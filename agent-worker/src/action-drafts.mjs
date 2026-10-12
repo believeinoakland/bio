@@ -1,7 +1,8 @@
-/* R76, R77 — `POST /draft` FOR AN ACTION: THE ASSISTANT'S TEXT CHECK, INFRACTION DRAFT AND CLAIM BEARINGS (T45-15;
- * N861, N887; Actions D11b, D25; `run-rules` R27; `skills` R45; `BIO_Action_v0_2.md` §4 rules 1, 2, 9, 12, 16, 19, 21).
+/* R76, R77 — `POST /draft` FOR AN ACTION: THE ASSISTANT'S TEXT CHECK, INFRACTION DRAFT, CLAIM BEARINGS AND STATUS
+ * REPORT (T45-15, T46-19; N861, N887, N920; Actions D11b, D25; `run-rules` R27; `skills` R45, R48; `BIO_Action_v0_2.md`
+ * §4 rules 1, 2, 9, 12, 16, 19, 21).
  *
- * WHAT IT IS. Three more tasks the plane's door routes to `POST /draft`, each the member's own act, each answered as a
+ * WHAT IT IS. Four more tasks the plane's door routes to `POST /draft`, each the member's own act, each answered as a
  * labelled proposal and never stored here:
  *
  *   `textcheck` `{text}`: a prepared outward text, read sentence by sentence; each sentence that reads as an assertion
@@ -13,11 +14,15 @@
  *       per point with its grade and what is uncertain, for one audience, `{text, sources}`.
  *   `bearingdraft` `{action, reply}`: each claim of the request, with how the reply bears on it, `{claim, bearing,
  *       quote}`.
+ *   `statusreportdraft` `{plan, items}` (T46; N920): a plan's status report from the items `plan-work` R8 assembled, which
+ *       the door hands in, `{text, sources}`: each sentence from a handed item, `sources` the items it rests on, named
+ *       by their place in `items` (0 the first). It reads nothing (`run-rules` R27's reach `none`), so a grant sent with
+ *       it is refused, as `textcheck`'s is.
  *
  * THE RECORDS (K2824). The records a draft is about arrive in the task from the door, assembled from the asking
  * member's own reads: `infractiondraft`'s `record` (`{plan?, actions, correspondence, findings}`, what the member may
  * see of the matter) and `bearingdraft`'s `action_record` and `reply_record` (the action with its claims, the reply's
- * entry and text). An absent or malformed one is `BAD_TASK`. They are record text: they reach the model only as the
+ * entry and text), and `statusreportdraft`'s `items`. An absent or malformed one is `BAD_TASK`. They are record text: they reach the model only as the
  * result of the fixed `read_facts` call the conversation opens with (R61, `agent-model` R12), text only (R63), as data
  * and never as instruction. Beside them the two drafts may read more only through the member's grant, and only the
  * reads the grant already admits (`answers`' `ASK_SCOPE`, R55's refusal of any other op returned as the tool's result);
@@ -37,8 +42,12 @@ import { draftMayRead } from "../../bio-plane/src/run-rules/index.mjs";
 import { READ_FACTS } from "../../agent-model/src/model.mjs";
 import { toolContent } from "./reads.mjs";
 
-/** R76 — the three tasks, in `run-rules`' `DRAFT_KINDS` order. */
-export const ACTION_DRAFT_OPS = Object.freeze(["textcheck", "infractiondraft", "bearingdraft"]);
+/** R76 — the four tasks, in `run-rules`' `DRAFT_KINDS` order. */
+export const ACTION_DRAFT_OPS = Object.freeze(["textcheck", "infractiondraft", "bearingdraft", "statusreportdraft"]);
+/** R76 — each task's kind in `run-rules`' `DRAFT_KINDS` (its R27): the task's own name, but for the status report's
+ *  (`statusreport`, T46). */
+const KIND_OF = Object.freeze({ textcheck: "textcheck", infractiondraft: "infractiondraft", bearingdraft: "bearingdraft",
+                                statusreportdraft: "statusreport" });
 /** R76 — what a pointed-out sentence reads as. */
 export const READS_AS = Object.freeze(["assertion", "position", "own_benefit_ask", "staff_named"]);
 /** R76 — who an infraction's documentation is drafted for. */
@@ -70,6 +79,8 @@ const isMatterRecord = (r) => isObject(r) && Object.keys(r).every((k) => RECORD_
   && (r.plan === undefined || r.plan === null || isObject(r.plan)) && sized(r);
 /** K2824 — `bearingdraft`'s `action_record` and `reply_record`: a non-empty object each, within `RECORD_MAX`. */
 const isOneRecord = (r) => isObject(r) && Object.keys(r).length > 0 && sized(r);
+/** R76 (T46) — `statusreportdraft`'s `items`, `plan-work` R8's: a non-empty list of objects, within `RECORD_MAX` whole. */
+const isItems = (v) => Array.isArray(v) && v.length > 0 && v.every(isObject) && sized(v);
 
 /** R76 — the task as the door sends it, or null. */
 export function actionTaskOf(t) {
@@ -83,20 +94,24 @@ export function actionTaskOf(t) {
       && isId(t.action) && isId(t.reply) && isOneRecord(t.action_record) && isOneRecord(t.reply_record))
     return { op: "bearingdraft", action: t.action, reply: t.reply, action_record: t.action_record,
              reply_record: t.reply_record };
+  if (t.op === "statusreportdraft" && sameKeys(t, ["op", "plan", "items"]) && isId(t.plan) && isItems(t.items))
+    return { op: "statusreportdraft", plan: t.plan, items: t.items };
   return null;
 }
 
 /** The task as the answer names it (R59's `task`): its op and what it names, never the records handed in, which the
  *  door already holds and which are not answered back (K2824). */
 const taskNamed = (task) => (task.op === "infractiondraft" ? { op: task.op, matter: task.matter, audience: task.audience }
-  : task.op === "bearingdraft" ? { op: task.op, action: task.action, reply: task.reply } : task);
+  : task.op === "bearingdraft" ? { op: task.op, action: task.action, reply: task.reply }
+  : task.op === "statusreportdraft" ? { op: task.op, plan: task.plan } : task);
 
 /** K2824, R61 — the records the task carries, as the facts the conversation opens with; null for `textcheck`. */
 const recordsOf = (task) => (task.op === "infractiondraft" ? { record: task.record }
-  : task.op === "bearingdraft" ? { action_record: task.action_record, reply_record: task.reply_record } : null);
+  : task.op === "bearingdraft" ? { action_record: task.action_record, reply_record: task.reply_record }
+  : task.op === "statusreportdraft" ? { items: task.items } : null);
 
-/** `run-rules` R27: whether a kind reads the record at all (through a grant), read from its one source. */
-const readsRecord = (kind) => draftMayRead({ kind, firsthand: false, suggestions: false });
+/** `run-rules` R27: whether a task's kind reads the record at all (through a grant), read from its one source. */
+const readsRecord = (op) => draftMayRead({ kind: KIND_OF[op], firsthand: false, suggestions: false });
 
 /** The final tool: the draft's own shape for its task. */
 function answerTool(op) {
@@ -113,6 +128,10 @@ function answerTool(op) {
     ? { text: { type: "string", description: "the documented account: the act and its office, the standard, the "
                   + "evidence for each point with its grade, and what is still uncertain" },
         sources: { type: "array", items: { type: "string" }, description: "the records each part rests on, as you read them" } }
+    : op === "statusreportdraft"
+    ? { text: { type: "string", description: "the status report, each sentence from one of the items handed to you" },
+        sources: { type: "array", items: { type: "integer", minimum: 0 },
+                   description: "the items the report rests on, each by its place in the list handed to you, 0 the first" } }
     : { claims: { type: "array", description: "each claim of the request, with how the reply bears on it",
                   items: { type: "object", additionalProperties: false, required: ["claim", "bearing", "quote"],
                            properties: { claim: { type: "string" }, bearing: { type: "string", enum: [...BEARINGS] },
@@ -147,6 +166,14 @@ export function actionDraftOf(task, answer) {
     if (!Array.isArray(src) || src.length === 0 || src.length > LIST_MAX || !src.every(isId)) return null;
     return { text: answer.text, sources: [...src] };
   }
+  /* R76 (T46): the items it rests on, by their place among the items handed in; one not handed makes it unformed. */
+  if (task.op === "statusreportdraft") {
+    if (!sameKeys(answer, ["text", "sources"]) || !isWords(answer.text, TEXTCHECK_TEXT_MAX)) return null;
+    const src = answer.sources;
+    if (!Array.isArray(src) || src.length === 0 || new Set(src).size !== src.length
+        || !src.every((i) => Number.isInteger(i) && i >= 0 && i < task.items.length)) return null;
+    return { text: answer.text, sources: [...src].sort((a, b) => a - b) };
+  }
   const c = answer.claims;
   if (!sameKeys(answer, ["claims"]) || !Array.isArray(c) || c.length > LIST_MAX) return null;
   const out = [];
@@ -175,14 +202,18 @@ const TASK_WORDS = {
     + "new evidence (new_evidence), disputed without evidence (disputed_without_evidence), or not addressed "
     + "(not_addressed), quoting the reply's own words. Judge no claim's merit, take no position, and never say what to "
     + "file or that anyone has a claim.",
+  statusreportdraft: "Draft the plan's status report from the items handed to you (the result of read_facts): where the "
+    + "plan stands, each sentence coming from one of those items and saying no more than it does, and name in sources "
+    + "the items the report rests on, each by its place in the list, 0 the first. Read nothing of the record (you have "
+    + "no read tool), take no position, state no breach, and never say what to file or that anyone has a claim.",
 };
 
-/** R76, R77 — `POST /draft` for one of the three tasks, after R59's checks of the binding, the body and the task.
+/** R76, R77 — `POST /draft` for one of the four tasks, after R59's checks of the binding, the body and the task.
  *  `deps` are the shell's pieces; `shared` is `draft.mjs`' own (the pack read, the read tool's door and the endings),
- *  so the three drafts and R59's are one mechanism. */
+ *  so the four drafts and R59's are one mechanism. */
 export async function actionDraft(body, task, env, deps, shared) {
   const { refusal, json, accountOf, cascadeToken, converse, segmentMeter, DEFAULT_MAX_SEGMENT_BYTES } = deps;
-  const { packFor, grantReader, readTool, draftEnding, ASK_DECLARED } = shared;
+  const { packFor, grantReader, readTool, draftEnding, ASK_DECLARED, labelled = {} } = shared;
   const acct = await accountOf(body);
   if (acct.refusal) return acct.refusal;
   const { account } = acct;
@@ -191,10 +222,13 @@ export async function actionDraft(body, task, env, deps, shared) {
      what the member saw is refused as R59's is. The door's own mistake cannot widen a draft's reach. */
   const grantSent = body.grant !== undefined && body.grant !== null;
   const firsthand = body.firsthand === undefined ? null : body.firsthand;
-  if (grantSent && !draftMayRead({ kind: task.op, firsthand, suggestions: account.suggestions === true }))
+  if (grantSent && !draftMayRead({ kind: KIND_OF[task.op], firsthand, suggestions: account.suggestions === true }))
     return refusal("DRAFT_READ_NOT_ALLOWED", task.op === "textcheck"
       ? "a text check reads nothing of what the group holds, only the text it is asked about; a grant to read was sent "
         + "with it, so nothing was done."
+      : task.op === "statusreportdraft"
+      ? "a status report is drafted only from the items handed to it and reads nothing of what the group holds; a grant "
+        + "to read was sent with it, so nothing was done."
       : "this draft reads what the group holds only for a field that does not record what the member saw; a grant to "
         + "read was sent with one that does, so nothing was done.", 400);
   if (!grantSent && readsRecord(task.op))
@@ -235,7 +269,9 @@ export async function actionDraft(body, task, env, deps, shared) {
     ? `TASK: check this prepared text.\n\nTHE MEMBER'S TEXT:\n${task.text}`
     : task.op === "infractiondraft"
     ? `TASK: draft the documentation of the infraction in the matter '${task.matter}' for the audience '${task.audience}'.`
-    : `TASK: the bearing of the reply '${task.reply}' on each claim of the action '${task.action}'.`;
+    : task.op === "bearingdraft"
+    ? `TASK: the bearing of the reply '${task.reply}' on each claim of the action '${task.action}'.`
+    : `TASK: draft the status report of the plan '${task.plan}' from the items handed to you.`;
   const messages = [{ role: "user", content: asked }];
   /* R61 (K2824): the records reach the model only as the result of the fixed `read_facts` call, text only (R63). */
   if (records) {
@@ -255,7 +291,7 @@ export async function actionDraft(body, task, env, deps, shared) {
   const spent = { usage: conv.usage ?? null, calls: conv.calls === undefined ? null : conv.calls };
   if (conv.answer !== undefined) {
     const draft = actionDraftOf(task, conv.answer);
-    if (draft) return json({ ok: true, task: taskNamed(task), draft, label: { kind: "machine" }, ...spent });
+    if (draft) return json({ ok: true, task: taskNamed(task), draft, ...labelled, label: { kind: "machine" }, ...spent });
     return refusal("DRAFT_UNFORMED", "the model answered without a draft of the task's shape, so nothing is returned.",
       502, { ending: "unformed", ...spent });
   }

@@ -156,7 +156,8 @@ test("R71 (T44; N869, N876; DEC-192 (1); K2713): a refusal (tier 4's aiRefusal, 
     assert.equal(written, false);
   }
   assert.match((await act({ away: KEPT, answer: null })).r.body.says, /\{member\} set this on \{date\}: “\{reason\}”\.$/, "placeholders kept");
-  for (const answer of [{ ok: false, reason: "BAD_PAGES", code: "BAD_PAGES", detail: "d", worker: "agent-worker" }, { ok: false, reason: "busy" }]) {
+  /* (T46) BAD_PAGES is one of agent-worker R72's six codes, answered with DEC-193's reason (R75: t46.test.mjs) */
+  for (const answer of [{ ok: false, reason: "SOME_OTHER_CODE", code: "SOME_OTHER_CODE", detail: "d", worker: "agent-worker" }, { ok: false, reason: "busy" }]) {
     const { r, written } = await act({ answer });
     assert.deepEqual(unfilled(r), [200, true, false, false], answer.reason);
     assert.equal("says" in r.body, false, `${answer.reason}: no row, no sentence`);

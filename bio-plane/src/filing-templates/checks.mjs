@@ -9,9 +9,20 @@
  * row of this module's family, C-125 (K933), except R26's two (T35, N702): C-115.45 and C-115.46, as R26 numbers them.
  * Every row but those two was stamped by 1.52.0 (PROMOTION #23, T22 layer 2; K991); they await T36's promotion job.
  * T45 (R15, R28; R23's T45 line): `TEMPLATE_NOT_REVIEWED` and `TEMPLATE_COURT_PETITION`, the next free numbers of this
- * module's own family, C-125.33 and C-125.34 (FILING-TEMPLATES #8 J1), awaiting promotion's stamp. */
+ * module's own family, C-125.33 and C-125.34 (FILING-TEMPLATES #8 J1), awaiting promotion's stamp.
+ * T46 (R29; DEC-194, N913): C-125.33 reads its translation from `words.json` by key (`FILING_TEMPLATES_WORDS` below);
+ * C-125.34 keeps its own until `words.json`'s sentence names "your group's Civicsmith" (DEC-149); awaiting T47's stamp. */
 
 const at = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
+
+/* R29 (T46; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module's
+   rows translate by, each `en` verbatim, read by key (`refusal.<CODE>`), as membership's `HANDLE_WORDS` and extraction's
+   `TRANSCRIBE_WORDS` are; a row never holds a copy of its sentence. `{missing}` is left for the screen, which fills it
+   from the refusal's `lacks` (R15). `refusal.TEMPLATE_COURT_PETITION` is not taken in T46: its sentence names
+   "Civicsmith" bare, where DEC-149 says "your group's Civicsmith" (R29). */
+export const FILING_TEMPLATES_WORDS = Object.freeze({
+  "refusal.TEMPLATE_NOT_REVIEWED": "This template isn't offered yet: it lacks {missing}.",
+});
 
 export const FILING_TEMPLATE_CHECKS = Object.freeze({
   /* ---- moved from filings (C-115) ---- */
@@ -203,12 +214,11 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
     check: "C-125.32", where: at("templatesFor", "is-templates-state"),
     translation: "Templates are listed as offered, or by one of: draft, in_review, withdrawn, retired, proposed.",
   },
-  /* ---- new in T45 (R15, R28; N858, Actions D8, v0.2 rule 11, §8): BOB's drafts, awaiting promotion's stamp ---- */
+  /* ---- new in T45 (R15, R28; N858, Actions D8, v0.2 rule 11, §8), awaiting promotion's stamp; C-125.33 re-worded in
+     T46 (R29), read by key ---- */
   TEMPLATE_NOT_REVIEWED: {
     check: "C-125.33", where: at("#profileRefusal", "is-profile-offered"),
-    translation: "This template from the jurisdiction profile is not offered yet. A profile's template is offered only "
-      + "once it names who wrote it, the public sources it was written from, a professional's review with no concerns, "
-      + "and an approver other than its writer; what it lacks is named.",
+    translation: FILING_TEMPLATES_WORDS["refusal.TEMPLATE_NOT_REVIEWED"],
   },
   TEMPLATE_COURT_PETITION: {
     check: "C-125.34", where: at("#courtPetition", "is-court-petition"),

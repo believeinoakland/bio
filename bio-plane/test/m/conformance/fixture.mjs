@@ -201,12 +201,14 @@ export function world({ group = "test-group" } = {}) {
       return { ok: true, found: true, calc_id: calcId, ...structuredClone(c.answer) };
     },
   };
-  /* case-carriage's three lapse reads (its R4, R5, R13), standing in: none lapsed unless the test says so */
+  /* case-carriage's three lapse reads (its R4, R5, R13), and from T46 the same three over the interval since the check
+     (its R19–R21, which case-check R2 latches through), standing in: none lapsed unless the test says so */
   const lapse = { sources: [], accepted: null, marks: [], fail: false };
+  const sourcesLapsed = () => { if (lapse.fail) throw new Error("the sources read failed"); return lapse.sources; };
   const caseCarriage = {
-    sourcesLapsed: () => { if (lapse.fail) throw new Error("the sources read failed"); return lapse.sources; },
-    acceptedWorkLapsed: () => lapse.accepted,
-    marksLapsed: () => lapse.marks,
+    sourcesLapsed, acceptedWorkLapsed: () => lapse.accepted, marksLapsed: () => lapse.marks,
+    sourcesLapsedSince: () => sourcesLapsed(), acceptedWorkLapsedSince: () => lapse.accepted,
+    marksLapsedSince: () => lapse.marks,
   };
   /* case-authoring's pre-flight and preparation (its R34, R14), standing in: every case is ready; the preparation is a
      case document of the named case and edition, stored through publication's R21 */

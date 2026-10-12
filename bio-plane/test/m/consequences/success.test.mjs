@@ -6,7 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
-import { CONSEQUENCES_CHECKS, SUCCESS_LIMITS, SEQUENCE_NOT_CAUSE, CAUSE_NOT_STATED, isSuccessDate }
+import { CONSEQUENCES_CHECKS, SUCCESS_LIMITS, SEQUENCE_NOT_CAUSE, CAUSE_NOT_STATED, isSuccessDate, consequencesWords }
   from "../../../src/consequences/index.mjs";
 
 const S = "STD-2026-0001-law";
@@ -163,9 +163,11 @@ test("R19: a sequence is never a cause; a cause rests on evidence other than the
   const w = setup();
   /* A sequence, answered with its sentence; no cause, answered null with its sentence. */
   const seq = w.rec({ sequence: "After our demand of 6 Nov, the City published both reports on 14 May" });
+  /* R25 (T46): each sentence answered with its key and words.json's words for it (t46.test.mjs proves the words). */
   assert.deepEqual(seq.success.sequence, { text: "After our demand of 6 Nov, the City published both reports on 14 May",
-                                           says: SEQUENCE_NOT_CAUSE });
-  assert.deepEqual([seq.success.cause, seq.success.cause_says], [null, CAUSE_NOT_STATED]);
+                                           key: SEQUENCE_NOT_CAUSE, says: consequencesWords(SEQUENCE_NOT_CAUSE) });
+  assert.deepEqual([seq.success.cause, seq.success.cause_key, seq.success.cause_says],
+                   [null, CAUSE_NOT_STATED, consequencesWords(CAUSE_NOT_STATED)]);
   assert.deepEqual([SEQUENCE_NOT_CAUSE, CAUSE_NOT_STATED], ["consequences.success.sequence_not_cause", "consequences.success.cause_not_stated"]);
   /* Refusals, each writing nothing. */
   const cases = [
@@ -188,7 +190,7 @@ test("R19: a sequence is never a cause; a cause rests on evidence other than the
   const ok = w.rec({ cause: { statement: "our demand did it", evidence: [w.ours, w.other] } });
   assert.equal(ok.ok, true, JSON.stringify(ok));
   assert.deepEqual(ok.success.cause, { statement: "our demand did it", evidence: [w.ours, w.other] });
-  assert.equal("cause_says" in ok.success, false);
+  assert.equal("cause_says" in ok.success || "cause_key" in ok.success, false);
   /* The reader is asked with the ids and the viewer. */
   let asked = null;
   const w2 = world();

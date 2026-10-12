@@ -61,7 +61,7 @@ import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { checkCaseFile, registerCaseCheckerPublicReads } from "../case-checker/index.mjs";
 import { caseImportOf, caseImportOps } from "../case-import/index.mjs";
 import { caseDisclosuresOf } from "../case-disclosures/index.mjs";
-import { caseAccountOf } from "../case-account/index.mjs";
+import { caseAccountOf, caseAccountOps } from "../case-account/index.mjs";
 import { caseCarriageOps } from "../case-carriage/index.mjs";
 import { publicReadOf, publicReadOps } from "../public-read/index.mjs";
 import { projectStageOf, projectStageOps } from "../project-stage/index.mjs";
@@ -104,7 +104,7 @@ import { answersOf, answersOps } from "../answers/index.mjs";
 import { caseTensionsOf, caseTensionsOps } from "../case-tensions/index.mjs";
 import { followingOf, followingOps } from "../following/index.mjs";
 import { noticeProducersOf } from "../notice-producers/index.mjs";
-import { askOnObject, draftOnObject, draftUse } from "./ask.mjs";
+import { askOnObject, draftOnObject, draftUse, assistantGateOf } from "./ask.mjs";
 import { admissionOf, admissionOps } from "../admission/window.mjs";
 import { archiveUnpackConsumer } from "./unpack.mjs";
 import { transcriberOf } from "./transcribe.mjs";
@@ -231,7 +231,11 @@ export class Store extends DurableObject {
        group's zone from retrieval (its R69) and counts by the group's local day; its first construction migrates and
        declares its tables (its R7). */
     aiUseOf(ctx);
-    aiRunsOf(ctx, env);   /* ai-runs registers with retrieval, in the modules' order */
+    /* ai-runs registers with retrieval, in the modules' order. R40 (T46): its `partAdmitted` is the one gate of the ask,
+       the drafts and the transcriber; a module test's own set (`assistantGateOf`, handed before construction, K61) is
+       handed to it here, at its first construction, else it reads Civicsmith's. */
+    const testSet = assistantGateOf(ctx).testSet;
+    aiRunsOf(ctx, env, testSet ? { testSet } : null);
     /* R36 (T42; N832; K2611, K2656; extraction R72): the one transcriber, registered with extraction once at start, built
        on this object's own instances (ai-runs' R75 records for its test bar, credentials, ai-use, the evidence store, the
        `AGENT_WORKER` binding), so extraction reaches nothing above its layer. */
@@ -594,6 +598,13 @@ export class Store extends DurableObject {
      RPC by control-plane's door (no route: R5). */
   async draft(args) { return draftOnObject(this.ctx, this.env, args || {}, { read: (op, params) => this.#read(op, params) }); }
 
+  /* R40 (T46; K2999; control-plane R77): a member's own run's segment dispatched by ai-runs in the object addressed
+     (`dispatchMemberRun`, its R18), reached over the object's RPC by control-plane's door; the presented credential is an
+     argument of this in-process call only, never a query, body or fetch. */
+  async dispatchMemberRun(args) { return aiRunsOf(this.ctx, this.env).dispatchMemberRun(args || {}); }
+  /* R40 (T46; K2999; control-plane R20): public-read's group fields of this object (the door asks the `bio` object's). */
+  async groupFields() { return publicReadOf(this.ctx).groupFields(); }
+
   /* R41 (K2824): one read the asking member may make, answered by this object's route map exactly as the door would
      answer it, her viewer stamp in `params.viewer`; a synchronous read's answer, or null for an op the map lacks. It
      reaches no write: R41 asks only `plan`, `action`, `basis` and `reading`. */
@@ -699,15 +710,9 @@ export class Store extends DurableObject {
       ...strengthOps(strengthOf(ctx), url, body),
       ...reevaluationOps(reevaluationOf(ctx), url, body),
       ...caseAuthoringOps(caseAuthoringOf(ctx), url, body),
-      /* R39 (T45; K2834, K2886 (3)): case-account's advocacy check (its R13) and its list, over the plane's one instance
-         (R38). case-account exports no ops map, so the pair is named here as the module's whose methods answer them, as
-         acquisition's co-archive pair is (K2042): the plane adds no behaviour, only the entry (R9); `by` (handed as the
-         owner's `author`, op-declarations R49) and `viewer` are the door's stamps, read from the query, so a caller's own
-         copy in the body never wins. */
-      advocacycheck: () => caseAccountOf(ctx).advocacyCheck({ project: url.searchParams.get("project") ?? body?.project ?? null,
-        sentences: body?.sentences ?? null, author: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),
-      advocacychecks: () => caseAccountOf(ctx).advocacyChecksOf({ project: url.searchParams.get("project") ?? body?.project ?? null,
-        viewer: url.searchParams.get("viewer") }),
+      /* R39 (T46; N935; case-account R15): case-account's own ops map (`advocacycheck`, `advocacychecks`, its R13), over
+         the plane's one instance (R38); the plane names no entry of it (R9). */
+      ...caseAccountOps(caseAccountOf(ctx), url, body),
       ...ratificationOps(ratificationOf(ctx), url, body),
       /* R17 (N520, N522): case-import's ten member ops (`importwatch` and `importunwatch` the watch's, R20);
          case-checker's public reads `casechecker` and `casefilespec` are public-read's (its R18). */
@@ -756,11 +761,9 @@ export class Store extends DurableObject {
       ...actionClocksOps(actionClocksOf(ctx), url, body),
       /* R39 (T45): action-replies' ops (`actionreplybearing`, `actionbearingpropose`, `arosefrom`), after action-clocks'. */
       ...actionRepliesOps(actionRepliesOf(ctx), url, body),
-      ...localFactsOps(localFactsOf(ctx), url, body),   /* R11 (K921) */
-      /* R39 (T45; op-declarations R49): local-facts' `groupRules` (its R12), a session's read with no arm in its map, named
-         here as the module's whose method answers it (R9); `viewer` the door's stamp, `section` the query's. */
-      grouprules: () => localFactsOf(ctx).groupRules({ section: url.searchParams.get("section") ?? undefined,
-                                                       viewer: url.searchParams.get("viewer") }),
+      /* R11 (K921); R39 (T46; N935; local-facts R15): its own ops map, `grouprules` (its R12) among them; the plane names
+         no entry of it (R9). */
+      ...localFactsOps(localFactsOf(ctx), url, body),
       ...standardsOps(standardsOf(ctx), url, body),
       ...conformanceOps(conformanceOf(ctx), url, body),
       ...consequencesOps(consequencesModule(ctx), url, body),

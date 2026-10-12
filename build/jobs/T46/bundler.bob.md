@@ -1,0 +1,12 @@
+# BOB to bundler (T46)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T46), layer 1, bundler: T46-2 (N900; K2266, K2828, K2912), test only: `bio-plane/test/system/fleetbundles.test.mjs` re-pinned (a) to agent-worker's 27 inputs as its manifest records them today (`src/action-drafts.mjs` added in T45), and (b) its real-fleet "container members, each with its images (R24)" pin to the 0.82.0 cut's GHCR names: `ghcr.io/believeinoakland/agent-runner`, `ghcr.io/believeinoakland/file-scanner-scanner`, `ghcr.io/believeinoakland/file-scanner-renderer` (cut `dist/cut-0.82.0` @ 985fbefc88, K2912). The cut is merged into tranche/T46 once 0.82.0 is signed (K2911); BOB tells you (CHANGE) when it is. Until then build (a) and (b), and test (b) against the cut's `fleet-member.json` files (read with `git show origin/dist/cut-0.82.0:<path>`); state in your record which tree you ran it on. No requirement text changes; no product code changes.
+Your requirements: `build/requirements/bundler.md` (read whole). Nothing is marked not yet met for T46.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Inherited reds: the plan's "Rules at the opening" rule 5: (5) is yours (both fleetbundles reds clear with this job). Before running `fleetbundles`, `npm ci` in every bundled member (`node bio-plane/scripts/bundles.mjs --install-dirs`; agent-runner with `--ignore-scripts`), or it skips (K1980).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 562 KB, under the 600 KB limit; read it whole.

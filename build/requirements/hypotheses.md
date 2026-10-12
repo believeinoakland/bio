@@ -1,6 +1,6 @@
 # hypotheses — requirements
 
-**Status** · In force: a new product module, reviewed (K1505; T33-46); a member's own notes as Bob ruled them (DEC-136, DEC-144). Last changed T41 (T41-16: R16–R21 new, the system's proposals and a note's share; R14 amended; as `draft-T41-investigation.md` §3.6, K2405, K2418), not yet met; every other requirement met (K1983). Last changed T42 (T42-13: R22 new, its own codes for C-134.22 and C-134.23, re-coded in place; N843; K2566, K2608), not yet met.
+**Status** · In force: a new product module, reviewed (K1505; T33-46); a member's own notes as Bob ruled them (DEC-136, DEC-144). Last changed T41 (T41-16: R16–R21 new, the system's proposals and a note's share; R14 amended; as `draft-T41-investigation.md` §3.6, K2405, K2418), not yet met; every other requirement met (K1983). Last changed T42 (T42-13: R22 new, its own codes for C-134.22 and C-134.23, re-coded in place; N843; K2566, K2608), not yet met. T46 (T46-65: R23, migrations only as Durable Object SQLite authorizes; the 0.82.0 cut's fix, K2926).
 
 **Size (P6).** New. Expected 500–700 lines. It is not added to `inquiry` (3,903 lines, P6).
 
@@ -63,6 +63,7 @@ Terms. A **note** is a member's own words kept in the group's copy, seen only by
 - `inquiry`: the inquiry's existence, type and visibility (R1, R3).
 
 ### Invariants
+- **R23** (T46; K2926) R14's renumbering, and every migration this module runs at boot, uses only statements a Durable Object's SQLite authorizes: no `TEMP` table, view or trigger and no other statement workerd refuses `SQLITE_AUTH`; its working map is an ordinary table created and dropped inside the one transaction. Tested where workerd runs it: a store numbered from the shared sequence, holding notes and turns, renumbered on the plane's own runtime.
 
 - **R8** Never a fact: no hypothesis moves a grade, a strength pair, a basis or a finding; this module writes nothing to any other module's table (K1467).
 - **R9** A hypothesised cause stays a hypothesis: nothing here records a cause as an event relation (`stated_cause` is a source's claim, `events`') (DEC-84 (10), K1461).

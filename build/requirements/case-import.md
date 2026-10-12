@@ -1,6 +1,6 @@
 # case-import — requirements
 
-**Status** · In force: a new product module, placed by BOB (K1256, K1257); folded at T28's opening (N520, DEC-96; K1268, K1277), R16 and R6–R9's changes N522's (K1273); N534 reviewed (K1369). Last changed T34 (T34-94: R5, K1828); every requirement met (K1833). Last changed T41 (T41-41's text: R22, R23 new; N820; D59, D62; K2405, K2417, K2418); marked not yet met (T41).
+**Status** · In force: a new product module, placed by BOB (K1256, K1257); folded at T28's opening (N520, DEC-96; K1268, K1277), R16 and R6–R9's changes N522's (K1273); N534 reviewed (K1369). Last changed T34 (T34-94: R5, K1828); every requirement met (K1833). Last changed T41 (T41-41's text: R22, R23 new; N820; D59, D62; K2405, K2417, K2418); marked not yet met (T41). Last changed T46 (T46-24: R4 amended, the source group's `group_fields` recorded at import and answered from `importedCase`, for `conformance` R32; N903; K2832); met (K2969).
 
 **Size (P6).** About 1,600–2,300 lines: the import and its tables, recreation, completion, the reads, the four acts and its catalogue rows. Acceptance is split out if it grows (K1256).
 
@@ -49,6 +49,12 @@ Terms.
   - each calculation the edition carries, with its result as recreated here (R21) beside the value the source states, labelled as the source's.
 
   A `viewer` who is not an active member is answered as if no import exists, with the same bytes for each. It writes nothing. (DEC-112 (6); DEC-92; DEC-96 item 1)
+
+  (T46; N903; K2832; `public-read` R34; `conformance` R32) The source group's public identity and declared stake are recorded at import and answered here, since they are never in the signed edition or the case file's bytes (`public-read` R34, R23).
+  - **At import.** `importCaseFile` (R1) also takes `groupFields`: the `group_fields` of the source's `publishedCase` answer for that case (`public-read` R34: `group`, `name`, `domain`, `domain_verified_at`, `stake`, `detail`), with `read_at`, the instant the caller read them. They are recorded with the edition when R1 first records it, as the source's own statement current at `read_at`: unsigned, never verified as part of the edition, never this group's. A repeat of the same edition (`existed: true`) writes nothing. Fields that are absent, not in R34's shape, or whose `group` is not the slug the manifest names, are not recorded, and the import is never refused for them.
+  - **In the answer.** `importedCase` answers, per edition, `group_fields: {group, name, domain, domain_verified_at, stake, detail, read_at}`, labelled as the source's declaration current when read, never as of the edition's signing; an edition recorded without them (before T46, or with none given or none recorded) answers `group_fields: null` with a sentence saying why, never a guess, so `conformance` R32 reads `identity: null, stake: "undetermined"` for it.
+
+  Control: an import given the source's fields answers them with `read_at`; the same import without them answers `group_fields: null` with its sentence; fields naming another group are not recorded.
 
 **completeImportedDocument({import, edition, bytes, by, viewer})** (`op=caseimportdocument`; mutating)
 
@@ -151,6 +157,7 @@ Terms.
 - `reevaluation`: `acceptanceWithdrawn` (its R31; R7); `citedCaseMoved` (its R33; R18; N534).
 - `signatures` (N534): `verifySshsig` (its R2), `NS_DOCKET` (its R39), `docketStatement` (its R40), for R18's check 2.
 - `docket` (N534): `DOCKET_UNREADABLE` (its R15), for R19; the public answer's form (its R24) that R18 reads, and the entry format's two labels (its R6).
+- `public-read` (T46; N903): the shape of R34's `group_fields`, which R4 records as the caller hands it; no call is made to it. Its user: `conformance` reads R4's `group_fields` (its R32).
 
 ### Invariants
 
@@ -169,6 +176,7 @@ Terms.
 - DEC-96 items 1 and 2 (the accept, withdraw, flag and clear acts); DEC-92 (the origin mark's facts for imported work); DEC-45, DEC-46 (3). K1256, K1257 (the module).
 - DEC-96 item 1's withdrawal notice and item 4 (R16, R7; N522, K1273).
 - DEC-101 response 3; DEC-116 item 8 (the citing copy, 'Could not read the publisher's docket'); `BIO_Publication_v0_1.md` §5A, §5D: R17–R20 (N534; K1339, K1366).
+- `BIO_Action_v0_2.md` §4 rule 21 (the group's public identity and declared stake; Actions D16, D16a, D28d), for another group's accepted finding (`conformance` R32): R4's T46 amendment (N903; K2832).
 
 ### Suggestions
 

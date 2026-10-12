@@ -25,7 +25,11 @@ export const OBJECT_TYPES = { INFO: 'information', PROB: 'inquiry', FOCUS: 'inqu
      none of them, and `checkBundle` admits only the bundle prefixes' types (bundle.mjs). */
   CALC: 'calculation', EVT: 'event', LIN: 'line', MNY: 'money_fact', MSR: 'money_set', PFA: 'person_fact',
   IDC: 'identity_claim', MTI: 'member_tie', CHK: 'interest_check', HYP: 'hypothesis', DUT: 'duty',
-  STQ: 'standing_question' };
+  STQ: 'standing_question',
+  /* T46-1 (R59; N911): the success record (`consequences`). Not a bundle prefix either (R1), but, unlike the rows above, a
+     record object promoted with history, so `STATES` holds its one state (document.mjs); `HEADINGS` and `checkBundle`'s
+     schemas still gain nothing. */
+  SUC: 'success_record' };
 export const LEGACY_TYPE_ALIASES = { problem: 'inquiry', focus: 'inquiry' };
 /* An OWN key only (R5): `constructor`, `toString` and the other `Object.prototype` names are types nobody declared,
    and answer themselves, never an inherited function. Only a string can be an alias. */

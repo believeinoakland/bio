@@ -30,14 +30,14 @@ var MODES = {
     deployed: false,
     does: "propose citable passages and readings over a SUBJECT a member named, under the run's `mints` bound, never attesting \u2014 \xA77.3 of docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md; not yet deployed, and a standing EXTRACT run is provisionally NO (\xA77.3 point 7)"
   },
-  /* R53 (K660): THE PLANNING SKILL, NOT DEPLOYED. It walks its own table (`PLAN_FLOW`, R50) and proposes options to one
-     action plan through `op=optionpropose`, never deciding anything (`BIO_Action_v0_1.md` §4). It is deployed as soon as
-     this member runs model turns (R40, R48) by the reviewed edit that also sets `run-rules`' `DEPLOYED_MODES` (its R14);
-     until then a plan-mode run closes `mode-not-deployed` at the gate, like every mode this table holds and has not
-     deployed. */
+  /* R10 (T46; N919; Bob's, K2892): THE PLANNING SKILL, DEPLOYED. It walks its own table (`PLAN_FLOW`, R6) and proposes
+     options to one action plan through `op=optionpropose`, never deciding anything (`BIO_Action_v0_1.md` §4). It is
+     deployed by the one reviewed change that also sets `run-rules`' `DEPLOYED_MODES` (its R14) and `agent-worker`'s
+     copy (its R53), never by model turns running; this copy must agree with run-rules', and the suite holds it to that.
+     The flag marks served code and lifts no bar: an open in mode `plan` is still admitted only through `run-rules` R29. */
   plan: {
-    deployed: false,
-    does: "propose options to one action plan, strongest first, through op=optionpropose; it decides, starts, prepares and sends nothing (BIO_Action_v0_1.md \xA74); not yet deployed"
+    deployed: true,
+    does: "propose options to one action plan, strongest first, through op=optionpropose; it decides, starts, prepares and sends nothing (BIO_Action_v0_1.md \xA74)"
   }
 };
 var BUDGET_BOUNDS = ["fetches", "subsessions", "wallclock"];
@@ -874,7 +874,13 @@ var ID_TABLE = Object.freeze([
      are. Since T41 case-authoring has minted it through record-core's `mintOpaqueId`, four random digits, which is the
      sequential shape; so its row carries `legacy: 'sequential'` as `CALC`'s does (K1728): those ids stay readable, and
      minting through `allocId` follows `form` alone. Its owner is named before it holds code (P8). */
-  row("ACD", "case-account", "opaque", "sequential")
+  row("ACD", "case-account", "opaque", "sequential"),
+  /* T46-1 (R59; N911, K2845): a success record (`consequences`, v0.2 §3 Success record), sequential, as the Action
+     layer's other record objects are. `consequences` has minted `SUC-<year>-<4 digits>` in its own rows since T45, which is
+     this form, so every one of those ids stays valid. It is a record object promoted with history like a finding, so it
+     has a type (`success_record`, types.mjs) and a machine (`STATES`, document.mjs), and it is not a bundle prefix (R1):
+     no heading set and no `checkBundle` schema. */
+  row("SUC", "consequences")
 ]);
 var YEAR = "\\d{4}";
 var CORE = { sequential: "\\d{4,}", opaque: "[a-z0-9]{16}" };
@@ -889,6 +895,7 @@ function idPattern(prefix) {
 var HYP_RE = idPattern("HYP");
 var STP_RE = idPattern("STP");
 var GUD_RE = idPattern("GUD");
+var SUC_RE = idPattern("SUC");
 var ID_PREFIXES = Object.freeze([
   "INFO",
   "PROB",
@@ -1071,6 +1078,10 @@ var OBSERVATION_CHECK_KEYS = Object.freeze(Object.keys(AI_RUN_CHECKS));
 var LEAD_ID_RE = new RegExp(`^${idPattern("LEAD").source.slice(1, -1)}-[a-z0-9]+$`);
 
 // ../bio-plane/src/run-rules/checks.mjs
+var RUN_RULES_WORDS = Object.freeze({
+  "refusal.AI_RUN_REEXAM_NEEDS_RESPONSE": "Nothing was started: a fresh look at the plan after a reply needs to know which reply. Record the reply first, then ask from it.",
+  "refusal.AI_RUN_REEXAM_OPEN": "Nothing was started: a fresh look at this plan after this reply is already under way. Wait for it, then read what it proposes."
+});
 var AI_RUN_OWN_CHECKS = {
   /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
      which bound and where it stopped". A close with no bound named is the
@@ -1328,6 +1339,26 @@ var AI_RUN_OWN_CHECKS = {
     check: "C-22.28",
     where: "src/ai-runs/index.mjs open > is-airun-open-step and its own step's steps check, reached from op=airunopen; and openMany, for each step of a member's batch she cannot see",
     translation: "Nothing was started, because the step this investigation names is not one the record holds here. Something you cannot see is answered exactly as something that does not exist."
+  },
+  /* R30 (T46; K231; K2816 (2)): AN AI PART NOT ADMITTED by the one deploy gate, `partAdmittedOn` (R29): its test bar is
+     not held on Civicsmith's set and the instance is not a test instance, or the chain before it is not verified. Minted
+     only by `partRefusal(part)`, the gate's refusal form, and relayed unchanged by the doors that had no refusal of their
+     own (`plane` R40: the ask and the drafts). C-22.29, the next free number. `AI_RUN_MODE_NOT_DEPLOYED` (C-109.1) and
+     `TRANSCRIBE_NOT_DEPLOYED` (C-51.7) keep their codes, numbers and sites. DEC-83's form: what happened, then what
+     still works. */
+  AI_PART_NOT_DEPLOYED: {
+    check: "C-22.29",
+    where: "src/run-rules/test-bar.mjs partRefusal, called from the doors partAdmittedOn does not admit (plane R40's ask and drafts)",
+    translation: "This part of the assistant has not yet passed Civicsmith's tests, so it is not switched on in your group's Civicsmith. Everything else works without it."
+  },
+  /* R32 (T46; K2947; `ai-runs` R18): A MEMBER'S OWN SIGN-IN RUN IN A MODE IT DOES NOT SERVE. On her own Claude sign-in
+     a member's run is dispatched for her only in `check` or `plan` (Bob's K2892); any other mode is refused by `ai-runs`
+     at its dispatch and read here by key. C-22.30, the next free number after R30's. DEC-83's form. Its translation is
+     interim, until `words.json` holds `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`. */
+  MEMBER_RUN_MODE_NOT_ADMITTED: {
+    check: "C-22.30",
+    where: "src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch",
+    translation: "Nothing was started, because on your own Claude sign-in the assistant only checks and plans for you; this kind of work needs your group's Civicsmith to run it."
   }
 };
 var AI_RUN_ACT_SHAPE_CHECKS = {
@@ -1561,16 +1592,18 @@ var AI_RUN_PLAN_CHECKS = {
   },
   /* R28 (T45; K2820, K2822; ai-runs R77): A RE-EXAMINATION RUN, the planning run started inside the member's act that
      records a response (v0.2 rule 16). Minted by ai-runs at its open after R46 and the origin (`originAllowed`, R23 as
-     R28 amends it), read here by key. DEC-83's form: the sentence, then the remedy. */
+     R28 amends it), read here by key. DEC-83's form: the sentence, then the remedy. R31 (T46; DEC-194; N913): each
+     translation is `words.json`'s `refusal.<CODE>`, read by key (RUN_RULES_WORDS above); code, number and `where`
+     unmoved. */
   AI_RUN_REEXAM_NEEDS_RESPONSE: {
     check: "C-109.13",
     where: "src/ai-runs/index.mjs open > is-airun-open-reexam, reached from op=airunopen",
-    translation: "Nothing was run, because a fresh look at the plan after a reply was asked for without saying which reply it is about. Record the reply first; the fresh look starts from that reply."
+    translation: RUN_RULES_WORDS["refusal.AI_RUN_REEXAM_NEEDS_RESPONSE"]
   },
   AI_RUN_REEXAM_OPEN: {
     check: "C-109.14",
     where: "src/ai-runs/index.mjs open > is-airun-open-reexam, reached from op=airunopen",
-    translation: "Nothing was run, because a fresh look at this plan after this reply is already under way. Wait for it to finish and read what it proposes."
+    translation: RUN_RULES_WORDS["refusal.AI_RUN_REEXAM_OPEN"]
   }
 };
 var AI_USE_CHECKS = {
@@ -1785,10 +1818,15 @@ var DEPLOYMENT_SEQUENCE = {
   /* R14: THE MODES THAT DEPLOY APART FROM THE CHAIN, each with its own flag and the condition that sets it. A mode here
      takes no part in the chain's verification: `DEPLOYED_MODES` below reads the chain from `order` without it, and
      adds it only when its flag is true. `false` until the change that meets its condition flips it under review. */
+  /* R14 (T46; N919; Bob's K2892, K2914): `plan`'s act is MADE, by this change together with `agent-worker`'s `MODES.plan`
+     (its R53) and `agent-harness`' copy (its R10), because a member's own planning run is now served end to end (`ai-runs`
+     R18 as T46 amends it). The flag marks served code and lifts no bar: a run in mode `plan` is admitted only through
+     `partAdmittedOn` (R29, `./test-bar.mjs`), so D14's test bar still gates it on every instance but a test instance. */
   deploys_apart: {
     plan: {
-      deployed: false,
-      when: "only by an explicit reviewed change of its own, which sets this flag and agent-worker's MODES.plan together; never as a side effect of model turns running, and whether or not investigate or extract is deployed"
+      deployed: true,
+      when: "only by an explicit reviewed change of its own, which sets this flag and agent-worker's MODES.plan together; never as a side effect of model turns running, and whether or not investigate or extract is deployed",
+      made: "T46 (K2892): set by its own reviewed change with agent-worker's MODES.plan, because a member's own planning run is served end to end; the flag marks served code and lifts no bar, so a run in mode plan is admitted only through partAdmittedOn (R29), D14's test bar gating it on every instance but a test instance"
     }
   },
   /* R40 (K102, K182): THE RECORD'S EDGE NOW REFUSES TOO. Until ai-runs' extraction nothing in the check catalogue
@@ -1811,8 +1849,9 @@ var ASK_MODE = Object.freeze({
   writes_run_row: false,
   why: "it answers one member's question inside that member's act and is no run: it writes no run row and no observation, and keeps nothing but the member's own device-local transcript (K1450)",
   deploys_apart: true,
-  deployed: false,
+  deployed: true,
   when: "only by a reviewed change of its own that sets this flag, whatever the run modes' state",
+  made: `T46 (N897 (2); K2816): set by its own reviewed change, because agent-worker's /ask is served end to end (since T33); the flag marks served code and lifts no bar, so an ask is admitted only through partAdmittedOn(set, "ask", \u2026) (R29), D14's test bar gating it on every instance but a test instance`,
   bounds: "ASK_BOUNDS (R17), declared when the ask starts"
 });
 var DRAFT_KINDS = Object.freeze([
@@ -1823,9 +1862,10 @@ var DRAFT_KINDS = Object.freeze([
   "bearing_note",
   "textcheck",
   "infractiondraft",
-  "bearingdraft"
+  "bearingdraft",
+  "statusreport"
 ]);
-var ACTION_DRAFT_KINDS = Object.freeze(DRAFT_KINDS.slice(-3));
+var ACTION_DRAFT_KINDS = Object.freeze(["textcheck", "infractiondraft", "bearingdraft"]);
 var DRAFT_REACH = Object.freeze({
   own_words: Object.freeze({ scope: "ask_scope", means: "within answers' ASK_SCOPE (its R1); a firsthand field reads nothing" }),
   translation: Object.freeze({ scope: "none", means: "nothing of the record: only the interface words it is asked about" }),
@@ -1834,7 +1874,8 @@ var DRAFT_REACH = Object.freeze({
   bearing_note: Object.freeze({ scope: "source_record", means: "within answers' ASK_SCOPE, narrowed to the source's own record (run-productions R23)" }),
   textcheck: Object.freeze({ scope: "none", means: "nothing of the record: only the prepared text it is asked about, as a translation draft is given only its words" }),
   infractiondraft: Object.freeze({ scope: "matter_record", means: "through the asking member's grant, only the matter's own record the member may see: its plan, actions, correspondence and findings, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" }),
-  bearingdraft: Object.freeze({ scope: "action_reply", means: "through the asking member's grant, only the action and the reply it is asked about, with the request's claims, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" })
+  bearingdraft: Object.freeze({ scope: "action_reply", means: "through the asking member's grant, only the action and the reply it is asked about, with the request's claims, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" }),
+  statusreport: Object.freeze({ scope: "none", means: "nothing of the record: only the items plan-work R8 assembled for the plan's status report, handed in by the door" })
 });
 var ACTION_DRAFTS = Object.freeze({
   flag: "action_drafts",
@@ -1858,8 +1899,9 @@ var DRAFT_MODE = Object.freeze({
   keeps: "nothing: the draft is answered into the member's field, never stored, and is the member's words only by the member's own act of keeping or editing it",
   why: "it answers one member's request for help with their own words inside that member's act and is no run: it writes no run row and keeps nothing (K1364, K1450)",
   deploys_apart: true,
-  deployed: false,
+  deployed: true,
   when: "only by a reviewed change of its own that sets this flag, the change that serves agent-worker's POST /draft, whatever the run modes' state and whatever ask's flag",
+  made: "T46 (N897 (2); K2816): set by its own reviewed change, because agent-worker's POST /draft is served (since T35 and T37); the flag marks served code and lifts no bar, so each draft kind is admitted only through partAdmittedOn for its part draft:<kind> (R29), D14's test bar gating it on every instance but a test instance; the action drafts still wait on their own flag, action_drafts (R27)",
   bounds: "ASK_BOUNDS (R17), declared when the draft starts"
 });
 var ENQUIRE_MODE = Object.freeze({
@@ -1947,6 +1989,33 @@ var TEST_BAR_RECORD = Object.freeze({
     at: "when it was graded"
   })
 });
+var UNTESTED_WORDS = "ai.label.untested";
+function untestedLabel(part) {
+  if (typeof part !== "string" || !TEST_BAR_PARTS.includes(part)) return null;
+  return Object.freeze({
+    kind: "untested",
+    part,
+    set: CIVICSMITH_TEST_SET.id,
+    set_version: CIVICSMITH_TEST_SET.version,
+    words: UNTESTED_WORDS
+  });
+}
+var ADMITTED = Object.freeze({ admitted: true, untested: null });
+var NOT_ADMITTED = Object.freeze({ admitted: false, untested: null });
+
+// src/untested.mjs
+var isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+function untestedOf(body) {
+  const v = body?.untested;
+  if (v === void 0 || v === null) return { label: null };
+  if (!isObject(v)) return { bad: true };
+  const want = untestedLabel(v.part);
+  if (!want) return { bad: true };
+  const keys = Object.keys(want);
+  if (Object.keys(v).length !== keys.length || !keys.every((k) => Object.hasOwn(v, k) && v[k] === want[k])) return { bad: true };
+  return { label: want };
+}
+var UNTESTED_BAD = "untested, when present, is the test-instance label exactly as the record's rules answer it for one part ({kind: untested, part, set, set_version, words}); what arrived is not one, so nothing was done.";
 
 // src/ask.mjs
 var ASK_DECLARED = Object.freeze(Object.fromEntries(Object.entries(ASK_BOUNDS).map(([k, v]) => [k, v.default])));
@@ -2077,6 +2146,8 @@ async function handleAsk(req, env, deps) {
   const body = await req.json().catch(() => null);
   if (body == null || typeof body !== "object" || Array.isArray(body))
     return refusal3("BAD_BODY", "the request body could not be read as a JSON object.", 400);
+  const untested = untestedOf(body);
+  if (untested.bad) return refusal3("BAD_BODY", UNTESTED_BAD, 400);
   if (typeof body.question !== "string" || !body.question.trim() || body.question.length > QUESTION_MAX)
     return refusal3("BAD_QUESTION", `an ask carries one question in words, of at most ${QUESTION_MAX} characters.`, 400);
   let store = null;
@@ -2289,7 +2360,13 @@ Disclosed layers, loaded with load_layer: ` + model.layers.join(", ") + ". Load 
           "ASK_UNCHECKED",
           "the record's checks answered without a checked answer, so nothing is returned: an unchecked answer is never shown."
         ));
-      await finish({ event: "answer", ok: true, answer: r.answer, withheld: Array.isArray(r.withheld) ? r.withheld : [] });
+      await finish({
+        event: "answer",
+        ok: true,
+        answer: r.answer,
+        withheld: Array.isArray(r.withheld) ? r.withheld : [],
+        ...untested.label ? { untested: untested.label } : {}
+      });
     } catch (e) {
       await finish(refusedEvent(
         "ASK_FAILED",
@@ -2449,21 +2526,47 @@ var READ_RESULT = Object.freeze({
     additionalProperties: false
   })
 });
+var RUNNER_VERSION_URL = "https://agent-runner/version";
+var IMAGE_CAPABILITY = "image";
 var IMAGE_NOT_RELAYED = "IMAGE_NOT_RELAYED";
 var isImage = (b) => !!b && typeof b === "object" && b.type === "image";
-var blocksHoldImage = (content) => Array.isArray(content) && content.some((b) => isImage(b) || !!b && b.type === "tool_result" && Array.isArray(b.content) && b.content.some(isImage));
-var transcriptHoldsImage = (messages) => (Array.isArray(messages) ? messages : []).some((m) => blocksHoldImage(m && m.content));
+var holdsImage = (content) => Array.isArray(content) && content.some(isImage);
+var contentOf = (messages) => (Array.isArray(messages) ? messages : []).flatMap((m) => Array.isArray(m && m.content) ? m.content : []);
+var imageOutsideResult = (messages) => contentOf(messages).some(isImage);
+var resultHoldsImage = (messages) => contentOf(messages).some((b) => !!b && b.type === "tool_result" && holdsImage(b.content));
 var notRelayed = () => refused(
   null,
   IMAGE_NOT_RELAYED,
-  "a page's picture reaches the model only on an API key: a sign-in's relay carries text only, so nothing was sent"
+  "a page's picture reaches a sign-in only through a runner that relays pictures, and this one does not; nothing was sent"
 );
-var NOT_RELAYED_RESULT = "not performed: a page's picture is not relayed to a sign-in";
+var NOT_RELAYED_RESULT = "not performed: this runner does not relay a page's picture";
+async function relaysImages(runner, member) {
+  try {
+    const res = await runner.get(runner.idFromName(member)).fetch(RUNNER_VERSION_URL);
+    if (!res || res.status !== 200) return false;
+    const body = await res.json();
+    return !!body && Array.isArray(body.capabilities) && body.capabilities.includes(IMAGE_CAPABILITY);
+  } catch {
+    return false;
+  }
+}
+function imageGate(runner, member) {
+  let asked = null;
+  return () => asked ??= relaysImages(runner, member);
+}
+function relayContent(content) {
+  if (!holdsImage(content)) return relayText(content);
+  return content.map((b) => {
+    if (isImage(b)) return b;
+    if (b && b.type === "text") return { type: "text", text: String(b.text ?? "") };
+    return { type: "text", text: relayText([b]) };
+  });
+}
 function heldResults(messages) {
   const held = /* @__PURE__ */ new Map();
   for (const m of Array.isArray(messages) ? messages : [])
     for (const b of Array.isArray(m && m.content) ? m.content : [])
-      if (b && b.type === "tool_result") held.set(String(b.tool_use_id), relayText(b.content));
+      if (b && b.type === "tool_result") held.set(String(b.tool_use_id), relayContent(b.content));
   return held;
 }
 function renderTranscript(messages) {
@@ -2502,7 +2605,7 @@ function answeredHere(u, messages) {
   }
   if (u.name === READ_FACTS.name) {
     const f = factsOf(messages);
-    return f.error ? f : { content: relayText(f.blocks) };
+    return f.error ? f : { content: relayContent(f.blocks) };
   }
   return null;
 }
@@ -2590,7 +2693,9 @@ async function signinConverse({
   let calls = 0;
   let k = 0;
   const unstated = () => sumUsage(usage, usageOf(null));
-  if (transcriptHoldsImage(messages)) return notRelayed();
+  const imagesRelayed = imageGate(runner, member);
+  if (imageOutsideResult(messages)) return notRelayed();
+  if (resultHoldsImage(messages) && !await imagesRelayed()) return notRelayed();
   while (k < maxTurns) {
     const serialized = JSON.stringify(conversationRequest(member, { model, system, messages, tools, maxTurns: maxTurns - k }));
     const stop = charge(serialized);
@@ -2632,12 +2737,12 @@ async function signinConverse({
             return r.halt;
           }
           blocks = toolResultContent(r);
-          if (blocksHoldImage(blocks)) {
+          if (holdsImage(blocks) && !await imagesRelayed()) {
             conn.close();
             messages.push({ role: "user", content: [{ type: "tool_result", tool_use_id: u.id, content: NOT_RELAYED_RESULT, is_error: true }] });
             return { ...notRelayed(), usage: unstated(), calls: null };
           }
-          content = relayText(blocks);
+          content = relayContent(blocks);
           isError = !!r?.error;
         }
         if (!reread) messages.push({ role: "user", content: [{
@@ -3051,7 +3156,13 @@ function subsessionTools(contract) {
 }
 
 // src/action-drafts.mjs
-var ACTION_DRAFT_OPS = Object.freeze(["textcheck", "infractiondraft", "bearingdraft"]);
+var ACTION_DRAFT_OPS = Object.freeze(["textcheck", "infractiondraft", "bearingdraft", "statusreportdraft"]);
+var KIND_OF = Object.freeze({
+  textcheck: "textcheck",
+  infractiondraft: "infractiondraft",
+  bearingdraft: "bearingdraft",
+  statusreportdraft: "statusreport"
+});
 var READS_AS = Object.freeze(["assertion", "position", "own_benefit_ask", "staff_named"]);
 var AUDIENCES = Object.freeze(["violating_party", "members", "oversight", "public", "broad"]);
 var BEARINGS = Object.freeze(["new_evidence", "disputed_without_evidence", "not_addressed"]);
@@ -3062,7 +3173,7 @@ var LIST_MAX = 200;
 var ACTION_DRAFTING_LAYER = "action_drafting";
 var RECORD_MAX = 2e5;
 var RECORD_KEYS = Object.freeze(["plan", "actions", "correspondence", "findings"]);
-var isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isObject2 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var sameKeys = (o, keys) => Object.keys(o).length === keys.length && keys.every((k) => k in o);
 var isId = (v) => typeof v === "string" && v.trim().length > 0 && v.length <= ID_MAX;
 var isWords = (v, max) => typeof v === "string" && v.trim().length > 0 && v.length <= max;
@@ -3073,10 +3184,11 @@ var sized = (v) => {
     return false;
   }
 };
-var isMatterRecord = (r) => isObject(r) && Object.keys(r).every((k) => RECORD_KEYS.includes(k)) && ["actions", "correspondence", "findings"].every((k) => Array.isArray(r[k])) && (r.plan === void 0 || r.plan === null || isObject(r.plan)) && sized(r);
-var isOneRecord = (r) => isObject(r) && Object.keys(r).length > 0 && sized(r);
+var isMatterRecord = (r) => isObject2(r) && Object.keys(r).every((k) => RECORD_KEYS.includes(k)) && ["actions", "correspondence", "findings"].every((k) => Array.isArray(r[k])) && (r.plan === void 0 || r.plan === null || isObject2(r.plan)) && sized(r);
+var isOneRecord = (r) => isObject2(r) && Object.keys(r).length > 0 && sized(r);
+var isItems = (v) => Array.isArray(v) && v.length > 0 && v.every(isObject2) && sized(v);
 function actionTaskOf(t) {
-  if (!isObject(t)) return null;
+  if (!isObject2(t)) return null;
   if (t.op === "textcheck" && sameKeys(t, ["op", "text"]) && isWords(t.text, TEXTCHECK_TEXT_MAX))
     return { op: "textcheck", text: t.text };
   if (t.op === "infractiondraft" && sameKeys(t, ["op", "matter", "audience", "record"]) && isId(t.matter) && AUDIENCES.includes(t.audience) && isMatterRecord(t.record))
@@ -3089,11 +3201,13 @@ function actionTaskOf(t) {
       action_record: t.action_record,
       reply_record: t.reply_record
     };
+  if (t.op === "statusreportdraft" && sameKeys(t, ["op", "plan", "items"]) && isId(t.plan) && isItems(t.items))
+    return { op: "statusreportdraft", plan: t.plan, items: t.items };
   return null;
 }
-var taskNamed = (task) => task.op === "infractiondraft" ? { op: task.op, matter: task.matter, audience: task.audience } : task.op === "bearingdraft" ? { op: task.op, action: task.action, reply: task.reply } : task;
-var recordsOf = (task) => task.op === "infractiondraft" ? { record: task.record } : task.op === "bearingdraft" ? { action_record: task.action_record, reply_record: task.reply_record } : null;
-var readsRecord = (kind) => draftMayRead({ kind, firsthand: false, suggestions: false });
+var taskNamed = (task) => task.op === "infractiondraft" ? { op: task.op, matter: task.matter, audience: task.audience } : task.op === "bearingdraft" ? { op: task.op, action: task.action, reply: task.reply } : task.op === "statusreportdraft" ? { op: task.op, plan: task.plan } : task;
+var recordsOf = (task) => task.op === "infractiondraft" ? { record: task.record } : task.op === "bearingdraft" ? { action_record: task.action_record, reply_record: task.reply_record } : task.op === "statusreportdraft" ? { items: task.items } : null;
+var readsRecord = (op) => draftMayRead({ kind: KIND_OF[op], firsthand: false, suggestions: false });
 function answerTool(op) {
   const properties = op === "textcheck" ? { sentences: {
     type: "array",
@@ -3112,6 +3226,13 @@ function answerTool(op) {
   } } : op === "infractiondraft" ? {
     text: { type: "string", description: "the documented account: the act and its office, the standard, the evidence for each point with its grade, and what is still uncertain" },
     sources: { type: "array", items: { type: "string" }, description: "the records each part rests on, as you read them" }
+  } : op === "statusreportdraft" ? {
+    text: { type: "string", description: "the status report, each sentence from one of the items handed to you" },
+    sources: {
+      type: "array",
+      items: { type: "integer", minimum: 0 },
+      description: "the items the report rests on, each by its place in the list handed to you, 0 the first"
+    }
   } : { claims: {
     type: "array",
     description: "each claim of the request, with how the reply bears on it",
@@ -3133,14 +3254,14 @@ function answerTool(op) {
   };
 }
 function actionDraftOf(task, answer) {
-  if (!isObject(answer)) return null;
+  if (!isObject2(answer)) return null;
   if (task.op === "textcheck") {
     const s = answer.sentences;
     if (!Array.isArray(s) || s.length > LIST_MAX) return null;
     const seen = /* @__PURE__ */ new Set();
     const out2 = [];
     for (const e of s) {
-      if (!isObject(e) || !sameKeys(e, ["index", "quote", "reads_as", "why"]) || !Number.isInteger(e.index) || e.index < 0 || !isWords(e.quote, TEXTCHECK_TEXT_MAX) || !task.text.includes(e.quote) || !READS_AS.includes(e.reads_as) || !isWords(e.why, WHY_MAX2) || seen.has(`${e.index} ${e.reads_as}`)) return null;
+      if (!isObject2(e) || !sameKeys(e, ["index", "quote", "reads_as", "why"]) || !Number.isInteger(e.index) || e.index < 0 || !isWords(e.quote, TEXTCHECK_TEXT_MAX) || !task.text.includes(e.quote) || !READS_AS.includes(e.reads_as) || !isWords(e.why, WHY_MAX2) || seen.has(`${e.index} ${e.reads_as}`)) return null;
       seen.add(`${e.index} ${e.reads_as}`);
       out2.push({ index: e.index, quote: e.quote, reads_as: e.reads_as, why: e.why });
     }
@@ -3152,11 +3273,17 @@ function actionDraftOf(task, answer) {
     if (!Array.isArray(src) || src.length === 0 || src.length > LIST_MAX || !src.every(isId)) return null;
     return { text: answer.text, sources: [...src] };
   }
+  if (task.op === "statusreportdraft") {
+    if (!sameKeys(answer, ["text", "sources"]) || !isWords(answer.text, TEXTCHECK_TEXT_MAX)) return null;
+    const src = answer.sources;
+    if (!Array.isArray(src) || src.length === 0 || new Set(src).size !== src.length || !src.every((i) => Number.isInteger(i) && i >= 0 && i < task.items.length)) return null;
+    return { text: answer.text, sources: [...src].sort((a, b) => a - b) };
+  }
   const c = answer.claims;
   if (!sameKeys(answer, ["claims"]) || !Array.isArray(c) || c.length > LIST_MAX) return null;
   const out = [];
   for (const e of c) {
-    if (!isObject(e) || !sameKeys(e, ["claim", "bearing", "quote"]) || !isWords(e.claim, WHY_MAX2) || !BEARINGS.includes(e.bearing) || typeof e.quote !== "string" || e.quote.length > TEXTCHECK_TEXT_MAX || e.bearing !== "not_addressed" && !e.quote.trim()) return null;
+    if (!isObject2(e) || !sameKeys(e, ["claim", "bearing", "quote"]) || !isWords(e.claim, WHY_MAX2) || !BEARINGS.includes(e.bearing) || typeof e.quote !== "string" || e.quote.length > TEXTCHECK_TEXT_MAX || e.bearing !== "not_addressed" && !e.quote.trim()) return null;
     out.push({ claim: e.claim, bearing: e.bearing, quote: e.quote });
   }
   return { claims: out };
@@ -3164,18 +3291,19 @@ function actionDraftOf(task, answer) {
 var TASK_WORDS = {
   textcheck: "Read the member's prepared text sentence by sentence and point out each sentence that reads as an assertion that the law or a rule was broken (assertion), a policy or vote position (position), an ask for the group's or its members' own benefit (own_benefit_ask), or a name of staff below the responsible official (staff_named), quoting it exactly and saying why. Rewrite nothing and suggest no wording: the member decides. You have no read tool and read nothing of the record.",
   infractiondraft: "Draft the documentation of an infraction for the audience named, from the matter's own record (the result of read_facts, and what you read): the act and the office, the standard it is measured against, the evidence for each point with its grade, and what is still uncertain, each part naming the record it rests on and an unread part stated as unread. Take no position, ask nothing for the group's own benefit, never say what to file or that anyone has a claim, and state no breach the record's own determination does not.",
-  bearingdraft: "Read the action and the reply (the result of read_facts), and for each claim of the request say how the reply bears on it: new evidence (new_evidence), disputed without evidence (disputed_without_evidence), or not addressed (not_addressed), quoting the reply's own words. Judge no claim's merit, take no position, and never say what to file or that anyone has a claim."
+  bearingdraft: "Read the action and the reply (the result of read_facts), and for each claim of the request say how the reply bears on it: new evidence (new_evidence), disputed without evidence (disputed_without_evidence), or not addressed (not_addressed), quoting the reply's own words. Judge no claim's merit, take no position, and never say what to file or that anyone has a claim.",
+  statusreportdraft: "Draft the plan's status report from the items handed to you (the result of read_facts): where the plan stands, each sentence coming from one of those items and saying no more than it does, and name in sources the items the report rests on, each by its place in the list, 0 the first. Read nothing of the record (you have no read tool), take no position, state no breach, and never say what to file or that anyone has a claim."
 };
 async function actionDraft(body, task, env, deps, shared) {
   const { refusal: refusal3, json: json2, accountOf: accountOf2, cascadeToken: cascadeToken2, converse: converse2, segmentMeter: segmentMeter2, DEFAULT_MAX_SEGMENT_BYTES: DEFAULT_MAX_SEGMENT_BYTES2 } = deps;
-  const { packFor: packFor2, grantReader: grantReader2, readTool: readTool2, draftEnding: draftEnding2, ASK_DECLARED: ASK_DECLARED2 } = shared;
+  const { packFor: packFor2, grantReader: grantReader2, readTool: readTool2, draftEnding: draftEnding2, ASK_DECLARED: ASK_DECLARED2, labelled = {} } = shared;
   const acct = await accountOf2(body);
   if (acct.refusal) return acct.refusal;
   const { account } = acct;
   const grantSent = body.grant !== void 0 && body.grant !== null;
   const firsthand = body.firsthand === void 0 ? null : body.firsthand;
-  if (grantSent && !draftMayRead({ kind: task.op, firsthand, suggestions: account.suggestions === true }))
-    return refusal3("DRAFT_READ_NOT_ALLOWED", task.op === "textcheck" ? "a text check reads nothing of what the group holds, only the text it is asked about; a grant to read was sent with it, so nothing was done." : "this draft reads what the group holds only for a field that does not record what the member saw; a grant to read was sent with one that does, so nothing was done.", 400);
+  if (grantSent && !draftMayRead({ kind: KIND_OF[task.op], firsthand, suggestions: account.suggestions === true }))
+    return refusal3("DRAFT_READ_NOT_ALLOWED", task.op === "textcheck" ? "a text check reads nothing of what the group holds, only the text it is asked about; a grant to read was sent with it, so nothing was done." : task.op === "statusreportdraft" ? "a status report is drafted only from the items handed to it and reads nothing of what the group holds; a grant to read was sent with it, so nothing was done." : "this draft reads what the group holds only for a field that does not record what the member saw; a grant to read was sent with one that does, so nothing was done.", 400);
   if (!grantSent && readsRecord(task.op))
     return refusal3(
       "DRAFT_NEEDS_GRANT",
@@ -3189,7 +3317,7 @@ async function actionDraft(body, task, env, deps, shared) {
   if (got.refusal) return got.refusal;
   const pub = got.pub;
   const layer = pub.ok ? pub.pack.disclosed?.[ACTION_DRAFTING_LAYER] : null;
-  if (!pub.ok || !isObject(layer) || layer.sourcing === "absent")
+  if (!pub.ok || !isObject2(layer) || layer.sourcing === "absent")
     return refusal3(
       "PACK_UNDETERMINED",
       `no skill pack with its action-drafting layer was published for this draft, so no model was called: a draft made without that layer would not be held to the rules on what the assistant may say about an action (${pub.ok ? "the pack carries that layer as a stated absence, or none" : pub.why}).`,
@@ -3209,7 +3337,7 @@ ${TASK_WORDS[task.op]} ` + (records ? `The records this draft is about are the r
   const asked = task.op === "textcheck" ? `TASK: check this prepared text.
 
 THE MEMBER'S TEXT:
-${task.text}` : task.op === "infractiondraft" ? `TASK: draft the documentation of the infraction in the matter '${task.matter}' for the audience '${task.audience}'.` : `TASK: the bearing of the reply '${task.reply}' on each claim of the action '${task.action}'.`;
+${task.text}` : task.op === "infractiondraft" ? `TASK: draft the documentation of the infraction in the matter '${task.matter}' for the audience '${task.audience}'.` : task.op === "bearingdraft" ? `TASK: the bearing of the reply '${task.reply}' on each claim of the action '${task.action}'.` : `TASK: draft the status report of the plan '${task.plan}' from the items handed to you.`;
   const messages = [{ role: "user", content: asked }];
   if (records) {
     messages.push({ role: "assistant", content: [{ type: "tool_use", id: "facts_1", name: READ_FACTS.name, input: {} }] });
@@ -3238,7 +3366,7 @@ ${task.text}` : task.op === "infractiondraft" ? `TASK: draft the documentation o
   const spent = { usage: conv.usage ?? null, calls: conv.calls === void 0 ? null : conv.calls };
   if (conv.answer !== void 0) {
     const draft = actionDraftOf(task, conv.answer);
-    if (draft) return json2({ ok: true, task: taskNamed(task), draft, label: { kind: "machine" }, ...spent });
+    if (draft) return json2({ ok: true, task: taskNamed(task), draft, ...labelled, label: { kind: "machine" }, ...spent });
     return refusal3(
       "DRAFT_UNFORMED",
       "the model answered without a draft of the task's shape, so nothing is returned.",
@@ -3264,11 +3392,11 @@ var KEY_MAX = 200;
 var WORD_TEXT_MAX = 4e3;
 var LANGUAGE_TAG = /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/;
 var LANGUAGE_MAX = 35;
-var isObject2 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isObject3 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var sameKeys2 = (o, keys) => Object.keys(o).length === keys.length && keys.every((k) => k in o);
 var isName = (v) => typeof v === "string" && v.trim().length > 0 && v.length <= NAME_MAX;
 function taskOf(t) {
-  if (!isObject2(t)) return null;
+  if (!isObject3(t)) return null;
   if (t.op === "writinghelp" && sameKeys2(t, ["op", "act", "field"]) && isName(t.act) && isName(t.field))
     return { op: "writinghelp", act: t.act, field: t.field };
   if (t.op === "groupdescriptiondraft" && sameKeys2(t, ["op"])) return { op: "groupdescriptiondraft" };
@@ -3279,7 +3407,7 @@ function taskOf(t) {
 var isText = (v, max) => typeof v === "string" && v.trim().length > 0 && v.length <= max;
 var isNoteText = (v) => v === null || typeof v === "string" && v.length <= WORD_TEXT_MAX;
 function translationTaskOf(t) {
-  if (!isObject2(t) || !sameKeys2(t, ["op", "direction", "language", "words"])) return null;
+  if (!isObject3(t) || !sameKeys2(t, ["op", "direction", "language", "words"])) return null;
   if (!TRANSLATION_DIRECTIONS.includes(t.direction)) return null;
   if (!(typeof t.language === "string" && t.language.length <= LANGUAGE_MAX && LANGUAGE_TAG.test(t.language)))
     return null;
@@ -3290,7 +3418,7 @@ function translationTaskOf(t) {
   const seen = /* @__PURE__ */ new Set();
   const words = [];
   for (const e of w) {
-    if (!isObject2(e) || !sameKeys2(e, fields) || !isText(e.key, KEY_MAX) || !isText(e.en, WORD_TEXT_MAX) || typeof e.protected !== "boolean" || seen.has(e.key)) return null;
+    if (!isObject3(e) || !sameKeys2(e, fields) || !isText(e.key, KEY_MAX) || !isText(e.en, WORD_TEXT_MAX) || typeof e.protected !== "boolean" || seen.has(e.key)) return null;
     if (toLanguage ? !(isNoteText(e.note) && isNoteText(e.means)) : !isText(e.text, WORD_TEXT_MAX)) return null;
     seen.add(e.key);
     words.push(toLanguage ? { key: e.key, en: e.en, note: e.note, means: e.means, protected: e.protected } : { key: e.key, en: e.en, text: e.text, protected: e.protected });
@@ -3301,7 +3429,7 @@ function toldOf(op, told) {
   if (op === "writinghelp")
     return typeof told === "string" && told.trim().length > 0 && told.length <= TOLD_MAX ? told : null;
   if (!Array.isArray(told) || told.length === 0 || told.length > ANSWERS_MAX) return null;
-  if (!told.every((a) => isObject2(a) && sameKeys2(a, ["question", "text"]) && typeof a.question === "string" && a.question.length <= TOLD_MAX && typeof a.text === "string" && a.text.length <= ANSWER_TEXT_MAX))
+  if (!told.every((a) => isObject3(a) && sameKeys2(a, ["question", "text"]) && typeof a.question === "string" && a.question.length <= TOLD_MAX && typeof a.text === "string" && a.text.length <= ANSWER_TEXT_MAX))
     return null;
   if (told.every((a) => !a.text.trim())) return null;
   return told.map((a) => ({ question: a.question, text: a.text }));
@@ -3318,7 +3446,7 @@ function draftTool(op) {
   };
 }
 function draftOf(op, answer) {
-  if (!isObject2(answer)) return null;
+  if (!isObject3(answer)) return null;
   if (op === "writinghelp")
     return typeof answer.text === "string" && answer.text.trim() ? { text: answer.text } : null;
   return typeof answer.focus === "string" && typeof answer.purpose === "string" && (answer.focus.trim() || answer.purpose.trim()) ? { focus: answer.focus, purpose: answer.purpose } : null;
@@ -3332,17 +3460,20 @@ async function handleDraft(req, env, deps) {
       503
     );
   const body = await req.json().catch(() => null);
-  if (!isObject2(body)) return refusal3("BAD_BODY", "the request body could not be read as a JSON object.", 400);
+  if (!isObject3(body)) return refusal3("BAD_BODY", "the request body could not be read as a JSON object.", 400);
+  const untested = untestedOf(body);
+  if (untested.bad) return refusal3("BAD_BODY", UNTESTED_BAD, 400);
+  const labelled = untested.label ? { untested: untested.label } : {};
   const task = taskOf(body.task);
   if (!task)
     return refusal3(
       "BAD_TASK",
-      `a draft is asked for one task: help writing in one field of one act ({op: writinghelp, act, field}), a draft of the group's description ({op: groupdescriptiondraft}), or a draft of interface words the group's language lacks, or one kept word read back into English ({op: translationdraft, direction, language, words}: to_language with 1 to ${TRANSLATION_WORDS_MAX} distinct words, to_english with exactly one), a check of a prepared text ({op: textcheck, text}), an infraction's documentation for an audience ({op: infractiondraft, matter, audience}) or the bearing of a reply on a request's claims ({op: bearingdraft, action, reply}). What arrived is none of these.`,
+      `a draft is asked for one task: help writing in one field of one act ({op: writinghelp, act, field}), a draft of the group's description ({op: groupdescriptiondraft}), or a draft of interface words the group's language lacks, or one kept word read back into English ({op: translationdraft, direction, language, words}: to_language with 1 to ${TRANSLATION_WORDS_MAX} distinct words, to_english with exactly one), a check of a prepared text ({op: textcheck, text}), an infraction's documentation for an audience ({op: infractiondraft, matter, audience}), the bearing of a reply on a request's claims ({op: bearingdraft, action, reply}) or a plan's status report from the items handed in ({op: statusreportdraft, plan, items}). What arrived is none of these.`,
       400
     );
-  if (task.op === "translationdraft") return translationDraft(body, task, env, deps);
+  if (task.op === "translationdraft") return translationDraft(body, task, env, deps, labelled);
   if (ACTION_DRAFT_OPS.includes(task.op))
-    return actionDraft(body, task, env, deps, { packFor, grantReader, readTool, draftEnding, ASK_DECLARED });
+    return actionDraft(body, task, env, deps, { packFor, grantReader, readTool, draftEnding, ASK_DECLARED, labelled });
   const told = toldOf(task.op, body.told);
   if (told == null)
     return refusal3("BAD_TOLD", task.op === "writinghelp" ? `a draft works from what the member typed: words of 1 to ${TOLD_MAX} characters.` : `a draft of the group's description works from the administrator's answers: a list of {question, text}, each text at most ${ANSWER_TEXT_MAX} characters, not all of them empty.`, 400);
@@ -3363,7 +3494,7 @@ async function handleDraft(req, env, deps) {
   if (gotPack.refusal) return gotPack.refusal;
   const pub = gotPack.pub;
   const layer = pub.ok ? pub.pack.disclosed?.[WRITING_HELP_LAYER] : null;
-  if (!pub.ok || !isObject2(layer) || layer.sourcing === "absent")
+  if (!pub.ok || !isObject3(layer) || layer.sourcing === "absent")
     return refusal3(
       "PACK_UNDETERMINED",
       `no skill pack with its writing-help layer was published for this draft, so no model was called: a draft made without that layer would not be held to the member's own words (${pub.ok ? "the pack carries no writing_help layer" : pub.why}).`,
@@ -3371,7 +3502,7 @@ async function handleDraft(req, env, deps) {
     );
   const pack = pub.pack;
   const suggestionsOn = account.suggestions === true;
-  const suggestionsLayer = suggestionsOn && isObject2(pack.disclosed?.[SUGGESTIONS_LAYER]) ? pack.disclosed[SUGGESTIONS_LAYER] : null;
+  const suggestionsLayer = suggestionsOn && isObject3(pack.disclosed?.[SUGGESTIONS_LAYER]) ? pack.disclosed[SUGGESTIONS_LAYER] : null;
   const system = `You draft words for one member of a BIO group, in their own field, from what they told you. Your draft is labelled machine work, nothing is saved, and it becomes theirs only by their own act. The instructions you work under are this skill pack, version ${String(pack.version)}.
 
 RESIDENT LAYER:
@@ -3411,7 +3542,7 @@ A: ${a.text}`).join("\n\n")}`;
   const spent = { usage: got.usage ?? null, calls: got.calls === void 0 ? null : got.calls };
   if (got.answer !== void 0) {
     const draft = draftOf(task.op, got.answer);
-    if (draft) return json2({ ok: true, task, draft, label: { kind: "machine" }, ...spent });
+    if (draft) return json2({ ok: true, task, draft, ...labelled, label: { kind: "machine" }, ...spent });
     return refusal3(
       "DRAFT_UNFORMED",
       "the model answered without a draft of the task's shape, so nothing is returned.",
@@ -3516,7 +3647,7 @@ function translationTool(direction) {
   };
 }
 function translationOf(task, answer) {
-  if (!isObject2(answer)) return null;
+  if (!isObject3(answer)) return null;
   if (task.direction === "to_english") {
     const english = answer.english;
     return typeof english === "string" && english.trim() ? { draft: { key: task.words[0].key, english } } : null;
@@ -3524,13 +3655,13 @@ function translationOf(task, answer) {
   if (!Array.isArray(answer.words)) return null;
   const got = /* @__PURE__ */ new Map();
   for (const w of answer.words)
-    if (isObject2(w) && typeof w.key === "string" && typeof w.text === "string" && w.text.trim() && !got.has(w.key))
+    if (isObject3(w) && typeof w.key === "string" && typeof w.text === "string" && w.text.trim() && !got.has(w.key))
       got.set(w.key, w.text);
   const words = task.words.filter((w) => got.has(w.key)).map((w) => ({ key: w.key, text: got.get(w.key) }));
   if (!words.length) return null;
   return { draft: { words }, not_drafted: task.words.filter((w) => !got.has(w.key)).map((w) => w.key) };
 }
-async function translationDraft(body, task, env, deps) {
+async function translationDraft(body, task, env, deps, labelled = {}) {
   const {
     refusal: refusal3,
     json: json2,
@@ -3552,7 +3683,7 @@ async function translationDraft(body, task, env, deps) {
     );
   const pub = publishedPack2({ pack: body.pack ?? null });
   const layer = pub.ok ? pub.pack.disclosed?.[TRANSLATION_LAYER] : null;
-  if (!pub.ok || !isObject2(layer) || layer.sourcing === "absent")
+  if (!pub.ok || !isObject3(layer) || layer.sourcing === "absent")
     return refusal3(
       "PACK_UNDETERMINED",
       `no skill pack with its interface-translation layer was published for this draft, so no model was called: a draft made without that layer would not keep each word's meaning and placeholders as the word list holds them (${pub.ok ? "the pack carries that layer as a stated absence, or none" : pub.why}).`,
@@ -3601,6 +3732,7 @@ ${JSON.stringify(task.words[0])}`;
       task,
       draft: made.draft,
       ...toLanguage ? { not_drafted: made.not_drafted } : {},
+      ...labelled,
       label: { kind: "machine" },
       ...spent
     });
@@ -3624,7 +3756,7 @@ var SIGNIN_ROUTES = Object.freeze({
 var MEMBER_MAX = 200;
 var RUNNER_ORIGIN = "https://agent-runner";
 var DETAIL_MAX2 = 300;
-var isObject3 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isObject4 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 function scrubbed(text, code) {
   let s = String(text ?? "");
   if (typeof code === "string" && code) s = s.split(code).join("[the code]");
@@ -3640,7 +3772,7 @@ async function handleSignin(req, env, deps) {
       503
     );
   const body = await req.json().catch(() => null);
-  if (!isObject3(body)) return refusal3("BAD_BODY", "the request body could not be read as a JSON object.", 400);
+  if (!isObject4(body)) return refusal3("BAD_BODY", "the request body could not be read as a JSON object.", 400);
   const { member, step } = body;
   if (!(typeof member === "string" && member.trim().length > 0 && member.length <= MEMBER_MAX))
     return refusal3(
@@ -3690,7 +3822,7 @@ var BASE642 = /^[A-Za-z0-9+/]*={0,2}$/;
 var PNG_SIGNATURE = "\x89PNG\r\n\n";
 var isPng = (data) => data.length >= 12 && atob(data.slice(0, 12)).startsWith(PNG_SIGNATURE);
 var PAGE_MAX = 1e6;
-var isObject4 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isObject5 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var sameKeys3 = (o, keys) => Object.keys(o).length === keys.length && keys.every((k) => k in o);
 function decodedBytes(data) {
   if (typeof data !== "string" || data.length === 0 || data.length % 4 !== 0 || !BASE642.test(data)) return -1;
@@ -3705,7 +3837,7 @@ function pagesOf(pages) {
   const seen = /* @__PURE__ */ new Set();
   const out = [];
   for (const [i, p] of pages.entries()) {
-    if (!isObject4(p) || !sameKeys3(p, ["page", "media_type", "data"]))
+    if (!isObject5(p) || !sameKeys3(p, ["page", "media_type", "data"]))
       return { fault: `pages[${i}] is not {page, media_type, data}` };
     if (!(Number.isInteger(p.page) && p.page >= 0 && p.page <= PAGE_MAX))
       return { fault: `pages[${i}].page is not a non-negative whole number` };
@@ -3750,7 +3882,7 @@ function pageOpening(page) {
 }
 function pageOutcome(got) {
   if (got.answer !== void 0) {
-    const text = isObject4(got.answer) ? got.answer.text : void 0;
+    const text = isObject5(got.answer) ? got.answer.text : void 0;
     if (typeof text !== "string") return { ending: "unformed" };
     return /\S/u.test(text) ? { text } : { ending: "blank" };
   }
@@ -3762,7 +3894,7 @@ function pageOutcome(got) {
 async function handleTranscribe(req, env, deps) {
   const { refusal: refusal3, json: json2, accountOf: accountOf2, cascadeToken: cascadeToken2, converse: converse2, segmentMeter: segmentMeter2, DEFAULT_MAX_SEGMENT_BYTES: DEFAULT_MAX_SEGMENT_BYTES2 } = deps;
   const body = await req.json().catch(() => null);
-  if (!isObject4(body)) return refusal3("BAD_BODY", "the request body could not be read as a JSON object.", 400);
+  if (!isObject5(body)) return refusal3("BAD_BODY", "the request body could not be read as a JSON object.", 400);
   if (!(typeof body.capture_sha === "string" && SHA.test(body.capture_sha)))
     return refusal3("BAD_SHA", "capture_sha names the capture the pages are of: 64 lowercase hexadecimal characters. Nothing was transcribed.", 400);
   const read = pagesOf(body.pages);
@@ -3771,13 +3903,6 @@ async function handleTranscribe(req, env, deps) {
   const acct = await accountOf2(body);
   if (acct.refusal) return acct.refusal;
   const { account } = acct;
-  if (account.kind === "signin")
-    return refusal3(
-      "TRANSCRIBE_NEEDS_API_KEY",
-      "the AI's reading of a page runs on an API key: the account that serves this act is a Claude sign-in, which cannot yet be sent a page's picture, so nothing was transcribed.",
-      409,
-      { level: account.level }
-    );
   const reference = (await cascadeToken2(account)).reference;
   const engine = MODEL_FOR_MODE.transcribe;
   const done = [];
@@ -4160,13 +4285,13 @@ var CASCADE_NO_ACCOUNT = "NO_ACCOUNT";
 var LEVEL_UNSET = "unset";
 var LEVEL_REVOKED = "revoked_by_publication";
 var LEVEL_AVAILABLE = "available";
-var isObject5 = (a) => a !== null && typeof a === "object" && !Array.isArray(a);
-var secretOf = (account) => isObject5(account) && typeof account.secret === "string" ? account.secret : "";
-var memberOf = (account) => isObject5(account) && typeof account.member === "string" ? account.member : "";
-var projectOf = (account) => isObject5(account) && typeof account.project === "string" ? account.project : "";
-var levelOf = (account) => isObject5(account) && CASCADE_ORDER.includes(account.level) ? account.level : "member";
+var isObject6 = (a) => a !== null && typeof a === "object" && !Array.isArray(a);
+var secretOf = (account) => isObject6(account) && typeof account.secret === "string" ? account.secret : "";
+var memberOf = (account) => isObject6(account) && typeof account.member === "string" ? account.member : "";
+var projectOf = (account) => isObject6(account) && typeof account.project === "string" ? account.project : "";
+var levelOf = (account) => isObject6(account) && CASCADE_ORDER.includes(account.level) ? account.level : "member";
 async function levelState(account) {
-  if (!isObject5(account) || !CASCADE_ORDER.includes(account.level)) return LEVEL_UNSET;
+  if (!isObject6(account) || !CASCADE_ORDER.includes(account.level)) return LEVEL_UNSET;
   if (!LEVEL_KINDS[account.level].includes(account.kind)) return LEVEL_UNSET;
   if (account.level === "project" && !projectOf(account)) return LEVEL_UNSET;
   if (account.kind === "signin") return memberOf(account) ? LEVEL_AVAILABLE : LEVEL_UNSET;
@@ -4847,7 +4972,9 @@ async function performPlanStep(call, state, runId) {
           });
       }
       if (state.origin === "reexamination") await reexaminationReads(ask, state.response, undetermined);
-      out.note = `${reads.length} read(s) answered under the run's credential, ${undetermined.length} UNDETERMINED (refused, silent or not published) and carried into every proposal's why, never as an absence; ${earlier.length} earlier plan(s) of the same project` + (state.origin === "reexamination" ? "; a re-examination after a recorded response, read with it" : "");
+      const noted = (n) => n && typeof n === "object" ? typeof n.note === "string" && n.note.trim() : typeof n === "string" && n.trim();
+      const notes = [planDoc?.closed, ...earlier.map((p) => p?.closing_note)].filter(noted).length;
+      out.note = `${reads.length} read(s) answered under the run's credential, ${undetermined.length} UNDETERMINED (refused, silent or not published) and carried into every proposal's why, never as an absence; ${earlier.length} earlier plan(s) of the same project, ${notes} closing note(s) of closed plans among them` + (state.origin === "reexamination" ? "; a re-examination after a recorded response, read with it" : "");
       out.state = { ...state, planDoc, earlier, reads, undetermined };
       return out;
     }
@@ -5107,10 +5234,10 @@ async function accountOf(body) {
       409,
       { capability: "unavailable" }
     ) };
-  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || (a.level === "project" ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX) : a.project !== void 0) || a.kind === "signin" && (a.secret !== void 0 || a.suggestions !== void 0 && a.suggestions !== false))
+  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || (a.level === "project" ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX) : a.project !== void 0) || a.kind === "signin" && (a.secret !== void 0 || a.suggestions !== void 0 && typeof a.suggestions !== "boolean"))
     return { refusal: refusal2(
       "BAD_ACCOUNT",
-      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a project's account names its project, and no other does; a signin account is the member's own and carries no secret and no suggestions but false. What arrived is not one, and this member judges only what it is handed.`,
+      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a project's account names its project, and no other does; a signin account is the member's own and carries no secret, and its suggestions switch, when sent, is true or false. What arrived is not one, and this member judges only what it is handed.`,
       400,
       { field: "account" }
     ) };
@@ -5315,8 +5442,15 @@ async function handleRun(req, env) {
   });
 }
 function handleVersion(env) {
-  return json({ ok: true, name: "agent-worker", version: env.VERSION || "0.0.0", model_turns: MODEL_TURNS });
+  return json({
+    ok: true,
+    name: "agent-worker",
+    version: env.VERSION || "0.0.0",
+    model_turns: MODEL_TURNS,
+    runner: runnerBound(env)
+  });
 }
+var runnerBound = (env) => typeof env.RUNNER?.idFromName === "function" && typeof env.RUNNER?.get === "function";
 var ASK_DEPS = {
   refusal: refusal2,
   json,

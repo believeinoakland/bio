@@ -275,7 +275,7 @@ test("R21 an escalation is a record object of its own type: an ESC- bundle of ty
   assert.match(w.E, BUNDLE_ID_RE);
   const head = w.record.head(w.E);
   assert.deepEqual([head.type, head.currentState], ["escalation", "open"]);
-  assert.deepEqual(STATES.escalation.legal, ["open", "suspended", "ended"]);
+  assert.deepEqual(STATES.escalation.legal, ["open", "suspended", "ended", "stopped_pursuing"], "R33: record-grammar R57's state");
   const fm = w.fm(w.E);
   assert.deepEqual([fm.object_type, fm.project, fm.determination, fm.stage], ["escalation", w.P, w.D, 4]);
   /* export: the image carries every snapshot and the manifest */

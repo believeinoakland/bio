@@ -97,7 +97,7 @@ import { KEYED, keyed, sentencesOf, isQuestion, verdictsOf, asks, askAllowed, di
          overrideDisclosure } from "./outward.mjs";
 
 export { FILINGS_SCHEMA, FILINGS_TABLES } from "./schema.mjs";
-export { FILINGS_CHECKS } from "./checks.mjs";
+export { FILINGS_CHECKS, FILINGS_WORDS } from "./checks.mjs";
 export { deadlineDate, COUNTED_FROM } from "./dates.mjs";
 export { KEYED, keyed, sentencesOf, OVERRIDE_HEAD, overrideDisclosure } from "./outward.mjs";
 
@@ -776,7 +776,7 @@ export class Filings {
                ...(notFor ? { not_written_for: notFor } : {}), disclosure,
                exhibits, venue_standard: standard, label: proposalLabel(who, "filing_draft"),
                outward, notices, marks: mk.marks, ...(review ? { review_copy: review } : {}),
-               ...(mk.marks.voice === "self" ? { voice_says: { key: "filings.voice.self", text: KEYED["filings.voice.self"] } } : {}),
+               ...Filings.#voiceSays(mk.marks.voice),
                prepared_by: who, at: when, evidence: false, says: DRAFT_SAYS };
     });
   }
@@ -859,7 +859,7 @@ export class Filings {
                addressee: a.counterparty ?? null, label: proposalLabel(who, "communication"), prepared_by: who, at: when,
                from: marks.from, ...(parts ? { parts } : {}), ...(claims ? { claims } : {}), outward, notices, marks: mk.marks,
                ...(review ? { review_copy: review } : {}),
-               ...(mk.marks.voice === "self" ? { voice_says: { key: "filings.voice.self", text: KEYED["filings.voice.self"] } } : {}),
+               ...Filings.#voiceSays(mk.marks.voice),
                evidence: false, says: "a draft communication: nobody has approved or sent it, and nothing is sent until a "
                  + "member approves it and sends it by their own hand" };
     });
@@ -999,6 +999,15 @@ export class Filings {
     }
     const v = verdictsOf(judged, answer, refs.map((c) => c.ref));
     for (const it of items) if (!it.verdict) Object.assign(it, v.get(it.index));
+    /* R52 (T46): each judged sentence answers its pointer in `words.json`'s words, read by key; a question, the group's
+       own doing and a sentence not judged answer none */
+    for (const it of items) {
+      if (it.verdict === "supported")
+        it.pointer = { key: "pointer.record.supported",
+                       text: keyed("pointer.record.supported", { findings: (it.by || []).join(", ") || "nothing it names" }) };
+      else if (it.verdict === "unsupported" || it.verdict === "contradicted")
+        it.pointer = { key: `pointer.record.${it.verdict}`, text: KEYED[`pointer.record.${it.verdict}`] };
+    }
     const count = (k) => items.filter((i) => i.verdict === k).length;
     return { state: judged.length && (!answer || answer.ok !== true) ? "undetermined" : "read", items, cites: refs.map((c) => c.ref),
              says: `${count("supported")} supported, ${count("unsupported")} not supported by the record (pointed out, never `
@@ -1056,12 +1065,16 @@ export class Filings {
     const facts = view && Array.isArray(view.legal_facts) ? view.legal_facts.filter(isObj) : [];
     if (marks.names_pending) {
       const election = facts.filter((f) => f.trigger === "pending_measure_or_candidate");
+      /* R52 (T46): `words.json`'s words, read by key, `{fact}` and `{citation}` filled from the legal fact */
       for (const f of election)
-        out.push({ kind: "election", key: "filings.election.notice", text: KEYED["filings.election.notice"], fact: f.key ?? null,
-                   citation: f.citation ?? null, statement: f.statement ?? null, source: `profile:${f.profile}/legal_facts/${f.key}` });
+        out.push({ kind: "election", key: "filings.election.notice",
+                   text: keyed("filings.election.notice", { fact: str(f.statement) || str(f.key) || "The governing view states the rule without words.",
+                                                            citation: str(f.citation) || "its citation not stated" }),
+                   fact: f.key ?? null, citation: f.citation ?? null, statement: f.statement ?? null, source: `profile:${f.profile}/legal_facts/${f.key}` });
       if (!election.length)
-        out.push({ kind: "election", key: "filings.election.notice", text: KEYED["filings.election.notice"], citation: null,
-                   says: "the governing view holds no campaign-spending rule, so its citation is undetermined" });
+        out.push({ kind: "election", key: "filings.election.notice",
+                   text: keyed("filings.election.notice", { fact: "The governing view holds no rule for it.", citation: "its citation undetermined" }),
+                   citation: null, says: "the governing view holds no campaign-spending rule, so its citation is undetermined" });
     }
     const entry = view && Array.isArray(view.action_kinds) ? view.action_kinds.find((k) => k.kind === a.kind) : null;
     if (entry && entry.shape === "recognition")
@@ -1087,10 +1100,10 @@ export class Filings {
     const ownBenefit = this.#pointOut(sentences, "own_benefit_ask", lang, view);
     out.pointed = {
       assertion, assertion_machine: Filings.#machine(sentences, textcheck, "assertion"),
-      own_benefit_ask: ownBenefit,
-      ...(marks.voice === "group" ? { position: this.#pointOut(sentences, "position", lang, view) } : {}),
-      staff_named: textcheck ? Filings.#machine(sentences, textcheck, "staff_named")
-        : { items: [], ran: false, key: "filings.staff.not_run", says: KEYED["filings.staff.not_run"] },
+      own_benefit_ask: Filings.#pointer(ownBenefit, "pointer.selfbenefit"),
+      ...(marks.voice === "group" ? { position: Filings.#pointer(this.#pointOut(sentences, "position", lang, view), "pointer.position") } : {}),
+      staff_named: textcheck ? Filings.#pointer(Filings.#machine(sentences, textcheck, "staff_named"), "pointer.staff", "items")
+        : { items: [], ran: false, key: "pointer.staff.notrun", says: KEYED["pointer.staff.notrun"] },
     };
     if (purpose === "chance_to_fix") {
       const allowed = this.#allowedAsks(det, view, viewer);
@@ -1102,6 +1115,14 @@ export class Filings {
     }
     if (assertion.state !== "read") out.no_list = { key: "phrasing.no_list", text: KEYED["phrasing.no_list"], why: assertion.why ?? null };
     return out;
+  }
+
+  /* R38, R39, R48, R52 (T46): each sentence a reading points out answers its pointer, `words.json`'s words read by key
+     (`pointer.selfbenefit`, `pointer.position`, `pointer.staff`), beside what the reading answered of it; a reading not
+     read (undetermined) is answered as it came. */
+  static #pointer(r, key, list = "pointed") {
+    if (!isObj(r) || !Array.isArray(r[list])) return r;
+    return { ...r, [list]: r[list].map((p) => (isObj(p) ? { ...p, pointer: { key, text: KEYED[key] } } : p)) };
   }
 
   /* R43: the pointed sentences R19 reads: the phrasing list's and the assistant's, unioned by sentence. */
@@ -1217,6 +1238,15 @@ export class Filings {
                detail: "prepared as yourself: your own notes are never approved, stamped or recorded as the group's act" };
     /* END DEC-49 REGION is-not-the-groups-act */
     return null;
+  }
+
+  /* R44, R52 (T46): whose act a text is, in `words.json`'s words read by key: the voice's name (`voice.group`,
+     `voice.self`) and what it means (`voice.group.means`; `voice.self.means`, in place of T45's `filings.voice.self`),
+     answered for a text whose voice the member stated; none for a text stating none. */
+  static #voiceSays(voice) {
+    if (voice !== "group" && voice !== "self") return {};
+    return { voice_says: { key: `voice.${voice}.means`, text: KEYED[`voice.${voice}.means`],
+                           voice: { key: `voice.${voice}`, text: KEYED[`voice.${voice}`] } } };
   }
 
   /* R40, R37: whether a text is a request for comment: an action of the product kind `request_for_comment`, or a
@@ -1456,10 +1486,11 @@ export class Filings {
   /* R42: whether the action's project names this act as needing a second member's approval
      (`project-roster.secondApprovalNeeded`, its R24): by the action's kind, the draft's governing tier, and whether it
      is public (a text for the public or broadly, or the group's own comment or testimony). With no project or no module
-     answering, one approval sends. */
-  #secondNeeded(d, viewer) {
+     answering, one approval sends. `read` is the action as the plane reads it, when the caller has read it already
+     (R50: `filingsFor` reads it once for every draft it lists). */
+  #secondNeeded(d, viewer, read = undefined) {
     const roster = this.projectRoster;
-    const a = this.#action(d.action_id, MACHINE_READER);
+    const a = read !== undefined ? read : this.#action(d.action_id, MACHINE_READER);
     const project = (a && a.project) || (parse(d.basis) || {}).project || null;
     if (!a || !project || !roster || typeof roster.secondApprovalNeeded !== "function") return { needed: false, matched: [] };
     const marks = parse(d.marks) || {};
@@ -1490,7 +1521,15 @@ export class Filings {
     const at = this.#when();
     this.sql.exec(`INSERT INTO filing_second_approvals (filing_id, action_id, approved_by, at) VALUES (?,?,?,?)`, d.filing_id, d.action_id, who, at);
     return { ok: true, filing: d.filing_id, action: d.action_id, second_approved_by: who, at, approved_by: ap.approved_by,
+             given: Filings.#secondGiven(who, at),
              says: "approved a second time by the member named; a member records the sending by their own hand" };
+  }
+
+  /* R42, R52 (T46): the sentence a recorded second approval answers, `words.json`'s `filings.secondapproval.given` read by
+     key, `{member}` and `{date}` (the day of its instant) filled from the record. */
+  static #secondGiven(member, at) {
+    return { key: "filings.secondapproval.given",
+             text: keyed("filings.secondapproval.given", { member, date: String(at ?? "").slice(0, 10) || "a date not stated" }) };
   }
 
   /** R36: a member records that a partner organisation approved the same text in its own copy, by its own act:
@@ -2427,10 +2466,13 @@ export class Filings {
 
   /** R13: the action's drafts and counsel packets, in creation order; the read `escalation` uses. A draft or packet
    *  version drawing on a determination or consequence in a project the viewer may not see is left out, and nothing of
-   *  it is named (K316). */
+   *  it is named (K316). R50 (T46): each draft answers `second_needed`, so `affordances` offers `filingsent` only on a
+   *  draft that needs no further approval. */
   filingsFor({ action = null, viewer = null } = {}) {
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
+    /* R50 (T46; N930): the action as the plane reads it, read once for R42's rule over every draft listed */
+    const plane = this.#action(a.id, MACHINE_READER);
     /* R23: the action's communications are listed among its drafts, marked a communication. */
     const drafts = this.#seenRows(FILINGS_FOR_MAX + 1, viewer,
       `SELECT d.filing_id, d.tier, d.preparer, d.prepared_at, d.basis, d.form, d.purpose, d.template, d.marks, ap.approved_by,
@@ -2455,7 +2497,11 @@ export class Filings {
         label: proposalLabel(d.preparer, d.form === "communication" ? "communication" : "filing_draft"), at: d.prepared_at,
         approval: d.approved_by ? { approved_by: d.approved_by, at: d.approved_at, sha: d.sha } : null,
         /* T45: R42's second approval, R36's partners' signatures, R44's voice, R46's review copy */
-        second_approval: d.second_by ? { approved_by: d.second_by, at: d.second_at } : null,
+        second_approval: d.second_by ? { approved_by: d.second_by, at: d.second_at, given: Filings.#secondGiven(d.second_by, d.second_at) } : null,
+        /* R50 (T46; N930): true exactly when R42 would ask a second approval of its sending not yet recorded; a draft
+           already sent, or the member's own notes (never sent, R44), is asked none */
+        second_needed: !d.second_by && !d.recorded_by && (parse(d.marks) || {}).voice !== "self"
+          && this.#secondNeeded({ ...d, action_id: a.id }, viewer, plane).needed,
         signatories: this.#rows(`SELECT organisation, role, body_sha, account, recorded_by, at FROM joint_signatories WHERE filing_id=?
                                   ORDER BY at, organisation`, d.filing_id),
         voice: (parse(d.marks) || {}).voice ?? null,

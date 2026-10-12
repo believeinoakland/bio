@@ -374,13 +374,18 @@ export const STATES = {
   },
   /* An escalation (escalation R21) is `open` while its stages run and `suspended` while a member has set it
      aside; `escalationResume` restores it at the same stage (R15). It is `ended` only by `escalationEnd`, once
-     compliance is restored and the consequences are addressed (R14), and nothing leaves `ended`. */
+     compliance is restored and the consequences are addressed (R14), and nothing leaves `ended`.
+     T46-1 (R57; N910, K2844; State Rules §4.4): `stopped_pursuing` is the group's decision to stop pursuing it
+     (`escalationStopPursuing`, escalation R31), from `open` or `suspended`, with a reason. It is never `ended` and never
+     read as success, so it has no edge to `ended`; `escalationReopen` is its one way out, back to `open` at the stage
+     where it stopped. Appended last, so `legal[0]` stays `open`. */
   escalation: {
-    legal: ['open', 'suspended', 'ended'],
+    legal: ['open', 'suspended', 'ended', 'stopped_pursuing'],
     edges: {
-      open: ['suspended', 'ended'],
-      suspended: ['open', 'ended'],
-      ended: []
+      open: ['suspended', 'ended', 'stopped_pursuing'],
+      suspended: ['open', 'ended', 'stopped_pursuing'],
+      ended: [],
+      stopped_pursuing: ['open']
     }
   },
   /* K198 (2) (T8, N159): intent's two pursuit documents (intent R26). An aspiration is held until it is retired;
@@ -396,10 +401,22 @@ export const STATES = {
     edges: { open: ['closed'], closed: [] }
   },
   /* N-A1 (T18, K608): `action-plans`' plan (its R2, `PLN-`, `action_plan` in record-grammar's `OBJECT_TYPES`). A plan
-     is `open` while the group works it and `closed` when a member closes it with a reason; nothing reopens it. */
+     is `open` while the group works it and `closed` when a member closes it with a reason; nothing reopens it.
+     T46-1 (R58; N914, K2848; State Rules §4.4): `paused` is a member setting the plan down with a reason (`planPause`,
+     action-plans R40) while what it set running continues; `planResume` returns it to `open`, and a paused plan may be
+     closed. It sits between the two in `legal`, the order R58 states; `legal[0]` stays `open`. `goal` keeps its own
+     machine, `open` to `closed` alone. */
   action_plan: {
-    legal: ['open', 'closed'],
-    edges: { open: ['closed'], closed: [] }
+    legal: ['open', 'paused', 'closed'],
+    edges: { open: ['paused', 'closed'], paused: ['open', 'closed'], closed: [] }
+  },
+  /* T46-1 (R59; N911, K2845): `consequences`' success record (its R17, `SUC-`, `success_record` in `OBJECT_TYPES`). It is
+     RECORDED once and never moves, as a standard, a determination and a consequence part are: a correction is a successor
+     (`successRevise`). Promoted with history like a finding (consequences R14's pattern), so it has this machine; it is not
+     a bundle prefix (R1), so `HEADINGS` and `checkBundle`'s schemas gain nothing. */
+  success_record: {
+    legal: ['recorded'],
+    edges: { recorded: [] }
   }
 };
 /* One machine, two spellings: the legacy alias points at the SAME object, so
@@ -410,8 +427,11 @@ STATES.problem = STATES.focus;
    `## What Would Falsify This` and `## What This Excludes` out of the published
    bytes, and it must slice them exactly the way the catalog does. One parser,
    because a reader and a gate disagreeing about where a section ends is a
-   disagreement about what the group published. */
+   disagreement about what the group published.
+   T46-1 (R36, P8): only a string is a body. An array or a `String` object answered `indexOf` and `slice` too, so one
+   was sliced as if it were text instead of refused; it is a `TypeError` now, as every other non-string already was. */
 export function sectionText(body, heading) {
+  if (typeof body !== 'string') throw new TypeError('sectionText: body must be a string');
   const idx = body.indexOf(heading);
   if (idx < 0) return null;
   const next = body.indexOf('\n## ', idx + 1);

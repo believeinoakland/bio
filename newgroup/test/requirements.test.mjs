@@ -5,7 +5,7 @@
  */
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
@@ -13,9 +13,11 @@ import worker, * as installer from "../src/index.mjs";
 import { CFG, planeLimits } from "../src/index.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "../../bio-plane/src/setup-fleet.mjs";
 import { setupPage } from "../../bio-plane/src/setup.mjs";
-import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE, PAGE_CSS, ASSISTANT_OFFER, DESCRIPTION, WHO, SECURITY_TOOLS } from "../src/ui.mjs";
-import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
-import { resolveVersion, checkSignedAsset, embedRelease } from "../scripts/embed-release.mjs";
+import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE, PAGE_CSS, ASSISTANT_OFFER, DESCRIPTION, WHO, SECURITY_TOOLS, LEFT_OUT } from "../src/ui.mjs";
+import { leftOutNotice, partsLeftOut } from "../src/images.mjs";
+import { RELEASE_VERSION, RELEASE_SOURCE, RELEASE_CONTAINERS } from "../src/release.mjs";
+import { resolveVersion, checkSignedAsset, embedRelease, releaseContainers } from "../scripts/embed-release.mjs";
+import vm from "node:vm";
 import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
 import * as jurisdictions from "../../jurisdictions/index.mjs";
 import { TOK, ORIGIN, req, begin, callback, cookieOf, cookieValue, b64url, script, realFetch, jres, run, release,
@@ -943,8 +945,8 @@ test("R38 a container member installs only with the Containers scope granted, Wo
   assert.equal(asked.apps.length, 1, "a read that answers means the scope is held");
   await leftOut("unasked", { grantedScope: null, containers: "read" }, /the permission you approved could not be shown to include Workers Containers \(Authentication error\)/);
   for (const [why, d, says] of [
-      ["unpinned", { ...DESCRIPTOR, image: "docker.io/civicos/agent-runner:latest" }, /its image is not a public registry image pinned by its sha256 digest/],
-      ["private", { ...DESCRIPTOR, image: "registry.cloudflare.com/acct/agent-runner@sha256:" + "b".repeat(64) }, /its image is not a public registry image/],
+      ["unpinned", { ...DESCRIPTOR, image: "docker.io/civicos/agent-runner:latest" }, /this release does not pin its image to one exact build \(a sha256 digest\)/],
+      ["private", { ...DESCRIPTOR, image: "registry.cloudflare.com/acct/agent-runner@sha256:" + "b".repeat(64) }, /this release's image is not yet published where your Cloudflare account can pull it/],
       ["policy", { ...DESCRIPTOR, scheduling_policy: "durable_object" }, /its scheduling policy is not the default one/],
       ["noclass", { ...DESCRIPTOR, class_name: "" }, /names no class/], ["max", { ...DESCRIPTOR, max_instances: 0 }, /no maximum number of instances/],
       ["bind", { ...DESCRIPTOR, bind: [{ member: "agent-worker", binding: "runner" }] }, /names its bindings unreadably/],
@@ -1061,7 +1063,7 @@ test("R38 (T36) a container member with two or more classes (file-scanner) is de
   await out("misnamed", { scannerParts: { "container/SafeViewRenderer.json": null, "container/Renderer.json": SCANNER_CLASSES[1] } }, /its container part container\/Renderer\.json describes the class SafeViewRenderer/);
   await out("unpathed", { scannerParts: { "container/SafeViewRenderer.json": null, "renderer.json": SCANNER_CLASSES[1] } }, /its container part renderer\.json is not named for its class/);
   await out("ghcr", { scannerParts: { "container/SafeViewRenderer.json": { ...SCANNER_CLASSES[1], image: "ghcr.io/believeinoakland/file-scanner-renderer@sha256:" + "e".repeat(64) } } },
-    /its image is not a public registry image pinned by its sha256 digest \(class SafeViewRenderer\)/);
+    /this release's image is not yet published where your Cloudflare account can pull it \(class SafeViewRenderer\)/);
   await out("noscope", {}, /the permission you approved does not include Workers Containers/, { grantedScope: "workers-scripts.write workers-r2.write account-settings.read" });
   /* An update rolls each class's application out to its own image. */
   const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
@@ -1072,6 +1074,92 @@ test("R38 (T36) a container member with two or more classes (file-scanner) is de
   assert.equal("migrations" in await metaOf(up, SCANNER), false, "the classes' migration is never restated");
   assert.deepEqual(up.refused, []);
   restoreSigners();
+});
+
+/* T46 (N897 (4)): no public registry yet; GitHub's registry is one the default scheduling policy cannot pull from. */
+const GHCR = (name, c) => `ghcr.io/believeinoakland/${name}@sha256:${c.repeat(64)}`;
+const UNPULLABLE = "this release's image is not yet published where your Cloudflare account can pull it";
+
+test("R38 (T46) a container member left out because its image is not in a registry your Cloudflare account can pull is named with \"this release's image is not yet published where your Cloudflare account can pull it\" beside what your group's Civicsmith then lacks, never \"not a public registry image\"; every other member installs, on the install and the update; control: images pinned by digest on Docker Hub install", async () => {
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT, container: true, descriptor: { ...DESCRIPTOR, image: GHCR("agent-runner", "a") }, scanner: true,
+    scannerParts: { "container/FileScanner.json": { ...SCANNER_CLASSES[0], image: GHCR("file-scanner-scanner", "d") },
+      "container/SafeViewRenderer.json": { ...SCANNER_CLASSES[1], image: GHCR("file-scanner-renderer", "e") } } });
+  const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  for (const [mode, pre] of [["install", {}], ["update", { "r38-ghcr": planeBase("r38-ghcr") }]]) {
+    const w = seen(await run({ slug: "r38-ghcr", mode, rel, pre }));
+    const said = w.page.label("fleet");
+    assert.ok(!w.acct.has(RUNNER) && !w.acct.has(SCANNER), `${mode}: neither container member installed`);
+    assert.equal(w.calls.some((c) => c.u.includes("/containers/")), false, `${mode}: the Containers API untouched`);
+    for (const m of MEMBERS.filter((x) => x !== RUNNER && x !== SCANNER)) assert.ok(w.acct.has(m), `${mode}: ${m} installs`);
+    assert.match(said, new RegExp(`${RUNNER} \\(${esc(UNPULLABLE)}; your group's Civicsmith offers the assistant only through an API key \\(a member's own, or your group's\\) until it is installed\\)`), mode);
+    assert.match(said, new RegExp(`${SCANNER} \\(${esc(UNPULLABLE)} \\(class FileScanner\\); your group's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not scanned`), mode);
+    assert.equal(/public registry/i.test(w.page.words), false, mode);
+    assert.ok(w.page.done, `${mode}: the act finished`);
+    if (mode === "update") assert.equal(w.page.status("up"), "ok");
+  }
+  /* The control: the same release with Docker Hub images pinned by digest installs both. */
+  const pulled = seen(await run({ slug: "r38-pulled", rel: await release({ version: NEXT, container: true, scanner: true }) }));
+  assert.equal(pulled.apps.length, 3);
+  assert.ok(pulled.acct.has(RUNNER) && pulled.acct.has(SCANNER));
+  assert.ok(!pulled.page.words.includes(UNPULLABLE));
+  restoreSigners();
+});
+
+test("R23 (T46) when the release this installer carries names, for a container member, an image your Cloudflare account cannot pull, the install and update pages say so before the install begins, per member, with what your group's Civicsmith then lacks (R38's words); control: images it can pull are not named", async () => {
+  const both = [{ member: RUNNER, class_name: "AgentRunner", image: GHCR("agent-runner", "a") },
+    { member: SCANNER, class_name: "FileScanner", image: GHCR("file-scanner-scanner", "d") },
+    { member: SCANNER, class_name: "SafeViewRenderer", image: GHCR("file-scanner-renderer", "e") }];
+  const n = leftOutNotice(both, "9.9.9");
+  const w = words(n);
+  assert.equal((n.match(/<li\b/g) || []).length, 2, "one line per member, a member of two classes once");
+  assert.match(w, /The assistant through a member's own Claude subscription \(agent-runner\): this release's image is not yet published where your Cloudflare account can pull it, so it is left out, and your group's Civicsmith offers the assistant only through an API key \(a member's own, or your group's\) until it is installed\./);
+  assert.match(w, /The built-in file scanner and safe view \(file-scanner\): this release's image is not yet published where your Cloudflare account can pull it, so it is left out, and your group's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made\./);
+  assert.match(w, /the release this installer carries \(9\.9\.9\) cannot install yet/);
+  assert.match(w, /Everything else installs/);
+  assert.equal(/public registry/i.test(w), false);
+  /* A member with one class it can pull and one it cannot still cannot install whole: it is named. */
+  assert.deepEqual(partsLeftOut([{ ...both[1], image: SCAN_IMAGE }, both[2]]).map((p) => p.member), [SCANNER]);
+  /* The control: images pinned by digest on Docker Hub, or none at all, say nothing. */
+  assert.equal(leftOutNotice([{ member: RUNNER, class_name: "AgentRunner", image: IMAGE }, { member: SCANNER, class_name: "FileScanner", image: SCAN_IMAGE },
+    { member: SCANNER, class_name: "SafeViewRenderer", image: RENDER_IMAGE }], "9.9.9"), "");
+  assert.equal(leftOutNotice([], "9.9.9"), "");
+  /* The pages: the statement for the release this installer carries (its signed fleet's classes, recorded by the embed),
+     before the act that begins the install, on the install page and the update page alike. */
+  assert.equal(LEFT_OUT, leftOutNotice(RELEASE_CONTAINERS, RELEASE_VERSION));
+  for (const [where, page] of [["install page", seen(await text("/"))], ["update page", seen(await text("/update"))]]) {
+    const named = partsLeftOut(RELEASE_CONTAINERS).map((p) => p.member);
+    for (const m of named) {
+      const at = page.indexOf(`id="left-out-${m}"`);
+      assert.ok(at > 0 && at < page.indexOf('<button id="go">'), `${where}: ${m}, before the install begins`);
+    }
+    if (!named.length) assert.equal(page.includes('id="left-out"'), false, where);
+  }
+  /* The release this tree carries (0.82.0) names GitHub's registry for both container members (draft-T46-trial §3.3), so
+     the pages name both today. */
+  if (RELEASE_CONTAINERS.length && RELEASE_CONTAINERS.every((c) => c.image.startsWith("ghcr.io/")))
+    assert.deepEqual(partsLeftOut(RELEASE_CONTAINERS).map((p) => p.member).sort(), [...new Set(RELEASE_CONTAINERS.map((c) => c.member))].sort());
+});
+
+test("R23 (T46) the embed records the container classes the release's signed fleet statement names (member, class, image), only from a fleet that verifies against the installer's keys and parts whose bytes it signs; a release naming no signed fleet names none; the shipped embed is the release's own", async () => {
+  const rel = await release({ version: "1.2.3", container: true, scanner: true });
+  const readPart = (member, path) => { const t = rel.assets[`${member}/${path}`]; if (t === undefined) throw new Error("missing"); return Buffer.from(t); };
+  assert.deepEqual(await releaseContainers({ manifest: rel.manifest, readPart, signers: [SIGNER.line] }),
+    [{ member: RUNNER, class_name: "AgentRunner", image: IMAGE },
+     ...SCANNER_CLASSES.map((c) => ({ member: SCANNER, class_name: c.class_name, image: c.image }))]);
+  assert.deepEqual(await releaseContainers({ manifest: { ...rel.manifest, fleet: undefined }, readPart, signers: [SIGNER.line] }), []);
+  assert.deepEqual(await releaseContainers({ manifest: { ...rel.manifest, fleetSig: undefined }, readPart, signers: [SIGNER.line] }), []);
+  await assert.rejects(releaseContainers({ manifest: rel.manifest, readPart, signers: [STRANGER.line] }), /fleet signature does not verify .*UNKNOWN_KEY/);
+  await assert.rejects(releaseContainers({ manifest: rel.manifest, signers: [SIGNER.line],
+    readPart: (m, p) => p === "container.json" ? Buffer.from(JSON.stringify({ ...DESCRIPTOR, image: GHCR("x", "f") })) : readPart(m, p) }), /agent-runner\/container\.json is not the part the fleet statement signs/);
+  await assert.rejects(releaseContainers({ manifest: rel.manifest, signers: [SIGNER.line],
+    readPart: (m, p) => { if (p === "container/FileScanner.json") throw new Error("gone"); return readPart(m, p); } }), /is missing/);
+  /* The shipped embed: exactly what the release in release/ signs, read again from its files. */
+  const root = new URL("../../release/", import.meta.url);
+  const manifest = JSON.parse(readFileSync(new URL("RELEASE.json", root), "utf8"));
+  restoreSigners();
+  assert.deepEqual(RELEASE_CONTAINERS, await releaseContainers({ manifest, readPart: (m, p) => readFileSync(new URL(`${m}/${p}`, root)) }));
+  assert.ok(Object.isFrozen(RELEASE_CONTAINERS) && RELEASE_CONTAINERS.every(Object.isFrozen));
 });
 
 test("R43 the installer verifies against exactly the armed public lines, the fresh release key and the offline recovery key: a release or fleet statement signed by either installs, one signed by any other key (the development key included) is not installed and is named so; the embed step checks against the same lines", async () => {
@@ -1261,6 +1349,57 @@ test("R47 the install binds OWN_HOSTS, the copy's own host names (its workers.de
   assert.match(un.page.label("addr"), /No web address was found for your group's Civicsmith, so it was not told one of its own/);
 });
 
+/* ------------------------------------------------------------------------------------------------ T46: the test-instance exception, the stewards */
+
+test.todo("R48 the installer's README publishes the stewards' contact address, what they may do, and the plain guide to what a group holds and who could compel it (not yet met: T46; the address is Bob's to name, K2799, and was not named by L11's START, so this part is carried to T47)");
+
+/* The bundle with the embedded plane release (its RELEASE_SOURCE literal, evaluated and checked to be that release) cut out:
+   the installer's own code. From 0.83.0 the plane itself reads the name (ai-runs R78); that is the release's text. */
+const ownBundle = () => {
+  const b = readFileSync(new URL("../dist/newgroup.bundled.mjs", import.meta.url), "utf8");
+  const i = b.indexOf("RELEASE_SOURCE = ");
+  const j = i + "RELEASE_SOURCE = ".length, q = b[j];
+  let k = j + 1;
+  while (k < b.length) { if (b[k] === "\\") { k += 2; continue; } if (b[k] === q) break; k++; }
+  assert.equal(vm.runInNewContext(b.slice(j, k + 1)), RELEASE_SOURCE, "only the embedded release is cut out");
+  return b.slice(0, j) + b.slice(k + 1);
+};
+
+test("R49 the installer never writes, reads or names CIVICSMITH_TEST_INSTANCE: no install or update upload (the plane's or a member's) carries it, /begin takes none and no page offers it, an update leaves one its deployer set exactly as it was, and the installer's own source and bundle hold no such name", async () => {
+  const NAME = "CIVICSMITH_TEST_INSTANCE";
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT, container: true, scanner: true });
+  const held = { type: "secret_text", name: NAME, text: "r49-upd" };
+  const b = await begin("r49-inst", "install", { [NAME]: "r49-inst", testInstance: true, test_instance: "yes" });
+  assert.equal(b.j.ok, true);
+  assert.ok(!JSON.stringify(cookieValue(b.cookie)).includes(NAME) && !/test/i.test(Object.keys(cookieValue(b.cookie)).join()), "/begin keeps none");
+  const i = seen(await run({ slug: "r49-inst", rel, cookie: b.cookie, state: b.state }));
+  const u = seen(await run({ slug: "r49-upd", mode: "update", rel, pre: { "r49-upd": [...planeBase("r49-upd"), held] } }));
+  restoreSigners();
+  for (const [what, w] of [["install", i], ["update", u]]) {
+    const puts = w.calls.filter((c) => c.method === "PUT" && /\/workers\/scripts\/[^/]+$/.test(c.u));
+    assert.ok(puts.length >= 4, `${what}: the plane's uploads and the members'`);
+    for (const c of puts) assert.equal((await c.init.body.get("metadata").text()).includes(NAME), false, `${what}: ${c.u}`);
+    for (const c of w.calls) assert.ok(!c.u.includes(NAME) && !(typeof c.init.body === "string" && c.init.body.includes(NAME)), `${what}: ${c.method} ${c.u}`);
+    assert.equal(w.raw.includes(NAME), false, `${what}: the page names none`);
+  }
+  assert.deepEqual(u.acct.get("r49-upd").filter((x) => x.name === NAME), [held], "the update leaves it as its deployer set it");
+  assert.deepEqual(u.deleted, [], "and removes nothing");
+  for (const page of [await text("/"), await text("/update")]) assert.equal(page.includes(NAME), false, "no page offers it");
+  /* The source: every file of the installer's own code, and the generated release.mjs but for the plane it embeds. */
+  const src = new URL("../src/", import.meta.url);
+  const files = readdirSync(src).filter((f) => f.endsWith(".mjs"));
+  assert.ok(files.includes("index.mjs") && files.includes("ui.mjs") && files.includes("images.mjs"));
+  for (const f of files) {
+    const text0 = readFileSync(new URL(f, src), "utf8");
+    const own = f === "release.mjs" ? text0.split("\n").filter((l) => !l.startsWith("export const RELEASE_SOURCE = ")).join("\n") : text0;
+    assert.equal(own.includes(NAME), false, f);
+  }
+  assert.equal(ownBundle().includes(NAME), false, "the bundle, the embedded release aside");
+  /* The reading finds the name where it is: a control. */
+  assert.ok(`{ "${NAME}": 1 }`.includes(NAME));
+});
+
 /* ------------------------------------------------------------------------------------------------ the embed step */
 
 const planeFiles = (dir, { pkgV = "1.2.3", cfgV = pkgV, secrets = "ADMIN_TOKEN=published-admin-value\n" } = {}) => {
@@ -1311,11 +1450,11 @@ test("R26 checkSignedAsset returns null only for the signed release of that vers
   writeFileSync(join(dir, "release", "bio-plane.bundled.mjs"), src);
   const out = join(dir, "out", "release.mjs");
   const args = { planeDir: join(dir, "plane"), releaseDir: join(dir, "release"), out, signers };
-  assert.deepEqual(await embedRelease(args), { version: "1.2.3", sha256: good.sha256, chars: src.length });
+  assert.deepEqual(await embedRelease(args), { version: "1.2.3", sha256: good.sha256, chars: src.length, containers: 0 });
   const written = readFileSync(out, "utf8");
   assert.match(written, /^\/\* GENERATED by scripts\/embed-release\.mjs\. Do not edit\. \*\/\n/);
   const mod = await import(out + "?v=1");
-  assert.deepEqual([mod.RELEASE_VERSION, mod.RELEASE_SOURCE], ["1.2.3", src]);
+  assert.deepEqual([mod.RELEASE_VERSION, mod.RELEASE_SOURCE, mod.RELEASE_CONTAINERS], ["1.2.3", src, []]);
   const leaky = "export default {}; // published-admin-value";
   writeFileSync(join(dir, "release", "bio-plane.bundled.mjs"), leaky);
   writeFileSync(join(dir, "release", "RELEASE.json"), JSON.stringify({ ...good, sha256: await sha(leaky), sig: await SIGNER.sign(leaky) }));

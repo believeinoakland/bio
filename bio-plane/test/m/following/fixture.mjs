@@ -208,7 +208,8 @@ export function world({ view = testView(), now = T0 } = {}) {
   w.standards = standards;
   /* ---- the plans, duties, standing questions and watched addresses the watches of R22–R26 read, each a stand-in coded
      to its provider's requirements (action-plans R6/R22 planRead, noSuchPlan, refusePlanClosed; plan-work R9's door,
-     R13's matterPromiseDuties; duties R7 readDuty, R9–R11 occurrencesOf; answers R16, R34; monitoring R32, R71, R72) ---- */
+     R13's matterPromiseDuties with R15's met_at; duties R7 readDuty, R9–R11 occurrencesOf; answers R16, R34; monitoring
+     R32, R71, R72) ---- */
   w.plans = new Map();           /* id → {id, project, state, closed?: {at}, subjects: [{key}]} */
   w.plan = (id, { project, state = "open", closedAt = null, matters = ["inquiry:I-1"] } = {}) => {
     w.plans.set(id, { id, project, state, ...(closedAt ? { closed: { at: closedAt } } : {}), subjects: matters.map((key) => ({ key })) });
@@ -223,7 +224,10 @@ export function world({ view = testView(), now = T0 } = {}) {
     },
   };
   w.promises = new Map();        /* `${plan} ${matter}` → [duty ids] (the matter's adopted promise-duties) */
-  w.dutiesHeld = new Map();      /* id → {act, project?, withdrawn?, occurrences: [{state, at?}]} */
+  w.dutiesHeld = new Map();      /* id → {act, project?, withdrawn?, occurrences: [{state, at?}]}; `at` the instant read met */
+  w.occurrenceReads = 0;         /* duties.occurrencesOf calls (R27: never read for promises_met) */
+  w.promiseReads = [];           /* matterPromiseDuties calls, {plan, matter, nowMs, viewer} */
+  w.promiseAnswer = null;        /* (plan, matter, answer) → answer: a test's override of plan-work's answer */
   w.duty = (id, { act = "publish the audit", project = null, met = [] } = {}) => {
     w.dutiesHeld.set(id, { act, project, occurrences: met.map((at) => (at ? { state: "met", at } : { state: "pending" })) });
     return id;
@@ -236,6 +240,7 @@ export function world({ view = testView(), now = T0 } = {}) {
         : { ok: true, found: false, duty_id: dutyId };
     },
     occurrencesOf({ dutyId, viewer }) {
+      w.occurrenceReads++;
       const d = w.dutiesHeld.get(dutyId);
       if (!d || !dutySeen(d, viewer)) return { ok: false, reason: "NO_SUCH_DUTY" };
       return { ok: true, duty_id: dutyId, occurrences: d.occurrences.map((o, i) => ({ key: `k${i}`, state: o.state,
@@ -250,7 +255,8 @@ export function world({ view = testView(), now = T0 } = {}) {
       w.watchReaders.push({ module, fn });
       return { ok: true, module };
     },
-    matterPromiseDuties({ plan, matter, viewer }) {
+    matterPromiseDuties({ plan, matter, nowMs, viewer }) {
+      w.promiseReads.push({ plan, matter, nowMs, viewer });
       const p = actionPlans.planRead({ id: plan, viewer });
       if (!p.ok) return p;
       const key = typeof matter === "string" ? matter : matter && matter.key;
@@ -258,8 +264,11 @@ export function world({ view = testView(), now = T0 } = {}) {
         return { ok: false, reason: "MATTER_NOT_OF_PLAN", code: "MATTER_NOT_OF_PLAN", check: "C-151.1", detail: "the plan is not about that matter. Nothing was written.", plan };
       const ids = w.promises.get(`${plan} ${key}`) || [];
       const ds = ids.map((id) => ({ duty_id: id, occurrences: w.dutiesHeld.get(id).occurrences }));
-      return { ok: true, plan, matter: key, duties: ds,
-               all_met: ds.length > 0 && ds.every((d) => d.occurrences.length && d.occurrences.every((o) => o.state === "met")), partial: false };
+      const all_met = ds.length > 0 && ds.every((d) => d.occurrences.length && d.occurrences.every((o) => o.state === "met"));
+      /* R15: when all met, the instant the last of them was read met; else null */
+      const met_at = all_met ? ds.flatMap((d) => d.occurrences.map((o) => o.at)).sort().at(-1) ?? null : null;
+      const a = { ok: true, plan, matter: key, duties: ds, all_met, partial: false, met_at };
+      return w.promiseAnswer ? w.promiseAnswer(plan, key, a) : a;
     },
   };
   w.questions = new Map();       /* id → {id, author, question, ends, ended} */

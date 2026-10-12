@@ -1,5 +1,5 @@
 /* A membership module over a real SQLite database (node:sqlite), with a stub record-core that provides the
-   services membership uses (bundleInfo, declarePurge) over a `bundles` table holding the R37 read contract
+   services membership uses (bundleInfo, declarePurge, declareTable) over a `bundles` table holding the R37 read contract
    (bundle_id, object_type) and a title, passed to `membershipOf` as a test's own record-core (K61). Every test drives the module at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { membershipOf, membershipOps } from "../../../src/membership/index.mjs";
@@ -20,13 +20,14 @@ export function sqlOver(db) {
 export function world({ omit = [] } = {}) {
   const db = new DatabaseSync(":memory:");
   db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT, project TEXT)`);
-  const declared = [];
+  const declared = [], tablesDeclared = [];
   const core = {
     bundleInfo(id) {
       const r = db.prepare(`SELECT bundle_id, object_type, title, project FROM bundles WHERE bundle_id=?`).get(bind(id));
       return r ? { id: r.bundle_id, type: r.object_type, title: r.title, project: r.project ?? null } : null;
     },
     declarePurge(module, tables, opts) { declared.push({ module, tables, opts }); },
+    declareTable(module, entries) { tablesDeclared.push({ module, entries }); return { ok: true }; },
   };
   const sql = sqlOver(db);
   const ctx = { storage: { sql } };                  // a Durable Object's storage, as membershipOf reads it
@@ -41,7 +42,7 @@ export function world({ omit = [] } = {}) {
     m.registerPasswordSetter(({ role, password }) => { creds.passwords.set(role, password); return { ok: true, role }; });
   if (!omit.includes("revoked")) m.onRevoked("credentials", (notice) => { creds.revoked.push(notice); });
   const w = {
-    db, sql, core, m, declared, creds,
+    db, sql, core, m, declared, tablesDeclared, creds,
     /* `project` is record-core R34's: the project the bundle belongs to (N426). */
     bundle(id, type = "information", title = `title of ${id}`, project = null) {
       db.prepare(`INSERT INTO bundles (bundle_id, object_type, title, project) VALUES (?,?,?,?)`).run(id, type, title, project);

@@ -45,7 +45,7 @@ import { strengthOf, strengthOps } from "../../../src/strength/index.mjs";
 import { reevaluationOf, reevaluationOps } from "../../../src/reevaluation/index.mjs";
 import { reviewOf, reviewOps } from "../../../src/review/index.mjs";
 import { caseAuthoringOf, caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
-import { caseAccountOf } from "../../../src/case-account/index.mjs";
+import { caseAccountOf, caseAccountOps } from "../../../src/case-account/index.mjs";
 import { ratificationOf, ratificationOps } from "../../../src/ratification/index.mjs";
 import { publicationOf, publicationOps } from "../../../src/publication/index.mjs";
 import { docketOf, docketOps } from "../../../src/docket/index.mjs";
@@ -125,13 +125,8 @@ export const MODULE_MAPS = [
   ["strength", (c, u, b) => strengthOps(strengthOf(c), u, b)],
   ["reevaluation", (c, u, b) => reevaluationOps(reevaluationOf(c), u, b)],
   ["case-authoring", (c, u, b) => caseAuthoringOps(caseAuthoringOf(c), u, b)],
-  /* plane R39 (K2834): case-account exports no ops map, so its advocacy check and list are named here as the module's
-     whose methods answer them, as acquisition's pair is (plane R9) */
-  ["case-account", (c, u, b) => ({
-    advocacycheck: () => caseAccountOf(c).advocacyCheck({ project: u.searchParams.get("project") ?? b?.project ?? null,
-      sentences: b?.sentences ?? null, author: u.searchParams.get("by"), viewer: u.searchParams.get("viewer") }),
-    advocacychecks: () => caseAccountOf(c).advocacyChecksOf({ project: u.searchParams.get("project") ?? b?.project ?? null,
-      viewer: u.searchParams.get("viewer") }) })],
+  /* plane R39 (T46; N935; case-account R15): case-account's own map, over the plane's one instance */
+  ["case-account", (c, u, b) => caseAccountOps(caseAccountOf(c), u, b)],
   ["ratification", (c, u, b) => ratificationOps(ratificationOf(c), u, b)],
   ["case-import", (c, u, b) => caseImportOps(caseImportOf(c), u, b)],
   ["corpus-export", (c, u) => corpusExportOps(corpusExportOf(c), (k) => u.searchParams.get(k))],
@@ -161,9 +156,8 @@ export const MODULE_MAPS = [
   ["action-holds", (c, u, b) => actionHoldsOps(actionHoldsOf(c), u, b)],   /* plane R39 (T45): directly after actions' */
   ["action-clocks", (c, u, b) => actionClocksOps(actionClocksOf(c), u, b)],
   ["action-replies", (c, u, b) => actionRepliesOps(actionRepliesOf(c), u, b)],   /* plane R39: after action-clocks' */
-  ["local-facts", (c, u, b) => ({ ...localFactsOps(localFactsOf(c), u, b),
-    /* plane R39 (op-declarations R49): `grouprules`, local-facts R12's read, named here as the module's (plane R9) */
-    grouprules: () => localFactsOf(c).groupRules({ section: u.searchParams.get("section") ?? undefined, viewer: u.searchParams.get("viewer") }) })],
+  /* plane R39 (T46; N935; local-facts R15): its own map, `grouprules` among it */
+  ["local-facts", (c, u, b) => localFactsOps(localFactsOf(c), u, b)],
   ["standards", (c, u, b) => standardsOps(standardsOf(c), u, b)],
   ["conformance", (c, u, b) => conformanceOps(conformanceOf(c), u, b)],
   ["consequences", (c, u, b) => consequencesOps(consequencesModule(c), u, b)],

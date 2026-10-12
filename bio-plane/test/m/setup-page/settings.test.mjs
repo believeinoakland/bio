@@ -206,7 +206,9 @@ test("R22 enrolment offers the language for the screens before op=enroll, starti
   assert.deepEqual(sent.find((c) => c.op === "login").body, { role: "member:sam", password: "sams-password-1" });
   const set = sent.find((c) => c.op === "memberlanguageset");
   assert.deepEqual([set.body, set.token], [{ language: "es-MX" }, "sess-sam"]);
-  assert.equal(p.el("#ln-now").textContent, "Your screens use es-MX.");
+  /* R32: sent before she is taken to Home, and nothing after it */
+  assert.deepEqual(p.sandbox.location.assigned, ["/app"]);
+  assert.equal(sent.at(-1).op, "memberlanguageset");
 });
 
 test("R22 the account screen (the panel) and members and keys offer the language at any time: read through op=memberlanguage, sent as the member's own op=memberlanguageset, empty clearing it; a refusal is stated in the plane's words", async () => {

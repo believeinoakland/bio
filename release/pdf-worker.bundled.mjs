@@ -39648,7 +39648,12 @@ var linkWrapper = {
 
 // ../bio-plane/src/pdfstructure.mjs
 var PDF_LINK_TYPES = [...LINK_TYPES, "undetermined"];
-var LATIN1 = new TextDecoder("latin1");
+function binaryString(u8) {
+  if (!(u8 instanceof Uint8Array)) return "";
+  let out = "";
+  for (let i2 = 0; i2 < u8.length; i2 += 8192) out += String.fromCharCode.apply(null, u8.subarray(i2, i2 + 8192));
+  return out;
+}
 function isWhitespace2(c2) {
   return c2 === 0 || c2 === 9 || c2 === 10 || c2 === 12 || c2 === 13 || c2 === 32;
 }
@@ -39826,75 +39831,23 @@ function tryParseRef(s2, pos) {
   return { value: { t: "ref", n: parseInt(m2[1], 10), g: parseInt(m2[2], 10) }, pos: pos + m2[0].length };
 }
 function parseLiteralString(s2, pos) {
-  pos++;
-  let out = "", depth = 1;
-  while (pos < s2.length) {
-    const c2 = s2.charCodeAt(pos);
-    if (c2 === 92) {
-      const n2 = s2[pos + 1];
-      const map = { n: "\n", r: "\r", t: "	", b: "\b", f: "\f", "(": "(", ")": ")", "\\": "\\" };
-      if (n2 in map) {
-        out += map[n2];
-        pos += 2;
-        continue;
-      }
-      if (n2 >= "0" && n2 <= "7") {
-        let oct = "";
-        let p2 = pos + 1;
-        while (p2 < s2.length && oct.length < 3 && s2[p2] >= "0" && s2[p2] <= "7") {
-          oct += s2[p2];
-          p2++;
-        }
-        out += String.fromCharCode(parseInt(oct, 8) & 255);
-        pos = p2;
-        continue;
-      }
-      pos += 2;
-      continue;
-    }
-    if (c2 === 40) {
-      depth++;
-      out += "(";
-      pos++;
-      continue;
-    }
-    if (c2 === 41) {
-      depth--;
-      if (depth === 0) {
-        pos++;
-        break;
-      }
-      out += ")";
-      pos++;
-      continue;
-    }
-    out += s2[pos];
-    pos++;
-  }
-  return { value: { t: "str", v: decodePdfText(out) }, pos };
+  const r2 = readLiteralBytes(s2, pos);
+  return { value: strValue(r2.bytes), pos: r2.pos };
 }
 function parseHexString(s2, pos) {
-  pos++;
-  let hex = "";
-  while (pos < s2.length && s2.charCodeAt(pos) !== 62) {
-    const c2 = s2[pos];
-    if (/[0-9a-fA-F]/.test(c2)) hex += c2;
-    pos++;
-  }
-  pos++;
-  if (hex.length % 2) hex += "0";
-  let raw = "";
-  for (let i2 = 0; i2 < hex.length; i2 += 2) raw += String.fromCharCode(parseInt(hex.substr(i2, 2), 16));
-  return { value: { t: "str", v: decodePdfText(raw) }, pos };
+  const r2 = readHexBytes(s2, pos);
+  return { value: strValue(r2.bytes), pos: r2.pos };
+}
+function strValue(raw) {
+  return { t: "str", v: decodePdfText(raw), raw };
 }
 function decodePdfText(raw) {
-  if (raw.charCodeAt(0) === 254 && raw.charCodeAt(1) === 255) {
+  if (raw[0] === 254 && raw[1] === 255) {
     let out = "";
-    for (let i2 = 2; i2 + 1 < raw.length; i2 += 2)
-      out += String.fromCharCode(raw.charCodeAt(i2) << 8 | raw.charCodeAt(i2 + 1));
+    for (let i2 = 2; i2 + 1 < raw.length; i2 += 2) out += String.fromCharCode(raw[i2] << 8 | raw[i2 + 1]);
     return out;
   }
-  return raw;
+  return binaryString(raw);
 }
 function parseArray(buf, s2, pos) {
   pos++;
@@ -39948,8 +39901,9 @@ function parseDict(buf, s2, pos) {
 var PdfDoc = class {
   constructor(bytes) {
     this.bytes = bytes;
-    this.s = LATIN1.decode(bytes);
-    this.objects = /* @__PURE__ */ new Map();
+    this.s = binaryString(bytes);
+    this._objs = /* @__PURE__ */ new Map();
+    this._gens = /* @__PURE__ */ new Map();
     this.pageIndexByObj = /* @__PURE__ */ new Map();
     this._pageOrder = [];
     this.pageCount = 0;
@@ -39976,12 +39930,15 @@ var PdfDoc = class {
       const num = parseInt(m2[1], 10);
       const bodyStart = m2.index + m2[0].length;
       const r2 = parseValueSafe(s2, bodyStart);
-      if (r2) this.objects.set(num, r2.value);
+      if (r2) {
+        this._objs.set(num, r2.value);
+        this._gens.set(num, parseInt(m2[2], 10));
+      }
     }
   }
   resolve(v2, seen = 0) {
     while (v2 && v2.t === "ref" && seen < 64) {
-      v2 = this.objects.get(v2.n);
+      v2 = this._objs.get(v2.n);
       seen++;
     }
     if (v2 && v2.t === "ref") return null;
@@ -39998,8 +39955,10 @@ var PdfDoc = class {
    *  resolves to an integer; otherwise we scan to the next `endstream`, which
    *  is the lenient recovery path. */
   streamRawBytes(streamObj) {
-    if (!streamObj || streamObj.t !== "stream") return null;
+    if (!streamObj || streamObj.t !== "stream" || !streamObj.dict || typeof streamObj.dict !== "object") return null;
+    if (!(this.bytes instanceof Uint8Array)) return null;
     const start = streamObj.start;
+    if (!Number.isInteger(start) || start < 0 || start > this.bytes.length) return null;
     let end;
     const len = this.resolve(streamObj.dict.Length);
     if (typeof len === "number" && len >= 0 && start + len <= this.bytes.length) {
@@ -40020,14 +39979,23 @@ var PdfDoc = class {
     if (this.s.charCodeAt(e2 - 1) === 13) e2--;
     return e2;
   }
-  /** Decompress a stream's bytes if its filter chain is (Flate). Returns null
-   *  for anything else, which the callers treat as "cannot resolve" -> the doc
-   *  degrades to undetermined rather than crashing. */
+  /** Decompress a stream's bytes if its filter chain is (Flate). Answers a
+   *  Promise of the bytes, or of null for anything else, which the callers
+   *  treat as "cannot resolve" -> the doc degrades to undetermined rather than
+   *  crashing. The Promise never rejects (R22): whatever goes wrong inside is
+   *  that null. */
   async streamDecoded(streamObj) {
+    try {
+      return await this._streamDecoded(streamObj);
+    } catch {
+      return null;
+    }
+  }
+  async _streamDecoded(streamObj) {
     const raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
-    const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f2) => f2 && f2.t === "name" ? f2.v : null) : [];
+    const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f2) => f2 && f2.t === "name" ? f2.v : null) : [null];
     if (names.length === 0) return raw;
     if (!names.every((n2) => n2 === "FlateDecode" || n2 === "Fl")) return null;
     const inflated = await inflate(raw);
@@ -40060,7 +40028,7 @@ var PdfDoc = class {
    *  uncompressed one is the safer read). */
   async loadObjectStreams() {
     const streams = [];
-    for (const v2 of this.objects.values()) {
+    for (const v2 of this._objs.values()) {
       if (v2 && v2.t === "stream") {
         const type = v2.dict.Type;
         if (type && type.t === "name" && type.v === "ObjStm") streams.push(v2);
@@ -40072,7 +40040,7 @@ var PdfDoc = class {
         this.note("objstm_undecodable");
         continue;
       }
-      const inner = LATIN1.decode(data);
+      const inner = binaryString(data);
       const n2 = numberVal(this.resolve(st2.dict.N));
       const first = numberVal(this.resolve(st2.dict.First));
       if (n2 == null || first == null) continue;
@@ -40081,9 +40049,9 @@ var PdfDoc = class {
         const objNum = header[i2 * 2];
         const off = header[i2 * 2 + 1];
         if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
-        if (this.objects.has(objNum)) continue;
+        if (this._objs.has(objNum)) continue;
         const r2 = parseValueSafe(inner, first + off);
-        if (r2) this.objects.set(objNum, r2.value);
+        if (r2) this._objs.set(objNum, r2.value);
       }
     }
   }
@@ -40091,7 +40059,7 @@ var PdfDoc = class {
    *  object-number order if the tree cannot be walked (leniency). */
   buildPageIndex() {
     let root = null;
-    for (const v2 of this.objects.values()) {
+    for (const v2 of this._objs.values()) {
       const map = v2 && v2.t === "dict" ? v2.map : null;
       if (map && map.Type && map.Type.t === "name" && map.Type.v === "Catalog") {
         root = map;
@@ -40122,7 +40090,7 @@ var PdfDoc = class {
     }
     if (this.pageIndexByObj.size === 0) {
       const pages = [];
-      for (const [num, v2] of this.objects) {
+      for (const [num, v2] of this._objs) {
         const map = v2 && (v2.t === "dict" ? v2.map : v2.t === "stream" ? v2.dict : null);
         if (map && map.Type && map.Type.t === "name" && map.Type.v === "Page") pages.push(num);
       }
@@ -40154,7 +40122,7 @@ var PdfDoc = class {
   isEncrypted() {
     if (this._encrypted !== void 0) return this._encrypted;
     let enc = false;
-    for (const v2 of this.objects.values()) {
+    for (const v2 of this._objs.values()) {
       const map = v2 && (v2.t === "dict" ? v2.map : v2.t === "stream" ? v2.dict : null);
       if (!map) continue;
       const filter = map.Filter;
@@ -40184,26 +40152,67 @@ var PdfDoc = class {
    *  `loadObjectStreams` so an /Info living inside an object stream resolves. */
   infoDict() {
     if (this._info !== void 0) return this._info;
+    const cands = this._trailers().filter((map) => map.Info && map.Info.t === "ref").map((map) => map.Info);
+    for (let i2 = cands.length - 1; i2 >= 0; i2--) {
+      const map = this.dictOf(cands[i2]);
+      if (map) return this._info = map;
+    }
+    return this._info = null;
+  }
+  /** Every trailer dict in file order: each classic `trailer << … >>` and each
+   *  `/Type /XRef` stream's own dict, by where it sits. R10 and R37 both choose
+   *  from this one list, so the two cannot disagree about which is the last. */
+  _trailers() {
     const cands = [];
     const re2 = /\btrailer\b/g;
     let m2;
     while (m2 = re2.exec(this.s)) {
       const r2 = parseValueSafe(this.s, m2.index + 7);
-      const map = r2 && r2.value && r2.value.t === "dict" ? r2.value.map : null;
-      if (map && map.Info && map.Info.t === "ref") cands.push([m2.index, map.Info]);
+      if (r2 && r2.value && r2.value.t === "dict") cands.push([m2.index, r2.value.map]);
     }
-    for (const v2 of this.objects.values()) {
-      if (!v2 || v2.t !== "stream") continue;
-      const type = v2.dict.Type;
-      if (!(type && type.t === "name" && type.v === "XRef")) continue;
-      if (v2.dict.Info && v2.dict.Info.t === "ref") cands.push([v2.start, v2.dict.Info]);
+    for (const v2 of this._objs.values()) {
+      const type = v2 && v2.t === "stream" ? v2.dict.Type : null;
+      if (type && type.t === "name" && type.v === "XRef") cands.push([v2.start, v2.dict]);
     }
-    cands.sort((a2, b2) => a2[0] - b2[0]);
-    for (let i2 = cands.length - 1; i2 >= 0; i2--) {
-      const map = this.dictOf(cands[i2][1]);
-      if (map) return this._info = map;
+    return cands.sort((a2, b2) => a2[0] - b2[0]).map((c2) => c2[1]);
+  }
+  /** R37: the latest revision as a rewrite reads it — the last trailer, every
+   *  indirect object reachable from it by any chain of references (each once,
+   *  ascending, its value as `resolve` answers it, its generation the one its
+   *  winning definition states), and every reference on those chains that
+   *  resolves to nothing. An object no chain reaches (an earlier revision's, an
+   *  object stream's container) is not in it. Null without a readable trailer;
+   *  never throws. The walk is iterative, so a deep or cyclic file cannot
+   *  exhaust the stack. */
+  objects() {
+    try {
+      const trailers = this._trailers();
+      if (!trailers.length) return null;
+      const trailer = trailers[trailers.length - 1];
+      const found = /* @__PURE__ */ new Map(), missing = /* @__PURE__ */ new Map(), queue = [];
+      const refsIn = (v2) => {
+        for (const stack = [v2]; stack.length; ) {
+          const x2 = stack.pop();
+          if (!x2 || typeof x2 !== "object") continue;
+          if (x2.t === "ref") queue.push(x2);
+          else if (x2.t === "arr") for (const it2 of x2.items) stack.push(it2);
+          else if (x2.t === "dict" || x2.t === "stream") for (const it2 of Object.values(x2.t === "dict" ? x2.map : x2.dict)) stack.push(it2);
+        }
+      };
+      refsIn({ t: "dict", map: trailer });
+      for (let i2 = 0; i2 < queue.length; i2++) {
+        const { n: n2, g: g2 } = queue[i2];
+        if (found.has(n2) || missing.has(n2)) continue;
+        const value = this.resolve({ t: "ref", n: n2, g: g2 });
+        if (value === null) missing.set(n2, { num: n2, gen: g2 });
+        else found.set(n2, { num: n2, gen: this._gens.get(n2) ?? 0, value });
+        refsIn(this._objs.get(n2));
+      }
+      const asc = (m2) => [...m2.values()].sort((a2, b2) => a2.num - b2.num);
+      return { trailer, objects: asc(found), unresolved: asc(missing) };
+    } catch {
+      return null;
     }
-    return this._info = null;
   }
 };
 function numberVal(v2) {
@@ -40513,6 +40522,10 @@ function readLiteralBytes(s2, pos) {
   while (pos < s2.length) {
     const c2 = s2.charCodeAt(pos);
     if (c2 === 92) {
+      if (pos + 1 >= s2.length) {
+        pos++;
+        break;
+      }
       const nc2 = s2.charCodeAt(pos + 1);
       if (nc2 in simple) {
         bytes.push(simple[nc2]);
@@ -40541,6 +40554,11 @@ function readLiteralBytes(s2, pos) {
       pos += 2;
       continue;
     }
+    if (c2 === 13) {
+      bytes.push(10);
+      pos += s2.charCodeAt(pos + 1) === 10 ? 2 : 1;
+      continue;
+    }
     if (c2 === 40) {
       depth++;
       bytes.push(40);
@@ -40560,7 +40578,7 @@ function readLiteralBytes(s2, pos) {
     bytes.push(c2);
     pos++;
   }
-  return { bytes, pos };
+  return { bytes: Uint8Array.from(bytes), pos };
 }
 function readHexBytes(s2, pos) {
   pos++;
@@ -40572,8 +40590,8 @@ function readHexBytes(s2, pos) {
   }
   pos++;
   if (hex.length % 2) hex += "0";
-  const bytes = [];
-  for (let i2 = 0; i2 < hex.length; i2 += 2) bytes.push(parseInt(hex.substr(i2, 2), 16));
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i2 = 0; i2 < hex.length; i2 += 2) bytes[i2 / 2] = parseInt(hex.substr(i2, 2), 16);
   return { bytes, pos };
 }
 function readContentName(s2, pos) {
@@ -40698,7 +40716,7 @@ async function loadFont(doc, fontVal) {
   if (tu && tu.t === "stream") {
     const data = await doc.streamDecoded(tu);
     if (data) {
-      const parsed = parseToUnicodeCMap(LATIN1.decode(data));
+      const parsed = parseToUnicodeCMap(binaryString(data));
       if (parsed.map.size) {
         toUni = parsed.map;
         width = parsed.width;
@@ -40818,7 +40836,7 @@ async function pageContent(doc, pageMap) {
   for (const st2 of streams) {
     if (st2 && st2.t === "stream") {
       const data = await doc.streamDecoded(st2);
-      if (data) parts.push(LATIN1.decode(data));
+      if (data) parts.push(binaryString(data));
       else {
         doc.note("content_stream_undecodable");
         unread.push("content_stream_undecodable");
@@ -41190,7 +41208,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       undetermined.push({ page: pageIdx, reason: "form_stream_undecodable", font: null, codes: "", count: 0 });
       return;
     }
-    const formToks = tokenizeContent(LATIN1.decode(data));
+    const formToks = tokenizeContent(binaryString(data));
     if (depth >= FORM_DEPTH_LIMIT || key != null && formChain.includes(key)) {
       const unread = textShowBytes(formToks);
       if (unread > 0) {
@@ -41293,7 +41311,7 @@ async function pageShowsText(doc, pageMap) {
       }
       const formRes = doc.dictOf(st2.dict.Resources) || resources;
       if (await walk(
-        LATIN1.decode(data),
+        binaryString(data),
         formRes,
         depth + 1,
         key != null ? [...formChain, key] : formChain
@@ -41433,7 +41451,7 @@ async function decodeContentStreams(doc, contents) {
     if (!st2 || st2.t !== "stream") continue;
     const data = await doc.streamDecoded(st2);
     if (!data) return { text: null };
-    parts.push(LATIN1.decode(data));
+    parts.push(binaryString(data));
   }
   return { text: parts.join("\n") };
 }
@@ -41498,7 +41516,7 @@ async function pdfPageImages(doc, pageIdx) {
             const m2 = matrixOf(doc, st2.dict.Matrix) || [1, 0, 0, 1, 0, 0];
             const formRes = doc.dictOf(st2.dict.Resources) || resources;
             await walk(
-              LATIN1.decode(data),
+              binaryString(data),
               formRes,
               mulMatrix(m2, ctm),
               depth + 1,
@@ -41698,11 +41716,11 @@ function extractActive(doc) {
   }
   const efNodes = embeddedTreeNodes(doc);
   const items = [];
-  for (const num of [...doc.objects.keys()].sort((a2, b2) => a2 - b2)) {
+  for (const num of [...doc._objs.keys()].sort((a2, b2) => a2 - b2)) {
     const page = pageOf.has(num) ? pageOf.get(num) : null;
     walkActive(
       doc,
-      doc.objects.get(num),
+      doc._objs.get(num),
       efNodes,
       0,
       (kind, key, detail) => items.push({ kind, where: { object: num, page, key }, detail })
@@ -41824,7 +41842,7 @@ async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {
     return { ok: false, container: "pdf", reason: "NOT_BYTES" };
   }
-  const header = LATIN1.decode(bytes.subarray(0, 1024));
+  const header = binaryString(bytes.subarray(0, 1024));
   const sig = /%PDF-(\d+\.\d+)/.exec(header);
   if (!sig) {
     return { ok: false, container: "pdf", reason: "NOT_A_PDF" };

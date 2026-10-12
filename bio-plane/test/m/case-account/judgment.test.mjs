@@ -214,7 +214,7 @@ test("R6 (D56–D58, D63; K2531, K2533): accountJudged builds case-grammar R23's
   assert.equal(JSON.parse(a.cited.holdings[1].quote).target_id, DOC, "a leg as its basis states it");
   assert.deepEqual([a.cited.rules, a.cited.looks], [[], []]);
   assert.deepEqual(a.conclusions, [{ finding: Q, claim: "the award followed the minutes", claim_state: "concluded",
-                                     legs: w.inquiry.basisFor(Q).legs }]);
+                                     legs: w.inquiry.basisFor(Q).legs.map((l, k) => ({ ...l, ord: k + 1 })) }], "legs numbered as leg cites are (K2965)");
   assert.deepEqual(a.flags, [{ kind: "account_check", ord: 2, text: "Not cited.", cites: [] }], "the flags after the draft");
   assert.deepEqual([a.lens, a.viewer], [{ in_force: false }, V("alice")]);
   assert.deepEqual([r.refusals, r.refusal, r.flags], [[], null, a.flags]);

@@ -1,5 +1,5 @@
 /* agent-harness (T33-54): copied from `agent-worker/src/harness.mjs` with no change of meaning; its requirements are
- * `build/requirements/agent-harness.md` R1–R9, tested in `agent-harness/test/`. The suites this header names
+ * `build/requirements/agent-harness.md` R1–R10, tested in `agent-harness/test/`. The suites this header names
  * (`test/harness.test.mjs` and the like) are agent-worker's, which drive the Worker shell. R3's default pass limit
  * (`passLimit`) is held here since this copy. The run's plane ops, its namespaces and its meaning arm (`PLANE_OPS`,
  * `NAMESPACES`, `MEANING_ARM`) are `agent-worker`'s, declared once in its `ops.mjs`; this module exports none of them
@@ -182,7 +182,7 @@ export const REPORTING_LEVEL = Object.freeze({
   meaning: "meaning", content: "content", document: "documents", internet: "internet",
 });
 
-/* THE MODES (§2/§10), and WHICH ONE IS DEPLOYED.
+/* THE MODES (§2/§10), and WHICH ARE DEPLOYED: `check` and `plan` (R10, T46).
  *
  * `check` is DEC-24's CHECK role and it deploys first. `investigate` is the
  * fresh-investigation mode and it is NOT deployed: `deployed: false` here is the
@@ -210,14 +210,14 @@ export const MODES = {
                  does: "propose citable passages and readings over a SUBJECT a member named, under the run's "
                      + "`mints` bound, never attesting — §7.3 of docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md; "
                      + "not yet deployed, and a standing EXTRACT run is provisionally NO (§7.3 point 7)" },
-  /* R53 (K660): THE PLANNING SKILL, NOT DEPLOYED. It walks its own table (`PLAN_FLOW`, R50) and proposes options to one
-     action plan through `op=optionpropose`, never deciding anything (`BIO_Action_v0_1.md` §4). It is deployed as soon as
-     this member runs model turns (R40, R48) by the reviewed edit that also sets `run-rules`' `DEPLOYED_MODES` (its R14);
-     until then a plan-mode run closes `mode-not-deployed` at the gate, like every mode this table holds and has not
-     deployed. */
-  plan:        { deployed: false,
+  /* R10 (T46; N919; Bob's, K2892): THE PLANNING SKILL, DEPLOYED. It walks its own table (`PLAN_FLOW`, R6) and proposes
+     options to one action plan through `op=optionpropose`, never deciding anything (`BIO_Action_v0_1.md` §4). It is
+     deployed by the one reviewed change that also sets `run-rules`' `DEPLOYED_MODES` (its R14) and `agent-worker`'s
+     copy (its R53), never by model turns running; this copy must agree with run-rules', and the suite holds it to that.
+     The flag marks served code and lifts no bar: an open in mode `plan` is still admitted only through `run-rules` R29. */
+  plan:        { deployed: true,
                  does: "propose options to one action plan, strongest first, through op=optionpropose; it decides, "
-                     + "starts, prepares and sends nothing (BIO_Action_v0_1.md §4); not yet deployed" },
+                     + "starts, prepares and sends nothing (BIO_Action_v0_1.md §4)" },
 };
 
 /* §14b.6's budget, in the plane's OWN bound names (run-rules'
@@ -559,7 +559,7 @@ export function passLimit(maxPasses) {
   return Number.isFinite(n) && n > 0 ? n : DEFAULT_MAX_PASSES;
 }
 
-/** THE GATE, the first row of either table (R14): a mode that is not deployed closes `mode-not-deployed` before any
+/** THE GATE, the first row of either table (R2): a mode that is not deployed closes `mode-not-deployed` before any
  *  bound is consulted; a deployed one goes on to `resume`. Pure. */
 export function gateStep(state) {
   const s = state || {};
@@ -718,7 +718,7 @@ export function nextStep(state) {
 
 /** THE MOVE FROM ONE ROW TO THE NEXT, as the driver applies it. Pure. `adjust` alone carries the refusal and the
  *  bytes that earned it; every other move clears them, so a stale refusal cannot route a later step into an adjust
- *  it did not earn. The pass counter moves on ENTERING `next-pass`: a pass counts when it is done (R15). */
+ *  it did not earn. The pass counter moves on ENTERING `next-pass`: a pass counts when it is done (R3). */
 export function advance(state, decision) {
   const s = state || {};
   const to = String((decision && decision.step) || "close");
@@ -779,7 +779,7 @@ export function publishableState(state, limit, flow = CONTROL_FLOW) {
   const bytes = stateBytes(full);
   const ceiling = Number(limit);
   if (!(Number.isFinite(ceiling) && ceiling > 0) || bytes <= ceiling) return { state: full, bytes, restarted: null };
-  /* `PLAN_FLOW`'s pass restarts at `read` (R50), `CONTROL_FLOW`'s at `plan`. */
+  /* `PLAN_FLOW`'s pass restarts at `read` (R6), `CONTROL_FLOW`'s at `plan`. */
   const at = flow === PLAN_FLOW ? (full.step === "close" ? "close" : "read")
     : (STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan");
   const restart = resumableState({ step: at, pass: full.pass, adjusted: false });
@@ -790,7 +790,7 @@ const list = (v) => (Array.isArray(v) ? v : []);
 const record = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : null);
 
 /** The steps a published state may name for a table to continue from: `resume`'s edges, and for `PLAN_FLOW` also
- *  `compose`, whose reads a state does not carry, so it continues by reading again (R50). */
+ *  `compose`, whose reads a state does not carry, so it continues by reading again (R6). */
 export const resumeTargets = (flow = CONTROL_FLOW) =>
   (flow === PLAN_FLOW ? [...PLAN_FLOW.resume.to, "compose"] : CONTROL_FLOW.resume.to);
 
@@ -985,11 +985,11 @@ export const PLAN_FLOW = {
   },
 };
 
-/** Which table a run walks: `PLAN_FLOW` for mode `plan`, `CONTROL_FLOW` for every other word (R50). */
+/** Which table a run walks: `PLAN_FLOW` for mode `plan`, `CONTROL_FLOW` for every other word (R6). */
 export const flowFor = (mode) => (mode === "plan" ? PLAN_FLOW : CONTROL_FLOW);
 
-/* R50: `stopBecause` asks `proposals` then `wallclock` for this table; `fetches` and `subsessions` are 0 on a plan-mode
-   run (ai-runs R46) and never asked. R15's pass limit is 1: the one pass is done when its queue is. */
+/* R6: `stopBecause` asks `proposals` then `wallclock` for this table; `fetches` and `subsessions` are 0 on a plan-mode
+   run (ai-runs R46) and never asked. R3's pass limit is 1: the one pass is done when its queue is. */
 export const PLAN_BUDGET_BOUNDS = ["proposals", "wallclock"];
 export const PLAN_MAX_PASSES = 1;
 

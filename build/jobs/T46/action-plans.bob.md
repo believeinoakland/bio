@@ -1,0 +1,24 @@
+# BOB to action-plans (T46)
+
+**Read** · handled J4
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T46), layer 9, action-plans: T46-39 · (N914) R40: `paused` moves the document's `current_state` with its Plan Log (T46-1); (N928) R40: `plansToLookAgain` compares `look_again` with the plan's local day (K1444 (iii)); (N913) 7 rows re-worded (`SCENARIO_OUT_OF_RANGE`, C-124.30, pinned: rule 5) and `plan.close.lessons` read by key · text BOB's; words.json.
+Your requirements: `build/requirements/action-plans.md` (read whole). Marked `*(not yet met: T46)*`: R46, R47 (folded K2959, rulings K2953).
+R46 (b) uses `civil-time`'s `localDay`: the edge is added (K2953).
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); every refusal a control. N913 re-wordings read words by key from `refusal.<CODE>`, changing no code, number or `where`; the rows your requirements keep are not re-worded.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START, and those named in K2924–K2963; none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 1013 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
+Merge order in L9: conformance, consequences, action-grammar, actions, action-holds, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work; a job that uses an L9 job's new service merges `tranche/T46` when BOB announces that merge (a CHANGE); each that uses no unmerged L9 job merges as soon as it is complete.
+
+## B2 · CHANGE
+
+CHANGE (K2984): action-grammar (T46-31), filing-templates (T46-36) and actions (T46-32: R98, a timed clock entry moved pending to overdue once its instant passes, `dueInstant` exported; R99) are merged into `tranche/T46`, as are conformance and consequences (K2980, K2983). Merge `tranche/T46` into your branch before you complete, re-run your tests on it, and name in your record any red it opens.
+
+## B3 · CHANGE
+
+CHANGE (K2987): action-clocks, action-replies, filings and escalation are now merged into `tranche/T46` too (after B2's). Merge `tranche/T46` into your branch again, re-run your tests and your users' on it, and record completion again; name any red it opens.

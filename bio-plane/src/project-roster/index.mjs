@@ -1,12 +1,13 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R24). T45 adds a project's scope (R21–R23: a counsel matter, a
+ * Requirements: build/requirements/project-roster.md (R1–R25). T45 adds a project's scope (R21–R23: a counsel matter, a
  * member's own project; the guard membership calls before an invitation or a visibility change, its R128) and the
- * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`. Split from membership for size at T38 (N783; K617,
- * K624, K2270: variant C1′ of `build/plan/membership-split.md`), by copy: each act's behaviour is membership's as T37
- * left it, its answers byte for byte. Inviting, joining, leaving and removing, the visibility setting, what a caller may
- * see of a project, the fence and the participation record stay `membership`'s.
+ * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`; T46 (R25)
+ * reads their refusals' words by key from `words.json` (`checks.mjs`' `PROJECT_SCOPE_WORDS`). Split from membership for
+ * size at T38 (N783; K617, K624, K2270: variant C1′ of `build/plan/membership-split.md`), by copy: each act's
+ * behaviour is membership's as T37 left it, its answers byte for byte. Inviting, joining, leaving and removing, the
+ * visibility setting, what a caller may see of a project, the fence and the participation record stay `membership`'s.
  * Design: docs/architecture/BIO_Membership_Architecture_v2.md §7.
  *
  * SHAPE (K61). `projectRosterOf(ctx)` answers the one instance for a Durable Object's storage, over `ctx.storage.sql`,
@@ -23,7 +24,7 @@ import { Membership, membershipOf, noSuchProject, viewerPredicate } from "../mem
 import { PROJECT_ROSTER_SCHEMA, PROJECT_ROSTER_TABLES } from "./schema.mjs";
 import { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECKS } from "./checks.mjs";
 export { PROJECT_ROSTER_TABLES } from "./schema.mjs";
-export { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECKS } from "./checks.mjs";
+export { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECKS, PROJECT_SCOPE_WORDS } from "./checks.mjs";
 
 const ROOT_ADMIN = Membership.ROOT_ADMIN;
 

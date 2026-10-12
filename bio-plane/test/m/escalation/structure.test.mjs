@@ -201,6 +201,11 @@ test("R30 escalation registers once with events.registerEventSource at start; fo
   assert.equal(w.esc.escalationSuspend({ id: w.E, reason: "Hold.", author: V("bob"), viewer: V("bob") }).ok, true);
   w.clock.now = "2026-10-02T00:00:00Z";
   assert.equal(w.esc.escalationResume({ id: w.E, author: V("bob"), viewer: V("bob") }).ok, true);
+  /* R31: the stop and the reopening, each dated and without its reason */
+  w.clock.now = "2026-10-02T06:00:00Z";
+  assert.equal(w.esc.escalationStopPursuing({ id: w.E, reason: "SECRET-stop", author: V("bob"), viewer: V("bob") }).ok, true);
+  w.clock.now = "2026-10-02T12:00:00Z";
+  assert.equal(w.esc.escalationReopen({ id: w.E, reason: "SECRET-reopen", author: V("bob"), viewer: V("bob") }).ok, true);
   /* the end: compliance restored and the consequences addressed */
   w.clock.now = "2026-10-03T00:00:00Z";
   w.determine({ project: w.P, act: w.determinations.get(w.D).act.id, outcomes: twoStandards.map((o) => ({ ...o, outcome: "compliant" })) });
@@ -225,6 +230,10 @@ test("R30 escalation registers once with events.registerEventSource at start; fo
   assert.equal(label("evaluate"), `A response evaluated in escalation ${w.E}: denied`);
   assert.equal(label("decline"), `Escalation ${w.E}: the move from stage 5 (legal_tools) to stage 7 (political_accountability) declined for now`);
   assert.equal(label("end"), `Escalation ${w.E} ended`);
+  assert.equal(label("stopped_pursuing"), `Escalation ${w.E}: the group stopped pursuing it at stage 5 (legal_tools)`);
+  assert.equal(label("reopened"), `Escalation ${w.E} reopened at stage 5 (legal_tools)`);
+  assert.ok(all.items.filter((x) => ["stopped_pursuing", "reopened"].includes(x.kind)).every((x) => x.public === true), "outward acts");
+  assert.equal(JSON.stringify(all.items).includes("SECRET"), false, "R30: never the reason");
   assert.ok(all.items.some((x) => x.label === `Action ${a5} attached to escalation ${w.E} at stage 5 (legal_tools)`));
   assert.equal(all.truncated, false);
   /* the act's event names it too; an id of neither, or an empty set, names nothing */
@@ -235,7 +244,8 @@ test("R30 escalation registers once with events.registerEventSource at start; fo
   /* from–to: a day bound covers its day; an instant bound is exact */
   const days = (q) => src({ set: [w.clerk], ...q }).items.map((x) => x.at);
   assert.deepEqual(days({ from: "2026-09-30", to: "2026-10-01" }), ["2026-09-30T00:00:00Z", "2026-10-01T00:00:00Z"]);
-  assert.deepEqual(days({ from: "2026-10-01T00:00:01Z" }), ["2026-10-02T00:00:00Z", "2026-10-03T00:00:00Z"]);
+  assert.deepEqual(days({ from: "2026-10-01T00:00:01Z" }),
+    ["2026-10-02T00:00:00Z", "2026-10-02T06:00:00Z", "2026-10-02T12:00:00Z", "2026-10-03T00:00:00Z"]);
   /* limit: oldest first, the rest truncated; clamped to 1–500 */
   const two = src({ set: [w.clerk], limit: 2 });
   assert.deepEqual([two.items, two.truncated, two.limit], [all.items.slice(0, 2), true, 2]);

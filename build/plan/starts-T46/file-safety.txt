@@ -1,0 +1,8 @@
+Depth 2. Your entry: `build/plan/current.md` (T46), layer 3, file-safety: T46-7 (N897 (4); DEC-149; trial draft §3.2): R42 new: `SCANNER_ABSENT` and `RENDERER_ABSENT` answered in member words (C-140.2, C-140.13, whose translations already are), and the details at R4, R11, R12, R29, R33, R41 that said "beside this copy" now say "your group's Civicsmith" (K2919; no row moves). Text BOB's.
+Your requirements: `build/requirements/file-safety.md` (read whole). Marked `*(not yet met: T46)*`: R42; the six amended sentences are tested under R42.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START, and those named in K2924–K2932; none is yours.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 785 KB, over the 600 KB limit, mostly the used modules' public parts (an upper bound, 420 KB). Read your requirements, code and tests whole; for the used modules' public parts, give helpers in your session your entry and what follows it (L11's instance-setup and setup-page read `SCANNER_ABSENT`'s words), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+You are alone in L3.

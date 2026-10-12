@@ -1,4 +1,4 @@
-/* GATE: reads newgroup/src/index.mjs newgroup/src/ui.mjs newgroup/src/release.mjs newgroup/src/signers.mjs newgroup/dist/newgroup.bundled.mjs newgroup/package.json bio-plane/src/sshsig.mjs
+/* GATE: reads newgroup/src/index.mjs newgroup/src/ui.mjs newgroup/src/images.mjs newgroup/src/release.mjs newgroup/src/signers.mjs newgroup/dist/newgroup.bundled.mjs newgroup/package.json bio-plane/src/sshsig.mjs
  *
  * DIST-13 — THE INSTALLER'S COMMITTED BUNDLE IS FRESH, OR THE GATE SAYS WHICH WAY IT IS NOT.
  *

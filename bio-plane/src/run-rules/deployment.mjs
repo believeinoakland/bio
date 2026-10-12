@@ -110,11 +110,18 @@ export const DEPLOYMENT_SEQUENCE = {
   /* R14: THE MODES THAT DEPLOY APART FROM THE CHAIN, each with its own flag and the condition that sets it. A mode here
      takes no part in the chain's verification: `DEPLOYED_MODES` below reads the chain from `order` without it, and
      adds it only when its flag is true. `false` until the change that meets its condition flips it under review. */
+  /* R14 (T46; N919; Bob's K2892, K2914): `plan`'s act is MADE, by this change together with `agent-worker`'s `MODES.plan`
+     (its R53) and `agent-harness`' copy (its R10), because a member's own planning run is now served end to end (`ai-runs`
+     R18 as T46 amends it). The flag marks served code and lifts no bar: a run in mode `plan` is admitted only through
+     `partAdmittedOn` (R29, `./test-bar.mjs`), so D14's test bar still gates it on every instance but a test instance. */
   deploys_apart: {
     plan: {
-      deployed: false,
+      deployed: true,
       when: "only by an explicit reviewed change of its own, which sets this flag and agent-worker's MODES.plan "
         + "together; never as a side effect of model turns running, and whether or not investigate or extract is deployed",
+      made: "T46 (K2892): set by its own reviewed change with agent-worker's MODES.plan, because a member's own planning "
+        + "run is served end to end; the flag marks served code and lifts no bar, so a run in mode plan is admitted only "
+        + "through partAdmittedOn (R29), D14's test bar gating it on every instance but a test instance",
     },
   },
 
@@ -146,7 +153,9 @@ export const DEPLOYMENT_SEQUENCE = {
  *  verification, and is deployed only by its own flag here, `deployed`, set by a reviewed change of its own whatever
  *  the run modes' state. Its reach is `answers`' `ASK_SCOPE` (that module's R1) and nothing else: no write op of any
  *  module. The flag lives on this object and not inside `DEPLOYMENT_SEQUENCE`, whose only flags are its own order's
- *  modes' (`deploys_apart`). Frozen. */
+ *  modes' (`deploys_apart`). Frozen.
+ *  T46 (N897 (2); K2816; `draft-T46-trial.md` §6 B1): the flag is `true`, set by its own reviewed change, because the path
+ *  is served end to end; whether an ask runs is then R19's test bar alone, asked through R29 (`partAdmittedOn`). */
 export const ASK_MODE = Object.freeze({
   mode: "ask",
   read_only: true,
@@ -156,8 +165,11 @@ export const ASK_MODE = Object.freeze({
   why: "it answers one member's question inside that member's act and is no run: it writes no run row and no "
     + "observation, and keeps nothing but the member's own device-local transcript (K1450)",
   deploys_apart: true,
-  deployed: false,
+  deployed: true,
   when: "only by a reviewed change of its own that sets this flag, whatever the run modes' state",
+  made: "T46 (N897 (2); K2816): set by its own reviewed change, because agent-worker's /ask is served end to end (since "
+    + "T33); the flag marks served code and lifts no bar, so an ask is admitted only through partAdmittedOn(set, \"ask\", "
+    + "…) (R29), D14's test bar gating it on every instance but a test instance",
   bounds: "ASK_BOUNDS (R17), declared when the ask starts",
 });
 
@@ -165,14 +177,15 @@ export const ASK_MODE = Object.freeze({
  *  member's own words; `translation` the assistant's draft of the interface words a group's language lacks, or its
  *  reading of one kept word back into English for an administrator's check (DEC-127 (5), DEC-157 (2), (4)). Frozen. */
 export const DRAFT_KINDS = Object.freeze(["own_words", "translation", "case_account", "account_check", "bearing_note",
-  "textcheck", "infractiondraft", "bearingdraft"]);
+  "textcheck", "infractiondraft", "bearingdraft", "statusreport"]);
 
-/** R27 (T45-10; N861, N887; Actions D11b, D21, D25; v0.2 rules 1, 2, 9, 16, 19, 21) — THE ACTION DRAFTS, the last three of
+/** R27 (T45-10; N861, N887; Actions D11b, D21, D25; v0.2 rules 1, 2, 9, 16, 19, 21) — THE ACTION DRAFTS, the three of
  *  DRAFT_KINDS (`agent-worker` R76's tasks): `textcheck`, the sentences of a prepared outward text that read as an
  *  assertion of breach, a policy position, an ask for the group's own benefit or a name of staff below the responsible
  *  official; `infractiondraft`, a documented account of a matter for one audience; `bearingdraft`, a reply's claims laid
- *  out claim by claim. Each is R21's mode in every other respect. Frozen. */
-export const ACTION_DRAFT_KINDS = Object.freeze(DRAFT_KINDS.slice(-3));
+ *  out claim by claim. Each is R21's mode in every other respect. Named, not sliced off DRAFT_KINDS' end: R27's T46
+ *  `statusreport` follows them in DRAFT_KINDS and is not one of them (it deploys under `draft`'s flag alone). Frozen. */
+export const ACTION_DRAFT_KINDS = Object.freeze(["textcheck", "infractiondraft", "bearingdraft"]);
 
 /** R22, R25 (T41-21; D56, D22) — WHAT EACH KIND OF DRAFT MAY READ. `own_words` reads within `answers`' ASK_SCOPE (R21), and
  *  through a grant only as `draftMayRead` says; `translation` reads nothing of the record (R22). R25's three, the system's
@@ -184,7 +197,9 @@ export const ACTION_DRAFT_KINDS = Object.freeze(DRAFT_KINDS.slice(-3));
  *  R27 (T45-10): the action drafts. `textcheck` reads nothing of the record, given only the prepared text it is asked
  *  about, as a translation is given only its words. `infractiondraft` and `bearingdraft` read through the asking member's
  *  grant (so `draftMayRead` is true for them), each only its own narrow part of the record, through the record reads the
- *  grant already admits (`credentials`' AI_GRANT_OPS, no op added), and no write op of any module. Frozen, every level. */
+ *  grant already admits (`credentials`' AI_GRANT_OPS, no op added), and no write op of any module.
+ *  R27 (T46; N920): `statusreport`, the assistant's draft of a plan's status report, reads nothing of the record: only the
+ *  items `plan-work` R8 assembled, handed in by the door, so `draftMayRead` is false for it. Frozen, every level. */
 export const DRAFT_REACH = Object.freeze({
   own_words: Object.freeze({ scope: "ask_scope", means: "within answers' ASK_SCOPE (its R1); a firsthand field reads nothing" }),
   translation: Object.freeze({ scope: "none", means: "nothing of the record: only the interface words it is asked about" }),
@@ -194,13 +209,17 @@ export const DRAFT_REACH = Object.freeze({
   textcheck: Object.freeze({ scope: "none", means: "nothing of the record: only the prepared text it is asked about, as a translation draft is given only its words" }),
   infractiondraft: Object.freeze({ scope: "matter_record", means: "through the asking member's grant, only the matter's own record the member may see: its plan, actions, correspondence and findings, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" }),
   bearingdraft: Object.freeze({ scope: "action_reply", means: "through the asking member's grant, only the action and the reply it is asked about, with the request's claims, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" }),
+  statusreport: Object.freeze({ scope: "none", means: "nothing of the record: only the items plan-work R8 assembled for the plan's status report, handed in by the door" }),
 });
 
 /** R27 — THE ACTION DRAFTS' ONE DEPLOY FLAG, `action_drafts`, held here as `ask`'s and `draft`'s are on their modes. The
  *  three kinds of ACTION_DRAFT_KINDS deploy only when both this flag and `draft`'s are true (`draftKindDeployed`):
  *  `draft`'s flag alone never deploys them. False until a reviewed change of its own sets it, once R19's test bar is
  *  held for each of the three (`draft:<kind>`). It names no mode: `deployedModesFor` takes it among its flags and no mode
- *  moves for it. Frozen. */
+ *  moves for it. Frozen.
+ *  T46 (K2914; M-T46-5, K2946): stays `false`. M-T46-5 found `textcheck` without a plane op (`ACTION_DRAFT_OPS` holds
+ *  only `infractiondraft` and `bearingdraft`; N917), so the three are not all served end to end, and R27's T46 clause is
+ *  carried to a later tranche. */
 export const ACTION_DRAFTS = Object.freeze({
   flag: "action_drafts",
   kinds: ACTION_DRAFT_KINDS,
@@ -225,7 +244,9 @@ export const TRANSLATION_DRAFT_MAX_WORDS = 100;
  *  C-109.1). Frozen.
  *  T37 (T37-49; N669; K2200, K2201): a draft is of one of `DRAFT_KINDS` (R22). `own_words` is everything above, its reach
  *  `reach` and `firsthand_reach`; `translation` is the same mode on the same flag and bounds, its reach
- *  `translation_reach`: nothing of the record. */
+ *  `translation_reach`: nothing of the record.
+ *  T46 (N897 (2); K2816; `draft-T46-trial.md` §6 B1): the flag is `true`, set by its own reviewed change, because
+ *  `POST /draft` is served; each kind is then admitted through R29 for its part `draft:<kind>` alone. */
 export const DRAFT_MODE = Object.freeze({
   mode: "draft",
   read_only: true,
@@ -246,9 +267,13 @@ export const DRAFT_MODE = Object.freeze({
   why: "it answers one member's request for help with their own words inside that member's act and is no run: it "
     + "writes no run row and keeps nothing (K1364, K1450)",
   deploys_apart: true,
-  deployed: false,
+  deployed: true,
   when: "only by a reviewed change of its own that sets this flag, the change that serves agent-worker's POST /draft, "
     + "whatever the run modes' state and whatever ask's flag",
+  made: "T46 (N897 (2); K2816): set by its own reviewed change, because agent-worker's POST /draft is served (since T35 "
+    + "and T37); the flag marks served code and lifts no bar, so each draft kind is admitted only through "
+    + "partAdmittedOn for its part draft:<kind> (R29), D14's test bar gating it on every instance but a test instance; "
+    + "the action drafts still wait on their own flag, action_drafts (R27)",
   bounds: "ASK_BOUNDS (R17), declared when the draft starts",
 });
 
@@ -293,7 +318,8 @@ export function draftMayRead(asked) {
 
 /** R27 — IS A DRAFT OF THIS KIND DEPLOYED UNDER THESE FLAGS? `flags` may name `draft` (R21) and `action_drafts` (R27), a
  *  name left out taking the value this module holds today, as `deployedModesFor`'s. One of ACTION_DRAFT_KINDS: `true`
- *  only when both flags are exactly `true`. R22's and R25's kinds: exactly when `draft`'s flag is. An unknown kind:
+ *  only when both flags are exactly `true`. R22's and R25's kinds, and T46's `statusreport`: exactly when `draft`'s flag
+ *  is. A flag marks served code only: whether a deployed kind runs is R29's (`partAdmittedOn`). An unknown kind:
  *  `false`. Own keys only. Pure; never throws. */
 export function draftKindDeployed(asked) {
   const kind = own(asked, "kind") ? asked.kind : null;

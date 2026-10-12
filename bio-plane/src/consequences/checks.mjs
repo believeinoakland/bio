@@ -11,7 +11,55 @@
  * `AFFECTED_INDIVIDUAL` (C-114.5) is retired. Codes R2 answers for its owners, `calc-grammar`'s `UNIT_MISMATCH` and
  * `money`'s summation codes (`SUM_MIXED_*`, `FACT_WITHDRAWN`), are theirs and carry no row here (`foreignRefusal`).
  * T45 adds R9's four, the success record's (R17–R21) and the carry's (R22), C-114.23 onward; `NO_SUCH_PROJECT` (R17) is
- * membership's, `DETERMINATION_VOID` (R1) conformance's, and `carryOutcome`'s codes case-authoring's: none has a row here. */
+ * membership's, `DETERMINATION_VOID` (R1) conformance's, and `carryOutcome`'s codes case-authoring's: none has a row here.
+ * T46 (R25; DEC-194, N913): seventeen of T45's rows take their translations from `words.json`'s `refusal.<CODE>`, read by
+ * key from `CONSEQUENCES_WORDS`, never a copy; their codes, numbers and `where`s are unmoved. C-114.29, .34 and .37 keep
+ * their own in T46 (R25), as do the rows `words.json` does not hold. */
+
+/* R25 (T46; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module
+   answers, each `en` verbatim, read by key, as membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are:
+   seventeen rows' `refusal.<CODE>` and R19's two sentences. The design stream's words: re-worded there, then re-taken
+   here by key; a row never holds a copy of its sentence. Not taken in T46 (R25), each returned to BOB until its words and
+   this module's behaviour agree: `refusal.SUCCESS_NO_STATEMENT`, `refusal.SUCCESS_CAUSE_UNSTATED`,
+   `refusal.SUCCESS_CAUSE_UNCHECKABLE`. */
+export const CONSEQUENCES_WORDS = Object.freeze({
+  "refusal.ADDRESSED_WORD_REFUSED": "A harm addressed is described with the words Remedied, Mitigated, Compensated, "
+    + "Acknowledged or Can't be undone, and a harm not addressed takes none of them. Nothing was written.",
+  "refusal.ADDRESSED_NO_PERCENTAGE": "How far a harm was addressed is said in words, never as a percentage, share or score. "
+    + "Nothing was written.",
+  "refusal.ADDRESSED_NO_REASON": "Say why, in your own words. Your reason is kept with the statement. Nothing was written.",
+  "refusal.ADDRESSED_BAD_REASON": "Your reason is longer than 2,000 characters. Shorten it. Nothing was written.",
+  "refusal.MACHINE_CANNOT_RECORD_SUCCESS": "Only a member records a success. Nothing was written.",
+  "refusal.SUCCESS_NOT_A_PARTICIPANT": "Only someone who has joined this project can record its success. Nothing was written.",
+  "refusal.SUCCESS_BAD_DATE": "The date it changed must be a real day, or a range such as a month or a year. Nothing was "
+    + "written.",
+  "refusal.SUCCESS_NO_EVIDENCE": "A success cites what shows it: at least one document or finding you can see. Nothing was "
+    + "written.",
+  "refusal.SUCCESS_TOO_LARGE": "A success cites at most 50 items and 20 figures, and its order of events is at most 1,000 "
+    + "characters. Nothing was written.",
+  "refusal.SUCCESS_FIGURE_NOT_COMPUTED": "A figure in a success is computed from amounts in the record, never typed in. "
+    + "Choose the amounts it comes from. Nothing was written.",
+  "refusal.SUCCESS_CAUSE_NOT_EVIDENCED": "A stated cause cites what shows it: at least one document or finding you can see. "
+    + "Nothing was written.",
+  "refusal.SUCCESS_CAUSE_OWN_ACT_ONLY": "Everything cited for the cause is your group's own act, and your own act never "
+    + "shows that it caused the change. Cite what the body did or said, or leave the cause out. Nothing was written.",
+  "refusal.NO_SUCH_SUCCESS_RECORD": "There is no success by that name, or none you can see. Nothing was written.",
+  "refusal.SUCCESS_NO_REASON": "Say why you are revising it. Your reason is kept with the change. Nothing was written.",
+  "refusal.SUCCESS_BAD_REASON": "Your reason is longer than 2,000 characters. Shorten it. Nothing was written.",
+  "refusal.SUCCESS_SUPERSEDED": "This success was already revised. Revise or carry its latest version. Nothing was written.",
+  "refusal.MACHINE_CANNOT_CARRY": "Only a member carries an outcome into a case. Nothing was written.",
+  "consequences.success.sequence_not_cause": "This is the order things happened in. It doesn't say one caused the other.",
+  "consequences.success.cause_not_stated": "No cause is stated.",
+});
+
+/** R25: a word read by key; a throw for a key the list lacks, because a missing sentence is silent and reaches a person
+ *  while a throw is loud in a test (DEC-49's rule). */
+export function consequencesWords(key) {
+  const en = CONSEQUENCES_WORDS[key];
+  if (typeof en !== "string" || !en) throw new Error(`consequencesWords: ${key} is not one of this module's words (words.json)`);
+  return en;
+}
+const words = (code) => consequencesWords(`refusal.${code}`);
 
 const at = (fn) => `src/consequences/index.mjs ${fn}`;
 const row = (n, fn, translation) => Object.freeze({ check: `C-114.${n}`, where: at(fn), translation });
@@ -55,46 +103,31 @@ export const CONSEQUENCES_CHECKS = Object.freeze({
     + "names them: give the content whose passage names the person. Nothing was written."),
   AFFECTED_NOT_A_PERSON: row(22, "#checkPerson", "Only a registered person is recorded as an affected person: the entity "
     + "named is not one this record holds as a person. Nothing was written."),
-  /* T45 (R9 amended; R17–R22): the next numbers of C-114, in the requirements' Rows order; translations BOB's drafts,
-     the UX stream's to revise. */
-  ADDRESSED_WORD_REFUSED: row(23, "addressedRecord", "The plain words a statement may carry are remedied, mitigated, "
-    + "compensated, acknowledged and cannot be undone, each once, and only on a part recorded addressed. Nothing was written."),
-  ADDRESSED_NO_PERCENTAGE: row(24, "addressedRecord", "Whether harm is addressed is said in words with evidence, never as a "
-    + "percentage, share, ratio or score. Nothing was written."),
-  ADDRESSED_NO_REASON: row(25, "addressedRecord", "Whether a part is addressed or not is a reasoned statement: say why. "
-    + "Nothing was written."),
-  ADDRESSED_BAD_REASON: row(26, "addressedRecord", "A reason is at most 2,000 characters. Nothing was written."),
-  MACHINE_CANNOT_RECORD_SUCCESS: row(27, "#successRefusal", "A success record is a member's statement. A machine may "
-    + "compute a figure for a member to adopt; it never records a success. Nothing was written."),
-  SUCCESS_NOT_A_PARTICIPANT: row(28, "#successRefusal", "Recording a success is work inside the project, done by a member "
-    + "who has joined it. Nothing was written."),
+  /* T45 (R9 amended; R17–R22): the next numbers of C-114, in the requirements' Rows order. T46 (R25): seventeen read
+     `words.json`'s `refusal.<CODE>` by key; C-114.29, .34 and .37 keep T45's words until theirs and R17, R19 agree. */
+  ADDRESSED_WORD_REFUSED: row(23, "addressedRecord", words("ADDRESSED_WORD_REFUSED")),
+  ADDRESSED_NO_PERCENTAGE: row(24, "addressedRecord", words("ADDRESSED_NO_PERCENTAGE")),
+  ADDRESSED_NO_REASON: row(25, "addressedRecord", words("ADDRESSED_NO_REASON")),
+  ADDRESSED_BAD_REASON: row(26, "addressedRecord", words("ADDRESSED_BAD_REASON")),
+  MACHINE_CANNOT_RECORD_SUCCESS: row(27, "#successRefusal", words("MACHINE_CANNOT_RECORD_SUCCESS")),
+  SUCCESS_NOT_A_PARTICIPANT: row(28, "#successRefusal", words("SUCCESS_NOT_A_PARTICIPANT")),
   SUCCESS_NO_STATEMENT: row(29, "#successRefusal", "Say in your own words what changed: at most 2,000 characters. Nothing "
     + "was written."),
-  SUCCESS_BAD_DATE: row(30, "#successRefusal", "When the change took place is a real date, such as 2026-05-14, or a band "
-    + "of dates. Nothing was written."),
-  SUCCESS_NO_EVIDENCE: row(31, "#successRefusal", "A success rests on evidence: content or findings this record holds and "
-    + "you may see. Nothing was written."),
-  SUCCESS_TOO_LARGE: row(32, "#successRefusal", "A success record holds at most 50 items of evidence, 20 figures and a "
-    + "sequence of 1,000 characters. Nothing was written."),
-  SUCCESS_FIGURE_NOT_COMPUTED: row(33, "#successFigures", "A figure on a success record is computed from cited sources, "
-    + "never stated: give its computation and its operands. Nothing was written."),
+  SUCCESS_BAD_DATE: row(30, "#successRefusal", words("SUCCESS_BAD_DATE")),
+  SUCCESS_NO_EVIDENCE: row(31, "#successRefusal", words("SUCCESS_NO_EVIDENCE")),
+  SUCCESS_TOO_LARGE: row(32, "#successRefusal", words("SUCCESS_TOO_LARGE")),
+  SUCCESS_FIGURE_NOT_COMPUTED: row(33, "#successFigures", words("SUCCESS_FIGURE_NOT_COMPUTED")),
   SUCCESS_CAUSE_UNSTATED: row(34, "#causeRefusal", "Saying the group's action caused the change is a statement in your own "
     + "words, at most 2,000 characters. Nothing was written."),
-  SUCCESS_CAUSE_NOT_EVIDENCED: row(35, "#causeRefusal", "Saying the group's action caused the change rests on evidence: "
-    + "between 1 and 50 items this record holds and you may see. Nothing was written."),
-  SUCCESS_CAUSE_OWN_ACT_ONLY: row(36, "#causeRefusal", "The group's own act is never evidence that it caused the change: "
-    + "cite evidence other than the group's own actions and what it sent. You may state the sequence of events instead. "
-    + "Nothing was written."),
+  SUCCESS_CAUSE_NOT_EVIDENCED: row(35, "#causeRefusal", words("SUCCESS_CAUSE_NOT_EVIDENCED")),
+  SUCCESS_CAUSE_OWN_ACT_ONLY: row(36, "#causeRefusal", words("SUCCESS_CAUSE_OWN_ACT_ONLY")),
   SUCCESS_CAUSE_UNCHECKABLE: row(37, "#causeRefusal", "Whether the cause rests only on the group's own acts could not be "
     + "checked, so it is not recorded. You may state the sequence of events instead. Nothing was written."),
-  NO_SUCH_SUCCESS_RECORD: row(38, "noSuchSuccessRecord", "No success record answers to that id. One you may not see is "
-    + "answered exactly as one that does not exist."),
-  SUCCESS_NO_REASON: row(39, "successRevise", "A revision of a success record says why. Nothing was written."),
-  SUCCESS_BAD_REASON: row(40, "successRevise", "A reason is at most 2,000 characters. Nothing was written."),
-  SUCCESS_SUPERSEDED: row(41, "successSuperseded", "This success record has been revised: its successor carries the record "
-    + "forward. Nothing was written."),
-  MACHINE_CANNOT_CARRY: row(42, "outcomeCarry", "Carrying an outcome into the case's next edition is a member's act. A "
-    + "machine never carries one. Nothing was written."),
+  NO_SUCH_SUCCESS_RECORD: row(38, "noSuchSuccessRecord", words("NO_SUCH_SUCCESS_RECORD")),
+  SUCCESS_NO_REASON: row(39, "successRevise", words("SUCCESS_NO_REASON")),
+  SUCCESS_BAD_REASON: row(40, "successRevise", words("SUCCESS_BAD_REASON")),
+  SUCCESS_SUPERSEDED: row(41, "successSuperseded", words("SUCCESS_SUPERSEDED")),
+  MACHINE_CANNOT_CARRY: row(42, "outcomeCarry", words("MACHINE_CANNOT_CARRY")),
   /* T45 (R22): BOB's answer to J1 point 2 pending (the job's best reading). */
   CARRY_NOT_ADDRESSED: row(43, "outcomeCarry", "Only a part a member has recorded addressed, with evidence, is carried "
     + "as harm addressed. Nothing was written."),

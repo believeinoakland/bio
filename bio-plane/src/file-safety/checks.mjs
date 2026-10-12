@@ -22,7 +22,7 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
   /* R2, R6, R8, R9, R11, R13, R33: the digest names nothing the record holds. */
   FILE_NOT_HELD: row('C-140.1', at("#held", "is-capture-held"),
     'Your group\'s Civicsmith holds no captured file under that digest, so there is nothing to check or open.'),
-  /* R4, R8 (K1928 Q4): the scanner is not installed beside this copy. */
+  /* R4, R8 (K1928 Q4), R42: your group's Civicsmith has no scanner installed. */
   SCANNER_ABSENT: row('C-140.2', at("scanBatch", "is-scanner-bound"),
     'Your group\'s Civicsmith has no virus scanner installed, so no file was scanned and no note was written. '
       + 'Whoever installed it can add the scanner; until then a file\'s checks say it was not scanned.'),

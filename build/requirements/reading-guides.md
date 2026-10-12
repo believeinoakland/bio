@@ -1,6 +1,6 @@
 # reading-guides — requirements
 
-**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.4 (N820; D8, D24, D65). Every requirement not yet met (T41).
+**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.4 (N820; D8, D24, D65). Every requirement not yet met (T41). Last changed T46 (T46-15: R14 new, `GUIDE_KIND_UNKNOWN` and `GUIDE_ITEM_UNSOURCED` read by key from `words.json`, and the procedure guide's label read by `guide.procedure.legalinfo`; DEC-194, N913); marked not yet met (T46).
 
 **Size (P6).** About 900 lines.
 
@@ -24,6 +24,7 @@ Terms. A **guide** is `GUD-` (`record-grammar` R53): `{id, kind, origin, items, 
 - **R8** `guidesOf({kind?, state?, viewer})` lists guides the viewer may see, at most 200, `truncated`.
 - **R12** `guidePropose({kind, items, run, by})` stores a machine draft apart, labelled (`record-grammar` R42); only a member's R2 act with `based_on` makes it a guide.
 - **R13** (T45; N858; Actions D8; v0.2 rule 11) A guide may have `purpose` `procedure` (a reading guide's is `reading`, the default): `kind` an `action_kinds` kind of the active profiles' view (`GUIDE_KIND_UNKNOWN` otherwise), each item `{route, expect?, citation}`, `route` and `expect` short plain strings, `citation` required (`GUIDE_ITEM_UNSOURCED`). R2, R3, R6–R8 and R12 hold for it. R4's check for a procedure guide applies only its op form, its party-to-conduct list and `skills` R16's control-flow check (a procedure names acts and duties, "send", "must", by nature); its look-for opening and its act and rule words do not apply. `procedureGuidesFor({kind, viewer})` answers the profile's guide for `kind` (from `combine`, `jurisdictions` R80) first, then the group's approved procedure guides in the order approved, each with its origin, answered as `{kind, guides: [{guide, origin, items}], label}` (`guide` the guide's id; K2820), served to members by `op=procedureguides` (`{kind}`, declared by `op-declarations`); no rank, score or preferred route; every answer carries `label` keyed `guide.procedure.legalinfo` (canon's words, v0.2 rule 11: "legal information, not legal advice"). Never throws.
+- **R14** (T46; DEC-194; N913; amends R11, R13) The rows C-144.4 `GUIDE_KIND_UNKNOWN` and C-144.19 `GUIDE_ITEM_UNSOURCED` take their translations from `words.json`'s `refusal.<CODE>`, read by key (as `membership`'s `HANDLE_WORDS` and `extraction`'s `TRANSCRIBE_WORDS` are), never a copy of the sentence; codes, numbers, `where`s and behaviour are unmoved, and each still says nothing was written. R13's `label` (`PROCEDURE_GUIDE_LABEL`) carries the words of `guide.procedure.legalinfo` read by that key ("Legal information, not legal advice", protected), never its own copy; the key is unchanged. This module's other rows, which `words.json` does not hold, keep theirs. The two changed rows wait for T47's promotion stamp (T46 rule 5 (2)).
 
 ## Private
 
@@ -45,6 +46,7 @@ Terms. A **guide** is `GUD-` (`record-grammar` R53): `{id, kind, origin, items, 
 
 - The investigation design of record (K2417): D8, D24, D65; D1's "reading-guide library".
 - `BIO_Action_v0_2.md` rule 11 (K2780; T45, N893): procedure guides per kind, legal information, unranked, a group's own beside the profile's (R13).
+- DEC-194 (R14; N913).
 
 ### Suggestions
 

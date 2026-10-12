@@ -24,11 +24,12 @@
  * language lacks, or one kept word read back into English. It reads nothing at all (`run-rules` R22) and is told
  * apart below, after the task is read.
  *
- * THE ACTION DRAFTS (R76, R77; T45). The door also routes `textcheck`, `infractiondraft` and `bearingdraft` here, in
- * `action-drafts.mjs`, on this file's pack read, read tool and endings. */
+ * THE ACTION DRAFTS (R76, R77; T45, T46). The door also routes `textcheck`, `infractiondraft`, `bearingdraft` and (T46)
+ * `statusreportdraft` here, in `action-drafts.mjs`, on this file's pack read, read tool and endings. */
 import { admitRead, readTool, ASK_DECLARED } from "./ask.mjs";
 import { toolContent } from "./reads.mjs";
 import { ACTION_DRAFT_OPS, actionTaskOf, actionDraft } from "./action-drafts.mjs";
+import { untestedOf, UNTESTED_BAD } from "./untested.mjs";
 import { askBoundReached, draftMayRead, TRANSLATION_DRAFT_MAX_WORDS } from "../../bio-plane/src/run-rules/index.mjs";
 
 /** The tasks a draft is asked for, and the field shapes of each (R59; R68, the translation draft; R76, the action
@@ -139,6 +140,10 @@ export async function handleDraft(req, env, deps) {
       + "draft was made and no model was called.", 503);
   const body = await req.json().catch(() => null);
   if (!isObject(body)) return refusal("BAD_BODY", "the request body could not be read as a JSON object.", 400);
+  /* R79 (T46): the test-instance label, when the door sends one, is answered unchanged beside the draft, every task. */
+  const untested = untestedOf(body);
+  if (untested.bad) return refusal("BAD_BODY", UNTESTED_BAD, 400);
+  const labelled = untested.label ? { untested: untested.label } : {};
 
   const task = taskOf(body.task);
   if (!task)
@@ -148,11 +153,12 @@ export async function handleDraft(req, env, deps) {
       + "language lacks, or one kept word read back into English ({op: translationdraft, direction, language, words}: "
       + `to_language with 1 to ${TRANSLATION_WORDS_MAX} distinct words, to_english with exactly one), a check of a `
       + "prepared text ({op: textcheck, text}), an infraction's documentation for an audience ({op: infractiondraft, "
-      + "matter, audience}) or the bearing of a reply on a request's claims ({op: bearingdraft, action, reply}). What "
-      + "arrived is none of these.", 400);
-  if (task.op === "translationdraft") return translationDraft(body, task, env, deps);
+      + "matter, audience}), the bearing of a reply on a request's claims ({op: bearingdraft, action, reply}) or a "
+      + "plan's status report from the items handed in ({op: statusreportdraft, plan, items}). What arrived is none of "
+      + "these.", 400);
+  if (task.op === "translationdraft") return translationDraft(body, task, env, deps, labelled);
   if (ACTION_DRAFT_OPS.includes(task.op))
-    return actionDraft(body, task, env, deps, { packFor, grantReader, readTool, draftEnding, ASK_DECLARED });
+    return actionDraft(body, task, env, deps, { packFor, grantReader, readTool, draftEnding, ASK_DECLARED, labelled });
   const told = toldOf(task.op, body.told);
   if (told == null)
     return refusal("BAD_TOLD", task.op === "writinghelp"
@@ -221,7 +227,7 @@ export async function handleDraft(req, env, deps) {
   const spent = { usage: got.usage ?? null, calls: got.calls === undefined ? null : got.calls };
   if (got.answer !== undefined) {
     const draft = draftOf(task.op, got.answer);
-    if (draft) return json({ ok: true, task, draft, label: { kind: "machine" }, ...spent });
+    if (draft) return json({ ok: true, task, draft, ...labelled, label: { kind: "machine" }, ...spent });
     return refusal("DRAFT_UNFORMED", "the model answered without a draft of the task's shape, so nothing is returned.",
       502, { ending: "unformed", ...spent });
   }
@@ -329,7 +335,7 @@ function translationOf(task, answer) {
   return { draft: { words }, not_drafted: task.words.filter((w) => !got.has(w.key)).map((w) => w.key) };
 }
 
-async function translationDraft(body, task, env, deps) {
+async function translationDraft(body, task, env, deps, labelled = {}) {
   const { refusal, json, publishedPack, accountOf, cascadeToken, converse, segmentMeter,
           DEFAULT_MAX_SEGMENT_BYTES } = deps;
   const acct = await accountOf(body);
@@ -383,7 +389,7 @@ async function translationDraft(body, task, env, deps) {
   if (got.answer !== undefined) {
     const made = translationOf(task, got.answer);
     if (made) return json({ ok: true, task, draft: made.draft, ...(toLanguage ? { not_drafted: made.not_drafted } : {}),
-                            label: { kind: "machine" }, ...spent });
+                            ...labelled, label: { kind: "machine" }, ...spent });
     return refusal("DRAFT_UNFORMED", "the model answered without a draft of the task's shape, so nothing is returned.",
       502, { ending: "unformed", ...spent });
   }

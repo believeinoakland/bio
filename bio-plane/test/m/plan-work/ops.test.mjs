@@ -24,10 +24,10 @@ test("R1 R11: op=matteroutcomeset and op=itemtakeup act as the stamped author; a
   assert.equal(op(w, "itemtakeup", { author: V("alice"), viewer: V("alice") }, { item: { kind: "clock", action: u.action, entry: 0 } }).ok, true);
 });
 
-test("R3 R7 R8: the read ops answer as the stamped viewer", () => {
+test("R3 R7 R8 R14: the read ops answer as the stamped viewer", () => {
   const w = world();
   for (const name of ["matters", "plantimeline", "planreviewopen", "planreviews", "prepitems", "plancomments", "whereitstands",
-                      "statusreportdraft", "statusreports"]) {
+                      "statusreportdraft", "statusreportassist", "statusreports"]) {
     assert.equal(op(w, name, { plan: w.PL, viewer: V("bob") }).ok, true, name);
     assert.equal(code(op(w, name, { plan: w.PL, viewer: V("dave") })), "NO_SUCH_PLAN", name);
   }

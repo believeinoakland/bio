@@ -31,7 +31,7 @@ test("R13 R4 the narrowed check's terms: two purposes, the item's fields and the
   assert.deepEqual([...PROCEDURE_ITEM_FIELDS], ["route", "expect", "citation"]);
   assert.deepEqual([...PROCEDURE_CONDUCT_LISTS], ["op_form", "party"]);
   for (const x of [GUIDE_PURPOSES, PROCEDURE_ITEM_FIELDS, PROCEDURE_CONDUCT_LISTS, PROCEDURE_GUIDE_LABEL]) assert.ok(Object.isFrozen(x));
-  assert.deepEqual({ ...PROCEDURE_GUIDE_LABEL }, { key: "guide.procedure.legalinfo", says: "legal information, not legal advice" });
+  assert.deepEqual({ ...PROCEDURE_GUIDE_LABEL }, { key: "guide.procedure.legalinfo", says: "Legal information, not legal advice" });
 });
 
 test("R13 R4 a procedure item names acts and duties: every act and rule word passes for a procedure and is still refused for a reading guide", () => {

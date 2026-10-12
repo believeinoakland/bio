@@ -1,13 +1,15 @@
 /* following R14 (T45), R22–R26: a follow's end date; a watch linked to the plan that set it running; the once-only
    question at the plan's close or when every promise is met; its answer in the watch owner's terms; the plan's watches
-   for "where it stands" (v0.2 rules 1, 17, 18; K2781 (2)). */
+   for "where it stands" (v0.2 rules 1, 17, 18; K2781 (2)). R27 (T46): when every promise was met, read from plan-work's
+   one source (its R13, R15). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, body, sha, MEMBER, BOB, OUTSIDER, MACHINE, T0, DAY } from "./fixture.mjs";
 import { noSuchPlan, refusePlanClosed } from "../../../src/action-plans/index.mjs";
 import { followingOf, FOLLOWING_CHECKS } from "../../../src/following/index.mjs";
 import { MONITORING_CHECKS } from "../../../src/monitoring/index.mjs";
-import { world as planWorld, V, by } from "../plan-work/fixture.mjs";
+import { world as planWorld, V, by, option, choose, OFFICE } from "../plan-work/fixture.mjs";
+import { INTERNAL as DUTIES_INTERNAL } from "../../../src/duties/index.mjs";
 
 /* T0 is 2026-10-06T12:00Z; the test profile's zone is America/Halifax (UTC−3), so today is 2026-10-06 and its end
    is 2026-10-07T03:00Z. */
@@ -242,6 +244,93 @@ test("R24 a link is asked on promises_met when the second of two adopted promise
   /* an ended watch is never asked */
   w.f.unfollow({ follow: f, author: MEMBER });
   assert.deepEqual(asked(w), []);
+});
+
+/* ---------------------------------------------------------------- R27 */
+
+test("R27 promises_met is read from plan-work's matterPromiseDuties alone, with no member's sight: due when every matter of the link answers all_met, not partial, with a met_at; due_at the latest met_at; never derived from duties' occurrences (control: one duty unmet, not listed)", () => {
+  const w = planned();
+  /* matter I-1: two duties read met on different days; matter I-2: one, read met between them */
+  w.duty("DUT-1", { met: ["2026-10-02T08:00:00Z"] });
+  w.duty("DUT-2", { met: ["2026-10-04T16:45:00Z"] });
+  w.duty("DUT-3", { met: [null] });
+  w.promises.set("PL-1 inquiry:I-1", ["DUT-1", "DUT-2"]);
+  w.promises.set("PL-1 inquiry:I-2", ["DUT-3"]);
+  const f = reg(w, 1).follow;
+  const l = link(w, { kind: "follow", id: f });
+  const one = link(w, { kind: "follow", id: reg(w, 2).follow }, { matters: ["inquiry:I-1"] });
+  /* the link naming I-1 is due at its later duty's instant; the link naming none waits on I-2's unmet duty (control) */
+  w.promiseReads.length = 0;
+  let q = asked(w);
+  assert.deepEqual(q.map((x) => [x.link, x.cause, x.due_at]), [[one.link, "promises_met", "2026-10-04T16:45:00Z"]]);
+  assert.ok(w.promiseReads.length > 0 && w.promiseReads.every((r) => r.viewer === null && r.plan === "PL-1" && r.nowMs === T0),
+            "read with no member's sight, as of the asker's now");
+  w.dutiesHeld.get("DUT-3").occurrences = [{ state: "met", at: "2026-10-03T11:00:00Z" }];
+  q = asked(w);
+  assert.deepEqual(q.map((x) => [x.link, x.cause, x.due_at]),
+                   [[l.link, "promises_met", "2026-10-04T16:45:00Z"], [one.link, "promises_met", "2026-10-04T16:45:00Z"]],
+                   "the latest of the matters' met_at");
+  /* whether it is due never depends on who asks */
+  assert.deepEqual(asked(w, BOB).map((x) => x.due_at), q.map((x) => x.due_at));
+  /* one source: plan-work's met_at governs, whatever duties' occurrences say, and the occurrences are never read */
+  w.occurrenceReads = 0;
+  w.promiseAnswer = (plan, matter, a) => (matter === "inquiry:I-2" ? { ...a, met_at: "2026-10-05T07:15:00Z" } : a);
+  assert.deepEqual(asked(w).map((x) => [x.link, x.due_at]), [[one.link, "2026-10-04T16:45:00Z"], [l.link, "2026-10-05T07:15:00Z"]]);
+  assert.equal(w.occurrenceReads, 0, "duties.occurrencesOf is not read");
+  /* a matter whose read answers no met_at, or partial, or not all_met, or fails, makes the link not due by this cause */
+  for (const [why, over] of [["no met_at", { met_at: null }], ["partial", { partial: true }], ["not all met", { all_met: false }],
+                             ["refused", { ok: false, reason: "MATTER_NOT_OF_PLAN" }], ["unreadable met_at", { met_at: "soon" }]]) {
+    w.promiseAnswer = (plan, matter, a) => (matter === "inquiry:I-2" ? { ...a, ...over } : a);
+    assert.deepEqual(asked(w).map((x) => x.link), [one.link], why);
+  }
+  w.promiseAnswer = () => { throw new Error("down"); };
+  assert.deepEqual(asked(w), [], "a read that throws: not due");
+  /* R24's other terms unchanged: the closed cause when the plan closed first; an ended watch never due */
+  w.promiseAnswer = null;
+  w.close("PL-1", "2026-10-03T00:00:00Z");
+  assert.deepEqual(asked(w).map((x) => [x.cause, x.due_at]), [["closed", "2026-10-03T00:00:00Z"], ["closed", "2026-10-03T00:00:00Z"]]);
+  w.close("PL-1", "2026-10-06T00:00:00Z");
+  assert.deepEqual(asked(w).map((x) => [x.cause, x.due_at]), [["promises_met", "2026-10-04T16:45:00Z"], ["promises_met", "2026-10-04T16:45:00Z"]]);
+  w.f.unfollow({ follow: f, author: MEMBER });
+  assert.deepEqual(asked(w).map((x) => x.link), [one.link]);
+});
+
+test("R27 with the real plan-work: a link's question is due on promises_met at the later of two duties' recorded met readings (plan-work R15), read with no member's sight (control: one duty unmet, not listed)", () => {
+  const p = planWorld();
+  const o = option(p, { addressee: OFFICE, subjects: [p.S1], dates: [{ date: "2026-11-01", basis: "statute" }] });
+  choose(p, [o]);
+  const s = p.ap.optionStart({ plan: p.PL, option: o, kind: "other", why_first: "the reply is due before we can document it", ...by("bob") });
+  assert.equal(s.ok, true, JSON.stringify(s));
+  const SHA = p.capture("We will repair the lights by May."), SHA2 = p.capture("And publish the schedule.");
+  p.correspond(s.action, "received", "2026-10-03", { artifactSha: SHA });
+  p.correspond(s.action, "received", "2026-10-04", { artifactSha: SHA2 });
+  const state = { "DUT-1": "met", "DUT-2": "met_late" };
+  p.dutiesAnswer = ({ captures }) => {
+    const duties = [["DUT-1", SHA], ["DUT-2", SHA2]].map(([id, cap]) => ({ duty_id: id, arising_in: cap, occurrences: [{ key: `OCC-${id}`, state: state[id] }] }));
+    return { ok: true, captures, duties, all_met: duties.every((d) => ["met", "met_late"].includes(d.occurrences[0].state)) };
+  };
+  const t = (id, st, asOf) => ({ duty_id: id, occurrence_key: `OCC-${id}`, state: st, as_of: asOf, at: asOf, cause: "derived", evidence: null, by: null });
+  p.transitions = [t("DUT-1", "pending", "2026-10-03T00:00:00Z"), t("DUT-1", "met", "2026-10-05T09:00:00Z"),
+                   t("DUT-2", "pending", "2026-10-04T00:00:00Z"), t("DUT-2", "met_late", "2026-10-08T17:30:00Z")];
+  const stub = { monitoring: () => ({ ok: true, items: [] }), addressWatchers: () => [], addressWatchEnd: () => ({ ok: false, reason: "NO_SUCH_ADDRESS" }),
+                 sweepHost: () => ({}), schedule: () => ({ unscheduled: [] }) };
+  let occurrenceReads = 0;
+  const f = followingOf(p.host, { record: p.record, membership: p.membership, actionPlans: p.ap, planWork: p.pw, monitoring: stub,
+    duties: { readDuty: () => ({ ok: true, found: false }), occurrencesOf: () => (occurrenceReads++, { ok: false }) },
+    answers: { standingQuestionsOf: () => ({ ok: true, questions: [] }) }, standards: { standardsIn: () => ({ ok: true, items: [] }) },
+    view: () => ({ time_zone: { value: "America/Halifax" } }), now: () => Date.parse(p.clock.now) });
+  const fl = f.followRegister({ address: REG(1), ...by("alice") });
+  /* the matter the promises answer: the plan's outcome on S1 (its other matters hold no promise) */
+  const S1 = p.ap.planRead({ id: p.PL, viewer: V("alice") }).subjects.find((x) => x.subject.kind === "outcome" && x.subject.standard === p.S1.standard).key;
+  const l = f.watchLink({ plan: p.PL, matters: [S1], watch: { kind: "follow", id: fl.follow }, ...by("alice") });
+  assert.equal(l.ok, true, JSON.stringify(l));
+  const q = f.watchQuestions({ viewer: V("alice") }).questions;
+  assert.deepEqual(q.map((x) => [x.link, x.cause, x.due_at]), [[l.link, "promises_met", "2026-10-08T17:30:00Z"]]);
+  assert.equal(p.transitionCalls.at(-1).viewer, DUTIES_INTERNAL, "plan-work read with no member's sight");
+  assert.equal(occurrenceReads, 0, "duties' occurrences are not read here");
+  /* control: one duty unmet */
+  state["DUT-2"] = "pending";
+  assert.deepEqual(f.watchQuestions({ viewer: V("alice") }).questions, []);
 });
 
 test("R24 a watch another open plan links is relied on, offered nothing (control: that plan closed, both offered); an address another project asks for is relied on, naming no project; a policy watch always", () => {

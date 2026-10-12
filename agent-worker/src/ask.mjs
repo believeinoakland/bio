@@ -26,7 +26,7 @@
  *
  * THE STREAM (K1601 (5)): NDJSON (`application/x-ndjson`), one object per line, `{event: "step", step}` for
  * `interpreting`, `composing` and `checking`, `{event: "read", op}` before each read, and last exactly one of
- * `{event: "answer", ok: true, answer, withheld}` or `{event: "refused", …refusal}`. A refusal made before any model
+ * `{event: "answer", ok: true, answer, withheld, untested?}` (R79: the test-instance label the door sent, unchanged) or `{event: "refused", …refusal}`. A refusal made before any model
  * call (R1, R2, `NO_GRANT`, `NO_ACCOUNT`, the ceiling) is answered as plain JSON with its status, not as a stream.
  *
  * THE BOUNDS are `run-rules`' `ASK_BOUNDS` (its R17), their provisional defaults (M-Q7 measures them): `turns` model
@@ -34,6 +34,7 @@
 import { ASK_BOUNDS, askBoundReached } from "../../bio-plane/src/run-rules/index.mjs";
 import { ASK_OPS } from "./ops.mjs";
 import { toolContent } from "./reads.mjs";
+import { untestedOf, UNTESTED_BAD } from "./untested.mjs";
 
 /** The ask's bounds: `ASK_BOUNDS`' defaults, the figure an ask declares when it starts (run-rules R17). */
 export const ASK_DECLARED = Object.freeze(Object.fromEntries(Object.entries(ASK_BOUNDS).map(([k, v]) => [k, v.default])));
@@ -129,6 +130,9 @@ export async function handleAsk(req, env, deps) {
   const body = await req.json().catch(() => null);
   if (body == null || typeof body !== "object" || Array.isArray(body))
     return refusal("BAD_BODY", "the request body could not be read as a JSON object.", 400);
+  /* R79 (T46): the test-instance label, when the door sends one, rides on the last answer event unchanged. */
+  const untested = untestedOf(body);
+  if (untested.bad) return refusal("BAD_BODY", UNTESTED_BAD, 400);
 
   if (typeof body.question !== "string" || !body.question.trim() || body.question.length > QUESTION_MAX)
     return refusal("BAD_QUESTION", `an ask carries one question in words, of at most ${QUESTION_MAX} characters.`, 400);
@@ -298,7 +302,8 @@ export async function handleAsk(req, env, deps) {
         return await finish(refusedEvent("ASK_UNCHECKED",
           "the record's checks answered without a checked answer, so nothing is returned: an unchecked answer is never "
           + "shown."));
-      await finish({ event: "answer", ok: true, answer: r.answer, withheld: Array.isArray(r.withheld) ? r.withheld : [] });
+      await finish({ event: "answer", ok: true, answer: r.answer, withheld: Array.isArray(r.withheld) ? r.withheld : [],
+                     ...(untested.label ? { untested: untested.label } : {}) });
     } catch (e) {
       await finish(refusedEvent("ASK_FAILED", "the ask failed inside this member, so nothing is returned.",
         { detail_from_member: String(e?.message ?? e).slice(0, 200) })).catch(() => {});

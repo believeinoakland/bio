@@ -3,7 +3,8 @@
  * bar on Civicsmith's test investigations (`./test-set.mjs`), besides R19's verification chain (`./deployment.mjs`
  * `deployable`). This module holds no record: `ai-runs` writes them (its R75 `testBarRecord`) and hands the ones it
  * holds to `testBarHeld` and `partDeployable`, so the bar, like the chain, is the record's and never a parameter a caller
- * sets. Pure; never throws. */
+ * sets. R29 (T46) adds the test-instance exception below: `partAdmittedOn` is the one gate every door asks, and
+ * `partRefusal` (R30) its refusal. Pure; never throws. */
 import { AI_RUN_OWN_CHECKS } from "./checks.mjs";
 import { DEPLOYMENT_SEQUENCE, ASK_MODE, ENQUIRE_MODE, DRAFT_KINDS, deployable } from "./deployment.mjs";
 import { CIVICSMITH_TEST_SET } from "./test-set.mjs";
@@ -96,3 +97,61 @@ export function partDeployable(part, held) {
 }
 
 /* A machine grader is not refused: R75's results are "written by the harness", grading against answers people wrote. */
+
+/* R29 (T46; K2816 (2); amends R19; `draft-T46-trial.md` §1.1, §1.2) — THE TEST-INSTANCE EXCEPTION. Bob's ruling: the
+ * deployer may mark one instance a test instance, on which an AI part whose test bar is not yet held runs anyway, every
+ * output it gives labelled as not yet tested. The exception lifts the test bar and nothing else: it never sets or reads a
+ * deploy flag (R14, R16, R21, R24, R27: the flags mark served code, and the doors still ask them), never lifts R19's
+ * verification chain, and never counts as a bar held (no R75 record is written or read differently). `testInstance` is a
+ * fact of the deployment that `ai-runs` reads from the Worker's environment and hands here (its R78), never a field a
+ * caller sends; only the literal `true` is one. */
+
+/** R29 — the key of the label's words (`words.json`, DEC-179), the design stream's to word. */
+export const UNTESTED_WORDS = "ai.label.untested";
+
+/** R29 — THE LABEL every output of a part admitted on the exception carries: `{kind: "untested", part, set, set_version,
+ *  words}`, frozen, naming Civicsmith's set and its current version (the bar the part has not yet passed), for a part in
+ *  TEST_BAR_PARTS; null for anything else. Pure; never throws. */
+export function untestedLabel(part) {
+  if (typeof part !== "string" || !TEST_BAR_PARTS.includes(part)) return null;
+  return Object.freeze({ kind: "untested", part, set: CIVICSMITH_TEST_SET.id, set_version: CIVICSMITH_TEST_SET.version,
+                         words: UNTESTED_WORDS });
+}
+
+const ADMITTED = Object.freeze({ admitted: true, untested: null });
+const NOT_ADMITTED = Object.freeze({ admitted: false, untested: null });
+
+/** R29 — THE ONE COMPUTATION EVERY DEPLOY GATE ASKS, against `set`. `{admitted: true, untested: null}` when
+ *  `partDeployableOn(set, part, held)` (R19: the bar, and for a mode of the order the chain) is true. When the bar is not
+ *  held but everything else R19 asks is (a part of TEST_BAR_PARTS; for a mode of the order, the chain, `deployable(part,
+ *  verifications)`) and `opts.testInstance` is exactly `true`, `{admitted: true, untested: untestedLabel(part)}`.
+ *  Otherwise `{admitted: false, untested: null}`, whose refusal is `partRefusal(part)` (R30). Answers frozen. Own keys of
+ *  `opts` only. Pure; never throws. */
+export function partAdmittedOn(set, part, held, opts) {
+  if (partDeployableOn(set, part, held)) return ADMITTED;
+  const testInstance = opts != null && typeof opts === "object" && Object.prototype.hasOwnProperty.call(opts, "testInstance")
+    ? opts.testInstance : false;
+  if (testInstance !== true || typeof part !== "string" || !TEST_BAR_PARTS.includes(part)) return NOT_ADMITTED;
+  if (DEPLOYMENT_SEQUENCE.order.includes(part)) {
+    const { verifications = [] } = held && typeof held === "object" ? held : {};
+    if (!deployable(part, verifications)) return NOT_ADMITTED;
+  }
+  return Object.freeze({ admitted: true, untested: untestedLabel(part) });
+}
+
+/** R29 — THE GATE ON CIVICSMITH'S SET: `partAdmittedOn(CIVICSMITH_TEST_SET, part, held, opts)`. */
+export function partAdmitted(part, held, opts) {
+  return partAdmittedOn(CIVICSMITH_TEST_SET, part, held, opts);
+}
+
+/** R30 — THE GATE'S REFUSAL FORM: `AI_PART_NOT_DEPLOYED` (C-22.29), the one site that mints it, built from its row in this
+ *  module's table and naming the part (its first 40 characters) in `part` and the detail. A door that `partAdmittedOn`
+ *  does not admit, and that has no refusal of its own, relays it unchanged (`plane` R40). Pure; never throws. */
+export function partRefusal(part) {
+  const row = AI_RUN_OWN_CHECKS.AI_PART_NOT_DEPLOYED;
+  const p = String(part ?? "").slice(0, 40);
+  return { ok: false, code: "AI_PART_NOT_DEPLOYED", check: row.check, translation: row.translation,
+           detail: `${JSON.stringify(p)} has not passed its bar on Civicsmith's test investigations, or what must come `
+             + "before it is not yet verified, and this is not a test instance (R29). Nothing was sent to the assistant",
+           part: p };
+}

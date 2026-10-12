@@ -79,10 +79,11 @@ const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, 
 test("R11, R5: every op of local-facts' and filing-templates' maps is in the route map and answers through control-plane's door what its own map answers called directly", async () => {
   const u = new URL("http://do/");
   const ops = [...Object.keys(localFactsOps(null, u, null)), ...Object.keys(filingTemplatesOps(null, u, null))];
-  /* (T45; K2811, plan rule 4 (11)) local-facts' four new ops of member-drafted rules (its R10–R14) */
+  /* (T45; K2811, plan rule 4 (11)) local-facts' four new ops of member-drafted rules (its R10–R14); (T46; N935) and
+     `grouprules` (its R12), now in its own map, which R39 spreads */
   assert.deepEqual(Object.keys(localFactsOps(null, u, null)), ["factconfirm", "factstatus", "factsdue", "ruledraft", "ruleconfirm",
-                                                               "rulewithdraw", "ruleoffer"]);
-  assert.ok(ops.includes("templates") && ops.includes("templatedraft") && ops.length === 20, ops.join());
+                                                               "rulewithdraw", "ruleoffer", "grouprules"]);
+  assert.ok(ops.includes("templates") && ops.includes("templatedraft") && ops.length === 21, ops.join());
   const x = await store(), twin = await store();
   const map = Object.keys(x.s.routes(u, null));
   for (const op of ops) assert.ok(map.includes(op), `the route map lacks ${op}`);

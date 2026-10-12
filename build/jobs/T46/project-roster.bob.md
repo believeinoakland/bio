@@ -1,0 +1,14 @@
+# BOB to project-roster (T46)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T46), layer 2, project-roster: T46-5 (N913; DEC-194): R25 new: C-147.1–C-147.8 read their translations by key from `words.json` (`refusal.<CODE>`, at main @ 3f40899950, `docs/development/ux-substrate/screens/words.json`); six texts change (.3–.8); codes, numbers and `where` unmoved. Text BOB's (K2917).
+Your requirements: `build/requirements/project-roster.md` (read whole). Marked `*(not yet met: T46)*`: R25.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874: an id older tests already name reads green wrongly); every refusal a control. A new refusal row goes in your module's existing family.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START, and K2924's (promotion registry :64, membership module-order tests until T46-4 and T46-6; escalation invariants :272 until L9); none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Merge order in L2: record-core, membership, project-roster, promotion (the stamp, last). A job that uses no unmerged L2 job may merge as soon as it is complete.
+Reading set (mechanics §17): measured at this START: 377 KB, under the 600 KB limit; read it whole.

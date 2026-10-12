@@ -4,7 +4,9 @@ import assert from "node:assert/strict";
 import { world, code, by, V, MACHINE, ms, OFFICE, option, choose } from "./fixture.mjs";
 import { noSuchPlan, refusePlanClosed } from "../../../src/action-plans/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
-import { DRAFT_LABEL } from "../../../src/plan-work/index.mjs";
+import { URL } from "node:url";
+import { DRAFT_LABEL, ASSIST_LABEL, ASSISTANT, planWorkOps } from "../../../src/plan-work/index.mjs";
+import { proposalLabel } from "../../../src/record-grammar/index.mjs";
 
 /* A plan with: a started action awaiting a response with a pending entry; an overridden breach action; a declined
    option; a scenario set aside; an escalation; a held project and a hold due on the action. */
@@ -153,4 +155,71 @@ test("R9: registerWatchReader takes one registration; its reader answers the pla
   const w3 = world();
   assert.equal(code(w3.pw.registerWatchReader("", reader)), "LISTENER_MALFORMED");
   assert.equal(code(w3.pw.registerWatchReader("following", null)), "LISTENER_MALFORMED");
+});
+
+test("R14: statusReportAssist answers exactly R8's items, each with its source, and nothing else; a plan the viewer may not see answers NO_SUCH_PLAN", () => {
+  const { w, b } = setup();
+  const at = ms("2026-10-10T00:00:00Z");
+  const rows = w.snapshot();
+  const runs = w.runs.length;
+  const r = w.pw.statusReportAssist({ plan: w.PL, nowMs: at, viewer: V("bob") });
+  const draft = w.pw.statusReportDraft({ plan: w.PL, nowMs: at, viewer: V("bob") });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  /* control: exactly R8's items, as statusReportDraft assembles them, every one naming its source */
+  assert.deepEqual(r.items, draft.items);
+  assert.ok(r.items.length > 0);
+  for (const x of r.items.filter((i) => !["holds", "watches"].includes(i.section)))
+    assert.ok(x.source && x.source.module, JSON.stringify(x));
+  /* nothing else: no text, label, refusal or model call of its own */
+  assert.deepEqual(Object.keys(r).sort(), ["as_of", "items", "ok", "plan"]);
+  assert.equal(w.runs.length, runs, "no assistant run is opened");
+  assert.deepEqual(w.snapshot(), rows, "a read writes nothing");
+  /* past sight: an outsider reads the plan as absent, the same answer as R8's */
+  assert.deepEqual(w.pw.statusReportAssist({ plan: w.PL, nowMs: at, viewer: V("dave") }), noSuchPlan(w.PL));
+  assert.deepEqual(w.pw.statusReportAssist({ plan: "PLN-2026-0999-plan", viewer: V("bob") }), noSuchPlan("PLN-2026-0999-plan"));
+  /* what the viewer may not see is withheld whole, as R8 withholds it */
+  w.hide(V("alice"), b.action);
+  const a = w.pw.statusReportAssist({ plan: w.PL, nowMs: at, viewer: V("alice") });
+  assert.deepEqual(a.items, w.pw.statusReportDraft({ plan: w.PL, nowMs: at, viewer: V("alice") }).items);
+  assert.doesNotMatch(JSON.stringify(a), new RegExp(b.action));
+  /* it answers no AI refusal: a host with no assistant at all answers the same items */
+  const w2 = world({ deps: { aiRuns: null } });
+  const r2 = w2.pw.statusReportAssist({ plan: w2.PL, viewer: V("bob") });
+  assert.equal(r2.ok, true); assert.deepEqual(r2.items, w2.pw.statusReportDraft({ plan: w2.PL, viewer: V("bob") }).items);
+});
+
+test("R14: op=statusreportassist answers as the stamped viewer, and nothing without a stamp", () => {
+  const w = world();
+  const op = (query) => planWorkOps(w.pw, new URL(`https://x/?op=statusreportassist&${new URLSearchParams(query)}`), {}).statusreportassist();
+  const r = op({ plan: w.PL, viewer: V("bob") });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.deepEqual(r.items, w.pw.statusReportDraft({ plan: w.PL, viewer: V("bob") }).items);
+  assert.equal(code(op({ plan: w.PL, viewer: V("dave") })), "NO_SUCH_PLAN");
+  assert.equal(code(op({ plan: w.PL })), "NO_SUCH_PLAN", "no viewer stamped, nothing answered");
+});
+
+test("R14: statusReportSave's from records that the text began as the assistant's draft, labelled machine work; the report kept is the member's", () => {
+  const w = world();
+  const save = (extra = {}) => w.pw.statusReportSave({ plan: w.PL, text: "Where we are, in my words.", ...by("alice"), ...extra });
+  const r = save({ from: { assistant: true, as_of: "2026-10-01T12:00:00Z" } });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  const want = { draft: "assistant", as_of: "2026-10-01T12:00:00Z", label: { ...ASSIST_LABEL } };
+  assert.deepEqual(r.from, want);
+  assert.deepEqual([r.author, r.text], [V("alice"), "Where we are, in my words."], "the member's report");
+  /* the label is shaped as record-grammar's proposalLabel answers, its state that of a machine */
+  assert.deepEqual(Object.keys(ASSIST_LABEL).sort(), Object.keys(proposalLabel(ASSISTANT, "plan_option")).sort());
+  assert.deepEqual([ASSIST_LABEL.state, ASSIST_LABEL.machine_work], ["machine_proposed", true]);
+  assert.doesNotMatch(ASSIST_LABEL.says, /Oakland|Alameda|California|Berkeley/i);
+  assert.equal(save({ from: { assistant: true } }).from.as_of, null);
+  /* read back as kept; a member's own one-line from (R8) still lands as written; none is never required */
+  assert.equal(save({ from: "a note of mine" }).ok, true);
+  assert.equal(save().ok, true);
+  assert.deepEqual(w.pw.statusReports({ plan: w.PL, viewer: V("bob") }).reports.map((x) => x.from),
+    [want, { ...want, as_of: null }, "a note of mine", null]);
+  /* controls: any other from is refused, writing nothing */
+  const before = w.count("pw_reports");
+  for (const from of [{ assistant: false }, { assistant: true, by: V("bob") }, { assistant: true, as_of: "yesterday" }, {}, ["x"], 7, "a\nb"])
+    assert.equal(code(save({ from })), "PLAN_WORK_TEXT_REFUSED", JSON.stringify(from));
+  assert.equal(code(save({ from: { assistant: true }, ...by("alice"), author: MACHINE })), "MACHINE_CANNOT_PLAN", "the assistant keeps nothing itself");
+  assert.equal(w.count("pw_reports"), before);
 });

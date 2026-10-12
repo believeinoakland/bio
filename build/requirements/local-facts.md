@@ -1,6 +1,6 @@
 # local-facts — requirements
 
-**Status** · In force: approved by Bob 2026-10-01 (K921: the design, its answers and the module), with K922 and K925; in layer 5 since T33 (K1438). Last changed T34 (T34-19: Terms, R6; K1650); every requirement met (K1795).
+**Status** · In force: approved by Bob 2026-10-01 (K921: the design, its answers and the module), with K922 and K925; in layer 5 since T33 (K1438). Last changed T34 (T34-19: Terms, R6; K1650); every requirement met (K1795). Last changed T46 (T46-9: R15 new, amending R12, its ops map carrying `grouprules`, N935; R16 new, the C-126 rows' words read by key from `words.json`, DEC-194, N913); marked not yet met (T46).
 
 **Size (P6).** New. Estimated 400–600 lines with its one table.
 
@@ -34,6 +34,10 @@ Terms. A **fact** is one of: a `holidays` entry's year (keyed by its year, its `
 - **R12** (T45; N858; v0.2 rule 11) `groupRules({section?, viewer})` answers the group's rules with their state, source, drafter, confirmer, dates and (confirmed with one) the statement, to a viewer naming a member. `governingView()` answers `jurisdictions.combine`'s view of the active profiles with each confirmed, unwithdrawn group rule added to its section, tagged `profile: "group"` and a `basis` naming the rule's id and confirmation date (no statement, no handle). With no group rule it equals `combine`'s view. Writes nothing; never throws. `action-clocks`, `filings`, `actions` and `duties` (its R5) read this view for those sections in place of `combine`, each in its own job.
 - **R13** (T45; N858; v0.2 rule 11) `ruleWithdraw({rule, reason, by, viewer})` by any member (`NO_SUCH_GROUP_RULE`; `RULE_NO_REASON`; a repeat answers `already: true`), kept, never deleted, the rule leaving `governingView` from then on. `ruleOffer({rule, by, viewer})` answers, for a confirmed rule, its entry, primary source and `confirmed: {at, with_statement: true|false}` as canonical bytes with their digest, for a member to carry to the shared profile's maintainers; it never carries the statement's words or a handle, and the instance transmits nothing (R2's report rule). An offer of a rule not confirmed (drafted or withdrawn) is refused `RULE_NOT_CONFIRMED`.
 
+**Its ops map; its words** (T46)
+- **R15** (T46; N935; amends R12; `plane` R39) `localFactsOps(s, url, body)` publishes this module's ops map, one route arm per act and read: `factconfirm`, `factstatus`, `factsdue`, `ruledraft`, `ruleconfirm`, `rulewithdraw`, `ruleoffer` as today, and `grouprules`, R12's `groupRules({section, viewer})` with `section` the query's (absent read as none) and `viewer` the URL's stamp, answering exactly what R12 answers. The control plane routes, authenticates and stamps each arm (`by` the body's stamp, `viewer` the URL's, read after the body so a body cannot set it), so the plane spreads the map (its R39) and names no entry of this module's.
+- **R16** (T46; DEC-194; N913; amends R8, R14) Every row of this module's family C-126 whose code `words.json` holds as `refusal.<CODE>` takes its translation from that key, read by key (as `membership`'s `HANDLE_WORDS` and `extraction`'s `TRANSCRIBE_WORDS` are), never a copy of the sentence; codes, numbers, `where`s and behaviour are unmoved. Eight rows' translations change by it: C-126.6 `MACHINE_CANNOT_DRAFT_RULE`, C-126.7 `RULE_SECTION_UNKNOWN`, C-126.8 `RULE_ENTRY_INVALID` (its `{errors}` left for the screen, the refusal's `errors` beside it), C-126.9 `RULE_NO_SOURCE`, C-126.10 `RULE_IN_PROFILE`, C-126.12 `NO_SUCH_GROUP_RULE`, C-126.14 `RULE_NOT_DRAFTED`, C-126.15 `RULE_NEEDS_QUALIFICATION`. C-126.13 `RULE_SELF_CONFIRM` already reads as its key; the rows `words.json` does not hold (C-126.1–C-126.5, C-126.11, C-126.16) keep their translations. The changed rows wait for T47's promotion stamp (T46 rule 5 (2)).
+
 ## Private
 
 ### Uses
@@ -62,6 +66,7 @@ Terms. A **fact** is one of: a `holidays` entry's year (keyed by its year, its `
 - `BIO_Design_Requirements_v2.md` §7 (the clock starts) as amended 2026-09-26; D-147 read with K102 (no date computed into the record).
 - Bob's direction K903 (6) and his answers K921 (Q6–Q8); K925; `build/layers.md`, layer 9.
 - `BIO_Action_v0_2.md` rules 6, 10, 11 (K2780; T45, N893): an office's own time zone (R3, R6); member-drafted jurisdiction rules, confirmed by another member, a professional's statement for Tier 2 and 3, offered to the shared profile (R10–R14); DESIGN §10.
+- DEC-194 (the refusals' words by key; N913): R16. N935 (the plane spreads the ops map): R15.
 
 ### Suggestions
 

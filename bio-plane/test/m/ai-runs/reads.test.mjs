@@ -30,7 +30,8 @@ test("R19: absent or invisible {found: false, session: null}; otherwise the sess
   assert.deepEqual(await w.runs.read({ run: "R1", viewer: "nobody-we-know" }), { run: "R1", found: false, session: null });
   const s = (await w.runs.read({ run: "R1", viewer: "member:dan" })).session;
   assert.deepEqual(Object.keys(s), ["id", "label", "mode", "status", "ticks", "created", "updated", "expires", "context",
-    "principal", "budget", "condition", "bias", "standard", "state", "rerun_of"]);
+    "principal", "budget", "condition", "bias", "standard", "state", "rerun_of", "untested"]);
+  assert.equal(s.untested, null, "R78: a run the bar admitted carries no label");
   assert.equal(s.rerun_of, null, "a run that re-runs nothing");
   assert.deepEqual(s.state, {}, "the run's scratch as the open wrote it");
   assert.deepEqual([s.id, s.label, s.mode, s.status, s.ticks, s.created, s.updated, s.expires],

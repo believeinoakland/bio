@@ -3,7 +3,8 @@
    written to its requirements' Provides as `questionExplorerOf`'s deps take them (K61, K120): `steps` (R1 `stepCreate`,
    R5 `stepEnd`, R6 `stepDelete`, R9 `recordProduct`, R17 `findRecipients`), `ai-use` (R6 `exploreAllowed`, R9
    `exploreAsk`, R10 `estimate`), `ai-runs` (R9 `open` with T41's `step` and `origin`, R13 `close` answering R76's
-   actual cost, R29 `boundOf`/`consumeBound`, R75's test bar and group results), `run-rules` R19's deploy gate,
+   actual cost, R29 `boundOf`/`consumeBound`, R75's test bar and group results, R78's `partAdmitted` over `run-rules`
+   R29 with the deployment's test-instance fact `w.testInstance`), `run-rules` R19's deploy gate,
    `capture-requests` (its door, R49's refusal, R55's `step`), `connections` (R4 `read`, R54 `asserted`), `retrieval`
    (R23 `contentAxis`, R69 `zone`), `inquiry` (R43 `subjectEntityOf`), `leg-earning` (R4 `basisFor`, R13
    `projectsDrawingOnPaged`) and `basis-versions` (`currentOf`). Every stand-in records the calls made to it. Bundles,
@@ -20,6 +21,7 @@ import { aiUseOf } from "../../../src/ai-use/index.mjs";
 import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
 import { questionExplorerOf } from "../../../src/question-explorer/index.mjs";
+import * as runRules from "../../../src/run-rules/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 /* A test set with one matter (Civicsmith's own holds none yet, so it opens nothing), and the records that hold its bar. */
@@ -114,6 +116,8 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true } = 
     /* What the record holds for the deploy gate (run-rules R19, R75's records) over a test set with one matter. */
     testBars: [bar("investigate"), bar("explore")], verifications: [VERIFIED_CHECK],
     groupResults: [], openRefuse: null,
+    /* ai-runs R78's `testInstance()`: the deployment's fact, false unless a test sets it. */
+    testInstance: false,
     row: (q, ...a) => [...st.sql.exec(q, ...a)][0] ?? null,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => [...st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
@@ -171,6 +175,11 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true } = 
       return null;
     },
     groupTestResults(a) { note("groupTestResults", a); return { ok: true, part: a.part, results: w.groupResults }; },
+    /* R78: `partAdmitted(part)`, run-rules R29 on what the record holds, with the deployment's test-instance fact. */
+    partAdmitted(part) {
+      note("partAdmitted", { part });
+      return runRules.partAdmittedOn(testSet, part, { verifications: w.verifications, testBars: w.testBars }, { testInstance: w.testInstance });
+    },
   };
   const connections = {
     edgeSevered: () => false,

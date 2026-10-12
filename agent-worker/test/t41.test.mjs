@@ -197,7 +197,7 @@ section("R6, R29, R71 · through POST /run: a project's account is taken, named 
     ["a member's own account carrying a project", { ...MKEY(), project: PROJECT }, 400, "BAD_ACCOUNT"],
     ["the group's API key carrying a project", { kind: "apikey", level: "group", secret: MEMBER_KEY, member: MEMBER, project: PROJECT }, 400, "BAD_ACCOUNT"],
     ["a project's sign-in carrying a secret", { ...PSIGNIN(), secret: PROJECT_KEY }, 400, "BAD_ACCOUNT"],
-    ["a project's sign-in with suggestions true", { ...PSIGNIN(), suggestions: true }, 400, "BAD_ACCOUNT"],
+    ["a project's sign-in with suggestions not a boolean (T46)", { ...PSIGNIN(), suggestions: "on" }, 400, "BAD_ACCOUNT"],
     ["a project's sign-in naming no member", { ...PSIGNIN(), member: "" }, 400, "BAD_ACCOUNT"],
     ["a project's account of a retired kind", { ...PKEY(), kind: "subscription" }, 400, "BAD_ACCOUNT"],
     ["a project's account with an empty key", { ...PKEY(), secret: "" }, 409, "NO_ACCOUNT"],

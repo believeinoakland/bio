@@ -1,0 +1,14 @@
+# BOB to record-core (T46)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T46), layer 2, record-core: T46-3 (N904): R83 new, amending R25's read: `getSetting(name, {strict: true})` answers `null` unset, `SETTING_UNREADABLE` for a stored value that is not valid JSON, the value otherwise; without the option, as today (its callers unchanged). Its user is public-read R34 (T46-22, L8). Text BOB's (K2917).
+Your requirements: `build/requirements/record-core.md` (read whole). Marked `*(not yet met: T46)*`: R83.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874: an id older tests already name reads green wrongly); every refusal a control. A new refusal row goes in your module's existing family.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START, and K2924's (promotion registry :64, membership module-order tests until T46-4 and T46-6; escalation invariants :272 until L9); none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Merge order in L2: record-core, membership, project-roster, promotion (the stamp, last). A job that uses no unmerged L2 job may merge as soon as it is complete.
+Reading set (mechanics §17): measured at this START: 564 KB, under the 600 KB limit; read it whole.

@@ -35,19 +35,17 @@
 
 const at = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
 
-/* R123, R124 (DEC-184, DEC-186): the handle words of `words.json` (`docs/development/ux-substrate/screens/words.json`),
-   each `en` verbatim, read by key; placeholders (`{handle}`, `{group}`, `{suggestion}`, `{case}`, `{minutes}`) are left
-   for the screen. `handle.changeable` and `handle.formerly` are the screens' own words and are not held here (R123).
-   T41-3 (DEC-188 (7)): the three refusals' words, `handle.refused.*`, the UX stream's; their rows read them by key. */
+/* R123 (DEC-184, DEC-186): the handle words of `words.json` (`docs/development/ux-substrate/screens/words.json`), each
+   `en` verbatim, read by key; placeholders (`{handle}`, `{group}`, `{suggestion}`, `{minutes}`) are left for the screen.
+   `handle.changeable` and `handle.formerly` are the screens' own words and are not held here (R123). T41-3 (DEC-188 (7)):
+   the paused refusal's words, `handle.refused.paused`, the UX stream's; its row reads them by key. T46 (DEC-197, R129):
+   `handle.fixed`, `handle.refused.unchecked` and `handle.refused.notmember` went with R124's change of handle; no row of
+   this module reads them. */
 export const HANDLE_WORDS = Object.freeze({
   'handle.free': '{handle} is free in {group}',
   'handle.taken': '{handle} is already taken in {group}. Try another, such as {suggestion}.',
   'handle.characters': 'A handle uses only lower-case letters, digits and hyphens.',
-  'handle.fixed': 'Your handle is fixed: your work is in a published case ({case}).',
-  'handle.refused.unchecked': 'Civicsmith couldn\'t check whether your work is in a published case, so your handle '
-    + 'wasn\'t changed. Try again in a moment.',
   'handle.refused.paused': 'Too many handles checked in a short time. Try again in {minutes} minutes.',
-  'handle.refused.notmember': 'Only a member can change their own handle.',
 });
 
 export const MEMBERSHIP_CHECKS = Object.freeze({
@@ -219,34 +217,26 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
     translation: 'No member of your group answers to the name or id given. Nothing was changed. Check the name, or '
       + 'add the person as a member first.',
   }),
-  /* ===== T40 (T40-M; N797, N799; DEC-184, DEC-186; K2394; R126): a member's handle, checked as it is typed (R123) and
-     changed by its member (R124). The next free numbers of C-96, this module's family for the acts on a member's own
-     row (K107 (3), K174; C-96.47 the last held at the job's START). Each code is minted at one site, the region its
-     `where` names. ===== */
+  /* ===== T40 (T40-M; N797, N799; DEC-184, DEC-186; K2394; R126): a member's handle, checked as it is typed (R123). The
+     next free numbers of C-96, this module's family for the acts on a member's own row (K107 (3), K174; C-96.47 the
+     last held at the job's START). Each code is minted at one site, the region its `where` names. T46 (DEC-197, R126):
+     C-96.49 HANDLE_CHANGE_NOT_A_MEMBER, C-96.50 (HANDLE_FIXED's published-case condition) and C-96.51
+     HANDLE_CHANGE_UNCHECKED are retired with R124, their numbers never reused. ===== */
   /* R123 (K1881): the check's protective window, 60 checks in any 10 minutes per invitation or member. The translation
      is `words.json`'s `handle.refused.paused`, read by key, `{minutes}` the answer's `minutes` (DEC-188 (7)). */
   HANDLE_CHECK_PAUSED: Object.freeze({
     check: 'C-96.48', where: at("handleCheck", "is-handle-check-window"),
     translation: HANDLE_WORDS['handle.refused.paused'],
   }),
-  /* R124: only an active member changes a handle, and only their own. The translation is `words.json`'s
-     `handle.refused.notmember`, read by key (DEC-188 (7)). */
-  HANDLE_CHANGE_NOT_A_MEMBER: Object.freeze({
-    check: 'C-96.49', where: at("handleChange", "is-handle-change-member"),
-    translation: HANDLE_WORDS['handle.refused.notmember'],
-  }),
-  /* R124, R125 (DEC-186 (1)): fixed once the member's work is in a published case. The translation is `words.json`'s
-     `handle.fixed`, read by key, `{case}` the case named. */
+  /* ===== T46 (T46-4; N934; DEC-196, DEC-197; K2903; R129, R126): a handle is chosen at joining and never changed, so
+     `op=handlechange` refuses every call. The code keeps its name; its one condition is now R129's, on a new row, the
+     next free number of C-96 (C-96.51 the last held at the job's START). The translation is DEC-198's sentence
+     (`words.json`'s `refusal.HANDLE_FIXED`, PR #30) in DEC-149's form, "your group's Civicsmith" (R112), held here until
+     that key reaches `main` and is read by key (BOB's START, K2917). ===== */
   HANDLE_FIXED: Object.freeze({
-    check: 'C-96.50', where: at("handleChange", "is-handle-fixed"),
-    translation: HANDLE_WORDS['handle.fixed'],
-  }),
-  /* R124: the guard could not answer (none registered, a throw, or an answer it does not give), so the change fails
-     closed. The translation is `words.json`'s `handle.refused.unchecked`, read by key: the UX stream re-worded BOB's
-     draft (DEC-188 (7)). */
-  HANDLE_CHANGE_UNCHECKED: Object.freeze({
-    check: 'C-96.51', where: at("handleChange", "is-handle-fixed"),
-    translation: HANDLE_WORDS['handle.refused.unchecked'],
+    check: 'C-96.52', where: at("handleChange", "is-handle-fixed"),
+    translation: 'Handles don\'t change in your group\'s Civicsmith: yours names your work for good, and no one else can '
+      + 'ever take it. Nothing was changed.',
   }),
   /* ===== T45 (T45-2; N893, Actions D4; R128): the project-act guard could not answer (a throw, a promise or an answer
      it does not give), so the invitation or the visibility setting fails closed. The next free number of C-56, a

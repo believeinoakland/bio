@@ -182,6 +182,11 @@ test("R4 the per-meeting link's refusals: MACHINE_CANNOT_FOLLOW, NO_SUCH_MEETING
   const b = body(w);
   w.bundle("INFO-2026-0100-agenda");
   w.watched.push({ bundle: "INFO-2026-0100-agenda", address: AGENDA });
+  for (const author of [MACHINE, ""]) {
+    const m = w.f.perMeetingBody({ address: AGENDA, body: b, author, viewer: MEMBER });
+    assert.deepEqual([m.code, m.check], ["MACHINE_CANNOT_FOLLOW", "C-137.1"]);
+  }
+  assert.equal(w.rows(`SELECT count(*) AS n FROM per_meeting_links`)[0].n, 0, "nothing written");
   const a = w.f.perMeetingBody({ address: "https://ellery.example/none", body: b, author: MEMBER, viewer: MEMBER });
   assert.deepEqual([a.code, a.check], ["NO_SUCH_MEETING_ADDRESS", "C-137.14"]);
   const n = w.f.perMeetingBody({ address: AGENDA, body: "ENT-2026-0999", author: MEMBER, viewer: MEMBER });

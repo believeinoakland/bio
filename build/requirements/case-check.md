@@ -1,6 +1,6 @@
 # case-check — requirements
 
-**Status** · New in T45 (T45-22; N828; Actions D23, D24; K2781 (1)): a module built fresh, no id moved; placed last in layer 8, after `review`, so that `case-authoring` stays under K617's bound (`draft-T45-l8.md` §4b, doubt 1). Every requirement is not yet met (T45).
+**Status** · New in T45 (T45-22; N828; Actions D23, D24; K2781 (1)): a module built fresh, no id moved; placed last in layer 8, after `review`, so that `case-authoring` stays under K617's bound (`draft-T45-l8.md` §4b, doubt 1). Every requirement is not yet met (T45). Last changed T46 (T46-28: R2's latch for the three lapse causes worded through `case-carriage`'s reads over an interval, its R19–R21; N907; K2833); that clause met (K2969).
 
 **Size (P6).** New. About 300 lines; one table.
 
@@ -34,9 +34,9 @@ Terms are `publication`'s and `case-authoring`'s. A **check** is one record of a
     - `undetermined`, when any of those reads fails. It fails closed: a failed read never answers `held`.
   - It answers `checked_at` and `by` with every state but `none`.
   - With `viewer`, it is fenced as `publication` R1 is (`hasCaseStanding`): no standing in the case's project answers `NO_SUCH_CASE`, the same answer as an absent case. Without `viewer` it is read as the plane.
-  - It writes nothing and never throws. A void check stays void when its cause is undone: re-running R1 makes a new check. For `document_replaced` and `member_moved` (latched by the pinned preparation and by record-core's `row_version`); for the three lapse causes the latch needs case-carriage reads over an interval (N907) and until then they are judged at the read, the commit re-reading all three *(not yet met for the lapse causes: T46, N907; K2833)*.
+  - It writes nothing and never throws. A void check stays void when its cause is undone: re-running R1 makes a new check. For `document_replaced` and `member_moved` (latched by the pinned preparation and by record-core's `row_version`); (T46; N907; K2833) for the three lapse causes, latched through `case-carriage`'s reads over the interval from the check's `checked_at` to the read (its R19–R21): `source_lapsed` when `sourcesLapsedSince(text, checked_at)` answers a row, `accepted_work_lapsed` when `acceptedWorkLapsedSince(fm, by, checked_at)` answers one, read as the check's `by`, and `marks_lapsed` when `marksLapsedSince(fm, checked_at)` answers a row, so a lapse undone before the read still voids the check, as far as those reads answer it (an acceptance withdrawn and restored, a mark's copy changed and derived again, in T46; a flag cleared or a consent restored once N947 gives `case-carriage` those histories, K2949); a failed read is `undetermined`, as above, and the commit still re-reads all three at its own instant.
 
-  Controls: each `why`, against an untouched check that reads `held`; a re-authored acknowledgement list (`case-authoring` R20) reads `document_replaced` (l8 doubt 3); a failed read reads `undetermined`; after ratification it reads `published`; an outsider gets the same answer as an absent case, byte-identical.
+  Controls: each `why`, against an untouched check that reads `held`; a re-authored acknowledgement list (`case-authoring` R20) reads `document_replaced` (l8 doubt 3); a failed read reads `undetermined`; after ratification it reads `published`; an outsider gets the same answer as an absent case, byte-identical. (T46) For each lapse cause, a lapse made after the check and undone before the read reads `void` with that `why`, and its control, nothing lapsed since the check, reads `held`.
 
 **heldFindingVersions({finding, version?, project?})** (no op)
 - **R3** (T45; N828; Actions D24; the plan's reconciliation R4) Answers `{items: [{case, edition, project, version_sha, role, check, checked_at}]}`: every check reading `held` (R2) whose members include `finding`, in `publication` R37's shape with `check` and `checked_at` in place of the frozen pair. `version` keeps those pinning that version, `project` those of that project. `NO_ID` for an empty `finding`; a finding no held check names answers `items: []`. Viewer-free; it writes nothing. It is the read `conformance` R2 uses beside `publication` R37, with R2 for voiding. Control: a void check is not listed.
@@ -47,7 +47,7 @@ Terms are `publication`'s and `case-authoring`'s. A **check** is one record of a
 
 - `case-authoring`: `publishPreflight` (its R34) and `publishCase` (its R14, R18), for R1.
 - `publication`: `hasCaseStanding` (its R1), for R2's fence; the `cases`, `published_cases`, `published_case_members` and `case_documents` read contracts (its R40, R56), for R2 and R3.
-- `case-carriage`: `acceptedWorkLapsed`, `sourcesLapsed` (its R4, R5) and `marksLapsed` (its R13), for R2's `void`.
+- `case-carriage`: `acceptedWorkLapsed`, `sourcesLapsed` (its R4, R5) and `marksLapsed` (its R13), for R2's `void`. (T46; N907) In their place for R2's latch, `acceptedWorkLapsedSince`, `marksLapsedSince` and `sourcesLapsedSince` (its R19–R21).
 - `record-grammar`: `parseFrontmatter`, the front matter the lapse reads take.
 - `record-core`: `transact`, `stampInstant`, `allocId` (a check's opaque id), `declarePurge`; the `bundles` read contract (its R37), for `member_moved`.
 - `membership`: `viewerPredicate`, for R2's fence beside `hasCaseStanding`.

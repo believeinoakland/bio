@@ -11,7 +11,7 @@
   "compatibility_flags": ["nodejs_compat"],
 
   // The release's version site (resolve-version ARM 7c), as every member's: a stamp, not a credential or address.
-  "vars": { "VERSION": "0.81.0" },
+  "vars": { "VERSION": "0.82.0" },
 
   // Reachable only through the Durable Object binding of its caller (agent-worker's RUNNER, script `agent-runner`):
   // no public address of its own.
@@ -26,7 +26,7 @@
   "containers": [
     {
       "class_name": "AgentRunner",
-      "image": "docker.io/civicos/agent-runner@sha256:UNPUBLISHED",
+      "image": "ghcr.io/believeinoakland/agent-runner@sha256:e56253c57212ea7585ee00aea01d1287682fee44c8203f00372be07dc53f2228",
       "max_instances": 10
     }
   ],

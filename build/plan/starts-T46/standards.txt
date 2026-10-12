@@ -1,0 +1,8 @@
+Depth 2. Your entry: `build/plan/current.md` (T46), layer 5, standards: T46-10 (N913): R55: `COMMITMENT_AS_HEARD` (C-112.63) and `COMMITMENT_OWN_LETTER` (C-112.64) re-worded by key. Text BOB's (K2919).
+Your requirements: `build/requirements/standards.md` (read whole). Marked `*(not yet met: T46)*`: R55.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); every refusal a control. N913's re-wordings read words by key from `docs/development/ux-substrate/screens/words.json` as on main @ 3f40899950 (`refusal.<CODE>`), changing no code, number or `where`; a sentence that names the group's Civicsmith bare, or that does not match what the refusal does, is not adopted (ask BOB).
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START, and those named in K2924–K2940; none is yours.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Merge order in L5: local-facts, standards, duties; each that uses no unmerged L5 job merges as soon as it is complete.
+Reading set (mechanics §17): measured at this START: 986 KB, over the 600 KB limit, mostly the used modules' public parts (an upper bound). Read your requirements, code and tests whole; for the used modules' public parts give helpers in your session your entries and what follows them, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.

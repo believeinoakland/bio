@@ -259,7 +259,7 @@ test("R4 R6 the ops reminderset and reminderanswer read the control plane's stam
   const a = op("reminderanswer", `target=${A}&entry=0&on=2026-10-01&author=${M}&viewer=${M}`);
   assert.deepEqual(a, { ok: true, target: A, entry: 0, answered: ["2026-09-20"], next: "2026-10-01" });
   assert.deepEqual(Object.keys(clocks.actionClocksOps(w.c, new URL("https://x/"), null)).sort(),
-    ["clockadopt", "clocklateness", "clocksics", "clockstate", "reminderanswer", "reminderset"]);
+    ["clockadopt", "clocklateness", "clockproposals", "clocksics", "clockstate", "reminderanswer", "reminderset"]);
 });
 
 test("R4 (N427) reminderRefused(arm, detail, extra?) is exported, the one answer REMINDER_REFUSED is minted through: its row, its arm and detail, a caller's extra fields never replacing them; it writes nothing and never throws", () => {

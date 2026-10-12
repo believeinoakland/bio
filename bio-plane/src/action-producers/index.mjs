@@ -40,15 +40,28 @@ import { followingOf } from "../following/index.mjs";
 import { localDay, dayRange, span, isCalendarDate } from "../civil-time/index.mjs";
 import { dayWords, say } from "./words.mjs";
 
-export { ACTION_WORDS, WORDS_OWED } from "./words.mjs";
+export { ACTION_WORDS, WORDS_CANON, KEPT } from "./words.mjs";
 
 /* The walk queue passes in answers this shape; with none passed, an item is ungrouped rather than given a home. */
 const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
 /* R9: the day before which `pendingClocks` lists every pending entry (action-clocks R1): every dated entry is before it. */
 const PENDING_BEFORE = "9999-12-31";
 
-const person = (x) => typeof x === "string" && x.trim() !== "" && !x.startsWith(MACHINE_AUTHOR_PREFIX)
-  && !x.startsWith(MACHINE_CLASS_PREFIX);
+/** K3000: a member as this module reads her, whichever form names her: the bare member id (`alice`, as queue passes
+ *  `member`) or the control plane's stamp of an author (`member:alice`, as action-clocks keeps a reminder's `set_by` and
+ *  an action's creator, and plan-work a take-up's `member`). Answers the bare id, or null for nothing, a machine
+ *  (`token:`, `class:`) or a stamp naming no one. Every member this module compares, counts or names goes through it. */
+const MEMBER_STAMP = "member:";
+export function memberIdOf(x) {
+  if (typeof x !== "string") return null;
+  let m = x.trim();
+  if (m.startsWith(MEMBER_STAMP)) m = m.slice(MEMBER_STAMP.length).trim();
+  if (m === "" || m.startsWith(MACHINE_AUTHOR_PREFIX) || m.startsWith(MACHINE_CLASS_PREFIX)) return null;
+  return m;
+}
+const person = (x) => memberIdOf(x) !== null;
+/** The distinct members a list names, each by its bare id (K3000). */
+const membersOf = (list) => [...new Set((Array.isArray(list) ? list : []).map(memberIdOf).filter((m) => m !== null))];
 
 export class ActionProducers {
   #host; #deps;
@@ -246,25 +259,29 @@ export class ActionProducers {
 
   /** R11: the doors, each the act whose taking makes the item leave, or routes it (take-up, plan-work R11). Plain acts:
    *  `queue` decorates every option (its R17). */
-  static CORRESPOND = Object.freeze({ id: "actioncorrespond", label: "Record a reply", weight: "single" });
-  static TAKE_UP = Object.freeze({ id: "itemtakeup", label: "Take this up yourself", weight: "single" });
-  static CHECKPOINT_JUDGE = Object.freeze({ id: "checkpointrecord", label: "Judge this checkpoint: met or not met", weight: "single" });
-  static STAGE_ADVANCE = Object.freeze({ id: "escalationadvance", label: "Advance to the proposed stage", weight: "single" });
-  static STAGE_DECLINE = Object.freeze({ id: "escalationdecline", label: "Decline to advance now, with a reason", weight: "single" });
-  static REMINDER_ANSWER = Object.freeze({ id: "reminderanswer", label: "Remind me again on a later day, or not again", weight: "single" });
+  static CORRESPOND = Object.freeze({ id: "actioncorrespond", label: say("door.actioncorrespond"), weight: "single" });
+  /** R21: the door stating an entry met or waived. No action-clocks op states it: it is a member's revision of the
+   *  action's document (`op=promote`, actions' revision within its R1 and R33), changing only that entry's `status` to
+   *  `met` or `waived`. Its label is `door.clockentrystate` (R23); `#entryStateDoor` keys it to the action and entry. */
+  static ENTRY_STATE = Object.freeze({ id: "promote", label: say("door.clockentrystate"), weight: "single" });
+  static TAKE_UP = Object.freeze({ id: "itemtakeup", label: say("door.itemtakeup"), weight: "single" });
+  static CHECKPOINT_JUDGE = Object.freeze({ id: "checkpointrecord", label: say("door.checkpointrecord"), weight: "single" });
+  static STAGE_ADVANCE = Object.freeze({ id: "escalationadvance", label: say("door.escalationadvance"), weight: "single" });
+  static STAGE_DECLINE = Object.freeze({ id: "escalationdecline", label: say("door.escalationdecline"), weight: "single" });
+  static REMINDER_ANSWER = Object.freeze({ id: "reminderanswer", label: say("door.reminderanswer"), weight: "single" });
   /** R5: a member's statement that a hold is in place (action-holds R2, `op=actionhold`), or its release, its own act
-   *  (action-holds R5, `op=actionholdrelease`), DEC-113. */
-  static HOLD_STATE = Object.freeze({ id: "actionhold", label: "Record that a litigation hold is in place", weight: "single" });
+   *  (action-holds R5, `op=actionholdrelease`, which words.json does not hold: its label stays), DEC-113. */
+  static HOLD_STATE = Object.freeze({ id: "actionhold", label: say("door.actionhold"), weight: "single" });
   static HOLD_RELEASE = Object.freeze({ id: "actionholdrelease", label: "Record that no hold is needed, with a reason", weight: "single" });
   static TEMPLATE_REVIEW = Object.freeze({ id: "templatereview", label: "Review this template version", weight: "single" });
   static FACT_CONFIRM = Object.freeze({ id: "factconfirm", label: "Confirm, correct or dispute this local fact", weight: "single" });
-  static WATCH_ANSWER = Object.freeze({ id: "watchanswer", label: "Keep this watch until a day you choose, or stop it now", weight: "single" });
-  static REVIEW_RECORD = Object.freeze({ id: "planreviewrecord", label: "Record what the review decided", weight: "single" });
-  static PLAN_RESUME = Object.freeze({ id: "planresume", label: "Resume this plan, with a reason", weight: "single" });
+  static WATCH_ANSWER = Object.freeze({ id: "watchanswer", label: say("door.watchanswer"), weight: "single" });
+  static REVIEW_RECORD = Object.freeze({ id: "planreviewrecord", label: say("door.planreviewrecord"), weight: "single" });
+  static PLAN_RESUME = Object.freeze({ id: "planresume", label: say("door.planresume"), weight: "single" });
 
   /** R11: each kind's doors, in order (the producers lead their options with exactly these). */
   static DOORS = Object.freeze({
-    "action-clock-overdue": ["actioncorrespond", "itemtakeup"],
+    "action-clock-overdue": ["actioncorrespond", "promote", "itemtakeup"],
     "plan-checkpoint-due": ["checkpointrecord", "itemtakeup"],
     "escalation-stage-proposed": ["escalationadvance", "escalationdecline", "itemtakeup"],
     "action-reminder": ["reminderanswer"],
@@ -281,12 +298,13 @@ export class ActionProducers {
    * item and is named in `facts.failed`, so the rest of the feed stands. `facts[<kind>]` states each producer's bound
    * and whether it cut. */
   actionItems({ member = null, viewer = null, now = null, homesOf = null, optionsOf = null } = {}) {
-    const me = typeof member === "string" && member.trim() ? member.trim() : null;
+    const me = memberIdOf(member);
     const at = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : Date.now();
     this.#homesFn = typeof homesOf === "function" ? homesOf : null;
     this.#optionsFn = typeof optionsOf === "function" ? optionsOf : null;
     this.#zone = undefined;
-    this.#memo = { reads: new Map(), takeUps: null, facts: new Map(), sight: new Map(), owners: new Map(), admins: null, part: new Map() };
+    this.#memo = { reads: new Map(), takeUps: null, facts: new Map(), sight: new Map(), owners: new Map(), admins: null, part: new Map(),
+                   watchEnds: new Map() };
     const items = [];
     const facts = { failed: [] };
     const run = (kind, produce) => {
@@ -341,8 +359,9 @@ export class ActionProducers {
    * ====================================================================== */
 
   /** Whether a member is an active member of the group (membership R68), memoised per read. */
-  #active(m) {
-    if (!person(m)) return false;
+  #active(who) {
+    const m = memberIdOf(who);
+    if (m === null) return false;
     if (!this.#memo.facts.has(m)) {
       let f = null;
       try { f = this.#membership.memberFacts(m); } catch { f = null; }
@@ -352,8 +371,10 @@ export class ActionProducers {
   }
 
   /** Whether a member may see a bundle (membership R80, as `member:<id>`), memoised per read. */
-  #sees(m, id) {
+  #sees(who, id) {
     if (typeof id !== "string" || !id) return true;
+    const m = memberIdOf(who);
+    if (m === null) return false;
     const k = `${m}\n${id}`;
     if (!this.#memo.sight.has(k)) {
       let s = false;
@@ -378,7 +399,7 @@ export class ActionProducers {
   #activeOwners(project) {
     if (typeof project !== "string" || !project) return [];
     if (!this.#memo.owners.has(project)) {
-      const owners = (this.#membership.projectOwners(project) || []).filter((m) => {
+      const owners = membersOf(this.#membership.projectOwners(project)).filter((m) => {
         const p = this.#participation(project, m);
         return this.#active(m) && !!p && p.state === "joined";
       });
@@ -394,7 +415,7 @@ export class ActionProducers {
   }
 
   #admins() {
-    if (this.#memo.admins === null) this.#memo.admins = this.#membership.activeAdmins() || [];
+    if (this.#memo.admins === null) this.#memo.admins = membersOf(this.#membership.activeAdmins());
     return this.#memo.admins;
   }
 
@@ -409,7 +430,7 @@ export class ActionProducers {
         if (!r || r.ok === false || !Array.isArray(r.items)) break;
         for (const t of r.items) {
           const k = ActionProducers.#takeUpKey(t && t.item);
-          if (k && person(t.member)) last.set(k, t.member);
+          if (k && person(t.member)) last.set(k, memberIdOf(t.member));
         }
         if (!r.truncated || r.cursor === null || r.cursor === undefined) break;
         after = r.cursor;
@@ -437,7 +458,7 @@ export class ActionProducers {
   #recipients({ taken = null, author = null, seen = null, project = null } = {}) {
     const takenBy = this.#takenBy(taken);
     if (takenBy && this.#active(takenBy) && this.#sees(takenBy, seen)) return { rule: "took_up", members: [takenBy] };
-    if (person(author) && this.#active(author) && this.#sees(author, seen)) return { rule: "author", members: [author.trim()] };
+    if (person(author) && this.#active(author) && this.#sees(author, seen)) return { rule: "author", members: [memberIdOf(author)] };
     const owners = this.#activeOwners(project);
     if (owners.length) return { rule: "project_owners", members: [...owners] };
     return { rule: "administrators", members: [...this.#admins()] };
@@ -465,9 +486,52 @@ export class ActionProducers {
    *  (`owed_by: group`, action-clocks R18) is `ours`; the other side's stated date (basis kind `stated`, its R7) is
    *  `theirs`; any other (the addressee's, or one whose owner is not stated) is canon's question, `noreply`. */
   static #wordsKey(e) {
-    if (e && e.owed_by === "group") return "queue.action-clock-overdue.ours";
-    if (e && e.basis_of && e.basis_of.kind === "stated") return "queue.action-clock-overdue.theirs";
+    if (e && e.owed_by === "group") return "queue.action-clock-overdue.ours.summary";
+    if (e && e.basis_of && e.basis_of.kind === "stated") return "queue.action-clock-overdue.theirs.summary";
     return "queue.action-clock-overdue.noreply";
+  }
+
+  /** R1's detail, one sentence for every basis. `.ours.detail` and `.theirs.detail` are keyed in words.json but keep
+   *  this present text in T46, returned to BOB, so no `detail_key` is answered (R23: `.theirs.detail` says "no reply is
+   *  recorded since", untrue once a reply is recorded while nothing marks the entry met; `.ours.detail` names a
+   *  `{venue}` no fact of the item holds, J1). */
+  static #detailOf(e, dated, steps) {
+    return `${e.text ? `"${e.text}"` : "An entry on this action's clock"} was dated ${dated ? e.date : "with no date"}`
+      + `${e.basis ? ` (${e.basis})` : ""}, and nothing marks it met or waived. This asks whether anything came; `
+      + "it says nothing about why, and nothing about whether anyone failed a duty until a member determines that "
+      + "on the record."
+      + (steps.length ? ` The step${steps.length > 1 ? "s" : ""} ${steps.join(", ")} stand${steps.length > 1 ? "" : "s"} `
+          + "for the same date, and are told here, once." : "")
+      + " It is told once, and it leaves when the entry is marked met or waived or the action is resolved or "
+      + "abandoned.";
+  }
+
+  /** R21: the door stating this entry met or waived: the action's revision (`op=promote`), keyed to the action and the
+   *  entry's position, changing only that entry's `status` to `met` or `waived`. */
+  static #entryStateDoor(action, entry) {
+    return { ...ActionProducers.ENTRY_STATE, revision: { action, entry, field: "status", to: ["met", "waived"] } };
+  }
+
+  /** R22 (N926; following R25): whether an entry carrying `noticed_by` is drawn after all: when the duty's watch has
+   *  ended, `following.dutyWatchEnd(duty)` answering a day before the read's local day in the action's zone, the duty's
+   *  Noticed item tells nothing of it and R1's item stands. With no `noticed_by` it stands; while that read answers null,
+   *  a day not yet passed, or throws, or no local day of the read is held, it does not, so one fact is never two items.
+   *  Memoised per duty per read. */
+  #standsAlone(e, now) {
+    const n = e && e.noticed_by;
+    if (!n) return { stands: true, end: null };
+    const duty = n && typeof n === "object" ? n.duty : n;
+    let end = null;
+    if (typeof duty === "string" && duty) {
+      if (!this.#memo.watchEnds.has(duty)) {
+        let d = null;
+        try { const f = this.#following; d = f && typeof f.dutyWatchEnd === "function" ? f.dutyWatchEnd(duty) : null; } catch { d = null; }
+        this.#memo.watchEnds.set(duty, isCalendarDate(d) ? d : null);
+      }
+      end = this.#memo.watchEnds.get(duty);
+    }
+    const today = ActionProducers.#today(now, this.#actionZone(e));
+    return { stands: !!(end && today && end < today), end };
   }
 
   /** `action-clock-overdue` (R1; monitoring R34; action-clocks R3, R16–R18; K611): one CONDITION per clock entry
@@ -484,7 +548,9 @@ export class ActionProducers {
     const out = [];
     for (const e of page.items) {
       if (!e || typeof e.action !== "string" || !e.action || !Number.isInteger(e.ord)) continue;
-      if (e.noticed_by) continue;                    // R1: the duty's Noticed item replaces it (action-clocks R17)
+      /* R1: the duty's Noticed item replaces it (action-clocks R17), until the duty's watch has ended (R22) */
+      const alone = this.#standsAlone(e, now);
+      if (!alone.stands) continue;
       const to = this.#recipients({ taken: `clock\n${e.action}\n${e.ord}`, author: e.created_by, seen: e.action, project: e.project });
       if (!to.members.includes(me)) continue;
       /* R20: past from the first instant after the entry's local day, in the action's zone (civil-time R7) */
@@ -494,7 +560,7 @@ export class ActionProducers {
       const key = ActionProducers.#wordsKey(e);
       const today = ActionProducers.#today(now, zone) || (typeof e.local_day === "string" ? e.local_day : null);
       const steps = Array.isArray(e.steps) ? e.steps.filter((s) => typeof s === "string" && s) : [];
-      const summary = say(key, { date: dated ? dayWords(e.date, today) : "its date", text: e.text || "an entry on its clock" });
+      const summary = say(key, { date: dated ? dayWords(e.date, today) : "its date", what: e.text || "an entry on its clock" });
       out.push({
         id: `CONDITION::action-clock-overdue::${e.action}::${e.ord}`,
         class: "CONDITION",
@@ -505,18 +571,12 @@ export class ActionProducers {
                    text: e.text ?? null, project: e.project ?? null, owed_by: e.owed_by ?? null, steps },
         summary,
         summary_key: key,
-        detail: `${e.text ? `"${e.text}"` : "An entry on this action's clock"} was dated ${dated ? e.date : "with no date"}`
-              + `${e.basis ? ` (${e.basis})` : ""}, and nothing marks it met or waived. This asks whether anything came; `
-              + "it says nothing about why, and nothing about whether anyone failed a duty until a member determines that "
-              + "on the record."
-              + (steps.length ? ` The step${steps.length > 1 ? "s" : ""} ${steps.join(", ")} stand${steps.length > 1 ? "" : "s"} `
-                  + "for the same date, and are told here, once." : "")
-              + " It is told once, and it leaves when the entry is marked met or waived or the action is resolved or "
-              + "abandoned.",
+        detail: ActionProducers.#detailOf(e, dated, steps),
         basis: { source: "action-clocks.overdueClocks", action: e.action, entry: e.ord, date: e.date ?? null,
                  basis: e.basis ?? null, text: e.text ?? null, status: e.status ?? null, past: e.past ?? null,
                  project: e.project ?? null, created_by: e.created_by ?? null, owed_by: e.owed_by ?? null, steps,
                  recipients_rule: to.rule, zone, words: key,
+                 ...(e.noticed_by ? { noticed_by: e.noticed_by, duty_watch_end: alone.end } : {}),
                  local_day: typeof e.local_day === "string" ? e.local_day : null,
                  basis_of: e.basis_of && typeof e.basis_of === "object" ? e.basis_of : null,
                  bound: { pages_bound: ActionProducers.QUEUE_ACTION_PAGES, truncated: page.truncated,
@@ -534,7 +594,8 @@ export class ActionProducers {
         assignee: null,
         assignee_role: null,
         recipients: to.members,
-        options: [ActionProducers.CORRESPOND, ActionProducers.TAKE_UP, ...this.#optionsOf([e.action])],
+        options: [ActionProducers.CORRESPOND, ActionProducers.#entryStateDoor(e.action, e.ord), ActionProducers.TAKE_UP,
+                  ...this.#optionsOf([e.action])],
       });
     }
     return { items: out, bound };
@@ -652,7 +713,7 @@ export class ActionProducers {
     bound.truncated = page.truncated;
     const out = [];
     for (const x of page.items) {
-      if (!x || typeof x.action !== "string" || !x.action || !Number.isInteger(x.ord) || x.set_by !== me) continue;
+      if (!x || typeof x.action !== "string" || !x.action || !Number.isInteger(x.ord) || memberIdOf(x.set_by) !== me) continue;
       if (!this.#active(me) || !this.#sees(me, x.action)) continue;
       /* R20: the reminder's day is a local day of the action's zone; it ages from that day's first local instant */
       const zone = this.#actionZone(x);
@@ -704,7 +765,7 @@ export class ActionProducers {
       if (!m || typeof m !== "object") continue;
       const arrived = m.arrived && typeof m.arrived === "object" ? m.arrived
         : typeof m.action === "string" ? { action: m.action, ord: m.ord } : {};
-      const marker = person(m.marked_by) ? m.marked_by : null;
+      const marker = memberIdOf(m.marked_by);
       const markerTold = marker && this.#active(marker) ? marker : null;
       if (!admin && markerTold !== me) continue;
       const recipients = [...new Set([...this.#admins(), ...(markerTold ? [markerTold] : [])])];
@@ -737,7 +798,9 @@ export class ActionProducers {
           id: `OBLIGATION::litigation-hold::docket::${arrived.docket_entry}`,
           case: this.#projectHomes(project, viewer),
           subject: { kind: "case", id: kase, entry: arrived.docket_entry, note: m.note ?? null, project },
-          summary: `a legal threat was recorded on the docket of ${kase || "a case"} and no litigation hold is stated for it`,
+          /* R23: the summary by key (a protected word); the detail keeps its present text, returned to BOB */
+          summary: say("queue.litigation-hold.docket.summary", { entry: arrived.docket_entry }),
+          summary_key: "queue.litigation-hold.docket.summary",
           detail: `an entry on this case's docket was marked as a legal threat${said}. Record that the group is preserving `
                 + "what the matter may reach: a hold placed from this mark. This is told once; it leaves when a hold is "
                 + "stated on the mark.",
@@ -795,7 +858,7 @@ export class ActionProducers {
     for (const x of page.items) {
       if (!x || typeof x.action !== "string" || !x.action || !Number.isInteger(x.ord) || !Number.isInteger(x.seq)) continue;
       if (visible(x.action) === null) continue;      // R14: a release on an action this viewer may not see is no item
-      const placers = [...new Set((Array.isArray(x.placers) ? x.placers : []).filter(person))];
+      const placers = membersOf(x.placers);
       if (!admin && !placers.includes(me)) continue;
       const admins = this.#admins();
       const restarted = (Array.isArray(x.restarted) ? x.restarted : [])
@@ -857,7 +920,7 @@ export class ActionProducers {
     const visible = this.#bundleRedactor(viewer);
     const out = [];
     for (const x of page.items) {
-      if (!x || typeof x.version !== "string" || !x.version || typeof x.member !== "string" || x.member !== me) continue;
+      if (!x || typeof x.version !== "string" || !x.version || memberIdOf(x.member) !== me) continue;
       const asker = x.asked_by && typeof x.asked_by === "object" ? { id: x.asked_by.id ?? null, name: x.asked_by.name ?? null } : null;
       const askerName = asker && (asker.name || asker.id) ? asker.name || asker.id : "a member";
       const project = typeof x.project === "string" && x.project ? visible(x.project) : null;   // R14
@@ -971,8 +1034,9 @@ export class ActionProducers {
 
   /** A member is gone from a project when she is no longer an active member of the group (membership R68), or holds
    *  no participation in the project (membership R74; a member who leaves holds none). */
-  #gone(m, project) {
-    if (!person(m)) return false;
+  #gone(who, project) {
+    const m = memberIdOf(who);
+    if (m === null) return false;
     if (!this.#active(m)) return true;
     if (typeof project !== "string" || !project) return false;
     const p = this.#participation(project, m);
@@ -997,15 +1061,19 @@ export class ActionProducers {
     const out = [];
     const cut = { truncated: false };
     const visible = this.#bundleRedactor(viewer);
-    const routed = (taken, author) => { const t = this.#takenBy(taken); return t || (person(author) ? author : null); };
+    const routed = (taken, author) => this.#takenBy(taken) || memberIdOf(author);
     /* clock entries: the passed ones with their creator and project (action-clocks R3), the pending ones (its R1) */
     const entries = new Map();
     const overdue = this.#once("overdueClocks", () => this.#pages((after) => this.#actionClocks.overdueClocks({ after, viewer, now })));
     const pending = this.#pages((after) => this.#actionClocks.pendingClocks({ before: PENDING_BEFORE, after, viewer }));
     if (overdue.truncated || pending.truncated) cut.truncated = true;
+    /* an entry a duty's Noticed item stands for (R1, R22) is no item of R1's, nor named here; its pending copy neither */
+    const told = new Set();
     for (const e of [...overdue.items, ...pending.items]) {
-      if (!e || typeof e.action !== "string" || !Number.isInteger(e.ord) || e.noticed_by) continue;
+      if (!e || typeof e.action !== "string" || !Number.isInteger(e.ord)) continue;
       const k = `${e.action}#${e.ord}`;
+      if (told.has(k)) continue;
+      if (e.noticed_by && !this.#standsAlone(e, now).stands) { told.add(k); continue; }
       if (!entries.has(k)) entries.set(k, e);
     }
     /* who created each action and its project: as overdueClocks states them, else as action-clocks R3 defines them */
@@ -1035,7 +1103,7 @@ export class ActionProducers {
         const e = entries.get(`${a}#${x.entry}`);
         if (!e || !person(x.set_by) || x.state === "answered") continue;
         out.push({ kind: "reminder", subject: a, entry: x.entry, date: x.on ?? null, basis: e.basis ?? null,
-                   project: factsOf(a).project, member: x.set_by, door: { kind: "clock", action: a, entry: x.entry } });
+                   project: factsOf(a).project, member: memberIdOf(x.set_by), door: { kind: "clock", action: a, entry: x.entry } });
       }
     }
     /* checkpoints come due on plans this viewer's projects hold (action-plans R17) */
@@ -1069,7 +1137,7 @@ export class ActionProducers {
                    door: { kind: "hold", target: a.action, ord: a.ord } });
       } else if (typeof a.pressure === "string" && typeof m.project === "string") {
         out.push({ kind: "hold", subject: m.project, entry: a.pressure, date: m.marked_at ?? null, basis: m.note ?? null,
-                   project: m.project, member: m.marked_by, door: { kind: "hold", project: m.project } });
+                   project: m.project, member: memberIdOf(m.marked_by), door: { kind: "hold", project: m.project } });
       }
     }
     return { items: out, truncated: cut.truncated };
@@ -1117,11 +1185,12 @@ export class ActionProducers {
         case: this.#projectHomes(g.project, viewer),
         subject: { kind: "member_departure", member: g.member, project: g.project, items: named,
                    more: Math.max(0, listed.length - named.length) },
-        summary: `${listed.length} dated item${listed.length === 1 ? "" : "s"} ${g.project ? `in ${g.project} ` : ""}`
-               + `were routed to ${g.member}, who is no longer here`,
-        detail: `these open dated items routed their to-dos to ${g.member}, who took them up or set them. Any member who can `
-              + "see an item may take it up by one act, which routes its to-dos to her; nobody assigns anybody. This is "
-              + "told once.",
+        /* R23: by key; {n} and {items} count and name only the items this recipient may see (R14) */
+        summary: say("queue.member-left-items.summary", { member: g.member, n: listed.length }),
+        summary_key: "queue.member-left-items.summary",
+        detail: say("queue.member-left-items.detail", { member: g.member, place: g.project || "the group",
+          items: ActionProducers.#itemsWords(named, listed.length - named.length) }),
+        detail_key: "queue.member-left-items.detail",
         basis: { source: "membership.memberFacts + membership.participation + plan-work.takeUpsFor", member: g.member,
                  project: g.project, count: listed.length, recipients_rule: owners.length ? "project_owners" : "administrators",
                  bound: { items_max: ActionProducers.MEMBER_LEFT_ITEMS_MAX, truncated: read.truncated },
@@ -1137,6 +1206,16 @@ export class ActionProducers {
       });
     }
     return { items: out, bound };
+  }
+
+  /** R23: the items a departure's finding names, in words: "the clock entry 0 on ACT-1 (2026-08-29)", …, and how many
+   *  more the recipient may see beyond the list's bound. */
+  static #itemsWords(named, more) {
+    const KIND = { clock: "the clock entry", reminder: "the reminder on entry", checkpoint: "the checkpoint",
+                   escalation_stage: "the proposed stage", hold: "the legal threat" };
+    const one = (x) => `${KIND[x.kind] || "the item"} ${x.entry} on ${x.subject}${typeof x.date === "string" && x.date ? ` (${x.date.slice(0, 10)})` : ""}`;
+    const words = named.map(one).join("; ");
+    return more > 0 ? `${words}; and ${more} more` : words;
   }
 
   /** `watch-keep-or-stop` (R10; N855; Actions D6d; v0.2 rule 17; K2781 (2)): one OBLIGATION per entry
@@ -1164,7 +1243,7 @@ export class ActionProducers {
     const out = [];
     for (const q of page.items) {
       if (!q || q.link === undefined || q.link === null || typeof q.plan !== "string") continue;
-      const recipients = (Array.isArray(q.recipients) ? q.recipients : []).filter(person);
+      const recipients = membersOf(q.recipients);
       if (!recipients.includes(me)) continue;
       const project = projectOf(q.plan);
       const w = q.watch && typeof q.watch === "object" ? q.watch : {};
@@ -1179,10 +1258,13 @@ export class ActionProducers {
         case: this.#projectHomes(project, viewer),
         subject: { kind: "plan", id: q.plan, project, link: q.link, watch: { kind: w.kind ?? null, id: w.id ?? null,
                    ends: w.ends ?? null }, cause: q.cause ?? null, relied_on: relied },
-        summary: `keep or stop a watch plan ${q.plan} set running: ${w.kind || "a watch"}${w.ends ? `, ending ${w.ends}` : ", with no end date"}`,
-        detail: relied
-          ? `${why}. This watch is relied on elsewhere, so it is shown here and not offered for keeping or stopping.`
-          : `${why}. Keep this watch until a day you choose, or stop it now; you are asked once.`,
+        /* R23: the summary by key on every entry; the detail by key where `watchanswer` is offered; a relied-on
+           entry keeps its present detail (the key would offer what following R25 refuses, WATCH_RELIED_ON) */
+        summary: say("queue.watch-keep-or-stop.summary", { what: ActionProducers.#watchWords(w) }),
+        summary_key: "queue.watch-keep-or-stop.summary",
+        ...(relied
+          ? { detail: `${why}. This watch is relied on elsewhere, so it is shown here and not offered for keeping or stopping.` }
+          : { detail: say("queue.watch-keep-or-stop.detail", { plan: q.plan }), detail_key: "queue.watch-keep-or-stop.detail" }),
         basis: { source: "following.watchQuestions", link: q.link, plan: q.plan, project, watch: { kind: w.kind ?? null,
                  id: w.id ?? null, ends: w.ends ?? null }, cause: q.cause ?? null, due_at: q.due_at ?? null,
                  relied_on: relied, offered, recipients, recipients_rule: "following",
@@ -1199,6 +1281,13 @@ export class ActionProducers {
       });
     }
     return { items: out, bound };
+  }
+
+  /** R23: a watch in words for `{what}`: its kind and what it watches ("the follow F-1"), else "this watch". */
+  static #watchWords(w) {
+    const KIND = { follow: "the follow", address: "the address", duty: "the duty", question: "the standing question" };
+    if (!w || w.id === undefined || w.id === null || w.id === "") return "this watch";
+    return `${KIND[w.kind] || "the watch"} ${w.id}`;
   }
 
   /** `plan-review-due` (R12; N890; Actions D27; v0.2 rule 20): one OBLIGATION per review day a plan's member-set rhythm
@@ -1228,7 +1317,10 @@ export class ActionProducers {
         case: this.#homesAt([x.project], viewer),
         due: dueDay,
         subject: { kind: "plan", id: x.plan, project: x.project, day, set_by: x.member ?? null },
-        summary: `plan ${x.plan} is due for the review your group asked for`,
+        /* R23: the summary by key; the detail keeps its present text, returned to BOB (J1: plan-work R4's read answers
+           neither the rhythm nor the day it counts since) */
+        summary: say("queue.plan-review-due.summary", { plan: x.plan }),
+        summary_key: "queue.plan-review-due.summary",
         detail: "the rhythm a member set for reviewing this plan has reached a review day, and no review is recorded since. "
               + "Open the review to see what changed, and record what the members decided. You are reminded only "
               + "because the group asked for it.",
@@ -1274,7 +1366,9 @@ export class ActionProducers {
         due: x.look_again,
         subject: { kind: "plan", id: x.plan, project: x.project, title: x.title ?? null, look_again: x.look_again,
                    paused_by: x.paused_by ?? null },
-        summary: `plan ${x.title ? `"${x.title}"` : x.plan} was paused until ${x.look_again} to look at again`,
+        /* R23: the summary by key; the detail keeps its present text, returned to BOB */
+        summary: say("queue.plan-look-again.summary", { plan: x.title ? `"${x.title}"` : x.plan }),
+        summary_key: "queue.plan-look-again.summary",
         detail: `a member paused this plan${x.reason ? `, because "${x.reason}"` : ""}, and named this day to look at it `
               + "again. What it set running has gone on. Review it, and resume it if the members decide to.",
         basis: { source: "action-plans.plansToLookAgain", plan: x.plan, project: x.project, look_again: x.look_again,

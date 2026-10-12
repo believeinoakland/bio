@@ -1,0 +1,11 @@
+{
+  "r2_buckets": [
+    {
+      "binding": "CAPTURES",
+      "bucket": "captures"
+    }
+  ],
+  "crons": [
+    "17 4 * * *"
+  ]
+}

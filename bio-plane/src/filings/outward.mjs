@@ -3,22 +3,49 @@
  * function what the record and the modules it uses answered. The one sentence split every check reads (R34, R43), the
  * classes this module gives a sentence itself (`question`, `own_doing`; reconciliation R7), the record check's verdicts
  * from `case-checker.checkAccount`'s departures (R34), the asking sentences of a notice (R38), the disclosures printed
- * first (R24, R35), and the keyed sentences whose words are the design stream's (each held here under its key, plain
- * working words until that stream gives them). */
+ * first (R24, R35), and the keyed sentences whose words are the design stream's (each held here under its key, as
+ * `words.json` holds it since T46, R52). */
 
-/** The keyed sentences this module writes into what it prepares (words the design stream's, canon's where it gives
- *  them: `prepared.rests.*`). Each answer names its key beside the words. */
+/** The keyed sentences this module writes into what it prepares, each answered with its key beside the words. R52 (T46;
+ *  DEC-194, N913): each is the words `words.json` (`docs/development/ux-substrate/screens/words.json`) holds for its key,
+ *  `en` verbatim, read by key (as membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are), its
+ *  `{placeholders}` as `words.json` names them, filled from the record. The design stream's words: re-worded there, then
+ *  re-taken here by key. Kept in T46, each returned to BOB until its sentence and the requirement agree (R52):
+ *  `phrasing.no_list` (R43: `words.json`'s names "Civicsmith" bare, DEC-149 "your group's Civicsmith"), `rfc.quoting`
+ *  (R40: its refusal looks for the sentence in the approved text, so new words would refuse every request for comment
+ *  prepared before them); `filings.secondapproval.waiting` (R42) is not taken. `filings.review_copy.*` (R46), which
+ *  `words.json` does not hold, keep theirs. */
 export const KEYED = Object.freeze({
+  /* R35 */
   "prepared.rests.held": "Rests on findings checked for publication on {date}, not yet published.",
-  "prepared.rests.accepted": "Rests on findings of {group} (edition of {edition}), accepted by us on {accepted}.",
+  "prepared.rests.accepted": "Rests on findings of {group} (edition of {date}), accepted by us on {date_accepted}.",
+  /* R10 */
+  "packet.privileged": "Privileged and confidential: prepared for counsel",
+  "packet.privileged.warning": "This packet belongs to a counsel matter. Sharing it outside the group may end its privilege. "
+    + "Share it only with your lawyer.",
+  /* R39 */
+  "filings.election.notice": "This names a pending measure or candidate. {fact} ({citation})",
+  /* R45 */
+  "recognition.staff_public": "This thanks staff by name in public. Check that they are willing to be named.",
+  /* the pointers: R34, R39, R38, R48 */
+  "pointer.record.supported": "Supported by the record: {findings}",
+  "pointer.record.unsupported": "The record doesn't support this sentence. You may still send it.",
+  "pointer.record.contradicted": "The record contradicts this sentence. It is held until you rewrite it, or release it with a reason.",
+  "pointer.position": "Reads as a policy position: remove it, or comment as yourself.",
+  "pointer.selfbenefit": "Asks for something for your group: rewrite it before approving.",
+  "pointer.staff": "Names staff below the official responsible (the assistant's reading).",
+  "pointer.staff.notrun": "Staff names weren't checked: the assistant is off.",
+  /* R44 */
+  "voice.group": "For the group",
+  "voice.group.means": "Approved and sent as your group's act.",
+  "voice.self": "As myself",
+  "voice.self.means": "Your own notes for speaking as yourself. It is not the group's act, and it is never recorded as sent "
+    + "or published.",
+  /* R42 */
+  "filings.secondapproval.given": "Second approval given by {member} on {date}.",
+  /* kept in T46 (R52) */
   "rfc.quoting": "Your reply may be quoted unless it says otherwise.",
-  "packet.privileged": "Privileged and confidential: prepared for counsel in a counsel matter.",
-  "packet.privileged.warning": "Sharing this outside the counsel matter may waive its privilege.",
-  "filings.election.notice": "This text names a pending measure or a candidate: the campaign-spending rule applies.",
-  "recognition.staff_public": "Thanks that name staff name them publicly.",
   "phrasing.no_list": "Nothing could be pointed out: no phrasing list is held for this language.",
-  "filings.staff.not_run": "The check for staff named below the responsible official did not run: the assistant is off.",
-  "filings.voice.self": "These are your own notes, not the group's act: they are never approved, sent or recorded as the group's.",
   "filings.review_copy.no_embargo": "No embargo is stated for this copy.",
   "filings.review_copy.terms": "Review copy. Embargoed until {embargo}; for release at {release}.",
 });
@@ -119,8 +146,8 @@ export function disclosureLines(disclosures, override) {
       return { key: "prepared.rests.held", kind: d.kind, text: keyed("prepared.rests.held", { date: d.checked_at ?? "a date not stated" }) };
     if (d.kind === "accepted")
       return { key: "prepared.rests.accepted", kind: d.kind,
-               text: `${keyed("prepared.rests.accepted", { group: d.group ?? "a group not named", edition: d.edition_date ?? "a date not stated",
-                                                          accepted: d.accepted_at ?? "a date not stated" })} ${identityWords(d)}` };
+               text: `${keyed("prepared.rests.accepted", { group: d.group ?? "a group not named", date: d.edition_date ?? "a date not stated",
+                                                          date_accepted: d.accepted_at ?? "a date not stated" })} ${identityWords(d)}` };
     if (d.kind === "override") return { key: "filings.override", kind: d.kind, text: overrideDisclosure({ ...(override || {}), ...d }) };
     return { key: `filings.disclosure.${d.kind}`, kind: d.kind ?? null, text: `Disclosed: ${JSON.stringify(d)}` };
   });

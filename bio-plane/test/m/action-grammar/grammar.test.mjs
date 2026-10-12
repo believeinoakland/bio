@@ -9,7 +9,7 @@ import { proposalLabel, idPattern } from "../../../src/record-grammar/index.mjs"
 import * as J from "../../../../jurisdictions/index.mjs";
 import { DOCS, KIND_SETS, SCALARS, NOW, TODAY } from "./corpus.mjs";
 import { GOLDEN, suite, overDoc, pushed, plain, VALUE_NAMES, ROW_NAMES, REWORDED, REWORDED_COUNTS, ZONE } from "./fixture.mjs";
-import { T45_ROWS } from "./t45-rows.mjs";
+import { ROWS_NOW } from "./t45-rows.mjs";
 
 const S = suite(AG);
 const codes = (list) => list.map((x) => x.code);
@@ -304,11 +304,11 @@ test("R9 (T45; K2845, K2859): the moved hold rows are retired once actions delet
   for (const code of ["MACHINE_CANNOT_MARK_PRESSURE", "PRESSURE_REFUSED", "PRESSURE_NOT_RECEIVED"]) assert.deepEqual(C[code], GOLDEN.rows.ACTION_CATALOGUE_CHECKS[code], code);
 });
 
-test("R9: every row is held as before the move, number and translation unchanged; C-73.6's where names its new site, C-117.11's names contactNotAMember (K837); C-117.5 is action-clocks', not here; C-117.26–.58 and C-32.21 (R14) are added, C-117.17, .18, .20–.25 retired (T45); C-117.19's translation is the reason's alone (K2849 (4)); C-94.5's translation names none_exists (R13)", () => {
+test("R9: every row is held as before the move, number and translation unchanged; C-73.6's where names its new site, C-117.11's names contactNotAMember (K837); C-117.5 is action-clocks', not here; C-117.26–.58 and C-32.21 (R14) are added, C-117.17, .18, .20–.25 retired (T45); C-117.19's translation is the reason's alone (K2849 (4)); C-94.5's translation names none_exists (R13); since T46 twenty-four of C-117.30–.56 translate by words.json (R26)", () => {
   const expected = structuredClone(GOLDEN.rows);
   delete expected.ACTION_CATALOGUE_CHECKS.PENDING_CLOCKS_BAD_BEFORE;
   for (const code of Object.keys(RETIRED)) delete expected.ACTION_CATALOGUE_CHECKS[code];
-  Object.assign(expected.ACTION_CATALOGUE_CHECKS, structuredClone(T33_ROWS), structuredClone(T41_ROWS), structuredClone(T45_ROWS));
+  Object.assign(expected.ACTION_CATALOGUE_CHECKS, structuredClone(T33_ROWS), structuredClone(T41_ROWS), structuredClone(ROWS_NOW));
   Object.assign(expected.RECORDS_LAW_FENCE_CHECKS, structuredClone(R14_ROWS));
   expected.LIFECYCLE_CHECKS.OUTCOME_NOT_IN_VOCABULARY.translation = C94_5_NOW;
   expected.ACTION_CATALOGUE_CHECKS.PREMISE_OVERRIDE_REFUSED.translation = C117_19_NOW;

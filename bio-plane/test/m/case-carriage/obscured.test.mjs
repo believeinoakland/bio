@@ -16,6 +16,8 @@ const docRow = (ref, s, over = {}) => ({ ref, kind: "document", sha: s, text_sha
                                          included: true, rests_under: "load_bearing", ...over });
 const obscuredRow = (ref, s, copy, over = {}) => docRow(ref, s, { included: false, obscured: { copy, label: OBSCURED_LABEL }, ...over });
 const area = (rect, kind = "person") => ({ rect, kind });
+const obsRow = (ref, s) => ({ ref, kind: "observation", sha: s, text_sha: null, origin: null, archived_copy: null,
+                              included: true, rests_under: "load_bearing" });
 
 async function scene() {
   const w = world();
@@ -229,9 +231,6 @@ test("R13 marksLapsed answers a row whose copy is no longer the photo's current 
   w.st.sql.exec(`INSERT INTO photo_copies (capture, through, sha256, refused_code, at) VALUES (?, 99, NULL, 'IMAGE_DATA_CORRUPT', ?)`, p, NOW);
   assert.deepEqual(w.cc.marksLapsed(caseFm({ materials: [obscuredRow(PHOTO, p, now)] })).map((x) => x.ref), [PHOTO]);
 });
-
-const obsRow = (ref, s) => ({ ref, kind: "observation", sha: s, text_sha: null, origin: null, archived_copy: null,
-                              included: true, rests_under: "load_bearing" });
 
 test("R13 marks that cannot be read answer each row lapsed (fail closed); at most 200; never throws", async () => {
   const { w, p, copy } = await scene();

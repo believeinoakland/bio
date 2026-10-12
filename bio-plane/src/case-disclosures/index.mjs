@@ -74,7 +74,7 @@ import { captureOf } from "../capture/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { parseFrontmatter, normalizeType, EARNED_CAPTURE_CEILING, canonicalJson,
          createSha256 } from "../record-grammar/index.mjs";
-import { extractedTextOf, sourceRowWithheld } from "../case-grammar/index.mjs";
+import { extractedTextOf, sourceRowWithheld, ACCOUNT_CITE_KINDS } from "../case-grammar/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
@@ -1159,7 +1159,8 @@ export class CaseDisclosures {
   /** R30 (T41; N820; D56–D58, D63; K2405, K2418, K2471): THE ACCOUNT SAYS ONLY WHAT THE RECORD HOLDS. Every sentence of
    *  the account and of the four statements (`case-grammar` R23's rows `{ord, text, cites, kind, bias_statement?,
    *  began_as?}`) is judged against what it cites by `case-checker.checkAccount` (its R24), one body of check code online
-   *  and offline: `cited` as the caller read it as the viewer (`answers` R33's `{holdings, rules, looks}`), `printed` the
+   *  and offline: `cited` as the caller read it as the viewer (`answers` R33's `{holdings, rules, looks}`, as `case-account`
+   *  R6 builds it), translated here, the one site, into `checkAccount`'s list (`checkerCited`; T46, N901), `printed` the
    *  statements the sentences frame by that `bias.statementInForce` (its R49) answers in force in this case's `lens`
    *  (its scope shape), and `conclusions` the record's at the act, as the caller read them. Its departures `{ord, code}`
    *  are answered in R30's arm order (`ACCOUNT_ARMS`), one refusal per code naming each sentence; the first arm,
@@ -1202,7 +1203,7 @@ export class CaseDisclosures {
     let answer = null;
     try {
       const check = this.caseChecker && this.caseChecker.checkAccount;
-      answer = typeof check === "function" ? check({ account: sentences, cited, printed, conclusions }) : null;
+      answer = typeof check === "function" ? check({ account: sentences, cited: checkerCited(cited), printed, conclusions }) : null;
     } catch { answer = null; }
     const byOrd = new Map(sentences.map((x) => [x.ord, x]));
     const all = answer && answer.ok === true && Array.isArray(answer.departures) ? answer.departures : null;
@@ -1407,6 +1408,34 @@ export class CaseDisclosures {
       acknowledged_by: who, acknowledged_at: when }));
     return { captures, materials, flags: flagRows, group };
   }
+}
+
+/* R30 (T46; N901; K2829): `cited` as `case-account` R6 builds it, `answers` R33's `{holdings, rules, looks}`, each holding
+   `{address, quote}`, translated into `case-checker.checkAccount`'s `cited` (its R24): one `{kind, ref, ord?, text}` per
+   holding, `kind` the address before its first colon, `ref` what follows, a leg's `ord` the `#<digits>` that ends it (a
+   ref of any other kind keeps a `#` it holds), `text` the holding's `quote`. The provider's shape is kept: the address is
+   read as case-account spells it, never re-spelled there. A holding whose address names no kind of `case-grammar` R23's
+   cites (`ACCOUNT_CITE_KINDS`), or a leg with no `ord`, answers nothing the account can cite, so it is not handed on;
+   `rules` and `looks` hold nothing a sentence cites. Any other `cited` is handed on as given, and `checkAccount` judges
+   it (a shape it does not take fails closed, `ACCOUNT_CHECK_UNDETERMINED`). */
+export function checkerCited(cited) {
+  if (!cited || typeof cited !== "object" || Array.isArray(cited) || !Array.isArray(cited.holdings)) return cited;
+  const out = [];
+  for (const h of cited.holdings) {
+    if (!h || typeof h !== "object" || typeof h.address !== "string") continue;
+    const at = h.address.indexOf(":");
+    const kind = at > 0 ? h.address.slice(0, at) : "";
+    let ref = at > 0 ? h.address.slice(at + 1) : "";
+    if (!ACCOUNT_CITE_KINDS.includes(kind) || !ref) continue;
+    let ord = null;
+    if (kind === "leg") {
+      const m = /^(.+)#(\d+)$/.exec(ref);
+      if (!m) continue;
+      ref = m[1]; ord = Number(m[2]);
+    }
+    out.push({ kind, ref, ...(ord === null ? {} : { ord }), text: typeof h.quote === "string" ? h.quote : String(h.quote ?? "") });
+  }
+  return out;
 }
 
 /* R30: one cite as a comparable key, a string as itself and `case-grammar` R23's `{kind, ref, ord}` by those fields. */

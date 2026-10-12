@@ -25,7 +25,7 @@
  *   escalation             `escalationsFor`, `escalationRead` (its R22, R2; R2, R3, R11).
  *   filings                `filingsFor` (its R13; R2, R6).
  *   conformance            `curesOf` (its R37; R2).
- *   duties                 `dutiesArisingIn` (its R31; R13).
+ *   duties                 `dutiesArisingIn`, `transitionsOf` (its R31, R14; R13, R15).
  *   readingGuides          `procedureGuidesFor` (its R13; R10).
  *   aiRuns                 `open` (its R77; R10).
  *   now                    the instance clock, an ISO string (default: the wall clock, to the second). */
@@ -45,7 +45,7 @@ import { dutiesOf, INTERNAL as DUTIES_INTERNAL } from "../duties/index.mjs";
 import { readingGuidesOf } from "../reading-guides/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { expandRecurrence } from "../civil-time/index.mjs";
-import { isMachineIdentity, parseFrontmatter, sha256HexSync } from "../record-grammar/index.mjs";
+import { isMachineIdentity, lawProposalState, parseFrontmatter, sha256HexSync, ISO_TS_RE } from "../record-grammar/index.mjs";
 import { PLAN_WORK_TABLES, migratePlanWork } from "./schema.mjs";
 import { PLAN_WORK_CHECKS, refusal } from "./checks.mjs";
 
@@ -69,6 +69,18 @@ export const REEXAM_BOUNDS = Object.freeze([Object.freeze({ bound: "proposals", 
 /** R8: the label every assembled draft carries. */
 export const DRAFT_LABEL = Object.freeze({ machine_work: true, by: "system",
   says: "assembled by the system from where the plan stands, each item naming its source; machine work, not a member's report" });
+/** R14: who a report that began as the assistant's draft names as its drafter: a machine identity, so its label's state
+ *  is `machine_proposed` (`record-grammar`'s `lawProposalState`). */
+export const ASSISTANT = "class:ai";
+/** R14: the label a kept report's `from` carries when its text began as the assistant's draft, shaped as `record-grammar`'s
+ *  `proposalLabel` answers (`{by, state, machine_work, says}`); record-grammar holds no status-report subject, so the
+ *  sentence is this module's (PLAN-WORK #2 J1). */
+export const ASSIST_LABEL = Object.freeze({ by: ASSISTANT, state: lawProposalState(ASSISTANT),
+  machine_work: lawProposalState(ASSISTANT) === "machine_proposed",
+  says: "the assistant drafted this report from the items where the plan stands; machine work, labelled as machine work. "
+    + "The report kept is the member's, in the words the member kept" });
+/** R15: the occurrence states that read a duty met (`duties` Terms; a promise kept late is kept). */
+const MET_STATES = Object.freeze(["met", "met_late"]);
 
 export const OUTCOME_MAX = 1000;
 export const DECIDED_MAX = 4000;
@@ -673,33 +685,44 @@ export class PlanWork {
   }
 
   /** R8: a sourced list assembled by the system from R7, each item naming its source, labelled machine work; no
-   *  assistant text (its arm joins T46) and no sentence that is not one of R7's items. Writes nothing. */
+   *  assistant text (that is R14's arm, drafted outside this module) and no sentence that is not one of R7's items.
+   *  Writes nothing. */
   statusReportDraft({ plan, nowMs, viewer } = {}) {
     const w = this.whereItStands({ plan, nowMs, viewer });
     if (!ok(w)) return w;
-    const items = [];
-    for (const section of ["matters", "waits", "next", "overrides", "declined", "set_aside", "escalations"])
-      for (const x of w[section] || []) items.push({ section, ...x });
-    for (const section of ["holds", "watches"]) items.push({ section, ...w[section] });
-    return { ok: true, plan: w.plan, as_of: w.as_of, label: DRAFT_LABEL, items, ...(w.out_of_view ? { out_of_view: true } : {}) };
+    return { ok: true, plan: w.plan, as_of: w.as_of, label: DRAFT_LABEL, items: reportItems(w), ...(w.out_of_view ? { out_of_view: true } : {}) };
   }
 
-  /** R8: a member keeps a status report with the plan, 1 to 8,000 characters; never required, never published. */
+  /** R14: the items the assistant drafts a status report from: past sight (a plan the viewer may not see answers
+   *  `NO_SUCH_PLAN`), R8's items exactly as `statusReportDraft` assembles them, and nothing else. It answers no AI
+   *  refusal, drafts nothing and calls no model: the plane's draft door gates the draft and hands it these items. Writes
+   *  nothing. */
+  statusReportAssist({ plan, nowMs, viewer } = {}) {
+    const w = this.whereItStands({ plan, nowMs, viewer });
+    if (!ok(w)) return w;
+    return { ok: true, plan: w.plan, as_of: w.as_of, items: reportItems(w), ...(w.out_of_view ? { out_of_view: true } : {}) };
+  }
+
+  /** R8, R14: a member keeps a status report with the plan, 1 to 8,000 characters; never required, never published.
+   *  `from` is one line of the member's own (as R8 took it), or `{assistant: true, as_of?}`: the text began as the
+   *  assistant's draft (R14), kept as `{draft: "assistant", as_of, label}`, labelled machine work; the report is the
+   *  member's. */
   statusReportSave(args = {}) {
     const { plan, text, from, author, viewer } = args;
     const o = this.#act(plan, author, viewer);
     if (o.r) return o.r;
-    const bad = refuseText(text, REPORT_MAX, "text")
-      || (from !== undefined && from !== null && !isLine(from, 200) ? refuseText(null, 200, "from") : null);
+    const bad = refuseText(text, REPORT_MAX, "text");
     if (bad) return bad;
+    const held = reportFrom(from);
+    if (held.r) return held.r;
     const at = this.now();
     const seq = this.record.transact(() => {
       const n = seqOf(this.#rows(`SELECT MAX(seq) AS n FROM pw_reports WHERE plan_id=?`, o.p.id));
       this.sql.exec(`INSERT INTO pw_reports (plan_id, seq, text, from_json, author, at) VALUES (?,?,?,?,?,?)`,
-        o.p.id, n, text, from ?? null, author, at);
+        o.p.id, n, text, held.stored, author, at);
       return n;
     });
-    return { ok: true, plan: o.p.id, report: seq, text, from: from ?? null, author, at };
+    return { ok: true, plan: o.p.id, report: seq, text, from: fromOf(held.stored), author, at };
   }
 
   /** R8: the plan's kept reports, oldest first. */
@@ -707,7 +730,7 @@ export class PlanWork {
     const p = this.#plan(plan, viewer);
     if (!p) return noSuchPlan(plan ?? null);
     return { ok: true, plan: p.id, reports: this.#rows(`SELECT * FROM pw_reports WHERE plan_id=? ORDER BY seq`, p.id)
-      .map((r) => ({ report: r.seq, text: r.text, from: r.from_json ?? null, by: r.author, at: r.at })) };
+      .map((r) => ({ report: r.seq, text: r.text, from: fromOf(r.from_json), by: r.author, at: r.at })) };
   }
 
   /* ===================================================================== *
@@ -957,8 +980,9 @@ export class PlanWork {
    * R13: A MATTER'S PROMISE-DUTIES
    * ===================================================================== */
 
-  /** R13: the adopted duties arising in the captures of the `received` entries of the plan's actions serving the
-   *  matter (`duties.dutiesArisingIn`), with `all_met` and `partial`. Writes nothing; never throws. */
+  /** R13, R15: the adopted duties arising in the captures of the `received` entries of the plan's actions serving the
+   *  matter (`duties.dutiesArisingIn`), with `all_met`, `partial` and `met_at`: when `all_met`, the instant the last of
+   *  them was read met (R15), else null. Writes nothing; never throws. */
   matterPromiseDuties({ plan, matter, nowMs, viewer } = {}) {
     try {
       const now = this.#nowMs(nowMs);
@@ -973,18 +997,46 @@ export class PlanWork {
           if (e && e.direction === "received" && typeof e.artifact_sha === "string" && /^[0-9a-f]{64}$/.test(e.artifact_sha))
             captures.add(e.artifact_sha);
       }
-      const none = { ok: true, plan: p.id, matter: m.s, captures: [], duties: [], all_met: false, partial: false };
+      const none = { ok: true, plan: p.id, matter: m.s, captures: [], duties: [], all_met: false, partial: false, met_at: null };
       if (!captures.size) return none;
-      const r = this.duties.dutiesArisingIn({ captures: [...captures].slice(0, 200), asOf: iso(now),
-                                              viewer: viewer === null || viewer === undefined ? DUTIES_INTERNAL : viewer });
+      const sight = viewer === null || viewer === undefined ? DUTIES_INTERNAL : viewer;
+      const r = this.duties.dutiesArisingIn({ captures: [...captures].slice(0, 200), asOf: iso(now), viewer: sight });
       if (!ok(r)) return { ...none, captures: [...captures], undetermined: { why: "the duties could not be read" } };
-      return { ok: true, plan: p.id, matter: m.s, captures: [...captures], duties: r.duties || [], all_met: r.all_met === true,
-               partial: r.partial === true, ...(r.undetermined ? { undetermined: r.undetermined } : {}) };
+      const duties = r.duties || [];
+      const allMet = r.all_met === true;
+      const met = allMet ? this.#metAt(duties, sight) : { met_at: null };
+      return { ok: true, plan: p.id, matter: m.s, captures: [...captures], duties, all_met: allMet,
+               partial: r.partial === true, ...met, ...(r.undetermined ? { undetermined: r.undetermined } : {}) };
     } catch (e) {
       if (e instanceof ProviderAbsent) return refuseProviderUnavailable(e.provider);
       return { ok: true, plan: plan ?? null, matter: matter ?? null, captures: [], duties: [], all_met: false, partial: false,
-               undetermined: { why: "the read failed" } };
+               met_at: null, undetermined: { why: "the read failed" } };
     }
+  }
+
+  /* R15: the instant the last of the duties was read met: for each occurrence, the start of the run of `met` or
+     `met_late` readings that ends its recorded transitions (`duties.transitionsOf`, its R13, R14), at its `as_of`; the
+     latest of those. Null, with why, when an occurrence's recorded readings do not end met (the derivation has moved on
+     and no reading is recorded yet) or cannot be read: never an instant guessed from the derivation. */
+  #metAt(duties, sight) {
+    const no = (why) => ({ met_at: null, met_at_why: why });
+    const d = this.duties;
+    if (typeof d.transitionsOf !== "function") return no("the duties' recorded readings cannot be read on this instance");
+    let last = null;
+    for (const duty of duties)
+      for (const o of duty.occurrences || []) {
+        let t;
+        try { t = d.transitionsOf({ dutyId: duty.duty_id, occurrenceKey: o.key, viewer: sight }); }
+        catch { return no("the duties' recorded readings could not be read"); }
+        const list = ok(t) && Array.isArray(t.transitions)
+          ? t.transitions.filter((x) => x && x.duty_id === duty.duty_id && x.occurrence_key === o.key) : null;
+        if (!list) return no("the duties' recorded readings could not be read");
+        let start = null;
+        for (const x of list) start = MET_STATES.includes(x.state) ? start ?? x : null;
+        if (!start || !Number.isFinite(msOf(start.as_of))) return no(`no reading of ${duty.duty_id} met is recorded yet`);
+        if (!last || msOf(start.as_of) > msOf(last)) last = start.as_of;
+      }
+    return last ? { met_at: last } : no("no duty's occurrence is read");
   }
 }
 
@@ -995,6 +1047,33 @@ export class PlanWork {
 /* R2: the standing cure link `conformance.curesOf` (its R37) answers for a standard: `{standards: [{standard, link,
    ended}]}`, the link null when none stands; a link whose curing determination has been superseded reads
    `cure_standing: false` and is no standing cure. Null when none. */
+/* R8, R14: the items of a status report, in R7's order, each one of R7's whole with its section. */
+function reportItems(w) {
+  const items = [];
+  for (const section of ["matters", "waits", "next", "overrides", "declined", "set_aside", "escalations"])
+    for (const x of w[section] || []) items.push({ section, ...x });
+  for (const section of ["holds", "watches"]) items.push({ section, ...w[section] });
+  return items;
+}
+
+/* R8, R14: a report's `from` as kept: `{stored}` (null, the member's one line, or the assistant's draft as JSON), or
+   `{r}`. A one-line `from` holds no quotation mark, so a stored JSON object is never one. */
+function reportFrom(from) {
+  if (from === undefined || from === null) return { stored: null };
+  if (typeof from === "string") return isLine(from, 200) ? { stored: from } : { r: refuseText(null, 200, "from") };
+  const asOf = isObj(from) ? from.as_of : undefined;
+  if (isObj(from) && from.assistant === true && Object.keys(from).every((k) => k === "assistant" || k === "as_of")
+      && (asOf === undefined || asOf === null || (typeof asOf === "string" && ISO_TS_RE.test(asOf))))
+    return { stored: JSON.stringify({ draft: "assistant", as_of: asOf ?? null, label: ASSIST_LABEL }) };
+  return { r: refuseText(null, 200, "from", { says: "from is one line of your own, or {assistant: true, as_of?} when the "
+    + "text began as the assistant's draft" }) };
+}
+/* R8, R14: a kept `from` as read back. */
+function fromOf(stored) {
+  if (typeof stored !== "string") return null;
+  return stored.startsWith("{") ? unjson(stored, stored) : stored;
+}
+
 function standingCure(r, standard) {
   const s = (Array.isArray(r && r.standards) ? r.standards : []).find((x) => isObj(x) && x.standard === standard);
   return s && isObj(s.link) && s.link.cure_standing !== false ? s.link : null;
@@ -1063,7 +1142,7 @@ class ProviderAbsent extends Error {
 
 for (const name of ["matterOutcomeSet", "matters", "planTimeline", "planReviewRhythm", "planReviewsDue", "planReviewOpen",
                     "planReviewRecord", "planReviews", "prepItemAdd", "prepItemTakeUp", "prepItemDone", "prepItems", "planComment",
-                    "planComments", "whereItStands", "statusReportDraft", "statusReportSave", "statusReports", "reexaminations",
+                    "planComments", "whereItStands", "statusReportDraft", "statusReportAssist", "statusReportSave", "statusReports", "reexaminations",
                     "itemTakeUp", "takeUpsFor"]) {
   const f = PlanWork.prototype[name];
   Object.defineProperty(PlanWork.prototype, name, { configurable: true, writable: true, value: function (...a) {
@@ -1151,6 +1230,7 @@ export function planWorkOps(m, url, body) {
     plancomments: () => m.planComments(read({ on: b.on ?? null })),
     whereitstands: () => m.whereItStands(read()),
     statusreportdraft: () => m.statusReportDraft(read()),
+    statusreportassist: () => m.statusReportAssist(read()),
     statusreportsave: () => m.statusReportSave(stamped({ plan: pick("plan") })),
     statusreports: () => m.statusReports(read()),
     itemtakeup: () => m.itemTakeUp(stamped()),

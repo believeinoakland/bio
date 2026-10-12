@@ -230,7 +230,8 @@ export function manifestFor(listed, { keys = ["group", "alice", "bob"], over = {
 
 /** A case file's parts as bytes: the files split into `parts` parts (round robin by path), the complete edition rendered
  *  from the rest, every part carrying the same manifest. `edit(bytesByPath)` changes carried bytes after the manifest is
- *  written (a tampered file). */
+ *  written (a tampered file); `unlisted` (a Map of path → bytes) adds entries to the first part that the manifest does not
+ *  list. */
 export function caseFile(opts = {}) {
   const { texts, pairs, facts } = caseFiles(opts);
   const n = opts.parts || 1;
@@ -251,7 +252,8 @@ export function caseFile(opts = {}) {
   const parts = [];
   for (let i = 1; i <= n; i++) {
     const entries = [{ name: CG.CASE_FILE_MANIFEST_PATH, bytes: new Uint8Array(manifestBytes) },
-      ...listed.filter((f) => f.part === i && carried.has(f.path)).map((f) => ({ name: f.path, bytes: new Uint8Array(carried.get(f.path)) }))];
+      ...listed.filter((f) => f.part === i && carried.has(f.path)).map((f) => ({ name: f.path, bytes: new Uint8Array(carried.get(f.path)) })),
+      ...(i === 1 && opts.unlisted ? [...opts.unlisted].map(([name, b]) => ({ name, bytes: new Uint8Array(b) })) : [])];
     const z = serialiseContainer(entries);
     if (!z.ok) throw new Error(`fixture: ${z.reason}`);
     parts.push(z.bytes);

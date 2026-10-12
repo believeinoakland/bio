@@ -964,6 +964,18 @@ export const PLANNING_ACTS = Object.freeze({
  *  under. */
 export const PLANNING_ACT = PLANNING_ACTS.proposes[0].id;
 
+/* WHAT THE PLANNING RUN READS AND WEIGHS BESIDE THE MATTER (R47; T46, N915; K2848). Named once here as a SELECTOR keyed
+   by the requirement that defines it, as the acts above are: `action-plans` is later in the order (P4), so no import
+   carries it, and this pack reads no plan; the run reads the notes (`agent-worker` R51). Its words are this module's
+   own description of an input, not a clause (R21 binds the clauses only). */
+export const PLANNING_INPUTS = Object.freeze([
+  Object.freeze({ id: "closingNotesOf", defined_by: "action-plans R45",
+                  answered_in: "planRead's closed block, and plansFor",
+                  is: "the closing notes of the project's closed plans, as members recorded them when each plan closed: "
+                    + "the run reads them and weighs them beside the matter when it proposes options, as the group's own "
+                    + "earlier plans (rule 4)" }),
+]);
+
 /* THE PUBLISHED CATALOGUE BY ACT ID, the one lookup every act-reading layer
    (R28, R30, R31, R32) selects through; a non-list, or an entry with no string id,
    contributes nothing. */
@@ -1009,6 +1021,8 @@ export function actionPlanningLayer(catalog) {
         proposes: PLANNING_ACTS.proposes.map(read),
         leaves_to_a_member: PLANNING_ACTS.leaves_to_a_member.map(read),
       },
+      /* R47: the closing notes of the project's closed plans, an input the run reads, named and never read here. */
+      inputs: PLANNING_INPUTS,
       /* R28 (T35; K1880; T36: N731): a standard it proposes rests only on captured text, so the run works under R38
          (a)'s and (c)'s clauses, the same objects the resident layer and the law lookup carry. */
       capture: CAPTURE_CLAUSES,
@@ -1753,7 +1767,8 @@ export function interfaceTranslationLayer(catalog) {
  * and drafting layers carry the same words. The three drafts are R21's mode, of
  * kinds of their own (`run-rules` R27): each is answered as a labelled proposal and
  * never stored, and their reach is `run-rules`' and `agent-worker`'s, never this
- * text's. The layer holds no gate.
+ * text's. (T46; R48, N920) It also names the status report task, a draft from the
+ * items `plan-work` R8 hands it, its act read on its own. The layer holds no gate.
  * ========================================================================= */
 
 /** The rules of §4 an action draft works under (R45), in §4's order, each the table's own object. */
@@ -1770,25 +1785,46 @@ export const ACTION_DRAFTING_ACTS = Object.freeze({
   ]),
 });
 
-/** THE `action_drafting` LAYER over the published catalogue (R45). Absent in R9's form while the catalogue holds none
- *  of its three acts; with any of them, every one must be published, or the render throws naming the missing one (R1,
- *  R39's form): a half layer is never rendered as a whole one. */
+/* THE STATUS REPORT TASK (R48; T46, N920; `study-T46-assistant.md` §2). Its act is named once here as a SELECTOR over
+   the published catalogue, as the three above are (`plan-work` is later in the order, P4), and read ON ITS OWN: R45's
+   all-or-none rule stays over the three, and this one is present or stated absent by itself. The task's description is
+   this module's own words, not a clause (R21 binds the clauses only); what the draft is handed, and that it reads
+   nothing, is held by code (`plan-work` R8's items, `run-rules` R27's reach `none`), never by this text. */
+export const STATUS_REPORT_ACT = Object.freeze({ id: "statusreportassist", defined_by: "plan-work R8" });
+export const STATUS_REPORT_TASK = "the assistant drafts a plan's status report from the items handed to it, the "
+  + "sourced list of where the plan stands that plan-work R8 assembles: each sentence of the report comes from one of "
+  + "those items and says no more than it does, and nothing is read, neither the record nor any document or page "
+  + "(run-rules R27's reach none). The report is a labelled machine draft, and it is a member's report only when she "
+  + "keeps or rewrites it.";
+
+const ACTION_DRAFTING_LOAD_WHEN = "the member asks the assistant to read a prepared text, draft an infraction's "
+  + "documentation for an audience, or propose bearings on a reply";
+const STATUS_REPORT_LOAD_WHEN = "asks the assistant to draft a plan's status report from the items handed to it";
+
+/** THE `action_drafting` LAYER over the published catalogue (R45, R48). R45's stated absence (R9's form) only while the
+ *  catalogue holds none of the three acts and no `STATUS_REPORT_ACT`. The three: with any of them, every one must be
+ *  published, or the render throws naming the missing one (R1, R39's form), so a half set is never rendered as a whole
+ *  one; with none, the body states them absent. The status report: with its act, the task renders and `load_when`
+ *  names it; without, the body states it absent. */
 export function actionDraftingLayer(catalog) {
   const byId = catalogueById(catalog);
   const named = ACTION_DRAFTING_ACTS.drafts;
-  if (!named.some((a) => byId.has(a.id))) return {
+  const drafts = named.some((a) => byId.has(a.id));
+  const statusReport = byId.has(STATUS_REPORT_ACT.id);
+  const draftsAbsentBecause = `the plane's published catalogue holds none of the acts ${named.map((a) => a.id).join(", ")}, `
+    + "the drafts through which a member asks the assistant to read a prepared text, document an infraction or propose "
+    + "bearings on a reply, so this layer carries no doctrine for work no draft can do.";
+  if (!drafts && !statusReport) return {
     load_when: "never, in this edition",
     sourcing: "absent",
     body: {},
     /* THE ABSENCE, STATED IN THE PACK ITSELF, as the wizard scripts layer states its own. */
-    absent_because: `the plane's published catalogue holds none of the acts ${named.map((a) => a.id).join(", ")}, the `
-      + "drafts through which a member asks the assistant to read a prepared text, document an infraction or propose "
-      + "bearings on a reply, so this layer carries no doctrine for work no draft can do.",
+    absent_because: draftsAbsentBecause,
   };
   const read = actReader(byId, "action drafting", "an action draft act");
   return {
-    load_when: "the member asks the assistant to read a prepared text, draft an infraction's documentation for an "
-      + "audience, or propose bearings on a reply",
+    load_when: drafts && statusReport ? `${ACTION_DRAFTING_LOAD_WHEN}, or ${STATUS_REPORT_LOAD_WHEN}`
+      : drafts ? ACTION_DRAFTING_LOAD_WHEN : `the member ${STATUS_REPORT_LOAD_WHEN}`,
     sourcing: "authored",
     body: {
       rules: ACTION_DRAFTING_RULES,
@@ -1796,7 +1832,18 @@ export function actionDraftingLayer(catalog) {
       section: ACTION_SECTION,
       /* The mode a draft is answered in, run-rules' (its R21, R27), read and never typed, as writing help's. */
       mode: DRAFT_MODE.mode,
-      acts: { drafts: named.map(read) },
+      acts: {
+        drafts: drafts ? named.map(read) : [],
+        status_report: statusReport ? [read(STATUS_REPORT_ACT)] : [],
+      },
+      /* R48: with none of the three published, the status report renders alone and the three are stated absent. */
+      ...(drafts ? {} : { drafts_absent_because: draftsAbsentBecause }),
+      /* run-rules R27: the status report's reach, read by key and never typed, as the case's account reads its own. */
+      status_report: statusReport ? { task: STATUS_REPORT_TASK, reach: DRAFT_REACH.statusreport } : {
+        absent_because: `the plane's published catalogue holds no ${STATUS_REPORT_ACT.id} act, the one act through which `
+          + "a member asks the assistant to draft a plan's status report from the items handed to it, so this layer "
+          + "carries no task for work no draft can do.",
+      },
       note: "this layer is INSTRUCTION. A draft is answered to the member who asked for it, labelled as machine work, "
         + "and stored nowhere; it never rewrites the member's text, and what it reads is fenced by the modules that "
         + "serve it. It becomes the group's only by a member's own acts, which refuse a machine. A run ignoring every "

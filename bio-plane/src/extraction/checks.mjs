@@ -50,6 +50,24 @@ export const TRANSCRIBE_WORDS = Object.freeze({
   'transcribe.picture.why.toolarge': 'it is too large',
   'capture.picture.unread': 'A photographed page, not read yet: its words can\'t be found or cited until the assistant '
     + 'reads it or a member types them.',
+  /* (T46; N886; DEC-193; K2836) R75: the reasons of agent-worker R72's six refusals, the `{reason}` of
+     `transcribe.refused`. Words, not rows: no check row is minted for them. `transcribe.reason.requestfault` is held as
+     R75's interim word in DEC-149's form ("your group's Civicsmith") until the design stream conforms the key (K2919). */
+  'transcribe.reason.requestfault': 'Your group\'s Civicsmith sent the assistant a request it couldn\'t use. The fault is '
+    + 'your group\'s Civicsmith\'s, not yours: try again, and if it happens again, tell an administrator.',
+  'transcribe.reason.noaccount': 'No AI account pays for this here. Connect your own in Settings › The assistant, or ask '
+    + 'an administrator about the group\'s key.',
+  'transcribe.reason.badaccount': 'The AI account that pays for this here can\'t be used as it is set up. Its owners can '
+    + 'check it in its settings.',
+  'transcribe.reason.needsapikey': 'Reading page pictures needs an Anthropic API key, and the account that pays here is a '
+    + 'Claude sign-in. Its owners can add an API key; meanwhile you can type a page\'s words yourself.',
+});
+
+/* R75 (T46; N886; DEC-193): agent-worker R72's refusal codes, each with the key of its reason. */
+export const AGENT_WORKER_REASONS = Object.freeze({
+  BAD_BODY: 'transcribe.reason.requestfault', BAD_SHA: 'transcribe.reason.requestfault',
+  BAD_PAGES: 'transcribe.reason.requestfault', NO_ACCOUNT: 'transcribe.reason.noaccount',
+  BAD_ACCOUNT: 'transcribe.reason.badaccount', TRANSCRIBE_NEEDS_API_KEY: 'transcribe.reason.needsapikey',
 });
 
 export const REEXTRACT_CHECKS = {

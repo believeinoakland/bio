@@ -1,0 +1,21 @@
+# BOB to instance-setup (T46)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T46), layer 11, instance-setup: T46-50 · (I5; N897 (2)–(4)) R79 new `infoLevelSet`/`infoLevel` (`op=infolevelset`, `op=infolevel`); R80 new `bootstrap` `test_instance` (edge → `ai-runs`, earlier); R81 new `bootstrap` `parts`; R17 amended (agent-runner through agent-worker's `runner`); R54 amended (the disclosure at a sign-in's connect) · interface §5 I5; trial §1.2, §2.2, §3.2.
+Your requirements: `build/requirements/instance-setup.md` (read whole). Marked `*(not yet met: T46)*`: R17, R54, R79, R80, R81 (folded K2960, reviewed). The sources the entry names (interface = `build/plan/draft-T46-interface.md`, trial = `build/plan/draft-T46-trial.md`, study = `build/plan/study-T46-assistant.md`; words.json, registry.json, library.json and `mock-acts.js` on `main` @ 3f40899950, which `main` still is) are read for the sections named.
+Measured before your START (M-T46-1): your module is 3,447 lines. If your additions would take it past ~4,000 (K617), say so in a QUESTION before writing past it; BOB decides the split.
+A new `uses` edge `instance-setup` → `ai-runs` (earlier, L6) is yours for R80 (`testInstance()`, ai-runs R78); BOB adds it to `modules.json` when you name it in your COMPLETE. You merge before setup-page (doubt 14), interface-shell, the screens and control-plane, which read `bootstrap`'s `test_instance` and `parts`.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874: an id older tests already name reads green wrongly); every refusal a control. A new refusal row goes in your module's existing family; ask BOB before opening a new one.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START, and those named in K2924–K2974 (with L9's and L10's merge rulings as they land); none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 1248 KB with your tests (K2700; used public parts 645 KB across 23 modules, an upper bound), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them (the later L11 jobs in the merge order below that use your services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
+Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, notice-producers, setup-words, instance-setup, setup-page (after instance-setup, doubt 14), op-declarations, answer-envelope, interface-assets, interface-shell, screens-settings, screens-intake, screens-daily, screens-inquiry, control-plane, installer, stewards, plane last. A provider merges before its users; a job that uses an L11 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L11 job may merge as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+Accepted and folded in your R79 (K2996): C-64.28 `MACHINE_CANNOT_SET_INFO_LEVEL` and C-64.29 `INFO_LEVEL_UNKNOWN` with your sentences, and `asked_at` set only once. Their words go to the design stream.

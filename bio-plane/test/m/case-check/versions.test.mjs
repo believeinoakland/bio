@@ -31,6 +31,19 @@ test("R3: every check reading held whose members include the finding, {case, edi
   assert.deepEqual(w.c.heldFindingVersions({ finding: "INQ-2026-0001" }).items, []);
 });
 
+test("R3: an id holding a character LIKE reads as its own (_, %, !) is found exactly, and a wildcard matches no other id (control: the plain id beside it)", () => {
+  const w = standard();
+  w.ca.gate = (a) => ({ caseId: a.caseId, edition: 1 });
+  const odd = ["INQ-2026-0004-d_e", "INQ-2026-0005-f%g", "INQ-2026-0006-h!i"];
+  for (const id of odd) w.bundle(id);
+  const r = w.c.checkAndHold(args([...odd, F1], { caseId: "CASE-2026-0004" }));
+  assert.equal(r.ok, true, JSON.stringify(r));
+  for (const id of [...odd, F1])
+    assert.deepEqual(w.c.heldFindingVersions({ finding: id }).items.map((x) => [x.check, x.version_sha]), [[r.check, w.head(id)]], id);
+  for (const wild of ["INQ-2026-0004-d%", "INQ-2026-0004-dxe", "%", "_"])
+    assert.deepEqual(w.c.heldFindingVersions({ finding: wild }).items, [], wild);
+});
+
 test("R3: a void check is not listed, beside a held one (control); a published one is not listed either (publication R37 lists it)", () => {
   const { w, one, two } = three();
   w.reauthor("CASE-2026-0002", 1);

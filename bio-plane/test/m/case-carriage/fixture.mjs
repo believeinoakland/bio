@@ -85,14 +85,16 @@ export function world() {
       const reg = w.row(`SELECT capture_sha, path FROM register WHERE bundle_id=?`, r.bundle_id);
       return { id: r.bundle_id, sha: reg.capture_sha, text: record.readFile(r.bundle_id, reg.path).text };
     },
-    /** case-import's registration with accepted-work, as a stand-in: `state.finding` and `state.openFlags` decide each
-     *  answer; every read is recorded in the answered list. */
+    /** case-import's registration with accepted-work, as a stand-in: `state.finding`, `state.openFlags` and (T46; R19)
+     *  `state.withdrawals` decide each answer (no withdrawals: an empty history); every read is recorded in the answered
+     *  list. */
     importer(state) {
       const calls = [];
       const r = acceptedWork.registerAcceptedWork("case-import", {
         finding: (a) => { calls.push(["finding", a]); return state.finding ? state.finding(a) : null; },
         openFlags: (a) => { calls.push(["openFlags", a]); return state.openFlags ? state.openFlags(a) : null; },
-        withdrawals: () => ({ withdrawals: [], cursor: null }) });
+        withdrawals: (a) => { calls.push(["withdrawals", a]);
+                              return state.withdrawals ? state.withdrawals(a) : { withdrawals: [], cursor: null }; } });
       if (!r.ok) throw new Error(`fixture registration refused: ${JSON.stringify(r)}`);
       return calls;
     },

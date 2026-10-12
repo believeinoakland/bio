@@ -82,8 +82,9 @@ const ARMS = {
   1: {
     label: "(1) THE ARM FL-6's ROW NAMES — the named-UNAVAILABLE refusal removed: exhausted material drives on as an empty success.",
     run: () => withReplaced(INDEX,
-      "if (cascade && !cascade.available)",
-      "if (false && cascade && !cascade.available)",
+      /* T46: re-anchored on the refusal as it stands (`accountOf`, R6/R32); the old anchor named code retired at K1502. */
+      "  if (!cascade.available)\n    return { refusal: refusal(CASCADE_NO_ACCOUNT",
+      "  if (false)\n    return { refusal: refusal(CASCADE_NO_ACCOUNT",
       () => report(runSuite(), {
         mustFail: "the no-token fixture's arms in section 7 — the refusal, the named reason, the per-level statement",
         mustNot: "the pure-resolver arms (the resolver still answers honestly; the ENDPOINT stopped saying so)",
@@ -104,8 +105,9 @@ const ARMS = {
   3: {
     label: "(3) THE PAYER-CONSISTENCY CHECK REMOVED — the record names one payer, the runtime resolves another, and the segment drives anyway.",
     run: () => withReplaced(INDEX,
-      "if (cascade?.available && recordedPayer !== cascade.level)",
-      "if (false && cascade?.available && recordedPayer !== cascade.level)",
+      /* T46: re-anchored on R10's check as it stands (the payer compared with the account's member, K1755). */
+      "if (account && recordedPayer !== account.member)",
+      "if (false && account && recordedPayer !== account.member)",
       () => report(runSuite(), {
         mustFail: "section 6's three arms — the 409, its name, and the two facts it must carry",
         mustNot: "section 5 (agreeing record and resolution) and section 7 (no payer resolved at all)",
@@ -115,11 +117,18 @@ const ARMS = {
 
 const only = process.argv[2];
 const names = only ? [only] : Object.keys(ARMS);
+/* T46: a VERDICT, not only a print: the baseline must pass whole and every arm must turn the suite red (exit non-zero
+   with a FAIL line); anything else is counted and the driver exits 1. */
+let bad = 0;
 for (const n of names) {
   const arm = ARMS[n];
   if (!arm) { console.error(`no such arm: ${n}`); process.exit(2); }
   console.log(`\n================ ARM ${n} ================\n  ${arm.label}`);
-  arm.run();
+  const r = arm.run();
+  const ok = n === "baseline" ? r.status === 0 && r.fail === 0 : r.status !== 0 && r.fail > 0;
+  console.log(`  VERDICT: ${ok ? "AS DECLARED" : "NOT AS DECLARED"}`);
+  if (!ok) bad++;
 }
 rmSync(PEN, { recursive: true, force: true });
-console.log("\nall requested arms done; the pen is removed and every restore was verified above.");
+console.log(`\nall requested arms done; the pen is removed and every restore was verified above. ${names.length - bad} as declared, ${bad} not.`);
+process.exit(bad ? 1 : 0);

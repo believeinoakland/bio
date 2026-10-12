@@ -1,0 +1,16 @@
+# BOB to monitoring (T46)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T46), layer 10, monitoring: T46-41 · (N918) R34, R50 read a timed entry's instant from `pendingClocks` (T46-34), not the action's document; (N922) R34's time-of-day arm met through actions R33 (T46-32), its two `test.todo` made tests · text BOB's.
+Your requirements: `build/requirements/monitoring.md` (read whole). Marked `*(not yet met: T46)*`: R34 (its time-of-day arm), R73 (folded K2960).
+Your providers changed in L9: `action-clocks` R1 (`pendingClocks`' items carry `due_at` and `due_zone`, T46-34) and `actions` R33 (`pending` → `overdue` once `due_at` has passed in its zone, T46-32); read their Provides as merged on `tranche/T46`.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START, and those named in K2924–K2973; none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 1354 KB with your tests (K2700; used public parts 723 KB across 26 modules, an upper bound), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them (following's T46-42 reads your answers next), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
+Merge order in L10: monitoring, then following.

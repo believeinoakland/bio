@@ -996,7 +996,51 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    order moves.
    ROW_CENSUS (R50) re-pinned to this tree: 1732 rows. Rows a T45 job in layers 3–11 adds or changes are T46's stamp
    (plan T45, rule 4 item 2). */
-export const CATALOG_VERSION = "1.72.0";
+/* 1.73.0 (PROMOTION #44, T46-6, 2026-10-12; T45's rule 4 item 2, T46's rule 5 item 2; N902; K1680, K2891, K2917, K2931):
+   MINOR. The stamp of every row awaiting it at T45's close (T45's layers 3–11) and of T46's layers 1 and 2, read by
+   diffing R50's census lines of `tranche/T46` after record-core, membership and project-roster merged against 1.72.0's
+   own (`test/fixtures/row-census-1.72.0.jsonl`: 1732 rows, 795f5029…): 152 lines arrived and twelve departed (145 new rows,
+   seven moved to a new number, one re-numbered and re-worded, four retired), nineteen changed. Each is one a job record names (T45's ACTION-GRAMMAR's,
+   ACTIONS', ACTION-HOLDS', ACTION-REPLIES', ACTION-PLANS', ACTION-CLOCKS', PLAN-WORK's, CASE-CHECK's, CASE-ACCOUNT's,
+   CASE-AUTHORING's, CONFORMANCE's, CONSEQUENCES', FILINGS', FILING-TEMPLATES', LOCAL-FACTS', DUTIES', FOLLOWING's,
+   STANDARDS', RUN-RULES', ANSWERS', DOCKET's, MONITORING's, PUBLICATION's, READING-GUIDES' and INSTANCE-SETUP's; T46's
+   MEMBERSHIP's and PROJECT-ROSTER's).
+   THE FAMILIES THAT ARRIVED, T45's new modules': `CASE_CHECK_CHECKS` C-148 (case-check), `ACTION_HOLDS_CHECKS` C-149
+   (action-holds), `ACTION_REPLY_CHECKS` C-150 (action-replies), `PLAN_WORK_CHECKS` C-151 (plan-work) and
+   `CASE_ACCOUNT_CHECKS` C-153 (case-account). No C-152: action-producers holds no family (K2891).
+   ARRIVED (145): action-grammar C-117.30–.58 (29; the five shape codes and actions' new acts, renumbered contiguously
+   before any stamp); consequences C-114.23–.44 (22: the addressed record, the success record, the carried outcome);
+   filings C-115.45–.56 (12); local-facts C-126.6–.16 (11, the group's own rules); conformance C-113.37–.44 (8, the void
+   determination and the cure); action-plans C-124.58–.65 (8, scenarios, pause and resume); plan-work C-151.1–.8 (8);
+   action-replies C-150.1–.7 (7); action-holds C-149.8–.11 (4, beside the seven it took from actions, below);
+   case-authoring C-136.3–.8 (6, carrying an outcome); duties C-133.40–.44 (5); following C-137.21–.25 (5, the watch);
+   case-account C-153.1–.3; case-check C-148.1, .2; standards C-112.63, .64; run-rules C-109.13, .14; filing-templates
+   C-125.33, .34; action-clocks C-123.7, .8; answers C-135.16 STANDING_ENDED; docket C-129.29 DOCKET_OUTCOME_UNREADABLE;
+   monitoring C-18.19 WATCH_END_REFUSED; publication C-122.8 COUNSEL_MATTER_NOT_PUBLISHED; reading-guides C-144.19
+   GUIDE_ITEM_UNSOURCED; setup C-64.27 STAKE_MALFORMED; membership C-96.52 HANDLE_FIXED (R129: `op=handlechange` refuses
+   every change; its translation new).
+   MOVED TO A NEW NUMBER (7), code and translation unmoved, `where` following the site (the old number departed, the new
+   arrived): actions' hold and pressure rows into action-holds, C-117.20 MACHINE_CANNOT_SET_HOLD → C-149.1, C-117.21
+   HOLD_REFUSED → C-149.2, C-117.23 HOLD_RELEASE_IS_ITS_OWN_ACT → C-149.3, C-117.24 HOLD_PROJECTS_REFUSED → C-149.4,
+   C-117.25 HOLD_ALREADY_RELEASED → C-149.5, C-117.17 PRESSURE_MARKED → C-149.6, C-117.18 PRESSURE_NO_ENTRY → C-149.7.
+   RE-NUMBERED AND RE-WORDED (1): membership's HANDLE_FIXED, C-96.50 departed and C-96.52 arrived (counted above), its
+   condition and translation new (the old row retired with R124).
+   RETIRED (4), their numbers never reused: filings C-115.19 NO_DETERMINATION; action-grammar C-117.22 HOLD_NO_LEGAL_MARK;
+   membership C-96.49 HANDLE_CHANGE_NOT_A_MEMBER and C-96.51 HANDLE_CHANGE_UNCHECKED (R124 retired by refusal, R126).
+   CHANGED (19), code and number unmoved. `where` only: conformance C-113.17, C-113.22 (`#reasonRefusal`); action-plans
+   C-124.22 (`refuseNoSuchProposal`). `where` and translation: action-plans C-124.1 (`machineCannotPlan`). Translation
+   only: conformance C-113.7; consequences C-114.16 ("A revision says why."); action-grammar C-117.19; action-plans
+   C-124.30; local-facts C-126.1; docket C-129.19; reading-guides C-144.1, .2, .4; project-roster C-147.3–.8 (read by key
+   from `words.json`, its R25). Membership's C-56.6 PROJECT_GUARD_UNCHECKED is unmoved (its R128 as K2917 folded it).
+   T46's layer 1 (record-grammar, bundler) and record-core's T46 job added and changed no row.
+   CHANGED IN WHAT THE GATES RUN, no row line moving: record-grammar's state tables (T46-1, its R35): an escalation gains
+   `stopped_pursuing` and an action plan `paused`, with their edges, so C-4.1 and the promote fence (R15) admit those moves;
+   `success_record` (`SUC-`) is a type the catalogue knows. No registered step, grammar, fact, case catalogue or listener
+   changed since 1.72.0; membership's `MODULE_ORDER` gains the six interface modules after `store-door` (T46-4), none of
+   which registers a gate step, so no gate's order moves.
+   ROW_CENSUS (R50) re-pinned to this tree: 1872 rows. Rows a T46 job in layers 3–11 adds or changes are T47's stamp
+   (plan T46, rule 5 item 2). */
+export const CATALOG_VERSION = "1.73.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -1088,8 +1132,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1732,
-  digest: "795f50296de9ee78e846d9f933b0a42eb178f03747e89c92f540f5074f1382a5" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1872,
+  digest: "65a4bea39dcb88e4f17a031927e019b2c8c03465fd3a31d34efae75ae41a281f" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

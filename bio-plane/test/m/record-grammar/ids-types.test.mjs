@@ -1,9 +1,9 @@
-/* record-grammar at its interface: the id grammar and the type vocabulary (R1–R5), T33's one id table (R46–R48), and
-   T41's step and guide ids (R51, R53). */
+/* record-grammar at its interface: the id grammar and the type vocabulary (R1–R5), T33's one id table (R46–R48),
+   T41's step and guide ids (R51, R53), and T46's success record id (R59). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, OBJECT_TYPES, LEGACY_TYPE_ALIASES, normalizeType, ID_TABLE,
-  idPattern, isHypothesisId, isStepId, isGuideId } from "../../../src/record-grammar/index.mjs";
+  idPattern, isHypothesisId, isStepId, isGuideId, isSuccessRecordId, STATES, HEADINGS } from "../../../src/record-grammar/index.mjs";
 
 const PREFIXES = ["INFO", "PROB", "FOCUS", "INQ", "PROJ", "ACTN", "BIAS", "STD", "CONF", "CONS", "ESC", "ASP", "GOAL", "PLN"];
 const SLUGS_OK = ["a", "a1", "abc-def", "a-b-c", "0-9", "x2-y3-z4"];
@@ -27,7 +27,7 @@ test("R1 BUNDLE_ID_RE: exactly <PREFIX>-<4 digits>-<4 or more digits>-<slug>, ov
       `${p}-2026-0001-a${ANN}`, `${p}-2026-abcdefghijklmnop-a`])
       assert.ok(!BUNDLE_ID_RE.test(bad), bad);
   }
-  for (const p of ["ENT", "CASE", "PLAN", "PL", "INFOS", "XINFO", "RUN", "", "EVT", "HYP", "CALC", "STQ"])
+  for (const p of ["ENT", "CASE", "PLAN", "PL", "INFOS", "XINFO", "RUN", "", "EVT", "HYP", "CALC", "STQ", "SUC"])
     assert.ok(!BUNDLE_ID_RE.test(`${p}-2026-0001-a`), p);
 });
 
@@ -42,7 +42,7 @@ test("R1 ANN_ID_RE: exactly a bundle id and .ann-<8 digits>T<6 digits>Z-<slug>, 
   }
   for (const p of PREFIXES) for (const c of COUNTERS_OK) assert.ok(ANN_ID_RE.test(`${p}-2026-${c}-a${ANN}`), `${p} ${c}`);
   for (const p of PREFIXES) for (const c of COUNTERS_BAD) assert.ok(!ANN_ID_RE.test(`${p}-2026-${c}-a${ANN}`), `${p} '${c}'`);
-  for (const p of ["ENT", "PLAN", "X", "EVT", "HYP"]) assert.ok(!ANN_ID_RE.test(`${p}-2026-0001-a${ANN}`), p);
+  for (const p of ["ENT", "PLAN", "X", "EVT", "HYP", "SUC"]) assert.ok(!ANN_ID_RE.test(`${p}-2026-0001-a${ANN}`), p);
 });
 
 test("R1 both patterns carry the same prefix set, each a sequential prefix of ID_TABLE, built from idPattern", () => {
@@ -84,11 +84,11 @@ test("R2 ISO_TS_RE: exactly YYYY-MM-DDTHH:MM:SSZ, no fraction, no offset", () =>
 const NEW_TYPES = { CALC: "calculation", EVT: "event", LIN: "line", MNY: "money_fact", MSR: "money_set", PFA: "person_fact",
   IDC: "identity_claim", MTI: "member_tie", CHK: "interest_check", HYP: "hypothesis", DUT: "duty", STQ: "standing_question" };
 
-test("R3 OBJECT_TYPES: every prefix of R1 and of T33's new objects to its type, and its keys exactly those", () => {
+test("R3 R59 OBJECT_TYPES: every prefix of R1, of T33's new objects and T46's SUC to its type, and its keys exactly those", () => {
   assert.deepEqual({ ...OBJECT_TYPES }, { INFO: "information", PROB: "inquiry", FOCUS: "inquiry", INQ: "inquiry", PROJ: "project",
     ACTN: "action", BIAS: "bias", STD: "standard", CONF: "determination", CONS: "consequence", ESC: "escalation",
-    ASP: "aspiration", GOAL: "goal", PLN: "action_plan", ...NEW_TYPES });
-  assert.deepEqual(Object.keys(OBJECT_TYPES).sort(), [...PREFIXES, ...Object.keys(NEW_TYPES)].sort());
+    ASP: "aspiration", GOAL: "goal", PLN: "action_plan", ...NEW_TYPES, SUC: "success_record" });
+  assert.deepEqual(Object.keys(OBJECT_TYPES).sort(), [...PREFIXES, ...Object.keys(NEW_TYPES), "SUC"].sort());
   /* R1's keys are exactly the prefixes both patterns carry. */
   for (const k of PREFIXES) {
     assert.ok(BUNDLE_ID_RE.test(`${k}-2026-0001-a`), k);
@@ -135,12 +135,13 @@ const TABLE = [
   ["MTI", "people"], ["CHK", "people"], ["MSR", "money"], ["HYP", "hypotheses"], ["DUT", "duties"],
   ["CALC", "calculations", "opaque", "sequential"], ["STQ", "answers"],
   ["STP", "steps", "opaque"], ["GUD", "reading-guides", "opaque"], ["ACD", "case-account", "opaque", "sequential"],
+  ["SUC", "consequences"],
 ].map(([prefix, owner, form = "sequential", legacy]) => (legacy ? { prefix, owner, form, legacy } : { prefix, owner, form }));
 const SEQUENTIAL = TABLE.filter((e) => e.form === "sequential").map((e) => e.prefix);
 const OPAQUE = TABLE.filter((e) => e.form === "opaque").map((e) => e.prefix);
 const TAIL = "a1b2c3d4e5f6g7h8";
 
-test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twice, holding exactly T33's census with T34's CALC opaque and its legacy sequential form, T41's STP and GUD, and T42's ACD", () => {
+test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twice, holding exactly T33's census with T34's CALC opaque and its legacy sequential form, T41's STP and GUD, T42's ACD, and T46's SUC", () => {
   assert.ok(Object.isFrozen(ID_TABLE));
   for (const e of ID_TABLE) {
     assert.ok(Object.isFrozen(e), e.prefix);
@@ -157,7 +158,7 @@ test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twic
      sequential, with STQ answers'. */
   for (const p of PREFIXES) assert.equal(ID_TABLE.find((e) => e.prefix === p).form, "sequential", p);
   assert.deepEqual(OPAQUE, ["EVT", "LIN", "MNY", "PFA", "IDC", "CALC", "STP", "GUD", "ACD"]);
-  for (const p of ["MTI", "CHK", "MSR", "HYP", "DUT", "STQ", "ENT"]) assert.ok(SEQUENTIAL.includes(p), p);
+  for (const p of ["MTI", "CHK", "MSR", "HYP", "DUT", "STQ", "ENT", "SUC"]) assert.ok(SEQUENTIAL.includes(p), p);
   assert.deepEqual({ ...ID_TABLE.find((e) => e.prefix === "CALC") },
     { prefix: "CALC", owner: "calculations", form: "opaque", legacy: "sequential" });
 });
@@ -288,7 +289,8 @@ test("R55 ID_TABLE gains ACD (owner case-account, form opaque, legacy sequential
   assert.deepEqual({ ...ID_TABLE.find((e) => e.prefix === "ACD") },
     { prefix: "ACD", owner: "case-account", form: "opaque", legacy: "sequential" });
   assert.equal(ID_TABLE.filter((e) => e.prefix === "ACD").length, 1);
-  assert.equal(ID_TABLE.at(-1).prefix, "ACD", "after T41's rows");
+  const at = ID_TABLE.findIndex((e) => e.prefix === "ACD");
+  assert.deepEqual(ID_TABLE.slice(at - 2, at + 1).map((e) => e.prefix), ["STP", "GUD", "ACD"], "after T41's rows");
   const re = idPattern("ACD");
   for (const ok of [`ACD-2026-${TAIL}`, "ACD-2026-0000000000000000", "ACD-1999-zzzzzzzzzzzzzzzz",
     "ACD-2026-0417", "ACD-2026-9999", "ACD-2026-0000", "ACD-2026-10000"]) assert.ok(re.test(ok), ok);
@@ -299,4 +301,39 @@ test("R55 ID_TABLE gains ACD (owner case-account, form opaque, legacy sequential
     `ACDX-2026-${TAIL}`, `XACD-2026-${TAIL}`]) assert.ok(!re.test(bad), bad);
   /* An account draft is a row of its owner's table, never a bundle (R1, R3). */
   assert.ok(!BUNDLE_ID_RE.test(`ACD-2026-${TAIL}-a`) && !BUNDLE_ID_RE.test("ACD-2026-0417-a") && !Object.hasOwn(OBJECT_TYPES, "ACD"));
+});
+
+/* T46 (R59; N911, K2845): the success record's prefix, `consequences`', sequential, every `SUC-<year>-<4 digits>` id it has
+   minted in its own rows since T45 still valid; with its type, its one-state machine and its own test, and the negative
+   controls (K874): a counter too short, an opaque tail, a slug, another prefix, every non-string. */
+test("R59 ID_TABLE gains SUC (owner consequences, form sequential), last; OBJECT_TYPES maps it to success_record; STATES holds success_record: legal recorded, no edge; it is no bundle prefix and has no headings", () => {
+  assert.deepEqual({ ...ID_TABLE.find((e) => e.prefix === "SUC") }, { prefix: "SUC", owner: "consequences", form: "sequential" });
+  assert.equal(ID_TABLE.filter((e) => e.prefix === "SUC").length, 1);
+  assert.equal(ID_TABLE.at(-1).prefix, "SUC", "after T42's ACD");
+  assert.equal(OBJECT_TYPES.SUC, "success_record");
+  assert.deepEqual(STATES.success_record, { legal: ["recorded"], edges: { recorded: [] } });
+  /* A row object promoted with history: a type and a machine, and nothing a bundle has (R3, R59). */
+  assert.ok(!PREFIXES.includes("SUC") && !Object.hasOwn(HEADINGS, "success_record"));
+  assert.ok(!BUNDLE_ID_RE.test("SUC-2026-0001-a") && !ANN_ID_RE.test(`SUC-2026-0001-a${ANN}`));
+  /* Every id consequences minted since T45 (`SUC-<year>-<4 digits>`) stays valid, and the 10,000th is accepted. */
+  const re = idPattern("SUC");
+  for (const ok of ["SUC-2026-0001", "SUC-2026-0000", "SUC-2026-9999", "SUC-2026-10000", "SUC-1999-123456"]) assert.ok(re.test(ok), ok);
+  for (const bad of ["SUC-2026-999", `SUC-2026-${TAIL}`, "SUC-2026-0001-a", "SUC-26-0001", "suc-2026-0001", " SUC-2026-0001",
+    "SUC-2026-0001\n", "SUC-2026-", "XSUC-2026-0001", "SUCC-2026-0001", "SU-2026-0001"]) assert.ok(!re.test(bad), bad);
+});
+
+test("R59 isSuccessRecordId is true exactly for a string matching idPattern('SUC'); never throws", () => {
+  const re = idPattern("SUC");
+  const cands = ["SUC-2026-0001", "SUC-2026-10000", "SUC-2026-999", "SUC-2026-0001-a", `SUC-2026-${TAIL}`, "suc-2026-0001",
+    " SUC-2026-0001", "SUC-2026-0001\n", "SUC-26-0001", "CONS-2026-0001", "CONS-2026-0001-suc", ""];
+  for (const { prefix } of ID_TABLE) cands.push(`${prefix}-2026-0001`, `${prefix}-2026-${TAIL}`);
+  for (const c of cands) assert.equal(isSuccessRecordId(c), re.test(c), c);
+  assert.equal(isSuccessRecordId("SUC-2026-0001"), true);
+  assert.equal(isSuccessRecordId("SUC-2026-10000"), true);
+  /* Negative controls: the nearest other ids are not success records. */
+  for (const bad of ["CONS-2026-0001", "HYP-2026-0001", "SUC-2026-999", `SUC-2026-${TAIL}`, "SUC-2026-0001-a"])
+    assert.equal(isSuccessRecordId(bad), false, bad);
+  for (const v of [undefined, null, 0, 20260001, NaN, true, {}, [], ["SUC-2026-0001"], Symbol("SUC-2026-0001"), 10n,
+    () => "SUC-2026-0001", { toString() { throw new Error("x"); } }, new String("SUC-2026-0001"), Object.create(null)])
+    assert.equal(isSuccessRecordId(v), false, String(typeof v));
 });

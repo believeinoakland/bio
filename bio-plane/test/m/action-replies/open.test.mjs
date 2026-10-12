@@ -45,8 +45,8 @@ test("R3 control: each open request for comment on the case's members is answere
   const before = w.counts();
   const rows = w.r.openRequestsOn({ case: "case-1", members: members(INQ, INQ2), viewer: M });
   assert.deepEqual(rows, [
-    { whom: WHOM, asked_at: "2026-09-10", window_closes: "2026-10-15", answers: { answered: 1, claims: 2 } },
-    { whom: WHOM, asked_at: "2026-09-12", window_closes: "2026-10-20", answers: null },
+    { whom: WHOM, asked_at: "2026-09-10", window_closes: "2026-10-15", answers: { answered: 1, claims: 2 }, replied: true },
+    { whom: WHOM, asked_at: "2026-09-12", window_closes: "2026-10-20", answers: null, replied: false },
   ]);
   /* through the seam, as R34's sign step reads it */
   assert.deepEqual(w.ca.openRequestsOn({ case: "case-1", members: members(INQ, INQ2), viewer: M }), { ok: true, rows });
@@ -102,4 +102,28 @@ test("R3 through the seam, this source when it cannot read is undetermined, neve
   assert.equal(ca.registerOpenRequests("action-replies", { openRequestsOn: (a) => broken.openRequestsOn(a) }).ok, true);
   const r = ca.openRequestsOn({ case: "c", members: members(INQ), viewer: M });
   assert.deepEqual([r.ok, r.undetermined], [false, true]);
+});
+
+test("R8 control: a request with a reply recorded and no claims laid out answers answers: null, replied: true; one with none, replied: false; case-authoring R70 takes every row as well formed", () => {
+  const w = world({ signing: true });
+  w.rfc(RFC);
+  w.say(RFC, "sent", "2026-09-10");
+  w.rfc(RFC2);
+  w.say(RFC2, "sent", "2026-09-12");
+  const on = () => w.r.openRequestsOn({ members: members(INQ), viewer: M });
+  /* neither replied: each row answers replied: false */
+  assert.deepEqual(on().map((r) => [r.asked_at, r.answers, r.replied]), [["2026-09-10", null, false], ["2026-09-12", null, false]]);
+  /* a reply recorded on RFC, no layout: answers null, replied true; RFC2 unchanged */
+  const got = w.say(RFC, "received", "2026-09-20");
+  assert.deepEqual(on().map((r) => [r.asked_at, r.answers, r.replied]), [["2026-09-10", null, true], ["2026-09-12", null, false]]);
+  /* laid out: answers set, still replied */
+  assert.equal(w.r.actionReplyBearing({ target: RFC, ord: got, claims: [{ claim: INQ, bearing: "new_evidence" }], author: M, viewer: M }).ok, true);
+  assert.deepEqual(on()[0], { whom: WHOM, asked_at: "2026-09-10", window_closes: "2026-10-15", answers: { answered: 1, claims: 1 }, replied: true });
+  /* a sent entry or a non-response is not a reply */
+  w.a.actionCorrespond({ target: RFC2, direction: "no_response", at: "2026-09-25", account: "nothing came", viewer: M, author: M });
+  assert.equal(on()[1].replied, false);
+  /* every row is a boolean, and case-authoring R70 takes each row as well formed */
+  assert.ok(on().every((r) => typeof r.replied === "boolean"));
+  const seam = w.ca.openRequestsOn({ case: "c", members: members(INQ), viewer: M });
+  assert.deepEqual(seam, { ok: true, rows: on() });
 });

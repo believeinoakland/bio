@@ -2,8 +2,8 @@
    Durable Object's storage, at the plane's shape (`sql.exec` answers a one-pass cursor, K316). What it uses of
    `case-authoring` (`publishPreflight`, `publishCase`, `calculationsAtPublication`: its R34, R14, R56), `publication`
    (`hasCaseStanding`, its R1, and its `cases`, `published_cases` and `case_documents` read contract, R40) and
-   `case-carriage` (`sourcesLapsed`, `acceptedWorkLapsed`, `marksLapsed`: its R5, R4, R13) are providers the test
-   controls, in the shapes of those modules' Provides. Every test drives the module at its interface. */
+   `case-carriage` (`sourcesLapsedSince`, `acceptedWorkLapsedSince`, `marksLapsedSince`: its R21, R19, R20) are
+   providers the test controls, in the shapes of those modules' Provides. Every test drives the module at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -121,14 +121,32 @@ export function world() {
     },
   };
 
-  /* case-carriage's side: each read answers what the test sets (a function of its arguments, or a value); `null`
-     settings answer "nothing lapsed". */
-  const cc = { sources: [], accepted: null, marks: [] };
+  /* case-carriage's side (its R19–R21), each read over the interval from `since` to the read. What lapsed AT the read
+     is what the test sets (a function of the read's arguments, or a value; `null` settings answer "nothing lapsed");
+     beside it, `cc.lapses` holds case-carriage's histories as the test writes them through `w.lapse` and `w.undo`:
+     one `{row, from, to}` per lapse, `to` null while it stands, so a lapse that stood at any instant of the interval
+     is answered, undone or not. An answer outside the read's shape is passed through unchanged. */
+  const cc = { sources: [], accepted: null, marks: [], lapses: { sources: [], accepted: [], marks: [] } };
   const answer = (v, ...a) => (typeof v === "function" ? v(...a) : v);
+  const during = (k, since) => cc.lapses[k].filter((l) => l.from <= clock.now && (l.to === null || l.to >= since))
+    .map((l) => l.row);
   const caseCarriage = {
-    sourcesLapsed(text, at) { calls.sources.push({ text, at }); return answer(cc.sources, text, at); },
-    acceptedWorkLapsed(fm, signer) { calls.accepted.push({ fm, signer }); return answer(cc.accepted, fm, signer); },
-    marksLapsed(fm) { calls.marks.push({ fm }); return answer(cc.marks, fm); },
+    sourcesLapsedSince(text, since) {
+      calls.sources.push({ text, since });
+      const now = answer(cc.sources, text, since);
+      return Array.isArray(now) ? [...now, ...during("sources", since)] : now;
+    },
+    acceptedWorkLapsedSince(fm, signer, since) {
+      calls.accepted.push({ fm, signer, since });
+      const now = answer(cc.accepted, fm, signer, since), then = during("accepted", since);
+      if (now !== null && now !== undefined) return now;
+      return then.length ? { withdrawn: then, undisclosed: [] } : null;
+    },
+    marksLapsedSince(fm, since) {
+      calls.marks.push({ fm, since });
+      const now = answer(cc.marks, fm, since);
+      return Array.isArray(now) ? [...now, ...during("marks", since)] : now;
+    },
   };
 
   const c = caseCheckOf(host, { record, caseAuthoring, publication, caseCarriage, now: () => clock.now });
@@ -178,6 +196,11 @@ export function world() {
       const text = `${d.text}acknowledged: 1\n`;
       st.sql.exec(`UPDATE case_documents SET text=?, doc_sha=? WHERE case_id=? AND edition=?`, text, sha(text), caseId, edition);
     },
+    /** A lapse recorded in case-carriage's history now (`k` one of `sources`, `accepted`, `marks`): a source's
+     *  consent withdrawn, an acceptance withdrawn, a photo's copy changed. */
+    lapse(k, row) { cc.lapses[k].push({ row, from: clock.now, to: null }); },
+    /** Every standing lapse of `k` undone now: the consent given again, the acceptance restored, the copy derived again. */
+    undo(k) { for (const l of cc.lapses[k]) if (l.to === null) l.to = clock.now; },
     /** A case edition ratified (publication's commit: its `cases` and `published_cases` rows; the document signed). */
     ratify(caseId, edition, project = P) {
       st.sql.exec(`INSERT OR IGNORE INTO cases (case_id, project_id) VALUES (?,?)`, caseId, project);

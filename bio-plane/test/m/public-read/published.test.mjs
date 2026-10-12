@@ -89,7 +89,7 @@ test("R3 publishedCase resolves by case, by finding and by hash, and answers the
     assert.equal(c.document.attestor.member, "olive", "D-712: the signed case document is served");
     assert.deepEqual(Object.keys(c.completeness).sort(), ["author", "statement"]);
     assert.ok("manifest" in c && "files" in c && "evidence_package" in c);
-    assert.equal(c.tensions, null, "a /4 document predates the disclosure (R13)");
+    assert.equal(c.tensions, null, "a /6 document with no tension section states none: null, never [] (R13)");
     assert.equal(c.captures, null);
   }
   assert.equal(byFinding.asked, F);

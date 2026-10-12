@@ -8,7 +8,7 @@ import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 
 import {
-  modelCall, converse, segmentMeter, MODEL_FOR_MODE, MODEL_FOR_MODE_SOURCE, MODEL_ENDPOINT, RUNNER_URL,
+  modelCall, converse, segmentMeter, MODEL_FOR_MODE, MODEL_FOR_MODE_SOURCE, MODEL_ENDPOINT, RUNNER_URL, RUNNER_VERSION_URL, IMAGE_CAPABILITY,
   CONVERSATION_MAX_TURNS, USAGE_FIGURES, ESTIMATE, MODEL_PRICES, MODEL_PRICES_SOURCE, MODEL_MAX_TOKENS, SEGMENT_BYTES_SOURCE, parentSystem, subsessionSystem, judgeTools,
   planJudgeTools, subsessionTools, rowPrompt, LOAD_LAYER, rowFacts, openRow, subsessionOpening, READ_FACTS, READ_RESULT,
 } from "../src/model.mjs";
@@ -41,11 +41,19 @@ beforeEach(() => {
 afterEach(() => { globalThis.fetch = realFetch; });
 
 /** A Container DO namespace whose every connection runs `script`: the nth message the module sends is answered
- *  with `script[n](msg)`'s messages (an array; `"close"` closes the socket). */
-function fakeRunner(script = []) {
-  const log = { urls: [], sent: [], opened: 0, closed: 0, ids: 0, names: [], got: [] };
+ *  with `script[n](msg)`'s messages (an array; `"close"` closes the socket). Its `GET /version` (agent-runner R5)
+ *  answers `version()`, by default R5's answer with `capabilities` naming `image` when `images` (agent-runner R24);
+ *  each such ask is logged in `probes`, apart from the connections. */
+function fakeRunner(script = [], { images = false, version } = {}) {
+  const log = { urls: [], sent: [], opened: 0, closed: 0, ids: 0, names: [], got: [], probes: [] };
   const stub = {
     async fetch(url, init = {}) {
+      if (String(url) === RUNNER_VERSION_URL) {
+        log.probes.push({ url: String(url), method: init.method ?? "GET" });
+        if (version) return version();
+        return new Response(JSON.stringify({ ok: true, name: "agent-runner", version: "1.0.0",
+                                             ...(images ? { capabilities: [IMAGE_CAPABILITY] } : {}) }), { status: 200 });
+      }
       log.urls.push(String(url));
       log.upgrade = init.headers && init.headers.Upgrade;
       log.opened += 1;
@@ -1120,41 +1128,131 @@ test("R14 a page's picture reaches the model only inside the tool_result answeri
   assert.ok(!outsideResults(calls.at(-1).body).includes(PNG_B64));
 });
 
-test("R14 on the signin path a transcript or an onTool result holding an image block is refused IMAGE_NOT_RELAYED and nothing is sent", async () => {
-  /* The opening holds the picture: refused before any connection, for a conversation and one turn alike. */
-  const r = fakeRunner([() => [{ tool_use: { id: "t1", name: "transcription", input: { text: "w" } } }], () => [end()]]);
-  const c = await converse(tconv({ reference: SUB, runner: r.ns }));
-  assert.equal(c.refused.type, "IMAGE_NOT_RELAYED");
-  assert.equal(r.log.opened, 0);
-  assert.deepEqual(r.log.sent, []);
-  const t = await modelCall(SUB, { ...BODY, messages: pageOpening() }, { runner: r.ns });
-  assert.equal(t.refused.type, "IMAGE_NOT_RELAYED");
-  assert.equal(r.log.opened, 0);
-  /* A picture in a user turn's own content is no more relayed. */
-  assert.equal((await converse(tconv({ reference: SUB, runner: r.ns, messages: [{ role: "user", content: [IMAGE] }] }))).refused.type,
-               "IMAGE_NOT_RELAYED");
-  assert.equal(r.log.opened, 0);
+/** A runner's answer to `GET /version` that does not state R24's capability, in each way it can fail to. */
+const OLDER_RUNNERS = [
+  ["no capabilities", undefined],
+  ["capabilities without image", () => new Response(JSON.stringify({ ok: true, name: "agent-runner", version: "0.9", capabilities: ["text"] }), { status: 200 })],
+  ["capabilities not a list", () => new Response(JSON.stringify({ ok: true, capabilities: "image" }), { status: 200 })],
+  ["a 404", () => new Response(JSON.stringify({ ok: false, code: "UNKNOWN" }), { status: 404 })],
+  ["a body that is not JSON", () => new Response("<html>", { status: 200 })],
+  ["a throw", () => { throw new Error("gone"); }],
+];
 
-  /* onTool answers a picture mid-conversation: the result is not sent, the conversation ends refused. */
-  const rm = fakeRunner([() => [{ tool_use: { id: "p2", name: "read_page", input: {} } }], () => [end()]]);
-  const messages = pageOpening({ type: "text", text: "the page is fetched by read_page" });
-  const mid = await converse(tconv({ reference: SUB, runner: rm.ns, messages, onTool: async () => ({ blocks: [IMAGE] }) }));
-  assert.equal(mid.refused.type, "IMAGE_NOT_RELAYED");
-  assert.ok("usage" in mid && "calls" in mid);
-  assert.equal(rm.log.sent.length, 1, "only the conversation request went; no result followed it");
-  assert.ok(rm.log.sent.every((x) => !x.tool_result));
-  assert.equal(rm.log.closed, 1);
-  assert.ok(!JSON.stringify(rm.log.sent).includes(PNG_B64));
-  assert.ok(!JSON.stringify(messages).includes(PNG_B64), "the transcript keeps no picture it could not send");
-  const uses = messages.filter((x) => x.role === "assistant").flatMap((x) => x.content.filter((b) => b.type === "tool_use").map((b) => b.id));
-  const results = messages.flatMap((x) => (Array.isArray(x.content) ? x.content : [])).filter((b) => b.type === "tool_result").map((b) => b.tool_use_id);
-  assert.deepEqual(results, uses, "every call in the transcript keeps a result");
+test("R14 R15 on the signin path a runner that does not answer agent-runner R24's capability refuses a picture IMAGE_NOT_RELAYED and nothing is sent, never dropping it", async () => {
+  for (const [why, version] of OLDER_RUNNERS) {
+    /* The opening holds the picture: refused before any connection, for a conversation and one turn alike. */
+    const r = fakeRunner([() => [{ tool_use: { id: "t1", name: "transcription", input: { text: "w" } } }], () => [end()]], { version });
+    const c = await converse(tconv({ reference: SUB, runner: r.ns }));
+    assert.equal(c.refused.type, "IMAGE_NOT_RELAYED", why);
+    assert.equal(r.log.opened, 0);
+    assert.deepEqual(r.log.sent, []);
+    const t = await modelCall(SUB, { ...BODY, messages: pageOpening() }, { runner: r.ns });
+    assert.equal(t.refused.type, "IMAGE_NOT_RELAYED", why);
+    assert.equal(r.log.opened, 0);
+    assert.deepEqual(r.log.probes.map((x) => [x.url, x.method]), [[RUNNER_VERSION_URL, "GET"], [RUNNER_VERSION_URL, "GET"]],
+                     "the member's own instance was asked, once per conversation");
 
-  /* Negative control: the same conversation answered in text is relayed and answered. */
+    /* onTool answers a picture mid-conversation: the result is not sent, the conversation ends refused. */
+    const rm = fakeRunner([() => [{ tool_use: { id: "p2", name: "read_page", input: {} } }], () => [end()]], { version });
+    const messages = pageOpening({ type: "text", text: "the page is fetched by read_page" });
+    const mid = await converse(tconv({ reference: SUB, runner: rm.ns, messages, onTool: async () => ({ blocks: [IMAGE] }) }));
+    assert.equal(mid.refused.type, "IMAGE_NOT_RELAYED", why);
+    assert.ok("usage" in mid && "calls" in mid);
+    assert.equal(rm.log.sent.length, 1, "only the conversation request went; no result followed it");
+    assert.ok(rm.log.sent.every((x) => !x.tool_result));
+    assert.equal(rm.log.closed, 1);
+    assert.ok(!JSON.stringify(rm.log.sent).includes(PNG_B64));
+    assert.ok(!JSON.stringify(messages).includes(PNG_B64), "the transcript keeps no picture it could not send");
+    const uses = messages.filter((x) => x.role === "assistant").flatMap((x) => x.content.filter((b) => b.type === "tool_use").map((b) => b.id));
+    const results = messages.flatMap((x) => (Array.isArray(x.content) ? x.content : [])).filter((b) => b.type === "tool_result").map((b) => b.tool_use_id);
+    assert.deepEqual(results, uses, "every call in the transcript keeps a result");
+  }
+
+  /* A picture in a user turn's own content rides in no result: refused even by a runner that relays pictures. */
+  const capable = fakeRunner([() => [end()]], { images: true });
+  for (const messages of [[{ role: "user", content: [IMAGE] }], [...pageOpening(), { role: "user", content: [{ type: "text", text: "and" }, IMAGE] }]]) {
+    assert.equal((await converse(tconv({ reference: SUB, runner: capable.ns, messages }))).refused.type, "IMAGE_NOT_RELAYED");
+    assert.equal((await modelCall(SUB, { ...BODY, messages }, { runner: capable.ns })).refused.type, "IMAGE_NOT_RELAYED");
+  }
+  assert.equal(capable.log.opened, 0);
+
+  /* Negative control: the same conversation answered in text is relayed and answered, and no runner is asked. */
   const rt = fakeRunner([() => [{ tool_use: { id: "p2", name: "read_page", input: {} } }],
     () => [{ tool_use: { id: "t1", name: "transcription", input: { text: "w" } } }], () => [end()]]);
   const ok = await converse(tconv({ reference: SUB, runner: rt.ns, messages: pageOpening({ type: "text", text: "x" }),
                                     onTool: async () => ({ blocks: [{ type: "text", text: "the words" }] }) }));
   assert.deepEqual(ok.answer, { text: "w" });
   assert.deepEqual(rt.log.sent[1], { tool_result: { id: "p2", content: "the words" } });
+  assert.deepEqual(rt.log.probes, []);
+});
+
+/* ------------------------------------------------------------------ R15 */
+
+/** Every string a sign-in message carries outside a relayed result's content: where a picture must never be. */
+const outsideRelay = (msg) => (msg.tool_result ? JSON.stringify({ ...msg.tool_result, content: null }) : JSON.stringify(msg));
+
+test("R15 on the signin path a tool_result holding an image block is relayed through a runner answering agent-runner R24, the block unchanged beside its text blocks in order, only inside the result answering its call; the meter counts its bytes", async () => {
+  /* The opening's picture, read back over the relay, and a picture onTool answers beside text: each relayed as blocks. */
+  const SR = { search_results: [{ source: "s", title: "t", content: "cited" }] };
+  const r = fakeRunner([
+    () => [{ tool_use: { id: "h1", name: "read_result", input: { id: "page_1" } } }],
+    () => [{ tool_use: { id: "p2", name: "read_page", input: { page: 2 } } }],
+    () => [{ tool_use: { id: "s1", name: "read_page", input: { page: 3 } } }],
+    () => [{ tool_use: { id: "t1", name: "transcription", input: { text: "words" } } }],
+    () => [end({ num_turns: 4 })],
+  ], { images: true });
+  const messages = pageOpening();
+  const m = meter();
+  let k = 0;
+  const got = await converse(tconv({ reference: SUB, runner: r.ns, meter: m, messages,
+    onTool: async () => (k++ === 0 ? { blocks: [{ type: "text", text: "page two" }, IMAGE2, { type: "text", text: "end" }] } : SR) }));
+  assert.deepEqual([got.answer, got.calls], [{ text: "words" }, 4]);
+  assert.equal(r.log.probes.length, 1, "the runner was asked once in the conversation");
+  assert.equal(r.log.opened, 1);
+  const [request, held, second, third, final] = r.log.sent;
+  assert.equal(request.model, MODEL_FOR_MODE.transcribe);
+  assert.ok(request.tools.some((t) => t.name === READ_RESULT.name), "the held picture is read with read_result");
+  assert.deepEqual(held, { tool_result: { id: "h1", content: [IMAGE] } }, "the opening's picture, unchanged");
+  assert.deepEqual(second, { tool_result: { id: "p2", content: [{ type: "text", text: "page two" }, IMAGE2, { type: "text", text: "end" }] } },
+                   "beside its text blocks, in order");
+  /* A result with no picture stays agent-runner R3's one string. */
+  assert.equal(typeof third.tool_result.content, "string");
+  assert.ok(third.tool_result.content.includes("cited"));
+  assert.deepEqual(final, { tool_result: { id: "t1", content: "received" } });
+  /* Only inside the result answering its call: never in the request's system, prompt or tools, nor beside a result. */
+  for (const x of r.log.sent) for (const b64 of [PNG_B64, IMAGE2.source.data]) assert.ok(!outsideRelay(x).includes(b64));
+  /* The transcript keeps the result as answered, as the apikey path does, every call with its result. */
+  const p2 = messages.flatMap((x) => (Array.isArray(x.content) ? x.content : [])).find((b) => b.type === "tool_result" && b.tool_use_id === "p2");
+  assert.deepEqual(p2.content, [{ type: "text", text: "page two" }, IMAGE2, { type: "text", text: "end" }]);
+  /* The meter counts every message as sent, the pictures' bytes with them. */
+  assert.equal(m.bytes, r.log.sent.reduce((n, x) => n + JSON.stringify(x).length, 0));
+  assert.ok(JSON.stringify(second).length > IMAGE2.source.data.length);
+
+  /* One turn (modelCall) alike: the held picture read back as blocks, then the turn's answer. */
+  const one = fakeRunner([() => [{ tool_use: { id: "h1", name: "read_result", input: { id: "page_1" } } }],
+    () => [{ tool_use: { id: "t1", name: "transcription", input: { text: "w" } } }]], { images: true });
+  const t = await modelCall(SUB, { ...BODY, model: MODEL_FOR_MODE.transcribe, tools: TRANSCRIBE_TOOLS, messages: pageOpening() }, { runner: one.ns });
+  assert.deepEqual(t.result.content, [{ type: "tool_use", id: "t1", name: "transcription", input: { text: "w" } }]);
+  assert.deepEqual(one.log.sent[1], { tool_result: { id: "h1", content: [IMAGE] } });
+  assert.ok(!outsideRelay(one.log.sent[0]).includes(PNG_B64));
+
+  /* A conversation asked again after the model ended without answering: the picture goes again, the runner not
+     asked again. */
+  const again = fakeRunner([() => [end({ result: "hm" })]], { images: true });
+  const ag = await converse(tconv({ reference: SUB, runner: again.ns, maxTurns: 2 }));
+  assert.deepEqual([ag.exhausted, again.log.opened, again.log.probes.length], [true, 2, 1]);
+
+  /* The meter: a bound just below the picture's result stops the segment before it is sent. */
+  const big = { type: "image", source: { type: "base64", media_type: "image/png", data: "A".repeat(4000) } };
+  const rb = fakeRunner([() => [{ tool_use: { id: "b1", name: "read_page", input: {} } }]], { images: true });
+  const sb = await converse(tconv({ reference: SUB, runner: rb.ns, meter: meter(100, 3000), messages: pageOpening({ type: "text", text: "x" }),
+                                    onTool: async () => ({ blocks: [big] }) }));
+  assert.equal(sb.stopped, "bytes");
+  assert.equal(rb.log.sent.length, 1, "the result that would pass the bound was not sent");
+  /* Negative control: a text result of the same call fits under that bound. */
+  const rs = fakeRunner([() => [{ tool_use: { id: "b1", name: "read_page", input: {} } }],
+    () => [{ tool_use: { id: "t1", name: "transcription", input: { text: "w" } } }], () => [end()]], { images: true });
+  assert.deepEqual((await converse(tconv({ reference: SUB, runner: rs.ns, meter: meter(100, 3000), messages: pageOpening({ type: "text", text: "x" }),
+                                          onTool: async () => ({ content: "short" }) }))).answer, { text: "w" });
+  assert.deepEqual(rs.log.probes, [], "a conversation with no picture asks the runner nothing");
 });

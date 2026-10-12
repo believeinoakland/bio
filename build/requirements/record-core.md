@@ -1,6 +1,6 @@
 # record-core — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (a product module, P17), with later folds reviewed. Last changed T35 (T35-13: R25 amended; R81, R82 new; K1754, DEC-49, DEC-149); every requirement met (RECORD-CORE #18, K1942).
+**Status** · In force: approved by Bob 2026-09-26 (a product module, P17), with later folds reviewed. Last changed T46 (T46-3: R83 new, amending R25's read, an unreadable setting told from an unset one; N904; K2832, K2914); marked not yet met (T46). Before that T35 (T35-13: R25 amended; R81, R82 new; K1754, DEC-49, DEC-149); every other requirement met (RECORD-CORE #18, K1942).
 
 ## Public
 
@@ -119,8 +119,9 @@ and every other module that stores anything, write through and read from.
 - **R24** Reports which form ran (`scope`, `"ALL"` or the bundle id) and a per-table count of what was removed, naming every declared table even when it removed nothing.
 - Errors: never throws.
 
-**getSetting(name) → value or null; setSetting(name, value, by) → `{ok: true}` or refusal**
+**getSetting(name, options?) → value, `null` or `SETTING_UNREADABLE`; setSetting(name, value, by) → `{ok: true}` or refusal**
 - **R25** Holds the instance's settings as named values, each recorded with who set it and when. `getSetting` returns the value last set, or `null` when none was. Settings are exempt from `purge`. `setSetting` refuses, recording nothing, an empty `name` (`SETTING_NAME_REQUIRED`), a `by` that is not a non-empty string (`SETTING_BY_REQUIRED`), an absent `value` (`SETTING_VALUE_REQUIRED`) and a value R26's setting does not take (`SETTING_INVALID`), in that order, each answered as R81 states.
+- **R83** (T46; N904; amends R25's read) `getSetting` tells a setting whose value last set cannot be read (held as text that is not valid JSON) from one never set. Asked `getSetting(name, {strict: true})`, it answers `null` when no value was ever set under `name`, the frozen exported constant `SETTING_UNREADABLE` (`{unreadable: true}`, one object, compared by identity) when the value last set is not valid JSON, and otherwise the value last set (a value set as `null` reads `null`, as set); it never answers `null` for an unreadable value and never throws. Asked without `{strict: true}`, it answers as R25 states and an unreadable value reads `null`, so no caller that does not ask changes. (`public-read` R34 asks the strict form, so an unreadable `declared_stake` reads `undetermined`.)
 - **R26** The instance's active jurisdiction profiles are the setting `jurisdiction_profiles`: an ordered list of profile ids, which a consumer passes to `jurisdictions.combine`.
 
 **transact(fn) → fn's result**

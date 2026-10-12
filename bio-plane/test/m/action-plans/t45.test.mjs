@@ -105,9 +105,10 @@ test("R40 R17: a member pauses and resumes a plan with a reason; refusals in ord
   /* every other act stays open to members; the plan still holds its matters (R3) */
   assert.equal(option(w, { summary: "While paused" }) !== undefined, true);
   assert.equal(code(w.ap.planOpen({ project: w.P, subjects: [w.S1], title: "Another", ...by("bob") })), "SUBJECT_IN_ACTIVE_PLAN");
-  /* the look-again read: once per pause, when its day has come */
-  assert.deepEqual(w.ap.plansToLookAgain({ nowMs: ms("2026-10-31T23:00:00Z") }).items, []);
-  const due = w.ap.plansToLookAgain({ nowMs: ms("2026-11-01T00:00:00Z") }).items;
+  /* the look-again read: once per pause, when its day has come on the place's local day (T46: R46 (b); the test
+     profile's zone, America/Halifax, is three hours behind UTC on 1 November until 02:00 local) */
+  assert.deepEqual(w.ap.plansToLookAgain({ nowMs: ms("2026-11-01T02:59:59Z") }).items, []);
+  const due = w.ap.plansToLookAgain({ nowMs: ms("2026-11-01T03:00:00Z") }).items;
   assert.equal(due.length, 1);
   assert.deepEqual([due[0].plan, due[0].project, due[0].look_again, due[0].paused_by], [w.PL, w.P, "2026-11-01", V("bob")]);
   assert.equal(w.ap.plansToLookAgain({ nowMs: ms("2026-12-01T00:00:00Z") }).items.length, 1, "one item for the pause");
@@ -115,7 +116,7 @@ test("R40 R17: a member pauses and resumes a plan with a reason; refusals in ord
   const back = resume();
   assert.equal(back.ok, true); assert.equal(back.state, "open");
   assert.equal(read(w).state, "open"); assert.equal(read(w).pause, null);
-  assert.equal(w.record.head(w.PL).currentState, "open", "the document stays open while the log holds the pause");
+  assert.equal(w.record.head(w.PL).currentState, "open", "T46 (R46 (a)): resumed, the document reads open again");
   assert.deepEqual(w.ap.checkpointsDue({ nowMs: DUE }).items.map((i) => i.plan), [w.PL]);
   assert.deepEqual(w.ap.plansToLookAgain({ nowMs: ms("2026-12-01T00:00:00Z") }).items, []);
   /* a second pause is a new item; a paused plan closes */
@@ -160,7 +161,7 @@ test("R20 R44: closing records the reason, an optional note and the registered r
   /* a reader that throws: undetermined, and the close lands */
   const w2 = seeded();
   opened(w2);
-  assert.equal(w2.ap.planRead({ id: w2.PL, viewer: V("bob") }).close_note_prompt, "plan.close.lessons");
+  assert.equal(w2.ap.planRead({ id: w2.PL, viewer: V("bob") }).close_note_prompt.key, "plan.close.lessons", "T46 (R47): its key and words");
   w2.ap.registerCloseSnapshot("plan-work", () => { throw new Error("no"); });
   const t = w2.ap.planClose({ id: w2.PL, reason: "Done", ...by("bob") });
   assert.equal(t.ok, true); assert.equal(t.summary.state, "undetermined");

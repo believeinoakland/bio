@@ -201,8 +201,9 @@ export const STANDARDS_TABLES = Object.freeze([
   { name: "standard_in_force_through_withdrawals", keys: ["standard_id"] },
 ].map((t) => Object.freeze({ ...t, ...CLASSES })));
 
-/** Creates the tables where absent, and adds R1's `reason` column (DEC-88) and R18–R19's columns to a `standards` table
- *  created before them, never filling them: a standard recorded before they were asked for carries none. Idempotent. */
+/** Creates the tables where absent, and adds R1's `reason` column (DEC-88), R18–R19's columns and T35's (R33–R42, R47)
+ *  to a `standards` table created before them, never filling them: a standard recorded before they were asked for
+ *  carries none. Idempotent. */
 export function migrateStandards(sql) {
   const bare = STANDARDS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
