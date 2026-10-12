@@ -4,7 +4,7 @@
   "entry": "src/entry.mjs",
   "testDir": "test",
   "surface": {
-    "GET /version": "R5: 200 {ok: true, name: \"agent-runner\", version}",
+    "GET /version": "R5: 200 {ok: true, name: \"agent-runner\", version, capabilities}",
     "GET /conversation (WebSocket upgrade)": "R1-R4: one conversation request, its relays and its answer",
     "POST /signin": "R17: {member} -> 200 {ok: true, address}, the sign-in address the binary states",
     "POST /signin/code": "R18: {member, code} -> 200 {ok: true, connected: true, member}, or 409 SIGNIN_REFUSED",

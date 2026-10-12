@@ -53,8 +53,40 @@ export function usageOf(result) {
   };
 }
 
+// A page's picture (R24): the one media type, and base64 as the caller sends it (`agent-model` R14).
+export const IMAGE_MEDIA_TYPE = 'image/png';
+// Linear in the picture's size (a page is megabytes): a grouped, repeated pattern overflows the regex engine's stack.
+const base64 = (s) => typeof s === 'string' && s.length > 0 && s.length % 4 === 0 && /^[A-Za-z0-9+/]+={0,2}$/.test(s);
+
+// Why an `image` block is not one R24 passes, or null: `{type: "image", source: {type: "base64", media_type, data}}`.
+// The fault names the field, never the bytes (R8).
+export function imageFault(b) {
+  const s = b.source;
+  if (!s || typeof s !== 'object' || Array.isArray(s) || s.type !== 'base64')
+    return 'an image block must be {type: "image", source: {type: "base64", media_type, data}}';
+  if (s.media_type !== IMAGE_MEDIA_TYPE) return `an image block's media_type must be ${IMAGE_MEDIA_TYPE}`;
+  if (!base64(s.data)) return 'an image block\'s data must be base64';
+  return null;
+}
+
+// The caller's tool_result content as the MCP tool's content (R3, R24): a string is one text item; each `image` block in
+// R14's shape becomes MCP's image item, its media type and bytes unchanged and in its place among the rest, which pass
+// as given. Any other image block makes the whole result the tool's error naming the fault, no bytes passed.
+export function toolContent(r) {
+  if (typeof r.content === 'string') return { content: [{ type: 'text', text: r.content }] };
+  if (!Array.isArray(r.content)) return { content: [{ type: 'text', text: JSON.stringify(r.content ?? null) }] };
+  const content = [];
+  for (const b of r.content) {
+    if (!b || b.type !== 'image') { content.push(b); continue; }
+    const fault = imageFault(b);
+    if (fault) return { content: [{ type: 'text', text: `the picture was not passed: ${fault}` }], fault: true };
+    content.push({ type: 'image', data: b.source.data, mimeType: b.source.media_type });
+  }
+  return { content };
+}
+
 // The relay server (R3): the model sees exactly the request's tools; a call goes to the caller as a relay and the
-// caller's tool_result comes back as the tool's result.
+// caller's tool_result comes back as the tool's result (a page's picture as MCP's image content, R24).
 export function relayServer(sdk, tools, relay) {
   const server = new sdk.McpServer({ name: RELAY_SERVER, version: '1' }, { capabilities: { tools: {} } });
   const named = new Map(tools.map((t) => [t.name, t]));
@@ -65,9 +97,8 @@ export function relayServer(sdk, tools, relay) {
     const { name, arguments: input } = req.params;
     if (!named.has(name)) return { content: [{ type: 'text', text: `no tool named ${name}` }], isError: true };
     const r = await relay(name, input ?? {});
-    const content = typeof r.content === 'string' ? [{ type: 'text', text: r.content }]
-      : Array.isArray(r.content) ? r.content : [{ type: 'text', text: JSON.stringify(r.content ?? null) }];
-    return r.is_error ? { content, isError: true } : { content };
+    const { content, fault } = toolContent(r);
+    return r.is_error || fault ? { content, isError: true } : { content };
   });
   return { type: 'sdk', name: RELAY_SERVER, instance: server };
 }

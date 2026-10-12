@@ -20,13 +20,19 @@ const raw = (base, text) => new Promise((resolve, reject) => {
   s.on('error', reject);
 });
 
-test('R5 GET /version answers 200 with the name and the version the image was built with', async () => {
-  const { sdk } = stubSdk(async () => success());
-  const r = await startRunner(sdk);
+test('R5 GET /version answers 200 with the name, the version the image was built with, and its capabilities: "image" as R24 is met', async () => {
+  const data = Buffer.from('a page').toString('base64');
+  const { calls, sdk } = stubSdk(async (call, { callTool }) => { await callTool('search', {}); return success(); });
+  const r = await startRunner(sdk, { signedIn: MEMBER });
   try {
     const res = await fetch(`http://${r.base}/version`);
     assert.equal(res.status, 200);
-    assert.deepEqual(await res.json(), { ok: true, name: 'agent-runner', version: pkg.version });
+    const v = await res.json();
+    assert.deepEqual(v, { ok: true, name: 'agent-runner', version: pkg.version, capabilities: ['image'] });
+    // "image" is stated because this image passes a page's picture (R24): checked here, not assumed
+    await conversation(r.base, request(), () => ({ content: [{ type: 'image', source: { type: 'base64', media_type: 'image/png', data } }] }));
+    assert.deepEqual(calls[0].results[0].content, [{ type: 'image', data, mimeType: 'image/png' }]);
+    assert.ok(!calls[0].results[0].isError);
   } finally { await r.stop(); }
 });
 
