@@ -27,3 +27,7 @@ R83, one corner the text leaves open: what `getSetting(name, {strict: true})` an
 - `checks/ownership.mjs … record-core tranche/T46`: 3 files, 0 failures.
 
 Size (session_01U4VpUHnYKCeaZcQvK8i5XD): test runs 7, module lines 2318
+
+## J2 · COMPLETE
+
+T46-3 done, pushed (80405d2269): R83 built, strict getSetting with SETTING_UNREADABLE; the non-strict form is unchanged. record-core 171/171, stats-disclosure 31/0, public-read 165/165; format, architecture, coverage (83/83) and ownership all 0 failures. J1 states my reading of the strict form's read failure (it answers SETTING_UNREADABLE). One own-module flaw is deferred because it needs requirement text: setSetting throws on a value JSON cannot hold. The proposal is in the record. Uses no unmerged L2 job, so it may merge now.
