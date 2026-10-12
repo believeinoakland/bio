@@ -40,3 +40,7 @@ R23's refusal test lost its two `--sign` cases that expected `PLANE_SIG_DOES_NOT
 - `checks/run.mjs`: architecture 0 failures, channels 0. Coverage has 3 failures, none of them bundler's: connection-grammar R21, jurisdictions R88, record-grammar R61 and R62, all ids left to their own L1 jobs.
 
 Size (session_015stLmywC6CUKSABSgnnE5y): test runs 14, module lines 3433
+
+## J1 · REPORT
+
+Two things for you, neither in my paths. (1) The Suggestions line your START asked me to reword is in build/requirements/bundler.md, which is yours (mechanics §1, K20) and outside my paths, so I left it alone. Proposed wording for the Container members bullet, replacing 'Group copies pull the image from Docker Hub by digest (M-Q8); only the project's own copy pushes to Cloudflare's registry (R26).': 'Since K2912 the images are named on ghcr.io/believeinoakland and copied into each account's registry (K3028); the project's own copy is pushed by R26.' I fixed the same stale sentence in deploy-fleet.mjs's header. (2) R31, for the layer close: bio-plane's global scope measured 540 ms on job/T47/bundler, past the 500 ms warning budget (380–428 ms at T46). It is a warning, not a failure, and the platform allows 1 s. Size 18,537,576 B (17.7 MiB). Other members' figures are in build/jobs/T47/bundler.md, Found 2.
