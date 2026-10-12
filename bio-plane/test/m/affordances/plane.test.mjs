@@ -182,7 +182,7 @@ const FACT_KEYS = ["ok", "target", "object_type", "declared_type", "current_stat
 /* R51: an action's facts, with their sub-keys */
 const ACTION_KEYS = ["clock", "closed", "drafts", "entries", "escalation", "holds_in_place", "preparable",
   "request_for_comment"];
-test("R14 R51: the answer carries exactly R14's facts, with their sub-keys, and an action's own facts only on an action", async () => {
+test("R14 R51 R52: the answer carries exactly R14's facts, with their sub-keys, and an action's own facts only on an action", async () => {
   for (const id of [W.INFO, W.INQ, W.ACTN, W.PA]) {
     const f = await facts(id, { viewer: "member:iris", identity: "member:iris", author: "member:iris", by: "iris" });
     assert.deepEqual(Object.keys(f).sort(), FACT_KEYS, id);
@@ -194,8 +194,10 @@ test("R14 R51: the answer carries exactly R14's facts, with their sub-keys, and 
     if (id === W.ACTN) {
       assert.deepEqual(Object.keys(f.action).sort(), ACTION_KEYS);
       assert.deepEqual(Object.keys(f.action.entries).sort(), ["all", "received", "received_unmarked", "sent"]);
-      assert.deepEqual(Object.keys(f.action.clock).sort(), ["dated", "entries", "reminders_room"]);
-      assert.deepEqual(Object.keys(f.action.escalation).sort(), ["attachable", "openable"]);
+      /* R52: the standing dated proposals' keys, and escalation's stop, reopening and stage-7 purposes */
+      assert.deepEqual(Object.keys(f.action.clock).sort(), ["dated", "entries", "proposals", "reminders_room"]);
+      assert.deepEqual(Object.keys(f.action.escalation).sort(),
+        ["attach_purposes", "attachable", "openable", "reopenable", "stoppable"]);
     } else assert.equal(f.action, null, id);
   }
 });
@@ -847,6 +849,12 @@ test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a m
     filingsent: () => POST(`op=filingsent&token=${ADM}`, { filing: "FIL-2026-0001", at: "2026-09-02", account: "a" }),
     counselpacket: () => POST(`op=counselpacket&token=${ADM}`, { action: ACTN, reason: "r" }),
     reminderset: () => POST(`op=reminderset&token=${ADM}&target=${E(ACTN)}`, { entry: 0 }),
+    /* R52 (T46): escalation's stop and reopening, on its route in the durable object (the control plane routes them at
+       T46-59), with a machine credential's author stamp; and clockadopt through the door */
+    escalationstoppursuing: () => DO(`escalationstoppursuing?viewer=admin&author=${E("token:member")}`,
+      { id: "ESC-2026-0001-x", reason: "r" }),
+    escalationreopen: () => DO(`escalationreopen?viewer=admin&author=${E("token:member")}`, { id: "ESC-2026-0001-x", reason: "r" }),
+    clockadopt: () => POST(`op=clockadopt&token=${ADM}&target=${E(ACTN)}`, { proposal: "deadline@member:iris" }),
   };
   const ROSTER = ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
     "projectownerremove", "projectownerrescue"];
