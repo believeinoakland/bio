@@ -87,3 +87,7 @@ B8 (K3009) applied: done awaited before re-reads; every password field cleared a
 **Tests and checks:** interface-shell 63/63 (new: R21 K3011 streamed answer, with a JSON control and a refusing stream; R11 K3011 reads run on press, with a mutating control). Screen modules on the tranche over this branch: screens-daily and screens-settings together 96/96. `format` 0; `architecture … interface-shell` 0; `coverage` 26 of 26; `ownership` 0.
 
 Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 32, module lines 1118 (src)
+
+## J6 · COMPLETE
+
+B9 (K3011) applied: ndjson answers reach done and cs.call as event lists (answer last; a refusing last event is a refusal); reads (OPS mutating: false) run on press with no weight mark. Tests 63/63; screens-daily + screens-settings on the tranche 96/96; checks 0 failures. Found: frontier (finder's registry act, a read) is not in SESSION_OPS.member, so R12 hides it from members; yours to route. See 'Re-opened by B9'.
