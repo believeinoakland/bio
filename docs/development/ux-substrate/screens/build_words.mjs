@@ -118,11 +118,9 @@ add('handle.free', '{handle} is free in {group}', false, 'mock-screens.js join')
 must(scr, 'mock-screens.js', 'mai-k is free in Lakeshore Tenants');
 add('handle.taken', '{handle} is already taken in {group}. Try another, such as {suggestion}.', false, 'mock-screens.js join');
 must(scr, 'mock-screens.js', 'is already taken in Lakeshore Tenants. Try another, such as');
-add('handle.changeable', 'You can still change it: none of your work is in a published case yet.', false, 'mock-screens.js account');
-must(scr, 'mock-screens.js', 'You can still change it: none of your work is in a published case yet.');
+add('handle.changeable', 'You can still change it: none of your work is in a published case yet.', false, 'DEC-186; kept until handlechange is retired (DEC-197)');
 add('handle.fixed', 'Your handle is fixed: your work is in a published case ({case}).', false, 'DEC-186');
-add('handle.formerly', 'formerly {handle}', false, 'mock-screens.js members');
-must(scr, 'mock-screens.js', 'formerly dev-o');
+add('handle.formerly', 'formerly {handle}', false, 'DEC-186; kept until handlechange is retired (DEC-197)');
 add('handle.characters', 'A handle uses only lower-case letters, digits and hyphens.', false, 'mock-screens.js join');
 must(scr, 'mock-screens.js', 'A handle uses only lower-case letters, digits and hyphens');
 
@@ -222,6 +220,10 @@ add('transcribe.refused', 'The assistant didn\'t read these pages. {reason}', fa
 add('transcribe.failed', 'The pages were sent to the assistant, but no reading came back: {why}. Nothing was written; you can try again.', false, 'DEC-192', 'after the post: the worker silent or the provider ending; {why} from transcribe.why.silent or .ended');
 add('transcribe.why.silent', 'it didn\'t answer in time', false, 'DEC-192', 'AGENT_WORKER_SILENT');
 add('transcribe.why.ended', 'the AI service stopped before it finished', false, 'DEC-192', 'a provider ending');
+add('transcribe.reason.requestfault', 'Civicsmith sent the assistant a request it couldn\'t use. The fault is Civicsmith\'s, not yours: try again, and if it happens again, tell an administrator.', false, 'DEC-193', '{reason} in transcribe.refused for BAD_BODY, BAD_SHA, BAD_PAGES (agent-worker R72)');
+add('transcribe.reason.noaccount', 'No AI account pays for this here. Connect your own in Settings › The assistant, or ask an administrator about the group\'s key.', false, 'DEC-193', '{reason} for NO_ACCOUNT');
+add('transcribe.reason.badaccount', 'The AI account that pays for this here can\'t be used as it is set up. Its owners can check it in its settings.', false, 'DEC-193', '{reason} for BAD_ACCOUNT');
+add('transcribe.reason.needsapikey', 'Reading page pictures needs an Anthropic API key, and the account that pays here is a Claude sign-in. Its owners can add an API key; meanwhile you can type a page\'s words yourself.', false, 'DEC-193', '{reason} for TRANSCRIBE_NEEDS_API_KEY');
 add('transcribe.picture.unprepared', 'This photo can\'t be prepared for the assistant: {why}. Take it again as an ordinary photo, or type its words yourself.', false, 'DEC-191', '{why} from transcribe.picture.why.*');
 add('transcribe.picture.why.progressive', 'it is saved in a form the assistant can\'t open (a progressive JPEG)', false, 'DEC-191');
 add('transcribe.picture.why.toolarge', 'it is too large', false, 'DEC-191');
@@ -237,6 +239,9 @@ add('document.refused.pending', 'The publication copy of a document a member sup
 
 // 4e. A question a project draws on (DEC-188; Bob's ruling that setting aside is each project's own)
 add('question.refused.drawnon', 'This question can\'t be set aside for the whole group, because a project draws on it. Set it aside in your project instead; that leaves it as it is everywhere else.', false, 'DEC-188', 'DRAWN_ON_BY_A_PROJECT; names no project');
+
+// 4f. The Action layer's words for T45 (DEC-194; BOB's B140): written in words-actions.src.py, which writes words-actions.json
+for (const x of JSON.parse(R('words-actions.json'))) add(x.key, x.en, x.protected, 'DEC-194', x.note || undefined);
 
 // 5. The frame: rail, phone tabs, explanation levels
 for (const [k, name] of W.RAIL) { add(`rail.${k}.name`, name, false, 'mock-shell.js RAIL'); if (W.RAIL_HELP[k]) add(`rail.${k}.holds`, W.RAIL_HELP[k], false, 'mock-refs.js RAIL_HELP'); }

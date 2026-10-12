@@ -2894,6 +2894,7 @@ reasoning recorded in: this entry; `screens/mock-screens.js` (the Photos step); 
 owed: (BOB, N779 in T38) the two labels on published photos, read by key; the Photos step's sentence.
 
 ### DEC-186 · answered
+amended: 2026-10-12 by DEC-195 (Bob, S19 point 1: reserved five years), itself replaced the same day by DEC-196 (Bob: a handle is never reused); then replaced in its rule by DEC-197 (Bob, "for the time being"): a handle is fixed at joining and never changed.
 raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (found answering Bob's comment on the handle field, DEC-184: no op changes a handle after joining, while the screens had said it could be; question S18)
 for: bob
 question: Whether a member may change their handle after joining, and until when.
@@ -3024,3 +3025,81 @@ decided: 2026-10-11 · the design session (P17)
 reasoning recorded in: this entry; `screens/build_words.mjs`, `screens/words.json` (1,099 words, 395 protected).
 owed: (BOB, T44) the keys read as named: extraction (`transcribe.refused`, `transcribe.failed`, `transcribe.why.*`), ai-use (`ai.when.month`), notice-producers (`ai.until.*`), the screens' dates (`date.daymonthyear`).
 
+### DEC-193 · answered
+raised: 2026-10-11 · the UX design session with Bob on his primary account (session_014uT5e8EjnRxmEeUDDg2cYa; the development process also runs on his primary account since K2511) (BOB's B139, for T45's N886)
+for: bob-session
+question: The `{reason}` of `transcribe.refused` for agent-worker R72's refusals after the pages are posted.
+why it is Bob's: it is not: word detail beneath DEC-192 (2); decided by the design session (P17) and reported.
+provisional: nothing shown (200, performed false, no sentence).
+alternative: one sentence for every code.
+recommendation: as decided below.
+reversal cost: low; words read by key.
+response: **Decided by the design session, 2026-10-11.** Each fills `transcribe.refused`'s `{reason}` as a sentence of its own: `transcribe.reason.requestfault` for `BAD_BODY`, `BAD_SHA` and `BAD_PAGES` (Civicsmith's own fault, said so; try again, then tell an administrator); `transcribe.reason.noaccount` (`NO_ACCOUNT`: where to connect an account); `transcribe.reason.badaccount` (`BAD_ACCOUNT`: its owners can check it); `transcribe.reason.needsapikey` (`TRANSCRIBE_NEEDS_API_KEY`: an API key is needed, a sign-in can't; type the words meanwhile).
+decided: 2026-10-11 · the design session (P17)
+reasoning recorded in: this entry; `screens/build_words.mjs`, `screens/words.json` (1,103 words, 395 protected).
+owed: (BOB, T45, N886) extraction fills `{reason}` from these keys by the worker's code.
+
+### DEC-194 · answered
+raised: 2026-10-11 · the UX design session with Bob on his primary account (session_014uT5e8EjnRxmEeUDDg2cYa; the development process also runs on his primary account since K2511) (BOB's B140, for T45's actions fold of `BIO_Action_v0_2.md`, K2780, N893)
+for: bob-session
+question: The member words T45 owes for the Action layer (the "Owed to UX" list of `build/plan/current.md` on `tranche/T45`); five wizard scripts; `@communication`'s step in Start and send; whether a pending second approval needs a screen; which new acts open a consequence dialog; the reason fields kept out of writing help.
+why it is Bob's: it is not: words, scripts and screen detail beneath Bob's rulings on the Action layer (the canon `BIO_Action_v0_2.md`, K2780) and his approval of the wizard library (DEC-148); decided by the design session (P17) and reported.
+provisional: BOB's draft translations (kept where they already said what happened, then what to do; re-worded where not), code fallbacks, and S1 §C 14's stage questions.
+alternative: BOB's drafts as written.
+recommendation: as decided below.
+reversal cost: low; words read by key, scripts adopted under wizard-scripts R22.
+response: **Decided by the design session, 2026-10-11.**
+(1) Words: 290 entries in `screens/words-actions.src.py` (read by `build_words.mjs` into `words.json`): canon's own words recorded by key; the matter states, project scopes, second-approval setting, group-rule states, the professional's statement prompt, `reads_as` and bearing names; every listed refusal as `refusal.<CODE>` (`NO_SUCH_RULE` as `NO_SUCH_GROUP_RULE`, K2811; `FINDING_NOT_PUBLISHED`, `SCENARIO_OUT_OF_RANGE` and `NOT_OPEN` re-worded as asked); the L8 keys (signing, case checks, outcomes, docket, advocacy); conformance and consequences (the cure link's form, the success sentences, the harm-addressed labels: Remedied, Mitigated, Compensated, Acknowledged, Can't be undone); the actions keys and every label set; the filings pointers, "For the group" / "As myself", the recognition reminder, the plan's prompts and standing offers ("Document what happened", "Give them a chance to fix it"), "No reply owed", "Stopped pursuing, {date}", the escalation stages as questions (S1 §C 14's, adopted), the scenario comparison; monitoring, following, the queue items' summary and detail, and the door labels. A cure is said to members as "corrected by the office".
+(2) Acts: `ACT_HELP` text for each of the 42 new ops (served names; the four drawn on screens before T45 serves them as `owed:<op> K2780`).
+(3) A pending second approval needs no queue item (BOB's upper doubt 11: nobody assigns anybody). The filing on Start and send shows it: `filings.secondapproval.waiting` ("Waiting for a second member's approval. Any member of this project other than {approver} can give it.") with the act "Give the second approval"; `filings.secondapproval.given` once given.
+(4) `@communication` (upper doubt 12, option a): Start and send's step 4 names no template; it says to start from the group's template for this kind of action if it has one, or write it. The script is no longer withheld for want of a generic template.
+(5) Five scripts, written for the library (required: false; adopted by BOB under wizard-scripts R22): "Comment for the group" (public comment, with "For the group" / "As myself" and positions pointed out), "Demand a correction" (the Tier 2 advisory, the window previewed, own-benefit asks rewritten), "Take an escalation to its next stage" (stages as questions; stop pursuing), "Refer it to an oversight body" (asks, never asserts; no reply owed; confidential where set; outcomes in the body's own terms), "Pick up a plan" (where it stands, the status report, take up an item). None places a template by handle; each says to start from the group's own template where it has one. "Get a record" is unchanged.
+(6) Consequence dialogs (weight 3, protected words): stopping pursuit of an escalation, making an action confidential or not, carrying an outcome into a case, the second approval, a joint signatory.
+(7) Reason fields kept out of writing help: all eight BOB lists (the override's reason, the "it only asks" words, the contradicted-send reason, the stop-pursuing reason, the scenario set-aside reason, the plan pause reason, the scope reasons, the harm-addressed statement), as every reason field already is (DEC-153).
+decided: 2026-10-11 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-actions.src.py`, `screens/words-actions.json`; `screens/build_words.mjs`, `screens/words.json` (1,504 words, 550 protected); `screens/mock-acts.js`; `screens/mock-kit.js`; `screens/mock-screens.js` (Plan, Start and send, Action, Matter); `screens/registry.src.py`; `screens/library.src.py` (22 scripts); `layouts.html`.
+owed: (BOB, T45) each key read by its module; the five scripts adopted under R22 and Start and send's re-pointed step; the owed acts re-pointed once served.
+
+### DEC-195 · answered
+amended: 2026-10-12 by DEC-196 (Bob): replaced whole; a handle is never reused. Nothing of DEC-195 stands, and its owed work is withdrawn.
+raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (question S19, point 1, from BOB's B121 §Z1 on DEC-186)
+for: bob
+question: Whether another member may take a handle a member gave up (S19, point 1).
+why it is Bob's: the meaning of his own ruling (DEC-186): what "formerly" promises members about who a name refers to (P17).
+provisional: 1A, membership as built at T40 (R124: an earlier handle stays taken for every other member for good).
+alternative: 1A, reserved for good; 1B, freed after a waiting period such as 90 days.
+recommendation: 1A.
+reversal cost: low; one clause of membership R124 and one word.
+response: **Bob, 2026-10-12: "S19: No reuse for 5 years or more".** Ruled: (1) a handle a member gives up stays reserved for five years from the day they change it: it is taken for every other member (at joining, at a change and in the handle check, which still says only "taken"), and the member who gave it up may take it back; (2) after five years it is free for any member. The design session reads "or more" as the floor and uses five years. (3) Design's detail beneath it: once a reservation has ended, members see that earlier handle with the year it was given up, "formerly mai-k, until 2026" (`handle.formerly.until`), so two members' histories are never confused; while it is reserved, "formerly mai-k" as before. Point 2 of S19 (what makes a handle fixed: shown in a published case, 2A, or any work carried, 2B) stays open with Bob.
+decided: 2026-10-12 · Bob
+reasoning recorded in: this entry; `screens/question.html` (S19); `screens/mock-screens.js` (Your account's "Your handle"); `screens/mock-acts.js` (`handlechange`); `screens/build_words.mjs`, `screens/words.json` (`handle.formerly.until`); BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB) membership R124's "Earlier handles" clause: an earlier handle stays taken for every other member for five years from its change, then is free (R16, R124 and the handle check alike); R17's `formerly` entries carry the date each was given up, so the screen can show `handle.formerly.until` once the five years have passed.
+
+### DEC-196 · answered
+amended: 2026-10-12 by DEC-197 (Bob): with handles fixed at joining, S19's point 2 is settled too; this entry's "point 2 stays open" no longer holds.
+raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (question S19, after DEC-195)
+for: bob
+question: Whether another member may take a handle a member gave up (S19, point 1), asked again after DEC-195.
+why it is Bob's: the meaning of his own ruling (DEC-186): what "formerly" promises members about who a name refers to (P17).
+provisional: DEC-195 (reserved five years, then free).
+alternative: 1B, freed after a waiting period (DEC-195's five years).
+recommendation: 1A.
+reversal cost: none; membership as built at T40 (R124) already reserves earlier handles for good.
+response: **Bob, 2026-10-12: "For S19: Handles just shouldn't ever be reused. There's too many risks of confusion if they every [ever] are. This is for both the first and second parts of S19."** Ruled: a handle a member gives up is never taken by another member (at joining, at a change, and in the handle check, which answers only "taken"); its holder may take it back. This is S19's 1A, as membership R124 is built; DEC-195 is replaced whole and `handle.formerly.until` withdrawn. Point 2 (when a member's own handle stops being changeable: when a published case shows it, 2A, or when any of their work is carried, 2B) is not a question of reuse, since under this ruling no handle passes to another member either way; it stays open with Bob, re-briefed in that light, and the development process keeps building on 2A.
+decided: 2026-10-12 · Bob
+reasoning recorded in: this entry; `screens/question.html` (S19); `screens/mock-screens.js` (Your account's "Your handle"); `screens/mock-acts.js` (`handlechange`); `screens/build_words.mjs`, `screens/words.json`; BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB) nothing new: N934 (DEC-195's change) is withdrawn; membership R124's "Earlier handles" clause stands as built.
+
+### DEC-197 · answered
+raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (question S19, point 2, after DEC-196)
+for: bob
+question: When a member's own handle stops being changeable (S19, point 2: when a published case shows it, 2A, or when any of their work is carried, 2B).
+why it is Bob's: the meaning of his own ruling (DEC-186) and what Civicsmith must do (a requirement): how a member appears on the group's work (P17).
+provisional: 2A, membership as built at T40 (R124).
+alternative: 2A; 2B; or, as Bob chose, no change at all (S18's option A).
+recommendation: 2A.
+reversal cost: low; `handlechange` is served but no screen draws it.
+response: **Bob, 2026-10-12: "Again, for the time being I think that members' handles should stay stable... Nobody can reuse a handle, and the same member can't just change their handle."** Ruled, for the time being: (1) a member's handle is chosen when they join and is never changed, by the member or anyone; this replaces DEC-186's rule (S18: B) and returns to S18's option A; (2) no handle is ever reused (DEC-196), including the handle of a member who has left; (3) with no change, there is no "formerly" and no moment a handle becomes fixed, so S19 is settled whole. Design's detail: joining's handle field says "Choose it with care: it can't be changed after you join, and no one else can ever take it"; Your account shows the handle without a change act ("Your handle is fixed: it names your work in the group and in published cases, and no one else can ever take it"); Members shows no "formerly"; the handle card says "chosen when you join and never changed". "For the time being": Bob may reopen changing a handle later; S18's brief and DEC-186 are kept for that.
+decided: 2026-10-12 · Bob
+reasoning recorded in: this entry; `screens/question.html` (S19, S18); `screens/page.src.html` (status, decided table); `screens/mock-screens.js` (joining, Members, Your account); `screens/mock-refs.js` (the handle card); `screens/registry.src.py` (Your account's acts: `handlechange` removed); `screens/build_words.mjs`, `screens/words.json` (`act.handlechange.label.account` removed; `handle.changeable`, `handle.formerly` and the `handle.refused.*` and `handle.fixed` keys kept while built code reads them); BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB) membership: retire R124 (`op=handlechange`: refuse every change, or remove the op and its door, op-declarations' and affordances' rows, ACT_HELP's copy; BOB's choice), and R17's `formerly` with it; confirm R16 keeps a departed member's handle taken. Once the op is retired, the design session removes `handle.changeable`, `handle.formerly`, `handle.fixed`, `handle.refused.notmember`, `handle.refused.unchecked`, and `handlechange`'s `ACT_HELP` and `WEIGHT` entries.

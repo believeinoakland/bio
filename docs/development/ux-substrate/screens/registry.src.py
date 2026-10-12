@@ -27,7 +27,7 @@ screen('members', 'Members', 'working', 'The roster: invitations, capabilities, 
 screen('security', 'Security', 'working', 'Administrators only: how hard the group\'s Civicsmith is being tried over a period they choose, by kind and hour against its usual; counts only; told only when risk is high (K1875, K1874, DEC-165).',
   [('securitymap','Show the level for a period'),('securitytooladd','Add a security tool'),('securitytooltest','Test a security tool'),('securitytoolremove','Remove a security tool')], [27])
 screen('account', 'Your account', 'working', 'Handle, password, language, expertise, signing key, theme.',
-  [('expertisedeclare','Declare your expertise'),('handlechange','Change your handle'),('setpassword','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('memberlanguageset','Choose your language'),('owed:infolevelset DEC-162','Choose how much is explained')], [3,16])
+  [('expertisedeclare','Declare your expertise'),('setpassword','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('memberlanguageset','Choose your language'),('owed:infolevelset DEC-162','Choose how much is explained')], [3,16])
 screen('connect', 'The assistant', 'working', 'The member\'s own API key or subscription token, or the group\'s key where it offers one, or none; which account pays for an act; their own account\'s uses and limits; their own use across every payer (K1547, K1755, DEC-188).',
   [('groupkeynoticeseen','Read what the group\'s key means'),('disclosureshown','Read what connecting means'),('owed:subscriptionsignin DEC-156','Open Anthropic\'s sign-in page'),('accountreferenceset','Connect with your own subscription or key'),('accountusesset','Set what your account pays for'),('ailimitset','Set a limit on your account'),('accountreferenceremove','Disconnect')], [4,17])
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
@@ -97,15 +97,15 @@ screen('standard', 'Standard', 'working', 'A requirement the city set itself, he
 # --- deciding and acting (bound sketches: the plan page, start and send)
 screen('plan', 'Action plan', 'working', 'The approved plan page: subjects, options, scenarios, what each option became (K608 (4)).',
   [('plansubjectadd','Add a subject'),('optionadd','Add an option'),('optionpropose','Ask the assistant for options'),('optionadopt','Adopt a suggestion'),('optiondispose','Choose or decline'),
-   ('scenarioset','Lay out a scenario'),('checkpointrecord','Judge a checkpoint'),('optionstartpreview','Start…'),('planclose','Close the plan')], [22])
+   ('scenarioset','Lay out a scenario'),('checkpointrecord','Judge a checkpoint'),('optionstartpreview','Start…'),('planclose','Close the plan'),('owed:itemtakeup K2780','Take an item up yourself')], [22])
 screen('start-send', 'Start and send', 'working', 'The bound start-and-send flow: refusals first, reason in place, approve then record the send (DEC-115).',
-  [('optionstartpreview','See what starting does'),('optionstart','Start the action'),('communicationprepare','Prepare what is sent'),('filingprepare','Prepare the filing'),('filingapprove','Approve this text'),('filingrecordsent','I have sent it')], [7,22])
+  [('optionstartpreview','See what starting does'),('optionstart','Start the action'),('communicationprepare','Prepare what is sent'),('filingprepare','Prepare the filing'),('filingapprove','Approve this text'),('filingrecordsent','I have sent it'),('owed:filingsecondapprove K2780','Give the second approval')], [7,22])
 screen('request', 'Request records', 'working', 'A records request: the office by role, what is wanted, the law, the text, approving and recording the send.',
   [('addresseesuggest','Choose the office'),('actioncreate','Start the request'),('actionlaws','Choose the law it goes under'),('communicationprepare','Prepare the text'),('filingapprove','Approve this text'),('filingrecordsent','I have sent it')], [7])
 screen('action', 'Action', 'working', 'One action: replies, deadlines, pressure, holds.',
-  [('actionmove','Move the action'),('actioncorrespond','Record a reply'),('actionpressure','Mark a reply as pressure'),('reminderset','Remind me'),('actionhold','Record a litigation hold')], [7,22])
+  [('actionmove','Move the action'),('actioncorrespond','Record a reply'),('actionpressure','Mark a reply as pressure'),('reminderset','Remind me'),('actionhold','Record a litigation hold'),('owed:actionscope K2780','Make the action confidential, or not')], [7,22])
 screen('matter', 'Matter', 'working', 'One government act: determination, consequences, escalation, actions.',
-  [('escalationopen','Open an escalation'),('escalationadvance','Advance'),('declinetoescalate','Decline to escalate, with a reason'),('escalationend','End')], [22])
+  [('escalationopen','Open an escalation'),('escalationadvance','Advance'),('declinetoescalate','Decline to escalate, with a reason'),('escalationend','End'),('owed:escalationstoppursuing K2780','Stop pursuing, with a reason')], [22])
 
 # --- publishing
 screen('case-editor', 'Case', 'working', 'Prepare the case: scope, statement, what it leaves out, bias, timeline, people named.',
