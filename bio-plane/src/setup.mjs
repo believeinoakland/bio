@@ -2142,7 +2142,8 @@ export class InstanceSetup {
 
   /** R79, op=infolevelset: `by` (the control plane's stamp, R29) is the member, and nobody sets it for another. Refusals,
    *  each writing nothing: a missing or machine `by` `MACHINE_CANNOT_SET_INFO_LEVEL`; a `level` other than `prompt` or
-   *  `pause` `INFO_LEVEL_UNKNOWN`. Each set is appended with when. */
+   *  `pause`, or an `asked` other than absent, `true` or `false`, `INFO_LEVEL_UNKNOWN` (K2996). Each set is appended with
+   *  when. */
   infoLevelSet({ level = undefined, asked = undefined, by = null } = {}) {
     const who = typeof by === "string" ? by.trim() : "";
     /* DEC-49 REGION is-info-level */
@@ -2152,6 +2153,10 @@ export class InstanceSetup {
     if (!INFO_LEVELS.includes(level))
       return refusal("INFO_LEVEL_UNKNOWN", `${typeof level === "string" && level ? `'${level.slice(0, 40)}' is not`
         : "the request names no level, and one is chosen as"} one of ${INFO_LEVELS.join(" or ")}. Nothing was changed.`);
+    /* K2996: `asked` is absent, `true` or `false`; anything else is no answer to the first-month question. */
+    if (asked !== undefined && asked !== null && asked !== true && asked !== false)
+      return refusal("INFO_LEVEL_UNKNOWN", "whether this set answers the first-month question is said as true or false, "
+        + "or not at all. Nothing was changed.");
     /* END DEC-49 REGION is-info-level */
     const before = this.#infoLevelRow(who);
     const at = this.#iso();
