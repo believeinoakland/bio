@@ -47,3 +47,16 @@
 - `ownership`: 4 files changed by file-safety between tranche/T46 and HEAD; 0 failures.
 
 Size (session_01L9fT5LDwkBexXHHGqAyzH5): test runs 1, module lines 4671
+
+## J1 · COMPLETE
+
+T46-7 applied (R42). The six SCANNER_ABSENT/RENDERER_ABSENT details (scanBatch, safeView, renderBatch, securityToolTest, requestSafeCopy, refreshReputationLists) now name "your group's Civicsmith", hold none of copy/instance/plane/server, and still say what was not done. Rows C-140.2 and C-140.13 unmoved; R8's and R14's codes unchanged. New test `test/m/file-safety/absent.test.mjs` names R42. I read my code and tests whole; the used modules' public parts were read by a helper (record: Working notes).
+
+Tests 55/55 pass; format, architecture, coverage (42/42) and ownership each have 0 failures. No new file outside my paths.
+
+For you:
+1. The plane bundle is now stale (rule 5 (4)).
+2. Deferred flaw in my module: `renderBatch` answers RENDERER_ABSENT when its queue cannot be read, even with a renderer bound. A right answer needs a new code and row (a requirement change), so I deferred it.
+3. odf-reader R47 sits under that module's Private heading, though file-safety uses it as provided.
+
+Details are in my record.
