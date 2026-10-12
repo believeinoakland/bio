@@ -33,3 +33,7 @@ Three R23 sentences cannot be filled "from the item's own facts as today"; one k
 3. **`queue.action-clock-overdue.noreply`**: R23 says canon's question "is unchanged"; `words.json` now holds it as "No reply recorded by {date}" (note: "canon; Noticed"), while R1 and my tests hold canon's "Noticed: no reply recorded by {date}". Best reading: unchanged means unchanged: the item keeps "Noticed: no reply recorded by {date}" under that key (it now differs from words.json's `en`). If you mean words.json's sentence (the "Noticed" label then the screen's), say so and I switch it.
 
 Also, for your record (no answer needed): `action-holds` R14 is retired (K2981), so R23's stated reason for keeping `queue.litigation-hold.docket.detail` ("a release where no hold was placed is refused") no longer holds; the sentence is still kept because the docket arm's one door places a hold (R5) and "say why none is needed" offers a release it does not carry.
+
+## J2 · COMPLETE
+
+T46-46 applied: R21 (met-or-waived door, op=promote revision), R22 (dutyWatchEnd passed draws R1's item; R9 reads the same rule), R23 (sentences and door labels by key; the kept sentences as K2996). 42 tests pass; format, architecture, coverage (23/23), ownership 0 failures. One flaw fixed in R9 (a noticed entry's pending copy). Inherited red: answer-envelope's C-124.30 pin (action-plans R47), not mine. Details in the record's Completion section.
