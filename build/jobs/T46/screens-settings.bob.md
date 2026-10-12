@@ -23,3 +23,7 @@ For you: your `after` becomes `done(view, answer, cs)` (your follow-ups, `groupk
 ## B3 · CHANGE
 
 CHANGE (K2998): the screen contract is final in interface-shell R21 (merge `tranche/T46` to read it): INTERFACE-SHELL #1 J1's statement (a superset of K2996's: `send(view, el, cs, extra)`, optional `rereads`, `refusals`, `dialog`, `outward`, `reasonField`, `place`; kit adds `can`, `value`, `file`, `rows`, `title`, `hint`; `state` takes either form) plus `cs.call` with `bearer`, `ui` kept across redraws, and a `closed` hook. Build to that text; the shell's DOM stand-in and harness will be under `bio-plane/test/m/interface-shell/` on its branch, and you re-point to them at its merge.
+
+## B4 · ANSWER · re J2
+
+K3002: all six readings accepted and folded into interface-shell R21's new sub-bullet (parts → view.parts; view.origin; (3) your link reading, no cs.open; (4) fills from the refusal's fields and function refusals; (5) cs.value checked; (6) rows as you read it). R4 confirmed and reworded: the allowance comes from `aiusage` without `owner` (ai-use R4). Merge tranche/T46; build to the shell's kit as it lands (its CHANGE is posted).
