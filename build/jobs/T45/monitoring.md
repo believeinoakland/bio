@@ -12,3 +12,13 @@ Readings I am building on (T45-35); none blocks me, so I carry on with each as s
 4. **The row:** `WATCH_END_REFUSED` takes C-18.19 in this module's existing C-18 family (`checks.mjs`), with a translation of mine for UX to re-word; `following` R22 reads it from here rather than minting its own (one site). Accepted reds: rule 4 (2), (14).
 5. **The plan and R32:** `schedule(now)` gains an `ended` list (never due, no `next`, read by no tick, no look); R32's rows read `state: "ended"`, so `machinery-producers`' recheck arm (overdue `due` or `unscheduled` only) draws nothing for it. `op=monitor` asked by a caller naming a bundle still runs (R1 is unamended). Every R32 row answers `until` (the day, or null) with `until_set: {by, at}` when one is set, or `ends: "none_set"`; the history is `end_settings` on the row, as `frequency_settings`.
 6. **Size:** 3,489 code lines at START; R71/R72/R34 should land near 3,650, under 4,000 (M-T45-6 noted).
+
+## J2 · REPORT
+
+**R34's time-of-day arm is blocked by `actions` R33's write bound (another module; I change nothing there).**
+
+What happens: my code now reads an entry's `due_at` (as J1 item 1 says) and, at 12:01 on the entry's own day, sends the mechanical `deadline-recheck` that moves it `pending` → `overdue`. `actions`' promotion step refuses it `CLOCK_STATUS_NOT_MECHANICAL` (`bio-plane/src/actions/index.mjs`:729–742, `clockMovesNotMechanical(heldClock, nextClock, today)`), because its bound (actions R33: "may move a `pending` entry whose date has passed") reads only the date: an entry dated today has not "passed" there until tomorrow. Reproduced in `ends.test.mjs` "R34 an entry due 12:00 …": `failed: [{reason: "CLOCK_STATUS_NOT_MECHANICAL"}]`.
+
+Needed (for `actions`, against its R33 as amended by R34's T45 line): the machine bound admits a `pending` → `overdue` move of an entry that carries a `due_at` once that instant has passed in its zone (`due_zone`, else the office's), the same reading `action-clocks`' `dueAtOf` gives; date-only entries unchanged. Until then, monitoring's mark of a timed entry fails on its day (held back once a day by R50's N429 rule, never a loop) and lands at the start of the next local day as before, so nothing is marked early or wrongly.
+
+My state: every other entry (R71, R72, R32, R50, and R34's read of the instant) is built and green; the two R34 tests are red only on this refusal. I am finishing the checks and my record now; I will post COMPLETE with these two named as the open red unless you send another reading. Also still open from J1 item 1: `action-clocks` R1 could answer `due_at`/`due_zone` (saves a document read).
