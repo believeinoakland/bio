@@ -33,3 +33,11 @@ My best reading, which I am building now: `from` takes, besides today's one-line
 - `node checks/ownership.mjs . plan-work tranche/T46`: 0 failures.
 
 Size (session_01QnyQWJJonW3PETrFRksgee): test runs 6, module lines 1415
+
+## J2 · COMPLETE
+
+T46-40 complete on `job/T46/plan-work`: R14 (`statusReportAssist`, op `statusreportassist`, R8's items exactly, no AI refusal, no run-rules edge; `statusReportSave`'s `from` `{assistant: true, as_of?}` kept as `{draft: "assistant", as_of, label}`) and R15 (`matterPromiseDuties` answers `met_at` from `duties.transitionsOf`'s recorded readings; null, with `met_at_why`, when they do not end met).
+
+The interim (B2, K2978): the label is `ASSIST_LABEL` in `src/plan-work/index.mjs`, shaped as `proposalLabel` answers (`by: "class:ai"`, `state` from `lawProposalState`, `machine_work: true`, this module's `says`), one site; at N956 (T47) it becomes `proposalLabel(ASSISTANT, "status_report")`.
+
+Tests 45 pass, 0 fail; users of plan-work green (following 73, action-producers 36, affordances t45 4 and plane 30, action-plans t45 12, actions t45 28, skills action 11, module-order 10); format, architecture, coverage (15 of 15) and ownership 0 failures; `checks/run.mjs` architecture 0 failures. For you: the Uses line could name `duties.transitionsOf` (R15's read, same edge); the plane bundle is stale; `statusreportassist` opens rule 5's named op reds. plan-work uses no unmerged L9 service. Details in my record.
