@@ -2,6 +2,21 @@
 
 **Status** · session_01CRGRQChAdRhfopqhzspuKx · depth 2 · WORKING · handled B2
 
+## Record (AFFORDANCES #30, T45-39)
+
+**Read.** Whole: `build/requirements/affordances.md`; the module's code (`affordances.mjs`, `affordances/{facts,door,words,act-help}.mjs`; `act-help.mjs`'s table is generated text, read at its head and tail); `catalogue.test.mjs` and `backing.test.mjs`; `BIO_Action_v0_2.md`; K2780, K2781, K2787; the plan's entry, rules at the opening and reconciliation R1–R21; `draft-T45-upper.md` "The L11 op pattern". By helpers in this session, each reading its part in full and writing a digest citing file:line (K2032, mechanics §17 (3)): the other 18 test files of this module; the T45 parts of the owners whose acts R51 offers (`actions`, `action-holds`, `action-grammar`; `escalation`, `filings`, `filing-templates`, `action-clocks`; `action-replies`, `plan-work`, `action-plans`, `project-roster`, `case-check`, `consequences`, `conformance`). The sources stay binding.
+
+**Applied.**
+- **N891 (tests only).** Dropped the copies of op-grades' table content its job now pins: RUNGS' closed partition; the `terminal` closed set; the `undetermined` closed set with 78 = 21 + 57; layer 9's NON_ACTS and read rows; the substrate and directed forms; the consequence statements' keys and words; T33's merged-table identity (t33, test removed); the JUSTIFICATION_REFUSALS exclusion lists; the owners' reads "writes nothing" (catalogue, t31, t33, t34). Kept: the totality (R12), each rung's backing (R19), the machine set (R20), R24's decorated shape.
+- **R51.** `ACTS` gains 21 acts on an action: `actionhold`, `actionholdrelease`, `actionpressure`, `holdnoticeprepare`, `holdnoticesent`, `actionreceipt`, `actionscope`, `actionpromise`, `actionreplybearing`, `actionbearingpropose`, `arosefrom`, `escalationopen`, `escalationattach` (join on override), `filingprepare`, `communicationprepare`, `filingapprove` (sentence resolutions and the contradicted-send release as its parameters, reconciliation R1), `filingsent`, `counselpacket`, `clockstate`, `reminderset`, `itemtakeup`. R14 gains `action` (facts.mjs `#actionFacts`, `#escalationFacts`), each sub-fact asked through the read its act's refusal runs. `VOCABULARIES` gains 13 by reference (action-grammar's eight, action-clocks' `BASIS_KINDS`, action-plans' `PLAN_STATES`, plan-work's `MATTER_STATES`, consequences' `ADDRESSED_WORDS`, project-roster's `ProjectRoster.PROJECT_SCOPES`). K2885 confirms the reading (J1, B2).
+- **Inherited reds.** The hold backing re-pointed to `action-holds`' interface; plan rule 4 (11)'s filing-templates/local-facts test names local-facts' four rule ops (green once op-grades grades them); t33's duties/answers/following T45 ops pinned (K2817, K2822, K2874); layer 9's test keyed to T45's maps, with a new test for T45's layer 8–9 ops (K2857's consequences ops among them).
+
+**Deferred, with why.** `clockadopt` (no proposal read: N925); escalation states with `stopped_pursuing`, and the links `arose_from`, `cures` (no owner exports them; K2885); the action's promotion fields (override, partners, press terms, "no reply owed", `follows_action`: no ops); escalation stop/reopen (escalation R31, T46); `escalationattach` at stage 7 (its counterparty conditions have no read). Reported in J2: action-holds' release with no hold, filings' second approval not readable, escalation's ALREADY_ATTACHED across sight, action-replies' author sight.
+
+**Edges added by my code** (all in `modules.json` uses already): `actions`, `action-holds`, `escalation`, `conformance`, `filings`, `action-clocks` (facts.mjs); `action-plans`, `plan-work`, `consequences`, `project-roster` (affordances.mjs, vocabularies). No `case-check` or `action-replies` import.
+
+**Next step if restarted:** merge `tranche/T45` at op-grades' CHANGE; run the module's tests (expected green but plane R17's modes, until T45-45), the four checks; then COMPLETE.
+
 ## J1 · QUESTION
 
 QUESTION (R51; my best reading, which I build on now; it touches op-grades, which merges before me).
