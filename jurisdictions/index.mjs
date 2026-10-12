@@ -48,6 +48,8 @@ export const MEMBER_CAPACITIES = Object.freeze(["elected", "appointed"]);
 /* R31: the one vocabulary of a law's level, for records laws, standard sources and an action's governing
    laws. An office's level (R24) is not a law's level and keeps its own. */
 export const LAW_LEVELS = Object.freeze(["federal", "state", "county", "city"]);
+/* R88 (T47; amends R24, R28): the one vocabulary of an office's level, which validate reads (outside it, LEVEL_UNKNOWN)
+   and a caller offering an office's level imports (setup-page R5). Not a law's level (R31). */
 export const COUNTERPARTY_LEVELS = Object.freeze(["state", "county", "city", "district"]);
 /* R23: `SOURCE_KINDS` stays the six `standards` reads (its R1, R12); the seven, with T35's `standard`, are
    `STANDARD_SOURCE_KINDS`, which validate accepts and `standards` adopts in its own job (K1902 (1)). */
