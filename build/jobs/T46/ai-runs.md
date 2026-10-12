@@ -65,7 +65,7 @@ Size (session_012KrF4pcZDor4ebZmdfWuBk): test runs 8, module lines 3618
 
 - `node --test test/m/ai-runs/*.test.mjs` on the merged tranche: tests 98, pass 98, fail 0.
 - Users' tests: run-rules, run-productions, plane t41–t43, affordances t33 and question-explorer, 0 failures. op-declarations fails only its 6 inherited tests.
-- `format`, `architecture ai-runs`: 0 failures. `coverage ai-runs`: 48 of 48; 0 failures. `ownership`: below, after the commit.
+- `format`, `architecture ai-runs`: 0 failures. `coverage ai-runs`: 48 of 48; 0 failures. `ownership ai-runs tranche/T46`: 9 files changed; 0 failures.
 
 Size (session_012KrF4pcZDor4ebZmdfWuBk): test runs 12, module lines 3618
 
