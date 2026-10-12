@@ -36,3 +36,7 @@ Two readings I am carrying on with; answer only if either is wrong.
 ## J2 · REPORT
 
 affordances (its T46-45, R52): my merge turns two of its tests red, each closed by its own ACTS rows for escalationstoppursuing and escalationreopen: plane.test.mjs 'R19: together the two drives reach every op RUNGS grades reasoned' (actual adds the two beside checkrecord) and 'R1 R20: no T33 op is an act, and MACHINE_REFUSALS holds only ACTS' (the two). control-plane totality (named red N938): the five K2881 ops are no longer unpublished or unranked; stale only T46's nine ops until op-declarations (T46-51) and the door (T46-59).
+
+## J3 · COMPLETE
+
+T46-44 done on job/T46/op-grades (efbffd81a0+): R33 (t46.mjs; escalation acts as ACTS with MACHINE_CANNOT_STOP per K2996), R34 (handlechange's sentences), and K2881's five graded under R32. op-grades 78/78; format, architecture, coverage (34/34), ownership 0 failures; users unchanged but the two affordances reds in my REPORT. Record: build/jobs/T46/op-grades.md.
