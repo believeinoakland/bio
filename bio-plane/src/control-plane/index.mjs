@@ -2014,8 +2014,12 @@ export function makeFetch(hooks = {}) {
        plane's draft door with the body's `text` alone (no told, grant or firsthand, no `checkDraft`), which gates it and
        answers it labelled; nothing is recorded or handed to `filings` here. Only a member's session reaches the op (its
        spec). A conversation that reached the model is counted to the member's day as a draft (ai-use R1). */
+    /* (T46) an object that offers no draft door or member-run dispatch is an instance with no assistant bound (plane's
+       `AGENT_WORKER_UNBOUND`, as R65's): nothing is sent */
+    const unboundRun = (what) => json({ ok: false, reason: "AGENT_WORKER_UNBOUND", store: storeName, tokenClass: cls,
+      detail: `your group's Civicsmith has no assistant bound to it, so ${what} and nothing was sent.` }, 503);
     if (op === TEXT_CHECK) {
-      if (!viaSession || typeof stub.draft !== "function") return storeSilent(op);
+      if (!viaSession || typeof stub.draft !== "function") return unboundRun("the text was not checked");
       const text = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) ? reqBody.text : undefined;
       const ask = { op: TEXT_CHECK, member: sessMember, session: credential.token, text: text ?? null };
       const res = await stub.draft(ask);
@@ -2039,9 +2043,7 @@ export function makeFetch(hooks = {}) {
        Any other caller is stamped by R17's machine form and refused by ai-runs itself. Its answers, withholdings and
        refusals are ai-runs', as given. */
     if (op === "airundispatch") {
-      if (typeof stub.dispatchMemberRun !== "function")
-        return json({ ok: false, reason: "AGENT_WORKER_UNBOUND", store: storeName, tokenClass: cls,
-                      detail: "your group's Civicsmith has no assistant bound to it, so the run was not started and nothing was sent." }, 503);
+      if (typeof stub.dispatchMemberRun !== "function") return unboundRun("the run was not started");
       const who = viaSession ? sessViewer : cls === "ai" && !aiCred?.grant ? aiCred.principal : actor;
       const run = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) && typeof reqBody.run === "string"
         ? reqBody.run : null;
