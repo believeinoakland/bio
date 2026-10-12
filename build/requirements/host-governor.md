@@ -1,6 +1,6 @@
 # host-governor — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (a product module, P17; K67), with later folds reviewed. Last changed T23 (Satisfies wording, N493); every requirement met (last merged T35, K1950).
+**Status** · In force: approved by Bob 2026-09-26 (a product module, P17; K67), with later folds reviewed. Last changed T47 (T47-68: R28 new, `op=governorstate` evaluated at the server's instant, a query `now` ignored; N983, K3027); marked not yet met (T47). Before that T23 (Satisfies wording, N493); every other requirement met (last merged T35, K1950).
 
 ## Public
 
@@ -46,6 +46,7 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 
 **op=governorstate** (a read)
 - **R18** Reached by the `admin` and `probe` classes and by every session (a member's included; no `member` class since T36, admission R5) and by every session. `host=` narrows to one host; absent, all. Answers `{ok: true, hosts}` from R13. A store that does not answer is reported as silence (`storeSilent`), never as an empty `{ok: true}`, which would claim the instance is holding nothing.
+- **R28** (T47; N983; K3027) `op=governorstate` is evaluated at the server's instant, since its answer may gate an act (an operator's or a screen's choice to wait on a host): it takes no instant from the request, and a `now` or `nowMs` in the query or the body is ignored, never read, so a request carrying one answers exactly as the same request without it. Any judgement of time its answer carries is made at this module's own clock (R26's `now`, which tests set through `governorOf`), never at a caller's. (Today the answer is R13's rows as recorded, which judge no instant; R28 holds that, and holds any later field that does.) *(not yet met: T47)*
 
 **op=governorconfig** (a write)
 - **R19** Reached by the `admin` and `probe` classes and, among sessions, by the founder's session alone; an enrolled administrator's and a member's session are refused (the refusal and its wording are the session gate's, `admission` R8, split from `control-plane`, K624). Refuses a missing `host` with `NEED_HOST` and a present `appetite_per_min` that is not a positive number with `BAD_APPETITE`; an absent one clears the host's appetite (R11). A store that does not answer is reported as silence, never `{ok: true}`.
@@ -86,5 +87,6 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 - Obligations on callers, for their own requirements (convention 2): a governed refusal is never counted as a source failure (D-104; `capture`'s `recordSourceOutcome`, C-22.2 in `legacy-checks`); a page's subresources ride the primary fetch's admission rather than taking a token each, take a small jittered stagger (`GOVERNOR_SUBRESOURCE_STAGGER_MS`, default 50–250 ms), stop when `isHeld` becomes true, and report every outcome (`capture`, `index.mjs`'s subresource `fetchOne`); the archive lookup sets web.archive.org's appetite to 24 (`capture`); the queue's `governor-holding-host` item is built by `queue` from R14.
 - `governedFetch` and the subresource `fetchOne` each parse `Retry-After`; one helper here removes the second copy.
 - The host key is the string given; callers pass a URL's `host` (lowercased, port kept). The group-domain verifier passes the claimed domain as stored. Normalising the key here would make that uniform.
+- **T47 (T47-68).** No route of this module reads a caller's instant today: `governorOp` forwards only `host`, and the store route hands `governorState` the body, which reads only `host`. R28 is therefore met by the code as it stands and made a requirement with its test at the interface (a `governorstate` request carrying `now` answers as one without). `governorHolding({now})` and `isHeld(host, now)` (R14) are in-plane reads whose callers pass their own clock (`machinery-producers`); no request reaches them, so N983 does not touch them.
 - `bio-plane/test/governor.test.mjs` holds today's tests; `modules.json` places this module's at `bio-plane/test/m/host-governor/`. The chosen constants are recorded as chosen in `docs/development/MEASUREMENTS.md` (reference).
 

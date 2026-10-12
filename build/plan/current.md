@@ -58,15 +58,15 @@ It is the only module marked `legacy` in `modules.json`.
 
 ### L3
 - **T47-68 · host-governor** · (N983, K3027) `governorstate` is evaluated at the server's instant (the module's clock; a query `now` ignored), stated in its requirement and tested at the interface · text BOB's.
-- **T47-11 · capture** · (N979) `heldCaptures` (R77) rows carry the capture's grade and digest; (N969) a read listing set-aside documents, so `heldrestore` is reachable beyond one visit (doubt 6); (N971) Provides states `INFORMATION_GRAMMAR` · SCREENS-INTAKE #1 J1, J4 · text BOB's.
+- **T47-11 · capture** · (N979) `heldCaptures` (R77) rows carry the capture's grade and digest; (N969) a read listing set-aside documents, so `heldrestore` is reachable beyond one visit (doubt 6); (N971) Provides states `INFORMATION_GRAMMAR`; (N983, K3033) `sourcereach` (capture's route) evaluated at the server's instant, a clock seam added · SCREENS-INTAKE #1 J1, J4 · text BOB's.
 - **T47-12 · file-safety** · (N941) R14: an unreadable queue with a renderer bound answers its own code, a new C-140 row (K231); (N971) Provides states `onOwnServers` · text BOB's · doubt 3 (size).
-- **T47-13 · sources** · (N947) answers the instants at which a source's disclosures and consents changed; (N983, K3027) `sourcereach` evaluated at the server's instant (a query `now` ignored) · text BOB's.
+- **T47-13 · sources** · (N947) answers the instants at which a source's disclosures and consents changed; (N983, K3027, K3033) `sourcepublishable` evaluated at the server's instant (a query `now`/`at` ignored) · text BOB's.
 
 **L3 merge order:** host-governor, capture, file-safety, sources.
 
 ### L5
 - **T47-14 · local-facts** · (N946) `RULE_SECTION_UNKNOWN` minted at one site (C-126.7's `where` moved) · K231.
-- **T47-69 · progressions** · (N983, K3027) `proposals` (`proposalsFeed`) evaluated at the server's instant (R16's configured clock; a query `now` ignored) · text BOB's.
+- **T47-69 · progressions** · (N983, K3027, K3033) `proposals` (`proposalsFeed`) and `captureprogressions` evaluated at the server's instant (R16's configured clock; a query `now` ignored) · text BOB's.
 
 **L5 merge order:** local-facts, progressions.
 
@@ -93,7 +93,7 @@ It is the only module marked `legacy` in `modules.json`.
 - **T47-28 · docket** · (N952) R12 lists `entry` (public-read R20's link); (N992) reads DEC-199's re-worded `refusal.DOCKET_OUTCOME_UNREADABLE` by key · text BOB's; DEC-199.
 - **T47-72 · ratification** · (N988) `release` and `retire` read `handle`, `acknowledgment`, `mitigation` and `reason` from the body, else the query (the stamps stay the door's), tested both ways · text BOB's.
 - **T47-29 · public-read** · (N953) R3 keys a cleaned copy by T47-25's marker; (N954) tests deepened: R11, R10, R14, DEC-149, K899, R28 "wherever served", `relay.test.mjs`' line numbers replaced by behaviour · text BOB's.
-- **T47-30 · case-import** · (N951) R17's citation of the absent docket R23 corrected · text BOB's.
+- **T47-30 · case-import** · (N951) R17's citation of the absent docket R23 corrected; (N947, K3033) registers `flagHistory` with accepted-work R9 (its registered flags' history, R8), so case-carriage R19's interval clause holds in the composed plane · text BOB's.
 - **T47-31 · case-inputs** (new) · (N908; K2982) built by copy (split map §2, §6), R1–R16 · `case-authoring-split-2.md` · first to merge in L8.
 - **T47-32 · case-authoring** · (N908) deletes the copies, re-points to `case-inputs` (§3), creates it in its factory, drops `schema.mjs` and its purge declaration, retires R19–R21, R28, R39, R59, R62, R70, R71, R73, adds R74, re-words R9, R14, R27, R29, R34, R38, R65; (N992) R73's no-window and not-laid-out open-request rows read DEC-199's sentences by key; (N683) ratification R44's `publish_at` offer carried into R34's step 5 · split map §3, §4; N683 BOB's · after T47-31 · doubt 4.
 - **T47-33 · review** · (N908) R18, R20 read `statementAcknowledgements` from `case-inputs`; `invariants.test.mjs` re-pointed · split map §5 · after T47-31.
