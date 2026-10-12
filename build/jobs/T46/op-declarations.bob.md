@@ -1,6 +1,6 @@
 # BOB to op-declarations (T46)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -23,3 +23,7 @@ CHANGE (K2996): R51 no longer names `textcheck` in `ACT_HELP_ABSENT` (its text i
 ## B3 · ANSWER · re J1
 
 Both readings accepted (K2999). (1) Name none of the three in `ACT_HELP_ABSENT`: affordances now holds `infolevelset` and `escalationstoppursuing` under their own op names (its R53, a CHANGE to it), and `escalationreopen` already, so R34's partition holds once both merge; your partition tests stay red only until affordances' merge (name that in your COMPLETE). (2) `airundispatch` `{classes: ["admin", "member"], mutating: true}`, no `machineClasses`, NEEDS null, `by` and `viewer` stamped, in ai-runs' family: CONTROL-PLANE #31 reads it the same (its R77). J2: `modules.json` now gives you `uses` `escalation`; merge `tranche/T46`.
+
+## B4 · CHANGE
+
+CHANGE (K3005; re-opens your job): affordances (T46-45) and your branch are both merged into tranche/T46. There, your three ACT_HELP-partition tests are red (t36 'R34 (affordances R48)', t42 'R47, R34', t45 'R34, R49'): affordances' R53 regenerated ACT_HELP from mock-acts.js @ 3f40899950 and now explains 39 member ops your ACT_HELP_ABSENT still names: dutyfromresponse, dutiesarising, standingendset, followend, watchlink, watchanswer, actionreceipt, actionscope, actionpromise, openitemswith, declaredstakeset, procedureguides, advocacycheck, holdnoticesent, pressurerecord, actionreplybearing, actionbearingpropose, arosefrom, scenariosetaside, scenariorestore, planpause, planresume, matteroutcomeset, itemtakeup, filingsecondapprove, jointsignatory, curelink, successrecord, outcomecarry, publishcheck, casecheck, projectscopeset, projectapprovalset, ruledraft, ruleconfirm, rulewithdraw, ruleoffer, infractiondraft, bearingdraft (read the full list from the test). Merge tranche/T46, name none of them in ACT_HELP_ABSENT (R34's partition holds both ways), re-pin what pins them, run your tests and affordances', and record completion again.

@@ -45,7 +45,7 @@ import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
 /* R51 (T45): the owners of the acts an action offers, each asked through the read its acts' refusals run. */
 import { actionsOf } from "../actions/index.mjs";
 import { actionHoldsOf } from "../action-holds/index.mjs";
-import { escalationOf } from "../escalation/index.mjs";
+import { escalationOf, STOPPED as ESCALATION_STOPPED, ACCOUNTABILITY_PURPOSES } from "../escalation/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
 import { actionClocksOf, CLOSED_ACTION_STATES, REMINDERS_PER_ACTION_MAX } from "../action-clocks/index.mjs";
@@ -181,17 +181,23 @@ class AffordanceFacts {
                             TIER3_COUNSEL_PACKET)
        drafts {unapproved, approved_unsent}
                             filings' `filingsFor`: a draft of the group's voice not yet approved (ALREADY_APPROVED,
-                            NOT_THE_GROUPS_ACT), and one approved and not yet sent (NOT_APPROVED, ALREADY_SENT)
-       clock {entries, dated, reminders_room}
+                            NOT_THE_GROUPS_ACT), and one approved, not yet sent and (R52; filings R50) answered
+                            `second_needed: false` (NOT_APPROVED, ALREADY_SENT, SECOND_APPROVAL_NEEDED)
+       clock {entries, dated, reminders_room, proposals}
                             the action's clock entries, those dated (REMINDER_REFUSED arm `entry`; plan-work's NO_SUCH_ITEM for
-                            a clock), and whether its standing reminders are under action-clocks' bound (arm `bound`)
-       escalation {openable, attachable}
+                            a clock), whether its standing reminders are under action-clocks' bound (arm `bound`), and (R52)
+                            the keys of the standing proposals `clockProposalsFor` answers with a date (NO_SUCH_CLOCK_PROPOSAL,
+                            CLOCK_PROPOSAL_UNDETERMINED): a proposal's key names a rule and its proposer, never a bundle (R16)
+       escalation {openable, attachable, attach_purposes, stoppable, reopenable}
                             escalation's `#pursuable` asked through its parts: a determination this action rests on, read
                             through conformance (live, not void, noncompliant), whose project the author has joined
-                            (`projectAuthority`) and with no escalation open or suspended (ALREADY_OPEN); and an
-                            escalation of such a determination, not ended, at a stage that takes an action (2 or 5; stage 7's
-                            counterparty conditions are not asked, so it is not offered there), the action a breach action
-                            resting on it and attached to none the viewer sees (ALREADY_ATTACHED)
+                            (`projectAuthority`) and with no escalation open, suspended or stopped (ALREADY_OPEN); an escalation of
+                            such a determination, not ended, at a stage that takes an action (2, 5 or 7), the action a breach
+                            action resting on it and attached to none (ALREADY_ATTACHED), at stage 7 (R52) only with a
+                            purpose `attachConditions` answers not refused for the action's addressee (COUNTERPARTY_NOT_*),
+                            those purposes being `attach_purposes`; and (R52; escalation R31) an escalation of a determination
+                            it rests on standing `open` or `suspended` (stop; NOT_OPEN) or `stopped_pursuing` (reopen;
+                            NOT_STOPPED), each read from its state as the viewer sees it
      Never ids (R16). Never writes (R22). */
   #actionFacts(id, viewer, author) {
     const ask = (f) => { try { return f(); } catch { return null; } };
@@ -217,13 +223,20 @@ class AffordanceFacts {
       const r = this.filings().filingsFor({ action: id, viewer });
       if (!r || r.ok !== true || r.drafts_truncated) return null;
       const ours = r.drafts.filter((d) => d && d.voice !== "self");
+      /* R52 (filings R50): a draft still waiting for a second approval offers no send; only a stated `false` sends */
       return { unapproved: ours.filter((d) => !d.approval).length,
-               approved_unsent: ours.filter((d) => d.approval && !d.sending).length };
+               approved_unsent: ours.filter((d) => d.approval && !d.sending && d.second_needed === false).length };
     });
     const clock = Array.isArray(a.clock) ? a.clock : [];
     const room = ask(() => { const r = this.actionClocks().remindersFor({ action: id, viewer });
       return r && r.ok !== false && Array.isArray(r.reminders) && !r.truncated
         ? r.reminders.filter((x) => x.state !== "answered").length < REMINDERS_PER_ACTION_MAX : null; });
+    /* R52 (action-clocks R20, R13): the standing proposals the viewer may see, each by the key `clockadopt` adopts it by;
+       an undated one is refused CLOCK_PROPOSAL_UNDETERMINED, so it is not offered */
+    const proposals = ask(() => { const r = this.actionClocks().clockProposalsFor({ action: id, viewer });
+      return r && r.ok === true && Array.isArray(r.proposals)
+        ? r.proposals.filter((p) => p && typeof p.key === "string" && typeof p.date === "string" && p.date).map((p) => p.key)
+        : null; });
     return { closed: CLOSED_ACTION_STATES.includes(a.current_state),
              request_for_comment: a.kind === "request_for_comment",
              entries: { all: corr.length, sent: corr.filter((e) => e && e.direction === "sent").length,
@@ -234,37 +247,60 @@ class AffordanceFacts {
              drafts,
              clock: { entries: clock.length,
                       dated: clock.filter((e) => e && /^\d{4}-\d{2}-\d{2}$/.test(String(e.date ?? ""))).length,
-                      reminders_room: room },
-             escalation: ask(() => this.#escalationFacts(a, viewer, author)) ?? { openable: null, attachable: null } };
+                      reminders_room: room, proposals },
+             escalation: ask(() => this.#escalationFacts(a, viewer, author))
+               ?? { openable: null, attachable: null, attach_purposes: null, stoppable: null, reopenable: null } };
   }
 
-  /* R51: the escalation half of the action's facts, each condition one of `escalationOpen`'s or `escalationAttach`'s
-     refusals asked through the read it runs. */
+  /* R51, R52: the escalation half of the action's facts, each condition one of `escalationOpen`'s, `escalationAttach`'s,
+     `escalationStopPursuing`'s or `escalationReopen`'s refusals asked through the read it runs. A determination this
+     action rests on that the viewer cannot read may hold an escalation the action is attached to, which no read here may
+     name or count (escalation R34), so attachment is then unknown (null) and not offered. */
   #escalationFacts(a, viewer, author) {
     const legs = (Array.isArray(a.legs) ? a.legs : []).filter((l) => l && l.kind === "rests_on" && typeof l.target === "string");
     const who = typeof author === "string" && author.trim() ? author.trim() : null;
     const m = this.membership(), esc = this.escalation(), conf = this.conformance();
-    let openable = false, attachable = false, attachedAnywhere = false;
-    const attach = [];
-    for (const leg of legs) {
+    let openable = false, attachedAnywhere = false, unseen = false, stoppable = false, reopenable = false, early = false;
+    const purposes = new Set();
+    for (const leg of new Set(legs.map((l) => l.target))) {
       let d = null;
-      try { d = conf.determinationRead({ id: leg.target, viewer }); } catch { d = null; }
-      if (!d || d.ok === false || d.live !== true || (d.void && typeof d.void === "object")) continue;
+      try { d = conf.determinationRead({ id: leg, viewer }); } catch { d = null; }
+      if (!d || d.ok === false) { unseen = true; continue; }
+      const items = esc.escalationsFor({ determination: leg, viewer });
+      if (!items || items.ok === false) return null;
+      /* R52 (escalation R31): stop what stands open or suspended, reopen what stopped */
+      if (items.items.some((e) => e.state === "open" || e.state === "suspended")) stoppable = true;
+      if (items.items.some((e) => e.state === ESCALATION_STOPPED)) reopenable = true;
+      for (const e of items.items) {
+        const r = esc.escalationRead({ id: e.id, viewer });
+        if (r && r.ok !== false && (r.actions ?? []).some((x) => x && x.action === a.id)) attachedAnywhere = true;
+      }
+      if (d.live !== true || (d.void && typeof d.void === "object")) continue;
       const outcomes = Array.isArray(d.outcomes) ? d.outcomes : [];
       if (!outcomes.some((o) => o && o.outcome === "noncompliant")) continue;
-      const items = esc.escalationsFor({ determination: leg.target, viewer });
-      if (!items || items.ok === false) return null;
-      const live = items.items.filter((e) => e.state === "open" || e.state === "suspended");
+      /* escalation R1, R31: one escalation of a determination stands at a time, a stopped one among them (ALREADY_OPEN) */
+      const live = items.items.filter((e) => e.state === "open" || e.state === "suspended" || e.state === ESCALATION_STOPPED);
       if (!live.length && who !== null && m.projectAuthority(d.project, who, "joined", "escalationOpen") === null) openable = true;
       for (const e of items.items) {
         const r = esc.escalationRead({ id: e.id, viewer });
-        if (!r || r.ok === false) continue;
-        if ((r.actions ?? []).some((x) => x && x.action === a.id)) attachedAnywhere = true;
-        if (r.state !== "ended" && (r.stage === 2 || r.stage === 5)) attach.push(e.id);
+        if (!r || r.ok === false || r.state === "ended") continue;
+        if (r.stage === 2 || r.stage === 5) early = true;
+        /* R52 (escalation R34): at stage 7, the purposes R9 would admit for this action's addressee; one refused is not
+           offered, one undetermined is (R9 lands it), and testimony and enforcing legislation ask nothing */
+        if (r.stage === 7) {
+          const c = esc.attachConditions({ id: e.id, action: a.id, viewer });
+          if (!c || c.ok !== true || !c.purposes) continue;
+          for (const p of ACCOUNTABILITY_PURPOSES) if (c.purposes[p] && c.purposes[p].state !== "refused") purposes.add(p);
+        }
       }
     }
-    if (a.breach === true && attach.length && !attachedAnywhere) attachable = true;
-    return { openable: who === null ? null : openable, attachable };
+    const breach = a.breach === true && !attachedAnywhere;
+    const attach_purposes = breach && purposes.size ? ACCOUNTABILITY_PURPOSES.filter((p) => purposes.has(p)) : null;
+    return { openable: who === null ? null : openable,
+             attachable: unseen ? null : breach && (early || attach_purposes !== null),
+             attach_purposes: unseen ? null : attach_purposes,
+             stoppable: who === null ? null : stoppable,
+             reopenable: who === null ? null : reopenable };
   }
 
   /* R13, R14 (D54; K2408; J1): an administrator (the founder included) neither invited nor joined to a HIDDEN project

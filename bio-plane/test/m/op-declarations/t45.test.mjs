@@ -25,6 +25,8 @@ import { consequencesOps } from "../../../src/consequences/index.mjs";
 import { caseCheckOps } from "../../../src/case-check/index.mjs";
 import { projectRosterOps } from "../../../src/project-roster/index.mjs";
 import { localFactsOps } from "../../../src/local-facts/index.mjs";
+import { caseAccountOps } from "../../../src/case-account/index.mjs";
+import { T46_SHARES } from "../../../src/op-declarations/t46.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, OP_STAMPS, OP_FAMILIES, OP_KINDS, OP_ALIASES, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS,
         UNATTENDED_BY_DECISION, ACT_GATE, ACT_HELP_ABSENT, PLAN_RUN_SCOPE } = O;
@@ -109,13 +111,15 @@ const R49 = {
   /* instance-setup R77 */
   declaredstakeset: ["instance-setup", "admin", ["by", "viewer"]],
 };
-/* each owner's map, and the ops no owner's map serves yet with the job that builds their arm (R6 holds at L11's close) */
+/* each owner's map, and the ops no owner's map serves yet with the job that builds their arm (R6 holds at L11's close).
+   T46 (N935): local-facts' map serves `grouprules` (its R12) and case-account's map, `caseAccountOps`, serves R13's two
+   (its R15), so neither is named for the plane any longer. */
 const MAPS = { following: followingOps, answers: answersOps, duties: dutiesOps, "reading-guides": readingGuidesOps,
   actions: actionsOps, "action-clocks": actionClocksOps, "action-holds": actionHoldsOps, "action-replies": actionRepliesOps,
   "action-plans": actionPlansOps, "plan-work": planWorkOps, filings: filingsOps, conformance: conformanceOps,
-  consequences: consequencesOps, "case-check": caseCheckOps, "project-roster": projectRosterOps, "local-facts": localFactsOps };
-const SERVED_ELSEWHERE = { grouprules: "plane (T45-47)", advocacycheck: "plane (T45-47)", advocacychecks: "plane (T45-47)",
-                           infractiondraft: "plane (T45-47)", bearingdraft: "plane (T45-47)",
+  consequences: consequencesOps, "case-check": caseCheckOps, "project-roster": projectRosterOps, "local-facts": localFactsOps,
+  "case-account": caseAccountOps };
+const SERVED_ELSEWHERE = { infractiondraft: "plane (T45-47)", bearingdraft: "plane (T45-47)",
                            declaredstakeset: "instance-setup (T45-44)" };
 
 /* An owner's map over a service that records each method it is called with and its arguments. */
@@ -194,7 +198,8 @@ test("R49, R4: each T45 stamp reaches its owner where the owner reads it, throug
     }
     assert.equal(await reaches(map, op, { query: { nosuchstamp: SENT } }), false, `${op}: any key reaches`);
   }
-  assert.equal(driven, 61, `${driven} stamps driven`);
+  /* T46 (N935): 64, with grouprules' viewer and case-account's by and viewer, driven through their own maps now */
+  assert.equal(driven, 64, `${driven} stamps driven`);
   /* local-facts' acts take by from the body: a query by does not reach it (the door overwrites the body's) */
   assert.equal(await reaches(localFactsOps, "ruledraft", { query: { by: SENT } }), false);
   /* a query-stamped actor is not taken from the body */
@@ -203,7 +208,7 @@ test("R49, R4: each T45 stamp reaches its owner where the owner reads it, throug
     assert.equal((await drive(map, op, { body: { [k]: SENT }, query: { [k]: "member:real" } })).includes(SENT), false, op);
 });
 
-test("R49, R6: each T45 owner's map is served whole by the tables — every op it serves to a caller has a spec (negative control: an op added to the map without a spec is seen) — and every R49 op is served by its owner's map or named for the L11 job that builds its arm (grouprules and case-account's two by the plane, declaredstakeset by instance-setup)", () => {
+test("R49, R6: each T45 owner's map is served whole by the tables — every op it serves to a caller has a spec (negative control: an op added to the map without a spec is seen) — and every R49 op is served by its owner's map or named for the L11 job that builds its arm (the two drafts by the plane, declaredstakeset by instance-setup; since T46 grouprules by local-facts' map and case-account's two by caseAccountOps, N935)", () => {
   for (const [fam, map] of Object.entries(MAPS))
     for (const op of keysOf(map)) assert.ok(Object.hasOwn(OPS, op), `${fam}: ${op} has no spec`);
   for (const [op, [fam]] of Object.entries(R49)) {
@@ -214,6 +219,8 @@ test("R49, R6: each T45 owner's map is served whole by the tables — every op i
     assert.ok(keysOf(MAPS[fam]).includes(op), `${op} is not served by ${fam}`);
   }
   /* the families T45 adds hold exactly the ops their maps serve beyond earlier declarations */
+  for (const op of ["grouprules", "advocacycheck", "advocacychecks"]) assert.ok(!Object.hasOwn(SERVED_ELSEWHERE, op), op);
+  assert.deepEqual(keysOf(caseAccountOps).sort(), ["advocacycheck", "advocacychecks"]);
   for (const f of T45.T45_FAMILIES) for (const op of Object.keys(f.ops))
     assert.ok(Object.hasOwn(SERVED_ELSEWHERE, op) || keysOf(MAPS[f.owner]).includes(op), `${f.owner}: ${op}`);
   /* negative control */
@@ -249,7 +256,7 @@ test("R49, R2, R4 (K2820, K2824; agent-worker R78): a planning run's agent crede
   assert.ok("machineClasses" in OPS.ruleoffer);
 });
 
-test("R49, R5, R7: t45.mjs is frozen data — each share names an owner whose family exists, each family an owner no other names, every kind one of OP_KINDS — and the new kinds owners and publishgate are frozen; the drafts infractiondraft and bearingdraft are as writinghelp (K2881), and textcheck, which no handler serves in T45, has no spec (R6; N917) (negative control: a kind outside OP_KINDS is seen)", () => {
+test("R49, R5, R7, R51: t45.mjs is frozen data — each share names an owner whose family exists, each family an owner no other names, every kind one of OP_KINDS — and the new kinds owners and publishgate are frozen; the drafts infractiondraft and bearingdraft are as writinghelp (K2881); textcheck, which no handler served in T45 (N917), is declared since T46 in agent-worker's family as the two drafts are (R51; t46.test.mjs) (negative control: a kind outside OP_KINDS is seen)", () => {
   assert.ok(Object.isFrozen(T45.T45_SHARES) && Object.isFrozen(T45.T45_FAMILIES));
   const BASE = Object.keys(OP_FAMILIES).filter((o) => !T45.T45_FAMILIES.some((f) => f.owner === o));
   for (const [owner, s] of Object.entries(T45.T45_SHARES)) {
@@ -263,7 +270,8 @@ test("R49, R5, R7: t45.mjs is frozen data — each share names an owner whose fa
   for (const f of T45.T45_FAMILIES) {
     assert.ok(Object.isFrozen(f) && Object.isFrozen(f.ops) && Object.isFrozen(f.actor), f.owner);
     assert.ok(!BASE.includes(f.owner), `${f.owner} has a family already`);
-    assert.deepEqual(plain(OP_FAMILIES[f.owner].kinds), plain(f.ops), f.owner);
+    /* T46 (R50, R51): a family T45 gave an owner also holds that owner's T46 share (`t46.mjs`) */
+    assert.deepEqual(plain(OP_FAMILIES[f.owner].kinds), plain({ ...f.ops, ...(T46_SHARES[f.owner]?.ops ?? {}) }), f.owner);
   }
   for (const k of ["owners", "publishgate"]) assert.ok(Object.isFrozen(OP_KINDS[k]), k);
   for (const op of ["infractiondraft", "bearingdraft"]) {
@@ -271,7 +279,10 @@ test("R49, R5, R7: t45.mjs is frozen data — each share names an owner whose fa
     assert.equal(NEEDS[op], NEEDS.writinghelp, op);
     assert.deepEqual(stamps(op), stamps("writinghelp"), op);
   }
-  assert.ok(!Object.hasOwn(OPS, "textcheck") && !SESSION_OPS.member.has("textcheck") && !Object.hasOwn(OP_STAMPS, "textcheck"));
+  assert.ok(!Object.values(T45.T45_FAMILIES).some((f) => Object.hasOwn(f.ops, "textcheck")), "textcheck is a T45 op");
+  assert.deepEqual(plain(OPS.textcheck), plain(OPS.infractiondraft));
+  assert.deepEqual(stamps("textcheck"), stamps("infractiondraft"));
+  assert.deepEqual(familyOf("textcheck"), ["agent-worker"]);
   assert.doesNotMatch(JSON.stringify([T45.T45_SHARES, T45.T45_FAMILIES]), /oakland|alameda|california|city of|county of/i);
   /* negative control */
   assert.ok(!Object.hasOwn(OP_KINDS, "nosuchkind"));
