@@ -35,7 +35,10 @@ test("R2 (op-declarations R6): no spec is without a handler or a store route —
           /* R41 (T35): `agentpack` is answered from the untargeted affordances handler (its hook) */
           || (op === "agentpack" && log.some((l) => l.kind === "gated" && l.op === "affordances"))
           /* R65 (T37): `subscriptionsignin` is this module's own route to the member's runner (no binding here) */
-          || (op === "subscriptionsignin" && r.json?.reason === "AGENT_WORKER_UNBOUND")) {
+          || (op === "subscriptionsignin" && r.json?.reason === "AGENT_WORKER_UNBOUND")
+          /* R57, R77 (T46): `textcheck` and `airundispatch` are this module's own routes to the object's draft door and
+             member-run dispatch (plane's RPC methods; none on the harness's objects) */
+          || (["textcheck", "airundispatch"].includes(op) && r.json?.reason === "AGENT_WORKER_UNBOUND")) {
         reached = true; break;
       }
     }

@@ -19,7 +19,9 @@ const KEYS = ["viewer", "by", "bodyBy", "author", "proposer", "member", "session
 const DOOR = { source: "src-test", country: null };
 /* (T41; R70, R72) `handlechange` and `captureupload` too: membership and capture compare the bare member id */
 const MEMBER_ID_BY = ["handlechange", "captureupload", "invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
-                      "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset"];
+                      "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset",
+                      /* (T46; R54) the administrator's read of the two doors, asked of `isAdministrator` as the acts are */
+                      "joindoors"];
 const URL0 = new URL("http://do/");
 
 /* The maps R53 names, and the T33 arms of the existing modules the findings route (K1544, K1550, K1570, K1601, K1604,
@@ -92,6 +94,9 @@ test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller 
     /* R65 (T37): `subscriptionsignin` reaches the member's runner, not a store route; its `by` (sent as `member`) is
        driven in `t37-door.test.mjs` */
     if (op === "subscriptionsignin") continue;
+    /* R57, R77 (T46): `textcheck` and `airundispatch` reach the object's draft door and member-run dispatch, not a store
+       route; their `by` (as `member`, and as `by` and `viewer`) is driven in `t46-door.test.mjs` */
+    if (op === "textcheck" || op === "airundispatch") continue;
     for (const [params, body] of [[c.params, {}], [{ ...c.params, ...forgedQ }, { by: FORGED, note: "kept" }]]) {
       w.env.calls.length = 0;
       const r = await call(w.env, { op, token: c.token, params, method: OPS[op]?.mutating ? "POST" : "GET",
