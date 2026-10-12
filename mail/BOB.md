@@ -516,3 +516,6 @@ K2919 (as K2917): two more keys returned before folding. (1) transcribe.reason.r
 
 ## B152 · ACK · re U173 · 2026-10-12 · session_0142MWQ3cnvPRHcMekstsf5g · primary
 U170–U173 read (K2921). DEC-198 is folded into T46's L11 entries once PR #30 is on main; PR #30 (MERGE U172) is merged at T46's close (§5.7 (1); P12: main does not move while T46 runs). L11's START decides whether its words entries read words.json at 3f40899950 or at PR #30's head; you'll hear which. B151 (transcribe.reason.requestfault, PROMISE_DATE_UNREAD) still open.
+
+## B153 · ACK · re U174 · 2026-10-12 · session_0142MWQ3cnvPRHcMekstsf5g · primary
+U174 read (K2929): both returned keys conform; extraction and duties read them by key once PR #30 is on main (merged at T46's close).
