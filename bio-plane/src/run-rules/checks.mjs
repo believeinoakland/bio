@@ -9,8 +9,20 @@
  * DEC-149 (T34-86; K1784): a translation a member reads names the group's Civicsmith as "your group's Civicsmith", never
  * "this instance", "the copy" or "the plane" (C-33.29, C-109.1; C-109.9 until its retirement, R20). */
 
-/* C-22's run rows: C-22.5, .7, .8, .11–.16, .18, T33's .19 (R18), .20 (R19) and .21 (R17), and T41's .22 (R19's test
- * bar), .23 (R26) and .24 (R23). The family's history and its reason for being one row per code are in
+/* R31 (T46; DEC-194; N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module's
+ * rows answer, each `en` verbatim, read by key as `membership`'s `HANDLE_WORDS` and `extraction`'s `TRANSCRIBE_WORDS` are;
+ * a row's `translation` is the word itself, never a copy. `refusal.AI_RUN_ORIGIN_UNKNOWN` is not held: its sentence speaks
+ * only of a planning run, while `originAllowed` mints the code in every mode, so C-22.25 keeps its own sentence until the
+ * design stream's covers both (R31). Frozen. */
+export const RUN_RULES_WORDS = Object.freeze({
+  'refusal.AI_RUN_REEXAM_NEEDS_RESPONSE': 'Nothing was started: a fresh look at the plan after a reply needs to know which '
+    + 'reply. Record the reply first, then ask from it.',
+  'refusal.AI_RUN_REEXAM_OPEN': 'Nothing was started: a fresh look at this plan after this reply is already under way. '
+    + 'Wait for it, then read what it proposes.',
+});
+
+/* C-22's run rows: C-22.5, .7, .8, .11–.16, .18, T33's .19 (R18), .20 (R19) and .21 (R17), T41's .22 (R19's test
+ * bar), .23 (R26) and .24 (R23), and T46's .29 (R30) and .30 (R32, minted by `ai-runs`). The family's history and its reason for being one row per code are in
  * observation-log's `AI_RUN_CHECKS` header (`../observation-log/checks.mjs`), which holds the log's rows. C-22.7 (`checkSkillVersion`'s, R8) is
  * held here beside its one minting site, `./skill-version.mjs` (R8, R11; K333, N289); `skills` names it by key through
  * this module (its R25). */
@@ -308,6 +320,29 @@ export const AI_RUN_OWN_CHECKS = {
       + 'and openMany, for each step of a member\'s batch she cannot see',
     translation: 'Nothing was started, because the step this investigation names is not one the record holds here. '
       + 'Something you cannot see is answered exactly as something that does not exist.',
+  },
+  /* R30 (T46; K231; K2816 (2)): AN AI PART NOT ADMITTED by the one deploy gate, `partAdmittedOn` (R29): its test bar is
+     not held on Civicsmith's set and the instance is not a test instance, or the chain before it is not verified. Minted
+     only by `partRefusal(part)`, the gate's refusal form, and relayed unchanged by the doors that had no refusal of their
+     own (`plane` R40: the ask and the drafts). C-22.29, the next free number. `AI_RUN_MODE_NOT_DEPLOYED` (C-109.1) and
+     `TRANSCRIBE_NOT_DEPLOYED` (C-51.7) keep their codes, numbers and sites. DEC-83's form: what happened, then what
+     still works. */
+  AI_PART_NOT_DEPLOYED: {
+    check: 'C-22.29',
+    where: 'src/run-rules/test-bar.mjs partRefusal, called from the doors partAdmittedOn does not admit (plane R40\'s ask '
+      + 'and drafts)',
+    translation: 'This part of the assistant has not yet passed Civicsmith\'s tests, so it is not switched on in your '
+      + 'group\'s Civicsmith. Everything else works without it.',
+  },
+  /* R32 (T46; K2947; `ai-runs` R18): A MEMBER'S OWN SIGN-IN RUN IN A MODE IT DOES NOT SERVE. On her own Claude sign-in
+     a member's run is dispatched for her only in `check` or `plan` (Bob's K2892); any other mode is refused by `ai-runs`
+     at its dispatch and read here by key. C-22.30, the next free number after R30's. DEC-83's form. Its translation is
+     interim, until `words.json` holds `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`. */
+  MEMBER_RUN_MODE_NOT_ADMITTED: {
+    check: 'C-22.30',
+    where: 'src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch',
+    translation: 'Nothing was started, because on your own Claude sign-in the assistant only checks and plans for you; '
+      + 'this kind of work needs your group\'s Civicsmith to run it.',
   },
 };
 
@@ -658,18 +693,18 @@ export const AI_RUN_PLAN_CHECKS = {
   },
   /* R28 (T45; K2820, K2822; ai-runs R77): A RE-EXAMINATION RUN, the planning run started inside the member's act that
      records a response (v0.2 rule 16). Minted by ai-runs at its open after R46 and the origin (`originAllowed`, R23 as
-     R28 amends it), read here by key. DEC-83's form: the sentence, then the remedy. */
+     R28 amends it), read here by key. DEC-83's form: the sentence, then the remedy. R31 (T46; DEC-194; N913): each
+     translation is `words.json`'s `refusal.<CODE>`, read by key (RUN_RULES_WORDS above); code, number and `where`
+     unmoved. */
   AI_RUN_REEXAM_NEEDS_RESPONSE: {
     check: 'C-109.13',
     where: 'src/ai-runs/index.mjs open > is-airun-open-reexam, reached from op=airunopen',
-    translation: 'Nothing was run, because a fresh look at the plan after a reply was asked for without saying which '
-      + 'reply it is about. Record the reply first; the fresh look starts from that reply.',
+    translation: RUN_RULES_WORDS['refusal.AI_RUN_REEXAM_NEEDS_RESPONSE'],
   },
   AI_RUN_REEXAM_OPEN: {
     check: 'C-109.14',
     where: 'src/ai-runs/index.mjs open > is-airun-open-reexam, reached from op=airunopen',
-    translation: 'Nothing was run, because a fresh look at this plan after this reply is already under way. Wait for it '
-      + 'to finish and read what it proposes.',
+    translation: RUN_RULES_WORDS['refusal.AI_RUN_REEXAM_OPEN'],
   },
 };
 
