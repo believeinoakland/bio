@@ -12,7 +12,7 @@ NS = ' Nothing was sent.'
 w('refusal.NO_SIGNIN_WAITING', 'No sign-in was waiting for that code: it timed out, or was started on another page. Open Anthropic\'s sign-in page again and paste the new code it gives you.', False, 'subscriptionsignin, step code')
 w('refusal.SIGNIN_REFUSED', 'Anthropic\'s page didn\'t accept that code ({detail}). Open the sign-in page again and paste the new code it gives you.', False, '{detail} the runner\'s own words')
 w('refusal.SIGNIN_UNAVAILABLE', 'Anthropic\'s sign-in couldn\'t be reached just now. Try again in a few minutes, or connect with an API key instead.', False)
-w('refusal.SIGNIN_ADDRESS_UNEXPECTED', 'The sign-in answered with an address that isn\'t Anthropic\'s, so Civicsmith didn\'t open it.' + NS + ' Tell whoever installed your group\'s Civicsmith.', True, 'a safety stop: says what was not opened')
+w('refusal.SIGNIN_ADDRESS_UNEXPECTED', 'The sign-in answered with an address that isn\'t Anthropic\'s, so your group\'s Civicsmith didn\'t open it.' + NS + ' Tell whoever installed your group\'s Civicsmith.', True, 'a safety stop: says what was not opened')
 w('ai.refused.signinabsent', 'Signing in with Claude is not installed in your group\'s Civicsmith yet. An API key works instead; whoever installed your group\'s Civicsmith can add it.', False, 'the translation control-plane R65 relays with agent-worker\'s runner-not-configured answer')
 w('refusal.AGENT_WORKER_UNBOUND', 'The assistant isn\'t installed in your group\'s Civicsmith yet, so signing in can\'t finish here. Everything else works without it; whoever installed your group\'s Civicsmith can add it.', False)
 w('refusal.DISCLOSURE_DUE', 'Read what connecting means first: your questions, and what is read to answer them, go to Anthropic under your own account. Then open the sign-in page again.', True, 'says who sees what; the start of a sign-in before the disclosure is shown')
@@ -110,6 +110,10 @@ w('queue.scan-found.summary', 'A scan found something in {document}', False, 'R1
 w('queue.scan-found.detail', '{engine} found {names} in this file on {date}: {meanings}. The file is held: its safe view stays open, and the original opens again only when two members each release the hold with a reason, or when a second, different scanner finds it clean. The machine never can.', True)
 w('queue.security-tool-off.summary', 'Switched off: {tool}', False, 'R15; administrators only')
 w('queue.security-tool-off.detail', '{tool} was switched off because it didn\'t confirm the private mode its handling requires. It stays off until an administrator tests it again.', False)
+
+# --- B154 (DEC-199): escalation's rows (N962) and the new reads' help lives in mock-acts.js
+w('refusal.ESCALATION_BY_ACT_ONLY', 'An escalation changes only through its own acts: open, attach, evaluate, advance, decline, suspend, resume, stop pursuing, reopen and end, so its record never disagrees with itself.' + ' Nothing was written.', False, 'C-116.41; DEC-199')
+w('refusal.ALREADY_ATTACHED', 'This action is already attached to an escalation. An action is attached to one escalation, at one stage.' + ' Nothing was written.', False, 'C-116.14; DEC-199; names no escalation the viewer may not see')
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 keys = [x['key'] for x in W]
