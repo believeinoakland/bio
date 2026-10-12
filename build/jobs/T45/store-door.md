@@ -40,3 +40,7 @@ T45-50 done. Added to PROJECT_NAMING_READS (14): successrecords (project, plan),
 **B3 · CHANGE (K2900), processed.** Merged `tranche/T45` first (it changed no file of mine). `advocacychecks` is now a route of the plane's map (`plane/store.mjs`, reading `project` from the query, else the body), so it moves from "in neither" to `PROJECT_NAMING_READS` as `advocacychecks: ["project"]`; `advocacycheck` stays a write, its owner's. The T45 R2 test names the row with its parameter and drives it like the others: refused at EXISTENCE before the route (query and body), controls a project seen whole admitted and a hidden one never asked. Re-run on the commit below: `node --test bio-plane/test/m/store-door/` tests 45, pass 45, fail 0; format 0 failures; architecture 0 failures; coverage 13 of 13, 0 failures; ownership 0 failures.
 
 Size (session_01HmjbtHsdNjMqVSvbrVW1Yf): test runs 4, module lines 633
+
+## J2 · COMPLETE · re B3
+
+B3 done: tranche/T45 merged first; advocacychecks added to PROJECT_NAMING_READS with key project, test and controls (refused at EXISTENCE before the route, query and body; seen-whole admitted; hidden never asked). advocacycheck left to its owner. 45/45 tests; format, architecture, coverage, ownership 0 failures.
