@@ -100,7 +100,7 @@ function render(cs, view) {
       const short = ["capture", "connection"].filter((a) => barOf[a] && !(s[a] && s[a].state === "graded"
         && rank[s[a].grade] >= rank[barOf[a]]));
       phrase = cs.w("screen.question.strength.against", { capture: barOf.capture || "", connection: barOf.connection || "" })
-        + " · " + (short.length ? cs.w("screen.question.strength.short", { axes: short.map((a) => cs.w("mark.scale." + a + ".name")).join(", ") })
+        + " · " + (short.length ? cs.w("screen.question.strength.short") + " " + short.map((a) => cs.w("mark.scale." + a + ".name")).join(", ")
                                 : cs.w("screen.question.strength.meets"));
     }
     const weak = ["capture", "connection"].map((a) => s[a] && s[a].weakest).filter(Boolean)[0];

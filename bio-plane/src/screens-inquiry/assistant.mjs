@@ -68,7 +68,7 @@ function render(cs, view) {
   const groupOn = ok("groupkey") && d.groupkey.value.held && d.groupkey.value.on !== false;
   const account = proj && proj.state === "ok" && proj.value.serving === "project" ? "ai.account.project.inline"
     : ownHeld ? "ai.account.own.inline" : groupOn ? "ai.account.group.inline" : "";
-  out.push(`<p>${account ? cs.w("screen.assistant.serves", { account: cs.w(account) }) : cs.w("screen.assistant.serves.unknown")}</p>`);
+  out.push(`<p>${account ? cs.w("screen.assistant.serves") + " " + cs.w(account) : cs.w("screen.assistant.serves.unknown")}</p>`);
   if (ok("usage") && d.usage.value.today && d.usage.value.today.used !== undefined && d.usage.value.today.limit !== undefined)
     out.push(`<p class="cs-meta">${cs.w("screen.assistant.use", { used: String(d.usage.value.today.used), limit: String(d.usage.value.today.limit) })}</p>`);
 

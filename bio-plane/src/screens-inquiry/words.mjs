@@ -61,7 +61,7 @@ const QUESTION = [
   row("screen.question.strength.weakest", "Weakest: {weakest}."),
   row("screen.question.strength.raise", "What would raise it: {raise}"),
   row("screen.question.strength.against", "Against the bar {capture}/{connection}"),
-  row("screen.question.strength.short", "Short of the bar on {axes}"),
+  row("screen.question.strength.short", "Short of the bar on:"),
   row("screen.question.strength.meets", "Meets the bar"),
   row("screen.question.strength.nobar", "No bar is set, so it is shown on its own."),
   row("screen.question.waits.head", "What it waits on"),
@@ -152,7 +152,7 @@ const DOCUMENT = [
 /** The assistant dock's sentences (R4, R6, R7). */
 const ASSISTANT = [
   row("screen.assistant.says", "It finds, reads and checks; it never concludes, signs or sends."),
-  row("screen.assistant.serves", "The assistant serves you here on {account}."),
+  row("screen.assistant.serves", "The assistant serves you here on:"),
   row("screen.assistant.serves.unknown", "Which account serves you here could not be read."),
   row("screen.assistant.use", "{used} of your {limit} today"),
   row("screen.assistant.run.head", "The assistant's run"),

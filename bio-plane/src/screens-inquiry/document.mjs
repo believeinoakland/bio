@@ -98,7 +98,7 @@ function render(cs, view) {
     + (letter ? cs.grade("capture", letter) : cs.mark("gap", "unrated"))
     + cs.act("gradenote", { label: "act.gradenote.label.document", data: { capture: sha }, tone: "quiet" }) + "</span></div>"
     + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="cs-id" tabindex="0" data-means="screen.document.fingerprint.means">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
-    + `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${encodeURIComponent(id)}">${cs.w("screen.document.open")}</a></div></div>`);
+    + `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${cs.esc(id)}">${cs.w("screen.document.open")}</a></div></div>`);
   if (ui.gradenote) {
     const n = ui.gradenote.note;
     out.push(cs.sec("screen.document.gradenote.head", n
@@ -137,11 +137,12 @@ function render(cs, view) {
     const un = reading.value.unread_pages;
     out.push(cs.sec("screen.document.unread.head",
       `<p>${cs.w("document.unread.pages", { pages: pagesText(un) })}</p>`
-      + (view.reachable ? cs.act("pagetranscribe", { label: "act.pagetranscribe.label.document", data: { sha } }) + own("pagetranscribe") : "")
+      + (view.reachable ? cs.act("pagetranscribe", { label: "act.pagetranscribe.label.document", data: { sha } }) : "")
       + cs.choice("document-unread-page", "screen.document.unread.page", un.map((p) => ({ value: String(p), text: String(p) })), { value: String(un[0]) })
       + cs.field("document-unread-words", "screen.document.unread.words", { area: true, rec: true })
       + cs.act("transcribe", { label: "act.transcribe.label.document", data: { document: id } })));
   }
+  out.push(own("transcribe") + own("pagetranscribe"));
   if (reading.state === "ok" && reading.value.untested && reading.value.text_provenance && reading.value.text_provenance.transcribed)
     out.push(`<p class="cs-label" data-label="untested">${cs.w("ai.label.untested")}</p>`);
 
