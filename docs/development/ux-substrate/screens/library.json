@@ -601,15 +601,21 @@
       },
       {
        "screen": "connect",
-       "act": "owed:subscriptionsignin DEC-156",
+       "act": "subscriptionsignin",
        "what": "To connect your Claude subscription, open Anthropic's sign-in page, sign in and approve. Or use an API key, or skip.",
        "why": "You sign in on Anthropic's own page; Civicsmith never sees your Claude password. Skipping is a real choice: every journey stays open."
       },
       {
        "screen": "connect",
+       "act": "subscriptionsignin",
+       "what": "Copy the code Anthropic's page shows you, paste it under \"The code from Anthropic's page\", and connect with it.",
+       "why": "The code is used once and never kept. Your subscription then serves only your own questions, and you can disconnect at any time."
+      },
+      {
+       "screen": "connect",
        "act": "accountreferenceset",
-       "what": "Copy the code Anthropic's page shows you, paste it here, and connect.",
-       "why": "Your subscription then serves only your own questions. You can disconnect at any time."
+       "what": "Using an API key instead? Paste it under \"Using an API key instead\" and connect with it.",
+       "why": "Anthropic bills you for each use of your own key; it serves only your questions."
       },
       {
        "screen": "connect",
@@ -625,9 +631,9 @@
       },
       {
        "screen": "connect",
-       "act": "accountreferenceremove",
-       "what": "You can disconnect at any time, here.",
-       "why": "Disconnecting removes the key or token from your group's Civicsmith."
+       "act": "subscriptiondisconnect",
+       "what": "You can disconnect at any time, here: your subscription, or your API key.",
+       "why": "Disconnecting removes the sign-in or the key from your group's Civicsmith."
       }
      ]
     }
@@ -1119,7 +1125,7 @@
       },
       {
        "screen": "matter",
-       "act": "owed:escalationstoppursuing K2780",
+       "act": "escalationstoppursuing",
        "what": "If your group is stopping, stop pursuing it, with your reason.",
        "why": "Stopping is never recorded as ended or as a success, and it can be reopened where it stopped."
       },
@@ -1181,7 +1187,7 @@
       },
       {
        "screen": "action",
-       "act": "owed:actionscope K2780",
+       "act": "actionscope",
        "what": "If the referral shouldn't be published, make the action confidential, with your reason.",
        "why": "A confidential action is seen inside the group and never published."
       },
@@ -1225,7 +1231,7 @@
       },
       {
        "screen": "plan",
-       "act": "owed:itemtakeup K2780",
+       "act": "itemtakeup",
        "what": "Take up an item you can do. Nobody assigns anybody: you choose.",
        "why": "Taking it up routes its dates and reminders to you."
       },
@@ -1299,6 +1305,46 @@
       }
      ]
     }
+   ]
+  }
+ ],
+ "doors": [
+  {
+   "door": "problem",
+   "scripts": [
+    "WIZ-86b7f4007e3b0e3c",
+    "WIZ-cb0ad18a17a04233",
+    "WIZ-33b5887790b7561b"
+   ]
+  },
+  {
+   "door": "person",
+   "scripts": [
+    "WIZ-86b7f4007e3b0e3c",
+    "WIZ-df0b5c4d0ffcdde7",
+    "WIZ-9f2b79390d6940a0"
+   ]
+  },
+  {
+   "door": "money",
+   "scripts": [
+    "WIZ-df0b5c4d0ffcdde7",
+    "WIZ-cb0ad18a17a04233"
+   ]
+  },
+  {
+   "door": "read",
+   "scripts": [
+    "WIZ-33b5887790b7561b",
+    "WIZ-a15d174f7a2c1dc5",
+    "WIZ-4cdbd26939d4cc6d"
+   ]
+  },
+  {
+   "door": "tip",
+   "scripts": [
+    "WIZ-33b5887790b7561b",
+    "WIZ-9f2b79390d6940a0"
    ]
   }
  ]

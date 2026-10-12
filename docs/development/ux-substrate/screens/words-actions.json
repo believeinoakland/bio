@@ -241,7 +241,7 @@
  },
  {
   "key": "refusal.PROJECT_GUARD_UNCHECKED",
-  "en": "Civicsmith couldn't check whether this project's own rules allow that, so nothing was changed. Try again in a moment.",
+  "en": "Your group's Civicsmith couldn't check whether this project's own rules allow that, so nothing was changed. Try again in a moment.",
   "protected": true,
   "note": ""
  },
@@ -271,7 +271,7 @@
  },
  {
   "key": "refusal.PROMISE_DATE_UNREAD",
-  "en": "A promise's date is read from the body's own words, and these don't state one whole calendar date (such as \"by spring\", or a month without its day). The promise is kept as written, with no due date.",
+  "en": "A promise's date is read from the body's own words, and these don't state one whole calendar date (such as \"by spring\", or a month without its day), so no duty was proposed. Nothing was written. Quote it in a note, or ask the body for a date and propose the duty from its answer.",
   "protected": false,
   "note": ""
  },
@@ -348,12 +348,6 @@
   "note": ""
  },
  {
-  "key": "refusal.DRAFT_NEEDS_GRANT",
-  "en": "The assistant drafts this only from the record you can read, and only with your permission for this draft, which wasn't given. Nothing was read, and nothing was sent to the assistant. Ask again from the screen you are on.",
-  "protected": false,
-  "note": ""
- },
- {
   "key": "refusal.AI_RUN_ORIGIN_UNKNOWN",
   "en": "Nothing was started: a planning run starts from a member's request or from a fresh look after a reply, and this said neither.",
   "protected": false,
@@ -391,7 +385,7 @@
  },
  {
   "key": "signing.openrequest.unread",
-  "en": "Civicsmith couldn't read whether any request for comment on this case is still open, so none is listed here.",
+  "en": "Your group's Civicsmith couldn't read whether any request for comment on this case is still open, so none is listed here.",
   "protected": true,
   "note": ""
  },
@@ -433,7 +427,7 @@
  },
  {
   "key": "case.check.undetermined",
-  "en": "Undetermined, because Civicsmith couldn't read everything the check rests on. It is not treated as held.",
+  "en": "Undetermined, because your group's Civicsmith couldn't read everything the check rests on. It is not treated as held.",
   "protected": true,
   "note": ""
  },
@@ -751,7 +745,7 @@
  },
  {
   "key": "refusal.SUCCESS_CAUSE_UNCHECKABLE",
-  "en": "Civicsmith couldn't check whether the cause rests only on your group's own acts, so the success wasn't recorded. Try again in a moment, or leave the cause out.",
+  "en": "Your group's Civicsmith couldn't check whether the cause rests only on your group's own acts, so the success wasn't recorded. Try again in a moment, or leave the cause out.",
   "protected": true,
   "note": ""
  },

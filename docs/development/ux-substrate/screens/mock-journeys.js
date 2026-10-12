@@ -16,7 +16,7 @@ const J = [
    { s: 'home', act: 'startfrom', say: 'Mai opens the group\'s home and picks "A problem I live with".' },
    { s: 'notes', act: 'notewrite', say: 'She writes the problem in her own words, in a note only she can see.' },
    { s: 'capture', act: 'testify', say: 'She records what she has seen on Seminary Avenue: where, when, and a photo.' },
-   { s: 'answers', act: 'ruleanswer', only: 'ai', say: 'She asks the assistant what standard the city set itself. It quotes Administrative Instruction 4.12 from what the group holds, as legal information.' },
+   { s: 'answers', act: 'ask', only: 'ai', say: 'She asks the assistant what standard the city set itself. It quotes Administrative Instruction 4.12 from what the group holds, as legal information.' },
    { s: 'finder', act: 'search', only: 'noai', say: 'She searches what the group holds for "pothole" and finds the city\'s own instruction, section by section.' },
    { s: 'find-in', act: 'findin', v: 'doc', say: 'On the instruction she uses "Find in this" for dates, deadlines and requirements. It lists "within seven calendar days" at passage 3, found by search.' },
    { s: 'standard', act: 'standarddeclare', say: 'She holds the seven-day rule as a standard the city must meet.' },
@@ -65,7 +65,7 @@ const J = [
    { s: 'question', act: null, say: 'Her declared, confirmed expertise shows beside her check, so readers know who looked.' } ] },
  { n: 17, t: 'Working with the assistant', who: 'A member with their own Claude account', steps: [
    { s: 'question', act: null, dock: true, only: 'ai', say: 'Mai opens the assistant panel beside her question. It runs on her own account, only for her.' },
-   { s: 'answers', act: 'ruleanswer', only: 'ai', say: 'She asks in plain words. It answers only from what the group holds, says where it looked, and labels its answer as machine work.' },
+   { s: 'answers', act: 'ask', only: 'ai', say: 'She asks in plain words. It answers only from what the group holds, says where it looked, and labels its answer as machine work.' },
    { s: 'project', act: 'promote', only: 'ai', say: 'With suggestions on, it suggests a question. She accepts it or not; it never concludes, signs or sends.' },
    { s: 'assistant', act: 'airunclose', only: 'ai', say: 'Her daily limit shows in the panel; she stops a run at any time.' },
    { s: 'answers', act: 'search', only: 'noai', say: 'Without the assistant, "Ask" is "Find and count": a search, and counts that show their method.' },
