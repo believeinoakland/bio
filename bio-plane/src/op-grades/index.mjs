@@ -861,9 +861,34 @@ export const MACHINE_REFUSALS = {
   versionhide:        "MACHINE_CANNOT_MOVE_VERSION",
   /* N345: contradiction's member acts refuse an empty or machine author first (its R30, C-93.10). */
   contradictionresolve: "MACHINE_CANNOT_ACT_ON_CANDIDATE",
+  /* R8, R32 (T45; K2885, K2887): the acts `affordances` R51 makes ACTS rows on an action target, each refused a machine
+     by its owner's own code (action-holds, actions, action-replies, escalation, filings, action-clocks, plan-work through
+     action-plans' row). `filingprepare`, `communicationprepare`, `holdnoticeprepare` and `actionbearingpropose` admit a
+     machine and take no row. Each left NON_ACTS with this change; no rung moves. */
+  actionhold:         "MACHINE_CANNOT_SET_HOLD",
+  actionholdrelease:  "MACHINE_CANNOT_SET_HOLD",
+  actionpressure:     "MACHINE_CANNOT_MARK_PRESSURE",
+  holdnoticesent:     "MACHINE_CANNOT_SEND",
+  actionreceipt:      "MACHINE_CANNOT_CORRESPOND",
+  actionscope:        "MACHINE_CANNOT_SET_SCOPE",
+  actionpromise:      "MACHINE_CANNOT_RECORD_PROMISE",
+  actionreplybearing: "MACHINE_CANNOT_RECORD_BEARING",
+  arosefrom:          "MACHINE_CANNOT_LINK",
+  escalationopen:     "MACHINE_CANNOT_OPEN",
+  escalationattach:   "MACHINE_CANNOT_ATTACH",
+  counselpacket:      "MACHINE_CANNOT_NAME_COUNSEL",
+  filingapprove:      "MACHINE_CANNOT_APPROVE",
+  filingsent:         "MACHINE_CANNOT_FILE",
+  clockstate:         "MACHINE_CANNOT_STATE_CLOCK",
+  reminderset:        "MACHINE_CANNOT_SET_REMINDER",
+  itemtakeup:         "MACHINE_CANNOT_PLAN",
 };
 
-/* Every op in NEEDS that is NOT an object-directed act, with the reason — so
+/* (T45; R8, R32; K2885, K2887) The 21 acts `affordances` R51 makes ACTS rows on an action target are named here no
+ * longer — the hold acts, the escalation and filing acts, the communication, the reminder and T45's own action acts —
+ * since an op is an act or a non-act, never both (`affordances` R1, R12); their rungs and absences are unchanged.
+ *
+ * Every op in NEEDS that is NOT an object-directed act, with the reason — so
  * the totality check can tell "deliberately not an affordance" from "someone
  * added an op and forgot the publication", which is the drift this op exists
  * to close. Grouped by the reason, keyed by op. */
@@ -1344,14 +1369,8 @@ export const NON_ACTS = {
   consequencerecord: "determination-directed: a member records one consequence part against one standard's noncompliant outcome, keyed by (determination, standard); writes a CONS- bundle",
   consequencerevise: "consequence-directed: a member revises a consequence part with its reason, keyed by part id; writes a successor CONS- bundle, the earlier one kept",
   addressedrecord: "consequence-directed: a member records a part addressed or not addressed, with a reason, keyed by part id; writes a `consequence_addressed` row",
-  filingprepare: "action-directed: a draft filing pre-filled from the record, keyed by action id; writes a `filing_drafts` row labelled as its preparer's",
-  filingapprove: "filing-directed: a member approves a draft's text as theirs, keyed by filing id; writes a `filing_approvals` row",
-  filingsent: "filing-directed: a member records that an approved filing was sent, keyed by filing id; writes a `filing_sendings` row and one correspondence entry on the action",
-  counselpacket: "action-directed: a member names counsel and assembles a counsel packet, keyed by action id; writes a new `counsel_packets` version, never published",
   counselpacketexport: "packet-directed: hands a member one packet version's bytes and logs the export, keyed by (packet id, version)",
   theorypropose: "action-directed: a member or a machine proposes a candidate theory and remedy with its why, keyed by action (and packet); writes a `theory_proposals` row",
-  escalationopen: "determination-directed: a member opens an escalation of a live noncompliant determination, keyed by determination id; writes an ESC- bundle",
-  escalationattach: "escalation-directed: a member attaches a breach action to the current stage, keyed by (escalation, action); appends to the escalation's log",
   escalationevaluate: "escalation-directed: a member reads a counterparty's response with a reason, keyed by escalation id; appends to its log",
   escalationadvance: "escalation-directed: a member advances an escalation along an edge with a reason, keyed by escalation id; appends to its log",
   escalationdecline: "escalation-directed: a member declines a proposed stage for now with a reason, keyed by escalation id; appends to its log",
@@ -1366,16 +1385,12 @@ export const NON_ACTS = {
      a pressure mark is keyed by one correspondence entry; creating an action acts on no existing bundle (`testify`'s
      reason). Their reads (`action`, `actions`) carry no `NEEDS` row and are not named here (`affordances` R12). `templatesave` (filings
      R32, T21) starts a draft in the template library from an approved filing draft. */
-  communicationprepare: "action-directed: a machine or a member prepares a draft message, briefing or statement, keyed by action id; writes a draft row labelled as its preparer's, never sent until a member approves it",
   templatesave: "draft-directed: a member starts a template draft from an approved filing draft, keyed by the draft; writes the template library's rows and moves no bundle",
   actioncreate: "creation: a member creates an action from its document, the same write as its promotion; acts on no existing bundle",
-  actionpressure: "entry-directed: a member marks one received correspondence entry as pressure, keyed by (action, entry ordinal); appends a mark and never rewrites the entry",
   /* K899 (7), K902 (T20): a litigation hold is stated on one `legal` pressure mark, `actionpressure`'s key; it is
      reached where the mark is shown (and from the hold reminder, queue-producers R19), never beside a bundle. */
-  actionhold: "entry-directed: keyed by (action, entry ordinal); appends a hold statement and never rewrites the entry or its mark",
   /* R8 (DEC-113; actions R56–R58): the release is the hold's own act, keyed as the hold is; its preview and the
      "is this project held?" answer are reads, gated as the act and stamped `viewer`, so each carries a `NEEDS` row. */
-  actionholdrelease: "entry-directed: keyed by (action, entry ordinal); appends a release and never rewrites the entry, its mark or an earlier statement",
   actionholdpreview: "read: what releasing one entry's hold would restart — the projects it alone covers that the viewer may see, and whether any is out of view — keyed by (action, entry ordinal); writes nothing",
   projectholds: "read: for each of 1 to 50 projects, whether a hold in place covers it, with when and by whom it was first stated; names no action, entry or reason, and writes nothing",
   /* K727 (T18): action-plans' twelve acts. A plan is a `PLN-` record object whose options, scenarios and checkpoints are
@@ -1400,7 +1415,6 @@ export const NON_ACTS = {
   optionstartpreview: "read: what starting a chosen option would do at this instant, keyed by (plan, option) — the action it would compose, the reminders it would set, and whether it would start or the refusal it would answer; allocates no id, sets no reminder and writes nothing",
   /* K727 (T18): action-clocks' reminders carry a `NEEDS` row with no capability (the control plane's `null`, as
      `queuesnooze`'s), so each is named: `queuesnooze`'s reason, the subject a member's own attention. */
-  reminderset: "personal state, keyed (member, action, clock entry): a member's own request to be reminded of a dated entry, kept in action-clocks' table, never in the action's document",
   reminderanswer: "personal state, keyed (member, action, clock entry): a member answers their own due reminder, with a further one or none",
   /* R6 (K921, T21): the template library's ops and the local facts'. A template and its versions are rows of
      `filing-templates`' own, and a fact is a path into a jurisdiction profile: neither is a bundle in a state that

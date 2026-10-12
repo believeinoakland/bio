@@ -11,14 +11,14 @@
  * `undetermined`. The assertion resolution per sentence is `filings`' approval (reconciliation R1), graded there.
  *
  * `./index.mjs` spreads the three tables into `RUNGS`, `RUNG_ABSENT` and `NON_ACTS`. This file imports nothing, so the
- * spread closes no cycle. None of these ops is in `MACHINE_REFUSALS`, which holds only `affordances`' `ACTS` (R5,
- * `affordances` R20): each owner refuses a machine by its own code. By R18 `phone` follows the rung. No consequence
+ * spread closes no cycle. (K2885, K2887) The ten acts `affordances` R51 makes ACTS rows on an action target have no
+ * NON_ACTS row here, and eight of them are in `MACHINE_REFUSALS` (`./index.mjs`) with their owners' codes; every other op
+ * here is a non-act, refused a machine by its owner's own code where it is. By R18 `phone` follows the rung. No consequence
  * statement is added (R32: which acts take one is the UX stream's to propose); `publishcheck`, graded as `publish`
  * (case-check's Uses; K2839), carries the Irreversible weight by R21's rule. */
 
 const R = (s) => `read: ${s}; writes nothing`;
 const PLAN = (s) => `plan-directed: ${s}; kept in the plan's history, never published; moves no bundle`;
-const ACTION = (s) => `action-directed: ${s}; appended beside the action's document, never rewriting it; moves no bundle`;
 const SUCCESS = (s) => `success-directed: ${s}; never a consequence part; moves no bundle`;
 const RULE = (s) => `rule-directed: ${s}; the group's own rule beside the profiles, never a profile's; moves no bundle`;
 const WATCH = (s) => `watch-directed: ${s}; moves no bundle`;
@@ -94,14 +94,9 @@ export const T45_NON_ACTS = {
   dutiesarising: R("the adopted duties arising in named captures, each with its occurrences' states, and whether every one "
     + "is met"),
   /* actions (R80, R87, R88, R92) */
-  actionreceipt: ACTION("keyed by (action, sent entry); a member records that it was received or served, how and when"),
-  actionscope: ACTION("keyed by action; a member sets or removes its confidential scope with a reason, every statement kept"),
-  actionpromise: ACTION("keyed by action; a member records a promise the group made to a person, or ends an earlier one"),
   openitemswith: R("the open actions the viewer may see addressed to the same office, with their overdue replies, as facts "
     + "and never a block"),
   /* action-holds (R11, R12) */
-  holdnoticesent: "hold-directed: keyed by a hold's place; a member records that she sent its notice by her own hand, "
-    + "naming no recipient and no one's compliance; moves no bundle",
   pressurerecord: "project-directed: keyed by a project; a member records pressure that arrived outside any action, as "
     + "evidence, creating no action; moves no bundle",
   /* following (R22–R25) */
@@ -114,8 +109,6 @@ export const T45_NON_ACTS = {
     + "approval a project's setting asks, at most once; moves no bundle",
   jointsignatory: "filing-directed: keyed by (filing, partner organisation); a member records that the partner approved "
     + "the same text by its own act; no shared plan is made; moves no bundle",
-  holdnoticeprepare: "hold-directed: keyed by a hold's place; a notice prepared from the record and labelled as a draft, "
-    + "never sent by the instance; moves no bundle",
   templatesforaction: R("the file templates offered for one action's kind at its governing tier, after the act is chosen, "
     + "never a suggestion of what to do"),
   /* case-check (R1, R2) */
@@ -129,12 +122,6 @@ export const T45_NON_ACTS = {
   projectapprovalset: "setting: which acts of a project need a second member's approval before sending, an owner's act "
     + "with a reason, appended; names no member; moves no bundle",
   /* action-replies (R1, R2) */
-  actionreplybearing: "response-directed: keyed by (action, received entry); a member lays out the reply claim by claim, "
-    + "a later layout replacing it and the earlier kept; moves no bundle",
-  actionbearingpropose: "response-directed: a machine (or a member) proposes a reply's claim-by-claim layout, keyed by "
-    + "(action, entry, proposer); labelled and never a layout until a member lays it out",
-  arosefrom: "response-directed: keyed by (action, received entry); a member records that a matter or project arose "
-    + "from it, append-only; moves no bundle",
   /* reading-guides (R13) */
   procedureguides: R("the procedure guides for a kind of action and their items, with each guide's origin"),
   /* consequences (R17, R20–R22) */
@@ -166,12 +153,8 @@ export const T45_NON_ACTS = {
     + "keeping a report",
   statusreportsave: PLAN("keyed by plan; a member keeps her status report, never required"),
   statusreports: R("a plan's kept status reports, never published"),
-  itemtakeup: "personal state, keyed (member, item): a member routes an item's to-dos to herself from then; nobody "
-    + "assigns anybody",
   matterpromiseduties: R("the adopted promise-duties of a matter's replies, and whether every one is met"),
   /* action-clocks (R18) */
-  clockstate: "action-directed: keyed by action; a member states a clock entry with its basis and who owes it, a new "
-    + "revision of the action's clock",
   /* conformance (R36, R37) */
   curelink: "determination-directed: keyed by (determination, standard, curing determination); a member links the curing "
     + "act, append-only; moves no bundle",

@@ -15,18 +15,20 @@
 - **N891 (tests only):** `pins.test.mjs` pins at this module's exports what was pinned only in `affordances`' tests: RUNGS as a closed partition; the closed `terminal` and `irreversible` sets; the closed `undetermined` ground with R3's tally (78 = 21 + 57); layer 9's NON_ACTS and read rows; every reason's form and the `capture-directed:` set; the substrate and directed forms; the consequence statements' keys and the correction path; T33's merged-table identity; the justification family's inclusion and exclusion lists; and that the owners' reads write nothing. `affordances` may drop its copies (T45-39).
 - **Own flaw fixed (P8):** stale citations of the hold ops moved to `action-holds` in T45 (`actionpressure`'s outward sentence now cites action-holds R1; comments on `actionhold`, `actionholdrelease` and its statement re-pointed), wording only.
 
+- **CHANGE B3, B4 (K2885, K2887, K2888):** after merging `tranche/T45` (R8 and R32 amended), the 21 acts `affordances` R51 makes `ACTS` rows on an action target leave `NON_ACTS` (R32's list: the hold acts, `escalationopen`, `escalationattach`, `filingprepare`, `filingapprove`, `filingsent`, `counselpacket`, `communicationprepare`, `reminderset`, and T45's `holdnoticesent`, `actionreceipt`, `actionscope`, `actionpromise`, `actionreplybearing`, `arosefrom`, `clockstate`, `itemtakeup`, with `holdnoticeprepare` and `actionbearingpropose`, "where they were listed": they were, so 21, not B4's 19); `MACHINE_REFUSALS` gains the 17 rows with their owners' codes, each checked against the owner's method (J4); no rung moves. Tests re-pinned: `ladder.test.mjs` R5 (the whole map, the four that admit a machine, no act also a non-act), `owners.test.mjs` R8 and R17's alias (`filingrecordsent`'s op is now an act), `pins.test.mjs` layer 9, `t45.test.mjs` (acts apart, the eight codes, the totality with its negative control).
+
 **Deferred:** none.
 
-**Found in other modules (REPORT J2):** my change moves users' suites as owed by later L11 jobs, none their fault: `affordances` (T45-39) — its closed-set copies (`catalogue.test.mjs` "RUNGS' assignment is closed", "`terminal` is given only…", "the `undetermined` ground is closed") and `plane.test.mjs` "together the two drives reach every op RUNGS grades `reasoned`" (T45's 11 reasoned acts need its R19 drives) turn red; its `backing.test.mjs` R19 on `addressedrecord` (K2857) turns green. `control-plane` `totality.test.mjs` reads T45's 61 ops `stale` until `op-declarations` R49 (T45-45) declares them. `plane` `wizards.test.mjs` 4/4, `op-declarations` and `membership` `module-order` unchanged (their one red each predates me).
+**Found in other modules (REPORT J2):** my change moves users' suites as owed by later L11 jobs, none their fault: `affordances` (T45-39) — its closed-set copies (`catalogue.test.mjs` "RUNGS' assignment is closed", "`terminal` is given only…", "the `undetermined` ground is closed") and `plane.test.mjs` "together the two drives reach every op RUNGS grades `reasoned`" (T45's 11 reasoned acts need its R19 drives) turn red; its `backing.test.mjs` R19 on `addressedrecord` (K2857) turns green. `control-plane` `totality.test.mjs` reads T45's 61 ops `stale` until `op-declarations` R49 (T45-45) declares them. After B3: `affordances` also reads red on "MACHINE_REFUSALS holds only ACTS" and the alias row for `filingrecordsent` until its `ACTS` rows land (T45-39); 213 pass, 13 fail. `plane` `wizards.test.mjs` 4/4, `op-declarations` and `membership` `module-order` unchanged (their one red each predates me).
 
 **Final `uses`:** none (unchanged).
 
 **Tests and checks:**
 - `node --test bio-plane/test/m/op-grades/`: tests 67, pass 67, fail 0 (was 51; `t45.test.mjs` 6, `pins.test.mjs` 10).
 - `affordances` before/after: reds 8 → 11 (above). `control-plane` totality: 0 → 1 (above).
-- `format`: 153 modules, 152 requirements files; 0 failures. `architecture op-grades`: 17 product files, 28 relative imports; 0 failures. `coverage op-grades`: 32 of 32 live requirement ids named by a test; 0 failures. `ownership op-grades tranche/T45`: 0 failures (re-run after commit below).
+- `format`: 153 modules, 152 requirements files; 0 failures. `architecture op-grades`: 20 product files, 37 relative imports (after the merge); 0 failures. `coverage op-grades`: 32 of 32 live requirement ids named by a test; 0 failures. `ownership op-grades tranche/T45`: 0 failures (re-run after commit below).
 
-Size (session_01QBg5Qed5iVkRuoNbR4vgRF): test runs 9, module lines 2838
+Size (session_01QBg5Qed5iVkRuoNbR4vgRF): test runs 13, module lines 2835
 
 ## J1 · QUESTION
 

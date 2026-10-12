@@ -66,10 +66,18 @@ const R32_READS = ["dutiesarising", "openitemswith", "watchquestions", "template
   "whereitstands", "statusreports", "matterpromiseduties", "cures", "ruleoffer"];
 const R32_DRAFTS = ["statusreportdraft"];
 const ALL = [...Object.keys(R32_WRITES), ...R32_READS, ...R32_DRAFTS];
+/* (K2885, K2887) T45's acts that affordances R51 makes ACTS rows on an action target: no NON_ACTS row, and those refused a
+   machine by name in MACHINE_REFUSALS with their owners' codes (R32's T45 bullet) */
+const R32_ACTS = ["holdnoticesent", "actionreceipt", "actionscope", "actionpromise", "actionreplybearing", "arosefrom",
+  "clockstate", "itemtakeup", "holdnoticeprepare", "actionbearingpropose"];
+const R32_MACHINE = { holdnoticesent: "MACHINE_CANNOT_SEND", actionreceipt: "MACHINE_CANNOT_CORRESPOND",
+  actionscope: "MACHINE_CANNOT_SET_SCOPE", actionpromise: "MACHINE_CANNOT_RECORD_PROMISE",
+  actionreplybearing: "MACHINE_CANNOT_RECORD_BEARING", arosefrom: "MACHINE_CANNOT_LINK",
+  clockstate: "MACHINE_CANNOT_STATE_CLOCK", itemtakeup: "MACHINE_CANNOT_PLAN" };
 
 test("R32: every write T45's owners serve carries R32's grade — the reasoned ones backed by their owner's code in "
    + "JUSTIFICATION_REFUSALS, each reversible one taken back by a graded act of its owner, following's and answers' as R32 "
-   + "names them — each with a NON_ACTS reason that is no read and no capture act", () => {
+   + "names them — each non-act with a NON_ACTS reason that is no read and no capture act, each act with none", () => {
   const got = grades(R32_WRITES);
   assert.deepEqual(got, R32_WRITES);
   assert.deepEqual(Object.keys(R32_WRITES).filter((op) => R32_WRITES[op] === "reasoned").sort(), Object.keys(R32_CODES).sort());
@@ -77,7 +85,8 @@ test("R32: every write T45's owners serve carries R32's grade — the reasoned o
   assert.deepEqual(Object.keys(R32_WRITES).filter((op) => R32_WRITES[op] === "reversible").sort(),
     Object.keys(TAKEN_BACK_BY).sort());
   for (const [op, by] of Object.entries(TAKEN_BACK_BY)) assert.notEqual(gradeOf(by), null, `${op} taken back by ${by}`);
-  for (const op of Object.keys(R32_WRITES)) {
+  for (const op of R32_ACTS) assert.ok(!Object.hasOwn(NON_ACTS, op), `${op} is an act, never a non-act too`);
+  for (const op of Object.keys(R32_WRITES).filter((op) => !R32_ACTS.includes(op))) {
     assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 40 && !NON_ACTS[op].startsWith("read: "), op);
     assert.ok(!NON_ACTS[op].startsWith("capture-directed:"), `${op} is no capture act`);
     assert.ok(!NON_ACTS[op].startsWith("draft: "), `${op} writes`);
@@ -131,10 +140,13 @@ test("R32 R1 (K2857): JUSTIFICATION_REFUSALS gains the codes T45's owners refuse
     ["terminal", "undetermined", "reasoned"]);
 });
 
-test("R32 R5 R18 R21: none of T45's ops is in MACHINE_REFUSALS; phone follows the rung (publishcheck and "
+test("R32 R5 R18 R21: of T45's ops MACHINE_REFUSALS holds exactly the eight acts R32 names, each with its owner's code, "
+   + "the two that admit a machine none; phone follows the rung (publishcheck and "
    + "filingsecondapprove off the phone); publishcheck carries the Irreversible weight by R21's rule; no consequence "
    + "statement, larger-screen entry or alias is added", () => {
-  assert.deepEqual(ALL.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
+  assert.deepEqual(Object.fromEntries(ALL.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)).map((op) => [op, MACHINE_REFUSALS[op]])),
+    R32_MACHINE);
+  for (const op of ["holdnoticeprepare", "actionbearingpropose"]) assert.ok(!Object.hasOwn(MACHINE_REFUSALS, op), op);
   assert.deepEqual(ALL.filter((op) => !phoneOf(op)).sort(), ["filingsecondapprove", "publishcheck"]);
   assert.ok(IRREVERSIBLE_WEIGHT.includes("publishcheck"));
   assert.deepEqual(ALL.filter((op) => IRREVERSIBLE_WEIGHT.includes(op)), ["publishcheck"]);
@@ -151,7 +163,7 @@ test("R32: T45's tables hold exactly these ops, none both graded and stated abse
    + "approval (reconciliation R1), no op of its own", () => {
   assert.deepEqual(Object.keys(T45).sort(), ["T45_NON_ACTS", "T45_RUNGS", "T45_RUNG_ABSENT"]);
   assert.deepEqual([...Object.keys(T45.T45_RUNGS), ...Object.keys(T45.T45_RUNG_ABSENT)].sort(), Object.keys(R32_WRITES).sort());
-  assert.deepEqual(Object.keys(T45.T45_NON_ACTS).sort(), [...ALL].sort());
+  assert.deepEqual(Object.keys(T45.T45_NON_ACTS).sort(), ALL.filter((op) => !R32_ACTS.includes(op)).sort());
   for (const [op, v] of Object.entries(T45.T45_RUNGS)) assert.equal(RUNGS[op], v, op);
   for (const [op, e] of Object.entries(T45.T45_RUNG_ABSENT)) assert.equal(RUNG_ABSENT[op], e, op);
   for (const [op, w] of Object.entries(T45.T45_NON_ACTS)) assert.equal(NON_ACTS[op], w, op);
@@ -165,11 +177,11 @@ test("R32: T45's tables hold exactly these ops, none both graded and stated abse
    mutating, each read and the draft not, every op gated by a NEEDS row */
 const STAND_IN = [...Object.keys(R32_WRITES).map((op) => ({ op, mutating: true, gated: true })),
   ...[...R32_READS, ...R32_DRAFTS].map((op) => ({ op, mutating: false, gated: true }))];
-const unaccountedOver = (rows) => {
+const unaccountedOver = (rows, acts = R32_ACTS) => {
   const mutating = new Set(rows.filter((r) => r.mutating).map((r) => r.op));
   const gated = new Set(rows.filter((r) => r.gated).map((r) => r.op));
   return {
-    unpublished: [...gated].filter((op) => !Object.hasOwn(NON_ACTS, op)).sort(),
+    unpublished: [...gated].filter((op) => !Object.hasOwn(NON_ACTS, op) && !acts.includes(op)).sort(),
     unranked: [...mutating].filter((op) => !Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op)).sort(),
     stale: rows.map((r) => r.op).filter((op) => !mutating.has(op) && (Object.hasOwn(RUNGS, op)
       || Object.hasOwn(RUNG_ABSENT, op)) || !gated.has(op) && Object.hasOwn(NON_ACTS, op)).sort(),
@@ -178,6 +190,8 @@ const unaccountedOver = (rows) => {
 test("R32: affordances R12's totality holds over a stand-in of op-declarations R49's rows — none unpublished, unranked or "
    + "stale", () => {
   assert.deepEqual(unaccountedOver(STAND_IN), { unpublished: [], unranked: [], stale: [] });
+  /* negative control: without affordances' ACTS rows (T45-39), the acts read unpublished */
+  assert.deepEqual(unaccountedOver(STAND_IN, []).unpublished, [...R32_ACTS].sort());
   /* negative controls: an ungraded new op is unranked and unpublished; a write carried as a read is stale */
   const left = unaccountedOver([...STAND_IN, { op: "plannew", mutating: true, gated: true }]);
   assert.deepEqual([left.unranked, left.unpublished], [["plannew"], ["plannew"]]);

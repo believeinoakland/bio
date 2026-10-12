@@ -163,8 +163,12 @@ test("R2 R5 (N891): layer 9's 41 writes each carry a NON_ACTS reason of more tha
    + "actionriskpropose named, and its ungated reads named in no table", () => {
   const writes = [...LAYER9_RUNGS, ...Object.keys(LAYER9_ABSENT)];
   assert.equal(writes.length, 41);
-  for (const op of writes)
+  /* (T45; R8, R32) the ones affordances R51 makes ACTS rows are named in NON_ACTS no longer */
+  const ACTS_NOW = ["actionhold", "actionpressure", "escalationopen", "escalationattach", "filingprepare", "filingapprove",
+    "filingsent", "counselpacket", "communicationprepare", "reminderset"];
+  for (const op of writes.filter((op) => !ACTS_NOW.includes(op)))
     assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 10 && !NON_ACTS[op].startsWith("capture-directed:"), op);
+  for (const op of ACTS_NOW) assert.ok(!Object.hasOwn(NON_ACTS, op), op);
   for (const op of LAYER9_RUNGS) assert.ok(Object.hasOwn(RUNGS, op), op);
   for (const [op, ground] of Object.entries(LAYER9_ABSENT)) {
     assert.equal(RUNG_ABSENT[op]?.ground, ground, op);
@@ -174,8 +178,6 @@ test("R2 R5 (N891): layer 9's 41 writes each carry a NON_ACTS reason of more tha
   assert.ok(Object.hasOwn(NON_ACTS, "actionriskpropose"));
   for (const op of LAYER9_UNGATED_READS)
     for (const t of [NON_ACTS, RUNGS, RUNG_ABSENT]) assert.ok(!Object.hasOwn(t, op), op);
-  assert.equal(NON_ACTS.actionhold, "entry-directed: keyed by (action, entry ordinal); appends a hold statement and "
-    + "never rewrites the entry or its mark");
   /* negative control */
   assert.ok(Object.hasOwn({ ...NON_ACTS, monitoring: "read: x" }, "monitoring"));
 });
