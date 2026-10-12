@@ -19,3 +19,12 @@ Seven readings, each with what I build meanwhile (step 3: I carry on with all of
 **Q6 · `heldrestore` (R4).** `heldCaptures` (capture R77) lists no set-aside document, so a picked row is never restorable. Reading: after a set-aside, the screen keeps the just-set-aside rows in a "Set aside just now" band with "Restore" (one reason, as R81 requires), until the screen is left. No read lists set-aside documents.
 
 **Q7 · R5's reads.** `scanstatus` is an administrators' read (file-safety R5); `scanfindings` is group-wide. Reading: `scanstatus` is read only when `whoami.administer` is true (its section absent otherwise, as R12's rule for acts); `scanfindings` is read with `since` a week back and filtered to this capture. The capture's subject id in `/app/open-file/<sha256>` is its digest; a held row's thumbnail links there.
+
+## J2 · QUESTION
+
+Building to K2998's contract now. Four points the contract's text leaves open for my screens; my reading of each, which I build meanwhile (none stops me). Please relay to INTERFACE-SHELL #1 if they are its to settle.
+
+1. **Multi-request acts.** `release` needs `op=select` first (K2996 Q5) and `acquire` a promote after (Q2). Reading: `send` may answer a promise and the shell awaits it, so `release`'s `send` calls `cs.call("select", …)` and answers the release's `{body}` with the handle; `acquire`'s `done` calls `cs.call("allocid")` and `cs.call("promote")`, drawing their refusals through `cs.set`.
+2. **Byte answers (R6).** `cs.call` answers "the parsed answer"; `openoriginal`, `openwithwarning` and `safeview` answer bytes. Reading: the kit gives `cs.download(op, {query, body})` → a promise of `{ok, answer}` that, on a byte answer, hands the bytes to the browser as a file (`Blob` behind an object address released once the download starts, setup-page R26's form) and answers `{ok: true, answer: {bytes, type, name}}` (the derived view's JSON answer as it comes); the three acts' `send` call it and answer `null`.
+3. **Picked rows (R19).** Reading: the hold strip's act receives the picked rows' keys as `extra.picked` (the `key` of `cs.rows`).
+4. **Upload's bytes.** Reading: `send` answers `{query: {statement, name}, raw: cs.file("ci-file")}`; the shell sends `raw` as the request body as it is, under the session header, with no JSON content type.
