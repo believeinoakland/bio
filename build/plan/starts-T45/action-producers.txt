@@ -8,3 +8,4 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 365 KB with your tests, under the 600 KB limit: read it all whole.
 Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, installer, stewards, plane. You merge before queue-producers.
+(K2874) following's reads for your R10 (watch-keep-or-stop): `watchQuestions({after, limit, viewer})`, entries with `recipients` (FOLLOWING #5 J2 (4)).

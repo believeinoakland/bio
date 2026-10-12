@@ -12,3 +12,4 @@ Also (K2817): duties' `dutyfromresponse`, `dutiesarising` stamps (plan rule 4 (1
 Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and `casecheck` (a read).
 
 (K2857) From consequences' merge (T45-24): its five ops (`successrecord`, `successrevise`, `outcomecarry`, `successread`, `successrecords`) join layer 9's op maps; `backing.test.mjs` R19 needs op-grades' `ADDRESSED_NO_REASON`/`SUCCESS_NO_REASON` (T45-38).
+(K2874) From L10: following's new ops `followend`, `watchlink`, `watchanswer`, `watchquestions` (FOLLOWING #5 J1, J2), and monitoring's new op for R71's end date if its COMPLETE names one; their affordances and vocabularies where your maps pin them.

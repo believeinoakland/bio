@@ -12,3 +12,4 @@ Also (K2817, K2820): grade duties' `dutyfromresponse`, `dutiesarising` and readi
 Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and `casecheck` (a read).
 
 (K2857) From consequences' merge (T45-24): add `ADDRESSED_NO_REASON` and `SUCCESS_NO_REASON` to `JUSTIFICATION_REFUSALS` and grade `successrevise` `reasoned`; affordances' `backing.test.mjs` R19 reads red on them until you and T45-39 merge.
+(K2874) From L10: following's new ops `followend`, `watchlink`, `watchanswer`, `watchquestions` (FOLLOWING #5 J1, J2), and monitoring's new op for R71's end date if its COMPLETE names one; each graded (R32).
