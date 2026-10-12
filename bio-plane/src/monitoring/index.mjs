@@ -31,8 +31,9 @@
  *                                   `recordSourceOutcome`, and `acquire` (its archive arm, R20; its capture-request
  *                                   arm, R28).
  *   observationLog                  its one append, `observe`.
- *   intent, actionClocks, escalation  R33 (`watchSet`, `registerSource`), R34/R44/R50 (`action-clocks`'
- *                                   `pendingClocks`, its R1; `actions` R31 before K617's split), R35
+ *   intent, actionClocks, escalation  R33 (`watchSet`, `registerSource`), R34/R44/R50/R73 (`action-clocks`'
+ *                                   `pendingClocks`, its R1, whose items carry a timed entry's `due_at` and
+ *                                   `due_zone`, its R19; `actions` R31 before K617's split), R35
  *                                   (`escalationsDue`).
  *   publication                     R33's published-finding half (`restingCapturesOf`, its R42; N230).
  *   caseImport                      R67, R68 (N534): `watchedImports` and `recordDocketRead` (its R18), the watched
@@ -465,6 +466,18 @@ function instantOfDueAt(dueAt, zone) {
   const hi = b && typeof b.latest === "string" ? Date.parse(b.latest) : NaN;
   if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi - lo !== (precision === "minute" ? 60000 : 1000)) return null;
   return lo;
+}
+
+/* R34, R50, R73 (T46; N918, N922): the instant a pending entry is due at, read from the item `action-clocks.pendingClocks`
+   answers for it (its R19), never from the action's document: its `due_at` on the entry's own date, in its `due_zone`
+   (the entry's own zone, else the action's, as that read answers them). Null for a date-only entry (both null), for an
+   item naming no zone, and for a wall time the zone skips or repeats that day: the entry is then read by its date alone,
+   never marked early. Never throws. */
+function dueInstantOf(it) {
+  try {
+    if (!it || typeof it.date !== "string" || typeof it.due_at !== "string" || !it.due_at.startsWith(`${it.date}T`)) return null;
+    return instantOfDueAt(it.due_at, typeof it.due_zone === "string" ? it.due_zone.trim() : null);
+  } catch { return null; }
 }
 
 /* R34 (civil-time R1): the local day (`YYYY-MM-DD`) of the instant `ms` in `zone`; null when it cannot be read. */
@@ -2987,6 +3000,8 @@ export class Monitoring {
    *  jurisdiction (`#zone`, as actions R12 reads it, through `civil-time.localDay`; never the UTC day), read through
    *  action-clocks R1's `pendingClocks` as this module's machine viewer, is marked `overdue` by one mechanical `deadline-recheck` promotion per action,
    *  changing only `clock[].status` (pending to overdue, nothing else) and `last_updated`, with its Session Log entry.
+   *  (T45, R73) An entry with a time of day, as its `pendingClocks` item answers it (`due_at` in `due_zone`), is past
+   *  from that instant, on its own day (`actions` R98 admits the move then); a date-only entry from the next local day.
    *  R35: then asks `escalation` which stages' triggers are met, so the next stage is proposed; it advances none.
    *  Answers `{ok, at, zone, day, marked: [{action, ords, dates, revision}], failed: [{action, reason}], escalations,
    *  truncated}`; with no zone held, nothing is marked and `undetermined` says why (`DEADLINE_NO_ZONE`). */
@@ -3000,9 +3015,8 @@ export class Monitoring {
     if (!today)
       return { ok: true, at, zone, marked: [], failed: [], truncated: false, escalations: null, undetermined: DEADLINE_NO_ZONE };
     let items = [], truncated = false;
-    /* R34 (T45): an entry with a time of day is past at that instant, so entries dated today are read too, and the day
-       after for a `due_zone` east of the jurisdiction's; a date-only entry is past from the local day after its date. */
-    const docs = new Map();
+    /* R34 (T45), R73: an entry with a time of day is past at that instant, so entries dated today are read too, and the
+       day after for a `due_zone` east of the jurisdiction's; a date-only entry is past from the local day after its date. */
     try {
       const p = this.actionClocks.pendingClocks({ before: addDays(today, 2), limit: DEADLINE_RECHECK_MAX, viewer: MONITOR_VIEWER });
       if (p && p.ok !== false) { items = Array.isArray(p.items) ? p.items : []; truncated = !!p.truncated; }
@@ -3011,11 +3025,11 @@ export class Monitoring {
       return { ok: false, reason: "PENDING_CLOCKS_UNREAD", detail: String(e && e.message || e).slice(0, 160) };
     }
     /* A deadline of the 14th is met by anything on the 14th: only an entry dated before today is past, unless it carries a
-       time of day, which is past from that instant in its zone (T45). */
+       time of day, which is past from that instant in its zone (T45; R73: `actions` R98 admits the move then). */
     const byAction = new Map();
     for (const it of items) {
       if (!it || typeof it.date !== "string") continue;
-      const timed = this.#dueInstant(it, zone, docs);
+      const timed = dueInstantOf(it);
       if (!(timed !== null ? nowMs >= timed : it.date < today)) continue;
       if (!byAction.has(it.action)) byAction.set(it.action, []);
       byAction.get(it.action).push(it);
@@ -3043,6 +3057,7 @@ export class Monitoring {
    *  first alarm of the day an entry passes (an entry dated D is past from the start of D + 1 in that zone, R34's rule),
    *  and an instance with no pending entry holds no wake. A read that fails holds no wake either: it is asked again at the
    *  scheduler's next reconcile. With no zone held nothing can pass (R34), so no wake is held.
+   *  (T45, R73) An entry with a time of day offers that instant, read from its `pendingClocks` item, in place.
    *  N429 (K719): an entry of an action whose last R34 mark failed is left out of that earliest date until the start of
    *  the local day after the failure, and holds the wake no earlier than that instant, so a mark that keeps failing is
    *  asked again once a day and never holds the wake in the past for the entries that can be marked. What failed is
@@ -3052,7 +3067,7 @@ export class Monitoring {
     const nowMs = Number.isFinite(Number(now)) && now !== null ? Number(now) : this.now();
     const zone = this.#zone();
     if (!zone) return null;
-    const dayAfter = new Map(), dayStart = new Map(), docs = new Map(), all = [];
+    const dayAfter = new Map(), all = [];
     let wake = null, after = null;
     try {
       for (let pages = 0; pages < DEADLINE_RECHECK_PAGES; pages++) {
@@ -3064,18 +3079,14 @@ export class Monitoring {
         if (!p.cursor) break;
         after = p.cursor;
       }
-      /* Earliest date first, so an entry's time of day is read from its action's document only while it could still
-         come before the wake found so far (a time on day D falls no earlier than the start of the day before D in the
-         jurisdiction's zone, whatever zone the entry names). */
-      all.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
       for (const it of all) {
-        if (!dayAfter.has(it.date)) dayAfter.set(it.date, startOfDayAfter(it.date, zone));
-        let at = dayAfter.get(it.date);
-        if (!dayStart.has(it.date)) dayStart.set(it.date, startOfDayAfter(addDays(it.date, -2), zone));
-        const from = dayStart.get(it.date);
-        /* R50 (T45): an entry with a time of day offers that instant in place of the start of the next local day */
-        const timed = wake === null || from === null || from < wake ? this.#dueInstant(it, zone, docs) : null;
-        if (timed !== null) at = timed;
+        /* R50 (T45), R73: an entry with a time of day offers that instant (the item's own `due_at` in its `due_zone`) in
+           place of the start of the next local day */
+        let at = dueInstantOf(it);
+        if (at === null) {
+          if (!dayAfter.has(it.date)) dayAfter.set(it.date, startOfDayAfter(it.date, zone));
+          at = dayAfter.get(it.date);
+        }
         if (at === null) continue;
         const held = this.#markFailed.get(it.action);
         if (held !== undefined && nowMs < held && at < held) at = held;
@@ -3090,29 +3101,6 @@ export class Monitoring {
     const nowMs = Number.isFinite(Number(now)) && now !== null ? Number(now) : this.now();
     const at = this.deadlineRecheckWake(nowMs);
     return at !== null && at <= nowMs ? at : null;
-  }
-
-  /** R34, R50 (T45; N882; v0.2 rule 6): the instant a pending entry `it` (`{action, ord, date}`, `pendingClocks`' item)
-   *  is due at when it carries a time of day, or null when it carries none (a date-only entry). `action-clocks` R1 answers
-   *  no time of day, so it is read from the action's own document, the authority (`docs` caches each document for one
-   *  call): the entry at `ord` with the same date, its `due_at` on that date, in its `due_zone` or else `zone` (as
-   *  `action-clocks` R3 answers it). A wall time the zone skips or repeats that day reads as none: the entry is then
-   *  read by its date alone, never marked early. Never throws. */
-  #dueInstant(it, zone, docs) {
-    try {
-      if (!docs.has(it.action)) {
-        const img = this.record.readImage(it.action);
-        const live = img && typeof img["bundle.md"] === "string" ? img["bundle.md"] : null;
-        let fm = null;
-        try { fm = live ? parseFrontmatter(live).data : null; } catch { fm = null; }
-        docs.set(it.action, fm && Array.isArray(fm.clock) ? fm.clock : null);
-      }
-      const clock = docs.get(it.action);
-      const e = clock && Number.isInteger(Number(it.ord)) ? clock[Number(it.ord)] : null;
-      if (!e || typeof e !== "object" || e.date !== it.date || typeof e.due_at !== "string" || !e.due_at.startsWith(`${it.date}T`))
-        return null;
-      return instantOfDueAt(e.due_at, typeof e.due_zone === "string" && e.due_zone.trim() ? e.due_zone.trim() : zone);
-    } catch { return null; }
   }
 
   /* R50 (N429): each action whose last R34 mark failed, with the start of the local day after the failure. */
