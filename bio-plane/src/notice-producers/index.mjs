@@ -10,7 +10,8 @@
  *   R2  interest-check-noticed   FINDING, people.checkResults            the machine's, "Noticed", hypothesis layer; a hint (R11)
  *   R3  money-detector-noticed   FINDING, money-checks.noticed           the machine's, "Noticed", hypothesis layer; a hint (R11)
  *   R4  standing-answer          FINDING, answers.standingAnswersFor     the assistant's machine work, told once
- *   R5  temporal-expectation-due FINDING, duties.dutiesOf/occurrencesOf  a question, never a violation; keyed per state
+ *   R5  temporal-expectation-due FINDING, duties.dutiesOf/occurrencesOf  a question, never a violation; keyed per state;
+ *                                none due after following.dutyWatchEnd's day (T45)
  *   R6  inquiry-recheck-due      OBLIGATION (K1505 (15), K1522), inquiry.datedWaits, to the wait's setter alone
  *   R12 security-level-high      FINDING, credentials.securityLevel/securityMap  once per High episode, to administrators
  *   R13 policy-changed-noticed   FINDING, following.policyChanges        a policy's silent change, DEC-145 (5)'s words
@@ -26,7 +27,8 @@
  *       question-find            FINDING, question-explorer.findsFor   "Hint · machine work"; `ai.label.explored` to the
  *                                paying account's owners, `ai.label.explored.member` to every other viewer (DEC-189 (7))
  *       step-later-found         FINDING, steps.laterFound
- *       step-date-due, step-reminder  OBLIGATION, steps.stepsDue     to the setter, to the member who asked
+ *       step-date-due, step-reminder  OBLIGATION, steps.stepsDue     to the setter, to the member who asked; none for a
+ *                                step whose date an action's clock entry holds (steps R29: stepsDue leaves it out; T45)
  *       step-cost-shared         FINDING, steps.costShares             to the sharing projects' owners
  *       step-cost-message        FINDING, steps.costMessages           to the owners it was relayed to
  *       milestone-overdue        FINDING, investigation.milestonesOverdue (and milestone-reminder, OBLIGATION)
@@ -513,7 +515,9 @@ export class NoticeProducers {
    * The adopted duties `duties.dutiesOf` answers the viewer, by obligor (the obligors from duties' read contract, its
    * R20); for each whose recipient is this member, `occurrencesOf` as of the read's instant. An occurrence `overdue`
    * (only after the latest candidate) or possibly overdue (between the candidates, civil-time R19) is one item, a
-   * question and never a violation. The group's own checkpoint is never one (D234; action-plans R23). */
+   * question and never a violation. The group's own checkpoint is never one (D234; action-plans R23). (T45) An occurrence
+   * whose due day (the latest candidate's, when undetermined) falls after the day `following.dutyWatchEnd` answers for the
+   * duty is no item; one due on or before it is raised as before. An occurrence with no due day read stays told. */
   #dutiesDue(me, viewer, now) {
     const asOf = instantOf(now);
     const obligors = this.#rows(`SELECT DISTINCT obligor FROM duties WHERE obligor IS NOT NULL ORDER BY obligor`).map((r) => r.obligor);
@@ -532,13 +536,26 @@ export class NoticeProducers {
         if (!to.members.includes(me)) continue;
         const o = this.#duties.occurrencesOf({ dutyId: d.duty_id, asOf, viewer });
         if (!o || o.ok === false || !Array.isArray(o.occurrences)) continue;
+        const ends = this.#watchEnd(d.duty_id);
         for (const occ of o.occurrences) {
           const it = this.#occurrenceItem(d, occ, to, asOf, viewer, now);
-          if (it) items.push(it);
+          /* (T45) told only up to the day a plan's watch on the duty ends: an occurrence due after it is no item */
+          if (it && !(ends && it.due && it.due > ends)) items.push(it);
         }
       }
     }
     return { items, facts: { truncated } };
+  }
+
+  /** R5 (T45; following R25): the day after which this duty is no longer told, `following.dutyWatchEnd(duty)`: null while
+   *  no plan's watch on it is answered (R5 as before), else that day. A following that throws fails R5's read (R1); an
+   *  answer that is no day is read as no end, so the duty is still told. */
+  #watchEnd(duty) {
+    const f = this.#following;
+    if (!f || typeof f.dutyWatchEnd !== "function") return null;
+    let end;
+    try { end = f.dutyWatchEnd(duty); } catch { throw failure("following"); }
+    return typeof end === "string" && /^\d{4}-\d{2}-\d{2}$/.test(end) ? end : null;
   }
 
   /** Who a duty's item goes to: the member who adopted it, else its project's owners (membership R65), else the

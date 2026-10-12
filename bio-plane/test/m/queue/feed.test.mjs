@@ -4,7 +4,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
-import { queueAnswer, QUEUE_MINT_CHECKS, QUEUE_CLASS_LABELS } from "../../../src/queue/index.mjs";
+import { queueAnswer, QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS, QUEUE_CLASS_LABELS } from "../../../src/queue/index.mjs";
+import { QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, MUTE_REFUSAL_DETAIL } from "../../../src/queuestate.mjs";
 import { deriveActs, decorate } from "../../../src/affordances.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
 
@@ -252,7 +253,9 @@ test("R16: a FINDING's basis names its source and derivation; a member's mute le
   for (const m of ["alice", "bob"]) { w.join("PRJ-A", m); w.join("PRJ-B", m); }
   w.cite("PRJ-A", "INQ-S"); w.cite("PRJ-B", "INQ-S");
   const id = "FINDING::stance-changed-here-not-elsewhere::INQ-S::PRJ-A";
-  for (const it of w.feed("alice").items.filter((i) => i.class === "FINDING")) {
+  const findings = w.feed("alice").items.filter((i) => i.class === "FINDING");
+  assert.ok(findings.some((i) => i.id === id), "the sweep has the stance finding to check");
+  for (const it of findings) {
     assert.equal(typeof it.basis.source, "string"); assert.equal(typeof it.basis.detail, "string");
     assert.equal(it.assignee, null);
   }
@@ -320,7 +323,12 @@ test("R38: no place is named in the feed's outward text", () => {
   const w = world({ governor: { governorHolding: () => [{ host: "h.example", cooloff_until: NOW + 5, refusals: 1 }] } });
   w.bundle("INF-1"); w.task("TASK-2026-0001-a", "INF-1");
   const text = JSON.stringify(w.feed(null, "class:admin"));
-  for (const place of ["Oakland", "California", "Alameda", "CPRA", "Brown Act", "Sunshine"]) assert.ok(!text.includes(place), place);
+  /* and every sentence this module answers whatever the feed holds: each kind's, each refusal row's translation, the
+     mute refusal's */
+  const all = [text, ...[QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS].flatMap((v) => Object.values(v)),
+               ...[...Object.values(QUEUE_MINT_CHECKS), ...Object.values(QUEUE_ACT_CHECKS)].map((r) => r.translation),
+               ...Object.values(MUTE_REFUSAL_DETAIL)].join("\n");
+  for (const place of ["Oakland", "California", "Alameda", "CPRA", "Brown Act", "Sunshine"]) assert.ok(!all.includes(place), place);
 });
 
 test("R39: resolved carries the obligations resolved lately on visible subjects, with who and when: tasks and settled bias debts", () => {

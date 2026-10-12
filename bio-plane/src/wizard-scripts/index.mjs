@@ -219,14 +219,20 @@ export function normaliseRegistration({ screens = [], ops = null, machineRefused
     if (isObj(s) && str(s.id) && !sc.has(str(s.id))) sc.set(str(s.id), screenActs(s, opSet));
   const lib = [];
   for (const e of Array.isArray(library) ? library : []) { const x = libraryEntry(e); if (x && !lib.some((y) => y.id === x.id)) lib.push(x); }
-  const reg = { screens: sc, ops: opSet, machineRefused: nameSet(machineRefused), machineDrafts: nameSet(machineDrafts),
+  /* R13 (T45; Actions D25, D26): a labelled machine draft is registered once its op is declared: with an op table, one
+     whose op the table does not hold is not registered (as an act is not, T37), so `{machine: <op>}` for it is refused
+     until `op-declarations` declares it, and accepted with no change here once it does. */
+  const drafts = nameSet(machineDrafts);
+  const reg = { screens: sc, ops: opSet, machineRefused: nameSet(machineRefused),
+                machineDrafts: opSet ? new Set([...drafts].filter((o) => opSet.has(o))) : drafts,
                 irreversible: nameSet(irreversible), library: lib };
   reg.helpRefused = helpRefusedActs(reg);
   reg.withheld = withheldLibrary(reg);
   return reg;
 }
 /* R11 (K1883): the library scripts R12 refuses against the registration, by id: not offered until they pass, as R13
-   withholds a group's. A `{template}` draft is judged by shape, as R14 judges it, and a side trip against the whole
+   withholds a group's. A `{template}` draft is judged here by shape, as R14 judges it (whether a template is offered is
+   judged at each read, for its viewer: `#libraryWithheld`, R22), and a side trip against the whole
    library, as R14 judges it: R11's grounds are a script's own acts and screens, so a required flow is never withheld
    because an optional script it visits is (the side trip to a script not offered is the runner's to skip). */
 function withheldLibrary(reg) {
@@ -273,6 +279,7 @@ export function checkScript(steps, { screens = [], ops = null, machineRefused = 
   const reg = screens instanceof Map ? { screens, ops: ops instanceof Set || ops === null ? ops : nameSet(ops),
                                          machineRefused: nameSet(machineRefused), machineDrafts: nameSet(machineDrafts) }
     : normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible });
+  if (reg.ops) reg.machineDrafts = new Set([...reg.machineDrafts].filter((o) => reg.ops.has(o)));   /* R13: once declared */
   reg.helpRefused = helpRefusedActs({ machineRefused: reg.machineRefused, irreversible: irreversible instanceof Set ? irreversible : nameSet(irreversible) });
   const offeredById = new Map((Array.isArray(offered) ? offered : []).filter((o) => isObj(o) && typeof o.id === "string" && o.id !== self)
     .map((o) => [o.id, Array.isArray(o.steps) ? o.steps : []]));
@@ -552,13 +559,25 @@ export class WizardScripts {
   /* The state of version `n` of any script. */
   #stateAt(s, n) { return s.origin === "civicsmith" ? WizardScripts.#libState(s, n) : this.#stateOf(this.#events(s.id), n); }
 
-  /* The Terms: the offered version's number, or null (retired, none approved, or broken). */
-  #offeredNumber(s, events = null) {
+  /* The Terms: the offered version's number to `viewer`, or null (retired, none approved, broken, or a library script
+     R11 withholds from this viewer). */
+  #offeredNumber(s, events = null, viewer = null) {
     if (s.retired) return null;
     const n = this.#latestApproved(s, events ?? (s.origin === "civicsmith" ? [] : this.#events(s.id)));
     if (n === null) return null;
-    if (s.origin === "civicsmith") return this.#registration().withheld.has(s.id) ? null : n;
+    if (s.origin === "civicsmith") return this.#libraryWithheld(s, viewer) ? null : n;
     return this.#isBroken(s.id, n) ? null : n;
+  }
+  /* R11, R22 (K1883; T45, N858, K2781 (6)): a library script is withheld while R12 refuses it against the registration
+     (`withheld`, judged once at registration) or while one of its `{template}` drafts names no template filing-templates
+     offers this viewer (its R25, R26: "Get a record"'s `@records-request` until a profile offers a template of that
+     handle), judged at each read, so it is offered once one is, the library data unchanged. */
+  #libraryWithheld(s, viewer) {
+    if (this.#registration().withheld.has(s.id)) return true;
+    return s.entry.steps.some((t) => {
+      const d = isObj(t) ? canonicalDraft(t.draft) : null;
+      return !!d && d.template !== undefined && !this.#templateOffered(d.template, viewer);
+    });
   }
 
   /* R5: every member who revised the version and every adopted proposal's run, in time order, each dated. Only a
@@ -692,22 +711,24 @@ export class WizardScripts {
      template and version; the offered scripts `viewer` may see, for duplicates (the script itself left out). */
   #check(steps, viewer, self = null, project = null) {
     const reg = this.#registration();
-    const templateOffered = (ref) => {
-      if (!this.templates || typeof ref !== "string") return false;
-      const asked = ref.startsWith("@") ? { name: ref, ...(project ? { project } : {}) }
-        : ref.includes("@") ? { template: ref.split("@")[0], version: ref.split("@")[1] } : { template: ref, version: null };
-      const r = this.#call(() => this.templates.offeredVersion({ ...asked, viewer }));
-      return !!r && r.ok === true;
-    };
+    const templateOffered = (ref) => this.#templateOffered(ref, viewer, project);
     const offered = this.#offeredScripts(viewer).filter((x) => x.s.id !== self).map((x) => ({ id: x.s.id, steps: x.steps }));
     return checkScript(steps, { ...reg, offered, templateOffered, self });
+  }
+  /* R2, R12: whether filing-templates offers `viewer` the template a `{template}` draft names (its R25; by handle, R26). */
+  #templateOffered(ref, viewer, project = null) {
+    if (!this.templates || typeof ref !== "string") return false;
+    const asked = ref.startsWith("@") ? { name: ref, ...(project ? { project } : {}) }
+      : ref.includes("@") ? { template: ref.split("@")[0], version: ref.split("@")[1] } : { template: ref, version: null };
+    const r = this.#call(() => this.templates.offeredVersion({ ...asked, viewer }));
+    return !!r && r.ok === true;
   }
   /* The offered scripts `viewer` may see, each `{s, n, steps}`. */
   #offeredScripts(viewer) {
     const out = [];
     for (const e of this.#registration().library) {
       const s = this.#libraryScript(e.id);
-      if (this.#canSee(s, viewer) && !this.#registration().withheld.has(e.id)) out.push({ s, n: e.version, steps: this.#steps(s, e.version) });
+      if (this.#canSee(s, viewer) && !this.#libraryWithheld(s, viewer)) out.push({ s, n: e.version, steps: this.#steps(s, e.version) });
     }
     for (const r of this.#rows(`SELECT script_id FROM wiz_scripts ORDER BY created_at, script_id`)) {
       const s = this.#groupScript(r.script_id);
@@ -1203,7 +1224,7 @@ export class WizardScripts {
       const numbers = s.origin === "civicsmith" ? s.entry.versions.map((v) => v.version) : this.#numbers(s.id);
       const stateOf = (n) => (s.origin === "civicsmith" ? WizardScripts.#libState(s, n) : this.#stateOf(events, n));
       let pick;
-      if (!st || st === "offered") { const n = this.#offeredNumber(s, events); pick = n === null ? [] : [n]; }
+      if (!st || st === "offered") { const n = this.#offeredNumber(s, events, viewer); pick = n === null ? [] : [n]; }
       else if (st === "retired") pick = s.retired ? numbers : [];
       else if (st === "broken") pick = s.origin === "group" ? numbers.filter((n) => this.#isBroken(s.id, n)) : [];
       else pick = s.retired ? [] : numbers.filter((n) => stateOf(n) === st);
@@ -1228,7 +1249,7 @@ export class WizardScripts {
                                  WHERE r.script_id=? AND r.version=? ORDER BY p.proposal_id`, s.id, n)
       .map((p) => ({ id: p.proposal_id, sha: p.sha, why: p.why, at: p.at, label: WizardScripts.#label(p.proposer) }));
     return { ok: true, script: this.#head(s, viewer, { start: startOf(view.steps) }), version: { ...view, proposals_adopted: adopted },
-             offered: this.#offeredNumber(s, events) === n };
+             offered: this.#offeredNumber(s, events, viewer) === n };
   }
 
   /* ================================================================ R11: wizardsAt */

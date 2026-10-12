@@ -14,7 +14,7 @@ import { machineFences } from "../../../src/skillpack.mjs";
 const SNAP = JSON.parse(readFileSync(new URL("./rows-before-r43.json", import.meta.url), "utf8"));
 const digest = (s) => createHash("sha256").update(s).digest("hex").slice(0, 16);
 
-test("R7, R2, R10: every code decorated before the catalogue's end reads the same check and translation, its owner's re-wordings under a ruling re-pinned (T41's: C-35.13, C-94.5, C-70.1, C-22.9, C-22.14, C-104.2–.5, C-104.8) and its retired codes held by none (T41's: C-124.52, C-106.1), every pin compared and every difference named, and every published fence (control-plane R41) stays published (negative control: a changed word or a missing code is seen)", () => {
+test("R7, R2, R10: every code decorated before the catalogue's end reads the same check and translation, its owner's re-wordings under a ruling re-pinned (T41's: C-35.13, C-94.5, C-70.1, C-22.9, C-22.14, C-104.2–.5, C-104.8) and its retired codes held by none (T41's: C-124.52, C-106.1; T45's: C-115.19), its moved rows read at their new numbers with their old ones held by none (T45's: C-117.17, C-117.18 to C-149.6, C-149.7), every pin compared and every difference named, and every published fence (control-plane R41) stays published (negative control: a changed word or a missing code is seen)", () => {
   const codes = Object.keys(SNAP.rows);
   assert.ok(codes.length > 900, String(codes.length));
   /* every pin is compared, and every one that differs is named at once */
@@ -33,6 +33,12 @@ test("R7, R2, R10: every code decorated before the catalogue's end reads the sam
   for (const [code, check] of Object.entries(SNAP.changed.retired)) {
     assert.equal(M.dec49Row(code), null, code);
     assert.equal(held.has(check), false, `${check} is reused`);
+  }
+  /* a moved row (T45, K2845, K2859): the same code and words at its new owner's number, the old number held by none */
+  for (const [code, [was, now]] of Object.entries(SNAP.changed.moved)) {
+    assert.equal(M.dec49Row(code).check, now, code);
+    assert.deepEqual(SNAP.rows[code], [now, digest(M.dec49Row(code).translation)], code);
+    assert.equal(held.has(was), false, `${was} is reused`);
   }
   for (const [was, now] of Object.entries(SNAP.changed.rekeyed)) {
     assert.equal(M.dec49Row(was), null, was);
