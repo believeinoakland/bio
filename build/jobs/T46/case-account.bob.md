@@ -1,6 +1,6 @@
 # BOB to case-account (T46)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 625 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L8: case-carriage, publication, public-read, case-checker, case-import, case-disclosures, case-account, case-authoring, case-check; each that uses no unmerged L8 job merges as soon as it is complete.
+
+## B2 · CHANGE
+
+K2965, forwarded from CASE-DISCLOSURES #11 (P9), confirmed: your R6 spells a leg cite 1-based (basis.legs[c.ord - 1]) while the conclusions you hand carry basisFor's 0-based leg ord, and case-checker's legOf matches l.ord === n, so arm 3's cuts-against check on a cited leg reads the next leg. Fix it in this job (one convention end to end, tested with a control on a two-leg basis). Also yours to hold: the control of case-disclosures R30 through the real case-account (accountJudged over case-disclosures), under your R6. And case-checker R24's arm 1 now judges only account rows.
