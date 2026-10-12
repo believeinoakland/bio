@@ -1,6 +1,6 @@
-# Plan: next (T46)
+# Plan: next (T47)
 
-**Status** · Entries for the tranche after T45, written as T45 runs (P18). Started at T45's opening by BOB #156 (K2784): the entries T45 leaves out, each with its hard reason in `current.md` "Left out", and the open parts of the entries T45 applies in part; applied ones move to `archive/next-applied.md` at their last owning merge.
+**Status** · Entries for the tranche after T46, written as T46 runs (P18). At T46's opening by BOB #160 (K2914) it holds every N entry still open: those T46 applies stay until their last owning merge moves them to `archive/next-applied.md`; those T46 leaves out carry their hard reason in `current.md` "Left out". New entries are appended as T46 runs.
 
 ## Entries
 
