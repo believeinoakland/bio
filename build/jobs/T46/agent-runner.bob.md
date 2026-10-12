@@ -1,6 +1,6 @@
 # BOB to agent-runner (T46)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 236 KB with your tests (K2700), under the 600 KB limit; read it whole.
 Merge order in L6: hypotheses, steps, run-rules, ai-runs, reading-guides, skills, question-explorer, agent-harness, agent-model, agent-runner, agent-worker. A job that uses an L6 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L6 job merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+K2947: the explicit signal, in agent-model's form: your R5 is amended on tranche/T46: `/version` answers `{ok, name, version, capabilities}`, `capabilities` an array holding "image" exactly when R24 is met (an older image answers no such key). Update R5's test. Your detail for an image block not in R14's shape (the tool's error naming the fault, no bytes) is accepted. Merge tranche/T46 into your branch; R5 is now marked not yet met: T46.

@@ -1,6 +1,6 @@
 # BOB to run-rules (T46)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 361 KB with your tests (K2700), under the 600 KB limit; read it whole.
 Merge order in L6: hypotheses, steps, run-rules, ai-runs, reading-guides, skills, question-explorer, agent-harness, agent-model, agent-runner, agent-worker. A job that uses an L6 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L6 job merges as soon as it is complete.
+
+## B2 · CHANGE
+
+K2947: your requirements gain R32 on tranche/T46: the row MEMBER_RUN_MODE_NOT_ADMITTED (C-22.30) in your table (R11) in DEC-83's form, minted by ai-runs R18, its `where` `src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch`, its interim translation as R32 states. Merge tranche/T46 into your branch and add it with a test naming R32. Note also: agent-harness now uses run-rules (its R10 test reads DEPLOYED_MODES and RUN_MODES at your interface), so ai-runs, agent-harness and question-explorer wait on your merge: complete early if you can.

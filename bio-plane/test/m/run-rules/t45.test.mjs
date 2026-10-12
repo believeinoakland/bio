@@ -7,15 +7,18 @@ import { DRAFT_KINDS, ACTION_DRAFT_KINDS, DRAFT_REACH, DRAFT_MODE, ACTION_DRAFTS
          deployedModesFor, DEPLOYED_MODES, RUN_MODES, DEPLOYMENT_SEQUENCE, deployable, startAllowed, ASK_BOUNDS,
          checkAskBounds, TEST_BAR_PARTS, partDeployableOn, AI_RUN_PLAN_CHECKS, AI_RUN_CHECKS, RETIRED_CHECKS, translationOf,
          RUN_ORIGINS, PLAN_ORIGINS, originAllowed } from "../../../src/run-rules/index.mjs";
+import { WORD } from "./words.mjs";
 import { refusal } from "./helpers.mjs";
 
 const ACTION = ["textcheck", "infractiondraft", "bearingdraft"];
 const EARLIER = ["own_words", "translation", "case_account", "account_check", "bearing_note"];
+/* R27 (T46; N920): the kind after the action drafts, under draft's own flag (t46.test.mjs holds it) */
+const LATER = ["statusreport"];
 const UNKNOWN = ["", "draft", "text_check", "TextCheck", "infraction_draft", "bearing", " textcheck", "statusreportdraft",
                  "__proto__", "toString", null, undefined, 3, true, ["textcheck"], { kind: "textcheck" }];
 
 test("R27: DRAFT_KINDS gains textcheck, infractiondraft and bearingdraft after R25's three, frozen and named by DRAFT_MODE; each is R21's mode in every other respect — no run, no run row, read-only, ASK_BOUNDS, no mode and no flag of its own name, the test bar held per kind (draft:<kind>)", () => {
-  assert.deepEqual([...DRAFT_KINDS], [...EARLIER, ...ACTION]);
+  assert.deepEqual([...DRAFT_KINDS], [...EARLIER, ...ACTION, ...LATER]);
   assert.deepEqual([...ACTION_DRAFT_KINDS], ACTION);
   assert.ok(Object.isFrozen(DRAFT_KINDS) && Object.isFrozen(ACTION_DRAFT_KINDS));
   assert.equal(DRAFT_MODE.kinds, DRAFT_KINDS);
@@ -95,7 +98,7 @@ test("R27: draftMayRead is true for infractiondraft and bearingdraft whatever su
   for (const x of [undefined, null, 3, "infractiondraft", [], () => 1]) assert.equal(draftMayRead(x), false, String(x));
 });
 
-test("R27: the action drafts deploy by one flag of their own, action_drafts, false today and set only by a reviewed change once the test bar is held for each; it names no mode (deployedModesFor takes it, no mode moves); draft's flag alone never deploys them", () => {
+test("R27: the action drafts deploy by one flag of their own, action_drafts, false today (T46: M-T46-5 found textcheck unserved, so it stays false) and set only by a reviewed change once the test bar is held for each; it names no mode (deployedModesFor takes it, no mode moves); draft's flag alone never deploys them", () => {
   assert.ok(Object.isFrozen(ACTION_DRAFTS));
   assert.equal(ACTION_DRAFTS.flag, "action_drafts");
   assert.equal(ACTION_DRAFTS.kinds, ACTION_DRAFT_KINDS);
@@ -107,50 +110,53 @@ test("R27: the action drafts deploy by one flag of their own, action_drafts, fal
   /* a name deployedModesFor's flags may carry, moving no mode */
   for (const v of [true, false, "true"]) {
     assert.deepEqual([...deployedModesFor({ action_drafts: v })], [...DEPLOYED_MODES], String(v));
-    assert.deepEqual([...deployedModesFor({ action_drafts: v, draft: true })], ["check", "draft"], String(v));
+    assert.deepEqual([...deployedModesFor({ action_drafts: v, plan: false, ask: false, draft: true })], ["check", "draft"], String(v));
   }
   assert.equal(DEPLOYED_MODES.includes("action_drafts"), false);
 });
 
-test("R27: draftKindDeployed({kind, flags}) — an action draft only when both draft's flag and action_drafts are exactly true; R22's and R25's kinds exactly when draft's flag is; an unknown kind false; a flag left out takes today's value (both false); never throws", () => {
+test("R27: draftKindDeployed({kind, flags}) — an action draft only when both draft's flag and action_drafts are exactly true; R22's and R25's kinds, and T46's statusreport, exactly when draft's flag is; an unknown kind false; a flag left out takes today's value (T46: draft true, action_drafts false); never throws", () => {
   const VALUES = [true, false, undefined, "true", 1, null];
   for (const kind of [...DRAFT_KINDS, ...UNKNOWN]) for (const draft of VALUES) for (const action of VALUES)
     for (const leave of [[], ["draft"], ["action_drafts"], ["draft", "action_drafts"]]) {
       const flags = {};
       if (!leave.includes("draft")) flags.draft = draft;
       if (!leave.includes("action_drafts")) flags.action_drafts = action;
-      const d = !leave.includes("draft") && draft === true;
-      const a = !leave.includes("action_drafts") && action === true;
-      const want = ACTION.includes(kind) ? d && a : EARLIER.includes(kind) ? d : false;
+      const d = leave.includes("draft") ? DRAFT_MODE.deployed === true : draft === true;
+      const a = leave.includes("action_drafts") ? ACTION_DRAFTS.deployed === true : action === true;
+      const want = ACTION.includes(kind) ? d && a : [...EARLIER, ...LATER].includes(kind) ? d : false;
       const got = draftKindDeployed({ kind, flags });
       assert.equal(typeof got, "boolean");
       assert.equal(got, want, JSON.stringify({ kind, flags }));
     }
-  /* today: no flag set, nothing deployed */
+  /* today (T46): draft's flag true, action_drafts false — every kind but the action drafts is deployed */
+  assert.deepEqual([DRAFT_MODE.deployed, ACTION_DRAFTS.deployed], [true, false]);
   for (const kind of DRAFT_KINDS) {
-    assert.equal(draftKindDeployed({ kind }), false, kind);
-    assert.equal(draftKindDeployed({ kind, flags: {} }), DRAFT_MODE.deployed, kind);
+    assert.equal(draftKindDeployed({ kind }), !ACTION.includes(kind), kind);
+    assert.equal(draftKindDeployed({ kind, flags: {} }), !ACTION.includes(kind), kind);
   }
   /* draft's flag alone never deploys an action draft; action_drafts alone deploys nothing */
   for (const kind of ACTION) {
     assert.equal(draftKindDeployed({ kind, flags: { draft: true } }), false, kind);
-    assert.equal(draftKindDeployed({ kind, flags: { action_drafts: true } }), false, kind);
+    assert.equal(draftKindDeployed({ kind, flags: { draft: false, action_drafts: true } }), false, kind);
     assert.equal(draftKindDeployed({ kind, flags: { draft: true, action_drafts: true } }), true, kind);
   }
-  /* control: R22's and R25's kinds follow draft's flag alone, action_drafts changing nothing for them */
-  for (const kind of EARLIER) {
+  /* control: R22's and R25's kinds, and statusreport, follow draft's flag alone, action_drafts changing nothing for them */
+  for (const kind of [...EARLIER, ...LATER]) {
     assert.equal(draftKindDeployed({ kind, flags: { draft: true } }), true, kind);
     assert.equal(draftKindDeployed({ kind, flags: { draft: false, action_drafts: true } }), false, kind);
   }
   /* own keys only; anything that is not a request is false */
   assert.equal(draftKindDeployed({ kind: "textcheck", flags: Object.create({ draft: true, action_drafts: true }) }), false);
+  assert.equal(draftKindDeployed({ kind: "own_words", flags: Object.create({ draft: false }) }), true, "an inherited false is no flag");
   assert.equal(draftKindDeployed(Object.create({ kind: "own_words", flags: { draft: true } })), false);
   for (const x of [undefined, null, 3, "textcheck", [], () => 1]) assert.equal(draftKindDeployed(x), false, String(x));
-  for (const flags of [null, 3, "x", [true]]) assert.equal(draftKindDeployed({ kind: "own_words", flags }), false, String(flags));
+  /* flags that are no map are no flags: today's values answer */
+  for (const flags of [null, 3, "x", [true]]) assert.equal(draftKindDeployed({ kind: "own_words", flags }), DRAFT_MODE.deployed, String(flags));
 });
 
 /* R28 (K2820, K2822; ai-runs R77): the re-examination run's rows, and originAllowed reading the run's mode. */
-test("R28: C-109 gains AI_RUN_REEXAM_NEEDS_RESPONSE (C-109.13) and AI_RUN_REEXAM_OPEN (C-109.14), each in DEC-83's sentence-then-remedy form, minted by ai-runs at is-airun-open-reexam and read here by key; no other number taken", () => {
+test("R28, R31: C-109 gains AI_RUN_REEXAM_NEEDS_RESPONSE (C-109.13) and AI_RUN_REEXAM_OPEN (C-109.14), each in DEC-83's sentence-then-remedy form (since T46 words.json's refusal.<CODE>, R31), minted by ai-runs at is-airun-open-reexam and read here by key; no other number taken", () => {
   const want = { AI_RUN_REEXAM_NEEDS_RESPONSE: "C-109.13", AI_RUN_REEXAM_OPEN: "C-109.14" };
   for (const [code, n] of Object.entries(want)) {
     const row = AI_RUN_PLAN_CHECKS[code];
@@ -163,11 +169,12 @@ test("R28: C-109 gains AI_RUN_REEXAM_NEEDS_RESPONSE (C-109.13) and AI_RUN_REEXAM
     /* DEC-83: the sentence (what happened), then the remedy (what to do) */
     const sentences = row.translation.split(/(?<=\.) /);
     assert.equal(sentences.length, 2, code);
-    assert.match(sentences[0], /^Nothing was run, because /, code);
+    assert.match(sentences[0], /^Nothing was started: /, code);
+    assert.equal(row.translation, WORD(`refusal.${code}`), `${code}: R31, words.json's own sentence`);
     assert.match(sentences[1], /^(Record|Wait)\b/, `${code}: the remedy follows`);
     assert.doesNotMatch(row.translation, /\b[A-Z][A-Z_]{3,}\b/, `${code}: plain words`);
   }
-  assert.match(AI_RUN_CHECKS.AI_RUN_REEXAM_NEEDS_RESPONSE.translation, /without saying which reply/);
+  assert.match(AI_RUN_CHECKS.AI_RUN_REEXAM_NEEDS_RESPONSE.translation, /needs to know which reply/);
   assert.match(AI_RUN_CHECKS.AI_RUN_REEXAM_OPEN.translation, /already under way/);
   /* one condition per number across the whole map; the retired numbers stay unused */
   const numbers = Object.values(AI_RUN_CHECKS).map((r) => r.check);

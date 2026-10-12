@@ -1,6 +1,6 @@
 # BOB to agent-worker (T46)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,15 @@ Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 2394 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them (the later layers that use your new services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Merge order in L6: hypotheses, steps, run-rules, ai-runs, reading-guides, skills, question-explorer, agent-harness, agent-model, agent-runner, agent-worker. A job that uses an L6 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L6 job merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+K2947: (1) your reading is ruled: no new credential shape; ai-runs hands the member's own presented `aik-` credential (the door forwards it in process; nothing minted) with account {kind: signin, level: member, member, suggestions: boolean}, no secret; R80 met by your tests as you describe, plus confirm R10 reads principal.ref. (2) and (3) accepted as stated.
+
+## B3 · CHANGE
+
+K2951: reading-guides, agent-model (R15: a sign-in picture relayed once the runner's /version lists capabilities "image") and agent-runner (R24, R5's capabilities) are merged into tranche/T46. Merge tranche/T46 into your branch. Your R45 bundle-freshness tests are red until BOB regenerates your bundle at L6's close (accepted by name, K2951).
+
+## B4 · CHANGE
+
+run-rules is merged into tranche/T46 (K2954: R29 partAdmittedOn/partAdmitted/untestedLabel, R30, R32 MEMBER_RUN_MODE_NOT_ADMITTED C-22.30, plan in DEPLOYED_MODES). Merge tranche/T46 into your branch, re-run your tests on it, and post COMPLETE (again) when green.

@@ -1,4 +1,4 @@
-// The container's Node entry: `GET /version` (R5), the conversation connection `GET /conversation` (R1–R4), the
+// The container's Node entry: `GET /version` (R5, with its capabilities), the conversation connection `GET /conversation` (R1–R4), the
 // member's own sign-in `POST /signin`, `/signin/code`, `/signin/state`, `/signout` (R17–R21), and 404 `UNKNOWN` for
 // anything else (R6). It logs nothing of a request (R8).
 import { createServer } from 'node:http';
@@ -11,6 +11,8 @@ import { signinOf, memberOk } from './signin.mjs';
 export const NAME = 'agent-runner';
 export const VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 export const CONVERSATION_PATH = '/conversation';
+// Each optional relay this image carries (R5): "image", a page's picture in a tool result (R24).
+export const CAPABILITIES = Object.freeze(['image']);
 
 // The SDK and the MCP server classes the relay needs; tests pass their own.
 export async function realSdk() {
@@ -53,7 +55,7 @@ const SIGNIN_ROUTES = {
 export function agentRunnerOf({ sdk, tmpRoot, signin = signinOf() } = {}) {
   const server = createServer(async (req, res) => {
     const path = pathOf(req);
-    if (req.method === 'GET' && path === '/version') return json(res, 200, { ok: true, name: NAME, version: VERSION });
+    if (req.method === 'GET' && path === '/version') return json(res, 200, { ok: true, name: NAME, version: VERSION, capabilities: CAPABILITIES });
     if (req.method === 'POST' && Object.hasOwn(SIGNIN_ROUTES, path)) {
       const body = await bodyOf(req);
       if (!body) return json(res, 400, { ok: false, code: 'BAD_REQUEST' });

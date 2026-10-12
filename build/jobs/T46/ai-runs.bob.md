@@ -1,6 +1,6 @@
 # BOB to ai-runs (T46)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,15 @@ Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 994 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them (the later layers that use your new services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Merge order in L6: hypotheses, steps, run-rules, ai-runs, reading-guides, skills, question-explorer, agent-harness, agent-model, agent-runner, agent-worker. A job that uses an L6 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L6 job merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+K2947: (1) is the intended wire: the door (control-plane, T46-59) hands the member's presented `ai` credential in process to `dispatchMemberRun`; you check it is on record, unrevoked and the run's own principal_plane, send it as `credential` for that call only, and drop it; nothing is minted or held. (2) the account as you state. (3) the refusals and the two reused codes as you propose; no new row beyond J2's. AGENT-WORKER #19 reads the same wire: /run adds no admission, R80 is met by its tests.
+
+## B3 · ANSWER · re J2
+
+K2947: RUN-RULES #13 adds the row as run-rules R32 (C-22.30, DEC-83's form, your `where`, the interim translation you proposed), a CHANGE to that job. Read it by key; until run-rules merges, your null-row handling and test as you describe; I will send a CHANGE when run-rules is merged.
+
+## B4 · CHANGE
+
+run-rules is merged into tranche/T46 (K2954: R29 partAdmittedOn/partAdmitted/untestedLabel, R30, R32 MEMBER_RUN_MODE_NOT_ADMITTED C-22.30, plan in DEPLOYED_MODES). Merge tranche/T46 into your branch, re-run your tests on it, and post COMPLETE (again) when green.
