@@ -23,3 +23,7 @@
 - `checks/run.mjs`: format 0, architecture 0 failures (3057 files), channels 0; coverage 3 failures, none file-scanner's (connection-grammar R21, jurisdictions R88, record-grammar R61 R62: other L1 jobs' new ids).
 
 Size (session_012TNzbQZh8FxASdHwTPhvby): test runs 5, module lines 2510
+
+## J1 · COMPLETE
+
+T47-67 applied: R10 met. The two accepted reds (K3022) re-pinned from Docker Hub to the release's registry rule: test 'R10 the release's registry rule' (ghcr.io/believeinoakland/<image>@sha256:<64 hex>, as agent-runner's, same reference in marker and configuration, no other registry) and a new test 'R10 an instance runs each image copied by its digest' (bundler containerParts names each class by that exact reference); the configuration and marker tests now require the published digest. Stale comments fixed in wrangler.jsonc and both Dockerfiles; fleet-member.json's note left (a bundle input), deferred. file-scanner 64/64, 0 skipped (ClamAV installed in-session); format, architecture, coverage (31/31), ownership 0 failures; run.mjs architecture 0, coverage's 3 failures are connection-grammar, jurisdictions, record-grammar. Record: build/jobs/T47/file-scanner.md on job/T47/file-scanner.
