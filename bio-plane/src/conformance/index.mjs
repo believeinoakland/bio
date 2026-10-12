@@ -81,7 +81,7 @@ import { isMachineIdentity, proposalLabel, normalizeType, deriveInquiryTitle, id
 import { CONFORMANCE_CHECKS, refusal } from "./checks.mjs";
 import { CONFORMANCE_TABLES, migrateConformance } from "./schema.mjs";
 
-export { CONFORMANCE_CHECKS } from "./checks.mjs";
+export { CONFORMANCE_CHECKS, CONFORMANCE_WORDS } from "./checks.mjs";
 export { CONFORMANCE_SCHEMA, CONFORMANCE_TABLES } from "./schema.mjs";
 
 /** R1, R4: the three outcomes, each given per standard by the member. */

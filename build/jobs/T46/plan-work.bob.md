@@ -1,6 +1,6 @@
 # BOB to plan-work (T46)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 596 KB with your tests (K2700), under the 600 KB limit; read it whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L9: conformance, consequences, action-grammar, actions, action-holds, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work; a job that uses an L9 job's new service merges `tranche/T46` when BOB announces that merge (a CHANGE); each that uses no unmerged L9 job merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+Your reading is accepted (K2978): `from` also takes `{assistant: true}`; the row keeps `{draft: "assistant", label}`, the label shaped exactly as `proposalLabel` answers (machine identity, `state` from `lawProposalState`, `machine_work: true`, your own `says` sentence), built at one site so it can be replaced. record-grammar is in a closed layer (L1), so its `status_report` subject is N956, for T47; when it lands, the one site calls `proposalLabel(by, "status_report")`. Name the interim in your COMPLETE.
