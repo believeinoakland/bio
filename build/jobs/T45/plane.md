@@ -1,6 +1,6 @@
 # plane (T45)
 
-**Status** · session_01STFztQZ7PjjtremMEUqCkc · depth 2 · WAITING ON BOB (J1) · handled B12
+**Status** · session_01STFztQZ7PjjtremMEUqCkc · depth 2 · RUNNING until 2026-10-12T01:42:44Z (full plane tests + migrate-released) · handled B12
 
 ## J1 · QUESTION
 
