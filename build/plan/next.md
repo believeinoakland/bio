@@ -79,3 +79,4 @@
 - N993 · plane (startup budget) · bio-plane's global scope measured 540 ms on job/T47/bundler, past bundler R31's 500 ms warning budget (380–428 ms at T46); a warning, the platform allows 1 s · BUNDLER #17 J1 (K3032) · T47-66
 - N994 · record-grammar (comments only) · stale comments in `ids.mjs` and `document.mjs`, left by RECORD-GRAMMAR #16 so as not to stale agent-worker's and newgroup's bundles mid-layer · RECORD-GRAMMAR #16 J1 (K3034) · next record-grammar job
 - N995 · conformance (flaw) · conformance reads `gf.edition_date` (and read `gf.identity`) from case-import's `group_fields`, which case-import never answers; R39 fixes the identity mapping, `edition_date` has no source · L8–L10 fold worker (K3038) · T47-34
+- N996 · credentials (P6, K617) · 4,027 module lines after T47-9 (CREDENTIALS #13 Size), past the ~4,000-line split mark: a split map before any entry adds capability to it · K3040 · BOB's split map (P18)
