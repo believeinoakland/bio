@@ -23,3 +23,7 @@
 - `checks/run.mjs`: format 0, architecture 0 failures (2963 files), channels 0; coverage 23 failures, none action-clocks' (interface and screens modules, monitoring R73, plan-work R14 R15, op-grades R33, setup-page R31, setup-words R5, wizard-scripts R29 R30, notice-producers R19).
 
 Size (session_01DhUXTVeJCC1jtm51pfpgGh): test runs 7, module lines 2090
+
+## J1 · REPORT
+
+Serving op=clockproposals (R20) opens one red not inherited: affordances 'R1 R12: layer 9's op maps hold exactly …' (the op is in no catalogue yet). It needs: op-declarations a spec in the action-clocks family (clockproposals: "read", viewer stamped, NEEDS null; its R6, R49/R51) and help text or ACT_HELP_ABSENT (R34); op-grades a grade (R33); affordances (T46-45) its catalogue row and R51's clockadopt offer through clockProposalsFor. op-declarations' 7 reds and plane's 1 are identical before and after this change (inherited).
