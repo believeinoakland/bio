@@ -27,3 +27,13 @@ Not-yet-met marks this job meets: **R14, R15**, each named by `t46.test.mjs`.
 - `checks/format.mjs`: 159 modules, 0 failures. `checks/architecture.mjs action-holds`: 10 product files, 0 failures. `checks/coverage.mjs action-holds`: 15 of 15 live ids named, 0 failures. `checks/ownership.mjs action-holds tranche/T46`: 0 failures. `checks/run.mjs`: architecture 0 failures (2957 product files); coverage 29 failures, none `action-holds` (other modules' not-yet-met ids, rule 5 (1)); channels 0.
 
 Size (session_01KoRoRu2gZWmcRcS7HdgM6n): test runs 7, module lines 1223
+
+## J1 · REPORT
+
+A flaw R14 opens in another module (`action-producers`; also the `litigation-hold` kind texts in `queue` and `queuestate`), against its R5/R11:
+
+The litigation-hold to-do (fed by my `holdsDue`, R3, which lists a legal mark only while no hold is stated at it) has two doors: `actionhold` and `actionholdrelease`, the latter labelled "Record that no hold is needed, with a reason". Since R14, `actionHoldRelease` at a place where no hold was ever placed is refused `HOLD_NOT_IN_PLACE`. That is exactly the to-do's case, so the second door is offered and always refused, and a member can no longer record "no hold is needed" without first placing a hold. The texts in `queue` and `queuestate` ("it leaves when a member records the hold in place or released") say the same.
+
+Not mine to change. Options as I see them: (a) drop the release door from the to-do and its texts (a hold is placed, then released); (b) give "no hold needed" its own statement in this module (a new requirement), which R3 would read as resolving the mark. My reading of N929's intent favours (a), but it is a requirement call.
+
+Also: `holdNotInPlace`'s one fixed `detail` is re-worded to be true of a release too; its row is unchanged, and `filings` (which relays it) asserts the reason only and passes.
