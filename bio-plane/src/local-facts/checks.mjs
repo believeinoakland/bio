@@ -6,6 +6,33 @@
 const at = (fn, region) => `src/local-facts/index.mjs ${fn} > ${region}`;
 const atRule = (fn, region) => `src/local-facts/rules.mjs ${fn} > ${region}`;
 
+/* R16 (T46; DEC-194; N913): the refusal words of `words.json` (`docs/development/ux-substrate/screens/words.json`), each
+   `en` verbatim, read by key (as membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are); `{errors}` is left
+   for the screen, the refusal's `errors` beside it. The C-126 rows the list holds take their translations from these keys;
+   the rows it does not hold (C-126.1–C-126.5, C-126.11, C-126.16) keep their own. */
+export const RULE_WORDS = Object.freeze({
+  'refusal.MACHINE_CANNOT_DRAFT_RULE': "Only a member drafts or withdraws your group's own rule. The assistant may "
+    + "draft one for you to read, but it enters only when you draft it yourself. Nothing was written.",
+  'refusal.RULE_SECTION_UNKNOWN': "A group's rule is either a deadline or a legal fact, and this is neither. "
+    + "Nothing was written.",
+  'refusal.RULE_ENTRY_INVALID': "This rule isn't in the form a deadline or a legal fact takes: {errors}. Nothing "
+    + "was written.",
+  'refusal.RULE_NO_SOURCE': "A rule is drafted from its source: name the captured document and the part of it that "
+    + "states the rule. Either no such capture is held where you can see it, or that part isn't in it. Nothing was "
+    + "written.",
+  'refusal.RULE_IN_PROFILE': "Your places' rules, or a rule your group already applies, hold this already. Dispute "
+    + "that fact, or offer your correction to whoever keeps those rules, instead. Nothing was written.",
+  'refusal.NO_SUCH_GROUP_RULE': "Your group has no rule of its own by that name, or none you can see. Nothing was "
+    + "written.",
+  'refusal.RULE_SELF_CONFIRM': "A rule is confirmed by a member other than the one who drafted it. Ask another "
+    + "member to check it against its source. Nothing was written.",
+  'refusal.RULE_NOT_DRAFTED': "Only a drafted rule can be confirmed, and this one is already confirmed or was "
+    + "withdrawn. Nothing was written.",
+  'refusal.RULE_NEEDS_QUALIFICATION': "A rule for a Tier 2 or Tier 3 matter, or one whose tier isn't known, is "
+    + "confirmed by a professional. State your qualification in your own words, in at most 500 characters. Nothing "
+    + "was written.",
+});
+
 export const LOCAL_FACTS_CHECKS = Object.freeze({
   MACHINE_CANNOT_CONFIRM: {
     check: "C-126.1", where: at("machineRefusal", "is-fact-member"),
@@ -38,28 +65,23 @@ export const LOCAL_FACTS_CHECKS = Object.freeze({
   /* R10-R13 (T45): the group's own jurisdiction rules. */
   MACHINE_CANNOT_DRAFT_RULE: {
     check: "C-126.6", where: atRule("machineRuleRefusal", "is-rule-member"),
-    translation: "Drafting or withdrawing your group's own jurisdiction rule is a member's act. An assistant may draft "
-      + "one for you to read; it enters only when a member drafts it. Sign in as a member. Nothing was written.",
+    translation: RULE_WORDS['refusal.MACHINE_CANNOT_DRAFT_RULE'],
   },
   RULE_SECTION_UNKNOWN: {
     check: "C-126.7", where: atRule("ruleDraft", "is-rule-section"),
-    translation: "A group's rule is a deadline or a legal fact; this names neither. Nothing was written.",
+    translation: RULE_WORDS['refusal.RULE_SECTION_UNKNOWN'],
   },
   RULE_ENTRY_INVALID: {
     check: "C-126.8", where: atRule("ruleDraft", "is-rule-entry"),
-    translation: "The rule is not in the form a jurisdiction profile holds a deadline or a legal fact in; the errors "
-      + "say which field. Nothing was written.",
+    translation: RULE_WORDS['refusal.RULE_ENTRY_INVALID'],
   },
   RULE_NO_SOURCE: {
     check: "C-126.9", where: atRule("ruleDraft", "is-rule-source"),
-    translation: "A rule is drafted from its primary source: name the captured document and the part of it that "
-      + "states the rule. No such capture is held where you can see it, or that part is not in it. Nothing was "
-      + "written.",
+    translation: RULE_WORDS['refusal.RULE_NO_SOURCE'],
   },
   RULE_IN_PROFILE: {
     check: "C-126.10", where: atRule("ruleDraft", "is-rule-new"),
-    translation: "Your jurisdiction profiles, or a rule your group already applies, hold this rule already. Dispute "
-      + "the profile's fact, or offer your correction to the profile's maintainers, instead. Nothing was written.",
+    translation: RULE_WORDS['refusal.RULE_IN_PROFILE'],
   },
   RULE_NO_REASON: {
     check: "C-126.11", where: atRule("reasonRefusal", "is-rule-reason"),
@@ -67,23 +89,19 @@ export const LOCAL_FACTS_CHECKS = Object.freeze({
   },
   NO_SUCH_GROUP_RULE: {
     check: "C-126.12", where: atRule("noSuchRule", "is-rule-named"),
-    translation: "Your group holds no rule of its own by that name. Nothing was written.",
+    translation: RULE_WORDS['refusal.NO_SUCH_GROUP_RULE'],
   },
   RULE_SELF_CONFIRM: {
     check: "C-126.13", where: atRule("ruleConfirm", "is-rule-other"),
-    translation: "A rule is confirmed by a member other than the one who drafted it. Ask another member to check "
-      + "it against its source. Nothing was written.",
+    translation: RULE_WORDS['refusal.RULE_SELF_CONFIRM'],
   },
   RULE_NOT_DRAFTED: {
     check: "C-126.14", where: atRule("ruleConfirm", "is-rule-drafted"),
-    translation: "This rule is already confirmed, or it was withdrawn; only a drafted rule is confirmed. Nothing was "
-      + "written.",
+    translation: RULE_WORDS['refusal.RULE_NOT_DRAFTED'],
   },
   RULE_NEEDS_QUALIFICATION: {
     check: "C-126.15", where: atRule("ruleConfirm", "is-rule-qualified"),
-    translation: "A rule for a Tier 2 or Tier 3 matter, or one whose tier is not known, is confirmed by a "
-      + "professional: state your qualification in your own words, in at most 500 characters. It is kept on this "
-      + "confirmation only. Nothing was written.",
+    translation: RULE_WORDS['refusal.RULE_NEEDS_QUALIFICATION'],
   },
   RULE_NOT_CONFIRMED: {
     check: "C-126.16", where: atRule("ruleOffer", "is-rule-confirmed"),
