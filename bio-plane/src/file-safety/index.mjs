@@ -1,6 +1,6 @@
 /* file-safety — keeps every captured file safe to open without touching its bytes, digest or grade (layer 3, directly
  * after `capture`; Bob's K1913, K1928, K1929, K1939, K1949 with DEC-168, DEC-169 and DEC-173, packaged by BOB, K2008,
- * K2063; new at T36, T36-11; its own cadences, T37-8). Requirements: `build/requirements/file-safety.md` (R1–R41).
+ * K2063; new at T36, T36-11; its own cadences, T37-8). Requirements: `build/requirements/file-safety.md` (R1–R42).
  *
  * WHAT IT HOLDS. Verdict notes beside each capture naming tool, engine and version (R2, R3); the scan and render queue
  * (R1, R4, R12); scan holds and their release by two members or a second, different engine (R15–R19); deeper checks
@@ -752,7 +752,7 @@ export class FileSafety {
         this.#count("safe_views");
         return { ok: true, kind: "data", derived: true, of: sha, sheets: s.sheets, original };
       }
-      if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", "No safe-view maker is bound beside this copy.", { captureSha: sha });
+      if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", "Your group's Civicsmith has no safe-view maker installed. Nothing was rendered.", { captureSha: sha });
       const row = this.#ensureQueued(sha);
       /* DEC-49 REGION is-safe-view-made */
       if (row.render_state === "failed")
@@ -805,7 +805,7 @@ export class FileSafety {
     try {
       this.#keep("render", { last: this.now() });
       /* DEC-49 REGION is-renderer-bound */
-      if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", "No safe-view maker is bound beside this copy. Nothing was rendered.");
+      if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", "Your group's Civicsmith has no safe-view maker installed. Nothing was rendered.");
       /* END DEC-49 REGION is-renderer-bound */
       const lim = clamp(limit, 20, SCAN_BATCH_MAX);
       const out = { rendered: 0, failed: 0, none: 0, data: 0 };
@@ -840,7 +840,7 @@ export class FileSafety {
   async scanBatch({ limit = SCAN_BATCH_MAX, at = null } = {}) {
     try {
       /* DEC-49 REGION is-scanner-bound */
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "No scanner is bound beside this copy. No note was written.");
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your group's Civicsmith has no virus scanner installed. No note was written.");
       /* END DEC-49 REGION is-scanner-bound */
       const now = Number.isFinite(Date.parse(at)) ? Date.parse(at) : this.now();
       /* R39: the run is kept first, so a batch the scanner refuses still counts as run (its files retried a poll later) */
@@ -1089,7 +1089,7 @@ export class FileSafety {
       if (bar) return bar;
       const { tool, refused } = this.#tool(toolId);
       if (refused) return refused;
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "No scanner is bound beside this copy, so no tool can be tested.", { tool_id: tool.tool_id });
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your group's Civicsmith has no virus scanner installed, so no tool can be tested.", { tool_id: tool.tool_id });
       const spec = await this.#spec(tool);
       const r = spec ? await this.#scanner("/provider/test", { tool: spec }) : { body: { ok: false, code: "CREDENTIALS_UNAVAILABLE" } };
       const at = iso(this.now());
@@ -1394,7 +1394,7 @@ export class FileSafety {
       /* END DEC-49 REGION is-copy-tool-on */
       const row = this.#one(`SELECT * FROM fs_copies WHERE capture_sha = ?`, h.sha);
       if (row && ["pending", "done", "withheld"].includes(row.state)) return { ok: true, captureSha: h.sha, state: row.state };
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "No scanner is bound beside this copy, so no tool can be asked.", { captureSha: h.sha });
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your group's Civicsmith has no virus scanner installed, so no tool can be asked.", { captureSha: h.sha });
       return { ok: true, captureSha: h.sha, state: await this.#makeCopy(h.sha, tool) };
     } catch { return refusal("SAFE_COPY_FAILED", "The safe copy could not be asked for.", { captureSha: captureSha ?? null }); }
   }
@@ -1489,7 +1489,7 @@ export class FileSafety {
    *  no route. Writes no note and names no file, address or member (R23); never throws. */
   async refreshReputationLists({ at = null } = {}) {
     try {
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "No scanner is bound beside this copy, so no list was refreshed.");
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your group's Civicsmith has no virus scanner installed, so no list was refreshed.");
       const when = Number.isFinite(msOf(at)) ? msOf(at) : this.now();
       const refreshed = [], failed = [], skipped = [];
       for (const tool of this.#onTools("url_reputation")) {
