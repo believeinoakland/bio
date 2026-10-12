@@ -253,8 +253,8 @@ test("R21, R17 (T36; K2130): this module holds no screen name — no table here 
 test("R27 (T37: its T36 sentence retired): subscriptionsignin and translationconfirm, served in T37, each have a spec, a row, both session sets and stamps (R36, R37), beside subscriptiondisconnect", () => {
   for (const op of ["subscriptionsignin", "translationconfirm", "subscriptiondisconnect"])
     assert.ok(Object.hasOwn(OPS, op) && Object.hasOwn(NEEDS, op) && both(op) && Object.hasOwn(OP_STAMPS, op), op);
-  /* negative control: an op no owner serves has none of them */
-  assert.ok(!Object.hasOwn(OPS, "infolevelset") && neither("infolevelset") && !Object.hasOwn(OP_STAMPS, "infolevelset"));
+  /* negative control: an op no owner serves has none of them (infolevelset, the control until T46, is R50's now) */
+  assert.ok(!Object.hasOwn(OPS, "nosuchowedact") && neither("nosuchowedact") && !Object.hasOwn(OP_STAMPS, "nosuchowedact"));
 });
 
 /* ---------- R34 (N726; DEC-174 (3); K2063 (3)): every member op explained, or named with why not ---------- */

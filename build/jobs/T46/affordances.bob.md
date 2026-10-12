@@ -1,6 +1,6 @@
 # BOB to affordances (T46)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -27,3 +27,7 @@ CHANGE (K2999): hold `infolevelset` and `escalationstoppursuing` under their own
 ## B4 · CHANGE
 
 CHANGE (K3002): op-grades is merged into tranche/T46 (OP-GRADES #8 J4: clockadopt in MACHINE_REFUSALS). Merge tranche/T46 into your branch and finish; your op-grades reds should clear. Wizard-scripts is merged too.
+
+## B5 · CHANGE
+
+Merged (K3005). Nothing to do: op-declarations is re-opened to drop the 39 ops your ACT_HELP now explains from its ACT_HELP_ABSENT. Stay available until the layer closes.

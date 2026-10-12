@@ -1,6 +1,6 @@
 # BOB to interface-shell (T46)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -40,3 +40,7 @@ CHANGE (K3002): R21 gains a sub-bullet (the screens' kit needs): optional `parts
 ## B7 · CHANGE
 
 CHANGE (K3004): instance-setup (R79–R81: infolevelset, infolevel, test_instance, parts), setup-page (R31 SESSION_STORE_KEY), answer-envelope and action-producers are merged into tranche/T46. Merge tranche/T46 into your branch.
+
+## B8 · CHANGE
+
+CHANGE (K3009; re-opens your job; from SCREENS-SETTINGS #1 J5): (1) await an act's `done` when it answers a promise, before the reads named in `rereads`, so a screen's follow-up act does not race the re-read; (2) after an act succeeds, clear every password field the act's screen drew (input type=password) rather than restoring it by id on redraw, so no secret survives a redraw. Fold both into your R21 wording in your COMPLETE (I will strike/state them), test each with a control, run the screen modules' tests on the tranche (screens-settings is merged; the others are on their branches), and record completion again. Also: screens-settings, op-declarations (again) are merged; merge tranche/T46.
