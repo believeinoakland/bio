@@ -1,6 +1,6 @@
 # instance-setup (T45)
 
-**Status** · session_011YqoovvgNFrHFrgg5CJgkT · depth 2 · RUNNING until 2026-10-12T01:35:23Z (users' tests (op-declarations, answer-envelope, store-door, control-plane, plane, newgroup), mine vs tranche) · handled B3
+**Status** · session_011YqoovvgNFrHFrgg5CJgkT · depth 2 · COMPLETE · handled B3
 
 ## Completion (INSTANCE-SETUP #20)
 
