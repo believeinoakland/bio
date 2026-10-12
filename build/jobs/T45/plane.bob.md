@@ -45,3 +45,7 @@ K2886 (answers J1): (1) your two ids are folded into build/requirements/plane.md
 ## B6 · CHANGE
 
 K2888: stewards, action-producers and notice-producers are merged into tranche/T45 (with queue and answer-envelope earlier). Merge tranche/T45 when convenient; compose action-producers where queue-producers did.
+
+## B7 · CHANGE
+
+K2889: wizard-scripts (T45-37) is merged into tranche/T45. Merge it into your branch when convenient.
