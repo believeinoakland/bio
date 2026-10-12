@@ -347,7 +347,10 @@ const ROWS_Q = [
 let seq = 0;
 const seed = async (label, version, persist) => {
   const mf = bootRelease(version, persist);
-  const c = client(mf);
+  /* From 0.82.0 a RELEASED plane reads its credential only from the `Authorization` header and retires the shared member
+     key (admission R5, R20, K2166, shipped in 0.82.0), so it is driven as the current plane is; earlier ones as they shipped. */
+  const [maj, min] = version.split(".").map(Number);
+  const c = client(mf, { current: maj > 0 || min >= 82 });
   const DOC = `INFO-2026-9143-${String(++seq).padStart(2, "0")}`;
   const text = infoMd(DOC);
   const pr = await c.post("promote", {
