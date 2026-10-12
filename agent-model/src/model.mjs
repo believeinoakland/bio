@@ -1,4 +1,4 @@
-/* agent-model — HOW A MODEL TURN REACHES CLAUDE (R1–R14). Copied from `agent-worker/src/model.mjs` (Q0-1 seam
+/* agent-model — HOW A MODEL TURN REACHES CLAUDE (R1–R15). Copied from `agent-worker/src/model.mjs` (Q0-1 seam
  * (iii); K617, K1439) and extended with the two providers of K1429 and K1502.
  *
  * WHOSE ACCOUNT (R1, R2, R8, R9, R11). Every call carries the account reference that serves one member's act, as
@@ -30,19 +30,21 @@
  * `messages` as given and returns each tool's answer as `text` blocks, or `search_result` blocks where the caller
  * marks it (`{search_results}`): citations as data (ladders §9.4). The sign-in path holds the same line in
  * `signin.mjs`. A page's picture is record content too (R14): an `image` block the caller's `onTool` answers in its
- * `blocks`, sent unchanged inside that `tool_result` on the `apikey` path; the sign-in relay carries text only, so
- * there a transcript or a result holding one is refused (`IMAGE_NOT_RELAYED`) and nothing is sent.
+ * `blocks`, sent unchanged inside that `tool_result` on the `apikey` path, and on the `signin` path relayed inside it
+ * through a runner that answers agent-runner R24 (R15); a runner that does not refuses it (`IMAGE_NOT_RELAYED`) and
+ * nothing is sent.
  *
  * D-611 — THE SEGMENT IS BOUNDED ON BYTES. M-168 measured that what binds a segment is CPU spent re-serialising the
  * transcript, ~7–10 ms per MB, ~3 GB under the 30 s default. So every request is counted as sent, and one that
  * would carry the segment past `bytesBound` is not sent: the SEGMENT stops (never the run), and resuming is what
  * segments are for. The turn bound is checked the same way. */
 import { MODEL_ENDPOINT, MODEL_API_VERSION, withCache, apikeyTurn } from "./apikey.mjs";
-import { RUNNER_URL, READ_RESULT, signinTurn, signinConverse, renderTranscript } from "./signin.mjs";
+import { RUNNER_URL, RUNNER_VERSION_URL, IMAGE_CAPABILITY, READ_RESULT, signinTurn, signinConverse, renderTranscript }
+  from "./signin.mjs";
 import { USAGE_FIGURES, ESTIMATE, usageOf, sumUsage, refused, READ_FACTS, toolResultContent, factsOf } from "./outcome.mjs";
 
-export { MODEL_ENDPOINT, MODEL_API_VERSION, RUNNER_URL, USAGE_FIGURES, ESTIMATE, usageOf, sumUsage, withCache,
-         renderTranscript, READ_FACTS, READ_RESULT };
+export { MODEL_ENDPOINT, MODEL_API_VERSION, RUNNER_URL, RUNNER_VERSION_URL, IMAGE_CAPABILITY, USAGE_FIGURES, ESTIMATE,
+         usageOf, sumUsage, withCache, renderTranscript, READ_FACTS, READ_RESULT };
 
 /* R1 — the model per mode. Every mode the harness's tables hold has an entry. */
 export const MODEL_FOR_MODE = Object.freeze({
