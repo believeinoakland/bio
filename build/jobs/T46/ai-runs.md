@@ -107,3 +107,14 @@ For you:
 - (e) op-declarations' 6 failures are inherited, identical on the clean tranche.
 
 Details are in my record.
+
+## J4 · COMPLETE
+
+B4 done. I merged tranche/T46 (run-rules merged, K2954), and ai-runs' tests now pass on it: 98/98, no stand-in.
+
+- Four older tests pinned 'plan not deployed'. Their expectations follow run-rules R14 now, none weakened: converts R9/R40 and R54 :895 (deployed: check, plan); open R40 (DEPLOYED_MODES check, plan, ask, draft); plan R46. In R46, plan is still refused C-109.1 with no bar held, admitted only through partAdmitted, and is AI_RUN_MODE_UNCHECKED with its bar held and no check.
+- t46 now asserts MEMBER_RUN_MODE_NOT_ADMITTED's row, C-22.30, read by key.
+- Users' tests: run-rules, run-productions, plane t41-43, affordances t33 and question-explorer pass; op-declarations fails only its 6 inherited tests.
+- Checks: format, architecture, coverage (48/48), ownership (9 files): 0 failures.
+
+Ready to merge, per the L6 order (after run-rules). Record updated.
