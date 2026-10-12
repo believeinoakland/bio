@@ -1,0 +1,47 @@
+# monitoring (T45)
+
+**Status** · session_0133TTPPm1mQzJwK2WwH5Yij · depth 2 · COMPLETE · handled B3
+
+## J1 · QUESTION
+
+Readings I am building on (T45-35); none blocks me, so I carry on with each as stated unless you answer otherwise.
+
+1. **R34/R50, where `due_at` comes from.** R34 names `action-clocks` R3 for an entry's `due_at` and zone, but R3 (`overdueClocks`) lists only entries already past by date, so it can never name an entry due at 12:00 today before today ends; R1 (`pendingClocks`, the read R44 binds me to) answers no `due_at`. Best reading: I keep reading through `pendingClocks`, asking `before` = two local days after today (so today's timed entries, and a `due_zone` east of the jurisdiction's, are read); for each candidate I read the entry's `due_at`/`due_zone` from the action's own document (the authority, which `#markOverdue` already reads), the zone being `due_zone` else the jurisdiction's (as `action-clocks`' own `dueAtOf`). A timed entry is past when now ≥ that instant; a wall time the zone skips or repeats that day falls back to the date-only rule (never marked early). R50 offers that instant as the candidate. Two of my existing tests pinned `before` = today; I update them to the new read, no weaker. **REPORT for `action-clocks`:** R1's items could carry `due_at` and `due_zone` (as R3's do), which would spare the document read.
+2. **R71, when an address is ended.** Ended when today's local day ≥ `until` (R71's test: "ended today is not ticked", "ended tomorrow is ticked today"). "Today" is the jurisdiction's local day (`#zone`, the zone R34 reads). With no zone held, a non-null `until` is refused `WATCH_END_REFUSED` (the detail saying today cannot be read in the instance's zone; never the UTC day), `null` is accepted, and a setting already held reads `until` with the row saying its end is undetermined (not ended).
+3. **R71 `asked_after_end`:** the versions at the ended address that still ask to be monitored (R15's `monitored_versions`), filtered by the viewer's sight on R32's rows.
+4. **The row:** `WATCH_END_REFUSED` takes C-18.19 in this module's existing C-18 family (`checks.mjs`), with a translation of mine for UX to re-word; `following` R22 reads it from here rather than minting its own (one site). Accepted reds: rule 4 (2), (14).
+5. **The plan and R32:** `schedule(now)` gains an `ended` list (never due, no `next`, read by no tick, no look); R32's rows read `state: "ended"`, so `machinery-producers`' recheck arm (overdue `due` or `unscheduled` only) draws nothing for it. `op=monitor` asked by a caller naming a bundle still runs (R1 is unamended). Every R32 row answers `until` (the day, or null) with `until_set: {by, at}` when one is set, or `ends: "none_set"`; the history is `end_settings` on the row, as `frequency_settings`.
+6. **Size:** 3,489 code lines at START; R71/R72/R34 should land near 3,650, under 4,000 (M-T45-6 noted).
+
+## J2 · REPORT
+
+**R34's time-of-day arm is blocked by `actions` R33's write bound (another module; I change nothing there).**
+
+What happens: my code now reads an entry's `due_at` (as J1 item 1 says) and, at 12:01 on the entry's own day, sends the mechanical `deadline-recheck` that moves it `pending` → `overdue`. `actions`' promotion step refuses it `CLOCK_STATUS_NOT_MECHANICAL` (`bio-plane/src/actions/index.mjs`:729–742, `clockMovesNotMechanical(heldClock, nextClock, today)`), because its bound (actions R33: "may move a `pending` entry whose date has passed") reads only the date: an entry dated today has not "passed" there until tomorrow. Reproduced in `ends.test.mjs` "R34 an entry due 12:00 …": `failed: [{reason: "CLOCK_STATUS_NOT_MECHANICAL"}]`.
+
+Needed (for `actions`, against its R33 as amended by R34's T45 line): the machine bound admits a `pending` → `overdue` move of an entry that carries a `due_at` once that instant has passed in its zone (`due_zone`, else the office's), the same reading `action-clocks`' `dueAtOf` gives; date-only entries unchanged. Until then, monitoring's mark of a timed entry fails on its day (held back once a day by R50's N429 rule, never a loop) and lands at the start of the next local day as before, so nothing is marked early or wrongly.
+
+My state: every other entry (R71, R72, R32, R50, and R34's read of the instant) is built and green; the two R34 tests are red only on this refusal. I am finishing the checks and my record now; I will post COMPLETE with these two named as the open red unless you send another reading. Also still open from J1 item 1: `action-clocks` R1 could answer `due_at`/`due_zone` (saves a document read).
+
+## Completion (MONITORING #18)
+
+**Read.** My requirements whole; the plan entry T45-35, its rules at the opening, the reconciliation (R7, R13) and `draft-T45-upper.md` "monitoring" whole; K2780, K2781, K2787. My code whole (`index.mjs`, `checks.mjs`, `schema.mjs`). Tests read whole: `fixture`, `cadence`, `reads`, `understanding`, `invariants`, `look`, `gathering`, `ticks`, `watch`, `queue-reads`, `voice`, `relay`; `tick`, `seam` and `docket` were not read whole (the START's set is over 600 KB; they test arms this job does not touch, and they pass unchanged). For the services I read I went to the source directly rather than through helper digests: `action-clocks` (R1, R3, `dueAtOf`), `civil-time` (`bounds`, `isCalendarDate`, `dayRange`), `actions`' clock write bound (R33), `machinery-producers`' recheck arm (R31). I did not read `BIO_Action_v0_2.md` whole; I worked from the draft's citations of rules 6 and 17.
+
+**Applied** (readings J1, confirmed B2/K2871):
+- **R71** `addressWatchEnd({address, until, by, viewer})`, in process and not an op. Its refusals, in order: an empty or machine `by` gets `MACHINE_CANNOT_SET_FREQUENCY`; an address that is absent or invisible gets `NO_SUCH_ADDRESS`; a bad day, a day before today, or a day given where no zone is held gets `WATCH_END_REFUSED`. The new row is C-18.19 in my C-18 family; its translation is a draft for UX. Settings go in the append-only table `monitor_address_end`, declared to a whole-store purge only. An address is ended when today's local day ≥ `until`. `schedule().ended` rows carry `until`, `until_set` and `asked_after_end`. They are never due, never ticked, get no look, hold no wake and are not on the slate. With no zone held, a held day reads `end_undetermined` and the address stays watched.
+- **R72** `addressWatchers(address)` answers the projects of the documents that still ask at the normalised address (R15 grouping), sorted. It answers `[]` otherwise, never throws and is not an op.
+- **R32** Every row answers `until`/`until_set`, or `until: null` with `ends: "none_set"`. A set address also carries its `end_settings` history. There is a new state `ended`, counted in `counts.ended`. `asked_after_end` is filtered by the viewer's sight. R31's recheck arm draws nothing for `ended`.
+- **R34, R50** `pendingClocks` is now read with `before` = two local days after today. An entry's `due_at`/`due_zone` is read from the action's own document; its zone is `due_zone`, else the jurisdiction's. A wall time the zone skips or repeats is read by the date alone. R50 offers the instant, reading documents only while the instant could still beat the wake. **Not met in T45: R34's time-of-day arm.** `actions` R33's machine bound reads only the date, so the mark is refused `CLOCK_STATUS_NOT_MECHANICAL` on the entry's own day (J2; K2874, N922 for T46). Two tests are `test.todo` naming that cause. A passing test pins that a timed entry is never marked early and lands at the start of the next local day.
+- Tests re-pinned because the requirements changed (none weakened): the R44 and K1444 tests' `before` (now two days on); R41's table list and purge counts (+`monitor_address_end`); R42's row list (+C-18.19); R32's `counts` (+`ended`). New file `ends.test.mjs`.
+
+**Found in other modules** (reported): `actions` R33's bound (J2, N922); `action-clocks` R1 could answer `due_at`/`due_zone` (J1, N918). `following` R22 reads `WATCH_END_REFUSED` from here (B2 item 4).
+
+**Deferred:** none of mine. Size: 3,694 lines in `src/monitoring/` (3,489 at START), under 4,000. M-T45-6 stands: no further work here without a split plan.
+
+**Tests and checks.** monitoring: 134 pass, 0 fail, 2 todo. Users' suites, compared with `origin/tranche/T45` failure for failure: following 50/0, link-sweep 29/0, scheduler 129/0, machinery-producers 24/0, queue-producers 84/0. affordances 8 fail, answer-envelope 6, control-plane 4 and plane 8 fail the same tests as on the base (rule 4 (6), (9), (11), (12), (14)); none are new. `system/migrate-released.test.mjs` fails on the base too. Checks: format 0 failures; architecture 0; coverage 59 of 59 live ids; ownership 0 (8 files).
+
+Size (session_0133TTPPm1mQzJwK2WwH5Yij): test runs 14, module lines 3694
+
+## J3 · COMPLETE
+
+T45-35 complete on job/T45/monitoring (pushed). R71, R72, R32, R50 met; R34 met but for its time-of-day arm, which is not met in T45 (actions R33's bound, N922, K2874): two test.todo tests name that cause, and a passing test pins that a timed entry is never marked early. monitoring 134 pass / 0 fail / 2 todo. The users' suites fail exactly the tests they fail on the tranche base. format, architecture, coverage (59/59) and ownership (8 files): 0 failures each. New row C-18.19 WATCH_END_REFUSED (rule 4 (2), (14)). Details are in my record's Completion section.

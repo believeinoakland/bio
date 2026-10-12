@@ -1,8 +1,9 @@
-/* monitoring's tables (requirements: `build/requirements/monitoring.md`, R21, R13, R41, R52; K4). The first three moved
+/* monitoring's tables (requirements: `build/requirements/monitoring.md`, R21, R13, R41, R52, R71; K4). The first three moved
  * from `schema.mjs` (legacy-store) with their comments; they are DERIVED and declared to record-core's purge (K23, R41):
  * `monitor_fired` by `subject`; `monitor_tick_epoch` and `monitor_address_type` only by a whole-store purge, an
  * address outliving any one version. `monitor_address_frequency` (R52, K1019) holds members' acts, append-only, and is
- * declared to purge only by a whole-store purge for the same reason. `monitor_gathering_run` (R28, K1096), the record of
+ * declared to purge only by a whole-store purge for the same reason; so is `monitor_address_end` (R71, T45), an address's
+ * end dates, append-only. `monitor_gathering_run` (R28, K1096), the record of
  * every attempt at a named request, is declared to purge by the bundle that carries the request. T24 (N506, K1159): the
  * link sweep's `sweep_runs` and `sweep_filed` left with the sweep for `link-sweep`, which creates and declares them. */
 
@@ -99,6 +100,21 @@ CREATE TABLE IF NOT EXISTS monitor_address_frequency (
   PRIMARY KEY (address_norm, seq)
 );
 
+-- R71 (T45; N855; Actions D6d): AN ADDRESS'S END DATE, the day from which it is no longer
+-- watched, set by a member's act through following R25. APPEND-ONLY as R52's settings are: a
+-- setting is never edited, the highest seq at the address governs, and every one stays readable.
+-- until NULL clears it (the address returns to R14-R16). Keyed on the NORMALISED address.
+-- Declared to purge only by a whole-store purge: an address outlives any one version.
+CREATE TABLE IF NOT EXISTS monitor_address_end (
+  address_norm  TEXT    NOT NULL,
+  seq           INTEGER NOT NULL,  -- 1, 2, ... per address, in the order set
+  address       TEXT    NOT NULL,  -- the address as named
+  until         TEXT,              -- a calendar day YYYY-MM-DD, or NULL (no end)
+  set_by        TEXT    NOT NULL,
+  at            TEXT    NOT NULL,
+  PRIMARY KEY (address_norm, seq)
+);
+
 -- R28 (K1096): THE RECORD OF EVERY ATTEMPT AT A NAMED REQUEST of a bundle's
 -- data/gathering.json, one row per attempt, never edited. A request is due by R14's interval
 -- from its last attempt (a governed attempt is our pacing and is not one); outcome is
@@ -133,6 +149,7 @@ export const MONITORING_TABLES = Object.freeze([
   { name: "monitor_tick_epoch", keys: [] },
   { name: "monitor_address_type", keys: [] },
   { name: "monitor_address_frequency", keys: [] },
+  { name: "monitor_address_end", keys: [] },
   { name: "monitor_gathering_run", keys: ["bundle_id"] },
 ]);
 

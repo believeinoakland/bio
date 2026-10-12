@@ -86,7 +86,7 @@ test("R32 monitoring({viewer}): every monitored address the viewer may see, with
   assert.equal(by["INFO-2026-0511-meeting"].reason, "cadence is a meeting schedule your group's Civicsmith does not hold");
   assert.equal(by["INFO-2026-0512-later"].state, "scheduled");
   assert.equal(by["INFO-2026-0512-later"].next_at, iso(NOW_MS - DAY + 7 * DAY));
-  assert.deepEqual(r.counts, { due: 1, scheduled: 1, unscheduled: 1 });
+  assert.deepEqual(r.counts, { due: 1, scheduled: 1, unscheduled: 1, ended: 0 });
   assert.equal(w.m.monitoring({ viewer: "nobody", now: NOW_MS }).items.length, 0, "only what the viewer may see");
   const one = w.m.monitoring({ viewer: DAEMON, now: NOW_MS, limit: 1 });
   assert.deepEqual([one.items.length, one.truncated, one.limit], [1, true, 1]);

@@ -2,7 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, DAEMON, NOW_MS, infoMd } from "./fixture.mjs";
-import { monitoringOps, MONITORING_TABLES, MONITORING_CHECKS, DRIVE_TICK_CHECKS, GATHERING_CHECKS, FREQUENCY_CHECKS }
+import { monitoringOps, MONITORING_TABLES, MONITORING_CHECKS, DRIVE_TICK_CHECKS, GATHERING_CHECKS, FREQUENCY_CHECKS,
+         WATCH_END_CHECKS }
   from "../../../src/monitoring/index.mjs";
 import { MECHANICAL_FIELD_SETS } from "../../../src/promotion/index.mjs";
 import { ACQUISITION_CHECKS } from "../../../src/acquisition/index.mjs";
@@ -100,11 +101,11 @@ test("R40 bias never shapes what is monitored: no service takes a lens, and a le
   assert.equal(JSON.stringify(routed), a);
 });
 
-test("R41 the tables are this module's and declared to purge: monitor_fired by subject; R28's monitor_gathering_run by the bundle carrying the request; monitor_address_type, monitor_tick_epoch and R52's monitor_address_frequency only by a whole-store purge; the link sweep's left with it (N506)", async () => {
+test("R41 the tables are this module's and declared to purge: monitor_fired by subject; R28's monitor_gathering_run by the bundle carrying the request; monitor_address_type, monitor_tick_epoch, R52's monitor_address_frequency and R71's monitor_address_end only by a whole-store purge; the link sweep's left with it (N506)", async () => {
   const w = world();
   assert.deepEqual(MONITORING_TABLES.map((t) => [t.name, t.keys]),
     [["monitor_fired", ["subject"]], ["monitor_tick_epoch", []], ["monitor_address_type", []], ["monitor_address_frequency", []],
-     ["monitor_gathering_run", ["bundle_id"]]]);
+     ["monitor_address_end", []], ["monitor_gathering_run", ["bundle_id"]]]);
   /* the link sweep's tables are link-sweep's (N506): this module neither creates nor declares them */
   assert.deepEqual(w.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name IN ('sweep_runs', 'sweep_filed')`), []);
   const id = "INFO-2026-0850-purge";
@@ -114,6 +115,7 @@ test("R41 the tables are this module's and declared to purge: monitor_fired by s
   await tick(w, id);                /* reads the address's type */
   assert.equal(w.m.addressFrequencySet({ address: LOC, frequency: "daily", reason: "source_changes_rarely", author: "carol",
                                          viewer: "member:carol" }).ok, true);   /* an address's own frequency (R52) */
+  assert.equal(w.m.addressWatchEnd({ address: LOC, until: "2099-01-01", by: "carol", viewer: "member:carol" }).ok, true);   /* its end (R71) */
   /* a named request of another bundle, attempted once (R28) */
   const gid = "INFO-2026-0851-gath";
   const g = JSON.stringify({ requests: [{ id: "GATH-2026-0851-x", target: { text: "x" }, locators: ["https://records.example.org/g"],
@@ -126,20 +128,20 @@ test("R41 the tables are this module's and declared to purge: monitor_fired by s
   await w.m.cadenceTick(NOW_MS + 2 * 86400000);   /* fails: its claim and epoch stay; the request is attempted */
   w.m.monitor = real;
   const count = (t) => w.rows(`SELECT count(*) c FROM ${t}`)[0].c;
-  const all = () => ["monitor_fired", "monitor_tick_epoch", "monitor_address_type", "monitor_address_frequency", "monitor_gathering_run"].map(count);
-  assert.deepEqual(all(), [2, 1, 1, 1, 1]);
+  const all = () => ["monitor_fired", "monitor_tick_epoch", "monitor_address_type", "monitor_address_frequency", "monitor_address_end", "monitor_gathering_run"].map(count);
+  assert.deepEqual(all(), [2, 1, 1, 1, 1, 1]);
   w.record.purge({ bundleId: id });
-  assert.deepEqual(all(), [1, 1, 1, 1, 1], "the bundle's claims go; the epoch, the address's reading and its settings outlive it");
+  assert.deepEqual(all(), [1, 1, 1, 1, 1, 1], "the bundle's claims go; the epoch, the address's reading and its settings outlive it");
   w.record.purge({ bundleId: gid });
-  assert.deepEqual(all(), [1, 1, 1, 1, 0], "the request's attempts go with the bundle carrying it; its claim is the tick's, spent with the epoch");
+  assert.deepEqual(all(), [1, 1, 1, 1, 1, 0], "the request's attempts go with the bundle carrying it; its claim is the tick's, spent with the epoch");
   w.record.purge({});
-  assert.deepEqual(all(), [0, 0, 0, 0, 0]);
+  assert.deepEqual(all(), [0, 0, 0, 0, 0, 0]);
 });
 
-test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, number, translation and a where naming this module's site; the rest of C-48 is acquisition's; C-18.10 is the gathering refusal's row; C-18.11 to C-18.15 are R52's; C-18.16 to C-18.18 left with the link sweep, whose grammar and fence mint them (N506, K1206)", () => {
+test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, number, translation and a where naming this module's site; the rest of C-48 is acquisition's; C-18.10 is the gathering refusal's row; C-18.11 to C-18.15 are R52's; C-18.19 is R71's WATCH_END_REFUSED; C-18.16 to C-18.18 left with the link sweep, whose grammar and fence mint them (N506, K1206)", () => {
   assert.deepEqual(Object.keys(MONITORING_CHECKS).sort(),
     ["BAD_FREQUENCY", "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL", "DRIVE_TICK_EXPORT_IS_THE_SHELL", "FREQUENCY_NO_REASON",
-     "GATHERING_REFUSED", "MACHINE_CANNOT_SET_FREQUENCY", "NOT_A_SOURCE_OWNER", "NO_SUCH_ADDRESS"]);
+     "GATHERING_REFUSED", "MACHINE_CANNOT_SET_FREQUENCY", "NOT_A_SOURCE_OWNER", "NO_SUCH_ADDRESS", "WATCH_END_REFUSED"]);
   assert.deepEqual(Object.fromEntries(Object.entries(MONITORING_CHECKS).map(([k, r]) => [k, [r.check, r.where]])), {
     DRIVE_TICK_EXPORT_IS_THE_SHELL: ["C-48.8", "src/monitoring/index.mjs monitor > is-drive-tick-export"],
     DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: ["C-48.9", "src/monitoring/index.mjs monitor > is-drive-tick-bytes"],
@@ -149,13 +151,14 @@ test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, n
     BAD_FREQUENCY: ["C-18.13", "src/monitoring/index.mjs addressFrequencySet > is-frequency-word"],
     NOT_A_SOURCE_OWNER: ["C-18.14", "src/monitoring/index.mjs addressFrequencySet > is-frequency-owner"],
     FREQUENCY_NO_REASON: ["C-18.15", "src/monitoring/index.mjs addressFrequencySet > is-frequency-reason"],
+    WATCH_END_REFUSED: ["C-18.19", "src/monitoring/index.mjs addressWatchEnd > is-watch-end-day"],
   });
   for (const r of Object.values(MONITORING_CHECKS)) {
     assert.equal(typeof r.translation, "string");
     assert.ok(r.translation.length > 40, "a canned sentence (DEC-49)");
     assert.ok(Object.isFrozen(r));
   }
-  assert.deepEqual(MONITORING_CHECKS, { ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS });
+  assert.deepEqual(MONITORING_CHECKS, { ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS, ...WATCH_END_CHECKS });
   /* no code is held twice: none of this module's rows is acquisition's, and no C-48 row of acquisition's is this module's */
   for (const code of Object.keys(MONITORING_CHECKS)) assert.equal(code in ACQUISITION_CHECKS, false, code);
   assert.deepEqual(Object.values(ACQUISITION_CHECKS).map((r) => r.check).filter((c) => c === "C-48.8" || c === "C-48.9"), []);
