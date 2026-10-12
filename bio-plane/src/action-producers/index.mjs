@@ -47,8 +47,21 @@ const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons:
 /* R9: the day before which `pendingClocks` lists every pending entry (action-clocks R1): every dated entry is before it. */
 const PENDING_BEFORE = "9999-12-31";
 
-const person = (x) => typeof x === "string" && x.trim() !== "" && !x.startsWith(MACHINE_AUTHOR_PREFIX)
-  && !x.startsWith(MACHINE_CLASS_PREFIX);
+/** K3000: a member as this module reads her, whichever form names her: the bare member id (`alice`, as queue passes
+ *  `member`) or the control plane's stamp of an author (`member:alice`, as action-clocks keeps a reminder's `set_by` and
+ *  an action's creator, and plan-work a take-up's `member`). Answers the bare id, or null for nothing, a machine
+ *  (`token:`, `class:`) or a stamp naming no one. Every member this module compares, counts or names goes through it. */
+const MEMBER_STAMP = "member:";
+export function memberIdOf(x) {
+  if (typeof x !== "string") return null;
+  let m = x.trim();
+  if (m.startsWith(MEMBER_STAMP)) m = m.slice(MEMBER_STAMP.length).trim();
+  if (m === "" || m.startsWith(MACHINE_AUTHOR_PREFIX) || m.startsWith(MACHINE_CLASS_PREFIX)) return null;
+  return m;
+}
+const person = (x) => memberIdOf(x) !== null;
+/** The distinct members a list names, each by its bare id (K3000). */
+const membersOf = (list) => [...new Set((Array.isArray(list) ? list : []).map(memberIdOf).filter((m) => m !== null))];
 
 export class ActionProducers {
   #host; #deps;
@@ -285,7 +298,7 @@ export class ActionProducers {
    * item and is named in `facts.failed`, so the rest of the feed stands. `facts[<kind>]` states each producer's bound
    * and whether it cut. */
   actionItems({ member = null, viewer = null, now = null, homesOf = null, optionsOf = null } = {}) {
-    const me = typeof member === "string" && member.trim() ? member.trim() : null;
+    const me = memberIdOf(member);
     const at = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : Date.now();
     this.#homesFn = typeof homesOf === "function" ? homesOf : null;
     this.#optionsFn = typeof optionsOf === "function" ? optionsOf : null;
@@ -346,8 +359,9 @@ export class ActionProducers {
    * ====================================================================== */
 
   /** Whether a member is an active member of the group (membership R68), memoised per read. */
-  #active(m) {
-    if (!person(m)) return false;
+  #active(who) {
+    const m = memberIdOf(who);
+    if (m === null) return false;
     if (!this.#memo.facts.has(m)) {
       let f = null;
       try { f = this.#membership.memberFacts(m); } catch { f = null; }
@@ -357,8 +371,10 @@ export class ActionProducers {
   }
 
   /** Whether a member may see a bundle (membership R80, as `member:<id>`), memoised per read. */
-  #sees(m, id) {
+  #sees(who, id) {
     if (typeof id !== "string" || !id) return true;
+    const m = memberIdOf(who);
+    if (m === null) return false;
     const k = `${m}\n${id}`;
     if (!this.#memo.sight.has(k)) {
       let s = false;
@@ -383,7 +399,7 @@ export class ActionProducers {
   #activeOwners(project) {
     if (typeof project !== "string" || !project) return [];
     if (!this.#memo.owners.has(project)) {
-      const owners = (this.#membership.projectOwners(project) || []).filter((m) => {
+      const owners = membersOf(this.#membership.projectOwners(project)).filter((m) => {
         const p = this.#participation(project, m);
         return this.#active(m) && !!p && p.state === "joined";
       });
@@ -399,7 +415,7 @@ export class ActionProducers {
   }
 
   #admins() {
-    if (this.#memo.admins === null) this.#memo.admins = this.#membership.activeAdmins() || [];
+    if (this.#memo.admins === null) this.#memo.admins = membersOf(this.#membership.activeAdmins());
     return this.#memo.admins;
   }
 
@@ -414,7 +430,7 @@ export class ActionProducers {
         if (!r || r.ok === false || !Array.isArray(r.items)) break;
         for (const t of r.items) {
           const k = ActionProducers.#takeUpKey(t && t.item);
-          if (k && person(t.member)) last.set(k, t.member);
+          if (k && person(t.member)) last.set(k, memberIdOf(t.member));
         }
         if (!r.truncated || r.cursor === null || r.cursor === undefined) break;
         after = r.cursor;
@@ -442,7 +458,7 @@ export class ActionProducers {
   #recipients({ taken = null, author = null, seen = null, project = null } = {}) {
     const takenBy = this.#takenBy(taken);
     if (takenBy && this.#active(takenBy) && this.#sees(takenBy, seen)) return { rule: "took_up", members: [takenBy] };
-    if (person(author) && this.#active(author) && this.#sees(author, seen)) return { rule: "author", members: [author.trim()] };
+    if (person(author) && this.#active(author) && this.#sees(author, seen)) return { rule: "author", members: [memberIdOf(author)] };
     const owners = this.#activeOwners(project);
     if (owners.length) return { rule: "project_owners", members: [...owners] };
     return { rule: "administrators", members: [...this.#admins()] };
@@ -697,7 +713,7 @@ export class ActionProducers {
     bound.truncated = page.truncated;
     const out = [];
     for (const x of page.items) {
-      if (!x || typeof x.action !== "string" || !x.action || !Number.isInteger(x.ord) || x.set_by !== me) continue;
+      if (!x || typeof x.action !== "string" || !x.action || !Number.isInteger(x.ord) || memberIdOf(x.set_by) !== me) continue;
       if (!this.#active(me) || !this.#sees(me, x.action)) continue;
       /* R20: the reminder's day is a local day of the action's zone; it ages from that day's first local instant */
       const zone = this.#actionZone(x);
@@ -749,7 +765,7 @@ export class ActionProducers {
       if (!m || typeof m !== "object") continue;
       const arrived = m.arrived && typeof m.arrived === "object" ? m.arrived
         : typeof m.action === "string" ? { action: m.action, ord: m.ord } : {};
-      const marker = person(m.marked_by) ? m.marked_by : null;
+      const marker = memberIdOf(m.marked_by);
       const markerTold = marker && this.#active(marker) ? marker : null;
       if (!admin && markerTold !== me) continue;
       const recipients = [...new Set([...this.#admins(), ...(markerTold ? [markerTold] : [])])];
@@ -842,7 +858,7 @@ export class ActionProducers {
     for (const x of page.items) {
       if (!x || typeof x.action !== "string" || !x.action || !Number.isInteger(x.ord) || !Number.isInteger(x.seq)) continue;
       if (visible(x.action) === null) continue;      // R14: a release on an action this viewer may not see is no item
-      const placers = [...new Set((Array.isArray(x.placers) ? x.placers : []).filter(person))];
+      const placers = membersOf(x.placers);
       if (!admin && !placers.includes(me)) continue;
       const admins = this.#admins();
       const restarted = (Array.isArray(x.restarted) ? x.restarted : [])
@@ -904,7 +920,7 @@ export class ActionProducers {
     const visible = this.#bundleRedactor(viewer);
     const out = [];
     for (const x of page.items) {
-      if (!x || typeof x.version !== "string" || !x.version || typeof x.member !== "string" || x.member !== me) continue;
+      if (!x || typeof x.version !== "string" || !x.version || memberIdOf(x.member) !== me) continue;
       const asker = x.asked_by && typeof x.asked_by === "object" ? { id: x.asked_by.id ?? null, name: x.asked_by.name ?? null } : null;
       const askerName = asker && (asker.name || asker.id) ? asker.name || asker.id : "a member";
       const project = typeof x.project === "string" && x.project ? visible(x.project) : null;   // R14
@@ -1018,8 +1034,9 @@ export class ActionProducers {
 
   /** A member is gone from a project when she is no longer an active member of the group (membership R68), or holds
    *  no participation in the project (membership R74; a member who leaves holds none). */
-  #gone(m, project) {
-    if (!person(m)) return false;
+  #gone(who, project) {
+    const m = memberIdOf(who);
+    if (m === null) return false;
     if (!this.#active(m)) return true;
     if (typeof project !== "string" || !project) return false;
     const p = this.#participation(project, m);
@@ -1044,7 +1061,7 @@ export class ActionProducers {
     const out = [];
     const cut = { truncated: false };
     const visible = this.#bundleRedactor(viewer);
-    const routed = (taken, author) => { const t = this.#takenBy(taken); return t || (person(author) ? author : null); };
+    const routed = (taken, author) => this.#takenBy(taken) || memberIdOf(author);
     /* clock entries: the passed ones with their creator and project (action-clocks R3), the pending ones (its R1) */
     const entries = new Map();
     const overdue = this.#once("overdueClocks", () => this.#pages((after) => this.#actionClocks.overdueClocks({ after, viewer, now })));
@@ -1086,7 +1103,7 @@ export class ActionProducers {
         const e = entries.get(`${a}#${x.entry}`);
         if (!e || !person(x.set_by) || x.state === "answered") continue;
         out.push({ kind: "reminder", subject: a, entry: x.entry, date: x.on ?? null, basis: e.basis ?? null,
-                   project: factsOf(a).project, member: x.set_by, door: { kind: "clock", action: a, entry: x.entry } });
+                   project: factsOf(a).project, member: memberIdOf(x.set_by), door: { kind: "clock", action: a, entry: x.entry } });
       }
     }
     /* checkpoints come due on plans this viewer's projects hold (action-plans R17) */
@@ -1120,7 +1137,7 @@ export class ActionProducers {
                    door: { kind: "hold", target: a.action, ord: a.ord } });
       } else if (typeof a.pressure === "string" && typeof m.project === "string") {
         out.push({ kind: "hold", subject: m.project, entry: a.pressure, date: m.marked_at ?? null, basis: m.note ?? null,
-                   project: m.project, member: m.marked_by, door: { kind: "hold", project: m.project } });
+                   project: m.project, member: memberIdOf(m.marked_by), door: { kind: "hold", project: m.project } });
       }
     }
     return { items: out, truncated: cut.truncated };
@@ -1226,7 +1243,7 @@ export class ActionProducers {
     const out = [];
     for (const q of page.items) {
       if (!q || q.link === undefined || q.link === null || typeof q.plan !== "string") continue;
-      const recipients = (Array.isArray(q.recipients) ? q.recipients : []).filter(person);
+      const recipients = membersOf(q.recipients);
       if (!recipients.includes(me)) continue;
       const project = projectOf(q.plan);
       const w = q.watch && typeof q.watch === "object" ? q.watch : {};
