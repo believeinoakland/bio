@@ -378,10 +378,28 @@
   "note": ""
  },
  {
-  "key": "signing.openrequest.nowindow",
-  "en": "no date is given for the window to close",
+  "key": "signing.openrequest.nowindow.line",
+  "en": "{whom} was asked for comment on {asked_at}, with no date given for the window to close; the reply answers {answered} of the {claims} claims the request laid out.",
   "protected": true,
-  "note": "in place of \"closes on {window_closes}\""
+  "note": "DEC-199: a row with no window_closes"
+ },
+ {
+  "key": "signing.openrequest.nowindow.noreply",
+  "en": "{whom} was asked for comment on {asked_at}, with no date given for the window to close; no reply is recorded.",
+  "protected": true,
+  "note": "DEC-199"
+ },
+ {
+  "key": "signing.openrequest.notlaidout",
+  "en": "{whom} was asked for comment on {asked_at}. The window for a reply closes on {window_closes}; no reply laid out claim by claim is recorded.",
+  "protected": true,
+  "note": "DEC-199: answers null, replied true or absent: true whether a reply came or not"
+ },
+ {
+  "key": "signing.openrequest.nowindow.notlaidout",
+  "en": "{whom} was asked for comment on {asked_at}, with no date given for the window to close; no reply laid out claim by claim is recorded.",
+  "protected": true,
+  "note": "DEC-199"
  },
  {
   "key": "signing.openrequest.unread",
@@ -487,9 +505,9 @@
  },
  {
   "key": "refusal.DOCKET_OUTCOME_UNREADABLE",
-  "en": "An outcome entry says what the outcome was (corrected by the office, or a harm addressed) and the date it happened, no later than today. This one doesn't. Nothing was written.",
+  "en": "An outcome is stated only on an outcome entry, with what it was (corrected by the office, or a harm addressed) and the date it happened, no later than the day it is filed. This entry's outcome is missing, isn't one of those, or is on another kind of entry. Nothing was written.",
   "protected": false,
-  "note": ""
+  "note": "DEC-199: true of every arm"
  },
  {
   "key": "refusal.DOCKET_PRESSURE_REFUSED",
@@ -511,9 +529,9 @@
  },
  {
   "key": "refusal.BAD_CARRIED_OUTCOME",
-  "en": "An outcome carried into a case needs its kind (a success, a correction by the office, or a harm addressed), your statement in at most 2,000 characters, what it cites, and its date. This lacks {field}. Nothing was written.",
+  "en": "An outcome carried into a case needs its kind (a success, a correction by the office, or a harm addressed), your statement on one line with no quotation marks or backslash and at most 2,000 characters, what it cites, and the date it happened. {field} is missing or isn't in that form. Nothing was written.",
   "protected": true,
-  "note": ""
+  "note": "DEC-199: a missing or a malformed field"
  },
  {
   "key": "refusal.NO_SUCH_CARRIED_OUTCOME",
@@ -1111,9 +1129,9 @@
  },
  {
   "key": "refusal.BEARING_REFUSED",
-  "en": "Each claim is one the request laid out, listed once, with how the reply bears on it and a note of at most 500 characters. Nothing was written.",
+  "en": "Lay out from 1 to 50 claims, each one the request laid out, listed once, with how the reply bears on it and a note of at most 500 characters. {item} isn't. Nothing was written.",
   "protected": false,
-  "note": ""
+  "note": "DEC-199: action-replies R24's count bound; {item} the item named"
  },
  {
   "key": "refusal.STAGE_NOT_IN_LAW",
@@ -1519,9 +1537,9 @@
  },
  {
   "key": "refusal.DOCUMENT_FIRST_NO_REASON",
-  "en": "What happened isn't documented yet. Say why you are acting first (at most 500 characters), or document it first. Nothing was written.",
+  "en": "Acting before what happened is documented needs your reason: why you are acting first, on one line with no quotation marks or backslash, at most 500 characters. The reason is missing or isn't in that form. Give it, or document what happened first. Nothing was written.",
   "protected": false,
-  "note": ""
+  "note": "DEC-199: absent and malformed why_first alike (N963)"
  },
  {
   "key": "refusal.SCENARIO_OUT_OF_RANGE",

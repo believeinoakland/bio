@@ -111,6 +111,10 @@ w('queue.scan-found.detail', '{engine} found {names} in this file on {date}: {me
 w('queue.security-tool-off.summary', 'Switched off: {tool}', False, 'R15; administrators only')
 w('queue.security-tool-off.detail', '{tool} was switched off because it didn\'t confirm the private mode its handling requires. It stays off until an administrator tests it again.', False)
 
+# --- B154 (DEC-199): escalation's rows (N962) and the new reads' help lives in mock-acts.js
+w('refusal.ESCALATION_BY_ACT_ONLY', 'An escalation changes only through its own acts: open, attach, evaluate, advance, decline, suspend, resume, stop pursuing, reopen and end, so its record never disagrees with itself.' + ' Nothing was written.', False, 'C-116.41; DEC-199')
+w('refusal.ALREADY_ATTACHED', 'This action is already attached to an escalation. An action is attached to one escalation, at one stage.' + ' Nothing was written.', False, 'C-116.14; DEC-199; names no escalation the viewer may not see')
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 keys = [x['key'] for x in W]
 assert len(keys) == len(set(keys)), 'duplicate key'

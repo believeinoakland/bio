@@ -550,5 +550,17 @@
   "en": "{tool} was switched off because it didn't confirm the private mode its handling requires. It stays off until an administrator tests it again.",
   "protected": false,
   "note": ""
+ },
+ {
+  "key": "refusal.ESCALATION_BY_ACT_ONLY",
+  "en": "An escalation changes only through its own acts: open, attach, evaluate, advance, decline, suspend, resume, stop pursuing, reopen and end, so its record never disagrees with itself. Nothing was written.",
+  "protected": false,
+  "note": "C-116.41; DEC-199"
+ },
+ {
+  "key": "refusal.ALREADY_ATTACHED",
+  "en": "This action is already attached to an escalation. An action is attached to one escalation, at one stage. Nothing was written.",
+  "protected": false,
+  "note": "C-116.14; DEC-199; names no escalation the viewer may not see"
  }
 ]

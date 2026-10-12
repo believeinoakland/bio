@@ -3105,6 +3105,7 @@ reasoning recorded in: this entry; `screens/question.html` (S19, S18); `screens/
 owed: (BOB) membership: retire R124 (`op=handlechange`: refuse every change, or remove the op and its door, op-declarations' and affordances' rows, ACT_HELP's copy; BOB's choice), and R17's `formerly` with it; confirm R16 keeps a departed member's handle taken. Once the op is retired, the design session removes `handle.changeable`, `handle.formerly`, `handle.fixed`, `handle.refused.notmember`, `handle.refused.unchecked`, and `handlechange`'s `ACT_HELP` and `WEIGHT` entries.
 
 ### DEC-198 · answered
+amended: 2026-10-12 by DEC-199 (B154): `signing.openrequest.nowindow` replaced by whole sentences; four returned refusals re-worded.
 raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (BOB's B149, T46's HANDOFF: `build/plan/current.md` on `tranche/T46`, "The channel"; `draft-T46-interface.md` §3, `draft-T46-trial.md`)
 for: bob-session
 question: T46's registry corrections and the words T46 owes: the sign-in refusals, the test-instance label, notice and parts, `DISCLOSURE_DUE`, the cards' "Here:" lines, the front doors, `HANDLE_FIXED`, the status report's assistant, a run on a member's own sign-in, the website key's and join link's settings read (N654), notice-producers' unkeyed sentences (N889), the unused `DRAFT_NEEDS_GRANT`, the library's stale `connect` step, and the screens' own sentences.
@@ -3125,3 +3126,22 @@ response: **Decided by the design session, 2026-10-12.**
 decided: 2026-10-12 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t46.src.py`, `screens/words-t46.json`; `screens/build_words.mjs`, `screens/words.json` (1,601 words, 567 protected); `screens/words-actions.src.py`; `screens/registry.src.py`, `screens/library.src.py`, `screens/check_library.py` (`registry.json`, `library.json` with `doors`); `screens/mock-screens.js` (Home, The assistant, Add, Ask, Matter); `screens/mock-acts.js`; `screens/mock-kit.js`; `screens/mock-journeys.js`; `screens/check_walk.mjs`; `layouts.html`.
 owed: (BOB, T46) `registry.json` and `library.json` re-taken (wizard-scripts R13, R22, R23's `doors`); `words.json` re-taken (setup-words R1, R2) and each key read by its module (connect's sign-in refusals, the dock, setup-page R30, R31, R33, file-safety R42, plan-work's assistant arm, the door, membership's settings read, notice-producers R5, R6, R13–R15); the screen modules' `SCREEN_WORDS` rows sent (or left on `main`) for adoption.
+
+### DEC-199 · answered
+raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (BOB's B154, T46's hand-off; K2949, K2953, K2983, K2986; N962, N963)
+for: bob-session
+question: The sentences T46's jobs returned as untrue for one of their arms, a missing refusal, and help for T46's new reads; and B154's restatement of B149.
+why it is Bob's: it is not: words beneath DEC-83 (a refusal says what happened, then what to do), DEC-149 and DEC-194; decided by the design session (P17) and reported.
+provisional: the modules' own rows, kept in T46.
+alternative: a distinct code for each arm (K231), BOB's to mint.
+recommendation: one sentence true of every arm, as below.
+reversal cost: low; words read by key.
+response: **Decided by the design session, 2026-10-12.**
+(1) Re-worded so each is true of every arm its code covers: `refusal.DOCKET_OUTCOME_UNREADABLE` (an outcome stated on another kind of entry included; "no later than the day it is filed"); `refusal.BAD_CARRIED_OUTCOME` (a field missing or malformed: one line, no quotation marks or backslash, at most 2,000 characters; "{field} is missing or isn't in that form"); `refusal.BEARING_REFUSED` (from 1 to 50 claims; `{item}` the item named); `refusal.DOCUMENT_FIRST_NO_REASON` (an absent or a malformed reason alike, N963).
+(2) The sign step's open requests: `signing.openrequest.nowindow` (a fragment) is replaced by whole sentences, `signing.openrequest.nowindow.line` and `.nowindow.noreply`; and the sentence true whether or not a reply came, for a row with no claims laid out and `replied` true or absent (case-authoring R73), `signing.openrequest.notlaidout` and `.nowindow.notlaidout` ("no reply laid out claim by claim is recorded"). `signing.openrequest.unread` was re-worded by DEC-198 (7).
+(3) Escalation (N962): `refusal.ESCALATION_BY_ACT_ONLY` names every act, stop pursuing and reopen included; `refusal.ALREADY_ATTACHED` new, naming no escalation.
+(4) Help: `clockproposals` and `joindoors` (`ACT_HELP`, read by affordances and op-declarations as their other rows are). `textcheck`'s was given under DEC-194.
+(5) B154's other items are DEC-198's, now on `main` (PR #30): the registry corrections (`escalationreopen`, `infolevelset` re-pointed; `infolevel` is a read and no registry act), the assistant's and test instance's words, `refusal.HANDLE_FIXED`, `statusreportassist`, the member-run door, N889's sentences, `refusal.DRAFT_NEEDS_GRANT` dropped, the library's `connect` step, the front doors, the "Here:" lines, and the screens' own sentences (adopted from the modules' `SCREEN_WORDS` once they merge, DEC-198 (6)).
+decided: 2026-10-12 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-actions.src.py`, `screens/words-t46.src.py`; `screens/mock-acts.js`; `screens/words.json` (1,608 words, 570 protected).
+owed: (BOB) docket, case-authoring (R73's sentences, the no-window and not-laid-out rows by key), action-replies, action-plans (R47, C-124.63), escalation (C-116.41, C-116.14) read these by key once on `main`; affordances and op-declarations take the two helps.
