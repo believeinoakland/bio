@@ -23,4 +23,4 @@
 - `build/manifest.md` names no layer tests.
 - `format`: 0 failures. `architecture reading-guides`: 0 failures. `coverage reading-guides`: 14 of 14 live ids named; 0 failures. `ownership reading-guides tranche/T46`: 5 files changed; 0 failures.
 
-Size (session_01JBdeWvyDiLY6TLEqW8MkkE): test runs 14, module lines 1005
+Size (session_01JBdeWvyDiLY6TLEqW8MkkE): test runs 14, module lines 1158
