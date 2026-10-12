@@ -22,7 +22,7 @@ Terms. The **caller** is `agent-model`'s `signin` path (its R2), through the Con
 - **R4** The conversation's end is answered on the connection as `{ok: true, result, stop_reason, num_turns, usage}` with `usage` `{input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens, total_cost_usd}` as the SDK states them (`null` where it states none), or `{ok: false, code, detail}` (detail at most 300 characters) when the SDK errors, the caller's connection closes, or `max_turns` is reached (`code: "MAX_TURNS"`); a closed connection aborts the query.
 
 **`GET /version`**
-- **R5** Answers 200 `{ok: true, name: "agent-runner", version}`, the version the image was built with.
+- **R5** Answers 200 `{ok: true, name: "agent-runner", version, capabilities}`, the version the image was built with. (T46; K2947; R24) `capabilities` is an array naming each optional relay the image carries: `"image"` exactly when R24 is met; an image built before R24 answers no such key, which its users read as no capability. *(not yet met: T46)*
 
 **Anything else**
 - **R6** Any other path or method answers 404 `UNKNOWN`.
