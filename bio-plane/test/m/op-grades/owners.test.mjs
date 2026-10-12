@@ -51,7 +51,8 @@ test("R7: T23's ops — whatchangedpropose `undetermined`, noticepost `attested`
 
 /* ---- R8 ------------------------------------------------------------------------------------------------------------ */
 test("R8: actionholdrelease is `terminal`, a named exception (actionhold stays `reasoned`), HOLD_REFUSED backs both, its "
-   + "consequence statement is the dialog DEC-113 words, its NON_ACTS reason entry-directed, and it is no machine refusal",
+   + "consequence statement is the dialog DEC-113 words; (T45, K2887) both are ACTS rows, in MACHINE_REFUSALS by "
+   + "MACHINE_CANNOT_SET_HOLD and no longer in NON_ACTS",
 () => {
   assert.deepEqual([RUNGS.actionholdrelease, RUNGS.actionhold], ["terminal", "reasoned"]);
   assert.ok(JUSTIFICATION_REFUSALS.includes("HOLD_REFUSED"));
@@ -61,10 +62,13 @@ test("R8: actionholdrelease is `terminal`, a named exception (actionhold stays `
   assert.match(s.statement, /purged/);
   assert.match(s.statement, /assistant transcripts/);
   assert.match(s.statement, /This cannot be undone\.$/);
-  assert.equal(NON_ACTS.actionholdrelease, "entry-directed: keyed by (action, entry ordinal); appends a release and never "
-    + "rewrites the entry, its mark or an earlier statement");
   for (const op of ["actionholdpreview", "projectholds"]) assert.ok(isRead(op), op);
-  notMachine(["actionholdrelease", "actionhold"]);
+  for (const op of ["actionholdrelease", "actionhold"]) {
+    assert.equal(MACHINE_REFUSALS[op], "MACHINE_CANNOT_SET_HOLD", op);
+    assert.ok(!Object.hasOwn(NON_ACTS, op), `${op} is an act, never a non-act too`);
+  }
+  /* negative control: the reads stay non-acts and no machine refusal */
+  notMachine(["actionholdpreview", "projectholds"]);
 });
 
 /* ---- R9 ------------------------------------------------------------------------------------------------------------ */
@@ -305,7 +309,8 @@ test("R17: each of op-declarations R21's 27 aliases takes its op's very grade an
   assert.deepEqual([RUNGS.claimidentity, RUNG_ABSENT.claimidentity, NON_ACTS.claimidentity], [undefined, undefined, undefined]);
   assert.ok(Object.hasOwn(RUNGS, "identityclaim"));
   for (const [a, op] of Object.entries(OP_ALIASES)) {
-    assert.ok(Object.hasOwn(NON_ACTS, op), `${op}, ${a}'s op, is named`);
+    /* named as a non-act, or (T45, R32: filingsent) an ACTS row in MACHINE_REFUSALS */
+    assert.ok(Object.hasOwn(NON_ACTS, op) || Object.hasOwn(MACHINE_REFUSALS, op), `${op}, ${a}'s op, is named`);
     assert.equal(NON_ACTS[a], NON_ACTS[op], a);
     assert.equal(RUNGS[a], RUNGS[op], a);
     assert.equal(RUNG_ABSENT[a], RUNG_ABSENT[op], `${a}: the same entry object`);

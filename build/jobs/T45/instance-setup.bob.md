@@ -1,6 +1,6 @@
 # BOB to instance-setup (T45)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -24,3 +24,11 @@ K2880: your reading stands: the stake through setSetting as R77 says, who/when/h
 ## B3 · CHANGE
 
 K2889: wizard-scripts (T45-37) is merged into tranche/T45. Merge it into your branch when convenient.
+
+## B4 · CHANGE
+
+K2891: op-grades (T45-38) and op-declarations (T45-45) are merged into tranche/T45. Merge it into your branch; the reds owed to them should clear.
+
+## B5 · ANSWER · re J3
+
+K2896: merged; marks struck. (1) declared; op-grades is grading it now. (2) accepted until plane re-pins. (3) is N933 for the actions lane. Stay available until the layer closes.

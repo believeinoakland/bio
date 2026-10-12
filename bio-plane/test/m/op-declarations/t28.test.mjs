@@ -139,5 +139,6 @@ test("R14, R6: every op case-import's ops map serves has a spec the door answers
   assert.deepEqual([...O.CASE_IMPORT_READS].sort(), served.filter((op) => !OPS[op].mutating).sort());
   /* Negative control: a map that serves an op with no spec is seen; names the modules do not serve are no op. */
   assert.deepEqual([...served, "importdelete"].filter((op) => !Object.hasOwn(OPS, op)), ["importdelete"]);
-  for (const op of ["importedit", "casecheck", "caseimports"]) assert.ok(!Object.hasOwn(OPS, op), op);
+  /* (T45: case-check's `casecheck` is a declared op since R49, so it is no control here) */
+  for (const op of ["importedit", "caseimportcheck", "caseimports"]) assert.ok(!Object.hasOwn(OPS, op), op);
 });

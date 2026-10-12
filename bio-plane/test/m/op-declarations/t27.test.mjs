@@ -28,11 +28,11 @@ const stampsOf = (op, lists = listsHolding(op)) => [...new Set(lists.flatMap((l)
    NEEDS row (affordances R33 names the two reads, so each carries a present null). */
 const R12 = {
   actionholdrelease: { spec: { classes: MEMBER_PROBE, mutating: true }, like: "actionhold", needs: "contribute",
-                       lists: ["ACTIONS_ACTIONS", "ACTION_LAYER_ACTIONS", "QUERY_AUTHOR_ACTIONS"], stamps: ["author", "viewer"] },
+                       lists: ["ACTION_HOLDS_ACTIONS", "ACTION_LAYER_ACTIONS", "QUERY_AUTHOR_ACTIONS"], stamps: ["author", "viewer"] },
   actionholdpreview: { spec: { classes: MEMBER_PROBE, mutating: false }, needs: null,
-                       lists: ["ACTIONS_READS", "ACTION_LAYER_READS"], stamps: ["viewer"] },
+                       lists: ["ACTION_HOLDS_READS", "ACTION_LAYER_READS"], stamps: ["viewer"] },
   projectholds:      { spec: { classes: MEMBER_PROBE, mutating: false }, needs: null,
-                       lists: ["ACTIONS_READS", "ACTION_LAYER_READS"], stamps: ["viewer"] },
+                       lists: ["ACTION_HOLDS_READS", "ACTION_LAYER_READS"], stamps: ["viewer"] },
 };
 /* R13's ops as it lists them. Every member op is a member session's only, `knocksof`'s fence; the reads and the public
    reads carry a present null NEEDS row (affordances R34 names each in NON_ACTS). */
@@ -90,14 +90,16 @@ test("R12, R3: each of N518's ops is in SESSION_OPS.member and SESSION_OPS.admin
   assert.equal(Object.hasOwn(NEEDS, "action"), false);
 });
 
-test("R12, R4: the act lists name N518's stamps — actionholdrelease in ACTIONS_ACTIONS beside actionhold, so author (query-stamped) and viewer; actionholdpreview and projectholds in ACTIONS_READS, so viewer (negative control: out of QUERY_AUTHOR_ACTIONS the release would lose author)", () => {
+test("R12, R4, R49: the act lists name N518's stamps — actionholdrelease beside actionhold, since T45 in action-holds' ACTION_HOLDS_ACTIONS (the hold moved with its owner), so author (query-stamped) and viewer; actionholdpreview and projectholds in ACTION_HOLDS_READS, so viewer (negative control: out of QUERY_AUTHOR_ACTIONS the release would lose author)", () => {
   for (const [op, want] of Object.entries(R12)) {
     assert.deepEqual(listsHolding(op), [...want.lists].sort(), op);
     assert.deepEqual(stampsOf(op), want.stamps, op);
   }
   assert.deepEqual(listsHolding("actionholdrelease"), listsHolding("actionhold"));
-  assert.deepEqual([...O.ACTIONS_ACTIONS], ["actioncreate", "actionpressure", "actionhold", "actionholdrelease"]);
-  assert.deepEqual([...O.ACTIONS_READS], ["action", "actions", "actionholdpreview", "projectholds"]);
+  assert.deepEqual([...O.ACTION_HOLDS_ACTIONS], ["actionpressure", "actionhold", "actionholdrelease"]);
+  assert.deepEqual([...O.ACTION_HOLDS_READS], ["actionholdpreview", "projectholds"]);
+  for (const op of [...O.ACTION_HOLDS_ACTIONS, ...O.ACTION_HOLDS_READS])
+    assert.ok(!O.ACTIONS_ACTIONS.includes(op) && !O.ACTIONS_READS.includes(op), op);
   for (const op of Object.keys(R12)) assert.ok(!PLAN_RUN_SCOPE.reads.includes(op) && !PLAN_RUN_SCOPE.writes.includes(op), op);
   assert.deepEqual(stampsOf("actionholdrelease", listsHolding("actionholdrelease").filter((l) => l !== "QUERY_AUTHOR_ACTIONS")),
                    ["viewer"]);
