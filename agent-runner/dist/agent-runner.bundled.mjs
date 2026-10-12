@@ -1504,8 +1504,8 @@ var fleet_member_default = {
     "anything else": 'R6: 404 {ok: false, code: "UNKNOWN"}'
   },
   image: {
-    repository: "docker.io/civicos/agent-runner",
-    digest: null,
+    repository: "ghcr.io/believeinoakland/agent-runner",
+    digest: "sha256:e56253c57212ea7585ee00aea01d1287682fee44c8203f00372be07dc53f2228",
     platform: "linux/amd64",
     port: 8080,
     schedulingPolicy: "default"
