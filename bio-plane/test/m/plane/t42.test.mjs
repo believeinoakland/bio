@@ -23,6 +23,7 @@ import { extractionOf } from "../../../src/extraction/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { CIVICSMITH_TEST_SET } from "../../../src/run-rules/index.mjs";
+import { assistantGateOf } from "../../../src/plane/ask.mjs";
 import { transcriberOf, renderPages, TRANSCRIBE_PAGES_MAX, TRANSCRIBE_IMAGE_MAX_BYTES } from "../../../src/plane/transcribe.mjs";
 import { publicOp, gatedOp } from "../../../src/plane/door.mjs";
 import * as AGENT_WORKER_OPS from "../../../../agent-worker/src/ops.mjs";
@@ -67,7 +68,8 @@ async function plane({ testSet = null, worker = null, evidence = bucket(), accou
   const st = storage();
   const env = { STORE: { idFromName: (n) => n }, ACCOUNT_SEAL_SECRET: "a-long-seal-secret-for-the-t42-test", CAPTURES: evidence,
                 ...(worker ? { AGENT_WORKER: worker } : {}) };
-  if (testSet) transcriberOf(st.ctx, env, { testSet });
+  /* R40 (T46): a test's own set is ai-runs', handed through `assistantGateOf` before construction */
+  if (testSet) assistantGateOf(st.ctx, { testSet });
   const s = new Store(st.ctx, env);
   for (const p of st.blocked) await p;
   const ctx = st.ctx, sql = ctx.storage.sql;
@@ -274,7 +276,9 @@ test("R36 (credentials R57): keptAway({project, use}) is credentials.aiKeptAway 
 test("R36: transcription({member, project, at}) answers the object's own credentials and ai-use's useCheck, the act minted for it (`transcribe:<capture prefix>:<instant>`), and the AI path; with no AGENT_WORKER binding the path answers AGENT_WORKER_UNBOUND and reads nothing", async () => {
   const x = await plane();
   const tx = transcriberOf(x.ctx, x.env).transcription({ member: "member:ann", project: "PROJ-1", at: "2026-10-11T06:00:00Z" });
-  assert.deepEqual(Object.keys(tx).sort(), ["act", "at", "credentials", "member", "project", "transcribe", "useCheck"]);
+  /* (T46; R40, extraction R74) re-pinned: `untested`, the test-instance label, null when the part runs on the bar or not at all */
+  assert.deepEqual(Object.keys(tx).sort(), ["act", "at", "credentials", "member", "project", "transcribe", "untested", "useCheck"]);
+  assert.equal(tx.untested, null);
   assert.equal(tx.credentials, credentialsOf(x.ctx));
   assert.deepEqual([tx.member, tx.project, tx.at], ["member:ann", "PROJ-1", "2026-10-11T06:00:00Z"]);
   const q = { owner: "member:ann", member: "member:ann", use: "transcribe", at: "2026-10-11T06:00:00Z" };

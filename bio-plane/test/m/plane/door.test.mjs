@@ -94,6 +94,10 @@ const DRIVES = [
   ["translationmark?by=member:nobody", "POST", { language: "es", key: "nav.home" }],
   ["translations?language=es&viewer=member:nobody", "GET"],
   ["interfacewords?language=es&viewer=member:nobody", "GET"],
+  /* (T46; K3004; instance-setup R79) a member's own information level: a machine's set is refused, and the read answers
+     the viewer's own, alike on both objects */
+  ["infolevelset?by=token:admin", "POST", { level: "pause" }],
+  ["infolevel?viewer=member:nobody", "GET"],
 ];
 const req = ([path, method, body]) => new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) });
 /* Instants differ between two runs; everything else must not. */
@@ -121,9 +125,9 @@ test("R1: the class whose fetch is control-plane's door: at construction it star
   assert.equal(started(await settle(other))[0].started, true);
 });
 
-test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's thirty-four routes (T45: `declaredstakeset`, K2896) are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
+test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's thirty-six routes (T45: `declaredstakeset`, K2896; T46: `infolevelset`, `infolevel`, K3004) are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
   const ops = Object.keys(S.instanceSetupOps(null, new URL("http://do/"), null));
-  assert.equal(ops.length, 34);
+  assert.equal(ops.length, 36);
   assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops].sort(), "every route is driven");
   const now = object(), before = object();
   const store = new Store(now.ctx, now.env);

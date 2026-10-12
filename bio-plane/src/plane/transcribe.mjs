@@ -1,7 +1,8 @@
 /* plane R36 (T42; N832; D21; extraction R72; reading-pipeline R29; K2484, K2611, K2613): the one transcriber the
    composition root registers with `extraction` (`registerTranscriber("plane", t)`), built on the object's own instances
    so `extraction` reaches nothing above its layer. It decides nothing about a page and holds no table: whether the AI's
-   part may run is `run-rules`' (on `ai-runs`' R75 records), whether a project keeps its material away is `credentials`',
+   part may run is `ai-runs`' `partAdmitted("transcribe")` (R40, T46: run-rules' bar on its R75 records, or the
+   test-instance exception, whose label the transcription hands `extraction`), whether a project keeps its material away is `credentials`',
    the account and its limit are `credentials`' and `ai-use`'s (asked by `reading-pipeline.tier4Extend`), the rendering is
    `pdf-pixels`' (a PDF page by its page renderer, a picture file by its picture renderer), the reading `agent-worker`'s, and the count `ai-use`'s (R9). The account's secret leaves the object only
    in the one `POST /transcribe` request body. */
@@ -9,7 +10,6 @@ import { recordOf } from "../record-core/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
-import { partDeployableOn, CIVICSMITH_TEST_SET } from "../run-rules/index.mjs";
 import { renderPageToPixels } from "../../../pdf-worker/src/pagepixels.mjs";
 import { renderPictureToPixels } from "../../../pdf-worker/src/picturepixels.mjs";
 
@@ -104,10 +104,11 @@ function aiPath(ctx, env, { member, at, act, onSha }) {
     const body = JSON.stringify({ capture_sha: sha, pages: rendered,
       account: { kind: a.kind, level: a.level, ...(a.level === "project" ? { project: a.project } : {}), secret: a.key,
                  member, suggestions: false } });
-    let answer;
+    let answer, status = null;
     try {
       const res = await w.fetch("https://agent-worker/transcribe", { method: "POST",
         headers: { "content-type": "application/json" }, body });
+      status = Number.isInteger(res.status) ? res.status : null;
       answer = await res.json();
     } catch { return { ok: false, reason: "AGENT_WORKER_SILENT" }; }
     if (!answer || typeof answer !== "object" || Array.isArray(answer)) return { ok: false, reason: "AGENT_WORKER_SILENT" };
@@ -119,21 +120,28 @@ function aiPath(ctx, env, { member, at, act, onSha }) {
       try { recordOf(ctx).transact(() => aiUseOf(ctx).countUsage(entry)); } catch { /* refused: rolled back, nothing counted */ }
     }
     if (answer.ok === true) return answer;
-    return { ...answer, ok: false, reason: answer.reason ?? answer.code ?? null };
+    /* R36 (T46; N886; extraction R75): a refusal agent-worker answers is relayed with its own HTTP status, never read from
+       the body alone, so extraction answers it as that refusal at that status. */
+    return { ...answer, ok: false, reason: answer.reason ?? answer.code ?? null,
+             ...(status !== null && status >= 400 ? { status } : {}) };
   };
 }
 
 /** R36: the transcriber, `{deployable(), keptAway({project, use}), transcription({member, project, at})}`. */
 class Transcriber {
-  #ctx; #env; #set;
-  constructor(ctx, env, set) { this.#ctx = ctx; this.#env = env; this.#set = set; }
+  #ctx; #env;
+  constructor(ctx, env) { this.#ctx = ctx; this.#env = env; }
 
-  /* run-rules R19 on ai-runs' R75 records, `transcribe` being outside the order (no verification chain). */
-  deployable() {
+  /* R40 (T46; N897 (2)): `ai-runs.partAdmitted("transcribe")`, the one gate, read at each call; anything that throws is
+     not admitted. */
+  #admitted() {
     try {
-      return partDeployableOn(this.#set, USE, { verifications: [], testBars: aiRunsOf(this.#ctx, this.#env).testBarRecords() }) === true;
-    } catch { return false; }
+      const said = aiRunsOf(this.#ctx, this.#env).partAdmitted(USE);
+      return said && said.admitted === true ? { admitted: true, untested: said.untested ?? null } : { admitted: false, untested: null };
+    } catch { return { admitted: false, untested: null }; }
   }
+
+  deployable() { return this.#admitted().admitted === true; }
 
   keptAway({ project = null, use = null } = {}) { return credentialsOf(this.#ctx).aiKeptAway({ project, use }); }
 
@@ -143,7 +151,8 @@ class Transcriber {
     let prefix = "";
     const act = () => `${USE}:${prefix}:${instant}`;
     const ctx = this.#ctx, aiUse = aiUseOf(ctx);
-    const tx = { member, project, at: instant, credentials: credentialsOf(ctx),
+    /* R40 (T46; extraction R74): `untested`, the test-instance label when the part runs on the exception, else null */
+    const tx = { member, project, at: instant, credentials: credentialsOf(ctx), untested: this.#admitted().untested,
       useCheck: (q) => aiUse.useCheck(q),
       transcribe: aiPath(ctx, this.#env, { member, at: instant, act, onSha: (sha) => { prefix = sha.slice(0, 16); } }) };
     Object.defineProperty(tx, "act", { get: act, enumerable: true });
@@ -151,13 +160,13 @@ class Transcriber {
   }
 }
 
-/* K61: one transcriber per storage, its `deps` (a test's own `testSet`, as ai-runs' `deps.testSet`) read on the first
-   call only. */
+/* K61: one transcriber per storage. (T46; R40) A test's own set is ai-runs' (`assistantGateOf`'s, handed to ai-runs at
+   its construction), never the transcriber's. */
 const OF = new WeakMap();
-/** R36: this object's transcriber. `deps.testSet` replaces `run-rules`' `CIVICSMITH_TEST_SET` (a test's). */
-export function transcriberOf(ctx, env, deps = {}) {
+/** R36: this object's transcriber. */
+export function transcriberOf(ctx, env) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let t = OF.get(storage);
-  if (!t) { t = new Transcriber(ctx, env, deps.testSet || CIVICSMITH_TEST_SET); OF.set(storage, t); }
+  if (!t) { t = new Transcriber(ctx, env); OF.set(storage, t); }
   return t;
 }

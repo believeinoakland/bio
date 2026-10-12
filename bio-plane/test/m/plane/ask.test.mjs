@@ -181,7 +181,7 @@ test("B5 (K1685; answers R1, R2): a read under an ask's grant reaching this obje
   } finally { a.logRead = was; }
 });
 
-test("K1806 (agent-worker R6, R54; credentials R35; K1755, K1798): a member with no account of their own is served by the group's API key while it is held and on, carried as level `group` with no suggestion; with it off, or its notice unread, nothing is asked", async () => {
+test("K1806, R33 (agent-worker R6, R54; credentials R35; K1755; T46: N897 (3)): a member with no account of their own is served by the group's API key while it is held and on, carried as level `group` with the group key's own suggestions switch; with it off, or its notice unread, nothing is asked", async () => {
   const x = await world({ account: false });
   const c = credentialsOf(x.ctx);
   const set = await c.groupKeySet({ key: "sk-ant-zz-group", by: "ada" });
@@ -199,8 +199,8 @@ test("K1806 (agent-worker R6, R54; credentials R35; K1755, K1798): a member with
   const r = await x.s.ask({ member: "member:ann", session: SESSION, question: "Who holds the clerk's office?" });
   assert.equal(r.status, 200);
   assert.equal(x.asks.length, 1);
-  assert.deepEqual(x.asks[0][1].account, { kind: "apikey", level: "group", secret: "sk-ant-zz-group", member: "member:ann", suggestions: false },
-                   "the group's key serves ann's own ask; its switch has no in-plane read for her act (K1798), so none is offered");
+  assert.deepEqual(x.asks[0][1].account, { kind: "apikey", level: "group", secret: "sk-ant-zz-group", member: "member:ann", suggestions: true },
+                   "R33 (T46): the group's key serves ann's own ask, with the group key's own suggestions switch");
   /* her own reference, once set, serves her first */
   assert.equal((await c.accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ant-zz-ann", by: "member:ann" })).ok, true);
   await x.s.ask({ member: "member:ann", session: SESSION, question: "q" });
