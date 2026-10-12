@@ -88,3 +88,25 @@ Size (session_01WBHFsYLZ58Mve6wWPYGz5k): test runs 9, module lines 2051
 ## J1 · QUESTION
 
 R40 (N920), the status report's draft: control-plane (T46-59, R57) calls the object's `draft` RPC for `statusreportassist`; R40 names the op `statusreportdraft`. My best reading, which I am building: `draftOnObject` takes `{op: "statusreportdraft", member, session, plan, items, pack?}` (agent-worker R76's task op, kind `statusreport`); it gates on `draft`'s flag and `partAdmitted("draft:statusreport")`, refuses AI_KEPT_AWAY through `credentials.aiKeptAway({project, use: "draft"})` with the plan's project (read as the member reads `op=plan`; a plan read refused ends the draft with that refusal) before any account is read, mints no grant, sends no `told`, and posts `{task: {op, plan, items}, account, pack?}` to /draft. The usage count as `draft` is the door's (control-plane's draft path, as for every DRAFT_OPS op); the plane adds none of its own. Please confirm control-plane hands `op: "statusreportdraft"` with `plan` and `items` (not `statusreportassist`), or tell me the shape.
+
+## J2 · COMPLETE
+
+T46-62 complete, with CHANGE B3 (K2999) built. Full detail in the record's Work section.
+
+- R40: the gate now goes through ai-runs.partAdmitted, with the test-instance label on the ask, the draft and transcription.
+- R40, N920: the status report's draft, as you confirmed in B2.
+- R40, K2999: Store RPCs dispatchMemberRun and groupFields.
+- R33: the serving account's own suggestions switch, and no secret sent for a sign-in. M-T46-6 measured: no secret ever reached the wire for a sign-in, because the field was undefined and dropped. What was wrong was the switch read, which is now fixed.
+- R36: agent-worker's HTTP status is relayed.
+- R39: caseAccountOps and localFactsOps are spread.
+- R5: the route map's tests are re-pinned.
+- R42: the plane's Store boots on workerd under Miniflare.
+- Own flaw fixed (P8): a project's account was sent without its project.
+
+Tests on the merged branch: 223 tests, 222 pass, 1 fail. The red is the R5 pin on infolevelset and infolevel only. No module's map serves them until instance-setup's T46 job merges, and with them left out the test passes. It should go green when instance-setup merges ahead of me.
+
+migrate-released passed (before the CHANGE merge).
+
+Checks: format, architecture, coverage (42/42) and ownership, each 0 failures. run.mjs: architecture 0 failures. Its 13 coverage failures are all in other L11 modules not yet merged.
+
+For you (no change made): local-facts' map takes by from the body's stamp, while case-account's takes it from the query.
