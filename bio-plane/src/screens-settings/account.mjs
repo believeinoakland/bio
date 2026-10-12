@@ -1,108 +1,103 @@
-/* screens-settings R3 (and R8): Settings › Your account, the registry's 6 acts. The handle drawn fixed in DEC-197's
+/* screens-settings R3 (and R8, R10): Settings › Your account, the registry's 6 acts. The handle drawn fixed in DEC-197's
    words, with no act that changes it; the member's language; appearance and the explanation level (interface-shell R18,
-   R17); the password, typed twice alike before it is sent; expertise; the member's own signing key (its public half,
-   as the signing page gives it); links to `connect` and `notes`. Every function is self-contained (K2854 T1). */
+   R17); the password, typed twice alike before it is sent; expertise; the member's own signing key (its public half, as
+   the signing page gives it); links to `connect` and `notes`. Every function is self-contained (interface-shell R21). */
 
 export const account = {
   id: "account",
 
-  reads(ctx) {
-    const me = ctx.me || {};
-    return [
-      { name: "me", op: "whoami" },
-      { name: "language", op: "memberlanguage" },
-      { name: "expertise", op: "expertiselist", query: { memberId: me.member } },
-      { name: "signers", op: "signerlist" },
-      { name: "level", op: "infolevel" },
-    ];
+  reads(view) {
+    const me = view.me || {};
+    return {
+      me: { op: "whoami" },
+      language: { op: "memberlanguage" },
+      expertise: { op: "expertiselist", query: { memberId: me.member } },
+      signers: { op: "signerlist" },
+      level: { op: "infolevel" },
+    };
   },
 
-  render(cs, d, ctx) {
+  render(cs, view) {
     const W = cs.w, E = cs.esc, S = "screen.account.";
-    const ok = (o) => o && o.state === "ok" && o.value && o.value.ok !== false;
-    const failed = (o) => cs.state(o.state === "ok" ? { state: "failed", refusal: o.value } : o);
-    const form = (inner) => `<div class="cs-form" data-form>${inner}</div>`;
-    const sec = (key, inner) => `<section class="cs-section"><h2>${W(key)}</h2>${inner}</section>`;
-    const me = ok(d.me) ? d.me.value : ctx.me || {};
-    const out = [`<h1>${W("screen.account.name")}</h1>`];
+    const D = (iso) => String(cs.date(iso, { year: true })).replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
+    const data = view.data || {};
+    const ui = view.ui || {};
+    const me = data.me && data.me.state === "ok" && data.me.value ? data.me.value : view.me || {};
+    const out = [];
 
     // the handle, fixed (DEC-197): no act changes it, and nothing says "formerly"
-    out.push(sec(S + "handle.heading", d.me.state === "ok" || ctx.me ? `<p><b>${E(me.handle || me.member || "")}</b></p><p>${W("handle.fixed")}</p>` : failed(d.me)));
+    out.push(cs.sec(S + "handle.heading", `<p><b>${E(me.handle || me.member || "")}</b></p><p>${W("handle.fixed")}</p>`));
 
     // language, appearance and the explanation level
-    let lang = "";
-    if (!ok(d.language)) lang = failed(d.language);
-    else {
-      const l = d.language.value.language;
-      lang = `<p data-state="language">${l ? W(S + "language.now", { language: l }) : W(S + "language.device")}</p>`;
-      const set = cs.act("memberlanguageset", { subject: "language", screen: "account" });
-      if (set) lang += form(`<label for="ma-lang">${W(S + "language.field")}</label><span class="help">${W(S + "language.help")}</span><input id="ma-lang" name="language" type="text" class="cs-input" value="${E(l || "")}" autocomplete="off">${set}`);
-    }
-    const ap = ctx.appearance || "device";
-    lang += `<div class="cs-form"><label for="ma-theme">${W(S + "appearance.field")}</label><select id="ma-theme" name="appearance" class="cs-input" data-device="appearance">${["device", "light", "dark"].map((v) => `<option value="${v}"${v === ap ? " selected" : ""}>${W(S + "appearance." + v)}</option>`).join("")}</select></div>`;
-    const level = ok(d.level) && (d.level.value.level === "prompt" || d.level.value.level === "pause") ? d.level.value.level : ctx.level === "pause" ? "pause" : "prompt";
-    const lv = cs.act("infolevelset", { subject: "level", label: "act.owed_infolevelset.label.account", screen: "account" });
-    lang += form(`<label for="ma-level">${W(S + "level.field")}</label><select id="ma-level" name="level" class="cs-input">${["prompt", "pause"].map((v) => `<option value="${v}"${v === level ? " selected" : ""}>${W("level." + v + ".name")}</option>`).join("")}</select>${lv}`);
-    out.push(sec(S + "language.heading", lang));
+    let lang = cs.state(data.language, (v) => {
+      let h = `<p data-state="language">${v.language ? W(S + "language.now", { language: v.language }) : W(S + "language.device")}</p>`;
+      const set = cs.act("memberlanguageset");
+      if (set) h += `<div class="cs-form"><label for="ma-lang">${W(S + "language.field")}</label><span class="help">${W(S + "language.help")}</span><input id="ma-lang" type="text" class="cs-input" value="${E(v.language || "")}" autocomplete="off">${set}</div>`;
+      return h;
+    });
+    // appearance is kept on the device (interface-shell R18): the shell applies the choice it finds marked
+    const ap = ui.appearance || "device";
+    lang += `<div class="cs-form"><label for="ma-theme">${W(S + "appearance.field")}</label><select id="ma-theme" class="cs-input" data-device="appearance">${["device", "light", "dark"].map((v) => `<option value="${v}"${v === ap ? " selected" : ""}>${W(S + "appearance." + v)}</option>`).join("")}</select></div>`;
+    const lv = data.level && data.level.state === "ok" && data.level.value && (data.level.value.level === "prompt" || data.level.value.level === "pause") ? data.level.value.level : ui.level === "pause" ? "pause" : "prompt";
+    lang += `<div class="cs-form"><label for="ma-level">${W(S + "level.field")}</label><select id="ma-level" class="cs-input">${["prompt", "pause"].map((v) => `<option value="${v}"${v === lv ? " selected" : ""}>${W("level." + v + ".name")}</option>`).join("")}</select>${cs.act("infolevelset", { label: "act.owed_infolevelset.label.account" })}</div>`;
+    out.push(cs.sec(S + "language.heading", lang));
 
     // what the member knows
-    let ex = "";
-    if (!ok(d.expertise)) ex = failed(d.expertise);
-    else {
-      const list = (d.expertise.value.expertise || []).filter((e) => e.state !== "withdrawn");
-      ex = list.length === 0 ? `<p>${W(S + "expertise.none")}</p>` : `<ul class="cs-list">${list.map((e) => `<li>${W(e.confirmed ? S + "expertise.confirmed" : S + "expertise.declared", { label: e.label })}</li>`).join("")}</ul>`;
-    }
-    const dec = cs.act("expertisedeclare", { subject: "expertise", screen: "account" });
-    if (dec) ex += form(`<label for="ma-exp">${W(S + "expertise.field")}</label><span class="help">${W(S + "expertise.help")}</span><input id="ma-exp" name="label" type="text" class="cs-input">${dec}`);
-    out.push(sec(S + "expertise.heading", ex));
+    let ex = cs.state(data.expertise, (v) => {
+      const list = (v.expertise || []).filter((e) => e.state !== "withdrawn");
+      return list.length === 0 ? `<p>${W(S + "expertise.none")}</p>` : `<ul class="cs-list">${list.map((e) => `<li>${W(e.confirmed ? S + "expertise.confirmed" : S + "expertise.declared", { label: e.label })}</li>`).join("")}</ul>`;
+    });
+    const dec = cs.act("expertisedeclare");
+    if (dec) ex += `<div class="cs-form"><label for="ma-exp">${W(S + "expertise.field")}</label><span class="help">${W(S + "expertise.help")}</span><input id="ma-exp" type="text" class="cs-input">${dec}</div>`;
+    out.push(cs.sec(S + "expertise.heading", ex));
 
-    // the password, typed twice alike (setup-page R3's rule)
-    const pw = cs.act("setpassword", { subject: "password", screen: "account" });
-    if (pw) out.push(sec(S + "password.heading", (ctx.shown && ctx.shown.password ? `<p data-shown="password">${W(S + "password.changed")}</p>` : "") + form(`<label for="ma-cur">${W(S + "password.current")}</label><input id="ma-cur" name="current" type="password" class="cs-input" autocomplete="current-password">
-<label for="ma-new">${W(S + "password.new")}</label><span class="help">${W(S + "password.help")}</span><input id="ma-new" name="password" type="password" class="cs-input" autocomplete="new-password">
-<label for="ma-again">${W(S + "password.again")}</label><input id="ma-again" name="again" type="password" class="cs-input" autocomplete="new-password">${pw}`)));
+    // the password, typed twice alike (setup-page R3's rule); no field is drawn with what was typed (R10)
+    const pw = cs.act("setpassword");
+    if (pw) out.push(cs.sec(S + "password.heading", (ui.passwordChanged ? `<p data-shown="password">${W(S + "password.changed")}</p>` : "") + `<div class="cs-form"><label for="ma-cur">${W(S + "password.current")}</label><input id="ma-cur" type="password" class="cs-input" autocomplete="current-password">
+<label for="ma-new">${W(S + "password.new")}</label><span class="help">${W(S + "password.help")}</span><input id="ma-new" type="password" class="cs-input" autocomplete="new-password">
+<label for="ma-again">${W(S + "password.again")}</label><input id="ma-again" type="password" class="cs-input" autocomplete="new-password">${pw}</div>`));
 
-    // the member's own signing key: its public half, registered or revoked (friction by weight, the shell's R11)
-    let sk = "";
-    if (!ok(d.signers) && !(d.signers.state === "ok" && Array.isArray(d.signers.value.signers))) sk = failed(d.signers);
-    else {
-      const mine = (d.signers.value.signers || []).filter((s) => s.member_id === me.member && s.status === "active");
-      sk = mine.length === 0 ? `<p>${W(S + "key.none")}</p>` : `<ul class="cs-list">${mine.map((s) => `<li>${W(S + "key.held", { key: "…" + String(s.key_b64).slice(-8), date: cs.dateText(s.added) })}${form(cs.act("signerrevokeown", { subject: s.key_b64, screen: "account" }))}</li>`).join("")}</ul>`;
-      const reg = cs.act("signerregisterown", { subject: "key", screen: "account" });
-      if (reg) sk += form(`<label for="ma-pub">${W(S + "key.field")}</label><span class="help">${W(S + "key.help")}</span><input id="ma-pub" name="publicKey" type="text" class="cs-input" autocomplete="off">${reg}`);
-    }
-    out.push(sec(S + "key.heading", sk));
+    // the member's own signing key: its public half, registered or revoked (friction by weight, interface-shell R11)
+    out.push(cs.sec(S + "key.heading", cs.state(data.signers, (v) => {
+      const mine = (v.signers || []).filter((s) => s.member_id === me.member && s.status === "active");
+      let h = mine.length === 0 ? `<p>${W(S + "key.none")}</p>` : `<ul class="cs-list">${mine.map((s) => `<li>${W(S + "key.held", { key: "…" + String(s.key_b64).slice(-8), date: D(s.added) })} ${cs.act("signerrevokeown", { data: { key: s.key_b64 } })}</li>`).join("")}</ul>`;
+      const reg = cs.act("signerregisterown");
+      if (reg) h += `<div class="cs-form"><label for="ma-pub">${W(S + "key.field")}</label><span class="help">${W(S + "key.help")}</span><input id="ma-pub" type="text" class="cs-input" autocomplete="off">${reg}</div>`;
+      return h;
+    })));
 
     // elsewhere in the member's settings
-    out.push(sec(S + "elsewhere.heading", `<p><a href="/app/connect">${W("screen.connect.name")}</a></p><p><a href="/app/notes">${W("screen.notes.name")}</a></p>`));
+    out.push(cs.sec(S + "elsewhere.heading", `<p><a href="/app/connect">${W("screen.connect.name")}</a></p><p><a href="/app/notes">${W("screen.notes.name")}</a></p>`));
     return out.join("");
   },
 
   acts: [
     { op: "memberlanguageset", rereads: ["language"],
-      args(f) { const t = String(f.language || "").trim(); return { body: { language: t || null } }; } },
+      send(view, el, cs) { const t = String(cs.value("ma-lang") || "").trim(); return { body: { language: t || null } }; } },
+    // the owed act `owed:infolevelset` (DEC-162), served by instance-setup R79; the level also kept on the device
     { op: "infolevelset", rereads: ["level"],
-      args(f) { return { body: { level: f.level === "pause" ? "pause" : "prompt" } }; },
-      after(a, ctx, d, f) { return { device: { level: f.level === "pause" ? "pause" : "prompt" } }; } },
-    { op: "expertisedeclare", rereads: ["expertise"], clears: ["label"],
-      args(f) { const label = String(f.label || "").trim(); return label ? { body: { label } } : { hold: "screen.account.expertise.nolabel" }; } },
+      send(view, el, cs) { return { body: { level: cs.value("ma-level") === "pause" ? "pause" : "prompt" } }; },
+      done(view, answer, cs) { cs.set("level", cs.value("ma-level") === "pause" ? "pause" : "prompt"); } },
+    { op: "expertisedeclare", rereads: ["expertise"],
+      send(view, el, cs) { const label = String(cs.value("ma-exp") || "").trim(); return label ? { body: { label } } : { refuse: "screen.account.expertise.nolabel" }; } },
     // sent only when the new password is typed twice alike; neither is kept, drawn again or sent again (R10)
-    { op: "setpassword", rereads: [], clears: ["current", "password", "again"],
-      args(f) {
-        if (!f.password || f.password !== f.again) return { hold: "screen.account.password.differ" };
-        return { body: { current: String(f.current || ""), password: String(f.password) } };
+    { op: "setpassword", rereads: [],
+      send(view, el, cs) {
+        const password = cs.value("ma-new"), again = cs.value("ma-again");
+        if (!password || password !== again) return { refuse: "screen.account.password.differ" };
+        return { body: { current: String(cs.value("ma-cur") || ""), password: String(password) } };
       },
-      after() { return { show: { password: true } }; } },
-    { op: "signerregisterown", rereads: ["signers"], clears: ["publicKey"],
-      args(f) {
-        // the line the signing page gives: `ssh-ed25519 <base64> <label>`, or the base64 alone
-        const parts = String(f.publicKey || "").trim().split(/\s+/);
+      done(view, answer, cs) { cs.set("passwordChanged", true); } },
+    { op: "signerregisterown", rereads: ["signers"],
+      send(view, el, cs) {
+        // the line the signing page gives, `ssh-ed25519 <base64> <label>`, or the base64 alone (credentials R9)
+        const parts = String(cs.value("ma-pub") || "").trim().split(/\s+/);
         const b64 = parts[0] === "ssh-ed25519" ? parts[1] : parts[0];
-        if (!b64 || !/^AAAA[A-Za-z0-9+/=]+$/.test(b64)) return { hold: "screen.account.key.bad" };
-        const comment = parts[0] === "ssh-ed25519" ? parts.slice(2).join(" ") : parts.slice(1).join(" ");
+        if (!b64 || !/^AAAA[A-Za-z0-9+/=]+$/.test(b64)) return { refuse: "screen.account.key.bad" };
+        const comment = (parts[0] === "ssh-ed25519" ? parts.slice(2) : parts.slice(1)).join(" ");
         return { body: comment ? { keyB64: b64, comment } : { keyB64: b64 } };
       } },
     { op: "signerrevokeown", rereads: ["signers"],
-      args(f, ctx, d, subject) { return { body: { keyB64: subject } }; } },
+      send(view, el) { return { body: { keyB64: el.dataset.key } }; } },
   ],
 };

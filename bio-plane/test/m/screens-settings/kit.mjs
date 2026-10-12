@@ -1,6 +1,6 @@
 /* screens-settings' tests' stand-in for the shell (draft-T46-interface §4 (1); K2854 T2): `interface-shell` is built in the
    same layer and is not yet merged, so its kit `cs`, its act gate (R12) and its read states (R10) are stood in here, over
-   the screen contract J1 states, and re-pointed to the shell's own at its merge. Nothing here is the module's code: the
+   the screen contract interface-shell R21 states (K2996, K2998), and re-pointed to the shell's own at its merge. Nothing here is the module's code: the
    screens run as they will in the browser, through `SCREENS`' self-contained functions, over a fake plane that answers
    each op in its owner's documented shape and records every request (its op, query, body and headers).
 
@@ -12,6 +12,7 @@ import { dirname, join } from "node:path";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { OPS, NEEDS, SESSION_OPS, OP_ALIASES } from "../../../src/op-declarations/index.mjs";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-settings/index.mjs";
+export { SCREENS };
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 
@@ -91,42 +92,58 @@ export const t = (key, fills = {}) => unescape(w(key, fills));
 
 // ---- the act gate (interface-shell R12, stood in) ----
 
-const resolve = (op) => (OP_ALIASES && OP_ALIASES[op]) || op;
+const resolve = (op) => OP_ALIASES[op] || op;
+// the acts their owners refuse to a member who does not administer (membership's administrator acts, credentials'
+// group-key acts, `aikeepaway`)
 const ADMIN_ONLY = new Set(["memberadd", "membercaps", "memberset", "adminendorse", "adminremove", "expertiseconfirm", "invitewithdraw",
   "websitekeycreate", "joinlinkenable", "groupkeyset", "groupkeyswitch", "groupkeyremove", "aikeepaway"]);
+const SERVED_LATER = new Set(["infolevelset"]); // op-declarations R50 (T46), merged before this module
 export function may(op, me) {
   if (!me) return false;
   const o = resolve(op);
-  if (!OPS[o]) return false;
+  if (!OPS[o] && !SERVED_LATER.has(o)) return false;
+  const spec = OPS[o] || { mutating: true };
   const need = NEEDS[o] ?? null;
   if (need !== null && !(me.capabilities || []).includes(need)) return false;
-  const set = me.founder ? SESSION_OPS.admin : SESSION_OPS.member;
-  if (OPS[o].mutating && !set.has(o)) return false;
+  const set = me.member === "admin" ? SESSION_OPS.admin : SESSION_OPS.member;
+  if (spec.mutating && OPS[o] && !set.has(o)) return false;
   if (ADMIN_ONLY.has(op) && me.administer !== true) return false;
   return true;
 }
+const OWED = { subscriptionsignin: "owed_subscriptionsignin", infolevelset: "owed_infolevelset" };
 
 // ---- the kit ----
 
-/** The kit a screen draws with, over `me` (whoami's answer). Each act button carries `data-act`, and `data-subject`
- *  when it acts on one row; each form is `[data-form]`, its fields named. */
-export function kit(me, screen) {
+/** The kit a screen draws with (interface-shell R21 (5)), over the view. Each act button carries `data-act` and its
+ *  `data-*`; `rows` draws each row's panel beneath it, as `data-panel-of`. */
+export function kit(view, screenId, hooks = {}) {
   const cs = {
-    w, t, esc,
-    state(o, emptyKey) {
-      if (o.state === "loading") return `<p class="cs-state" data-state="loading">${w("state.loading")}</p>`;
-      if (o.state === "empty") return `<p class="cs-state" data-state="empty">${w(emptyKey || "state.empty")}</p>`;
-      if (o.state === "failed") return `<p class="cs-state" data-state="failed">${w("state.failed", { reason: o.refusal ? (o.refusal.translation || o.refusal.code) : "no answer" })}</p>`;
-      return "";
+    w, esc,
+    state(o, inner, opt = {}) {
+      if (!o || o.state === "loading") return `<p class="cs-state" data-state="loading">${w("state.loading")}</p>`;
+      if (o.state === "empty") return `<p class="cs-state" data-state="empty">${w(opt.empty || "state.empty")}</p>`;
+      if (o.state === "failed") return `<p class="cs-state" data-state="failed">${w("state.failed", { reason: o.refusal ? (o.refusal.words || o.refusal.code) : "no answer" })}</p>`;
+      return inner(o.value);
     },
     act(op, o = {}) {
-      if (!may(op, me)) return "";
-      const key = o.label || `act.${op.replace(/^owed:(\w+).*/, "owed_$1")}.label.${screen}`;
-      return `<button type="button" class="cs-btn" data-act="${esc(op)}"${o.subject !== undefined ? ` data-subject="${esc(o.subject)}"` : ""}${o.form ? ` data-form-of="${esc(o.form)}"` : ""}>${w(key, o.fills)}</button>`;
+      if (!may(op, view.me)) return "";
+      const key = o.label || `act.${OWED[op] || op}.label.${screenId}`;
+      const data = Object.entries(o.data || {}).filter(([, v]) => v !== undefined).map(([k, v]) => ` data-${k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase())}="${esc(v)}"`).join("");
+      return `<button type="button" class="cs-btn" data-act="${esc(op)}"${data}>${w(key)}</button>`;
     },
-    date(iso) { return iso ? esc(String(iso).slice(0, 10)) : ""; },
-    dateText(iso) { return iso ? String(iso).slice(0, 10) : ""; },
-    number(n) { return esc(Number(n).toLocaleString("en")); },
+    can(op) { return may(op, view.me); },
+    set(name, value) { view.ui[name] = value; if (hooks.redraw) hooks.redraw(); },
+    value(id) { return hooks.values ? hooks.values[id] : undefined; },
+    call(op, o = {}) { return hooks.call(op, o.query || {}, o.body); },
+    sec(titleKey, inner) { return `<section class="cs-section"><h2>${w(titleKey)}</h2>${inner}</section>`; },
+    rows({ cols, items, key, cells, acts }) {
+      return `<table class="cs-table"><thead><tr>${cols.map((c) => `<th>${w(c)}</th>`).join("")}</tr></thead><tbody>${items.map((it) => {
+        const k = key(it);
+        const panel = acts ? acts(it) : "";
+        return `<tr data-row="${esc(k)}">${cells(it).map((c) => `<td>${c}</td>`).join("")}</tr>${panel ? `<tr class="cs-panel" data-panel-of="${esc(k)}"><td colspan="${cols.length}">${panel}</td></tr>` : ""}`;
+      }).join("")}</tbody></table>`;
+    },
+    date(iso, o = {}) { return iso ? esc(String(iso).slice(0, o.year ? 10 : 10)) : ""; },
   };
   return cs;
 }
@@ -134,76 +151,80 @@ export function kit(me, screen) {
 // ---- the fake plane and the screen driver ----
 
 /** Answers each op by `table[op]`: an answer object, a function `(query, body) => answer`, `"pending"` (never answers),
- *  or `"none"` (no answer: a network failure). Every request is recorded. */
+ *  or `"none"` (no answer: a network failure). Every request is recorded with its op, query, body and header. */
 export function plane(table) {
   const requests = [];
-  async function call(op, query = {}, body = undefined, headers = { authorization: "Bearer SENTINEL" }) {
-    requests.push({ op, query, body, headers });
+  async function call(op, query = {}, body = undefined) {
+    requests.push({ op, query, body, headers: { authorization: "Bearer SENTINEL-SESSION" } });
     const t = table[op];
     const a = typeof t === "function" ? t(query, body) : t;
     if (a === undefined) throw new Error(`the fake plane has no answer for ${op}`);
     if (a === "pending") return new Promise(() => {});
-    if (a === "none") return { state: "failed", refusal: null };
+    if (a === "none") return null;
     return a;
   }
   return { call, requests, table };
 }
 
-/** An answer's outcome as the shell hands it to `render` (its R10): ok with the value, empty, or failed with the refusal. */
-export function outcomeOf(answer, emptyWhen) {
-  if (answer && answer.state === "failed") return answer;
-  if (!answer || answer.ok === false) return { state: "failed", refusal: answer || null };
+/** An answer as the shell hands a read to `render` (its R10, R21 (2)): `{state, value, refusal}`, `value` the answer's
+ *  `result` (or the answer, for `bootstrap` and `subscriptionsignin`, which the door relays at the top level). */
+export function outcomeOf(answer, empty) {
+  if (!answer) return { state: "failed", refusal: null };
   const value = answer.result !== undefined ? answer.result : answer;
-  if (value && value.ok === false) return { state: "failed", refusal: value };
-  if (emptyWhen && emptyWhen(value)) return { state: "empty", value };
+  if (answer.ok === false || (value && value.ok === false)) { const r = value && value.ok === false ? value : answer; return { state: "failed", refusal: { code: r.code || r.reason, words: r.translation || null } }; }
+  if (empty && empty(value)) return { state: "empty", value };
   return { state: "ok", value };
 }
 
 export const screen = (id) => SCREENS.find((s) => s.id === id);
 
-/** Runs one screen: its reads over the fake plane, then its render; answers the drawn tree and helpers. */
-export async function open(id, { me, table, subject = null, reachable = false, origin = "https://group.example", states = {} }) {
-  const s = screen(id);
+/** Runs one screen as the shell does: its reads over the fake plane (each pending read drawn loading), then its render.
+ *  `states` stands a read's outcome in directly. */
+export async function open(id, { me, table, subject = null, reachable = false, origin = "https://group.example", states = {}, s: given = null } = {}) {
+  const s = given || screen(id);
   const p = plane(table);
-  const ctx = { me, subject, reachable, origin, shown: null };
-  const d = {};
-  const readOne = async (r) => {
-    if (states[r.name]) return states[r.name];
+  const view = { subject, data: {}, me, ui: {}, reachable, origin, parts: s.parts };
+  const hooks = { values: {}, call: p.call };
+  const out = { s, p, view, opened: [], refused: null };
+  const cs = kit(view, id, hooks);
+  out.cs = cs;
+  const readOne = async (name, r) => {
+    if (states[name]) return states[name];
     const a = await Promise.race([p.call(r.op, r.query || {}, r.body), new Promise((res) => setTimeout(() => res("pending"), 5))]);
-    return a === "pending" ? { state: "loading" } : outcomeOf(a);
+    return a === "pending" ? { state: "loading" } : outcomeOf(a, r.empty);
   };
-  for (const r of s.reads(ctx)) d[r.name] = await readOne(r);
-  const cs = kit(me, id);
-  const draw = () => s.render(cs, d, ctx, s.parts);
-  const out = { s, p, ctx, d, cs, opened: [], held: null, refusal: null };
-  out.redraw = () => { out.html = draw(); out.tree = html(out.html); return out; };
+  const readAll = async (names) => { const rs = s.reads(view); for (const [n, r] of Object.entries(rs)) if (!names || names.includes(n)) view.data[n] = await readOne(n, r); };
+  out.redraw = () => { out.html = s.render(cs, view); out.tree = html(out.html); return out; };
+  hooks.redraw = () => out.redraw();
+  await readAll(null);
   out.redraw();
-  /** Presses an act as the shell does (its R11–R13; this module's R8): the request made from the form's values, sent;
-   *  on a refusal, the refusal drawn and nothing else changed; on success, `after` applied, its follow-up sent, the
-   *  act's reads read again and the screen drawn again. */
-  out.press = async (op, { subject, values = {} } = {}) => {
+  /** Presses an act as the shell does (its R11–R13; this module's R8): `send` over the pressed control (`data`) and
+   *  the form's values; `{refuse}` draws a word and sends nothing; a refusal is drawn and nothing else changes; on
+   *  success, `done`, then the act's reads read again, and the screen drawn again. */
+  out.press = async (op, { data = {}, values = {}, reason, extra = {} } = {}) => {
     const spec = s.acts.find((a) => a.op === op);
     if (!spec) throw new Error(`${id} lists no act ${op}`);
     const before = p.requests.length;
-    out.held = null; out.refusal = null; ctx.shown = null;
-    const req = spec.args(values, ctx, d, subject, s.parts);
-    if (req.hold) { out.held = req.hold; out.redraw(); return { sent: [], held: req.hold }; }
-    const answer = await p.call(op, req.query || {}, req.body);
-    const result = answer && answer.result !== undefined ? answer.result : answer;
-    if (!answer || answer.ok === false || answer.state === "failed" || (result && result.ok === false)) {
-      out.refusal = { answer: result || answer, drawn: spec.refused ? spec.refused(cs, result || answer, s.parts) : null };
+    out.refused = null;
+    hooks.values = values;
+    const req = await spec.send(view, { dataset: { ...data } }, cs, extra);
+    if (req === null) return { sent: [] };
+    if (req.refuse) { out.refused = { key: req.refuse, drawn: w(req.refuse) }; return { sent: [], refuse: req.refuse }; }
+    const body = req.body !== undefined ? { ...req.body } : undefined;
+    if (spec.reasonField && reason !== undefined) body[spec.reasonField] = reason;
+    const answer = await p.call(op, req.query || {}, body);
+    const o = outcomeOf(answer);
+    if (o.state === "failed") {
+      const r = answer ? (answer.result && answer.result.ok === false ? answer.result : answer) : null;
+      const code = r && (r.code || r.reason);
+      const how = spec.refusals && spec.refusals[code];
+      out.refused = { code, drawn: typeof how === "function" ? how(r, cs) : how ? w(how, r) : r && r.translation ? esc(r.translation) : w("state.failed", { reason: code || "no answer" }) };
       return { sent: p.requests.slice(before), answer, refused: true };
     }
-    let followed = null;
-    if (spec.after) {
-      followed = spec.after(result, ctx, d, values, subject) || null;
-      if (followed && followed.then) for (const t2 of followed.then) await p.call(t2.op, t2.query || {}, t2.body);
-      if (followed && followed.open) out.opened.push(followed.open);
-    }
-    for (const r of s.reads(ctx).filter((r) => (spec.rereads || []).includes(r.name))) d[r.name] = await readOne(r);
-    ctx.shown = followed && followed.show ? followed.show : null;
+    if (spec.done) await spec.done(view, answer, cs);
+    await readAll(spec.rereads || null);
     out.redraw();
-    return { sent: p.requests.slice(before), answer, followed };
+    return { sent: p.requests.slice(before), answer };
   };
   return out;
 }

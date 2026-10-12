@@ -38,34 +38,37 @@ test("the screens are the registry's members, account, connect and notes, each l
   assert.ok(!SCREENS.find((s) => s.id === "account").acts.some((a) => a.op === "handlechange"));
 });
 
-test("every act names an op OPS holds (owed:infolevelset's op once op-declarations R50 declares it)", () => {
+test("every act names an op OPS holds (owed:infolevelset's op once op-declarations R50 declares it), and every read too", () => {
   for (const s of SCREENS) for (const a of s.acts) {
     const op = OP_ALIASES[a.op] || a.op;
     if (a.op === "infolevelset" && !OPS.infolevelset) continue; // op-declarations R50 (T46), merged before this module
     assert.ok(OPS[op], `${s.id}: ${a.op} is served`);
   }
-  for (const s of SCREENS) for (const r of s.reads({ me: ADMIN, subject: "ana" })) {
+  for (const s of SCREENS) for (const [n, r] of Object.entries(s.reads({ me: ADMIN, subject: "ana" }))) {
     if (r.op === "infolevel" && !OPS.infolevel) continue;
-    assert.ok(OPS[r.op], `${s.id}: read ${r.op} is served`);
+    assert.ok(OPS[r.op], `${s.id}: read ${n} (${r.op}) is served`);
   }
 });
 
-test("every function of SCREENS is self-contained: rebuilt from its own source, it draws the same", async () => {
-  const rebuild = (fn) => {
-    const src = fn.toString();
-    // a method's source (`name(a) {…}`) is rebuilt as an object's method; a function's as itself
-    const f = /^(async\s+)?function\b|^\(|^[\w$]+\s*=>/.test(src) ? new Function(`return (${src});`)() : new Function(`return ({ ${src} });`)()[fn.name];
-    assert.equal(typeof f, "function", fn.name);
-    return f;
-  };
+/* A function's source rebuilt with nothing in scope but the language's own globals (interface-shell R21 (1)). */
+function rebuild(fn) {
+  const src = fn.toString();
+  const f = /^(async\s+)?function\b|^(async\s*)?\(|^[\w$]+\s*=>/.test(src) ? new Function(`"use strict"; return (${src});`)() : new Function(`"use strict"; return ({ ${src} });`)()[fn.name];
+  assert.equal(typeof f, "function", fn.name);
+  return f;
+}
+const rebuilt = (s) => ({ ...s, reads: rebuild(s.reads), render: rebuild(s.render), parts: Object.fromEntries(Object.entries(s.parts).map(([k, f]) => [k, rebuild(f)])),
+  acts: s.acts.map((a) => Object.fromEntries(Object.entries(a).map(([k, v]) => [k, typeof v === "function" ? rebuild(v)
+    : k === "refusals" ? Object.fromEntries(Object.entries(v).map(([c, x]) => [c, typeof x === "function" ? rebuild(x) : x])) : v]))) });
+
+test("every function of SCREENS is self-contained: rebuilt from its own source, each screen reads and draws the same", async () => {
+  const tables = { members: membersTable(), account: accountTable(ADMIN), connect: connectTable(ADMIN, "own"), notes: notesTable(ADMIN) };
   for (const s of SCREENS) {
-    const copy = { ...s, reads: rebuild(s.reads), render: rebuild(s.render), parts: Object.fromEntries(Object.entries(s.parts).map(([k, f]) => [k, rebuild(f)])),
-      acts: s.acts.map((a) => Object.fromEntries(Object.entries(a).map(([k, v]) => [k, typeof v === "function" ? rebuild(v) : v]))) };
-    const table = { members: membersTable(), account: accountTable(ADMIN), connect: connectTable(ADMIN, "own"), notes: notesTable(ADMIN) }[s.id];
-    const a = await open(s.id, { me: ADMIN, table, subject: s.id === "members" ? "ana" : s.id === "notes" ? "1" : null, reachable: true });
-    assert.equal(copy.render(a.cs, a.d, a.ctx, copy.parts), a.html, `${s.id} renders the same from its source`);
-    assert.deepEqual(copy.reads(a.ctx), s.reads(a.ctx));
-    for (const act of copy.acts) assert.equal(typeof act.args, "function");
+    const subject = s.id === "members" ? "ana" : null;
+    const a = await open(s.id, { me: ADMIN, table: tables[s.id], subject, reachable: true });
+    const b = await open(s.id, { me: ADMIN, table: tables[s.id], subject, reachable: true, s: rebuilt(s) });
+    assert.equal(b.html, a.html, `${s.id} draws the same from its source`);
+    assert.deepEqual(b.p.requests, a.p.requests, `${s.id} reads the same from its source`);
   }
 });
 
@@ -87,5 +90,8 @@ test("SCREEN_WORDS: frozen [key, en, protected] rows, keys distinct, under the s
 
 test("every word a screen names is held in WORD_ROWS or SCREEN_WORDS", () => {
   const held = new Set([...WORD_ROWS.map((r) => r[0]), ...SCREEN_WORDS.map((r) => r[0])]);
-  for (const s of SCREENS) for (const k of s.words) assert.ok(held.has(k), `${s.id}: ${k}`);
+  for (const s of SCREENS) for (const k of s.words) {
+    if (Array.isArray(k)) assert.ok(SCREEN_WORDS.includes(k), `${s.id}: its own row ${k[0]} is SCREEN_WORDS' row`);
+    else assert.ok(held.has(k), `${s.id}: ${k}`);
+  }
 });
