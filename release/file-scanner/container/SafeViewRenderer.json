@@ -1,0 +1,38 @@
+{
+  "class_name": "SafeViewRenderer",
+  "image": "ghcr.io/believeinoakland/file-scanner-renderer@sha256:90385aeddbc05b66882506a0ae6ec48dfb635119bae8c20cfba3c31e4afb974b",
+  "scheduling_policy": "default",
+  "max_instances": 3,
+  "bind": [
+    {
+      "member": "file-scanner",
+      "binding": "RENDERER"
+    }
+  ],
+  "packages": [
+    {
+      "name": "fonts-dejavu-core",
+      "version": "2.37-6"
+    },
+    {
+      "name": "fonts-liberation2",
+      "version": "2.1.5-1"
+    },
+    {
+      "name": "libreoffice-core",
+      "version": "4:7.4.7-1+deb12u14"
+    },
+    {
+      "name": "libreoffice-impress",
+      "version": "4:7.4.7-1+deb12u14"
+    },
+    {
+      "name": "libreoffice-writer",
+      "version": "4:7.4.7-1+deb12u14"
+    },
+    {
+      "name": "poppler-utils",
+      "version": "22.12.0-2+deb12u3"
+    }
+  ]
+}

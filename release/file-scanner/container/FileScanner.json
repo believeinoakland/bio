@@ -1,0 +1,30 @@
+{
+  "class_name": "FileScanner",
+  "image": "ghcr.io/believeinoakland/file-scanner-scanner@sha256:2af812a3bde157731a05a827c035f49e8faf83ad29e6cbbf4ff440844b6e5db8",
+  "scheduling_policy": "default",
+  "max_instances": 3,
+  "bind": [
+    {
+      "member": "file-scanner",
+      "binding": "SCANNER"
+    }
+  ],
+  "packages": [
+    {
+      "name": "clamav",
+      "version": "1.4.3+dfsg-1~deb12u2"
+    },
+    {
+      "name": "clamav-base",
+      "version": "1.4.3+dfsg-1~deb12u2"
+    },
+    {
+      "name": "clamav-freshclam",
+      "version": "1.4.3+dfsg-1~deb12u2"
+    },
+    {
+      "name": "libclamav12",
+      "version": "1.4.3+dfsg-1~deb12u2"
+    }
+  ]
+}
