@@ -16,6 +16,7 @@
 - **Own flaw fixed (P8):** stale citations of the hold ops moved to `action-holds` in T45 (`actionpressure`'s outward sentence now cites action-holds R1; comments on `actionhold`, `actionholdrelease` and its statement re-pointed), wording only.
 
 - **CHANGE B3, B4 (K2885, K2887, K2888):** after merging `tranche/T45` (R8 and R32 amended), the 21 acts `affordances` R51 makes `ACTS` rows on an action target leave `NON_ACTS` (R32's list: the hold acts, `escalationopen`, `escalationattach`, `filingprepare`, `filingapprove`, `filingsent`, `counselpacket`, `communicationprepare`, `reminderset`, and T45's `holdnoticesent`, `actionreceipt`, `actionscope`, `actionpromise`, `actionreplybearing`, `arosefrom`, `clockstate`, `itemtakeup`, with `holdnoticeprepare` and `actionbearingpropose`, "where they were listed": they were, so 21, not B4's 19); `MACHINE_REFUSALS` gains the 17 rows with their owners' codes, each checked against the owner's method (J4); no rung moves. Tests re-pinned: `ladder.test.mjs` R5 (the whole map, the four that admit a machine, no act also a non-act), `owners.test.mjs` R8 and R17's alias (`filingrecordsent`'s op is now an act), `pins.test.mjs` layer 9, `t45.test.mjs` (acts apart, the eight codes, the totality with its negative control).
+- **CHANGE B6 (K2896):** after merging `tranche/T45`, `declaredstakeset` (instance-setup R77) graded `reversible` by R32's rule, as `coarchiveset` (a later setting replaces it, `null` clears it, no reason asked), with a `setting:` NON_ACTS sentence; no MACHINE_REFUSALS row (it refuses `NOT_AN_ADMIN` and is no act). Tested by name with its precedent and a control (`t45.test.mjs`, `pins.test.mjs`). Every op served since T44's close is now graded or named (re-checked over every owner's map).
 
 **Deferred:** none.
 
@@ -28,7 +29,7 @@
 - `affordances` before/after: reds 8 → 11 (above). `control-plane` totality: 0 → 1 (above).
 - `format`: 153 modules, 152 requirements files; 0 failures. `architecture op-grades`: 20 product files, 37 relative imports (after the merge); 0 failures. `coverage op-grades`: 32 of 32 live requirement ids named by a test; 0 failures. `ownership op-grades tranche/T45`: 0 failures (re-run after commit below).
 
-Size (session_01QBg5Qed5iVkRuoNbR4vgRF): test runs 13, module lines 2835
+Size (session_01QBg5Qed5iVkRuoNbR4vgRF): test runs 15, module lines 2840
 
 ## J1 · QUESTION
 
