@@ -1,6 +1,6 @@
 # queue-producers (T45)
 
-**Status** · session_01DYXLS1wknT5aRvQSA1DDD2 · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_01DYXLS1wknT5aRvQSA1DDD2 · depth 2 · WAITING ON BOB (CHANGE: action-producers' merge) · handled B2
 
 ## J1 · QUESTION
 
