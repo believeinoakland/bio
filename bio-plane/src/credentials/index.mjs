@@ -37,7 +37,8 @@
  */
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, sha256HexSync } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject, notTheOwner } from "../membership/index.mjs";
+import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject, notTheOwner, listenerRefusal }
+  from "../membership/index.mjs";
 import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES,
          CREDENTIALS_HISTORY_TABLE } from "./schema.mjs";
 export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES, CREDENTIALS_HISTORY_TABLE } from "./schema.mjs";
@@ -1386,6 +1387,11 @@ export class Credentials {
     /* END DEC-49 REGION is-account-kind */
     const empty = Credentials.#noSecret(secret);
     if (empty) return empty;
+    /* R22 (T47; N981, K231): an API key is held only once the disclosure of what connecting means is recorded for
+       her, asked after every refusal above, through R64's one site; `by` is the door's stamp, the form the disclosure
+       is recorded under (control-plane R65 asks it so) */
+    const due = kind === "apikey" ? this.disclosureDue({ member: by }) : null;
+    if (due) return due;
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
     const id = Credentials.#memberOf(member);
@@ -1399,6 +1405,44 @@ export class Credentials {
       this.#change(`member:${id}`, "key_set", { account: "reference", kind }, by, null, setAt);   /* R61 */
     });
     return { ok: true, kind, set_at: setAt };
+  }
+
+  /* ===== THE DISCLOSURE-FIRST ORDER (R64; T47, N981; K231, K3027, K3030) =====
+   *
+   * Before a member's own account is connected she is shown what connecting means, and `instance-setup` (its R54)
+   * records that it was shown. That record is a later module's, so this module cannot read it: one later module
+   * (instance-setup, or the composition root on its behalf) registers, once at start, its `disclosureOf`, and
+   * `disclosureDue` asks it. This is the one site that mints DISCLOSURE_DUE (K231): R22 refuses through it, and
+   * control-plane R65's refusal of a sign-in's `start` answers through it. Fail closed: anything but `shown: true`, a
+   * throw, or an answer that is not one (a promise among them) is the refusal. With none registered nothing is asked
+   * and nothing is held (a module test with no instance-setup). */
+  #disclosureSource = null;   // {module, fn}
+
+  /* R64: one registration, whoever makes it; its refusals are membership's R81, naming the holder. */
+  registerDisclosureRead(module, fn) {
+    const refused = listenerRefusal(this.#disclosureSource, module, fn);
+    if (refused) return refused;
+    this.#disclosureSource = { module, fn };
+    return { ok: true, module };
+  }
+
+  /* R64: an in-plane read, reached by no route and answered to no viewer: null when the registered read answers
+     `shown: true` for `member` (or none is registered), else the one DISCLOSURE_DUE refusal. Writes nothing; never
+     throws. */
+  disclosureDue({ member = null } = {}) {
+    const source = this.#disclosureSource;
+    if (source === null) return null;
+    let shown = false;
+    try {
+      const a = source.fn({ member });
+      shown = !!a && typeof a === "object" && typeof a.then !== "function" && a.shown === true;
+    } catch { shown = false; }
+    if (shown) return null;
+    /* DEC-49 REGION is-disclosure-shown */
+    return Credentials.#row(ACCOUNT_CHECKS, "DISCLOSURE_DUE", "you have not yet been shown what connecting your own "
+      + "Claude account means, so nothing was connected or sent. Read it, then try again.",
+      { member: typeof member === "string" ? member : null });
+    /* END DEC-49 REGION is-disclosure-shown */
   }
 
   /* R22, R25, R32: the member removes their reference, which turns both switches off and ends at once every standing
@@ -1765,13 +1809,16 @@ export class Credentials {
     if (unsealable) return unsealable;
     const { sealed, iv } = await this.#encrypt(Credentials.#GROUP_KEY_OWNER, "apikey", key);
     const setAt = stampSecond();
-    const first = !this.#groupKeyFacts().held;
-    this.sql.exec(
-      `INSERT INTO group_key (id, sealed, iv, is_on, set_by, set_at) VALUES (1,?,?,0,?,?)
-       ON CONFLICT(id) DO UPDATE SET sealed=excluded.sealed, iv=excluded.iv, set_by=excluded.set_by,
-         set_at=excluded.set_at, is_on=CASE WHEN ? THEN 0 ELSE group_key.is_on END`,
-      sealed, iv, Credentials.#memberOf(by), setAt, first ? 1 : 0);
-    this.#groupKeyAct("set", null, by);
+    /* the key and its record (R33, R61) in one act */
+    this.#tx(() => {
+      const first = !this.#groupKeyFacts().held;
+      this.sql.exec(
+        `INSERT INTO group_key (id, sealed, iv, is_on, set_by, set_at) VALUES (1,?,?,0,?,?)
+         ON CONFLICT(id) DO UPDATE SET sealed=excluded.sealed, iv=excluded.iv, set_by=excluded.set_by,
+           set_at=excluded.set_at, is_on=CASE WHEN ? THEN 0 ELSE group_key.is_on END`,
+        sealed, iv, Credentials.#memberOf(by), setAt, first ? 1 : 0);
+      this.#groupKeyAct("set", null, by);
+    });
     return { ok: true, set_at: setAt };
   }
 
@@ -1782,8 +1829,10 @@ export class Credentials {
     if (bar) return bar;
     const held = this.#groupKeyFacts().held;
     const off = USE_SWITCHES.map((k) => `${Credentials.#USE_COLUMN[k]}=${k === "explore" ? "'no'" : "0"}`).join(", ");
-    this.sql.exec(`UPDATE group_key SET sealed=NULL, iv=NULL, is_on=0, set_by=NULL, set_at=NULL, ${off} WHERE id=1`);
-    this.#groupKeyAct("remove", null, by);
+    this.#tx(() => {
+      this.sql.exec(`UPDATE group_key SET sealed=NULL, iv=NULL, is_on=0, set_by=NULL, set_at=NULL, ${off} WHERE id=1`);
+      this.#groupKeyAct("remove", null, by);
+    });
     return { ok: true, removed: held };
   }
 
@@ -1792,8 +1841,10 @@ export class Credentials {
     const bar = this.#adminBar(by, "switching the group's Anthropic API key");
     if (bar) return bar;
     const v = on === true ? 1 : 0;
-    this.sql.exec(`INSERT INTO group_key (id, is_on) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET is_on=excluded.is_on`, v);
-    this.#groupKeyAct("switch", v ? "on" : "off", by);
+    this.#tx(() => {
+      this.sql.exec(`INSERT INTO group_key (id, is_on) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET is_on=excluded.is_on`, v);
+      this.#groupKeyAct("switch", v ? "on" : "off", by);
+    });
     return { ok: true, on: this.#groupKeyFacts().on };
   }
 

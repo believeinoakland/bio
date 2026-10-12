@@ -28,6 +28,9 @@ export const AI_WORDS = Object.freeze({
     + 'or Yes.',
   'ai.refused.signinnotconnected': 'Connect your own Claude sign-in first, in Settings \u203a The assistant; then it can '
     + 'serve this project.',
+  /* R64 (T47; N981, K231): DISCLOSURE_DUE's sentence, unchanged by its move from the door's C-69.6 */
+  'refusal.DISCLOSURE_DUE': 'Read what connecting means first: your questions, and what is read to answer them, go to '
+    + 'Anthropic under your own account. Then open the sign-in page again.',
 });
 
 /* D-158 / C-63: a signing key is registered to a member who can attest (Membership Architecture v2 §6). Two codes for
@@ -275,6 +278,14 @@ export const ACCOUNT_CHECKS = Object.freeze({
   PROJECT_KEY_NOTICE_DUE: Object.freeze({
     check: 'C-29.39', where: at("#projectNoticeDue", "is-project-key-notice-seen"),
     translation: AI_WORDS['ai.refused.noticedue'],
+  }),
+  /* T47 (T47-9; N981, K231, K3030): the disclosure-first order held here (R64), its one site `disclosureDue`, which R22
+     refuses through and control-plane R65 relays (T47-65); the next free number of C-29 at the job's START. Its code and
+     sentence are the door's C-69.6's, unchanged (that row retires at T47-65, its number never reused); its translation
+     read by key. A new row, awaiting promotion's stamp (T47-10). */
+  DISCLOSURE_DUE: Object.freeze({
+    check: 'C-29.40', where: at("disclosureDue", "is-disclosure-shown"),
+    translation: AI_WORDS['refusal.DISCLOSURE_DUE'],
   }),
   /* T40 (T40-3): its `where` moves to `#keepAwayReason`, the one site R51 and R57 share (a row change for T40-4). */
   AI_KEEP_AWAY_NO_REASON: Object.freeze({
