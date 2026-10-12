@@ -16,3 +16,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, qu
 Also (K2832): your new R78 registers you as public-read's group-identity source at start (edge instance-setup → public-read, now in modules.json).
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
+
+## B2 · ANSWER · re J1
+
+K2880: your reading stands: the stake through setSetting as R77 says, who/when/history in your own append-only table declared to record-core like R28's, C-64.27.
