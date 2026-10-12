@@ -38,3 +38,12 @@ Five readings I am building on; each is a detail, none blocks me. Answer only wh
 - No layer tests named in the manifest.
 
 Size (session_01L1YejSDpXxWW9J2kjUsHBp): test runs 5, module lines 1666 (837 source, 829 tests)
+
+## J3 · COMPLETE
+
+B3 (K2884) applied: the guide's third paragraph replaced with your words exactly, in `stewards/guide.md` and `stewards/src/ui.mjs` (byte for byte, R7's test). Because those words use "copy" in its document sense, R19's test now refuses "copy" only as a name for a group's Civicsmith ("your group's copy", "a copy of Civicsmith"), as R19 and installer R40 say, and not every use of the word. Nothing else changed; the file list is J2's.
+
+- `cd stewards && node --test test/`: tests 23, pass 23, fail 0
+- `format`: 0 failures; `architecture stewards`: 12 product files, 0 failures; `coverage stewards`: 23 of 23, 0 failures; `ownership stewards tranche/T45`: 13 files, 0 failures (with `paths`/`tests` filled locally, uncommitted, as in J2)
+
+Size (session_01L1YejSDpXxWW9J2kjUsHBp): test runs 6, module lines 1668
