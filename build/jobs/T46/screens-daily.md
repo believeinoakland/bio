@@ -85,3 +85,13 @@ Tests: 45/45 over the served page (the words check proven by a planted raw strin
 **Kit gaps remaining (REPORT J7):** `ask`'s stream; reads weighed as reasoned; `frontier` in no session set. Each is described in J7.
 
 Size (session_01RJBRXS3sxyhSh6P5LL6g9S): test runs 27, module lines 1135 (tests 918)
+
+## J7 · REPORT
+
+Kit gaps found re-pointing to interface-shell's real page (B7). None is mine to fix; each leaves part of a registered act unusable on a live page.
+
+1. **`ask`'s answer is a stream (agent-worker R54: NDJSON, the answer the last event).** The shell's op client reads every answer with `r.json()`, so a multi-line answer reads as no answer ("no answer" drawn beside Ask), and the Ask screen never shows an answer on a live plane. My `done` already takes the last event from raw text, a list of events or one event; it needs the op client (or `cs.call`) to hand one of those for `ask` (e.g. parse `application/x-ndjson` and answer its last line). screens-inquiry's dock likely meets the same. Owner: interface-shell.
+2. **Reads drawn as acts weigh "reasoned".** `search`, `findin`, `frontier` and `ruleanswer` (all `mutating: false`) are in neither `op-grades`' `RUNGS` nor `RUNG_ABSENT`, so the shell asks the member for a reason before every search, find-in and count explanation, and adds `reason` to the request. Fix: `op-grades` `RUNG_ABSENT` with an `observational` ground for these reads (then the shell runs them on press), or the shell weighing any non-mutating op as `none`. Owner: op-grades (or interface-shell).
+3. **`frontier` is in no session set.** It is a read (admission lets every session reach a read), but it is in neither `SESSION_OPS.member` nor `.admin`, and interface-shell R12 draws an act only when the session set holds it, so Find's registered "See where nobody looked" is never drawn. Fix: `op-declarations` adding `frontier` to both session sets (as `search` and `findin` are), or R12 admitting reads. Owner: op-declarations (or interface-shell). My test proves the screen draws and sends it once the set holds it.
+
+Also noted, not a gap: the shell opens a `dialog` only for a terminal or signed act, so my lower-weight acts that ask the member's words draw their fields in place (a native disclosure), read by `send`; and the queue's note-once keeps its device mark in `localStorage` directly, as the kit has no device store.
