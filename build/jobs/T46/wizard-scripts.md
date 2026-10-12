@@ -73,3 +73,7 @@ Size (session_01EbaJuecoPkZHYH3qYHesEg): test runs 12, module lines 2577
 ## J1 · REPORT
 
 op-declarations (its R50, R52; K2780): until it declares escalationstoppursuing, actionscope and itemtakeup, the R30 scripts "Take an escalation to its next stage", "Refer it to an oversight body" and "Pick up a plan" stay withheld by R11 (none required, R14 unmoved). The same holds for infolevelset on account and filingsecondapprove on start-send. Its 7 reds (t33:245, t34:148, t34:329, t37:180, t38:76, t42:184, t45:206) are identical on tranche/T46 without my change; they read the design files directly. Nothing for you to do here unless op-declarations' entry lacks them.
+
+## J2 · COMPLETE
+
+T46-43 applied (R29, R30), pushed at f9f9a9bb4a on job/T46/wizard-scripts. wizard-scripts 82/0; users' pass/fail counts and failing test names identical to tranche/T46; format, architecture, coverage and ownership 0 failures; run.mjs: architecture 0 failures, coverage reds are only other L11 jobs' untested ids. Details in my record.
