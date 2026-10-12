@@ -1,6 +1,6 @@
 # case-check — requirements
 
-**Status** · New in T45 (T45-22; N828; Actions D23, D24; K2781 (1)): a module built fresh, no id moved; placed last in layer 8, after `review`, so that `case-authoring` stays under K617's bound (`draft-T45-l8.md` §4b, doubt 1). Every requirement is not yet met (T45). Last changed T46 (T46-28: R2's latch for the three lapse causes worded through `case-carriage`'s reads over an interval, its R19–R21; N907; K2833); that clause marked not yet met (T46).
+**Status** · New in T45 (T45-22; N828; Actions D23, D24; K2781 (1)): a module built fresh, no id moved; placed last in layer 8, after `review`, so that `case-authoring` stays under K617's bound (`draft-T45-l8.md` §4b, doubt 1). Every requirement is not yet met (T45). Last changed T46 (T46-28: R2's latch for the three lapse causes worded through `case-carriage`'s reads over an interval, its R19–R21; N907; K2833); that clause met (K2969).
 
 **Size (P6).** New. About 300 lines; one table.
 

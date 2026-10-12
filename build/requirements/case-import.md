@@ -1,6 +1,6 @@
 # case-import — requirements
 
-**Status** · In force: a new product module, placed by BOB (K1256, K1257); folded at T28's opening (N520, DEC-96; K1268, K1277), R16 and R6–R9's changes N522's (K1273); N534 reviewed (K1369). Last changed T34 (T34-94: R5, K1828); every requirement met (K1833). Last changed T41 (T41-41's text: R22, R23 new; N820; D59, D62; K2405, K2417, K2418); marked not yet met (T41). Last changed T46 (T46-24: R4 amended, the source group's `group_fields` recorded at import and answered from `importedCase`, for `conformance` R32; N903; K2832); marked not yet met (T46).
+**Status** · In force: a new product module, placed by BOB (K1256, K1257); folded at T28's opening (N520, DEC-96; K1268, K1277), R16 and R6–R9's changes N522's (K1273); N534 reviewed (K1369). Last changed T34 (T34-94: R5, K1828); every requirement met (K1833). Last changed T41 (T41-41's text: R22, R23 new; N820; D59, D62; K2405, K2417, K2418); marked not yet met (T41). Last changed T46 (T46-24: R4 amended, the source group's `group_fields` recorded at import and answered from `importedCase`, for `conformance` R32; N903; K2832); met (K2969).
 
 **Size (P6).** About 1,600–2,300 lines: the import and its tables, recreation, completion, the reads, the four acts and its catalogue rows. Acceptance is split out if it grows (K1256).
 
