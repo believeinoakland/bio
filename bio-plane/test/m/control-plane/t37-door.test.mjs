@@ -90,8 +90,11 @@ test("R68 (N776; DEC-182 (4); op-declarations R39; credentials R3): `setpassword
 /* ---------------------------------------------------------------- R65 */
 
 const keptAway = { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", detail: "kept away", keep_away: { reason: "a case", set_by: "admin", set_at: "2026-10-01" } };
-function signinWorld({ away = false, reply } = {}) {
+/* (T46; R65) `disclosed` is what instance-setup's `disclosureof` answers for the member asked (T46's own tests are in
+   `t46-door.test.mjs`): shown, unless a test says otherwise. */
+function signinWorld({ away = false, reply, disclosed = true } = {}) {
   const c = callers({ answer: (q) => (q.route === "aikeptaway" ? ok(away ? keptAway : { ok: true })
+                                      : q.route === "disclosureof" ? ok({ ok: true, member: q.params.member ?? null, shown: disclosed })
                                       : q.route === "subscriptionconnected" ? ok({ ok: true, connected: true }) : null) });
   const aw = agentWorker(reply ?? ((path, body) => runner(200, body.step === "start" ? { ok: true, address: "https://claude.ai/oauth/x" }
     : { ok: true, connected: body.step === "code" || body.step === "state", member: body.member })));

@@ -7,14 +7,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, aik, cred, hex64, member, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
-const { actionsOps } = await import("../../../src/actions/index.mjs");
+/* (T46; N938) the hold ops are action-holds' since T45 (plane R39): its own map, spread beside actions' */
+const { actionHoldsOps } = await import("../../../src/action-holds/index.mjs");
 const { docketOps } = await import("../../../src/docket/index.mjs");
 const { publicReadDoorOp } = await import("../../../src/public-read/door.mjs");
 const D = await import("../../../src/store-door/dispatch.mjs");
 
 const { OPS } = O;
 const U = new URL("http://do/");
-const ACTIONS_MAP = Object.keys(actionsOps(null, U, null));
+const HOLDS_MAP = Object.keys(actionHoldsOps(null, U, null));
 const DOCKET_MAP = Object.keys(docketOps(null, U, null));
 
 function callers() {
@@ -38,7 +39,7 @@ const viewer = (c) => ({ viewer: c.viewer });
 const authored = (c) => ({ viewer: c.viewer, author: c.identity });
 const byed = (c) => ({ viewer: c.viewer, by: c.identity });
 const ROUTES = {
-  actionholdrelease: [ACTIONS_MAP, authored], actionholdpreview: [ACTIONS_MAP, viewer], projectholds: [ACTIONS_MAP, viewer],
+  actionholdrelease: [HOLDS_MAP, authored], actionholdpreview: [HOLDS_MAP, viewer], projectholds: [HOLDS_MAP, viewer],
   docketfile: [DOCKET_MAP, authored], docketpressure: [DOCKET_MAP, authored], docket: [DOCKET_MAP, viewer],
   docketprepare: [DOCKET_MAP, byed], docketpost: [DOCKET_MAP, byed], docketdecline: [DOCKET_MAP, byed],
   docketinvitation: [DOCKET_MAP, viewer],
@@ -49,7 +50,7 @@ const admits = (spec, c) => (c.session ? true
   : (Array.isArray(spec.machineClasses) ? spec.machineClasses : spec.classes).includes(c.name));
 const STAMP_NAMES = [...new Set([...QUERY_STAMPS, "proposedBy", "proposer", "principal", "owner", "member", "mintedBy"])];
 
-test("R47, R48, R2, R26: each op is declared, a route of its owner's own map (actions', docket's), and routed through the door's general path to that route, in the caller's namespace, with the caller's own parameters and body, for every caller its row admits; docket's ops are a member's session's alone (negative control: a name no owner serves is `unknown op`, nothing forwarded)", async () => {
+test("R47, R48, R2, R26: each op is declared, a route of its owner's own map (action-holds', docket's), and routed through the door's general path to that route, in the caller's namespace, with the caller's own parameters and body, for every caller its row admits; docket's ops are a member's session's alone (negative control: a name no owner serves is `unknown op`, nothing forwarded)", async () => {
   for (const [op, [map]] of Object.entries(ROUTES)) {
     assert.ok(Object.hasOwn(OPS, op), `${op} is declared`);
     assert.ok(map.includes(op), `${op} is a route of its owner's map`);
