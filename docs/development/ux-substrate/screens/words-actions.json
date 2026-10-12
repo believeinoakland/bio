@@ -271,7 +271,7 @@
  },
  {
   "key": "refusal.PROMISE_DATE_UNREAD",
-  "en": "A promise's date is read from the body's own words, and these don't state one whole calendar date (such as \"by spring\", or a month without its day). The promise is kept as written, with no due date.",
+  "en": "A promise's date is read from the body's own words, and these don't state one whole calendar date (such as \"by spring\", or a month without its day), so no duty was proposed. Nothing was written. Quote it in a note, or ask the body for a date and propose the duty from its answer.",
   "protected": false,
   "note": ""
  },

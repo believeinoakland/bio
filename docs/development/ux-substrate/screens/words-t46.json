@@ -156,10 +156,10 @@
   "note": "shown before \"Work on this\" starts on a member's own sign-in"
  },
  {
-  "key": "ai.refused.run.signinonly",
-  "en": "A run on your own sign-in can check or plan; this one asks for more. Nothing was sent. A project's or the group's account can run it, where one serves you.",
+  "key": "refusal.MEMBER_RUN_MODE_NOT_ADMITTED",
+  "en": "A run on your own Claude sign-in can check or plan, and this one asks for more. Nothing was sent. A project's or the group's account can run it, where one serves you.",
   "protected": false,
-  "note": "the door's refusal for a mode other than check or plan (ai-runs R18 as amended by K2892)"
+  "note": "ai-runs R18 (K2920): any mode other than check or plan on a member's own sign-in"
  },
  {
   "key": "members.websitekey.live",

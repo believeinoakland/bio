@@ -9,7 +9,7 @@
   "draft": 4,
   "photo": 13,
   "handle": 7,
-  "ai": 80,
+  "ai": 79,
   "date": 14,
   "queue": 47,
   "transcribe": 19,
@@ -21,7 +21,7 @@
   "label": 52,
   "project": 7,
   "grouprule": 1,
-  "refusal": 135,
+  "refusal": 136,
   "signing": 4,
   "case": 11,
   "docket": 2,
@@ -1448,7 +1448,7 @@
   },
   {
    "key": "transcribe.reason.requestfault",
-   "en": "Civicsmith sent the assistant a request it couldn't use. The fault is Civicsmith's, not yours: try again, and if it happens again, tell an administrator.",
+   "en": "Your group's Civicsmith sent the assistant a request it couldn't use. That is a fault in your group's Civicsmith, not anything you did: try again, and if it happens again, tell an administrator.",
    "protected": false,
    "source": "DEC-193",
    "note": "{reason} in transcribe.refused for BAD_BODY, BAD_SHA, BAD_PAGES (agent-worker R72)"
@@ -1848,7 +1848,7 @@
   },
   {
    "key": "refusal.PROMISE_DATE_UNREAD",
-   "en": "A promise's date is read from the body's own words, and these don't state one whole calendar date (such as \"by spring\", or a month without its day). The promise is kept as written, with no due date.",
+   "en": "A promise's date is read from the body's own words, and these don't state one whole calendar date (such as \"by spring\", or a month without its day), so no duty was proposed. Nothing was written. Quote it in a note, or ask the body for a date and propose the duty from its answer.",
    "protected": false,
    "source": "DEC-194"
   },
@@ -3536,11 +3536,11 @@
    "note": "shown before \"Work on this\" starts on a member's own sign-in"
   },
   {
-   "key": "ai.refused.run.signinonly",
-   "en": "A run on your own sign-in can check or plan; this one asks for more. Nothing was sent. A project's or the group's account can run it, where one serves you.",
+   "key": "refusal.MEMBER_RUN_MODE_NOT_ADMITTED",
+   "en": "A run on your own Claude sign-in can check or plan, and this one asks for more. Nothing was sent. A project's or the group's account can run it, where one serves you.",
    "protected": false,
    "source": "DEC-198",
-   "note": "the door's refusal for a mode other than check or plan (ai-runs R18 as amended by K2892)"
+   "note": "ai-runs R18 (K2920): any mode other than check or plan on a member's own sign-in"
   },
   {
    "key": "members.websitekey.live",

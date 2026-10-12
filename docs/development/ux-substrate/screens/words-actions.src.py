@@ -49,7 +49,7 @@ w('refusal.COMMITMENT_AS_HEARD', 'A spoken commitment becomes a standard only on
 w('refusal.COMMITMENT_OWN_LETTER', 'A commitment becomes a standard only once the body confirms it in writing or states it publicly. Every passage named here is from your group\'s own letters or members\' accounts. Name the body\'s own confirmation.' + NW)
 w('refusal.RESPONSE_KIND_UNKNOWN', 'An obligation taken from a reply or a report is either a promise the body made or a response the report requires. This is neither.' + NW)
 w('refusal.RESPONSE_EXTENT_NOT_IN', 'The passage quoted isn\'t part of the reply or report the obligation comes from. Quote a passage of that document.' + NW)
-w('refusal.PROMISE_DATE_UNREAD', 'A promise\'s date is read from the body\'s own words, and these don\'t state one whole calendar date (such as "by spring", or a month without its day). The promise is kept as written, with no due date.')
+w('refusal.PROMISE_DATE_UNREAD', 'A promise\'s date is read from the body\'s own words, and these don\'t state one whole calendar date (such as "by spring", or a month without its day), so no duty was proposed. Nothing was written. Quote it in a note, or ask the body for a date and propose the duty from its answer.')
 w('refusal.DUTY_SOURCE_NOT_HELD', 'This promise rests on a commitment that is still only proposed as a standard. Adopt that commitment first; the obligation then names it.' + NW)
 w('refusal.MACHINE_CANNOT_DRAFT_RULE', 'Only a member drafts or withdraws your group\'s own rule. The assistant may draft one for you to read, but it enters only when you draft it yourself.' + NW, True)
 w('refusal.RULE_SECTION_UNKNOWN', 'A group\'s rule is either a deadline or a legal fact, and this is neither.' + NW)

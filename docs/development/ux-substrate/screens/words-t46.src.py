@@ -43,7 +43,7 @@ w('statusreport.assist.label', 'A first draft by the assistant, from the plan\'s
 
 # --- A run on a member's own sign-in (N919, K2892; the dock's "Work on this", control-plane's door)
 w('ai.run.ownsignin', 'This run works on your own Claude sign-in, for you alone. What it produces is labelled machine work and changes nothing until a member acts on it.', True, 'shown before "Work on this" starts on a member\'s own sign-in')
-w('ai.refused.run.signinonly', 'A run on your own sign-in can check or plan; this one asks for more.' + NS + ' A project\'s or the group\'s account can run it, where one serves you.', False, 'the door\'s refusal for a mode other than check or plan (ai-runs R18 as amended by K2892)')
+w('refusal.MEMBER_RUN_MODE_NOT_ADMITTED', 'A run on your own Claude sign-in can check or plan, and this one asks for more.' + NS + ' A project\'s or the group\'s account can run it, where one serves you.', False, 'ai-runs R18 (K2920): any mode other than check or plan on a member\'s own sign-in')
 
 # --- Joining through the group's website (members; N654: membership's read of the key's and link's settings and history)
 w('members.websitekey.live', 'Website key: live. Lets in up to {cap} people a day, as {capabilities}, until {expires}. Created by {member} on {date}.', True, 'says who may join and see the group\'s shared work')
