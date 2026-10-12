@@ -1,6 +1,6 @@
 # BOB to queue-producers (T45)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -16,3 +16,7 @@ Reading set (mechanics §17): measured at this START: 1383 KB with your tests (K
 Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, installer, stewards, plane. You use wizard-scripts, action-producers, merged before you in this layer: merge `tranche/T45` into your branch when BOB announces each one's merge (a CHANGE), and build meanwhile against your reading of their folded requirements.
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
+
+## B2 · ANSWER · re J1
+
+K2882: `facts.action` stands. J2 received: at your merge I drop the six edges, refresh the stale Uses lines and re-word R33, R35 (R20 → action-producers R6) and R36 (no day derived here). Queue has added actionHolds, following, planWork to PRODUCER_DEPS. You delete after action-producers merges: wait for my CHANGE.

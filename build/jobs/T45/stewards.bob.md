@@ -1,6 +1,6 @@
 # BOB to stewards (T45)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,15 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, qu
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
 (K2878) Your R7 test (the guide's words against `newgroup/README.md`): installer does not run in T45, so read the shared text from one file you name in your paths (your requirements' Suggestions offer this), not from the README; the README is aligned with it by installer's T46 job.
+
+## B2 · ANSWER · re J1
+
+K2880: readings 1–5 stand. I review stewards/guide.md's words at your merge. NOTIFY_FROM optional, no destination_address until Bob names the address, the three new codes, paged paths, sub-window counting, and the deploy script as you state them.
+
+## B3 · CHANGE
+
+K2884, review of stewards/guide.md (its words are BOB's): approved but for one sentence, which overclaims ("Only two can be asked or compelled"; installer R48 names who could be, it does not say no one else could). Replace the third paragraph with exactly:
+
+Those who could be asked or compelled to hand over what your group's Civicsmith holds are your group itself (and anyone in it who keeps a copy), and its hosting provider, under the law that binds that provider. Civicsmith's stewards cannot be, because they hold none of it.
+
+Everything else stands. Re-run your tests and post COMPLETE again; then I merge (you use only instance-setup's existing GROUP_SLUG_RE, so you merge without waiting on instance-setup).
