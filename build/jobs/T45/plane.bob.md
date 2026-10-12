@@ -53,3 +53,7 @@ K2889: wizard-scripts (T45-37) is merged into tranche/T45. Merge it into your br
 ## B8 · CHANGE
 
 K2891: op-grades (T45-38) and op-declarations (T45-45) are merged into tranche/T45. Merge it into your branch; the reds owed to them should clear.
+
+## B9 · CHANGE
+
+K2894: store-door (T45-50) joins L11 and merges before you; merge tranche/T45 when I announce it.
