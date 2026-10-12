@@ -367,3 +367,37 @@ test("R42 (T46; K2950; hypotheses R23, R14): the plane's own Store, booted on wo
   try { answered = (await (await stubOf("TEMPBOOT")).fetch("http://do/notes?viewer=member:ann")).status; } catch (e) { answered = String(e && e.message || e); }
   assert.notEqual(answered, 200, `a TEMP table at boot: ${answered}`);
 });
+
+/* ===== R40 (T46; K2999; control-plane R77, R20): the Store's two RPC methods for control-plane's door ===== */
+
+test("R40 (T46; K2999; ai-runs R18; control-plane R77): the Store's RPC `dispatchMemberRun(args)` is ai-runs' dispatchMemberRun in the object addressed, handed the args as given, the credential among them only as an in-process argument; a run nobody holds answers {found: false}; control: no args is ai-runs' own answer to none", async () => {
+  const x = await store();
+  const ai = aiRunsOf(x.ctx), was = ai.dispatchMemberRun.bind(ai), seen = [];
+  ai.dispatchMemberRun = async (a) => { seen.push(a); return was(a); };
+  try {
+    const args = { run: "RUN-2026-0009-none", by: "member:ann", viewer: "member:ann", credential: "aik-secret-t46", at: "2026-10-12T00:00:00Z" };
+    const r = await x.s.dispatchMemberRun(args);
+    assert.deepEqual(seen, [args], "ai-runs reached once, with the args as given");
+    assert.deepEqual(r, await was(args));
+    assert.equal(r.found, false, JSON.stringify(r));
+    assert.equal(JSON.stringify(r).includes("aik-secret-t46"), false, "the credential is never answered");
+    const none = await x.s.dispatchMemberRun();
+    assert.deepEqual(seen.at(-1), {});
+    assert.deepEqual(none, await was({}));
+  } finally { ai.dispatchMemberRun = was; }
+  /* negative control: another object's ai-runs is not reached */
+  const y = await store();
+  assert.notEqual(aiRunsOf(y.ctx), ai);
+});
+
+test("R40 (T46; K2999; public-read R34; control-plane R20): the Store's RPC `groupFields()` answers public-read's groupFields() of the object addressed, the group's fields and nothing else; control: once a group identity is registered, its fields are answered", async () => {
+  const { publicReadOf } = await import("../../../src/public-read/index.mjs");
+  const x = await store();
+  const f = await x.s.groupFields();
+  assert.deepEqual(f, publicReadOf(x.ctx).groupFields());
+  assert.deepEqual(Object.keys(f).sort(), ["detail", "domain", "domain_verified_at", "group", "name", "stake"]);
+  /* control: a spy on public-read shows the RPC is its answer, not a copy */
+  const pr = publicReadOf(x.ctx), was = pr.groupFields.bind(pr);
+  pr.groupFields = () => ({ ...was(), name: "Spied Group" });
+  try { assert.equal((await x.s.groupFields()).name, "Spied Group"); } finally { pr.groupFields = was; }
+});

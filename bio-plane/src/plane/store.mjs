@@ -598,6 +598,13 @@ export class Store extends DurableObject {
      RPC by control-plane's door (no route: R5). */
   async draft(args) { return draftOnObject(this.ctx, this.env, args || {}, { read: (op, params) => this.#read(op, params) }); }
 
+  /* R40 (T46; K2999; control-plane R77): a member's own run's segment dispatched by ai-runs in the object addressed
+     (`dispatchMemberRun`, its R18), reached over the object's RPC by control-plane's door; the presented credential is an
+     argument of this in-process call only, never a query, body or fetch. */
+  async dispatchMemberRun(args) { return aiRunsOf(this.ctx, this.env).dispatchMemberRun(args || {}); }
+  /* R40 (T46; K2999; control-plane R20): public-read's group fields of this object (the door asks the `bio` object's). */
+  async groupFields() { return publicReadOf(this.ctx).groupFields(); }
+
   /* R41 (K2824): one read the asking member may make, answered by this object's route map exactly as the door would
      answer it, her viewer stamp in `params.viewer`; a synchronous read's answer, or null for an op the map lacks. It
      reaches no write: R41 asks only `plan`, `action`, `basis` and `reading`. */
