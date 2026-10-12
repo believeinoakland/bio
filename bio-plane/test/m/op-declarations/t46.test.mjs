@@ -349,3 +349,19 @@ test("R53 (N934; DEC-197; membership R129): handlechange keeps R42's spec — in
   /* negative control */
   assert.equal(await reaches(membershipOps, op, { body: { by: SENT } }), false);
 });
+
+/* ---------- K3011: frontier in both session sets ---------- */
+
+test("R3, R34 (T46; K3011): frontier — REC-93's read (admin, member, probe; not mutating) — is in both SESSION_OPS.member and SESSION_OPS.admin as search and findin are, so the act gate answers session; as a read it needs no NEEDS row (search's shape) and is in no act list; it is explained by affordances' ACT_HELP and so named under no ground of ACT_HELP_ABSENT (negative control: a read no session reaches is in neither set)", () => {
+  assert.deepEqual(plain(OPS.frontier), { classes: MP, mutating: false });
+  for (const op of ["frontier", "search", "findin"]) assert.ok(both(op), `${op}: not in both session sets`);
+  assert.equal(ACT_GATE.mode("frontier"), "session");
+  assert.ok(!Object.hasOwn(NEEDS, "frontier") && !Object.hasOwn(NEEDS, "search"));
+  assert.equal(ACT_GATE.needs("frontier"), null);
+  assert.ok(!Object.hasOwn(OP_STAMPS, "frontier"));
+  assert.deepEqual(listsOf("frontier"), []);
+  assert.equal(explained("frontier"), true, "frontier has no ACT_HELP text");
+  assert.deepEqual(ground("frontier"), []);
+  /* negative control: an operator's read reached by no session is in neither set */
+  assert.ok(!SESSION_OPS.member.has("registeraudit") && !SESSION_OPS.admin.has("registeraudit"));
+});
