@@ -20,3 +20,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, no
 ## B2 · CHANGE
 
 CHANGE (K2996): the contract between this shell and the four screen modules, built concurrently, is now stated in your R21 (a sub-bullet): merge `tranche/T46` and build the shell to it, `reads`/`render`/`acts`/`done`/the kit `cs` exactly as stated, and export the shared DOM stand-in from your tests for the screen modules. If something in it cannot work for the shell, say so in a QUESTION at once: four jobs build to it.
+
+## B3 · CHANGE
+
+CHANGE (K2998): your J1 contract is now your R21 (a sub-bullet), with three additions SCREENS-INQUIRY #1 needs for the dock (its R6, K2976): `cs.call(op, {query, body, bearer})` → promise of the parsed answer, `bearer` absent = the session, present = replaces the session token in `Authorization` for that request only (no session token on it; your R3 test must allow this); `ui` kept in page memory across redraws, never stored; a screen's optional `closed(cs, view)` called on close or `pagehide`. Merge `tranche/T46` and build them in.
