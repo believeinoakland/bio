@@ -158,17 +158,11 @@ export function defaultFakes() {
     linkSweep: { sweepConditions: () => ({ ok: true, conditions: [] }) },
     contradiction: { candidatesFor: () => ({ ok: true, candidates: [], truncated: false, cursor: null }),
                      conflictNotices: () => ({ ok: true, notices: [], truncated: false, cursor: null }) },
-    actionClocks: { overdueClocks: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
-                    remindersDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
-                    calendarFactsRead: () => ({ ok: true, as_of: "2026-09-01", paths: [], actions_limit: 500, truncated: false }) },
-    escalation: { escalationsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
-    actionPlans: { checkpointsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
-    /* actions R12's place: the active profiles' combined view, of which this module reads the `time_zone` (R25, R36) */
-    actions: { place: () => ({ time_zone: { value: "UTC", status: "ruled", basis: "TEST" } }), holdsDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
-               holdsReleased: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
+    /* actions R12's place: the active profiles' combined view, whose `time_zone` machinery-producers reads (its R10) */
+    actions: { place: () => ({ time_zone: { value: "UTC", status: "ruled", basis: "TEST" } }) },
+    /* T45 (K2781 (1)): the Action layer's to-dos, action-producers' (its R13), answered through R8; a test fills it */
+    actionProducers: { actionItems: () => ({ items: [], facts: {} }) },
     docket: { coreDue: () => ({ ok: true, items: [], count: 0, wrote: false }) },
-    filingTemplates: { reviewsRequested: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
-    localFacts: { factsDue: () => ({ ok: true, due: [], unknown: [], absent: [] }) },
     networkNotices: { noticesOf: ({ project }) => ({ ok: true, project, notices: [], sealed_weeks: [], methodVersion: 1 }) },
   };
 }

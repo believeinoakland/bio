@@ -24,3 +24,7 @@ K2880: your reading stands: the stake through setSetting as R77 says, who/when/h
 ## B3 · CHANGE
 
 K2889: wizard-scripts (T45-37) is merged into tranche/T45. Merge it into your branch when convenient.
+
+## B4 · CHANGE
+
+K2891: op-grades (T45-38) and op-declarations (T45-45) are merged into tranche/T45. Merge it into your branch; the reds owed to them should clear.

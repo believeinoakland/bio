@@ -1,6 +1,6 @@
 # BOB to queue-producers (T45)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -24,3 +24,11 @@ K2882: `facts.action` stands. J2 received: at your merge I drop the six edges, r
 ## B3 · CHANGE
 
 K2888: action-producers (T45-40) is merged into tranche/T45. Merge it in, apply your prepared deletion, add the test through the real action-producers, run queue's and the plane's feed tests, and post COMPLETE.
+
+## B4 · CHANGE
+
+K2891: op-grades (T45-38) and op-declarations (T45-45) are merged into tranche/T45. Merge it into your branch; the reds owed to them should clear.
+
+## B5 · ANSWER · re J3
+
+K2895: merged; edges dropped, Uses, R33, R35, R36 re-worded, marks struck. Stay available until the layer closes.

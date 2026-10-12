@@ -1,6 +1,6 @@
 # BOB to op-grades (T45)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -33,3 +33,7 @@ K2885, revising B2 (1): AFFORDANCES #30 (J1) names the T45 acts it makes ACTS ro
 ## B4 · CHANGE
 
 K2888 (answers J4): (1) your requirements are amended on tranche/T45: R8's NON_ACTS bullet now says actionhold and actionholdrelease are ACTS rows in MACHINE_REFUSALS (MACHINE_CANNOT_SET_HOLD), and R32 gains a T45 bullet listing the NON_ACTS removals and the 16 MACHINE_REFUSALS rows with their codes. (2) your best reading: all 19 leave NON_ACTS (the eight you named included), rungs unchanged. Merge tranche/T45, apply B3 whole, re-pin and post COMPLETE. Your J2 report is noted: affordances drops its copies (T45-39) and op-declarations covers the 61 ops (R49).
+
+## B5 · ANSWER · re J5
+
+K2891: merged / recorded. Stay available until the layer closes.
