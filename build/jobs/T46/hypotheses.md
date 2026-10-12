@@ -30,3 +30,7 @@
 - Requirements: R23's `*(not yet met: T46)*` marker is BOB's to strike.
 
 Size (session_01MXHAyHBp7fQrcxs8MPUFgy): test runs 5, module lines 1110
+
+## J1 · COMPLETE
+
+T46-65 complete (8a5a73fb8f; record 7cd5df844e). R23 held by test on workerd: workerd.test.mjs boots the plane's own Durable Object (Store, unchanged) under Miniflare over a store seeded before the constructor runs: notes numbered from the shared AUTOINCREMENT sequence (2 members interleaved, 2 deleted, 5 turns, revised set), the same in T34's shape without revised, and a fresh store. Asserts: the runtime refuses CREATE TEMP TABLE (SQLITE_AUTH); each member renumbered from 1, turns following, marks set, no sqlite_sequence row/working map/old table or index left; acts continue from each member's mark; a real restart over persisted storage changes nothing; T34 shape gains revised. Negative control measured: with CREATE TEMP TABLE put back, the two renumbering tests fail 'not authorized: SQLITE_AUTH' (as 0.82.0), the fresh test passes; source restored, sha identical. Source change: one comment on #renumberNotes naming R23. P8: no flaw found. hypotheses 51/51 (48 + 3); format, architecture, coverage (23/23), ownership (4 files) 0 failures; no service changed. Stales the plane bundle (comment-only; §14, layer close). R23's not-yet-met marker is BOB's to strike.
