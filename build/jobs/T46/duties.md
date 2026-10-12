@@ -22,3 +22,7 @@
 - `format`: 0 failures. `architecture duties`: 0 failures. `coverage duties`: 32 of 32 live ids named; 0 failures. `ownership duties tranche/T46`: 4 files changed; 0 failures.
 
 Size (session_0139ZFtgTvp1mhcekkFjucSn): test runs 9, module lines 2204
+
+## J1 · COMPLETE
+
+T46-11 (N913; R32) applied: C-133.41 RESPONSE_KIND_UNKNOWN, .42 RESPONSE_EXTENT_NOT_IN and .44 DUTY_SOURCE_NOT_HELD read words.json's refusal.<CODE> by key from a frozen DUTIES_WORDS (checks.mjs, re-exported by index.mjs), as project-roster's PROJECT_SCOPE_WORDS do; codes, numbers, wheres and behaviour unmoved; C-133.43 PROMISE_DATE_UNREAD kept (K2919); the other 39 rows byte-identical. New test file test/m/duties/t46-words.test.mjs (R32, 3 tests, negative control shown). Module tests 65/65 pass; action-plans, affordances, answer-envelope tests reading DUTIES_CHECKS 35/35. Checks: format, architecture, coverage (32/32), ownership (4 files) all 0 failures. Reds opened, both accepted: row-census names exactly C-133.41/.42/.44 (rule 5 (2), until T47's stamp); plane, release and newgroup bundles stale (rule 5 (4)). Own code and tests read whole; nothing deferred; nothing found in another module. Details in my record.
