@@ -30,3 +30,7 @@ Size (session_01SxeNT2u2jzZVk4x8bDxKJA): test runs 9, module lines 1435
 ## J1 · REPORT
 
 Two findings outside my module, from T45-42 (full text in my record, Completion). (1) action-clocks R17 / action-producers R1: a clock entry with noticed_by raises no action-clock-overdue because R5's Noticed item replaces it. But R17 sets noticed_by without reading following.dutyWatchEnd. Once a plan's watch on the duty ends, R5 draws no item and the clock item is still held back, so the overdue fact reaches nobody. (2) R5 as written: a possibly-overdue occurrence already told between its candidates leaves when a stop's end day falls before its latest candidate. I built it as written. queue R16 (a FINDING leaves only by disposition) may want it kept: yours to rule. Also, not mine: conclude-project and 8 plane tests are red from queue-producers (holdsDue is not a function) and other modules' route maps. Same red without my change.
+
+## J2 · COMPLETE
+
+T45-42 done. R5: an occurrence due (latest candidate, when undetermined) after following.dutyWatchEnd(duty) is no item; null is as before; a throwing dutyWatchEnd is named following in facts.failed. R17: no code change; stepsDue omits held steps (steps R29); a new test over the real steps with a no-holder control. No flaw found in my module; nothing deferred. Tests 102/102. Checks format, architecture, coverage and ownership all 0 (5 files). Users: queue 136/137, plane 188/196; every red is from other modules (see REPORT J1). Plane bundle stale until L11 close. Record: Completion (T45-42).
