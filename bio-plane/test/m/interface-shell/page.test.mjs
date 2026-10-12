@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { interfacePage, NONCE_SLOT, SHELL_WORDS, PATHS, checkScreens } from "../../../src/interface-shell/index.mjs";
-import { withPagePolicy } from "../../../src/answer-envelope/index.mjs";
+import { randomBytes } from "node:crypto";
 import { boot, ok, scriptOf } from "./harness.mjs";
 import { ALL, HOME, DOCUMENT } from "./screens.fixture.mjs";
 import { documentOf, textNodes } from "./dom.mjs";
@@ -68,16 +68,21 @@ test("R2 no inline event-handler attribute, no javascript: address and no script
   assert.equal(handlers('<a href="javascript:x">a</a><b onclick="x">b</b>').length, 2);
 });
 
-test("R2 served through the door (answer-envelope R6), every script element carries the response's nonce, the policy names it and no slot is left", async () => {
-  const res = await withPagePolicy(new Response(interfacePage(ALL), { headers: { "content-type": "text/html" } }));
-  const policy = res.headers.get("content-security-policy");
-  const nonce = /script-src 'nonce-([^']+)'/.exec(policy)[1];
-  const body = await res.text();
-  assert.equal(body.includes(NONCE_SLOT), false);
-  const s = scripts(body);
-  assert.equal(s.length, 1);
-  for (const attrs of s) assert.equal(/\bnonce="([^"]*)"/.exec(attrs)[1], nonce);
-  assert.doesNotMatch(policy, /script-src[^;]*unsafe/);
+/* One response as the door makes it (answer-envelope R6, which is not in this module's uses; its own test and control-plane's
+   end-to-end suite serve this page through the real door): a fresh 128-bit nonce, its policy, every slot filled. */
+const door = (html) => { const nonce = randomBytes(16).toString("base64"); return { policy: `default-src 'self'; script-src 'nonce-${nonce}'`, body: html.split(NONCE_SLOT).join(nonce) }; };
+
+test("R2 served as the door serves it, every script element carries the response's nonce, the policy names it, two responses differ and no slot is left", async () => {
+  const [a, b] = [door(interfacePage(ALL)), door(interfacePage(ALL))];
+  assert.notEqual(a.policy, b.policy);
+  for (const { policy, body } of [a, b]) {
+    const nonce = /script-src 'nonce-([^']+)'/.exec(policy)[1];
+    assert.equal(body.includes(NONCE_SLOT), false);
+    const s = scripts(body);
+    assert.equal(s.length, 1);
+    for (const attrs of s) assert.equal(/\bnonce="([^"]*)"/.exec(attrs)[1], nonce);
+  }
+  assert.equal(interfacePage(ALL).split(NONCE_SLOT).length - 1, 1, "the slot is nowhere but in the script's nonce");
 });
 
 test("R21 interfacePage throws, naming the screen, for a screen whose id is not in SCREEN_REGISTRY, an act naming an op OPS does not hold, or an op neither the registry's for that screen nor a named re-point; a valid set and the three re-points pass", () => {

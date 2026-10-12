@@ -17,3 +17,33 @@
 **R11: an op in `RUNG_ABSENT` drawn as reasoned also takes reasoned friction (asks a reason before sending).** R11 says such an op is "drawn as reasoned (DEC-87)" and "friction follows the weight", so read literally every `RUNG_ABSENT` act asks the member's reason in place and sends it as `reason`: among T46's screens `memberadd`, `groupkeyset`, `accountreferenceset`, `subscriptionsignin`, `notewrite`, `noterevise`, `openoriginal`, `openwithwarning`, `deepercheck`, `captureupload`, `promote`, `inboxpull`, `setpassword`, `memberlanguageset`, `infolevelset`. Owners ignore the extra `reason` body field (no refusal), but members are asked for a reason to open a file or write their own note, and a raw-body upload carries it in the query.
 
 My reading, built now and tested: literal, as above, except the shell's own sign-out (R4 is explicit: it sends at once) and the explanation level (R17: one click). Alternative I would build instead if you say so: an op in `RUNG_ABSENT` keeps the *label* "Reasoned" (DEC-87) but runs on press, unless its ground is `undetermined`. Either way no requirement text moves for the screens; this decides what the four screen jobs' members see. Not blocking: I carry on.
+
+## Completion
+
+**Entries applied.** T46-54 · interface-shell (new; N897 (1); DEC-87, -98, -99, -122, -138, -139, -154, -155, -159–-163, -175–-177, -179, -181; N672, N673; K2893): R1–R26, built fresh, with R21's contract as K2996, K2998 and K2999 state it (B2–B4).
+- `bio-plane/src/interface-shell/index.mjs`: `interfacePage(screens)` (R1, R2), `checkScreens` (R21: throws naming the screen for an id not in `SCREEN_REGISTRY`, an op `OPS` does not hold, or an op neither the registry's for that screen, its owed ops, nor a named re-point), `toSource`, `wordsOf`, `NONCE_SLOT`, `PHONE_WIDTH`, `STYLESHEET`/`ICONS` (from `ASSET_FILES`' names), `PATHS` (R8, `mock-shell.js` `PATH` at 3f40899950), `PLACE_SCREENS`, `REF_SCREENS`, `RE_POINTS`, `ADMIN_ACTS` (R12), `SHELL_OPS`; the page carries only the words its screens and kit can draw (the shell's families, each act's and registered screen's keys, every key a screen names).
+- `bio-plane/src/interface-shell/browser.mjs`: `shellProgram(D, SCREENS, win)`, the page's one script, serialized whole: the session hand-over and op client (R3: the token only in the `Authorization` header; a 401 to a session request signs out), sign-out (R4), words and dates (R5, R6), the frame, path, router and Settings page (R7–R9, R25), read states (R10), acts with weight, friction, gate and refusals (R11–R13), explanations with the absorb rule (R14, R15), references and cards (R16), the level (R17), appearance (R18), rows and the hold strip (R19), the dock (R20), the rail's width (R26), and the kit `cs` (R21, with `call`, `download`, `closed`, `extra.picked`, raw bodies, async `send`).
+- `bio-plane/src/interface-shell/words.mjs`: `SHELL_WORDS`, the shell's own `[key, en, protected]` rows (`shell.<part>`), BOB's interim English: a HANDOFF to the design stream (plan T46, "BOB's acts").
+- Tests, `bio-plane/test/m/interface-shell/`: `dom.mjs` (the shared document stand-in, K2996: parser, selectors, events, form properties) and `harness.mjs` (the served page over the stand-in with a scripted plane and a fake clock; `boot`, `ok`, `refused`, `refusedIn`, `httpError`, `silent`, `pending`, `bytes`, `nestedTips`, `controls`, `accessibleName`), both for the screen modules' tests; `screens.fixture.mjs` (registry screens drawn with every kit part); `page`, `session`, `words`, `acts`, `frame`, `explain`, `rows` `.test.mjs`.
+
+**Files to add to `modules.json` (K1043):** paths `bio-plane/src/interface-shell/`; tests `bio-plane/test/m/interface-shell/`.
+
+**Readings (in my record for BOB; none moves a requirement):**
+- R11 (J2, unanswered at this COMPLETE): an op in `RUNG_ABSENT` takes reasoned friction (a reason in place, sent as `reason`); the shell's own sign-out and level switch send at once (R4, R17). A CHANGE re-points it.
+- R11: an op in `op-grades`' `IRREVERSIBLE_WEIGHT` weighs Irreversible whatever its rung (DEC-143, `op-grades` R21); none is offered in T46.
+- R17: "after their first month" counts from the first day this device served the member, or the level's first `set_at` if earlier (whoami answers no joining date); asked once, recorded `{level, asked: true}`; kept on the device (`cs-level-asked`) too. While `infolevelset` is not in `OPS` (op-declarations' T46-51 unmerged) the level is kept on the device only, as R17 says.
+- R20: `groupkeystate` answers a non-administrator `{on}` only (`credentials` R34), so "held and on" reads as `on: true` with `held` not `false`.
+- R9: a subject "not found" is a read a screen marks `subject: true` answering empty, or refused `NO_SUCH_*`/`*_NOT_FOUND`; any other refusal is "could not read" (R10).
+- R2: the test serves the page as the door does (fresh nonce, policy, slots filled), not through `answer-envelope` itself, which is not in this module's uses; control-plane's end-to-end suite (T46-59) serves it through the real door.
+- The page's own styles (path, menu, rows and their phone cards, reduced motion) are one inline `<style>` (the page policy allows inline styles).
+
+**Deferred:** none.
+
+**Found elsewhere (REPORT in this COMPLETE):** none against another module's requirements. Dependencies at merge: `setup-page` R31's `SESSION_STORE_KEY` (unmerged on `tranche/T46` at this COMPLETE; `interfacePage` throws without it) and `op-declarations` R50 (`infolevelset` declared; until then the level is device-only). Generated artifacts: none staled (nothing imports the module until control-plane R75).
+
+**Tests and checks** (with `modules.json` given this module's paths locally and `setup-page`'s job head for R31, neither committed):
+- `node --test bio-plane/test/m/interface-shell/`: tests 57, pass 57, fail 0. No layer tests (`build/manifest.md`).
+- `format`: 159 modules, 158 requirements files; 0 failures. `architecture … interface-shell`: 13 product files, 36 relative imports; 0 failures. `coverage … interface-shell`: 26 of 26 live requirement ids named by a test; 0 failures. `ownership … interface-shell tranche/T46`: 0 failures.
+- `checks/run.mjs`: architecture 2985 product files, 0 failures; coverage 12 failures, all other L11 modules' unmerged ids (screens-*, control-plane, installer, instance-setup, setup-page R31, op-grades R33, wizard-scripts, answer-envelope R13, notice-producers), none of this module's; channels 0 failures.
+
+Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 14, module lines 1077 (src; tests 1533; the estimate 3,200–3,800 was not reached)
