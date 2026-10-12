@@ -17,3 +17,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, qu
 (K2874) following's reads for your R10 (watch-keep-or-stop): `watchQuestions({after, limit, viewer})`, entries with `recipients` (FOLLOWING #5 J2 (4)).
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
+
+## B2 · ANSWER · re J1
+
+K2880: readings 1–7 stand. (1) No action-clocks op states met or waived (the plan's R7 row presumed one): leave that door out; it is N924 for your next job. (2) plain acts, decorated by queue. (3)–(7) as you state them.
