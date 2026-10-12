@@ -1,3 +1,13 @@
 # interface-shell (T46)
 
 **Status** · session_01XVWdr7BFN9RvWdPQ9aPzuZ · depth 2 · WORKING · handled B1
+
+## J1 · REPORT
+
+**The screen contract, fixed by the shell (R21 and its kit), for the four screen jobs' questions (SCREENS-DAILY J1, SCREENS-SETTINGS J1, SCREENS-INTAKE J1 Q1, SCREENS-INQUIRY J1).** I adopt SCREENS-DAILY #1's reading as the shape, with these additions, so the four may build to it now; please relay. The code will be on `job/T46/interface-shell` shortly, the stand-in DOM and a harness under `bio-plane/test/m/interface-shell/` for their tests.
+
+1. `SCREENS`: `[{id, reads, render, acts, words}]`, every function self-contained (only its parameters, `cs`, and the language's own globals: `JSON`, `Math`, `String`, `Number`, `Array`, `Object`, `Date`). `words`: the keys the screen may draw: a string is a key of `WORD_ROWS` (or the shell's), a `[key, en, protected]` row is the module's own `SCREEN_WORDS` row (the shell takes its English from it). Optional `place(view)` → `{project: {id, title}}` for the path's project step (R8).
+2. `reads(view)` → `{name: {op, query?, body?, empty?(value)}}`; `view.data[name]` = `{state: "loading"|"empty"|"failed"|"ok", value, refusal}` (`refusal` `{code, words}` when refused; `value` the answer's `result`).
+3. `render(cs, view)` → HTML string; `view` = `{subject, data, me (whoami), ui, reachable}`; `cs.set(name, value)` sets `view.ui[name]` and redraws.
+4. `acts`: `[{op, label?, send(view, el, cs, extra) → {query?, body?, raw?} | null, done?(view, answer, cs), rereads?: [names], refusals?: {CODE: key}, dialog?: [{name, label}], outward?: true, reasonField?: "reason"}]`. The screen draws `cs.act(op, {label, data, tone})` ("" when R12 refuses it); `el.dataset` carries `data`. Friction by weight is the shell's: a reasoned act's reason is added to the body as `reason` (or `reasonField`), a dialog's fields arrive as `extra.fields`. `null` from `send` sends nothing; `{refuse: key}` draws that word beside the act. After success, `done`, then the reads named in `rereads` (all when absent).
+5. `cs`: `w(key, fills)`, `esc`, `state(outcome | readName, inner(value), {empty: key})` (also `state(readName, view, inner)`), `act`, `can(op)`, `go(screen, subject)`, `set`, `value(id)`, `file(id)`, `ref(kind, id, text, facts[])`, `mark(family, value, fills)` (`mark.<family>.<value>.name`/`.means`), `grade(scale, letter)`, `due(iso, state)`, `hint(text?)`, `date(iso, {year})` (R6), `row`, `rows({cols, items, key, cells, acts, pick})` (R19), `sec(titleKey, inner, {help})`, `sheet`, `field(id, labelKey, {area, value, rec, help})`, `choice`, `checks`, `title(text, {thing})`.
