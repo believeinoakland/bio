@@ -231,7 +231,7 @@ const acts = [
       return null;
     } },
   { op: "findin", label: "act.findin.label.project",
-    send(view, el, cs) { cs.go("find-in", "project:" + String(view.subject || "")); return null; } },
+    send(view, el, cs) { cs.go("find-in", String(view.subject || "")); return null; } },
   { op: "projectinvite", label: "act.projectinvite.label.project",
     send(view, el, cs) {
       const handle = String(cs.value("project-invite") || "").trim().replace(/^@/, "");

@@ -157,7 +157,7 @@ function render(cs, view) {
   };
   out.push(cs.sec("screen.question.supports.head", cs.state("basis", view, (b) => legRows(b, "supports"))
     + `<p class="cs-meta">${cs.w("screen.question.cite.from")}</p>`
-    + cs.act("cite", { label: "act.cite.label.question", data: { inquiry: id }, tone: "primary" })));
+    + cs.act("cite", { label: "act.cite.label.question", data: { inquiry: id, q: heading }, tone: "primary" })));
   out.push(cs.sec("screen.question.against.head", cs.state("basis", view, (b) => legRows(b, "cuts_against"))));
 
   /* hunches: a member's suspicion, labelled, never evidence (mark.hunch) */
@@ -198,8 +198,14 @@ function render(cs, view) {
  *  to send, or opening another screen and sending nothing (`findin`'s scope and `search` live on `screens-daily`'s screens). */
 const acts = [
   { op: "cite", label: "act.cite.label.question",
-    /* the passage is chosen where passages are: a document's (its per-passage cite names this question) or Find in */
-    send(view, el, cs) { cs.go("find-in", "question:" + String(view.subject || "")); return null; } },
+    /* the passage is chosen where passages are: a document's (its per-passage cite names this question), or Find in over
+       the question's project (`find-in`'s scope is a project, a held set or a capture); with no project, Find */
+    send(view, el, cs) {
+      const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
+      const m = typeof text === "string" ? /^project:\s*(\S+)\s*$/m.exec(text) : null;
+      if (m) cs.go("find-in", m[1]); else cs.go("finder", el.dataset.q || "");
+      return null;
+    } },
   { op: "narrow", label: "act.narrow.label.question",
     dialog: [{ name: "name", label: "screen.question.narrow.name" }, { name: "description", label: "screen.question.narrow.description" }],
     send(view, el, cs, extra) {

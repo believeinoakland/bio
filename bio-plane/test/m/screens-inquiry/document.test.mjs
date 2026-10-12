@@ -104,8 +104,9 @@ test("R3 acts send what their owners take", async () => {
     { body: { a: "ENT-17", b: "ENT-3", kind: "same_as", basis: "corroborated_name", evidence: { a: { captureSha: SHA } }, note: "Same title and department" } });
   assert.deepEqual((await h.press("pagetranscribe", { data: { sha: SHA } })).sent, { query: { sha256: SHA, project: "PROJ-2026-0007" } });
   assert.match(h.html, /The assistant read 7, 8\..*data-key="ai.label.untested"/s);
-  assert.equal((await h.press("findin")).sent, null);
-  assert.deepEqual(h.went.at(-1), ["find-in", "capture:" + D]);
+  assert.equal((await h.press("findin", { data: { capture: SHA } })).sent, null);
+  assert.deepEqual(h.went.at(-1), ["find-in", SHA], "find-in's scope: the capture's digest");
+  assert.match(h.html, new RegExp(`data-act="findin"[^>]*data-capture="${SHA}"`));
 });
 
 test("R3 release and retire act on a selection of this document, made first, and draw a refusal beside the act", async () => {

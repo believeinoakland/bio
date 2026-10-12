@@ -105,7 +105,7 @@ function render(cs, view) {
       ? `<p>${cs.esc(typeof n === "string" ? n : (n.says || n.text || n.how || JSON.stringify(n)))}</p>`
       : `<p>${cs.w("screen.document.gradenote.none")}</p>`));
   }
-  out.push(cs.act("findin", { label: "act.findin.label.document", data: { capture: id } }));
+  if (sha) out.push(cs.act("findin", { label: "act.findin.label.document", data: { capture: sha } }));
 
   /* passages: the reading's, each citable in a question the member chooses (citation R1's `found`) */
   const reading = sha ? later("reading", "reading", { sha256: sha }) : { state: "empty" };
@@ -198,7 +198,8 @@ const acts = [
     done(view, answer, cs) { cs.set("gradenote", answer && answer.result !== undefined ? answer.result : answer); },
     rereads: [] },
   { op: "findin", label: "act.findin.label.document",
-    send(view, el, cs) { cs.go("find-in", "capture:" + String(view.subject || "")); return null; } },
+    /* `find-in`'s scope is the route's subject: for a document, its capture's digest (screens-daily) */
+    send(view, el, cs) { if (el.dataset.capture) cs.go("find-in", el.dataset.capture); return null; } },
   { op: "cite", label: "act.cite.label.document",
     send(view, el, cs) {
       const question = String(cs.value("document-cite-question") || "").trim();

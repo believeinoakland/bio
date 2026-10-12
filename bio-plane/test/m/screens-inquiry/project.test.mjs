@@ -129,7 +129,7 @@ test("R1 the other acts send what their owners take", async () => {
   /* the plan screen is T47's: the screen says the plan was opened and lists it */
   assert.match(h.html, /Ask the committee.*PLN-2026-0001/s);
   assert.deepEqual((await h.press("findin")).sent, null);
-  assert.deepEqual(h.went.at(-1), ["find-in", "project:" + P]);
+  assert.deepEqual(h.went.at(-1), ["find-in", P], "find-in's scope: the project's id");
   /* controls: no handle, no title, no question: refused by their words, nothing sent */
   h.fields["project-invite"] = ""; h.fields["project-plan-about"] = "";
   assert.deepEqual((await h.press("projectinvite")).sent, { refuse: "screen.project.invite.empty" });

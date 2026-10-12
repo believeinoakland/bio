@@ -113,13 +113,20 @@ test("R2 acts send what their owners take; conclude and withdraw carry the dialo
   assert.deepEqual((await h.press("planopen")).sent, { body: { project: P, title: "Ask the committee", subjects: [{ kind: "inquiry", inquiry: Q }] } });
   assert.deepEqual((await h.press("heldrestore", { data: { doc: "INFO-2026-0008" } })).sent, { body: { ids: ["INFO-2026-0008"] } });
   /* cite chooses its passage where passages are; "Find another source" searches */
-  assert.equal((await h.press("cite")).sent, null);
-  assert.deepEqual(h.went.at(-1), ["find-in", "question:" + Q]);
+  assert.equal((await h.press("cite", { data: { q: "Seven days?" } })).sent, null);
+  assert.deepEqual(h.went.at(-1), ["find-in", P], "Find in over the question's project");
   assert.equal((await h.press("search", { data: { q: "Is the city repairing?" } })).sent, null);
   assert.deepEqual(h.went.at(-1), ["finder", "Is the city repairing?"]);
   /* no act's request carries a writing-help field or a stamp the door owns */
   for (const r of h.requests) for (const k of ["by", "author", "viewer", "at", "assist", "draft"])
     assert.ok(!(r.query && k in r.query) && !(r.body && k in r.body), `${r.op} sends ${k}`);
+});
+
+test("R2 a question with no project chooses its passage through Find, by its words", async () => {
+  const h = harness(QUESTION, { subject: Q, data: DATA({ project: null }), plane });
+  h.render();
+  assert.equal((await h.press("cite", { data: { q: "Seven days?" } })).sent, null);
+  assert.deepEqual(h.went.at(-1), ["finder", "Seven days?"]);
 });
 
 test("R2 controls: a hunch, a check and a plan with nothing written are refused by their words, nothing sent", async () => {
