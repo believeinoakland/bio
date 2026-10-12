@@ -30,9 +30,35 @@
  * `FINDING_NOT_PUBLISHED` for R2's three kinds of finding (its code and number unchanged); translations BOB's drafts,
  * the UX stream's to revise, awaiting stamp until T46's promotion job (plan T45, accepted red 2). R32's refusals of an
  * accepted finding (`IMPORTED_NOT_ACCEPTED` C-21.4, `ACCEPTED_WORK_UNREADABLE` C-21.5) are accepted-work's rows, minted
- * through its `acceptedLegRefusals`, never copied here. */
+ * through its `acceptedLegRefusals`, never copied here. T46-29 (R38; DEC-194, N913): C-113.38–C-113.43 read their
+ * translations by key from `CONFORMANCE_WORDS` below; C-113.7, .37 and .44 keep theirs (R38 names why each waits);
+ * codes, numbers and `where`s unmoved; awaiting T47's promotion stamp (plan T46, accepted red 2). */
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
+
+/* R38 (T46; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) the six
+   rows R38 names translate by, each `en` verbatim, read by key (`refusal.<CODE>`), as membership's `HANDLE_WORDS` and
+   extraction's `TRANSCRIBE_WORDS` are. The design stream's words: re-worded there, then re-taken here by key; a row
+   never holds a copy of its sentence. Not taken in T46 (R38): `refusal.FINDING_NOT_PUBLISHED` (it says "your group has
+   published", while R2 refuses a finding published only by another project, which may be the group's own),
+   `refusal.DETERMINATION_VOID` (it says "a finding under it changed", while R33 is also void when a read cannot
+   complete) and `refusal.CURE_LINKED` (it says "That correction", while R36 refuses any standing link, this cure's or
+   another's). */
+export const CONFORMANCE_WORDS = Object.freeze({
+  "refusal.DETERMINATION_NOT_ADOPTABLE": "Another group's determination is never adopted as yours. Read its findings, "
+    + "and make your own determination from them. Nothing was written.",
+  "refusal.MACHINE_CANNOT_LINK_CURE": "Only a member links a later act as what corrected an earlier one. Nothing was "
+    + "written.",
+  "refusal.CURE_TARGET_NOT_NONCOMPLIANT": "Only an act found noncompliant with this standard can be corrected by a "
+    + "later one, and this one wasn't. Nothing was written.",
+  "refusal.CURE_NOT_COMPLIANT": "The later act must be found compliant with the same standard to count as the "
+    + "correction, and it isn't. Nothing was written.",
+  "refusal.CURE_OTHER_OFFICE": "Only a later act of the same office can correct this one, and this act is another "
+    + "office's. Nothing was written.",
+  "refusal.CURE_NOT_LATER": "The correcting act must come after the act it corrects, and this one doesn't, or their "
+    + "order isn't known. Nothing was written.",
+});
+const words = (code) => CONFORMANCE_WORDS[`refusal.${code}`];
 
 export const CONFORMANCE_CHECKS = Object.freeze({
   MACHINE_CANNOT_DETERMINE: {
@@ -203,34 +229,27 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   },
   DETERMINATION_NOT_ADOPTABLE: {
     check: 'C-113.38', where: at("#refuseAdoption", "is-own-determination"),
-    translation: 'Another group\'s determination is never adopted as this group\'s. Make your own determination, against '
-      + 'standards in your group\'s record, resting on findings this group published, holds checked, or has accepted. '
-      + 'Nothing was written.',
+    translation: words("DETERMINATION_NOT_ADOPTABLE"),
   },
   MACHINE_CANNOT_LINK_CURE: {
     check: 'C-113.39', where: at("#refuseCureMachine", "is-cure-member"),
-    translation: 'Naming a later act as the cure of a breach is a member\'s judgment. An assistant may not record it. '
-      + 'Sign in as a member. Nothing was written.',
+    translation: words("MACHINE_CANNOT_LINK_CURE"),
   },
   CURE_TARGET_NOT_NONCOMPLIANT: {
     check: 'C-113.40', where: at("#cureRefusal", "is-cure-target-noncompliant"),
-    translation: 'Only a noncompliant outcome is cured. The determination named is not noncompliant against that '
-      + 'standard. Nothing was written.',
+    translation: words("CURE_TARGET_NOT_NONCOMPLIANT"),
   },
   CURE_NOT_COMPLIANT: {
     check: 'C-113.41', where: at("#cureRefusal", "is-cure-compliant"),
-    translation: 'The curing act is one a member determined compliant against the same standard. The determination named '
-      + 'as the cure does not say so. Nothing was written.',
+    translation: words("CURE_NOT_COMPLIANT"),
   },
   CURE_OTHER_OFFICE: {
     check: 'C-113.42', where: at("#cureRefusal", "is-cure-same-office"),
-    translation: 'A breach is cured by a later act of the same office. The act named as the cure is another office\'s. '
-      + 'Nothing was written.',
+    translation: words("CURE_OTHER_OFFICE"),
   },
   CURE_NOT_LATER: {
     check: 'C-113.43', where: at("#cureRefusal", "is-cure-later"),
-    translation: 'A cure comes after the act it cures. The act named as the cure is not shown to be later, or the date of '
-      + 'one of the two acts is not known. Nothing was written.',
+    translation: words("CURE_NOT_LATER"),
   },
   CURE_LINKED: {
     check: 'C-113.44', where: at("#cureRefusal", "is-cure-unlinked"),
