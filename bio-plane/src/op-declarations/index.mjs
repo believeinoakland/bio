@@ -3378,10 +3378,11 @@ const UNATTENDED_BY_DECISION = Object.freeze({
    T45 (R34, R49): every member op T45 declares (`t45.mjs`) is named here until the design stream gives its text — the
    reads under the read ground (the assistant's two drafts among them, no screen's control yet), the acts
    under the last.
-   T46 (R34, R50, R51, R53): the ops whose text `mock-acts.js` lacks are named — `infolevel`, `statusreportassist`,
-   `joindoors`, `textcheck` and `clockproposals` under the read ground, the member-run door's `airundispatch` under the
-   last; `infolevelset`, `escalationstoppursuing` and `escalationreopen` are explained by `ACT_HELP` (affordances R53),
-   and `handlechange` by the refusal sentence affordances R53 holds for it, so none of the four is named. */
+   T46 (R34, R50, R51, R53; K2996, K2999): the ops whose text `mock-acts.js` lacks are named — `infolevel`,
+   `statusreportassist`, `joindoors` and `clockproposals` under the read ground, the member-run door's `airundispatch`
+   under the last; `infolevelset`, `escalationstoppursuing`, `escalationreopen` and `textcheck` are explained by
+   `ACT_HELP` under their own names (affordances R53), and `handlechange` by the refusal sentence affordances R53 holds
+   for it, so none of the five is named. */
 const ACT_HELP_ABSENT = Object.freeze({
   alias: Object.freeze({ ground: "An alias of a declared op (R21): its op's explanation serves it.",
     ops: frozenList([
@@ -3423,7 +3424,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "standinganswers", "statementsof", "statusreportassist", "statusreportdraft", "statusreports", "stepproducts", "stepproposals",
       "steps", "stepslike", "stillstanding", "structureat", "successread", "successrecords", "sweeps", "table",
       "tablesat", "templatecomments", "templateread", "templates", "templatesforaction", "textattest",
-      "textcheck", "textprovenance", "threatof", "timeline", "translations", "usesof", "verdictnotes", "versionnotice",
+      "textprovenance", "threatof", "timeline", "translations", "usesof", "verdictnotes", "versionnotice",
       "watchquestions", "whatchangeddrafts", "whereitstands", "whowassent", "wizardcandidates", "wizardcheck",
       "wizardread", "wizardsat", "wizarduse", "workbook", "workbookexport", "workbookinputs", "workbooklint"]) }),
   nocontrol: Object.freeze({ ground: "A step another act takes, which no control on a screen offers: a promotion's lease and identifier, a run's tick, the count of a check or a wizard's progress.",

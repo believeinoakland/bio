@@ -257,10 +257,11 @@ test("R51, R6: each map of a T46 owner that serves an R51 op is served whole by 
   assert.deepEqual([...keysOf(actionClocksOps), "clocknosuch"].filter((op) => !Object.hasOwn(OPS, op)), ["clocknosuch"]);
 });
 
-test("R51, R34: each R51 op whose text mock-acts.js lacks is named in ACT_HELP_ABSENT — statusreportassist, joindoors, textcheck and clockproposals under the read ground, airundispatch under the last (an act the design has not yet explained) — and none of them is also explained (negative control: an explained op is named under no ground)", () => {
-  for (const op of ["statusreportassist", "joindoors", "textcheck", "clockproposals"]) assert.deepEqual(ground(op), ["read"], op);
+test("R51, R34 (K2996): each R51 op whose text mock-acts.js lacks is named in ACT_HELP_ABSENT — statusreportassist, joindoors and clockproposals under the read ground, airundispatch under the last (an act the design has not yet explained) — and none of them is also explained; textcheck, whose text mock-acts.js holds (affordances R53), is named under no ground (negative control: an explained op is named under no ground)", () => {
+  for (const op of ["statusreportassist", "joindoors", "clockproposals"]) assert.deepEqual(ground(op), ["read"], op);
   assert.deepEqual(ground("airundispatch"), ["unexplained"]);
-  for (const op of ["statusreportassist", "joindoors", "textcheck", "clockproposals", "airundispatch"]) {
+  assert.deepEqual(ground("textcheck"), []);
+  for (const op of ["statusreportassist", "joindoors", "clockproposals", "airundispatch"]) {
     assert.ok(SESSION_OPS.member.has(op), op);
     assert.equal(explained(op), false, `${op} is explained and named`);
   }
