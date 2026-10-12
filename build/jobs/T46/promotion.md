@@ -103,3 +103,14 @@ Two readings I will apply unless you say otherwise. I stamp what the merged tree
 - `ownership`: 5 files, 1 failure. The 1.73.0 fixture lies outside `tests` until the modules.json swap.
 
 Size (session_01QFUJsskb7hnNteGSP3z9cY): test runs 26, module lines 3858
+
+## J2 · COMPLETE
+
+T46-6 complete on job/T46/promotion (record: Completion). Stamp 1.72.0 → 1.73.0 at bdb6edca97, taken over tranche/T46 after record-core, membership and project-roster merged.
+
+- **New pin:** ROW_CENSUS 1872 rows, 65a4bea3…
+- **Against 1.72.0:** 145 new rows; 7 moved to a new number (C-117 hold and pressure rows → C-149.1–.7); HANDLE_FIXED renumbered and reworded (C-96.50 → C-96.52); 4 retired (C-115.19, C-117.22, C-96.49, C-96.51); 19 changed (T45's 13, plus C-147.3–.8). C-56.6 is unmoved.
+- **The gate.mjs note** names the families C-148, C-149, C-150, C-151 and C-153, and says there is no C-152 (K2891).
+- **Tests:** promotion 137/0; row-census 8/0, which clears red 5 (2)'s T45 half; d526 31/0.
+- **Checks:** architecture 0; coverage 57/57. Format and ownership each have 1 failure, both from the same cause: build/modules.json's promotion `tests` must name `bio-plane/test/fixtures/row-census-1.73.0.jsonl` in place of 1.72.0. That swap is yours, as at c7780afcc0.
+- **Stale generated artifacts:** case-checker `program.mjs` (it embeds GATE_VERSION) and the plane bundle. They are regenerated at the layer close (rule 5 (4)).
