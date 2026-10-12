@@ -2,12 +2,37 @@
 
 **Status** · session_013tqrpd8PzESSsECd7jbcoD · depth 2 · WAITING ON BOB (merges) · handled B6
 
-## Progress (kept current; next step last)
+## Completion
 
-- Read at START as J1 states (code and requirements whole; tests and used public parts by two helpers' digests, K2032). B1–B3 handled; J1's readings accepted (K2999), K2996 applied.
-- Done on this branch, tested (`t46-door.test.mjs`; sweeps re-pinned in `declarations`, `r53-routes`, `envelope`, `t37-door`; `r48-routes` re-pinned to action-holds' map, N938): R65 (`DISCLOSURE_DUE`, C-69.6 region `is-disclosure-due`; `RUNNER_NOT_CONFIGURED` with `ai.refused.signinabsent`), R57 (`statusreportassist`, `textcheck`, `untested` passed on every draft), R20 (`groupFields`), R77 (`airundispatch`), R54 (`joindoors`), R76's routing (generic forward). Verified green in a scratch merge with answer-envelope's, op-declarations' and instance-setup's job branches (231 of 233; the other two are totality, affordances' and op-grades', and nothing else).
-- R75: `app.mjs` written (page and assets); one change from J1 (7): assets are `cache-control: no-cache` with an `etag` of the version and name and 304 on a match, so the browser keeps a file exactly while the plane's version is unchanged.
-- Next: on BOB's CHANGE announcing the interface modules' merges, merge `tranche/T46`, wire `/app` in `fetch` (imports `interface-shell`, the four screens, `interface-assets`), write R75's door tests and the end-to-end suite (Miniflare over `src/plane/index.mjs`), run steps 5–7.
+**How the reading set was read (mechanics §17; K2032).** My requirements and my code (`index.mjs`, `draft.mjs`, `signin.mjs`, `owner-ops.mjs`, `archive.mjs`) whole, by me; my tests (46 files, 628 KB) and the used modules' public parts with the plan sources (interface §1.2, §5; trial §2.2; study §2) by two helpers in this session, each reading in full and writing a digest citing each section; a third helper surveyed every declared op for a caller's `at` (B4). I read my own code and tests whole for this job (P20) and dealt with what I found: the stale R47/R48 pin (actions' map no longer holds the hold ops, which are action-holds' since T45).
+
+**Entries applied** (T46-59; B2, B4, B6 CHANGEs; J1's readings accepted, K2999):
+- R2, R41, R47, R48 (N938): re-pinned; `r48-routes` points the hold ops at action-holds' map; the door's op table and route-map sweeps (`declarations`, `r53-routes`, `envelope`, `totality`) green over T45's and T46's declared ops, with `textcheck` and `airundispatch` (the door's own routes) and `joindoors` (bare member id) named in them.
+- R20 (N905): the review copy's quartet takes `group` from the object's `groupFields()` at each read (null, never a guess, without it); the hash unchanged by it.
+- R54 (N654): `joindoors` routed through `membershipOps`, `by` the session's member id.
+- R57 (N917, N920, N897 (2); K2953, K2996): `statusreportassist` among the drafts, `{op: "statusreportdraft", member, session, plan, items}` from the owner's answer; `textcheck` the door's own route to the draft door, `text` from the body alone; `untested` passed on every draft (writing help, group description, translation, status report, text check); `AGENT_WORKER_UNBOUND` when the object offers no draft door.
+- R65 (N897 (3), (4)): `start` refused `DISCLOSURE_DUE` (C-69.6, DEC-49 region `is-disclosure-due` in `fetch`) while `disclosureof` answers not shown, after keep-away; `RUNNER_NOT_CONFIGURED` relayed with `ai.refused.signinabsent`'s sentence (`SIGNIN_WORDS`).
+- R75 (N897 (1)): `/app`, `/app/<path>`, `/app/assets/<name>` (`app.mjs`), through admission R1 and R20; page `no-store` under the page policy; assets `no-cache` with an etag of the version and name, 304 on a match; any other name 404; no credential read. The end-to-end suite over Miniflare and the real plane (`t46-e2e.test.mjs`).
+- R76: `infolevelset`, `infolevel` routed (generic forward, stamps from op-declarations R50).
+- R77 (N919; K2999): `airundispatch` calls the object's `dispatchMemberRun({run, by, viewer, credential, at})`, the credential in process only; `by`/`viewer` the member (an `ai` caller's principal); 503 `AGENT_WORKER_UNBOUND` without the method.
+- R17 (K3003, K3006): a caller's `at` never reaches the 21 acts that record their own clock (`ACT_CLOCK_OPS`); `reattest` needs nothing (its `attempted` is the authority's, J3); `calibrate` left as ruled.
+
+**Deferred:** none.
+
+**Found in other modules** (reported, J4):
+- **screens-intake R4 / ratification R20 (`release`):** the held screen sends `handle`, `acknowledgment` and `mitigation` in the JSON body; ratification's map reads all three from the query (`ratification/index.mjs:1567`), so every release from the interface is refused `NO_ACKNOWLEDGMENT`. Measured end to end: the same release with the three in the query releases the document. `retire` reads the same way. My end-to-end test's last assertion ("released, no longer held") is red until one of the two moves.
+- plane's `compose.test.mjs` (instance-setup's thirty-four routes) and `door.test.mjs` (R11, local-facts' and filing-templates' maps) are red on `tranche/T46` itself (plane's T46-62, rule 5), not from this branch.
+- store-door `PROJECT_NAMING_READS` lacks `statusreportassist` (N970, T47, already filed).
+- The plane bundle is staled by these merges (rule 5 (4)); R75 takes `interface-assets` (about 1.1 MB) into it.
+
+**Uses edges to add to `modules.json`** (all earlier modules; with them the architecture check is 0 failures for my files, measured locally): `interface-assets`, `interface-shell`, `screens-settings`, `screens-intake`, `screens-daily`, `screens-inquiry` (code, R75); `setup-page` and `test-support` (the end-to-end suite: the real setup page's login, the Miniflare sandbox); `action-holds` (`r48-routes`, its map). No file outside my paths and tests.
+
+**Tests and checks:**
+- `node --test test/m/control-plane/`: tests 242, pass 241, fail 1 (`t46-e2e` "capture … release", the release defect above).
+- My users' suites through the door (`plane`, `setup-page`, `interface-shell`, `screens-*`, with mine): tests 786, pass 783, fail 3 (the one above; plane's two inherited reds).
+- `format`: 159 modules, 158 requirements files; 0 failures. `coverage … control-plane`: 50 of 50 live ids named by a test; 0 failures. `ownership … control-plane tranche/T46`: 0 failures. `architecture … control-plane`: 18 failures, every one a missing edge listed above (0 with them, measured). `checks/run.mjs`: architecture 18 failures (the same), coverage 0 failures over 158 modules (4935 of 4935), channels 0.
+
+Size (session_013tqrpd8PzESSsECd7jbcoD): test runs 31, module lines 3760
 
 ## J1 · QUESTION
 
