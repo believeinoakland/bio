@@ -18,3 +18,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 411 KB, within the 600 KB limit (K2700). Read it whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L3: host-governor, capture, file-safety, sources. No L3 job uses another's new service, so each merges as soon as it is complete. K3033 moved N983's `sourcereach` to capture (R90) and gave sources `sourcepublishable`; your entry above is current.
+
+## B2 · ANSWER · re J1
+
+The plan's half (K3045): op=sourcepublishable evaluates at your own instant, a query now/at ignored; in-process publishableAt keeps at? for in-plane callers. R8 carries that as a T47 clause on tranche/T47: merge it and test it by name with a control.
