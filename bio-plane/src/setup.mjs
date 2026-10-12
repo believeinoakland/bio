@@ -1,4 +1,4 @@
-/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R75).
+/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R78).
  *
  * THE PAGE AT THE ROOT is `setup-page`'s (K1851): the template, its group line and its script. This module composes it,
  * placing R47's block on who controls the group's Civicsmith in the template's one slot (setup-page R14), and re-exports
@@ -39,6 +39,11 @@ import { GROUP_SLUG_RE, FLEET_BINDINGS, hostingControlBlock } from "./setup-flee
 import { proposalLabel, isMachineIdentity } from "./record-grammar/index.mjs";
 /* R68 (T39, N807): the interface's word list is setup-words' (its R1, R2), read, never copied. */
 import { WORD_ROWS, WORDS_COMMIT } from "./setup-words/index.mjs";
+/* R76 (T45; grammar doubt 11): whether a records law's stages are stages of a records request is action-grammar's check
+   (its R25), read there and never copied. */
+import { lawStagesFindings } from "./action-grammar/index.mjs";
+/* R78 (T45; K2832): the group's public identity is registered at start with public-read (its R34). */
+import { publicReadOf, DECLARED_STAKE_SETTING } from "./public-read/index.mjs";
 
 /* R47 (DEC-109; K1038; K1851): the page as composed, setup-page's template with the hosting block in its one slot. */
 export const SETUP_HTML = PAGE_HTML.replace(HOSTING_SLOT, () => hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF }));
@@ -323,6 +328,15 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
     translation: 'A note on a translation that looks wrong is optional, and when given it is at most 500 characters. '
       + 'Nothing was recorded.',
   },
+  /* R77 (T45; N892 (d); Actions D28d; v0.2 rule 21): the group's declared stake, the next free C-64 number, awaiting
+     T46's stamp. */
+  STAKE_MALFORMED: {
+    check: 'C-64.27',
+    where: 'src/setup.mjs declaredStakeSet > is-declared-stake',
+    translation: 'Your group\'s declared stake says, in its own words, what your group itself has at stake in the matters '
+      + 'it works on: some text, at most 1,000 characters, on one line, or nothing to clear it. It is carried on '
+      + 'everything your group sends or publishes from now on. Nothing was changed.',
+  },
 });
 
 const refusal = (code, detail, extra) => {
@@ -360,6 +374,10 @@ export const GROUP_DRAFT_ANSWERS_MAX = 20;
 export const GROUP_DRAFT_ANSWER_MAX = 1000;
 export const GROUP_FOCUS_MAX = 1000;
 export const GROUP_PURPOSE_MAX = 4000;
+/* R77: the longest declared stake, in characters. The setting it is recorded under is public-read's name for it (its
+   R34, the reader), one binding, re-exported. */
+export const DECLARED_STAKE_MAX = 1000;
+export { DECLARED_STAKE_SETTING };
 
 /* ============================================================================================================
  * THE TABLES (K4, `build/layers.md` ruling 3: each module owns its tables), created by `migrate` at start. Every one
@@ -371,7 +389,9 @@ export const INSTANCE_SETUP_TABLES = Object.freeze(["instance_group", "group_ide
   "place_wanted", "place_seen", "place_arrivals", "member_languages",
   /* R75 (T37; N669): the group's translation of the interface, append-only. */
   "translation_grants", "translation_drafts", "translation_adoptions", "translation_confirmations", "translation_undos",
-  "translation_marks", "translation_readings"]);
+  "translation_marks", "translation_readings",
+  /* R77, R11 (T45): who set the declared stake and when, each act appended beside record-core's setting. */
+  "declared_stake_history"]);
 /* Each table's classes, declared explicitly through record-core's `declareTable` (its R21; plan T33, Rules (6)). Every
    one is exempt from purge (R28, R41); none is a cache of anything; the append-only ones keep every version (R26, R53,
    R54). A member's disclosure record is theirs and the group's, never exported (it names who connected an account). */
@@ -400,6 +420,8 @@ const TABLE_CLASSES = Object.freeze({
   translation_undos: { export: "never", version_chain: true },
   translation_marks: { export: "never", version_chain: true },
   translation_readings: { export: "never", version_chain: true },
+  /* R77: the group's settings' class, exempt from purge; the stake is public, who set it is the administrators'. */
+  declared_stake_history: { export: "admin-only", version_chain: true },
 });
 /* R50–R52: the seeding ledgers name entities and lines of the registry (`entities`, `lines`), which a whole-store purge
    clears, so a whole-store purge clears them with it and a later seeding starts afresh; a bundle's purge touches none. */
@@ -665,6 +687,14 @@ CREATE TABLE IF NOT EXISTS translation_readings (
   by_name    TEXT,
   at         TEXT NOT NULL
 );
+-- R77, R11 (T45; N892 (d)): each set or clear of the group's declared stake, with who and when, appended after
+-- record-core's setting 'declared_stake' recorded it (the value public-read reads). stake NULL is a clear. Append-only.
+CREATE TABLE IF NOT EXISTS declared_stake_history (
+  seq     INTEGER PRIMARY KEY AUTOINCREMENT,
+  stake   TEXT,
+  set_by  TEXT NOT NULL,
+  set_at  TEXT NOT NULL
+);
 -- R54 (D311): each time the assistant's disclosure was shown to a member before they connected their own account: who,
 -- the disclosure's version, who recorded it and when. Append-only.
 CREATE TABLE IF NOT EXISTS assistant_disclosures (
@@ -832,6 +862,10 @@ export class InstanceSetup {
   #scheduler() { return this.#deps.scheduler ?? schedulerOf(this.#ctx, this.#env); }
   #capture() { return this.#deps.capture ?? captureOf(this.#ctx, { env: this.#env }); }
   #queueProducers() { return this.#deps.queueProducers ?? null; }
+  /* R78: public-read's one instance on this storage (the plane builds it first); a test hands its own, or null. */
+  #publicRead() { return this.#deps.publicRead !== undefined ? this.#deps.publicRead : publicReadOf(this.#ctx); }
+  /* R76: action-grammar's check, as imported; a test may hand its own. */
+  #lawStagesFindings(stages) { return (this.#deps.lawStagesFindings ?? lawStagesFindings)(stages); }
   #fetch(...a) { return (this.#deps.fetch ?? globalThis.fetch)(...a); }
   #sleep(ms) { return this.#deps.sleep ? this.#deps.sleep(ms) : new Promise((s) => setTimeout(s, ms)); }
   #now() { return this.#deps.now ? this.#deps.now() : Date.now(); }
@@ -898,6 +932,7 @@ export class InstanceSetup {
     try { out.places = this.#comparePlaces(); }
     catch (e) { out.places = { compared: false, detail: `the place could not be compared: ${String(e && e.message || e).slice(0, 200)}` }; }
     out.arrivals = this.#registerArrivals();
+    out.identity = this.#registerIdentity();
     /* The instance's start reconciles (scheduler R11), now that this consumer is registered: never `arm`, the producers'
        door, which would start the test seam's probe at every boot (K419). */
     try { out.armed = await this.#scheduler().start(); } catch { out.armed = null; /* the next arm reconciles */ }
@@ -911,6 +946,16 @@ export class InstanceSetup {
     const qp = this.#queueProducers();
     if (!qp || typeof qp.registerPlaceArrivals !== "function") return { ok: false, detail: "no producers to register with" };
     try { return qp.registerPlaceArrivals(({ viewer = null } = {}) => this.placeArrivals({ viewer })); }
+    catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
+  }
+
+  /* R78 (T45; K2832; public-read R34): registered once at start as public-read's group-identity source, its door
+     answering R10's `groupIdentityPublic`. A refusal or a throw is answered in the start's report, never thrown. */
+  #registerIdentity() {
+    let pr = null;
+    try { pr = this.#publicRead(); } catch (e) { return { ok: false, detail: `public-read could not be reached: ${String(e && e.message || e).slice(0, 200)}` }; }
+    if (!pr || typeof pr.registerGroupIdentity !== "function") return { ok: false, detail: "no public-read to register with" };
+    try { return pr.registerGroupIdentity({ identity: () => this.groupIdentityPublic() }); }
     catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
   }
 
@@ -1171,7 +1216,59 @@ export class InstanceSetup {
                                    latest: this.#domainLatestCheck(dom.value) } : null,
              domain_history: this.#identityHistory("domain"),
              domain_checks: checks.slice(0, max).map((r) => ({ ...r })),
-             domain_checks_limit: max, domain_checks_truncated: checks.length > max };
+             domain_checks_limit: max, domain_checks_truncated: checks.length > max,
+             ...this.#declaredStake() };
+  }
+
+  /* =====================================================================
+   * THE GROUP'S DECLARED STAKE (R77, R11; T45; N892 (d); Actions D28d; v0.2 rule 21). What the group itself has at stake
+   * in the matters it works on, in its own words, set by an administrator and carried beside its public identity on
+   * everything it sends or publishes (`public-read` R34 reads the setting). The value is record-core's setting
+   * `declared_stake` (its R25), the one value its readers read; who set it and when, and every earlier value, are this
+   * module's append-only history beside it. A change applies to what is sent or published after it; nothing already
+   * signed, sent or published changes. Never set, it is `null`, never a default or an empty text.
+   * ===================================================================== */
+
+  /* R11: `declared_stake: {stake, set_by, set_at}` (the three null when none is set) and its history, oldest first. */
+  #declaredStake() {
+    const value = this.#record().getSetting(DECLARED_STAKE_SETTING);
+    const stake = typeof value === "string" ? value : null;
+    const history = this.#rows(`SELECT stake, set_by, set_at FROM declared_stake_history ORDER BY seq`)
+      .map((r) => ({ stake: r.stake ?? null, set_by: r.set_by, set_at: r.set_at }));
+    const last = history.length ? history[history.length - 1] : null;
+    return { declared_stake: { stake, set_by: last ? last.set_by : null, set_at: last ? last.set_at : null },
+             declared_stake_history: history };
+  }
+
+  /** R77, op=declaredstakeset: an administrator records the group's declared stake, or clears it with `stake: null`.
+   *  `by` is the control plane's stamp (R29). Refusals, each writing nothing: `NOT_AN_ADMIN` (a machine included);
+   *  `STAKE_MALFORMED`. Recorded through record-core's `setSetting` with `by`, then appended with who and when. */
+  declaredStakeSet({ stake = undefined, by = null } = {}) {
+    const who = typeof by === "string" ? by.trim() : "";
+    if (!who || isMachineIdentity(who) || !this.#isAdmin(who))
+      return notAnAdmin(by ?? null, "declaring what your group has at stake");
+    let value = null;
+    if (stake !== null) {
+      const s = typeof stake === "string" ? stake.trim() : "";
+      const chars = [...s].length;
+      /* DEC-49 REGION is-declared-stake */
+      if (!s || chars > DECLARED_STAKE_MAX || !oneLine(s))
+        return refusal("STAKE_MALFORMED", `${typeof stake !== "string" ? "the request names no stake, and one is declared as"
+          : !s ? "an empty stake is not one, and one is declared as" : `a stake of ${chars} characters${oneLine(s) ? "" : " over more than one line"} is not`} `
+          + `one line of 1 to ${DECLARED_STAKE_MAX} characters with no control characters; null clears it. Nothing was changed.`);
+      /* END DEC-49 REGION is-declared-stake */
+      value = s;
+    }
+    const set = this.#record().setSetting(DECLARED_STAKE_SETTING, value, who);
+    if (!set || set.ok !== true) return set;
+    const at = this.#iso();
+    this.#sql.exec(`INSERT INTO declared_stake_history (stake, set_by, set_at) VALUES (?, ?, ?)`, value, who, at);
+    return { ok: true, stake: value, set_by: who, set_at: at, history: this.#declaredStake().declared_stake_history,
+             note: value === null
+               ? "no stake is declared from now on: what your group sends or publishes says it has declared none. "
+                 + "Nothing already sent or published changes."
+               : "carried beside your group's public identity on everything it sends or publishes from now on. Nothing "
+                 + "already signed, sent or published changes." };
   }
 
   /* =====================================================================
@@ -1227,7 +1324,8 @@ export class InstanceSetup {
     });
     const combined = ids.length ? J.combine(ids) : { ok: true, conflicts: [] };
     const out = { ok: true, profiles: active, conflicts: combined.ok ? combined.conflicts : [],
-                  ...(combined.ok ? {} : { errors: combined.errors }), view: profileView(combined), choices };
+                  ...(combined.ok ? {} : { errors: combined.errors }), view: profileView(combined), choices,
+                  ...this.#stageFindings(combined) };
     if (!ids.length) {
       out.detail = "no active profile: your group's Civicsmith reads no local facts, which is valid, and every fact that needs one "
         + "is answered as undetermined until an administrator chooses";
@@ -1236,6 +1334,33 @@ export class InstanceSetup {
         out.boot = { recorded: false, why: note.why, bound: note.bound ?? null };
     }
     return out;
+  }
+
+  /* R76 (T45; N858; v0.2 §5, rule 11; grammar doubt 11): for each records law of the combined view that carries
+     `stages` (jurisdictions R76), each finding action-grammar's `lawStagesFindings` answers, as `{law, check:
+     "LAW_STAGE_UNKNOWN", stage}`; `[]` when every law's stages are known or none carries any. It reports and refuses
+     nothing, writes nothing and never throws: a check that throws is `stage_findings: null` with why, never `[]`. */
+  #stageFindings(combined) {
+    const v = combined && combined.ok === true && combined.view && typeof combined.view === "object" ? combined.view : null;
+    const laws = v && Array.isArray(v.records_laws) ? v.records_laws : [];
+    const out = [];
+    try {
+      for (const law of laws) {
+        if (!law || typeof law !== "object" || !Array.isArray(law.stages)) continue;
+        /* Each stage is checked on its own, so each finding names the stage it is about. */
+        for (const item of law.stages) {
+          const findings = this.#lawStagesFindings([item]);
+          if (!Array.isArray(findings)) throw new Error("the check answered no list");
+          if (findings.some((f) => f && f.code === "LAW_STAGE_UNKNOWN"))
+            out.push({ law: law.name ?? null, check: "LAW_STAGE_UNKNOWN",
+                       stage: item && typeof item === "object" ? item.stage ?? null : item ?? null });
+        }
+      }
+    } catch (e) {
+      return { stage_findings: null, stage_findings_detail: `whether the records laws' stages are known could not be checked `
+        + `(${String(e && e.message || e).slice(0, 160)}), so it is not known; the profiles stay active as chosen` };
+    }
+    return { stage_findings: out };
   }
 
   /** R14, op=profilesset: replaces the list. `by` is the control plane's stamp of an administrator's own session. */
@@ -2756,6 +2881,8 @@ export function instanceSetupOps(m, url, body) {
     memberlanguageset: () => m.memberLanguageSet({ ...(body || {}), by: q("by") }),
     memberlanguage: () => m.memberLanguage({ viewer: q("viewer") }),
     adminrecoverystep: () => m.adminRecoveryStep({ viewer: q("viewer") }),
+    /* R77 (T45): the administrators' act setting the group's declared stake. */
+    declaredstakeset: () => m.declaredStakeSet({ ...(body || {}), by: q("by") }),
     /* R67–R74 (T37; N669): the translation ops, and the door's store-internal record route (no spec). */
     translationdraft: () => m.translationDraft({ ...(body || {}), by: q("by") }),
     translationdraftrecord: () => m.translationDraftRecord({ ...(body || {}), by: q("by") }),

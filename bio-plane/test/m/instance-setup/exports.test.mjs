@@ -85,6 +85,8 @@ test("N348 this module holds no Durable Object door or class of its own: its rou
     "recordcpuprobestep", "runtimeobservations", "seatsseed",
     /* T37 (R67–R74): the translation ops and the door's store-internal record route */
     "translationadopt", "translationconfirm", "translationdraft", "translationdraftrecord", "translationgrant",
-    "translationmark", "translationrevert", "translations", "interfacewords"].sort());
+    "translationmark", "translationrevert", "translations", "interfacewords",
+    /* T45 (R77): the administrators' act setting the group's declared stake */
+    "declaredstakeset"].sort());
   for (const f of Object.values(ops)) assert.equal(typeof f, "function");
 });

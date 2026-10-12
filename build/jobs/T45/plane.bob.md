@@ -61,3 +61,7 @@ K2894: store-door (T45-50) joins L11 and merges before you; merge tranche/T45 wh
 ## B10 · CHANGE
 
 K2895: queue-producers is merged (its holdsDue callers gone: rule 4 (6)'s queue-producers half cleared). Merge tranche/T45 when convenient.
+
+## B11 · CHANGE
+
+K2896: instance-setup is merged: its routes are now 34 with declaredstakeset; re-pin door.test.mjs R1/R5 and drive the new route. Merge tranche/T45.
