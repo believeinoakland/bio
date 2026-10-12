@@ -40,7 +40,7 @@
 - Deferred: action-producers' C-152, until its `checks.mjs` lands (BOB's CHANGE).
 - Other modules: nothing new to report. Rule 4 (14) and (15)'s answer-envelope items are cleared by this job.
 
-Size (session_01V6aaxFDYEfw6Q7h7zHh9zL): test runs 14, module lines 875
+Size (session_01V6aaxFDYEfw6Q7h7zHh9zL): test runs 14, module lines 858
 
 ## J1 · QUESTION
 
