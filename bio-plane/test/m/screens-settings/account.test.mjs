@@ -1,8 +1,8 @@
 /* Settings › Your account at the module's interface (R3, R8, R10). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, acts, all, textOf, said, ancestor } from "./kit.mjs";
-import { ADMIN, MEMBER, READER, accountTable, refuse, env } from "./fixtures.mjs";
+import { open, acts, all, textOf, said } from "./kit.mjs";
+import { ADMIN, MEMBER, READER, accountTable, refuse } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 const has = (o, key, fills) => assert.ok(o.html.includes(o.cs.w(key, fills)), `drawn: ${key}`);
@@ -92,6 +92,4 @@ test("R3 a member without a capability an act needs is not offered it; the found
   assert.ok(ops(f).includes("setpassword"));
   const failed = await open("account", { me: MEMBER, table: accountTable(MEMBER, { signerlist: "none", expertiselist: refuse("NO_SUCH_MEMBER") }) });
   assert.equal(all(failed.tree, (e) => e.attrs["data-state"] === "failed").length, 2);
-  assert.ok(env);
-  assert.ok(ancestor);
 });

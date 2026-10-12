@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { open, acts, all, textOf, said, ancestor } from "./kit.mjs";
-import { MEMBER, ADMIN, connectTable, refuse, env, KEEPAWAY_ON } from "./fixtures.mjs";
+import { MEMBER, ADMIN, connectTable, env, KEEPAWAY_ON } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 const situations = (o) => all(o.tree, (e) => e.attrs["data-situation"]).map((e) => e.attrs["data-situation"]);
@@ -158,5 +158,4 @@ test("R5 the group's key serving a member: no settings of the group's account ar
   const g = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "group") });
   assert.ok(!ops(g).includes("ailimitset") && !ops(g).includes("accountusesset"));
   has(g, "screen.connect.grouplimits");
-  assert.ok(refuse);
 });

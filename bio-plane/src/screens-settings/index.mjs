@@ -35,6 +35,7 @@ const WORDS = {
     "screen.connect.name", "screen.notes.name",
     ...LABELS("account", ["expertisedeclare", "setpassword", "signerregisterown", "signerrevokeown", "memberlanguageset", "owed_infolevelset"])],
   connect: [...STATES, "screen.connect.name", ...own("screen.connect."), "screen.members.founder", ...PANEL, "ai.whopays", "mark.outward.means",
+    "act.subscriptiondisconnect.does",
     ...LABELS("connect", ["groupkeynoticeseen", "disclosureshown", "owed_subscriptionsignin", "accountreferenceset", "accountusesset", "ailimitset", "accountreferenceremove"])],
   notes: [...STATES, "screen.notes.name", ...own("screen.notes."), "ai.label.untested",
     ...LABELS("notes", ["notewrite", "noteturn", "noterevise", "notedelete", "writinghelp"])],

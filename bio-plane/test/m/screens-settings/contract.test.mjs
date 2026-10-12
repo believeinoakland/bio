@@ -75,7 +75,7 @@ test("every function of SCREENS is self-contained: rebuilt from its own source, 
 test("SCREEN_WORDS: frozen [key, en, protected] rows, keys distinct, under the screens' own keys or the shell's named rows", () => {
   assert.ok(Object.isFrozen(SCREEN_WORDS));
   const keys = new Set();
-  const named = new Set(["handle.fixed", "act.memberlanguageset.does", "act.groupkeyremove.does", "act.owed_subscriptionsignin.does", "ai.label.untested"]);
+  const named = new Set(["handle.fixed", "act.memberlanguageset.does", "act.groupkeyremove.does", "act.owed_subscriptionsignin.does", "act.subscriptiondisconnect.does", "ai.label.untested"]);
   for (const r of SCREEN_WORDS) {
     assert.ok(Object.isFrozen(r) && r.length === 3 && typeof r[0] === "string" && typeof r[1] === "string" && typeof r[2] === "boolean", String(r));
     assert.ok(!keys.has(r[0]), `${r[0]} once`);

@@ -6,8 +6,9 @@
    joining), and the meanings the requirements state where they give none (the sign-in refusals, R5).
    Rows under a `WORD_ROWS` key are the ones interface-shell R5 names as not drawn from `WORD_ROWS` on these screens:
    `act.memberlanguageset.does`, `act.groupkeyremove.does` and `act.owed_subscriptionsignin.does` (bare "Civicsmith")
-   and `handle.fixed` (untrue under DEC-197), each here in DEC-149's form and true on every arm; and the test-instance
-   label `ai.label.untested`, as screens-inquiry R7 words it, until `words.json` holds it. */
+   and `handle.fixed` (untrue under DEC-197), each here in DEC-149's form and true on every arm; what the re-pointed
+   `subscriptiondisconnect` does (`words.json` holds no row for it); and the test-instance label `ai.label.untested`, as
+   screens-inquiry R7 words it, until `words.json` holds it. */
 
 const ROWS = [
   // ---- words held under WORD_ROWS keys (interface-shell R5) ----
@@ -15,6 +16,7 @@ const ROWS = [
   ["act.memberlanguageset.does", "Sets the language your group's Civicsmith speaks to you. Documents stay in their own language.", false],
   ["act.groupkeyremove.does", "Removes the group's key for good. Members without their own account use your group's Civicsmith without the assistant.", false],
   ["act.owed_subscriptionsignin.does", "Opens Anthropic's own sign-in page in a new tab. It gives you a code to paste here; your group's Civicsmith never sees your password.", false],
+  ["act.subscriptiondisconnect.does", "Disconnects your Claude subscription from your account. The group's key serves you instead, if the group has one.", false],
   ["ai.label.untested", "Not yet tested: this part of the assistant has not yet passed Civicsmith's tests on real matters. Check what it says against the record.", true],
 
   // ---- members ----
