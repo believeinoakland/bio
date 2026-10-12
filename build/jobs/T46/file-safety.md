@@ -33,3 +33,17 @@
 **Found outside my module.**
 - The plane bundle `bio-plane/dist/bio-plane.bundled.mjs` carries the old details; staled by this change (rule 5 (4); regenerated at the layer's close by BOB).
 - No other module's source reads `SCANNER_ABSENT`'s or `RENDERER_ABSENT`'s details (grep over `bio-plane/src`).
+- From the helper's digest:
+  - Neither code is worded in any used module. DEC-149 applies to `detail` too (membership R112, credentials R48), which is what R42 asks.
+  - `scheduler` R7 (`build/requirements/scheduler.md:49`) names both codes as a tick's answer; it reads the codes, not the details, so it is unaffected.
+  - `odf-reader` R47 (the `active` list R6 and R14 use) sits below odf-reader's `## Private` heading, though its Status line names it as provided. That is a requirements-placement matter for BOB.
+
+**Tests and checks** (on `job/T46/file-safety` after the change):
+- `node --test test/m/file-safety/`: tests 55, pass 55, fail 0.
+- Layer tests: none named in `build/manifest.md`. I changed no service another module uses (only the wording of a refusal's detail).
+- `format`: 159 modules, 152 requirements files; 0 failures.
+- `architecture`: 16 product files, 65 relative imports; 0 failures.
+- `coverage`: 42 of 42 live requirement ids named by a test; 0 failures.
+- `ownership`: 4 files changed by file-safety between tranche/T46 and HEAD; 0 failures.
+
+Size (session_01L9fT5LDwkBexXHHGqAyzH5): test runs 1, module lines 4671
