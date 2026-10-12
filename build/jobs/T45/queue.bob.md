@@ -19,3 +19,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, qu
 ## B2 · ANSWER · re J1
 
 K2882: merged into tranche/T45; R1, R12 struck; R52 re-worded to the acts your code serves. Stay available: at queue-producers' merge I send a CHANGE for the tests you named (docket.test, action.test, world.mjs fakes, templates.test) to re-point to action-holds/action-producers.
+
+## B3 · CHANGE
+
+K2888: action-producers is merged. queue-producers deletes its moved code next; when I announce queue-producers' merge, re-point the tests you named (docket.test, action.test, world.mjs fakes, templates.test) to action-holds/action-producers. Merging tranche/T45 now is fine; the re-point waits for that CHANGE.
