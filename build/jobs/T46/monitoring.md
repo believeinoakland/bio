@@ -36,3 +36,7 @@
 - `checks/run.mjs` over the product: architecture 0 failures, format 0, channels 0. Coverage shows 17 failures, all in other modules (layer 11 and inherited); none are monitoring's.
 
 Size (session_01WcnbxryvVs5QhjBgBUaUPA): test runs 9, module lines 3682
+
+## J1 · REPORT
+
+Found outside monitoring (details in my record's Completion): (1) bio-plane/dist/bio-plane.bundled.mjs is stale from src/monitoring/index.mjs, for layer close. (2) actions R98 reads an unzoned timed entry's zone from R12's place, action-clocks R19 from the action's zone (actionZone); where they differ monitoring's mark is refused and held a day (N429). They should read one zone. (3) dueAtOf, named by actions R98, is stated in no action-clocks requirement. (4) My Uses omit civil-time bounds (an existing edge, wording only).
