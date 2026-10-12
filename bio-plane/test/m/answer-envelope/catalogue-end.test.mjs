@@ -14,7 +14,7 @@ import { machineFences } from "../../../src/skillpack.mjs";
 const SNAP = JSON.parse(readFileSync(new URL("./rows-before-r43.json", import.meta.url), "utf8"));
 const digest = (s) => createHash("sha256").update(s).digest("hex").slice(0, 16);
 
-test("R7, R2, R10: every code decorated before the catalogue's end reads the same check and translation, its owner's re-wordings under a ruling re-pinned (T41's: C-35.13, C-94.5, C-70.1, C-22.9, C-22.14, C-104.2–.5, C-104.8) and its retired codes held by none (T41's: C-124.52, C-106.1; T45's: C-115.19), its moved rows read at their new numbers with their old ones held by none (T45's: C-117.17, C-117.18 to C-149.6, C-149.7), every pin compared and every difference named, and every published fence (control-plane R41) stays published (negative control: a changed word or a missing code is seen)", () => {
+test("R7, R2, R10, R13: every code decorated before the catalogue's end reads the same check and translation, its owner's re-wordings under a ruling re-pinned (T41's: C-35.13, C-94.5, C-70.1, C-22.9, C-22.14, C-104.2–.5, C-104.8; T46's: C-124.30) and its retired codes held by none (T41's: C-124.52, C-106.1; T45's: C-115.19), its moved rows read at their new numbers with their old ones held by none (T45's: C-117.17, C-117.18 to C-149.6, C-149.7), every pin compared and every difference named, and every published fence (control-plane R41) stays published (negative control: a changed word or a missing code is seen)", () => {
   const codes = Object.keys(SNAP.rows);
   assert.ok(codes.length > 900, String(codes.length));
   /* every pin is compared, and every one that differs is named at once */
@@ -75,4 +75,46 @@ test("R7 (rule 1, K786): the catalogue file and legacy-checks' tests are gone, C
   for (const t of [`import * as c from "../../checks/${NAME}.mjs";`, `import { a } from '../checks/${NAME}.mjs'`, `await import("../checks/${NAME}.mjs")`])
     assert.ok(IMPORT.test(t), t);
   assert.equal(IMPORT.test("/* moved from `checks/bio-checks.mjs` */"), false);
+});
+
+test("R13 (T46; DEC-194, N913; K2953, K2959, K2960): C-124.30 SCENARIO_OUT_OF_RANGE is re-pinned to the translation action-plans reads by key from words.json's refusal.SCENARIO_OUT_OF_RANGE, its code, check and where unmoved; C-113.7 FINDING_NOT_PUBLISHED and C-116.27 NOT_OPEN keep their pins (their owners keep their words in T46); changed.note names DEC-194's re-wording as C-124.30's reason; CHECK_FAMILY_FILES holds no T46 file (control: every other pinned code decorates with the same code, check and translation as before; negative control: the old pin would be seen)", async () => {
+  const { join, dirname } = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+  const REPO = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
+  const WORDS = JSON.parse(readFileSync(join(REPO, "docs/development/ux-substrate/screens/words.json"), "utf8")).words;
+  const en = (key) => WORDS.find((w) => w.key === key)?.en;
+  const AP = (await import("../../../src/action-plans/checks.mjs")).ACTION_PLAN_CHECKS;
+  /* C-124.30: words.json's sentence, as action-plans' row holds it, and the pin moved with it */
+  const sentence = en("refusal.SCENARIO_OUT_OF_RANGE");
+  assert.ok(typeof sentence === "string" && sentence, "words.json holds refusal.SCENARIO_OUT_OF_RANGE");
+  assert.equal(AP.SCENARIO_OUT_OF_RANGE.translation, sentence);
+  assert.deepEqual(M.dec49Row("SCENARIO_OUT_OF_RANGE"), { check: "C-124.30", translation: sentence });
+  assert.equal(M.CHECK_FAMILIES.ACTION_PLAN_CHECKS.SCENARIO_OUT_OF_RANGE, AP.SCENARIO_OUT_OF_RANGE);
+  assert.match(AP.SCENARIO_OUT_OF_RANGE.where, /scenarioSet > is-scenario-numbered/);
+  assert.deepEqual(SNAP.rows.SCENARIO_OUT_OF_RANGE, ["C-124.30", digest(sentence)]);
+  assert.deepEqual(M.dec49Attach({ ok: false, reason: "SCENARIO_OUT_OF_RANGE" }),
+                   { ok: false, reason: "SCENARIO_OUT_OF_RANGE", code: "SCENARIO_OUT_OF_RANGE", check: "C-124.30", translation: sentence });
+  /* C-113.7 and C-116.27: their pins as T45 left them, which the rows still read (not words.json's unadopted sentences) */
+  for (const [code, pin, key] of [["FINDING_NOT_PUBLISHED", ["C-113.7", "2993ac7dd0bfd047"], "refusal.FINDING_NOT_PUBLISHED"],
+                                  ["NOT_OPEN", ["C-116.27", "80ea63ad3225e138"], "refusal.NOT_OPEN"]]) {
+    assert.deepEqual(SNAP.rows[code], pin, code);
+    const got = M.dec49Row(code);
+    assert.deepEqual([got.check, digest(got.translation)], pin, code);
+    if (en(key)) assert.notEqual(got.translation, en(key), `${code} keeps its own words in T46`);
+  }
+  /* changed.note: one sentence naming DEC-194 as C-124.30's reason, and the two kept rows */
+  const note = SNAP.changed.note;
+  assert.match(note, /T46 \(answer-envelope R13; DEC-194, N913[^)]*\): action-plans C-124\.30 SCENARIO_OUT_OF_RANGE re-worded under DEC-194/);
+  assert.match(note, /C-113\.7 FINDING_NOT_PUBLISHED and escalation C-116\.27 NOT_OPEN keep their translations in T46/);
+  /* CHECK_FAMILY_FILES unchanged: T46 adds no family, so no file of a module new in T46 is listed */
+  for (const id of ["interface-assets", "interface-shell", "screens-settings", "screens-intake", "screens-daily", "screens-inquiry"])
+    assert.equal(M.CHECK_FAMILY_FILES.some(([p]) => p.startsWith(`src/${id}/`)), false, id);
+  assert.equal(M.CHECK_FAMILY_FILES.length, 87);
+  /* control: every other pinned code decorates exactly as pinned */
+  for (const [code, pin] of Object.entries(SNAP.rows)) if (code !== "SCENARIO_OUT_OF_RANGE") {
+    const got = M.dec49Row(code);
+    assert.deepEqual(got ? [got.check, digest(got.translation)] : null, pin, code);
+  }
+  /* negative control: T45's pin of C-124.30 would read red */
+  assert.notDeepEqual([M.dec49Row("SCENARIO_OUT_OF_RANGE").check, digest(M.dec49Row("SCENARIO_OUT_OF_RANGE").translation)], ["C-124.30", "13524823f3e8dd74"]);
 });
