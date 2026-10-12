@@ -8,7 +8,7 @@
   "state": 4,
   "draft": 4,
   "photo": 13,
-  "handle": 9,
+  "handle": 7,
   "ai": 80,
   "date": 14,
   "queue": 47,
@@ -53,7 +53,7 @@
   "act": 535,
   "column": 33,
   "wizard": 306,
-  "total": 1603,
+  "total": 1601,
   "protected": 567
  },
  "words": [
@@ -628,25 +628,11 @@
    "source": "mock-screens.js join"
   },
   {
-   "key": "handle.refused.unchecked",
-   "en": "Civicsmith couldn't check whether your work is in a published case, so your handle wasn't changed. Try again in a moment.",
-   "protected": false,
-   "source": "DEC-188",
-   "note": "HANDLE_CHANGE_UNCHECKED"
-  },
-  {
    "key": "handle.refused.paused",
    "en": "Too many handles checked in a short time. Try again in {minutes} minutes.",
    "protected": false,
    "source": "DEC-188",
    "note": "HANDLE_CHECK_PAUSED"
-  },
-  {
-   "key": "handle.refused.notmember",
-   "en": "Only a member can change their own handle.",
-   "protected": false,
-   "source": "DEC-188",
-   "note": "HANDLE_CHANGE_NOT_A_MEMBER"
   },
   {
    "key": "ai.whopays",
@@ -1014,7 +1000,7 @@
   },
   {
    "key": "ai.refused.limit.unjudged",
-   "en": "The assistant stopped here: Civicsmith couldn't check the use of {whose} account just now, and it spends nothing it can't count. Try again in a moment. Everything else works as usual.",
+   "en": "The assistant stopped here: your group's Civicsmith couldn't check the use of {whose} account just now, and it spends nothing it can't count. Try again in a moment. Everything else works as usual.",
    "protected": true,
    "source": "DEC-189",
    "note": "AI_LIMIT_REACHED when the limit can't be judged (ai-use R3 failing closed); in place of a {period} and {when}"
@@ -1832,7 +1818,7 @@
   },
   {
    "key": "refusal.PROJECT_GUARD_UNCHECKED",
-   "en": "Civicsmith couldn't check whether this project's own rules allow that, so nothing was changed. Try again in a moment.",
+   "en": "Your group's Civicsmith couldn't check whether this project's own rules allow that, so nothing was changed. Try again in a moment.",
    "protected": true,
    "source": "DEC-194"
   },
@@ -1979,7 +1965,7 @@
   },
   {
    "key": "signing.openrequest.unread",
-   "en": "Civicsmith couldn't read whether any request for comment on this case is still open, so none is listed here.",
+   "en": "Your group's Civicsmith couldn't read whether any request for comment on this case is still open, so none is listed here.",
    "protected": true,
    "source": "DEC-194"
   },
@@ -2022,7 +2008,7 @@
   },
   {
    "key": "case.check.undetermined",
-   "en": "Undetermined, because Civicsmith couldn't read everything the check rests on. It is not treated as held.",
+   "en": "Undetermined, because your group's Civicsmith couldn't read everything the check rests on. It is not treated as held.",
    "protected": true,
    "source": "DEC-194"
   },
@@ -2347,7 +2333,7 @@
   },
   {
    "key": "refusal.SUCCESS_CAUSE_UNCHECKABLE",
-   "en": "Civicsmith couldn't check whether the cause rests only on your group's own acts, so the success wasn't recorded. Try again in a moment, or leave the cause out.",
+   "en": "Your group's Civicsmith couldn't check whether the cause rests only on your group's own acts, so the success wasn't recorded. Try again in a moment, or leave the cause out.",
    "protected": true,
    "source": "DEC-194"
   },

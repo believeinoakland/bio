@@ -124,9 +124,7 @@ add('handle.formerly', 'formerly {handle}', false, 'DEC-186; kept until handlech
 add('handle.characters', 'A handle uses only lower-case letters, digits and hyphens.', false, 'mock-screens.js join');
 must(scr, 'mock-screens.js', 'A handle uses only lower-case letters, digits and hyphens');
 
-add('handle.refused.unchecked', 'Civicsmith couldn\'t check whether your work is in a published case, so your handle wasn\'t changed. Try again in a moment.', false, 'DEC-188', 'HANDLE_CHANGE_UNCHECKED');
 add('handle.refused.paused', 'Too many handles checked in a short time. Try again in {minutes} minutes.', false, 'DEC-188', 'HANDLE_CHECK_PAUSED');
-add('handle.refused.notmember', 'Only a member can change their own handle.', false, 'DEC-188', 'HANDLE_CHANGE_NOT_A_MEMBER');
 
 // 4c. AI accounts and limits (DEC-188; N812): who pays, what for, up to what; protected where they say who sees what
 add('ai.whopays', must(scr, 'mock-screens.js', 'For a member\\\'s act in a project that has its own AI account, that project\\\'s account pays. Otherwise the member\\\'s own account, if they connected one; otherwise the group\\\'s key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.').replace(/\\'/g, "'"), true, 'mock-screens.js AI_WHO_PAYS');
@@ -165,7 +163,7 @@ add('ai.until.day', 'tomorrow', false, 'DEC-192', '{when} after "until" in ai.qu
 add('ai.until.month', '1 {month}', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a monthly limit: "pause until 1 November"');
 ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
   .forEach(m => add(`date.month.${m}`, m[0].toUpperCase() + m.slice(1), false, 'DEC-189', 'a month\'s name in a sentence'));
-add('ai.refused.limit.unjudged', 'The assistant stopped here: Civicsmith couldn\'t check the use of {whose} account just now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.', true, 'DEC-189', 'AI_LIMIT_REACHED when the limit can\'t be judged (ai-use R3 failing closed); in place of a {period} and {when}');
+add('ai.refused.limit.unjudged', 'The assistant stopped here: your group\'s Civicsmith couldn\'t check the use of {whose} account just now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.', true, 'DEC-189', 'AI_LIMIT_REACHED when the limit can\'t be judged (ai-use R3 failing closed); in place of a {period} and {when}');
 for (const [k, t] of [
   ['owner', 'it doesn\'t say which account it is for'],
   ['scope', 'that isn\'t something a limit can cover'],
