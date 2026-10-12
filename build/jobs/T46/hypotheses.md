@@ -1,6 +1,6 @@
 # hypotheses (T46)
 
-**Status** · session_01MXHAyHBp7fQrcxs8MPUFgy · depth 2 · WORKING · handled B0
+**Status** · session_01MXHAyHBp7fQrcxs8MPUFgy · depth 2 · WORKING · handled B1
 
 ## Completion (HYPOTHESES #7)
 
