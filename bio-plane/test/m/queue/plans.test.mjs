@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
-import { QUEUE_ACT_CHECKS } from "../../../src/queue/index.mjs";
+import { Queue, QUEUE_ACT_CHECKS } from "../../../src/queue/index.mjs";
 import { classOfKind, QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS } from "../../../src/queuestate.mjs";
 
 const ITEMS = {
@@ -152,4 +152,30 @@ test("R12, R14, R20, R30: member-left-items is quieted by its recipient, by its 
   f = w.feed("alice");
   assert.deepEqual(f.mute.suppressed.map((s) => [s.id, s.scope, s.case]), [[ITEMS.left.id, "case", "PRJ-1"]]);
   assert.ok(byId(w.feed("bob"))[ITEMS.left.id], "still on another owner's feed");
+});
+
+test("R8, R12 (T45): queue hands following, planWork and actionHolds on; a fake following's question reaches the real action-producers R10 and mints with its door; answering none, no item", () => {
+  for (const k of ["actionHolds", "following", "planWork"]) assert.ok(Queue.PRODUCER_DEPS.includes(k), k);
+  const asked = [];
+  const following = (questions) => ({ watchQuestions: (a) => { asked.push(a.viewer);
+    return { ok: true, questions, truncated: false, cursor: null }; } });
+  const q = { link: "LNK-1", plan: "PLN-1", watch: { kind: "address", id: "MON-1", ends: null }, cause: "closed",
+              due_at: iso(NOW - 5000), recipients: ["alice"], offered: ["keep", "stop"] };
+  const make = (questions) => {
+    const w = world({ following: following(questions),
+                      actionPlans: { planRead: () => ({ ok: true, project: "PRJ-1" }) } });
+    w.member("alice"); w.bundle("PRJ-1", "project"); w.join("PRJ-1", "alice"); w.bundle("PLN-1");
+    return w;
+  };
+  const f = make([q]).feed("alice");
+  assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
+  const it = byId(f)["OBLIGATION::watch-keep-or-stop::LNK-1"];
+  assert.ok(it, "the fake's question reached action-producers R10 and the mint accepted it");
+  assert.deepEqual([it.class, it.disposition.available, it.disposition.instead], ["OBLIGATION", false, "watchanswer"]);
+  assert.equal(it.options[0] && it.options[0].id, "watchanswer", "its door leads its options (action-producers R11)");
+  assert.ok(asked.includes("member:alice"));
+  // negative control: answering no question, the same feed carries none
+  const g = make([]).feed("alice");
+  assert.equal(g.ok, true);
+  assert.equal(g.items.filter((i) => i.kind === "watch-keep-or-stop").length, 0);
 });
