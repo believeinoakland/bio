@@ -40,7 +40,7 @@ import { docketOf } from "../docket/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          LENS_CLOSING_SENTENCES, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
-import { caseFilePath, calculationsOf, timelineOf } from "../case-grammar/index.mjs";
+import { caseFilePath, calculationsOf, timelineOf, signedCitations } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { COPY_CLEANED_LABEL } from "../case-carriage/index.mjs";
 import { rowOf } from "./checks.mjs";
@@ -1134,8 +1134,11 @@ export class PublicRead {
              /* D-712: THE SIGNED CASE DOCUMENT, SERVED. `caseEditionState` builds `document` for exactly this read (the
                 ratify path and the public read must not be able to disagree), and this return picks its fields by
                 name (IC-22), so it names it. NULL UNTIL RATIFIED, never a partial; null on the loose branch. */
+             /* R13 (T46; N906): beside the signed text, the versions its citations rest on as signed
+                (`case-grammar.signedCitations`): a document older than `/4` signed none, and says so, never filled. */
              document: docWithheld ? { withheld: true, doc_sha: state.document.doc_sha ?? null, detail: WITHHELD_SENTENCE }
-                                   : (state.document ?? null),
+                                   : state.document ? { ...state.document, citations: signedCitations(state.document.text) }
+                                   : null,
              /* IC-22, 2026-08-05 (UI-40): `opened` IS NOT PUBLISHED HERE. It was
                 the instant the case edition was opened, and NOTHING read it —
                 re-measured across the whole repository rather than inherited

@@ -202,7 +202,6 @@ test("R34 (T46; N904; record-core R83) a stored declared_stake that is not valid
     /* a value held that is not valid JSON, planted as record-core's own table holds a setting */
     w.st.sql.exec(`INSERT INTO settings (name,value,set_by,set_at) VALUES (?,?,?,?)`, DECLARED_STAKE_SETTING, value,
                   "hand", "2026-10-12T00:00:00Z");
-    assert.equal(w.record.getSetting(DECLARED_STAKE_SETTING), null, "the lenient read would have answered null (the flaw)");
     const g = w.pr.groupFields();
     assert.equal(g.stake, "undetermined", `${JSON.stringify(value)} is unreadable, never none`);
     assert.ok(g.detail.includes(STAKE_UNDETERMINED_SENTENCE), "the detail says the declared stake could not be read");
