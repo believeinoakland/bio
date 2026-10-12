@@ -27,7 +27,9 @@ No generated artifact was staled by a file I own beyond the plane bundle every m
 - Users (op-declarations, answer-envelope, store-door, control-plane, plane, `migrate-released`, newgroup): mine 628 tests / 607 pass / 21 fail and 54 / 51 / 0; `tranche/T45`: 628 / 608 / 20 and 54 / 51 / 0; the one difference is item 2 above.
 - `checks/format.mjs`: 153 modules, 152 requirements files; 0 failures. `checks/architecture.mjs … instance-setup`: 23 product files, 93 relative imports; 0 failures. `checks/coverage.mjs … instance-setup`: 60 of 60 live requirement ids named by a test; 0 failures. `checks/ownership.mjs … instance-setup tranche/T45`: 0 failures.
 
-Size (session_011YqoovvgNFrHFrgg5CJgkT): test runs 9, module lines 3447
+**After B4 (K2891: op-grades and op-declarations merged; tranche/T45 merged in).** `declaredstakeset` is declared (op-declarations `t45.mjs`, `admin`), so item 1 above is cleared. Module tests: 147/147. op-declarations, op-grades and plane `door.test.mjs`: 213 tests, 212 pass, 1 fail, the plane pin of item 2 (owed to T45-47). format, architecture, coverage (60/60) and ownership: 0 failures.
+
+Size (session_011YqoovvgNFrHFrgg5CJgkT): test runs 11, module lines 3447
 
 ## J1 · QUESTION
 
