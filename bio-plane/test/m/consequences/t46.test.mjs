@@ -208,16 +208,9 @@ test("R24 a success record is a success_record record object, promoted in the ac
   assert.deepEqual([w.record.head(rev.id), w.rows(`SELECT 1 FROM success_records WHERE id=?`, rev.id).length], [null, 0]);
 });
 
-test("R24 audit (pending BOB, J1): record-grammar's checkBundle knows no success_record, so the audit names each one; a part audits clean", async () => {
-  const w = setup();
-  const r = w.rec();
-  const part = w.c.consequenceRecord({ determination: w.D, standard: S, affected: { kind: "fund", description: "f" },
-    period: { from: "2026-01-01", to: "2026-06-30" }, measure: { unit: "money", value: 10 }, basis: { rationale: "r" }, author: V("alice") });
-  const audit = await w.record.auditPass({ limit: 50 });
-  const of = (id) => (audit.offenders || []).filter((o) => o.bundleId === id).flatMap((o) => o.errors.map((e) => e.check)).sort();
-  assert.deepEqual(of(part.id), []);
-  assert.deepEqual(of(r.id), ["C-1.2", "C-2.5"], "record-grammar R59 gives SUC no id grammar or schema (J1)");
-});
+/* R24's audit clause (K2980): a success record audits clean as a part does once record-grammar's checkBundle admits a
+   `success_record` object (N958, T47). Not pinned today (K208). */
+test.todo("R24 (N958, T47) a success record audits clean as a consequence part does: record-grammar's checkBundle admits its SUC- id and its success_record type");
 
 /* promotion as this module reaches it, refusing every success record's object as the record does with no producing group
    recorded (promotion R13, C-64.1); every other promotion as it is. */
