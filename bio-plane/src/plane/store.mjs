@@ -80,6 +80,7 @@ import { contentOf, contentOps } from "../content/index.mjs";
 import { retrievalOf, retrievalRoutes } from "../retrieval/index.mjs";
 import { queueOf, Queue } from "../queue/index.mjs";
 import { queueProducersOf } from "../queue-producers/index.mjs";
+import { actionProducersOf } from "../action-producers/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps } from "../wizard-scripts/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
@@ -457,6 +458,12 @@ export class Store extends DurableObject {
        days). */
     const queueDeps = { env, filingTemplates, localFacts, docket, caseImport, noticeProducers, publishSchedule,
                         investigation: investigationOf(ctx), actionHolds, following: followingOf(ctx), planWork: planWorkOf(ctx) };
+    /* R39 (T45; K2781 (1), K2888): action-producers, the action layer's to-dos moved from queue-producers (its R1–R12),
+       the one instance per storage, built here with the plane's own instances it reads, before queue-producers'
+       factory reaches it (a factory keeps the first instance per storage), so none is built bare. It registers
+       nothing and holds no table. */
+    actionProducersOf(ctx, { actions: actionsOf(ctx), actionHolds, actionClocks: actionClocksOf(ctx), escalation: escalationOf(ctx),
+      actionPlans: actionPlansOf(ctx), planWork: planWorkOf(ctx), filingTemplates, localFacts, following: followingOf(ctx) });
     const queueProducers = queueProducersOf(ctx, Object.fromEntries(
       Queue.PRODUCER_DEPS.filter((k) => queueDeps[k] !== undefined).map((k) => [k, queueDeps[k]])));
     queueOf(ctx, { ...queueDeps, producers: queueProducers }).migrate();

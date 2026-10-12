@@ -331,3 +331,17 @@ test("R39 (K2834): case-account's advocacy check and its list are routed over th
   const machine = await viaDoor("/advocacycheck?project=PROJ-2026-0009-none&author=token:ai&viewer=member:ann", { sentences, author: "member:ann" });
   assert.equal(machine.result.reason, "MACHINE_CANNOT_CHECK_ADVOCACY", JSON.stringify(machine));
 });
+
+import { actionProducersOf } from "../../../src/action-producers/index.mjs";
+
+test("R39 (K2888; action-producers R13): action-producers is built at start over the plane's own instances, before queue-producers reaches it: its read asks the plane's one action-holds, and every producer answers with none failed", async () => {
+  const x = await store();
+  const h = actionHoldsOf(x.ctx), was = h.holdsDue.bind(h), asked = [];
+  h.holdsDue = (...a) => { asked.push(a); return was(...a); };
+  const p = actionProducersOf(x.ctx);
+  const r = p.actionItems({ member: "member:ann", viewer: "member:ann" });
+  assert.deepEqual(r.facts.failed, [], JSON.stringify(r.facts.failed));
+  assert.ok(asked.length > 0, "the plane's action-holds instance was read");
+  /* control: a later caller's own deps change nothing; the one instance per storage is the plane's */
+  assert.equal(actionProducersOf(x.ctx, { actionHolds: { holdsDue: () => { throw new Error("not the plane's"); } } }), p);
+});
