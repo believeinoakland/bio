@@ -29,3 +29,7 @@
 - Checks: `format` 0 failures; `architecture` bundler 0 failures; `coverage` bundler 31 of 31 live ids, 0 failures; `ownership` bundler against `tranche/T46`, 0 failures (re-run after the commit).
 
 Size (session_01SHEYtEvhTCnEvXN1xWJ1iY): test runs 4, module lines 3435
+
+## J1 · REPORT
+
+The 0.82.0 cut (dist/cut-0.82.0 @ 985fbefc88) tracks agent-runner/node_modules and file-scanner/node_modules as symlinks (mode 120000) to absolute paths (/home/user/bio/agent-runner/node_modules, /home/user/bio/file-scanner/node_modules). .gitignore's node_modules/ matches directories only, so it does not ignore them. Merged into tranche/T46, they point at themselves on a /home/user/bio checkout, and into another tree anywhere else. Either way npm ci in those members cannot install, and fleetbundles' byte guard needs those installs (K1980). They are in other modules' paths and the cut is yours, so I touched neither. Suggest git rm --cached on both, before or in the cut's merge. Details: build/jobs/T46/bundler.md, Found 1.
