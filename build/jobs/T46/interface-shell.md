@@ -1,6 +1,6 @@
 # interface-shell (T46)
 
-**Status** · session_01XVWdr7BFN9RvWdPQ9aPzuZ · depth 2 · COMPLETE · handled B7
+**Status** · session_01XVWdr7BFN9RvWdPQ9aPzuZ · depth 2 · COMPLETE · handled B9
 
 ## J1 · REPORT
 
@@ -63,3 +63,31 @@ Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 22, module lines 1098 (src; t
 ## J4 · COMPLETE
 
 B5/B6 (K3002) applied: R11's ground rule and reasonField; R21's parts, origin, filled refusal words, refusal functions, {refuse, fills}, cs.value checked, cs.digest, cs.now, no cs.open. Tests 60/60; format, architecture, coverage, ownership 0 failures. See the record's 'Re-opened by B5, B6'. Merge after setup-page (R31) and op-declarations (R50) as before.
+
+## Re-opened by B8 (K3009)
+
+**Applied.** (1) An act's `done` that answers a promise is awaited before the reads named in `rereads` (or all). (2) After an act succeeds, every password field in the page (`input[type="password"]`) is cleared before `done` and any redraw, so no secret is restored by a redraw; a refused act keeps what was typed (R13). Harness: a plane answer given as a function may answer a promise.
+
+**R21 wording for BOB to state (K3009):** "After an act succeeds the shell clears every password field the screen drew, before the act's `done` and any redraw; an act's `done` that answers a promise is awaited before the reads named in `rereads` (all when absent)."
+
+**Tests and checks:** `node --test bio-plane/test/m/interface-shell/`: tests 61, pass 61, fail 0 (new: R21 K3009, with its controls: a refused act keeps the typed password, a plain field is kept; and, run once with the `await` removed, the test fails). The screen modules' tests over this shell: screens-settings (merged, on the tranche) 51/51; screens-intake 42/42, screens-daily 45/45, screens-inquiry 44/44 (each its job branch's head in a scratch worktree over this branch). `format` 0 failures; `architecture … interface-shell` 13 product files, 0 failures; `coverage … interface-shell` 26 of 26; `ownership … interface-shell tranche/T46` 0 failures.
+
+Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 27, module lines 1102 (src)
+
+## J5 · COMPLETE
+
+B8 (K3009) applied: done awaited before re-reads; every password field cleared after a successful act (refused acts keep typed text). R21 wording proposed in the record's 'Re-opened by B8'. Tests 61/61; screen modules over this shell: settings 51/51 (tranche), intake 42/42, daily 45/45, inquiry 44/44 (branch heads). format, architecture, coverage, ownership 0 failures.
+
+## Re-opened by B9 (K3011)
+
+**Applied.** (1) An answer of type `application/x-ndjson` (`ask`, `agent-worker` R54) is read as its list of parsed events, the answer the last, and handed so to `done` and `cs.call`; a stream whose last event is `ok: false`, or an HTTP error, is a refusal beside the act; a line that does not parse is no answer. (2) An op `OPS` declares `mutating: false` carries no weight mark and runs on press, whatever `op-grades`' tables hold (`index.mjs`, before the grades).
+
+**Found elsewhere (REPORT):** `frontier`, a registry act of `finder` and a read, is not in `op-declarations`' `SESSION_OPS.member`, so R12 keeps it off a member's Find screen (absent, as R12 requires). Either its session sets lack it, or screens-daily's R4 `frontier` cannot be drawn for members; BOB's to route.
+
+**Tests and checks:** interface-shell 63/63 (new: R21 K3011 streamed answer, with a JSON control and a refusing stream; R11 K3011 reads run on press, with a mutating control). Screen modules on the tranche over this branch: screens-daily and screens-settings together 96/96. `format` 0; `architecture … interface-shell` 0; `coverage` 26 of 26; `ownership` 0.
+
+Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 32, module lines 1118 (src)
+
+## J6 · COMPLETE
+
+B9 (K3011) applied: ndjson answers reach done and cs.call as event lists (answer last; a refusing last event is a refusal); reads (OPS mutating: false) run on press with no weight mark. Tests 63/63; screens-daily + screens-settings on the tranche 96/96; checks 0 failures. Found: frontier (finder's registry act, a read) is not in SESSION_OPS.member, so R12 hides it from members; yours to route. See 'Re-opened by B9'.

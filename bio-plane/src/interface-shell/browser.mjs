@@ -75,6 +75,18 @@ export function shellProgram(D, SCREENS, win) {
     if (r.status === 401 && !own) { gone(); return { kind: "silent" }; }
     if (req.bytes) return { kind: "response", r };
     let j = null;
+    const type = r.headers && typeof r.headers.get === "function" ? String(r.headers.get("content-type") || "") : "";
+    if (/ndjson/i.test(type)) {
+      /* R21 (K3011): a streamed answer (application/x-ndjson, `agent-worker` R54) is its list of parsed events, the
+         answer the last; a line that does not parse is no answer */
+      let events = null;
+      try { events = String(await r.text()).split("\n").filter((l) => l.trim()).map((l) => JSON.parse(l)); } catch { events = null; }
+      if (!events || !events.length) return { kind: "silent" };
+      const last = events[events.length - 1];
+      if (!r.ok || (last && typeof last === "object" && last.ok === false))
+        return { kind: "refused", code: String((last && (last.code || last.reason)) || r.status), translation: last && typeof last.translation === "string" ? last.translation : null, fields: last || {} };
+      return { kind: "ok", value: events, json: events };
+    }
     try { j = await r.json(); } catch { j = null; }
     const refused = (o) => ({ kind: "refused", code: String(o.code || o.reason || r.status), translation: typeof o.translation === "string" ? o.translation : null, fields: o });
     if (j && typeof j === "object" && j.ok === false) return refused(j);
@@ -608,7 +620,11 @@ export function shellProgram(D, SCREENS, win) {
       return besideAct(ai, refusalHtml(words));
     }
     let after = null;
-    try { after = d.spec.done ? d.spec.done(inst.view, a.value, kit(inst)) : null; } catch { after = null; }
+    /* R21 (K3009): no secret survives a successful act: every password field its screen drew is cleared, so no redraw
+       restores one */
+    for (const el of doc.getElementById("cs-root").querySelectorAll('input[type="password"]')) el.value = "";
+    /* R21 (K3009): a `done` that answers a promise is awaited before the re-reads, so a follow-up act does not race them */
+    try { after = d.spec.done ? await d.spec.done(inst.view, a.value, kit(inst)) : null; } catch { after = null; }
     if (after && after.stay) return draw();
     if (inst === MAIN || inst === DOCKI) readAll(inst, d.spec.rereads || null);
   }

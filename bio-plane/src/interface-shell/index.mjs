@@ -151,7 +151,8 @@ function dataOf(screens) {
     /* R11 (K3002): the weight from `RUNGS` (an alias carries its op's); an act that can never be undone weighs
        Irreversible (DEC-143, `op-grades` R21); an op in `RUNG_ABSENT` under a ground other than `undetermined` is not an
        act on the record: no weight (`none`), run on press; an undetermined or unnamed op is reasoned in the browser (DEC-87) */
-    rungs: pick((op) => (IRREVERSIBLE_WEIGHT.includes(op) ? "irreversible"
+    /* R11 (K3011): a read (`OPS` declares it not mutating) carries no weight and runs on press, whatever the grades hold */
+    rungs: pick((op) => (OPS[op] && OPS[op].mutating === false ? "none" : IRREVERSIBLE_WEIGHT.includes(op) ? "irreversible"
       : Object.hasOwn(RUNG_ABSENT, op) ? (RUNG_ABSENT[op] && RUNG_ABSENT[op].ground !== "undetermined" ? "none" : undefined)
         : Object.hasOwn(RUNGS, op) ? RUNGS[op] : undefined)),
     paths: PATHS, placeScreens: PLACE_SCREENS, refScreens: REF_SCREENS,
