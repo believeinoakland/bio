@@ -29,3 +29,7 @@ Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and 
 ## B2 · CHANGE
 
 K2880, from WIZARD-SCRIPTS #8 J1: listing T45's labelled machine drafts in MACHINE_DRAFTS (plane R19) is yours, by the op names op-declarations (T45-45) declares; wizard-scripts accepts each once declared. Nothing to merge now.
+
+## B3 · CHANGE
+
+K2882: queue (T45-43) and answer-envelope (T45-49) are merged into tranche/T45. Merge tranche/T45 into your branch when convenient.
