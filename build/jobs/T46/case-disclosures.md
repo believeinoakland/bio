@@ -52,3 +52,7 @@ Separately (REPORT, not mine to fix): `case-account` R6 spells a leg cite 1-base
 **Generated artifacts.** None made stale: no generated artifact in the manifest is built from `case-disclosures`.
 
 Size (session_016tFh3EWvxLbakE52DL24QM): test runs 6, module lines 2418
+
+## J2 · COMPLETE
+
+T46-25 applied: R30's accountJudged translates case-account's {holdings} into checkAccount's cited at one site (checkerCited). case-disclosures tests 97/97; case-account 32/32; case-authoring 204/204; format, architecture, coverage (31/31), ownership 0 failures; run.mjs architecture 0 failures. Record: build/jobs/T46/case-disclosures.md. Ready to merge; I will merge tranche/T46 on your CHANGE after case-checker merges.
