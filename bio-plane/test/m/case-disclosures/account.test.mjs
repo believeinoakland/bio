@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
-import { CASE_DISCLOSURE_CHECKS, ACCOUNT_ARMS } from "../../../src/case-disclosures/index.mjs";
+import { CASE_DISCLOSURE_CHECKS, ACCOUNT_ARMS, checkerCited } from "../../../src/case-disclosures/index.mjs";
 import { INQUIRY_BIAS_CHECKS } from "../../../src/inquiry/checks.mjs";
 import { CASE_DOCUMENT_FORMAT, accountLines, accountOf, biasApplicationsLines, biasApplicationsOf } from "../../../src/case-grammar/index.mjs";
 
@@ -58,7 +58,7 @@ test("R30: accountJudged hands case-checker's checkAccount every sentence of the
   assert.equal(ck.calls.length, 1);
   assert.deepEqual(ck.calls[0].account.map((x) => [x.ord, x.kind, x.text]),
     [...ACCOUNT, ...STATEMENTS].map((x) => [x.ord, x.kind, x.text]), "the account and the four statements, every sentence");
-  assert.deepEqual(ck.calls[0].cited, { holdings: [] });
+  assert.deepEqual(ck.calls[0].cited, [], "case-account's {holdings: []} handed on in checkAccount's shape (T46)");
   assert.deepEqual(ck.calls[0].conclusions, [{ finding: Q, claim: "the award followed the minutes" }]);
   assert.deepEqual([ck.calls[0].printed, r.printed], [["S-scrutiny"], ["S-scrutiny"]]);
   assert.deepEqual(w.lens.asked, [{ statement: "S-scrutiny", scope: LENS, viewer: V("alice") }]);
@@ -273,7 +273,7 @@ test("R30 over the real case-checker.checkAccount (its R24, K2531): the five arm
   w.lens.byScope.set(LENS.id, new Set(["S1"]));
   const PASSAGE = "The lease was approved without a vote on March 3, 2024, for $4,200, by Jane Doe of the Parks Board.";
   const P1 = { kind: "passage", ref: "P1", ord: null };
-  const cited = [{ ...P1, text: PASSAGE }];
+  const cited = { holdings: [{ address: "passage:P1", quote: PASSAGE }], rules: [], looks: [] };   /* case-account R6's shape */
   const row = (ord, text, cites, more = {}) => ({ ord, text, cites, kind: "account", began_as: "member", ...more });
   const account = [
     row(1, "The lease was approved without a vote.", [P1]),
@@ -292,4 +292,54 @@ test("R30 over the real case-checker.checkAccount (its R24, K2531): the five arm
   /* negative control: the account that holds, with S7 printed */
   w.lens.byScope.set(LENS.id, new Set(["S1", "S7"]));
   assert.deepEqual(w.cd.accountJudged({ account: [account[0], account[3]], statements, cited, lens: LENS, conclusions: [], viewer: V("alice") }).refusals, []);
+});
+
+test("R30 (T46; N901): cited arrives as case-account R6 builds it, answers R33's {holdings, rules, looks}, and is translated at this one site into checkAccount's cited (case-checker R24): one {kind, ref, ord?, text} per holding, kind and ref read from its address kind:ref, a leg's ord from the #ord after it, text its quote", () => {
+  const IMP = "imported:" + "a".repeat(64) + "/INQ-2026-0042-x";
+  const cited = { holdings: [
+    { address: `finding:${Q}`, quote: "the finding's text" },
+    { address: `leg:${Q}#2`, quote: '{"ord":1}' },
+    { address: "passage:CNT-2026-0001", quote: "a passage" },
+    { address: `material:${DOC}`, quote: "the material's text" },
+    { address: `finding:${IMP}`, quote: "an imported finding" },
+    { address: "finding:INQ-2026-0009-q#3", quote: "a # kept off a leg" },
+  ], rules: [{ address: "rule:1", quote: "a rule" }], looks: [] };
+  const want = [
+    { kind: "finding", ref: Q, text: "the finding's text" },
+    { kind: "leg", ref: Q, ord: 2, text: '{"ord":1}' },
+    { kind: "passage", ref: "CNT-2026-0001", text: "a passage" },
+    { kind: "material", ref: DOC, text: "the material's text" },
+    { kind: "finding", ref: IMP, text: "an imported finding" },
+    { kind: "finding", ref: "INQ-2026-0009-q#3", text: "a # kept off a leg" },
+  ];
+  assert.deepEqual(checkerCited(cited), want);
+  const { w, ck } = setup([]);
+  judge(w, { cited });
+  assert.deepEqual(ck.calls[0].cited, want, "accountJudged hands checkAccount the translation");
+  /* a holding no sentence can cite is not handed on: no kind of case-grammar R23's, no ref, a leg without its ord, no address */
+  assert.deepEqual(checkerCited({ holdings: [{ address: "rule:1", quote: "r" }, { address: "finding:", quote: "x" },
+    { address: `leg:${Q}`, quote: "x" }, { address: "INQ-2026-0001-q", quote: "x" }, { quote: "x" }, null] }), []);
+  /* negative control: any other cited is handed on as given, for checkAccount to judge */
+  for (const other of [null, {}, [{ kind: "passage", ref: "P1", text: "t" }]]) assert.equal(checkerCited(other), other);
+});
+
+test("R30 (T46; N901; K2829) control, over the real case-checker.checkAccount: an account sentence citing a held finding, its cited read as case-account R6 builds it (address finding:<id>, quote the finding's live text), passes when the finding's words hold its facts; the same sentence whose cite was not read (no holding) answers ACCOUNT_SENTENCE_UNSUPPORTED", () => {
+  const w = world(); w.member("alice");                      /* the real case-checker */
+  w.doc(DOC); w.finding(Q, [{ target: DOC }]);
+  const text = w.record.readFile(Q, "bundle.md").text;
+  assert.ok(text.includes("the award followed the minutes"));
+  const account = [{ ord: 1, text: 'The finding reads "the award followed the minutes".', kind: "account",
+                     cites: [{ kind: "finding", ref: Q, ord: null }], began_as: "member" }];
+  const held = { holdings: [{ address: `finding:${Q}`, quote: text }], rules: [], looks: [] };
+  const conclusions = [{ finding: Q, claim: "the award followed the minutes", legs: [] }];
+  const ok = w.cd.accountJudged({ account, cited: held, lens: LENS, conclusions, viewer: V("alice") });
+  assert.deepEqual(ok.refusals, [], "the cite read, its words holding the quotation: nothing refused");
+  const unread = w.cd.accountJudged({ account, cited: { holdings: [], rules: [], looks: [] }, lens: LENS, conclusions,
+                                      viewer: V("alice") });
+  assert.deepEqual(unread.refusals.map((x) => [x.reason, x.sentences.map((s) => s.ord)]), [["ACCOUNT_SENTENCE_UNSUPPORTED", [1]]]);
+  refused(unread.refusals[0], "ACCOUNT_SENTENCE_UNSUPPORTED");
+  /* the quotation not in what it cites is a fact not held: the cite is read, the words judged */
+  const other = w.cd.accountJudged({ account: [{ ...account[0], text: 'The finding reads "the award broke the rules".' }],
+    cited: held, lens: LENS, conclusions, viewer: V("alice") });
+  assert.deepEqual(other.refusals.map((x) => x.reason), ["ACCOUNT_FACT_NOT_IN_CITED"]);
 });
