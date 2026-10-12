@@ -387,8 +387,7 @@ section("R2–R7 · each malformed request refused by its code, in order, with n
     ["R6", "(T38) a member's own subscription, retired (credentials R22)", { ...base, account: { ...ACCOUNTS, kind: "subscription" } }, 400, "BAD_ACCOUNT"],
     ["R6", "(T38) a sign-in carrying a secret", { ...base, account: { ...SIGNIN, secret: CLAUDE_TOKEN } }, 400, "BAD_ACCOUNT"],
     ["R6", "(T38) a sign-in carrying an empty secret", { ...base, account: { ...SIGNIN, secret: "" } }, 400, "BAD_ACCOUNT"],
-    ["R6", "(T38) a sign-in with suggestions true", { ...base, account: { ...SIGNIN, suggestions: true } }, 400, "BAD_ACCOUNT"],
-    ["R6", "(T38) a sign-in with suggestions not a boolean", { ...base, account: { ...SIGNIN, suggestions: "no" } }, 400, "BAD_ACCOUNT"],
+    ["R6", "(T46) a sign-in with suggestions not a boolean", { ...base, account: { ...SIGNIN, suggestions: "no" } }, 400, "BAD_ACCOUNT"],
     ["R6", "(T38) a sign-in at the group level (the group's is an API key only)", { ...base, account: { ...SIGNIN, level: "group" } }, 400, "BAD_ACCOUNT"],
     ["R6", "(T38) a sign-in naming no member", { ...base, account: { kind: "signin", level: "member", suggestions: false } }, 400, "BAD_ACCOUNT"],
     ["R6", "(T38) a sign-in naming an empty member", { ...base, account: { ...SIGNIN, member: "" } }, 400, "BAD_ACCOUNT"],
@@ -631,8 +630,8 @@ section("agent-harness R1 · the rows, their declared edges, and nextStep held t
 section("agent-harness R2 · gate-mode is first; an undeployed mode closes mode-not-deployed before anything is spent");
 {
   /* skillsequencing's agent-worker share (T17 convert): every held mode not deployed, an ABSENT mode and a mis-spelled
-     one each close mode-not-deployed; plan (R53) is held and not deployed. */
-  for (const mode of ["investigate", "extract", "plan", "sorcery", null, "", "Check"]) {
+     one each close mode-not-deployed; plan (R53) is deployed since T46 (Bob's K2892), so it is not among them. */
+  for (const mode of ["investigate", "extract", "sorcery", null, "", "Check"]) {
     await reset(mf, { mode });
     const r = await runOp(mf, { ...base, judgements: J() });
     const st = await planeState(mf);
@@ -645,10 +644,10 @@ section("agent-harness R2 · gate-mode is first; an undeployed mode closes mode-
       [true, true]);
     t(`agent-harness R2: …and the close was written (${mode})`, st.ended?.bound, "mode-not-deployed");
   }
-  t("agent-harness R2: the first step is gate-mode, and check is deployed while investigate, extract and plan are not",
+  t("agent-harness R2, R53 (T46): the first step is gate-mode, and check and plan are deployed while investigate and extract are not",
     /* read with `?.`: a deleted row FAILS this arm instead of killing the suite (found by harness.control E2, T21) */
     [FIRST_STEP, MODES.check?.deployed, MODES.investigate?.deployed, MODES.extract?.deployed, MODES.plan?.deployed],
-    ["gate-mode", true, false, false, false]);
+    ["gate-mode", true, false, false, true]);
   t("agent-harness R2 (skillsequencing): MODES is exactly the recorded set, the one deployment order's members",
     Object.keys(MODES), DEPLOYMENT_SEQUENCE.order);
 }
@@ -1083,6 +1082,10 @@ section("R29 · claude_account and principal");
   const sb = await runOp(mf, { ...base, judgements: J(), account: { kind: "signin", level: "member", member: MEMBER } });
   t("R6 (T38): a sign-in with no suggestions field is carried, the switch read as off (R56)",
     [sb.status, sb.out.claude_account?.kind], [200, "signin"]);
+  await reset(mf);
+  const st = await runOp(mf, { ...base, judgements: J(), account: { ...SIGNIN, suggestions: true } });
+  t("R6 (T46): a sign-in with suggestions true is carried (the sign-in's own switch, no longer refused)",
+    [st.status, st.out.claude_account?.kind], [200, "signin"]);
   await reset(mf, { payer: "member:sam" });
   const ss = await runOp(mf, { ...base, judgements: J(), account: SIGNIN });
   t("R10 (T38): Ruth's sign-in on Sam's run is refused as any account serving another member's act",
@@ -1391,8 +1394,8 @@ section("R42 · enabling a mode is an edit to MODES, never a request parameter")
   await reset(mf, { mode: "investigate" });
   const r = await runOp(mf, { ...base, mode: "check", modes: { investigate: { deployed: true } }, deployed: true, judgements: J() });
   t("R42: no request field enables an undeployed mode", r.out.ended?.bound, "mode-not-deployed");
-  t("R42, R53: MODES holds which modes are deployed: plan is held and not deployed", Object.fromEntries(Object.entries(MODES).map(([k, v]) => [k, v.deployed])),
-    { check: true, investigate: false, extract: false, plan: false });
+  t("R42, R53 (T46): MODES holds which modes are deployed: check, and plan by its own reviewed act", Object.fromEntries(Object.entries(MODES).map(([k, v]) => [k, v.deployed])),
+    { check: true, investigate: false, extract: false, plan: true });
 }
 
 section("R43 · a refusal reaching the member is never reworded");
@@ -1420,13 +1423,15 @@ section("R44 · its copies equal their sources, both ways");
     [Object.keys(REPORTING_LEVEL), LEVELS.map((l) => REPORTING_LEVEL[l] === reportsAs(l))], [LEVELS, LEVELS.map(() => true)]);
   t("R44: NAMESPACES is the plane's (the member's refusal and the real plane's list the same set)",
     (await runOp(mf, { run_id: "r", store: "x", credential: AIK })).out.namespaces, planeNamespaces);
-  /* R44 as R53 reads it: only the order's first member is deployed, and `plan` once R58 and R48 are met (it is not in
-     T18, run-rules agent-harness R2): MODES' deployed set is run-rules' DEPLOYED_MODES, both ways. */
-  t("R44, R53: MODES' keys are DEPLOYMENT_SEQUENCE.order, and its deployed modes are run-rules' DEPLOYED_MODES: the first member only",
-    [Object.keys(MODES), Object.keys(MODES).filter((k) => MODES[k].deployed), [...DEPLOYED_MODES]],
-    [DEPLOYMENT_SEQUENCE.order, [DEPLOYMENT_SEQUENCE.order[0]], [DEPLOYMENT_SEQUENCE.order[0]]]);
-  t("R44, R53: plan is the order's last member and deploys apart, not deployed with MODES.plan",
-    [DEPLOYMENT_SEQUENCE.order.at(-1), DEPLOYMENT_SEQUENCE.deploys_apart?.plan?.deployed, MODES.plan?.deployed], ["plan", false, false]);
+  /* R44 as R53 reads it since T46 (Bob's K2892; run-rules R14): the order's first member and plan are deployed, by
+     plan's own reviewed act: MODES' deployed set is run-rules' DEPLOYED_MODES among the order's modes, both ways
+     (DEPLOYED_MODES also names ask and draft, which are not run modes). */
+  t("R44, R53 (T46): MODES' keys are DEPLOYMENT_SEQUENCE.order, and its deployed modes are run-rules' DEPLOYED_MODES' run modes: check and plan",
+    [Object.keys(MODES), Object.keys(MODES).filter((k) => MODES[k].deployed),
+     DEPLOYMENT_SEQUENCE.order.filter((m) => DEPLOYED_MODES.includes(m))],
+    [DEPLOYMENT_SEQUENCE.order, ["check", "plan"], ["check", "plan"]]);
+  t("R44, R53 (T46): plan is the order's last member and deploys apart, its flag and MODES.plan set together",
+    [DEPLOYMENT_SEQUENCE.order.at(-1), DEPLOYMENT_SEQUENCE.deploys_apart?.plan?.deployed, MODES.plan?.deployed], ["plan", true, true]);
   t("R44: the mode-not-deployed ending is one of the plane's RUN_ENDINGS", Object.keys(RUN_ENDINGS).includes("mode-not-deployed"), true);
 }
 

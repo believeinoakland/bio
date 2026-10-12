@@ -218,11 +218,12 @@ const draftOpsOk = (r) => r.plane.filter((c) => c.op !== "agentpack" && !ASK_OPS
 
 section("R76 · POST /draft for an action: the three tasks, and their refusals in R59's order before any model call");
 {
-  t("R76: DRAFT_OPS gains exactly textcheck, infractiondraft and bearingdraft, after R59's and R68's",
-    DRAFT_OPS, ["writinghelp", "groupdescriptiondraft", "translationdraft", "textcheck", "infractiondraft", "bearingdraft"]);
+  t("R76: DRAFT_OPS gains exactly textcheck, infractiondraft, bearingdraft and (T46) statusreportdraft, after R59's and R68's",
+    DRAFT_OPS, ["writinghelp", "groupdescriptiondraft", "translationdraft", "textcheck", "infractiondraft", "bearingdraft",
+                "statusreportdraft"]);
   t("R76: the tasks, the reads_as values, the audiences and the bearings are the requirement's",
     [ACTION_DRAFT_OPS, READS_AS, AUDIENCES, BEARINGS],
-    [["textcheck", "infractiondraft", "bearingdraft"], ["assertion", "position", "own_benefit_ask", "staff_named"],
+    [["textcheck", "infractiondraft", "bearingdraft", "statusreportdraft"], ["assertion", "position", "own_benefit_ask", "staff_named"],
      ["violating_party", "members", "oversight", "public", "broad"], ["new_evidence", "disputed_without_evidence", "not_addressed"]]);
 
   let r = await drive("draft", draftBody(TC()), { noPlane: true });

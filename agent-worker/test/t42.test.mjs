@@ -35,7 +35,7 @@ function planeStub() {
   const calls = [];
   return { calls, binding: { fetch: async (url) => { calls.push(String(url)); return Response.json({ ok: false }, { status: 500 }); } } };
 }
-/** A recording `RUNNER` namespace: a picture is never relayed to a sign-in (R72; agent-model R14). */
+/** A recording `RUNNER` namespace: an API-key account never reaches it (R72); a sign-in's relay of the picture is t46's (T46). */
 function runnerStub() {
   const calls = [];
   return { calls, binding: { idFromName: (n) => ({ n }), get: (id) => ({ fetch: async (u) => { calls.push([id.n, String(u)]); return Response.json({}); } }) } };
@@ -179,8 +179,9 @@ section("R72 · the refusals, before any model call, in order");
   for (const [label, account] of [["the member's own sign-in", { kind: "signin", level: "member", member: MEMBER, suggestions: false }],
                                   ["a project's sign-in (R71)", { kind: "signin", level: "project", project: "PRJ-1", member: MEMBER, suggestions: false }]]) {
     const x = await transcribe(body({ account }));
-    t(`R72: ${label}: 409 TRANSCRIBE_NEEDS_API_KEY, nothing called, nothing relayed to a runner`,
-      [codeOf(x), nothingCalled(x)], [[409, "TRANSCRIBE_NEEDS_API_KEY"], [0, 0, 0]]);
+    /* T46 (N852): TRANSCRIBE_NEEDS_API_KEY is no longer answered; the sign-in's relay of the picture is t46's to show. */
+    t(`R72 (T46): ${label} is no longer refused TRANSCRIBE_NEEDS_API_KEY, and no plane call is made`,
+      [x.out?.code === "TRANSCRIBE_NEEDS_API_KEY", x.text.includes("TRANSCRIBE_NEEDS_API_KEY"), x.plane.length], [false, false, 0]);
   }
   for (const [label, account] of [["the group's API key", { ...ACCOUNT, level: "group" }],
                                   ["a project's API key (R71)", { ...ACCOUNT, level: "project", project: "PRJ-1" }]]) {
@@ -192,7 +193,7 @@ section("R72 · the refusals, before any model call, in order");
   t("R72: BAD_SHA before BAD_PAGES", codeOf(await transcribe(body({ capture_sha: "x", pages: [] }))), [400, "BAD_SHA"]);
   t("R72: BAD_PAGES before the account", codeOf(await transcribe(body({ pages: [], account: undefined }))), [400, "BAD_PAGES"]);
   t("R72: NO_ACCOUNT before BAD_ACCOUNT's neighbours", codeOf(await transcribe(body({ account: null }))), [409, "NO_ACCOUNT"]);
-  t("R72: BAD_ACCOUNT before TRANSCRIBE_NEEDS_API_KEY", codeOf(await transcribe(body({ account: { kind: "signin", level: "member", member: MEMBER, secret: "x" } }))), [400, "BAD_ACCOUNT"]);
+  t("R72: a sign-in carrying a secret is BAD_ACCOUNT", codeOf(await transcribe(body({ account: { kind: "signin", level: "member", member: MEMBER, secret: "x" } }))), [400, "BAD_ACCOUNT"]);
   const noPlane = await transcribe(body(), { noPlane: true });
   t("R72: no PLANE binding is needed: the pages are transcribed", [noPlane.status, noPlane.out?.pages?.length], [200, 2]);
   t("R72, R35: the only binding /transcribe reads from env is RUNNER (passed to agent-model as bound)", [...new Set([...ok.keys, ...noPlane.keys])].sort(), ["RUNNER"]);

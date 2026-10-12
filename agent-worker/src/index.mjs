@@ -50,8 +50,8 @@
  * /draft` (R59) is a member's labelled draft of their own words, made the same
  * way, read only under a grant the door sends when the draft may read, and
  * checked by the door before the member sees it. `POST /transcribe` (R72–R75)
- * runs turns the same way, one conversation per page under the API key that
- * serves the member's `transcribe` act, handing the model only the page's
+ * runs turns the same way, one conversation per page under the account that
+ * serves the member's `transcribe` act (an API key or, since T46, the member's own sign-in), handing the model only the page's
  * picture the plane rendered, as a tool's result, and answers the AI's reading
  * of each page: no plane call. `POST /signin` (R66, R67)
  * relays one step of a member's own Claude sign-in to that member's own
@@ -1247,9 +1247,14 @@ async function performPlanStep(call, state, runId) {
       /* R78: a re-examination run reads, besides R51's reads, the recorded response and the procedure guide for its
          action's kind, under the same credential and the same rule: what cannot be read is UNDETERMINED in `why`. */
       if (state.origin === "reexamination") await reexaminationReads(ask, state.response, undetermined);
+      /* R51 (T46; N915; action-plans R45): the closing notes of the project's closed plans, as `op=plan`'s `closed`
+         block and `op=plans`' `closing_note` answer them, reach the model with the rest of what was read (the compose
+         row's facts) and are weighed there; this only counts them, so the trace says what the run had to weigh. */
+      const noted = (n) => (n && typeof n === "object" ? typeof n.note === "string" && n.note.trim() : typeof n === "string" && n.trim());
+      const notes = [planDoc?.closed, ...earlier.map((p) => p?.closing_note)].filter(noted).length;
       out.note = `${reads.length} read(s) answered under the run's credential, ${undetermined.length} UNDETERMINED `
                + "(refused, silent or not published) and carried into every proposal's why, never as an absence; "
-               + `${earlier.length} earlier plan(s) of the same project`
+               + `${earlier.length} earlier plan(s) of the same project, ${notes} closing note(s) of closed plans among them`
                + (state.origin === "reexamination" ? "; a re-examination after a recorded response, read with it" : "");
       out.state = { ...state, planDoc, earlier, reads, undetermined };
       return out;
@@ -1424,7 +1429,8 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
 }
 
 /* R56 (K1479, K1502, K1755) — THE SUGGESTIONS SWITCH THAT GOVERNS THE ACT, as the plane sends it beside the account
-   (`suggestions`): the member's own (credentials R25), or, for an act the group's API key serves, the group key's
+   (`suggestions`): the member's own (credentials R25; for the member's own sign-in, that sign-in's own, credentials R55,
+   T46), or, for an act the group's API key serves, the group key's
    (credentials R37; K1479: the switch belongs to whoever holds the account). Only when it is on may the pack's
    `suggestions` layer (skills R35) be loaded; off, as by default, the layer is not offered and a call naming it is refused, so DEC-27's
    clause in the layers that are loaded governs and no unprompted suggestion is offered. The pack and its version are
@@ -1494,9 +1500,10 @@ const planeRefused = (runId, store, asked) =>
  *  refused naming that field, and a member whom no account serves has no assistant, refused by name before any plane
  *  call (D-260 as K1503 reads it). The secret is read here for the call it serves and goes no further than
  *  `agent-model` (R36). (T38; N785, K2200) A `signin` account, the member's own stored sign-in (or a one-member
- *  project's, which is that member's own), is `{kind: "signin", level: "member" | "project", member,
- *  suggestions: false}` and carries no secret: one carrying a `secret`, or a `suggestions` other than `false`, is
- *  refused `BAD_ACCOUNT`. (T41; N796, K2425) Whether a sign-in may serve a standing question's AI half is
+ *  project's, which is that member's own), is `{kind: "signin", level: "member" | "project", member, suggestions}`
+ *  and carries no secret: one carrying a `secret` is refused `BAD_ACCOUNT`. (T46; N897 (3); credentials R55) Its
+ *  `suggestions` is the sign-in's own switch, honoured as a reference's is (R56): absent is off, and one that is not a
+ *  boolean is refused `BAD_ACCOUNT`. (T41; N796, K2425) Whether a sign-in may serve a standing question's AI half is
  *  `credentials`' (its R32, R55, the sign-in's `standing` use): this module refuses nothing of its own for a sign-in. */
 /** R71: a project's id as the account carries it, a short name and never a secret. */
 const PROJECT_ID_MAX = 200;
@@ -1518,13 +1525,14 @@ async function accountOf(body) {
       || (a.level === "project"
         ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX)
         : a.project !== undefined)
-      || (a.kind === "signin" && (a.secret !== undefined || (a.suggestions !== undefined && a.suggestions !== false))))
+      || (a.kind === "signin" && (a.secret !== undefined
+        || (a.suggestions !== undefined && typeof a.suggestions !== "boolean"))))
     return { refusal: refusal("BAD_ACCOUNT",
       `account is the account that serves the member's act: {kind, level, secret, member}, kind one of `
       + `${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), `
       + "and member the member whose act it serves; a project's account names its project, and no other does; a "
-      + "signin account is the member's own and carries no secret and no suggestions but false. What arrived is not "
-      + "one, and this member judges only what it is handed.",
+      + "signin account is the member's own and carries no secret, and its suggestions switch, when sent, is true or "
+      + "false. What arrived is not one, and this member judges only what it is handed.",
       400, { field: "account" }) };
   const cascade = await resolveClaudeCascade(a);
   if (!cascade.available)
@@ -1750,8 +1758,14 @@ async function handleRun(req, env) {
    that window is invisible to both. A verification must establish which build
    ANSWERED. This is how this member answers that question about itself. */
 function handleVersion(env) {
-  return json({ ok: true, name: "agent-worker", version: env.VERSION || "0.0.0", model_turns: MODEL_TURNS });
+  return json({ ok: true, name: "agent-worker", version: env.VERSION || "0.0.0", model_turns: MODEL_TURNS,
+                runner: runnerBound(env) });
 }
+
+/* R30 (T46; N897 (4)) — WHETHER THE SIGN-IN PART IS INSTALLED: the `RUNNER` Container Durable Object binding is present
+   (it names instances and reaches them, as `/signin` and a sign-in's turns use it), so `instance-setup` (its R17) can tell
+   a copy that runs a member's own sign-in from one that does not. A boolean only: nothing else of the binding is named. */
+const runnerBound = (env) => typeof env.RUNNER?.idFromName === "function" && typeof env.RUNNER?.get === "function";
 
 /* R54, R59 — what `/ask` (ask.mjs) and `/draft` (draft.mjs) use of this shell: one route to the plane, one refusal
    helper, one account judgement. */

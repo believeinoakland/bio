@@ -24,8 +24,9 @@ const OPS = join(MEMBER, "src/ops.mjs");
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
 const ARMS = [
-  { name: "a sign-in account sent a picture (TRANSCRIBE_NEEDS_API_KEY never refused)", file: TRANSCRIBE, ids: ["R72"],
-    from: `if (account.kind === "signin")\n    return refusal("TRANSCRIBE_NEEDS_API_KEY"`, to: `if (false)\n    return refusal("TRANSCRIBE_NEEDS_API_KEY"` },
+  { name: "(T46) a sign-in refused TRANSCRIBE_NEEDS_API_KEY again", file: TRANSCRIBE, ids: ["R72"],
+    from: `  const { account } = acct;\n`,
+    to: `  const { account } = acct;\n  if (account.kind === "signin") return refusal("TRANSCRIBE_NEEDS_API_KEY", "no", 409);\n` },
   { name: "capture_sha not judged", file: TRANSCRIBE, ids: ["R72"],
     from: `if (!(typeof body.capture_sha === "string" && SHA.test(body.capture_sha)))`, to: "if (false)" },
   { name: "a duplicate page taken", file: TRANSCRIBE, ids: ["R72"],

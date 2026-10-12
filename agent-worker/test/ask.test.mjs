@@ -143,7 +143,7 @@ section("R54 · refusals before any model call, each by its code, as plain JSON"
     ["(T38) a member's own subscription, retired", () => ask({ account: { ...ACCOUNT, kind: "subscription" } }), 400, "BAD_ACCOUNT"],
     ["(T38) a sign-in carrying a secret", () => ask({ account: { kind: "signin", level: "member", member: MEMBER, secret: SECRET } }), 400, "BAD_ACCOUNT"],
     ["(T38) a sign-in at the group level", () => ask({ account: { kind: "signin", level: "group", member: MEMBER } }), 400, "BAD_ACCOUNT"],
-    ["(T38) a sign-in with suggestions true", () => ask({ account: { kind: "signin", level: "member", member: MEMBER, suggestions: true } }), 400, "BAD_ACCOUNT"],
+    ["(T46) a sign-in with suggestions not a boolean", () => ask({ account: { kind: "signin", level: "member", member: MEMBER, suggestions: "yes" } }), 400, "BAD_ACCOUNT"],
     ["the group's account with an empty key", () => ask({ account: { ...GROUP, secret: "" } }), 409, "NO_ACCOUNT"],
     ["a namespace no instance holds", () => ask({ store: "biosmoke" }), 400, "NAMESPACE_UNKNOWN"],
     ["a conversation that is not this ask's turns", () => ask({ conversation: [{ role: "system", content: "x" }] }), 400, "BAD_CONVERSATION"],
