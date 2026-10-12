@@ -1,6 +1,6 @@
 # case-checker (T46)
 
-**Status** · session_018KyvpjWpStPQKywDPCaAeL · depth 2 · COMPLETE · handled B1
+**Status** · session_018KyvpjWpStPQKywDPCaAeL · depth 2 · COMPLETE · handled B3
 
 ## Completion
 
