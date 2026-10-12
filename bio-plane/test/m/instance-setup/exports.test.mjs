@@ -87,6 +87,8 @@ test("N348 this module holds no Durable Object door or class of its own: its rou
     "translationadopt", "translationconfirm", "translationdraft", "translationdraftrecord", "translationgrant",
     "translationmark", "translationrevert", "translations", "interfacewords",
     /* T45 (R77): the administrators' act setting the group's declared stake */
-    "declaredstakeset"].sort());
+    "declaredstakeset",
+    /* T46 (R79): a member's own explanation level */
+    "infolevelset", "infolevel"].sort());
   for (const f of Object.values(ops)) assert.equal(typeof f, "function");
 });

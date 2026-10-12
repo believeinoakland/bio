@@ -1,4 +1,4 @@
-/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R78).
+/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R81).
  *
  * THE PAGE AT THE ROOT is `setup-page`'s (K1851): the template, its group line and its script. This module composes it,
  * placing R47's block on who controls the group's Civicsmith in the template's one slot (setup-page R14), and re-exports
@@ -44,6 +44,8 @@ import { WORD_ROWS, WORDS_COMMIT } from "./setup-words/index.mjs";
 import { lawStagesFindings } from "./action-grammar/index.mjs";
 /* R78 (T45; K2832): the group's public identity is registered at start with public-read (its R34). */
 import { publicReadOf, DECLARED_STAKE_SETTING } from "./public-read/index.mjs";
+/* R80 (T46; ai-runs R78): whether this is a test instance is ai-runs' one computation, asked of its own method. */
+import { AiRuns } from "./ai-runs/index.mjs";
 
 /* R47 (DEC-109; K1038; K1851): the page as composed, setup-page's template with the hosting block in its one slot. */
 export const SETUP_HTML = PAGE_HTML.replace(HOSTING_SLOT, () => hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF }));
@@ -76,33 +78,88 @@ export { GROUP_SLUG_RE, FLEET_BINDINGS };
  *   UNBOUND   this plane holds no binding by that name — the member is unreachable FROM HERE whatever the account holds.
  *   SILENT    bound, and it did not answer a readable version within the bound (`why` says what happened).
  *   MISNAMED  something answered through the binding, but under another name — the binding points at the wrong worker.
- * Read only on `op=bootstrap&members=1`, so the anonymous answer a browser polls does not fan out to three workers. */
+ * Read whole only on `op=bootstrap&members=1`, so the anonymous answer a browser polls does not fan out to every member;
+ * since T46 (R81) that answer asks the two members whose parts the setup page shows before sign-in (agent-worker for the
+ * sign-in's runner, file-scanner for scanning and the safe view), each within the same bound. */
 const MEMBER_VERSION_WAIT_MS = 4000;
+/* One member's own `/version`, asked through its binding within the bound: `{report, body}`, `report` its state as
+   above and `body` the member's answer when it served (agent-worker's carries `runner`, R17). */
+async function askMemberVersion(env, member, binding) {
+  const b = env[binding];
+  if (!b || typeof b.fetch !== "function") return { report: { binding, state: "UNBOUND" }, body: null };
+  let timer;
+  try {
+    const r = await Promise.race([
+      b.fetch(`https://${member}/version`, { method: "GET" }),
+      new Promise((_, no) => { timer = setTimeout(() => no(new Error(`no answer within ${MEMBER_VERSION_WAIT_MS} ms`)),
+                                                  MEMBER_VERSION_WAIT_MS); }),
+    ]);
+    const j = await r.json().catch(() => null);
+    if (!r.ok || !j || typeof j.version !== "string" || !j.version)
+      return { report: { binding, state: "SILENT", why: `answered HTTP ${r.status} without a version` }, body: null };
+    if (j.name !== member)
+      return { report: { binding, state: "MISNAMED", name: typeof j.name === "string" ? j.name : null, version: j.version }, body: null };
+    return { report: { binding, state: "SERVING", version: j.version }, body: j };
+  } catch (e) {
+    return { report: { binding, state: "SILENT", why: String(e && e.message || e).slice(0, 200) }, body: null };
+  } finally { clearTimeout(timer); }
+}
+
+/* R17 (T46; N897 (4); agent-worker R30): `agent-runner` is a Container the plane does not bind; agent-worker does, and
+   says so in its `/version` as `runner`. So the runner's state is read from agent-worker's answer: `SERVING` with
+   agent-worker's version on `runner: true`, `UNBOUND` on `runner: false`, and agent-worker's own state when it did not
+   serve. An agent-worker that served but said neither (a build before R30) leaves the runner unread: `SILENT`, said so,
+   never `SERVING`. */
+const RUNNER_MEMBER = "agent-runner";
+const RUNNER_HOST = "agent-worker";
+function runnerReport(host) {
+  const via = { binding: host.report.binding, via: RUNNER_HOST };
+  if (host.report.state !== "SERVING") return { ...host.report, ...via };
+  const runner = host.body ? host.body.runner : undefined;
+  if (runner === true) return { ...via, state: "SERVING", version: host.report.version };
+  if (runner === false) return { ...via, state: "UNBOUND" };
+  return { ...via, state: "SILENT", why: `${RUNNER_HOST} answered its version without saying whether the runner is bound` };
+}
+
 export async function memberVersions(env) {
   const out = {};
+  const asked = new Map();
+  const ask = (member, binding) => {
+    if (!asked.has(member)) asked.set(member, askMemberVersion(env, member, binding));
+    return asked.get(member);
+  };
+  const hostBinding = (FLEET_BINDINGS.find(([m]) => m === RUNNER_HOST) || [])[1];
   await Promise.all(FLEET_BINDINGS.map(async ([member, binding]) => {
-    const b = env[binding];
-    if (!b || typeof b.fetch !== "function") { out[member] = { binding, state: "UNBOUND" }; return; }
-    let timer;
-    try {
-      const r = await Promise.race([
-        b.fetch(`https://${member}/version`, { method: "GET" }),
-        new Promise((_, no) => { timer = setTimeout(() => no(new Error(`no answer within ${MEMBER_VERSION_WAIT_MS} ms`)),
-                                                    MEMBER_VERSION_WAIT_MS); }),
-      ]);
-      const j = await r.json().catch(() => null);
-      if (!r.ok || !j || typeof j.version !== "string" || !j.version) {
-        out[member] = { binding, state: "SILENT", why: `answered HTTP ${r.status} without a version` };
-      } else if (j.name !== member) {
-        out[member] = { binding, state: "MISNAMED", name: typeof j.name === "string" ? j.name : null, version: j.version };
-      } else {
-        out[member] = { binding, state: "SERVING", version: j.version };
-      }
-    } catch (e) {
-      out[member] = { binding, state: "SILENT", why: String(e && e.message || e).slice(0, 200) };
-    } finally { clearTimeout(timer); }
+    out[member] = member === RUNNER_MEMBER ? runnerReport(await ask(RUNNER_HOST, hostBinding))
+      : (await ask(member, binding)).report;
   }));
   return out;
+}
+
+/* R81 (T46; N897 (4); trial §3.2): which optional parts this Civicsmith has installed, each `present` `true`, `false`
+   or `null` (could not be read), from the member that carries it: `signin` from R17's `agent-runner` answer, `scanner`
+   and `safe_view` from `file-scanner`'s (`SERVING` true, `UNBOUND` false, otherwise null). No reason beyond the part. */
+export const PARTS = Object.freeze([["signin", RUNNER_MEMBER], ["scanner", "file-scanner"], ["safe_view", "file-scanner"]]);
+const presentOf = (report) => (report && report.state === "SERVING" ? true : report && report.state === "UNBOUND" ? false : null);
+export async function partsReport(env, versions = null) {
+  const v = versions || {};
+  const need = [...new Set(PARTS.map(([, m]) => m))].filter((m) => !v[m]);
+  if (need.length) {
+    const host = need.includes(RUNNER_MEMBER) ? FLEET_BINDINGS.find(([m]) => m === RUNNER_HOST) : null;
+    const hostAsked = host ? askMemberVersion(env, host[0], host[1]) : null;
+    await Promise.all(need.map(async (m) => {
+      if (m === RUNNER_MEMBER) { v[m] = runnerReport(await hostAsked); return; }
+      const pair = FLEET_BINDINGS.find(([x]) => x === m);
+      v[m] = pair ? (await askMemberVersion(env, pair[0], pair[1])).report : null;
+    }));
+  }
+  return PARTS.map(([part, m]) => ({ part, present: presentOf(v[m]) }));
+}
+
+/* R80 (T46; N897 (2); ai-runs R78): whether this is a test instance, asked of `ai-runs`' own `testInstance` over this
+   isolate's environment (the one computation, never a copy of its condition); a read that throws is `false`. */
+export function testInstanceOf(env) {
+  try { return AiRuns.prototype.testInstance.call({ env: env || {} }) === true; } catch { return false; }
 }
 
 /* ============================================================================================================
@@ -328,6 +385,20 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
     translation: 'A note on a translation that looks wrong is optional, and when given it is at most 500 characters. '
       + 'Nothing was recorded.',
   },
+  /* R79 (T46; DEC-162, DEC-175): how quickly explanations open for a member, the member's own act; the next free C-64
+     numbers, awaiting T47's stamp. */
+  MACHINE_CANNOT_SET_INFO_LEVEL: {
+    check: 'C-64.28',
+    where: 'src/setup.mjs infoLevelSet > is-info-level',
+    translation: 'How quickly explanations open on your screens is your own choice, made from your own signed-in session, '
+      + 'never by another member or a machine. Nothing was changed.',
+  },
+  INFO_LEVEL_UNKNOWN: {
+    check: 'C-64.29',
+    where: 'src/setup.mjs infoLevelSet > is-info-level',
+    translation: 'Explanations open either promptly or on a longer pause, and what was sent is neither. Nothing is ever '
+      + 'hidden at either. Nothing was changed.',
+  },
   /* R77 (T45; N892 (d); Actions D28d; v0.2 rule 21): the group's declared stake, the next free C-64 number, awaiting
      T46's stamp. */
   STAKE_MALFORMED: {
@@ -377,6 +448,9 @@ export const GROUP_PURPOSE_MAX = 4000;
 /* R77: the longest declared stake, in characters. The setting it is recorded under is public-read's name for it (its
    R34, the reader), one binding, re-exported. */
 export const DECLARED_STAKE_MAX = 1000;
+/* R79 (DEC-162, DEC-175): the two explanation levels, and where a new member starts. */
+export const INFO_LEVELS = Object.freeze(["prompt", "pause"]);
+export const INFO_LEVEL_DEFAULT = "prompt";
 export { DECLARED_STAKE_SETTING };
 
 /* ============================================================================================================
@@ -387,6 +461,8 @@ export { DECLARED_STAKE_SETTING };
 export const INSTANCE_SETUP_TABLES = Object.freeze(["instance_group", "group_identity_history", "group_domain_checks",
   "runtime_observations", "cpu_probe_runs", "cpu_probe_steps", "assistant_switch", "assistant_disclosures",
   "place_wanted", "place_seen", "place_arrivals", "member_languages",
+  /* R79 (T46): each member's explanation level, appended. */
+  "member_info_levels",
   /* R75 (T37; N669): the group's translation of the interface, append-only. */
   "translation_grants", "translation_drafts", "translation_adoptions", "translation_confirmations", "translation_undos",
   "translation_marks", "translation_readings",
@@ -411,6 +487,8 @@ const TABLE_CLASSES = Object.freeze({
   place_arrivals: { export: "never", version_chain: true },
   /* R64 (DEC-127 (1)): each member's own choice of language, appended. */
   member_languages: { export: "admin-only", version_chain: true },
+  /* R79 (DEC-162, DEC-175): each member's own explanation level, appended, R64's class. */
+  member_info_levels: { export: "admin-only", version_chain: true },
   /* R75 (DEC-127 (4)): the group's translation work, the group's settings' class, exempt from purge; none of it leaves
      your group's Civicsmith, so none is exported. */
   translation_grants: { export: "never", version_chain: true },
@@ -596,6 +674,16 @@ CREATE TABLE IF NOT EXISTS member_languages (
   seq       INTEGER PRIMARY KEY AUTOINCREMENT,
   member    TEXT NOT NULL,
   language  TEXT,
+  set_at    TEXT NOT NULL
+);
+-- R79 (T46; DEC-162, DEC-175): how quickly explanations open for each member, by their own act; the latest row per
+-- member is the level. asked_at is the instant the one first-month question was answered (DEC-162 (2)), carried
+-- forward on every later row once recorded, so the latest row answers it. Append-only.
+CREATE TABLE IF NOT EXISTS member_info_levels (
+  seq       INTEGER PRIMARY KEY AUTOINCREMENT,
+  member    TEXT NOT NULL,
+  level     TEXT NOT NULL CHECK (level IN ('prompt','pause')),
+  asked_at  TEXT,
   set_at    TEXT NOT NULL
 );
 -- R67-R75 (T37; N669; DEC-127, DEC-157, DEC-179): THE GROUP'S TRANSLATION OF THE INTERFACE. Every table is
@@ -1848,7 +1936,8 @@ export class InstanceSetup {
     }
   }
 
-  /** R54, op=disclosureshown: the disclosure was shown to `member` before they connected their own account. `by` is
+  /** R54, op=disclosureshown: the disclosure was shown to `member` before they connected their own account (a reference
+   *  set, or her own Claude subscription signed in: T46, N897 (3)). `by` is
    *  the control plane's stamp and must be that member's own session: no one records it on another's behalf. */
   disclosureShown({ member = null, version = null, by = null } = {}) {
     const m = typeof member === "string" ? member.trim() : "";
@@ -1868,7 +1957,10 @@ export class InstanceSetup {
   }
 
   /** R54: whether the disclosure at the current version (or `version`) was recorded as shown to `member`. A member with
-   *  none recorded is `shown: false`, never assumed. Writes nothing and never throws. */
+   *  none recorded is `shown: false`, never assumed. (T46; N897 (3)) It answers alike before a reference is set and
+   *  before a sign-in to her own Claude subscription starts (credentials R43): it reads only what `disclosureShown`
+   *  recorded, never whether an account is connected, so `control-plane` R65 refuses a sign-in's `start`
+   *  `DISCLOSURE_DUE` while it answers `shown: false`. Writes nothing and never throws. */
   disclosureOf({ member = null, version = ASSISTANT_DISCLOSURE.version } = {}) {
     const m = typeof member === "string" ? member.trim() : "";
     const v = typeof version === "string" && version.trim() ? version.trim() : ASSISTANT_DISCLOSURE.version;
@@ -2038,6 +2130,54 @@ export class InstanceSetup {
         ? this.#one(`SELECT language, set_at FROM member_languages WHERE member = ? ORDER BY seq DESC LIMIT 1`, who) : null;
     } catch { r = null; }
     return { ok: true, language: r ? r.language ?? null : null, set_at: r ? r.set_at : null };
+  }
+
+  /* =====================================================================
+   * A MEMBER'S EXPLANATION LEVEL (R79; T46; DEC-162, DEC-175). How quickly explanations open for a member: `prompt`
+   * ("Explain promptly", where every member starts) or `pause` (guidance on a longer pause, so less opens while she
+   * moves; nothing is ever hidden). The member's own act, beside her language (R64). `asked: true` records, in the same
+   * act, that the set answers the one question the interface asks after her first month (DEC-162 (2)); its instant is
+   * kept from then on, whatever later sets say.
+   * ===================================================================== */
+
+  /** R79, op=infolevelset: `by` (the control plane's stamp, R29) is the member, and nobody sets it for another. Refusals,
+   *  each writing nothing: a missing or machine `by` `MACHINE_CANNOT_SET_INFO_LEVEL`; a `level` other than `prompt` or
+   *  `pause`, or an `asked` other than absent, `true` or `false`, `INFO_LEVEL_UNKNOWN` (K2996). Each set is appended with
+   *  when. */
+  infoLevelSet({ level = undefined, asked = undefined, by = null } = {}) {
+    const who = typeof by === "string" ? by.trim() : "";
+    /* DEC-49 REGION is-info-level */
+    if (!who || isMachineIdentity(who))
+      return refusal("MACHINE_CANNOT_SET_INFO_LEVEL", "how quickly explanations open is set by the member, from their own "
+        + "signed-in session. Nothing was changed.", { by: by ?? null });
+    if (!INFO_LEVELS.includes(level))
+      return refusal("INFO_LEVEL_UNKNOWN", `${typeof level === "string" && level ? `'${level.slice(0, 40)}' is not`
+        : "the request names no level, and one is chosen as"} one of ${INFO_LEVELS.join(" or ")}. Nothing was changed.`);
+    /* K2996: `asked` is absent, `true` or `false`; anything else is no answer to the first-month question. */
+    if (asked !== undefined && asked !== null && asked !== true && asked !== false)
+      return refusal("INFO_LEVEL_UNKNOWN", "whether this set answers the first-month question is said as true or false, "
+        + "or not at all. Nothing was changed.");
+    /* END DEC-49 REGION is-info-level */
+    const before = this.#infoLevelRow(who);
+    const at = this.#iso();
+    const askedAt = before && before.asked_at ? before.asked_at : asked === true ? at : null;
+    this.#sql.exec(`INSERT INTO member_info_levels (member, level, asked_at, set_at) VALUES (?, ?, ?, ?)`, who, level, askedAt, at);
+    return { ok: true, member: who, level, set_at: at, asked_at: askedAt,
+             note: level === "prompt" ? "explanations open promptly on your screens."
+               : "explanations open on a longer pause, so less opens while you move; nothing is hidden." };
+  }
+
+  #infoLevelRow(who) {
+    return this.#one(`SELECT level, asked_at, set_at FROM member_info_levels WHERE member = ? ORDER BY seq DESC LIMIT 1`, who);
+  }
+
+  /** R79, op=infolevel: the viewer's own `{level, set_at, asked_at}`, and nobody else's: `prompt` with `set_at` null
+   *  when none is set, `asked_at` null until the first-month question is answered. Writes nothing; never throws. */
+  infoLevel({ viewer = null } = {}) {
+    const who = typeof viewer === "string" ? viewer.trim() : "";
+    let r = null;
+    try { r = who && !isMachineIdentity(who) ? this.#infoLevelRow(who) : null; } catch { r = null; }
+    return { ok: true, level: r ? r.level : INFO_LEVEL_DEFAULT, set_at: r ? r.set_at : null, asked_at: r ? r.asked_at ?? null : null };
   }
 
   /* =====================================================================
@@ -2880,6 +3020,9 @@ export function instanceSetupOps(m, url, body) {
     placewantedstate: () => m.placeWanted({ viewer: q("viewer") }),
     memberlanguageset: () => m.memberLanguageSet({ ...(body || {}), by: q("by") }),
     memberlanguage: () => m.memberLanguage({ viewer: q("viewer") }),
+    /* R79 (T46): a member's own explanation level. */
+    infolevelset: () => m.infoLevelSet({ ...(body || {}), by: q("by") }),
+    infolevel: () => m.infoLevel({ viewer: q("viewer") }),
     adminrecoverystep: () => m.adminRecoveryStep({ viewer: q("viewer") }),
     /* R77 (T45): the administrators' act setting the group's declared stake. */
     declaredstakeset: () => m.declaredStakeSet({ ...(body || {}), by: q("by") }),
@@ -2955,9 +3098,11 @@ export async function groupIdentityOp(env, storeName, { viewer = null, cls = nul
 export async function bootstrapReport(env, fp, { members = false, stub, json, storeSilent, doAnswer, storeRefusal }) {
   const out = await doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
   if (!out.answered) return notAnswered(out, "bootstrap", { json, storeSilent, storeRefusal });
+  const versions = members ? await memberVersions(env) : null;
   return json({ ok: true, service: "bio-plane", version: env.VERSION || "0.0.0",
                 bootstrapConfigured: await liveToken(env.ADMIN_TOKEN), ...out.result,
-                ...(members ? { memberVersions: await memberVersions(env) } : {}) }, 200);
+                test_instance: testInstanceOf(env), parts: await partsReport(env, versions ? { ...versions } : null),
+                ...(members ? { memberVersions: versions } : {}) }, 200);
 }
 
 /** R18, op=selftest: deployment health as JSON, so "did the deploy work" is a link rather than a command. It

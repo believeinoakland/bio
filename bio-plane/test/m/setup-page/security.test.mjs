@@ -24,14 +24,16 @@ const WORDS = {
   CONFIG_UNKNOWN: "A setting was given that the tool's entry does not name. Nothing was added.",
   PROVIDER_UNKNOWN: "Your group's Civicsmith knows no security service by that name, or the service needs an address that was not given. Nothing was added.",
 };
-function plane({ administer = true, refuse = {}, passes = true, catalogue = { result: CATALOGUE } } = {}) {
+/* instance-setup R81: bootstrap's parts, each present true, false or null; a scanner present unless a test says otherwise. */
+const PARTS = (scanner, signin = true) => [{ part: "signin", present: signin }, { part: "scanner", present: scanner }, { part: "safe_view", present: scanner }];
+function plane({ administer = true, refuse = {}, passes = true, catalogue = { result: CATALOGUE }, boot = { claimed: false, bootstrapConfigured: true, parts: PARTS(true) } } = {}) {
   const st = { tools: [] };
   const sent = [];
   const answer = (op, body) => {
     if (refuse[op]) return { result: { ok: false, ...refuse[op] } };
     switch (op) {
       case "stats": return { ok: true };
-      case "bootstrap": return { claimed: false, bootstrapConfigured: true };
+      case "bootstrap": if (boot instanceof Error) throw boot; return boot;
       case "claim": return { result: { ok: true, consumedAt: "2026-10-08T10:00:00Z" } };
       case "login": return { result: { ok: true, token: "sess-founder", expires: 0 } };
       case "whoami": return { result: { capabilities: ["contribute"], administer } };
@@ -81,6 +83,8 @@ function plane({ administer = true, refuse = {}, passes = true, catalogue = { re
   };
   return { st, sent, fetch };
 }
+const WORDS_U125 = "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view. If your organization "
+  + "already uses a file scanner, a safe-copy maker or a log service, you can add it here, now or later.";
 async function claimed(opts = {}) {
   const pl = plane(opts);
   const p = pageOver({ html: pageOf({ answered: true, result: { ok: true, group: "river-town" } }), hash: "#boot=one-time", fetch: pl.fetch });
@@ -98,17 +102,17 @@ test("R30 in the claim's section, after R29 and R15–R18, the page offers the f
   const at = (id) => after.indexOf(`id="${id}"`);
   for (const id of ["cl-rc", "cl-ha", "cl-cn", "cl-ka", "cl-gk"]) assert.ok(at(id) >= 0 && at(id) < at("cl-st"), `${id} before the step`);
   const step = after.slice(at("cl-st"));
-  /* DEC-182 (6) (UX-DESIGN U125 (3)): the first form, exactly, until Settings › Security exists, opening the step */
-  const WORDS_U125 = "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view. If your organization "
-    + "already uses a file scanner, a safe-copy maker or a log service, you can add it here, now or later.";
-  assert.ok(step.replace(/\s+/g, " ").includes(WORDS_U125));
-  assert.ok(step.slice(step.indexOf(">") + 1).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
-    .startsWith("Your organization's own security tools (optional). " + WORDS_U125), "the step opens with them, after its heading");
+  /* (T46) the template holds no sentence saying files are scanned: the script draws them while a scanner is present */
+  assert.doesNotMatch(step, /scans every file|built-in scanner/);
+  assert.ok(at("cl-st-built") < at("cl-st-cat") && step.indexOf('id="cl-st-built"') < step.indexOf('id="cl-st-skip"'), "what is built in comes first");
+  assert.match(step.slice(step.indexOf(">") + 1).replace(/\s+/g, " "), /^ ?<p[^>]*><b>Your organization's own security tools \(optional\)\.<\/b> <span id="cl-st-built"><\/span><\/p>/,
+    "the step opens with them, after its heading");
   assert.doesNotMatch(step, /Settings\s+(?:&rsaquo;|›) Security/, "not the second form while that screen does not exist");
-  assert.match(step, /You can skip this step: adding nothing records nothing, and nothing needs adding\./);
-  assert.ok(step.indexOf("Civicsmith scans") < step.indexOf('id="cl-st-cat"'), "what is built in comes first");
   assert.doesNotMatch(step.slice(0, step.indexOf('id="cl-st-form"')), /type="password"/, "no key is asked before a tool is chosen");
   const p = await claimed();
+  /* DEC-182 (6) (UX-DESIGN U125 (3)): the first form, exactly, while bootstrap's parts says a scanner is present */
+  assert.equal(p.el("#cl-st-built").textContent, WORDS_U125);
+  assert.equal(p.el("#cl-st-skip").textContent, "You can skip this step: adding nothing records nothing, and nothing needs adding.");
   const read = p.sent.filter((c) => c.op === "securitytoolcatalogue");
   assert.deepEqual(read.map((c) => [c.method, c.token]), [["GET", "sess-founder"]], "read under the founder's session");
   assert.equal(p.el("#cl-st-form").hidden, true);
@@ -302,4 +306,46 @@ test("R30 members and keys offers the same step to an administrator at any time,
   await settle();
   assert.equal(n.el("#go-members").hidden, true);
   assert.deepEqual(m.sent.filter((c) => /^securitytool/.test(c.op)), []);
+});
+
+test("R30 (T46; N897 (4)) the scanner's sentences only while bootstrap's parts answers a scanner present: with none, the interim words; unread, that it could not be read, never that none is; the healthy panel lists each part installed, not installed or not read. Control: scanner false shows no sentence saying files are scanned; true, DEC-182 (6)'s words", async () => {
+  const NONE = "Your group's Civicsmith has no file scanner installed yet: files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made.";
+  const UNREAD = "Whether your group's Civicsmith has a file scanner installed could not be read just now.";
+  const SCANS = /scans every file|files are scanned|built-in scanner/;
+  const cases = [
+    ["present", { claimed: false, bootstrapConfigured: true, parts: PARTS(true) }, WORDS_U125, true],
+    ["absent", { claimed: false, bootstrapConfigured: true, parts: PARTS(false, false) }, NONE, false],
+    ["unread part", { claimed: false, bootstrapConfigured: true, parts: PARTS(null) }, UNREAD, null],
+    ["no parts", { claimed: false, bootstrapConfigured: true }, UNREAD, null],
+    ["parts not a list", { claimed: false, bootstrapConfigured: true, parts: "x" }, UNREAD, null],
+  ];
+  for (const [name, boot, words, sc] of cases) {
+    const p = await claimed({ boot });
+    assert.equal(p.el("#cl-st-built").textContent, words, name);
+    assert.equal(p.el("#cl-st-skip").textContent, "You can skip this step: adding nothing records nothing" + (sc === true ? ", and nothing needs adding." : "."), name);
+    if (sc !== true) assert.doesNotMatch(p.el("#cl-st-built").textContent + p.el("#cl-st-skip").textContent, SCANS, name);
+    if (sc === false) assert.doesNotMatch(p.el("#cl-st-built").textContent, /could not be read/, name);
+    if (sc === null) assert.doesNotMatch(p.el("#cl-st-built").textContent, /has no file scanner/, name);
+    /* members and keys draws the same step, and its empty tools list claims no scanner unless one is present */
+    const pl = plane({ boot: { ...boot, claimed: true } });
+    const m = pageOver({ html: pageOf(undefined), session: { t: "sess-1", e: 0, w: "admin" }, fetch: pl.fetch });
+    await settle(); await m.el("#go-members").fire(); await settle();
+    assert.equal(m.el("#mk-st-built").textContent, words, name);
+    assert.equal(m.el("#mk-st-tools").innerHTML, '<h3>Your group\'s tools</h3><p class="small">None added.'
+      + (sc === true ? " The built-in scanner and the safe view work without any." : "") + "</p>", name);
+    /* the healthy panel: each part, in member words, naming no reason beyond the part */
+    const parts = m.el("#p-parts").innerHTML;
+    if (Array.isArray(boot.parts)) {
+      const word = (v) => (v === true ? "installed" : v === false ? "not installed" : "could not be read");
+      assert.equal(parts, boot.parts.map((x) => '<div class="kv"><span class="k">'
+        + { signin: "Signing in with a member\'s own Claude account", scanner: "The file scanner", safe_view: "The safe view" }[x.part]
+        + '</span><span class="v">' + word(x.present) + "</span></div>").join(""), name);
+    } else assert.match(parts, /could not be read just now/, name);
+  }
+  /* bootstrap not answering at all: the step says it could not be read */
+  const pl = plane({ boot: new Error("down") });
+  const m = pageOver({ html: pageOf(undefined), session: { t: "sess-1", e: 0, w: "admin" }, fetch: pl.fetch });
+  await settle(); await m.el("#go-members").fire(); await settle();
+  assert.equal(m.el("#mk-st-built").textContent, UNREAD);
+  assert.match(m.el("#p-parts").innerHTML, /could not be read just now/);
 });

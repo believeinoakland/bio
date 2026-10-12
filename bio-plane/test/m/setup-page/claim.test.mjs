@@ -4,7 +4,7 @@
    security tools step (R30) is in security.test.mjs. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { pageOf, PAGE_HTML, HOSTING_SLOT } from "../../../src/setup-page/index.mjs";
+import { pageOf, PAGE_HTML, HOSTING_SLOT, SESSION_STORE_KEY } from "../../../src/setup-page/index.mjs";
 import { pageOver, bearerOf } from "./fixture.mjs";
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
@@ -210,7 +210,7 @@ test("R29 the codes are held only in the page's memory while shown: never in the
   const anyCode = (t) => CODES1.some((c) => String(t).includes(c));
   for (const c of pl.sent) assert.equal(anyCode(JSON.stringify(c.body ?? null)) && c.op !== "recoverycodesissue", false, c.op);
   for (const c of later) assert.equal(anyCode(JSON.stringify(c)), false, c.op);
-  for (const k of ["bio-session"]) assert.equal(anyCode(p.sandbox.sessionStorage.getItem(k)), false);
+  for (const k of [SESSION_STORE_KEY]) assert.equal(anyCode(p.sandbox.sessionStorage.getItem(k)), false);
   assert.equal(anyCode(JSON.stringify(logged)), false, "nothing logged holds a code");
   /* left the section: the codes are gone from it */
   assert.deepEqual([p.el("#cl-rc-codes").textContent, p.el("#cl-rc-shown").hidden], ["", true]);
