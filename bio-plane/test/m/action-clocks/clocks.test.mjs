@@ -36,7 +36,7 @@ test("R1 pendingClocks lists pending entries dated before `before` across visibl
   const w = world();
   w.action(A, ["clock:", ...CLK("2026-09-01"), ...CLK("2026-09-05", "met"), ...CLK("2026-12-01")]);
   const r = w.c.pendingClocks({ before: "2026-10-01", viewer: M });
-  assert.deepEqual(r.items, [{ action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", past: true }]);
+  assert.deepEqual(r.items, [{ action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", past: true, due_at: null, due_zone: null }]);
   assert.equal(r.limit, 500); assert.equal(r.truncated, false);
   assert.equal(w.c.pendingClocks({ before: "2026-10-01", viewer: "nobody" }).items.length, 0);
   const bad = w.c.pendingClocks({ before: "soon", viewer: M });
@@ -89,7 +89,7 @@ test("R1 (N311) a page runs in (action, position) order and may end inside an ac
   for (let k = 1; k <= 6; k++) assert.deepEqual(pages(w, { limit: k }).items.map(key), all, `limit ${k}`);
   assert.deepEqual(pages(w, { limit: 2, after: A }).items.map(key), all.slice(1));
   assert.deepEqual(pages(w, { limit: 2, after: B }).items.map(key), [`${C}:0`]);
-  assert.deepEqual(p2.items[0], { action: B, ord: 2, date: "2026-01-02", basis: "Act s.2", text: "t", past: true });
+  assert.deepEqual(p2.items[0], { action: B, ord: 2, date: "2026-01-02", basis: "Act s.2", text: "t", past: true, due_at: null, due_zone: null });
 });
 
 test("R1 (N311) an action with more pending clock entries than a page (500) is read whole across pages", () => {

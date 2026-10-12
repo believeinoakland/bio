@@ -14,9 +14,37 @@
  * packet needs no determination); R34–R44's rows are C-115.45–.54 in the requirement's order, with R23's `NO_SUCH_BUNDLE`
  * (a chosen finding absent or unseen) and the marks a member states at preparation (`FILING_MARK_REFUSED`) after them.
  * `action-holds`' `HOLD_NOT_IN_PLACE` and `HOLD_PLACE_REFUSED` (R47) and `actions`' revision refusals (R43's
- * `breach_claim`) pass through as their owners'. */
+ * `breach_claim`) pass through as their owners'. T46 (R51; DEC-194, N913): eight of the T45 rows translate by
+ * `words.json`'s `refusal.<CODE>`, read by key (`FILINGS_WORDS`); codes, numbers and `where`s unmoved. */
 
 const at = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
+
+/* R51 (T46; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) the rows
+   C-115.45–.49, .51–.53 translate by, each `en` verbatim, read by key (`refusal.<CODE>`), as membership's `HANDLE_WORDS`
+   and extraction's `TRANSCRIBE_WORDS` are. The design stream's words: re-worded there, then re-taken here by key; a row
+   never holds a copy of its sentence. Not taken in T46 (R51): `refusal.SECOND_APPROVAL_NEEDED` ("Any other member of the
+   project can give it", while `filingSecondApprove`, R42, admits any member other than the approver who may see the
+   draft), returned to BOB until the sentence and R42 agree. `HOLD_NOT_IN_PLACE` and `HOLD_PLACE_REFUSED` are
+   `action-holds`' rows, re-worded at its site and relayed here as they come (R47; K231). */
+export const FILINGS_WORDS = Object.freeze({
+  "refusal.CONTRADICTED_HELD": "The record contradicts a sentence in this text. Rewrite it, or release it with a reason, "
+    + "before approving. Nothing was written.",
+  "refusal.SELF_BENEFIT_ASK": "A sentence still asks for something for your group or its members. A notice or demand asks "
+    + "the body to correct its own act; rewrite that sentence before approving. Nothing was written.",
+  "refusal.RFC_QUOTING_MISSING": "A request for comment says the reply may be quoted unless it says otherwise. Add that "
+    + "sentence before approving. Nothing was written.",
+  "refusal.NOT_A_PARTNER": "That organisation isn't one of this action's partners. Add it as a partner first. Nothing was "
+    + "written.",
+  "refusal.JOINT_FINGERPRINT_MISMATCH": "The partner's copy isn't the same text your group approved. They sign the same "
+    + "words, or none. Nothing was written.",
+  "refusal.SAME_APPROVER": "The second approval comes from a member other than the one who approved first. Nothing was "
+    + "written.",
+  "refusal.ASSERTION_UNRESOLVED": "A sentence that reads as saying the body broke a rule is still open. Rewrite it, confirm "
+    + "the act only asks, or treat the act as a breach claim. Nothing was written.",
+  "refusal.ASSERTION_RESOLUTION_REFUSED": "Each answer names one sentence that was pointed out, once; \"it only asks\" needs "
+    + "your own words, and a breach claim takes none. Nothing was written.",
+});
+const word = (code) => FILINGS_WORDS[`refusal.${code}`];
 
 export const FILINGS_CHECKS = Object.freeze({
   FILING_NO_PREPARER: {
@@ -165,29 +193,27 @@ export const FILINGS_CHECKS = Object.freeze({
       + "than 2,000 characters. Write one. Nothing was written.",
   },
   /* T45 (K2780, K2791): the record check, the chance to fix, quoting, joint texts, second approval, the assertion gate,
-     "as myself" (R34, R36, R38, R40, R42–R44); R23's chosen findings; the marks stated at preparation. */
+     "as myself" (R34, R36, R38, R40, R42–R44); R23's chosen findings; the marks stated at preparation. T46 (R51): eight
+     translate by `FILINGS_WORDS`, read by key; `SECOND_APPROVAL_NEEDED` keeps its own until its sentence and R42 agree. */
   CONTRADICTED_HELD: {
     check: "C-115.45", where: at("#outwardRefusal", "is-contradicted-held"),
-    translation: "A sentence of this text is contradicted by the group's own record, and it is held back. Rewrite it, or "
-      + "approve it openly by naming the sentence with your reason.",
+    translation: word("CONTRADICTED_HELD"),
   },
   SELF_BENEFIT_ASK: {
     check: "C-115.46", where: at("#outwardRefusal", "is-self-benefit-ask"),
-    translation: "A sentence of this text asks something for the benefit of the group or its members. Nothing is sent that "
-      + "asks that: rewrite it to ask only for what the rule requires, remedy of the harm, or a route the law provides.",
+    translation: word("SELF_BENEFIT_ASK"),
   },
   RFC_QUOTING_MISSING: {
     check: "C-115.47", where: at("#outwardRefusal", "is-rfc-quoting-missing"),
-    translation: "A request for comment says that the reply may be quoted unless it says otherwise, and this text no longer "
-      + "does. Put the sentence back.",
+    translation: word("RFC_QUOTING_MISSING"),
   },
   NOT_A_PARTNER: {
     check: "C-115.48", where: at("jointSignatory", "is-joint-signatory"),
-    translation: "That organisation is not among this action's partners, so it cannot be recorded as signing this text.",
+    translation: word("NOT_A_PARTNER"),
   },
   JOINT_FINGERPRINT_MISMATCH: {
     check: "C-115.49", where: at("jointSignatory", "is-joint-signatory"),
-    translation: "The partner's text does not match this one: its fingerprint differs, so the same text was not approved.",
+    translation: word("JOINT_FINGERPRINT_MISMATCH"),
   },
   SECOND_APPROVAL_NEEDED: {
     check: "C-115.50", where: at("filingRecordSent", "is-filing-sent"),
@@ -195,17 +221,15 @@ export const FILINGS_CHECKS = Object.freeze({
   },
   SAME_APPROVER: {
     check: "C-115.51", where: at("filingSecondApprove", "is-second-approve"),
-    translation: "A second approval is made by a member other than the one who approved the text.",
+    translation: word("SAME_APPROVER"),
   },
   ASSERTION_UNRESOLVED: {
     check: "C-115.52", where: at("#outwardRefusal", "is-assertion-unresolved"),
-    translation: "A sentence that reads as asserting a breach is not resolved yet. Rewrite it, say in your own words that the "
-      + "act only asks, or treat the act as a breach claim.",
+    translation: word("ASSERTION_UNRESOLVED"),
   },
   ASSERTION_RESOLUTION_REFUSED: {
     check: "C-115.53", where: at("#outwardRefusal", "is-assertion-resolution-refused"),
-    translation: "A resolution names no sentence that was pointed out, names one twice, or is not in a form that can be "
-      + "recorded. Nothing was approved.",
+    translation: word("ASSERTION_RESOLUTION_REFUSED"),
   },
   NOT_THE_GROUPS_ACT: {
     check: "C-115.54", where: at("#notTheGroups", "is-not-the-groups-act"),

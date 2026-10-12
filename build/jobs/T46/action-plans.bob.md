@@ -1,6 +1,6 @@
 # BOB to action-plans (T46)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Merge order in L9: conformance, consequences, action-grammar, actions, action-ho
 ## B2 · CHANGE
 
 CHANGE (K2984): action-grammar (T46-31), filing-templates (T46-36) and actions (T46-32: R98, a timed clock entry moved pending to overdue once its instant passes, `dueInstant` exported; R99) are merged into `tranche/T46`, as are conformance and consequences (K2980, K2983). Merge `tranche/T46` into your branch before you complete, re-run your tests on it, and name in your record any red it opens.
+
+## B3 · CHANGE
+
+CHANGE (K2987): action-clocks, action-replies, filings and escalation are now merged into `tranche/T46` too (after B2's). Merge `tranche/T46` into your branch again, re-run your tests and your users' on it, and record completion again; name any red it opens.

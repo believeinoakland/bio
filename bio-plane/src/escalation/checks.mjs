@@ -13,6 +13,14 @@
  * decline to escalate (R27) has its own code and row, C-116.46, since `MACHINE_CANNOT_DECLINE` is C-116.26's, R13's
  * edge decline (K1084). Each translation calls the group's Civicsmith by that name or needs none (DEC-149, T34-87). */
 
+/* R33 (T46; N910, DEC-194): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module
+   answers, each `en` verbatim, read by key, as membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are: the
+   two rows R31 mints. A row's `translation` is the word itself, never a copy. `refusal.NOT_OPEN` is not taken (R35). */
+export const ESCALATION_WORDS = Object.freeze({
+  'refusal.MACHINE_CANNOT_STOP': 'Only a member stops or reopens an escalation. Nothing was written.',
+  'refusal.NOT_STOPPED': 'Only an escalation your group stopped pursuing can be reopened. Nothing was written.',
+});
+
 const at = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
 
 export const ESCALATION_CHECKS = Object.freeze({
@@ -136,7 +144,10 @@ export const ESCALATION_CHECKS = Object.freeze({
       + 'written.',
   },
   NOT_OPEN: {
-    check: 'C-116.27', where: at("#edgeArgs", "is-edge-open"),
+    /* R35 (T46; DEC-194, N913, K2953): the translation is kept. `words.json`'s `refusal.NOT_OPEN` says a suspended one
+       is resumed first, while R31 lets a suspended escalation be stopped directly, so that sentence is not adopted
+       until it and R31 agree (returned to BOB). Minted at one site, `refuseNotOpen`, for R13's edges and R31's stop. */
+    check: 'C-116.27', where: at("refuseNotOpen", "is-escalation-open"),
     translation: 'The escalation\'s stage moves only while it is open. A suspended one is resumed first; an ended one '
       + 'never moves again. Nothing was written.',
   },
@@ -218,6 +229,14 @@ export const ESCALATION_CHECKS = Object.freeze({
     check: 'C-116.46', where: at("declineToEscalate", "is-decline-member"),
     translation: 'Recording that the group is not pursuing a breach is a member\'s act, in the member\'s own words. An '
       + 'assistant may point out a breach; it may not decline it. Nothing was written.',
+  },
+  MACHINE_CANNOT_STOP: {
+    check: 'C-116.47', where: at("#stopArgs", "is-stop-member"),
+    translation: ESCALATION_WORDS['refusal.MACHINE_CANNOT_STOP'],
+  },
+  NOT_STOPPED: {
+    check: 'C-116.48', where: at("escalationReopen", "is-reopen-stopped"),
+    translation: ESCALATION_WORDS['refusal.NOT_STOPPED'],
   },
   PROVIDER_UNAVAILABLE: {
     check: 'C-116.44', where: at("refuseProviderUnavailable", "is-provider-present"),

@@ -15,7 +15,8 @@
  * entry says who owes it (`owed_by`, R18) and may be a date the other side stated (`stated`, R7); this module writes an
  * entry by a member's adoption (R13) or statement (`clockState`, R18); R3 answers `owed_by`, `due_at`, the steps standing
  * for the entry (R16) and a duty's Noticed item (R17); `ourDeadlines` lists the group's own (R18); and lateness counts
- * only the group's own (R15). At start it registers as `steps`' due holder (R16). An
+ * only the group's own (R15). At start it registers as `steps`' due holder (R16). T46: R1's items carry an entry's
+ * time of day and zone (R19, N918), and the standing proposals are read before one is adopted (R20, N925). An
  * action's clock is written in its own document (`actions`); this module reads it, proposes entries apart, holds the
  * members' reminders in its own table, and writes the document only through R13's adoption, a member's revision.
  *
@@ -87,6 +88,8 @@ export const REMINDERS_DUE_MAX = 500;
 /** R4: the most standing reminders one action holds; and the most reminders `remindersFor` answers. */
 export const REMINDERS_PER_ACTION_MAX = 50;
 export const REMINDERS_READ_MAX = 500;
+/** R20: the most standing proposals `clockProposalsFor` answers. */
+export const CLOCK_PROPOSALS_MAX = 500;
 /** R11: the most actions `calendarFactsRead` reads. */
 export const CALENDAR_FACTS_ACTIONS_MAX = 500;
 /** R14: the most actions one calendar file holds. R15: the most actions one lateness index reads, and the most versions
@@ -120,10 +123,11 @@ export const owedOf = (e) => (e && typeof e === "object" && CLOCK_OWED_BY.includ
 /** R15: whether an entry is one of the group's own deadlines. */
 export const isGroupOwn = (e) => owedOf(e) === "group" || (!!e && GROUP_OWN_KINDS.includes(e.basis_kind));
 const DUE_AT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
-/** R3 (T45; for `monitoring` R34): an entry's time of day and its zone where it states one (R13 writes them from a
- *  count due at a time; `civil-time` R11, R14), else both null. */
+/** R3 (T45; for `monitoring` R34), R19 (T46; N918): an entry's time of day and its zone where it states one (R13 writes
+ *  them from a count due at a time; `civil-time` R11, R14), the entry's `due_zone`, else the action's zone; else both
+ *  null. `zone` is the action's zone, or a function answering it, asked only when a timed entry states none. */
 const dueAtOf = (e, zone) => (e && typeof e.due_at === "string" && DUE_AT_RE.test(e.due_at)
-  ? { due_at: e.due_at, due_zone: typeof e.due_zone === "string" && e.due_zone ? e.due_zone : zone }
+  ? { due_at: e.due_at, due_zone: typeof e.due_zone === "string" && e.due_zone ? e.due_zone : typeof zone === "function" ? zone() : zone }
   : { due_at: null, due_zone: null });
 /** R3 (T45; v0.2 rule 6): an overdue item is a question about a date, never a finding. */
 export const OVERDUE_SAYS = "a date on this action's clock has passed: a question about a date, not a finding about anyone";
@@ -345,7 +349,8 @@ export class ActionClocks {
      answered when `truncated`, else null, and when the action bound ends a page past an action with no qualifying
      entry, that action's last position instead, so a page always moves on and paging from the start through each
      `cursor` to null reaches every entry. `candidates(seekId, n)` answers up to `n` rows `{bundle_id}` at or after
-     `seekId` in id order; `item(r, i, e)` answers the entry's item, or null when it does not qualify. */
+     `seekId` in id order; `item(r, i, e, fm)` answers the entry's item (`fm` the action's document, read once a page),
+     or null when it does not qualify. */
   #entryPage({ after, max, actionsMax, candidates, item }) {
     const from = after === null || after === undefined || after === "" ? null : String(after);
     const at = from ? /^(.+)#(\d+)$/.exec(from) : null;
@@ -359,7 +364,7 @@ export class ActionClocks {
       const clock = Array.isArray(fm.clock) ? fm.clock : [];
       const skip = seek && r.bundle_id === seek.id ? seek.pos : -1;
       for (let i = skip + 1; i < clock.length; i++) {
-        const it = item(r, i, clock[i]);
+        const it = item(r, i, clock[i], fm);
         if (!it) continue;
         /* The page is full and an entry remains: the next page resumes after the last one answered. */
         if (items.length === max) { full = truncated = true; break read; }
@@ -380,7 +385,9 @@ export class ActionClocks {
 
   /** R1 (N237, N311): every `pending` clock entry dated before `before` across visible actions, at most 500 per page,
    *  in (action id, entry position) order after `after` (`#entryPage`). The seek is retrieval's projection
-   *  (`bundle_projection`, its R61), joined on `bundle_id`; the entries are read from the document, the authority. */
+   *  (`bundle_projection`, its R61), joined on `bundle_id`; the entries are read from the document, the authority.
+   *  R19 (T46; N918; for `monitoring` R34, R50): each item carries `due_at` and `due_zone` as R3's do, so `monitoring`
+   *  reads a timed entry's instant here; the action's zone is read only for a timed entry that states none. */
   pendingClocks({ before, limit = null, after = null, viewer = null } = {}) {
     const day = String(before ?? "").slice(0, 10);
     /* DEC-49 REGION is-pending-before */
@@ -389,14 +396,23 @@ export class ActionClocks {
     /* END DEC-49 REGION is-pending-before */
     const max = clampLimit(limit, PENDING_CLOCKS_MAX, PENDING_CLOCKS_MAX);
     const gate = viewerPredicate(viewer);
+    /* R19: the view and each action's zone, read once a call and only when a timed entry needs them. */
+    let view;
+    const zones = new Map();
+    const zoneOf = (id, fm) => {
+      if (view === undefined) view = this.#view();
+      if (!zones.has(id)) zones.set(id, actionZone(fm, view));
+      return zones.get(id);
+    };
     const page = this.#entryPage({
       after, max, actionsMax: PENDING_CLOCKS_ACTIONS_MAX,
       candidates: (seekId, n) => this.#rows(`SELECT b.bundle_id FROM bundles b JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id
         WHERE b.object_type='action' AND (${gate.sql}) ${seekId !== null ? "AND b.bundle_id>=?" : ""}
           AND bp.action_clock_next IS NOT NULL AND bp.action_clock_next < ? ORDER BY b.bundle_id LIMIT ?`,
         ...gate.args, ...(seekId !== null ? [seekId] : []), day, n),
-      item: (r, i, e) => (!e || e.status !== "pending" || typeof e.date !== "string" || !(e.date < day)) ? null
-        : { action: r.bundle_id, ord: i, date: e.date, basis: e.basis ?? null, text: e.text ?? null, past: e.date < day },
+      item: (r, i, e, fm) => (!e || e.status !== "pending" || typeof e.date !== "string" || !(e.date < day)) ? null
+        : { action: r.bundle_id, ord: i, date: e.date, basis: e.basis ?? null, text: e.text ?? null, past: e.date < day,
+            ...dueAtOf(e, () => zoneOf(r.bundle_id, fm)) },
     });
     return { ok: true, before: day, items: page.items, limit: max, actions_limit: PENDING_CLOCKS_ACTIONS_MAX,
              truncated: page.truncated, cursor: page.cursor };
@@ -421,8 +437,7 @@ export class ActionClocks {
     const max = clampLimit(limit, OVERDUE_CLOCKS_MAX, OVERDUE_CLOCKS_MAX);
     const gate = viewerPredicate(viewer);
     const closed = CLOSED_ACTION_STATES.map(() => "?").join(",");
-    const who = new Map(), judged = new Map(), docs = new Map();
-    const fmOf = (id) => { if (!docs.has(id)) docs.set(id, this.#heldFm(id) || {}); return docs.get(id); };
+    const who = new Map(), judged = new Map();
     const instant = stampInstant("second", this.#nowMs(now));
     let undetermined = 0;
     const page = this.#entryPage({
@@ -431,9 +446,8 @@ export class ActionClocks {
         WHERE b.object_type='action' AND b.current_state NOT IN (${closed}) AND (${gate.sql})
           ${seekId !== null ? "AND b.bundle_id>=?" : ""} ORDER BY b.bundle_id LIMIT ?`,
         ...CLOSED_ACTION_STATES, ...gate.args, ...(seekId !== null ? [seekId] : []), n),
-      item: (r, i, e) => {
+      item: (r, i, e, fm) => {
         if (!e || typeof e !== "object") return null;
-        const fm = fmOf(r.bundle_id);
         if (!judged.has(r.bundle_id)) judged.set(r.bundle_id, this.#judged(fm, view, now));
         const { zone, day: today } = judged.get(r.bundle_id);
         const dated = typeof e.date === "string" && isDay(e.date);
@@ -476,11 +490,10 @@ export class ActionClocks {
         WHERE b.object_type='action' AND b.current_state NOT IN (${closed}) AND (${gate.sql})
           ${seekId !== null ? "AND b.bundle_id>=?" : ""} ORDER BY b.bundle_id LIMIT ?`,
         ...CLOSED_ACTION_STATES, ...gate.args, ...(seekId !== null ? [seekId] : []), n),
-      item: (r, i, e) => {
+      item: (r, i, e, fm) => {
         if (!e || typeof e !== "object" || e.status !== "pending" || owedOf(e) !== "group" || !isDay(e.date)) return null;
         if ((f0 !== null && e.date < f0) || (t0 !== null && e.date > t0)) return null;
         if (!judged.has(r.bundle_id)) {
-          const fm = this.#heldFm(r.bundle_id) || {};
           judged.set(r.bundle_id, this.#judged(fm, view, now));
           who.set(r.bundle_id, { project: this.#projectOf(fm, viewer), created_by: this.#createdBy(r.bundle_id) });
         }
@@ -678,6 +691,31 @@ export class ActionClocks {
                          ...(computed.date ? {} : { undetermined: computed.why }) },
              says: "this clock entry is proposed and is not on the action's clock: a member adopts it (op=clockadopt) "
                  + "or states a clock entry by a revision of the action." };
+  }
+
+  /** R20 (T46; N925; for `affordances` R51; `op=clockproposals`, a read): the standing proposals of R2 on an action the
+   *  viewer may see, those not yet adopted (R13), in (rule, proposer) order: each with the key R13 adopts it by
+   *  (`<rule>@<proposer>`), the rule, its date or `undetermined` with why, its basis, the entry R2 proposed, the trace
+   *  R2 answered (with its one-line account, and the candidates and due instant where it has them), its label (machine
+   *  work, a member's, or unstated) and when it was proposed; `[]` when none stands, at most 500 with `truncated`. An
+   *  absent or invisible action answers `actions.noSuchAction` (its R43). Writes nothing. */
+  clockProposalsFor({ action = null, viewer = null } = {}) {
+    const a = this.#actionFor(action, viewer);
+    if (!a) return noSuchAction(action ?? null);
+    const rows = this.#rows(`SELECT proposed_by, rule, date, basis, entry_json, why, proposed_at, trace_json
+      FROM action_clock_proposals WHERE bundle_id=? AND adopted_at IS NULL ORDER BY rule, proposed_by LIMIT ?`,
+      a.id, CLOCK_PROPOSALS_MAX + 1);
+    const parse = (t) => { try { const v = JSON.parse(t || "null"); return v && typeof v === "object" ? v : null; } catch { return null; } };
+    const proposals = rows.slice(0, CLOCK_PROPOSALS_MAX).map((r) => {
+      const kept = parse(r.trace_json) || {};
+      const dated = typeof r.date === "string" && r.date !== "";
+      return { key: `${r.rule}@${r.proposed_by}`, rule: r.rule, date: dated ? r.date : null,
+               undetermined: dated ? null : (r.why || "the count is undetermined"), basis: r.basis, entry: parse(r.entry_json),
+               trace: kept.trace ?? null, trace_line: kept.trace_line ?? null,
+               ...(Array.isArray(kept.candidates) ? { candidates: kept.candidates } : {}), ...(kept.due ? { due: kept.due } : {}),
+               label: proposalLabelFor(r.proposed_by), proposed_by: r.proposed_by, proposed_at: r.proposed_at };
+    });
+    return { ok: true, action: a.id, proposals, limit: CLOCK_PROPOSALS_MAX, truncated: rows.length > CLOCK_PROPOSALS_MAX };
   }
 
   /* R10, R12: the count's reader of the holiday entries' confirmations is `factReader` over this host's local-facts, the
@@ -1416,8 +1454,8 @@ export function actionClocksOwns(t) {
 
 /** The module's ops (K3, K671), entries of the route map `plane` composes (its R5) and control-plane's `dispatch` looks
  *  up: `op=reminderset` (R4), `op=reminderanswer` (R6), `op=clockadopt` (R13), `op=clockstate` (R18, T45), and the
- *  reads `op=clocksics` (R14) and `op=clocklateness` (R15). `viewer` and `author` are the control plane's stamps, read from the query, so a caller's
- *  own copy never wins. */
+ *  reads `op=clocksics` (R14), `op=clocklateness` (R15) and `op=clockproposals` (R20, T46). `viewer` and `author` are
+ *  the control plane's stamps, read from the query, so a caller's own copy never wins. */
 export function actionClocksOps(m, url, body) {
   const q = (k) => url.searchParams.get(k);
   const has = (k) => url.searchParams.has(k);
@@ -1440,5 +1478,6 @@ export function actionClocksOps(m, url, body) {
     clocksics: () => m.clocksIcs({ actions: has("actions") ? url.searchParams.getAll("actions").join(",") : b.actions ?? null,
                                    viewer: q("viewer") }),
     clocklateness: () => m.lateness({ from: pick("from"), to: pick("to"), project: pick("project"), viewer: q("viewer") }),
+    clockproposals: () => m.clockProposalsFor({ action: pick("action"), viewer: q("viewer") }),
   };
 }
