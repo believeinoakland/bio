@@ -5,9 +5,23 @@
  * C-112.11, never codeless (N269, D-495): standards' own condition, so its own code (K275), not the generic `NO_ID`
  * other modules mint for their own subjects. C-112.20 (`STANDARD_NO_REASON`, R1 and R10; DEC-88, K1025) was minted in T22
  * and stamped by 1.53.0, as was C-112.17's re-wording (the record now holds the declarer's reason). No translation
- * names a place (R13, `layers.md` rule 1), and none speaks of a standard's merit (R12). */
+ * names a place (R13, `layers.md` rule 1), and none speaks of a standard's merit (R12). Since T46 (R55), a row whose code
+ * `words.json` holds as `refusal.<CODE>` reads its translation from there by key (`REFUSAL_WORDS`). */
 
 const at = (fn, region, file = "index.mjs") => `src/standards/${file} ${fn} > ${region}`;
+
+/* R55 (T46; DEC-194, N913): the refusal words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this
+   module answers, each `en` verbatim, read by key as `membership`'s `HANDLE_WORDS` and `extraction`'s `TRANSCRIBE_WORDS`
+   are; a row's `translation` is the word itself. Only the codes the list holds as `refusal.<CODE>` are here: every other
+   row keeps its own translation. */
+export const REFUSAL_WORDS = Object.freeze({
+  'refusal.COMMITMENT_AS_HEARD': 'A spoken commitment becomes a standard only once the body confirms it in writing or '
+    + 'states it publicly. Every passage named here is a member\'s account of what was heard, which stays that member\'s '
+    + 'own. Name the body\'s writing or public statement. Nothing was written.',
+  'refusal.COMMITMENT_OWN_LETTER': 'A commitment becomes a standard only once the body confirms it in writing or states '
+    + 'it publicly. Every passage named here is from your group\'s own letters or members\' accounts. Name the body\'s '
+    + 'own confirmation. Nothing was written.',
+});
 
 export const STANDARDS_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE_STANDARD: {
@@ -273,19 +287,15 @@ export const STANDARDS_CHECKS = Object.freeze({
     check: 'C-112.62', where: at("inForceThroughWithdraw", "is-through-record-held"),
     translation: 'No record of a version known in force through a date answers to that id here. Nothing was written.',
   },
-  /* T45-7 (R52, R53; Actions D7; v0.2 §3 Standard): rows minted in T45, awaiting promotion's stamp (T46). */
+  /* T45-7 (R52, R53; Actions D7; v0.2 §3 Standard): rows minted in T45. T46-10 (R55; DEC-194, N913): their translations
+     are `words.json`'s `refusal.<CODE>`, read by key (`REFUSAL_WORDS` above), never a copy; awaiting T47's stamp. */
   COMMITMENT_AS_HEARD: {
     check: 'C-112.63', where: at("#commitmentRefusal", "is-commitment-confirmed"),
-    translation: 'A spoken commitment becomes a standard only once it is confirmed in writing or stated publicly. Every '
-      + 'passage named for this one is a member\'s account of what was heard, which stays that member\'s own observation. '
-      + 'Name the body\'s letter, its minutes, a recording or its own publication that states it. Nothing was written.',
+    translation: REFUSAL_WORDS['refusal.COMMITMENT_AS_HEARD'],
   },
   COMMITMENT_OWN_LETTER: {
     check: 'C-112.64', where: at("#commitmentRefusal", "is-commitment-not-own-letter"),
-    translation: 'A commitment becomes a standard once the body confirms it in writing or states it publicly. Every '
-      + 'passage named for this one is from your group\'s own letters or members\' accounts, and your group\'s confirming '
-      + 'letter is not the body\'s confirmation. Name the body\'s reply, its minutes, a recording or its own publication '
-      + 'that states it. Nothing was written.',
+    translation: REFUSAL_WORDS['refusal.COMMITMENT_OWN_LETTER'],
   },
 });
 

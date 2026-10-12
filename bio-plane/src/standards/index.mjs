@@ -52,7 +52,10 @@
  * T45 (T45-7; Actions D7; v0.2 §3 Standard): a spoken commitment is a standard only once confirmed in writing or stated
  * publicly. A `commitment` resting only on members' "as heard" accounts (`provenance` R28's authored observations, read
  * through its R48 contract) is refused (R52), and so is one resting only on the group's own sending, which a later
- * module (`actions`) tells this one through the check it registers at start (R53, `registerOwnSendingCheck`). */
+ * module (`actions`) tells this one through the check it registers at start (R53, `registerOwnSendingCheck`).
+ *
+ * T46 (T46-10; DEC-194, N913): the two refusals' translations are `words.json`'s `refusal.<CODE>`, read by key
+ * (R55, `./checks.mjs` `REFUSAL_WORDS`); no code, number, `where` or behaviour moved. */
 
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
@@ -80,7 +83,7 @@ import { COPY_STATES, HELD_STATES, ACCESS_STATES, FORCES, POLICY_FORCES, ownerWo
 import { LawRecords, LAW_RELATIONS, COURT_LINKS, TREATMENTS, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD,
          weakestCeiling, machineRelate, refuseNoCitation } from "../law-relations/index.mjs";
 
-export { STANDARDS_CHECKS } from "./checks.mjs";
+export { STANDARDS_CHECKS, REFUSAL_WORDS } from "./checks.mjs";
 export { STANDARDS_SCHEMA, STANDARDS_TABLES } from "./schema.mjs";
 export { instrumentKey, referenceKey, isPortionPath, PORTION_PATH_MAX } from "./instrument.mjs";
 export { LAW_RELATIONS, COURT_LINKS, TREATMENTS, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD };
