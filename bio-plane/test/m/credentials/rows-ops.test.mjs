@@ -20,6 +20,8 @@ test("R6 R9 R12 R14 R15 R53 the rows: ids and words as copied, each where naming
     AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER: ["C-29.11", W("aiCredentialMint", "is-ai-credential-mint"), /member who creates it/],
     AI_CREDENTIAL_BAD_EXPIRY: ["C-29.28", W("aiCredentialMint", "is-ai-credential-expiry"), /from 1 to 365, and 90/],
     AI_CREDENTIAL_NO_SECRET: ["C-29.33", W("aiCredentialMint", "is-ai-credential-digest"), /could never be used/],
+    /* (T47-9; R63) a run segment's credential's malformed request, the next free C-29 number after R64's */
+    AI_RUN_CREDENTIAL_MALFORMED: ["C-29.41", W("aiRunCredentialMint", "is-ai-run-credential-shape"), /did not name the run/],
     BAD_KEY: ["C-96.8", W("signerAdd", "is-signer-key-shape"), /begins AAAA/],
     SIGNER_KEY_HELD_BY_ANOTHER: ["C-96.15", W("signerRegisterOwn", "is-signer-key-held"),
       /^This key is registered to another member, so it cannot be yours\. Make a new key in this browser\. Nothing was changed\.$/],
@@ -121,6 +123,8 @@ test("R22 R23 R24 R25 R27 R28 R29 R31 R32 R33 R35 R36 R37 R51 the T33-20, T34 an
     AI_USE_SWITCHED_OFF: ["C-29.37", W("#switchedOff", "is-use-switched-on")],
     PROJECT_AI_KEPT_AWAY: ["C-29.38", W("aiKeptAway", "is-project-kept-away")],
     PROJECT_KEY_NOTICE_DUE: ["C-29.39", W("#projectNoticeDue", "is-project-key-notice-seen")],
+    /* (T47-9; R64, K231) the disclosure-first order's one site, C-69.6's code and sentence moved here */
+    DISCLOSURE_DUE: ["C-29.40", W("disclosureDue", "is-disclosure-shown")],
     UNKNOWN_KEYED_SERVICE: ["C-96.19", W("#keyedService", "is-keyed-service")],
     KEYED_SERVICE_NO_KEY: ["C-96.20", W("keyedServiceSet", "is-keyed-service-key")],
     KEYED_SERVICE_OFF: ["C-96.21", W("keyedServiceFor", "is-keyed-service-on")],
