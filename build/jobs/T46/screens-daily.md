@@ -60,3 +60,7 @@ T46-57 applied: home, queue, finder, find-in, answers (R1–R7), to interface-sh
 `tranche/T46` merged. Applied the kit additions my screens need: the clock is `cs.now()` everywhere (Home's new project, the queue's due marks and question, the standing questions' end); `adoptversion` (`why`) and `standarddeclare` (`reason`) collect the member's own words in their dialog and name that field as `reasonField`, so the words are the act's reason and no second one is asked (R11 as amended). `cs.value`'s checkbox `true`/`false` was already read. `parts`, `view.origin`, `cs.digest` and outside links are not needed by these screens (promotion computes the bundle's digest itself). New own rows: `screen.queue.why`, `screen.find-in.field.reason`. Tests: 42/42 (a new one for the page's clock). With paths entered locally: architecture 0, coverage 7/7, ownership 0; format 0.
 
 Size (session_01RJBRXS3sxyhSh6P5LL6g9S): test runs 15, module lines 1096 (tests 878)
+
+## J5 · COMPLETE · re B5
+
+B5 (K3002) applied after merging tranche/T46: cs.now() is the clock throughout; adoptversion and standarddeclare collect the member's words in their dialog as their reasonField. Two own rows added (screen.queue.why, screen.find-in.field.reason); files unchanged from J4's list. 42/42; with paths entered: architecture 0, coverage 7/7, ownership 0. Details in my record.
