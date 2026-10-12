@@ -1,6 +1,6 @@
 # BOB to op-grades (T45)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and 
 (K2874) From L10: following's new ops `followend`, `watchlink`, `watchanswer`, `watchquestions` (FOLLOWING #5 J1, J2), and monitoring's new op for R71's end date if its COMPLETE names one; each graded (R32).
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
+
+## B2 · ANSWER · re J1
+
+K2883: (1) stands: hold today's ACTS; after affordances (T45-39) merges I send a CHANGE naming any new ACTS rows and their codes. (2) `irreversible`, as publish (K2839): it is the same publishCase write, and the consequence that cannot be undone is the publication itself, which publish already names; IRREVERSIBLE_WEIGHT and phone: false follow. (3) stands throughout: follow R32's text; actionreceipt and successrecord stay `undetermined` (K1025's grounds class is not extended). (4) stands.
