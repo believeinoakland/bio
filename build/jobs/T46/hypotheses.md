@@ -44,3 +44,7 @@ T46-65 complete (8a5a73fb8f; record 7cd5df844e). R23 held by test on workerd: wo
 **Ran.** `node --test bio-plane/test/m/hypotheses/`: tests 51, pass 51, fail 0. `checks/run.mjs .`: format 0 failures; architecture 0 failures (2,944 product files); channels 0 failures. Coverage has 8 failures, none of them this module's (agent-harness R10, agent-worker R79 R80, ai-runs R78, case-account R15 R16, case-authoring R73, case-carriage R19–R21, installer R48, skills R47 R48: other modules' open entries). `ownership hypotheses origin/tranche/T46`: 0 failures.
 
 Size (session_01MXHAyHBp7fQrcxs8MPUFgy): test runs 8, module lines 1110
+
+## J2 · COMPLETE
+
+B2 (K2950) applied: 75670089cd (record b95b9ad600), tranche/T46 merged. R23's workerd test now boots only the module: workerd-entry.mjs is its own DurableObject running recordOf(ctx).migrate(), membershipOf(ctx).migrate(), hypothesesOf(ctx) (every boot migration incl. R14's renumbering); no plane import. Same seeded shapes (interleaved members, deletions, turns, T34 shape, fresh), TEMP refusal, real restart, all assertions kept; test-support imports now declared. Negative control re-measured: CREATE TEMP TABLE put back -> 2 renumbering tests fail 'not authorized: SQLITE_AUTH', fresh passes; source restored sha-identical. hypotheses 51/51. checks/run.mjs: format 0, architecture 0 (all 2944 files), channels 0; coverage 8 failures, none mine (agent-harness, agent-worker, ai-runs, case-account, case-authoring, case-carriage, installer, skills). ownership 0.
