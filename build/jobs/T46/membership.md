@@ -36,6 +36,15 @@
 
 Size (session_01NYNAzwK9hYtCvE5CTuZxYA): test runs 12, module lines 3,729.
 
+**B3 (CHANGE; K2928):** merged `tranche/T46` (R131 new).
+- **R131** `join_doors` is declared through `record-core.declareTable` with `export: never`, and its other classes are the ones the default form gave it (`purge: exempt`, `expunge: none`, `sight: group`, `derive: stored`, `version_chain: false`; `MEMBERSHIP_DECLARED_TABLES` in `schema.mjs`). It left the default form's `exempt` list and stays in `MEMBERSHIP_EXEMPT_TABLES`, the list of what purge keeps. Every other membership table keeps the default form (`export: admin-only`).
+- **Tested at my interface, through the real record-core:** `declaredTables()` holds `join_doors` once with exactly those classes. No exportable membership table holds a door's hash. A whole-store purge keeps the doors' records. Controls: every other table is `admin-only`, and R130's read still answers. corpus-export, which reads these classes and skips `export: never` tables, is layer 8, so my tests do not drive an export itself. corpus-export's own tests are green on this branch.
+- **A host whose record-core offers no `declareTable`** (a test's stand-in) declares `join_doors` in the default form as before. This follows `#registerReservedIdFinding`'s precedent and is tested with its control. Without it, `project-roster`'s fixture (a stub with `declarePurge` only) turned 34 of its tests red; with it, every test of the ten modules building membership over a stub passes (2,051 of 2,051). For `project-roster` (REPORT J4): its fixture's stub may gain `declareTable` so that its runs see R131's declaration.
+- `node --test test/m/membership/*.test.mjs test/members.test.mjs`: tests 219, pass 219, fail 0. Fifteen other modules (the thirteen above, plus corpus-export and record-core): tests 1723, pass 1713, fail 9. These are the same nine reds as at J3; none is new.
+- format (159 modules, 152 requirements files), architecture, coverage (97 of 97), ownership (tranche/T46): 0 failures each.
+
+Size (session_01NYNAzwK9hYtCvE5CTuZxYA): test runs 17, module lines 3,749.
+
 ## J1 · QUESTION
 
 Two readings I am building on; neither stops the job.
