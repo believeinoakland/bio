@@ -62,3 +62,7 @@ R7 names re-wordings and retirements as exceptions, but it does not name a row t
 ## J2 · COMPLETE
 
 T45-49 done (B2 merged): CHECK_FAMILY_FILES lists case-account C-153, case-check C-148, action-holds C-149, action-replies C-150, plan-work C-151 at their modules.json places; R7 snapshot re-pinned (C-113.7, C-124.1, C-124.30, C-117.19 re-worded; C-115.19 retired; PRESSURE_MARKED/PRESSURE_NO_ENTRY moved to C-149.6/.7 under changed.moved, meeting R7's T45 sentence). Clears rule 4 (14) and (15)'s answer-envelope items. answer-envelope 32/32; store-door 44/44; control-plane 219/4 and plane 188/8 identical to tranche/T45 without my commits. format, architecture (9 files), coverage (12/12), ownership (5 files): 0 failures. Deferred: action-producers' C-152 until its checks.mjs lands (your CHANGE). Record in build/jobs/T45/answer-envelope.md.
+
+## J3 · COMPLETE
+
+B4 processed (tranche/T45 merged): action-producers merged with no checks.mjs and no exported *_CHECKS family (its reason fields are undetermined states, not refusals), so there is nothing to list and no C-152 yet; the totality test would turn red if a family lands later. No code change. answer-envelope 32/32; format, architecture (9 files), coverage (12/12), ownership (1 file): 0 failures. Record updated.
