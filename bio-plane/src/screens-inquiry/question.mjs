@@ -151,8 +151,8 @@ function render(cs, view) {
         (l.words ? `<span class="cs-rec">“${cs.esc(l.words)}”</span>` : "")
         + `<span class="cs-meta">${cs.ref("document", target, cs.esc(l.target_title || target), facts)}`
         + (severed ? ` · ${cs.w("screen.question.leg.severed")}` : "") + "</span>",
-        severed ? cs.act("reinstate", { label: "act.reinstate.label.question", data: { handle: target } })
-                : cs.act("sever", { label: "act.sever.label.question", data: { handle: target } }));
+        /* not drawn in T46: `sever` and `reinstate`, which act only on a project's `cites` edges (K3003; N977) */
+        "");
     }).join(""));
   };
   out.push(cs.sec("screen.question.supports.head", cs.state("basis", view, (b) => legRows(b, "supports"))
@@ -194,24 +194,12 @@ function render(cs, view) {
   return out.join("");
 }
 
-/** R2's eleven acts, each answering `{query, body}` for the shell to send, or opening another screen and sending
- *  nothing (`findin`'s scope and `search` live on `screens-daily`'s screens). */
+/** R2's acts (nine in T46: `sever` and `reinstate` are not drawn, K3003), each answering `{query, body}` for the shell
+ *  to send, or opening another screen and sending nothing (`findin`'s scope and `search` live on `screens-daily`'s screens). */
 const acts = [
   { op: "cite", label: "act.cite.label.question",
     /* the passage is chosen where passages are: a document's (its per-passage cite names this question) or Find in */
     send(view, el, cs) { cs.go("find-in", "question:" + String(view.subject || "")); return null; } },
-  { op: "sever", label: "act.sever.label.question",
-    dialog: [{ name: "reason", label: "screen.question.restore.label" }],
-    send(view, el, cs, extra) {
-      const f = (extra && extra.fields) || {};
-      return { query: { project: String(view.subject || ""), handle: el.dataset.handle || "", reason: String(f.reason || "") } };
-    } },
-  { op: "reinstate", label: "act.reinstate.label.question",
-    dialog: [{ name: "reason", label: "screen.question.restore.label" }],
-    send(view, el, cs, extra) {
-      const f = (extra && extra.fields) || {};
-      return { query: { project: String(view.subject || ""), handle: el.dataset.handle || "", reason: String(f.reason || "") } };
-    } },
   { op: "narrow", label: "act.narrow.label.question",
     dialog: [{ name: "name", label: "screen.question.narrow.name" }, { name: "description", label: "screen.question.narrow.description" }],
     send(view, el, cs, extra) {
@@ -238,7 +226,7 @@ const acts = [
       return { query: q };
     } },
   { op: "withdrawconclusion", label: "act.withdrawconclusion.label.question",
-    dialog: [{ name: "reason", label: "screen.question.restore.label" }],
+    dialog: [{ name: "reason", label: "screen.question.withdraw.reason" }],
     send(view, el, cs, extra) {
       const f = (extra && extra.fields) || {};
       const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
@@ -280,7 +268,7 @@ const acts = [
 /** The keys the question screen may draw. */
 const words = [
   "screen.question.name", "screen.question.purpose",
-  ...["cite", "sever", "reinstate", "narrow", "conclude", "withdrawconclusion", "hypothesishold", "planopen", "checkrequest", "heldrestore", "search"]
+  ...["cite", "narrow", "conclude", "withdrawconclusion", "hypothesishold", "planopen", "checkrequest", "heldrestore", "search"]
     .flatMap((op) => ["act." + op + ".label.question", "act." + op + ".does"]),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.connection.name", "mark.scale.connection.means",
   "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading", "mark.strength.means", "mark.hunch.means",

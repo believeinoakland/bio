@@ -50,7 +50,7 @@ export function harness(screen, { subject = "", data = {}, me = { member: "m1", 
   }
   const h = {
     screen: s, keys: new Set(), unlisted: new Set(), requests: [], went: [], redraws: 0, html: "",
-    view: { subject, data, me, ui, reachable }, fields: { ...fields }, denied: new Set(denied),
+    view: { subject, data, me, ui, reachable }, fields: { ...fields }, denied: new Set(denied), clock: Date.UTC(2026, 9, 12, 9, 30),
   };
   const w = (key, fills = {}) => {
     h.keys.add(key);
@@ -103,6 +103,7 @@ export function harness(screen, { subject = "", data = {}, me = { member: "m1", 
       + options.map((o) => `<option value="${esc(o.value)}"${o.value === value ? " selected" : ""}>${o.key ? w(o.key) : esc(o.text)}</option>`).join("") + "</select>",
     checks: () => "",
     title: (text) => `<h1>${text}</h1>`,
+    now: () => h.clock,
     call(op, { query = {}, body, bearer } = {}) {
       const req = { op, query: { ...query }, body: body === undefined ? undefined : JSON.parse(JSON.stringify(body)),
                     authorization: `Bearer ${bearer === undefined ? SESSION : bearer}` };

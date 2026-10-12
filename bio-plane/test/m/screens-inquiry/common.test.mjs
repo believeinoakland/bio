@@ -85,11 +85,13 @@ for (const s of SCREENS) {
   });
 }
 
-test("R5 each screen draws exactly its registry acts, labelled by act.<op>.label.<screen>, each an op OPS holds (interface-shell R21)", () => {
+test("R5 each screen draws exactly its registry acts (less K3003's three), labelled by act.<op>.label.<screen>, each an op OPS holds (interface-shell R21)", () => {
   for (const s of SCREENS) {
     const reg = REGISTRY.screens.find((x) => x.id === s.id);
     assert.ok(reg, `${s.id} is a registry screen`);
-    assert.deepEqual(s.acts.map((a) => a.op).sort(), reg.acts.map((a) => a.op).sort(), s.id);
+    /* K3003: in T46 the project draws no `strengthbarset` and the question no `sever`, `reinstate` */
+    const ruledOut = { project: ["strengthbarset"], question: ["sever", "reinstate"] }[s.id] || [];
+    assert.deepEqual(s.acts.map((a) => a.op).sort(), reg.acts.map((a) => a.op).filter((op) => !ruledOut.includes(op)).sort(), s.id);
     for (const a of s.acts) {
       assert.ok(Object.hasOwn(OPS, a.op), `${a.op} in OPS`);
       assert.equal(a.label, `act.${a.op}.label.${s.id}`);

@@ -47,9 +47,6 @@ const PROJECT = [
   row("screen.project.plan.empty", "Give the plan a title and choose its question."),
   row("screen.project.plan.opened", "Plan opened: {title}. Its screen comes later; it is in the project's record now."),
   row("screen.project.plan.head", "Plans opened here"),
-  row("screen.project.bar.capture", "Capture, at least"),
-  row("screen.project.bar.connection", "Connection, at least"),
-  row("screen.project.bar.group", "This sets the bar your group's new projects start with; an administrator sets it."),
 ];
 
 /** The question screen's sentences (R2). */
@@ -99,7 +96,7 @@ const QUESTION = [
   row("screen.question.cite.from", "Choose the passage in a document, or find it: then cite it here."),
   row("screen.question.narrow.name", "A name for the narrower question"),
   row("screen.question.narrow.description", "Why, in a sentence"),
-  row("screen.question.restore.label", "Why restore it?"),
+  row("screen.question.withdraw.reason", "Why withdraw it?"),
   row("screen.question.versions.head", "What it rests on"),
   row("screen.question.versions.count", "{count} ways of answering it, {current} current"),
 ];

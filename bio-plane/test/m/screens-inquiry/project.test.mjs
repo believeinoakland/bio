@@ -55,7 +55,8 @@ test("R1 the project drawn: title, objective, stage, the bar as two grades, the 
   assert.match(html, /dev \(owner\)/);
   assert.match(html, /ana \(invited\)/);
   /* the acts a joined member is offered; Join only to an invited or unjoined member */
-  assert.deepEqual(h.drawn().sort(), ["findin", "planopen", "projectinvite", "promote", "strengthbarset"].sort());
+  assert.deepEqual(h.drawn().sort(), ["findin", "planopen", "projectinvite", "promote"].sort());
+  assert.ok(!/data-act="strengthbarset"/.test(html), "K3003: the group's bar is not set from a project");
   await h.settle();
   assert.equal(h.requests.filter((q) => q.op === "inquirystrength").length, 2, "each strength read once, not at every redraw");
 });
@@ -86,7 +87,8 @@ test("R1 promote opens a question in this project: an id from allocid, an inquir
   const { sent } = await h.press("promote");
   assert.equal(sent, null);
   const [alloc, prom] = h.requests.filter((r) => ["allocid", "promote"].includes(r.op));
-  assert.deepEqual(alloc.query, { prefix: "INQ", year: String(new Date().getFullYear()) });
+  assert.deepEqual(alloc.query, { prefix: "INQ", year: "2026" });
+  assert.match(prom.body.meta.created, /^2026-10-12T09:30:00Z$/);
   const id = "INQ-2026-0010-did-the-2026-report-count-working-days";
   assert.equal(prom.body.bundleId, id);
   assert.equal(prom.body.base, null);
@@ -117,13 +119,11 @@ test("R1 promote: an empty question is refused by its word; a refused write is d
 
 test("R1 the other acts send what their owners take", async () => {
   const h = harness(PROJECT, { subject: P, data: DATA(), plane: { ...plane, projectinvite: () => answer({ ok: true }), projectjoin: () => answer({ ok: true }),
-    strengthbarset: () => answer({ ok: true }), planopen: () => answer({ ok: true, id: "PLN-2026-0001", title: "Ask the committee" }) },
+    planopen: () => answer({ ok: true, id: "PLN-2026-0001", title: "Ask the committee" }) },
     fields: { "project-invite": "@ben", "project-plan": "Ask the committee", "project-plan-about": "INQ-2026-0001-seven-days" } });
   h.render();
   assert.deepEqual((await h.press("projectinvite")).sent, { query: { projectId: P, handle: "ben" } });
   assert.deepEqual((await h.press("projectjoin")).sent, { query: { projectId: P } });
-  assert.deepEqual((await h.press("strengthbarset", { dialog: { capture: "b", connection: "c", reason: "the policy needs it" } })).sent,
-    { body: { capture: "B", connection: "C", reason: "the policy needs it" } });
   assert.deepEqual((await h.press("planopen")).sent,
     { body: { project: P, title: "Ask the committee", subjects: [{ kind: "inquiry", inquiry: "INQ-2026-0001-seven-days" }] } });
   /* the plan screen is T47's: the screen says the plan was opened and lists it */
@@ -137,7 +137,7 @@ test("R1 the other acts send what their owners take", async () => {
 });
 
 test("R1 an act the session may not do is absent, never greyed (interface-shell R12)", () => {
-  const h = harness(PROJECT, { subject: P, data: DATA(), plane, denied: ["strengthbarset", "promote", "projectinvite"] });
+  const h = harness(PROJECT, { subject: P, data: DATA(), plane, denied: ["promote", "projectinvite"] });
   h.render();
   assert.deepEqual(h.drawn().sort(), ["findin", "planopen"]);
 });

@@ -37,7 +37,7 @@ function place(view) {
 }
 
 /** R1, R5: the project, its stage and bar, its questions with their strength, what pays for the assistant, its members,
- *  and the six acts, each drawn by `cs.act` (absent when the session may not do it, interface-shell R12). */
+ *  and its acts, each drawn by `cs.act` (absent when the session may not do it, interface-shell R12). */
 function render(cs, view) {
   const id = String(view.subject || "");
   const ui = view.ui;
@@ -122,7 +122,8 @@ function render(cs, view) {
     const said = bar.declared && (bar.capture || bar.connection)
       ? `<p>${cs.grade("capture", bar.capture || "")}${cs.grade("connection", bar.connection || "")} ${cs.w("screen.project.bar.declared", { capture: bar.capture || "", connection: bar.connection || "" })}</p>`
       : `<p>${cs.mark("gap", "unrated")} ${cs.w("screen.project.bar.none")}</p>`;
-    return said + cs.act("strengthbarset", { label: "act.strengthbarset.label.project", data: { project: id } });
+    /* not drawn in T46: `strengthbarset`, which sets the group's bar, not the project's (K3003; N976) */
+    return said;
   })));
 
   /* the questions: the project's own `cites` edges to inquiries, not severed (basis-versions R41's test) */
@@ -184,7 +185,8 @@ function render(cs, view) {
   return out.join("");
 }
 
-/** R1's six acts. `promote` writes its question itself (an id from `allocid`, then the package), so its `send` sends
+/** R1's acts (five in T46: `strengthbarset` is not drawn, K3003). `promote` writes its question itself (an id from
+ *  `allocid`, then the package), so its `send` sends
  *  nothing through the shell and draws its own outcome; the others answer `{query, body}` for the shell to send. */
 const acts = [
   { op: "promote", label: "act.promote.label.project",
@@ -197,13 +199,14 @@ const acts = [
         const r = a && a.result !== undefined ? a.result : a;
         cs.set("promoteRefusal", { code: (r && (r.code || r.reason)) || (a && (a.code || a.reason)) || "", translation: r && r.translation });
       };
-      const year = String(new Date().getFullYear());
+      const clock = new Date(cs.now());
+      const year = String(clock.getUTCFullYear());
       cs.call("allocid", { query: { prefix: "INQ", year } }).then((a) => {
         const r = a && a.result !== undefined ? a.result : a;
         if (!r || !r.id) return fail(a);
         const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
         const id = r.id + (slug ? "-" + slug : "");
-        const now = new Date().toISOString().split(".")[0] + "Z";
+        const now = clock.toISOString().split(".")[0] + "Z";
         /* an inquiry document as record-grammar's inquiry grammar asks (HEADINGS.inquiry; first legal state `open`),
            stating its project (promotion R53) */
         const heads = ["## Question", "## What It Rests On", "## Conclusion", "## What Would Falsify This", "## Session Log", "## Review Notes"];
@@ -229,15 +232,6 @@ const acts = [
     } },
   { op: "findin", label: "act.findin.label.project",
     send(view, el, cs) { cs.go("find-in", "project:" + String(view.subject || "")); return null; } },
-  { op: "strengthbarset", label: "act.strengthbarset.label.project",
-    dialog: [{ name: "capture", label: "screen.project.bar.capture" }, { name: "connection", label: "screen.project.bar.connection" }],
-    send(view, el, cs, extra) {
-      const f = (extra && extra.fields) || {};
-      const g = (x) => { const v = String(x || "").trim().toUpperCase(); return /^[A-D]$/.test(v) ? v : null; };
-      const body = { capture: g(f.capture), connection: g(f.connection) };
-      if (f.reason) body.reason = String(f.reason);
-      return { body };
-    } },
   { op: "projectinvite", label: "act.projectinvite.label.project",
     send(view, el, cs) {
       const handle = String(cs.value("project-invite") || "").trim().replace(/^@/, "");
@@ -264,7 +258,7 @@ const acts = [
 const words = [
   "screen.project.name", "screen.project.purpose",
   "act.promote.label.project", "act.promote.does", "act.findin.label.project", "act.findin.does",
-  "act.strengthbarset.label.project", "act.strengthbarset.does", "act.projectinvite.label.project", "act.projectinvite.does",
+"act.projectinvite.label.project", "act.projectinvite.does",
   "act.projectjoin.label.project", "act.projectjoin.does", "act.planopen.label.project", "act.planopen.does",
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.connection.name", "mark.scale.connection.means",
   "mark.grade.reading", "mark.strength.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",

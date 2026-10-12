@@ -77,8 +77,8 @@ test("R2 sections Supports, Cuts against, Hunches, Concluding; what it waits on,
   const supports = html.slice(at("screen.question.supports.head"), at("screen.question.against.head"));
   const against = html.slice(at("screen.question.against.head"), at("screen.question.hunches.head"));
   assert.match(supports, /within seven calendar days.*data-ref="document" data-id="INFO-2026-0004"/s);
-  assert.match(supports, /data-act="sever" data-handle="INFO-2026-0004"/);
-  assert.match(supports, /Removed from the question.*data-act="reinstate" data-handle="INFO-2026-0005"/s);
+  assert.match(supports, /Removed from the question/);
+  assert.ok(!/data-act="(sever|reinstate)"/.test(html), "K3003: a question's legs are not severed from this screen in T46");
   assert.match(against, /data-grade="testimony" data-letter="D".*still open/s);
   assert.ok(!/INFO-2026-0004/.test(against));
   assert.match(html, /Waiting: 2024 budget PDF was set aside by ben: “wrong year”/);
@@ -86,9 +86,9 @@ test("R2 sections Supports, Cuts against, Hunches, Concluding; what it waits on,
   assert.match(html, /Hunch · dev's.*Crews close reports when they inspect\./s);
   assert.match(html, /data-help="mark.hunch.means"/);
   assert.match(html, /Not concluded\./);
-  /* the registry's eleven acts, conclude (not withdraw) while unconcluded */
+  /* the registry's acts but sever and reinstate (K3003), conclude (not withdraw) while unconcluded */
   assert.deepEqual([...new Set(h.drawn())].sort(), ["checkrequest", "cite", "conclude", "heldrestore", "hypothesishold", "narrow", "planopen",
-                                                     "reinstate", "search", "sever"].sort());
+                                                     "search"].sort());
 });
 
 test("R2 a concluded question shows its conclusion and offers its withdrawal, never a second conclusion", () => {
@@ -102,10 +102,6 @@ test("R2 acts send what their owners take; conclude and withdraw carry the dialo
   const h = harness(QUESTION, { subject: Q, data: DATA(), plane, fields: { "question-hunch": "Inspections close them.", "question-hunch-kind": "flow",
     "question-check": "engineering", "question-check-note": "the crew reports", "question-plan": "Ask the committee" } });
   h.render();
-  assert.deepEqual((await h.press("sever", { data: { handle: "INFO-2026-0004" }, dialog: { reason: "wrong passage" } })).sent,
-    { query: { project: Q, handle: "INFO-2026-0004", reason: "wrong passage" } });
-  assert.deepEqual((await h.press("reinstate", { data: { handle: "INFO-2026-0005" }, dialog: { reason: "it was right" } })).sent,
-    { query: { project: Q, handle: "INFO-2026-0005", reason: "it was right" } });
   assert.deepEqual((await h.press("narrow", { dialog: { name: "Reported in 2026", description: "the record covers 2026 only" } })).sent,
     { query: { target: Q, version: "main", name: "Reported in 2026", description: "the record covers 2026 only" } });
   assert.deepEqual((await h.press("conclude", { dialog: { falsifier: "inspection records showing repair", commentary: "" } })).sent,
