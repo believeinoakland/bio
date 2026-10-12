@@ -2694,8 +2694,9 @@ var OBJECT_TYPES = {
   DUT: "duty",
   STQ: "standing_question",
   /* T46-1 (R59; N911): the success record (`consequences`). Not a bundle prefix either (R1), but, unlike the rows above, a
-     record object promoted with history, so `STATES` holds its one state (document.mjs); `HEADINGS` and `checkBundle`'s
-     schemas still gain nothing. */
+     record object promoted with history, so `STATES` holds its one state (document.mjs); `HEADINGS` still gains nothing.
+     T47-1 (R62; N958): `checkBundle` admits its document, a bare `SUC` id under this type with `success_record@1`
+     (bundle.mjs), without making `SUC` one of R1's prefixes. */
   SUC: "success_record"
 };
 
@@ -3229,6 +3230,14 @@ var PROPOSAL_STATES = Object.freeze({
     machine_proposed: "a machine credential proposed this layout of how a reply bears on each claim of an action. That is machine work, labelled as machine work: it can propose a layout and it can never record one. It is a proposed reading and never the group's reading until a member records it",
     member_proposed: "a member proposed this layout of how a reply bears on each claim of an action. It is a proposed reading and never the group's reading until a member records it, and the record holds who proposed it",
     unstated: "the record does not say who proposed this layout of how a reply bears on each claim of an action. It is a proposed reading and never the group's reading until a member records it"
+  }),
+  /* N956 (K3028; T47, R61): a draft of a status report on a plan (`plan-work` R14, the assistant's draft) is kept with the
+     plan and never published, and the report kept is the member's; a machine can draft one and never keep or publish one.
+     `plan-work` labels the assistant's draft through this subject. */
+  status_report: Object.freeze({
+    machine_proposed: "a machine credential drafted this status report on a plan. It is the assistant's draft: machine work, labelled as machine work, which can draft a report and can never keep or publish one. It is kept with the plan and never published, and the report kept is the member's",
+    member_proposed: "a member drafted this status report on a plan. It is a draft, kept with the plan and never published; the report kept is the member's, and the record holds who proposed it",
+    unstated: "the record does not say who drafted this status report on a plan. It is a draft, kept with the plan and never published, and the report kept is the member's"
   })
 });
 
@@ -3297,7 +3306,8 @@ var SHARED_ACT_CHECKS = Object.freeze({
 var ACCEPTANCE_FORMS = Object.freeze(["as_proposed", "edited", "own_instead"]);
 
 // ../bio-plane/src/record-grammar/bundle.mjs
-var BUNDLE_TYPES = Object.fromEntries(ID_PREFIXES.map((p) => [p, OBJECT_TYPES[p]]));
+var SUC_CORE_RE = idPattern("SUC");
+var BUNDLE_TYPES = Object.fromEntries([...ID_PREFIXES, "SUC"].map((p) => [p, OBJECT_TYPES[p]]));
 var EXTENSION_ARMS = Object.freeze([
   { name: "checkInformationExtension", ids: ["C-2.7"] },
   { name: "checkInfo2Contract", ids: ["C-18.6", "C-18.7"] },
