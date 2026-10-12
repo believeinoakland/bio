@@ -62,3 +62,44 @@ Started; reading set read (record: Working notes). Before L2's merges the census
 Two readings I will apply unless you say otherwise. I stamp what the merged tree holds, so neither blocks the stamp:
 1. **C-56.6.** Plan T46-4 says `PROJECT_GUARD_UNCHECKED` is "re-worded". Membership R128, as K2917 folded it, says it keeps its present translation in T46. If membership's merge leaves the line unmoved, my note says so and stamps no change for C-56.6.
 2. **C-96.50.** B1 names the retired C-96.49 and C-96.51 and the new C-96.52 `HANDLE_FIXED`. Membership R126 also retires C-96.50, the old `HANDLE_FIXED` row. I expect the stamp to record three departures (C-96.49–.51) and one arrival (C-96.52), as R126 says.
+
+## Completion
+
+**B2 (CHANGE, K2931) applied.** I merged `tranche/T46` (49e9c3202d), which holds record-core, membership and project-roster, re-diffed the census and stamped. Both J1 readings stand, as B2 confirms.
+
+**Entry applied (T46-6): the stamp, 1.72.0 → 1.73.0, MINOR.**
+- **The pin.** `ROW_CENSUS` is now **1872 rows, `65a4bea39dcb88e4f17a031927e019b2c8c03465fd3a31d34efae75ae41a281f`**. It was taken over the merged tree and diffed line by line against 1.72.0's own lines. 152 lines arrived and 12 departed:
+  - 145 new rows;
+  - 7 rows moved to new numbers: actions' C-117.17, .18, .20, .21, .23–.25 became action-holds' C-149.6, .7, .1–.5;
+  - 1 row renumbered and reworded: membership's `HANDLE_FIXED`, C-96.50 → C-96.52;
+  - 4 rows retired: C-115.19, C-117.22, C-96.49, C-96.51;
+  - 19 rows changed: Working notes lists T45's 13; the other 6 are project-roster's C-147.3–.8.
+- **Membership.** C-56.6 is unmoved. Record-core's T46 job and T46 L1 changed no row.
+- **The note in `gate.mjs`.** The 1.73.0 note lists every row by family. It names the families that arrived: `CASE_CHECK_CHECKS` C-148, `ACTION_HOLDS_CHECKS` C-149, `ACTION_REPLY_CHECKS` C-150, `PLAN_WORK_CHECKS` C-151 and `CASE_ACCOUNT_CHECKS` C-153. It says there is no C-152 (K2891).
+- **Changes to what the gates run** (no row moves):
+  - record-grammar's new state edges: escalation `stopped_pursuing`, action_plan `paused`, and the type `success_record`;
+  - membership's six new modules in `MODULE_ORDER`, none of which registers a gate step.
+- **Files.**
+  - The fixture is renamed to `test/fixtures/row-census-1.73.0.jsonl` and was written by `censusOf`.
+  - The census suite's header and its two declaration lists are re-anchored at 1.73.0, with none open.
+  - The requirements' Status line already carries the stamp's terms (BOB's fold, K2917). I did not edit it.
+- **Stamp commit:** `bdb6edca97`.
+
+**Own code and tests read whole (P20).** See Working notes. No requirement fails, so nothing needed fixing (P8). I deferred these, with reasons:
+- Row counts are hard-coded in tests (write-path R18 expects 35; promote Errors expects 14). They track this module's own tables and did not move here.
+- `AWAITING_STAMP` is kept by hand, as in T45.
+
+**Found in other modules, and BOB's to act on:**
+- `build/modules.json` (BOB's file): promotion's `tests` must name `bio-plane/test/fixtures/row-census-1.73.0.jsonl` in place of `…1.72.0.jsonl`. This is the same swap BOB made in T45 (c7780afcc0). Until then, `format` and `ownership` each report that one line.
+- Generated artifact made stale: `bio-plane/src/case-checker/program.mjs` embeds `GATE_VERSION` ("1.72.0"). It is regenerated at the layer close (rule 5 (4)). The plane bundle is staled likewise.
+
+**Tests and checks run (summary lines):**
+- promotion `test/m/promotion/`: tests 137, pass 137, fail 0. The registry R39 `MODULE_ORDER` red cleared once membership merged.
+- `row-census.test.mjs`: 8 pass, 0 fail. This clears the census half of T45's red 2 in rule 5 (2).
+- d526: 31 passed, 0 failed.
+- `format`: 1 failure, the modules.json fixture name above.
+- `architecture`: 0 failures.
+- `coverage`: 57 of 57 live requirement ids named by a test, 0 failures.
+- `ownership`: 5 files, 1 failure. The 1.73.0 fixture lies outside `tests` until the modules.json swap.
+
+Size (session_01QFUJsskb7hnNteGSP3z9cY): test runs 26, module lines 3858
