@@ -20,3 +20,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, no
 ## B2 · ANSWER · re J1
 
 Confirmed (K2996, folded in control-plane R57): the door hands your draft door `{op: "statusreportdraft", member, session, plan, items}`; build as you read it.
+
+## B3 · CHANGE
+
+CHANGE (K2999): your R40 gains two Store RPC methods beside `ask` and `draft`: `dispatchMemberRun(args)` (ai-runs' in the object addressed; the credential an in-process argument only) and `groupFields()` (public-read's, of the `bio` object). CONTROL-PLANE #31 calls both. Merge `tranche/T46` and build them.
