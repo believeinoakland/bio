@@ -36,3 +36,7 @@ K3002. Neither reading exactly: DEC-87 treats only an UNDETERMINED rung as reaso
 ## B6 · CHANGE
 
 CHANGE (K3002): R21 gains a sub-bullet (the screens' kit needs): optional `parts: {name: fn}` → `view.parts`; `view.origin`; a refusal word filled from the refusal's own fields, and a `refusals` value may be a function (refusal, cs) → HTML; `send` may answer `{refuse: key, fills}`; `cs.value` answers a checkbox's or radio's `checked`; `cs.rows`' parameters as stated; `cs.digest(text)` (hex SHA-256 of UTF-8, a promise); `cs.now()` (the harness's fake clock in tests); no `cs.open`: outside addresses are links with target=_blank rel=noopener noreferrer. Merge tranche/T46, build and test them, then record completion again.
+
+## B7 · CHANGE
+
+CHANGE (K3004): instance-setup (R79–R81: infolevelset, infolevel, test_instance, parts), setup-page (R31 SESSION_STORE_KEY), answer-envelope and action-producers are merged into tranche/T46. Merge tranche/T46 into your branch.
