@@ -42,6 +42,13 @@ import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { ratificationOf } from "../ratification/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
 import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
+/* R51 (T45): the owners of the acts an action offers, each asked through the read its acts' refusals run. */
+import { actionsOf } from "../actions/index.mjs";
+import { actionHoldsOf } from "../action-holds/index.mjs";
+import { escalationOf } from "../escalation/index.mjs";
+import { conformanceOf } from "../conformance/index.mjs";
+import { filingsOf } from "../filings/index.mjs";
+import { actionClocksOf, CLOSED_ACTION_STATES, REMINDERS_PER_ACTION_MAX } from "../action-clocks/index.mjs";
 import { explainRefusal } from "../affordances.mjs";
 
 /* R15: the `by` a roster position is asked of, or null when none can be: no stamp sent, or a credential's stamp (N874). */
@@ -65,6 +72,12 @@ class AffordanceFacts {
     this.ratification = of("ratification", ratificationOf);
     this.contradiction = of("contradiction", contradictionOf);
     this.wizardScripts = of("wizardScripts", wizardScriptsOf);
+    this.actions = of("actions", actionsOf);
+    this.actionHolds = of("actionHolds", actionHoldsOf);
+    this.escalation = of("escalation", escalationOf);
+    this.conformance = of("conformance", conformanceOf);
+    this.filings = of("filings", filingsOf);
+    this.actionClocks = of("actionClocks", actionClocksOf);
     const storage = host && host.storage ? host.storage : host;
     this.sql = d.sql || (storage && storage.sql);
   }
@@ -154,6 +167,106 @@ class AffordanceFacts {
              rescue_open: m.rescueRefusal(projectId, actor) === null };
   }
 
+  /* R14, R51 (T45; v0.2 rule 1; DEC-8): THE FACTS THE ACTS AN ACTION OFFERS RUN ON, each asked through the read its act's
+     refusal runs, and each null where that read could not answer (a null offers nothing that needs it, R10):
+       closed               filings' and action-clocks' ACTION_CLOSED: the action's state is resolved or abandoned
+       request_for_comment  action-replies' BEARING_NOT_RFC: the action's kind
+       entries {all, sent, received, received_unmarked}
+                            the ledger, counted: a hold's or a receipt's place (HOLD_PLACE_REFUSED, RECEIPT_NOT_ON_SENT), a
+                            bearing's and a link's received entry (BEARING_NOT_RFC, AROSE_FROM_NOT_A_RESPONSE), and pressure's
+                            unmarked received entry (PRESSURE_NOT_RECEIVED, PRESSURE_MARKED), through action-holds' own marks
+       holds_in_place       action-holds' `holdsOf`: the places on this action (the whole, and each entry) whose hold is in
+                            place (HOLD_ALREADY_RELEASED, HOLD_NOT_IN_PLACE, plan-work's NO_SUCH_ITEM for a hold)
+       preparable           filings' `templatesForAction`: the governing tier is 1 or 2 (FILING_TIER_UNDETERMINED,
+                            TIER3_COUNSEL_PACKET)
+       drafts {unapproved, approved_unsent}
+                            filings' `filingsFor`: a draft of the group's voice not yet approved (ALREADY_APPROVED,
+                            NOT_THE_GROUPS_ACT), and one approved and not yet sent (NOT_APPROVED, ALREADY_SENT)
+       clock {entries, dated, reminders_room}
+                            the action's clock entries, those dated (REMINDER_REFUSED arm `entry`; plan-work's NO_SUCH_ITEM for
+                            a clock), and whether its standing reminders are under action-clocks' bound (arm `bound`)
+       escalation {openable, attachable}
+                            escalation's `#pursuable` asked through its parts: a determination this action rests on, read
+                            through conformance (live, not void, noncompliant), whose project the author has joined
+                            (`projectAuthority`) and with no escalation open or suspended (ALREADY_OPEN); and an
+                            escalation of such a determination, not ended, at a stage that takes an action (2 or 5; stage 7's
+                            counterparty conditions are not asked, so it is not offered there), the action a breach action
+                            resting on it and attached to none the viewer sees (ALREADY_ATTACHED)
+     Never ids (R16). Never writes (R22). */
+  #actionFacts(id, viewer, author) {
+    const ask = (f) => { try { return f(); } catch { return null; } };
+    const a = ask(() => this.actions().actionRead({ id, viewer }));
+    if (!a || a.ok !== true) return null;
+    const corr = Array.isArray(a.correspondence) ? a.correspondence : [];
+    const received = corr.filter((e) => e && e.direction === "received");
+    const h = this.actionHolds();
+    const marked = ask(() => {
+      const r = h.pressureFor({ action: id, viewer });
+      return r && r.ok === true ? new Set(r.items.map((i) => i?.arrived?.ord)) : null;
+    });
+    const inPlace = (ord) => ask(() => { const r = h.holdsOf({ target: id, ...(ord === null ? {} : { ord }), viewer });
+      return r && r.ok === true ? r.hold === "in_place" : null; });
+    const places = [inPlace(null), ...corr.map((e) => inPlace(e.ord))];
+    const holds = places.some((x) => x === null) ? null : places.filter(Boolean).length;
+    const preparable = ask(() => {
+      const r = this.filings().templatesForAction({ action: id, viewer });
+      if (r && r.ok === true) return r.governing?.tier === 1 || r.governing?.tier === 2;
+      return r && ["FILING_TIER_UNDETERMINED", "TIER3_COUNSEL_PACKET"].includes(r.reason) ? false : null;
+    });
+    const drafts = ask(() => {
+      const r = this.filings().filingsFor({ action: id, viewer });
+      if (!r || r.ok !== true || r.drafts_truncated) return null;
+      const ours = r.drafts.filter((d) => d && d.voice !== "self");
+      return { unapproved: ours.filter((d) => !d.approval).length,
+               approved_unsent: ours.filter((d) => d.approval && !d.sending).length };
+    });
+    const clock = Array.isArray(a.clock) ? a.clock : [];
+    const room = ask(() => { const r = this.actionClocks().remindersFor({ action: id, viewer });
+      return r && r.ok !== false && Array.isArray(r.reminders) && !r.truncated
+        ? r.reminders.filter((x) => x.state !== "answered").length < REMINDERS_PER_ACTION_MAX : null; });
+    return { closed: CLOSED_ACTION_STATES.includes(a.current_state),
+             request_for_comment: a.kind === "request_for_comment",
+             entries: { all: corr.length, sent: corr.filter((e) => e && e.direction === "sent").length,
+                        received: received.length,
+                        received_unmarked: marked === null ? null : received.filter((e) => !marked.has(e.ord)).length },
+             holds_in_place: holds,
+             preparable,
+             drafts,
+             clock: { entries: clock.length,
+                      dated: clock.filter((e) => e && /^\d{4}-\d{2}-\d{2}$/.test(String(e.date ?? ""))).length,
+                      reminders_room: room },
+             escalation: ask(() => this.#escalationFacts(a, viewer, author)) ?? { openable: null, attachable: null } };
+  }
+
+  /* R51: the escalation half of the action's facts, each condition one of `escalationOpen`'s or `escalationAttach`'s
+     refusals asked through the read it runs. */
+  #escalationFacts(a, viewer, author) {
+    const legs = (Array.isArray(a.legs) ? a.legs : []).filter((l) => l && l.kind === "rests_on" && typeof l.target === "string");
+    const who = typeof author === "string" && author.trim() ? author.trim() : null;
+    const m = this.membership(), esc = this.escalation(), conf = this.conformance();
+    let openable = false, attachable = false, attachedAnywhere = false;
+    const attach = [];
+    for (const leg of legs) {
+      let d = null;
+      try { d = conf.determinationRead({ id: leg.target, viewer }); } catch { d = null; }
+      if (!d || d.ok === false || d.live !== true || (d.void && typeof d.void === "object")) continue;
+      const outcomes = Array.isArray(d.outcomes) ? d.outcomes : [];
+      if (!outcomes.some((o) => o && o.outcome === "noncompliant")) continue;
+      const items = esc.escalationsFor({ determination: leg.target, viewer });
+      if (!items || items.ok === false) return null;
+      const live = items.items.filter((e) => e.state === "open" || e.state === "suspended");
+      if (!live.length && who !== null && m.projectAuthority(d.project, who, "joined", "escalationOpen") === null) openable = true;
+      for (const e of items.items) {
+        const r = esc.escalationRead({ id: e.id, viewer });
+        if (!r || r.ok === false) continue;
+        if ((r.actions ?? []).some((x) => x && x.action === a.id)) attachedAnywhere = true;
+        if (r.state !== "ended" && (r.stage === 2 || r.stage === 5)) attach.push(e.id);
+      }
+    }
+    if (a.breach === true && attach.length && !attachedAnywhere) attachable = true;
+    return { openable: who === null ? null : openable, attachable };
+  }
+
   /* R13, R14 (D54; K2408; J1): an administrator (the founder included) neither invited nor joined to a HIDDEN project
      sees it at EXISTENCE (membership R44): its id, name and owners, never its contents. The one act membership keeps
      reachable for it there is the owner rescue (membership R60, project-roster R5), so the facts answer R14's keys with
@@ -184,7 +297,7 @@ class AffordanceFacts {
              rested_on: { working: null, frozen: null, severed: null }, basis_version_states: null, basis_versions: null,
              cites_in: { confirmed: null, severed: null },
              cites_out: { confirmed: null, severed: null, severed_reinstatable: null },
-             cited_by_case: { confirmed: null, severed: null } };
+             cited_by_case: { confirmed: null, severed: null }, action: null };
   }
 
   /** R13–R16: the facts for one target as the caller stands. `viewer` is what the caller may see, `identity` who it
@@ -276,7 +389,9 @@ class AffordanceFacts {
                .map((v) => v.state.trim()),
              basis_versions: versions.filter((v) => v && typeof v === "object").length,
              cites_in: { confirmed: citesIn.confirmed.length, severed: citesIn.severed.length },
-             cites_out: citesOut, cited_by_case: citedByCase };
+             cites_out: citesOut, cited_by_case: citedByCase,
+             /* R51 (T45): an action's own facts, null on any other type */
+             action: type === "action" ? this.#actionFacts(id, viewer, author) : null };
   }
 
   /** R41 (Q1-7): a refusal an op gave, explained from its catalogue row (`rowOf`, handed in) and, with a target, a dry

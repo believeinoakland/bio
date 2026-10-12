@@ -69,3 +69,7 @@ K2896: instance-setup is merged: its routes are now 34 with declaredstakeset; re
 ## B12 · CHANGE
 
 K2897: store-door (T45-50), queue (re-pointed) and op-grades (declaredstakeset graded) are merged into tranche/T45. Merge it. store-door left `advocacychecks` out of PROJECT_NAMING_READS pending your route: if your route for it takes a project or bundle id, say so in your COMPLETE and I re-open store-door.
+
+## B13 · CHANGE
+
+K2898: affordances (T45-39) is merged: every L11 job but you is on tranche/T45. Merge it, run your suites, post COMPLETE.

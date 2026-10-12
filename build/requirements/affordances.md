@@ -87,7 +87,7 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
   - **Vocabularies.** `VOCABULARIES` (R4) gains, by reference, the closed vocabularies T45's owners refuse against: `action-grammar`'s `OVERRIDE_GROUNDS`, `PHRASING_KINDS`, `ASSERTION_RESOLUTIONS`, `PRESS_RECORD_TERMS`, `FOUND_ELSEWHERE_KINDS`, `BEARINGS`, `PROMISE_KINDS` and `CLOCK_OWED_BY` (its T45 R2), the five basis kinds, escalation states with `stopped_pursuing`, plan states with `paused`, matter states, the harm words, the scopes, and the links `arose_from` and `cures`; each the owner's very object (R4).
   - **Act help.** `ACT_HELP` (R48) holds each new op's text once the design stream gives it; until then `op-declarations` names it in `ACT_HELP_ABSENT` (its R34).
 
-  *(not yet met: T45)*
+ 
   - Tests: R18 by driving each new act with the caller the facts describe; an action with an open escalation offers its acts (control: one without, not); a machine caller is offered none in `MACHINE_REFUSALS`; each new vocabulary by reference identity.
 
 **deriveActs(facts) → act[]** (pure; never throws on a well-formed facts object)
