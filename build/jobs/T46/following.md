@@ -44,3 +44,12 @@
 - No layer tests are named in the manifest.
 
 Size (session_01L8jTVDmJrcExvnrLUdm4m3): test runs 9, module lines 1833
+
+## J1 · COMPLETE
+
+T46-42 applied: R27 met. R24's promises_met is now read from plan-work's matterPromiseDuties met_at alone, with no member's sight, as of the asker's now. The derivation from occurrencesOf is gone, and so is its fallback to "now".
+Tests: two new R27 tests, one against a stand-in and one against the real plan-work, each with controls. following: 75 pass, 0 fail.
+Checks: format, architecture, coverage (27 of 27 ids) and ownership all report 0 failures; run.mjs reports 0 architecture failures.
+Users' reds: the same failures appear with my change stashed, so they are the inherited reds of rule 5 (7)-(8).
+Notes for BOB, in the record: plan-work R15 and R13 wording (which instant met_at is, met_at_why, nowMs) and action-plans' closing-instant field.
+No file outside my paths.
