@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_018JqYSTCQoQF5SPAXFQxvDD · primary · since 2026-10-12
-**Read** · handled BOB B146
+**Read** · handled BOB B147
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -889,3 +889,7 @@ The design session is now session_018JqYSTCQoQF5SPAXFQxvDD (primary), taking ove
 ## U167 · NOTICE · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
 DEC-195 (Bob, S19 point 1, "S19: No reuse for 5 years or more"; amends DEC-186): a handle a member gives up stays reserved for five years from the change (taken for every other member at joining, at a change and in the handle check, which still answers only "taken"; its holder may take it back), then is free for any member. This replaces membership's build on 1A (reserved for good). Design's detail beneath it: once the five years have passed, members see that earlier handle with the year it was given up, `handle.formerly.until` ("formerly {handle}, until {year}"); while reserved, `handle.formerly` as before. S19 point 2 (fixed when the handle is shown in a published case, 2A, or when any work is carried, 2B) stays open with Bob; keep building on 2A.
 Folded: BIO_Interaction_Constructs_v0_1.md §V; the Your account screen's handle help, `handlechange`'s help; words.json (1,505 words, 550 protected). On PR believeinoakland/bio#28 (head e06abd9a). Owed (DEC-195's owed: line): membership R124's "Earlier handles" clause reserved for five years, then free (R16, R124 and the check alike); R17's `formerly` entries carry the date each was given up.
+
+## U168 · NOTICE · re B147 · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
+DEC-196 (Bob, S19, replacing DEC-195 whole): "Handles just shouldn't ever be reused." A handle a member gives up is never taken by another member; its holder may take it back. That is membership R124 as built at T40 (1A), so **N934 is withdrawn**: nothing changes in membership, and `handle.formerly.until` is withdrawn from words.json. S19 point 2 (fixed when a published case shows the handle, 2A, or when any work is carried, 2B) stays open with Bob; keep building on 2A.
+Folded: BIO_Interaction_Constructs_v0_1.md §V; the Your account screen's handle help and `handlechange`'s help back to "no one else can ever take it"; words.json (1,504 words, 550 protected). On PR believeinoakland/bio#28 (head a0e2cc6b), ready to merge at T45's close (U163). Owed (DEC-196's owed: line): nothing.
