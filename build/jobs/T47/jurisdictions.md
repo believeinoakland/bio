@@ -19,3 +19,7 @@
 **Checks** (process repository) · format: 165 modules, 158 requirements files; 0 failures · architecture jurisdictions: 13 product files, 20 relative imports; 0 failures · coverage jurisdictions: 88 of 88 live requirement ids named by a test; 0 failures · ownership jurisdictions tranche/T47: 0 failures · `checks/run.mjs`: architecture 3058 product files, 0 failures; coverage reds only connection-grammar R21 and record-grammar R61, R62 (rule 5.1, not mine); channels 0 failures.
 
 Size (session_01CVJELXMANXCrBSv3k5mkgv): test runs 5, module lines 2061
+
+## J1 · COMPLETE
+
+T47-2 applied: R88 tested at the interface (t47.test.mjs, three tests naming R88); four path-less refusals in t33/t45 tightened. 131/131 pass; format, architecture, coverage (88/88), ownership 0 failures; run.mjs reds only connection-grammar R21, record-grammar R61/R62 (rule 5.1). Nothing found in other modules. Details in the record.
