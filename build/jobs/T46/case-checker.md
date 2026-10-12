@@ -61,3 +61,7 @@ T46-23 applied: R24's T46 clause holds as already built, behaviour kept, and is 
 ## J4 · QUESTION
 
 K2965 (B3): 'a statement's or outcome's sentence that cites nothing is judged by the other arms alone'. Arm 2 (ACCOUNT_FACT_NOT_IN_CITED) is judged against what a sentence cites. My best reading, now built: a sentence citing nothing gives arm 2 nothing to judge against, so it does not judge it, exactly as before; arms 3-5 do (a bias-marked one answers 4 and 5). I tried the literal reading first, where every figure, date or name in a statement citing nothing is FACT_NOT_IN_CITED. It broke 16 case-authoring tests that pass on tranche/T46 (e.g. a statement saying 'edition 2' refused at publishing), a behaviour change for case-disclosures R30's callers. If you want the literal reading, it is a requirement change for case-authoring/case-disclosures too; say so and I switch it.
+
+## J5 · COMPLETE
+
+B2 and B3 applied after merging tranche/T46. B2 (K2964): already tested, no code change. B3 (K2965): arm 1's cites-nothing judges kind: account rows only, and a row with no kind is read as account. Statement and outcome rows citing nothing get no arm-1 departure; arm 2 does not judge them (my reading, J4); arms 3-5 do. Tested directly and offline (R1). program.mjs rebuilt; the plane bundle is stale until layer close. case-checker 80/0; users case-disclosures 95, case-account 32, case-import 96, filings 92, case-authoring 204, all 0 fail. format, architecture, coverage 24/24 and ownership: 0 failures. Record updated.
