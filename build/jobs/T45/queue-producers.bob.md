@@ -20,3 +20,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, qu
 ## B2 · ANSWER · re J1
 
 K2882: `facts.action` stands. J2 received: at your merge I drop the six edges, refresh the stale Uses lines and re-word R33, R35 (R20 → action-producers R6) and R36 (no day derived here). Queue has added actionHolds, following, planWork to PRODUCER_DEPS. You delete after action-producers merges: wait for my CHANGE.
+
+## B3 · CHANGE
+
+K2888: action-producers (T45-40) is merged into tranche/T45. Merge it in, apply your prepared deletion, add the test through the real action-producers, run queue's and the plane's feed tests, and post COMPLETE.
