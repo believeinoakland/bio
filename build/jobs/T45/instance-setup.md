@@ -51,3 +51,7 @@ Found outside my module (details in my record's Completion):
 ## J3 · COMPLETE
 
 T45-44 applied: R76 stage_findings, R77 declaredStakeSet (C-64.27), R11 stake and its history, R78 registerGroupIdentity at start. Module tests 147/147. format, architecture, coverage (60/60) and ownership all 0 failures. One red outside the module, for plane T45-47 to re-pin (REPORT J2). Record: Completion section.
+
+## J4 · COMPLETE
+
+B4 handled: tranche/T45 merged. declaredstakeset is now declared, so REPORT J2 item 1 is cleared. Module tests 147/147. op-declarations, op-grades and plane door: 212/213; the one failure is plane's 33-route pin (J2 item 2, owed to T45-47). All four checks 0 failures.
