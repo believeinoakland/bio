@@ -1,6 +1,6 @@
 /* project-roster over a real SQLite database (node:sqlite), beside the real membership it uses, with a stub record-core
-   that provides the services both use (bundleInfo, declarePurge, getSetting) over a `bundles` table holding the R37 read contract
-   (bundle_id, object_type) and a title, passed to `membershipOf` and `projectRosterOf` as a test's own record-core
+   that provides the services both use (bundleInfo, declarePurge, declareTable, getSetting) over a `bundles` table holding the
+   R37 read contract this module reads (bundle_id, object_type, title, current_state, project), passed to `membershipOf` and `projectRosterOf` as a test's own record-core
    (K61). Every test drives the module at its interface; membership's acts set up the participation it reads. */
 import { DatabaseSync } from "node:sqlite";
 import { membershipOf } from "../../../src/membership/index.mjs";
@@ -29,7 +29,8 @@ function standIns(m) {
 
 export function world() {
   const db = new DatabaseSync(":memory:");
-  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT, project TEXT)`);
+  db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT, project TEXT,
+    current_state TEXT)`);
   const declared = [];
   /* record-core's settings (its R25), for R24's active profiles: `jurisdiction_profiles` a test sets directly. */
   const settings = { jurisdiction_profiles: ["test-port-ellery"] };
@@ -40,6 +41,9 @@ export function world() {
       return r ? { id: r.bundle_id, type: r.object_type, title: r.title, project: r.project ?? null } : null;
     },
     declarePurge(module, tables, opts) { declared.push({ module, tables, opts }); },
+    /* N940 (T47): record-core R21's explicit form, so membership declares `join_doors` with its own classes (its R131)
+       here as on a real host, rather than in the default form a stub without it gets. */
+    declareTable(module, entries) { declared.push({ module, tables: entries, explicit: true }); },
   };
   const sql = sqlOver(db);
   const ctx = { storage: { sql } };
@@ -51,11 +55,15 @@ export function world() {
   r.migrate();
   const w = {
     db, sql, core, m, r, declared, creds, ctx, settings,
-    bundle(id, type = "information", title = `title of ${id}`, project = null) {
-      db.prepare(`INSERT INTO bundles (bundle_id, object_type, title, project) VALUES (?,?,?,?)`).run(id, type, title, project);
+    bundle(id, type = "information", title = `title of ${id}`, project = null, state = null) {
+      db.prepare(`INSERT INTO bundles (bundle_id, object_type, title, project, current_state) VALUES (?,?,?,?,?)`)
+        .run(id, type, title, project, state);
       return id;
     },
-    project(id, title = `Project ${id}`) { w.bundle(id, "project", title); m.reindexProjectSight(id); return id; },
+    /* A project with its recorded `current_state` (record-core R37), `forming` unless a test names another or null. */
+    project(id, title = `Project ${id}`, state = "forming") {
+      w.bundle(id, "project", title, null, state); m.reindexProjectSight(id); return id;
+    },
     row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; },
     rows(q, ...a) { return sql.exec(q, ...a); },
     async claim() { creds.claimed = true; },
