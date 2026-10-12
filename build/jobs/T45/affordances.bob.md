@@ -25,3 +25,7 @@ Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and 
 ## B2 · ANSWER · re J1
 
 K2885: (1)–(5) stand as you state them; the three vocabularies with no owner (stopped_pursuing, arose_from, cures) are deferred, named in your record. clockadopt's missing proposal read is N925 (action-clocks). (3) is relayed to OP-GRADES #7 now as a CHANGE, so it adds those rows in its job (it merges before you). (6) is relayed to OP-DECLARATIONS #20 and PLANE #33.
+
+## B3 · CHANGE
+
+K2889: wizard-scripts (T45-37) is merged into tranche/T45. Merge it into your branch when convenient.
