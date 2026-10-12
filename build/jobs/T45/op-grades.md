@@ -1,6 +1,6 @@
 # op-grades (T45)
 
-**Status** · session_01QBg5Qed5iVkRuoNbR4vgRF · depth 2 · COMPLETE · handled B3
+**Status** · session_01QBg5Qed5iVkRuoNbR4vgRF · depth 2 · WAITING ON BOB (J4) · handled B3
 
 
 ## Record (OP-GRADES #7)
