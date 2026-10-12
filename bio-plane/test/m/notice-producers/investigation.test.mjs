@@ -97,6 +97,30 @@ test("R17 step-date-due and step-reminder: OBLIGATIONs from steps.stepsDue, keye
   assert.deepEqual(items(ANN, "step-reminder", "2026-10-12T18:00:00Z"), [], "hers alone");
 });
 
+/* R17 (T45; Actions DESIGN §11 "one date, one reminder"; v0.2 rule 6; steps R29): a step whose date an action's clock entry
+   holds draws no step-date-due: stepsDue leaves it out, and this module reads stepsDue as before (no read of action-clocks). */
+test("R17 (T45) a step whose byWhen an action's clock entry holds (steps R29) draws no step-date-due; control: with no holder registered, the same step raises one; her own reminder on it stays", () => {
+  const at = "2026-10-10T06:30:00Z";
+  const make = () => {
+    const w = stepsWorld();
+    w.clock = "2026-10-10T06:30:00.000Z";
+    const held = w.step({ work: "held", byWhen: { date: "2026-10-01", basis: "law" } });
+    const own = w.step({ work: "own", byWhen: { date: "2026-10-02", basis: "own" } });
+    return { w, held, own, items: over(w, { steps: w.s }) };
+  };
+  const plain = make();
+  assert.deepEqual(plain.items(ANN, "step-date-due", at).map((i) => i.subject.id).sort(), [plain.held, plain.own].sort(),
+    "control: no holder, each past date is its step's own item");
+  const x = make();
+  assert.deepEqual(x.w.s.registerDueHolder("action-clocks", ({ step }) => (step === x.held ? { entry: { clock: "CLK-1" } } : null)), { ok: true, module: "action-clocks" });
+  assert.deepEqual(x.w.s.step({ step: x.held, viewer: ANN }).by_when_held, { module: "action-clocks", entry: { clock: "CLK-1" } });
+  const due = x.items(ANN, "step-date-due", at);
+  assert.deepEqual(due.map((i) => i.subject.id), [x.own], "the held step draws none; the unheld one keeps its own");
+  assert.ok(!texts(x.items(ANN, "step-date-due", at)).includes("held"), "nothing of the held step");
+  assert.equal(x.w.s.stepReminder({ step: x.held, at: "2026-10-10", by: ANN }).ok, true);
+  assert.deepEqual(x.items(ANN, "step-reminder", "2026-10-10T18:00:00Z").map((i) => i.subject.id), [x.held], "her own reminder is not the date's item and stays");
+});
+
 test("R17 step-cost-shared and step-cost-message: FINDINGs from steps.costShares and costMessages, to the sharing projects' owners and to whom a message was relayed; nothing when a sharing project is hidden", () => {
   const w = stepsWorld();
   const items = over(w, { steps: w.s });
