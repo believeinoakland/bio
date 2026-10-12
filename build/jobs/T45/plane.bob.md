@@ -25,3 +25,7 @@ Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and 
 (K2874) From L10: following's new ops `followend`, `watchlink`, `watchanswer`, `watchquestions` (FOLLOWING #5 J1, J2), and monitoring's new op for R71's end date if its COMPLETE names one; route each; and `followingOf(host)` now reaches `actionPlansOf`, `planWorkOf`, `dutiesOf`, `answersOf` lazily and registers its watch reader with plan-work R9 when created: compose it at start.
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
+
+## B2 · CHANGE
+
+K2880, from WIZARD-SCRIPTS #8 J1: listing T45's labelled machine drafts in MACHINE_DRAFTS (plane R19) is yours, by the op names op-declarations (T45-45) declares; wizard-scripts accepts each once declared. Nothing to merge now.
