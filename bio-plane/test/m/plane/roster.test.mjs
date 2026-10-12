@@ -17,7 +17,9 @@ import { projectRosterOf, projectRosterOps, PROJECT_ROSTER_TABLES } from "../../
 
 const PR = [...PROJECT_ROSTER_TABLES];
 const OPS = ["projectowneradd", "projectownerremove", "projectownerrescue", "projectvisibility", "projectdirectory",
-             "projectparticipants", "projectrequest", "projectrequestwithdraw", "projectrequestanswer", "projectrequests"];
+             "projectparticipants", "projectrequest", "projectrequestwithdraw", "projectrequestanswer", "projectrequests",
+             /* (T45; K2797, plan rule 4 (9)) project-roster R21, R24: a project's scope and its second-approval setting */
+             "projectscopeset", "projectapprovalset"];
 const tableNames = (x) => [...x.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type='table'`)].map((r) => r.name);
 const one = (x, q, ...a) => [...x.ctx.storage.sql.exec(q, ...a)][0];
 

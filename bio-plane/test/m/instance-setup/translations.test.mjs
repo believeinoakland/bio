@@ -558,7 +558,7 @@ test("R75 (T38; N793) this module holds no NO_SUCH_MEMBER row: C-64.18 is droppe
     assert.deepEqual([r.reason, r.code, r.check, r.translation], ["NO_SUCH_MEMBER", "NO_SUCH_MEMBER", "C-96.47", noSuchMember("x").translation]);
 });
 
-test("R30 every row of this module's table names, in its where, the function that holds its region, and the region inside it (the new C-64.11–C-64.26 rows among them, C-64.18 dropped, R75); no number is held twice and C-119.5 is held by none", () => {
+test("R30 every row of this module's table names, in its where, the function that holds its region, and the region inside it (the new C-64.11–C-64.26 rows among them, C-64.18 dropped, R75; T45's C-64.27, R77); no number is held twice and C-119.5 is held by none", () => {
   const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../src/setup.mjs"), "utf8").split("\n");
   const body = (fn) => {
     const name = fn.replace(/[$#]/g, "\\$&");
@@ -583,6 +583,6 @@ test("R30 every row of this module's table names, in its where, the function tha
   const numbers = Object.values(INSTANCE_SETUP_CHECKS).map((r) => r.check);
   assert.equal(new Set(numbers).size, numbers.length);
   assert.equal(numbers.includes("C-119.5"), false);
-  assert.deepEqual(numbers.filter((n) => /^C-64\.(1[1-9]|2\d)$/.test(n)).length, 15);
+  assert.deepEqual(numbers.filter((n) => /^C-64\.(1[1-9]|2\d)$/.test(n)).length, 16);
   assert.equal(numbers.includes("C-64.18"), false);
 });

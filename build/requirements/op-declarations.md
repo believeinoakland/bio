@@ -206,6 +206,7 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 
 ### Uses
 
+- (T45; K2895) The T45 owners its `t45.test.mjs` drives the stamps through: `action-holds`, `action-replies`, `plan-work`, `filings`, `conformance`, `consequences`, `case-check`, `project-roster`, `local-facts` (their ops maps, tests only).
 - `affordances`: `decorate` (its R11), for R1.
 - `case-import` (N520): the ops R14 declares, and the watch ops R16 declares (N534).
 - `link-sweep` (N506): the `sweeps` read R10 declares, served by its R9.

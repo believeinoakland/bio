@@ -85,6 +85,8 @@ const DRIVES = [
      answers alike on both objects; `translationdraftrecord` is the door's store-internal call (control-plane R66) */
   ["translationdraft?by=member:nobody", "POST", { direction: "to_language", language: "es", keys: ["nav.home"] }],
   ["translationdraftrecord?by=member:nobody", "POST", { language: "es", words: [] }],
+  /* (T45; K2896; instance-setup R77) the group's declared stake, an administrator's act: refused NOT_AN_ADMIN here */
+  ["declaredstakeset?by=member:nobody", "POST", { stake: null }],
   ["translationgrant?by=member:nobody", "POST", { member: "member:nobody", language: "es" }],
   ["translationadopt?by=member:nobody", "POST", { language: "es", key: "nav.home", text: "Inicio" }],
   ["translationconfirm?by=member:nobody", "POST", { language: "es", key: "nav.home" }],
@@ -119,9 +121,9 @@ test("R1: the class whose fetch is control-plane's door: at construction it star
   assert.equal(started(await settle(other))[0].started, true);
 });
 
-test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's thirty-three routes are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
+test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's thirty-four routes (T45: `declaredstakeset`, K2896) are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
   const ops = Object.keys(S.instanceSetupOps(null, new URL("http://do/"), null));
-  assert.equal(ops.length, 33);
+  assert.equal(ops.length, 34);
   assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops].sort(), "every route is driven");
   const now = object(), before = object();
   const store = new Store(now.ctx, now.env);

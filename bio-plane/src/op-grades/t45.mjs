@@ -49,6 +49,8 @@ export const T45_RUNGS = {
   curelink:            "reversible",   // conformance R36: cureunlink takes it back
   matteroutcomeset:    "reversible",   // plan-work R1: a later statement replaces it, each revision kept
   plancomment:         "reversible",   // plan-work R6: a comment answered by another, as reviewcomment (DEC-88)
+  /* B6 (K2896): instance-setup R77, as coarchiveset: a later setting replaces it (`null` clears it), and none asks a reason */
+  declaredstakeset:    "reversible",   // instance-setup R77: a further declaredstakeset sets or clears it, every value kept
 };
 
 /* ---- the stated absences ---- */
@@ -160,6 +162,9 @@ export const T45_NON_ACTS = {
     + "act, append-only; moves no bundle",
   cureunlink: "cure-directed: keyed by a cure link; a member ends it with a reason, the link kept; moves no bundle",
   cures: R("each standard's standing cure link of a determination, and the ended ones apart with their reasons"),
+  /* instance-setup (R77; B6, K2896) */
+  declaredstakeset: "setting: the group's declared stake in its own words, carried beside its public identity on what it "
+    + "sends or publishes from then; an administrator's act, every earlier value kept; moves no bundle",
   /* local-facts (R10–R13) */
   ruledraft: RULE("keyed by a profile section and an entry; a member drafts a rule from its primary source, with a reason"),
   ruleconfirm: RULE("keyed by group rule; a member other than its drafter confirms it, and it applies from then"),

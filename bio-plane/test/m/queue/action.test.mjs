@@ -1,5 +1,5 @@
 /* The Action layer's kinds at queue's interface (K608, K611, K614; K899 (7)), over a stubbed `queue-producers.feedItems`
-   (its R8, R15–R19) minting each as its requirement keys it: the four OBLIGATIONs (the litigation hold among them) pass
+   (its R8; the producers `action-producers` R1–R5 since T45) minting each as its requirement keys it: the four OBLIGATIONs (the litigation hold among them) pass
    the mint (R1, R11), name the door each leaves by (R12, R28) and are never muted (R19, R26, R31); the overdue clock is
    a CONDITION a member may mute (R5, R14, R20). */
 import { test } from "node:test";
@@ -101,7 +101,7 @@ test("R14, R19, R20: a member mutes action-clock-overdue for themselves, by kind
   assert.ok(!refused.available.includes("litigation-hold"));
 });
 
-test("R8, R15–R18, R20, R21 (K728, K921): a caller's fakes for the Action layer's providers, filingTemplates and localFacts reach queue-producers, each asked by its producer", () => {
+test("R8 (K728, K921; action-producers R1–R4, R6, R7): a caller's fakes for the Action layer's providers, filingTemplates and localFacts reach the producers through queue-producers, each asked by its producer", () => {
   const asked = [];
   const page = (name) => (a) => { asked.push([name, a.viewer]); return { ok: true, items: [], truncated: false, cursor: null }; };
   const w = world({ actionClocks: { overdueClocks: page("overdueClocks"), remindersDue: page("remindersDue"),
@@ -133,20 +133,20 @@ test("R12, R28 (K899 (7)): litigation-hold's door is actionhold on the item, and
   assert.equal(w.all(`SELECT count(*) c FROM finding_dispositions`)[0].c, 0, "nothing written");
 });
 
-test("R8, R12 (K899 (7)): a caller's fake actions reaches queue-producers R19, whose litigation-hold item mints with its door; answering no mark, none", () => {
+test("R8, R12 (K899 (7)): a caller's fake actionHolds (action-holds R3) reaches action-producers R5 through queue-producers R8, whose litigation-hold item mints with its door; answering no mark, none", () => {
   const asked = [];
   const marks = [{ action: "ACT-1", ord: 2, note: "a letter from counsel", marked_by: "bob", marked_at: iso(NOW - 5000), project: null }];
   const holds = (answer) => ({ holdsDue: (a) => { asked.push(a.viewer); return { ok: true, items: answer, truncated: false, cursor: null }; } });
-  const w = world({ actions: holds(marks) });
+  const w = world({ actionHolds: holds(marks) });
   w.member("alice", { role: "admin" }); w.member("bob"); w.bundle("ACT-1", "action");
   const f = w.feed("alice");
   assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
   const it = byId(f)["OBLIGATION::litigation-hold::ACT-1::2"];
-  assert.ok(it, "the fake's mark reached R19's mint");
+  assert.ok(it, "the fake's mark reached action-producers R5's item and the mint");
   assert.deepEqual([it.class, it.kind, it.disposition.available, it.disposition.instead], ["OBLIGATION", "litigation-hold", false, "actionhold"]);
   assert.deepEqual(asked, ["member:alice"], "asked once, of this viewer");
   // negative control: the same feed over a fake answering no mark mints no litigation-hold item
-  const none = world({ actions: holds([]) });
+  const none = world({ actionHolds: holds([]) });
   none.member("alice", { role: "admin" }); none.bundle("ACT-1", "action");
   const g = none.feed("alice");
   assert.equal(g.ok, true);

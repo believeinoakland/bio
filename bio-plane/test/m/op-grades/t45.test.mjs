@@ -46,6 +46,8 @@ const R32_WRITES = {
   curelink: "reversible", cureunlink: "reasoned",
   /* local-facts R10, R11, R13 */
   ruledraft: "reasoned", ruleconfirm: "undetermined", rulewithdraw: "reasoned",
+  /* instance-setup R77 (B6, K2896; as coarchiveset) */
+  declaredstakeset: "reversible",
 };
 /* the code each `reasoned` op's owner refuses an absent reason with */
 const R32_CODES = {
@@ -58,7 +60,7 @@ const R32_CODES = {
 const TAKEN_BACK_BY = {
   followend: "followend", actionpromise: "actionpromise", actionreplybearing: "actionreplybearing",
   actionbearingpropose: "actionbearingpropose", curelink: "cureunlink", matteroutcomeset: "matteroutcomeset",
-  plancomment: "plancomment",
+  plancomment: "plancomment", declaredstakeset: "declaredstakeset",
 };
 /* every other op T45's owners serve: a read, or (statusreportdraft) a labelled draft that writes nothing */
 const R32_READS = ["dutiesarising", "openitemswith", "watchquestions", "templatesforaction", "casecheck", "procedureguides",
@@ -97,7 +99,7 @@ test("R32: every write T45's owners serve carries R32's grade — the reasoned o
     ["filingsecondapprove", "filingapprove"], ["holdnoticeprepare", "communicationprepare"], ["clockstate", "clockadopt"],
     ["statusreportsave", "reportkeep"], ["prepitemdone", "checkpointrecord"], ["ruleconfirm", "templateapprove"],
     ["plancomment", "reviewcomment"], ["actionbearingpropose", "actionseekspropose"], ["publishcheck", "publish"],
-    ["itemtakeup", "reminderset"], ["standingendset", "standingend"]])
+    ["itemtakeup", "reminderset"], ["standingendset", "standingend"], ["declaredstakeset", "coarchiveset"]])
     assert.equal(gradeOf(op), gradeOf(like), `${op} as ${like}`);
   /* negative controls: a misgrade is seen, and the grounds class (K1025) is not extended */
   assert.notDeepEqual({ ...got, actionscope: "undetermined" }, R32_WRITES);
@@ -155,6 +157,8 @@ test("R32 R5 R18 R21: of T45's ops MACHINE_REFUSALS holds exactly the eight acts
     assert.ok(!LARGER_SCREEN_ACTS.includes(op), op);
     assert.ok(!Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op), op);
   }
+  /* B6: an administrator's setting refused NOT_AN_ADMIN, no act and no machine refusal */
+  assert.ok(!Object.hasOwn(MACHINE_REFUSALS, "declaredstakeset") && NON_ACTS.declaredstakeset.startsWith("setting: "));
   /* negative control: a reasoned T45 op is a phone act */
   assert.equal(phoneOf("actionscope"), true);
 });

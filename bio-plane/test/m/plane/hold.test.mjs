@@ -1,10 +1,11 @@
-/* plane R14 (DEC-113; control-plane R46): the composition root hands control-plane's `dispatch` the object's namespace
-   (R2's own name) and `actions`' `purgeHeld` (its R60) on the object's storage, so the store's door refuses a purge of
+/* plane R14 (DEC-113; control-plane R46; T45, K2781 (1)): the composition root hands control-plane's `dispatch` the object's
+   namespace (R2's own name) and `action-holds`' `purgeHeld` (its R9, was `actions` R60) on the one instance R39 builds, so the store's door refuses a purge of
    held material in `bio` before record-core's `purge` arm runs; `scratch`'s door is handed its namespace too and never
    refuses for a hold. Driven through the object's own door (its `fetch`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { storage, Store } from "./fixture.mjs";
+import { actionHoldsOf } from "../../../src/action-holds/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
 
 /* One object named `name` (`bio`, `scratch`, or null for an object of no known name), constructed and settled. */
@@ -18,14 +19,15 @@ async function named(name) {
   return { ctx: st.ctx, fetch, count };
 }
 
-/* actions' own reader on this object's storage, answering `held`, recording each question. */
+/* action-holds' own reader on this object's storage (the one instance R39 builds), answering `held`, recording each
+   question. */
 function hold(x, held) {
   const asked = [];
-  actionsOf(x.ctx).purgeHeld = (q) => { asked.push(q); if (held instanceof Error) throw held; return held; };
+  actionHoldsOf(x.ctx).purgeHeld = (q) => { asked.push(q); if (held instanceof Error) throw held; return held; };
   return asked;
 }
 
-test("R14: in `bio`, a purge that actions' purgeHeld answers held is refused PURGE_HOLD_IN_PLACE before record-core's arm runs, nothing cleared", async () => {
+test("R14: in `bio`, a purge that action-holds' purgeHeld answers held is refused PURGE_HOLD_IN_PLACE before record-core's arm runs, nothing cleared", async () => {
   for (const name of ["bio", null]) {
     const x = await named(name);
     x.ctx.storage.sql.exec(`INSERT INTO docket_marks (entry_id, kind, by_member, at) VALUES ('DKT-1', 'pressure', 'bob', 't')`);
@@ -35,7 +37,7 @@ test("R14: in `bio`, a purge that actions' purgeHeld answers held is refused PUR
       assert.equal(r.status, 409, `${name} ${path}: ${JSON.stringify(r.body)}`);
       assert.equal(r.body.reason ?? r.body.result?.reason, "PURGE_HOLD_IN_PLACE", `${name} ${path}`);
     }
-    assert.deepEqual(asked.map((q) => q.bundleId || ""), ["", "PROJ-2026-x"], `${name}: the plane's actions was asked, with the bundle`);
+    assert.deepEqual(asked.map((q) => q.bundleId || ""), ["", "PROJ-2026-x"], `${name}: the plane's action-holds was asked, with the bundle`);
     assert.equal(x.count("docket_marks"), 1, `${name}: nothing cleared`);
   }
 });
@@ -58,4 +60,17 @@ test("R14: `scratch` is never refused for a hold, and `bio` with no hold purges 
     assert.equal(r.body.result.ok, true, name);
     assert.equal(x.count("docket_marks"), 0, `${name}: the whole-store purge ran`);
   }
+});
+
+test("R14 (T45; K2781 (1)), R39: the reader handed is action-holds' one instance, never actions'; with no hold placed, `bio` purges (control: an actions reader answering held is never asked)", async () => {
+  const x = await named("bio");
+  x.ctx.storage.sql.exec(`INSERT INTO docket_marks (entry_id, kind, by_member, at) VALUES ('DKT-1', 'pressure', 'bob', 't')`);
+  const asked = [];
+  actionsOf(x.ctx).purgeHeld = (q) => { asked.push(q); return true; };
+  const r = await x.fetch("/purge");
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.equal(r.body.result.ok, true);
+  assert.deepEqual(asked, [], "actions is not asked");
+  assert.equal(x.count("docket_marks"), 0, "action-holds' real reader holds nothing, so the whole-store purge ran");
+  assert.equal(typeof actionHoldsOf(x.ctx).purgeHeld, "function");
 });

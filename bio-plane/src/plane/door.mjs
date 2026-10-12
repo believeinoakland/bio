@@ -21,7 +21,7 @@ import { EXTRACTION_OPS, extractionOp, acquireReadingOp, pageTranscribeOp } from
 import { CONNECTIONS_OPS, connectionsOp } from "../connections/ops.mjs";
 import { ratificationOp } from "../ratification/ops.mjs";
 import { ACT_GATE } from "../op-declarations/index.mjs";
-import { askOp } from "./ask.mjs";
+import { askOp, actionDraftOp, ACTION_DRAFT_OPS } from "./ask.mjs";
 /* K1907, K2041: the answer's envelope is answer-envelope's (its R1–R5); the reads of a case, a capture's key and the
    store's absence stay control-plane's, with the namespace names it re-exports from admission. */
 import { json, doAnswer, storeSilent, storeRefusal, STORE_SILENT_REASON, STORE_SILENT_DETAIL,
@@ -62,6 +62,8 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
 
   /* B2 (K1674): the ask, a member's own act, carried to agent-worker with the grant and the member's account. */
   if (op === "ask") return askOp({ req, url, env, viaSession, sessMember, grantMember });
+  /* R41 (T45; K2824, K2881): the assistant's infraction and reply-bearing drafts, a member's own act on the `bio` object */
+  if (ACTION_DRAFT_OPS.includes(op)) return actionDraftOp({ req, url, env, op, viaSession, sessMember, sessViewer });
   if (op === "affordances")
     return affordancesOp(url, store(), { json, doAnswer, storeSilent, storeRefusal, gate: ACT_GATE, viewer, identity, author,
       by, storeName, cls });

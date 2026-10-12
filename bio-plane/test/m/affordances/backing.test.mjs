@@ -1,7 +1,7 @@
 /* affordances: R19's backing — of `op-grades`' rungs (its R1, R3), including those a published act or a terminal state
    backs, and (R24) of the stated absences that ask no reason — for the acts the plane fixture does not reach, each
    driven at its owning module's own interface over that module's fixture: `narrow`, `triage`, layer 9's,
-   action-plans', actions R52's, filing-templates' and local-facts', and (T22) every op DEC-88 bands `reasoned` or
+   action-plans', action-holds' (was actions R52's), filing-templates' and local-facts', and (T22) every op DEC-88 bands `reasoned` or
    `terminal` and T22's four new reasoned acts. Everything else R19 drives is in `plane.test.mjs`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -176,78 +176,68 @@ test("R19: scenarioset, graded `reversible` (K727), asks no reason and is taken 
   assert.ok(sc.history.some((h) => h.name === "First line"), "the earlier version is kept");
 });
 
-/* K918 (T20): actions R52's hold statement, graded `reasoned`, driven at actions' interface over its fixture: on a
-   `legal` pressure mark, a hold stated well-formed but without its reason is refused HOLD_REFUSED, in the justification
-   family, and with one it is accepted; a later statement corrects it forward, the earlier kept. Since DEC-113 (T27) a
-   release is its own act (op-grades R8, actions R56), so `actionhold` is driven `in_place` only and the release through
-   `actionHoldRelease`. */
-import { world as aWorld, V as AV } from "../actions/fixture.mjs";
-/* With `inProject`, the action sits in a project alice owns, promoted as a project is, so a hold covers it (actions R52). */
+/* K918 (T20): the hold statement (`action-holds` R2, moved from actions R52 in T45, K2781 (1)), graded `reasoned`, driven
+   at action-holds' interface over its fixture: on a `legal` pressure mark, a hold stated well-formed but without its
+   reason is refused HOLD_REFUSED, in the justification family, and with one it is accepted; a later statement corrects
+   it forward, the earlier kept. Since DEC-113 (T27) a release is its own act (op-grades R8, action-holds R5), so
+   `actionhold` is driven `in_place` only and the release through `actionHoldRelease`. */
+import { world as hWorld, V as HV, received as hReceived } from "../action-holds/fixture.mjs";
+/* With `inProject`, the action sits in a project alice owns, so a hold covers it (action-holds R2). */
 const holdScene = ({ inProject = false } = {}) => {
-  const w = aWorld(), A = "ACTN-2026-0001-a", M = AV("alice");
-  let P = null;
-  if (inProject) {
-    const r = w.promotion.promote({ base: null, snapKey: "p1", author: M, ownerMemberId: "alice",
-      files: [{ path: "bundle.md", text: ["---", "object_type: project", "schema: project@1", 'title: "Project 1"',
-        "current_state: forming", "prior_state: null", 'created: "2026-09-27T00:00:00Z"', 'last_updated: "2026-09-27T00:00:00Z"',
-        "references: []", "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n") }],
-      meta: { object_type: "project" } });
-    assert.equal(r.ok, true, JSON.stringify(r));
-    P = r.bundleId;
-  }
-  w.action(A, [...(P ? [`project: ${P}`] : []), "correspondence:", "  - direction: received", "    at: 2026-09-03",
-               '    account: "a letter"', "    author: member:alice"]);
-  assert.equal(w.a.actionPressure({ target: A, ord: 0, pressure: { kind: "legal", note: "a threatened suit" },
-                                    viewer: M, author: M }).ok, true);
+  const w = hWorld(), A = "ACTN-2026-0001-a", M = HV("alice");
+  const P = inProject ? w.project("alice") : null;
+  w.action(A, [...(P ? [`project: ${P}`] : []), ...hReceived(1)]);
+  w.mark(A, 0, "legal", M, "a threatened suit");
   return { w, A, M, P };
 };
+const holdsAt = (w, A, M) => w.h.holdsOf({ target: A, ord: 0, viewer: M }).holds.map((h) => h.hold);
 test("R19: actionhold, graded `reasoned` (K918), is refused without its reason on a legal pressure mark, with a code "
    + "in JUSTIFICATION_REFUSALS, and accepted with one; a later statement corrects it forward, the earlier kept", () => {
   const { w, A, M } = holdScene();
   assert.equal(RUNGS.actionhold, "reasoned");
   for (const reason of [undefined, null, "", "   "]) {
     const before = dump(sqlOf(w));
-    const r = w.a.actionHold({ target: A, ord: 0, hold: "in_place", reason, viewer: M, author: M });
+    const r = w.h.actionHold({ target: A, ord: 0, hold: "in_place", reason, viewer: M, author: M });
     assert.equal(r.reason, "HOLD_REFUSED", JSON.stringify(reason));
     assert.ok(JUSTIFICATION_REFUSALS.includes(r.reason));
     assert.equal(dump(sqlOf(w)), before, "nothing written");
   }
-  assert.equal(w.a.actionHold({ target: A, ord: 0, hold: "in_place", reason: "preserving the emails", viewer: M, author: M }).ok, true);
-  assert.equal(w.a.actionHold({ target: A, ord: 0, hold: "in_place", reason: "and the texts", viewer: M, author: M }).ok, true);
-  assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).pressure[0].holds.map((h) => h.hold), ["in_place", "in_place"]);
+  assert.equal(w.h.actionHold({ target: A, ord: 0, hold: "in_place", reason: "preserving the emails", viewer: M, author: M }).ok, true);
+  assert.equal(w.h.actionHold({ target: A, ord: 0, hold: "in_place", reason: "and the texts", viewer: M, author: M }).ok, true);
+  assert.deepEqual(holdsAt(w, A, M), ["in_place", "in_place"]);
 });
 
-/* op-grades R8 (DEC-113; K1134 (3); actions R56, R57): the release, graded `terminal` as a named exception to op-grades R3, driven at
-   actions' interface. Its reason is backed by HOLD_REFUSED as `actionhold`'s is (in the justification family, nothing
-   written). Its rung by what it does: it records, with the release, the projects it restarted (what R57's preview
-   answered at that instant, the statement's projects); once released, the hold is not released again
-   (HOLD_ALREADY_RELEASED), and the restarted projects stand released — no act takes a release back into the same hold:
-   a later `in_place` is a new hold, stated anew, and the release stays in the record. */
+/* op-grades R8 (DEC-113; K1134 (3); action-holds R5, R6, was actions R56, R57): the release, graded `terminal` as a named
+   exception to op-grades R3, driven at action-holds' interface. Its reason is backed by HOLD_REFUSED as `actionhold`'s is
+   (in the justification family, nothing written). Its rung by what it does: it records, with the release, the projects
+   it restarted (what R6's preview answered at that instant, the statement's projects); once released, the hold is not
+   released again (HOLD_ALREADY_RELEASED), and the restarted projects stand released — no act takes a release back into
+   the same hold: a later `in_place` is a new hold, stated anew, and the release stays in the record. */
 test("R19: actionholdrelease, graded `terminal` (K1134), is refused without its reason (HOLD_REFUSED, in the family) and "
    + "writes nothing; with one it records what it restarted — R57's answer — and cannot be walked back: released again is "
    + "refused HOLD_ALREADY_RELEASED, and the release stays in the record under any later hold", () => {
   assert.equal(RUNGS.actionholdrelease, "terminal");
   const { w, A, M, P } = holdScene({ inProject: true });
-  assert.equal(w.a.actionHold({ target: A, ord: 0, hold: "in_place", reason: "preserving the emails", viewer: M, author: M }).ok, true);
+  assert.equal(w.h.actionHold({ target: A, ord: 0, hold: "in_place", reason: "preserving the emails", viewer: M, author: M }).ok, true);
   for (const reason of [undefined, null, "", "   "]) {
     const before = dump(sqlOf(w));
-    const r = w.a.actionHoldRelease({ target: A, ord: 0, reason, viewer: M, author: M });
+    const r = w.h.actionHoldRelease({ target: A, ord: 0, reason, viewer: M, author: M });
     assert.equal(r.reason, "HOLD_REFUSED", JSON.stringify(reason));
     assert.ok(JUSTIFICATION_REFUSALS.includes(r.reason));
     assert.equal(dump(sqlOf(w)), before, "nothing written");
   }
-  const preview = w.a.holdReleasePreview({ target: A, ord: 0, viewer: M });
+  const preview = w.h.holdReleasePreview({ target: A, ord: 0, viewer: M });
   assert.equal(preview.ok, true, JSON.stringify(preview).slice(0, 300));
-  const rel = w.a.actionHoldRelease({ target: A, ord: 0, reason: "the claim was withdrawn", viewer: M, author: M });
+  const rel = w.h.actionHoldRelease({ target: A, ord: 0, reason: "the claim was withdrawn", viewer: M, author: M });
   assert.deepEqual([rel.ok, rel.hold], [true, "released"], JSON.stringify(rel).slice(0, 300));
   assert.deepEqual(preview.restarts, [P], "the hold covers the action's own project, and nothing else holds it");
   assert.deepEqual(rel.restarted, preview.restarts, "the release records what the preview said it would restart");
-  assert.deepEqual(w.a.holdReleasePreview({ target: A, ord: 0, viewer: M }).restarts, [], "released, it restarts nothing more");
-  const again = w.a.actionHoldRelease({ target: A, ord: 0, reason: "once more", viewer: M, author: M });
+  assert.deepEqual(w.h.holdReleasePreview({ target: A, ord: 0, viewer: M }).restarts, [], "released, it restarts nothing more");
+  const again = w.h.actionHoldRelease({ target: A, ord: 0, reason: "once more", viewer: M, author: M });
   assert.equal(again.reason, "HOLD_ALREADY_RELEASED", JSON.stringify(again).slice(0, 300));
   /* a later hold is stated anew; the release stays */
-  assert.equal(w.a.actionHold({ target: A, ord: 0, hold: "in_place", reason: "a new threat", viewer: M, author: M }).ok, true);
-  assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).pressure[0].holds.map((h) => h.hold), ["in_place", "released", "in_place"]);
+  assert.equal(w.h.actionHold({ target: A, ord: 0, hold: "in_place", reason: "a new threat", viewer: M, author: M }).ok, true);
+  assert.deepEqual(holdsAt(w, A, M), ["in_place", "released", "in_place"]);
 });
 
 /* R34 (DEC-116, N520): the docket's two reasoned acts and its attested post, driven at docket's interface over its

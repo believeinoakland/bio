@@ -1,0 +1,68 @@
+# affordances (T45)
+
+**Status** · session_01CRGRQChAdRhfopqhzspuKx · depth 2 · COMPLETE · handled B5
+
+## Record (AFFORDANCES #30, T45-39)
+
+**Read.** Whole: `build/requirements/affordances.md`; the module's code (`affordances.mjs`, `affordances/{facts,door,words,act-help}.mjs`; `act-help.mjs`'s table is generated text, read at its head and tail); `catalogue.test.mjs` and `backing.test.mjs`; `BIO_Action_v0_2.md`; K2780, K2781, K2787; the plan's entry, rules at the opening and reconciliation R1–R21; `draft-T45-upper.md` "The L11 op pattern". By helpers in this session, each reading its part in full and writing a digest citing file:line (K2032, mechanics §17 (3)): the other 18 test files of this module; the T45 parts of the owners whose acts R51 offers (`actions`, `action-holds`, `action-grammar`; `escalation`, `filings`, `filing-templates`, `action-clocks`; `action-replies`, `plan-work`, `action-plans`, `project-roster`, `case-check`, `consequences`, `conformance`). The sources stay binding.
+
+**Applied.**
+- **N891 (tests only).** Dropped the copies of op-grades' table content its job now pins: RUNGS' closed partition; the `terminal` closed set; the `undetermined` closed set with 78 = 21 + 57; layer 9's NON_ACTS and read rows; the substrate and directed forms; the consequence statements' keys and words; T33's merged-table identity (t33, test removed); the JUSTIFICATION_REFUSALS exclusion lists; the owners' reads "writes nothing" (catalogue, t31, t33, t34). Kept: the totality (R12), each rung's backing (R19), the machine set (R20), R24's decorated shape.
+- **R51.** `ACTS` gains 21 acts on an action: `actionhold`, `actionholdrelease`, `actionpressure`, `holdnoticeprepare`, `holdnoticesent`, `actionreceipt`, `actionscope`, `actionpromise`, `actionreplybearing`, `actionbearingpropose`, `arosefrom`, `escalationopen`, `escalationattach` (join on override), `filingprepare`, `communicationprepare`, `filingapprove` (sentence resolutions and the contradicted-send release as its parameters, reconciliation R1), `filingsent`, `counselpacket`, `clockstate`, `reminderset`, `itemtakeup`. R14 gains `action` (facts.mjs `#actionFacts`, `#escalationFacts`), each sub-fact asked through the read its act's refusal runs. `VOCABULARIES` gains 13 by reference (action-grammar's eight, action-clocks' `BASIS_KINDS`, action-plans' `PLAN_STATES`, plan-work's `MATTER_STATES`, consequences' `ADDRESSED_WORDS`, project-roster's `ProjectRoster.PROJECT_SCOPES`). K2885 confirms the reading (J1, B2).
+- **Inherited reds.** The hold backing re-pointed to `action-holds`' interface; plan rule 4 (11)'s filing-templates/local-facts test names local-facts' four rule ops (green once op-grades grades them); t33's duties/answers/following T45 ops pinned (K2817, K2822, K2874); layer 9's test keyed to T45's maps, with a new test for T45's layer 8–9 ops (K2857's consequences ops among them).
+
+**Deferred, with why.** `clockadopt` (no proposal read: N925); escalation states with `stopped_pursuing`, and the links `arose_from`, `cures` (no owner exports them; K2885); the action's promotion fields (override, partners, press terms, "no reply owed", `follows_action`: no ops); escalation stop/reopen (escalation R31, T46); `escalationattach` at stage 7 (its counterparty conditions have no read). Reported in J2: action-holds' release with no hold, filings' second approval not readable, escalation's ALREADY_ATTACHED across sight, action-replies' author sight.
+
+**Edges added by my code** (all in `modules.json` uses already): `actions`, `action-holds`, `escalation`, `conformance`, `filings`, `action-clocks` (facts.mjs); `action-plans`, `plan-work`, `consequences`, `project-roster` (affordances.mjs, vocabularies). No `case-check` or `action-replies` import.
+
+**After op-grades' and op-declarations' merges (B5, K2891):** `local-facts`' `ruleoffer` is a read (op-grades R32), so it moved to the reads; `publishcheck` is `irreversible` (K2839), added to R19's test; an alias of a published act is published with it in `unaccounted` (R12; op-grades R17's rule that an alias answers as its op): `filingrecordsent` lost its non-act row when `filingsent` became an act. R19's drive list gains T45's eleven reasoned ops, each driven at its owner's interface (`t45-backing.test.mjs`); R20's machine drive gains R51's acts, at the plane where it routes them and at the owners' interfaces for those it composes at T45-47 (`t45.test.mjs`).
+
+**Tests and checks.** `node --test test/m/affordances/` (bio-plane): tests 234, pass 234, fail 0. From the process repository: format (153 modules, 0 failures), architecture (affordances: 294 imports, 0 failures), coverage (35 of 35 live ids named, 0 failures), ownership (11 files, 0 failures). Layer tests: none named by the manifest.
+
+Size (session_01CRGRQChAdRhfopqhzspuKx): test runs 14, module lines 2575
+
+## J1 · QUESTION
+
+QUESTION (R51; my best reading, which I build on now; it touches op-grades, which merges before me).
+
+**1. The acts R51 adds to `ACTS` on an `action` target** (each an op its owner serves today, its subject the action or reached from it; offered where its own refusal admits the caller, R18):
+- action-holds: `actionhold` (whole action or an entry: any action in sight), `actionholdrelease` (a hold in place on the action or an entry), `actionpressure` (an unmarked received entry), `holdnoticesent` (a hold in place).
+- actions (T45): `actionreceipt` (a sent entry), `actionscope` (any; the direction is the parameter), `actionpromise` (any).
+- action-replies: `actionreplybearing` (kind `request_for_comment` and a received entry), `actionbearingpropose` (the same; a machine may propose, so not in MACHINE_REFUSALS), `arosefrom` (a received entry).
+- escalation: `escalationopen` (the action rests on a live, not void, noncompliant determination with no open or suspended escalation, and the author has joined its project), `escalationattach` (join on override included: a breach action resting on such a determination whose escalation is open or suspended at stage 2, 5 or 7 and not yet attached).
+- filings: `filingprepare` and `communicationprepare` (action not closed; prepare also tier 1–2 determined; a machine may prepare), `counselpacket` (any), `filingapprove` (an unapproved draft of the action the viewer sees: the assertion resolution per sentence and the contradicted-send release are its parameters, plan R1), `filingsent` (an approved, unsent draft), `holdnoticeprepare` (a hold in place).
+- action-clocks: `clockstate` (any), `reminderset` (a dated clock entry and fewer than 50 standing reminders).
+- plan-work: `itemtakeup` (a clock entry or a hold in place on the action).
+
+**2. Not offered, each with its reason:** `clockadopt`: no read lists standing clock proposals, so its NO_SUCH_CLOCK_PROPOSAL cannot be asked without writing (offering it would break R18); I propose action-clocks gains a proposal read later (REPORT). The override, partners, press terms, "no reply owed" and `follows_action` are fields written through the action's promotion, not ops; no op to offer. Stop pursuing and reopen (escalation R31) are not built (T46, K2844). The plan acts (`planpause`, `optionstart`, …) take a plan, not an action: offered on the plan, not here; `plancomment` with `on:{action}` likewise.
+
+**3. What op-grades must hold for these before I merge** (its job is running; please relay): each op in 1 is an `ACTS` row here, so it leaves `NON_ACTS` (today `actionhold`, `actionholdrelease`, `actionpressure`, `escalationopen`, `escalationattach`, `filingprepare`, `filingapprove`, `filingsent`, `counselpacket`, `communicationprepare`, `reminderset` are non-acts; catalogue's R1/R12 test refuses an op that is both). `MACHINE_REFUSALS` (R20, both ways) gains: actionhold, actionholdrelease → MACHINE_CANNOT_SET_HOLD; actionpressure → MACHINE_CANNOT_MARK_PRESSURE; holdnoticesent → MACHINE_CANNOT_SEND; actionreceipt → MACHINE_CANNOT_CORRESPOND; actionscope → MACHINE_CANNOT_SET_SCOPE; actionpromise → MACHINE_CANNOT_RECORD_PROMISE; actionreplybearing → MACHINE_CANNOT_RECORD_BEARING; arosefrom → MACHINE_CANNOT_LINK; escalationopen → MACHINE_CANNOT_OPEN; escalationattach → MACHINE_CANNOT_ATTACH; counselpacket → MACHINE_CANNOT_NAME_COUNSEL; filingapprove → MACHINE_CANNOT_APPROVE; filingsent → MACHINE_CANNOT_FILE; clockstate → MACHINE_CANNOT_STATE_CLOCK; reminderset → MACHINE_CANNOT_SET_REMINDER; itemtakeup → MACHINE_CANNOT_PLAN. (filingprepare, communicationprepare, holdnoticeprepare, actionbearingpropose accept a machine.)
+
+**4. Vocabularies:** added by reference: action-grammar's `OVERRIDE_GROUNDS`, `PHRASING_KINDS`, `ASSERTION_RESOLUTIONS`, `PRESS_RECORD_TERMS`, `FOUND_ELSEWHERE_KINDS`, `BEARINGS`, `PROMISE_KINDS`, `CLOCK_OWED_BY`; the five basis kinds (`action-clocks.BASIS_KINDS`); plan states (`action-plans.PLAN_STATES`); matter states (`plan-work.MATTER_STATES`); harm words (`consequences.ADDRESSED_WORDS`); scopes (`ProjectRoster.PROJECT_SCOPES`, a static of the class, read through it). **Not addable, no owner exports them:** escalation states with `stopped_pursuing` (not built, T46), and the links `arose_from` and `cures` (no module exports a link vocabulary). I leave those three out and name them deferred unless you say otherwise.
+
+**5. Facts (R14) gained for an action target:** counts and booleans, each through the predicate the act runs (actions.actionRead, action-holds.holdsOf, escalation.escalationsFor/escalationRead with conformance.determinationRead and membership.projectAuthority, filings.filingsFor/templatesForAction, action-clocks.remindersFor). "Its project's scope" and "its plan link": no action-directed act refuses on either today, so a fact for them would narrow nothing; I add none (R14: facts are asked for the acts). "Open requests for comment": `actionreplybearing`'s condition (kind and a received entry) is the fact asked.
+
+**6. Found elsewhere (REPORT to follow):** `plane/store.mjs` does not spread `actionRepliesOps`, `planWorkOps` or `caseCheckOps` (plane T45-47); `actionreceipt`, `actionscope`, `actionpromise`, `holdnoticesent`, `clockstate`, `itemtakeup` and action-replies' ops are not yet declared in op-declarations (T45-45).
+
+## J2 · REPORT
+
+REPORT (found in other modules while building R51; none is mine to change).
+1. **action-holds R5**: `actionHoldRelease` accepts a release at a place where no hold stands (it releases nothing; HOLD_ALREADY_RELEASED only for one already released). I offer the release only where a hold is in place (REC-186's reading: an offer that changes nothing is an overclaim). Proposed: refuse it `HOLD_NOT_IN_PLACE` as `holdNoticeSent` does.
+2. **filings R7 / project-roster R24**: `filingsent` refuses `SECOND_APPROVAL_NEEDED`, but no read states whether a draft needs a second approval (`#secondNeeded` is private; `filingsFor` gives `second_approval` but not whether one is needed). So I offer `filingsent` on an approved, unsent draft, and a draft that still waits on a second approval is offered and then refused. Proposed: `filingsFor` answers `second_needed` per draft; I narrow on it in the next job.
+3. **action-clocks**: no read of standing clock proposals (N925, per K2885).
+4. **escalation R9**: `ALREADY_ATTACHED` is not limited to the viewer's sight, while `escalationRead(...).actions` is; an action attached to an escalation the viewer cannot see would be offered `escalationattach` and refused. Also, stage 7's counterparty conditions have no read, so I offer the attachment at stages 2 and 5 only.
+5. **action-replies R2**: `aroseFromLink` asks the *author's* sight of `{project}` (NO_SUCH_PROJECT), and refuses `AROSE_FROM_REFUSED`, a code R2 does not list.
+6. **Accepted red at my merge until T45-45 (op-declarations)**: plane.test.mjs "R17: every act the catalogue publishes carries a mode" — the ops not yet declared (`holdnoticeprepare`, `holdnoticesent`, `actionreceipt`, `actionscope`, `actionpromise`, `actionreplybearing`, `actionbearingpropose`, `arosefrom`, `clockstate`, `itemtakeup`) have no mode until they are declared.
+
+## J3 · COMPLETE
+
+COMPLETE (T45-39). Branch `job/T45/affordances`, tranche/T45 merged through B5 (op-grades, op-declarations).
+- **N891**: the copies of op-grades' table content dropped from catalogue, t31, t33, t34 (t33's merged-table identity test removed); backing, the machine set and the totality kept.
+- **R51**: 21 acts on an action in `ACTS`, R14's `action` facts, 13 vocabularies by reference (K2885). Deferred: clockadopt (N925), the three vocabularies with no owner, the promotion fields, escalation stop/reopen, attach at stage 7.
+- **Rule 4 (11)** red cleared (filing-templates/local-facts; `ruleoffer` a read per op-grades R32); rule 4 (12)'s affordances t33 reds cleared; K2857 consequences, K2874 following pinned.
+- `unaccounted` (R12): an alias of a published act is published with it (`filingrecordsent` after `filingsent` became an act). `publishcheck` irreversible per K2839 in R19's test.
+- **Edges my code added** (all already in modules.json uses): actions, action-holds, escalation, conformance, filings, action-clocks (facts.mjs); action-plans, plan-work, consequences, project-roster (affordances.mjs). Test-only fixture reads: action-holds, escalation, action-plans, actions, project-roster, consequences, conformance, local-facts fixtures (t45, t45-backing, backing).
+- **New test files** (inside my tests path): `t45.test.mjs`, `t45-backing.test.mjs`.
+- Tests: 234/234 pass; format, architecture, coverage (35/35), ownership: 0 failures. R51's `*(not yet met: T45)*` is yours to clear.
+- Reported in J2 (K2890, N929–N932).
+Size (session_01CRGRQChAdRhfopqhzspuKx): test runs 14, module lines 2575.
