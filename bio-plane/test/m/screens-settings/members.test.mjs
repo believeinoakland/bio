@@ -128,7 +128,8 @@ test("R2 the row acts send their owners' arguments: membercaps, memberset, admin
   assert.deepEqual(await body("memberset", { data: { member: "old", status: "active" } }), { memberId: "old", status: "active" });
   assert.deepEqual(await body("adminendorse", { data: { member: "kim" } }), { memberId: "kim" });
   has(a, "screen.members.invite.shown", { handle: "kim", expires: "2026-10-19" });
-  assert.deepEqual(await body("adminremove", { data: { member: "lu" }, reason: "Moved away" }), { memberId: "lu", reason: "Moved away" });
+  assert.deepEqual(await body("adminremove", { data: { member: "lu" }, values: { "mr-lu": " Moved away " } }), { memberId: "lu", reason: "Moved away" });
+  assert.deepEqual((await a.press("adminremove", { data: { member: "lu" }, values: { "mr-lu": "" } })).sent, [], "not without a reason");
   assert.deepEqual(await body("expertiseconfirm", { data: { member: "ana", label: "CPA" } }), { memberId: "ana", label: "CPA" });
   assert.deepEqual(await body("invitewithdraw", { data: { member: "mai-k" } }), { memberId: "mai-k" });
   // the panel's own data drive them: the buttons carry what the requests name
@@ -165,16 +166,21 @@ test("R2 the group's key: groupkeyset sends the key in the body only, then group
   assert.deepEqual(empty.sent, []);
 });
 
-test("R2 aikeepaway: says first what it does; on only with a reason (the shell's reasoned friction, sent as `reason`), for every use or the ones chosen; off with none", async () => {
+test("R2 aikeepaway: says first what it does; on only with a reason of 1 to 2,000 characters, for every use or the ones chosen; off with none", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable() });
   const form = ancestor(btn(a.tree, "aikeepaway")[0], (e) => e.attrs.class === "cs-form");
   const words = texts(form);
   assert.ok(words.indexOf(said("act.aikeepaway.does")) === 0, "what it does, first");
   const spec = a.s.acts.find((x) => x.op === "aikeepaway");
   assert.equal(spec.reasonField, "reason");
-  assert.deepEqual((await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-all": true }, reason: "We hold tips." })).sent[0].body, { on: true, reason: "We hold tips." });
-  assert.deepEqual((await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-some": true, "mk-use-ask": true, "mk-use-run": true }, reason: "Tips." })).sent[0].body, { on: true, uses: ["ask", "run"], reason: "Tips." });
-  const none = await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-some": true }, reason: "x" });
+  assert.deepEqual((await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-all": true, "mk-why": "We hold tips." } })).sent[0].body, { on: true, reason: "We hold tips." });
+  assert.deepEqual((await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-some": true, "mk-use-ask": true, "mk-use-run": true, "mk-why": "Tips." } })).sent[0].body, { on: true, reason: "Tips.", uses: ["ask", "run"] });
+  for (const why of ["", " ", "x".repeat(2001)]) {
+    assert.deepEqual((await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-all": true, "mk-why": why } })).sent, [], "no reason, no keep-away");
+    assert.equal(a.refused.key, "screen.members.keepaway.noreason");
+  }
+  assert.equal((await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-all": true, "mk-why": "x".repeat(2000) } })).sent[0].body.reason.length, 2000);
+  const none = await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-some": true, "mk-why": "x" } });
   assert.deepEqual(none.sent, []);
   const on = await open("members", { me: ADMIN, table: membersTable({ aikeepawaystate: env({ on: true, reason: "We hold tips.", set_by: "rosa", set_at: "2026-10-02T00:00:00Z", uses: ["ask"] }) }) });
   has(on, "screen.members.keepaway.on", { by: "rosa", date: "2026-10-02" });

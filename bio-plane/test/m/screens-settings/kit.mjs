@@ -214,7 +214,8 @@ export async function open(id, { me, table, subject = null, reachable = false, o
     if (req === null) return { sent: [] };
     if (req.refuse) { out.refused = { key: req.refuse, drawn: w(req.refuse) }; return { sent: [], refuse: req.refuse }; }
     const body = req.body !== undefined ? { ...req.body } : undefined;
-    if (spec.reasonField && reason !== undefined) body[spec.reasonField] = reason;
+    // a reasoned act with no `reasonField` has its reason asked by the shell, added as `reason` (interface-shell R11)
+    if (!spec.reasonField && reason !== undefined && body) body.reason = reason;
     const answer = await p.call(op, req.query || {}, body);
     const o = outcomeOf(answer);
     if (o.state === "failed") {

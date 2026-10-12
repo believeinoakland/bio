@@ -83,7 +83,10 @@ export const members = {
             if (c) p.push(`<p>${W(S + "status.to." + next, { handle: label })}</p>${c}`);
           }
           if (m.role === "admin" && m.status === "proposed") { const c = cs.act("adminendorse", { data: { member: id } }); if (c) p.push(`<p>${W(S + "endorse.what", { handle: label })}</p>${c}`); }
-          if (m.role === "admin" && m.status === "active" && id !== me.member) p.push(cs.act("adminremove", { data: { member: id } }));
+          if (m.role === "admin" && m.status === "active" && id !== me.member) {
+            const c = cs.act("adminremove", { data: { member: id } });
+            if (c) p.push(`<label for="mr-${E(id)}">${W(S + "remove.reason")}</label><textarea id="mr-${E(id)}" class="cs-input rec" maxlength="2000"></textarea>${c}`);
+          }
           if (m.invitation === "live") p.push(cs.act("invitewithdraw", { data: { member: id } }));
           for (const e of expOf(m)) if (e.state === "declared" && !e.confirmed) p.push(`<p>${W(S + "expertise.declared", { label: e.label })}</p>${cs.act("expertiseconfirm", { data: { member: id, label: e.label } })}`);
           return p.join("");
@@ -130,7 +133,7 @@ export const members = {
       if (on) {
         const USES = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore"];
         const chosen = v.on && Array.isArray(v.uses) && v.uses.length < USES.length ? v.uses : null;
-        h += `<div class="cs-form"><p>${W("act.aikeepaway.does")}</p><fieldset><legend>${W(S + "keepaway.which")}</legend><input type="radio" id="mk-all" name="mk-scope"${chosen ? "" : " checked"}><label for="mk-all">${W(S + "keepaway.all")}</label><input type="radio" id="mk-some" name="mk-scope"${chosen ? " checked" : ""}><label for="mk-some">${W(S + "keepaway.some")}</label></fieldset><fieldset><legend>${W(S + "keepaway.uses")}</legend>${USES.map((u) => `<input type="checkbox" id="mk-use-${u}"${chosen && chosen.indexOf(u) >= 0 ? " checked" : ""}><label for="mk-use-${u}">${W("ai.use." + u + ".name")}</label>`).join("")}</fieldset><p>${W(S + "keepaway.reason")}</p>${on}</div>`;
+        h += `<div class="cs-form"><p>${W("act.aikeepaway.does")}</p><fieldset><legend>${W(S + "keepaway.which")}</legend><input type="radio" id="mk-all" name="mk-scope"${chosen ? "" : " checked"}><label for="mk-all">${W(S + "keepaway.all")}</label><input type="radio" id="mk-some" name="mk-scope"${chosen ? " checked" : ""}><label for="mk-some">${W(S + "keepaway.some")}</label></fieldset><fieldset><legend>${W(S + "keepaway.uses")}</legend>${USES.map((u) => `<input type="checkbox" id="mk-use-${u}"${chosen && chosen.indexOf(u) >= 0 ? " checked" : ""}><label for="mk-use-${u}">${W("ai.use." + u + ".name")}</label>`).join("")}</fieldset><label for="mk-why">${W(S + "keepaway.reason")}</label><textarea id="mk-why" class="cs-input rec" maxlength="2000">${v.on ? E(v.reason || "") : ""}</textarea>${on}</div>`;
         if (v.on) h += cs.act("aikeepaway", { label: S + "keepaway.turnoff", data: { on: "off" } });
       }
       return h;
@@ -166,9 +169,12 @@ export const members = {
         const a = answer && answer.result !== undefined ? answer.result : answer;
         if (a && a.invite) cs.set("invite", { memberId: a.memberId, expires: a.expires, link: (view.origin || "") + "/#invite=" + encodeURIComponent(a.invite) });
       } },
-    // a terminal act: the shell asks for its reason (interface-shell R11), sent as `reason` (membership R7)
+    // its reason in the administrator's own words, from the row's field (membership R7; interface-shell R11's `reasonField`)
     { op: "adminremove", rereads: ["roster", "recovery"], reasonField: "reason",
-      send(view, el) { return { body: { memberId: el.dataset.member } }; } },
+      send(view, el, cs) {
+        const reason = String(cs.value("mr-" + el.dataset.member) || "").trim();
+        return reason && reason.length <= 2000 ? { body: { memberId: el.dataset.member, reason } } : { refuse: "screen.members.remove.noreason" };
+      } },
     { op: "expertiseconfirm", rereads: ["roster", "expertise"],
       send(view, el) { return { body: { memberId: el.dataset.member, label: el.dataset.label } }; } },
     { op: "invitewithdraw", rereads: ["roster"],
@@ -203,14 +209,17 @@ export const members = {
     { op: "ailimitset", rereads: ["limits"],
       send(view, el, cs) { return view.parts.aiPanelSend("ailimitset", "group", el, cs); },
       refusals: { AI_LIMIT_INVALID: (r, cs) => cs.w("ai.refused.limitinvalid", { field: String(cs.w("ai.limitfield." + (["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].indexOf(r && r.field) >= 0 ? r.field : "amount"))).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) }), LIMIT_UNIT_UNAVAILABLE: "ai.refused.unitunavailable" } },
-    // reasoned: the shell asks the reason (1 to 2,000 characters, the owner's rule) and sends it as `reason`
+    // on only with a reason of 1 to 2,000 characters in the administrator's own words, its field the act's reason
+    // (interface-shell R11's `reasonField`; credentials R51); off with none
     { op: "aikeepaway", rereads: ["keepaway", "history", "uses"], reasonField: "reason",
       send(view, el, cs) {
         if (el.dataset.on === "off") return { body: { on: false } };
+        const reason = String(cs.value("mk-why") || "").trim();
+        if (reason.length < 1 || reason.length > 2000) return { refuse: "screen.members.keepaway.noreason" };
         const USES = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore"];
-        if (cs.value("mk-some") !== true) return { body: { on: true } };
+        if (cs.value("mk-some") !== true) return { body: { on: true, reason } };
         const uses = USES.filter((u) => cs.value("mk-use-" + u) === true);
-        return uses.length ? { body: { on: true, uses } } : { refuse: "screen.members.keepaway.nouses" };
+        return uses.length ? { body: { on: true, reason, uses } } : { refuse: "screen.members.keepaway.nouses" };
       } },
   ],
 };
