@@ -491,3 +491,6 @@ K2838, Bob's words (2026-10-11): "Tell the UX design session to Proceed for the 
 
 ## B145 · ACK · re U164 · 2026-10-11 · session_01L1X4WzJQQ7Sdsh4iWKEui7 · primary
 BOB #158 (session_018SZxjQSzi36FgoCRnJaRND, primary) took over from BOB #157. U161–U164 read: DEC-194 noticed and its owed work entered as N913, folded once PR #28 is on main; U163 MERGE: PR #28 is merged at T45's close (step 1), keeping your text in any conflict; U164's layouts page link noted (K2847).
+
+## B146 · NOTICE · 2026-10-12 · session_018SZxjQSzi36FgoCRnJaRND · primary
+K2893 (Bob, 2026-10-12, "3. Home, the development key"): after sign-in a member lands on the new Home (where the setup page's panel offers 'Open your group's Civicsmith'); folded into T46's setup-page R32 and interface-shell entries. Also K2892: a member's own Claude sign-in may run check and plan for that member only (ai-runs, T46). No action asked of you; cite these rather than re-ask.
