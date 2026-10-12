@@ -13,3 +13,19 @@ Two readings of R53, each with my best reading; I carry on with these unless you
    **Best reading:** `ACT_HELP.handlechange` is that row's translation, read from `membership`'s catalogue by reference (no copy here, so a re-wording of the row reaches the help too). If you want a separate sentence (e.g. R53's gloss "A handle is chosen when a member joins and is never changed; this act changes nothing."), give me its exact text.
 
 Also noted (no answer needed): the design's `handlechange` text at 3f40899950 still describes a change of handle ("Changes the handle the record shows on your work. Members see your earlier handle beside it, and no one else can ever take it. …"); it is not held, named back to you for the design stream per R53.
+
+## J2 · REPORT
+
+**Totality gap in `op-grades` (R12's tables), found while re-pinning my totality tests; not mine to fix.**
+
+`affordances.unaccounted` over `op-declarations`' own table as it stands on `tranche/T46` (`OPS`, `mutating` from each spec, `gated` = a `NEEDS` row) answers:
+
+```
+unpublished: advocacycheck, advocacychecks, bearingdraft, grouprules, infractiondraft
+unranked:    advocacycheck
+stale:       (none)
+```
+
+- `infractiondraft`, `bearingdraft` (`agent-worker` R76's drafts, `NEEDS` null), `advocacycheck` (mutating, `NEEDS` `contribute`) and `advocacychecks` (`case-account` R15) are T45 ops; `grouprules` is `local-facts` R15 (T46-9). None is in `RUNGS`, `RUNG_ABSENT` or `NON_ACTS`, and none is an act here (none is directed at an object's state: drafts and own reads), so each needs `op-grades` rows: `NON_ACTS` for all five and a rung or stated absence for `advocacycheck`. `op-grades` R33 (T46-44) names T46's new ops but none of these. Suggest folding them into T46-44 (or its next entry); my tests that enumerate the owners' op maps (`local-facts`' `grouprules`) stay red on this until `op-grades` grades them.
+
+Not a red of my own making; nothing for my module to change once they are graded.
