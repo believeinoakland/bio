@@ -30,14 +30,14 @@ var MODES = {
     deployed: false,
     does: "propose citable passages and readings over a SUBJECT a member named, under the run's `mints` bound, never attesting \u2014 \xA77.3 of docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md; not yet deployed, and a standing EXTRACT run is provisionally NO (\xA77.3 point 7)"
   },
-  /* R53 (K660): THE PLANNING SKILL, NOT DEPLOYED. It walks its own table (`PLAN_FLOW`, R50) and proposes options to one
-     action plan through `op=optionpropose`, never deciding anything (`BIO_Action_v0_1.md` §4). It is deployed as soon as
-     this member runs model turns (R40, R48) by the reviewed edit that also sets `run-rules`' `DEPLOYED_MODES` (its R14);
-     until then a plan-mode run closes `mode-not-deployed` at the gate, like every mode this table holds and has not
-     deployed. */
+  /* R10 (T46; N919; Bob's, K2892): THE PLANNING SKILL, DEPLOYED. It walks its own table (`PLAN_FLOW`, R6) and proposes
+     options to one action plan through `op=optionpropose`, never deciding anything (`BIO_Action_v0_1.md` §4). It is
+     deployed by the one reviewed change that also sets `run-rules`' `DEPLOYED_MODES` (its R14) and `agent-worker`'s
+     copy (its R53), never by model turns running; this copy must agree with run-rules', and the suite holds it to that.
+     The flag marks served code and lifts no bar: an open in mode `plan` is still admitted only through `run-rules` R29. */
   plan: {
-    deployed: false,
-    does: "propose options to one action plan, strongest first, through op=optionpropose; it decides, starts, prepares and sends nothing (BIO_Action_v0_1.md \xA74); not yet deployed"
+    deployed: true,
+    does: "propose options to one action plan, strongest first, through op=optionpropose; it decides, starts, prepares and sends nothing (BIO_Action_v0_1.md \xA74)"
   }
 };
 var BUDGET_BOUNDS = ["fetches", "subsessions", "wallclock"];
