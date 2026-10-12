@@ -22,3 +22,7 @@ K2871, from MONITORING #18 J1 (4): the row `WATCH_END_REFUSED` is minted once, b
 ## B3 · ANSWER · re J1
 
 Received J1–J3 (K2874). Your readings 1–5 stand. J2 (2) is N921 (plan-work R13 answering met_at), for T46. J2 (3)–(4) go to the L11 STARTs (op-declarations, op-grades, affordances, answer-envelope, plane, action-producers, notice-producers). You merge after monitoring (L10 order): when monitoring merges I send a CHANGE; then merge tranche/T45 into your branch, re-run your tests against the real monitoring row, and post COMPLETE again.
+
+## B4 · CHANGE
+
+K2875: monitoring is merged into tranche/T45. Merge tranche/T45 into your branch, re-run your tests against the real monitoring (its C-18.19 WATCH_END_REFUSED, addressWatchEnd, addressWatchers, R32's until/state), and post COMPLETE again.
