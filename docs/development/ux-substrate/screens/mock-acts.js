@@ -84,6 +84,7 @@ const ACT_HELP = {
   testify: 'Records what you saw or heard yourself as testimony: grade D, labelled as yours, never changed afterwards.',
   capturerequest: 'Asks for this to be captured later, for example when a site is down. The request waits until it can be fetched.',
   monitor: 'Checks this address once, now, for a new version. A new version is kept beside the old. To keep checking, turn watching on.',
+  recoverycodesissue: 'Gives you ten new one-time recovery codes for your own role, shown to you once, and spends every earlier unused one. Nobody else can see or use them.',
   monitorset: 'Turns watching on or off for this document\'s address, and sets how often it is checked. Each new version found is kept beside the old, and you are told.',
   heldcaptures: 'Shows captures waiting for a member to vouch for them before they count.',
   release: 'Vouches that each copy is what its source gave, unaltered. It is signed with your name; it can be corrected later, never silently undone.',

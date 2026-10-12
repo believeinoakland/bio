@@ -593,6 +593,70 @@
    ]
   },
   {
+   "id": "places",
+   "name": "Places and offices",
+   "frame": "working",
+   "purpose": "Administrators: the places whose rules apply, the place a group wants that Civicsmith does not hold yet, and the offices and seats the group deals with (setup-page R13; instance-setup R50, R62; DEC-200 (8), N997).",
+   "acts": [
+    {
+     "op": "profilesset",
+     "label": "Choose the places whose rules apply",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
+    },
+    {
+     "op": "placewanted",
+     "label": "Save the place you want",
+     "status": "declared",
+     "modules": [
+      "instance-setup",
+      "setup-page"
+     ]
+    },
+    {
+     "op": "officesseed",
+     "label": "Fill in the offices again",
+     "status": "declared",
+     "modules": [
+      "instance-setup"
+     ]
+    },
+    {
+     "op": "entitycreate",
+     "label": "Add an office yourself",
+     "status": "declared",
+     "modules": [
+      "entities",
+      "setup-page"
+     ]
+    }
+   ],
+   "journeys": [
+    2
+   ]
+  },
+  {
+   "id": "recovery",
+   "name": "Recovery codes",
+   "frame": "working",
+   "purpose": "Administrators: their own one-time recovery codes, how many are left, and whether two administrators hold them (credentials R46; instance-setup R66; K1888; DEC-200 (8), N997).",
+   "acts": [
+    {
+     "op": "recoverycodesissue",
+     "label": "Get new recovery codes",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
+    }
+   ],
+   "journeys": [
+    2
+   ]
+  },
+  {
    "id": "ties",
    "name": "Your ties",
    "frame": "working",

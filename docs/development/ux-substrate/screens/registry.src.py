@@ -30,6 +30,10 @@ screen('account', 'Your account', 'working', 'Handle, password, language, expert
   [('expertisedeclare','Declare your expertise'),('setpassword','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('memberlanguageset','Choose your language'),('infolevelset','Choose how much is explained')], [3,16])
 screen('connect', 'The assistant', 'working', 'The member\'s own API key or subscription token, or the group\'s key where it offers one, or none; which account pays for an act; their own account\'s uses and limits; their own use across every payer (K1547, K1755, DEC-188).',
   [('groupkeynoticeseen','Read what the group\'s key means'),('disclosureshown','Read what connecting means'),('subscriptionsignin','Open Anthropic\'s sign-in page'),('accountreferenceset','Connect with your own API key'),('subscriptiondisconnect','Disconnect your subscription'),('accountusesset','Set what your account pays for'),('ailimitset','Set a limit on your account'),('accountreferenceremove','Disconnect')], [4,17])
+screen('places', 'Places and offices', 'working', 'Administrators: the places whose rules apply, the place a group wants that Civicsmith does not hold yet, and the offices and seats the group deals with (setup-page R13; instance-setup R50, R62; DEC-200 (8), N997).',
+  [('profilesset','Choose the places whose rules apply'),('placewanted','Save the place you want'),('officesseed','Fill in the offices again'),('entitycreate','Add an office yourself')], [2])
+screen('recovery', 'Recovery codes', 'working', 'Administrators: their own one-time recovery codes, how many are left, and whether two administrators hold them (credentials R46; instance-setup R66; K1888; DEC-200 (8), N997).',
+  [('recoverycodesissue','Get new recovery codes')], [2])
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
   [('declaretie','Add a tie'),('withdrawtie','Remove a tie')], [5])
 screen('notes', 'Your notes', 'working', 'A member\'s own notes, seen only by them (DEC-136).',

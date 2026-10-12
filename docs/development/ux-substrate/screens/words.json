@@ -49,12 +49,12 @@
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "screen": 95,
-  "act": 547,
+  "screen": 99,
+  "act": 553,
   "column": 33,
   "wizard": 306,
-  "total": 1626,
-  "protected": 575
+  "total": 1636,
+  "protected": 580
  },
  "words": [
   {
@@ -4318,6 +4318,30 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.places.name",
+   "en": "Places and offices",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.places.purpose",
+   "en": "Administrators only: the places whose rules your group's Civicsmith follows (deadlines, holidays, offices, records laws), and the offices and seats your group deals with.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.recovery.name",
+   "en": "Recovery codes",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.recovery.purpose",
+   "en": "Administrators only: your own recovery codes, which let you set a new password if you lose yours. Each works once.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "screen.ties.name",
    "en": "Your ties",
    "protected": false,
@@ -5124,6 +5148,36 @@
   {
    "key": "act.accountreferenceremove.label.connect",
    "en": "Disconnect",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.profilesset.label.places",
+   "en": "Choose the places whose rules apply",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.placewanted.label.places",
+   "en": "Save the place you want",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.officesseed.label.places",
+   "en": "Fill in the offices again",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.entitycreate.label.places",
+   "en": "Add an office yourself",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.recoverycodesissue.label.recovery",
+   "en": "Get new recovery codes",
    "protected": true,
    "source": "registry.json"
   },
@@ -6948,6 +7002,12 @@
   {
    "key": "act.monitor.does",
    "en": "Checks this address once, now, for a new version. A new version is kept beside the old. To keep checking, turn watching on.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.recoverycodesissue.does",
+   "en": "Gives you ten new one-time recovery codes for your own role, shown to you once, and spends every earlier unused one. Nobody else can see or use them.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
