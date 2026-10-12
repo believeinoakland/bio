@@ -5,9 +5,9 @@
 import { test } from "node:test";
 import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
-import { store } from "./fixture.mjs";
+import { store, deployed, GATE_FLAGS, GATE_SET } from "./fixture.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
-import { askOp, draftOnObject } from "../../../src/plane/ask.mjs";
+import { askOp, assistantGateOf } from "../../../src/plane/ask.mjs";
 import { answersOf } from "../../../src/answers/index.mjs";
 
 const SEAL = "a-long-seal-secret-for-the-test-only";
@@ -25,7 +25,9 @@ async function world({ account = true, worker = true } = {}) {
       return new Response(JSON.stringify(DRAFT), { status: 200, headers: { "content-type": "application/json" } });
     return new Response('{"event":"step","step":"interpreting"}\n{"event":"answer","ok":true}\n',
                         { status: 200, headers: { "content-type": "application/x-ndjson" } }); } };
-  const x = await store({ env });
+  /* R40 (K2853): the doors deployed for this test (their flags on, the bar held on the test's set) */
+  const x = await store({ env, before: (ctx) => assistantGateOf(ctx, { flags: GATE_FLAGS, testSet: GATE_SET }) });
+  await deployed(x.ctx);
   const sql = x.ctx.storage.sql;
   /* the copy's assistant on: keep-away switched off by an administrator (credentials R51; instance-setup R53 derives the
      assistant's state from it, K2162) */
@@ -320,7 +322,7 @@ test("R19 negative controls (N686; N765): no assistant member, the group keeping
   assert.equal(off.asks.length + none.asks.length + x.asks.length, 0, "nothing reached agent-worker");
   const silent = await world();
   silent.env.AGENT_WORKER.fetch = async () => { throw new Error("gone"); };
-  const r5 = await draftOnObject(silent.ctx, silent.env, ask());
+  const r5 = await silent.s.draft(ask());
   assert.equal(r5.status, 502);
   assert.equal((await r5.json()).reason, "AGENT_WORKER_SILENT");
 });

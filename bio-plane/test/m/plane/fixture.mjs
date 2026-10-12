@@ -50,11 +50,28 @@ export function storage(db = new DatabaseSync(":memory:")) {
   return { db, ctx, blocked };
 }
 
+/** R40 (K2853): the doors' deploy flags all on and a one-matter test set, for a module test (`assistantGateOf`); the
+ *  bar is then held by `deployed(ctx)`, which records a passed R75 record for every part on that set. */
+export const GATE_SET = Object.freeze({ id: "plane-t45-set", version: 1, matters: Object.freeze([{ id: "m1" }]) });
+export const GATE_FLAGS = Object.freeze({ ask: true, draft: true, action_drafts: true });
+export const GATE_PARTS = Object.freeze(["ask", "draft:own_words", "draft:translation", "draft:textcheck", "draft:infractiondraft",
+                                         "draft:bearingdraft"]);
+export async function deployed(ctx, parts = GATE_PARTS) {
+  const { aiRunsOf } = await import("../../../src/ai-runs/index.mjs");
+  for (const part of parts) {
+    const r = aiRunsOf(ctx).testBarRecord({ part, set: GATE_SET.id, set_version: GATE_SET.version, false_alarm_rate: 0,
+                                            passed: true, graded_by: "harness", at: "2026-10-01T00:00:00Z" });
+    if (!r || r.ok !== true) throw new Error(`the bar for ${part} was not recorded: ${JSON.stringify(r)}`);
+  }
+}
+
 /** One object, constructed and settled (its migration and starts run). `routes(path, body)` answers its route map;
  *  `call(path, body)` the route the path names, awaited, as the frame does; `fetch(path, init)` the object's own door. */
-export async function store({ db, env: extra } = {}) {
+export async function store({ db, env: extra, before = null } = {}) {
   const st = storage(db);
   const env = { STORE: { idFromName: (n) => n }, ...(extra || {}) };
+  /* a test's own deps for a factory read on its first call only (K61), handed before construction */
+  if (typeof before === "function") before(st.ctx, env);
   const s = new Store(st.ctx, env);
   for (const p of st.blocked) await p;
   const routes = (path, body = null) => s.routes(new URL("http://do" + path), body);

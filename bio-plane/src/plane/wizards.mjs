@@ -10,7 +10,11 @@ import { SCREENS } from "./screens.mjs";
    `whatchangedpropose` and `escalationreasondraft` (DEC-101's "what changed"), and (T34; DEC-152, DEC-153; K1818)
    `instance-setup` R65's `groupdescriptiondraft` and `wizard-scripts` R27's `writinghelp`, registered with
    `wizard-scripts`. */
-export const MACHINE_DRAFTS = Object.freeze(["whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft", "writinghelp"]);
+/* (T45; K2880, K2881; wizard-scripts R13's T45 clause) the documentation of an infraction for one audience, the
+   assistant's `infractiondraft` (agent-worker R76, declared by op-declarations R49); the chance-to-fix notice's draft has
+   no op declared in T45, so it is not listed (an undeclared draft would be refused by wizard-scripts all the same). */
+export const MACHINE_DRAFTS = Object.freeze(["whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft", "writinghelp",
+                                             "infractiondraft"]);
 
 /** R19 (T34; DEC-153; K1818, K1907): the acts `op-grades` grades `irreversible` (its R1, R14), read from its `RUNGS` at
  *  registration, so the set follows the grading and is never a copy of it. */
