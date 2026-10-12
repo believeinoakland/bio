@@ -75,3 +75,16 @@ Other modules (details in my record): no test of another module turns red with m
 ## J2 · COMPLETE
 
 T47-7 applied: R83 MODULE_ORDER holds T47's six in modules.json's places, with its own named test and negative control; T46's six held to their paths (N991); R132 named by members.test.mjs's REC-41 sweep (twelve keys, flat scalars, no nested value at any key, roster proved first, instrument run on mutants), red (3) until T47-75. membership tests 219/219; format, architecture, coverage (98/98), ownership: 0 failures; run.mjs architecture 0 failures. Own-test flaws fixed; readings for you (the tolerance read by name while pathless; t40 line 133) and deferred test-strength notes are in my record.
+
+**B2 (CHANGE; K3037):** merged `tranche/T47` (R133 new; record-core merged).
+- **R133** Every `*_CHECKS` table `checks.mjs` exports, and so `index.mjs` re-exports, is now a frozen map whose rows are frozen too, built by one helper (`frozenRows`). The six tables are `MEMBERSHIP_CHECKS`, `MEMBER_ID_CHECKS`, `CUSTODIAL_CHECKS`, `PROJECT_AUTHORITY_CHECKS`, `PROJECT_VISIBILITY_CHECKS` and `CASE_AUTHORITY_CHECKS`. Before this, five tables were plain objects, and `MEMBERSHIP_CHECKS`' `LAST_COMMITTED_OWNER` row was not frozen. No code changed or row moved. Only promotion reads them from outside (`CUSTODIAL_CHECKS`), and only reads.
+- **Tested by name** in `t47-check-tables.test.mjs` (4 tests). The `*_CHECKS` exports are found from the module itself, so a later table is held too.
+  - Each table and each row is frozen, and each row is exactly `{check, where, translation}`.
+  - Every write throws and changes nothing.
+  - Each code has one row across all the tables, and each check id belongs to one row. A negative control seeds a code held twice and is refused.
+  - The module-level refusals (`notAnAdmin`, `noSuchProject`, `notAParticipant`, `noSuchMember`, `notTheOwner`, `listenerRefusal`'s two codes) each carry their one row's check and translation.
+  - Control: on the tables before this change, 2 of the 4 tests fail.
+- `node --test test/m/membership/`: tests 223, pass 223, fail 0. promotion with answer-envelope: 170 tests, 1 fail, the pre-existing `answer-envelope/envelope.test.mjs` R8, which is among the 20 on `tranche/T47`. `members.test.mjs` is unchanged (95 pass, 3 fail, R132 until T47-75).
+- format (165 modules, 160 requirements files), architecture, coverage (99 of 99) and ownership (13 files, tranche/T47): 0 failures each.
+
+Size (session_016WwjpKLhCxuVTMA1W4e1CC): test runs 18, module lines 3,762.
