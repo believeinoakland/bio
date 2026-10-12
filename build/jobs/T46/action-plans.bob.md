@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 1013 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L9: conformance, consequences, action-grammar, actions, action-holds, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work; a job that uses an L9 job's new service merges `tranche/T46` when BOB announces that merge (a CHANGE); each that uses no unmerged L9 job merges as soon as it is complete.
+
+## B2 · CHANGE
+
+CHANGE (K2984): action-grammar (T46-31), filing-templates (T46-36) and actions (T46-32: R98, a timed clock entry moved pending to overdue once its instant passes, `dueInstant` exported; R99) are merged into `tranche/T46`, as are conformance and consequences (K2980, K2983). Merge `tranche/T46` into your branch before you complete, re-run your tests on it, and name in your record any red it opens.
