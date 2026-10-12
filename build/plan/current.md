@@ -1,6 +1,6 @@
 # Plan T47
 
-**Status** · OPEN · BOB #165 · session_018LZeYsyDy9gwXyhVrZuG8i · depth 1
+**Status** · OPEN · BOB #166 · session_017YpDCnXuqsn5FBKooME6xp · depth 1
 
 **Jobs** · record-grammar: RECORD-GRAMMAR #16 session_013aVsQVbraDzPKRguViHbgA; jurisdictions: JURISDICTIONS #11 session_01CVJELXMANXCrBSv3k5mkgv; connection-grammar: CONNECTION-GRAMMAR #4 session_01G4kGikmgsoaj9zsvzXXe1r; bundler: BUNDLER #17 session_015stLmywC6CUKSABSgnnE5y; odf-reader: ODF-READER #6 session_01Jn5rD2YHo9oPrridu4wiX2; file-scanner: FILE-SCANNER #4 session_012TNzbQZh8FxASdHwTPhvby; record-core: RECORD-CORE #22 session_01UoXK9QPNAj5jdUwKRxUk56; membership: MEMBERSHIP #36 session_016WwjpKLhCxuVTMA1W4e1CC; project-roster: PROJECT-ROSTER #5 session_01V2ibyN2cvYwuMA6E7qMpYL; credentials: CREDENTIALS #13 session_011wSZT8CGnm3MLDqCvn7JJo; promotion: PROMOTION #45 session_0145CtZqHwp5jtUoDWPESrGG; host-governor: HOST-GOVERNOR #9 session_01KMdoJShc6cVjtBV9B9Kjxf; capture: CAPTURE #29 session_011naTtV4rRTduD7pKYGh6AV; file-safety: FILE-SAFETY #7 session_01CB2zDvnZ59Kvh4cLQziYD9; sources: SOURCES #14 session_012DLyugbYugm9hcAwhQQgJk
 
