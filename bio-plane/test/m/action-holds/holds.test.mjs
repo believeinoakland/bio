@@ -169,7 +169,7 @@ test("R2 R13 a hold records the place's own project and those named; it covers e
   assert.ok(holds.ACTION_HOLDS_TABLES.includes("action_hold_projects"));
 });
 
-test("R5 actionHoldRelease: refusals in R5's order (C-149.5), a release with none stated, and restarted recorded whatever the author sees", () => {
+test("R5 actionHoldRelease: refusals in R5's order (C-149.5), a release of a hold in place, and restarted recorded whatever the author sees", () => {
   const { w, P1, P2, hold, release } = ground();
   const R = (x) => release(A, 0, ALICE, x);
   assert.deepEqual([R({ author: MACHINE, target: "", reason: "" }), R({ author: "", target: "", reason: "" }),
@@ -180,10 +180,13 @@ test("R5 actionHoldRelease: refusals in R5's order (C-149.5), a release with non
   for (const reason of ["", "  ", null, "x".repeat(501), "a\\b", "a\nb"]) assert.equal(R({ reason }).reason, "HOLD_REFUSED");
   assert.equal(R({ viewer: "nobody" }).reason, "NO_SUCH_BUNDLE", "invisible as absent");
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM action_holds`)[0].n, 0, "no refusal writes");
-  /* an entry with no hold stated may be released; then it is already released */
+  /* (T46, R14) an entry with no hold stated is no longer released (HOLD_NOT_IN_PLACE, R14's own test); a hold in place
+     is, its restarts recorded; then it is already released */
+  assert.equal(release(A, 1, ALICE).reason, "HOLD_NOT_IN_PLACE");
+  hold(A, 1, ALICE);
   const first = release(A, 1, ALICE);
   assert.deepEqual(first, { ok: true, target: A, ord: 1, hold: "released", reason: "the matter closed", by: ALICE,
-                            at: "2026-09-28T12:00:00Z", restarted: [] });
+                            at: "2026-09-28T12:00:00Z", restarted: [P1] });
   row(release(A, 1, ALICE), "HOLD_ALREADY_RELEASED", "C-149.5", "actionHold > is-hold-already-released");
   /* A0 covers P1 and P2; B0 (alice's, naming P1) covers P1: releasing A0 restarts P2 alone */
   hold(A, 0, ALICE, { projects: [P2] });
@@ -191,7 +194,7 @@ test("R5 actionHoldRelease: refusals in R5's order (C-149.5), a release with non
   w.clock.ms += 60000;
   const a0 = R();
   assert.deepEqual([a0.ok, a0.restarted, a0.at], [true, [P2], "2026-09-28T12:01:00Z"]);
-  assert.deepEqual(w.rows(`SELECT project FROM action_hold_projects WHERE bundle_id=? AND seq=2`, A).map((r) => r.project), [P2]);
+  assert.deepEqual(w.rows(`SELECT project FROM action_hold_projects WHERE bundle_id=? AND ord=0 AND seq=2`, A).map((r) => r.project), [P2]);
   /* bob, who sees B and not P1, releases B0: P1 is recorded as restarted, and his answer shows none of it */
   const b0 = release(B, 0, BOB);
   assert.deepEqual([b0.ok, b0.restarted], [true, []]);
@@ -281,7 +284,7 @@ test("R7 projectHolds: 1 to 50 distinct project ids (C-149.4); held with since a
 
 test("R8 holdsReleased: each release that ended a hold in place, with its placers and the restarted the viewer may name; never an invisible action; pages with cursor", () => {
   const { w, P1, P2, hold, release } = ground();
-  release(B, 1, ALICE);                     /* ends no hold: not listed */
+  assert.equal(release(B, 1, ALICE).reason, "HOLD_NOT_IN_PLACE");   /* (T46, R14) ends no hold: refused, never listed */
   hold(B, 0, ALICE, { projects: [P1] });
   hold(B, 0, BOB);
   hold(B, 0, ALICE);

@@ -12,6 +12,16 @@
 
 const at = (fn, region) => `src/action-holds/index.mjs ${fn} > ${region}`;
 
+/* R15 (T46; DEC-194; N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) the C-149 rows
+   R15 names translate by, each `en` verbatim, read by key (`refusal.<CODE>`), as membership's `HANDLE_WORDS` and
+   extraction's `TRANSCRIBE_WORDS` are. The design stream's words: re-worded there, then re-taken here by key; a row never
+   holds a copy of its sentence. `refusal.HOLD_NOT_IN_PLACE` and `refusal.HOLD_PLACE_REFUSED` are not taken in T46: each
+   sentence says less than the requirement it answers (R14's release where no hold was placed; R2's entry and project
+   places), so both rows keep their own until the sentence and the requirement agree (K2953). */
+export const ACTION_HOLDS_WORDS = Object.freeze({
+  "refusal.MACHINE_CANNOT_SEND": "Only a member records that the hold notice was sent. Nothing was written.",
+});
+
 export const ACTION_HOLDS_CHECKS = Object.freeze({
   /* R2 (K899 (7), DEC-61; N-A19): a litigation hold stated at a place, in place or released, with a reason. */
   MACHINE_CANNOT_SET_HOLD: Object.freeze({
@@ -65,11 +75,11 @@ export const ACTION_HOLDS_CHECKS = Object.freeze({
       + 'so nothing was written.',
   }),
   /* R11 (v0.2 rules 10, 12): the hold notice, sent by a member's own hand; `HOLD_NOT_IN_PLACE` minted only by the exported
-     `holdNotInPlace`, which `filings` R47 calls too (K2848). */
+     `holdNotInPlace`, which `filings` R47 calls too (K2848), and which R14's release where no hold was placed answers
+     through. R15 (T46): `MACHINE_CANNOT_SEND` reads `words.json` by key; `HOLD_NOT_IN_PLACE` keeps its own (K2953). */
   MACHINE_CANNOT_SEND: Object.freeze({
     check: 'C-149.10', where: at("holdNoticeSent", "is-machine-send"),
-    translation: 'Recording that the hold notice was sent is a member\'s statement of what she did. The credential '
-      + 'that asked here is an automated one, so it cannot record it. Sign in to record it yourself.',
+    translation: ACTION_HOLDS_WORDS["refusal.MACHINE_CANNOT_SEND"],
   }),
   HOLD_NOT_IN_PLACE: Object.freeze({
     check: 'C-149.11', where: at("holdNotInPlace", "is-hold-not-in-place"),

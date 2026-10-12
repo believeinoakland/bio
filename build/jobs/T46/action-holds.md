@@ -1,3 +1,29 @@
 # action-holds (T46)
 
 **Status** · session_01KoRoRu2gZWmcRcS7HdgM6n · depth 2 · WORKING · handled B1
+
+## Record
+
+**How the reading set was read** (mechanics §17; START: 588 KB with my tests, read whole). Read whole by me: `roles/JOB.md`; `build/manifest.md`; `build/requirements/action-holds.md`; the plan's T46 opening rules and entry T46-33; layer 9's contract in `build/layers.md`; my module's code (`index.mjs`, `checks.mjs`, `schema.mjs`) and tests (`fixture.mjs`, `holds`, `places`, `pressure`, `due`, `hidden`, `readers`) whole (P20); the public part (Purpose and Provides) of each module in my Uses: `actions`, `record-core`, `membership`, `provenance`, `civil-time`, `docket`, `publication`, `project-roster`, `doorbell`, `ratification`, `action-grammar`, `record-grammar`; `words.json`'s three `refusal.*` rows this module's rows name; `duties`' T46 words test and `extraction`'s `TRANSCRIBE_WORDS` as the read-by-key precedent.
+
+**Entries applied (T46-33):**
+- **R14** (N929; amends R5) `actionHoldRelease` at a place where no statement stands is refused `HOLD_NOT_IN_PLACE`, answered through `holdNotInPlace(place)` (R11's one minter), asked where `HOLD_ALREADY_RELEASED` is, writing nothing; a place whose latest statement is `released` is still `HOLD_ALREADY_RELEASED`. Every place R2 names (entry, whole action, project, case). The minter's one fixed `detail` is re-worded to be true of a release too ("…A hold notice is recorded, and a hold is released, only while one is in place. Nothing was written."); its row (code, check, translation) is unchanged. The preview (R6) is unchanged: a place with none stated previews `hold: null`, nothing to restart.
+- **R15** (DEC-194; N913) C-149.10 `MACHINE_CANNOT_SEND` reads `words.json`'s `refusal.MACHINE_CANNOT_SEND` by key from `ACTION_HOLDS_WORDS` (new, frozen, exported from `checks.mjs` and `index.mjs`), never a copy; code, number, `where` and behaviour unmoved. C-149.11 `HOLD_NOT_IN_PLACE` and C-149.8 `HOLD_PLACE_REFUSED` keep their present translations (K2953), pinned; every other row pinned unchanged by digest. Both kept codes are minted here only; `filings` relays them (K231).
+- Tests changed for R14's replaced sentence ("An entry with no hold stated may be released"): `holds.test.mjs` R5 (a release now follows a placed hold; the none-stated case answers `HOLD_NOT_IN_PLACE`) and R8 (the release that ended no hold is now refused, still never listed); `due.test.mjs` R3 (the mark leaves the list by a hold placed then released). New `t46.test.mjs`: R14 (every place, the order, the op, the controls) and R15 (the word by key at the act; the two kept rows; no other row moved).
+
+Not-yet-met marks this job meets: **R14, R15**, each named by `t46.test.mjs`.
+
+**Flaws in my own module:** none known beyond the detail sentence above (fixed). Deferred: none.
+
+**Other modules (also in a REPORT):**
+- `action-producers` R5/R11 (and `queue`'s and `queuestate`'s kind texts for `litigation-hold`): the to-do's second door is `actionholdrelease`, labelled "Record that no hold is needed, with a reason". Since R14 that act is refused `HOLD_NOT_IN_PLACE` where no hold was ever placed, which is exactly the to-do's case (R3 lists a mark only while no hold is stated at it). So the door is offered and always refused, and a member can no longer record "no hold needed" without first placing one. Not mine to change: a requirement question for BOB (drop the door, or give "no hold needed" its own act/statement).
+- `filings` R47: relays `HOLD_NOT_IN_PLACE` from `holdNotInPlace`; its `detail` sentence changed (above), its row did not. `filings`' tests assert the reason only and pass.
+- `affordances`: offers `actionholdrelease` only where `holds_in_place` > 0, which already agrees with R14.
+- Generated artifacts: the plane bundle includes this module's source, so it is staled (accepted red 4, regenerated at the layer's close).
+
+**Tests and checks run** (on the commit below):
+- `node --test bio-plane/test/m/action-holds/`: tests 38, pass 38, fail 0.
+- Users of this module (`membership` t42-hold-reach, `queue` action and catalogue, `action-producers`, `filings`, `affordances`, `op-declarations`, `op-grades`, `store-door` dispatch, `control-plane` r48-routes, `answer-envelope`, `action-grammar`, `ratification`, `doorbell`, `plane`): tests 1209, pass 1198, fail 11; all 11 red on the tree before my change as well (the op-declarations/affordances registry and op-map reds of rule 5 (7), (8) and the T46 named ops, and `plane` `compose.test.mjs` R11/R5), none naming this module.
+- `checks/format.mjs`: 159 modules, 0 failures. `checks/architecture.mjs action-holds`: 10 product files, 0 failures. `checks/coverage.mjs action-holds`: 15 of 15 live ids named, 0 failures. `checks/ownership.mjs action-holds tranche/T46`: 0 failures. `checks/run.mjs`: architecture 0 failures (2957 product files); coverage 29 failures, none `action-holds` (other modules' not-yet-met ids, rule 5 (1)); channels 0.
+
+Size (session_01KoRoRu2gZWmcRcS7HdgM6n): test runs 7, module lines 1223

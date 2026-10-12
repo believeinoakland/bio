@@ -47,8 +47,9 @@ test("R3 holdsDue lists an action's legal mark until a hold is stated at its ent
     { action: A, ord: 2, note: "legal 2", marked_by: M, marked_at: "2026-09-28T12:00:00Z", project: P, arrived: { action: A, ord: 2 } },
     { action: B, ord: 1, note: "legal 1", marked_by: M, marked_at: "2026-09-28T12:00:00Z", project: null, arrived: { action: B, ord: 1 } }]);
   assert.deepEqual([r.ok, r.truncated, r.cursor, r.limit], [true, false, null, 500]);
-  /* a stated hold, in place or released, takes the mark off the list */
-  w.h.actionHoldRelease({ target: A, ord: 2, reason: "never needed", viewer: M, author: M });
+  /* a stated hold, in place or released, takes the mark off the list (T46, R14: released only after it was placed) */
+  assert.equal(w.h.actionHold({ target: A, ord: 2, hold: "in_place", reason: "preserving", viewer: M, author: M }).ok, true);
+  assert.equal(w.h.actionHoldRelease({ target: A, ord: 2, reason: "never needed", viewer: M, author: M }).ok, true);
   assert.deepEqual(due().items.map((x) => [x.action, x.ord]), [[A, 0], [B, 1]]);
   /* (T45) a hold at the whole action placed from the mark takes it off too */
   assert.equal(w.h.actionHold({ target: A, from: { mark: { target: A, ord: 0 } }, hold: "in_place", reason: "r",
