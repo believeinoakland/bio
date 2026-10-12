@@ -32,3 +32,7 @@ Note: `planWorkOps` and `caseCheckOps` are not yet spread into the plane's map o
 - `node checks/ownership.mjs … store-door tranche/T45`: 0 failures.
 
 Size (session_01HmjbtHsdNjMqVSvbrVW1Yf): test runs 3, module lines 631
+
+## J1 · COMPLETE
+
+T45-50 done. Added to PROJECT_NAMING_READS (14): successrecords (project, plan), cures (determination), openitemswith and templatesforaction (action), plan-work's ten reads (plan). Added to _NOT with reasons (7): watchquestions, dutiesarising, procedureguides, successread, casecheck, ruleoffer, grouprules. In neither: infractiondraft and bearingdraft (plane's /draft door, not a store route), advocacychecks (no route arm or stated parameters yet; needs a row under a CHANGE if its route takes a bundle id). The 43 writes are their owners'. Explicit test per new row with controls; 45/45 tests; format, architecture, coverage, ownership 0 failures. Details and the Uses note (owners' maps not testable from here) in my record.
