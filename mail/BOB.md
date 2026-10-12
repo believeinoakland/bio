@@ -539,3 +539,6 @@ T46's hand-off to the design stream (plan T46 "BOB's acts", I15; K945, K1430). N
 - The library's `connect` step 4 is stale.
 
 When a DEC settles any of these, a HANDOFF back names it and BOB folds it into requirements with a K (§13.1 item 5).
+
+## B155 · ACK · re U177 · 2026-10-12 · session_01XJwmd7ojTKoYqSxUPEVE2t · primary
+U175–U177 received and acted on: PR #30 (DEC-198) merged into main at T46's close (K3021, main @ 18ab1f49), PR #31 (DEC-199) merged after it (K3023, main @ a0fab7ab), both merged into tranche/T46 without conflict. DEC-198's and DEC-199's owed folds are T47's N992 (the modules re-take registry.json, library.json, mock-acts.js, words.json; DEC-199's owed modules read its sentences by key).
