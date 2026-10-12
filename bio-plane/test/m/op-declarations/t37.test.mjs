@@ -177,7 +177,7 @@ test("R39 (N776; DEC-182 (4); K2175; credentials R3): setpassword — the caller
 
 /* ---------- R21, R27 (T37): the registry and library as PR #14 left them ---------- */
 
-test("R21 (T37; N776, DEC-180, DEC-182; K2159, K2171): on PR #14's registry every function is an op or an alias, the four withdrawn functions and claimidentity are gone, and the eight owed acts T37 declares are each declared once under its own name, read as served with no alias; infolevelset stays without a spec; the comment naming setpassword a function served in process is gone; (T43, DEC-189 (3)) seven of the eight re-pointed to their declared ops, subscriptionsignin still owed (negative control: an undeclared owed act is seen)", () => {
+test("R21 (T37; N776, DEC-180, DEC-182; K2159, K2171): on PR #14's registry every function is an op or an alias, the four withdrawn functions and claimidentity are gone, and the eight owed acts T37 declares are each declared once under its own name, read as served with no alias; the comment naming setpassword a function served in process is gone; (T43, DEC-189 (3)) seven of the eight re-pointed to their declared ops, subscriptionsignin still owed; (R52, T46) no owed act is left without a spec, infolevelset R50's (negative control: an undeclared owed act is seen)", () => {
   const fns = actsOf("function");
   for (const f of fns) assert.ok(Object.hasOwn(OPS, f), `${f}: no spec`);
   for (const f of ["projectcreated", "countask", "registerproceeding", "deadlinecompute", "setpassword", "claimidentity"])
@@ -193,11 +193,13 @@ test("R21 (T37; N776, DEC-180, DEC-182; K2159, K2171): on PR #14's registry ever
     else assert.ok(actsOf("declared").includes(op) && !owed.includes(op), `${op} is not re-pointed to its declared op`);
     assert.ok(Object.hasOwn(OPS, op) && familyOf(op), `${op}: not declared in a family`);
   }
-  assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)), ["infolevelset"]);
+  /* T46 (R52): every owed act of PR #28's registry is declared (infolevelset, owed with no spec until T46, is R50's) */
+  assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)), []);
   const src = readFileSync(new URL("bio-plane/src/op-declarations/index.mjs", ROOT), "utf8");
   assert.doesNotMatch(src, /`setpassword` \(credentials, in process\)/);
   /* negative control */
-  assert.ok(inNoTable("infolevelset"));
+  assert.deepEqual([...owed, "nosuchowedact"].filter((op) => !Object.hasOwn(OPS, op)), ["nosuchowedact"]);
+  assert.ok(inNoTable("claimidentity"));
 });
 
 test("R27 (T37; N701, N708, N669; K2134, K2200): the seven owed acts of DEC-148's library — memberlanguageset, startfrom, publishat, translationdraft, translationadopt, subscriptionsignin, translationconfirm — are each declared under its own name, in both session sets, with a spec of its kind (a member's own act mutating, machineClasses [], by stamped; a read viewer stamped, NEEDS null) (negative control: an undeclared act fails)", () => {
@@ -215,7 +217,7 @@ test("R27 (T37; N701, N708, N669; K2134, K2200): the seven owed acts of DEC-148'
     }
   }
   /* negative control */
-  assert.ok(!Object.hasOwn(OPS, "infolevelset"));
+  assert.ok(!Object.hasOwn(OPS, "claimidentity"));
 });
 
 /* ---------- R34 (T37): the explanation of T37's member ops ---------- */
