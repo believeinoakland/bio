@@ -20,3 +20,7 @@ Also (K2832): your new R78 registers you as public-read's group-identity source 
 ## B2 · ANSWER · re J1
 
 K2880: your reading stands: the stake through setSetting as R77 says, who/when/history in your own append-only table declared to record-core like R28's, C-64.27.
+
+## B3 · CHANGE
+
+K2889: wizard-scripts (T45-37) is merged into tranche/T45. Merge it into your branch when convenient.
