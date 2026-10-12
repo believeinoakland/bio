@@ -2,6 +2,32 @@
 
 **Status** · session_01JBa3sUqEAyKhi388Z2gNjX · depth 2 · WORKING · handled B4
 
+## Completion (SCREENS-INTAKE #1)
+
+**Entry applied** · T46-56 (N897 (1); N821; N714's screen side; N747): R1–R9 met, a new module built to interface-shell R21 as K2996, K2998 and K2999 fixed it (B2–B4), against my own stand-in kit; re-pointed to the shell's shared DOM stand-in at its merge (B3).
+- **capture** (R1–R3): three tabs at `/app/capture/address|file|saw`. R1 `acquire` (its five refusals each in its own row via `refusals`), `capturerequest`, `monitor` drawn once a capture landed in a bundle (K2996 Q3); an answer carrying `promoted` is not promoted again, any other new document is promoted by the screen (`allocid`, then `promote` of an information@2 bundle at `collected` composed as setup-page's intake composes it; K2996 Q2). R2 the upload: `accept` and `capture="environment"`, four choices none preselected, statement composed in order with labels, ≤2,000 characters, nothing sent while any part is missing (saying which), raw bytes with `statement` and `name` in the query; its four refusals in their own rows; `existed` drawn; "Downloaded from a website?" links the address tab; `photo.reminder` by key. R3 `testify` (words with where, `observedAt` from when, never after now); `writinghelp` under the words only while reachable, told only what was typed, the draft labelled, `ai.label.untested` exactly when the answer carries `untested`.
+- **held** (R4): `heldcaptures`; rows through `cs.rows` (picked, hold strip `release`, `heldsetaside`), eligibility marks (`gap.refused` with its reason, `gap.undetermined` when R78 is unregistered), questions and `gap.withheld`; an archive's files link to `open-file`. `release` = `op=select` over the picked ids then `op=release` with the signed dialog's acknowledgment and mitigation, checked to ratification R20's bounds first (K2996 Q5). Set-aside rows stay in view with `heldrestore` (Q6).
+- **open-file** (R5, R6, R9): `threatof`, `originalstate`, `verdictnotes`, `scanfindings` (filtered to the capture), `scanstatus` only for a session that administers (Q7); held / low / high; `openwithwarning` only on the `warned` path, sent only with both boxes ticked; the deeper path by `override`; `releasescanhold` only while held; the safe view marked `origin.machine`, "a safe copy of the original", cite the original; a sheet drawn as data. Originals and safe views through `cs.download` (B4); requests carry only the capture's digest.
+- **inbox** (R7): `inbox`, `inboxget` for `/app/inbox/<knock>`; size, date, note, same-knocker count, the ladder (from what the row holds); `inboxpull`, `inboxresolve` to `discarded` (the shell's reason; `RESOLVE_NO_REASON` its own row), `sourcelink`.
+- **Words**: `SCREEN_WORDS`, 167 rows (165 `screen.<id>.` keys, plus `mark.gap.refused.means` in DEC-149's form and `ai.label.untested` word for word as screens-inquiry R7), for the design stream's HANDOFF (plan T46, "BOB's acts").
+
+**Files (K1043; for `modules.json`)** · paths `bio-plane/src/screens-intake/` (`index.mjs`, `words.mjs`, `capture.mjs`, `held.mjs`, `open-file.mjs`, `inbox.mjs`); tests `bio-plane/test/m/screens-intake/` (`kit.mjs`, `capture.test.mjs`, `held.test.mjs`, `open-file.test.mjs`, `inbox.test.mjs`, `common.test.mjs`). **Uses** gain `wizard-scripts` (tests only: `SCREEN_REGISTRY`, to check every act against the registry; earlier in layer 11).
+
+**Kit parts read beyond K2998's list** (asked in J3, unanswered at COMPLETE): `cs.digest(text)` (the promoted bundle's SHA-256s; `crypto` is not an allowed global), `cs.now()` (falls back to `Date.now()`), `{refuse: key, fills}` filled by the shell, `cs.value(id)` a checkbox's or radio's `checked`. If the shell does not give `cs.digest`, the R1 promote cannot run; that is the one point to settle at its merge.
+
+**Read** · my requirements whole; the public parts of interface-shell, setup-words, op-declarations (its tables); layers.md layer 11; draft-T46-interface.md §1, §2.4, §3–§7; registry, `mock-kit.js`, `mock-screens.js` (capture, held, open-file, inbox) and `words.json` at 3f40899950; the owners' answers I draw (acquisition R10, capture R76–R81 and R86 and its `heldCaptures`, `setAside`, `restoreHeld` code, ratification R20–R26, retrieval R18, provenance R28, monitoring R1, capture-requests R1–R2, file-safety R2, R5, R6, R8–R11, R13, R15–R17 and its ops map, doorbell R3, R13 and its ops map, sources R1–R12, wizard-scripts R24, R27, control-plane R36, R58, R59, R72 and its archive promote, setup-page R10, R11, R26, R31 and its intake composition).
+
+**Found in other modules** (also in REPORT) · N969 (K2996) holds the three gaps: `monitor` refuses `NOT_MONITORED` on a bundle the screen writes (`monitoring.enabled: false`) and no act sets it; `captureRequest` needs a running run (no member path); no read lists set-aside documents. New: (a) `heldCaptures` rows (capture R77) carry no grade and no capture digest, so a held row other than an archive's file can draw no grade and no thumbnail opening `open-file` (R4 asks both); (b) no member read answers a knock's source id (`sourceof` and `sourcerung` are not in `SESSION_OPS.member`), so `sourcelink` needs the member to type both ids and the ladder stops at "Same knocker"; (c) the registry's `inbox` op is served as doorbell's `inboxlist` arm (control-plane's alias), not checked live here.
+
+**Deferred** · none in my module.
+
+**Tests and checks** (on `job/T46/screens-intake`, `tranche/T46` merged at B3)
+- `node --test bio-plane/test/m/screens-intake/`: tests 42, pass 42, fail 0. Every function runs compiled from its own text in a `vm` context with only the language's globals (R21 (1)); the stand-in's `w` throws on any key no list holds.
+- With `modules.json` patched locally (paths, tests, the `wizard-scripts` use; not committed): `architecture.mjs … screens-intake` 0 failures; `coverage.mjs … screens-intake` 9 of 9; `ownership.mjs … tranche/T46` 13 files, 0 failures. Unpatched: architecture 0 (no files listed), coverage 9 unnamed (no tests listed), as K1043 expects.
+- `checks/run.mjs` (patched): architecture 0 failures over 2,984 files, channels 0; coverage 12 failures, none screens-intake's (the other L11 jobs' marked ids, as rule 5 (1)).
+
+Size (session_01JBa3sUqEAyKhi388Z2gNjX): test runs 11, module lines 834
+
 ## J1 · QUESTION
 
 Seven readings, each with what I build meanwhile (step 3: I carry on with all of them; none stops me). Q1 is the one I most need an answer to before COMPLETE.
