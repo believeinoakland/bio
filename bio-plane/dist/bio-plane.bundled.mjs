@@ -241942,6 +241942,14 @@ function instantOfDueAt(dueAt, zone) {
   if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi - lo !== (precision === "minute" ? 6e4 : 1e3)) return null;
   return lo;
 }
+function dueInstantOf(it) {
+  try {
+    if (!it || typeof it.date !== "string" || typeof it.due_at !== "string" || !it.due_at.startsWith(`${it.date}T`)) return null;
+    return instantOfDueAt(it.due_at, typeof it.due_zone === "string" ? it.due_zone.trim() : null);
+  } catch {
+    return null;
+  }
+}
 function localDayOf2(ms5, zone) {
   let d = null;
   try {
@@ -244848,6 +244856,8 @@ var Monitoring = class {
    *  jurisdiction (`#zone`, as actions R12 reads it, through `civil-time.localDay`; never the UTC day), read through
    *  action-clocks R1's `pendingClocks` as this module's machine viewer, is marked `overdue` by one mechanical `deadline-recheck` promotion per action,
    *  changing only `clock[].status` (pending to overdue, nothing else) and `last_updated`, with its Session Log entry.
+   *  (T45, R73) An entry with a time of day, as its `pendingClocks` item answers it (`due_at` in `due_zone`), is past
+   *  from that instant, on its own day (`actions` R98 admits the move then); a date-only entry from the next local day.
    *  R35: then asks `escalation` which stages' triggers are met, so the next stage is proposed; it advances none.
    *  Answers `{ok, at, zone, day, marked: [{action, ords, dates, revision}], failed: [{action, reason}], escalations,
    *  truncated}`; with no zone held, nothing is marked and `undetermined` says why (`DEADLINE_NO_ZONE`). */
@@ -244859,7 +244869,6 @@ var Monitoring = class {
     if (!today2)
       return { ok: true, at: at47, zone, marked: [], failed: [], truncated: false, escalations: null, undetermined: DEADLINE_NO_ZONE };
     let items = [], truncated6 = false;
-    const docs = /* @__PURE__ */ new Map();
     try {
       const p3 = this.actionClocks.pendingClocks({ before: addDays3(today2, 2), limit: DEADLINE_RECHECK_MAX, viewer: MONITOR_VIEWER });
       if (p3 && p3.ok !== false) {
@@ -244872,7 +244881,7 @@ var Monitoring = class {
     const byAction = /* @__PURE__ */ new Map();
     for (const it of items) {
       if (!it || typeof it.date !== "string") continue;
-      const timed = this.#dueInstant(it, zone, docs);
+      const timed = dueInstantOf(it);
       if (!(timed !== null ? nowMs >= timed : it.date < today2)) continue;
       if (!byAction.has(it.action)) byAction.set(it.action, []);
       byAction.get(it.action).push(it);
@@ -244894,6 +244903,7 @@ var Monitoring = class {
    *  first alarm of the day an entry passes (an entry dated D is past from the start of D + 1 in that zone, R34's rule),
    *  and an instance with no pending entry holds no wake. A read that fails holds no wake either: it is asked again at the
    *  scheduler's next reconcile. With no zone held nothing can pass (R34), so no wake is held.
+   *  (T45, R73) An entry with a time of day offers that instant, read from its `pendingClocks` item, in place.
    *  N429 (K719): an entry of an action whose last R34 mark failed is left out of that earliest date until the start of
    *  the local day after the failure, and holds the wake no earlier than that instant, so a mark that keeps failing is
    *  asked again once a day and never holds the wake in the past for the entries that can be marked. What failed is
@@ -244903,7 +244913,7 @@ var Monitoring = class {
     const nowMs = Number.isFinite(Number(now)) && now !== null ? Number(now) : this.now();
     const zone = this.#zone();
     if (!zone) return null;
-    const dayAfter = /* @__PURE__ */ new Map(), dayStart = /* @__PURE__ */ new Map(), docs = /* @__PURE__ */ new Map(), all = [];
+    const dayAfter = /* @__PURE__ */ new Map(), all = [];
     let wake = null, after2 = null;
     try {
       for (let pages = 0; pages < DEADLINE_RECHECK_PAGES; pages++) {
@@ -244919,14 +244929,12 @@ var Monitoring = class {
         if (!p3.cursor) break;
         after2 = p3.cursor;
       }
-      all.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
       for (const it of all) {
-        if (!dayAfter.has(it.date)) dayAfter.set(it.date, startOfDayAfter(it.date, zone));
-        let at47 = dayAfter.get(it.date);
-        if (!dayStart.has(it.date)) dayStart.set(it.date, startOfDayAfter(addDays3(it.date, -2), zone));
-        const from = dayStart.get(it.date);
-        const timed = wake === null || from === null || from < wake ? this.#dueInstant(it, zone, docs) : null;
-        if (timed !== null) at47 = timed;
+        let at47 = dueInstantOf(it);
+        if (at47 === null) {
+          if (!dayAfter.has(it.date)) dayAfter.set(it.date, startOfDayAfter(it.date, zone));
+          at47 = dayAfter.get(it.date);
+        }
         if (at47 === null) continue;
         const held2 = this.#markFailed.get(it.action);
         if (held2 !== void 0 && nowMs < held2 && at47 < held2) at47 = held2;
@@ -244942,34 +244950,6 @@ var Monitoring = class {
     const nowMs = Number.isFinite(Number(now)) && now !== null ? Number(now) : this.now();
     const at47 = this.deadlineRecheckWake(nowMs);
     return at47 !== null && at47 <= nowMs ? at47 : null;
-  }
-  /** R34, R50 (T45; N882; v0.2 rule 6): the instant a pending entry `it` (`{action, ord, date}`, `pendingClocks`' item)
-   *  is due at when it carries a time of day, or null when it carries none (a date-only entry). `action-clocks` R1 answers
-   *  no time of day, so it is read from the action's own document, the authority (`docs` caches each document for one
-   *  call): the entry at `ord` with the same date, its `due_at` on that date, in its `due_zone` or else `zone` (as
-   *  `action-clocks` R3 answers it). A wall time the zone skips or repeats that day reads as none: the entry is then
-   *  read by its date alone, never marked early. Never throws. */
-  #dueInstant(it, zone, docs) {
-    try {
-      if (!docs.has(it.action)) {
-        const img = this.record.readImage(it.action);
-        const live7 = img && typeof img["bundle.md"] === "string" ? img["bundle.md"] : null;
-        let fm = null;
-        try {
-          fm = live7 ? parseFrontmatter(live7).data : null;
-        } catch {
-          fm = null;
-        }
-        docs.set(it.action, fm && Array.isArray(fm.clock) ? fm.clock : null);
-      }
-      const clock2 = docs.get(it.action);
-      const e2 = clock2 && Number.isInteger(Number(it.ord)) ? clock2[Number(it.ord)] : null;
-      if (!e2 || typeof e2 !== "object" || e2.date !== it.date || typeof e2.due_at !== "string" || !e2.due_at.startsWith(`${it.date}T`))
-        return null;
-      return instantOfDueAt(e2.due_at, typeof e2.due_zone === "string" && e2.due_zone.trim() ? e2.due_zone.trim() : zone);
-    } catch {
-      return null;
-    }
   }
   /* R50 (N429): each action whose last R34 mark failed, with the start of the local day after the failure. */
   #markFailed = /* @__PURE__ */ new Map();
@@ -249382,48 +249362,28 @@ ${s.address}`, Number(w.follow_id));
     }
     return false;
   }
-  /* R24: the instant every promise-duty of the link's matters read met, each matter holding at least one, read with no
-     member's sight (plan-work R13, duties R10, R31); or null. The instant is the latest at which an occurrence's
-     matching was recorded (duties R12); measured evidence counts at its latest bound. */
+  /* R24 (b), R27: the instant every promise-duty of the link's matters read met, from one source: plan-work's
+     `matterPromiseDuties` (its R13, R15), read with no member's sight. Each matter (all the plan's when the link names
+     none) must answer `all_met`, not `partial`, with a `met_at`; the latest `met_at` is the instant, in the record's
+     whole-second spelling. Any matter that does not makes it null: never derived here, never guessed. `nowMs` is the
+     instant the read is as of (the asker's `now`). */
   #promisesMetAt(l2, p3, nowMs) {
     const keys = json19(l2.matters) || (Array.isArray(p3.subjects) ? p3.subjects.map((x) => x.key) : []);
     if (!keys.length) return null;
-    const asOf = instant3(nowMs);
     let last = null;
     for (const k of keys) {
       let r;
       try {
-        r = this.planWork.matterPromiseDuties({ plan: p3.id, matter: k, viewer: null });
+        r = this.planWork.matterPromiseDuties({ plan: p3.id, matter: k, nowMs, viewer: null });
       } catch {
         return null;
       }
-      if (!r || r.ok !== true || r.all_met !== true || r.partial === true || !Array.isArray(r.duties) || !r.duties.length) return null;
-      for (const d of r.duties) {
-        let o;
-        try {
-          o = this.duties.occurrencesOf({ dutyId: d.duty_id, asOf, viewer: MACHINE2 });
-        } catch {
-          o = null;
-        }
-        for (const occ of o && Array.isArray(o.occurrences) ? o.occurrences : []) {
-          if (!["met", "met_late"].includes(occ.state)) continue;
-          let t2 = null;
-          for (const e2 of Array.isArray(occ.evidence) ? occ.evidence : []) {
-            if (e2.kind === "event" && typeof e2.at === "string") t2 = e2.at;
-            else if (e2.kind === "measured" && e2.when && !t2) {
-              try {
-                t2 = bounds(e2.when).latest || null;
-              } catch {
-                t2 = null;
-              }
-            }
-          }
-          const tt = t2 ? wholeSecondFrom(t2) : null;
-          if (tt && (!last || tt > last)) last = tt;
-        }
-      }
+      if (!r || r.ok !== true || r.all_met !== true || r.partial === true) return null;
+      const t2 = wholeSecondFrom(r.met_at);
+      if (!t2) return null;
+      if (!last || t2 > last) last = t2;
     }
-    return last || asOf;
+    return last;
   }
   /* R24: a link's question, `{due_at, cause}`, or null when it is not due (its watch ended, or neither cause holds). */
   #due(l2, p3, w, nowMs) {
