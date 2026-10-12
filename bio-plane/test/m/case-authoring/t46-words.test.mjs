@@ -179,7 +179,7 @@ test("R73 (P8) a reply recorded never reads \"no reply is recorded\": answers nu
     { whom: CLERK, asked_at: "2026-09-03", window_closes: "2026-09-30", answers: null, replied: null },
   ];
   const o = preflight(rows);
-  assert.deepEqual(o.lines.map((l) => [l.key, l.replied]), [[null, true], [null, null], [null, null]]);
+  assert.deepEqual(o.lines.map((l) => [l.key, l.replied]), [[null, true], [null, undefined], [null, undefined]]);
   for (const l of o.lines) assert.ok(!l.says.includes("no reply is recorded"), l.says);
   assert.equal(o.lines[0].says, `${CLERK} was asked for comment on 2026-09-01; the window for a reply closes on 2026-09-30; `
     + "a reply is recorded, and its claims are not yet laid out.");

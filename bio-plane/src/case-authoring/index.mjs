@@ -254,8 +254,9 @@ const OPEN_REQUESTS_DOORS = Object.freeze(["openRequestsOn"]);
  *  keep their plain sentences. */
 export const OPEN_REQUEST_KEYS = Object.freeze({ line: "signing.openrequest.line", noreply: "signing.openrequest.noreply" });
 const isCount = (n) => Number.isInteger(n) && n >= 0;
-/* R70: one row the source answers, as R70 shapes it, or null when it is not one. `replied` (J1, P8), when stated, is
-   whether a reply is recorded: a row stating none (`false`) while it answers a layout contradicts itself. */
+/* R70: one row the source answers, as R70 shapes it, or null when it is not one. `replied` (R73; K2964), when stated, is
+   whether a reply is recorded: a row stating none (`false`) while it answers a layout contradicts itself, and is
+   malformed. */
 function openRequestRow(r) {
   if (!r || typeof r !== "object" || Array.isArray(r)) return null;
   const whom = typeof r.whom === "string" ? r.whom.trim() : "";
@@ -269,9 +270,11 @@ function openRequestRow(r) {
   if (replied !== null && typeof replied !== "boolean") return null;
   if (replied === false && a !== null) return null;
   return { whom, asked_at: asked, window_closes: r.window_closes === null ? null : r.window_closes.trim(),
-           answers: a === null ? null : { answered: a.answered, claims: a.claims }, replied };
+           answers: a === null ? null : { answered: a.answered, claims: a.claims },
+           /* stated only where the source states it, so a row of a source that does not reads as before */
+           ...(replied === null ? {} : { replied }) };
 }
-/* R34, R73 (P8, J1): what a row says of its reply. "No reply is recorded" only when the source states none
+/* R34, R73 (P8; K2964): what a row says of its reply. "No reply is recorded" only when the source states none
    (`replied: false`): `answers` null alone also means a reply recorded whose claims are not laid out (R70), so a row that
    does not say which reads a sentence true of both, and a recorded reply never reads as none. */
 function replySaid(r) {

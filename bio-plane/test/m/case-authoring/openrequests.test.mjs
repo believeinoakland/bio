@@ -12,8 +12,8 @@ const ROWS = [
   { whom: "the Planning Director, City of Example", asked_at: "2026-09-05", window_closes: null, answers: null },
   { whom: "the Town Auditor", asked_at: "2026-09-06", window_closes: "2026-10-06", answers: null, replied: false },
 ];
-/* R70's rows as read: `replied` (J1) null where the source states none. */
-const READ = ROWS.map((r) => ({ ...r, replied: r.replied ?? null }));
+/* R70's rows as read: `replied` (R73; K2964) only where the source states it. */
+const READ = ROWS;
 
 function setup() {
   const w = world();
