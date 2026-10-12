@@ -3,8 +3,8 @@
    cursor). Members and project participations are rows of membership's own tables, written as its acts would leave
    them; a project is a real bundle committed through record-core. The screen registry and the Civicsmith library here
    are test ones, small enough to reason about (the carried ones, SCREEN_REGISTRY and CIVICSMITH_LIBRARY, are tested in
-   library.test.mjs), and the jurisdiction profile is the test profile, whose records-request template filing-templates
-   offers. Every test drives `wizard-scripts` at its interface. */
+   library.test.mjs), and the jurisdiction profile is a made-up test one (`profiles`), whose records-request template
+   filing-templates offers. Every test drives `wizard-scripts` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -43,8 +43,33 @@ export const V = (id) => `member:${id}`;
 export const MACHINE = "class:ai";
 export const NOW = "2026-10-03T12:00:00Z";
 export const TEST = "test-port-ellery";
-/** The test profile's records-request template, which filing-templates offers while the profile is active. */
+/** The test profile's records-request template, which filing-templates offers while the profile is active and the
+ *  template is attributed (`reviewed`). */
 export const OFFERED_TEMPLATE = "TPL-test-records-request";
+/** R22 (T45): the name the attributed records-request template is given, so its handle is `records-request`
+ *  (filing-templates R26). */
+export const RECORDS_REQUEST_NAME = "Records request";
+
+/** filing-templates R15 (T45; v0.2 rule 11; K2851): the test profile filing-templates reads (through `get`, the one
+ *  reading it makes), made up here, standing for the test profile's records request: one kind, its venue not a court,
+ *  and its template attributed as rule 11 offers it (a named writer, the public sources it was written from, a
+ *  professional's review with no concerns and another approver) and named "Records request", so its handle is
+ *  `records-request` (filing-templates R26); or, with `name` null, keeping its kind's label for a name. `reviewed: false`
+ *  leaves out its sources and its professional review, so it is not offered (R15). No place, law or venue is real. */
+export const PRO_REVIEW = Object.freeze({ reviewer: "Dee Example", kind: "professional", organisation: "Test Legal Society",
+                                          credential: "solicitor (test)", scope: "the whole text", outcome: "no_concerns", at: "2026-08-25" });
+export function profiles({ reviewed = true, name = RECORDS_REQUEST_NAME } = {}) {
+  const template = { id: OFFERED_TEMPLATE, version: 1, use: "file", ...(name ? { name } : {}),
+                     text: "To the {{counterparty_role}}: under {{law}}, {{group}} asks for the records described below.",
+                     notes: "A made-up template for tests.", authored_by: "Ada Example", contributors: ["Ben Example"],
+                     approved_by: "Cy Example", approved_at: "2026-09-01", basis: "TEST",
+                     ...(reviewed ? { sources: [{ citation: "Test Records Act § 1" }], reviews: [{ ...PRO_REVIEW }] } : { reviews: [] }) };
+  const profile = { id: TEST, name: "A test place", covers: ["A test place"], test: true,
+                    action_kinds: [{ kind: "records_request", label: "request under the records act", tier: 2, laws: ["Test Records Act"],
+                                     venue: { name: "the test clerk", how: "email", basis: "TEST" }, template, basis: "TEST" }] };
+  return { get: (id) => (id === TEST ? structuredClone(profile) : null) };
+}
+
 const EMPTY = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 
@@ -54,8 +79,9 @@ export const SCREENS = Object.freeze([
   { id: "filing-draft", acts: ["filingsave", "filingapprove"] },
   { id: "publish", acts: ["publish", "whatchangedpropose"] },
 ]);
-export const OPS = Object.freeze(["casenote", "casejoin", "filingsave", "filingapprove", "publish", "whatchangedpropose"]);
-/** The acts a machine is refused (affordances' MACHINE_REFUSALS keys, here a test's). */
+export const OPS = Object.freeze(["casenote", "casejoin", "filingsave", "filingapprove", "publish", "whatchangedpropose", "escalationreasondraft",
+                                   "writinghelp", "groupdescriptiondraft"]);
+/** The acts a machine is refused (op-grades' MACHINE_REFUSALS keys, its R5, here a test's; K1974). */
 export const MACHINE_REFUSED = Object.freeze(["filingapprove", "publish"]);
 /** The labelled machine drafts (case-authoring R39's ops). */
 export const MACHINE_DRAFTS = Object.freeze(["whatchangedpropose", "escalationreasondraft"]);
@@ -72,7 +98,10 @@ export const LIBRARY = Object.freeze([
 export const registration = (x = {}) => ({ screens: SCREENS, ops: OPS, machineRefused: MACHINE_REFUSED, machineDrafts: MACHINE_DRAFTS,
                                            library: LIBRARY, ...x });
 
-export function world({ register = true, reg = {} } = {}) {
+/** `templates`: `"reviewed"` (the default: the test profile's template attributed, so filing-templates offers it as
+ *  "Records request", or with `recordsRequest: null` under its kind's label) or `"unreviewed"` (not offered, R15);
+ *  `jurisdictions`, a profile reader (`get`) in place of either. */
+export function world({ register = true, reg = {}, templates = "reviewed", recordsRequest = RECORDS_REQUEST_NAME, jurisdictions = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -84,7 +113,8 @@ export function world({ register = true, reg = {} } = {}) {
   membership.migrate();
   record.setSetting("jurisdiction_profiles", [TEST], "test");
   const now = () => Date.parse(clock.now);
-  const filingTemplates = filingTemplatesOf(host, { record, membership, now });
+  const filingTemplates = filingTemplatesOf(host, { record, membership, now,
+    jurisdictions: jurisdictions ?? profiles({ reviewed: templates === "reviewed", name: recordsRequest }) });
   /* credentials, real: its keep-away (R35's `aiKeptAway`) is what R24 reads; off until an administrator sets it */
   const credentials = credentialsOf(host, { record, membership });
   credentials.migrate();
