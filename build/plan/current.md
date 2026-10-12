@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #160 · session_0142MWQ3cnvPRHcMekstsf5g · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #15 session_01WTxZEji9hScnnv3kyz3xtf; bundler: BUNDLER #16 session_01SHEYtEvhTCnEvXN1xWJ1iY
+**Jobs** · record-grammar: RECORD-GRAMMAR #15 session_01WTxZEji9hScnnv3kyz3xtf; bundler: BUNDLER #16 session_01SHEYtEvhTCnEvXN1xWJ1iY; record-core: RECORD-CORE #21 session_01U4VpUHnYKCeaZcQvK8i5XD
 
 **At T46's opening:** T45 closed by PR #29 (`main` @ 8e5f57fad0, K2907); PR #28 (the design stream, DEC-193–DEC-197) merged into `main` at T45's close (`main` @ 3f40899950, K2904), so its `words.json` (1,503 words, 549 protected), `words-actions.json`, `registry.json` and `library.json` are on `main`. `tranche/T46` from `main`. Release 0.82.0 is being cut from `tranche/T45` (K2910–K2912: steps 0–5 done, `dist/cut-0.82.0` @ 985fbefc88; signing waits on Bob's act). T46 opens before the release finishes (P19: no idle wait on Bob's act); the cut, once signed, is merged into `tranche/T46` (K2911), and any live-check failure joins a layer not yet started (P10). Development runs (K2605); the 80% pause (K2341) and the account-switch rule stand. Provisional ids of the drafts are renumbered here (K2872, doubt 1).
 
