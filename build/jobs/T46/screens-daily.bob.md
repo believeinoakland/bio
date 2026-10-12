@@ -30,3 +30,7 @@ Confirmed (K3000): Home draws the member's projects from `search` `q=type:projec
 ## B5 · CHANGE
 
 CHANGE (K3002): interface-shell R21 gains a kit sub-bullet (parts, view.origin, refusal fills, {refuse, fills}, cs.value checked, cs.rows parameters, cs.digest, cs.now, outside links). Merge tranche/T46 and use them where your screens need them.
+
+## B6 · CHANGE
+
+CHANGE (K3004): instance-setup (R79–R81: infolevelset, infolevel, test_instance, parts), setup-page (R31 SESSION_STORE_KEY), answer-envelope and action-producers are merged into tranche/T46. Merge tranche/T46 into your branch.
