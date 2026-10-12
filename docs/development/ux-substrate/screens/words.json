@@ -46,7 +46,7 @@
   "statusreport": 1,
   "members": 6,
   "ref": 26,
-  "session": 4,
+  "session": 6,
   "signin": 1,
   "rail": 14,
   "tab": 2,
@@ -55,8 +55,8 @@
   "act": 575,
   "column": 33,
   "wizard": 306,
-  "total": 1690,
-  "protected": 596
+  "total": 1692,
+  "protected": 597
  },
  "words": [
   {
@@ -4149,23 +4149,38 @@
   },
   {
    "key": "session.ended",
-   "en": "Your sign-in ended, as it does after the time you chose, or when you signed out everywhere or changed your password on another device. Sign in again to go back to the page you were on.",
+   "en": "You were signed out after a while away, so nobody else at this device can use your sign-in. Sign in again to go back to the page you were on.",
    "protected": false,
    "source": "DEC-200",
-   "note": "the front door after an expiry"
+   "note": "D3 (K3061): 15 minutes idle on a shared device; 12 hours on one kept signed in"
+  },
+  {
+   "key": "session.locked",
+   "en": "Locked after 30 minutes away. Enter your password to go on where you were; nothing was lost.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "D3 (K3061): a device kept signed in"
+  },
+  {
+   "key": "session.reauth",
+   "en": "For this, enter your password again: signing or publishing a case, changing administrators and connecting Claude always ask.",
+   "protected": true,
+   "source": "DEC-200",
+   "note": "D3 (K3061)"
   },
   {
    "key": "session.keep",
-   "en": "Keep me signed in for 30 days (your own phone or computer)",
+   "en": "My own: keep me signed in (it locks after 30 minutes away; you sign in again after 12 hours)",
    "protected": false,
    "source": "DEC-200",
-   "note": "DEC-201, pending Bob's question on how long a sign-in lasts"
+   "note": "D3 (K3061)"
   },
   {
    "key": "session.shared",
-   "en": "Sign me out when I close the browser (a shared or public computer)",
+   "en": "Shared or public: sign me out after 15 minutes away",
    "protected": false,
-   "source": "DEC-200"
+   "source": "DEC-200",
+   "note": "D3 (K3061)"
   },
   {
    "key": "signin.founderhint",
@@ -4344,13 +4359,13 @@
   },
   {
    "key": "screen.front.name",
-   "en": "Sign in",
+   "en": "Your group's page",
    "protected": false,
    "source": "registry.json"
   },
   {
    "key": "screen.front.purpose",
-   "en": "Your group's address for anyone not signed in: members sign in here; anyone may read the group's published cases or hand it material.",
+   "en": "Your group's own page: who it is, what it has published, how to hand it material and how it works, with members' sign-in beside it.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -4362,7 +4377,7 @@
   },
   {
    "key": "screen.forgot.purpose",
-   "en": "How to get back in without email: an administrator uses a recovery code; a member asks an administrator for a reset link.",
+   "en": "How to get back in without email: use one of your recovery codes, or ask an administrator for a one-time reset link.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -4482,7 +4497,7 @@
   },
   {
    "key": "screen.recovery.purpose",
-   "en": "Administrators only: your own recovery codes, which let you set a new password if you lose yours. Each works once.",
+   "en": "Your own recovery codes, which let you set a new password if you lose yours. Each works once.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },

@@ -12,9 +12,9 @@ screen('install', 'Create your Civicsmith group', 'setup', 'The founder\'s link 
   [('bootstrap','Continue to Cloudflare'),('selftest','Run the checks again')], [1,28])
 screen('update', 'Update your group\'s Civicsmith', 'setup', 'The hosting account\'s holder updates the group\'s Civicsmith to a signed release; records, members and settings are kept (installer R1, DEC-201).',
   [('bootstrap','Continue to Cloudflare to update')], [1])
-screen('front', 'Sign in', 'public', 'The group\'s address for anyone not signed in: sign-in for members and administrators, with how long to stay signed in; signed out and ended sign-ins; published cases and the doorbell for everyone else (credentials R4, R38; DEC-201).',
+screen('front', 'Your group\'s page', 'public', 'The group\'s own landing page at its address (Bob\'s D2, K3060): who it is, what it has published, handing it material, how it works; members sign in beside it, with an own device kept signed in (locks after 30 minutes away, signs out after 12 hours) or a shared one (signed out after 15 minutes away) (D3, K3061); refused, paused, signed out, ended and locked (credentials R4, R38; DEC-201, DEC-202).',
   [('login','Sign in')], [3,28])
-screen('forgot', 'Forgot your password', 'public', 'Getting back in without email: an administrator with a recovery code; a member through an administrator\'s reset link (credentials R47; DEC-201).',
+screen('forgot', 'Forgot your password', 'public', 'Getting back in without email: any member with one of their recovery codes, or through an administrator\'s one-time reset link (Bob\'s D4, B3, K3060; credentials R47; DEC-201, DEC-202).',
   [('recover','Set a new password with a recovery code')], [3])
 screen('setup', 'Become your group\'s first administrator', 'setup', 'The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
   [('claim','Claim with the one-time password'),('groupnameset','Name the group'),('groupdomainset','Verify the web address'),('profilesset','Choose places and languages'),
@@ -38,7 +38,7 @@ screen('connect', 'The assistant', 'working', 'The member\'s own API key or subs
   [('groupkeynoticeseen','Read what the group\'s key means'),('disclosureshown','Read what connecting means'),('subscriptionsignin','Open Anthropic\'s sign-in page'),('accountreferenceset','Connect with your own API key'),('subscriptiondisconnect','Disconnect your subscription'),('accountusesset','Set what your account pays for'),('ailimitset','Set a limit on your account'),('accountreferenceremove','Disconnect')], [4,17])
 screen('places', 'Places and offices', 'working', 'Administrators: the places whose rules apply, the place a group wants that Civicsmith does not hold yet, and the offices and seats the group deals with (setup-page R13; instance-setup R50, R62; DEC-200 (8), N997).',
   [('profilesset','Choose the places whose rules apply'),('placewanted','Save the place you want'),('officesseed','Fill in the offices again'),('entitycreate','Add an office yourself')], [2])
-screen('recovery', 'Recovery codes', 'working', 'Administrators: their own one-time recovery codes, how many are left, and whether two administrators hold them (credentials R46; instance-setup R66; K1888; DEC-200 (8), N997).',
+screen('recovery', 'Recovery codes', 'working', 'Every member\'s own one-time recovery codes (D4, K3060), how many are left, and whether two administrators hold them (credentials R46; instance-setup R66; K1888; DEC-200 (8), N997).',
   [('recoverycodesissue','Get new recovery codes')], [2])
 screen('group', 'Your group', 'working', 'Administrators: the settings chosen at setup, changeable here: name and logo, website, languages, the court notice, the hosting account\'s holder, the group\'s bar (DEC-201).',
   [('groupnameset','Save the name'),('groupdomainset','Verify the website'),('profilesset','Choose the languages'),('courtnoticeset','Show the court notice'),('hostingaccess','Record who holds the hosting account'),('strengthbarset','Set the group\'s bar')], [2])

@@ -3170,6 +3170,7 @@ reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-scre
 owed: (BOB, T47 or T48) `registry.json` (50 screens) and `words.json` re-taken; screens for `places` and `recovery` (N997); the new rows and helps read by key (monitoring, strength, file-safety, record-core, credentials, screens-settings, affordances, op-declarations); file-safety R42 re-worded to "file scanner" and "safe view".
 
 ### DEC-201 · answered
+amended: 2026-10-12 by DEC-202 (Bob's answers K3060, K3061): the front door is the group's own page (D2); sign-in lasts as D3 rules; members hold recovery codes too (D4); the walk-through is offered to anyone (D7).
 raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (BOB's B158 and B159; Bob's K3052, K3053; BOB's review K3051 and design audit `build/plan/draft-T47-design-audit.md`)
 for: bob-session
 question: The way into Civicsmith, drawn whole: the front door, signing in and out, an ended sign-in, a forgotten password, the founder's link and every installer step, the hand-over to setup, setup's recovery codes and finish, joining by invitation and by join link and a dead link, a new member's first visit, group settings, the Projects list, the Settings index, the outside reviewer's view, the update page, and the states for an address that can't be opened; then one walked journey from the founder's link to a new member's first work.
@@ -3195,3 +3196,22 @@ response: **Decided by the design session, 2026-10-12.**
 decided: 2026-10-12 · the design session (P17)
 reasoning recorded in: this entry; `screens/mock-screens.js` (install, update, front, forgot, setup, join, home, members, account, group, settings, projects, unavailable, review-outside), `screens/mock-journeys.js` (journey 28), `screens/mock-shell.js`, `screens/mock-refs.js`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/registry.src.py` (58 screens), `screens/words-t47.src.py`, `screens/words.json` (1,690 words, 596 protected), `screens/page.src.html`, `layouts.html`.
 owed: (BOB, T47's L11, N999, N1002, N1003, N1005) build the front door at `/` with sign-in, signing out and an ended sign-in, the forgotten password, the installer's pages as drawn, the hand-over into setup, setup's codes and finish, joining's states, Home's first-visit and new-group states, and the eight new screens; a requirement and op for the member's reset link (`owed:passwordresetlink`, once Bob answers B); sign-in length per Bob's C; registry.json and words.json re-taken.
+
+### DEC-202 · answered
+raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (Bob's answers to BOB's D1–D15, K3060 and K3061, folded into DEC-201's drawings)
+for: bob-session
+question: How Bob's answers of 12 October change the way in drawn by DEC-201.
+why it is Bob's: the rulings are his (K3060, K3061, given through BOB, cited here, not ruled again); the drawing beneath them is the design session's (P17).
+provisional: DEC-201 (10)'s recommendations.
+alternative: none.
+recommendation: as below.
+reversal cost: low: mockups and words.
+response: **Bob's rulings through BOB (K3060, K3061), drawn by the design session, 2026-10-12.**
+(1) D2: the front door (`front`, now "Your group's page") presents as the group's own page, not Civicsmith's: the group's logo and name as a masthead, its purpose, what it has published (with each case's edition, date, signer and one line), "Have something for us?" (the doorbell), "How we work" (with the walk-through), and members' sign-in as a panel beside them; "Lakeshore Tenants uses Civicsmith" at the foot.
+(2) D3: "This device is: my own (keep me signed in; it locks after 30 minutes away, you sign in again after 12 hours) or shared or public (signed out after 15 minutes away)". New state: locked ("Welcome back, Mai… Enter your password to go on where you were; nothing was lost", "Unlock"); the ended state says the member was signed out after a while away. Words `session.keep`, `session.shared`, `session.ended` re-worded; `session.locked`, `session.reauth` new (signing or publishing a case, changing administrators and connecting Claude always ask for the password again).
+(3) D4 (B3): every member holds recovery codes, ten, shown once on joining; Recovery codes is each member's own screen (Settings › Yours); Forgot your password offers a code to anyone, then an administrator's reset link for one without codes.
+(4) D7: "See how it works, step by step" on the group's page offers the walk-through to anyone, before joining or being invited; Home's first-visit offer stays for members.
+(5) Not yet drawn, for the successor on the secondary account (HANDOFF §0): People as BOB decided (D8); the founding journey from civicsmith.org (D6) and the signing ceremony from the principles (D9), both after the refresh.
+decided: 2026-10-12 · Bob (K3060, K3061), drawn by the design session
+reasoning recorded in: this entry; `screens/mock-screens.js` (front, forgot, recovery, join, settings, members), `screens/page.src.html`, `screens/registry.src.py`, `screens/mock-shell.js`, `screens/mock-refs.js`, `screens/words-t47.src.py`, `screens/words.json` (1,692 words, 597 protected), `layouts.html`.
+owed: (BOB) the group's page at `/` as drawn; sessions per D3 (idle sign-out, lock, re-asking the password for the four acts); recovery codes for every member at joining (credentials R46 widened beyond administrators) and the member's reset link (`owed:passwordresetlink`); the walk-through reachable before joining.

@@ -50,7 +50,7 @@ function mast(c, s) {
 // (or, outside the workspace, the group or Civicsmith) to the screen's own name, which is always last. The heading below
 // names the thing shown (a question's words, a person's name); the path names the screen.
 const PATH = {
-  install: ['Civicsmith', 'Create your group'], update: ['Civicsmith', 'Update'], front: ['Lakeshore Tenants', 'Sign in'], forgot: ['Lakeshore Tenants', 'Sign in', 'Forgot your password'], 'review-outside': ['Lakeshore Tenants', 'Review copy'],
+  install: ['Civicsmith', 'Create your group'], update: ['Civicsmith', 'Update'], front: ['Lakeshore Tenants'], forgot: ['Lakeshore Tenants', 'Forgot your password'], 'review-outside': ['Lakeshore Tenants', 'Review copy'],
   group: ['Settings', 'Your group'], settings: ['Settings'], projects: ['Projects'], unavailable: ['Can\'t open this'], setup: ['Set up', 'Places and languages'], join: ['Lakeshore Tenants', 'Your invitation'],
   doorbell: ['Lakeshore Tenants', 'Hand material over'], published: ['Lakeshore Tenants', 'Published cases', 'The Coliseum lease'],
   home: ['Home'], queue: ['Queue'], 'due-date': ['Queue', 'Due date'], inbox: ['Queue', 'Inbox'],

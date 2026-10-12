@@ -121,21 +121,33 @@
  },
  {
   "key": "session.ended",
-  "en": "Your sign-in ended, as it does after the time you chose, or when you signed out everywhere or changed your password on another device. Sign in again to go back to the page you were on.",
+  "en": "You were signed out after a while away, so nobody else at this device can use your sign-in. Sign in again to go back to the page you were on.",
   "protected": false,
-  "note": "the front door after an expiry"
+  "note": "D3 (K3061): 15 minutes idle on a shared device; 12 hours on one kept signed in"
+ },
+ {
+  "key": "session.locked",
+  "en": "Locked after 30 minutes away. Enter your password to go on where you were; nothing was lost.",
+  "protected": false,
+  "note": "D3 (K3061): a device kept signed in"
+ },
+ {
+  "key": "session.reauth",
+  "en": "For this, enter your password again: signing or publishing a case, changing administrators and connecting Claude always ask.",
+  "protected": true,
+  "note": "D3 (K3061)"
  },
  {
   "key": "session.keep",
-  "en": "Keep me signed in for 30 days (your own phone or computer)",
+  "en": "My own: keep me signed in (it locks after 30 minutes away; you sign in again after 12 hours)",
   "protected": false,
-  "note": "DEC-201, pending Bob's question on how long a sign-in lasts"
+  "note": "D3 (K3061)"
  },
  {
   "key": "session.shared",
-  "en": "Sign me out when I close the browser (a shared or public computer)",
+  "en": "Shared or public: sign me out after 15 minutes away",
   "protected": false,
-  "note": ""
+  "note": "D3 (K3061)"
  },
  {
   "key": "signin.founderhint",

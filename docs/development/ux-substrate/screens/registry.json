@@ -56,9 +56,9 @@
   },
   {
    "id": "front",
-   "name": "Sign in",
+   "name": "Your group's page",
    "frame": "public",
-   "purpose": "The group's address for anyone not signed in: sign-in for members and administrators, with how long to stay signed in; signed out and ended sign-ins; published cases and the doorbell for everyone else (credentials R4, R38; DEC-201).",
+   "purpose": "The group's own landing page at its address (Bob's D2, K3060): who it is, what it has published, handing it material, how it works; members sign in beside it, with an own device kept signed in (locks after 30 minutes away, signs out after 12 hours) or a shared one (signed out after 15 minutes away) (D3, K3061); refused, paused, signed out, ended and locked (credentials R4, R38; DEC-201, DEC-202).",
    "acts": [
     {
      "op": "login",
@@ -78,7 +78,7 @@
    "id": "forgot",
    "name": "Forgot your password",
    "frame": "public",
-   "purpose": "Getting back in without email: an administrator with a recovery code; a member through an administrator's reset link (credentials R47; DEC-201).",
+   "purpose": "Getting back in without email: any member with one of their recovery codes, or through an administrator's one-time reset link (Bob's D4, B3, K3060; credentials R47; DEC-201, DEC-202).",
    "acts": [
     {
      "op": "recover",
@@ -742,7 +742,7 @@
    "id": "recovery",
    "name": "Recovery codes",
    "frame": "working",
-   "purpose": "Administrators: their own one-time recovery codes, how many are left, and whether two administrators hold them (credentials R46; instance-setup R66; K1888; DEC-200 (8), N997).",
+   "purpose": "Every member's own one-time recovery codes (D4, K3060), how many are left, and whether two administrators hold them (credentials R46; instance-setup R66; K1888; DEC-200 (8), N997).",
    "acts": [
     {
      "op": "recoverycodesissue",
