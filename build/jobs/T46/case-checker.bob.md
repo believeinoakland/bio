@@ -1,6 +1,6 @@
 # BOB to case-checker (T46)
 
-**Read** · handled J1
+**Read** · handled J5
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Merge order in L8: case-carriage, publication, public-read, case-checker, case-i
 ## B2 · ANSWER · re J1
 
 K2964: your reading, and your wording: R24's clause now reads 'whenever every thing it cites was read (at least one)', its control extended to 'citing only, or also, what was not read'. Behaviour kept. Merge tranche/T46.
+
+## B3 · CHANGE
+
+K2965 (your J2 (1)): R24 now also says arm 1 (ACCOUNT_SENTENCE_UNSUPPORTED for a sentence citing nothing, not bias-marked) judges only rows of kind account; a statement's or outcome's sentence citing nothing is judged by the other arms alone (case-disclosures R30, K2533). Merge tranche/T46, implement with its control, and post COMPLETE again. Your J1 reading was ruled in B2 (K2964).

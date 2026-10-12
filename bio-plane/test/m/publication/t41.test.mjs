@@ -202,16 +202,28 @@ test("R76 when its tables or the source cannot be read it answers {unreadable: t
   assert.deepEqual(w2.p.publishedWorkOf({ memberId: "cy" }), { unreadable: true });
 });
 
-test("R76 at start it is registered once with membership.registerHandleGuard (its R125): a member whose work is in a published case cannot change their handle (HANDLE_FIXED naming it); a member with none can", () => {
+/* T46 (K2928; membership R129, DEC-197): no handle is ever changed, so membership's `op=handlechange` refuses every call
+   HANDLE_FIXED before reading anything, naming no case; the guard slot (its R125) and this module's registration stand,
+   so reopening a change is one requirement. */
+test("R76 at start it is registered once with membership.registerHandleGuard (its R125), the slot this module's; while no handle is changed (membership R129) every change is refused HANDLE_FIXED naming no case, whether or not the member's work is in a published case, and nothing is written", () => {
   const { w, proj, roles, roster } = base();
   assert.deepEqual(w.p.handleGuard, { ok: true, module: "publication" }, "registered at start");
   const dup = w.membership.registerHandleGuard("other", () => null);
   assert.deepEqual([dup.ok, dup.reason, dup.module], [false, "LISTENER_DECLARED", "publication"], "the slot is this module's");
   store(w, CASE, 1, docWith(CASE, 1, proj, roles), "cy");
   assert.equal(commit(w, proj, roster, CASE, { signer: "olive" }).ok, true);
+  /* the control: the fact the guard answers stands, olive's work in a published case and gus's in none */
+  assert.deepEqual(w.p.publishedWorkOf({ memberId: "olive" }), { case: CASE, edition: 1 });
+  assert.equal(w.p.publishedWorkOf({ memberId: "gus" }), null);
+  const before = w.snapshot();
   const fixed = w.membership.handleChange({ handle: "olive-new", by: "olive" });
-  assert.deepEqual([fixed.ok, fixed.reason, fixed.case, fixed.edition], [false, "HANDLE_FIXED", CASE, 1]);
-  /* negative control: gus has no work in a published case */
-  const ok = w.membership.handleChange({ handle: "gus-new", by: "gus" });
-  assert.deepEqual([ok.ok, ok.handle], [true, "gus-new"]);
+  const none = w.membership.handleChange({ handle: "gus-new", by: "gus" });
+  for (const [who, a] of [["olive", fixed], ["gus", none]]) {
+    assert.deepEqual([a.ok, a.reason, a.code], [false, "HANDLE_FIXED", "HANDLE_FIXED"], who);
+    assert.equal("case" in a || "edition" in a, false, `${who}: no case is named`);
+  }
+  assert.deepEqual(fixed, none, "one answer, so the published-work fact decides nothing");
+  assert.deepEqual(w.snapshot(), before, "nothing written: no handle changes");
+  assert.deepEqual(w.rows(`SELECT member_id, handle FROM members WHERE member_id IN ('olive','gus') ORDER BY member_id`),
+                   [{ member_id: "gus", handle: "h_gus" }, { member_id: "olive", handle: "h_olive" }]);
 });
