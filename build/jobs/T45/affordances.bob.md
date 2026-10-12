@@ -29,3 +29,7 @@ K2885: (1)–(5) stand as you state them; the three vocabularies with no owner (
 ## B3 · CHANGE
 
 K2889: wizard-scripts (T45-37) is merged into tranche/T45. Merge it into your branch when convenient.
+
+## B4 · ANSWER · re J2
+
+K2890: (1), (2), (4), (5) confirmed and queued for their owners' next jobs (N929–N932); your narrower offers in this job stand. (6) is accepted by name at your merge until op-declarations (T45-45) merges.
