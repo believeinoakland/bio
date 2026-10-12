@@ -1,6 +1,6 @@
 # odf-reader — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T35 (T35-76: R47; K1903); every requirement met (K1919). Last changed T47 (T47-5: R47 moved from Private to Provides, `file-safety`'s use, wording unchanged, N942); marked not yet met (T47).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T35 (T35-76: R47; K1903); every requirement met (K1919). Last changed T47 (T47-5: R47 moved from Private to Provides, `file-safety`'s use, wording unchanged, N942); met (K3029).
 
 ## Public
 
@@ -231,7 +231,7 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
   sub-document directory or a `ObjectReplacements/` part's source; `{kind:"odf-script", part}` for each member under the package root's `Scripts/` (embedded Python,
   BeanShell or JavaScript macros; K1917); `{kind:"launch", part, event}` for each
   `presentation:event-listener` whose `presentation:action` is `execute`; `{kind:"unread", part, why}` for a
-  part it could not read for this list. A file with none answers `[]`. *(not yet met: T47)*
+  part it could not read for this list. A file with none answers `[]`.
 
 ## Private
 
