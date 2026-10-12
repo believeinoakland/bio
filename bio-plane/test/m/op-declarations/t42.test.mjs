@@ -181,9 +181,13 @@ test("R48 (T42; N839; case-account R1, R3; K2608, K2656): accountpropose and acc
   assert.notDeepEqual(plain(OPS.accountdrafts), MEMBER_ACT);
 });
 
-test("R48, R6: the account ops' handler is the door's own map (control-plane R71): case-account exports no ops map and serves both by the services its R1 and R3 name, accountPropose and accountDrafts (negative control: an unnamed service is absent)", async () => {
+test("R48, R6: the account ops' handler is the door's own map (control-plane R71): case-account serves both by the services its R1 and R3 name, accountPropose and accountDrafts, and its one ops map (since T46, caseAccountOps, its R15; N935) serves R13's two and neither account op (negative control: an unnamed service is absent)", async () => {
   const CA = await import("../../../src/case-account/index.mjs");
-  assert.deepEqual(Object.keys(CA).filter((k) => /ops$/i.test(k)), []);
+  assert.deepEqual(Object.keys(CA).filter((k) => /ops$/i.test(k)), ["caseAccountOps"]);
+  const svc = new Proxy({}, { get: (_, k) => (k === "then" ? undefined : () => ({ ok: true })) });
+  const served = Object.keys(CA.caseAccountOps(svc, new URL("http://plane/"), {}));
+  assert.deepEqual(served.sort(), ["advocacycheck", "advocacychecks"]);
+  for (const op of ["accountpropose", "accountdrafts"]) assert.ok(!served.includes(op), `${op} is served by caseAccountOps`);
   assert.equal(typeof CaseAccount.prototype.accountPropose, "function");
   assert.equal(typeof CaseAccount.prototype.accountDrafts, "function");
   /* negative control */

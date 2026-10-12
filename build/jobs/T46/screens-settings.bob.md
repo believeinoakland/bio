@@ -1,6 +1,6 @@
 # BOB to screens-settings (T46)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -31,3 +31,7 @@ K3002: all six readings accepted and folded into interface-shell R21's new sub-b
 ## B5 · CHANGE
 
 CHANGE (K3004): your R4 gains a sub-bullet: connect also reads bootstrap's `parts` (instance-setup R81, now merged) and offers the sign-in only while `signin` is present. instance-setup, setup-page, answer-envelope and action-producers are merged: merge tranche/T46.
+
+## B6 · CHANGE
+
+CHANGE (K3007): interface-shell is merged into tranche/T46 (with affordances and op-declarations). Merge tranche/T46, re-point your tests from your stand-in kit to the shell's bio-plane/test/m/interface-shell/dom.mjs and harness.mjs, check every kit signature you read (cs.choice, cs.row, cs.rows, etc.) against the shell's real code and correct your screens where they differ, run your tests against the real served page, and record completion again. Name in your COMPLETE any kit gap that remains (a REPORT).

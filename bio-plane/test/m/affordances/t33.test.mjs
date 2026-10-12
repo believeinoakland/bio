@@ -168,9 +168,11 @@ test("R19: each `reversible` T33 op is taken back by a published act of its own 
     assert.ok(keysOf(ownerOf(op).map).includes(by), `${op}: ${by} is its owner's op`);
 });
 
-test("R1 R20: no T33 op is an act, and MACHINE_REFUSALS holds only ACTS", () => {
+/* R52 (T46): `clockadopt`, graded in T33, is offered on an action since T46, so it is the one T33 op that is an act. */
+const T33_ACTS_SINCE = ["clockadopt"];
+test("R1 R20 R52: no T33 op is an act but clockadopt (R52), and MACHINE_REFUSALS holds only ACTS", () => {
   const t33 = [...Object.keys(ALL_WRITES), ...ALL_READS];
-  assert.deepEqual(t33.filter((op) => published().has(op)), []);
+  assert.deepEqual(t33.filter((op) => published().has(op)), T33_ACTS_SINCE);
   assert.deepEqual(Object.keys(MACHINE_REFUSALS).filter((op) => !ACTS.some((a) => a.id === op)), []);
 });
 
