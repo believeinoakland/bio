@@ -115,7 +115,16 @@ export function harness(screen, { subject = "", data = {}, me = { member: "m1", 
   h.cs = cs;
   h.render = () => { h.html = s.render(cs, h.view); return h.html; };
   /* let every pending call and its continuations run, redrawing after, as the shell does on `cs.set` */
-  h.settle = async () => { for (let i = 0; i < 20; i++) await new Promise((r) => setImmediate(r)); return h.render(); };
+  h.settle = async () => {
+    for (let round = 0; round < 6; round++) {
+      const before = h.requests.length + h.redraws;
+      for (let i = 0; i < 10; i++) await new Promise((r) => setImmediate(r));
+      h.render();
+      for (let i = 0; i < 10; i++) await new Promise((r) => setImmediate(r));
+      if (h.requests.length + h.redraws === before) break;
+    }
+    return h.render();
+  };
   /* press an act as the shell does: its `send`, then (for an answer) the request through the stub plane and `done` */
   h.press = async (op, { data = {}, dialog = {} } = {}) => {
     const a = s.acts.find((x) => x.op === op);
