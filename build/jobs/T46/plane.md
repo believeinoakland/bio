@@ -100,6 +100,14 @@ Size (session_01WBHFsYLZ58Mve6wWPYGz5k): test runs 9, module lines 2051
 
 Size (session_01WBHFsYLZ58Mve6wWPYGz5k): test runs 11, module lines 2051
 
+**CHANGE B5, B6 (K3017, K3018).**
+- Merged `tranche/T46`, which now holds every other L11 job: control-plane, with R75 bringing interface-assets into the route path, and screens-intake merged again.
+- On the B5 merge: `node --test "bio-plane/test/m/plane/*.test.mjs" bio-plane/test/system/migrate-released.test.mjs` gave 224 tests, 224 pass, 0 fail, 0 skipped.
+- On the final B6 merge: `node --test "bio-plane/test/m/plane/*.test.mjs"` gave 223 tests, 223 pass, 0 fail, 0 skipped.
+- Checks: format 0 failures; architecture plane 0 failures; coverage plane 42/42, 0 failures; ownership plane tranche/T46 14 files, 0 failures.
+
+Size (session_01WBHFsYLZ58Mve6wWPYGz5k): test runs 13, module lines 2051
+
 ## J1 · QUESTION
 
 R40 (N920), the status report's draft: control-plane (T46-59, R57) calls the object's `draft` RPC for `statusreportassist`; R40 names the op `statusreportdraft`. My best reading, which I am building: `draftOnObject` takes `{op: "statusreportdraft", member, session, plan, items, pack?}` (agent-worker R76's task op, kind `statusreport`); it gates on `draft`'s flag and `partAdmitted("draft:statusreport")`, refuses AI_KEPT_AWAY through `credentials.aiKeptAway({project, use: "draft"})` with the plan's project (read as the member reads `op=plan`; a plan read refused ends the draft with that refusal) before any account is read, mints no grant, sends no `told`, and posts `{task: {op, plan, items}, account, pack?}` to /draft. The usage count as `draft` is the door's (control-plane's draft path, as for every DRAFT_OPS op); the plane adds none of its own. Please confirm control-plane hands `op: "statusreportdraft"` with `plan` and `items` (not `statusreportassist`), or tell me the shape.
