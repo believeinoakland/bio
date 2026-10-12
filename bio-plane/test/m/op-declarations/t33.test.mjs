@@ -126,7 +126,11 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
   grouprules: "plane (T45-47)", advocacycheck: "plane (T45-47)", advocacychecks: "plane (T45-47)",
   /* the assistant's two drafts, whose doors the plane builds (K2824, K2881) */
   infractiondraft: "plane (T45-47)", bearingdraft: "plane (T45-47)",
-  declaredstakeset: "instance-setup (T45-44)" };
+  declaredstakeset: "instance-setup (T45-44)",
+  /* T46 (R50, R51): how much is explained, built by instance-setup's job beside this one (its R79); the member-run
+     door, control-plane's route calling ai-runs' `dispatchMemberRun` in process (no arm in `aiRunsOps`, K2952) */
+  infolevelset: "instance-setup (T46-50)", infolevel: "instance-setup (T46-50)",
+  airundispatch: "control-plane (T46-59)" };
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
   assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["acquisition", "action-clocks", "actions", "ai-runs", "ai-use", "answers",
@@ -143,7 +147,9 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     "sessionread", "sessionrunact",
     "settingread", "sightact", "tally",
     /* T45 (R49) */
-    "owners", "publishgate"].sort());
+    "owners", "publishgate",
+    /* T46 (R51): the member-run door's act, a member's session or her own agent credential */
+    "memberrun"].sort());
   const seen = new Set();
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     for (const v of [f, f.kinds, f.acts, f.proposals, f.reads, f.extra, ...Object.values(f.extra)]) assert.ok(Object.isFrozen(v), owner);
@@ -206,6 +212,8 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
     /* T45 (R49): a project's setting by its owner's predicate, projectvisibilityset's; a held check, publish's */
     owners: [{ classes: MP, mutating: true }, null],
     publishgate: [{ classes: MP, mutating: true }, "publish"],
+    /* T46 (R51): a member's own run act, her session or her own `ai` credential (no machineClasses), no probe, null */
+    memberrun: [{ classes: ["admin", "member"], mutating: true }, null],
   };
   const PUBLIC = ["door", "public", "publicread"];
   let n = 0;
@@ -326,7 +334,9 @@ test("R19, R4: every family read is stamped with the viewer, and the owner reads
     /* T35: the security map and the recovery codes' state answer `by`, an administrator's own (credentials R45, R46) */
     "securitymap", "recoverycodesstate",
     /* T41: run-productions' acceptance counts name no member and take no viewer (its R22) */
-    "acceptancecounts"];
+    "acceptancecounts",
+    /* T46 (R51): the doors' settings and history answer `by`, an administrator's own (membership R130) */
+    "joindoors"];
   let checked = 0;
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     if (!MAPS[owner]) continue;

@@ -1,6 +1,6 @@
 # BOB to control-plane (T46)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -33,3 +33,7 @@ CHANGE (K3003; P9, from SCREENS-INQUIRY #1 J4 (8)): `aicredentialmint`, `transcr
 ## B5 · CHANGE
 
 CHANGE (K3004): instance-setup (R79–R81), setup-page, answer-envelope, action-producers, wizard-scripts, op-grades and notice-producers are merged into tranche/T46; op-declarations and affordances are next. Merge tranche/T46.
+
+## B6 · ANSWER · re J2
+
+K3006: accepted and folded as an R17 sub-bullet (your wording, with ACT_CLOCK_OPS). (2) reattest: strip its `attempted` too (the attempt's instant is the server's); (1) calibrate: leave it, a stated probe time. The reads' query `now` is N983 (T47). Also merged since B5: affordances and op-declarations (op-declarations re-opened for its ACT_HELP_ABSENT partition, K3005). Merge tranche/T46.
