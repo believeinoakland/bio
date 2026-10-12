@@ -135,6 +135,10 @@ test("R18 owner votes, requests, ownership decisions, scope records and approval
     "project_scopes", "project_approval_settings"]
     .map((name) => ({ name, keys: ["project_id"] })));
   assert.deepEqual([...PROJECT_ROSTER_TABLES], mine[0].tables.map((t) => t.name));
+  /* N940 (T47): the fixture's record-core offers `declareTable`, so membership declares `join_doors` explicitly (its
+     R131) beside this module's default-form declaration, as on a real host */
+  const doors = w.declared.filter((d) => d.module === "membership" && d.explicit);
+  assert.deepEqual(doors.map((d) => d.tables.map((t) => [t.name, t.export])), [[["join_doors", "never"]]]);
   for (const t of PROJECT_ROSTER_TABLES)
     assert.ok(w.rows(`PRAGMA table_info(${t})`).some((c) => c.name === "project_id"), `${t} is keyed by project`);
   w.r.migrate();
