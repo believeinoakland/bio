@@ -1,6 +1,6 @@
 # record-core (T47)
 
-**Status** · session_01UoXK9QPNAj5jdUwKRxUk56 · depth 2 · WORKING · handled B0
+**Status** · session_01UoXK9QPNAj5jdUwKRxUk56 · depth 2 · RUNNING until 2026-10-12T13:00:47Z (neighbour suites: instance-setup, answer-envelope, public-read, control-plane envelope) · handled B0
 
 ## J1 · QUESTION
 
