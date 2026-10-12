@@ -18,7 +18,7 @@
 **Tests and checks.**
 - `node --test test/m/action-grammar/*.test.mjs`: tests 64, pass 64, fail 0 (61 before). New: `t46-words.test.mjs`, three tests naming R26. `t45-rows.mjs` keeps T45's drafts as `T45_ROWS` and adds `ROWS_NOW` (read from `words.json` itself), which the R9 tests in `t45.test.mjs` and `grammar.test.mjs` now compare against.
 - Negative control: `t46-words.test.mjs` against the T45 `checks.mjs`: 0 pass, 3 fail; restored, 3 pass.
-- Users' tests (the rows are a provided value): actions 110/0, action-holds 35/0, action-clocks 66/0, action-replies 16/0, filing-templates 63/0, filings 92/0, setup-page 83/0, instance-setup 147/0, answer-envelope 32/0, promotion 137/0; escalation 70/1 and affordances 230/2, the inherited reds above.
+- Users' tests (the rows are a provided value): actions 110/0, action-holds 35/0, action-clocks 66/0, action-replies 16/0, filing-templates 63/0, filings 92/0, setup-page 83/0, instance-setup 147/0, answer-envelope 32/0, promotion 137/0; escalation 71 pass, 1 fail and affordances 232 pass, 2 fail, the inherited reds above.
 - No layer tests are named in `build/manifest.md`.
 - `format`: 0 failures. `architecture action-grammar`: 0 failures. `coverage action-grammar`: 26 of 26 live ids named; 0 failures. `ownership action-grammar tranche/T46`: 6 files changed; 0 failures. `run.mjs`: format 0, architecture 0 (none for my files), coverage 29 failures (other modules' ids marked not yet met, rule 5 (1); none action-grammar's), channels 0.
 
