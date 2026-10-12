@@ -10,12 +10,12 @@
  *
  * WHAT VOIDS A CHECK (R2; l8 doubt 3): any move of the stored preparation's `doc_sha` (a re-authored acknowledgement
  * list among them), a member whose current bundle is no longer the one pinned, and the commit's three lapse reads
- * (`case-carriage` R4, R5, R13, as `publication` R51, R57, R59 ask them at the commit). Nothing is stored about a lapse:
- * each read computes it. A void check stays void when its cause is undone for a replaced preparation (preparations only
- * move forward) and a moved member (its commit count, record-core's `row_version`, never returns). The three lapse
- * causes are judged at the read until case-carriage answers them over an interval (K2833; N907, T46): a lapse undone
- * in between reads held again, and the commit re-reads all three. Any read that fails answers `undetermined`, never
- * `held` (fail closed).
+ * (`case-carriage` R4, R5, R13, as `publication` R51, R57, R59 ask them at the commit), each asked over the interval
+ * from the check's `checked_at` to the read (its R19–R21; T46, N907, K2833). Nothing is stored about a lapse: each read
+ * computes it. A void check stays void when its cause is undone: for a replaced preparation (preparations only move
+ * forward), a moved member (its commit count, record-core's `row_version`, never returns), and a lapse since the check
+ * (case-carriage's histories answer it, as far as they hold one). The commit still re-reads all three at its own
+ * instant. Any read that fails answers `undetermined`, never `held` (fail closed).
  *
  * REACHED as `caseCheckOf(host, deps)` (K61): one instance per host, created on the first call with `deps`, returned
  * to every later caller. At creation it creates its table and declares it to record-core's purge (R4).
@@ -25,8 +25,9 @@
  *   caseAuthoring   `publishPreflight` (its R34), `publishCase` (its R14, R18) and `calculationsAtPublication` (its
  *                   R56, which the op arm gathers first, as `op=publish` does).
  *   publication     `hasCaseStanding` (its R1), R2's fence.
- *   caseCarriage    `sourcesLapsed`, `acceptedWorkLapsed` (its R5, R4) and `marksLapsed` (its R13).
- *   now             the clock for `checked_at` and the lapse reads, an ISO string (default: record-core's instant).
+ *   caseCarriage    `sourcesLapsedSince`, `acceptedWorkLapsedSince` and `marksLapsedSince` (its R21, R19, R20), each
+ *                   asked from the check's `checked_at`.
+ *   now             the clock for `checked_at`, an ISO string (default: record-core's instant).
  *
  * READ CONTRACTS it joins in its own SQL: publication's `cases`, `published_cases` and `case_documents` (its R40, R56);
  * record-core's `bundles` (its R37). `membership.viewerPredicate` answers whether a viewer is a stamp at all. */
@@ -200,19 +201,21 @@ export class CaseCheck {
       }
       if (moved.length) { why.push("member_moved"); extra.moved = moved; }
       if (!replaced) {
-        /* The commit's three lapse reads, over the checked text itself, as publication R51, R57, R59 ask them. */
-        const C = this.caseCarriage;
+        /* The commit's three lapse reads, over the checked text itself, as publication R51, R57, R59 ask them, each
+           over the interval since the check (case-carriage R19–R21), so a lapse undone before this read still voids. A
+           provider without them is a failed read: undetermined, never held. */
+        const C = this.caseCarriage, since = row.checked_at;
         const fm = parseFrontmatter(String(doc.text ?? "")).data;
         if (!fm || typeof fm !== "object") throw new Error("the checked preparation's front matter could not be read");
-        const sources = C.sourcesLapsed(doc.text, this.#when());
+        const sources = C.sourcesLapsedSince(doc.text, since);
         if (!Array.isArray(sources)) throw new Error("case-carriage's sources read gave no list");
         if (sources.length) why.push("source_lapsed");
-        const accepted = C.acceptedWorkLapsed(fm, row.by);
+        const accepted = C.acceptedWorkLapsedSince(fm, row.by, since);
         if (accepted !== null && accepted !== undefined) {
           if (typeof accepted !== "object") throw new Error("case-carriage's accepted-work read gave no answer");
           why.push("accepted_work_lapsed");
         }
-        const marks = C.marksLapsed(fm);
+        const marks = C.marksLapsedSince(fm, since);
         if (!Array.isArray(marks)) throw new Error("case-carriage's marks read gave no list");
         if (marks.length) why.push("marks_lapsed");
       }
@@ -287,8 +290,9 @@ export class CaseCheck {
     }
     const v = str(version), p = str(project);
     const items = [];
-    for (const row of this.#rows(`SELECT * FROM case_checks WHERE members LIKE ? ORDER BY seq`,
-                                 `%${JSON.stringify(id).slice(1, -1).replace(/[%_]/g, "")}%`)) {
+    /* A narrowing by the id as the stored JSON spells it, LIKE's own characters escaped; the exact match follows. */
+    for (const row of this.#rows(`SELECT * FROM case_checks WHERE members LIKE ? ESCAPE '!' ORDER BY seq`,
+                                 `%${JSON.stringify(id).slice(1, -1).replace(/[!%_]/g, "!$&")}%`)) {
       if (p && row.project_id !== p) continue;
       const member = JSON.parse(row.members).find((m) => m.bundle_id === id);
       if (!member || (v && member.version_sha !== v)) continue;
