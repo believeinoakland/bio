@@ -59,3 +59,7 @@ T46-54 interface-shell complete: R1–R26 with R21's contract (K2996, K2998, K29
 **Tests and checks** (same local arrangement as above): `node --test bio-plane/test/m/interface-shell/`: tests 60, pass 60, fail 0 (new: R11 K3002 ground rule with controls, R11 DEC-88 `reasonField`, R21 K3002 kit points). `format` 0 failures; `architecture … interface-shell` 13 product files, 0 failures; `coverage … interface-shell` 26 of 26; `ownership … interface-shell tranche/T46` 0 failures.
 
 Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 22, module lines 1098 (src; tests 1611)
+
+## J4 · COMPLETE
+
+B5/B6 (K3002) applied: R11's ground rule and reasonField; R21's parts, origin, filled refusal words, refusal functions, {refuse, fills}, cs.value checked, cs.digest, cs.now, no cs.open. Tests 60/60; format, architecture, coverage, ownership 0 failures. See the record's 'Re-opened by B5, B6'. Merge after setup-page (R31) and op-declarations (R50) as before.
