@@ -47,3 +47,7 @@ My reading, built now and tested: literal, as above, except the shell's own sign
 - `checks/run.mjs`: architecture 2985 product files, 0 failures; coverage 12 failures, all other L11 modules' unmerged ids (screens-*, control-plane, installer, instance-setup, setup-page R31, op-grades R33, wizard-scripts, answer-envelope R13, notice-producers), none of this module's; channels 0 failures.
 
 Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 14, module lines 1077 (src; tests 1533; the estimate 3,200–3,800 was not reached)
+
+## J3 · COMPLETE
+
+T46-54 interface-shell complete: R1–R26 with R21's contract (K2996, K2998, K2999); see this record's Completion. Files to add to modules.json: paths bio-plane/src/interface-shell/, tests bio-plane/test/m/interface-shell/ (dom.mjs and harness.mjs there are the shared stand-in for the screen modules' tests). Merge after setup-page (R31's SESSION_STORE_KEY) and op-declarations (R50). J2 (R11 friction for RUNG_ABSENT ops) is still open: built literally; a CHANGE re-points it. Tests 57/57; format, architecture, coverage, ownership 0 failures.
