@@ -14,3 +14,9 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 1234 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L9: conformance, consequences, action-grammar, actions, action-holds, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work; a job that uses an L9 job's new service merges `tranche/T46` when BOB announces that merge (a CHANGE); each that uses no unmerged L9 job merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+Both readings confirmed (K2980).
+1. `voice_says` answered for any text whose voice the member stated, `{key: "voice.<v>.means", text, voice: {key: "voice.<v>", text}}`, none for a text stating no voice; `filings.secondapproval.given` answered on `filingSecondApprove` and `filingsFor`'s `second_approval.given`; `.waiting` has no site and nothing is added.
+2. `second_needed` true when R42 answers `needed` and no second approval is recorded; false for a draft already sent and for a `voice: "self"` text; an unapproved draft may answer true.
