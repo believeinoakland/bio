@@ -28,7 +28,7 @@ export const notes = {
       const help = view.reachable ? cs.act("writinghelp", { data: { field, id } }) : "";
       return `<label for="${id}">${label}</label>${dr && dr.untested ? `<p class="cs-label-untested">${W("ai.label.untested")}</p>` : ""}<textarea id="${id}" class="cs-input rec${dr ? " cs-draft" : ""}">${E(dr ? dr.text : value)}</textarea>${help}`;
     };
-    const out = [`<p>${W(S + "private")}</p><p class="cs-note">${W(S + "protects")}</p>`];
+    const out = [cs.title(), `<p>${W(S + "private")}</p><p class="cs-note">${W(S + "protects")}</p>`];
 
     // the court sentence, once (R7)
     if (ui.court) out.push(`<p class="cs-notice" data-shown="court">${W(S + "court")}</p>`);
@@ -39,7 +39,7 @@ export const notes = {
 
     // the notes kept, each with its acts in its panel (interface-shell R19)
     out.push(cs.sec(S + "kept.heading", cs.state(data.notes, (v) => cs.rows({
-      cols: [S + "col.note", S + "col.when"], items: v.notes || [], key: (n) => String(n.note),
+      id: "notes", cols: [S + "col.note", S + "col.when"], items: v.notes || [], key: (n) => String(n.note), name: (n) => String(n.text).slice(0, 60),
       cells: (n) => [
         `<span class="rec">${E(n.text)}</span>`,
         `${E(D(n.at))}${n.revised ? " · " + W(S + "revised", { date: D(n.revised) }) : ""} · ${W(S + "onlyyou")}${(n.turned || []).map((t) => " · " + W(S + "turned." + (["observation", "hunch", "question"].indexOf(t.into) >= 0 ? t.into : "other"), { id: t.id })).join("")}`,
@@ -98,7 +98,9 @@ export const notes = {
         return made ? { body: { note, into, made } } : { refuse: "screen.notes.turn.nomade" };
       } },
     // the assistant's help with the note's words (wizard-scripts R27; DEC-153): nothing is kept until the member keeps it
-    { op: "writinghelp", rereads: [],
+    // the member's own words it is told are its reason (interface-shell R11's `reasonField`; DEC-88): op-grades grades it
+    // no rung, so the shell would otherwise ask a reason for asking help (REPORT)
+    { op: "writinghelp", rereads: [], reasonField: "told",
       send(view, el, cs) {
         const told = String(cs.value(el.dataset.id) || "").trim();
         if (!told) return { refuse: "screen.notes.notext" };

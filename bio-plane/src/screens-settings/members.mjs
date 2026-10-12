@@ -43,7 +43,9 @@ export const members = {
     const names = (by) => { const id = String(by || "").replace(/^member:/, ""); return id === "admin" ? T(S + "founder") : byId[id] && byId[id].handle ? byId[id].handle : id; };
     const vocabulary = Array.isArray(me.vocabulary) && me.vocabulary.length ? me.vocabulary : ["contribute", "publish", "create_projects"];
     const capName = (c) => vocabulary.indexOf(c) >= 0 || c === "administer" ? T(S + "cap." + c) : c;
-    const out = [];
+    const out = [cs.title()];
+    // a member opened by address has their row's panel open (interface-shell R19's `open:<rows>`)
+    if (view.subject && view.ui && !view.ui.subjectOpened) { view.ui["open:roster"] = [...(view.ui["open:roster"] || []), String(view.subject)]; view.ui.subjectOpened = true; }
 
     // the roster (R1): handle, cover, role, capabilities, status; no "formerly" (DEC-197)
     out.push(cs.state(data.roster, (v) => {
@@ -59,9 +61,9 @@ export const members = {
         return view.subject === m.member_id && ex ? ex.expertise || [] : m.expertise || [];
       };
       return h + cs.rows({
-        cols, items: list, key: (m) => m.member_id,
+        id: "roster", cols, items: list, key: (m) => m.member_id, name: (m) => m.handle || T(S + "nohandle"),
         cells: (m) => [
-          `<a href="/app/members/${encodeURIComponent(m.member_id)}" data-ref="member">${E(m.handle || T(S + "nohandle"))}</a>`,
+          E(m.handle || T(S + "nohandle")),
           ...(admin ? [m.cover !== undefined ? E(m.cover) : ""] : []),
           W(m.role === "admin" ? S + "role.admin" : S + "role.member"),
           E((m.capabilities || []).map(capName).join(", ")),
@@ -117,7 +119,7 @@ export const members = {
     out.push(cs.sec(S + "key.heading", cs.state(data.groupkey, (g) => {
       let h = `<p data-state="groupkey">${g.held === undefined ? W(g.on ? S + "key.on" : S + "key.off") : !g.held ? W(S + "key.none") : W(g.on ? S + "key.heldon" : S + "key.heldoff", { by: names(g.by), date: D(g.set_at) })}</p>`;
       const set = cs.act("groupkeyset");
-      if (set) h += `<div class="cs-form"><label for="mk-key">${W(g.held ? S + "key.replace" : S + "key.field")}</label><input id="mk-key" type="password" class="cs-input" autocomplete="off">${set}</div>`;
+      if (set) h += `<div class="cs-form"><label for="mk-key${ui.keyGen || 0}">${W(g.held ? S + "key.replace" : S + "key.field")}</label><input id="mk-key${ui.keyGen || 0}" type="password" class="cs-input" autocomplete="off">${set}</div>`;
       if (g.held) h += cs.act("groupkeyswitch", { label: g.on ? S + "key.switchoff" : S + "key.switchon", data: { on: g.on ? "off" : "on" } }) + cs.act("groupkeyremove");
       return h;
     }) + `<p class="cs-note">${W("ai.whopays")}</p>`));
@@ -133,8 +135,7 @@ export const members = {
       if (on) {
         const USES = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore"];
         const chosen = v.on && Array.isArray(v.uses) && v.uses.length < USES.length ? v.uses : null;
-        h += `<div class="cs-form"><p>${W("act.aikeepaway.does")}</p><fieldset><legend>${W(S + "keepaway.which")}</legend><input type="radio" id="mk-all" name="mk-scope"${chosen ? "" : " checked"}><label for="mk-all">${W(S + "keepaway.all")}</label><input type="radio" id="mk-some" name="mk-scope"${chosen ? " checked" : ""}><label for="mk-some">${W(S + "keepaway.some")}</label></fieldset><fieldset><legend>${W(S + "keepaway.uses")}</legend>${USES.map((u) => `<input type="checkbox" id="mk-use-${u}"${chosen && chosen.indexOf(u) >= 0 ? " checked" : ""}><label for="mk-use-${u}">${W("ai.use." + u + ".name")}</label>`).join("")}</fieldset><label for="mk-why">${W(S + "keepaway.reason")}</label><textarea id="mk-why" class="cs-input rec" maxlength="2000">${v.on ? E(v.reason || "") : ""}</textarea>${on}</div>`;
-        if (v.on) h += cs.act("aikeepaway", { label: S + "keepaway.turnoff", data: { on: "off" } });
+        h += `<div class="cs-form"><p>${W("act.aikeepaway.does")}</p><fieldset><legend>${W(S + "keepaway.which")}</legend><input type="radio" id="mk-all" name="mk-scope"${chosen ? "" : " checked"}><label for="mk-all">${W(S + "keepaway.all")}</label><input type="radio" id="mk-some" name="mk-scope"${chosen ? " checked" : ""}><label for="mk-some">${W(S + "keepaway.some")}</label></fieldset><fieldset><legend>${W(S + "keepaway.uses")}</legend>${USES.map((u) => `<input type="checkbox" id="mk-use-${u}"${chosen && chosen.indexOf(u) >= 0 ? " checked" : ""}><label for="mk-use-${u}">${W("ai.use." + u + ".name")}</label>`).join("")}</fieldset><label for="mk-why">${W(S + "keepaway.reason")}</label><textarea id="mk-why" class="cs-input rec" maxlength="2000">${v.on ? E(v.reason || "") : ""}</textarea>${on}${v.on ? cs.act("aikeepaway", { label: S + "keepaway.turnoff", data: { on: "off" } }) : ""}</div>`;
       }
       return h;
     })));
@@ -197,8 +198,10 @@ export const members = {
       done(view, answer, cs) { const a = answer && answer.result !== undefined ? answer.result : answer; if (a && a.link) cs.set("joinLink", (view.origin || "") + "/#join=" + encodeURIComponent(a.link)); } },
     // the key in the request's body only, never drawn again; then switched on, as setup-page R18 does
     { op: "groupkeyset", rereads: ["groupkey", "uses", "history"],
-      send(view, el, cs) { const key = String(cs.value("mk-key") || "").trim(); return key ? { body: { key } } : { refuse: "screen.members.key.nokey" }; },
-      done(view, answer, cs) { return cs.call("groupkeyswitch", { body: { on: true } }); } },
+      send(view, el, cs) { const key = String(cs.value("mk-key" + ((view.ui && view.ui.keyGen) || 0)) || "").trim(); return key ? { body: { key } } : { refuse: "screen.members.key.nokey" }; },
+      // the field drawn anew, empty (the shell keeps a field's value by its id, R10); the shell does not await `done`:
+      // the switch is sent, then the screen opened again, which reads everything anew
+      done(view, answer, cs) { cs.set("keyGen", ((view.ui && view.ui.keyGen) || 0) + 1); cs.call("groupkeyswitch", { body: { on: true } }).then(() => cs.go("members", view.subject)); return { stay: true }; } },
     { op: "groupkeyswitch", rereads: ["groupkey", "history"],
       send(view, el) { return { body: { on: el.dataset.on === "on" } }; } },
     { op: "groupkeyremove", rereads: ["groupkey", "uses", "history"],
@@ -210,12 +213,13 @@ export const members = {
       send(view, el, cs) { return view.parts.aiPanelSend("ailimitset", "group", el, cs); },
       refusals: { AI_LIMIT_INVALID: (r, cs) => cs.w("ai.refused.limitinvalid", { field: String(cs.w("ai.limitfield." + (["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].indexOf(r && r.field) >= 0 ? r.field : "amount"))).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) }), LIMIT_UNIT_UNAVAILABLE: "ai.refused.unitunavailable" } },
     // on only with a reason of 1 to 2,000 characters in the administrator's own words, its field the act's reason
-    // (interface-shell R11's `reasonField`; credentials R51); off with none
+    // (interface-shell R11's `reasonField`; credentials R51); off with the reason for turning it off
     { op: "aikeepaway", rereads: ["keepaway", "history", "uses"], reasonField: "reason",
       send(view, el, cs) {
-        if (el.dataset.on === "off") return { body: { on: false } };
         const reason = String(cs.value("mk-why") || "").trim();
         if (reason.length < 1 || reason.length > 2000) return { refuse: "screen.members.keepaway.noreason" };
+        // turning it off is reasoned too (op-grades), its reason the same field's
+        if (el.dataset.on === "off") return { body: { on: false, reason } };
         const USES = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore"];
         if (cs.value("mk-some") !== true) return { body: { on: true, reason } };
         const uses = USES.filter((u) => cs.value("mk-use-" + u) === true);

@@ -1,23 +1,30 @@
 /* The screens draw no text of their own outside their words (interface-shell R5, DEC-179, as this module's share of
-   it): every screen in every state, each drawn text node read with its words marked; what remains once the words are
-   taken out is the record's own data (handles, covers, reasons, notes, dates, counts) or punctuation. Each key drawn
-   is one the screen lists in its `words`. */
+   it), on the real served page: `interfacewords` answers every word's text between two invisible marks, the first
+   carrying its key, so each text node the main area draws reads as words (marked) and what remains, the record's own
+   data (handles, covers, reasons, notes, dates, counts) or punctuation. Each key a screen draws is one it lists in its
+   `words`, or one the shell draws itself. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, walk, usedKeys, resetUsed } from "./kit.mjs";
+import { open, walk, WORDS, SCREENS } from "./kit.mjs";
+import { SHELL_WORDS } from "../../../src/interface-shell/index.mjs";
 import * as F from "./fixtures.mjs";
 
-const { ADMIN, MEMBER, membersTable, membersTableMember, accountTable, connectTable, notesTable, env, refuse } = F;
+const { membersTable, membersTableMember, accountTable, connectTable, notesTable, env, refuse } = F;
 
-const DATA = JSON.stringify(F) + JSON.stringify([ADMIN, MEMBER]) + "https://group.example/#invite=0123456789abcdef0123456789abcdef https://group.example/#join=" + "b".repeat(64) + " " + "a".repeat(64);
-const strip = (t) => { let s = t, prev; do { prev = s; s = s.replace(/⁠[^⁠⁡]*⁡/g, " "); } while (s !== prev); return s; };
-const PUNCT = /^[\s·:,…$\d.()\-–/%]*$/;
+const MARKED = [...WORDS.keys()].map((key) => ({ key, text: "\u2060" + key + "\u2062" + WORDS.get(key) + "\u2061", en: WORDS.get(key), fallback: false }));
+const DATA = JSON.stringify(F) + "https://group.example/#invite=0123456789abcdef0123456789abcdef https://group.example/#join=" + "b".repeat(64) + " " + "a".repeat(64);
+const strip = (t) => { let s = t, prev; do { prev = s; s = s.replace(/\u2060[^\u2060\u2061]*\u2061/g, " "); } while (s !== prev); return s; };
+const keysIn = (t) => [...t.matchAll(/\u2060([^\u2060\u2061\u2062]+)\u2062/g)].map((m) => m[1]);
+const PUNCT = /^[\s·:,…$\d.()\-–/%›]*$/;
+const SHELL = new Set(SHELL_WORDS.map((r) => r[0]));
+const SHELLS = ["rail.", "tab.", "state.", "weight.", "mark.", "date.", "level.", "shell.", "refusal."];
 
 async function check(id, opt, what) {
-  resetUsed();
-  const o = await open(id, { ...opt, trace: true });
+  const o = await open(id, { ...opt, words: MARKED });
+  const listed = new Set(o.s.words.map((x) => (Array.isArray(x) ? x[0] : x)));
   for (const n of walk(o.tree)) {
     if (n.text === undefined || !n.text.trim()) continue;
+    for (const k of keysIn(n.text)) assert.ok(listed.has(k) || SHELL.has(k) || SHELLS.some((f) => k.startsWith(f)), `${id} (${what}): ${k} drawn but not in its words`);
     const rest = strip(n.text).trim();
     if (!rest || PUNCT.test(rest)) continue;
     for (const part of rest.split(/\s*[·,]\s*|\s{2,}/).map((x) => x.trim()).filter((x) => x && !PUNCT.test(x)))
@@ -43,17 +50,11 @@ test("every text drawn by every screen, in every state, is a word or the record'
   ];
   for (const [id, opt] of runs) {
     for (const [what, over] of STATES(opt.table)) {
-      const table = { ...opt.table, ...over };
-      const o = await check(id, { ...opt, table }, what);
-      const listed = new Set(o.s.words.map((w) => (Array.isArray(w) ? w[0] : w)));
-      for (const k of usedKeys()) if (k.startsWith("screen.") || k.startsWith("act.") || k.startsWith("ai.") || k.startsWith("handle.")) {
-        const owner = k.startsWith("screen.") && !k.startsWith(`screen.${id}.`) && !k.startsWith("screen.panel.") ? null : k;
-        if (owner) assert.ok(listed.has(k) || !o.html.includes("⁠"), `${id}: ${k} listed`);
-      }
+      await check(id, { ...opt, table: { ...opt.table, ...over } }, what);
     }
   }
   // what the acts draw after answering, too: the invitation, the key, the link, the draft, the court sentence
-  const m = await open("members", { me: F.ADMIN, table: membersTable(), trace: true });
+  const m = await open("members", { me: F.ADMIN, table: membersTable(), words: MARKED });
   await m.press("memberadd", { values: { "mi-id": "x", "mi-cover": "y", "mi-cap-contribute": true } });
   await m.press("websitekeycreate", { values: { "mw-cap": "2" } });
   await m.press("joinlinkenable", { values: { "mw-cap": "2" } });
@@ -61,8 +62,7 @@ test("every text drawn by every screen, in every state, is a word or the record'
 });
 
 test("control: a text written into a render, not a word, is found", async () => {
-  const { SCREENS } = await import("./kit.mjs");
   const s = SCREENS.find((x) => x.id === "notes");
-  const bad = { ...s, render: (cs, view) => s.render(cs, view) + "<p>Saved!</p>" };
-  await assert.rejects(check("notes", { me: F.MEMBER, table: notesTable(F.MEMBER), s: bad }, "control"), /Saved!/);
+  const bad = { ...s, render(cs) { return cs.title() + "<p>Saved!</p>"; } };
+  await assert.rejects(check("notes", { me: F.MEMBER, table: notesTable(F.MEMBER), screens: SCREENS.map((x) => (x.id === "notes" ? bad : x)) }, "control"), /Saved!/);
 });

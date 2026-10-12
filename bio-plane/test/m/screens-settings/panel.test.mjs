@@ -2,7 +2,7 @@
    group's key and by `connect` for the member's own account. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, acts, all, textOf, said, SCREENS } from "./kit.mjs";
+import { SCREENS, acts, all, day, has, lacks, open, panelOf, rowOf, said, textOf } from "./kit.mjs";
 import { ADMIN, MEMBER, membersTable, connectTable, refuse, env, LIMITS } from "./fixtures.mjs";
 
 const section = (o, key) => all(o.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2")[0] && textOf(all(e, (h) => h.tag === "h2")[0]) === said(key))[0];
@@ -56,11 +56,11 @@ test("R9 a refused limit is drawn with ai.limitfield.* naming the field (AI_LIMI
   for (const field of ["amount", "unit", "period", "scope"]) {
     const a = await open("members", { me: ADMIN, table: membersTable({ ailimitset: refuse("AI_LIMIT_INVALID", { field }) }) });
     await a.press("ailimitset", { data: { remove: "" }, values: { "aig-scope": "overall", "aig-amount": "5", "aig-unit": "usd", "aig-period": "day" } });
-    assert.equal(a.refused.drawn, a.cs.w("ai.refused.limitinvalid", { field: said(`ai.limitfield.${field}`) }));
+    assert.equal(a.refused.text, said("ai.refused.limitinvalid", { field: said(`ai.limitfield.${field}`) }));
   }
   const u = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "subscription", { ailimitset: refuse("LIMIT_UNIT_UNAVAILABLE") }) });
   await u.press("ailimitset", { data: { remove: "" }, values: { "aio-scope": "overall", "aio-amount": "5", "aio-unit": "usd", "aio-period": "day" } });
-  assert.equal(u.refused.drawn, u.cs.w("ai.refused.unitunavailable"));
+  assert.equal(u.refused.text, said("ai.refused.unitunavailable"));
 });
 
 test("R9 this month's use summed per use and in all, naming no member; the changes with who and when, the limits' and the account's together", async () => {
@@ -70,7 +70,7 @@ test("R9 this month's use summed per use and in all, naming no member; the chang
   assert.ok(use.includes(said("screen.panel.usage.group")));
   const ch = all(section(a, "screen.panel.changes.heading"), (e) => e.tag === "li").map((e) => textOf(e));
   assert.equal(ch.length, 5);
-  assert.ok(ch[0].startsWith(said("screen.panel.change.limit.removed", { who: "lu", scope: said("ai.use.draft.name"), amount: "", unit: said("screen.panel.unit.calls"), period: said("screen.panel.period.day") })) && ch[0].endsWith("2026-10-08"), "newest first, with who and when");
+  assert.ok(ch[0].startsWith(said("screen.panel.change.limit.removed", { who: "lu", scope: said("ai.use.draft.name"), amount: "", unit: said("screen.panel.unit.calls"), period: said("screen.panel.period.day") })) && ch[0].endsWith(day("2026-10-08")), "newest first, with who and when");
   assert.ok(ch.some((t) => t.startsWith(said("screen.panel.change.use_set", { who: "lu", use: said("ai.use.explore.name"), value: said("ai.explore.ask") }))));
   assert.ok(ch.some((t) => t.startsWith(said("screen.panel.change.key_set", { who: "rosa" }))));
   const c = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });

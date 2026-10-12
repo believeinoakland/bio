@@ -42,7 +42,7 @@ export const connect = {
     const okv = (o) => (o && o.state === "ok" && o.value && o.value.ok !== false ? o.value : null);
     const outward = (inner) => `<div class="cs-notice"><p class="cs-tag-outward">${W("mark.outward.means")}</p>${inner}</div>`;
     const names = (by) => { const id = String(by || "").replace(/^member:/, ""); return id === me.member ? T(S + "you") : id === "admin" ? T("screen.members.founder") : id; };
-    const out = [`<p>${W(S + "optional")}</p>`, `<p class="cs-note">${W("ai.whopays")}</p>`];
+    const out = [cs.title(), `<p>${W(S + "optional")}</p>`, `<p class="cs-note">${W("ai.whopays")}</p>`];
 
     // the situation: exactly one of four (R4)
     const ka = okv(data.keepaway), as = okv(data.assistant);
@@ -96,12 +96,12 @@ export const connect = {
           const code = cs.act("subscriptionsignin", { label: S + "signin.connect", data: { step: "code" } });
           if (start || code) {
             const open = ui.signinAddress ? `<p data-shown="signin"><a href="${E(ui.signinAddress)}" target="_blank" rel="noopener noreferrer">${W(S + "signin.open")}</a></p>` : "";
-            h += `<h3>${W(S + "signin.heading")}</h3><ol class="cs-list"><li>${W(S + "signin.step1")}</li><li>${W(S + "signin.step2")}</li><li>${W(S + "signin.step3")}</li><li>${W(S + "signin.step4")}</li></ol>${start}${open}<div class="cs-form"><label for="mc-code">${W(S + "signin.code")}</label><span class="help">${W(S + "signin.help")}</span><input id="mc-code" type="password" class="cs-input" autocomplete="off">${code}</div>`;
+            h += `<h3>${W(S + "signin.heading")}</h3><ol class="cs-list"><li>${W(S + "signin.step1")}</li><li>${W(S + "signin.step2")}</li><li>${W(S + "signin.step3")}</li><li>${W(S + "signin.step4")}</li></ol>${start}${open}<div class="cs-form"><label for="mc-code${ui.gen || 0}">${W(S + "signin.code")}</label><span class="help">${W(S + "signin.help")}</span><input id="mc-code${ui.gen || 0}" type="password" class="cs-input" autocomplete="off">${code}</div>`;
           }
         } else h += `<p data-state="signin">${W(part && part.present === false ? S + "signin.absent" : S + "signin.unread")}</p>`;
         // 2. an API key
         const set = cs.act("accountreferenceset");
-        if (set) h += `<h3>${W(S + "apikey.heading")}</h3><div class="cs-form"><label for="mc-key">${W(S + "apikey.field")}</label><span class="help">${W(S + "apikey.help")}</span><input id="mc-key" type="password" class="cs-input" autocomplete="off">${set}</div>`;
+        if (set) h += `<h3>${W(S + "apikey.heading")}</h3><div class="cs-form"><label for="mc-key${ui.gen || 0}">${W(S + "apikey.field")}</label><span class="help">${W(S + "apikey.help")}</span><input id="mc-key${ui.gen || 0}" type="password" class="cs-input" autocomplete="off">${set}</div>`;
         // 3. skip
         return h + `<p>${W(S + "skip")}</p>`;
       });
@@ -129,16 +129,18 @@ export const connect = {
     { op: "subscriptionsignin", rereads: ["signin", "reference", "uses", "limits", "usage", "history"],
       send(view, el, cs) {
         if (el.dataset.step === "start") return { body: { step: "start" } };
-        const code = String(cs.value("mc-code") || "").trim();
+        const code = String(cs.value("mc-code" + ((view.ui && view.ui.gen) || 0)) || "").trim();
         return code ? { body: { step: "code", code } } : { refuse: "screen.connect.signin.nocode" };
       },
       // Anthropic's page, offered to open in a new browsing context, with no opener and no referrer (J2 (3))
-      done(view, answer, cs) { const a = answer && answer.result !== undefined ? answer.result : answer; if (a && a.address) cs.set("signinAddress", a.address); },
+      // the code's field drawn anew, empty (the shell keeps a field's value by its id; R10)
+      done(view, answer, cs) { const a = answer && answer.result !== undefined ? answer.result : answer; if (a && a.address) cs.set("signinAddress", a.address); else cs.set("gen", ((view.ui && view.ui.gen) || 0) + 1); },
       // RUNNER_NOT_CONFIGURED and DISCLOSURE_DUE: the translation the door relays (control-plane R65)
       refusals: { NO_SIGNIN_WAITING: "screen.connect.refused.NO_SIGNIN_WAITING", SIGNIN_REFUSED: "screen.connect.refused.SIGNIN_REFUSED", SIGNIN_UNAVAILABLE: "screen.connect.refused.SIGNIN_UNAVAILABLE",
         SIGNIN_ADDRESS_UNEXPECTED: "screen.connect.refused.SIGNIN_ADDRESS_UNEXPECTED", AGENT_WORKER_UNBOUND: "screen.connect.refused.AGENT_WORKER_UNBOUND", AI_KEPT_AWAY: "screen.connect.refused.AI_KEPT_AWAY" } },
     { op: "accountreferenceset", rereads: ["reference", "uses", "limits", "usage", "history"], outward: true,
-      send(view, el, cs) { const secret = String(cs.value("mc-key") || "").trim(); return secret ? { body: { member: "member:" + (view.me || {}).member, kind: "apikey", secret } } : { refuse: "screen.connect.apikey.nokey" }; } },
+      send(view, el, cs) { const secret = String(cs.value("mc-key" + ((view.ui && view.ui.gen) || 0)) || "").trim(); return secret ? { body: { member: "member:" + (view.me || {}).member, kind: "apikey", secret } } : { refuse: "screen.connect.apikey.nokey" }; },
+      done(view, answer, cs) { cs.set("gen", ((view.ui && view.ui.gen) || 0) + 1); } },
     { op: "accountusesset", rereads: ["uses", "history"],
       send(view, el, cs) { return view.parts.aiPanelSend("accountusesset", "member:" + (view.me || {}).member, el, cs); },
       refusals: { SWITCH_VALUE_INVALID: "ai.refused.switchvalue" } },

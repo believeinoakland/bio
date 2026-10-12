@@ -11,7 +11,8 @@ import { dirname, join } from "node:path";
 import { OPS, OP_ALIASES } from "../../../src/op-declarations/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-settings/index.mjs";
-import { open } from "./kit.mjs";
+import { open, said } from "./kit.mjs";
+import { interfacePage, checkScreens } from "../../../src/interface-shell/index.mjs";
 import { ADMIN, membersTable, accountTable, connectTable, notesTable } from "./fixtures.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
@@ -38,38 +39,30 @@ test("the screens are the registry's members, account, connect and notes, each l
   assert.ok(!SCREENS.find((s) => s.id === "account").acts.some((a) => a.op === "handlechange"));
 });
 
-test("every act names an op OPS holds (owed:infolevelset's op once op-declarations R50 declares it), and every read too", () => {
+test("every act names an op OPS holds (owed:infolevelset's op among them, op-declarations R50), and every read too", () => {
   for (const s of SCREENS) for (const a of s.acts) {
     const op = OP_ALIASES[a.op] || a.op;
-    if (a.op === "infolevelset" && !OPS.infolevelset) continue; // op-declarations R50 (T46), merged before this module
     assert.ok(OPS[op], `${s.id}: ${a.op} is served`);
   }
   for (const s of SCREENS) for (const [n, r] of Object.entries(s.reads({ me: ADMIN, subject: "ana" }))) {
-    if (r.op === "infolevel" && !OPS.infolevel) continue;
     assert.ok(OPS[r.op], `${s.id}: read ${n} (${r.op}) is served`);
   }
 });
 
-/* A function's source rebuilt with nothing in scope but the language's own globals (interface-shell R21 (1)). */
-function rebuild(fn) {
-  const src = fn.toString();
-  const f = /^(async\s+)?function\b|^(async\s*)?\(|^[\w$]+\s*=>/.test(src) ? new Function(`"use strict"; return (${src});`)() : new Function(`"use strict"; return ({ ${src} });`)()[fn.name];
-  assert.equal(typeof f, "function", fn.name);
-  return f;
-}
-const rebuilt = (s) => ({ ...s, reads: rebuild(s.reads), render: rebuild(s.render), parts: Object.fromEntries(Object.entries(s.parts).map(([k, f]) => [k, rebuild(f)])),
-  acts: s.acts.map((a) => Object.fromEntries(Object.entries(a).map(([k, v]) => [k, typeof v === "function" ? rebuild(v)
-    : k === "refusals" ? Object.fromEntries(Object.entries(v).map(([c, x]) => [c, typeof x === "function" ? rebuild(x) : x])) : v]))) });
-
-test("every function of SCREENS is self-contained: rebuilt from its own source, each screen reads and draws the same", async () => {
+test("the shell serves the four screens: interfacePage passes its R21 check, and the page runs each screen from its own source (self-contained), drawing it", async () => {
+  assert.equal(checkScreens(SCREENS), true);
+  const html = interfacePage(SCREENS);
+  for (const s of SCREENS) for (const a of s.acts) assert.ok(html.includes(a.op), `${s.id}'s ${a.op} is in the page`);
   const tables = { members: membersTable(), account: accountTable(ADMIN), connect: connectTable(ADMIN, "own"), notes: notesTable(ADMIN) };
   for (const s of SCREENS) {
-    const subject = s.id === "members" ? "ana" : null;
-    const a = await open(s.id, { me: ADMIN, table: tables[s.id], subject, reachable: true });
-    const b = await open(s.id, { me: ADMIN, table: tables[s.id], subject, reachable: true, s: rebuilt(s) });
-    assert.equal(b.html, a.html, `${s.id} draws the same from its source`);
-    assert.deepEqual(b.p.requests, a.p.requests, `${s.id} reads the same from its source`);
+    const o = await open(s.id, { me: ADMIN, table: tables[s.id], reachable: true });
+    assert.ok(o.text.includes(said(`screen.${s.id}.name`)), `${s.id} drawn`);
+    assert.ok(!o.tree.children.some((c) => c.attrs && c.attrs["data-state"] === "failed"), `${s.id}'s render ran from its source`);
   }
+  // a screen whose function reaches outside itself fails in the page, so this check would see it
+  const leaky = { ...SCREENS[3], render(cs) { return cs.title() + NOT_IN_SCOPE; } };
+  const o = await open("notes", { me: ADMIN, table: tables.notes, screens: [SCREENS[0], SCREENS[1], SCREENS[2], leaky] });
+  assert.ok(o.html.includes('data-state="failed"'), "control: a leaky render is drawn as failed");
 });
 
 test("SCREEN_WORDS: frozen [key, en, protected] rows, keys distinct, under the screens' own keys or the shell's named rows", () => {

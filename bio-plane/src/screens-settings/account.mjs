@@ -13,7 +13,6 @@ export const account = {
       language: { op: "memberlanguage" },
       expertise: { op: "expertiselist", query: { memberId: me.member } },
       signers: { op: "signerlist" },
-      level: { op: "infolevel" },
     };
   },
 
@@ -23,7 +22,7 @@ export const account = {
     const data = view.data || {};
     const ui = view.ui || {};
     const me = data.me && data.me.state === "ok" && data.me.value ? data.me.value : view.me || {};
-    const out = [];
+    const out = [cs.title()];
 
     // the handle, fixed (DEC-197): no act changes it, and nothing says "formerly"
     out.push(cs.sec(S + "handle.heading", `<p><b>${E(me.handle || me.member || "")}</b></p><p>${W("handle.fixed")}</p>`));
@@ -35,10 +34,11 @@ export const account = {
       if (set) h += `<div class="cs-form"><label for="ma-lang">${W(S + "language.field")}</label><span class="help">${W(S + "language.help")}</span><input id="ma-lang" type="text" class="cs-input" value="${E(v.language || "")}" autocomplete="off">${set}</div>`;
       return h;
     });
-    // appearance is kept on the device (interface-shell R18): the shell applies the choice it finds marked
-    const ap = ui.appearance || "device";
-    lang += `<div class="cs-form"><label for="ma-theme">${W(S + "appearance.field")}</label><select id="ma-theme" class="cs-input" data-device="appearance">${["device", "light", "dark"].map((v) => `<option value="${v}"${v === ap ? " selected" : ""}>${W(S + "appearance." + v)}</option>`).join("")}</select></div>`;
-    const lv = data.level && data.level.state === "ok" && data.level.value && (data.level.value.level === "prompt" || data.level.value.level === "pause") ? data.level.value.level : ui.level === "pause" ? "pause" : "prompt";
+    // appearance is kept on the device (interface-shell R18): the shell's own control, `data-shell="theme"`
+    const ap = cs.theme();
+    lang += `<div class="cs-form" role="group" aria-labelledby="ma-theme"><p id="ma-theme">${W(S + "appearance.field")}</p>${["device", "light", "dark"].map((v) => `<button type="button" class="cs-btn" data-tone="quiet" data-shell="theme" data-theme-to="${v}" aria-pressed="${v === ap}">${W(S + "appearance." + v)}</button>`).join("")}</div>`;
+    // the explanation level is the shell's (R17): its value, and its act through the shell's own setting
+    const lv = cs.level() === "pause" ? "pause" : "prompt";
     lang += `<div class="cs-form"><label for="ma-level">${W(S + "level.field")}</label><select id="ma-level" class="cs-input">${["prompt", "pause"].map((v) => `<option value="${v}"${v === lv ? " selected" : ""}>${W("level." + v + ".name")}</option>`).join("")}</select>${cs.act("infolevelset", { label: "act.owed_infolevelset.label.account" })}</div>`;
     out.push(cs.sec(S + "language.heading", lang));
 
@@ -53,9 +53,11 @@ export const account = {
 
     // the password, typed twice alike (setup-page R3's rule); no field is drawn with what was typed (R10)
     const pw = cs.act("setpassword");
-    if (pw) out.push(cs.sec(S + "password.heading", (ui.passwordChanged ? `<p data-shown="password">${W(S + "password.changed")}</p>` : "") + `<div class="cs-form"><label for="ma-cur">${W(S + "password.current")}</label><input id="ma-cur" type="password" class="cs-input" autocomplete="current-password">
-<label for="ma-new">${W(S + "password.new")}</label><span class="help">${W(S + "password.help")}</span><input id="ma-new" type="password" class="cs-input" autocomplete="new-password">
-<label for="ma-again">${W(S + "password.again")}</label><input id="ma-again" type="password" class="cs-input" autocomplete="new-password">${pw}</div>`));
+    // the fields drawn anew, empty, after each change (the shell keeps a field's value by its id; R10)
+    const g = ui.pwGen || 0;
+    if (pw) out.push(cs.sec(S + "password.heading", (ui.passwordChanged ? `<p data-shown="password">${W(S + "password.changed")}</p>` : "") + `<div class="cs-form"><label for="ma-cur${g}">${W(S + "password.current")}</label><input id="ma-cur${g}" type="password" class="cs-input" autocomplete="current-password">
+<label for="ma-new${g}">${W(S + "password.new")}</label><span class="help">${W(S + "password.help")}</span><input id="ma-new${g}" type="password" class="cs-input" autocomplete="new-password">
+<label for="ma-again${g}">${W(S + "password.again")}</label><input id="ma-again${g}" type="password" class="cs-input" autocomplete="new-password">${pw}</div>`));
 
     // the member's own signing key: its public half, registered or revoked (friction by weight, interface-shell R11)
     out.push(cs.sec(S + "key.heading", cs.state(data.signers, (v) => {
@@ -74,20 +76,21 @@ export const account = {
   acts: [
     { op: "memberlanguageset", rereads: ["language"],
       send(view, el, cs) { const t = String(cs.value("ma-lang") || "").trim(); return { body: { language: t || null } }; } },
-    // the owed act `owed:infolevelset` (DEC-162), served by instance-setup R79; the level also kept on the device
-    { op: "infolevelset", rereads: ["level"],
-      send(view, el, cs) { return { body: { level: cs.value("ma-level") === "pause" ? "pause" : "prompt" } }; },
-      done(view, answer, cs) { cs.set("level", cs.value("ma-level") === "pause" ? "pause" : "prompt"); } },
+    // the owed act `owed:infolevelset` (DEC-162), served by instance-setup R79: sent by the shell's own setting, which also
+    // keeps the level on the device and redraws the frame (interface-shell R17), so nothing more is sent from here
+    { op: "infolevelset", rereads: [],
+      send(view, el, cs) { cs.setLevel(cs.value("ma-level") === "pause" ? "pause" : "prompt"); return null; } },
     { op: "expertisedeclare", rereads: ["expertise"],
       send(view, el, cs) { const label = String(cs.value("ma-exp") || "").trim(); return label ? { body: { label } } : { refuse: "screen.account.expertise.nolabel" }; } },
     // sent only when the new password is typed twice alike; neither is kept, drawn again or sent again (R10)
     { op: "setpassword", rereads: [],
       send(view, el, cs) {
-        const password = cs.value("ma-new"), again = cs.value("ma-again");
+        const g = (view.ui && view.ui.pwGen) || 0;
+        const password = cs.value("ma-new" + g), again = cs.value("ma-again" + g);
         if (!password || password !== again) return { refuse: "screen.account.password.differ" };
-        return { body: { current: String(cs.value("ma-cur") || ""), password: String(password) } };
+        return { body: { current: String(cs.value("ma-cur" + g) || ""), password: String(password) } };
       },
-      done(view, answer, cs) { cs.set("passwordChanged", true); } },
+      done(view, answer, cs) { cs.set("pwGen", ((view.ui && view.ui.pwGen) || 0) + 1); cs.set("passwordChanged", true); } },
     { op: "signerregisterown", rereads: ["signers"],
       send(view, el, cs) {
         // the line the signing page gives, `ssh-ed25519 <base64> <label>`, or the base64 alone (credentials R9)

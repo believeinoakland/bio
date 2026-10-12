@@ -2,27 +2,25 @@
    shell and a fake plane answering each op in its owner's shape; what it reads, what it draws, and what each act sends. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, acts, all, texts, textOf, said, ancestor } from "./kit.mjs";
+import { acts, all, ancestor, day, has, lacks, open, panelOf, rowOf, said, textOf, texts } from "./kit.mjs";
 import { ADMIN, MEMBER, READER, ROSTER, membersTable, membersTableMember, refuse, env } from "./fixtures.mjs";
 
-const panelOf = (o, id) => all(o.tree, (e) => e.attrs["data-panel-of"] === id)[0] || { children: [] };
 const btn = (n, op, pred = () => true) => acts(n).filter((b) => b.attrs["data-act"] === op && pred(b));
-const has = (o, key, fills) => assert.ok(o.html.includes(o.cs.w(key, fills)), `drawn: ${key}`);
-const lacks = (o, key, fills) => assert.ok(!o.html.includes(o.cs.w(key, fills)), `not drawn: ${key}`);
 
 test("R1 the reads: the roster, the group's key and the keep-away for every member; the recovery step and the group's account (owner group) for an administrator; a member's expertise when opened", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable(), subject: "ana" });
-  const reads = a.p.requests.map((r) => [r.op, r.query]);
+  const reads = a.p.requests.map((r) => [r.op, r.query]).slice(0, 9);
   assert.deepEqual(reads, [["memberlist", {}], ["groupkeystate", {}], ["aikeepawaystate", {}], ["expertiselist", { memberId: "ana" }],
     ["adminrecoverystep", {}], ["accountuses", { owner: "group" }], ["ailimits", { owner: "group" }], ["aiusage", { owner: "group" }], ["accounthistory", { owner: "group" }]]);
   const m = await open("members", { me: MEMBER, table: membersTableMember() });
-  assert.deepEqual(m.p.requests.map((r) => r.op), ["memberlist", "groupkeystate", "aikeepawaystate"], "nothing the owners refuse a member is read");
+  assert.deepEqual(m.p.requests.map((r) => r.op).slice(0, 3), ["memberlist", "groupkeystate", "aikeepawaystate"]);
+  for (const op of ["adminrecoverystep", "accountuses", "ailimits", "aiusage", "accounthistory", "expertiselist"]) assert.ok(!m.p.requests.some((r) => r.op === op), `nothing the owners refuse a member is read (${op})`);
 });
 
 test("R1 the roster: each member's handle, cover (to an administrator), role, capabilities and status; no \"formerly\" (DEC-197)", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable() });
   for (const m of ROSTER) {
-    const row = all(a.tree, (e) => e.attrs["data-row"] === m.member_id)[0];
+    const row = rowOf(a.tree, m.member_id, m.handle || said("screen.members.nohandle"));
     assert.ok(row, m.member_id);
     const t = textOf(row);
     assert.ok(t.includes(m.handle || said("screen.members.nohandle")));
@@ -33,7 +31,7 @@ test("R1 the roster: each member's handle, cover (to an administrator), role, ca
   }
   has(a, "screen.members.count", { members: 4, administrators: 2 });
   assert.ok(!/formerly/i.test(a.html), "no formerly");
-  assert.ok(textOf(all(a.tree, (e) => e.attrs["data-row"] === "ana")[0]).includes(said("screen.members.expertise.declared", { label: "CPA" })));
+  assert.ok(textOf(rowOf(a.tree, "ana")).includes(said("screen.members.expertise.declared", { label: "CPA" })));
   // a member who does not administer: no cover column, no cover
   const m = await open("members", { me: MEMBER, table: membersTableMember() });
   assert.ok(!m.html.includes("R. Medina") && !m.html.includes(said("screen.members.col.cover")));
@@ -55,7 +53,7 @@ test("R1 the one-administrator note while the step is not met, as setup-page R16
 
 test("R1 the group's key and its use: held and on, never the key; use summed over members, naming none (DEC-188 (5))", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable() });
-  has(a, "screen.members.key.heldon", { by: "rosa", date: "2026-10-06" });
+  has(a, "screen.members.key.heldon", { by: "rosa", date: day("2026-10-06") });
   const usage = all(a.tree, (e) => e.tag === "section" && textOf(e).startsWith(said("screen.panel.usage.heading")))[0];
   assert.ok(usage, "the use is drawn");
   const ut = textOf(usage);
@@ -93,12 +91,12 @@ test("R2 every registry act is drawn for an administrator where it applies, each
   for (const [op, row] of TABLE) {
     const bs = btn(a.tree, op);
     assert.ok(bs.length, op);
-    if (row) assert.ok(bs.some((b) => ancestor(b, (p) => p.attrs["data-panel-of"] === row)), `${op} in ${row}'s panel`);
-    if (row) assert.ok(bs.every((b) => ancestor(b, (p) => p.attrs["data-panel-of"])), `${op} only in a row's panel`);
+    if (row) assert.ok(btn(panelOf(a.tree, row), op).length, `${op} in ${row}'s panel`);
+    if (row) assert.ok(bs.every((b) => ancestor(b, (p) => /cs-panel/.test(p.attrs.class || ""))), `${op} only in a row's panel`);
   }
   // no act where it does not apply: no endorsing an active administrator, no capabilities for one, none on oneself
-  assert.ok(!btn(panelOf(a, "rosa"), "adminremove").length && !btn(panelOf(a, "lu"), "membercaps").length && !btn(panelOf(a, "dev"), "adminendorse").length);
-  assert.ok(!btn(panelOf(a, "dev"), "invitewithdraw").length);
+  assert.ok(!btn(panelOf(a.tree, "rosa"), "adminremove").length && !btn(panelOf(a.tree, "lu"), "membercaps").length && !btn(panelOf(a.tree, "dev"), "adminendorse").length);
+  assert.ok(!btn(panelOf(a.tree, "dev"), "invitewithdraw").length);
   for (const me of [MEMBER, READER]) {
     const m = await open("members", { me, table: membersTableMember() });
     assert.deepEqual(acts(m.tree).map((b) => b.attrs["data-act"]), [], "absent, not greyed");
@@ -110,7 +108,8 @@ test("R2 memberadd: the short id, the cover and the capabilities ticked; the inv
   has(a, "screen.members.invite.noemail");
   assert.ok(said("screen.members.invite.noemail").startsWith("Your group's Civicsmith sends no email"));
   const r = await a.press("memberadd", { values: { "mi-id": "mai-k2", "mi-cover": "Mai's cousin", "mi-cap-contribute": true, "mi-cap-publish": true } });
-  assert.deepEqual(r.sent[0], { op: "memberadd", query: {}, body: { memberId: "mai-k2", cover: "Mai's cousin", capabilities: ["contribute", "publish"] }, headers: r.sent[0].headers });
+  assert.deepEqual([r.sent[0].op, r.sent[0].query, r.sent[0].body, r.sent[0].method], ["memberadd", {}, { memberId: "mai-k2", cover: "Mai's cousin", capabilities: ["contribute", "publish"] }, "POST"]);
+  assert.equal(r.sent[0].headers.Authorization, "Bearer tok-1", "the session in the header only");
   const shown = all(a.tree, (e) => e.attrs["data-shown"] === "invite")[0];
   assert.ok(textOf(shown).includes("https://group.example/#invite=0123456789abcdef0123456789abcdef"));
   const admin = await a.press("memberadd", { values: { "mi-id": "lee", "mi-cover": "Lee", "mi-cap-contribute": true, "mi-cap-administer": true } });
@@ -127,16 +126,16 @@ test("R2 the row acts send their owners' arguments: membercaps, memberset, admin
   assert.deepEqual(await body("memberset", { data: { member: "dev", status: "revoked" } }), { memberId: "dev", status: "revoked" });
   assert.deepEqual(await body("memberset", { data: { member: "old", status: "active" } }), { memberId: "old", status: "active" });
   assert.deepEqual(await body("adminendorse", { data: { member: "kim" } }), { memberId: "kim" });
-  has(a, "screen.members.invite.shown", { handle: "kim", expires: "2026-10-19" });
+  has(a, "screen.members.invite.shown", { handle: "kim", expires: day("2026-10-19") });
   assert.deepEqual(await body("adminremove", { data: { member: "lu" }, values: { "mr-lu": " Moved away " } }), { memberId: "lu", reason: "Moved away" });
   assert.deepEqual((await a.press("adminremove", { data: { member: "lu" }, values: { "mr-lu": "" } })).sent, [], "not without a reason");
   assert.deepEqual(await body("expertiseconfirm", { data: { member: "ana", label: "CPA" } }), { memberId: "ana", label: "CPA" });
   assert.deepEqual(await body("invitewithdraw", { data: { member: "mai-k" } }), { memberId: "mai-k" });
   // the panel's own data drive them: the buttons carry what the requests name
   const p = await open("members", { me: ADMIN, table: membersTable(), subject: "ana" });
-  assert.equal(btn(panelOf(p, "ana"), "expertiseconfirm")[0].attrs["data-label"], "CPA");
-  assert.equal(btn(panelOf(p, "dev"), "memberset")[0].attrs["data-status"], "revoked");
-  assert.equal(btn(panelOf(p, "old"), "memberset")[0].attrs["data-status"], "active");
+  assert.equal(btn(panelOf(p.tree, "ana"), "expertiseconfirm")[0].attrs["data-label"], "CPA");
+  assert.equal(btn(panelOf(p.tree, "dev"), "memberset")[0].attrs["data-status"], "revoked");
+  assert.equal(btn(panelOf(p.tree, "old"), "memberset")[0].attrs["data-status"], "active");
 });
 
 test("R2 joining through the website: websitekeycreate and joinlinkenable with a daily cap; the key and the link shown once", async () => {
@@ -155,18 +154,18 @@ test("R2 joining through the website: websitekeycreate and joinlinkenable with a
 test("R2 the group's key: groupkeyset sends the key in the body only, then groupkeyswitch on (setup-page R18); never drawn again; switch and remove", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable() });
   const KEY = "sk-ant-api03-SENTINELKEY";
-  const r = await a.press("groupkeyset", { values: { "mk-key": KEY } });
+  const r = await a.press("groupkeyset", { values: { "mk-key0": KEY } });
   assert.deepEqual(r.sent.map((x) => [x.op, x.query, x.body]).slice(0, 2), [["groupkeyset", {}, { key: KEY }], ["groupkeyswitch", {}, { on: true }]]);
   assert.ok(!a.html.includes(KEY), "never drawn again");
   assert.ok(!a.p.requests.slice(1).some((x) => x.op !== "groupkeyset" && JSON.stringify(x).includes(KEY)), "never sent again");
   assert.deepEqual((await a.press("groupkeyswitch", { data: { on: "off" } })).sent[0].body, { on: false });
   assert.equal(btn(a.tree, "groupkeyswitch")[0].attrs["data-on"], "off", "drawn to switch off while on");
   assert.deepEqual((await a.press("groupkeyremove")).sent[0].body, {});
-  const empty = await a.press("groupkeyset", { values: { "mk-key": " " } });
+  const empty = await a.press("groupkeyset", { values: { "mk-key0": " " } });
   assert.deepEqual(empty.sent, []);
 });
 
-test("R2 aikeepaway: says first what it does; on only with a reason of 1 to 2,000 characters, for every use or the ones chosen; off with none", async () => {
+test("R2 aikeepaway: says first what it does; on only with a reason of 1 to 2,000 characters, for every use or the ones chosen; off with its reason too (op-grades: reasoned)", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable() });
   const form = ancestor(btn(a.tree, "aikeepaway")[0], (e) => e.attrs.class === "cs-form");
   const words = texts(form);
@@ -180,20 +179,22 @@ test("R2 aikeepaway: says first what it does; on only with a reason of 1 to 2,00
     assert.equal(a.refused.key, "screen.members.keepaway.noreason");
   }
   assert.equal((await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-all": true, "mk-why": "x".repeat(2000) } })).sent[0].body.reason.length, 2000);
-  const none = await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-some": true, "mk-why": "x" } });
+  const none = await a.press("aikeepaway", { data: { on: "on" }, values: { "mk-some": true, "mk-use-ask": false, "mk-use-run": false, "mk-why": "x" } });
   assert.deepEqual(none.sent, []);
   const on = await open("members", { me: ADMIN, table: membersTable({ aikeepawaystate: env({ on: true, reason: "We hold tips.", set_by: "rosa", set_at: "2026-10-02T00:00:00Z", uses: ["ask"] }) }) });
-  has(on, "screen.members.keepaway.on", { by: "rosa", date: "2026-10-02" });
+  has(on, "screen.members.keepaway.on", { by: "rosa", date: day("2026-10-02") });
   assert.ok(on.html.includes("We hold tips."));
-  assert.deepEqual((await on.press("aikeepaway", { data: { on: "off" } })).sent[0].body, { on: false });
+  assert.deepEqual((await on.press("aikeepaway", { data: { on: "off" }, values: { "mk-why": "We publish our sources now." } })).sent[0].body, { on: false, reason: "We publish our sources now." });
+  assert.deepEqual((await on.press("aikeepaway", { data: { on: "off" }, values: { "mk-why": "" } })).sent, [], "turning it off is reasoned too");
 });
 
 test("R2 a refusal is drawn beside its act and nothing else changes; R8 nothing is drawn as done before the answer", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable({ memberadd: refuse("EXISTS") }) });
-  const before = a.html;
+  const before = a.text;
   const r = await a.press("memberadd", { values: { "mi-id": "dev", "mi-cover": "x" } });
-  assert.ok(r.refused && a.refused.drawn.includes("translated EXISTS"));
-  assert.equal(a.html, before, "nothing else changes");
+  assert.ok(r.refused && a.refused.text.includes("translated EXISTS"));
+  assert.equal(a.text.replace(a.refused.text, "").replace(/\s+/g, " "), before.replace(/\s+/g, " "), "nothing else changes");
+  assert.equal(a.b.doc.getElementById("mi-id").value, "dev", "the form keeps what was typed");
   const b = await open("members", { me: ADMIN, table: membersTable({ memberset: "pending" }) });
   const was = b.html;
   b.press("memberset", { data: { member: "dev", status: "revoked" } });

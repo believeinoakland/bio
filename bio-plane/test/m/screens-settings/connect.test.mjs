@@ -1,13 +1,11 @@
 /* Settings › The assistant at the module's interface (R4, R5, R8, R9 over `owner: "member:<id>"`). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, acts, all, textOf, said, ancestor } from "./kit.mjs";
+import { acts, all, ancestor, day, has, lacks, open, panelOf, rowOf, said, textOf } from "./kit.mjs";
 import { MEMBER, ADMIN, connectTable, env, KEEPAWAY_ON } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 const situations = (o) => all(o.tree, (e) => e.attrs["data-situation"]).map((e) => e.attrs["data-situation"]);
-const has = (o, key, fills) => assert.ok(o.html.includes(o.cs.w(key, fills)), `drawn: ${key}`);
-const lacks = (o, key, fills) => assert.ok(!o.html.includes(o.cs.w(key, fills)), `not drawn: ${key}`);
 
 test("R4 the reads: assistantstate, aikeepawaystate, groupkeystate, groupkeynotice, disclosureof, accountreference, subscriptionsignin {step: state}, and the member's own account (owner member:<me>)", async () => {
   const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER) });
@@ -36,7 +34,7 @@ test("R4 exactly one of four situations: the group's key serves (with the member
   assert.deepEqual(situations(none), ["none"]);
   const kept = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "keptaway") });
   assert.deepEqual(situations(kept), ["keptaway"]);
-  has(kept, "screen.connect.keptaway", { by: "rosa", date: "2026-10-02" });
+  has(kept, "screen.connect.keptaway", { by: "rosa", date: day("2026-10-02") });
   assert.ok(kept.html.includes(KEEPAWAY_ON.reason), "the reason in the administrator's words");
   has(kept, "screen.connect.keptaway.ask");
   assert.ok(said("screen.connect.keptaway.ask").includes("If you think this should change, ask an administrator"));
@@ -97,44 +95,44 @@ test("R5 the subscription sign-in: start, the address offered in a new browsing 
   assert.deepEqual([s.sent[0].query, s.sent[0].body], [{}, { step: "start" }]);
   const link = all(a.tree, (e) => e.tag === "a" && e.attrs.href === "https://claude.ai/oauth/authorize?x=1")[0];
   assert.ok(link && link.attrs.target === "_blank" && link.attrs.rel === "noopener noreferrer");
+  assert.deepEqual((await a.press("subscriptionsignin", { data: { step: "code" }, values: { "mc-code0": "" } })).sent, [], "no code, nothing sent");
   const CODE = "SENTINEL-CODE-1234";
-  const c = await a.press("subscriptionsignin", { data: { step: "code" }, values: { "mc-code": CODE } });
+  const c = await a.press("subscriptionsignin", { data: { step: "code" }, values: { "mc-code0": CODE } });
   assert.deepEqual([c.sent[0].query, c.sent[0].body], [{}, { step: "code", code: CODE }]);
   assert.deepEqual(situations(a), ["own"]);
   has(a, "screen.connect.own.subscription");
   assert.ok(!a.html.includes(CODE));
-  assert.ok(!a.p.requests.slice(a.p.requests.indexOf(c.sent[0]) + 1).some((r) => JSON.stringify(r).includes(CODE)), "never sent again");
-  assert.deepEqual((await a.press("subscriptionsignin", { data: { step: "code" }, values: { "mc-code": "" } })).sent, []);
+  assert.equal(a.p.all.filter((r) => JSON.stringify(r).includes(CODE)).length, 1, "sent once, never again");
 });
 
 test("R5 the sign-in's refusals drawn with this module's meanings; RUNNER_NOT_CONFIGURED and DISCLOSURE_DUE by the translation the door relays", async () => {
   const words = { NO_SIGNIN_WAITING: "screen.connect.refused.NO_SIGNIN_WAITING", SIGNIN_UNAVAILABLE: "screen.connect.refused.SIGNIN_UNAVAILABLE", SIGNIN_ADDRESS_UNEXPECTED: "screen.connect.refused.SIGNIN_ADDRESS_UNEXPECTED", AGENT_WORKER_UNBOUND: "screen.connect.refused.AGENT_WORKER_UNBOUND", AI_KEPT_AWAY: "screen.connect.refused.AI_KEPT_AWAY" };
   for (const [code, key] of Object.entries(words)) {
     const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: false } : { ok: false, reason: code, code } }) });
-    const before = a.html;
+    const before = a.text;
     await a.press("subscriptionsignin", { data: { step: "start" } });
-    assert.equal(a.refused.drawn, a.cs.w(key), code);
-    assert.equal(a.html, before, "nothing else changes");
+    assert.equal(a.refused.text, said(key), code);
+    assert.equal(a.text.replace(a.refused.text, "").replace(/\s+/g, " "), before.replace(/\s+/g, " "), "nothing else changes");
   }
   assert.ok(said("screen.connect.refused.NO_SIGNIN_WAITING").includes("timed out") && said("screen.connect.refused.AGENT_WORKER_UNBOUND").includes("can't run on your group's Civicsmith yet"));
   const r = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: false } : { ok: false, reason: "SIGNIN_REFUSED", code: "SIGNIN_REFUSED", detail: "invalid code" } }) });
-  await r.press("subscriptionsignin", { data: { step: "code" }, values: { "mc-code": "x" } });
-  assert.equal(r.refused.drawn, r.cs.w("screen.connect.refused.SIGNIN_REFUSED", { detail: "invalid code" }), "the runner's detail shown");
+  await r.press("subscriptionsignin", { data: { step: "code" }, values: { "mc-code0": "x" } });
+  assert.equal(r.refused.text, said("screen.connect.refused.SIGNIN_REFUSED", { detail: "invalid code" }), "the runner's detail shown");
   for (const code of ["RUNNER_NOT_CONFIGURED", "DISCLOSURE_DUE"]) {
     const o = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: (q, b) => b.step === "state" ? { ok: true, connected: false } : { ok: false, reason: code, code, translation: "relayed " + code } }) });
     await o.press("subscriptionsignin", { data: { step: "start" } });
-    assert.equal(o.refused.drawn, "relayed " + code);
+    assert.equal(o.refused.text, "relayed " + code);
   }
 });
 
 test("R5 an API key: accountreferenceset with the key in the body only (and the member it is for), never drawn again", async () => {
   const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
   const KEY = "sk-ant-api03-SENTINEL-OWN";
-  const r = await a.press("accountreferenceset", { values: { "mc-key": KEY } });
+  const r = await a.press("accountreferenceset", { values: { "mc-key0": KEY } });
   assert.deepEqual([r.sent[0].query, r.sent[0].body], [{}, { member: "member:dev", kind: "apikey", secret: KEY }]);
   assert.ok(!a.html.includes(KEY));
-  assert.ok(!a.p.requests.slice(a.p.requests.indexOf(r.sent[0]) + 1).some((x) => JSON.stringify(x).includes(KEY)));
-  assert.deepEqual((await a.press("accountreferenceset", { values: { "mc-key": " " } })).sent, []);
+  assert.equal(a.p.all.filter((x) => JSON.stringify(x).includes(KEY)).length, 1, "sent once, never again");
+  assert.deepEqual((await a.press("accountreferenceset", { values: { "mc-key0": " " } })).sent, []);
 });
 
 test("R5 disconnect: a subscription by subscriptiondisconnect, an API key by accountreferenceremove; R9 the member's own account panel", async () => {

@@ -23,6 +23,22 @@
 
 Size (session_01V6ChUsecnpQgZeXHEMdaCi): test runs 24, module lines 1031
 
+## Record after B6 (K3007)
+
+**CHANGE applied.** `tranche/T46` merged (interface-shell, affordances, op-declarations in). My stand-in kit is gone: every test now boots the real page, `interfacePage(SCREENS)`, through interface-shell's harness (`test/m/interface-shell/harness.mjs`) over its `dom.mjs`, clicking each act as a member would and answering the shell's friction. Kit signatures checked against `browser.mjs` and corrected in the screens: `cs.title()` heads each screen (R8's heading); `cs.rows` takes `id` and `name`, and its first cell is plain text (the shell wraps it in the row's button), a member opened by address having its row's panel open; the explanation level is sent by the shell's own `cs.setLevel` (the `infolevelset` act's `send` calls it and sends nothing more), drawn from `cs.level()`, the `infolevel` read dropped (the shell reads it); appearance is the shell's own theme control (`data-shell="theme"`), drawn with `cs.theme()`; `reasonField` per K3002's R11 (the screen's own field carries the reason): `adminremove` and `aikeepaway` (both reasoned by op-grades) send their own reason fields, and turning the keep-away off now asks its reason too; `writinghelp` names `told` as its `reasonField`. One flaw of my own fixed: the shell restores each field's value by its id on every redraw, so a typed key, code or password stayed in its field after a successful act; those fields now take a fresh id after success and are drawn empty (R10, tested).
+
+**Kit gaps (REPORT to BOB, interface-shell's):**
+1. `done` is not awaited and offers no re-read: `groupkeyset`'s follow-up `groupkeyswitch {on: true}` is sent from `done`, and the screen then re-opens itself with `cs.go("members")` to read everything anew (else the re-read races the switch). A `done` returning a promise the shell awaits before its re-reads would remove the workaround.
+2. Field values survive redraws by id, including password fields after a successful act; a screen must change ids to clear them. A shell rule (clear `type=password` fields of a succeeded act's form) or `cs.clear(id)` would be safer for every screen.
+3. `cs.rows` makes the first cell its row button, so a row's name cannot also be a reference link (interface-shell R16) to its screen.
+4. A screen control for appearance has no kit call: I draw the shell's own `data-shell="theme"` buttons (works, but leans on the shell's internal attribute); `cs.setTheme` exists but nothing in a screen can call it on a click without an act.
+
+**Grades (REPORT, op-grades'):** `writinghelp` has no rung (the shell draws it as reasoned, and would ask a reason to ask for help: worked around with `reasonField: "told"`); `aikeepaway` is reasoned in both directions, so switching the keep-away off asks a reason too.
+
+**Tests and checks after B6.** `node --test bio-plane/test/m/screens-settings/`: 51 pass, 0 fail, on the served page. `format` 0; with the paths set locally (not committed): `architecture` 0 (17 product files), `coverage` 10/10, `ownership` 0.
+
+Size (session_01V6ChUsecnpQgZeXHEMdaCi): test runs 44, module lines 1042
+
 ## J1 · QUESTION
 
 **The screen contract and the kit `cs`, while interface-shell is unbuilt.** INTERFACE-SHELL #1 has not started (no record on its branch), and its R21 and Suggestions name the contract's parts (`{id, reads, render, acts, words}`, the kit's names) but not their signatures. I cannot wait on its merge without idling, so my best reading, which I am building to now and will align to the shell's actual kit at its merge's CHANGE:

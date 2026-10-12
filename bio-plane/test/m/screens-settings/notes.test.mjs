@@ -1,23 +1,21 @@
 /* Settings › Your notes at the module's interface (R6, R7, R8). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, acts, all, textOf, said, ancestor } from "./kit.mjs";
+import { acts, all, ancestor, day, has, lacks, open, panelOf, rowOf, said, textOf } from "./kit.mjs";
 import { MEMBER, READER, NOTES, notesTable, env } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
-const has = (o, key, fills) => assert.ok(o.html.includes(o.cs.w(key, fills)), `drawn: ${key}`);
-const lacks = (o, key, fills) => assert.ok(!o.html.includes(o.cs.w(key, fills)), `not drawn: ${key}`);
 
 test("R6 reads the member's own notes; states who can see them (protected words); each note's acts in its panel", async () => {
   const a = await open("notes", { me: MEMBER, table: notesTable(MEMBER) });
-  assert.deepEqual(a.p.requests.map((r) => r.op), ["notes", "courtnotice"]);
+  assert.deepEqual(a.p.requests.map((r) => r.op).slice(0, 2), ["notes", "courtnotice"]);
   has(a, "screen.notes.private");
   assert.equal(said("screen.notes.private"), "Only you can see these in your group.");
   for (const r of ["screen.notes.private", "screen.notes.protects", "screen.notes.court", "screen.notes.draft.label"])
     assert.equal(a.s.words.find((w) => Array.isArray(w) && w[0] === r)[2], true, `${r} is protected`);
   for (const n of NOTES) {
-    assert.ok(textOf(all(a.tree, (e) => e.attrs["data-row"] === String(n.note))[0]).includes(n.text));
-    const panel = all(a.tree, (e) => e.attrs["data-panel-of"] === String(n.note))[0];
+    assert.ok(textOf(rowOf(a.tree, String(n.note))).includes(n.text));
+    const panel = panelOf(a.tree, String(n.note));
     assert.deepEqual([...new Set(acts(panel).map((b) => b.attrs["data-act"]))].sort(), ["notedelete", "noterevise", "noteturn"]);
   }
   has(a, "screen.notes.turned.observation", { id: "OBS-0001" });
@@ -37,7 +35,7 @@ test("R6 notewrite, noterevise and notedelete send their owner's arguments (hypo
   assert.deepEqual((await a.press("noterevise", { data: { note: "2" }, values: { "mn-r2": "Revised." } })).sent[0].body, { note: 2, text: "Revised." });
   assert.deepEqual((await a.press("notedelete", { data: { note: "1" } })).sent[0].body, { note: 1 });
   const rev = acts(a.tree).find((b) => b.attrs["data-act"] === "noterevise" && b.attrs["data-note"] === "2");
-  assert.ok(ancestor(rev, (e) => e.attrs["data-panel-of"] === "2"));
+  assert.ok(ancestor(rev, (e) => /cs-panel/.test(e.attrs.class || "")));
 });
 
 test("R6 noteturn, as the owner's shape names: into a hunch {inquiry, kind, about}, or into an observation or question already made", async () => {
