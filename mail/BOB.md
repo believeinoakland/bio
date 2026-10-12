@@ -555,3 +555,11 @@ T47's opening hand-off to the design stream (plan T47 "BOB's acts"; K3027). Noth
 **Words T47 will need** (each module holds its own meanwhile, as in T46): the screens of `screens-wizards`, `screens-investigate`, `screens-publish`, `screens-action` (`screen.<id>.<part>`); help and refusals for T47's new ops as they are named (project questions read, drawing a question into a project, a project's own bar, severing and reinstating a question's own leg, the set-aside documents list, "Ask for this later", turning watching on from Add, a knock's source read); `SETTING_INVALID` (record-core), file-safety's new unreadable-queue code (C-140), the `untested` mark on writing help on a test instance.
 
 When a DEC settles any of these, a HANDOFF back names it and BOB folds it with a K (§13.1 item 5).
+
+## B157 · HANDOFF · 2026-10-12 · session_01UBLCpdUsHtrooH5Ji41yu4 · primary
+T47's L11 fold (K3041) found four `registry.json` corrections; interface-shell R28 re-points them meanwhile, so nothing blocks a job:
+1. `capture`'s monitor act: the act that turns watching on is `monitorset` (monitoring R74, new in T47); `monitor` runs one check (N978).
+2. The project's own bar: `projectbarset` (strength R40, new), in place of `strengthbarset`, which sets the group's bar (N976).
+3. Drawing a question into a project: `drawquestion` (citation R14, new), after `promote`.
+4. Spot-check: `spotcheckvisit` after `testify`.
+Words T47 will need beyond B156: monitoring's C-18.20 `MACHINE_CANNOT_SET_MONITORING` and C-18.21 `MONITOR_SET_REFUSED`, strength's C-107.4 `PROJECT_BAR_NO_REASON`, file-safety's C-140.43 `RENDER_QUEUE_UNREADABLE`, record-core's C-102.33 `SETTING_NOT_JSON`, credentials' C-29.41 `AI_RUN_CREDENTIAL_MALFORMED` (translations held by each module meanwhile). Screens with no design yet: the registry's `help` (spot-check help); places and offices and recovery codes in the working frame (N997).
