@@ -17,3 +17,7 @@ Merge order in L6: hypotheses, steps, run-rules, ai-runs, reading-guides, skills
 ## B2 · ANSWER · re J1
 
 K2947: (1) your reading is ruled: no new credential shape; ai-runs hands the member's own presented `aik-` credential (the door forwards it in process; nothing minted) with account {kind: signin, level: member, member, suggestions: boolean}, no secret; R80 met by your tests as you describe, plus confirm R10 reads principal.ref. (2) and (3) accepted as stated.
+
+## B3 · CHANGE
+
+K2951: reading-guides, agent-model (R15: a sign-in picture relayed once the runner's /version lists capabilities "image") and agent-runner (R24, R5's capabilities) are merged into tranche/T46. Merge tranche/T46 into your branch. Your R45 bundle-freshness tests are red until BOB regenerates your bundle at L6's close (accepted by name, K2951).
