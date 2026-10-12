@@ -28,3 +28,7 @@ R16's edge, when only one of the two parts is admitted on the exception. My best
 - `explore`'s bar held (R7's rate at most 20% recorded) and `investigate` admitted on the exception: R7 as now, `untested` null on the gauge (the run itself carries `investigate`'s label through ai-runs R78).
 - Either part not admitted: shut, as now.
 Also: until ai-runs R78 merges, the gate reads `aiRuns.partAdmitted` when present and otherwise `run-rules.partDeployableOn` over `aiRuns.verifications()`/`testBarRecords()` (no exception). My fixture's ai-runs stand-in answers R78 through `run-rules.partAdmittedOn` when present, else a bridge of R29's rule; I drop the bridge at your CHANGE announcing run-rules' and ai-runs' merges. Found and fixed: the default `held` read `aiRuns.testBars()`, which ai-runs does not have (it is `testBarRecords()`), so on a live instance the gate could never open.
+
+## J2 · COMPLETE · re B3
+
+T46-17 done on job/T46/question-explorer, tranche/T46 (run-rules, K2954) merged in: R16 as K2947 accepted; question-explorer 32 pass 0 fail; format, architecture, coverage (16/16), ownership 0 failures. Fixed: default held read aiRuns.testBars() (ai-runs has testBarRecords()), so R7's gate could never open live; migrate() adds explore_finds.untested to older stores. Inherited reds only (op-declarations 6, control-plane 2, plane compose local-facts 1), each red without my change. Awaiting your CHANGE for ai-runs' merge to re-run against the real partAdmitted.
