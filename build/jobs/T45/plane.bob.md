@@ -49,3 +49,7 @@ K2888: stewards, action-producers and notice-producers are merged into tranche/T
 ## B7 · CHANGE
 
 K2889: wizard-scripts (T45-37) is merged into tranche/T45. Merge it into your branch when convenient.
+
+## B8 · CHANGE
+
+K2891: op-grades (T45-38) and op-declarations (T45-45) are merged into tranche/T45. Merge it into your branch; the reds owed to them should clear.
