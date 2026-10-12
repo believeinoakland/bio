@@ -26,3 +26,7 @@
 - No generated artifact was touched. The plane bundle includes this module's source, so it is stale until L11's close regenerates it.
 
 Size (session_01SxeNT2u2jzZVk4x8bDxKJA): test runs 9, module lines 1435
+
+## J1 · REPORT
+
+Two findings outside my module, from T45-42 (full text in my record, Completion). (1) action-clocks R17 / action-producers R1: a clock entry with noticed_by raises no action-clock-overdue because R5's Noticed item replaces it. But R17 sets noticed_by without reading following.dutyWatchEnd. Once a plan's watch on the duty ends, R5 draws no item and the clock item is still held back, so the overdue fact reaches nobody. (2) R5 as written: a possibly-overdue occurrence already told between its candidates leaves when a stop's end day falls before its latest candidate. I built it as written. queue R16 (a FINDING leaves only by disposition) may want it kept: yours to rule. Also, not mine: conclude-project and 8 plane tests are red from queue-producers (holdsDue is not a function) and other modules' route maps. Same red without my change.
