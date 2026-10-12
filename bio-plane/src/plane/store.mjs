@@ -7,6 +7,10 @@
 import { DurableObject } from "cloudflare:workers";
 import { actionsOf, actionsOps } from "../actions/index.mjs";
 import { actionClocksOf, actionClocksOps } from "../action-clocks/index.mjs";
+import { actionHoldsOf, actionHoldsOps } from "../action-holds/index.mjs";
+import { actionRepliesOf, actionRepliesOps } from "../action-replies/index.mjs";
+import { planWorkOf, planWorkOps } from "../plan-work/index.mjs";
+import { caseCheckOf, caseCheckOps } from "../case-check/index.mjs";
 import { localFactsOf, localFactsOps } from "../local-facts/index.mjs";
 import { filingTemplatesOf, filingTemplatesOps } from "../filing-templates/index.mjs";
 import { standardsOf, standardsOps } from "../standards/index.mjs";
@@ -278,7 +282,19 @@ export class Store extends DurableObject {
        before the scheduler's default owner first reaches it (R30). It is handed to case-authoring (its R58) and to queue
        for queue-producers R37 (below); the scheduler's `scheduled-publish` reaches the same instance (its R22). */
     const publishSchedule = ratificationOf(ctx).publishSchedule;
+    /* K1654 (P8, T45): conformance, with the seeded offices' read, before actions: actions' constructor reaches
+       conformance (`void a.conformance`) and a factory reads its deps on its first call only, so built after actions it
+       never received `officeEntityOf`. Its registrations rank by the modules' total order, never construction order. */
+    const conformance = conformanceOf(ctx, { officeEntityOf: offices.officeEntityOf });
+    /* R39 (K2849; actions R97): actions, with this environment, registers its own-act reader with consequences (its
+       R19) and its own-sending check with standards (its R53), once each, at its creation. */
     actionsOf(ctx, { env });
+    /* R39, R14 (T45; K2781 (1), K2815; reconciliation R19): action-holds, directly after actions in the modules' order,
+       the one instance per host. At creation it makes and declares its tables (its R13) and registers its
+       litigation-hold reader with doorbell (its R4; doorbell R3) and, handed this environment, its reader of holds over
+       a project with ratification (its R10; ratification R45), each once; actions no longer makes either. Its
+       `purgeHeld` (its R9) is the reader store-door's door is handed (R14). */
+    const actionHolds = actionHoldsOf(ctx, { env });
     retrieval.registerLegGrades("inquiry", inquiryLegGrades(ctx));   /* R10 (K861): inquiry's leg grades (its R52, retrieval R55) */
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
     strengthOf(ctx, { retrieval, acceptedWork });   /* strength: registers its pair (R17), its cache projection (R13) and, with retrieval, the cache's fields (R23) */
@@ -323,21 +339,38 @@ export class Store extends DurableObject {
        running run's principal reaches `planPropose` and `claimFindStep`'s run arm. */
     investigationOf(ctx, { promotion }).registerRunHolder("ai-runs", (by, run) => aiRunsOf(ctx, env).runHolder(by, run));
     caseAuthoringOf(ctx, { publishSchedule });   /* R18: its disclosures, with their attestation, are case-disclosures' (built above) */
+    /* R39 (T45; K2839): case-check, last in layer 8 (after review), the one instance per host, over case-authoring,
+       publication and case-carriage on this host; at creation it makes and declares its table (its R4). */
+    const caseCheck = caseCheckOf(ctx);
     /* layer 9, in the modules' order, each registering at start what its factory registers (checks, projections,
        purge, filings' evidence block). standards creates its own tables at construction. R11 (K921): local-facts heads
        the layer, creating its table and declaring it to purge (record-core K23). */
-    /* K1654: conformance names an office's entity through the seeded offices (instance-setup R50). */
-    const conformance = conformanceOf(ctx, { officeEntityOf: offices.officeEntityOf });
+    /* K1654: conformance names an office's entity through the seeded offices (instance-setup R50); built above, before
+       actions. */
     const consequences = consequencesModule(ctx, { conformance });
-    actionClocksOf(ctx);   /* action-clocks (K704): after actions, which it reads and which joins the host first (its R9) */
+    /* action-clocks (K704): after actions, which it reads and which joins the host first (its R9). R39 (T45): at creation
+       it registers its due holder with steps (its R16, steps R29), once. */
+    actionClocksOf(ctx);
+    /* R39 (T45; K2781 (1)): action-replies, directly after action-clocks, the one instance per host; handed this
+       environment, it registers its open-requests source with case-authoring (built above; its R3, case-authoring R70),
+       once, and makes and declares its tables (its R4). */
+    actionRepliesOf(ctx, { env });
     /* R11 (K921): filing-templates, after action-clocks and before filings: it creates its tables, declares them to purge
        (record-core K23), registers its opaque ids' seed and takes the library `filings` R26 kept (its migration). */
     const filingTemplates = filingTemplatesOf(ctx);
-    filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences, attestation });
+    /* R39 (K2858): filings handed the plane's one action-holds instance, the project roster (migrated in R3's pass,
+       so its second-approval read sees the roster), case-check and accepted-work. */
+    filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences, attestation,
+                     actionHolds, projectRoster: projectRosterOf(ctx), caseCheck, acceptedWork });
     escalationOf(ctx);   /* on this host, it reaches conformance, consequences, actions and filings through their factories */
     /* action-plans (K711): built before any route can run, so ai-runs holds its plan-mode open check (its R30) when the
        first `airunopen` arrives; built lazily, that open is refused AI_RUN_MODE_UNCHECKED. */
     actionPlansOf(ctx);
+    /* R39 (T45; K2781 (1)): plan-work, directly after action-plans, the one instance per host, handed the plane's
+       action-holds and ai-runs; at creation it makes and declares its tables and registers its closing summary with
+       action-plans (its R7, action-plans R44) and its re-examination with actions (`registerResponseListener`, its R10,
+       actions R95), once each. following's watch reader is registered with it when following is built (below). */
+    planWorkOf(ctx, { actionHolds, aiRuns: aiRunsOf(ctx, env) });
     const capture = captureOf(ctx, { env, attestation });   /* the acquisition act signs its receipt through `cap.attestation` */
     /* R37 (T42; N826; K2607 rule 3, K2629, K2630; doorbell R25): doorbell, directly after capture in the modules' order,
        the one instance per host (actions' factory may have reached it first for its hold reader, actions R55); it takes no
@@ -377,7 +410,11 @@ export class Store extends DurableObject {
     linkSweepOf(ctx, { monitoring, captureRequests, capture });
     /* R21 (T33-79): following, after monitoring whose sweep host it reads, built before the scheduler reaches it
        (scheduler R21's `follow` consumer and its `onFollowed` notice). */
-    followingOf(ctx, { monitoring, events, entities: entitiesOf(ctx), capture });
+    /* R39 (K2874): handed the plane's own instances it reads (action-plans, plan-work, duties, answers, standards), so
+       none is built bare by its lazy getters; at creation it registers its watch reader with plan-work (its R26,
+       plan-work R9), once. */
+    followingOf(ctx, { monitoring, events, entities: entitiesOf(ctx), capture, actionPlans: actionPlansOf(ctx),
+                       planWork: planWorkOf(ctx), duties, answers: answersOf(ctx), standards });
     /* R19 (N528; DEC-120, DEC-121): wizard-scripts, first in layer 11, built here before every layer-11 reader
        (affordances, queue-producers, control-plane). At creation it creates its tables, declares them to purge (K23) and
        registers its ids' seed; it is then registered, once and before the first request, with the bundle's screens and
@@ -519,12 +556,19 @@ export class Store extends DurableObject {
     ratificationOf(this.ctx).publishSchedule.migrate();
     docketOf(this.ctx).migrate();   /* R15: its tables, in the modules' order (directly after publication) */
     caseImportOf(this.ctx).migrate();   /* R17: its tables, in the modules' order (after ratification and case-checker) */
+    caseCheckOf(this.ctx).migrate();   /* R39 (T45): `case_checks`, last in layer 8 (idempotent) */
     networkNoticesOf(this.ctx).migrate();   /* its tables, in the modules' order (after project-stage) */
     /* R11 (K921): layer 9's two new modules, in the modules' order: local-facts' table, then filing-templates' tables
        and its take of the library `filings` R26 kept (a template already taken is passed over). */
     localFactsOf(this.ctx).migrate();
     filingTemplatesOf(this.ctx).migrate();
     filingTemplatesOf(this.ctx).migrateFromFilings();
+    /* R39 (T45; K2781 (1)): layer 9's three new modules' tables, in the modules' order (each made at creation too;
+       idempotent): action-holds' (after actions), action-replies' (after action-clocks), plan-work's (after
+       action-plans). */
+    actionHoldsOf(this.ctx).migrate();
+    actionRepliesOf(this.ctx).migrate();
+    planWorkOf(this.ctx).migrate();
     wizardScriptsOf(this.ctx).migrate();   /* R19: its tables, in the modules' order (first in layer 11) */
 
     addColumns();   /* REC-143: the second pass */
@@ -548,10 +592,11 @@ export class Store extends DurableObject {
 
   /* R1, R5: every store request passes store-door's one frame (K2043). R14 (DEC-113; control-plane R46): it is handed the
      object's namespace, R2's own name (`bio` or `scratch`, else `bio`, so an object whose name is unknown is the real
-     record's and fails closed), and `actions`' `purgeHeld` (its R60) on this storage, each asked at the purge only. */
+     record's and fails closed), and `action-holds`' `purgeHeld` (its R9, was `actions` R60; T45, K2781 (1)) on the one
+     instance R39 builds, each asked at the purge only. */
   async fetch(req) {
     return dispatch(req, { routes: (url, body, grant) => this.routes(url, body, grant), membership: () => membershipOf(this.ctx),
-      namespace: () => this.#ownNamespace() || "bio", purgeHeld: (q) => actionsOf(this.ctx).purgeHeld(q),
+      namespace: () => this.#ownNamespace() || "bio", purgeHeld: (q) => actionHoldsOf(this.ctx).purgeHeld(q),
       /* B5 (K1685; answers R1, R2): a read served under a grant is recorded in this object's read log, scrubbed. R33
          (K2500; answers R30, store-door R11): under a grant this object's draft path minted, with `use: "draft"`, so the
          rows of projects kept away from drafts are removed before the log records them; else the entry's own use. */
@@ -676,7 +721,12 @@ export class Store extends DurableObject {
       ...answersOps(answersOf(ctx), url, body),   /* R21 (K1609) */
       ...retrievalRoutes(retrievalOf(ctx), url, body),
       ...actionsOps(actionsOf(ctx), url, body),
+      /* R39 (T45): action-holds' ops (`actionpressure`, `actionhold`, `actionholdrelease`, `actionholdpreview`,
+         `projectholds`, `holdnoticesent`, `pressurerecord`), directly after actions', over the one instance R39 builds. */
+      ...actionHoldsOps(actionHoldsOf(ctx), url, body),
       ...actionClocksOps(actionClocksOf(ctx), url, body),
+      /* R39 (T45): action-replies' ops (`actionreplybearing`, `actionbearingpropose`, `arosefrom`), after action-clocks'. */
+      ...actionRepliesOps(actionRepliesOf(ctx), url, body),
       ...localFactsOps(localFactsOf(ctx), url, body),   /* R11 (K921) */
       ...standardsOps(standardsOf(ctx), url, body),
       ...conformanceOps(conformanceOf(ctx), url, body),
@@ -685,11 +735,14 @@ export class Store extends DurableObject {
       /* R11 (K921): after filings', so `op=templates`, in both maps until filings drops its arm, is filing-templates' (K991). */
       ...filingTemplatesOps(filingTemplatesOf(ctx), url, body),
       ...actionPlansOps(actionPlansOf(ctx), url, body),   /* `optionpropose` answers a promise, which the frame awaits */
+      ...planWorkOps(planWorkOf(ctx), url, body),   /* R39 (T45): plan-work's ops, directly after action-plans' */
       ...escalationOps(escalationOf(ctx), url, body),
       ...monitoringOps(monitoringOf(ctx), url, body),
       ...linkSweepOps(linkSweepOf(ctx), url),   /* `sweeps` (link-sweep R9), at the place monitoring's map held it (N506) */
       ...followingOps(followingOf(ctx), url, body),   /* R21 (T33-79) */
       ...reviewOps(reviewOf(ctx), url, body),
+      /* R39 (T45; K2839): case-check's `publishcheck` (graded as publish) and `casecheck`, after review's map. */
+      ...caseCheckOps(caseCheckOf(ctx), url, body),
       ...wizardScriptsOps(wizardScriptsOf(ctx), url, body),   /* R19 (N528): the wizard scripts' ops, layer 11 */
       ...instanceSetupOps(instanceSetupOf(ctx, env), url, body),
       /* K2044, K2054 (admission R21): the Worker's count of a request to a public op, `doorwindow`, store-internal */
