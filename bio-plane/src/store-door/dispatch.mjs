@@ -77,6 +77,13 @@ export const PROJECT_NAMING_READS = Object.freeze({
   publishpreflight: ["project"],
   /* R45 (network-notices R22): a project's notices name the project by its own id and answer by the caller's sight. */
   notices: ["project"],
+  /* T45-50 (K2891): T45's reads whose parameters carry a bundle id. A success record's listing names its project (or a
+     plan); plan-work's reads name a plan (a `PLN-` record object); `cures` a determination; `openitemswith` and
+     `templatesforaction` an action. Each owner answers its own sight after the door. */
+  successrecords: ["project", "plan"], cures: ["determination"], openitemswith: ["action"], templatesforaction: ["action"],
+  matters: ["plan"], plantimeline: ["plan"], planreviewopen: ["plan"], planreviews: ["plan"], prepitems: ["plan"],
+  plancomments: ["plan"], whereitstands: ["plan"], statusreportdraft: ["plan"], statusreports: ["plan"],
+  matterpromiseduties: ["plan"],
 });
 export const PROJECT_NAMING_READS_NOT = Object.freeze({
   content: "`id` is a content row's fixed key, hash(capture, extent, chain) — never a bundle id",
@@ -150,6 +157,15 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   scanfindings: "`after` is a cursor over file-safety's FINDING notes and `limit` a count, never a bundle id (file-safety R15)",
   findingkind: "`name` is a scanner's FINDING name, explained from the name alone, never a bundle id (file-safety R38)",
   securitytoolevents: "`after` is a cursor over the security tools' EVENTS and `limit` a count, never a bundle id (file-safety R31)",
+  /* T45-50 (K2891): T45's reads whose parameters carry no bundle id. */
+  watchquestions: "`after` is a cursor over the due watch QUESTIONS and `limit` a count, never a bundle id (following R24)",
+  dutiesarising: "`captures` are CAPTUREs' digests and `as_of` a date, never a bundle id (duties R31)",
+  procedureguides: "`kind` is a KIND of action, never a bundle id (reading-guides R13)",
+  successread: "`id` is a SUCCESS RECORD's id — a row inside a project, whose existence is contents (consequences R20)",
+  casecheck: "`case` is a CASE id, `edition` one of its editions and `check` a CHECK id, answered by the case's own fence "
+    + "(case-check R2)",
+  ruleoffer: "`rule` is a GROUP RULE's id, never a bundle id (local-facts R13)",
+  grouprules: "`section` is a profile's SECTION name, never a bundle id (local-facts R12)",
 });
 
 /* R2 (REC-196): the answer for a read naming a discoverable project's own id, asked by a caller at EXISTENCE: C-70.1
