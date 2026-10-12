@@ -1,6 +1,6 @@
 # BOB to action-producers (T46)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,11 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 589 KB with your tests, within the 600 KB limit: read it all whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, notice-producers, setup-words, instance-setup, setup-page (after instance-setup, doubt 14), op-declarations, answer-envelope, interface-assets, interface-shell, screens-settings, screens-intake, screens-daily, screens-inquiry, control-plane, installer, stewards, plane last. A provider merges before its users; a job that uses an L11 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L11 job may merge as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+All three readings accepted (K2996): (1) R1's group arm reads `.ours.summary` by key and keeps its present detail; (2) `.summary` by key, the detail kept; both until N968 (T47: the providers answer venue, recurrence and last review). No new Uses edge. (3) canon's "Noticed: no reply recorded by {date}" unchanged. Your note on action-holds R14's retirement is recorded.
+
+## B3 · CHANGE
+
+CHANGE (K3000), re-opening the job: SCREENS-DAILY #1 reports that action-clocks' `reminderSet`/`reminderAnswer` store `set_by` as `member:<id>` (control-plane stamps `author` so), while your `action-reminder` producer keeps an item only when `x.set_by === me`, `me` the queue's bare member stamp (index.mjs:655), and your tests use bare fakes. Verify with a test through the real action-clocks; if real, compare both forms (one helper), with a control, and record completion again. Merge `tranche/T46` first.

@@ -26,6 +26,9 @@
 import { WIZARD_HTML, UPDATE_HTML, PAGE_CSS, PRODUCT, publisherFooter, PROFILE_CHOICES, ASSISTANT_OFFER, SECURITY_TOOLS } from "./ui.mjs";
 import { RELEASE_SOURCE, RELEASE_VERSION } from "./release.mjs";
 import { ARMED_SIGNERS } from "./signers.mjs";
+/* R38, R23 (T46): whether a container image can be pulled, and what your group's Civicsmith lacks without it; held once
+   for this fleet step and the pages. */
+import { imageWhy, lacksOf } from "./images.mjs";
 /* One verifier, shared with the plane. The installer and the instance
    agree on what a valid signature is because they run the same code. */
 import { verifySshsig, NS_RELEASE, NS_FLEET, fleetStatement } from "../../bio-plane/src/sshsig.mjs";
@@ -737,12 +740,12 @@ async function uploadMember(token, acct, slug, m, version, bundle, partBytes, ex
  * leaves that one member out by name (R11's rule).
  *
  * It installs only when all of these hold: the permission granted carries the Containers write scope (R2), the account
- * is on Workers Paid (R6), and every descriptor names a public registry image pinned by digest under the default
- * scheduling policy (the Cloudflare registry is the `durable_object` policy's, which this installer never uses). Then:
+ * is on Workers Paid (R6), and every descriptor names an image the default scheduling policy can pull, pinned by digest
+ * (images.mjs; T46: one it cannot pull is named "not yet published where your Cloudflare account can pull it"). Then:
  * the Worker is uploaded (with its classes' migration when the script is new, and bound to each class it reaches
  * itself), the Containers application of each class is created for that class's namespace with its image, or, when it
  * exists, rolled out to the image; and each other member a descriptor names is uploaded with a cross-script binding to
- * the class. Any condition failing leaves the member out, named with what the copy then lacks (CONTAINER_LACKS): the
+ * the class. Any condition failing leaves the member out, named with what the copy then lacks (images.mjs, CONTAINER_LACKS): the
  * install never fails over it. The Containers API calls are wrangler's own (`/accounts/<id>/containers/applications`,
  * `…/rollouts`); like the install's SELF binding, they are confirmed only by a real install, which is deploy-gated. */
 export const CONTAINER_PART = "Container";
@@ -755,19 +758,9 @@ export const CONTAINER_PART = "Container";
 export const WORKER_PART = "Worker";
 const DESCRIPTOR_PARTS = new Set([CONTAINER_PART, WORKER_PART]);
 const containerPartsOf = (m) => (m.parts || []).filter((pp) => pp.type === CONTAINER_PART);
-/* Public registries the default policy pulls from: Docker Hub, Amazon ECR, Google Artifact Registry. */
-const PUBLIC_IMAGE = /^(?:docker\.io|registry-1\.docker\.io|[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com|[a-z0-9-]+-docker\.pkg\.dev)\/[a-z0-9._/-]+@sha256:[0-9a-f]{64}$/;
 const CLASS_NAME = /^[A-Za-z_$][A-Za-z0-9_$]{0,63}$/;
 const BINDING_NAME = /^[A-Z][A-Z0-9_]{0,63}$/;
 const CLASS_PATH = /^container\/([A-Za-z_$][A-Za-z0-9_$]{0,63})\.json$/;
-
-/* R38 (T36): what the copy lacks while a container member is left out, said beside its reason. */
-const CONTAINER_LACKS = Object.freeze({
-  "agent-runner": "your group's Civicsmith offers the assistant only through an API key (a member's own, or your group's) until it is installed",
-  "file-scanner": "your group's Civicsmith has no file scanner and no safe view until it is installed: files are kept and shown but not "
-    + "scanned, and a high-risk file opens only in its safe view once one can be made",
-});
-const lacksOf = (member) => CONTAINER_LACKS[member] || "what it provides is missing from your group's Civicsmith until it is installed";
 
 /* The descriptor, read and checked; `{ok: true, d}` or `{ok: false, why}` in words. */
 export function containerDescriptor(bytes) {
@@ -775,8 +768,9 @@ export function containerDescriptor(bytes) {
   try { d = JSON.parse(new TextDecoder().decode(bytes)); } catch { return { ok: false, why: "its container description does not parse" }; }
   if (!d || typeof d !== "object" || Array.isArray(d)) return { ok: false, why: "its container description is not an object" };
   if (typeof d.class_name !== "string" || !CLASS_NAME.test(d.class_name)) return { ok: false, why: "its container description names no class" };
-  if (typeof d.image !== "string" || !PUBLIC_IMAGE.test(d.image))
-    return { ok: false, why: "its image is not a public registry image pinned by its sha256 digest" };
+  /* R38 (T46): an image the account cannot pull, or one not pinned by digest, is said in words a group can read. */
+  const imageNot = imageWhy(d.image);
+  if (imageNot) return { ok: false, why: imageNot };
   if (d.scheduling_policy !== "default") return { ok: false, why: "its scheduling policy is not the default one" };
   if (!Number.isInteger(d.max_instances) || d.max_instances < 1 || d.max_instances > 1000)
     return { ok: false, why: "its container description states no maximum number of instances" };

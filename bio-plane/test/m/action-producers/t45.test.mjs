@@ -7,7 +7,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso, page, ofKind, DAY, day } from "./world.mjs";
-import { ACTION_WORDS, WORDS_OWED } from "../../../src/action-producers/index.mjs";
+import { ACTION_WORDS, WORDS_CANON } from "../../../src/action-producers/index.mjs";
+import { WORD, FILLED } from "./words.mjs";
 
 /* ada an administrator; alice, bob, carl members; olga owns PRJ-1 (alice, bob, carl joined); PRJ-2 owned by olga too;
    PRJ-H hidden from everyone but its owner hank. */
@@ -79,7 +80,7 @@ test("R1 (T45): one item per fact: an entry an adopted duty's Noticed item stand
   assert.deepEqual(m["CONDITION::action-clock-overdue::ACT-1::2"].subject.steps, []);
 });
 
-test("R1 (T45; v0.2 rule 6): the words by basis, read by key: the addressee's date is canon's question; the group's own and the other side's stated dates have their own keys; none says overdue, violation or legal", () => {
+test("R1 (T45; v0.2 rule 6), R23: the words by basis, read by key: the addressee's date is canon's question; the group's own and the other side's stated dates read words.json's keys; none says overdue, violation or legal", () => {
   const w = people({ actionClocks: { overdueClocks: () => page([
     entry({ ord: 0, date: "2026-08-25", owed_by: "body" }),
     entry({ ord: 1, owed_by: "undetermined" }),
@@ -88,21 +89,27 @@ test("R1 (T45; v0.2 rule 6): the words by basis, read by key: the addressee's da
   const m = byId(w.read("alice"));
   const at = (n) => m[`CONDITION::action-clock-overdue::ACT-1::${n}`];
   assert.equal(at(0).summary_key, "queue.action-clock-overdue.noreply");
-  assert.equal(at(0).summary, "Noticed: no reply recorded by 25 August", "canon's own words (v0.2 rule 6)");
+  assert.equal(at(0).summary, "Noticed: no reply recorded by 25 August", "canon's own words (v0.2 rule 6), unchanged (R23)");
   assert.equal(ACTION_WORDS["queue.action-clock-overdue.noreply"], "Noticed: no reply recorded by {date}");
+  assert.deepEqual([...WORDS_CANON], ["queue.action-clock-overdue.noreply"], "the one key held apart from words.json, named");
   assert.equal(at(1).summary_key, "queue.action-clock-overdue.noreply", "an entry whose owner is not stated reads as canon's question");
-  assert.equal(at(2).summary_key, "queue.action-clock-overdue.ours");
-  assert.equal(at(3).summary_key, "queue.action-clock-overdue.theirs");
+  /* R23: the group's own date and the other side's stated date, each its key's words filled, never a copy */
+  assert.equal(at(2).summary_key, "queue.action-clock-overdue.ours.summary");
+  assert.equal(at(2).summary, FILLED("queue.action-clock-overdue.ours.summary", { what: "file the reply brief" }));
+  assert.equal(at(2).summary, "Our deadline passed: file the reply brief");
+  assert.equal(at(3).summary_key, "queue.action-clock-overdue.theirs.summary");
+  assert.equal(at(3).summary, FILLED("queue.action-clock-overdue.theirs.summary", { what: "their date" }));
+  /* control: the interim keys are gone, and canon's question is no other key's sentence */
+  assert.equal(ACTION_WORDS["queue.action-clock-overdue.ours"], undefined);
+  assert.notEqual(at(0).summary, at(2).summary);
+  /* the kept details answer no detail_key (R23: returned to BOB) */
+  for (const n of [0, 1, 2, 3]) assert.equal("detail_key" in at(n), false, at(n).id);
   for (const n of [0, 1, 2, 3]) {
     const it = at(n);
-    assert.equal(it.summary, ACTION_WORDS[it.summary_key].replace("{date}", it.summary.match(/\d+ \w+( \d{4})?$/)[0])
-      .replace("{text}", it.subject.text), `${it.id}: its summary is its key's sentence`);
     for (const s of [it.summary, it.detail]) assert.doesNotMatch(s, /\b(overdue|violat\w*)\b/i, `${it.id}: "${s}"`);
     assert.equal(it.class, "CONDITION");
   }
   for (const s of [at(3).summary, at(3).detail]) assert.doesNotMatch(s, /\blegal\b|\blaw\b/i, "a stated date is never called a legal one");
-  assert.deepEqual([...WORDS_OWED].sort(), ["queue.action-clock-overdue.ours", "queue.action-clock-overdue.theirs"],
-    "the two sentences owed to the design stream are named");
   /* control: the check catches the word it forbids */
   assert.match("the date is overdue", /\b(overdue|violat\w*)\b/i);
 });
@@ -376,7 +383,7 @@ const KINDS = ["action-clock-overdue", "plan-checkpoint-due", "escalation-stage-
 test("R11: each Action-layer kind's options lead with its doors, in order, before queue's acts; a kind outside R11 (R8's finding) has none of them; nothing offers to mark it resolved", () => {
   const r = everyKind().read("alice");
   const DOORS = {
-    "action-clock-overdue": ["actioncorrespond", "itemtakeup"], "plan-checkpoint-due": ["checkpointrecord", "itemtakeup"],
+    "action-clock-overdue": ["actioncorrespond", "promote", "itemtakeup"], "plan-checkpoint-due": ["checkpointrecord", "itemtakeup"],
     "escalation-stage-proposed": ["escalationadvance", "escalationdecline", "itemtakeup"], "action-reminder": ["reminderanswer"],
     "local-fact-due": ["factconfirm"], "member-left-items": ["itemtakeup"], "watch-keep-or-stop": ["watchanswer"],
     "plan-review-due": ["planreviewrecord"], "plan-look-again": ["planreviewrecord", "planresume"] };
@@ -390,10 +397,11 @@ test("R11: each Action-layer kind's options lead with its doors, in order, befor
   for (const it of holds) assert.equal(it.options[0].id, "actionhold", it.id);
   assert.equal(byId(r)["CONDITION::action-clock-overdue::ACT-1::0"].options[0].id, "actioncorrespond", "R1's item offers actioncorrespond first");
   /* the doors are plain acts, decorated by queue (its R17) */
-  for (const o of byId(r)["CONDITION::action-clock-overdue::ACT-1::0"].options.slice(0, 2)) assert.deepEqual(Object.keys(o).sort(), ["id", "label", "weight"]);
+  for (const o of byId(r)["CONDITION::action-clock-overdue::ACT-1::0"].options.slice(0, 3))
+    assert.deepEqual(Object.keys(o).filter((k) => k !== "revision").sort(), ["id", "label", "weight"], `${o.id}: a plain act`);
   /* control: R8's finding, outside R11's list, leads with no door */
   const released = ofKind(r, "litigation-hold-released")[0];
-  const doorIds = new Set(Object.values(DOORS).flat().concat(["actionhold", "actionholdrelease"]));
+  const doorIds = new Set(Object.values(DOORS).flat().concat(["actionhold", "actionholdrelease"]).filter((d) => d !== "promote"));
   assert.ok(released.options.every((o) => !doorIds.has(o.id)), "a kind with no door named has none");
   for (const it of r.items) assert.ok(!it.options.some((o) => /resolve/.test(o.id)), `${it.id}: never "mark resolved"`);
 });
