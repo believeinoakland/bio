@@ -245,6 +245,7 @@ T41's other carried rows enter T46: N559 (T46-53, -59), N672 (T46-54), N673 (T46
 - **M-T46-3**: at T46-14's START, whether `CIVICSMITH_TEST_INSTANCE` survives `deploy.mjs`' `keep_bindings` as the trial assumes.
 - **M-T46-4** (N919): at T46-14's START, whether `agent-worker`'s `/run` takes a member's sign-in principal through the runner; if not, its admission joins T46-19.
 - **M-T46-5** (doubt 9): at T46-13's START, whether `textcheck`, `infractiondraft` and `bearingdraft` are each served end to end once T45's L11 (K2881, K2900) and N917 are in (the study predates them); if all three are, `action_drafts`' flag is set in T46-13's reviewed change.
+- **M-T46-6** (K2946): at T46-62's START, whether `plane/ask.mjs` `draftOnObject` (:290) sends `secret: ref.key` for a sign-in account, which agent-worker's R6 refuses `BAD_ACCOUNT`; if so, T46-62 sends none for a sign-in.
 
 ## For BOB
 
