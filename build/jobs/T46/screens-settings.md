@@ -62,3 +62,7 @@ COMPLETE: T46-55 applied, R1–R10, built to interface-shell R21 as K2996, K2998
 3. `infolevel`/`infolevelset`, `bootstrap`'s `parts` and R65's `DISCLOSURE_DUE` are not served on this branch yet (L11 jobs before me).
 
 Size (session_01V6ChUsecnpQgZeXHEMdaCi): test runs 24, module lines 1031.
+
+## J4 · COMPLETE
+
+COMPLETE after B5 (K3004): tranche/T46 merged (instance-setup, setup-page, answer-envelope, action-producers in). R4's new sub-bullet was already met: connect reads op=bootstrap's parts and offers the subscription sign-in only while signin is present: true (else says it is not installed, or could not be read, and offers the API key); checked against the merged instance-setup's PARTS shape [{part, present}] (setup.mjs:142, :156). Its test now names R4 too (connect.test.mjs). 51 pass, 0 fail. Files and checks as J3. infolevel/infolevelset still not in OPS on the tranche (op-declarations R50 unmerged). Size (session_01V6ChUsecnpQgZeXHEMdaCi): test runs 26, module lines 1031.
