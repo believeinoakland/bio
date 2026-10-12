@@ -105,7 +105,12 @@ test("R18 op=selftest through the Worker: every binding reported, the store's st
   assert.deepEqual([b.status, b.j.ok, b.j.service, b.j.version, b.j.bootstrapConfigured, "memberVersions" in b.j],
                    [200, true, "bio-plane", "test", true, false]);
   const m = await call(mf, "op=bootstrap&members=1");
-  assert.deepEqual(m.j.memberVersions, Object.fromEntries(FLEET_BINDINGS.map(([n, binding]) => [n, { binding, state: "UNBOUND" }])));
+  /* T46 (R17): agent-runner is read through agent-worker's binding, unbound here too */
+  assert.deepEqual(m.j.memberVersions, Object.fromEntries(FLEET_BINDINGS.map(([n, binding]) => [n, n === "agent-runner"
+    ? { binding: "AGENT_WORKER", via: "agent-worker", state: "UNBOUND" } : { binding, state: "UNBOUND" }])));
+  /* T46 (R80, R81): a plane with no test-instance pair and no parts bound */
+  assert.deepEqual([b.j.test_instance, b.j.parts], [false, [{ part: "signin", present: false }, { part: "scanner", present: false },
+                                                            { part: "safe_view", present: false }]]);
 });
 
 test("R19 R18 R17 an instance with no R2 is healthy and declared: selftest ok with both buckets not configured, and livefire's verdict pass with the named 'declared, not silent' assertion, failing nothing", { timeout: 300000 }, async () => {

@@ -29,3 +29,7 @@ All seven readings accepted (K2999). (1) The Store gains `dispatchMemberRun(args
 ## B4 · CHANGE
 
 CHANGE (K3003; P9, from SCREENS-INQUIRY #1 J4 (8)): `aicredentialmint`, `transcribe`, `airunopen` and `airunclose` read `at` from the request body, and the door passes it through, so a session or credential caller can date its own act. Deal with it in your job if you can: strip `at` from the body of a request reaching these ops through the door (any other op reading `at` likewise), unless a caller through the door relies on it; then name it in your requirements' wording by a REPORT or in your COMPLETE. If you cannot, REPORT why and it goes to next.md. Also: wizard-scripts, op-grades and notice-producers are merged.
+
+## B5 · CHANGE
+
+CHANGE (K3004): instance-setup (R79–R81), setup-page, answer-envelope, action-producers, wizard-scripts, op-grades and notice-producers are merged into tranche/T46; op-declarations and affordances are next. Merge tranche/T46.

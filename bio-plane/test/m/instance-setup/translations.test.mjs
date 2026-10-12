@@ -583,6 +583,6 @@ test("R30 every row of this module's table names, in its where, the function tha
   const numbers = Object.values(INSTANCE_SETUP_CHECKS).map((r) => r.check);
   assert.equal(new Set(numbers).size, numbers.length);
   assert.equal(numbers.includes("C-119.5"), false);
-  assert.deepEqual(numbers.filter((n) => /^C-64\.(1[1-9]|2\d)$/.test(n)).length, 16);
+  assert.deepEqual(numbers.filter((n) => /^C-64\.(1[1-9]|2\d)$/.test(n)).length, 18);
   assert.equal(numbers.includes("C-64.18"), false);
 });
