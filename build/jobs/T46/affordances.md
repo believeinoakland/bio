@@ -54,3 +54,27 @@ Also for the record (R52, my reading, no answer needed unless you differ): `cloc
 Also for the record (no answer needed): "the action's escalation" (R52) I read as an escalation of a determination the action rests on (the set R51's open and attach already read), seen by the viewer; and while fixing it I found and fixed a flaw in my own facts — `escalationopen` was offered while an escalation stood `stopped_pursuing`, which `escalationOpen` refuses `ALREADY_OPEN` (escalation R1, R31: a stopped one still stands).
 
 Waiting on your CHANGE for op-grades' merge.
+
+## J5 · COMPLETE
+
+**T46-45 complete** (branch `job/T46/affordances`, `tranche/T46` merged after op-grades' merge, B4).
+
+**Read.** My requirements whole; my code whole (`affordances.mjs`, `affordances/act-help.mjs`, `door.mjs`, `facts.mjs`, `words.mjs`, 2,672 lines); the tests (480 KB) and the used modules' public parts, over the 600 KB limit, through two helpers who read them in full and wrote digests citing each section (K2032, mechanics §17 (3)); I then read in full every test region I changed and the provider sections R52 turns on (escalation R31, R33, R34 and its code; action-clocks R20, R13; filings R50, R42; op-grades R33).
+
+**Entries applied.**
+- **R53** (with K2996, K2999): `ACT_HELP` re-generated from `mock-acts.js` @ 3f40899950, 255 entries in the design's order; T45's owed acts and `infolevelset`, `escalationstoppursuing` under their ops (no `owed_` key held); `escalationreopen`, `textcheck` under their own texts; `handlechange` is `membership`'s `HANDLE_FIXED` translation by reference; the design's `handlechange` text (still a change of handle) not held, named back for the design stream (J1).
+- **R52**: on an action, `escalationstoppursuing` where an escalation of a determination it rests on stands open or suspended, `escalationreopen` where one stopped; `clockadopt` once per standing **dated** proposal (`clockProposalsFor`), each act naming its key as `proposal` (an undated one is refused CLOCK_PROPOSAL_UNDETERMINED, so not offered); `filingsent` only on a draft answered `second_needed: false`; `escalationattach` at stage 7 only where `attachConditions` answers a purpose not refused, the act naming those as `purposes`; an action whose rests-on determination the viewer cannot read is not offered attachment (an unseen attachment may stand there, which no read may name: R34, R16). Machines are withheld all of these through `MACHINE_REFUSALS`.
+- Totality tests re-pinned for T46's ops (`clockproposals`, the escalation pair, `grouprules`); `clockadopt` the one T33 op that is now an act.
+
+**Flaws fixed in my module.** `escalationopen` was offered while an escalation stood `stopped_pursuing`, which `escalationOpen` refuses ALREADY_OPEN (escalation R1, R31) — fixed with a driven control.
+
+**Deferred.** None.
+
+**Found in other modules** (reported): J2 — `op-grades` lacked grades for `infractiondraft`, `bearingdraft`, `advocacycheck`, `advocacychecks`, `grouprules` (now graded, merged); J3 — `clockadopt` out of `NON_ACTS` and into `MACHINE_REFUSALS` (merged, OP-GRADES #8 J4). **Open:** `op-declarations` (T46-51, merging after me) must put `escalationstoppursuing` and `escalationreopen` in `SESSION_OPS` (its R51): until then my plane test "R17: every act the catalogue publishes carries a mode, and none is the machine's" is red, named in J4; and `op-declarations`' own R34 tests (3, the ACT_HELP partition) go red against my new `ACT_HELP` until its K2996/K2999 change lands (its tests, its job). No generated artifact of another module edited; the plane bundle is staled by any merge (rule 5 (4)).
+
+**Tests and checks run.**
+- Module tests: `node --test bio-plane/test/m/affordances/` — 245 tests, 244 pass, 1 fail (R17 above, op-declarations').
+- Users' tests (action-clocks, basis-versions, citation, control-plane, escalation, membership, op-declarations, op-grades, queue, ratification, skills, store-door, wizard-scripts, plane) against `origin/tranche/T46` as baseline: no new red but op-declarations' three R34/R47 ACT_HELP-partition tests (its T46-51 work).
+- `checks/format.mjs` 0 failures; `architecture.mjs bio affordances` 0 failures; `coverage.mjs bio affordances` 37 of 37, 0 failures; `ownership.mjs bio affordances tranche/T46` 0 failures (new files `t46.test.mjs`, `t46-backing.test.mjs`, both under my `tests`); `checks/run.mjs` over the product: architecture 0 failures (coverage's 9 failures are other L11 modules' not-yet-met ids, rule 5 (1)).
+
+Size (session_01ALqCxKN9g4DMrH5R7g4DnX): test runs 22, module lines 2672
