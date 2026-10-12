@@ -46,3 +46,7 @@ ${lines.join("\n")}
 ```
 
 Size (session_01CG8p9bVJ7PuMGv4UzWE2jr): test runs 4, module lines 1512
+
+## J1 · REPORT
+
+From T46-49: (1) build/requirements/setup-words.md (BOB's): R5 is now met but still marked *(not yet met: T46)*, and R1's and R2's own text still states 1,006 rows / 388 protected / 3660c18803, which R5 amends to 1,503 / 549 / 3f40899950. (2) Generated artifact made stale: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs and .bundle.json, not_product) takes setup-words as an input.
