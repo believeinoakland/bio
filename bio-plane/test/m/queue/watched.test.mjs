@@ -61,7 +61,7 @@ function withT31(fakes = {}) {
 }
 const ofKind = (feed, kind) => feed.items.filter((i) => i.kind === kind);
 
-test("R1: each of the seven T31 kinds answers its class, with its one sentence", () => {
+test("R1: each of the eight T31 kinds answers its class, with its one sentence", () => {
   for (const [kind, [cls, says]] of Object.entries(T31)) {
     assert.equal(classOfKind(kind), cls, kind);
     assert.match(VOCAB[cls][kind], says, kind);

@@ -212,7 +212,7 @@ test("R2, R7 (N512; K1193): the list reads attestation's C-89 (`ATTEST_CHECKS`) 
     assert.ok(M.dec49Row(code), code);
 });
 
-test("R2, R7 (N520, N522, N526, N533; K1310, K1331): the list reads accepted-work's C-21.4 and C-21.5 (after inquiry-grammar, before inquiry), case-import's C-130 (after ratification, before case-authoring) and docket's C-129 (after publication and, since T41, directly after publish-schedule, which directly follows publication (R10); before public-read), each in its module's place, and every one of their rows decorates with its own check and words; case-checker holds no family and has no entry; docket's pressure codes are its own (`MACHINE_CANNOT_MARK_DOCKET_PRESSURE` C-129.10, `DOCKET_PRESSURE_MARKED` C-129.12, `DOCKET_PRESSURE_REFUSED` C-129.13), no code is in both docket's and action-grammar's families, and action-grammar's `PRESSURE_MARKED`, `PRESSURE_REFUSED` and `MACHINE_CANNOT_MARK_PRESSURE` keep their own rows (negative control: the list without any of the three files misses its family)", async () => {
+test("R2, R7 (N520, N522, N526, N533; K1310, K1331): the list reads accepted-work's C-21.4 and C-21.5 (after inquiry-grammar, before inquiry), case-import's C-130 (after ratification, before case-authoring) and docket's C-129 (after publication and, since T41, directly after publish-schedule, which directly follows publication (R10); before public-read), each in its module's place, and every one of their rows decorates with its own check and words; case-checker holds no family and has no entry; docket's pressure codes are its own (`MACHINE_CANNOT_MARK_DOCKET_PRESSURE` C-129.10, `DOCKET_PRESSURE_MARKED` C-129.12, `DOCKET_PRESSURE_REFUSED` C-129.13), no code is in both docket's and action-grammar's families, and action-grammar's `PRESSURE_REFUSED` and `MACHINE_CANNOT_MARK_PRESSURE` keep their own rows, `PRESSURE_MARKED` decorating with action-holds' C-149.6 since T45 (K2845, K2859) (negative control: the list without any of the three files misses its family)", async () => {
   const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
   const at = (p) => paths.indexOf(p);
   assert.ok(at("src/inquiry-grammar/checks.mjs") < at("src/accepted-work/checks.mjs") && at("src/accepted-work/checks.mjs") < at("src/inquiry/index.mjs"), paths.join(", "));
@@ -238,8 +238,12 @@ test("R2, R7 (N520, N522, N526, N533; K1310, K1331): the list reads accepted-wor
   const AG = (await import("../../../src/action-grammar/checks.mjs"));
   const agFams = Object.entries(AG).filter(([k, v]) => isFamily(k, v)).map(([, v]) => v);
   const agRow = (code) => agFams.filter((v) => v[code]).map((v) => v[code])[0];
-  for (const code of ["PRESSURE_MARKED", "PRESSURE_REFUSED", "MACHINE_CANNOT_MARK_PRESSURE"])
+  for (const code of ["PRESSURE_REFUSED", "MACHINE_CANNOT_MARK_PRESSURE"])
     assert.deepEqual(M.dec49Row(code), { check: agRow(code).check, translation: agRow(code).translation }, code);
+  /* T45 (K2845, K2859): `PRESSURE_MARKED` moved with its raiser to action-holds' C-149.6; action-grammar holds it no longer */
+  assert.equal(agRow("PRESSURE_MARKED"), undefined);
+  const AH = (await import("../../../src/action-holds/checks.mjs")).ACTION_HOLDS_CHECKS;
+  assert.deepEqual(M.dec49Row("PRESSURE_MARKED"), { check: "C-149.6", translation: AH.PRESSURE_MARKED.translation });
   const DK = (await import("../../../src/docket/checks.mjs")).DOCKET_CHECKS;
   for (const code of Object.keys(DK)) assert.equal(agFams.some((v) => Object.hasOwn(v, code)), false, `${code} is in both docket's and action-grammar's families`);
   for (const code of ["MACHINE_CANNOT_MARK_PRESSURE", "PRESSURE_MARKED", "PRESSURE_REFUSED"])
@@ -248,11 +252,12 @@ test("R2, R7 (N520, N522, N526, N533; K1310, K1331): the list reads accepted-wor
     assert.deepEqual(M.dec49Row(code), { check, translation: DK[code].translation }, code);
 });
 
-test("R2, R7 (N529; K1331, K1333; T38: N788, K2310; T39: N806, K2333; T41: K2428, K2538) .20–.29: the list reads case-disclosures' C-120 (`CASE_DISCLOSURE_CHECKS`) in its module's place (after case-import, directly before case-authoring), every one of its rows (C-120.1–C-120.8, C-120.10–C-120.22; .14–.16 since T33, K1638; .17, .18 since T37, K2227; C-120.19 `PHOTO_UNCHECKED` since T38; C-120.20–.22, a member document's copy, since T39; C-120.23–.29, the account's sentences, since T41, K2538) decorates with its own check and words, C-120.17 `PHOTO_NOT_COVERABLE` and C-120.19 `PHOTO_UNCHECKED` with `words.json`'s `photo.refused.format` and `photo.refused.unchecked` verbatim, C-120.21 `DOCUMENT_COPY_PENDING` and C-120.22 `DOCUMENT_NOT_CLEANABLE` with case-disclosures' `DOCUMENT_WORDS` `document.refused.pending` and `document.refused.clean` verbatim (BOB's drafts until `words.json` holds the keys), case-authoring's file no longer holds them, and C-120.9 is held by no code (negative control: the list without case-disclosures' file misses its family)", async () => {
+test("R2, R7 (N529; K1331, K1333; T38: N788, K2310; T39: N806, K2333; T41: K2428, K2538) .20–.29: the list reads case-disclosures' C-120 (`CASE_DISCLOSURE_CHECKS`) in its module's place (after case-import, directly before case-account since T45, which directly precedes case-authoring), every one of its rows (C-120.1–C-120.8, C-120.10–C-120.22; .14–.16 since T33, K1638; .17, .18 since T37, K2227; C-120.19 `PHOTO_UNCHECKED` since T38; C-120.20–.22, a member document's copy, since T39; C-120.23–.29, the account's sentences, since T41, K2538) decorates with its own check and words, C-120.17 `PHOTO_NOT_COVERABLE` and C-120.19 `PHOTO_UNCHECKED` with `words.json`'s `photo.refused.format` and `photo.refused.unchecked` verbatim, C-120.21 `DOCUMENT_COPY_PENDING` and C-120.22 `DOCUMENT_NOT_CLEANABLE` with case-disclosures' `DOCUMENT_WORDS` `document.refused.pending` and `document.refused.clean` verbatim (BOB's drafts until `words.json` holds the keys), case-authoring's file no longer holds them, and C-120.9 is held by no code (negative control: the list without case-disclosures' file misses its family)", async () => {
   const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
   const path = "src/case-disclosures/checks.mjs";
   assert.ok(paths.indexOf("src/case-import/checks.mjs") < paths.indexOf(path), paths.join(", "));
-  assert.equal(paths.indexOf(path) + 1, paths.indexOf("src/case-authoring/checks.mjs"), paths.join(", "));
+  assert.equal(paths.indexOf(path) + 1, paths.indexOf("src/case-account/checks.mjs"), paths.join(", "));
+  assert.equal(paths.indexOf(path) + 2, paths.indexOf("src/case-authoring/checks.mjs"), paths.join(", "));
   const table = (await import(`../../../${path}`)).CASE_DISCLOSURE_CHECKS;
   assert.deepEqual(Object.values(table).map((r) => r.check).sort((a, b) => Number(a.split(".")[1]) - Number(b.split(".")[1])),
     ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7", "C-120.8", "C-120.10", "C-120.11", "C-120.12", "C-120.13",
@@ -605,4 +610,77 @@ test("R12, R7, R2 (T43; N851, K2609, K2697): CHECK_FAMILY_FILES lists doorbell's
     assert.equal(M.CHECK_FAMILIES.CAPTURE_CHECKS[code], row, code);
   }
   assert.equal(M.dec49Row("EVIDENCE_NOT_HELD").check, "C-118.1");
+});
+
+/* T45's new families (T45-49; K2834): `[path, family, check prefix, module, the file directly before it, the file directly
+   after it]`, each its module's place in `build/modules.json`. action-producers' C-152 joins when its file exists (BOB's
+   CHANGE). */
+const T45_FAMILIES = [
+  ["src/case-account/checks.mjs", "CASE_ACCOUNT_CHECKS", "C-153.", "case-account", "src/case-disclosures/checks.mjs", "src/case-authoring/checks.mjs"],
+  ["src/case-check/checks.mjs", "CASE_CHECK_CHECKS", "C-148.", "case-check", "src/review/checks.mjs", "src/conformance/checks.mjs"],
+  ["src/action-holds/checks.mjs", "ACTION_HOLDS_CHECKS", "C-149.", "action-holds", "src/action-grammar/checks.mjs", "src/action-clocks/checks.mjs"],
+  ["src/action-replies/checks.mjs", "ACTION_REPLY_CHECKS", "C-150.", "action-replies", "src/action-clocks/checks.mjs", "src/filing-templates/checks.mjs"],
+  ["src/plan-work/checks.mjs", "PLAN_WORK_CHECKS", "C-151.", "plan-work", "src/action-plans/checks.mjs", "src/monitoring/checks.mjs"],
+];
+
+test("R7, R2 (T45-49; K2834, K2845, K2859): CHECK_FAMILY_FILES lists T45's new families at their `modules.json` places — case-account's C-153 directly after case-disclosures' and before case-authoring's, case-check's C-148 after review's and before conformance's, action-holds' C-149 after action-grammar's (actions holding no file) and before action-clocks', action-replies' C-150 after action-clocks' and before filing-templates', plan-work's C-151 after action-plans' and before monitoring's — so CHECK_FAMILIES is total again; every one of their codes decorates with its own family's row unless an earlier family holds the code, no later family holds a code one of them decorates, the moved PRESSURE_MARKED and PRESSURE_NO_ENTRY read C-149.6 and C-149.7, and no code decorated without them moves (negative control: the list without any one of the five files misses its family, and the totality test fails)", async () => {
+  const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
+  const at = (p) => paths.indexOf(p);
+  const order = MODULES.map((m) => m.id);
+  const owner = (p) => MODULES.find((m) => (m.paths || []).some((q) => `bio-plane/${p}` === q || `bio-plane/${p}`.startsWith(q)))?.id;
+  /* the catalogue is total with them */
+  assert.deepEqual(await unreached(M.CHECK_FAMILY_FILES), []);
+  const holders = (files, code) => files.flatMap(([, ns]) => Object.entries(ns).filter(([k, v]) => isFamily(k, v) && v[code]?.translation)
+    .map(([, v]) => v[code]));
+  const keptEarlier = [];
+  for (const [path, fam, prefix, id, before, after] of T45_FAMILIES) {
+    /* its place: directly between its neighbours in the list, its module between theirs in `modules.json` */
+    assert.equal(at(before) + 1, at(path), `${path} directly after ${before}: ${paths.join(", ")}`);
+    assert.equal(at(path) + 1, at(after), `${path} directly before ${after}: ${paths.join(", ")}`);
+    assert.equal(owner(path), id, path);
+    assert.ok(order.indexOf(owner(before)) < order.indexOf(id) && order.indexOf(id) < order.indexOf(owner(after)), `${id} in modules.json`);
+    assert.ok(MODULES.find((m) => m.id === "answer-envelope").uses.includes(id), `answer-envelope uses ${id}`);
+    /* the list reads the module's own file, the namespace its index re-exports from */
+    const ns = M.CHECK_FAMILY_FILES[at(path)][1];
+    assert.equal(ns, await import(`../../../${path}`), path);
+    const table = ns[fam];
+    assert.ok(table && Object.keys(table).length >= 1, `${path} ${fam}`);
+    const earlier = M.CHECK_FAMILY_FILES.slice(0, at(path)), later = M.CHECK_FAMILY_FILES.slice(at(path) + 1);
+    for (const [code, row] of Object.entries(table)) {
+      assert.ok(row.check.startsWith(prefix), `${fam}.${code} ${row.check}`);
+      assert.ok(typeof row.translation === "string" && row.translation, code);
+      const first = holders(earlier, code)[0];
+      if (first) {
+        keptEarlier.push(`${path} ${code}`);
+        assert.deepEqual(M.dec49Row(code), { check: first.check ?? null, translation: first.translation }, `${code} keeps the earlier row`);
+      } else {
+        assert.deepEqual(holders(later, code), [], `${code} is also held after ${path}`);
+        assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, `${fam}.${code}`);
+        assert.equal(M.CHECK_FAMILIES[fam][code], row, `${fam}.${code} by identity`);
+        assert.deepEqual(M.dec49Attach({ ok: false, reason: code }), { ok: false, reason: code, code, check: row.check, translation: row.translation }, code);
+      }
+    }
+    /* negative control: the list without its file misses its family */
+    const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
+    assert.ok(missing.includes(`bio-plane/${path} ${fam}`), `without ${path}: ${missing.join(", ")}`);
+  }
+  /* none of T45's codes is held by an earlier family */
+  assert.deepEqual(keptEarlier, []);
+  /* the moved rows (K2845, K2859): action-holds' alone, at their new numbers */
+  for (const [code, check] of [["PRESSURE_MARKED", "C-149.6"], ["PRESSURE_NO_ENTRY", "C-149.7"]]) {
+    assert.equal(M.dec49Row(code).check, check, code);
+    assert.equal(holders(M.CHECK_FAMILY_FILES, code).length, 1, code);
+  }
+  /* no code decorated without the five moves: the list without all five decorates every other code exactly as with them */
+  const five = new Set(T45_FAMILIES.map(([p]) => p));
+  const without = M.CHECK_FAMILY_FILES.filter(([p]) => !five.has(p));
+  const theirs = new Set(T45_FAMILIES.flatMap(([p, f]) => Object.keys(M.CHECK_FAMILY_FILES[at(p)][1][f])));
+  for (const rows of Object.values(M.CHECK_FAMILIES))
+    for (const code of Object.keys(rows)) {
+      const was = holders(without, code)[0];
+      if (was) assert.deepEqual(M.dec49Row(code), { check: was.check ?? null, translation: was.translation }, `${code} moved`);
+      else if (M.dec49Row(code)) assert.ok(theirs.has(code), `${code} decorates only with a T45 family`);
+    }
+  /* negative control: the totality test fails with any one of them left out */
+  for (const [p] of T45_FAMILIES) assert.notDeepEqual(await unreached(M.CHECK_FAMILY_FILES.filter(([q]) => q !== p)), []);
 });

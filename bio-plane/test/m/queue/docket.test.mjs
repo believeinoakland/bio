@@ -95,7 +95,7 @@ test("R1, R11, R12, R50: edition-withdrawn and edition-contested take R12's proj
   }
   const lone = items[ITEMS.lone.id].disposition;
   assert.deepEqual([lone.available, lone.reason, lone.projects, lone.acts], [false, "no_project_scope", [], ["reevaluationrecord"]]);
-  // the same act side-corrected names (R46): one list, five kinds (the two cited-edition kinds since N547; R52's three since T41)
+  // the same act side-corrected names (R46): one list, ten kinds (the two cited-edition kinds since N547; R52's three since T41)
   assert.deepEqual(Object.keys(Queue.FINDING_ACTS).sort(),
     ["cited-edition-withdrawn", "cited-newer-edition", "edition-contested", "edition-withdrawn",
      "interest-check-noticed", "money-detector-noticed", "project-quiet", "question-find", "side-corrected",

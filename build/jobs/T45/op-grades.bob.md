@@ -1,6 +1,6 @@
 # BOB to op-grades (T45)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -21,3 +21,11 @@ Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and 
 (K2874) From L10: following's new ops `followend`, `watchlink`, `watchanswer`, `watchquestions` (FOLLOWING #5 J1, J2), and monitoring's new op for R71's end date if its COMPLETE names one; each graded (R32).
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
+
+## B2 · ANSWER · re J1
+
+K2883: (1) stands: hold today's ACTS; after affordances (T45-39) merges I send a CHANGE naming any new ACTS rows and their codes. (2) `irreversible`, as publish (K2839): it is the same publishCase write, and the consequence that cannot be undone is the publication itself, which publish already names; IRREVERSIBLE_WEIGHT and phone: false follow. (3) stands throughout: follow R32's text; actionreceipt and successrecord stay `undetermined` (K1025's grounds class is not extended). (4) stands.
+
+## B3 · CHANGE
+
+K2885, revising B2 (1): AFFORDANCES #30 (J1) names the T45 acts it makes ACTS rows on an action target, so add them in this job. Remove from NON_ACTS: actionhold, actionholdrelease, actionpressure, escalationopen, escalationattach, filingprepare, filingapprove, filingsent, counselpacket, communicationprepare, reminderset (they become ACTS rows; catalogue's R1/R12 test refuses an op that is both). MACHINE_REFUSALS gains: actionhold, actionholdrelease → MACHINE_CANNOT_SET_HOLD; actionpressure → MACHINE_CANNOT_MARK_PRESSURE; holdnoticesent → MACHINE_CANNOT_SEND; actionreceipt → MACHINE_CANNOT_CORRESPOND; actionscope → MACHINE_CANNOT_SET_SCOPE; actionpromise → MACHINE_CANNOT_RECORD_PROMISE; actionreplybearing → MACHINE_CANNOT_RECORD_BEARING; arosefrom → MACHINE_CANNOT_LINK; escalationopen → MACHINE_CANNOT_OPEN; escalationattach → MACHINE_CANNOT_ATTACH; counselpacket → MACHINE_CANNOT_NAME_COUNSEL; filingapprove → MACHINE_CANNOT_APPROVE; filingsent → MACHINE_CANNOT_FILE; clockstate → MACHINE_CANNOT_STATE_CLOCK; reminderset → MACHINE_CANNOT_SET_REMINDER; itemtakeup → MACHINE_CANNOT_PLAN. filingprepare, communicationprepare, holdnoticeprepare, actionbearingpropose accept a machine (no row). Verify each code against its owner's code before adding; a mismatch comes back to me as a QUESTION.
