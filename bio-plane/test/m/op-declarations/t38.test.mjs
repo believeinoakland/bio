@@ -73,7 +73,7 @@ test("R40 (T38; N788; DEC-183 (2); case-carriage R14): obscuremarkwithdraw — a
   assert.notDeepEqual(plain(OPS.photomarks), plain(OPS[op]));
 });
 
-test("R21 (T38; N788; DEC-183; K2300): on PR #15's registry the owed act obscuremarkwithdraw (the ceremony's Photos step), since T43 (DEC-189 (3)) a declared act, is read as served and declared once under its own name, in case-carriage's family, with no alias; infolevelset stays the one owed act with no spec (negative control: an undeclared owed act is in no table)", () => {
+test("R21 (T38; N788; DEC-183; K2300): on PR #15's registry the owed act obscuremarkwithdraw (the ceremony's Photos step), since T43 (DEC-189 (3)) a declared act, is read as served and declared once under its own name, in case-carriage's family, with no alias; (R52, T46) no owed act is left without a spec, infolevelset R50's (negative control: an undeclared owed act is seen)", () => {
   const owed = owedActs();
   /* T43 (DEC-189 (3); K2704): the registry re-points the owed act to the op R40 declares, a declared act */
   const declared = registry.screens.flatMap((s) => s.acts).filter((a) => a.status === "declared").map((a) => a.op);
@@ -82,9 +82,11 @@ test("R21 (T38; N788; DEC-183; K2300): on PR #15's registry the owed act obscure
   assert.ok(Object.hasOwn(OPS, "obscuremarkwithdraw") && familyOf("obscuremarkwithdraw") === "case-carriage");
   assert.equal(Object.values(OP_FAMILIES).filter((f) => Object.hasOwn(f.kinds, "obscuremarkwithdraw")).length, 1);
   assert.ok(!Object.hasOwn(OP_ALIASES, "obscuremarkwithdraw"));
-  assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)), ["infolevelset"]);
+  /* T46 (R52): every owed act of PR #28's registry is declared (infolevelset, owed with no spec until T46, is R50's) */
+  assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)), []);
   /* negative control */
-  assert.ok(inNoTable("infolevelset"));
+  assert.deepEqual([...owed, "nosuchowedact"].filter((op) => !Object.hasOwn(OPS, op)), ["nosuchowedact"]);
+  assert.ok(inNoTable("nosuchowedact"));
 });
 
 test("R34 (T38; K2300): obscuremarkwithdraw is named under no ground of ACT_HELP_ABSENT — PR #15's mock-acts.js explains it under its owed key, since T43 (DEC-189 (3)) under the op, which affordances R48 carries to ACT_HELP under the op (negative control: a named read is found)", () => {
