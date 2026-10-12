@@ -29,10 +29,18 @@
 
 **Flaws found in my own module (P8):** none in the code I read whole.
 
-**Tests and checks run so far** (on 5f0b0c8, with `tranche/T45` @ 5877d22a2c merged in):
+**Tests and checks run before J1** (on ef08a7cf9e, with `tranche/T45` @ 5877d22a2c merged in):
 - `node --test bio-plane/test/m/answer-envelope/`: 32 tests, 31 pass, 1 fail. The red is the new T45 test's edge assertion ("answer-envelope uses case-account"), which waits on J1.
 - Users: `store-door` 44/44. `control-plane` 219 pass, 4 fail, and `plane` 188 pass, 8 fail: the same failing tests as on `origin/tranche/T45` without my commit (plan rule 4's accepted reds), so none are mine.
 - `checks/format.mjs`: 0 failures. `checks/coverage.mjs answer-envelope`: 12 of 12 live ids named, 0 failures. `checks/ownership.mjs answer-envelope tranche/T45`: 5 files, 0 failures. `checks/architecture.mjs answer-envelope`: 6 failures, all the missing `uses` edges (J1).
+
+**After B2** (K2880: the edges and R7's T45 sentence; `tranche/T45` merged in). My `changed.moved` key and its assertion in `catalogue-end.test.mjs` meet R7's new sentence, and the new T45 test meets the Uses line. No code change was needed.
+- `node --test bio-plane/test/m/answer-envelope/`: 32 tests, 32 pass, 0 fail.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs answer-envelope`: 9 product files, 0 failures. `checks/coverage.mjs answer-envelope`: 12 of 12, 0 failures. `checks/ownership.mjs answer-envelope tranche/T45`: 5 files, 0 failures.
+- Deferred: action-producers' C-152, until its `checks.mjs` lands (BOB's CHANGE).
+- Other modules: nothing new to report. Rule 4 (14) and (15)'s answer-envelope items are cleared by this job.
+
+Size (session_01V6aaxFDYEfw6Q7h7zHh9zL): test runs 14, module lines 875
 
 ## J1 · QUESTION
 
