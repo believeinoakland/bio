@@ -149,6 +149,14 @@ It is the only module marked `legacy` in `modules.json`.
 
 No ids move. **Edges added, each to an earlier module:** `instance-setup` → `ai-runs`; `control-plane` → the six. **Struck:** `plan-work` → `run-rules` (N920). `extraction` (L4) takes the label as data, no edge to `run-rules` (L6). `action-clocks` gains no edge to `following` (N926 is action-producers'). No edge points later.
 
+## For L11's STARTs (K2960)
+
+- **T46-52 answer-envelope:** the row `DISCLOSURE_DUE` (control-plane R65's refusal) is held in its table beside the door's other rows (next free C-69 number), read by key.
+- **T46-55 screens-settings:** the `connect` screen reads `op=bootstrap`'s `parts` (instance-setup R81) and offers the sign-in only while `signin` is present (trial §3.2).
+- **T46-56, -57, -55 (intake R3, daily R6, settings R6):** every AI output drawn (an ask's answer, a writing-help draft) carries the test-instance label `untested` as screens-inquiry R7 states (K2816 (2)).
+- **T46-58, T46-59 (open, BOB's to settle before L11's START):** a run the dock opens under a member's session has no `ai` credential, so `dispatchMemberRun` withholds it `MEMBER_PRINCIPAL_RUN` (K2947's wire needs a credential the member presented); either the door holds a per-run credential minted at her act (`credentials` R13's member-scoped credential) in memory only, or `ai-runs` admits a run opened by her session (revisiting K2947). The door's `by` for an `ai` caller is the member her principal names, so op-declarations' stamps agree (T46-51).
+- **T46-59 control-plane:** plan-work R14 answers the items directly (no AI refusal, K2953): `draftDue` recognises the items answer.
+
 ## BOB's acts (no job)
 
 - **Release 0.82.0**, cut from `tranche/T45` (K2910–K2912: steps 0–5 done, the three GHCR images published and pinned; regression run 38197495576): the rest of trial §4 steps 6–14, the signed cut merged into `tranche/T46`, the images copied into the account's registry for `biosmoke7` (K2816 (4)), file-scanner's first deploy; signing with the development key in the `release` environment (K2893), whose secret Bob sets himself since a session cannot reach the environment (K2910), then Bob approves the `release-sign.yml` run; each deploy act and the verify controls Bob's in session; the installer's deploy deferred (trial §6 B6). Surface failures found at the live checks join T46's layers not yet started (P10).

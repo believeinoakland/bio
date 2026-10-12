@@ -1,7 +1,7 @@
 # following — requirements
 
 
-**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-79), a seam beside `monitoring` with no copy (K617): no `monitoring` requirement moved. Following a whole policy portal and a standard's new editions is not here. Last changed T35 (T35-65: R20, R21; K1727, K1740); every requirement met (K2027).
+**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-79), a seam beside `monitoring` with no copy (K617): no `monitoring` requirement moved. Following a whole policy portal and a standard's new editions is not here. Last changed T35 (T35-65: R20, R21; K1727, K1740); every requirement met (K2027). Last changed T46 (T46-42: R27 new, amending R24, `promises_met`'s instant read from `plan-work.matterPromiseDuties`' `met_at`, one source, N921; K2874, K2960); marked not yet met (T46).
 
 **Size (P6).** Estimated 1,500–2,500 lines (T33-79, est 15 requirements). Under 4,000.
 
@@ -78,13 +78,16 @@ Terms. A **follow** is a member's standing act naming what is followed and for w
 - **R26** (T45; N881; Actions D14; v0.2 rule 18; the plan's reconciliation R7, R13) **For the plan's "where it stands" view.** This module registers once at start, through `plan-work`'s watch-reader door (`registerWatchReader`, its R9; the only module that registers there, its links covering addresses), the read `watchesOfPlan({plan, viewer})`: each watch linked to that plan the viewer may see, with its kind, its owner's words for it (a follow's subject, an address, a duty's performance, a standing question's words to its author only), its end date or `none_set`, whether it has ended, and `relied_on` (R24's rule). It writes nothing and never throws; `plan-work` reads it (its R7, the closing summary included) and imports nothing of this module.
   - Tests: the registered read answers a plan's three linked watches with end dates (control: a watch linked to another plan is absent); a second registration is refused by the door.
 
+**When the promises were met, from one source** (T46)
+- **R27** (T46; N921; amends R24 (b); `plan-work` R15) R24's `promises_met` is read from `plan-work.matterPromiseDuties` alone (its R13, R15), as this module reads it with no member's sight: a link's question is due on `promises_met` when, for each of the link's matters (all the plan's matters when it names none), the read answers `all_met` and not `partial`, and its `due_at` is the latest of those matters' `met_at`. This module no longer derives that instant from `duties.occurrencesOf` or an occurrence's evidence; a matter whose read answers no `met_at` makes the question not due by this cause. R24's other terms (the `closed` cause, the first of the two, an ended watch never due) are unchanged. Control: a matter whose two duties were read met on different days makes the question due at the later instant; with one of them unmet, the link is not listed on `promises_met`. *(not yet met: T46)*
+
 ## Private
 
 ### Uses
 
 Rule 3's list: `monitoring` (`sweepHost`, its R65; R14's frequencies), `capture` (the render path, R7), `acquisition` (captures, R2, R8, R9, R10), `events` (observed meetings, R4; the Legistar following write, R2), `legistar-reader` (R2, R3), `jurisdictions` (the profile's recurrences, notice periods, identifier schemes), `civil-time` (recurrence expansion, zones, `validAt`).
 (T35) `standards`: the held policies with their source address and family, and a version from captures (T35-31), for R20; its amendments and supersessions, for R21's `amendment_held`. A `modules.json` edge, BOB's (P17).
-(T45; K2781 (2); the plan's reconciliation R7, R13, R18) New edges, each to an earlier module: `action-plans` (the plan read with its state, closing instant and matters, `NO_SUCH_PLAN`; R23, R24); `plan-work` (`matterPromiseDuties`, its R13, R24; `registerWatchReader`, its R9, R26); `duties` (a duty's sight and words, its met state; R23, R24, R26); `answers` (a standing question's sight, words and `ends`; `standingQuestionEnd`, its R16; `standingQuestionEndSet`, its R34; R23–R26). `monitoring` gains `addressWatchEnd` and `addressWatchers` (its R71, R72) in the existing use; `membership` (`memberFacts`, `projectOwners`, `activeAdmins`) for R24's recipients.
+(T45; K2781 (2); the plan's reconciliation R7, R13, R18) New edges, each to an earlier module: `action-plans` (the plan read with its state, closing instant and matters, `NO_SUCH_PLAN`; R23, R24); `plan-work` (`matterPromiseDuties`, its R13, R24; `registerWatchReader`, its R9, R26); `duties` (a duty's sight and words, its met state; R23, R24, R26; from T46 its met instant is read through `plan-work`, R27); `answers` (a standing question's sight, words and `ends`; `standingQuestionEnd`, its R16; `standingQuestionEndSet`, its R34; R23–R26). `monitoring` gains `addressWatchEnd` and `addressWatchers` (its R71, R72) in the existing use; `membership` (`memberFacts`, `projectOwners`, `activeAdmins`) for R24's recipients.
 **Not in Rule 3, needed by this draft (open):** `entities` (R1's body identifier), `membership` (sight and the machine-author test), `record-core` (`declareTable`, `transact`), `promotion` (if a landing promotes outside the host's `land`).
 
 ### Invariants
