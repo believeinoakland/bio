@@ -30,6 +30,18 @@
 
 Size (session_018KyvpjWpStPQKywDPCaAeL): test runs 9, module lines 2078
 
+**B2 (K2964), B3 (K2965), applied after merging `tranche/T46`.**
+- B2: BOB adopted my J1 reading and its wording. R24 now says "every thing it cites was read (at least one)", and the control covers a cite that is only, or also, unread. My test already pins this; no code changed.
+- B3: arm 1's cites-nothing departure now judges only `kind: account` rows. A row with no `kind` is read as an account row, so existing callers are unchanged. A statement's or an outcome's sentence that cites nothing gets no arm-1 departure. Arms 3 to 5 still judge it, and a bias-marked one answers arms 4 and 5 (tested).
+  - Arm 2 is judged against what a sentence cites, so it has nothing to judge a sentence that cites nothing against. My reading, open as J4: arm 2 does not judge such a sentence, exactly as before. Judging it would mean that every figure, date or name in a statement citing nothing is `ACCOUNT_FACT_NOT_IN_CITED`.
+  - I tried that literal reading first. It broke 16 case-authoring tests (for example, a statement saying "edition 2" is refused at publishing), all of which pass on `tranche/T46` without it. So it would change the users' behaviour, and I did not keep it.
+  - New tests: `R24 (K2965; …)`, covering five statement and outcome kinds with the account-row and no-kind controls, and `R24 R1 (K2965)`, offline: a statement row citing nothing recreates every finding, and an account row citing nothing differs.
+- `program.mjs` was regenerated (`build-program.mjs`; the R13 test passes). The plane bundle is stale from `account.mjs` until the layer close regenerates it.
+- Tests: case-checker 80/0. Users pass with 0 fail: case-disclosures 95, case-account 32, case-import 96, filings 92, case-authoring 204.
+- Checks: format, architecture, coverage (24/24) and ownership all show 0 failures. `run.mjs` shows architecture 0; its 33 coverage failures are other modules', inherited.
+
+Size (session_018KyvpjWpStPQKywDPCaAeL, after B3): test runs 17, module lines 2085
+
 ## J1 · QUESTION
 
 R24's T46 clause: "reads as supported ... whenever it cites anything that was read". Read literally, a sentence with nothing checkable that cites one held finding AND one thing not read is supported. Today's behaviour (which the entry says is kept) answers that sentence `ACCOUNT_SENTENCE_UNSUPPORTED`, naming the unread cite ("cites F9, which is not among what it may cite"): any cite not read is arm 1's departure, whatever else the sentence cites.

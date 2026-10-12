@@ -102,6 +102,23 @@ test("R24 (T46; N916): a sentence not bias-marked that states nothing checkable 
   assert.deepEqual(codes(judge(one("The lease was not approved without a vote.", [F1]))), [[0, "ACCOUNT_CONTRADICTED_BY_RECORD"]]);
 });
 
+test("R24 (K2965; case-disclosures R30, K2533): arm 1's cites-nothing judges only account rows; a statement's or outcome's sentence citing nothing is judged by the other arms alone", () => {
+  for (const kind of ["statement", "subject_justification", "excluded", "what_changed", "outcome"]) {
+    /* nothing checkable: no departure at all */
+    assert.deepEqual(codes(judge(one("We chose this subject because members asked about it.", [], { kind }))), [], kind);
+    /* arm 2 judges against what a sentence cites, so a sentence citing nothing has nothing to judge it against (J4) */
+    assert.deepEqual(codes(judge(one("It does not cover the later amendments, edition 2, signed by John Roe on 2023-05-01.", [], { kind }))), [], kind);
+    /* the other arms still judge such a row: bias-marked, arms 4 and 5 */
+    assert.deepEqual(codes(judge(one("Jane Doe favoured the vendor.", [], { kind, bias_statement: "S7" }))),
+      [[0, "ACCOUNT_BIAS_NOT_PRINTED"], [0, "ACCOUNT_CLAIM_NOT_BIAS"]], kind);
+    /* a cite not read is still arm 1's, whatever the row's kind */
+    assert.deepEqual(codes(judge(one("We chose this subject.", [F2], { kind }))), [[0, "ACCOUNT_SENTENCE_UNSUPPORTED"]], kind);
+  }
+  /* control: an account row citing nothing does answer arm 1, and so does a row with no kind */
+  assert.deepEqual(codes(judge(one("We chose this subject because members asked about it.", [], { kind: "account" }))), [[0, "ACCOUNT_SENTENCE_UNSUPPORTED"]]);
+  assert.deepEqual(codes(CC.checkAccount({ account: [{ ord: 0, text: "We chose this subject.", cites: [] }] })), [[0, "ACCOUNT_SENTENCE_UNSUPPORTED"]]);
+});
+
 test("R24 arm 2: a figure, date, name or quotation not in what it cites is ACCOUNT_FACT_NOT_IN_CITED, each named; the same facts taken from what it cites pass", () => {
   const cases = [
     ["The lease cost $9,999.", /the figure \$9,999/],
@@ -235,4 +252,13 @@ test("R24 R1 R9: offline, a sentence citing material whose text the case file do
   assert.equal(unreadable.account.ok, false);
   assert.deepEqual(unreadable.account.malformed, { reason: "MALFORMED", field: "account[0]" });
   assert.ok(unreadable.findings.every((f) => f.differs.some((e) => e.check === "account" && /account cannot be read/.test(e.detail))));
+});
+
+test("R24 R1 (K2965): offline, a statement row citing nothing adds no arm-1 entry, and every finding recreates; an account row citing nothing does differ", async () => {
+  const statement = await offline([{ ord: 0, text: "We chose this subject because members asked about it.", cites: [], kind: "statement" }]);
+  assert.deepEqual(statement.account, { sentences: 1, judged: 1, ok: true, departures: [], not_judged: [] });
+  assert.deepEqual(new Set(Object.values(results(statement))), new Set(["recreated"]));
+  const account = await offline([{ ord: 0, text: "We chose this subject because members asked about it.", cites: [] }]);
+  assert.deepEqual(account.account.departures.map((x) => [x.ord, x.code]), [[0, "ACCOUNT_SENTENCE_UNSUPPORTED"]]);
+  assert.deepEqual(new Set(Object.values(results(account))), new Set(["did_not_recreate"]));
 });

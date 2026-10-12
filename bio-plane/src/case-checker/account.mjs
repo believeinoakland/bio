@@ -4,7 +4,8 @@
  * `checkAccount({account, cited, printed, conclusions})` judges each sentence of a case document's `account:` block
  * (`case-grammar` R23) through `answers.checkSentences` (its R33) and `case-disclosures` R30's arms, in its order:
  *
- *   ACCOUNT_SENTENCE_UNSUPPORTED     a sentence not bias-marked that cites nothing, or cites anything that was not read;
+ *   ACCOUNT_SENTENCE_UNSUPPORTED     a sentence not bias-marked that cites nothing (an account row), or cites anything
+ *                                    that was not read;
  *   ACCOUNT_FACT_NOT_IN_CITED        a figure, date, name or quotation not in what it cites;
  *   ACCOUNT_CONTRADICTED_BY_RECORD   a finding's conclusion or a determination other than the record holds, or a leg that
  *                                    cuts against it read as supporting it (against `conclusions`);
@@ -14,6 +15,10 @@
  * (T46; N916) A sentence not bias-marked that states nothing these arms can check (no figure, date, name or quotation)
  * and whose cites were all read reads as supported: "supported" means only that it states nothing the cited record lacks,
  * never that the cited record shows what it says. `filings` (its R34) and `case-account` read it so.
+ *
+ * (K2965; `case-disclosures` R30, K2533) Arm 1's "cites nothing" judges only rows of kind `account` (a row with no
+ * `kind` is read as one): a statement's or an outcome's sentence that cites nothing is judged by the other arms alone,
+ * arm 2 having nothing it cites to judge it against, so arms 3 to 5.
  *
  * `case-disclosures` R30 runs it at the act, with the record; `checkCaseFile` (R1) runs it offline over the carried
  * document, so one body of check code judges both. The machine flags (`run-rules` R25) are not judged here. Its codes'
@@ -220,6 +225,8 @@ function judgeAccount({ account = [], cited = [], printed = [], conclusions = []
     const cites = listOfField(r.cites).map(citeOf);
     if (cites.some((x) => !x)) return MALFORMED(`account[${i}].cites`);
     rows.push({ ord: Number.isInteger(r.ord) ? r.ord : i, text: String(r.text), cites: cites.map((x) => x.key),
+                /* (K2965) arm 1 judges only an account row: a row with no `kind` is read as one */
+                account: r.kind === undefined || r.kind === null || r.kind === "account",
                 words: Object.fromEntries(cites.map((x) => [x.key, x.words])), bias: filled(r.bias_statement) ? r.bias_statement.trim() : null });
   }
   const c = citedMap(cited);
@@ -274,8 +281,11 @@ function judgeSentence(row, cited, printed, concl) {
       : null;
     const code = j && j.ok ? (j.withheld[0]?.code ?? null) : null;
     const unread = row.cites.filter((x) => !cited.has(x));
-    if (!row.cites.length) say("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row.ord} cites nothing, and is not marked as following a printed bias statement`);
-    else if (code === "ANSWER_CITES_UNREAD" || (j && !j.ok))
+    if (!row.cites.length) {
+      /* (K2965) a statement's or outcome's sentence citing nothing: arm 1 is not asked, and arm 2, judged against what
+         a sentence cites, has nothing to judge it against (J4); arms 3 to 5 below still judge it */
+      if (row.account) say("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row.ord} cites nothing, and is not marked as following a printed bias statement`);
+    } else if (code === "ANSWER_CITES_UNREAD" || (j && !j.ok))
       say("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row.ord} cites ${(unread.length ? unread : row.cites).map(w).join(", ")}, which is not among what it may cite`);
     else {
       /* arm 2: a figure, date, name or quotation not in what it cites */
