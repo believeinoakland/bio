@@ -120,12 +120,27 @@ export const FREQUENCY_CHECKS = Object.freeze({
   }),
 });
 
-/** R42: every row this module holds, keyed by code, for a reader that looks one up by the code an answer carries. */
-export const MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS });
+/* C-18.19 — R71's refusal of an address's end date (T45; N855; Actions D6d; v0.2 rule 17): `until` neither a calendar
+   day nor null, a day before today's local day, or a day given where no zone is held to read today in. Minted here, its
+   one site; `following` R22 refuses the same condition with this row. The translation is BOB's draft, the design
+   stream's to re-word. */
+export const WATCH_END_CHECKS = Object.freeze({
+  WATCH_END_REFUSED: Object.freeze({
+    check: 'C-18.19',
+    where: at('addressWatchEnd', 'is-watch-end-day'),
+    translation: 'A watch ends on a calendar day, today or later, or has no end date. That day could not be used. '
+      + 'Nothing was changed.',
+  }),
+});
 
-/** A refusal answer naming one of this module's rows (DEC-49): its code, row and member's sentence, and the detail. */
+/** R42: every row this module holds, keyed by code, for a reader that looks one up by the code an answer carries. */
+export const MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS,
+                                                 ...WATCH_END_CHECKS });
+
+/** A refusal answer naming one of this module's rows (DEC-49): its code, row and member's sentence, and the detail.
+ *  R52's rows and R71's (which shares R52's first two). */
 export function frequencyRefusal(code, detail, extra) {
-  const row = FREQUENCY_CHECKS[code];
+  const row = FREQUENCY_CHECKS[code] || WATCH_END_CHECKS[code];
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
 }
 
