@@ -7,10 +7,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
-import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
-import { T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
-import { T36_NON_ACTS } from "../../../src/op-grades/t36.mjs";
-import { T41_NON_ACTS } from "../../../src/op-grades/t41.mjs";
 import { composedVocabularies, plainWord } from "../../../src/affordances/words.mjs";
 import { affordancesOf } from "../../../src/affordances/facts.mjs";
 import { owners, kindOf } from "../../../src/connection-grammar/index.mjs";
@@ -143,44 +139,27 @@ const T36_ADDS = { calculations: { spotcheckvisit: "reasoned", spotcheck: null }
    pinned here so the map stays closed (the grades are op-grades' tests'). */
 const T41_ADDS = { hypotheses: { hypothesistakeup: "reversible", hypothesissetaside: "reasoned", noteshare: "reversible",
   noteunshare: "reversible", shares: null } };
+/* T45 (op-grades R32; K2817, K2822, K2874): the ops duties (its R30, R31), answers (its R34) and following (its R22–R25)
+   add, graded by op-grades in its T45 table; pinned here so each map stays closed (the grades are op-grades' tests'). */
+const T45_ADDS = { duties: ["dutyfromresponse", "dutiesarising"], answers: ["standingendset"],
+  following: ["followend", "watchlink", "watchanswer", "watchquestions"] };
 
-test("R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35, T36 and T41 add, each "
-   + "named in op-grades' table for its tranche — each earlier module's map holds the ops T33 adds to it, and no owner "
-   + "serves a retired op", () => {
+test("R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35, T36, T41 and T45 add — "
+   + "each earlier module's map holds the ops T33 adds to it, and no owner serves a retired op", () => {
   for (const [name, m] of Object.entries(T33)) {
     const keys = keysOf(m.map);
     const mine = [...Object.keys(m.writes), ...m.reads, ...(T35_ADDS[name] ?? []), ...Object.keys(T36_ADDS[name] ?? {}),
-      ...Object.keys(T41_ADDS[name] ?? {})];
+      ...Object.keys(T41_ADDS[name] ?? {}), ...(T45_ADDS[name] ?? [])];
     if (m.part) assert.deepEqual(mine.filter((op) => !keys.includes(op)), [], name);
     else assert.deepEqual([...keys].sort(), [...mine].sort(), name);
   }
-  for (const op of Object.values(T35_ADDS).flat()) {
-    assert.ok(Object.hasOwn(T35_NON_ACTS, op), op);
-    assert.equal(NON_ACTS[op], T35_NON_ACTS[op], op);
-  }
-  for (const op of Object.values(T36_ADDS).flatMap((ops) => Object.keys(ops))) {
-    assert.ok(Object.hasOwn(T36_NON_ACTS, op), op);
-    assert.equal(NON_ACTS[op], T36_NON_ACTS[op], op);
-  }
-  for (const op of Object.values(T41_ADDS).flatMap((ops) => Object.keys(ops))) {
-    assert.ok(Object.hasOwn(T41_NON_ACTS, op), op);
-    assert.equal(NON_ACTS[op], T41_NON_ACTS[op], op);
-  }
+  /* R12: each op a later tranche adds is accounted for — named in NON_ACTS (op-grades' tables carry each; N891: which
+     table, and its words, are op-grades' tests') */
+  for (const op of [...Object.values(T35_ADDS).flat(), ...Object.values(T36_ADDS).flatMap((ops) => Object.keys(ops)),
+                    ...Object.values(T41_ADDS).flatMap((ops) => Object.keys(ops)), ...Object.values(T45_ADDS).flat()])
+    assert.ok(Object.hasOwn(NON_ACTS, op) && !published().has(op), op);
   /* retired: served by no owner's map (op-grades' tests hold them graded and named nowhere) */
   for (const op of RETIRED) assert.ok(!keysOf(credentialsOps).includes(op) && !keysOf(aiRunsOps).includes(op), op);
-});
-
-/* op-grades' content its own tests do not yet pin (N877; reported to BOB): op-grades' merged tables, which this module
-   reads for R12's totality and R11's decoration, carry each of T33's entries op for op — the very entry objects — and
-   each stated absence carries its sentence. T33's grades themselves are pinned in op-grades' tests. */
-test("R12: the registries this module reads (RUNGS, RUNG_ABSENT, NON_ACTS) carry each entry of op-grades' T33 tables, op "
-   + "for op and the very entry object", () => {
-  for (const [op, r] of Object.entries(T33_RUNGS)) assert.equal(RUNGS[op], r, op);
-  for (const [op, e] of Object.entries(T33_RUNG_ABSENT)) {
-    assert.equal(RUNG_ABSENT[op], e, op);
-    assert.ok(typeof e.is === "string" && e.is.length > 40, op);
-  }
-  for (const [op, why] of Object.entries(T33_NON_ACTS)) assert.equal(NON_ACTS[op], why, op);
 });
 
 test("R19: each `reversible` T33 op is taken back by a published act of its own owner — an op its owner's map serves", () => {
@@ -189,14 +168,7 @@ test("R19: each `reversible` T33 op is taken back by a published act of its own 
     assert.ok(keysOf(ownerOf(op).map).includes(by), `${op}: ${by} is its owner's op`);
 });
 
-test("R1 R20: no T33 op is an act, and MACHINE_REFUSALS holds only ACTS; each read's reason says it writes nothing and "
-   + "each write's is no read and no capture act", () => {
-  /* op-grades' content its own tests do not yet pin (N877; reported to BOB) */
-  for (const op of ALL_READS) assert.match(NON_ACTS[op], /writes nothing$/, op);
-  for (const op of Object.keys(ALL_WRITES).filter((op) => !UNGATED_WRITES.includes(op))) {
-    assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 30, op);
-    assert.ok(!NON_ACTS[op].startsWith("read: ") && !NON_ACTS[op].startsWith("capture-directed:"), op);
-  }
+test("R1 R20: no T33 op is an act, and MACHINE_REFUSALS holds only ACTS", () => {
   const t33 = [...Object.keys(ALL_WRITES), ...ALL_READS];
   assert.deepEqual(t33.filter((op) => published().has(op)), []);
   assert.deepEqual(Object.keys(MACHINE_REFUSALS).filter((op) => !ACTS.some((a) => a.id === op)), []);

@@ -22,6 +22,7 @@ import { T35_RUNGS } from "../../../src/op-grades/t35.mjs";
 import { T36_RUNGS } from "../../../src/op-grades/t36.mjs";
 import { T38_RUNGS } from "../../../src/op-grades/t38.mjs";
 import { T41_RUNGS } from "../../../src/op-grades/t41.mjs";
+import { T45_RUNGS } from "../../../src/op-grades/t45.mjs";
 import { OP_ALIASES } from "../../../src/op-grades/t34.mjs";
 /* R39's vocabularies, by name. */
 const R39_KEYS = ["event_kinds", "dated_fact_kinds", "event_statuses", "participant_roles", "event_relation_kinds",
@@ -176,8 +177,12 @@ const FACT_KEYS = ["ok", "target", "object_type", "declared_type", "current_stat
   "project_owner", "project_target_owner", "project_participant", "roster", "actor_is_machine", "concludes_for_project",
   "concluded_for_project", "edition_warranted_for_project", "basis_legs", "contradiction_inquiry",
   "contradiction_sides_seen" /* N365 */, "rested_on",
-  "basis_version_states", "basis_versions", "cites_in", "cites_out", "cited_by_case"].sort();
-test("R14: the answer carries exactly R14's facts, with their sub-keys", async () => {
+  "basis_version_states", "basis_versions", "cites_in", "cites_out", "cited_by_case",
+  "action" /* R51: an action's own facts, null on any other type */].sort();
+/* R51: an action's facts, with their sub-keys */
+const ACTION_KEYS = ["clock", "closed", "drafts", "entries", "escalation", "holds_in_place", "preparable",
+  "request_for_comment"];
+test("R14 R51: the answer carries exactly R14's facts, with their sub-keys, and an action's own facts only on an action", async () => {
   for (const id of [W.INFO, W.INQ, W.ACTN, W.PA]) {
     const f = await facts(id, { viewer: "member:iris", identity: "member:iris", author: "member:iris", by: "iris" });
     assert.deepEqual(Object.keys(f).sort(), FACT_KEYS, id);
@@ -186,6 +191,12 @@ test("R14: the answer carries exactly R14's facts, with their sub-keys", async (
     assert.deepEqual(Object.keys(f.cites_out).sort(), ["confirmed", "severed", "severed_reinstatable"]);
     assert.deepEqual(Object.keys(f.cited_by_case).sort(), ["confirmed", "severed"]);
     assert.equal(f.target, id);
+    if (id === W.ACTN) {
+      assert.deepEqual(Object.keys(f.action).sort(), ACTION_KEYS);
+      assert.deepEqual(Object.keys(f.action.entries).sort(), ["all", "received", "received_unmarked", "sent"]);
+      assert.deepEqual(Object.keys(f.action.clock).sort(), ["dated", "entries", "reminders_room"]);
+      assert.deepEqual(Object.keys(f.action.escalation).sort(), ["attachable", "openable"]);
+    } else assert.equal(f.action, null, id);
   }
 });
 
@@ -767,7 +778,9 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     /* K2322: op-grades' T38 op (its R28), at case-carriage's interface over its fixture, t38-backing.test.mjs */
     ...Object.keys(T38_RUNGS).filter((op) => T38_RUNGS[op] === "reasoned"),
     /* op-grades R30 (T41): T41's eight, each at its owner's interface over its fixture, t41-backing.test.mjs */
-    ...Object.keys(T41_RUNGS).filter((op) => T41_RUNGS[op] === "reasoned")];
+    ...Object.keys(T41_RUNGS).filter((op) => T41_RUNGS[op] === "reasoned"),
+    /* op-grades R32 (T45): T45's eleven, each at its owner's interface over its fixture, t45-backing.test.mjs */
+    ...Object.keys(T45_RUNGS).filter((op) => T45_RUNGS[op] === "reasoned")];
   /* R45: an alias is its op's handler (op-declarations R21, control-plane R55), so its op's drive is its backing */
   driven.push(...Object.keys(OP_ALIASES).filter((a) => driven.includes(OP_ALIASES[a])));
   /* R45: tasks' checkrecord (CHECK_NO_REASON, tasks R15): tasks is later in the order (P4), so this module's tests cannot
@@ -825,12 +838,27 @@ test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a m
        stamp a machine credential's call carries */
     contradictionresolve: () => DO(`contradictionresolve?viewer=admin&author=${E("token:member")}`,
       { inquiry: INQ, resolution: { kind: "irreconcilable" }, conclusion: "c" }),
+    /* R51 (T45): the acts an action offers, each with what a member would send; the machine's answer is each method's */
+    escalationopen: () => POST(`op=escalationopen&token=${ADM}`, { determination: "CONF-2026-0001-x", reason: "r" }),
+    escalationattach: () => POST(`op=escalationattach&token=${ADM}`, { id: "ESC-2026-0001-x", action: ACTN, reason: "r" }),
+    filingprepare: () => POST(`op=filingprepare&token=${ADM}`, { action: ACTN, text: "t" }),
+    communicationprepare: () => POST(`op=communicationprepare&token=${ADM}`, { action: ACTN, text: "t", purpose: "inform" }),
+    filingapprove: () => POST(`op=filingapprove&token=${ADM}`, { filing: "FIL-2026-0001", text: "t" }),
+    filingsent: () => POST(`op=filingsent&token=${ADM}`, { filing: "FIL-2026-0001", at: "2026-09-02", account: "a" }),
+    counselpacket: () => POST(`op=counselpacket&token=${ADM}`, { action: ACTN, reason: "r" }),
+    reminderset: () => POST(`op=reminderset&token=${ADM}&target=${E(ACTN)}`, { entry: 0 }),
   };
   const ROSTER = ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
     "projectownerremove", "projectownerrescue"];
   /* N364: `sourceconsent` is offered beside no bundle and the durable object does not route sources' ops; its machine
      answer is driven at sources' interface (sources.test.mjs) */
-  const AT_SOURCES = ["sourceconsent"];
+  const AT_SOURCES = ["sourceconsent",
+    /* R51: action-replies' and plan-work's ops are composed by the plane at T45-47; their machine answers are driven at
+       their owners' interfaces (t45.test.mjs) */
+    "actionreplybearing", "actionbearingpropose", "arosefrom", "itemtakeup",
+    /* and action-holds' (composed with them), actions' T45 acts and action-clocks' `clockstate`, routed there too */
+    "actionhold", "actionholdrelease", "actionpressure", "holdnoticeprepare", "holdnoticesent", "actionreceipt",
+    "actionscope", "actionpromise", "clockstate"];
   const objectActs = ACTS.map((a) => a.id).filter((k) => !ROSTER.includes(k) && !AT_SOURCES.includes(k));
   assert.deepEqual(objectActs.filter((k) => !(k in DRIVE)), [], "every object-directed act is driven");
   /* the offer side first, before any drive moves an object */

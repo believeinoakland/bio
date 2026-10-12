@@ -102,21 +102,9 @@ const WIZARD_READS = ["wizards", "wizardread", "wizardsat", "wizarduse", "wizard
 
 test("R1 R12 R24: wizard-scripts' ops — each write decorates with a rung or a stated absence, none is an act — and with "
    + "the control plane's rows nothing is unaccounted; one left out is seen", () => {
-  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): each stated absence's sentence */
   for (const op of WIZARD_WRITES) {
-    if (Object.hasOwn(RUNG_ABSENT, op)) assert.ok(RUNG_ABSENT[op].is.length > 40, op);
     const d = decorate({ id: op, label: "x" }, null);
     assert.equal((d.rung === null) !== (d.rung_absence === null), true, `R24: ${op}`);
-  }
-  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the template library's refusals that ask
-     an object, a choice or a form stay out of the justification family, and so do the wizard's */
-  for (const c of ["WIZARD_NAME_REFUSED", "WIZARD_STEP_REFUSED", "WIZARD_WHY_REFUSED", "WIZARD_SCOPE_REFUSED", "NOT_A_DRAFT",
-    "MACHINE_CANNOT_APPROVE_WIZARD", "WIZARD_ALREADY_ENDED"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
-  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the reads write nothing and carry no grade */
-  for (const op of WIZARD_READS) {
-    assert.ok(NON_ACTS[op]?.startsWith("read: ") && NON_ACTS[op].length > 40, op);
-    assert.match(NON_ACTS[op], /writes nothing$/, op);
-    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
   }
   const ALL = [...WIZARD_WRITES, ...WIZARD_READS];
   assert.ok(!published().some((a) => ALL.includes(a.id)));

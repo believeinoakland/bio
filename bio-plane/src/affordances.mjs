@@ -72,6 +72,16 @@ import { SUFFICIENCY_CLAIM_STATES } from "./basis-versions/index.mjs";
    held here. */
 import { PRODUCT_KINDS, RISK_TIERS, LAW_LEVELS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS,
          CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, RESOLUTIONS } from "./action-grammar/index.mjs";
+/* R51 (T45): the closed vocabularies T45's owners refuse against, each the owner's very object (R4): action-grammar's
+   (its T45 R2), the five bases of a deadline (action-clocks R2), a plan's states (action-plans), a matter's states
+   (plan-work), the harm words (consequences R9) and a project's scopes (project-roster R21, a static of its class). */
+import { OVERRIDE_GROUNDS, PHRASING_KINDS, ASSERTION_RESOLUTIONS, PRESS_RECORD_TERMS, FOUND_ELSEWHERE_KINDS, BEARINGS,
+         PROMISE_KINDS, CLOCK_OWED_BY } from "./action-grammar/index.mjs";
+import { BASIS_KINDS as CLOCK_BASIS_KINDS } from "./action-clocks/index.mjs";
+import { PLAN_STATES } from "./action-plans/index.mjs";
+import { MATTER_STATES } from "./plan-work/index.mjs";
+import { ADDRESSED_WORDS } from "./consequences/index.mjs";
+import { ProjectRoster } from "./project-roster/index.mjs";
 /* REC-14 / DEC-13: the three subject positions are `ratification'`s, whose case-document check refuses against them
    (C-2.8, C-41). */
 import { SUBJECT_POSITIONS } from "./ratification/index.mjs";
@@ -125,7 +135,7 @@ export { ACT_HELP } from "./affordances/act-help.mjs";
    (R4, R11, R12, R19, R20, R36): `VOCABULARIES` publishes the same objects, `deriveActs` reads `MACHINE_REFUSALS`,
    `decorate` reads `RUNGS`, `RUNG_ABSENT` and `phoneOf`, and `unaccounted` (R12) checks the totality over them. */
 import { RUNG_LADDER, IRREVERSIBLE_CORRECTION_PATH, RUNG_ABSENCE_GROUNDS, CONSEQUENCE_STATEMENTS, LARGER_SCREEN_ACTS,
-         IRREVERSIBLE_WEIGHT, RUNGS, RUNG_ABSENT, MACHINE_REFUSALS, NON_ACTS, phoneOf } from "./op-grades/index.mjs";
+         IRREVERSIBLE_WEIGHT, RUNGS, RUNG_ABSENT, MACHINE_REFUSALS, NON_ACTS, phoneOf, OP_ALIASES } from "./op-grades/index.mjs";
 /* R39 (T33-85): the new closed vocabularies with the members' words, read at the call from the composed owners. */
 import { composedVocabularies } from "./affordances/words.mjs";
 
@@ -563,6 +573,24 @@ export const VOCABULARIES = {
   docket_pressure_kinds: DOCKET_PRESSURE_KINDS,
   /* R36 (DEC-122 (1); `op-grades` R18): the acts a phone surface leaves for a larger screen beyond the ladder's own. */
   larger_screen_acts: LARGER_SCREEN_ACTS,
+  /* R51 (T45): what a member offers when she overrides on a ground, resolves a pointed-out sentence, notes press terms,
+     records a response found elsewhere or a reply's bearing on a claim, notes a promise, says who owes a date and on what
+     basis, pauses a plan, states a matter's state, words a harm addressed or sets a project's scope — each the array its
+     owner refuses against, so a surface offers a choice before a member is refused it. Escalation states with "stopped
+     pursuing" and the links `arose_from` and `cures` are not here: no owner exports them yet (the job's record). */
+  override_grounds: OVERRIDE_GROUNDS,
+  phrasing_kinds: PHRASING_KINDS,
+  assertion_resolutions: ASSERTION_RESOLUTIONS,
+  press_record_terms: PRESS_RECORD_TERMS,
+  found_elsewhere_kinds: FOUND_ELSEWHERE_KINDS,
+  bearings: BEARINGS,
+  promise_kinds: PROMISE_KINDS,
+  clock_owed_by: CLOCK_OWED_BY,
+  clock_basis_kinds: CLOCK_BASIS_KINDS,
+  plan_states: PLAN_STATES,
+  matter_states: MATTER_STATES,
+  addressed_words: ADDRESSED_WORDS,
+  project_scopes: ProjectRoster.PROJECT_SCOPES,
 };
 
 /* R26 (N65 (3)): the vocabularies an instance publishes, with `action_kind` the kinds its `actions` accepts at the
@@ -1176,6 +1204,83 @@ export const ACTS = [
      as much as a planned one. Weight `single`: one revision, one act, appended. RUNG `reasoned` (R27, K211). */
   { id: "actionrisktier", label: "Revise risk tier", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" },
+  /* ===== R51 (T45; v0.2 rule 1, S1 §D 12; DEC-8): EVERY ACT DIRECTED AT AN ACTION THAT T45'S OWNERS SERVE ==========
+     Each is offered on an `action` target exactly where its own refusal would admit this caller (R18), read off R14's
+     `action` facts (./affordances/facts.mjs), each asked through the read that refusal runs. Sight is every one's first
+     gate and the facts are null for an action the viewer cannot see (R13). A machine is withheld each whose method refuses
+     it by name (`MACHINE_REFUSALS`, R20); `filingprepare`, `communicationprepare`, `holdnoticeprepare` and
+     `actionbearingpropose` take a machine's labelled work and stay offered to one. What turns on a PARAMETER (which entry,
+     which ground, the reason, the words) is the act's own refusal, the release precedent: the record permits the move,
+     not that this caller's parameters will pass. Every count is read through `countOf` and every flag on `=== true`: an
+     absent fact offers nothing that needs it. Weight `single`: one act on one action. Not offered here, each with its
+     reason (the job's record, K-ruled by BOB): `clockadopt` (no read answers a standing clock proposal, so its refusal
+     cannot be asked without writing), the action's fields written through promotion (override, partners, press terms,
+     "no reply owed", `follows_action`: no op), stop pursuing and reopen (escalation R31, not built), and the plan's acts
+     (their subject is a plan). */
+  /* action-holds R2: a hold is placed on the whole action, or on one of its entries; sight is its only gate on place. */
+  { id: "actionhold", label: "Place a litigation hold (with a reason)", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && !!f.action },
+  /* action-holds R5: released only where a hold is in place (HOLD_ALREADY_RELEASED). */
+  { id: "actionholdrelease", label: "Release a litigation hold (with a reason)", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && countOf(f.action?.holds_in_place) > 0 },
+  /* action-holds R1: pressure is marked on a received entry not yet marked (PRESSURE_NOT_RECEIVED, PRESSURE_MARKED). */
+  { id: "actionpressure", label: "Mark a reply as pressure on the group", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && countOf(f.action?.entries?.received_unmarked) > 0 },
+  /* action-holds R11 and filings' hold notice: prepared and recorded sent only where a hold is in place (HOLD_NOT_IN_PLACE). */
+  { id: "holdnoticeprepare", label: "Prepare the hold notice for members", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && countOf(f.action?.holds_in_place) > 0 },
+  { id: "holdnoticesent", label: "Record that the hold notice was sent", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && countOf(f.action?.holds_in_place) > 0 },
+  /* actions R80: a receipt is recorded on a sent entry (RECEIPT_NOT_ON_SENT). */
+  { id: "actionreceipt", label: "Record that a sending was received", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && countOf(f.action?.entries?.sent) > 0 },
+  /* actions' scope (confidential set or removed, with a reason) and promise notes: sight only; which direction, and
+     whether a promise stands to end, are parameters. */
+  { id: "actionscope", label: "Keep this action confidential, or no longer (with a reason)", weight: "single",
+    types: ["action"], applies: (f, ty) => ty === "action" && !!f.action },
+  { id: "actionpromise", label: "Note a promise the group made", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && !!f.action },
+  /* action-replies R1, R2: a reply laid out claim by claim on a request for comment's received entry (BEARING_NOT_RFC);
+     a response's arising matter linked from any received entry (AROSE_FROM_NOT_A_RESPONSE). */
+  { id: "actionreplybearing", label: "Record what a reply says to each claim", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && f.action?.request_for_comment === true
+                     && countOf(f.action?.entries?.received) > 0 },
+  { id: "actionbearingpropose", label: "Propose what a reply says to each claim", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && f.action?.request_for_comment === true
+                     && countOf(f.action?.entries?.received) > 0 },
+  { id: "arosefrom", label: "Link a matter that arose from this reply", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && countOf(f.action?.entries?.received) > 0 },
+  /* escalation R1, R9 (join on override, R23): opened on the determination this action rests on, and the action
+     attached to an escalation at a stage that takes one (escalation's `#pursuable` and `escalationAttach`). */
+  { id: "escalationopen", label: "Open an escalation of the determination this rests on (with a reason)",
+    weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && f.action?.escalation?.openable === true },
+  { id: "escalationattach", label: "Attach this action to its escalation (with a reason)", weight: "single",
+    types: ["action"], applies: (f, ty) => ty === "action" && f.action?.escalation?.attachable === true },
+  /* filings R5, R23: prepared on an action not closed (ACTION_CLOSED); a filing only at a governing tier of 1 or 2
+     (FILING_TIER_UNDETERMINED, TIER3_COUNSEL_PACKET). */
+  { id: "filingprepare", label: "Prepare a filing", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && f.action?.closed === false && f.action?.preparable === true },
+  { id: "communicationprepare", label: "Prepare a communication", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && f.action?.closed === false },
+  /* filings R6 (with R34, R43: the release of a contradicted sentence and each pointed-out sentence's resolution are its
+     parameters, the plan's reconciliation R1): a draft of the group's voice not yet approved; R7: approved, not sent. */
+  { id: "filingapprove", label: "Approve a prepared draft", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && countOf(f.action?.drafts?.unapproved) > 0 },
+  { id: "filingsent", label: "Record that an approved draft was sent", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && countOf(f.action?.drafts?.approved_unsent) > 0 },
+  /* filings R11 (claim or defence; T45: no determination needed): sight only, counsel being its parameter. */
+  { id: "counselpacket", label: "Brief counsel (with a reason)", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && !!f.action },
+  /* action-clocks R18: the group's own deadline stated (sight only); R4: a reminder on a dated entry, while the
+     action's standing reminders are under the bound (REMINDER_REFUSED, arms `entry`, `bound`). */
+  { id: "clockstate", label: "State a deadline and its basis", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && !!f.action },
+  { id: "reminderset", label: "Set a reminder for a date", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && countOf(f.action?.clock?.dated) > 0 && f.action?.clock?.reminders_room === true },
+  /* plan-work R11: a member takes up a clock entry or a hold of this action (NO_SUCH_ITEM). */
+  { id: "itemtakeup", label: "Take this up myself", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && (countOf(f.action?.clock?.entries) > 0 || countOf(f.action?.holds_in_place) > 0) },
   /* PL-2 / IS-2 — THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE.
    *
    * WHY THEY ARE `ACTS` AND NOT `NON_ACTS`, decided rather than assumed, and the
@@ -1539,12 +1644,16 @@ export function explainRefusal(arg) {
  * a surface could offer it; a row without the key counts as gated), rungs over every mutating op. `unpublished`: a
  * gated op in none of the four registries. `unranked`: a mutating op with neither a rung nor a stated absence.
  * `stale`: a key of `RUNGS` or `RUNG_ABSENT` the table does not carry as mutating, or of `NON_ACTS` it does not carry
- * as gated. All three empty is the totality; each list is sorted, so an answer names the ops. */
+ * as gated. An alias of a published act is published (R51). All three empty is the totality; each list is sorted, so
+ * an answer names the ops. */
 export function unaccounted(opTable) {
   const rows = Array.isArray(opTable) ? opTable.filter((r) => r && typeof r.op === "string") : [];
   const all = new Set(rows.filter((r) => r.gated !== false).map((r) => r.op));
   const mutating = new Set(rows.filter((r) => r.mutating === true).map((r) => r.op));
   const published = new Set([...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].map((a) => a.id));
+  /* T45 (R51): an alias answers as its op (`op-grades` R17, op-declarations R21), so an alias of a published act is
+     published with it — `filingrecordsent` with `filingsent`, an act on an action since R51. */
+  for (const [alias, op] of Object.entries(OP_ALIASES)) if (published.has(op)) published.add(alias);
   const has = (o, k) => Object.hasOwn(o, k);
   const unpublished = [...all].filter((op) => !published.has(op) && !has(NON_ACTS, op));
   const unranked = [...mutating].filter((op) => !has(RUNGS, op) && !has(RUNG_ABSENT, op));
