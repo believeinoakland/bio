@@ -27,10 +27,14 @@
  * and both are answered here, over the relay, as a `tool_result` (agent-runner R3): the one place record text
  * reaches the model on this path.
  *
- * A PAGE'S PICTURE IS NOT RELAYED (R14; N832). The relay carries text only (agent-runner R3), so an `image` block
- * cannot reach a sign-in conversation as an image, and rendered as text it would carry the picture's bytes into
- * the prompt or the relay. A transcript holding one is refused before any connection opens, and an `onTool` answer
- * holding one is refused in place of its result: `refused` with type `IMAGE_NOT_RELAYED`, and nothing more is sent.
+ * A PAGE'S PICTURE IS RELAYED, ONLY INSIDE ITS RESULT (R14, R15; N852). A runner that answers agent-runner R24 hands
+ * an `image` block in a relayed `tool_result` to the model as the tool's image content, so a result holding one is
+ * relayed as its blocks in order (`text` and `image`, the picture unchanged; a `search_result` flattened to `text`),
+ * and a text-only result stays the one string agent-runner R3 carries. Whether the member's instance answers R24 is
+ * asked of it once per conversation, and only when a picture is about to go: its `GET /version` answer's
+ * `capabilities` naming `image`. A runner that does not (an older image, a refusal, an answer that is not JSON)
+ * refuses the picture rather than drops it: `refused` with type `IMAGE_NOT_RELAYED`, and nothing more is sent. A
+ * picture outside any `tool_result` (a user turn's own content) has no result to ride in and is refused alike.
  *
  * THE CALLS (R6; N588). Each runner conversation's model calls are the `num_turns` its end states (agent-runner R4);
  * a conversation that ended without stating them (the socket closed, or this side stopped it) makes the count
@@ -54,22 +58,57 @@ export const READ_RESULT = Object.freeze({
                                 required: Object.freeze(["id"]), additionalProperties: false }),
 });
 
-/* R14 — a page's picture: an `image` block, alone or inside a `tool_result`'s content. */
+/* R14, R15 — a page's picture: an `image` block, inside a `tool_result`'s content or (refused) outside one. */
+export const RUNNER_VERSION_URL = "https://agent-runner/version";
+export const IMAGE_CAPABILITY = "image";
 const IMAGE_NOT_RELAYED = "IMAGE_NOT_RELAYED";
 const isImage = (b) => !!b && typeof b === "object" && b.type === "image";
-const blocksHoldImage = (content) => Array.isArray(content) && content.some((b) => isImage(b)
-  || (!!b && b.type === "tool_result" && Array.isArray(b.content) && b.content.some(isImage)));
-const transcriptHoldsImage = (messages) => (Array.isArray(messages) ? messages : []).some((m) => blocksHoldImage(m && m.content));
+const holdsImage = (content) => Array.isArray(content) && content.some(isImage);
+const contentOf = (messages) => (Array.isArray(messages) ? messages : [])
+  .flatMap((m) => (Array.isArray(m && m.content) ? m.content : []));
+const imageOutsideResult = (messages) => contentOf(messages).some(isImage);
+const resultHoldsImage = (messages) => contentOf(messages)
+  .some((b) => !!b && b.type === "tool_result" && holdsImage(b.content));
 const notRelayed = () => refused(null, IMAGE_NOT_RELAYED,
-  "a page's picture reaches the model only on an API key: a sign-in's relay carries text only, so nothing was sent");
-const NOT_RELAYED_RESULT = "not performed: a page's picture is not relayed to a sign-in";
+  "a page's picture reaches a sign-in only through a runner that relays pictures, and this one does not; nothing was sent");
+const NOT_RELAYED_RESULT = "not performed: this runner does not relay a page's picture";
+
+/** R15 — whether the member's own instance answers agent-runner R24: its `/version` answer names the capability.
+ *  Anything else (a refusal, a throw, a body that is not JSON, no `capabilities`) is no. Never throws. */
+async function relaysImages(runner, member) {
+  try {
+    const res = await runner.get(runner.idFromName(member)).fetch(RUNNER_VERSION_URL);
+    if (!res || res.status !== 200) return false;
+    const body = await res.json();
+    return !!body && Array.isArray(body.capabilities) && body.capabilities.includes(IMAGE_CAPABILITY);
+  } catch {
+    return false;
+  }
+}
+
+/** Asked at most once per conversation, and only when a picture is about to be relayed. */
+function imageGate(runner, member) {
+  let asked = null;
+  return () => (asked ??= relaysImages(runner, member));
+}
+
+/** R15 — a `tool_result`'s content as the relay carries it: the one string of agent-runner R3, or, when it holds a
+ *  picture, its blocks in order, each `image` unchanged and every other block as `text`. */
+export function relayContent(content) {
+  if (!holdsImage(content)) return relayText(content);
+  return content.map((b) => {
+    if (isImage(b)) return b;
+    if (b && b.type === "text") return { type: "text", text: String(b.text ?? "") };
+    return { type: "text", text: relayText([b]) };
+  });
+}
 
 /** The results a transcript holds, by their call's id, as the relay would carry them. */
 function heldResults(messages) {
   const held = new Map();
   for (const m of Array.isArray(messages) ? messages : [])
     for (const b of Array.isArray(m && m.content) ? m.content : [])
-      if (b && b.type === "tool_result") held.set(String(b.tool_use_id), relayText(b.content));
+      if (b && b.type === "tool_result") held.set(String(b.tool_use_id), relayContent(b.content));
   return held;
 }
 
@@ -114,7 +153,7 @@ function answeredHere(u, messages) {
   }
   if (u.name === READ_FACTS.name) {
     const f = factsOf(messages);
-    return f.error ? f : { content: relayText(f.blocks) };
+    return f.error ? f : { content: relayContent(f.blocks) };
   }
   return null;
 }
@@ -165,7 +204,8 @@ function ending(m, usage) {
  *  turn's answer, returned as a Messages-shaped `tool_use` block, and the connection is closed (which aborts the
  *  query, agent-runner R4), so no tool is performed here and no usage was stated for it. */
 export async function signinTurn(member, runner, body) {
-  if (transcriptHoldsImage(body.messages)) return notRelayed();
+  if (imageOutsideResult(body.messages)) return notRelayed();
+  if (resultHoldsImage(body.messages) && !(await relaysImages(runner, member))) return notRelayed();
   /* A held result read over the relay is a turn of the runner's own, so the turn may take one per held result. */
   const reads = heldResults(body.messages).size;
   const serialized = JSON.stringify(conversationRequest(member, {
@@ -202,7 +242,9 @@ export async function signinConverse({ member, runner, model, system, messages, 
   let calls = 0;
   let k = 0;
   const unstated = () => sumUsage(usage, usageOf(null));
-  if (transcriptHoldsImage(messages)) return notRelayed();
+  const imagesRelayed = imageGate(runner, member);
+  if (imageOutsideResult(messages)) return notRelayed();
+  if (resultHoldsImage(messages) && !(await imagesRelayed())) return notRelayed();
   while (k < maxTurns) {
     const serialized = JSON.stringify(conversationRequest(member, { model, system, messages, tools, maxTurns: maxTurns - k }));
     const stop = charge(serialized);
@@ -236,13 +278,14 @@ export async function signinConverse({ member, runner, model, system, messages, 
           const r = await onTool(u.name, input);
           if (r && r.halt) { conn.close(); return r.halt; }
           blocks = toolResultContent(r);
-          if (blocksHoldImage(blocks)) {
-            /* R14: the picture is not sent; the transcript keeps the call answered, without the picture. */
+          if (holdsImage(blocks) && !(await imagesRelayed())) {
+            /* R15: a runner without R24 refuses the picture, never drops it; the transcript keeps the call answered,
+               without the picture. */
             conn.close();
             messages.push({ role: "user", content: [{ type: "tool_result", tool_use_id: u.id, content: NOT_RELAYED_RESULT, is_error: true }] });
             return { ...notRelayed(), usage: unstated(), calls: null };
           }
-          content = relayText(blocks);
+          content = relayContent(blocks);
           isError = !!r?.error;
         }
         if (!reread) messages.push({ role: "user", content: [{ type: "tool_result", tool_use_id: u.id, content: blocks ?? content,

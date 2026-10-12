@@ -63,7 +63,7 @@ Terms. A **note** is a member's own words kept in the group's copy, seen only by
 - `inquiry`: the inquiry's existence, type and visibility (R1, R3).
 
 ### Invariants
-- **R23** (T46; K2926) R14's renumbering, and every migration this module runs at boot, uses only statements a Durable Object's SQLite authorizes: no `TEMP` table, view or trigger and no other statement workerd refuses `SQLITE_AUTH`; its working map is an ordinary table created and dropped inside the one transaction. Tested where workerd runs it: a store numbered from the shared sequence, holding notes and turns, renumbered on the plane's own runtime. *(not yet met: T46)*
+- **R23** (T46; K2926) R14's renumbering, and every migration this module runs at boot, uses only statements a Durable Object's SQLite authorizes: no `TEMP` table, view or trigger and no other statement workerd refuses `SQLITE_AUTH`; its working map is an ordinary table created and dropped inside the one transaction. Tested where workerd runs it: a store numbered from the shared sequence, holding notes and turns, renumbered on the plane's own runtime.
 
 - **R8** Never a fact: no hypothesis moves a grade, a strength pair, a basis or a finding; this module writes nothing to any other module's table (K1467).
 - **R9** A hypothesised cause stays a hypothesis: nothing here records a cause as an event relation (`stated_cause` is a source's claim, `events`') (DEC-84 (10), K1461).
