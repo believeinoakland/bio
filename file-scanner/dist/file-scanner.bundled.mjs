@@ -1514,8 +1514,8 @@ var fleet_member_default = {
     {
       class_name: "FileScanner",
       image: {
-        repository: "docker.io/civicos/file-scanner-scanner",
-        digest: null,
+        repository: "ghcr.io/believeinoakland/file-scanner-scanner",
+        digest: "sha256:2af812a3bde157731a05a827c035f49e8faf83ad29e6cbbf4ff440844b6e5db8",
         platform: "linux/amd64",
         port: 8080,
         schedulingPolicy: "default",
@@ -1543,8 +1543,8 @@ var fleet_member_default = {
     {
       class_name: "SafeViewRenderer",
       image: {
-        repository: "docker.io/civicos/file-scanner-renderer",
-        digest: null,
+        repository: "ghcr.io/believeinoakland/file-scanner-renderer",
+        digest: "sha256:90385aeddbc05b66882506a0ae6ec48dfb635119bae8c20cfba3c31e4afb974b",
         platform: "linux/amd64",
         port: 8080,
         schedulingPolicy: "default",

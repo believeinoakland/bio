@@ -5,7 +5,12 @@ var LINK_TYPES = ["anchor", "intra", "deferred", "refused"];
 
 // ../bio-plane/src/pdfstructure.mjs
 var PDF_LINK_TYPES = [...LINK_TYPES, "undetermined"];
-var LATIN1 = new TextDecoder("latin1");
+function binaryString(u8) {
+  if (!(u8 instanceof Uint8Array)) return "";
+  let out = "";
+  for (let i = 0; i < u8.length; i += 8192) out += String.fromCharCode.apply(null, u8.subarray(i, i + 8192));
+  return out;
+}
 function isWhitespace(c) {
   return c === 0 || c === 9 || c === 10 || c === 12 || c === 13 || c === 32;
 }
@@ -183,75 +188,23 @@ function tryParseRef(s, pos) {
   return { value: { t: "ref", n: parseInt(m[1], 10), g: parseInt(m[2], 10) }, pos: pos + m[0].length };
 }
 function parseLiteralString(s, pos) {
-  pos++;
-  let out = "", depth = 1;
-  while (pos < s.length) {
-    const c = s.charCodeAt(pos);
-    if (c === 92) {
-      const n = s[pos + 1];
-      const map = { n: "\n", r: "\r", t: "	", b: "\b", f: "\f", "(": "(", ")": ")", "\\": "\\" };
-      if (n in map) {
-        out += map[n];
-        pos += 2;
-        continue;
-      }
-      if (n >= "0" && n <= "7") {
-        let oct = "";
-        let p = pos + 1;
-        while (p < s.length && oct.length < 3 && s[p] >= "0" && s[p] <= "7") {
-          oct += s[p];
-          p++;
-        }
-        out += String.fromCharCode(parseInt(oct, 8) & 255);
-        pos = p;
-        continue;
-      }
-      pos += 2;
-      continue;
-    }
-    if (c === 40) {
-      depth++;
-      out += "(";
-      pos++;
-      continue;
-    }
-    if (c === 41) {
-      depth--;
-      if (depth === 0) {
-        pos++;
-        break;
-      }
-      out += ")";
-      pos++;
-      continue;
-    }
-    out += s[pos];
-    pos++;
-  }
-  return { value: { t: "str", v: decodePdfText(out) }, pos };
+  const r = readLiteralBytes(s, pos);
+  return { value: strValue(r.bytes), pos: r.pos };
 }
 function parseHexString(s, pos) {
-  pos++;
-  let hex = "";
-  while (pos < s.length && s.charCodeAt(pos) !== 62) {
-    const c = s[pos];
-    if (/[0-9a-fA-F]/.test(c)) hex += c;
-    pos++;
-  }
-  pos++;
-  if (hex.length % 2) hex += "0";
-  let raw = "";
-  for (let i = 0; i < hex.length; i += 2) raw += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-  return { value: { t: "str", v: decodePdfText(raw) }, pos };
+  const r = readHexBytes(s, pos);
+  return { value: strValue(r.bytes), pos: r.pos };
+}
+function strValue(raw) {
+  return { t: "str", v: decodePdfText(raw), raw };
 }
 function decodePdfText(raw) {
-  if (raw.charCodeAt(0) === 254 && raw.charCodeAt(1) === 255) {
+  if (raw[0] === 254 && raw[1] === 255) {
     let out = "";
-    for (let i = 2; i + 1 < raw.length; i += 2)
-      out += String.fromCharCode(raw.charCodeAt(i) << 8 | raw.charCodeAt(i + 1));
+    for (let i = 2; i + 1 < raw.length; i += 2) out += String.fromCharCode(raw[i] << 8 | raw[i + 1]);
     return out;
   }
-  return raw;
+  return binaryString(raw);
 }
 function parseArray(buf, s, pos) {
   pos++;
@@ -305,8 +258,9 @@ function parseDict(buf, s, pos) {
 var PdfDoc = class {
   constructor(bytes) {
     this.bytes = bytes;
-    this.s = LATIN1.decode(bytes);
-    this.objects = /* @__PURE__ */ new Map();
+    this.s = binaryString(bytes);
+    this._objs = /* @__PURE__ */ new Map();
+    this._gens = /* @__PURE__ */ new Map();
     this.pageIndexByObj = /* @__PURE__ */ new Map();
     this._pageOrder = [];
     this.pageCount = 0;
@@ -333,12 +287,15 @@ var PdfDoc = class {
       const num = parseInt(m[1], 10);
       const bodyStart = m.index + m[0].length;
       const r = parseValueSafe(s, bodyStart);
-      if (r) this.objects.set(num, r.value);
+      if (r) {
+        this._objs.set(num, r.value);
+        this._gens.set(num, parseInt(m[2], 10));
+      }
     }
   }
   resolve(v, seen = 0) {
     while (v && v.t === "ref" && seen < 64) {
-      v = this.objects.get(v.n);
+      v = this._objs.get(v.n);
       seen++;
     }
     if (v && v.t === "ref") return null;
@@ -355,8 +312,10 @@ var PdfDoc = class {
    *  resolves to an integer; otherwise we scan to the next `endstream`, which
    *  is the lenient recovery path. */
   streamRawBytes(streamObj) {
-    if (!streamObj || streamObj.t !== "stream") return null;
+    if (!streamObj || streamObj.t !== "stream" || !streamObj.dict || typeof streamObj.dict !== "object") return null;
+    if (!(this.bytes instanceof Uint8Array)) return null;
     const start = streamObj.start;
+    if (!Number.isInteger(start) || start < 0 || start > this.bytes.length) return null;
     let end;
     const len = this.resolve(streamObj.dict.Length);
     if (typeof len === "number" && len >= 0 && start + len <= this.bytes.length) {
@@ -377,14 +336,23 @@ var PdfDoc = class {
     if (this.s.charCodeAt(e - 1) === 13) e--;
     return e;
   }
-  /** Decompress a stream's bytes if its filter chain is (Flate). Returns null
-   *  for anything else, which the callers treat as "cannot resolve" -> the doc
-   *  degrades to undetermined rather than crashing. */
+  /** Decompress a stream's bytes if its filter chain is (Flate). Answers a
+   *  Promise of the bytes, or of null for anything else, which the callers
+   *  treat as "cannot resolve" -> the doc degrades to undetermined rather than
+   *  crashing. The Promise never rejects (R22): whatever goes wrong inside is
+   *  that null. */
   async streamDecoded(streamObj) {
+    try {
+      return await this._streamDecoded(streamObj);
+    } catch {
+      return null;
+    }
+  }
+  async _streamDecoded(streamObj) {
     const raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
-    const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f) => f && f.t === "name" ? f.v : null) : [];
+    const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f) => f && f.t === "name" ? f.v : null) : [null];
     if (names.length === 0) return raw;
     if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
     const inflated = await inflate(raw);
@@ -417,7 +385,7 @@ var PdfDoc = class {
    *  uncompressed one is the safer read). */
   async loadObjectStreams() {
     const streams = [];
-    for (const v of this.objects.values()) {
+    for (const v of this._objs.values()) {
       if (v && v.t === "stream") {
         const type = v.dict.Type;
         if (type && type.t === "name" && type.v === "ObjStm") streams.push(v);
@@ -429,7 +397,7 @@ var PdfDoc = class {
         this.note("objstm_undecodable");
         continue;
       }
-      const inner = LATIN1.decode(data);
+      const inner = binaryString(data);
       const n = numberVal(this.resolve(st.dict.N));
       const first = numberVal(this.resolve(st.dict.First));
       if (n == null || first == null) continue;
@@ -438,9 +406,9 @@ var PdfDoc = class {
         const objNum = header[i * 2];
         const off = header[i * 2 + 1];
         if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
-        if (this.objects.has(objNum)) continue;
+        if (this._objs.has(objNum)) continue;
         const r = parseValueSafe(inner, first + off);
-        if (r) this.objects.set(objNum, r.value);
+        if (r) this._objs.set(objNum, r.value);
       }
     }
   }
@@ -448,7 +416,7 @@ var PdfDoc = class {
    *  object-number order if the tree cannot be walked (leniency). */
   buildPageIndex() {
     let root = null;
-    for (const v of this.objects.values()) {
+    for (const v of this._objs.values()) {
       const map = v && v.t === "dict" ? v.map : null;
       if (map && map.Type && map.Type.t === "name" && map.Type.v === "Catalog") {
         root = map;
@@ -479,7 +447,7 @@ var PdfDoc = class {
     }
     if (this.pageIndexByObj.size === 0) {
       const pages = [];
-      for (const [num, v] of this.objects) {
+      for (const [num, v] of this._objs) {
         const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
         if (map && map.Type && map.Type.t === "name" && map.Type.v === "Page") pages.push(num);
       }
@@ -511,7 +479,7 @@ var PdfDoc = class {
   isEncrypted() {
     if (this._encrypted !== void 0) return this._encrypted;
     let enc = false;
-    for (const v of this.objects.values()) {
+    for (const v of this._objs.values()) {
       const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
       if (!map) continue;
       const filter = map.Filter;
@@ -541,26 +509,67 @@ var PdfDoc = class {
    *  `loadObjectStreams` so an /Info living inside an object stream resolves. */
   infoDict() {
     if (this._info !== void 0) return this._info;
+    const cands = this._trailers().filter((map) => map.Info && map.Info.t === "ref").map((map) => map.Info);
+    for (let i = cands.length - 1; i >= 0; i--) {
+      const map = this.dictOf(cands[i]);
+      if (map) return this._info = map;
+    }
+    return this._info = null;
+  }
+  /** Every trailer dict in file order: each classic `trailer << … >>` and each
+   *  `/Type /XRef` stream's own dict, by where it sits. R10 and R37 both choose
+   *  from this one list, so the two cannot disagree about which is the last. */
+  _trailers() {
     const cands = [];
     const re = /\btrailer\b/g;
     let m;
     while (m = re.exec(this.s)) {
       const r = parseValueSafe(this.s, m.index + 7);
-      const map = r && r.value && r.value.t === "dict" ? r.value.map : null;
-      if (map && map.Info && map.Info.t === "ref") cands.push([m.index, map.Info]);
+      if (r && r.value && r.value.t === "dict") cands.push([m.index, r.value.map]);
     }
-    for (const v of this.objects.values()) {
-      if (!v || v.t !== "stream") continue;
-      const type = v.dict.Type;
-      if (!(type && type.t === "name" && type.v === "XRef")) continue;
-      if (v.dict.Info && v.dict.Info.t === "ref") cands.push([v.start, v.dict.Info]);
+    for (const v of this._objs.values()) {
+      const type = v && v.t === "stream" ? v.dict.Type : null;
+      if (type && type.t === "name" && type.v === "XRef") cands.push([v.start, v.dict]);
     }
-    cands.sort((a, b) => a[0] - b[0]);
-    for (let i = cands.length - 1; i >= 0; i--) {
-      const map = this.dictOf(cands[i][1]);
-      if (map) return this._info = map;
+    return cands.sort((a, b) => a[0] - b[0]).map((c) => c[1]);
+  }
+  /** R37: the latest revision as a rewrite reads it — the last trailer, every
+   *  indirect object reachable from it by any chain of references (each once,
+   *  ascending, its value as `resolve` answers it, its generation the one its
+   *  winning definition states), and every reference on those chains that
+   *  resolves to nothing. An object no chain reaches (an earlier revision's, an
+   *  object stream's container) is not in it. Null without a readable trailer;
+   *  never throws. The walk is iterative, so a deep or cyclic file cannot
+   *  exhaust the stack. */
+  objects() {
+    try {
+      const trailers = this._trailers();
+      if (!trailers.length) return null;
+      const trailer = trailers[trailers.length - 1];
+      const found = /* @__PURE__ */ new Map(), missing = /* @__PURE__ */ new Map(), queue = [];
+      const refsIn = (v) => {
+        for (const stack = [v]; stack.length; ) {
+          const x = stack.pop();
+          if (!x || typeof x !== "object") continue;
+          if (x.t === "ref") queue.push(x);
+          else if (x.t === "arr") for (const it of x.items) stack.push(it);
+          else if (x.t === "dict" || x.t === "stream") for (const it of Object.values(x.t === "dict" ? x.map : x.dict)) stack.push(it);
+        }
+      };
+      refsIn({ t: "dict", map: trailer });
+      for (let i = 0; i < queue.length; i++) {
+        const { n, g } = queue[i];
+        if (found.has(n) || missing.has(n)) continue;
+        const value = this.resolve({ t: "ref", n, g });
+        if (value === null) missing.set(n, { num: n, gen: g });
+        else found.set(n, { num: n, gen: this._gens.get(n) ?? 0, value });
+        refsIn(this._objs.get(n));
+      }
+      const asc = (m) => [...m.values()].sort((a, b) => a.num - b.num);
+      return { trailer, objects: asc(found), unresolved: asc(missing) };
+    } catch {
+      return null;
     }
-    return this._info = null;
   }
 };
 function numberVal(v) {
@@ -676,6 +685,10 @@ function readLiteralBytes(s, pos) {
   while (pos < s.length) {
     const c = s.charCodeAt(pos);
     if (c === 92) {
+      if (pos + 1 >= s.length) {
+        pos++;
+        break;
+      }
       const nc = s.charCodeAt(pos + 1);
       if (nc in simple) {
         bytes.push(simple[nc]);
@@ -704,6 +717,11 @@ function readLiteralBytes(s, pos) {
       pos += 2;
       continue;
     }
+    if (c === 13) {
+      bytes.push(10);
+      pos += s.charCodeAt(pos + 1) === 10 ? 2 : 1;
+      continue;
+    }
     if (c === 40) {
       depth++;
       bytes.push(40);
@@ -723,7 +741,7 @@ function readLiteralBytes(s, pos) {
     bytes.push(c);
     pos++;
   }
-  return { bytes, pos };
+  return { bytes: Uint8Array.from(bytes), pos };
 }
 function readHexBytes(s, pos) {
   pos++;
@@ -735,8 +753,8 @@ function readHexBytes(s, pos) {
   }
   pos++;
   if (hex.length % 2) hex += "0";
-  const bytes = [];
-  for (let i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substr(i, 2), 16));
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
   return { bytes, pos };
 }
 function readContentName(s, pos) {
@@ -822,7 +840,7 @@ async function pageShowsText(doc, pageMap) {
       }
       const formRes = doc.dictOf(st.dict.Resources) || resources;
       if (await walk(
-        LATIN1.decode(data),
+        binaryString(data),
         formRes,
         depth + 1,
         key != null ? [...formChain, key] : formChain
@@ -883,7 +901,7 @@ async function decodeContentStreams(doc, contents) {
     if (!st || st.t !== "stream") continue;
     const data = await doc.streamDecoded(st);
     if (!data) return { text: null };
-    parts.push(LATIN1.decode(data));
+    parts.push(binaryString(data));
   }
   return { text: parts.join("\n") };
 }
@@ -953,7 +971,7 @@ async function pdfPageImages(doc, pageIdx) {
             const m = matrixOf(doc, st.dict.Matrix) || [1, 0, 0, 1, 0, 0];
             const formRes = doc.dictOf(st.dict.Resources) || resources;
             await walk(
-              LATIN1.decode(data),
+              binaryString(data),
               formRes,
               mulMatrix(m, ctm),
               depth + 1,
@@ -998,7 +1016,7 @@ async function loadPdf(bytes) {
 }
 async function openPdf(bytes) {
   if (!(bytes instanceof Uint8Array)) return null;
-  if (!/%PDF-\d+\.\d+/.test(LATIN1.decode(bytes.subarray(0, 1024)))) return null;
+  if (!/%PDF-\d+\.\d+/.test(binaryString(bytes.subarray(0, 1024)))) return null;
   return loadPdf(bytes);
 }
 
@@ -1097,6 +1115,7 @@ function readJpegHeader(d) {
     throw new DctRefusal("NOT_A_JPEG", { note: "no SOI" });
   const qt = [];
   const hts = { dc: [], ac: [] };
+  const bogus = /* @__PURE__ */ new Map();
   let frame = null, jfif = false, adobe = null, restart = 0;
   let p = 2;
   for (; ; ) {
@@ -1138,12 +1157,24 @@ function readJpegHeader(d) {
     } else if (m === 196) {
       let q = 0;
       while (q < seg.length) {
-        const tc = seg[q] >> 4, th = seg[q] & 15;
+        const tc = seg[q] >> 4, th = seg[q] & 15, table2 = `${tc === 0 ? "dc" : "ac"} ${th}`;
+        if (tc > 1 || th > 3) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman table class or id past the four tables", class: tc, id: th });
+        if (q + 17 > seg.length) throw new DctRefusal("CORRUPT_DATA", { note: "Huffman table counts run past their DHT", table: table2 });
         const counts = seg.subarray(q + 1, q + 17);
         let total = 0;
         for (let i = 0; i < 16; i++) total += counts[i];
+        if (total > 256 || q + 17 + total > seg.length)
+          throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table of ${total} symbols ${total > 256 ? "past 256" : "runs past its DHT"}`, table: table2 });
         const symbols = seg.subarray(q + 17, q + 17 + total);
-        (tc === 0 ? hts.dc : hts.ac)[th] = buildHuffman(counts, symbols);
+        const why = bogusHuffman(counts, symbols, tc === 0);
+        const list = tc === 0 ? hts.dc : hts.ac;
+        if (why) {
+          delete list[th];
+          bogus.set(table2, why);
+        } else {
+          list[th] = buildHuffman(counts, symbols);
+          bogus.delete(table2);
+        }
         q += 17 + total;
       }
     } else if (m === 204) {
@@ -1161,10 +1192,26 @@ function readJpegHeader(d) {
       const ns = seg[0];
       const scomps = [];
       for (let i = 0; i < ns; i++) scomps.push({ id: seg[1 + 2 * i], td: seg[2 + 2 * i] >> 4, ta: seg[2 + 2 * i] & 15 });
+      for (const sc of scomps) for (const table2 of [`dc ${sc.td}`, `ac ${sc.ta}`]) {
+        if (bogus.has(table2))
+          throw new DctRefusal("CORRUPT_DATA", { note: `bogus Huffman table definition: ${bogus.get(table2)}`, table: table2, component: sc.id });
+      }
       return { frame, qt, hts, jfif, adobe, restart, scan: { comps: scomps, dataAt: p + len } };
     }
     p += len;
   }
+}
+function bogusHuffman(counts, symbols, isDC) {
+  let code = 0;
+  for (let l = 1; l <= 16; l++) {
+    code += counts[l - 1];
+    if (code >= 1 << l) return `${counts[l - 1]} codes of ${l} bits overflow the code space, or use the all-ones code`;
+    code <<= 1;
+  }
+  if (isDC) {
+    for (const s of symbols) if (s > 15) return `DC symbol ${s} past 15`;
+  }
+  return null;
 }
 function buildHuffman(counts, symbols) {
   const maxcode = new Int32Array(18).fill(-1);
@@ -1424,6 +1471,48 @@ function colourTransformOf(h) {
   return { ycc: true, why: "libjpeg's default for three components" };
 }
 function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform = null } = {}) {
+  const deg = ((rotate | 0) % 360 + 360) % 360;
+  if (deg % 90) {
+    decodeStrips(d, expectComps, colorTransform, () => {
+    });
+    throw new DctRefusal("UNSUPPORTED_ROTATION", { rotate });
+  }
+  let out = null, W2 = 0, H2 = 0;
+  const info = decodeStrips(d, expectComps, colorTransform, (rows, y0, count, { W: W3, H, nc }) => {
+    if (!out) {
+      [W2, H2] = deg === 90 || deg === 270 ? [H, W3] : [W3, H];
+      out = new Uint8Array(W2 * H2 * nc);
+    }
+    if (deg === 0) {
+      out.set(rows, y0 * W3 * nc);
+      return;
+    }
+    for (let j = 0; j < count; j++) {
+      const y = y0 + j;
+      for (let x = 0; x < W3; x++) {
+        let X, Y;
+        if (deg === 90) {
+          X = H - 1 - y;
+          Y = x;
+        } else if (deg === 180) {
+          X = W3 - 1 - x;
+          Y = H - 1 - y;
+        } else {
+          X = y;
+          Y = W3 - 1 - x;
+        }
+        const o = (Y * W2 + X) * nc, s = (j * W3 + x) * nc;
+        out[o] = rows[s];
+        if (nc === 3) {
+          out[o + 1] = rows[s + 1];
+          out[o + 2] = rows[s + 2];
+        }
+      }
+    }
+  });
+  return { width: W2, height: H2, comps: info.comps, samples: out, source: info.source };
+}
+function decodeStrips(d, expectComps, colorTransform, emit) {
   const h = readJpegHeader(d);
   const { frame, qt, hts, scan } = h;
   const nc = frame.comps.length;
@@ -1447,27 +1536,41 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
     if (!ok || c.h < 1 || c.v < 1) throw new DctRefusal("UNSUPPORTED_SAMPLING", { sampling });
     if (!qt[c.tq]) throw new DctRefusal("CORRUPT_DATA", { note: `quantisation table ${c.tq} missing` });
   }
-  const mcux = Math.ceil(frame.width / (8 * hmax)), mcuy = Math.ceil(frame.height / (8 * vmax));
-  const planes = frame.comps.map((c, i) => {
+  const W2 = frame.width, H = frame.height;
+  const single = nc === 1;
+  const mcux = Math.ceil(W2 / (8 * hmax)), mcuy = Math.ceil(H / (8 * vmax));
+  const unitsPerRow = single ? Math.ceil(W2 / 8) : mcux;
+  const strips = single ? Math.ceil(H / 8) : mcuy;
+  const outPerStrip = single ? 8 : 8 * vmax;
+  const planes = frame.comps.map((c) => {
     const sc = scan.comps.find((s) => s.id === c.id);
     if (!sc || !hts.dc[sc.td] || !hts.ac[sc.ta]) throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table missing for component ${c.id}` });
-    const bw = mcux * c.h, bh = mcuy * c.v;
+    const hx = single ? 1 : hmax / c.h, vx = single ? 1 : vmax / c.v;
+    const stride = mcux * c.h * 8, rowsPer = single ? 8 : 8 * c.v;
+    const dw = Math.ceil(W2 * c.h / hmax);
     return {
       c,
-      i,
       dc: hts.dc[sc.td],
       ac: hts.ac[sc.ta],
       q: qt[c.tq],
       pred: 0,
-      stride: bw * 8,
-      rows: bh * 8,
-      data: new Uint8Array(bw * 8 * bh * 8),
-      dw: Math.ceil(frame.width * c.h / hmax),
-      dh: Math.ceil(frame.height * c.v / vmax)
+      hx,
+      vx,
+      stride,
+      rowsPer,
+      dw,
+      dh: Math.ceil(H * c.v / vmax),
+      base: 0,
+      /* slot 0 the row above this MCU row, slots 1..rowsPer the MCU row's own */
+      data: new Uint8Array((rowsPer + 1) * stride),
+      /* one upsampled row, for a component that is upsampled */
+      tmp: hx === 1 && vx === 1 ? null : new Uint8Array(dw * hx)
     };
   });
+  const waits = planes.some((pl) => pl.vx === 2);
   const br = new Bits(d, scan.dataAt);
   const coef = new Int32Array(64);
+  let fabricated = false;
   const decodeBlock = (pl, bx, by) => {
     coef.fill(0);
     const t = br.decode(pl.dc);
@@ -1489,11 +1592,79 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
       coef[ZIGZAG[k]] = br.receiveExtend(s) << 16 >> 16;
       k++;
     }
-    idctIslow(coef, pl.q, pl.data, by * 8 * pl.stride + bx * 8, pl.stride);
+    if (!fabricated) idctIslow(coef, pl.q, pl.data, (1 + by * 8) * pl.stride + bx * 8, pl.stride);
   };
-  const single = nc === 1;
-  const totalUnits = single ? Math.ceil(frame.width / 8) * Math.ceil(frame.height / 8) : mcux * mcuy;
-  const unitsPerRow = single ? Math.ceil(frame.width / 8) : mcux;
+  const rowAt = (pl, y) => ((y < 0 ? 0 : y >= pl.dh ? pl.dh - 1 : y) - pl.base + 1) * pl.stride;
+  const fullRow = (pl, oy) => {
+    const { hx, vx, data: src, dw, tmp } = pl;
+    if (vx === 1) {
+      if (hx === 1) return [src, rowAt(pl, oy)];
+      h2v1Row(src, rowAt(pl, oy), dw, tmp, 0);
+      return [tmp, 0];
+    }
+    const cy = oy >> 1, below = oy & 1;
+    const r0 = rowAt(pl, cy);
+    if (hx === 1) {
+      const r1 = rowAt(pl, below ? cy + 1 : cy - 1), bias = below ? 2 : 1;
+      for (let x = 0; x < dw; x++) tmp[x] = src[r0 + x] * 3 + src[r1 + x] + bias >> 2;
+    } else if (dw <= 2) {
+      for (let x = 0; x < dw; x++) tmp[2 * x] = tmp[2 * x + 1] = src[r0 + x];
+    } else {
+      const r1 = rowAt(pl, below ? cy + 1 : cy - 1);
+      let thiscol = src[r0] * 3 + src[r1], nextcol = src[r0 + 1] * 3 + src[r1 + 1], lastcol;
+      tmp[0] = thiscol * 4 + 8 >> 4;
+      tmp[1] = thiscol * 3 + nextcol + 7 >> 4;
+      let q = 2;
+      for (let x = 2; x < dw; x++) {
+        lastcol = thiscol;
+        thiscol = nextcol;
+        nextcol = src[r0 + x] * 3 + src[r1 + x];
+        tmp[q++] = thiscol * 3 + lastcol + 8 >> 4;
+        tmp[q++] = thiscol * 3 + nextcol + 7 >> 4;
+      }
+      lastcol = thiscol;
+      thiscol = nextcol;
+      tmp[q++] = thiscol * 3 + lastcol + 8 >> 4;
+      tmp[q] = thiscol * 4 + 7 >> 4;
+    }
+    return [tmp, 0];
+  };
+  const shape = { W: W2, H, nc };
+  const strip = new Uint8Array(outPerStrip * W2 * nc);
+  let emitted = 0;
+  const emitTo = (limit) => {
+    while (limit - emitted > outPerStrip) emitTo(emitted + outPerStrip);
+    if (limit <= emitted) return;
+    const count = limit - emitted, rows = strip.subarray(0, count * W2 * nc);
+    for (let j = 0; j < count; j++) {
+      const oy = emitted + j;
+      let o = j * W2 * nc;
+      if (nc === 1) {
+        const [a2, ao2] = fullRow(planes[0], oy);
+        rows.set(a2.subarray(ao2, ao2 + W2), o);
+        continue;
+      }
+      const [a, ao] = fullRow(planes[0], oy), [b, bo] = fullRow(planes[1], oy), [c, co] = fullRow(planes[2], oy);
+      if (colour.ycc) {
+        for (let x = 0; x < W2; x++, o += 3) {
+          const Y = a[ao + x], cb = b[bo + x], cr = c[co + x];
+          rows[o] = clamp8(Y + CR_R[cr]);
+          rows[o + 1] = clamp8(Y + Math.floor((CB_G[cb] + CR_G[cr]) / 65536));
+          rows[o + 2] = clamp8(Y + CB_B[cb]);
+        }
+      } else {
+        for (let x = 0; x < W2; x++, o += 3) {
+          rows[o] = a[ao + x];
+          rows[o + 1] = b[bo + x];
+          rows[o + 2] = c[co + x];
+        }
+      }
+    }
+    const y0 = emitted;
+    emitted = limit;
+    emit(rows, y0, count, shape);
+  };
+  const totalUnits = unitsPerRow * strips;
   let restartsLeft = h.restart, rstExpect = 0;
   for (let u = 0; u < totalUnits; u++) {
     if (h.restart) {
@@ -1509,58 +1680,27 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
       }
       restartsLeft--;
     }
-    const ux = u % unitsPerRow, uy = (u - ux) / unitsPerRow;
-    if (single) decodeBlock(planes[0], ux, uy);
+    const ux = u % unitsPerRow;
+    if (single) decodeBlock(planes[0], ux, 0);
     else for (const pl of planes)
       for (let v = 0; v < pl.c.v; v++) for (let hh = 0; hh < pl.c.h; hh++)
-        decodeBlock(pl, ux * pl.c.h + hh, uy * pl.c.v + v);
+        decodeBlock(pl, ux * pl.c.h + hh, v);
+    if (ux !== unitsPerRow - 1) continue;
+    if (!fabricated && br.fabricated()) fabricated = true;
+    if (fabricated) continue;
+    const k = (u + 1) / unitsPerRow - 1;
+    emitTo(k === strips - 1 ? H : Math.min(H, (k + 1) * outPerStrip - (waits ? 1 : 0)));
+    for (const pl of planes) {
+      pl.data.copyWithin(0, pl.rowsPer * pl.stride, (pl.rowsPer + 1) * pl.stride);
+      pl.base += pl.rowsPer;
+    }
   }
   if (br.fabricated())
     throw new DctRefusal("TRUNCATED", { note: `entropy-coded data ended before the last MCU (${br.fabricated()} bits zero-filled)` });
-  const W2 = frame.width, H = frame.height;
-  const full = planes.map((pl) => upsample(pl, W2, H, hmax, vmax));
-  const deg = ((rotate | 0) % 360 + 360) % 360;
-  if (deg % 90) throw new DctRefusal("UNSUPPORTED_ROTATION", { rotate });
-  const [W22, H2] = deg === 90 || deg === 270 ? [H, W2] : [W2, H];
-  const out = new Uint8Array(W22 * H2 * nc);
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W2; x++) {
-      let X, Y;
-      if (deg === 0) {
-        X = x;
-        Y = y;
-      } else if (deg === 90) {
-        X = H - 1 - y;
-        Y = x;
-      } else if (deg === 180) {
-        X = W2 - 1 - x;
-        Y = H - 1 - y;
-      } else {
-        X = y;
-        Y = W2 - 1 - x;
-      }
-      const o = (Y * W22 + X) * nc;
-      if (nc === 1) {
-        out[o] = full[0].data[y * full[0].stride + x];
-        continue;
-      }
-      const a = full[0].data[y * full[0].stride + x], b = full[1].data[y * full[1].stride + x], c = full[2].data[y * full[2].stride + x];
-      if (colour.ycc) {
-        out[o] = clamp8(a + CR_R[c]);
-        out[o + 1] = clamp8(a + Math.floor((CB_G[b] + CR_G[c]) / 65536));
-        out[o + 2] = clamp8(a + CB_B[b]);
-      } else {
-        out[o] = a;
-        out[o + 1] = b;
-        out[o + 2] = c;
-      }
-    }
-  }
   return {
-    width: W22,
-    height: H2,
+    width: W2,
+    height: H,
     comps: nc,
-    samples: out,
     source: {
       width: W2,
       height: H,
@@ -1570,56 +1710,6 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
       colour: colour ? colour.why + (colour.ycc ? " -> YCbCr" : " -> no transform") : "grey"
     }
   };
-}
-function upsample(pl, W2, H, hmax, vmax) {
-  const hx = hmax / pl.c.h, vx = vmax / pl.c.v;
-  if (hx === 1 && vx === 1) return { data: pl.data, stride: pl.stride };
-  const { data: src, stride: ss, dw, dh } = pl;
-  const row = (y) => (y < 0 ? 0 : y >= dh ? dh - 1 : y) * ss;
-  const outW = dw * hx;
-  const dst = new Uint8Array(outW * dh * vx);
-  if (vx === 1) {
-    for (let y = 0; y < dh; y++) {
-      const r = row(y), o = y * outW;
-      h2v1Row(src, r, dw, dst, o);
-    }
-  } else if (hx === 1) {
-    for (let y = 0; y < dh; y++) {
-      const r0 = row(y);
-      for (let v = 0; v < 2; v++) {
-        const r1 = row(v === 0 ? y - 1 : y + 1), bias = v === 0 ? 1 : 2, o = (2 * y + v) * outW;
-        for (let x = 0; x < dw; x++) dst[o + x] = src[r0 + x] * 3 + src[r1 + x] + bias >> 2;
-      }
-    }
-  } else if (dw <= 2) {
-    for (let y = 0; y < dh * 2; y++) {
-      const r = row(y >> 1), o = y * outW;
-      for (let x = 0; x < dw; x++) dst[o + 2 * x] = dst[o + 2 * x + 1] = src[r + x];
-    }
-  } else {
-    for (let y = 0; y < dh; y++) {
-      const r0 = row(y);
-      for (let v = 0; v < 2; v++) {
-        const r1 = row(v === 0 ? y - 1 : y + 1), o = (2 * y + v) * outW;
-        let thiscol = src[r0] * 3 + src[r1], nextcol = src[r0 + 1] * 3 + src[r1 + 1], lastcol;
-        dst[o] = thiscol * 4 + 8 >> 4;
-        dst[o + 1] = thiscol * 3 + nextcol + 7 >> 4;
-        let q = o + 2;
-        for (let x = 2; x < dw; x++) {
-          lastcol = thiscol;
-          thiscol = nextcol;
-          nextcol = src[r0 + x] * 3 + src[r1 + x];
-          dst[q++] = thiscol * 3 + lastcol + 8 >> 4;
-          dst[q++] = thiscol * 3 + nextcol + 7 >> 4;
-        }
-        lastcol = thiscol;
-        thiscol = nextcol;
-        dst[q++] = thiscol * 3 + lastcol + 8 >> 4;
-        dst[q] = thiscol * 4 + 7 >> 4;
-      }
-    }
-  }
-  return { data: dst, stride: outW };
 }
 function h2v1Row(src, r, dw, dst, o) {
   if (dw <= 2) {
@@ -4595,15 +4685,16 @@ function b2(ref, a0, color) {
 }
 
 // ../pdf-worker/src/pagepixels.mjs
-var LATIN12 = new TextDecoder("latin1");
+var LATIN1 = new TextDecoder("latin1");
 var REFUSALS = {
   NOT_A_PDF: "the bytes do not carry a %PDF- header",
+  NOT_A_PICTURE: "the bytes are neither a JPEG nor a PNG file",
   ENCRYPTED: "the document is encrypted; streams are ciphertext to this reader",
   NO_SUCH_PAGE: "the page index is outside the document",
   PAGE_UNREADABLE: "the page object could not be read",
   PAGE_HAS_TEXT_LAYER: "the page carries a text layer; it does not need pixels",
   NOT_IMAGE_ONLY: "the page carries marks that are not an embedded image",
-  NO_IMAGE_ON_PAGE: "the page references no image XObject",
+  NO_IMAGE_ON_PAGE: "the page paints no image",
   MULTIPLE_IMAGES_ON_PAGE: "the page composes several images; compositing is not built",
   IMAGE_UNREADABLE: "the image XObject's stream could not be read",
   UNSUPPORTED_FILTER: "the image's filter chain has no decoder here",
@@ -4657,7 +4748,7 @@ async function pageContentText(doc, pageMap) {
     const st = doc.resolve(v);
     if (!st || st.t !== "stream") return;
     const data = await doc.streamDecoded(st);
-    if (data) parts.push(LATIN12.decode(data));
+    if (data) parts.push(LATIN1.decode(data));
   };
   if (c && c.t === "arr") {
     for (const it of c.items) await one(it);
