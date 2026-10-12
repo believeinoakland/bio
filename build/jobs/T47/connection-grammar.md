@@ -16,3 +16,7 @@
 - `checks/run.mjs`: format 0, architecture 0 failures (3058 files), channels 0; coverage 2 failures, neither mine (record-grammar R61 R62, jurisdictions R88: their T47 marks, rule 5.1).
 
 Size (session_01G4kGikmgsoaj9zsvzXXe1r): test runs 1, module lines 692
+
+## J1 · COMPLETE
+
+T47-3 applied: R21 met. isRecordId already behaved as R21 states (no behaviour change; doc comment states R21). New record-id.test.mjs, 4 tests naming R21, run over every ID_TABLE row (legacy forms included), with every control; it also checks that checkConnection's from/to agree with isRecordId. connection-grammar 37/37; format, architecture, coverage (21/21), ownership 0 failures; run.mjs architecture 0, coverage reds only record-grammar R61 R62 and jurisdictions R88 (their T47 marks). Nothing deferred, nothing found elsewhere. Record: build/jobs/T47/connection-grammar.md on job/T47/connection-grammar.
