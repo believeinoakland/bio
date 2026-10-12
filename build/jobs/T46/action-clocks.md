@@ -27,3 +27,7 @@ Size (session_01DhUXTVeJCC1jtm51pfpgGh): test runs 7, module lines 2090
 ## J1 · REPORT
 
 Serving op=clockproposals (R20) opens one red not inherited: affordances 'R1 R12: layer 9's op maps hold exactly …' (the op is in no catalogue yet). It needs: op-declarations a spec in the action-clocks family (clockproposals: "read", viewer stamped, NEEDS null; its R6, R49/R51) and help text or ACT_HELP_ABSENT (R34); op-grades a grade (R33); affordances (T46-45) its catalogue row and R51's clockadopt offer through clockProposalsFor. op-declarations' 7 reds and plane's 1 are identical before and after this change (inherited).
+
+## J2 · COMPLETE
+
+T46-34 applied: R19 (pendingClocks items carry due_at/due_zone via dueAtOf, as R3) and R20 (clockProposalsFor, op=clockproposals, cap 500) met; tranche/T46 merged per B2, no red opened. action-clocks 70/70; format, architecture, coverage (20/20), ownership 0 failures; run.mjs architecture 0. One red in affordances from the new op (REPORT above). Record: build/jobs/T46/action-clocks.md on job/T46/action-clocks.
