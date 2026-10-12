@@ -19,7 +19,7 @@
 
 **Tests and checks.** `node --test test/m/affordances/` (bio-plane): tests 234, pass 234, fail 0. From the process repository: format (153 modules, 0 failures), architecture (affordances: 294 imports, 0 failures), coverage (35 of 35 live ids named, 0 failures), ownership (11 files, 0 failures). Layer tests: none named by the manifest.
 
-Size (session_01CRGRQChAdRhfopqhzspuKx): test runs 14, module lines 2338
+Size (session_01CRGRQChAdRhfopqhzspuKx): test runs 14, module lines 2575
 
 ## J1 · QUESTION
 
