@@ -1,14 +1,23 @@
 # notice-producers (T46)
 
-**Status** · session_014SC3rCBPTNFj9KFcNmLCLT · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_014SC3rCBPTNFj9KFcNmLCLT · depth 2 · WAITING ON BOB (J1) · handled B2
 
-## Progress
+## Completion (T46-47)
 
-- Read whole: my requirements (public and private), my code (`index.mjs`, `words.mjs`) and all 13 test files. The 19 used modules' public parts plus queue's (over the reading limit, K2700) were read in full by one helper; its digest cites each section (steps R12, R29; following R25; duties R9–R14; queue R11, R13, R16, R27, R42, R51). The sources stay binding.
-- R19 done: `facts.step_due.truncated` carries `stepsDue`'s `truncated: true` (only a `true`), beside this module's own 200 cut. Test over the real steps: 1,001 future-dated open steps → truncated (control: 1,000 after one ended); 1,001 reminders due → truncated; stub controls.
-- R18 built to J1's reading: `following.dutyWatchEndAt(duty)` → `{day, at}` read when present; otherwise the fallback on the end day alone. An occurrence told before the end took hold is exempt from the end of telling. Six tests (stand-in duties with candidates 20 Feb – 10 Mar; following in R25's shape).
-- Tests 109/109; queue's 143/143. format, architecture, coverage and ownership: 0 failures; `run.mjs`: architecture 0 failures.
-- Next: apply BOB's answer to J1, then step 7.
+- **Read:** whole: my requirements (public and private), my code (`index.mjs`, `words.mjs`) and all 13 test files. The 19 used modules' public parts plus queue's were over the reading limit (K2700). One helper read them in full and wrote a digest citing each section (steps R12, R29; following R25; duties R9–R14; queue R11, R13, R16, R27, R42, R51); the sources stay binding. No flaw found in my own module.
+- **R19 applied:** `facts.step_due.truncated` carries `stepsDue`'s `truncated: true` (only a `true`), beside this module's own cut of 200. Tested over the real steps:
+  - 1,001 future-dated open steps → truncated, no item drawn; control: 1,000 after one is ended, not truncated; another member, not truncated.
+  - 1,001 reminders due → truncated.
+  - Stub controls at the interface.
+- **R18 applied, per B2 (K2996):** an occurrence whose first told day (the first candidate's, else its due day's) ended no later than the start of the end day is already told. It is exempt from R5's end of telling: kept with the same key until disposed, and raised as overdue later. It still leaves when met, met late or no longer overdue. An occurrence not told keeps R5's rule.
+  - Tested over the real `following` (link, plan closed, stop answered): stopped after it was told → kept on every read; controls: a stop before it came due, and a stop on its first candidate day, raise none.
+  - **Known limit:** following answers no instant, so the rule is exact for every stop, but a keep answered before an occurrence whose candidates span its end day reads as told. The exact instant is N967 (T47).
+  - The test double of an unbuilt `dutyWatchEndAt` is dropped.
+- **Deferred:** none.
+- **Found in another module:** `steps.laterFound` answers `truncated` (src/steps), but steps R23 does not state it. So this module does not carry it into `facts.step_later_found`: a bound reached there is silent, against R1's intent. Suggest steps R23 state it; this module would then carry it as R19 does for `stepsDue`.
+- **Tests:** `node --test bio-plane/test/m/notice-producers/`: 106 pass, 0 fail. Users: `queue` (`test/m/queue/`, `conclude-project.test.mjs`): 143 pass, 0 fail.
+- **Checks:** format 0 failures; architecture (15 files) 0 failures; coverage 19 of 19 ids, 0 failures; ownership (4 files) 0 failures. `run.mjs`: format, architecture and channels 0 failures; its coverage failures are other L11 modules' unbuilt ids, none mine.
+- Size (session_014SC3rCBPTNFj9KFcNmLCLT): test runs 9, module lines 1376
 
 ## J1 · QUESTION
 
