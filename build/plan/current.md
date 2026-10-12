@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #164 · session_01UBLCpdUsHtrooH5Ji41yu4 · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #16 session_013aVsQVbraDzPKRguViHbgA; jurisdictions: JURISDICTIONS #11 session_01CVJELXMANXCrBSv3k5mkgv; connection-grammar: CONNECTION-GRAMMAR #4 session_01G4kGikmgsoaj9zsvzXXe1r; bundler: BUNDLER #17 session_015stLmywC6CUKSABSgnnE5y; odf-reader: ODF-READER #6 session_01Jn5rD2YHo9oPrridu4wiX2; file-scanner: FILE-SCANNER #4 session_012TNzbQZh8FxASdHwTPhvby
+**Jobs** · record-grammar: RECORD-GRAMMAR #16 session_013aVsQVbraDzPKRguViHbgA; jurisdictions: JURISDICTIONS #11 session_01CVJELXMANXCrBSv3k5mkgv; connection-grammar: CONNECTION-GRAMMAR #4 session_01G4kGikmgsoaj9zsvzXXe1r; bundler: BUNDLER #17 session_015stLmywC6CUKSABSgnnE5y; odf-reader: ODF-READER #6 session_01Jn5rD2YHo9oPrridu4wiX2; file-scanner: FILE-SCANNER #4 session_012TNzbQZh8FxASdHwTPhvby; record-core: RECORD-CORE #22 session_01UoXK9QPNAj5jdUwKRxUk56; membership: MEMBERSHIP #36 session_016WwjpKLhCxuVTMA1W4e1CC; project-roster: PROJECT-ROSTER #5 session_01V2ibyN2cvYwuMA6E7qMpYL; credentials: CREDENTIALS #13 session_011wSZT8CGnm3MLDqCvn7JJo; promotion: PROMOTION #45 session_0145CtZqHwp5jtUoDWPESrGG
 
 **At T47's opening:** T46 closed by PR #32 (`main` @ b4dd9d2616, K3024), after the design stream's PR #30 (DEC-198) and PR #31 (DEC-199) were merged into `main` (K3021, K3023). `tranche/T47` from `main`. Opened by BOB #164 from `draft-T47-plan.md` (a worker's draft for BOB #163), reviewed whole and amended at the opening (K3027): N981–N992 folded, the draft's doubts ruled, DEC-198/DEC-199 re-tested. Development runs (K2605); the 80% pause (K2341) and the account-switch rule stand. Release 0.83.0 is cut from this tranche (§11; T46's "BOB's acts").
 
@@ -80,7 +80,7 @@ It is the only module marked `legacy` in `modules.json`.
 - **T47-70 · ai-use** · (N992) R13 re-takes the DEC-198/DEC-199 design files it reads, clearing its five reds · DEC-198, DEC-199.
 - **T47-20 · ai-runs** · (N955) a member's run dispatched at her act with the segment credential `credentials` R63 mints, T46's interim (the page-held one-day credential, K2976, K2999) retired; (N949) R40's "(today only check)" re-worded · text BOB's.
 - **T47-21 · capture-requests** · (N969) a member path for "Ask for this later": `captureRequest` without a running `run` · text BOB's · doubt 6.
-- **T47-22 · skills** · (N949) R18's three-member order re-worded to `plan`'s deployment · text BOB's.
+- **T47-22 · skills** · (N949) R18's three-member order re-worded to `plan`'s deployment; (K3038) R31's citations of case-authoring ids moved to case-inputs re-pointed (wording) · text BOB's.
 - **T47-23 · agent-harness** · (N949) R2's public text re-worded · text BOB's.
 - **T47-24 · agent-worker** · (N949) R56 (the switch on the wire for a sign-in) and its Suggestions' T46 note re-worded (agent-model R15) · text BOB's.
 
@@ -91,6 +91,7 @@ It is the only module marked `legacy` in `modules.json`.
 - **T47-26 · case-carriage** · (N947) R19, R21 latch a flag opened and cleared, or a consent withdrawn and restored, inside the interval (their T47 marks), through T47-13, -15; (N953) writes T47-25's marker · text BOB's.
 - **T47-27 · publication** · (N952) R53's field list names `criteria`, `signed_at`/`published_at` and the timeline R62, R70, R72 attribute to it; (N908) R23 and Suggestions name `case-inputs` · text BOB's.
 - **T47-28 · docket** · (N952) R12 lists `entry` (public-read R20's link); (N992) reads DEC-199's re-worded `refusal.DOCKET_OUTCOME_UNREADABLE` by key · text BOB's; DEC-199.
+- **T47-76 · case-disclosures** · (N953, K3038) records case-carriage R22's cleaned-copy marker (case-grammar R31) in each edition's document-copy row it writes (R6, R7), so public-read R35 keys a cleaned copy by the marker, never by the label's words · text BOB's.
 - **T47-72 · ratification** · (N988) `release` and `retire` read `handle`, `acknowledgment`, `mitigation` and `reason` from the body, else the query (the stamps stay the door's), tested both ways · text BOB's.
 - **T47-29 · public-read** · (N953) R3 keys a cleaned copy by T47-25's marker; (N954) tests deepened: R11, R10, R14, DEC-149, K899, R28 "wherever served", `relay.test.mjs`' line numbers replaced by behaviour · text BOB's.
 - **T47-30 · case-import** · (N951) R17's citation of the absent docket R23 corrected; (N947, K3033) registers `flagHistory` with accepted-work R9 (its registered flags' history, R8), so case-carriage R19's interval clause holds in the composed plane · text BOB's.
@@ -98,10 +99,10 @@ It is the only module marked `legacy` in `modules.json`.
 - **T47-32 · case-authoring** · (N908) deletes the copies, re-points to `case-inputs` (§3), creates it in its factory, drops `schema.mjs` and its purge declaration, retires R19–R21, R28, R39, R59, R62, R70, R71, R73, adds R74, re-words R9, R14, R27, R29, R34, R38, R65; (N992) R73's no-window and not-laid-out open-request rows read DEC-199's sentences by key; (N683) ratification R44's `publish_at` offer carried into R34's step 5 · split map §3, §4; N683 BOB's · after T47-31 · doubt 4.
 - **T47-33 · review** · (N908) R18, R20 read `statementAcknowledgements` from `case-inputs`; `invariants.test.mjs` re-pointed · split map §5 · after T47-31.
 
-**L8 merge order:** case-inputs first (K624), then case-grammar, case-carriage, publication, docket, ratification, public-read, case-import, case-authoring, review (re-checked against `modules.json` at L8's START).
+**L8 merge order:** case-inputs first (K624), then case-grammar, case-carriage, publication, docket, ratification, case-disclosures, public-read, case-import, case-authoring, review (re-checked against `modules.json` at L8's START).
 
 ### L9
-- **T47-34 · conformance** · (N951) R32's identity mapping stated against case-import R4 as T46 built it · text BOB's.
+- **T47-34 · conformance** · (N951) R32's identity mapping stated against case-import R4 as T46 built it (R39); (N995, K3038) the source edition's date it reads (`edition_date`) named from what case-import R4 answers, or the read removed, tested · text BOB's.
 - **T47-35 · consequences** · (N958) R24's audit clause met, its `test.todo` made a test; (N908) R22: `carryOutcome` through `case-inputs`, `uses` drops `case-authoring` · text BOB's.
 - **T47-36 · action-grammar** · (N959) R8 stated as the date rule (the time-of-day arm actions' own); (N961) the moved rows' `where`s (C-73.2–.5, C-90.2, receipt, scope, promise, risk-basis) → `src/action-records/index.mjs`, census fixtures following · text BOB's; split map §5 · doubt 8.
 - **T47-37 · action-records** (new) · (N961; K2982) built by copy (split map §2, §6, line numbers re-taken after T46-32), R1–R15 · `actions-split.md` · first to merge in L9.
@@ -113,7 +114,7 @@ It is the only module marked `legacy` in `modules.json`.
 - **T47-43 · action-plans** · (N964) R19's `date_past`, `date_before_phase` on the place's local day, undetermined (R28) with no zone held; (N963, N992) C-124.63 `DOCUMENT_FIRST_NO_REASON` kept for both arms, its translation read by key from DEC-199's sentence, now true of the absent and the malformed reason (no new code); (N966) the public part names the closing instant `closed.at` · text BOB's.
 - **T47-44 · plan-work** · (N956) R14's interim label → `proposalLabel(by, "status_report")`; (N966) R15 names `met_at`'s instant and `met_at_why`, R13 names `nowMs`; (N968) R4's due read answers the review recurrence and the last review's day · text BOB's.
 
-**L9 merge order:** action-records first (K624), then conformance, consequences, action-grammar, actions, action-clocks, action-replies, filing-templates, escalation, action-plans, plan-work.
+**L9 merge order:** action-records first (K624), then conformance, consequences, action-grammar, actions (before action-clocks: `actionZone` moves to it, R100), action-clocks, action-replies, filing-templates, escalation, action-plans, plan-work.
 
 ### L10
 - **T47-45 · monitoring** · (N969) a served act setting a bundle's `monitoring.enabled`, so `op=monitor` from Add is not refused `NOT_MONITORED` · text BOB's.
@@ -163,6 +164,7 @@ It is the only module marked `legacy` in `modules.json`.
 
 ## BOB's acts (no job)
 
+- **Citations of moved ids (K3038):** case-account R6, case-check, filings R24 re-pointed by BOB (wording, no job); control-plane, op-declarations, op-grades, wizard-scripts at L11's fold.
 - **Requirements before each START (P18):** `case-inputs`, `action-records` (split maps §4); the L11 screens' requirements from `registry.json` and the layouts page (a `draft-T47-interface.md`, as T46's); the N-entries' wording marked "text BOB's".
 - **The channel (design stream's words):** N889, N962, N963 settled by DEC-198/DEC-199 on `main` (re-tested at the opening, K3027; folded in T47-51, -42, -43). One HANDOFF at the opening (B156): N971's scanner wording (file-safety R42 "no virus scanner" against setup-page R30 "no file scanner"), N976's `strengthbarset` label ("Set the project's bar" sets the group's bar; T47-19 adds the project's own act), N978 (`attest` is an RFC 3161 timestamp over the capture's hash, not a signature; `monitor` runs one check), and the words T47's new ops and screens will need.
 - **N943:** file-safety's split map (4,671 lines), written during T46 (P18), so its split can join T47's L3 if ready at the opening (doubt 3).

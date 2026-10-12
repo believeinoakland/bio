@@ -1,6 +1,6 @@
 # BOB to record-core (T47)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 578 KB, within the 600 KB limit (K2700). Read it whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L2: record-core, membership, project-roster, credentials, promotion (the stamp, last). No L2 job uses another's new service, so each merges as soon as it is complete; promotion's stamp merges after the other four (it measures their rows: merge `tranche/T47` when BOB announces the last of them).
+
+## B2 · ANSWER · re J1
+
+Your reading holds on both edges (K3036): the list governs; -0 is stored and reads back 0; a null-prototype object, symbol keys, getters, non-enumerable properties, holed or named-property arrays and a throwing inspection are refused SETTING_NOT_JSON, recording nothing. R84 now says so on tranche/T47 (merge it into your branch). Test each edge by name.

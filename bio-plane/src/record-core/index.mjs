@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R83).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R84).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -20,7 +20,8 @@
    `ID_TABLE` since record-grammar's T41 job, each named by its own sentence in `mintExhausted` (R62, R76). T42 (T42-2a;
    K2616, K2617): `ACD`, a case account draft, opaque in `ID_TABLE` with `legacy: "sequential"` since record-grammar's
    T42 job (its R55), minted opaque by its form alone and named by its own sentence (R62, R76). T46 (T46-3; N904): the
-   strict `getSetting` tells an unreadable setting (`SETTING_UNREADABLE`) from an unset one (R83). */
+   strict `getSetting` tells an unreadable setting (`SETTING_UNREADABLE`) from an unset one (R83). T47 (T47-6; N939):
+   `setSetting` refuses a value that does not round-trip through JSON, `SETTING_NOT_JSON` under its own row (R84). */
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES, ID_TABLE } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
@@ -258,6 +259,42 @@ export function perItem(act, body, stamped, one, { itemKeys = null, sharedKeys =
 /** R83 (T46; N904): what the strict `getSetting` answers for a setting whose value last set cannot be read, told from
  *  `null` (never set). One frozen object, compared by identity; no stored value parses to it. */
 export const SETTING_UNREADABLE = Object.freeze({ unreadable: true });
+
+/* R84 (T47; N939): whether `value` reads back through JSON as it was set: at every depth `null`, a boolean, a string, a
+   finite number, an array of such values or a plain object (its prototype `Object.prototype`) whose values are all such.
+   JSON would silently change anything else, so it is not: a function, a symbol, a BigInt, `undefined`, `NaN` and the
+   infinities (written as `null`), a `Date` or other non-plain object (a null-prototype one among them), a cycle, and the
+   parts of an array or object JSON drops or flattens: a hole, a named property on an array, a symbol key, a property
+   that is not enumerable or is a getter. A value whose inspection throws (a hostile Proxy), or nests too deep to walk,
+   is not either. `-0` is a finite number and is taken (JSON writes it `0`). Never throws. */
+function roundTripsJson(value) {
+  const open = new Set();                 /* the objects on the path being walked: one met again is a cycle */
+  const ok = (v) => {
+    if (v === null || typeof v === "string" || typeof v === "boolean") return true;
+    if (typeof v === "number") return Number.isFinite(v);
+    if (typeof v !== "object" || open.has(v)) return false;
+    const list = Array.isArray(v);
+    if (Object.getPrototypeOf(v) !== (list ? Array.prototype : Object.prototype)) return false;
+    const keys = Reflect.ownKeys(v);
+    if (list && keys.length !== v.length + 1) return false;       /* its indices and `length`, nothing more or less */
+    open.add(v);
+    for (const k of keys) {
+      if (typeof k !== "string") return false;
+      if (list && k === "length") continue;
+      if (list && !(String(Number(k)) === k && Number.isInteger(Number(k)) && Number(k) >= 0 && Number(k) < v.length)) return false;
+      const d = Reflect.getOwnPropertyDescriptor(v, k);
+      if (!d || !d.enumerable || !("value" in d) || !ok(d.value)) return false;
+    }
+    open.delete(v);
+    return true;
+  };
+  try { return ok(value) === true; } catch { return false; }
+}
+/* The JSON text of a value `roundTripsJson` took, or null when writing it fails after all (a Proxy that answers one way
+   and then another). Never throws. */
+function jsonText(value) {
+  try { const t = JSON.stringify(value); return typeof t === "string" ? t : null; } catch { return null; }
+}
 
 const instances = new WeakMap();
 /* The storage's SQL of an instance, for this module's own route arms (R73's sight gate) and nothing outside it. */
@@ -1791,10 +1828,12 @@ export class RecordCore {
     }
   }
 
-  /** R25, R26, R81: records `value` under `name`, with who set it and when. `jurisdiction_profiles` is an
+  /** R25, R26, R81, R84: records `value` under `name`, with who set it and when. `jurisdiction_profiles` is an
    *  ordered list of profile ids (non-empty strings, no repeats); anything else is refused and nothing
-   *  is recorded. The four refusals, in this order, each answer with its row (C-102.29–.32, DEC-49) and one fixed
-   *  sentence; `SETTING_INVALID` keeps `name`. */
+   *  is recorded. The five refusals, in this order, each answer with its row (C-102.29–.33, DEC-49) and one fixed
+   *  sentence; `SETTING_NOT_JSON` and `SETTING_INVALID` keep `name`. R84 (T47; N939): a value is stored as JSON, so one
+   *  that would not read back as it was set is refused `SETTING_NOT_JSON` (`roundTripsJson`), and JSON never silently
+   *  changes a setting. */
   setSetting(name, value, by) {
     const n = String(name ?? "");
     /* DEC-49 REGION is-setting-refused */
@@ -1803,6 +1842,10 @@ export class RecordCore {
       return rowRefusal("SETTING_BY_REQUIRED", "a setting is recorded with who set it, and no one was named; nothing was recorded.");
     if (value === undefined)
       return rowRefusal("SETTING_VALUE_REQUIRED", "a setting is recorded with a value, and none was given; nothing was recorded.");
+    const text = roundTripsJson(value) ? jsonText(value) : null;
+    if (text === null)
+      return rowRefusal("SETTING_NOT_JSON", "a setting's value is stored as JSON, and this value cannot be stored as written; "
+        + "nothing was recorded.", { name: n });
     if (n === "jurisdiction_profiles"
         && !(Array.isArray(value) && value.every((v) => typeof v === "string" && v.trim() !== "")
              && new Set(value).size === value.length))
@@ -1810,7 +1853,7 @@ export class RecordCore {
                         { name: n });
     /* END DEC-49 REGION is-setting-refused */
     this.#sql.exec(`INSERT INTO settings (name,value,set_by,set_at) VALUES (?,?,?,?)`,
-                   n, JSON.stringify(value), by, new Date().toISOString());
+                   n, text, by, new Date().toISOString());
     return { ok: true };
   }
 
