@@ -56,3 +56,13 @@ Size (session_016tFh3EWvxLbakE52DL24QM): test runs 6, module lines 2418
 ## J2 · COMPLETE
 
 T46-25 applied: R30's accountJudged translates case-account's {holdings} into checkAccount's cited at one site (checkerCited). case-disclosures tests 97/97; case-account 32/32; case-authoring 204/204; format, architecture, coverage (31/31), ownership 0 failures; run.mjs architecture 0 failures. Record: build/jobs/T46/case-disclosures.md. Ready to merge; I will merge tranche/T46 on your CHANGE after case-checker merges.
+
+## B3 · CHANGE handled
+
+`tranche/T46` (with case-checker's T46 merge, K2968) merged into this branch, no conflict.
+- Re-run on the merge: `test/m/case-disclosures/` tests 97, pass 97, fail 0; `test/m/case-account/` 32/32; `test/m/case-authoring/` 204/204.
+- `format`, `architecture case-disclosures`, `coverage case-disclosures` (31 of 31), `ownership case-disclosures tranche/T46`: 0 failures each.
+- `checks/run.mjs`: architecture 2950 product files, 0 failures; coverage 32 failures, all other modules' (inherited); channels 0.
+- Nothing in my code changes: R30's arm-1 filter on account rows already matches case-checker R24 as merged.
+
+Size (session_016tFh3EWvxLbakE52DL24QM): test runs 9, module lines 2416
