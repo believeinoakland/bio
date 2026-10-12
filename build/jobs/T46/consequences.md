@@ -47,3 +47,7 @@ Lower-level choices I made (recorded in my record for rulings.md): new SUC ids a
   - `run.mjs` over the product: architecture 2957 files, 0 failures; coverage 29 failures, none consequences' (rule 5 (1)'s T46 not-yet-met ids); channels 0 failures.
 
 Size (session_0193uDUaniMYE18ayZQpYAsc): test runs 14, module lines 2175
+
+## J2 · COMPLETE
+
+T46-30 complete on job/T46/consequences. R24 built (success records promoted as SUC- success_record objects; T45 rows promoted at creation, unchanged; audit clause a test.todo naming N958 per K2980). R25 built (17 rows and R19's two sentences read words.json by key; C-114.29/.34/.37 kept). Consequences tests 63 pass, 0 fail, 1 todo; format, architecture, coverage (25/25), ownership 0 failures; run.mjs architecture 0 failures. Details, reds found elsewhere (escalation R21 states, T46-38) and Size line in my record.
