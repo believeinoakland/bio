@@ -47,7 +47,7 @@ import { GroupRules } from "./rules.mjs";
 import { LOCAL_FACTS_TABLE_CLASSES, migrateLocalFacts } from "./schema.mjs";
 import { factPath, parseFactPath, officesToken } from "./paths.mjs";
 
-export { LOCAL_FACTS_CHECKS } from "./checks.mjs";
+export { LOCAL_FACTS_CHECKS, RULE_WORDS } from "./checks.mjs";
 export { LOCAL_FACTS_SCHEMA, LOCAL_FACTS_TABLES, LOCAL_FACTS_TABLE_CLASSES } from "./schema.mjs";
 export { LOCAL_FACT_KINDS, factPath, parseFactPath } from "./paths.mjs";
 export { RULE_SECTIONS, RULE_STATES, RULE_REASON_MAX, RULE_STATEMENT_MAX, GROUP_PROFILE } from "./rules.mjs";
@@ -638,9 +638,10 @@ function noSuchFact(path) {
   /* END DEC-49 REGION is-fact-named */
 }
 
-/** The ops whose handlers are this module's (K3): the control plane routes, authenticates and stamps them (`by` in the
- *  body; `viewer` in the URL, read after the body so a body cannot set it). `plane` composes them (its R11). A read's
- *  `paths` are the body's list, or the query's repeated `path`. */
+/** R15: the ops whose handlers are this module's (K3), one arm per act and read: the control plane routes,
+ *  authenticates and stamps them (`by` in the body; `viewer` in the URL, read after the body so a body cannot set it).
+ *  `plane` spreads the map (its R39) and names no entry of it. A read's `paths` are the body's list, or the query's
+ *  repeated `path`. */
 export function localFactsOps(s, url, body) {
   const qp = (k) => url.searchParams.get(k);
   const b = isObj(body) ? body : {};
@@ -654,6 +655,8 @@ export function localFactsOps(s, url, body) {
     ruleconfirm: () => s.ruleConfirm({ ...b, viewer: qp("viewer") }),
     rulewithdraw: () => s.ruleWithdraw({ ...b, viewer: qp("viewer") }),
     ruleoffer: () => s.ruleOffer({ rule: qp("rule") ?? b.rule, by: b.by, viewer: qp("viewer") }),
+    /* R15 (T46; N935): R12's read, `section` the query's (absent read as none), `viewer` the URL's */
+    grouprules: () => s.groupRules({ section: qp("section") ?? undefined, viewer: qp("viewer") }),
   };
 }
 
