@@ -12,3 +12,7 @@ Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Merge order in L2: record-core, membership, project-roster, promotion (the stamp, last). A job that uses no unmerged L2 job may merge as soon as it is complete.
 Reading set (mechanics §17): measured at this START: 820 KB, over the 600 KB limit, mostly your tests and the used modules' public parts (an upper bound). Read your requirements and code whole, and your tests whole where you can; for what remains, give helpers in your session your entries and what follows them, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+
+## B2 · CHANGE
+
+K2931: record-core (K2927), membership and project-roster are merged into tranche/T46. Merge tranche/T46 into your branch and stamp what it holds: membership C-96.49, C-96.50, C-96.51 retired, C-96.52 HANDLE_FIXED new, C-56.6 unmoved (your J1 readings both stand); project-roster C-147.3–.8 re-worded; the gate aggregate as your START says. Then COMPLETE.
