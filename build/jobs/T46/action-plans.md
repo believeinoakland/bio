@@ -1,6 +1,6 @@
 # action-plans (T46)
 
-**Status** · session_011gbw5FmUZTZY6DZZ5KGkV9 · depth 2 · RUNNING until 2026-10-12T08:13:08Z (tests after merging tranche/T46 (B3)) · handled B2
+**Status** · session_011gbw5FmUZTZY6DZZ5KGkV9 · depth 2 · RUNNING until 2026-10-12T08:13:08Z (tests after merging tranche/T46 (B3)) · handled B3
 
 ## Record
 
