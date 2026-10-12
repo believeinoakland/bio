@@ -78,7 +78,9 @@ export { GROUP_SLUG_RE, FLEET_BINDINGS };
  *   UNBOUND   this plane holds no binding by that name — the member is unreachable FROM HERE whatever the account holds.
  *   SILENT    bound, and it did not answer a readable version within the bound (`why` says what happened).
  *   MISNAMED  something answered through the binding, but under another name — the binding points at the wrong worker.
- * Read only on `op=bootstrap&members=1`, so the anonymous answer a browser polls does not fan out to three workers. */
+ * Read whole only on `op=bootstrap&members=1`, so the anonymous answer a browser polls does not fan out to every member;
+ * since T46 (R81) that answer asks the two members whose parts the setup page shows before sign-in (agent-worker for the
+ * sign-in's runner, file-scanner for scanning and the safe view), each within the same bound. */
 const MEMBER_VERSION_WAIT_MS = 4000;
 /* One member's own `/version`, asked through its binding within the bound: `{report, body}`, `report` its state as
    above and `body` the member's answer when it served (agent-worker's carries `runner`, R17). */
