@@ -176,8 +176,12 @@ const FACT_KEYS = ["ok", "target", "object_type", "declared_type", "current_stat
   "project_owner", "project_target_owner", "project_participant", "roster", "actor_is_machine", "concludes_for_project",
   "concluded_for_project", "edition_warranted_for_project", "basis_legs", "contradiction_inquiry",
   "contradiction_sides_seen" /* N365 */, "rested_on",
-  "basis_version_states", "basis_versions", "cites_in", "cites_out", "cited_by_case"].sort();
-test("R14: the answer carries exactly R14's facts, with their sub-keys", async () => {
+  "basis_version_states", "basis_versions", "cites_in", "cites_out", "cited_by_case",
+  "action" /* R51: an action's own facts, null on any other type */].sort();
+/* R51: an action's facts, with their sub-keys */
+const ACTION_KEYS = ["clock", "closed", "drafts", "entries", "escalation", "holds_in_place", "preparable",
+  "request_for_comment"];
+test("R14 R51: the answer carries exactly R14's facts, with their sub-keys, and an action's own facts only on an action", async () => {
   for (const id of [W.INFO, W.INQ, W.ACTN, W.PA]) {
     const f = await facts(id, { viewer: "member:iris", identity: "member:iris", author: "member:iris", by: "iris" });
     assert.deepEqual(Object.keys(f).sort(), FACT_KEYS, id);
@@ -186,6 +190,12 @@ test("R14: the answer carries exactly R14's facts, with their sub-keys", async (
     assert.deepEqual(Object.keys(f.cites_out).sort(), ["confirmed", "severed", "severed_reinstatable"]);
     assert.deepEqual(Object.keys(f.cited_by_case).sort(), ["confirmed", "severed"]);
     assert.equal(f.target, id);
+    if (id === W.ACTN) {
+      assert.deepEqual(Object.keys(f.action).sort(), ACTION_KEYS);
+      assert.deepEqual(Object.keys(f.action.entries).sort(), ["all", "received", "received_unmarked", "sent"]);
+      assert.deepEqual(Object.keys(f.action.clock).sort(), ["dated", "entries", "reminders_room"]);
+      assert.deepEqual(Object.keys(f.action.escalation).sort(), ["attachable", "openable"]);
+    } else assert.equal(f.action, null, id);
   }
 });
 

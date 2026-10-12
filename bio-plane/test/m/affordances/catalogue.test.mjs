@@ -393,30 +393,15 @@ import { filingsOps } from "../../../src/filings/index.mjs";
 import { actionsOps } from "../../../src/actions/index.mjs";
 import { actionPlansOps } from "../../../src/action-plans/index.mjs";
 import { actionClocksOps } from "../../../src/action-clocks/index.mjs";
-const LAYER9_RUNGS = {
-  /* DEC-88 (K1038): layer 9's thirteen that were `undetermined` */
-  standarddeclare: "reasoned", standardpropose: "reversible", standardadopt: "reasoned", comparisonpropose: "reversible",
-  consequencerecord: "reasoned", filingprepare: "reversible", filingapprove: "terminal", filingsent: "reasoned",
-  counselpacket: "reasoned", theorypropose: "reversible", escalationopen: "reasoned", escalationattach: "reasoned",
-  escalationend: "terminal",
-  consequencerevise: "reasoned", addressedrecord: "reasoned", escalationevaluate: "reasoned",
-  escalationadvance: "reasoned", escalationdecline: "reasoned", escalationsuspend: "reasoned",
-  escalationresume: "reversible",
-  determine: "reasoned",   // N310, with conformance's N233
-  /* K727: action-plans' (its R4, R9, R13, R14, R20) */
-  plansubjectadd: "reasoned", plansubjectremove: "reasoned", optionrevise: "reasoned", optiondispose: "reasoned",
-  planclose: "reasoned", scenarioset: "reversible",
-  actionhold: "reasoned",   // K918: actions R52
-};
-const LAYER9_ABSENT = {
-  counselpacketexport: "substrate",
-  communicationprepare: "undetermined", templatesave: "undetermined",   // K705: filings R23, R26
-  actioncreate: "undetermined", actionpressure: "undetermined",         // K709: actions R47, R48
-  /* K727: action-plans' six, and action-clocks' two reminders (a member's own request, `queuesnooze`'s ground) */
-  planopen: "undetermined", optionadd: "undetermined", optionpropose: "undetermined", optionadopt: "undetermined",
-  checkpointrecord: "undetermined", optionstart: "undetermined",
-  reminderset: "caller-owned", reminderanswer: "caller-owned",
-};
+/* Layer 9's ops before T45 (K264, K705, K709, K727, K902), keyed only to which owner serves them; their grades are
+   op-grades' (N891). The hold and pressure acts moved to `action-holds` in T45 (K2781 (1)). */
+const LAYER9_WRITES = ["standarddeclare", "standardpropose", "standardadopt", "comparisonpropose", "consequencerecord",
+  "filingprepare", "filingapprove", "filingsent", "counselpacket", "theorypropose", "escalationopen", "escalationattach",
+  "escalationend", "consequencerevise", "addressedrecord", "escalationevaluate", "escalationadvance", "escalationdecline",
+  "escalationsuspend", "escalationresume", "determine", "plansubjectadd", "plansubjectremove", "optionrevise",
+  "optiondispose", "planclose", "scenarioset", "actionhold", "counselpacketexport", "communicationprepare", "templatesave",
+  "actioncreate", "actionpressure", "planopen", "optionadd", "optionpropose", "optionadopt", "checkpointrecord",
+  "optionstart", "reminderset", "reminderanswer"];
 const LAYER9_READS = ["standard", "standards", "determination", "determinations", "comparison",
   "comparisonfacts" /* conformance R21 (N345), an ungated read like `comparison` */,
   "consequence", "consequencesof", "addressed", "counselpacketread", "filingsfor", "availableactions", "escalation",
@@ -424,88 +409,87 @@ const LAYER9_READS = ["standard", "standards", "determination", "determinations"
   "plan", "plans", "planproposals" /* K727: action-plans R6, R7, R34 */];
 const LAYER9_GATED_READS = ["optionstartpreview" /* N490: action-plans R37 */,
   "standardinforce" /* K1689: gated since T33, a NEEDS row of null (op-declarations) */];
-/* actions' op map holds acts and reads catalogued long before layer 9; only the ops K709 adds join this set. */
-const ACTIONS_NEW = ["actioncreate", "actionpressure", "actionhold" /* K902 */, "action", "actions"];
-/* K2049 (B4): the ops standards adds in T35 (its R35–R43), graded by op-grades in its `t35.mjs` (its R22, K2043) and set aside
-   from layer 9's closed set as T33's are, pinned here to standards' map. */
-const STANDARDS_T35 = ["standardforce", "standardforcepropose", "standardforcewithdraw", "standardrelease",
-  "standardadoption", "standardimpose", "standardbenchmark", "forcesof", "overridesof", "editioninforce", "bindsat"];
-/* K2121 (T36): standards' in-force-through record, its withdrawal and its read (its R50; K2092), graded by op-grades R23 in
-   its `t36.mjs` and pinned apart as T35's are. */
-const STANDARDS_T36 = ["standardinforcethrough", "standardinforcethroughwithdraw", "inforcethroughof"];
-test("R1 R12: (K2049: standards' T35 ops pinned apart) layer 9's op maps hold exactly its 41 mutating ops, 19 ungated reads "
-   + "and two gated reads (optionstartpreview, N490; standardinforce, K1689) — 62 ops (K264; conformance's comparisonfacts, "
-   + "N345; K705, K709, K727, K902; K992: `templates` is filing-templates') — none an act, each write and gated read "
-   + "named in NON_ACTS, the ungated reads in no registry, standards' T35 and T36 ops in op-grades' tables; and with the "
-   + "control plane's rows nothing is unaccounted", () => {
+/* T45's layer 8–9 ops (K2781, K2839, K2857; op-grades R32 grades them, op-declarations R49 declares them), by owner:
+   the writes, and the reads (whose gating is op-declarations'). */
+const T45_L9 = {
+  actions: { writes: ["actionreceipt", "actionscope", "actionpromise"], reads: ["openitemswith"] },
+  actionHolds: { writes: ["actionholdrelease", "holdnoticesent", "pressurerecord"], reads: ["actionholdpreview", "projectholds"] },
+  actionReplies: { writes: ["actionreplybearing", "actionbearingpropose", "arosefrom"], reads: [] },
+  planWork: { writes: ["matteroutcomeset", "planreviewrhythm", "planreviewrecord", "prepitemadd", "prepitemtakeup",
+    "prepitemdone", "plancomment", "statusreportsave", "itemtakeup"],
+    reads: ["matters", "plantimeline", "planreviewopen", "planreviews", "prepitems", "plancomments", "whereitstands",
+      "statusreportdraft", "statusreports", "matterpromiseduties"] },
+  caseCheck: { writes: ["publishcheck"], reads: ["casecheck"] },
+  consequences: { writes: ["successrecord", "successrevise", "outcomecarry"], reads: ["successread", "successrecords"] },
+  conformance: { writes: ["curelink", "cureunlink"], reads: ["cures"] },
+  actionPlans: { writes: ["scenariosetaside", "scenariorestore", "planpause", "planresume"], reads: [] },
+  actionClocks: { writes: ["clockstate"], reads: [] },
+  filings: { writes: ["filingsecondapprove", "jointsignatory", "holdnoticeprepare"], reads: ["templatesforaction"] },
+  projectRoster: { writes: ["projectscopeset", "projectapprovalset"], reads: [] },
+};
+const T45_L9_OPS = new Set(Object.values(T45_L9).flatMap((o) => [...o.writes, ...o.reads]));
+/* K2049 (B4) and K2121: standards' T35 and T36 ops, graded in op-grades' `t35.mjs` and `t36.mjs`, set aside as T33's are. */
+const STANDARDS_LATER = ["standardforce", "standardforcepropose", "standardforcewithdraw", "standardrelease",
+  "standardadoption", "standardimpose", "standardbenchmark", "forcesof", "overridesof", "editioninforce", "bindsat",
+  "standardinforcethrough", "standardinforcethroughwithdraw", "inforcethroughof"];
+import { actionHoldsOps } from "../../../src/action-holds/index.mjs";
+import { actionRepliesOps } from "../../../src/action-replies/index.mjs";
+import { planWorkOps } from "../../../src/plan-work/index.mjs";
+import { caseCheckOps } from "../../../src/case-check/index.mjs";
+import { projectRosterOps } from "../../../src/project-roster/index.mjs";
+const MAPS = () => {
   const url = new URL("http://x/");
-  const keys = (f) => Object.keys(f({}, url, {}));
-  const ESCALATION = ["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance", "escalationdecline",
-    "escalationend", "escalationsuspend", "escalationresume", "escalation", "escalationsdue"];
-  const actions = keys(actionsOps);
-  assert.deepEqual(ACTIONS_NEW.filter((op) => !actions.includes(op)), [], "actions' op map holds K709's four and K902's actionhold");
-  /* op-grades R13 (K1571, K1658): standards' and action-clocks' T33 ops are graded in t33.mjs and held there (t33.test.mjs) */
-  const ops = [...keys(standardsOps), ...keys(conformanceOps), ...keys(consequencesOps), ...keys(filingsOps), ...ESCALATION,
-               ...ACTIONS_NEW, ...keys(actionPlansOps), ...keys(actionClocksOps)]
-               .filter((op) => (!T33_OPS.has(op) || LAYER9_GATED_READS.includes(op)) && !STANDARDS_T35.includes(op)
-                 && !STANDARDS_T36.includes(op));
-  /* K2049: standards' T35 ops are in its map, each named in op-grades' T35 table */
-  const standards = keys(standardsOps);
-  assert.deepEqual(STANDARDS_T35.filter((op) => !standards.includes(op)), []);
-  for (const op of STANDARDS_T35) {
-    assert.ok(Object.hasOwn(T35_NON_ACTS, op) && NON_ACTS[op] === T35_NON_ACTS[op], op);
-  }
-  /* K2121: standards' T36 ops are in its map, each named in op-grades' T36 table */
-  for (const op of STANDARDS_T36) {
-    assert.ok(standards.includes(op), op);
-    assert.ok(Object.hasOwn(T36_NON_ACTS, op) && NON_ACTS[op] === T36_NON_ACTS[op], op);
-  }
-  const mutating = [...Object.keys(LAYER9_RUNGS), ...Object.keys(LAYER9_ABSENT)];
-  assert.equal(mutating.length, 41);
+  const keys = (f) => Object.keys(f({}, url, {}, {}));
+  return { standards: keys(standardsOps), conformance: keys(conformanceOps), consequences: keys(consequencesOps),
+    filings: keys(filingsOps), actions: keys(actionsOps), actionHolds: keys(actionHoldsOps), actionPlans: keys(actionPlansOps),
+    actionClocks: keys(actionClocksOps), escalation: keys(escalationOps), actionReplies: keys(actionRepliesOps),
+    planWork: keys(planWorkOps), caseCheck: keys(caseCheckOps), projectRoster: keys(projectRosterOps) };
+};
+test("R1 R12: layer 9's op maps hold exactly its 41 writes, 19 ungated reads and two gated reads from before T45 "
+   + "(K264, K705, K709, K727, K902; the holds now action-holds'), beside T45's, T33's and standards' later ops; with the "
+   + "control plane's rows nothing is unaccounted; a gated read left unnamed is seen", () => {
+  const m = MAPS();
+  const ops = [...m.standards, ...m.conformance, ...m.consequences, ...m.filings, ...m.escalation, ...m.actionPlans,
+    ...m.actionClocks, ...["actioncreate", "action", "actions"].filter((op) => m.actions.includes(op)),
+    ...["actionhold", "actionpressure"].filter((op) => m.actionHolds.includes(op))]
+    .filter((op) => (!T33_OPS.has(op) || LAYER9_GATED_READS.includes(op)) && !STANDARDS_LATER.includes(op)
+      && !T45_L9_OPS.has(op) && !["escalationstatus", "declinetoescalate", "escalationreasondraft"].includes(op));
+  assert.equal(LAYER9_WRITES.length, 41);
   assert.equal(LAYER9_READS.length, 19);
-  assert.deepEqual([...ops].sort(), [...mutating, ...LAYER9_READS, ...LAYER9_GATED_READS].sort());
-  for (const op of mutating) {
-    /* op-grades' content its own tests do not yet pin (N877; reported to BOB): each write's reason, no capture act */
-    assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 10 && !NON_ACTS[op].startsWith("capture-directed:"), op);
-    assert.ok(!ACTS.some((a) => a.id === op), op);
-  }
-  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): counselpacketexport's ground, and each
-     stated absence's sentence */
-  assert.equal(RUNG_ABSENT.counselpacketexport?.ground, LAYER9_ABSENT.counselpacketexport);
-  for (const op of Object.keys(LAYER9_ABSENT))
-    assert.ok(typeof RUNG_ABSENT[op].is === "string" && RUNG_ABSENT[op].is.length > 20, op);
-  const named = (op) => Object.hasOwn(NON_ACTS, op) || Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op)
-    || [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op);
-  assert.deepEqual(LAYER9_READS.filter(named), []);
-  /* N490 (op-grades R5): the gated read carries a `read:` reason in the form of the others, and no rung (op-grades R2
-     grades the ops that write), and is no act */
-  for (const op of LAYER9_GATED_READS) {
-    /* op-grades' content its own tests do not yet pin (N877; reported to BOB) */
-    assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ") && NON_ACTS[op].length > 40, op);
-    assert.match(NON_ACTS[op], /writes nothing$/, op);
-    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
-    assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op), op);
-  }
-  /* op-grades' content its own tests do not yet pin (N877; reported to BOB) */
-  assert.ok(Object.hasOwn(NON_ACTS, "actionriskpropose"));
-  assert.ok(!named("monitoring"));
-  /* the control plane's rows for these ops, as op-declarations declares them (K263's routing, now its): gated and
-     mutating for the writes, the reads ungated but the preview; nothing is unaccounted */
-  const table = [...mutating.map((op) => ({ op, mutating: true, gated: true })),
+  assert.deepEqual([...ops].sort(), [...LAYER9_WRITES, ...LAYER9_READS, ...LAYER9_GATED_READS].sort());
+  for (const op of STANDARDS_LATER) assert.ok(m.standards.includes(op), op);
+  const table = [...LAYER9_WRITES.map((op) => ({ op, mutating: true, gated: true })),
     ...LAYER9_READS.map((op) => ({ op, mutating: false, gated: false })),
-    ...LAYER9_GATED_READS.map((op) => ({ op, mutating: false, gated: true })),
-    { op: "actionriskpropose", mutating: true, gated: true }, { op: "monitoring", mutating: false, gated: false }];
+    ...LAYER9_GATED_READS.map((op) => ({ op, mutating: false, gated: true }))];
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
-  assert.deepEqual(r.stale.filter((op) => mutating.includes(op) || LAYER9_READS.includes(op)
-    || LAYER9_GATED_READS.includes(op)), []);
-  /* negative controls (N490): carried by no row or carried ungated, the gated read reads stale; an ungated read of
-     action-plans carried gated, as the preview is, reads unpublished, so a gated read left unnamed is seen */
+  assert.deepEqual(r.stale.filter((op) => table.some((t) => t.op === op)), []);
   for (const op of LAYER9_GATED_READS) {
     assert.ok(A.unaccounted([]).stale.includes(op), op);
     assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
   }
   assert.deepEqual(A.unaccounted([{ op: "planproposals", mutating: false, gated: true }]).unpublished, ["planproposals"]);
+});
+
+test("R1 R12 R24 R51: T45's layer 8–9 ops — each owner's map holds them; each write decorates with a rung or a stated "
+   + "absence, never both; the acts R51 offers on an action are acts and never non-acts, every other write a non-act; and "
+   + "with the control plane's rows for the writes nothing is unaccounted; one left out is seen", () => {
+  const m = MAPS();
+  for (const [owner, { writes, reads }] of Object.entries(T45_L9))
+    assert.deepEqual([...writes, ...reads].filter((op) => !m[owner].includes(op)), [], owner);
+  const writes = Object.values(T45_L9).flatMap((o) => o.writes);
+  const acts = new Set(ACTS.map((a) => a.id));
+  for (const op of writes) {
+    const d = A.decorate({ id: op, label: "x" }, null);
+    assert.equal((d.rung === null) !== (d.rung_absence === null), true, `R24: ${op}`);
+    if (R51_ACTS.includes(op)) assert.ok(acts.has(op) && !Object.hasOwn(NON_ACTS, op), op);
+    else assert.ok(!acts.has(op) && Object.hasOwn(NON_ACTS, op), op);
+  }
+  const table = writes.map((op) => ({ op, mutating: true, gated: true }));
+  const r = A.unaccounted(table);
+  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
+  const left = A.unaccounted([...table, { op: "actionunnamed", mutating: true, gated: true }]);
+  assert.deepEqual([left.unpublished, left.unranked], [["actionunnamed"], ["actionunnamed"]]);
 });
 
 /* N321 (T13, K424): `op=projectstage` (publication R44) is a read stamping `viewer`, carried as every project read is:
@@ -603,24 +587,25 @@ test("R1 R12: N364's ops — the op maps of sources, capture, the doorbell and c
   assert.deepEqual(A.unaccounted([{ op: "knockerconsent", mutating: true, gated: true }]).unpublished, ["knockerconsent"]);
 });
 
-/* K899 (7), K902, K918 (T20): actions R52's `op=actionhold`, a member's hold statement on a `legal` pressure mark: graded
-   `reasoned` in op-grades (its backing is driven in backing.test.mjs) and named in NON_ACTS, keyed by the entry the
-   mark is on. With the control plane's row for it (mutating, gated) nothing is unaccounted (R12). */
-test("R1 R12 R24: actionhold, actions R52's op — actions' op map holds it, it is no act, its NON_ACTS reason is "
-   + "entry-directed, with the control plane's row for it nothing is unaccounted, and it decorates with a rung", () => {
-  assert.ok(Object.keys(actionsOps({}, new URL("http://x/"), {})).includes("actionhold"), "actions' op map holds it");
-  /* op-grades' content its own tests do not yet pin (N877; reported to BOB) */
-  assert.equal(NON_ACTS.actionhold, "entry-directed: keyed by (action, entry ordinal); appends a hold statement and "
-    + "never rewrites the entry or its mark");
-  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === "actionhold"));
-  const row = { op: "actionhold", mutating: true, gated: true };
-  const base = A.unaccounted([]);
-  const r = A.unaccounted([row]);
+/* R51 (T45): the hold acts, now `action-holds`' (K2781 (1)), are acts on an action: offered where their refusals admit
+   the caller (derive.test.mjs, and driven in t45.test.mjs); each decorates with its rung, and a machine is withheld them
+   (R20). The release's consequence statement stays published by reference (R4). */
+test("R1 R4 R12 R24 R51: actionhold and actionholdrelease — action-holds' op map holds them and their two reads, both are "
+   + "acts and no non-act, each decorates with a rung and never a bare null, the release's consequence statement is "
+   + "published by reference; with the control plane's rows nothing is unaccounted", () => {
+  const ops = Object.keys(actionHoldsOps({}, new URL("http://x/"), {}));
+  for (const op of ["actionhold", "actionholdrelease", "actionholdpreview", "projectholds"]) assert.ok(ops.includes(op), op);
+  for (const op of ["actionhold", "actionholdrelease"]) {
+    assert.ok(ACTS.some((a) => a.id === op) && !Object.hasOwn(NON_ACTS, op), op);
+    const d = A.decorate({ id: op, label: "x" }, null);
+    assert.ok(d.rung !== null && d.rung_absence === null, `R24: ${op}`);
+  }
+  assert.equal(VOCABULARIES.rung_consequences.actionholdrelease, G.CONSEQUENCE_STATEMENTS.actionholdrelease);
+  const table = [{ op: "actionhold", mutating: true, gated: true }, { op: "actionholdrelease", mutating: true, gated: true },
+    ...["actionholdpreview", "projectholds"].map((op) => ({ op, mutating: false, gated: true }))];
+  const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
-  assert.deepEqual(r.stale, base.stale.filter((op) => op !== "actionhold"));
-  assert.ok(base.stale.includes("actionhold"), "carried by no row, both its keys read stale");
-  assert.deepEqual([A.decorate({ id: "actionhold", label: "x" }, null).rung, A.decorate({ id: "actionhold", label: "x" }, null).rung_absence],
-    ["reasoned", null], "R24: a rung, never a bare null");
+  assert.ok(A.unaccounted([{ op: "projectholds", mutating: false, gated: false }]).stale.includes("projectholds"));
 });
 
 /* K921, K922 (3), T21: the ops of `filing-templates` and `local-facts`, keyed to their op maps, graded in op-grades (its
@@ -827,42 +812,6 @@ test("R19: the justification family holds DEC-88's and T22's codes, each a row i
     assert.ok(JUSTIFICATION_REFUSALS.includes(code), code);
     assert.ok(rowIn(mod, code), `${code} is a row of its owner's checks`);
   }
-});
-
-/* op-grades R8 (DEC-113; K1134 (3), K1252; T27): the litigation hold's release and its two reads, keyed to actions' op map
-   (op-declarations R12 carries their rows: the release mutating, every op gated and stamped `viewer`). The release is
-   `terminal`, op-grades R3's named exception, with a consequence statement beside it, published here by reference (R4);
-   the preview and the held-project answer are reads. Their backing is driven at actions' interface in backing.test.mjs. */
-const HOLD_READS = ["actionholdpreview", "projectholds"];
-test("R1 R4 R12 R24: actionholdrelease — actions' op map holds it and its two reads, its consequence statement is "
-   + "published as vocabularies.rung_consequences by reference, none is an act, it decorates `terminal` and never a bare "
-   + "null, and with the control plane's rows nothing is unaccounted; an unnamed read is seen", () => {
-  const ops = Object.keys(actionsOps({}, new URL("http://x/"), {}));
-  for (const op of ["actionholdrelease", ...HOLD_READS]) assert.ok(ops.includes(op), `actions' op map holds ${op}`);
-  const c = G.CONSEQUENCE_STATEMENTS.actionholdrelease;
-  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the statement's keys and its full words on
-     what is purged again and the assistant transcripts deleted */
-  assert.deepEqual(Object.keys(c).sort(), ["friction", "statement"]);
-  assert.match(c.statement, /material may be purged again/);
-  assert.match(c.statement, /assistant transcripts for them past the time limit will be deleted on each member's device when it is next opened/);
-  assert.equal(VOCABULARIES.rung_consequences.actionholdrelease, c);
-  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the reads write nothing and carry no grade */
-  for (const op of HOLD_READS) {
-    assert.ok(NON_ACTS[op]?.startsWith("read: ") && NON_ACTS[op].length > 40, op);
-    assert.match(NON_ACTS[op], /writes nothing$/, op);
-    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
-  }
-  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => ["actionholdrelease", ...HOLD_READS].includes(a.id)));
-  assert.deepEqual([A.decorate({ id: "actionholdrelease", label: "x" }, null).rung,
-                    A.decorate({ id: "actionholdrelease", label: "x" }, null).rung_absence], ["terminal", null], "R24");
-  const table = [{ op: "actionholdrelease", mutating: true, gated: true },
-    ...HOLD_READS.map((op) => ({ op, mutating: false, gated: true }))];
-  const r = A.unaccounted(table);
-  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
-  assert.deepEqual(r.stale.filter((op) => table.some((t) => t.op === op)), []);
-  /* negative controls: carried ungated, a read reads stale; carried by no row, each reads stale */
-  for (const op of HOLD_READS) assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
-  assert.deepEqual(["actionholdrelease", ...HOLD_READS].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
 });
 
 /* R34 (DEC-116, DEC-100; N520; T27): the docket's ops, keyed to docket's op map (its `docketOps`), and its two public
