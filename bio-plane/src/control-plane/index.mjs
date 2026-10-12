@@ -25,7 +25,8 @@ import { credentialAddressGate } from "../admission/index.mjs";
 import { json, doAnswer, storeRefusal, storeSilent, relayAnswer, planeInternalError, replayRow, requiredArgument,
          installationRow, dispatchRow, withPagePolicy, CHECK_FAMILIES } from "../answer-envelope/index.mjs";
 /* R57 (T35): the draft asked of agent-worker once every refusal is answered. */
-import { draftDue, draftAsk, checkedDraft, TRANSLATION_DRAFT, TRANSLATION_RECORD } from "./draft.mjs";
+import { draftDue, draftAsk, checkedDraft, untestedOf, TRANSLATION_DRAFT, TRANSLATION_RECORD, STATUS_REPORT_ASSIST,
+         TEXT_CHECK } from "./draft.mjs";
 /* R58 (T35): the promotions of what an unpack files. */
 import { archiveDocuments, promoteArchive } from "./archive.mjs";
 /* R65 (T37): a member's own Claude sign-in, relayed to their own runner, and its sign-out when they leave. */
@@ -88,7 +89,9 @@ const WIZARD_VIEWER_OPS = Object.freeze(["wizarddraft", "wizardrevise", "wizards
 /* R54 (DEC-133, DEC-136, DEC-132; op-declarations R22): membership's T34 administrator acts, routed through
    `membershipOps` by the general forward with `by` stamped below; the doors and the two reads are answered above. */
 const MEMBERSHIP_ADMIN_ACTS = Object.freeze(["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke",
-  "joinlinkenable", "joinlinkset", "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset"]);
+  "joinlinkenable", "joinlinkset", "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset",
+  /* (T46; N654; membership R130) the administrator's read of the two doors' settings and history, `by` the same */
+  "joindoors"]);
 
 /* R50 (wizard-scripts R16; K1364 B4): A REFUSAL ANSWERED TO A MEMBER'S SESSION IS COUNTED, UNATTRIBUTED. Read off the
    answer on its way out (the two levels R22 decorates): its op and its code, and nothing else of the call, reach the
@@ -159,7 +162,17 @@ async function sha256Hex(v) {
    same bytes from the single read (`reviewcopy`) and from the list (`casedrafts`); a store that did not answer is a
    silence, stated as one. */
 /* `extra` is put in the answer before the in-band hash is taken, so the hash is over the answer exactly as served. */
-async function reviewAnswer(out, op, extra = {}) {
+/* R20 (T46; N905; public-read R34, R7; v0.2 rule 21): `group`, public-read's `groupFields()` read at this request from the
+   `bio` object (plane's `groupFields` on the object), handed to the quartet beside `hash`, which it never enters; null when
+   the object offers no such read or it fails, never a guess. */
+async function groupOf(stub) {
+  if (!stub || typeof stub.groupFields !== "function") return null;
+  try {
+    const g = await stub.groupFields();
+    return g && typeof g === "object" && !Array.isArray(g) ? g : null;
+  } catch { return null; }
+}
+async function reviewAnswer(out, op, extra = {}, group = null) {
   if (out.refused) return storeRefusal(out, extra);   /* R23: the store's own refusal, at its status */
   if (!out.answered) return storeSilent(op, out.correlation);
   const r = out.result;
@@ -183,7 +196,7 @@ async function reviewAnswer(out, op, extra = {}) {
          store computes it over the rows it SERVES and says in `last_change.stated` what it cannot see.
          THE AUTHOR DOES NOT MOVE: the ruling is about the date, and a recipient who comments on a copy
          has not authored it; `last_change.by` is who made that change, beside it. */
-      date: r.last_change?.at ?? null, author: r.updated_by ?? null, bar: bar ?? null });
+      date: r.last_change?.at ?? null, author: r.updated_by ?? null, bar: bar ?? null, group });
     return json({ ...served, inband: quartet }, 200);
   }
   return json({ ok: true, ...r, ...extra }, 200);
@@ -756,7 +769,7 @@ export function makeFetch(hooks = {}) {
         const out = await doAnswer(stub.fetch(`http://do/${op}?${q}`,
           innerBody === null ? undefined : { method: "POST", headers: { "content-type": "application/json" },
                                              body: JSON.stringify(innerBody) }));
-        return reviewAnswer(out, op);
+        return reviewAnswer(out, op, {}, op === "reviewcopy" && out.answered && out.result?.ok ? await groupOf(stub) : null);
       }
       /* The sign-in and the invitation's two steps, relayed to the store's routes (credentials' `login`, membership's
          `invitelook` and `enroll`) and answered through R24's relay (D-679). The invitation ops answer from the store
@@ -1980,9 +1993,70 @@ export function makeFetch(hooks = {}) {
        spec). Nothing of it reaches the record but the fact `credentials` R43 keeps. */
     if (op === "subscriptionsignin") {
       const stored = (path, init) => doAnswer(stub.fetch(new Request(`http://do/${path}`, init)));
-      const signed = await subscriptionSignin({ env, member: stampOf.by, asked: reqBody, store: stored });
+      /* (T46; N897 (3); instance-setup R54) `start` waits on the disclosure: asked of the store's `disclosureof` for the
+         member the door stamps (the form `disclosureshown` records), fail closed as the keep-away question is. */
+      const disclosureDue = async () => {
+        const seen = await stored(`disclosureof?member=${encodeURIComponent(stampOf.by)}`, { method: "POST", body: "{}" });
+        if (seen.refused || !seen.answered) return { unread: seen };
+        if (seen.result && seen.result.ok === true && seen.result.shown === true) return null;
+        /* DEC-49 REGION is-disclosure-due
+           C-69.6 (answer-envelope's row): a sign-in started before the member was shown what connecting means. */
+        return { status: 409, body: { ok: false, reason: "DISCLOSURE_DUE", ...dispatchRow("DISCLOSURE_DUE"),
+          detail: "you have not yet been shown what connecting your own Claude account means, so the sign-in was not "
+                + "started and nothing was sent. Read it, then start again." } };
+        /* END DEC-49 REGION is-disclosure-due */
+      };
+      const signed = await subscriptionSignin({ env, member: stampOf.by, asked: reqBody, store: stored, disclosureDue });
       if (signed.unread) return signed.unread.refused ? storeRefusal(signed.unread) : storeSilent(op, signed.unread.correlation);
       return json(signed.body, signed.status);
+    }
+    /* R57 (T46; N917; plane R40, R41; agent-worker R76): `textcheck` has no owner before the draft: the door asks the
+       plane's draft door with the body's `text` alone (no told, grant or firsthand, no `checkDraft`), which gates it and
+       answers it labelled; nothing is recorded or handed to `filings` here. Only a member's session reaches the op (its
+       spec). A conversation that reached the model is counted to the member's day as a draft (ai-use R1). */
+    if (op === TEXT_CHECK) {
+      if (!viaSession || typeof stub.draft !== "function") return storeSilent(op);
+      const text = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) ? reqBody.text : undefined;
+      const ask = { op: TEXT_CHECK, member: sessMember, session: credential.token, text: text ?? null };
+      const res = await stub.draft(ask);
+      let drafted = null;
+      try { drafted = await res.json(); } catch { drafted = null; }
+      if (!drafted || typeof drafted !== "object") return storeSilent(op);
+      if (drafted.ok === true)
+        await doAnswer(stub.fetch(new Request(`http://do/askusage?viewer=${encodeURIComponent(sessViewer)}`, { method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ mode: "draft", usage: drafted.usage ?? null, calls: drafted.calls }) })));
+      const shaped = checkedDraft(ask, drafted, res.status, sessViewer);
+      return shaped.body.ok === true ? json({ ok: true, result: shaped.body, store: storeName, tokenClass: cls }, 200)
+        : json({ ...shaped.body, store: storeName, tokenClass: cls }, shaped.status);
+    }
+    /* R77 (T46; N919; Bob's K2892, K2947, K2952, K2976; ai-runs R18): THE MEMBER-RUN DOOR. A member's own run, opened on
+       her own sign-in, is dispatched at her act by `ai-runs.dispatchMemberRun`, in the store object addressed (plane's
+       `dispatchMemberRun` on the object, as its `draft` and `ask` are), with `by` and `viewer` the member (a session's as
+       R17 stamps it; an `ai` credential's its principal, `member:<id>`, never `class:ai/<tokenId>`, since ai-runs compares
+       `by` with the run's principal), `run` from the body alone, and `credential` the `ai` credential the caller presented
+       (admission R20), handed in process: it crosses no query, body or fetch and is never logged, kept or answered (R30).
+       Any other caller is stamped by R17's machine form and refused by ai-runs itself. Its answers, withholdings and
+       refusals are ai-runs', as given. */
+    if (op === "airundispatch") {
+      if (typeof stub.dispatchMemberRun !== "function")
+        return json({ ok: false, reason: "AGENT_WORKER_UNBOUND", store: storeName, tokenClass: cls,
+                      detail: "your group's Civicsmith has no assistant bound to it, so the run was not started and nothing was sent." }, 503);
+      const who = viaSession ? sessViewer : cls === "ai" && !aiCred?.grant ? aiCred.principal : actor;
+      const run = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) && typeof reqBody.run === "string"
+        ? reqBody.run : null;
+      const presented = cls === "ai" && !aiCred?.grant && typeof credential.token === "string" ? credential.token : null;
+      let out;
+      try {
+        out = await stub.dispatchMemberRun({ run, by: who, viewer: who, credential: presented, at: new Date().toISOString() });
+      } catch { return storeSilent(op); }
+      if (!out || typeof out !== "object" || Array.isArray(out)) return storeSilent(op);
+      /* a refusal by its code is a refusal (the envelope decorates it, admission's tally counts it); a withholding, an
+         absent run or a dispatch is an answer */
+      if (typeof out.code === "string")
+        return json({ ok: true, result: { ok: false, reason: out.code, ...out }, store: storeName, tokenClass: cls },
+                    out.code === "AI_RUN_NOT_PRINCIPAL" || out.code === "MEMBER_RUN_MODE_NOT_ADMITTED" ? 403 : 400);
+      return json({ ok: true, result: out, store: storeName, tokenClass: cls }, 200);
     }
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
@@ -3064,7 +3138,8 @@ export function makeFetch(hooks = {}) {
     if (draftDue(op, body) && viaSession && typeof stub.draft === "function") {
       let asked = {};
       try { asked = passBody ? JSON.parse(passBody) : {}; } catch { asked = {}; }
-      const pack = await heldPack({ req, url, env, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps,
+      /* (T46) a status report reads nothing and its task carries no pack */
+      const pack = op === STATUS_REPORT_ASSIST ? null : await heldPack({ req, url, env, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps,
                                     aiCred, storeName, stub });
       const ask = draftAsk(op, asked, { member: sessMember, session: credential.token,
                                        firsthand: body.result.firsthand === true, pack, owner: body.result });
@@ -3097,10 +3172,17 @@ export function makeFetch(hooks = {}) {
           body: JSON.stringify(handed) })));
         if (recorded.refused) return storeRefusal(recorded, { store: storeName, tokenClass: cls });
         if (!recorded.answered) return storeSilent(TRANSLATION_RECORD, recorded.correlation);
-        return json({ ...recorded.reply.body, store: storeName, tokenClass: cls }, recorded.reply.status);
+        /* (T46; N897 (2)) the plane's `untested`, passed beside what the owner recorded */
+        const kept = recorded.reply.body;
+        const untested = untestedOf(drafted);
+        const carried = untested.untested && kept && typeof kept.result === "object" && kept.result
+          ? { ...kept, result: { ...kept.result, ...untested } } : kept;
+        return json({ ...carried, store: storeName, tokenClass: cls }, recorded.reply.status);
       }
       const shaped = checkedDraft(ask, drafted, res.status, sessViewer);
-      return shaped.body.ok === true ? json({ ok: true, result: shaped.body, store: storeName, tokenClass: cls }, 200)
+      /* (T46; N920) the status report keeps the owner's `as_of` beside its plan */
+      const asOf = op === STATUS_REPORT_ASSIST && body.result.as_of !== undefined ? { as_of: body.result.as_of } : {};
+      return shaped.body.ok === true ? json({ ok: true, result: { ...shaped.body, ...asOf }, store: storeName, tokenClass: cls }, 200)
         : json({ ...shaped.body, store: storeName, tokenClass: cls }, shaped.status);
     }
     /* K383 (doorbell's C-118.2, its R21; T43-8): an inbox read or disposition naming no knock answers 404, as NO_SUCH_BUNDLE does. */
