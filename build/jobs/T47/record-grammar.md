@@ -27,3 +27,7 @@
 - `plan-work`: `proposalLabel(_, "status_report")` is in place for R14.
 
 Size (session_013aVsQVbraDzPKRguViHbgA): test runs 9, module lines 2611
+
+## J1 · COMPLETE
+
+T47-1 complete (record 669beeaca8). R61: PROPOSAL_STATES gains status_report after bearing (seventeen; the sixteen earlier tables byte-identical by digest). R62: checkBundle admits a success_record document (bare SUC core under object_type success_record, no C-1.2; SUC implies success_record for C-2.5; success_record@1 in the default knownSchemas, sixteen); BUNDLE_ID_RE, R1 prefixes, HEADINGS unchanged; consequences' successDoc passes with no finding. record-grammar 99/99; format, architecture, coverage (60/60), ownership 0 failures; run.mjs architecture 0 (coverage's 2 are jurisdictions R88 and connection-grammar R21, rule 5.1). Users' suites (31 modules) vs tranche base: 14 identical reds on both (rule 5); mine are 2 generated artifacts: case-checker program.mjs (5.4) and the NEWGROUP BUNDLE (newgroup/src/release.mjs bundles checkBundle; not in 5.4; regenerate at layer close). agent-worker's bundle is not staled. Deferred: stale comments in ids.mjs and document.mjs (editing them would stale agent-worker's and newgroup's bundles mid-layer).
