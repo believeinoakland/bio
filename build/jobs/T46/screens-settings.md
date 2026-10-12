@@ -47,3 +47,18 @@ Until the shell merges, my tests use a stand-in kit and HTML reader in my own te
 6. **`cs.rows({cols, items, key, cells, acts, pick})`.** Reading: `cols` the header word keys; `cells(item)` → the row's cell HTML list; `acts(item)` → the HTML of the row's panel (its acts, R19); `key(item)` → the row's key.
 
 Also, for BOB's record: R4 says the member's daily allowance on the group's key comes "from `ailimits`", but ai-use R12 refuses `ailimits` (and `aiusage`) with `owner: "group"` to a member who does not administer (`NOT_AN_ADMIN`). I read it from `aiusage` without `owner` (ai-use R4's `aiUsageMine`: `payers[].limits` carries the group's `per_member` limit), an extra read on `connect`. Please confirm or reword R4.
+
+## J3 · COMPLETE
+
+COMPLETE: T46-55 applied, R1–R10, built to interface-shell R21 as K2996, K2998 and K3002 state it; 51 tests pass, 0 fail, on `tranche/T46` merged at B4.
+
+**Files for `modules.json`** (K1043): paths `bio-plane/src/screens-settings/`; tests `bio-plane/test/m/screens-settings/`. With those set, architecture 0, coverage 10/10 and ownership 0 failures (verified locally, not committed); without them, architecture and ownership name only these 17 files.
+
+**Deferred:** re-pointing my tests from my stand-in kit to interface-shell's harness at its merge's CHANGE.
+
+**REPORT, other modules** (details in my record):
+1. `writinghelp`'s answer carries no test-instance mark, so my R6 cannot draw `untested` on a test instance until whichever owner marks AI outputs (K2816 (2)) marks it.
+2. `ai.label.untested` is an own row here and in screens-inquiry (same English): the shell should accept one key from two modules.
+3. `infolevel`/`infolevelset`, `bootstrap`'s `parts` and R65's `DISCLOSURE_DUE` are not served on this branch yet (L11 jobs before me).
+
+Size (session_01V6ChUsecnpQgZeXHEMdaCi): test runs 24, module lines 1031.
