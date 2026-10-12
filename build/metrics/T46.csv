@@ -1,3 +1,7 @@
 session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
 session_01WTxZEji9hScnnv3kyz3xtf,job,record-grammar,16468824,255616,147,40023,,9,2583
 session_01SHEYtEvhTCnEvXN1xWJ1iY,job,bundler,15478088,336829,116,23256,,4,3435
+session_01U4VpUHnYKCeaZcQvK8i5XD,job,record-core,12673122,355631,96,21018,,7,2318
+session_01NYNAzwK9hYtCvE5CTuZxYA,job,membership,25662043,660171,216,77152,,17,3749
+session_01QUJPgnjkqLzkfXN1KCUCmG,job,project-roster,11430613,257013,110,25589,,10,1195
+session_01QFUJsskb7hnNteGSP3z9cY,job,promotion,20341468,544203,148,37841,,26,3858
