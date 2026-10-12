@@ -54,3 +54,9 @@ Size (session_01RJBRXS3sxyhSh6P5LL6g9S): test runs 12, module lines 1082 (tests 
 ## J4 · COMPLETE
 
 T46-57 applied: home, queue, finder, find-in, answers (R1–R7), to interface-shell R21 as K2996/K2998, Home per K3000. Files for modules.json: paths bio-plane/src/screens-daily/ (index, words, home, queue, finder, find-in, answers .mjs); tests bio-plane/test/m/screens-daily/ (kit.mjs and five *.test.mjs plus contract.test.mjs). 41/41 pass. With the paths entered: architecture, coverage (7/7), ownership 0 failures. Readings taken (R1 description, R2 sort route and device note, R3 dispositions' doors, R4–R6 details) and the deferred re-point to the shell's stand-in are in my record's Completion section. Size: test runs 12, module lines 1082.
+
+## Completion of B5 (CHANGE, K3002)
+
+`tranche/T46` merged. Applied the kit additions my screens need: the clock is `cs.now()` everywhere (Home's new project, the queue's due marks and question, the standing questions' end); `adoptversion` (`why`) and `standarddeclare` (`reason`) collect the member's own words in their dialog and name that field as `reasonField`, so the words are the act's reason and no second one is asked (R11 as amended). `cs.value`'s checkbox `true`/`false` was already read. `parts`, `view.origin`, `cs.digest` and outside links are not needed by these screens (promotion computes the bundle's digest itself). New own rows: `screen.queue.why`, `screen.find-in.field.reason`. Tests: 42/42 (a new one for the page's clock). With paths entered locally: architecture 0, coverage 7/7, ownership 0; format 0.
+
+Size (session_01RJBRXS3sxyhSh6P5LL6g9S): test runs 15, module lines 1096 (tests 878)

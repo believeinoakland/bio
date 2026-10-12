@@ -125,8 +125,9 @@ test("R3: each act sends its op's body for the item it was drawn on", () => {
   assert.deepEqual(k.send(queue, "queuemute", v, on("queuemute", "CONDITION::q")), { body: { item: "CONDITION::q" } });
   assert.deepEqual(k.send(queue, "queuesnooze", v, on("queuesnooze"), { fields: { until: "2026-10-20" } }), { body: { case: "PROJ-1", until: "2026-10-20" } });
   assert.equal(k.send(queue, "queuesnooze", v, on("queuesnooze"), { fields: {} }), null);
-  assert.deepEqual(k.send(queue, "adoptversion", v, on("adoptversion")), { body: { notice: "VN-5" } });
-  assert.equal(queue.acts.find((a) => a.op === "adoptversion").reasonField, "why", "adopting asks why (reevaluation R15)");
+  assert.deepEqual(k.send(queue, "adoptversion", v, on("adoptversion"), { fields: { why: " It corrects the date " } }), { body: { notice: "VN-5", why: "It corrects the date" } });
+  assert.equal(k.send(queue, "adoptversion", v, on("adoptversion"), { fields: {} }), null, "control: adopting asks why (reevaluation R15)");
+  assert.equal(queue.acts.find((a) => a.op === "adoptversion").reasonField, "why", "the member's why is the act's reason (interface-shell R11)");
   assert.deepEqual(k.send(queue, "keepversion", v, on("keepversion")), { body: { notice: "VN-5" } });
   assert.deepEqual(k.send(queue, "reminderanswer", v, on("reminderanswer")), { body: { target: "ACT-1", entry: 0 } });
   assert.deepEqual(k.send(queue, "reminderanswer", v, on("reminderanswer"), { fields: { on: "2026-10-25" } }), { body: { target: "ACT-1", entry: 0, on: "2026-10-25" } });
@@ -158,4 +159,14 @@ test("R2, R3 (interface-shell R10): the queue's four states; an item resolved or
   // After an act the shell re-reads every read (no `rereads`): the feed without the item draws without it.
   const after = kit().render(queue, viewOf({ data: { queue: { items: ITEMS.filter((i) => i.id !== "TSK-1") } } }));
   assert.ok(!drawn(after).some(([, d]) => d.item === "TSK-1"));
+});
+
+test("R2 (interface-shell R21, K3002): due dates are judged on the page's clock, cs.now()", () => {
+  const item = { ...ITEMS[0], due: "2026-10-20" };
+  const before = kit({ now: Date.parse("2026-10-01T12:00:00Z") }).render(queue, viewOf({ data: { queue: { items: [item] } } }));
+  assert.match(before, /data-due="" data-iso="2026-10-20"/);
+  const near = kit({ now: Date.parse("2026-10-19T12:00:00Z") }).render(queue, viewOf({ data: { queue: { items: [item] } } }));
+  assert.match(near, /data-due="near"/);
+  const after = kit({ now: Date.parse("2026-10-21T12:00:00Z") }).render(queue, viewOf({ data: { queue: { items: [item] } } }));
+  assert.match(after, /data-due="overdue"/);
 });

@@ -85,7 +85,7 @@ export const home = Object.freeze({
       send: function (view, el, cs) {
         const title = String(cs.value("home-title") || "").trim();
         if (!title) return { refuse: "screen.home.title.needed" };
-        const now = new Date();
+        const now = new Date(cs.now());
         const iso = now.toISOString().replace(/\.\d{3}Z$/, "Z");
         const stamp = iso.replace(/[-:]/g, "");
         const nonce = Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");

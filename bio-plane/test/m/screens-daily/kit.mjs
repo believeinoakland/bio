@@ -17,7 +17,7 @@ export function viewOf({ subject = null, data = {}, me = { member: "mai", capabi
   return { subject, data: d, me, ui, reachable };
 }
 
-export function kit({ allow = () => true, values = {} } = {}) {
+export function kit({ allow = () => true, values = {}, now = Date.now() } = {}) {
   const log = { words: [], go: [], set: [], acts: [], missing: [] };
   let view = null;
   const w = (key, fills = {}) => {
@@ -49,6 +49,8 @@ export function kit({ allow = () => true, values = {} } = {}) {
     set(name, value) { log.set.push([name, value]); if (view) view.ui[name] = value; },
     value: (id) => values[id],
     file: () => null,
+    now: () => now,
+    digest: async () => "",
     ref: (kind, id, text, facts = []) => `<a class="cs-ref" data-ref="${kind}" href="/app/${kind}/${encodeURIComponent(id)}">${esc(text)}</a>`,
     mark: (family, value, fills) => `<span class="cs-mark" data-mark="${family}.${value}">${w(`mark.${family}.${value}.name`, fills)}</span>`,
     grade: (scale, letter) => `<span class="cs-grade" data-scale="${scale}">${esc(letter)}</span>`,

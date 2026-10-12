@@ -98,8 +98,8 @@ test("R5: each recording act sends its owner's body from the result's passage, t
   assert.deepEqual(pf, { body: { person: "ENT-9", kind: "locality", value: "Oakland", citation: { capture_sha: "c1", extent: { passage: 3 } }, question: "INQ-1" } });
   const df = k.send(findIn, "recorddatedfact", v, { k: "2", i: "0" }, { fields: { kind: "effective", value: "2023-01-01" } });
   assert.deepEqual(df, { body: { captureSha: "c1", extent: { passage: 3 }, kind: "effective", value: "2023-01-01", method: "typed", question: "INQ-1" } });
-  const sd = k.send(findIn, "standarddeclare", v, { k: "3", i: "0" }, { fields: { cite: "AI 4.12", kind: "policy", issuer: "Public Works" } });
-  assert.deepEqual(sd, { body: { cite: "AI 4.12", kind: "policy", issuer: "Public Works", text: ["CNT-1"] } });
+  const sd = k.send(findIn, "standarddeclare", v, { k: "3", i: "0" }, { fields: { cite: "AI 4.12", kind: "policy", issuer: "Public Works", reason: "the city's own rule" } });
+  assert.deepEqual(sd, { body: { cite: "AI 4.12", kind: "policy", issuer: "Public Works", reason: "the city's own rule", text: ["CNT-1"] } });
   assert.equal(findIn.acts.find((a) => a.op === "standarddeclare").reasonField, "reason");
   const td = k.send(findIn, "tabledeclare", v, { k: "2", i: "1" }, { fields: { header: "reported, closed ,," } });
   assert.deepEqual(td, { body: { source: "CNT-4", header: ["reported", "closed"] } });

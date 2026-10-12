@@ -63,6 +63,7 @@ export const SCREEN_WORDS = Object.freeze([
   row("screen.queue.forward.to", "Forward to (the member's handle)"),
   row("screen.queue.snooze.until", "Until which day"),
   row("screen.queue.reminder.on", "Remind me again on (optional)"),
+  row("screen.queue.why", "Why adopt the newer version"),
   row("screen.queue.question", "The question, in your words"),
   row("screen.queue.projectkey", "The project's Anthropic API key"),
 
@@ -122,6 +123,7 @@ export const SCREEN_WORDS = Object.freeze([
   row("screen.find-in.field.date", "The date (a day)"),
   row("screen.find-in.field.cite", "How the requirement is cited"),
   row("screen.find-in.field.issuer", "Who set it"),
+  row("screen.find-in.field.reason", "Why your group holds them to it"),
   row("screen.find-in.field.amount", "The amount, in figures"),
   row("screen.find-in.field.currency", "Currency"),
   row("screen.find-in.field.phase", "Its stage: proposed, adopted, amended or actual"),

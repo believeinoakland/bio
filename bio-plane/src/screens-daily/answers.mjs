@@ -151,7 +151,7 @@ export const answers = Object.freeze({
       send: function (view, el, cs) {
         const q = String(cs.value("answers-q") || (view.ui || {}).q || "").trim();
         if (!q) return { refuse: "screen.answers.questionfirst" };
-        const ends = new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10);
+        const ends = new Date(cs.now() + 365 * 86400000).toISOString().slice(0, 10);
         return { body: { question: q, query: q, cadence: "weekly", ends: ends } };
       },
       done: function (view, answer, cs) {

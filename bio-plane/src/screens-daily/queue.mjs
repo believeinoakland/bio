@@ -52,11 +52,11 @@ export const queue = Object.freeze({
       }
       return KEYED.indexOf(String(it.kind)) >= 0 && it.fills ? String(it.kind) : null;
     };
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date(cs.now()).toISOString().slice(0, 10);
     const dueOf = function (iso) {
       const day = String(iso).slice(0, 10);
       if (day < today) return cs.due(String(iso), "overdue");
-      const soon = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+      const soon = new Date(cs.now() + 2 * 86400000).toISOString().slice(0, 10);
       return cs.due(String(iso), day === today || day <= soon ? "near" : "");
     };
     const hintOf = function (it) {
@@ -174,8 +174,12 @@ export const queue = Object.freeze({
       } },
     { op: "queuemute", label: "act.queuemute.label.queue",
       send: function (view, el) { return { body: { item: el.dataset.item } }; } },
-    { op: "adoptversion", label: "act.adoptversion.label.queue", reasonField: "why",
-      send: function (view, el) { return { body: { notice: el.dataset.notice } }; } },
+    // Adopting asks why (reevaluation R15); the member's words are the act's reason (interface-shell R11, K3002).
+    { op: "adoptversion", label: "act.adoptversion.label.queue", reasonField: "why", dialog: [{ name: "why", label: "screen.queue.why" }],
+      send: function (view, el, cs, extra) {
+        const why = String((extra && extra.fields && extra.fields.why) || "").trim();
+        return why ? { body: { notice: el.dataset.notice, why: why } } : null;
+      } },
     { op: "keepversion", label: "act.keepversion.label.queue",
       send: function (view, el) { return { body: { notice: el.dataset.notice } }; } },
     { op: "reminderanswer", label: "act.reminderanswer.label.queue", dialog: [{ name: "on", label: "screen.queue.reminder.on" }],
@@ -190,7 +194,7 @@ export const queue = Object.freeze({
       send: function (view, el, cs, extra) {
         const q = String((extra && extra.fields && extra.fields.question) || "").trim();
         if (!q) return null;
-        const iso = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+        const iso = new Date(cs.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
         const nonce = Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
         const text = "---\nobject_type: inquiry\nquestion: " + JSON.stringify(q) + "\ncurrent_state: open\ncreated: \"" + iso
           + "\"\nlast_updated: \"" + iso + "\"\n---\n\n## Session Log\n\n### Session " + iso

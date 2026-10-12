@@ -130,7 +130,7 @@ export const findIn = Object.freeze({
         const scope = s.indexOf("PROJ-") === 0 ? { project: s } : s.indexOf("sel-") === 0 ? { selection: s } : { capture: s };
         const find = { scope: scope, kinds: kinds };
         if (kinds.indexOf("term") >= 0) find.term = term;
-        const ends = new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10);
+        const ends = new Date(cs.now() + 365 * 86400000).toISOString().slice(0, 10);
         return { body: { question: chosen ? String(chosen.title || qid) : (term || kinds.join(", ")), find: find, cadence: "weekly", ends: ends } };
       },
       done: function (view, answer, cs) { cs.set("keeping", true); } },
@@ -158,15 +158,17 @@ export const findIn = Object.freeze({
         if ((view.ui || {}).question) body.question = view.ui.question;
         return { body: body };
       } },
+    // The member's own words why the group holds the city to it are the act's reason (interface-shell R11, K3002).
     { op: "standarddeclare", label: "act.standarddeclare.label.find-in", reasonField: "reason",
-      dialog: [{ name: "cite", label: "screen.find-in.field.cite" }, { name: "kind", label: "screen.find-in.field.kind" }, { name: "issuer", label: "screen.find-in.field.issuer" }],
+      dialog: [{ name: "cite", label: "screen.find-in.field.cite" }, { name: "kind", label: "screen.find-in.field.kind" }, { name: "issuer", label: "screen.find-in.field.issuer" },
+        { name: "reason", label: "screen.find-in.field.reason" }],
       send: function (view, el, cs, extra) {
         const f = (extra && extra.fields) || {};
         const k = ((view.ui || {}).found || {}).kinds[Number(el.dataset.k)];
         const it = k && k.items[Number(el.dataset.i)];
         if (!it) return null;
         return { body: { cite: String(f.cite || "").trim(), kind: String(f.kind || "").trim(), issuer: String(f.issuer || "").trim(),
-          text: it.content_id ? [String(it.content_id)] : [] } };
+          reason: String(f.reason || "").trim(), text: it.content_id ? [String(it.content_id)] : [] } };
       } },
     { op: "recordfact", label: "act.recordfact.label.find-in",
       dialog: [{ name: "amount", label: "screen.find-in.field.amount" }, { name: "currency", label: "screen.find-in.field.currency" },
