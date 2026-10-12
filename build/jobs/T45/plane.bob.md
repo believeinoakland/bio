@@ -65,3 +65,7 @@ K2895: queue-producers is merged (its holdsDue callers gone: rule 4 (6)'s queue-
 ## B11 · CHANGE
 
 K2896: instance-setup is merged: its routes are now 34 with declaredstakeset; re-pin door.test.mjs R1/R5 and drive the new route. Merge tranche/T45.
+
+## B12 · CHANGE
+
+K2897: store-door (T45-50), queue (re-pointed) and op-grades (declaredstakeset graded) are merged into tranche/T45. Merge it. store-door left `advocacychecks` out of PROJECT_NAMING_READS pending your route: if your route for it takes a project or bundle id, say so in your COMPLETE and I re-open store-door.
