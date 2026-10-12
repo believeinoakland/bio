@@ -395,7 +395,7 @@ export class Publication {
    *  its bytes fixed) whose signer, deliverer (R14) or preparer (`authored_by`) is the member, or whose document names
    *  the member's handle in a row that carries one (`material_attestations:` at `cover` or `name`, `member_ties:`, an
    *  attribution at `cover` or `name`); null when none; `{unreadable: true}` when its tables or the source cannot be
-   *  read. A waiting edition's signer and deliverer are its source's `signerOf` (R77; K2529). Synchronous; writes nothing; never throws. Registered with `membership.registerHandleGuard` at start. */
+   *  read. A waiting edition's signer and deliverer are its source's `signerOf` (R77; K2529). Synchronous; writes nothing; never throws. Registered with `membership.registerHandleGuard` at start; while no handle is changed (membership R129, T46) no act of membership asks it. */
   publishedWorkOf({ memberId = null } = {}) {
     try {
       const id = str(memberId);
@@ -2704,7 +2704,8 @@ export function publicationOf(host, deps) {
        this one registration (its R26). the plane's store (`plane/store.mjs`) builds reevaluation first, with its `env` (its R25). */
     (d.reevaluation || reevaluationOf(host)).registerCaseParts("publication", {
       parts: (a) => p.caseCitedParts(a || {}), cases: (a) => p.ratifiedCases(a || {}) });
-    /* R76 (membership R125): the one guard membership's handle change asks; its answer kept, so a refused one is seen. */
+    /* R76 (membership R125): the one guard membership's slot holds; its answer kept, so a refused one is seen. While no
+       handle is changed (membership R129, T46; DEC-197) no act of membership asks it; the registration stands. */
     p.handleGuard = typeof membership.registerHandleGuard === "function"
       ? membership.registerHandleGuard("publication", (a) => p.publishedWorkOf(a || {})) : null;
   }
