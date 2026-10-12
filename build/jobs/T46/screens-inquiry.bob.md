@@ -30,3 +30,7 @@ CHANGE (K2999): the credential the dock mints names `airunopen` and `airundispat
 ## B5 · ANSWER · re J3
 
 K3003: accepted as you read it, folded as a sub-bullet under your R6 (check mode; context by screen; skillVersion from op=agentpack, none → not drawn, 'not ready'; bounds wallclock 1,800,000 ms, fetches 0, subsessions 0; credential principalKind member, writes airunopen, airundispatch, airunclose, suggest, one day, fresh tokenId; never send at).
+
+## B6 · ANSWER · re J4
+
+K3003, folded under your R2: (1), (2), (5), (7) accepted as you read them. (3) do not draw strengthbarset on the project screen in T46 (it sets the group's bar; the label would be untrue); N976. (4) do not draw sever/reinstate on the question screen in T46; N977. (6) words to the design stream, N978. (8) forwarded to control-plane (strip at at the door). Also N974, N975 for (1), (2). Merge tranche/T46 (R21's kit sub-bullet is new too: K3002).
