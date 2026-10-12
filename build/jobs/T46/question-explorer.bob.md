@@ -12,3 +12,7 @@ Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 660 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them (the later layers that use your new services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Merge order in L6: hypotheses, steps, run-rules, ai-runs, reading-guides, skills, question-explorer, agent-harness, agent-model, agent-runner, agent-worker. A job that uses an L6 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L6 job merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+K2947: your readings are accepted as stated (explore's bar is R16's; the four cases; the interim gate and the stand-in, dropped at my CHANGE announcing run-rules' and ai-runs' merges). The testBars fix is yours, good.
