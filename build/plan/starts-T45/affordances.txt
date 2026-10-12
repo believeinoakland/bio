@@ -13,3 +13,5 @@ Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and 
 
 (K2857) From consequences' merge (T45-24): its five ops (`successrecord`, `successrevise`, `outcomecarry`, `successread`, `successrecords`) join layer 9's op maps; `backing.test.mjs` R19 needs op-grades' `ADDRESSED_NO_REASON`/`SUCCESS_NO_REASON` (T45-38).
 (K2874) From L10: following's new ops `followend`, `watchlink`, `watchanswer`, `watchquestions` (FOLLOWING #5 J1, J2), and monitoring's new op for R71's end date if its COMPLETE names one; their affordances and vocabularies where your maps pin them.
+
+(K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.

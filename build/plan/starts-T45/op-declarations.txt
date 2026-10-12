@@ -13,3 +13,5 @@ Also (K2824): `PLAN_RUN_SCOPE` gains `action`, `reading`, `procedureguides` (age
 Also (K2834): case-account's `advocacycheck` (mutating, writes only in the member's own project) and a read op for `advocacyChecksOf` need specs.
 Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and `casecheck` (a read).
 (K2874) From L10: following's new ops `followend`, `watchlink`, `watchanswer`, `watchquestions` (FOLLOWING #5 J1, J2), and monitoring's new op for R71's end date if its COMPLETE names one; each specified (R49).
+
+(K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.

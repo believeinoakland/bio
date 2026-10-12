@@ -137,6 +137,7 @@ Users re-pointed in their own jobs: `doorbell` R3, `ratification` R45, `store-do
 | entry | hard reason |
 |---|---|
 | N751 | a measurement: no fresh policies beyond the 74 read (K2079) |
+| T45-46 · installer (N894), moved at L11's START (K2878) | Bob's: the stewards' contact address is his to name (K2799), not yet named; joins T46's installer job |
 | N780 | a deployment: the next release cut (K1501) |
 | N794, N865 | Bob's: legacy-ui stays frozen until the new screens replace it (K633, K1849) |
 | N824 | Bob's: "D42 - email: A" (K2425), after upload is in use; and a deployment |
