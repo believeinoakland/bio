@@ -64,3 +64,7 @@ T46-4 done, pushed on job/T46/membership (tranche/T46 merged). R129: handlechang
 ## J4 · REPORT
 
 project-roster: its test fixture stubs record-core with declarePurge only. Membership now declares join_doors through declareTable (R131); with no declareTable it falls back to the default form (tested), so project-roster's tests stay green. Its stub may gain declareTable so its runs see R131's declaration.
+
+## J5 · COMPLETE · re B3
+
+B3 done, pushed (tranche/T46 merged). R131: join_doors declared through declareTable with export never, the other classes as the default form gave them; tested through the real record-core (declaredTables, no exportable membership table holds a door hash, purge keeps it, every other table admin-only, R130 still answers). A record-core without declareTable (a test stub) falls back to the default form (tested); without that, project-roster's stub fixture went 34 red; now 2,051/2,051 across stub users (J4). Membership 219/219; the other-module reds are the same nine as J3; format, architecture, coverage 97/97, ownership: 0 failures. Module 3,749 lines.
