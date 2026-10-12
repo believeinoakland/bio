@@ -171,3 +171,29 @@ test("R84 R32: answered inside a transact, SETTING_NOT_JSON rolls the caller bac
   assert.deepEqual(rc.transact(() => { rc.setSetting("y", 1, "admin"); return rc.setSetting("z", { when: "1970-01-01T00:00:00.000Z" }, "admin"); }), { ok: true });
   assert.deepEqual([rc.getSetting("y"), rc.getSetting("z")], [1, { when: "1970-01-01T00:00:00.000Z" }]);
 });
+
+test("R84 (K3036): each edge by name: -0 is a finite number, stored and read back 0; a null-prototype object, symbol keys, a getter, a non-enumerable property, an array with a hole or a named property, and a value whose inspection throws are each refused SETTING_NOT_JSON, recording nothing", () => {
+  const { s, rc } = fresh();
+  /* -0: taken, and read back as JSON writes it, in both forms of the read */
+  assert.deepEqual(rc.setSetting("neg0", -0, "admin"), { ok: true });
+  assert.ok(Object.is(rc.getSetting("neg0"), 0) && Object.is(rc.getSetting("neg0", { strict: true }), 0), "read back 0, not -0");
+  assert.equal(rows(s, `SELECT value FROM settings WHERE name='neg0'`)[0].value, "0");
+  assert.deepEqual(rc.setSetting("neg0s", { a: [-0] }, "admin"), { ok: true }, "nested too");
+  assert.deepEqual(rc.getSetting("neg0s"), { a: [0] });
+  const before = dump(s);
+  const edges = {
+    "a null-prototype object": () => Object.assign(Object.create(null), { a: 1 }),
+    "a null-prototype object nested": () => ({ a: Object.create(null) }),
+    "a symbol key": symbolKey,
+    "a getter": getter,
+    "a non-enumerable property": hidden,
+    "an array with a hole": holey,
+    "an array with a named property": named,
+    "a value whose inspection throws": () => new Proxy({}, { ownKeys() { throw new Error("keys"); } }),
+  };
+  for (const [what, make] of Object.entries(edges)) assert.deepEqual(rc.setSetting("edge", make(), "admin"), notJson("edge"), what);
+  assert.deepEqual(dump(s), before, "none of them recorded anything");
+  /* the controls: the same shapes without the edge are taken */
+  for (const v of [{ a: 1 }, { a: {} }, { a: 1 }, { a: 1 }, { a: 1, b: 2 }, [1, null, 3], [1, 2]])
+    assert.deepEqual(rc.setSetting("edge", v, "admin"), { ok: true }, JSON.stringify(v));
+});
