@@ -1,0 +1,13 @@
+{
+  "name": "bio-stewards",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/",
+    "deploy": "node scripts/deploy.mjs",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.114.0"
+  }
+}

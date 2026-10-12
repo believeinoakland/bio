@@ -83,7 +83,9 @@ test("R12 op=wizardcheck serves checkScript to any credential, ai included, agai
 });
 
 test("R12 R2 a {template} draft named @ and a handle reaches filing-templates' offeredVersion by name (its R26), in the script's project; an <id>@<n> ref keeps its split (K2021)", () => {
-  const w = seeded();
+  /* the profile's records-request template attributed (offered) but keeping its kind's label for a name, so the project's
+     own "Records request" is the only template of that handle */
+  const w = seeded({ recordsRequest: null });
   const B = V("bob");
   /* a project template of P named "Records request", approved as filing-templates' acts leave it (alice drafts, bob approves) */
   const ft = w.filingTemplates;

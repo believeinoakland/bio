@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T45)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,11 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, qu
 (K2851) From filing-templates' merge (T45-30): its R15 offers a profile template only with a named writer, `sources`, a professional `no_concerns` review and another approver, so 7 of your tests drafting from the test profile's templates read `WIZARD_DRAFT_REFUSED` (e.g. "R12 R2 a {template} draft named @ and a handle reaches filing-templates' offeredVersion by name"). Give your fixture attributed templates (filing-templates' `fixture.mjs` `reviewedOf()`/`attributed()` shows how) and keep a not-offered case; inherited red until your merge.
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
+
+## B2 · ANSWER · re J1
+
+K2880: both readings stand as you state them. The plane's listing of T45's drafts in MACHINE_DRAFTS is plane's (PLANE #33 is told).
+
+## B3 · ANSWER · re J2
+
+K2889: merged; marks struck; rule 4 (15)'s wizard-scripts reds cleared. Stay available until the layer closes.

@@ -132,3 +132,82 @@ test("R11: a duty's item, overdue or possibly overdue, is no hint: it carries no
   assert.equal(between.length, 1);
   for (const it of [...overdue, ...between]) assert.deepEqual(notHintFailures(it, HINT_MARK), [], it.id);
 });
+
+/* R5 (T45; N855; Actions D6d; v0.2 rule 17; following R25): a duty is told only up to the day `following.dutyWatchEnd`
+   answers for it (a plan's watch kept until, or stopped on, that day); null is R5 as before. `following` is a stand-in in
+   its R25 shape: the end day per duty, every duty it is asked about recorded. */
+function watched(ends = {}) {
+  const w = world();
+  const asked = [];
+  const following = { policyChanges: () => ({ ok: true, changes: [], cursor: null }),
+                      dutyWatchEnd: (duty) => { asked.push(duty); return Object.prototype.hasOwnProperty.call(ends, duty) ? ends[duty] : null; } };
+  const read = (n) => (member, opts) => ofKind(reader(n).read(member, opts), KIND);
+  return { w, asked, ends, items: read(fresh(w.host, { membership: w.membership, duties: w.duties, following })),
+           plain: read(fresh(w.host, { membership: w.membership, duties: w.duties })) };
+}
+
+test("R5 (T45): a duty stopped today raises no item for an occurrence due tomorrow; control: the same duty with no link (dutyWatchEnd null) raises it; the duty stays held and its occurrence readable", () => {
+  const { w, asked, ends, items, plain } = watched();
+  const a = w.declare();                                     /* due 2026-02-12 */
+  const at = "2026-02-20T12:00:00Z";
+  const control = plain("bob", { now: at });
+  assert.equal(control.length, 1, "control: no link, told as before");
+  assert.equal(control[0].due, "2026-02-12");
+  assert.deepEqual(items("bob", { now: at }).map((i) => i.id), control.map((i) => i.id), "control: dutyWatchEnd answering null is R5 as before");
+  assert.ok(asked.includes(a.duty_id), "the end is read through following.dutyWatchEnd(duty)");
+  ends[a.duty_id] = "2026-02-11";                            /* stopped on the 11th: the occurrence falls due the day after */
+  assert.deepEqual(items("bob", { now: at }), [], "stopped: no item for an occurrence due after the end day");
+  const occ = w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: "2026-02-20T12:00:00Z", viewer: BOB });
+  assert.equal(occ.ok, true);
+  assert.equal(occ.occurrences.length, 1, "the duty stays held and its occurrence readable (duties R10): only the telling stops");
+  ends[a.duty_id] = "2026-02-12";                            /* an end on the due day itself: the occurrence is not after it */
+  assert.deepEqual(items("bob", { now: at }).map((i) => i.id), control.map((i) => i.id), "control: due on the end day, still told");
+});
+
+test("R5 (T45): a duty kept until a day raises items up to that day and none after; the item already raised for the earlier occurrence is unchanged", () => {
+  const { w, ends, items, plain } = watched();
+  const a = w.declare({ trigger: { kind: "event", event_kind: "communication", entity: E.clerk } });
+  w.event({ value: day("2026-02-02"), concerns: [E.clerk] });
+  w.event({ value: day("2026-03-02"), concerns: [E.clerk] });
+  const at = "2026-04-01T12:00:00Z";
+  const both = plain("bob", { now: at });
+  assert.equal(both.length, 2, "control: with no end, both occurrences are told");
+  const [first, second] = [...both].sort((x, y) => (x.due < y.due ? -1 : 1));
+  assert.ok(first.due < "2026-03-01" && second.due > "2026-03-01", `${first.due}, ${second.due}`);
+  ends[a.duty_id] = "2026-03-01";                            /* kept until 1 March */
+  const kept = items("bob", { now: at });
+  assert.deepEqual(kept, [first], "the earlier occurrence's item, unchanged; none for the one due after the end day");
+  ends[a.duty_id] = second.due;
+  assert.deepEqual(items("bob", { now: at }).map((i) => i.id).sort(), both.map((i) => i.id).sort(), "control: kept until the later due day, both told");
+});
+
+test("R5 (T45): an undetermined due date is compared by its latest candidate: an end between the candidates tells nothing, an end on the latest tells the possibly-overdue item", () => {
+  const { w, ends, items } = watched();
+  const a = w.declare({ trigger: { kind: "date", date: "2026-01-31" }, time: { basis: "rule", rule: "monthly_report", applies_to: "claim" } });
+  const at = "2026-03-01T16:00:00Z";                         /* between the candidates 2026-02-28 and 2026-03-01 */
+  ends[a.duty_id] = "2026-02-28";
+  assert.deepEqual(items("bob", { now: at }), [], "the latest candidate falls after the end day");
+  ends[a.duty_id] = "2026-03-01";
+  const told = items("bob", { now: at });
+  assert.equal(told.length, 1, "control: the latest candidate on the end day");
+  assert.equal(told[0].subject.state, "possibly overdue");
+});
+
+test("R5 (T45) R1: a following whose dutyWatchEnd throws contributes no duty item and is named in facts.failed; an answer that is no day is read as no end (the duty still told); the read writes nothing", () => {
+  const w = world();
+  w.declare();
+  const at = Date.parse("2026-02-20T12:00:00Z");
+  const run = (dutyWatchEnd) => reader(fresh(w.host, { membership: w.membership, duties: w.duties,
+    following: { policyChanges: () => ({ ok: true, changes: [], cursor: null }), dutyWatchEnd } })).read("bob", { now: at });
+  const down = run(() => { throw new Error("down"); });
+  assert.deepEqual(ofKind(down, KIND), []);
+  assert.deepEqual(down.facts.failed, ["following"]);
+  for (const odd of [undefined, 42, "", "12 February", "2026-02-11T00:00:00Z", {}]) {
+    const r = run(() => odd);
+    assert.equal(ofKind(r, KIND).length, 1, JSON.stringify(odd));
+    assert.deepEqual(r.facts.failed, [], JSON.stringify(odd));
+  }
+  const before = w.st.sql.exec(`SELECT COUNT(*) AS n FROM duties`).one().n;
+  run(() => "2026-02-11");
+  assert.equal(w.st.sql.exec(`SELECT COUNT(*) AS n FROM duties`).one().n, before);
+});
