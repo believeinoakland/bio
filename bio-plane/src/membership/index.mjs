@@ -1,6 +1,10 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R128; T45's R128 `registerProjectActGuard` and R83 order (`case-check`,
+ * Requirements: build/requirements/membership.md (R4–R131; T46's R131 `join_doors` declared `export: never` (K2928);
+ * R129 `handleChange` refusing every change
+ * `HANDLE_FIXED` (R124 retired; DEC-197, K2903), R16, R17, R125 and R126 as amended, R130 `joinDoors` (N654) and R83 order
+ * (`interface-assets`, `interface-shell`, `screens-settings`, `screens-intake`, `screens-daily`, `screens-inquiry`; T46-4,
+ * K2914, K657); T45's R128 `registerProjectActGuard` and R83 order (`case-check`,
  * `action-holds`, `action-replies`, `plan-work`, `action-producers`, `stewards`; T45-2, K2781, K2799, K657); T42's R83 order (`doorbell`, `case-account`; T42-3, K2607, K2608)
  * and R60's hold acts at a hidden project's EXISTENCE, met through R44 and R85 (N833, K2484; `actions` asks them); T40's R127 `joinedParticipants` (K2404), R122 `notTheOwner`, R123–R125 the handle check, the
  * handle change and its guard, R126's rows, R16, R17, R55 and R57 as amended, and R83's order with `ai-use` (T40-M; N797,
@@ -27,8 +31,8 @@
  */
 import { MACHINE_CLASS_PREFIX, sha256HexSync } from "../record-grammar/index.mjs";
 import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLES,
-         MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
-export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "./schema.mjs";
+         MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_DECLARED_TABLES } from "./schema.mjs";
+export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES, MEMBERSHIP_DECLARED_TABLES } from "./schema.mjs";
 import { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
          CASE_AUTHORITY_CHECKS, HANDLE_WORDS } from "./checks.mjs";
 export { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
@@ -254,7 +258,9 @@ export function notTheOwner(by, projectId, extra = null) {
    T42-3 (N826, N839; K657, K2607, K2608): `doorbell` after `capture` in layer 3, `case-account` after
    `case-disclosures` and before `case-authoring` in layer 8. T45-2 (K2781 (1), K2784, K657): `case-check` after `review`
    in layer 8, `action-holds` after `actions`, `action-replies` after `action-clocks` and `plan-work` after `action-plans`
-   in layer 9, `action-producers` after `machinery-producers` in layer 11; `stewards` last, after `installer`, in layer 11 (K2799). */
+   in layer 9, `action-producers` after `machinery-producers` in layer 11; `stewards` last, after `installer`, in layer 11 (K2799). T46-4 (K2914, K657): `interface-assets`,
+   `interface-shell`, `screens-settings`, `screens-intake`, `screens-daily` and `screens-inquiry` after `store-door` and
+   before `control-plane` in layer 11. */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
           "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
@@ -282,7 +288,8 @@ export const MODULE_ORDER = Object.freeze([
   /* 11 */ "wizard-scripts", "op-grades", "affordances", "tasks", "machinery-producers", "action-producers",
            "queue-producers",
            "notice-producers", "queue", "setup-page", "setup-words", "instance-setup", "op-declarations", "admission",
-           "answer-envelope", "store-door", "control-plane", "plane", "legacy-ui", "installer", "stewards",
+           "answer-envelope", "store-door", "interface-assets", "interface-shell", "screens-settings",
+           "screens-intake", "screens-daily", "screens-inquiry", "control-plane", "plane", "legacy-ui", "installer", "stewards",
 ]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -371,17 +378,26 @@ export class Membership {
     if (cols("bundles").length) this.reindexProjectSight();
   }
 
-  /* R115 (was R59), through record-core's `declarePurge` (its R21) once record-core provides it. */
+  /* R115 (was R59), through record-core's `declarePurge` (its R21's default form); R131 (T46) through its `declareTable`. */
   declareTables() {
     if (this.#declared) return false;
     /* record-core R21/R46: the project-keyed tables, keyed to a bundle (the project) by `project_id`, and the
-       exempt ones named once, as exempt. Its answer is read: a refusal (a table another module declared) is
-       thrown, because a purge that silently skipped these tables would leave the participation graph behind. */
-    const answer = this.core.declarePurge("membership",
-      MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })),
-      { exempt: [...MEMBERSHIP_EXEMPT_TABLES] });
-    if (answer && answer.ok === false)
-      throw new Error(`membership: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+       exempt ones named once, as exempt, in the default form; R131: `join_doors` with its own classes (`export: never`),
+       so it is left out of the default form. Each answer is read: a refusal (a table another module declared) is
+       thrown, because a purge that silently skipped these tables would leave the participation graph behind, and an
+       export that took the doors' hashes would carry what R111 holds back. */
+    /* A host whose record-core offers no `declareTable` (a test's stand-in; record-core R21 provides it on every real
+       host) declares these tables in the default form, as before R131: it states their purge class, all it can state. */
+    const explicit = typeof this.core.declareTable === "function";
+    const own = new Set(explicit ? MEMBERSHIP_DECLARED_TABLES.map((t) => t.name) : []);
+    const answers = [
+      this.core.declarePurge("membership", MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })),
+        { exempt: MEMBERSHIP_EXEMPT_TABLES.filter((t) => !own.has(t)) }),
+      ...(explicit ? [this.core.declareTable("membership", MEMBERSHIP_DECLARED_TABLES.map((t) => ({ ...t })))] : []),
+    ];
+    for (const answer of answers)
+      if (answer && answer.ok === false)
+        throw new Error(`membership: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
     this.#declared = true;
     return true;
   }
@@ -866,7 +882,7 @@ export class Membership {
    * later module registers, once at start, the guard R32 and R45 call synchronously inside their act, after their own
    * refusals and before any write: `fn({act, projectId, by, setting?})`, `act` `invite` or `visibility`. A refusal it
    * answers is answered unchanged and nothing is written; null lets the act proceed; a throw, a promise or anything else
-   * refuses PROJECT_GUARD_UNCHECKED (fail closed, as R124). With none registered the acts proceed as before. The slot
+   * refuses PROJECT_GUARD_UNCHECKED (fail closed). With none registered the acts proceed as before. The slot
    * takes one registration whoever makes it, so its refusals are R81's, naming the holder. */
   #projectActGuard = null;   // {module, fn}
 
@@ -2109,7 +2125,8 @@ export class Membership {
             + "used to invite you." };
     if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(h))
       return { ok: false, reason: "BAD_HANDLE", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
-    /* R16, R124 (T40; DEC-184 (1), DEC-186 (2)): taken when another member holds it now or held it before. */
+    /* R16 (T40, T46; DEC-184 (1), DEC-186 (2), DEC-196): taken when another member holds it now, whatever their status
+       (a member who has left keeps theirs), or held it before (the history R124's changes left). */
     if (this.#heldByAnother(h, m.member_id)) return { ok: false, reason: "HANDLE_TAKEN", handle: h };
     if (typeof password !== "string" || password.length < 12)
       return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
@@ -2192,8 +2209,7 @@ export class Membership {
             this row. Two places answering the same question, one of them never
             updated, is the shape that produces a roster nobody can trust. */
          expertise: this.expertiseList({ memberId: r.member_id }).expertise,
-         /* R17, R124 (T40; DEC-186 (2)): the member's earlier handles, latest first, to every caller R17 answers. */
-         formerly: this.#formerly(r.member_id, r.handle),
+         /* R17 (T46; DEC-197): no `formerly` key: a handle is chosen at joining and never changed. */
          pairing_published: r.pairing_published === 1,              /* R19 */
          ...(pairs ? { projects: this.#projectsOf(r.member_id, viewer),        /* R18: an administrator's roster */
                        /* R105: how each came in and their invitation, for an administrator's roster only. */
@@ -2203,16 +2219,15 @@ export class Membership {
   }
 
   /* ===== T40 (T40-M; N797, N799; DEC-184, DEC-186, Bob's "S18: B"; K1881, K2394) — A MEMBER'S HANDLE, CHECKED AS IT
-   * IS TYPED AND CHANGED BY ITS MEMBER =====
+   * IS TYPED; T46 (T46-4; N934; DEC-196, DEC-197; K2903) — AND NEVER CHANGED =====
    *
-   * A handle is unique in the group (R16), and a handle a member held before stays theirs: it is taken for every other
-   * member (at enrolment and at a change), so "formerly mai-k" never names someone else, and its member may take it
-   * back (R124). Earlier handles live in `handle_history`, append-only and never deleted (R57). The check (R123) says
-   * only free, taken or not allowed, never who holds a handle or that it was someone's earlier one, and counts every
-   * call against a window per invitation or member (K1881's protective limit). A change is refused once the member's
-   * work is in a published case, a fact a later module (`publication`, its R76) answers through the one guard it
-   * registers (R125); with no guard, or one that cannot answer, the change fails closed. A published case keeps the
-   * handle it was signed with: nothing here rewrites a signed document or another module's row. */
+   * A handle is unique in the group and never reused (R16): every member's handle stays taken whatever the member's
+   * status, a member who has left included, and so does every handle `handle_history` holds, the earlier handles of the
+   * changes made before R124 was retired (append-only and never deleted, R57). The check (R123) says only free, taken or
+   * not allowed, never who holds a handle or that it was someone's earlier one, and counts every call against a window
+   * per invitation or member (K1881's protective limit). A handle is chosen at joining and never changed (DEC-197):
+   * `handleChange` (R129) refuses every call `HANDLE_FIXED`, reading and writing nothing. R125's guard slot stands, so
+   * reopening a change is one requirement, but no act here calls it. */
 
   static HANDLE_PATTERN = /^[a-z0-9][a-z0-9-]{1,40}$/;
 
@@ -2223,19 +2238,11 @@ export class Membership {
   static HANDLE_CHECK_STATED = `at most ${Membership.HANDLE_CHECK_WINDOW.perKey} handle checks in any `
     + `${Membership.HANDLE_CHECK_WINDOW.windowMs / 60_000} minutes for one invitation or one member`;
 
-  /* Whether another member than `self` holds `handle` now or held it before (R16, R124). */
+  /* Whether another member than `self` holds `handle` now, whatever their status, or held it before (R16). */
   #heldByAnother(handle, self) {
     return !!this.#one(`SELECT 1 AS x FROM members WHERE handle=? AND member_id<>?
                         UNION ALL SELECT 1 AS x FROM handle_history WHERE from_handle=? AND member_id<>? LIMIT 1`,
       handle, self ?? "", handle, self ?? "");
-  }
-
-  /* R17, R124: a member's earlier handles, latest first, each once, the current one left out. */
-  #formerly(memberId, current) {
-    const out = [];
-    for (const r of this.#rows(`SELECT from_handle FROM handle_history WHERE member_id=? ORDER BY seq DESC`, memberId))
-      if (r.from_handle !== current && !out.includes(r.from_handle)) out.push(r.from_handle);
-    return out;
   }
 
   /* R123: what in a typed handle does not fit R12's pattern: `length` (2 to 41), `start` (a letter or digit) and
@@ -2288,7 +2295,8 @@ export class Membership {
   }
 
   /** R123 (DEC-184 (2), (3), DEC-186 (3); K1881; `op=handlecheck`): whether `handle` could be taken in this group now,
-   *  as a person types it, asked with a live invitation or by an active member (`viewer`). Free, taken (with a
+   *  as a person types it, asked with a live invitation or by an active member (`viewer`, a member checking a handle;
+   *  T46: no handle is changed, R129). Free, taken (with a
    *  suggestion) or not allowed (naming what does not fit), never who holds it. Writes only its count; never throws. */
   async handleCheck({ invite = null, handle = null, viewer = null } = {}) {
     try {
@@ -2328,9 +2336,10 @@ export class Membership {
     } catch { return { ...Membership.#INVITE_MISS }; }
   }
 
-  /* R125 (DEC-186 (1); K2376 (4); R116's form): the one guard R124 asks whether a member's work is in a published case.
-     One later module (`publication`, its R76) registers once at start; the slot takes one registration whoever makes
-     it, so its refusals are R81's, naming the holder. */
+  /* R125 (DEC-186 (1); K2376 (4); R116's form): the one guard a change of handle would ask whether a member's work is in
+     a published case. One later module (`publication`, its R76) registers once at start; the slot takes one
+     registration whoever makes it, so its refusals are R81's, naming the holder. T46 (DEC-197): while no handle is
+     changed (R129), no act of this module calls it; the slot stands so that reopening a change is one requirement. */
   #handleGuard = null;   // {module, fn}
 
   registerHandleGuard(module, fn) {
@@ -2340,60 +2349,16 @@ export class Membership {
     return { ok: true, module };
   }
 
-  /* R124, R125: the guard's answer for a member: `{fixed: {case, edition}}`, `{clear: true}`, or `{unchecked: true}` when
-     no guard is registered, it throws, or it answers anything but null or a case (fail closed). Called synchronously,
-     before any write; a promise is not an answer. */
-  #publishedWork(memberId) {
-    const guard = this.#handleGuard;
-    if (!guard) return { unchecked: true };
-    let r;
-    try { r = guard.fn({ memberId }); } catch { return { unchecked: true }; }
-    if (r === null) return { clear: true };
-    if (r && typeof r.then === "function") { r.then(null, () => {}); return { unchecked: true }; }
-    if (isObj(r) && typeof r.case === "string" && r.case && r.unreadable !== true)
-      return { fixed: { case: r.case.slice(0, 200),
-                        edition: typeof r.edition === "string" || Number.isInteger(r.edition) ? r.edition : null } };
-    return { unchecked: true };
-  }
-
-  /** R124 (DEC-186 (1)–(3); `op=handlechange`): a member changes their own handle, until their work first appears in a
-   *  published case. Refusals in order, each writing nothing; a handle equal to the current one changes nothing;
-   *  otherwise, in one act, the handle becomes `handle` and `{member, from, to, at}` is appended to the history. */
-  handleChange({ handle = null, by = null } = {}) {
-    const self = typeof by === "string" && by && by !== Membership.ROOT_ADMIN && !by.startsWith(MACHINE_CLASS_PREFIX)
-      ? this.#one(`SELECT member_id, handle, status FROM members WHERE member_id=?`, by) : null;
-    /* DEC-49 REGION is-handle-change-member */
-    if (!self || self.status !== "active")
-      return Membership.#rowRefusal("HANDLE_CHANGE_NOT_A_MEMBER",
-        "a handle is changed by its own member, signed in, and the caller is not an active member of this group (a "
-        + "machine credential, an operator token and the founding administrator hold no handle). Nothing was written.",
-        { by: Membership.#echo(by ?? null) });
-    /* END DEC-49 REGION is-handle-change-member */
-    const h = String(handle ?? "").trim();
-    if (!h) return { ok: false, reason: "NO_HANDLE",
-      detail: "choose a handle. It is what the record shows of you inside the group. Nothing was written." };
-    if (!Membership.HANDLE_PATTERN.test(h))
-      return { ok: false, reason: "BAD_HANDLE", detail: "lowercase letters, digits and dashes, 2 to 41 characters" };
-    const work = this.#publishedWork(self.member_id);
+  /** R129 (T46; DEC-197, DEC-196; N934, K2903; `op=handlechange`): a handle is chosen when a member joins and is never
+   *  changed, by the member or anyone. The op stays declared and routed, and every call is refused HANDLE_FIXED before
+   *  anything is read: whoever asks and whatever `handle` names, one answer, and nothing is written (no handle, no
+   *  handle-history row). Its arguments are taken and not read, so reopening a change is one requirement. */
+  handleChange() {
     /* DEC-49 REGION is-handle-fixed */
-    if (work.fixed)
-      return Membership.#rowRefusal("HANDLE_FIXED",
-        `your work appears in a published case (${work.fixed.case}), which is signed and permanent, so your handle is `
-        + "fixed from then on (DEC-186 (1)). Nothing was written.",
-        { case: work.fixed.case, edition: work.fixed.edition });
-    if (work.unchecked)
-      return Membership.#rowRefusal("HANDLE_CHANGE_UNCHECKED",
-        "whether your work appears in a published case could not be read, so the change was not made: a handle is not "
-        + "changed on a guess. Nothing was written.");
+    return Membership.#rowRefusal("HANDLE_FIXED",
+      "a handle is chosen when a member joins and is never changed, by the member or anyone (DEC-197). Nothing was "
+      + "written.");
     /* END DEC-49 REGION is-handle-fixed */
-    if (this.#heldByAnother(h, self.member_id)) return { ok: false, reason: "HANDLE_TAKEN", handle: h };
-    if (h === self.handle) return { ok: true, unchanged: true };
-    const at = new Date().toISOString();
-    this.sql.exec(`UPDATE members SET handle=?, updated=? WHERE member_id=?`, h, at, self.member_id);
-    if (self.handle)
-      this.sql.exec(`INSERT INTO handle_history (member_id, from_handle, to_handle, at) VALUES (?,?,?,?)`,
-        self.member_id, self.handle, h, at);
-    return { ok: true, handle: h, formerly: this.#formerly(self.member_id, h) };
   }
 
   memberSet({ memberId, status, by = null } = {}) {
@@ -2776,6 +2741,43 @@ export class Membership {
     return this.#doorMember("link", live, label, null);
   }
 
+  /* ---- R130 (T46; N654, K1752): the doors' settings and history, for an administrator ---- */
+
+  /* R130's bound: R113's rule, at most 200 records, lowered never raised. */
+  static JOIN_DOORS_LIMIT = 200;
+
+  /** R130 (`op=joindoors`): the settings and history of the group's two doors, to an administrator (R64), never their
+   *  secrets. Each door answers `{live, current, history, limit, truncated}`: `current` the live door's settings, its
+   *  id the one its invitations' actor names (R105), `since` and `by` its latest record's; `history` every record R100
+   *  and R103 appended for it, in the order recorded, the first `limit` of them, `truncated` read one row past. No
+   *  column holding a secret's hash is selected, and no invitation a door made is read. Writes nothing, never throws. */
+  joinDoors(args = {}) {
+    const { by = null, limit = null } = isObj(args) ? args : {};
+    try {
+      if (!this.isAdministrator(by)) return notAnAdmin(by, "reading the group's website key and join link");   /* R84 */
+      const cap = Math.max(1, Math.min(Number(limit) || Membership.JOIN_DOORS_LIMIT, Membership.JOIN_DOORS_LIMIT));
+      const record = (r) => ({ id: r.door_id, event: r.event, capabilities: this.#capsOf(r), dailyCap: r.daily_cap,
+                               expiresInDays: r.expires_days, by: r.set_by, at: r.at });
+      const door = (kind) => {
+        const d = Membership.#DOOR[kind];
+        const found = this.#rows(`SELECT door_id, event, capabilities, daily_cap, expires_days, set_by, at FROM join_doors
+                                   WHERE door=? ORDER BY seq LIMIT ?`, d.door, cap + 1).map(record);
+        const last = this.#one(`SELECT door_id, event, capabilities, daily_cap, expires_days, set_by, at FROM join_doors
+                                 WHERE door=? ORDER BY seq DESC LIMIT 1`, d.door);
+        const live = !!last && last.event !== d.stop;
+        const truncated = found.length > cap;
+        return { live, current: live ? { id: last.door_id, capabilities: this.#capsOf(last), dailyCap: last.daily_cap,
+                                         expiresInDays: last.expires_days, since: last.at, by: last.set_by } : null,
+                 history: truncated ? found.slice(0, cap) : found, limit: cap, truncated };
+      };
+      return { ok: true, websiteKey: door("website"), joinLink: door("link") };
+    } catch {
+      /* a read that could not be made answers no door, as `courtNotice` answers no choice */
+      const none = { live: false, current: null, history: [], limit: Membership.JOIN_DOORS_LIMIT, truncated: false };
+      return { ok: true, websiteKey: { ...none }, joinLink: { ...none } };
+    }
+  }
+
   /* ---- R106 (DEC-135 (2), (5)): who a check request reaches ---- */
 
   /** Every active member whose current state for `label` is declared or confirmed and whom R80 admits to `target`, in
@@ -2920,10 +2922,11 @@ export function membershipOps(m, url, body, env) {
            `null`, which `memberAdd` reads as NO endorsement — never the body's. */
         memberadd: () => m.memberAdd({ ...(body || {}), by: url.searchParams.get("by") }),
         enroll: () => m.enroll(body || {}),
-        /* T40 (R123, R124): the invitation and the handle from the body, never the address; `viewer` and `by` the
+        /* T40 (R123; R129 since T46): the invitation and the handle from the body, never the address; `viewer` and `by` the
            control plane's stamps from the query, read after the body so a body's copy never wins. */
         handlecheck: () => m.handleCheck({ invite: body?.invite ?? null, handle: body?.handle ?? null,
                                            viewer: url.searchParams.get("viewer") }),
+        /* R129 (T46; DEC-197): declared and routed, and refusing every call; nothing it is sent is read. */
         handlechange: () => m.handleChange({ handle: body?.handle ?? null, by: url.searchParams.get("by") }),
         invitelook: () => m.inviteLook(body || {}),
         /* R18 (D54, T41-3): `viewer`, the control plane's stamp, says which administrator reads the roster's projects. */
@@ -3008,6 +3011,8 @@ export function membershipOps(m, url, body, env) {
         joinlinkreplace: () => m.joinLinkReplace({ by: url.searchParams.get("by") }),
         joinlinkoff: () => m.joinLinkOff({ by: url.searchParams.get("by") }),
         joinlinkinvite: () => m.joinLinkInvite({ link: body?.link, cover: body?.cover }),
+        /* R130 (T46; N654): `by` the control plane's stamp; `limit` the caller's, lowered never raised. */
+        joindoors: () => m.joinDoors({ by: url.searchParams.get("by"), limit: url.searchParams.get("limit") }),
         checkaddressees: () => m.checkAddressees({ target: url.searchParams.get("target"),
           label: url.searchParams.get("label") }),
         courtnoticeset: () => m.courtNoticeSet({ ...(body || {}), by: url.searchParams.get("by") }),

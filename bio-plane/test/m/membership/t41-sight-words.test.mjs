@@ -1,5 +1,6 @@
 /* T41 (T41-3; N822, D54 B, K2408, K2409, K2435; DEC-188 (7)): administrators' sight of hidden projects (the Terms' two
-   forms of EXISTENCE, R18, R43, R44, R60, R77, R88, R120) and the handle refusals' words read by key (R123, R124, R126).
+   forms of EXISTENCE, R18, R43, R44, R60, R77, R88, R120) and the handle refusals' words read by key (R123, R126; R124's
+   two refusals retired with it at T46, DEC-197).
    Each id is tested here explicitly, with a negative control (K874: older tests name some of these ids already). Every
    test drives the module at its interface. */
 import { test } from "node:test";
@@ -113,9 +114,8 @@ test("R77 T41 C-70.1 carries `owners`, the owners' current handles in R65's orde
       () => w.m.projectVisibilitySet({ projectId: "PROJ-H", setting: "discoverable", by, viewer: v }),
     ]) assert.deepEqual(act(), ex, v);
   }
-  /* the current handle: a changed handle is what the owners read */
-  w.m.registerHandleGuard("publication", () => null);
-  w.m.handleChange({ handle: "bob-2", by: "bob" });
+  /* the current handle: a handle changed before T46 (DEC-197; no act changes one now, R129) is what the owners read */
+  w.sql.exec(`UPDATE members SET handle='bob-2' WHERE member_id='bob'`);
   assert.deepEqual(w.m.existenceAct("PROJ-H", V("second")).owners, ["ann", "bob-2"]);
   /* negative control: the first form carries no `owners` key, and a hidden project answers nothing to a non-administrator */
   const first = w.m.existenceAct("PROJ-D", V("dee"));
@@ -222,28 +222,21 @@ test("R120 T41 the sight the contract tables give is R43's: an administrator is 
   assert.deepEqual(byR43(V("dee")), ["PROJ-D"], "made an administrator: D only, not hidden H");
 });
 
-/* ---------------------------------------------------------------- R123, R124, R126 ---------------------------------- */
+/* ---------------------------------------------------------------- R123, R126 ---------------------------------------- */
 
-test("R126 R123 R124 T41 the three handle refusals' translations are words.json's handle.refused.*, read by key (DEC-188 (7)); their rows keep their numbers", async () => {
+test("R126 R123 T41 T46 HANDLE_CHECK_PAUSED's translation is words.json's handle.refused.paused, read by key (DEC-188 (7)), its row C-96.48; the two refusals R124 read by key are retired with it", async () => {
   const words = await wordsJson();
   const en = (k) => words.find((x) => x.key === k).en;
-  const want = { HANDLE_CHECK_PAUSED: ["C-96.48", "handle.refused.paused"],
-                 HANDLE_CHANGE_NOT_A_MEMBER: ["C-96.49", "handle.refused.notmember"],
-                 HANDLE_CHANGE_UNCHECKED: ["C-96.51", "handle.refused.unchecked"] };
-  for (const [code, [check, key]] of Object.entries(want)) {
-    assert.equal(HANDLE_WORDS[key], en(key), `${key}: held verbatim`);
-    assert.equal(MEMBERSHIP_CHECKS[code].translation, HANDLE_WORDS[key], `${code} reads ${key}`);
-    assert.equal(MEMBERSHIP_CHECKS[code].check, check, code);
-  }
-  /* negative control: BOB's draft of HANDLE_CHANGE_UNCHECKED is gone, and no two refusals share a sentence */
-  assert.notEqual(MEMBERSHIP_CHECKS.HANDLE_CHANGE_UNCHECKED.translation,
-    "Whether your work is in a published case could not be checked, so your handle was not changed. Try again.");
-  const ts = Object.keys(want).map((c) => MEMBERSHIP_CHECKS[c].translation);
-  assert.equal(new Set(ts).size, ts.length);
+  assert.equal(HANDLE_WORDS["handle.refused.paused"], en("handle.refused.paused"), "held verbatim");
+  assert.equal(MEMBERSHIP_CHECKS.HANDLE_CHECK_PAUSED.translation, HANDLE_WORDS["handle.refused.paused"]);
+  assert.equal(MEMBERSHIP_CHECKS.HANDLE_CHECK_PAUSED.check, "C-96.48");
+  /* negative control (T46, DEC-197): no row reads handle.refused.notmember or handle.refused.unchecked, nor holds them */
+  for (const key of ["handle.refused.notmember", "handle.refused.unchecked", "handle.fixed"])
+    assert.equal(key in HANDLE_WORDS, false, key);
+  for (const code of ["HANDLE_CHANGE_NOT_A_MEMBER", "HANDLE_CHANGE_UNCHECKED"]) assert.equal(code in MEMBERSHIP_CHECKS, false, code);
 });
 
-test("R123 T41 HANDLE_CHECK_PAUSED answers handle.refused.paused with `minutes`, the whole minutes until retryAfter, rounded up", async (t) => {
-  t.mock.timers.enable({ apis: ["Date"], now: Date.UTC(2026, 9, 9, 12, 0, 0) });
+test("R123 T41 HANDLE_CHECK_PAUSED answers handle.refused.paused with `minutes`, the whole minutes until retryAfter, rounded up", async (t) => {  t.mock.timers.enable({ apis: ["Date"], now: Date.UTC(2026, 9, 9, 12, 0, 0) });
   const w = await world().group("ann");
   const inv = (await w.m.memberAdd({ memberId: "cal", cover: "c", by: "admin" })).invite;
   for (let i = 0; i < 60; i++) await w.m.handleCheck({ invite: inv, handle: `h-${i}` });
@@ -256,17 +249,4 @@ test("R123 T41 HANDLE_CHECK_PAUSED answers handle.refused.paused with `minutes`,
   t.mock.timers.setTime(Date.now() + p.retryAfter * 1000);
   const ok = await w.m.handleCheck({ invite: inv, handle: "x-y" });
   assert.deepEqual([ok.ok, "minutes" in ok], [true, false]);
-});
-
-test("R124 T41 HANDLE_CHANGE_NOT_A_MEMBER and HANDLE_CHANGE_UNCHECKED answer their words by key at the act", async () => {
-  const words = await wordsJson();
-  const en = (k) => words.find((x) => x.key === k).en;
-  const w = await world().group("ann");
-  for (const by of [null, "admin", `${MACHINE_CLASS_PREFIX}admin`])
-    assert.equal(w.m.handleChange({ handle: "ann-x", by }).translation, en("handle.refused.notmember"), String(by));
-  assert.equal(w.m.handleChange({ handle: "ann-x", by: "ann" }).translation, en("handle.refused.unchecked"), "no guard");
-  /* negative control: with a guard answering null the change is made, and carries no refusal's words */
-  w.m.registerHandleGuard("publication", () => null);
-  const ok = w.m.handleChange({ handle: "ann-x", by: "ann" });
-  assert.deepEqual([ok.ok, "translation" in ok], [true, false]);
 });

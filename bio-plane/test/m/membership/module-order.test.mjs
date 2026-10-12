@@ -51,7 +51,9 @@ const T33_NEW = ["civil-time", "calc-grammar", "connection-grammar", "court-cita
    after]`, so the place is pinned by both neighbours. */
 const SINCE_T33 = [["sheet-worker", "file-scanner", "record-core"], ["doorbell", "file-safety", "sources"],
                    ["observation-log", "law-relations", "standards"], ["wizard-scripts", "op-grades", "affordances"],
-                   ["admission", "answer-envelope", "store-door"], ["answer-envelope", "store-door", "control-plane"],
+                   ["admission", "answer-envelope", "store-door"],
+                   /* T46-4 (K2914): `interface-assets` now follows `store-door` (T46_PINS below). */
+                   ["answer-envelope", "store-door", "interface-assets"],
                    /* T37-44 (K1185, K2171): `image-cover` after `pdf-pixels` in layer 1 (`doc-clean` after it since T39). */
                    ["pdf-pixels", "image-cover", "doc-clean"],
                    /* T38-4 (N783; K657, K1185, K2270): `project-roster` directly after `membership` in layer 2. */
@@ -84,9 +86,16 @@ const LAST = ["installer", "stewards"];
    its paths; the five T41's opening adds are tolerated until each one's job merges. T42-3 (K657, K2607, K2608): `ai-use`
    and T41's five have merged and are held to their paths; `doorbell` and `case-account`, which T42's opening adds, are
    tolerated until each one's job merges (T42-6, T42-21). T45-2 (K657, K2781, K2784): `doorbell` and `case-account` have
-   merged and are held to their paths; the five T45's opening adds are tolerated until each one's job merges. */
+   merged and are held to their paths; the five T45's opening adds are tolerated until each one's job merges. T46-4
+   (K657, K2914; N936): T45's six have merged and are held to their paths; the six T46's opening adds are tolerated until
+   each one's job merges. */
 const T45_NEW = ["case-check", "action-holds", "action-replies", "plan-work", "action-producers", "stewards"];
-const NOT_YET_BUILT = [...T45_NEW];
+/* T46-4 (K657, K2914): the six layer-11 modules T46's opening adds, directly after `store-door` and before
+   `control-plane`, in this order; each `[before, id, after]` pins its place by both neighbours. */
+const T46_NEW = ["interface-assets", "interface-shell", "screens-settings", "screens-intake", "screens-daily",
+                 "screens-inquiry"];
+const T46_PINS = T46_NEW.map((id, i) => [i ? T46_NEW[i - 1] : "store-door", id, T46_NEW[i + 1] ?? "control-plane"]);
+const NOT_YET_BUILT = [...T46_NEW];
 
 test("R83 T36-6 T37-44 T38-4 T39-M T40-M T41-3 T42-3 T45-2 MODULE_ORDER holds the modules added since T33 in the file's places: file-scanner, file-safety, law-relations, op-grades, answer-envelope, store-door, image-cover, project-roster, doc-clean, setup-words, ai-use, steps, reading-guides, question-explorer, investigation, publish-schedule, doorbell, case-account, case-check, action-holds, action-replies, plan-work, action-producers", async () => {
   const modules = await modulesJson();
@@ -120,7 +129,7 @@ test("R83 T33-19a MODULE_ORDER holds plan T33's order: the new modules in their 
   for (const id of T33_NEW) assert.ok(MODULE_ORDER.includes(id), `${id} is held in its place`);
 });
 
-test("R83 T33-19a T39-M T40-M T41-3 T42-3 T45-2 every module MODULE_ORDER holds is built, its paths on disk; a module listed before its job merges (case-check, action-holds, action-replies, plan-work, action-producers, stewards) is named as not yet built, by name, and fails nothing", async (t) => {
+test("R83 T33-19a T39-M T40-M T41-3 T42-3 T45-2 T46-4 every module MODULE_ORDER holds is built, its paths on disk; a module listed before its job merges (interface-assets, interface-shell, screens-settings, screens-intake, screens-daily, screens-inquiry) is named as not yet built, by name, and fails nothing", async (t) => {
   const modules = await modulesJson();
   const notYet = [];
   for (const m of modules) {
@@ -184,10 +193,10 @@ test("R83 T42-3 negative control: a list without doorbell or case-account, or ho
     assert.ok(!NOT_YET_BUILT.includes(id) && modules.find((m) => m.id === id).paths.length, `${id} merged: held to its paths`);
 });
 
-/* K874's negative control for T45-2's re-pin: the list T42 left (without the five) is not the file's; each of the five
-   left out, or held one place out (before its left neighbour), is refused by the file and by its neighbour pin; and the
-   tolerated names are exactly the six (B2: `stewards`, K2799, last after `installer`), each still without paths in the file. */
-test("R83 T45-2 negative control: a list without case-check, action-holds, action-replies, plan-work, action-producers or stewards, or holding one out of its place, is refused; the tolerated names are exactly the six unbuilt", async () => {
+/* K874's negative control for T45-2's re-pin, re-pinned at T46-4 (N936): T45's six are merged, so each is held to its
+   filled paths and none is tolerated as not yet built; a list without one of them, or holding one out of its place, is
+   still refused by the file and by its neighbour pin. */
+test("R83 T45-2 T46-4 negative control: a list without case-check, action-holds, action-replies, plan-work, action-producers or stewards, or holding one out of its place, is refused; the six are merged, held to their filled paths and never tolerated", async () => {
   const modules = await modulesJson();
   const ids = modules.map((m) => m.id);
   assert.notDeepEqual(MODULE_ORDER.filter((id) => !T45_NEW.includes(id)), ids, "T42's list is behind the file");
@@ -209,8 +218,38 @@ test("R83 T45-2 negative control: a list without case-check, action-holds, actio
   early.splice(early.indexOf("installer"), 0, "stewards");
   assert.notDeepEqual(early, ids, "stewards before installer is not the file's order");
   assert.notDeepEqual(early.slice(-2), LAST, "the pin refuses it");
-  assert.deepEqual([...NOT_YET_BUILT].sort(), [...T45_NEW].sort());
-  for (const id of T45_NEW) assert.deepEqual(modules.find((m) => m.id === id).paths, [], `${id}: no paths until its job merges`);
+  /* N936: merged, each held to its filled paths, on disk, and none tolerated as not yet built */
+  for (const id of T45_NEW) {
+    const paths = modules.find((m) => m.id === id).paths;
+    assert.ok(paths.length, `${id}: its paths are filled`);
+    for (const p of paths) assert.ok(existsSync(new URL(`../../../../${p}`, import.meta.url)), `${id}: ${p} is on disk`);
+    assert.ok(!NOT_YET_BUILT.includes(id), `${id} is not tolerated as not yet built`);
+  }
+});
+
+/* K874's negative control for T46-4's re-pin: the list T45 left (without the six) is not the file's; each of the six left
+   out, or held one place out (before its left neighbour), is refused by the file and by its neighbour pin; the six sit
+   in layer 11 between store-door and control-plane; and the tolerated names are exactly the six, each still without
+   paths in the file. */
+test("R83 T46-4 MODULE_ORDER holds interface-assets, interface-shell, screens-settings, screens-intake, screens-daily and screens-inquiry after store-door and before control-plane; negative control: a list without one, or holding one out of its place, is refused; the tolerated names are exactly the six unbuilt", async () => {
+  const modules = await modulesJson();
+  const ids = modules.map((m) => m.id);
+  const layerOf = new Map(modules.map((m) => [m.id, m.layer]));
+  const pin = (list, id) => { const i = list.indexOf(id); return list.slice(i - 1, i + 2); };
+  const at = MODULE_ORDER.indexOf("store-door");
+  assert.deepEqual(MODULE_ORDER.slice(at, at + 8), ["store-door", ...T46_NEW, "control-plane"], "the run, in order");
+  assert.notDeepEqual(MODULE_ORDER.filter((id) => !T46_NEW.includes(id)), ids, "T45's list is behind the file");
+  for (const [before, id, after] of T46_PINS) {
+    assert.equal(layerOf.get(id), 11, `${id} is in layer 11`);
+    assert.deepEqual(pin(MODULE_ORDER, id), [before, id, after], `${id} in its place in the real list`);
+    assert.notDeepEqual(MODULE_ORDER.filter((x) => x !== id), ids, `a list without ${id} is not the file's`);
+    const moved = MODULE_ORDER.filter((x) => x !== id);
+    moved.splice(moved.indexOf(before), 0, id);
+    assert.notDeepEqual(moved, ids, `${id} before ${before} is not the file's order`);
+    assert.notDeepEqual(pin(moved, id), [before, id, after], `the pin refuses ${id} out of its place`);
+  }
+  assert.deepEqual([...NOT_YET_BUILT].sort(), [...T46_NEW].sort());
+  for (const id of T46_NEW) assert.deepEqual(modules.find((m) => m.id === id).paths, [], `${id}: no paths until its job merges`);
 });
 
 test("R83 MODULE_ORDER is frozen: no write changes it", () => {
