@@ -132,7 +132,7 @@ test("R3 (blocks 1-2) the public read answers the case, with each finding's own 
   assert.equal(f.serves.some((e) => e.to === DOC_CAP) || f.names.some((e) => e.to === DOC_CAP), false,
                "an unpublished target is neither served nor named");
   assert.deepEqual([f.names, f.unresolved, f.division.parent, f.division.siblings], [[], [], null, []]);
-  assert.equal(f.tensions, null, "a /4 document states no tensions (R13)");
+  assert.equal(f.tensions, null, "a /5 document with no tension section states none: null, never [] (R13)");
   assert.equal(s.manifest_sha, manifestSha);
   assert.deepEqual(s.files, s.manifest.parts.map((p) => ({ path: p.path, sha256: p.sha256, kind: p.kind, bytes: p.bytes, finding: p.finding })));
   assert.deepEqual(s.files.filter((p) => p.kind === "capture").map((p) => [p.path, p.finding, p.sha256, p.bytes]),
