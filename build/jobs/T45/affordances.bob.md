@@ -37,3 +37,7 @@ K2890: (1), (2), (4), (5) confirmed and queued for their owners' next jobs (N929
 ## B5 · CHANGE
 
 K2891: op-grades (T45-38) and op-declarations (T45-45) are merged into tranche/T45. Merge it into your branch; the reds owed to them should clear.
+
+## B6 · ANSWER · re J3
+
+K2898: merged; R51 struck. Stay available until the layer closes.
