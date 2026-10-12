@@ -35,3 +35,7 @@ Size (session_016rtHXktFUtkGX8nXhc548v): test runs 9, module lines 2533
 ## J1 · COMPLETE
 
 Complete (commits 1ae003ff03, record). R29 partAdmittedOn/partAdmitted/untestedLabel, R30 AI_PART_NOT_DEPLOYED C-22.29 via partRefusal, R16/R21/R14 flags true (DEPLOYED_MODES check, plan, ask, draft), R27 statusreport (action_drafts stays false per M-T46-5), R31 two C-109 rows read by key; ACTION_DRAFT_KINDS no longer sliced off DRAFT_KINDS' end. run-rules 59/0; format, architecture, coverage (31/31), ownership clean. Newly red elsewhere, owned by later L6 jobs: ai-runs 4 (R40, R46, converts R9/R40, R54: DEPLOYED_MODES/plan pins and the mode note listing check, plan) for T46-14; agent-worker requirements R44/R53 x2 (MODES.plan) and R45 x2 (bundle stale, run-rules an input) for T46-19. Other users unchanged. Details in my record.
+
+## J2 · COMPLETE · re B2
+
+B2 applied (00fd4d8a00): tranche/T46 merged; R32 MEMBER_RUN_MODE_NOT_ADMITTED C-22.30 in my C-22 rows, ai-runs' where, R32's interim translation verbatim, tested (t46.test.mjs R32). run-rules 60/0; format, architecture, coverage 32/32, ownership clean. ai-runs still the same 4 reds (T46-14's), agent-harness 31/0. Ready to merge.
