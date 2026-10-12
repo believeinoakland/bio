@@ -40,7 +40,7 @@ Size (session_018KyvpjWpStPQKywDPCaAeL): test runs 9, module lines 2078
 - Tests: case-checker 80/0. Users pass with 0 fail: case-disclosures 95, case-account 32, case-import 96, filings 92, case-authoring 204.
 - Checks: format, architecture, coverage (24/24) and ownership all show 0 failures. `run.mjs` shows architecture 0; its 33 coverage failures are other modules', inherited.
 
-Size (session_018KyvpjWpStPQKywDPCaAeL, after B3): test runs 17, module lines 2085
+Size (session_018KyvpjWpStPQKywDPCaAeL, after B3): test runs 17, module lines 2088
 
 ## J1 · QUESTION
 
