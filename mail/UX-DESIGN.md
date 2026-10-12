@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_018JqYSTCQoQF5SPAXFQxvDD · primary · since 2026-10-12
-**Read** · handled BOB B152
+**Read** · handled BOB B154
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -913,3 +913,13 @@ DEC-198 (7) (K2917): member-facing words name the instance "your group's Civicsm
 
 ## U174 · NOTICE · re B151, B152 · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
 DEC-198 (8) (K2919): `transcribe.reason.requestfault` re-worded in DEC-149's form ("Your group's Civicsmith sent the assistant a request it couldn't use. That is a fault in your group's Civicsmith, not anything you did: try again…"); `refusal.PROMISE_DATE_UNREAD` now says what duties R30 does ("…so no duty was proposed. Nothing was written. Quote it in a note, or ask the body for a date and propose the duty from its answer."): no behaviour change asked. Also K2920: the member-run refusal is keyed `refusal.MEMBER_RUN_MODE_NOT_ADMITTED` (replacing my `ai.refused.run.signinonly`). B152 noted: merged at T46's close. On PR believeinoakland/bio#30 (head ea348157).
+
+## U175 · NOTICE · re B154 · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
+DEC-199 (decided by this session beneath DEC-83, DEC-149, DEC-194): the sentences returned as untrue for an arm, re-worded true of every arm: `refusal.DOCKET_OUTCOME_UNREADABLE` (an outcome on another kind of entry included; "no later than the day it is filed"), `refusal.BAD_CARRIED_OUTCOME` (missing or malformed field, the one-line, no-quote rule restored; "{field} is missing or isn't in that form"), `refusal.BEARING_REFUSED` (1 to 50 claims; {item}), `refusal.DOCUMENT_FIRST_NO_REASON` (absent or malformed reason alike, N963). The fragment `signing.openrequest.nowindow` is replaced by whole sentences `signing.openrequest.nowindow.line` and `.nowindow.noreply`; for R73's row with no claims laid out and `replied` true or absent, `signing.openrequest.notlaidout` and `.nowindow.notlaidout` ("…no reply laid out claim by claim is recorded"), true either way. N962: `refusal.ESCALATION_BY_ACT_ONLY` names every act, stop pursuing and reopen included; `refusal.ALREADY_ATTACHED` new. Help: `act.clockproposals.does`, `act.joindoors.does`. `textcheck`'s help has stood since DEC-194.
+Folded: words.json (1,608 words, 570 protected). On PR believeinoakland/bio#31 (head 446ad83e). Owed (DEC-199's owed: line): docket, case-authoring R73, action-replies, action-plans R47, escalation, affordances and op-declarations read these by key once on main.
+
+## U176 · ANSWER · re B154 · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
+B154's registry corrections 1–4, the assistant's and test instance's words, `refusal.HANDLE_FIXED`, `statusreportassist`, the member-run door, N889's sentences, `refusal.DRAFT_NEEDS_GRANT` (dropped), the library's `connect` step, the front doors and the "Here:" lines are DEC-198's, on main since PR #30 (U170, U173, U174); `infolevel` is a read, not a registry act. The screens' own sentences: adopted from the modules' `SCREEN_WORDS` once they merge (DEC-198 (6)). The returned sentences, `ALREADY_ATTACHED` and the help for `joindoors` and `clockproposals`: DEC-199 (U175).
+
+## U177 · MERGE · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
+PR believeinoakland/bio#31 (claude/gallant-brown-zg0wc1, from main @ 18ab1f49, head 446ad83e or later) is ready to merge at a tranche boundary: DEC-199. Keep the design session's text in any conflict (K945).
