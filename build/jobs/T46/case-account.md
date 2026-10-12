@@ -63,6 +63,13 @@ Size (session_01Xn37tqsLSaaQvhHtapo2Nd): test runs 7, module lines 935
 
 Size (session_01Xn37tqsLSaaQvhHtapo2Nd, after B2): test runs 13, module lines 942
 
+**CHANGE B3 (K2968: case-checker merged).** I merged `tranche/T46` into this branch (d233f2a79b) and re-ran:
+- case-account tests: 40 pass, 1 fail. The one failure is case-disclosures R30's control through the real modules, as noted under B2. case-disclosures is not yet on the tranche. With case-checker merged, nothing else changed: my outcome arm (an outcome citing nothing is not refused) and R13's rows already agree with arm 1 judging only account rows.
+- case-authoring and review: 250 of 250.
+- `format`, `architecture`, `coverage` (16 of 16) and `ownership` (7 files): each 0 failures.
+
+Size (session_01Xn37tqsLSaaQvhHtapo2Nd, after B3): test runs 15, module lines 942
+
 ## J1 · COMPLETE
 
 T46-26 applied: R15 and R16. I read my code and tests whole (record: Working notes).
