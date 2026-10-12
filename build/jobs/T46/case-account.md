@@ -46,3 +46,13 @@ The set is over the limit only with the used modules' public parts. I did not re
 - `checks/run.mjs` over the product: architecture 2951 product files, 0 failures. Coverage shows 32 failures, none of them case-account's (rule 5 (1) and other modules' new ids).
 
 Size (session_01Xn37tqsLSaaQvhHtapo2Nd): test runs 7, module lines 935
+
+## J1 · COMPLETE
+
+T46-26 applied: R15 and R16. I read my code and tests whole (record: Working notes).
+- R15: new export caseAccountOps(c, url, body), with arms advocacycheck and advocacychecks. Each answers exactly what R13 answers. `author` is the URL's `by` stamp and `viewer` the URL's, both from the query; `project` is the query's, else the body's.
+- R16: C-153.2 ADVOCACY_NOT_OWN_PROJECT reads words.json's refusal.ADVOCACY_NOT_OWN_PROJECT by key, through ADVOCACY_WORDS (checks.mjs). No code, number, where or behaviour moved. C-153.1 and C-153.3 keep their words.
+- case-checker R24: my R6 and R13 tests agree. A new arm shows the "supported" reading, with its control.
+- Fixed in my module: the T45 test's N901 workaround now probes whether case-disclosures translates `cited` by itself, so it stays green once T46-25 merges.
+- Found outside: op-declarations t42.test.mjs:186 pins "case-account exports no ops map". R15 makes it red (the only new red; for T46-51). plane store.mjs 701–710 should spread caseAccountOps (T46-62).
+- Checks: case-account tests 38/38; users 282/282; format, architecture, coverage (16/16) and ownership each 0 failures.
