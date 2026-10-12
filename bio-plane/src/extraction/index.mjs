@@ -1459,6 +1459,8 @@ export class Extraction {
         /* reading-pipeline R28 (K1557, CHANGE B4): what the pdf entry emitted beside the text, unaltered, by the read's own
            rule: its `metadata` or null, and `cells` only for a workbook or a `.docx` (R70), never for a pdf. */
         Object.assign(reading, emittedFieldsOf(t3.i2text));
+        /* R74: a test-instance label the stored reading carries is kept by the re-read that writes over it. */
+        keepUntested(reading, stored, null);
         structureChain = chain;
         reading.reextracted = {
           at: stampInstant("second"), by: author,
@@ -1673,6 +1675,10 @@ export class Extraction {
                                                    planeVersion: e.VERSION || null });
     { const n = textCountsOf(t4.i2text); if (n) Object.assign(reading, n); }
     Object.assign(reading, emittedFieldsOf(t4.i2text));
+    /* R74 (T46; N897 (2)): the test-instance label the plane handed in for this act, recorded on the reading it writes;
+       a label already stored stays, whatever this act was admitted by. */
+    const untested = untestedOf(tx);
+    keepUntested(reading, stored, untested);
     const act = tx && typeof tx.act === "string" && tx.act ? tx.act : null;
     reading.reextracted = {
       at, by, engine: t3.engine ? t3.engine.engine : null, version: t3.engine ? t3.engine.version : null,
@@ -1684,6 +1690,7 @@ export class Extraction {
       transcription: {
         performed: true, written: w.ok === true, ...unwrittenWhy(w, "transcription"),
         pages: t4.filled, engine: t4.engine.engine, version: t4.engine.version, act,
+        ...(untested ? { untested } : {}),
         text_source: chain, chain: describeChain(chain),
         label: TRANSCRIBE_WORDS["transcribe.label"], note: t4.aiNote, measured_by: AI_TRANSCRIPTION_SOURCE,
         ocr: t3.filled.length ? { pages: t3.filled, engine: t3.engine } : null,
@@ -1822,6 +1829,22 @@ const PICTURE_FORMATS = Object.freeze(["jpeg", "png"]);
 /* R71 (N853a): the status a relayed account or limit refusal carries: its own when it states one, else 403, as the
    keep-away refusal is relayed. */
 const refusalStatus = (r) => (Number.isInteger(r.status) && r.status >= 400 && r.status < 500 ? r.status : 403);
+
+/* R74 (T46; N897 (2); K2872): the label the plane hands in when the part `transcribe` runs on the test-instance
+   exception (run-rules' `untestedLabel`, reached only as data through R72's registration), exactly as handed; null when
+   the act carries none. */
+function untestedOf(tx) {
+  const u = tx && typeof tx === "object" ? tx.untested : null;
+  return u && typeof u === "object" && !Array.isArray(u) ? u : null;
+}
+
+/* R74: the label a composed reading carries: the stored reading's unchanged when it holds one, so no later bar removes
+   it; else this act's own; else none, absent and never null (R45). */
+function keepUntested(reading, stored, untested) {
+  const kept = untestedOf(stored);
+  if (kept) reading.untested = kept;
+  else if (untested) reading.untested = untested;
+}
 
 /* R72: a transcriber is `{deployable(), keptAway({project, use}), transcription({member, project, at})}`. */
 const isTranscriber = (t) => !!t && typeof t === "object" && typeof t.deployable === "function"
