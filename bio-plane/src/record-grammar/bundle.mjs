@@ -7,7 +7,7 @@
    K855). Pure over the files it is handed: no store, no network; the clock is
    read only where the caller passes no `nowMs` (C-16.3, C-16.5), as the catalogue's has always read it. */
 
-import { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, ID_PREFIXES } from './ids.mjs';
+import { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, ID_PREFIXES, idPattern } from './ids.mjs';
 import { OBJECT_TYPES, normalizeType } from './types.mjs';
 import { CORE_FIELDS, FORBIDDEN_ALIASES, parseFrontmatter } from './frontmatter.mjs';
 import { HEADINGS, HEADINGS_WHEN, isCaseMemberBytes, STATES, sectionText } from './document.mjs';
@@ -100,9 +100,20 @@ export function idDisagrees(fm, folderName) {
   return typeof id === 'string' && id !== folderName;
 }
 
+/* T47-1 (R62; N958, K3028): A SUCCESS RECORD IS A DOCUMENT `checkBundle` ADMITS. `consequences` promotes each one as a
+   `success_record` object (R59) whose id is a bare `SUC-<year>-<counter>`, with no slug, and writes `schema:
+   success_record@1`; before this the gate refused every one of them (C-1.2 on the id, C-2.5 on the type). It is admitted
+   on its own terms, not by widening R1: `BUNDLE_ID_RE`, its prefix set and `HEADINGS` are unchanged, so a reference target
+   or an annotation is judged exactly as before. The id is admitted only as a `SUC` core (`idPattern`, R47) and only under
+   `object_type: success_record`: a slug after it, a `SUC` id under another type, or the type under another prefix is
+   refused as before (C-1.2, C-2.5). */
+const SUC_CORE_RE = idPattern('SUC');
+const SUCCESS_RECORD = 'success_record';
+const isSuccessRecordDoc = (fm, id) => normalizeType(fm?.object_type) === SUCCESS_RECORD && SUC_CORE_RE.test(id);
+
 function checkIdentity(ctx, findings) {
   const id = ctx.fm?.id;
-  if (typeof id !== 'string' || !BUNDLE_ID_RE.test(id)) {
+  if (typeof id !== 'string' || !(BUNDLE_ID_RE.test(id) || isSuccessRecordDoc(ctx.fm, id))) {
     findings.push(f('C-1.2', 'error', `frontmatter id '${id}' does not match the canonical ID grammar`));
   }
   if (idDisagrees(ctx.fm, ctx.folderName)) {
@@ -148,8 +159,9 @@ function checkIdentity(ctx, findings) {
 
 /* T33-1 (R3): `OBJECT_TYPES` also names the types of T33's new objects, which are table rows and never bundles. The
    bundle check reads only the bundle prefixes' types, so `object_type: event` is still not a known type here (C-2.5)
-   and a prefix outside R1's set implies none, exactly as before the new keys. */
-const BUNDLE_TYPES = Object.fromEntries(ID_PREFIXES.map((p) => [p, OBJECT_TYPES[p]]));
+   and a prefix outside R1's set implies none, exactly as before the new keys. T47-1 (R62): the success record's `SUC`
+   joins them here alone, so `success_record` is a known type and `SUC` implies it (C-2.5); R1's set is unchanged. */
+const BUNDLE_TYPES = Object.fromEntries([...ID_PREFIXES, 'SUC'].map((p) => [p, OBJECT_TYPES[p]]));
 
 /* T40 (N809, K2390; R39): A TYPE IS ONE OF THE TABLES' OWN KEYS. `vocabFor` answers an inherited key too (R34), so an
    `object_type` of `toString`, `constructor` or `__proto__` read `HEADINGS` and `STATES` as a function or
@@ -765,8 +777,10 @@ export async function checkBundle(input, opts = {}) {
        stamp has to be admitted in the same turn as the type. */
     /* K171 (1) and K198 (2) (T8): the six types admitted above, each at schema 1, on `bias@1`'s reason; N-A1 (T18)
        `action_plan@1` likewise. */
+    /* T47-1 (R62): `success_record@1`, the stamp `consequences` writes on every success record. */
     knownSchemas: opts.knownSchemas ?? ['information@1', 'information@2', 'inquiry@1', 'focus@1', 'problem@1', 'project@1', 'action@1', 'bias@1',
-      'standard@1', 'determination@1', 'consequence@1', 'escalation@1', 'aspiration@1', 'goal@1', 'action_plan@1'],
+      'standard@1', 'determination@1', 'consequence@1', 'escalation@1', 'aspiration@1', 'goal@1', 'action_plan@1',
+      'success_record@1'],
     resolveTarget: input.resolveTarget,
     // D2.3: the key registry, injected exactly like resolveTarget. Absent
     // is legal and means pre-migration behavior; absent WITH a

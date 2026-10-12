@@ -144,9 +144,10 @@ test("R39 checkBundle: the injected sha256, nowMs and package age are what it re
   assert.ok((await run({ ...young, maxPackageAgeDays: 1 })).findings.some((f) => f.check === "C-16.3"));
 });
 
-test("R39 the default knownSchemas are the fifteen stamps; a passed list replaces them; elidedPaths as a Set or a list", async () => {
+test("R39 R62 the default knownSchemas are the sixteen stamps, success_record@1 among them; a passed list replaces them; elidedPaths as a Set or a list", async () => {
   const STAMPS = ["information@1", "information@2", "inquiry@1", "focus@1", "problem@1", "project@1", "action@1", "bias@1",
-    "standard@1", "determination@1", "consequence@1", "escalation@1", "aspiration@1", "goal@1", "action_plan@1"];
+    "standard@1", "determination@1", "consequence@1", "escalation@1", "aspiration@1", "goal@1", "action_plan@1", "success_record@1"];
+  assert.equal(STAMPS.length, 16);
   const base = fixtures()["clean information"];
   const at = (schema, opts) => {
     const type = schema.split("@")[0];
@@ -156,10 +157,12 @@ test("R39 the default knownSchemas are the fifteen stamps; a passed list replace
   };
   const prefix = (t) => ({ information: "INFO", inquiry: "INQ", focus: "FOCUS", problem: "PROB", project: "PROJ", action: "ACTN",
     bias: "BIAS", standard: "STD", determination: "CONF", consequence: "CONS", escalation: "ESC", aspiration: "ASP", goal: "GOAL",
-    action_plan: "PLN" })[t];
+    action_plan: "PLN", success_record: "SUC" })[t];
   const unknown = (r) => r.findings.some((f) => f.check === "C-2.5" && /not known to this check catalog/.test(f.message));
   for (const s of STAMPS) assert.equal(unknown(await at(s)), false, s);
-  for (const s of ["information@3", "inquiry@2", "action_plan@2"]) assert.equal(unknown(await at(s)), true, s);
+  for (const s of ["information@3", "inquiry@2", "action_plan@2", "success_record@2", "success_record@0"]) assert.equal(unknown(await at(s)), true, s);
+  /* A passed list without the stamp refuses it, so the default is what admits it. */
+  assert.equal(unknown(await at("success_record@1", { knownSchemas: STAMPS.slice(0, 15) })), true);
   assert.equal(unknown(await at("information@1", { knownSchemas: ["information@2"] })), true);
   assert.equal(unknown(await at("information@2", { knownSchemas: ["information@2"] })), false);
   const e = fixtures()["C-12.2 elided snapshots count as present"];
@@ -248,4 +251,82 @@ test("R56 idDisagrees(fm, folderName): true exactly when fm.id is a string not e
   const rn = await run({ ...base, files: new Map([...base.files, ["bundle.md", num]]) });
   assert.ok(rn.findings.some((f) => f.check === "C-1.2"));
   assert.ok(!rn.findings.some((f) => f.check === "C-1.1"));
+});
+
+/* T47 (R62; N958, K3028): a success record's document, as `consequences` writes it (R24's `successDoc`, with the `group:`
+   line promotion adds): a bare `SUC` id, `object_type: success_record`, `schema: success_record@1`, state `recorded`, and
+   headings of its own. */
+const SUC_NOW = Date.parse("2026-10-12T00:00:00Z");
+const successDoc = ({ id = "SUC-2026-0001", type = "success_record", schema = `${type}@1`, state = "recorded", body } = {}) => [
+  "---", `id: ${id}`, `object_type: ${type}`, `schema: ${schema}`, 'title: "success: the fee was refunded"',
+  `current_state: ${state}`, "prior_state: null", 'created: "2026-10-01T00:00:00Z"', 'last_updated: "2026-10-01T00:00:00Z"',
+  'project: "PROJ-2026-0001-a"', "supersedes: null", 'author: "alice"', "machine_work: false", "group: g",
+  "produced_by:", "  mode: human", "  capability_tier: session", "references: []", "state_history: []", "annotations_open: 0",
+  "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "---", "",
+  ...(body ?? ["## Success Record", "", "```json", '{"statement": "the fee was refunded"}', "```", "",
+    "## Why It Was Revised", "", "a figure was wrong", "", "## Session Log", "", "### Session 2026-10-01T00:00:00Z | Recorded | alice",
+    "Changes: success record recorded.", ""]),
+].join("\n");
+const checkSuccess = (o = {}, opts = {}) => checkBundle({ folderName: o.folderName ?? o.id ?? "SUC-2026-0001",
+  files: new Map([["bundle.md", successDoc(o)]]), sha256, nowMs: SUC_NOW }, opts);
+const checks = (r) => r.findings.map((f) => f.check);
+
+test("R62 checkBundle admits a success_record document: a bare SUC id core under object_type success_record with success_record@1 raises no C-1.2 or C-2.5, no heading finding, its state judged by STATES; it passes", async () => {
+  /* The document consequences writes passes whole: no finding at all. */
+  const r = await checkSuccess();
+  assert.deepEqual(r, { pass: true, findings: [] });
+  /* Every SUC core consequences mints, the 10,000th and later included (R59), is admitted. */
+  for (const id of ["SUC-2026-0000", "SUC-2026-0417", "SUC-2026-9999", "SUC-2026-10000", "SUC-1999-123456"])
+    assert.deepEqual(checks(await checkSuccess({ id })), [], id);
+  /* No required headings (R32): any body, an empty one or one carrying another type's headings, draws no C-3.1. */
+  for (const body of [[], ["## Summary", "x"], ["## Anything At All", "", "## Session Log", "### Session 1"]])
+    assert.ok(!checks(await checkSuccess({ body })).includes("C-3.1"), JSON.stringify(body));
+  /* Its state is judged by its STATES entry (R59): recorded alone is legal. */
+  for (const state of ["open", "published", "closed", "superseded"]) {
+    const s = await checkSuccess({ state });
+    assert.deepEqual(s.findings.filter((f) => f.check === "C-4.1").map((f) => f.message),
+      [`current_state '${state}' is not legal for success_record (legal: recorded)`], state);
+    assert.equal(s.pass, false);
+  }
+  /* The type is known to C-2.5 and the SUC prefix implies it: no C-2.5 for the document, and the default stamp admits it. */
+  assert.ok(!checks(r).includes("C-2.5"));
+  /* R1 is unchanged: SUC is no bundle prefix, so neither a reference target nor an annotation id takes a SUC id. */
+  const { BUNDLE_ID_RE, ANN_ID_RE, HEADINGS } = await import("../../../src/record-grammar/index.mjs");
+  for (const id of ["SUC-2026-0001", "SUC-2026-0001-a"]) assert.ok(!BUNDLE_ID_RE.test(id) && !ANN_ID_RE.test(`${id}.ann-20261001T000000Z-a`), id);
+  assert.ok(!Object.hasOwn(HEADINGS, "success_record"));
+});
+
+test("R62 negative controls: a SUC id with a slug draws C-1.2; a SUC id under another object_type, success_record under another prefix, a SUC id of the wrong form, or another schema stamp is refused as before (C-1.2, C-2.5)", async () => {
+  const only = async (o, want) => {
+    const r = await checkSuccess(o);
+    assert.deepEqual(checks(r).filter((c) => c === "C-1.2" || c === "C-2.5"), want, JSON.stringify(o));
+    assert.equal(r.pass, false, JSON.stringify(o));
+    return r;
+  };
+  /* The control R62 names: the same document with a slug after its id draws C-1.2, and nothing else of these. */
+  const slug = await only({ id: "SUC-2026-0001-a" }, ["C-1.2"]);
+  assert.equal(slug.findings[0].message, "frontmatter id 'SUC-2026-0001-a' does not match the canonical ID grammar");
+  for (const id of ["SUC-2026-0001-success", "SUC-2026-10000-a-b"]) await only({ id }, ["C-1.2"]);
+  /* A SUC id of any other form: too short a counter, an opaque tail, a short year, lower case, padding. */
+  for (const id of ["SUC-2026-999", "SUC-2026-a1b2c3d4e5f6g7h8", "SUC-26-0001", "suc-2026-0001", "SUCC-2026-0001"])
+    assert.ok(checks(await checkSuccess({ id })).includes("C-1.2"), id);
+  /* A SUC id under another object_type: the id is not admitted (C-1.2) and the prefix implies success_record (C-2.5). */
+  for (const type of ["consequence", "information", "standard", "action_plan"]) {
+    const r = await only({ type }, ["C-1.2", "C-2.5"]);
+    assert.ok(r.findings.some((f) => f.message === `id prefix 'SUC' implies 'success_record' but object_type is '${type}'`), type);
+  }
+  /* success_record under a bundle id of another prefix: that prefix implies its own type (C-2.5); under a bare core of
+     another prefix, the id is not admitted either (C-1.2). */
+  for (const [id, implied] of [["INFO-2026-0001-a", "information"], ["CONS-2026-0001-a", "consequence"], ["PLN-2026-0001-a", "action_plan"]]) {
+    const r = await only({ id }, ["C-2.5"]);
+    assert.ok(r.findings.some((f) => f.message === `id prefix '${id.split("-")[0]}' implies '${implied}' but object_type is 'success_record'`), id);
+  }
+  for (const id of ["CONS-2026-0001", "STD-2026-0001"]) await only({ id }, ["C-1.2", "C-2.5"]);
+  /* A row prefix that is no bundle type's implies none, so the id alone is refused. */
+  for (const id of ["HYP-2026-0001", "EVT-2026-a1b2c3d4e5f6g7h8"]) await only({ id }, ["C-1.2"]);
+  /* Another stamp: the next version, or another type's. */
+  for (const schema of ["success_record@2", "consequence@1", "success_record"]) await only({ schema }, ["C-2.5"]);
+  /* A narrowed knownSchemas without the stamp refuses it, so the default list is what admits it (R39). */
+  const narrowed = await checkSuccess({}, { knownSchemas: ["consequence@1"] });
+  assert.deepEqual(narrowed.findings.map((f) => f.message), ["schema version 'success_record@1' is not known to this check catalog"]);
 });
