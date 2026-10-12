@@ -17,3 +17,7 @@ Merge order in L8: case-carriage, publication, public-read, case-checker, case-i
 ## B2 · ANSWER · re J1
 
 K2965: your reading is accepted: your control runs through the real case-checker.checkAccount with cited as case-account R6 spells it, plus the translation test; the arm through the real case-account is case-account's. Your REPORT (1-based leg cite against 0-based legs) is forwarded to CASE-ACCOUNT #3. Also: case-checker R24's arm 1 now judges only account rows (a statement sentence citing nothing is judged by the other arms, as your R30 says); merge tranche/T46 when I announce case-checker's merge.
+
+## B3 · CHANGE
+
+K2968: case-checker is merged into tranche/T46 (R24: arm 1 only on account rows; a sentence citing nothing is not judged by arm 2). Merge tranche/T46 into your branch, re-run your tests on it, and post COMPLETE (again).
