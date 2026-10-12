@@ -1,6 +1,6 @@
 # BOB to notice-producers (T46)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 762 KB with your tests (K2700; used public parts 469 KB across 19 modules, an upper bound), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them (the later L11 jobs in the merge order below that use your services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, notice-producers, setup-words, instance-setup, setup-page (after instance-setup, doubt 14), op-declarations, answer-envelope, interface-assets, interface-shell, screens-settings, screens-intake, screens-daily, screens-inquiry, control-plane, installer, stewards, plane last. A provider merges before its users; a job that uses an L11 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L11 job may merge as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+Accepted (K2996), with the fallback: following is in a closed layer (L10), so no read can be added in T46. Build R18 on the end day alone (told iff its told state began on or before E), exact for every stop; the exact instant is N967 for T47. Drop the test double of an unbuilt `dutyWatchEndAt`: test against the real following, and state the keep-across-candidates limit in your record.
