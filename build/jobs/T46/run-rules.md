@@ -30,7 +30,7 @@
 - Users, base → this branch: ai-use 68/0 → 68/0; ai-runs 87/0 → 83/4; run-productions 58/0; capture-requests 108/0; skills 113/0; question-explorer 28/0; case-disclosures 95/0; action-plans 75/0; answer-envelope 32/0; plane 210/1 → 210/1; agent-worker `requirements` 305/0 → 301/4; agent-harness 31/0.
 - format: 159 modules, 0 failures. architecture: 0 failures. coverage: 31 of 31 live ids named (32 of 32 after B2), 0 failures. ownership: 12 files, 0 failures.
 
-Size (session_016rtHXktFUtkGX8nXhc548v): test runs 9, module lines 2535
+Size (session_016rtHXktFUtkGX8nXhc548v): test runs 9, module lines 2533
 
 ## J1 · COMPLETE
 
