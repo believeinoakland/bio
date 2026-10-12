@@ -466,14 +466,6 @@
      ]
     },
     {
-     "op": "handlechange",
-     "label": "Change your handle",
-     "status": "declared",
-     "modules": [
-      "membership"
-     ]
-    },
-    {
      "op": "setpassword",
      "label": "Change your password",
      "status": "declared",

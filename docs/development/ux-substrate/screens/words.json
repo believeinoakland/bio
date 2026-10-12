@@ -46,11 +46,11 @@
   "tab": 2,
   "level": 2,
   "screen": 95,
-  "act": 529,
+  "act": 528,
   "column": 33,
   "wizard": 304,
-  "total": 1504,
-  "protected": 550
+  "total": 1503,
+  "protected": 549
  },
  "words": [
   {
@@ -603,7 +603,7 @@
    "key": "handle.changeable",
    "en": "You can still change it: none of your work is in a published case yet.",
    "protected": false,
-   "source": "mock-screens.js account"
+   "source": "DEC-186; kept until handlechange is retired (DEC-197)"
   },
   {
    "key": "handle.fixed",
@@ -615,7 +615,7 @@
    "key": "handle.formerly",
    "en": "formerly {handle}",
    "protected": false,
-   "source": "mock-screens.js members"
+   "source": "DEC-186; kept until handlechange is retired (DEC-197)"
   },
   {
    "key": "handle.characters",
@@ -4359,12 +4359,6 @@
   {
    "key": "act.expertisedeclare.label.account",
    "en": "Declare your expertise",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.handlechange.label.account",
-   "en": "Change your handle",
    "protected": true,
    "source": "registry.json"
   },

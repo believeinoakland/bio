@@ -2894,7 +2894,7 @@ reasoning recorded in: this entry; `screens/mock-screens.js` (the Photos step); 
 owed: (BOB, N779 in T38) the two labels on published photos, read by key; the Photos step's sentence.
 
 ### DEC-186 · answered
-amended: 2026-10-12 by DEC-195 (Bob, S19 point 1: reserved five years), itself replaced the same day by DEC-196 (Bob: a handle is never reused).
+amended: 2026-10-12 by DEC-195 (Bob, S19 point 1: reserved five years), itself replaced the same day by DEC-196 (Bob: a handle is never reused); then replaced in its rule by DEC-197 (Bob, "for the time being"): a handle is fixed at joining and never changed.
 raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (found answering Bob's comment on the handle field, DEC-184: no op changes a handle after joining, while the screens had said it could be; question S18)
 for: bob
 question: Whether a member may change their handle after joining, and until when.
@@ -3076,6 +3076,7 @@ reasoning recorded in: this entry; `screens/question.html` (S19); `screens/mock-
 owed: (BOB) membership R124's "Earlier handles" clause: an earlier handle stays taken for every other member for five years from its change, then is free (R16, R124 and the handle check alike); R17's `formerly` entries carry the date each was given up, so the screen can show `handle.formerly.until` once the five years have passed.
 
 ### DEC-196 · answered
+amended: 2026-10-12 by DEC-197 (Bob): with handles fixed at joining, S19's point 2 is settled too; this entry's "point 2 stays open" no longer holds.
 raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (question S19, after DEC-195)
 for: bob
 question: Whether another member may take a handle a member gave up (S19, point 1), asked again after DEC-195.
@@ -3088,3 +3089,17 @@ response: **Bob, 2026-10-12: "For S19: Handles just shouldn't ever be reused. Th
 decided: 2026-10-12 · Bob
 reasoning recorded in: this entry; `screens/question.html` (S19); `screens/mock-screens.js` (Your account's "Your handle"); `screens/mock-acts.js` (`handlechange`); `screens/build_words.mjs`, `screens/words.json`; BIO_Interaction_Constructs_v0_1.md §V.
 owed: (BOB) nothing new: N934 (DEC-195's change) is withdrawn; membership R124's "Earlier handles" clause stands as built.
+
+### DEC-197 · answered
+raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (question S19, point 2, after DEC-196)
+for: bob
+question: When a member's own handle stops being changeable (S19, point 2: when a published case shows it, 2A, or when any of their work is carried, 2B).
+why it is Bob's: the meaning of his own ruling (DEC-186) and what Civicsmith must do (a requirement): how a member appears on the group's work (P17).
+provisional: 2A, membership as built at T40 (R124).
+alternative: 2A; 2B; or, as Bob chose, no change at all (S18's option A).
+recommendation: 2A.
+reversal cost: low; `handlechange` is served but no screen draws it.
+response: **Bob, 2026-10-12: "Again, for the time being I think that members' handles should stay stable... Nobody can reuse a handle, and the same member can't just change their handle."** Ruled, for the time being: (1) a member's handle is chosen when they join and is never changed, by the member or anyone; this replaces DEC-186's rule (S18: B) and returns to S18's option A; (2) no handle is ever reused (DEC-196), including the handle of a member who has left; (3) with no change, there is no "formerly" and no moment a handle becomes fixed, so S19 is settled whole. Design's detail: joining's handle field says "Choose it with care: it can't be changed after you join, and no one else can ever take it"; Your account shows the handle without a change act ("Your handle is fixed: it names your work in the group and in published cases, and no one else can ever take it"); Members shows no "formerly"; the handle card says "chosen when you join and never changed". "For the time being": Bob may reopen changing a handle later; S18's brief and DEC-186 are kept for that.
+decided: 2026-10-12 · Bob
+reasoning recorded in: this entry; `screens/question.html` (S19, S18); `screens/page.src.html` (status, decided table); `screens/mock-screens.js` (joining, Members, Your account); `screens/mock-refs.js` (the handle card); `screens/registry.src.py` (Your account's acts: `handlechange` removed); `screens/build_words.mjs`, `screens/words.json` (`act.handlechange.label.account` removed; `handle.changeable`, `handle.formerly` and the `handle.refused.*` and `handle.fixed` keys kept while built code reads them); BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB) membership: retire R124 (`op=handlechange`: refuse every change, or remove the op and its door, op-declarations' and affordances' rows, ACT_HELP's copy; BOB's choice), and R17's `formerly` with it; confirm R16 keeps a departed member's handle taken. Once the op is retired, the design session removes `handle.changeable`, `handle.formerly`, `handle.fixed`, `handle.refused.notmember`, `handle.refused.unchecked`, and `handlechange`'s `ACT_HELP` and `WEIGHT` entries.
