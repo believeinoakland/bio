@@ -213,7 +213,7 @@ const TASK_WORDS = {
  *  so the four drafts and R59's are one mechanism. */
 export async function actionDraft(body, task, env, deps, shared) {
   const { refusal, json, accountOf, cascadeToken, converse, segmentMeter, DEFAULT_MAX_SEGMENT_BYTES } = deps;
-  const { packFor, grantReader, readTool, draftEnding, ASK_DECLARED } = shared;
+  const { packFor, grantReader, readTool, draftEnding, ASK_DECLARED, labelled = {} } = shared;
   const acct = await accountOf(body);
   if (acct.refusal) return acct.refusal;
   const { account } = acct;
@@ -291,7 +291,7 @@ export async function actionDraft(body, task, env, deps, shared) {
   const spent = { usage: conv.usage ?? null, calls: conv.calls === undefined ? null : conv.calls };
   if (conv.answer !== undefined) {
     const draft = actionDraftOf(task, conv.answer);
-    if (draft) return json({ ok: true, task: taskNamed(task), draft, label: { kind: "machine" }, ...spent });
+    if (draft) return json({ ok: true, task: taskNamed(task), draft, ...labelled, label: { kind: "machine" }, ...spent });
     return refusal("DRAFT_UNFORMED", "the model answered without a draft of the task's shape, so nothing is returned.",
       502, { ending: "unformed", ...spent });
   }

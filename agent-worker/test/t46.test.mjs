@@ -10,6 +10,7 @@
 import worker from "../src/index.mjs";
 import { MODES } from "../../agent-harness/src/harness.mjs";
 import { MEMBER } from "./account.mjs";
+import { untestedLabel } from "../../bio-plane/src/run-rules/index.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -29,7 +30,8 @@ const LAYER = (body) => ({ load_when: "when asked", sourcing: "authored", body }
 const PACK = { id: "investigative-session", version: "pack@t46",
   resident: { objective: { text: "answer from the record" }, disclosable: [] },
   disclosed: { ask: LAYER("closed book"), suggestions: LAYER("SUGGESTIONS-LAYER-WORDS"),
-               action_planning: LAYER("planning"), action_drafting: LAYER("ACTION-DRAFTING-LAYER-WORDS") } };
+               action_planning: LAYER("planning"), action_drafting: LAYER("ACTION-DRAFTING-LAYER-WORDS"),
+               writing_help: LAYER("writing help"), interface_translation: LAYER("translate") } };
 const ABSENT = { load_when: "never", sourcing: "absent", body: [] };
 
 const PLAN_ID = "PLN-T46", PROJECT = "PROJ-T46";
@@ -108,6 +110,8 @@ function answerFor(names, prompt, seen = "", tools = []) {
       const inj = /INJECT:say ([^"\\]+)/.exec(seen);
       return ["draft", { text: inj ? `The plan stands. ${inj[1]}` : "Two items stand: the clerk's reply is awaited.", sources: [0, 1] }];
     }
+    if (props.english) return ["draft", { english: "the minutes" }];
+    if (props.sentences) return ["draft", { sentences: [] }];
     return ["draft", { text: "drafted" }];
   }
   const judge = [...String(prompt).matchAll(/calling (judge_\w+)/g)].pop()?.[1];
@@ -384,6 +388,43 @@ section("R72 (T46) · a sign-in transcribes: the picture relayed to the member's
   const key = await transcribeOn(pictureRunner(), KEY);
   t("R72 (control): an apikey account goes to the API as before, never to a runner",
     [key.modelCalls > 0, key.text.includes("TRANSCRIBE_NEEDS_API_KEY")], [true, false]);
+}
+
+/* ================================================================================================ R79 */
+
+section("R79 (T46) · the test-instance label: on /ask's last answer event, and beside every /draft task's draft");
+{
+  const ASK_LABEL = untestedLabel("ask");
+  const DRAFT_LABEL = untestedLabel("draft:own_words");
+  const ask = (extra) => drive("ask", { question: "Who held the seat?", grant: GRANT, account: KEY, ...extra });
+  const a = await ask({ untested: ASK_LABEL });
+  t("R79: an ask with the label carries it unchanged on its last answer event",
+    [a.status, last(a)?.event, last(a)?.untested], [200, "answer", ASK_LABEL]);
+  t("R79: and on no other event", a.lines.slice(0, -1).some((l) => "untested" in l), false);
+  const plain = await ask({});
+  t("R79 (control): without it, the answer event carries no untested", [last(plain)?.event, "untested" in (last(plain) || {})], ["answer", false]);
+  const drafts = [
+    ["writinghelp", { task: { op: "writinghelp", act: "noteadd", field: "text" }, told: "the clerk said no" }],
+    ["translationdraft", { task: { op: "translationdraft", direction: "to_english", language: "es",
+                                   words: [{ key: "k.minutes", en: "minutes", text: "las actas", protected: false }] } }],
+    ["textcheck", { task: { op: "textcheck", text: "We ask for the minutes." } }],
+    ["statusreportdraft", { task: SR() }],
+  ];
+  for (const [op, b] of drafts) {
+    const d = await drive("draft", { account: KEY, pack: PACK, ...b, untested: DRAFT_LABEL });
+    t(`R79: a ${op} draft answers the label unchanged beside its draft`, [d.status, d.out?.untested, "draft" in (d.out || {})], [200, DRAFT_LABEL, true]);
+    const n = await drive("draft", { account: KEY, pack: PACK, ...b });
+    t(`R79 (control): a ${op} draft without it carries no untested`, [n.status, "untested" in (n.out || {})], [200, false]);
+  }
+  for (const [label, bad] of [["a string", "untested"], ["a list", [ASK_LABEL]], ["another kind", { ...ASK_LABEL, kind: "tested" }],
+                              ["a part with no label", { ...ASK_LABEL, part: "sorcery" }], ["other words", { ...ASK_LABEL, words: "trust me" }],
+                              ["an extra key", { ...ASK_LABEL, extra: 1 }], ["a missing key", (({ set: _s, ...x }) => x)(ASK_LABEL)]]) {
+    const x = await ask({ untested: bad });
+    const y = await drive("draft", { account: KEY, pack: PACK, task: SR(), untested: bad });
+    t(`R79 (control): a malformed label (${label}) is BAD_BODY on /ask and /draft, before anything is called`,
+      [x.status, x.out?.code, y.status, y.out?.code, x.plane.length + y.plane.length, x.model.length + y.model.length],
+      [400, "BAD_BODY", 400, "BAD_BODY", 0, 0]);
+  }
 }
 
 console.log(`\nt46: ${pass} passed, ${fail} failed`);

@@ -5,9 +5,9 @@
  * binding, and with the global `fetch` replaced by a counter, so "no fetch" is a count, not a promise. The pure table
  * (`PLAN_FLOW`, `nextPlanStep`, `applyPlanJudgement`, `planDedup`) is walked directly.
  *
- * `plan` is not deployed (R53): a plan-mode run closes `mode-not-deployed` at the gate, and one arm holds that. To
- * drive `PLAN_FLOW`'s rows through the op, the suite deploys it IN THIS PROCESS ONLY, by the edit R42 names — setting
- * `MODES.plan.deployed` on the module it imports — and restores it; no request field can do that (R42). */
+ * `plan` is deployed since T46 (R53, Bob's K2892, made with run-rules R14). The arms written before then still wrap
+ * their drives in `withPlanDeployed` (now a no-op that restores what it found); one arm turns `MODES.plan` off IN THIS
+ * PROCESS ONLY to show the gate reads `MODES` and nothing else, and no request field can change it (R42). */
 import { ACCOUNT, MEMBER, ACCOUNT_SECRET, withAccount } from "./account.mjs";
 import "../../bio-plane/test/sandbox.mjs";
 
@@ -287,27 +287,30 @@ section("R52 · compose, dedup, submit: optionPropose's fields only, strongest f
 }
 
 /* ================================================================== R53 */
-section("R53 · PLANE_OPS gains exactly mode plan's ops; plan is not deployed yet");
+section("R53 · PLANE_OPS gains exactly mode plan's ops; plan is deployed by its own reviewed act (T46)");
 {
   t("R53: PLANE_OPS gains exactly plan, plans, the R51 reads (non-mutating) and optionpropose (the one new write)",
     ["plan", "plans", "determination", "standard", "consequencesof", "availableactions", "publishededitions", "profiles", "optionpropose"]
       .map((op) => [op, PLANE_OPS[op]?.mutating]),
     [["plan", false], ["plans", false], ["determination", false], ["standard", false], ["consequencesof", false],
      ["availableactions", false], ["publishededitions", false], ["profiles", false], ["optionpropose", true]]);
-  t("R53: MODES gains plan, and plan is NOT deployed today", [Object.keys(MODES).includes("plan"), MODES.plan.deployed], [true, false]);
+  t("R53 (T46): MODES gains plan, and plan is deployed (Bob's K2892; run-rules R14)", [Object.keys(MODES).includes("plan"), MODES.plan.deployed], [true, true]);
   const r = await run({}, [{ candidates: [A] }]);
-  t("R53: a plan-mode run today closes mode-not-deployed at its first step, before any read or proposal",
-    [r.status, r.out.trace?.map((x) => x.step), r.out.ended?.bound, r.ops],
-    [200, ["gate-mode"], "mode-not-deployed", ["whoami", "airun", "airunlog", "airuntick", "airunclose"]]);
-  t("R53: and its why says the table holds plan and has not deployed it", /mode 'plan' is not deployed yet/.test(r.out.trace?.[0]?.why ?? ""), true);
+  t("R53 (T46): a plan-mode run walks past gate-mode, reads its plan and proposes",
+    [r.status, r.out.trace?.[0]?.step, r.out.trace?.[0]?.to, r.out.ended?.bound, r.ops.includes("plan"), r.ops.includes("optionpropose")],
+    [200, "gate-mode", "resume", "completed", true, true]);
   await withPlanDeployed(async () => {
     const all = await run({ refuseSummary: [A.summary] }, [{ candidates: [A, B] }, { submission: { ...A, summary: "changed" } }]);
     t("R53 (control): optionadd, or any write but optionpropose, airuntick and airunclose, is never attempted by a plan-mode run",
       [all.ops.includes("optionadd"), [...new Set(all.ops.filter((op) => PLANE_OPS[op]?.mutating))].sort()],
       [false, ["airunclose", "airuntick", "optionpropose"]]);
   });
-  t("R53: a request field cannot deploy it (R42)",
-    (await run({}, [{ candidates: [A] }], { modes: { plan: { deployed: true } }, deployed: true, mode: "plan" })).out.ended?.bound,
+  t("R53, R42: a request field cannot undeploy it",
+    (await run({}, [{ candidates: [A] }], { modes: { plan: { deployed: false } }, deployed: false, mode: "check" })).out.ended?.bound,
+    "completed");
+  t("R53, R42 (control): with MODES.plan off the same run closes mode-not-deployed: the gate reads MODES and nothing else",
+    await (async () => { const was = MODES.plan.deployed; MODES.plan.deployed = false;
+      try { return (await run({}, [{ candidates: [A] }])).out.ended?.bound; } finally { MODES.plan.deployed = was; } })(),
     "mode-not-deployed");
 }
 
