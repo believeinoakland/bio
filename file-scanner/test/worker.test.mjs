@@ -73,7 +73,7 @@ test('R10 the marker states a container member with two digest-pinned classes, i
   assert.deepEqual(m.containers.map((c) => c.class_name), ['FileScanner', 'SafeViewRenderer']);
   for (const c of m.containers) {
     assert.match(c.image.repository, /^[a-z0-9.-]+\/[a-z0-9._/-]+$/);
-    assert.ok(c.image.digest === null || /^sha256:[0-9a-f]{64}$/.test(c.image.digest), 'digest-pinned once published');
+    assert.match(c.image.digest, /^sha256:[0-9a-f]{64}$/, 'digest-pinned, as the release published it');
     assert.match(c.image.base.digest, /^sha256:[0-9a-f]{64}$/);
     assert.equal(c.instance_type, 'standard-1');
     assert.ok(Number.isInteger(c.max_instances) && c.max_instances > 0);
@@ -96,19 +96,37 @@ test('R10 the marker states a container member with two digest-pinned classes, i
   for (const c of containerClasses(member).classes) assert.equal(classPackages(member, c).ecosystem, 'Debian:12');
 });
 
-test('R10 both images are named in a registry Cloudflare Containers pull from, as agent-runner\'s is: Docker Hub, never ghcr.io, in the marker and the configuration alike; digests unpublished until the release', () => {
+// R10 (T47; N990, K2816 (4), K2912): the release's registry rule. Both images are named as agent-runner's is,
+// `ghcr.io/believeinoakland/<image>@sha256:<64 hex>`, the digest the release published, the same reference in the
+// marker and the configuration, and no other registry named for them. Cloudflare Containers do not pull from ghcr.io:
+// an instance runs each image copied by that digest into its own account's registry (bundler R25, R26).
+const RULE = /^ghcr\.io\/believeinoakland\/[a-z0-9][a-z0-9._-]*@sha256:[0-9a-f]{64}$/;
+const references = (m) => m.containers.map((c) => `${c.image.repository}@${c.image.digest}`);
+
+test('R10 the release\'s registry rule: both images named ghcr.io/believeinoakland/<image>@sha256:<64 hex>, as agent-runner\'s is, the same reference in the marker and the configuration, no other registry', () => {
   const runner = JSON.parse(readFileSync(new URL('../../agent-runner/fleet-member.json', import.meta.url), 'utf8'));
-  const registry = (r) => r.split('/').slice(0, 2).join('/');
-  assert.equal(registry(runner.image.repository), 'docker.io/civicos', 'agent-runner\'s image is published on Docker Hub');
+  assert.match(`${runner.image.repository}@${runner.image.digest}`, RULE, 'agent-runner\'s image is named by the rule');
   const m = marker();
-  assert.deepEqual(m.containers.map((c) => c.image.repository), ['docker.io/civicos/file-scanner-scanner', 'docker.io/civicos/file-scanner-renderer']);
-  for (const c of m.containers) {
-    assert.equal(registry(c.image.repository), registry(runner.image.repository), `${c.class_name}: agent-runner's registry`);
-    assert.equal(c.image.digest, null, 'the release cut publishes it (K1898, K1905)');
+  assert.deepEqual(m.containers.map((c) => c.image.repository), ['ghcr.io/believeinoakland/file-scanner-scanner', 'ghcr.io/believeinoakland/file-scanner-renderer']);
+  for (const r of references(m)) assert.match(r, RULE, 'the digest the release published, 64 hex');
+  assert.equal(new Set(m.containers.map((c) => c.image.digest)).size, 2, 'each image its own digest');
+  assert.deepEqual(wrangler().containers.map((c) => c.image), references(m), 'the same reference in the configuration');
+  // No other registry names an image: every image reference in the marker and the configuration is under the rule's
+  // namespace (the Dockerfiles' base, pinned by digest, is the base's own coordinate and names neither image).
+  const named = [...m.containers.map((c) => c.image.repository), ...wrangler().containers.map((c) => c.image)];
+  assert.deepEqual(named.filter((r) => !r.startsWith('ghcr.io/believeinoakland/')), []);
+  for (const t of [text('fleet-member.json'), text('wrangler.jsonc'), text('Dockerfile.scanner'), text('Dockerfile.renderer')]) {
+    assert.ok(!/docker\.io\/civicos|registry\.cloudflare\.com|UNPUBLISHED/.test(t), 'no other registry and no unpublished placeholder');
   }
-  assert.deepEqual(wrangler().containers.map((c) => c.image), ['docker.io/civicos/file-scanner-scanner@sha256:UNPUBLISHED',
-    'docker.io/civicos/file-scanner-renderer@sha256:UNPUBLISHED']);
-  for (const t of [text('fleet-member.json'), text('wrangler.jsonc'), text('Dockerfile.scanner'), text('Dockerfile.renderer')]) assert.ok(!t.includes('ghcr.io'), 'never ghcr.io');
+});
+
+test('R10 an instance runs each image copied by its digest: the release describes each class by exactly that ghcr.io reference, never a tag', () => {
+  const member = discoverMembers().find((x) => x.name === 'file-scanner');
+  const parts = containerParts(member, discoverMembers().map((x) => x.name));
+  assert.equal(parts.conflict ?? null, null);
+  assert.deepEqual(parts.parts.map((p) => [p.class_name, p.descriptor.image]),
+    marker().containers.map((c, i) => [c.class_name, references(marker())[i]]), 'the part names the image the copy pulls, by digest');
+  for (const p of parts.parts) assert.match(p.descriptor.image, RULE);
 });
 
 test('R10 the configuration: the classes by class_name with the marker\'s images, their bindings, the bucket, the trigger, no VPC binding by default', () => {
@@ -120,7 +138,7 @@ test('R10 the configuration: the classes by class_name with the marker\'s images
   assert.deepEqual(w.containers.map((c) => c.class_name), m.containers.map((c) => c.class_name));
   for (const c of w.containers) {
     const k = m.containers.find((x) => x.class_name === c.class_name);
-    assert.equal(c.image, `${k.image.repository}@sha256:UNPUBLISHED`);
+    assert.equal(c.image, `${k.image.repository}@${k.image.digest}`);
     assert.equal(c.instance_type, k.instance_type);
     assert.equal(c.max_instances, k.max_instances);
   }

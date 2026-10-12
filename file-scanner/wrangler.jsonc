@@ -30,9 +30,11 @@
     { "binding": "CAPTURES", "bucket_name": "bio-captures" }
   ],
 
-  // R10: the two containers. Each image is named only as <repository>@sha256:<64 hex>; the release writes each digest
-  // here and into fleet-member.json's classes when it publishes the images. Until then they read UNPUBLISHED, and
-  // bundler's deploy refuses the member. Neither container has internet (src/worker.mjs, enableInternet false; R12).
+  // R10: the two containers. Each image is named by the release's registry rule, as agent-runner's is: the
+  // repository fleet-member.json's class states, @sha256:<64 hex>, the digest the release published, the same
+  // reference as the marker's. Cloudflare Containers do not pull from ghcr.io: bundler's deploy copies each image by
+  // that digest into the account's own registry and deploys the copy. Neither container has internet (src/worker.mjs,
+  // enableInternet false; R12).
   "containers": [
     {
       "class_name": "FileScanner",
