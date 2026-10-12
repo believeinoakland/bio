@@ -52,7 +52,7 @@ The remaining tests and the used modules' public parts (run-rules, credentials, 
   - run-rules, run-productions, plane t41–t43, affordances t33: 0 failures;
   - op-declarations: the 6 inherited failures only.
 - No layer tests are named in `build/manifest.md`.
-- `format`: 0 failures. `architecture ai-runs`: 0 failures. `coverage ai-runs`: 48 of 48 live ids named; 0 failures. `ownership ai-runs tranche/T46`: 0 failures (after the commit).
+- `format`: 0 failures. `architecture ai-runs`: 0 failures. `coverage ai-runs`: 48 of 48 live ids named; 0 failures. `ownership ai-runs tranche/T46`: 7 files changed; 0 failures.
 
 Size (session_012KrF4pcZDor4ebZmdfWuBk): test runs 8, module lines 3618
 
