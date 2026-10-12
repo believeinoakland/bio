@@ -5,7 +5,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, body, sha, MEMBER, BOB, OUTSIDER, MACHINE, T0, DAY } from "./fixture.mjs";
 import { noSuchPlan, refusePlanClosed } from "../../../src/action-plans/index.mjs";
-import { followingOf } from "../../../src/following/index.mjs";
+import { followingOf, FOLLOWING_CHECKS } from "../../../src/following/index.mjs";
+import { MONITORING_CHECKS } from "../../../src/monitoring/index.mjs";
 import { world as planWorld, V, by } from "../plan-work/fixture.mjs";
 
 /* T0 is 2026-10-06T12:00Z; the test profile's zone is America/Halifax (UTC−3), so today is 2026-10-06 and its end
@@ -44,7 +45,11 @@ test("R22 every follow act takes ends, a calendar day after today's local day (i
                               address: "https://licences.ellery.example/search?licence=L-00042", author: MEMBER, viewer: MEMBER }),
     ];
     for (const r of acts) assert.equal(code(r), "WATCH_END_REFUSED", `${ends}: ${JSON.stringify(r)}`);
+    /* monitoring's own row (C-18.19, its R71), minted there once (K2871); none of this module's */
+    const row = MONITORING_CHECKS.WATCH_END_REFUSED;
+    for (const r of acts) assert.deepEqual([r.ok, r.check, r.translation], [false, row ? row.check : null, row ? row.translation : null]);
   }
+  assert.equal("WATCH_END_REFUSED" in FOLLOWING_CHECKS, false);
   assert.equal(count(w, "follows") + count(w, "follow_ends"), 0, "nothing written");
   /* control: tomorrow, in the instance's zone, and none */
   const r = w.f.followBody({ body: b, from: "2026-09-01", ends: "2026-10-07", author: MEMBER, viewer: MEMBER });

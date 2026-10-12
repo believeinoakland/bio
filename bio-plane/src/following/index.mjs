@@ -39,7 +39,7 @@ import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/in
 import { captureOf } from "../capture/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
-import { monitoringOf, MONITOR_VIEWER, MONITOR_CADENCE_MS } from "../monitoring/index.mjs";
+import { monitoringOf, MONITOR_VIEWER, MONITOR_CADENCE_MS, frequencyRefusal } from "../monitoring/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { actionPlansOf, noSuchPlan, refusePlanClosed } from "../action-plans/index.mjs";
 import { planWorkOf } from "../plan-work/index.mjs";
@@ -90,7 +90,13 @@ const POLICY_PAGE = 200;
 
 const said = (v) => typeof v === "string" && v.trim() !== "";
 /* every refusal carries its C-137 row (DEC-49; `checks.mjs`) */
-const refuse = followRefusal;
+const refuse = (code, detail, extra) => (code === "WATCH_END_REFUSED" ? watchEndRefusal(detail, extra) : followRefusal(code, detail, extra));
+/* R22, R25 (K2871): a watch's end refused with monitoring's own row (C-18.19, its R71), minted there once; this module
+   mints none. Answered bare (no row) only on a monitoring that does not hold it. */
+function watchEndRefusal(detail, extra = {}) {
+  try { return frequencyRefusal("WATCH_END_REFUSED", detail, extra); }
+  catch { return { ok: false, reason: "WATCH_END_REFUSED", code: "WATCH_END_REFUSED", check: null, translation: null, detail, ...extra }; }
+}
 const json = (v) => { try { return v == null ? null : JSON.parse(v); } catch { return null; } };
 const ms = (s) => Date.parse(s);
 const instant = (t) => stampInstant("second", t);
