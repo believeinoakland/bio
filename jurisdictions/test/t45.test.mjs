@@ -71,8 +71,8 @@ test("R75 a deadline's owed_by and consequence; a start by a third party's act n
   for (const ob of OWED_BY) assert.ok(breakT((p) => { p.deadlines[cp].owed_by = ob; }).ok, ob);
   for (const bad of ["office", "", true]) assert.ok(hasError(breakT((p) => { p.deadlines[cp].owed_by = bad; }), "VALUE_INVALID", `${D}.owed_by`), String(bad));
   assert.ok(breakT((p) => { delete p.deadlines[cp].owed_by; }).ok, "absent: undetermined, never refused");
-  for (const bad of ["deemed denied", { text: "deemed denied" }, { citation: "§ 1" }, { text: "", citation: "§ 1" }])
-    assert.ok(hasError(breakT((p) => { p.deadlines[cp].consequence = bad; }), "VALUE_INVALID"), JSON.stringify(bad));
+  for (const [bad, at] of [["deemed denied", ""], [{ text: "deemed denied" }, ".citation"], [{ citation: "§ 1" }, ".text"], [{ text: "", citation: "§ 1" }, ".text"]])
+    assert.ok(hasError(breakT((p) => { p.deadlines[cp].consequence = bad; }), "VALUE_INVALID", `${D}.consequence${at}`), JSON.stringify(bad));
   assert.ok(hasError(breakT((p) => { p.deadlines[cp].consequence.extra = 1; }), "UNKNOWN_SECTION", `${D}.consequence.extra`));
   /* the starter is a counterparty of the profile, by role and body */
   assert.deepEqual(t.deadlines[er].starter, { role: "Examiner of Accounts", body: "Marlow County Audit Office" });
@@ -168,7 +168,7 @@ test("R79 legal_facts: key, a trigger of LEGAL_FACT_TRIGGERS, statement, citatio
   for (const bad of [{ amount: 0, unit: "GBP" }, { amount: 5 }, { amount: "5", unit: "GBP" }, { amount: 5, unit: "GBP", per: "year" }, 5])
     assert.ok(hasError(breakT((p) => { p.legal_facts[0].threshold = bad; }), "VALUE_INVALID", `${L}.threshold`), JSON.stringify(bad));
   assert.ok(breakT((p) => { p.legal_facts[0].applies_to = ["bylaw_complaint", "records_request"]; }).ok);
-  for (const bad of [[], ["nowhere"], "bylaw_complaint"]) assert.ok(hasError(breakT((p) => { p.legal_facts[0].applies_to = bad; }), "VALUE_INVALID"), JSON.stringify(bad));
+  for (const [bad, at] of [[[], ""], [["nowhere"], "[0]"], ["bylaw_complaint", ""]]) assert.ok(hasError(breakT((p) => { p.legal_facts[0].applies_to = bad; }), "VALUE_INVALID", `${L}.applies_to${at}`), JSON.stringify(bad));
   assert.ok(hasError(breakT((p) => { delete p.legal_facts[0].status; }), "BASIS_INVALID", `${L}.status`));
   assert.ok(hasError(breakF((p) => { p.legal_facts[0].basis = "UNMEASURED"; }), "BASIS_INVALID", "legal_facts[0].basis"), "a legal fact is sourced");
   assert.ok(hasError(breakT((p) => { p.legal_facts[0].rank = 1; }), "UNKNOWN_SECTION", `${L}.rank`));
