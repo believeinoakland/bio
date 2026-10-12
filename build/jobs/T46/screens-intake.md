@@ -2,6 +2,26 @@
 
 **Status** · session_01JBa3sUqEAyKhi388Z2gNjX · depth 2 · WORKING · handled B5
 
+## Completion, third (SCREENS-INTAKE #1, B6; K3007)
+
+**Re-opened by B6** · `tranche/T46` merged with interface-shell; my stand-in kit (`kit.mjs`) deleted; every test now drives the real served page, `interfacePage(SCREENS)` booted through interface-shell's `harness.mjs` and `dom.mjs` (a small helper of my own, `page.mjs`, opens a screen, fills fields and presses acts). Each kit part I read checked against `browser.mjs` and corrected where it differed:
+- `cs.rows` takes `id`, `name` and `hold(ids)`; `extra.picked` reaches only acts drawn inside `hold`, so held's `heldsetaside` and `release` (with the member's acknowledgment and mitigation fields) are drawn there.
+- `release` is graded reasoned, not signed (op-grades `RUNGS`), so it opens no dialog: it names `reasonField: "acknowledgment"` (DEC-88) and reads its two fields with `cs.value`. Likewise `testify` (`words`), `captureupload` (`statement`), `writinghelp` (`told`) and `sourcelink` (`evidence`), so no second reason is asked of the member's own words.
+- `cs.ref(kind, id, label)` escapes its label (no double escape) and maps kinds through `REF_SCREENS` (`capture` → `open-file`; a document is a card while `document` is not registered). A knock has no ref kind: drawn as a plain `data-nav` link.
+- `cs.title()` heads each screen (its name and purpose explaining it); my four `.heading` rows dropped.
+- `cs.download` hands a JSON answer back unsaved: a spreadsheet's safe view is read from it.
+- `cs.call` answers the envelope (`{ok, result}`) or the refusal's fields; `done` gets the result and is not awaited.
+- The shell's redraw keeps what was typed into a field of the same id, so a writing-help draft is drawn into a field with a new id (`ui.wordsId`).
+
+**Tests and checks** (on `job/T46/screens-intake`, `tranche/T46` merged at B6)
+- `node --test bio-plane/test/m/screens-intake/`: tests 41, pass 41, fail 0 (twice); interface-shell's own 60/0 unchanged.
+- With `modules.json` patched locally (paths, tests, the `wizard-scripts` use; not committed): format 0; architecture 0; coverage 9 of 9; ownership 0 (13 files). `checks/run.mjs`: architecture 0 over 3,008 files, channels 0; coverage 4 failures, none mine.
+- Files now: paths `bio-plane/src/screens-intake/` (`index.mjs`, `words.mjs`, `capture.mjs`, `held.mjs`, `open-file.mjs`, `inbox.mjs`); tests `bio-plane/test/m/screens-intake/` (`page.mjs`, `capture.test.mjs`, `held.test.mjs`, `open-file.test.mjs`, `inbox.test.mjs`, `common.test.mjs`); `kit.mjs` removed.
+
+**Kit gaps that remain (REPORT J6)** · (1) reads graded as acts: `heldcaptures` (the registry's "See held captures") and `safeview` have no `RUNGS` or `RUNG_ABSENT` row, and `deepercheck` and `inboxpull` are `undetermined`, so the shell asks a reason before refreshing the list, reading the safe view, asking a deeper check or moving a knock in (DEC-87's default); an `op-grades` row each (`RUNG_ABSENT` with a non-undetermined ground for the two reads) would end it. (2) A redraw keeps a field's typed value over the value a screen draws, so a screen cannot fill a field it drew (worked around by a new id). (3) `done` is called unawaited: an async `done`'s rejection is unhandled, and its reads made again run before it ends. (4) No ref kind for a knock (`REF_SCREENS`), so its card and explanation are not drawn.
+
+Size (session_01JBa3sUqEAyKhi388Z2gNjX): test runs 24, module lines 846
+
 ## Completion again (SCREENS-INTAKE #1, B5; K3002)
 
 **Re-opened by B5** · `tranche/T46` merged; aligned to interface-shell R21's K3002 sub-bullet: `cs.rows` takes `cols` as header word keys (new row `screen.held.col`) and `acts(item)` as a row's panel, so held's hold strip (`heldsetaside`, `release`, receiving `extra.picked`) is drawn by the screen after the rows; `cs.digest`, `cs.now`, `{refuse, fills}` and `cs.value` on checkboxes and radios are now the kit's (J3 accepted), so nothing remains open on the kit. J4's two reports are N979 and N980 (T47). Still to do at the shell's merge: re-point the tests to its DOM stand-in (B5).
