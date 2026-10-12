@@ -2,7 +2,7 @@
  *
  * The rung ladder and each writing op's rung, or the one ground on which it has none (R1–R3); the consequence statements
  * published beside a rung (R4, R8, R21); the codes that back a `reasoned` rung (R1); the ops refused to a machine by name
- * and every other gated op's reason (R5); the owners' ops, graded (R6–R17, R22–R25, R27–R32); the advisory phone set (R18,
+ * and every other gated op's reason (R5); the owners' ops, graded (R6–R17, R22–R25, R27–R34); the advisory phone set (R18,
  * R26); the Irreversible weight (R21); and the alias table that gives an alias its op's grade (R17).
  *
  * DATA ONLY, AND IT IMPORTS NOTHING OF ANOTHER MODULE (R19, R20). It decides no op's behaviour: each grade is read from
@@ -10,9 +10,9 @@
  * backed (its R12, R19, R20) and publishes these very objects in its `VOCABULARIES` (its R4). Names written in the
  * comments below (`STATES`, `decorateAct`, `ACTS`, `CAPTURE_ACTS`, `deriveActs`, `unaccounted`) are `affordances`'.
  *
- * T33's, T34's, T35's, T36's, T37's, T38's, T41's, T42's and T45's ops are graded in `./t33.mjs`, `./t34.mjs`,
- * `./t35.mjs`, `./t36.mjs`, `./t37.mjs`, `./t38.mjs`, `./t41.mjs`, `./t42.mjs` and `./t45.mjs`, spread into the tables
- * below; each of those files imports nothing, so the spread closes no cycle. */
+ * T33's, T34's, T35's, T36's, T37's, T38's, T41's, T42's, T45's and T46's ops are graded in `./t33.mjs`, `./t34.mjs`,
+ * `./t35.mjs`, `./t36.mjs`, `./t37.mjs`, `./t38.mjs`, `./t41.mjs`, `./t42.mjs`, `./t45.mjs` and `./t46.mjs`, spread into
+ * the tables below; each of those files imports nothing, so the spread closes no cycle. */
 
 /* R13 (T33-85): the grades and reasons of every op T33 adds, spread into RUNGS, RUNG_ABSENT and NON_ACTS below. */
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "./t33.mjs";
@@ -33,6 +33,8 @@ import { T41_RUNGS, T41_RUNG_ABSENT, T41_NON_ACTS } from "./t41.mjs";
 import { T42_RUNG_ABSENT, T42_NON_ACTS } from "./t42.mjs";
 /* R32 (T45; N893): every op T45's owners serve, graded from their owners. */
 import { T45_RUNGS, T45_RUNG_ABSENT, T45_NON_ACTS } from "./t45.mjs";
+/* R33 (T46): every op T46 adds, graded from its owner. */
+import { T46_RUNGS, T46_RUNG_ABSENT, T46_NON_ACTS } from "./t46.mjs";
 export { OP_ALIASES, aliased } from "./t34.mjs";
 
 /* ===========================================================================
@@ -603,7 +605,8 @@ export const RUNGS = {
   publishatcancel:       "reversible", // caseratify or publishat signs it again
 
   /* ---- R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs, T36's in
-     ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs, T41's (R29, R30) in ./t41.mjs and T45's (R32) in ./t45.mjs. */
+     ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs, T41's (R29, R30) in ./t41.mjs, T45's (R32) in ./t45.mjs and
+     T46's (R33) in ./t46.mjs. */
   ...T33_RUNGS,
   ...T34_RUNGS,
   ...T35_RUNGS,
@@ -612,6 +615,7 @@ export const RUNGS = {
   ...T38_RUNGS,
   ...T41_RUNGS,
   ...T45_RUNGS,
+  ...T46_RUNGS,
 };
 
 
@@ -810,8 +814,8 @@ export const RUNG_ABSENT = {
   wizardeditorrevoke:   { ground: "credential", is: "an administrator revokes an advanced-editor grant, appended and never deleted (wizard-scripts R8)" },
   wizardprogress:       { ground: "observational", is: "adds one to an unattributed daily tally of a script version's start, step reached or finish; names no member, case or project, and stopping is no event (wizard-scripts R15)" },
   /* R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs, T36's in
-     ./t36.mjs, T37's in ./t37.mjs, T41's in ./t41.mjs, T42's (R31) in ./t42.mjs and T45's (R32) in ./t45.mjs (T38's
-     ./t38.mjs states no absence). */
+     ./t36.mjs, T37's in ./t37.mjs, T41's in ./t41.mjs, T42's (R31) in ./t42.mjs, T45's (R32) in ./t45.mjs and T46's
+     (R33) in ./t46.mjs (T38's ./t38.mjs states no absence). */
   ...T33_RUNG_ABSENT,
   ...T34_RUNG_ABSENT,
   ...T35_RUNG_ABSENT,
@@ -820,6 +824,7 @@ export const RUNG_ABSENT = {
   ...T41_RUNG_ABSENT,
   ...T42_RUNG_ABSENT,
   ...T45_RUNG_ABSENT,
+  ...T46_RUNG_ABSENT,
 };
 
 /* D-311 · THE ACTS A MACHINE CREDENTIAL'S CLASS IS REFUSED BY NAME, each with the code its store
@@ -882,6 +887,10 @@ export const MACHINE_REFUSALS = {
   clockstate:         "MACHINE_CANNOT_STATE_CLOCK",
   reminderset:        "MACHINE_CANNOT_SET_REMINDER",
   itemtakeup:         "MACHINE_CANNOT_PLAN",
+  /* R33 (T46; affordances R52, amending R51): stopping and reopening an escalation are ACTS rows on an action target,
+     each refused a machine by escalation's own code (its R31); neither has a NON_ACTS row. */
+  escalationstoppursuing: "MACHINE_CANNOT_STOP",
+  escalationreopen:       "MACHINE_CANNOT_STOP",
 };
 
 /* (T45; R8, R32; K2885, K2887) The 21 acts `affordances` R51 makes ACTS rows on an action target are named here no
@@ -1512,8 +1521,8 @@ export const NON_ACTS = {
   groupdescriptiondraft: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   writinghelp: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   /* R13 (T33-85): T33's ops, their reasons in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs,
-     T36's in ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs, T41's in ./t41.mjs, T42's in ./t42.mjs and T45's in
-     ./t45.mjs. */
+     T36's in ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs, T41's in ./t41.mjs, T42's in ./t42.mjs, T45's in
+     ./t45.mjs and T46's in ./t46.mjs. */
   ...T33_NON_ACTS,
   ...T34_NON_ACTS,
   ...T35_NON_ACTS,
@@ -1523,6 +1532,7 @@ export const NON_ACTS = {
   ...T41_NON_ACTS,
   ...T42_NON_ACTS,
   ...T45_NON_ACTS,
+  ...T46_NON_ACTS,
 };
 
 /* R21 (N657, DEC-143): THE IRREVERSIBLE WEIGHT. An act that can never be undone shows the Irreversible weight on its

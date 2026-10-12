@@ -48,6 +48,8 @@ const R32_WRITES = {
   ruledraft: "reasoned", ruleconfirm: "undetermined", rulewithdraw: "reasoned",
   /* instance-setup R77 (B6, K2896; as coarchiveset) */
   declaredstakeset: "reversible",
+  /* (T46; K2881) case-account R13, declared after the T45 merge: kept in her own hidden project, no reason asked */
+  advocacycheck: "undetermined",
 };
 /* the code each `reasoned` op's owner refuses an absent reason with */
 const R32_CODES = {
@@ -65,8 +67,11 @@ const TAKEN_BACK_BY = {
 /* every other op T45's owners serve: a read, or (statusreportdraft) a labelled draft that writes nothing */
 const R32_READS = ["dutiesarising", "openitemswith", "watchquestions", "templatesforaction", "casecheck", "procedureguides",
   "successread", "successrecords", "matters", "plantimeline", "planreviewopen", "planreviews", "prepitems", "plancomments",
-  "whereitstands", "statusreports", "matterpromiseduties", "cures", "ruleoffer"];
-const R32_DRAFTS = ["statusreportdraft"];
+  "whereitstands", "statusreports", "matterpromiseduties", "cures", "ruleoffer",
+  /* (T46; K2881) local-facts R12, case-account R13 */
+  "grouprules", "advocacychecks"];
+/* (T46; K2881) agent-worker R76's two record drafts beside plan-work's */
+const R32_DRAFTS = ["statusreportdraft", "infractiondraft", "bearingdraft"];
 const ALL = [...Object.keys(R32_WRITES), ...R32_READS, ...R32_DRAFTS];
 /* (K2885, K2887) T45's acts that affordances R51 makes ACTS rows on an action target: no NON_ACTS row, and those refused a
    machine by name in MACHINE_REFUSALS with their owners' codes (R32's T45 bullet) */
@@ -77,7 +82,7 @@ const R32_MACHINE = { holdnoticesent: "MACHINE_CANNOT_SEND", actionreceipt: "MAC
   actionreplybearing: "MACHINE_CANNOT_RECORD_BEARING", arosefrom: "MACHINE_CANNOT_LINK",
   clockstate: "MACHINE_CANNOT_STATE_CLOCK", itemtakeup: "MACHINE_CANNOT_PLAN" };
 
-test("R32: every write T45's owners serve carries R32's grade — the reasoned ones backed by their owner's code in "
+test("R32 (K2881): every write T45's owners serve carries R32's grade — the reasoned ones backed by their owner's code in "
    + "JUSTIFICATION_REFUSALS, each reversible one taken back by a graded act of its owner, following's and answers' as R32 "
    + "names them — each non-act with a NON_ACTS reason that is no read and no capture act, each act with none", () => {
   const got = grades(R32_WRITES);
@@ -99,7 +104,8 @@ test("R32: every write T45's owners serve carries R32's grade — the reasoned o
     ["filingsecondapprove", "filingapprove"], ["holdnoticeprepare", "communicationprepare"], ["clockstate", "clockadopt"],
     ["statusreportsave", "reportkeep"], ["prepitemdone", "checkpointrecord"], ["ruleconfirm", "templateapprove"],
     ["plancomment", "reviewcomment"], ["actionbearingpropose", "actionseekspropose"], ["publishcheck", "publish"],
-    ["itemtakeup", "reminderset"], ["standingendset", "standingend"], ["declaredstakeset", "coarchiveset"]])
+    ["itemtakeup", "reminderset"], ["standingendset", "standingend"], ["declaredstakeset", "coarchiveset"],
+    ["advocacycheck", "captureupload"]])
     assert.equal(gradeOf(op), gradeOf(like), `${op} as ${like}`);
   /* negative controls: a misgrade is seen, and the grounds class (K1025) is not extended */
   assert.notDeepEqual({ ...got, actionscope: "undetermined" }, R32_WRITES);
@@ -107,7 +113,7 @@ test("R32: every write T45's owners serve carries R32's grade — the reasoned o
   assert.notEqual(gradeOf("successrecord"), gradeOf("consequencerecord"));
 });
 
-test("R32: every other op T45's owners serve is a read, a NON_ACTS row beginning `read: …` that writes nothing and takes "
+test("R32 (K2881): every other op T45's owners serve is a read, a NON_ACTS row beginning `read: …` that writes nothing and takes "
    + "no grade; statusreportdraft is a draft, `draft: …`, writing nothing", () => {
   for (const op of R32_READS) {
     assert.ok(isRead(op) && NON_ACTS[op].length > 30, op);
@@ -117,8 +123,12 @@ test("R32: every other op T45's owners serve is a read, a NON_ACTS row beginning
     assert.ok(NON_ACTS[op].startsWith("draft: ") && /writes nothing of the record/.test(NON_ACTS[op]), op);
     assert.equal(gradeOf(op), null, op);
   }
+  /* (T46; K2881) the two record drafts each name what they answer and that a member's own act keeps it */
+  assert.match(NON_ACTS.infractiondraft, /infraction for one audience/);
+  assert.match(NON_ACTS.bearingdraft, /bearing of each claim/);
   /* negative control */
   assert.ok(!isRead("successrecord"));
+  assert.ok(!isRead("advocacycheck") && NON_ACTS.advocacycheck.startsWith("project-directed: "));
 });
 
 test("R32 R1 (K2857): JUSTIFICATION_REFUSALS gains the codes T45's owners refuse an absent reason with — "
