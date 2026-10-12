@@ -24,3 +24,7 @@ CHANGE (K2996): the contract between this shell and the four screen modules, bui
 ## B3 · CHANGE
 
 CHANGE (K2998): your J1 contract is now your R21 (a sub-bullet), with three additions SCREENS-INQUIRY #1 needs for the dock (its R6, K2976): `cs.call(op, {query, body, bearer})` → promise of the parsed answer, `bearer` absent = the session, present = replaces the session token in `Authorization` for that request only (no session token on it; your R3 test must allow this); `ui` kept in page memory across redraws, never stored; a screen's optional `closed(cs, view)` called on close or `pagehide`. Merge `tranche/T46` and build them in.
+
+## B4 · CHANGE
+
+CHANGE (K2999): R21 gains SCREENS-INTAKE #1's four kit points: `send` may answer a promise (awaited); `cs.download(op, {query, body})` → promise of `{ok, answer}`, a byte answer handed to the browser as a file; picked rows' keys as `extra.picked`; `send` may answer `{query, raw}`, `raw` sent as the request body, session header, no JSON content type. Merge `tranche/T46`.
