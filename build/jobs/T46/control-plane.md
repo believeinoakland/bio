@@ -2,6 +2,13 @@
 
 **Status** · session_013tqrpd8PzESSsECd7jbcoD · depth 2 · WORKING · handled B3
 
+## Progress (kept current; next step last)
+
+- Read at START as J1 states (code and requirements whole; tests and used public parts by two helpers' digests, K2032). B1–B3 handled; J1's readings accepted (K2999), K2996 applied.
+- Done on this branch, tested (`t46-door.test.mjs`; sweeps re-pinned in `declarations`, `r53-routes`, `envelope`, `t37-door`; `r48-routes` re-pinned to action-holds' map, N938): R65 (`DISCLOSURE_DUE`, C-69.6 region `is-disclosure-due`; `RUNNER_NOT_CONFIGURED` with `ai.refused.signinabsent`), R57 (`statusreportassist`, `textcheck`, `untested` passed on every draft), R20 (`groupFields`), R77 (`airundispatch`), R54 (`joindoors`), R76's routing (generic forward). Verified green in a scratch merge with answer-envelope's, op-declarations' and instance-setup's job branches (231 of 233; the other two are totality, affordances' and op-grades', and nothing else).
+- R75: `app.mjs` written (page and assets); one change from J1 (7): assets are `cache-control: no-cache` with an `etag` of the version and name and 304 on a match, so the browser keeps a file exactly while the plane's version is unchanged.
+- Next: on BOB's CHANGE announcing the interface modules' merges, merge `tranche/T46`, wire `/app` in `fetch` (imports `interface-shell`, the four screens, `interface-assets`), write R75's door tests and the end-to-end suite (Miniflare over `src/plane/index.mjs`), run steps 5–7.
+
 ## J1 · QUESTION
 
 Read at START: requirements whole, my code whole (index.mjs, draft.mjs, signin.mjs, owner-ops.mjs, archive.mjs); the tests and the used public parts through two helpers' digests (K2032). Baseline: my suite has exactly the two named reds (rule 5 (8)). Questions, each with my best reading, on which I carry on:
