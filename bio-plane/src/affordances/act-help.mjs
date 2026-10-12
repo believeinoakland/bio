@@ -11,11 +11,11 @@
  *   - an alias (`op-grades`' OP_ALIASES, `op-declarations` R21's table) is held under its op, never as a second entry;
  *   - `owed_<op>` is held under `<op>` for every owed act declared since T36 (the nineteen of T36, the eight of T37,
  *     `obscuremarkwithdraw` of T38, the eleven of T41, `pagetranscribe` of T42; still keyed `owed_` in the file:
- *     `subscriptionsignin`, `projectaikeepaway`) and for the three of T45 (R53: `actionscope`, `itemtakeup`,
- *     `filingsecondapprove`), and under `owed_<op>` for the two not yet declared (`infolevelset`,
- *     `escalationstoppursuing`: `op-declarations` R50, R51, T46-51);
+ *     `subscriptionsignin`, `projectaikeepaway`), for the three of T45 (R53: `actionscope`, `itemtakeup`,
+ *     `filingsecondapprove`) and for the two `op-declarations` declares in T46 (R53, K2999: `infolevelset`,
+ *     `escalationstoppursuing`, its R50, R51), so no `owed_` key is held;
  *   - `escalationreopen` and `textcheck`, served in T46 and declared by `op-declarations` R51 (T46-51), are held under
- *     their own names (R53; AFFORDANCES #31 J1 for `textcheck`, whose text the file gives);
+ *     their own names (R53; K2996 for `textcheck`, whose text the file gives);
  *   - `handlechange`: the file's text still describes a change of handle, which `membership` R129 now refuses whatever
  *     is asked (DEC-197), so it is not held; the help states the refusal, `membership`'s own `HANDLE_FIXED` row read by
  *     reference (R53), and the file's text is named back to BOB for the design stream.
@@ -61,7 +61,7 @@ export const ACT_HELP = Object.freeze({
   setpassword: 'Changes your password. Every other session signed in as you ends, so anyone using an old one must sign in again with the new password.',
   signerregister: 'Registers the key you sign published cases with. Readers check a signature against it.',
   signerrevoke: 'Withdraws your signing key, for example if it was lost. Cases already signed keep a record that it was withdrawn.',
-  owed_infolevelset: 'Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.',
+  infolevelset: 'Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.',
   groupkeynoticeseen: 'Confirms you have read that your questions go to Anthropic under the group\'s account. Asked once, before your first question.',
   disclosureshown: 'Confirms you have read what connecting your own account means: your questions go to Anthropic under your own account and terms.',
   subscriptionsignin: 'Opens Anthropic\'s own sign-in page in a new tab. It gives you a code to paste here; Civicsmith never sees your password.',
@@ -162,7 +162,7 @@ export const ACT_HELP = Object.freeze({
   holdnoticesent: 'Records that you sent the litigation hold notice, with a copy or your account of how.',
   jointsignatory: 'Records that a partner organisation approved the same text in its own copy. Their copy must match word for word.',
   filingsecondapprove: 'Gives the second approval this project requires before sending. Only a member other than the first approver can give it.',
-  owed_escalationstoppursuing: 'Stops pursuing this escalation, with your reason. It is never recorded as ended or as a success, and it can be reopened where it stopped.',
+  escalationstoppursuing: 'Stops pursuing this escalation, with your reason. It is never recorded as ended or as a success, and it can be reopened where it stopped.',
   escalationreopen: 'Reopens an escalation your group stopped pursuing, at the stage where it stopped, with your reason.',
   scenariosetaside: 'Sets this scenario aside, with your reason. It is kept whole, and can be restored.',
   scenariorestore: 'Brings a set-aside scenario back, with your reason.',

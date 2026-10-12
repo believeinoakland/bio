@@ -33,11 +33,13 @@ const OWED_DECLARED_IN_T41 = ["accountusesset", "ailimitset", "projectkeyset", "
 const OWED_DECLARED_IN_T42 = ["pagetranscribe"];
 /* R53 (T46): the owed acts of T45 the design gives texts under `owed_` (PR #28), each declared by op-declarations in T45 */
 const OWED_DECLARED_IN_T45 = ["actionscope", "itemtakeup", "filingsecondapprove"];
+/* R53 (K2999): declared by op-declarations in T46 (its R50, R51), so held under their ops */
+const OWED_DECLARED_IN_T46 = ["infolevelset", "escalationstoppursuing"];
 const OWED_DECLARED = [...OWED_DECLARED_IN_T36, ...OWED_DECLARED_IN_T37, ...OWED_DECLARED_IN_T38, ...OWED_DECLARED_IN_T41, ...OWED_DECLARED_IN_T42,
-  ...OWED_DECLARED_IN_T45];
-/* R53: not declared until op-declarations R50, R51 (T46-51), so held under `owed_<op>` until then */
-const OWED_UNDECLARED = ["infolevelset", "escalationstoppursuing"];
-/* The design's `owed_` keys at PR #28: each but the undeclared ones is an owed act declared since. */
+  ...OWED_DECLARED_IN_T45, ...OWED_DECLARED_IN_T46];
+/* R53 (K2999): no owed act stays undeclared, so no `owed_` key is held */
+const OWED_UNDECLARED = [];
+/* The design's `owed_` keys at PR #28: each an owed act declared since. */
 const DESIGN_OWED = ["infolevelset", "subscriptionsignin", "projectaikeepaway", "actionscope", "itemtakeup", "filingsecondapprove",
   "escalationstoppursuing"];
 /* R53: the 42 texts PR #28 adds, by the design's own key (DEC-194 (2): the ops T45 serves; escalation's stop and reopening) */
@@ -72,7 +74,7 @@ const meetsR48 = (table) => {
 
 test("R48 R53: ACT_HELP is a frozen module constant holding all 255 of the design's texts as PR #28 merged the registry to main "
    + "(3f40899950; DEC-194 (2)), verbatim, each under the key R48 reads it as, in the design's order: aliases under their op, the owed "
-   + "acts declared in T36, T37, T38, T41, T42 and T45 under their op, infolevelset and escalationstoppursuing still under owed_<op>, "
+   + "acts declared in T36, T37, T38, T41, T42, T45 and T46 (infolevelset, escalationstoppursuing) under their op and no owed_ key, "
    + "escalationreopen and textcheck under their own names, handlechange as membership's refusal and never the design's text of a change; "
    + "the withdrawn texts and the five retired ops nowhere; mock-acts.js and words.json give each text alike; a table departing from "
    + "any of these is seen (K874)", () => {
@@ -126,7 +128,7 @@ test("R48 R53: ACT_HELP is a frozen module constant holding all 255 of the desig
     "a retired op's text held": { ...ACT_HELP, aiceilingset: "Sets the ceiling." },
     "a declared owed text held under owed_<op>": Object.fromEntries(Object.entries(ACT_HELP).map(([k, v]) => [k === "ailimitset" ? "owed_ailimitset" : k, v])),
     "T45's declared owed act held under owed_<op>": Object.fromEntries(Object.entries(ACT_HELP).map(([k, v]) => [k === "itemtakeup" ? "owed_itemtakeup" : k, v])),
-    "an undeclared owed act held under its op": Object.fromEntries(Object.entries(ACT_HELP).map(([k, v]) => [k === "owed_escalationstoppursuing" ? "escalationstoppursuing" : k, v])),
+    "a T46-declared owed act held under owed_<op>": Object.fromEntries(Object.entries(ACT_HELP).map(([k, v]) => [k === "escalationstoppursuing" ? "owed_escalationstoppursuing" : k, v])),
     "an owed text missing": Object.fromEntries(Object.entries(ACT_HELP).filter(([k]) => k !== "handlecheck")),
     "one of PR #28's texts missing": Object.fromEntries(Object.entries(ACT_HELP).filter(([k]) => k !== "escalationreopen")),
     "handlechange's design text held": { ...ACT_HELP, handlechange: DESIGN.handlechange },
@@ -171,7 +173,7 @@ test("R48 (T43-17, T44-9; DEC-190, DEC-191): transcribe and pagetranscribe, both
 });
 
 test("R48 R53: no key is an alias or a retired op; every alias the design explains is answered by its op's entry; the owed_ "
-   + "keys are exactly the owed acts op-declarations does not declare (infolevelset, escalationstoppursuing), none under a declared op; every other "
+   + "keys are exactly the owed acts op-declarations does not declare (none since T46), none under a declared op; every other "
    + "key is an op op-grades grades or names, or one of the design's ungated ops", () => {
   const keys = Object.keys(ACT_HELP);
   for (const k of keys) {
