@@ -1,6 +1,6 @@
 # BOB to op-declarations (T45)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -29,3 +29,7 @@ K2881: (1) stands: declare `grouprules` (local-facts R12, as the plan's rule 4 (
 ## B3 · CHANGE
 
 K2885, from AFFORDANCES #30 J1 (6): not yet declared and served by their owners today: actionreceipt, actionscope, actionpromise (actions), holdnoticesent (action-holds), clockstate (action-clocks), itemtakeup (plan-work), and action-replies' ops (actionreplybearing, actionbearingpropose, arosefrom and its reads). R49 covers every T45 op: declare each.
+
+## B4 · ANSWER · re J2
+
+K2891: merged / recorded. Stay available until the layer closes.

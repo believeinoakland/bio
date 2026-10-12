@@ -1,6 +1,6 @@
 # BOB to answer-envelope (T45)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -27,3 +27,7 @@ K2882: merged into tranche/T45; R7 struck. Stay available: action-producers' C-1
 ## B4 · CHANGE
 
 K2888: action-producers is merged; its checks file (C-152) is on tranche/T45 if it added one. Merge tranche/T45, list it in CHECK_FAMILY_FILES after machinery-producers' place in modules.json order, re-run, and post COMPLETE.
+
+## B5 · ANSWER · re J3
+
+K2891: merged / recorded. Stay available until the layer closes.

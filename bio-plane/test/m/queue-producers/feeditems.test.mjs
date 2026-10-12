@@ -1,7 +1,7 @@
 /* feedItems (R8) at its interface: what it answers, what it takes from queue, what it never carries; the bias debts
-   (R1); the lead's take-up (R9); and the invariants over every producer (R10–R13), the Action layer's (R15–R19), the
-   signing key's (R14) and the filing templates' and local facts' (R20, R21) among them; and the words members see (R24,
-   R25, R28); the litigation hold's release (R29) and the docket's items (R30, R31) among them. */
+   (R1); the lead's take-up (R9); and the invariants over every producer (R10–R13), the signing key's (R14) and the
+   docket's items (R30, R31) among them; and the words members see (R24, R25, R28) and the local day (R36). The Action
+   layer's to-dos are action-producers' since T45 (K2781 (1)), answered through R8 (`action.test.mjs`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
@@ -67,27 +67,6 @@ function busy(extra = {}) {
     governor: { governorHolding: () => [{ host: "h.example", cooloff_until: NOW + 5, refusals: 1 }] },
     capture: { liveCaptureSessions: () => [{ session: "S1", locator: "https://x.example/", primarySha: "p1", created: iso(NOW),
       updated: iso(NOW), expires: iso(NOW + 10), ticks: 1, state: { queue: [1] } }] },
-    actionClocks: {
-      overdueClocks: () => ({ ok: true, limit: 500, truncated: false, cursor: null, items: [{ action: "ACT-1", ord: 0,
-        date: "2026-08-20", basis: "b", text: "t", status: "pending", past: true, project: "PRJ-A", created_by: "alice" }] }),
-      remindersDue: () => ({ ok: true, limit: 500, truncated: false, cursor: null, items: [{ action: "ACT-1", ord: 0,
-        date: "2026-08-20", basis: "b", text: "t", on: "2026-08-15", set_by: "alice", project: "PRJ-A" }] }),
-      calendarFactsRead: () => ({ ok: true, as_of: "2026-09-01", actions_limit: 500, truncated: false,
-        paths: [{ path: "profile:p/holidays/2026/*", actions: [{ action: "ACT-1", project: "PRJ-A", created_by: "alice" }] }] }) },
-    filingTemplates: { reviewsRequested: () => ({ ok: true, limit: 500, truncated: false, cursor: null, items: [{ template: "TPL-1",
-      version: "TPL-1@1", name: "Records request", kind: "records_request", member: "alice", member_name: "alice",
-      asked_by: { id: "alice", name: "alice" }, asked_at: iso(NOW - 5) }] }) },
-    localFacts: { factsDue: ({ paths }) => ({ ok: true, unknown: [], absent: [], due: paths.map((path) => ({ path,
-      fact: { profile: "p", fact: "holidays", year: 2026 }, status: "unconfirmed", due: true, why: "no member has confirmed it",
-      latest: null, due_from: "2025-11-01" })) }) },
-    escalation: { escalationsDue: () => ({ ok: true, limit: 500, truncated: false, items: [{ id: "ESC-1", project: "PRJ-A",
-      opened_by: "alice", from: 1, to: 2, stage: "notification", instant: iso(NOW - 5), ids: [] }] }) },
-    actionPlans: { checkpointsDue: () => ({ ok: true, limit: 500, truncated: false, items: [{ plan: "PLN-1", project: "PRJ-A",
-      scenario: 1, version: 1, phase: "p", set_by: "alice", due: "2026-08-30", days_since_due: 2 }] }) },
-    actions: { holdsDue: () => ({ ok: true, limit: 500, truncated: false, cursor: null, items: [{ action: "ACT-1", ord: 1,
-      note: "a letter threatening suit", marked_by: "alice", marked_at: iso(NOW - 5), project: "PRJ-A" }] }),
-      holdsReleased: () => ({ ok: true, limit: 500, truncated: false, cursor: null, items: [{ action: "ACT-1", ord: 0, seq: 2,
-        released_by: "alice", released_at: iso(NOW - 3), reason: "the matter settled", placers: ["alice"], restarted: ["PRJ-A"] }] }) },
     docket: { coreDue: () => ({ ok: true, count: 1, wrote: false, items: [
       { case: "CASE-D", kind: "response", ref: "DKT-2026-0001", edition: 1, since: iso(NOW - 7) }] }) },
     ...extra,
@@ -116,7 +95,11 @@ function busy(extra = {}) {
 
 test("R8: every producer's items, homed through homesOf and offered optionsOf; no disposition, no catalogue_id; the facts beside them", () => {
   let feeds = 0;
-  const w = busy();
+  /* T45: the Action layer's to-dos, action-producers' (its R13), answered in the same one answer */
+  const w = busy({ actionProducers: { actionItems: ({ homesOf, optionsOf }) => ({ facts: { failed: [] }, items: [
+    { id: "OBLIGATION::plan-review-due::PLN-1::2026-08-31", class: "OBLIGATION", kind: "plan-review-due", case: homesOf ? homesOf(["PRJ-A"]) : { state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] },
+      due: "2026-08-31", subject: { kind: "plan", id: "PLN-1" }, summary: "s", detail: "d", basis: { source: "plan-work.planReviewsDue" },
+      age: { state: "undetermined", reason: "zone_undetermined" }, assignee: null, assignee_role: null, options: optionsOf ? optionsOf(["PLN-1"]) : [] }] }) } });
   const inner = w.fakes.progressions.proposalsFeed;
   w.fakes.progressions.proposalsFeed = (...a) => { feeds += 1; return inner(...a); };
   const before = w.statements.length;
@@ -126,14 +109,12 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
                    "new-version-arrived-from-another-team", "shared-inquiry-concluded-by-another-project", "export-performed",
                    "newer-capture-affects-reference", "objective-gap", "source-modified", "governor-holding-host",
                    "partial-capture-outstanding", "capture-completed-unattended", "render-deferred",
-                   "archive-fallback-eligible", "monitoring-recheck-due", "signer-self-registered", "action-clock-overdue",
-                   "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder", "litigation-hold",
-                   "template-review-requested", "local-fact-due", "litigation-hold-released", "docket-core-due",
+                   "archive-fallback-eligible", "monitoring-recheck-due", "signer-self-registered", "docket-core-due",
                    "edition-withdrawn", "edition-contested", "cited-newer-edition", "cited-edition-withdrawn",
                    "followed-case-entry", "cited-docket-entry-refused", "cited-docket-unreadable",
                    "wizard-withdrawn", "wizard-restored", "wizard-approval-requested",
                    "edition-scheduled", "edition-published-as-scheduled", "scheduled-edition-stopped", "place-profile-arrived",
-                   "wizard-base-updated"])
+                   "wizard-base-updated", "plan-review-due"])
     assert.ok(kinds.has(k), k);
   for (const it of r.items) {
     assert.ok(!("disposition" in it), `${it.id}: the mint's`);
@@ -144,24 +125,15 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
   }
   assert.ok(w.asked.homes.length > 0 && w.asked.options.length > 0);
   // the options are exactly what optionsOf answered, except the producers' own acts (R9's take-up, the export log,
-  // R14's revoke, R16's judgement, R17's advance and decline, R18's answer, R19's two hold statements, R20's review,
-  // R21's confirmation, R30's placement and decline)
+  // R14's revoke, R30's placement and decline)
   const m = byId(r);
   assert.deepEqual(m["FINDING::p::s"].options, [{ id: "opt", on: ["INF-1"] }]);
   assert.deepEqual(m["FINDING::export-performed::1"].options.map((o) => o.id), ["exportlog"]);
   assert.deepEqual(m["OBLIGATION::signer-self-registered::KEY-1"].options.map((o) => o.id), ["signerset"]);
-  assert.deepEqual(m["CONDITION::action-clock-overdue::ACT-1::0"].options, [{ id: "opt", on: ["ACT-1"] }]);
-  assert.deepEqual(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].options.map((o) => o.id), ["checkpointrecord"]);
-  assert.deepEqual(m["OBLIGATION::escalation-stage-proposed::ESC-1::2"].options.map((o) => o.id), ["escalationadvance", "escalationdecline"]);
-  assert.deepEqual(m["OBLIGATION::action-reminder::ACT-1::0::2026-08-15"].options.map((o) => o.id), ["reminderanswer", "opt"]);
-  assert.deepEqual(m["OBLIGATION::litigation-hold::ACT-1::1"].options.map((o) => o.id), ["actionhold", "actionholdrelease", "opt"]);
-  assert.deepEqual(m["FINDING::litigation-hold-released::ACT-1::0::2"].options, [{ id: "opt", on: ["ACT-1"] }]);
   assert.deepEqual(m["OBLIGATION::docket-core-due::CASE-D::response::DKT-2026-0001"].options.map((o) => o.id),
     ["docketprepare", "docketdecline"]);
   assert.deepEqual(m["FINDING::edition-withdrawn::INQ-S::CASE-W#3"].options, [{ id: "opt", on: ["INQ-S"] }]);
   assert.deepEqual(m["FINDING::edition-contested::INF-1::DKT-2026-0002"].options, [{ id: "opt", on: ["INF-1"] }]);
-  assert.deepEqual(m["OBLIGATION::template-review-requested::TPL-1@1::alice"].options.map((o) => o.id), ["templatereview"]);
-  assert.deepEqual(m["OBLIGATION::local-fact-due::profile:p/holidays/2026/*::unconfirmed"].options.map((o) => o.id), ["factconfirm", "opt"]);
   /* R37's, R38's and R39's own acts (publish-schedule R3; instance-setup R14; wizard-scripts R4) */
   assert.deepEqual(m["CONDITION::edition-scheduled::CASE-SW@1"].options.map((o) => o.id), ["publishatmove", "publishatcancel"]);
   assert.deepEqual(m["CONDITION::place-profile-arrived::us-xx-riverton"].options.map((o) => o.id), ["profilesset"]);
@@ -175,6 +147,7 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
   assert.deepEqual(r.facts.objective_gap, { bound: 50, truncated: false });
   assert.deepEqual(r.facts.contradiction, { bound: 50, truncated: false });
   assert.deepEqual(r.facts.unattributed, { count: 0, inquiries: [] });
+  assert.deepEqual(r.facts.action, { failed: [] }, "action-producers' facts beside them");
   // it writes nothing
   assert.ok(!w.statements.slice(before).some((q) => /^\s*(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\b/i.test(q)));
   // with no walk passed, no item is given a home it was not handed
@@ -350,14 +323,13 @@ test("R24 (DEC-107; DEC-131; H15, H19): no member-facing sentence of any item ki
   const kinds = new Set(r.items.map((i) => i.kind));
   for (const k of ["contradiction-duty", "contradiction-lead", "contradiction-plurality", "contradiction-duty-unseen",
                    "contradiction-plurality-unseen", "side-corrected", "tension-after-publication", "bias-debt", "governor-holding-host",
-                   "render-deferred", "plan-checkpoint-due", "objective-gap", "template-review-requested", "local-fact-due",
-                   "attribution-unchosen", "litigation-hold-released", "docket-core-due", "edition-withdrawn", "edition-contested",
+                   "render-deferred", "objective-gap", "attribution-unchosen", "docket-core-due", "edition-withdrawn", "edition-contested",
                    "cited-newer-edition", "cited-edition-withdrawn", "followed-case-entry", "cited-docket-entry-refused",
                    "cited-docket-unreadable", "wizard-withdrawn", "wizard-restored", "wizard-approval-requested",
                    "edition-scheduled", "edition-published-as-scheduled", "scheduled-edition-stopped", "place-profile-arrived",
                    "wizard-base-updated"])
     assert.ok(kinds.has(k), `the world produces ${k}`);
-  assert.ok(kinds.size >= 49, `every kind this module produces (${[...kinds].sort().join(", ")})`);
+  assert.ok(kinds.size >= 41, `every kind this module produces (${[...kinds].sort().join(", ")})`);
   /* negative control: the check catches the word it forbids */
   for (const bad of ["a signal", "Signals of the sweep", "SIGNAL"]) assert.match(bad, /\bsignals?\b/i);
   for (const it of r.items) {
@@ -378,7 +350,6 @@ test("R24 (DEC-107; DEC-131; H15, H19): no member-facing sentence of any item ki
   assert.match(m["CONDITION::governor-holding-host::h.example"].basis.detail, /^a status is a fact about OUR OWN machinery/);
   assert.match(m["CONDITION::render-deferred::CR-R"].basis.detail, /^a status is a fact about OUR OWN machinery/);
   assert.match(m["FINDING::contradiction::CC-L"].detail, /asks nothing of you: dismiss it or take it up/);
-  assert.match(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].detail, /records whether what it set was met/);
   /* R38: the place's arrival calls itself a status (DEC-131) */
   assert.match(m["CONDITION::place-profile-arrived::us-xx-riverton"].detail, /This status is told once/);
 });
@@ -389,11 +360,7 @@ test("T34-87 (DEC-149; K1784, K1811): each member-facing string that called the 
   const YOURS = /your group's Civicsmith/;
   const OLD = /\b(this|the) (instance|copy|plane)\b|\bserver\b/i;
   const said = [];
-  /* index.mjs :218, the undetermined age's sentence (R36), as a reader with no zone held is told it */
-  const w = everyKind();
-  w.fakes.actions.place = () => ({ time_zone: null });
-  const unzoned = byId(w.read("alice"))["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].age;
-  said.push(["the undetermined age (R36)", unzoned.detail]);
+  /* the undetermined age's sentence (R36) moved with the Action layer's items to action-producers (T45; its R20) */
   /* :1623, export-performed's detail */
   said.push(["export-performed", m["FINDING::export-performed::1"].detail]);
   /* :3487, the cited-case finding's derivation, "a verified entry this copy read" */
@@ -403,7 +370,7 @@ test("T34-87 (DEC-149; K1784, K1811): each member-facing string that called the 
   said.push(["cited-docket-entry-refused", m[`FINDING::cited-docket-entry-refused::${"c".repeat(64)}#4`].summary]);
   /* :3741, the restored wizard's detail */
   said.push(["wizard-restored", m[`FINDING::wizard-restored::WIZ-1@1::${iso(NOW - 5)}`].detail]);
-  assert.equal(said.length, 6, "every row of draft-T34-dec149.md that stays in this module");
+  assert.equal(said.length, 5, "every row of draft-T34-dec149.md that stays in this module (the sixth moved, T45)");
   for (const [what, s] of said) {
     assert.equal(typeof s, "string", what);
     assert.match(s, YOURS, `${what}: "${s}"`);
@@ -418,8 +385,7 @@ test("R28 (DEC-114): no member-facing sentence of any item kind calls what an ac
   assert.doesNotMatch("the plan's matters", SAYS_SUBJECT);
   const r = everyKind().read("alice");
   const m = byId(r);
-  assert.ok(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"], "the world produces the action plan's item");
-  assert.ok(new Set(r.items.map((i) => i.kind)).size >= 44, "every kind this module produces");
+  assert.ok(new Set(r.items.map((i) => i.kind)).size >= 41, "every kind this module produces");
   for (const it of r.items) {
     /* R28's words: the summary, the detail and the words of the options; and every other sentence under the item */
     const words = [["summary", it.summary], ["detail", it.detail],
@@ -429,20 +395,20 @@ test("R28 (DEC-114): no member-facing sentence of any item kind calls what an ac
     assert.ok(it.subject && typeof it.subject === "object" && typeof it.subject.kind === "string", `${it.id} keeps subject`);
     assert.ok(it.id.startsWith(`${it.class}::`), it.id);
   }
-  assert.equal(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].subject.kind, "plan");
 });
 
-test("R25 (DEC-110 (1)): `due` is carried by action-clock-overdue, action-reminder and plan-checkpoint-due, and by no other item", () => {
-  const r = everyKind().read("alice");
-  const dated = new Set(["action-clock-overdue", "action-reminder", "plan-checkpoint-due"]);
-  for (const it of r.items) {
-    if (dated.has(it.kind)) assert.match(String(it.due), /^\d{4}-\d{2}-\d{2}$/, it.id);
-    else assert.equal("due" in it, false, `${it.id} carries no due`);
-  }
-  const m = byId(r);
-  assert.equal(m["CONDITION::action-clock-overdue::ACT-1::0"].due, "2026-08-20");
-  assert.equal(m["OBLIGATION::action-reminder::ACT-1::0::2026-08-15"].due, "2026-08-20");
-  assert.equal(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].due, "2026-08-30");
+test("R25, R36 (T45): over every kind this module produces, none carries `due`, and none changes with the zone the instance holds (west of UTC at the day boundary, UTC, none)", () => {
+  const read = (zone) => {
+    const w = everyKind();
+    w.fakes.actions.place = () => (zone ? { time_zone: { value: zone, status: "ruled", basis: "TEST" } } : { time_zone: null });
+    return w.read("alice");
+  };
+  const la = read("America/Los_Angeles");
+  assert.ok(new Set(la.items.map((i) => i.kind)).size >= 40, "every kind this module produces");
+  for (const it of la.items) assert.equal("due" in it, false, `${it.id} carries no due`);
+  assert.deepEqual(read("UTC").items, la.items, "R36: no day this module answers is taken in the instance's zone, so none moves with it");
+  assert.deepEqual(read(null).items, la.items, "and none is undetermined for want of one");
+  for (const it of la.items) assert.equal("days" in (it.age || {}), false, `${it.id}: no day counted here`);
 });
 
 test("R8 (R22, R23; K1019): feedItems reads the unattended capture's grade note and the credit-level to-do into its one answer", () => {

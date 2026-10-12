@@ -157,10 +157,12 @@ test("R48 (T42; N839; case-account R1, R3; K2608, K2656): accountpropose and acc
   assert.ok(fam, "no case-account family");
   assert.equal(fam.owner, "case-account");
   assert.equal(fam.cite, "case-account R1, R3; R43; K2569, K2608");
-  assert.deepEqual(plain(fam.kinds), { accountpropose: "member", accountdrafts: "ownread" });
+  /* T45 (R49; case-account R13, K2834): the family also holds T45's advocacy check and its read (`t45.test.mjs`) */
+  assert.deepEqual(plain(fam.kinds), { accountpropose: "member", accountdrafts: "ownread", advocacycheck: "member",
+                                       advocacychecks: "ownread" });
   assert.deepEqual(plain(fam.actor), { key: "by", at: "query" });
-  assert.deepEqual([...fam.acts], ["accountpropose"]);
-  assert.deepEqual([...fam.reads], ["accountdrafts"]);
+  assert.deepEqual([...fam.acts], ["accountpropose", "advocacycheck"]);
+  assert.deepEqual([...fam.reads], ["accountdrafts", "advocacychecks"]);
   for (const op of ["accountpropose", "accountdrafts"]) {
     assert.deepEqual(familyOf(op), ["case-account"], op);
     holdsSessionOnly(op);

@@ -199,13 +199,14 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
   - An act whose text `mock-acts.js` lacks is named in `ACT_HELP_ABSENT` (R34) until the design stream gives it.
   - An owed act in the screen registry whose op is now declared is registered by `wizard-scripts` R13 with no change there.
 
-  T45's specs are held in a file of this module's own beside the others (M-T45-6: this module stands near 3,700 lines). Each op is tested by name, with a negative control (K874). R6 holds over them. *(not yet met: T45)*
+  T45's specs are held in a file of this module's own beside the others (M-T45-6: this module stands near 3,700 lines). Each op is tested by name, with a negative control (K874). R6 holds over them.
 
 **Settled readings (K1396):** the readings of op-declarations's T31 question stand as K1396 states them; they bind this module's tests.
 ## Private
 
 ### Uses
 
+- (T45; K2895) The T45 owners its `t45.test.mjs` drives the stamps through: `action-holds`, `action-replies`, `plan-work`, `filings`, `conformance`, `consequences`, `case-check`, `project-roster`, `local-facts` (their ops maps, tests only).
 - `affordances`: `decorate` (its R11), for R1.
 - `case-import` (N520): the ops R14 declares, and the watch ops R16 declares (N534).
 - `link-sweep` (N506): the `sweeps` read R10 declares, served by its R9.

@@ -142,7 +142,19 @@ test("R5: MACHINE_REFUSALS maps each act refused a machine by name to its code; 
     inquiryground: "MACHINE_CANNOT_GROUND", actionmove: "MACHINE_CANNOT_MOVE_ACTION",
     actioncorrespond: "MACHINE_CANNOT_CORRESPOND", actionlaws: "MACHINE_CANNOT_SET_LAWS",
     actionrisktier: "MACHINE_CANNOT_SET_RISK_TIER", versionaccept: V, versionreject: V, versionconsider: V,
-    versionrevert: V, versioncurrent: V, versionhide: V, contradictionresolve: "MACHINE_CANNOT_ACT_ON_CANDIDATE" });
+    versionrevert: V, versioncurrent: V, versionhide: V, contradictionresolve: "MACHINE_CANNOT_ACT_ON_CANDIDATE",
+    /* R8, R32 (T45; K2885, K2887): the acts affordances R51 makes ACTS rows, each with its owner's code */
+    actionhold: "MACHINE_CANNOT_SET_HOLD", actionholdrelease: "MACHINE_CANNOT_SET_HOLD",
+    actionpressure: "MACHINE_CANNOT_MARK_PRESSURE", holdnoticesent: "MACHINE_CANNOT_SEND",
+    actionreceipt: "MACHINE_CANNOT_CORRESPOND", actionscope: "MACHINE_CANNOT_SET_SCOPE",
+    actionpromise: "MACHINE_CANNOT_RECORD_PROMISE", actionreplybearing: "MACHINE_CANNOT_RECORD_BEARING",
+    arosefrom: "MACHINE_CANNOT_LINK", escalationopen: "MACHINE_CANNOT_OPEN", escalationattach: "MACHINE_CANNOT_ATTACH",
+    counselpacket: "MACHINE_CANNOT_NAME_COUNSEL", filingapprove: "MACHINE_CANNOT_APPROVE", filingsent: "MACHINE_CANNOT_FILE",
+    clockstate: "MACHINE_CANNOT_STATE_CLOCK", reminderset: "MACHINE_CANNOT_SET_REMINDER", itemtakeup: "MACHINE_CANNOT_PLAN" });
+  /* R32: the four that admit a machine take no row, and no ACTS row is also a non-act */
+  for (const op of ["filingprepare", "communicationprepare", "holdnoticeprepare", "actionbearingpropose"])
+    assert.ok(!Object.hasOwn(MACHINE_REFUSALS, op), op);
+  for (const op of Object.keys(MACHINE_REFUSALS)) assert.ok(!Object.hasOwn(NON_ACTS, op), `${op} is an act, never a non-act too`);
   assert.deepEqual(Object.keys(NON_ACTS).filter((op) => NON_ACTS[op].startsWith("capture-directed:")).sort(),
     ["attest", "attesttext", "monitor"]);
   for (const op of ["contradictiondismiss", "contradictionclarify", "contradictiontakeup"])
