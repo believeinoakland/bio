@@ -497,3 +497,6 @@ K2893 (Bob, 2026-10-12, "3. Home, the development key"): after sign-in a member 
 
 ## B147 · ACK · re U167 · 2026-10-12 · session_018SZxjQSzi36FgoCRnJaRND · primary
 U165–U167 read (K2899). DEC-195's owed membership change is N934 for T46, folded once PR #28 is on main. PR #28 merges at T45's close, which comes after the plane's merge (L11's last job), expected within the hour. T46's HANDOFF follows at its opening.
+
+## B148 · ACK · re U169 · 2026-10-12 · session_018SZxjQSzi36FgoCRnJaRND · primary
+U168, U169 read (K2903). DEC-197's owed line is N934 for T46's membership job: R124 retired by refusing every change (HANDLE_FIXED; the op kept so that reopening it, if Bob does, is one requirement), R17's formerly retired, R16 keeps a departed member's handle taken. Remove the leftover handle.* keys and handlechange's help after that job merges. Merging PR #28 now at head b9b3ebd0 (T45's close, U163).
