@@ -83,14 +83,13 @@ export function withRow(r) {
 }
 const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detail, ...(extra || {}) });
 
-/* R11, R14 (K231, K2848). THE ONE ANSWER TO ONE CONDITION: the hold at a place is not in place (none placed, or released),
-   so no hold notice is recorded for it, and (R14) a release where none was ever placed releases nothing. This module's
-   `holdNoticeSent` and `actionHoldRelease` answer it through here, and so does `filings` R47 (the notice's text), so
-   `HOLD_NOT_IN_PLACE` is minted at one site with its one row (C-149.11). `place` is R2's
+/* R11 (K231, K2848). THE ONE ANSWER TO ONE CONDITION: the hold at a place is not in place (none placed, or released), so
+   no hold notice is recorded for it. This module's `holdNoticeSent` answers it through here, and so does `filings` R47
+   (the notice's text), so `HOLD_NOT_IN_PLACE` is minted at one site with its one row (C-149.11). `place` is R2's
    (`{target, ord?}`, `{project}` or `{case}`); its keys are answered beside the row as given, each a string or a whole
    number, and nothing else of it. The detail is one fixed sentence. Writes nothing and never throws. */
-const HOLD_NOT_IN_PLACE_DETAIL = "the hold at this place is not in place: none has been placed there, or it was released. A "
-  + "hold notice is recorded, and a hold is released, only while one is in place. Nothing was written.";
+const HOLD_NOT_IN_PLACE_DETAIL = "a hold notice is recorded for a hold in place, and the hold at this place is not in place: "
+  + "none has been placed there, or it was released. Nothing was written.";
 export function holdNotInPlace(place = null) {
   let keys = {};
   try {
@@ -416,8 +415,6 @@ export class ActionHolds {
       return refuse("HOLD_ALREADY_RELEASED", "this place's hold is already released; a release ends a hold in place. "
         + "Nothing was written.", where);
     /* END DEC-49 REGION is-hold-already-released */
-    /* R14 (T46; N929): where no statement stands, a release would release nothing; answered by R11's one minter. */
-    if (release && !latest) return holdNotInPlace(where);
     /* R2: the first named project the author may not name answers as membership answers it (its R77, R78). */
     for (const p of named) {
       const seen = this.#projectSeen(p, viewer);
@@ -453,8 +450,7 @@ export class ActionHolds {
              projects: [...this.#covered(place.bundle, place.ord)].sort().filter((p) => this.#mayName(p, viewer)) };
   }
 
-  /** R5 (DEC-113; K1134 (3)): a member states `released` at a place, recording what it restarted. R14 (T46; N929): a place
-   *  where no hold was ever placed is refused `HOLD_NOT_IN_PLACE`, asked where `HOLD_ALREADY_RELEASED` is. */
+  /** R5 (DEC-113; K1134 (3)): a member states `released` at a place, recording what it restarted. */
   actionHoldRelease({ target = null, ord = null, project = null, case: caseId = null, reason = null, viewer = null,
                       author = null } = {}) {
     return this.actionHold({ target, ord, project, case: caseId, reason, viewer, author, [HOLD_MODE]: "release" });

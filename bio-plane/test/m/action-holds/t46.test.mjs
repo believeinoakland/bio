@@ -1,6 +1,4 @@
-/* action-holds' T46 requirements at their interface: R14 (N929; amends R5) a release where no hold has been placed is
-   refused `HOLD_NOT_IN_PLACE`, answered through R11's one minter `holdNotInPlace`, asked where `HOLD_ALREADY_RELEASED`
-   is, writing nothing, at every place R2 names; R15 (DEC-194; N913; amends R11) C-149.10 `MACHINE_CANNOT_SEND` reads
+/* action-holds' T46 requirement at its interface: R15 (DEC-194; N913; amends R11) C-149.10 `MACHINE_CANNOT_SEND` reads
    `words.json`'s `refusal.MACHINE_CANNOT_SEND` by key from `ACTION_HOLDS_WORDS`, never a copy, its code, number and
    `where` unmoved; C-149.11 `HOLD_NOT_IN_PLACE` and C-149.8 `HOLD_PLACE_REFUSED` keep their present translations, and
    no other row moves. Each refusal with its control (K874). */
@@ -11,8 +9,8 @@ import { world, V, MACHINE, received } from "./fixture.mjs";
 import * as holds from "../../../src/action-holds/index.mjs";
 import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.mjs";
 
-const A = "ACTN-2026-0001-a", I = "INFO-2026-0001-d";
-const ALICE = V("alice"), BOB = V("bob");
+const A = "ACTN-2026-0001-a";
+const ALICE = V("alice");
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
   import.meta.url), "utf8")).words;
@@ -31,53 +29,8 @@ function ground() {
   w.st.db.exec(`CREATE TABLE IF NOT EXISTS cases (case_id TEXT PRIMARY KEY, project_id TEXT NOT NULL, opened TEXT NOT NULL)`);
   w.st.db.exec(`INSERT INTO cases VALUES ('CASE-2026-0001', '${D}', 't')`);
   const hold = (x) => w.h.actionHold({ hold: "in_place", reason: "preserving", viewer: ALICE, author: ALICE, ...x });
-  const release = (x) => w.h.actionHoldRelease({ reason: "the matter closed", viewer: ALICE, author: ALICE, ...x });
-  return { w, P, D, hold, release };
+  return { w, P, D, hold };
 }
-/* Everything a release could write. */
-const state = (w) => JSON.stringify(["action_holds", "action_hold_projects", "hold_notices", "manifest", "bundles"]
-  .map((t) => w.rows(`SELECT * FROM ${t} ORDER BY rowid`)));
-
-test("R14 actionHoldRelease where no hold has been placed is refused HOLD_NOT_IN_PLACE through holdNotInPlace, at every place, writing nothing; a released place is still HOLD_ALREADY_RELEASED; controls: a hold in place is released", () => {
-  const { w, P, D, hold, release } = ground();
-  /* each place R2 names, with no statement standing there: the one minter's answer, byte for byte, and nothing written */
-  const places = [[{ target: A, ord: 0 }, { target: A, ord: 0 }], [{ target: A }, { target: A, ord: null }],
-                  [{ project: P }, { project: P }], [{ case: "CASE-2026-0001" }, { project: D, case: "CASE-2026-0001" }]];
-  const before = state(w);
-  for (const [given, where] of places) {
-    const r = release(given);
-    assert.deepEqual(r, holds.holdNotInPlace(where), JSON.stringify(given));
-    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation],
-      [false, "HOLD_NOT_IN_PLACE", "HOLD_NOT_IN_PLACE", "C-149.11", holds.ACTION_HOLDS_CHECKS.HOLD_NOT_IN_PLACE.translation]);
-    assert.match(r.detail, /released, only while one is in place\. Nothing was written\.$/, "the one fixed sentence says it of a release too");
-  }
-  assert.equal(state(w), before, "no refusal writes a statement or its projects");
-  /* asked where HOLD_ALREADY_RELEASED is: every refusal R5 asks before it comes first */
-  assert.deepEqual([release({ target: A, ord: 0, author: MACHINE }), release({ ord: 0 }), release({ target: A, ord: 0, reason: "" }),
-    release({ target: A, ord: 9 }), release({ target: I }), release({ target: A, ord: 0, viewer: "nobody" }),
-    release({ target: A, project: P })].map((r) => r.reason),
-    ["MACHINE_CANNOT_SET_HOLD", "NO_TARGET", "HOLD_REFUSED", "HOLD_PLACE_REFUSED", "NO_SUCH_BUNDLE", "NO_SUCH_BUNDLE",
-     "HOLD_PLACE_REFUSED"]);
-  assert.equal(release({ project: P, viewer: BOB, author: BOB }).reason, "NO_SUCH_PROJECT", "a place she may not name, as before");
-  /* the op answers it too, with the control plane's stamps */
-  const op = holds.actionHoldsOps(w.h, new URL(`https://x/?target=${A}&ord=1&reason=done&viewer=${ALICE}&author=${ALICE}`), null);
-  assert.deepEqual(op.actionholdrelease(), holds.holdNotInPlace({ target: A, ord: 1 }));
-  assert.equal(state(w), before);
-  /* the preview still answers a place with none stated (R6 unchanged): nothing to restart */
-  assert.deepEqual(w.h.holdReleasePreview({ project: P, viewer: ALICE }), { ok: true, project: P, hold: null, restarts: [], out_of_view: false });
-  /* controls: a hold in place at each place is released; then each is HOLD_ALREADY_RELEASED, never HOLD_NOT_IN_PLACE */
-  for (const [given] of places) {
-    assert.equal(hold(given).ok, true, JSON.stringify(given));
-    const r = release(given);
-    assert.deepEqual([r.ok, r.hold], [true, "released"], JSON.stringify(given));
-    const again = release(given);
-    assert.deepEqual([again.reason, again.check], ["HOLD_ALREADY_RELEASED", "C-149.5"], JSON.stringify(given));
-  }
-  assert.deepEqual(w.h.holdsReleased({ viewer: ALICE }).items.length, 4, "each landed release ended a hold in place");
-  /* placed again after a release, it is released again */
-  assert.equal(hold({ target: A, ord: 0 }).ok, true);
-  assert.equal(release({ target: A, ord: 0 }).ok, true);
-});
 
 test("R15 C-149.10 MACHINE_CANNOT_SEND reads words.json's refusal.MACHINE_CANNOT_SEND by key from ACTION_HOLDS_WORDS, never a copy; its code, number and where unmoved; answered at the act", () => {
   assert.ok(Object.isFrozen(holds.ACTION_HOLDS_WORDS));

@@ -28,6 +28,14 @@ Not-yet-met marks this job meets: **R14, R15**, each named by `t46.test.mjs`.
 
 Size (session_01KoRoRu2gZWmcRcS7HdgM6n): test runs 7, module lines 1223
 
+
+**After B2** (CHANGE, K2981: R14 retired; `tranche/T46` merged into this branch). R14's behaviour undone: a release at a place where no hold was ever placed is accepted again, as R5 states (the statement that none was needed), with its restarts; a place whose latest statement is `released` is still `HOLD_ALREADY_RELEASED`. `index.mjs`, `holds.test.mjs` and `due.test.mjs` are back to their T45 state (R5's control "an entry with no hold stated may be released" restored), but for `index.mjs` exporting `ACTION_HOLDS_WORDS`. `holdNotInPlace` stays `HOLD_NOT_IN_PLACE`'s one minter; its fixed `detail` is back to the notice sentence, the only arm that answers it (`holdNoticeSent`, `filings` R47), so my re-wording is dropped. R14's test is removed; `t46.test.mjs` names R15 alone. R15 unchanged. Net change of this job against T45: `checks.mjs` (R15's word by key), the one export line, `t46.test.mjs`.
+- `node --test bio-plane/test/m/action-holds/`: tests 37, pass 37, fail 0. `action-producers`, `filings`, `queue` action, `membership` t42-hold-reach: tests 138, pass 138, fail 0.
+- `checks/format.mjs` 0 failures; `architecture.mjs action-holds` 11 product files, 0 failures; `coverage.mjs action-holds` 15 of 15 live ids named, 0 failures; `ownership.mjs action-holds tranche/T46` 0 failures.
+- The J1 REPORT is settled by the CHANGE: nothing owed in `action-producers`. (My J2 COMPLETE called that report J2; it is J1.)
+
+Size (session_01KoRoRu2gZWmcRcS7HdgM6n): test runs 10, module lines 1217
+
 ## J1 · REPORT
 
 A flaw R14 opens in another module (`action-producers`; also the `litigation-hold` kind texts in `queue` and `queuestate`), against its R5/R11:

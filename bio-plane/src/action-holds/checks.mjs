@@ -16,8 +16,9 @@ const at = (fn, region) => `src/action-holds/index.mjs ${fn} > ${region}`;
    R15 names translate by, each `en` verbatim, read by key (`refusal.<CODE>`), as membership's `HANDLE_WORDS` and
    extraction's `TRANSCRIBE_WORDS` are. The design stream's words: re-worded there, then re-taken here by key; a row never
    holds a copy of its sentence. `refusal.HOLD_NOT_IN_PLACE` and `refusal.HOLD_PLACE_REFUSED` are not taken in T46: each
-   sentence says less than the requirement it answers (R14's release where no hold was placed; R2's entry and project
-   places), so both rows keep their own until the sentence and the requirement agree (K2953). */
+   sentence says less or other than the requirement it answers (a notice, where R11's `holdNotInPlace` is the one minter
+   of a condition its other callers answer too; R2's entry and project places), so both rows keep their own until the
+   sentence and the requirement agree (K2953). */
 export const ACTION_HOLDS_WORDS = Object.freeze({
   "refusal.MACHINE_CANNOT_SEND": "Only a member records that the hold notice was sent. Nothing was written.",
 });
@@ -75,8 +76,7 @@ export const ACTION_HOLDS_CHECKS = Object.freeze({
       + 'so nothing was written.',
   }),
   /* R11 (v0.2 rules 10, 12): the hold notice, sent by a member's own hand; `HOLD_NOT_IN_PLACE` minted only by the exported
-     `holdNotInPlace`, which `filings` R47 calls too (K2848), and which R14's release where no hold was placed answers
-     through. R15 (T46): `MACHINE_CANNOT_SEND` reads `words.json` by key; `HOLD_NOT_IN_PLACE` keeps its own (K2953). */
+     `holdNotInPlace`, which `filings` R47 calls too (K2848). R15 (T46): `MACHINE_CANNOT_SEND` reads `words.json` by key; `HOLD_NOT_IN_PLACE` keeps its own (K2953). */
   MACHINE_CANNOT_SEND: Object.freeze({
     check: 'C-149.10', where: at("holdNoticeSent", "is-machine-send"),
     translation: ACTION_HOLDS_WORDS["refusal.MACHINE_CANNOT_SEND"],
