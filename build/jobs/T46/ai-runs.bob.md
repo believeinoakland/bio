@@ -17,3 +17,7 @@ Merge order in L6: hypotheses, steps, run-rules, ai-runs, reading-guides, skills
 ## B2 · ANSWER · re J1
 
 K2947: (1) is the intended wire: the door (control-plane, T46-59) hands the member's presented `ai` credential in process to `dispatchMemberRun`; you check it is on record, unrevoked and the run's own principal_plane, send it as `credential` for that call only, and drop it; nothing is minted or held. (2) the account as you state. (3) the refusals and the two reused codes as you propose; no new row beyond J2's. AGENT-WORKER #19 reads the same wire: /run adds no admission, R80 is met by its tests.
+
+## B3 · ANSWER · re J2
+
+K2947: RUN-RULES #13 adds the row as run-rules R32 (C-22.30, DEC-83's form, your `where`, the interim translation you proposed), a CHANGE to that job. Read it by key; until run-rules merges, your null-row handling and test as you describe; I will send a CHANGE when run-rules is merged.
