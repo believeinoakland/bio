@@ -1,0 +1,11 @@
+Depth 2. Your entry: `build/plan/current.md` (T46), layer 10, following: T46-42 · (N921) R24's `promises_met` reads plan-work R13's `met_at` (one source) · text BOB's · after T46-41.
+Your requirements: `build/requirements/following.md` (read whole). Marked `*(not yet met: T46)*`: R27 (folded K2960).
+Your provider changed in L9: `plan-work` (R15: `matterPromiseDuties`, its R13, also answers `met_at`; T46-40); read its Provides as merged on `tranche/T46`.
+You merge after monitoring (L10's order); if you use nothing monitoring changes you may complete before it, and BOB merges you after it.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START, and those named in K2924–K2973; none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 853 KB with your tests (K2700; used public parts 581 KB across 19 modules, an upper bound), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
+Merge order in L10: monitoring, then following.

@@ -1,0 +1,117 @@
+{
+ "wizard-scripts": {
+  "special": [
+   "`main` has not moved since T46's opening (still 8e5f57fad0, carrying 3f40899950's design files): R29 re-takes `SCREEN_REGISTRY` from `registry.json` @ 3f40899950 (DEC-197: `handlechange` is gone from Your account's acts)."
+  ]
+ },
+ "op-grades": {
+  "special": [
+   "Measured before your START (M-T46-1): your module is 2,840 lines, under the ~4,000 split mark.",
+   "Reds that are yours in this job (rule 5): op-grades' `handlechange` NON_ACTS pin (`t41.test.mjs` R29) from T46-4's merge, and the totality tests over T46's new ops from their owners' merges (`escalationstoppursuing`, `escalationreopen`, `statusreportassist`, membership's N654 read `joindoors`, `infolevelset`, `infolevel`, `airundispatch`, `textcheck` if ungraded). You are the first of L11's op jobs: affordances, op-declarations, control-plane and plane read your grades after your merge."
+  ]
+ },
+ "affordances": {
+  "special": [
+   "Reds that are yours in this job (rule 5): affordances R48 ACT_HELP (N937), and the totality tests over T46's new ops from their owners' merges. You use op-grades' new grades: merge `tranche/T46` when BOB announces op-grades' merge (a CHANGE).",
+   "Your providers changed in L9: escalation R31 (stop and reopen, T46-38), action-clocks R20 (`clockProposalsFor`, `op=clockproposals`, T46-34), filings R7 (`second_needed`, T46-37); read their Provides as merged on `tranche/T46`."
+  ]
+ },
+ "action-producers": {
+  "special": [
+   "Your providers changed in L9 and L10: actions (R33's `overdue`, revision of an entry's status), action-clocks, following (`dutyWatchEnd`); read their Provides as merged on `tranche/T46`. N926 is yours, not action-clocks' (Settled 16: action-clocks, L9, cannot use following, L10)."
+  ]
+ },
+ "notice-producers": {
+  "special": [
+   "Your provider changed in L6: steps R12 (`stepsDue`'s `truncated`, K2955); queue R16 (disposal) as it stands. N889 (your R5, R6, R13–R15 sentences unkeyed) stays left out: words.json @ 3f40899950 keys none of them."
+  ]
+ },
+ "setup-words": {
+  "special": [
+   "You merge before instance-setup and setup-page, which read your rows. R1, R2 re-take `WORD_ROWS` from words.json @ 3f40899950 (1,503 words, 549 protected), `WORDS_COMMIT` that commit."
+  ]
+ },
+ "instance-setup": {
+  "special": [
+   "Measured before your START (M-T46-1): your module is 3,447 lines. If your additions would take it past ~4,000 (K617), say so in a QUESTION before writing past it; BOB decides the split.",
+   "A new `uses` edge `instance-setup` → `ai-runs` (earlier, L6) is yours for R80 (`testInstance()`, ai-runs R78); BOB adds it to `modules.json` when you name it in your COMPLETE. You merge before setup-page (doubt 14), interface-shell, the screens and control-plane, which read `bootstrap`'s `test_instance` and `parts`."
+  ]
+ },
+ "setup-page": {
+  "special": [
+   "Measured before your START (M-T46-1): your module is 2,580 lines.",
+   "You merge after instance-setup (doubt 14): R33's notice reads `bootstrap`'s `test_instance` (instance-setup R80) and R30 its `parts` (R81); merge `tranche/T46` when BOB announces instance-setup's merge. Home (Bob, K2893): R32's landing is `/app`, which control-plane R75 serves (T46-59, later in L11): test against your own interface, not the route."
+  ]
+ },
+ "answer-envelope": {
+  "special": [
+   "Reds that are yours in this job (rule 5): `catalogue-end.test.mjs` from action-plans' merge (C-124.30, re-worded under N913). C-113.7 and C-116.27 keep their translations in T46 (K2953): R7's snapshot re-pins only what the owners changed.",
+   "For L11 (K2960): the row `DISCLOSURE_DUE` (control-plane R65's refusal) is held in your table beside the door's other rows, the next free C-69 number, read by key. You merge before plane."
+  ]
+ },
+ "interface-assets": {
+  "new": true,
+  "special": [
+   "You are first of the six new interface modules (T46-53…58); interface-shell and the screens use you."
+  ]
+ },
+ "interface-shell": {
+  "new": true,
+  "special": [
+   "You use interface-assets, setup-words, setup-page, op-declarations and op-grades: merge `tranche/T46` when BOB announces each of their merges. The four screen modules and control-plane follow you.",
+   "Measure your own lines at COMPLETE (M-T46-1, estimate 3,200–3,800); if you would pass ~4,000 (K617), say so in a QUESTION before writing past it.",
+   "Every AI output drawn carries the test-instance label `untested` as screens-inquiry R7 states (K2816 (2)) wherever the shell draws one."
+  ]
+ },
+ "screens-settings": {
+  "new": true,
+  "special": [
+   "You follow interface-shell (merge `tranche/T46` at its merge's CHANGE). For L11 (K2960): the `connect` screen reads `op=bootstrap`'s `parts` (instance-setup R81) and offers the sign-in only while `signin` is present (trial §3.2); every AI output drawn (your R6) carries the test-instance label `untested` as screens-inquiry R7 states (K2816 (2)). DEC-197: R1 draws no \"formerly\", R3 no `handlechange` act and the fixed handle in DEC-197's words."
+  ]
+ },
+ "screens-intake": {
+  "new": true,
+  "special": [
+   "You follow interface-shell (merge `tranche/T46` at its merge's CHANGE). For L11 (K2960): every AI output drawn (your R3) carries the test-instance label `untested` as screens-inquiry R7 states (K2816 (2))."
+  ]
+ },
+ "screens-daily": {
+  "new": true,
+  "special": [
+   "You follow interface-shell (merge `tranche/T46` at its merge's CHANGE). For L11 (K2960): every AI output drawn (your R6) carries the test-instance label `untested` as screens-inquiry R7 states (K2816 (2))."
+  ]
+ },
+ "installer": {
+  "special": [
+   "Bob has not named the stewards' contact address (K2799) by this START: R48's address part (the README and public documentation publishing it, what the stewards may do and the plain guide) stays left out, and its `*(not yet met: T46)*` mark is an accepted red carried to T47 (rule 5 (1)); do the rest of your entry (R49, R38, R23). If BOB sends a CHANGE naming the address before you complete, R48 joins this job.",
+   "Your reading set's size is the embedded signed release (`newgroup/src/release.mjs`) and other generated files, which are not read; read your requirements, your own source and tests whole."
+  ]
+ },
+ "plane": {
+  "special": [
+   "Measured before your START (M-T46-1): your module is 1,988 lines.",
+   "M-T46-6, measure first: whether `plane/ask.mjs` `draftOnObject` (:290) sends `secret: ref.key` for a sign-in account, which agent-worker's R6 refuses `BAD_ACCOUNT`; if so, send none for a sign-in, in this job.",
+   "Reds that are yours in this job (rule 5): the route map's tests and totality over T46's new ops from their owners' merges. K2950: a test that the plane's Store renumbers a store holding notes and turns on workerd without a `TEMP` table (hypotheses R23 at the plane's shape, moved from hypotheses' tests). You merge last in L11, after control-plane, answer-envelope and stewards if it runs."
+  ]
+ },
+ "op-declarations": {
+  "special": [
+   "Measured before your START (M-T46-1): your module is 3,578 lines. If your additions would take it past ~4,000 (K617), say so in a QUESTION before writing past it.",
+   "Reds that are yours in this job (rule 5): the four R21/R27 registry tests (N937), and the totality tests over T46's new ops from their owners' merges. `airundispatch`'s spec: a member's act, admitted for her session or her own `ai` credential, mutating, `by` stamped, `run` a body field, no field carrying a credential (K2976: the dock presents her member-scoped credential in the header). You merge before interface-shell, the screens, control-plane and plane."
+  ]
+ },
+ "screens-inquiry": {
+  "new": true,
+  "special": [
+   "You follow interface-shell (merge `tranche/T46` at its merge's CHANGE). K2976 settles the dock's member run (your R6, folded): the dock mints her a one-day member-scoped credential, opens the run under it, presents it in the `Authorization` header at each `airundispatch`, holds it in page memory only and revokes it at the run's end; a reloaded dock starts a new run. Every AI output drawn carries the test-instance label `untested` (your R7)."
+  ]
+ },
+ "control-plane": {
+  "special": [
+   "Measured before your START (M-T46-1): your module is 3,529 lines. Your T46 additions (R75, R76, R77, the end-to-end suite) may pass ~4,000 (K617): measure as you go and say so in a QUESTION before writing past it; BOB decides the split.",
+   "Reds that are yours in this job (rule 5): your two op-table tests R2, R41, R47, R48 (N938), and the route map and totality over T46's new ops from their owners' merges.",
+   "K2952 and K2976 (R77, folded): the member-run door calls `ai-runs.dispatchMemberRun({run, by, viewer, credential, at})` in process with the caller's presented `ai` credential; `aiRunsOps` holds no `airundispatch` entry. Check at START whether the presented credential reaches `dispatchMemberRun` only through the Worker's internal fetch to the store: if so it travels in that request's `Authorization` header only, never a query or body. The dock presents her member-scoped credential in the header (screens-inquiry R6).",
+   "For L11 (K2960): plan-work R14 answers the items directly (no AI refusal, K2953): `draftDue` recognises the items answer. New `uses` edges to the six new modules are yours; name them in your COMPLETE. You merge after the screens and before installer and plane."
+  ]
+ }
+}
