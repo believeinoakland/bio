@@ -84,4 +84,4 @@ Tests: 45/45 over the served page (the words check proven by a planted raw strin
 
 **Kit gaps remaining (REPORT J7):** `ask`'s stream; reads weighed as reasoned; `frontier` in no session set. Each is described in J7.
 
-Size (session_01RJBRXS3sxyhSh6P5LL6g9S): test runs 27, module lines 1135 (tests 693)
+Size (session_01RJBRXS3sxyhSh6P5LL6g9S): test runs 27, module lines 1135 (tests 918)
