@@ -49,7 +49,7 @@ const T41_UNDETERMINED = ["stepdelete", "steprefer", "stepproduct", "costmessage
   "bearingnote", "guidedraft", "guideoffer", "guideadopt", "accountpropose", "caseapprove", "grouptestset",
   "captureupload", "steplearn", "guideproposetocivicsmith"];
 
-test("R1 R3 (N891): RUNGS is a closed partition — every op it ranks is one a requirement ranks, in its band, and no other; "
+test("R1 R3 R33 (N891): RUNGS is a closed partition — every op it ranks is one a requirement ranks, in its band, and no other; "
    + "DEC-88's three bands word for word among them; a misbanded op, or one of the 57 left out, is seen", () => {
   const want = {
     irreversible: ["publish", "publishat", "publishatmove" /* R14 */],
@@ -82,6 +82,8 @@ test("R1 R3 (N891): RUNGS is a closed partition — every op it ranks is one a r
   want.reversible.push("followend", "actionpromise", "actionreplybearing", "actionbearingpropose", "curelink",
     "matteroutcomeset", "plancomment", "declaredstakeset" /* B6, K2896 */);
   want.irreversible.push("publishcheck");
+  /* R33 (T46) */
+  want.reasoned.push("escalationstoppursuing", "escalationreopen");
   want.terminal.push("filingsecondapprove");
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(RUNGS, op)) want[RUNGS[op]].push(a);
   for (const k of Object.keys(want)) want[k].sort();
@@ -96,7 +98,7 @@ test("R1 R3 (N891): RUNGS is a closed partition — every op it ranks is one a r
   assert.notDeepEqual(bandsOf(withoutOne), want);
 });
 
-test("R1 R8 R14 R32 (N891): the closed `terminal` set is retire, DEC-88's two, actionholdrelease and (T45) "
+test("R1 R8 R14 R32 R33 (N891): the closed `terminal` set is retire, DEC-88's two, actionholdrelease and (T45) "
    + "filingsecondapprove; `irreversible` is publish, the two that set when a signed edition publishes, and publishcheck", () => {
   const of = (r) => Object.keys(RUNGS).filter((op) => RUNGS[op] === r && !Object.hasOwn(OP_ALIASES, op)).sort();
   assert.deepEqual(of("terminal"), ["actionholdrelease", "escalationend", "filingapprove", "filingsecondapprove", "retire"]);
@@ -110,7 +112,7 @@ const R3_LEFT = ["inboxpull", "contradictionrecommend", "contradictionoptin", "c
   "templatesave", "actioncreate", "actionpressure", "planopen", "optionadd", "optionpropose", "optionadopt",
   "checkpointrecord", "optionstart", "templatedraft", "templaterevise", "templatepropose", "templatesubmit",
   "templatereview", "templatecomment", "templateapprove"];
-test("R3 (N891): the `undetermined` ground is closed — exactly R3's 21 and the ops ruled onto it later on R3's rule, and "
+test("R3 R33 (N891): the `undetermined` ground is closed — exactly R3's 21 and the ops ruled onto it later on R3's rule, and "
    + "no other; the 78 held before DEC-88 are the 21 and DEC-88's 57; a later op left out, or one of the 57 left there, "
    + "is seen", () => {
   const LATER = ["whatchangedpropose", "docketpressure", "caseimport", "caseimportdocument", "wizarddraft", "wizardrevise",
@@ -120,12 +122,14 @@ test("R3 (N891): the `undetermined` ground is closed — exactly R3's 21 and the
     /* R32 (T45), named by hand */
     "dutyfromresponse", "actionreceipt", "holdnoticesent", "pressurerecord", "watchlink", "watchanswer", "jointsignatory",
     "holdnoticeprepare", "arosefrom", "successrecord", "outcomecarry", "clockstate", "planreviewrecord", "prepitemadd",
-    "prepitemdone", "statusreportsave", "ruleconfirm",
+    "prepitemdone", "statusreportsave", "ruleconfirm", "advocacycheck" /* K2881 */,
+    /* R33 (T46), named by hand */
+    "airundispatch",
     ...Object.keys(OP_ALIASES).filter((a) => RUNG_ABSENT[OP_ALIASES[a]]?.ground === "undetermined")];
   assert.equal(new Set(LATER).size, LATER.length);
   assert.deepEqual(undeterminedOf(T36_RUNG_ABSENT), ["deepercheck", "safecopyrequest"]);
   assert.deepEqual(undeterminedOf(T41_RUNG_ABSENT), [...T41_UNDETERMINED].sort());
-  assert.equal(undeterminedOf(T45_RUNG_ABSENT).length, 17);
+  assert.equal(undeterminedOf(T45_RUNG_ABSENT).length, 18);
   const left = undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op));
   assert.deepEqual(left, [...R3_LEFT].sort());
   assert.equal(left.length, 21, "R3's count: DEC-88 moved 57 of the 78 into RUNGS");
