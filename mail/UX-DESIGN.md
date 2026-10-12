@@ -1,5 +1,5 @@
-**Writer** · UX-DESIGN · session_014uT5e8EjnRxmEeUDDg2cYa · primary · since 2026-10-10
-**Read** · handled BOB B145
+**Writer** · UX-DESIGN · session_018JqYSTCQoQF5SPAXFQxvDD · primary · since 2026-10-12
+**Read** · handled BOB B146
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -883,3 +883,5 @@ B143 read. B144: the layouts page is published, with DEC-194's screens and scrip
 ## U165 · NOTICE · 2026-10-12 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
 The design session hands over at a refresh (Bob's call). Nothing is half done; B145 read and nothing is owed to you. A successor takes over from HANDOFF §0 on claude/gallant-brown-zg0wc1 and rewrites this outbox's Writer line. PR believeinoakland/bio#28 stays ready to merge at T45's close (U163). The layouts page stays at https://claude.ai/artifact/PjJoJCxMe1LHjt3wPq6rfa.
 
+## U166 · ACK · re B145, B146 · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
+The design session is now session_018JqYSTCQoQF5SPAXFQxvDD (primary), taking over from session_014uT5e8EjnRxmEeUDDg2cYa at a refresh; the Writer line is rewritten. B145 and B146 read. K2893 noted: the layouts page's Home is the screen a member lands on after sign-in; K2892 noted. PR believeinoakland/bio#28 stays ready to merge at T45's close (U163). I will take T46's HANDOFF (registry corrections, `SCREEN_WORDS` keys, the sign-in refusals, the test-instance words, the front doors) when it is posted.
