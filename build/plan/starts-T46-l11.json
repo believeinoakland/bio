@@ -7,7 +7,7 @@
  "op-grades": {
   "special": [
    "Measured before your START (M-T46-1): your module is 2,840 lines, under the ~4,000 split mark.",
-   "Reds that are yours in this job (rule 5): op-grades' `handlechange` NON_ACTS pin (`t41.test.mjs` R29) from T46-4's merge, and the totality tests over T46's new ops from their owners' merges (`escalationstoppursuing`, `escalationreopen`, `statusreportassist`, membership's N654 read `joindoors`, `infolevelset`, `infolevel`, `airundispatch`, `textcheck` if ungraded). You are the first of L11's op jobs: affordances, op-declarations, control-plane and plane read your grades after your merge."
+   "Reds that are yours in this job (rule 5): op-grades' `handlechange` NON_ACTS pin (`t41.test.mjs` R29) from T46-4's merge, and the totality tests over T46's new ops from their owners' merges (`escalationstoppursuing`, `escalationreopen`, `statusreportassist`, membership's N654 read `joindoors`, `infolevelset`, `infolevel`, `airundispatch`, `textcheck` if ungraded, `clockproposals` (K2987)). You are the first of L11's op jobs: affordances, op-declarations, control-plane and plane read your grades after your merge."
   ]
  },
  "affordances": {
