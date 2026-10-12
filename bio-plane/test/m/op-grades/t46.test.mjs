@@ -160,6 +160,20 @@ test("R33: affordances R12's totality holds over a stand-in of op-declarations R
     ["infolevelset"]);
 });
 
+test("R33 (K2998): clockadopt is an ACTS row on an action (affordances R52) — it leaves NON_ACTS, MACHINE_REFUSALS gains "
+   + "it with MACHINE_CANNOT_ADOPT_CLOCK, and its `undetermined` absence stands", () => {
+  assert.ok(!Object.hasOwn(NON_ACTS, "clockadopt"), "an act, never a non-act too");
+  assert.equal(MACHINE_REFUSALS.clockadopt, "MACHINE_CANNOT_ADOPT_CLOCK");
+  assert.equal(RUNG_ABSENT.clockadopt.ground, "undetermined");
+  assert.ok(!Object.hasOwn(RUNGS, "clockadopt"));
+  assert.equal(phoneOf("clockadopt"), true);
+  /* negative controls: its proposal (clockpropose) stays a non-act with no machine refusal; the read beside it too */
+  for (const op of ["clockpropose", "clockproposals"]) {
+    assert.ok(Object.hasOwn(NON_ACTS, op), op);
+    assert.ok(!Object.hasOwn(MACHINE_REFUSALS, op), op);
+  }
+});
+
 /* ---- R34 ----------------------------------------------------------------------------------------------------------- */
 test("R34: handlechange stays where R29 puts it (`caller-owned`, no rung, phone true) and its sentences state the refusal "
    + "it now is — NON_ACTS word for word, its absence naming membership R129 and never R124; neither says a handle is "

@@ -891,6 +891,9 @@ export const MACHINE_REFUSALS = {
      each refused a machine by escalation's own code (its R31); neither has a NON_ACTS row. */
   escalationstoppursuing: "MACHINE_CANNOT_STOP",
   escalationreopen:       "MACHINE_CANNOT_STOP",
+  /* R33 (T46; K2998; affordances R52): adopting a clock proposal is an ACTS row on an action, refused a machine by
+     action-clocks' own code; its absence (`undetermined`) stands and it left NON_ACTS. */
+  clockadopt:             "MACHINE_CANNOT_ADOPT_CLOCK",
 };
 
 /* (T45; R8, R32; K2885, K2887) The 21 acts `affordances` R51 makes ACTS rows on an action target are named here no

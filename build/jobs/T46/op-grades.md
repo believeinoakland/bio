@@ -25,6 +25,14 @@
 
 Size (session_0123yhdXmCvnXfwMqnZcKEqr): test runs 12, module lines 2922
 
+## Record (B3, CHANGE K2998)
+
+Merged `tranche/T46`. R33's `clockadopt` applied: it left `T33_NON_ACTS`, and `MACHINE_REFUSALS` gains `clockadopt: "MACHINE_CANNOT_ADOPT_CLOCK"` (action-clocks' code, checked in its `checks.mjs`); its `RUNG_ABSENT` (`undetermined`) stands. Tested by name with a control (`t46.test.mjs`: clockpropose and clockproposals stay non-acts with no machine refusal); `owners.test.mjs` R13 and `ladder.test.mjs` R5 re-pinned to it.
+- op-grades: 79 pass, 0 fail. format 0; architecture (op-grades) 22 files, 0; coverage 34/34, 0; ownership 0 (below).
+- Users: affordances + control-plane totality 228 pass, 7 fail: beside J2's two, one more affordances red closed by its own T46-45 row, "R12 R24: with the control plane's rows for them …" (`clockadopt` not yet an ACTS row); the rest pre-existing and named.
+
+Size (session_0123yhdXmCvnXfwMqnZcKEqr): test runs 14, module lines 2922
+
 ## J1 · QUESTION
 
 Two readings I am carrying on with; answer only if either is wrong.

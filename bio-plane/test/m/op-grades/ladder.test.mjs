@@ -152,7 +152,9 @@ test("R5: MACHINE_REFUSALS maps each act refused a machine by name to its code; 
     counselpacket: "MACHINE_CANNOT_NAME_COUNSEL", filingapprove: "MACHINE_CANNOT_APPROVE", filingsent: "MACHINE_CANNOT_FILE",
     clockstate: "MACHINE_CANNOT_STATE_CLOCK", reminderset: "MACHINE_CANNOT_SET_REMINDER", itemtakeup: "MACHINE_CANNOT_PLAN",
     /* R33 (T46; affordances R52): stopping and reopening an escalation, ACTS rows on an action */
-    escalationstoppursuing: "MACHINE_CANNOT_STOP", escalationreopen: "MACHINE_CANNOT_STOP" });
+    escalationstoppursuing: "MACHINE_CANNOT_STOP", escalationreopen: "MACHINE_CANNOT_STOP",
+    /* R33 (T46; K2998): adopting a clock proposal, an ACTS row on an action */
+    clockadopt: "MACHINE_CANNOT_ADOPT_CLOCK" });
   /* R32: the four that admit a machine take no row, and no ACTS row is also a non-act */
   for (const op of ["filingprepare", "communicationprepare", "holdnoticeprepare", "actionbearingpropose"])
     assert.ok(!Object.hasOwn(MACHINE_REFUSALS, op), op);
