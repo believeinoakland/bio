@@ -84,6 +84,7 @@ export function w(key, fills = {}) {
 }
 const used = new Set();
 export const usedKeys = () => new Set(used);
+export const resetUsed = () => used.clear();
 export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 /** A word's text with its fills, as a drawn text node reads it (unescaped), for comparison. */
 export const said = (key, fills = {}) => unescape(w(key, fills));
@@ -117,27 +118,29 @@ const OWED = { subscriptionsignin: "owed_subscriptionsignin", infolevelset: "owe
 /** The kit a screen draws with (interface-shell R21 (5)), over the view. Each act button carries `data-act` and its
  *  `data-*`; `rows` draws each row's panel beneath it, as `data-panel-of`. */
 export function kit(view, screenId, hooks = {}) {
+  // traced: each word drawn between two invisible marks, so a test can tell words from data in what is drawn
+  const W = hooks.trace ? (k, f) => "\u2060" + w(k, f) + "\u2061" : w;
   const cs = {
-    w, esc,
+    w: W, esc,
     state(o, inner, opt = {}) {
-      if (!o || o.state === "loading") return `<p class="cs-state" data-state="loading">${w("state.loading")}</p>`;
-      if (o.state === "empty") return `<p class="cs-state" data-state="empty">${w(opt.empty || "state.empty")}</p>`;
-      if (o.state === "failed") return `<p class="cs-state" data-state="failed">${w("state.failed", { reason: o.refusal ? (o.refusal.words || o.refusal.code) : "no answer" })}</p>`;
+      if (!o || o.state === "loading") return `<p class="cs-state" data-state="loading">${W("state.loading")}</p>`;
+      if (o.state === "empty") return `<p class="cs-state" data-state="empty">${W(opt.empty || "state.empty")}</p>`;
+      if (o.state === "failed") return `<p class="cs-state" data-state="failed">${W("state.failed", { reason: o.refusal ? (o.refusal.words || o.refusal.code) : "no answer" })}</p>`;
       return inner(o.value);
     },
     act(op, o = {}) {
       if (!may(op, view.me)) return "";
       const key = o.label || `act.${OWED[op] || op}.label.${screenId}`;
       const data = Object.entries(o.data || {}).filter(([, v]) => v !== undefined).map(([k, v]) => ` data-${k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase())}="${esc(v)}"`).join("");
-      return `<button type="button" class="cs-btn" data-act="${esc(op)}"${data}>${w(key)}</button>`;
+      return `<button type="button" class="cs-btn" data-act="${esc(op)}"${data}>${W(key)}</button>`;
     },
     can(op) { return may(op, view.me); },
     set(name, value) { view.ui[name] = value; if (hooks.redraw) hooks.redraw(); },
     value(id) { return hooks.values ? hooks.values[id] : undefined; },
     call(op, o = {}) { return hooks.call(op, o.query || {}, o.body); },
-    sec(titleKey, inner) { return `<section class="cs-section"><h2>${w(titleKey)}</h2>${inner}</section>`; },
+    sec(titleKey, inner) { return `<section class="cs-section"><h2>${W(titleKey)}</h2>${inner}</section>`; },
     rows({ cols, items, key, cells, acts }) {
-      return `<table class="cs-table"><thead><tr>${cols.map((c) => `<th>${w(c)}</th>`).join("")}</tr></thead><tbody>${items.map((it) => {
+      return `<table class="cs-table"><thead><tr>${cols.map((c) => `<th>${W(c)}</th>`).join("")}</tr></thead><tbody>${items.map((it) => {
         const k = key(it);
         const panel = acts ? acts(it) : "";
         return `<tr data-row="${esc(k)}">${cells(it).map((c) => `<td>${c}</td>`).join("")}</tr>${panel ? `<tr class="cs-panel" data-panel-of="${esc(k)}"><td colspan="${cols.length}">${panel}</td></tr>` : ""}`;
@@ -180,11 +183,11 @@ export const screen = (id) => SCREENS.find((s) => s.id === id);
 
 /** Runs one screen as the shell does: its reads over the fake plane (each pending read drawn loading), then its render.
  *  `states` stands a read's outcome in directly. */
-export async function open(id, { me, table, subject = null, reachable = false, origin = "https://group.example", states = {}, s: given = null } = {}) {
+export async function open(id, { me, table, subject = null, reachable = false, origin = "https://group.example", states = {}, s: given = null, trace = false } = {}) {
   const s = given || screen(id);
   const p = plane(table);
   const view = { subject, data: {}, me, ui: {}, reachable, origin, parts: s.parts };
-  const hooks = { values: {}, call: p.call };
+  const hooks = { values: {}, call: p.call, trace };
   const out = { s, p, view, opened: [], refused: null };
   const cs = kit(view, id, hooks);
   out.cs = cs;

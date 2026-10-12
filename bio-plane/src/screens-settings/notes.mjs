@@ -71,7 +71,8 @@ export const notes = {
         const d = view.data || {};
         const tell = !!(d.court && d.court.state === "ok" && d.court.value && d.court.value.choice === "tell");
         const first = !!(d.notes && d.notes.state === "empty");
-        if ((a && a.courtStatement) || (tell && first)) cs.set("court", true);
+        const court = !!((a && a.courtStatement) || (tell && first));
+        if (court || (view.ui && view.ui.court)) cs.set("court", court);
         if (view.ui && view.ui.draft) cs.set("draft", null);
       } },
     { op: "noterevise", rereads: ["notes"],
