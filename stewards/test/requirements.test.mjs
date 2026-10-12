@@ -260,7 +260,7 @@ test("R7: /guide serves the shared guide words byte for byte as stewards/guide.m
     assert.ok(text.indexOf('id="guide"') < text.indexOf('id="service"'));
   }
   /* the shared words carry installer R48's third part: what and where, who controls it, who could be compelled. */
-  for (const re of [/own hosting account/, /Whoever can sign in to that hosting account controls your group's Civicsmith/, /your group itself, and its hosting provider, under the law that binds/, /stewards hold none of it/, /not legal advice/])
+  for (const re of [/own hosting account/, /Whoever can sign in to that hosting account controls your group's Civicsmith/, /your group itself \(and anyone in it who keeps a copy\), and its hosting provider, under the law that binds/, /stewards hold none of it/, /not legal advice/])
     assert.match(shared, re);
 });
 
@@ -638,7 +638,9 @@ test("R19: every page names Civicsmith, says \"a group's Civicsmith\", never cop
   for (const [p, text] of out) {
     const words = strip(text);
     assert.match(words, /Civicsmith/, p);
-    assert.doesNotMatch(words, /\b(copy|copies|instance|instances|plane|server)\b/i, p);
+    assert.doesNotMatch(words, /\b(instance|instances|plane|server)\b/i, p);
+    /* "copy" only in its other meanings (a copy of a document), never as a name for a group's Civicsmith. */
+    assert.doesNotMatch(words, /group(&#39;|')s (own )?cop(y|ies)|cop(y|ies) of (your |a )?(group(&#39;|')s )?Civicsmith|Civicsmith cop(y|ies)/i, p);
     for (const m of words.matchAll(/Believe in Oakland/g)) assert.match(words.slice(m.index, m.index + 60), /Believe in Oakland, the publisher of Civicsmith/, p);
   }
   assert.match(out.find(([p]) => p === "/guide")[1], /your group&#39;s Civicsmith/);
