@@ -1,6 +1,6 @@
 # affordances (T46)
 
-**Status** · session_01ALqCxKN9g4DMrH5R7g4DnX · depth 2 · WORKING · handled B3
+**Status** · session_01ALqCxKN9g4DMrH5R7g4DnX · depth 2 · WAITING ON BOB (J4) · handled B3
 
 ## J1 · QUESTION
 
