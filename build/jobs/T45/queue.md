@@ -1,6 +1,6 @@
 # queue (T45)
 
-**Status** · session_01RjHrzA8rocdW5JJBBdTHUw · depth 2 · COMPLETE · handled B2
+**Status** · session_01RjHrzA8rocdW5JJBBdTHUw · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · COMPLETE
 
