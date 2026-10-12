@@ -14,7 +14,7 @@ import { createHash } from "node:crypto";
 import { Miniflare } from "miniflare";
 import { pageOver, scriptOf } from "./fixture.mjs";
 import { deriveInquiryTitle } from "../../../src/record-grammar/index.mjs";
-import { pageOf, PAGE_HTML } from "../../../src/setup-page/index.mjs";
+import { pageOf, PAGE_HTML, SESSION_STORE_KEY } from "../../../src/setup-page/index.mjs";
 import { list as heldProfiles } from "../../../../jurisdictions/index.mjs";
 import { RISK_TIERS, riskTierState } from "../../../src/action-grammar/index.mjs";
 
@@ -122,7 +122,7 @@ const until = async (cond, what) => {
 /* This module's page over the plane's own public read of its group (op=instancegroup), as instance-setup's `setupPage`
    hands `pageOf` a read. */
 const readOf = async (mf) => { const r = await api(mf, "op=instancegroup"); return { answered: r.j && r.j.ok === true, result: r.j && r.j.result }; };
-const pageOn = async (mf, { hash = "", sent = [] } = {}) => pageOver({ html: pageOf(await readOf(mf)), hash,
+const pageOn = async (mf, { hash = "", sent = [], session = null } = {}) => pageOver({ html: pageOf(await readOf(mf)), hash, session,
   fetch: async (url, init) => {
     const u = new URL(url, "https://copy.example");
     sent.push({ op: u.searchParams.get("op"), body: init && init.body ? JSON.parse(init.body) : null });
@@ -135,10 +135,10 @@ const founderPage = async (mf, sent = []) => {
   await until(() => p.el("#boot").value === ADM, "the claim form");
   p.el("#pw1").value = "the-founders-password"; p.el("#pw2").value = "the-founders-password";
   await p.el("#do-claim").fire();
-  await until(() => p.sandbox.sessionStorage.getItem("bio-session"), "the signed-in claim section");
+  await until(() => p.sandbox.sessionStorage.getItem(SESSION_STORE_KEY), "the signed-in claim section");
   await p.el("#claim-on").fire();
   await until(() => p.el("#go-new").hidden === false, "the contribute capability");
-  return { ...p, token: JSON.parse(p.sandbox.sessionStorage.getItem("bio-session")).t, sent };
+  return { ...p, token: JSON.parse(p.sandbox.sessionStorage.getItem(SESSION_STORE_KEY)).t, sent };
 };
 
 /* ================================================================== R1: the group line over the plane's read */
@@ -382,9 +382,17 @@ test("R13 end to end through the Worker's route: the page shows the active profi
   await until(() => typeof member.el("#do-login").listeners.click !== "undefined", "the sign-in form");
   member.el("#lwho").value = "ada"; member.el("#lpw").value = "adas-own-password";
   await member.el("#do-login").fire();
-  await until(() => /class="k">1\./.test(member.el("#pf-active").innerHTML), "the member's view of the profiles");
-  assert.match(member.el("#pf-active").innerHTML, new RegExp(REAL[0].name));
-  assert.equal(member.el("#pf-choose").hidden, true);
+  /* R32: signed in, she is taken to Home with the session record written (R31); the page itself, opened again with
+     that record, shows the panel */
+  await until(() => member.sandbox.location.assigned.length > 0, "Home");
+  assert.deepEqual(member.sandbox.location.assigned, ["/app"]);
+  const record = JSON.parse(member.sandbox.sessionStorage.getItem(SESSION_STORE_KEY));
+  assert.equal(record.w, "ada");
+  const again = await pageOn(mf, { session: record });
+  await until(() => /class="k">1\./.test(again.el("#pf-active").innerHTML), "the member's view of the profiles");
+  assert.match(again.el("#pf-active").innerHTML, new RegExp(REAL[0].name));
+  assert.equal(again.el("#pf-choose").hidden, true);
+  assert.deepEqual(again.sandbox.location.assigned, [], "opening the page with a saved session does not leave it");
   /* choosing none: allowed, said before it is sent, and shown after */
   pick.checked = false; await pick.fire("change");
   admin.el("#pf-warn").hidden = true;

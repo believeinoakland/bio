@@ -4,6 +4,7 @@
    LIKE or GLOB pattern over workerd's 50 bytes (K313), which node:sqlite does not. */
 import { DatabaseSync } from "node:sqlite";
 import { webcrypto } from "node:crypto";
+import { SESSION_STORE_KEY } from "../../../src/setup-page/index.mjs";
 
 export const WORKERD_PATTERN_CAP = 50;
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -137,14 +138,16 @@ export function pageOver({ html, hash = "", session = null, fetch, globals = {} 
       files.push({ name: a.download, url: a.href, blob: u ? u.blob : null, clicked: true }); }; return a; },
     body: { appendChild() {}, removeChild() {} },
   };
-  const store = new Map(session ? [["bio-session", JSON.stringify(session)]] : []);
+  const store = new Map(session ? [[SESSION_STORE_KEY, JSON.stringify(session)]] : []);
   const sandbox = {
     document, fetch, URLSearchParams, console, JSON, Date, RegExp, String, Number, Object, Array, Set, Map, Promise,
     crypto: webcrypto, setTimeout, TextEncoder, encodeURIComponent, decodeURIComponent, Blob,
     URL: { createObjectURL: (blob) => { const url = `blob:https://copy.example/${objectUrls.length + 1}`; objectUrls.push({ url, blob, released: false }); return url; },
            revokeObjectURL: (url) => { const u = objectUrls.find((x) => x.url === url); if (u) u.released = true; } },
     addEventListener: (t, f) => { (winListeners[t] ||= []).push(f); },
-    location: { hash, pathname: "/", origin: "https://copy.example" },
+    /* R32: the browser leaving the page for another address: each `location.assign` is recorded in `assigned`, and the
+       page stays as it was (a test reads where it went) */
+    location: { hash, pathname: "/", origin: "https://copy.example", assigned: [], assign(u) { this.assigned.push(String(u)); } },
     history: { replaceState() { replaced += 1; sandbox.location.hash = ""; } },
     sessionStorage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: (k) => store.delete(k) },
     navigator: { clipboard: { writeText: async () => {} } },

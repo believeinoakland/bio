@@ -49,7 +49,7 @@ test("R65 the refusals, in order: NOT_AN_ADMIN (membership R84) before anything;
       + "your group already holds. Nothing was saved.");
   }
   assert.equal(writes(w), mark, "no refusal writes");
-  assert.ok(before <= mark);
+  assert.equal(mark, before, "NOT_AN_ADMIN and AI_KEPT_AWAY wrote nothing either");
 });
 
 test("R65 a draft that cannot be served (no turn handed in, as with no route to agent-worker's /draft) answers, past every refusal, wizard-scripts' ASSISTANT_DRAFT_UNAVAILABLE and nothing else, and writes nothing", async () => {

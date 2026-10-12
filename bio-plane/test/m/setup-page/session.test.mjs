@@ -6,7 +6,7 @@
    link the page draws or address it leaves in the browser's history. A `401` signs the page out. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { pageOf, PAGE_HTML } from "../../../src/setup-page/index.mjs";
+import { pageOf, PAGE_HTML, SESSION_STORE_KEY } from "../../../src/setup-page/index.mjs";
 import { pageOver, bearerOf, CATALOGUE } from "./fixture.mjs";
 
 const ORIGIN = "https://copy.example";
@@ -162,12 +162,12 @@ test("R26 a 401 answer signs the page out as today: a read, an act and a downloa
     const pl = plane({ unauthorized: new Set([op]) });
     const p = pageOver({ html: PAGE_HTML, session: { t: SENTINEL, e: 0, w: "admin" }, fetch: pl.fetch });
     await settle();
-    assert.ok(p.sandbox.sessionStorage.getItem("bio-session"), op);
+    assert.ok(p.sandbox.sessionStorage.getItem(SESSION_STORE_KEY), op);
     if (op === "list") { await p.ui.openBrowse(); await settle(); }
     if (op === "inboxresolve") { await p.ui.openInbox(); await settle(); p.el("#ir-0").value = "r"; await p.ibtns()[0].fire(); await settle(); }
     if (op === "capture") { await p.ui.openBundle("INFO-2026-0001-a"); await settle(); await p.dlbtns()[0].fire(); await settle(); }
     assert.ok(pl.log.some((c) => c.op === op), op);
-    assert.equal(p.sandbox.sessionStorage.getItem("bio-session"), null, op);
+    assert.equal(p.sandbox.sessionStorage.getItem(SESSION_STORE_KEY), null, op);
     assert.deepEqual(p.shown(), ["#s-login"], op);
   }
   /* on load: a kept session the plane no longer honours is dropped and the page asks no more under it */
@@ -175,7 +175,7 @@ test("R26 a 401 answer signs the page out as today: a read, an act and a downloa
   const p = pageOver({ html: PAGE_HTML, session: { t: SENTINEL, e: 0, w: "admin" }, fetch: pl.fetch });
   await settle();
   assert.deepEqual(pl.log.filter((c) => c.bearer).map((c) => c.op), ["stats"]);
-  assert.equal(p.sandbox.sessionStorage.getItem("bio-session"), null);
+  assert.equal(p.sandbox.sessionStorage.getItem(SESSION_STORE_KEY), null);
 });
 
 test("R26 the founder's claim: the session login answers is kept for the tab and sent only in the header from then on, the claim's own requests carrying none", async () => {
