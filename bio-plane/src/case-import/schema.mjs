@@ -1,4 +1,4 @@
-/* case-import's tables (requirements: `build/requirements/case-import.md` R1–R9, R12, R13, R17, R18, R21).
+/* case-import's tables (requirements: `build/requirements/case-import.md` R1–R9 (R4's group fields, T46), R12, R13, R17, R18, R21).
  *
  * APPEND-ONLY (R12): no act of this module updates or deletes a row. An import, an edition, its files, each recreation
  * (one `case_import_checks` row and its results and calculations per run: the import's, then each completion's), each acceptance,
@@ -165,6 +165,16 @@ CREATE TABLE IF NOT EXISTS case_import_edition_keys (
   keys          TEXT NOT NULL,
   PRIMARY KEY (import_id, edition)
 );
+-- R4 (T46; N903): the source group's public identity and declared stake (public-read R34's group_fields) as the
+-- caller read them at read_at, recorded with the edition when it was first imported, only when they are in R34's shape
+-- and name the manifest's group; the source's statement, unsigned, never this group's. At most one row per edition.
+CREATE TABLE IF NOT EXISTS case_import_group_fields (
+  import_id     TEXT NOT NULL,
+  edition       INTEGER NOT NULL,
+  fields        TEXT NOT NULL,
+  read_at       TEXT NOT NULL,
+  PRIMARY KEY (import_id, edition)
+);
 -- R17: a watch of the publisher's docket. The latest watch of an import is in force unless it has ended; a later one
 -- replaces an earlier.
 CREATE TABLE IF NOT EXISTS case_import_watches (
@@ -226,7 +236,7 @@ export const CASE_IMPORT_TABLES = Object.freeze(["case_imports", "case_import_ed
   "case_import_files", "case_import_blobs", "case_import_checks", "case_import_results", "case_import_calculations",
   "case_import_documents",
   "case_import_acceptances", "case_import_withdrawals", "case_import_flags", "case_import_clears",
-  "case_import_edition_keys", "case_import_watches", "case_import_watch_ends", "case_import_docket_reads",
+  "case_import_edition_keys", "case_import_group_fields", "case_import_watches", "case_import_watch_ends", "case_import_docket_reads",
   "case_import_docket_entries"]);
 
 /** Creates the tables; idempotent. */

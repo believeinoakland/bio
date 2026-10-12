@@ -46,6 +46,9 @@
  *   bias            `statementInForce` (its R49; R23), synchronous.
  *   reweigh         `case-checker`'s synchronous re-weighing under a reader lens (its R23; R23 here). Default: its own.
  *   caseFileManifestCheck   `case-grammar.caseFileManifestCheck` (its R13), pure.
+ * (T46; N903) An import may carry the source's `group_fields` (`public-read` R34), read by the caller at `read_at`: they
+ * are recorded with the edition, the source's own statement, when in R34's shape and naming the manifest's group, and
+ * answered per edition (R4); they never refuse an import, and nothing is fetched. No edge to `public-read`: its shape only.
  *   now             the clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
  *
  * The words a member sees (the origin marks, "another group's", the statement that recreating is not endorsing) are the
@@ -129,6 +132,45 @@ export const WATCH_PAGE_MAX = 200;
 export const NO_MOVE_SEEN = "No new edition or withdrawal of this case has been seen on its publisher's docket. That is "
   + "not a statement that none was made: it says only what your group's Civicsmith has seen in its reads, as of the last read.";
 export { DOCKET_UNREADABLE };
+
+/* ================================================================ R4 (T46; N903): the source group's identity and stake */
+
+/** R4 (`public-read` R34): the keys of a group's `group_fields`, and the instant the caller read them. */
+export const GROUP_FIELD_KEYS = Object.freeze(["group", "name", "domain", "domain_verified_at", "stake", "detail"]);
+/** R4: the label the recorded fields carry: the source's declaration as current when read, never as of the signing. */
+export const GROUP_FIELDS_LABEL = "the source group's public identity and declared stake, as it stated them when they were read; "
+  + "unsigned, not part of the edition, and never your group's";
+/** R4: why an edition answers `group_fields: null` (never a guess; `conformance` R32 reads identity null, stake undetermined). */
+export const GROUP_FIELDS_NONE = "The source group's public identity and declared stake were not recorded when this edition was "
+  + "imported, so they are not known here. Nothing is guessed: the identity reads as unknown and the stake as undetermined.";
+/* R4: the bounds this module keeps on what it records (R34 states none): a text field, and the stake as held. */
+const GROUP_TEXT_MAX = 2000, GROUP_STAKE_MAX = 8192;
+
+/** R4: the source group's `group_fields` as given with an import, checked against `public-read` R34's shape and the slug
+ *  the manifest names. Answers `{fields, read_at}` to record, or `{why}` naming why they are not recorded. Pure; never
+ *  throws. Absent fields answer `{why: "none_given"}`. */
+export function groupFieldsOf(given, manifestGroup) {
+  try {
+    if (given === null || given === undefined) return { why: "none_given" };
+    if (!isObj(given)) return { why: "not_an_object" };
+    const extra = Object.keys(given).filter((k) => !GROUP_FIELD_KEYS.includes(k) && k !== "read_at");
+    const absent = [...GROUP_FIELD_KEYS, "read_at"].filter((k) => !Object.hasOwn(given, k));
+    if (extra.length || absent.length) return { why: "not_its_shape", ...(extra.length ? { extra } : {}), ...(absent.length ? { absent } : {}) };
+    const text = (v) => v === null || (typeof v === "string" && v.length <= GROUP_TEXT_MAX && !LONE_SURROGATE.test(v));
+    const bad = ["group", "name", "domain", "domain_verified_at", "detail"].filter((k) => !text(given[k]));
+    let stakeJson = null;
+    try { stakeJson = canonicalJson(given.stake); } catch { stakeJson = null; }
+    if (given.stake === undefined || typeof stakeJson !== "string" || stakeJson.length > GROUP_STAKE_MAX || LONE_SURROGATE.test(stakeJson))
+      bad.push("stake");
+    if (bad.length) return { why: "not_its_shape", malformed: bad };
+    if (given.group !== manifestGroup) return { why: "another_group" };
+    const ms = typeof given.read_at === "string" ? Date.parse(given.read_at) : NaN;
+    if (!Number.isFinite(ms) || ms < 0) return { why: "no_read_at" };
+    const fields = {};
+    for (const k of GROUP_FIELD_KEYS) fields[k] = k === "stake" ? JSON.parse(stakeJson) : given[k];
+    return { fields, read_at: stampInstant("second", ms) };
+  } catch { return { why: "not_its_shape" }; }
+}
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
@@ -569,7 +611,7 @@ export class CaseImport {
 
   /** R1: imports a case file's parts into this group's read-only import of that case and lens, recreating each finding.
    *  The same edition with the same bytes answers `existed: true` and writes nothing. */
-  async importCaseFile({ parts = null, by = null, viewer = null } = {}) {
+  async importCaseFile({ parts = null, by = null, viewer = null, groupFields = null } = {}) {
     const k = this.#callerRefusal({ by, viewer });
     if (k.refusal) return k.refusal;
     const list = Array.isArray(parts) ? parts.map(bytesOf) : [];
@@ -608,6 +650,8 @@ export class CaseImport {
     if (held && held.manifest_sha === manifestSha)
       return { ok: true, existed: true, import: importId, group: who.group, case: who.case, lens: lensSha, edition: who.edition,
                manifest_sha: manifestSha, wrote: false };
+    /* R4 (T46): the source's fields, recorded only in R34's shape and naming the manifest's group; never a refusal */
+    const gf = groupFieldsOf(groupFields, who.group);
     /* DEC-49 REGION is-import-case-file */
     if (held)
       return refuse("IMPORT_EDITION_DIFFERS", `edition ${who.edition} of this case is held with other bytes; an edition never changes`,
@@ -639,6 +683,9 @@ export class CaseImport {
       for (const f of files)
         this.sql.exec(`INSERT OR IGNORE INTO case_import_files (import_id, edition, path, kind, sha, bytes, part) VALUES (?,?,?,?,?,?,?)`,
                       importId, who.edition, f.path, str(f.kind), shaOf(f.content), f.content.length, listed.get(f.path)?.part ?? 0);
+      if (gf.fields)
+        this.sql.exec(`INSERT INTO case_import_group_fields (import_id, edition, fields, read_at) VALUES (?,?,?,?)`,
+                      importId, who.edition, canonicalJson(gf.fields), gf.read_at);
       this.#recordCheck(importId, who.edition, answer, { cause: "import", by: k.member, at, published, calcs });
       return { ok: true };
     });
@@ -652,6 +699,7 @@ export class CaseImport {
     }
     return { ok: true, existed: false, import: importId, group: who.group, case: who.case, lens: lensSha, edition: who.edition,
              manifest_sha: manifestSha, imported_at: at, imported_by: k.member,
+             group_fields: gf.fields ? { recorded: true, read_at: gf.read_at } : { recorded: false, why: gf.why },
              recreation: this.#recreationView(importId, who.edition) };
   }
 
@@ -762,10 +810,21 @@ export class CaseImport {
              edition: { ...this.#editionView(i, e, viewer), ...wf.publisher(Number(e.edition)) }, ...wf.facts, wrote: false };
   }
 
-  /* R4, R19: an import's editions, each with when it was imported and its publisher facts. */
+  /* R4, R19: an import's editions, each with when it was imported, the source's group fields and its publisher facts. */
   #editionsOf(i, wf) {
     return this.#rows(`SELECT edition, imported_at, imported_by FROM case_import_editions WHERE import_id=? ORDER BY edition`, i.import_id)
-      .map((e) => ({ edition: Number(e.edition), imported_at: e.imported_at, imported_by: e.imported_by, ...wf.publisher(Number(e.edition)) }));
+      .map((e) => ({ edition: Number(e.edition), imported_at: e.imported_at, imported_by: e.imported_by,
+                     ...this.#groupFields(i.import_id, Number(e.edition)), ...wf.publisher(Number(e.edition)) }));
+  }
+
+  /* R4 (T46; N903): an edition's recorded `group_fields` with `read_at` and their label, or null with the sentence why. */
+  #groupFields(importId, edition) {
+    const r = this.#one(`SELECT fields, read_at FROM case_import_group_fields WHERE import_id=? AND edition=?`, importId, edition);
+    const f = r ? parse(r.fields, null) : null;
+    if (!isObj(f)) return { group_fields: null, group_fields_note: GROUP_FIELDS_NONE };
+    const out = {};
+    for (const k of GROUP_FIELD_KEYS) out[k] = Object.hasOwn(f, k) ? f[k] : null;
+    return { group_fields: { ...out, read_at: r.read_at }, group_fields_label: GROUP_FIELDS_LABEL };
   }
 
   /* R4: one edition in full. */
@@ -792,7 +851,7 @@ export class CaseImport {
     }));
     return {
       edition: ed, manifest_sha: e.manifest_sha, format: e.format ?? null, case_document_sha: e.case_doc_sha ?? null,
-      imported_at: e.imported_at, imported_by: e.imported_by,
+      imported_at: e.imported_at, imported_by: e.imported_by, ...this.#groupFields(i.import_id, ed),
       checked_at: rec ? rec.checked_at : null, checker: rec ? rec.checker : null, ...(rec && rec.unread ? { unread: rec.unread } : {}),
       statement: rec ? rec.statement : STATEMENT,
       source_bar: { whose: "source", label: SOURCE_BAR, group: i.source_group, stated: sourceBar,
@@ -1655,7 +1714,8 @@ export function caseImportOps(m, url, body) {
   const pick = (k) => (b[k] !== undefined && b[k] !== null ? b[k] : url.searchParams.has(k) ? q(k) : null);
   const by = q("by") ?? q("author"), viewer = q("viewer");
   return {
-    caseimport: () => m.importCaseFile({ parts: Array.isArray(b.parts) ? b.parts : null, by, viewer }),
+    caseimport: () => m.importCaseFile({ parts: Array.isArray(b.parts) ? b.parts : null, by, viewer,
+      groupFields: b.groupFields ?? b.group_fields ?? null }),
     importedcases: () => m.importedCases({ viewer }),
     importedcase: () => m.importedCase({ import: q("import"), edition: q("edition"), viewer }),
     caseimportdocument: () => m.completeImportedDocument({ import: pick("import"), edition: pick("edition"),
