@@ -70,8 +70,9 @@ export function lawProposalState(proposedBy) {
  * DEC-101) and an escalation's pre-assembled opening reason (escalation R29; DEC-89; both K1019, T23), and steps proposed
  * for a wizard script (wizard-scripts R5; N543, T32), a law relation, court link or treatment (standards R23, R26,
  * R27, R30; N568, T34), a draft translation of an interface word (N669, T37), a draft of a case's account and a
- * check of a member's account (case-authoring R64; N838, T42), and a layout of how a reply bears on an action's claims
- * (action-replies R1; N912, T46) are each machine work or a member's
+ * check of a member's account (case-authoring R64; N838, T42), a layout of how a reply bears on an action's claims
+ * (action-replies R1; N912, T46) and a draft of a status report on a plan (plan-work R14; N956, T47) are each machine
+ * work or a member's
  * suggestion, never the thing itself, and each is labelled by `lawProposalState`'s three states. ONE CLOSED
  * TABLE, keyed by what was proposed: `governing_laws` is REC-195's table above, the same object, so its words
  * cannot drift from it; each other subject says, in each state, what the proposal is not. A subject the table does
@@ -239,6 +240,18 @@ export const PROPOSAL_STATES = Object.freeze({
       + 'and never the group\'s reading until a member records it, and the record holds who proposed it',
     unstated: 'the record does not say who proposed this layout of how a reply bears on each claim of an action. It is a '
       + 'proposed reading and never the group\'s reading until a member records it',
+  }),
+  /* N956 (K3028; T47, R61): a draft of a status report on a plan (`plan-work` R14, the assistant's draft) is kept with the
+     plan and never published, and the report kept is the member's; a machine can draft one and never keep or publish one.
+     `plan-work` labels the assistant's draft through this subject. */
+  status_report: Object.freeze({
+    machine_proposed: 'a machine credential drafted this status report on a plan. It is the assistant\'s draft: machine work, '
+      + 'labelled as machine work, which can draft a report and can never keep or publish one. It is kept with the plan and '
+      + 'never published, and the report kept is the member\'s',
+    member_proposed: 'a member drafted this status report on a plan. It is a draft, kept with the plan and never published; '
+      + 'the report kept is the member\'s, and the record holds who proposed it',
+    unstated: 'the record does not say who drafted this status report on a plan. It is a draft, kept with the plan and never '
+      + 'published, and the report kept is the member\'s',
   }),
 });
 

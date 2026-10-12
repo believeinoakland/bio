@@ -27,8 +27,9 @@ export const OBJECT_TYPES = { INFO: 'information', PROB: 'inquiry', FOCUS: 'inqu
   IDC: 'identity_claim', MTI: 'member_tie', CHK: 'interest_check', HYP: 'hypothesis', DUT: 'duty',
   STQ: 'standing_question',
   /* T46-1 (R59; N911): the success record (`consequences`). Not a bundle prefix either (R1), but, unlike the rows above, a
-     record object promoted with history, so `STATES` holds its one state (document.mjs); `HEADINGS` and `checkBundle`'s
-     schemas still gain nothing. */
+     record object promoted with history, so `STATES` holds its one state (document.mjs); `HEADINGS` still gains nothing.
+     T47-1 (R62; N958): `checkBundle` admits its document, a bare `SUC` id under this type with `success_record@1`
+     (bundle.mjs), without making `SUC` one of R1's prefixes. */
   SUC: 'success_record' };
 export const LEGACY_TYPE_ALIASES = { problem: 'inquiry', focus: 'inquiry' };
 /* An OWN key only (R5): `constructor`, `toString` and the other `Object.prototype` names are types nobody declared,
