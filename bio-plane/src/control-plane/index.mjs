@@ -484,6 +484,10 @@ const BODY_ONLY = Object.freeze({ securitytooladd: Object.freeze(["credentials",
                                   projectkeyset: Object.freeze(["key"]),
                                   setpassword: Object.freeze(["current", "password", "role"]) });
 const BODY_DROPPED = Object.freeze({ setpassword: Object.freeze(["role"]) });
+/* R17 (T46; K3003): the acts whose owner reads `at` as the time the act is recorded (its clock, now when absent): that
+   time is the record's, never the caller's, so a caller's `at` leaves the address and the body before the owner reads
+   either. An op whose `at` is a date the caller states (a letter's, a reminder's day, a read's as-of) keeps it. */
+const ACT_CLOCK_OPS = Object.freeze(["aicredentialmint", "transcribe", "airunopen", "airunclose"]);
 /* R60, R29 (K1687; op-declarations' families): the acts whose owner reads its actor from the BODY under a key that is not
    `by` (`bodyBy`, R53, sets that one) — standards' `author`, its proposals' `proposer` — op → key, derived once from the
    families, so a family's new act is stamped as its others are. */
@@ -933,6 +937,8 @@ export function makeFetch(hooks = {}) {
     for (const k of ["secretSha", "bySecret"]) inner.searchParams.delete(k);
     /* R61 (op-declarations R32): what an op takes from the body alone leaves the address the store is asked at */
     if (Object.hasOwn(BODY_ONLY, op)) for (const k of BODY_ONLY[op]) inner.searchParams.delete(k);
+    /* R17 (T46; K3003): an act's own clock is the record's */
+    if (ACT_CLOCK_OPS.includes(op)) inner.searchParams.delete("at");
     /* R53 (K1122, K1674; op-declarations R17–R20): T33'S OPS' STAMPS, each declared key (`OP_STAMPS`) deleted from the
        caller's query and set by one expression: `viewer` every read's; `by` (query) and `bodyBy` (the body's `by`, below)
        the actor in the viewer's form (a session's viewer; a machine `class:<cls>`, an agent `class:ai/<tokenId>`);
@@ -2367,6 +2373,7 @@ export function makeFetch(hooks = {}) {
         /* R29, R67 (T38): an op whose `by` or `viewer` the door stamps in the address (`OP_STAMPS`) takes neither from
            the caller's body either, so its owner's map never holds a caller's statement of who is acting */
         const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? []),
+                       ...(ACT_CLOCK_OPS.includes(op) ? ["at"] : []),
                        ...declared.filter((k) => k === "by" || k === "viewer")];
         if (b0 && typeof b0 === "object" && !Array.isArray(b0) && strip.some((k) => k in b0)) {
           for (const k of strip) delete b0[k];

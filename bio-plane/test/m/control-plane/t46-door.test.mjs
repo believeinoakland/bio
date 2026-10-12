@@ -328,3 +328,24 @@ test("R76 (T46; DEC-162; instance-setup R79; op-declarations R50): `infolevelset
   assert.ok(OP_STAMPS.infolevel?.includes("viewer"));
   await routesForSessions(["infolevelset", "infolevel"], (op) => (op === "infolevelset" ? { level: "pause", asked: true } : {}));
 });
+
+/* ================================================================ R17 (K3003) */
+
+test("R17, R29 (T46; K3003): the acts that record their own clock (`aicredentialmint`, `transcribe`, `airunopen`, `airunclose`) never receive a caller's `at`, in the address or the body, so no caller dates its own act; the rest of the body reaches the owner; an op whose `at` is a date the caller states (`milestonereminder`'s day) keeps it (negative control)", async () => {
+  const AT = "1999-01-01T00:00:00Z";
+  const { w } = callers();
+  for (const op of ["aicredentialmint", "transcribe", "airunopen", "airunclose"]) {
+    w.env.calls.length = 0;
+    const r = await call(w.env, { op, token: w.S.ann, method: "POST", params: { at: AT },
+                                  body: { at: AT, note: "kept", writes: [], run: "RUN-1", bundleId: "B", extent: {}, text: "t" } });
+    const inner = opCalls(w.env).filter((c) => c.route === op);
+    assert.equal(inner.length, 1, `${op}: ${r.text.slice(0, 200)}`);
+    assert.equal(Object.hasOwn(inner[0].params, "at"), false, `${op}: no caller's at in the address`);
+    assert.equal(inner[0].body && Object.hasOwn(inner[0].body, "at"), false, `${op}: no caller's at in the body`);
+    assert.equal(inner[0].body.note, "kept", `${op}: the rest of the body kept`);
+  }
+  w.env.calls.length = 0;
+  await call(w.env, { op: "milestonereminder", token: w.S.ann, method: "POST", body: { milestone: "M-1", at: "2026-11-01" } });
+  const [kept] = opCalls(w.env).filter((c) => c.route === "milestonereminder");
+  assert.equal(kept.body.at, "2026-11-01", "a stated day is the caller's to state");
+});
