@@ -27,7 +27,7 @@ import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { contentMintState } from "../record-grammar/labels.mjs";
 import { EXTRACTION_SCHEMA } from "./schema.mjs";
 import { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, TRANSCRIBE_WORDS, fillWords,
-         pagesSaid } from "./checks.mjs";
+         pagesSaid, AGENT_WORKER_REASONS } from "./checks.mjs";
 import { evidenceAbsent } from "../capture/ops.mjs";
 import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
@@ -1459,6 +1459,8 @@ export class Extraction {
         /* reading-pipeline R28 (K1557, CHANGE B4): what the pdf entry emitted beside the text, unaltered, by the read's own
            rule: its `metadata` or null, and `cells` only for a workbook or a `.docx` (R70), never for a pdf. */
         Object.assign(reading, emittedFieldsOf(t3.i2text));
+        /* R74: a test-instance label the stored reading carries is kept by the re-read that writes over it. */
+        keepUntested(reading, stored, null);
         structureChain = chain;
         reading.reextracted = {
           at: stampInstant("second"), by: author,
@@ -1673,6 +1675,10 @@ export class Extraction {
                                                    planeVersion: e.VERSION || null });
     { const n = textCountsOf(t4.i2text); if (n) Object.assign(reading, n); }
     Object.assign(reading, emittedFieldsOf(t4.i2text));
+    /* R74 (T46; N897 (2)): the test-instance label the plane handed in for this act, recorded on the reading it writes;
+       a label already stored stays, whatever this act was admitted by. */
+    const untested = untestedOf(tx);
+    keepUntested(reading, stored, untested);
     const act = tx && typeof tx.act === "string" && tx.act ? tx.act : null;
     reading.reextracted = {
       at, by, engine: t3.engine ? t3.engine.engine : null, version: t3.engine ? t3.engine.version : null,
@@ -1684,6 +1690,7 @@ export class Extraction {
       transcription: {
         performed: true, written: w.ok === true, ...unwrittenWhy(w, "transcription"),
         pages: t4.filled, engine: t4.engine.engine, version: t4.engine.version, act,
+        ...(untested ? { untested } : {}),
         text_source: chain, chain: describeChain(chain),
         label: TRANSCRIBE_WORDS["transcribe.label"], note: t4.aiNote, measured_by: AI_TRANSCRIPTION_SOURCE,
         ocr: t3.filled.length ? { pages: t3.filled, engine: t3.engine } : null,
@@ -1793,8 +1800,9 @@ function pictureWhy(refused) {
 /* R71 (T44): what the AI path answered when it was called and nothing was filled, read from the transcriber's own
    answer (`tier4Extend` keeps only a sentence of it): `{key, why}` for a sentence with a `{why}` key, `{none: true}`
    for a post agent-worker answered `ok: true` filling nothing, `{refusal}` for a refusal agent-worker answered after
-   the post with its row's translation, or null when no key says it (the transcriber threw, or a refusal with no row to
-   translate it, which is reported, never given a sentence of this module's own). `fmt` is R73's detected format. */
+   the post with its row's translation, or with no row one of R72's six codes (R75, its DEC-193 reason), or null when no
+   key says it (the transcriber threw, or another refusal with no row to translate it, which is reported, never given a
+   sentence of this module's own). `fmt` is R73's detected format. */
 function unfilledOutcome(a, fmt) {
   if (!a || typeof a !== "object") return null;
   if (a.ok === true) return { none: true };
@@ -1806,6 +1814,11 @@ function unfilledOutcome(a, fmt) {
   if (ENDINGS.includes(a.ending) || ENDING_CODES.includes(a.code) || ENDING_CODES.includes(a.reason))
     return { key: "transcribe.failed", why: "transcribe.why.ended" };
   if (typeof a.translation === "string" && a.translation) return { refusal: a };
+  /* R75 (T46; N886; DEC-193): one of agent-worker R72's six codes, which carry no row, is that refusal with DEC-193's
+     reason as its translation, read by key; its code and status as answered, no check of this module's own. */
+  const code = typeof a.code === "string" && a.code ? a.code : a.reason;
+  if (Object.prototype.hasOwnProperty.call(AGENT_WORKER_REASONS, code))
+    return { refusal: { ...a, code, translation: fillWords(AGENT_WORKER_REASONS[code]) } };
   return null;
 }
 
@@ -1822,6 +1835,22 @@ const PICTURE_FORMATS = Object.freeze(["jpeg", "png"]);
 /* R71 (N853a): the status a relayed account or limit refusal carries: its own when it states one, else 403, as the
    keep-away refusal is relayed. */
 const refusalStatus = (r) => (Number.isInteger(r.status) && r.status >= 400 && r.status < 500 ? r.status : 403);
+
+/* R74 (T46; N897 (2); K2872): the label the plane hands in when the part `transcribe` runs on the test-instance
+   exception (run-rules' `untestedLabel`, reached only as data through R72's registration), exactly as handed; null when
+   the act carries none. */
+function untestedOf(tx) {
+  const u = tx && typeof tx === "object" ? tx.untested : null;
+  return u && typeof u === "object" && !Array.isArray(u) ? u : null;
+}
+
+/* R74: the label a composed reading carries: the stored reading's unchanged when it holds one, so no later bar removes
+   it; else this act's own; else none, absent and never null (R45). */
+function keepUntested(reading, stored, untested) {
+  const kept = untestedOf(stored);
+  if (kept) reading.untested = kept;
+  else if (untested) reading.untested = untested;
+}
 
 /* R72: a transcriber is `{deployable(), keptAway({project, use}), transcription({member, project, at})}`. */
 const isTranscriber = (t) => !!t && typeof t === "object" && typeof t.deployable === "function"
