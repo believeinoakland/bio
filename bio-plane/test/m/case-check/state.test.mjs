@@ -48,19 +48,22 @@ test("R2: void member_moved names each member whose current bundle_sha is not th
   assert.deepEqual(a.moved, [{ bundle_id: F2, pinned: r.members[1].version_sha, current: "sha-new" }]);
 });
 
-test("R2: void source_lapsed, accepted_work_lapsed and marks_lapsed, each when case-carriage answers a row over the checked text (R5, R4 read as the check's by, R13); several causes are each named, in R2's order", () => {
+test("R2: void source_lapsed, accepted_work_lapsed and marks_lapsed, each when case-carriage answers a row over the checked text, from the check's checked_at (its R21, R19 read as the check's by, R20); several causes are each named, in R2's order", () => {
   const w = standard();
   held(w);
+  w.clock.now = "2026-10-20T08:00:00Z";
   w.cc.sources = [{ capture: "c1" }];
   voidWith(w.c.caseCheckOf({ case: CASE }), ["source_lapsed"]);
   const asked = w.calls.sources.at(-1);
   assert.match(asked.text, /case_id: CASE-2026-0001/, "the checked text itself");
-  assert.equal(asked.at, NOW);
+  assert.equal(asked.since, NOW, "over the interval from the check's checked_at, never from the read");
   w.cc.sources = [];
   w.cc.accepted = { withdrawn: [{ ref: "imported:x", edition: 1 }], undisclosed: [] };
   voidWith(w.c.caseCheckOf({ case: CASE }), ["accepted_work_lapsed"]);
   assert.equal(w.calls.accepted.at(-1).signer, "ann", "read as the check's by");
   assert.equal(w.calls.accepted.at(-1).fm.case_id, CASE);
+  assert.equal(w.calls.accepted.at(-1).since, NOW);
+  assert.equal(w.calls.marks.at(-1).since, NOW);
   w.cc.accepted = null;
   w.cc.marks = [{ ref: "p", sha: "s", kind: "photo", why: "w" }];
   voidWith(w.c.caseCheckOf({ case: CASE }), ["marks_lapsed"]);
@@ -98,13 +101,51 @@ test("R2: a void check stays void when its cause is undone (a preparation stored
   assert.equal(w.c.caseCheckOf({ case: CASE }).state, "held");
 });
 
-test("R2 (K2833; N907, T46): the three lapse causes are judged at the read until case-carriage answers over an interval: a lapse undone reads held again (the stated gap), while a replaced preparation or a moved member stays void (control)", () => {
+const LAPSES = [["sources", "source_lapsed", { capture: "c1" }],
+                ["accepted", "accepted_work_lapsed", { ref: "imported:x", edition: 1 }],
+                ["marks", "marks_lapsed", { ref: "p", sha: "s", kind: "photo", why: "the copy changed since" }]];
+
+test("R2 (T46; N907, K2833): each lapse cause is latched: a lapse made after the check and undone before the read reads void with that why (control: nothing lapsed since the check reads held)", () => {
+  for (const [k, why, row] of LAPSES) {
+    const w = standard();
+    const r = held(w);
+    w.clock.now = "2026-10-12T09:00:00Z";
+    assert.equal(w.c.caseCheckOf({ check: r.check }).state, "held", `control ${k}: nothing lapsed since the check`);
+    w.lapse(k, row);
+    w.clock.now = "2026-10-13T09:00:00Z";
+    w.undo(k);
+    w.clock.now = "2026-10-14T09:00:00Z";
+    const a = w.c.caseCheckOf({ check: r.check });
+    voidWith(a, [why]);
+    assert.deepEqual([a.checked_at, a.by], [NOW, "ann"], k);
+    voidWith(w.c.caseCheckOf({ case: CASE }), [why]);
+    /* a new check, made after the lapse was undone, reads held: re-running R1 is the way back */
+    const fresh = w.c.checkAndHold(args([F1, F2], { statement: `Again, ${k}.` }));
+    assert.equal(fresh.ok, true, JSON.stringify(fresh));
+    assert.equal(w.c.caseCheckOf({ check: fresh.check }).state, "held", `a new check ${k}`);
+    voidWith(w.c.caseCheckOf({ check: r.check }), ["document_replaced"]);
+  }
+});
+
+test("R2 (T46): a lapse undone before the check was made does not void it, and a lapse still standing does (controls for the latch)", () => {
+  for (const [k, why, row] of LAPSES) {
+    const w = standard();
+    w.clock.now = "2026-10-01T00:00:00Z";
+    w.lapse(k, row);
+    w.clock.now = "2026-10-02T00:00:00Z";
+    w.undo(k);
+    w.clock.now = NOW;
+    const r = held(w);
+    w.clock.now = "2026-10-14T09:00:00Z";
+    assert.equal(w.c.caseCheckOf({ check: r.check }).state, "held", `${k}: undone before the check`);
+    w.lapse(k, row);
+    voidWith(w.c.caseCheckOf({ check: r.check }), [why]);
+  }
+});
+
+test("R2 (T46): a replaced preparation or a moved member stays void when undone, beside the lapse causes", () => {
   const w = standard();
   const r = held(w);
-  w.cc.sources = [{ capture: "c" }];
-  voidWith(w.c.caseCheckOf({ check: r.check }), ["source_lapsed"]);
-  w.cc.sources = [];
-  assert.equal(w.c.caseCheckOf({ check: r.check }).state, "held", "judged at the read");
   w.move(F1, "elsewhere"); w.move(F1, r.members[0].version_sha);
   voidWith(w.c.caseCheckOf({ check: r.check }), ["member_moved"]);
 });
@@ -113,6 +154,16 @@ test("R2: undetermined when any read fails (each lapse read throwing or answerin
   const boom = () => { throw new Error("unreadable"); };
   const cases = [["sources", boom], ["sources", "not a list"], ["accepted", boom], ["accepted", "yes"],
                  ["marks", boom], ["marks", null]];
+  /* a case-carriage without the interval reads (R19–R21) is a failed read too, never one answered at the instant */
+  for (const read of ["sourcesLapsedSince", "acceptedWorkLapsedSince", "marksLapsedSince"]) {
+    const w = standard();
+    held(w);
+    const kept = w.caseCarriage[read];
+    w.caseCarriage[read] = undefined;
+    assert.equal(w.c.caseCheckOf({ case: CASE }).state, "undetermined", read);
+    w.caseCarriage[read] = kept;
+    assert.equal(w.c.caseCheckOf({ case: CASE }).state, "held", `control ${read}`);
+  }
   for (const [k, v] of cases) {
     const w = standard();
     const r = held(w);
