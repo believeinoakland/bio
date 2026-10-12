@@ -137,7 +137,7 @@ test("R30: partRefusal(part) is AI_PART_NOT_DEPLOYED (C-22.29, the next free C-2
   for (const x of [null, undefined, 3, "x".repeat(99), {}]) assert.equal(refusal(partRefusal(x), "AI_PART_NOT_DEPLOYED").part.length <= 40, true);
   /* the next free number: C-22.28 was the last taken, and no retired number is reused */
   const c22 = Object.values(AI_RUN_CHECKS).map((r) => r.check).filter((c) => c.startsWith("C-22.")).map((c) => Number(c.slice(5)));
-  assert.equal(Math.max(...c22), 29);
+  assert.equal(c22.filter((n) => n > 28).sort().join(), "29,30", "29 R30's, 30 R32's");
   assert.equal(new Set(c22).size, c22.length);
   for (const r of Object.values(RETIRED_CHECKS)) assert.notEqual(r.check, "C-22.29");
   /* control: the codes it stands beside keep theirs */
@@ -218,4 +218,23 @@ test("R31: C-109.13 and C-109.14 take their translations from words.json's refus
   assert.equal(Object.prototype.hasOwnProperty.call(RUN_RULES_WORDS, "refusal.AI_RUN_ORIGIN_UNKNOWN"), false);
   /* control: a word the list lacks fails loudly */
   assert.throws(() => WORD("refusal.NOT_A_CODE"), /holds no word/);
+});
+
+test("R32: MEMBER_RUN_MODE_NOT_ADMITTED (C-22.30, the next free number after R30's) is a row of this module's table in DEC-83's form, minted by ai-runs R18 at dispatchMemberRun's region and read here by key, with R32's interim translation", () => {
+  const row = AI_RUN_OWN_CHECKS.MEMBER_RUN_MODE_NOT_ADMITTED;
+  assert.deepEqual(Object.keys(row).sort(), ["check", "translation", "where"]);
+  assert.equal(row.check, "C-22.30");
+  assert.equal(row.where, "src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch");
+  assert.equal(row.translation, "Nothing was started, because on your own Claude sign-in the assistant only checks and plans "
+    + "for you; this kind of work needs your group's Civicsmith to run it.");
+  assert.equal(AI_RUN_CHECKS.MEMBER_RUN_MODE_NOT_ADMITTED, row);
+  assert.equal(translationOf("MEMBER_RUN_MODE_NOT_ADMITTED"), row.translation);
+  /* interim until words.json holds its key; control: the list does not hold it yet */
+  assert.throws(() => WORD("refusal.MEMBER_RUN_MODE_NOT_ADMITTED"), /holds no word/);
+  /* one condition per number, and none retired reused */
+  const numbers = Object.values(AI_RUN_CHECKS).map((r) => r.check);
+  assert.equal(numbers.filter((n) => n === "C-22.30").length, 1);
+  for (const r of Object.values(RETIRED_CHECKS)) assert.notEqual(r.check, "C-22.30");
+  /* control: R30's row is a different condition */
+  assert.notEqual(row.translation, AI_RUN_OWN_CHECKS.AI_PART_NOT_DEPLOYED.translation);
 });

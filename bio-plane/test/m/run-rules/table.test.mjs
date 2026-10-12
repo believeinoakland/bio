@@ -30,7 +30,9 @@ const MINTED_HERE = {
   AI_PART_NOT_DEPLOYED: ["C-22.29", "src/run-rules/test-bar.mjs partRefusal"],
 };
 /** The C-22 rows of ai-runs' T41 acts (B3, B4; K2482, K2485), minted by ai-runs (its R73, R75) and read here by key. */
-const AI_RUNS_C22 = { AI_GROUP_TEST_INVALID: "C-22.24", AI_RUN_EXPLORE_NEEDS_STEP: "C-22.26", AI_RUN_STEP_UNKNOWN: "C-22.28" };
+const AI_RUNS_C22 = { AI_GROUP_TEST_INVALID: "C-22.24", AI_RUN_EXPLORE_NEEDS_STEP: "C-22.26", AI_RUN_STEP_UNKNOWN: "C-22.28",
+                      /* R32 (T46; K2947; ai-runs R18) */
+                      MEMBER_RUN_MODE_NOT_ADMITTED: "C-22.30" };
 /** R20's rows, minted by ai-runs (its R52) and answers, read here by key. */
 const USE = { AI_NO_ACCOUNT: "C-109.10", NOT_YOUR_CEILING: "C-109.11" };
 /** R20's retired codes (T40; N812; K2373, K2400), each with its number, never reused, and its replacement in ai-use. */

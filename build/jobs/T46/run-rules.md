@@ -14,6 +14,8 @@
 - **R27**: `statusreport` appended to `DRAFT_KINDS`, `DRAFT_REACH.statusreport` scope `none`, `draftMayRead` false, deployed under `draft`'s flag, part `draft:statusreport`. `action_drafts` stays `false` (M-T46-5: `textcheck` unserved); R27's T46 flag clause carried, as R27 says.
 - **R31**: `RUN_RULES_WORDS` holds `refusal.AI_RUN_REEXAM_NEEDS_RESPONSE` and `refusal.AI_RUN_REEXAM_OPEN` verbatim; the two C-109 rows read them by key. `AI_RUN_ORIGIN_UNKNOWN` keeps its own sentence.
 
+- **R32** (B2, K2947): row `MEMBER_RUN_MODE_NOT_ADMITTED` C-22.30 in this module's C-22 rows, minted by `ai-runs` R18 at `dispatchMemberRun > is-airun-member-dispatch`, R32's interim translation verbatim (`words.json` has no key yet; the test says so).
+
 **Flaw fixed in my module.** `ACTION_DRAFT_KINDS` was `DRAFT_KINDS.slice(-3)`: appending `statusreport` would have made it an action draft. It now names its three kinds.
 
 **Deferred.** None of my module's work. Out of my hands: R27's `action_drafts` clause (by the requirement itself) and R31's promotion stamp (T47, rule 5 (2)).
@@ -24,11 +26,11 @@
 3. Unchanged: ai-use, run-productions, capture-requests, skills, question-explorer, case-disclosures, action-plans, answer-envelope, agent-harness all green; plane's one red ("R11, R5: … local-facts' and filing-templates' maps …") is on the base as well.
 
 **Tests and checks** (on `job/T46/run-rules` from `tranche/T46`):
-- `run-rules`: 59 pass, 0 fail (new `t46.test.mjs`, `words.mjs`).
+- `run-rules`: 59 pass, 0 fail (new `t46.test.mjs`, `words.mjs`); after B2 (tranche merged, R32 added): 60 pass, 0 fail; ai-runs 83/4 (the same four), agent-harness 31/0.
 - Users, base → this branch: ai-use 68/0 → 68/0; ai-runs 87/0 → 83/4; run-productions 58/0; capture-requests 108/0; skills 113/0; question-explorer 28/0; case-disclosures 95/0; action-plans 75/0; answer-envelope 32/0; plane 210/1 → 210/1; agent-worker `requirements` 305/0 → 301/4; agent-harness 31/0.
-- format: 159 modules, 0 failures. architecture: 0 failures. coverage: 31 of 31 live ids named, 0 failures. ownership: 12 files, 0 failures.
+- format: 159 modules, 0 failures. architecture: 0 failures. coverage: 31 of 31 live ids named (32 of 32 after B2), 0 failures. ownership: 12 files, 0 failures.
 
-Size (session_016rtHXktFUtkGX8nXhc548v): test runs 7, module lines 2523
+Size (session_016rtHXktFUtkGX8nXhc548v): test runs 9, module lines 2535
 
 ## J1 · COMPLETE
 

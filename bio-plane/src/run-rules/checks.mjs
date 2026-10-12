@@ -22,7 +22,7 @@ export const RUN_RULES_WORDS = Object.freeze({
 });
 
 /* C-22's run rows: C-22.5, .7, .8, .11–.16, .18, T33's .19 (R18), .20 (R19) and .21 (R17), T41's .22 (R19's test
- * bar), .23 (R26) and .24 (R23), and T46's .29 (R30). The family's history and its reason for being one row per code are in
+ * bar), .23 (R26) and .24 (R23), and T46's .29 (R30) and .30 (R32, minted by `ai-runs`). The family's history and its reason for being one row per code are in
  * observation-log's `AI_RUN_CHECKS` header (`../observation-log/checks.mjs`), which holds the log's rows. C-22.7 (`checkSkillVersion`'s, R8) is
  * held here beside its one minting site, `./skill-version.mjs` (R8, R11; K333, N289); `skills` names it by key through
  * this module (its R25). */
@@ -333,6 +333,16 @@ export const AI_RUN_OWN_CHECKS = {
       + 'and drafts)',
     translation: 'This part of the assistant has not yet passed Civicsmith\'s tests, so it is not switched on in your '
       + 'group\'s Civicsmith. Everything else works without it.',
+  },
+  /* R32 (T46; K2947; `ai-runs` R18): A MEMBER'S OWN SIGN-IN RUN IN A MODE IT DOES NOT SERVE. On her own Claude sign-in
+     a member's run is dispatched for her only in `check` or `plan` (Bob's K2892); any other mode is refused by `ai-runs`
+     at its dispatch and read here by key. C-22.30, the next free number after R30's. DEC-83's form. Its translation is
+     interim, until `words.json` holds `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`. */
+  MEMBER_RUN_MODE_NOT_ADMITTED: {
+    check: 'C-22.30',
+    where: 'src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch',
+    translation: 'Nothing was started, because on your own Claude sign-in the assistant only checks and plans for you; '
+      + 'this kind of work needs your group\'s Civicsmith to run it.',
   },
 };
 

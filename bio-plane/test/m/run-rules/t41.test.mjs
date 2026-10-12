@@ -145,6 +145,7 @@ test("B3, B4 (K2482, K2485; ai-runs R73, R75): the rows of ai-runs' T41 acts are
   const c22 = Object.values(AI_RUN_CHECKS).map((r) => r.check).filter((c) => /^C-22\.2\d$/.test(c)).sort();
   assert.deepEqual(c22, ["C-22.20", "C-22.21", "C-22.22", "C-22.23", "C-22.24", "C-22.25", "C-22.26", "C-22.27", "C-22.28",
                          "C-22.29"], "T46's C-22.29 is this module's own (R30)");
+  assert.equal(AI_RUN_CHECKS.MEMBER_RUN_MODE_NOT_ADMITTED.check, "C-22.30", "and C-22.30 ai-runs' (R32)");
 });
 
 test("R24: ENQUIRE_MODE describes the mode enquire, frozen — interactive, no run, read-only within ASK_SCOPE, bounded by ASK_BOUNDS, writing nothing itself; deployed apart by its own flag (false today), set once R19's test bar is held for it; startAllowed admits it only at a member's act", () => {
