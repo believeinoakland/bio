@@ -1,11 +1,8 @@
-/* screens-intake R7: the `inbox` screen, its reads and three acts, over the stand-in kit. */
+/* screens-intake R7: the `inbox` screen on the real served page, its reads and three acts. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { SCREENS } from "../../../src/screens-intake/index.mjs";
-import { pageScreen, kit, viewOf, press, ok } from "./kit.mjs";
+import { open, html, text, main, btn, fill, press, ok, refused, rawKeys } from "./page.mjs";
 
-const S = pageScreen(SCREENS.find((s) => s.id === "inbox"));
-const draw = (view, opts) => S.render(kit(S, view, opts).cs, view);
 const K1 = { knock_id: "KNOCK-2026-10-03-9c1f0a2b", sha256: "1".repeat(64), bytes: 3 * 1048576, note: "The inspection sheets they don't publish.",
              received: "2026-10-03T10:00:00Z", status: "new", pseudonym: "P-1", knocker_digest: "dd" };
 const K2 = { knock_id: "KNOCK-2026-09-12-11aa22bb", sha256: "2".repeat(64), bytes: 500, note: null, received: "2026-09-12T10:00:00Z",
@@ -13,74 +10,79 @@ const K2 = { knock_id: "KNOCK-2026-09-12-11aa22bb", sha256: "2".repeat(64), byte
 const K3 = { knock_id: "KNOCK-2026-09-01-33cc44dd", sha256: "3".repeat(64), bytes: 2048, note: "", received: "2026-09-01T10:00:00Z",
              status: "pulled", pseudonym: null, knocker_digest: null, capture_sha: "3".repeat(64) };
 const LIST = ok({ inbox: [K1, K2, K3] });
+const knock = (k, plane = {}) => open(`/app/inbox/${k.knock_id}`, { plane: { inbox: LIST, inboxget: ok({ ok: true, item: k }), ...plane } });
 
-test("R7 reads inbox always and inboxget for the knock the address names", () => {
-  const reads = S.reads(viewOf(S));
-  assert.deepEqual(Object.keys(reads), ["list"]);
-  assert.equal(reads.list.op, "inbox");
-  assert.equal(reads.list.empty({ inbox: [] }), true);
-  const one = S.reads(viewOf(S, { subject: K1.knock_id }));
-  assert.equal(one.knock.op, "inboxget");
-  assert.deepEqual({ ...one.knock.query }, { id: K1.knock_id });
-  assert.match(draw(viewOf(S, { data: { list: { state: "empty" } } })), /Nothing has been handed in/);
+test("R7 reads inbox always and inboxget for the knock the address names", async () => {
+  const p = await open("/app/inbox", { plane: { inbox: LIST } });
+  assert.equal(p.byOp("inbox").length, 1);
+  assert.equal(p.byOp("inboxget").length, 0);
+  const q = await knock(K1);
+  assert.equal(q.byOp("inboxget")[0].query.id, K1.knock_id);
+  const e = await open("/app/inbox", { plane: { inbox: ok({ inbox: [] }) } });
+  assert.match(text(e), /Nothing has been handed in/);
 });
 
-test("R7 each knock: what was handed in, its note, the same-knocker mark and, opened, the identification ladder", () => {
-  const html = draw(viewOf(S, { subject: K1.knock_id, data: { list: LIST, knock: ok({ ok: true, item: K1 }) } }));
-  assert.match(html, /3\.0 MB handed in on <time data-iso="2026-10-03T10:00:00Z">/);
-  assert.match(html, /Their note: “The inspection sheets they don&#39;t publish\.”/);
-  assert.match(html, /Same knocker as 1 other knocks here/);
-  assert.match(html, /No note came with it\./);
-  assert.match(html, /Discarded: “Spam\.”/);
-  assert.match(html, /data-ladder="ident"[\s\S]*aria-current="step">Same knocker</);
-  assert.match(html, new RegExp(`data-ref="inbox:${K3.knock_id}"`));
+test("R7 each knock: what was handed in, its note, the same-knocker mark and, opened, the identification ladder", async () => {
+  const p = await knock(K1);
+  const t = text(p);
+  assert.match(t, /3\.0 MB handed in on 3 October 2026/);
+  assert.match(t, /Their note: “The inspection sheets they don't publish\.”/);
+  assert.match(t, /Same knocker as 1 other knocks here/);
+  assert.match(t, /No note came with it\./);
+  assert.match(t, /Discarded: “Spam\.”/);
+  assert.equal(main(p).querySelector('[data-ladder="ident"] [aria-current="step"]').textContent, "Same knocker");
+  assert.ok(main(p).querySelector(`a[href="/app/inbox/${K3.knock_id}"][data-nav]`));
+  assert.deepEqual(rawKeys(p), []);
   /* control: a knock with no secret stands at Unknown */
-  const k3 = draw(viewOf(S, { subject: K3.knock_id, data: { list: LIST, knock: ok({ ok: true, item: K3 }) } }));
-  assert.match(k3, /aria-current="step">Unknown</);
+  assert.equal(main(await knock(K3)).querySelector('[data-ladder="ident"] [aria-current="step"]').textContent, "Unknown");
 });
 
-test("R7 a new knock offers inboxpull and inboxresolve; one already pulled or discarded offers neither", () => {
-  const html = draw(viewOf(S, { subject: K1.knock_id, data: { list: LIST, knock: ok({ ok: true, item: K1 }) } }));
-  assert.match(html, /data-act="inboxpull"/);
-  assert.match(html, /data-act="inboxresolve"/);
-  assert.match(html, /data-act="sourcelink"/);
-  const pulled = draw(viewOf(S, { subject: K3.knock_id, data: { list: LIST, knock: ok({ ok: true, item: K3 }) } }));
-  assert.doesNotMatch(pulled, /data-act="inboxpull"/);
-  assert.doesNotMatch(pulled, /data-act="inboxresolve"/);
-  /* the list alone draws no act */
-  assert.doesNotMatch(draw(viewOf(S, { data: { list: LIST } })), /data-act=/);
+test("R7 a new knock offers inboxpull and inboxresolve; one already pulled offers neither; the list alone draws no act", async () => {
+  const p = await knock(K1);
+  assert.ok(btn(p, "inboxpull"));
+  assert.ok(btn(p, "inboxresolve"));
+  assert.ok(btn(p, "sourcelink"));
+  const q = await knock(K3);
+  assert.equal(btn(q, "inboxpull"), null);
+  assert.equal(btn(q, "inboxresolve"), null);
+  assert.equal(main(await open("/app/inbox", { plane: { inbox: LIST } })).querySelector("button[data-act]"), null);
 });
 
 test("R7 inboxpull moves the knock into the record", async () => {
-  const v = viewOf(S, { subject: K1.knock_id, data: { list: LIST, knock: ok({ ok: true, item: K1 }) } });
-  const r = await press(S, v, "inboxpull", { answers: { inboxpull: { ok: true, document: {} } } });
-  assert.deepEqual(r.request.body, { knockId: K1.knock_id });
-  assert.match(draw(v), /Moved into the record/);
-  const v2 = viewOf(S, { subject: K1.knock_id, data: { list: LIST, knock: ok({ ok: true, item: K1 }) } });
-  await press(S, v2, "inboxpull", { answers: { inboxpull: { ok: true, existed: true } } });
-  assert.match(draw(v2), /Already in the record/);
+  const p = await knock(K1, { inboxpull: ok({ ok: true, document: {} }) });
+  await press(p, "inboxpull", { reason: "It bears on our question." });
+  assert.equal(p.byOp("inboxpull")[0].body.knockId, K1.knock_id);
+  assert.match(text(p), /Moved into the record/);
+  const q = await knock(K1, { inboxpull: ok({ ok: true, existed: true }) });
+  await press(q, "inboxpull", { reason: "again" });
+  assert.match(text(q), /Already in the record/);
 });
 
-test("R7 inboxresolve to discarded with the member's reason; RESOLVE_NO_REASON drawn by its words, the knock left as it was", async () => {
-  const v = viewOf(S, { subject: K1.knock_id, data: { list: LIST, knock: ok({ ok: true, item: K1 }) } });
-  const r = await press(S, v, "inboxresolve", { reason: "Nothing in it bears on our questions." });
-  assert.deepEqual(r.request.body, { knockId: K1.knock_id, status: "discarded", reason: "Nothing in it bears on our questions." });
-  assert.match(draw(v), /Discarded, with your reason\./);
-  const v2 = viewOf(S, { subject: K1.knock_id, data: { list: LIST, knock: ok({ ok: true, item: K1 }) } });
-  const no = await press(S, v2, "inboxresolve", { reason: " ", answers: { inboxresolve: { ok: false, reason: "RESOLVE_NO_REASON" } } });
-  assert.equal(no.refused.key, "screen.inbox.refusal.RESOLVE_NO_REASON");
-  assert.match(no.refused.text, /The knock is left as it was\./);
-  assert.doesNotMatch(draw(v2), /Discarded, with your reason/);
+test("R7 inboxresolve to discarded with the member's reason asked first; RESOLVE_NO_REASON drawn by its words, the knock left as it was", async () => {
+  const p = await knock(K1, { inboxresolve: ok({ ok: true, status: "discarded" }) });
+  const r0 = await press(p, "inboxresolve");
+  assert.equal(p.byOp("inboxresolve").length, 0, "the reason is asked first");
+  assert.ok(r0.slot().querySelector("textarea"));
+  await press(p, "inboxresolve", { reason: "Nothing in it bears on our questions." });
+  assert.deepEqual(p.byOp("inboxresolve")[0].body, { knockId: K1.knock_id, status: "discarded", reason: "Nothing in it bears on our questions." });
+  assert.match(text(p), /Discarded, with your reason\./);
+  const q = await knock(K1, { inboxresolve: refused("RESOLVE_NO_REASON", "the owner's words") });
+  const r = await press(q, "inboxresolve", { reason: "x" });
+  assert.match(r.slot().textContent, /Say why you are discarding it.*The knock is left as it was\./);
+  assert.doesNotMatch(text(q), /Discarded, with your reason/);
 });
 
 test("R7 sourcelink records this knock's source as the same person as another, with what shows it", async () => {
-  const v = viewOf(S, { subject: K1.knock_id, data: { list: LIST, knock: ok({ ok: true, item: { ...K1, source_id: "SRC-2026-AAAA" } }) } });
-  assert.match(draw(v), /id="cx-source" value="SRC-2026-AAAA"/);
-  const r = await press(S, v, "sourcelink", { values: { "cx-source": "SRC-2026-AAAA", "cx-to": "SRC-2026-BBBB", "cx-evidence": "Same secret phrase." } });
-  assert.deepEqual(r.request.body, { source: "SRC-2026-AAAA", to: "SRC-2026-BBBB", evidence: "Same secret phrase." });
-  assert.match(draw(v), /Recorded with the source/);
-  const nos = await press(S, v, "sourcelink", { values: { "cx-to": "SRC-2026-BBBB", "cx-evidence": "x" } });
-  assert.equal(nos.refused.key, "screen.inbox.link.nosource");
-  const miss = await press(S, v, "sourcelink", { values: { "cx-source": "SRC-2026-AAAA" } });
-  assert.match(miss.refused.text, /The same person as source, What shows it is the same person/);
+  const p = await knock({ ...K1, source_id: "SRC-2026-AAAA" }, { sourcelink: ok({ ok: true }) });
+  assert.equal(p.doc.getElementById("cx-source").value, "SRC-2026-AAAA");
+  fill(p, { "cx-to": "SRC-2026-BBBB", "cx-evidence": "Same secret phrase." });
+  await press(p, "sourcelink");
+  assert.deepEqual(p.byOp("sourcelink")[0].body, { source: "SRC-2026-AAAA", to: "SRC-2026-BBBB", evidence: "Same secret phrase." });
+  assert.match(text(p), /Recorded with the source/);
+  const q = await knock(K1);
+  fill(q, { "cx-to": "SRC-2026-BBBB", "cx-evidence": "x" });
+  assert.match((await press(q, "sourcelink")).slot().textContent, /Move it into the record first/);
+  fill(q, { "cx-source": "SRC-1", "cx-to": "", "cx-evidence": "x" });
+  assert.match((await press(q, "sourcelink")).slot().textContent, /say: The same person as source\./);
+  assert.equal(q.byOp("sourcelink").length, 0);
 });

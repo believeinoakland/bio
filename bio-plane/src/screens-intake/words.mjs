@@ -15,7 +15,6 @@ export const SCREEN_WORDS = Object.freeze([
   ["ai.label.untested", "Not yet tested: this part of the assistant has not yet passed Civicsmith's tests on real matters. Check what it says against the record.", true],
 
   /* capture: the screen and its three tabs */
-  ["screen.capture.heading", "Add to the record", false],
   ["screen.capture.sub", "A document from an address or a file, a photo, or what you saw yourself.", false],
   ["screen.capture.tabs", "What you are adding", false],
   ["screen.capture.tab.address", "From an address", false],
@@ -73,7 +72,6 @@ export const SCREEN_WORDS = Object.freeze([
   ["screen.capture.help.only", "The assistant helps word only what you saw or heard, from what you typed; it adds nothing.", false],
 
   /* held */
-  ["screen.held.heading", "Held captures", false],
   ["screen.held.sub", "Captured but not yet vouched for. Nothing here is sent to you; it waits.", false],
   ["screen.held.empty", "No captures are waiting. Everything captured has been vouched for or set aside.", false],
   ["screen.held.age", "{days} days old", false],
@@ -97,6 +95,8 @@ export const SCREEN_WORDS = Object.freeze([
   ["screen.held.archivemore", "{shown} of {total} files shown.", false],
   ["screen.held.more", "More captures are waiting than are shown here: {count} shown.", false],
   ["screen.held.ack", "What you vouch for", false],
+  ["screen.held.ackhelp", "That each copy is what its source gave, unaltered. At most 500 characters, with no quotation marks or line breaks.", false],
+  ["screen.held.mitigationhelp", "How you checked, in a sentence. At most 500 characters, with no quotation marks or line breaks.", false],
   ["screen.held.mitigation", "What you did to check", false],
   ["screen.held.vouchmissing", "Before vouching, say: {fields}.", false],
   ["screen.held.vouchbad", "{field} must be at most 500 characters, with no quotation marks, backslashes or line breaks.", false],
@@ -109,7 +109,6 @@ export const SCREEN_WORDS = Object.freeze([
   ["screen.held.selectfailed", "The picked captures could not be gathered to vouch for them together. Nothing was vouched for; try again.", false],
 
   /* open-file */
-  ["screen.open-file.heading", "Opening a file", false],
   ["screen.open-file.risk.low", "Low risk", false],
   ["screen.open-file.risk.low.means", "Low risk: your group's Civicsmith fetched it itself, and it holds nothing that acts on its own. It opens as it is.", false],
   ["screen.open-file.risk.high", "High risk", false],
@@ -157,7 +156,6 @@ export const SCREEN_WORDS = Object.freeze([
   ["screen.open-file.nofile", "Name a file to open: this screen opens from a capture.", false],
 
   /* inbox */
-  ["screen.inbox.heading", "Inbox", false],
   ["screen.inbox.sub", "Material handed in through your doorbell.", false],
   ["screen.inbox.empty", "Nothing has been handed in.", false],
   ["screen.inbox.knock", "{size} handed in on", false],

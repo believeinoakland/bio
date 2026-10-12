@@ -28,28 +28,35 @@ function renderHeld(cs, view) {
     if (!a) return "";
     return `<span class="meta">${cs.w("screen.held.archive", { filed: a.filed ?? 0, notfiled: a.not_filed ?? 0 })}</span>`
       + `<ul class="mk-list" aria-label="${cs.w("screen.held.archivefiles")}">`
-      + (Array.isArray(r.files) ? r.files : []).map((f) => `<li>${cs.ref("open-file", f.sha256, cs.esc(f.name || f.document), [])}`
+      + (Array.isArray(r.files) ? r.files : []).map((f) => `<li>${cs.ref("capture", f.sha256, f.name || f.document, [])}`
         + (f.grade ? ` ${cs.grade("capture", f.grade)}` : "")
         + (f.eligible === false ? ` ${cs.mark("gap", "refused")}` : "") + "</li>").join("") + "</ul>"
       + (r.files_truncated ? `<span class="meta">${cs.w("screen.held.archivemore", { shown: (r.files || []).length, total: r.files_total })}</span>` : "");
   };
   const list = cs.state(view.data.held, (v) => cs.rows({
+    id: "held",
     cols: ["screen.held.col"],
+    name: (r) => r.title || cs.w("screen.held.untitled"),
+    /* R4: the hold strip (shell R19): one reason to set the picked aside; or vouching, in the member's own words */
+    hold: () => `${cs.act("heldsetaside")}`
+      + cs.field("ch-ack", "screen.held.ack", { help: "screen.held.ackhelp", max: 500 })
+      + cs.field("ch-mitigation", "screen.held.mitigation", { help: "screen.held.mitigationhelp", max: 500 })
+      + cs.act("release", { tone: "primary" }),
     items: v.held,
     key: (r) => r.bundle_id,
     pick: true,
-    cells: (r) => [`${cs.ref("document", r.bundle_id, cs.esc(r.title || cs.w("screen.held.untitled")), [])}`
+    cells: (r) => [`${cs.ref("document", r.bundle_id, r.title || cs.w("screen.held.untitled"), [])}`
       + `<span class="meta">${age(r.age_days)} · ${r.project ? cs.w("screen.held.project", { project: r.project }) : cs.w("screen.held.noproject")}`
       + (r.source && r.source.address ? ` · ${cs.w("screen.held.from", { address: r.source.address })}` : "") + "</span>"
       + eligibility(r) + asked(r) + files(r)],
   }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : "")
-    + `<div class="cs-hold mk-hold" data-hold="picked"><span class="acts">${cs.act("heldsetaside")}${cs.act("release", { tone: "primary" })}</span></div>`,
+    ,
   { empty: "screen.held.empty" });
   const aside = Array.isArray(U.setAside) && U.setAside.length
     ? cs.sec("screen.held.setaside", said("screen.held.setasidecount", { count: U.setAside.length })
       + (Array.isArray(U.waiting) ? U.waiting : []).map((q) => said("screen.held.waiting", { asker: q.asker || "", title: q.title || "" })).join("")
       + `<div class="mk-acts">${cs.act("heldrestore")}</div>`) : "";
-  return `<div class="mk-h"><h1 class="t-title">${cs.w("screen.held.heading")}</h1><p class="mk-sub">${cs.w("screen.held.sub")}</p></div>`
+  return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.held.sub")}</p></div>`
     + `<div class="mk-acts">${cs.act("heldcaptures")}</div>`
     + list
     + (U.released ? said("screen.held.released", { count: U.released }) : "")
@@ -62,8 +69,7 @@ function renderHeld(cs, view) {
  * signed act's dialog asks, each checked as R20 bounds it before anything is sent. */
 async function sendRelease(view, el, cs, extra) {
   const ids = (extra && Array.isArray(extra.picked) ? extra.picked : []).filter((x) => typeof x === "string" && x);
-  const f = (extra && extra.fields) || {};
-  const ack = String(f.acknowledgment || "").trim(), mitigation = String(f.mitigation || "").trim();
+  const ack = String(cs.value("ch-ack") || "").trim(), mitigation = String(cs.value("ch-mitigation") || "").trim();
   if (!ids.length) return { refuse: "screen.held.none" };
   const missing = [!ack && "screen.held.ack", !mitigation && "screen.held.mitigation"].filter(Boolean);
   if (missing.length) return { refuse: "screen.held.vouchmissing", fills: { fields: missing.map((k) => cs.w(k)).join(", ").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&") } };
@@ -123,9 +129,7 @@ export const HELD_SCREEN = Object.freeze({
   render: renderHeld,
   acts: Object.freeze([
     Object.freeze({ op: "heldcaptures", label: "act.heldcaptures.label.held", send: sendRefresh }),
-    Object.freeze({ op: "release", label: "act.release.label.held", send: sendRelease, done: doneRelease,
-                    dialog: Object.freeze([Object.freeze({ name: "acknowledgment", label: "screen.held.ack" }),
-                                           Object.freeze({ name: "mitigation", label: "screen.held.mitigation" })]) }),
+    Object.freeze({ op: "release", label: "act.release.label.held", send: sendRelease, done: doneRelease, reasonField: "acknowledgment" }),
     Object.freeze({ op: "heldsetaside", label: "act.heldsetaside.label.held", send: sendSetAside, done: doneSetAside }),
     Object.freeze({ op: "heldrestore", label: "act.heldrestore.label.held", send: sendRestore, done: doneRestore }),
   ]),

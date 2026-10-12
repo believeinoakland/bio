@@ -14,7 +14,7 @@ function renderCapture(cs, view) {
   const U = view.ui || {};
   const said = (k, f) => `<p class="mk-note" role="status">${cs.w(k, f)}</p>`;
   const tabs = [["address", "screen.capture.tab.address"], ["file", "screen.capture.tab.file"], ["saw", "screen.capture.tab.saw"]]
-    .map(([k, w]) => `<a role="tab" class="cs-tab" href="/app/capture/${k}"${k === tab ? ' aria-selected="true" aria-current="page"' : ""}>${cs.w(w)}</a>`).join("");
+    .map(([k, w]) => `<a role="tab" class="cs-tab" href="/app/capture/${k}" data-nav${k === tab ? ' aria-selected="true" aria-current="page"' : ""}>${cs.w(w)}</a>`).join("");
   let body = "";
   if (tab === "address") {
     const got = U.captured;
@@ -39,7 +39,7 @@ function renderCapture(cs, view) {
       + `<fieldset class="mk-checks"><legend>${cs.w("screen.capture.file.how")}</legend>`
       + how.map(([k, w]) => `<label><input type="radio" id="ci-how-${k}" name="ci-how" value="${k}"> ${cs.w(w)}</label>`).join("")
       + "</fieldset>"
-      + `<p class="mk-small muted">${cs.w("screen.capture.file.downloaded")} <a href="/app/capture/address">${cs.w("screen.capture.file.toaddress")}</a></p>`
+      + `<p class="mk-small muted">${cs.w("screen.capture.file.downloaded")} <a href="/app/capture/address" data-nav>${cs.w("screen.capture.file.toaddress")}</a></p>`
       + cs.field("ci-where", "screen.capture.file.where", { help: "screen.capture.file.wherehelp", value: U.where || "" })
       + cs.field("ci-what", "screen.capture.file.what", { area: true, rec: true, value: U.what || "" })
       + `<div class="mk-acts">${cs.act("captureupload", { tone: "primary", label: "act.capture.label.capture" })}</div>`
@@ -47,8 +47,9 @@ function renderCapture(cs, view) {
       + `<p class="mk-note">${cs.w("screen.capture.file.note")}</p>`;
   } else {
     const draft = U.draft;
+    /* a draft is drawn into a field of a new id: the shell keeps what was typed into a field it redraws (K3002) */
     body = `<p class="mk-note">${cs.w("screen.capture.saw.note")}</p>`
-      + cs.field("ci-words", "screen.capture.saw.words", { area: true, rec: true, value: draft ? draft.text : (U.words || "") })
+      + cs.field(U.wordsId || "ci-words", "screen.capture.saw.words", { area: true, rec: true, value: draft ? draft.text : (U.words || "") })
       + (draft ? `<p class="cs-draftlabel">${cs.w("draft.machine.label")}</p>`
         + (draft.untested ? `<p class="cs-untested" data-label="untested">${cs.w("ai.label.untested")}</p>` : "") : "")
       + (view.reachable ? `<div class="mk-acts">${cs.act("writinghelp", { label: "act.writinghelp.label.capture" })}</div>`
@@ -60,7 +61,7 @@ function renderCapture(cs, view) {
       + (U.testified ? said("screen.capture.saw.done", { id: U.testified }) : "")
       + `<p class="mk-note">${cs.w("screen.capture.saw.after")}</p>`;
   }
-  return `<div class="mk-h"><h1 class="t-title">${cs.w("screen.capture.heading")}</h1><p class="mk-sub">${cs.w("screen.capture.sub")}</p></div>`
+  return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.capture.sub")}</p></div>`
     + `<nav class="mk-tabs2" role="tablist" aria-label="${cs.w("screen.capture.tabs")}">${tabs}</nav>`
     + `<div class="st" data-tab="${tab}">${body}</div>`;
 }
@@ -173,7 +174,7 @@ function doneUpload(view, answer, cs) {
 
 /* R3: what the member saw or heard (`testify`): the words, with where in them, and when as `observedAt`. */
 function sendTestify(view, el, cs) {
-  const words = String(cs.value("ci-words") || "").trim(), where = String(cs.value("ci-where") || "").trim();
+  const words = String(cs.value((view.ui && view.ui.wordsId) || "ci-words") || "").trim(), where = String(cs.value("ci-where") || "").trim();
   const when = String(cs.value("ci-when") || "").trim();
   const missing = [!words && "screen.capture.saw.words", !where && "screen.capture.saw.where", !when && "screen.capture.saw.when"].filter(Boolean);
   if (missing.length) return { refuse: "screen.capture.saw.missing", fills: { fields: missing.map((k) => cs.w(k)).join(", ").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&") } };
@@ -191,7 +192,7 @@ function doneTestify(view, answer, cs) {
  * told only what the member typed. Its draft fills the field labelled as its draft, with the test-instance label when
  * the answer carries `untested` (K2816 (2); screens-inquiry R7). */
 function sendWritingHelp(view, el, cs) {
-  const told = String(cs.value("ci-words") || "").trim();
+  const told = String(cs.value((view.ui && view.ui.wordsId) || "ci-words") || "").trim();
   if (!told) return { refuse: "screen.capture.help.empty" };
   cs.set("where", cs.value("ci-where") || "");
   cs.set("when", cs.value("ci-when") || "");
@@ -200,6 +201,8 @@ function sendWritingHelp(view, el, cs) {
 function doneWritingHelp(view, answer, cs) {
   const a = answer || {};
   const untested = a.untested === true || a.label === "untested" || (Array.isArray(a.labels) && a.labels.includes("untested"));
+  const n = Number(String((view.ui && view.ui.wordsId) || "ci-words-0").split("-").pop()) || 0;
+  cs.set("wordsId", `ci-words-${n + 1}`);
   cs.set("draft", { text: String(a.text || ""), untested });
 }
 
@@ -214,11 +217,11 @@ export const CAPTURE_SCREEN = Object.freeze({
                                               TOO_LARGE: "screen.capture.refusal.TOO_LARGE" }) }),
     Object.freeze({ op: "capturerequest", label: "act.capturerequest.label.capture", send: sendCaptureRequest, done: doneCaptureRequest, rereads: [] }),
     Object.freeze({ op: "monitor", label: "act.monitor.label.capture", send: sendMonitor, done: doneMonitor, rereads: [] }),
-    Object.freeze({ op: "captureupload", label: "act.capture.label.capture", send: sendUpload, done: doneUpload, rereads: [],
+    Object.freeze({ op: "captureupload", label: "act.capture.label.capture", send: sendUpload, done: doneUpload, rereads: [], reasonField: "statement",
                     refusals: Object.freeze({ UPLOAD_NO_STATEMENT: "screen.capture.refusal.UPLOAD_NO_STATEMENT", EMPTY: "screen.capture.refusal.upload.EMPTY",
                                               TOO_LARGE: "screen.capture.refusal.upload.TOO_LARGE",
                                               MEMBER_SESSION_REQUIRED: "screen.capture.refusal.MEMBER_SESSION_REQUIRED" }) }),
-    Object.freeze({ op: "testify", label: "act.testify.label.capture", send: sendTestify, done: doneTestify, rereads: [] }),
-    Object.freeze({ op: "writinghelp", label: "act.writinghelp.label.capture", send: sendWritingHelp, done: doneWritingHelp, rereads: [] }),
+    Object.freeze({ op: "testify", label: "act.testify.label.capture", send: sendTestify, done: doneTestify, rereads: [], reasonField: "words" }),
+    Object.freeze({ op: "writinghelp", label: "act.writinghelp.label.capture", send: sendWritingHelp, done: doneWritingHelp, rereads: [], reasonField: "told" }),
   ]),
 });

@@ -18,7 +18,7 @@ function openFileReads(view) {
 /* R5: one of the states, drawn from what `threatof` and `originalstate` answer: held (a scan hold), low, or high. */
 function renderOpenFile(cs, view) {
   const sha = typeof view.subject === "string" ? view.subject.toLowerCase() : "";
-  const head = `<div class="mk-h"><h1 class="t-title">${cs.w("screen.open-file.heading")}</h1></div>`;
+  const head = `<div class="mk-h">${cs.title()}</div>`;
   if (!/^[0-9a-f]{64}$/.test(sha)) return head + `<p class="mk-note">${cs.w("screen.open-file.nofile")}</p>`;
   const U = view.ui || {}, D = view.data || {};
   const said = (k, f) => `<p class="mk-note" role="status">${cs.w(k, f)}</p>`;
@@ -93,8 +93,9 @@ function renderOpenFile(cs, view) {
 async function sendOpenOriginal(view, el, cs) {
   const sha = String(view.subject || "").toLowerCase();
   const override = el && el.dataset && el.dataset.override === "1";
-  const got = await cs.download("openoriginal", { query: { capture: sha, ...(override ? { override: "1" } : {}) } });
-  cs.set("refused", got && got.ok ? null : ((got && got.answer && (got.answer.translation || got.answer.reason || got.answer.code)) || ""));
+  const got = await cs.download("openoriginal", { query: { capture: sha, ...(override ? { override: "1" } : {}) }, name: sha.slice(0, 12) });
+  const no = got && got.answer && typeof got.answer === "object" ? (got.answer.result && typeof got.answer.result === "object" ? got.answer.result : got.answer) : {};
+  cs.set("refused", got && got.ok ? null : (no.translation || no.reason || no.code || ""));
   cs.set("opened", !!(got && got.ok));
   return null;
 }
@@ -103,8 +104,9 @@ async function sendOpenOriginal(view, el, cs) {
 async function sendOpenWithWarning(view, el, cs) {
   if (cs.value("co-device") !== true || cs.value("co-macros") !== true) return { refuse: "screen.open-file.warn.both" };
   const sha = String(view.subject || "").toLowerCase();
-  const got = await cs.download("openwithwarning", { query: { capture: sha }, body: { warned: { own_device: true, no_macros: true } } });
-  cs.set("refused", got && got.ok ? null : ((got && got.answer && (got.answer.translation || got.answer.reason || got.answer.code)) || ""));
+  const got = await cs.download("openwithwarning", { query: { capture: sha }, body: { warned: { own_device: true, no_macros: true } }, name: sha.slice(0, 12) });
+  const no = got && got.answer && typeof got.answer === "object" ? (got.answer.result && typeof got.answer.result === "object" ? got.answer.result : got.answer) : {};
+  cs.set("refused", got && got.ok ? null : (no.translation || no.reason || no.code || ""));
   cs.set("opened", !!(got && got.ok));
   return null;
 }
@@ -113,11 +115,14 @@ async function sendOpenWithWarning(view, el, cs) {
  * derived copy. */
 async function sendSafeView(view, el, cs) {
   const sha = String(view.subject || "").toLowerCase();
-  const got = await cs.download("safeview", { query: { capture: sha } });
-  const a = (got && got.answer) || {};
-  if (!got || !got.ok) { cs.set("refused", a.translation || a.reason || a.code || ""); return null; }
+  const got = await cs.download("safeview", { query: { capture: sha }, name: `${sha.slice(0, 12)}-safe-view.pdf` });
+  /* a spreadsheet's safe view is a JSON answer (file-safety R11), which the download hands back unsaved */
+  const j = (got && got.answer) || {};
+  const a = j && typeof j === "object" && j.result && typeof j.result === "object" ? j.result : j;
+  if (a && a.kind === "data" && a.ok !== false) { cs.set("refused", null); cs.set("safe", a); return null; }
+  if (!got || !got.ok) { cs.set("refused", (a && (a.translation || a.reason || a.code)) || ""); return null; }
   cs.set("refused", null);
-  cs.set("safe", a.kind === "data" ? a : { kind: "pdf", pages: a.pages, source_pages: a.source_pages, truncated: a.truncated === true });
+  cs.set("safe", { kind: "pdf" });
   return null;
 }
 

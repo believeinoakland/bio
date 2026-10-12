@@ -29,7 +29,7 @@ function renderInbox(cs, view) {
     + (same(k) ? `<span class="meta">${cs.w("screen.inbox.same", { count: same(k) })}</span>` : "")
     + (k.status === "discarded" && k.resolve_reason ? `<span class="meta">${cs.w("screen.inbox.resolved", { reason: k.resolve_reason })}</span>` : "");
   const list = cs.state(D.list, (v) => `<div class="cs-sheet" role="list">${v.inbox.map((k) => `<div class="cs-row" role="listitem"${k.knock_id === id ? ' aria-current="true"' : ""}>`
-      + `<span>${cs.ref("inbox", k.knock_id, cs.w("screen.inbox.open", { id: k.knock_id }), [])}${facts(k)}</span></div>`).join("")}</div>`,
+      + `<span>${`<a class="cs-ref" href="/app/inbox/${cs.esc(k.knock_id)}" data-nav>${cs.w("screen.inbox.open", { id: k.knock_id })}</a>`}${facts(k)}</span></div>`).join("")}</div>`,
     { empty: "screen.inbox.empty" });
   const one = !id ? "" : cs.state(D.knock, (v) => {
     const k = v.item || {};
@@ -41,7 +41,7 @@ function renderInbox(cs, view) {
       + `${cs.field("cx-evidence", "screen.inbox.link.evidence", { area: true, rec: true, value: L.evidence || "" })}`
       + `${cs.act("sourcelink")}</div></section>`;
   });
-  return `<div class="mk-h"><h1 class="t-title">${cs.w("screen.inbox.heading")}</h1><p class="mk-sub">${cs.w("screen.inbox.sub")}</p></div>`
+  return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.inbox.sub")}</p></div>`
     + one
     + (L.pulled ? said(L.pulled === "existed" ? "screen.inbox.existed" : "screen.inbox.pulled") : "")
     + (L.discarded ? said("screen.inbox.discarded") : "")
@@ -90,6 +90,6 @@ export const INBOX_SCREEN = Object.freeze({
     Object.freeze({ op: "inboxpull", label: "act.inboxpull.label.inbox", send: sendPull, done: donePull }),
     Object.freeze({ op: "inboxresolve", label: "act.inboxresolve.label.inbox", send: sendDiscard, done: doneDiscard,
                     refusals: Object.freeze({ RESOLVE_NO_REASON: "screen.inbox.refusal.RESOLVE_NO_REASON" }) }),
-    Object.freeze({ op: "sourcelink", label: "act.sourcelink.label.inbox", send: sendSourceLink, done: doneSourceLink }),
+    Object.freeze({ op: "sourcelink", label: "act.sourcelink.label.inbox", send: sendSourceLink, done: doneSourceLink, reasonField: "evidence" }),
   ]),
 });
