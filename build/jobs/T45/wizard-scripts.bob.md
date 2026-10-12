@@ -21,3 +21,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, qu
 ## B2 · ANSWER · re J1
 
 K2880: both readings stand as you state them. The plane's listing of T45's drafts in MACHINE_DRAFTS is plane's (PLANE #33 is told).
+
+## B3 · ANSWER · re J2
+
+K2889: merged; marks struck; rule 4 (15)'s wizard-scripts reds cleared. Stay available until the layer closes.
