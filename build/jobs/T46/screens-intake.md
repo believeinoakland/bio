@@ -2,6 +2,15 @@
 
 **Status** · session_01JBa3sUqEAyKhi388Z2gNjX · depth 2 · WORKING · handled B6
 
+## Completion, fourth (SCREENS-INTAKE #1, B7; K3017)
+
+**Re-opened by B7** · `tranche/T46` merged (control-plane in it; `modules.json` already lists my paths, tests and the `wizard-scripts` use). `release` from the held screen now sends `handle`, `acknowledgment` and `mitigation` in the query, as ratification's map reads them (`ratification/index.mjs`:1567); the body repeats them for the shell's own-words check of `reasonField` and as control-plane's end-to-end suite reads the request. No `retire` is sent by this module. Test with a control: a plane stand-in reading as the map does releases the held screen's request, and refuses `NO_ACKNOWLEDGMENT` the same three in the body alone.
+- `node --test bio-plane/test/m/screens-intake/`: tests 42, pass 42, fail 0.
+- `node --test bio-plane/test/m/control-plane/`: tests 242, pass 242, fail 0 (its "R75 end to end … release" green: released, read back as no longer held); interface-shell 63/0.
+- format 0; architecture 0; coverage 9 of 9; ownership 0 (3 files).
+
+Size (session_01JBa3sUqEAyKhi388Z2gNjX): test runs 30, module lines 848
+
 ## Completion, third (SCREENS-INTAKE #1, B6; K3007)
 
 **Re-opened by B6** · `tranche/T46` merged with interface-shell; my stand-in kit (`kit.mjs`) deleted; every test now drives the real served page, `interfacePage(SCREENS)` booted through interface-shell's `harness.mjs` and `dom.mjs` (a small helper of my own, `page.mjs`, opens a screen, fills fields and presses acts). Each kit part I read checked against `browser.mjs` and corrected where it differed:
