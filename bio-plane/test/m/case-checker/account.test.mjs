@@ -79,6 +79,29 @@ test("R24 arm 1: a sentence not bias-marked that cites nothing, or only what it 
   assert.deepEqual(codes(judge(one("This group expects a vendor to be favoured.", [], { bias_statement: "S1" }))), []);
 });
 
+test("R24 (T46; N916): a sentence not bias-marked that states nothing checkable (no figure, date, name or quotation) reads as supported whenever every thing it cites was read, whatever it says; the same sentence citing only, or also, what was not read is ACCOUNT_SENTENCE_UNSUPPORTED", () => {
+  /* "supported" means only that it states nothing the cited record lacks, never that the cited record shows what it says:
+     none of these says what F1, P1 or the leg holds, and each passes */
+  const plainSentences = ["The record bears on the matter.", "The vote was never in doubt.", "Nothing here was done properly.",
+                          "it matters less than it seems."];
+  for (const text of plainSentences) {
+    for (const cites of [[F1], [P1], [leg("F1", 0)], [F1, P1]]) assert.deepEqual(codes(judge(one(text, cites))), [], `${text} ${JSON.stringify(cites)}`);
+    /* control: the same sentence citing only what was not read */
+    const unread = judge(one(text, [F2]));
+    assert.deepEqual(codes(unread), [[0, "ACCOUNT_SENTENCE_UNSUPPORTED"]], text);
+    assert.match(detail(unread), /sentence 0 cites F2, which is not among what it may cite/);
+    /* and what was not read beside what was: the unread cite is named, the read one excuses nothing */
+    for (const cites of [[F1, F2], [F2, F1]]) {
+      const mixed = judge(one(text, cites));
+      assert.deepEqual(codes(mixed), [[0, "ACCOUNT_SENTENCE_UNSUPPORTED"]], `${text} ${JSON.stringify(cites)}`);
+      assert.match(detail(mixed), /cites F2, which is not among/);
+      assert.doesNotMatch(detail(mixed), /F1/);
+    }
+  }
+  /* read as supported means arms 1 and 2 find nothing; arm 3 still judges such a sentence against the record */
+  assert.deepEqual(codes(judge(one("The lease was not approved without a vote.", [F1]))), [[0, "ACCOUNT_CONTRADICTED_BY_RECORD"]]);
+});
+
 test("R24 arm 2: a figure, date, name or quotation not in what it cites is ACCOUNT_FACT_NOT_IN_CITED, each named; the same facts taken from what it cites pass", () => {
   const cases = [
     ["The lease cost $9,999.", /the figure \$9,999/],

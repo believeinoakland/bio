@@ -130,10 +130,17 @@ test("R23 R16: a lens that is none of the three is answered as published with th
 });
 
 test("R23 R12: no lens composes a case-level strength: pairs stay per finding and per axis under every lens", async () => {
-  const r = await run(withApplications(), "removed");
-  for (const k of ["strength", "pair", "verdict", "score"]) assert.equal(Object.keys(r).includes(k), false, k);
-  for (const f of r.findings) if (f.pair) assert.deepEqual(Object.keys(f.pair), ["capture", "connection", "testimony"]);
-  assert.deepEqual(Object.keys(gradingFacts()).sort(), [A, B, C].sort());
+  const cf = withApplications();
+  for (const lens of [undefined, "as_published", "removed", { statements: ["S1"] }, { statements: [] }]) {
+    const r = await run(cf, lens);
+    for (const k of ["strength", "pair", "verdict", "score"]) assert.equal(Object.keys(r).includes(k), false, `${k} ${JSON.stringify(lens)}`);
+    assert.deepEqual(r.findings.map((f) => f.finding).sort(), [A, B, C].sort());
+    for (const f of r.findings) {
+      assert.ok(f.pair, `${f.finding} ${JSON.stringify(lens)}`);
+      assert.deepEqual(Object.keys(f.pair), ["capture", "connection", "testimony"]);
+      if (f.as_published) assert.deepEqual(Object.keys(f.as_published.pair), ["capture", "connection", "testimony"]);
+    }
+  }
 });
 
 test("R23 (K2529): reweigh({parts, documents, answer, lens}) is the same re-weighing, pure and synchronous, over an as-published answer already checked, answering per finding the pair, bar_met, the statements that changed it and the limit; checkCaseFile's lens arm answers what it answers", async () => {

@@ -4,12 +4,16 @@
  * `checkAccount({account, cited, printed, conclusions})` judges each sentence of a case document's `account:` block
  * (`case-grammar` R23) through `answers.checkSentences` (its R33) and `case-disclosures` R30's arms, in its order:
  *
- *   ACCOUNT_SENTENCE_UNSUPPORTED     a sentence not bias-marked that cites nothing, or cites only what was not read;
+ *   ACCOUNT_SENTENCE_UNSUPPORTED     a sentence not bias-marked that cites nothing, or cites anything that was not read;
  *   ACCOUNT_FACT_NOT_IN_CITED        a figure, date, name or quotation not in what it cites;
  *   ACCOUNT_CONTRADICTED_BY_RECORD   a finding's conclusion or a determination other than the record holds, or a leg that
  *                                    cuts against it read as supporting it (against `conclusions`);
  *   ACCOUNT_BIAS_NOT_PRINTED         a bias-marked sentence whose statement is not in `printed`;
  *   ACCOUNT_CLAIM_NOT_BIAS           a bias-marked sentence stating a fact ("Lying is not bias").
+ *
+ * (T46; N916) A sentence not bias-marked that states nothing these arms can check (no figure, date, name or quotation)
+ * and whose cites were all read reads as supported: "supported" means only that it states nothing the cited record lacks,
+ * never that the cited record shows what it says. `filings` (its R34) and `case-account` read it so.
  *
  * `case-disclosures` R30 runs it at the act, with the record; `checkCaseFile` (R1) runs it offline over the carried
  * document, so one body of check code judges both. The machine flags (`run-rules` R25) are not judged here. Its codes'
