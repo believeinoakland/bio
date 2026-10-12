@@ -53,3 +53,10 @@ R31 says the record's `w` is "the `op=whoami` answer". The page has always store
 - Merge note: I use instance-setup R80/R81's `test_instance` and `parts`. I test against my own interface and will merge `tranche/T46` when BOB announces instance-setup's merge (doubt 14).
 
 Size (session_01D7vhiucs6Yq1H95ANNK4SF): test runs 11, module lines 2657
+
+## J2 · REPORT
+
+Found while reading my Uses' public parts (none blocks me):
+- `jurisdictions`: `COUNTERPARTY_LEVELS`, which setup-page imports (R5), is named in no Provides of its public part.
+- `file-safety`: `onOwnServers`, which setup-page imports (R30), is named in no Provides; R42's row says "no virus scanner" where setup-page R30's interim says "no file scanner" (the design stream's words should reconcile them).
+- `capture`: `INFORMATION_GRAMMAR`, which my tests import, is named in no Provides.
