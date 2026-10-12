@@ -1,6 +1,6 @@
 # skills (T46)
 
-**Status** · session_01FiMon7UNZRyjhX6B7Jo9z2 · depth 2 · COMPLETE · handled B1
+**Status** · session_01FiMon7UNZRyjhX6B7Jo9z2 · depth 2 · COMPLETE · handled B2
 
 ## Record
 
