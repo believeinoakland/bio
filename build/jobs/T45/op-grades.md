@@ -51,3 +51,15 @@ My change moves users' suites as owed by later L11 jobs, none their fault (recor
 ## J3 · COMPLETE
 
 T45-38 complete on job/T45/op-grades (pushed): R32 graded (61 ops, t45.mjs), N891 pins (pins.test.mjs), hold-op citations re-pointed. op-grades 67/67; format, architecture, coverage 32/32, ownership (6 files) 0 failures. J1 (four readings) is still open: each is built as my best reading and I will bring the job in line with your answer by CHANGE. Details in my record.
+
+## J4 · QUESTION
+
+Re B3 (K2885). Every code checks against its owner: all 16 are the codes the owners' methods answer (action-holds, actions, action-replies, escalation, filings, action-clocks; `itemtakeup` through plan-work's `#act`, action-plans' `machineCannotPlan` row). No mismatch.
+
+Two things stop me building it as sent. This QUESTION replaces nothing; J1 is answered (B2).
+
+1. **R8 says the opposite, so it needs re-wording first** (requirements are my contract). R8 as written: "`NON_ACTS` gives `actionholdrelease` 'entry-directed: …'" and "`actionholdrelease` is not in `MACHINE_REFUSALS`, which holds only `ACTS` (R5, `affordances` R20), as `actionhold` is not." B3 removes both rows from NON_ACTS and adds both to MACHINE_REFUSALS. R5's list of MACHINE_REFUSALS members also needs the 16 additions, and R1's/R2's layer-9 sentences say nothing that conflicts. Please amend R8 (and add to R5, or to R32, the 16 rows and the 11 removals) before I apply it, or tell me the amendment's words and I will build to them.
+
+2. **Eight of B3's new MACHINE_REFUSALS ops are still listed in NON_ACTS.** `actionscope`, `actionreceipt`, `actionpromise`, `actionreplybearing`, `arosefrom`, `holdnoticesent`, `clockstate` and `itemtakeup` gain a MACHINE_REFUSALS row, which holds only `ACTS` (R5, `affordances` R20). So they are `ACTS` rows too, and catalogue's R1/R12 test refuses an op that is both an act and a non-act. Best reading: remove those eight from NON_ACTS as well (19 removals in all), their grades unchanged. Alternative: they stay non-acts and take no MACHINE_REFUSALS row. Which?
+
+As soon as both are answered I apply the CHANGE whole, re-pin my tests (pins.test.mjs's layer-9 `actionhold` sentence, ladder.test.mjs's MACHINE_REFUSALS equality, owners.test.mjs R8, t45.test.mjs) and re-run steps 5–7.
