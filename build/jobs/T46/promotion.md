@@ -1,6 +1,6 @@
 # promotion (T46)
 
-**Status** · session_01QFUJsskb7hnNteGSP3z9cY · depth 2 · WORKING · handled B2
+**Status** · session_01QFUJsskb7hnNteGSP3z9cY · depth 2 · COMPLETE · handled B2
 
 ## Working notes
 
