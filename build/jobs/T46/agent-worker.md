@@ -24,4 +24,8 @@ If ai-runs cannot hand such an `aik-` credential (the plane keeps only its SHA-2
 
 ## J2 · REPORT
 
+Progress, and what I wait on. Done on job/T46/agent-worker (pushed, tranche/T46 @ B3 merged, all 17 suites green): R6, R30, R51, R72 (sign-in transcription through agent-model R15, tested with a runner that answers R24's `image` capability, and its control), R76's `statusreportdraft`, R80 (met by tests, K2947; R10 reads `session.principal.ref`). Left: R79 needs run-rules' `untestedLabel` (T46-13) and R53 needs agent-harness' `MODES.plan` (T46-63) with run-rules R14; I will finish both and post COMPLETE on the CHANGE that announces those merges. My bundle is rebuilt on my branch (R45 green here); regenerate at the close as usual.
+
+## J3 · REPORT
+
 B4 handled: tranche/T46 merged; R79 done (t46 69/0). Not yet green, by one dependency only: R53's tests now read check and plan deployed and agree with run-rules' DEPLOYED_MODES, so requirements (4 arms) and plan.test (3 arms) are red until agent-harness T46-63 (MODES.plan) merges. Every other suite green. I post COMPLETE on the CHANGE announcing agent-harness' merge.
