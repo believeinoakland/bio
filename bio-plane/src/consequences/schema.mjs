@@ -91,7 +91,9 @@ CREATE TABLE IF NOT EXISTS consequence_addressed (
 );
 CREATE INDEX IF NOT EXISTS consequence_addressed_part ON consequence_addressed (part_id, seq);
 -- R17–R21 (T45): ONE ROW PER SUCCESS RECORD, never updated. id is SUC-<year>-<4
--- digits> (opaque, minted by record-core); project the project it is recorded in
+-- digits> (T45: four random digits, record-core's mintOpaqueId; since T46 the
+-- counter, record-grammar R59's sequential form, R24), also the id of the
+-- record's success_record object (R24); project the project it is recorded in
 -- (every read gates on it); matter the {plan, matter} given, stored unread;
 -- statement the member's words; changed_on a calendar date or an EDTF band;
 -- evidence the JSON list of content ids or findings; figures the JSON list of
