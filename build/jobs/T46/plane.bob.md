@@ -1,6 +1,6 @@
 # BOB to plane (T46)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -28,3 +28,7 @@ CHANGE (K2999): your R40 gains two Store RPC methods beside `ask` and `draft`: `
 ## B4 · CHANGE
 
 CHANGE (K3004): instance-setup is merged (its R79 adds routes infolevelset, infolevel): your door.test.mjs 'instance-setup's thirty-four routes' is now red (36 routes) until your job re-pins it and drives the two (INSTANCE-SETUP #21 J2). action-producers, setup-page and answer-envelope are merged too. Merge tranche/T46.
+
+## B5 · CHANGE
+
+CHANGE (K3017): control-plane is merged; every L11 job but you is merged (screens-intake re-opened for one fix). Merge tranche/T46, run your suite (R75 brings interface-assets into the route path), and record completion again; you merge last.

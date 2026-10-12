@@ -2218,6 +2218,10 @@ const SESSION_OPS = Object.freeze({
                       that produces a member's own name for a member's proposal. */
                    "actionlawspropose",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
+                   /* T46 (R3, R34; K3011): REC-93's frontier read, in BOTH sets as `search` and `findin` are, so the
+                      shell draws Find's "See where nobody looked" from a session; a read, so no NEEDS row, the viewer
+                      stamp the door's. */
+                   "frontier",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,
@@ -2320,6 +2324,7 @@ const SESSION_OPS = Object.freeze({
                       that produces a member's own name for a member's proposal. */
                    "actionlawspropose",
                    "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
+                   "frontier",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
                    ...PROJECT_ACTIONS, ...EXPERTISE_ACTIONS, ...TASK_ACTIONS, ...QUEUE_ACTIONS, ...AI_RUN_ACTIONS,

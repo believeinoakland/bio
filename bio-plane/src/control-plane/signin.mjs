@@ -9,11 +9,24 @@
    and only then. The member's own `subscriptiondisconnect` and their revocation (credentials R16: `memberset` to
    `revoked`, a carried `adminremove`) send `step: "signout"` for that member, and a runner that cannot be reached changes
    neither act's answer. The code passes through and is kept nowhere here: it is never logged, stored, echoed or put in an
-   answer by this module (R30; agent-worker R67). */
+   answer by this module (R30; agent-worker R67).
+   (T46; N897 (3), (4)) `start` is refused `DISCLOSURE_DUE` while the member has not been shown what connecting means
+   (`instance-setup.disclosureOf`, its R54), after the keep-away refusal and with nothing sent: the door hands the
+   question in (`disclosureDue`), since the row's site is its own (`answer-envelope`'s C-69.6). `agent-worker`'s
+   `RUNNER_NOT_CONFIGURED` is relayed with its code and status unchanged and a `translation` read by key. */
 
 export const SIGNIN_STEPS = Object.freeze(["start", "code", "state", "signout"]);
 /* The steps that start or complete a sign-in, refused under keep-away (K2200 (9)); `state` and `signout` never are. */
 const KEPT_AWAY_STEPS = Object.freeze(["start", "code"]);
+/* (T46; R65) The step refused while the disclosure is due; `state`, `signout` and `code` never are. */
+const DISCLOSURE_STEPS = Object.freeze(["start"]);
+/* (T46; R65) The door's member words under the UX stream's keys, read by key until `words.json` holds them. */
+export const SIGNIN_WORDS = Object.freeze({
+  "ai.refused.signinabsent": "Signing in with Claude is not installed in your group's Civicsmith yet. Whoever installed "
+    + "your group's Civicsmith can add it.",
+});
+/* agent-worker R66's refusal when it holds no runner, relayed in member words. */
+const RUNNER_ABSENT = "RUNNER_NOT_CONFIGURED";
 
 const unbound = () => ({ status: 503, body: { ok: false, reason: "AGENT_WORKER_UNBOUND",
   detail: "your group's Civicsmith has no assistant bound to it, so nothing was sent to your sign-in." } });
@@ -46,6 +59,8 @@ async function send(env, payload) {
   let body;
   try { body = await res.json(); } catch { return silent("answered no JSON"); }
   if (!body || typeof body !== "object" || Array.isArray(body)) return silent("answered no JSON object");
+  if (body.ok === false && (body.code === RUNNER_ABSENT || body.reason === RUNNER_ABSENT) && body.translation === undefined)
+    return { status: res.status, body: { ...body, translation: SIGNIN_WORDS["ai.refused.signinabsent"] } };
   return { status: res.status, body };
 }
 
@@ -53,7 +68,9 @@ async function send(env, payload) {
  *  read: admission R20 refuses a credential there and `step` and `code` are the body's), `store(path, init)` asks the
  *  caller's store through `doAnswer`. Answers `{status, body}`, or `{unread}`, the store's own answer to the keep-away
  *  question when it refused it or did not answer, which the door answers as any store refusal or silence. */
-export async function subscriptionSignin({ env, member, asked, store }) {
+/*  `disclosureDue()` (T46) answers `null` when the member has been shown the disclosure, else `{status, body}` (the
+ *  door's refusal) or `{unread}` (the store's own answer, refused or silent); it is asked for `start` alone. */
+export async function subscriptionSignin({ env, member, asked, store, disclosureDue = null }) {
   const a = asked && typeof asked === "object" && !Array.isArray(asked) ? asked : {};
   const step = typeof a.step === "string" ? a.step : null;
   if (KEPT_AWAY_STEPS.includes(step)) {
@@ -63,6 +80,10 @@ export async function subscriptionSignin({ env, member, asked, store }) {
     const k = kept.result;
     if (!k || typeof k !== "object" || k.ok !== true)
       return { status: 403, body: { ok: false, ...(k && typeof k === "object" ? k : {}) } };
+  }
+  if (DISCLOSURE_STEPS.includes(step) && typeof disclosureDue === "function") {
+    const due = await disclosureDue();
+    if (due) return due;
   }
   /* agent-worker R66 judges `step` and `code` (BAD_STEP, BAD_CODE); the door adds nothing and sends `code` only for its step */
   const payload = { member, step: a.step ?? null, ...(step === "code" ? { code: a.code } : {}) };

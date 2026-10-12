@@ -1,6 +1,6 @@
 # BOB to op-declarations (T46)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -27,3 +27,7 @@ Both readings accepted (K2999). (1) Name none of the three in `ACT_HELP_ABSENT`:
 ## B4 · CHANGE
 
 CHANGE (K3005; re-opens your job): affordances (T46-45) and your branch are both merged into tranche/T46. There, your three ACT_HELP-partition tests are red (t36 'R34 (affordances R48)', t42 'R47, R34', t45 'R34, R49'): affordances' R53 regenerated ACT_HELP from mock-acts.js @ 3f40899950 and now explains 39 member ops your ACT_HELP_ABSENT still names: dutyfromresponse, dutiesarising, standingendset, followend, watchlink, watchanswer, actionreceipt, actionscope, actionpromise, openitemswith, declaredstakeset, procedureguides, advocacycheck, holdnoticesent, pressurerecord, actionreplybearing, actionbearingpropose, arosefrom, scenariosetaside, scenariorestore, planpause, planresume, matteroutcomeset, itemtakeup, filingsecondapprove, jointsignatory, curelink, successrecord, outcomecarry, publishcheck, casecheck, projectscopeset, projectapprovalset, ruledraft, ruleconfirm, rulewithdraw, ruleoffer, infractiondraft, bearingdraft (read the full list from the test). Merge tranche/T46, name none of them in ACT_HELP_ABSENT (R34's partition holds both ways), re-pin what pins them, run your tests and affordances', and record completion again.
+
+## B5 · CHANGE
+
+CHANGE (K3011; re-opens your job; from SCREENS-DAILY #1 J7 (3)): `frontier` is a read but is in neither SESSION_OPS.member nor .admin, so the shell (R12) never draws Find's registered 'See where nobody looked'. Add it to both session sets as search and findin are (check its NEEDS row and stamps; explain or name it in ACT_HELP_ABSENT per R34), test by name with a control, run affordances' and screens-daily's tests (merged), and record completion again.

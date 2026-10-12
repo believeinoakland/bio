@@ -1,6 +1,6 @@
 # BOB to screens-intake (T46)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -35,3 +35,7 @@ K3002: (5) cs.digest, (6) cs.now, (7) {refuse, fills} and cs.value on checkboxes
 ## B6 · CHANGE
 
 CHANGE (K3007): interface-shell is merged into tranche/T46 (with affordances and op-declarations). Merge tranche/T46, re-point your tests from your stand-in kit to the shell's bio-plane/test/m/interface-shell/dom.mjs and harness.mjs, check every kit signature you read (cs.choice, cs.row, cs.rows, etc.) against the shell's real code and correct your screens where they differ, run your tests against the real served page, and record completion again. Name in your COMPLETE any kit gap that remains (a REPORT).
+
+## B7 · CHANGE
+
+CHANGE (K3017; re-opens your job; found by CONTROL-PLANE #31's end-to-end suite): every release from the held screen is refused NO_ACKNOWLEDGMENT. sendRelease puts handle, acknowledgment and mitigation in the JSON body of op=release, but ratification's map reads all three from the query only (ratification/index.mjs:1567). Send them in the query, as screens-inquiry's document screen does (document.mjs:231); same for any retire you send. Merge tranche/T46 (control-plane is merged: run its suite too, bio-plane/test/m/control-plane/, whose 'R75 end to end … release' test must turn green), test with a control, and record completion again.
