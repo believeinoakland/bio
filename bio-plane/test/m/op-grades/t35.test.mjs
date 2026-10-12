@@ -32,7 +32,8 @@ test("R21 R22 (K2049): IRREVERSIBLE_WEIGHT, frozen, holds every op RUNGS grades 
    + "publishatmove), personexpunge and standardrelease, and no other op; it changes no rung", () => {
   assert.ok(Object.isFrozen(IRREVERSIBLE_WEIGHT));
   const irreversible = Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible" && !Object.hasOwn(OP_ALIASES, op));
-  assert.deepEqual(irreversible.sort(), ["publish", "publishat", "publishatmove"]);
+  /* R32 (T45; K2839): case-check's publishcheck, graded as publish, joins by R21's rule */
+  assert.deepEqual(irreversible.sort(), ["publish", "publishat", "publishatmove", "publishcheck"]);
   assert.deepEqual([...IRREVERSIBLE_WEIGHT].sort(), [...irreversible, "personexpunge", "standardrelease"].sort());
   assert.equal(new Set(IRREVERSIBLE_WEIGHT).size, IRREVERSIBLE_WEIGHT.length);
   assert.equal(RUNGS.personexpunge, "reasoned", "the weight is not a rung");

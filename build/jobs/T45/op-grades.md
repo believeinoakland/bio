@@ -2,6 +2,32 @@
 
 **Status** · session_01QBg5Qed5iVkRuoNbR4vgRF · depth 2 · WORKING · handled B0
 
+
+## Record (OP-GRADES #7)
+
+**Read, whole:** `build/requirements/op-grades.md`; layer 11 in `build/layers.md`; my plan entry (T45-38), the L11 lines, the plan's "Rules at the opening" (rule 4 as at my START) and the reconciliation (R1, R21 name this module); `draft-T45-upper.md` "The L11 op pattern"; K2569, K2773, K2780, K2781, K2787, K2817, K2820, K2839, K2857, K2874, K2878, K2879 in `build/rulings.md`; the module's code (`index.mjs`, `t33.mjs`–`t42.mjs`) and its eight test files, whole (P20); the owners' requirements and op-map code for each T45 op (action-plans, answers, duties, actions, action-holds, following, filings, case-check, project-roster, action-replies, reading-guides, consequences, plan-work, action-clocks, conformance, local-facts, monitoring's record for R71: no op). `BIO_Action_v0_2.md` was read through the owners' requirements that cite its rules 1, 2, 17–20.
+
+**How the T45 ops were found:** every `*Ops` map in `bio-plane/src` called on `tranche/T45` and on `main` (T44's close): 61 ops are new in T45, none removed. Every one is graded or named here (verified again after the change: no new op ungraded, no T45 row naming an op no owner serves).
+
+**Entries applied (T45-38):**
+- **R32:** the 61 ops in a new `t45.mjs` spread into the tables as T33–T42's are: 11 `reasoned`, 7 `reversible`, 1 `terminal` (`filingsecondapprove`, as `filingapprove`), 1 `irreversible` (`publishcheck`, graded as `publish`, K2839; in `IRREVERSIBLE_WEIGHT` by R21's rule), 4 `caller-owned`, 17 `undetermined`; 19 reads and one `draft:` row (`statusreportdraft`, which writes nothing). `JUSTIFICATION_REFUSALS` gains `SCOPE_NO_REASON`, `ADDRESSED_NO_REASON`, `SUCCESS_NO_REASON`, `RULE_NO_REASON` and R32's named reasons inside existing acts (`CONTRADICTED_HELD`, `DOCUMENT_FIRST_NO_REASON`, `OVERRIDE_NO_GROUND`); `addressedrecord`'s backing re-pointed to `ADDRESSED_NO_REASON` (K2857). No `MACHINE_REFUSALS` row (today's `ACTS` holds no T45 op). The readings are J1's, all open to BOB's answer.
+- **K2817, K2820, K2839, K2857, K2874:** `dutyfromresponse`, `dutiesarising`, `procedureguides`, `publishcheck`, `casecheck`, `successrevise`, `followend`, `watchlink`, `watchanswer`, `watchquestions` graded; monitoring's R71 is in process, no op.
+- **N891 (tests only):** `pins.test.mjs` pins at this module's exports what was pinned only in `affordances`' tests: RUNGS as a closed partition; the closed `terminal` and `irreversible` sets; the closed `undetermined` ground with R3's tally (78 = 21 + 57); layer 9's NON_ACTS and read rows; every reason's form and the `capture-directed:` set; the substrate and directed forms; the consequence statements' keys and the correction path; T33's merged-table identity; the justification family's inclusion and exclusion lists; and that the owners' reads write nothing. `affordances` may drop its copies (T45-39).
+- **Own flaw fixed (P8):** stale citations of the hold ops moved to `action-holds` in T45 (`actionpressure`'s outward sentence now cites action-holds R1; comments on `actionhold`, `actionholdrelease` and its statement re-pointed), wording only.
+
+**Deferred:** none.
+
+**Found in other modules (REPORT J2):** my change moves users' suites as owed by later L11 jobs, none their fault: `affordances` (T45-39) — its closed-set copies (`catalogue.test.mjs` "RUNGS' assignment is closed", "`terminal` is given only…", "the `undetermined` ground is closed") and `plane.test.mjs` "together the two drives reach every op RUNGS grades `reasoned`" (T45's 11 reasoned acts need its R19 drives) turn red; its `backing.test.mjs` R19 on `addressedrecord` (K2857) turns green. `control-plane` `totality.test.mjs` reads T45's 61 ops `stale` until `op-declarations` R49 (T45-45) declares them. `plane` `wizards.test.mjs` 4/4, `op-declarations` and `membership` `module-order` unchanged (their one red each predates me).
+
+**Final `uses`:** none (unchanged).
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/op-grades/`: tests 67, pass 67, fail 0 (was 51; `t45.test.mjs` 6, `pins.test.mjs` 10).
+- `affordances` before/after: reds 8 → 11 (above). `control-plane` totality: 0 → 1 (above).
+- `format`: 153 modules, 152 requirements files; 0 failures. `architecture op-grades`: 17 product files, 28 relative imports; 0 failures. `coverage op-grades`: 32 of 32 live requirement ids named by a test; 0 failures. `ownership op-grades tranche/T45`: 0 failures (re-run after commit below).
+
+Size (session_01QBg5Qed5iVkRuoNbR4vgRF): test runs 9, module lines 2838
+
 ## J1 · QUESTION
 
 Four readings of R32, each my best reading; I am building on them now and will bring the job in line with your answer. None stops me.

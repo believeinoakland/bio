@@ -2,7 +2,7 @@
  *
  * The rung ladder and each writing op's rung, or the one ground on which it has none (R1–R3); the consequence statements
  * published beside a rung (R4, R8, R21); the codes that back a `reasoned` rung (R1); the ops refused to a machine by name
- * and every other gated op's reason (R5); the owners' ops, graded (R6–R17, R22–R25, R27–R31); the advisory phone set (R18,
+ * and every other gated op's reason (R5); the owners' ops, graded (R6–R17, R22–R25, R27–R32); the advisory phone set (R18,
  * R26); the Irreversible weight (R21); and the alias table that gives an alias its op's grade (R17).
  *
  * DATA ONLY, AND IT IMPORTS NOTHING OF ANOTHER MODULE (R19, R20). It decides no op's behaviour: each grade is read from
@@ -10,9 +10,9 @@
  * backed (its R12, R19, R20) and publishes these very objects in its `VOCABULARIES` (its R4). Names written in the
  * comments below (`STATES`, `decorateAct`, `ACTS`, `CAPTURE_ACTS`, `deriveActs`, `unaccounted`) are `affordances`'.
  *
- * T33's, T34's, T35's, T36's, T37's, T38's, T41's and T42's ops are graded in `./t33.mjs`, `./t34.mjs`, `./t35.mjs`,
- * `./t36.mjs`, `./t37.mjs`, `./t38.mjs`, `./t41.mjs` and `./t42.mjs`, spread into the tables below; each of those files
- * imports nothing, so the spread closes no cycle. */
+ * T33's, T34's, T35's, T36's, T37's, T38's, T41's, T42's and T45's ops are graded in `./t33.mjs`, `./t34.mjs`,
+ * `./t35.mjs`, `./t36.mjs`, `./t37.mjs`, `./t38.mjs`, `./t41.mjs`, `./t42.mjs` and `./t45.mjs`, spread into the tables
+ * below; each of those files imports nothing, so the spread closes no cycle. */
 
 /* R13 (T33-85): the grades and reasons of every op T33 adds, spread into RUNGS, RUNG_ABSENT and NON_ACTS below. */
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "./t33.mjs";
@@ -31,6 +31,8 @@ import { T38_RUNGS, T38_NON_ACTS } from "./t38.mjs";
 import { T41_RUNGS, T41_RUNG_ABSENT, T41_NON_ACTS } from "./t41.mjs";
 /* R31 (N832; T42): `pagetranscribe`, the AI's reading of the pages Civicsmith could not read. */
 import { T42_RUNG_ABSENT, T42_NON_ACTS } from "./t42.mjs";
+/* R32 (T45; N893): every op T45's owners serve, graded from their owners. */
+import { T45_RUNGS, T45_RUNG_ABSENT, T45_NON_ACTS } from "./t45.mjs";
 export { OP_ALIASES, aliased } from "./t34.mjs";
 
 /* ===========================================================================
@@ -207,6 +209,16 @@ export const JUSTIFICATION_REFUSALS = [
      R7) and a proposed step set aside for the member's own (steps R24, `triage`'s shape). A project's keep-away
      answers `AI_KEEP_AWAY_NO_REASON`, already above. */
   "INVESTIGATION_NO_REASON", "CLOSE_BAD_REASON", "PROPOSAL_NO_REASON", "GUIDE_REASON_MISSING", "STEP_BAD_TEXT",
+  /* R32 (T45; N893): T45's owners' reasoned acts, each refusing without the member's account in its own word for it —
+     an action's confidential scope set or removed (actions R87), a harm-addressed statement and a success record's
+     revision (consequences R9, R21; K2857: `addressedrecord` answers ADDRESSED_NO_REASON where it answered NO_REASON),
+     and a group rule drafted or withdrawn (local-facts R10, R13). A plan's set-aside, restoration, pause and resume answer
+     PLAN_NO_REASON, a project's scope and approval setting NO_REASON, and a cure's unlinking CONFORMANCE_NO_REASON, all
+     above. R32 also names the reasons asked inside existing acts, whose rungs do not change: a contradicted sentence
+     released at approval (filings R34), another outward step taken before the infraction is documented (action-plans
+     R42) and a premise override's ground (actions R74). */
+  "SCOPE_NO_REASON", "ADDRESSED_NO_REASON", "SUCCESS_NO_REASON", "RULE_NO_REASON",
+  "CONTRADICTED_HELD", "DOCUMENT_FIRST_NO_REASON", "OVERRIDE_NO_GROUND",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -281,8 +293,8 @@ export const CONSEQUENCE_STATEMENTS = Object.freeze({
     statement: "An assistant will work this project's objective within the run's budget and scope, shown beside "
       + "this field. Your reason is recorded on the run's opening; the run proposes and never concludes." }),
   /* R8 (DEC-113; K1134 (3), K1252): releasing a litigation hold restarts what the hold stopped, for the projects
-     `actions` R57 answers (`op=actionholdpreview`), which the surface reads and shows beside the statement. DEC-113's
-     sentence, with K1252's purge: while a hold stands no held material is purged (actions R60). */
+     `action-holds` R6 (was `actions` R57) answers (`op=actionholdpreview`), which the surface reads and shows beside the statement. DEC-113's
+     sentence, with K1252's purge: while a hold stands no held material is purged (action-holds R9). */
   actionholdrelease: Object.freeze({ friction: "dialog",
     statement: "Releasing this hold restarts deletion for the projects shown beside this: their material may be purged "
       + "again, and assistant transcripts for them past the time limit will be deleted on each member's device when it "
@@ -351,9 +363,9 @@ export const RUNGS = {
   /* R8 (DEC-113; K1134 (3)): A NAMED EXCEPTION TO R3, which would grade it `reasoned` (a further statement corrects it
      forward, and HOLD_REFUSED asks its reason). DEC-113 rules releasing heavier than reasoned: what it restarts — the
      purge of held material and the deletion of assistant transcripts on members' devices — cannot be undone, and a
-     release ends a hold in place at most once (actions R56, HOLD_ALREADY_RELEASED). Placing stays light: `actionhold` is
+     release ends a hold in place at most once (action-holds R5, was actions R56; HOLD_ALREADY_RELEASED). Placing stays light: `actionhold` is
      `reasoned` (K918), and it refuses `released` (HOLD_RELEASE_IS_ITS_OWN_ACT), so the heavier act has its own op. */
-  actionholdrelease:  "terminal",   // actions R56 · DEC-113: what it restarts cannot be undone; HOLD_REFUSED asks its reason
+  actionholdrelease:  "terminal",   // action-holds R5 (was actions R56) · DEC-113: what it restarts cannot be undone; HOLD_REFUSED asks its reason
 
   /* ---- reasoned: the store refuses the act for want of an authored account.
      The four with a Constructs line keep it; the rest are DERIVED FROM THE
@@ -397,7 +409,7 @@ export const RUNGS = {
   reevaluationrecord: "reasoned",   // REEVALUATION_NOTE_MALFORMED (reevaluation R16: the note is the account)
   /* Layer 9's acts that refuse without the member's authored reason, on R3's rule (K208 (2), K264; with N216). */
   consequencerevise:  "reasoned",   // NO_REASON (consequences R6: a part is revised with its reason)
-  addressedrecord:    "reasoned",   // NO_REASON (consequences R9: addressed or not, with a reason)
+  addressedrecord:    "reasoned",   // ADDRESSED_NO_REASON (consequences R9: addressed or not, with a reason; K2857)
   escalationevaluate: "reasoned",   // ESCALATION_NO_REASON (escalation R10, R24: a response is read with a reason)
   escalationadvance:  "reasoned",   // ESCALATION_NO_REASON (escalation R13, R24: an edge is taken with a reason)
   escalationdecline:  "reasoned",   // ESCALATION_NO_REASON (escalation R13, R24: a proposed stage is declined with a reason)
@@ -429,7 +441,7 @@ export const RUNGS = {
   planclose:             "reasoned", // PLAN_NO_REASON (action-plans R20: a member closes a plan with a reason)
   /* K918 (T20), on R3's rule: a litigation hold is stated with its reason and corrected forward by a further
      statement, the earlier kept (actions R52). */
-  actionhold:            "reasoned", // HOLD_REFUSED (actions R52, C-117.21: a hold stated without its reason)
+  actionhold:            "reasoned", // HOLD_REFUSED (action-holds R2, was actions R52: a hold stated without its reason)
   /* R6 (K921, T21), on R3's rule: a template's retirement (or a draft's withdrawal) asks its reason and stands, and an
      approver's later act supersedes nothing; a member's confirmation, correction or dispute of a local fact asks how
      they checked it, and a later act supersedes it on read, as `actionrisktier`'s revision does. */
@@ -591,7 +603,7 @@ export const RUNGS = {
   publishatcancel:       "reversible", // caseratify or publishat signs it again
 
   /* ---- R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs, T36's in
-     ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs and T41's (R29, R30) in ./t41.mjs. */
+     ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs, T41's (R29, R30) in ./t41.mjs and T45's (R32) in ./t45.mjs. */
   ...T33_RUNGS,
   ...T34_RUNGS,
   ...T35_RUNGS,
@@ -599,6 +611,7 @@ export const RUNGS = {
   ...T37_RUNGS,
   ...T38_RUNGS,
   ...T41_RUNGS,
+  ...T45_RUNGS,
 };
 
 
@@ -743,7 +756,7 @@ export const RUNG_ABSENT = {
   communicationprepare: { ground: "undetermined", is: "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labelled as its preparer's; never sent until a member approves it (filings R23)" },
   templatesave:         { ground: "undetermined", is: "a member starts a template draft (or a draft of a new version of a named template) from an approved filing draft, handed to the template library's draft act; no machine writes one (filings R32)" },
   actioncreate:         { ground: "undetermined", is: "a member creates an action, the same write as promoting an action document (actions R47)" },
-  actionpressure:       { ground: "undetermined", is: "a member marks a received correspondence entry as pressure directed at the group, appended to a table of its own and never rewritten; an entry is marked once (actions R48)" },
+  actionpressure:       { ground: "undetermined", is: "a member marks a received correspondence entry as pressure directed at the group, appended to a table of its own and never rewritten; an entry is marked once (action-holds R1, was actions R48)" },
   /* K727 (T18), on R3's rule: action-plans' acts that ask no authored reason and that no published act takes back —
      opening a plan, adding, proposing and adopting an option, a checkpoint's judgement (its note optional, never
      re-judged) and starting an option as an action (`actioncreate`'s ground). DEC-88 left all six `undetermined`. */
@@ -797,8 +810,8 @@ export const RUNG_ABSENT = {
   wizardeditorrevoke:   { ground: "credential", is: "an administrator revokes an advanced-editor grant, appended and never deleted (wizard-scripts R8)" },
   wizardprogress:       { ground: "observational", is: "adds one to an unattributed daily tally of a script version's start, step reached or finish; names no member, case or project, and stopping is no event (wizard-scripts R15)" },
   /* R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs, T36's in
-     ./t36.mjs, T37's in ./t37.mjs, T41's in ./t41.mjs and T42's (R31) in ./t42.mjs (T38's ./t38.mjs states no
-     absence). */
+     ./t36.mjs, T37's in ./t37.mjs, T41's in ./t41.mjs, T42's (R31) in ./t42.mjs and T45's (R32) in ./t45.mjs (T38's
+     ./t38.mjs states no absence). */
   ...T33_RUNG_ABSENT,
   ...T34_RUNG_ABSENT,
   ...T35_RUNG_ABSENT,
@@ -806,6 +819,7 @@ export const RUNG_ABSENT = {
   ...T37_RUNG_ABSENT,
   ...T41_RUNG_ABSENT,
   ...T42_RUNG_ABSENT,
+  ...T45_RUNG_ABSENT,
 };
 
 /* D-311 · THE ACTS A MACHINE CREDENTIAL'S CLASS IS REFUSED BY NAME, each with the code its store
@@ -1484,7 +1498,8 @@ export const NON_ACTS = {
   groupdescriptiondraft: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   writinghelp: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   /* R13 (T33-85): T33's ops, their reasons in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs,
-     T36's in ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs, T41's in ./t41.mjs and T42's in ./t42.mjs. */
+     T36's in ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs, T41's in ./t41.mjs, T42's in ./t42.mjs and T45's in
+     ./t45.mjs. */
   ...T33_NON_ACTS,
   ...T34_NON_ACTS,
   ...T35_NON_ACTS,
@@ -1493,6 +1508,7 @@ export const NON_ACTS = {
   ...T38_NON_ACTS,
   ...T41_NON_ACTS,
   ...T42_NON_ACTS,
+  ...T45_NON_ACTS,
 };
 
 /* R21 (N657, DEC-143): THE IRREVERSIBLE WEIGHT. An act that can never be undone shows the Irreversible weight on its
