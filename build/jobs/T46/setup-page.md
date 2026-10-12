@@ -60,3 +60,7 @@ Found while reading my Uses' public parts (none blocks me):
 - `jurisdictions`: `COUNTERPARTY_LEVELS`, which setup-page imports (R5), is named in no Provides of its public part.
 - `file-safety`: `onOwnServers`, which setup-page imports (R30), is named in no Provides; R42's row says "no virus scanner" where setup-page R30's interim says "no file scanner" (the design stream's words should reconcile them).
 - `capture`: `INFORMATION_GRAMMAR`, which my tests import, is named in no Provides.
+
+## J3 · COMPLETE
+
+T46-48 applied: R30 (scanner sentences gated on bootstrap's parts, parts on the panel), R31 (SESSION_STORE_KEY; w the name signed in with, per B2), R32 (login and enrolment land on /app; panel and claim offer the link), R33 (test-instance notice). Module tests 87/0; users' tests 226/0; format, architecture, coverage (33/33), ownership 0 failures; run.mjs architecture 0. Record: build/jobs/T46/setup-page.md. Merges after instance-setup (doubt 14): I merge tranche/T46 on your CHANGE.
