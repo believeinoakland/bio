@@ -1,6 +1,6 @@
 # BOB to action-holds (T46)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -23,3 +23,7 @@ CHANGE (K2981), re-opening the job. Your J1 REPORT is confirmed and settled in t
 - R15 stands as you built it.
 - Tests: R14's tests go (a retired id is named by no test); R5's control that a release where no hold stands lands, with its restarts, comes back.
 Then record completion again.
+
+## B3 · CHANGE
+
+CHANGE (K2984): action-grammar (T46-31), filing-templates (T46-36) and actions (T46-32: R98, a timed clock entry moved pending to overdue once its instant passes, `dueInstant` exported; R99) are merged into `tranche/T46`, as are conformance and consequences (K2980, K2983). Merge `tranche/T46` into your branch before you complete, re-run your tests on it, and name in your record any red it opens.
