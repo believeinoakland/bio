@@ -25,3 +25,7 @@
 - No layer tests are named in `build/manifest.md`.
 
 Size (session_018acpnGGGPwqinsMDvEo2a5): test runs 2, module lines 1863
+
+## J1 · COMPLETE
+
+T46-36 applied (R29): C-125.33 TEMPLATE_NOT_REVIEWED reads words.json's refusal.TEMPLATE_NOT_REVIEWED by key (FILING_TEMPLATES_WORDS), code, number, where and behaviour unmoved; C-125.34 kept; the other 42 rows byte-identical. New test t46-words.test.mjs (R29, three tests with controls). filing-templates 66/66, filings 92/92; format, architecture, coverage (29/29) and ownership 0 failures; run.mjs: architecture 0, coverage reds are only other modules' T46 ids (rule 5 (1)). No new file outside my paths. Plane bundles stale by this merge (rule 5 (4)). One item deferred in my own module and placed with you: C-125.4 TEMPLATE_BLANK_UNKNOWN's where names only #textRefusal, while #profileRefusal (R15) also raises it. That is a row change, so it is not in this entry's scope. Details in my record.
