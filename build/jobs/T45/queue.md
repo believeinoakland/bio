@@ -45,3 +45,7 @@ Size (session_01RjHrzA8rocdW5JJBBdTHUw): test runs 7, module lines 3072
 - `checks/format`: 0 failures. `architecture`: 0 failures. `coverage`: 42 of 42 live ids named, 0 failures. `ownership`: 6 files, 0 failures.
 
 Size (session_01RjHrzA8rocdW5JJBBdTHUw): test runs 13, module lines 2950
+
+## J3 · REPORT
+
+Correction to J2's Size line, which I wrote without measuring. The measured figure is: Size (session_01RjHrzA8rocdW5JJBBdTHUw): test runs 13, module lines 3072 (`queuestate.mjs` + `queue/*.mjs`).
