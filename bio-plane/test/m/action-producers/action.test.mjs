@@ -8,6 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { WORD } from "./words.mjs";
 
 const DAY = 86400000;
 const day = (ms) => iso(ms).slice(0, 10);
@@ -66,7 +67,7 @@ test("R1: one CONDITION per overdue clock entry action-clocks answers the viewer
   assert.deepEqual(byId(w.read("ada"))["CONDITION::action-clock-overdue::ACT-3::1"].basis.recipients_rule, "administrators");
   assert.equal(byId(w.read("bob"))["CONDITION::action-clock-overdue::ACT-4::0"].age.state, "undetermined");
   assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed under the action's project");
-  assert.deepEqual(it.options.map((o) => o.id), ["actioncorrespond", "itemtakeup", "opt"], "R11: its doors first, then the acts on the action");
+  assert.deepEqual(it.options.map((o) => o.id), ["actioncorrespond", "promote", "itemtakeup", "opt"], "R11, R21: its doors first, then the acts on the action");
   assert.deepEqual(it.options.at(-1), { id: "opt", on: ["ACT-1"] });
   assert.equal(it.basis.source, "action-clocks.overdueClocks"); assert.equal(it.basis.bound.truncated, false);
   // raised once and never re-notified here: the same read twice is the same one item; it leaves when the read stops answering it
@@ -174,7 +175,7 @@ test("R4: one OBLIGATION per reminder action-clocks answers due, keyed OBLIGATIO
     text: "response due", on: day(NOW - DAY), project: "PRJ-1" }, "its subject the action, naming the entry's date, basis and text");
   assert.deepEqual(it.age, { state: "determined", since: `${day(NOW - DAY)}T00:00:00Z`, ms: DAY, days: 1 }, "aged from the reminder's day");
   assert.deepEqual(it.recipients, ["alice"]);
-  assert.deepEqual(it.options, [{ id: "reminderanswer", label: "Remind me again on a later day, or not again", weight: "single" },
+  assert.deepEqual(it.options, [{ id: "reminderanswer", label: WORD("door.reminderanswer"), weight: "single" },
     { id: "opt", on: ["ACT-1"] }], "its response offers another reminder or none, beside the acts on the action");
   assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]]);
   w.fakes.actionClocks.remindersDue = () => page([]);
@@ -224,7 +225,7 @@ test("R5: one OBLIGATION litigation-hold per legal mark action-holds.holdsDue an
   assert.deepEqual(it.age, { state: "determined", since: iso(NOW - 3 * DAY), ms: 3 * DAY }, "aged from the mark's instant");
   assert.equal(byId(alice)["OBLIGATION::litigation-hold::ACT-2::0"].age.state, "undetermined");
   assert.deepEqual(it.recipients, ["ada", "alice"], "every administrator and the marker (read before ida was added)");
-  assert.deepEqual(it.options, [{ id: "actionhold", label: "Record that a litigation hold is in place", weight: "single" },
+  assert.deepEqual(it.options, [{ id: "actionhold", label: WORD("door.actionhold"), weight: "single" },
     { id: "actionholdrelease", label: "Record that no hold is needed, with a reason", weight: "single" },
     { id: "opt", on: ["ACT-1"] }], "both its doors (DEC-113): the hold in place and its release, beside the acts on the action");
   assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed under the action's project");

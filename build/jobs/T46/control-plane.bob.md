@@ -17,3 +17,11 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 2701 KB with your tests (K2700; used public parts 1821 KB across 72 modules, an upper bound), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them (the later L11 jobs in the merge order below that use your services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, notice-producers, setup-words, instance-setup, setup-page (after instance-setup, doubt 14), op-declarations, answer-envelope, interface-assets, interface-shell, screens-settings, screens-intake, screens-daily, screens-inquiry, control-plane, installer, stewards, plane last. A provider merges before its users; a job that uses an L11 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L11 job may merge as soon as it is complete.
+
+## B2 · CHANGE
+
+CHANGE (K2996): R57 now states the draft RPC's shape for `statusreportassist`: the door hands the plane's draft door `{op: "statusreportdraft", member, session, plan, items}` (PLANE #34 builds to it). Merge `tranche/T46` and apply.
+
+## B3 · ANSWER · re J1
+
+All seven readings accepted (K2999). (1) The Store gains `dispatchMemberRun(args)` (plane R40, a CHANGE to PLANE #34); the credential is an in-process RPC argument, folded into your R77 (K2976's header reading not needed); with no method, 503 `AGENT_WORKER_UNBOUND`. (2) `airundispatch` as you state; OP-DECLARATIONS #21 declares it so; SCREENS-INQUIRY's minted credential names it among its writes. (3) the Store's `groupFields()` (plane R40), folded into your R20. (4), (5), (6), (7) as you read them; store-door's missing `statusreportassist` is N970 (T47). Merge `tranche/T46` for the folded text.
