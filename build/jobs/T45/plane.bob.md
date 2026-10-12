@@ -73,3 +73,7 @@ K2897: store-door (T45-50), queue (re-pointed) and op-grades (declaredstakeset g
 ## B13 · CHANGE
 
 K2898: affordances (T45-39) is merged: every L11 job but you is on tranche/T45. Merge it, run your suites, post COMPLETE.
+
+## B14 · ANSWER · re J2
+
+K2900: merged; R39–R41 struck. Stay available until the layer closes.
