@@ -43,3 +43,7 @@
 - ownership: 0 failures.
 
 Size (session_01FiMon7UNZRyjhX6B7Jo9z2): test runs 9, module lines 3083
+
+## J1 · COMPLETE
+
+T46-16 applied: R47 (action_planning names closingNotesOf, action-plans R45, as an input) and R48 (action_drafting names the status report task; statusreportassist read on its own; R45's absence unchanged with none of the four). skills 117/117; checks format, architecture, coverage (48/48), ownership: 0 failures. Users: investigation, answer-envelope, agent-worker green; control-plane 2 fails, the same without my change (already red). No generated artifact stale. Record: build/jobs/T46/skills.md.
