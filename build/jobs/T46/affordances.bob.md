@@ -1,0 +1,25 @@
+# BOB to affordances (T46)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T46), layer 11, affordances: T46-45 · (N937) R48's ACT_HELP for PR #28's 42 new ops re-pinned to the merged registry and `mock-acts.js` @ 3f40899950; R51 offers escalation's stop and reopen (R31; deferred in T45, K2898), `clockadopt` through T46-34's read (N925), `filingsent` only on a draft that needs no further approval (N930), attachment at stage 7 (N931); help for T46's new ops; `handlechange`'s help as a refusal where its tests pin it (N934) · text BOB's; `mock-acts.js` · after T46-44.
+Your requirements: `build/requirements/affordances.md` (read whole). Marked `*(not yet met: T46)*`: R52, R53 (folded K2960, reviewed). The sources the entry names (interface = `build/plan/draft-T46-interface.md`, trial = `build/plan/draft-T46-trial.md`, study = `build/plan/study-T46-assistant.md`; words.json, registry.json, library.json and `mock-acts.js` on `main` @ 3f40899950, which `main` still is) are read for the sections named.
+Reds that are yours in this job (rule 5): affordances R48 ACT_HELP (N937), and the totality tests over T46's new ops from their owners' merges. You use op-grades' new grades: merge `tranche/T46` when BOB announces op-grades' merge (a CHANGE).
+Your providers changed in L9: escalation R31 (stop and reopen, T46-38), action-clocks R20 (`clockProposalsFor`, `op=clockproposals`, T46-34), filings R7 (`second_needed`, T46-37); read their Provides as merged on `tranche/T46`.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874: an id older tests already name reads green wrongly); every refusal a control. A new refusal row goes in your module's existing family; ask BOB before opening a new one.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START, and those named in K2924–K2974 (with L9's and L10's merge rulings as they land); none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 2354 KB with your tests (K2700; used public parts 1674 KB across 71 modules, an upper bound), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them (the later L11 jobs in the merge order below that use your services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
+Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, notice-producers, setup-words, instance-setup, setup-page (after instance-setup, doubt 14), op-declarations, answer-envelope, interface-assets, interface-shell, screens-settings, screens-intake, screens-daily, screens-inquiry, control-plane, installer, stewards, plane last. A provider merges before its users; a job that uses an L11 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L11 job may merge as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+Both readings accepted and folded in your R53 (K2996): hold `textcheck` under its own design text; op-declarations R51 no longer names it in `ACT_HELP_ABSENT` (a CHANGE to that job). `handlechange`'s help is HANDLE_FIXED's translation read from membership's catalogue by reference. The design's stale `handlechange` text goes to the design stream.
+
+## B3 · CHANGE
+
+CHANGE (K2999): hold `infolevelset` and `escalationstoppursuing` under their own op names in `ACT_HELP` (op-declarations declares both in this tranche), not under `owed_` keys (your R53, merge `tranche/T46`). OP-DECLARATIONS #21 names none of them absent.
