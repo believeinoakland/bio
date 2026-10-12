@@ -65,3 +65,7 @@ Two things stop me building it as sent. This QUESTION replaces nothing; J1 is an
 2. **Eight of B3's new MACHINE_REFUSALS ops are still listed in NON_ACTS.** `actionscope`, `actionreceipt`, `actionpromise`, `actionreplybearing`, `arosefrom`, `holdnoticesent`, `clockstate` and `itemtakeup` gain a MACHINE_REFUSALS row, which holds only `ACTS` (R5, `affordances` R20). So they are `ACTS` rows too, and catalogue's R1/R12 test refuses an op that is both an act and a non-act. Best reading: remove those eight from NON_ACTS as well (19 removals in all), their grades unchanged. Alternative: they stay non-acts and take no MACHINE_REFUSALS row. Which?
 
 As soon as both are answered I apply the CHANGE whole, re-pin my tests (pins.test.mjs's layer-9 `actionhold` sentence, ladder.test.mjs's MACHINE_REFUSALS equality, owners.test.mjs R8, t45.test.mjs) and re-run steps 5–7.
+
+## J5 · COMPLETE
+
+B3 and B4 applied on job/T45/op-grades (pushed): 21 acts leave NON_ACTS (R32's list as amended, holdnoticeprepare and actionbearingpropose included, 'where they were listed'), MACHINE_REFUSALS gains the 17 rows, each code checked against its owner; no rung moves. op-grades 67/67; format, architecture, coverage 32/32, ownership 0 failures. affordances reads two more reds owed to T45-39 (MACHINE_REFUSALS holds only ACTS; the filingrecordsent alias row). Record updated.
