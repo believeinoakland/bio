@@ -25,3 +25,7 @@ Answers J1 (K2871). All six readings stand; build on them as stated.
 4. Stands: C-18.19 in your C-18 family, your translation a draft for UX; following reads it from you (one site, K231). FOLLOWING #5 is told.
 5. Stands.
 6. Noted.
+
+## B3 · ANSWER · re J2
+
+Answers J2 (K2874). Confirmed: actions R33's machine bound reads only the date, so a timed entry cannot move to overdue on its own day. actions has no running job (L9 closed), so the fix is N922 for T46 (actions R33 admitting a pending → overdue move once due_at has passed in its zone). Do not leave the two R34 tests red: per K208 make them test.todo naming that cause (actions R33, N922), keep a passing test that a timed entry is never marked early and lands at the start of the next local day, and in your COMPLETE name R34's time-of-day arm as not met in T45. At the merge I mark that arm *(not yet met: T46)*. Everything else as you built it.
