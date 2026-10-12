@@ -1,0 +1,50 @@
+[
+ {
+  "key": "refusal.MACHINE_CANNOT_SET_MONITORING",
+  "en": "Only a member turns watching on or off, and this came from an automated credential. Nothing was changed.",
+  "protected": false,
+  "note": "C-18.20"
+ },
+ {
+  "key": "refusal.MONITOR_SET_REFUSED",
+  "en": "Say whether this document is watched, yes or no, and, if you give one, how often, as one of the listed frequencies ({field} isn't). Nothing was changed.",
+  "protected": false,
+  "note": "C-18.21, naming the field"
+ },
+ {
+  "key": "refusal.PROJECT_BAR_NO_REASON",
+  "en": "Setting this project's bar needs your reason, kept on the record with the change. Nothing was changed.",
+  "protected": false,
+  "note": "C-107.4"
+ },
+ {
+  "key": "refusal.RENDER_QUEUE_UNREADABLE",
+  "en": "Your group's Civicsmith couldn't read its list of files waiting for a safe view, so none was made just now. Try again in a moment; if it keeps happening, tell an administrator.",
+  "protected": false,
+  "note": "C-140.43; a safe view is installed but its queue could not be read"
+ },
+ {
+  "key": "refusal.SETTING_INVALID",
+  "en": "That isn't a value this setting takes. Choose one of the setting's own values. Nothing was changed.",
+  "protected": false,
+  "note": "C-102.32"
+ },
+ {
+  "key": "refusal.SETTING_NOT_JSON",
+  "en": "That value can't be kept as a setting: a setting holds words, numbers, yes or no, or a list of those. Nothing was changed.",
+  "protected": false,
+  "note": "C-102.33"
+ },
+ {
+  "key": "refusal.AI_RUN_CREDENTIAL_MALFORMED",
+  "en": "The run couldn't start: the pass it needs to work for you was malformed. Nothing was sent. Try again; if it happens again, tell an administrator.",
+  "protected": false,
+  "note": "C-29.41"
+ },
+ {
+  "key": "ai.label.untested.writinghelp",
+  "en": "Not yet tested: this help with writing hasn't yet passed Civicsmith's tests on real matters. Read it through before you use any of it.",
+  "protected": true,
+  "note": "on writinghelp's marked answer on a test instance"
+ }
+]

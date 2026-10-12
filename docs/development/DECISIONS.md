@@ -3146,3 +3146,25 @@ response: **Decided by the design session, 2026-10-12.**
 decided: 2026-10-12 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-actions.src.py`, `screens/words-t46.src.py`; `screens/mock-acts.js`; `screens/words.json` (1,608 words, 570 protected).
 owed: (BOB) docket, case-authoring (R73's sentences, the no-window and not-laid-out rows by key), action-replies, action-plans (R47, C-124.63), escalation (C-116.41, C-116.14) read these by key once on `main`; affordances and op-declarations take the two helps.
+
+### DEC-200 · answered
+raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (BOB's B156 and B157, T47's opening and its L11 fold; K3027, K3041; N971, N976, N978, N984, N997)
+for: bob-session
+question: Words T47 returned as untrue (`attest`, `monitor`, the project's bar, the scanner's name), four registry corrections, and the refusals and help T47's new ops need.
+why it is Bob's: it is not: words and registry detail beneath DEC-83, DEC-149, DEC-169 and Bob's rulings on evidence strength (DEC-72, DEC-17); decided by the design session (P17) and reported.
+provisional: each module's own rows and interface-shell R28's re-points.
+alternative: none needed.
+recommendation: as decided below.
+reversal cost: low; words read by key, registry re-taken.
+response: **Decided by the design session, 2026-10-12.**
+(1) `attest`'s help says what it is: an independent timestamp over the copy's fingerprint, adding no signature of the member's and saying nothing of whether the copy is true (N978).
+(2) Watching: `monitor` checks once ("Check it now"; on a document "Check for a new version now"); `monitorset` turns watching on or off and sets how often ("Watch this address", "Watch for changes") on `capture` and `document` (N978, B157 1).
+(3) Bars: the project screen's act is `projectbarset` ("Set this project's bar", reasoned; its help says it never changes the group's bar and holds nothing back); `strengthbarset`'s help names the group's bar, for the group settings screen that will draw it (N976, B157 2).
+(4) `project` gains `drawquestion` ("Draw on a question from elsewhere") after `promote` (B157 3); `calculation` gains `spotcheckvisit` ("Count it for the drawn report") after `testify` ("Record what you saw at a report") (B157 4).
+(5) One term for members: "file scanner" (the security screen: "a file scanner (ClamAV, which looks for viruses and other harmful code…)"); and "safe view", never "safe-view maker". file-safety R42's rows take these words (N971).
+(6) Words (`screens/words-t47.src.py`): `refusal.MACHINE_CANNOT_SET_MONITORING`, `MONITOR_SET_REFUSED` ({field}), `PROJECT_BAR_NO_REASON`, `RENDER_QUEUE_UNREADABLE`, `SETTING_INVALID`, `SETTING_NOT_JSON`, `AI_RUN_CREDENTIAL_MALFORMED`; `ai.label.untested.writinghelp` (N984). Help (`mock-acts.js`): `monitorset`, `projectbarset`, `drawquestion`, `spotcheckvisit`, and the reads `projectquestions`, `projectlist`. T47's other new ops (sever and reinstate on a question's own leg, the set-aside list, a knock's source) take their help once their ops are named.
+(7) `check_library.py` consults the newest `origin/tranche/T<n>` for acts `main` does not yet serve, marking each `onTranche`.
+(8) Not yet drawn (N997): places and offices, and recovery codes, as working-frame screens; the help screen (`help`) is drawn on the layouts page and needs only its module.
+decided: 2026-10-12 · the design session (P17)
+reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js` (Add, Document, Project, Calculation, Security), `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/words-t47.src.py`, `screens/build_words.mjs`, `screens/words.json` (1,626 words, 575 protected), `screens/check_library.py`, `layouts.html`.
+owed: (BOB, T47 or T48) `registry.json` and `words.json` re-taken; the new rows and helps read by key (monitoring, strength, file-safety, record-core, credentials, screens-settings, affordances, op-declarations); file-safety R42 re-worded to "file scanner" and "safe view".

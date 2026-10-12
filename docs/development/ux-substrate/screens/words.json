@@ -9,7 +9,7 @@
   "draft": 4,
   "photo": 13,
   "handle": 7,
-  "ai": 79,
+  "ai": 80,
   "date": 14,
   "queue": 47,
   "transcribe": 19,
@@ -21,7 +21,7 @@
   "label": 52,
   "project": 7,
   "grouprule": 1,
-  "refusal": 138,
+  "refusal": 145,
   "signing": 7,
   "case": 11,
   "docket": 2,
@@ -50,11 +50,11 @@
   "tab": 2,
   "level": 2,
   "screen": 95,
-  "act": 537,
+  "act": 547,
   "column": 33,
   "wizard": 306,
-  "total": 1608,
-  "protected": 570
+  "total": 1626,
+  "protected": 575
  },
  "words": [
   {
@@ -4009,6 +4009,62 @@
    "note": "C-116.14; DEC-199; names no escalation the viewer may not see"
   },
   {
+   "key": "refusal.MACHINE_CANNOT_SET_MONITORING",
+   "en": "Only a member turns watching on or off, and this came from an automated credential. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "C-18.20"
+  },
+  {
+   "key": "refusal.MONITOR_SET_REFUSED",
+   "en": "Say whether this document is watched, yes or no, and, if you give one, how often, as one of the listed frequencies ({field} isn't). Nothing was changed.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "C-18.21, naming the field"
+  },
+  {
+   "key": "refusal.PROJECT_BAR_NO_REASON",
+   "en": "Setting this project's bar needs your reason, kept on the record with the change. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "C-107.4"
+  },
+  {
+   "key": "refusal.RENDER_QUEUE_UNREADABLE",
+   "en": "Your group's Civicsmith couldn't read its list of files waiting for a safe view, so none was made just now. Try again in a moment; if it keeps happening, tell an administrator.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "C-140.43; a safe view is installed but its queue could not be read"
+  },
+  {
+   "key": "refusal.SETTING_INVALID",
+   "en": "That isn't a value this setting takes. Choose one of the setting's own values. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "C-102.32"
+  },
+  {
+   "key": "refusal.SETTING_NOT_JSON",
+   "en": "That value can't be kept as a setting: a setting holds words, numbers, yes or no, or a list of those. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "C-102.33"
+  },
+  {
+   "key": "refusal.AI_RUN_CREDENTIAL_MALFORMED",
+   "en": "The run couldn't start: the pass it needs to work for you was malformed. Nothing was sent. Try again; if it happens again, tell an administrator.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "C-29.41"
+  },
+  {
+   "key": "ai.label.untested.writinghelp",
+   "en": "Not yet tested: this help with writing hasn't yet passed Civicsmith's tests on real matters. Read it through before you use any of it.",
+   "protected": true,
+   "source": "DEC-200",
+   "note": "on writinghelp's marked answer on a test instance"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -5306,8 +5362,14 @@
    "source": "registry.json"
   },
   {
-   "key": "act.monitor.label.capture",
+   "key": "act.monitorset.label.capture",
    "en": "Watch this address",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.monitor.label.capture",
+   "en": "Check it now",
    "protected": true,
    "source": "registry.json"
   },
@@ -5432,8 +5494,14 @@
    "source": "registry.json"
   },
   {
-   "key": "act.monitor.label.document",
+   "key": "act.monitorset.label.document",
    "en": "Watch for changes",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.monitor.label.document",
+   "en": "Check for a new version now",
    "protected": true,
    "source": "registry.json"
   },
@@ -5516,14 +5584,20 @@
    "source": "registry.json"
   },
   {
+   "key": "act.drawquestion.label.project",
+   "en": "Draw on a question from elsewhere",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.findin.label.project",
    "en": "Find in this project",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.strengthbarset.label.project",
-   "en": "Set the project's bar",
+   "key": "act.projectbarset.label.project",
+   "en": "Set this project's bar",
    "protected": true,
    "source": "registry.json"
   },
@@ -5907,7 +5981,13 @@
   },
   {
    "key": "act.testify.label.calculation",
-   "en": "Record what you found at a report",
+   "en": "Record what you saw at a report",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.spotcheckvisit.label.calculation",
+   "en": "Count it for the drawn report",
    "protected": true,
    "source": "registry.json"
   },
@@ -6867,7 +6947,13 @@
   },
   {
    "key": "act.monitor.does",
-   "en": "Watches this address and tells you when what it publishes changes. Each new version is kept beside the old.",
+   "en": "Checks this address once, now, for a new version. A new version is kept beside the old. To keep checking, turn watching on.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.monitorset.does",
+   "en": "Turns watching on or off for this document's address, and sets how often it is checked. Each new version found is kept beside the old, and you are told.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -6951,7 +7037,7 @@
   },
   {
    "key": "act.attest.does",
-   "en": "Signs that this copy matches its source, adding your word to the capture. Signed with your key.",
+   "en": "Has an independent timestamp service certify that this exact copy existed by now: a timestamp over its fingerprint. It adds no signature of yours and says nothing about whether the copy is true.",
    "protected": true,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -7371,7 +7457,37 @@
   },
   {
    "key": "act.strengthbarset.does",
-   "en": "Sets how strong an answer must be in this project before the group relies on it.",
+   "en": "Sets the group's bar: how strong an answer must be before the group relies on it, in every project that sets no bar of its own.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectbarset.does",
+   "en": "Sets this project's own bar, with your reason: the strength each of its questions is measured against. It never changes the group's bar and holds nothing back; it shows how far each answer is from the bar.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.drawquestion.does",
+   "en": "Brings a question from elsewhere in your group into this project, with a note on why. The project draws on it; the question stays where it is, and is not copied.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.spotcheckvisit.does",
+   "en": "Ties what you recorded at one drawn report to the spot-check: repaired, not repaired, or could not tell. It counts toward the estimate only for a report in the draw.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectquestions.does",
+   "en": "Lists the questions this project draws on, its own and those drawn in from elsewhere.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectlist.does",
+   "en": "Lists the projects you may see.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

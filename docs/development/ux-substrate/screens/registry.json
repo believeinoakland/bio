@@ -14,7 +14,8 @@
      "status": "declared",
      "modules": [
       "installer",
-      "instance-setup"
+      "instance-setup",
+      "setup-page"
      ]
     },
     {
@@ -253,6 +254,7 @@
      "label": "Start a project",
      "status": "declared",
      "modules": [
+      "action-producers",
       "basis-versions",
       "control-plane",
       "promotion"
@@ -502,7 +504,10 @@
      "op": "infolevelset",
      "label": "Choose how much is explained",
      "status": "declared",
-     "servedBy": "instance-setup R79 (T46)"
+     "modules": [
+      "instance-setup",
+      "interface-shell"
+     ]
     }
    ],
    "journeys": [
@@ -536,7 +541,10 @@
      "op": "subscriptionsignin",
      "label": "Open Anthropic's sign-in page",
      "status": "declared",
-     "servedBy": "control-plane R65"
+     "modules": [
+      "interface-shell",
+      "screens-settings"
+     ]
     },
     {
      "op": "accountreferenceset",
@@ -549,9 +557,9 @@
     {
      "op": "subscriptiondisconnect",
      "label": "Disconnect your subscription",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "credentials"
+      "screens-settings"
      ]
     },
     {
@@ -847,6 +855,7 @@
      "label": "Open a question from a hint",
      "status": "declared",
      "modules": [
+      "action-producers",
       "basis-versions",
       "control-plane",
       "promotion"
@@ -959,7 +968,8 @@
      "label": "Capture a file or photo",
      "status": "declared",
      "modules": [
-      "capture"
+      "capture",
+      "screens-intake"
      ]
     },
     {
@@ -981,8 +991,17 @@
      ]
     },
     {
-     "op": "monitor",
+     "op": "monitorset",
      "label": "Watch this address",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "monitoring"
+     ]
+    },
+    {
+     "op": "monitor",
+     "label": "Check it now",
      "status": "declared",
      "modules": [
       "capture-sources",
@@ -1121,7 +1140,8 @@
      "label": "Read the safe view",
      "status": "declared",
      "modules": [
-      "file-safety"
+      "file-safety",
+      "screens-intake"
      ]
     },
     {
@@ -1203,8 +1223,17 @@
      ]
     },
     {
-     "op": "monitor",
+     "op": "monitorset",
      "label": "Watch for changes",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "monitoring"
+     ]
+    },
+    {
+     "op": "monitor",
+     "label": "Check for a new version now",
      "status": "declared",
      "modules": [
       "capture-sources",
@@ -1340,9 +1369,19 @@
      "label": "Open a question",
      "status": "declared",
      "modules": [
+      "action-producers",
       "basis-versions",
       "control-plane",
       "promotion"
+     ]
+    },
+    {
+     "op": "drawquestion",
+     "label": "Draw on a question from elsewhere",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "citation"
      ]
     },
     {
@@ -1354,9 +1393,10 @@
      ]
     },
     {
-     "op": "strengthbarset",
-     "label": "Set the project's bar",
-     "status": "function",
+     "op": "projectbarset",
+     "label": "Set this project's bar",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
      "modules": [
       "strength"
      ]
@@ -1577,7 +1617,9 @@
      "op": "ask",
      "label": "Ask",
      "status": "declared",
-     "servedBy": "the plane's ask door, agent-worker R54"
+     "modules": [
+      "screens-daily"
+     ]
     },
     {
      "op": "ruleanswer",
@@ -1967,11 +2009,19 @@
     },
     {
      "op": "testify",
-     "label": "Record what you found at a report",
+     "label": "Record what you saw at a report",
      "status": "function",
      "modules": [
       "entities",
       "provenance"
+     ]
+    },
+    {
+     "op": "spotcheckvisit",
+     "label": "Count it for the drawn report",
+     "status": "declared",
+     "modules": [
+      "calculations"
      ]
     }
    ],
@@ -2032,6 +2082,7 @@
      "label": "Open a question from this chain",
      "status": "declared",
      "modules": [
+      "action-producers",
       "basis-versions",
       "control-plane",
       "promotion"
