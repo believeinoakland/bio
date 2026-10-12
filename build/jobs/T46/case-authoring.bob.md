@@ -18,3 +18,7 @@ Merge order in L8: case-carriage, publication, public-read, case-checker, case-i
 ## B2 · ANSWER · re J1
 
 K2964: your reading 1-3 is ruled. Your requirements on tranche/T46 now say: R70's row gains an optional boolean replied; .noreply only when answers is null and replied is false; otherwise a plain sentence true in both cases, keyed null. action-replies R8 (rows answer replied) joins T46-35 in L9. Merge tranche/T46.
+
+## B3 · CHANGE
+
+K2968: case-checker is merged into tranche/T46 (R24: arm 1 only on account rows; a sentence citing nothing is not judged by arm 2). Merge tranche/T46 into your branch, re-run your tests on it, and post COMPLETE (again).
