@@ -547,7 +547,7 @@ export class NoticeProducers {
              (T46, R18) unless it was already told before that end took hold: then it stays until disposed */
           if (ends && it.due && it.due > ends.day) {
             if (!NoticeProducers.#toldBefore(it, ends)) continue;
-            it.basis.watch_end = { day: ends.day, at: ends.at, told_before: true };
+            it.basis.watch_end = { day: ends.day, told_before: true };
           }
           items.push(it);
         }
@@ -556,49 +556,35 @@ export class NoticeProducers {
     return { items, facts: { truncated } };
   }
 
-  /** R5 (T45; following R25): the end of this duty's telling, `{day, at}`: `day` the day after which the duty is no longer
-   *  told (`following.dutyWatchEnd(duty)`), null while no plan's watch on it is answered (R5 as before). R18 (T46): `at`
-   *  the instant that end took hold, from `following.dutyWatchEndAt(duty)` (`{day, at}`) where following answers it, else
-   *  null. A following that throws fails R5's read (R1); an answer that is no day is read as no end (the duty still told),
-   *  and an `at` that is no instant as none. */
+  /** R5 (T45; following R25): the end of this duty's telling, `{day}`: the day after which the duty is no longer told
+   *  (`following.dutyWatchEnd(duty)`), null while no plan's watch on it is answered (R5 as before). A following that
+   *  throws fails R5's read (R1); an answer that is no day is read as no end, so the duty is still told. */
   #watchEnd(duty) {
     const f = this.#following;
-    if (!f) return null;
-    const isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
-    try {
-      if (typeof f.dutyWatchEndAt === "function") {
-        const e = f.dutyWatchEndAt(duty);
-        if (!e || typeof e !== "object" || !isDay(e.day)) return null;
-        return { day: e.day, at: typeof e.at === "string" && INSTANT.test(e.at) && Number.isFinite(Date.parse(e.at)) ? e.at : null };
-      }
-      if (typeof f.dutyWatchEnd !== "function") return null;
-      const end = f.dutyWatchEnd(duty);
-      return isDay(end) ? { day: end, at: null } : null;
-    } catch { throw failure("following"); }
+    if (!f || typeof f.dutyWatchEnd !== "function") return null;
+    let end;
+    try { end = f.dutyWatchEnd(duty); } catch { throw failure("following"); }
+    return typeof end === "string" && /^\d{4}-\d{2}-\d{2}$/.test(end) ? { day: end } : null;
   }
 
-  /** R18 (T46; N927; queue R16): whether an occurrence was already told before its duty's end of telling took hold, so it
-   *  keeps its item (and is told as R5 tells it) until disposed, met, met late or no longer overdue. It was told from the
+  /** R18 (T46; N927; queue R16; K2996): whether an occurrence was already told before its duty's end of telling, so it
+   *  keeps its item (and is told as R5 tells it) until disposed, met, met late or no longer overdue. It is told from the
    *  end of its first told day (civil-time, in that day's own zone): the first candidate's, when undetermined, else its
-   *  due day's; it is possibly overdue, or overdue, from then. With the instant the end took hold (`at`), told when that
-   *  start came before it; with the end day alone, told when it came no later than the end day's start (exact for a
-   *  stop, whose day is its answer's own; J1). A start that cannot be read is not told. */
+   *  due day's. Read on the end day alone (following answers no instant): told when that start came no later than the
+   *  end day's start, i.e. its told state began on or before the end day. Exact for a stop, whose day is its answer's
+   *  own; a keep answered before an occurrence whose candidates span its day reads as told (the instant is N967, T47).
+   *  A start that cannot be read is not told. */
   static #toldBefore(item, ends) {
     const due = item && item.subject ? item.subject.due : null;
     const first = due && Array.isArray(due.candidates) ? due.candidates[0] : due;
     const day = first && typeof first === "object" ? dayOf(first.value) : null;
     const zone = first && typeof first === "object" && filled(first.zone) ? first.zone : null;
     if (!day || !zone) return false;
-    let from = NaN, endStart = NaN;
     try {
-      const r = dayRange(day, day, zone);
-      from = r && filled(r.end) ? Date.parse(r.end) : NaN;
-      const e = dayRange(ends.day, ends.day, zone);
-      endStart = e && filled(e.start) ? Date.parse(e.start) : NaN;
+      const from = Date.parse((dayRange(day, day, zone) || {}).end);
+      const endStart = Date.parse((dayRange(ends.day, ends.day, zone) || {}).start);
+      return Number.isFinite(from) && Number.isFinite(endStart) && from <= endStart;
     } catch { return false; }
-    if (!Number.isFinite(from)) return false;
-    if (ends.at) return from < Date.parse(ends.at);
-    return Number.isFinite(endStart) && from <= endStart;
   }
 
   /** Who a duty's item goes to: the member who adopted it, else its project's owners (membership R65), else the
