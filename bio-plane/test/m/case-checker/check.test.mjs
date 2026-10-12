@@ -103,7 +103,7 @@ test("R19: readCaseFile answers the manifest, every file with its kind, fingerpr
   assert.equal(r.files.find((f) => f.kind === "finding" && f.finding === A).path, CG.caseFilePath("finding", A));
   assert.equal(r.files.find((f) => f.kind === "document" && f.ref === MINUTES).path, CG.caseFilePath("document", MINUTES));
   /* negative controls: an unlisted entry, a tampered file, a missing part, junk */
-  const extra = caseFile({ edit: (b) => b.set("extra.txt", Buffer.from("hi")) });
+  const extra = caseFile({ unlisted: new Map([["extra.txt", Buffer.from("hi")]]) });
   const tampered = CC.readCaseFile(caseFile({ edit: (b) => b.set(CG.caseFilePath("finding", C), Buffer.from("changed")) }).parts);
   const t = tampered.files.find((f) => f.path === CG.caseFilePath("finding", C));
   assert.equal(t.state, "differs"); assert.equal(t.content, null);
@@ -115,6 +115,11 @@ test("R19: readCaseFile answers the manifest, every file with its kind, fingerpr
     assert.ok(Array.isArray(j.files));
   }
   assert.equal(extra.parts.length, 1);
+  /* the unlisted entry is named, and every listed file is still read */
+  const ex = CC.readCaseFile(extra.parts);
+  assert.ok(ex.departures.some((d) => /carries extra\.txt, which the manifest does not list/.test(d)), ex.departures.join(" | "));
+  assert.equal(ex.files.some((f) => f.path === "extra.txt"), false);
+  assert.ok(ex.files.every((f) => f.state === "intact"));
 });
 
 test("R3: the case document's signature and each member's verify over their statements; a forged one differs for the case and every finding; a key the case file does not list differs", async () => {

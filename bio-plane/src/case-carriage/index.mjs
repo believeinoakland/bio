@@ -19,6 +19,9 @@
  * module queues it from each receipt that is not a fetch and from each miss (R15, R16), derives the copy on the
  * scheduler's wake (`copyBatch`, `copyWake`; R17 `onCopyWork` the arming notice) and answers its state synchronously
  * (`documentCopy`). Its archive is never carried (R8). Inside the group every document stays as it came.
+ * (T46; N907, K2833, K2949) For `case-check` R2's latch, R4, R5 and R13 are each widened over the interval from a check's
+ * `checked_at` through the read (`acceptedWorkLapsedSince`, `sourcesLapsedSince`, `marksLapsedSince`; R19–R21), as far as
+ * accepted-work's withdrawals, sources at the two instants and this module's own append-only marks and copies answer it.
  *
  * Split from `publication` by copy (K617, K624 (1), N532, K1332; seam map `build/extraction/publication-split-2.md`):
  * R57's holding (`#holdMaterials`, `#registered`, `#fileRow`, `#tokenFiles`, `heldMaterialsOf`,
@@ -34,7 +37,7 @@
  *                                   construct the three below.
  *   extraction     `unitsOf` (its R36), for R1's extracted text.
  *   sources        `publishableAt` (its R8), for R5.
- *   acceptedWork   `acceptedFinding`, `openFlagsOn` (its R2), for R4.
+ *   acceptedWork   `acceptedFinding`, `openFlagsOn` (its R2), for R4; (T46) `acceptanceWithdrawals` (its R2), for R19.
  *   now            the clock for the instants it writes when the caller gives none, an ISO string (default: the wall
  *                  clock).
  *   bucket, store  (T37; R11) the evidence bucket (the Worker's `CAPTURES` R2 binding) and the store's namespace (a
@@ -54,7 +57,7 @@
 
 import { membershipOf, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { recordOf, stampInstant } from "../record-core/index.mjs";
+import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { createSha256, canonicalJson, isMachineIdentity } from "../record-grammar/index.mjs";
 import { coverAreas, COVER_MAX_BYTES } from "../image-cover/index.mjs";
 import { cleanDocument, CLEAN_MAX_BYTES } from "../doc-clean/index.mjs";
@@ -104,6 +107,24 @@ export const MEMBER_DOCUMENT_ONLY_AS_COPY = "a member's document travels only as
 export const ARCHIVE_SUPPLIED_BY_MEMBER = "the archive was supplied by a member, and a member's file leaves only as its copy";
 /* R13: why a member document's row lapses when its state cannot be read. */
 const DOCUMENT_UNREAD = "the document's copy could not be read, so it cannot be confirmed";
+/* R13: why a photo's row lapses when its marks cannot be read. */
+const MARKS_UNREAD = "the photo's marks could not be read, so its copy cannot be confirmed";
+/* R20 (T46; N907): why a row lapses over the interval since a check. */
+export const COPY_CHANGED_SINCE = "the copy changed since the check was made, so the check no longer holds";
+const SINCE_UNREAD = "the instant the check was made cannot be read, so its copy cannot be confirmed since";
+const MARKS_HISTORY_UNREAD = "the photo's marks since the check could not be read, so its copy cannot be confirmed";
+const DOCUMENT_HISTORY_UNREAD = "the document's copies since the check could not be read, so its copy cannot be confirmed";
+/* R19: the page asked of accepted-work's withdrawals (case-import's bound), and the most pages one read walks. */
+const WITHDRAWAL_PAGE = 1000, WITHDRAWAL_PAGES_MAX = 1000;
+/* R19–R21: `since` is an instant as record-core stamps it (its R47), to the second or the millisecond. */
+const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+const isInstant = (s) => {
+  try {
+    if (typeof s !== "string" || !INSTANT.test(s)) return false;
+    const ms = Date.parse(s);
+    return Number.isFinite(ms) && stampInstant(s.includes(".") ? "millisecond" : "second", ms) === s;
+  } catch { return false; }
+};
 /* R16: the answer when the tables or R62 cannot be read (fail closed). */
 const UNDETERMINED = Object.freeze({ state: "undetermined", copy: null, refused: null });
 /* R11: image-cover's refusals that leave a mark recorded with no copy (every one but the areas' own). */
@@ -429,25 +450,176 @@ export class CaseCarriage {
    *  capture with no knock, or a source that cannot be read, answers nothing, so its rows lapse (fail closed). A document
    *  stating no `sources:` row has nothing to re-read. Writes nothing. */
   sourcesLapsed(text, at) {
+    const rows = CaseCarriage.#sourceRows(text);
+    return rows.length ? sourceRowsStanding(rows, this.#publishable(at)) : [];
+  }
+
+  /* R5, R21: a case document's `sources:` rows (case-grammar R27), `[]` when it states none or cannot be read. */
+  static #sourceRows(text) {
     let rows = null;
     try { rows = caseDocumentBlocks(text).sources; } catch { rows = null; }
-    if (!Array.isArray(rows) || !rows.length) return [];
-    return sourceRowsStanding(rows, (capture) => {
+    return Array.isArray(rows) ? rows : [];
+  }
+
+  /* R5, R21: case-grammar R28's `publishable` at `at`: for one capture, what the public may be told at `at` of every
+     source behind it (its pulled knocks, first received first), or null when no knock stands behind it or a source
+     cannot be read (fail closed). Each capture is asked once per function made. */
+  #publishable(at) {
+    const asked = new Map();
+    return (capture) => {
+      if (asked.has(capture)) return asked.get(capture);
       let knocks = [];
       try {
         knocks = this.#rows(`SELECT source_id, received FROM source_knocks WHERE capture_sha=?
                              ORDER BY received, knock_id`, capture);
       } catch { knocks = []; }
-      if (!knocks.length) return null;
-      const entries = [];
-      for (const s of [...new Set(knocks.map((k) => k.source_id))]) {
-        let r = null;
-        try { r = this.sources.publishableAt({ source: s, audience: "public", at }); } catch { r = null; }
-        if (!r || r.ok !== true || !Array.isArray(r.entries)) return null;
-        entries.push(...r.entries);
+      let answer = null;
+      if (knocks.length) {
+        const entries = [];
+        answer = { entries, received: knocks[0].received };
+        for (const s of [...new Set(knocks.map((k) => k.source_id))]) {
+          let r = null;
+          try { r = this.sources.publishableAt({ source: s, audience: "public", at }); } catch { r = null; }
+          if (!r || r.ok !== true || !Array.isArray(r.entries)) { answer = null; break; }
+          entries.push(...r.entries);
+        }
       }
-      return { entries, received: knocks[0].received };
-    });
+      asked.set(capture, answer);
+      return answer;
+    };
+  }
+
+  /* ---- what lapsed since an instant (R19–R21; T46, N907, K2833, K2949), for `case-check` R2's latch ---- */
+
+  /** R19 (T46; N907; K2833, K2949): R4's answer over the interval from `since` through the read, as far as
+   *  `accepted-work` answers it. A row is withdrawn when R4 reads it withdrawn now, or when an acceptance withdrawal
+   *  (`acceptanceWithdrawals`, its R2) at or after `since` names its `(ref, edition)`, though an acceptance stands again
+   *  now; the undisclosed flags are R4's, those open at the read. Null when no row lapsed, else `{withdrawn,
+   *  undisclosed}` in R4's bounds. A withdrawal history that cannot be read whole, or a `since` that is not record-core's
+   *  instant, answers every row withdrawn. (A flag opened and cleared inside the interval waits on N947, T47.)
+   *  Synchronous; writes nothing; never throws. */
+  acceptedWorkLapsedSince(fm, signer, since) {
+    let blocks = null;
+    try { blocks = acceptedWorkBlocksOf(fm); } catch { blocks = null; }
+    const rows = [];
+    const keys = new Set();
+    for (const r of blocks && Array.isArray(blocks.rows) ? blocks.rows : []) {
+      if (!r || typeof r !== "object") continue;
+      const ref = str(r.ref), edition = Number(r.edition), key = `${ref}\u0000${edition}`;
+      if (keys.has(key)) continue;
+      keys.add(key);
+      rows.push({ key, named: { ref: ref || null, edition: Number.isInteger(edition) ? edition : null } });
+    }
+    if (!rows.length) return null;
+    let now = null;
+    try { now = this.acceptedWorkLapsed(fm, signer); } catch { now = null; }
+    const gone = isInstant(since) ? this.#withdrawnSince(since) : null;
+    const isNow = new Set((now ? now.withdrawn : []).map((x) => `${x.ref ?? ""}\u0000${x.edition}`));
+    const withdrawn = rows.filter((r) => gone === null || gone.has(r.key)
+      || isNow.has(`${r.named.ref ?? ""}\u0000${r.named.edition}`)).map((r) => ({ ...r.named }));
+    const undisclosed = now ? now.undisclosed : [];
+    return withdrawn.length || undisclosed.length ? { withdrawn, undisclosed: undisclosed.slice(0, UNDISCLOSED_MAX) } : null;
+  }
+
+  /* R19: the `(ref, edition)` keys an acceptance withdrawal recorded at or after `since` names (a withdrawal whose
+     instant cannot be read counts as after it), read page by page through accepted-work R2; null when the history
+     cannot be read whole (absent, unreadable, a malformed page, a cursor that does not move, or past the bound). */
+  #withdrawnSince(since) {
+    const keys = new Set();
+    let after = null;
+    for (let page = 0; page < WITHDRAWAL_PAGES_MAX; page++) {
+      let p = null;
+      try { p = this.acceptedWork.acceptanceWithdrawals({ after, limit: WITHDRAWAL_PAGE }); } catch { p = null; }
+      if (!p || typeof p !== "object" || p.absent || p.unreadable || !Array.isArray(p.withdrawals)) return null;
+      for (const w of p.withdrawals) {
+        if (!w || typeof w !== "object" || !Array.isArray(w.refs)) return null;
+        const order = instantOrder(w.at, since);
+        if (order < 0) continue;
+        for (const ref of w.refs) keys.add(`${str(ref)}\u0000${Number(w.edition)}`);
+      }
+      if (p.cursor === null || p.cursor === undefined) return keys;
+      if (p.cursor === after || !p.withdrawals.length) return null;
+      after = p.cursor;
+    }
+    return null;
+  }
+
+  /** R20 (T46; N907; K2833): R13's rows over the interval from `since` through the read: each row R13 answers now, and
+   *  each row stating `obscured` whose photo's copy (R11) or member document's copy (R16) was, at any instant at or
+   *  after `since`, other than the copy it states, read from this module's append-only marks, withdrawals and copies
+   *  (R12), even when the stated copy was derived again since. A history that cannot be read, or a `since` that is not
+   *  record-core's instant, answers the row lapsed. At most 200, in row order; `[]` when none. Synchronous; writes
+   *  nothing; never throws. */
+  marksLapsedSince(fm, since) {
+    const valid = isInstant(since);
+    const out = [];
+    for (const m of this.#materialRows(fm)) {
+      let e = null;
+      try { e = this.#lapsedNow(m); } catch { e = { ref: str(m.ref) || null, sha: str(m.sha).toLowerCase() || null, kind: "photo", why: MARKS_UNREAD }; }
+      if (!e) {
+        const ob = obscuredOf(m);
+        if (ob) e = this.#changedSince(m, ob, valid ? since : null);
+      }
+      if (e) out.push(e);
+      if (out.length >= MARKS_LAPSED_MAX) break;
+    }
+    return out;
+  }
+
+  /* R20: one row stating `obscured` when its copy was other than the stated one at an instant at or after `since`
+     (null: not an instant, so lapsed), else null. A photo's copy after each act is the derivation that act wrote (a
+     mark's, or a withdrawal's that left a mark standing), or none after a withdrawal that left none; a member document's
+     is each outcome recorded. An act whose instant cannot be read counts as after `since`. */
+  #changedSince(m, ob, since) {
+    const ref = str(m.ref) || null, sha = str(m.sha).toLowerCase();
+    const document = HEX64.test(sha) && (() => { try { return !this.#isPhoto(sha); } catch { return false; } })();
+    const kind = document ? "document" : "photo";
+    if (since === null) return { ref, sha: sha || null, kind, why: SINCE_UNREAD };
+    if (!HEX64.test(sha)) return null;
+    const after = (at) => !(instantOrder(at, since) < 0);
+    try {
+      let copies;
+      if (document) {
+        copies = this.#rows(`SELECT state, sha256, at FROM document_copies WHERE capture=? ORDER BY seq`, sha)
+          .filter((d) => after(d.at)).map((d) => (d.state === "copy" ? d.sha256 : null));
+      } else {
+        const derived = this.#rows(`SELECT through, withdrawal, sha256 FROM photo_copies WHERE capture=? ORDER BY seq`, sha);
+        const ofMark = (mark) => derived.find((d) => d.through === mark && d.withdrawal === null);
+        const ofWithdrawal = (w) => derived.find((d) => d.withdrawal === w);
+        copies = [
+          ...this.#rows(`SELECT mark, at FROM photo_marks WHERE capture=?`, sha).filter((r) => after(r.at))
+            .map((r) => { const d = ofMark(r.mark); return d ? d.sha256 : null; }),
+          ...this.#rows(`SELECT withdrawal, at FROM photo_mark_withdrawals WHERE capture=?`, sha).filter((r) => after(r.at))
+            .map((r) => { const d = ofWithdrawal(r.withdrawal); return d ? d.sha256 : null; }),
+        ];
+      }
+      return copies.some((c) => c !== ob.copy) ? { ref, sha, kind, why: COPY_CHANGED_SINCE } : null;
+    } catch {
+      return { ref, sha, kind, why: document ? DOCUMENT_HISTORY_UNREAD : MARKS_HISTORY_UNREAD };
+    }
+  }
+
+  /** R21 (T46; N907; K2833, K2949): R5's rows over the interval, as far as `sources` answers it: each `sources:` row
+   *  that did not hold, judged as R5 judges it, at `since` or at the read, in row order (the read's answer where both
+   *  fail). A source that cannot be read answers its rows lapsed (R5); a `since` that is not record-core's instant
+   *  answers every row lapsed. A document stating no `sources:` row answers `[]`. (A row that lapsed only between the
+   *  two instants waits on N947, T47.) Synchronous; writes nothing; never throws. */
+  sourcesLapsedSince(text, since) {
+    try {
+      const rows = CaseCarriage.#sourceRows(text);
+      if (!rows.length) return [];
+      if (!isInstant(since)) return sourceRowsStanding(rows, () => null);
+      const atRead = this.#publishable(this.#when(null)), atSince = this.#publishable(since);
+      const out = [];
+      for (const r of rows) {
+        const now = sourceRowsStanding([r], atRead);
+        const lapsed = now.length ? now : sourceRowsStanding([r], atSince);
+        if (lapsed.length) out.push(lapsed[0]);
+      }
+      return out;
+    } catch {
+      try { return sourceRowsStanding(CaseCarriage.#sourceRows(text), () => null); } catch { return []; }
+    }
   }
 
   /* R1 (T37; N757; DEC-180 (4)): a photo carried as its copy holds the copy alone, `derived`, kind `obscured`, when
@@ -784,44 +956,58 @@ export class CaseCarriage {
    *  the document whole and its state is not `clean`, and when its state cannot be read (fail closed). Synchronous;
    *  writes nothing; never throws. */
   marksLapsed(fm) {
+    const out = [];
+    for (const m of this.#materialRows(fm)) {
+      let e = null;
+      try { e = this.#lapsedNow(m); } catch { e = { ref: str(m.ref) || null, sha: str(m.sha).toLowerCase() || null, kind: "photo", why: MARKS_UNREAD }; }
+      if (e) out.push(e);
+      if (out.length >= MARKS_LAPSED_MAX) break;
+    }
+    return out;
+  }
+
+  /* R13, R20: the `materials:` rows that may lapse here: every row but an observation's, stating `obscured` or
+     carried whole. */
+  #materialRows(fm) {
     let rows = null;
     try { const m = materialsOf(fm); rows = m && Array.isArray(m.materials) ? m.materials : null; } catch { rows = null; }
-    const out = [];
-    for (const m of Array.isArray(rows) ? rows : []) {
-      if (!m || typeof m !== "object" || m.kind === "observation") continue;
-      const ob = obscuredOf(m), whole = m.included === true || m.included === "true";
-      if (!ob && !whole) continue;
-      const ref = str(m.ref) || null, sha = str(m.sha).toLowerCase();
-      if (!ob) {
-        if (!HEX64.test(sha)) continue;
-        if (this.#isPhoto(sha)) { out.push({ ref, sha, kind: "photo", why: PHOTO_ONLY_AS_COPY }); continue; }
-        /* (T39; N806) a member document carried whole stands only while its state is `clean`; a digest the record
-           holds no capture under is no member document (R1 answers it unheld, never refused) */
-        const held = this.#held(sha);
-        const member = held === false ? null : held === null ? UNDETERMINED : this.#memberOf(sha);
-        if (member && member.state === "undetermined") out.push({ ref, sha, kind: "document", why: DOCUMENT_UNREAD });
-        else if (member && member.state !== "clean") out.push({ ref, sha, kind: "document", why: MEMBER_DOCUMENT_ONLY_AS_COPY });
-        continue;
-      }
-      /* (T39; N806) a row carrying a member document's copy: it stands while that copy is the document's current one */
-      if (HEX64.test(sha) && !this.#isPhoto(sha)) {
-        let s = UNDETERMINED;
-        try { s = this.#documentState(sha); } catch { s = UNDETERMINED; }
-        if (s.state === "undetermined") out.push({ ref, sha, kind: "document", why: DOCUMENT_UNREAD });
-        else if (!(s.state === "copy" && s.copy === ob.copy))
-          out.push({ ref, sha, kind: "document", why: "the document's copy is no longer the one the case names, so the case must be prepared again" });
-        continue;
-      }
-      let view = null;
-      try {
-        const { marks, last } = this.#marksOf(sha);
-        view = CaseCarriage.#view(marks, last);
-      } catch { view = null; }
-      if (!view) out.push({ ref, sha: sha || null, kind: "photo", why: "the photo's marks could not be read, so its copy cannot be confirmed" });
-      else if (!(view.copy && view.copy.sha256 === ob.copy))
-        out.push({ ref, sha, kind: "photo", why: "a mark on the photo was added or withdrawn since the case was prepared, so its copy is no longer the one the case names" });
+    return (Array.isArray(rows) ? rows : []).filter((m) => m && typeof m === "object" && m.kind !== "observation"
+      && (obscuredOf(m) || m.included === true || m.included === "true"));
+  }
+
+  /* R13: one row's lapse at the read, `{ref, sha, kind, why}`, or null when it stands. */
+  #lapsedNow(m) {
+    const ob = obscuredOf(m);
+    const ref = str(m.ref) || null, sha = str(m.sha).toLowerCase();
+    if (!ob) {
+      if (!HEX64.test(sha)) return null;
+      if (this.#isPhoto(sha)) return { ref, sha, kind: "photo", why: PHOTO_ONLY_AS_COPY };
+      /* (T39; N806) a member document carried whole stands only while its state is `clean`; a digest the record
+         holds no capture under is no member document (R1 answers it unheld, never refused) */
+      const held = this.#held(sha);
+      const member = held === false ? null : held === null ? UNDETERMINED : this.#memberOf(sha);
+      if (member && member.state === "undetermined") return { ref, sha, kind: "document", why: DOCUMENT_UNREAD };
+      if (member && member.state !== "clean") return { ref, sha, kind: "document", why: MEMBER_DOCUMENT_ONLY_AS_COPY };
+      return null;
     }
-    return out.slice(0, MARKS_LAPSED_MAX);
+    /* (T39; N806) a row carrying a member document's copy: it stands while that copy is the document's current one */
+    if (HEX64.test(sha) && !this.#isPhoto(sha)) {
+      let s = UNDETERMINED;
+      try { s = this.#documentState(sha); } catch { s = UNDETERMINED; }
+      if (s.state === "undetermined") return { ref, sha, kind: "document", why: DOCUMENT_UNREAD };
+      if (!(s.state === "copy" && s.copy === ob.copy))
+        return { ref, sha, kind: "document", why: "the document's copy is no longer the one the case names, so the case must be prepared again" };
+      return null;
+    }
+    let view = null;
+    try {
+      const { marks, last } = this.#marksOf(sha);
+      view = CaseCarriage.#view(marks, last);
+    } catch { view = null; }
+    if (!view) return { ref, sha: sha || null, kind: "photo", why: MARKS_UNREAD };
+    if (!(view.copy && view.copy.sha256 === ob.copy))
+      return { ref, sha, kind: "photo", why: "a mark on the photo was added or withdrawn since the case was prepared, so its copy is no longer the one the case names" };
+    return null;
   }
 
   /* ---- a member document and its copy (R15–R17; T39, N806, K2315, K2333) ---- */
