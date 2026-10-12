@@ -64,3 +64,7 @@ Size (session_01RJBRXS3sxyhSh6P5LL6g9S): test runs 15, module lines 1096 (tests 
 ## J5 · COMPLETE · re B5
 
 B5 (K3002) applied after merging tranche/T46: cs.now() is the clock throughout; adoptversion and standarddeclare collect the member's words in their dialog as their reasonField. Two own rows added (screen.queue.why, screen.find-in.field.reason); files unchanged from J4's list. 42/42; with paths entered: architecture 0, coverage 7/7, ownership 0. Details in my record.
+
+## J6 · COMPLETE · re B6
+
+B6 (K3004): tranche/T46 merged (145c1cfcd8). None of the merged services is one these screens call directly or change; nothing to change. Re-run: 42/42; with paths entered: architecture 0, coverage 7/7, ownership 0; format 0.
