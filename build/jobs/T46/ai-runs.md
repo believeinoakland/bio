@@ -12,3 +12,11 @@ R18's member dispatch: the wire to agent-worker `/run` (M-T46-4; your START asks
 4. **Consequence for AGENT-WORKER (R80).** With (1), `/run` needs no new admission. R5 is a shape test and the member's token has the shape. Every plane call is admitted as `member:<id>/<tokenId>`, so the run's own principal gate (run-rules R5) passes on her ticks. R10 compares `session.principal.ref` (`member:<id>`, R52) with the account's `member`: the same member. So R80 should be met by its tests alone. AGENT-WORKER should confirm that its R10 reads `principal.ref` and that a `signin` account at `level` `member` passes R6 with `suggestions` a boolean.
 
 Question: is (1) the intended wire, with the door forwarding the member's presented `ai` credential? Or should the plane mint or hold something for her (which is credentials' work, not in T46)? And are the two reused codes in (3) right, or do you want a new row?
+
+## J2 · QUESTION
+
+Separate from J1. R18 names `MEMBER_RUN_MODE_NOT_ADMITTED` as "a row of this module's family" (K2920). This module's rows are held in `run-rules`' table (`bio-plane/src/run-rules/checks.mjs`, `AI_RUNS_CHECKS`) and read by key (R35, run-rules R11). The row does not exist there, and T46-13 (run-rules) does not list it. I cannot write `checks.mjs`, because it is run-rules' file.
+
+My best reading: RUN-RULES adds the row in T46-13. It would be C-22.30 (C-22.29 is R30's `AI_PART_NOT_DEPLOYED`), in DEC-83's form. `where`: `src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch`. Interim translation, until the design stream's `refusal.MEMBER_RUN_MODE_NOT_ADMITTED` lands on main (K2929): "Nothing was started, because on your own Claude sign-in the assistant only checks and plans for you; this kind of work needs your group's Civicsmith to run it." I mint it at that region and read the row by key. Until the row merges, my code reads it with `check`/`translation` null, as `#refuse` already does for a missing row, and my test asserts the code and that nothing was sent. Once the row is on the tranche, it asserts the row too.
+
+Question: should RUN-RULES add it in T46-13, in a CHANGE to that job, or do you want another arrangement?
