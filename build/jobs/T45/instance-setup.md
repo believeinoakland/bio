@@ -38,3 +38,10 @@ My reading, which I am building now: the value is recorded through setSetting("d
 The alternative is a record-core read of a setting's history (a record-core change, layer closed), which I am not building.
 
 Also: STAKE_MALFORMED takes C-64.27, the next free C-64 number (your START numbered none). Answer only if either reading is wrong.
+
+## J2 · REPORT
+
+Found outside my module (details in my record's Completion):
+1. op-declarations (T45-45, its R49) and op-grades (R32) owe `declaredstakeset` a spec and a grade: an administrator's act, mutating, `by` stamped, `machineClasses: []`, answered by `NOT_AN_ADMIN`, with help text under R34. Until then the door answers `UNKNOWN_OP` for it, as rule 4 (12) accepts for other new ops.
+2. plane `door.test.mjs` "R1, R5 (K1690, K1870, K2162, K2249): instance-setup's thirty-three routes…" pins 33 routes and drives each. With `declaredstakeset` there are 34, so it is red from my merge until plane (T45-47) re-pins it and adds the drive. It is the only difference between the users' suites on my branch and on tranche/T45 (607 vs 608 pass of 628; newgroup 51/54 both).
+3. Yours to place: v0.2 rule 9 ("a group with a stake in a matter discloses it") reads as a stake per matter, and R77 holds one group-wide stake. Rule 21's half about another group's findings belongs to the readers of accepted findings.
