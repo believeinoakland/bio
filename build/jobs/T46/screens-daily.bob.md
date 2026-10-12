@@ -34,3 +34,7 @@ CHANGE (K3002): interface-shell R21 gains a kit sub-bullet (parts, view.origin, 
 ## B6 · CHANGE
 
 CHANGE (K3004): instance-setup (R79–R81: infolevelset, infolevel, test_instance, parts), setup-page (R31 SESSION_STORE_KEY), answer-envelope and action-producers are merged into tranche/T46. Merge tranche/T46 into your branch.
+
+## B7 · CHANGE
+
+CHANGE (K3007): interface-shell is merged into tranche/T46 (with affordances and op-declarations). Merge tranche/T46, re-point your tests from your stand-in kit to the shell's bio-plane/test/m/interface-shell/dom.mjs and harness.mjs, check every kit signature you read (cs.choice, cs.row, cs.rows, etc.) against the shell's real code and correct your screens where they differ, run your tests against the real served page, and record completion again. Name in your COMPLETE any kit gap that remains (a REPORT).
