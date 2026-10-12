@@ -4,6 +4,7 @@
    a refusal, no answer, or never), with the frame's own reads answered by default. Timers are a fake clock, so the
    explanations' timings (R14) are read exactly. */
 import { interfacePage, NONCE_SLOT } from "../../../src/interface-shell/index.mjs";
+import { webcrypto } from "node:crypto";
 import { documentOf, Event, textNodes } from "./dom.mjs";
 
 export { textNodes, Event };
@@ -73,6 +74,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
   let now = 0;
   const clock = {
     setTimeout: (f, ms = 0) => { const t = { f, at: now + ms, id: timers.length + 1 }; timers.push(t); return t.id; },
+    at: () => now,
     clearTimeout: (id) => { const t = timers.find((x) => x.id === id); if (t) t.f = null; },
     async tick(ms) { const end = now + ms; for (;;) { const due = timers.filter((t) => t.f && t.at <= end).sort((a, b) => a.at - b.at)[0]; if (!due) break; now = due.at; const f = due.f; due.f = null; f(); await settle(5); } now = end; },
   };
@@ -92,6 +94,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     addEventListener: (t, f) => (listeners[t] ||= []).push(f),
     removeEventListener: (t, f) => { listeners[t] = (listeners[t] || []).filter((x) => x !== f); },
     listeners,
+    crypto: webcrypto,
     URL: { createObjectURL: (blob) => { const url = "blob:https://group.example/" + (objectUrls.length + 1); objectUrls.push({ url, blob, released: false }); return url; },
            revokeObjectURL: (url) => { const u = objectUrls.find((x) => x.url === url); if (u) u.released = true; } },
   };
@@ -103,7 +106,10 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
   const click = async (el) => { if (typeof el === "string") el = root().querySelector(el); if (!el) throw new Error("nothing to click"); fire(el, "click"); await settle(); return el; };
   const back = async (path2) => { location.pathname = path2; for (const f of listeners.popstate || []) f({}); await settle(); };
   if (run) {
-    new Function("window", "setTimeout", "clearTimeout", scriptOf(html))(win, clock.setTimeout, clock.clearTimeout);
+    /* the page's clock is the fake one: `Date.now()` advances with `clock.tick` (cs.now, K3002) */
+    const base = Date.now();
+    const FakeDate = class extends Date { static now() { return base + clock.at(); } };
+    new Function("window", "setTimeout", "clearTimeout", "Date", scriptOf(html))(win, clock.setTimeout, clock.clearTimeout, FakeDate);
     await settle();
   }
   const byOp = (op) => requests.filter((r) => r.op === op);

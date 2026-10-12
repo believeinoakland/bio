@@ -148,9 +148,12 @@ function dataOf(screens) {
     needs: pick((op) => (Object.hasOwn(NEEDS, op) ? NEEDS[op] : undefined)),
     sessionOps: { member: [...ops].filter((op) => SESSION_OPS.member.has(op)), admin: [...ops].filter((op) => SESSION_OPS.admin.has(op)) },
     adminActs: [...ops].filter((op) => ADMIN_ACTS.has(op)),
-    /* R11: the weight from `RUNGS` (an alias carries its op's); an act that can never be undone weighs Irreversible
-       (DEC-143, `op-grades` R21); an op in `RUNG_ABSENT` or unnamed is drawn as reasoned in the browser (DEC-87) */
-    rungs: pick((op) => (IRREVERSIBLE_WEIGHT.includes(op) ? "irreversible" : Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op) ? RUNGS[op] : undefined)),
+    /* R11 (K3002): the weight from `RUNGS` (an alias carries its op's); an act that can never be undone weighs
+       Irreversible (DEC-143, `op-grades` R21); an op in `RUNG_ABSENT` under a ground other than `undetermined` is not an
+       act on the record: no weight (`none`), run on press; an undetermined or unnamed op is reasoned in the browser (DEC-87) */
+    rungs: pick((op) => (IRREVERSIBLE_WEIGHT.includes(op) ? "irreversible"
+      : Object.hasOwn(RUNG_ABSENT, op) ? (RUNG_ABSENT[op] && RUNG_ABSENT[op].ground !== "undetermined" ? "none" : undefined)
+        : Object.hasOwn(RUNGS, op) ? RUNGS[op] : undefined)),
     paths: PATHS, placeScreens: PLACE_SCREENS, refScreens: REF_SCREENS,
     places: [...Object.keys(PLACE_SCREENS), "more"],
   };

@@ -100,7 +100,7 @@ export function shellProgram(D, SCREENS, win) {
     return true;
   }
   const WEIGHTS = ["reversible", "reasoned", "terminal", "signed", "irreversible"];
-  const weightOf = (op) => { const r = D.rungs[op]; const n = r === "attested" ? "signed" : r; return WEIGHTS.includes(n) ? n : "reasoned"; };
+  const weightOf = (op) => { const r = D.rungs[op]; const n = r === "attested" ? "signed" : r; return n === "none" || WEIGHTS.includes(n) ? n : "reasoned"; };
 
   /* ---------- explanation level (R17), appearance (R18), the rail's width (R26) ---------- */
   let LEVEL = local.get("cs-level") === "pause" ? "pause" : "prompt";
@@ -144,20 +144,25 @@ export function shellProgram(D, SCREENS, win) {
   }
   /* R13: `refusal.<code>` (or the screen's own key for the code) when held; else the answer's translation; else
      `state.failed` with the code (a read's state already says it, so a read is handed the code alone) */
-  function refusalWords(a, own, bare) {
-    const key = own && own[a.code] ? own[a.code] : "refusal." + a.code;
+  function refusalWords(a, own, bare, inst) {
+    /* R21 (K3002): a screen's own word for the code, or its own function `(refusal, cs)` → HTML */
+    if (own && typeof own[a.code] === "function") {
+      try { return String(own[a.code]({ code: a.code, translation: a.translation, ...(a.fields || {}) }, inst ? kit(inst) : null)); } catch { /* falls to the words below */ }
+    }
+    const key = own && typeof own[a.code] === "string" ? own[a.code] : "refusal." + a.code;
     if (has(key)) return w(key, a.fields || {});
     if (a.translation) return esc(a.translation);
     return bare ? esc(a.code) : w("state.failed", { reason: a.code });
   }
   function outcome(spec, a) {
     if (a.kind === "ok") return emptyOf(spec, a.value) ? { state: "empty", value: a.value, refusal: null } : { state: "ok", value: a.value, refusal: null };
-    if (a.kind === "refused") return { state: "failed", value: null, refusal: { code: a.code, words: refusalWords(a, spec && spec.refusals, true) } };
+    if (a.kind === "refused") return { state: "failed", value: null, refusal: { code: a.code, words: refusalWords(a, spec && spec.refusals, true, null) } };
     return { state: "failed", value: null, refusal: { code: null, words: w("shell.noanswer") } };
   }
   function instance(spec, subject, key, serves) {
     const inst = { key, spec, subject, serves: serves || null, data: {}, ui: {}, acts: [], gen: 0, notFound: false };
-    inst.view = { subject, data: inst.data, ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, serves: inst.serves };
+    inst.view = { subject, data: inst.data, ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, serves: inst.serves,
+      parts: spec.parts || {}, origin: win.location.origin };
     return inst;
   }
   const NOT_FOUND = /^NO_SUCH_|_NOT_FOUND$|^NOT_FOUND$/;
@@ -204,6 +209,12 @@ export function shellProgram(D, SCREENS, win) {
       theme: () => THEME,
       setTheme: (v) => setTheme(v),
       go: (screen, subject) => navigate(hrefOf(screen, subject)),
+      now: () => Date.now(),
+      /* R21 (K3002): the lowercase hex SHA-256 of the text's UTF-8 bytes */
+      async digest(t) {
+        const buf = await win.crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(t)));
+        return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+      },
       /* R21 (K2998): one op, its parsed answer (null when none came); `bearer` replaces the session for this request only */
       async call(op, o = {}) {
         const a = await call(op, { query: o.query, body: o.body, raw: o.raw, rawType: o.rawType, bearer: o.bearer });
@@ -258,13 +269,14 @@ export function shellProgram(D, SCREENS, win) {
           return '<div class="cs-reason" data-phone-act="' + esc(op) + '"><b>' + label + "</b>" + (does ? "<p>" + does + "</p>" : "") + "<p>" + w("shell.phone.larger") + "</p></div>";
         const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null }) - 1;
         const data = Object.entries(o.data || {}).map(([k, v]) => " data-" + k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + '="' + esc(v) + '"').join("");
+        const weighed = weight !== "none";
         const pips = '<span class="cs-pips" aria-hidden="true">' + [1, 2, 3, 4, 5].map((i) => "<i" + (i <= WEIGHTS.indexOf(weight) + 1 ? ' class="on"' : "") + "></i>").join("") + "</span>";
-        const tip = (does ? "<b>" + label + "</b>: " + does : "<b>" + label + "</b>") + '<span class="why">' + w("weight." + weight + ".means") + "</span>"
+        const tip = (does ? "<b>" + label + "</b>: " + does : "<b>" + label + "</b>") + (weighed ? '<span class="why">' + w("weight." + weight + ".means") + "</span>" : "")
           + (outward ? '<span class="why">' + w("mark.outward.means") + "</span>" : "");
         return '<span class="cs-actwrap"><button type="button" class="cs-btn"' + (o.tone ? ' data-tone="' + esc(o.tone) + '"' : "")
           + ' data-act="' + esc(op) + '" data-ai="' + inst.key + ":" + idx + '"' + data + tipAttr(tip, 2) + ">"
           + (o.icon ? I(o.icon) : "") + (outward ? I("outward") : "") + label
-          + '<span class="w">' + pips + w("weight." + weight + ".name") + "</span></button>"
+          + (weighed ? '<span class="w">' + pips + w("weight." + weight + ".name") + "</span>" : "") + "</button>"
           + '<span class="cs-slot" data-slot="' + inst.key + ":" + idx + '"></span></span>';
       },
       /* R16: an item the record holds, a link to its screen where one is built, with its card */
@@ -555,7 +567,9 @@ export function shellProgram(D, SCREENS, win) {
     const d = inst && inst.acts[Number(i)];
     if (!d) return;
     const weight = weightOf(d.op);
-    if (weight === "reversible") return run(inst, d, btn, ai, {});
+    if (weight === "reversible" || weight === "none") return run(inst, d, btn, ai, {});
+    /* R11 (DEC-88): an act whose own field carries the member's authored words sends them as its reason, asking none */
+    if (weight === "reasoned" && d.spec.reasonField) return run(inst, d, btn, ai, { own: true });
     if (weight === "reasoned") {
       const rid = "cs-reason-" + ai.replace(":", "-");
       return besideAct(ai, '<span class="cs-reason" role="group"><span class="cs-field"><label for="' + rid + '">' + w("shell.reason") + '</label><span class="help" id="' + rid + '-help">'
@@ -579,6 +593,10 @@ export function shellProgram(D, SCREENS, win) {
     } catch { req = null; }
     if (!req) return;
     if (req.refuse) return besideAct(ai, refusalHtml(w(req.refuse, req.fills)));
+    if (extra.own) {
+      const words = req.raw !== undefined ? (req.query || {})[d.spec.reasonField] : (req.body || {})[d.spec.reasonField];
+      if (!(typeof words === "string" && words.trim())) return besideAct(ai, refusalHtml(w("shell.reason.needed")));
+    }
     if (extra.reason !== undefined) {
       if (req.raw !== undefined) req.query = Object.assign({}, req.query, { [d.spec.reasonField || "reason"]: extra.reason });
       else req.body = Object.assign({}, req.body || {}, { [d.spec.reasonField || "reason"]: extra.reason });
@@ -586,7 +604,7 @@ export function shellProgram(D, SCREENS, win) {
     besideAct(ai, "");
     const a = await call(d.op, req);
     if (a.kind !== "ok") {
-      const words = a.kind === "refused" ? refusalWords(a, d.spec.refusals) : w("state.failed", { reason: html(w("shell.noanswer")) });
+      const words = a.kind === "refused" ? refusalWords(a, d.spec.refusals, false, inst) : w("state.failed", { reason: html(w("shell.noanswer")) });
       return besideAct(ai, refusalHtml(words));
     }
     let after = null;

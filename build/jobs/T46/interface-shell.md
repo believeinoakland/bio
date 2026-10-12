@@ -29,7 +29,7 @@ My reading, built now and tested: literal, as above, except the shell's own sign
 **Files to add to `modules.json` (K1043):** paths `bio-plane/src/interface-shell/`; tests `bio-plane/test/m/interface-shell/`.
 
 **Readings (in my record for BOB; none moves a requirement):**
-- R11 (J2, unanswered at this COMPLETE): an op in `RUNG_ABSENT` takes reasoned friction (a reason in place, sent as `reason`); the shell's own sign-out and level switch send at once (R4, R17). A CHANGE re-points it.
+- R11: superseded by B5/B6 (K3002); see "Re-opened by B5, B6" below.
 - R11: an op in `op-grades`' `IRREVERSIBLE_WEIGHT` weighs Irreversible whatever its rung (DEC-143, `op-grades` R21); none is offered in T46.
 - R17: "after their first month" counts from the first day this device served the member, or the level's first `set_at` if earlier (whoami answers no joining date); asked once, recorded `{level, asked: true}`; kept on the device (`cs-level-asked`) too. While `infolevelset` is not in `OPS` (op-declarations' T46-51 unmerged) the level is kept on the device only, as R17 says.
 - R20: `groupkeystate` answers a non-administrator `{on}` only (`credentials` R34), so "held and on" reads as `on: true` with `held` not `false`.
@@ -51,3 +51,11 @@ Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 14, module lines 1077 (src; t
 ## J3 · COMPLETE
 
 T46-54 interface-shell complete: R1–R26 with R21's contract (K2996, K2998, K2999); see this record's Completion. Files to add to modules.json: paths bio-plane/src/interface-shell/, tests bio-plane/test/m/interface-shell/ (dom.mjs and harness.mjs there are the shared stand-in for the screen modules' tests). Merge after setup-page (R31's SESSION_STORE_KEY) and op-declarations (R50). J2 (R11 friction for RUNG_ABSENT ops) is still open: built literally; a CHANGE re-points it. Tests 57/57; format, architecture, coverage, ownership 0 failures.
+
+## Re-opened by B5, B6 (K3002)
+
+**Applied.** R11 as K3002 words it: the weight from `RUNGS`; an op in `RUNG_ABSENT` under `undetermined`, or in neither table, reasoned; under `substrate`, `credential`, `caller-owned` or `observational` no weight mark (no pips, no weight name or meaning in its explanation) and run on press (`index.mjs` marks it `none`); a reasoned act whose spec names a `reasonField` sends the member's own words in that body (or, raw, query) field as its reason and asks none, refusing to send while it is empty (`shell.reason.needed` beside the act). R21's K3002 sub-bullet: `parts` serialised with the screen and handed in as `view.parts`; `view.origin`; a refusal word filled from the refusal's fields; a `refusals` value may be a function `(refusal, cs)` → HTML; `{refuse, fills}`; `cs.value` of a checkbox or radio its `checked`; `cs.digest(text)` (hex SHA-256 of UTF-8, `crypto.subtle`); `cs.now()` (the page's `Date.now`, the harness's fake clock in tests); no `cs.open`. Harness: the page runs with a fake `Date` on the harness clock and `crypto`.
+
+**Tests and checks** (same local arrangement as above): `node --test bio-plane/test/m/interface-shell/`: tests 60, pass 60, fail 0 (new: R11 K3002 ground rule with controls, R11 DEC-88 `reasonField`, R21 K3002 kit points). `format` 0 failures; `architecture … interface-shell` 13 product files, 0 failures; `coverage … interface-shell` 26 of 26; `ownership … interface-shell tranche/T46` 0 failures.
+
+Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 22, module lines 1098 (src; tests 1611)

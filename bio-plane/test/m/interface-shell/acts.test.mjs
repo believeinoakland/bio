@@ -1,7 +1,7 @@
 /* interface-shell R11, R12, R13 and R21's act contract: weight and friction, the gate, refusals beside the act. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { RUNGS } from "../../../src/op-grades/index.mjs";
+import { RUNGS, RUNG_ABSENT } from "../../../src/op-grades/index.mjs";
 import { NEEDS, SESSION_OPS } from "../../../src/op-declarations/index.mjs";
 import { boot, ok, refused, refusedIn, httpError, silent, pending, bytes, MEMBER, ADMIN } from "./harness.mjs";
 import { ALL, HOME, HELD } from "./screens.fixture.mjs";
@@ -11,7 +11,7 @@ const HELDA = ok({ items: [{ id: "h1", title: "Minutes", at: "2026-10-01" }, { i
 const PLANE = { image: IMAGE, heldcaptures: HELDA };
 const btn = (p, op) => p.root().querySelector(`button[data-act="${op}"]`);
 
-test("R11 each act is a button labelled act.<op>.label.<screen>, carrying its weight's pips and name from op-grades' RUNGS (attested drawn as Signed; RUNG_ABSENT or unnamed as Reasoned)", async () => {
+test("R11 each act is a button labelled act.<op>.label.<screen>, carrying its weight's pips and name from op-grades' RUNGS (attested drawn as Signed)", async () => {
   assert.equal(RUNGS.cite, "reversible"); assert.equal(RUNGS.retire, "terminal"); assert.equal(RUNGS.attest, "attested"); assert.equal(RUNGS.release, "reasoned");
   assert.equal(RUNGS.promote, undefined);
   const p = await boot({ screens: ALL, path: "/app/document/c1", plane: PLANE });
@@ -25,8 +25,42 @@ test("R11 each act is a button labelled act.<op>.label.<screen>, carrying its we
   }
   assert.ok(btn(p, "cite").textContent.startsWith("Cite a passage"));
   const h = await boot({ screens: ALL, plane: PLANE });
-  assert.equal(btn(h, "promote").querySelector(".w").textContent, "Reasoned", "promote is RUNG_ABSENT: reasoned");
-  assert.ok(btn(h, "promote").textContent.startsWith("Start a project"));
+  assert.equal(btn(h, "promote").querySelector(".w"), null, "promote is RUNG_ABSENT under substrate: no weight mark");
+  assert.equal(btn(h, "promote").querySelectorAll(".cs-pips").length, 0);
+  assert.equal(btn(h, "promote").textContent, "Start a project");
+});
+
+test("R11 (K3002) an op in RUNG_ABSENT under `undetermined`, or one neither table names, is drawn and frictioned as reasoned; under substrate, credential, caller-owned or observational it carries no weight mark and runs on press", async () => {
+  assert.equal(RUNG_ABSENT.captureupload.ground, "undetermined");
+  assert.equal(RUNG_ABSENT.openoriginal.ground, "observational");
+  assert.equal(RUNG_ABSENT.memberadd.ground !== "undetermined", true);
+  const s = { id: "capture", reads: () => ({}), acts: [{ op: "captureupload" }, { op: "acquire" }], render: (cs) => cs.act("captureupload") + cs.act("acquire") };
+  const p = await boot({ screens: [s], path: "/app/capture" });
+  assert.equal(btn(p, "captureupload").querySelector(".w").textContent, "Reasoned");
+  await p.click(btn(p, "captureupload"));
+  assert.equal(p.byOp("captureupload").length, 0, "asks a reason first");
+  assert.ok(p.root().querySelector('[data-slot="m:0"] textarea'));
+  const o = { id: "open-file", reads: () => ({}), acts: [{ op: "openoriginal" }], render: (cs) => cs.act("openoriginal") };
+  const q = await boot({ screens: [o], path: "/app/open-file/ab" });
+  assert.equal(btn(q, "openoriginal").querySelector(".w"), null);
+  assert.ok(!btn(q, "openoriginal").getAttribute("data-tip").includes("Reasoned"));
+  await q.click(btn(q, "openoriginal"));
+  assert.equal(q.byOp("openoriginal").length, 1, "runs on press");
+  const a = await boot({ screens: ALL, path: "/app/members", plane: { whoami: ok(ADMIN) } });
+  assert.equal(btn(a, "memberadd").querySelector(".w"), null);
+});
+
+test("R11 (DEC-88) a reasoned act whose screen names a reasonField sends the member's own words in that field as its reason and asks no second one; with that field empty it sends nothing and says so", async () => {
+  const s = { id: "held", reads: () => ({}), acts: [{ op: "heldsetaside", reasonField: "reason", send: (view, el, cs) => ({ body: { ids: ["h1"], reason: cs.value("why") } }) }],
+    render: (cs) => cs.field("why", "shell.reason") + cs.act("heldsetaside") };
+  const p = await boot({ screens: [s], path: "/app/held" });
+  await p.click(btn(p, "heldsetaside"));
+  assert.equal(p.byOp("heldsetaside").length, 0);
+  assert.equal(p.root().querySelector('[data-slot="m:0"] textarea'), null, "no second reason asked");
+  assert.ok(p.root().querySelector('[data-slot="m:0"]').textContent.includes("Say why first"));
+  p.doc.getElementById("why").value = "a duplicate";
+  await p.click(btn(p, "heldsetaside"));
+  assert.deepEqual(p.byOp("heldsetaside")[0].body, { ids: ["h1"], reason: "a duplicate" });
 });
 
 test("R11 friction: a reversible act runs on press; a reasoned act opens a reason field in place and sends only with a reason; a terminal or signed act opens a dialog stating what it does and who signs, and sends only on its confirm", async () => {
@@ -124,8 +158,6 @@ test("R13 a refusal of each kind (ok: false at the top level, in result, an HTTP
     p.doc.getElementById("home-title").value = "Typed title";
     const before = p.root().querySelector("#cs-main").innerHTML;
     await p.click(btn(p, "promote"));
-    p.root().querySelector("textarea").value = "why";
-    await p.click(p.root().querySelector('[data-shell="reason-send"]'));
     const slot = p.root().querySelector('[data-slot="m:0"]');
     assert.ok(slot.querySelector('[data-gap="refused"]'), words);
     assert.ok(slot.textContent.includes(words), slot.textContent);
@@ -136,7 +168,7 @@ test("R13 a refusal of each kind (ok: false at the top level, in result, an HTTP
   /* refusal.<code> when held, and the screen's own key for a code first */
   const held = await boot({ screens: ALL, plane: { promote: refused(code, "ignored"), projectdirectory: ok({ projects: [] }) } });
   held.doc.getElementById("home-title").value = "T";
-  await held.click(btn(held, "promote")); held.root().querySelector("textarea").value = "r"; await held.click(held.root().querySelector('[data-shell="reason-send"]'));
+  await held.click(btn(held, "promote"));
   assert.ok(!held.root().querySelector('[data-slot="m:0"]').textContent.includes("ignored"));
   const own = await boot({ screens: ALL, path: "/app/document/c1", plane: { ...PLANE, cite: refused("CITE_GONE", "ignored") } });
   await own.click(btn(own, "cite"));
@@ -146,13 +178,13 @@ test("R13 a refusal of each kind (ok: false at the top level, in result, an HTTP
 test("R21 an act's send: null sends nothing; {refuse: key} draws that word beside the act; a promise is awaited; done runs on success, then the reads named in rereads (all when absent)", async () => {
   const p = await boot({ screens: ALL, plane: { projectdirectory: ok({ projects: [] }) } });
   p.doc.getElementById("home-title").value = "";
-  await p.click(btn(p, "promote")); p.root().querySelector("textarea").value = "r"; await p.click(p.root().querySelector('[data-shell="reason-send"]'));
+  await p.click(btn(p, "promote"));
   assert.equal(p.byOp("promote").length, 0);
   assert.ok(p.root().querySelector('[data-slot="m:0"]').textContent.includes("Say why first"));
   const q = await boot({ screens: ALL, plane: { promote: ok({ project: "P9" }), projectdirectory: ok({ projects: [] }) } });
   q.doc.getElementById("home-title").value = "New";
-  await q.click(btn(q, "promote")); q.root().querySelector("textarea").value = "r"; await q.click(q.root().querySelector('[data-shell="reason-send"]'));
-  assert.deepEqual(q.byOp("promote")[0].body, { title: "New", reason: "r" });
+  await q.click(btn(q, "promote"));
+  assert.deepEqual(q.byOp("promote")[0].body, { title: "New" });
   assert.equal(q.location.pathname, "/app/project/P9", "done opened another screen");
   let reads = 0;
   const s = { id: "held", reads: () => ({ a: { op: "heldcaptures" }, b: { op: "gradenote" } }), render: (cs) => cs.act("heldrestore"),
@@ -183,7 +215,7 @@ test("R21 (K2999) cs.download hands a byte answer to the browser as a file, its 
   const s = { id: "open-file", reads: () => ({}), acts: [{ op: "openoriginal", async send(view, el, cs) { const r = await cs.download("openoriginal", { query: { sha256: "ab" } }); el.setAttribute("data-got", String(r.ok)); return null; } }],
     render: (cs) => cs.act("openoriginal") };
   const p = await boot({ screens: [s], path: "/app/open-file/ab", plane: { openoriginal: bytes("%PDF-1.7") } });
-  const press = async (x) => { await x.click(btn(x, "openoriginal")); x.root().querySelector("textarea").value = "r"; await x.click(x.root().querySelector('[data-shell="reason-send"]')); };
+  const press = async (x) => { await x.click(btn(x, "openoriginal")); };
   await press(p);
   assert.equal(p.files.length, 1);
   assert.equal(p.objectUrls.length, 1);
@@ -207,3 +239,43 @@ test("R21 (K2998) a screen's closed(cs, view) is called when the member leaves i
 });
 
 export { HELD };
+
+test("R21 (K3002) parts in view.parts, view.origin, a refusal word filled from the refusal's fields, a refusals function, {refuse, fills}, cs.value of a checkbox and a radio, cs.digest, cs.now, and no cs.open", async () => {
+  const s = { id: "connect", reads: () => ({}),
+    parts: { pane: (cs, x) => "<b id=part>" + cs.esc(x) + "</b>" },
+    acts: [
+      { op: "groupkeynoticeseen", refusals: { ZZ_FN: (r, cs) => "<i id=fn>" + cs.esc(r.code + ":" + r.detail) + "</i>" } },
+      { op: "disclosureshown", send: (view, el, cs) => ({ refuse: "shell.picked", fills: { n: String(cs.value("c1")) + "/" + String(cs.value("r2")) } }) },
+      { op: "accountreferenceremove", send: async (view, el, cs) => { const h = await cs.digest("abc"); el.setAttribute("data-h", h); el.setAttribute("data-now", String(cs.now())); el.setAttribute("data-open", typeof cs.open); return null; } },
+    ],
+    render: (cs, view) => view.parts.pane(cs, view.origin) + cs.checks("c", "shell.appearance", [["a", "shell.appearance.light", true]]) + '<input type="radio" id="r1" name="r"><input type="radio" id="r2" name="r" checked>'
+      .replace(/<input type="radio" id="r1"/, '<label for="r1">x</label><input type="radio" id="r1"').replace(/<input type="radio" id="r2"/, '<label for="r2">y</label><input type="radio" id="r2"')
+      + '<input type="checkbox" id="c1" checked aria-label="z">' + cs.act("groupkeynoticeseen") + cs.act("disclosureshown") + cs.act("accountreferenceremove") };
+  const p = await boot({ screens: [s], path: "/app/connect", plane: { groupkeynoticeseen: refused("ZZ_FN", null, 400, { detail: "why not" }) } });
+  assert.equal(p.doc.getElementById("part").textContent, "https://group.example");
+  await p.click(btn(p, "groupkeynoticeseen"));
+  assert.equal(p.doc.getElementById("fn").textContent, "ZZ_FN:why not");
+  await p.click(btn(p, "disclosureshown"));
+  assert.equal(p.root().querySelector('[data-slot="m:1"]').textContent, "true/true picked");
+  assert.equal(p.byOp("disclosureshown").length, 0);
+  p.doc.getElementById("c1").checked = false;
+  await p.click(btn(p, "disclosureshown"));
+  assert.equal(p.root().querySelector('[data-slot="m:1"]').textContent, "false/true picked");
+  /* the digest is answered off the page's thread: wait for it */
+  const pressed = async () => { await p.click(btn(p, "accountreferenceremove")); for (let i = 0; i < 200 && !btn(p, "accountreferenceremove").getAttribute("data-h"); i++) await new Promise((r) => setTimeout(r, 5)); };
+  await pressed();
+  const t0 = Number(btn(p, "accountreferenceremove").getAttribute("data-now"));
+  assert.equal(btn(p, "accountreferenceremove").getAttribute("data-h"), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+  assert.equal(btn(p, "accountreferenceremove").getAttribute("data-open"), "undefined");
+  await p.clock.tick(5000);
+  btn(p, "accountreferenceremove").removeAttribute("data-h");
+  await pressed();
+  assert.equal(Number(btn(p, "accountreferenceremove").getAttribute("data-now")) - t0, 5000, "the harness's fake clock");
+  /* a refusal row's word filled from the refusal's own fields */
+  const code = (await import("../../../src/setup-words/index.mjs")).WORD_ROWS.find((r) => r[0].startsWith("refusal.") && /\{detail\}/.test(r[1]));
+  if (code) {
+    const q = await boot({ screens: [s], path: "/app/connect", plane: { groupkeynoticeseen: refused(code[0].slice(8), null, 400, { detail: "THE-DETAIL" }) } });
+    await q.click(btn(q, "groupkeynoticeseen"));
+    assert.ok(q.root().querySelector('[data-slot="m:0"]').textContent.includes("THE-DETAIL"));
+  }
+});
