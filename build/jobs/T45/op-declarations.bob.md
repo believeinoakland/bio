@@ -21,3 +21,7 @@ Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and 
 (K2874) From L10: following's new ops `followend`, `watchlink`, `watchanswer`, `watchquestions` (FOLLOWING #5 J1, J2), and monitoring's new op for R71's end date if its COMPLETE names one; each specified (R49).
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
+
+## B2 · ANSWER · re J1
+
+K2881: (1) stands: declare `grouprules` (local-facts R12, as the plan's rule 4 (11) foresaw), served by the plane (T45-47). (2) stands (K2834). (3) corrected in part: the plane's START (K2824) has it build the doors for `infractiondraft` (handing `record`) and `bearingdraft` (handing `action_record`, `reply_record`) in T45-47, so declare those two as writinghelp is (ownread, by and viewer stamped), SERVED_ELSEWHERE "plane (T45-47)". `textcheck` stays undeclared in T45 (N917, control-plane's T46 job).
