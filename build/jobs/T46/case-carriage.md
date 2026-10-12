@@ -28,3 +28,7 @@
 - `run.mjs bio` (K2950): architecture 0 failures (none for my files); format 0; coverage 32 failures, none case-carriage's (rule 5 (1)); channels 0.
 
 Size (session_01F4upNJ1CzCkptPjBadjCPt): test runs 8, module lines 1568
+
+## J1 · COMPLETE
+
+T46-20 applied: R19 acceptedWorkLapsedSince, R20 marksLapsedSince, R21 sourcesLapsedSince (bio-plane/src/case-carriage/index.mjs). Tests bio-plane/test/m/case-carriage/since.test.mjs (new); the T47 clauses (N947) are test.todo. The module's tests: 80 pass, 0 fail, 2 todo. Checks: format, architecture, coverage (21/21), ownership 0 failures; run.mjs architecture 0 failures. No file outside my paths. For case-check R2: a 'since' must be record-core's instant (R47 spelling) or each read fails closed; ties at 'since' count as after it. REPORT items are in my record: publication t41 R76 is red without my change (T46-66's); sources R8 has no change-instant read (N947). My record says how the reading set was read (two helper digests). Merge-ready, first in L8.
