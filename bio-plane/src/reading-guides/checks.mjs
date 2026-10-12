@@ -1,4 +1,4 @@
-/* reading-guides' refusal rows (requirements: `build/requirements/reading-guides.md` R11). DEC-49: every refusal this
+/* reading-guides' refusal rows (requirements: `build/requirements/reading-guides.md` R11, R14). DEC-49: every refusal this
  * module answers carries its code, its row and the member's translation. A new module with nothing moved: its rows are
  * a new family, C-144 (K2480, K2482: T41's new families steps C-142, ai-use C-143, reading-guides C-144,
  * question-explorer C-145, investigation C-146), each awaiting promotion's stamp (K231; T41 rule 4 item 2). No
@@ -7,6 +7,19 @@
  * do. This file imports nothing. */
 
 const at = (file, fn, region) => `src/reading-guides/${file} ${fn} > ${region}`;
+
+/* T46 (R14; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module
+   answers, each `en` verbatim, read by key, as membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are: the
+   translations of C-144.4 and C-144.19 (`refusal.<CODE>`) and the procedure guide's label (R13's
+   `guide.procedure.legalinfo`, protected). The design stream's words: re-worded there, then re-taken here by key; a row
+   never holds a copy of its sentence. The other rows, which `words.json` does not hold, keep their own. */
+export const READING_GUIDES_WORDS = Object.freeze({
+  "refusal.GUIDE_KIND_UNKNOWN": "A guide is for one kind of action or document your group's places recognise, and this "
+    + "names another. Nothing was written.",
+  "refusal.GUIDE_ITEM_UNSOURCED": "Each route in a procedure guide cites the law, rule or published procedure it rests "
+    + "on, so members can read the source. This one cites nothing. Add its citation. Nothing was written.",
+  "guide.procedure.legalinfo": "Legal information, not legal advice",
+});
 
 export const READING_GUIDES_CHECKS = Object.freeze({
   GUIDE_CARRIES_CONDUCT: {
@@ -33,10 +46,7 @@ export const READING_GUIDES_CHECKS = Object.freeze({
   },
   GUIDE_KIND_UNKNOWN: {
     check: "C-144.4", where: at("index.mjs", "kindRefusal", "is-guide-kind"),
-    translation: "A reading guide is for one kind of document your group's Civicsmith recognises (a meeting "
-      + "calendar, minutes, an agenda, a staff report, an ordinance or code section, a policy, a staff directory, "
-      + "or any other document); a procedure guide is for one kind of action your group's jurisdiction profiles list. "
-      + "The kind or purpose given is not one of them. Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_KIND_UNKNOWN"],
   },
   NO_SUCH_GUIDE: {
     check: "C-144.5", where: at("index.mjs", "noSuchGuide", "is-guide-held"),
@@ -110,9 +120,7 @@ export const READING_GUIDES_CHECKS = Object.freeze({
   },
   GUIDE_ITEM_UNSOURCED: {
     check: "C-144.19", where: at("check.mjs", "checkGuide", "is-guide-sourced"),
-    translation: "Each route in a procedure guide carries the citation it rests on: the law, rule or published "
-      + "procedure that provides it, so members can read the source. The item named has none. Add its citation. "
-      + "Nothing was written.",
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_ITEM_UNSOURCED"],
   },
 });
 
