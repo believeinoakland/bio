@@ -69,10 +69,12 @@ It is the only module marked `legacy` in `modules.json`.
 - **T46-15 · reading-guides** · (N913) `GUIDE_KIND_UNKNOWN`, `GUIDE_ITEM_UNSOURCED` re-worded; `PROCEDURE_GUIDE_LABEL` reads `guide.procedure.legalinfo` · words.json.
 - **T46-16 · skills** · (N915) the planning layer names `closingNotesOf`'s notes as planning input; (N920) R45's `action_drafting` layer names the status-report task (each sentence from a handed item, nothing read) · text BOB's · after T46-15.
 - **T46-17 · question-explorer** · (N897 (2)) R16 new: the gate open on the exception, finds labelled · trial §1.2 · after T46-14.
+- **T46-63 · agent-harness** · (N919; K2892) R10 new: `MODES.plan` deployed, the harness's copy agreeing with run-rules R14 and agent-worker R53 (K2920: the copy lives in `harness.mjs`, agent-harness's file) · text BOB's · after T46-13.
+- **T46-64 · agent-model** · (N852) R15 new (amends R14): on the sign-in path an image block is relayed through the runner (agent-runner R24), `IMAGE_NOT_RELAYED` kept for a runner without it · text BOB's · before T46-18.
 - **T46-18 · agent-runner** · (N852; K2816 (3), (4)) a sign-in transcribes: the runner passes page images as `agent-worker` R72 does for API keys (its dependency met for `biosmoke7` by K2816 (4)'s copy) · text BOB's (trial §6 B4 A) · before T46-19.
 - **T46-19 · agent-worker** · (N897 (2)–(4)) R79 new (`untested` on `/ask`'s last answer event and `/draft`'s); R6 amended (a sign-in's `suggestions` boolean); R34 amended (`/version` `runner`); (N852) `TRANSCRIBE_NEEDS_API_KEY` lifted for a sign-in; (N915) R51 names `closingNotesOf`; (N920) R76's fourth task `{op: "statusreportdraft", plan, items}` → `{text, sources}`, `grant` present `DRAFT_READ_NOT_ALLOWED`, R77, R79 applying; (K2892) R53's reviewed act: `MODES.plan` deployed with run-rules R14; `/run` taking a member's sign-in principal if M-T46-4 finds it refused. N886 asks no change here: R72's six codes are answered with their HTTP status already (verified at START) · trial §1.2, §3.2; study §2; rest BOB's · after T46-13, -16, -18.
 
-**L6 merge order:** steps, run-rules, ai-runs, reading-guides, skills, question-explorer, agent-runner, agent-worker.
+**L6 merge order:** steps, run-rules, ai-runs, reading-guides, skills, question-explorer, agent-harness, agent-model, agent-runner, agent-worker.
 
 ### L8
 - **T46-20 · case-carriage** · (N907) new reads `acceptedWorkLapsedSince`, `marksLapsedSince`, `sourcesLapsedSince(…, since)` over its append-only histories · text BOB's.
@@ -133,7 +135,7 @@ It is the only module marked `legacy` in `modules.json`.
 
 **L11 merge order:** wizard-scripts, op-grades, affordances, action-producers, notice-producers, setup-words, instance-setup, setup-page (after instance-setup, doubt 14), op-declarations, answer-envelope, interface-assets, interface-shell, screens-settings, screens-intake, screens-daily, screens-inquiry, control-plane, installer, stewards, plane last.
 
-**Counts:** L1 2 · L2 4 · L3 1 · L4 1 · L5 3 · L6 8 · L8 9 · L9 12 · L10 2 · L11 20 (T46-61 conditional) = 62.
+**Counts:** L1 2 · L2 4 · L3 1 · L4 1 · L5 3 · L6 10 · L8 9 · L9 12 · L10 2 · L11 20 (T46-61 conditional) = 64.
 
 ### New modules: places (K617, K657, K1043)
 

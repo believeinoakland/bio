@@ -1,6 +1,6 @@
 # question-explorer — requirements
 
-**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.2 (N815, N820; D33, D36, D39, D11–D14, D66). Every requirement not yet met (T41). Last changed T42 (T42-19: R15 new, the factory migrates at creation; N845; K2571, K2608), not yet met.
+**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.2 (N815, N820; D33, D36, D39, D11–D14, D66). Every requirement not yet met (T41). Last changed T42 (T42-19: R15 new, the factory migrates at creation; N845; K2571, K2608), not yet met. Last changed T46 (T46-17: R16 new, the gate open on the test-instance exception, finds labelled; N897 (2), K2816, `draft-T46-trial.md` §1.2); marked not yet met (T46).
 
 **Size (P6).** About 1,450 lines. Built and tested; offered to no member until R7's gate (D11's bar) opens.
 
@@ -27,6 +27,7 @@ The system exploring a question on its own where an account owner turned explori
 - **R13** (D2) An exploring run may read inside documents the record holds, a few pages at a time within `run-rules` R26's reading bound, never a document under a "no AI" material limit (`credentials` R57); what it proposes while reading is `run-productions` R21's, each tied to the step.
 - **R14** (D66; CF invariant 7 as amended) A find that cuts against what the question's members hold is offered exactly as prominently as one that supports it: the same item, kind, place and order rule; no answer here orders, groups or filters finds by bearing.
 - **R15** (T42; N845; K2571) `questionExplorerOf(host, deps?)` answers one instance per host with its tables already created: it runs its `migrate()` before declaring them to purge, as `publish-schedule`'s factory does. A host that builds it and never calls `migrate()` therefore reads, ticks and purges without error. `migrate()` stays callable and idempotent.
+- **R16** (T46; N897 (2); K2816 (2); amends R4, R7) The gate is also open, on the test-instance exception, when `ai-runs.partAdmitted` (its R78) admits both `investigate` and the explorer's use `explore` with the label (`run-rules` R29): R4's answer then carries `false_alarm_rate` null, `gold_set` null and `untested` the label, and each find R5 offers carries the label. Whenever the bar is held, R7's recorded false-alarm rate of at most 20% applies as now and no label is carried. The exception lifts only the bar: R7's other conditions (the verification chain that lets `investigate` deploy) stand, and nothing here counts toward any bar. Test: on a test instance with no record and `investigate`'s chain held, finds are offered labelled; control: a non-test instance with no record stays shut, R5 answering nothing. *(not yet met: T46)*
 
 ## Private
 
@@ -52,6 +53,7 @@ Stated with its services above: R4 (a gauge is never a grade), R6 (members' door
 ### Satisfies
 
 - The investigation design of record (K2417): D33, D36, D39, D11–D14, D66; N815.
+- K2816 (2) (Bob: the deployer-set test-instance exception, every output labelled; R16).
 
 ### Suggestions
 

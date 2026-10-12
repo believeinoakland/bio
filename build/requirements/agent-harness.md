@@ -1,6 +1,6 @@
 # agent-harness — requirements
 
-**Status** · In force: reviewed (K1505; banner cleared K1599). Split from `agent-worker` by copy (K617, K1439; T33-54), meaning unchanged: R1–R7 name their `agent-worker` ids, R8 new. Last changed T34 (T34-37: R9); every requirement met (K1808).
+**Status** · In force: reviewed (K1505; banner cleared K1599). Split from `agent-worker` by copy (K617, K1439; T33-54), meaning unchanged: R1–R7 name their `agent-worker` ids, R8 new. Last changed T34 (T34-37: R9); every requirement met (K1808). Last changed T46 (T46-63: R10, `MODES.plan` deployed, K2892, K2920).
 
 | old (`agent-worker`) | new | |
 |---|---|---|
@@ -48,6 +48,7 @@ Mode `plan`'s table (K660; `BIO_Action_v0_1.md` §4):
 - **R7** (was `agent-worker` R41) Sub-sessions run, one per level, each under its spawn contract (`agent-worker` R17) and returning only reports (R5).
 - **R8** (new; Q0-1) Every export of this module is pure: it makes no network call, reads no binding, environment, clock or storage, and keeps no state between calls, so the same arguments always give the same answer. A test calls each exported function twice on equal inputs with the global `fetch` and `Date.now` replaced by throwing stubs and finds equal answers and no stub called.
 - **R9** (N586; K1615) It exports none of `PLANE_OPS`, `NAMESPACES` and `MEANING_ARM`: the run's plane ops, the namespace list and the meaning arm are `agent-worker`'s (its R37, R4, R44, R19 and R22), declared once there, so no name is declared in both modules. A test imports each of this module's files and finds none of the three among their exports.
+- **R10** (T46; N919; Bob's, K2892; amends R44's copies held in `harness.mjs`) `MODES.plan` is deployed by the same reviewed edit that sets `run-rules`' `DEPLOYED_MODES` (its R14) and `agent-worker`'s (its R53): the harness's copy agrees with both, `check` stays deployed, and every other mode stays as it is. A copy that disagrees with `run-rules` R14 fails this module's test. *(not yet met: T46)*
 
 ### Satisfies
 
