@@ -71,3 +71,7 @@ Size (session_016WwjpKLhCxuVTMA1W4e1CC): test runs 14, module lines 3,756.
 ## J1 · REPORT
 
 Other modules (details in my record): no test of another module turns red with my change; the 20 reds of the whole test/m run (op-declarations, ai-use, affordances, action-replies, answer-envelope, case-authoring, run-rules) fail identically on tranche/T47 without it. My change turns green standards/reads R29, promotion/registry R39/R45/R46 and progressions/order R41 (rule 5's MODULE_ORDER reds). The plane bundle composes membership, so this merge stales it; I did not touch it. members.test.mjs's R132 reds are 3, not rule 5's 2: the new scalar arm (part_* present, true/false/null) is red for the same cause, nested parts, until T47-75.
+
+## J2 · COMPLETE
+
+T47-7 applied: R83 MODULE_ORDER holds T47's six in modules.json's places, with its own named test and negative control; T46's six held to their paths (N991); R132 named by members.test.mjs's REC-41 sweep (twelve keys, flat scalars, no nested value at any key, roster proved first, instrument run on mutants), red (3) until T47-75. membership tests 219/219; format, architecture, coverage (98/98), ownership: 0 failures; run.mjs architecture 0 failures. Own-test flaws fixed; readings for you (the tolerance read by name while pathless; t40 line 133) and deferred test-strength notes are in my record.
