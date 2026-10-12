@@ -1,6 +1,6 @@
 # control-plane (T46)
 
-**Status** · session_013tqrpd8PzESSsECd7jbcoD · depth 2 · WAITING ON BOB (merges) · handled B6
+**Status** · session_013tqrpd8PzESSsECd7jbcoD · depth 2 · COMPLETE · handled B6
 
 ## Completion
 
