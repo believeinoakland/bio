@@ -75,9 +75,28 @@ test("R4 release: an enumerated selection of the picked rows, then the release o
   fill(p, { "ch-ack": "Each copy is what its source gave.", "ch-mitigation": "Compared with the site." });
   await press(p, "release");
   assert.deepEqual(p.byOp("select")[0].body, { ids: ["INFO-2026-0001-photo", "INFO-2026-0002-budget"] });
-  assert.deepEqual(p.byOp("release")[0].body, { handle: "SEL-1", acknowledgment: "Each copy is what its source gave.", mitigation: "Compared with the site." });
+  /* K3017: ratification's map reads handle, acknowledgment and mitigation from the query alone */
+  const rq = p.byOp("release")[0];
+  assert.equal(rq.query.handle, "SEL-1");
+  assert.equal(rq.query.acknowledgment, "Each copy is what its source gave.");
+  assert.equal(rq.query.mitigation, "Compared with the site.");
+  assert.equal(rq.method, "POST");
   assert.match(text(p), /Vouched for: 2\./);
   assert.ok(p.byOp("heldcaptures").length >= 2, "read again after the act (R8)");
+});
+
+test("R4 (K3017) release as ratification's map reads it: the query carries the three; a release read from the body alone is refused (control)", async () => {
+  /* the plane stand-in reads as ratification/index.mjs's map does: q("handle"), q("acknowledgment"), q("mitigation") */
+  const asMap = (req) => (req.query.handle && req.query.acknowledgment && req.query.mitigation
+    ? ok({ ok: true, released: ["INFO-2026-0001-photo"] }) : refused("NO_ACKNOWLEDGMENT", "Say what you vouch for."));
+  const p = await open("/app/held", { plane: { heldcaptures: HELD, select: ok({ ok: true, handle: "SEL-1" }), release: asMap } });
+  await pick(p, "INFO-2026-0001-photo");
+  fill(p, { "ch-ack": "Each copy is what its source gave.", "ch-mitigation": "Compared with the site." });
+  await press(p, "release");
+  assert.match(text(p), /Vouched for: 1\./);
+  /* control: the same reader refuses a request carrying them in the body only */
+  const body = asMap({ query: { op: "release" }, body: { handle: "SEL-1", acknowledgment: "a", mitigation: "m" } });
+  assert.equal(body.json.reason, "NO_ACKNOWLEDGMENT");
 });
 
 test("R4 release sends nothing with a field missing, or a field outside ratification R20's bounds", async () => {

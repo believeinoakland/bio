@@ -78,7 +78,9 @@ async function sendRelease(view, el, cs, extra) {
   const sel = await cs.call("select", { body: { ids } });
   const s = sel && (sel.result || sel);
   if (!s || s.ok === false || typeof s.handle !== "string") return { refuse: "screen.held.selectfailed" };
-  return { body: { handle: s.handle, acknowledgment: ack, mitigation } };
+  /* ratification's map reads the three from the query (K3017); the body repeats them, for the shell's own-words check of
+     `reasonField` (R11) and as control-plane's end-to-end suite reads the request */
+  return { query: { handle: s.handle, acknowledgment: ack, mitigation }, body: { handle: s.handle, acknowledgment: ack, mitigation } };
 }
 function doneRelease(view, answer, cs) {
   cs.set("released", answer && Array.isArray(answer.released) ? answer.released.length : 0);
