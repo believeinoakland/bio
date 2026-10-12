@@ -32,3 +32,15 @@
 - Process checks: format 0 failures; architecture 0 failures; coverage 26 of 26 live ids; ownership 7 files, 0 failures.
 
 Size (session_01GFBw9f24M2axfCAsVCYFd3): test runs 16, module lines 1838
+
+## J2 · REPORT
+
+Found while building T45-36 (none blocks this job):
+
+1. **monitoring (T45-35, running): R71/R72 were not on `job/T45/monitoring` when I built.** I built against their requirements. The calls are `addressWatchEnd({address, until, by, viewer})` (`until` = today for "stop"), `addressWatchers(address)` → project ids, and R32's `monitoring({viewer, now})` items carrying `address`, `until` and `state: "ended"`. Once monitoring merges, I merge tranche/T45 and re-run my tests against the real module, if you send a CHANGE.
+2. **plan-work R13 (improvement):** `matterPromiseDuties` answers no instant at which the last duty read met. R24 needs one, so I derive it from `duties.occurrencesOf` evidence (my record, reading 2). A field such as `met_at` in R13 would give one source.
+3. **The new ops `followend`, `watchlink`, `watchanswer`, `watchquestions`** need their declaration, grade, affordance and route: T45-45, T45-38, T45-39, T45-47. Also needed:
+   - the C-137.21–26 rows' stamp, for promotion's row census;
+   - the answer-envelope catalogue, under rule 4 (14);
+   - the plane's start composition: `followingOf(host)` now reaches `actionPlansOf`, `planWorkOf`, `dutiesOf` and `answersOf` lazily, and registers its watch reader with plan-work when it is created (T45-47).
+4. **For `action-producers` R10 and `notice-producers` R5:** the reads are `watchQuestions({after, limit, viewer})` (entries with `recipients`) and `dutyWatchEnd(duty)`.
