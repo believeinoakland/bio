@@ -1,6 +1,7 @@
 /* escalation's ops map (R25; `build/extraction/legacy-store.md` §4.2 (6), §4.4 (8); `build/plan/current.md` rule 5;
  * K760's pattern): the ten route arms the legacy store named (N216, K262), with R27's `declinetoescalate`, R28's
- * `escalationstatus` (DEC-89) and R29's `escalationreasondraft` (K1025, N485), as one object the composition root
+ * `escalationstatus` (DEC-89), R29's `escalationreasondraft` (K1025, N485) and R31's `escalationstoppursuing` and
+ * `escalationreopen` (T45), as one object the composition root
  * spreads into its route map (K671). Each arm is a function of no arguments that answers what the named service
  * answers. `author` and `viewer` are the control plane's stamps, read from the query and set after the body's fields,
  * so a body never supplies them; which credential reaches an op is `op-declarations`' and `control-plane`'s, never
@@ -23,6 +24,8 @@ export function escalationOps(escalation, url, body) {
     escalationend: act("escalationEnd"),
     escalationsuspend: act("escalationSuspend"),
     escalationresume: act("escalationResume"),
+    escalationstoppursuing: act("escalationStopPursuing"),
+    escalationreopen: act("escalationReopen"),
     escalationsdue: () => escalation.escalationsDue({ nowMs: numberParam(url, "now"), limit: numberParam(url, "limit"),
                                                       viewer: q("viewer") }),
     declinetoescalate: act("declineToEscalate"),
