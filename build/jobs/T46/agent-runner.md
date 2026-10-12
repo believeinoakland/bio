@@ -2,6 +2,26 @@
 
 **Status** · session_01BPav5py7tUQEUxAhMso2Mn · depth 2 · WORKING · handled B1
 
+## Completion (AGENT-RUNNER #5)
+
+**Read, whole:** `build/requirements/agent-runner.md`; `bundler`'s Purpose and Provides; layer 6's contract; every file under `agent-runner/src/` and `agent-runner/test/` (stubs included), `Dockerfile`, `wrangler.jsonc`, `fleet-member.json`, `package.json`, `scripts/build.mjs`; T46-18 in `build/plan/current.md`; trial §2.1, §2.2 item 7 and §6 B4; `agent-model` R12, R14, R15 and `agent-worker` R72 for R24's shape.
+
+**Entry applied.** T46-18 (R24): `src/runner.mjs` `toolContent` turns each `image` block of a relay's `tool_result` in `agent-model` R14's shape into MCP's image item `{type: "image", data, mimeType}`, bytes and media type unchanged, in its place among the text blocks; text and other blocks pass as before (R3). An image block whose `media_type` is not `image/png`, whose `data` is not base64, or which is not in R14's shape makes the result the tool's error naming the fault, no bytes passed. Nothing is decoded, written or logged (R8, R9).
+
+**Flaw found and fixed in this job:** my first base64 check (a grouped, repeated regex) overflowed the regex stack on a 5 MiB page (`Maximum call stack size exceeded`, answered `SDK_ERROR`); replaced by a linear check, and the 5 MiB test keeps it so. No other flaw found in the module on the whole read.
+
+**Measured at START (R24's suggestion):** a page at `agent-worker`'s `TRANSCRIBE_IMAGE_MAX_BYTES` (5 MiB) is 6,990,508 base64 characters in one frame; `ws.mjs`'s cap is 16 MiB, Cloudflare Workers' WebSocket limit 32 MiB. No limit hit.
+
+**Open:** J1 (how a caller tells an R24 runner from an older one; built on my reading, R5 unchanged).
+
+**For BOB, outside this module:** (1) the image must be rebuilt and republished for R24 to be live (0.82.0's image predates it; the release's `agent-runner-image.yml`, K1898). The Worker bundle is not stale (`runner.mjs` is not one of its inputs). (2) A pre-R24 runner fails an R14 image block as an MCP schema error (a tool error to the model), never `IMAGE_NOT_RELAYED`; `agent-model` R15's fallback depends on J1's answer.
+
+**Deferred:** none.
+
+**Tests and checks:** `node --test test/` in `agent-runner/`: tests 38, pass 38, fail 0 (baseline at START 34/34). `format`: 159 modules, 152 requirements files; 0 failures. `architecture agent-runner`: 28 product files, 29 relative imports; 0 failures. `coverage agent-runner`: 24 of 24 live requirement ids named by a test; 0 failures. `ownership agent-runner tranche/T46`: 3 files changed; 0 failures. Final `uses`: `bundler` (unchanged).
+
+Size (session_01BPav5py7tUQEUxAhMso2Mn): test runs 6, module lines 674
+
 ## J1 · QUESTION
 
 R24 / agent-model R15: "IMAGE_NOT_RELAYED stays for a runner that does not answer R24's capability". Neither my requirements nor agent-model's say how a runner answers that capability, and R5 (`GET /version` → `{ok, name, version}`, tested by deepEqual) has no field for it.
