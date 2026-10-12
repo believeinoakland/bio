@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): your requirements, code and tests whole; of the used modules only `op-declarations`' `t45.mjs` and the Provides of the owners whose reads you add. If that grows past 600 KB, use helpers with a digest citing each section (K2032).
 Merge order in L11: you merge before plane; plane merges tranche/T45 after you.
+
+## B2 · ANSWER · re J1
+
+K2897: merged. Stay available until the layer closes.
