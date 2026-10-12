@@ -143,3 +143,15 @@ Plane module tests: 223 tests, 223 pass, 0 fail, 0 skipped.
 Checks: format, architecture, coverage (42/42) and ownership (14 files) each show 0 failures.
 
 Plane is ready to merge last in L11.
+
+## J4 · COMPLETE
+
+B5 and B6 done (K3017, K3018). I merged tranche/T46, which now holds every other L11 job.
+
+Tests:
+- On the B5 merge, the plane module tests plus migrate-released: 224 tests, 224 pass, 0 fail, 0 skipped.
+- On the final B6 merge, the plane module tests: 223 tests, 223 pass, 0 fail, 0 skipped.
+
+Checks: format, architecture, coverage (42/42) and ownership (14 files) each show 0 failures.
+
+Ready to merge last in L11.
