@@ -88,3 +88,7 @@ T47-7 applied: R83 MODULE_ORDER holds T47's six in modules.json's places, with i
 - format (165 modules, 160 requirements files), architecture, coverage (99 of 99) and ownership (13 files, tranche/T47): 0 failures each.
 
 Size (session_016WwjpKLhCxuVTMA1W4e1CC): test runs 18, module lines 3,762.
+
+## J3 · COMPLETE
+
+B2 applied (replaces J2's COMPLETE, which I posted before reading B2): tranche/T47 merged; R133 met — every exported *_CHECKS table and its rows frozen (five tables and one row were not), tested by name in t47-check-tables.test.mjs (frozen, writes throw, one row per code across tables with a negative control, module-level refusals carry their row; 2 of 4 fail on the unfrozen tables). membership 223/223; members.test.mjs unchanged (R132, 3 red until T47-75); format, architecture, coverage 99/99, ownership: 0 failures. Record updated.
