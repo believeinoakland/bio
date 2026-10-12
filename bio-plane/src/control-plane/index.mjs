@@ -29,6 +29,16 @@ import { draftDue, draftAsk, checkedDraft, untestedOf, TRANSLATION_DRAFT, TRANSL
          TEXT_CHECK } from "./draft.mjs";
 /* R58 (T35): the promotions of what an unpack files. */
 import { archiveDocuments, promoteArchive } from "./archive.mjs";
+/* R75 (T46; N897 (1)): the member interface's page and its assets, beside `/`: interface-shell's page over the four screen
+   modules' screens, and interface-assets' files. */
+import { appRouteOf, appPage, appAsset } from "./app.mjs";
+import { interfacePage } from "../interface-shell/index.mjs";
+import { ASSET_FILES } from "../interface-assets/index.mjs";
+import { SCREENS as SETTINGS_SCREENS } from "../screens-settings/index.mjs";
+import { SCREENS as INTAKE_SCREENS } from "../screens-intake/index.mjs";
+import { SCREENS as DAILY_SCREENS } from "../screens-daily/index.mjs";
+import { SCREENS as INQUIRY_SCREENS } from "../screens-inquiry/index.mjs";
+const APP_SCREENS = Object.freeze([...SETTINGS_SCREENS, ...INTAKE_SCREENS, ...DAILY_SCREENS, ...INQUIRY_SCREENS]);
 /* R65 (T37): a member's own Claude sign-in, relayed to their own runner, and its sign-out when they leave. */
 import { subscriptionSignin, leaverOf, signoutLeaver } from "./signin.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
@@ -615,6 +625,18 @@ export function makeFetch(hooks = {}) {
       const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
       return new Response(setupPage(await hooks.publicInstanceGroup(env, pageStore, "groupidentitypublic")),
         { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+    }
+
+    /* R75 (T46): `GET /app`, `/app/<path>` and `/app/assets/<name>`, through the same namespace and address gates as `/`
+       (admission R1, R20), before any `op` exists; no credential is read on either route (`app.mjs`). */
+    const appRoute = appRouteOf(req, url);
+    if (appRoute) {
+      const appNamespace = namespaceGate(url);   /* admission R1 */
+      if (appNamespace) return json(appNamespace.body, appNamespace.status);
+      const appAddress = addressGate(url);   /* R59: admission R20 */
+      if (appAddress) return json(appAddress.body, appAddress.status);
+      return appRoute === "page" ? appPage(req, { interfacePage, screens: APP_SCREENS })
+        : appAsset(req, url, { assets: ASSET_FILES, version: env.VERSION });
     }
 
     const path = url.pathname.replace(/^\/api\/?/, "/");
