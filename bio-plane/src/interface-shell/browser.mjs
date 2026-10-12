@@ -15,7 +15,7 @@ export function shellProgram(D, SCREENS, win) {
   /* ---------- words (R5, R6) ---------- */
   const BASE = new Map(D.words);
   let SHOWN = new Map();
-  let wordsRead = false, wordsRetry = true;
+  let wordsRead = false, wordsRetry = false;
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const has = (key) => BASE.has(key);
   const text = (key) => (SHOWN.has(key) ? SHOWN.get(key) : BASE.has(key) ? BASE.get(key) : key);
@@ -66,12 +66,14 @@ export function shellProgram(D, SCREENS, win) {
     const qs = new URLSearchParams();
     qs.set("op", op);
     for (const [k, v] of Object.entries(req.query || {})) if (v !== undefined && v !== null) qs.set(k, String(v));
-    const init = { headers: { Authorization: "Bearer " + S.t } };
-    if (req.raw !== undefined) { init.method = "POST"; init.body = req.raw; init.headers["content-type"] = req.rawType || "application/octet-stream"; }
+    const own = typeof req.bearer === "string" && req.bearer !== "";
+    const init = { headers: { Authorization: "Bearer " + (own ? req.bearer : S.t) } };
+    if (req.raw !== undefined) { init.method = "POST"; init.body = req.raw; if (req.rawType) init.headers["content-type"] = req.rawType; }
     else if (req.body !== undefined) { init.method = "POST"; init.body = JSON.stringify(req.body); init.headers["content-type"] = "application/json"; }
     let r;
     try { r = await win.fetch("/api/?" + qs.toString(), init); } catch { return { kind: "silent" }; }
-    if (r.status === 401) { gone(); return { kind: "silent" }; }
+    if (r.status === 401 && !own) { gone(); return { kind: "silent" }; }
+    if (req.bytes) return { kind: "response", r };
     let j = null;
     try { j = await r.json(); } catch { j = null; }
     const refused = (o) => ({ kind: "refused", code: String(o.code || o.reason || r.status), translation: typeof o.translation === "string" ? o.translation : null, fields: o });
@@ -80,7 +82,7 @@ export function shellProgram(D, SCREENS, win) {
     if (value && typeof value === "object" && value.ok === false) return refused(value);
     if (!r.ok) return j && typeof j === "object" ? refused(j) : { kind: "refused", code: String(r.status), translation: null, fields: {} };
     if (j === null) return { kind: "silent" };
-    return { kind: "ok", value };
+    return { kind: "ok", value, json: j };
   }
 
   /* ---------- the act gate (R12) and the weights (R11) ---------- */
@@ -140,15 +142,17 @@ export function shellProgram(D, SCREENS, win) {
     if (typeof v === "object") for (const k of ["items", "results", "list", "rows", "words"]) if (Array.isArray(v[k])) return v[k].length === 0;
     return false;
   }
-  function refusalWords(a, own) {
+  /* R13: `refusal.<code>` (or the screen's own key for the code) when held; else the answer's translation; else
+     `state.failed` with the code (a read's state already says it, so a read is handed the code alone) */
+  function refusalWords(a, own, bare) {
     const key = own && own[a.code] ? own[a.code] : "refusal." + a.code;
     if (has(key)) return w(key, a.fields || {});
     if (a.translation) return esc(a.translation);
-    return w("state.failed", { reason: a.code });
+    return bare ? esc(a.code) : w("state.failed", { reason: a.code });
   }
   function outcome(spec, a) {
     if (a.kind === "ok") return emptyOf(spec, a.value) ? { state: "empty", value: a.value, refusal: null } : { state: "ok", value: a.value, refusal: null };
-    if (a.kind === "refused") return { state: "failed", value: null, refusal: { code: a.code, words: refusalWords(a, spec && spec.refusals) } };
+    if (a.kind === "refused") return { state: "failed", value: null, refusal: { code: a.code, words: refusalWords(a, spec && spec.refusals, true) } };
     return { state: "failed", value: null, refusal: { code: null, words: w("shell.noanswer") } };
   }
   function instance(spec, subject, key, serves) {
@@ -200,6 +204,29 @@ export function shellProgram(D, SCREENS, win) {
       theme: () => THEME,
       setTheme: (v) => setTheme(v),
       go: (screen, subject) => navigate(hrefOf(screen, subject)),
+      /* R21 (K2998): one op, its parsed answer (null when none came); `bearer` replaces the session for this request only */
+      async call(op, o = {}) {
+        const a = await call(op, { query: o.query, body: o.body, raw: o.raw, rawType: o.rawType, bearer: o.bearer });
+        return a.kind === "ok" ? a.json : a.kind === "refused" ? a.fields : null;
+      },
+      /* R21 (K2999): a byte answer handed to the browser as a file, its object address released once the download starts */
+      async download(op, o = {}) {
+        const a = await call(op, { query: o.query, body: o.body, bytes: true });
+        if (a.kind !== "response") return { ok: false, answer: null };
+        const r = a.r;
+        const type = r.headers && r.headers.get ? r.headers.get("content-type") || "" : "";
+        if (!r.ok || /json/i.test(type)) { let j = null; try { j = await r.json(); } catch { j = null; } return { ok: false, answer: j }; }
+        const blob = await r.blob();
+        const url = win.URL.createObjectURL(blob);
+        const link = doc.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", o.name || "");
+        doc.body.appendChild(link);
+        link.click();
+        doc.body.removeChild(link);
+        win.URL.revokeObjectURL(url);
+        return { ok: true, answer: { type, size: blob.size } };
+      },
       set: (name, value) => { inst.ui[name] = value; draw(); },
       value(id) {
         const el = doc.getElementById(id);
@@ -229,7 +256,7 @@ export function shellProgram(D, SCREENS, win) {
         const outward = !!(spec.outward || o.outward);
         if (phone() && (weight === "signed" || weight === "irreversible"))
           return '<div class="cs-reason" data-phone-act="' + esc(op) + '"><b>' + label + "</b>" + (does ? "<p>" + does + "</p>" : "") + "<p>" + w("shell.phone.larger") + "</p></div>";
-        const idx = inst.acts.push({ op, spec, data: o.data || {} }) - 1;
+        const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null }) - 1;
         const data = Object.entries(o.data || {}).map(([k, v]) => " data-" + k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + '="' + esc(v) + '"').join("");
         const pips = '<span class="cs-pips" aria-hidden="true">' + [1, 2, 3, 4, 5].map((i) => "<i" + (i <= WEIGHTS.indexOf(weight) + 1 ? ' class="on"' : "") + "></i>").join("") + "</span>";
         const tip = (does ? "<b>" + label + "</b>: " + does : "<b>" + label + "</b>") + '<span class="why">' + w("weight." + weight + ".means") + "</span>"
@@ -273,6 +300,7 @@ export function shellProgram(D, SCREENS, win) {
         return '<span class="cs-hint" tabindex="0"' + tipAttr(kw("mark.hint.means"), 1) + ">" + I("hint") + (label ? esc(label) : kw("mark.hint.label")) + "</span>";
       },
       title(label, o = {}) {
+        if (o.thing) o = typeof o.thing === "string" ? { kind: o.thing, facts: o.facts } : { kind: o.thing.kind, facts: o.thing.facts };
         const purpose = kw("screen." + inst.spec.id + ".purpose");
         const t = label === undefined || label === null ? kw("screen." + inst.spec.id + ".name") : esc(label);
         const tip = o.kind
@@ -339,7 +367,7 @@ export function shellProgram(D, SCREENS, win) {
         inst.ui["pick:" + id] = keep;
         const hold = t.pick && keep.length
           ? '<div class="cs-hold" role="region" aria-label="' + w("shell.picked", { n: String(keep.length) }) + '"><span class="n">' + w("shell.picked", { n: String(keep.length) }) + '</span><span class="acts">'
-            + (t.hold ? t.hold(keep) : "") + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="unpick" data-table="' + esc(id) + '">' + w("shell.unpick") + "</button></span></div>"
+            + (t.hold ? (inst.holding = id, (() => { try { return t.hold(keep); } finally { inst.holding = null; } })()) : "") + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="unpick" data-table="' + esc(id) + '">' + w("shell.unpick") + "</button></span></div>"
           : "";
         return '<table class="cs-rows">' + head + "<tbody>" + body + "</tbody></table>" + hold;
       },
@@ -495,7 +523,14 @@ export function shellProgram(D, SCREENS, win) {
     if (replace) win.history.replaceState({}, "", href); else win.history.pushState({}, "", href);
     route();
   }
+  /* R21 (K2998): a screen's `closed(cs, view)` when the member leaves it or the page */
+  function closing(inst) {
+    if (!inst || typeof inst.spec.closed !== "function") return;
+    try { inst.spec.closed(kit(inst), inst.view); } catch { /* a screen's own leave-taking never stops the shell */ }
+  }
   function route() {
+    closing(MAIN);
+    closing(DOCKI);
     ROUTE = parse(win.location.pathname);
     MENU = false;
     if (!wordsRead && wordsRetry && ME) { wordsRetry = false; loadWords(); }
@@ -538,8 +573,9 @@ export function shellProgram(D, SCREENS, win) {
   }
   async function run(inst, d, btn, ai, extra) {
     let req;
+    if (d.table) extra.picked = (inst.ui["pick:" + d.table] || []).slice();
     try {
-      req = d.spec.send ? d.spec.send(inst.view, btn, kit(inst), extra) : { body: Object.assign({}, d.data) };
+      req = d.spec.send ? await d.spec.send(inst.view, btn, kit(inst), extra) : { body: Object.assign({}, d.data) };
     } catch { req = null; }
     if (!req) return;
     if (req.refuse) return besideAct(ai, refusalHtml(w(req.refuse, req.fills)));
@@ -653,6 +689,7 @@ export function shellProgram(D, SCREENS, win) {
       if (e.altKey && e.shiftKey && (e.key === "I" || e.key === "i" || e.code === "KeyI")) { e.preventDefault(); setLevel(LEVEL === "prompt" ? "pause" : "prompt"); }
     });
     win.addEventListener("popstate", () => route());
+    win.addEventListener("pagehide", () => { closing(MAIN); closing(DOCKI); });
     if (mq && mq.addEventListener) mq.addEventListener("change", () => draw());
     win.addEventListener("beforeprint", () => doc.documentElement.setAttribute("data-theme", "light"));
     win.addEventListener("afterprint", () => applyTheme());
@@ -668,6 +705,7 @@ export function shellProgram(D, SCREENS, win) {
     if (what === "level-keep") { ASK_LEVEL = false; local.set("cs-level-asked", "1"); return setLevel(LEVEL, true); }
     if (what === "level-switch") { ASK_LEVEL = false; local.set("cs-level-asked", "1"); return setLevel(LEVEL === "prompt" ? "pause" : "prompt", true); }
     if (what === "dock") {
+      if (DOCK) closing(DOCKI);
       DOCK = !DOCK;
       if (DOCK && DOCKI && !Object.keys(DOCKI.data).length) readAll(DOCKI);
       return draw();
@@ -772,8 +810,8 @@ export function shellProgram(D, SCREENS, win) {
     if (who.kind !== "ok" || !who.value || !who.value.session || !who.value.member) return gone();
     ME = who.value;
     await loadWords();
-    wordsRetry = !wordsRead;
     route();
+    wordsRetry = !wordsRead;
     await Promise.all([loadFrame(), loadReach()]);
   }
   return { start, state: () => ({ ME, ROUTE, LEVEL, THEME, RAILW, REACHABLE, DOCK, TODO, GROUP, MAIN, DOCKI }), absorb, date, w };

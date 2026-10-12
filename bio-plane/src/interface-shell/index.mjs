@@ -108,7 +108,9 @@ export function toSource(v) {
   if (typeof v === "function") {
     const src = v.toString();
     /* a method written `name(a) {…}` is an object's member, never an expression: make it one */
-    return /^(async\s+)?(function\b|\(|[\w$]+\s*=>|async\s*\()/.test(src) ? src : "function " + src.replace(/^async\s+/, "");
+    if (/^(async\s+)?(function\b|\(|[\w$]+\s*=>)|^async\s*\(/.test(src)) return src;
+    const m = /^async\s+/.exec(src);
+    return (m ? "async function " : "function ") + src.slice(m ? m[0].length : 0);
   }
   if (Array.isArray(v)) return "[" + v.map(toSource).join(",") + "]";
   if (v && typeof v === "object") return "{" + Object.entries(v).map(([k, x]) => JSON.stringify(k) + ":" + toSource(x)).join(",") + "}";

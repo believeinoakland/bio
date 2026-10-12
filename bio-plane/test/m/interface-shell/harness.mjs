@@ -20,6 +20,7 @@ export const refused = (code, translation, status = 400, extra = {}) => ({ statu
 export const refusedIn = (code, translation) => ({ status: 200, json: { ok: true, result: { ok: false, reason: code, code, ...(translation ? { translation } : {}) } } });
 export const httpError = (status = 500) => ({ status, text: "boom" });
 export const silent = Object.freeze({ silent: true });
+export const bytes = (data, type = "application/pdf") => ({ status: 200, bytes: data, type });
 export const pending = Object.freeze({ pending: true });
 
 export const FRAME = Object.freeze({
@@ -63,7 +64,10 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     if (a === undefined) a = ok(null);
     if (a.pending) return new Promise(() => {});
     if (a.silent) throw new TypeError("Failed to fetch");
-    return { status: a.status, ok: a.status >= 200 && a.status < 300, json: async () => { if (a.json === undefined) throw new SyntaxError("not JSON"); return JSON.parse(JSON.stringify(a.json)); } };
+    return { status: a.status, ok: a.status >= 200 && a.status < 300,
+      headers: { get: (h) => (h.toLowerCase() === "content-type" ? (a.bytes !== undefined ? a.type : a.json !== undefined ? "application/json" : "text/plain") : null) },
+      blob: async () => new Blob([a.bytes ?? ""], { type: a.type || "" }),
+      json: async () => { if (a.json === undefined) throw new SyntaxError("not JSON"); return JSON.parse(JSON.stringify(a.json)); } };
   };
   const timers = [];
   let now = 0;
@@ -77,6 +81,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
   const localMap = new Map(Object.entries(local));
   const location = { pathname: path, hash: "", origin: "https://group.example", assign: (u) => assigned.push(u) };
   const listeners = {};
+  const objectUrls = [], files = [];
   const win = {
     document: doc, fetch, location,
     history: { pushState: (s, t, u) => { location.pathname = u; }, replaceState: (s, t, u) => { location.pathname = u; } },
@@ -87,7 +92,11 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     addEventListener: (t, f) => (listeners[t] ||= []).push(f),
     removeEventListener: (t, f) => { listeners[t] = (listeners[t] || []).filter((x) => x !== f); },
     listeners,
+    URL: { createObjectURL: (blob) => { const url = "blob:https://group.example/" + (objectUrls.length + 1); objectUrls.push({ url, blob, released: false }); return url; },
+           revokeObjectURL: (url) => { const u = objectUrls.find((x) => x.url === url); if (u) u.released = true; } },
   };
+  const origCreate = doc.createElement.bind(doc);
+  doc.createElement = (t) => { const el = origCreate(t); if (t === "a") el.click = () => files.push({ name: el.getAttribute("download"), url: el.getAttribute("href"), released: false }); return el; };
   doc.defaultView = win;
   const root = () => doc.getElementById("cs-root");
   const fire = (el, type, init = {}) => el.dispatchEvent(new Event(type, { bubbles: true, target: el, ...init }));
@@ -98,7 +107,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     await settle();
   }
   const byOp = (op) => requests.filter((r) => r.op === op);
-  return { doc, win, html, requests, root, clock, settle, click, fire, back, assigned, store, local: localMap, byOp, location };
+  return { doc, win, html, requests, root, clock, settle, click, fire, back, assigned, store, local: localMap, byOp, location, objectUrls, files };
 }
 const safeJson = (s) => { try { return JSON.parse(s); } catch { return s; } };
 
