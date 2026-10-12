@@ -135,7 +135,7 @@ export { ACT_HELP } from "./affordances/act-help.mjs";
    (R4, R11, R12, R19, R20, R36): `VOCABULARIES` publishes the same objects, `deriveActs` reads `MACHINE_REFUSALS`,
    `decorate` reads `RUNGS`, `RUNG_ABSENT` and `phoneOf`, and `unaccounted` (R12) checks the totality over them. */
 import { RUNG_LADDER, IRREVERSIBLE_CORRECTION_PATH, RUNG_ABSENCE_GROUNDS, CONSEQUENCE_STATEMENTS, LARGER_SCREEN_ACTS,
-         IRREVERSIBLE_WEIGHT, RUNGS, RUNG_ABSENT, MACHINE_REFUSALS, NON_ACTS, phoneOf } from "./op-grades/index.mjs";
+         IRREVERSIBLE_WEIGHT, RUNGS, RUNG_ABSENT, MACHINE_REFUSALS, NON_ACTS, phoneOf, OP_ALIASES } from "./op-grades/index.mjs";
 /* R39 (T33-85): the new closed vocabularies with the members' words, read at the call from the composed owners. */
 import { composedVocabularies } from "./affordances/words.mjs";
 
@@ -1644,12 +1644,16 @@ export function explainRefusal(arg) {
  * a surface could offer it; a row without the key counts as gated), rungs over every mutating op. `unpublished`: a
  * gated op in none of the four registries. `unranked`: a mutating op with neither a rung nor a stated absence.
  * `stale`: a key of `RUNGS` or `RUNG_ABSENT` the table does not carry as mutating, or of `NON_ACTS` it does not carry
- * as gated. All three empty is the totality; each list is sorted, so an answer names the ops. */
+ * as gated. An alias of a published act is published (R51). All three empty is the totality; each list is sorted, so
+ * an answer names the ops. */
 export function unaccounted(opTable) {
   const rows = Array.isArray(opTable) ? opTable.filter((r) => r && typeof r.op === "string") : [];
   const all = new Set(rows.filter((r) => r.gated !== false).map((r) => r.op));
   const mutating = new Set(rows.filter((r) => r.mutating === true).map((r) => r.op));
   const published = new Set([...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].map((a) => a.id));
+  /* T45 (R51): an alias answers as its op (`op-grades` R17, op-declarations R21), so an alias of a published act is
+     published with it — `filingrecordsent` with `filingsent`, an act on an action since R51. */
+  for (const [alias, op] of Object.entries(OP_ALIASES)) if (published.has(op)) published.add(alias);
   const has = (o, k) => Object.hasOwn(o, k);
   const unpublished = [...all].filter((op) => !published.has(op) && !has(NON_ACTS, op));
   const unranked = [...mutating].filter((op) => !has(RUNGS, op) && !has(RUNG_ABSENT, op));

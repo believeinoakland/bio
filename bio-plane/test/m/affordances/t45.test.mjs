@@ -13,6 +13,9 @@ import { MACHINE_REFUSALS } from "../../../src/op-grades/index.mjs";
 import { world as hWorld, V, MACHINE, received } from "../action-holds/fixture.mjs";
 import { seeded as escSeeded, opened as escOpened, V as EV } from "../escalation/fixture.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
+import { actionRepliesOf } from "../../../src/action-replies/index.mjs";
+import { planWorkOf } from "../../../src/plan-work/index.mjs";
 
 const A = "ACTN-2026-0001-a";
 const ALICE = V("alice");
@@ -98,9 +101,19 @@ test("R51 R10 R20: a machine is offered none of the acts in MACHINE_REFUSALS, an
     actionreceipt: () => w.a.actionReceipt({ target: A, ord: 0, at: "2026-09-02", how: "h", account: "a", viewer: ALICE, author: MACHINE }),
     actionscope: () => w.a.actionScope({ target: A, confidential: true, reason: "r", viewer: ALICE, author: MACHINE }),
     actionpromise: () => w.a.actionPromise({ target: A, kind: "embargo", text: "t", viewer: ALICE, author: MACHINE }),
+    /* the owners the plane composes at T45-47, each on the same host */
+    clockstate: () => actionClocksOf(w.host, { record: w.record, membership: w.membership })
+      .clockState({ target: A, text: "t", date: "2026-10-01", basis_kind: "window", viewer: ALICE, author: MACHINE }),
+    actionreplybearing: () => actionRepliesOf(w.host, { record: w.record, membership: w.membership, actions: w.a })
+      .actionReplyBearing({ target: A, ord: 1, claims: [], viewer: ALICE, author: MACHINE }),
+    arosefrom: () => actionRepliesOf(w.host).aroseFromLink({ target: A, ord: 1, arising: { project: "PROJ-2026-0001-x" },
+      viewer: ALICE, author: MACHINE }),
+    itemtakeup: () => planWorkOf(w.host, { record: w.record, membership: w.membership, actions: w.a, actionHolds: w.h })
+      .itemTakeUp({ item: { kind: "hold", target: A, ord: 1 }, viewer: ALICE, author: MACHINE }),
   };
   for (const [id, act] of Object.entries(drive)) {
-    assert.ok(member.includes(id), `a member is offered ${id}`);
+    if (!["clockstate", "actionreplybearing", "arosefrom", "itemtakeup"].includes(id))
+      assert.ok(member.includes(id), `a member is offered ${id}`);
     if (!Object.hasOwn(MACHINE_REFUSALS, id)) continue;
     assert.ok(!machine.includes(id), `a machine is not offered ${id}`);
     assert.equal(act().reason, MACHINE_REFUSALS[id], id);

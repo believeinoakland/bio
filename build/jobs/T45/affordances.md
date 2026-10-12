@@ -15,7 +15,11 @@
 
 **Edges added by my code** (all in `modules.json` uses already): `actions`, `action-holds`, `escalation`, `conformance`, `filings`, `action-clocks` (facts.mjs); `action-plans`, `plan-work`, `consequences`, `project-roster` (affordances.mjs, vocabularies). No `case-check` or `action-replies` import.
 
-**Next step if restarted:** merge `tranche/T45` at op-grades' CHANGE; run the module's tests (expected green but plane R17's modes, until T45-45), the four checks; then COMPLETE.
+**After op-grades' and op-declarations' merges (B5, K2891):** `local-facts`' `ruleoffer` is a read (op-grades R32), so it moved to the reads; `publishcheck` is `irreversible` (K2839), added to R19's test; an alias of a published act is published with it in `unaccounted` (R12; op-grades R17's rule that an alias answers as its op): `filingrecordsent` lost its non-act row when `filingsent` became an act. R19's drive list gains T45's eleven reasoned ops, each driven at its owner's interface (`t45-backing.test.mjs`); R20's machine drive gains R51's acts, at the plane where it routes them and at the owners' interfaces for those it composes at T45-47 (`t45.test.mjs`).
+
+**Tests and checks.** `node --test test/m/affordances/` (bio-plane): tests 234, pass 234, fail 0. From the process repository: format (153 modules, 0 failures), architecture (affordances: 294 imports, 0 failures), coverage (35 of 35 live ids named, 0 failures), ownership (11 files, 0 failures). Layer tests: none named by the manifest.
+
+Size (session_01CRGRQChAdRhfopqhzspuKx): test runs 14, module lines 2338
 
 ## J1 · QUESTION
 

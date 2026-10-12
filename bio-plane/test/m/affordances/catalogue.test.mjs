@@ -304,12 +304,13 @@ test("R1 R12: NON_ACTS names no act, and a reason begins `capture-directed:` exa
 });
 
 test("R19: `terminal` is given only while STATES.information.edges.retired is empty — retire among it — and "
-   + "`irreversible` only to publish and the two that set when a signed case edition publishes, publishat and "
-   + "publishatmove", () => {
+   + "`irreversible` only to publish, the two that set when a signed case edition publishes, publishat and "
+   + "publishatmove, and case-check's publishcheck (K2839)", () => {
   /* N891: the closed set of `terminal` ops is op-grades' content, pinned in its tests */
   assert.deepEqual(STATES.information.edges.retired, []);
   assert.equal(RUNGS.retire, "terminal");
-  assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible").sort(), ["publish", "publishat", "publishatmove"]);
+  assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible").sort(),
+    ["publish", "publishat", "publishatmove", "publishcheck" /* K2839: case-check's, graded as publish */]);
 });
 
 test("R19: the justification family holds the codes the reasoned ops refuse with", () => {
@@ -617,8 +618,9 @@ import { localFactsOps } from "../../../src/local-facts/index.mjs";
 const TEMPLATE_WRITES = ["templateretire", "factconfirm", "templatereviewgrant", "templategrantrevoke", "templatedraft",
   "templaterevise", "templatepropose", "templatesubmit", "templatereview", "templatecomment", "templateapprove",
   /* T45 (local-facts R10–R13; K2787): a member's drafted group rule, its confirmation, withdrawal and offer */
-  "ruledraft", "ruleconfirm", "rulewithdraw", "ruleoffer"];
-const TEMPLATE_READS = ["templates", "templateread", "templatecomments", "factstatus", "factsdue"];
+  "ruledraft", "ruleconfirm", "rulewithdraw"];
+const TEMPLATE_READS = ["templates", "templateread", "templatecomments", "factstatus", "factsdue",
+  "ruleoffer" /* local-facts R13: a confirmed rule's entry offered to the shared profile, a read (op-grades R32) */];
 
 test("R1 R12 R24: the op maps of filing-templates and local-facts hold exactly their ops; none is an act; each write "
    + "decorates with a rung or a stated absence; and with the control plane's rows for them nothing is unaccounted", () => {
