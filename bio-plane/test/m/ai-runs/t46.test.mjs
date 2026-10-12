@@ -254,6 +254,9 @@ test("R18 (T46; K2920): a run of a mode other than check or plan on her own sign
   const before = w.dump();
   const r = await w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", credential: TOKEN_M });
   assert.deepEqual([r.dispatched, r.code, r.mode], [false, "MEMBER_RUN_MODE_NOT_ADMITTED", "investigate"]);
+  /* its row, run-rules R32 (C-22.30), read by key (B3) */
+  assert.deepEqual([r.check, r.translation], [AI_RUNS_CHECKS.MEMBER_RUN_MODE_NOT_ADMITTED.check, AI_RUNS_CHECKS.MEMBER_RUN_MODE_NOT_ADMITTED.translation]);
+  assert.equal(r.check, "C-22.30");
   assert.equal(w.dump(), before);
   assert.equal(aw.calls.length, 0);
 });

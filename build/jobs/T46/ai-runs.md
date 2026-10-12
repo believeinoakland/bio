@@ -56,6 +56,19 @@ The remaining tests and the used modules' public parts (run-rules, credentials, 
 
 Size (session_012KrF4pcZDor4ebZmdfWuBk): test runs 8, module lines 3618
 
+**Re-run on the tranche after B4 (CHANGE: run-rules merged, K2954).** I merged `tranche/T46` into this branch; the R29 stand-in is no longer needed. `plan` is now deployed (run-rules R14), and four older tests pinned "plan not deployed". Their expectations follow the requirement now, and none was weakened:
+- `converts.test.mjs`: R9/R40 and R54's :895 note now name `check, plan` as deployed.
+- `open.test.mjs`, R40: `DEPLOYED_MODES` is `check, plan, ask, draft`. The refused modes are investigate, extract, ask, draft and the malformed ones, and `deployed` is `check, plan`.
+- `plan.test.mjs`, R46: with no bar held, a plan open is still refused C-109.1, so the bar gates it through `partAdmitted`. With its bar held, no check registered, it is `AI_RUN_MODE_UNCHECKED`. A check open still lands.
+
+`t46.test.mjs` now also asserts `MEMBER_RUN_MODE_NOT_ADMITTED`'s row, C-22.30 (run-rules R32), read by key.
+
+- `node --test test/m/ai-runs/*.test.mjs` on the merged tranche: tests 98, pass 98, fail 0.
+- Users' tests: run-rules, run-productions, plane t41–t43, affordances t33 and question-explorer, 0 failures. op-declarations fails only its 6 inherited tests.
+- `format`, `architecture ai-runs`: 0 failures. `coverage ai-runs`: 48 of 48; 0 failures. `ownership`: below, after the commit.
+
+Size (session_012KrF4pcZDor4ebZmdfWuBk): test runs 12, module lines 3618
+
 ## J1 · QUESTION
 
 R18's member dispatch: the wire to agent-worker `/run` (M-T46-4; your START asks me to agree it with AGENT-WORKER through you before I fix it). My best reading, which I am building on meanwhile:

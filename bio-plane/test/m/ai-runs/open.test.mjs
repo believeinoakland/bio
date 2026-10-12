@@ -140,15 +140,15 @@ test("R32: a run's conditions are recorded at the open and never derived later â
 
 test("R40: the open refuses a mode that is not a deployed member of the one deployment order (C-109.1), after R8 and before anything is written; no mode opens in the deployed one", async () => {
   const w = await openWorld();
-  assert.deepEqual(DEPLOYED_MODES, ["check"]);
-  assert.deepEqual(DEPLOYMENT_SEQUENCE.order.slice(0, 1), DEPLOYED_MODES);
+  /* run-rules R14 (T46; K2892): plan is deployed by its own flag; ask and draft deploy apart and are no run modes */
+  assert.deepEqual(DEPLOYED_MODES, ["check", "plan", "ask", "draft"]);
   assert.equal(DEPLOYMENT_SEQUENCE.verification_recorded, null);
   const before = w.dump();
-  for (const mode of [...DEPLOYMENT_SEQUENCE.order.slice(1), "", "   ", "CHECK", "anything", 0]) {
+  for (const mode of ["investigate", "extract", "ask", "draft", "", "   ", "CHECK", "anything", 0]) {
     const r = await w.runs.open(OPEN({ mode }));
     refused(r, "AI_RUN_MODE_NOT_DEPLOYED");
     assert.equal(r.check, "C-109.1");
-    assert.deepEqual(r.deployed, ["check"]);
+    assert.deepEqual(r.deployed, ["check", "plan"]);
   }
   /* after R8: a bad skill version is asked first; before R3: a bad mode is answered before bad bounds */
   refused(await w.runs.open(OPEN({ mode: "investigate", skillVersion: "" })), "AI_RUN_SKILL_VERSION_UNNAMED");
