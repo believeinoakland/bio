@@ -328,8 +328,14 @@ test("R50: the digest does not depend on the order rows are read — the sort's 
   assert.equal(censusOf(tree.rows.map((r) => ({ ...r, where: r.where ?? undefined }))).digest, now.digest, "a missing where reads null");
 });
 
-test("R50 R34: the pin names the stamp it moves with — ROW_CENSUS.version is CATALOG_VERSION", () => {
+test("R50 R34: the pin names the stamp it moves with — ROW_CENSUS.version is CATALOG_VERSION, the pin frozen and whole", () => {
   assert.equal(ROW_CENSUS.version, CATALOG_VERSION);
+  /* PROMOTION #45 (T47-10): the version is set by reference, so the arm also holds the pin's own shape (R50: a count
+     and a lowercase SHA-256), which a hand edit could break while the version still agreed. */
+  assert.ok(Object.isFrozen(ROW_CENSUS), "ROW_CENSUS is frozen");
+  assert.deepEqual(Object.keys(ROW_CENSUS).sort(), ["digest", "rows", "version"]);
+  assert.ok(Number.isSafeInteger(ROW_CENSUS.rows) && ROW_CENSUS.rows > 0, `rows ${ROW_CENSUS.rows}`);
+  assert.match(ROW_CENSUS.digest, /^[0-9a-f]{64}$/);
 });
 
 /* LEGACY-TESTS #14 (T16, 2026-09-30), K567: a record may name its row with the exact phrase
@@ -372,7 +378,9 @@ test("R50: every row awaiting stamp is named so by its job record", () => {
 });
 
 test("R50: the stamp's own lines are the pin — the snapshot this suite names rows against is the stamp's", () => {
-  if (!stamped) { console.log(`  no snapshot of ${ROW_CENSUS.version}: a failure below cannot name its rows until one is taken`); return; }
+  /* PROMOTION #45 (T47-10): every stamp since 1.43.0 writes its snapshot, so a missing one is a stamp that missed it,
+     never a pass: without it the arm below cannot name a moved row. */
+  assert.ok(stamped, `no snapshot of ${ROW_CENSUS.version} (${stampedPath}): the stamp writes its own lines there`);
   const c = censusOf(stamped.map((l) => { const [check, code, where, translation] = JSON.parse(l); return { check, code, where, translation }; }));
   assert.deepEqual({ rows: c.rows, digest: c.digest }, { rows: ROW_CENSUS.rows, digest: ROW_CENSUS.digest });
 });
@@ -396,14 +404,16 @@ test("R50 NEGATIVE CONTROL: a row added without a re-pin fails, naming it; so do
   const a = compare([...now.lines, added], ctl);
   assert.equal(a.held, false);
   assert.ok(a.named.includes("arrived with no record: C-999.1 CONTROL_ARRIVAL"), a.named.join("; "));
-  const gone = now.lines.find((l) => l.startsWith('["C-59.6",'));
+  /* PROMOTION #45 (T47-10): the departed and changed row is the tree's first row held once, so the control never depends on one
+     module's row staying where it is (it named C-59.6 until T47). */
+  const gone = now.lines.find((l) => now.lines.filter((x) => keyOfLine(x) === keyOfLine(l)).length === 1), goneKey = keyOfLine(gone);
   const d = compare(now.lines.filter((l) => l !== gone), ctl);
   assert.equal(d.held, false);
-  assert.ok(d.named.includes("departed with no record: C-59.6 MINT_EXHAUSTED"), d.named.join("; "));
+  assert.ok(d.named.includes(`departed with no record: ${goneKey}`), d.named.join("; "));
   const moved = JSON.parse(gone); moved[3] = `${moved[3]} (a control arm's edit)`;
   const m = compare(now.lines.map((l) => (l === gone ? JSON.stringify(moved) : l)), ctl);
   assert.equal(m.held, false);
-  assert.ok(m.named.includes("changed with no record: C-59.6 MINT_EXHAUSTED"), m.named.join("; "));
+  assert.ok(m.named.includes(`changed with no record: ${goneKey}`), m.named.join("; "));
   /* And a declaration the tree does not bear out is itself a failure, not an exemption. */
   const x = compare(now.lines, { ...ctl, awaiting: [
     { after: "control", kind: "arrived", by: "a control arm", record: "-", check: "C-999.2", code: "NOWHERE" }] });
@@ -413,7 +423,7 @@ test("R50 NEGATIVE CONTROL: a row added without a re-pin fails, naming it; so do
   const y = compare(now.lines, { ...ctl, awaiting: [
     { after: "control", kind: "changed", by: "a control arm", record: "-", line: JSON.parse(gone) }] });
   assert.equal(y.held, false);
-  assert.ok(y.problems.some((p) => p.includes("unchanged in the tree: C-59.6 MINT_EXHAUSTED")), y.problems.join("; "));
+  assert.ok(y.problems.some((p) => p.includes(`unchanged in the tree: ${goneKey}`)), y.problems.join("; "));
 });
 
 console.log(`\nrow-census: ${pass} pass, ${fail} fail`);

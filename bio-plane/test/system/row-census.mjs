@@ -1,8 +1,9 @@
 /* R50's row census (promotion R50, N319, K431), computed EXACTLY as R50 words it, so `row-census.test.mjs` can hold
    promotion's frozen `ROW_CENSUS` against the tree (P4: promotion cannot read a later module's table).
 
-     files   every `.mjs`/`.js` in any module's `paths` (`build/modules.json`), as the commit at HEAD holds them (`git
-             ls-files`, so an untracked file or an installed `node_modules` is never read), less tests (a `test/`
+     files   every `.mjs`/`.js` in any module's `paths` (`build/modules.json`) that git tracks (`git ls-files`: the index's
+             list, read from the working tree, so an untracked file or an installed `node_modules` is never read; a stamp
+             adds a new file to the index before it reads the census), less tests (a `test/`
              directory, `*.test.mjs`, `*.control.mjs`) and scripts that run when imported (`bio-plane/scripts/`,
              `bio-plane/migrate/`, `civicos-ui/check-*.mjs`);
      table   an exported plain object;
