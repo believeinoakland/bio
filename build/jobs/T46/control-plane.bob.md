@@ -37,3 +37,7 @@ CHANGE (K3004): instance-setup (R79–R81), setup-page, answer-envelope, action-
 ## B6 · ANSWER · re J2
 
 K3006: accepted and folded as an R17 sub-bullet (your wording, with ACT_CLOCK_OPS). (2) reattest: strip its `attempted` too (the attempt's instant is the server's); (1) calibrate: leave it, a stated probe time. The reads' query `now` is N983 (T47). Also merged since B5: affordances and op-declarations (op-declarations re-opened for its ACT_HELP_ABSENT partition, K3005). Merge tranche/T46.
+
+## B7 · CHANGE
+
+CHANGE (K3014): interface-shell and all four screens are merged into tranche/T46 (the shell is re-opened only for K3009/K3011 kit changes, which do not change interfacePage's signature). Merge tranche/T46 and do R75's wiring, its tests and the end-to-end suite now; record completion.
