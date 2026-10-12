@@ -28,6 +28,11 @@ import * as contradiction from "../../../src/contradiction/index.mjs";
 import * as filingTemplates from "../../../src/filing-templates/index.mjs";
 import * as localFacts from "../../../src/local-facts/index.mjs";
 import * as docket from "../../../src/docket/index.mjs";
+import * as actionClocks from "../../../src/action-clocks/index.mjs";
+import * as actionPlans from "../../../src/action-plans/index.mjs";
+import * as planWork from "../../../src/plan-work/index.mjs";
+import * as consequences from "../../../src/consequences/index.mjs";
+import * as projectRoster from "../../../src/project-roster/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { list as profiles, get as profile } from "../../../../jurisdictions/index.mjs";
 
@@ -47,7 +52,13 @@ import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades
    `t36.mjs`; the ops the closures below name are named by hand, as their owners' requirements give them, never read
    back from the table. */
 import { T36_NON_ACTS } from "../../../src/op-grades/t36.mjs";
-test("R1: ACTS holds exactly the object-directed acts, each at its weight", () => {
+/* R51 (T45): the acts an action offers, by owner: action-holds', actions', action-replies', escalation's, filings',
+   action-clocks' and plan-work's. */
+const R51_ACTS = ["actionhold", "actionholdrelease", "actionpressure", "holdnoticeprepare", "holdnoticesent",
+  "actionreceipt", "actionscope", "actionpromise", "actionreplybearing", "actionbearingpropose", "arosefrom",
+  "escalationopen", "escalationattach", "filingprepare", "communicationprepare", "filingapprove", "filingsent",
+  "counselpacket", "clockstate", "reminderset", "itemtakeup"];
+test("R1 R51: ACTS holds exactly the object-directed acts, each at its weight", () => {
   const W = {
     refuse: ["release", "retire", "dispose", "sever", "reinstate"],
     report: ["cite"],
@@ -55,7 +66,9 @@ test("R1: ACTS holds exactly the object-directed acts, each at its weight", () =
       "actionlaws", "actionrisktier", "versionaccept", "versionreject", "versionconsider", "versionrevert",
       "versioncurrent", "withdrawconclusion", "versionhide", "projectinvite", "projectjoin", "projectleave",
       "projectremove", "projectowneradd", "projectownerremove", "projectownerrescue", "projectvisibilityset",
-      "contradictionresolve" /* N345 */, "sourceconsent" /* N364 (K530): its prompt rides it, R5 */],
+      "contradictionresolve" /* N345 */, "sourceconsent" /* N364 (K530): its prompt rides it, R5 */,
+      /* R51 (T45): every act directed at an action T45's owners serve */
+      ...R51_ACTS],
   };
   const want = Object.entries(W).flatMap(([w, xs]) => xs.map((id) => [id, w])).sort();
   assert.deepEqual(ACTS.map((a) => [a.id, a.weight]).sort(), want);
@@ -99,7 +112,7 @@ test("R12 R24: against a table of every op the catalogue classifies, with each r
   assert.deepEqual(ACTS.map((a) => a.id).filter((id) => !Object.hasOwn(RUNGS, id) && !Object.hasOwn(RUNG_ABSENT, id)), []);
 });
 
-test("R4 R36: VOCABULARIES carries exactly the named vocabularies", () => {
+test("R4 R36 R51: VOCABULARIES carries exactly the named vocabularies", () => {
   assert.deepEqual(Object.keys(VOCABULARIES).sort(), ["action_kind", "law_levels", "dispositions", "subject_positions",
     "basis_roles", "entity_kinds", "relation_kinds", "stage_requiredness", "action_basis_kinds",
     "correspondence_directions", "correspondence_stages", "correspondence_outcomes", "resolutions", "risk_tiers",
@@ -110,10 +123,13 @@ test("R4 R36: VOCABULARIES carries exactly the named vocabularies", () => {
     /* R30 */ "template_states", "template_uses", "template_review_outcomes", "local_fact_acts",
     "local_fact_statuses",
     /* R34 */ "docket_shelves", "docket_entry_kinds", "docket_proposals", "docket_pressure_kinds",
-    /* R36 */ "larger_screen_acts", /* R4 (op-grades R21; DEC-143) */ "irreversible_weight"].sort());
+    /* R36 */ "larger_screen_acts", /* R4 (op-grades R21; DEC-143) */ "irreversible_weight",
+    /* R51 */ "override_grounds", "phrasing_kinds", "assertion_resolutions", "press_record_terms", "found_elsewhere_kinds",
+    "bearings", "promise_kinds", "clock_owed_by", "clock_basis_kinds", "plan_states", "matter_states", "addressed_words",
+    "project_scopes"].sort());
 });
 
-test("R4: each fixed value is the very object its enforcing module refuses against — the same reference, never a copy", () => {
+test("R4 R51: each fixed value is the very object its enforcing module refuses against — the same reference, never a copy", () => {
   const same = [
     ["law_levels", actionGrammar.LAW_LEVELS], ["dispositions", inquiry.DISPOSITIONS],
     ["subject_positions", ratification.SUBJECT_POSITIONS], ["basis_roles", inquiry.BASIS_ROLES],
@@ -140,6 +156,15 @@ test("R4: each fixed value is the very object its enforcing module refuses again
     ["docket_pressure_kinds", docket.PRESSURE_KINDS],
     ["larger_screen_acts", G.LARGER_SCREEN_ACTS] /* R36: op-grades' (its R18) */,
     ["irreversible_weight", G.IRREVERSIBLE_WEIGHT] /* R4: op-grades' (its R21) */,
+    /* R51 (T45): action-grammar's T45 vocabularies (its R2), action-clocks' five bases, action-plans' plan states,
+       plan-work's matter states, consequences' harm words and project-roster's scopes */
+    ["override_grounds", actionGrammar.OVERRIDE_GROUNDS], ["phrasing_kinds", actionGrammar.PHRASING_KINDS],
+    ["assertion_resolutions", actionGrammar.ASSERTION_RESOLUTIONS], ["press_record_terms", actionGrammar.PRESS_RECORD_TERMS],
+    ["found_elsewhere_kinds", actionGrammar.FOUND_ELSEWHERE_KINDS], ["bearings", actionGrammar.BEARINGS],
+    ["promise_kinds", actionGrammar.PROMISE_KINDS], ["clock_owed_by", actionGrammar.CLOCK_OWED_BY],
+    ["clock_basis_kinds", actionClocks.BASIS_KINDS], ["plan_states", actionPlans.PLAN_STATES],
+    ["matter_states", planWork.MATTER_STATES], ["addressed_words", consequences.ADDRESSED_WORDS],
+    ["project_scopes", projectRoster.ProjectRoster.PROJECT_SCOPES],
   ];
   assert.deepEqual(same.filter(([k, v]) => VOCABULARIES[k] !== v).map(([k]) => k), []);
   assert.equal(same.length + 1, Object.keys(VOCABULARIES).length, "every key but action_kind is a fixed value checked here");

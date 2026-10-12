@@ -39,9 +39,6 @@ test("R1 R12 R36: publishat, publishatmove and publishatcancel — ratification 
   }
   /* op-grades R3's `reversible`: the published act that takes a cancel back is served */
   assert.ok(keysOf(ratificationOps).includes("caseratify"));
-  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the read writes nothing and has no grade */
-  assert.match(NON_ACTS.publishschedule, /writes nothing$/);
-  assert.equal(gradeOf("publishschedule"), null);
   assert.deepEqual(SCHEDULE_WRITES.map((op) => dec(op).phone), [false, false, true]);
   const ALL = [...SCHEDULE_WRITES, "publishschedule"];
   assert.deepEqual(ALL.filter((op) => published(op)), []);
@@ -60,13 +57,8 @@ test("R1 R12 R36: notewrite and noteturn — hypotheses' op map holds them and t
   const ops = keysOf(hypothesesOps);
   for (const op of ["notewrite", "noteturn", "notes"]) assert.ok(ops.includes(op), op);
   for (const op of ["notewrite", "noteturn"]) {
-    /* op-grades' content its own tests do not yet pin (N877; reported to BOB): each stated absence's sentence */
-    assert.ok(RUNG_ABSENT[op].is.length > 40, op);
     assert.equal(dec(op).phone, true, op);
   }
-  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the read writes nothing and has no grade */
-  assert.match(NON_ACTS.notes, /writes nothing$/);
-  assert.equal(gradeOf("notes"), null);
   assert.deepEqual(["notewrite", "noteturn", "notes"].filter((op) => published(op)), []);
   const table = [{ op: "notewrite", mutating: true, gated: true }, { op: "noteturn", mutating: true, gated: true },
     { op: "notes", mutating: false, gated: true }];
@@ -85,23 +77,16 @@ test("R20: hypotheses refuses a machine at both note ops by its own code, MACHIN
   assert.ok(!Object.values(MACHINE_REFUSALS).includes("MACHINE_CANNOT_NOTE"));
 });
 
-test("R19: HYPOTHESIS_NO_REASON and DUTY_NO_REASON are each a row of its owner's checks, and the note ops' refusals, "
-   + "which ask an object or a member, stay out of the justification family", () => {
+test("R19: HYPOTHESIS_NO_REASON and DUTY_NO_REASON are each a row of its owner's checks, in the justification family", () => {
   assert.ok(Object.hasOwn(HYPOTHESES_CHECKS, "HYPOTHESIS_NO_REASON"));
   assert.ok(Object.hasOwn(DUTIES_CHECKS, "DUTY_NO_REASON"));
-  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the note ops' refusals ask an object or a
-     member, never an account, and stay out */
-  for (const c of ["MACHINE_CANNOT_NOTE", "NOTE_NO_TEXT", "NOTE_TOO_LONG", "NOTE_TURN_UNKNOWN", "NOTE_TURN_NOT_MADE",
-    "NOTE_TOO_LONG_FOR_HUNCH", "HYPOTHESIS_NO_STATEMENT"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
+  for (const c of ["HYPOTHESIS_NO_REASON", "DUTY_NO_REASON"]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
 });
 
 /* ---- the assistant's two labelled drafts (op-grades R16) and baseupdates (op-grades R11) ---------------------------- */
 test("R1 R12: groupdescriptiondraft and writinghelp are no act; with the control plane's rows (gated, not mutating) for "
    + "them and baseupdates nothing is unaccounted, and carried as mutating each would read unranked", () => {
   for (const op of ["groupdescriptiondraft", "writinghelp"]) assert.ok(!published(op), op);
-  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): baseupdates writes nothing and has no grade */
-  assert.match(NON_ACTS.baseupdates, /writes nothing$/);
-  assert.equal(gradeOf("baseupdates"), null);
   const OPS = ["groupdescriptiondraft", "writinghelp", "baseupdates"];
   const table = OPS.map((op) => ({ op, mutating: false, gated: true }));
   const r = A.unaccounted(table);
