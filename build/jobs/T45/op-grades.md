@@ -70,3 +70,7 @@ As soon as both are answered I apply the CHANGE whole, re-pin my tests (pins.tes
 ## J5 · COMPLETE
 
 B3 and B4 applied on job/T45/op-grades (pushed): 21 acts leave NON_ACTS (R32's list as amended, holdnoticeprepare and actionbearingpropose included, 'where they were listed'), MACHINE_REFUSALS gains the 17 rows, each code checked against its owner; no rung moves. op-grades 67/67; format, architecture, coverage 32/32, ownership 0 failures. affordances reads two more reds owed to T45-39 (MACHINE_REFUSALS holds only ACTS; the filingrecordsent alias row). Record updated.
+
+## J6 · COMPLETE
+
+B6 applied on job/T45/op-grades (pushed): declaredstakeset (instance-setup R77) reversible by R32's rule, as coarchiveset, with a setting: NON_ACTS sentence, no MACHINE_REFUSALS row (NOT_AN_ADMIN; no act). op-grades 67/67; format, architecture, coverage 32/32, ownership 0 failures. Re-checked every owner's map: every op served since T44's close is graded or named.
