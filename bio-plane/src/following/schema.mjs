@@ -20,7 +20,44 @@ CREATE TABLE IF NOT EXISTS follows (
   ended_at    TEXT,
   ended_by    TEXT,
   last_read   TEXT,
-  last_outcome TEXT
+  last_outcome TEXT,
+  ended_reason TEXT
+);
+
+-- R22: a follow's end date, set at the follow, changed by followEnd or R25's answer; appended with who and when and
+-- never edited, the latest governing (ends null: none set).
+CREATE TABLE IF NOT EXISTS follow_ends (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  follow_id   INTEGER NOT NULL,
+  ends        TEXT,
+  by          TEXT,
+  at          TEXT NOT NULL
+);
+
+-- R23: one row per link of a watch to the plan that set it running, append-only (a second link of the same watch to
+-- the same plan is answered with the first). watch_kind one of follow, address, duty, question; matters JSON (null:
+-- all the plan's matters); home the plan's project, its sight.
+CREATE TABLE IF NOT EXISTS watch_links (
+  link_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  plan        TEXT NOT NULL,
+  matters     TEXT,
+  watch_kind  TEXT NOT NULL,
+  watch_id    TEXT NOT NULL,
+  home        TEXT,
+  author      TEXT NOT NULL,
+  at          TEXT NOT NULL,
+  UNIQUE (plan, watch_kind, watch_id)
+);
+
+-- R25: the one answer to a link's once-only question; never edited.
+CREATE TABLE IF NOT EXISTS watch_answers (
+  link_id     INTEGER PRIMARY KEY,
+  answer      TEXT NOT NULL,
+  until_day   TEXT,
+  cause       TEXT NOT NULL,
+  author      TEXT NOT NULL,
+  home        TEXT,
+  at          TEXT NOT NULL
 );
 
 -- R2, R3, R7–R10: the last capture taken at each address a follow reads (a read with the same bytes lands nothing).
@@ -93,9 +130,14 @@ export const FOLLOWING_TABLES = Object.freeze([
   t("per_meeting_captures", { keys: ["bundle_id"], sight: "bundle" }),
   t("portal_snapshots", { keys: ["bundle_id"], sight: "source" }),
   t("policy_versions", { keys: ["bundle_id"], sight: "source" }),
+  t("follow_ends", { keys: [], sight: "group" }),
+  t("watch_links", { keys: ["home"], sight: "bundle" }),
+  t("watch_answers", { keys: ["home"], sight: "bundle" }),
 ]);
 
 export function migrateFollowing(sql) {
   const bare = FOLLOWING_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  /* R14, R22: a follows table made before T45 gains its ending's reason */
+  if (![...sql.exec(`PRAGMA table_info(follows)`)].some((r) => r.name === "ended_reason")) sql.exec(`ALTER TABLE follows ADD COLUMN ended_reason TEXT`);
 }

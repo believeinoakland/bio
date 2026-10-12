@@ -61,6 +61,21 @@ export const FOLLOWING_CHECKS = Object.freeze({
     "A register behind an account is read with your own credential, and none was given. Nothing was read."),
   NOT_READ: row(20, "refreshRegister", "is-refresh-read",
     "The register could not be read; the reason is beside this. Nothing was changed."),
+  WATCH_END_REFUSED: row(21, "#endsGiven", "is-watch-end-day",
+    "A watch's end date is a calendar day after today, or none; a policy's standing watch takes none, and an answer "
+    + "either keeps the watch until such a day or stops it now, not both. Nothing was written."),
+  WATCH_ENDED: row(22, "watchLink", "is-watch-live",
+    "That watch has already ended, so it can no longer be linked or given an end date. Nothing was written."),
+  MACHINE_CANNOT_LINK_WATCH: row(23, "watchLink", "is-link-member",
+    "Linking a watch to a plan, and answering whether to keep it, is a member's own act; the machine does neither. "
+    + "Nothing was written."),
+  NO_SUCH_WATCH: row(24, "watchLink", "is-watch-seen",
+    "No watch of that kind that you may see is held under that id. Nothing was written."),
+  WATCH_NOT_ASKED: row(25, "watchAnswer", "is-answer-asked",
+    "There is no question about keeping this watch that is yours to answer now. Nothing was written."),
+  WATCH_RELIED_ON: row(26, "watchAnswer", "is-answer-relied",
+    "Something else still relies on this watch, so it is shown but not offered for keeping or stopping here. Nothing "
+    + "was written."),
 });
 
 /** A refusal answer naming one of this module's rows (DEC-49): `{ok: false, reason, code, check, translation, detail,

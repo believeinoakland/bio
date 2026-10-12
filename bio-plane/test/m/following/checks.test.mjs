@@ -72,7 +72,39 @@ const CASES = {
   NO_CREDENTIAL: async (w) => [await w.f.refreshRegister({ follow: reg(w, { gated: { kind: "account" } }).follow, author: MEMBER })],
   /* the address answers nothing, so the member's refresh reads nothing */
   NOT_READ: async (w) => [await w.f.refreshRegister({ follow: reg(w, { gated: { kind: "account" } }).follow, author: MEMBER, credential: cred })],
+  /* R22–R25: the watches a plan set running (one plan, PL-1, of the project; set up once per world) */
+  WATCH_END_REFUSED: async (w) => {
+    const s = watched(w);
+    return [reg(w, { ends: "2026-10-06" }), w.f.followEnd({ follow: s.follow, ends: "2026-10-05", by: MEMBER }),
+      w.f.watchAnswer({ link: s.asked, keep: { until: "2026-10-06" }, author: MEMBER }), w.f.watchAnswer({ link: s.asked, author: MEMBER })];
+  },
+  WATCH_ENDED: async (w) => [w.f.watchLink({ plan: "PL-1", watch: { kind: "follow", id: watched(w).ended }, author: MEMBER, viewer: MEMBER }),
+    w.f.followEnd({ follow: watched(w).ended, ends: "2026-11-01", by: MEMBER })],
+  MACHINE_CANNOT_LINK_WATCH: async (w) => [w.f.watchLink({ plan: "PL-1", watch: { kind: "follow", id: watched(w).follow }, author: MACHINE }),
+    w.f.watchAnswer({ link: watched(w).asked, stop: true, author: MACHINE })],
+  NO_SUCH_WATCH: async (w) => (watched(w), [w.f.watchLink({ plan: "PL-1", watch: { kind: "follow", id: 99 }, author: MEMBER, viewer: MEMBER }),
+    w.f.watchAnswer({ link: 99, stop: true, author: MEMBER })]),
+  WATCH_NOT_ASKED: async (w) => [w.f.watchAnswer({ link: watched(w).open, stop: true, author: MEMBER }),
+    w.f.watchAnswer({ link: watched(w).asked, stop: true, author: BOB })],
+  WATCH_RELIED_ON: async (w) => [w.f.watchAnswer({ link: watched(w).relied, stop: true, author: MEMBER })],
 };
+
+/* A plan PL-1 of the project, open, and PL-C closed: a follow linked to PL-C (asked), one linked to PL-1 (not yet asked), one
+   linked to both a closed and an open plan (relied on), and an ended follow. */
+function watched(w) {
+  if (w.watchedSetup) return w.watchedSetup;
+  w.st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES ('PRJ-2026-0001-a', 'bob', 'joined', 0, '2026-01-02', '2026-01-02')`);
+  w.plan("PL-1", { project: "PRJ-2026-0001-a" });
+  w.plan("PL-C", { project: "PRJ-2026-0001-a" });
+  const mk = (n) => w.f.followRegister({ address: `${REG}/${n}`, author: MEMBER, viewer: MEMBER }).follow;
+  const ln = (plan, id) => w.f.watchLink({ plan, watch: { kind: "follow", id }, author: MEMBER, viewer: MEMBER }).link;
+  const follow = mk("a"), other = mk("b"), shared = mk("c"), ended = mk("d");
+  const asked = ln("PL-C", follow), open = ln("PL-1", other), relied = ln("PL-C", shared);
+  ln("PL-1", shared);
+  w.f.unfollow({ follow: ended, author: MEMBER });
+  w.close("PL-C", "2026-10-06T10:00:00Z");
+  return (w.watchedSetup = { follow, ended, asked, open, relied });
+}
 
 for (const [code, row] of Object.entries(FOLLOWING_CHECKS)) {
   test(`R1 ${row.check} ${code}: the refusal carries its code, its row and the member's translation (DEC-49), and writes nothing`, async () => {
@@ -81,7 +113,7 @@ for (const [code, row] of Object.entries(FOLLOWING_CHECKS)) {
     w.bundle("INFO-2026-0002-a", { project: "PRJ-2026-0001-a" });
     assert.ok(CASES[code], `a case drives ${code}`);
     const before = (t) => w.rows(`SELECT count(*) AS n FROM ${t}`)[0].n;
-    const counts = () => ["follows", "per_meeting_links"].map(before);
+    const counts = () => ["follows", "per_meeting_links", "follow_ends", "watch_links", "watch_answers"].map(before);
     const answers = await CASES[code](w);
     const held = counts();
     for (const r of answers) {

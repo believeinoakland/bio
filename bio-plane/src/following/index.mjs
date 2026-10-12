@@ -24,6 +24,13 @@
  *                        `content`'s read contract (its R45) and its address through `provenance`'s (its R48).
  *   view                 the jurisdiction view, or a function answering it (default: `jurisdictions.combine` of the
  *                        instance's active profiles, record-core R26).
+ *   actionPlans, planWork the plan read (state, closing instant, matters, project; `NO_SUCH_PLAN`, `PLAN_CLOSED`), each
+ *                        matter's adopted promise-duties (`matterPromiseDuties`) and the watch-reader door this module
+ *                        registers with at start (`registerWatchReader`) (R23, R24, R26).
+ *   duties, answers      a duty's sight, words and occurrences; a standing question's sight, words and `ends`, and
+ *                        its author's acts ending it or moving its end (R23–R26).
+ *   monitoring           also an address's rows with their end date (its R32), `addressWatchEnd` (R71) and
+ *                        `addressWatchers` (R72) (R23–R25).
  *   now                  the instance clock in milliseconds.
  *   bytes(sha)           a capture's bytes (default: record-core's evidence store). */
 
@@ -34,8 +41,12 @@ import { entitiesOf } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { monitoringOf, MONITOR_VIEWER, MONITOR_CADENCE_MS } from "../monitoring/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
+import { actionPlansOf, noSuchPlan, refusePlanClosed } from "../action-plans/index.mjs";
+import { planWorkOf } from "../plan-work/index.mjs";
+import { dutiesOf } from "../duties/index.mjs";
+import { answersOf } from "../answers/index.mjs";
 import { isMachineIdentity, isPublicHttpsLocator } from "../record-grammar/index.mjs";
-import { isCalendarDate, validAt, localDay } from "../civil-time/index.mjs";
+import { isCalendarDate, validAt, localDay, dayRange, bounds } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parse as parseLegistar, KEY as LEGISTAR_KEY } from "../../../legistar-reader/index.mjs";
 import { FOLLOWING_TABLES, migrateFollowing } from "./schema.mjs";
@@ -67,6 +78,10 @@ export const POLICY_GATED_ACCESS = Object.freeze(["paywalled", "reading_room"]);
 /** R21: the most changes one answer gives, and its default. */
 export const POLICY_CHANGES_MAX = 200;
 export const FOLLOW_PURPOSE = "following";
+/** R23: the four kinds of watch a plan may set running (v0.2 rule 17). */
+export const WATCH_KINDS = Object.freeze(["follow", "address", "duty", "question"]);
+/** R24: the most questions one answer gives, and its default. */
+export const WATCH_QUESTIONS_MAX = 200;
 const MACHINE = MONITOR_VIEWER;
 const EPOCH_MS = 3600000;
 const STATIC_ONLY = "only its static form is followed: the register is not re-rendered, so what a visitor's browser would add is not seen";
@@ -103,9 +118,14 @@ export function followingOf(host, deps = {}) {
       entities: lazy(deps.entities, () => entitiesOf(host)),
       events: lazy(deps.events, () => eventsOf(host)),
       standards: lazy(deps.standards, () => standardsOf(host, { record, membership })),
-      monitoring: lazy(deps.monitoring, () => monitoringOf(host, { record, membership })) });
+      monitoring: lazy(deps.monitoring, () => monitoringOf(host, { record, membership })),
+      actionPlans: lazy(deps.actionPlans, () => actionPlansOf(host, { record, membership })),
+      planWork: lazy(deps.planWork, () => planWorkOf(host, { record, membership })),
+      duties: lazy(deps.duties, () => dutiesOf(host, { record, membership })),
+      answers: lazy(deps.answers, () => answersOf(host, { record, membership })) });
     instances.set(storage, f);
     f.migrate();
+    f.registered = f.registerWatches();
   }
   return f;
 }
@@ -113,14 +133,15 @@ export function followingOf(host, deps = {}) {
 export class Following {
   #sql; #declared = false; #listeners = [];
 
-  constructor({ storage, record, membership, now, view, bytes, capture, entities, events, standards, monitoring }) {
+  constructor({ storage, record, membership, now, view, bytes, capture, entities, events, standards, monitoring, actionPlans, planWork, duties,
+                answers }) {
     this.#sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.now = typeof now === "function" ? now : () => Date.now();
     this.viewOpt = view;
     this.bytesOpt = bytes;
-    this.dep = { capture, entities, events, standards, monitoring };
+    this.dep = { capture, entities, events, standards, monitoring, actionPlans, planWork, duties, answers };
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -130,6 +151,10 @@ export class Following {
   get events() { return this.dep.events(); }
   get standards() { return this.dep.standards(); }
   get monitoring() { return this.dep.monitoring(); }
+  get actionPlans() { return this.dep.actionPlans(); }
+  get planWork() { return this.dep.planWork(); }
+  get duties() { return this.dep.duties(); }
+  get answers() { return this.dep.answers(); }
   get host() { return this.monitoring.sweepHost(); }
 
   /** R17: the tables, and their declaration with their classes, once. */
@@ -200,14 +225,44 @@ export class Following {
   #cadence(c) { return c == null || c === "" ? "daily" : FOLLOW_CADENCES.includes(c) ? c : null; }
   /* `lastRead`: R20's watch counts its policy's own text capture as its first read, so it is next due 7 days after it. */
   #insert(kind, subject, { home = null, author, from = null, until = null, cadence = "daily", gated = null, at: given = null,
-                           lastRead = null }) {
+                           lastRead = null, ends = null }) {
     const at = given || instant(this.now());
     this.#sql.exec(`INSERT INTO follows (kind, subject, home, author, from_day, until_day, cadence, gated, at, last_read, last_outcome)
                     VALUES (?,?,?,?,?,?,?,?,?,?,?)`, kind, JSON.stringify(subject), home, author, from, until, cadence,
                    gated ? JSON.stringify(gated) : null, at, lastRead, lastRead ? "held" : null);
     const id = Number(this.#one(`SELECT max(follow_id) AS n FROM follows`).n);
+    if (ends) this.#sql.exec(`INSERT INTO follow_ends (follow_id, ends, by, at) VALUES (?,?,?,?)`, id, ends, author, at);
     this.#tell(id, lastRead ? this.#nextDue(id) : at);
-    return { ok: true, follow: id, kind, at, ...(kind === "register" && !subject.render ? { form: "static", note: STATIC_ONLY } : {}) };
+    return { ok: true, follow: id, kind, at, ends: ends || null, ...(kind === "register" && !subject.render ? { form: "static", note: STATIC_ONLY } : {}) };
+  }
+  /* R22: a follow's end date as given: none, or a calendar day after today's local day in the instance's zone. Answers
+     `{ends}` (null: none) or `{bad}`. */
+  #endsGiven(v, nowMs = this.now()) {
+    if (v == null) return { ends: null };
+    if (!said(v) || !isCalendarDate(v.trim())) return { bad: "an end date is a calendar day (YYYY-MM-DD), or none" };
+    if (v.trim() <= this.#today(nowMs)) return { bad: `an end date is a day after today (${this.#today(nowMs)}), in the group's own zone` };
+    return { ends: v.trim() };
+  }
+  #today(nowMs = this.now()) { return localDay(instant(nowMs), this.zone()); }
+  /* R22: a follow's present end date (the latest setting), or null. */
+  #endsOf(id) {
+    const r = this.#one(`SELECT ends FROM follow_ends WHERE follow_id=? ORDER BY seq DESC LIMIT 1`, Number(id));
+    return r ? r.ends ?? null : null;
+  }
+  /* R22: the instant a follow's end day is over: the start of the next local day in the instance's zone. */
+  #endInstant(day) {
+    try { const r = dayRange(day, day, this.zone()); return r && r.end ? r.end : null; } catch { return null; }
+  }
+  /* R22: every live follow whose end day is over is ended by itself, once, with no one as its ender; its listeners told. */
+  #endExpired(nowMs) {
+    for (const r of this.#rows(`SELECT f.follow_id, e.ends FROM follows f JOIN follow_ends e ON e.follow_id = f.follow_id
+                                AND e.seq = (SELECT max(seq) FROM follow_ends WHERE follow_id = f.follow_id)
+                                WHERE f.ended_at IS NULL AND e.ends IS NOT NULL`)) {
+      const end = this.#endInstant(r.ends);
+      if (!end || ms(end) > nowMs) continue;
+      this.#sql.exec(`UPDATE follows SET ended_at=?, ended_by=NULL, ended_reason='ends' WHERE follow_id=? AND ended_at IS NULL`, end, r.follow_id);
+      this.#tell(Number(r.follow_id), null);
+    }
   }
   /* R8: an account or fee gate as declared by the following member; anything else is a public register. */
   #gated(g) {
@@ -219,7 +274,7 @@ export class Following {
   }
 
   /** R1: a member's follow of a body for a period. */
-  followBody({ body, from, until = null, cadence = null, home = null, author, viewer = null } = {}) {
+  followBody({ body, from, until = null, cadence = null, home = null, ends = null, author, viewer = null } = {}) {
     const r = this.#actorRefusal(author, viewer, home);
     if (r) return r;
     const ents = this.entities;
@@ -231,8 +286,10 @@ export class Following {
       return refuse("BAD_PERIOD", "a follow names the days it covers: from (a day), and until (a day not before it) or none");
     const c = this.#cadence(cadence);
     if (!c) return refuse("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    const e = this.#endsGiven(ends);
+    if (e.bad) return refuse("WATCH_END_REFUSED", e.bad);
     return this.#insert("body", { kind: "body", id: body.trim(), legistar: id }, { home, author, from: from.trim(),
-      until: until == null ? null : until.trim(), cadence: c });
+      until: until == null ? null : until.trim(), cadence: c, ends: e.ends });
   }
   #legistarId(body) {
     let ids = null;
@@ -247,14 +304,45 @@ export class Following {
     if (!said(author) || author !== row.author) return refuse("NOT_THE_AUTHOR", "a follow is ended only by the member who made it");
     if (row.ended_at) return { ok: true, already: true, follow: row.follow_id, ended_at: row.ended_at };
     const at = instant(this.now());
-    this.#sql.exec(`UPDATE follows SET ended_at=?, ended_by=? WHERE follow_id=?`, at, author, row.follow_id);
+    this.#sql.exec(`UPDATE follows SET ended_at=?, ended_by=?, ended_reason='author' WHERE follow_id=?`, at, author, row.follow_id);
     this.#tell(Number(row.follow_id), null);
     return { ok: true, follow: row.follow_id, ended_at: at };
+  }
+
+  /** R22: a follow's end date changed later, by its author (or by R25's answer, `#setEnds`); `ends: null` removes it.
+   *  A policy watch takes none (R20). */
+  followEnd({ follow, ends, by, viewer = null } = {}) {
+    if (!said(by) || isMachineIdentity(by))
+      return refuse("MACHINE_CANNOT_FOLLOW", "a follow's end date is set by a member's own act");
+    this.#endExpired(this.now());
+    const row = this.#follow(follow);
+    if (!row || !this.#sees(row, viewer ?? by)) return refuse("NO_SUCH_FOLLOW", "no follow by that id you may see is held");
+    if (row.kind === "policy")
+      return refuse("WATCH_END_REFUSED", "a policy's watch is the group's standing watch: it takes no end date and ends only with the policy");
+    if (by !== row.author) return refuse("NOT_THE_AUTHOR", "a follow's end date is set by the member who made it");
+    if (row.ended_at) return refuse("WATCH_ENDED", "the follow has already ended");
+    const e = this.#endsGiven(ends);
+    if (e.bad) return refuse("WATCH_END_REFUSED", e.bad);
+    return this.#setEnds(row, e.ends, by);
+  }
+  /* R22, R25: append an end date setting and tell the listeners (the next due is unchanged; the follow's end moved). */
+  #setEnds(row, ends, by) {
+    const at = instant(this.now());
+    this.#sql.exec(`INSERT INTO follow_ends (follow_id, ends, by, at) VALUES (?,?,?,?)`, Number(row.follow_id), ends, by, at);
+    this.#tell(Number(row.follow_id), this.#nextDue(row.follow_id));
+    return { ok: true, follow: Number(row.follow_id), ends, ...(ends ? {} : { ends_state: "none_set" }), at };
+  }
+  /* R25: a follow ended now by the answer to its once-only question. */
+  #endByAnswer(row, by) {
+    const at = instant(this.now());
+    this.#sql.exec(`UPDATE follows SET ended_at=?, ended_by=?, ended_reason='answer' WHERE follow_id=? AND ended_at IS NULL`, at, by, Number(row.follow_id));
+    this.#tell(Number(row.follow_id), null);
+    return at;
   }
   #follow(id) { const n = Number(id); return Number.isSafeInteger(n) ? this.#one(`SELECT * FROM follows WHERE follow_id=?`, n) : null; }
 
   /** R7, R8: a member switching a watch on for a register. */
-  followRegister({ address, render = false, gated = null, cadence = null, home = null, author, viewer = null } = {}) {
+  followRegister({ address, render = false, gated = null, cadence = null, home = null, ends = null, author, viewer = null } = {}) {
     const r = this.#actorRefusal(author, viewer, home);
     if (r) return r;
     if (!said(address) || !isPublicHttpsLocator(address.trim())) return refuse("NO_LOCATOR", "a register is followed at a public https locator");
@@ -263,11 +351,13 @@ export class Following {
     if (g.bad) return refuse("BAD_GATE", g.bad);
     const c = this.#cadence(cadence);
     if (!c) return refuse("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
-    return this.#insert("register", { kind: "register", address: address.trim(), render: render === true }, { home, author, cadence: c, gated: g.gated });
+    const e = this.#endsGiven(ends);
+    if (e.bad) return refuse("WATCH_END_REFUSED", e.bad);
+    return this.#insert("register", { kind: "register", address: address.trim(), render: render === true }, { home, author, cadence: c, gated: g.gated, ends: e.ends });
   }
 
   /** R9: a register's own query for one identifier a member names for a person. */
-  followPersonQuery({ register, scheme, value, address, person = null, gated = null, cadence = null, home = null, author, viewer = null } = {}) {
+  followPersonQuery({ register, scheme, value, address, person = null, gated = null, cadence = null, home = null, ends = null, author, viewer = null } = {}) {
     const r = this.#actorRefusal(author, viewer, home);
     if (r) return r;
     const no = (detail) => refuse("PERSON_QUERY_NOT_NAMED", detail);
@@ -285,8 +375,10 @@ export class Following {
     if (g.bad) return refuse("BAD_GATE", g.bad);
     const c = this.#cadence(cadence);
     if (!c) return refuse("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    const e = this.#endsGiven(ends);
+    if (e.bad) return refuse("WATCH_END_REFUSED", e.bad);
     return this.#insert("person-query", { kind: "person-query", register, scheme, value: String(value).trim(), address: address.trim(),
-      person: person == null ? null : person.trim() }, { home, author, cadence: c, gated: g.gated });
+      person: person == null ? null : person.trim() }, { home, author, cadence: c, gated: g.gated, ends: e.ends });
   }
   #inScheme(view, sch, value) {
     if (value == null || String(value).trim() === "") return false;
@@ -305,7 +397,7 @@ export class Following {
   }
 
   /** R10: a portal's dataset, keyed to its query, with a declared key field. */
-  followPortal({ address, query = null, key, cadence = null, home = null, author, viewer = null } = {}) {
+  followPortal({ address, query = null, key, cadence = null, home = null, ends = null, author, viewer = null } = {}) {
     const r = this.#actorRefusal(author, viewer, home);
     if (r) return r;
     if (!said(address) || !isPublicHttpsLocator(address.trim())) return refuse("NO_LOCATOR", "a portal is followed at a public https locator");
@@ -314,10 +406,12 @@ export class Following {
     if (!said(key)) return refuse("NO_KEY", "a portal follow declares the field that keys its rows");
     const c = this.#cadence(cadence);
     if (!c) return refuse("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    const e = this.#endsGiven(ends);
+    if (e.bad) return refuse("WATCH_END_REFUSED", e.bad);
     const held = this.#rows(`SELECT follow_id, subject FROM follows WHERE kind='portal' AND ended_at IS NULL`)
       .find((x) => { const s = json(x.subject); return s && s.address === q && s.key === key.trim(); });
     if (held) return { ok: true, already: true, follow: Number(held.follow_id) };
-    return this.#insert("portal", { kind: "portal", address: q, key: key.trim() }, { home, author, cadence: c });
+    return this.#insert("portal", { kind: "portal", address: q, key: key.trim() }, { home, author, cadence: c, ends: e.ends });
   }
 
   /** R4 (K1505 (15)): the body and notice period of a `per_meeting` watch. */
@@ -391,11 +485,17 @@ export class Following {
   plan(now) {
     const nowMs = Number.isFinite(now) ? now : this.now();
     this.#syncPolicies(nowMs);
+    this.#endExpired(nowMs);
     const follows = this.#followPlan(nowMs), meetings = this.#meetingPlan(nowMs);
     const due = [], unscheduled = [];
     let wake = null;
     const consider = (t) => { if (wake === null || t < wake) wake = t; };
-    for (const f of follows) { if (f.dueMs <= nowMs) due.push(f); else consider(f.dueMs); }
+    for (const f of follows) {
+      if (f.dueMs <= nowMs) due.push(f); else consider(f.dueMs);
+      /* R22: the instant its end day is over is a wake too, so the end is recorded and told then */
+      const e = this.#endsOf(f.id), end = e ? this.#endInstant(e) : null;
+      if (end) consider(ms(end));
+    }
     for (const m of meetings) {
       if (m.unscheduled) { unscheduled.push(m); continue; }
       const t = ms(m.due_at);
@@ -693,7 +793,8 @@ export class Following {
     }
     for (const [key, id] of live) {
       if (held.has(key)) continue;
-      this.#sql.exec(`UPDATE follows SET ended_at=?, ended_by=? WHERE follow_id=?`, instant(nowMs), MACHINE, id);
+      this.#sql.exec(`UPDATE follows SET ended_at=?, ended_by=?, ended_reason=? WHERE follow_id=?`, instant(nowMs), MACHINE,
+                     this.#policyEndReason(key.split("\n")[0]), id);
       this.#tell(id, null);
     }
     for (const [key, p] of held) {
@@ -706,6 +807,14 @@ export class Following {
       this.#sql.exec(`INSERT OR REPLACE INTO follow_reads (follow_id, address, capture_sha, bundle_id, facts, at) VALUES (?,?,?,?,NULL,?)`,
                      r.follow, p.address, p.capture, p.home, p.at);
     }
+  }
+
+  /* R14, R20: why a policy's watch ended: the policy was superseded, or is no longer held with its text at a public
+     address (withdrawn from being watched). */
+  #policyEndReason(standard) {
+    try { const a = this.standards.standardRead({ id: standard, viewer: MACHINE }); if (a && a.ok !== false && a.superseded_by) return "superseded"; }
+    catch { /* not read: withdrawn */ }
+    return "withdrawn";
   }
 
   /* R20: one policy watch's read: its address, compared with the last version seen; bytes that differ are kept as a new
@@ -816,6 +925,322 @@ export class Following {
   }
 
   /* ===================================================================== *
+   * THE WATCHES A PLAN SET RUNNING (R22–R26; v0.2 rules 1, 17, 18; K2781 (2)).
+   * ===================================================================== */
+
+  /* The plan as action-plans answers it to `viewer` (null: this module's own read, every plan), or null when it cannot
+     be read. */
+  #plan(id, viewer = null) {
+    if (!said(String(id ?? ""))) return null;
+    try { const r = this.actionPlans.planRead({ id: String(id).trim(), viewer }); return r && r.ok === true ? r : null; } catch { return null; }
+  }
+  #planClosedAt(p) { return p && p.state === "closed" ? (p.closed && p.closed.at) || null : null; }
+  #memberId(v) { const m = /^member:(.+)$/.exec(String(v || "")); return m ? m[1] : null; }
+
+  /* A standing question as its author reads it, never writing (answers R16: only its author sees it), or null. */
+  #question(id, viewer) {
+    if (!said(String(id ?? "")) || !said(viewer)) return null;
+    try {
+      const r = this.answers.standingQuestionsOf({ viewer });
+      const list = r && Array.isArray(r.questions) ? r.questions : Array.isArray(r && r.items) ? r.items : Array.isArray(r) ? r : [];
+      return list.find((q) => q && String(q.id) === String(id)) || null;
+    } catch { return null; }
+  }
+  /* A duty as `viewer` reads it (`duties` R7), or null when absent or unseen. */
+  #duty(id, viewer) {
+    if (!said(String(id ?? ""))) return null;
+    try { const r = this.duties.readDuty({ dutyId: String(id), viewer }); return r && r.ok && r.found ? r.duty : null; } catch { return null; }
+  }
+  /* A watched address's row as `viewer` sees it (`monitoring` R32), matched by its normalised form, or null. */
+  #addressRow(address, viewer) {
+    const key = said(address) ? portalKey(address.trim()) : null;
+    if (!key || !said(viewer)) return null;
+    try {
+      const r = this.monitoring.monitoring({ viewer, now: this.now() });
+      return (r && Array.isArray(r.items) ? r.items : []).find((i) => i && said(i.address) && portalKey(i.address) === key) || null;
+    } catch { return null; }
+  }
+
+  /* R23–R26: one watch as `viewer` sees it, in its owner's terms: `{kind, id, words, ends, ended, policy?}`, or null
+     when it is absent or unseen. `viewer` null is this module's own read: every watch but a standing question, which
+     only its author sees. */
+  #watch(kind, id, viewer) {
+    const v = viewer ?? MACHINE;
+    if (kind === "follow") {
+      const f = this.#follow(id);
+      if (!f || (viewer != null && !this.#sees(f, viewer))) return null;
+      const s = json(f.subject) || {};
+      return { kind, id: String(f.follow_id), words: s, ends: f.kind === "policy" ? null : this.#endsOf(f.follow_id),
+               ended: !!f.ended_at, policy: f.kind === "policy" };
+    }
+    if (kind === "address") {
+      const row = this.#addressRow(id, v);
+      if (!row) return null;
+      const until = row.until ?? null;
+      return { kind, id: String(id).trim(), words: row.address, ends: until,
+               ended: row.state === "ended" || (typeof until === "string" && until < this.#today()) };
+    }
+    if (kind === "duty") {
+      const d = this.#duty(id, viewer == null ? MACHINE : viewer);
+      if (!d) return null;
+      return { kind, id: String(d.duty_id), words: (d.performance && d.performance.act) || null, ends: this.dutyWatchEnd(d.duty_id),
+               ended: !!d.withdrawn };
+    }
+    if (kind === "question") {
+      const q = viewer == null ? null : this.#question(id, viewer);
+      if (!q) return null;
+      return { kind, id: String(q.id), words: q.question ?? null, ends: q.ends ?? null, ended: !!q.ended };
+    }
+    return null;
+  }
+
+  #link(id) { const n = Number(id); return Number.isSafeInteger(n) ? this.#one(`SELECT * FROM watch_links WHERE link_id=?`, n) : null; }
+  #linkView(l) {
+    return { link: Number(l.link_id), plan: l.plan, matters: json(l.matters), watch: { kind: l.watch_kind, id: l.watch_id },
+             author: l.author, at: l.at };
+  }
+  /* R23: a link is seen by whoever sees its plan; a link to a standing question only by that question's author. */
+  #seesLink(l, viewer) {
+    if (l.watch_kind === "question") return said(viewer) && viewer === l.author && !!this.#question(l.watch_id, viewer);
+    return viewer == null ? true : !!this.#plan(l.plan, viewer);
+  }
+
+  /** R23: a member's act recording that a plan set a watch running, for some of its matters or all of them. */
+  watchLink({ plan, matters = null, watch = null, author, viewer = null } = {}) {
+    if (!said(author) || isMachineIdentity(author))
+      return refuse("MACHINE_CANNOT_LINK_WATCH", "linking a watch to a plan is a member's own act");
+    const who = viewer ?? author;
+    const p = this.#plan(plan, who);
+    if (!p) return noSuchPlan(said(String(plan ?? "")) ? String(plan) : null);
+    if (p.state === "closed") return refusePlanClosed(p.id);
+    const kind = watch && typeof watch === "object" ? watch.kind : null;
+    const wid = watch && typeof watch === "object" && watch.id != null ? String(watch.id).trim() : null;
+    if (!WATCH_KINDS.includes(kind) || !said(wid)) return refuse("NO_SUCH_WATCH", "no watch of that kind that you may see is held under that id");
+    const w = this.#watch(kind, wid, kind === "question" ? author : who);
+    if (!w) return refuse("NO_SUCH_WATCH", "no watch of that kind that you may see is held under that id");
+    let keys = null;
+    if (matters != null) {
+      const list = Array.isArray(matters) ? matters : [matters];
+      const held = new Map((Array.isArray(p.subjects) ? p.subjects : []).map((x) => [x.key, x]));
+      keys = [];
+      for (const m of list) {
+        const k = typeof m === "string" ? m.trim() : m && typeof m === "object" ? (m.key || null) : null;
+        if (k && held.has(k)) { if (!keys.includes(k)) keys.push(k); continue; }
+        /* the matter is not the plan's: plan-work's own refusal (its MATTER_NOT_OF_PLAN), relayed as given */
+        let r = null;
+        try { r = this.planWork.matterPromiseDuties({ plan: p.id, matter: m, viewer: who }); } catch { r = null; }
+        if (r && r.ok === false) return r;
+        /* plan-work holds it as the plan's matter (one the viewer's plan read withheld): linked by its key */
+        if (k && !keys.includes(k)) keys.push(k);
+      }
+      if (!keys.length) keys = null;
+    }
+    if (w.ended) return refuse("WATCH_ENDED", "that watch has already ended");
+    const id = kind === "address" ? portalKey(wid) : w.id;
+    const had = this.#one(`SELECT * FROM watch_links WHERE plan=? AND watch_kind=? AND watch_id=?`, p.id, kind, id);
+    if (had) return { ok: true, existed: true, ...this.#linkView(had) };
+    const at = instant(this.now());
+    this.#sql.exec(`INSERT INTO watch_links (plan, matters, watch_kind, watch_id, home, author, at) VALUES (?,?,?,?,?,?,?)`,
+                   p.id, keys ? JSON.stringify(keys) : null, kind, id, p.project ?? null, author, at);
+    const l = this.#one(`SELECT * FROM watch_links WHERE plan=? AND watch_kind=? AND watch_id=?`, p.id, kind, id);
+    return { ok: true, ...this.#linkView(l) };
+  }
+
+  /* R24: whether another plan or project relies on a link's watch: another link of it names a plan not closed; for an
+     address, a project other than the plan's asks for it (`monitoring` R72); a policy's watch always. Names none. */
+  #reliedOn(l, w, project) {
+    if (w && w.policy) return true;
+    for (const o of this.#rows(`SELECT plan FROM watch_links WHERE watch_kind=? AND watch_id=? AND link_id<>?`, l.watch_kind, l.watch_id, l.link_id)) {
+      const p = this.#plan(o.plan);
+      if (p && p.state !== "closed") return true;
+    }
+    if (l.watch_kind === "address") {
+      let ps = [];
+      try { const r = this.monitoring.addressWatchers(l.watch_id); ps = Array.isArray(r) ? r : []; } catch { ps = []; }
+      if (ps.some((x) => x && x !== project)) return true;
+    }
+    return false;
+  }
+
+  /* R24: the instant every promise-duty of the link's matters read met, each matter holding at least one, read with no
+     member's sight (plan-work R13, duties R10, R31); or null. The instant is the latest at which an occurrence's
+     matching was recorded (duties R12); measured evidence counts at its latest bound. */
+  #promisesMetAt(l, p, nowMs) {
+    const keys = json(l.matters) || (Array.isArray(p.subjects) ? p.subjects.map((x) => x.key) : []);
+    if (!keys.length) return null;
+    const asOf = instant(nowMs);
+    let last = null;
+    for (const k of keys) {
+      let r;
+      try { r = this.planWork.matterPromiseDuties({ plan: p.id, matter: k, viewer: null }); } catch { return null; }
+      if (!r || r.ok !== true || r.all_met !== true || r.partial === true || !Array.isArray(r.duties) || !r.duties.length) return null;
+      for (const d of r.duties) {
+        let o;
+        try { o = this.duties.occurrencesOf({ dutyId: d.duty_id, asOf, viewer: MACHINE }); } catch { o = null; }
+        for (const occ of o && Array.isArray(o.occurrences) ? o.occurrences : []) {
+          if (!["met", "met_late"].includes(occ.state)) continue;
+          let t = null;
+          for (const e of Array.isArray(occ.evidence) ? occ.evidence : []) {
+            if (e.kind === "event" && typeof e.at === "string") t = e.at;
+            else if (e.kind === "measured" && e.when && !t) { try { t = bounds(e.when).latest || null; } catch { t = null; } }
+          }
+          const tt = t ? wholeSecondFrom(t) : null;
+          if (tt && (!last || tt > last)) last = tt;
+        }
+      }
+    }
+    return last || asOf;
+  }
+
+  /* R24: a link's question, `{due_at, cause}`, or null when it is not due (its watch ended, or neither cause holds). */
+  #due(l, p, w, nowMs) {
+    if (!p || !w || w.ended) return null;
+    const closed = this.#planClosedAt(p);
+    const met = this.#promisesMetAt(l, p, nowMs);
+    if (closed && (!met || closed <= met)) return { due_at: closed, cause: "closed" };
+    if (met) return { due_at: met, cause: "promises_met" };
+    return null;
+  }
+
+  /* R24: who is asked: a standing question's author; else the link's author while an active member who sees the plan;
+     else the plan's project's active owners; else the administrators. */
+  #recipients(l, p) {
+    if (l.watch_kind === "question") return [l.author];
+    const active = (id) => { try { const f = this.membership.memberFacts(id); return !!f && f.status === "active"; } catch { return false; } };
+    const a = this.#memberId(l.author);
+    if (a && active(a) && this.#plan(p.id, l.author)) return [l.author];
+    let owners = [];
+    try { owners = (this.membership.projectOwners(p.project) || []).filter(active).map((x) => `member:${x}`); } catch { owners = []; }
+    if (owners.length) return owners;
+    try { return (this.membership.activeAdmins() || []).map((x) => (x === "admin" ? "admin" : `member:${x}`)); } catch { return []; }
+  }
+
+  /* R24: one link's entry when its question is due and unanswered, else null; `viewer` its sight (null: every link). */
+  #question24(l, nowMs, viewer) {
+    if (this.#one(`SELECT 1 AS x FROM watch_answers WHERE link_id=?`, l.link_id)) return null;
+    if (viewer !== null && !this.#seesLink(l, viewer)) return null;
+    const p = this.#plan(l.plan);
+    if (!p) return null;
+    const w = this.#watch(l.watch_kind, l.watch_id, l.watch_kind === "question" ? l.author : null);
+    const d = this.#due(l, p, w, nowMs);
+    if (!d) return null;
+    const relied = this.#reliedOn(l, w, p.project);
+    return { link: Number(l.link_id), plan: l.plan, matters: json(l.matters), watch: { kind: l.watch_kind, id: l.watch_id, ends: w.ends ?? null },
+             due_at: d.due_at, cause: d.cause, relied_on: relied, offered: relied ? [] : ["keep", "stop"], recipients: this.#recipients(l, p) };
+  }
+
+  /** R24: the once-only question: one entry per link whose question is due and not yet answered, in (due instant, link)
+   *  order after `after`, at most `limit` (1–200), with `cursor`. An entry the viewer may not see is left out whole.
+   *  Writes nothing. */
+  watchQuestions({ after = null, limit = null, viewer = null, now = null } = {}) {
+    const nowMs = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
+    const n = Number.isInteger(Number(limit)) && limit !== null && limit !== "" ? Math.min(WATCH_QUESTIONS_MAX, Math.max(1, Number(limit))) : WATCH_QUESTIONS_MAX;
+    if (!said(viewer) || viewerPredicate(viewer).scope === "DENY") return { ok: true, questions: [], cursor: null };
+    const all = [];
+    for (const l of this.#rows(`SELECT * FROM watch_links ORDER BY link_id`)) {
+      const e = this.#question24(l, nowMs, viewer);
+      if (e) all.push(e);
+    }
+    all.sort((a, b) => (a.due_at < b.due_at ? -1 : a.due_at > b.due_at ? 1 : a.link - b.link));
+    const m = said(String(after ?? "")) ? /^(.+)#(\d+)$/.exec(String(after)) : null;
+    const from = m ? all.filter((e) => e.due_at > m[1] || (e.due_at === m[1] && e.link > Number(m[2]))) : all;
+    const page = from.slice(0, n);
+    return { ok: true, questions: page, cursor: from.length > n ? `${page.at(-1).due_at}#${page.at(-1).link}` : null };
+  }
+
+  /** R25: the one answer to a link's question, by one of its recipients: keep until a day, or stop now; the watch's end
+   *  is set in its owner's terms in the same act. */
+  watchAnswer({ link, keep = null, stop = null, author, viewer = null } = {}) {
+    if (!said(author) || isMachineIdentity(author))
+      return refuse("MACHINE_CANNOT_LINK_WATCH", "answering whether to keep a watch is a member's own act");
+    const who = viewer ?? author;
+    const l = this.#link(link);
+    if (!l || !this.#seesLink(l, who)) return refuse("NO_SUCH_WATCH", "no link of a watch you may see is held under that id");
+    const had = this.#one(`SELECT * FROM watch_answers WHERE link_id=?`, l.link_id);
+    if (had) return { ok: true, existed: true, link: Number(l.link_id), answer: had.answer, until: had.until_day, by: had.author, at: had.at };
+    const nowMs = this.now();
+    const e = this.#question24(l, nowMs, null);
+    if (!e || !e.recipients.includes(author))
+      return refuse("WATCH_NOT_ASKED", "there is no question about this watch that is yours to answer now");
+    if (e.relied_on) return refuse("WATCH_RELIED_ON", "something else still relies on this watch, so it is not offered for keeping or stopping");
+    const keeping = keep != null && keep !== false, stopping = stop === true;
+    if (keeping === stopping) return refuse("WATCH_END_REFUSED", "an answer either keeps the watch until a day, or stops it now");
+    let until = null;
+    if (keeping) {
+      const g = this.#endsGiven(keep && typeof keep === "object" ? keep.until : null, nowMs);
+      if (g.bad || !g.ends) return refuse("WATCH_END_REFUSED", g.bad || "keeping a watch names the day it is kept until");
+      until = g.ends;
+    }
+    const today = this.#today(nowMs);
+    const act = () => {
+      const r = this.#endWatch(l, keeping ? until : null, author, today);
+      if (r && r.ok === false) return r;
+      const at = instant(this.now());
+      this.#sql.exec(`INSERT INTO watch_answers (link_id, answer, until_day, cause, author, home, at) VALUES (?,?,?,?,?,?,?)`,
+                     l.link_id, keeping ? "keep" : "stop", keeping ? until : today, e.cause, author, l.home, at);
+      return { ok: true, link: Number(l.link_id), answer: keeping ? "keep" : "stop", until: keeping ? until : today, cause: e.cause, by: author, at,
+               watch: { kind: l.watch_kind, id: l.watch_id }, owner: r };
+    };
+    return typeof this.record.transact === "function" ? this.record.transact(act) : act();
+  }
+
+  /* R25: a watch's end set in its owner's terms: a follow's `ends` or its end now; an address's end day (monitoring
+     R71); a duty's on the link (here); a standing question's `ends` or its end (answers R34, R16). A refusal by the
+     owner's act is answered as given. */
+  #endWatch(l, until, by, today) {
+    if (l.watch_kind === "follow") {
+      const f = this.#follow(l.watch_id);
+      if (!f) return refuse("NO_SUCH_WATCH", "the follow is no longer held");
+      if (until) return this.#setEnds(f, until, by);
+      return { ok: true, follow: Number(f.follow_id), ended_at: this.#endByAnswer(f, by), ended_reason: "answer" };
+    }
+    if (l.watch_kind === "address") return this.monitoring.addressWatchEnd({ address: l.watch_id, until: until || today, by, viewer: by });
+    if (l.watch_kind === "duty") return { ok: true, duty: l.watch_id, until: until || today };
+    if (until) return this.answers.standingQuestionEndSet({ id: l.watch_id, ends: until, author: by });
+    return this.answers.standingQuestionEnd({ id: l.watch_id, author: by });
+  }
+
+  /** R25 (for `notice-producers` R5): the day after which a duty is no longer told: null while it has no link or any
+   *  link of it is unanswered; else the latest end day its answered links hold. Writes nothing; never throws. */
+  dutyWatchEnd(duty) {
+    try {
+      const ls = this.#rows(`SELECT l.link_id, a.until_day FROM watch_links l LEFT JOIN watch_answers a ON a.link_id = l.link_id
+                             WHERE l.watch_kind='duty' AND l.watch_id=?`, String(duty));
+      if (!ls.length || ls.some((x) => x.until_day == null)) return null;
+      return ls.map((x) => x.until_day).sort().at(-1);
+    } catch { return null; }
+  }
+
+  /** R26: each watch linked to the plan that the viewer may see, in its owner's words, with its end date or
+   *  `none_set`, whether it has ended, and `relied_on`. `viewer` null is the module's own read (the closing summary),
+   *  which sees no standing question. Writes nothing; never throws. */
+  watchesOfPlan({ plan, viewer = null } = {}) {
+    try {
+      const p = this.#plan(plan, viewer);
+      if (!p) return [];
+      const out = [];
+      for (const l of this.#rows(`SELECT * FROM watch_links WHERE plan=? ORDER BY link_id`, p.id)) {
+        if (l.watch_kind === "question" && (!said(viewer) || viewer !== l.author)) continue;
+        const w = this.#watch(l.watch_kind, l.watch_id, l.watch_kind === "question" ? viewer : null);
+        if (!w) continue;
+        out.push({ link: Number(l.link_id), kind: l.watch_kind, watch: l.watch_id, words: w.words, ends: w.ends ?? null,
+                   ...(w.ends ? {} : { ends_state: "none_set" }), ended: !!w.ended, relied_on: this.#reliedOn(l, w, p.project),
+                   matters: json(l.matters) });
+      }
+      return out;
+    } catch { return []; }
+  }
+
+  /** R26: this module's one registration, at start, through plan-work's watch-reader door (its R9). */
+  registerWatches() {
+    try {
+      const pw = this.planWork;
+      if (!pw || typeof pw.registerWatchReader !== "function") return { ok: false, reason: "NO_WATCH_DOOR" };
+      return pw.registerWatchReader(FOLLOWING_MODULE, (a) => this.watchesOfPlan(a || {}));
+    } catch (e) { return { ok: false, reason: String((e && e.message) || e).slice(0, 160) }; }
+  }
+
+  /* ===================================================================== *
    * THE READS (R11, R14).
    * ===================================================================== */
 
@@ -851,11 +1276,26 @@ export class Following {
     return { ok: true, follow: Number(f.follow_id), snapshots: list };
   }
 
-  /** R14: every follow the viewer may see, and every per-meeting watch, with what is not being read and why. */
-  follows({ viewer = null, now = null } = {}) {
+  /* R14, R22: a follow's end as every read answers it: `ends` (or null with `ends_state: "none_set"`), and when ended,
+     when, by whom and why. A follow ended before T45 states its reason from its ender. */
+  #endFields(f) {
+    const ends = f.kind === "policy" ? null : this.#endsOf(f.follow_id);
+    const reason = f.ended_reason || (f.ended_at ? (f.kind === "policy" ? "withdrawn" : "author") : null);
+    return { ends, ...(ends ? {} : { ends_state: "none_set" }),
+             ...(f.ended_at ? { ended_at: f.ended_at, ended_by: f.ended_by ?? null, ended_reason: reason } : {}) };
+  }
+
+  /** R14: every follow the viewer may see, and every per-meeting watch, with what is not being read and why; each
+   *  follow with its end date (R22). Ended follows are listed too when `ended` is set, each with when and why. */
+  follows({ viewer = null, now = null, ended = false } = {}) {
     const nowMs = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
     this.#syncPolicies(nowMs);
+    this.#endExpired(nowMs);
     const plan = this.#followPlan(nowMs);
+    if (ended === true || ended === "1" || ended === "true")
+      for (const f of this.#rows(`SELECT * FROM follows WHERE ended_at IS NOT NULL ORDER BY follow_id`))
+        plan.push({ kind: "follow", follow: f, id: Number(f.follow_id), due_at: null, ended: true });
+    plan.sort((a, b) => a.id - b.id);
     const items = [];
     for (const p of plan) {
       const f = p.follow;
@@ -864,7 +1304,8 @@ export class Following {
       const gated = json(f.gated);
       items.push({ follow: p.id, kind: f.kind, subject: s, author: f.kind === "policy" ? null : f.author, home: f.home,
         period: f.kind === "body" ? { from: f.from_day, until: f.until_day } : null, cadence: f.cadence, at: f.at,
-        last_read: f.last_read, last_outcome: f.last_outcome, next_due: p.due_at ?? instant(nowMs),
+        last_read: f.last_read, last_outcome: f.last_outcome, next_due: p.ended ? null : p.due_at ?? instant(nowMs),
+        ...this.#endFields(f),
         ...(gated ? { gated, unscheduled: "read only at its member's own act (R8); the tick fetches nothing" } : {}),
         ...(f.kind === "policy" ? { watch: "the group's standing watch of a policy it holds: no member made it, and it ends when the policy is superseded",
                                     ...(POLICY_GATED_ACCESS.includes(s.access) ? { unscheduled: "read only by a member's own act: the policy's copy is behind an account or a fee; the tick fetches nothing" } : {}) } : {}),
@@ -891,13 +1332,17 @@ export function followingOps(f, url, body) {
   return {
     followbody: act((b) => f.followBody(b)),
     unfollow: act((b) => f.unfollow(b)),
+    followend: () => f.followEnd({ ...(body || {}), by: q("by") ?? null, viewer: q("viewer") ?? null }),
     followregister: act((b) => f.followRegister(b)),
     followpersonquery: act((b) => f.followPersonQuery(b)),
     followportal: act((b) => f.followPortal(b)),
     permeetingbody: act((b) => f.perMeetingBody(b)),
     refreshregister: act((b) => f.refreshRegister(b)),
-    follows: () => f.follows({ viewer: q("viewer"), now: q("now") }),
+    follows: () => f.follows({ viewer: q("viewer"), now: q("now"), ended: q("ended") }),
     snapshots: () => f.snapshots({ follow: q("follow"), at: q("at"), viewer: q("viewer") }),
     snapshotdiff: () => f.snapshotDiff({ follow: q("follow"), from: q("from"), to: q("to"), viewer: q("viewer") }),
+    watchlink: act((b) => f.watchLink(b)),
+    watchanswer: act((b) => f.watchAnswer(b)),
+    watchquestions: () => f.watchQuestions({ after: q("after"), limit: q("limit"), viewer: q("viewer") }),
   };
 }
