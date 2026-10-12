@@ -1,6 +1,6 @@
 # notice-producers (T45)
 
-**Status** · session_01SxeNT2u2jzZVk4x8bDxKJA · depth 2 · COMPLETE · handled B0
+**Status** · session_01SxeNT2u2jzZVk4x8bDxKJA · depth 2 · COMPLETE · handled B2
 
 ## Completion (T45-42)
 
