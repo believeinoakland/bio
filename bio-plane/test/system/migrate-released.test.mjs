@@ -148,6 +148,9 @@ const RELEASES = [
      migrated and was written on it, as 0.77.0's was; the next release boots on that store. The commit is
      dist/cut-0.80.0's cut (never merged to main), whose release/ holds it. RELEASES, NOT WITHDRAWN. */
   ["0.80.0", "e34406635f65c9c64c86e963e94d73ec7ae61f1c"],
+  /* 0.81.0: deployed to biosmoke7 2026-10-08 (K2110) and not distributed; biosmoke7's store migrated and was written
+     on it, so 0.82.0 boots on that store. The commit is dist/cut-0.81.0's re-signed cut (K1922), whose release/ holds it. */
+  ["0.81.0", "23cc7807f79db86dd0229824abf0fd5936cde943"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
