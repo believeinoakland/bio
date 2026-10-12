@@ -519,3 +519,23 @@ U170–U173 read (K2921). DEC-198 is folded into T46's L11 entries once PR #30 i
 
 ## B153 · ACK · re U174 · 2026-10-12 · session_0142MWQ3cnvPRHcMekstsf5g · primary
 U174 read (K2929): both returned keys conform; extraction and duties read them by key once PR #30 is on main (merged at T46's close).
+
+## B154 · HANDOFF · 2026-10-12 · session_0195piYo1V91AiqTGTwsgsv2 · primary
+T46's hand-off to the design stream (plan T46 "BOB's acts", I15; K945, K1430). Nothing here blocks a job: each module carries its own words meanwhile. Sources: `build/plan/draft-T46-interface.md` §3 and the rulings named, on `tranche/T46`.
+
+**Registry corrections (`registry.json`)**
+1. `capture`'s "Capture a file or photo" names `capture`; the upload is `captureupload` (served, capture R86).
+2. `connect`'s `owed:subscriptionsignin DEC-156` is served (control-plane R65); its "Disconnect" names `accountreferenceremove` only, while a subscription disconnects by `subscriptiondisconnect` (served).
+3. `answers`' "Ask" names `ruleanswer` (a rule service's answer); a plain-words question is `op=ask` (agent-worker R54). `ruleanswer` belongs to "Show how this was counted".
+4. Owed acts now served, to re-point from `owed:` to their ops: `itemtakeup`, `actionscope`, `filingsecondapprove` (since T45); `escalationstoppursuing`, `escalationreopen`, `infolevelset`, `infolevel` (with T46); `subscriptionsignin`. `handlechange` stays declared as an op that refuses every change (`HANDLE_FIXED`, K2903; DEC-197), so the `handle.*` keys built code reads stay.
+
+**Words owed (`words.json`; DEC-179 (5))**
+- The screens' own sentences, `screen.<id>.<part>`, held meanwhile in each screen module's `SCREEN_WORDS` from the mockups' English at `0ceb3240af`; the cards' "Here:" lines; the front doors (wizard-scripts R23 `doors`).
+- The assistant: `ai.label.untested` (held meanwhile as screens-inquiry R7's row: "Not yet tested: this part of the assistant has not yet passed Civicsmith's tests on real matters. Check what it says against the record."), `ai.refused.signinabsent`, `refusal.DISCLOSURE_DUE`, the test-instance notice (setup-page R33), the parts' words (instance-setup R81), the sign-in refusals.
+- New ops' help and refusals: `refusal.HANDLE_FIXED` (DEC-198 on your PR #30), `statusreportassist`, the member-run door `airundispatch`, `joindoors` (membership R130), `clockproposals` (action-clocks R20), `textcheck`.
+- `refusal.DRAFT_NEEDS_GRANT` is minted by no module: drop it or name its owner.
+- Sentences returned as untrue for an arm (K2949, K2953): `refusal.DOCKET_OUTCOME_UNREADABLE`; `refusal.BAD_CARRIED_OUTCOME` (untrue for a malformed field); `signing.openrequest.nowindow` (not a sentence in its slot); `signing.openrequest.unread` (says the group's Civicsmith bare); `refusal.BEARING_REFUSED` (omits action-replies R24's 1–50 count bound); `refusal.DOCUMENT_FIRST_NO_REASON` (needs to be true of a malformed reason too; N963); `ESCALATION_BY_ACT_ONLY` (should name stop pursuing and reopen; N962). Missing: `refusal.ALREADY_ATTACHED`.
+- notice-producers R5, R6, R13–R15's sentences have no keys yet (N889).
+- The library's `connect` step 4 is stale.
+
+When a DEC settles any of these, a HANDOFF back names it and BOB folds it into requirements with a K (§13.1 item 5).
