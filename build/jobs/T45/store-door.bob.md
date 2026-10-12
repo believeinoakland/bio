@@ -17,3 +17,7 @@ Merge order in L11: you merge before plane; plane merges tranche/T45 after you.
 ## B2 · ANSWER · re J1
 
 K2897: merged. Stay available until the layer closes.
+
+## B3 · CHANGE
+
+K2900: plane is merged. Its `advocacychecks` route takes `project` (the query's, else the body's): add it to PROJECT_NAMING_READS (key `project`) with its test and control; `advocacycheck` is a write (its owner's). Merge tranche/T45 first, then post COMPLETE.
