@@ -36,7 +36,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, RUN_CONTEXTS, STANDARD_BASIS, OBSERVATION_STAT
          OBSERVATION_COVERAGE, OBSERVATION_COVERAGE_UNDETERMINED, observationCoverage, checkBound, checkCondition,
          checkConsume, checkRunState, finishedBound, runStatusFor, projectGate, runConsultsProjects, checkRunContextKind,
          runPrincipalGate, checkSkillVersion, DEPLOYED_MODES, DEFAULT_MODE, AI_RUNS_CHECKS, RUN_MODES, startAllowed,
-         checkVerification, partDeployableOn, CIVICSMITH_TEST_SET, originAllowed, checkTestBarRecord } from "../run-rules/index.mjs";
+         checkVerification, partAdmittedOn, CIVICSMITH_TEST_SET, originAllowed, checkTestBarRecord } from "../run-rules/index.mjs";
 import { AI_RUNS_SCHEMA, AI_RUNS_TABLES, AI_RUNS_ADDED_COLUMNS } from "./schema.mjs";
 
 export { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
@@ -315,12 +315,29 @@ export class AiRuns {
     return { ok: true, module, mode: m };
   }
   #deployedModes() { return Array.isArray(this.#deps.deployedModes) ? this.#deps.deployedModes : DEPLOYED_MODES; }
-  /** run-rules R19 as amended (B6, K2489): MAY THIS AI PART DEPLOY, on what this record holds: its verification chain
-   *  (`verifications`) and its test bar (`testBarRecords`, R75) on Civicsmith's set (a module test's own set through
-   *  `deps.testSet`). `partDeployable`'s one computation, never a second here. */
-  #partDeployable(part) {
-    const set = this.#deps.testSet || CIVICSMITH_TEST_SET;
-    return partDeployableOn(set, part, { verifications: this.verifications(), testBars: this.testBarRecords() });
+  /** R78 (T46; K2816 (2)): WHETHER THIS IS A TEST INSTANCE, a fact of the deployment and of nothing else: true exactly
+   *  when the Worker environment's `CIVICSMITH_TEST_INSTANCE` is a string equal to its `INSTANCE_NAME`, both non-empty;
+   *  false otherwise, and when either cannot be read. Only `env` is read: no op, body, query or table reaches it. */
+  testInstance() {
+    try {
+      const env = this.env || {};
+      const flag = env.CIVICSMITH_TEST_INSTANCE, name = env.INSTANCE_NAME;
+      return typeof flag === "string" && typeof name === "string" && flag !== "" && name !== "" && flag === name;
+    } catch { return false; }
+  }
+  /** R78, run-rules R19, R29 (B6, K2489; K2816 (2)): MAY THIS AI PART RUN HERE, on what this record holds: its
+   *  verification chain (`verifications`) and its test bar (`testBarRecords`, R75) on Civicsmith's set (a module test's
+   *  own set through `deps.testSet`), with the test-instance exception (`testInstance`). `run-rules`' `partAdmittedOn`
+   *  is the one computation: `{admitted, untested}`, the label set only for a part admitted on the exception. The one
+   *  gate of this module (R40, R23's input), and what later modules ask (question-explorer, instance-setup, plane). */
+  partAdmitted(part) {
+    try {
+      const set = this.#deps.testSet || CIVICSMITH_TEST_SET;
+      const said = partAdmittedOn(set, part, { verifications: this.verifications(), testBars: this.testBarRecords() },
+        { testInstance: this.testInstance() });
+      return said && said.admitted === true ? { admitted: true, untested: said.untested ?? null }
+        : { admitted: false, untested: null };
+    } catch { return { admitted: false, untested: null }; }
   }
   #captureRequestConfigured() {
     const w = this.#wait();
@@ -993,7 +1010,10 @@ export class AiRuns {
     /* DEC-49 REGION is-airun-open-mode — C-109.1. */
     /* K1606 (run-rules R16, R19): a RUN's mode is one of the order's (`RUN_MODES`; `ask` is deployed apart and is no
        run), deployed by its flag, and deployable on what this record holds (B6: the chain and the test bar, R75). */
-    const deployed = this.#deployedModes().filter((m) => RUN_MODES.includes(m) && this.#partDeployable(m));
+    /* R78: through `partAdmitted`, the one gate (the test-instance exception lifts the bar alone, never a flag). */
+    const admissions = new Map(this.#deployedModes().filter((m) => RUN_MODES.includes(m))
+      .map((m) => [m, this.partAdmitted(m)]));
+    const deployed = [...admissions.keys()].filter((m) => admissions.get(m).admitted);
     if (!deployed.includes(runMode))
       return refusal("AI_RUN_MODE_NOT_DEPLOYED", {
                mode: String(mode).slice(0, 60), deployed: [...deployed],
@@ -1001,6 +1021,9 @@ export class AiRuns {
                    + `order, each only after the one before it is verified live, and today ${deployed.join(", ")} `
                    + `${deployed.length === 1 ? "is" : "are"} deployed. Nothing was written` });
     /* END DEC-49 REGION is-airun-open-mode */
+    /* R78, R32: the label a run admitted on the test-instance exception carries, fixed now and never derived later;
+       null for a run the bar admitted. */
+    const untested = admissions.get(runMode).untested ?? null;
     /* R46 (K660; BIO_Action_v0_1.md §4 rule 1): THE PLANNING RUN, asked after the mode is known deployed and before
        anything else about the run's shape: its plan named (and a plan named by no other mode), over a project, by a
        member, with no search allowance, in that order. Each code is written once, at its refusal (`refusal` above). */
@@ -1033,7 +1056,7 @@ export class AiRuns {
        (K231), so `reexamination` outside mode `plan`, and any origin of a planning run but those two, are refused there.
        A re-examination names the `response`, stored verbatim, and one per plan and response runs at a time. */
     const originSaid = originAllowed({ origin: runOrigin, mode: runMode,
-                                       investigateDeployable: this.#partDeployable("investigate") });
+                                       investigateDeployable: this.partAdmitted("investigate").admitted });
     if (!originSaid || originSaid.ok !== true)
       return { run, started: false, code: originSaid.code, check: originSaid.check, translation: originSaid.translation,
                detail: originSaid.detail, note: "Nothing was written" };
@@ -1214,8 +1237,8 @@ export class AiRuns {
         `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
            principal_plane, principal_claude, principal_claude_ref, skill_version,
            bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open,
-           rerun_of, plan, step, origin, response)
-         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)`,
+           rerun_of, plan, step, origin, response, untested)
+         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)`,
         run, label, runMode, String(contextType), String(contextId),
         /* SK-1: TRIMMED, and the reason is PL-4's measurement one field over —
            a value that survives a falsiness guard while naming nothing reads as
@@ -1234,7 +1257,9 @@ export class AiRuns {
         /* R46: verbatim, and only a planning run carries one (any other mode naming a plan was refused above). */
         runMode === "plan" ? plan : null,
         /* R73: the step and the origin, judged above; R77: a re-examination's response, verbatim (trimmed, as judged) */
-        stepId, runOrigin, responseId);
+        stepId, runOrigin, responseId,
+        /* R78: the exception's label, as admitted above */
+        untested ? JSON.stringify(untested) : null);
       for (const b of Array.isArray(bounds) ? bounds : []) {
         if (!b || !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, String(b.bound))) continue;
         this.sql.exec(
@@ -1284,6 +1309,8 @@ export class AiRuns {
              ...(systemStep ? { step: systemStep } : stepId ? { step: stepId } : {}),
              ...(runOrigin !== "member" ? { origin: runOrigin } : {}),
              ...(responseId ? { response: responseId } : {}),
+             /* R78: the label, null for a run the bar admitted */
+             untested,
              ...AiRuns.#aiRunGateStated(gate) };
   }
 
@@ -1950,18 +1977,8 @@ export class AiRuns {
     if (!cred.token) return { ready: false, withheld: cred.reason };
     const store = this.#ownNamespace();
     if (!store) return { ready: false, withheld: "NAMESPACE_UNDETERMINED" };
-    const sha = await sha256hex(cred.token);
-    let look = null;
-    if (store === "bio") look = credentialsOf(this.ctx).aiCredentialLook({ secretSha: sha });
-    else {
-      try {
-        const res = await env.STORE.get(env.STORE.idFromName("bio"))
-          .fetch(`http://do/aicredentiallook?sha=${sha}`);
-        const out = await res.json().catch(() => null);
-        look = out && out.ok === true ? out.result : null;
-      } catch { look = null; }
-      if (!look) return { ready: false, withheld: "CREDENTIAL_RECORD_SILENT" };
-    }
+    const look = await this.#credentialLook(cred.token, store);
+    if (!look) return { ready: false, withheld: "CREDENTIAL_RECORD_SILENT" };
     const c = look && look.found ? look.credential : null;
     if (!c) return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_NOT_ON_RECORD" };
     if (c.revoked) return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_REVOKED", tokenId: c.tokenId };
@@ -1973,6 +1990,22 @@ export class AiRuns {
     /* K1502, K1514, K1755: the copy binds no Claude credential; the account a resumed run is carried by is the one that
        serves its member's act (R52: their own, or the group's API key), read per run at the dispatch. */
     return { ready: true, stamp: `${c.principal}/${c.tokenId}`, tokenId: c.tokenId, token: cred.token, store };
+  }
+
+  /** An `ai` credential's record row, looked up by its hash (credentials R15) where `ai_credentials` lives: this object
+   *  when it is `bio`, else the `bio` object (`aicredentiallook`). `{found, credential}`, or null when the record did not
+   *  answer. The value is hashed here and kept nowhere. */
+  async #credentialLook(token, store) {
+    const sha = await sha256hex(token);
+    if (store === "bio") {
+      try { return credentialsOf(this.ctx).aiCredentialLook({ secretSha: sha }); } catch { return null; }
+    }
+    try {
+      const env = this.env || {};
+      const res = await env.STORE.get(env.STORE.idFromName("bio")).fetch(`http://do/aicredentiallook?sha=${sha}`);
+      const out = await res.json().catch(() => null);
+      return out && out.ok === true ? out.result : null;
+    } catch { return null; }
   }
 
   /** THE GATE, and the sentence the wake entry carries. `dispatch` is true ONLY on equality of the two stamps. The
@@ -2022,6 +2055,10 @@ export class AiRuns {
     let ref = d.payer ? await this.#accountFor(d.payer, "run", d.project) : null;
     /* R52 (T41): the account that serves now must be the one the run recorded as paying; a run never moves to another */
     if (ref && !ref.refusal && d.owner && ref.owner !== d.owner) ref = { refusal: { code: "NO_ACCOUNT", reason: "NO_ACCOUNT" } };
+    /* R18 (T46; Bob's, K2892): a member's own run is dispatched on her own sign-in alone; any other account that would
+       serve her (her API-key reference, the group's key, a project's account) is withheld, nothing sent, nothing written. */
+    if (d.signinOnly && !(ref && !ref.refusal && ref.kind === "signin" && ref.level === "member"))
+      return { state: "WITHHELD", status: null, withheld: "MEMBER_PRINCIPAL_RUN" };
     if (!ref || ref.refusal)
       outcome = { state: "REFUSED", status: null,
                   reason: String((ref && ref.refusal && (ref.refusal.code || ref.refusal.reason)) || "NO_ACCOUNT").slice(0, 80) };
@@ -2085,6 +2122,78 @@ export class AiRuns {
       if (refusal) outcome.unwritable = refusal;
     }
     return outcome;
+  }
+
+  /** R18 (T46; N919; Bob's, K2892: a member's own sign-in runs check and plan for that member only): A MEMBER'S OWN RUN,
+   *  DISPATCHED AT HER OWN ACT. The wake never dispatches a member's run (`MEMBER_PRINCIPAL_RUN`, above); this is the one
+   *  door that does, called by `control-plane`'s door (op `airundispatch`, T46-59). `by` is the door's stamp of who acts,
+   *  `viewer` its sight (`by` when not given), and `credential` the member's own `ai` credential the door was presented
+   *  with, handed in-process and never read from a body, query or record: the segment `agent-worker` runs acts under it
+   *  (its R5), so it must be the credential that opened the run (`<principal>/<tokenId>` equal to its `principal_plane`),
+   *  on record and unrevoked. Its value is used for the one call and kept nowhere, never written or answered.
+   *
+   *  In order, nothing sent on any: absent or invisible, `{found: false}`; `by` not the member the run's principal names,
+   *  `AI_RUN_NOT_PRINCIPAL` (run-rules R5, relayed); not running, `{dispatched: false, status}`; a mode other than
+   *  `check` or `plan`, `MEMBER_RUN_MODE_NOT_ADMITTED`; then withheld by name as the wake's dispatch is
+   *  (`AGENT_WORKER_UNBOUND`, `NAMESPACE_UNDETERMINED`, `CREDENTIAL_RECORD_SILENT`); no credential presented, or a run
+   *  opened without one (a session's `member:<id>`), `MEMBER_PRINCIPAL_RUN`; a credential not on record, revoked or not
+   *  the run's own, `AI_RUN_NOT_PRINCIPAL`; an account other than her own sign-in, `MEMBER_PRINCIPAL_RUN`. Then the
+   *  wake's call (`#aiRunDispatch`): the 30 s wait, `RUNNING` past it, and one log entry for a refused or incomplete call. */
+  async dispatchMemberRun({ run = null, by = null, viewer = null, credential = null, at = null } = {}) {
+    const iso = AiRuns.#aiIso(at ? Date.parse(at) : Date.now());
+    const id = run == null ? "" : String(run).trim();
+    const sight = viewer == null || viewer === "" ? by : viewer;
+    const row = id ? this.#one(`SELECT run, status, mode, context_type, context_id, principal_plane, principal_claude,
+                                       principal_claude_ref, step FROM ai_runs WHERE run = ?`, id) : null;
+    if (!row || !this.#aiRunInSight(id, sight))
+      return { run: run || null, found: false, note: "no such run: it either never existed or was purged" };
+    /* run-rules R5's comparison, relayed: `by` must be the member the run's principal names. A run whose principal is no
+       member (the organisation credential's, which the wake resumes) is no member's to continue, so it is refused as R5
+       refuses a caller it does not recognise (asked with no caller). */
+    const owner = String(row.principal_plane ?? "");
+    const member = memberIdOf(by);
+    const act = "continuing a run";
+    const notPrincipal = owner.startsWith("member:") && member
+      ? runPrincipalGate({ caller: `member:${member}`, principal: owner, act })
+      : runPrincipalGate({ caller: "", principal: owner, act });
+    if (notPrincipal)
+      return { run, dispatched: false, found: true, status: row.status, code: notPrincipal.code, check: notPrincipal.check,
+               translation: notPrincipal.translation, detail: notPrincipal.detail,
+               note: "a run is continued by its principal alone. Nothing was sent" };
+    if (row.status !== "running")
+      return { run, found: true, dispatched: false, status: row.status,
+               note: "this run has ended; a later dispatch does not reopen it. Nothing was sent" };
+    /* DEC-49 REGION is-airun-member-dispatch */
+    if (row.mode !== "check" && row.mode !== "plan")
+      return { run, found: true, dispatched: false, status: row.status,
+               ...AiRuns.#shed(this.#refuse("MEMBER_RUN_MODE_NOT_ADMITTED", `on a member's own sign-in the assistant runs `
+                 + `checks and plans for that member only; this run is in mode '${String(row.mode).slice(0, 40)}'. Nothing was sent.`)),
+               mode: row.mode };
+    /* END DEC-49 REGION is-airun-member-dispatch */
+    const withheld = (w, extra = {}) => ({ run, found: true, dispatched: false, status: row.status, withheld: w, ...extra,
+                                          note: "Nothing was sent" });
+    const env = this.env || {};
+    if (!env.AGENT_WORKER || typeof env.AGENT_WORKER.fetch !== "function") return withheld("AGENT_WORKER_UNBOUND");
+    const store = this.#ownNamespace();
+    if (!store) return withheld("NAMESPACE_UNDETERMINED");
+    const token = typeof credential === "string" ? credential.trim() : "";
+    /* A run opened by her session (`member:<id>`, no credential) has none the segment could act under. */
+    if (!token || !owner.includes("/")) return withheld("MEMBER_PRINCIPAL_RUN");
+    const look = await this.#credentialLook(token, store);
+    if (!look) return withheld("CREDENTIAL_RECORD_SILENT");
+    const c = look.found ? look.credential : null;
+    if (!c || c.revoked || `${c.principal}/${c.tokenId}` !== String(row.principal_plane)) {
+      const r = runPrincipalGate({ caller: "", principal: owner, act });
+      return { run, found: true, dispatched: false, status: row.status, code: r.code, check: r.check,
+               translation: r.translation, detail: "the credential presented is not the one this run was opened on, or it is "
+                 + "revoked or not on record. Nothing was sent" };
+    }
+    const d = { run: row.run, context_id: row.context_id, payer: AiRuns.#memberOfRun(row), step: row.step || null,
+                project: row.context_type === "project" ? row.context_id : null, owner: row.principal_claude, signinOnly: true };
+    const outcome = await this.#aiRunDispatch(d, { store, token, tokenId: c.tokenId }, iso);
+    if (outcome.state === "WITHHELD") return withheld(outcome.withheld);
+    return { run, found: true, dispatched: outcome.state === "DISPATCHED" || outcome.state === "RUNNING", status: row.status,
+             dispatch: outcome };
   }
 
   /** op=airun — THE RUNNING-SESSION SURFACE'S READ (UI-38's rider).
@@ -2223,6 +2332,8 @@ export class AiRuns {
          earlier run is out of view answer alike, so the field never says a hidden run exists. */
       rerun_of: row.rerun_of != null && String(row.rerun_of).trim() !== "" && this.#aiRunInSight(String(row.rerun_of), viewer)
         ? String(row.rerun_of) : null,
+      /* R78: the label recorded at the open (null for a run the bar admitted, and for one opened before T46) */
+      untested: AiRuns.#untestedOf(row),
       /* R73: the step a step-run works on, and its origin; the keys exist only on a run that names a step or explores. */
       ...(row.step ? { step: row.step } : {}),
       ...(row.origin && row.origin !== "member" ? { origin: row.origin } : {}),
@@ -2861,13 +2972,22 @@ export class AiRuns {
       if (!id) return null;
       const seen = this.#bundleGate("r.context_id", viewer);
       const r = this.#one(`SELECT r.run, r.status, r.mode, r.context_type, r.context_id, r.principal_plane, r.principal_claude,
-                                  r.plan, r.origin, r.response FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
+                                  r.plan, r.origin, r.response, r.untested FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
       return r ? { run: r.run, status: r.status, mode: r.mode, context_type: r.context_type,
                    context_id: r.context_id, principal_plane: r.principal_plane, principal_claude: r.principal_claude,
+                   /* R78: the label recorded at the open */
+                   untested: AiRuns.#untestedOf(r),
                    ...(r.mode === "plan" ? { plan: r.plan ?? null } : {}),
                    /* R77: a re-examination run's response, as `read` answers it */
                    ...(r.origin === "reexamination" ? { response: r.response ?? null } : {}) } : null;
     } catch { return null; }
+  }
+
+  /** R78: a run's recorded `untested` label, read back as stored at the open; null when none was recorded or it cannot be
+   *  read (never derived from the bar or the instance now, R32). */
+  static #untestedOf(row) {
+    const v = row && row.untested != null ? safeJson(String(row.untested)) : null;
+    return v && typeof v === "object" && !Array.isArray(v) ? v : null;
   }
 
   /** R29: one bound's `{allowed, consumed}`, or null when the run declared none. */
@@ -3090,7 +3210,7 @@ export class AiRuns {
     const order = RUN_MODES;
     const next = order[order.indexOf(mode) + 1] ?? null;
     return { ok: true, mode, run, verified_by: v.verified_by, at: existed ? prior.at : now, existed,
-             next: next ? { mode: next, deployable: this.#partDeployable(next) } : null };
+             next: next ? { mode: next, deployable: this.partAdmitted(next).admitted } : null };
   }
 
   /* ---- R75 (T41; D14, D11): THE TEST BAR, written here, where runs are, and read by run-rules R19's deploy gate ---- */

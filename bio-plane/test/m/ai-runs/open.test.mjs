@@ -86,7 +86,8 @@ test("R10: success writes the run, its bounds, the handed manifest and bar verba
   const r = await w.runs.open(OPEN({ label: "fees", bounds: [{ bound: "fetches", allowed: 5, unit: "fetch" },
     { bound: "surfaces", allowed: 2, consumed: 0 }], biasManifest: handed, standardPair: bar, state: { todo: [1] },
     actor: "bob", viewer: "member:bob", principalPlane: "member:bob/t1" }));
-  assert.deepEqual(Object.keys(r), ["run", "started", "status", "ticks", "created", "expires", "projectGate"]);
+  assert.deepEqual(Object.keys(r), ["run", "started", "status", "ticks", "created", "expires", "untested", "projectGate"]);
+  assert.equal(r.untested, null, "R78: a run the bar admitted carries no label");
   assert.deepEqual([r.started, r.status, r.ticks, r.created, r.expires], [true, "running", 1, T0, "2026-07-01T01:00:00Z"]);
   /* INQ is cited by PROJ (bob sees it) and HIDDEN (he does not): the stated count is the sighted one */
   assert.deepEqual(r.projectGate, { applied: false, ground: "INQUIRY", why: r.projectGate.why, projects: 1 });
