@@ -15,3 +15,5 @@ Size (session_018a3dXcqAa5fykfa4cLba4t): test runs 9, module lines 2085
 ## J1 · COMPLETE
 
 T46-24 complete on job/T46/case-import (pushed): R4's T46 clause applied. groupFields (R34's six fields + read_at) are recorded with the edition at its first import when in R34's shape and naming the manifest's group, and never refuse the import. A repeat writes nothing. importedCase answers group_fields per edition with read_at, or null with GROUP_FIELDS_NONE. Tests: case-import 101/0 (new group-fields.test.mjs); users green except inherited reds (same counts on the tranche base). format, architecture, coverage 23/23, ownership: 0 failures. R4's *(not yet met: T46)* mark is yours to strike. Findings for other modules' wording are in the record's Completion section: R17 cites docket R23, which does not exist; conformance R32's identity mapping.
+
+**B2 (CHANGE, K2968):** merged tranche/T46 (with case-checker) into job/T46/case-import; case-import 101 pass 0 fail; architecture 0, coverage 23/23, ownership 0 failures.
