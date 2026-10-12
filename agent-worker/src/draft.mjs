@@ -24,8 +24,8 @@
  * language lacks, or one kept word read back into English. It reads nothing at all (`run-rules` R22) and is told
  * apart below, after the task is read.
  *
- * THE ACTION DRAFTS (R76, R77; T45). The door also routes `textcheck`, `infractiondraft` and `bearingdraft` here, in
- * `action-drafts.mjs`, on this file's pack read, read tool and endings. */
+ * THE ACTION DRAFTS (R76, R77; T45, T46). The door also routes `textcheck`, `infractiondraft`, `bearingdraft` and (T46)
+ * `statusreportdraft` here, in `action-drafts.mjs`, on this file's pack read, read tool and endings. */
 import { admitRead, readTool, ASK_DECLARED } from "./ask.mjs";
 import { toolContent } from "./reads.mjs";
 import { ACTION_DRAFT_OPS, actionTaskOf, actionDraft } from "./action-drafts.mjs";
@@ -148,8 +148,9 @@ export async function handleDraft(req, env, deps) {
       + "language lacks, or one kept word read back into English ({op: translationdraft, direction, language, words}: "
       + `to_language with 1 to ${TRANSLATION_WORDS_MAX} distinct words, to_english with exactly one), a check of a `
       + "prepared text ({op: textcheck, text}), an infraction's documentation for an audience ({op: infractiondraft, "
-      + "matter, audience}) or the bearing of a reply on a request's claims ({op: bearingdraft, action, reply}). What "
-      + "arrived is none of these.", 400);
+      + "matter, audience}), the bearing of a reply on a request's claims ({op: bearingdraft, action, reply}) or a "
+      + "plan's status report from the items handed in ({op: statusreportdraft, plan, items}). What arrived is none of "
+      + "these.", 400);
   if (task.op === "translationdraft") return translationDraft(body, task, env, deps);
   if (ACTION_DRAFT_OPS.includes(task.op))
     return actionDraft(body, task, env, deps, { packFor, grantReader, readTool, draftEnding, ASK_DECLARED });

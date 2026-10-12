@@ -3058,7 +3058,13 @@ function subsessionTools(contract) {
 }
 
 // src/action-drafts.mjs
-var ACTION_DRAFT_OPS = Object.freeze(["textcheck", "infractiondraft", "bearingdraft"]);
+var ACTION_DRAFT_OPS = Object.freeze(["textcheck", "infractiondraft", "bearingdraft", "statusreportdraft"]);
+var KIND_OF = Object.freeze({
+  textcheck: "textcheck",
+  infractiondraft: "infractiondraft",
+  bearingdraft: "bearingdraft",
+  statusreportdraft: "statusreport"
+});
 var READS_AS = Object.freeze(["assertion", "position", "own_benefit_ask", "staff_named"]);
 var AUDIENCES = Object.freeze(["violating_party", "members", "oversight", "public", "broad"]);
 var BEARINGS = Object.freeze(["new_evidence", "disputed_without_evidence", "not_addressed"]);
@@ -3082,6 +3088,7 @@ var sized = (v) => {
 };
 var isMatterRecord = (r) => isObject(r) && Object.keys(r).every((k) => RECORD_KEYS.includes(k)) && ["actions", "correspondence", "findings"].every((k) => Array.isArray(r[k])) && (r.plan === void 0 || r.plan === null || isObject(r.plan)) && sized(r);
 var isOneRecord = (r) => isObject(r) && Object.keys(r).length > 0 && sized(r);
+var isItems = (v) => Array.isArray(v) && v.length > 0 && v.every(isObject) && sized(v);
 function actionTaskOf(t) {
   if (!isObject(t)) return null;
   if (t.op === "textcheck" && sameKeys(t, ["op", "text"]) && isWords(t.text, TEXTCHECK_TEXT_MAX))
@@ -3096,11 +3103,13 @@ function actionTaskOf(t) {
       action_record: t.action_record,
       reply_record: t.reply_record
     };
+  if (t.op === "statusreportdraft" && sameKeys(t, ["op", "plan", "items"]) && isId(t.plan) && isItems(t.items))
+    return { op: "statusreportdraft", plan: t.plan, items: t.items };
   return null;
 }
-var taskNamed = (task) => task.op === "infractiondraft" ? { op: task.op, matter: task.matter, audience: task.audience } : task.op === "bearingdraft" ? { op: task.op, action: task.action, reply: task.reply } : task;
-var recordsOf = (task) => task.op === "infractiondraft" ? { record: task.record } : task.op === "bearingdraft" ? { action_record: task.action_record, reply_record: task.reply_record } : null;
-var readsRecord = (kind) => draftMayRead({ kind, firsthand: false, suggestions: false });
+var taskNamed = (task) => task.op === "infractiondraft" ? { op: task.op, matter: task.matter, audience: task.audience } : task.op === "bearingdraft" ? { op: task.op, action: task.action, reply: task.reply } : task.op === "statusreportdraft" ? { op: task.op, plan: task.plan } : task;
+var recordsOf = (task) => task.op === "infractiondraft" ? { record: task.record } : task.op === "bearingdraft" ? { action_record: task.action_record, reply_record: task.reply_record } : task.op === "statusreportdraft" ? { items: task.items } : null;
+var readsRecord = (op) => draftMayRead({ kind: KIND_OF[op], firsthand: false, suggestions: false });
 function answerTool(op) {
   const properties = op === "textcheck" ? { sentences: {
     type: "array",
@@ -3119,6 +3128,13 @@ function answerTool(op) {
   } } : op === "infractiondraft" ? {
     text: { type: "string", description: "the documented account: the act and its office, the standard, the evidence for each point with its grade, and what is still uncertain" },
     sources: { type: "array", items: { type: "string" }, description: "the records each part rests on, as you read them" }
+  } : op === "statusreportdraft" ? {
+    text: { type: "string", description: "the status report, each sentence from one of the items handed to you" },
+    sources: {
+      type: "array",
+      items: { type: "integer", minimum: 0 },
+      description: "the items the report rests on, each by its place in the list handed to you, 0 the first"
+    }
   } : { claims: {
     type: "array",
     description: "each claim of the request, with how the reply bears on it",
@@ -3159,6 +3175,12 @@ function actionDraftOf(task, answer) {
     if (!Array.isArray(src) || src.length === 0 || src.length > LIST_MAX || !src.every(isId)) return null;
     return { text: answer.text, sources: [...src] };
   }
+  if (task.op === "statusreportdraft") {
+    if (!sameKeys(answer, ["text", "sources"]) || !isWords(answer.text, TEXTCHECK_TEXT_MAX)) return null;
+    const src = answer.sources;
+    if (!Array.isArray(src) || src.length === 0 || new Set(src).size !== src.length || !src.every((i) => Number.isInteger(i) && i >= 0 && i < task.items.length)) return null;
+    return { text: answer.text, sources: [...src].sort((a, b) => a - b) };
+  }
   const c = answer.claims;
   if (!sameKeys(answer, ["claims"]) || !Array.isArray(c) || c.length > LIST_MAX) return null;
   const out = [];
@@ -3171,7 +3193,8 @@ function actionDraftOf(task, answer) {
 var TASK_WORDS = {
   textcheck: "Read the member's prepared text sentence by sentence and point out each sentence that reads as an assertion that the law or a rule was broken (assertion), a policy or vote position (position), an ask for the group's or its members' own benefit (own_benefit_ask), or a name of staff below the responsible official (staff_named), quoting it exactly and saying why. Rewrite nothing and suggest no wording: the member decides. You have no read tool and read nothing of the record.",
   infractiondraft: "Draft the documentation of an infraction for the audience named, from the matter's own record (the result of read_facts, and what you read): the act and the office, the standard it is measured against, the evidence for each point with its grade, and what is still uncertain, each part naming the record it rests on and an unread part stated as unread. Take no position, ask nothing for the group's own benefit, never say what to file or that anyone has a claim, and state no breach the record's own determination does not.",
-  bearingdraft: "Read the action and the reply (the result of read_facts), and for each claim of the request say how the reply bears on it: new evidence (new_evidence), disputed without evidence (disputed_without_evidence), or not addressed (not_addressed), quoting the reply's own words. Judge no claim's merit, take no position, and never say what to file or that anyone has a claim."
+  bearingdraft: "Read the action and the reply (the result of read_facts), and for each claim of the request say how the reply bears on it: new evidence (new_evidence), disputed without evidence (disputed_without_evidence), or not addressed (not_addressed), quoting the reply's own words. Judge no claim's merit, take no position, and never say what to file or that anyone has a claim.",
+  statusreportdraft: "Draft the plan's status report from the items handed to you (the result of read_facts): where the plan stands, each sentence coming from one of those items and saying no more than it does, and name in sources the items the report rests on, each by its place in the list, 0 the first. Read nothing of the record (you have no read tool), take no position, state no breach, and never say what to file or that anyone has a claim."
 };
 async function actionDraft(body, task, env, deps, shared) {
   const { refusal: refusal3, json: json2, accountOf: accountOf2, cascadeToken: cascadeToken2, converse: converse2, segmentMeter: segmentMeter2, DEFAULT_MAX_SEGMENT_BYTES: DEFAULT_MAX_SEGMENT_BYTES2 } = deps;
@@ -3181,8 +3204,8 @@ async function actionDraft(body, task, env, deps, shared) {
   const { account } = acct;
   const grantSent = body.grant !== void 0 && body.grant !== null;
   const firsthand = body.firsthand === void 0 ? null : body.firsthand;
-  if (grantSent && !draftMayRead({ kind: task.op, firsthand, suggestions: account.suggestions === true }))
-    return refusal3("DRAFT_READ_NOT_ALLOWED", task.op === "textcheck" ? "a text check reads nothing of what the group holds, only the text it is asked about; a grant to read was sent with it, so nothing was done." : "this draft reads what the group holds only for a field that does not record what the member saw; a grant to read was sent with one that does, so nothing was done.", 400);
+  if (grantSent && !draftMayRead({ kind: KIND_OF[task.op], firsthand, suggestions: account.suggestions === true }))
+    return refusal3("DRAFT_READ_NOT_ALLOWED", task.op === "textcheck" ? "a text check reads nothing of what the group holds, only the text it is asked about; a grant to read was sent with it, so nothing was done." : task.op === "statusreportdraft" ? "a status report is drafted only from the items handed to it and reads nothing of what the group holds; a grant to read was sent with it, so nothing was done." : "this draft reads what the group holds only for a field that does not record what the member saw; a grant to read was sent with one that does, so nothing was done.", 400);
   if (!grantSent && readsRecord(task.op))
     return refusal3(
       "DRAFT_NEEDS_GRANT",
@@ -3216,7 +3239,7 @@ ${TASK_WORDS[task.op]} ` + (records ? `The records this draft is about are the r
   const asked = task.op === "textcheck" ? `TASK: check this prepared text.
 
 THE MEMBER'S TEXT:
-${task.text}` : task.op === "infractiondraft" ? `TASK: draft the documentation of the infraction in the matter '${task.matter}' for the audience '${task.audience}'.` : `TASK: the bearing of the reply '${task.reply}' on each claim of the action '${task.action}'.`;
+${task.text}` : task.op === "infractiondraft" ? `TASK: draft the documentation of the infraction in the matter '${task.matter}' for the audience '${task.audience}'.` : task.op === "bearingdraft" ? `TASK: the bearing of the reply '${task.reply}' on each claim of the action '${task.action}'.` : `TASK: draft the status report of the plan '${task.plan}' from the items handed to you.`;
   const messages = [{ role: "user", content: asked }];
   if (records) {
     messages.push({ role: "assistant", content: [{ type: "tool_use", id: "facts_1", name: READ_FACTS.name, input: {} }] });
@@ -3344,7 +3367,7 @@ async function handleDraft(req, env, deps) {
   if (!task)
     return refusal3(
       "BAD_TASK",
-      `a draft is asked for one task: help writing in one field of one act ({op: writinghelp, act, field}), a draft of the group's description ({op: groupdescriptiondraft}), or a draft of interface words the group's language lacks, or one kept word read back into English ({op: translationdraft, direction, language, words}: to_language with 1 to ${TRANSLATION_WORDS_MAX} distinct words, to_english with exactly one), a check of a prepared text ({op: textcheck, text}), an infraction's documentation for an audience ({op: infractiondraft, matter, audience}) or the bearing of a reply on a request's claims ({op: bearingdraft, action, reply}). What arrived is none of these.`,
+      `a draft is asked for one task: help writing in one field of one act ({op: writinghelp, act, field}), a draft of the group's description ({op: groupdescriptiondraft}), or a draft of interface words the group's language lacks, or one kept word read back into English ({op: translationdraft, direction, language, words}: to_language with 1 to ${TRANSLATION_WORDS_MAX} distinct words, to_english with exactly one), a check of a prepared text ({op: textcheck, text}), an infraction's documentation for an audience ({op: infractiondraft, matter, audience}), the bearing of a reply on a request's claims ({op: bearingdraft, action, reply}) or a plan's status report from the items handed in ({op: statusreportdraft, plan, items}). What arrived is none of these.`,
       400
     );
   if (task.op === "translationdraft") return translationDraft(body, task, env, deps);
@@ -3778,13 +3801,6 @@ async function handleTranscribe(req, env, deps) {
   const acct = await accountOf2(body);
   if (acct.refusal) return acct.refusal;
   const { account } = acct;
-  if (account.kind === "signin")
-    return refusal3(
-      "TRANSCRIBE_NEEDS_API_KEY",
-      "the AI's reading of a page runs on an API key: the account that serves this act is a Claude sign-in, which cannot yet be sent a page's picture, so nothing was transcribed.",
-      409,
-      { level: account.level }
-    );
   const reference = (await cascadeToken2(account)).reference;
   const engine = MODEL_FOR_MODE.transcribe;
   const done = [];
@@ -4854,7 +4870,9 @@ async function performPlanStep(call, state, runId) {
           });
       }
       if (state.origin === "reexamination") await reexaminationReads(ask, state.response, undetermined);
-      out.note = `${reads.length} read(s) answered under the run's credential, ${undetermined.length} UNDETERMINED (refused, silent or not published) and carried into every proposal's why, never as an absence; ${earlier.length} earlier plan(s) of the same project` + (state.origin === "reexamination" ? "; a re-examination after a recorded response, read with it" : "");
+      const noted = (n) => n && typeof n === "object" ? typeof n.note === "string" && n.note.trim() : typeof n === "string" && n.trim();
+      const notes = [planDoc?.closed, ...earlier.map((p) => p?.closing_note)].filter(noted).length;
+      out.note = `${reads.length} read(s) answered under the run's credential, ${undetermined.length} UNDETERMINED (refused, silent or not published) and carried into every proposal's why, never as an absence; ${earlier.length} earlier plan(s) of the same project, ${notes} closing note(s) of closed plans among them` + (state.origin === "reexamination" ? "; a re-examination after a recorded response, read with it" : "");
       out.state = { ...state, planDoc, earlier, reads, undetermined };
       return out;
     }
@@ -5114,10 +5132,10 @@ async function accountOf(body) {
       409,
       { capability: "unavailable" }
     ) };
-  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || (a.level === "project" ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX) : a.project !== void 0) || a.kind === "signin" && (a.secret !== void 0 || a.suggestions !== void 0 && a.suggestions !== false))
+  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || (a.level === "project" ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX) : a.project !== void 0) || a.kind === "signin" && (a.secret !== void 0 || a.suggestions !== void 0 && typeof a.suggestions !== "boolean"))
     return { refusal: refusal2(
       "BAD_ACCOUNT",
-      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a project's account names its project, and no other does; a signin account is the member's own and carries no secret and no suggestions but false. What arrived is not one, and this member judges only what it is handed.`,
+      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a project's account names its project, and no other does; a signin account is the member's own and carries no secret, and its suggestions switch, when sent, is true or false. What arrived is not one, and this member judges only what it is handed.`,
       400,
       { field: "account" }
     ) };
@@ -5322,8 +5340,15 @@ async function handleRun(req, env) {
   });
 }
 function handleVersion(env) {
-  return json({ ok: true, name: "agent-worker", version: env.VERSION || "0.0.0", model_turns: MODEL_TURNS });
+  return json({
+    ok: true,
+    name: "agent-worker",
+    version: env.VERSION || "0.0.0",
+    model_turns: MODEL_TURNS,
+    runner: runnerBound(env)
+  });
 }
+var runnerBound = (env) => typeof env.RUNNER?.idFromName === "function" && typeof env.RUNNER?.get === "function";
 var ASK_DEPS = {
   refusal: refusal2,
   json,

@@ -15,8 +15,9 @@
  * WHAT IT IS NOT. It reads no store and makes no plane call (it needs no `PLANE` binding); `capture_sha` is named,
  * never read. It checks, stores and shows nothing: what is merged, labelled and written is `reading-pipeline`'s and
  * `extraction`'s, and `usage` is counted by the plane (`ai-use` R1, `use: "transcribe"`). It keeps nothing between
- * calls, and no answer, refusal or trace carries the account's secret or a page's `data` (R75). In T42 it runs on API
- * keys only: a sign-in's relay carries text, so a picture is not relayed to one (`agent-model` R14; N852). */
+ * calls, and no answer, refusal or trace carries the account's secret or a page's `data` (R75). Since T46 (N852) it runs
+ * on a member's own sign-in as on an API key: the page's conversation runs on that member's own runner instance, the
+ * picture relayed inside the same `read_page` result (`agent-model` R15, `agent-runner` R24). */
 import { MODEL_FOR_MODE, sumUsage } from "../../agent-model/src/model.mjs";
 import { TRANSCRIBE_PAGES_MAX, TRANSCRIBE_TURNS, TRANSCRIBE_IMAGE_MAX_BYTES } from "./ops.mjs";
 
@@ -138,11 +139,9 @@ export async function handleTranscribe(req, env, deps) {
   const acct = await accountOf(body);
   if (acct.refusal) return acct.refusal;
   const { account } = acct;
-  /* R72, `agent-model` R14: a sign-in's relay carries text only, so a page's picture is not sent to one (N852). */
-  if (account.kind === "signin")
-    return refusal("TRANSCRIBE_NEEDS_API_KEY", "the AI's reading of a page runs on an API key: the account that serves "
-      + "this act is a Claude sign-in, which cannot yet be sent a page's picture, so nothing was transcribed.", 409,
-      { level: account.level });
+  /* R72 (T46; N852; K2816 (3), (4)): a sign-in transcribes. Its page's conversation runs on the member's own runner
+     instance, the picture relayed only inside `read_page`'s result (`agent-model` R15, `agent-runner` R24); a runner
+     that cannot take a picture is `agent-model`'s to refuse (`IMAGE_NOT_RELAYED`), and the page then ends `refused`. */
 
   const reference = (await cascadeToken(account)).reference;
   const engine = MODEL_FOR_MODE.transcribe;

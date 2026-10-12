@@ -387,8 +387,7 @@ section("R2–R7 · each malformed request refused by its code, in order, with n
     ["R6", "(T38) a member's own subscription, retired (credentials R22)", { ...base, account: { ...ACCOUNTS, kind: "subscription" } }, 400, "BAD_ACCOUNT"],
     ["R6", "(T38) a sign-in carrying a secret", { ...base, account: { ...SIGNIN, secret: CLAUDE_TOKEN } }, 400, "BAD_ACCOUNT"],
     ["R6", "(T38) a sign-in carrying an empty secret", { ...base, account: { ...SIGNIN, secret: "" } }, 400, "BAD_ACCOUNT"],
-    ["R6", "(T38) a sign-in with suggestions true", { ...base, account: { ...SIGNIN, suggestions: true } }, 400, "BAD_ACCOUNT"],
-    ["R6", "(T38) a sign-in with suggestions not a boolean", { ...base, account: { ...SIGNIN, suggestions: "no" } }, 400, "BAD_ACCOUNT"],
+    ["R6", "(T46) a sign-in with suggestions not a boolean", { ...base, account: { ...SIGNIN, suggestions: "no" } }, 400, "BAD_ACCOUNT"],
     ["R6", "(T38) a sign-in at the group level (the group's is an API key only)", { ...base, account: { ...SIGNIN, level: "group" } }, 400, "BAD_ACCOUNT"],
     ["R6", "(T38) a sign-in naming no member", { ...base, account: { kind: "signin", level: "member", suggestions: false } }, 400, "BAD_ACCOUNT"],
     ["R6", "(T38) a sign-in naming an empty member", { ...base, account: { ...SIGNIN, member: "" } }, 400, "BAD_ACCOUNT"],
@@ -1083,6 +1082,10 @@ section("R29 · claude_account and principal");
   const sb = await runOp(mf, { ...base, judgements: J(), account: { kind: "signin", level: "member", member: MEMBER } });
   t("R6 (T38): a sign-in with no suggestions field is carried, the switch read as off (R56)",
     [sb.status, sb.out.claude_account?.kind], [200, "signin"]);
+  await reset(mf);
+  const st = await runOp(mf, { ...base, judgements: J(), account: { ...SIGNIN, suggestions: true } });
+  t("R6 (T46): a sign-in with suggestions true is carried (the sign-in's own switch, no longer refused)",
+    [st.status, st.out.claude_account?.kind], [200, "signin"]);
   await reset(mf, { payer: "member:sam" });
   const ss = await runOp(mf, { ...base, judgements: J(), account: SIGNIN });
   t("R10 (T38): Ruth's sign-in on Sam's run is refused as any account serving another member's act",

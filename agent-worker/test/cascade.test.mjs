@@ -218,7 +218,7 @@ console.log("\n--- 4 · R6, R57: no account, a bad one, or the retired cascade's
     ["R6 (T38): a member's own subscription, retired (credentials R22)", { ...base, account: sub() }, 400, "BAD_ACCOUNT"],
     ["R6 (T38): a sign-in carrying a secret", { ...base, account: { ...signin(), secret: TOKEN } }, 400, "BAD_ACCOUNT"],
     ["R6 (T38): a sign-in carrying an empty secret", { ...base, account: { ...signin(), secret: "" } }, 400, "BAD_ACCOUNT"],
-    ["R6 (T38): a sign-in with suggestions true", { ...base, account: { ...signin(), suggestions: true } }, 400, "BAD_ACCOUNT"],
+    ["R6 (T46): a sign-in with suggestions not a boolean", { ...base, account: { ...signin(), suggestions: 1 } }, 400, "BAD_ACCOUNT"],
     ["R6 (T38): a sign-in at the group level", { ...base, account: { ...signin(), level: "group" } }, 400, "BAD_ACCOUNT"],
     ["R6 (T38): a sign-in naming no member", { ...base, account: { kind: "signin", level: "member", suggestions: false } }, 400, "BAD_ACCOUNT"],
     ["R6 (T38): a sign-in naming an empty member", { ...base, account: signin("") }, 400, "BAD_ACCOUNT"],
