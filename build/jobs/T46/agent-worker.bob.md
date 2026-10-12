@@ -21,3 +21,7 @@ K2947: (1) your reading is ruled: no new credential shape; ai-runs hands the mem
 ## B3 · CHANGE
 
 K2951: reading-guides, agent-model (R15: a sign-in picture relayed once the runner's /version lists capabilities "image") and agent-runner (R24, R5's capabilities) are merged into tranche/T46. Merge tranche/T46 into your branch. Your R45 bundle-freshness tests are red until BOB regenerates your bundle at L6's close (accepted by name, K2951).
+
+## B4 · CHANGE
+
+run-rules is merged into tranche/T46 (K2954: R29 partAdmittedOn/partAdmitted/untestedLabel, R30, R32 MEMBER_RUN_MODE_NOT_ADMITTED C-22.30, plan in DEPLOYED_MODES). Merge tranche/T46 into your branch, re-run your tests on it, and post COMPLETE (again) when green.
