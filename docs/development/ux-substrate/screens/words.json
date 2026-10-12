@@ -3408,7 +3408,7 @@
   },
   {
    "key": "refusal.SIGNIN_ADDRESS_UNEXPECTED",
-   "en": "The sign-in answered with an address that isn't Anthropic's, so Civicsmith didn't open it. Nothing was sent. Tell whoever installed your group's Civicsmith.",
+   "en": "The sign-in answered with an address that isn't Anthropic's, so your group's Civicsmith didn't open it. Nothing was sent. Tell whoever installed your group's Civicsmith.",
    "protected": true,
    "source": "DEC-198",
    "note": "a safety stop: says what was not opened"
