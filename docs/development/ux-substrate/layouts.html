@@ -1879,7 +1879,10 @@ SCR.wizards = c => ({ rail: 'settings', title: 'Wizards', crumbs: ['Settings', '
   ${note('A copy becomes your group\'s own wizard: a draft until approved, like any wizard your group writes. The original stays as it is and is still offered; a required wizard stays required. The copy shows what it is based on, and when Civicsmith\'s original changes, your wizard editors are told and can bring the change across.')}` });
 
 /* ---------------- daily work ---------------- */
-SCR.queue = c => ({ rail: 'queue', title: 'Your queue', main: `
+const EMPTY_ST = { empty: 'b' };
+SCR.queue = c => ({ st: EMPTY_ST[c.v], rail: 'queue', title: 'Your queue', main: `
+  <div class="mk-mockctl"><label for="mk-equeue">In this mockup, show</label> <select id="mk-equeue" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a">the screen in use</option><option value="b">the queue with nothing waiting</option></select></div>
+  <div class="st st-a">
   ${h1('Your queue', '9 items · grouped by case · <a href="#" onclick="return false">sort by time due</a>')}
   ${note('Three kinds: <b>To do</b> needs your act; <b>Noticed</b> is something the record found that nobody has judged; <b>Status</b> tells you where something stands. <span class="muted">(Shown once.)</span>')}
   ${sec('The Coliseum lease', sheet(
@@ -1898,9 +1901,12 @@ SCR.queue = c => ({ rail: 'queue', title: 'Your queue', main: `
   ${sec('The assistant\'s accounts', sheet(
     row(kindm('noticed'), `${ref('Pothole repairs\' account', 'projectai', '<b>AI for this project</b> · Pothole repairs · its own API key, its uses and limits', 'Where an owner can raise the limit.')} reached its monthly limit for runs on 14 October. It pauses runs until 1 November; its other uses go on.<span class="meta">told once to the project\'s owners · nobody is named</span>`, '') +
     row(kindm('noticed'), `Your sign-in no longer serves Ward 3 parking: a second member joined, and a sign-in serves a project only while it has one member. Members\' acts there now use their own accounts, or the group\'s key.<span class="meta">${btn('projectkeyset', 'Add an API key for the project')}</span>`, '') +
-    row(kindm('noticed'), `The assistant found something worth exploring in Pothole repairs today: two new work orders that bear on <span class="rec">Is the city repairing reported potholes within seven days?</span> Explore it today on the project\'s account? If nobody says yes today, it doesn\'t.<span class="meta">${btn('exploreapprove', 'Explore today')}<span class="muted">asked at most once a day, of the project\'s owners</span></span>`, '')))}` });
+    row(kindm('noticed'), `The assistant found something worth exploring in Pothole repairs today: two new work orders that bear on <span class="rec">Is the city repairing reported potholes within seven days?</span> Explore it today on the project\'s account? If nobody says yes today, it doesn\'t.<span class="meta">${btn('exploreapprove', 'Explore today')}<span class="muted">asked at most once a day, of the project\'s owners</span></span>`, '')))}</div>
+  <div class="st st-b">${h1('Your queue', 'Nothing is waiting on you.')}${row(I('accepted'), '<b>You are up to date.</b> When something needs your act, a reply arrives, or the record notices something you follow, it appears here, once.', '')}${acts(ref('Go to Home', 'home', '<b>Home</b> · your group\'s home'))}</div>` });
 
-SCR.finder = c => ({ rail: 'find', title: 'Find', main: `
+SCR.finder = c => ({ st: EMPTY_ST[c.v], rail: 'find', title: 'Find', main: `
+  <div class="mk-mockctl"><label for="mk-efinder">In this mockup, show</label> <select id="mk-efinder" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a">the search in use</option><option value="b">a search with no results</option></select></div>
+  <div class="st st-a">
   ${h1('Find', 'Search everything your group holds, then hold a set together to act on it.')}
   <div class="mk-search" data-act="search"><input class="cs-input" id="mk-q" value="pothole work orders 2025"><span>${btn('search', 'Search', { tone: 'primary', icon: 'search' })}</span></div>
   ${sheet(
@@ -1908,7 +1914,8 @@ SCR.finder = c => ({ rail: 'find', title: 'Find', main: `
     row('<input type="checkbox" checked aria-label="pick">', '<b class="rec">Pothole repair policy, Administrative Instruction 4.12</b><span class="meta">' + grade('capture', 'B') + ' passage 3: "within seven calendar days"</span>', '') +
     row('<input type="checkbox" aria-label="pick">', '<b class="rec">Report to council: street maintenance performance</b><span class="meta">' + grade('capture', 'C') + ' public archive copy</span>', ''))}
   ${gapm('nobody', '<b>Nobody looked</b> in the 2024 council minutes for this yet. ') } ${btn('frontier', 'See where nobody looked')} ${btn('calculationcreate', 'Count', { help: 'Counts what matches in the documents you are holding together, as a calculation with its method shown, so anyone can count again and get the same.' })}
-  <div class="cs-hold mk-hold">${I('hold')}<span><span class="n">2 documents held together</span><span class="drift"> · until 16:40 today</span></span><span class="acts">${btn('select', 'Hold these together')}${btn('findin', 'Find in these', { icon: 'search' })}${btn('selectionrelease', 'Let the set go')}</span></div>` });
+  <div class="cs-hold mk-hold">${I('hold')}<span><span class="n">2 documents held together</span><span class="drift"> · until 16:40 today</span></span><span class="acts">${btn('select', 'Hold these together')}${btn('findin', 'Find in these', { icon: 'search' })}${btn('selectionrelease', 'Let the set go')}</span></div></div>
+  <div class="st st-b">${h1('Find', 'Search everything your group holds, then hold a set together to act on it.')}<div class="mk-search" data-act="search"><input class="cs-input" id="mk-q0" value="rent board minutes 2019"><span>${btn('search', 'Search', { tone: 'primary', icon: 'search' })}</span></div>${row(I('nobody'), '<b>Nothing your group holds matches “rent board minutes 2019”.</b> Search finds only what has been captured. Try fewer or other words, or capture the record from where it is published.', '')}${acts(ref(I('add') + 'Capture it', 'capture', '<b>Add</b> · capture a document from its address, a file or photo, or what you saw'))}</div>` });
 
 /* Add: three tabs, each its own experience. A journey or wizard step opens the tab its act belongs to. */
 const CAPTURE_TAB = { acquire: 'a', capturerequest: 'a', monitor: 'a', capture: 'b', testify: 'c' };
@@ -2076,7 +2083,9 @@ SCR['find-in'] = c => { const st = FIND_ST[c.v] || 'a'; const sel = v => v === s
   ${c.ai ? sec('Proposed by the assistant', `<p class="mk-note"><b>Not in the first release.</b> Switched on once it has been measured: at your request, and for a question you name, the assistant will also propose people, events and money figures that search can't match, such as "K. Osei, Deputy Director" in the council report, a person your group doesn't follow yet. Each is labelled machine work, graded no higher than its method earns, and becomes a fact only by the same acts, by a member.</p>${sheet(row(origin('machine', 'Proposed by the assistant'), '<span class="muted">"K. Osei, Deputy Director, presented the report" · Report to council: street maintenance performance · passage 2</span>', '<span class="muted">later</span>'))}`) : ''}` }; };
 
 /* ---------------- projects and questions ---------------- */
-SCR.project = c => ({ rail: 'projects', title: 'Pothole repairs', crumbs: ['Projects', 'Pothole repairs'], main: `
+SCR.project = c => ({ st: EMPTY_ST[c.v], rail: 'projects', title: 'Pothole repairs', crumbs: ['Projects', 'Pothole repairs'], main: `
+  <div class="mk-mockctl"><label for="mk-eproject">In this mockup, show</label> <select id="mk-eproject" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a">the screen in use</option><option value="b">a new project with no questions</option></select></div>
+  <div class="st st-a">
   <div class="mk-titlerow">${h1('Pothole repairs', 'Is the city repairing reported potholes as its own policy requires?')}${wizmark(2, 'Your first question · Check a claim')}</div>
   <div class="mk-grid2"><div>${ladder('stage', ['Forming', 'Investigating', 'Matured', 'Closed'], 1)}</div><div class="row">${btn('projectbarset', 'Set this project\'s bar')}<span class="muted">Bar: B/B</span></div></div>
   ${acts(btn('findin', 'Find in this project', { icon: 'search' }))}
@@ -2086,7 +2095,8 @@ SCR.project = c => ({ rail: 'projects', title: 'Pothole repairs', crumbs: ['Proj
     acts(btn('promote', 'Open a question', { tone: 'primary' }), btn('drawquestion', 'Draw on a question from elsewhere'), btn('planopen', 'Plan what to do')))}
   ${c.ai ? sec('Suggested questions', machine('Mai', '<p class="rec">Did the 2026 report count reports closed within seven days, or within seven working days?</p>' + acts(btn('promote', 'Open this question'))) + explored(null, '<p class="rec">Two work orders filed on 3 October cite report numbers the project\'s question has not matched yet.</p>' + acts(btn('promote', 'Open a question from this')))) : ''}
   ${sec('AI for this project', `<p class="mk-small" style="margin:0">Paid for by the project's own API key · asking, drafting and runs · exploring: ask every day. ${ref('Open AI for this project', 'projectai', '<b>AI for this project</b> · who pays for the assistant here, for which uses and up to what limits', 'Where an owner sets the project\'s account and limits; members see what pays.')}</p>`)}
-  ${sec('Members', `<p>Dev (owner), Mai, Ana</p>${acts(btn('projectinvite', 'Invite a member to the project'), btn('projectjoin', 'Join'))}`)}` });
+  ${sec('Members', `<p>Dev (owner), Mai, Ana</p>${acts(btn('projectinvite', 'Invite a member to the project'), btn('projectjoin', 'Join'))}`)}</div>
+  <div class="st st-b"><div class="mk-titlerow">${h1('Rent at the Coliseum lots', 'Opened by Mai on 12 October. No questions yet.')}</div>${row(I('question'), '<b>Start with one question the record could answer</b>, such as “Did the city collect rent above the lease?”. Documents, notes and plans gather under it.', '')}${acts(btn('promote', 'Open a question', { tone: 'primary' }), btn('drawquestion', 'Draw on a question from elsewhere'))}</div>` });
 
 SCR.projectai = c => { const st = ({ 'projectsigninset': 'b', 'projectkeynoticeseen': 'd' })[c.wizard && c.wizard.act] || ({ signin: 'b', suspended: 'c', member: 'd' })[c.v] || 'a'; const sel = v => v === st ? ' selected' : ''; return { rail: 'projects', title: 'AI for this project', st, crumbs: ['Pothole repairs', 'AI for this project'], main: `
   <div class="mk-mockctl"><label for="mk-pst">In this mockup, show the screen for</label> <select id="mk-pst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>an owner, the project holding its own API key</option><option value="b"${sel('b')}>an owner who is the project's only member, their own sign-in serving it</option><option value="c"${sel('c')}>an owner, after a second member joined and the sign-in stopped serving</option><option value="d"${sel('d')}>a member who is not an owner</option></select></div>
