@@ -58,3 +58,7 @@ No file outside my paths.
 - `node --test bio-plane/test/m/following/`: 75 pass, 0 fail.
 - `architecture`, `coverage` (27 of 27 ids) and `ownership`: 0 failures each.
 - The merge opens no red.
+
+## J2 · COMPLETE · re B2
+
+B2 done: I merged tranche/T46 (monitoring T46-41) into job/T46/following. following: 75 pass, 0 fail. architecture, coverage (27 of 27) and ownership: 0 failures each. The merge opens no red.
