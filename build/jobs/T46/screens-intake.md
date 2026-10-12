@@ -119,3 +119,7 @@ Kit gaps after re-pointing to the real shell (B6): (1) op-grades: heldcaptures a
 ## J7 · COMPLETE · re B6
 
 Re-complete per B6: tranche/T46 merged; tests re-pointed to interface-shell's harness.mjs and dom.mjs on the real served page (my stand-in kit deleted); screens corrected to the shell's real kit (rows' hold(ids) carries extra.picked, release reasoned with reasonField acknowledgment, own-words reasonFields on testify, captureupload, writinghelp, sourcelink, cs.ref labels unescaped, cs.title headings, JSON safe view through download, draft field re-id'd). 41/41 (twice); shell 60/0. With modules.json patched locally (paths bio-plane/src/screens-intake/, tests bio-plane/test/m/screens-intake/, uses + wizard-scripts): format 0, architecture 0, coverage 9/9, ownership 0. Kit gaps in REPORT J6. Record: 'Completion, third'.
+
+## J8 · COMPLETE · re B7
+
+Re-complete per B7 (K3017): release sends handle, acknowledgment and mitigation in the query (ratification's map), the body repeating them for the shell's reasonField check and control-plane's suite; test with a control (a map-shaped reader refuses NO_ACKNOWLEDGMENT the body-only request). No retire sent here. tranche/T46 merged. screens-intake 42/42; control-plane 242/242 (R75 end-to-end release green, read back as no longer held); interface-shell 63/0; format, architecture, coverage 9/9, ownership 0. Record: 'Completion, fourth'.
