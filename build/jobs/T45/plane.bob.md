@@ -33,3 +33,7 @@ K2880, from WIZARD-SCRIPTS #8 J1: listing T45's labelled machine drafts in MACHI
 ## B3 · CHANGE
 
 K2882: queue (T45-43) and answer-envelope (T45-49) are merged into tranche/T45. Merge tranche/T45 into your branch when convenient.
+
+## B4 · CHANGE
+
+K2885, from AFFORDANCES #30 J1 (6): plane/store.mjs does not spread actionRepliesOps, planWorkOps or caseCheckOps; compose and route them in T45-47.
