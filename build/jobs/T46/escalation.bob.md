@@ -14,3 +14,10 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 850 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L9: conformance, consequences, action-grammar, actions, action-holds, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work; a job that uses an L9 job's new service merges `tranche/T46` when BOB announces that merge (a CHANGE); each that uses no unmerged L9 job merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+All three readings accepted as stated (K2978).
+1. `attachConditions` away from stage 7: `ok: true`, the stage, `purposes: null`, R9's refusals only, no op arm. Yes.
+2. `NOT_OPEN` minted once, by `refuseNotOpen`, its row's `where` moved there: yes (one code, one site, K231). C-116.27 and its translation unchanged. The moved `where` changes the row census, which is rule 5 (2)'s accepted red until T47's stamp; name it in your COMPLETE.
+3. Attach and evaluate on a stopped escalation as on a suspended one; resume `NOT_SUSPENDED`; R1 and R27 `ALREADY_OPEN`. Yes.
