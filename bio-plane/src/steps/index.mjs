@@ -68,6 +68,8 @@ export const RECIPIENTS_LIMIT = Object.freeze({ default: 500, max: 1000 });
 const DRAW_PAGE = 500, DRAW_MAX = 10000;
 /** R23: how many later-found entries one `laterFound` read takes at most, oldest first. */
 export const LATER_FOUND_SCAN = 5000;
+/** R12 (T46): the most dated steps, and the most reminders, one `stepsDue` reads; a read reaching past it says `truncated`. */
+export const DUE_READ_MAX = 1000;
 /** R30: the most steps one `stepsWaitingOn` answers. */
 export const WAITING_ON_MAX = 200;
 /** R26: the figures registered with record-core's counts, one per acceptance form. */
@@ -1075,25 +1077,30 @@ export class Steps {
   /** R12: `stepsDue({viewer, at})`, for `notice-producers`: to the member who set each date only, each step past its
    *  date and not closed, and each reminder she asked for, from its day; each with a stable key. R29: a step whose
    *  date the registered holder holds draws no past-date item (the action's clock entry is the one item); her own
-   *  reminders stay. */
+   *  reminders stay. T46: each read takes at most `DUE_READ_MAX` rows (her dated steps not closed, in step order; her
+   *  reminders due by that day, in the order she asked them); when either holds more, the answer carries
+   *  `truncated: true` beside `due`, and otherwise no `truncated`, so a bound reached is never silent. */
   stepsDue({ viewer = null, at = null } = {}) {
     const member = this.#memberOf(viewer);
     const today = filled(at) ? this.#today(at) : null;
     if (!member) return { ok: true, due: [] };
     if (!today) return { ok: true, due: [], undetermined: true, why: "no time zone is held for your group's Civicsmith, or no instant was given" };
     const due = [];
-    for (const r of this.#rows(`SELECT * FROM steps WHERE by_when_by = ? AND state NOT IN ('ended', 'set_aside') ORDER BY step_id LIMIT 1000`, member)) {
+    const dated = this.#rows(`SELECT * FROM steps WHERE by_when_by = ? AND state NOT IN ('ended', 'set_aside') ORDER BY step_id LIMIT ?`, member, DUE_READ_MAX + 1);
+    const reminders = this.#rows(`SELECT m.seq, m.day, s.* FROM step_reminders m JOIN steps s ON s.step_id = m.step_id
+                                  WHERE m.member = ? AND m.day <= ? AND s.state NOT IN ('ended', 'set_aside') ORDER BY m.seq LIMIT ?`, member, today, DUE_READ_MAX + 1);
+    const truncated = dated.length > DUE_READ_MAX || reminders.length > DUE_READ_MAX;
+    for (const r of dated.slice(0, DUE_READ_MAX)) {
       const b = parse(r.by_when_json);
       if (!isObj(b) || !(b.date < today) || !this.#seen(r, viewer)) continue;
       if (this.#heldBy(r)) continue;                 /* R29: the action's clock entry is that date's one item */
       due.push({ step: r.step_id, work: r.work, kind: "past_date", date: b.date, key: sha256HexSync(`steps:due:${r.step_id}:${b.date}`) });
     }
-    for (const m of this.#rows(`SELECT m.seq, m.day, s.* FROM step_reminders m JOIN steps s ON s.step_id = m.step_id
-                                 WHERE m.member = ? AND m.day <= ? AND s.state NOT IN ('ended', 'set_aside') ORDER BY m.seq LIMIT 1000`, member, today)) {
+    for (const m of reminders.slice(0, DUE_READ_MAX)) {
       if (!this.#seen(m, viewer)) continue;
       due.push({ step: m.step_id, work: m.work, kind: "reminder", date: m.day, key: sha256HexSync(`steps:reminder:${m.seq}`) });
     }
-    return { ok: true, due };
+    return truncated ? { ok: true, due, truncated: true } : { ok: true, due };
   }
 
   /* ---- money cost (R13–R15) ---- */
