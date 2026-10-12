@@ -1,6 +1,9 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R131; T46's R131 `join_doors` declared `export: never` (K2928);
+ * Requirements: build/requirements/membership.md (R4–R132; T47's R83 order (`case-inputs`, `action-records`,
+ * `screens-wizards`, `screens-investigate`, `screens-publish`, `screens-action`; T47-7, K657, K3027, N991) and R132, the
+ * pre-auth `bootstrap` answer's invariant (REC-41), held by `test/members.test.mjs` (the answer is `instance-setup`'s and
+ * `credentials`'; nothing here builds it); T46's R131 `join_doors` declared `export: never` (K2928);
  * R129 `handleChange` refusing every change
  * `HANDLE_FIXED` (R124 retired; DEC-197, K2903), R16, R17, R125 and R126 as amended, R130 `joinDoors` (N654) and R83 order
  * (`interface-assets`, `interface-shell`, `screens-settings`, `screens-intake`, `screens-daily`, `screens-inquiry`; T46-4,
@@ -260,7 +263,10 @@ export function notTheOwner(by, projectId, extra = null) {
    in layer 8, `action-holds` after `actions`, `action-replies` after `action-clocks` and `plan-work` after `action-plans`
    in layer 9, `action-producers` after `machinery-producers` in layer 11; `stewards` last, after `installer`, in layer 11 (K2799). T46-4 (K2914, K657): `interface-assets`,
    `interface-shell`, `screens-settings`, `screens-intake`, `screens-daily` and `screens-inquiry` after `store-door` and
-   before `control-plane` in layer 11. */
+   before `control-plane` in layer 11. T47-7 (K657, K3027, N991): `case-inputs` after `case-account` in layer 8,
+   `action-records` after `action-grammar` in layer 9, `screens-wizards` after `interface-shell`, and
+   `screens-investigate`, `screens-publish`, `screens-action` after `screens-inquiry` and before `control-plane`, in
+   layer 11. */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
           "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
@@ -281,15 +287,16 @@ export const MODULE_ORDER = Object.freeze([
   /* 7 */ "intent", "investigation", "reevaluation",
   /* 8 */ "case-grammar", "corpus-export", "case-carriage", "case-tensions", "publication", "publish-schedule",
           "docket", "public-read", "project-stage", "network-notices", "case-catalogue", "ratification", "case-checker", "case-import",
-          "case-disclosures", "case-account", "case-authoring", "review", "case-check",
-  /* 9 */ "conformance", "consequences", "action-grammar", "actions", "action-holds", "action-clocks", "action-replies",
+          "case-disclosures", "case-account", "case-inputs", "case-authoring", "review", "case-check",
+  /* 9 */ "conformance", "consequences", "action-grammar", "action-records", "actions", "action-holds", "action-clocks", "action-replies",
           "filing-templates", "filings", "escalation", "action-plans", "plan-work",
   /* 10 */ "monitoring", "following", "link-sweep", "scheduler",
   /* 11 */ "wizard-scripts", "op-grades", "affordances", "tasks", "machinery-producers", "action-producers",
            "queue-producers",
            "notice-producers", "queue", "setup-page", "setup-words", "instance-setup", "op-declarations", "admission",
-           "answer-envelope", "store-door", "interface-assets", "interface-shell", "screens-settings",
-           "screens-intake", "screens-daily", "screens-inquiry", "control-plane", "plane", "legacy-ui", "installer", "stewards",
+           "answer-envelope", "store-door", "interface-assets", "interface-shell", "screens-wizards",
+           "screens-settings", "screens-intake", "screens-daily", "screens-inquiry", "screens-investigate",
+           "screens-publish", "screens-action", "control-plane", "plane", "legacy-ui", "installer", "stewards",
 ]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -403,7 +410,7 @@ export class Membership {
   }
   #declared = false;
 
-  /* ===== R96 (K861; plane R10) — THIS MODULE'S SHARE OF THE INSTANCE'S FIGURES =====
+  /* ===== R114 (was R96's participation half; K861; plane R10) — THIS MODULE'S SHARE OF THE INSTANCE'S FIGURES =====
    *
    * The figures `op=stats` and purge's proof report of this module's project-keyed tables (REC-27, D-137: the
    * participation graph and the pending owner votes, so a purge can PROVE it took them), shaped as record-core R63's
@@ -1727,7 +1734,7 @@ export class Membership {
       .map((r) => r.member_id);
   }
 
-  /* The owners committed to the project: every owner who has not asked to leave (R35, R40). */
+  /* The owners committed to the project: every owner who has not asked to leave (R35; `project-roster` R4 reads the same set). */
   #committedOwners(projectId) {
     return this.#rows(`SELECT member_id FROM project_participants WHERE project_id=? AND owner=1 AND state<>'leaving'`,
       projectId).map((r) => r.member_id);

@@ -1,7 +1,7 @@
 /* T20 layer 2 (K861, plane R10); T38 (N783): R114 (was R96's participation half), this module's share of the instance's figures, a source shaped as record-core
    R63's `counts(hid)` with its key list, which `plane` registers under this module's name. Proved at the interface: the
    source alone, then registered through the REAL record-core's R63 under this module's name, as `plane` registers it
-   (plane R10), and read as `op=stats` and purge's proof read it, each answer held against R96's statement of the
+   (plane R10), and read as `op=stats` and purge's proof read it, each answer held against R114's statement of the
    figure, pinned here (the owner-votes figure is project-roster's, its R17): `count(*)` less the rows whose key, read as `COALESCE(key, '')`, is in `hid`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";

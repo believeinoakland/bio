@@ -111,7 +111,7 @@ test("R128 the guard is asked after each act's own refusals: an act its own rule
   assert.deepEqual(w.calls.map((c) => c.act), ["invite", "visibility"]);
 });
 
-test("R128 R126 a guard that throws, answers a promise or anything but null or a refusal refuses PROJECT_GUARD_UNCHECKED (C-56.6), fail closed, writing nothing", async () => {
+test("R128 a guard that throws, answers a promise or anything but null or a refusal refuses PROJECT_GUARD_UNCHECKED (C-56.6), fail closed, writing nothing", async () => {
   const answers = [
     ["throws", () => { throw new Error("roster unreadable"); }],
     ["a promise", () => Promise.resolve(null)],
@@ -182,7 +182,7 @@ test("R128 the ops reach the guard: op=projectinvite and op=projectvisibilityset
                              { act: "visibility", projectId: P, by: "ann", setting: "discoverable" }]);
 });
 
-test("R128 R126 R112 PROJECT_GUARD_UNCHECKED is this module's row C-56.6, minted at its one region, its words naming no plane, server, copy or instance", () => {
+test("R128 R112 PROJECT_GUARD_UNCHECKED is this module's row C-56.6, minted at its one region, its words naming no plane, server, copy or instance", () => {
   const row = MEMBERSHIP_CHECKS.PROJECT_GUARD_UNCHECKED;
   assert.equal(row.check, "C-56.6");
   assert.equal(row.where, "src/membership/index.mjs #projectActGuarded > is-project-guard-checked");

@@ -446,9 +446,19 @@ console.log("\n--- REC-41: what a STRANGER is told by op=bootstrap ---");
  * behind them. bootstrap.test.mjs claims a single admin and could not tell a
  * closed roster from an empty one — an outcome that costs nothing to produce is
  * not evidence. */
+/* FIRST, THE SWEEP IS NOT PASSING BECAUSE THE FIXTURE IS EMPTY. If this
+   instance held no credentials the assertions below would pass on a store
+   with nothing to leak, which is the equality-that-costs-nothing trap. The
+   roster is proved to EXIST, through the gated op that is entitled to show it,
+   before the anonymous answer is asserted to withhold it. */
+const rosterNow = (await GET(`op=memberlist&token=t-admin-1`)).result.members.map((m) => m.member_id).sort();
+t("R132 REC-41: the instance really does hold the roster the stranger was not shown",
+  rosterNow, ["meilan", "ruth"]);
 const anon = await GET("op=bootstrap");
-/* Every (path, value) leaf and every key path in the answer, so nesting cannot
-   hide a disclosure from a top-level check. */
+/* R132 (T47-7; N989, K3027): REC-41 stated as membership's requirement. The arms below are one function, so the
+   same instrument that judges the live answer is run on mutants of it (K874's negative control): an arm that passed a
+   mutant would be testing nothing. Every (path, value) leaf and every key path in the answer, so nesting cannot hide a
+   disclosure from a top-level check. */
 const walk = (v, path, out) => {
   if (v !== null && typeof v === "object") {
     for (const k of Object.keys(v)) {
@@ -459,18 +469,12 @@ const walk = (v, path, out) => {
   } else out.push([path, v]);
   return out;
 };
-const leaves = walk(anon, "$", []);
 const flat = (x) => String(x).toLowerCase();
 /* (1) NO ROLE NAME, ANYWHERE. Every credentialled role this fixture created,
    plus the member ids and handles behind them, searched as a SUBSTRING of every
    key and every value — so `roles`, `credentials:["member:ruth"]`, a key named
    `member:ruth`, or a bare `ruth` inside some summary string all fail alike. */
 const NAMES = ["admin", "ruth", "meilan", "member:ruth", "member:meilan"];
-const roleHits = leaves
-  .filter(([p, v]) => NAMES.some((n) => flat(p).includes(n) || flat(v).includes(n)))
-  .map(([p, v]) => p + " = " + JSON.stringify(v));
-t("REC-41: an anonymous op=bootstrap names NO credentialled role, at any key, at any depth",
-  roleHits, []);
 /* (2) NO PASSWORD DATE, ANYWHERE. Any ISO-8601 instant reaching a stranger is a
    failure EXCEPT the one that is not a password date: `consumedAt` is when this
    INSTANCE was claimed — one fact about this copy of the software, naming
@@ -478,32 +482,59 @@ t("REC-41: an anonymous op=bootstrap names NO credentialled role, at any key, at
    its operator. It is allowed BY PATH, not by value, so a password date that
    happens to equal it is still caught somewhere else. */
 const ISO = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
-const dateHits = leaves
-  .filter(([p, v]) => ISO.test(String(v)) && p !== "$.consumedAt")
-  .map(([p, v]) => p + " = " + JSON.stringify(v));
-t("REC-41: and NO password date — the only instant it may carry is the instance's own claim time",
-  dateHits, []);
-/* (3) THE SHAPE ITSELF IS FLAT AND ENUMERATED. A roster is a collection, so an
-   answer with no collections in it cannot carry one; and pinning the key set
-   EXACTLY means a NEW field fails by name rather than being swept under the two
-   checks above. This is the arm that catches a disclosure whose values happen to
-   dodge both patterns. */
-t("REC-41: the answer carries no nested object or array at all",
-  leaves.filter(([, v]) => v === "«key»").map(([p]) => p).filter((p) => p.slice(1).split(".").length > 2), []);
-/* MOVED BY ONE KEY at D-116 (2026-09-23), through its IC in INTERFACE-CHANGES.md: `storeVersion` is the build the
-   Durable Object itself runs — a release label like `version` beside it, naming nobody and no date, and the one fact
-   that tells an installer whether the record's store took an update. The pin still fails by name on any OTHER key. */
-t("REC-41: and its key set is exactly what the pre-auth question needs, nothing more",
-  Object.keys(anon).sort(),
-  ["bootstrapConfigured", "claimed", "consumedAt", "ok", "rearmed", "service", "storeVersion", "version"]);
-/* (4) AND THE SWEEP IS NOT PASSING BECAUSE THE FIXTURE IS EMPTY. If this
-   instance held no credentials the four assertions above would pass on a store
-   with nothing to leak, which is the equality-that-costs-nothing trap. The
-   roster is proved to EXIST, through the gated op that is entitled to show it,
-   before the anonymous answer is asserted to withhold it. */
-const rosterNow = (await GET(`op=memberlist&token=t-admin-1`)).result.members.map((m) => m.member_id).sort();
-t("REC-41: the instance really does hold the roster the stranger was not shown",
-  rosterNow, ["meilan", "ruth"]);
+/* (4) THE KEY SET, exactly R132's: the pre-auth question's eight (`storeVersion` moved in by D-116, 2026-09-23, through
+   its IC) and, by name (N989, K3027), `test_instance` and the three flat parts, each a scalar. A NEW key fails by name
+   rather than being swept under the other arms. */
+const R132_KEYS = ["bootstrapConfigured", "claimed", "consumedAt", "ok", "rearmed", "service", "storeVersion", "version",
+  "test_instance", "part_signin", "part_scanner", "part_safe_view"];
+const R132_SCALARS = ["test_instance", "part_signin", "part_scanner", "part_safe_view"];
+const r132 = (answer) => {
+  const leaves = walk(answer, "$", []);
+  return {
+    names: leaves.filter(([p, v]) => NAMES.some((n) => flat(p).includes(n) || flat(v).includes(n)))
+      .map(([p, v]) => p + " = " + JSON.stringify(v)),
+    dates: leaves.filter(([p, v]) => ISO.test(String(v)) && p !== "$.consumedAt")
+      .map(([p, v]) => p + " = " + JSON.stringify(v)),
+    /* (3) THE SHAPE ITSELF IS FLAT. A roster is a collection, so an answer with no collections in it cannot carry one.
+       Judged on the value at every key, so an EMPTY array or object fails as surely as a full one. */
+    nested: Object.entries(answer).filter(([, v]) => v !== null && typeof v === "object").map(([k]) => "$." + k),
+    keys: JSON.stringify(Object.keys(answer).sort()) === JSON.stringify([...R132_KEYS].sort()) ? [] : Object.keys(answer).sort(),
+    scalars: R132_SCALARS.filter((k) => !(k in answer) || ![true, false, null].includes(answer[k]))
+      .map((k) => k + " = " + JSON.stringify(answer[k])),
+  };
+};
+const seen = r132(anon);
+t("R132 REC-41: an anonymous op=bootstrap names NO credentialled role, member id or handle, at any key, at any depth",
+  seen.names, []);
+t("R132 REC-41: and NO password date — the only instant it may carry is the instance's own claim time",
+  seen.dates, []);
+t("R132 REC-41: the answer carries no nested object or array at any key, empty or not", seen.nested, []);
+t("R132 REC-41: and its key set is exactly R132's: the pre-auth question's keys, test_instance and the three flat parts",
+  seen.keys, []);
+t("R132: test_instance, part_signin, part_scanner and part_safe_view are each present and a scalar (true, false or null)",
+  seen.scalars, []);
+/* K874's negative control: each arm refuses a mutant of a compliant answer that breaks it, and passes the compliant one
+   (so the live answer's red or green is the answer's, never the instrument's). */
+{
+  const good = { bootstrapConfigured: true, claimed: true, consumedAt: "2026-10-12T00:00:00.000Z", ok: true,
+    rearmed: false, service: "bio-plane", storeVersion: "x", version: "test", test_instance: false,
+    part_signin: true, part_scanner: null, part_safe_view: null };
+  const clean = r132(good);
+  t("R132 negative control: the instrument passes a compliant answer on every arm",
+    [clean.names, clean.dates, clean.nested, clean.keys, clean.scalars], [[], [], [], [], []]);
+  const fires = (mutant, arm) => r132(mutant)[arm].length > 0;
+  t("R132 negative control: each arm fires on its own breach — a handle in a value, a password date, an empty "
+  + "nested array, a nested parts object, an extra key, a missing part, a part that is not a scalar",
+    [fires({ ...good, service: "bio for ruth" }, "names"),
+     fires({ ...good, rearmed: "2026-08-04T19:08:37.880Z" }, "dates"),
+     fires({ ...good, test_instance: [] }, "nested"),
+     fires({ ...good, parts: [{ part: "signin", present: true }] }, "nested"),
+     fires({ ...good, members: 2 }, "keys"),
+     fires(Object.fromEntries(Object.entries(good).filter(([k]) => k !== "part_scanner")), "keys"),
+     fires(Object.fromEntries(Object.entries(good).filter(([k]) => k !== "part_scanner")), "scalars"),
+     fires({ ...good, part_signin: "yes" }, "scalars")],
+    [true, true, true, true, true, true, true, true]);
+}
 
 console.log("\n--- REC-41: and the refusals COST the same, or a stopwatch undoes them ---");
 /* IDENTICAL WORDS ARE NOT AN IDENTICAL ANSWER IF ONE ARRIVES IN A MILLISECOND
