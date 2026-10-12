@@ -1,6 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R130; T46's R129 `handleChange` refusing every change
+ * Requirements: build/requirements/membership.md (R4–R131; T46's R131 `join_doors` declared `export: never` (K2928);
+ * R129 `handleChange` refusing every change
  * `HANDLE_FIXED` (R124 retired; DEC-197, K2903), R16, R17, R125 and R126 as amended, R130 `joinDoors` (N654) and R83 order
  * (`interface-assets`, `interface-shell`, `screens-settings`, `screens-intake`, `screens-daily`, `screens-inquiry`; T46-4,
  * K2914, K657); T45's R128 `registerProjectActGuard` and R83 order (`case-check`,
@@ -30,8 +31,8 @@
  */
 import { MACHINE_CLASS_PREFIX, sha256HexSync } from "../record-grammar/index.mjs";
 import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLES,
-         MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
-export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "./schema.mjs";
+         MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_DECLARED_TABLES } from "./schema.mjs";
+export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES, MEMBERSHIP_DECLARED_TABLES } from "./schema.mjs";
 import { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
          CASE_AUTHORITY_CHECKS, HANDLE_WORDS } from "./checks.mjs";
 export { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
@@ -377,17 +378,26 @@ export class Membership {
     if (cols("bundles").length) this.reindexProjectSight();
   }
 
-  /* R115 (was R59), through record-core's `declarePurge` (its R21) once record-core provides it. */
+  /* R115 (was R59), through record-core's `declarePurge` (its R21's default form); R131 (T46) through its `declareTable`. */
   declareTables() {
     if (this.#declared) return false;
     /* record-core R21/R46: the project-keyed tables, keyed to a bundle (the project) by `project_id`, and the
-       exempt ones named once, as exempt. Its answer is read: a refusal (a table another module declared) is
-       thrown, because a purge that silently skipped these tables would leave the participation graph behind. */
-    const answer = this.core.declarePurge("membership",
-      MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })),
-      { exempt: [...MEMBERSHIP_EXEMPT_TABLES] });
-    if (answer && answer.ok === false)
-      throw new Error(`membership: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+       exempt ones named once, as exempt, in the default form; R131: `join_doors` with its own classes (`export: never`),
+       so it is left out of the default form. Each answer is read: a refusal (a table another module declared) is
+       thrown, because a purge that silently skipped these tables would leave the participation graph behind, and an
+       export that took the doors' hashes would carry what R111 holds back. */
+    /* A host whose record-core offers no `declareTable` (a test's stand-in; record-core R21 provides it on every real
+       host) declares these tables in the default form, as before R131: it states their purge class, all it can state. */
+    const explicit = typeof this.core.declareTable === "function";
+    const own = new Set(explicit ? MEMBERSHIP_DECLARED_TABLES.map((t) => t.name) : []);
+    const answers = [
+      this.core.declarePurge("membership", MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })),
+        { exempt: MEMBERSHIP_EXEMPT_TABLES.filter((t) => !own.has(t)) }),
+      ...(explicit ? [this.core.declareTable("membership", MEMBERSHIP_DECLARED_TABLES.map((t) => ({ ...t })))] : []),
+    ];
+    for (const answer of answers)
+      if (answer && answer.ok === false)
+        throw new Error(`membership: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
     this.#declared = true;
     return true;
   }

@@ -123,7 +123,7 @@ test("R45 R85 migrate recomputes the sight index from the owners' acts, so a dis
 
 test("R59 migrate on a host whose record-core has made no bundles table creates membership's tables and indexes nothing", () => {
   const db = new DatabaseSync(":memory:");
-  const m = new Membership({ sql: sqlOver(db), core: { declarePurge() { return { ok: true }; } } });
+  const m = new Membership({ sql: sqlOver(db), core: { declarePurge() { return { ok: true }; }, declareTable() { return { ok: true }; } } });
   assert.doesNotThrow(() => m.migrate());
   assert.deepEqual(sqlOver(db).exec(`SELECT * FROM project_sight`), []);
 });

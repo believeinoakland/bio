@@ -86,7 +86,7 @@ test("R114 a NULL key names no bundle, so hid never drops its row; it writes not
              owner INTEGER NOT NULL DEFAULT 0, owner_order INTEGER, invited_by TEXT, comment TEXT, created TEXT NOT NULL,
              updated TEXT NOT NULL)`);
   const sql = sqlOver(db);
-  const m = new Membership({ sql, core: { declarePurge() { return { ok: true }; } } });
+  const m = new Membership({ sql, core: { declarePurge() { return { ok: true }; }, declareTable() { return { ok: true }; } } });
   m.migrate();
   db.exec(`INSERT INTO bundles VALUES ('PROJ-A','project','A',NULL)`);
   for (const p of ["PROJ-A", null]) {
