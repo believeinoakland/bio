@@ -44,3 +44,7 @@ Found outside my module (details in my record's Completion):
 2. Requirement text, yours: R17 still cites membership R72 for `bootstrapState` (now credentials R2); R54's first paragraph says credentials reads `disclosureOf`, but neither its requirements nor its code do — only control-plane R65 at a sign-in's `start` — so nothing server-side orders the disclosure before an API-key reference is set (only the screen's order); R81 says the `connect` screen reads `parts`, which screens-settings' requirements do not list.
 3. file-scanner's `/version` names no separate renderer, so `safe_view` always equals `scanner` under R81 as worded.
 4. Also my reading of a gap in R17: an agent-worker that serves but answers no `runner` (a build before its R30) reports agent-runner `SILENT` with why, never `SERVING` (parts' signin null).
+
+## J3 · COMPLETE
+
+T46-50 applied: R79 infolevelset/infolevel (C-64.28, C-64.29 per K2996; table member_info_levels), R80 test_instance (via ai-runs' own testInstance; edge instance-setup → ai-runs, already in modules.json), R81 parts (always answered), R17 agent-runner through agent-worker's runner, R54 tested (behaviour already met). New exports: INFO_LEVELS, INFO_LEVEL_DEFAULT, testInstanceOf, partsReport, PARTS. No file outside my paths. Module tests 157/157; format, architecture, coverage (63/63), ownership 0 failures; run.mjs architecture 0. One red outside the module, plane door.test's route count, for T46-62 (REPORT J2). Record: Completion section.
