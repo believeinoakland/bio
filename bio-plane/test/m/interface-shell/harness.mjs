@@ -61,7 +61,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
       body: init.body === undefined ? undefined : typeof init.body === "string" ? safeJson(init.body) : init.body, method: init.method || "GET" };
     requests.push(req);
     let a = answers[op];
-    if (typeof a === "function") a = a(req);
+    if (typeof a === "function") a = await a(req);
     if (a === undefined) a = ok(null);
     if (a.pending) return new Promise(() => {});
     if (a.silent) throw new TypeError("Failed to fetch");

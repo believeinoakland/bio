@@ -63,3 +63,13 @@ Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 22, module lines 1098 (src; t
 ## J4 · COMPLETE
 
 B5/B6 (K3002) applied: R11's ground rule and reasonField; R21's parts, origin, filled refusal words, refusal functions, {refuse, fills}, cs.value checked, cs.digest, cs.now, no cs.open. Tests 60/60; format, architecture, coverage, ownership 0 failures. See the record's 'Re-opened by B5, B6'. Merge after setup-page (R31) and op-declarations (R50) as before.
+
+## Re-opened by B8 (K3009)
+
+**Applied.** (1) An act's `done` that answers a promise is awaited before the reads named in `rereads` (or all). (2) After an act succeeds, every password field in the page (`input[type="password"]`) is cleared before `done` and any redraw, so no secret is restored by a redraw; a refused act keeps what was typed (R13). Harness: a plane answer given as a function may answer a promise.
+
+**R21 wording for BOB to state (K3009):** "After an act succeeds the shell clears every password field the screen drew, before the act's `done` and any redraw; an act's `done` that answers a promise is awaited before the reads named in `rereads` (all when absent)."
+
+**Tests and checks:** `node --test bio-plane/test/m/interface-shell/`: tests 61, pass 61, fail 0 (new: R21 K3009, with its controls: a refused act keeps the typed password, a plain field is kept; and, run once with the `await` removed, the test fails). The screen modules' tests over this shell: screens-settings (merged, on the tranche) 51/51; screens-intake 42/42, screens-daily 45/45, screens-inquiry 44/44 (each its job branch's head in a scratch worktree over this branch). `format` 0 failures; `architecture … interface-shell` 13 product files, 0 failures; `coverage … interface-shell` 26 of 26; `ownership … interface-shell tranche/T46` 0 failures.
+
+Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 27, module lines 1102 (src)

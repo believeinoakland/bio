@@ -279,3 +279,31 @@ test("R21 (K3002) parts in view.parts, view.origin, a refusal word filled from t
     assert.ok(q.root().querySelector('[data-slot="m:0"]').textContent.includes("THE-DETAIL"));
   }
 });
+
+test("R21 (K3009) an act's done that answers a promise is awaited before the reads named in rereads; and after an act succeeds every password field its screen drew is cleared, surviving no redraw (controls: a refused act keeps it; a plain field is kept)", async () => {
+  const s = { id: "account", reads: () => ({ r: { op: "memberlanguage" } }),
+    acts: [{ op: "setpassword", send: (view, el, cs) => ({ body: { current: cs.value("cur"), password: cs.value("new") } }),
+      done: async (view, answer, cs) => { await cs.call("signerlist", {}); }, rereads: ["r"] }],
+    render: (cs) => cs.field("cur", "shell.reason", { type: "password" }) + cs.field("new", "shell.reason", { type: "password" }) + cs.field("plain", "shell.reason") + cs.act("setpassword") };
+  let seq = [];
+  const plane = (answer) => ({ setpassword: answer, memberlanguage: () => (seq.push("reread"), ok({ language: "en" })), signerlist: async () => { await new Promise((r) => setTimeout(r, 20)); seq.push("done"); return ok({}); } });
+  const p = await boot({ screens: [s], path: "/app/account", plane: plane(ok({ ok: true })) });
+  seq = [];
+  for (const [id, v] of [["cur", "old-secret"], ["new", "new-secret"], ["plain", "kept"]]) p.doc.getElementById(id).value = v;
+  const b = p.root().querySelector('button[data-act="setpassword"]');
+  await p.click(b);
+  if (p.root().querySelector('[data-shell="reason-send"]')) { p.root().querySelector("textarea").value = "r"; await p.click(p.root().querySelector('[data-shell="reason-send"]')); }
+  for (let i = 0; i < 100 && !seq.includes("reread"); i++) await new Promise((r) => setTimeout(r, 5));
+  await p.settle();
+  assert.deepEqual(seq, ["done", "reread"], "done awaited before the re-read");
+  assert.deepEqual(p.byOp("setpassword")[0].body, { current: "old-secret", password: "new-secret" });
+  assert.equal(p.doc.getElementById("cur").value, "");
+  assert.equal(p.doc.getElementById("new").value, "");
+  assert.equal(p.doc.getElementById("plain").value, "kept");
+  assert.ok(!p.root().innerHTML.includes("secret"));
+  const q = await boot({ screens: [s], path: "/app/account", plane: plane(refused("BAD_PASSWORD", "Wrong.")) });
+  q.doc.getElementById("cur").value = "old-secret";
+  await q.click(q.root().querySelector('button[data-act="setpassword"]'));
+  if (q.root().querySelector('[data-shell="reason-send"]')) { q.root().querySelector("textarea").value = "r"; await q.click(q.root().querySelector('[data-shell="reason-send"]')); }
+  assert.equal(q.doc.getElementById("cur").value, "old-secret", "a refused act keeps what was typed (R13)");
+});

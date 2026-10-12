@@ -608,7 +608,11 @@ export function shellProgram(D, SCREENS, win) {
       return besideAct(ai, refusalHtml(words));
     }
     let after = null;
-    try { after = d.spec.done ? d.spec.done(inst.view, a.value, kit(inst)) : null; } catch { after = null; }
+    /* R21 (K3009): no secret survives a successful act: every password field its screen drew is cleared, so no redraw
+       restores one */
+    for (const el of doc.getElementById("cs-root").querySelectorAll('input[type="password"]')) el.value = "";
+    /* R21 (K3009): a `done` that answers a promise is awaited before the re-reads, so a follow-up act does not race them */
+    try { after = d.spec.done ? await d.spec.done(inst.view, a.value, kit(inst)) : null; } catch { after = null; }
     if (after && after.stay) return draw();
     if (inst === MAIN || inst === DOCKI) readAll(inst, d.spec.rereads || null);
   }
