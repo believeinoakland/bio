@@ -187,12 +187,12 @@ const keepAwayBlock = (p) => `<div class="card" id="${p}-ka">
    built in comes first; the catalogue is read and drawn as file-safety answers it; adding a tool asks only what its
    entry names, and the credentials go once, in the request's body. Its opening words are the design stream's for the
    time before Settings › Security exists (UX-DESIGN U125 (3), K2159); once that screen exists its last sentence ends
-   "you can add it now, or later in Settings › Security". */
+   "you can add it now, or later in Settings › Security". (T46; N897 (4)) Those words, and every sentence saying files are
+   scanned, are drawn by the script only while op=bootstrap's parts answers a scanner present (drawBuiltIn, below): the
+   template holds none of them. */
 const securityBlock = (p) => `<div class="card" id="${p}-st">
-    <p style="margin:0 0 10px"><b>Your organization's own security tools (optional).</b> Civicsmith scans every file it
-    captures with its own scanner and opens risky ones in a safe view. If your organization already uses a file scanner, a
-    safe-copy maker or a log service, you can add it here, now or later.</p>
-    <p class="small">You can skip this step: adding nothing records nothing, and nothing needs adding.</p>
+    <p style="margin:0 0 10px"><b>Your organization's own security tools (optional).</b> <span id="${p}-st-built"></span></p>
+    <p class="small" id="${p}-st-skip"></p>
     <div id="${p}-st-tools"></div>
     <div id="${p}-st-cat"></div>
     <div id="${p}-st-form" hidden>
@@ -237,6 +237,13 @@ export const NONCE_SLOT = "__CSP_NONCE__";
 /* R27 (F10; K1874 (Q6)): where the guide to replacing the one-time password is reached. A link to it anywhere on the
    page, R14's block included (instance-setup R47 writes that link), opens the guide, signed in or out. */
 export const ROTATION_GUIDE_HREF = "#replace-one-time-password";
+/* R31 (T46; interface §5 I4): the session record's key in the browser's sessionStorage, the record the interface
+   (interface-shell R3) reads to take over a session signed in here: {t, e, c, w}, t the token op=login answered, e its
+   expiry (0 when none), c the instant the group was claimed ("" when unread), w the name signed in with. Never
+   localStorage, a cookie or an address; removed on a 401. */
+export const SESSION_STORE_KEY = "bio-session";
+/* R32 (T46; Bob, K2893: Home): where a member lands after signing in, the new interface's Home. */
+export const HOME_HREF = "/app";
 const MACHINE_VOCAB_JSON = JSON.stringify({ authors: NON_MEMBER_AUTHORS, classes: ACTOR_CLASSES, prefixes: MACHINE_STAMP_PREFIXES });
 
 /* R29: the recovery codes, shown once where they are issued: `cl` at the claim, `mk` in members and keys. The codes are
@@ -345,6 +352,9 @@ table.rec tr.row:hover td{background:#F6F7F2}
 <body>
 <main>
 ${GROUP_LINE_UNREAD}
+<!-- R33 (T46; N897 (2); instance-setup R80): shown to every visitor, on the first view and the healthy panel, only
+     while op=bootstrap answers test_instance true; it offers no act and names no value of the setting. -->
+<div class="notice" id="test-instance" hidden><p style="margin:0" id="test-instance-words"></p></div>
 
 <section id="s-loading" class="on">
   <h1>One moment</h1>
@@ -414,6 +424,8 @@ ${GROUP_LINE_UNREAD}
     ${groupKeyBlock("cl")}
     ${securityBlock("cl")}
     <div class="actions"><button id="claim-on">Go on to your group's Civicsmith</button></div>
+    <!-- R32: the same link the panel offers, once the steps above are done or left. -->
+    <p><a class="filelink" id="cl-app" href="${HOME_HREF}">Open your group's Civicsmith</a></p>
   </div>
 </section>
 
@@ -449,6 +461,10 @@ ${GROUP_LINE_UNREAD}
     <div class="kv"><span class="k">Signed in as</span><span class="v" id="p-roles"></span></div>
     <div class="kv"><span class="k">Session expires</span><span class="v" id="p-expires"></span></div>
   </div>
+  <!-- R30 (T46; instance-setup R81): each part op=bootstrap's parts answers, installed, not installed or not read. -->
+  <div class="card" id="p-parts"></div>
+  <!-- R32 (Bob, K2893: Home): the new interface's Home, beside the settings sections kept here. -->
+  <p><a class="filelink" id="go-app" href="${HOME_HREF}">Open your group's Civicsmith</a></p>
   ${languageBlock("ln")}
   <div class="actions" style="margin:22px 0 6px">
     <button id="go-browse">Browse the record</button>
@@ -829,6 +845,32 @@ ${GROUP_LINE_UNREAD}
 </main>
 <script nonce="${NONCE_SLOT}">
 const $ = (s)=>document.querySelector(s);
+/* R31: the session record's key, the module's export, never a second spelling of it. */
+const SESSION_STORE_KEY = ${JSON.stringify(SESSION_STORE_KEY)};
+/* R32: a member signed in through op=login, or enrolled and signed in, is taken to the interface's Home, the session
+   handed over by R31's record (written by signIn before she leaves). */
+const goHome = ()=>{ location.assign(${JSON.stringify(HOME_HREF)}); };
+/* The last op=bootstrap answer, or null when it did not answer: R30's parts and R33's test_instance are read from it. */
+let BOOT = null;
+/* R33: the test-instance notice, shown only while bootstrap answered test_instance exactly true. */
+const TEST_INSTANCE_WORDS = "This group's Civicsmith is for testing. Parts of its assistant have not yet passed Civicsmith's tests; "
+  + "each answer they give says so.";
+function bootRead(b){
+  BOOT = b && typeof b === "object" ? b : null;
+  const on = !!(BOOT && BOOT.test_instance === true);
+  $("#test-instance-words").textContent = on ? TEST_INSTANCE_WORDS : "";
+  $("#test-instance").hidden = !on;
+  return BOOT;
+}
+/* R33: a first view reached without the bootstrap read (an invitation, a join link) reads it for the notice; it carries
+   nothing of the link (R2). */
+const bootNotice = ()=>{ api("bootstrap").then(bootRead, ()=>bootRead(null)); };
+/* R30 (T46; instance-setup R81): one part's presence as bootstrap's parts answers it: true, false, or null (not read). */
+const partOf = (name)=>{
+  const parts = BOOT && Array.isArray(BOOT.parts) ? BOOT.parts : null;
+  const x = parts && parts.find((p)=>p && p.part === name);
+  return x && (x.present === true || x.present === false) ? x.present : null;
+};
 /* R29: leaving the section that shows recovery codes forgets them (forgetCodes, below). */
 let SHOWN = "#s-loading";
 const show = (id)=>{
@@ -839,7 +881,7 @@ const show = (id)=>{
    never in its address, its query or its body, and never in a link the page writes. */
 const auth = ()=>({ Authorization: "Bearer " + SESSION });
 /* R26: a 401 signs the page out, as it always has. */
-const signedOut = ()=>{ SESSION = null; try{sessionStorage.removeItem("bio-session");}catch{}; show("#s-login"); throw new Error("signed out"); };
+const signedOut = ()=>{ SESSION = null; try{sessionStorage.removeItem(SESSION_STORE_KEY);}catch{}; show("#s-login"); throw new Error("signed out"); };
 /* R27: the guide to replacing the one-time password, opened by a link to it from wherever the page shows one; its
    fragment is stripped at once, as every fragment is, and Back returns to where the member was. */
 const ROTATION = ${JSON.stringify(ROTATION_GUIDE_HREF)};
@@ -884,6 +926,7 @@ const NOT_LIVE_INVITE = "This invitation link is not live. An invitation is used
 async function state(){
   /* The wizard hands over with the one-time password in the URL fragment.
      Fragments never reach any server. Strip it immediately either way. */
+  /* R27: the guide reads nothing; R33's notice is drawn when Back opens the page's own start. */
   if (guideFromHash()) return;
   const join = location.hash.match(/join=([^&]+)/);
   if (join) {
@@ -894,7 +937,7 @@ async function state(){
     $("#en-lede").textContent = "You followed this group's join link. First, say what the group should call you.";
     $("#en-join").hidden = false;
     $("#en-form").hidden = true;
-    show("#s-enroll"); return;
+    show("#s-enroll"); bootNotice(); return;
   }
   const inv = location.hash.match(/invite=([^&]+)/);
   if (inv) {
@@ -907,6 +950,7 @@ async function state(){
        had been invited. */
     INVITE = decodeURIComponent(inv[1]);
     history.replaceState({}, "", location.pathname);
+    bootNotice();
     const look = await api("invitelook", { invite: INVITE });
     if (!look.result || !look.result.ok) { enrolDead(NOT_LIVE_INVITE); return; }
     enrolShow(look.result); return;
@@ -915,23 +959,23 @@ async function state(){
   if (m) boot0 = decodeURIComponent(m[1]);
   if (location.hash) history.replaceState({}, "", location.pathname);
   try {
-    const saved = JSON.parse(sessionStorage.getItem("bio-session") || "null");
+    const saved = JSON.parse(sessionStorage.getItem(SESSION_STORE_KEY) || "null");
     if (saved && saved.t && (!saved.e || saved.e > Date.now())) {
       SESSION = saved.t;
       WHO = saved.w || "admin";
       const probe = await fetch("/api/?op=stats", { headers: auth() });
       if (probe.ok) {
-        const b2 = await api("bootstrap");
+        const b2 = bootRead(await api("bootstrap").catch(()=>null)) || {};
         window.__ver = b2.version || "";
         panel({ token: saved.t, expires: saved.e }, saved.c || b2.consumedAt);
         return;
       }
-      SESSION = null; sessionStorage.removeItem("bio-session");
+      SESSION = null; sessionStorage.removeItem(SESSION_STORE_KEY);
     }
   } catch {}
   let b;
-  try { b = await api("bootstrap"); }
-  catch(e){ $("#s-loading h1").textContent = "This group's Civicsmith is not answering";
+  try { b = await api("bootstrap"); bootRead(b); }
+  catch(e){ bootRead(null); $("#s-loading h1").textContent = "This group's Civicsmith is not answering";
     $("#s-loading .small").textContent = "The page loaded but the record behind it did not respond. Wait a moment and reload."; return; }
   window.__ver = b.version || "";
   if (b.claimed) { show("#s-login"); return; }
@@ -1020,8 +1064,10 @@ $("#do-login").addEventListener("click", async ()=>{
       e.textContent = (l.result && l.result.detail)
         || "That name and password were not accepted."; return; }
     WHO = who || "admin";
-    const b = await api("bootstrap");
-    panel(l.result, b.consumedAt);
+    /* R32: the record written (R31), with the claim's instant when bootstrap answers it, then Home. */
+    const b = bootRead(await api("bootstrap").catch(()=>null)) || {};
+    signIn(l.result, b.consumedAt);
+    goHome();
   } catch(err){ e.textContent = "Sign-in did not go through: " + err.message; }
   finally { $("#do-login").disabled = false; }
 });
@@ -1059,7 +1105,7 @@ function applyCaps(){
 function signIn(login, claimedAt){
   if (login && login.token) {
     SESSION = login.token;
-    try { sessionStorage.setItem("bio-session", JSON.stringify({ t: login.token, e: login.expires || 0, c: claimedAt || "", w: WHO })); } catch {}
+    try { sessionStorage.setItem(SESSION_STORE_KEY, JSON.stringify({ t: login.token, e: login.expires || 0, c: claimedAt || "", w: WHO })); } catch {}
   }
 }
 function panel(login, claimedAt){
@@ -1081,7 +1127,20 @@ function panel(login, claimedAt){
   $("#p-claimed").textContent = claimedAt ? new Date(claimedAt).toLocaleString() : "just now";
   $("#p-roles").textContent = WHO;
   $("#p-expires").textContent = login && login.expires ? new Date(login.expires).toLocaleString() : "";
+  drawParts();
   show("#s-panel");
+}
+
+/* R30 (T46; instance-setup R81): the healthy panel lists each part bootstrap's parts answers, installed, not installed
+   or not read, in member words, naming no reason beyond the part. */
+const PART_WORDS = { signin: "Signing in with a member's own Claude account", scanner: "The file scanner", safe_view: "The safe view" };
+const PRESENT_WORDS = (v)=> v === true ? "installed" : v === false ? "not installed" : "could not be read";
+function drawParts(){
+  const parts = BOOT && Array.isArray(BOOT.parts) ? BOOT.parts.filter((p)=>p && PART_WORDS[p.part]) : null;
+  $("#p-parts").innerHTML = parts
+    ? parts.map((p)=>'<div class="kv"><span class="k">' + escH(PART_WORDS[p.part]) + '</span><span class="v">'
+        + escH(PRESENT_WORDS(p.present === true || p.present === false ? p.present : null)) + "</span></div>").join("")
+    : '<p class="small" style="margin:0">Which parts of your group&#39;s Civicsmith are installed could not be read just now.</p>';
 }
 
 /* ---- the record, read-only through the signed-in session ---- */
@@ -2162,7 +2221,22 @@ function handlingHtml(h){
 const configOf = (t)=> Array.isArray(t && t.config) ? t.config.filter((f)=>f && typeof f.name === "string" && f.name)
   .map((f)=>({ name: f.name, label: typeof f.label === "string" && f.label ? f.label : f.name, required: f.required === true })) : [];
 const toolName = (t)=> t ? [t.vendor, t.product].filter(Boolean).join(" ") || String(t.provider_id || "") : "";
+/* R30 (T46; N897 (4)): the scanner's sentences only while bootstrap's parts answers a scanner present; with none, the
+   interim words saying so; unread, that it could not be read, never that none is. */
+const BUILT_IN = {
+  true: "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view. If your organization "
+    + "already uses a file scanner, a safe-copy maker or a log service, you can add it here, now or later.",
+  false: "Your group's Civicsmith has no file scanner installed yet: files are kept and shown but not scanned, and a high-risk "
+    + "file opens only in its safe view once one can be made.",
+  null: "Whether your group's Civicsmith has a file scanner installed could not be read just now.",
+};
+function drawBuiltIn(P){
+  const sc = partOf("scanner");
+  $(ID(P, "st-built")).textContent = BUILT_IN[String(sc)];
+  $(ID(P, "st-skip")).textContent = "You can skip this step: adding nothing records nothing" + (sc === true ? ", and nothing needs adding." : ".");
+}
 async function showSecurity(P){
+  drawBuiltIn(P);
   $(ID(P, "st-form")).hidden = true; STPICK[P] = null;
   let c = null;
   try { c = await rec("securitytoolcatalogue"); } catch { c = null; }
@@ -2198,7 +2272,7 @@ async function showTools(P){
     + '</span><span class="v">' + escH(STATE[t.state] || t.state) + (t.off_reason ? " (" + escH(t.off_reason) + ")" : "")
     + (t.use === "routine" ? " &middot; checks every file" : "") + " &middot; up to " + escH(t.monthly_limit) + " a month"
     + (P === "mk" ? ' <button class="st-rm" data-id="' + escH(t.tool_id) + '">remove</button>' : "") + "</span></div>").join("")
-    : '<p class="small">None added. The built-in scanner and the safe view work without any.</p>');
+    : '<p class="small">None added.' + (partOf("scanner") === true ? " The built-in scanner and the safe view work without any." : "") + "</p>");
   if (P === "mk") document.querySelectorAll("#mk-st-tools .st-rm").forEach((b)=>b.addEventListener("click", ()=>removeTool(P, b.dataset.id)));
 }
 function pickTool(P, i){
@@ -2567,9 +2641,12 @@ $("#en-go").addEventListener("click", async ()=>{
   if (!l || !l.result || !l.result.ok || !l.result.token) {
     $("#lwho").value = handle; $("#lpw").value = ""; show("#s-login"); return; }
   WHO = handle;
-  const b = await api("bootstrap").catch(()=>({}));
-  panel(l.result, b && b.consumedAt);
-  await languageSet("ln", $("#en-lang").value);
+  const b = bootRead(await api("bootstrap").catch(()=>null)) || {};
+  signIn(l.result, b.consumedAt);
+  /* R22, R32: the language chosen before joining is sent as the member's own act, then Home. */
+  const tag = String($("#en-lang").value || "").trim();
+  try { await post("memberlanguageset", { language: tag || null }); } catch {}
+  goHome();
 });
 document.querySelectorAll(".crumb-home").forEach(a=>a.addEventListener("click", ()=>{
   document.querySelector("main").classList.remove("wide"); show("#s-panel"); }));
