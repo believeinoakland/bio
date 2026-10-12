@@ -2,7 +2,7 @@
    promotion, actions, action-clocks, action-plans, action-holds and action-replies (merged, K2856, K2862, K2864), on a real SQLite database; plan-work is built over them with
    stand-ins, in the shape of their Provides, for the modules whose facts a test controls: escalation (`escalationsFor`
    R22, `escalationRead` R2, the fixture's own), filings (`filingsFor` R13), conformance (`curesOf` R37; a test may read
-   it through the real module), duties (`dutiesArisingIn` R31), reading-guides (`procedureGuidesFor` R13) and ai-runs
+   it through the real module), duties (`dutiesArisingIn` R31, `transitionsOf` R14), reading-guides (`procedureGuidesFor` R13) and ai-runs
    (`open` R77). Every test drives plan-work at its interface. */
 import { seeded, opened, option, choose, V, MACHINE, by, OFFICE, ms, DAY, NOW } from "../action-plans/fixture.mjs";
 import { createHash } from "node:crypto";
@@ -38,7 +38,12 @@ export function world(opts = {}) {
   const actionReplies = actionRepliesOf(w.host, { record: w.record, membership: w.membership, actions: w.actions, caseAuthoring: null,
                                                   now: () => ms(w.clock.now) });
   const dutyCalls = [];
-  const duties = { dutiesArisingIn: (a) => { dutyCalls.push(a); return w.dutiesAnswer ? w.dutiesAnswer(a) : { ok: true, duties: [], all_met: false }; } };
+  /* duties R14's recorded readings: `w.transitions`, in R13's shape, filtered as `transitionsOf` filters them */
+  const transitionCalls = [];
+  const duties = { dutiesArisingIn: (a) => { dutyCalls.push(a); return w.dutiesAnswer ? w.dutiesAnswer(a) : { ok: true, duties: [], all_met: false }; },
+    transitionsOf: (a) => { transitionCalls.push(a); if (w.transitionsAnswer) return w.transitionsAnswer(a);
+      const t = (w.transitions || []).filter((x) => (!a.dutyId || x.duty_id === a.dutyId) && (!a.occurrenceKey || x.occurrence_key === a.occurrenceKey));
+      return { ok: true, transitions: t, count: t.length }; } };
   const guides = new Map();         // kind -> guides
   const readingGuides = { procedureGuidesFor: ({ kind }) => ({ ok: true, kind, guides: guides.get(kind) || [], label: {} }) };
   const runs = [];
@@ -54,7 +59,7 @@ export function world(opts = {}) {
   const pw = planWorkOf(w.host, { record: w.record, membership: w.membership, actionPlans: ap, actions,
     escalation: w.stand.escalation, filings, conformance, actionHolds, actionReplies, duties, readingGuides, aiRuns,
     now: () => w.clock.now, ...(opts.deps || {}) });
-  Object.assign(w, { pw, cures, drafts, holds: actionHolds, replies: actionReplies, dutyCalls, guides, runs });
+  Object.assign(w, { pw, cures, drafts, holds: actionHolds, replies: actionReplies, dutyCalls, transitionCalls, guides, runs });
   /** Start a chosen option addressed to the office and answer its action's id. */
   w.started = (fields = {}, extra = {}) => {
     const o = option(w, { addressee: OFFICE, ...fields });

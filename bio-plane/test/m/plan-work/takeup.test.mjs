@@ -121,3 +121,65 @@ test("R13: control: a matter with no promise answers all_met false with no dutie
   w.pw.matterPromiseDuties({ plan: w.PL, matter: w.S1, viewer: V("bob") });
   assert.deepEqual(w.snapshot(), rows, "writes nothing");
 });
+
+/* R15's world: two adopted duties arising in the matter's captures, each with one occurrence, all read met. */
+function promised() {
+  const { w, s } = setup();
+  w.correspond(s.action, "sent");
+  const SHA = w.capture("We will repair the lights by May."), SHA2 = w.capture("And publish the schedule.");
+  w.correspond(s.action, "received", "2026-10-03", { artifactSha: SHA });
+  w.correspond(s.action, "received", "2026-10-04", { artifactSha: SHA2 });
+  const state = { "DUT-1": "met", "DUT-2": "met_late" };
+  w.dutiesAnswer = ({ captures }) => {
+    const duties = [["DUT-1", SHA], ["DUT-2", SHA2]].map(([id, cap]) => ({ duty_id: id, arising_in: cap, occurrences: [{ key: `OCC-${id}`, state: state[id] }] }));
+    return { ok: true, captures, duties, all_met: duties.every((d) => ["met", "met_late"].includes(d.occurrences[0].state)) };
+  };
+  const t = (id, st, asOf) => ({ duty_id: id, occurrence_key: `OCC-${id}`, state: st, as_of: asOf, at: asOf, cause: "derived", evidence: null, by: null });
+  w.transitions = [t("DUT-1", "pending", "2026-10-03T00:00:00Z"), t("DUT-1", "met", "2026-10-05T09:00:00Z"),
+                   t("DUT-2", "pending", "2026-10-04T00:00:00Z"), t("DUT-2", "met_late", "2026-10-08T17:30:00Z")];
+  return { w, s, state, t, read: (viewer = V("bob")) => w.pw.matterPromiseDuties({ plan: w.PL, matter: w.S1, nowMs: ms("2026-10-10T00:00:00Z"), viewer }) };
+}
+
+test("R15: matterPromiseDuties answers met_at, the instant the last of the matter's duties was read met, from duties' recorded readings", () => {
+  const { w, read } = promised();
+  const r = read();
+  assert.deepEqual([r.all_met, r.met_at], [true, "2026-10-08T17:30:00Z"], "two duties met on different days: the later instant (a promise kept late is kept)");
+  /* read through duties' recorded readings, per occurrence, at the reader's sight */
+  assert.deepEqual(w.transitionCalls.slice(-2), [{ dutyId: "DUT-1", occurrenceKey: "OCC-DUT-1", viewer: V("bob") },
+                                                 { dutyId: "DUT-2", occurrenceKey: "OCC-DUT-2", viewer: V("bob") }]);
+  /* the module's own read (following's, with no member's sight) is duties' internal reader, and answers the same */
+  const own = w.pw.matterPromiseDuties({ plan: w.PL, matter: w.S1, nowMs: ms("2026-10-10T00:00:00Z") });
+  assert.equal(own.met_at, "2026-10-08T17:30:00Z"); assert.equal(w.transitionCalls.at(-1).viewer, DUTIES_INTERNAL);
+  /* a duty read met, then not, then met again: the instant is the start of the reading that stands */
+  w.transitions.push({ ...w.transitions[3], state: "overdue", as_of: "2026-10-09T00:00:00Z" },
+                     { ...w.transitions[3], state: "met_late", as_of: "2026-10-09T12:00:00Z" },
+                     { ...w.transitions[3], state: "met_late", as_of: "2026-10-09T18:00:00Z" });
+  assert.equal(read().met_at, "2026-10-09T12:00:00Z");
+});
+
+test("R15: control: with one duty unmet, met_at is null; a met reading not yet recorded is null with why, never guessed", () => {
+  const { w, state, read } = promised();
+  state["DUT-2"] = "pending";
+  const r = read();
+  assert.deepEqual([r.all_met, r.met_at], [false, null]);
+  assert.equal(w.transitionCalls.length, 0, "not all met: no reading is asked");
+  /* all derived met, but duties has recorded no met reading for one occurrence yet */
+  state["DUT-2"] = "met";
+  w.transitions = w.transitions.filter((x) => !(x.duty_id === "DUT-2" && x.state !== "pending"));
+  const u = read();
+  assert.deepEqual([u.all_met, u.met_at], [true, null]); assert.match(u.met_at_why, /DUT-2/);
+  /* the readings cannot be read: null with why, never a throw */
+  w.transitionsAnswer = () => { throw new Error("down"); };
+  const f = read();
+  assert.deepEqual([f.ok, f.all_met, f.met_at], [true, true, null]); assert.ok(f.met_at_why);
+  w.transitionsAnswer = () => ({ ok: false, reason: "NO_SUCH_DUTY" });
+  assert.equal(read().met_at, null);
+  /* a matter with no promise answers met_at null */
+  const { w: w2, s: s2 } = setup();
+  w2.correspond(s2.action, "received", "2026-10-03");
+  assert.equal(w2.pw.matterPromiseDuties({ plan: w2.PL, matter: w2.S1, viewer: V("bob") }).met_at, null);
+  const rows = w.snapshot();
+  w.transitionsAnswer = null;
+  read();
+  assert.deepEqual(w.snapshot(), rows, "writes nothing");
+});
