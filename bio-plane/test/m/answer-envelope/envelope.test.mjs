@@ -234,9 +234,10 @@ const HELD = {
   PURGE_HOLD_IN_PLACE: ["C-69.5", "src/store-door/dispatch.mjs"], BOOTSTRAP_CREDENTIAL_UNSET: ["C-68.2", "src/control-plane/index.mjs"],
   BOOTSTRAP_CREDENTIAL_PUBLISHED: ["C-68.3", "src/control-plane/index.mjs"], BOOTSTRAP_CREDENTIAL_MISMATCH: ["C-68.4", "src/control-plane/index.mjs"],
   REPLAY_UNVERIFIED: ["C-66.6", "src/control-plane/index.mjs"], REQUIRED_ARGUMENT_MISSING: ["C-61.1", "src/answer-envelope/index.mjs"],
+  DISCLOSURE_DUE: ["C-69.6", "src/control-plane/index.mjs"],
 };
 
-test("R8: this module's table holds exactly the rows of the checks the doors raise (C-69.1–.5, C-68.2–.4, C-66.6, C-61.1), each code, check and translation unchanged, each `where` naming the file whose code raises it, its own sites found there by their regions; DISPATCH_CHECKS answers the rows store-door mints; each reader answers its row and refuses to invent one", async () => {
+test("R8: this module's table holds exactly the rows of the checks the doors raise (C-69.1–.5, C-68.2–.4, C-66.6, C-61.1, and since T46 C-69.6 DISCLOSURE_DUE, control-plane R65, its words read by key), each code, check and translation unchanged, each `where` naming the file whose code raises it, its own sites found there by their regions; DISPATCH_CHECKS answers the rows store-door mints; each reader answers its row and refuses to invent one", async () => {
   const OWN = await import("../../../src/answer-envelope/checks.mjs");
   const rows = {};
   for (const [fam, table] of Object.entries(OWN)) if (isFamily(fam, table))
@@ -272,6 +273,21 @@ test("R8: this module's table holds exactly the rows of the checks the doors rai
     assert.throws(() => reader("NO_SUCH_CODE"), /DEC-49/);
     assert.throws(() => reader("UNKNOWN_OP" in family ? "REPLAY_UNVERIFIED" : "UNKNOWN_OP"), /DEC-49/);
   }
+  /* T46 (control-plane R65; K2960): C-69.6 DISCLOSURE_DUE, the door's next free C-69 number, its words read by key from
+     DOOR_WORDS (R65's interim sentence until words.json holds `refusal.DISCLOSURE_DUE`, then words.json's verbatim) */
+  const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8")).words;
+  const keyed = WORDS.find((w) => w.key === "refusal.DISCLOSURE_DUE")?.en;
+  assert.equal(M.DOOR_WORDS["refusal.DISCLOSURE_DUE"], keyed ?? "Read what connecting means first: your questions and what is read "
+    + "to answer them go to Anthropic under your own account.");
+  assert.equal(rows.DISCLOSURE_DUE.translation, M.DOOR_WORDS["refusal.DISCLOSURE_DUE"]);
+  assert.equal(M.DISPATCH_CHECKS.DISCLOSURE_DUE, rows.DISCLOSURE_DUE);
+  assert.deepEqual(M.dispatchRow("DISCLOSURE_DUE"), { code: "DISCLOSURE_DUE", check: "C-69.6", translation: M.DOOR_WORDS["refusal.DISCLOSURE_DUE"] });
+  assert.deepEqual(M.dec49Attach({ ok: false, reason: "DISCLOSURE_DUE" }),
+                   { ok: false, reason: "DISCLOSURE_DUE", code: "DISCLOSURE_DUE", check: "C-69.6", translation: M.DOOR_WORDS["refusal.DISCLOSURE_DUE"] });
+  /* the door's C-69 numbers are each held once across every family, C-69.6 by DISCLOSURE_DUE alone */
+  const c69 = Object.values(M.CHECK_FAMILIES).flatMap((f) => Object.entries(f)).filter(([, r]) => /^C-69\./.test(r.check));
+  assert.deepEqual(c69.map(([c, r]) => `${r.check} ${c}`).sort(), ["C-69.1 UNKNOWN_OP", "C-69.2 STORE_DID_NOT_ANSWER", "C-69.3 PLANE_INTERNAL_ERROR",
+    "C-69.4 STORE_INTERNAL_ERROR", "C-69.5 PURGE_HOLD_IN_PLACE", "C-69.6 DISCLOSURE_DUE"]);
   /* C-61.1's one raiser: the argument complaint, its error passed through byte for byte, nothing changed */
   const a = M.requiredArgument("capture", "sha256", "<64 lowercase hex>", "requires sha256=<64 lowercase hex>");
   assert.deepEqual(a, { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", code: "REQUIRED_ARGUMENT_MISSING", check: "C-61.1",

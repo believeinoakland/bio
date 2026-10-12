@@ -398,4 +398,4 @@ export { PAGE_POLICY, pagePolicy, withPagePolicy, NONCE_SLOT, json, dec49Attach,
          doAnswer, storeRefusal, storeSilent, relayAnswer, STORE_SILENT_REASON, STORE_SILENT_DETAIL,
          planeInternalError, planeInternalAnswer, replayRow, requiredArgumentRow, requiredArgument, installationRow,
          dispatchRow, StoreSilent };
-export { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHECKS } from "./checks.mjs";
+export { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHECKS, DOOR_WORDS } from "./checks.mjs";
