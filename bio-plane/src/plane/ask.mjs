@@ -49,6 +49,44 @@ export async function askOp({ req, url, env, viaSession, sessMember, grantMember
   return env.STORE.get(env.STORE.idFromName("bio")).ask(args);
 }
 
+/** R41 (T45; K2824, K2881; op-declarations R49): the two action drafts whose door the plane builds. */
+export const ACTION_DRAFT_OPS = Object.freeze(["infractiondraft", "bearingdraft"]);
+
+/** R41: the door's arm (in the Worker) for `infractiondraft` (`{matter, audience}`) and `bearingdraft` (`{action, reply}`):
+ *  a member's own session only (their spec, `ownread`), the body read, the `bio` object asked through its `draft`
+ *  (`draftOnObject`, which gates, judges the account, assembles the records from her reads and posts), a conversation
+ *  that reached the model counted to the member's day as a draft through the store's `askusage` (ai-runs R48, as
+ *  control-plane's draft path counts it), and the draft answered as `{ok: true, result}`, or its refusal at its status.
+ *  The grant and the read log are never answered. */
+export async function actionDraftOp({ req, url, env, op, viaSession, sessMember, sessViewer }) {
+  if (!viaSession || !sessMember)
+    return json({ ok: false, reason: "ASK_NOT_A_MEMBER", detail: "a draft is a member's own act, from their own session. "
+      + "Nothing was drafted." }, 403);
+  if (req.method !== "POST") return json({ ok: false, reason: "METHOD_NOT_ALLOWED", detail: "a draft is a POST" }, 405);
+  let body;
+  try { body = await req.json(); } catch { return json({ ok: false, reason: "BAD_JSON", detail: "the draft's body is not JSON" }, 400); }
+  const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
+  const args = op === "infractiondraft" ? { matter: b.matter ?? null, audience: b.audience ?? null }
+    : { action: b.action ?? null, reply: b.reply ?? null };
+  const stub = env.STORE.get(env.STORE.idFromName("bio"));
+  let drafted = null, status = 502;
+  try {
+    const res = await stub.draft({ op, member: sessMember, session: presentedToken(req, url, b), ...args });
+    status = res.status;
+    drafted = await res.json();
+  } catch { drafted = null; }
+  if (!drafted || typeof drafted !== "object")
+    return json({ ok: false, reason: "AGENT_WORKER_SILENT", detail: "the draft did not come back. Nothing was kept." }, 502);
+  const { grant: _g, read: _r, ...given } = drafted;
+  if (given.ok !== true) return json(given, status >= 400 ? status : 502);
+  try {
+    await stub.fetch(new Request(`http://do/askusage?viewer=${encodeURIComponent(sessViewer ?? "")}`, { method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ mode: "draft", usage: given.usage ?? null, calls: given.calls }) }));
+  } catch { /* the count is the store's; a failed count leaves the draft as answered */ }
+  return json({ ok: true, result: given }, 200);
+}
+
 /* R33 (K2500; answers R2 as R30 widens it, store-door R11): the grants this object's draft path minted, each with the
    instant it lapses, so a read made under one is recorded in its read log with `use: "draft"` (`draftUse`, read by the
    `logRead` the composition root hands store-door's frame). Held in memory only, on this storage, for at most a grant's

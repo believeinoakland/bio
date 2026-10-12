@@ -316,19 +316,19 @@ test("R41 (K2824): the records are assembled from the asking member's own reads 
 
 import { caseAccountOf } from "../../../src/case-account/index.mjs";
 
-test("R39 (K2834): case-account's advocacy check and its list are routed over the plane's one case-account instance, with the door's stamps: each answers through the door what that instance answers called directly; a body's own `author` never wins", async () => {
+test("R39 (K2834): case-account's advocacy check and its list are routed over the plane's one case-account instance, with the door's stamps: each answers through the door what that instance answers called directly; the door's `by` stamp is the author (op-declarations R49) and a body's own never wins", async () => {
   const x = await store(), twin = await store();
   const keys = Object.keys(x.s.routes(new URL("http://do/"), null));
   for (const op of ["advocacycheck", "advocacychecks"]) assert.ok(keys.includes(op), op);
   const sentences = [{ text: "The council acted.", cites: [] }];
   const viaDoor = async (path, body) => JSON.parse(mask(await (await x.fetch(path, { method: "POST", body: JSON.stringify(body) })).text()));
   const direct = (v) => JSON.parse(mask(JSON.stringify({ ok: true, result: v })));
-  assert.deepEqual(await viaDoor("/advocacycheck?project=PROJ-2026-0009-none&author=member:ann&viewer=member:ann", { sentences, author: "token:ai" }),
+  assert.deepEqual(await viaDoor("/advocacycheck?project=PROJ-2026-0009-none&by=member:ann&viewer=member:ann", { sentences, author: "token:ai", by: "token:ai" }),
     direct(caseAccountOf(twin.ctx).advocacyCheck({ project: "PROJ-2026-0009-none", sentences, author: "member:ann", viewer: "member:ann" })));
   assert.deepEqual(await viaDoor("/advocacychecks?project=PROJ-2026-0009-none&viewer=member:ann", {}),
     direct(caseAccountOf(twin.ctx).advocacyChecksOf({ project: "PROJ-2026-0009-none", viewer: "member:ann" })));
   /* control: the door's stamp, not the body's, is the author: a machine stamp is case-account's own refusal */
-  const machine = await viaDoor("/advocacycheck?project=PROJ-2026-0009-none&author=token:ai&viewer=member:ann", { sentences, author: "member:ann" });
+  const machine = await viaDoor("/advocacycheck?project=PROJ-2026-0009-none&by=token:ai&viewer=member:ann", { sentences, author: "member:ann", by: "member:ann" });
   assert.equal(machine.result.reason, "MACHINE_CANNOT_CHECK_ADVOCACY", JSON.stringify(machine));
 });
 
@@ -344,4 +344,46 @@ test("R39 (K2888; action-producers R13): action-producers is built at start over
   assert.ok(asked.length > 0, "the plane's action-holds instance was read");
   /* control: a later caller's own deps change nothing; the one instance per storage is the plane's */
   assert.equal(actionProducersOf(x.ctx, { actionHolds: { holdsDue: () => { throw new Error("not the plane's"); } } }), p);
+});
+
+import { gatedOp } from "../../../src/plane/door.mjs";
+import { localFactsOf } from "../../../src/local-facts/index.mjs";
+
+test("R41 (K2824, K2881; op-declarations R49): the door's arm for infractiondraft and bearingdraft asks the bio object's draft with the member's session and the task's own fields, counts a drafted conversation to her day, and answers the draft without its grant or read log; any caller but a member's session is refused, nothing asked", async () => {
+  const seen = [], counted = [];
+  let answer = { ok: true, draft: { text: "an account" }, label: { kind: "machine" }, usage: { input_tokens: 1 }, calls: 1,
+                 grant: "g".repeat(64), suggestions: false, read: ["x"] };
+  const env = { STORE: { idFromName: (n) => n, get: (id) => ({
+    draft: async (a) => { seen.push([id, a]); return new Response(JSON.stringify(answer), { status: answer.ok ? 200 : 409 }); },
+    fetch: async (r) => { counted.push([new URL(r.url).pathname + new URL(r.url).search, await r.json()]); return new Response("{}"); } }) } };
+  const call = (op, body, extra = {}) => gatedOp({ req: new Request(`http://plane/${op}`, { method: "POST",
+    headers: { authorization: `Bearer ${SESSION}` }, body: JSON.stringify(body) }), url: new URL(`http://plane/${op}`), env, op,
+    cls: "member", viaSession: true, sessMember: "ann", sessViewer: "member:ann", storeName: "bio", ...extra });
+  const r1 = await call("infractiondraft", { matter: { plan: "PLN-2026-0001-x" }, audience: "members", told: "ignored" });
+  assert.equal(r1.status, 200);
+  assert.deepEqual(await r1.json(), { ok: true, result: { ok: true, draft: { text: "an account" }, label: { kind: "machine" },
+                                                          usage: { input_tokens: 1 }, calls: 1, suggestions: false } });
+  assert.deepEqual(seen[0], ["bio", { op: "infractiondraft", member: "ann", session: SESSION, matter: { plan: "PLN-2026-0001-x" }, audience: "members" }]);
+  assert.deepEqual(counted[0], ["/askusage?viewer=member%3Aann", { mode: "draft", usage: { input_tokens: 1 }, calls: 1 }]);
+  await call("bearingdraft", { action: "ACTN-2026-0001-rfc", reply: 2 });
+  assert.deepEqual(seen[1][1], { op: "bearingdraft", member: "ann", session: SESSION, action: "ACTN-2026-0001-rfc", reply: 2 });
+  /* a refusal is answered at its status, its grant withheld, and nothing is counted */
+  answer = { ok: false, reason: "AI_RUN_MODE_NOT_DEPLOYED", grant: null, read: [] };
+  const r3 = await call("bearingdraft", { action: "A", reply: 1 });
+  assert.equal(r3.status, 409);
+  assert.deepEqual(await r3.json(), { ok: false, reason: "AI_RUN_MODE_NOT_DEPLOYED" });
+  assert.equal(counted.length, 2);
+  /* control: a machine credential is no member's session; nothing asked */
+  const r4 = await call("infractiondraft", { matter: "PLN-x" }, { viaSession: false, sessMember: null, cls: "ai", aiCred: { principal: "member:ann", tokenId: "t1" } });
+  assert.equal(r4.status, 403);
+  assert.equal(seen.length, 3);
+});
+
+test("R39 (op-declarations R49; local-facts R12): `grouprules` is routed over the plane's local-facts, a session's read answering through the door what groupRules answers; an unknown section is local-facts' own refusal", async () => {
+  const x = await store(), twin = await store();
+  const viaDoor = async (path) => JSON.parse(mask(await (await x.fetch(path, { method: "POST", body: "{}" })).text()));
+  assert.deepEqual(await viaDoor("/grouprules?viewer=member:ann"),
+                   JSON.parse(mask(JSON.stringify({ ok: true, result: localFactsOf(twin.ctx).groupRules({ viewer: "member:ann" }) }))));
+  const bad = await viaDoor("/grouprules?viewer=member:ann&section=zz");
+  assert.equal(bad.result.reason, "RULE_SECTION_UNKNOWN", JSON.stringify(bad));
 });

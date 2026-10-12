@@ -129,7 +129,7 @@ export const MODULE_MAPS = [
      whose methods answer them, as acquisition's pair is (plane R9) */
   ["case-account", (c, u, b) => ({
     advocacycheck: () => caseAccountOf(c).advocacyCheck({ project: u.searchParams.get("project") ?? b?.project ?? null,
-      sentences: b?.sentences ?? null, author: u.searchParams.get("author"), viewer: u.searchParams.get("viewer") }),
+      sentences: b?.sentences ?? null, author: u.searchParams.get("by"), viewer: u.searchParams.get("viewer") }),
     advocacychecks: () => caseAccountOf(c).advocacyChecksOf({ project: u.searchParams.get("project") ?? b?.project ?? null,
       viewer: u.searchParams.get("viewer") }) })],
   ["ratification", (c, u, b) => ratificationOps(ratificationOf(c), u, b)],
@@ -161,7 +161,9 @@ export const MODULE_MAPS = [
   ["action-holds", (c, u, b) => actionHoldsOps(actionHoldsOf(c), u, b)],   /* plane R39 (T45): directly after actions' */
   ["action-clocks", (c, u, b) => actionClocksOps(actionClocksOf(c), u, b)],
   ["action-replies", (c, u, b) => actionRepliesOps(actionRepliesOf(c), u, b)],   /* plane R39: after action-clocks' */
-  ["local-facts", (c, u, b) => localFactsOps(localFactsOf(c), u, b)],
+  ["local-facts", (c, u, b) => ({ ...localFactsOps(localFactsOf(c), u, b),
+    /* plane R39 (op-declarations R49): `grouprules`, local-facts R12's read, named here as the module's (plane R9) */
+    grouprules: () => localFactsOf(c).groupRules({ section: u.searchParams.get("section") ?? undefined, viewer: u.searchParams.get("viewer") }) })],
   ["standards", (c, u, b) => standardsOps(standardsOf(c), u, b)],
   ["conformance", (c, u, b) => conformanceOps(conformanceOf(c), u, b)],
   ["consequences", (c, u, b) => consequencesOps(consequencesModule(c), u, b)],

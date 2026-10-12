@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { store } from "./fixture.mjs";
 import { MACHINE_DRAFTS, wizardRegistration, irreversibleActs } from "../../../src/plane/wizards.mjs";
+import { caseCheckOf, caseCheckOps } from "../../../src/case-check/index.mjs";
 import { SCREENS } from "../../../src/plane/screens.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { reviewOf, reviewOps } from "../../../src/review/index.mjs";
@@ -65,7 +66,8 @@ test("R19 (T34; DEC-152, DEC-153; K1818): before the first request it is registe
   assert.equal(again.ok, false);
   assert.equal(again.reason, "WIZARD_ALREADY_REGISTERED");
   /* the registration is exactly R19's parts */
-  const drafts = ["whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft", "writinghelp"];
+  /* (T45; K2880) the infraction draft, declared by op-declarations R49 */
+  const drafts = ["whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft", "writinghelp", "infractiondraft"];
   const graded = Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible");
   assert.deepEqual(wizardRegistration(), { screens: SCREEN_REGISTRY, ops: OPS, machineRefused: Object.keys(MACHINE_REFUSALS),
                                            machineDrafts: drafts, irreversible: graded, library: CIVICSMITH_LIBRARY });
@@ -111,14 +113,16 @@ test("R19 (T34; DEC-152, DEC-153; K1818): before the first request it is registe
   assert.ok((await check([step({})])).includes("WIZARD_SCREEN_UNKNOWN"));
 });
 
-test("R19, R5: every op of wizard-scripts' map is in the route map, after review's, and answers through control-plane's door what its own map answers called directly", async () => {
+test("R19, R5, R39: every op of wizard-scripts' map is in the route map, after review's and case-check's (T45), and answers through control-plane's door what its own map answers called directly", async () => {
   const u = new URL("http://do/");
   const ops = Object.keys(wizardScriptsOps(null, u, null));
   assert.ok(ops.length >= 15 && ops.includes("wizardsat") && ops.includes("wizardcheck"), ops.join());
   const x = await store(), twin = await store();
   const map = Object.keys(x.s.routes(u, null));
   const rev = Object.keys(reviewOps(reviewOf(x.ctx), u, null));
-  assert.deepEqual(map.slice(map.indexOf(rev[rev.length - 1]) + 1).slice(0, ops.length), ops, "at its place, in its own order");
+  const chk = Object.keys(caseCheckOps(caseCheckOf(x.ctx), u, null));
+  assert.deepEqual(map.slice(map.indexOf(rev[rev.length - 1]) + 1).slice(0, chk.length), chk, "case-check's map directly after review's");
+  assert.deepEqual(map.slice(map.indexOf(chk[chk.length - 1]) + 1).slice(0, ops.length), ops, "at its place, in its own order");
   for (const op of ops) {
     const path = `${op}?viewer=member:nobody&author=member:nobody&script=WIZ-none&version=WIZ-none@1&screen=nowhere`;
     const res = await x.fetch(`/${path}`, { method: "POST", body: "{}" });

@@ -701,10 +701,11 @@ export class Store extends DurableObject {
       ...caseAuthoringOps(caseAuthoringOf(ctx), url, body),
       /* R39 (T45; K2834, K2886 (3)): case-account's advocacy check (its R13) and its list, over the plane's one instance
          (R38). case-account exports no ops map, so the pair is named here as the module's whose methods answer them, as
-         acquisition's co-archive pair is (K2042): the plane adds no behaviour, only the entry (R9); `author` and `viewer`
-         are the door's stamps, read from the query, so a caller's own copy in the body never wins. */
+         acquisition's co-archive pair is (K2042): the plane adds no behaviour, only the entry (R9); `by` (handed as the
+         owner's `author`, op-declarations R49) and `viewer` are the door's stamps, read from the query, so a caller's own
+         copy in the body never wins. */
       advocacycheck: () => caseAccountOf(ctx).advocacyCheck({ project: url.searchParams.get("project") ?? body?.project ?? null,
-        sentences: body?.sentences ?? null, author: url.searchParams.get("author"), viewer: url.searchParams.get("viewer") }),
+        sentences: body?.sentences ?? null, author: url.searchParams.get("by"), viewer: url.searchParams.get("viewer") }),
       advocacychecks: () => caseAccountOf(ctx).advocacyChecksOf({ project: url.searchParams.get("project") ?? body?.project ?? null,
         viewer: url.searchParams.get("viewer") }),
       ...ratificationOps(ratificationOf(ctx), url, body),
@@ -756,6 +757,10 @@ export class Store extends DurableObject {
       /* R39 (T45): action-replies' ops (`actionreplybearing`, `actionbearingpropose`, `arosefrom`), after action-clocks'. */
       ...actionRepliesOps(actionRepliesOf(ctx), url, body),
       ...localFactsOps(localFactsOf(ctx), url, body),   /* R11 (K921) */
+      /* R39 (T45; op-declarations R49): local-facts' `groupRules` (its R12), a session's read with no arm in its map, named
+         here as the module's whose method answers it (R9); `viewer` the door's stamp, `section` the query's. */
+      grouprules: () => localFactsOf(ctx).groupRules({ section: url.searchParams.get("section") ?? undefined,
+                                                       viewer: url.searchParams.get("viewer") }),
       ...standardsOps(standardsOf(ctx), url, body),
       ...conformanceOps(conformanceOf(ctx), url, body),
       ...consequencesOps(consequencesModule(ctx), url, body),
