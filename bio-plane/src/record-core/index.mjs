@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R82).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R83).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -19,7 +19,8 @@
    member-facing sentence says "your group's Civicsmith" (R82). T41 (T41-2a; K2431, K2435): `STP` and `GUD`, opaque in
    `ID_TABLE` since record-grammar's T41 job, each named by its own sentence in `mintExhausted` (R62, R76). T42 (T42-2a;
    K2616, K2617): `ACD`, a case account draft, opaque in `ID_TABLE` with `legacy: "sequential"` since record-grammar's
-   T42 job (its R55), minted opaque by its form alone and named by its own sentence (R62, R76). */
+   T42 job (its R55), minted opaque by its form alone and named by its own sentence (R62, R76). T46 (T46-3; N904): the
+   strict `getSetting` tells an unreadable setting (`SETTING_UNREADABLE`) from an unset one (R83). */
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES, ID_TABLE } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
@@ -253,6 +254,10 @@ export function perItem(act, body, stamped, one, { itemKeys = null, sharedKeys =
            ...head };
   /* END DEC-49 REGION is-per-item-retained */
 }
+
+/** R83 (T46; N904): what the strict `getSetting` answers for a setting whose value last set cannot be read, told from
+ *  `null` (never set). One frozen object, compared by identity; no stored value parses to it. */
+export const SETTING_UNREADABLE = Object.freeze({ unreadable: true });
 
 const instances = new WeakMap();
 /* The storage's SQL of an instance, for this module's own route arms (R73's sight gate) and nothing outside it. */
@@ -1762,11 +1767,28 @@ export class RecordCore {
 
   /* ---- settings (R25, R26) ---- */
 
-  /** R25: the value last set under `name`, or null. */
-  getSetting(name) {
-    const r = this.#one(`SELECT value FROM settings WHERE name=? ORDER BY rowid DESC LIMIT 1`, String(name ?? ""));
-    if (!r) return null;
-    try { return JSON.parse(r.value); } catch { return null; }
+  /** R25: the value last set under `name`, or null. R83 (T46; N904): asked `{strict: true}` (exactly `true`), it tells a
+   *  value that cannot be read from one never set: `null` only when no value was ever set under `name`,
+   *  `SETTING_UNREADABLE` when the value last set is not valid JSON (or not held as text), the value otherwise (one set
+   *  as null reads null). FAIL CLOSED: a read that fails, a name that cannot be spelled or options that cannot be read
+   *  never answer "unset" in the strict form; it answers `SETTING_UNREADABLE` and never throws. Without the option it
+   *  answers as R25 always has, an unreadable value reading null, so no caller that does not ask changes. */
+  getSetting(name, options) {
+    let strict = false;
+    try { strict = options !== null && typeof options === "object" && options.strict === true; } catch { strict = false; }
+    if (!strict) {
+      const r = this.#one(`SELECT value FROM settings WHERE name=? ORDER BY rowid DESC LIMIT 1`, String(name ?? ""));
+      if (!r) return null;
+      try { return JSON.parse(r.value); } catch { return null; }
+    }
+    try {
+      const r = this.#one(`SELECT value FROM settings WHERE name=? ORDER BY rowid DESC LIMIT 1`, String(name ?? ""));
+      if (!r) return null;
+      if (typeof r.value !== "string") return SETTING_UNREADABLE;
+      return JSON.parse(r.value);
+    } catch {
+      return SETTING_UNREADABLE;
+    }
   }
 
   /** R25, R26, R81: records `value` under `name`, with who set it and when. `jurisdiction_profiles` is an
