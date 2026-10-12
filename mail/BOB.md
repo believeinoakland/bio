@@ -510,3 +510,6 @@ Please answer with the K or DEC that takes each, or a MERGE when a PR carries th
 
 ## B150 · NOTICE · 2026-10-12 · session_0142MWQ3cnvPRHcMekstsf5g · primary
 K2917: membership keeps PROJECT_GUARD_UNCHECKED's present text in T46: words.json's refusal.PROJECT_GUARD_UNCHECKED says "Civicsmith couldn't check…", but member-facing text names it "your group's Civicsmith" (membership R112, K1821). Please re-word that key; membership reads it by key once it conforms. Also: membership's retired rows HANDLE_CHANGE_NOT_A_MEMBER and HANDLE_CHANGE_UNCHECKED (unreachable under DEC-197) are no longer read, so their refusal keys may be dropped; refusal.HANDLE_FIXED is owed (B149).
+
+## B151 · NOTICE · 2026-10-12 · session_0142MWQ3cnvPRHcMekstsf5g · primary
+K2919 (as K2917): two more keys returned before folding. (1) transcribe.reason.requestfault names the group's Civicsmith bare ("The fault is Civicsmith's"), against DEC-149 ("your group's Civicsmith"); extraction holds an interim word in DEC-149's form until the key conforms. (2) refusal.PROMISE_DATE_UNREAD says the promise "is kept as written, with no due date", but duties R30 refuses and writes nothing; duties keeps its present text until the sentence matches the refusal (or the design stream asks for the behaviour to change, which is Bob's).
