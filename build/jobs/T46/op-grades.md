@@ -52,3 +52,16 @@ T46-44 done on job/T46/op-grades (efbffd81a0+): R33 (t46.mjs; escalation acts as
 ## J4 · COMPLETE
 
 B3 (K2998) applied: clockadopt left NON_ACTS, MACHINE_REFUSALS gains MACHINE_CANNOT_ADOPT_CLOCK, its undetermined absence stands; tested by name with a control. op-grades 79/79; format, architecture, coverage 34/34, ownership 0 failures. One more affordances red, closed by its own T46-45 row: 'R12 R24: with the control plane's rows for them' (clockadopt not yet an ACTS row). Record updated.
+
+## J5 · QUESTION · re B4
+
+Re B4 (K3009): applying it as written breaks two requirements, so I have not changed anything yet.
+
+1. op-grades R16: `groupdescriptiondraft` and `writinghelp` "Neither writes, so neither takes a rung"; their NON_ACTS sentence is the "draft: …" one. R16's test pins `gradeOf("writinghelp") === null`. A `RUNG_ABSENT` row is a grade (an absence ground), so R16 would need amending.
+2. affordances R12 (its `unaccounted`, affordances.mjs:1669): `stale` is "a key of RUNGS or RUNG_ABSENT the table does not carry as mutating". op-declarations declares `writinghelp` an `ownread` (index.mjs:452, `mutating: false`), so a `RUNG_ABSENT.writinghelp` row reads `stale` in affordances' and control-plane's totality, a new red with no job to close it.
+
+Options:
+(a) Recommended: no op-grades change. The defect is the shell's: it treats an op with no rung as `reasoned`. An op with no grade whose NON_ACTS begins "draft: " (writinghelp, groupdescriptiondraft, statusreportdraft, statusreportassist, textcheck, infractiondraft, bearingdraft) writes nothing and asks no reason. The shell (or affordances' decoration) should run it on press. That is the shell's change, made once, for all seven.
+(b) Grade it as K3009 says, which needs three amendments of yours: R16 (a draft may carry the `caller-owned` ground with no rung), affordances R12 (an absence on a non-mutating op is not stale, or `writinghelp` declared mutating in op-declarations), and the same for its six fellow drafts if the shell is to treat them alike.
+
+The answer decides what I build, so I am waiting for it.
