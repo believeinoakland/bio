@@ -67,3 +67,7 @@ All of these are carried to the next membership job.
 - No layer tests are named in the manifest.
 
 Size (session_016WwjpKLhCxuVTMA1W4e1CC): test runs 14, module lines 3,756.
+
+## J1 · REPORT
+
+Other modules (details in my record): no test of another module turns red with my change; the 20 reds of the whole test/m run (op-declarations, ai-use, affordances, action-replies, answer-envelope, case-authoring, run-rules) fail identically on tranche/T47 without it. My change turns green standards/reads R29, promotion/registry R39/R45/R46 and progressions/order R41 (rule 5's MODULE_ORDER reds). The plane bundle composes membership, so this merge stales it; I did not touch it. members.test.mjs's R132 reds are 3, not rule 5's 2: the new scalar arm (part_* present, true/false/null) is red for the same cause, nested parts, until T47-75.
