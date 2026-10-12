@@ -106,6 +106,17 @@ export function providers({ admins = ["admin", "member:ada"] } = {}) {
         keep_away: p.keepAway.on === true ? { reason: p.keepAway.reason, set_by: p.keepAway.set_by, set_at: p.keepAway.set_at }
           : { reason: null, set_by: null, set_at: null } }),
     },
+    /* public-read R34's registration door, as a stand-in coded to its requirement: once, a door `identity()`, else
+       PROVIDER_MALFORMED; a second PROVIDER_DECLARED; each refusal registering nothing. `identities` holds what was
+       registered, for a test to read through. */
+    identities: [],
+    publicRead: {
+      registerGroupIdentity({ identity } = {}) {
+        if (typeof identity !== "function") return { ok: false, reason: "PROVIDER_MALFORMED" };
+        if (p.identities.length) return { ok: false, reason: "PROVIDER_DECLARED" };
+        p.identities.push(identity); return { ok: true };
+      },
+    },
     /* The domain's answer: a function of the URL, or a thrown error. */
     answer: () => new Response("", { status: 404 }),
     fetch: async (url, init) => { fetched.push({ url: String(url), init }); return p.answer(String(url), init); },
@@ -125,7 +136,7 @@ export async function boot({ st = null, env = {}, prov = null, now = null, more 
   applyRecordSchema(store);                     // the record's schema pass (CREATE IF NOT EXISTS)
   const p = prov || providers();
   const deps = { record, membership: p.membership, credentials: p.credentials, promotion: p.promotion, scheduler: p.scheduler, capture: p.capture,
-                 governor: p.governor, fetch: p.fetch, sleep: async () => {}, ...(now ? { now } : {}), ...more };
+                 governor: p.governor, publicRead: p.publicRead, fetch: p.fetch, sleep: async () => {}, ...(now ? { now } : {}), ...more };
   const m = new InstanceSetup(ctx, env, deps);
   const started = await m.start();
   return { m, st: store, ctx, record, prov: p, started, env };
