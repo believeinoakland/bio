@@ -27,3 +27,7 @@ CHANGE (K2998), re-opening the job: R33 gains `clockadopt` (affordances R52 make
 ## B4 · CHANGE
 
 CHANGE (K3009; re-opens your job; from SCREENS-SETTINGS #1 J5): `writinghelp` has no grade, so the shell treats it as reasoned. Grade it in RUNG_ABSENT under ground `caller-owned` (an AI draft answered to the member alone; nothing written to the record), with its `is` sentence citing its owner's requirement; test it by name with a control. Merge tranche/T46 first; run affordances' tests too. Record completion again.
+
+## B5 · ANSWER · re J5
+
+K3012: (a). B4 is withdrawn: change nothing. K3011 already has the shell run any op OPS declares mutating: false on press (writinghelp and the six other drafts among them). Your merged state stands; post COMPLETE (no change) so your record shows it, and stay available until the layer closes.
