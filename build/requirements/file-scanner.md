@@ -1,6 +1,6 @@
 # file-scanner — requirements
 
-**Status** · In force: a new module and fleet member (layer 1, last), by Bob's K1913, K1928, K1929, K1939 and K1949, packaged by BOB (K2008, K2063), entered at T36's opening; every requirement met (FILE-SCANNER #1, K2085).
+**Status** · In force: a new module and fleet member (layer 1, last), by Bob's K1913, K1928, K1929, K1939 and K1949, packaged by BOB (K2008, K2063), entered at T36's opening; every requirement met (FILE-SCANNER #1, K2085). Last changed T47 (T47-67: R10 amended, its images named by the release's registry rule, `ghcr.io/believeinoakland`, copied into the account's registry for an instance, in place of Docker Hub; N990, K2816 (4), K2912); marked not yet met (T47).
 
 **Size (P6).** About 600–900 lines with tests for R1–R18, plus two container images (built artifacts, PROCESS-MECHANICS §14); the provider contract and catalogue (R19–R31) add about 1,500–2,500 lines.
 
@@ -61,7 +61,7 @@ A fleet member in the group's own Cloudflare account, reached only through the p
 - **R9** Any other method or path is refused 404 `UNKNOWN`.
 
 **The fleet member**
-- **R10** The module defines the Worker hosting two container classes: `FileScanner` (ClamAV; `standard-1`, 4 GiB) and `SafeViewRenderer`; R1–R9 and R19–R31 answer through the binding. Its `fleet-member.json` states `kind:"container"`, each image by a digest-pinned reference with its base pinned by digest, in a registry Cloudflare Containers pull from and published as `agent-runner`'s image is (N773; K1898, K2155; never `ghcr.io`, which Containers cannot pull), `bundle`, `class_name`s, `max_instances`, `bind` (`FILE_SCANNER`) and the scheduled trigger, as `agent-runner` R13–R14 do, so `bundler` lists, describes and deploys it. It states an optional Workers VPC binding (`SECURITY_VPC`), absent by default, which the installer adds for a `reach:"tunnel"` tool.
+- **R10** The module defines the Worker hosting two container classes: `FileScanner` (ClamAV; `standard-1`, 4 GiB) and `SafeViewRenderer`; R1–R9 and R19–R31 answer through the binding. Its `fleet-member.json` states `kind:"container"`, each image by a digest-pinned reference with its base pinned by digest, `bundle`, `class_name`s, `max_instances`, `bind` (`FILE_SCANNER`) and the scheduled trigger, as `agent-runner` R13–R14 do, so `bundler` lists, describes and deploys it. It states an optional Workers VPC binding (`SECURITY_VPC`), absent by default, which the installer adds for a `reach:"tunnel"` tool. (T47; N990; K2816 (4), K2912; replaces T36's Docker Hub clause, N773, K1898, K2155) The marker and the configuration name both images by the release's registry rule, as `agent-runner`'s image is named: each a `ghcr.io/believeinoakland/<image>@sha256:<64 hex>` reference, the digest the release published, the same reference in the marker and the configuration, and no other registry named. Cloudflare Containers do not pull from `ghcr.io`, so an instance runs the images copied by digest into its own account's registry, never pulled from `ghcr.io`. *(not yet met: T47)*
 
 ## Private
 

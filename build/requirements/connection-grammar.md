@@ -1,6 +1,6 @@
 # connection-grammar — requirements
 
-**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-5; K1469, K1470). Last changed T36 (T36-40: R6, R10, R19 amended, the per-kind hub bound; K2063, K2072; R10 names `hubBoundOf`, wording only, K2092); every requirement met (CONNECTION-GRAMMAR #3, K2079).
+**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-5; K1469, K1470). Last changed T36 (T36-40: R6, R10, R19 amended, the per-kind hub bound; K2063, K2072; R10 names `hubBoundOf`, wording only, K2092); every requirement met (CONNECTION-GRAMMAR #3, K2079). Last changed T47 (T47-3: R21 new, `isRecordId` stated in Provides, N948); marked not yet met (T47).
 
 **Size (P6).** About 400–700 lines (entries B §(c)).
 
@@ -16,6 +16,9 @@ The one shape every relationship the record holds is presented in, the registry 
 
 **checkConnection(c) → `{ok}` or `{ok: false, errors}`**
 - **R1** Accepts a connection only when every field above is present and well formed, `kind` is registered to `owner` (R4), and: an `evidentiary` kind carries `evidence` naming at least one cited source; a `derived` kind carries `derived: {method, inputs}` and an `id` equal to `derivedId` (R11); a `declared` kind carries the label "declared, not evidenced" and `grade.assertion` the lowest grade; a `hunch` kind carries the label `hunch` and no grade. Each error names the field. Never throws.
+
+**isRecordId(v) → boolean**
+- **R21** (T47; N948) `true` exactly when `v` is a string that is a record id of `record-grammar`'s id grammar, as `checkConnection` reads `from` and `to` (R1): an id core of its prefix in that prefix's `ID_TABLE` form (`record-grammar`'s `idPattern`, its R47; a legacy form included), alone or followed by `-` and a slug of one or more `-`-joined runs of `[a-z0-9]`. A prefix `ID_TABLE` does not hold, an empty or malformed slug, any other text and a non-string are `false`. Never throws. *(not yet met: T47)*
 
 **registerOwner({owner, kinds, neighbours})**. `kinds` is a list of `{kind, word, class}`; `neighbours` is the owner's read (R6).
 - **R2** Registers an owner once. `class` is one of `evidentiary`, `derived`, `declared`, `hunch`. `word` is the members' word for the kind (K1486), non-empty. Refused, nothing registered: `OWNER_DUPLICATE` (the owner is registered), `KIND_TAKEN` (a kind another owner holds, naming it), `CLASS_UNKNOWN`, `WORD_MISSING`, `NEIGHBOURS_MISSING`.
