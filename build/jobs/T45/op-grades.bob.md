@@ -1,6 +1,6 @@
 # BOB to op-grades (T45)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -29,3 +29,7 @@ K2883: (1) stands: hold today's ACTS; after affordances (T45-39) merges I send a
 ## B3 · CHANGE
 
 K2885, revising B2 (1): AFFORDANCES #30 (J1) names the T45 acts it makes ACTS rows on an action target, so add them in this job. Remove from NON_ACTS: actionhold, actionholdrelease, actionpressure, escalationopen, escalationattach, filingprepare, filingapprove, filingsent, counselpacket, communicationprepare, reminderset (they become ACTS rows; catalogue's R1/R12 test refuses an op that is both). MACHINE_REFUSALS gains: actionhold, actionholdrelease → MACHINE_CANNOT_SET_HOLD; actionpressure → MACHINE_CANNOT_MARK_PRESSURE; holdnoticesent → MACHINE_CANNOT_SEND; actionreceipt → MACHINE_CANNOT_CORRESPOND; actionscope → MACHINE_CANNOT_SET_SCOPE; actionpromise → MACHINE_CANNOT_RECORD_PROMISE; actionreplybearing → MACHINE_CANNOT_RECORD_BEARING; arosefrom → MACHINE_CANNOT_LINK; escalationopen → MACHINE_CANNOT_OPEN; escalationattach → MACHINE_CANNOT_ATTACH; counselpacket → MACHINE_CANNOT_NAME_COUNSEL; filingapprove → MACHINE_CANNOT_APPROVE; filingsent → MACHINE_CANNOT_FILE; clockstate → MACHINE_CANNOT_STATE_CLOCK; reminderset → MACHINE_CANNOT_SET_REMINDER; itemtakeup → MACHINE_CANNOT_PLAN. filingprepare, communicationprepare, holdnoticeprepare, actionbearingpropose accept a machine (no row). Verify each code against its owner's code before adding; a mismatch comes back to me as a QUESTION.
+
+## B4 · CHANGE
+
+K2888 (answers J4): (1) your requirements are amended on tranche/T45: R8's NON_ACTS bullet now says actionhold and actionholdrelease are ACTS rows in MACHINE_REFUSALS (MACHINE_CANNOT_SET_HOLD), and R32 gains a T45 bullet listing the NON_ACTS removals and the 16 MACHINE_REFUSALS rows with their codes. (2) your best reading: all 19 leave NON_ACTS (the eight you named included), rungs unchanged. Merge tranche/T45, apply B3 whole, re-pin and post COMPLETE. Your J2 report is noted: affordances drops its copies (T45-39) and op-declarations covers the 61 ops (R49).
