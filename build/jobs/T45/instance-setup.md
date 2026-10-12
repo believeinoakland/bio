@@ -45,3 +45,7 @@ Found outside my module (details in my record's Completion):
 1. op-declarations (T45-45, its R49) and op-grades (R32) owe `declaredstakeset` a spec and a grade: an administrator's act, mutating, `by` stamped, `machineClasses: []`, answered by `NOT_AN_ADMIN`, with help text under R34. Until then the door answers `UNKNOWN_OP` for it, as rule 4 (12) accepts for other new ops.
 2. plane `door.test.mjs` "R1, R5 (K1690, K1870, K2162, K2249): instance-setup's thirty-three routes…" pins 33 routes and drives each. With `declaredstakeset` there are 34, so it is red from my merge until plane (T45-47) re-pins it and adds the drive. It is the only difference between the users' suites on my branch and on tranche/T45 (607 vs 608 pass of 628; newgroup 51/54 both).
 3. Yours to place: v0.2 rule 9 ("a group with a stake in a matter discloses it") reads as a stake per matter, and R77 holds one group-wide stake. Rule 21's half about another group's findings belongs to the readers of accepted findings.
+
+## J3 · COMPLETE
+
+T45-44 applied: R76 stage_findings, R77 declaredStakeSet (C-64.27), R11 stake and its history, R78 registerGroupIdentity at start. Module tests 147/147. format, architecture, coverage (60/60) and ownership all 0 failures. One red outside the module, for plane T45-47 to re-pin (REPORT J2). Record: Completion section.
