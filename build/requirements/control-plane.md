@@ -43,7 +43,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
   - a session: its member, its viewer (`admin` for the founder) and its identity (`member:<id>`);
   - an `ai` credential: its principal as viewer, and `class:ai/<tokenId>` as author (REC-134);
   - a binding class: `class:<cls>`, or `token:<cls>` where the op's recorded decision names that form (D-311).
-  - (K3006; CONTROL-PLANE #31 J2) A caller's `at` (query or body) never reaches an op whose owner reads it as the act's recorded time (`ACT_CLOCK_OPS`), and `reattest`'s `attempted` likewise; a date the caller states (a letter's, a reminder's day, a read's as-of, `calibrate`'s probe time) is passed on. *(not yet met: T46)*
+  - (K3006; CONTROL-PLANE #31 J2) A caller's `at` (query or body) never reaches an op whose owner reads it as the act's recorded time (`ACT_CLOCK_OPS`); a date the caller states (a letter's, a reminder's day, a read's as-of, `calibrate`'s probe time) is passed on. *(not yet met: T46)*
 
   The founder's `author` is `admin`, and `member:admin` on the action-layer and intent acts (T8). `origin` is the origin the request reached. On `publishpreflight` an `ai` caller's credential is also stamped as `aiCred` (N407, K737). So no handler ever receives a caller's own statement of who or where they are.
 - **R18** `administer` is true exactly for a session that administers (membership R3) and for the `admin` binding class. `op=whoami` answers `tokenClass`, `session`, `member`, `handle`, `administer`, `rootOfTrust`, the session's sorted `capabilities` (`null` for a credential), the capability `vocabulary` and `confinedTo` (for an `ai` credential, else `null`).

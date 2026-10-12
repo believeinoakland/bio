@@ -1,0 +1,100 @@
+# screens-inquiry (T46)
+
+**Status** · session_01YMxGacVK3G14cDwVAkXxu7 · depth 2 · COMPLETE · handled B8
+
+## J1 · QUESTION
+
+The screen contract's calling shape (interface-shell R21 and its Suggestions) is not yet pushed by INTERFACE-SHELL #1. I build against exactly the reading SCREENS-DAILY #1 posted as its J1 (SCREENS an array of `{id, reads, render, acts, words}`; `reads(view)` → `{name: {op, query, empty?}}`; `render(cs, view)` → an HTML string with `view = {subject, data, me, ui, reachable}`; `acts` `[{op, label, send(view, el), done?}]` drawn by `cs.act(op, {label, data})`; the kit `cs` as its point 5), so that the four screen modules share one shape. My tests run the screens over a small fake kit of that shape under my own test path, replaced by interface-shell's stand-in when its merge is announced. Whatever you answer SCREENS-DAILY #1 applies to me too: one answer to both is enough.
+
+## J2 · QUESTION
+
+R6 (K2976) needs two things from interface-shell's kit that J1's shape does not give, since the kit's reads and acts carry the member's session token in `Authorization` (its R3):
+
+1. **A call under another bearer.** `airunopen` (opened under her minted `ai` credential) and each `airundispatch` must present the minted credential, not the session, in `Authorization: Bearer`. My reading: the kit gives `cs.call(op, {query, body, bearer})` answering a promise of the parsed answer; `bearer` absent means the session; present, it replaces the session token in the header for that one request and appears nowhere else. `aicredentialmint` and `aicredentialrevoke` go under the session through the same call.
+2. **Memory that survives a redraw but not a reload, and a close hook.** The credential lives only in page memory. My reading: the dock's `ui` object (J1 point 3) is kept by the shell in memory across redraws of the same page and never written to storage, the address or the record; and the shell calls the dock panel's optional `closed(cs, view)` when the member closes the dock or leaves the page (`pagehide`), where I revoke. A reload loses `ui`, so the dock finds an open run of hers it holds no credential for and offers a new run (R6).
+
+I build against this reading, behind my own fake kit, and replace it with interface-shell's when its merge is announced. Please confirm or replace, and relay to INTERFACE-SHELL #1 if confirmed (it touches its R3 test, which finds the session token only in headers: a request carrying the `ai` credential carries no session token).
+
+## J3 · QUESTION
+
+R4 and R6: what the dock's `airunopen` body carries. `ai-runs` R9 needs both principals, a well-formed `skillVersion` (`run-rules` R8) and declared `bounds` (`run-rules` R3); none of my sources says where the dock takes them. My reading, which I build now:
+- `run`: a fresh id the page draws (`RUN-` and 16 random hex); `mode`: `check` (the one deployed mode, R40; `plan` only with a plan named, so the dock offers `plan` nowhere in T46: the project's plans are T47's screen);
+- context: on `question` and `assistant`, `{contextType: "inquiry", contextId: <the question>}`; on `project`, `{contextType: "project", contextId: <the project>}`; on `document`, the project the document is filed in when the screen knows it (its `place`), else "Work on this" is not drawn there (`RUN_CONTEXTS` holds only inquiry and project);
+- `principalClaude`: `member:<whoami.member>` (her own Claude principal); `skillVersion`: the pack and edition `op=agentpack` answers, read once by the dock (if it names none, "Work on this" is not drawn and the dock says the assistant is not ready, `state.failed`);
+- `bounds`: `[{bound: "wallclock", allowed: 1800000, unit: "ms"}, {bound: "fetches", allowed: 0}, {bound: "subsessions", allowed: 0}]` (a member's check reads what the group holds, fetching nothing);
+- the minted credential's `writes`: `["airunopen", "airundispatch", "airunclose", "suggest"]`, `principalKind: "member"`, `taskScope` left to its default, `expiresInDays: 1`, `tokenId` `dock-` and 16 random hex. Until T46-59 declares `airundispatch`, the mint refuses `AI_SCOPE_UNKNOWN_OP` and the dock draws that refusal; my tests stub the plane.
+Please confirm or name the values; only the skillVersion source and the bounds would change what I build.
+
+## J4 · REPORT
+
+What my op survey found in the ops my requirements name, against their owners' code on `tranche/T46` (I build on the readings given; none blocks me, each is BOB's to place):
+1. R1 "the project's questions (`list` of its inquiries)": `list` neither filters by project nor answers one per row, and no op serves `basis-versions` R41 (`projectQuestions`) over HTTP. I take the project's questions as its document's `cites` references to `INQ-` ids not `severed` (R41's own test), read from `image` of the project, their titles from `list` (`type=inquiry`). An op for R41 would be cleaner (control-plane, or basis-versions' map).
+2. R1 `promote` "Open a question": a new inquiry written with `project:` is fenced by the project (promotion R53) but is not among the project's questions by R41 until the project's document cites it, and no op adds that edge short of a full revision of the project's bundle. I write the inquiry (allocid, then promote with `project:`) and open its screen; it shows on the project screen only once cited. A served "draw this question into the project" act is owed.
+3. R1 `strengthbarset` (→ `strengthbar`) sets the group's default bar, administrators only (`STRENGTH_BAR_NOT_ADMIN`); a project's own bar is `required_strength` in its document. The registry and the word say "Set the project's bar". I draw the act as the requirement says and it sets the group's bar: the protected label is then untrue. Needs a ruling (and perhaps a design-stream correction).
+4. R2 `sever`, `reinstate` act only on a project's `cites` edges: an inquiry is refused `NOT_A_PROJECT`, so on the question screen they cannot remove a leg. I send `project=<the question>` as the requirement implies, and the plane refuses; I draw the refusal (R13).
+5. R1 `projectdirectory` lists only discoverable projects the member does not see in full; I use it as "she has not joined" (subject listed → `projectjoin` drawn), beside the existence answer `PROJECT_SEEN_NOT_A_PARTICIPANT` on the project's reads.
+6. R3 `attest` is an RFC 3161 timestamp over the capture's hash, not a member's signature, though `act.attest.does` says "Signed with your key"; `monitor` runs one check now and does not subscribe, though `act.monitor.does` says it watches. Words for the design stream.
+7. R7: `airunlog` entries and the `suggest` answer carry no `untested`; the dock takes the label from the run (`airun` `session.untested`, and `airunopen`'s answer) for every output of that run.
+8. `aicredentialmint`, `transcribe`, `airunopen` and `airunclose` read `at` from the body and the door does not strip it, so a client could date its own act. The dock never sends `at`; the door (control-plane) may want to strip it.
+
+## J5 · COMPLETE
+
+T46-58 applied: R1–R7 with K2976, K2999 and K3003's sub-bullets (J3, J4 as you ruled).
+
+**Files (for `modules.json`; K1043).** paths `bio-plane/src/screens-inquiry/`: `index.mjs` (`SCREENS`, `SCREEN_WORDS`), `words.mjs` (the module's own rows), `project.mjs`, `question.mjs`, `document.mjs`, `assistant.mjs`. tests `bio-plane/test/m/screens-inquiry/`: `kit.mjs` (the stand-in kit), `project.test.mjs`, `question.test.mjs`, `document.test.mjs`, `assistant.test.mjs`, `common.test.mjs`.
+
+**Applied.** The four registry screens on interface-shell R21's contract (K2996, K2998, K3002), each function self-contained: the tests rebuild every function from its source text before running it, so a module-scope reference fails. Project (R1): stage, the bar as two grades, the questions by R41's rule with each one's strength, what pays for the assistant, members, `promote` (allocid, then an inquiry with `project:`), `findin`, `projectinvite`, `projectjoin` (when not joined, or invited), `planopen` (plans opened listed); no `strengthbarset` (K3003). Question (R2): strength against the project's or the group's bar (two grades, the phrase, the weakest part, what would raise it), waits with who set aside and why, Supports, Cuts against, Hunches, Concluding; nine acts, no `sever` or `reinstate` (K3003); conclude and withdraw are dialogs carrying only the member's words. Document (R3): grade as one mark with "Why B?", passages citable into a chosen question (`found`), unread pages (`transcribe`; `pagetranscribe` only while reachable), the people it names (`identityclaim`), versions (a newer one marked changed), what cites it; `release` and `retire` make their selection first; the original opens through `open-file`. Dock (R4, R6, R7): what it is, whose account serves her, the run and its productions as machine work, never evidence, each with the run's `untested` label; "Work on this" on her own sign-in mints a one-day member credential (writes `airunopen`, `airundispatch`, `airunclose`, `suggest`), opens and dispatches the run presenting it only as `Authorization`, keeps it in `ui`, and revokes it when the run ends, is stopped, or the dock closes (`closed`); a reloaded dock offers a new run.
+- Seam with screens-daily, read from its branch: `find-in`'s subject is a project id, a held set's handle or a capture digest. So the project passes its id, the document its digest, and the question's cite opens Find in over its project (or Find with its words when it has no project).
+- Flaws found and fixed in my own module: words nested inside fills (escaped) restructured; a transcription's outcome note hidden while the reading reloads; the withdraw dialog borrowing the restore label.
+
+**Deferred.** (1) `narrow` sends the version, name and description but no narrower `extent`. Choosing a part narrower than a leg needs a passage picker no T46 screen has, so the plane refuses it `NARROW_NO_EXTENT` and the refusal is drawn. (2) The stand-in kit replaces interface-shell's shared DOM stand-in until its merge's CHANGE; `cs.choice(id, labelKey, [{value, key|text}], {value})` and `cs.row(lead, main, end)` are my readings of signatures R21 does not spell out, to re-point then. (3) Size is ~1,300 lines against the 2,400–3,000 estimate. The screens draw HTML through the kit, so most of the frame's weight is the shell's.
+
+**Found in other modules (reported in J4; your N974–N978).** No op serves `basis-versions` R41, and none draws a new question into a project. `strengthbarset` sets the group's bar. `sever` and `reinstate` refuse an inquiry. `attest` and `monitor` words overstate what the ops do. `airunlog` and `suggest` carry no `untested`. `at` is not stripped by the door. Also: `aicredentialmint` refuses `AI_SCOPE_UNKNOWN_OP` until `airundispatch` is declared (T46-59). No generated artifact is made stale.
+
+**Tests and checks.** `node --test bio-plane/test/m/screens-inquiry/`: tests 44, pass 44, fail 0 (every live id R1–R7 named, controls with each). No layer tests are named in the manifest. From the process repository, with a local uncommitted `modules.json` entry for my paths: `format` 159 modules, 0 failures; `architecture` 12 product files, 22 relative imports, 0 failures; `coverage` 7 of 7 live ids named, 0 failures; `ownership` 13 files, 0 failures. `checks/run.mjs`: architecture 0 failures; coverage 8 failures, none mine (other L11 jobs still open).
+
+Size (session_01YMxGacVK3G14cDwVAkXxu7): test runs 13, module lines 1299
+
+## J6 · REPORT
+
+Kit gaps that remain after re-pointing to interface-shell's kit (K3007). The first two are interface-shell's or op-grades', not mine; I work around each as stated.
+1. **`cs.choice` takes word keys only** (`[value, key, fills]`). A choice among record data (question titles, page numbers) has no plain-text option. I pass the datum in the key's place, and the kit draws an unknown key as itself, escaped. That works, but it rides on the fallback. A `[value, {text}]` option, or `fills` on a key such as `shell.choice.datum` = "{text}", would make it explicit.
+2. **Reads drawn as acts weigh as reasoned.** `findin`, `search` and `gradenote` have no rung in `op-grades`' `RUNGS` or `RUNG_ABSENT`, so the shell asks a reason before Find in opens, before Find opens, and before "Why B?" reads the grade note. Each still works once a reason is given, but the reason is asked to no purpose. op-grades could name them `RUNG_ABSENT` (observational), as `openoriginal` is; a registry or op-grades ruling, not mine.
+3. **No timer in the contract.** The dock cannot watch a run. It re-reads the run after each act of the member's in the dock, so a run that ends by itself is seen ended (and its credential revoked) at her next act, when the dock closes, when she leaves the page, or when the one-day credential expires, whichever comes first. A kit `cs.later(ms, fn)` (the fake clock in tests) would let it poll.
+4. Adapted, not a gap: dialog fields show only for terminal and signed acts. So conclude's and narrow's words, release's acknowledgment and mitigation, and a transcription's text are screen fields serving as `reasonField`. Withdraw's reason is the shell's, carried in the query (`raw: ""`) where `basis-versions` reads it.
+
+## J7 · COMPLETE
+
+CHANGEs B7 and B8 applied (K3004, K3007): `tranche/T46` merged; tests re-pointed from my stand-in kit (deleted) to interface-shell's served page (`harness.mjs` `boot`, `dom.mjs`); screens corrected to the real kit.
+
+**Signatures corrected.**
+- `cs.title` and `cs.ref` now get raw labels (they escape).
+- `cs.choice` options are `[value, key]`.
+- Dates go into words as `{html}` fills.
+- A failed later read's refusal now carries its `words`.
+- `cs.call`'s answers are read as the kit gives them: the envelope on success, the refusal's fields on refusal, null when nothing answers.
+
+**Friction by each op's weight (op-grades), as interface-shell R11 draws it.**
+- Reasoned acts whose words are the member's own name a `reasonField`: `planopen` (title), `narrow` (description), `conclude` (commentary, in the query with `raw`), `checkrequest` (note, now required), `release` (acknowledgment), `identityclaim` (note), `transcribe` (text).
+- `withdrawconclusion` and `heldrestore` take the shell's reason.
+- `retire` keeps its terminal dialog; `attest` confirms its signed dialog.
+
+**Flaws found and fixed on the real page.**
+- The question screen read the group's bar before the inquiry named its project.
+- The grade note's heading drew `{letter}` unfilled.
+- The question screen's `planopen` lacked its reasonField.
+- The dock now re-reads its run after a suggestion, so a run that ended by itself has its credential revoked without closing the dock.
+
+**Files.** Unchanged paths. Tests: `bio-plane/test/m/screens-inquiry/` (`fixtures.mjs` new; `kit.mjs` deleted; the five test files rewritten). Modules and words as in J5, plus K3003 applied (no `strengthbarset` on the project; no `sever` or `reinstate` on the question).
+
+**Kit gaps that remain:** J6 (REPORT). `cs.choice` has no plain-text option; `findin`, `search` and `gradenote` weigh as reasoned for want of a rung; there is no timer for watching a run.
+
+**Still deferred:** `narrow` sends no narrower extent (no passage picker in T46), so the plane refuses it `NARROW_NO_EXTENT`, drawn beside the act.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/screens-inquiry/`: tests 46, pass 46, fail 0, all over the served page.
+- Each requirement R1–R7 is named, with controls.
+- From the process repository, with a local uncommitted `modules.json` entry for my paths: format 0 failures; architecture 12 product files, 26 relative imports, 0 failures; coverage 7 of 7; ownership 13 files, 0 failures.
+- `checks/run.mjs`: architecture 0 failures; coverage 4 failures, none mine.
+
+Size (session_01YMxGacVK3G14cDwVAkXxu7): test runs 29, module lines 1338
