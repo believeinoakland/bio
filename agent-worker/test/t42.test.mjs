@@ -35,7 +35,7 @@ function planeStub() {
   const calls = [];
   return { calls, binding: { fetch: async (url) => { calls.push(String(url)); return Response.json({ ok: false }, { status: 500 }); } } };
 }
-/** A recording `RUNNER` namespace: a picture is never relayed to a sign-in (R72; agent-model R14). */
+/** A recording `RUNNER` namespace: an API-key account never reaches it (R72); a sign-in's relay of the picture is t46's (T46). */
 function runnerStub() {
   const calls = [];
   return { calls, binding: { idFromName: (n) => ({ n }), get: (id) => ({ fetch: async (u) => { calls.push([id.n, String(u)]); return Response.json({}); } }) } };

@@ -319,5 +319,72 @@ section("R80 (T46) · /run takes a run a member opened on her own sign-in, as ai
     [shape.status, shape.out?.code, shape.plane.length], [400, "BAD_CREDENTIAL_SHAPE", 0]);
 }
 
+/* ================================================================================================ R72 */
+
+/* A PNG as the transcriber sends it: the signature, then a sentinel standing for the picture's bytes. */
+const PICTURE = "PICTURE-BYTES-T46-SENTINEL";
+const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from(PICTURE.repeat(4))]).toString("base64");
+/* The member's own instance as agent-runner R24 and R5 answer it: `/version` names `image` when `capable`; each
+   conversation asks `read_page`, then answers `transcription` once the picture came back inside the tool's result. */
+function pictureRunner({ capable = true } = {}) {
+  const named = [], opened = [], results = [], versions = [];
+  const connect = async (url) => {
+    if (String(url).endsWith("/version")) {
+      versions.push(String(url));
+      return Response.json({ ok: true, name: "agent-runner", version: "t46", ...(capable ? { capabilities: ["image"] } : {}) });
+    }
+    const on = {};
+    const emit = (m) => setTimeout(() => (on.message || []).forEach((f) => f({ data: JSON.stringify(m) })), 0);
+    let answered = false;
+    const ws = { accept() {}, close() {}, addEventListener(type, fn) { (on[type] ||= []).push(fn); },
+      send(text) {
+        const m = JSON.parse(text);
+        if (!m.tool_result) { opened.push(m); return emit({ tool_use: { id: "p1", name: "read_page", input: {} } }); }
+        results.push(m.tool_result);
+        if (answered) return emit({ ok: true, result: "", stop_reason: "end_turn", usage: { input_tokens: 2, output_tokens: 1 }, num_turns: 2 });
+        const saw = Array.isArray(m.tool_result.content) && m.tool_result.content.some((b) => b.type === "image" && b.source?.data === PNG);
+        answered = true;
+        emit({ tool_use: { id: "p2", name: "transcription", input: { text: saw ? "the words on the page" : "" } } });
+      } };
+    return { status: 101, webSocket: ws };
+  };
+  return { named, opened, results, versions, idFromName: (n) => { named.push(n); return { n }; }, get: () => ({ fetch: connect }) };
+}
+async function transcribeOn(runner, account) {
+  const p = plane();
+  const saved = globalThis.fetch;
+  let modelCalls = 0;
+  globalThis.fetch = async () => { modelCalls += 1; return new Response("no", { status: 599 }); };
+  try {
+    const res = await worker.fetch(new Request("http://agent-worker/transcribe", { method: "POST",
+      body: JSON.stringify({ capture_sha: "c".repeat(64), pages: [{ page: 0, media_type: "image/png", data: PNG }], account }) }),
+      { PLANE: p.binding, RUNNER: runner });
+    const text = await res.text();
+    return { status: res.status, text, out: JSON.parse(text), plane: p.calls, modelCalls };
+  } finally { globalThis.fetch = saved; }
+}
+
+section("R72 (T46) · a sign-in transcribes: the picture relayed to the member's own runner inside read_page's result");
+{
+  const rn = pictureRunner();
+  const r = await transcribeOn(rn, SIGNIN(MEMBER, false));
+  t("R72: a signin account with a stub runner transcribes the page", [r.status, r.out?.pages], [200, [{ page: 0, text: "the words on the page" }]]);
+  t("R72: on the member's own instance only, and no API call", [[...new Set(rn.named)], r.modelCalls], [[MEMBER], 0]);
+  t("R72 (R73): the picture reached the runner only inside the read_page result",
+    [rn.results.filter((x) => x.id === "p1" && JSON.stringify(x.content).includes(PNG)).length,
+     rn.opened.some((o) => JSON.stringify(o).includes(PNG)), rn.results.filter((x) => x.id !== "p1" && JSON.stringify(x).includes(PNG)).length],
+    [1, false, 0]);
+  t("R72, R75: no plane call, and the answer carries no picture", [r.plane.length, r.text.includes(PNG)], [0, false]);
+  t("R72, R74: the answer is labelled the AI's reading", r.out?.label, { kind: "machine", says: "the AI's reading" });
+  const old = pictureRunner({ capable: false });
+  const o = await transcribeOn(old, SIGNIN(MEMBER, false));
+  t("R72 (control): a runner that does not relay pictures: the picture is never sent, the page refused, not dropped",
+    [o.status, o.out?.code, o.out?.ending, old.opened.length, old.results.length], [502, "MODEL_REFUSED", "refused", 0, 0]);
+  t("R72 (control): and it is no longer refused TRANSCRIBE_NEEDS_API_KEY", o.text.includes("TRANSCRIBE_NEEDS_API_KEY"), false);
+  const key = await transcribeOn(pictureRunner(), KEY);
+  t("R72 (control): an apikey account goes to the API as before, never to a runner",
+    [key.modelCalls > 0, key.text.includes("TRANSCRIBE_NEEDS_API_KEY")], [true, false]);
+}
+
 console.log(`\nt46: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

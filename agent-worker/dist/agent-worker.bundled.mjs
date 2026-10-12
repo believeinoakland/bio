@@ -2456,21 +2456,47 @@ var READ_RESULT = Object.freeze({
     additionalProperties: false
   })
 });
+var RUNNER_VERSION_URL = "https://agent-runner/version";
+var IMAGE_CAPABILITY = "image";
 var IMAGE_NOT_RELAYED = "IMAGE_NOT_RELAYED";
 var isImage = (b) => !!b && typeof b === "object" && b.type === "image";
-var blocksHoldImage = (content) => Array.isArray(content) && content.some((b) => isImage(b) || !!b && b.type === "tool_result" && Array.isArray(b.content) && b.content.some(isImage));
-var transcriptHoldsImage = (messages) => (Array.isArray(messages) ? messages : []).some((m) => blocksHoldImage(m && m.content));
+var holdsImage = (content) => Array.isArray(content) && content.some(isImage);
+var contentOf = (messages) => (Array.isArray(messages) ? messages : []).flatMap((m) => Array.isArray(m && m.content) ? m.content : []);
+var imageOutsideResult = (messages) => contentOf(messages).some(isImage);
+var resultHoldsImage = (messages) => contentOf(messages).some((b) => !!b && b.type === "tool_result" && holdsImage(b.content));
 var notRelayed = () => refused(
   null,
   IMAGE_NOT_RELAYED,
-  "a page's picture reaches the model only on an API key: a sign-in's relay carries text only, so nothing was sent"
+  "a page's picture reaches a sign-in only through a runner that relays pictures, and this one does not; nothing was sent"
 );
-var NOT_RELAYED_RESULT = "not performed: a page's picture is not relayed to a sign-in";
+var NOT_RELAYED_RESULT = "not performed: this runner does not relay a page's picture";
+async function relaysImages(runner, member) {
+  try {
+    const res = await runner.get(runner.idFromName(member)).fetch(RUNNER_VERSION_URL);
+    if (!res || res.status !== 200) return false;
+    const body = await res.json();
+    return !!body && Array.isArray(body.capabilities) && body.capabilities.includes(IMAGE_CAPABILITY);
+  } catch {
+    return false;
+  }
+}
+function imageGate(runner, member) {
+  let asked = null;
+  return () => asked ??= relaysImages(runner, member);
+}
+function relayContent(content) {
+  if (!holdsImage(content)) return relayText(content);
+  return content.map((b) => {
+    if (isImage(b)) return b;
+    if (b && b.type === "text") return { type: "text", text: String(b.text ?? "") };
+    return { type: "text", text: relayText([b]) };
+  });
+}
 function heldResults(messages) {
   const held = /* @__PURE__ */ new Map();
   for (const m of Array.isArray(messages) ? messages : [])
     for (const b of Array.isArray(m && m.content) ? m.content : [])
-      if (b && b.type === "tool_result") held.set(String(b.tool_use_id), relayText(b.content));
+      if (b && b.type === "tool_result") held.set(String(b.tool_use_id), relayContent(b.content));
   return held;
 }
 function renderTranscript(messages) {
@@ -2509,7 +2535,7 @@ function answeredHere(u, messages) {
   }
   if (u.name === READ_FACTS.name) {
     const f = factsOf(messages);
-    return f.error ? f : { content: relayText(f.blocks) };
+    return f.error ? f : { content: relayContent(f.blocks) };
   }
   return null;
 }
@@ -2597,7 +2623,9 @@ async function signinConverse({
   let calls = 0;
   let k = 0;
   const unstated = () => sumUsage(usage, usageOf(null));
-  if (transcriptHoldsImage(messages)) return notRelayed();
+  const imagesRelayed = imageGate(runner, member);
+  if (imageOutsideResult(messages)) return notRelayed();
+  if (resultHoldsImage(messages) && !await imagesRelayed()) return notRelayed();
   while (k < maxTurns) {
     const serialized = JSON.stringify(conversationRequest(member, { model, system, messages, tools, maxTurns: maxTurns - k }));
     const stop = charge(serialized);
@@ -2639,12 +2667,12 @@ async function signinConverse({
             return r.halt;
           }
           blocks = toolResultContent(r);
-          if (blocksHoldImage(blocks)) {
+          if (holdsImage(blocks) && !await imagesRelayed()) {
             conn.close();
             messages.push({ role: "user", content: [{ type: "tool_result", tool_use_id: u.id, content: NOT_RELAYED_RESULT, is_error: true }] });
             return { ...notRelayed(), usage: unstated(), calls: null };
           }
-          content = relayText(blocks);
+          content = relayContent(blocks);
           isError = !!r?.error;
         }
         if (!reread) messages.push({ role: "user", content: [{
