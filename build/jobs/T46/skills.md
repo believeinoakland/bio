@@ -63,3 +63,7 @@ T46-16 applied: R47 (action_planning names closingNotesOf, action-plans R45, as 
 - Checks: format, architecture, coverage (48/48) and ownership, 0 failures each.
 
 Size (session_01FiMon7UNZRyjhX6B7Jo9z2): test runs 15, module lines 3084
+
+## J2 · COMPLETE
+
+B2 done: tranche/T46 merged; status report now carries run-rules' DRAFT_REACH.statusreport by key. skills 117/117; checks 0 failures. Users: investigation, answer-envelope green; control-plane the same 2 already-red; agent-worker requirements.test.mjs now fails R44/R53 (plan in DEPLOYED_MODES vs MODES) and R45 (bundle stale against run-rules), identically without my change: from the run-rules merge, agent-worker's own to fix.
