@@ -10,7 +10,7 @@
 
 **Tests:** new `stamps.test.mjs` (three tests, each with controls): R4 through the real action-clocks, read bare and stamped (control: bob is not told); R1's creator as action-clocks answers it (control: revoked, passed over); R1–R3, R5–R10, R12 with every provider's member in the stamped form (control: a machine's stamp names no member, so the owners receive it). `action-producers` 45 pass, 0 fail; `queue-producers` 74/0; `queue` 142/0; `plane/t45` 14/0. Checks: format, architecture, coverage (23/23), ownership 0 failures; `run.mjs` architecture 0, coverage 12 failures, none this module's.
 
-Size (session_01RtAxjH3XdN1UyVL6cBpQ1K): test runs 18, module lines 1470
+Size (session_01RtAxjH3XdN1UyVL6cBpQ1K): test runs 18, module lines 1462
 
 ## Completion
 
