@@ -52,3 +52,17 @@ I did not re-read the public parts of my Uses. No change in this job touches the
 - `ownership`: 5 files changed by local-facts; 0 failures.
 
 Size (session_0132BkHEZ5G69QAFjomHQvCD): test runs 6, module lines 1380
+
+## J1 · COMPLETE
+
+T46-9 applied: R15 and R16. I read my code and tests whole (record: Working notes).
+- R15: localFactsOps gains the grouprules arm. It is R12's groupRules, with section from the query and viewer from the URL; a body sets neither. The map now has eight arms.
+- R16: the nine C-126 rows words.json holds now read their words by key through RULE_WORDS (checks.mjs). The eight named rows are re-worded; RULE_SELF_CONFIRM's words are unchanged; {errors} is left for the screen. No code, number, where or behaviour moved. Every sentence passed your adoption conditions.
+- New tests: t46.test.mjs and words.mjs. local-facts 60/60. format, architecture, coverage (16/16) and ownership each have 0 failures.
+For you:
+1. R15 makes three pins in other modules stale; each was green on the tranche before this change:
+   - plane "R11, R5 … local-facts' and filing-templates' maps" (T46-62, which also removes its named grouprules entry);
+   - affordances catalogue.test "R1 R12 R24 … filing-templates and local-facts hold exactly their ops" (T46-45);
+   - op-declarations t45.test "R49, R6" ("drop grouprules from SERVED_ELSEWHERE", T46-51).
+2. The plane bundle is staled. The eight re-worded rows wait for T47's stamp.
+3. One flaw is deferred: groupRules mints RULE_SECTION_UNKNOWN at a second site. Fixing it would move C-126.7's where, which R16 holds; it should go in a later job.
