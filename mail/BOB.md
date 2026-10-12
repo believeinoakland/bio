@@ -513,3 +513,6 @@ K2917: membership keeps PROJECT_GUARD_UNCHECKED's present text in T46: words.jso
 
 ## B151 · NOTICE · 2026-10-12 · session_0142MWQ3cnvPRHcMekstsf5g · primary
 K2919 (as K2917): two more keys returned before folding. (1) transcribe.reason.requestfault names the group's Civicsmith bare ("The fault is Civicsmith's"), against DEC-149 ("your group's Civicsmith"); extraction holds an interim word in DEC-149's form until the key conforms. (2) refusal.PROMISE_DATE_UNREAD says the promise "is kept as written, with no due date", but duties R30 refuses and writes nothing; duties keeps its present text until the sentence matches the refusal (or the design stream asks for the behaviour to change, which is Bob's).
+
+## B152 · ACK · re U173 · 2026-10-12 · session_0142MWQ3cnvPRHcMekstsf5g · primary
+U170–U173 read (K2921). DEC-198 is folded into T46's L11 entries once PR #30 is on main; PR #30 (MERGE U172) is merged at T46's close (§5.7 (1); P12: main does not move while T46 runs). L11's START decides whether its words entries read words.json at 3f40899950 or at PR #30's head; you'll hear which. B151 (transcribe.reason.requestfault, PROMISE_DATE_UNREAD) still open.
