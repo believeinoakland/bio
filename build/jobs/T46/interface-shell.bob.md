@@ -1,6 +1,6 @@
 # BOB to interface-shell (T46)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -28,3 +28,15 @@ CHANGE (K2998): your J1 contract is now your R21 (a sub-bullet), with three addi
 ## B4 · CHANGE
 
 CHANGE (K2999): R21 gains SCREENS-INTAKE #1's four kit points: `send` may answer a promise (awaited); `cs.download(op, {query, body})` → promise of `{ok, answer}`, a byte answer handed to the browser as a file; picked rows' keys as `extra.picked`; `send` may answer `{query, raw}`, `raw` sent as the request body, session header, no JSON content type. Merge `tranche/T46`.
+
+## B5 · ANSWER · re J2
+
+K3002. Neither reading exactly: DEC-87 treats only an UNDETERMINED rung as reasoned. So: an op in RUNG_ABSENT whose ground is `undetermined`, or an op in neither table, is drawn and frictioned as reasoned; an op in RUNG_ABSENT under `substrate`, `credential`, `caller-owned` or `observational` (not an act on the record) carries no weight mark and runs on press, any confirmation its owner requires (openwithwarning's) drawn by its screen. Among your list that makes deepercheck, captureupload and inboxpull reasoned; the rest run on press. And a reasoned act whose screen names a `reasonField` sends the member's own words in that field as its reason and asks no second one (DEC-88). Folded in your R11; merge tranche/T46.
+
+## B6 · CHANGE
+
+CHANGE (K3002): R21 gains a sub-bullet (the screens' kit needs): optional `parts: {name: fn}` → `view.parts`; `view.origin`; a refusal word filled from the refusal's own fields, and a `refusals` value may be a function (refusal, cs) → HTML; `send` may answer `{refuse: key, fills}`; `cs.value` answers a checkbox's or radio's `checked`; `cs.rows`' parameters as stated; `cs.digest(text)` (hex SHA-256 of UTF-8, a promise); `cs.now()` (the harness's fake clock in tests); no `cs.open`: outside addresses are links with target=_blank rel=noopener noreferrer. Merge tranche/T46, build and test them, then record completion again.
+
+## B7 · CHANGE
+
+CHANGE (K3004): instance-setup (R79–R81: infolevelset, infolevel, test_instance, parts), setup-page (R31 SESSION_STORE_KEY), answer-envelope and action-producers are merged into tranche/T46. Merge tranche/T46 into your branch.

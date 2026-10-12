@@ -1213,10 +1213,12 @@ export const ACTS = [
      which ground, the reason, the words) is the act's own refusal, the release precedent: the record permits the move,
      not that this caller's parameters will pass. Every count is read through `countOf` and every flag on `=== true`: an
      absent fact offers nothing that needs it. Weight `single`: one act on one action. Not offered here, each with its
-     reason (the job's record, K-ruled by BOB): `clockadopt` (no read answers a standing clock proposal, so its refusal
-     cannot be asked without writing), the action's fields written through promotion (override, partners, press terms,
-     "no reply owed", `follows_action`: no op), stop pursuing and reopen (escalation R31, not built), and the plan's acts
-     (their subject is a plan). */
+     reason (the job's record, K-ruled by BOB): the action's fields written through promotion (override, partners, press
+     terms, "no reply owed", `follows_action`: no op), and the plan's acts (their subject is a plan). R52 (T46) adds what
+     T45 deferred (K2898): stopping and reopening an escalation, `clockadopt` through action-clocks' read of the standing
+     proposals, `filingsent` only on a draft needing no second approval, and attachment at stage 7 by purpose. An act whose
+     refusal turns on WHICH of several things it names (`clockadopt`'s proposal, stage 7's purpose) carries them, read
+     off the facts (`expand`, below `deriveActs`), so its own refusal of a wrong one is never the only way to learn. */
   /* action-holds R2: a hold is placed on the whole action, or on one of its entries; sight is its only gate on place. */
   { id: "actionhold", label: "Place a litigation hold (with a reason)", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && !!f.action },
@@ -1255,18 +1257,33 @@ export const ACTS = [
   { id: "escalationopen", label: "Open an escalation of the determination this rests on (with a reason)",
     weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && f.action?.escalation?.openable === true },
+  /* R52 (escalation R34): at stage 7 the purposes R9 would admit for the action's addressee are carried as `purposes`
+     (never one it refuses), so the purpose is chosen from what the act will accept; at stages 2 and 5 none is asked. */
   { id: "escalationattach", label: "Attach this action to its escalation (with a reason)", weight: "single",
-    types: ["action"], applies: (f, ty) => ty === "action" && f.action?.escalation?.attachable === true },
+    types: ["action"], applies: (f, ty) => ty === "action" && f.action?.escalation?.attachable === true,
+    expand: (f) => [Array.isArray(f.action?.escalation?.attach_purposes) ? { purposes: f.action.escalation.attach_purposes } : {}] },
+  /* R52 (escalation R31, R33): the group stops pursuing an escalation open or suspended (NOT_OPEN otherwise), and reopens
+     one stopped (NOT_STOPPED otherwise), each with a member's reason; a machine is refused both (MACHINE_CANNOT_STOP). */
+  { id: "escalationstoppursuing", label: "Stop pursuing this escalation (with a reason)", weight: "single",
+    types: ["action"], applies: (f, ty) => ty === "action" && f.action?.escalation?.stoppable === true },
+  { id: "escalationreopen", label: "Reopen an escalation the group stopped pursuing (with a reason)", weight: "single",
+    types: ["action"], applies: (f, ty) => ty === "action" && f.action?.escalation?.reopenable === true },
   /* filings R5, R23: prepared on an action not closed (ACTION_CLOSED); a filing only at a governing tier of 1 or 2
      (FILING_TIER_UNDETERMINED, TIER3_COUNSEL_PACKET). */
   { id: "filingprepare", label: "Prepare a filing", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && f.action?.closed === false && f.action?.preparable === true },
   { id: "communicationprepare", label: "Prepare a communication", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && f.action?.closed === false },
+  /* R52 (action-clocks R13, R20): a standing proposal adopted onto the action's clock, one act per proposal with a
+     date, each naming the key `clockadopt` takes as `proposal`; none stands, none is offered. */
+  { id: "clockadopt", label: "Put a proposed deadline on this action's clock", weight: "single", types: ["action"],
+    applies: (f, ty) => ty === "action" && countOf(f.action?.clock?.proposals) > 0,
+    expand: (f) => f.action.clock.proposals.map((proposal) => ({ proposal })) },
   /* filings R6 (with R34, R43: the release of a contradicted sentence and each pointed-out sentence's resolution are its
      parameters, the plan's reconciliation R1): a draft of the group's voice not yet approved; R7: approved, not sent. */
   { id: "filingapprove", label: "Approve a prepared draft", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && countOf(f.action?.drafts?.unapproved) > 0 },
+  /* R52 (filings R50): `approved_unsent` counts only drafts answered `second_needed: false` (SECOND_APPROVAL_NEEDED). */
   { id: "filingsent", label: "Record that an approved draft was sent", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" && countOf(f.action?.drafts?.approved_unsent) > 0 },
   /* filings R11 (claim or defence; T45: no determination needed): sight only, counsel being its parameter. */
@@ -1584,15 +1601,20 @@ export function deriveActs(facts) {
   /* D-311: a machine is withheld what its class is refused — on a STATED true only; a null
      (no author stamp was sent) narrows nothing, D-310's three-valued shape. */
   const machine = facts.actor_is_machine === true;
-  return ACTS.filter((a) => a.applies(facts, ty) && !(machine && Object.hasOwn(MACHINE_REFUSALS, a.id)));
+  return ACTS.filter((a) => a.applies(facts, ty) && !(machine && Object.hasOwn(MACHINE_REFUSALS, a.id)))
+    /* R52: an act naming what it takes (a proposal's key, the purposes it admits) is answered once per named thing */
+    .flatMap((a) => (a.expand ? a.expand(facts).map((named) => (Object.keys(named).length ? { ...a, ...named } : a)) : [a]));
 }
+
+/* R52: the keys an expanded act names, carried by `decorate` beside R11's (the act's own parameter names). */
+const NAMED_KEYS = ["proposal", "purposes"];
 
 /* R11: one act, decorated for a caller. `gate` is the control plane's, built from the tables that actually gate the
  * call (`NEEDS`, `SESSION_OPS`): `{needs(op), mode(op)}`, `mode` one of `session`, `admin-session`, `machine`. Every
  * key is present and a value the record does not hold is a STATED null, never an omitted key — so a queue item's
  * option and an `op=affordances` act for the same subject are one shape from one function. `rung_absence` is the
  * ground of a classified absence (FW-14): a null rung beside a stated ground is undetermined STATED (R24). `phone` is
- * R36's, always a boolean. */
+ * R36's, always a boolean. An act R52 expands also carries what it names (`proposal`, `purposes`). */
 export function decorate(act, gate) {
   const id = act.id;
   return {
@@ -1603,6 +1625,7 @@ export function decorate(act, gate) {
     rung_absence: Object.hasOwn(RUNG_ABSENT, id) ? RUNG_ABSENT[id].ground : null,
     prompt: act.prompt ?? null,
     phone: phoneOf(id),
+    ...Object.fromEntries(NAMED_KEYS.filter((k) => act[k] !== undefined).map((k) => [k, act[k]])),
   };
 }
 

@@ -58,7 +58,9 @@ const R51_ACTS = ["actionhold", "actionholdrelease", "actionpressure", "holdnoti
   "actionreceipt", "actionscope", "actionpromise", "actionreplybearing", "actionbearingpropose", "arosefrom",
   "escalationopen", "escalationattach", "filingprepare", "communicationprepare", "filingapprove", "filingsent",
   "counselpacket", "clockstate", "reminderset", "itemtakeup"];
-test("R1 R51: ACTS holds exactly the object-directed acts, each at its weight", () => {
+/* R52 (T46): the acts T45 deferred, offered on an action: escalation's stop and reopening, and `clockadopt`. */
+const R52_ACTS = ["escalationstoppursuing", "escalationreopen", "clockadopt"];
+test("R1 R51 R52: ACTS holds exactly the object-directed acts, each at its weight", () => {
   const W = {
     refuse: ["release", "retire", "dispose", "sever", "reinstate"],
     report: ["cite"],
@@ -68,7 +70,7 @@ test("R1 R51: ACTS holds exactly the object-directed acts, each at its weight", 
       "projectremove", "projectowneradd", "projectownerremove", "projectownerrescue", "projectvisibilityset",
       "contradictionresolve" /* N345 */, "sourceconsent" /* N364 (K530): its prompt rides it, R5 */,
       /* R51 (T45): every act directed at an action T45's owners serve */
-      ...R51_ACTS],
+      ...R51_ACTS, ...R52_ACTS],
   };
   const want = Object.entries(W).flatMap(([w, xs]) => xs.map((id) => [id, w])).sort();
   assert.deepEqual(ACTS.map((a) => [a.id, a.weight]).sort(), want);
@@ -429,6 +431,12 @@ const T45_L9 = {
   projectRoster: { writes: ["projectscopeset", "projectapprovalset"], reads: [] },
 };
 const T45_L9_OPS = new Set(Object.values(T45_L9).flatMap((o) => [...o.writes, ...o.reads]));
+/* T46's layer 9 ops (escalation R31; action-clocks R20, K2987; op-grades R33 grades them), by owner. */
+const T46_L9 = {
+  escalation: { writes: ["escalationstoppursuing", "escalationreopen"], reads: [] },
+  actionClocks: { writes: [], reads: ["clockproposals"] },
+};
+const T46_L9_OPS = new Set(Object.values(T46_L9).flatMap((o) => [...o.writes, ...o.reads]));
 /* K2049 (B4) and K2121: standards' T35 and T36 ops, graded in op-grades' `t35.mjs` and `t36.mjs`, set aside as T33's are. */
 const STANDARDS_LATER = ["standardforce", "standardforcepropose", "standardforcewithdraw", "standardrelease",
   "standardadoption", "standardimpose", "standardbenchmark", "forcesof", "overridesof", "editioninforce", "bindsat",
@@ -454,7 +462,7 @@ test("R1 R12: layer 9's op maps hold exactly its 41 writes, 19 ungated reads and
     ...m.actionClocks, ...["actioncreate", "action", "actions"].filter((op) => m.actions.includes(op)),
     ...["actionhold", "actionpressure"].filter((op) => m.actionHolds.includes(op))]
     .filter((op) => (!T33_OPS.has(op) || LAYER9_GATED_READS.includes(op)) && !STANDARDS_LATER.includes(op)
-      && !T45_L9_OPS.has(op) && !["escalationstatus", "declinetoescalate", "escalationreasondraft"].includes(op));
+      && !T45_L9_OPS.has(op) && !T46_L9_OPS.has(op) && !["escalationstatus", "declinetoescalate", "escalationreasondraft"].includes(op));
   assert.equal(LAYER9_WRITES.length, 41);
   assert.equal(LAYER9_READS.length, 19);
   assert.deepEqual([...ops].sort(), [...LAYER9_WRITES, ...LAYER9_READS, ...LAYER9_GATED_READS].sort());
@@ -491,6 +499,29 @@ test("R1 R12 R24 R51: T45's layer 8–9 ops — each owner's map holds them; eac
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   const left = A.unaccounted([...table, { op: "actionunnamed", mutating: true, gated: true }]);
   assert.deepEqual([left.unpublished, left.unranked], [["actionunnamed"], ["actionunnamed"]]);
+});
+
+test("R1 R12 R24 R52: T46's layer 9 ops — escalation's and action-clocks' maps hold them; the stop and the reopening are "
+   + "acts on an action (R52) and never non-acts, each decorating with a rung or a stated absence; clockproposals is a gated "
+   + "read, no act; with the control plane's rows for them nothing is unaccounted; one left out is seen", () => {
+  const m = MAPS();
+  for (const [owner, { writes, reads }] of Object.entries(T46_L9))
+    assert.deepEqual([...writes, ...reads].filter((op) => !m[owner].includes(op)), [], owner);
+  const acts = new Set(ACTS.map((a) => a.id));
+  const writes = Object.values(T46_L9).flatMap((o) => o.writes);
+  const reads = Object.values(T46_L9).flatMap((o) => o.reads);
+  for (const op of writes) {
+    const d = A.decorate({ id: op, label: "x" }, null);
+    assert.equal((d.rung === null) !== (d.rung_absence === null), true, `R24: ${op}`);
+    assert.ok(R52_ACTS.includes(op) && acts.has(op) && !Object.hasOwn(NON_ACTS, op), op);
+  }
+  for (const op of reads) assert.ok(!acts.has(op) && Object.hasOwn(NON_ACTS, op), op);
+  const table = [...writes.map((op) => ({ op, mutating: true, gated: true })), ...reads.map((op) => ({ op, mutating: false, gated: true }))];
+  const r = A.unaccounted(table);
+  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
+  assert.deepEqual(r.stale.filter((op) => T46_L9_OPS.has(op)), []);
+  const left = A.unaccounted([...table, { op: "escalationunnamed", mutating: true, gated: true }]);
+  assert.deepEqual([left.unpublished, left.unranked], [["escalationunnamed"], ["escalationunnamed"]]);
 });
 
 /* N321 (T13, K424): `op=projectstage` (publication R44) is a read stamping `viewer`, carried as every project read is:
@@ -620,7 +651,8 @@ const TEMPLATE_WRITES = ["templateretire", "factconfirm", "templatereviewgrant",
   /* T45 (local-facts R10–R13; K2787): a member's drafted group rule, its confirmation, withdrawal and offer */
   "ruledraft", "ruleconfirm", "rulewithdraw"];
 const TEMPLATE_READS = ["templates", "templateread", "templatecomments", "factstatus", "factsdue",
-  "ruleoffer" /* local-facts R13: a confirmed rule's entry offered to the shared profile, a read (op-grades R32) */];
+  "ruleoffer" /* local-facts R13: a confirmed rule's entry offered to the shared profile, a read (op-grades R32) */,
+  "grouprules" /* local-facts R15 (T46; N935): the group's rules for a section, a read */];
 
 test("R1 R12 R24: the op maps of filing-templates and local-facts hold exactly their ops; none is an act; each write "
    + "decorates with a rung or a stated absence; and with the control plane's rows for them nothing is unaccounted", () => {

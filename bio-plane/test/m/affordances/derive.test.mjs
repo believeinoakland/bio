@@ -6,7 +6,7 @@
    basis-versions' `VERSION_MACHINE`, which is what R8's "an edge to X" is defined over. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { deriveActs, ACTS, REOPENABLE_FROM, DISPOSITIONS } from "../../../src/affordances.mjs";
+import { deriveActs, decorate, ACTS, REOPENABLE_FROM, DISPOSITIONS } from "../../../src/affordances.mjs";
 import { MACHINE_REFUSALS } from "../../../src/op-grades/index.mjs";
 import { STATES, normalizeType, vocabFor } from "../../../src/record-grammar/index.mjs";
 import { VERSION_MACHINE } from "../../../src/basis-versions/index.mjs";
@@ -95,7 +95,15 @@ const R51 = {
   reminderset: (f, t) => t === "action" && has(f.action?.clock?.dated) && f.action?.clock?.reminders_room === true,
   itemtakeup: (f, t) => t === "action" && (has(f.action?.clock?.entries) || has(f.action?.holds_in_place)),
 };
-const ORACLE = { ...R8, ...R9, ...SOURCE, ...R51 };
+/* R52 (T46): the acts T45 deferred — escalation's stop where one stands open or suspended, its reopening where one
+   stopped, and `clockadopt` where a dated proposal stands (one act per proposal, each naming its key); `filingsent` keeps
+   R51's oracle over `approved_unsent`, which R52 narrows at the facts (filings R50; the plane's drive, t45). */
+const R52 = {
+  escalationstoppursuing: (f, t) => t === "action" && f.action?.escalation?.stoppable === true,
+  escalationreopen: (f, t) => t === "action" && f.action?.escalation?.reopenable === true,
+  clockadopt: (f, t) => t === "action" && has(f.action?.clock?.proposals),
+};
+const ORACLE = { ...R8, ...R9, ...SOURCE, ...R51, ...R52 };
 /* R10: a machine is withheld what its class is refused, on a stated true only. */
 const expected = (f, id) => ORACLE[id](f, normalizeType(f.object_type))
   && !(f.actor_is_machine === true && id in MACHINE_REFUSALS);
@@ -125,10 +133,12 @@ const READINGS = [null, [], ["suggested"], ["considering"], ["accepted"], ["reje
 /* R51: an action's facts with every act's condition met, with none met, and with every sub-fact null. */
 const ACTION_ALL = { closed: false, request_for_comment: true, entries: { all: 2, sent: 1, received: 1, received_unmarked: 1 },
   holds_in_place: 1, preparable: true, drafts: { unapproved: 1, approved_unsent: 1 },
-  clock: { entries: 1, dated: 1, reminders_room: true }, escalation: { openable: true, attachable: true } };
+  clock: { entries: 1, dated: 1, reminders_room: true, proposals: ["deadline@M-1", "reply@M-2"] },
+  escalation: { openable: true, attachable: true, attach_purposes: ["testimony"], stoppable: true, reopenable: true } };
 const ACTION_NONE = { closed: true, request_for_comment: false, entries: { all: 0, sent: 0, received: 0, received_unmarked: 0 },
   holds_in_place: 0, preparable: false, drafts: { unapproved: 0, approved_unsent: 0 },
-  clock: { entries: 0, dated: 0, reminders_room: false }, escalation: { openable: false, attachable: false } };
+  clock: { entries: 0, dated: 0, reminders_room: false, proposals: [] },
+  escalation: { openable: false, attachable: false, attach_purposes: null, stoppable: false, reopenable: false } };
 const ACTION_NULL = { closed: null, request_for_comment: null, entries: null, holds_in_place: null, preparable: null,
   drafts: null, clock: null, escalation: null };
 const DIMS = {
@@ -175,7 +185,7 @@ const NAMES = {
   projectleave: ["roster"], projectownerremove: ["roster"], projectownerrescue: ["roster"],
   projectvisibilityset: ["project_target_owner"],
   sourceconsent: ["contradiction_inquiry", "case_member", "roster"],
-  ...Object.fromEntries(Object.keys(R51).map((id) => [id, ["action"]])),
+  ...Object.fromEntries([...Object.keys(R51), ...Object.keys(R52)].map((id) => [id, ["action"]])),
 };
 const PERMISSIVE = { case_member: false, concludes_for_project: true, concluded_for_project: true,
   edition_warranted_for_project: true, project_owner: true, basis_legs: 2,
@@ -231,7 +241,29 @@ test("R51: each act an action offers is returned exactly when its owner's refusa
   assert.deepEqual(wrong.slice(0, 5), []);
 });
 
-test("R8 R9 R10 R51: the oracle covers exactly the acts in ACTS", () => {
+test("R52: escalation's stop and reopening and clockadopt are returned exactly when their owners' refusals would admit the "
+   + "caller, on every type, state and combination of the action's facts; clockadopt once per standing dated proposal, each "
+   + "naming its key, and attachment at stage 7 naming the purposes it admits; a machine is offered none in MACHINE_REFUSALS", () => {
+  const { wrong, rows } = checkActs(Object.keys(R52));
+  assert.ok(rows > 1000, `a real corpus (${rows} rows)`);
+  assert.deepEqual(wrong.slice(0, 5), []);
+  const f = make({ object_type: "action", declared_type: "action", current_state: "planned" }, { actor_is_machine: false },
+    { action: ACTION_ALL });
+  const acts = deriveActs(f);
+  assert.deepEqual(acts.filter((a) => a.id === "clockadopt").map((a) => a.proposal), ["deadline@M-1", "reply@M-2"]);
+  assert.deepEqual(acts.filter((a) => a.id === "escalationattach").map((a) => a.purposes), [["testimony"]]);
+  /* decorated, each keeps what it names; R11's keys otherwise unchanged */
+  const d = acts.filter((a) => a.id === "clockadopt").map((a) => decorate(a, null));
+  assert.deepEqual(d.map((x) => x.proposal), ["deadline@M-1", "reply@M-2"]);
+  assert.deepEqual(Object.keys(decorate(acts.find((a) => a.id === "actionhold"), null)).includes("proposal"), false);
+  /* controls: no proposal standing, none offered; attachment at stages 2 and 5 names no purposes */
+  const none = deriveActs(make(f, {}, { action: { ...ACTION_ALL, clock: { ...ACTION_ALL.clock, proposals: [] },
+    escalation: { ...ACTION_ALL.escalation, attach_purposes: null } } }));
+  assert.equal(none.some((a) => a.id === "clockadopt"), false);
+  assert.equal(none.find((a) => a.id === "escalationattach").purposes, undefined);
+});
+
+test("R8 R9 R10 R51 R52: the oracle covers exactly the acts in ACTS", () => {
   assert.deepEqual(Object.keys(ORACLE).sort(), ACTS.map((a) => a.id).sort());
   assert.deepEqual(Object.keys(NAMES).sort(), ACTS.map((a) => a.id).sort());
 });
@@ -251,7 +283,7 @@ test("R9: cite, sever, reinstate and the roster acts are returned exactly when R
 test("R8 R9: the corpus is not degenerate — every act on a bundle is both returned and withheld somewhere in it", () => {
   const seen = Object.fromEntries(ACTS.map((a) => [a.id, new Set()]));
   for (const a of ACTS) for (const ts of typestates) for (const [, bg] of BACKGROUNDS)
-    for (const over of cross(NAMES[a.id])) seen[a.id].add(deriveActs(make(ts, bg, over)).includes(a));
+    for (const over of cross(NAMES[a.id])) seen[a.id].add(deriveActs(make(ts, bg, over)).some((x) => x.id === a.id));
   assert.deepEqual(ACTS.map((a) => a.id).filter((id) => !(id in SOURCE) && seen[id].size !== 2), []);
   /* and the act on a source's entry is withheld everywhere (the SOURCE oracle, checked row by row below) */
   assert.deepEqual([...seen.sourceconsent], [false]);
