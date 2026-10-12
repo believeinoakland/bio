@@ -43,7 +43,7 @@ import { FILING_TEMPLATE_CHECKS, rowOf } from "./checks.mjs";
 import { FILING_TEMPLATES_TABLES, FILING_TEMPLATES_MINT_SEED, migrateFilingTemplates } from "./schema.mjs";
 
 export { FILING_BLANKS, FILING_TEXT_MAX, blanksOf } from "./blanks.mjs";
-export { FILING_TEMPLATE_CHECKS } from "./checks.mjs";
+export { FILING_TEMPLATE_CHECKS, FILING_TEMPLATES_WORDS } from "./checks.mjs";
 export { FILING_TEMPLATES_SCHEMA, FILING_TEMPLATES_TABLES } from "./schema.mjs";
 
 /* ---------------------------------------------------------------- the vocabularies (R21) */
