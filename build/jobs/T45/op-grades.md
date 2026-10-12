@@ -1,0 +1,71 @@
+# op-grades (T45)
+
+**Status** · session_01QBg5Qed5iVkRuoNbR4vgRF · depth 2 · COMPLETE · handled B4
+
+
+## Record (OP-GRADES #7)
+
+**Read, whole:** `build/requirements/op-grades.md`; layer 11 in `build/layers.md`; my plan entry (T45-38), the L11 lines, the plan's "Rules at the opening" (rule 4 as at my START) and the reconciliation (R1, R21 name this module); `draft-T45-upper.md` "The L11 op pattern"; K2569, K2773, K2780, K2781, K2787, K2817, K2820, K2839, K2857, K2874, K2878, K2879 in `build/rulings.md`; the module's code (`index.mjs`, `t33.mjs`–`t42.mjs`) and its eight test files, whole (P20); the owners' requirements and op-map code for each T45 op (action-plans, answers, duties, actions, action-holds, following, filings, case-check, project-roster, action-replies, reading-guides, consequences, plan-work, action-clocks, conformance, local-facts, monitoring's record for R71: no op). `BIO_Action_v0_2.md` was read through the owners' requirements that cite its rules 1, 2, 17–20.
+
+**How the T45 ops were found:** every `*Ops` map in `bio-plane/src` called on `tranche/T45` and on `main` (T44's close): 61 ops are new in T45, none removed. Every one is graded or named here (verified again after the change: no new op ungraded, no T45 row naming an op no owner serves).
+
+**Entries applied (T45-38):**
+- **R32:** the 61 ops in a new `t45.mjs` spread into the tables as T33–T42's are: 11 `reasoned`, 7 `reversible`, 1 `terminal` (`filingsecondapprove`, as `filingapprove`), 1 `irreversible` (`publishcheck`, graded as `publish`, K2839; in `IRREVERSIBLE_WEIGHT` by R21's rule), 4 `caller-owned`, 17 `undetermined`; 19 reads and one `draft:` row (`statusreportdraft`, which writes nothing). `JUSTIFICATION_REFUSALS` gains `SCOPE_NO_REASON`, `ADDRESSED_NO_REASON`, `SUCCESS_NO_REASON`, `RULE_NO_REASON` and R32's named reasons inside existing acts (`CONTRADICTED_HELD`, `DOCUMENT_FIRST_NO_REASON`, `OVERRIDE_NO_GROUND`); `addressedrecord`'s backing re-pointed to `ADDRESSED_NO_REASON` (K2857). No `MACHINE_REFUSALS` row (today's `ACTS` holds no T45 op). The readings are J1's, all open to BOB's answer.
+- **K2817, K2820, K2839, K2857, K2874:** `dutyfromresponse`, `dutiesarising`, `procedureguides`, `publishcheck`, `casecheck`, `successrevise`, `followend`, `watchlink`, `watchanswer`, `watchquestions` graded; monitoring's R71 is in process, no op.
+- **N891 (tests only):** `pins.test.mjs` pins at this module's exports what was pinned only in `affordances`' tests: RUNGS as a closed partition; the closed `terminal` and `irreversible` sets; the closed `undetermined` ground with R3's tally (78 = 21 + 57); layer 9's NON_ACTS and read rows; every reason's form and the `capture-directed:` set; the substrate and directed forms; the consequence statements' keys and the correction path; T33's merged-table identity; the justification family's inclusion and exclusion lists; and that the owners' reads write nothing. `affordances` may drop its copies (T45-39).
+- **Own flaw fixed (P8):** stale citations of the hold ops moved to `action-holds` in T45 (`actionpressure`'s outward sentence now cites action-holds R1; comments on `actionhold`, `actionholdrelease` and its statement re-pointed), wording only.
+
+- **CHANGE B3, B4 (K2885, K2887, K2888):** after merging `tranche/T45` (R8 and R32 amended), the 21 acts `affordances` R51 makes `ACTS` rows on an action target leave `NON_ACTS` (R32's list: the hold acts, `escalationopen`, `escalationattach`, `filingprepare`, `filingapprove`, `filingsent`, `counselpacket`, `communicationprepare`, `reminderset`, and T45's `holdnoticesent`, `actionreceipt`, `actionscope`, `actionpromise`, `actionreplybearing`, `arosefrom`, `clockstate`, `itemtakeup`, with `holdnoticeprepare` and `actionbearingpropose`, "where they were listed": they were, so 21, not B4's 19); `MACHINE_REFUSALS` gains the 17 rows with their owners' codes, each checked against the owner's method (J4); no rung moves. Tests re-pinned: `ladder.test.mjs` R5 (the whole map, the four that admit a machine, no act also a non-act), `owners.test.mjs` R8 and R17's alias (`filingrecordsent`'s op is now an act), `pins.test.mjs` layer 9, `t45.test.mjs` (acts apart, the eight codes, the totality with its negative control).
+
+**Deferred:** none.
+
+**Found in other modules (REPORT J2):** my change moves users' suites as owed by later L11 jobs, none their fault: `affordances` (T45-39) — its closed-set copies (`catalogue.test.mjs` "RUNGS' assignment is closed", "`terminal` is given only…", "the `undetermined` ground is closed") and `plane.test.mjs` "together the two drives reach every op RUNGS grades `reasoned`" (T45's 11 reasoned acts need its R19 drives) turn red; its `backing.test.mjs` R19 on `addressedrecord` (K2857) turns green. `control-plane` `totality.test.mjs` reads T45's 61 ops `stale` until `op-declarations` R49 (T45-45) declares them. After B3: `affordances` also reads red on "MACHINE_REFUSALS holds only ACTS" and the alias row for `filingrecordsent` until its `ACTS` rows land (T45-39); 213 pass, 13 fail. `plane` `wizards.test.mjs` 4/4, `op-declarations` and `membership` `module-order` unchanged (their one red each predates me).
+
+**Final `uses`:** none (unchanged).
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/op-grades/`: tests 67, pass 67, fail 0 (was 51; `t45.test.mjs` 6, `pins.test.mjs` 10).
+- `affordances` before/after: reds 8 → 11 (above). `control-plane` totality: 0 → 1 (above).
+- `format`: 153 modules, 152 requirements files; 0 failures. `architecture op-grades`: 20 product files, 37 relative imports (after the merge); 0 failures. `coverage op-grades`: 32 of 32 live requirement ids named by a test; 0 failures. `ownership op-grades tranche/T45`: 0 failures (re-run after commit below).
+
+Size (session_01QBg5Qed5iVkRuoNbR4vgRF): test runs 13, module lines 2835
+
+## J1 · QUESTION
+
+Four readings of R32, each my best reading; I am building on them now and will bring the job in line with your answer. None stops me.
+
+1. **MACHINE_REFUSALS and affordances R51 (a seam).** R32: MACHINE_REFUSALS holds each op in `affordances`' `ACTS` whose method refuses a machine by name. Today's `ACTS` holds none of T45's ops, so I add no row. If T45-39 makes T45's action acts `ACTS` rows (R51: scope, receipt, links, promise notes, claim bearings, the hold acts), each refuses a machine by its own code (`MACHINE_CANNOT_SET_SCOPE`, `MACHINE_CANNOT_CORRESPOND`, `MACHINE_CANNOT_RECORD_PROMISE`, `MACHINE_CANNOT_LINK`, `MACHINE_CANNOT_RECORD_BEARING`, `MACHINE_CANNOT_MARK_PRESSURE`, `MACHINE_CANNOT_SEND`), and `affordances` R20's two-way drive then needs those rows here. Best reading: this job holds today's `ACTS`; a CHANGE from you after T45-39 names the rows to add. Alternative: you name now which acts R51 makes `ACTS` rows and I add their codes in this job (affordances' "MACHINE_REFUSALS holds only ACTS" test then reads red until T45-39).
+
+2. **`publishcheck` "graded as `publish`" (case-check Uses; K2839).** Best reading: `irreversible`, as `publish` (the same `publishCase` write, refused `MACHINE_CANNOT_PUBLISH`). R21's rule then puts it in `IRREVERSIBLE_WEIGHT` (every op RUNGS grades `irreversible`) and R18 answers `phone: false`; no consequence statement is added. That sits uneasily with R32's last bullet (the weight gains an op only where its owner names a consequence that cannot be undone; case-check names none: a held check is a state). Alternative: `undetermined` (it stores a preparation and a check, asks no reason, and nothing takes it back), which keeps it out of the weight. Tell me if you want the alternative.
+
+3. **Rungs where R32's rule and the draft's expected grades differ** (I follow R32's text: reasoned only for an authored reason; R1's K1025 grounds class names its four ops by ruling):
+   - `actionreceipt`, `holdnoticesent`, `pressurerecord`, `successrecord`, `outcomecarry`, `arosefrom`, `statusreportsave`, `planreviewrecord`, `prepitemadd`, `dutyfromresponse`, `holdnoticeprepare`, `clockstate`: `undetermined` (no authored reason asked; no published act takes it back). The draft expected `actionreceipt` "as actioncorrespond" and `successrecord` "as consequencerecord" (`reasoned`); grading them so would extend K1025's grounds class, which I take to need your ruling.
+   - `filingsecondapprove`: `terminal`, as `filingapprove` (approved at most once, `ALREADY_APPROVED`; DEC-88's band). `jointsignatory` and `prepitemdone`: `undetermined`, as `checkpointrecord` (recorded once, never re-judged). `ruleconfirm`: `undetermined`, as `templateapprove` (a confirmation stands; `rulewithdraw` ends the rule, not the confirmation).
+   - `reasoned`: `scenariosetaside`, `scenariorestore`, `planpause`, `planresume` (PLAN_NO_REASON), `actionscope` (SCOPE_NO_REASON), `projectscopeset`, `projectapprovalset` (NO_REASON), `successrevise` (SUCCESS_NO_REASON, K2857), `cureunlink` (CONFORMANCE_NO_REASON), `ruledraft`, `rulewithdraw` (RULE_NO_REASON). `reversible`: `followend`, `actionpromise` (a later promise with `ends` ends it), `actionreplybearing` (a later layout replaces it), `actionbearingpropose` (restated by its proposer, as `actionseekspropose`), `curelink` (`cureunlink`), `matteroutcomeset` (a later statement replaces it), `plancomment` (as `reviewcomment`). `caller-owned`: `standingendset`, `planreviewrhythm`, `prepitemtakeup`, `itemtakeup`. `undetermined` also: `watchlink`, `watchanswer` (as R32 names them). `statusreportdraft` writes nothing: a `draft:` row, no grade. Reads: `openitemswith`, `dutiesarising`, `watchquestions`, `templatesforaction`, `casecheck`, `procedureguides`, `successread`, `successrecords`, `matters`, `plantimeline`, `planreviewopen`, `planreviews`, `prepitems`, `plancomments`, `whereitstands`, `statusreports`, `matterpromiseduties`, `cures`, `ruleoffer` (it writes nothing).
+   - `optionstart` stays `undetermined` (R3's 21 as written; R32 grades only R49's ops), though R42's `DOCUMENT_FIRST_NO_REASON` now asks a reason where the documentation option is not started.
+
+4. **R32's parenthetical codes on existing ops.** I add to JUSTIFICATION_REFUSALS the codes it names that the owners now answer: `SCOPE_NO_REASON`, `RULE_NO_REASON`, `SUCCESS_NO_REASON`, `ADDRESSED_NO_REASON` (K2857; `addressedrecord`'s backing now names it in place of NO_REASON), and also `CONTRADICTED_HELD` (filings R34, the contradicted-send release), `DOCUMENT_FIRST_NO_REASON` (action-plans R42, "step first") and `OVERRIDE_NO_GROUND` (actions R74). No existing op's rung changes. ESCALATION_NO_REASON (stop) and PLAN_NO_REASON (set-aside, pause) are already there. `escalationstoppursuing`/`escalationreopen` are not served in T45 (escalation R31 T46, N910), so they take no grade now.
+
+## J2 · REPORT
+
+My change moves users' suites as owed by later L11 jobs, none their fault (record, 'Found in other modules'): affordances (T45-39): catalogue.test.mjs's closed-set copies (RUNGS closed, terminal set, undetermined ground) and plane.test.mjs 'the two drives reach every op RUNGS grades reasoned' turn red (T45's 11 reasoned acts need its R19 drives); backing.test.mjs R19 on addressedrecord (K2857) turns green. control-plane totality.test.mjs reads T45's 61 ops stale until op-declarations R49 (T45-45). The N891 pins are now in op-grades' pins.test.mjs, so affordances may drop its copies.
+
+## J3 · COMPLETE
+
+T45-38 complete on job/T45/op-grades (pushed): R32 graded (61 ops, t45.mjs), N891 pins (pins.test.mjs), hold-op citations re-pointed. op-grades 67/67; format, architecture, coverage 32/32, ownership (6 files) 0 failures. J1 (four readings) is still open: each is built as my best reading and I will bring the job in line with your answer by CHANGE. Details in my record.
+
+## J4 · QUESTION
+
+Re B3 (K2885). Every code checks against its owner: all 16 are the codes the owners' methods answer (action-holds, actions, action-replies, escalation, filings, action-clocks; `itemtakeup` through plan-work's `#act`, action-plans' `machineCannotPlan` row). No mismatch.
+
+Two things stop me building it as sent. This QUESTION replaces nothing; J1 is answered (B2).
+
+1. **R8 says the opposite, so it needs re-wording first** (requirements are my contract). R8 as written: "`NON_ACTS` gives `actionholdrelease` 'entry-directed: …'" and "`actionholdrelease` is not in `MACHINE_REFUSALS`, which holds only `ACTS` (R5, `affordances` R20), as `actionhold` is not." B3 removes both rows from NON_ACTS and adds both to MACHINE_REFUSALS. R5's list of MACHINE_REFUSALS members also needs the 16 additions, and R1's/R2's layer-9 sentences say nothing that conflicts. Please amend R8 (and add to R5, or to R32, the 16 rows and the 11 removals) before I apply it, or tell me the amendment's words and I will build to them.
+
+2. **Eight of B3's new MACHINE_REFUSALS ops are still listed in NON_ACTS.** `actionscope`, `actionreceipt`, `actionpromise`, `actionreplybearing`, `arosefrom`, `holdnoticesent`, `clockstate` and `itemtakeup` gain a MACHINE_REFUSALS row, which holds only `ACTS` (R5, `affordances` R20). So they are `ACTS` rows too, and catalogue's R1/R12 test refuses an op that is both an act and a non-act. Best reading: remove those eight from NON_ACTS as well (19 removals in all), their grades unchanged. Alternative: they stay non-acts and take no MACHINE_REFUSALS row. Which?
+
+As soon as both are answered I apply the CHANGE whole, re-pin my tests (pins.test.mjs's layer-9 `actionhold` sentence, ladder.test.mjs's MACHINE_REFUSALS equality, owners.test.mjs R8, t45.test.mjs) and re-run steps 5–7.
+
+## J5 · COMPLETE
+
+B3 and B4 applied on job/T45/op-grades (pushed): 21 acts leave NON_ACTS (R32's list as amended, holdnoticeprepare and actionbearingpropose included, 'where they were listed'), MACHINE_REFUSALS gains the 17 rows, each code checked against its owner; no rung moves. op-grades 67/67; format, architecture, coverage 32/32, ownership 0 failures. affordances reads two more reds owed to T45-39 (MACHINE_REFUSALS holds only ACTS; the filingrecordsent alias row). Record updated.

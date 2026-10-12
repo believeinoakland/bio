@@ -139,12 +139,12 @@ test("R4: every act list is a list of distinct op names, each with a spec; the c
   }
   const eqSet = (a, b, what) => assert.deepEqual([...new Set(a)].sort(), [...new Set(b)].sort(), what);
   eqSet(O.QUERY_AUTHOR_ACTIONS, [...O.CONFORMANCE_ACTIONS, ...O.CONSEQUENCES_ACTIONS, ...O.FILINGS_ACTIONS, ...O.ESCALATION_ACTIONS,
-    ...O.ACTIONS_ACTIONS, ...O.ACTION_CLOCKS_ACTIONS, ...O.ACTION_PLANS_ACTIONS, ...O.FILING_TEMPLATES_ACTIONS, ...O.MONITORING_ACTIONS,
+    ...O.ACTIONS_ACTIONS, ...O.ACTION_HOLDS_ACTIONS, ...O.ACTION_CLOCKS_ACTIONS, ...O.ACTION_PLANS_ACTIONS, ...O.FILING_TEMPLATES_ACTIONS, ...O.MONITORING_ACTIONS,
     ...O.ACTION_PLANS_PREVIEWS], "QUERY_AUTHOR_ACTIONS");
   eqSet(O.ACTION_LAYER_ACTIONS, [...O.STANDARDS_ACTIONS, ...O.QUERY_AUTHOR_ACTIONS, ...O.PLAN_PROPOSAL_ACTIONS,
     ...O.TEMPLATE_PROPOSAL_ACTIONS, ...O.LOCAL_FACTS_ACTIONS], "ACTION_LAYER_ACTIONS");
   eqSet(O.ACTION_LAYER_READS, [...O.STANDARDS_READS, ...O.CONFORMANCE_READS, ...O.CONSEQUENCES_READS, ...O.FILINGS_READS,
-    ...O.ESCALATION_READS, ...O.ACTIONS_READS, ...O.ACTION_PLANS_READS, ...O.FILING_TEMPLATES_READS, ...O.LOCAL_FACTS_READS,
+    ...O.ESCALATION_READS, ...O.ACTIONS_READS, ...O.ACTION_HOLDS_READS, ...O.ACTION_PLANS_READS, ...O.FILING_TEMPLATES_READS, ...O.LOCAL_FACTS_READS,
     ...O.LINK_SWEEP_READS], "ACTION_LAYER_READS");
   /* A list named for acts holds mutating ops, one named for reads or previews non-mutating ones. The one exception is
      the start preview (R11), a read the two composed author-stamped lists carry so the door stamps it as the start. */
@@ -185,12 +185,14 @@ test("R4, R3 (N-A12, K704, K709, K711, K705): the action layer's new ops — act
     ACTION_PLANS_ACTIONS: ["planopen", "plansubjectadd", "plansubjectremove", "optionadd", "optionrevise", "optionadopt",
                            "optiondispose", "scenarioset", "checkpointrecord", "optionstart", "planclose"],
     PLAN_PROPOSAL_ACTIONS: ["optionpropose"],
-    /* T27 (R12): the hold's release joins actions' acts, its two reads actions' reads (`t27.test.mjs`). */
-    ACTIONS_ACTIONS: ["actioncreate", "actionpressure", "actionhold", "actionholdrelease"],
+    /* T27 (R12): the hold's release joins actions' acts, its two reads actions' reads (`t27.test.mjs`); T45 (R49): the
+       pressure mark and the hold's ops moved with their owner to action-holds' lists. */
+    ACTIONS_ACTIONS: ["actioncreate"],
+    ACTION_HOLDS_ACTIONS: ["actionpressure", "actionhold", "actionholdrelease"],
     ACTION_CLOCKS_ACTIONS: ["reminderset", "reminderanswer"],
   };
   const reads = { ACTION_PLANS_READS: ["plan", "plans", "planproposals"],
-                  ACTIONS_READS: ["action", "actions", "actionholdpreview", "projectholds"] };
+                  ACTIONS_READS: ["action", "actions"], ACTION_HOLDS_READS: ["actionholdpreview", "projectholds"] };
   for (const [name, list] of [...Object.entries(acts), ...Object.entries(reads)]) assert.deepEqual([...named(name)], list, name);
   /* action-plans' ops are exactly `actionPlansOps`' sixteen: R1–R34's fifteen (K711) and R37's start preview (R11). */
   assert.equal([...acts.ACTION_PLANS_ACTIONS, ...acts.PLAN_PROPOSAL_ACTIONS, ...reads.ACTION_PLANS_READS,
@@ -222,9 +224,10 @@ test("R4, R3 (N-A12, K704, K709, K711, K705): the action layer's new ops — act
   }
 });
 
-test("R2, R4 (K660, K683): a plan-mode run's agent credential scope — the reads plan, plans and agent-worker R51's, the writes optionpropose, airuntick and airunclose — each reachable by an agent credential: it admits member, carries no machineClasses, and is no bearer-fenced act", () => {
+test("R2, R4, R49 (K660, K683; T45: K2820, K2824): a plan-mode run's agent credential scope — the reads plan, plans, agent-worker R51's and, since T45, action, reading and procedureguides (agent-worker R78), the writes optionpropose, airuntick and airunclose — each reachable by an agent credential: it admits member, carries no machineClasses, and is no bearer-fenced act", () => {
   assert.deepEqual([...PLAN_RUN_SCOPE.reads], ["plan", "plans", "determination", "standard", "consequencesof",
-                                               "availableactions", "publishededitions", "profiles"]);
+                                               "availableactions", "publishededitions", "profiles", "action", "reading",
+                                               "procedureguides"]);
   assert.deepEqual([...PLAN_RUN_SCOPE.writes], ["optionpropose", "airuntick", "airunclose"]);
   const reachable = (op) => Array.isArray(OPS[op].classes) && OPS[op].classes.includes("member")
     && !Array.isArray(OPS[op].machineClasses) && !O.GOVERNANCE_ACTIONS.includes(op) && !O.IDENTITY_ACTIONS.includes(op);
@@ -268,7 +271,8 @@ test("R2, R3, R4, R6 (K899 (7), K902; actions R52): actionhold is declared as ac
   /* Every list that names actionpressure names actionhold, and no other. */
   const holding = (op) => LISTS.filter(([, list]) => list.includes(op)).map(([name]) => name).sort();
   assert.deepEqual(holding("actionhold"), holding("actionpressure"));
-  assert.deepEqual(holding("actionhold"), ["ACTIONS_ACTIONS", "ACTION_LAYER_ACTIONS", "QUERY_AUTHOR_ACTIONS"]);
+  /* T45 (R49): its list is action-holds' since the hold moved with its owner (action-holds R2). */
+  assert.deepEqual(holding("actionhold"), ["ACTION_HOLDS_ACTIONS", "ACTION_LAYER_ACTIONS", "QUERY_AUTHOR_ACTIONS"]);
   assert.ok(both("actionhold"));
   assert.equal(NEEDS.actionhold, "contribute");
   assert.equal(O.ACT_GATE.needs("actionhold"), "contribute");
