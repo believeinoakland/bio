@@ -24,6 +24,8 @@ class Node {
   appendChild(n) { this.append(n); return n; }
   removeChild(n) { this.childNodes = this.childNodes.filter((c) => c !== n); n.parentNode = null; return n; }
   get children() { return this.childNodes.filter((c) => c.nodeType === 1); }
+  get nextElementSibling() { const s = this.parentNode ? this.parentNode.children : []; return s[s.indexOf(this) + 1] || null; }
+  get previousElementSibling() { const s = this.parentNode ? this.parentNode.children : []; return s[s.indexOf(this) - 1] || null; }
   *descendants() { for (const c of this.childNodes) { if (c.nodeType === 1) { yield c; yield* c.descendants(); } } }
   querySelectorAll(sel) { const m = compile(sel); return [...this.descendants()].filter((e) => m(e)); }
   querySelector(sel) { const m = compile(sel); for (const e of this.descendants()) if (m(e)) return e; return null; }
