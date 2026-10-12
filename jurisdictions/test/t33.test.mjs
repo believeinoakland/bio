@@ -26,7 +26,7 @@ test("R3 T33 spaces: account, object, vendor, proceeding and person are known sp
   const t = get(TEST);
   for (const sp of ["account", "object", "vendor", "proceeding", "person"]) {
     assert.ok(t.spaces[sp] && t.spaces[sp].forms.length, sp);
-    assert.ok(!breakT((p) => { p.spaces[sp].forms[0].pattern = { re: "(" }; }).ok, `${sp} is judged as a space`);
+    assert.ok(hasError(breakT((p) => { p.spaces[sp].forms[0].pattern = { re: "(" }; }), "PATTERN_INVALID", `spaces.${sp}.forms[0].pattern`), `${sp} is judged as a space`);
   }
   assert.ok(validate(t).ok);
   assert.ok(hasError(breakT((p) => { p.spaces.licence = p.spaces.person; }), "UNKNOWN_SPACE", "spaces.licence"));
@@ -654,7 +654,7 @@ test("R52 K1513 classification_schemes: forms and the project kind; the first pr
   const i = get(TEST).classification_schemes.findIndex((x) => x.kind === "project");
   assert.ok(i >= 0, "a project scheme");
   const C = `classification_schemes[${i}]`;
-  for (const bad of [[], [{ re: "(" }], "WO"]) assert.ok(hasError(breakT((p) => { p.classification_schemes[i].forms = bad; }), "SCHEME_INVALID"), JSON.stringify(bad));
+  for (const [bad, at] of [[[], `${C}.forms`], [[{ re: "(" }], `${C}.forms[0]`], ["WO", `${C}.forms`]]) assert.ok(hasError(breakT((p) => { p.classification_schemes[i].forms = bad; }), "SCHEME_INVALID", at), JSON.stringify(bad));
   assert.ok(hasError(breakT((p) => { p.classification_schemes[i].forms = [{ re: "(" }]; }), "SCHEME_INVALID", `${C}.forms[0]`));
   const f = get(FIRST).classification_schemes;
   assert.deepEqual(f.map((x) => x.kind), ["fund", "organisation", "organisation", "program", "account", "project"]);
