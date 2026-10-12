@@ -59,8 +59,8 @@
  * a kind whose generator is not built, and the mint refuses any CONDITION kind this list does not name. A surface
  * never keeps a copy of it; it reads it from the refusal or from op=queue's own answer. */
 /* R5 (K608, K611): beside observation-log's kinds (twenty since T23, K1099), the one condition kind that is not a
- * look's: a deadline on one of the group's actions passed while its entry is still pending (`queue-producers` R15, from
- * `action-clocks.overdueClocks`).
+ * look's: a deadline on one of the group's actions passed while its entry is still pending (`action-producers` R1, was
+ * `queue-producers` R15 until T45, from `action-clocks.overdueClocks`).
  * A CONDITION and not a FINDING (K611): it is said once, when the date passes, and a member quiets it for themselves;
  * the action's own record is where the overdue entry is met or waived. It is queue's to add and not observation-log's,
  * because no look ever carries it (C-22.4 checks a look's condition against observation-log's list alone). */
@@ -68,7 +68,7 @@ import { CONDITION_KINDS } from "./observation-log/vocabulary.mjs";
 export const QUEUE_CONDITION_KINDS = Object.freeze({
   ...CONDITION_KINDS,
   "action-clock-overdue":       "a deadline on one of the group's actions passed while its entry is still pending "
-                              + "(DEC-94) — LIVE: queue-producers R15, from action-clocks' overdueClocks",
+                              + "(DEC-94) — LIVE: action-producers R1, from action-clocks' overdueClocks",
   /* R1, R5 (DEC-101 (3), DEC-116 item 8; T31): a docket a member follows could not be read on this copy's latest read.
      A fact about our own reading, never about the publisher, so a CONDITION a member quiets for themselves; queue's to add
      for action-clock-overdue's reason (no look carries it). Its producer is `queue-producers`' (its R35). */
@@ -114,27 +114,30 @@ export const QUEUE_OBLIGATION_KINDS = {
   "signer-self-registered":      "a member registered their own signing key; you may revoke it (N375)",
   /* The Action layer (R1; K608, K613, K614; BIO_Action_v0_1.md §4 rule 5): three OBLIGATIONs, each a judgement or an
      answer a named member owes, each leaving by its own act (R12's doors) and never by a mute. Their producers are
-     `queue-producers`' (its R16, R17, R18). */
+     `action-producers`' (its R2, R3, R4; `queue-producers` R16–R18 until T45, K2781 (1)). */
   "plan-checkpoint-due":         "a checkpoint your group set in an action plan has come; a member judges whether its "
-                              + "condition was met (op=checkpointrecord) — LIVE: queue-producers R16",
+                              + "condition was met (op=checkpointrecord) — LIVE: action-producers R2",
   "escalation-stage-proposed":   "an escalation's next stage is proposed because its trigger was met; a member advances "
                               + "it or declines with a reason (op=escalationadvance, op=escalationdecline) "
-                              + "— LIVE: queue-producers R17",
+                              + "— LIVE: action-producers R3",
   "action-reminder":             "a reminder you asked for on one of the group's action deadlines; answer it with "
-                              + "another reminder or none (op=reminderanswer, DEC-94) — LIVE: queue-producers R18",
-  /* K899 (7), DEC-61, DEC-113 (R1; actions R52, R56): a reply the group marked as legal pressure asks the group whether
-     to place a litigation hold; a member answers by placing the hold (op=actionhold) or releasing it
-     (op=actionholdrelease, its own act since DEC-113), each with a reason, and those acts are the item's doors (R12). An
-     OBLIGATION, never muted. Its producer is `queue-producers`' (its R19). */
+                              + "another reminder or none (op=reminderanswer, DEC-94) — LIVE: action-producers R4",
+  /* K899 (7), DEC-61, DEC-113 (R1; action-holds R2, R5, were actions R52, R56): a reply the group marked as legal
+     pressure asks the group whether to place a litigation hold; a member answers by placing the hold (op=actionhold) or
+     releasing it (op=actionholdrelease, its own act since DEC-113), each with a reason, and those acts are the item's
+     doors (R12). (T45; Actions D10, v0.2 rule 12) A `legal` mark on a docket entry and a `legal` pressure record raise
+     it too. An OBLIGATION, never muted. Its producer is `action-producers`' (its R5, was `queue-producers` R19). */
   "litigation-hold":             "a reply the group marked as legal pressure: consider whether to place a litigation "
                               + "hold, and record it in place or released with a reason (op=actionhold to place it, "
-                              + "op=actionholdrelease to release it; DEC-61, DEC-113) — LIVE: queue-producers R19",
+                              + "op=actionholdrelease to release it; DEC-61, DEC-113); a legal mark on a docket entry, "
+                              + "or a legal pressure record, asks the same — LIVE: action-producers R5",
   /* K921 (R1; filing-templates R9, local-facts R1): two more OBLIGATIONs a named member owes, each leaving by its own act
-     (R12's doors) and never by a mute. Their producers are `queue-producers`' (its R20, R21). */
+     (R12's doors) and never by a mute. Their producers are `action-producers`' (its R6, R7; `queue-producers` R20, R21
+     until T45). */
   "template-review-requested":   "a member asked you to review a filing template's version (op=templatereview) "
-                              + "— LIVE: queue-producers R20",
+                              + "— LIVE: action-producers R6",
   "local-fact-due":              "a holiday calendar or office hours one of the group's deadlines reads is unconfirmed "
-                              + "or due for confirmation (op=factconfirm) — LIVE: queue-producers R21",
+                              + "or due for confirmation (op=factconfirm) — LIVE: action-producers R7",
   /* DEC-102 item 3, K1019 (R1; publication R17): a case edition being prepared reaches an observation the member authored
      and they have chosen no credit level for it. Theirs alone to answer, by choosing one (R12's door, op=attribute), and
      never muted. Its producer is `queue-producers`' (its R23). */
@@ -172,6 +175,15 @@ export const QUEUE_OBLIGATION_KINDS = {
                               + "(op=stepreminder, DEC-94) — LIVE: notice-producers R17",
   "milestone-reminder":          "a reminder you asked for on a milestone (DEC-94); answer it with another reminder or "
                               + "none (op=milestonereminder) — LIVE: notice-producers R17",
+  /* T45 (R1, R12; N855, N890; Actions D6d, D27; v0.2 rules 17, 20): what a plan set running, or a date its group set on
+     it, now asks of a named member. Each leaves by its own act (R12's doors) and never by a mute. Their producer is
+     `action-producers`' (its R10, R12). */
+  "watch-keep-or-stop":          "a plan that set a watch running has closed, or every promise it watched is met: keep "
+                              + "the watch until a date, or stop it (op=watchanswer) — LIVE: action-producers R10",
+  "plan-review-due":             "a review day your group set for a plan has come; record a review "
+                              + "(op=planreviewrecord) — LIVE: action-producers R12",
+  "plan-look-again":             "a paused plan's look-again date has come; look again, resume it (op=planresume) or "
+                              + "close it — LIVE: action-producers R12",
 };
 
 export const QUEUE_FINDING_KINDS = {
@@ -286,11 +298,11 @@ export const QUEUE_FINDING_KINDS = {
                               + "— LIVE: queue-producers R31",
   "edition-contested":          "a response the group filed contests a case edition this finding is part of (DEC-116) "
                               + "— LIVE: queue-producers R31",
-  /* DEC-113 (R1; actions R56, R59): the administrators and whoever placed the hold are told once that it was released.
-     Something the record noticed, which the recipient disposes of (R12's FINDING disposition). Its producer is
-     `queue-producers`' (its R29). */
+  /* DEC-113 (R1; action-holds R5, R8, were actions R56, R59): the administrators and whoever placed the hold are told
+     once that it was released. Something the record noticed, which the recipient disposes of (R12's FINDING
+     disposition). Its producer is `action-producers`' (its R8, was `queue-producers` R29). */
   "litigation-hold-released":   "a member released a litigation hold: the projects it alone covered may be purged again "
-                              + "and their assistant transcripts deleted on schedule (DEC-113) — LIVE: queue-producers R29",
+                              + "and their assistant transcripts deleted on schedule (DEC-113) — LIVE: action-producers R8",
   /* DEC-121 (5) (R1; wizard-scripts R13): a script's owner is told once why it was withheld, and when it returns. Each is
      something the record noticed, disposed of by its recipient. Their producer is `queue-producers`' (its R32). */
   "wizard-withdrawn":           "a wizard script you own or wrote no longer matches the screens and is withheld until "
@@ -354,6 +366,11 @@ export const QUEUE_FINDING_KINDS = {
                               + "— LIVE: notice-producers R17",
   "review-comment-left-out":    "your comments on a case's review copy were not included in its published edition; you "
                               + "may file a response in its docket — LIVE: notice-producers R17",
+  /* T45 (R1, R12; N881; Actions D14; v0.2 rule 18): the project's owners are told once that a member who left had items
+     routed to them. No project-scoped decision answers it: its doors are the take-ups its options lead with, and its
+     recipient quiets it for themselves (R12). Its producer is `action-producers`' (its R9). */
+  "member-left-items":          "a member who left had items of this project routed to them; take up the ones you "
+                              + "choose — LIVE: action-producers R9",
 };
 
 /* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before

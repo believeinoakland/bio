@@ -1,6 +1,6 @@
 # BOB to plane (T45)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -25,3 +25,27 @@ Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and 
 (K2874) From L10: following's new ops `followend`, `watchlink`, `watchanswer`, `watchquestions` (FOLLOWING #5 J1, J2), and monitoring's new op for R71's end date if its COMPLETE names one; route each; and `followingOf(host)` now reaches `actionPlansOf`, `planWorkOf`, `dutiesOf`, `answersOf` lazily and registers its watch reader with plan-work R9 when created: compose it at start.
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
+
+## B2 · CHANGE
+
+K2880, from WIZARD-SCRIPTS #8 J1: listing T45's labelled machine drafts in MACHINE_DRAFTS (plane R19) is yours, by the op names op-declarations (T45-45) declares; wizard-scripts accepts each once declared. Nothing to merge now.
+
+## B3 · CHANGE
+
+K2882: queue (T45-43) and answer-envelope (T45-49) are merged into tranche/T45. Merge tranche/T45 into your branch when convenient.
+
+## B4 · CHANGE
+
+K2885, from AFFORDANCES #30 J1 (6): plane/store.mjs does not spread actionRepliesOps, planWorkOps or caseCheckOps; compose and route them in T45-47.
+
+## B5 · CHANGE
+
+K2886 (answers J1): (1) your two ids are folded into build/requirements/plane.md on tranche/T45: R40 (K2853, the gate, as you worded it, a refusal test and an admitted control per door) and R41 (K2824, the draft ops and their records). The composition items stay under R39. Merge tranche/T45 and name R40/R41 in your tests. (2) Build the assembly too, as you describe it (from the asking member's own reads, never wider than she sees), not only the gate: it is refused today by the flags, so test it through your seam. (3) stands. Your conformance-before-actions fix: good (P8), note it in your record.
+
+## B6 · CHANGE
+
+K2888: stewards, action-producers and notice-producers are merged into tranche/T45 (with queue and answer-envelope earlier). Merge tranche/T45 when convenient; compose action-producers where queue-producers did.
+
+## B7 · CHANGE
+
+K2889: wizard-scripts (T45-37) is merged into tranche/T45. Merge it into your branch when convenient.
