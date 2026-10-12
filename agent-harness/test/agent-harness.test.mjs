@@ -1,6 +1,6 @@
 /* agent-harness — its requirements, tested at its interface (`src/harness.mjs`, `src/subsession.mjs`), pure.
  *
- * Every live id R1–R9 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
+ * Every live id R1–R10 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
  * pure (R8), so nothing is stood up: the tables are walked directly, exhaustively where a requirement says "never",
  * and a run is driven the way the Worker shell drives it (`walk` below: `nextStep`, then `advance`, a judgement
  * applied only at a judged row). What only the shell does (the plane calls, the HTTP status) is agent-worker's and is
@@ -11,6 +11,7 @@ import { readdirSync } from "node:fs";
 
 import * as HARNESS from "../src/harness.mjs";
 import * as SUBSESSION from "../src/subsession.mjs";
+import { DEPLOYED_MODES, RUN_MODES } from "../../bio-plane/src/run-rules/index.mjs";
 
 const {
   CONTROL_FLOW, PLAN_FLOW, FIRST_STEP, MODES, LEVELS, BUDGET_BOUNDS, PLAN_BUDGET_BOUNDS, PLAN_MAX_PASSES,
@@ -116,11 +117,15 @@ test("R2: check is deployed; investigate and extract are not", () => {
   assert.equal(MODES.check.deployed, true);
   assert.equal(MODES.investigate.deployed, false);
   assert.equal(MODES.extract.deployed, false);
-  assert.deepEqual(Object.entries(MODES).filter(([, m]) => m.deployed).map(([k]) => k), ["check"]);
+  for (const flow of [CONTROL_FLOW, PLAN_FLOW]) {
+    assert.deepEqual(walk({ mode: "check", maxPasses: 1 }, [], { flow }).trace[0], "gate-mode>resume");
+    for (const mode of ["investigate", "extract"])
+      assert.deepEqual(walk({ mode }, [], { flow }).bound, "mode-not-deployed");
+  }
 });
 
 test("R2: a mode that is not deployed closes mode-not-deployed at its first step, before any bound, fan-out, request or suggestion", () => {
-  for (const mode of ["investigate", "extract", "plan", "sorcery", null, undefined, "", "Check", " check"]) {
+  for (const mode of ["investigate", "extract", "sorcery", null, undefined, "", "Check", " check", "Plan", "plan "]) {
     /* even with every budget spent and the pass limit reached: the gate is asked before any bound */
     for (const state of [{}, { budget: { ...spent("fetches"), ...spent("subsessions"), ...spent("wallclock") }, pass: 9, maxPasses: 1 }]) {
       for (const flow of [CONTROL_FLOW, PLAN_FLOW]) {
@@ -136,16 +141,16 @@ test("R2: a mode that is not deployed closes mode-not-deployed at its first step
 });
 
 test("R2: its why tells a mode the table holds and has not deployed from a word it does not hold, and names the deployed modes", () => {
-  for (const mode of ["investigate", "extract", "plan"]) {
+  for (const mode of ["investigate", "extract"]) {
     const why = gateStep({ mode }).why;
     assert.match(why, new RegExp(`mode '${mode}' is not deployed yet — it is a row in this table`));
     assert.ok(why.includes(MODES[mode].does));
-    assert.match(why, /deployed now: check;/);
+    assert.match(why, /deployed now: check, plan; not yet: investigate, extract\./);
   }
   for (const mode of ["sorcery", "Check", ""]) {
     const why = gateStep({ mode }).why;
     assert.match(why, /it is no mode this table knows at all \(the table holds: check, investigate, extract, plan\)/);
-    assert.match(why, /deployed now: check;/);
+    assert.match(why, /deployed now: check, plan;/);
     assert.doesNotMatch(why, /not deployed yet/);
   }
   assert.match(gateStep({}).why, /mode '\(none\)' is not deployed/);
@@ -404,19 +409,41 @@ test("R6: one pass (the pass limit is 1), and stopBecause asks proposals then wa
   assert.equal(planStopBecause({ pass: 1, maxPasses: 5 }), "completed");
   for (const step of ["resume", "read", "compose", "dedup", "submit", "adjust"])
     assert.deepEqual(nextPlanStep({ step, pass: 1 }).bound, "completed");
-  /* a plan run, deployed in this process only, walks its one pass and closes completed */
-  const was = MODES.plan.deployed;
-  MODES.plan.deployed = true;
-  try {
-    const r = walk({ mode: "plan" }, [], { flow: PLAN_FLOW });
-    assert.deepEqual([r.trace, r.bound, r.state.pass],
-      [["gate-mode>resume", "resume>read", "read>compose", "compose>dedup", "dedup>close"], "completed", 1]);
-    /* with a queue, one at a time until none remain (the shell takes each off the head as it submits), then the pass is done */
-    assert.equal(nextPlanStep({ mode: "plan", step: "dedup", pass: 0, queue: [{ summary: "a" }] }).step, "submit");
-    assert.equal(nextPlanStep({ mode: "plan", step: "submit", pass: 0, queue: [{ summary: "b" }] }).step, "submit");
-    const last = nextPlanStep({ mode: "plan", step: "submit", pass: 0, queue: [] });
-    assert.deepEqual([last.step, last.bound, planAdvance({ step: "submit", pass: 0 }, last).pass], ["close", "completed", 1]);
-  } finally { MODES.plan.deployed = was; }
+  /* a plan run walks its one pass and closes completed */
+  const r = walk({ mode: "plan" }, [], { flow: PLAN_FLOW });
+  assert.deepEqual([r.trace, r.bound, r.state.pass],
+    [["gate-mode>resume", "resume>read", "read>compose", "compose>dedup", "dedup>close"], "completed", 1]);
+  /* with a queue, one at a time until none remain (the shell takes each off the head as it submits), then the pass is done */
+  assert.equal(nextPlanStep({ mode: "plan", step: "dedup", pass: 0, queue: [{ summary: "a" }] }).step, "submit");
+  assert.equal(nextPlanStep({ mode: "plan", step: "submit", pass: 0, queue: [{ summary: "b" }] }).step, "submit");
+  const last = nextPlanStep({ mode: "plan", step: "submit", pass: 0, queue: [] });
+  assert.deepEqual([last.step, last.bound, planAdvance({ step: "submit", pass: 0 }, last).pass], ["close", "completed", 1]);
+});
+
+/* ============================================================ R10: plan deployed, agreeing with run-rules */
+test("R10: MODES.plan is deployed, check stays deployed, investigate and extract stay as they are", () => {
+  assert.deepEqual(Object.entries(MODES).map(([k, m]) => [k, m.deployed]),
+    [["check", true], ["investigate", false], ["extract", false], ["plan", true]]);
+  assert.doesNotMatch(MODES.plan.does, /not yet deployed/);
+  /* the gate lets a plan-mode run through, on either table, and the run walks PLAN_FLOW */
+  for (const flow of [CONTROL_FLOW, PLAN_FLOW]) {
+    const d = (flow === PLAN_FLOW ? nextPlanStep : nextStep)({ mode: "plan", pass: 0 });
+    assert.deepEqual([d.step, d.bound], ["resume", undefined]);
+  }
+  assert.equal(flowFor("plan"), PLAN_FLOW);
+  assert.equal(walk({ mode: "plan" }, [], { flow: PLAN_FLOW }).bound, "completed");
+});
+
+test("R10: the harness's copy agrees with run-rules R14: every run mode deployed here exactly when DEPLOYED_MODES holds it", () => {
+  /* the modes this table holds are exactly the modes a run may be in (run-rules' RUN_MODES, its order) */
+  assert.deepEqual(Object.keys(MODES), [...RUN_MODES]);
+  const disagree = Object.keys(MODES).filter((m) => MODES[m].deployed !== DEPLOYED_MODES.includes(m));
+  assert.deepEqual(disagree, [], "the harness's MODES and run-rules' DEPLOYED_MODES disagree on these modes");
+  assert.deepEqual(DEPLOYED_MODES.filter((m) => RUN_MODES.includes(m)),
+    Object.entries(MODES).filter(([, m]) => m.deployed).map(([k]) => k));
+  /* and the gate answers each run mode as run-rules does */
+  for (const mode of RUN_MODES)
+    assert.equal(gateStep({ mode }).bound === "mode-not-deployed", !DEPLOYED_MODES.includes(mode), mode);
 });
 
 /* ============================================================ R7: one sub-session per level */
