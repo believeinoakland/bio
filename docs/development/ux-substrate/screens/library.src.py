@@ -109,11 +109,12 @@ wiz('Invite a member', 'members', False, [
 wiz('Connect your Claude account', 'connect', False, [
  ('connect', None, 'The assistant is optional. If your group offers its API key, you can use it already; your own account, if you connect one, always comes first.', 'Your own account serves only you. Everything works without the assistant.'),
  ('connect', 'disclosureshown', 'Read what connecting means.', 'Your questions, and what is read to answer them, go to Anthropic under your own account.'),
- ('connect', 'owed:subscriptionsignin DEC-156', 'To connect your Claude subscription, open Anthropic\'s sign-in page, sign in and approve. Or use an API key, or skip.', 'You sign in on Anthropic\'s own page; Civicsmith never sees your Claude password. Skipping is a real choice: every journey stays open.'),
- ('connect', 'accountreferenceset', 'Copy the code Anthropic\'s page shows you, paste it here, and connect.', 'Your subscription then serves only your own questions. You can disconnect at any time.'),
+ ('connect', 'subscriptionsignin', 'To connect your Claude subscription, open Anthropic\'s sign-in page, sign in and approve. Or use an API key, or skip.', 'You sign in on Anthropic\'s own page; Civicsmith never sees your Claude password. Skipping is a real choice: every journey stays open.'),
+ ('connect', 'subscriptionsignin', 'Copy the code Anthropic\'s page shows you, paste it under "The code from Anthropic\'s page", and connect with it.', 'The code is used once and never kept. Your subscription then serves only your own questions, and you can disconnect at any time.'),
+ ('connect', 'accountreferenceset', 'Using an API key instead? Paste it under "Using an API key instead" and connect with it.', 'Anthropic bills you for each use of your own key; it serves only your questions.'),
  ('connect', 'ailimitset', 'Set a limit on your account, if you want one: for everything or for one use, a day or a month.', 'It binds only your own account. The group\'s and a project\'s limits never bind it.'),
  ('connect', 'accountusesset', 'Choose what your account pays for, and whether the assistant may suggest things without being asked. Suggestions are off unless you turn them on.', 'Some members want suggestions; others want quiet.'),
- ('connect', 'accountreferenceremove', 'You can disconnect at any time, here.', 'Disconnecting removes the key or token from your group\'s Civicsmith.'),
+ ('connect', 'subscriptiondisconnect', 'You can disconnect at any time, here: your subscription, or your API key.', 'Disconnecting removes the sign-in or the key from your group\'s Civicsmith.'),
 ], [4, 17])
 
 wiz('Your ties', 'ties', False, [
@@ -192,7 +193,7 @@ wiz('Take an escalation to its next stage', 'matter', False, [
  ('matter', None, 'Read where the escalation stands. Each stage is a question, such as "Did we tell them?" or "What did they say?".', 'The questions say what each stage needs before the next.'),
  ('action', 'actioncorrespond', 'If they replied, record what they said.', 'The next stage rests on the reply, or on there being none.'),
  ('matter', 'escalationadvance', 'Advance to the next stage, or decline to escalate with your reason.', 'Either way the record keeps why.'),
- ('matter', 'owed:escalationstoppursuing K2780', 'If your group is stopping, stop pursuing it, with your reason.', 'Stopping is never recorded as ended or as a success, and it can be reopened where it stopped.'),
+ ('matter', 'escalationstoppursuing', 'If your group is stopping, stop pursuing it, with your reason.', 'Stopping is never recorded as ended or as a success, and it can be reopened where it stopped.'),
  ('due-date', 'reminderset', 'Set when to look at it again.', 'An escalation moves only when a member moves it.'),
 ], [22], 'DEC-194 (B140): escalation stage')
 
@@ -202,14 +203,14 @@ wiz('Refer it to an oversight body', 'plan', False, [
  ('start-send', 'communicationprepare', 'Write what happened and ask the body to look into it. Start from your group\'s referral template if it has one.', 'A referral asks for an examination. It doesn\'t claim a breach the body hasn\'t found.'),
  ('start-send', 'filingapprove', 'Approve the text.', 'Approving is kept apart from sending, so you can stop between them.'),
  ('start-send', 'filingrecordsent', 'Send it, then record that you sent it. Say if no reply is owed.', 'Some oversight bodies don\'t reply to a referral; saying so keeps a missing reply from being counted against them.'),
- ('action', 'owed:actionscope K2780', 'If the referral shouldn\'t be published, make the action confidential, with your reason.', 'A confidential action is seen inside the group and never published.'),
+ ('action', 'actionscope', 'If the referral shouldn\'t be published, make the action confidential, with your reason.', 'A confidential action is seen inside the group and never published.'),
  ('action', 'actioncorrespond', 'When they reply, record it, with their own words for its status.', 'Outcomes are kept in the oversight body\'s own terms.'),
 ], [22], 'DEC-194 (B140): oversight referral')
 
 wiz('Pick up a plan', 'plan', False, [
  ('plan', None, 'Read where it stands: the matters, what each has reached, and what is due next.', 'Joining midway starts from what is already true, not from the beginning.'),
  ('plan', None, 'Read the latest status report, if a member saved one, and what changed since.', 'Each line cites what it rests on, so you can check it.'),
- ('plan', 'owed:itemtakeup K2780', 'Take up an item you can do. Nobody assigns anybody: you choose.', 'Taking it up routes its dates and reminders to you.'),
+ ('plan', 'itemtakeup', 'Take up an item you can do. Nobody assigns anybody: you choose.', 'Taking it up routes its dates and reminders to you.'),
  ('due-date', 'reminderset', 'Set a reminder for your item.', 'Your reminder is yours alone.'),
 ], [22], 'DEC-194 (B140): pick up a plan')
 
@@ -222,3 +223,14 @@ wiz('Start and send', 'plan', False, [
  ('start-send', 'filingrecordsent', 'Send it, then record that you sent it.', 'This tells the office what your group is looking at, and starts the clock.'),
  ('due-date', 'reminderset', 'The due date and next checkpoint go into your queue. A next step can wait on the reply.', 'If no reply comes, the next step is ready without anyone remembering.'),
 ], [22])
+
+# The front doors (wizard-scripts R23 `doors`; canon BIO_Investigation §7, Bob's D52 through K2407: one door, "What happened?").
+# By hand, the door offers these plain-language choices, each leading to offered scripts of this library; Home also shows
+# existing work that matches and allows a blank start ("Start a project"). Words: door.front.<door>.name and .hint in words.json.
+DOORS = [
+ ('problem', ['Your first question', 'Get a record', 'Check a claim']),
+ ('person', ['Your first question', 'Follow the money', 'Build a timeline']),
+ ('money', ['Follow the money', 'Get a record']),
+ ('read', ['Check a claim', 'Follow a proceeding', 'Use another group\'s case']),
+ ('tip', ['Check a claim', 'Build a timeline']),
+]

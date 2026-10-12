@@ -62,7 +62,6 @@ w('refusal.RULE_NEEDS_QUALIFICATION', 'A rule for a Tier 2 or Tier 3 matter, or 
 w('refusal.NO_SUCH_GROUP_RULE', 'Your group has no rule of its own by that name, or none you can see.' + NW, False, 'renamed from NO_SUCH_RULE (K2811)')
 w('refusal.GUIDE_KIND_UNKNOWN', 'A guide is for one kind of action or document your group\'s places recognise, and this names another.' + NW)
 w('refusal.GUIDE_ITEM_UNSOURCED', 'Each route in a procedure guide cites the law, rule or published procedure it rests on, so members can read the source. This one cites nothing. Add its citation.' + NW)
-w('refusal.DRAFT_NEEDS_GRANT', 'The assistant drafts this only from the record you can read, and only with your permission for this draft, which wasn\'t given. Nothing was read, and nothing was sent to the assistant. Ask again from the screen you are on.')
 w('refusal.AI_RUN_ORIGIN_UNKNOWN', 'Nothing was started: a planning run starts from a member\'s request or from a fresh look after a reply, and this said neither.')
 w('refusal.AI_RUN_REEXAM_NEEDS_RESPONSE', 'Nothing was started: a fresh look at the plan after a reply needs to know which reply. Record the reply first, then ask from it.')
 w('refusal.AI_RUN_REEXAM_OPEN', 'Nothing was started: a fresh look at this plan after this reply is already under way. Wait for it, then read what it proposes.')

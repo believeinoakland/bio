@@ -348,12 +348,6 @@
   "note": ""
  },
  {
-  "key": "refusal.DRAFT_NEEDS_GRANT",
-  "en": "The assistant drafts this only from the record you can read, and only with your permission for this draft, which wasn't given. Nothing was read, and nothing was sent to the assistant. Ask again from the screen you are on.",
-  "protected": false,
-  "note": ""
- },
- {
   "key": "refusal.AI_RUN_ORIGIN_UNKNOWN",
   "en": "Nothing was started: a planning run starts from a member's request or from a fresh look after a reply, and this said neither.",
   "protected": false,

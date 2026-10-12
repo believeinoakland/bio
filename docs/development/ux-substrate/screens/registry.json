@@ -246,7 +246,7 @@
    "id": "home",
    "name": "Your group's home",
    "frame": "working",
-   "purpose": "What the group is working on, what waits on you, and \"What brought you here?\".",
+   "purpose": "What the group is working on, what waits on you, and \"What happened?\", the door to a first step.",
    "acts": [
     {
      "op": "promote",
@@ -499,9 +499,10 @@
      ]
     },
     {
-     "op": "owed:infolevelset DEC-162",
+     "op": "infolevelset",
      "label": "Choose how much is explained",
-     "status": "owed"
+     "status": "declared",
+     "servedBy": "instance-setup R79 (T46)"
     }
    ],
    "journeys": [
@@ -532,13 +533,22 @@
      ]
     },
     {
-     "op": "owed:subscriptionsignin DEC-156",
+     "op": "subscriptionsignin",
      "label": "Open Anthropic's sign-in page",
-     "status": "owed"
+     "status": "declared",
+     "servedBy": "control-plane R65"
     },
     {
      "op": "accountreferenceset",
-     "label": "Connect with your own subscription or key",
+     "label": "Connect with your own API key",
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
+    },
+    {
+     "op": "subscriptiondisconnect",
+     "label": "Disconnect your subscription",
      "status": "function",
      "modules": [
       "credentials"
@@ -945,12 +955,11 @@
      ]
     },
     {
-     "op": "capture",
+     "op": "captureupload",
      "label": "Capture a file or photo",
      "status": "declared",
      "modules": [
-      "capture",
-      "control-plane"
+      "capture"
      ]
     },
     {
@@ -1565,8 +1574,14 @@
    "purpose": "Ask in plain words (with the assistant) or by search (without); keep asking.",
    "acts": [
     {
-     "op": "ruleanswer",
+     "op": "ask",
      "label": "Ask",
+     "status": "declared",
+     "servedBy": "the plane's ask door, agent-worker R54"
+    },
+    {
+     "op": "ruleanswer",
+     "label": "Show how this was counted",
      "status": "function",
      "modules": [
       "answers"
@@ -1614,7 +1629,8 @@
      "label": "Ask the assistant to work on this",
      "status": "declared",
      "modules": [
-      "ai-runs"
+      "ai-runs",
+      "run-rules"
      ]
     },
     {
@@ -2231,9 +2247,12 @@
      ]
     },
     {
-     "op": "owed:itemtakeup K2780",
+     "op": "itemtakeup",
      "label": "Take an item up yourself",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "plan-work"
+     ]
     }
    ],
    "journeys": [
@@ -2295,9 +2314,12 @@
      ]
     },
     {
-     "op": "owed:filingsecondapprove K2780",
+     "op": "filingsecondapprove",
      "label": "Give the second approval",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "filings"
+     ]
     }
    ],
    "journeys": [
@@ -2391,7 +2413,7 @@
      "label": "Mark a reply as pressure",
      "status": "declared",
      "modules": [
-      "actions"
+      "action-holds"
      ]
     },
     {
@@ -2407,13 +2429,16 @@
      "label": "Record a litigation hold",
      "status": "declared",
      "modules": [
-      "actions"
+      "action-holds"
      ]
     },
     {
-     "op": "owed:actionscope K2780",
+     "op": "actionscope",
      "label": "Make the action confidential, or not",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "actions"
+     ]
     }
    ],
    "journeys": [
@@ -2460,9 +2485,20 @@
      ]
     },
     {
-     "op": "owed:escalationstoppursuing K2780",
+     "op": "escalationstoppursuing",
      "label": "Stop pursuing, with a reason",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "escalation"
+     ]
+    },
+    {
+     "op": "escalationreopen",
+     "label": "Reopen where it stopped",
+     "status": "declared",
+     "modules": [
+      "escalation"
+     ]
     }
    ],
    "journeys": [
@@ -2597,6 +2633,7 @@
      "status": "declared",
      "modules": [
       "case-authoring",
+      "case-check",
       "review"
      ]
     },

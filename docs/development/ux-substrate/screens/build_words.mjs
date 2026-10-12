@@ -119,7 +119,7 @@ must(scr, 'mock-screens.js', 'mai-k is free in Lakeshore Tenants');
 add('handle.taken', '{handle} is already taken in {group}. Try another, such as {suggestion}.', false, 'mock-screens.js join');
 must(scr, 'mock-screens.js', 'is already taken in Lakeshore Tenants. Try another, such as');
 add('handle.changeable', 'You can still change it: none of your work is in a published case yet.', false, 'DEC-186; kept until handlechange is retired (DEC-197)');
-add('handle.fixed', 'Your handle is fixed: your work is in a published case ({case}).', false, 'DEC-186');
+add('handle.fixed', 'Your handle can\'t be changed: it names your work for good, and no one else can ever take it.', false, 'DEC-197 (was DEC-186); kept while membership reads it');
 add('handle.formerly', 'formerly {handle}', false, 'DEC-186; kept until handlechange is retired (DEC-197)');
 add('handle.characters', 'A handle uses only lower-case letters, digits and hyphens.', false, 'mock-screens.js join');
 must(scr, 'mock-screens.js', 'A handle uses only lower-case letters, digits and hyphens');
@@ -242,6 +242,8 @@ add('question.refused.drawnon', 'This question can\'t be set aside for the whole
 
 // 4f. The Action layer's words for T45 (DEC-194; BOB's B140): written in words-actions.src.py, which writes words-actions.json
 for (const x of JSON.parse(R('words-actions.json'))) add(x.key, x.en, x.protected, 'DEC-194', x.note || undefined);
+// 4g. T46's words (DEC-198; BOB's B149): written in words-t46.src.py, which writes words-t46.json
+for (const x of JSON.parse(R('words-t46.json'))) add(x.key, x.en, x.protected, 'DEC-198', x.note || undefined);
 
 // 5. The frame: rail, phone tabs, explanation levels
 for (const [k, name] of W.RAIL) { add(`rail.${k}.name`, name, false, 'mock-shell.js RAIL'); if (W.RAIL_HELP[k]) add(`rail.${k}.holds`, W.RAIL_HELP[k], false, 'mock-refs.js RAIL_HELP'); }
