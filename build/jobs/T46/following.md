@@ -53,3 +53,8 @@ Checks: format, architecture, coverage (27 of 27 ids) and ownership all report 0
 Users' reds: the same failures appear with my change stashed, so they are the inherited reds of rule 5 (7)-(8).
 Notes for BOB, in the record: plan-work R15 and R13 wording (which instant met_at is, met_at_why, nowMs) and action-plans' closing-instant field.
 No file outside my paths.
+
+**B2 (CHANGE, K2992).** I merged `tranche/T46`, which now carries monitoring T46-41, into this branch.
+- `node --test bio-plane/test/m/following/`: 75 pass, 0 fail.
+- `architecture`, `coverage` (27 of 27 ids) and `ownership`: 0 failures each.
+- The merge opens no red.
