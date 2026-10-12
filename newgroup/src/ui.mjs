@@ -7,13 +7,18 @@
  * party. R23: the install page states the two prerequisites the install enforces, and the Containers permission the
  * assistant's subscription path and the file scanner need. R37 (T36): the page says where the assistant's two settings
  * are made, and takes no choice. R45 (T36): the security tools are added inside the group's Civicsmith, and the
- * optional Workers VPC service is named here. R35 (DEC-122 (3)): every page loads
+ * optional Workers VPC service is named here. R23 (T46): the container parts the carried release cannot install, per
+ * member, before the install begins (LEFT_OUT). R35 (DEC-122 (3)): every page loads
  * nothing from another origin; its typefaces are the device's own (PAGE_CSS's stacks). R41 (DEC-143): the act that chooses
  * the short name carries the Irreversible weight and opens a full dialog saying it is permanent. R42 (DEC-146): the one
  * line saying what Civicsmith is, and its second line, held here once.
  */
 
 import { list as heldProfiles } from "../../jurisdictions/index.mjs";
+/* R23 (T46): the container images the release this installer carries names (recorded by the embed from its signed fleet
+   statement), and the one statement of what cannot install yet. */
+import { RELEASE_VERSION, RELEASE_CONTAINERS } from "./release.mjs";
+import { leftOutNotice } from "./images.mjs";
 
 export const PRODUCT = "Civicsmith";
 export const PUBLISHER = `This installer is run by the publisher of ${PRODUCT} releases.`;
@@ -173,6 +178,11 @@ dialog::backdrop{background:rgba(22,35,46,.45)}
 dialog h2{margin-top:0}
 `;
 
+/* R23 (T46; N897 (4)): before the install begins, the install and update pages say, per member, which container part
+   the release this installer carries cannot install (its image is not where your Cloudflare account can pull it), and
+   what your group's Civicsmith then lacks. Nothing when every image installs. */
+export const LEFT_OUT = leftOutNotice(RELEASE_CONTAINERS, RELEASE_VERSION);
+
 /* `confirm` (R41, the install page only): the button that chooses the short name carries the Irreversible weight, and
    pressing it opens the permanence dialog instead of sending /begin. `what` (R42): the page says what Civicsmith is. */
 function page({ title, description, eyebrow, lede, blocks, slugLabel, slugHint,
@@ -272,6 +282,7 @@ its safe view once one can be made. And it serves the assistant through a
 member's own Claude subscription: without it, the assistant is used only with
 an API key: a member's own, or your group's. Everything else installs either way.</p>
 </div>
+${LEFT_OUT}
 
 <h2>What happens when you press the button</h2>
 <p>Cloudflare will show you a permission screen naming exactly what this
@@ -325,6 +336,7 @@ updates: files are kept and shown but not scanned, and a high-risk file opens on
 its safe view once one can be made; and the assistant is used only with an API key: a
 member's own, or your group's. You approve it on Cloudflare's own page, the new release is placed into your account, and
 the permission is gone the moment it finishes. Nothing is stored here.</p>
+${LEFT_OUT}
 
 <h2>Which installation</h2>`,
   slugLabel: "The name your group's Civicsmith was installed under",

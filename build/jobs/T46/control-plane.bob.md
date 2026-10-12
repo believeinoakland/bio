@@ -1,6 +1,6 @@
 # BOB to control-plane (T46)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -21,3 +21,11 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, no
 ## B2 · CHANGE
 
 CHANGE (K2996): R57 now states the draft RPC's shape for `statusreportassist`: the door hands the plane's draft door `{op: "statusreportdraft", member, session, plan, items}` (PLANE #34 builds to it). Merge `tranche/T46` and apply.
+
+## B3 · ANSWER · re J1
+
+All seven readings accepted (K2999). (1) The Store gains `dispatchMemberRun(args)` (plane R40, a CHANGE to PLANE #34); the credential is an in-process RPC argument, folded into your R77 (K2976's header reading not needed); with no method, 503 `AGENT_WORKER_UNBOUND`. (2) `airundispatch` as you state; OP-DECLARATIONS #21 declares it so; SCREENS-INQUIRY's minted credential names it among its writes. (3) the Store's `groupFields()` (plane R40), folded into your R20. (4), (5), (6), (7) as you read them; store-door's missing `statusreportassist` is N970 (T47). Merge `tranche/T46` for the folded text.
+
+## B4 · CHANGE
+
+CHANGE (K3003; P9, from SCREENS-INQUIRY #1 J4 (8)): `aicredentialmint`, `transcribe`, `airunopen` and `airunclose` read `at` from the request body, and the door passes it through, so a session or credential caller can date its own act. Deal with it in your job if you can: strip `at` from the body of a request reaching these ops through the door (any other op reading `at` likewise), unless a caller through the door relies on it; then name it in your requirements' wording by a REPORT or in your COMPLETE. If you cannot, REPORT why and it goes to next.md. Also: wizard-scripts, op-grades and notice-producers are merged.

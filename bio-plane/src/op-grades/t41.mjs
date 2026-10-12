@@ -8,7 +8,7 @@
  *
  * `./index.mjs` spreads the three tables into `RUNGS`, `RUNG_ABSENT` and `NON_ACTS`. This file imports nothing, so the
  * spread closes no cycle. None of these ops is in `MACHINE_REFUSALS`, which holds only `affordances`' `ACTS` (R5,
- * `affordances` R20): each owner refuses a machine itself (`membership` R124 by `HANDLE_CHANGE_NOT_A_MEMBER`). By R18
+ * `affordances` R20): each owner refuses a machine itself (`membership` R129 refuses every caller `HANDLE_FIXED`; T46, R34). By R18
  * only `projectkeyset`, `projectsigninset` and `projectaccountremove` (ground `credential`) answer `phone: false`. No
  * consequence statement, vocabulary or prompt is added. (DEC-188 (8)) `aiceilingset` and `aicopyceilingset` (retired to
  * `ailimitset`) and `accountswitchset` and `groupswitchset` (retired to `accountusesset`) left `./t33.mjs` and
@@ -60,8 +60,8 @@ export const T41_RUNGS = {
 
 /* ---- the stated absences ---- */
 export const T41_RUNG_ABSENT = {
-  /* R29: membership R124, as setpassword (R27) */
-  handlechange:        { ground: "caller-owned", is: "a member changes their own handle, changeable until their work is first in a published case; earlier handles kept and shown as formerly (membership R124)" },
+  /* R29, as setpassword (R27); (T46) R34: membership R129 (DEC-197) refuses every change, so the sentence states it */
+  handlechange:        { ground: "caller-owned", is: "a member's own handle, fixed at joining: the act stays declared and refuses every change HANDLE_FIXED, whoever asks, writing nothing (membership R129)" },
   /* credentials R54, as groupkeyset and accountreferenceremove: who pays for a project's assistant */
   projectkeyset:       { ground: "credential", is: "an owner holds an Anthropic API key as the project's one account, replacing any earlier, never answered (credentials R54)" },
   projectsigninset:    { ground: "credential", is: "an owner who is the project's sole participant makes their own subscription sign-in the project's account (credentials R54)" },
@@ -107,9 +107,9 @@ export const T41_RUNG_ABSENT = {
 
 /* ---- every op's NON_ACTS reason (R5) ---- */
 export const T41_NON_ACTS = {
-  /* R29 */
-  handlechange: "member-directed: the caller's own handle, changeable until their work is first in a published case; "
-    + "earlier handles kept and shown as formerly; moves no bundle",
+  /* R29, as R34 amends it (T46; N934; DEC-197; membership R129) */
+  handlechange: "member-directed: a handle is fixed at joining; this act refuses every change, `HANDLE_FIXED`, and "
+    + "writes nothing",
   handlecheck: "read: whether a handle is free, taken or not allowed, never who holds it",
   /* credentials (R41) */
   projectkeyset: PROJECT_ACCOUNT("an owner holds the project's API key, never answered"),

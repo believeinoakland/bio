@@ -339,3 +339,51 @@ test("R17 (T44) each {date}: step-later-found, step-date-due and milestone-overd
   const noLook = run({ found: [later(null, "2026-10-07T03:00:00Z")] }, now);
   assert.deepEqual(detail(noLook, "step-later-found"), [say("queue.step-later-found.detail", { date: date("6", "october") })]);
 });
+
+/* R19 (T46; STEPS #5 J1; K2955; steps R12): `stepsDue` reads at most 1,000 of a member's dated steps not ended and 1,000 of
+   her reminders due; when either read reaches past it, its answer's `truncated` is carried into `facts.step_due`, so the
+   steps producer's bound reached is never silent. Over the real steps, with dates not yet past, so no item is drawn and only
+   stepsDue's own bound is in play; the items drawn are unchanged. */
+test("R19 a member with 1,001 open dated steps has facts.step_due truncated (stepsDue's own bound reached), the items drawn unchanged; control: with 1,000, not; and 1,001 reminders due likewise (control: 1,000)", () => {
+  const at = "2026-10-10T06:30:00Z";
+  const many = (w, n, args = {}) => {
+    const ids = [];
+    w.st.db.exec("BEGIN");
+    for (let i = 0; i < n; i++) ids.push(w.step({ work: `dated ${i}`, byWhen: { date: "2099-01-01", basis: "own" }, by: ANN, ...args }));
+    w.st.db.exec("COMMIT");
+    return ids.sort();
+  };
+  const w = stepsWorld();
+  duties(w.st);
+  const ids = many(w, 1001);
+  const facts = () => reader(fresh(w.host, { membership: w.membership, view: UTC, steps: w.s })).read("ann", { now: Date.parse(at) });
+  assert.equal(w.s.stepsDue({ viewer: ANN, at }).truncated, true, "steps R12: its read reached past its 1,000");
+  const r = facts();
+  assert.deepEqual(r.facts.step_due, { bound: INVESTIGATION_ITEMS_MAX, truncated: true }, "the steps producer's bound reached, stated");
+  assert.deepEqual([...ofKind(r, "step-date-due"), ...ofKind(r, "step-reminder")], [], "the items drawn are unchanged: none is past its date");
+  assert.deepEqual(r.facts.failed, []);
+  assert.equal(w.s.stepEnd({ step: ids[0], end: "ended", by: ANN }).ok, true);
+  assert.equal("truncated" in w.s.stepsDue({ viewer: ANN, at }), false);
+  assert.deepEqual(facts().facts.step_due, { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, "control: 1,000 open dated steps, not truncated");
+  assert.deepEqual(reader(fresh(w.host, { membership: w.membership, view: UTC, steps: w.s })).read("bob", { now: Date.parse(at) }).facts.step_due,
+    { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, "control: another member's read, not hers");
+  /* reminders: 1,001 due that day reach steps' bound; the items drawn are this module's own 200 */
+  const m = stepsWorld();
+  duties(m.st);
+  const s = m.step({ work: "reminded" });
+  m.st.db.exec("BEGIN");
+  for (let i = 0; i < 1001; i++) m.s.stepReminder({ step: s, at: "2026-10-09", by: BOB });
+  m.st.db.exec("COMMIT");
+  const read = () => reader(fresh(m.host, { membership: m.membership, view: UTC, steps: m.s })).read("bob", { now: Date.parse(at) });
+  const rr = read();
+  assert.deepEqual(rr.facts.step_due, { bound: INVESTIGATION_ITEMS_MAX, truncated: true });
+  assert.equal(ofKind(rr, "step-reminder").length, INVESTIGATION_ITEMS_MAX);
+  /* control, at the interface: a stepsDue answering the same 1,000 entries with no truncated is not truncated by its bound, only by this module's own cut */
+  const due = m.s.stepsDue({ viewer: BOB, at }).due;
+  assert.equal(due.length, 1000);
+  const stub = (answer) => reader(fresh(m.host, { membership: m.membership, view: UTC, steps: { ...NONE_STEPS, stepsDue: () => answer } })).read("bob", { now: Date.parse(at) }).facts.step_due;
+  assert.deepEqual(stub({ ok: true, due: due.slice(0, INVESTIGATION_ITEMS_MAX) }), { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, "control: within both bounds");
+  assert.deepEqual(stub({ ok: true, due: due.slice(0, INVESTIGATION_ITEMS_MAX), truncated: true }), { bound: INVESTIGATION_ITEMS_MAX, truncated: true }, "stepsDue's truncated alone");
+  assert.deepEqual(stub({ ok: true, due: due.slice(0, INVESTIGATION_ITEMS_MAX), truncated: "yes" }), { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, "only a truncated that is true");
+});
+const NONE_STEPS = { laterFound: () => ({ ok: true, found: [] }), costShares: () => ({ ok: true, shares: [] }), costMessages: () => ({ ok: true, messages: [] }) };
