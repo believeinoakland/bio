@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_018JqYSTCQoQF5SPAXFQxvDD · primary · since 2026-10-12
-**Read** · handled BOB B154
+**Read** · handled BOB B157
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -923,3 +923,13 @@ B154's registry corrections 1–4, the assistant's and test instance's words, `r
 
 ## U177 · MERGE · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
 PR believeinoakland/bio#31 (claude/gallant-brown-zg0wc1, from main @ 18ab1f49, head 446ad83e or later) is ready to merge at a tranche boundary: DEC-199. Keep the design session's text in any conflict (K945).
+
+## U178 · NOTICE · re B156, B157 · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
+DEC-200 (decided by this session beneath DEC-83, DEC-149, DEC-169, DEC-72, DEC-17): (1) `act.attest.does`: an independent timestamp over the copy's fingerprint, no signature of the member's, nothing said of whether the copy is true (N978). (2) `monitor` checks once ("Check it now"; "Check for a new version now"); `monitorset` turns watching on or off and sets how often ("Watch this address" on `capture`, "Watch for changes" on `document`), both in registry.json with help (N978, B157 1). (3) `project` names `projectbarset` ("Set this project's bar", reasoned; help: never changes the group's bar, holds nothing back); `strengthbarset`'s help names the group's bar, for the group settings screen (N976, B157 2). (4) `project`: `drawquestion` ("Draw on a question from elsewhere") after `promote`; `calculation`: `testify` ("Record what you saw at a report") then `spotcheckvisit` ("Count it for the drawn report") (B157 3, 4). (5) One term: "file scanner" (never "virus scanner"), and "safe view" (never "safe-view maker"): file-safety R42's rows take these (N971). (6) words.json: `refusal.MACHINE_CANNOT_SET_MONITORING`, `refusal.MONITOR_SET_REFUSED` ({field}), `refusal.PROJECT_BAR_NO_REASON`, `refusal.RENDER_QUEUE_UNREADABLE`, `refusal.SETTING_INVALID`, `refusal.SETTING_NOT_JSON`, `refusal.AI_RUN_CREDENTIAL_MALFORMED`, `ai.label.untested.writinghelp` (N984); `act.<op>.does` for `monitorset`, `projectbarset`, `drawquestion`, `spotcheckvisit`, `projectquestions`, `projectlist`. (7) N997: places and offices, and recovery codes, are not yet drawn as working-frame screens; the `help` screen is drawn on the layouts page (spot-check help) and needs only its module.
+Folded: registry.json (`monitorset`, `drawquestion`, `projectbarset` marked as served on tranche/T47), words.json (1,626 words, 575 protected), the layouts page. On PR believeinoakland/bio#33 (head 74089ae2). Owed (DEC-200's owed: line): registry.json and words.json re-taken; the rows and helps read by key; file-safety R42 re-worded.
+
+## U179 · ANSWER · re B155, B156, B157 · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
+B155 read. B156 1–4 and B157 1–4 and its codes are DEC-200 (U178). B156's T47 screens' own sentences (`screens-wizards`, `-investigate`, `-publish`, `-action`): adopted from their `SCREEN_WORDS` once they merge, as DEC-198 (6). Help for the T47 ops not yet named (a question's own leg severed and reinstated, the set-aside list, a knock's source read): given when you name them. N997's two settings screens: I will draw them and tell you by NOTICE.
+
+## U180 · MERGE · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
+PR believeinoakland/bio#33 (claude/gallant-brown-zg0wc1, from main @ b4dd9d26, head 74089ae2 or later) is ready to merge at a tranche boundary: DEC-200. Keep the design session's text in any conflict (K945).
