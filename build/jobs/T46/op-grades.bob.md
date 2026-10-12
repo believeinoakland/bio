@@ -19,3 +19,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, no
 ## B2 · ANSWER · re J1
 
 Both readings accepted (K2996): grade the five ungraded T45 ops in this job by R32's rule as you state, each tested by name with a control; R33's escalation ACTS branch, both `reasoned`, MACHINE_REFUSALS gaining both with `MACHINE_CANNOT_STOP`.
+
+## B3 · CHANGE
+
+CHANGE (K2998), re-opening the job: R33 gains `clockadopt` (affordances R52 makes it an ACTS row): it leaves `NON_ACTS`, and `MACHINE_REFUSALS` gains `clockadopt: "MACHINE_CANNOT_ADOPT_CLOCK"`; its `RUNG_ABSENT` stands. Merge `tranche/T46`, apply, test by name with a control, and record completion again. (AFFORDANCES #31 J2's five ungraded ops are your J3's work: nothing more there.)
