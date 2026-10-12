@@ -102,3 +102,7 @@ T46-56 complete: R1–R9 met, built to interface-shell R21 (K2996, K2998, K2999)
 ## J5 · COMPLETE · re B5
 
 Re-complete per B5: tranche/T46 merged; aligned to K3002's R21 (cs.rows cols as header keys, acts(item) the row panel, so held draws its own hold strip with heldsetaside and release over extra.picked; digest, now, refuse fills and value on checkboxes now the kit's). 42/42; with modules.json patched locally (paths bio-plane/src/screens-intake/, tests bio-plane/test/m/screens-intake/, uses + wizard-scripts): format 0, architecture 0, coverage 9/9, ownership 0; run.mjs coverage failures none mine. Re-pointing to the shell's DOM stand-in waits on its merge's CHANGE. Record: 'Completion again'.
+
+## J6 · REPORT
+
+Kit gaps after re-pointing to the real shell (B6): (1) op-grades: heldcaptures and safeview (reads) have no RUNGS or RUNG_ABSENT row, and deepercheck and inboxpull are undetermined, so the shell asks a reason before refreshing the held list, reading a safe view, asking a deeper check or moving a knock in; a RUNG_ABSENT row with a non-undetermined ground for the two reads (and a grade for the other two) would end it. (2) interface-shell: a redraw keeps a field's typed value over the value the screen draws, so a screen cannot fill a field it drew (I draw a writing-help draft into a field of a new id). (3) interface-shell: done is called unawaited; an async done's rejection is unhandled and the rereads run before it ends. (4) interface-shell REF_SCREENS has no kind for a knock, so it carries no card.
