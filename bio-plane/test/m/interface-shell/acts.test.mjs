@@ -307,3 +307,41 @@ test("R21 (K3009) an act's done that answers a promise is awaited before the rea
   if (q.root().querySelector('[data-shell="reason-send"]')) { q.root().querySelector("textarea").value = "r"; await q.click(q.root().querySelector('[data-shell="reason-send"]')); }
   assert.equal(q.doc.getElementById("cur").value, "old-secret", "a refused act keeps what was typed (R13)");
 });
+
+test("R21 (K3011) a streamed answer (application/x-ndjson) reaches done and cs.call as its list of parsed events, the answer the last; a stream whose last event refuses is a refusal beside the act (control: a JSON answer reaches done as its result)", async () => {
+  const { ndjson } = await import("./harness.mjs");
+  const s = { id: "answers", reads: () => ({}),
+    acts: [{ op: "ask", send: () => ({ body: { question: "q" } }), done: async (view, answer, cs) => { const again = await cs.call("ask", { body: { question: "r" } }); cs.set("got", JSON.stringify([answer, again])); } },
+      { op: "search", send: () => ({ query: { q: "x" } }), done: (view, answer, cs) => cs.set("got2", JSON.stringify(answer)) }],
+    render: (cs, view) => cs.act("ask") + cs.act("search") + "<p id=got>" + cs.esc(view.ui.got || "") + "</p><p id=got2>" + cs.esc(view.ui.got2 || "") + "</p>" };
+  const events = [{ event: "looking" }, { event: "read", n: 2 }, { ok: true, summary: "S" }];
+  const p = await boot({ screens: [s], path: "/app/answers", plane: { ask: ndjson(events), search: ok({ results: [1] }) } });
+  await p.click(btn(p, "ask"));
+  if (p.root().querySelector('[data-shell="reason-send"]')) { p.root().querySelector("textarea").value = "r"; await p.click(p.root().querySelector('[data-shell="reason-send"]')); }
+  await p.settle();
+  assert.deepEqual(JSON.parse(p.doc.getElementById("got").textContent), [events, events]);
+  await p.click(btn(p, "search"));
+  assert.deepEqual(JSON.parse(p.doc.getElementById("got2").textContent), { results: [1] }, "control: JSON reaches done as its result");
+  const q = await boot({ screens: [s], path: "/app/answers", plane: { ask: ndjson([{ event: "looking" }, { ok: false, code: "AI_NO_ACCOUNT", translation: "No account serves you." }]) } });
+  await q.click(btn(q, "ask"));
+  if (q.root().querySelector('[data-shell="reason-send"]')) { q.root().querySelector("textarea").value = "r"; await q.click(q.root().querySelector('[data-shell="reason-send"]')); }
+  assert.ok(q.root().querySelector('[data-slot="m:0"] [data-gap="refused"]'));
+});
+
+test("R11 (K3011) a read (an op OPS declares not mutating) carries no weight mark and runs on press, whatever op-grades' tables hold (control: a mutating act keeps its weight)", async () => {
+  const { OPS } = await import("../../../src/op-declarations/index.mjs");
+  for (const op of ["search", "findin", "frontier", "ruleanswer"]) assert.equal(OPS[op].mutating, false, op);
+  const s = { id: "finder", reads: () => ({}), acts: [{ op: "search" }, { op: "findin" }, { op: "frontier" }, { op: "select" }], render: (cs) => cs.act("search") + cs.act("findin") + cs.act("frontier") + cs.act("select") };
+  const p = await boot({ screens: [s], path: "/app/finder" });
+  for (const op of ["search", "findin"]) {
+    assert.equal(btn(p, op).querySelector(".w"), null, op);
+    await p.click(btn(p, op));
+    assert.equal(p.byOp(op).length, 1, op + " runs on press");
+  }
+  const { SESSION_OPS } = await import("../../../src/op-declarations/index.mjs");
+  assert.equal(btn(p, "frontier") === null, !SESSION_OPS.member.has("frontier"), "frontier is gated by R12 alone");
+  assert.equal(OPS.cite.mutating, true);
+  const c = { id: "document", reads: () => ({}), acts: [{ op: "cite" }], render: (cs) => cs.act("cite") };
+  const q = await boot({ screens: [c], path: "/app/document/x" });
+  assert.equal(btn(q, "cite").querySelector(".w").textContent, "Reversible", "control: a mutating act keeps its weight");
+});

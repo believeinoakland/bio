@@ -75,6 +75,18 @@ export function shellProgram(D, SCREENS, win) {
     if (r.status === 401 && !own) { gone(); return { kind: "silent" }; }
     if (req.bytes) return { kind: "response", r };
     let j = null;
+    const type = r.headers && typeof r.headers.get === "function" ? String(r.headers.get("content-type") || "") : "";
+    if (/ndjson/i.test(type)) {
+      /* R21 (K3011): a streamed answer (application/x-ndjson, `agent-worker` R54) is its list of parsed events, the
+         answer the last; a line that does not parse is no answer */
+      let events = null;
+      try { events = String(await r.text()).split("\n").filter((l) => l.trim()).map((l) => JSON.parse(l)); } catch { events = null; }
+      if (!events || !events.length) return { kind: "silent" };
+      const last = events[events.length - 1];
+      if (!r.ok || (last && typeof last === "object" && last.ok === false))
+        return { kind: "refused", code: String((last && (last.code || last.reason)) || r.status), translation: last && typeof last.translation === "string" ? last.translation : null, fields: last || {} };
+      return { kind: "ok", value: events, json: events };
+    }
     try { j = await r.json(); } catch { j = null; }
     const refused = (o) => ({ kind: "refused", code: String(o.code || o.reason || r.status), translation: typeof o.translation === "string" ? o.translation : null, fields: o });
     if (j && typeof j === "object" && j.ok === false) return refused(j);

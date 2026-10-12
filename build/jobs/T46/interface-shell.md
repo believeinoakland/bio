@@ -77,3 +77,13 @@ Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 27, module lines 1102 (src)
 ## J5 · COMPLETE
 
 B8 (K3009) applied: done awaited before re-reads; every password field cleared after a successful act (refused acts keep typed text). R21 wording proposed in the record's 'Re-opened by B8'. Tests 61/61; screen modules over this shell: settings 51/51 (tranche), intake 42/42, daily 45/45, inquiry 44/44 (branch heads). format, architecture, coverage, ownership 0 failures.
+
+## Re-opened by B9 (K3011)
+
+**Applied.** (1) An answer of type `application/x-ndjson` (`ask`, `agent-worker` R54) is read as its list of parsed events, the answer the last, and handed so to `done` and `cs.call`; a stream whose last event is `ok: false`, or an HTTP error, is a refusal beside the act; a line that does not parse is no answer. (2) An op `OPS` declares `mutating: false` carries no weight mark and runs on press, whatever `op-grades`' tables hold (`index.mjs`, before the grades).
+
+**Found elsewhere (REPORT):** `frontier`, a registry act of `finder` and a read, is not in `op-declarations`' `SESSION_OPS.member`, so R12 keeps it off a member's Find screen (absent, as R12 requires). Either its session sets lack it, or screens-daily's R4 `frontier` cannot be drawn for members; BOB's to route.
+
+**Tests and checks:** interface-shell 63/63 (new: R21 K3011 streamed answer, with a JSON control and a refusing stream; R11 K3011 reads run on press, with a mutating control). Screen modules on the tranche over this branch: screens-daily and screens-settings together 96/96. `format` 0; `architecture … interface-shell` 0; `coverage` 26 of 26; `ownership` 0.
+
+Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 32, module lines 1118 (src)

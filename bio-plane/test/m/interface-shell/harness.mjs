@@ -21,6 +21,7 @@ export const refused = (code, translation, status = 400, extra = {}) => ({ statu
 export const refusedIn = (code, translation) => ({ status: 200, json: { ok: true, result: { ok: false, reason: code, code, ...(translation ? { translation } : {}) } } });
 export const httpError = (status = 500) => ({ status, text: "boom" });
 export const silent = Object.freeze({ silent: true });
+export const ndjson = (events, status = 200) => ({ status, ndjson: events });
 export const bytes = (data, type = "application/pdf") => ({ status: 200, bytes: data, type });
 export const pending = Object.freeze({ pending: true });
 
@@ -66,7 +67,8 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     if (a.pending) return new Promise(() => {});
     if (a.silent) throw new TypeError("Failed to fetch");
     return { status: a.status, ok: a.status >= 200 && a.status < 300,
-      headers: { get: (h) => (h.toLowerCase() === "content-type" ? (a.bytes !== undefined ? a.type : a.json !== undefined ? "application/json" : "text/plain") : null) },
+      headers: { get: (h) => (h.toLowerCase() === "content-type" ? (a.ndjson !== undefined ? "application/x-ndjson" : a.bytes !== undefined ? a.type : a.json !== undefined ? "application/json" : "text/plain") : null) },
+      text: async () => (a.ndjson !== undefined ? a.ndjson.map((e) => (typeof e === "string" ? e : JSON.stringify(e))).join("\n") + "\n" : JSON.stringify(a.json ?? "")),
       blob: async () => new Blob([a.bytes ?? ""], { type: a.type || "" }),
       json: async () => { if (a.json === undefined) throw new SyntaxError("not JSON"); return JSON.parse(JSON.stringify(a.json)); } };
   };
