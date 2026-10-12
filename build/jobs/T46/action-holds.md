@@ -65,3 +65,7 @@ Details in my record.
 ## J3 · COMPLETE · re B2
 
 B2 applied (pushed). R14 undone: a release where no hold was placed is accepted again (R5, with its restarts); a released place is still HOLD_ALREADY_RELEASED. holdNotInPlace stays the one minter; its detail is back to the notice sentence (the only arm that answers it). R14's test removed; R5's control restored. R15 unchanged. action-holds 37/37; action-producers, filings, queue action, membership t42-hold-reach 138/138; format, architecture, coverage (15/15), ownership 0 failures. Correction: my earlier COMPLETE called the report J2; it is J1.
+
+## J4 · COMPLETE · re B3
+
+B3 applied (pushed): tranche/T46 merged (fab21527cc). No red opened: action-holds 37/37; actions, filings, action-producers 249/249; format, architecture, coverage (15/15), ownership 0 failures.
