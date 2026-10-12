@@ -23,3 +23,7 @@ K2880 (answers J1): your edges are added: modules.json gives answer-envelope use
 ## B3 · ANSWER · re J2
 
 K2882: merged into tranche/T45; R7 struck. Stay available: action-producers' C-152 comes by CHANGE at its merge.
+
+## B4 · CHANGE
+
+K2888: action-producers is merged; its checks file (C-152) is on tranche/T45 if it added one. Merge tranche/T45, list it in CHECK_FAMILY_FILES after machinery-producers' place in modules.json order, re-run, and post COMPLETE.
