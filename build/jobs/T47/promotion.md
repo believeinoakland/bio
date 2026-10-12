@@ -1,6 +1,6 @@
 # promotion (T47)
 
-**Status** · session_0145CtZqHwp5jtUoDWPESrGG · depth 2 · COMPLETE · handled B2
+**Status** · session_0145CtZqHwp5jtUoDWPESrGG · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
