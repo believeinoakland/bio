@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #164 · session_01UBLCpdUsHtrooH5Ji41yu4 · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #16 session_013aVsQVbraDzPKRguViHbgA; jurisdictions: JURISDICTIONS #11 session_01CVJELXMANXCrBSv3k5mkgv; connection-grammar: CONNECTION-GRAMMAR #4 session_01G4kGikmgsoaj9zsvzXXe1r; bundler: BUNDLER #17 session_015stLmywC6CUKSABSgnnE5y; odf-reader: ODF-READER #6 session_01Jn5rD2YHo9oPrridu4wiX2; file-scanner: FILE-SCANNER #4 session_012TNzbQZh8FxASdHwTPhvby; record-core: RECORD-CORE #22 session_01UoXK9QPNAj5jdUwKRxUk56
+**Jobs** · record-grammar: RECORD-GRAMMAR #16 session_013aVsQVbraDzPKRguViHbgA; jurisdictions: JURISDICTIONS #11 session_01CVJELXMANXCrBSv3k5mkgv; connection-grammar: CONNECTION-GRAMMAR #4 session_01G4kGikmgsoaj9zsvzXXe1r; bundler: BUNDLER #17 session_015stLmywC6CUKSABSgnnE5y; odf-reader: ODF-READER #6 session_01Jn5rD2YHo9oPrridu4wiX2; file-scanner: FILE-SCANNER #4 session_012TNzbQZh8FxASdHwTPhvby; record-core: RECORD-CORE #22 session_01UoXK9QPNAj5jdUwKRxUk56; membership: MEMBERSHIP #36 session_016WwjpKLhCxuVTMA1W4e1CC
 
 **At T47's opening:** T46 closed by PR #32 (`main` @ b4dd9d2616, K3024), after the design stream's PR #30 (DEC-198) and PR #31 (DEC-199) were merged into `main` (K3021, K3023). `tranche/T47` from `main`. Opened by BOB #164 from `draft-T47-plan.md` (a worker's draft for BOB #163), reviewed whole and amended at the opening (K3027): N981–N992 folded, the draft's doubts ruled, DEC-198/DEC-199 re-tested. Development runs (K2605); the 80% pause (K2341) and the account-switch rule stand. Release 0.83.0 is cut from this tranche (§11; T46's "BOB's acts").
 
