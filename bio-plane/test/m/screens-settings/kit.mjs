@@ -6,9 +6,14 @@
 
    `html(s)` reads an HTML string into a small tree (elements, attributes, text), enough to find what a screen drew:
    its text nodes, its acts (`[data-act]`), its fields (`name`, `type`, `value`) and its links. */
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { OPS, NEEDS, SESSION_OPS, OP_ALIASES } from "../../../src/op-declarations/index.mjs";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-settings/index.mjs";
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 
 // ---- reading HTML ----
 
@@ -61,7 +66,13 @@ export const ancestor = (e, pred) => { for (let p = e.parent; p; p = p.parent) i
 
 // ---- the words ----
 
-const ROWS = new Map(WORD_ROWS.map((r) => [r[0], r[1]]));
+/* The stand-in draws `WORD_ROWS`' words, and, while `setup-words` R5 (T46: `words.json` at 3f40899950) is not yet merged
+   into this branch, that file's words, which R5 carries; `contract.test.mjs` holds the screens to `WORD_ROWS` itself. */
+function wordsAt3f() {
+  try { return JSON.parse(execFileSync("git", ["show", "3f40899950:docs/development/ux-substrate/screens/words.json"], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 24 })).words.map((x) => [x.key, x.en]); }
+  catch { return []; }
+}
+const ROWS = new Map([...wordsAt3f(), ...WORD_ROWS.map((r) => [r[0], r[1]])]);
 for (const [k, en] of SCREEN_WORDS) ROWS.set(k, en);
 export const WORDS = ROWS;
 /** The shell's `w(key, fills)` (its R5): the screen's own row first, else `WORD_ROWS`; each `{name}` filled, escaped. */
@@ -75,6 +86,8 @@ export const usedKeys = () => new Set(used);
 export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 /** A word's text with its fills, as a drawn text node reads it (unescaped), for comparison. */
 export const said = (key, fills = {}) => unescape(w(key, fills));
+/** A word's text, unescaped, for a fill (the kit's `t`). */
+export const t = (key, fills = {}) => unescape(w(key, fills));
 
 // ---- the act gate (interface-shell R12, stood in) ----
 
@@ -99,7 +112,7 @@ export function may(op, me) {
  *  when it acts on one row; each form is `[data-form]`, its fields named. */
 export function kit(me, screen) {
   const cs = {
-    w, esc,
+    w, t, esc,
     state(o, emptyKey) {
       if (o.state === "loading") return `<p class="cs-state" data-state="loading">${w("state.loading")}</p>`;
       if (o.state === "empty") return `<p class="cs-state" data-state="empty">${w(emptyKey || "state.empty")}</p>`;
@@ -112,6 +125,7 @@ export function kit(me, screen) {
       return `<button type="button" class="cs-btn" data-act="${esc(op)}"${o.subject !== undefined ? ` data-subject="${esc(o.subject)}"` : ""}${o.form ? ` data-form-of="${esc(o.form)}"` : ""}>${w(key, o.fills)}</button>`;
     },
     date(iso) { return iso ? esc(String(iso).slice(0, 10)) : ""; },
+    dateText(iso) { return iso ? String(iso).slice(0, 10) : ""; },
     number(n) { return esc(Number(n).toLocaleString("en")); },
   };
   return cs;
@@ -148,37 +162,46 @@ export function outcomeOf(answer, emptyWhen) {
 export const screen = (id) => SCREENS.find((s) => s.id === id);
 
 /** Runs one screen: its reads over the fake plane, then its render; answers the drawn tree and helpers. */
-export async function open(id, { me, table, subject = null, reachable = false, states = {} }) {
+export async function open(id, { me, table, subject = null, reachable = false, origin = "https://group.example", states = {} }) {
   const s = screen(id);
   const p = plane(table);
-  const ctx = { me, subject, reachable };
+  const ctx = { me, subject, reachable, origin, shown: null };
   const d = {};
-  for (const r of s.reads(ctx)) {
-    if (states[r.name]) { d[r.name] = states[r.name]; continue; }
+  const readOne = async (r) => {
+    if (states[r.name]) return states[r.name];
     const a = await Promise.race([p.call(r.op, r.query || {}, r.body), new Promise((res) => setTimeout(() => res("pending"), 5))]);
-    d[r.name] = a === "pending" ? { state: "loading" } : outcomeOf(a);
-  }
+    return a === "pending" ? { state: "loading" } : outcomeOf(a);
+  };
+  for (const r of s.reads(ctx)) d[r.name] = await readOne(r);
   const cs = kit(me, id);
-  const draw = () => s.render(cs, d, ctx, s.parts || {});
-  const out = { s, p, ctx, d, cs, html: draw() };
-  out.tree = html(out.html);
+  const draw = () => s.render(cs, d, ctx, s.parts);
+  const out = { s, p, ctx, d, cs, opened: [], held: null, refusal: null };
   out.redraw = () => { out.html = draw(); out.tree = html(out.html); return out; };
-  /** Presses an act: its args from the form's values, the request sent, `after` applied, the named reads read again. */
+  out.redraw();
+  /** Presses an act as the shell does (its R11–R13; this module's R8): the request made from the form's values, sent;
+   *  on a refusal, the refusal drawn and nothing else changed; on success, `after` applied, its follow-up sent, the
+   *  act's reads read again and the screen drawn again. */
   out.press = async (op, { subject, values = {} } = {}) => {
     const spec = s.acts.find((a) => a.op === op);
     if (!spec) throw new Error(`${id} lists no act ${op}`);
     const before = p.requests.length;
-    const req = spec.args(values, ctx, d, subject);
-    if (req === null) return { sent: [], refused: true };
-    const answer = await p.call(spec.send || resolve(op).replace(/^owed:(\w+).*/, "$1"), req.query || {}, req.body);
-    let followed = null;
-    if (spec.after && answer && answer.ok !== false && !(answer.result && answer.result.ok === false)) {
-      followed = spec.after(answer.result !== undefined ? answer.result : answer, ctx, d, values);
-      if (followed && followed.then) for (const t of [].concat(followed.then)) await p.call(t.op, t.query || {}, t.body);
-      if (followed && followed.show) d.__shown = followed.show;
+    out.held = null; out.refusal = null; ctx.shown = null;
+    const req = spec.args(values, ctx, d, subject, s.parts);
+    if (req.hold) { out.held = req.hold; out.redraw(); return { sent: [], held: req.hold }; }
+    const answer = await p.call(op, req.query || {}, req.body);
+    const result = answer && answer.result !== undefined ? answer.result : answer;
+    if (!answer || answer.ok === false || answer.state === "failed" || (result && result.ok === false)) {
+      out.refusal = { answer: result || answer, drawn: spec.refused ? spec.refused(cs, result || answer, s.parts) : null };
+      return { sent: p.requests.slice(before), answer, refused: true };
     }
-    if (answer && answer.ok !== false)
-      for (const r of s.reads(ctx).filter((r) => (spec.rereads || []).includes(r.name))) d[r.name] = outcomeOf(await p.call(r.op, r.query || {}, r.body));
+    let followed = null;
+    if (spec.after) {
+      followed = spec.after(result, ctx, d, values, subject) || null;
+      if (followed && followed.then) for (const t2 of followed.then) await p.call(t2.op, t2.query || {}, t2.body);
+      if (followed && followed.open) out.opened.push(followed.open);
+    }
+    for (const r of s.reads(ctx).filter((r) => (spec.rereads || []).includes(r.name))) d[r.name] = await readOne(r);
+    ctx.shown = followed && followed.show ? followed.show : null;
     out.redraw();
     return { sent: p.requests.slice(before), answer, followed };
   };
