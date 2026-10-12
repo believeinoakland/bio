@@ -41,3 +41,7 @@ My state: every other entry (R71, R72, R32, R50, and R34's read of the instant) 
 **Tests and checks.** monitoring: 134 pass, 0 fail, 2 todo. Users' suites, compared with `origin/tranche/T45` failure for failure: following 50/0, link-sweep 29/0, scheduler 129/0, machinery-producers 24/0, queue-producers 84/0. affordances 8 fail, answer-envelope 6, control-plane 4 and plane 8 fail the same tests as on the base (rule 4 (6), (9), (11), (12), (14)); none are new. `system/migrate-released.test.mjs` fails on the base too. Checks: format 0 failures; architecture 0; coverage 59 of 59 live ids; ownership 0 (8 files).
 
 Size (session_0133TTPPm1mQzJwK2WwH5Yij): test runs 14, module lines 3694
+
+## J3 · COMPLETE
+
+T45-35 complete on job/T45/monitoring (pushed). R71, R72, R32, R50 met; R34 met but for its time-of-day arm, which is not met in T45 (actions R33's bound, N922, K2874): two test.todo tests name that cause, and a passing test pins that a timed entry is never marked early. monitoring 134 pass / 0 fail / 2 todo. The users' suites fail exactly the tests they fail on the tranche base. format, architecture, coverage (59/59) and ownership (8 files): 0 failures each. New row C-18.19 WATCH_END_REFUSED (rule 4 (2), (14)). Details are in my record's Completion section.
