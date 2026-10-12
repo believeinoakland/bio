@@ -1,6 +1,6 @@
 # case-authoring (T46)
 
-**Status** · session_015ySFNDd18mdxT5E8Xsc9u6 · depth 2 · RUNNING until 2026-10-12T06:40:54Z (reading helper: digest of tests and Uses' public parts) · handled B2
+**Status** · session_015ySFNDd18mdxT5E8Xsc9u6 · depth 2 · COMPLETE · handled B2
 
 ## Completion (CASE-AUTHORING #27)
 
