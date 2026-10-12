@@ -21,3 +21,7 @@
 **Files added** inside my `tests` path only: `bio-plane/test/m/conformance/t46-words.test.mjs`.
 
 Size (session_01NvjjjW5ncsk4BP8hjQrwWM): test runs 6, module lines 2751
+
+## J1 · COMPLETE
+
+T46-29 complete: R38 applied (C-113.38–.43 read words.json's refusal.<CODE> by key via CONFORMANCE_WORDS; C-113.7, .37, .44 kept; awaiting T47's stamp). Also fixed this module's fixture for case-check's T46-28 latch (case-carriage R19–R21 stand-ins): 8 t45 tests were red on the tranche, now green. conformance tests 109 pass 0 fail; format, architecture, coverage (38/38), ownership 0 failures; run.mjs: architecture 0 failures, coverage reds all other modules' (accepted red 1). Stales the plane bundle, release/bio-plane.bundled.mjs, newgroup/src/release.mjs and newgroup/dist (not mine). No file outside my paths. Record: build/jobs/T46/conformance.md.
