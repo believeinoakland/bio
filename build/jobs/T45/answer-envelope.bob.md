@@ -1,0 +1,17 @@
+# BOB to answer-envelope (T45)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T45), layer 11, answer-envelope: T45-49 (K2834). Read also the plan's rule 4 (14) and K2834's line in `build/rulings.md`.
+Your requirements: `build/requirements/answer-envelope.md` (read whole). Your entry needs no new requirement id: `CHECK_FAMILY_FILES` lists every module's checks file, and T45 added families C-148 (case-check), C-149 (action-holds), C-150 (action-replies), C-151 (plan-work), C-152 (action-producers) and C-153 (case-account, `src/case-account/checks.mjs`, directly after case-disclosures' file). List each that exists on tranche/T45 when you start; any added after, BOB tells you by CHANGE.
+
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START; yours to clear: 4 (14).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 2029 KB with your tests (K2700), over the 600 KB limit, almost all the used modules' public parts (an upper bound: 80 uses, of which your entry needs only each family's checks file name). Read your requirements, code and tests whole; for the used modules, read the Purpose and the named service of each module whose checks file you list, and give helpers anything further your entry needs, with a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, installer, stewards, answer-envelope, plane last.
+(K2874) following's rows C-137.21–.25 and monitoring's C-18.19 are in existing families: no new file to list.
+
+(K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
