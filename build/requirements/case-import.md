@@ -54,7 +54,7 @@ Terms.
   - **At import.** `importCaseFile` (R1) also takes `groupFields`: the `group_fields` of the source's `publishedCase` answer for that case (`public-read` R34: `group`, `name`, `domain`, `domain_verified_at`, `stake`, `detail`), with `read_at`, the instant the caller read them. They are recorded with the edition when R1 first records it, as the source's own statement current at `read_at`: unsigned, never verified as part of the edition, never this group's. A repeat of the same edition (`existed: true`) writes nothing. Fields that are absent, not in R34's shape, or whose `group` is not the slug the manifest names, are not recorded, and the import is never refused for them.
   - **In the answer.** `importedCase` answers, per edition, `group_fields: {group, name, domain, domain_verified_at, stake, detail, read_at}`, labelled as the source's declaration current when read, never as of the edition's signing; an edition recorded without them (before T46, or with none given or none recorded) answers `group_fields: null` with a sentence saying why, never a guess, so `conformance` R32 reads `identity: null, stake: "undetermined"` for it.
 
-  Control: an import given the source's fields answers them with `read_at`; the same import without them answers `group_fields: null` with its sentence; fields naming another group are not recorded. *(not yet met: T46)*
+  Control: an import given the source's fields answers them with `read_at`; the same import without them answers `group_fields: null` with its sentence; fields naming another group are not recorded.
 
 **completeImportedDocument({import, edition, bytes, by, viewer})** (`op=caseimportdocument`; mutating)
 
