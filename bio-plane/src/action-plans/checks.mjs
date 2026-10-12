@@ -11,6 +11,22 @@
 
 const at = (fn, region) => `src/action-plans/index.mjs ${fn} > ${region}`;
 
+/* R47 (T46; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module
+   answers, each `en` verbatim, read by key as `membership`'s `HANDLE_WORDS` and `extraction`'s `TRANSCRIBE_WORDS` are:
+   six rows' translations (`refusal.<CODE>`) and the closing note's prompt (R20, `plan.close.lessons`). The rows keep their
+   codes, numbers and `where`s. `refusal.DOCUMENT_FIRST_NO_REASON` is not taken in T46: its sentence says the matter is
+   not documented, while R42 also refuses a malformed `why_first` once it is, so C-124.63 keeps its own words and the
+   difference is BOB's (R47). */
+export const PLAN_WORDS = Object.freeze({
+  'refusal.SCENARIO_OUT_OF_RANGE': 'A scenario is numbered 1, 2, 3 and on. Nothing was written.',
+  'refusal.NO_SUCH_SCENARIO': 'This plan has no such scenario. Nothing was changed.',
+  'refusal.SCENARIO_ALREADY_SET_ASIDE': 'This scenario is already set aside. Nothing was changed.',
+  'refusal.SCENARIO_NOT_SET_ASIDE': "This scenario isn't set aside, so there is nothing to restore. Nothing was changed.",
+  'refusal.PLAN_NOT_OPEN': 'Only an open plan can be paused. Nothing was changed.',
+  'refusal.PLAN_NOT_PAUSED': 'Only a paused plan can be resumed. Nothing was changed.',
+  'plan.close.lessons': 'What would your group do differently next time? (optional, at most 4,000 characters)',
+});
+
 export const ACTION_PLAN_CHECKS = Object.freeze({
   /* ---- R1, R4: opening a plan and its subjects ---- */
   MACHINE_CANNOT_PLAN: {
@@ -162,8 +178,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   },
   SCENARIO_OUT_OF_RANGE: {
     check: 'C-124.30', where: at("scenarioSet", "is-scenario-numbered"),
-    translation: 'A scenario is numbered with a positive whole number: 1, 2, 3 and on. A plan holds as many scenarios as '
-      + 'the group wants. Nothing was written.',
+    translation: PLAN_WORDS['refusal.SCENARIO_OUT_OF_RANGE'],
   },
   SCENARIO_NAME_REFUSED: {
     check: 'C-124.31', where: at("scenarioSet", "is-scenario-named"),
@@ -305,24 +320,23 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   /* ---- R39, R40, R42, R20 (T45): scenarios set aside, the paused state, document first, the close ---- */
   NO_SUCH_SCENARIO: {
     check: 'C-124.58', where: at("#scenarioAct", "is-scenario-held"),
-    translation: 'The plan holds no scenario of that number. Nothing was written.',
+    translation: PLAN_WORDS['refusal.NO_SUCH_SCENARIO'],
   },
   SCENARIO_ALREADY_SET_ASIDE: {
     check: 'C-124.59', where: at("#scenarioAct", "is-scenario-in-use"),
-    translation: 'That scenario is already set aside. It is kept whole, with its reason, and can be restored. Nothing was '
-      + 'written.',
+    translation: PLAN_WORDS['refusal.SCENARIO_ALREADY_SET_ASIDE'],
   },
   SCENARIO_NOT_SET_ASIDE: {
     check: 'C-124.60', where: at("#scenarioAct", "is-scenario-aside"),
-    translation: 'That scenario is not set aside, so there is nothing to restore. Nothing was written.',
+    translation: PLAN_WORDS['refusal.SCENARIO_NOT_SET_ASIDE'],
   },
   PLAN_NOT_OPEN: {
     check: 'C-124.61', where: at("#pauseAct", "is-plan-pausable"),
-    translation: 'This plan is already paused. Resume it, or close it, instead. Nothing was written.',
+    translation: PLAN_WORDS['refusal.PLAN_NOT_OPEN'],
   },
   PLAN_NOT_PAUSED: {
     check: 'C-124.62', where: at("#pauseAct", "is-plan-paused"),
-    translation: 'This plan is not paused, so there is nothing to resume. Nothing was written.',
+    translation: PLAN_WORDS['refusal.PLAN_NOT_PAUSED'],
   },
   DOCUMENT_FIRST_NO_REASON: {
     check: 'C-124.63', where: at("optionStart", "is-document-first"),

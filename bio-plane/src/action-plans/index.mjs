@@ -5,7 +5,8 @@
  * over time, with checkpoints a member judges, each in use or set aside; and the link from each started option to the
  * Action it created. Since T45 (`BIO_Action_v0_2.md`) a plan may be paused, offers the infraction's two standing options
  * (R41, R42), holds the re-examination's machine marks apart (R43), and keeps a frozen summary and a note at its close
- * (R20, R44, R45). A pause is its log's, the document staying `open` (record-grammar's `action_plan` states).
+ * (R20, R44, R45). Since T46 a pause is the document's own state, `paused`, written with its Plan Log entry in one act
+ * (R46 (a); record-grammar's `action_plan` states), and the look-again day is read on the place's local day (R46 (b)).
  *
  * A new module (T18, layer 9, last): nothing moves from the legacy modules. Escalation's record-object pattern is the
  * model (its index.mjs and doc.mjs).
@@ -39,7 +40,8 @@
  *   strength       `projectBar` (Terms: `short` support).
  *   conformance    `determinationRead`, `determinationsFor` (R1, R5, R8); its `noSuchDetermination`.
  *   standards      `standardRead` (R12's `enforces`, R19).
- *   actions        `actionCreate`, `actionRead` (R6, R15, R18); its `contactNotAMember` and `contactId` (its R45; R18).
+ *   actions        `actionCreate`, `actionRead` (R6, R15, R18); its `contactNotAMember` and `contactId` (its R45; R18);
+ *                  `place()` and `zoneOf` (its R68; R46 (b): the zone a plan's day is read in).
  *   clocks         action-clocks' `reminderSet` and `reminderRefused` (its R4; R18, R29).
  *   escalation     `escalationsFor`, `escalationRead` (R6, R15).
  *   filings        `availableActions` (shown beside legal options).
@@ -55,7 +57,8 @@ import { legEarningOf } from "../leg-earning/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { conformanceOf, noSuchDetermination } from "../conformance/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
-import { actionsOf, contactNotAMember, contactId } from "../actions/index.mjs";
+import { actionsOf, contactNotAMember, contactId, zoneOf } from "../actions/index.mjs";
+import { localDay } from "../civil-time/index.mjs";
 import { actionClocksOf, reminderRefused } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
@@ -65,7 +68,7 @@ import { runPrincipalGate } from "../run-rules/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType } from "../record-grammar/index.mjs";
 import { ACTION_PLAN, planId, planDoc, appendEntry, logOf, logSection, parseFm, q, tok } from "./doc.mjs";
 import { ACTION_PLANS_TABLES, migrateActionPlans } from "./schema.mjs";
-import { ACTION_PLAN_CHECKS, refusal } from "./checks.mjs";
+import { ACTION_PLAN_CHECKS, PLAN_WORDS, refusal } from "./checks.mjs";
 import { CATEGORIES, DISPOSITIONS, NEEDS_REASON, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, TITLE_MAX, REASON_MAX,
          SUMMARY_MAX, DETAIL_MAX, WHY_MAX, NOTE_MAX, SUBJECTS_MAX, DATES_MAX, PLANS_PAGE_MAX, DUE_MAX,
          SOURCES_MAX, isObj, str, isDay, isLine, isToken, normSubject, subjectKey, addresseeArm, addresseeOf,
@@ -73,7 +76,7 @@ import { CATEGORIES, DISPOSITIONS, NEEDS_REASON, WORK_KINDS, REFUSED_KEYS, TIERS
          CLOSING_NOTES_MAX, MARKS_MAX } from "./values.mjs";
 
 export { ACTION_PLANS_SCHEMA, ACTION_PLANS_TABLES } from "./schema.mjs";
-export { ACTION_PLAN_CHECKS } from "./checks.mjs";
+export { ACTION_PLAN_CHECKS, PLAN_WORDS } from "./checks.mjs";
 export { CATEGORIES, DISPOSITIONS, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, DUTY_STATES, PLAN_STATES, OFFER_KINDS,
          MARK_KINDS } from "./values.mjs";
 
@@ -91,6 +94,11 @@ const OFFER_WORDS = Object.freeze({
   document_infraction: Object.freeze({ summary: "Document the infraction", category: "other", key: "plan.offer.document_infraction" }),
   chance_to_fix: Object.freeze({ summary: "Offer the chance to fix it", category: "mitigation", key: "plan.offer.chance_to_fix" }),
 });
+/* R20, R47: the closing note's prompt, its key and words.json's words for it, read by key (DEC-194). */
+const CLOSE_NOTE_PROMPT = Object.freeze({ key: "plan.close.lessons", en: PLAN_WORDS["plan.close.lessons"] });
+/* R46 (b): what the look-again read says when no zone is held. */
+const LOOK_AGAIN_UNDETERMINED = "no time zone is held for this place, so the day to look again cannot be told and no plan is "
+  + "answered due by it";
 /* R40: what a paused plan's read says of it. */
 const PAUSED_SAYS = "the plan is paused: what it set running continues (its actions' dates, escalations and watches), and "
   + "its own checkpoints are not due until it is resumed. Every act stays open to members.";
@@ -581,11 +589,9 @@ export class ActionPlans {
     const from = heldRow ? heldRow.log_len : 0;
     for (const x of log.filter((y) => y.seq > from)) this.#apply(id, x);
     const fm = parseFm(text) || {};
-    /* R40: the document holds open and closed (record-grammar's `action_plan` table); a pause is the log's, so an open
-       document's plan is paused from a pause until a resume. */
-    const last = this.#one(`SELECT kind FROM plan_history WHERE plan_id=? AND kind IN ('pause', 'resume') ORDER BY seq DESC LIMIT 1`, id);
-    const state = fm.current_state === "closed" ? "closed" : last && last.kind === "pause" ? "paused" : String(fm.current_state ?? "open");
-    this.sql.exec(`UPDATE plans SET state=?, log_len=? WHERE plan_id=?`, state, log.length, id);
+    /* R40, R46 (a): the plan's state is its document's `current_state` (open, paused or closed), which each act writes
+       with its Plan Log entry; it is never derived from the log. */
+    this.sql.exec(`UPDATE plans SET state=?, log_len=? WHERE plan_id=?`, String(fm.current_state ?? "open"), log.length, id);
     return null;
   }
 
@@ -1648,7 +1654,8 @@ export class ActionPlans {
     /* END DEC-49 REGION is-plan-paused */
     const entry = { kind, reason: reason.trim(), ...(kind === "pause" ? { look_again: given ? lookAgain : null } : {}),
                     author, at: this.now() };
-    const w = this.#append(o.p, entry, { blurb: kind === "pause" ? "Plan paused" : "Plan resumed" });
+    /* R46 (a): the document's state moves along record-grammar's edge in the same act as its Plan Log entry. */
+    const w = this.#append(o.p, entry, { state: kind === "pause" ? "paused" : "open", blurb: kind === "pause" ? "Plan paused" : "Plan resumed" });
     if (!w.ok) return w;
     return { ok: true, id: o.p.id, state: kind === "pause" ? "paused" : "open", reason: entry.reason,
              ...(kind === "pause" ? { look_again: entry.look_again } : {}), author, at: entry.at };
@@ -1662,12 +1669,16 @@ export class ActionPlans {
     return { seq: h.seq, since: h.at, by: h.author, reason: h.reason ?? null, look_again: e.look_again ?? null };
   }
 
-  /** R40: each paused plan whose `look_again` day has come at `nowMs`, oldest day first, for `action-producers`
-   *  (`plan-look-again`). One item per pause (`pause` names it), so a reader tells it once. Writes nothing. */
+  /** R40, R46 (b): each paused plan whose `look_again` day has come at `nowMs`, oldest day first, for `action-producers`
+   *  (`plan-look-again`). One item per pause (`pause` names it), so a reader tells it once. The day is `nowMs`'s local
+   *  day in the plan's zone (actions' `place()` and `zoneOf`, its R68; K1444 (iii)), never the UTC day; with no zone held
+   *  it is undetermined and no plan is answered due by it. Writes nothing. */
   plansToLookAgain({ nowMs, limit } = {}) {
     const now = Number.isFinite(nowMs) ? nowMs : this.#nowMs();
     const cap = Number.isInteger(limit) && limit > 0 ? Math.min(limit, DUE_MAX) : DUE_MAX;
-    const today = dayOf(now);
+    const today = this.#localDay(now);
+    if (today === null)
+      return { ok: true, as_of: iso(now), day: { state: "undetermined", says: LOOK_AGAIN_UNDETERMINED }, items: [], truncated: false, limit: cap };
     const items = [];
     for (const r of this.#rows(`SELECT plan_id FROM plans WHERE state='paused' ORDER BY plan_id`)) {
       const p = this.#plan(r.plan_id, null);
@@ -1677,7 +1688,16 @@ export class ActionPlans {
                    paused_at: pz.since, reason: pz.reason, pause: `${p.id}#${pz.seq}` });
     }
     items.sort((a, b) => (a.look_again < b.look_again ? -1 : a.look_again > b.look_again ? 1 : a.plan < b.plan ? -1 : 1));
-    return { ok: true, as_of: iso(now), items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
+    return { ok: true, as_of: iso(now), day: today, items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
+  }
+  /* R46 (b): the local day of `nowMs` in the zone the place states (actions R68), or null when no zone is held or the
+     day cannot be read (K1444 (iii): never the UTC day in its place). */
+  #localDay(nowMs) {
+    const zone = zoneOf(this.actions.place());
+    if (!zone) return null;
+    let d;
+    try { d = localDay(iso(nowMs), zone); } catch { return null; }
+    return typeof d === "string" && isDay(d) ? d : null;
   }
 
   /* ===================================================================== *
@@ -1721,7 +1741,7 @@ export class ActionPlans {
     const pz = this.#pause(p);
     return {
       ok: true, id: p.id, project: p.project, title: p.title, state: p.state, opened_by: p.openedBy, opened_at: p.openedAt,
-      ...(p.state === "closed" ? { closed: this.#closedView(p) } : { close_note_prompt: "plan.close.lessons" }),
+      ...(p.state === "closed" ? { closed: this.#closedView(p) } : { close_note_prompt: CLOSE_NOTE_PROMPT }),
       pause: pz ? { since: pz.since, by: pz.by, reason: pz.reason, look_again: pz.look_again,
                     running: this.#running(options, subjects), says: PAUSED_SAYS } : null,
       as_of: iso(now), work_kinds: this.#workKinds(p.project), subjects, removed_subjects: removed,

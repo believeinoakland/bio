@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, option, choose, V, MACHINE, by, DAY, ms } from "./fixture.mjs";
+import { ACTION_PLAN_CHECKS } from "../../../src/action-plans/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
 const at = (w, iso) => { w.clock.now = iso; };
@@ -57,7 +58,8 @@ test("R14: a three-phase scenario with a checkpoint and both branches lands; ref
   assert.equal(set(w, three(w), { scenario: 4 }).ok, true, "a fourth scenario lands");
   assert.equal(set(w, three(w), { scenario: "12" }).ok, true);
   assert.deepEqual(w.ap.planRead({ id: w.PL, viewer: V("bob") }).scenarios.map((s) => s.scenario), [1, 2, 3, 4, 12]);
-  assert.match(code(set(w, three(w), { scenario: 0 })) && set(w, three(w), { scenario: 0 }).translation, /positive whole number/);
+  /* T46 (R47): its row's words are words.json's, read by key (t46.test.mjs) */
+  assert.equal(set(w, three(w), { scenario: 0 }).translation, ACTION_PLAN_CHECKS.SCENARIO_OUT_OF_RANGE.translation);
 });
 
 test("R15: a phase starting on another subject's track reads not started, then started when its escalation reaches the stage", () => {
