@@ -41,3 +41,7 @@ K2891: merged / recorded. Stay available until the layer closes.
 ## B6 · CHANGE
 
 K2896: instance-setup's `declaredstakeset` (R77: an administrator's act setting the group's declared stake, a later setting replacing it, refused NOT_AN_ADMIN, machineClasses []) is declared by op-declarations but has no grade. Merge tranche/T45, grade it by R32's rule (and its R5/NON_ACTS placement), and post COMPLETE again.
+
+## B7 · ANSWER · re J6
+
+K2897: merged. Stay available until the layer closes.
