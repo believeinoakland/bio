@@ -26,3 +26,7 @@ Confirmed (K2998) and folded into interface-shell R21: `cs.call(op, {query, body
 ## B4 · CHANGE
 
 CHANGE (K2999): the credential the dock mints names `airunopen` and `airundispatch` among its declared `writes` (your R6), so admission admits it; the door now hands it to ai-runs as an in-process RPC argument (control-plane R77). Merge `tranche/T46`.
+
+## B5 · ANSWER · re J3
+
+K3003: accepted as you read it, folded as a sub-bullet under your R6 (check mode; context by screen; skillVersion from op=agentpack, none → not drawn, 'not ready'; bounds wallclock 1,800,000 ms, fetches 0, subsessions 0; credential principalKind member, writes airunopen, airundispatch, airunclose, suggest, one day, fresh tokenId; never send at).
