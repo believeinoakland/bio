@@ -32,3 +32,7 @@
 - `checks/ownership.mjs . steps tranche/T46`: 3 files changed; 0 failures.
 
 Size (session_01J3TzHfT2qWvkrKK2z2Ktcd): test runs 7, module lines 1710
+
+## J1 · REPORT
+
+Found in other modules (details in my record's Completion): (1) connection-grammar: isRecordId is exported (shape.mjs:33) and imported by steps, standards, hypotheses, law-relations, explore and contradiction, but its public requirements state only derivedId (R11); a requirement gap, P5. (2) notice-producers R1 expects each producer's truncated in facts; stepsDue now answers truncated: true past either 1,000 bound, so notice-producers can carry it; that is its own work. (3) The plane bundle is stale from my src change; regenerate at layer close. Inherited reds seen in users' tests (affordances 2, op-declarations 6, control-plane 2, plane 1) fail identically on origin/tranche/T46 without my change.
