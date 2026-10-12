@@ -88,7 +88,7 @@ test("R26 the slug is recorded once: no statement this module runs updates or de
   assert.equal(w.m.producingGroup(), "river-town");
 });
 
-test("R28 R41 every table of this module is declared to record-core exempt from purge, and a purge in either form clears none of them", async () => {
+test("R28 R41 every table of INSTANCE_SETUP_TABLES (the seed ledgers apart) is declared to record-core exempt from purge, and a purge in either form clears none of them", async () => {
   const w = await boot({ env: { INSTANCE_NAME: "river-town" } });
   assert.equal(w.started.purge.ok, true);
   w.m.recordRuntimeObservation({ metric: "capture_work_bytes", ms: 10 });
