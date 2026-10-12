@@ -72,7 +72,7 @@ import { detectFormat } from "../formats.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 import { identify, doctypeFor, assess, CONTRACT } from "../../../docprofile/registry.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { localDay, dayRange } from "../civil-time/index.mjs";
+import { localDay, dayRange, isCalendarDate, bounds } from "../civil-time/index.mjs";
 import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PREFIX, MACHINE_AUTHOR_PREFIX,
          isMachineIdentity } from "../record-grammar/index.mjs";
 import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, frequencyRefusal } from "./checks.mjs";
@@ -430,6 +430,41 @@ function settingView(x) {
   return { address: x.address_norm, seq: Number(x.seq), frequency: x.frequency ?? null, reason: x.reason,
            ...(custom ? { text: x.reason_text ?? null } : { sentence: ADDRESS_FREQUENCY_REASONS[x.reason] ?? null }),
            author: x.author, at: x.at };
+}
+
+/** R71: one recorded end date as the plan row and the act state it: the day (or null), who set it and when. */
+function endView(x) {
+  return { address: x.address_norm, seq: Number(x.seq), until: x.until ?? null, by: x.set_by, at: x.at };
+}
+
+/* R71, R32: what a row says of its address's end: `until` the day the latest setting holds, with who set it and when
+   (`until_set`), or `until: null` with `ends: "none_set"`. */
+function endOf(row) {
+  const h = Array.isArray(row && row.end_settings) ? row.end_settings : [];
+  const cur = h.length ? h[h.length - 1] : null;
+  return cur && cur.until ? { until: cur.until, until_set: { by: cur.by, at: cur.at } } : { until: null, ends: "none_set" };
+}
+
+/* R34 (T45): the calendar day `n` days after `day` (YYYY-MM-DD), as a day; null when `day` is not one. */
+function addDays(day, n) {
+  if (!isCalendarDate(day)) return null;
+  const t = Date.parse(`${day}T00:00:00Z`) + n * 86400000;
+  return new Date(t).toISOString().slice(0, 10);
+}
+
+/* R34 (T45; action-clocks' `due_at` rule): the instant, in milliseconds, of an entry's time of day `dueAt`
+   (`YYYY-MM-DDTHH:MM[:SS]`) in `zone`; null when it cannot be read, or when that wall time occurs twice or never that
+   day in the zone (the entry is then read by its date alone, never marked early). */
+function instantOfDueAt(dueAt, zone) {
+  const m = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})(:\d{2})?$/.exec(String(dueAt || ""));
+  if (!m || typeof zone !== "string" || !zone) return null;
+  const precision = m[2] ? "second" : "minute";
+  let b = null;
+  try { b = bounds({ value: m[0], precision, zone }); } catch { b = null; }
+  const lo = b && typeof b.earliest === "string" ? Date.parse(b.earliest) : NaN;
+  const hi = b && typeof b.latest === "string" ? Date.parse(b.latest) : NaN;
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi - lo !== (precision === "minute" ? 60000 : 1000)) return null;
+  return lo;
 }
 
 /* R34 (civil-time R1): the local day (`YYYY-MM-DD`) of the instant `ms` in `zone`; null when it cannot be read. */
@@ -1437,6 +1472,13 @@ export class Monitoring {
       if (!settings.has(x.address_norm)) settings.set(x.address_norm, []);
       settings.get(x.address_norm).push(settingView(x));
     }
+    /* R71: every address's end dates, oldest first; the last is the one in force. */
+    const ends = new Map();
+    for (const x of this.#rows(`SELECT * FROM monitor_address_end ORDER BY address_norm, seq`)) {
+      if (!ends.has(x.address_norm)) ends.set(x.address_norm, []);
+      ends.get(x.address_norm).push(endView(x));
+    }
+    const endsAt = (at) => (at && ends.has(at) ? { end_settings: ends.get(at) } : {});
     const byId = new Map(bundles.map((b) => [b.bundle_id, b]));
     /* Every address each MONITORED bundle holds a version at, with the raw spelling. */
     const addrsOf = new Map();
@@ -1518,7 +1560,7 @@ export class Monitoring {
         : cadence(b.monitor_frequency, type, last([b]));
       rows.push({ bundle_id: b.bundle_id, monitor_last_checked: b.monitor_last_checked,
                   address: null, versions: [b.bundle_id],
-                  ...(basis ? { address_basis: basis } : {}), ...settled(c, at, type),
+                  ...(basis ? { address_basis: basis } : {}), ...settled(c, at, type), ...endsAt(at),
                   setting_address: at, monitored_versions: [b.bundle_id] });
     }
     /* ONE pass over the chain, which is ordered by address and then by version, so the
@@ -1549,7 +1591,7 @@ export class Monitoring {
         versions: [...new Set(versions.map((v) => v.bundle_id))],
         ...(newer.length ? { newer_unmonitored: newer } : {}),
         ...settled(cadence(current.monitor_frequency, types.get(addr), last(members)), addr, types.get(addr)),
-        setting_address: addr, monitored_versions: members.map((m) => m.bundle_id),
+        ...endsAt(addr), setting_address: addr, monitored_versions: members.map((m) => m.bundle_id),
         ...(disagrees ? { disagreement: {
           governs: governs, governed_by: current.bundle_id,
           authored: authored.map((m) => ({ bundle: m.bundle_id, frequency: m.monitor_frequency })),
@@ -1560,14 +1602,18 @@ export class Monitoring {
     return { rows, monitored: bundles.length, addresses: rows.filter((r) => r.address !== null).length };
   }
 
-  /** R16: what is due, what is next, and what has no computable cadence — one read, so `due`, `wake` and `tick`
+  /** R16: what is due, what is next, what has no computable cadence and (R71) what is ended — one read, so `due`, `wake` and `tick`
    *  cannot disagree about the same instant. REC-191: over ADDRESSES (`subjects`), one row per address, each row
    *  carrying the version it checks as `bundle` and every version it stands for. Computed whether or not monitoring
    *  is configured; the ticks read `plan`, which is empty unless it is (R19). */
   schedule(now) {
-    const due = [], unscheduled = [], scheduled = [];
+    const due = [], unscheduled = [], scheduled = [], ended = [];
     let next = null;
     const subjects = this.subjects();
+    /* R71: today's local day in the instance's zone (R34's), against which an address's end date is read; null when no
+       zone is held, and then no address reads as ended (its end is stated undetermined). */
+    const zone = this.#zone();
+    const today = zone ? localDayOf(Number.isFinite(Number(now)) ? Number(now) : this.now(), zone) : null;
     const about = (r) => ({ address: r.address, versions: r.versions, frequency_source: r.frequency_source,
       ...(r.contract ? { contract: r.contract, content_type: r.content_type } : {}),
       ...(r.address_basis ? { address_basis: r.address_basis } : {}),
@@ -1577,13 +1623,27 @@ export class Monitoring {
          R18: a contract default's run of unchanged checks and the step it earned. */
       ...(r.address_frequency ? { address_frequency: r.address_frequency } : {}),
       ...(r.volatility ? { volatility: r.volatility } : {}),
-      ...(r.frequency_settings ? { frequency_settings: r.frequency_settings } : {}) });
+      ...(r.frequency_settings ? { frequency_settings: r.frequency_settings } : {}),
+      /* R71: every end date set at the address, oldest first */
+      ...(r.end_settings ? { end_settings: r.end_settings } : {}) });
     for (const r of subjects.rows) {
+      /* R71: after its end day the address is ended: never due, read by no tick, no look written; the documents that
+         still ask to be monitored there are stated, and do not restart it. */
+      const end = endOf(r);
+      if (end.until && today !== null && today >= end.until) {
+        ended.push({ bundle: r.bundle_id, frequency: r.monitor_frequency ?? null, last_checked: r.monitor_last_checked ?? null,
+                     ...about(r), until: end.until, until_set: end.until_set,
+                     asked_after_end: [...(r.monitored_versions || [])] });
+        continue;
+      }
+      const undeterminedEnd = end.until && today === null
+        ? { end_undetermined: "no time zone is held for the instance, so today's local day cannot be read against the "
+                              + "address's end date; it is watched until it can be" } : {};
       const iv = monitorIntervalMs(r.monitor_frequency);
       if (iv === null) {
         /* REC-191: nothing authored and nothing read — the check is how the type is read. */
         if (r.frequency_source === "unread") {
-          due.push({ bundle: r.bundle_id, frequency: null, due_at: 0, ...about(r), why: r.why });
+          due.push({ bundle: r.bundle_id, frequency: null, due_at: 0, ...about(r), ...undeterminedEnd, why: r.why });
           continue;
         }
         const word = r.monitor_frequency ?? r.authored ?? null;
@@ -1596,7 +1656,7 @@ export class Monitoring {
               ? "no frequency declared"
               : MONITOR_FREQ.includes(word)
                 ? "the cadence table gives this frequency no interval"
-                : "not a frequency the catalog knows", ...about(r) });
+                : "not a frequency the catalog knows", ...about(r), ...undeterminedEnd });
         continue;
       }
       /* A monitored document that has NEVER been checked is due now: the record
@@ -1604,17 +1664,18 @@ export class Monitoring {
          is the strongest case for asking rather than the weakest. */
       const last = r.monitor_last_checked ? Date.parse(r.monitor_last_checked) : NaN;
       const at = Number.isFinite(last) ? last + iv : 0;
-      if (at <= now) due.push({ bundle: r.bundle_id, frequency: r.monitor_frequency, due_at: at, interval_ms: iv, ...about(r) });
+      if (at <= now) due.push({ bundle: r.bundle_id, frequency: r.monitor_frequency, due_at: at, interval_ms: iv, ...about(r),
+                                ...undeterminedEnd });
       else {
         scheduled.push({ bundle: r.bundle_id, frequency: r.monitor_frequency, next_at: at, interval_ms: iv,
-                         last_checked: r.monitor_last_checked, ...about(r) });
+                         last_checked: r.monitor_last_checked, ...about(r), ...undeterminedEnd });
         if (next === null || at < next) next = at;
       }
     }
     /* Longest-overdue first, then by id, so a batch-bounded tick starves nobody
        and the same instant always produces the same batch. */
     due.sort((a, b) => a.due_at - b.due_at || (a.bundle < b.bundle ? -1 : a.bundle > b.bundle ? 1 : 0));
-    return { due, next, unscheduled, scheduled, monitored: subjects.monitored, addresses: subjects.addresses };
+    return { due, next, unscheduled, scheduled, ended, monitored: subjects.monitored, addresses: subjects.addresses };
   }
 
   /** The plan the cadence tick runs by: `schedule(now)`, on every instance (R19, R45). */
@@ -1748,16 +1809,24 @@ export class Monitoring {
   /** R52: an owner (membership R54) of a project holding a monitored document at the address: a document's project
    *  is its `project`, or the document itself when it is a project. */
   #ownsSourceAt(rows, member) {
-    const ids = [...new Set(rows.flatMap((r) => r.monitored_versions || []))];
-    if (!ids.length || !member) return false;
-    const docs = this.#rows(`SELECT bundle_id, object_type, project FROM bundles WHERE bundle_id IN (${ids.map(() => "?").join(", ")})`, ...ids);
-    const projects = new Set(docs.map((d) => (d.object_type === "project" ? d.bundle_id : d.project)).filter((p) => typeof p === "string" && p));
+    const projects = this.#projectsAt(rows);
+    if (!projects.length || !member) return false;
     for (const p of projects) {
       let owns = false;
       try { owns = this.membership.isProjectOwner(p, member) === true; } catch { owns = false; }
       if (owns) return true;
     }
     return false;
+  }
+
+  /** R52, R72: the projects holding the documents that ask to be monitored at the subject rows `rows` (R15's grouping):
+   *  a document's project is its `project`, or the document itself when it is a project. Sorted, each once. */
+  #projectsAt(rows) {
+    const ids = [...new Set(rows.flatMap((r) => r.monitored_versions || []))];
+    if (!ids.length) return [];
+    const docs = this.#rows(`SELECT bundle_id, object_type, project FROM bundles WHERE bundle_id IN (${ids.map(() => "?").join(", ")})`, ...ids);
+    return [...new Set(docs.map((d) => (d.object_type === "project" ? d.bundle_id : d.project))
+      .filter((p) => typeof p === "string" && p))].sort();
   }
 
   /** R52 (K1019; monitoring R17 as Bob agreed it, with his canned or custom reason): a member sets an address's own
@@ -1813,6 +1882,65 @@ export class Monitoring {
                ? "recorded: the address returns to the frequency its documents set; every earlier setting stays readable"
                : "recorded: this frequency governs the address over its documents' own until a later setting replaces it; "
                  + "every earlier setting stays readable" };
+  }
+
+  /* ================================================================== *
+   * An address's end date and its watchers (R71, R72; T45, N855, Actions D6d, v0.2 rule 17)
+   * ================================================================== */
+
+  /** R71: records the day from which the address is no longer watched, called in process by `following` R25 inside its
+   *  member's act (never served as an op). `until` is a calendar day not before today's local day in the instance's
+   *  zone (R34's), today meaning "stop now", or null, which clears it. Refused, in this order, each writing nothing: an
+   *  empty or machine `by` (R52's code, the same condition); an address no subject of R15 the viewer sees is at (absent
+   *  and invisible alike, R52's code); `until` neither a calendar day nor null, a day before today, or a day where no
+   *  zone is held to read today in (`WATCH_END_REFUSED`). A setting is appended with who and when and never edited; the
+   *  latest governs and every one stays readable. Answers `{ok, address, setting, history}`. */
+  addressWatchEnd({ address = null, until, by = null, viewer = null } = {}) {
+    const who = typeof by === "string" ? by.trim() : "";
+    if (!who || isMachineIdentity(who))
+      return frequencyRefusal("MACHINE_CANNOT_SET_FREQUENCY", "an address's end date is set by a named member's act; a "
+        + "machine may suggest it and never sets it. Nothing was written.");
+    const asked = typeof address === "string" && address.trim() ? address.trim() : null;
+    const norm = asked ? normalizeAddress(asked) : null;
+    const rows = norm ? this.#subjectsAt(norm, viewer) : null;
+    if (!rows)
+      return frequencyRefusal("NO_SUCH_ADDRESS", "no monitored document this viewer may see is checked at that address; "
+        + "one hidden from the viewer is answered exactly as one that does not exist. Nothing was written.",
+        { address: asked });
+    const zone = this.#zone();
+    const today = zone ? localDayOf(this.now(), zone) : null;
+    /* DEC-49 REGION is-watch-end-day */
+    if (until !== null) {
+      const why = typeof until !== "string" || !isCalendarDate(until)
+        ? "the end date must be a calendar day written YYYY-MM-DD, or null to clear it"
+        : today === null ? "no time zone is held for the instance, so today's local day cannot be read and no end day can "
+                         + "be checked against it (the UTC day is never used in its place); null still clears an end date"
+        : until < today ? `the end date ${until} is before today (${today} in ${zone})` : null;
+      if (why) return frequencyRefusal("WATCH_END_REFUSED", `${why}. Nothing was written.`, { until: until ?? null });
+    }
+    /* END DEC-49 REGION is-watch-end-day */
+    const member = who.startsWith("member:") ? who.slice("member:".length) : who;
+    const at = stampInstant("second", this.now());
+    const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM monitor_address_end WHERE address_norm = ?`, norm).n;
+    this.sql.exec(`INSERT INTO monitor_address_end (address_norm, seq, address, until, set_by, at) VALUES (?, ?, ?, ?, ?, ?)`,
+                  norm, seq, asked, until, member, at);
+    const history = this.#rows(`SELECT * FROM monitor_address_end WHERE address_norm = ? ORDER BY seq`, norm).map(endView);
+    return { ok: true, address: norm, setting: history[history.length - 1], history,
+             says: until === null
+               ? "recorded: the address has no end date and is watched by its frequency; every earlier setting stays readable"
+               : until === today ? "recorded: the address is no longer watched from today; every earlier setting stays readable"
+               : `recorded: the address is no longer watched from ${until}; every earlier setting stays readable` };
+  }
+
+  /** R72: the ids of the projects whose monitored documents ask to be monitored at `address` (R15's grouping, its
+   *  normalised form), sorted; `[]` for an address no subject of R15 is at. In process, for `following` R24; never served
+   *  as an op. Writes nothing and never throws. */
+  addressWatchers(address) {
+    try {
+      const norm = typeof address === "string" && address.trim() ? normalizeAddress(address.trim()) : null;
+      if (!norm) return [];
+      return this.#projectsAt(this.subjects().rows.filter((r) => r.setting_address === norm));
+    } catch { return []; }
   }
 
   /* ================================================================== *
@@ -2596,7 +2724,8 @@ export class Monitoring {
    * What reaches members (R31, R32)
    * ================================================================== */
 
-  /** R32: every monitored address the viewer may see, with its R15–R16 row: due, scheduled or unscheduled, so a
+  /** R32: every monitored address the viewer may see, with its R15–R16 row: due, scheduled, unscheduled or (R71)
+   *  ended, each with its end date (`until` and `until_set`, or `until: null` with `ends: "none_set"`), so a
    *  document that is not being checked is visible without waiting for a tick. An address is seen when the viewer
    *  sees the version it checks. At most MONITORING_READ_MAX rows (`truncated` stated).
    *  Every other bundle a row names (`versions`, `newer_unmonitored`, `disagreement.authored`) is answered only when
@@ -2612,12 +2741,15 @@ export class Monitoring {
       ...s.due.map((d) => ({ state: "due", ...d, due_at: d.due_at ? stampInstant("second", d.due_at) : null })),
       ...s.scheduled.map((d) => ({ state: "scheduled", ...d, next_at: stampInstant("second", d.next_at) })),
       ...s.unscheduled.map((d) => ({ state: "unscheduled", ...d })),
-    ].filter((r) => sees(r.bundle)).map((r) => this.#withheld(r, sees));
+      /* R71: an ended address, never due, stating its end day and who set it */
+      ...s.ended.map((d) => ({ state: "ended", ...d })),
+    ].filter((r) => sees(r.bundle)).map((r) => this.#withheld({ ...r, ...endOf(r) }, sees));
     const items = all.slice(0, cap);
     return { ok: true, as_of: stampInstant("second", at), configured: this.configured(), paused: this.paused(), items,
              counts: { due: items.filter((r) => r.state === "due").length,
                        scheduled: items.filter((r) => r.state === "scheduled").length,
-                       unscheduled: items.filter((r) => r.state === "unscheduled").length },
+                       unscheduled: items.filter((r) => r.state === "unscheduled").length,
+                       ended: items.filter((r) => r.state === "ended").length },
              limit: cap, truncated: all.length > cap };
   }
 
@@ -2741,9 +2873,11 @@ export class Monitoring {
    *  the versions the viewer sees (`subjects`' own test), and dropped when those do not disagree, since a
    *  disagreement only a hidden version makes would say that version exists. */
   #withheld(row, sees) {
-    const { versions, newer_unmonitored: newer, disagreement, ...rest } = row;
+    const { versions, newer_unmonitored: newer, disagreement, asked_after_end: asked, ...rest } = row;
     const out = { ...rest };
     if (Array.isArray(versions)) out.versions = versions.filter(sees);
+    /* R71: the documents still asking at an ended address, the seen ones */
+    if (Array.isArray(asked)) out.asked_after_end = asked.filter(sees);
     const newerSeen = Array.isArray(newer) ? newer.filter(sees) : [];
     if (newerSeen.length) out.newer_unmonitored = newerSeen;
     if (disagreement && typeof disagreement === "object") {
@@ -2866,17 +3000,23 @@ export class Monitoring {
     if (!today)
       return { ok: true, at, zone, marked: [], failed: [], truncated: false, escalations: null, undetermined: DEADLINE_NO_ZONE };
     let items = [], truncated = false;
+    /* R34 (T45): an entry with a time of day is past at that instant, so entries dated today are read too, and the day
+       after for a `due_zone` east of the jurisdiction's; a date-only entry is past from the local day after its date. */
+    const docs = new Map();
     try {
-      const p = this.actionClocks.pendingClocks({ before: today, limit: DEADLINE_RECHECK_MAX, viewer: MONITOR_VIEWER });
+      const p = this.actionClocks.pendingClocks({ before: addDays(today, 2), limit: DEADLINE_RECHECK_MAX, viewer: MONITOR_VIEWER });
       if (p && p.ok !== false) { items = Array.isArray(p.items) ? p.items : []; truncated = !!p.truncated; }
       else return { ok: false, reason: p?.reason ?? "PENDING_CLOCKS_UNREAD", detail: p?.detail ?? null };
     } catch (e) {
       return { ok: false, reason: "PENDING_CLOCKS_UNREAD", detail: String(e && e.message || e).slice(0, 160) };
     }
-    /* A deadline of the 14th is met by anything on the 14th: only an entry dated before today is past. */
+    /* A deadline of the 14th is met by anything on the 14th: only an entry dated before today is past, unless it carries a
+       time of day, which is past from that instant in its zone (T45). */
     const byAction = new Map();
     for (const it of items) {
-      if (!it || typeof it.date !== "string" || !(it.date < today)) continue;
+      if (!it || typeof it.date !== "string") continue;
+      const timed = this.#dueInstant(it, zone, docs);
+      if (!(timed !== null ? nowMs >= timed : it.date < today)) continue;
       if (!byAction.has(it.action)) byAction.set(it.action, []);
       byAction.get(it.action).push(it);
     }
@@ -2912,24 +3052,34 @@ export class Monitoring {
     const nowMs = Number.isFinite(Number(now)) && now !== null ? Number(now) : this.now();
     const zone = this.#zone();
     if (!zone) return null;
-    const dayAfter = new Map();
+    const dayAfter = new Map(), dayStart = new Map(), docs = new Map(), all = [];
     let wake = null, after = null;
     try {
       for (let pages = 0; pages < DEADLINE_RECHECK_PAGES; pages++) {
         const p = this.actionClocks.pendingClocks({ before: PENDING_ANY_DATE, limit: DEADLINE_RECHECK_MAX, after,
                                                     viewer: MONITOR_VIEWER });
         if (!p || p.ok === false) return null;
-        for (const it of Array.isArray(p.items) ? p.items : []) {
-          if (!it || typeof it.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(it.date)) continue;
-          if (!dayAfter.has(it.date)) dayAfter.set(it.date, startOfDayAfter(it.date, zone));
-          let at = dayAfter.get(it.date);
-          if (at === null) continue;
-          const held = this.#markFailed.get(it.action);
-          if (held !== undefined && nowMs < held && at < held) at = held;
-          if (wake === null || at < wake) wake = at;
-        }
+        for (const it of Array.isArray(p.items) ? p.items : [])
+          if (it && typeof it.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(it.date)) all.push(it);
         if (!p.cursor) break;
         after = p.cursor;
+      }
+      /* Earliest date first, so an entry's time of day is read from its action's document only while it could still
+         come before the wake found so far (a time on day D falls no earlier than the start of the day before D in the
+         jurisdiction's zone, whatever zone the entry names). */
+      all.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+      for (const it of all) {
+        if (!dayAfter.has(it.date)) dayAfter.set(it.date, startOfDayAfter(it.date, zone));
+        let at = dayAfter.get(it.date);
+        if (!dayStart.has(it.date)) dayStart.set(it.date, startOfDayAfter(addDays(it.date, -2), zone));
+        const from = dayStart.get(it.date);
+        /* R50 (T45): an entry with a time of day offers that instant in place of the start of the next local day */
+        const timed = wake === null || from === null || from < wake ? this.#dueInstant(it, zone, docs) : null;
+        if (timed !== null) at = timed;
+        if (at === null) continue;
+        const held = this.#markFailed.get(it.action);
+        if (held !== undefined && nowMs < held && at < held) at = held;
+        if (wake === null || at < wake) wake = at;
       }
     } catch { return null; }
     return wake;
@@ -2940,6 +3090,29 @@ export class Monitoring {
     const nowMs = Number.isFinite(Number(now)) && now !== null ? Number(now) : this.now();
     const at = this.deadlineRecheckWake(nowMs);
     return at !== null && at <= nowMs ? at : null;
+  }
+
+  /** R34, R50 (T45; N882; v0.2 rule 6): the instant a pending entry `it` (`{action, ord, date}`, `pendingClocks`' item)
+   *  is due at when it carries a time of day, or null when it carries none (a date-only entry). `action-clocks` R1 answers
+   *  no time of day, so it is read from the action's own document, the authority (`docs` caches each document for one
+   *  call): the entry at `ord` with the same date, its `due_at` on that date, in its `due_zone` or else `zone` (as
+   *  `action-clocks` R3 answers it). A wall time the zone skips or repeats that day reads as none: the entry is then
+   *  read by its date alone, never marked early. Never throws. */
+  #dueInstant(it, zone, docs) {
+    try {
+      if (!docs.has(it.action)) {
+        const img = this.record.readImage(it.action);
+        const live = img && typeof img["bundle.md"] === "string" ? img["bundle.md"] : null;
+        let fm = null;
+        try { fm = live ? parseFrontmatter(live).data : null; } catch { fm = null; }
+        docs.set(it.action, fm && Array.isArray(fm.clock) ? fm.clock : null);
+      }
+      const clock = docs.get(it.action);
+      const e = clock && Number.isInteger(Number(it.ord)) ? clock[Number(it.ord)] : null;
+      if (!e || typeof e !== "object" || e.date !== it.date || typeof e.due_at !== "string" || !e.due_at.startsWith(`${it.date}T`))
+        return null;
+      return instantOfDueAt(e.due_at, typeof e.due_zone === "string" && e.due_zone.trim() ? e.due_zone.trim() : zone);
+    } catch { return null; }
   }
 
   /* R50 (N429): each action whose last R34 mark failed, with the start of the local day after the failure. */
