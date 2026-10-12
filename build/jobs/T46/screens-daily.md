@@ -25,3 +25,28 @@ Please confirm, or name the op that answers a member's projects with their quest
 ## J3 · REPORT
 
 Found in another module, not mine to change (reported, not verified by an integrated run): `action-clocks`' `reminderSet` and `reminderAnswer` store and compare `set_by` as the positional `member:<id>` (control-plane stamps `author` that way, cp:1688), while `action-producers`' `action-reminder` producer keeps an item only when `x.set_by === me`, `me` being the queue's bare member stamp (`bio-plane/src/action-producers/index.mjs`:655); its tests use fakes with a bare `set_by`. If so, a real reminder never reaches the queue, and the queue screen's `reminderanswer` act (my R3) is never drawn on a live instance. The fix belongs to action-producers (compare both forms) or action-clocks.
+
+## Completion (SCREENS-DAILY #1)
+
+**Entry applied.** T46-57: `home`, `queue`, `finder`, `find-in`, `answers` (R1–R7), built fresh to interface-shell R21's contract as K2996/K2998 fixed it (B2, B3), with Home's projects as K3000 rules (B4: `search` `type:project`, stage from `current_state`, no question count; `projectdirectory` under "Projects you could join", name only).
+
+**Files** (BOB enters them in `modules.json`, K1043): code `bio-plane/src/screens-daily/` (`index.mjs`, `words.mjs`, `home.mjs`, `queue.mjs`, `finder.mjs`, `find-in.mjs`, `answers.mjs`); tests `bio-plane/test/m/screens-daily/` (`kit.mjs`, `contract.test.mjs`, `home.test.mjs`, `queue.test.mjs`, `finder.test.mjs`, `find-in.test.mjs`, `answers.test.mjs`).
+
+**Readings taken (each tested):**
+- R1: the description is drawn from `groupidentity`'s `description` when it answers one; the public read (instance-setup R10) answers none today, so Home says "Your group has not described itself yet." A description would need `groupdescription` (membership R110) or a field on `groupidentity`: noted for BOB, not a defect of mine.
+- R3: an item's acts are its decorated `options` and the doors its `disposition` names (`op` when available, `acts`, `instead`; queue R12, R46), since `taskresolve`, `proposedispose`, `adoptversion`/`keepversion`, `reminderanswer` and `exploreapprove` reach a member only there; `queuemute` (item form) on every item that is not an obligation; `queuesnooze` on each case's heading (it is per case, queue R21). "Open" is drawn once per item, to the subject's screen where T46 builds one.
+- R2: the sort is the route's subject (`/app/queue/<sort>`), so it survives reload and history; items are grouped by case in the feed's order for every sort. The three-kinds note's "once per member on the device" uses `localStorage` (keyed by member), guarded, as the kit offers no device store; a device that cannot keep it does not show it.
+- R4: search results and the held set's handle are kept in the screen's page memory (`view.ui`); "until" is the handle's time of day (it lapses five minutes after last use); "Count" sends `calculationcreate` `kind: count` over the held set (`inputs: [{name: "held", set: <handle>}]`), question and period asked in the act's dialog.
+- R5: the scope is the route's subject (`PROJ-…` a project, `sel-…` the held set, else a capture digest); recording bodies follow each owner's documented fields, the fields a member must supply asked in the act's dialog; `cite` uses citation's `found` form in the query.
+- R6: `ask`'s answer is a stream; `done` takes its last event whether the shell hands the raw text, the parsed events or the last event. "Show how this was counted" sends `ruleanswer` with service `occurrences` over the member's words: the requirement names no service, so this is my reading. `ASSISTANT_OFF` and `AI_PART_NOT_DEPLOYED` have no `ai.refused.*` word, so they are this module's own rows (`screen.answers.refused.*`).
+
+**Deferred:** the re-point of my tests to interface-shell's shared DOM stand-in and harness, at its merge's CHANGE (B3). Until then they run over `kit.mjs`, a stand-in at R21's contract.
+
+**Found in another module:** J3 (action-producers vs action-clocks `set_by`, forwarded by BOB to ACTION-PRODUCERS #2). Also, not a defect: `groupidentity`'s public answer carries no description (R1 above).
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/screens-daily/*.test.mjs`: tests 41, pass 41, fail 0. No layer tests are named (manifest).
+- `checks/format.mjs`: 0 failures. With my paths entered locally (not committed): `architecture.mjs … screens-daily` 0 failures (14 product files); `coverage.mjs … screens-daily` 7 of 7 live ids named; `ownership.mjs … screens-daily tranche/T46` 0 failures. As committed (empty `paths`, K1043) ownership and coverage fail on my files only for want of the entry.
+- `checks/run.mjs`: format 0, channels 0; architecture/ownership failures only for my files' missing entry; coverage reds are other L11 jobs in flight and mine pending the entry.
+
+Size (session_01RJBRXS3sxyhSh6P5LL6g9S): test runs 12, module lines 1082 (tests 866)
