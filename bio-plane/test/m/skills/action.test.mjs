@@ -6,7 +6,7 @@ import { renderPack, packVersion, SOURCING } from "../../../src/skillpack.mjs";
 import { actionDraftingLayer, procedureGuideLayer, ACTION_DRAFTING_RULES, ACTION_DRAFTING_ACTS, ACTION_RULE_TABLE,
          STATUS_REPORT_ACT, STATUS_REPORT_TASK,
          ACTION_RULES, FILING_RULES, ACTION_SOURCE, ACTION_SECTION, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
-import { DRAFT_MODE } from "../../../src/run-rules/index.mjs";
+import { DRAFT_MODE, DRAFT_REACH } from "../../../src/run-rules/index.mjs";
 import { PROCEDURE_GUIDE_LABEL } from "../../../src/reading-guides/index.mjs";
 import { SRC, read, norm, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
 
@@ -153,8 +153,11 @@ test("R48 with all four published, the action_drafting layer names statusreporta
   assert.equal(sr.defined_by, "plan-work R8");
   assert.equal(STATUS_REPORT_ACT.id, STATUS);
   assert.ok(!("drafts_absent_because" in layer.body));
-  assert.deepEqual(Object.keys(status_report), ["task"]);
+  assert.deepEqual(Object.keys(status_report), ["task", "reach"]);
   assert.equal(status_report.task, STATUS_REPORT_TASK);
+  /* run-rules R27's reach, its own object read by key: none, only the items handed in. */
+  assert.equal(status_report.reach, DRAFT_REACH.statusreport);
+  assert.equal(status_report.reach.scope, "none");
   assert.match(STATUS_REPORT_TASK, /each sentence of the report comes from one of those items/);
   assert.match(STATUS_REPORT_TASK, /nothing is read/);
   assert.match(STATUS_REPORT_TASK, /plan-work R8/);

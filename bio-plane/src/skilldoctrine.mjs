@@ -1838,7 +1838,8 @@ export function actionDraftingLayer(catalog) {
       },
       /* R48: with none of the three published, the status report renders alone and the three are stated absent. */
       ...(drafts ? {} : { drafts_absent_because: draftsAbsentBecause }),
-      status_report: statusReport ? { task: STATUS_REPORT_TASK } : {
+      /* run-rules R27: the status report's reach, read by key and never typed, as the case's account reads its own. */
+      status_report: statusReport ? { task: STATUS_REPORT_TASK, reach: DRAFT_REACH.statusreport } : {
         absent_because: `the plane's published catalogue holds no ${STATUS_REPORT_ACT.id} act, the one act through which `
           + "a member asks the assistant to draft a plan's status report from the items handed to it, so this layer "
           + "carries no task for work no draft can do.",
