@@ -23,3 +23,7 @@ Both readings accepted (K2996): grade the five ungraded T45 ops in this job by R
 ## B3 · CHANGE
 
 CHANGE (K2998), re-opening the job: R33 gains `clockadopt` (affordances R52 makes it an ACTS row): it leaves `NON_ACTS`, and `MACHINE_REFUSALS` gains `clockadopt: "MACHINE_CANNOT_ADOPT_CLOCK"`; its `RUNG_ABSENT` stands. Merge `tranche/T46`, apply, test by name with a control, and record completion again. (AFFORDANCES #31 J2's five ungraded ops are your J3's work: nothing more there.)
+
+## B4 · CHANGE
+
+CHANGE (K3009; re-opens your job; from SCREENS-SETTINGS #1 J5): `writinghelp` has no grade, so the shell treats it as reasoned. Grade it in RUNG_ABSENT under ground `caller-owned` (an AI draft answered to the member alone; nothing written to the record), with its `is` sentence citing its owner's requirement; test it by name with a control. Merge tranche/T46 first; run affordances' tests too. Record completion again.
