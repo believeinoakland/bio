@@ -12,3 +12,7 @@ Best reading: leave all three out of `ACT_HELP_ABSENT`. R34's partition tests (t
 (2) `airundispatch`'s admission (R51; control-plane R77: "her session or her own ai credential"). Admission lets an `ai` credential reach an op only when `member` is in `classes` and there are no `machineClasses`. So I gave it a new kind, `memberrun`: classes `admin`, `member`, no `machineClasses`, mutating, `NEEDS` null, `by` stamped, in ai-runs' family.
 That also lets the operator's `admin` bearer past the spec gate; `dispatchMemberRun` then refuses it (`AI_RUN_NOT_PRINCIPAL`).
 Classes `["member"]` alone would refuse the admin bearer, but would also refuse the founder's own session (kind `admin`). I kept `[admin, member]`. Say if you want `["member"]` instead.
+
+## J2 · REPORT
+
+checks/run.mjs over the product (6da0899eb1): architecture's one failure for my files is t46.test.mjs importing escalation's ops map (escalationOps), to drive R51's escalationstoppursuing and escalationreopen stamps through their owner. R51's Uses note leaves that edge to BOB: please add escalation to op-declarations' uses in modules.json. format 0, coverage 52/52 for op-declarations, ownership 0. The other coverage failures are modules not yet merged in L11 (installer, instance-setup, interface and screen modules, notice-producers, op-grades, setup-page, setup-words, wizard-scripts).
