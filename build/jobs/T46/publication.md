@@ -52,3 +52,7 @@ Noted, and not changed:
 - I changed no service I provide, so no user module's tests were due. No layer tests are named in the manifest.
 
 Size (session_015HY6DrM4gxmJtgrtDXma3h): test runs 3, module lines 4,466.
+
+## J1 · COMPLETE
+
+T46-66 done (test only): t41.test.mjs R76's handle-change arm re-pinned to membership R129 — registration stands, every change refused HANDLE_FIXED naming no case, one answer whether or not the member has published work, nothing written; control publishedWorkOf. Two stale guard comments in index.mjs corrected. publication tests 142/141 pass, 0 fail, 1 todo (R30, D-246). format, architecture, coverage (48/48), ownership: 0 failures; run.mjs architecture 0 failures. Details and the reading set in my record.
