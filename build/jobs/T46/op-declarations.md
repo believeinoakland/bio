@@ -56,3 +56,7 @@ COMPLETE at 659a277c13 (job/T46/op-declarations, tranche/T46 merged at 01a102f36
 - checks/run.mjs over the product: architecture 0 failures (2974 files). Coverage has 13 failures, none op-declarations' (modules not yet merged in L11). Channels 0.
 
 Size (session_01NUf7KtHeiN1J9PyDGrJ1af): test runs 12, module lines 3642
+
+## J4 · COMPLETE
+
+COMPLETE again after B4 (K3005), at 7ec25e8725. I merged tranche/T46 at b8463bfa81, which carries affordances' R53 merge. ACT_HELP_ABSENT no longer names the 39 T45 member ops that ACT_HELP now explains (the list in B4). A check against ACT_HELP found no other op named and explained, none neither, and no stale name. No test pinned those names one by one, so nothing needed re-pinning; R34's partition tests (t36 'R34 (affordances R48)', t42 'R47, R34', t45 'R34, R49') are green. The four ops K2999 left out (infolevelset, escalationstoppursuing, escalationreopen, textcheck) are now explained under their own names. Tests: op-declarations 155 of 155 pass; affordances 245 of 245 pass. Checks: format 0 failures; architecture op-declarations 0; coverage 52 of 52; ownership 0 (2 files changed since the tranche). Size (session_01NUf7KtHeiN1J9PyDGrJ1af): test runs 15, module lines 3636
