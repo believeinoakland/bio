@@ -44,6 +44,13 @@ Nothing deferred.
 
 Size (session_015ySFNDd18mdxT5E8Xsc9u6): test runs 16, module lines 4132
 
+**After B3 (K2968).** `tranche/T46` was merged in, with case-checker's R24 now on it. Re-run on the merged branch:
+- `test/m/case-authoring/`: tests 210, pass 210, fail 0.
+- With `action-replies`, `consequences`, `plane/t45` and `case-checker`: tests 375, pass 375, fail 0.
+- Checks: format, architecture, coverage (55/55) and ownership each show 0 failures.
+
+Size (session_015ySFNDd18mdxT5E8Xsc9u6): test runs 18, module lines 4132
+
 ## J1 · QUESTION
 
 The P8 flaw in B1 (`.noreply` read when a reply exists but no claims are laid out) cannot be fixed inside this module alone: R70 lets the source answer `answers: null` both for "no reply recorded" and for "a reply recorded, no claims laid out", and action-replies R3 (`#openRow`, index.mjs 392-401) answers null for both. Nothing in the row tells them apart.
