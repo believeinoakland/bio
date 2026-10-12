@@ -27,3 +27,7 @@ R18 needs to know whether an occurrence was "already told" before the duty's wat
 (2) What it needs: a read in `following` (your change; following R25), e.g. `dutyWatchEndAt(duty)` → null, or `{day, at}` with `at` the recorded instant (`watch_answers.at`, already stored) of the answer that made the end hold (the latest answer among the duty's links, since the end is null while any link is unanswered). Writes nothing, never throws, as `dutyWatchEnd`.
 Recommendation: add (2) to following R25 in this tranche; I read it when present.
 Until you answer, I build R18 against (2) with a test double for `following`, and fall back, where `following` has no such read, to the end day alone (told iff its told state began on or before E), which is exact for every stop and errs only for a keep across candidates. Say if you want the fallback dropped (then a real `following` without the read keeps R5's rule as now).
+
+## J2 · COMPLETE
+
+T46-47 done. R18 is built on the end day alone, per B2 (K2996): an occurrence told before the end day keeps its item until disposed. It is tested over the real following; the keep-across-candidates limit is stated in my record (N967, T47). R19: stepsDue's truncated is carried into facts.step_due. Tests 106/106; queue 143/143. format, architecture, coverage and ownership: 0 failures; run.mjs architecture 0. Finding: steps.laterFound answers truncated, but steps R23 does not state it (see Completion). Record: Completion (T46-47).
