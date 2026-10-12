@@ -2894,7 +2894,7 @@ reasoning recorded in: this entry; `screens/mock-screens.js` (the Photos step); 
 owed: (BOB, N779 in T38) the two labels on published photos, read by key; the Photos step's sentence.
 
 ### DEC-186 · answered
-amended: 2026-10-12 by DEC-195 (Bob, S19 point 1): a handle a member gives up is reserved for five years, then free for others.
+amended: 2026-10-12 by DEC-195 (Bob, S19 point 1: reserved five years), itself replaced the same day by DEC-196 (Bob: a handle is never reused).
 raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (found answering Bob's comment on the handle field, DEC-184: no op changes a handle after joining, while the screens had said it could be; question S18)
 for: bob
 question: Whether a member may change their handle after joining, and until when.
@@ -3061,6 +3061,7 @@ reasoning recorded in: this entry; `screens/words-actions.src.py`, `screens/word
 owed: (BOB, T45) each key read by its module; the five scripts adopted under R22 and Start and send's re-pointed step; the owed acts re-pointed once served.
 
 ### DEC-195 · answered
+amended: 2026-10-12 by DEC-196 (Bob): replaced whole; a handle is never reused. Nothing of DEC-195 stands, and its owed work is withdrawn.
 raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (question S19, point 1, from BOB's B121 §Z1 on DEC-186)
 for: bob
 question: Whether another member may take a handle a member gave up (S19, point 1).
@@ -3073,3 +3074,17 @@ response: **Bob, 2026-10-12: "S19: No reuse for 5 years or more".** Ruled: (1) a
 decided: 2026-10-12 · Bob
 reasoning recorded in: this entry; `screens/question.html` (S19); `screens/mock-screens.js` (Your account's "Your handle"); `screens/mock-acts.js` (`handlechange`); `screens/build_words.mjs`, `screens/words.json` (`handle.formerly.until`); BIO_Interaction_Constructs_v0_1.md §V.
 owed: (BOB) membership R124's "Earlier handles" clause: an earlier handle stays taken for every other member for five years from its change, then is free (R16, R124 and the handle check alike); R17's `formerly` entries carry the date each was given up, so the screen can show `handle.formerly.until` once the five years have passed.
+
+### DEC-196 · answered
+raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (question S19, after DEC-195)
+for: bob
+question: Whether another member may take a handle a member gave up (S19, point 1), asked again after DEC-195.
+why it is Bob's: the meaning of his own ruling (DEC-186): what "formerly" promises members about who a name refers to (P17).
+provisional: DEC-195 (reserved five years, then free).
+alternative: 1B, freed after a waiting period (DEC-195's five years).
+recommendation: 1A.
+reversal cost: none; membership as built at T40 (R124) already reserves earlier handles for good.
+response: **Bob, 2026-10-12: "For S19: Handles just shouldn't ever be reused. There's too many risks of confusion if they every [ever] are. This is for both the first and second parts of S19."** Ruled: a handle a member gives up is never taken by another member (at joining, at a change, and in the handle check, which answers only "taken"); its holder may take it back. This is S19's 1A, as membership R124 is built; DEC-195 is replaced whole and `handle.formerly.until` withdrawn. Point 2 (when a member's own handle stops being changeable: when a published case shows it, 2A, or when any of their work is carried, 2B) is not a question of reuse, since under this ruling no handle passes to another member either way; it stays open with Bob, re-briefed in that light, and the development process keeps building on 2A.
+decided: 2026-10-12 · Bob
+reasoning recorded in: this entry; `screens/question.html` (S19); `screens/mock-screens.js` (Your account's "Your handle"); `screens/mock-acts.js` (`handlechange`); `screens/build_words.mjs`, `screens/words.json`; BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB) nothing new: N934 (DEC-195's change) is withdrawn; membership R124's "Earlier handles" clause stands as built.

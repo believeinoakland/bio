@@ -123,7 +123,6 @@ must(scr, 'mock-screens.js', 'You can still change it: none of your work is in a
 add('handle.fixed', 'Your handle is fixed: your work is in a published case ({case}).', false, 'DEC-186');
 add('handle.formerly', 'formerly {handle}', false, 'mock-screens.js members');
 must(scr, 'mock-screens.js', 'formerly dev-o');
-add('handle.formerly.until', 'formerly {handle}, until {year}', false, 'DEC-195');
 add('handle.characters', 'A handle uses only lower-case letters, digits and hyphens.', false, 'mock-screens.js join');
 must(scr, 'mock-screens.js', 'A handle uses only lower-case letters, digits and hyphens');
 
