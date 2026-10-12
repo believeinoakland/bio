@@ -43,7 +43,7 @@ import { ACTION_HOLDS_CHECKS } from "./checks.mjs";
 import { ACTION_HOLDS_TABLES, migrateActionHolds } from "./schema.mjs";
 
 export { ACTION_HOLDS_SCHEMA, ACTION_HOLDS_TABLES } from "./schema.mjs";
-export { ACTION_HOLDS_CHECKS } from "./checks.mjs";
+export { ACTION_HOLDS_CHECKS, ACTION_HOLDS_WORDS } from "./checks.mjs";
 
 /** R1, R2, R11, R12: the longest note, reason, account or medium (`actions`' `NOTE_MAX`). */
 export const NOTE_MAX = 500;

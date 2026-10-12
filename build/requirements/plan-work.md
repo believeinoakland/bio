@@ -56,7 +56,7 @@ Terms. A **plan**, its matters (subjects), options, scenarios, phases and checkp
 - `escalation`: `escalationsFor`, `escalationRead` (its R22, R2; R2, R3).
 - `filings`: `filingsFor` (its R13; R2's `documented`, `fix_offered`).
 - `conformance`: `curesOf` (its R37; R2).
-- `duties`: `dutiesArisingIn` (its R31; R13).
+- `duties`: `dutiesArisingIn` (its R31; R13); `transitionsOf` (its R9; R15's `met_at`, K2980).
 - `reading-guides`: the procedure guide (its R13; R10).
 - `ai-runs`: `open` with `origin: "reexamination"` (its R77; R10).
 - `civil-time`: the recurrence subset, `localDay` (R4).

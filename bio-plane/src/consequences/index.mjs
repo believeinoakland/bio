@@ -21,6 +21,11 @@
  * reader `actions` registers, R19). A success record is never a consequence part (R23). An outcome (a success, a harm
  * addressed, a cure) is carried into a case's next edition only through `case-authoring.carryOutcome` (R22).
  *
+ * T46 (N911, R24): each success record is a `success_record` record object (`SUC-`, record-grammar R59), promoted through
+ * `promotion` with history, audit and export as a part is (R14); one held in this module's rows before T46 is promoted at
+ * creation with its id, fields, author and time unchanged. (N913, R25) Seventeen refusal rows and R19's two sentences
+ * read `words.json`'s words by key (`./checks.mjs`, `CONSEQUENCES_WORDS`).
+ *
  * A new module (layer 9): no `from`, nothing moved. REACHED as `consequencesModule(host, deps)` (K171 (17)): one instance
  * per host (the Durable Object's `ctx`), created on the first call with `deps`, returned to every later caller. At
  * creation it creates its tables and declares them to record-core's purge (R13, K23). Each part is also a `CONS-`
@@ -75,11 +80,11 @@ import { BASIS_GRADES } from "../record-grammar/grades.mjs";
 import { OPS, RATIO_ROUNDING, exactOf, isZero, order, readFigure, passageHolds, compute, measureOfFigure,
          addMeasures } from "./measures.mjs";
 import { CONSEQUENCES_TABLES, migrateConsequences } from "./schema.mjs";
-import { CONSEQUENCES_CHECKS } from "./checks.mjs";
+import { CONSEQUENCES_CHECKS, consequencesWords } from "./checks.mjs";
 
 export { OPS, RATIO_ROUNDING, exactOf } from "./measures.mjs";
 export { CONSEQUENCES_SCHEMA, CONSEQUENCES_TABLES } from "./schema.mjs";
-export { CONSEQUENCES_CHECKS } from "./checks.mjs";
+export { CONSEQUENCES_CHECKS, CONSEQUENCES_WORDS, consequencesWords } from "./checks.mjs";
 
 /** Terms: who or what is affected (R10: a person only as a document names them). */
 export const AFFECTED_KINDS = Object.freeze(["class", "fund", "program", "service", "body", "person", "other"]);
@@ -117,8 +122,8 @@ export const SUCCESS_LIMITS = Object.freeze({ evidence: 50, figures: 20, sequenc
 export const SUCCESS_PAGE_MAX = 200;
 /** R22 (T45): what an outcome carried into a case's next edition is (case-authoring R71's kinds). */
 export const CARRY_KINDS = Object.freeze({ success: "success", addressed: "harm_addressed", cure: "cure" });
-/** R19 (T45): the sentences a success record's read answers beside its sequence and its absent cause (keys the UX
- *  stream words). */
+/** R19 (T45), R25 (T46): the keys of the sentences a success record's read answers beside its sequence and its absent
+ *  cause; their words are `words.json`'s, read by key (`CONSEQUENCES_WORDS`). */
 export const SEQUENCE_NOT_CAUSE = "consequences.success.sequence_not_cause";
 export const CAUSE_NOT_STATED = "consequences.success.cause_not_stated";
 
@@ -1058,8 +1063,9 @@ export class Consequences {
    * optionally with figures computed exactly as R2 computes a part (R18); it may state the sequence of events, and says
    * the group's action caused the change only on evidence other than the group's own act (R19). Never a consequence
    * part (R23): no read of parts reads, lists or counts one. Its own append-only rows (`success_records`), fenced by
-   * its project as a part is (R13), declared to purge. Until `record-grammar` registers its object type, nothing is
-   * promoted (the job's reading, J1).
+   * its project as a part is (R13), declared to purge, which every read answers from. Since T46 (R24) each is also a
+   * `SUC-` record object of type `success_record`, promoted through `promotion` in the act that records it, with history,
+   * audit and export as a part has (R14); one recorded in the rows before T46 is promoted at the module's creation.
    * ===================================================================== */
 
   /** R19: `actions` registers, once, the reader of the group's own acts: `fn({ids, viewer})` answers the ids that are an
@@ -1232,19 +1238,72 @@ export class Consequences {
     return { ok: true, cause: { statement: c.statement.trim(), evidence: ids } };
   }
 
+  /* R17, R24: the record written, once every check has passed: its row, and its `SUC-` record object promoted in the
+     same transaction, so a promotion refused writes nothing. Its id is minted in `ID_TABLE`'s form for `SUC`
+     (sequential, record-grammar R59), stepping past any id a record of T45's own minting already holds. */
   #successLand({ project, matter, statement, changed_on, evidence, figures, sequence, cause, author, who, rev }) {
+    this.#promoteHeld();
     const at = this.#when();
     return this.record.transact(() => {
-      const id = this.record.mintOpaqueId(SUCCESS_PREFIX, at.slice(0, 4), "", (x) =>
-        !!this.#one(`SELECT 1 AS x FROM success_records WHERE id=?`, x));
+      const id = this.#mintSuccessId(at.slice(0, 4));
       if (!id) return mintExhausted(SUCCESS_PREFIX);
+      const row = { id, project, matter: json(matter), statement, changed_on, evidence: JSON.stringify(evidence),
+        figures: JSON.stringify(figures), sequence, cause: json(cause), author, at, supersedes: rev ? rev.supersedes : null,
+        reason: rev ? rev.reason : null };
+      const done = this.#promoteSuccess(row);
+      if (done.ok === false) return done;
       this.sql.exec(`INSERT INTO success_records (id, project, matter, statement, changed_on, evidence, figures, sequence,
           cause, author, at, supersedes, reason) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-        id, project, json(matter), statement, changed_on, JSON.stringify(evidence), JSON.stringify(figures), sequence,
-        json(cause), author, at, rev ? rev.supersedes : null, rev ? rev.reason : null);
+        row.id, row.project, row.matter, row.statement, row.changed_on, row.evidence, row.figures, row.sequence, row.cause,
+        row.author, row.at, row.supersedes, row.reason);
       return { ok: true, id, success: this.#successAnswer(this.#one(`SELECT * FROM success_records WHERE id=?`, id), who) };
     });
   }
+
+  /* R24: the next `SUC-<year>-NNNN` from record-core's counter that no success record, and no record object, holds (a T45
+     id was four random digits); null after 64 held in a row. Inside the caller's transaction. */
+  #mintSuccessId(year) {
+    for (let i = 0; i < 64; i++) {
+      const got = this.record.allocId(SUCCESS_PREFIX, year);
+      const id = got && got.id;
+      if (!id) return null;
+      if (!this.#one(`SELECT 1 AS x FROM success_records WHERE id=?`, id) && !this.record.bundleInfo(id)) return id;
+    }
+    return null;
+  }
+
+  /* R24: a success record's row promoted as its `success_record` object: created at the row's time, by its author, in
+     its project (so membership fences the object as the reads are fenced, R13), state `recorded`. */
+  #promoteSuccess(row) {
+    return this.promotion.promote({ bundleId: row.id, base: null, snapKey: `${second(row.at).replace(/[-:]/g, "")}_${rand(4)}`,
+      author: str(row.author) ?? INTERNAL, files: [{ path: "bundle.md", text: successDoc(row) }],
+      meta: { object_type: SUCCESS_TYPE, title: successTitle(row), current_state: "recorded", created: row.at,
+              last_updated: row.at } });
+  }
+
+  /* R24 (N911): every success record held in this module's rows with no record object (recorded before T46) promoted,
+     in id order, with its id, fields, author and time unchanged (its successor's `supersedes` names it, as before). One
+     the record refuses (no producing group set yet, say) is left in its rows, read as before, and
+     tried again at the next success record written or the module's next creation. Never throws. */
+  #heldPending = true;
+  #promoteHeld() {
+    if (!this.#heldPending) return { ok: true, promoted: [] };
+    const promoted = [], left = [];
+    let rows = [];
+    try { rows = this.#rows(`SELECT * FROM success_records ORDER BY id`); } catch { return { ok: false, promoted, left }; }
+    for (const r of rows) {
+      if (this.record.bundleInfo(r.id)) continue;
+      let done;
+      try { done = this.record.transact(() => this.#promoteSuccess(r)); } catch (e) { done = { ok: false }; }
+      (done && done.ok !== false ? promoted : left).push(r.id);
+    }
+    this.#heldPending = left.length > 0;
+    return { ok: !left.length, promoted, left };
+  }
+
+  /** R24: promote the success records held before T46 (`#promoteHeld`); the module's creation calls it. Answers
+   *  `{ok, promoted, left}`, the ids promoted now and those the record refused. */
+  promoteHeldSuccessRecords() { this.#heldPending = true; return this.#promoteHeld(); }
 
   /* A success record's row, or null when absent or in a project the viewer may not see (R13's one answer). */
   #successRow(id, viewer) {
@@ -1278,9 +1337,9 @@ export class Consequences {
     const next = this.#successSuccessor(r.id);
     const out = { id: r.id, project: r.project, matter: parse(r.matter), statement: r.statement, changed_on: r.changed_on,
       evidence: seen(parse(r.evidence) || []), figures,
-      sequence: r.sequence ? { text: r.sequence, says: SEQUENCE_NOT_CAUSE } : null,
+      sequence: r.sequence ? { text: r.sequence, key: SEQUENCE_NOT_CAUSE, says: consequencesWords(SEQUENCE_NOT_CAUSE) } : null,
       cause: cause ? { statement: cause.statement, evidence: seen(cause.evidence || []) } : null,
-      ...(cause ? {} : { cause_says: CAUSE_NOT_STATED }),
+      ...(cause ? {} : { cause_key: CAUSE_NOT_STATED, cause_says: consequencesWords(CAUSE_NOT_STATED) }),
       author: r.author, at: r.at, supersedes: r.supersedes, reason: r.reason, superseded_by: next, live: !next,
       carries: this.#carriesOf(r.id) };
     if (withheld) out.out_of_view = true;
@@ -1461,8 +1520,29 @@ const isFigure = (x) => isObj(x) && typeof x.precision === "string" && (typeof x
  * R17–R22 (T45): THE SUCCESS RECORD'S PIECES. Pure.
  * ===================================================================== */
 
-/* R17: a success record's id prefix (opaque, `record-core.mintOpaqueId`). */
+/* R17, R24: a success record's id prefix (record-grammar R59: sequential) and its object type. */
 const SUCCESS_PREFIX = "SUC";
+const SUCCESS_TYPE = "success_record";
+
+/* R24: a success record's object: its title, the member's statement cut to a line. */
+const successTitle = (r) => `success: ${String(r.statement)}`.replace(/\s+/g, " ").slice(0, 110);
+
+/* R24: a success record's document, a `success_record` record object in its one state, `recorded`, holding the fields
+   its row holds (R17) as recorded; its project in the front matter, so membership R43 fences it as the reads are. */
+function successDoc(r) {
+  const body = { project: r.project, matter: parse(r.matter), statement: r.statement, changed_on: r.changed_on,
+    evidence: parse(r.evidence) || [], figures: parse(r.figures) || [], sequence: r.sequence ?? null, cause: parse(r.cause),
+    author: r.author, at: r.at, supersedes: r.supersedes ?? null, reason: r.reason ?? null };
+  return ["---", `id: ${r.id}`, `object_type: ${SUCCESS_TYPE}`, `schema: ${SUCCESS_TYPE}@1`, `title: ${q(successTitle(r))}`,
+    "current_state: recorded", "prior_state: null", `created: ${q(r.at)}`, `last_updated: ${q(r.at)}`,
+    `project: ${q(r.project)}`, `supersedes: ${q(r.supersedes ?? null)}`, `author: ${q(r.author)}`, "machine_work: false",
+    "produced_by:", "  mode: human", "  capability_tier: session", "references: []", "state_history: []",
+    "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "---", "",
+    "## Success Record", "", "```json", JSON.stringify(body, null, 2), "```", "",
+    ...(r.reason ? ["## Why It Was Revised", "", r.reason, ""] : []),
+    "## Session Log", "", `### Session ${r.at} | Recorded | ${r.author}`,
+    `Changes: success record recorded${r.supersedes ? `, superseding ${r.supersedes}` : ""}.`, ""].join("\n");
+}
 
 /** R20, R22: no success record answers to the id, or the reader may not see it: one answer. */
 function noSuchSuccessRecord(id, wrote = false, why = null) {
@@ -1633,6 +1713,8 @@ export function consequencesModule(host, deps) {
     instances.set(host, c);
     c.migrate();
     record.declarePurge("consequences", CONSEQUENCES_TABLES);
+    /* R24 (N911): the success records held before T46, promoted as their record objects. */
+    c.promoteHeldSuccessRecords();
   }
   return c;
 }
