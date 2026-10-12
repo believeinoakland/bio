@@ -78,3 +78,7 @@ T46-56 complete: R1–R9 met, built to interface-shell R21 (K2996, K2998, K2999)
 - **Open for the shell's merge (J3, unanswered):** `cs.digest(text)` (R1's promoted bundle; `crypto` is not an allowed global), `cs.now()`, `{refuse, fills}` filled, `cs.value` answering a checkbox's `checked`. I re-point to the shell's DOM stand-in at its merge (your CHANGE).
 - **REPORT, other modules (beyond N969):** (a) capture R77's `heldCaptures` rows carry no grade and no capture digest, so a held row (not an archive's file) can draw neither its grade nor a thumbnail opening `open-file`, as R4 asks; (b) no member-session read answers a knock's source id (`sourceof`, `sourcerung` not in `SESSION_OPS.member`), so `sourcelink` needs both ids typed and the ladder stops at "Same knocker".
 - `SCREEN_WORDS`: 167 rows for the design stream's HANDOFF.
+
+## J5 · COMPLETE · re B5
+
+Re-complete per B5: tranche/T46 merged; aligned to K3002's R21 (cs.rows cols as header keys, acts(item) the row panel, so held draws its own hold strip with heldsetaside and release over extra.picked; digest, now, refuse fills and value on checkboxes now the kit's). 42/42; with modules.json patched locally (paths bio-plane/src/screens-intake/, tests bio-plane/test/m/screens-intake/, uses + wizard-scripts): format 0, architecture 0, coverage 9/9, ownership 0; run.mjs coverage failures none mine. Re-pointing to the shell's DOM stand-in waits on its merge's CHANGE. Record: 'Completion again'.
