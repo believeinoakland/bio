@@ -1,6 +1,6 @@
 # case-disclosures (T46)
 
-**Status** · session_016tFh3EWvxLbakE52DL24QM · depth 2 · WORKING · handled B3
+**Status** · session_016tFh3EWvxLbakE52DL24QM · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
