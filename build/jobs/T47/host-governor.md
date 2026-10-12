@@ -28,3 +28,7 @@ Comments only in `index.mjs`: the header cites R1–R28, and `governorState`'s d
 - `node checks/run.mjs` (K2950) → format 0 failures; architecture: 3063 product files, 9347 relative imports; 0 failures; coverage: 4967 of 5096, 44 failures, none host-governor's (other modules' *(not yet met: T47)* ids, accepted red 5.1); channels 0 failures.
 
 Size (session_01KMdoJShc6cVjtBV9B9Kjxf): test runs 2, module lines 435
+
+## J1 · COMPLETE
+
+T47-68 applied: R28 is met by the code as it stood (governorOp forwards only host; governorState reads only host), so no behaviour changed. Three interface tests name R28 in ops.test.mjs: the Worker handler (and governorOpResponse behind the relay), where a query now/nowMs answers as without it and the store is asked identically; the DO route, where a body whose now/nowMs throw when read answers as without them; and the whole plane (admin, founder, member; query, body, both). A mutation check turned the first two red. index.mjs changed only in comments (header R1–R28, governorState's doc), which stales the plane bundle (accepted red 5.4). Module tests 43/43; format, architecture, coverage (28/28), ownership 0 failures; run.mjs architecture 0 failures, coverage reds none of mine. Nothing deferred; nothing found in other modules. Record: build/jobs/T47/host-governor.md on job/T47/host-governor.
