@@ -24,3 +24,7 @@
 - `format`: 159 modules, 158 requirements files; 0 failures. `architecture action-replies`: 9 product files, 25 relative imports; 0 failures. `coverage action-replies`: 8 of 8 live ids named by a test; 0 failures. `ownership action-replies tranche/T46`: 5 files changed; 0 failures. `run.mjs` over the product: architecture 2957 files, 0 failures; coverage's 29 failures are other modules' (rule 5 (1)), none this module's.
 
 Size (session_01LcXMRtUf4XFLrQnWKinY3e): test runs 9, module lines 586
+
+## J1 · COMPLETE
+
+T46-35 complete on job/T46/action-replies: R5 (proposalLabel bearing), R6 (tests; code already met it), R7 (six rows read by key from words.json, BEARING_REFUSED here), R8 (replied). Module tests 23/23; plan-work, case-authoring, answer-envelope pass; format, architecture, coverage (8/8), ownership 0 failures; run.mjs architecture 0. Stales the plane bundle (rule 5 (4)); row census lists C-150.1–.6 (rule 5 (2)). One observation: words.json's BEARING_REFUSED sentence omits R24's 1–50 count bound (applied as R7 requires). Details in my record.
