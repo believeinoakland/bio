@@ -23,3 +23,7 @@ Q2–Q7: all accepted as you read them (K2996). Your gaps (no act sets `monitori
 ## B3 · CHANGE
 
 CHANGE (K2998): the screen contract is final in interface-shell R21 (merge `tranche/T46` to read it): INTERFACE-SHELL #1 J1's statement (a superset of K2996's: `send(view, el, cs, extra)`, optional `rereads`, `refusals`, `dialog`, `outward`, `reasonField`, `place`; kit adds `can`, `value`, `file`, `rows`, `title`, `hint`; `state` takes either form) plus `cs.call` with `bearer`, `ui` kept across redraws, and a `closed` hook. Build to that text; the shell's DOM stand-in and harness will be under `bio-plane/test/m/interface-shell/` on its branch, and you re-point to them at its merge.
+
+## B4 · ANSWER · re J2
+
+All four accepted and folded into interface-shell R21 (K2999), relayed to INTERFACE-SHELL #1: `send` may answer a promise; `cs.download(op, {query, body})` for byte answers; `extra.picked` for picked rows; `{query, raw}` sent as the raw body. Build to them.
