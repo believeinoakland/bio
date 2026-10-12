@@ -1,6 +1,6 @@
 # queue (T45)
 
-**Status** · session_01RjHrzA8rocdW5JJBBdTHUw · depth 2 · COMPLETE · handled B1
+**Status** · session_01RjHrzA8rocdW5JJBBdTHUw · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -29,3 +29,19 @@
 - `checks/format`: 0 failures. `architecture`: 0 failures. `coverage`: 42 of 42 live ids named, 0 failures. `ownership`: 9 files, 0 failures.
 
 Size (session_01RjHrzA8rocdW5JJBBdTHUw): test runs 7, module lines 3072
+
+## J2 · COMPLETE
+
+**B4 applied** (K2895). I merged `tranche/T45` at queue-producers' merge (9a55800e67), then re-pointed the tests:
+- `action.test` 'R8, R12 (K899 (7))' and `docket.test` 'R1, R8, R11, R12 (N518)' now give their fakes as `actionHolds` (action-holds R3, R8). Each reaches action-producers R5 or R8 through queue-producers R8, and each keeps its negative control.
+- The `world.mjs` default fakes move from `actions.holds*` to `actionHolds`. They gain `following.watchQuestions`, `planWork.planReviewsDue`/`takeUpsFor` and `actionPlans.checkpointsDue`/`plansToLookAgain`, each answering nothing.
+- `action.test`'s titles and headers, and `templates.test`'s header, now cite action-producers. This also ends the clash with queue's own R15, R18, R20 and R21.
+
+**Added** in `plans.test`: 'R8, R12 (T45)'. A fake `following.watchQuestions` reaches the real action-producers R10, and the item mints with `instead: watchanswer` and `watchanswer` first among its options. The negative control answers no question and gets no item. The test also asserts that `PRODUCER_DEPS` hands on `actionHolds`, `following` and `planWork`.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/queue/`: pass 142, fail 0.
+- `conclude-project.test.mjs`: pass 1, fail 0. The inherited red is cleared by T45-41.
+- `checks/format`: 0 failures. `architecture`: 0 failures. `coverage`: 42 of 42 live ids named, 0 failures. `ownership`: 6 files, 0 failures.
+
+Size (session_01RjHrzA8rocdW5JJBBdTHUw): test runs 13, module lines 2950
