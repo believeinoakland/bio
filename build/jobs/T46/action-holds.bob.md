@@ -14,3 +14,12 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 588 KB with your tests (K2700), under the 600 KB limit; read it whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L9: conformance, consequences, action-grammar, actions, action-holds, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work; a job that uses an L9 job's new service merges `tranche/T46` when BOB announces that merge (a CHANGE); each that uses no unmerged L9 job merges as soon as it is complete.
+
+## B2 · CHANGE
+
+CHANGE (K2981), re-opening the job. Your J1 REPORT is confirmed and settled in this module: R14 is retired. It reversed R5's "an entry with no hold stated may be released", which carries DEC-113's "or never needed to" (Bob's design stream), and broke the litigation-hold to-do's "Record that no hold is needed" door. Merge `tranche/T46` to read the retired R14.
+- Undo R14's behaviour: a release at a place where no hold was ever placed is accepted again, as R5 states (the statement that none was needed); a place whose latest statement is `released` is still refused `HOLD_ALREADY_RELEASED`.
+- Keep `holdNotInPlace` as `HOLD_NOT_IN_PLACE`'s one minter for its other callers; keep your re-worded fixed `detail` only if it is true of every arm that still answers it.
+- R15 stands as you built it.
+- Tests: R14's tests go (a retired id is named by no test); R5's control that a release where no hold stands lands, with its restarts, comes back.
+Then record completion again.
