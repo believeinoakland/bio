@@ -13,3 +13,11 @@ The screen contract's calling shape is interface-shell's (its R21 and Suggestion
 5. The kit `cs` holds at least `w(key, fills)`, `state(readName, view, inner)` (draws the four states, calling `inner(value)` for data), `act`, `go`, `set`, `ref(kind, id, text, card)`, `mark(kind, arg)` (kind marks, `due`, `hint`, `origin`, `gap`), `grade`, `row`, `sec`, `sheet`, `field`, `choice`, `checks`, `date(iso)` (R6), and `esc`.
 
 What I build if you do not answer before I finish: exactly the above, with my tests running the screens over a small fake kit of this shape in my own test path, to be replaced by interface-shell's stand-in when its merge is announced.
+
+## J2 · QUESTION
+
+R1 (home) reads `projectdirectory` for "each project the member may see, its question count and its stage ladder". `project-roster` R9's `projectdirectory` answers something else: only the discoverable projects the caller does NOT see at full sight (projects to ask to join), each `{id, name, request}`, with no question count and no stage. No op I have found answers a member's own projects with their question counts.
+
+My best reading, which I am building now: Home draws "What the group is working on" from `search` with `q=type:project` (query-language R3's `type:` field; retrieval's sight gate gives exactly the projects the member may see), each hit's `title` as a link to `project`, and its stage ladder from the hit's `current_state` (Forming, Investigating, Matured, Closed; an unknown state draws no step on), with no question count drawn; and it also reads `projectdirectory` and, when it lists any, draws them under a second heading "Projects you could join" (name only, no act: `projectrequest` is not a registered home act). `search` is not a registered home act, only a read, so R21 is not touched.
+
+Please confirm, or name the op that answers a member's projects with their question count (or rule the count out for T46).
