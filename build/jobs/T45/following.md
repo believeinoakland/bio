@@ -44,3 +44,20 @@ Found while building T45-36 (none blocks this job):
    - the answer-envelope catalogue, under rule 4 (14);
    - the plane's start composition: `followingOf(host)` now reaches `actionPlansOf`, `planWorkOf`, `dutiesOf` and `answersOf` lazily, and registers its watch reader with plan-work when it is created (T45-47).
 4. **For `action-producers` R10 and `notice-producers` R5:** the reads are `watchQuestions({after, limit, viewer})` (entries with `recipients`) and `dutyWatchEnd(duty)`.
+
+## J3 · COMPLETE
+
+**B2 (K2871) applied.** `WATCH_END_REFUSED` is no longer minted here. R22's refusals (the follow acts and `followEnd`) and R25's bad `until` now answer monitoring's own row through `frequencyRefusal("WATCH_END_REFUSED", …)`, C-18.19.
+- On a monitoring that does not yet hold the row (today's tranche, before monitoring merges), the same code is answered with `check` and `translation` null.
+- C-137 is renumbered: `WATCH_ENDED` .21, `MACHINE_CANNOT_LINK_WATCH` .22, `NO_SUCH_WATCH` .23, `WATCH_NOT_ASKED` .24, `WATCH_RELIED_ON` .25.
+- A test asserts the refusal carries monitoring's row, read from `MONITORING_CHECKS`, and that `FOLLOWING_CHECKS` holds no such code.
+- The local-day rule needs no change here: following judges "after today" on the instance zone's local day.
+
+**Not yet proven:** against the real monitoring row. A local trial overlaying `origin/job/T45/monitoring` was refused by my permission check. It is not worked around: I'll prove it by merging `tranche/T45` after monitoring's merge (your CHANGE).
+
+**Tests and checks:**
+- `test/m/following/`: 72 pass, 0 fail. WATCH_END_REFUSED's family row test goes with its row.
+- format, architecture and coverage: 0 failures (26 of 26 ids).
+- ownership: 7 files, 0 failures.
+
+Size (session_01GFBw9f24M2axfCAsVCYFd3): test runs 19, module lines 1840
