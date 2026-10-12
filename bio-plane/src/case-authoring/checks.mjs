@@ -9,11 +9,44 @@
  * enforces it. C-32.6 (`MACHINE_CANNOT_PUBLISH`) and C-33.14 (`NO_STATEMENT`) were copied
  * into `PUBLISH_ACT_CHECKS` (T18; R1, R3, R29; K695), ids, codes, `where`s and translations unchanged, and stamped by
  * promotion in T19; the catalogue and its copies are deleted (K529). R56's `CALCULATION_NOT_DISCLOSED` joins
- * `PUBLISH_ACT_CHECKS` in T33 (R29), R61's `STANDARDS_USE_REFUSED` (C-136.2) in T36, R71's six (C-136.3–C-136.8) in T45. The family C-120, "a case's disclosures and its
+ * `PUBLISH_ACT_CHECKS` in T33 (R29), R61's `STANDARDS_USE_REFUSED` (C-136.2) in T36, R71's six (C-136.3–C-136.8) in T45, five of them read by key from
+ * `words.json` in T46 (R73). The family C-120, "a case's disclosures and its
  * pre-flight", moved whole to `case-disclosures`' own `checks.mjs` with its ids, codes and translations (its R22; N529);
  * no copy is held here (K529), and `index.mjs` re-exports it for this module's importers. */
 
 const at = (fn, region) => `src/case-authoring/index.mjs ${fn} > ${region}`;
+
+/* R73 (T46; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module
+   answers, each `en` verbatim, read by key, as membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are: five of
+   R71's rows (`refusal.<CODE>`) and the sign step's two open-request lines (R34, R70), whose `{placeholders}` are filled
+   from R70's row. The design stream's words: re-worded there, then re-taken here by key; a row never holds a copy of its
+   sentence. Not taken in T46 (R73): `refusal.BAD_CARRIED_OUTCOME`, `signing.openrequest.nowindow` and
+   `signing.openrequest.unread`, each returned to BOB until its words and this module's behaviour agree. */
+export const CASE_AUTHORING_WORDS = Object.freeze({
+  'refusal.MACHINE_CANNOT_CARRY_OUTCOME': 'Only a member carries an outcome into a case\'s next edition, and this came from '
+    + 'the assistant or another automated credential. Sign in to carry it. Nothing was written.',
+  'refusal.CARRY_NOT_A_PARTICIPANT': 'Only someone who has joined the project that makes this case can carry an outcome '
+    + 'into its next edition. Nothing was written.',
+  'refusal.NO_SUCH_CARRIED_OUTCOME': 'There is no outcome waiting for a case\'s next edition by that name, or none you can '
+    + 'see. Nothing was written.',
+  'refusal.CARRIED_OUTCOME_SETTLED': 'This outcome is no longer waiting: a signed edition already carries it, or it was '
+    + 'withdrawn. A signed edition is corrected only by a later one. Nothing was written.',
+  'refusal.CARRY_NO_REASON': 'Say why you are withdrawing this outcome, in at most 2,000 characters. Your reason is kept '
+    + 'with it. Nothing was written.',
+  'signing.openrequest.line': '{whom} was asked for comment on {asked_at}. The window for a reply closes on '
+    + '{window_closes}; the reply answers {answered} of the {claims} claims the request laid out.',
+  'signing.openrequest.noreply': '{whom} was asked for comment on {asked_at}. The window for a reply closes on '
+    + '{window_closes}; no reply is recorded.',
+});
+
+/* R73: a word read by key, with its `{placeholders}` filled from `fill`; a throw for a key the list lacks, because a
+   missing sentence is silent and reaches a person while a throw is loud in a test (DEC-49's rule). */
+export function fillWords(key, fill = {}) {
+  const en = CASE_AUTHORING_WORDS[key];
+  if (typeof en !== 'string' || !en) throw new Error(`fillWords: ${key} is not one of this module's words (words.json)`);
+  return en.replace(/\{([a-z_]+)\}/g, (m, k) => (Object.prototype.hasOwnProperty.call(fill, k) ? String(fill[k]) : m));
+}
+const words = (key) => fillWords(key);
 
 /* C-32.6, C-33.14 — op=publish's own two rows from the catalogue's machine-fence and act-shape families (R1, R3; K6,
    K529), copied with their ids, codes, `where`s and translations unchanged; stamped by promotion (T19 layer 2). */
@@ -59,21 +92,22 @@ export const PUBLISH_ACT_CHECKS = Object.freeze({
       + 'Nothing was prepared.',
   },
   /* R71 (T45; N855 (6c); Actions D5, D6c; v0.2 §3 Success record, rule 17): an outcome carried into a case's next edition
-     by a member's act (`carryOutcome`, `withdrawCarriedOutcome`). Six new rows, the next free numbers of C-136 (this
-     module's existing family); their translations are BOB's to draft, these the job's until then, the member words the UX
-     stream's to revise, awaiting promotion's stamp (rule 17). */
+     by a member's act (`carryOutcome`, `withdrawCarriedOutcome`). Six rows, the next free numbers of C-136 (this module's
+     existing family). (T46; R73; DEC-194, N913) Five read their translations from `CASE_AUTHORING_WORDS` by key, never a
+     copy; `BAD_CARRIED_OUTCOME` keeps its own until `words.json`'s sentence and R71 agree. The changed rows await
+     promotion's T47 stamp (T46 rule 5 (2)). */
   MACHINE_CANNOT_CARRY_OUTCOME: {
     check: 'C-136.3',
     where: at('carryOutcome', 'is-carry-machine'),
-    translation: 'An outcome is carried into a case\'s next edition by a member, and the credential that asked here is an '
-      + 'automated one. Sign in to carry it. Nothing was written.',
+    translation: words('refusal.MACHINE_CANNOT_CARRY_OUTCOME'),
   },
   CARRY_NOT_A_PARTICIPANT: {
     check: 'C-136.4',
     where: at('carryOutcome', 'is-carry-participant'),
-    translation: 'Only someone who has joined the project that makes this case can carry an outcome into its next edition. '
-      + 'Nothing was written.',
+    translation: words('refusal.CARRY_NOT_A_PARTICIPANT'),
   },
+  /* R73: kept in T46. `words.json`'s sentence ends "This lacks {field}." while R71 also refuses a field present and
+     malformed, and it drops the one-line, no-quote rule; returned to BOB, read by key once the two agree. */
   BAD_CARRIED_OUTCOME: {
     check: 'C-136.5',
     where: at('carryOutcome', 'is-carry-shaped'),
@@ -84,19 +118,17 @@ export const PUBLISH_ACT_CHECKS = Object.freeze({
   NO_SUCH_CARRIED_OUTCOME: {
     check: 'C-136.6',
     where: at('withdrawCarriedOutcome', 'is-carried-outcome-found'),
-    translation: 'No outcome carried into a case you can see answers to that id. Nothing was written.',
+    translation: words('refusal.NO_SUCH_CARRIED_OUTCOME'),
   },
   CARRIED_OUTCOME_SETTLED: {
     check: 'C-136.7',
     where: at('withdrawCarriedOutcome', 'is-carried-outcome-pending'),
-    translation: 'This outcome is no longer waiting for the next edition: a signed edition already carries it, or it was '
-      + 'withdrawn. A signed edition is corrected only by a later one. Nothing was written.',
+    translation: words('refusal.CARRIED_OUTCOME_SETTLED'),
   },
   CARRY_NO_REASON: {
     check: 'C-136.8',
     where: at('withdrawCarriedOutcome', 'is-carry-reasoned'),
-    translation: 'Withdrawing an outcome from a case\'s next edition is recorded with your own words on why, and none were '
-      + 'given, or they are longer than 2,000 characters. Write them. Nothing was written.',
+    translation: words('refusal.CARRY_NO_REASON'),
   },
 });
 

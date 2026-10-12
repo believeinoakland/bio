@@ -104,13 +104,13 @@ import { workbooksOf } from "../workbooks/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { caseDisclosuresOf, FLAGS_SAY, SELF_ATTESTED_SENTENCE, TENSIONS_DEPTH_STATED, peopleLines, memberTieLines }
   from "../case-disclosures/index.mjs";
-import { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS } from "./checks.mjs";
+import { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, fillWords } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
 import { searchedSection } from "./searched.mjs";
 import { fmSafe, statementSha, caseDocumentText, ackFrontmatterLines, ackBodyLines, withheldWriterStated,
          CEREMONY_HIGHLIGHT_SENTENCE } from "./document.mjs";
 
-export { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS } from "./checks.mjs";
+export { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_AUTHORING_WORDS } from "./checks.mjs";
 export { CASE_AUTHORING_SCHEMA, CASE_AUTHORING_TABLES } from "./schema.mjs";
 export { searchedSection, SEARCHED_LEVEL_OUTCOMES } from "./searched.mjs";
 export { caseDocumentText, statementSha, withheldWriterStated, fmSafe, ackFrontmatterLines, ackBodyLines,
@@ -248,11 +248,14 @@ const isDate = (v) => {
 
 /** R70 (T45; N880; Actions D13; v0.2 rule 8): the doors the open-requests source gives. */
 const OPEN_REQUESTS_DOORS = Object.freeze(["openRequestsOn"]);
-/** R34 (T45; N880): the sign step's fact lines, the UX design stream's words by key; until given, one plain sentence. */
-export const OPEN_REQUEST_KEYS = Object.freeze({ line: "signing.openrequest.line", noreply: "signing.openrequest.noreply",
-                                                 unread: "signing.openrequest.unread" });
+/** R34, R73 (T45; N880; T46: DEC-194, N913): the sign step's fact lines, read by key from `words.json`
+ *  (`CASE_AUTHORING_WORDS`): `line` for a row whose reply is laid out, `noreply` for one that states no reply is recorded.
+ *  `signing.openrequest.nowindow` and `.unread` are not taken in T46 (R73): a row with no window, and an unread source,
+ *  keep their plain sentences. */
+export const OPEN_REQUEST_KEYS = Object.freeze({ line: "signing.openrequest.line", noreply: "signing.openrequest.noreply" });
 const isCount = (n) => Number.isInteger(n) && n >= 0;
-/* R70: one row the source answers, as R70 shapes it, or null when it is not one. */
+/* R70: one row the source answers, as R70 shapes it, or null when it is not one. `replied` (J1, P8), when stated, is
+   whether a reply is recorded: a row stating none (`false`) while it answers a layout contradicts itself. */
 function openRequestRow(r) {
   if (!r || typeof r !== "object" || Array.isArray(r)) return null;
   const whom = typeof r.whom === "string" ? r.whom.trim() : "";
@@ -262,16 +265,39 @@ function openRequestRow(r) {
   const a = r.answers;
   if (a !== null && !(a && typeof a === "object" && !Array.isArray(a) && isCount(a.answered) && isCount(a.claims)
                       && a.answered <= a.claims)) return null;
+  const replied = r.replied === undefined || r.replied === null ? null : r.replied;
+  if (replied !== null && typeof replied !== "boolean") return null;
+  if (replied === false && a !== null) return null;
   return { whom, asked_at: asked, window_closes: r.window_closes === null ? null : r.window_closes.trim(),
-           answers: a === null ? null : { answered: a.answered, claims: a.claims } };
+           answers: a === null ? null : { answered: a.answered, claims: a.claims }, replied };
 }
-/** R34: one row's four facts in one plain sentence, until the UX design stream gives the words. */
+/* R34, R73 (P8, J1): what a row says of its reply. "No reply is recorded" only when the source states none
+   (`replied: false`): `answers` null alone also means a reply recorded whose claims are not laid out (R70), so a row that
+   does not say which reads a sentence true of both, and a recorded reply never reads as none. */
+function replySaid(r) {
+  if (r.answers) return `the reply answers ${r.answers.answered} of the ${r.answers.claims} claims the request laid out.`;
+  if (r.replied === false) return "no reply is recorded.";
+  if (r.replied === true) return "a reply is recorded, and its claims are not yet laid out.";
+  return "no reply laid out claim by claim is recorded.";
+}
+/** R34: one row's four facts in one plain sentence, where no word of `words.json` is taken for it (R73: a row with no
+ *  window, or a reply whose claims are not laid out). */
 export function openRequestSentence(r) {
   return `${r.whom} was asked for comment on ${r.asked_at}; `
     + (r.window_closes ? `the window for a reply closes on ${r.window_closes}; ` : "no date is stated for the window to close; ")
-    + (r.answers ? `the reply answers ${r.answers.answered} of the ${r.answers.claims} claims the request laid out.`
-                 : "no reply is recorded.");
+    + replySaid(r);
 }
+/** R34, R73: one row's fact line, `{key, says}`: `words.json`'s `line` or `noreply` with the row's facts filled, where the
+ *  row has a window and its reply is laid out or stated absent; else `key` null and R34's plain sentence. */
+export function openRequestLine(r) {
+  if (r.window_closes && (r.answers || r.replied === false)) {
+    const key = r.answers ? OPEN_REQUEST_KEYS.line : OPEN_REQUEST_KEYS.noreply;
+    return { key, says: fillWords(key, { whom: r.whom, asked_at: r.asked_at, window_closes: r.window_closes,
+                                         ...(r.answers ? { answered: r.answers.answered, claims: r.answers.claims } : {}) }) };
+  }
+  return { key: null, says: openRequestSentence(r) };
+}
+/** R34, R73: the step's one sentence when R70 reads `undetermined`, plain in T46 (`signing.openrequest.unread` returned). */
 export const OPEN_REQUESTS_UNREAD_SENTENCE = "Whether any request for comment on this case is still open could not be "
   + "read, so none is listed here.";
 
@@ -373,9 +399,8 @@ export class CaseAuthoring {
   #openRequestsStep(at, viewer) {
     if (!at) return { read: false, stated: "not reached: op=publish refuses before the case and its pins are known" };
     const r = this.openRequestsOn({ case: at.case, members: at.members, viewer });
-    if (!r.ok) return { read: false, undetermined: true, key: OPEN_REQUEST_KEYS.unread, says: OPEN_REQUESTS_UNREAD_SENTENCE };
-    return { read: true, lines: r.rows.map((row) => ({ ...row, key: row.answers ? OPEN_REQUEST_KEYS.line : OPEN_REQUEST_KEYS.noreply,
-                                                        says: openRequestSentence(row) })) };
+    if (!r.ok) return { read: false, undetermined: true, key: null, says: OPEN_REQUESTS_UNREAD_SENTENCE };
+    return { read: true, lines: r.rows.map((row) => ({ ...row, ...openRequestLine(row) })) };
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
