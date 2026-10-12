@@ -125,6 +125,13 @@ export const MODULE_MAPS = [
   ["strength", (c, u, b) => strengthOps(strengthOf(c), u, b)],
   ["reevaluation", (c, u, b) => reevaluationOps(reevaluationOf(c), u, b)],
   ["case-authoring", (c, u, b) => caseAuthoringOps(caseAuthoringOf(c), u, b)],
+  /* plane R39 (K2834): case-account exports no ops map, so its advocacy check and list are named here as the module's
+     whose methods answer them, as acquisition's pair is (plane R9) */
+  ["case-account", (c, u, b) => ({
+    advocacycheck: () => caseAccountOf(c).advocacyCheck({ project: u.searchParams.get("project") ?? b?.project ?? null,
+      sentences: b?.sentences ?? null, author: u.searchParams.get("author"), viewer: u.searchParams.get("viewer") }),
+    advocacychecks: () => caseAccountOf(c).advocacyChecksOf({ project: u.searchParams.get("project") ?? b?.project ?? null,
+      viewer: u.searchParams.get("viewer") }) })],
   ["ratification", (c, u, b) => ratificationOps(ratificationOf(c), u, b)],
   ["case-import", (c, u, b) => caseImportOps(caseImportOf(c), u, b)],
   ["corpus-export", (c, u) => corpusExportOps(corpusExportOf(c), (k) => u.searchParams.get(k))],

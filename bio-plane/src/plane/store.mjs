@@ -582,7 +582,17 @@ export class Store extends DurableObject {
   async ask(args) { return askOnObject(this.ctx, this.env, args || {}); }
   /* R19 (N686; K2038; control-plane R57): a draft's account and grant on the `bio` object, reached over the object's
      RPC by control-plane's door (no route: R5). */
-  async draft(args) { return draftOnObject(this.ctx, this.env, args || {}); }
+  async draft(args) { return draftOnObject(this.ctx, this.env, args || {}, { read: (op, params) => this.#read(op, params) }); }
+
+  /* R41 (K2824): one read the asking member may make, answered by this object's route map exactly as the door would
+     answer it, her viewer stamp in `params.viewer`; a synchronous read's answer, or null for an op the map lacks. It
+     reaches no write: R41 asks only `plan`, `action`, `basis` and `reading`. */
+  #read(op, params) {
+    const u = new URL(`http://do/${op}`);
+    for (const [k, v] of Object.entries(params || {})) if (v !== null && v !== undefined) u.searchParams.set(k, String(v));
+    const map = this.routes(u, null);
+    return Object.hasOwn(map, op) ? map[op]() : null;
+  }
 
   /* R4: scheduler's. */
   async alarm() { await schedulerOf(this.ctx, this.env).alarm(); }
@@ -679,6 +689,14 @@ export class Store extends DurableObject {
       ...strengthOps(strengthOf(ctx), url, body),
       ...reevaluationOps(reevaluationOf(ctx), url, body),
       ...caseAuthoringOps(caseAuthoringOf(ctx), url, body),
+      /* R39 (T45; K2834, K2886 (3)): case-account's advocacy check (its R13) and its list, over the plane's one instance
+         (R38). case-account exports no ops map, so the pair is named here as the module's whose methods answer them, as
+         acquisition's co-archive pair is (K2042): the plane adds no behaviour, only the entry (R9); `author` and `viewer`
+         are the door's stamps, read from the query, so a caller's own copy in the body never wins. */
+      advocacycheck: () => caseAccountOf(ctx).advocacyCheck({ project: url.searchParams.get("project") ?? body?.project ?? null,
+        sentences: body?.sentences ?? null, author: url.searchParams.get("author"), viewer: url.searchParams.get("viewer") }),
+      advocacychecks: () => caseAccountOf(ctx).advocacyChecksOf({ project: url.searchParams.get("project") ?? body?.project ?? null,
+        viewer: url.searchParams.get("viewer") }),
       ...ratificationOps(ratificationOf(ctx), url, body),
       /* R17 (N520, N522): case-import's ten member ops (`importwatch` and `importunwatch` the watch's, R20);
          case-checker's public reads `casechecker` and `casefilespec` are public-read's (its R18). */
