@@ -27,3 +27,7 @@
 - The plane bundle staled (rule 5 (4)).
 
 Size (session_01QUJPgnjkqLzkfXN1KCUCmG): test runs 10, module lines 1195
+
+## J1 · COMPLETE
+
+T46-5 complete (ec58012bd2; record 8ee689850b). R25: PROJECT_SCOPE_WORDS (checks.mjs, exported) holds words.json's refusal.<CODE> for the eight C-147 codes verbatim; each row's translation reads it by key, as membership's HANDLE_WORDS. Six rows change (C-147.3-.8); codes, numbers, wheres unmoved. No other row of mine is keyed in words.json. P8: header id range and width, a test comment's op count. New t46-words.test.mjs names R25 (rows pinned, words verbatim by key, all eight reached through the acts with landing controls); mutation-checked. project-roster 40/40; checks format, architecture, coverage (25/25), ownership (5 files) 0 failures. Users (55 files, 470 tests): 5 red, the same 5 red on the tranche without me: membership module-order x3 and promotion's order test (rule 5(6)); row-census (5(2)), which my change adds C-147.3-.8 to for T46-6's stamp. Staled (§14, not mine): the plane bundle (rule 5(4)). Deferred: none. Record: build/jobs/T46/project-roster.md, Completion.
