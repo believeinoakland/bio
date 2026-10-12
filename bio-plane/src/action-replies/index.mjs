@@ -5,6 +5,8 @@
  * claim, with any proposed layout stored apart (R1); a member links a matter or project to the response it arose from,
  * read both ways (R2); and at signing each open request for comment on a case is answered once as a line of fact
  * through `case-authoring`'s seam (R3). A member does every act; nothing here rates a reply or counts a chain (R4).
+ * T46: a proposal is labelled through `record-grammar`'s `bearing` subject (R5); `aroseFromLink`'s refusals and sight as
+ * R6 states them; six rows read their words by key (R7, `./checks.mjs`); each open-request row answers `replied` (R8).
  *
  * REACHED as `actionRepliesOf(host, deps)` (K61): one instance per host, created on the first call. At creation it
  * creates its tables and declares them to record-core's purge (R4), and registers its open-requests source once with
@@ -25,11 +27,11 @@ import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { actionsOf } from "../actions/index.mjs";
 import { caseAuthoringOf } from "../case-authoring/index.mjs";
 import { bearingFindings, BEARINGS, counterpartyName } from "../action-grammar/index.mjs";
-import { isMachineIdentity, lawProposalState, BUNDLE_ID_RE, idPattern } from "../record-grammar/index.mjs";
+import { isMachineIdentity, proposalLabel, BUNDLE_ID_RE, idPattern } from "../record-grammar/index.mjs";
 import { ACTION_REPLY_CHECKS } from "./checks.mjs";
 import { ACTION_REPLIES_TABLES, migrateActionReplies } from "./schema.mjs";
 
-export { ACTION_REPLY_CHECKS } from "./checks.mjs";
+export { ACTION_REPLY_CHECKS, ACTION_REPLY_WORDS } from "./checks.mjs";
 export { ACTION_REPLIES_SCHEMA, ACTION_REPLIES_TABLES } from "./schema.mjs";
 
 /** R1: the most standing proposals one entry's read lists (`actions` R28's bound). */
@@ -70,19 +72,10 @@ const isProjectId = (x) => typeof x === "string" && BUNDLE_ID_RE.test(x) && x.st
 const PLAN_ID_RE = new RegExp(`^${idPattern("PLN").source.slice(1, -1)}(-[a-z0-9]+)*$`);
 const isMatter = (x) => typeof x === "string" && x.trim().length > 0 && x.length <= MATTER_MAX && !/["\\\r\n]/.test(x);
 
-/* R1: the label of a proposed layout. Its state is record-grammar's one rule (`lawProposalState`, which
-   `proposalLabel` applies; J1 (c)); the sentence says in each state what the proposal is not. */
-const PROPOSAL_SAYS = {
-  machine_proposed: "a machine credential proposed this layout of the reply. That is machine work, labelled as machine "
-    + "work: it sets bearings beside the reply for members to weigh and never lays the reply out; nothing becomes the "
-    + "layout until a member states it themselves",
-  member_proposed: "a member proposed this layout of the reply. It is a proposal and not the layout: only a member's own "
-    + "layout states that, and the record holds who made the proposal",
-  unstated: "the record does not say who proposed this layout of the reply",
-};
+/* R5 (T46; N912; record-grammar R60): the label of a proposed layout is `record-grammar`'s, its `bearing` subject: the
+   state from its one rule and the subject's sentence for it, never sentences of this module's own. */
 export function bearingProposalLabel(who) {
-  const state = lawProposalState(who);
-  return { by: who ?? null, state, machine_work: state === "machine_proposed", says: PROPOSAL_SAYS[state] };
+  return proposalLabel(who, "bearing");
 }
 
 export class ActionReplies {
@@ -398,7 +391,8 @@ export class ActionReplies {
       if (Array.isArray(claims) && claims.length)
         answers = { answered: claims.filter((c) => c && c.bearing !== NOT_ADDRESSED).length, claims: claims.length };
     }
-    return { whom, asked_at: asked, window_closes: win ? dayOf(win.date) : null, answers };
+    /* R8 (K2964): whether a reply is recorded at all, so `answers: null` is never read as no reply when one is held. */
+    return { whom, asked_at: asked, window_closes: win ? dayOf(win.date) : null, answers, replied: received.length > 0 };
   }
 }
 
