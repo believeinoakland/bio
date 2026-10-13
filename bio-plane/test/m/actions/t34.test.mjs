@@ -1,5 +1,5 @@
-/* actions' T34 entry at its interface: R68 (N611, K1681) `place()` and `zoneOf`, R12's zone read given to other
-   modules; and T34-87 (DEC-149), the member-facing details that called the group's Civicsmith "this instance". (Its R69
+/* actions' T34 entry at its interface: R68 (N611, K1681; re-stated T47, N960) `place()` and `zoneOf`, the read for a
+   module with no office (an action's clock is read in R100's `actionZone`, `t47.test.mjs`); and T34-87 (DEC-149), the member-facing details that called the group's Civicsmith "this instance". (Its R69
    tests moved to `action-holds` with the reader, T45; K2781 (1).) */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -15,7 +15,7 @@ const state = (w) => JSON.stringify(["settings", "manifest", "bundles"]
 
 /* ---------------------------------------------------------------- R68 */
 
-test("R68 place() answers the active profiles' combined view as they stand at the call, or null when none can be read; it writes nothing and never throws", () => {
+test("R68 place() is the read for a module with no office: the active profiles' combined view as they stand at the call, or null when none can be read; it writes nothing and never throws", () => {
   const w = world();
   assert.deepEqual(w.a.place(), view(["test-port-ellery"]));
   /* at the call (K1649): a change of the active profiles is read at the next call, never cached */
@@ -43,7 +43,7 @@ test("R68 place() answers the active profiles' combined view as they stand at th
   assert.equal(state(x), before);
 });
 
-test("R68 zoneOf answers the IANA zone a place states (its time_zone's value; a string read as the zone itself), or null when it states none; it never throws", () => {
+test("R68 zoneOf answers the IANA zone a place states (its time_zone's value; a string read as the zone itself), the group's zone for place(), or null when none is held or the active profiles disagree; it never throws", () => {
   assert.equal(typeof actions.zoneOf, "function", "a module-level function");
   assert.equal(actions.zoneOf(view(["test-port-ellery"])), "America/Halifax");
   assert.equal(actions.zoneOf(view(["oakland-alameda"])), "America/Los_Angeles");
@@ -61,7 +61,7 @@ test("R68 zoneOf answers the IANA zone a place states (its time_zone's value; a 
   assert.equal(actions.zoneOf(hostile), null);
 });
 
-test("R68 R12 read through place() and zoneOf, a local day is the office's, never the UTC day; with no profile held every local day is undetermined", () => {
+test("R68 R12 R100 with one active profile R100's zone is zoneOf(place()), a local day never the UTC day; an action's clock is never read in place() alone, and with no zone held for it every local day is undetermined", () => {
   const at = Date.parse("2026-09-29T02:00:00Z");          /* 23:00 on the 28th in Halifax, the 29th in UTC */
   const w = world();
   assert.equal(actions.localToday(at, actions.zoneOf(w.a.place())), "2026-09-28");
@@ -69,10 +69,13 @@ test("R68 R12 read through place() and zoneOf, a local day is the office's, neve
     "    basis: s", "    status: pending"]);
   assert.equal(actions.actionFacts(md, at, w.a.place()).clock_overdue, false, "still the 28th where the office is");
   assert.equal(actions.actionFacts(md, at, actions.zoneOf(w.a.place())).clock_overdue, false, "the zone alone reads the same");
+  assert.equal(actions.actionZone({ counterparty: { state: "named", role: "Town Clerk", body: "Town of Port Ellery" } }, w.a.place()),
+    actions.zoneOf(w.a.place()), "one profile: R100's zone is the group's");
   /* the active profiles changed: the next read follows them */
   w.record.setSetting("jurisdiction_profiles", ["oakland-alameda"], V("admin"));
   assert.equal(actions.localToday(at, actions.zoneOf(w.a.place())), "2026-09-28");
-  /* none held: undetermined, never the UTC day */
+  /* none held for this action (no profile; or two whose zones differ, and none gives its office): undetermined, never
+     the UTC day */
   for (const nz of [world({ profiles: null }), world({ profiles: ["test-port-ellery", "oakland-alameda"] })]) {
     const zone = actions.zoneOf(nz.a.place());
     assert.equal(zone, null);

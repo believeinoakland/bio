@@ -14,8 +14,8 @@
  * R25; retrieval R53, R56), its "what we did" and trigger sources with events and duties (R66, R67), its none-exists
  * reader with intent (R71), and its own-act reader and own-sending check with consequences and standards (R97). The
  * pressure marks and litigation holds, their reads and their registrations with doorbell and ratification, are
- * `action-holds`' since T45 (R48, R52, R54–R60, R69; K2781 (1)). `place()` and `zoneOf` give R12's zone to other modules
- * (R68: retrieval, queue-producers).
+ * `action-holds`' since T45 (R48, R52, R54–R60, R69; K2781 (1)). `place()` and `zoneOf` give the group's zone to modules
+ * with no office (R68); `actionZone` is the one zone an action's clock is read in (R100; `action-clocks` reads it).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `transact`, `acquireLease`, `releaseLease`, `head`, `readFile`, `livePaths`,
  *                                   `declarePurge`, `registerAuditCheck`, `getSetting`, `bundleInfo`; `viewerPredicate`,
@@ -57,7 +57,7 @@ import { dutiesOf } from "../duties/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
 import { intentOf } from "../intent/index.mjs";
 import { localDay, overdueOn, isCalendarDate, bounds } from "../civil-time/index.mjs";
-import { combine } from "../../../jurisdictions/index.mjs";
+import { combine, get as profileOf } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity,
          createSha256, BUNDLE_ID_RE, idPattern } from "../record-grammar/index.mjs";
 import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
@@ -233,15 +233,46 @@ export function instantOf(nowMs) {
   const n = Number(nowMs);
   return new Date(Math.floor((Number.isFinite(n) ? n : 0) / 1000) * 1000).toISOString().replace(".000Z", "Z");
 }
-/** R12, R68 (N611, K1681): the IANA zone a place states: a view's (`place()`'s) `time_zone` value, or null when it
- *  states none (none held, or the active profiles disagree, so it is withheld). A string is read as the zone itself.
- *  The one spelling of R12's zone read, provided to `retrieval` and `queue-producers`. Writes nothing; never throws. */
+/** R68 (N611, K1681; T47, N960): the IANA zone a place states: a view's (`place()`'s) `time_zone` value, or null when
+ *  it states none (none held, or the active profiles disagree, so it is withheld). A string is read as the zone itself.
+ *  The read for a module with no office; an action's clock is read in R100's `actionZone`. Writes nothing; never throws. */
 export function zoneOf(place) {
   try {
     if (typeof place === "string") return place.trim() || null;
     const tz = place && typeof place === "object" ? place.time_zone : null;
     const v = tz && typeof tz === "object" ? tz.value : tz;
     return typeof v === "string" && v.trim() ? v.trim() : null;
+  } catch { return null; }
+}
+/** R100 (T47; N960; K1444 (iii); K3027 doubt 12): the IANA zone an action's clock is read in, the one spelling of it
+ *  (`action-clocks` reads it, its R21): for the action whose document is `fm`, the `time_zone` of the active profile that
+ *  gives its addressed office (the counterparty's role and body in `view`'s `counterparties`, R9), or, for an action whose
+ *  deadlines run at its kind's venue, the profile that gives that kind (`view`'s `action_kinds`); else `view`'s own
+ *  `time_zone` (`zoneOf`); null when none is held, and every local day read through it is then undetermined, never the
+ *  UTC day. `view` is the view R10 reads. Writes nothing; never throws. */
+export function actionZone(fm, view) {
+  try {
+    if (!view || typeof view !== "object") return null;
+    const cp = fm && typeof fm === "object" && fm.counterparty && typeof fm.counterparty === "object" ? fm.counterparty : null;
+    let pid = null;
+    if (cp && cp.state === "named" && (cp.kind === undefined || cp.kind === null || cp.kind === "office")
+        && typeof cp.role === "string" && cp.role.trim()) {
+      const role = cp.role.trim(), body = typeof cp.body === "string" ? cp.body.trim() : null;
+      const c = (Array.isArray(view.counterparties) ? view.counterparties : [])
+        .find((x) => x && x.role === role && (body === null || x.body === body));
+      pid = c && typeof c.profile === "string" ? c.profile : null;
+    } else {
+      const k = (Array.isArray(view.action_kinds) ? view.action_kinds : [])
+        .find((x) => x && x.kind === (fm && typeof fm === "object" ? fm.action_kind : null) && x.venue);
+      pid = k && typeof k.profile === "string" ? k.profile : null;
+    }
+    if (pid) {
+      let p = null;
+      try { p = profileOf(pid); } catch { p = null; }
+      const z = zoneOf(p);
+      if (z) return z;
+    }
+    return zoneOf(view);
   } catch { return null; }
 }
 /** R12, R25 (K1444 (iii)): the local day of `nowMs` in `zone`, or null with no zone or an unreadable one. */
@@ -271,12 +302,12 @@ function closeOf(fm, day, place) {
 /** R12 (K1444 (iii)): whether the next pending deadline has passed at `nowMs`, on the local day of the office's zone,
  *  never the UTC day: a deadline is met by anything on its day, and an entry whose basis says "close of business" is
  *  overdue from the close of the office's hours that day (`civil-time.overdueOn`, side `body`). `place` is the
- *  jurisdiction view (its `time_zone` and `counterparties`) or a zone. True, false, or null when no zone is held or
- *  the comparison is undetermined. */
+ *  view R10 reads (its `counterparties`, `action_kinds` and `time_zone`), read in R100's `actionZone`, or a zone. True,
+ *  false, or null when no zone is held or the comparison is undetermined. */
 export function actionOverdue(fm, nowMs, place = null) {
   const next = actionClockNext(fm);
   if (!next) return false;
-  const zone = zoneOf(place);
+  const zone = typeof place === "string" ? zoneOf(place) : actionZone(fm, place);
   if (!zone) return null;
   const at = instantOf(nowMs);
   const entries = (Array.isArray(fm.clock) ? fm.clock : [])
@@ -319,7 +350,8 @@ function timedEntryPassed(e, zone, nowMs) {
 }
 
 /** R12: the six facts retrieval projects for an action, pure; all null for another type or an unparsable document.
- *  `place` is the jurisdiction view (or a zone) the caller passes; without a zone `clock_overdue` is null. */
+ *  `place` is the view R10 reads (or a zone) the caller passes; `clock_overdue` is read in R100's zone, and without one
+ *  it is null. */
 export function actionFacts(documentText, nowMs, place = null) {
   const none = { kind: null, risk_tier: null, counterparty_state: null, resolution: null, clock_next: null, clock_overdue: null };
   let fm = null;
@@ -439,9 +471,9 @@ export class Actions {
     const c = combine(ids);
     return c && c.ok ? c.view : null;
   }
-  /** R12, R68 (K1444 (iii); N611, K1681): the active profiles' combined view as they stand at the call (K1649), the
-   *  place a clock is read in (its `time_zone`, its offices' hours), or null when none can be read. Provided to
-   *  `retrieval` and `queue-producers` with `zoneOf`, so none spells its own. Writes nothing; never throws. */
+  /** R68 (K1444 (iii); N611, K1681; T47, N960): the active profiles' combined view as they stand at the call (K1649),
+   *  the read for a module with no office (its `time_zone` the group's zone, `zoneOf(place())`), or null when none can
+   *  be read. An action's clock is never read in it: it is read in R100's `actionZone`. Writes nothing; never throws. */
   place() {
     try { return this.#view(); } catch { return null; }
   }
@@ -455,6 +487,10 @@ export class Actions {
     try { v = lf && typeof lf.governingView === "function" ? lf.governingView() : null; } catch { v = null; }
     if (v && v.ok === true && v.view && typeof v.view === "object") return v.view;
     return this.#view();
+  }
+  /** R10, R100: the view this module reads (`#governing`), for R100's `actionZone`; null with none. Never throws. */
+  governingView() {
+    try { return this.#governing(); } catch { return null; }
   }
   /* R81 (T45): the response statuses the governing view holds for `kind` (jurisdictions R58, R77: an entry with no
      `applies_to` applies to every kind), as tokens; null when the view holds none. */
@@ -765,8 +801,8 @@ export class Actions {
     /* END DEC-49 REGION is-promote-clock */
     /* DEC-49 REGION is-promote-clock-mechanical */
     if (!creation && (!who || isMachineIdentity(who) || writer === "mechanical")) {
-      /* R33 (K1444 (iii)): "passed" on the office's local day; with no zone held no entry has passed. */
-      const nowMs = this.#nowMs(null), zone = zoneOf(this.place());
+      /* R33, R98, R100 (K1444 (iii)): "passed" on the local day of the action's zone; with none held no entry has passed. */
+      const nowMs = this.#nowMs(null), zone = actionZone(heldFm || nextFm, this.governingView());
       const today = localToday(nowMs, zone) ?? "0000-00-00";
       const heldClock = heldFm && Array.isArray(heldFm.clock) ? heldFm.clock : [];
       const nextClock = Array.isArray(clock) ? clock : [];
@@ -1400,8 +1436,9 @@ export class Actions {
     const findings = [];
     respondsToEdgeFindings(fm, findings);
     if (fm.object_type === "action")
-      /* R51 (K1444 (iii)): the zone of the action's office or venue, as R12 reads it; none held, none handed. */
-      checkActionExtension({ fm, nowMs: this.#nowMs(null), actionKinds: this.kinds(), zone: zoneOf(this.place()) }, findings);
+      /* R51, R100 (K1444 (iii)): the zone of the action's office or venue, as R12 reads it; none held, none handed. */
+      checkActionExtension({ fm, nowMs: this.#nowMs(null), actionKinds: this.kinds(), zone: actionZone(fm, this.governingView()) },
+        findings);
     return findings;
   }
 
@@ -2691,7 +2728,8 @@ export class Actions {
     try { fm = row && row.fm_json ? (JSON.parse(row.fm_json) || {}) : {}; } catch { fm = {}; }
     if ((!fm || !Object.keys(fm).length) && row && row.bundle_id) fm = this.#heldFm(row.bundle_id) || {};
     const now = this.#nowMs(nowMs);
-    const place = this.place();
+    /* R25, R100: the clock and the lifecycle day are read in the action's zone. */
+    const view = this.governingView();
     const ledger = this.#rows(
       `SELECT ord, direction, at, medium, party, artifact_bundle_id, artifact_sha, account, author, recorded_at
          FROM correspondence WHERE bundle_id=? ORDER BY ord`, row.bundle_id);
@@ -2709,7 +2747,7 @@ export class Actions {
       counterparty_state: typeof cp.state === "string" ? cp.state : (row.action_counterparty_state ?? null),
       resolution: typeof fm.resolution === "string" ? fm.resolution : (row.action_resolution ?? null),
       clock_next: actionClockNext(fm),
-      clock_overdue: actionOverdue(fm, now, place),
+      clock_overdue: actionOverdue(fm, now, view),
       clock_overdue_cached: row.action_clock_overdue === null || row.action_clock_overdue === undefined
         ? null : !!row.action_clock_overdue,
       as_of: new Date(now).toISOString(),
@@ -2722,7 +2760,7 @@ export class Actions {
       seeks: seeksOf(fm),
       seeks_proposals: this.#seeksProposalsFor(row.bundle_id),
       records_law: fm.action_kind === "records_request" ? recordsLawOf(fm, this.#lawAuthor(row.bundle_id, fm)) : null,
-      lifecycle: requestLifecycleOf(fm, localToday(now, zoneOf(place)) ?? ""),
+      lifecycle: requestLifecycleOf(fm, localToday(now, actionZone(fm, view)) ?? ""),
       /* R26, DEC-14: the ACTION'S OWN OUTCOME, never the breach's consequence (which `consequences` holds). */
       own_outcome: consequenceState(fm),
       responses: this.#rows(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='responds_to' ORDER BY bundle_id`,
@@ -3392,7 +3430,7 @@ export class Actions {
     const office = counterpartyOffice(cp);
     if (!office || office.legacy)
       return { ok: true, items: [], overdue_replies: 0, truncated: false, ...T45_SENTENCES.openitems_not_office };
-    const now = this.#nowMs(null), place = this.place();
+    const now = this.#nowMs(null), view = this.governingView();
     const items = [];
     let truncated = false;
     for (const { id, fm } of this.#visibleActions(viewer)) {
@@ -3403,7 +3441,7 @@ export class Actions {
       if (items.length === OPEN_ITEMS_MAX) { truncated = true; break; }
       const sent = (Array.isArray(fm.correspondence) ? fm.correspondence : []).find((e) => e && e.direction === "sent");
       items.push({ action: id, kind: fm.action_kind ?? null, state, first_sent: sent ? String(sent.at).slice(0, 10) : null,
-                   clock_overdue: actionOverdue(fm, now, place) });
+                   clock_overdue: actionOverdue(fm, now, view) });
     }
     return { ok: true, office: { role: office.role, body: office.body, entity_id: office.entity_id ?? null }, items,
              overdue_replies: items.filter((x) => x.clock_overdue === true).length, truncated, limit: OPEN_ITEMS_MAX,
@@ -3616,7 +3654,7 @@ export function actionsOf(host, deps) {
     record.registerAuditCheck("actions", (image) => a.audit(image));
     const retrieval = d.retrieval === null ? null : a.retrieval;
     if (retrieval) {
-      retrieval.registerActionFacts("actions", (md, nowMs) => actionFacts(md, nowMs, a.place()));
+      retrieval.registerActionFacts("actions", (md, nowMs) => actionFacts(md, nowMs, a.governingView()));
       retrieval.registerProjectionDecoration("actions", (row, { nowMs, viewer } = {}) =>
         (normalizeType(row && row.object_type) === "action" ? { action: a.derived(row, nowMs, viewer ?? null) } : {}));
     }
