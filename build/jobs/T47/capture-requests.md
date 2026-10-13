@@ -44,3 +44,7 @@ R56, my readings where its text is silent (I am building on them; answer only wh
 - `run.mjs`: architecture 0 failures; the 43 coverage reds are other modules', none of them mine.
 
 Size (session_01NZ5W5xidnV9DeKDD7m38zu): test runs 22, module lines 2643
+
+## J2 · COMPLETE
+
+T47-21 applied: R56, a member's own request with no run ("Ask for this later"), with all nine J1 readings (K3089). The table is rebuilt once with run, target and principal_claude nullable. K3065's plane flake: its cause was the scheduler's alarm drain, armed at once by R44, racing op=capturerequestdrain (busy, or the row already taken); the plane tests now assert on the row's end state, bounded, and nothing was skipped. capture-requests 122/122 (t47.test.mjs 13 new; 1 new plane test); users scheduler 129, link-sweep 29, intent 82, investigation 32, question-explorer 32 (after merging tranche/T47, which carried its R3 fix), agent-worker 16, all green. format, architecture, coverage (56/56) and ownership 0 failures; run.mjs architecture 0, with no coverage red of mine. Nothing deferred. Record: build/jobs/T47/capture-requests.md on job/T47/capture-requests.
