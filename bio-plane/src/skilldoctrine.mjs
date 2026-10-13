@@ -753,6 +753,10 @@ export const PERMITTED_AUTO_COMPOSITION = {
  * `SEQUENCING_ALSO_NAMED_IN` are imported above and re-exported unchanged
  * (R18), and the layer below carries them: an ADDRESS for the gate and a
  * reason for the order, and no flag, predicate or decision of this module's.
+ * The order has four members since `plan` joined it last (`run-rules` R14), and
+ * `plan` is deployed by its own flag since T46, so the first mode and `plan` are
+ * the deployed modes today; this module states the order and deploys none (T47;
+ * N949: wording only).
  * The gate itself is the first row (`gate-mode`) of the control-flow table
  * `agent-worker` runs, held in `agent-harness`' files since the agent-worker
  * split (N586, K1615); `run-rules`' own tests dereference `GATE_ADDRESS`, and
@@ -1114,7 +1118,8 @@ export function filingDraftingLayer(catalog) {
  * diff, and the signed statement is the group's, adopted by a member, the record
  * keeping that it began as a machine draft. Each clause is a sentence of §5A
  * found by R21's normaliser; nothing here rewords it. The layer holds no gate:
- * the draft is stored apart and labelled machine work (`case-authoring` R39), and
+ * the draft is stored apart and labelled machine work (`case-inputs` R6, was
+ * `case-authoring` R39; K3038), and
  * becomes a statement only through a member's signing act, which refuses a
  * machine (its R38; `ratification` R2).
  * ========================================================================= */
@@ -1134,12 +1139,12 @@ export const EDITION_STATEMENT_CLAUSES = [
 
 /* THE ACTS THE LAYER NAMES, EACH BY THE REQUIREMENT THAT DEFINES IT (R31), named
    once here as a SELECTOR over the published catalogue, as R28's are:
-   `case-authoring` and `ratification` are later in the order (P4). `proposes` is
+   `case-inputs`, `case-authoring` and `ratification` are later in the order (P4). `proposes` is
    the one act a run may use; `leaves_to_a_member` the acts that make a statement
    the group's (§5A). */
 export const EDITION_STATEMENT_ACTS = Object.freeze({
   proposes: Object.freeze([
-    Object.freeze({ id: "whatchangedpropose", defined_by: "case-authoring R39" }),
+    Object.freeze({ id: "whatchangedpropose", defined_by: "case-inputs R6" }),
   ]),
   leaves_to_a_member: Object.freeze([
     Object.freeze({ id: "publish",    defined_by: "case-authoring R38" }),
@@ -2383,18 +2388,19 @@ export function judgementLayers() {
        ADDRESS of the thing that actually refuses, so a run reading this learns
        where the gate is rather than being told what it says. */
     deployment_sequence: {
-      load_when: "the run is launched, or a member asks which mode is deployed and why",
+      load_when: "the run is launched, or a member asks which modes are deployed and why",
       sourcing: "authored",
       body: {
         sequence: DEPLOYMENT_SEQUENCE,
         gate: GATE_ADDRESS,
         ruled_in: SEQUENCING_SOURCE,
         restated_in: SEQUENCING_ALSO_NAMED_IN,
-        note: "this layer is INSTRUCTION and it holds no flag of its own. The mode that is deployed is "
-          + "read from FL-3's landed table at the address above, which is CODE and is the first row "
-          + "every run takes, and by the plane's open from the run's rules, whose record this layer "
+        note: "this layer is INSTRUCTION and it holds no flag of its own, and this module deploys no mode. "
+          + "Which modes are deployed (the order's first, and any mode deployed apart from the chain by its "
+          + "own flag) is read from FL-3's landed table at the address above, which is CODE and is the first "
+          + "row every run takes, and by the plane's open from the run's rules, whose record this layer "
           + "carries unchanged; this text neither restates those flags nor could change them. What it "
-          + "adds is the REASON for the order and the enabling condition for the second mode, "
+          + "adds is the REASON for the order and who owns each later mode's enabling condition, "
           + "both of which are facts a run should be able to state and neither of which any code "
           + "can be asked to hold.",
       },
