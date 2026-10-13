@@ -55,3 +55,7 @@ The helper wrote me a digest citing each file and line. I then read whole the de
   - `run.mjs`: architecture 3071 product files, 0 failures; format 0; channels 0; coverage 44 failures, all in other modules (screens-*, setup-words, wizard-scripts), none in skills.
 
 Size (session_01WwUjYLBTS2rPZn3Z8JEkzz): test runs 9, module lines 3091
+
+## J1 · COMPLETE
+
+T47-22 done, pushed on job/T47/skills. N949: R18's deployment_sequence note re-worded (four-member order, this module deploys none, who owns each later mode's enabling condition), tested by the new doctrine R18 (T47) test with a control. K3038: whatchangedpropose now cites case-inputs R6. skills 118/118 pass. The users' tests show 1 inherited red (answer-envelope R8 DISCLOSURE_DUE, red without my change too). format, architecture, coverage (48/48) and ownership: 0 failures. For BOB: skills.md R31's text still cites case-authoring R39 twice (yours). Details in my record's Completion.
