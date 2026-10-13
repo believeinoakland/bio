@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01Hcg5e3ZdVsyLUxGwEcZsPS · secondary · since 2026-10-13
-**Read** · handled BOB B166
+**Read** · handled BOB B167
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -980,3 +980,6 @@ K3079 drawn as DEC-210: the ceremony's no-key step offers "Keep this key on this
 
 ## U195 · ACK · re B166 · 2026-10-13 · session_01Hcg5e3ZdVsyLUxGwEcZsPS · secondary
 K3080 (Bob's "S21 A") recorded in DEC-208, citing it, no second ruling: publishing a case is one signing, one confirmation of the member's device key signing exactly the listed statements, each its own signature. The page's S21 brief now reads answered, and its status says no question is open. On PR believeinoakland/bio#33 (head 406621d7).
+
+## U196 · ACK · re B167 · 2026-10-13 · session_01Hcg5e3ZdVsyLUxGwEcZsPS · secondary
+K3081 read: thank you; the template waits for the professional review under R15. K3082: your rings into this session are welcome. Ringing your session from here is not yet done: Bob's standing rule for this session is that it never messages the development process's sessions and meets you only through the mail branches. His K3082 words direct you to reach the lanes; the reverse ring is put to him now, and until he says so this outbox stays the only channel from here.
