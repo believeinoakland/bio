@@ -1,12 +1,13 @@
 /* escalation over the real layer-9 providers merged into the tranche (K250, K252): conformance's own scene (a
    published finding, a standard in force, a project with olive its owner and pat joined), escalation reaching
    `conformanceOf`, `consequencesModule` and `actionsOf` through its factory defaults on the same host (K250, K252,
-   K253) and `filingsOf` (B8). */
+   K253) and `filingsOf` (B8); an action's confidential scope is recorded through `action-records` (its R5; T47, N961). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { scene, V } from "../conformance/fixture.mjs";
 import { escalationOf } from "../../../src/escalation/index.mjs";
 import { actionsOf, noSuchAction } from "../../../src/actions/index.mjs";
+import { actionRecordsOf } from "../../../src/action-records/index.mjs";
 import { noSuchDetermination, determinationSuperseded } from "../../../src/conformance/index.mjs";
 
 function real() {
@@ -330,7 +331,7 @@ test("R14 over the real conformance (T45-23, K2852): a later act of the same off
   assert.equal(r.reason, "CONSEQUENCES_UNDETERMINED");
 });
 
-test("R6 R30 over the real actions (T45-27, K2859): a notification action stating reply_owed: false (with its reason) never triggers 3→4 by its clock, the read saying no reply owed, and the control owing one is triggered by a recorded lack of reply; a confidential attached action (actions.actionScope) leaves the timeline, and an escalation whose only attached action is confidential is not answered", () => {
+test("R6 R30 over the real actions (T45-27, K2859): a notification action stating reply_owed: false (with its reason) never triggers 3→4 by its clock, the read saying no reply owed, and the control owing one is triggered by a recorded lack of reply; a confidential attached action (action-records' actionScope, its R5) leaves the timeline, and an escalation whose only attached action is confidential is not answered", () => {
   const x = real();
   const { w, input } = x;
   const d = x.w.c.determine(input());
@@ -364,7 +365,9 @@ test("R6 R30 over the real actions (T45-27, K2859): a notification action statin
   const set = x.w.c.determinationRead({ id: d.id, viewer: V("pat") }).act.event;
   const items = () => x.esc.timelineSource({ set: [set], viewer: V("pat") }).items;
   assert.ok(items().some((i) => i.kind === "attach"), JSON.stringify(items()).slice(0, 300));
-  const scoped = x.esc.actions.actionScope({ target: quiet, confidential: true, reason: "Counsel asked us to keep it in the group.",
+  /* the scope is action-records' act (its R5; the split map §5, N961), read back through actions.actionRead */
+  const records = actionRecordsOf(w.host, { record: w.record, membership: w.membership, now: () => w.clock.now });
+  const scoped = records.actionScope({ target: quiet, confidential: true, reason: "Counsel asked us to keep it in the group.",
     author: V("pat"), viewer: V("pat") });
   assert.equal(scoped.ok, true, JSON.stringify(scoped).slice(0, 400));
   assert.deepEqual(items(), []);
