@@ -19,3 +19,14 @@
 **Ran.** `node --test bio-plane/test/m/plan-work/`: tests 50, pass 50, fail 0. Users of my services (action-plans, following, action-producers, plane, run-rules, queue, skills action, actions t45, membership module-order, affordances, op-declarations, answer-envelope, op-grades, queue-producers): 75 failing tests, the identical set on the job branch before my change (compared by name); none new. Checks from the process repository: format 0 failures; architecture `plan-work` 0 failures; coverage `plan-work` 18 of 18 live ids named, 0 failures; ownership 5 files, 0 failures; `checks/run.mjs`: format 0, architecture 0 failures (3105 files), coverage 36 failures, none plan-work's, channels 0.
 
 Size (session_0178ZGpF7DFhbLEP9pukeAin): test runs 4, module lines 1423
+
+## J1 · COMPLETE
+
+T47-44 complete on job/T47/plan-work; details in the record's Completion section.
+- R16 (N956): the assistant-draft label is record-grammar's proposalLabel("class:ai", "status_report") at its one site; attached on read, so earlier rows read with it; a member's own report carries none.
+- R17 (N966): already met in code by T46's job; new tests name R17 and check every clause and both controls.
+- R18 (N968): planReviewsDue items carry recurrence {rrule, dtstart, zone, by, at} and since {day, from: review|rhythm_set}, the day in the rhythm's zone via civil-time.localDay.
+- Own flaw fixed: a misplaced comment (standingCure).
+- Tests: plan-work 50/50. Users' tests: 75 failing, the identical set before my change; none new. Checks: format 0, architecture 0, coverage 18/18, ownership 0; run.mjs architecture 0, coverage failures none mine.
+- Generated artifact staled: the plane bundle (input src/plan-work/index.mjs), for the layer close.
+- action-producers (T47-50, R24) can fill queue.plan-review-due.detail from R18's recurrence and since.day.
