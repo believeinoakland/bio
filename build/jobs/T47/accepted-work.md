@@ -48,3 +48,7 @@ The fixture's stand-in gained `flagHistory` and `flag()`. R1's and R8's "three a
   - coverage 43 failures, all other modules' ids not yet met (rule 5 (1)), none of them accepted-work's.
 
 Size (session_01KFAPWox7MWHEahyqLXHMsA): test runs 4, module lines 263
+
+## J1 · COMPLETE
+
+T47-15 applied: R9 flagHistoryOn and the optional fifth registered function flagHistory (malformed when given and not a function), relayed as R2's reads; flags.test.mjs names R9 (5 tests). accepted-work 28/28; users green but rule 5's answer-envelope R8 (7b) and plane R5,R9 (7c), and one inherited red not named in rule 5: plane t46.test.mjs R33 (credentials' sign-in suggestions switch), red with this change reverted too. format, architecture, coverage (9/9), ownership: 0 failures. Record: build/jobs/T47/accepted-work.md.
