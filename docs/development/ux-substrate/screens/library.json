@@ -99,7 +99,7 @@
       },
       {
        "screen": "setup",
-       "act": "hostingaccess",
+       "act": "hostingaccessset",
        "what": "Record who holds the hosting account.",
        "why": "If you are ever unreachable, this is how the group gets back in."
       },

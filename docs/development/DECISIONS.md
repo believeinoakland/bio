@@ -3259,3 +3259,22 @@ decided: 2026-10-13 · Bob's direction, folded by the design session (P17)
 reasoning recorded in: this entry; `screens/page.src.html` (section "Who the screens are for", the viewer's journey brief, the gaps, section 6), `screens/mock-journeys.js` (`JBRIEF`), `screens/mock-refs.js`, `layouts.html`, `journeys.html`.
 owed: nothing to BOB: the page's reading sections build nothing; the build reads `registry.json`, `library.json` and `words.json`, unchanged by this entry.
 
+### DEC-205 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (BOB's B162, from its way-in draft, K3064)
+for: bob-session
+question: Five drawing points BOB raised against DEC-201 and DEC-202.
+why it is Bob's: it is not: screen detail beneath Bob's K3052, K3053, K3060 and K3061, decided by the design session (P17) and reported.
+provisional: DEC-201 and DEC-202 as drawn.
+alternative: none.
+recommendation: as below.
+reversal cost: low: mockups and words.
+response: **Decided by the design session, 2026-10-13.**
+(1) **A group's languages are their own act** on Your group (`group`): "Save the languages" (`owed:grouplanguagesset DEC-205`, the name BOB may change when it serves it): sets the languages the group's members use, leaving the places unchanged; `profilesset` stays setup's act for places and languages together.
+(2) **The logo**: "Change the logo" (`owed:grouplogoset DEC-205`, BOB's `grouplogoset`), beside "Save the name"; help: it replaces the logo beside the group's name on its page, its masthead and its published cases; a logo is optional.
+(3) **`hostingaccessset`**, not the read `hostingaccess`, on `setup`, `group` and the wizard "Set up and claim" (step 14); its help and weight re-keyed.
+(4) **`recover`'s help** says it serves any member: "Sets a new password with one of your recovery codes, for any member. The code is spent, and every other sign-in of yours ends." (DEC-202 (3)).
+(5) **Two new screens.** `reset`, "Choose a new password": the administrator's one-time reset link opens it for one member (who made it, for whom, until when); "Set my new password" (`owed:passwordreset DEC-205`); the handle and work kept, every other sign-in ended, recovery codes still working; states: set ("Sign in"), and a link used, expired or withdrawn ("Ask an administrator for a new one. Nothing was changed."). `tour`, "How we work, step by step": the walk-through for anyone from the group's page (Bob's D7), six steps (what we look into; every finding shows its source; how strong the evidence is; what we publish and who signs it; have something for us?; taking part), Back, Next and "Stop here" back to the group's page, no account and nothing recorded; the group's page's "See how it works, step by step" now opens it, where it opened Home. People (B161) is DEC-203.
+decided: 2026-10-13 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (group, setup, tour, reset, front), `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/mock-refs.js`, `screens/mock-shell.js`, `screens/registry.src.py` (61 screens), `screens/library.src.py`, `screens/words.json` (1,707 words, 603 protected), `layouts.html`.
+owed: (BOB, L11) the ops `grouplanguagesset` (or BOB's name), `grouplogoset` and the member's act on a reset link (`passwordreset`, or BOB's name), then the buttons re-pointed from their `owed:` names; the screens `tour` and `reset` built as drawn; registry.json, library.json and words.json re-taken.
+

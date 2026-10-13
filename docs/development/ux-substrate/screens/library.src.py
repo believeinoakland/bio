@@ -30,7 +30,7 @@ wiz('Set up and claim', 'install', True, [
  ('setup', 'aikeepaway', "Read what the assistant is (and open More about this for the detail), then choose whether to keep the group's material away from AI.", "Any member may connect their own Claude account unless you keep the material away from AI; then members see who chose it and your reason. Everything works without the assistant."),
  ('setup', 'groupkeyset', 'If the group will pay for the assistant, paste its Anthropic API key here. It is never shown again.', 'It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group\'s account. Leave it empty and members bring their own.'),
  ('setup', 'courtnoticeset', 'Choose whether members are told what a court can reach.', 'A court order your group cannot defeat can require anything not public to be shown. Some groups want every member told; the explanation is always one tap away.'),
- ('setup', 'hostingaccess', 'Record who holds the hosting account.', 'If you are ever unreachable, this is how the group gets back in.'),
+ ('setup', 'hostingaccessset', 'Record who holds the hosting account.', 'If you are ever unreachable, this is how the group gets back in.'),
  ('setup', 'memberadd', 'Invite your first members, and a second administrator now or later.', 'With one administrator the group depends on one person. A second means it is never stuck.'),
  ('group-identity', None, 'Optional: say who your group is. You will come back here when you finish or stop.', 'It shapes how each member is welcomed. It locks nothing and is never required.', {'via': 'Say who your group is'}),
 ], [1, 2])

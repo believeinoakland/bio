@@ -51,12 +51,12 @@
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "screen": 117,
-  "act": 579,
+  "screen": 121,
+  "act": 584,
   "column": 33,
   "wizard": 306,
-  "total": 1698,
-  "protected": 601
+  "total": 1707,
+  "protected": 603
  },
  "words": [
   {
@@ -4370,6 +4370,30 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.tour.name",
+   "en": "How we work, step by step",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.tour.purpose",
+   "en": "How your group works, in six short steps, for anyone: no account needed, nothing recorded.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.reset.name",
+   "en": "Choose a new password",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.reset.purpose",
+   "en": "Choose a new password from the one-time reset link an administrator made for you.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "screen.forgot.name",
    "en": "Forgot your password",
    "protected": false,
@@ -5060,6 +5084,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_passwordreset.label.reset",
+   "en": "Set my new password",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.recover.label.forgot",
    "en": "Set a new password with a recovery code",
    "protected": true,
@@ -5138,7 +5168,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.hostingaccess.label.setup",
+   "key": "act.hostingaccessset.label.setup",
    "en": "Record who holds the hosting account",
    "protected": true,
    "source": "registry.json"
@@ -5474,8 +5504,14 @@
    "source": "registry.json"
   },
   {
-   "key": "act.profilesset.label.group",
-   "en": "Choose the languages",
+   "key": "act.owed_grouplanguagesset.label.group",
+   "en": "Save the languages",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_grouplogoset.label.group",
+   "en": "Change the logo",
    "protected": true,
    "source": "registry.json"
   },
@@ -5486,7 +5522,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.hostingaccess.label.group",
+   "key": "act.hostingaccessset.label.group",
    "en": "Record who holds the hosting account",
    "protected": true,
    "source": "registry.json"
@@ -6879,7 +6915,25 @@
   },
   {
    "key": "act.recover.does",
-   "en": "Sets a new password for an administrator with one of their recovery codes. The code is spent, and every other sign-in of theirs ends.",
+   "en": "Sets a new password with one of your recovery codes, for any member. The code is spent, and every other sign-in of yours ends.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_grouplanguagesset.does",
+   "en": "Sets the languages your group's members use: Civicsmith's own words are shown in each, and members choose among them when they join. The places whose rules apply are not changed.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_grouplogoset.does",
+   "en": "Replaces the logo shown beside your group's name on its page, its masthead and its published cases. A logo is optional; with none, the name stands alone.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_passwordreset.does",
+   "en": "Sets your new password from the reset link an administrator made for you. The link is spent, every other sign-in of yours ends, and your handle and work stay as they are.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -6980,7 +7034,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.hostingaccess.does",
+   "key": "act.hostingaccessset.does",
    "en": "Records who holds the Cloudflare account. Whoever holds it can reach everything, so the group should know who that is.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"

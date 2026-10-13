@@ -421,6 +421,8 @@ const SCREEN_HELP = {
   install: 'Creates your group\'s Civicsmith in a Cloudflare account your group controls: what you need, a permanent short name, Cloudflare\'s permission, then your one-time password.',
   update: 'Updates your group\'s Civicsmith to a new signed release. Records, members and settings are kept.',
   front: 'Your group\'s own page: who it is, what it has published, how to hand it material and how it works, with members\' sign-in beside it.',
+  tour: 'How your group works, in six short steps, for anyone: no account needed, nothing recorded.',
+  reset: 'Choose a new password from the one-time reset link an administrator made for you.',
   forgot: 'How to get back in without email: use one of your recovery codes, or ask an administrator for a one-time reset link.',
   group: 'Administrators only: your group\'s name, website, languages, court notice, hosting account and bar.',
   settings: 'Every setting in one list: yours first, then the group\'s.',

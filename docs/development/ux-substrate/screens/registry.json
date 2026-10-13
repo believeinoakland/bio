@@ -75,6 +75,32 @@
    ]
   },
   {
+   "id": "tour",
+   "name": "How we work, step by step",
+   "frame": "public",
+   "purpose": "The walk-through for anyone, offered on the group's page before joining (Bob's D7, K3060): what the group looks into, how a finding shows its source and its strength, what it publishes and who signs it, handing it material, and how people join (DEC-205).",
+   "acts": [],
+   "journeys": [
+    3
+   ]
+  },
+  {
+   "id": "reset",
+   "name": "Choose a new password",
+   "frame": "public",
+   "purpose": "The administrator's one-time reset link opens here: the member chooses a new password, keeping their handle and work; a used, expired or withdrawn link says so (Bob's D4, K3060; DEC-201, DEC-205).",
+   "acts": [
+    {
+     "op": "owed:passwordreset DEC-205",
+     "label": "Set my new password",
+     "status": "owed"
+    }
+   ],
+   "journeys": [
+    3
+   ]
+  },
+  {
    "id": "forgot",
    "name": "Forgot your password",
    "frame": "public",
@@ -199,11 +225,11 @@
      ]
     },
     {
-     "op": "hostingaccess",
+     "op": "hostingaccessset",
      "label": "Record who holds the hosting account",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "setup-page"
      ]
     },
     {
@@ -780,12 +806,14 @@
      ]
     },
     {
-     "op": "profilesset",
-     "label": "Choose the languages",
-     "status": "declared",
-     "modules": [
-      "setup-page"
-     ]
+     "op": "owed:grouplanguagesset DEC-205",
+     "label": "Save the languages",
+     "status": "owed"
+    },
+    {
+     "op": "owed:grouplogoset DEC-205",
+     "label": "Change the logo",
+     "status": "owed"
     },
     {
      "op": "courtnoticeset",
@@ -796,11 +824,11 @@
      ]
     },
     {
-     "op": "hostingaccess",
+     "op": "hostingaccessset",
      "label": "Record who holds the hosting account",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "setup-page"
      ]
     },
     {

@@ -14,12 +14,16 @@ screen('update', 'Update your group\'s Civicsmith', 'setup', 'The hosting accoun
   [('bootstrap','Continue to Cloudflare to update')], [1])
 screen('front', 'Your group\'s page', 'public', 'The group\'s own landing page at its address (Bob\'s D2, K3060): who it is, what it has published, handing it material, how it works; members sign in beside it, with an own device kept signed in (locks after 30 minutes away, signs out after 12 hours) or a shared one (signed out after 15 minutes away) (D3, K3061); refused, paused, signed out, ended and locked (credentials R4, R38; DEC-201, DEC-202).',
   [('login','Sign in')], [3,28])
+screen('tour', 'How we work, step by step', 'public', 'The walk-through for anyone, offered on the group\'s page before joining (Bob\'s D7, K3060): what the group looks into, how a finding shows its source and its strength, what it publishes and who signs it, handing it material, and how people join (DEC-205).',
+  [], [3])
+screen('reset', 'Choose a new password', 'public', 'The administrator\'s one-time reset link opens here: the member chooses a new password, keeping their handle and work; a used, expired or withdrawn link says so (Bob\'s D4, K3060; DEC-201, DEC-205).',
+  [('owed:passwordreset DEC-205','Set my new password')], [3])
 screen('forgot', 'Forgot your password', 'public', 'Getting back in without email: any member with one of their recovery codes, or through an administrator\'s one-time reset link (Bob\'s D4, B3, K3060; credentials R47; DEC-201, DEC-202).',
   [('recover','Set a new password with a recovery code')], [3])
 screen('setup', 'Become your group\'s first administrator', 'setup', 'The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
   [('claim','Claim with the one-time password'),('groupnameset','Name the group'),('groupdomainset','Verify the web address'),('profilesset','Choose places and languages'),
    ('officesseed','Review offices and seats'),('entitycreate','Add an office yourself'),('placewanted','Name a place not yet listed'),('aikeepaway','Keep the group\'s material away from AI, with a reason'),('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('ailimitset','Set each member\'s daily use of the group\'s key'),('courtnoticeset','Choose whether members are told what a court can reach'),
-   ('hostingaccess','Record who holds the hosting account'),('securitytooladd','Add a security tool (optional)'),('memberadd','Invite a member or a second administrator'),('recoverycodesissue','Show my recovery codes')], [1,28])
+   ('hostingaccessset','Record who holds the hosting account'),('securitytooladd','Add a security tool (optional)'),('memberadd','Invite a member or a second administrator'),('recoverycodesissue','Show my recovery codes')], [1,28])
 screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpose, and who sees them (DEC-132).',
   [('groupdescriptionset','Save who your group is, and who sees it'),('groupdescriptiondraft','Ask the assistant to help write it')], [2])
 screen('join', 'Your invitation', 'setup', 'The invitation link opens here: language, handle, password.',
@@ -41,7 +45,7 @@ screen('places', 'Places and offices', 'working', 'Administrators: the places wh
 screen('recovery', 'Recovery codes', 'working', 'Every member\'s own one-time recovery codes (D4, K3060), how many are left, and whether two administrators hold them (credentials R46; instance-setup R66; K1888; DEC-200 (8), N997).',
   [('recoverycodesissue','Get new recovery codes')], [2])
 screen('group', 'Your group', 'working', 'Administrators: the settings chosen at setup, changeable here: name and logo, website, languages, the court notice, the hosting account\'s holder, the group\'s bar (DEC-201).',
-  [('groupnameset','Save the name'),('groupdomainset','Verify the website'),('profilesset','Choose the languages'),('courtnoticeset','Show the court notice'),('hostingaccess','Record who holds the hosting account'),('strengthbarset','Set the group\'s bar')], [2])
+  [('groupnameset','Save the name'),('groupdomainset','Verify the website'),('owed:grouplanguagesset DEC-205','Save the languages'),('owed:grouplogoset DEC-205','Change the logo'),('courtnoticeset','Show the court notice'),('hostingaccessset','Record who holds the hosting account'),('strengthbarset','Set the group\'s bar')], [2])
 screen('settings', 'Settings', 'working', 'Every setting in one list: the member\'s own, then the group\'s for administrators (DEC-201).', [], [2,3])
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
   [('declaretie','Add a tie'),('withdrawtie','Remove a tie')], [5])
