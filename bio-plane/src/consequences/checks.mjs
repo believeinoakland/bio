@@ -11,7 +11,8 @@
  * `AFFECTED_INDIVIDUAL` (C-114.5) is retired. Codes R2 answers for its owners, `calc-grammar`'s `UNIT_MISMATCH` and
  * `money`'s summation codes (`SUM_MIXED_*`, `FACT_WITHDRAWN`), are theirs and carry no row here (`foreignRefusal`).
  * T45 adds R9's four, the success record's (R17–R21) and the carry's (R22), C-114.23 onward; `NO_SUCH_PROJECT` (R17) is
- * membership's, `DETERMINATION_VOID` (R1) conformance's, and `carryOutcome`'s codes case-authoring's: none has a row here.
+ * membership's, `DETERMINATION_VOID` (R1) conformance's, and `carryOutcome`'s codes case-inputs' (T47; case-authoring's
+ * before): none has a row here.
  * T46 (R25; DEC-194, N913): seventeen of T45's rows take their translations from `words.json`'s `refusal.<CODE>`, read by
  * key from `CONSEQUENCES_WORDS`, never a copy; their codes, numbers and `where`s are unmoved. C-114.29, .34 and .37 keep
  * their own in T46 (R25), as do the rows `words.json` does not hold. */
