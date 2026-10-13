@@ -38,4 +38,4 @@
 - `format`: 0 failures. `architecture … docket`: 0 failures. `coverage … docket`: 29 of 29, 0 failures. `ownership … docket tranche/T47`: 0 failures.
 - `run.mjs`: architecture 0 failures (3084 files); coverage 44 failures, none docket's; channels 0.
 
-Size (session_01LdRUdodYLfpSaz5xmhmwfA): test runs 5, module lines 1647
+Size (session_01LdRUdodYLfpSaz5xmhmwfA): test runs 5, module lines 1648
