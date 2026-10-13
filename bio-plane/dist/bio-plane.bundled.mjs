@@ -79753,7 +79753,7 @@ var LOCAL_FACTS_CHECKS = Object.freeze({
   },
   RULE_SECTION_UNKNOWN: {
     check: "C-126.7",
-    where: atRule("ruleDraft", "is-rule-section"),
+    where: atRule("sectionRefusal", "is-rule-section"),
     translation: RULE_WORDS["refusal.RULE_SECTION_UNKNOWN"]
   },
   RULE_ENTRY_INVALID: {
@@ -79972,12 +79972,7 @@ var GroupRules = class {
     const machine3 = machineRuleRefusal(b.by);
     if (machine3) return machine3;
     const section = b.section;
-    if (!RULE_SECTIONS.includes(section))
-      return refusal9(
-        "RULE_SECTION_UNKNOWN",
-        `a group's rule is drafted in ${RULE_SECTIONS.join(" or ")}.`,
-        { section: typeof section === "string" ? section.slice(0, 40) : null, sections: [...RULE_SECTIONS] }
-      );
+    if (!RULE_SECTIONS.includes(section)) return sectionRefusal(section);
     const at47 = this.instant();
     const c = this.#combined();
     const errors = this.#entryErrors(section, b.entry, c && c.ok ? c.view : null, at47);
@@ -80105,12 +80100,7 @@ var GroupRules = class {
   groupRules(a = {}) {
     try {
       const b = isObj20(a) ? a : {};
-      if (b.section !== void 0 && b.section !== null && !RULE_SECTIONS.includes(b.section))
-        return refusal9(
-          "RULE_SECTION_UNKNOWN",
-          `a group's rule is drafted in ${RULE_SECTIONS.join(" or ")}.`,
-          { section: typeof b.section === "string" ? b.section.slice(0, 40) : null, sections: [...RULE_SECTIONS] }
-        );
+      if (b.section !== void 0 && b.section !== null && !RULE_SECTIONS.includes(b.section)) return sectionRefusal(b.section);
       if (!namesMember(b.viewer)) return { ok: true, rules: [], count: 0 };
       const rules = this.#rules().filter((r) => !b.section || r.section === b.section).map((r) => ({
         rule: r.rule,
@@ -80188,6 +80178,13 @@ var GroupRules = class {
 function machineRuleRefusal(by) {
   if (str3(by) && !isMachineIdentity(str3(by))) return null;
   return refusal9("MACHINE_CANNOT_DRAFT_RULE", "drafting or withdrawing a group's rule is a named member's act; an assistant's draft reaches a member as its run's output. Nothing was written.");
+}
+function sectionRefusal(section) {
+  return refusal9(
+    "RULE_SECTION_UNKNOWN",
+    `a group's rule is drafted in ${RULE_SECTIONS.join(" or ")}.`,
+    { section: typeof section === "string" ? section.slice(0, 40) : null, sections: [...RULE_SECTIONS] }
+  );
 }
 function reasonRefusal(reason2) {
   if (reason2 && reason2.length <= RULE_REASON_MAX) return null;
@@ -107969,10 +107966,11 @@ var Progressions = class _Progressions {
   /* ===================================================================== *
    * THE FEEDS (R18, R19; REC-6, REC-7, REC-9, REC-184, D-552).
    * ===================================================================== */
-  /** R18 (`op=proposals`): one walk over every threaded instance. `instances[]` each instance with an open finding
-   *  (missing, then overdue, then any other kind); `proposals[]` one per (progression, stage) of the missing findings,
-   *  carrying its instances; `dispositions[]` every decision recorded. A finding an applying decision governs leaves
-   *  the first two and stays in the third (D-79: aged, never vanished). */
+  /** R18 (`op=proposals`): one walk over every threaded instance, at `nowMs` when an in-plane caller passes its own
+   *  instant (R16), else at the configured clock; the route passes none (R43). `instances[]` each instance with an
+   *  open finding (missing, then overdue, then any other kind); `proposals[]` one per (progression, stage) of the
+   *  missing findings, carrying its instances; `dispositions[]` every decision recorded. A finding an applying
+   *  decision governs leaves the first two and stays in the third (D-79: aged, never vanished). */
   proposalsFeed(nowMs) {
     const now = this.nowMs(nowMs);
     const recorded = /* @__PURE__ */ new Map();
@@ -108087,7 +108085,8 @@ var Progressions = class _Progressions {
   }
   /** R19 (`op=captureprogressions`): every (progression, entity, stage) at which a capture is placed, each instance
    *  assembled once, with its missing, overdue and other findings, each carrying `established`, `needs_confirmation`
-   *  and its decision, and the instance's `open_finding_count`. */
+   *  and its decision, and the instance's `open_finding_count`. Overdue is judged at `nowMs` when an in-plane caller
+   *  passes one, else at the configured clock; the route passes none (R43, K3033). */
   captureProgressions({ captureSha, nowMs } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
       return noSha("progression membership is read for a captured document, by its capture sha256 (op=captureprogressions&sha256=...)");
@@ -108301,8 +108300,10 @@ function progressionOps(p3, url, body) {
     instance: () => p3.readInstance({ progressionKey: q10("key"), entityId: q10("id"), viewer: q10("viewer") }),
     discharge: () => p3.dischargeStage({ ...body || {}, viewer: q10("viewer") }),
     exceptions: () => p3.readExceptions({ progressionKey: q10("key"), entityId: q10("id"), viewer: q10("viewer") }),
-    proposals: () => p3.proposalsFeed(q10("now")),
-    captureprogressions: () => p3.captureProgressions({ captureSha: q10("sha256"), nowMs: q10("now") })
+    /* R43 (N983): both are evaluated at the server's instant, R16's configured clock, since their answers (which stage
+       is overdue, `overdue_count`) may gate an act; a `now` or `nowMs` in the query or the body is never read. */
+    proposals: () => p3.proposalsFeed(),
+    captureprogressions: () => p3.captureProgressions({ captureSha: q10("sha256") })
   };
 }
 var instances25 = /* @__PURE__ */ new WeakMap();
