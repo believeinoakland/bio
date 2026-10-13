@@ -700,7 +700,8 @@ export class BasisVersions {
    *  (`project-stage` R2, was publication R45) fences the project. The candidates are the document's live `cites`
    *  targets that the record holds as inquiries, read in one bounded statement, one past the page, so `cursor` (the
    *  last answered) is set only when more follow. `limit` absent, zero or not a number reads as 500, a negative one as 1 (connections R42's reading).
-   *  Writes nothing; never throws: an empty or non-project id, or a project with no document, answers `items: []`. */
+   *  Writes nothing; never throws: an empty or non-project id, or a project with no document, answers `items: []`; a
+   *  `basisFor` that throws reads as no leg, so a failing read never cuts a page short behind a null cursor. */
   projectQuestions({ project = null, after = null, limit = null } = {}) {
     const out = { items: [], cursor: null };
     try {
@@ -722,7 +723,9 @@ export class BasisVersions {
             AND object_type IN (SELECT value FROM json_each(?)) AND bundle_id > ?
           ORDER BY bundle_id LIMIT ?`, JSON.stringify(live), INQUIRY_TYPES, String(after ?? ""), cap + 1);
       for (const r of rows.slice(0, cap)) {
-        const basis = this.inquiry.basisFor(r.bundle_id, { limit: 1 });
+        /* a read that fails reads as one that answered no leg (not ok), so the page and its cursor stay whole */
+        let basis = null;
+        try { basis = this.inquiry.basisFor(r.bundle_id, { limit: 1 }); } catch { basis = null; }
         const { stance } = BasisVersions.#recordIn(fm, pid, r.bundle_id);
         out.items.push({ inquiry: r.bundle_id, legs: !!basis?.ok && Array.isArray(basis.legs) && basis.legs.length > 0,
                          stance: stance ? stance.state : "none" });

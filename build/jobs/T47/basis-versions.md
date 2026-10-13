@@ -28,3 +28,35 @@ Size (session_01AcLstPtmnnzTXdMVgnyvmU): test runs 7, module lines 3786
 ## J1 · COMPLETE
 
 T47-18 applied: R50 projectQuestionsFor / op=projectquestions, with 5 new R50 tests. basis-versions suite: 150 pass, 0 fail. format, architecture, coverage (47/47) and ownership checks: 0 failures. Neighbouring op suites show the same 15 inherited reds as on the base. Record notes that P20's whole read of grammar/checks/text/schema was not done (untouched by this job). Details in my record.
+
+## B2 · CHANGE: P20's whole read, completed
+
+**How the set was read (mechanics §17).** I read every source file of the module whole: `index.mjs` (in the first pass), `grammar.mjs`, `checks.mjs`, `text.mjs` and `schema.mjs`. I had also read `fixture.mjs`, `project-discoverable.test.mjs` and my own `project-questions-for.test.mjs` whole. Two helpers in this session, each given the entry and the requirements, read the other 20 test files in full (helper A: versionstate, versions, conclude, grammar, conclude-project, reads, acts, 1,808 lines; helper B: the other 13, 1,849 lines). Each wrote me a digest citing file and line. The sources stay binding.
+
+**Flaw fixed (P8).** In `projectQuestions` (R41), a `basisFor` that threw partway through a page was caught around the whole loop. The answer was then a page cut short with `cursor: null`, which a caller, R50 included, reads as the last page. Now a read that throws reads as one that answered no leg, which is how a not-ok answer was already read. The page and its cursor stay whole. A test in `reads.test.mjs` R41 shows it. `project-stage` (R41's user) tests: 23 pass, 0 fail, as before.
+
+**Tests strengthened where they checked less than their titles say (no assertion weakened):**
+- `grammar.test.mjs` R35 now covers C-25.35 (`BAD_BIAS_APPLIED`, in `CONCLUDE_ACT_CHECKS`) and C-27.15. Its title said C-25.1–C-25.34. R35 and R36's catalogue sweeps now include `CONCLUDE_ACT_CHECKS` and `VERSION_KIND_CHECKS`.
+- `versions.test.mjs`: new R6 test for a stored composition that has no `leg_capture` line, run through promotions. It covers the first re-projection storing the pin, the legacy form still frozen against other changes, and a stored pin frozen.
+- `machine-passage.test.mjs`: new R49 test. A blank author is asked (fail closed), a replay is not asked, a member's raw promote accepting a machine version is asked as `versionAccept`, and there is a control.
+- `narrow.test.mjs`: R25's content-level absence (read, nothing inside), and R26's boilerplate descriptions as `NARROW_NO_DESCRIPTION`.
+- `conclude.test.mjs` R16: the 500-character bounds on commentary and conclusion, and a backslash in a falsifier.
+- `acts.test.mjs` R31: an unused variable removed. Project A's bytes are now checked unmoved after B's act.
+- `promote.test.mjs`: two lines of dead code removed.
+- `checks.mjs`: two stale comments corrected (a "precedent above" that is not in this file, and a paragraph on the retired coverage script).
+
+**Left as they stand, with why:**
+- R16's `NO_DOCUMENT` arm is still untested. It needs a held bundle with no `bundle.md`, which no promotion through the module's uses can produce. This is a defensive branch.
+- Some refusal tests check by reason only, and some headers cite retired file names as provenance. This is harmless.
+- `grammar.mjs` reports a malformed version name under `VERSION_NAME_NOT_UNIQUE`. C-25.2 (R1) covers both conditions, so the code is kept.
+- R41's `limit` 0 reads as the default (500), per the existing test and connections R42's reading, where "clamped to 1–500" could also be read as 1. It is met as tested. A wording ruling is BOB's if wanted.
+
+**For BOB (requirements, not code).** R49's accept arm keys on the version row's own `author` field. R28's documented `appendVersion` call lists no `author` in `version`, so a caller following R28 literally would write a machine version that R49's accept arm never asks about. Today's caller, `run-productions` (its `index.mjs:534`), passes `version.author`, so nothing is broken. R28's signature could name `author` in `version`. That is a requirement change, so I left the code as is.
+
+**Tests and checks run.**
+- `node --test bio-plane/test/m/basis-versions/`: tests 152, pass 152, fail 0.
+- `project-stage` tests: 23 pass, 0 fail.
+- `format`, `architecture` and `ownership` checks: 0 failures.
+- `coverage`: 47 of 47 live ids named, 0 failures.
+
+Size (session_01AcLstPtmnnzTXdMVgnyvmU): test runs 14, module lines 3789

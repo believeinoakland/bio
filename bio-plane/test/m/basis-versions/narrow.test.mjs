@@ -40,6 +40,12 @@ test("R25: narrowCandidates writes nothing and lists, per source and at most 50 
   const { w, cap } = setup();
   const empty = w.bv.narrowCandidates(narrowArgs());
   assert.deepEqual([empty.ok, empty.candidates, empty.absence.level, empty.proposal_only, empty.limit], [true, [], "document", true, 50]);
+  /* read, and nothing found inside: the absence is stated at the content level */
+  w.st.sql.exec(`INSERT INTO readings (capture_sha, bundle_id, content_type, reader_version, found, entity_count, reading, at)
+                 VALUES (?, ?, 'doc', '1', 0, 0, '{}', ?)`, cap, DOC, T);
+  const readEmpty = w.bv.narrowCandidates(narrowArgs());
+  assert.deepEqual([readEmpty.candidates, readEmpty.absence.level], [[], "content"]);
+  assert.match(readEmpty.absence.says, /was read/);
   w.readRef(cap, DOC, "entity:council", 2);
   w.readRef(cap, DOC, "entity:mayor", 4);
   w.st.sql.exec(`INSERT INTO entities (entity_id, kind, label, at) VALUES ('ENT-2026-0001', 'body', 'council', ?)`, T);
@@ -81,6 +87,8 @@ test("R26: narrow refuses a machine, a bad extent, no extent, another capture, t
   assert.deepEqual(c({ name: "first" }), ["NARROW_NAME", "C-50.10"], "taken");
   assert.deepEqual(c({ name: "bad/name" }), ["NARROW_NAME", "C-50.10"]);
   assert.deepEqual(c({ description: "" }), ["NARROW_NO_DESCRIPTION", "C-50.11"]);
+  for (const d of ["TBD", "  n/a. ", "<description>", "...", "Lorem ipsum"])
+    assert.deepEqual(c({ description: d }), ["NARROW_NO_DESCRIPTION", "C-50.11"], `boilerplate: ${d}`);
   assert.equal(w.count("inquiry_basis_versions"), 1, "nothing written");
   void cap;
 });
