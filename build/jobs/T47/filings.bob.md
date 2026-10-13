@@ -22,3 +22,7 @@ filing-templates R31 (K3120, on tranche/T47; merge it) adds four member-filled b
 ## B3 · ANSWER · re J1
 
 All three readings stand (K3122). Your filing-templates report is met: filing-templates R31 (K3120) adds records, period, form and cost_limit to FILING_BLANKS, so a template may name them once filing-templates merges; test R55 with one then (CHANGE when it merges).
+
+## B4 · CHANGE
+
+R56 (K3124) is added on tranche/T47: your own-words check (index.mjs:685) answers C-125.4 through filing-templates.blankUnknownRefusal (its R32), never spelling the code. filing-templates provides it in its re-opened job; when it merges I send a CHANGE, then merge the tranche, apply R56 with its test, and also test R55 with one of R31's blanks (records, period, form, cost_limit).
