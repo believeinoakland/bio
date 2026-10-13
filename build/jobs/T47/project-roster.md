@@ -69,4 +69,4 @@ R27, my reading (proceeding on it; answer only if wrong). "Its first author, as 
 
 **Found in other modules.** None new. Generated artifact staled: the plane bundle (rule 5.4). screens-daily's `projects` screen (DEC-201) reads `owner` when its job starts.
 
-Size (session_01EqRQSrvFHgecXk4RLmgHTk): test runs 9, module lines 3268
+Size (session_01EqRQSrvFHgecXk4RLmgHTk): test runs 9, module lines 1244
