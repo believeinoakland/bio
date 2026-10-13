@@ -1,6 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R140; T47-82's R140, `screens-entry` after `interface-shell` in
+ * Requirements: build/requirements/membership.md (R4–R141; T47's R141, the handle `admin` reserved for the founder
+ * (K3076); T47-82's R140, `screens-entry` after `interface-shell` in
  * R83's order (K3064, K3069); T47's R133, the frozen `*_CHECKS` tables (K3037); T47's R83 order (`case-inputs`, `action-records`,
  * `screens-wizards`, `screens-investigate`, `screens-publish`, `screens-action`; T47-7, K657, K3027, N991) and R132, the
  * pre-auth `bootstrap` answer's invariant (REC-41), held by `test/members.test.mjs` (the answer is `instance-setup`'s and
@@ -2247,8 +2248,10 @@ export class Membership {
   static HANDLE_CHECK_STATED = `at most ${Membership.HANDLE_CHECK_WINDOW.perKey} handle checks in any `
     + `${Membership.HANDLE_CHECK_WINDOW.windowMs / 60_000} minutes for one invitation or one member`;
 
-  /* Whether another member than `self` holds `handle` now, whatever their status, or held it before (R16). */
+  /* Whether another member than `self` holds `handle` now, whatever their status, or held it before (R16); and R141
+     (T47; K3076; credentials R67): `admin` is the founder's, so it is always taken, for enrolment and every check. */
   #heldByAnother(handle, self) {
+    if (handle === Membership.ROOT_ADMIN) return true;
     return !!this.#one(`SELECT 1 AS x FROM members WHERE handle=? AND member_id<>?
                         UNION ALL SELECT 1 AS x FROM handle_history WHERE from_handle=? AND member_id<>? LIMIT 1`,
       handle, self ?? "", handle, self ?? "");
