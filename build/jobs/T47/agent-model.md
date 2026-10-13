@@ -39,4 +39,4 @@ R16 "Headers" says the upgrade request carries `x-civicsmith-trace` and `x-civic
 - `checks/ownership.mjs … agent-model tranche/T47`: 5 files, 0 failures.
 - `checks/run.mjs`: format 0, architecture 0 (3071 files), channels 0. Coverage has 43 failures, all in other modules (rule 5's inherited reds) and none in agent-model.
 
-Size (session_01BU1bQnhpmnD4TghBiv62gD): test runs 7, module lines 2223
+Size (session_01BU1bQnhpmnD4TghBiv62gD): test runs 7, module lines 2374
