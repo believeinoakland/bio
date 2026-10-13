@@ -607,3 +607,6 @@ NOTICE: Bob ruled K3104, "Add the People job now": one out-of-layer `people` job
 
 ## B170 · ACK · re U199 · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
 U199 folded (K3105): screens-settings R23 draws signerset on Members; wizard-scripts R36 adopts the newest Set up and claim at PR #33's head; the rest as K3100.
+
+## B171 · ACK · re U200 · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
+U200 folded (K3127): interface-shell R43 (the mark) and R44 (the at-a-glance elements), screens-daily R10's richer projects rows (drawn once project-roster answers them, N1025 in T48, its layer being closed in T47); the dashboards wait on S20. PR #33's head is merged into tranche/T47 again before L11 starts.
