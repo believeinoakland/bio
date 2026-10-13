@@ -1,6 +1,6 @@
 /* actions' T45 entry at its interface (T45-27; N828, N855, N858, N879, N880, N883, N884, N892 (a); K2781 (4), K2845,
    K2848–K2850): the gate (R8 amended, R74–R76), addressing (R9 amended, R77–R79, R94), receipt, responses and outcomes
-   (R80–R83, R85, R86, R95), scopes and promises (R87, R88), the misuse guards and recognition (R92, R93), the
+   (R81–R83, R85, R86, R95; R80, R87, R88 moved to `action-records` R4–R6 at T47, read here through it), the misuse guards and recognition (R92, R93), the
    registrations (R97), the view (R10), "what we did" (R66), the machine fence (R33) and the tables (R36).
    Determinations and success records are stand-ins in conformance R9's and consequences R20's shapes; members, entities,
    events, standards and the jurisdiction view are the real modules on the fixture's host. */
@@ -245,32 +245,26 @@ test("R94 a sent entry may state its speaker, a member, stated by a member; seve
 
 /* ================================================================ receipt, responses and outcomes: R80–R83, R85, R86, R95 */
 
-test("R80 actionReceipt: refusals in order; a receipt or a service recorded on a sent entry, appended; actionRead answers receipts oldest first (K2845)", () => {
+test("R25 the read answers the receipts action-records records (its R4, was R80), oldest first (K2845), and the entry is never rewritten; its op is still served through actions' map", () => {
   const w = world();
   const s = w.doc("INFO-2026-0001-d");
   w.action(A);
   w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-02", account: "asked", viewer: M, author: M });
-  w.a.actionCorrespond({ target: A, direction: "received", at: "2026-09-04", account: "reply", viewer: M, author: M });
-  const R = (x) => w.a.actionReceipt({ target: A, ord: 0, at: "2026-09-03", how: "stamped by the clerk", account: "I saw the stamp",
+  const R = (x) => w.a.records.actionReceipt({ target: A, ord: 0, at: "2026-09-03", how: "stamped by the clerk", account: "I saw the stamp",
     viewer: M, author: M, ...x });
-  assert.deepEqual(reasons([R({ author: MACHINE }), R({ target: "" }), R({ at: "2026-02-30" }), R({ artifactSha: s }),
-    R({ account: "" }), R({ target: "ACTN-2026-0404-x" }), R({ target: "INFO-2026-0001-d" }), R({ ord: 1 }),
-    R({ account: "", artifactSha: "d".repeat(64) })]),
-    ["MACHINE_CANNOT_CORRESPOND", "NO_TARGET", "BAD_DATE", "CAPTURE_AND_TESTIMONY", "NEITHER_CAPTURE_NOR_TESTIMONY",
-     "NO_SUCH_BUNDLE", "NOT_AN_ACTION", "RECEIPT_NOT_ON_SENT", "UNREGISTERED_ARTIFACT"]);
-  assert.equal(R({ kind: "delivered" }).reason, "RECEIPT_NOT_ON_SENT", "a kind neither receipt nor service");
-  assert.equal(R({ kind: "service" }).reason, "BAD_PARTY", "service names the party served");
-  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM action_receipts`)[0].n, 0, "no refusal writes");
-  const one = R({ at: "2026-09-03T10:15" });
-  assert.deepEqual([one.ok, one.kind, one.at, one.held_as, one.seq], [true, "receipt", "2026-09-03T10:15", "testimony", 1]);
-  w.clock.ms += 60000;
-  const two = R({ kind: "service", party: "the Town Clerk", account: "", artifactSha: s });
-  assert.deepEqual([two.ok, two.seq, two.held_as], [true, 2, "capture"]);
+  /* the control: none recorded answers none */
+  assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).receipts, []);
   const text = w.text(A);
-  assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).receipts.map((x) => [x.ord, x.seq, x.kind]), [[0, 1, "receipt"], [0, 2, "service"]]);
+  assert.equal(R({ at: "2026-09-03T10:15" }).ok, true);
+  w.clock.ms += 60000;
+  assert.equal(R({ kind: "service", party: "the Town Clerk", account: "", artifactSha: s }).ok, true);
+  const read = w.a.actionRead({ id: A, viewer: M });
+  assert.deepEqual(read.receipts, w.a.records.receiptsOf(A), "read through action-records, unchanged");
+  assert.deepEqual(read.receipts.map((x) => [x.ord, x.seq, x.kind]), [[0, 1, "receipt"], [0, 2, "service"]]);
   assert.equal(w.text(A), text, "the entry is never rewritten");
   const op = actions.actionsOps(w.a, new URL(`https://x/?target=${A}&ord=0&at=2026-09-05&how=post&account=x&viewer=${M}&author=${M}`), null).actionreceipt();
   assert.equal(op.ok, true);
+  assert.equal(w.a.actionRead({ id: A, viewer: M }).receipts.length, 3);
 });
 
 test("R81 a received entry with an outcome may carry office_status, its status of the view's response statuses for the kind; OFFICE_STATUS_UNKNOWN, OFFICE_STATUS_WITHOUT_OUTCOME; the fixed outcome is never replaced", () => {
@@ -371,47 +365,42 @@ test("R95 registerResponseListener: one per module; each listener called once af
 
 /* ================================================================ scopes and promises: R87, R88 */
 
-test("R87 actionScope: refusals in order; each statement appended; the read and actionsFor answer confidential (K2850); a confidential action is not answered by R66, and is again once removed", () => {
+test("R66 R25 R30 (T47) confidential is read through action-records.confidential (its R5, was R87): a confidential action is not answered by R66, is answered again once removed, and the read and actionsFor answer it", () => {
   const w = world();
   const office = entity(w, "office", "Town Clerk");
   w.promote(B, actionMd(B, ["counterparty:", "  state: named", "  role: Town Clerk", "  body: Town of Port Ellery", `  entity_id: ${office}`,
     "action_kind: other"]));
   w.a.actionCorrespond({ target: B, direction: "sent", at: "2026-09-02", account: "asked", viewer: M, author: M });
-  const S = (x) => w.a.actionScope({ target: B, confidential: true, reason: "a source's safety", viewer: M, author: M, ...x });
-  assert.deepEqual(reasons([S({ author: MACHINE }), S({ target: "" }), S({ reason: "" }), S({ reason: 'a"b' }),
-    S({ target: "ACTN-2026-0404-x" }), S({ target: "INFO-2026-0404-x" }), S({ confidential: false })]),
-    ["MACHINE_CANNOT_SET_SCOPE", "NO_TARGET", "SCOPE_NO_REASON", "BAD_REASON", "NO_SUCH_BUNDLE", "NO_SUCH_BUNDLE", "SCOPE_UNCHANGED"]);
+  const S = (x) => w.a.records.actionScope({ target: B, confidential: true, reason: "a source's safety", viewer: M, author: M, ...x });
   const src = () => w.a.eventSource({ set: [office], viewer: M });
   assert.equal(src().length, 1, "control: answered while not confidential");
   assert.equal(w.a.actionRead({ id: B, viewer: M }).confidential, false);
-  const set = S({});
-  assert.deepEqual([set.ok, set.confidential, set.by, set.published.key], [true, true, M, "actions.scope.published_stays"]);
-  assert.equal(S({}).reason, "SCOPE_UNCHANGED");
+  assert.equal(S({}).ok, true);
+  assert.equal(w.a.records.confidential(B), true);
   assert.deepEqual(src(), [], "a confidential action is not answered");
   assert.equal(w.a.actionRead({ id: B, viewer: M }).confidential, true, "seen inside the group as before");
   assert.equal(w.a.actionsFor({ viewer: M }).items.find((x) => x.id === B).confidential, true);
   assert.equal(S({ confidential: "false", reason: "the source has gone public" }).ok, true);
   assert.equal(src().length, 1, "answered again once removed");
-  assert.deepEqual(w.a.actionRead({ id: B, viewer: M }).scope.statements.map((x) => x.confidential), [true, false]);
+  const read = w.a.actionRead({ id: B, viewer: M });
+  assert.deepEqual(read.scope, w.a.records.scopeOf(B), "read through action-records, unchanged");
+  assert.deepEqual(read.scope.statements.map((x) => x.confidential), [true, false]);
+  assert.equal(w.a.actionsFor({ viewer: M }).items.find((x) => x.id === B).confidential, false);
 });
 
-test("R88 actionPromise: refusals in order; a promise recorded and ended by a later one, appended; every viewer who sees the action reads them, standing apart from ended", () => {
+test("R25 every viewer who sees the action reads the promises action-records records (its R6, was R88), standing apart from ended", () => {
   const w = world();
   w.action(A);
-  const P = (x) => w.a.actionPromise({ target: A, kind: "anonymity", text: "we will not name the source", viewer: M, author: M, ...x });
-  assert.deepEqual(reasons([P({ author: MACHINE }), P({ target: "" }), P({ kind: "secrecy" }), P({ text: "" }),
-    P({ text: "x".repeat(501) }), P({ ends: "one" }), P({ target: "ACTN-2026-0404-x" }), P({ ends: 9 })]),
-    ["MACHINE_CANNOT_RECORD_PROMISE", "NO_TARGET", "PROMISE_REFUSED", "PROMISE_REFUSED", "PROMISE_REFUSED", "PROMISE_REFUSED",
-     "NO_SUCH_BUNDLE", "PROMISE_REFUSED"]);
-  const one = P({});
-  assert.deepEqual([one.ok, one.seq, one.kind], [true, 1, "anonymity"]);
+  const P = (x) => w.a.records.actionPromise({ target: A, kind: "anonymity", text: "we will not name the source", viewer: M, author: M, ...x });
+  /* the control: none recorded answers none standing and none ended */
+  assert.deepEqual(w.a.actionRead({ id: A, viewer: V("bob") }).promises, { standing: [], ended: [] });
+  assert.equal(P({}).ok, true);
   P({ kind: "embargo", text: "nothing before the 9th" });
-  const end = P({ kind: "anonymity", text: "the source asked to be named", ends: 1 });
-  assert.equal(end.ok, true);
+  assert.equal(P({ kind: "anonymity", text: "the source asked to be named", ends: 1 }).ok, true);
   const r = w.a.actionRead({ id: A, viewer: V("bob") }).promises;
+  assert.deepEqual(r, w.a.records.promisesOf(A), "read through action-records, unchanged");
   assert.deepEqual(r.standing.map((p) => p.seq), [2]);
   assert.deepEqual(r.ended.map((p) => [p.seq, p.ended_by.seq, p.ended_by.text]), [[1, 3, "the source asked to be named"]]);
-  assert.equal(P({ ends: 1 }).reason, "PROMISE_REFUSED", "an ended promise is not standing");
 });
 
 /* ================================================================ guards and recognition: R92, R93 */
@@ -509,7 +498,7 @@ test("R66 (T45) the event source never answers a confidential act, a counsel mat
   assert.ok(lane.items.length && lane.items.every((i) => i.public === true), JSON.stringify(lane));
 });
 
-test("R33 (T45) a machine credential states no override ground, partners, copied offices, press terms, reply_owed, scope, promise, receipt or speaker", () => {
+test("R33 (T45) a machine credential states no override ground, partners, copied offices, press terms, reply_owed or speaker", () => {
   const { w } = grounded();
   w.action(A);
   w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-02", account: "asked", viewer: M, author: M });
@@ -518,38 +507,57 @@ test("R33 (T45) a machine credential states no override ground, partners, copied
     mach(["partners:", "  - role: Chair", "    organisation: Union"]),
     mach(["copied:", "  - state: named", "    role: Selectboard", "    body: Port Ellery Selectboard"]),
     mach(["reply_owed: false", 'reply_owed_reason: "x"']),
-    w.a.actionScope({ target: A, confidential: true, reason: "r", viewer: MACHINE, author: MACHINE }).reason,
-    w.a.actionPromise({ target: A, kind: "other", text: "t", viewer: MACHINE, author: MACHINE }).reason,
-    w.a.actionReceipt({ target: A, ord: 0, at: "2026-09-03", how: "h", account: "a", viewer: MACHINE, author: MACHINE }).reason,
     w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-03", account: "a", speaker: "alice", viewer: MACHINE, author: MACHINE }).reason],
     ["MACHINE_CANNOT_OVERRIDE", "MACHINE_CANNOT_SET_PARTNERS", "MACHINE_CANNOT_SET_COPIED", "MACHINE_CANNOT_SET_REPLY_OWED",
-     "MACHINE_CANNOT_SET_SCOPE", "MACHINE_CANNOT_RECORD_PROMISE", "MACHINE_CANNOT_CORRESPOND", "MACHINE_CANNOT_CORRESPOND"]);
+     "MACHINE_CANNOT_CORRESPOND"]);
   assert.equal(w.promote(C, actionMd(C, ["action_kind: other", ...press(), "press_terms:", "  on_record: background"]), { author: MACHINE }).reason,
     "MACHINE_CANNOT_SET_PRESS_TERMS");
   assert.equal(w.record.head(B), null);
 });
 
-test("R36 (T45) the new tables (receipts, scopes, promises, the press-terms and reply-owed histories) are keyed by bundle_id, listed and purged with the action", () => {
+test("R33 (T47) that a machine never records a receipt, sets a scope or records a promise, and may propose laws, a tier and what a request seeks stored apart, is action-records' (its R12), reached on this module's instance", () => {
+  const w = world();
+  w.action(A, ["risk_tier: 1"]);
+  w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-02", account: "asked", viewer: M, author: M });
+  const r = w.a.records;
+  assert.deepEqual(reasons([r.actionScope({ target: A, confidential: true, reason: "r", viewer: MACHINE, author: MACHINE }),
+    r.actionPromise({ target: A, kind: "other", text: "t", viewer: MACHINE, author: MACHINE }),
+    r.actionReceipt({ target: A, ord: 0, at: "2026-09-03", how: "h", account: "a", viewer: MACHINE, author: MACHINE })]),
+    ["MACHINE_CANNOT_SET_SCOPE", "MACHINE_CANNOT_RECORD_PROMISE", "MACHINE_CANNOT_CORRESPOND"]);
+  const text = w.text(A);
+  const tier = r.actionRiskPropose({ target: A, tier: 3, basis: "b", proposer: MACHINE, viewer: MACHINE });
+  assert.deepEqual([tier.ok, tier.proposal.machine_work, w.a.actionRead({ id: A, viewer: M }).risk_tier], [true, true, 1], "stored apart");
+  assert.equal(w.text(A), text, "a proposal writes nothing of the action");
+  /* the control: a member records each */
+  assert.ok([r.actionScope({ target: A, confidential: true, reason: "r", viewer: M, author: M }),
+    r.actionPromise({ target: A, kind: "other", text: "t", viewer: M, author: M }),
+    r.actionReceipt({ target: A, ord: 0, at: "2026-09-03", how: "h", account: "a", viewer: M, author: M })].every((x) => x.ok));
+});
+
+test("R36 (T47) this module's tables are action_basis, correspondence, action_quotes, action_overrides and action_field_history; the six moved are action-records', created and declared at this module's creation; each purges with the action", async () => {
+  const { ACTION_RECORDS_TABLES } = await import("../../../src/action-records/index.mjs");
+  assert.deepEqual([...actions.ACTIONS_TABLES], ["action_basis", "correspondence", "action_quotes", "action_overrides", "action_field_history"]);
+  const moved = ["action_law_proposals", "action_risk_proposals", "action_seeks_proposals", "action_receipts", "action_scopes", "action_promises"];
+  assert.deepEqual([...ACTION_RECORDS_TABLES].sort(), [...moved].sort());
+  for (const t of moved) assert.ok(!actions.ACTIONS_TABLES.includes(t), t);
   const w = world();
   w.action(A, ["reply_owed: false", 'reply_owed_reason: "a statement"']);
   w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-02", account: "asked", viewer: M, author: M });
-  w.a.actionReceipt({ target: A, ord: 0, at: "2026-09-03", how: "by hand", account: "handed over", viewer: M, author: M });
-  w.a.actionScope({ target: A, confidential: true, reason: "r", viewer: M, author: M });
-  w.a.actionPromise({ target: A, kind: "other", text: "t", viewer: M, author: M });
-  const tables = ["action_receipts", "action_scopes", "action_promises", "action_field_history"];
-  for (const t of tables) {
-    assert.ok(actions.ACTIONS_TABLES.includes(t), t);
-    assert.equal(w.rows(`SELECT COUNT(*) AS n FROM ${t} WHERE bundle_id=?`, A)[0].n, 1, t);
-  }
+  w.a.records.actionReceipt({ target: A, ord: 0, at: "2026-09-03", how: "by hand", account: "handed over", viewer: M, author: M });
+  w.a.records.actionScope({ target: A, confidential: true, reason: "r", viewer: M, author: M });
+  w.a.records.actionPromise({ target: A, kind: "other", text: "t", viewer: M, author: M });
+  const tables = ["action_receipts", "action_scopes", "action_promises", "action_field_history", "correspondence"];
+  for (const t of tables) assert.equal(w.rows(`SELECT COUNT(*) AS n FROM ${t} WHERE bundle_id=?`, A)[0].n, 1, t);
   w.record.purge({ bundleId: A });
   for (const t of tables) assert.equal(w.rows(`SELECT COUNT(*) AS n FROM ${t} WHERE bundle_id=?`, A)[0].n, 0, t);
 });
 
-test("R8 R74 R77 R78 R79 R80 R82 R85 R86 R87 R88 (T45) each code this module mints has its row in action-grammar's C-117 (R9), and each row naming this module names a region its source holds", async () => {
+test("R8 R74 R77 R78 R79 R82 R85 R86 (T45) each code this module mints has its row in action-grammar's C-117 (R9), and each row naming this module names a region its source holds", async () => {
   const { readFileSync } = await import("node:fs");
   const src = readFileSync(new URL("../../../src/actions/index.mjs", import.meta.url), "utf8");
   /* the codes whose act moved to action-holds (its R1, R2, R5–R7; K2781 (1)): their rows are re-pointed by action-grammar,
-     reported at this job's COMPLETE, so they are not this module's to hold */
+     reported at this job's COMPLETE, so they are not this module's to hold. Those that moved to action-records at T47
+     (receipt, scope, promise) are named by action-grammar R28 under its file, so they leave this filter by their `where`. */
   const MOVED = new Set(["PRESSURE_MARKED", "PRESSURE_NO_ENTRY", "MACHINE_CANNOT_SET_HOLD", "HOLD_REFUSED", "HOLD_NO_LEGAL_MARK",
     "HOLD_RELEASE_IS_ITS_OWN_ACT", "HOLD_PROJECTS_REFUSED", "HOLD_ALREADY_RELEASED"]);
   const rows = Object.entries(grammar.ACTION_CATALOGUE_CHECKS)
@@ -561,9 +569,8 @@ test("R8 R74 R77 R78 R79 R80 R82 R85 R86 R87 R88 (T45) each code this module min
     assert.ok(new RegExp(`(^|\\s)${fn.replace(/[#$]/g, "\\$&")}\\(`, "m").test(src), `${code}: ${fn}`);
   }
   for (const code of ["DETERMINATION_NOT_NONCOMPLIANT", "OVERRIDE_NO_GROUND", "MACHINE_CANNOT_SET_COPIED", "MACHINE_CANNOT_SET_PARTNERS",
-                      "PARTNERS_REFUSED", "MACHINE_CANNOT_SET_PRESS_TERMS", "RECEIPT_NOT_ON_SENT", "MACHINE_CANNOT_SET_REPLY_OWED",
-                      "NO_REPLY_OWED", "STAGE_NOT_IN_LAW", "FOLLOWS_ACTION_REWRITTEN", "MACHINE_CANNOT_SET_SCOPE", "SCOPE_NO_REASON",
-                      "SCOPE_UNCHANGED", "MACHINE_CANNOT_RECORD_PROMISE", "PROMISE_REFUSED"])
+                      "PARTNERS_REFUSED", "MACHINE_CANNOT_SET_PRESS_TERMS", "MACHINE_CANNOT_SET_REPLY_OWED",
+                      "NO_REPLY_OWED", "STAGE_NOT_IN_LAW", "FOLLOWS_ACTION_REWRITTEN"])
     assert.ok(rows.some(([c]) => c === code), `${code} has its row`);
 });
 

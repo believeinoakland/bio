@@ -127,8 +127,9 @@ test("R51 R36 the audit reports C-2.10 and C-11.1 over an action, a missing coun
   assert.ok(f.some((x) => x.check === "C-11.1" && /past-due/.test(x.message)));
   assert.deepEqual(w.a.audit({ files: new Map([["bundle.md", actionMd(A, [...CP, "action_kind: cpra_request"])]]) }), [], "an old kind reads as written");
   w.action(A, ["action_basis:", "  - target: INFO-2026-0404-q", "    kind: rests_on"].slice(0, 0));
-  w.a.actionLawsPropose({ target: A, laws: [{ level: "city", citation: "B" }], proposer: MACHINE, viewer: MACHINE });
-  w.a.actionRiskPropose({ target: A, tier: 2, basis: "b", proposer: MACHINE, viewer: MACHINE });
+  /* the proposals' tables are action-records' (its R11), created and declared at this module's creation */
+  w.a.records.actionLawsPropose({ target: A, laws: [{ level: "city", citation: "B" }], proposer: MACHINE, viewer: MACHINE });
+  w.a.records.actionRiskPropose({ target: A, tier: 2, basis: "b", proposer: MACHINE, viewer: MACHINE });
   w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-02", account: "x", viewer: M, author: M });
   const r = w.record.purge({ bundleId: A });
   for (const t of actions.ACTIONS_TABLES) assert.ok(t in (r.removed || r.tables || r) || JSON.stringify(r).includes(t), t);
