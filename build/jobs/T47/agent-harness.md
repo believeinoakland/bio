@@ -19,3 +19,7 @@
 - No provided service changed, so no user's tests are owed (P11).
 
 Size (session_01PCacVzuLTMy5UuViTqdHY9): test runs 2, module lines 1774
+
+## J1 · COMPLETE
+
+T47-23 applied: R2's re-worded text met, no behaviour moved; its R2 test replaced by one titled with the new text (deployed = MODES' marks = run-rules' DEPLOYED_MODES over RUN_MODES: check, plan; plan walks PLAN_FLOW; the why names them). No source change. agent-harness 33/33; format, architecture, coverage (10/10), ownership 0 failures; run.mjs architecture 0, coverage reds all other modules'. Nothing found in other modules. Record: build/jobs/T47/agent-harness.md on job/T47/agent-harness.
