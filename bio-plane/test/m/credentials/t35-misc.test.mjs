@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
-import { world, sqlOver, PASSWORD, SEAL } from "./fixture.mjs";
+import { world, sqlOver, PASSWORD, SEAL, SIGNIN_TOKEN } from "./fixture.mjs";
 import { AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS, SIGN_IN_CHECKS, CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS,
          KEYED_SERVICE_CHECKS, AI_CREDENTIAL_EXPIRY_DAYS, CREDENTIALS_TABLES, Credentials, credentialsOf }
   from "../../../src/credentials/index.mjs";
@@ -95,7 +95,8 @@ test("R43 subscriptionConnected records that an active member is connected, with
         check: "C-29.29", translation: ACCOUNT_CHECKS.SUBSCRIPTION_LOGIN_REFUSED.translation }, JSON.stringify(extra));
       for (const [k, v] of Object.entries(extra)) if (k !== "member") assert.ok(!JSON.stringify(r).includes(v), "the refusal echoes none of it");
     }
-  for (const member of ["dee", "ghost", "admin", "class:ai", null, ""])
+  /* (T47; R71 (3)) the claimed founder is connected as a member is: not refused here */
+  for (const member of ["dee", "ghost", "class:ai", null, ""])
     assert.deepEqual(shape(w.c.subscriptionConnected({ member })), { ok: false, reason: "ACCOUNT_MEMBER_NOT_ACTIVE",
       code: "ACCOUNT_MEMBER_NOT_ACTIVE", check: "C-29.15", translation: ACCOUNT_CHECKS.ACCOUNT_MEMBER_NOT_ACTIVE.translation }, String(member));
   assert.equal(w.snapshot(), before, "recording nothing");
@@ -103,22 +104,27 @@ test("R43 subscriptionConnected records that an active member is connected, with
   assert.deepEqual(Object.keys(r).sort(), ["member", "ok", "since"]);
   assert.deepEqual([r.ok, r.member], [true, "ann"]);
   assert.deepEqual(w.rows(`SELECT member_id, since FROM subscription_connections`), [{ member_id: "ann", since: r.since }], "the fact and its instant");
-  assert.deepEqual(Object.keys(w.row(`SELECT * FROM subscription_connections`)).sort(), ["explore", "member_id", "since", "standing",
-    "suggestions", "use_account", "use_ask", "use_draft", "use_enquire", "use_read", "use_run", "use_transcribe"], "and the sign-in's own switches (R55), nothing else: no login, code or token");
+  assert.deepEqual(Object.keys(w.row(`SELECT * FROM subscription_connections`)).sort(), ["explore", "iv", "member_id", "refused_at",
+    "sealed", "since", "standing", "suggestions", "use_account", "use_ask", "use_draft", "use_enquire", "use_read", "use_run",
+    "use_transcribe", "valid_until"], "and the sign-in's own switches (R55), and (T47; R70) its token's columns");
+  const fact = w.row(`SELECT sealed, iv, valid_until, refused_at FROM subscription_connections`);
+  assert.deepEqual(fact, { sealed: null, iv: null, valid_until: null, refused_at: null }, "the fact alone: no login, code or token");
+  assert.equal(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription.connected, false,
+    "(T47; R70) a fact with no token held answers not connected");
   assert.deepEqual(w.c.subscriptionConnected({ member: "ann" }).since, r.since, "connected since the first");
   assert.ok(!Object.keys(w.ops()).some((op) => op === "subscriptionconnected"), "reached by no route");
 });
 
-test("R43 R23 accountReferenceState answers it to the member alone as subscription {connected, since}; subscriptionDisconnect is the member's own act (R22's refusals); since T38 accountFor and the ask grant read it (R35, R27)", async () => {
+test("R43 R23 R70 accountReferenceState answers it to the member alone as subscription {connected, since, held}; subscriptionDisconnect is the member's own act (R22's refusals); since T38 accountFor and the ask grant read it (R35, R27); (T47) with its held token", async () => {
   const w = await world().group("ann", "bob");
-  const since = w.c.subscriptionConnected({ member: "ann" }).since;
-  assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: true, since,
+  const since = (await w.signin("ann")).since;
+  assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: true, since, held: true,
     uses: { ask: true, draft: true, run: true, standing: false, explore: "no", enquire: true, read: true, transcribe: true, account: true, suggestions: false } });
-  assert.deepEqual(w.c.accountReferenceState({ member: "bob", viewer: "bob" }).subscription, { connected: false, since: null, uses: null });
+  assert.deepEqual(w.c.accountReferenceState({ member: "bob", viewer: "bob" }).subscription, { connected: false, since: null, held: false, uses: null });
   for (const viewer of ["bob", "second", "admin"]) assert.equal(w.c.accountReferenceState({ member: "ann", viewer }).reason, "NOT_YOUR_ACCOUNT");
   /* T38: served by her own sign-in (R35); bob, not connected, by nothing */
   assert.deepEqual(await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
-    { ok: true, kind: "signin", level: "member", member: "ann" });
+    { ok: true, kind: "signin", level: "member", member: "ann", key: SIGNIN_TOKEN("ann") });
   assert.equal((await w.c.accountFor({ member: "bob", act: { kind: "ask", member: "bob" } })).reason, "NO_ACCOUNT");
   const s = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
   assert.equal((await w.c.aiGrantMint({ member: "ann", by: "ann", session: s })).ok, true, "T38: the ask grant too (R27, K2275)");
@@ -128,7 +134,7 @@ test("R43 R23 accountReferenceState answers it to the member alone as subscripti
     assert.equal(w.c.subscriptionDisconnect({ member: "ann", by }).reason, code, String(by));
   assert.equal(w.snapshot(), before);
   assert.deepEqual(w.c.subscriptionDisconnect({ member: "ann", by: "member:ann" }), { ok: true, disconnected: true });
-  assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: false, since: null, uses: null });
+  assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: false, since: null, held: false, uses: null });
   assert.equal((await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).reason, "NO_ACCOUNT", "disconnected: served by nothing");
   assert.deepEqual(w.c.subscriptionDisconnect({ member: "ann", by: "ann" }), { ok: true, disconnected: false });
   assert.deepEqual(w.ops("by=bob", { member: "ann" }).subscriptiondisconnect(), { ok: true, disconnected: false }, "the route acts for the stamped member only");
@@ -142,7 +148,7 @@ test("R16 a member's revocation also spends their unspent recovery codes and cle
   await w.m.enroll({ invite: e.invite, handle: "third", password: PASSWORD("third") });
   const codes = w.c.recoveryCodesIssue({ by: "third" }).codes;
   w.c.recoveryCodesIssue({ by: "second" });
-  for (const id of ["third", "ann"]) w.c.subscriptionConnected({ member: id });
+  for (const id of ["third", "ann"]) await w.signin(id);
   const r = await (async () => {
     for (const by of ["admin", "second"]) { const v = w.m.adminRemove({ memberId: "third", by, reason: "r" }); if (v.ok) return v; }
     return null;
@@ -210,6 +216,7 @@ test("R3 R38 R39 R43 R44 R45 R46 R47 R49 R53 T35's rows, T36's R49 row and T37's
     SECURITY_COUNTS_UNREADABLE: ["C-96.44", W("securityTotals", "is-security-counts-read")],   /* T36: R49 */
     MACHINE_CANNOT_SET_PASSWORD: ["C-96.45", W("passwordChange", "is-password-change-own")],   /* T37: R3 */
     CURRENT_PASSWORD_WRONG: ["C-96.46", W("passwordChange", "is-current-password")],   /* T37: R3 */
+    RECOVERY_CODES_NOT_A_MEMBER: ["C-96.53", W("recoveryCodesIssue", "is-recovery-codes-member")],   /* T47: R68, R71 (5) */
   };
   assert.ok(Object.isFrozen(SIGN_IN_CHECKS));
   assert.deepEqual(Object.keys(SIGN_IN_CHECKS), Object.keys(want));
@@ -247,7 +254,11 @@ test("R1 R4 R39 R45 R46 R47 R43 the T35 routes: `source` and `country`, `by` and
   assert.equal(w.ops(`by=ann&from=${now - 3600e3}&to=${now}`, { by: "admin" }).securitymap().reason, "NOT_AN_ADMIN");
   assert.equal(w.ops(`by=second&from=${now - 3600e3}&to=${now}`).securitymap().ok, true);
   assert.equal(w.ops("by=second", { from: now - 3600e3, to: now }).securitymap().ok, true, "the period from the body");
-  assert.equal(w.ops("by=ann", { by: "admin" }).recoverycodesissue().reason, "NOT_AN_ADMIN");
+  /* (T47; R68) the stamped member's own codes, never the body's */
+  const anns = w.ops("by=ann", { by: "admin" }).recoverycodesissue();
+  assert.equal(anns.codes.length, 10);
+  assert.equal(w.c.recoveryCodesState({ by: "ann" }).remaining, 10);
+  assert.equal(w.c.recoveryCodesState({ by: "admin" }).remaining, 0);
   const issued = w.ops("by=second", { by: "ann" }).recoverycodesissue();
   assert.equal(issued.codes.length, 10);
   assert.deepEqual(w.ops("by=second").recoverycodesstate(), { ok: true, held: true, remaining: 10, issuedAt: issued.issuedAt });

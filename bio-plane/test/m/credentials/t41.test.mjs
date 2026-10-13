@@ -31,7 +31,7 @@ async function projectWorld(opts) {
   assert.equal(w.join("P", "ann", "bob").ok, true);
   w.project("S", "cy");
   w.project("D", "dee", "discoverable");
-  w.c.subscriptionConnected({ member: "cy" });
+  await w.signin("cy");
   return w;
 }
 
@@ -173,7 +173,7 @@ test("R54 R55 R56 R57 R58 the six refusals read their translation by key from wo
   assert.ok(!Object.values(WORDS).includes(ACCOUNT_CHECKS.GROUP_KEY_NOTICE_DUE.translation));
   /* each refusal, as answered */
   const w = await projectWorld();
-  w.c.subscriptionConnected({ member: "ann" });
+  await w.signin("ann");
   assert.deepEqual(shape(w.c.projectSigninSet({ project: "P", by: "ann" })), refusal("PROJECT_NOT_SOLE_MEMBER"));
   assert.equal(w.c.projectSigninSet({ project: "D", by: "dee" }).translation, WORDS["ai.refused.signinnotconnected"]);
   assert.equal(w.c.accountUsesSet({ owner: "member:cy", switch: "ask", on: 1, by: "cy" }).translation, WORDS["ai.refused.switchvalue"]);
@@ -261,7 +261,7 @@ test("R61 every change to an account's settings is recorded with who made it and
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-hist-ann", by: "ann" });
   w.c.accountUsesSet({ owner: "member:ann", switch: "explore", on: "yes", by: "ann" });
   w.c.accountReferenceRemove({ member: "ann", by: "ann" });
-  w.c.subscriptionConnected({ member: "ann" });
+  await w.signin("ann");
   w.c.subscriptionDisconnect({ member: "ann", by: "ann" });
   await w.c.projectKeySet({ project: "P", key: KEY, by: "ann" });
   w.c.projectAccountSwitch({ project: "P", on: true, by: "ann" });

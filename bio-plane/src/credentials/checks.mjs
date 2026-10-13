@@ -287,6 +287,38 @@ export const ACCOUNT_CHECKS = Object.freeze({
     check: 'C-29.40', where: at("disclosureDue", "is-disclosure-shown"),
     translation: AI_WORDS['refusal.DISCLOSURE_DUE'],
   }),
+  /* T47 (T47-81; K3060 D4, D10, K3061 D3, K3069): the sessions' lock and re-ask (R65, R66), the held sign-in token
+     (R70) and the administrator's reset link (R69), the next free numbers of C-29 at the job's START (C-29.42–.47).
+     New rows, joining the row census red until T48's stamp. */
+  REAUTH_DUE: Object.freeze({
+    check: 'C-29.42', where: at("reauthDue", "is-reauth-window"),
+    translation: 'Type your password again to do this. Signing or publishing a case, changing administrators and '
+      + 'connecting Claude always ask for it. Nothing was changed.',
+  }),
+  SESSION_LOCKED: Object.freeze({
+    check: 'C-29.43', where: at("sessionLockedRefusal", "is-session-unlocked"),
+    translation: 'This page locked after a while without use. Type your password to carry on where you were, or sign '
+      + 'out. Nothing was changed.',
+  }),
+  SIGNIN_NOT_HELD: Object.freeze({
+    check: 'C-29.44', where: at("#signinNotHeld", "is-signin-held"),
+    translation: 'The Claude sign-in that would serve this is not connected now: it needs to be signed in again, by the '
+      + 'member it belongs to. Nothing was sent.',
+  }),
+  SUBSCRIPTION_TOKEN_MALFORMED: Object.freeze({
+    check: 'C-29.45', where: at("subscriptionTokenHold", "is-signin-token-shape"),
+    translation: 'The Claude sign-in could not be kept, because what came back from it was not a sign-in. Nothing was '
+      + 'kept. Sign in again; if it keeps happening, tell whoever hosts your group\'s Civicsmith.',
+  }),
+  RESET_LINK_DEAD: Object.freeze({
+    check: 'C-29.46', where: at("#resetLinkDead", "is-reset-link-live"),
+    translation: 'This password reset link does not work any more: it was used, it expired, or a newer one was made. '
+      + 'Nothing was changed. Ask an administrator for a new link.',
+  }),
+  RESET_LINK_MEMBER_NOT_ACTIVE: Object.freeze({
+    check: 'C-29.47', where: at("passwordResetLinkMake", "is-reset-link-member"),
+    translation: 'A password reset link is made only for an active member of your group. Nothing was made.',
+  }),
   /* T40 (T40-3): its `where` moves to `#keepAwayReason`, the one site R51 and R57 share (a row change for T40-4). */
   AI_KEEP_AWAY_NO_REASON: Object.freeze({
     check: 'C-29.32', where: at("#keepAwayReason", "is-keep-away-reason"),
@@ -329,9 +361,10 @@ export const SIGN_IN_CHECKS = Object.freeze({
   }),
   RECOVERY_REFUSED: Object.freeze({
     check: 'C-96.41', where: at("#recoveryRefused", "is-recovery-code"),
-    translation: 'That recovery did not go through. A recovery code works once, only for the administrator it was '
-      + 'given to, and only while they are an administrator. Nothing was changed. Check the code and the account it '
-      + 'belongs to, or ask another administrator for help.',
+    /* (T47; R68) re-worded: every member holds codes. A row change, joining the census red until T48's stamp. */
+    translation: 'That recovery did not go through. A recovery code works once, only for the account it was given to, '
+      + 'and only while that member is active. Nothing was changed. Check the code and the account it belongs to, or '
+      + 'ask an administrator for help.',
   }),
   SECURITY_KIND_UNKNOWN: Object.freeze({
     check: 'C-96.42', where: at("securityCount", "is-security-kind"),
@@ -363,5 +396,12 @@ export const SIGN_IN_CHECKS = Object.freeze({
     translation: 'The current password you typed is not the one your account holds, so your password was not '
       + 'changed. Nothing was changed. Type your current password again; if you have forgotten it, ask an administrator '
       + 'for help.',
+  }),
+  /* T47 (T47-81; R68, K3060 D4): recovery codes issued to anyone but an active member, the next free number of C-96.
+     A new row, joining the row census red until T48's stamp. */
+  RECOVERY_CODES_NOT_A_MEMBER: Object.freeze({
+    check: 'C-96.53', where: at("recoveryCodesIssue", "is-recovery-codes-member"),
+    translation: 'Recovery codes are given to an active member, for their own account, from their own signed-in '
+      + 'session. Nothing was issued.',
   }),
 });
