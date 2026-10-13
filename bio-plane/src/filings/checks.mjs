@@ -1,5 +1,5 @@
 /* filings' refusal rows (requirements: `build/requirements/filings.md`, R1, R6–R8, R11, R13, R14, R21, R23, R28, R31, R32,
- * R34–R44). DEC-49: every
+ * R34–R44, R54, R55). DEC-49: every
  * refusal this module answers carries its code, its catalogue row and the member's translation. The family is C-115
  * (K248). A refusal another module answers passes through as it came: `actions.actionCorrespond`'s (R7), standards'
  * `NO_SUCH_STANDARD` (R14) and conformance's `NO_SUCH_DETERMINATION` (R21), each its owner's row. `NO_SUCH_ACTION` (R1,
@@ -9,13 +9,14 @@
  * conformance's, so a theory naming none is `THEORY_NO_STANDARDS`. T21 (K921, K922, K924): `KIND_NO_TEMPLATE` (C-115.6)
  * and `NOT_TIER3` (C-115.17) are retired, their numbers never reused; the library's rows C-115.31–.33, .35–.38 moved to
  * `filing-templates` (its R23), whose refusals R28, R31 and R32 pass through as its own (`NO_SUCH_TEMPLATE`,
- * `TEMPLATE_RETIRED`, `TEMPLATE_NOT_OFFERED`, `TEMPLATE_BLANK_UNKNOWN` and `templateDraft`'s). T22 (DEC-88, K1025): R8's
+ * `TEMPLATE_RETIRED`, `TEMPLATE_NOT_OFFERED`, its unknown-blank refusal (`blankUnknownRefusal`, its R32; R56) and `templateDraft`'s). T22 (DEC-88, K1025): R8's
  * `PACKET_NO_REASON` (C-115.44). T45 (K2780, K2791): `NO_DETERMINATION` (C-115.19) is retired, its number never reused (R8: a
  * packet needs no determination); R34–R44's rows are C-115.45–.54 in the requirement's order, with R23's `NO_SUCH_BUNDLE`
  * (a chosen finding absent or unseen) and the marks a member states at preparation (`FILING_MARK_REFUSED`) after them.
  * `action-holds`' `HOLD_NOT_IN_PLACE` and `HOLD_PLACE_REFUSED` (R47) and `actions`' revision refusals (R43's
  * `breach_claim`) pass through as their owners'. T46 (R51; DEC-194, N913): eight of the T45 rows translate by
- * `words.json`'s `refusal.<CODE>`, read by key (`FILINGS_WORDS`); codes, numbers and `where`s unmoved. */
+ * `words.json`'s `refusal.<CODE>`, read by key (`FILINGS_WORDS`); codes, numbers and `where`s unmoved. T47 (DEC-209,
+ * K3100): R54's `SENT_REFERENCE_MALFORMED` (C-115.57) and R55's `FILL_UNKNOWN_BLANK` (C-115.58), new rows. */
 
 const at = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
 
@@ -245,6 +246,17 @@ export const FILINGS_CHECKS = Object.freeze({
     check: "C-115.56", where: at("#marks", "is-filing-mark-refused"),
     translation: "Something you marked about this text (whose voice it is, its audience, its language, the sentences about "
       + "the group's own doing, or what it names) is not in a form that can be recorded. Nothing was prepared.",
+  },
+  /* T47 (DEC-209 (3), (4); K3100): R54's venue reference at sending and R55's member's own fills, the family's next
+     numbers in the requirements' order. */
+  SENT_REFERENCE_MALFORMED: {
+    check: "C-115.57", where: at("filingRecordSent", "is-sent-reference-malformed"),
+    translation: "The venue's reference for this sending is one line of 1 to 100 characters, as the venue gave it. "
+      + "Nothing was recorded.",
+  },
+  FILL_UNKNOWN_BLANK: {
+    check: "C-115.58", where: at("#fills", "is-fill-unknown-blank"),
+    translation: "You filled in a blank the text does not have. Fill only the blanks the text names. Nothing was prepared.",
   },
 });
 

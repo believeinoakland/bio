@@ -9,7 +9,7 @@ import { FILINGS_CHECKS, Filings } from "../../../src/filings/index.mjs";
 import { noSuchAction } from "../../../src/actions/index.mjs";
 import { FILING_TEMPLATE_CHECKS } from "../../../src/filing-templates/index.mjs";
 
-test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 R34 R36 R38 R40 R42 R43 R44 each refusal of this module carries its code, its C-115 row and translation; one actions answered passes through as it came", async () => {
+test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 R34 R36 R38 R40 R42 R43 R44 R54 R55 each refusal of this module carries its code, its C-115 row and translation; one actions answered passes through as it came", async () => {
   const x = world();
   const A = x.action();
   const T3 = x.action({ kind: "commitment_claim" });
@@ -120,6 +120,9 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 R34 R36 R38 R40 R42 R43 R44 ea
   const js = (o) => g.jointSignatory({ filing: joint.id, organisation: "Harbour Watch", body_sha: "0".repeat(64), account: "signed", author: V("bo"), viewer: V("bo"), ...o });
   expect(js({ organisation: "Nobody" }), "NOT_A_PARTNER");
   expect(js(), "JOINT_FINGERPRINT_MISMATCH");
+  /* T47 (R54, R55): the venue's reference at sending; the member's own fills */
+  expect(g.filingRecordSent({ filing: joint.id, at: "2026-09-29", account: "x", reference: "", author: V("bo"), viewer: V("bo") }), "SENT_REFERENCE_MALFORMED");
+  expect(gp("Words {{law}}.", { fills: { nope: "x" } }), "FILL_UNKNOWN_BLANK");
   const roster = projectRosterOf(x.host, { record: x.record });
   roster.migrate();
   assert.equal(roster.projectApprovalSet({ projectId: x.proj, needs: [{ tier: 1 }], reason: "two eyes", by: "olive", viewer: V("olive") }).ok, true);
