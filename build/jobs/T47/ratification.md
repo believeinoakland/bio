@@ -1,6 +1,6 @@
 # ratification (T47)
 
-**Status** · session_01MuiXmnj9JeUNyQYyGSoQVj · depth 2 · RUNNING until 2026-10-13T21:25:28Z (the tests of the modules using ratification) · handled B2
+**Status** · session_01MuiXmnj9JeUNyQYyGSoQVj · depth 2 · COMPLETE · handled B2
 
 ## Record
 
