@@ -7,6 +7,8 @@ import assert from "node:assert/strict";
 import { world, makePng, V, NOW, sha } from "./fixture.mjs";
 import { pdf } from "../doc-clean/fixtures.mjs";
 import { OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "../../../src/case-carriage/index.mjs";
+import { materialsOf } from "../../../src/case-grammar/index.mjs";
+import { caseFm } from "./fixture.mjs";
 
 const OLIVE = V("olive");
 const area = (rect, kind = "person") => ({ rect, kind });
@@ -80,4 +82,31 @@ test("R22 a member document's documentCopy in state copy answers obscured {copy,
   const p = w.photo("INFO-2026-0020-photo", makePng(4, 4));
   assert.deepEqual(w.cc.documentCopy(p), { state: "photo", copy: null, refused: null });
   assert.deepEqual(w.cc.documentCopy("not a digest"), { state: "undetermined", copy: null, refused: null });
+});
+
+test("R22 the obscured object each answer names, handed whole to a materials: row, is read back by case-grammar (its R12, R31) with its marker: kind photo for a marked and an unmarked photo's copy, kind document for a member document's", async () => {
+  const w = world();
+  w.member("olive");
+  const row = (ref, s, obscured) => ({ ref, kind: "document", sha: s, text_sha: null, origin: null, archived_copy: null,
+                                       included: false, rests_under: "load_bearing", obscured });
+  const read = (r) => materialsOf(caseFm({ materials: [r] })).materials[0].obscured;
+  const plainP = w.photo("INFO-2026-0021-plain", makePng(8, 8));
+  const plain = await w.cc.obscureMark({ captureSha: plainP, areas: [], by: OLIVE });
+  assert.deepEqual(read(row("INFO-2026-0021-plain", plainP, plain.obscured)), plain.obscured);
+  const markedP = w.photo("INFO-2026-0020-photo", makePng(20, 20));
+  const marked = await w.cc.obscureMark({ captureSha: markedP, areas: [area([2, 2, 8, 8])], by: OLIVE });
+  assert.deepEqual(read(row("INFO-2026-0020-photo", markedP, marked.obscured)), marked.obscured);
+  const b = Buffer.from(pdf()), s = sha(b), id = "INFO-2026-0101-knock", path = "snapshots/file.pdf";
+  w.doc(id, { text: `the page about ${id}` });
+  w.st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, ?, 'binary', ?, ?)`, s, id, path, b.length, NOW);
+  w.st.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?, ?, NULL, ?, ?, ?)`, id, path, s, b.length, s);
+  w.st.sql.exec(`UPDATE files SET content=? WHERE bundle_id=? AND path='data/provenance.json'`,
+    JSON.stringify({ documents: [{ file: path, capture: { method: "acquire", sha256: s, encoding: "binary", bytes: b.length, content_type: "application/pdf" } }] }), id);
+  w.evidence.held.set(s, b);
+  w.receipt(s, "doorbell");
+  await w.cc.copyBatch({});
+  const d = w.cc.documentCopy(s).obscured;
+  assert.equal(d.kind, "document");
+  const back = read(row(id, s, d));
+  assert.deepEqual([back.copy, back.label, back.kind], [d.copy, COPY_CLEANED_LABEL, "document"]);
 });
