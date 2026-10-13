@@ -1,6 +1,6 @@
 # case-authoring (T47)
 
-**Status** · session_01RymrBMQ5XEGoEKerL7JfqT · depth 2 · COMPLETE · handled B3
+**Status** · session_01RymrBMQ5XEGoEKerL7JfqT · depth 2 · WORKING · handled B3
 
 ## Completion (CASE-AUTHORING #28)
 
