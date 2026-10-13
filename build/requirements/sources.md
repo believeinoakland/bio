@@ -31,6 +31,7 @@ Terms. A **source** is the person behind a capture that was given to the group r
 
 **publishableAt({source, audience, at?}), rungOf({source, viewer})**
 - **R8** `publishableAt` answers each entry that may be shown to `audience`, with its value (a `recorded: false` entry answers none) and its basis: `consent` (R7, not withdrawn at `at`) or `public_elsewhere` (a `knownTo: public` entry whose evidence is a citation, and never a `hostile` one alone, which answers as R3's claim sentence). Every other entry is left out, and nothing is said about it. The group is never the first to make a detail more public (item 5(a)). It writes nothing and never throws.
+  (T47; N983, K3027, K3033, K3045) `op=sourcepublishable` evaluates at this module's own instant (its clock seam in tests): a query `now` or `at` is ignored; the in-process `publishableAt({source, audience, at?})` keeps its stated `at` for in-plane callers (R20's among them). *(not yet met: T47)*
 - **R9** `rungOf` answers the ladder: `unknown`; `same_knocker` (proved by the secret); `partly_known`; `known_to_group`; `publicly_known`. Each rung comes with who knows and how, from the history, and a withheld value stays withheld (R5).
 
 **sourceChangesSince({source, since, limit?, after?})** (T47; N947)

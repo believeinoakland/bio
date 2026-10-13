@@ -19,3 +19,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 810 KB, over the 600 KB limit. Read your requirements and code whole; generated or vendored data and large fixtures are not part of the set (K2053, K2083); for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L3: host-governor, capture, file-safety, sources. No L3 job uses another's new service, so each merges as soon as it is complete. K3033 moved N983's `sourcereach` to capture (R90) and gave sources `sourcepublishable`; your entry above is current.
+
+## B2 · CHANGE
+
+Requirement added on tranche/T47 (K3062, DEC-200 (5)): R42a, one term each in member-facing text, "file scanner" and "safe view"; C-140.2 and C-140.13 re-worded (row census red until T48's stamp, accepted), every R42 detail re-worded, tested at the six sites. Merge tranche/T47 into your branch before continuing; part of T47-12.
