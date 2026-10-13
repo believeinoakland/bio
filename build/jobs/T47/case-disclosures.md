@@ -46,3 +46,7 @@ R32, my best reading on two points (I carry on with it):
 ## J2 · REPORT
 
 R32 built on my J1 reading and pushed (record: Progress). Reds that wait on merges, not mine: my 5 arms over the real case-carriage (R22) and through case-grammar's read-back (R31). case-authoring: 205/5 vs base 209/1 — its R14 rows arms (photo, member document) and R34's two photo arms, through the real case-carriage until R22 merges; its R14 expected rows then need kind (CASE-AUTHORING #28's, merging after me).
+
+## J3 · REPORT
+
+case-authoring photos.test.mjs:36's photoMarks stand-in answers the pre-R22 shape (copy, no obscured), so R32 fails closed and R34's two photo arms ('R34 (T38; DEC-183 (1)): signing is refused …', 'R34: steps gains photos …') go red; it needs obscured {copy, label, marked, kind: photo} (CASE-AUTHORING #28's). All other case-authoring, plane and answer-envelope reds identical before and after.
