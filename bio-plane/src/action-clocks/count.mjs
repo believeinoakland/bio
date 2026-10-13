@@ -10,12 +10,13 @@
  * counts on a correction that governs whatever its status now (N603, its R16), so the count hands it every answer as
  * read and no longer rewrites the view itself. T35-62: R11's paths include the entries of each named closure list a
  * live deadline counts or rolls on (`closureListsRead`; N689). T45: a count starts from the receipt or service `actions`
- * records (its R80; `startOf`), saying which. */
+ * records (its R80; `startOf`), saying which. T47 (R21; N960): the action's zone is `actions.actionZone` (its R100), the
+ * one spelling of it; this file's own copy is removed. */
 
 import { evaluateRule, localDay, isCalendarDate } from "../civil-time/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
 import { factPath, LOCAL_FACT_STATUSES } from "../local-facts/index.mjs";
-import { get as profileOf } from "../../../jurisdictions/index.mjs";
+import { actionZone } from "../actions/index.mjs";
 
 const textOf = (v) => { try { return v === undefined || v === null ? null : String(v); } catch { return null; } };
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -42,31 +43,6 @@ const officeKey = (o) => (typeof o === "string" ? `role:${o}` : o && typeof o.ve
 
 /* The office as `civil-time` names it (its R9): a counterparty's role, or `{venue: <kind>}`; null for none. */
 const civilOffice = (o) => (!o ? null : o.venue ? { venue: o.venue } : o.role);
-
-/* R3, R5, R6 (actions R12, K1444 (iii)): the zone of an action's jurisdiction: the time zone of the profile that gives
-   its addressed office (or its kind's venue), else the view's `time_zone`; null when none is held, and every local
-   day that needs it is then undetermined, never the UTC day. */
-export function actionZone(fm, view) {
-  if (!view || typeof view !== "object") return null;
-  const o = actionOffices(fm, view)[0];
-  let pid = null;
-  if (o && o.role) {
-    const c = (Array.isArray(view.counterparties) ? view.counterparties : [])
-      .find((x) => x && x.role === o.role && (o.body === null || x.body === o.body));
-    pid = c && typeof c.profile === "string" ? c.profile : null;
-  } else if (o && o.venue) {
-    const k = (Array.isArray(view.action_kinds) ? view.action_kinds : []).find((x) => x && x.kind === o.venue);
-    pid = k && typeof k.profile === "string" ? k.profile : null;
-  }
-  if (pid) {
-    let p = null;
-    try { p = profileOf(pid); } catch { p = null; }
-    const z = p && p.time_zone && p.time_zone.value;
-    if (typeof z === "string" && z) return z;
-  }
-  const z = view.time_zone && view.time_zone.value;
-  return typeof z === "string" && z ? z : null;
-}
 
 /** The local day (`YYYY-MM-DD`) of the instant `ms` in `zone`, through `civil-time.localDay` (its R1); null when the
  *  zone is absent or unknown, never the UTC day. */

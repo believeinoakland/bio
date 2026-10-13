@@ -16,7 +16,9 @@
  * entry by a member's adoption (R13) or statement (`clockState`, R18); R3 answers `owed_by`, `due_at`, the steps standing
  * for the entry (R16) and a duty's Noticed item (R17); `ourDeadlines` lists the group's own (R18); and lateness counts
  * only the group's own (R15). At start it registers as `steps`' due holder (R16). T46: R1's items carry an entry's
- * time of day and zone (R19, N918), and the standing proposals are read before one is adopted (R20, N925). An
+ * time of day and zone (R19, N918), and the standing proposals are read before one is adopted (R20, N925). T47: every
+ * day is read in `actions.actionZone` (R21, N960); `dueAtOf` is exported (R22, N965); R3's items name the clock's venue
+ * (R23, N968). An
  * action's clock is written in its own document (`actions`); this module reads it, proposes entries apart, holds the
  * members' reminders in its own table, and writes the document only through R13's adoption, a member's revision.
  *
@@ -52,7 +54,7 @@ import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { PROJECTION_TABLE } from "../retrieval/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
-import { actionsOf, noSuchAction } from "../actions/index.mjs";
+import { actionsOf, noSuchAction, actionZone } from "../actions/index.mjs";
 import { standardsOf, noSuchStandard } from "../standards/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
@@ -68,13 +70,13 @@ import { isCalendarDate, span } from "../civil-time/index.mjs";
 import { evaluate as calcEvaluate } from "../calc-grammar/index.mjs";
 import { ACTION_CLOCK_CHECKS } from "./checks.mjs";
 import { ACTION_CLOCKS_TABLES, ACTION_CLOCKS_TABLE_CLASSES, migrateActionClocks } from "./schema.mjs";
-import { actionOffices, actionZone, localDayOf, yearEntries, holidayFact, officeHours, readsOfficeCalendar, closureListsRead,
+import { actionOffices, localDayOf, yearEntries, holidayFact, officeHours, readsOfficeCalendar, closureListsRead,
          factReader, computeDeadline, traceLine } from "./count.mjs";
 import { icsCalendar } from "./ics.mjs";
 
 export { ACTION_CLOCK_CHECKS } from "./checks.mjs";
 export { ACTION_CLOCKS_SCHEMA, ACTION_CLOCKS_TABLES, ACTION_CLOCKS_TABLE_CLASSES } from "./schema.mjs";
-export { actionOffices, actionZone, yearEntries, closureListsRead, factReader, computeDeadline } from "./count.mjs";
+export { actionOffices, yearEntries, closureListsRead, factReader, computeDeadline } from "./count.mjs";
 export { icsCalendar } from "./ics.mjs";
 
 /** R1: the most pending clock entries one page answers, and the most actions one page reads. */
@@ -288,7 +290,7 @@ export class ActionClocks {
   /* The UTC day of the instance clock: only R11's horizon of years reads it (its "UTC year"); every day a deadline or a
      reminder is judged on is the action's local day (`#localToday`). */
   #today(explicit = null) { return new Date(this.#nowMs(explicit)).toISOString().slice(0, 10); }
-  /* R3, R5, R6 (K1444 (iii); actions R12): the local day of the instance clock in the action's zone (`actionZone`), or
+  /* R3, R5, R6 (K1444 (iii); actions R12): the local day of the instance clock in the action's zone (R21: `actions.actionZone`, its R100), or
      null when no zone is held: undetermined, never the UTC day. */
   #localToday(fm, view, explicit = null) { return this.#judged(fm, view, explicit).day; }
   /* R3, R5 (N609, K1675): the zone an action's day is judged in at this call and that local day, which each item

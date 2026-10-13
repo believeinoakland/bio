@@ -111,3 +111,43 @@ test("R23 each overdueClocks item carries venue: an office addressee answers its
   for (const x of [null, undefined, 3, {}]) assert.equal(clocks.venueOf(x, x).venue, null);
   assert.equal(clocks.venueOf({ action_kind: "x" }, { get action_kinds() { throw new Error("x"); } }).venue, null, "never throws");
 });
+
+test("R21 the zone a day is read in is actions.actionZone (its R100), the one spelling: with two active profiles of different zones, an action addressed to an office the second gives is judged, and its items' zone answered, in the second's zone (R3, R5, R14, R19's fallback), the zone actions reads; with no zone held its days stay undetermined, never the UTC day; this module exports no actionZone of its own", async () => {
+  const actions = await import("../../../src/actions/index.mjs");
+  assert.ok(!("actionZone" in clocks), "no actionZone of this module's own");
+  /* the test profile (America/Halifax) and the first profile (America/Los_Angeles) active together: their own time_zone
+     facts disagree, so the combined view holds none (jurisdictions R15). */
+  const w = world({ profiles: ["test-port-ellery", "oakland-alameda"] });
+  const view = w.localFacts.governingView().view;
+  assert.equal(view.time_zone, undefined, "no view-wide zone: each action's zone is its office's profile's");
+  const LA = "America/Los_Angeles", HFX = "America/Halifax";
+  const C = "ACTN-2026-0003-c";
+  w.action(A, ["counterparty:", "  state: named", "  role: Controller", "  body: Finance Department", "action_kind: other",
+               "clock:", ...E("2026-09-28", ['    due_at: "2026-09-28T17:00"'])]);
+  w.action(B, ["counterparty:", "  state: named", "  role: Town Clerk", "  body: City of Port Ellery", "action_kind: other",
+               "clock:", ...CLK("2026-09-28")]);
+  w.action(C, ["counterparty:", "  state: audience", "  description: residents", "action_kind: other", "clock:", ...CLK("2026-09-01")]);
+  assert.deepEqual([A, B, C].map((id) => actions.actionZone(w.fm(id), view)), [LA, HFX, null], "the zone actions reads (its R100)");
+  /* R3: 2026-09-29T04:00Z is the 29th in Halifax and still the 28th in Los Angeles. */
+  const at = (iso) => w.c.overdueClocks({ viewer: M, now: Date.parse(iso) });
+  const r = at("2026-09-29T04:00:00Z");
+  assert.deepEqual(r.items.map((x) => [x.action, x.zone, x.local_day]), [[B, HFX, "2026-09-29"]], "the second's entry not yet past in its own zone");
+  assert.equal(r.zone_undetermined, 1, "C's day undetermined (no zone held), never judged on the UTC day, where it is long past");
+  const later = at("2026-09-29T08:00:00Z");
+  assert.deepEqual(later.items.map((x) => [x.action, x.zone, x.local_day, x.due_zone]), [[A, LA, "2026-09-29", LA], [B, HFX, "2026-09-29", null]],
+    "judged, and answered, in the zone actions reads; a timed entry stating no zone falls back to it");
+  assert.equal(later.zone_undetermined, 1);
+  /* R19: pendingClocks' fallback due_zone is the same zone. */
+  assert.deepEqual(w.c.pendingClocks({ before: "2026-10-01", viewer: M }).items.filter((x) => x.action === A).map((x) => x.due_zone), [LA]);
+  /* R5: a reminder is due on the local day of that zone, and carries it. */
+  assert.equal(w.c.reminderSet({ target: A, entry: 0, on: "2026-09-29", author: M, viewer: M }).ok, true);
+  assert.deepEqual(w.c.remindersDue({ viewer: M, nowMs: Date.parse("2026-09-29T04:00:00Z") }).items, [], "still the 28th in Los Angeles");
+  assert.deepEqual(w.c.remindersDue({ viewer: M, nowMs: Date.parse("2026-09-29T08:00:00Z") }).items.map((x) => [x.action, x.zone]), [[A, LA]]);
+  /* R14: the calendar file's zone. */
+  const ics = w.c.clocksIcs({ actions: [A], viewer: M }).ics;
+  assert.ok(ics.includes(`TZID:${LA}`) && ics.includes(`X-WR-TIMEZONE:${LA}`) && !ics.includes(`TZID:${HFX}`));
+  /* the same action under the test profile alone (control): its office is not given, so the view's own zone, Halifax. */
+  const one = world();
+  one.action(A, ["counterparty:", "  state: named", "  role: Controller", "  body: Finance Department", "action_kind: other", "clock:", ...CLK("2026-09-28")]);
+  assert.deepEqual(one.c.overdueClocks({ viewer: M, now: Date.parse("2026-09-29T04:00:00Z") }).items.map((x) => [x.action, x.zone]), [[A, HFX]]);
+});
