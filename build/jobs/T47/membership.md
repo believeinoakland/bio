@@ -216,3 +216,7 @@ T47-82 applied: R140, screens-entry in MODULE_ORDER after interface-shell (layer
   - channels: 0 failures.
 
 Size (session_011oUnEgjgR8iwQexLBg4vjp): test runs 27, module lines 3,777.
+
+## J7 · COMPLETE
+
+B5 and B6 applied (replaces J6): R141, the handle admin always taken (enrol HANDLE_TAKEN, every check taken; other cases BAD_HANDLE by R12), tested with controls; R142 (1) the viewer's own current and earlier handles taken (t40 re-pinned), (2) C-56.6 reads words.json refusal.PROJECT_GUARD_UNCHECKED by key (REFUSAL_WORDS), (3) a census over membershipOps' seven project ops proves R61/R78, each with controls; (1), (2) and R141 fail on the old code. membership 229/229; members.test.mjs 95/3 (R132 until T47-75); format, architecture, coverage 102/102, ownership: 0 failures; run.mjs architecture 0. Other modules: whole test/m 23 reds in 14 files, identical on tranche/T47; row census now also names C-56.6 (changed), already red on tranche from other rows, until T48's stamp (rule 5 (2)). Plane bundle staled; not touched.
