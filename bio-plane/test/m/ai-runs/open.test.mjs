@@ -138,7 +138,7 @@ test("R32: a run's conditions are recorded at the open and never derived later �
   assert.equal(read.session.bias.now.in_force, true);
 });
 
-test("R40: the open refuses a mode that is not a deployed member of the one deployment order (C-109.1), after R8 and before anything is written; no mode opens in the deployed one", async () => {
+test("R40 (T47; N949): the open refuses a mode that is not a deployed member of the one deployment order — a mode whose own flag in DEPLOYED_MODES is set, check and plan today — by C-109.1, after R8 and before anything is written; no mode opens in the deployed one", async () => {
   const w = await openWorld();
   /* run-rules R14 (T46; K2892): plan is deployed by its own flag; ask and draft deploy apart and are no run modes */
   assert.deepEqual(DEPLOYED_MODES, ["check", "plan", "ask", "draft"]);

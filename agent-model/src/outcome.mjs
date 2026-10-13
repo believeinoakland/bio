@@ -46,6 +46,22 @@ export function scrub(text, secret, max) {
   return s.slice(0, max);
 }
 
+/** R8, R16 — a value with every copy of the secret in any of its strings replaced, so nothing returned carries it.
+ *  Unchanged (the same object) when it holds none, which is the case the secret's one route makes the rule. */
+export function scrubDeep(value, secret) {
+  if (typeof secret !== "string" || !secret) return value;
+  let text;
+  try { text = JSON.stringify(value); } catch { text = null; }
+  if (text != null && !text.includes(secret)) return value;
+  const walk = (v) => {
+    if (typeof v === "string") return v.split(secret).join("[secret]");
+    if (Array.isArray(v)) return v.map(walk);
+    if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [walk(k), walk(x)]));
+    return v;
+  };
+  return walk(value);
+}
+
 export const silent = (detail, secret) => ({ silent: { detail: scrub(detail, secret, DETAIL_MAX) } });
 export const refused = (status, type, message, secret) =>
   ({ refused: { status, type: type == null ? null : scrub(type, secret, MESSAGE_MAX), message: scrub(message, secret, MESSAGE_MAX) } });

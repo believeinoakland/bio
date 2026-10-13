@@ -156,6 +156,7 @@ The answer:
     - a relayed runner refusal is unchanged but for `trace`;
     - `SIGNIN_CODES` equals the codes the module and the runner's tests produce.
   - *(not yet met: T47)*
+- **R85** (T47; K3087; amends R66, R84) `/signin`'s `code` relays `{member, code, attempt?}`: an `attempt` the door sends, a string of at most 200 characters, is passed on unchanged (another shape is not passed, and the runner's own check answers); `start`'s `attempt` reaches the door in the runner's answer unchanged. R84's `SIGNIN_CODES` is proven by driving each own refusal and a stub runner answering each code agent-runner's requirements name (R17–R20, R26–R28, R31), plus `SIGNIN_NOT_HELD` and `SIGNIN_TOKEN_REFUSED`, never by reading another module's source. *(not yet met: T47)*
 
 ## Private
 

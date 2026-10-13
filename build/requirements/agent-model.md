@@ -52,7 +52,7 @@ Terms. An **account reference** is `{kind: "apikey", key}` or (T38; K2200) `{kin
     - a sentinel `secret` reaches the stub runner's first frame only, and no outcome, usage or detail;
     - no `secret` gives `SIGNIN_NOT_HELD` with no runner call;
     - control: an `apikey` reference is unchanged.
-  - *(not yet met: T47)*
+  -
 
 ## Private
 

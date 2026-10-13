@@ -72,7 +72,6 @@ test("R6 the question outside the owner's scope is refused EXPLORE_OUT_OF_SCOPE:
   const w = await exploring();
   explore(w, "group", "yes", "admin");
   explore(w, "project:P", "yes", "ann");
-  w.c.subscriptionConnected({ member: "cy" });
   explore(w, "member:ann", "yes", "ann");
   const out = (owner, q) => w.u.exploreAllowed({ owner, question: q, at: AT });
   assert.equal(out("group", "INQ-2").ok, true);
