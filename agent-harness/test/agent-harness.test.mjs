@@ -113,15 +113,29 @@ test("R2: gate-mode is first: a run with no step starts there, and nothing in it
   assert.deepEqual(nextStep({ mode: "investigate" }).bound, "mode-not-deployed");
 });
 
-test("R2: check is deployed; investigate and extract are not", () => {
-  assert.equal(MODES.check.deployed, true);
+test("R2: the deployed modes are those MODES marks deployed, agreeing with run-rules' DEPLOYED_MODES: check and plan; investigate and extract are not", () => {
+  const deployed = Object.entries(MODES).filter(([, m]) => m.deployed).map(([k]) => k);
+  assert.deepEqual(deployed, ["check", "plan"]);
+  assert.deepEqual(deployed, DEPLOYED_MODES.filter((m) => RUN_MODES.includes(m)));
   assert.equal(MODES.investigate.deployed, false);
   assert.equal(MODES.extract.deployed, false);
-  for (const flow of [CONTROL_FLOW, PLAN_FLOW]) {
-    assert.deepEqual(walk({ mode: "check", maxPasses: 1 }, [], { flow }).trace[0], "gate-mode>resume");
-    for (const mode of ["investigate", "extract"])
-      assert.deepEqual(walk({ mode }, [], { flow }).bound, "mode-not-deployed");
-  }
+  /* each mode MODES marks deployed passes the gate on either table, and only those */
+  for (const flow of [CONTROL_FLOW, PLAN_FLOW])
+    for (const mode of Object.keys(MODES)) {
+      const r = walk({ mode, maxPasses: 1 }, [], { flow });
+      if (deployed.includes(mode)) assert.equal(r.trace[0], "gate-mode>resume", mode);
+      else assert.deepEqual([r.trace, r.bound], [["gate-mode>close"], "mode-not-deployed"], mode);
+    }
+  /* check walks CONTROL_FLOW; plan (since T46) walks PLAN_FLOW, R6, to its one pass */
+  assert.equal(flowFor("check"), CONTROL_FLOW);
+  assert.equal(walk({ mode: "check", maxPasses: 1 }).trace.includes("plan>fanout"), true);
+  assert.equal(flowFor("plan"), PLAN_FLOW);
+  const plan = walk({ mode: "plan" }, [], { flow: flowFor("plan") });
+  assert.deepEqual([plan.trace, plan.bound],
+    [["gate-mode>resume", "resume>read", "read>compose", "compose>dedup", "dedup>close"], "completed"]);
+  /* the why names the deployed modes as MODES marks them, for every refused word */
+  for (const mode of ["investigate", "extract", "sorcery", ""])
+    assert.ok(gateStep({ mode }).why.includes(`deployed now: ${deployed.join(", ")};`), mode);
 });
 
 test("R2: a mode that is not deployed closes mode-not-deployed at its first step, before any bound, fan-out, request or suggestion", () => {
