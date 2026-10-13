@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Your Size line counts only your module's own code (K2513, K3101).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Run the tests of the modules that use people (P11).
 Reading set (mechanics §17): measured at this START: 650 KB, over the 600 KB limit (its used-modules figure is an upper bound of whole public parts). Read your requirements and code whole and, per mechanics §3, each used module's Purpose and only the services your Uses names; for what remains over the limit (your tests, used parts), give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, §17 (3)); the sources stay binding. State in your record how the set was read.
+
+## B2 · ANSWER · re J1
+
+All seven readings stand as you state them (K3106); build on them. No new uses edge is needed.
