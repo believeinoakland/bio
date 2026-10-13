@@ -65,6 +65,13 @@ It is the only module marked `legacy` in `modules.json`.
 
 **L3 merge order:** host-governor, capture, file-safety, sources.
 
+### L2 out of layer (Bob, K3069: "Add the jobs now"; K1548)
+- **T47-81 · credentials** · (K3061 D3, K3060 D4, D10; DEC-201, DEC-202; K3068) R65 sessions by device and inactivity, `unlock`; R66 `reauth` and `REAUTH_DUE`; R67 sign-in by handle; R68 every member's recovery codes; R69 the administrator's reset link; R70 the held sign-in token (the founder may hold one) · text BOB's · merges before L6's START.
+- **T47-82 · membership** · (K3064) R140: `MODULE_ORDER` gains `screens-entry`, tolerated as not yet built · text BOB's.
+- **T47-83 · project-roster** · (DEC-201 `projects`) R27: `projectlist` answers each project's owner · text BOB's.
+
+**Merge order:** credentials, membership, project-roster, each as soon as it is complete; all before L6's START (their users are L6 and later). Their new rows (credentials' C-29) join the row census red until T48's stamp.
+
 ### L5
 - **T47-14 · local-facts** · (N946) `RULE_SECTION_UNKNOWN` minted at one site (C-126.7's `where` moved) · K231.
 - **T47-69 · progressions** · (N983, K3027, K3033) `proposals` (`proposalsFeed`) and `captureprogressions` evaluated at the server's instant (R16's configured clock; a query `now` ignored) · text BOB's.
@@ -89,7 +96,7 @@ It is the only module marked `legacy` in `modules.json`.
 - **T47-79 · agent-runner** · (N1001, K3060 D10, K3061 D10; K1874) R25: the container held awake through a sign-in (the class's `onActivityExpired` hold, start to outcome, at most 10 min 90 s); R26: listen before the SDK loads, a failed start answered JSON `RUNNER_NOT_STARTED`; R27: `start`/`code` run the binary's own `setup-token` (AT-22), and the token it prints is answered once in the `code` answer, the instance storing no sign-in; R28: conversations on the held token through `CLAUDE_CODE_OAUTH_TOKEN` in the query's environment only, `SIGNIN_NOT_HELD`, `SIGNIN_TOKEN_REFUSED`; R29–R30: one JSON line per step, conversation, lifecycle event and egress call (Anthropic's HTTP status), never a token, secret or code; R31: `attempt`, `ATTEMPT_SUPERSEDED`, member-readable `detail` and `trace` on every refusal; R2, R8, R9, R12, R17–R23 amended (R23/R17's U-7 sentences cite K3061) · the image rebuilt and published by the release (N780) · START measures `setup-token` under `script` in the image up to its address and prompt (doubt 1) · text BOB's.
 - **T47-80 · agent-worker** · (N1001, K3060 D10; K1874) R81: a `code` answer's token relayed only under the door's `hold: true`, else dropped (`held: false`); R82: a `signin` account carries `secret` (R6's refusal lifted), `SIGNIN_NOT_HELD`; R83: one JSON line per `/signin` step, trace and member-ref headers passed on, `RUNNER_SILENT` with the runner's status and text head; R84: `trace` on every answer, member-readable `detail` on its own refusals, `SIGNIN_CODES` exported for the words; R66, R67, R6, R32, R36 amended · after T47-78, T47-79 · text BOB's.
 
-**L6 merge order:** accepted-work, steps, citation, basis-versions, strength, run-rules, ai-use, ai-runs, capture-requests, skills, agent-harness, agent-model, agent-runner, agent-worker (K3068). The way-in draft's T47-78…80 are renumbered from T47-81 at L11's fold.
+**L6 merge order:** accepted-work, steps, citation, basis-versions, strength, run-rules, ai-use, ai-runs, capture-requests, skills, agent-harness, agent-model, agent-runner, agent-worker (K3068). The way-in draft's T47-78…80 are renumbered from T47-84 at L11's fold.
 
 ### L8
 - **T47-25 · case-grammar** · (N952) Provides states `workingOnOf`; (N953) a stored marker for a cleaned document copy (R12), so a re-wording of `COPY_CLEANED_LABEL` never re-keys a signed edition · text BOB's.

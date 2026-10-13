@@ -1,0 +1,7 @@
+Depth 2. Second T47 job for project-roster (out of layer, Bob K3069). Your entry: `build/plan/current.md`, **T47-83 · project-roster** (R27).
+Your requirements: `build/requirements/project-roster.md` (read whole); R27, marked `*(not yet met: T47)*`, is yours to meet. Its user is screens-daily's `projects` screen (L11, DEC-201).
+Read your own code and tests whole where your reading set allows, not only what you change (P20, mechanics §6 step 2; plan rule 2). Deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); every refusal a control. New rows join the row census red until T48's stamp (rule 5 (2)).
+This is an out-of-layer job (Bob, K3069): L3 and L5 have merged or run since your layer closed; merge `tranche/T47` into your branch first (it already is at your START). No module that uses your new services has started; they start after your merge.
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11) and report any red they show.
+Reading set (mechanics §17): 412 KB, within the 600 KB limit (K2700). Read it whole.
