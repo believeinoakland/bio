@@ -3323,6 +3323,7 @@ reasoning recorded in: this entry; `screens/mock-screens.js` (ceremony), `screen
 owed: (BOB, T47-63 or later) the ceremony's last step as drawn: the in-interface signer with the browser-held key (credentials R9; membership's note on the browser-held key), the password re-asked (D3), the device's confirmation, the two buttons, the signed and published states, the side trip to register a key, the phone and not-an-owner states; the op `signrequest` (or BOB's name) putting a prepared edition in the owners' queues; registry.json, library.json and words.json re-taken. BOB may send what the signing service provides (B161 (4)); a difference from this drawing comes back as an entry.
 
 ### DEC-208 · open (S21 asked)
+amended: 2026-10-13 by DEC-210 (BOB's K3079): the key stays on the device only when the member chooses "Keep this key on this device".
 raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (BOB's B164: what the signing service provides, `build/plan/draft-signing-service.md` on `tranche/T47`; Bob's D9, K3060, K3075)
 for: bob-session
 question: How the ceremony of DEC-207 meets what signing provides today: a case needs 1 + one per finding + one per piece of evidence signatures (ratification R4, R5); `publish` only prepares (with the tie attestation, T47-32) while `caseratify` signs and publishes; the key is a blob today, the on-device key not yet built. And one question that is Bob's (S21): whether one confirmation may cover all of a case's signatures, given his ruling that each use of the key is confirmed (K509 (2)).
@@ -3360,4 +3361,18 @@ response: **Researched and drawn by the design session, 2026-10-13.**
 decided: 2026-10-13 · Bob's direction (D13), researched and drawn by the design session
 reasoning recorded in: this entry; `screens/mock-screens.js` (request, help-records), `screens/mock-kit.js`, `screens/mock-refs.js`, `screens/mock-shell.js`, `screens/registry.src.py` (63 screens), `screens/words.json` (1,726 words), `layouts.html`.
 owed: (BOB, N858) the two templates ("Records request" and "Records request with immediate disclosure") into the California and Oakland profiles under the template process (filing-templates R15: a named writer, the sources above, a professional review before any member is offered them), with the period, form and cost-limit fields; the portal's request number recorded with the sending (`filingrecordsent`); the channel's words (the portal shows the text to anyone) on the profile's NextRequest venue; the help page from the profile's facts; registry.json and words.json re-taken.
+
+### DEC-210 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (BOB's B165, K3079)
+for: bob-session
+question: How a member's signing key is kept, now that BOB allows a non-extractable key to persist in the member's browser only when she chooses it (screens-publish R11 amended, K3079).
+why it is Bob's: it is not: BOB's ruling on its own requirement, drawn by the design session (P17).
+provisional: DEC-208 (3): the key kept on the device across visits.
+alternative: none.
+recommendation: as below.
+reversal cost: low: one choice and one word.
+response: **Drawn by the design session, 2026-10-13.** The ceremony's "no signing key in this browser" step offers, before "Register a signing key in this browser", the member's own choice: "Keep this key on this device, so you can sign here again without loading it. Leave this unticked on a computer others use: you then load your key file each time you sign." (`signing.ceremony.keepkey`, protected); unticked, the key is saved as a key file protected by a passphrase the member chooses, and "Use a key file you already have" loads it. The served op is `signerregisterown` (K3079 (6)), as the registry already names it.
+decided: 2026-10-13 · the design session (P17), on BOB's K3079
+reasoning recorded in: this entry; `screens/mock-screens.js` (ceremony), `screens/words-t47.src.py`, `screens/words.json` (1,727 words, 616 protected), `layouts.html`.
+owed: (BOB) the choice as drawn, the key persisted only when ticked; words.json re-taken.
 

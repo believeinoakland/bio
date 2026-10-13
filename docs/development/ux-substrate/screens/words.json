@@ -22,7 +22,7 @@
   "project": 7,
   "grouprule": 1,
   "refusal": 156,
-  "signing": 15,
+  "signing": 16,
   "case": 11,
   "docket": 2,
   "advocacy": 3,
@@ -55,8 +55,8 @@
   "act": 591,
   "column": 33,
   "wizard": 306,
-  "total": 1726,
-  "protected": 615
+  "total": 1727,
+  "protected": 616
  },
  "words": [
   {
@@ -4229,6 +4229,13 @@
    "protected": true,
    "source": "DEC-200",
    "note": "NO_ATTESTING_KEY before signing"
+  },
+  {
+   "key": "signing.ceremony.keepkey",
+   "en": "Keep this key on this device, so you can sign here again without loading it. Leave this unticked on a computer others use: you then load your key file each time you sign.",
+   "protected": true,
+   "source": "DEC-200",
+   "note": "K3079: kept only when the member chooses"
   },
   {
    "key": "signing.ceremony.notowner",

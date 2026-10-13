@@ -56,6 +56,7 @@ w('signing.ceremony.declined', 'Your device didn\'t confirm, so nothing was sign
 w('signing.ceremony.signedat', 'Signed. Edition {edition} becomes public on {date} at {time} ({zone}). Until then it waits, not public. At that time Civicsmith checks again and publishes only if nothing changed since you signed.', True, 'publishat done')
 w('signing.ceremony.signednow', 'Signed and published. Edition {edition} is public now: anyone can read it and check your signature without the group.', True, 'caseratify done')
 w('signing.ceremony.nokey', 'You have no signing key in this browser. Register one here: it is made on this device and never leaves it, and every use asks you to confirm. Then you come back to this step, with nothing lost.', True, 'NO_ATTESTING_KEY before signing')
+w('signing.ceremony.keepkey', 'Keep this key on this device, so you can sign here again without loading it. Leave this unticked on a computer others use: you then load your key file each time you sign.', True, 'K3079: kept only when the member chooses')
 w('signing.ceremony.notowner', 'Only an owner of {project} signs its cases: {owners}. Everything you prepared stays as it is. Ask one of them to sign.', True, 'CASE_SIGNER_NOT_AN_OWNER before signing')
 w('signing.ceremony.phone', 'Signing and publishing finish on a larger screen. Everything here can be read on a phone. Open {project} on a computer to sign: the ceremony is where you left it.', True, 'principle 8.6')
 

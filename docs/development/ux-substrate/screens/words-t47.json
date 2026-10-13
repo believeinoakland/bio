@@ -192,6 +192,12 @@
   "note": "NO_ATTESTING_KEY before signing"
  },
  {
+  "key": "signing.ceremony.keepkey",
+  "en": "Keep this key on this device, so you can sign here again without loading it. Leave this unticked on a computer others use: you then load your key file each time you sign.",
+  "protected": true,
+  "note": "K3079: kept only when the member chooses"
+ },
+ {
   "key": "signing.ceremony.notowner",
   "en": "Only an owner of {project} signs its cases: {owners}. Everything you prepared stays as it is. Ask one of them to sign.",
   "protected": true,

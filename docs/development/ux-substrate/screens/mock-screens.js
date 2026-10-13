@@ -968,7 +968,8 @@ SCR.ceremony = c => { const st = CER_ST[c.v] || 'a'; const sel = v => v === st ?
   <div class="st st-d">${cerSteps(10)}${row(I('accepted'), '<b>Signed and published.</b> Edition 2 is public now: anyone can read it and check your signature without the group. Members who follow this case are told once.', '')}
    ${acts(ref(I('case') + 'Open the public page', 'published', '<b>Edition 2</b> · as any reader sees it'))}</div>
   <div class="st st-e">${cerSteps(9)}<div class="cs-dialog" style="max-width:none;box-shadow:none"><b>You have no signing key in this browser</b>
-   <div class="ends">Register one here. It is made on this device and never leaves it; every use asks you to confirm. Then you come back to this step, with nothing lost.</div>
+   <div class="ends">Register one here. It is made on this device and can never be copied out of it; every use asks you to confirm. Unless you keep it on this device, you save it as a key file, protected by a passphrase you choose. Then you come back to this step, with nothing lost.</div>
+   ${checks('', [['Keep this key on this device, so you can sign here again without loading it. Leave this unticked on a computer others use: you then load your key file each time you sign.', false]], { act: 'signerregisterown' })}
    ${acts(btn('signerregisterown', 'Register a signing key in this browser', { tone: 'primary', help: 'Makes your signing key on this device and registers its public half with your group, so readers can check what you sign. The key itself never leaves this device.' }))}
    ${acts('<button type="button" class="cs-btn" data-tone="quiet">Use a key file you already have</button>')}
    <p class="mk-small muted" style="margin:0">Registered a key on another computer? Sign from that one, or register a key here too. Lost a key? Withdraw it under Settings › Your account and make a new one here; cases it already signed can still be checked. Your signing keys are listed there.</p></div></div>
