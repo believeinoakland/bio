@@ -46,7 +46,8 @@
  *   membership           `memberFacts` (a signer's cover or handle, at the level they chose; R27).
  *   caseCarriage         `photoMarks` (its R10; R6, R29); `OBSCURED_LABEL` and (T40) `PUBLISHED_LABEL` (its R11) are
  *                        imported (T37; N757);
- *                        `documentCopy` (its R16; R6), `COPY_CLEANED_LABEL` (its R15) imported (T39; N806). A member
+ *                        `documentCopy` (its R16; R6; T39, N806), its cleaned copy's `obscured` object, label and
+ *                        (T47, R32) `kind` marker its own, handed on whole. A member
  *                        document neither queued nor derived is queued by that read, case-carriage's one write, inside
  *                        the caller's transaction (its R16).
  *   bias                 `statementInForce` (its R49; R30: the statements this case's lens prints).
@@ -80,7 +81,7 @@ import { eventsOf } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { peopleOf as peopleModuleOf } from "../people/index.mjs";
-import { caseCarriageOf, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "../case-carriage/index.mjs";
+import { caseCarriageOf, OBSCURED_LABEL, PUBLISHED_LABEL } from "../case-carriage/index.mjs";
 import * as caseCheckerModule from "../case-checker/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { DRAFT_KINDS } from "../run-rules/index.mjs";
@@ -94,7 +95,7 @@ import { NOT_SHOWN_WORDS, tensionSide, SELF_ATTESTED_SENTENCE } from "./document
 export { CASE_DISCLOSURE_CHECKS, PHOTO_WORDS, DOCUMENT_WORDS, ACCOUNT_ARMS } from "./checks.mjs";
 export { PERSON_BASES, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS, basesListed, basisCitation, placesStated,
          peopleLines, memberTieLines, peopleOf, memberTiesOf } from "./people.mjs";
-export { chainsOf, materialHeld, materialRows, photoRead, documentRead, PHOTO_STATES, DOCUMENT_STATES,
+export { chainsOf, materialHeld, materialRows, photoRead, documentRead, obscuredRead, PHOTO_STATES, DOCUMENT_STATES,
          PHOTO_NOT_COVERABLE_WORDS, PHOTO_UNCHECKED_WORDS } from "./materials.mjs";
 export { flagsListed, acceptedWorkRow, FLAG_SENTENCE, FLAGS_SAY } from "./accepted.mjs";
 export { SELF_ATTESTED_SENTENCE, TENSION_TEMPLATES, HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED,
@@ -427,7 +428,8 @@ export class CaseDisclosures {
    *    chain reaching it is `PHOTO_NOT_COVERABLE`, naming each such photo and member; one only supporting members reach
    *    is listed `included: false` with no `obscured`;
    *  - otherwise (`marked` or `nothing_to_obscure`, with a copy) it is presentable through its copy, `obscured: {copy,
-   *    label, marked, label_key}`: `label` `OBSCURED_LABEL` when `marked` (`photo.obscured.label`), else
+   *    label, marked, kind, label_key}`, case-carriage's object handed on whole (R32; its R22: `kind` "photo") with
+   *    `label_key` beside it: `label` `OBSCURED_LABEL` when `marked` (`photo.obscured.label`), else
    *    `PUBLISHED_LABEL` (`photo.published.label`; T40, DEC-185 (1): every photo a published case carries is labelled,
    *    replacing K2291's null), `marked` whether it is `marked`, and `label_key` the key a reader's surface shows the
    *    label by (K2483, as `public-read` R3 answers it).
@@ -440,7 +442,8 @@ export class CaseDisclosures {
    *    `doc-clean`'s code; pending or refused material only supporting members reach is listed `included: false` with
    *    no `obscured`;
    *  - `copy` is presentable through its copy, `included: false`, `obscured: {copy, label: COPY_CLEANED_LABEL,
-   *    label_key: "document.cleaned.label"}` (K2483: the words stay `case-carriage`'s);
+   *    kind: "document", label_key: "document.cleaned.label"}`, case-carriage's object handed on whole (R32; its R22)
+   *    with K2483's key beside it (the words stay `case-carriage`'s);
    *  - `clean` and `public` are judged as any document, by what is held.
    *  None of the first four is C-120.8. A member-supplied archive is never carried (`case-carriage` R8): this module
    *  answers materials, never an archive.
@@ -460,10 +463,12 @@ export class CaseDisclosures {
       const isPhoto = !!(photo && photo.photo === true);
       const document = photo && photo.photo === false
         ? documentRead(() => this.caseCarriage.documentCopy(m.sha)) : null;
-      const obscured = isPhoto && photo.state !== "unchecked" && !photo.refused && photo.copy
-        ? { copy: photo.copy, ...photoLabel(photo.state === "marked") }
-        : document && document.state === "copy"
-          ? { copy: document.copy, label: COPY_CLEANED_LABEL, label_key: "document.cleaned.label" }
+      /* R32 (T47; N953): case-carriage's own `obscured` object, `kind` included, handed on unchanged; K2483's `label_key`
+         beside it for a reader's surface, never written (R7) */
+      const obscured = isPhoto && photo.obscured
+        ? { ...photo.obscured, label_key: photoLabel(photo.state === "marked").label_key }
+        : document && document.state === "copy" && document.obscured
+          ? { ...document.obscured, label_key: "document.cleaned.label" }
           : null;
       const plain = !(photo && photo.unread) && !isPhoto && !(document && !AS_HELD.includes(document.state));
       return { ...m, held, included: plain && held.whole, obscured, photo, document };

@@ -40,7 +40,7 @@ import { linesOf } from "../../../src/lines/index.mjs";
 import { moneyOf } from "../../../src/money/index.mjs";
 import { peopleOf } from "../../../src/people/index.mjs";
 import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
-import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
+import { caseCarriageOf, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "../../../src/case-carriage/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -279,8 +279,11 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
  *  a)` answers `a` for that capture (a refused or malformed read), `read`,
  *  when set, answers in place of the held marks (a failed or a refused read). Every other capture is no photo. `asked`
  *  lists each `{captureSha, viewer}` asked.
+ *  (T47; R32) A photo answering a copy answers case-carriage R22's `obscured` object `{copy, label, marked, kind:
+ *  "photo"}` with it, as that module will.
  *  `documentCopy(captureSha)` at its ruled interface (its R16; T39, N806): `document(sha, a)` answers `a` (a state, or
- *  any answer) for that capture, `copyRead`, when set, answers in place of the held ones; every other capture answers
+ *  any answer; a `copy` answer with no `obscured` key gains R22's `{copy, label: COPY_CLEANED_LABEL, kind: "document"}`)
+ *  for that capture, `copyRead`, when set, answers in place of the held ones; every other capture answers
  *  `public` and a photo `photo`. `copyAsked` lists each digest asked. */
 export function marksStandIn() {
   const held = new Map(), answers = new Map(), copies = new Map();
@@ -289,7 +292,10 @@ export function marksStandIn() {
     copyRead: null,
     copyAsked: [],
     document(captureSha, a) {
-      copies.set(captureSha, typeof a === "string" ? { state: a, copy: null, refused: null } : a);
+      const c = typeof a === "string" ? { state: a, copy: null, refused: null } : a;
+      /* (T47; R32) case-carriage R22: a copy's answer carries its `obscured` object, `kind` "document" */
+      copies.set(captureSha, c && c.state === "copy" && typeof c.copy === "string" && !("obscured" in c)
+        ? { ...c, obscured: { copy: c.copy.toLowerCase(), label: COPY_CLEANED_LABEL, kind: "document" } } : c);
     },
     documentCopy(captureSha) {
       s.copyAsked.push(captureSha);
@@ -304,7 +310,11 @@ export function marksStandIn() {
         : state === "nothing_to_obscure" ? [{ mark: "MARK-1", areas: [], by: "alice", at: T0 }] : []);
       held.set(captureSha, { state, marks: m,
         copy: copy ? { sha256: copy, covered: 1, width: 8, height: 8 } : null,
-        refused: refused ? { code: refused, detail: `image-cover refused: ${refused}` } : null });
+        refused: refused ? { code: refused, detail: `image-cover refused: ${refused}` } : null,
+        /* (T47; R32) case-carriage R22: a photo answering a copy answers its `obscured` object, `kind` "photo" */
+        ...(copy && !refused && state !== "unchecked"
+          ? { obscured: { copy: copy.toLowerCase(), label: state === "marked" ? OBSCURED_LABEL : PUBLISHED_LABEL,
+                          marked: state === "marked", kind: "photo" } } : {}) });
     },
     photoMarks({ captureSha, viewer }) {
       s.asked.push({ captureSha, viewer });
