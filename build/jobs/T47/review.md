@@ -1,6 +1,6 @@
 # review (T47)
 
-**Status** · session_016AUno3QNTCjsViWYp6mtmK · depth 2 · WORKING · handled B1
+**Status** · session_016AUno3QNTCjsViWYp6mtmK · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## J1 · REPORT
 
