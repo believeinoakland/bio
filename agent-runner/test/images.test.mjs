@@ -15,7 +15,7 @@ const image = (data, media_type = 'image/png') => ({ type: 'image', source: { ty
 // One conversation whose model calls read_page once; resolves with what the SDK boundary received and the frames.
 async function onePage(content, extra = {}) {
   const { calls, sdk } = stubSdk(async (call, { callTool }) => { await callTool('read_page', { page: 1 }); return success(); });
-  const r = await startRunner(sdk, { signedIn: MEMBER });
+  const r = await startRunner(sdk);
   try {
     const relays = [];
     const got = await conversation(r.base, transcribe(), (tu) => { relays.push(tu); return { content, ...extra }; });
@@ -49,7 +49,8 @@ test('R24 R8 a sentinel in an image\'s data is in no answer, relay, log line or 
   const logged = [];
   const orig = { log: console.log, error: console.error, warn: console.warn, out: process.stdout.write, err: process.stderr.write };
   console.log = console.error = console.warn = (...a) => { logged.push(a.join(' ')); };
-  process.stdout.write = process.stderr.write = (s) => { logged.push(String(s)); return true; };
+  process.stdout.write = (s, ...a) => { logged.push(String(s)); return orig.out.call(process.stdout, s, ...a); };
+  process.stderr.write = (s, ...a) => { logged.push(String(s)); return orig.err.call(process.stderr, s, ...a); };
   let got, bad;
   try {
     got = await onePage([image(SENT)]);

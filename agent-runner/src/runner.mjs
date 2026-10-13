@@ -1,5 +1,6 @@
-// One conversation request run as one Agent SDK query (R1–R4, R8–R10): Claude Code unmodified, with nothing of its own
-// switched on, under the member's own stored sign-in in this instance, and every tool a relay to the caller.
+// One conversation request run as one Agent SDK query (R1–R4, R8–R10, R28): Claude Code unmodified, with nothing of its
+// own switched on, on the member's held token (`CLAUDE_CODE_OAUTH_TOKEN`, AT-22) in that query's environment only, and
+// every tool a relay to the caller. It writes one JSON line per conversation (R29), never its content or its token.
 import { mkdtemp, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -9,18 +10,22 @@ export const RELAY_SERVER = 'relay';
 export { DETAIL_MAX, scrub };
 export const MAX_TURNS_BOUND = 100;
 const TOOL_NAME = /^[A-Za-z0-9_-]{1,64}$/;
+// The SDK's own sign of Anthropic refusing the token (sdk.d.ts `SDKAssistantMessageError`, 0.3.289; START, K3068):
+// an assistant or `api_retry` message carrying this error, then a query that does not succeed (R28).
+export const AUTH_FAILED = 'authentication_failed';
 
 const fail = (code, detail) => ({ ok: false, code, detail });
 const num = (x) => (typeof x === 'number' && Number.isFinite(x) ? x : null);
 
-// The request's one credential (R2; T39, K2290, K2343): `{kind: "signin", member}`, the member whose stored sign-in in
-// this instance the query runs under (R21); null for anything else, so it is refused before anything starts. It carries
-// no secret: one carrying a `secret`, or of any other kind (`subscription`, `apikey`), is refused, and no token or key
-// of a request is ever read.
+// The request's one credential (R2 as R28 amends it): `{kind: "signin", member, secret}`, `secret` the token
+// `credentials` holds for the member. Anything but a `signin` credential naming a member is null (NO_CREDENTIAL); one
+// whose `secret` is not a non-empty string is `{member, secret: null}` (SIGNIN_NOT_HELD). No key of any other kind is
+// ever read.
 export function credentialOf(request) {
   const c = request && request.credential;
-  if (!c || typeof c !== 'object' || Array.isArray(c) || c.kind !== 'signin' || Object.hasOwn(c, 'secret')) return null;
-  return typeof c.member === 'string' && c.member.length > 0 ? { member: c.member } : null;
+  if (!c || typeof c !== 'object' || Array.isArray(c) || c.kind !== 'signin') return null;
+  if (typeof c.member !== 'string' || c.member.length === 0) return null;
+  return { member: c.member, secret: typeof c.secret === 'string' && c.secret.length > 0 ? c.secret : null };
 }
 
 // The rest of a conversation request's shape; null when it is whole.
@@ -104,14 +109,22 @@ export function relayServer(sdk, tools, relay) {
 }
 
 // Runs `request` over `channel` ({send(obj), close()}); returns the handlers the connection feeds:
-// `toolResult(frame)` and `closed()`. The answer is sent on the channel and the promise resolves with it. `signin` is
-// the instance's own sign-in (src/signin.mjs), which every query runs under (R2, R21).
-export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = '0', signin = null } = {}) {
+// `toolResult(frame)` and `closed()`. The answer is sent on the channel and the promise resolves with it. `sdk` may be
+// a promise: a conversation that arrives before the SDK has loaded waits for it (R26). `log` takes the one line (R29).
+export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = '0', trace = null, memberRef = null,
+  log = (line) => console.log(JSON.stringify(line)) } = {}) {
   const cred = credentialOf(request);
+  const secret = cred && cred.secret;
   const pending = new Map();
-  let ended = false, n = 0;
+  const t0 = Date.now();
+  let ended = false, n = 0, turns = null;
   const abort = new AbortController();
-  const answer = (a) => { if (!ended) { ended = true; channel.send(a); channel.close(); } return a; };
+  const line = (a) => {
+    const outcome = a.ok ? 'ok' : ['NO_CREDENTIAL', 'SIGNIN_NOT_HELD', 'BAD_REQUEST', 'SIGNIN_TOKEN_REFUSED'].includes(a.code) ? 'refused' : 'failed';
+    log({ event: 'conversation.runner', ...(trace ? { trace } : {}), member_ref: memberRef, outcome,
+      ...(a.ok ? {} : { code: a.code }), ms: Date.now() - t0, num_turns: turns });
+  };
+  const answer = (a) => { if (!ended) { ended = true; line(a); channel.send(a); channel.close(); } return a; };
   const handlers = {
     toolResult(tr) {
       const p = tr && pending.get(tr.id);
@@ -120,6 +133,7 @@ export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = 
     closed() {
       if (ended) return;
       ended = true;
+      line({ ok: false, code: 'CLOSED' });
       abort.abort();
       for (const p of pending.values()) p.reject(new Error('the connection closed'));
       pending.clear();
@@ -127,18 +141,17 @@ export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = 
   };
   const run = async () => {
     if (!cred) return answer(fail('NO_CREDENTIAL', 'the request carries no usable credential'));
+    if (!secret) return answer(fail('SIGNIN_NOT_HELD', 'no Claude sign-in is held for this member: connect Claude again'));
     const fault = shapeFault(request);
     if (fault) return answer(fail('BAD_REQUEST', fault));
-    // The query runs under the stored sign-in made for its member, else starts nothing (R2, R21).
-    const why = signin ? await signin.serves(cred.member) : 'NOT_SIGNED_IN';
-    if (why === 'NOT_THIS_MEMBER') return answer(fail(why, 'this instance\'s sign-in was made for another member'));
-    if (why) return answer(fail(why, 'this instance holds no sign-in made for this member'));
+    let kit;
+    try { kit = await sdk; } catch { return answer(fail('SDK_ERROR', 'the Agent SDK could not be loaded')); }
     if (ended) return null;
-    const kept = await signin.paths();
     const dir = await mkdtemp(join(tmpRoot, 'agent-runner-'));
-    let stderr = '';
+    let stderr = '', authFailed = false;
+    const refused = () => answer(fail('SIGNIN_TOKEN_REFUSED', 'Anthropic refused this member\'s Claude sign-in: connect Claude again'));
     try {
-      for (const d of ['home', 'tmp', 'work']) await mkdir(join(dir, d));
+      for (const d of ['home', 'tmp', 'work', 'claude']) await mkdir(join(dir, d));
       const relay = (name, input) => new Promise((resolve, reject) => {
         if (ended) return reject(new Error('the connection closed'));
         const id = `relay_${++n}`;
@@ -155,38 +168,44 @@ export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = 
         skills: [],
         plugins: [],
         maxTurns: request.max_turns,
-        mcpServers: { [RELAY_SERVER]: relayServer(sdk, request.tools, relay) },
+        mcpServers: { [RELAY_SERVER]: relayServer(kit, request.tools, relay) },
         allowedTools: request.tools.map((t) => `mcp__${RELAY_SERVER}__${t.name}`),
         permissionMode: 'dontAsk',
         cwd: join(dir, 'work'),
-        // Neither credential variable, and the stored sign-in's own directory, where Claude Code authenticates as its
-        // sign-in left it (AT-27).
+        // The held token in this query's environment only (AT-22's way), a fresh config directory gone with the
+        // query, and no API key (R28, R9).
         env: {
           PATH, ...passed(), HOME: join(dir, 'home'), TMPDIR: join(dir, 'tmp'), ...QUIET,
-          CLAUDE_AGENT_SDK_CLIENT_APP: `agent-runner/${version}`, CLAUDE_CONFIG_DIR: signin.configDir,
+          CLAUDE_AGENT_SDK_CLIENT_APP: `agent-runner/${version}`, CLAUDE_CONFIG_DIR: join(dir, 'claude'),
+          CLAUDE_CODE_OAUTH_TOKEN: secret,
         },
         abortController: abort,
         stderr: (s) => { stderr = (stderr + s).slice(-4096); },
       };
       let result = null;
-      for await (const m of sdk.query({ prompt: request.prompt, options })) if (m && m.type === 'result') result = m;
+      for await (const m of kit.query({ prompt: request.prompt, options })) {
+        if (m && m.error === AUTH_FAILED && (m.type === 'assistant' || (m.type === 'system' && m.subtype === 'api_retry'))) authFailed = true;
+        if (m && m.type === 'result') result = m;
+      }
       if (ended) return null;
-      if (!result) return answer(fail('SDK_ERROR', scrub(stderr || 'the query ended with no result')));
+      turns = result ? num(result.num_turns) : null;
+      const ok = result && result.subtype === 'success' && !result.is_error;
+      if (!ok && authFailed) return refused();
+      if (!result) return answer(fail('SDK_ERROR', scrub(stderr || 'the query ended with no result', secret)));
       if (result.subtype === 'error_max_turns')
         return answer(fail('MAX_TURNS', `stopped after ${result.num_turns} turns (max_turns ${request.max_turns})`));
-      if (result.subtype !== 'success' || result.is_error) {
+      if (!ok) {
         const why = (result.errors && result.errors.join('; ')) || result.result || result.subtype;
-        return answer(fail('SDK_ERROR', scrub(why)));
+        return answer(fail('SDK_ERROR', scrub(why, secret)));
       }
-      return answer({ ok: true, result: scrub(result.result, '', Infinity), stop_reason: result.stop_reason ?? null,
+      return answer({ ok: true, result: scrub(result.result, secret, Infinity), stop_reason: result.stop_reason ?? null,
         num_turns: result.num_turns, usage: usageOf(result) });
     } catch (e) {
       if (ended) return null;
-      return answer(fail('SDK_ERROR', scrub((e && e.message) || e)));
+      if (authFailed) return refused();
+      return answer(fail('SDK_ERROR', scrub((e && e.message) || e, secret)));
     } finally {
       await rm(dir, { recursive: true, force: true });
-      // Of the stored sign-in's directory only what the binary held before stays, renewed or not (R9).
-      await signin.keepOnly(kept);
     }
   };
   handlers.done = run();
