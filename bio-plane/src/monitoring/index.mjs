@@ -3339,11 +3339,12 @@ export function monitoringOps(m, url, body) {
     /* R30: the administrator's pause, `by` the control plane's stamp; and the due slate through the viewer's sight. */
     monitorpause: () => m.pause({ paused: typeof b.paused === "boolean" ? b.paused : null, by: q("actor") || null }),
     monitorslate: () => m.slate({ viewer: q("viewer"), now: q("now"), limit: q("limit") }),
-    /* R52: the body's fields, then the control plane's `author` and `viewer` stamps, so a body never supplies them. */
-    addressfrequencyset: () => m.addressFrequencySet({ ...b, author: q("author"), viewer: q("viewer") }),
-    /* R74: the same, for a member's act setting a bundle's monitoring. */
+    /* R74: a member's act setting a bundle's monitoring; the body's fields, then the control plane's `author` and
+       `viewer` stamps, so a body never supplies them. Before R52's, which the route map keeps last of this module's ops. */
     monitorset: () => m.monitorSet({ bundleId: b.bundleId ?? null, enabled: b.enabled, frequency: b.frequency ?? null,
                                      author: q("author"), viewer: q("viewer") }),
+    /* R52: the body's fields, then the control plane's `author` and `viewer` stamps, so a body never supplies them. */
+    addressfrequencyset: () => m.addressFrequencySet({ ...b, author: q("author"), viewer: q("viewer") }),
   };
 }
 

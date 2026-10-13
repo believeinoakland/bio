@@ -113,6 +113,8 @@ test("R74 refusals, in order, each writing nothing: required bundleId (R1's), AB
   const http = "INFO-2026-0905-http";
   w.promote(http, infoMd(http, "http://records.example.org/x", { enabled: false }));
   const hb = untouched(w, http);
+  /* the shape is asked before the locator: a malformed act on a bundle with no public locator is MONITOR_SET_REFUSED */
+  assert.equal((await set(w, { bundleId: http, enabled: "yes" })).reason, "MONITOR_SET_REFUSED");
   const nl = await set(w, { bundleId: http, enabled: true });
   assert.deepEqual([nl.ok, nl.reason], [false, "NO_LOCATOR"]);
   assert.equal(untouched(w, http), hb);
@@ -166,10 +168,20 @@ test("R74 promotion's refusal of the member's revision is answered as promotion 
   const seen = [];
   w.promotion.promote = (pkg) => { seen.push(pkg); return refusal; };
   try {
+    /* promotion's refusal is known only at the write (K3135): a malformed act, one without a public locator, and a
+       no-op answer as R74 orders them first, and promotion is not asked */
+    assert.equal((await set(w, { bundleId: id, enabled: "yes" })).reason, "MONITOR_SET_REFUSED");
+    const same = await set(w, { bundleId: id, enabled: false });
+    assert.deepEqual([same.ok, same.existed], [true, true]);
+    assert.equal(seen.length, 0, "promotion not asked before the write");
     const r = await set(w, { bundleId: id, enabled: true });
     assert.deepEqual(r, refusal);
+    assert.equal(seen.length, 1);
   } finally { w.promotion.promote = real; }
   assert.equal(untouched(w, id), before);
+  /* control: the same act, promotion admitting it, lands */
+  assert.equal((await set(w, { bundleId: id, enabled: true })).ok, true);
+  assert.equal(w.fm(id).monitoring.enabled, true);
   /* the member's revision: authored and stamped by the member, never mechanical */
   assert.deepEqual([seen[0].author, seen[0].actorIdentity, seen[0].actorViewer, seen[0].actorMemberId, seen[0].writer],
     [ALICE, ALICE, ALICE, "alice", undefined]);
