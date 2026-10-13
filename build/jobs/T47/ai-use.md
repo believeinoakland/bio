@@ -22,3 +22,7 @@
 - `checks/run.mjs` over the product: architecture 3071 product files; 0 failures. Coverage's 44 failures are other modules' inherited ones (screens-*, setup-words, wizard-scripts …), none ai-use's.
 
 Size (session_01Um9FEN6s8PabTD7bZrJfA9): test runs 4, module lines 1203
+
+## J1 · COMPLETE
+
+T47-70 applied: ai.refused.limit.unjudged re-taken from main's words.json (DEC-198/199); K3084: limits.test.mjs R2 holds cy's sign-in token (credentials R70). Removed a vestigial subscriptionConnected in explore.test.mjs. ai-use tests 68/68 pass (was 6 fail); format, architecture, coverage (13/13), ownership: 0 failures; run.mjs architecture 0 failures. Uses no unmerged L6 job; ready to merge. Record: build/jobs/T47/ai-use.md.
