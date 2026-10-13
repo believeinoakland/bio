@@ -70,11 +70,17 @@ test("R12 factReader answers each holiday entry as R10's count reads it, over th
 });
 
 test("R12 a lapsed confirmation is unconfirmed, naming the day it was made; the count says so", () => {
-  const { w, act } = setUp();
+  const { w, act, propose } = setUp();
   const c = act(CLERK26, "confirm");
   w.clock.ms = Date.parse("2027-01-02T00:00:00Z");
   const r = clocks.factReader(w.localFacts, M)(CLERK26);
   assert.deepEqual([r.status, r.last_at], ["unconfirmed", c.at.slice(0, 10)]);
+  /* the count says so, naming the lapsed confirmation's day beside the year never confirmed. */
+  const p = propose();
+  assert.equal(p.calendar.status, "unconfirmed");
+  assert.deepEqual(p.calendar.years.map((y) => [y.path, y.status]), [[pathOf(CLERK26), "unconfirmed"], [pathOf(ALL26), "unconfirmed"]]);
+  assert.deepEqual(p.calendar.says, [`counted on an unconfirmed calendar (TEST, ${c.at.slice(0, 10)})`,
+                                     "counted on an unconfirmed calendar (TEST, never confirmed here)"]);
 });
 
 test("R12 negative controls: an entry naming no local fact, a factStatus that throws or refuses, or an answer local-facts cannot give is absent with why; nothing is thrown; the count says it \"cannot be read in your group's Civicsmith\" (DEC-149)", () => {

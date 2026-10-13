@@ -122,13 +122,47 @@ const IN_PROCESS = "class:daemon";
 export const owedOf = (e) => (e && typeof e === "object" && CLOCK_OWED_BY.includes(e.owed_by) ? e.owed_by : "undetermined");
 /** R15: whether an entry is one of the group's own deadlines. */
 export const isGroupOwn = (e) => owedOf(e) === "group" || (!!e && GROUP_OWN_KINDS.includes(e.basis_kind));
-const DUE_AT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
-/** R3 (T45; for `monitoring` R34), R19 (T46; N918): an entry's time of day and its zone where it states one (R13 writes
- *  them from a count due at a time; `civil-time` R11, R14), the entry's `due_zone`, else the action's zone; else both
- *  null. `zone` is the action's zone, or a function answering it, asked only when a timed entry states none. */
-const dueAtOf = (e, zone) => (e && typeof e.due_at === "string" && DUE_AT_RE.test(e.due_at)
-  ? { due_at: e.due_at, due_zone: typeof e.due_zone === "string" && e.due_zone ? e.due_zone : typeof zone === "function" ? zone() : zone }
-  : { due_at: null, due_zone: null });
+/* R22: a local date-time, `YYYY-MM-DDTHH:MM` with optional seconds, its hour 00–23 and its minute and second 00–59; its
+   day a real calendar day (`civil-time.isCalendarDate`). */
+const DUE_AT_RE = /^(\d{4}-\d{2}-\d{2})T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
+const isLocalDateTime = (v) => { const m = typeof v === "string" ? DUE_AT_RE.exec(v) : null; return !!m && isCalendarDate(m[1]); };
+/** R22 (T47; N965; `actions` R98; `monitoring` R34): the one reading of a timed clock entry. For an entry whose `due_at`
+ *  is a local date-time (`YYYY-MM-DDTHH:MM`, seconds optional), `{due_at, due_zone}`: `due_at` as stated, and `due_zone`
+ *  the entry's own where it states a non-empty one, else `zone` (the action's zone, R21; a function given as `zone` is
+ *  asked only then, and a zone that is not a non-empty string, or a function that throws, answers null); for any other
+ *  entry, `{due_at: null, due_zone: null}`. The entry's instant is `due_at` read in `due_zone` (`civil-time`). R3's and
+ *  R19's items carry its answer (T45, T46). Pure; never throws. */
+export function dueAtOf(entry, zone) {
+  const none = { due_at: null, due_zone: null };
+  try {
+    if (!entry || typeof entry !== "object") return none;
+    const at = entry.due_at;
+    if (!isLocalDateTime(at)) return none;
+    const own = entry.due_zone;
+    if (typeof own === "string" && own.trim()) return { due_at: at, due_zone: own };
+    let z = zone;
+    if (typeof z === "function") { try { z = z(); } catch { z = null; } }
+    return { due_at: at, due_zone: typeof z === "string" && z ? z : null };
+  } catch { return none; }
+}
+/** R23 (T47; N968; `action-producers` R1): the office or venue an action's clock entries are owed at, read as R21 reads
+ *  the zone (the office or venue `actionOffices` names): `{venue: {kind: "office", role, body}}` for an action addressed
+ *  to an office (`actions` R9), else `{venue: {kind: "venue", action_kind, name}}` for an action whose kind the view gives
+ *  a venue (`jurisdictions` R25, R87; `name` as the view states it), else `{venue: null, venue_why}`. Answered as the
+ *  record states it, never composed into a sentence. Pure; never throws. */
+export function venueOf(fm, view) {
+  const none = (why) => ({ venue: null, venue_why: why });
+  try {
+    const o = actionOffices(fm, view)[0];
+    if (o && typeof o.role === "string") return { venue: { kind: "office", role: o.role, body: o.body ?? null } };
+    if (o && typeof o.venue === "string") {
+      const k = (view && Array.isArray(view.action_kinds) ? view.action_kinds : []).find((x) => x && x.kind === o.venue);
+      const name = k && k.venue && typeof k.venue.name === "string" ? k.venue.name : null;
+      return { venue: { kind: "venue", action_kind: o.venue, name } };
+    }
+    return none("the action is addressed to no office, and the view gives its kind no venue");
+  } catch { return none("the action's office or venue cannot be read"); }
+}
 /** R3 (T45; v0.2 rule 6): an overdue item is a question about a date, never a finding. */
 export const OVERDUE_SAYS = "a date on this action's clock has passed: a question about a date, not a finding about anyone";
 
@@ -430,7 +464,8 @@ export class ActionClocks {
    *  and `due_zone` where the entry states a time of day (else null), `steps` standing for the entry (R16) and, where
    *  an adopted duty's occurrence stands for it, `noticed_by` (R17). It is a question about a date, never a finding:
    *  `says` names no failure. While the action states `reply_owed: false` (`actions` R82), no entry `owed_by: body` is
-   *  listed. Writes nothing. */
+   *  listed. (T47; N968) Each item also carries `venue`, the office or venue the entry is owed at (R23, `venueOf`), with
+   *  `venue_why` when none is held. Writes nothing. */
   overdueClocks({ after = null, limit = null, viewer = null, now = null } = {}) {
     const asOf = this.#today(now);
     const view = this.#view();
@@ -456,7 +491,8 @@ export class ActionClocks {
         if (!(e.status === "overdue" || (e.status === "pending" && past === true))) return null;
         /* T45 (actions R82): no reply is owed, so the body owes no date on this action. */
         if (fm.reply_owed === false && owedOf(e) === "body") return null;
-        if (!who.has(r.bundle_id)) who.set(r.bundle_id, { project: this.#projectOf(fm, viewer), created_by: this.#createdBy(r.bundle_id) });
+        if (!who.has(r.bundle_id)) who.set(r.bundle_id, { project: this.#projectOf(fm, viewer), created_by: this.#createdBy(r.bundle_id),
+                                                          ...venueOf(fm, view) });
         const noticed = this.#noticedBy(r.bundle_id, fm, e, viewer, instant);
         return { action: r.bundle_id, ord: i, date: typeof e.date === "string" ? e.date : null, basis: e.basis ?? null,
                  text: e.text ?? null, status: e.status, past, ...who.get(r.bundle_id), basis_of: this.#basisOf(e, viewer),
@@ -1052,7 +1088,7 @@ export class ActionClocks {
     const when = stampInstant("second", this.#nowMs(null));
     /* R3 (T45): a count due at a time of day (civil-time R11, R14) keeps its time and zone, unless the date is amended. */
     const due = kept.due && typeof kept.due === "object" ? kept.due : null;
-    const timed = !amend.date && due && typeof due.value === "string" && DUE_AT_RE.test(due.value) && due.value.slice(0, 10) === entry.date
+    const timed = !amend.date && due && isLocalDateTime(due.value) && due.value.slice(0, 10) === entry.date
       ? { due_at: due.value, ...(typeof due.zone === "string" && due.zone ? { due_zone: due.zone } : {}) } : {};
     const written = { text: amend.text ?? entry.text, description: amend.description ?? entry.description,
       date: amend.date ?? entry.date, basis: entry.basis, status: "pending", basis_kind: "rule",
@@ -1124,7 +1160,7 @@ export class ActionClocks {
         return clockEntryRefused(name, `${name} belongs to another basis kind than '${k}'. Nothing was written.`, ext);
     if (dueAt !== null && dueAt !== undefined && dueAt !== "") {
       const t = String(dueAt);
-      if (!DUE_AT_RE.test(t) || t.slice(0, 10) !== String(date) || !isDay(t.slice(0, 10)))
+      if (!isLocalDateTime(t) || t.slice(0, 10) !== String(date))
         return clockEntryRefused("due_at", "due_at is a time on the entry's own date, written YYYY-MM-DDTHH:MM. Nothing was written.", ext);
       own.due_at = t;
       if (dueZone !== null && dueZone !== undefined && dueZone !== "") {
