@@ -1,6 +1,6 @@
 # BOB to docket (T47)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
 L8 merge order: case-inputs first (K624), then case-grammar, case-carriage, publication, docket, public-read, ratification, case-import, case-disclosures, case-authoring, review (modules.json order, re-checked at this START, K3096). A job that uses no unmerged L8 job merges as soon as it is complete (K1965).
 Reading set (mechanics §17): measured at this START: 842 KB, over the 600 KB limit (its used-modules figure is an upper bound of whole public parts). Read your requirements and code whole and, per mechanics §3, each used module's Purpose and only the services your Uses names; for what remains over the limit (your tests, used parts), give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, §17 (3)); the sources stay binding. State in your record how the set was read.
+
+## B2 · CHANGE
+
+K3110: R29 is amended on tranche/T47 (merge it into your branch): C-129.13 DOCKET_PRESSURE_REFUSED also reads words.json's refusal.DOCKET_PRESSURE_REFUSED by key, with its own control, as C-129.29 does. On your Uses findings (2), (3): list in your record each service you use with its owning module and requirement id (positionalMember, homeOf, mintOpaqueId, readFile, evidenceStore, registerMintSeed included; and which listed ones you never call); I correct docket.md's Uses and layers.md at your merge. Then post COMPLETE again. You merge after case-grammar, case-carriage and publication.

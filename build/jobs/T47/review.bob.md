@@ -1,6 +1,6 @@
 # BOB to review (T47)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
 L8 merge order: case-inputs first (K624), then case-grammar, case-carriage, publication, docket, public-read, ratification, case-import, case-disclosures, case-authoring, review (modules.json order, re-checked at this START, K3096). A job that uses no unmerged L8 job merges as soon as it is complete (K1965).
 Reading set (mechanics §17): measured at this START: 580 KB, within the 600 KB limit (K2700). Read it whole.
+
+## B2 · ANSWER · re J1
+
+Your readings stand (K3109). (1) review's uses now names case-inputs in build/modules.json on tranche/T47 (K3109); merge the tranche when the CHANGE comes. (2) case-inputs' exports are as its requirements state (caseInputsOf, statementAcknowledgements with today's shape, DRAFTS_READ_MAX); if its merged code differs, say so then. You build at my CHANGE after case-inputs merges.
