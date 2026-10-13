@@ -33,7 +33,7 @@ export const ACCOUNT_FIELDS = Object.freeze(["ord", "text", "cites", "kind", "bi
 /** R23 (D63): what a row is: a sentence of the account, or one of the four authored statements (what it says, why this
  *  subject, what was left out and why, what changed; `case-authoring` R65's fields), each under the same check. */
 export const ACCOUNT_KINDS = Object.freeze(["account", "statement", "subject_justification", "excluded", "what_changed",
-  /* T45 (N855 (6c); Actions D6c): the text of an outcome carried into this edition (R29; `case-authoring` R71), with its
+  /* T45 (N855 (6c); Actions D6c): the text of an outcome carried into this edition (R29; `case-inputs` R9 and `case-authoring` R74, was `case-authoring` R71; N908), with its
      cites, judged as the four statements are (`case-account` R6); printed by the outcomes section, never as the account */
   "outcome"]);
 /** R23: how a sentence began (R8's two origins). */

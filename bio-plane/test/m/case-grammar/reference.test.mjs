@@ -115,6 +115,43 @@ test("R10 negative controls: a /5 document without working_on names no notice; n
   }
 });
 
+test("R30 workingOnOf is the one reading of working_on: the notice id for every format from /5 whose value is a notice reference, null for none, for a value that is not one, and for any earlier format", () => {
+  const FROM5 = [V5, "bio-case-document/6", CASE_DOCUMENT_FORMAT];
+  for (const format of FROM5) {
+    assert.equal(caseDocumentRequiresTensionSection({ format }), true, format);
+    assert.equal(workingOnOf(fmOf(doc(format, workingOnLines(NOTICE)))), NOTICE, format);
+    assert.equal(workingOnOf(fmOf(doc(format))), null, `${format}: none carried`);
+  }
+  /* control: a /4 document carrying a well-formed working_on answers null, as every format the predicate does not hold for */
+  for (const format of [...OLDER, "bio-case-document/8", "Bio-case-document/7"]) {
+    assert.equal(caseDocumentRequiresTensionSection({ format }), false);
+    assert.equal(workingOnOf(fmOf(doc(format, workingOnLines(NOTICE)))), null, String(format));
+  }
+  /* control: a malformed value answers null, on every format that states the field */
+  for (const format of FROM5)
+    for (const bad of ["note-2026-0001", " NOTE-2026-0001", "NOTE-2026-1", "NOTE-2026-0001-X", ""])
+      assert.equal(workingOnOf(fmOf(doc(format, workingOnLines(bad)))), null, `${format} ${JSON.stringify(bad)}`);
+  /* the one reading: over any value it answers exactly the value when the shape holds, else null */
+  for (const v of [NOTICE, "NOTE-2026-10007-parks", "x", 7, null, ["NOTE-2026-0001"], { id: NOTICE }])
+    assert.equal(workingOnOf({ format: CASE_DOCUMENT_FORMAT, [WORKING_ON_KEY]: v }), isNoticeReference(v) ? v : null, JSON.stringify(v));
+  for (const odd of [null, undefined, 7, "x", [], { get format() { throw new Error("boom"); } }])
+    assert.doesNotThrow(() => workingOnOf(odd));
+});
+
+test("R30 workingOnLines writes the line folded onto one line, as handed, never trimmed or corrected, and none for null", () => {
+  assert.deepEqual(workingOnLines(null), []);
+  assert.deepEqual(workingOnLines(undefined), []);
+  assert.deepEqual(workingOnLines(NOTICE), [`${WORKING_ON_KEY}: "${NOTICE}"`]);
+  for (const [handed, read] of [["  NOTE-2026-0001  ", "  NOTE-2026-0001  "], ["NOTE-2026-0001\r\nx", "NOTE-2026-0001 x"],
+                                ["a\nb\rc", "a b c"], ["note-2026-0001", "note-2026-0001"], [7, "7"]]) {
+    const lines = workingOnLines(handed);
+    assert.equal(lines.length, 1, JSON.stringify(handed));
+    assert.equal(fmOf(doc(CASE_DOCUMENT_FORMAT, lines))[WORKING_ON_KEY], read, `${JSON.stringify(handed)}: as handed, on one line`);
+  }
+  /* a well-formed id written and read through the one reading on the current format */
+  assert.equal(workingOnOf(fmOf(doc(CASE_DOCUMENT_FORMAT, workingOnLines(NOTICE)))), NOTICE);
+});
+
 test("R10 the writer writes a malformed value as handed, never trimmed or corrected, so ratification R38's refusal finds it by the one reading", () => {
   for (const bad of [" NOTE-2026-0001 ", "note-2026-0001", "NOTE-2026-0001\nINQ-2026-0002", 'NOTE-2026-"0001"', "a\\b", 7, true, ""]) {
     const lines = workingOnLines(bad);
