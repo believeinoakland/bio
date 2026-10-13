@@ -2,7 +2,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
-import { WHAT_CHANGED_MAX, PLANE_VIEWER } from "../../../src/case-authoring/index.mjs";
+import { PLANE_VIEWER } from "../../../src/case-authoring/index.mjs";
+/* R38 (T47; N908): the 8,000-character bound is case-inputs' one spelling, imported by case-authoring. */
+import { WHAT_CHANGED_MAX } from "../../../src/case-inputs/index.mjs";
 import { whatChangedOf, whatChangedSectionLines, whatChangedBlockLines, WHAT_CHANGED_HEAD, lensOf, lensBlockLines,
          lensSectionLines, LENS_HEAD, LENS_NONE_SENTENCE, SECTIONS } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -115,7 +117,7 @@ test("R38, R14: an edition 2 with a statement stores case-grammar R8's block and
   assert.ok(at && (wc < at.b0 || wc > at.b1) && (block < at.f0 || block > at.f1));
   /* an acknowledgement re-authors the list: the statement and its block survive unchanged */
   w.member("cy"); w.join(P, "bo"); w.join(P, "cy");
-  const a = w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: e1.caseId, edition: 2, reason: "Read it." });
+  const a = w.ci.acknowledgeStatement({ viewer: V("bo"), caseId: e1.caseId, edition: 2, reason: "Read it." });
   assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
   const after = docOf(w, e1.caseId, 2);
   assert.notEqual(after.doc_sha, doc.doc_sha, "the list was re-authored");

@@ -1,13 +1,15 @@
-/* case-authoring: the act inside a caller's transaction (R18), stamps (R25), the purge declaration (R28), the checks
-   that moved here (R29), no place named (R30), and the ops that route to the module (K3). */
+/* case-authoring: the act inside a caller's transaction (R18), stamps (R25), no table of its own and `case-inputs` created
+   at its creation (T47; N908; case-inputs R11, R16), the checks that moved here (R29), no place named (R30), and the ops
+   that route to the module (K3). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, storage } from "./fixture.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
-import { caseAuthoringOf, caseAuthoringOps, caseAuthoringOwns, CASE_AUTHORING_TABLES, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS,
-         CASE_DISCLOSURE_CHECKS, PUBLISH_ACT_CHECKS, STATEMENT_ACK_MAX, SEARCHED_LEVEL_OUTCOMES }
-  from "../../../src/case-authoring/index.mjs";
+import { caseAuthoringOf, caseAuthoringOps, CASE_DERIVATION_CHECKS, CASE_DISCLOSURE_CHECKS, PUBLISH_ACT_CHECKS,
+         SEARCHED_LEVEL_OUTCOMES } from "../../../src/case-authoring/index.mjs";
+import { caseInputsOf, caseInputsOps, CASE_INPUTS_TABLES, CARRIED_OUTCOME_CHECKS, STATEMENT_ACK_CHECKS }
+  from "../../../src/case-inputs/index.mjs";
 import * as CHECKS from "../../../src/case-authoring/checks.mjs";
 import * as DISCLOSURES from "../../../src/case-disclosures/index.mjs";
 import { list as listProfiles } from "../../../../jurisdictions/index.mjs";
@@ -42,9 +44,13 @@ test("R18: publishCase is synchronous and writes only inside the caller's transa
   assert.equal(w.count("minted_ids"), n);
 });
 
-test("R25, R65: every authorship field is a stamp — the author, an acknowledger, the draft link's namer — and statement_by is read from the record, never a body's: a body naming it is refused CASE_FIELD_NOT_ALLOWED", async () => {
+test("R25, R65: every authorship field is a stamp — the author, an acknowledger (case-inputs R13's stamp, T47), the draft link's namer — and statement_by is read from the record, never a body's: a body naming it is refused CASE_FIELD_NOT_ALLOWED", async () => {
   const { w, P } = setup();
   w.draft("DRAFT-2026-0001", P, { statement: AUTHORED.statement }, { statementBy: "bo" });
+  /* the acknowledger is the viewer the control plane stamped (case-inputs R13), a body naming nobody; the document lists that stamp */
+  const au = new URL(`http://do/statementack?draft=DRAFT-2026-0001&viewer=${encodeURIComponent(V("cy"))}&reason=read`);
+  const a = caseInputsOps(w.ci, au, { viewer: V("mallory"), by: "mallory" }).statementack();
+  assert.deepEqual([a.ok, a.acknowledgement.by], [true, "cy"]);
   const url = new URL(`http://do/publishcase?author=alice&viewer=${encodeURIComponent(V("alice"))}&project=${P}&draft=DRAFT-2026-0001`);
   const body = { ...AUTHORED, targets: [Q], roles: { [Q]: "load_bearing" }, author: "mallory", viewer: V("mallory"),
                  draft: "DRAFT-2026-0099" };
@@ -58,32 +64,31 @@ test("R25, R65: every authorship field is a stamp — the author, an acknowledge
                     r.completeness.draft.draft_id], ["alice", "alice", "bo", "alice", "DRAFT-2026-0001"]);
   const fm = w.fm(w.row(`SELECT text FROM case_documents WHERE case_id=?`, r.caseId).text);
   assert.deepEqual([fm.completeness.author, fm.completeness.statement_by, fm.completeness.draft_named_by], ["alice", "bo", "alice"]);
-  /* the acknowledger is the viewer the control plane stamped; a body names nobody */
-  const au = new URL(`http://do/statementack?case=${r.caseId}&edition=1&viewer=${encodeURIComponent(V("cy"))}&reason=read`);
-  const a = caseAuthoringOps(w.ca, au, { viewer: V("mallory"), by: "mallory" }).statementack();
-  assert.deepEqual([a.ok, a.acknowledgement.by], [true, "cy"]);
+  assert.deepEqual(r.completeness.acknowledgements.map((x) => x.by), ["cy"]);
+  assert.deepEqual(fm.completeness_acknowledgements.map((x) => x.by), ["cy"], "the stamp, never the body's mallory");
 });
 
-test("R28: statement_acknowledgements is declared whole to record-core's purge, with R39's what_changed_drafts beside it (the account's two tables are case-account's, its R8): a whole-store purge clears it, a bundle's purge does not", () => {
-  const { w, P } = setup();
-  assert.deepEqual(CASE_AUTHORING_TABLES, [{ name: "statement_acknowledgements", keys: [] },
-                                           { name: "what_changed_drafts", keys: [] },
-                                           /* R71 (T45): the carried outcomes and their withdrawals */
-                                           { name: "carried_outcomes", keys: [] },
-                                           { name: "carried_outcome_withdrawals", keys: [] }]);
-  assert.deepEqual([caseAuthoringOwns("statement_acknowledgements"), caseAuthoringOwns({ name: "statement_acknowledgements" }),
-                    caseAuthoringOwns("case_documents"), caseAuthoringOwns("account_drafts"), caseAuthoringOwns("account_acceptances")],
-                   [true, true, false, false, false]);
-  const pub = w.publish(P, "alice", [Q]);
-  assert.equal(w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: "read" }).ok, true);
-  const one = w.record.purge({ bundleId: Q });
-  assert.equal(w.count("statement_acknowledgements"), 1, "keyed to no bundle");
-  assert.equal(one.removed.statement_acknowledgements, 0, "named in the report, nothing removed by a bundle's purge");
-  w.record.purge({});
-  assert.equal(w.count("statement_acknowledgements"), 0);
+test("case-inputs R11, R16 (T47; N908; K2982): case-authoring holds no table and declares none; its factory creates case-inputs' one instance on the host, whose four tables are declared to record-core's purge as case-inputs'", () => {
+  const { w } = setup();
+  assert.equal(caseInputsOf(w.host), w.ci, "the one instance on the host");
+  const declared = w.record.declaredTables();
+  assert.equal(declared.some((d) => d.module === "case-authoring"), false, "this module declares nothing");
+  assert.deepEqual(CASE_INPUTS_TABLES.map((t) => declared.find((d) => d.name === t.name)?.module),
+                   CASE_INPUTS_TABLES.map(() => "case-inputs"));
+  /* created at case-authoring's creation, on a host where nothing else asked for it */
+  const host = { storage: storage() };
+  const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const t of bare.split(";")) if (t.trim()) host.storage.db.exec(t);
+  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  record.migrate();
+  const membership = membershipOf(host, { record });
+  membership.migrate();
+  caseAuthoringOf(host, { record, membership });
+  assert.deepEqual(record.declaredTables().filter((d) => d.module === "case-inputs").map((d) => d.name).sort(),
+                   CASE_INPUTS_TABLES.map((t) => t.name).sort());
 });
 
-test("R28 (K2675): a declaration record-core refuses is thrown at creation and no instance is kept — another owner already holding statement_acknowledgements (TABLE_DECLARED) leaves none of this module's tables declared, so caseAuthoringOf throws naming the refusal and the next call throws again; negative control: a host where no other owner holds them creates the instance and its tables are declared", () => {
+test("case-inputs R11, R16 (K2675's form): a declaration record-core refuses at case-inputs' creation is thrown by case-authoring's creation, and no instance of it is kept — the next call throws again; negative control: the fixture's host creates it", () => {
   const host = { storage: storage() };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) host.storage.db.exec(t);
@@ -94,17 +99,12 @@ test("R28 (K2675): a declaration record-core refuses is thrown at creation and n
   assert.equal(record.declarePurge("another-owner", [{ name: "statement_acknowledgements", keys: [] }]).ok !== false, true);
   for (let i = 0; i < 2; i++)
     assert.throws(() => caseAuthoringOf(host, { record, membership }),
-                  /^Error: case-authoring: record-core refused its table declaration: TABLE_DECLARED \(statement_acknowledgements\)$/);
-  /* negative control: the fixture's host, where nothing else holds them — created, and the whole-store purge clears them */
-  const { w, P } = setup();
+                  /^Error: case-inputs: record-core refused its table declaration: TABLE_DECLARED \(statement_acknowledgements\)$/);
+  const { w } = setup();
   assert.equal(caseAuthoringOf(w.host), w.ca, "the one instance");
-  const pub = w.publish(P, "alice", [Q]);
-  assert.equal(w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: "read" }).ok, true);
-  w.record.purge({});
-  assert.equal(w.count("statement_acknowledgements"), 0, "declared, so cleared");
 });
 
-test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5 (and R58's C-44.6, new, N681), C-82.2–C-82.8 (C-82.8 new, DEC-88), C-32.6 (and R3's C-33.14), R56's CALCULATION_NOT_DISCLOSED (new, T33-69) and R61's STANDARDS_USE_REFUSED (C-136.2, new, T36) — every refusal carrying its check, code and translation; the family C-120.1–C-120.8 and C-120.10–C-120.29 (C-120.9 withdrawn unstamped; .14–.16 the people a case names, T33-68; .17–.18 a marked photo, T37; .19 an unchecked photo, T38; .20–.22 a member document's publication copy, T39, numbered provisionally until promotion's stamp; .23–.29 the account, T41) is case-disclosures' (its R22, N529), re-exported here and held nowhere in this module's own families (K529)", () => {
+test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5 (and R58's C-44.6, new, N681), C-32.6 (and R3's C-33.14), R56's CALCULATION_NOT_DISCLOSED (new, T33-69) and R61's STANDARDS_USE_REFUSED (C-136.2, new, T36) — every refusal carrying its check, code and translation; C-82.2–C-82.8 and C-136.3–C-136.8 case-inputs' (its R12, T47), held nowhere here; the family C-120.1–C-120.8 and C-120.10–C-120.29 (C-120.9 withdrawn unstamped; .14–.16 the people a case names, T33-68; .17–.18 a marked photo, T37; .19 an unchecked photo, T38; .20–.22 a member document's publication copy, T39, numbered provisionally until promotion's stamp; .23–.29 the account, T41) is case-disclosures' (its R22, N529), re-exported here and held nowhere in this module's own families (K529)", () => {
   assert.deepEqual(Object.entries(CASE_DERIVATION_CHECKS).map(([k, v]) => [k, v.check]),
     [["CASE_IDENTITY_AMBIGUOUS", "C-44.1"], ["PUBLISH_DRAFT_NOT_FOUND", "C-44.3"], ["PUBLISH_DRAFT_NOT_THIS_CASE", "C-44.4"],
      ["PUBLISH_DRAFT_ALREADY_BOUND", "C-44.5"], ["CASE_EDITION_WAITING", "C-44.6"]]);
@@ -114,17 +114,14 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
     + "prepared.");
   assert.equal(CASE_DERIVATION_CHECKS.CASE_EDITION_WAITING.where,
     "src/case-authoring/index.mjs #publishCase > is-case-edition-waiting");
-  assert.deepEqual(Object.entries(STATEMENT_ACK_CHECKS).map(([k, v]) => [k, v.check]),
-    [["STATEMENT_ACK_NO_SUBJECT", "C-82.2"], ["STATEMENT_ACK_ALREADY_SIGNED", "C-82.3"],
-     ["STATEMENT_ACK_NOT_A_PARTICIPANT", "C-82.4"], ["STATEMENT_ACK_NO_STATEMENT", "C-82.5"],
-     ["STATEMENT_ACK_BY_ITS_AUTHOR", "C-82.6"], ["STATEMENT_ACK_AUTHOR_UNDETERMINED", "C-82.7"],
-     ["STATEMENT_ACK_NO_REASON", "C-82.8"]]);
-  /* C-82.8's translation is the requirements' own, word for word (case-authoring.md, "Row C-82.8") */
-  assert.equal(STATEMENT_ACK_CHECKS.STATEMENT_ACK_NO_REASON.translation, "An acknowledgement of a statement is recorded "
-    + "with your own words on it, and none were given, or they are longer than 2,000 characters. Write them. Nothing was "
-    + "written.");
-  assert.equal(STATEMENT_ACK_CHECKS.STATEMENT_ACK_NO_REASON.where,
-    "src/case-authoring/index.mjs acknowledgeStatement > is-statement-ack-reasoned");
+  /* (T47; N908) C-82.2–C-82.8 and C-136.3–C-136.8 are case-inputs' (its R12): held nowhere in this module's files, and the
+     C-136 family spans both modules, each id once */
+  const OWN = Object.values(CHECKS).filter((v) => v && typeof v === "object").flatMap((f) => Object.values(f));
+  assert.equal(OWN.some((v) => /^C-82\./.test(v.check)), false, "no C-82 row held here");
+  assert.deepEqual([...Object.values(PUBLISH_ACT_CHECKS), ...Object.values(CARRIED_OUTCOME_CHECKS)]
+    .map((v) => v.check).filter((c) => /^C-136\./.test(c)), ["C-136.1", "C-136.2", "C-136.3", "C-136.4", "C-136.5", "C-136.6",
+    "C-136.7", "C-136.8"]);
+  assert.equal(Object.values(STATEMENT_ACK_CHECKS).every((v) => v.where.startsWith("src/case-inputs/")), true);
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).map((v) => v.check),
     ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7", "C-120.8", "C-120.10", "C-120.11",
      "C-120.12", "C-120.13", "C-120.14", "C-120.15", "C-120.16", "C-120.17", "C-120.18", "C-120.19",
@@ -132,10 +129,7 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
   assert.equal(Object.values(CASE_DISCLOSURE_CHECKS).some((v) => v.check === "C-120.9"), false, "withdrawn, never used");
   assert.deepEqual(Object.entries(PUBLISH_ACT_CHECKS).map(([k, v]) => [k, v.check]),
     [["MACHINE_CANNOT_PUBLISH", "C-32.6"], ["NO_STATEMENT", "C-33.14"], ["CALCULATION_NOT_DISCLOSED", "C-136.1"],
-     ["STANDARDS_USE_REFUSED", "C-136.2"],
-     /* R71 (T45): the carried outcomes' six rows */
-     ["MACHINE_CANNOT_CARRY_OUTCOME", "C-136.3"], ["CARRY_NOT_A_PARTICIPANT", "C-136.4"], ["BAD_CARRIED_OUTCOME", "C-136.5"],
-     ["NO_SUCH_CARRIED_OUTCOME", "C-136.6"], ["CARRIED_OUTCOME_SETTLED", "C-136.7"], ["CARRY_NO_REASON", "C-136.8"]]);
+     ["STANDARDS_USE_REFUSED", "C-136.2"]]);
   /* R61's new row (T36): its region, and its translation the requirements' own, word for word (case-authoring.md R29) */
   assert.equal(PUBLISH_ACT_CHECKS.STANDARDS_USE_REFUSED.where, "src/case-authoring/index.mjs #publishCase > is-standards-use");
   assert.equal(PUBLISH_ACT_CHECKS.STANDARDS_USE_REFUSED.translation, "This case uses a standard as a published case may not: "
@@ -151,14 +145,14 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
   /* K529: this module's own family file holds no C-120 row and no disclosure code */
   const own = Object.values(CHECKS).filter((v) => v && typeof v === "object").flatMap((f) => Object.entries(f));
   assert.equal(own.some(([k, v]) => k in CASE_DISCLOSURE_CHECKS || /^C-120\./.test(v.check)), false, "no C-120 row held here");
-  for (const row of [...Object.values(CASE_DERIVATION_CHECKS), ...Object.values(STATEMENT_ACK_CHECKS),
+  for (const row of [...Object.values(CASE_DERIVATION_CHECKS),
                      ...Object.values(CASE_DISCLOSURE_CHECKS), ...Object.values(PUBLISH_ACT_CHECKS)]) {
     assert.match(row.where, /^src\/case-(authoring|disclosures)\/index\.mjs \S+ > [a-z-]+$/, "each row names its module's region");
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, "a member's sentence");
     assert.ok(!/[A-Z]{2,}_[A-Z_]+/.test(row.translation), "no code in a member's words");
   }
   /* one row per code and per check id across this module's families: no code or id is held twice here */
-  const all = [...Object.entries(CASE_DERIVATION_CHECKS), ...Object.entries(STATEMENT_ACK_CHECKS),
+  const all = [...Object.entries(CASE_DERIVATION_CHECKS),
                ...Object.entries(CASE_DISCLOSURE_CHECKS), ...Object.entries(PUBLISH_ACT_CHECKS)];
   assert.equal(new Set(all.map(([k]) => k)).size, all.length, "each code once");
   assert.equal(new Set(all.map(([, v]) => v.check)).size, all.length, "each check id once");
@@ -169,7 +163,6 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
     ["MACHINE_CANNOT_PUBLISH", "C-32.6", PUBLISH_ACT_CHECKS.MACHINE_CANNOT_PUBLISH.translation]);
   const s = w.publish(P, "alice", [Q], { statement: "" });
   assert.deepEqual([s.code, s.check, s.translation], ["NO_STATEMENT", "C-33.14", PUBLISH_ACT_CHECKS.NO_STATEMENT.translation]);
-  assert.equal(STATEMENT_ACK_MAX, 500);
 });
 
 test("R30: no place is named in this module's behaviour or outward text — every document, answer and refusal it writes, and every row's words, name no place a jurisdiction profile covers", () => {
@@ -189,22 +182,19 @@ test("R30: no place is named in this module's behaviour or outward text — ever
   const pub = w.publish(P, "alice", [Q], { draft: "DRAFT-2026-0001", excluded: [{ description: "d", reason: "r" }] });
   say(pub);
   say(w.row(`SELECT text FROM case_documents WHERE case_id=?`, pub.caseId).text);
-  say(w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: "read" }));
-  say(w.ca.acknowledgeStatement({ viewer: V("bo"), draft: "DRAFT-2026-0001", reason: "read" }));
   for (const over of [{ author: "" }, { project: null }, { project: "PROJ-2026-0000-x" }, { targets: [] }, { statement: "" },
                       { subjectPosition: "x" }, { subjectJustification: "" }, { excluded: null }, { scope: "" },
                       { biasAcknowledgement: "" }, { excluded: [{}] }, { statement: 'a "q"' }, { roles: [] },
                       { roles: { [Q]: "x" } }, { caseId: "CASE-2026-0001", newCase: true }, { caseId: "CASE-2026-0001" },
                       { draft: "DRAFT-2026-0404" }])
     say(w.publish(P, "alice", [Q], over));
-  say(w.ca.acknowledgeStatement({ viewer: V("bo") }));
-  say(Object.values(CASE_DERIVATION_CHECKS)); say(Object.values(STATEMENT_ACK_CHECKS)); say(SEARCHED_LEVEL_OUTCOMES);
+  say(Object.values(CASE_DERIVATION_CHECKS)); say(SEARCHED_LEVEL_OUTCOMES);
   say(Object.values(CASE_DISCLOSURE_CHECKS)); say(Object.values(PUBLISH_ACT_CHECKS));
   const all = said.join("\n");
   for (const p of places) assert.equal(all.includes(p), false, `names ${p}`);
 });
 
-test("K3: the ops route the stamps from the query after the body — publishcase takes targets, caseId, project and draft from either, newCase's string forms spelled out; statementack takes its subject from the query", async () => {
+test("K3: the ops route the stamps from the query after the body — publishcase takes targets, caseId, project and draft from either, newCase's string forms spelled out; it holds no statementack (case-inputs R16's, T47)", async () => {
   const { w, P } = setup();
   const q = (s) => new URL(`http://do/x?viewer=${encodeURIComponent(V("alice"))}&author=alice&${s}`);
   const base = { ...AUTHORED, roles: { [Q]: "load_bearing", [Q2]: "load_bearing" } };
@@ -217,8 +207,5 @@ test("K3: the ops route the stamps from the query after the body — publishcase
   }
   const b = await caseAuthoringOps(w2.ca, q(""), { ...base, targets: [Q], project: P2, newCase: true, caseId: "CASE-2026-0001" }).publishcase();
   assert.equal(b.reason, "CASE_IDENTITY_AMBIGUOUS", "the body's own newCase and caseId when the query has none");
-  const ack = caseAuthoringOps(w.ca, new URL(`http://do/statementack?case=${viaQuery.caseId}&edition=1&viewer=${encodeURIComponent(V("bo"))}&reason=${encodeURIComponent("I read it whole.")}`), null).statementack();
-  assert.deepEqual([ack.ok, ack.acknowledgement.reason], [true, "I read it whole."], "the reason from the query (R19)");
-  const none = caseAuthoringOps(w.ca, new URL(`http://do/statementack?case=${viaQuery.caseId}&edition=1&viewer=${encodeURIComponent(V("cy"))}`), { reason: "a body's words" }).statementack();
-  assert.equal(none.reason, "STATEMENT_ACK_NO_REASON", "a body's reason is not read: the arm reads the query (R19)");
+  assert.equal("statementack" in caseAuthoringOps(w.ca, q(""), null), false);
 });

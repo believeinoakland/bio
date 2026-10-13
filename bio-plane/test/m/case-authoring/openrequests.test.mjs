@@ -1,10 +1,11 @@
-/* case-authoring R70 and R34's open requests (T45; N880; Actions D13; v0.2 rule 8): the one source of a case's open
-   requests for comment, registered once at start by a later module (`action-replies` R3), stood in here at R70's ruled
-   interface; and the pre-flight's sign step, which lists what it answers, once, and never as a blocker. */
+/* case-authoring R34's open requests (T45; N880; Actions D13; v0.2 rule 8; T47, N908): the pre-flight's sign step, which
+   lists what `case-inputs`' one source of a case's open requests answers (its R8, registered once at start by a later
+   module, `action-replies` R3, stood in here at its ruled interface through `w.ci`), once, and never as a blocker, each
+   line `case-inputs.openRequestLine`'s (its R10, R17). The source's own registration arms are case-inputs' tests. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
-import { OPEN_REQUEST_KEYS, openRequestSentence, openRequestLine, OPEN_REQUESTS_UNREAD_SENTENCE } from "../../../src/case-authoring/index.mjs";
+import { OPEN_REQUEST_KEYS, openRequestLine, OPEN_REQUESTS_UNREAD_SENTENCE } from "../../../src/case-inputs/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q";
 const ROWS = [
@@ -12,7 +13,7 @@ const ROWS = [
   { whom: "the Planning Director, City of Example", asked_at: "2026-09-05", window_closes: null, answers: null },
   { whom: "the Town Auditor", asked_at: "2026-09-06", window_closes: "2026-10-06", answers: null, replied: false },
 ];
-/* R70's rows as read: `replied` (R73; K2964) only where the source states it. */
+/* case-inputs R8's rows as read: `replied` (K2964) only where the source states it. */
 const READ = ROWS;
 
 function setup() {
@@ -37,67 +38,24 @@ const without = (pre) => {
 };
 const same = (x, y) => assert.ok(without(x) === without(y), "byte-equal but for open_requests");
 
-test("R70: registerOpenRequests takes the one source once; a second registration is refused PROVIDER_DECLARED and one without the door PROVIDER_MALFORMED, each registering nothing", () => {
-  const { w } = setup();
-  assert.deepEqual(w.ca.openRequestsSource(), { registered: false, module: null });
-  for (const bad of [null, {}, { openRequestsOn: "not a door" }]) {
-    const r = w.ca.registerOpenRequests("action-replies", bad);
-    assert.deepEqual([r.ok, r.reason], [false, "PROVIDER_MALFORMED"]);
-  }
-  assert.deepEqual(w.ca.openRequestsSource(), { registered: false, module: null }, "a malformed one registers nothing");
-  const first = { openRequestsOn: () => [] };
-  assert.deepEqual(w.ca.registerOpenRequests("action-replies", first), { ok: true, module: "action-replies" });
-  const second = w.ca.registerOpenRequests("other", { openRequestsOn: () => ROWS });
-  assert.deepEqual([second.ok, second.reason, second.module], [false, "PROVIDER_DECLARED", "action-replies"]);
-  assert.deepEqual(w.ca.openRequestsOn({ case: "CASE-X", members: [], viewer: V("alice") }), { ok: true, rows: [] },
-    "the first source still answers");
-  /* the one-argument form, as publication R77's */
-  const { w: w2 } = setup();
-  assert.equal(w2.ca.registerOpenRequests({ module: "action-replies", openRequestsOn: () => [] }).ok, true);
-  assert.equal(w2.ca.openRequestsSource().module, "action-replies");
-});
-
-test("R70: with no source the list is []; the source is called with the case, the members at their bytes and the viewer, and answers in its order; a throwing source, or one answering anything but a list of R70's rows, reads undetermined", () => {
-  const { w } = setup();
-  assert.deepEqual(w.ca.openRequestsOn({ case: "CASE-X", members: [], viewer: null }), { ok: true, rows: [] });
-  const calls = [];
-  let answer = ROWS;
-  w.ca.registerOpenRequests("action-replies", { openRequestsOn: (a) => { calls.push(a); if (answer instanceof Error) throw answer;
-                                                                         return typeof answer === "function" ? answer() : answer; } });
-  const members = [{ bundle_id: Q, version_sha: "a".repeat(64) }];
-  assert.deepEqual(w.ca.openRequestsOn({ case: "CASE-X", members, viewer: V("alice") }), { ok: true, rows: READ });
-  assert.deepEqual(calls, [{ case: "CASE-X", members, viewer: V("alice") }]);
-  for (const bad of [new Error("cannot read"), { rows: ROWS }, null, [null], [{ ...ROWS[0], whom: "" }],
-                     [{ ...ROWS[0], asked_at: 3 }], [{ ...ROWS[0], window_closes: undefined }],
-                     [{ ...ROWS[0], answers: { answered: 4, claims: 3 } }], [{ ...ROWS[0], answers: { answered: -1, claims: 3 } }],
-                     [{ ...ROWS[0], answers: 2 }], [{ ...ROWS[0], replied: "yes" }], [{ ...ROWS[0], replied: false }],
-                     Promise.resolve(ROWS)]) {
-    answer = bad;
-    const r = w.ca.openRequestsOn({ case: "CASE-X", members, viewer: V("alice") });
-    assert.deepEqual([r.ok, r.undetermined], [false, true], JSON.stringify(bad));
-  }
-  answer = [];
-  assert.deepEqual(w.ca.openRequestsOn({ case: "CASE-X", members, viewer: null }), { ok: true, rows: [] });
-});
-
-test("R34, R70: the pre-flight's sign step carries open_requests, one fact line per row in the source's order, each naming whom, when asked, when the window closes and how many claims the reply answers, or that none is recorded; listed in that step only, never in the document", () => {
+test("R34 (case-inputs R8, R10, R17): the pre-flight's sign step carries open_requests, one fact line per row in the source's order, each naming whom, when asked, when the window closes and how many claims the reply answers, or that none is recorded; listed in that step only, never in the document", () => {
   const { w, P } = setup();
   const calls = [];
-  w.ca.registerOpenRequests("action-replies", { openRequestsOn: (a) => { calls.push(a); return ROWS; } });
+  w.ci.registerOpenRequests("action-replies", { openRequestsOn: (a) => { calls.push(a); return ROWS; } });
   const pre = w.ca.publishPreflight(act(P));
   assert.equal(pre.first, null, JSON.stringify(pre.first).slice(0, 300));
   const o = sign(pre).open_requests;
   assert.equal(o.read, true);
   assert.deepEqual(o.lines.map((l) => [l.whom, l.asked_at, l.window_closes, l.answers, l.replied]),
     READ.map((r) => [r.whom, r.asked_at, r.window_closes, r.answers, r.replied]));
-  /* R73: words.json's line or noreply where the row has a window, R34's plain sentence where it has none */
+  /* T47: each line is case-inputs' openRequestLine (its R10, R17), every row keyed; this module spells none */
   assert.deepEqual(o.lines.map((l) => [l.key, l.says]), READ.map((r) => [openRequestLine(r).key, openRequestLine(r).says]));
-  assert.deepEqual(o.lines.map((l) => l.key), [OPEN_REQUEST_KEYS.line, null, OPEN_REQUEST_KEYS.noreply]);
-  assert.equal(o.lines[1].says, openRequestSentence(READ[1]));
+  assert.deepEqual(o.lines.map((l) => l.key), [OPEN_REQUEST_KEYS.line, OPEN_REQUEST_KEYS["nowindow.notlaidout"],
+                                               OPEN_REQUEST_KEYS.noreply]);
   for (const [i, l] of o.lines.entries()) {
     const r = READ[i];
     assert.ok(l.says.includes(r.whom) && l.says.includes(r.asked_at));
-    assert.ok(r.window_closes ? l.says.includes(r.window_closes) : l.says.includes("no date is stated"));
+    if (r.window_closes) assert.ok(l.says.includes(r.window_closes));
     assert.ok(r.answers ? l.says.includes(`${r.answers.answered} of the ${r.answers.claims} claims`)
                         : r.replied === false ? l.says.includes("no reply is recorded") : !l.says.includes("no reply is recorded"));
   }
@@ -117,11 +75,11 @@ test("R34, R70: the pre-flight's sign step carries open_requests, one fact line 
   assert.equal(text.includes(ROWS[0].whom) || text.includes("open_requests"), false);
 });
 
-test("R34, R70 (control): with an open request the pre-flight is byte-equal, but for open_requests, to the same act with no source registered: ready and first unchanged, never a blocker; with the act refused first it is still never first; an unreadable source says so in one sentence", () => {
+test("R34 (case-inputs R8; control): with an open request the pre-flight is byte-equal, but for open_requests, to the same act with no source registered: ready and first unchanged, never a blocker; with the act refused first it is still never first; an unreadable source says so in one sentence", () => {
   const { w, P } = setup();
   const a = w.ca.publishPreflight(act(P)), ra = w.ca.publishPreflight(act(P, { statement: "" }));
   assert.deepEqual(sign(a).open_requests, { read: true, lines: [] });
-  w.ca.registerOpenRequests("action-replies", { openRequestsOn: () => ROWS });
+  w.ci.registerOpenRequests("action-replies", { openRequestsOn: () => ROWS });
   const b = w.ca.publishPreflight(act(P));
   assert.equal(sign(b).open_requests.lines.length, 3);
   same(a, b);
@@ -135,9 +93,10 @@ test("R34, R70 (control): with an open request the pre-flight is byte-equal, but
   /* unreadable */
   const u = setup();
   const c0 = u.w.ca.publishPreflight(act(u.P));
-  u.w.ca.registerOpenRequests("action-replies", { openRequestsOn: () => { throw new Error("down"); } });
+  u.w.ci.registerOpenRequests("action-replies", { openRequestsOn: () => { throw new Error("down"); } });
   const c = u.w.ca.publishPreflight(act(u.P));
-  assert.deepEqual(sign(c).open_requests, { read: false, undetermined: true, key: null, says: OPEN_REQUESTS_UNREAD_SENTENCE });
+  assert.deepEqual(sign(c).open_requests, { read: false, undetermined: true, key: OPEN_REQUEST_KEYS.unread,
+                                            says: OPEN_REQUESTS_UNREAD_SENTENCE });
   same(c0, c);
   assert.deepEqual([c.ready, c.first], [c0.ready, c0.first]);
 });

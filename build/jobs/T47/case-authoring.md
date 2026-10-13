@@ -1,0 +1,48 @@
+# case-authoring (T47)
+
+**Status** · session_01RymrBMQ5XEGoEKerL7JfqT · depth 2 · COMPLETE · handled B3
+
+## Completion (CASE-AUTHORING #28)
+
+**Read.** Requirements whole; split map `case-authoring-split-2.md` whole; my code whole, all five files (P20), before changing it; case-inputs' public part, its exports, constructor, factory and ops whole; ratification R18, R44 and `#publishAtOffer`; case-disclosures' `tieAttestationJudged`. My tests (512 KB, over the 600 KB reading-set limit with the used modules) were read in full by two helpers in this session, who wrote digests citing every test by file and line (K2032, §17 (3)); each test file I changed I then read in the parts I changed.
+
+**Entries applied (T47-32).**
+- N908, split map §3, §4: deleted the copies (`index.mjs`: the open requests' source and its words, the carried outcomes, the drafts of what changed, `#waits`, `acknowledgeStatement`, `#draftLinkOf`, `#reauthorAcknowledgements`, `statementAcknowledgements`, `#statementWriter`, the constants `STATEMENT_ACK_MAX`, `WHAT_CHANGED_DRAFTS_MAX`, `WHAT_CHANGED_DRAFT_PREFIX`, `STATEMENT_ACK_REASON_MAX`, `DRAFTS_READ_MAX`, `CARRIED_OUTCOME_PREFIX`, `CARRY_REASON_MAX`, the ops `whatchangedpropose`, `whatchangeddrafts`, `statementack`; `document.mjs`: `statementSha` and the acknowledgement renderers; `checks.mjs`: `CASE_AUTHORING_WORDS`, `fillWords`, C-136.3–.8, `STATEMENT_ACK_CHECKS`; `schema.mjs` whole), the `declarePurge` call, `migrate` and `caseAuthoringOwns`. Re-pointed `#publishCase` (`pendingOutcomes`, `statementWriter`, `statementAcknowledgements`), `#whatChangedJudged` (`whatChangedDraftOf`) and `#openRequestsStep` (`openRequestsOn`, `openRequestLine`, `OPEN_REQUEST_KEYS`, `OPEN_REQUESTS_UNREAD_SENTENCE`) to the getter `inputs` (`caseInputsOf(host)`, handed this module's record, membership and clock when it is the first to ask); `WHAT_CHANGED_MAX` and the acknowledgement renderers are imported from case-inputs. The factory creates case-inputs (`void c.inputs`) beside case-account, before the instance is kept, so a refused declaration there leaves no instance of this module. This module now holds and declares no table. No re-export of a moved symbol is kept here (no pass-through, K2608).
+- R9, R14, R25, R27, R29, R34, R38, R65 re-worded: met by the re-pointing; each tested (below).
+- R74 (new): met by the re-pointed `pendingOutcomes` read; tested: asked once for the case R7 resolves, written in the order answered, a minted case asks nothing.
+- R75 (N683): the sign step answers `publish_at` exactly as `caseRatifyPreflight` answers it, from the one call R34 makes; not reached, `publish_at: null` with `publish_at_stated` (`PUBLISH_AT_NOT_REACHED_SENTENCE`); reached with no offer in the answer, null with `PUBLISH_AT_UNANSWERED_SENTENCE`. Both sentences are plain placeholders, the UX stream's to word.
+- R76 (K1490, K3041): no code change (`tieAttested === true` already the only confirmation); tested at the interface.
+- N992: R73's rows are case-inputs R17's; this module spells no open-request sentence. The sign step's unread line now carries its key (`signing.openrequest.unread`) beside its sentence, so every line it shows is keyed.
+- B2: `obscured`'s read shape gains `kind` (case-grammar R31): documents.test.mjs and photos.test.mjs expect `kind: null`.
+
+**Tests.** Deleted here because case-inputs holds them: the moved-only arms of statement, drafts, outcomes, openrequests, waiting, invariants and dec149, and t46-words.test.mjs whole (K3022's one case-authoring red goes with it). Kept and re-tagged: R14 (the acknowledgement list as printed, the writer printed, each asked once per act), R27 (no statementack here; the dead answer is case-inputs'), R34 (the sign-step lines are `openRequestLine`'s, every row keyed; the unread line keyed), R38 (the adopted draft read through `whatChangedDraftOf`, the drafts untouched), R58, R65, R74, R25 (an acknowledger's stamp is case-inputs R13's, as the document lists it). New: signing.test.mjs (R75, R76); invariants' case-inputs R11/R16 arms (this module declares nothing; case-inputs' tables declared as its own; a refused declaration there is thrown by this factory and no instance kept). The fixture builds the real case-inputs (`w.ci`) on the same clock before case-authoring.
+
+**Deferred.** None.
+
+**Found in other modules (also in COMPLETE).** The tests of users that still name the moved services are red from this merge, each in its split window (plan rule 5 (8)) unless noted. Compared against `tranche/T47` run the same way: review `invariants.test.mjs` (imports the moved `DRAFTS_READ_MAX`; review's T47-33 re-points it; not in rule 5 (8)'s list); action-replies R3 (3), R8 (1) (`registerOpenRequests`, T47-40); affordances R1 R12 R24, R14 R9 R18, R19 (2) (T47-49); control-plane R20 (3), R45, R64 (2) (T47-65); plane R17, R38, R39 and R33 (T47-66; R33's file failed to load on the baseline, so whether it is mine is not established). consequences, case-check, tasks and op-declarations show no new red. Generated artifact staled: the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, `.bundle.json`), whose inputs lose `src/case-authoring/schema.mjs` (rule 5 (4); regenerated at the layer close).
+
+**Ran.** `node --test bio-plane/test/m/case-authoring/`: tests 190, pass 190, fail 0. Checks from the process repository: format 0 failures; architecture `case-authoring` 0 failures (33 files); coverage `case-authoring` 48 of 48 live ids named, 0 failures; ownership 20 files, 0 failures; `checks/run.mjs ../bio`: format 0, architecture 0 failures (3096 files), coverage 41 failures, none of them case-authoring's (other modules' ids not yet met, rule 5 (1)), channels 0.
+
+Size (session_01RymrBMQ5XEGoEKerL7JfqT): test runs 17, module lines 3008
+
+## J1 · REPORT
+
+Started and read: requirements whole, split map, my code whole (all five files); my tests (512 KB, over the reading-set limit) read in full by two helpers in this session, who wrote me digests citing each test by line (K2032, §17 (3)).
+
+Done while case-inputs is unmerged (commits 879ab186d0, then signing.test.mjs):
+- R75: the sign step answers `publish_at` exactly as `caseRatifyPreflight` answers it (read from the one call R34 makes); not reached, `publish_at: null` with `publish_at_stated` saying so; reached with no offer in the answer, null with a second sentence. Never a blocker, `first` or `ready`. Tested over the real ratification with and without `jurisdiction_profiles` (`test-port-ellery`).
+- R76: tested at the interface (no code change; `tieAttested` already taken): absent, null, false, "yes", "true", 1 and a body's own list each refused TIE_ATTESTATION_MISSING naming the signer, nothing written; the pre-flight answers it `first`; `true` stores the signer's attestation with the act's instant.
+- Module tests: 214, 213 pass, 1 fail: t46-words.test.mjs:193 (K3022's inherited red, DEC-199 removed `signing.openrequest.nowindow`), which leaves with the R73 arms at the delete.
+
+Waiting for your CHANGE after T47-31 merges to delete the copies (§3, §4). Plan for the tests at that point, so you can object before: statement, drafts, outcomes, openrequests, waiting, invariants and dec149's arms of class "moved code only" are deleted here (case-inputs holds them); t46-words.test.mjs is deleted whole (its row arms are case-inputs R10/R17's; its sign-step arms are re-kept in openrequests.test.mjs as R34 end-to-end, reading `case-inputs.openRequestLine`); the end-to-end arms stay re-tagged R14 (acknowledgement listed, writer printed), R74 (outcomes), R34 (sign-step lines), R38 (adopted draft), R58, driving the moved setup acts through `caseInputsOf(host)`. invariants' K2675 arm is re-pointed: case-authoring now declares nothing, so its factory's throw is case-inputs'. account.test.mjs:454's "what case-authoring keeps" control is re-worded to assert the moved methods are gone.
+
+## J2 · COMPLETE
+
+T47-32 complete on `job/T47/case-authoring` (merged `tranche/T47` through K3112). Details in the record's Completion section.
+
+- Copies deleted and re-pointed per split map §3, §4: `#publishCase`, `#whatChangedJudged`, `#openRequestsStep` ask case-inputs through the getter `inputs`; the factory creates it beside case-account; `schema.mjs`, `declarePurge`, `migrate` and `caseAuthoringOwns` gone; no re-export of a moved symbol kept. Module 3,008 lines with comments.
+- R74, R75, R76 met and tested; R9, R14, R25, R27, R29, R34, R38, R65 met as re-worded, each tested. B2's `kind: null` applied.
+- One behaviour choice, yours to overrule: the sign step's unread line now carries `key: signing.openrequest.unread` beside its sentence (every line keyed). R75's two "not offered" sentences are plain placeholders for the UX stream.
+- Tests: case-authoring 190/190. Checks: format 0, architecture 0, coverage 48/48, ownership 0; run.mjs architecture 0, coverage failures none of mine.
+- Reds this merge opens in users (vs `tranche/T47` run the same way): review invariants.test.mjs (moved `DRAFTS_READ_MAX`; T47-33; NOT in rule 5 (8)'s list, please name it); action-replies R3 x3, R8 (T47-40); affordances R1 R12 R24, R14 R9 R18, R19 x2 (T47-49); control-plane R20 x3, R45, R64 x2 (T47-65); plane R17, R38, R39 (+ R33, not established as mine; its file failed to load on the baseline) (T47-66). consequences, case-check, tasks, op-declarations: nothing new.
+- Generated artifact staled: the plane bundle (inputs lose `src/case-authoring/schema.mjs`), rule 5 (4).
