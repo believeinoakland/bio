@@ -4,7 +4,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, WORDS, LAW } from "./fixture.mjs";
-import { FILINGS_CHECKS, FILINGS_FOR_MAX, unfilledMarker } from "../../../src/filings/index.mjs";
+import { FILINGS_CHECKS, FILINGS_FOR_MAX, FILING_BLANKS, unfilledMarker } from "../../../src/filings/index.mjs";
+import { blankUnknownRefusal, FILING_TEMPLATE_CHECKS } from "../../../src/filing-templates/index.mjs";
 
 const OUTSIDER = V("quinn");
 const DRAFT_TABLES = ["filing_drafts", "communication_drafts", "filing_approvals", "filing_sendings", "filing_second_approvals"];
@@ -221,4 +222,39 @@ test("R54 SENT_REFERENCE_MALFORMED (C-115.57): a reference empty, blank, not a s
   assert.deepEqual([x.count("filing_sendings"), x.read(A).correspondence], [0, []], "nothing recorded");
   assert.equal(send(x, c.id, { reference: "x".repeat(100) }).ok, true, "negative control: 100 characters");
   assert.equal(send(x, c.id, { reference: "!" }).reason, "ALREADY_SENT", "asked before the reference");
+});
+
+test("R56 a member's own words naming a blank outside FILING_BLANKS are refused through filing-templates' blankUnknownRefusal (its R32), answered as it gives it: the refusal is the provider's, its row and blank equal; nothing written; control: known blanks are prepared", () => {
+  const x = world();
+  const A = x.action();
+  const n = x.count("filing_drafts");
+  const text = "To {{counterparty_role}}: {{nope}} and {{worse}}.";
+  const r = prep(x, A, { text });
+  const own = blankUnknownRefusal(text, { blanks: Object.keys(FILING_BLANKS) });
+  assert.deepEqual(r, own, "the provider's answer, as it gives it");
+  assert.deepEqual([r.reason, r.blank, r.check, r.translation],
+                   [own.reason, "nope", FILING_TEMPLATE_CHECKS[own.reason].check, FILING_TEMPLATE_CHECKS[own.reason].translation]);
+  assert.equal(own.reason in FILINGS_CHECKS, false, "not this module's row");
+  assert.equal(x.count("filing_drafts"), n, "nothing written");
+  assert.equal(blankUnknownRefusal(WORDS), null);
+  assert.equal(prep(x, A, { text: WORDS }).ok, true, "control: every blank known");
+});
+
+test("R55 with a member-filled blank (filing-templates R31: records, period, form, cost_limit): the record never fills it, so it stays [UNFILLED] with why until the member fills it; filled, it is labelled the member's and the draft is approved as it stands", async () => {
+  const x = world();
+  const A = x.action({ kind: "records_request", risk_tier: 2, law: "Test Stat. § 1.100" });
+  for (const n of ["records", "period", "form", "cost_limit"]) assert.ok(n in FILING_BLANKS, n);
+  const text = "Under {{law}}, please send {{records}} for {{period}}, in {{form}} form; tell us first above {{cost_limit}}.";
+  const bare = prep(x, A, { text });
+  assert.equal(bare.ok, true, JSON.stringify(bare).slice(0, 300));
+  assert.deepEqual(bare.unfilled.filter((u) => u.name !== "advisory").map((u) => u.name), ["records", "period", "form", "cost_limit"]);
+  for (const u of bare.unfilled.filter((y) => y.name !== "advisory")) assert.match(u.why, /the member fills it in/, u.name);
+  assert.ok(bare.text.includes(unfilledMarker("period")));
+  const fills = { records: "the inspection logs", period: "FY2025", form: "electronic", cost_limit: "50 dollars" };
+  const d = prep(x, A, { text, fills });
+  assert.ok(d.text.endsWith("Under Test Stat. § 1.100, please send the inspection logs for FY2025, in electronic form; tell us first above 50 dollars."), d.text);
+  assert.deepEqual(d.blanks.filter((b) => b.name in fills).map((b) => [b.name, b.value, b.source, b.label.kind]),
+                   Object.entries(fills).map(([n, v]) => [n, v, `fills:${V("bo")}`, "member_fill"]));
+  assert.deepEqual(d.unfilled.map((u) => u.name), [], "the advisory comes from the profile, every blank filled");
+  assert.equal((await approve(x, d.id)).ok, true);
 });

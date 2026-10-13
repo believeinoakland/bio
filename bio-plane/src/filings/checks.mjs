@@ -9,7 +9,7 @@
  * conformance's, so a theory naming none is `THEORY_NO_STANDARDS`. T21 (K921, K922, K924): `KIND_NO_TEMPLATE` (C-115.6)
  * and `NOT_TIER3` (C-115.17) are retired, their numbers never reused; the library's rows C-115.31–.33, .35–.38 moved to
  * `filing-templates` (its R23), whose refusals R28, R31 and R32 pass through as its own (`NO_SUCH_TEMPLATE`,
- * `TEMPLATE_RETIRED`, `TEMPLATE_NOT_OFFERED`, `TEMPLATE_BLANK_UNKNOWN` and `templateDraft`'s). T22 (DEC-88, K1025): R8's
+ * `TEMPLATE_RETIRED`, `TEMPLATE_NOT_OFFERED`, its unknown-blank refusal (`blankUnknownRefusal`, its R32; R56) and `templateDraft`'s). T22 (DEC-88, K1025): R8's
  * `PACKET_NO_REASON` (C-115.44). T45 (K2780, K2791): `NO_DETERMINATION` (C-115.19) is retired, its number never reused (R8: a
  * packet needs no determination); R34–R44's rows are C-115.45–.54 in the requirement's order, with R23's `NO_SUCH_BUNDLE`
  * (a chosen finding absent or unseen) and the marks a member states at preparation (`FILING_MARK_REFUSED`) after them.

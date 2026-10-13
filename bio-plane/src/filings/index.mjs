@@ -73,7 +73,7 @@ import { actionsOf, noSuchAction } from "../actions/index.mjs";
 import { actionClocksOf, factReader } from "../action-clocks/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
 import { eventsOf } from "../events/index.mjs";
-import { filingTemplatesOf, FILING_BLANKS, FILING_TEXT_MAX, blanksOf, withRow as templatesRow }
+import { filingTemplatesOf, FILING_BLANKS, FILING_TEXT_MAX, blanksOf, blankUnknownRefusal, withRow as templatesRow }
   from "../filing-templates/index.mjs";
 import { docketOf } from "../docket/index.mjs";
 import { caseCheckOf } from "../case-check/index.mjs";
@@ -714,9 +714,10 @@ export class Filings {
     if (own) {
       const bad = Filings.#unwritable(text, { action: a.id });
       if (bad) return bad;
-      const { unknown } = blanksOf(text);
-      if (unknown) return templatesRow({ ok: false, reason: "TEMPLATE_BLANK_UNKNOWN", blank: unknown, blanks: Object.keys(FILING_BLANKS),
-                                         detail: `{{${unknown}}} is not a blank filings fill` });
+      /* R56 (T47; K3124): a blank outside `FILING_BLANKS` is refused through filing-templates' one site (its R32),
+         answered as it gives it; this module never spells its code */
+      const unknown = blankUnknownRefusal(text, { blanks: Object.keys(FILING_BLANKS) });
+      if (unknown) return unknown;
     } else {
       const profileTpl = entry && isObj(entry.template) && entry.template.use === "file" && str(entry.template.id) ? entry.template : null;
       if (!named && !profileTpl) {

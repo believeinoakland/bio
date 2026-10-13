@@ -112,9 +112,11 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   const r = prep(x, B);
   assert.equal(r.ok, true);
   const by = Object.fromEntries(r.blanks.map((b) => [b.name, b]));
-  assert.deepEqual(r.unfilled.map((u) => u.name), ["counterparty_organisation", "counterparty_description", "law"],
-                   "a bylaw complaint states no law, and an office holds no organisation or description; every other blank filled");
+  assert.deepEqual(r.unfilled.map((u) => u.name), ["counterparty_organisation", "counterparty_description", "law",
+                                                  "records", "period", "form", "cost_limit"],
+                   "a bylaw complaint states no law, an office holds no organisation or description, and the member-filled blanks (filing-templates R31) are the member's to fill (R55); every other blank filled");
   assert.match(r.unfilled[2].why, /undetermined/);
+  for (const u of r.unfilled.slice(3)) assert.match(u.why, /the member fills it in/, u.name);
   for (const u of r.unfilled.slice(0, 2)) assert.match(u.why, /addressed to an office, which holds no/);
   assert.deepEqual([by.counterparty_role.value, by.counterparty_role.source], ["Selectboard", B]);
   assert.deepEqual([by.counterparty_body.value, by.counterparty_body.source], ["Port Ellery Selectboard", B]);
