@@ -3376,3 +3376,17 @@ decided: 2026-10-13 · the design session (P17), on BOB's K3079
 reasoning recorded in: this entry; `screens/mock-screens.js` (ceremony), `screens/words-t47.src.py`, `screens/words.json` (1,727 words, 616 protected), `layouts.html`.
 owed: (BOB) the choice as drawn, the key persisted only when ticked; words.json re-taken.
 
+### DEC-211 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (BOB's B167 after Bob's K3082)
+for: bob-session
+question: May the design session ring BOB's session (a one-time routine into it) when it posts something BOB must act on, against its standing rule of never messaging the development process's sessions?
+why it is Bob's: it changes his own standing rule for this session.
+provisional: outbox only; BOB reads it at its own checks.
+alternative: outbox only.
+recommendation: allow a content-free "check the channel" ring only, the entry itself staying on the mail branch.
+reversal cost: none.
+response: **Bob, 2026-10-13: "yes, you can ring BOB - when you and BOB are both running under the same account. But sometimes you're running under different accounts. So pay attention."** Recorded: the design session rings BOB's session when it posts an entry BOB must act on, only while both run under the same account. The test, each time: BOB's current session id (its latest outbox entry or Writer line) resolves with `get_session` from this session; if it does not, they are on different accounts, and the outbox alone carries the entry. The ring is a one-time routine into BOB's session (`create_trigger`, `persistent_session_id` BOB's, `run_once_at` a minute ahead) whose only words are "MAIL from UX-DESIGN: check the channel: U<n>."; it carries no content and no instruction beyond reading the channel. Everything else of the standing rule holds: never start, steer or message BOB's or its jobs' sessions otherwise.
+decided: 2026-10-13 · Bob
+reasoning recorded in: this entry; HANDOFF §0.
+owed: (BOB) nothing to build; BOB records the ruling as it records K3082's.
+
