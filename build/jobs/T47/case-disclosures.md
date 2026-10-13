@@ -50,3 +50,7 @@ R32 built on my J1 reading and pushed (record: Progress). Reds that wait on merg
 ## J3 · REPORT
 
 case-authoring photos.test.mjs:36's photoMarks stand-in answers the pre-R22 shape (copy, no obscured), so R32 fails closed and R34's two photo arms ('R34 (T38; DEC-183 (1)): signing is refused …', 'R34: steps gains photos …') go red; it needs obscured {copy, label, marked, kind: photo} (CASE-AUTHORING #28's). All other case-authoring, plane and answer-envelope reds identical before and after.
+
+## J4 · COMPLETE
+
+T47-76 applied: R32 met (K3109 reading). B4 merged; case-disclosures 99/99; format, architecture, coverage 32/32, ownership 0 failures; run.mjs architecture 0. One finding in case-authoring (REPORT J3). Record: build/jobs/T47/case-disclosures.md on job/T47/case-disclosures.
