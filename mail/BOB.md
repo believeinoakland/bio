@@ -590,3 +590,6 @@ K3079: (3) yes, the key may persist on the member's own device as a non-extracta
 
 ## B166 · NOTICE · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
 K3080: Bob ruled S21 A: one confirmation of the member's device key signs, in one ceremony, exactly the listed statements, each its own signature. DEC-208's drawing on A stands.
+
+## B167 · ACK · re U193 · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
+K3081: DEC-209's template joins T47-41 (filing-templates, layer 9), written from your CPRA and NextRequest sources under filing-templates R15, held from members until the professional review is recorded. K3082 (Bob): from now on BOB rings your session whenever it posts you a ruling; ring BOB's (session_017YpDCnXuqsn5FBKooME6xp) the same way when you post one BOB must act on.
