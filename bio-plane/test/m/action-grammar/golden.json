@@ -179,22 +179,22 @@
    },
    "NO_LAWS": {
     "check": "C-73.2",
-    "where": "src/actions/index.mjs #lawEntries > is-laws-entry",
+    "where": "src/action-records/index.mjs lawEntries > is-laws-entry",
     "translation": "The act names at least one law, each by its citation and its level. With none named there is nothing to set: a request whose laws nobody has stated reads as undetermined on its own, and setting an empty list would not make that any truer."
    },
    "BAD_LAW_LEVEL": {
     "check": "C-73.3",
-    "where": "src/actions/index.mjs #lawEntries > is-laws-entry",
+    "where": "src/action-records/index.mjs lawEntries > is-laws-entry",
     "translation": "Each law is stated at one of its levels: federal, state, county, city. One entry named a level outside those, so nothing was written."
    },
    "BAD_CITATION": {
     "check": "C-73.4",
-    "where": "src/actions/index.mjs #lawEntries > is-laws-entry",
+    "where": "src/action-records/index.mjs lawEntries > is-laws-entry",
     "translation": "Each law is named by its citation — a short reference such as a code section — and one entry was empty, too long, repeated, or held a quotation mark, backslash or line break, which this record cannot store. Nothing was written."
    },
    "TOO_MANY_LAWS": {
     "check": "C-73.5",
-    "where": "src/actions/index.mjs #lawEntries > is-laws-entry",
+    "where": "src/action-records/index.mjs lawEntries > is-laws-entry",
     "translation": "One act states at most twelve governing laws. A request governed at the federal, state and local levels names a handful; a longer list is more likely a list of every law that might apply than of the ones that do. Nothing was written."
    },
    "RECORDS_LAW_REFUSED": {
@@ -315,7 +315,7 @@
    },
    "BAD_RISK_TIER": {
     "check": "C-90.2",
-    "where": "src/actions/index.mjs #badRiskTier > is-bad-risk-tier",
+    "where": "src/action-records/index.mjs badRiskTier > is-bad-risk-tier",
     "translation": "A risk tier is 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). The act states one of those three; \"not assessed\" is what an action reads when nobody has stated one, and is not something to set. Nothing was written."
    },
    "RISK_TIER_REASON_REFUSED": {
@@ -335,7 +335,7 @@
    },
    "RISK_PROPOSAL_BASIS_REFUSED": {
     "check": "C-90.6",
-    "where": "src/actions/index.mjs actionRiskPropose > is-risk-propose-basis",
+    "where": "src/action-records/index.mjs actionRiskPropose > is-risk-propose-basis",
     "translation": "A proposed risk tier carries its basis: what the proposer read the tier from, in its own words, kept beside the proposal. The basis was missing, longer than 500 characters, or held a quotation mark, backslash or line break, which this record cannot store. Nothing was written, and the action's tier was never going to change."
    }
   },
