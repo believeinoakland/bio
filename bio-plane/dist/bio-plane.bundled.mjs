@@ -22039,7 +22039,8 @@ var HostGovernor = class {
     );
     return { configured: true, host, appetite_per_min: appetite };
   }
-  /** R13: one host's row, or every row by host; never creates one. Never throws. */
+  /** R13: one host's row, or every row by host; never creates one. Never throws. R28: it reads only `host`, so a
+   *  `now` or `nowMs` a caller sends is never read, and the rows it answers are as recorded, judging no instant. */
   governorState(q10) {
     const host = q10 && q10.host != null && q10.host !== "" ? String(q10.host) : null;
     return { hosts: host ? this.#rows(`SELECT * FROM host_governor WHERE host = ?`, host) : this.#rows(`SELECT * FROM host_governor ORDER BY host`) };
@@ -58186,7 +58187,9 @@ var REASON_MAX = 2e3;
 var reasonGiven = (r) => typeof r === "string" && r.trim() !== "" && [...r].length <= REASON_MAX;
 var SORT_DIRS = Object.freeze(["asc", "desc"]);
 var HELD_SORTS = Object.freeze(["age", "source", "project"]);
+var HELD_STATES = Object.freeze(["held", "set_aside"]);
 var HELD_FILES_IN_ROW = 50;
+var REGISTER_FIRST = `SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY julianday(registered), registered, capture_sha LIMIT 1`;
 var instances9 = /* @__PURE__ */ new WeakMap();
 var supplied = /* @__PURE__ */ new WeakMap();
 var sameEnv2 = (a, b) => {
@@ -58211,7 +58214,7 @@ function captureOf(ctx, opts = {}) {
       acquisitionHost: opts.acquisition ? null : ctx
     });
     instances9.set(storage, c);
-    supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation", "acquisition", "ownHosts"].filter((k) => opts[k] != null)));
+    supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation", "acquisition", "ownHosts", "now"].filter((k) => k === "now" ? typeof opts.now === "function" : opts[k] != null)));
     registerGrammar(c.core);
     registerFigures2(c);
     return c;
@@ -58223,6 +58226,7 @@ function captureOf(ctx, opts = {}) {
   if (opts.env != null && given6.has("env") && !sameEnv2(c.env, opts.env)) refuse29("env");
   if (opts.governor != null && given6.has("governor") && c.governor !== opts.governor) refuse29("governor");
   if (opts.ownHosts != null && given6.has("ownHosts") && !Capture.sameHosts(c.ownHosts, opts.ownHosts)) refuse29("ownHosts");
+  if (typeof opts.now === "function" && given6.has("now") && c.clock !== opts.now) refuse29("now");
   for (const [name3, held2] of [
     ["record", () => c.core],
     ["provenance", () => c.provenance],
@@ -58241,6 +58245,10 @@ function captureOf(ctx, opts = {}) {
   if (opts.ownHosts != null && !given6.has("ownHosts")) {
     c.ownHosts = Capture.hostsOf(opts.ownHosts);
     given6.add("ownHosts");
+  }
+  if (typeof opts.now === "function" && !given6.has("now")) {
+    c.clock = opts.now;
+    given6.add("now");
   }
   c.adoptReputation(opts);
   return c;
@@ -58279,13 +58287,15 @@ var Capture = class _Capture {
     acquisitionHost = null,
     ownHosts = [],
     reputation = null,
-    fileScanner = null
+    fileScanner = null,
+    now = null
   } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.core = record;
     this.env = env || {};
     this.governor = governor;
+    this.clock = typeof now === "function" ? now : Date.now;
     this.provenance = provenance;
     this.attestation = attestation;
     this.credentials = credentials;
@@ -58340,6 +58350,17 @@ var Capture = class _Capture {
   #credentials() {
     if (!this.credentials) this.credentials = credentialsOf({ storage: this.#storage }, { record: this.core });
     return this.credentials;
+  }
+  /* R90: this module's clock read once, epoch milliseconds; an answer that is not a finite number (a clock at fault)
+     reads the platform's. */
+  #instant() {
+    let t2;
+    try {
+      t2 = Number(this.clock());
+    } catch {
+      t2 = NaN;
+    }
+    return Number.isFinite(t2) ? t2 : Date.now();
   }
   #rows(q10, ...a) {
     return [...this.#sql.exec(q10, ...a)];
@@ -59077,7 +59098,10 @@ var Capture = class _Capture {
    * ==================================================================== */
   /* R77: the SQL of a document's standing: an Information document at `collected` whose latest held act is not a
      set-aside, seen by the viewer (membership R43 over record-core's `bundles`, R37). */
-  static #NOT_SET_ASIDE = `COALESCE((SELECT h.act FROM held_acts h WHERE h.bundle_id = b.bundle_id ORDER BY h.seq DESC LIMIT 1), '') <> 'set_aside'`;
+  static #LATEST_ACT = `COALESCE((SELECT h.act FROM held_acts h WHERE h.bundle_id = b.bundle_id ORDER BY h.seq DESC LIMIT 1), '')`;
+  static #NOT_SET_ASIDE = `${_Capture.#LATEST_ACT} <> 'set_aside'`;
+  /* R88: its latest held act is a set-aside. */
+  static #IS_SET_ASIDE = `${_Capture.#LATEST_ACT} = 'set_aside'`;
   /* R77: when it was collected: `created` while it has never left `collected` (no prior state), else the instant its
      state last moved, `last_updated` (record-core keeps no other per-state instant). */
   static #SINCE = `CASE WHEN b.prior_state IS NULL THEN b.created ELSE b.last_updated END`;
@@ -59090,14 +59114,15 @@ var Capture = class _Capture {
     const g = viewerPredicate(viewer);
     return { sql: g.sql, args: g.args };
   }
-  /* R77: the WHERE terms of a held document: an Information document at `collected`, not set aside, seen by the viewer,
-     and passing the `member` and `project` filters; with their arguments. One builder for the list and for asking
-     whether one document (an archive's, R77's grouping) is a row of it. */
-  #heldWhere({ viewer, who: who3, project }) {
+  /* R77: the WHERE terms of a held document: an Information document at `collected`, not set aside (R88: set aside, for
+     the `set_aside` list), seen by the viewer, and passing the `member` and `project` filters; with their arguments. One
+     builder for the list and for asking whether one document (an archive's, R77's grouping) is a row of it. */
+  #heldWhere({ viewer, who: who3, project, aside = false }) {
     const sight = this.#sightOf(viewer);
     const hasProject = project != null && project !== "";
     return {
-      sql: `b.object_type = 'information' AND b.current_state = 'collected' AND ${_Capture.#NOT_SET_ASIDE} AND (${sight.sql})
+      sql: `b.object_type = 'information' AND b.current_state = 'collected'
+            AND ${aside ? _Capture.#IS_SET_ASIDE : _Capture.#NOT_SET_ASIDE} AND (${sight.sql})
             AND ${who3 ? `EXISTS (SELECT 1 FROM register r JOIN capture_actors ca ON ca.capture_sha = r.capture_sha
                                   WHERE r.bundle_id = b.bundle_id
                                     AND (CASE WHEN ca.actor LIKE 'member:%' THEN substr(ca.actor, 8) ELSE ca.actor END) = ?)` : "1=1"}
@@ -59126,12 +59151,16 @@ var Capture = class _Capture {
     limit = null,
     after: after2 = null,
     viewer = void 0,
-    now = null
+    now = null,
+    state = null
   } = {}) {
     const by = sort == null || sort === "" ? "age" : sort;
     if (!HELD_SORTS.includes(by)) return _Capture.#badArgument("heldcaptures", "sort", HELD_SORTS.join(" | "), by);
     const way = dir == null || dir === "" ? by === "age" ? "desc" : "asc" : dir;
     if (!SORT_DIRS.includes(way)) return _Capture.#badArgument("heldcaptures", "dir", SORT_DIRS.join(" | "), way);
+    const list6 = state == null || state === "" ? "held" : state;
+    if (!HELD_STATES.includes(list6)) return _Capture.#badArgument("heldcaptures", "state", HELD_STATES.join(" | "), list6);
+    const aside = list6 === "set_aside";
     const cap = limitOf(limit);
     const from = after2 ? keyOf(after2, 3) : null;
     if (after2 && !from) return badCursor();
@@ -59139,7 +59168,7 @@ var Capture = class _Capture {
     const k0 = by === "age" ? "'0'" : by === "source" ? "CASE WHEN src_address IS NULL THEN '1' ELSE '0' END" : "CASE WHEN project IS NULL OR project = '' THEN '1' ELSE '0' END";
     const asc = by === "age" ? way === "desc" : way === "asc";
     const who3 = typeof member2 === "string" && member2 ? memberIdOf(member2) : null;
-    const where = this.#heldWhere({ viewer, who: who3, project });
+    const where = this.#heldWhere({ viewer, who: who3, project, aside });
     const window = (key3, n2) => this.#rows(
       `SELECT * FROM (SELECT bundle_id, title, project, since, src_address, src_via, src_retrieved, ${k0} AS k0, ${k1} AS k1 FROM (
          SELECT b.bundle_id, b.title, b.project, ${_Capture.#SINCE} AS since, ${_Capture.#SOURCE("address")} AS src_address,
@@ -59190,18 +59219,46 @@ var Capture = class _Capture {
         age_days: Number.isFinite(since) ? Math.max(0, Math.floor((at47 - since) / 864e5)) : null,
         ...await this.#eligibility(r.bundle_id),
         ...asked.questions ? { captured_for: _Capture.#shown(asked.questions) } : { captured_for: null, captured_for_basis: asked.basis },
-        ...grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {})
+        ...grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {}),
+        capture: this.#captureOfDocument(r.bundle_id),
+        ...aside ? { set_aside: this.#latestSetAside(r.bundle_id) } : {}
       });
     }
     return {
       ok: true,
       held: rows4,
+      state: list6,
       sort: by,
       dir: way,
       limit: cap,
       truncated: truncated6,
       next: truncated6 ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null
     };
+  }
+  /* R88: a set-aside document's latest set-aside as R79 recorded it, `{reason, author, at}`. */
+  #latestSetAside(bundleId) {
+    const r = this.#one(`SELECT reason, author, at FROM held_acts WHERE bundle_id = ? AND act = 'set_aside' ORDER BY seq DESC LIMIT 1`, bundleId);
+    return r ? { reason: r.reason, author: r.author, at: r.at } : null;
+  }
+  /* R77 (T47; N979): the capture a held row stands for, `{sha256, grade}`: the digest the register files under the
+     document (provenance R48; of several, the one first registered, ties by digest) and `provenance.captureGrade`'s
+     answer whole, null when provenance does not answer; null for a document under which the register files no capture. */
+  #captureOfDocument(bundleId) {
+    let reg = null;
+    try {
+      reg = this.#one(REGISTER_FIRST, bundleId);
+    } catch {
+      reg = null;
+    }
+    if (!reg || typeof reg.capture_sha !== "string") return null;
+    let grade2 = null;
+    try {
+      const g = typeof this.provenance?.captureGrade === "function" ? this.provenance.captureGrade(reg.capture_sha) : null;
+      grade2 = g && typeof g === "object" && typeof g.then !== "function" ? g : null;
+    } catch {
+      grade2 = null;
+    }
+    return { sha256: reg.capture_sha, grade: grade2 };
   }
   /* R77 (DEC-167 (8)): for each document of a window, the archives its captures were cut out of or found in
      (`acquisition.memberOf` over the captures the register files under it, provenance R48), each with the document its
@@ -60866,7 +60923,9 @@ var Capture = class _Capture {
     return { ok: true, counted: outcome !== "governed", ...this.sourceReachability({ addressNorm, now }) };
   }
   /** R8. The reachability of one address and whether the fallback threshold is met, with the facts it is computed
-   *  from. Staleness runs from the FIRST failure of the current run, and the age arm needs corroboration. */
+   *  from. Staleness runs from the FIRST failure of the current run, and the age arm needs corroboration. R90 (N983): an
+   *  in-plane caller (`monitoring`'s archive tick) may pass its own `now`; with none (the route never passes one, its
+   *  answer may gate an archive fallback) it is judged at this module's clock (`captureOf`'s `now`). */
   sourceReachability({ addressNorm = null, now = null } = {}) {
     const row14 = this.#one(`SELECT * FROM source_reachability WHERE address_norm=?`, addressNorm);
     const TH = this.reachabilityThresholds();
@@ -60880,7 +60939,7 @@ var Capture = class _Capture {
         thresholds: TH,
         basis: "no attempt on this address has ever been recorded"
       };
-    const at47 = now && ISO_INSTANT.test(now) ? now : stampSecond4();
+    const at47 = now && ISO_INSTANT.test(now) ? now : stampSecond4(this.#instant());
     const byCount = row14.consecutive_failures >= TH.failures;
     const since = row14.first_failure_since ? Date.parse(row14.first_failure_since) : null;
     const staleDays = since === null ? 0 : (Date.parse(at47) - since) / 864e5;
@@ -60949,7 +61008,8 @@ function captureOps(c, url, body, env) {
     derivesitechrome: () => c.deriveSiteChrome({ host: q10("host"), limit: q10("limit"), after: q10("after") }),
     chromeof: () => c.chromeOf({ host: q10("host"), ...page2 }),
     recordsourceoutcome: () => c.recordSourceOutcome(body || {}),
-    sourcereach: () => c.sourceReachability({ addressNorm: q10("address"), now: q10("now") }),
+    /* R90 (N983, K3027): judged at the server's instant, this module's clock: a `now` in the query or body is never read. */
+    sourcereach: () => c.sourceReachability({ addressNorm: q10("address") }),
     taskenqueue: () => c.taskEnqueue(body || {}),
     savecapturesession: () => c.saveCaptureSession(body || {}),
     loadcapturesession: () => c.loadCaptureSession({ session: q10("session") }),
@@ -60964,6 +61024,7 @@ function captureOps(c, url, body, env) {
       sort: q10("sort"),
       dir: q10("dir"),
       ...page2,
+      state: q10("state"),
       viewer: q10("viewer") ?? ""
     }),
     heldsetaside: () => c.setAside({
@@ -84884,7 +84945,7 @@ var COPY_STATES = Object.freeze([
   "vendor_model",
   "undetermined"
 ]);
-var HELD_STATES = Object.freeze(["text", "cited", "absent"]);
+var HELD_STATES2 = Object.freeze(["text", "cited", "absent"]);
 var ACCESS_STATES = Object.freeze(["free", "reading_room", "paywalled"]);
 var FORCE_WORD = Object.freeze({
   requires: "Requires",
@@ -86379,8 +86440,8 @@ var Standards = class {
   #heldFields(a) {
     const viewer = a.viewer ?? null;
     const held2 = a.held == null || a.held === "" ? "text" : a.held;
-    if (!HELD_STATES.includes(held2))
-      return refuseFieldInvalid("held", `is one of ${HELD_STATES.join(", ")}`);
+    if (!HELD_STATES2.includes(held2))
+      return refuseFieldInvalid("held", `is one of ${HELD_STATES2.join(", ")}`);
     if (held2 === "text") {
       const texts = this.#textIdsResolved(a.text);
       if (texts && texts.unresolved) return refuseTextUnresolved(texts.unresolved);
@@ -92151,6 +92212,18 @@ function evidenceOf(v) {
   }
   return null;
 }
+var INSTANT2 = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?(?:Z|[+-](\d{2}):(\d{2}))$/;
+function isInstant(v) {
+  const m = typeof v === "string" ? INSTANT2.exec(v) : null;
+  if (!m || Number(m[4]) > 23 || Number(m[5]) > 59 || Number(m[6] ?? 0) > 59 || Number(m[7] ?? 0) > 23 || Number(m[8] ?? 0) > 59)
+    return false;
+  const day2 = `${m[1]}-${m[2]}-${m[3]}`;
+  const d = /* @__PURE__ */ new Date(`${day2}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === day2 && Number.isFinite(Date.parse(v));
+}
+var CHANGES_LIMIT_DEFAULT = 200;
+var CHANGES_LIMIT_MAX = 1e3;
+var INSTANT_SPELLED_MAX = Date.parse("+010000-01-01T00:00:00Z");
 function isWhen(v) {
   if (typeof v !== "string" || !v) return false;
   if (DATE.test(v)) {
@@ -92764,7 +92837,8 @@ var Sources = class _Sources {
   /** R8: each entry that may be shown to `audience` at `at`, with its value (none for an entry recorded without one)
    *  and its basis; every other entry is left out, and nothing is said about it. Its answer is not a read under sight:
    *  it answers only what consent or the public record already opens to that audience, so it logs nothing (R5, K539).
-   *  It writes nothing and never throws. */
+   *  It writes nothing and never throws. A stated `at` is for in-plane callers (R20's among them); the route asks at
+   *  this module's own instant and passes none (`sourcesOps`, K3045). */
   publishableAt(args = {}) {
     const { source: source2, audience, at: at47 = null } = isObj27(args) ? args : {};
     try {
@@ -92799,6 +92873,74 @@ var Sources = class _Sources {
         out.push(row14);
       }
       return { ok: true, source: source2, audience, at: when, entries: out };
+    } catch {
+      return noSuchSource(source2);
+    }
+  }
+  /* ---- R20: the instants at which what R8 answers could have changed ---- */
+  /** R20 (in-plane only: no route, no viewer). Each disclosure appended to `source` (R2, R6) and each consent and
+   *  withdrawal recorded for it (R7, R11) at an instant after `since` and at or before the read's own instant, in
+   *  recorded order, each `{at, act, entry}` and nothing else (R5, R13: no value, audience, evidence, member or sight).
+   *  A caller asks R8 at each `at`, and at `since`, to find a state that held only inside the interval.
+   *
+   *  Recorded order is the instant, then, at one instant, disclosures before consents (a consent names an entry
+   *  already appended), then each table's own order. Every `at` here is written by `#instant()`, one spelling
+   *  (`stampInstant("millisecond")`), so instants compare as text; `since` is put in that spelling first, its
+   *  fraction past the millisecond dropped, which keeps "after" exact for instants held to the millisecond. `next`
+   *  names the last change answered (`d<seq>` or `c<seq>`); an `after` that names no change of this source reads as
+   *  absent, from the first. It writes nothing, logs no read and never throws. */
+  sourceChangesSince(args = {}) {
+    const { source: source2, since, limit, after: after2 } = isObj27(args) ? args : {};
+    try {
+      if (!this.#source(source2)) return noSuchSource(source2);
+      if (!isInstant(since)) return { ok: true, source: source2, changes: null, since_invalid: true };
+      const n2 = typeof limit === "number" || typeof limit === "string" && limit.trim() ? Math.trunc(Number(limit)) : NaN;
+      const lim = Number.isFinite(n2) ? Math.min(CHANGES_LIMIT_MAX, Math.max(1, n2)) : CHANGES_LIMIT_DEFAULT;
+      const sinceMs = Date.parse(since);
+      const from = sinceMs >= INSTANT_SPELLED_MAX ? "9999-12-31T23:59:59.999Z" : stampInstant("millisecond", sinceMs);
+      const at47 = this.#instant();
+      let cAt = "", cRank = -1, cSeq = -1;
+      const cur = typeof after2 === "string" ? /^([dc])(\d{1,15})$/.exec(after2) : null;
+      if (cur) {
+        const row14 = this.#one(cur[1] === "d" ? `SELECT at FROM source_entries WHERE seq = ? AND source_id = ?` : `SELECT at FROM source_consents WHERE seq = ? AND source_id = ?`, Number(cur[2]), source2);
+        if (row14) {
+          cAt = row14.at;
+          cRank = cur[1] === "d" ? 0 : 1;
+          cSeq = Number(cur[2]);
+        }
+      }
+      const rows4 = this.#rows(
+        `SELECT at, r, seq, entry, act FROM (
+           SELECT at, 0 AS r, seq, entry_id AS entry, 'disclosure' AS act FROM source_entries WHERE source_id = ?
+           UNION ALL
+           SELECT at, 1 AS r, seq, entry_id AS entry, CASE act WHEN 'consent' THEN 'consent' ELSE 'withdrawal' END AS act
+             FROM source_consents WHERE source_id = ?)
+         WHERE at > ? AND at <= ? AND (at > ? OR (at = ? AND (r > ? OR (r = ? AND seq > ?))))
+         ORDER BY at, r, seq LIMIT ?`,
+        source2,
+        source2,
+        from,
+        at47,
+        cAt,
+        cAt,
+        cRank,
+        cRank,
+        cSeq,
+        lim + 1
+      );
+      const truncated6 = rows4.length > lim;
+      const page2 = rows4.slice(0, lim);
+      const last = page2[page2.length - 1];
+      return {
+        ok: true,
+        source: source2,
+        since,
+        at: at47,
+        changes: page2.map((c) => ({ at: c.at, act: c.act, entry: c.entry })),
+        limit: lim,
+        truncated: truncated6,
+        next: truncated6 ? `${last.r === 0 ? "d" : "c"}${last.seq}` : null
+      };
     } catch {
       return noSuchSource(source2);
     }
@@ -92963,11 +93105,8 @@ function sourcesOps(s, url, body) {
     sourcekeyed: () => s.markKeyedResult({ captureSha: b.captureSha, service: b.service, terms: b.terms, by: q10("by") }),
     sourcerung: () => s.rungOf({ source: q10("source_id") ?? b.source, viewer: q10("viewer") }),
     sourcereadlog: () => s.readLog({ source: q10("source_id") ?? b.source, viewer: q10("viewer") }),
-    sourcepublishable: () => s.publishableAt({
-      source: q10("source_id") ?? b.source,
-      audience: q10("audience") ?? b.audience,
-      at: q10("at") ?? b.at ?? null
-    })
+    /* R8 (T47; K3045): evaluated at this module's own instant; a `now` or `at` in the query or the body is never read */
+    sourcepublishable: () => s.publishableAt({ source: q10("source_id") ?? b.source, audience: q10("audience") ?? b.audience })
   };
 }
 
@@ -137135,10 +137274,10 @@ var MARKS_HISTORY_UNREAD = "the photo's marks since the check could not be read,
 var DOCUMENT_HISTORY_UNREAD = "the document's copies since the check could not be read, so its copy cannot be confirmed";
 var WITHDRAWAL_PAGE = 1e3;
 var WITHDRAWAL_PAGES_MAX = 1e3;
-var INSTANT2 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
-var isInstant = (s) => {
+var INSTANT3 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+var isInstant2 = (s) => {
   try {
-    if (typeof s !== "string" || !INSTANT2.test(s)) return false;
+    if (typeof s !== "string" || !INSTANT3.test(s)) return false;
     const ms5 = Date.parse(s);
     return Number.isFinite(ms5) && stampInstant(s.includes(".") ? "millisecond" : "second", ms5) === s;
   } catch {
@@ -137631,7 +137770,7 @@ var CaseCarriage = class _CaseCarriage {
     } catch {
       now = null;
     }
-    const gone = isInstant(since) ? this.#withdrawnSince(since) : null;
+    const gone = isInstant2(since) ? this.#withdrawnSince(since) : null;
     const isNow = new Set((now ? now.withdrawn : []).map((x) => `${x.ref ?? ""}\0${x.edition}`));
     const withdrawn = rows4.filter((r) => gone === null || gone.has(r.key) || isNow.has(`${r.named.ref ?? ""}\0${r.named.edition}`)).map((r) => ({ ...r.named }));
     const undisclosed = now ? now.undisclosed : [];
@@ -137670,7 +137809,7 @@ var CaseCarriage = class _CaseCarriage {
    *  record-core's instant, answers the row lapsed. At most 200, in row order; `[]` when none. Synchronous; writes
    *  nothing; never throws. */
   marksLapsedSince(fm, since) {
-    const valid = isInstant(since);
+    const valid = isInstant2(since);
     const out = [];
     for (const m of this.#materialRows(fm)) {
       let e2 = null;
@@ -137738,7 +137877,7 @@ var CaseCarriage = class _CaseCarriage {
     try {
       const rows4 = _CaseCarriage.#sourceRows(text7);
       if (!rows4.length) return [];
-      if (!isInstant(since)) return sourceRowsStanding(rows4, () => null);
+      if (!isInstant2(since)) return sourceRowsStanding(rows4, () => null);
       const atRead = this.#publishable(this.#when(null)), atSince = this.#publishable(since);
       const out = [];
       for (const r of rows4) {
@@ -228578,17 +228717,17 @@ var FILE_SAFETY_CHECKS = Object.freeze({
     at39("#held", "is-capture-held"),
     "Your group's Civicsmith holds no captured file under that digest, so there is nothing to check or open."
   ),
-  /* R4, R8 (K1928 Q4), R42: your group's Civicsmith has no scanner installed. */
+  /* R4, R8 (K1928 Q4), R42, R42a: your group's Civicsmith has no file scanner installed. */
   SCANNER_ABSENT: row6(
     "C-140.2",
     at39("scanBatch", "is-scanner-bound"),
-    "Your group's Civicsmith has no virus scanner installed, so no file was scanned and no note was written. Whoever installed it can add the scanner; until then a file's checks say it was not scanned."
+    "Your group's Civicsmith has no file scanner installed, so no file was scanned and no note was written. Whoever installed it can add the file scanner; until then a file's checks say it was not scanned."
   ),
   /* R4, R8, R14: the scanner is installed but did not answer. */
   SCANNER_UNREACHABLE: row6(
     "C-140.3",
     at39("scanBatch", "is-scanner-answering"),
-    "The virus scanner your group's Civicsmith uses did not answer, so nothing was scanned and no note was written. It is asked again on its next round."
+    "The file scanner your group's Civicsmith uses did not answer, so nothing was scanned and no note was written. It is asked again on its next round."
   ),
   /* R8: the scan before first opening could not decide. */
   NOT_SCANNED: row6(
@@ -228642,10 +228781,11 @@ var FILE_SAFETY_CHECKS = Object.freeze({
     at39("safeView", "is-safe-view-made"),
     "The safe view of this file could not be made. The reason is stated beside it. The original is unchanged."
   ),
+  /* R11, R12, R42, R42a: no renderer is bound, the one condition of this code (R43). */
   RENDERER_ABSENT: row6(
     "C-140.13",
     at39("renderBatch", "is-renderer-bound"),
-    "Your group's Civicsmith has no safe-view maker installed, so no safe view can be made. Whoever installed it can add it."
+    "Your group's Civicsmith has no safe view installed, so no safe view can be made. Whoever installed it can add it."
   ),
   /* R13: a deeper check needs an outside scanner or sandbox the group turned on. */
   NO_OUTSIDE_TOOL: row6(
@@ -228777,7 +228917,7 @@ var FILE_SAFETY_CHECKS = Object.freeze({
   SAFE_COPY_WITHHELD: row6(
     "C-140.38",
     at39("safeCopy", "is-copy-clean"),
-    "The safe copy of this file has not been found clean by the virus scanner, so it is not handed out. The safe view is still there."
+    "The safe copy of this file has not been found clean by the file scanner, so it is not handed out. The safe view is still there."
   ),
   /* R35: the forwarded period. */
   FORWARD_PERIOD_INVALID: row6(
@@ -228802,6 +228942,13 @@ var FILE_SAFETY_CHECKS = Object.freeze({
     "C-140.42",
     at39("deeperBatch", "is-deeper-readable"),
     "The deeper checks your group asked for could not be read just now, so none was started or asked about. They are read again on the next round."
+  ),
+  /* R43 (T47; N941, K231): a renderer is bound, but the files waiting for a safe view could not be read. New at T47
+     (T47-12); the row awaits promotion's stamp (plan T47). */
+  RENDER_QUEUE_UNREADABLE: row6(
+    "C-140.43",
+    at39("renderBatch", "is-render-queue-readable"),
+    "The files waiting for a safe view could not be read just now, so nothing was rendered. They are read again on the next round."
   )
 });
 var reason = (translation) => Object.freeze({ translation });
@@ -236630,7 +236777,7 @@ var FileSafety = class _FileSafety {
         this.#count("safe_views");
         return { ok: true, kind: "data", derived: true, of: sha2, sheets: s.sheets, original };
       }
-      if (!this.#scannerBinding()) return refusal35("RENDERER_ABSENT", "Your group's Civicsmith has no safe-view maker installed. Nothing was rendered.", { captureSha: sha2 });
+      if (!this.#scannerBinding()) return refusal35("RENDERER_ABSENT", "Your group's Civicsmith has no safe view installed. Nothing was rendered.", { captureSha: sha2 });
       const row14 = this.#ensureQueued(sha2);
       if (row14.render_state === "failed")
         return refusal35("SAFE_VIEW_FAILED", "The renderer refused the file.", { captureSha: sha2, renderer_reason: row14.render_reason, renderer_detail: row14.render_detail });
@@ -236705,18 +236852,30 @@ var FileSafety = class _FileSafety {
     return "rendered";
   }
   /** R12: renders queued files (the scheduler's wake), and makes the safe copies a routine tool queued (R32, R33); it
-   *  states the copies and the files still queued after it. */
+   *  states the copies and the files still queued after it. R43: with a renderer bound, a queue that cannot be read
+   *  (the files queued to render, or the safe copies queued) answers RENDER_QUEUE_UNREADABLE, rendering, copying and
+   *  counting nothing; RENDERER_ABSENT keeps its one condition, no renderer bound. */
   async renderBatch({ limit = 20 } = {}) {
+    this.#keep("render", { last: this.now(), unreadable: false });
+    if (!this.#scannerBinding()) return refusal35("RENDERER_ABSENT", "Your group's Civicsmith has no safe view installed. Nothing was rendered.");
+    const lim = clamp11(limit, 20, SCAN_BATCH_MAX);
+    const unreadable2 = (detail, extra) => {
+      this.#keep("render", { last: this.now(), unreadable: true });
+      return refusal35("RENDER_QUEUE_UNREADABLE", detail, extra);
+    };
+    let views, queuedCopies;
     try {
-      this.#keep("render", { last: this.now() });
-      if (!this.#scannerBinding()) return refusal35("RENDERER_ABSENT", "Your group's Civicsmith has no safe-view maker installed. Nothing was rendered.");
-      const lim = clamp11(limit, 20, SCAN_BATCH_MAX);
-      const out = { rendered: 0, failed: 0, none: 0, data: 0 };
-      for (const row14 of this.#rows(`SELECT * FROM fs_files WHERE render_state = 'queued' ORDER BY queued_at, capture_sha LIMIT ?`, lim))
-        out[await this.#render(row14)]++;
-      const copies = { made: 0, failed: 0, queued: 0 };
+      views = this.#rows(`SELECT * FROM fs_files WHERE render_state = 'queued' ORDER BY queued_at, capture_sha LIMIT ?`, lim);
+      queuedCopies = this.#rows(`SELECT * FROM fs_copies WHERE state = 'queued' ORDER BY queued_at LIMIT ?`, lim);
+    } catch {
+      return unreadable2("Your group's Civicsmith could not read the files waiting for a safe view. Nothing was rendered, made or counted.");
+    }
+    const out = { rendered: 0, failed: 0, none: 0, data: 0 };
+    const copies = { made: 0, failed: 0, queued: 0 };
+    try {
+      for (const row14 of views) out[await this.#render(row14)]++;
       const tool = this.#routineTools("cdr")[0];
-      if (tool) for (const c of this.#rows(`SELECT * FROM fs_copies WHERE state = 'queued' ORDER BY queued_at LIMIT ?`, lim)) {
+      if (tool) for (const c of queuedCopies) {
         const r = await this.#makeCopy(c.capture_sha, tool);
         if (r === "done" || r === "withheld") copies.made++;
         else copies.failed++;
@@ -236725,7 +236884,10 @@ var FileSafety = class _FileSafety {
       const remaining = Number(this.#one(`SELECT COUNT(*) AS n FROM fs_files WHERE render_state = 'queued'`).n);
       return { ok: true, ...out, copies, remaining };
     } catch {
-      return refusal35("RENDERER_ABSENT", "The render queue could not be read. Nothing was rendered.");
+      return unreadable2(
+        "Your group's Civicsmith could not read the files waiting for a safe view after some were rendered. The rest wait for the next round.",
+        { rendered: out.rendered, copies_made: copies.made }
+      );
     }
   }
   /* ===== scanning (R4, R5) ===== */
@@ -236740,7 +236902,7 @@ var FileSafety = class _FileSafety {
   /** R4: one batch to ClamAV in one request, a note per verdict; each routine scan tool also scans each due file. */
   async scanBatch({ limit = SCAN_BATCH_MAX, at: at47 = null } = {}) {
     try {
-      if (!this.#scannerBinding()) return refusal35("SCANNER_ABSENT", "Your group's Civicsmith has no virus scanner installed. No note was written.");
+      if (!this.#scannerBinding()) return refusal35("SCANNER_ABSENT", "Your group's Civicsmith has no file scanner installed. No note was written.");
       const now = Number.isFinite(Date.parse(at47)) ? Date.parse(at47) : this.now();
       this.#keep("scan", { last: now, remaining: 0 });
       const due2 = this.#due(now);
@@ -237056,7 +237218,7 @@ var FileSafety = class _FileSafety {
       if (bar) return bar;
       const { tool, refused: refused5 } = this.#tool(toolId);
       if (refused5) return refused5;
-      if (!this.#scannerBinding()) return refusal35("SCANNER_ABSENT", "Your group's Civicsmith has no virus scanner installed, so no tool can be tested.", { tool_id: tool.tool_id });
+      if (!this.#scannerBinding()) return refusal35("SCANNER_ABSENT", "Your group's Civicsmith has no file scanner installed, so no tool can be tested.", { tool_id: tool.tool_id });
       const spec = await this.#spec(tool);
       const r = spec ? await this.#scanner("/provider/test", { tool: spec }) : { body: { ok: false, code: "CREDENTIALS_UNAVAILABLE" } };
       const at47 = iso6(this.now());
@@ -237446,7 +237608,7 @@ var FileSafety = class _FileSafety {
       if (!tool) return refusal35("NO_SAFE_COPY", "No tool of kind cdr is on.", { captureSha: h.sha });
       const row14 = this.#one(`SELECT * FROM fs_copies WHERE capture_sha = ?`, h.sha);
       if (row14 && ["pending", "done", "withheld"].includes(row14.state)) return { ok: true, captureSha: h.sha, state: row14.state };
-      if (!this.#scannerBinding()) return refusal35("SCANNER_ABSENT", "Your group's Civicsmith has no virus scanner installed, so no tool can be asked.", { captureSha: h.sha });
+      if (!this.#scannerBinding()) return refusal35("SCANNER_ABSENT", "Your group's Civicsmith has no file scanner installed, so no tool can be asked.", { captureSha: h.sha });
       return { ok: true, captureSha: h.sha, state: await this.#makeCopy(h.sha, tool) };
     } catch {
       return refusal35("SAFE_COPY_FAILED", "The safe copy could not be asked for.", { captureSha: captureSha ?? null });
@@ -237559,7 +237721,7 @@ var FileSafety = class _FileSafety {
    *  no route. Writes no note and names no file, address or member (R23); never throws. */
   async refreshReputationLists({ at: at47 = null } = {}) {
     try {
-      if (!this.#scannerBinding()) return refusal35("SCANNER_ABSENT", "Your group's Civicsmith has no virus scanner installed, so no list was refreshed.");
+      if (!this.#scannerBinding()) return refusal35("SCANNER_ABSENT", "Your group's Civicsmith has no file scanner installed, so no list was refreshed.");
       const when = Number.isFinite(msOf3(at47)) ? msOf3(at47) : this.now();
       const refreshed = [], failed3 = [], skipped = [];
       for (const tool of this.#onTools("url_reputation")) {
@@ -237621,18 +237783,21 @@ var FileSafety = class _FileSafety {
   }
   /** R39: renderBatch's instant. Null with no renderer bound (the scanner binding, as renderBatch refuses
    *  RENDERER_ABSENT) or while no file's view and no safe copy is queued; else the later of `now` and the last batch
-   *  plus FILE_SAFETY_POLL_MS. */
+   *  plus FILE_SAFETY_POLL_MS. While the queue cannot be read (R43: the last batch found it so, or this read fails), the
+   *  last batch plus FILE_SAFETY_POLL_MS, as deeperWake's, so the files waiting are read again on the next round. */
   renderWake(now) {
+    const n2 = msOf3(now);
+    if (!Number.isFinite(n2) || !this.#scannerBinding()) return this.#answer("render", null);
+    const kept = this.#kept("render");
+    const poll = kept && Number.isFinite(kept.last) ? Math.max(n2, kept.last + FILE_SAFETY_POLL_MS) : n2;
     try {
-      const n2 = msOf3(now);
-      if (!Number.isFinite(n2) || !this.#scannerBinding()) return this.#answer("render", null);
+      if (kept && kept.unreadable) return this.#answer("render", poll);
       const views = this.#one(`SELECT 1 AS x FROM fs_files WHERE render_state = 'queued' LIMIT 1`);
       const copies = this.#one(`SELECT 1 AS x FROM fs_copies WHERE state = 'queued' LIMIT 1`);
       if (!views && !copies) return this.#answer("render", null);
-      const kept = this.#kept("render");
-      return this.#answer("render", kept && Number.isFinite(kept.last) ? Math.max(n2, kept.last + FILE_SAFETY_POLL_MS) : n2);
+      return this.#answer("render", poll);
     } catch {
-      return null;
+      return this.#answer("render", poll);
     }
   }
   /** R39: deeperBatch's instant. Null while no check is queued or running; else the earliest of the last batch plus
@@ -275201,7 +275366,7 @@ var bare3 = (m) => {
 };
 var isMachine7 = (m) => typeof m === "string" && (m.startsWith(MACHINE_AUTHOR_PREFIX) || m.startsWith(MACHINE_CLASS_PREFIX));
 var instantOf3 = (ms5) => new Date(ms5).toISOString().replace(/\.\d{3}Z$/, "Z");
-var INSTANT3 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+var INSTANT4 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 var dayOf10 = (v) => {
   const d = typeof v === "string" ? v.slice(0, 10) : "";
   return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
@@ -276655,7 +276820,7 @@ var NoticeProducers = class _NoticeProducers {
    *  instant, since civil-time reads only whole-second UTC) in `zone` (civil-time), the UTC day when none is held; null when
    *  it is no instant (a sentence then says no day, never a word of this module's own). */
   static #localDay(at47, zone) {
-    const ms5 = typeof at47 === "number" ? at47 : typeof at47 === "string" && INSTANT3.test(at47) ? Date.parse(at47) : NaN;
+    const ms5 = typeof at47 === "number" ? at47 : typeof at47 === "string" && INSTANT4.test(at47) ? Date.parse(at47) : NaN;
     const t2 = Number.isFinite(ms5) ? instantOf3(ms5) : at47;
     try {
       const d = localDay(t2, zone || "UTC");
