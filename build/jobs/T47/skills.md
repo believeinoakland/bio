@@ -54,4 +54,4 @@ The helper wrote me a digest citing each file and line. I then read whole the de
   - ownership skills tranche/T47: 0 failures;
   - `run.mjs`: architecture 3071 product files, 0 failures; format 0; channels 0; coverage 44 failures, all in other modules (screens-*, setup-words, wizard-scripts), none in skills.
 
-Size (session_01WwUjYLBTS2rPZn3Z8JEkzz): test runs 9, module lines 3085
+Size (session_01WwUjYLBTS2rPZn3Z8JEkzz): test runs 9, module lines 3091
