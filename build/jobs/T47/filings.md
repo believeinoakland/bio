@@ -36,3 +36,19 @@ Reports, not questions:
 - `checks/run.mjs`: format 0 failures; architecture 0 failures; coverage 36 failures, none of them filings (54/54); channels 0; ownership 0 (6 files).
 
 Size (session_01Hr4JrN5a2WxdtUg3TH5AVM): test runs 9, module lines 3547
+
+## J3 · COMPLETE
+
+**Completion record, B5 (re-opened by B4 and B5).**
+
+- Merged `tranche/T47` (with filing-templates T47-41, K3126) into this branch.
+- **R56**: `filingPrepare`'s own-words check now answers through `filing-templates.blankUnknownRefusal(text, {blanks})` (its R32), exactly as that function gives it. Filings no longer spells the code anywhere in its source; checks.mjs's comment names the provider instead. Test: the refusal equals the provider's answer, with filing-templates' row and blank; nothing is written; control: known blanks are prepared.
+- **R55 with R31's blanks**: a records request in the member's own words names `records`, `period`, `form` and `cost_limit`. Without fills each one stays `[UNFILLED]` with "the member fills it in". With fills each one is the member's, labelled, and the draft is approved as it stands.
+- The R3 test, whose template names every `FILING_BLANKS` name, now expects the four member-filled blanks among those left unfilled. This was the prepare red the filing-templates merge opened. The premise R3 test is already green.
+
+**Tests and checks:**
+- filings: 107 pass, 0 fail.
+- Users: escalation 85/0, action-plans 79/0, plan-work 45/0, action-producers 45/0. filing-templates is 72/0.
+- `checks/run.mjs`: format 0 failures; architecture 0; coverage 32 failures, none of them filings (55/55); channels 0; ownership 0 (7 files).
+
+Size (session_01Hr4JrN5a2WxdtUg3TH5AVM): test runs 12, module lines 3548
