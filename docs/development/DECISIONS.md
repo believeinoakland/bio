@@ -3390,3 +3390,21 @@ decided: 2026-10-13 · Bob
 reasoning recorded in: this entry; HANDOFF §0.
 owed: (BOB) nothing to build; BOB records the ruling as it records K3082's.
 
+### DEC-212 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (Bob's question: "Are all UX design tasks defined so far completed at this point?")
+for: bob-session
+question: The design work still owed from earlier handoffs, found in answering Bob: the reminder for a wizard draft left unsent (K1364; journeys page journey 19, step 9; HANDOFF §4's list of 6 October), and two loose ends in the mockups' sample data.
+why it is Bob's: it is not: detail beneath K1364 and the wide path's sixth rule (DEC-129), decided by the design session (P17).
+provisional: undrawn; the sample data inconsistent.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-13.**
+(1) **A request left unsent** (K1364; wide path rule 6, "their unfinished work listed where they will see it"): Your queue, under its project, a Status item: "You left a records request unsent: inspection logs for pothole reports closed in FY2025 · Get a record · approved on 9 October, not yet sent · nothing has gone to the office", with "Pick up where you left off" (opens the request at its step), "Keep it for later" (`queuesnooze`) and "Drop the request, with a reason" (`actionmove` to `abandoned`, actions R7's resolutions; nothing was sent, so the office never sees it). The queue now lists 10 items.
+(2) **Edition 2's date:** the published case read "published 14 November" while the ceremony scheduled the same edition for 19 November; every page now says it was published on 19 November, at the time Dev set when signing.
+(3) **The work orders' grade:** two cards said capture A where the record and the calculation say B; both now say B ("captured by Dev from the city's open-data portal").
+(4) **Checked and not a loose end:** "Ben" is the group's sixth member (Lakeshore Tenants has 6 members); the queue's dates read consistently.
+decided: 2026-10-13 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (queue, site, published), `screens/mock-refs.js`, `screens/mock-shell.js`, `screens/registry.src.py`, `screens/words.json` (1,728 words), `layouts.html`.
+owed: (BOB) the queue's item for an action prepared through a wizard and left unsent (a producer naming the wizard, the step and the date), with its three acts; registry.json and words.json re-taken.
+

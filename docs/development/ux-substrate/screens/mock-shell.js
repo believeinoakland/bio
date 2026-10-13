@@ -79,7 +79,7 @@ const pathNav = list => `<nav class="mk-crumbs" aria-label="Where you are">${lis
 const tipOf = (what, why, go) => `${what}${why ? `<span class=why><b>Here:</b> ${why}</span>` : ''}${go ? '<span class=more>Click to open it.</span>' : ''}`;
 const AQ = 'Is the city repairing reported potholes within seven days?';
 const REFS = {
-  home: [['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · project · 3 questions · Edition 2 published 14 November', '2 items in it wait on you this week.'],
+  home: [['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · project · 3 questions · Edition 2 published 19 November', '2 items in it wait on you this week.'],
          ['Pothole repairs', 'project', '<b>Pothole repairs</b> · project · 2 questions · its main question is short on connection', 'A better link between reports and work orders would bring it to the bar.'],
          ['Sewer fund transfers', 'money', '<b>Sewer fund transfers</b> · project · a money trail across FY2022 to FY2024', 'Ana\'s question there waits for the FY2024–25 budget.']],
   members: [['Rosa', null, '<b>Rosa</b> · administrator · cover name R. Medina', 'The group\'s only administrator: the group depends on her and the hosting account.'],
@@ -87,8 +87,8 @@ const REFS = {
             ['Ana', null, '<b>Ana</b> · member · works on Sewer fund transfers', 'Has a question waiting on a held document.'],
             ['Teo', null, '<b>Teo</b> · member · reporter at the Bay Courier · declared expertise: journalism', 'Runs the story that cites Edition 2.']],
   queue: [['812 of 903 reports closed within 7 days', 'calculation', '<b>Reports closed within seven days, FY2025</b> · a calculation · 812 of 903 · computed from the city\'s work orders', 'One of its inputs changed: check whether the count still holds.'],
-          ['pothole work orders', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · captured from the city\'s open-data portal, capture A', 'The input that changed.']],
-  finder: [['Public Works work orders, FY2025 (CSV)', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · capture A', 'The city\'s own record of every pothole report: what your search matched most.'],
+          ['pothole work orders', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · captured by Dev from the city\'s open-data portal, capture B', 'The input that changed.']],
+  finder: [['Public Works work orders, FY2025 (CSV)', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · capture B', 'The city\'s own record of every pothole report: what your search matched most.'],
            ['Pothole repair policy, Administrative Instruction 4.12', 'document', '<b>Administrative Instruction 4.12</b> · Public Works · capture B · current version', 'Sets the seven-day standard your question tests the city against.'],
            ['Report to council: street maintenance performance', 'document', '<b>Report to council: street maintenance performance</b> · 2026 · capture B', 'Where the city claims 90% of potholes were filled.']],
   held: [['City budget FY2024–25, adopted (PDF)', 'document', '<b>City budget FY2024–25, adopted</b> · 412 pages · captured 2 October · not yet released', 'Held until a member vouches for it; Ana\'s question is waiting for it.'],
@@ -97,7 +97,7 @@ const REFS = {
   project: [[AQ, 'question', `<b>${AQ}</b> · question · capture B, connection C · short on connection`, 'The project\'s main question, and the one closest to the bar.'],
             ['Does "closed" in the city\'s records mean "repaired"?', 'question', '<b>Does “closed” mean “repaired”?</b> · question · unrated · opened by Mai', 'If the answer is no, the main question\'s count overstates repairs.']],
   question: [['812 of 903 reports closed within 7 days', 'calculation', '<b>Reports closed within seven days, FY2025</b> · a calculation from the city\'s work orders', 'Supports the question, using the city\'s own count of “closed”.']],
-  answers: [['Public Works work orders, FY2025', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · capture A', 'The answer counts its rows.']],
+  answers: [['Public Works work orders, FY2025', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · capture B', 'The answer counts its rows.']],
   timeline: [['City Clerk releases schedules', 'action', '<b>The City Clerk released the rent schedules</b> · 18 September · answering the group\'s request', 'The group\'s own act and the office\'s reply, in the second lane.']],
   explore: [['J. Ortega', 'person', '<b>J. Ortega</b> · Council District 3 since 2023, from Legistar', 'Where this chain starts.'],
             ['Bayline Properties', 'money', '<b>Bayline Properties</b> · paid $1.2M in FY2024 under the Coliseum lease', 'Where the money in this chain ends up.']],
@@ -111,7 +111,7 @@ const REFS = {
 // Things named on many screens: one card wherever they appear (DEC-160, widened 6 October). [text, opens, what it is, why here
 // (usually none: a screen's own REFS add that), screens where it is not attached].
 const GLOBAL_REFS = [
-  ['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · a project · whether the city kept the terms of its lease of the Coliseum land, including rent raised in 2024 without a council vote · owner: Dev · Edition 2 published 14 November', null, ['project']],
+  ['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · a project · whether the city kept the terms of its lease of the Coliseum land, including rent raised in 2024 without a council vote · owner: Dev · Edition 2 published 19 November', null, ['project']],
   ['Pothole repairs', 'project', '<b>Pothole repairs</b> · a project · whether the city repairs reported potholes within the seven days its own policy sets · 2 questions', null, ['project']],
   ['Sewer fund transfers', 'money', '<b>Sewer fund transfers</b> · a project · where sewer-fee money moved between funds, FY2022 to FY2024, and whether each transfer was authorised · owner: Ana', null, []],
   ['Lakeshore Tenants', null, '<b>Lakeshore Tenants</b> · your group · tenants near the Coliseum, meeting since 2025 · 6 members, 1 administrator', null, ['install', 'setup', 'join', 'doorbell', 'published']],
@@ -130,7 +130,7 @@ const GLOBAL_REFS = [
   ['Administrative Instruction 4.12', 'document', '<b>Administrative Instruction 4.12</b> · a document · the city\'s pothole repair policy · Public Works · capture B · sets seven calendar days', null, ['document']],
   ['Lease amendment 1', 'document', '<b>Lease amendment 1</b> · a document · the Coliseum lease change approved 12 January 2024', null, []],
   ['Bayline Properties', 'money', '<b>Bayline Properties</b> · a firm · paid $1.2M in FY2024 under the Coliseum lease', null, []],
-  ['Edition 2', 'published', '<b>Edition 2</b> of The Coliseum lease · a published case · signed and published 14 November 2026', null, ['published']],
+  ['Edition 2', 'published', '<b>Edition 2</b> of The Coliseum lease · a published case · published 19 November 2026 at the time Dev set when signing', null, ['published']],
   ['Edition 1', 'published', '<b>Edition 1</b> of The Coliseum lease · a published case, since corrected by Edition 2', null, []],
   ['West Oakland Neighbors', 'imported', '<b>West Oakland Neighbors</b> · another group · its published cases can be imported and recreated here', null, ['imported']],
   ['Bay Courier', null, '<b>Bay Courier</b> · a newsroom · Teo reports for it; its story cites Edition 2', null, []],

@@ -1182,6 +1182,14 @@
      "modules": [
       "ai-use"
      ]
+    },
+    {
+     "op": "actionmove",
+     "label": "Drop an unsent request, with a reason",
+     "status": "declared",
+     "modules": [
+      "actions"
+     ]
     }
    ],
    "journeys": [

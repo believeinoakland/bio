@@ -52,11 +52,11 @@
   "tab": 2,
   "level": 2,
   "screen": 125,
-  "act": 591,
+  "act": 592,
   "column": 33,
   "wizard": 306,
-  "total": 1727,
-  "protected": 616
+  "total": 1728,
+  "protected": 617
  },
  "words": [
   {
@@ -5797,6 +5797,12 @@
   {
    "key": "act.exploreapprove.label.queue",
    "en": "Let the assistant explore today",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.actionmove.label.queue",
+   "en": "Drop an unsent request, with a reason",
    "protected": true,
    "source": "registry.json"
   },

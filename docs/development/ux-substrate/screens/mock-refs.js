@@ -337,7 +337,7 @@ const SCREEN_REFS = {
     ["owner of the project",null,"<b>Owner of The Coliseum lease</b> · Dev · only an owner signs the project's cases","Your signature stands for the group; readers see “signed by an owner of the project”."]
   ],
   "published": [
-    ["Edition 2",null,"<b>Edition 2</b> · the current edition of this case · published 14 November 2026 · corrects Edition 1, which stays readable","Corrections, if any, come as a new edition listed on the case's public docket."],
+    ["Edition 2",null,"<b>Edition 2</b> · the current edition of this case · published 19 November 2026 · corrects Edition 1, which stays readable","Corrections, if any, come as a new edition listed on the case's public docket."],
     ["Lakeshore Tenants",null,"<b>Lakeshore Tenants</b> · the group that made this case · tenants near the Oakland Coliseum, meeting since 2025","The authors; the case is signed by one of them and can be checked without them."],
     ["council vote the lease requires",null,"<b>Lease §7.2</b> · a clause of the Coliseum lease · a change to the rent needs a council vote","The rule this finding measures the rent adjustments against."],
     ["this project's bar",null,"<b>The project's bar</b> · the least strength a finding needs before the group relies on it · here B for both grades","This finding meets it; the bar is the group's own, set before publishing."],
@@ -413,7 +413,7 @@ const TITLE_HELP = {
   "case-editor": "<b>The Coliseum lease · Edition 2</b>: Dev's draft of the next edition of your group's published case. Nothing here is public until an owner signs and publishes it.",
   "review-copy": "<b>Share Edition 2 for review</b>: lets named outside readers see the draft of The Coliseum lease, Edition 2, before it is published. You can stop a reader's access at any time.",
   "ceremony": "<b>Publish Edition 2</b>: the last checks and the signing of The Coliseum lease, Edition 2. Once published it is permanent and public; it can be corrected by a new edition, never removed.",
-  "published": "<b>The Coliseum lease</b>: your group's published case as anyone reads it: Edition 2, published 14 November 2026, which corrects Edition 1.",
+  "published": "<b>The Coliseum lease</b>: your group's published case as anyone reads it: Edition 2, published 19 November 2026, which corrects Edition 1.",
   "imported": "<b>Port lease revenue</b>: a case published by West Oakland Neighbors (Edition 2), imported by Dev on 1 October. Nothing in it counts for your group until a member accepts it.",
   "doorbell": "<b>Hand material to Lakeshore Tenants</b>: the page where anyone can give the group documents or information, without an account. It says exactly what happens to what is sent.",
 };

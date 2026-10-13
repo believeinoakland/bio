@@ -63,7 +63,7 @@ screen('projects', 'Projects', 'working', 'Every project the member may see, wit
 screen('unavailable', 'Can\'t open this', 'working', 'An address that leads nowhere, something the member may not see, and the group\'s Civicsmith out of reach (DEC-201).', [], [3])
 screen('queue', 'Your queue', 'working', 'To do, Noticed and Status, grouped by case (DEC-110, DEC-131).',
   [('taskresolve','Act on an item'),('taskforward','Forward to a member'),('proposedispose','Dismiss with a reason'),('queuesnooze','Snooze to a date'),('queuemute','Mute a kind'),
-   ('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('reminderanswer','Answer a reminder'),('promote','Open a question from a hint'),('projectkeyset','Add an API key for a project'),('exploreapprove','Let the assistant explore today')], [19,23])
+   ('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('reminderanswer','Answer a reminder'),('promote','Open a question from a hint'),('projectkeyset','Add an API key for a project'),('exploreapprove','Let the assistant explore today'),('actionmove','Drop an unsent request, with a reason')], [19,23])
 screen('finder', 'Find', 'working', 'Search what the group holds; hold a set together; see where nobody looked.',
   [('search','Search'),('select','Hold these together'),('findin','Find in these'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('calculationcreate','Count')], [6,7])
 screen('capture', 'Add', 'working', 'Capture a document from an address or a file, photograph a handout, or record what you saw.',
