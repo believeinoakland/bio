@@ -24,3 +24,7 @@
   - red: action-replies 17/6, affordances 238/7, op-declarations 144/12, control-plane 235/7, plane 218/5. Those 42 failing tests fail identically with my change stashed, so they are inherited reds, not this job's.
 
 **Next:** wait for BOB's CHANGE after T47-37 (action-records) merges. Then: merge `tranche/T47`; delete the copies (split map §2); re-point through a `records` getter (§3); create `action-records` in `actionsOf`; drop the six tables from `ACTIONS_TABLES`; re-tag and move tests (per the digest: acts:81, acts:193, read:122, t33:146, t41:163, t41:185, t45:248, t45:374, t45:398, t45:512, t45:532, t45:548, t46:113, t46:150, t46:185).
+
+## J1 · REPORT
+
+R100 (N960) is done and pushed (2c0477fb82). actions now exports actionZone(fm, view), the one zone an action's clock is read in. R12, R25, R51, R92 and R98 read it; place() and zoneOf stay as R68's read for modules with no office. New t47.test.mjs (5 R100 tests); t34's R68 pin is re-stated. actions passes 126/0. Users' tests (P11): the reds in action-replies, affordances, op-declarations, control-plane and plane (42 failing tests) fail identically without my change. action-clocks (T47-39) can import actionZone from actions once this merges. I am waiting for your CHANGE after T47-37 (action-records) merges before deleting the copies and re-pointing.
