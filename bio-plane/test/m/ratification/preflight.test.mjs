@@ -431,3 +431,19 @@ test("R19: a signature by a member's self-registered key verifies exactly as an 
   const ok = await run(fresh);
   assert.deepEqual([ok.status, ok.body.attestor], [200, "alice"], JSON.stringify(ok.body).slice(0, 300));
 });
+
+test("R18, R2 (C-92.11; T47-72): a case document stating a level for an observation the edition no longer reaches is ATTRIBUTION_STATEMENT_STALE naming that observation, never a refusal naming nothing; a document stating none is not asked", async () => {
+  const { world: mk, cleanCase: cc, fmText: ft, CASE_BODY: body, newKey: nk, V: v } = await import("./fixture.mjs");
+  const w = mk();
+  const key = await nk();
+  w.member("iris", { signer: key });
+  const P = w.project("Team", "iris");
+  const doc = (raw) => ft(cc({ caseId: "CASE-2026-0092", edition: 1, project: P, members: [] }), { raw, body });
+  const stray = w.r.caseRatifyPreflight({ text: doc(["observation_attributions:", "  - observation: OBS-2026-0092",
+                                                     "    level: name", '    shown: "Iris"']), signer: "iris", viewer: v("iris") });
+  const stale = stray.refusals.find((r) => r.reason === "ATTRIBUTION_STATEMENT_STALE");
+  assert.ok(stale, JSON.stringify(stray).slice(0, 400));
+  assert.deepEqual(stale.observations, ["OBS-2026-0092"]);
+  const none = w.r.caseRatifyPreflight({ text: doc([]), signer: "iris", viewer: v("iris") });
+  assert.equal(none.refusals.some((r) => r.reason === "ATTRIBUTION_STATEMENT_STALE"), false, "negative control");
+});
