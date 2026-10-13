@@ -23,3 +23,7 @@ Size (session_01C7z3ksZT88uRq5xSFCgo2P): test runs 3, module lines 1894
 ## J1 · REPORT
 
 A grant's read log takes its use from its first read. answers' ruleAnswer opens a log with use 'ask' (it takes no use), and the plane passes use 'draft' (plane/store.mjs:634, draftUse) to logRead only; store-door's underGrant skips op=rule. So a draft grant whose first read is op=rule opens as 'ask', and its later draft reads are scrubbed of projects kept away from asks, not from drafts (R30's widening of R2). Fixing it needs both sides: answers' ruleAnswer and rule op taking a use, and the plane passing the draft use for op=rule. Not done in this test-only entry; for BOB to plan.
+
+## J2 · COMPLETE
+
+T47-84 applied: standing.test.mjs R19 sign-in arm re-pointed to a held token (credentials R70: subscriptionTokenHold), with a control that the fact alone answers NO_ACCOUNT and a check that the token appears in nothing answers keeps. Test only, no source change. answers 63/63; format, architecture (21 files), coverage (34/34), ownership 0 failures; run.mjs architecture 0 (coverage's 44 failures none answers'). One finding in REPORT J1. Record: build/jobs/T47/answers.md on job/T47/answers.
