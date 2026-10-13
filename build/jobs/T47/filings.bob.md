@@ -18,3 +18,7 @@ Reading set (mechanics §17): measured at this START: 1284 KB, over the 600 KB l
 ## B2 · CHANGE
 
 filing-templates R31 (K3120, on tranche/T47; merge it) adds four member-filled blanks to FILING_BLANKS: records, period, form, cost_limit. Your R55 fills reads them like any blank the template names; no change to your text, but test R55 with one of them once filing-templates merges.
+
+## B3 · ANSWER · re J1
+
+All three readings stand (K3122). Your filing-templates report is met: filing-templates R31 (K3120) adds records, period, form and cost_limit to FILING_BLANKS, so a template may name them once filing-templates merges; test R55 with one then (CHANGE when it merges).
