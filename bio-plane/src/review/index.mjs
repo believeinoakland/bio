@@ -43,8 +43,10 @@
  *   publication          `registerReviewProvider` (its R23).
  *   caseTensions         `attributionInForce` (its R6, was publication R39; R16), read directly and never through
  *                        `publication`, which no longer answers it (its R61; T35-60, N597, K1643).
- *   caseAuthoring        `publishCase` (its R18; R13) and `statementAcknowledgements`, whose list carries its
- *                        `withheld_stated` sentence (its R20; R15).
+ *   caseAuthoring        `publishCase` (its R18; R13), run dry.
+ *   caseInputs           `statementAcknowledgements` (its R2; R15, R28; `case-authoring`'s R20 before T47, N908), the
+ *                        one acknowledgement list, whose answer carries its `withheld_stated` sentence; on the one
+ *                        instance for the host (`caseInputsOf`, its R16).
  *   caseAccount          `registerReviewComments` (its R7; was case-authoring R66, retired), filled at start with
  *                        R33's `reviewCommentsFor` (K2483; T42-23a, N839, K2608), on the one instance for the host.
  *   ratification         `registerApprovalReader` (its R50), filled at start with R30–R31's rule and approvals (R32).
@@ -58,8 +60,8 @@
  * `doc_sha`, `text`, `draft_id`, `sig_armored`), its R40 (R3, R5, R31, R33).
  *
  * READ CONTRACT it states (R26): `case_drafts` (`draft_id`, `case_id`, `project_id`, `params`, `statement_by`,
- * `created_at`), on record-core R37's terms, which `case-authoring`'s acknowledgements read under `REVIEW_LIST_MAX`;
- * every write to it stays here. */
+ * `created_at`), on record-core R37's terms, which `case-inputs`' statement writer (its R3) reads under
+ * `REVIEW_LIST_MAX`; every write to it stays here. */
 
 import { recordOf, stampInstant, instantOrder, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, notAnAdmin } from "../membership/index.mjs";
@@ -68,6 +70,7 @@ import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
 import { caseAuthoringOf } from "../case-authoring/index.mjs";
+import { caseInputsOf } from "../case-inputs/index.mjs";
 import { caseAccountOf } from "../case-account/index.mjs";
 import { ratificationOf } from "../ratification/index.mjs";
 import * as caseGrammar from "../case-grammar/index.mjs";
@@ -92,8 +95,9 @@ export const APPROVERS_MAX = 50;
 /** R31: an approval's reason, trimmed. */
 export const APPROVAL_REASON_MAX = 4000;
 /** R14, R19, R26: THE COPY'S LISTS ARE BOUNDED AND SAY SO. Comments, grants and drafts are read under this cap (one row
- *  over it to know), and an answer that hit it says so rather than presenting a page as the whole. `case-authoring`,
- *  earlier in the order, reads `case_drafts` under the same bound and keeps its own copy of it (K242). */
+ *  over it to know), and an answer that hit it says so rather than presenting a page as the whole. `case-inputs`,
+ *  earlier in the order, reads `case_drafts` under the same bound and keeps its own copy of it, `DRAFTS_READ_MAX`
+ *  (its R3; K242). */
 export const REVIEW_LIST_MAX = 500;
 /** R11: the marking every copy carries. Read by members and by recipients outside the group, so it names no machine
  *  and addresses no one as the group (DEC-149, T34-87). */
@@ -250,13 +254,13 @@ export class Review {
   #seeded = false;
 
   constructor({ storage, record, membership, host = null, strength = null, basisVersions = null, publication = null,
-                caseTensions = null, caseAuthoring = null, caseAccount = null, ratification = null,
+                caseTensions = null, caseAuthoring = null, caseInputs = null, caseAccount = null, ratification = null,
                 caseGrammar: grammar = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, storage, strength, basisVersions, publication, caseTensions, caseAuthoring, caseAccount,
-                   ratification, caseGrammar: grammar };
+    this.#deps = { host, storage, strength, basisVersions, publication, caseTensions, caseAuthoring, caseInputs,
+                   caseAccount, ratification, caseGrammar: grammar };
     this.now = typeof now === "function" ? now : () => stampInstant("millisecond");
   }
 
@@ -271,6 +275,8 @@ export class Review {
                                                               ...(basisVersions ? { basisVersions } : {}) });
   }
   get caseAuthoring() { return this.#deps.caseAuthoring ||= caseAuthoringOf(this.#deps.host); }
+  /* R15, R28 (T47; N908): case-inputs' one instance for the host (its R16), which holds the acknowledgement list. */
+  get caseInputs() { return this.#deps.caseInputs ||= caseInputsOf(this.#deps.host); }
   /* R33 (T42-23a): case-account's one instance for the host (its R12), which holds the review-comments reader. */
   get caseAccount() { return this.#deps.caseAccount ||= caseAccountOf(this.#deps.host); }
   get ratification() { return this.#deps.ratification ||= ratificationOf(this.#deps.host); }
@@ -630,14 +636,15 @@ export class Review {
       });
       grantPart = { grants, grants_truncated: grantRows.length > cap };
     }
-    /* R15 (D-150, §3 rule 11; REC-194, REC-213): WHO HAS ACKNOWLEDGED THE STATEMENT AS IT STANDS NOW, case-authoring's
-       one list, at this draft's identity (the draft is passed: for a draft naming no case the draft IS the identity the
-       reading was given for). The WRITER is asked (`statement_by`, the member whose write made the statement's bytes,
-       never `updated_by`): a reading by the sentence's own writer is not a second reading, so it is withheld and
-       COUNTED, never hidden; `{by: null}` is undetermined and withholds every participant row, counted. */
+    /* R15 (D-150, §3 rule 11; REC-194, REC-213): WHO HAS ACKNOWLEDGED THE STATEMENT AS IT STANDS NOW, case-inputs'
+       one list (its R2; case-authoring's before T47), at this draft's identity (the draft is passed: for a draft
+       naming no case the draft IS the identity the reading was given for). The WRITER is asked (`statement_by`, the
+       member whose write made the statement's bytes, never `updated_by`): a reading by the sentence's own writer is
+       not a second reading, so it is withheld and COUNTED, never hidden; `{by: null}` is undetermined and withholds
+       every participant row, counted. */
     const writer = { by: d.statement_by ?? null };
-    const acks = this.caseAuthoring.statementAcknowledgements(d.project_id, ident.caseId, ident.edition,
-                                                              params.statement ?? "", null, writer, d.draft_id);
+    const acks = this.caseInputs.statementAcknowledgements(d.project_id, ident.caseId, ident.edition,
+                                                           params.statement ?? "", null, writer, d.draft_id);
     const withheld = acks.byWriter + acks.withheldWriterUndetermined;
     const statementAcks = { statement_sha: acks.statementSha, acknowledgements: acks.rows,
                             truncated: acks.truncated,
@@ -650,7 +657,7 @@ export class Review {
                             /* R28 (DEC-88): the act's LINK names the act and the draft and nothing of the reader's,
                                so it never carries or pre-fills a member's words; beside it, in the `requires` form of
                                queue's act descriptors, that the act takes the acknowledger's own reason
-                               (case-authoring R19, C-82.8). Both doors answer it alike. */
+                               (case-inputs R1, C-82.8; case-authoring R19 before T47). Both doors answer it alike. */
                             act: "op=statementack&draft=" + d.draft_id,
                             act_requires: ["reason"] };
     return {

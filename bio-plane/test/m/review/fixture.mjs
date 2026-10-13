@@ -2,8 +2,8 @@
    for a Durable Object's storage, at the plane's shape: `sql.exec` answers a one-pass cursor as workerd does (K316),
    never an array, so code that indexes or measures an answer instead of iterating it fails here as it would there. What it reads from `publication` (its `cases` and `published_cases` read contract,
    R3 and R5, its R40, and its `case_documents`, R31 and R33), `ratification` (`registerApprovalReader`, R32),
-   `case-grammar` (`reviewCommentsOf`, R33), `case-tensions` (`attributionInForce`, R16, its R6), `case-authoring` (`publishCase` run dry, R13;
-   `statementAcknowledgements` with its `withheld_stated`, R15), `case-account` (`registerReviewComments`, R33, its R7) and `basis-versions` (`testimonyReach`, R16) are providers the test controls, in the
+   `case-grammar` (`reviewCommentsOf`, R33), `case-tensions` (`attributionInForce`, R16, its R6), `case-authoring` (`publishCase` run dry, R13),
+   `case-inputs` (`statementAcknowledgements` with its `withheld_stated`, R15, its R2), `case-account` (`registerReviewComments`, R33, its R7) and `basis-versions` (`testimonyReach`, R16) are providers the test controls, in the
    shapes of those modules' Provides, as `reviewOf`'s `deps` take them. Every test drives the module at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -78,8 +78,9 @@ export function world({ now = NOW, injectClock = true } = {}) {
   const strength = strengthOf(host, { record, membership, inquiry: {}, versions: {}, producingGroup: () => "grp" });
   const clock = { now };
   /* case-authoring's side: `publishCase` answers what `gate` returns for the arguments, and writes a case document
-     first (so a dry run that did not roll back would leave a row); the acknowledgement list is `acks`. */
-  const calls = { publish: [], acks: [], reach: [], attribution: [], attributionViaPublication: [] };
+     first (so a dry run that did not roll back would leave a row). */
+  const calls = { publish: [], acks: [], acksViaCaseAuthoring: [], reach: [], attribution: [],
+                  attributionViaPublication: [] };
   const ca = { gate: () => ({ ok: true, caseId: "CASE-2026-0001" }), acks: [], throws: null };
   const caseAuthoring = {
     /* its pass-through to case-account until T43 (N850): R33 registers with case-account, never here, so this list
@@ -93,6 +94,15 @@ export function world({ now = NOW, injectClock = true } = {}) {
       if (ca.throws) throw ca.throws;
       return ca.gate(args);
     },
+    /* its list before T47 (N908), moved to case-inputs: R15 reads case-inputs, never here, so this stays uncalled
+       (the negative control) */
+    statementAcknowledgements(...args) {
+      calls.acksViaCaseAuthoring.push(args);
+      return caseInputs.statementAcknowledgements(...args);
+    },
+  };
+  /* case-inputs' side (its R2): the acknowledgement list is `ca.acks`. */
+  const caseInputs = {
     statementAcknowledgements(project, caseId, edition, statement, exceptAuthor, writer, draftId) {
       calls.acks.push({ project, caseId, edition, statement, exceptAuthor, writer, draftId });
       const rows = ca.acks.filter((r) => r.project === project && r.statement === statement);
@@ -101,7 +111,7 @@ export function world({ now = NOW, injectClock = true } = {}) {
       const listed = rows.filter((r) => !(r.kind === "participant" && (writer.by === null || r.by === writer.by)));
       return { statementSha: sha(statement), truncated: false, byWriter, withheldWriterUndetermined: undetermined,
                withheld_stated: `withheld ${byWriter + undetermined} by ${writer && writer.by ? writer.by : "UNDETERMINED"}`,
-               /* case-authoring R19, R20 (DEC-88): each row carries the acknowledger's `reason` as stored, null for a
+               /* case-inputs R1, R2 (DEC-88): each row carries the acknowledger's `reason` as stored, null for a
                   reading recorded before the reason was required. */
                rows: listed.map((r) => ({ kind: r.kind, by: r.by, recipient: r.recipient ?? null, at: r.at,
                                           reason: r.reason ?? null })) };
@@ -154,11 +164,11 @@ export function world({ now = NOW, injectClock = true } = {}) {
   const caseGrammar = { reviewCommentsOf, approvalSubjectSha };
   /* `injectClock: false` leaves the module on its own default clock (R17's stamps as the module writes them). */
   const r = reviewOf(host, { record, membership, strength, basisVersions, publication, caseTensions, caseAuthoring,
-                             caseAccount, ratification, caseGrammar, ...(injectClock ? { now: () => clock.now } : {}) });
+                             caseInputs, caseAccount, ratification, caseGrammar, ...(injectClock ? { now: () => clock.now } : {}) });
   let bundles = 0;
   const w = {
     st, host, record, membership, strength, r, clock, calls, ca, chosen, reach, providers, ratification, caseAuthoring,
-    caseAccount, caseGrammar,
+    caseInputs, caseAccount, caseGrammar,
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
     row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
