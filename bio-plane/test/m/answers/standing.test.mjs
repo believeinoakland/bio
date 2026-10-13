@@ -311,7 +311,7 @@ test("R19 keep-away is never reported as no_account, nor an account's refusal as
   assert.equal(calls.length, 0);
 });
 
-test("R19 the sign-in arm (N796, Bob K2425; credentials R32, R55): an author served by their own Claude sign-in with its standing use off is held back {switch_off, member}, never no_account or kept_away, no grant, no model; with it on, the grant is minted for the sign-in and the AI half runs as for the author's reference, its limits read as for any account", async () => {
+test("R19 the sign-in arm (N796, Bob K2425; credentials R32, R55, R70): an author served by their own held Claude sign-in with its standing use off is held back {switch_off, member}, never no_account or kept_away, no grant, no model; with it on, the grant is minted for the sign-in and the AI half runs as for the author's reference, its limits read as for any account", async () => {
   const w = answersWorld();
   const calls = [], touched = [];
   const real = w.credentials;
@@ -324,8 +324,13 @@ test("R19 the sign-in arm (N796, Bob K2425; credentials R32, R55): an author ser
     return answer({ holdings: [{ address: x.finds.ids[0], quote: "Budget" }],
                     sentences: [{ text: "A new budget document is held.", kind: "quote", support: ["h1"] }] });
   });
-  /* carol holds no reference of her own and the group no key: her sign-in is what serves her (credentials R35, R43) */
+  /* carol holds no reference of her own and the group no key: her sign-in is what serves her (credentials R35, R43),
+     and only while its token is held (credentials R70, T47): the connected fact alone serves no one */
   assert.equal((await real.subscriptionConnected({ member: "carol" })).ok, true);
+  assert.equal((await real.accountFor({ member: "carol", act: { kind: "standing", member: CAROL } })).code, "NO_ACCOUNT",
+               "a sign-in with no token held is not connected");
+  const TOKEN = "sk-ant-oat01-sentinel-carol-0123456789";
+  assert.equal((await real.subscriptionTokenHold({ member: "carol", token: TOKEN })).ok, true);
   const q = set(w, { author: CAROL });
   await w.a.standingTick(w.clock.now);
   let n = 0;
@@ -367,6 +372,10 @@ test("R19 the sign-in arm (N796, Bob K2425; credentials R32, R55): an author ser
   assert.equal(calls[0].held.ok, true); assert.equal(calls[0].held.member, "carol");
   const last = w.a.standingAnswersFor({ member: CAROL }).entries.at(-1);
   assert.equal(last.held_back, null); assert.equal(last.answer.sentences[0].text, "A new budget document is held.");
+  /* the held token is used by no caller here: it reaches no answerer, run row, entry or tally */
+  const seen = JSON.stringify([calls, w.rows(`SELECT * FROM standing_runs`), w.rows(`SELECT * FROM standing_questions`),
+                               w.rows(`SELECT * FROM answers_tallies`), w.a.standingAnswersFor({ member: CAROL })]);
+  assert.ok(!seen.includes(TOKEN) && !seen.includes("sentinel"), "the sign-in's token appears nowhere this module answers or keeps");
 });
 
 test("R20 standingAnswersFor answers a member's own new-find runs, once each, in run order after `after`, at most 200, with a cursor, labelled machine work from the standing question; nothing of another member's", async () => {

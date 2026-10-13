@@ -62,8 +62,9 @@
  * validated a parallel path; a pin comparing a hand-written literal against its
  * own length.
  *
- * So this file holds THREE kinds of thing and says which is which, in
- * `SOURCING` below, mechanically rather than in prose:
+ * So this file holds FOUR kinds of thing and says which is which, in
+ * `SOURCING` below, mechanically rather than in prose (and a layer with
+ * nothing to carry says so, as `absent`):
  *
  *   `authored` — doctrine. Every authored sentence (the four resident ones
  *                below, and every clause of `skilldoctrine.mjs`) is checked
@@ -226,7 +227,7 @@ export const ABSENCE_ANSWER_SHAPE = ["level", "state", "searched", "not_searched
 
 /* ------------------------------------------------------- SOURCING, DECLARED
 
-   The three kinds, per pack member, MECHANICALLY. The suite reads this and
+   The four kinds, per pack member, MECHANICALLY. The suite reads this and
    holds each member to its declaration — a member declared `driven` whose value
    does not come from the caller's published answer, or one declared `imported`
    whose words appear in this file as literals, FAILS. A declaration nothing

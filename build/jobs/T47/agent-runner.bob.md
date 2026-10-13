@@ -1,6 +1,6 @@
 # BOB to agent-runner (T47)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
 L6 merge order: accepted-work, steps, citation, basis-versions, strength, run-rules, ai-use, ai-runs, capture-requests, skills, agent-harness, answers, question-explorer, agent-model, agent-runner, agent-worker. A job that uses no unmerged L6 job merges as soon as it is complete (K1965).
 Reading set (mechanics §17): measured at this START: 266 KB, within the 600 KB limit (K2700). Read it whole.
+
+## B2 · ANSWER · re J2
+
+Both kept (K3092): detail is the member's sentence, library words in library_detail (≤120, scrubbed); the x-signin-waiting header for R25's hold is fine (no body read).

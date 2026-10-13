@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 
 import {
   modelCall, converse, segmentMeter, MODEL_FOR_MODE, MODEL_FOR_MODE_SOURCE, MODEL_ENDPOINT, RUNNER_URL, RUNNER_VERSION_URL, IMAGE_CAPABILITY,
-  CONVERSATION_MAX_TURNS, USAGE_FIGURES, ESTIMATE, MODEL_PRICES, MODEL_PRICES_SOURCE, MODEL_MAX_TOKENS, SEGMENT_BYTES_SOURCE, parentSystem, subsessionSystem, judgeTools,
+  TRACE_HEADER, MEMBER_REF_HEADER, TRACE_HEADER_MAX, CONVERSATION_MAX_TURNS, USAGE_FIGURES, ESTIMATE, MODEL_PRICES, MODEL_PRICES_SOURCE, MODEL_MAX_TOKENS, SEGMENT_BYTES_SOURCE, parentSystem, subsessionSystem, judgeTools,
   planJudgeTools, subsessionTools, rowPrompt, LOAD_LAYER, rowFacts, openRow, subsessionOpening, READ_FACTS, READ_RESULT,
 } from "../src/model.mjs";
 
@@ -45,17 +45,18 @@ afterEach(() => { globalThis.fetch = realFetch; });
  *  answers `version()`, by default R5's answer with `capabilities` naming `image` when `images` (agent-runner R24);
  *  each such ask is logged in `probes`, apart from the connections. */
 function fakeRunner(script = [], { images = false, version } = {}) {
-  const log = { urls: [], sent: [], opened: 0, closed: 0, ids: 0, names: [], got: [], probes: [] };
+  const log = { urls: [], sent: [], opened: 0, closed: 0, ids: 0, names: [], got: [], probes: [], headers: [] };
   const stub = {
     async fetch(url, init = {}) {
       if (String(url) === RUNNER_VERSION_URL) {
-        log.probes.push({ url: String(url), method: init.method ?? "GET" });
+        log.probes.push({ url: String(url), method: init.method ?? "GET", headers: { ...(init.headers || {}) } });
         if (version) return version();
         return new Response(JSON.stringify({ ok: true, name: "agent-runner", version: "1.0.0",
                                              ...(images ? { capabilities: [IMAGE_CAPABILITY] } : {}) }), { status: 200 });
       }
       log.urls.push(String(url));
       log.upgrade = init.headers && init.headers.Upgrade;
+      log.headers.push({ ...(init.headers || {}) });
       log.opened += 1;
       const on = { message: [], close: [], error: [] };
       let n = 0;
@@ -91,8 +92,10 @@ const end = (extra = {}) => ({ ok: true, result: "done", stop_reason: "end_turn"
 const KEY = "sk-ant-api03-SENTINELKEY-0000";
 const MEMBER = "member-ana-0001";
 const APIKEY = { kind: "apikey", key: KEY };
-const SUB = { kind: "signin", member: MEMBER };
-const SIGNIN_CREDENTIAL = { kind: "signin", member: MEMBER };
+/* R16: a sign-in reference carries the token credentials holds, sent only in the conversation request's credential. */
+const TOKEN = "sk-ant-oat01-SENTINELTOKEN-0000";
+const SUB = { kind: "signin", member: MEMBER, secret: TOKEN };
+const SIGNIN_CREDENTIAL = { kind: "signin", member: MEMBER, secret: TOKEN };
 const PACK = { version: 7, resident: { rule: "RESIDENT-LAYER-MARK", disclosable: [{ layer: "law", load_when: "a law question" }] } };
 const TOOLS = [
   { name: "lookup", description: "look", input_schema: { type: "object", properties: { q: { type: "string" } } } },
@@ -177,7 +180,7 @@ test("R1 the model per mode comes from MODEL_FOR_MODE only; the call runs under 
 
 /* ------------------------------------------------------------------ R2 */
 
-test("R2 the provider follows the reference's kind: apikey to MODEL_ENDPOINT with the key in x-api-key only; signin to the member's own runner instance named by idFromName(member), never a new one, with the credential {kind: signin, member}, for one turn and a conversation alike; unusable references (subscription included) and a missing runner are refused with no call; the runner's NOT_SIGNED_IN and NOT_THIS_MEMBER pass through unchanged", async () => {
+test("R2 the provider follows the reference's kind: apikey to MODEL_ENDPOINT with the key in x-api-key only; signin to the member's own runner instance named by idFromName(member), never a new one, with the credential {kind: signin, member, secret} (R16), for one turn and a conversation alike; unusable references (subscription included) and a missing runner are refused with no call; the runner's NOT_SIGNED_IN and NOT_THIS_MEMBER pass through unchanged", async () => {
   replies.push(json(200, message([{ type: "text", text: "a" }])));
   const r = fakeRunner([() => [end()]]);
   const a = await modelCall(APIKEY, BODY, { runner: r.ns });
@@ -215,7 +218,7 @@ test("R2 the provider follows the reference's kind: apikey to MODEL_ENDPOINT wit
   assert.ok(rc.log.sent.every((m) => JSON.stringify(m.credential) === JSON.stringify(SIGNIN_CREDENTIAL)));
   /* Two members, two instances: each turn goes to its own member's. */
   const rm = fakeRunner([() => [end()]]);
-  await modelCall({ kind: "signin", member: "member-bo" }, BODY, { runner: rm.ns });
+  await modelCall({ kind: "signin", member: "member-bo", secret: TOKEN }, BODY, { runner: rm.ns });
   await converse(conv({ reference: SUB, runner: rm.ns, maxTurns: 1 }));
   assert.deepEqual(rm.log.names, ["member-bo", MEMBER]);
   assert.deepEqual(rm.log.sent.map((m) => m.credential.member), ["member-bo", MEMBER]);
@@ -749,7 +752,7 @@ test("Purpose a turn reaches the provider the account reference names (today Ant
   assert.equal(r.log.opened, 0);
   /* A member's sign-in goes to that member's own runner instance and makes no fetch. */
   calls.length = 0;
-  returned.push(await modelCall({ kind: "signin", level: "member", member: MEMBER }, BODY, { runner: r.ns }));
+  returned.push(await modelCall({ kind: "signin", level: "member", member: MEMBER, secret: TOKEN }, BODY, { runner: r.ns }));
   assert.deepEqual([calls.length, r.log.opened, r.log.names], [0, 1, [MEMBER]]);
   /* Never kept: the next call without a reference makes no call, and no answer carries a key. */
   returned.push(await modelCall(undefined, BODY, { runner: r.ns }), await converse(conv({ reference: undefined, runner: r.ns })));
@@ -813,7 +816,7 @@ test("R11 a group-level reference is the group's API key and a project-level one
   assert.equal(calls.length, 0);
   assert.equal(r.log.opened, 0);
   /* Negative control: the same runner and a member-level sign-in does reach it, so the refusals above are the level's. */
-  assert.ok((await modelCall({ kind: "signin", level: "member", member: MEMBER }, BODY, { runner: r.ns })).result);
+  assert.ok((await modelCall({ kind: "signin", level: "member", member: MEMBER, secret: TOKEN }, BODY, { runner: r.ns })).result);
   assert.equal(r.log.opened, 1);
 });
 
@@ -1255,4 +1258,158 @@ test("R15 on the signin path a tool_result holding an image block is relayed thr
   assert.deepEqual((await converse(tconv({ reference: SUB, runner: rs.ns, meter: meter(100, 3000), messages: pageOpening({ type: "text", text: "x" }),
                                           onTool: async () => ({ content: "short" }) }))).answer, { text: "w" });
   assert.deepEqual(rs.log.probes, [], "a conversation with no picture asks the runner nothing");
+});
+
+/* ------------------------------------------------------------------ R16 */
+
+test("R16 a signin reference's secret reaches the stub runner's first frame only, inside the conversation request's credential, and no outcome, usage, detail, transcript, header, relayed result or console output, even when the runner echoes it", async () => {
+  const out = [];
+  const saved = { log: console.log, error: console.error, warn: console.warn, info: console.info, debug: console.debug,
+                  write: process.stdout.write, ewrite: process.stderr.write };
+  for (const k of ["log", "error", "warn", "info", "debug"]) console[k] = (...a) => out.push(a.map(String).join(" "));
+  process.stdout.write = (s) => { out.push(String(s)); return true; };
+  process.stderr.write = (s) => { out.push(String(s)); return true; };
+  const returned = [];
+  const runners = [];
+  const echo = `the token ${TOKEN} was refused`;
+  try {
+    /* A conversation with a relayed tool, a picture asked of /version, a re-ask (a second connection), and an answer. */
+    const r = fakeRunner([
+      () => [{ tool_use: { id: "u1", name: "lookup", input: { q: "a" } } }],
+      () => [{ tool_use: { id: "u2", name: "read_page", input: {} } }],
+      () => [end({ result: `hm ${TOKEN}` })],
+    ], { images: true });
+    const second = fakeRunner([() => [{ tool_use: { id: "u3", name: "answer", input: { v: "y" } } }], () => [end({ usage: { input_tokens: 1 } })]]);
+    let opened = 0;
+    const runner = { idFromName: (n) => `named:${n}`, get: () => ({ fetch: async (u, i) => {
+      if (String(u) === RUNNER_VERSION_URL) return r.stub.fetch(u, i);
+      opened += 1;
+      return (opened === 1 ? r : second).stub.fetch(u, i);
+    } }) };
+    runners.push(r, second);
+    const messages = [{ role: "user", content: "row" }];
+    let k = 0;
+    const got = await converse(conv({ reference: SUB, runner, messages, maxTurns: 6, tools: [...TOOLS, ...TRANSCRIBE_TOOLS],
+      onTool: async () => (k++ === 0 ? { content: "found" } : { blocks: [IMAGE] }) }));
+    assert.deepEqual(got.answer, { v: "y" });
+    returned.push(got, messages);
+    /* Each connection's first frame is the conversation request, its credential carrying the secret. */
+    for (const x of [r, second]) {
+      assert.deepEqual(x.log.sent[0].credential, SIGNIN_CREDENTIAL);
+      assert.equal(JSON.stringify(x.log.sent[0]).split(TOKEN).length - 1, 1, "once, in the credential");
+      for (const later of x.log.sent.slice(1)) assert.ok(!JSON.stringify(later).includes(TOKEN), "no later frame carries it");
+      assert.ok(x.log.sent.slice(1).every((f) => f.tool_result), "every later frame is a relayed result");
+    }
+    assert.ok(r.log.probes.length === 1 && !JSON.stringify(r.log.probes).includes(TOKEN), "the /version ask carries none");
+    /* One turn alike. */
+    const one = fakeRunner([() => [end()]]);
+    runners.push(one);
+    returned.push(await modelCall(SUB, BODY, { runner: one.ns }));
+    assert.deepEqual(one.log.sent[0].credential, SIGNIN_CREDENTIAL);
+    /* The runner's echoes: in a refusal's detail, a model refusal's result, a non-JSON close, an answer after the end. */
+    for (const script of [
+      [() => [{ ok: false, code: "SDK_ERROR", detail: echo }]],
+      [() => [{ ok: false, code: "SIGNIN_TOKEN_REFUSED", detail: echo }]],
+      [() => [end({ stop_reason: "refusal", result: echo })]],
+      [() => [end({ result: echo })]],
+    ]) {
+      const a = fakeRunner(script);
+      const b = fakeRunner(script);
+      runners.push(a, b);
+      const msgs = [{ role: "user", content: "row" }];
+      returned.push(await converse(conv({ reference: SUB, runner: a.ns, messages: msgs, maxTurns: 1 })), msgs);
+      returned.push(await modelCall(SUB, BODY, { runner: b.ns }));
+    }
+    /* A binding that throws the secret back, and an upgrade refused. */
+    returned.push(await modelCall(SUB, BODY, { runner: binding({ fetch: async () => { throw new Error(echo); } }) }));
+    returned.push(await converse(conv({ reference: SUB, runner: binding({ fetch: async () => { throw new Error(echo); } }) })));
+    returned.push(await modelCall(SUB, BODY, { runner: { idFromName() { throw new Error(echo); }, get() { return null; } } }));
+  } finally {
+    Object.assign(console, { log: saved.log, error: saved.error, warn: saved.warn, info: saved.info, debug: saved.debug });
+    process.stdout.write = saved.write;
+    process.stderr.write = saved.ewrite;
+  }
+  const text = JSON.stringify(returned) + out.join("\n");
+  assert.ok(!text.includes(TOKEN), "no outcome, usage, detail, transcript or console line carries the secret");
+  assert.ok(text.includes("[secret]"), "an echo is scrubbed, not dropped");
+  for (const x of runners) assert.ok(!JSON.stringify(x.log.headers).includes(TOKEN), "no header carries it");
+  /* The refusals still say what the runner said, with the secret scrubbed. */
+  const sdk = returned.find((g) => g && g.refused && g.refused.type === "SDK_ERROR");
+  assert.equal(sdk.refused.message, "the token [secret] was refused");
+});
+
+test("R16 a signin reference with no non-empty string secret answers refused SIGNIN_NOT_HELD with no runner call; a runner's SIGNIN_NOT_HELD and SIGNIN_TOKEN_REFUSED pass through with that type, never reworded", async () => {
+  const r = fakeRunner([() => [end()]], { images: true });
+  for (const secret of [undefined, null, "", 42, { token: TOKEN }, [TOKEN], true]) {
+    const reference = { kind: "signin", member: MEMBER, ...(secret === undefined ? {} : { secret }) };
+    for (const ref of [reference, { ...reference, level: "member" }]) {
+      const t = await modelCall(ref, BODY, { runner: r.ns });
+      assert.deepEqual([t.refused.type, t.refused.status], ["SIGNIN_NOT_HELD", null], JSON.stringify(ref));
+      assert.ok(!("usage" in t));
+      const c = await converse(conv({ reference: ref, runner: r.ns, messages: pageOpening() }));
+      assert.equal(c.refused.type, "SIGNIN_NOT_HELD");
+      assert.ok(!("usage" in c) && !("calls" in c));
+      /* Even with no runner: the reference's own fault is said first. */
+      assert.equal((await modelCall(ref, BODY)).refused.type, "SIGNIN_NOT_HELD");
+    }
+  }
+  assert.deepEqual([r.log.opened, r.log.probes.length, r.log.names.length, calls.length], [0, 0, 0, 0], "no call of any kind");
+  /* An unusable reference is still that, whatever its secret. */
+  assert.equal((await modelCall({ kind: "signin", secret: TOKEN }, BODY, { runner: r.ns })).refused.type, "ACCOUNT_REFERENCE_UNUSABLE");
+  assert.equal((await modelCall({ kind: "signin", level: "group", member: MEMBER, secret: TOKEN }, BODY, { runner: r.ns })).refused.type,
+               "ACCOUNT_REFERENCE_UNUSABLE");
+  /* With its secret, a missing runner is RUNNER_NOT_CONFIGURED. */
+  assert.equal((await modelCall(SUB, BODY)).refused.type, "RUNNER_NOT_CONFIGURED");
+  /* The runner's own codes, on one turn and in a conversation, unchanged. */
+  for (const code of ["SIGNIN_NOT_HELD", "SIGNIN_TOKEN_REFUSED"]) {
+    const t = await modelCall(SUB, BODY, { runner: fakeRunner([() => [{ ok: false, code, detail: "connect again" }]]).ns });
+    assert.deepEqual([t.refused.type, t.refused.status, t.refused.message], [code, null, "connect again"]);
+    const c = await converse(conv({ reference: SUB, runner: fakeRunner([() => [{ ok: false, code, detail: "connect again", num_turns: 0 }]]).ns }));
+    assert.deepEqual([c.refused.type, c.refused.message, c.calls], [code, "connect again", 0]);
+  }
+  /* Negative control: the same reference with its secret reaches the runner. */
+  assert.ok((await modelCall(SUB, BODY, { runner: r.ns })).result);
+  assert.equal(r.log.opened, 1);
+});
+
+test("R16 the upgrade request carries x-civicsmith-trace and x-civicsmith-member-ref when the caller gave them, and nothing secret; control: an apikey reference is unchanged", async () => {
+  assert.deepEqual([TRACE_HEADER, MEMBER_REF_HEADER], ["x-civicsmith-trace", "x-civicsmith-member-ref"]);
+  const TRACE = "trace-0f3a", REF = "mref-77";
+  /* Given: both headers on every connection, a conversation's and one turn's, beside the upgrade. */
+  const r = fakeRunner([() => [end({ result: "hm" })]]);
+  await converse(conv({ reference: SUB, runner: r.ns, maxTurns: 2, trace: TRACE, memberRef: REF }));
+  await modelCall(SUB, BODY, { runner: r.ns, trace: TRACE, memberRef: REF });
+  assert.equal(r.log.headers.length, 3);
+  for (const h of r.log.headers) assert.deepEqual(h, { Upgrade: "websocket", [TRACE_HEADER]: TRACE, [MEMBER_REF_HEADER]: REF });
+  /* Not given, or not a usable value (empty, not a string, too long, holding the secret): not sent. */
+  const bad = ["", 7, null, { t: 1 }, "x".repeat(TRACE_HEADER_MAX + 1), `t-${TOKEN}`];
+  const rb = fakeRunner([() => [end()]]);
+  await modelCall(SUB, BODY, { runner: rb.ns });
+  for (const v of bad) await modelCall(SUB, BODY, { runner: rb.ns, trace: v, memberRef: v });
+  await converse(conv({ reference: SUB, runner: rb.ns, maxTurns: 1, trace: TRACE }));
+  assert.deepEqual(rb.log.headers.slice(0, -1), Array(bad.length + 1).fill({ Upgrade: "websocket" }));
+  assert.deepEqual(rb.log.headers.at(-1), { Upgrade: "websocket", [TRACE_HEADER]: TRACE }, "each header on its own");
+  assert.ok("x".repeat(TRACE_HEADER_MAX).length === TRACE_HEADER_MAX);
+  const edge = fakeRunner([() => [end()]]);
+  await modelCall(SUB, BODY, { runner: edge.ns, trace: "x".repeat(TRACE_HEADER_MAX) });
+  assert.equal(edge.log.headers[0][TRACE_HEADER].length, TRACE_HEADER_MAX, "at the bound it is sent");
+  /* The /version ask carries neither. */
+  const img = fakeRunner([() => [end()]], { images: true });
+  await converse(tconv({ reference: SUB, runner: img.ns, maxTurns: 1, trace: TRACE, memberRef: REF }));
+  assert.equal(img.log.probes.length, 1);
+  assert.deepEqual(img.log.probes[0].headers, {});
+
+  /* Control: an apikey reference is sent exactly as before, the trace arguments changing nothing. */
+  replies.push(json(200, message([{ type: "text", text: "a" }])));
+  replies.push(json(200, message([{ type: "text", text: "a" }])));
+  const plain = await modelCall(APIKEY, BODY);
+  const traced = await modelCall(APIKEY, BODY, { trace: TRACE, memberRef: REF });
+  assert.deepEqual(traced, plain);
+  assert.deepEqual(calls[1].init.headers, calls[0].init.headers);
+  assert.equal(calls[1].init.body, calls[0].init.body);
+  assert.deepEqual(Object.keys(calls[0].init.headers).sort(), ["anthropic-version", "content-type", "x-api-key"]);
+  replies.push(json(200, message([toolUse("a", "answer", { v: 1 })])));
+  const c = await converse(conv({ trace: TRACE, memberRef: REF }));
+  assert.deepEqual(c.answer, { v: 1 });
+  assert.ok(!JSON.stringify(calls.at(-1)).includes(TRACE) && !JSON.stringify(calls.at(-1)).includes(REF));
 });

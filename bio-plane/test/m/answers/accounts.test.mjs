@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { answersWorld, answer, V } from "./fixture.mjs";
-import { GRANT_USES, ASK_ACCOUNT_KINDS, ownerOf } from "../../../src/answers/index.mjs";
+import { GRANT_USES, ASK_ACCOUNT_KINDS, RULE_USES, ownerOf, answersOps } from "../../../src/answers/index.mjs";
 import { ACCOUNT_CHECKS } from "../../../src/credentials/index.mjs";
 
 const BOB = V("bob"), CAROL = V("carol"), ALICE = V("alice");
@@ -177,4 +177,38 @@ test("R30 (K2508) askAccount takes kind: ask when absent, or draft, the account 
   }
   assert.equal(seen.length, n); assert.equal(w.limit.asked.length, m);
   assert.deepEqual(ASK_ACCOUNT_KINDS, ["ask", "draft"]);
+});
+
+test("R35 ruleAnswer and op=rule take use (ask or draft, ask when absent) and open the grant's read log with it: a draft grant first read by op=rule scrubs its later reads as a draft (R30); an ask grant unchanged; the use is the control plane's stamp, never the body's", async () => {
+  const w = answersWorld();
+  const P = w.project("Carol's work", "carol");
+  const open = w.document("budget minutes", { title: "Budget minutes" });
+  assert.equal((await w.credentials.projectAiKeepAwaySet({ project: P, on: true, uses: ["draft"], reason: "No drafts.", by: CAROL })).ok, true);
+  assert.deepEqual(RULE_USES, ["ask", "draft"]);
+  const url = (q) => new URL(`https://plane.test/?${new URLSearchParams({ viewer: CAROL, service: "profiles", ...q })}`);
+  const rule = (q, body = {}) => answersOps(w.a, url(q), { args: { section: "time_zone" }, ...body }).rule();
+  const read = (grant, use) => w.a.logRead({ grant, viewer: CAROL, op: "search", args: {}, use,
+    answer: { ok: true, count: 2, hits: [{ bundle_id: open.bundleId }, { bundle_id: P }] } });
+  /* a draft's grant, first read by op=rule with the plane's draft use: opened as a draft, its later reads drop P */
+  assert.equal((await rule({ grant: "g-draft", use: "draft" })).ok, true);
+  assert.equal(w.a.readLog("g-draft").use, "draft");
+  const d = read("g-draft", "draft");
+  assert.deepEqual(d.hits, [{ bundle_id: open.bundleId }], "scrubbed as a draft"); assert.equal(d.count, 1);
+  /* through ruleAnswer itself, the same */
+  assert.equal((await w.a.ruleAnswer({ service: "profiles", args: { section: "time_zone" }, viewer: CAROL, grant: "g-draft2", use: "draft" })).ok, true);
+  assert.equal(w.a.readLog("g-draft2").use, "draft");
+  assert.deepEqual(read("g-draft2", "draft").hits, [{ bundle_id: open.bundleId }]);
+  /* control: an ask's grant, first read by op=rule with no use, opens as an ask and keeps P (kept away from drafts only) */
+  assert.equal((await rule({ grant: "g-ask" })).ok, true);
+  assert.equal(w.a.readLog("g-ask").use, "ask");
+  assert.equal(read("g-ask").hits.length, 2, "an ask grant unchanged");
+  /* the use is the control plane's stamp from the query: a body's use, or any other value, opens an ask */
+  await rule({ grant: "g-body" }, { use: "draft" });
+  assert.equal(w.a.readLog("g-body").use, "ask");
+  await rule({ grant: "g-odd", use: "standing" });
+  assert.equal(w.a.readLog("g-odd").use, "ask");
+  /* a log already open keeps the use it opened with */
+  read("g-first", "draft");
+  await rule({ grant: "g-first" });
+  assert.equal(w.a.readLog("g-first").use, "draft");
 });
