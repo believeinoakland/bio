@@ -5,12 +5,19 @@
  *
  *   one WebSocket per conversation, opened at `RUNNER_URL` on the instance the binding names by the member
  *   (`runner.idFromName(member)`): the instance holding that member's stored sign-in, never a new or unnamed one;
- *   → the conversation request `{credential: {kind: "signin", member}, model, system, prompt, tools, max_turns}`,
- *     which carries no secret: the query runs on the instance's stored sign-in (agent-runner R2, R21);
+ *   → the conversation request `{credential: {kind: "signin", member, secret}, model, system, prompt, tools,
+ *     max_turns}`, its `secret` the held token `credentials` holds for the member, which the runner gives that one
+ *     query and nothing else (R16; agent-runner R28);
  *   ← a relay `{tool_use: {id, name, input}}`, answered → `{tool_result: {id, content, is_error?}}` on the same socket;
  *   ← the end `{ok: true, result, stop_reason, num_turns, usage}` or `{ok: false, code, detail}`. The runner's own
- *     refusals (`NOT_SIGNED_IN`: the instance holds no stored sign-in; `NOT_THIS_MEMBER`: it holds another member's)
- *     are `refused` with that code as their type, never reworded (R2).
+ *     refusals (`SIGNIN_NOT_HELD`, `SIGNIN_TOKEN_REFUSED`: Anthropic refused the token, `NOT_THIS_MEMBER`, and any
+ *     other) are `refused` with that code as their type, never reworded (R2, R16).
+ *
+ * THE SECRET GOES ONE PLACE (R8, R16). The held token is in the conversation request's credential, the first message
+ * of each connection, and nowhere else: not a relayed result, the upgrade request, the `/version` ask, a header, the
+ * transcript, an outcome, its `usage` or its `detail`. Whatever comes back is scrubbed of it, in case a runner or
+ * the binary echoes it. The upgrade request carries only the caller's trace and member reference (`x-civicsmith-trace`,
+ * `x-civicsmith-member-ref`), when given, and never one holding the secret.
  *
  * THE RELAY KEEPS THE TABLE'S DECISIONS (R7; M-Q4 GO, relay). The model sees only the tools the conversation
  * names; each call it makes is relayed here and performed by the caller's `onTool`, exactly as on the API-key path,
@@ -42,8 +49,8 @@
  *
  * THE METER (D-611). Every message this side sends is a request: the conversation request and each `tool_result`
  * are counted, turn and bytes, before they are sent, and one that would pass a bound is not sent. */
-import { usageOf, sumUsage, callsOf, sumCalls, silent, refused, READ_FACTS, toolResultContent, relayText, factsOf }
-  from "./outcome.mjs";
+import { usageOf, sumUsage, callsOf, sumCalls, silent, refused, READ_FACTS, toolResultContent, relayText, factsOf,
+         scrub, scrubDeep } from "./outcome.mjs";
 
 export const RUNNER_URL = "https://agent-runner/conversation";
 const ANSWERED = "received";
@@ -138,9 +145,20 @@ const plainTools = (tools) => (Array.isArray(tools) ? tools : [])
 /** The tools a conversation offers: the caller's, and `read_result` while the transcript holds a result (R12). */
 const offeredTools = (tools, held) => [...plainTools(tools), ...(held.size ? [plainTools([READ_RESULT])[0]] : [])];
 
-/** The conversation request; its credential names the member and carries no secret (R2; agent-runner R2). */
-function conversationRequest(member, { model, system, messages, tools, maxTurns }) {
-  return { credential: { kind: "signin", member }, model, system: systemText(system),
+/* R16 — the caller's trace and member reference, as the upgrade request's headers: each only when it is a non-empty
+ * string of at most `TRACE_HEADER_MAX` characters that does not hold the secret; anything else is not sent. */
+export const TRACE_HEADER = "x-civicsmith-trace";
+export const MEMBER_REF_HEADER = "x-civicsmith-member-ref";
+export const TRACE_HEADER_MAX = 200;
+export function traceHeaders({ trace, memberRef } = {}, secret) {
+  const fit = (v) => typeof v === "string" && v.length > 0 && v.length <= TRACE_HEADER_MAX
+    && !(typeof secret === "string" && secret && v.includes(secret));
+  return { ...(fit(trace) ? { [TRACE_HEADER]: trace } : {}), ...(fit(memberRef) ? { [MEMBER_REF_HEADER]: memberRef } : {}) };
+}
+
+/** The conversation request; its credential names the member and carries the held token (R16; agent-runner R28). */
+function conversationRequest({ member, secret }, { model, system, messages, tools, maxTurns }) {
+  return { credential: { kind: "signin", member, secret }, model, system: systemText(system),
            prompt: renderTranscript(messages), tools: offeredTools(tools, heldResults(messages)), max_turns: maxTurns };
 }
 
@@ -160,12 +178,12 @@ function answeredHere(u, messages) {
 
 /** One connection to the member's own runner instance, read as a queue. Answers `{send, next, close}` or an
  *  outcome; never throws. */
-async function openRunner(runner, member) {
+async function openRunner(runner, { member, secret, headers }) {
   let res;
   try {
-    res = await runner.get(runner.idFromName(member)).fetch(RUNNER_URL, { headers: { Upgrade: "websocket" } });
+    res = await runner.get(runner.idFromName(member)).fetch(RUNNER_URL, { headers: { ...headers, Upgrade: "websocket" } });
   } catch (e) {
-    return silent((e && e.message) || e);
+    return silent((e && e.message) || e, secret);
   }
   const ws = res && res.webSocket;
   if (!ws) return refused(res ? res.status : null, "RUNNER_REFUSED",
@@ -183,7 +201,7 @@ async function openRunner(runner, member) {
     ws.addEventListener("close", (ev) => push({ closed: true, detail: `the runner closed the connection (${ev && ev.code})` }));
     ws.addEventListener("error", () => push({ closed: true, detail: "the runner's connection failed" }));
   } catch (e) {
-    return silent((e && e.message) || e);
+    return silent((e && e.message) || e, secret);
   }
   return {
     send(text) { try { ws.send(text); return true; } catch { push({ closed: true, detail: "the runner's connection failed on send" }); return false; } },
@@ -203,14 +221,18 @@ function ending(m, usage) {
 /** modelCall's sign-in arm: ONE TURN. The conversation is offered one turn; the first relayed call is that
  *  turn's answer, returned as a Messages-shaped `tool_use` block, and the connection is closed (which aborts the
  *  query, agent-runner R4), so no tool is performed here and no usage was stated for it. */
-export async function signinTurn(member, runner, body) {
+export async function signinTurn(account, runner, body) {
+  return scrubDeep(await turn(account, runner, body), account.secret);
+}
+async function turn(account, runner, body) {
+  const { member } = account;
   if (imageOutsideResult(body.messages)) return notRelayed();
   if (resultHoldsImage(body.messages) && !(await relaysImages(runner, member))) return notRelayed();
   /* A held result read over the relay is a turn of the runner's own, so the turn may take one per held result. */
   const reads = heldResults(body.messages).size;
-  const serialized = JSON.stringify(conversationRequest(member, {
+  const serialized = JSON.stringify(conversationRequest(account, {
     model: body.model, system: body.system, messages: body.messages, tools: body.tools, maxTurns: 1 + reads }));
-  const conn = await openRunner(runner, member);
+  const conn = await openRunner(runner, account);
   if (!conn.send) return conn;
   conn.send(serialized);
   let m = await conn.next();
@@ -235,8 +257,11 @@ export async function signinTurn(member, runner, body) {
 
 /** converse's sign-in arm (R6, R7). `charge(serialized)` is the meter: it answers `{stopped}` when the
  *  message may not be sent, else counts it and answers null. */
-export async function signinConverse({ member, runner, model, system, messages, tools, finalTool, onTool,
-                                             maxTurns, charge }) {
+export async function signinConverse(args) {
+  return scrubDeep(await conversation(args), args.account.secret);
+}
+async function conversation({ account, runner, model, system, messages, tools, finalTool, onTool, maxTurns, charge }) {
+  const { member, secret } = account;
   const offered = new Set(plainTools(tools).map((t) => t.name));
   let usage = null;
   let calls = 0;
@@ -246,11 +271,11 @@ export async function signinConverse({ member, runner, model, system, messages, 
   if (imageOutsideResult(messages)) return notRelayed();
   if (resultHoldsImage(messages) && !(await imagesRelayed())) return notRelayed();
   while (k < maxTurns) {
-    const serialized = JSON.stringify(conversationRequest(member, { model, system, messages, tools, maxTurns: maxTurns - k }));
+    const serialized = JSON.stringify(conversationRequest(account, { model, system, messages, tools, maxTurns: maxTurns - k }));
     const stop = charge(serialized);
     if (stop) return { ...stop, usage, calls };
     k += 1;
-    const conn = await openRunner(runner, member);
+    const conn = await openRunner(runner, account);
     if (!conn.send) return conn.silent ? { ...conn, usage, calls } : { ...conn, usage: unstated(), calls: null };
     conn.send(serialized);
     let answer = null;
@@ -307,7 +332,7 @@ export async function signinConverse({ member, runner, model, system, messages, 
       const end = ending(m, usage);
       if (end) return { ...end, calls };
       /* The model ended without answering: say what it said, ask again, in a fresh conversation. */
-      messages.push({ role: "assistant", content: [{ type: "text", text: String(m.result || "(no answer)") }] });
+      messages.push({ role: "assistant", content: [{ type: "text", text: scrub(m.result || "(no answer)", secret, Infinity) }] });
       messages.push({ role: "user", content: `Answer by calling the \`${finalTool}\` tool.` });
       break;
     }
