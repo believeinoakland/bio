@@ -17,7 +17,8 @@
  * C-129.19 (DOCKET_NO_SUMMARY) re-worded to cover an outcome's summary too (R1), reading changed until the stamp. A
  * counsel matter's refusal (R28) is `publication`'s row C-122 (its R78), answered from its export, never copied here.
  * At T47 (R29; DEC-199, N992) C-129.29 takes its translation from `words.json`'s `refusal.DOCKET_OUTCOME_UNREADABLE`, read
- * by key (`DOCKET_WORDS` below), its code, number and `where` unmoved; the row reads changed until T48's stamp. */
+ * by key (`DOCKET_WORDS` below), its code, number and `where` unmoved; the row reads changed until T48's stamp. K3110:
+ * C-129.13 `DOCKET_PRESSURE_REFUSED` reads `refusal.DOCKET_PRESSURE_REFUSED` by key the same way, its sentence unchanged. */
 
 const at = (fn, region) => `src/docket/index.mjs ${fn} > ${region}`;
 const FILER = at("#filerRefusal", "is-docket-filer");
@@ -37,6 +38,9 @@ export const DOCKET_WORDS = Object.freeze({
   "refusal.DOCKET_OUTCOME_UNREADABLE": "An outcome is stated only on an outcome entry, with what it was (corrected by the "
     + "office, or a harm addressed) and the date it happened, no later than the day it is filed. This entry's outcome is "
     + "missing, isn't one of those, or is on another kind of entry. Nothing was written.",
+  /* K3110: C-129.13 likewise, its sentence unchanged by the taking */
+  "refusal.DOCKET_PRESSURE_REFUSED": "A threat is marked as legal, retaliation, discrediting or other, with a note of at "
+    + "most 500 characters. Nothing was marked.",
 });
 
 export const DOCKET_CHECKS = Object.freeze({
@@ -104,8 +108,7 @@ export const DOCKET_CHECKS = Object.freeze({
   },
   DOCKET_PRESSURE_REFUSED: {
     check: "C-129.13", where: PRESSURE,
-    translation: "A threat is marked as legal, retaliation, discrediting or other, with a note of at most 500 "
-      + "characters. Nothing was marked.",
+    translation: DOCKET_WORDS["refusal.DOCKET_PRESSURE_REFUSED"],   /* R29 (K3110): read by key */
   },
   MACHINE_CANNOT_PLACE_DOCKET: {
     check: "C-129.14", where: MANAGER,

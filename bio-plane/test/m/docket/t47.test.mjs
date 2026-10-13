@@ -17,6 +17,7 @@ const en = (key) => {
   return w.en;
 };
 const KEY = "refusal.DOCKET_OUTCOME_UNREADABLE";
+const PKEY = "refusal.DOCKET_PRESSURE_REFUSED";
 /* T45's words for the row, answered no longer. */
 const T45 = "An outcome entry says what the outcome was (a cure, or a harm addressed) and the date it happened, no later "
   + "than today; an entry of any other kind says neither. Nothing was written.";
@@ -34,14 +35,15 @@ function refusedThenAccepted(w, bad, good) {
 
 test("R29 C-129.29 DOCKET_OUTCOME_UNREADABLE reads words.json's refusal.DOCKET_OUTCOME_UNREADABLE by key from DOCKET_WORDS, never a copy; code, number and where unmoved; T45's words answered no longer", () => {
   assert.ok(Object.isFrozen(DOCKET_WORDS));
-  assert.deepEqual(Object.keys(DOCKET_WORDS), [KEY], "the one row R29 takes");
-  assert.equal(DOCKET_WORDS[KEY], en(KEY), "verbatim");
+  assert.deepEqual(Object.keys(DOCKET_WORDS).sort(), [KEY, PKEY].sort(), "the two rows R29 takes (K3110: C-129.13 too)");
+  for (const k of Object.keys(DOCKET_WORDS)) assert.equal(DOCKET_WORDS[k], en(k), `${k} verbatim`);
   const row = DOCKET_CHECKS.DOCKET_OUTCOME_UNREADABLE;
   assert.deepEqual(row, { check: "C-129.29", where: "src/docket/index.mjs #formRefusal > is-docket-form", translation: en(KEY) });
   assert.notEqual(row.translation, T45);
-  /* every other row keeps its own: none translates by this sentence */
+  /* every other row keeps its own: none translates by these sentences */
   for (const [code, r] of Object.entries(DOCKET_CHECKS))
-    if (code !== "DOCKET_OUTCOME_UNREADABLE") assert.notEqual(r.translation, en(KEY), code);
+    if (!["DOCKET_OUTCOME_UNREADABLE", "DOCKET_PRESSURE_REFUSED"].includes(code))
+      assert.ok(![en(KEY), en(PKEY)].includes(r.translation), code);
 });
 
 test("R29 each of R1's four outcome refusals (missing, an unknown kind, dated after its filing, stated on another kind) answers DEC-199's sentence, each writing nothing, each beside its control", () => {
@@ -84,4 +86,27 @@ test("R12 (T47, N952) withdrawalOf names `entry`, the id of the public withdrawa
   w.publish(w.P, CASE, 3, [{ id: w.F1, role: "load_bearing" }]);
   assert.equal(w.docket.withdrawalOf({ case: CASE, edition: 3 }), null);
   assert.equal(w.docket.docketOf({ case: CASE, viewer: A }).ok, true);
+});
+
+test("R29 (K3110) C-129.13 DOCKET_PRESSURE_REFUSED reads words.json's refusal.DOCKET_PRESSURE_REFUSED by key; code, number and where unmoved; each act refusing with it answers that sentence, writing nothing, beside its control", () => {
+  assert.deepEqual(DOCKET_CHECKS.DOCKET_PRESSURE_REFUSED,
+                   { check: "C-129.13", where: "src/docket/index.mjs docketPressure > is-docket-pressure", translation: en(PKEY) });
+  const w = seeded();
+  const answers = (r) => {
+    assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, "DOCKET_PRESSURE_REFUSED", "DOCKET_PRESSURE_REFUSED", "C-129.13"],
+                     JSON.stringify(r).slice(0, 300));
+    assert.equal(r.translation, en(PKEY), "the refusal answers words.json's sentence");
+  };
+  const entry = file(w).entry;
+  const mark = (pressure) => w.docket.docketPressure({ entry, pressure, author: V("bob"), viewer: V("bob") });
+  for (const pressure of [null, { kind: "threat" }, { kind: "legal", note: "n".repeat(501) }]) {
+    const before = w.snapshot();
+    answers(mark(pressure));
+    assert.deepEqual(w.snapshot(), before, "nothing written");
+  }
+  /* the plane's read refuses an unknown kind the same way (R27) */
+  answers(w.docket.docketPressureMarks({ kind: "threat" }));
+  assert.equal(w.docket.docketPressureMarks({ kind: "legal" }).ok, true, "control: a known kind reads");
+  /* control: a well-formed mark is made */
+  assert.equal(mark({ kind: "legal", note: "n".repeat(500) }).ok, true);
 });
