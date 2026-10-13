@@ -107,6 +107,21 @@ test("R17 a watch records by, the instant, the publisher and the docket address;
   assert.equal(w.count("case_import_watch_ends"), 1);
 });
 
+test("R17 (N951) the docket address is the publisher's address with the route public-read R21 and R25 serve: op=docketpublic, the case percent-encoded, captures=omit, and nothing else", async () => {
+  const { w, a } = await watched({ watch: false });
+  for (const publisher of [PUB, `${PUB}/`, "https://moved.example.org/copy"]) {
+    const r = w.ci.watchImport({ import: a.import, publisher, by: V("alice"), viewer: V("alice") });
+    const u = new URL(r.docket);
+    assert.equal(r.docket.slice(0, r.docket.indexOf("?")), publisher, "the publisher's address, as given");
+    assert.deepEqual([...u.searchParams], [["op", "docketpublic"], ["case", CASE], ["captures", "omit"]]);
+    assert.equal(u.hash, "");
+  }
+  for (const c of ["CASE 1/2", "CASE-2026-0101?x=1&y", "CASE#7"]) {
+    const u = new URL(docketAddressOf(PUB, c));
+    assert.deepEqual([...u.searchParams], [["op", "docketpublic"], ["case", c], ["captures", "omit"]], c);
+  }
+});
+
 test("R17 unwatchImport refuses R1's two, an absent import, and IMPORT_NOT_WATCHED when no watch is in force; each writes nothing", async () => {
   const { w, a } = await watched();
   const go = (x = {}, who = "alice") => w.ci.unwatchImport({ import: a.import, by: V(who), viewer: V(who), ...x });
