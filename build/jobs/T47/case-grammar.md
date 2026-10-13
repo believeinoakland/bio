@@ -1,6 +1,6 @@
 # case-grammar (T47)
 
-**Status** · session_01MumH1LDmj58bzBZXFqYHEm · depth 2 · WORKING · handled B0
+**Status** · session_01MumH1LDmj58bzBZXFqYHEm · depth 2 · COMPLETE · handled B0
 
 ## Completion (CASE-GRAMMAR #15)
 
