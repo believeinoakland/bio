@@ -4,7 +4,8 @@
    recorded on `job/T19/action-grammar` before any edit outside `src/action-grammar/`, by running `fixture.mjs`' `suite`
    over the old faces (`src/actions/checks.mjs`, which re-exported the catalogue's vocabularies and grammars, with the
    catalogue's `ACTION_KINDS` beside it) and writing its answer as JSON. The tests run the same `suite` over this module
-   and compare (K585 (2)). */
+   and compare (K585 (2)). Since T47 (R28; N961) the six recorded rows whose raising site moved to `action-records`
+   (C-73.2–.5, C-90.2, C-90.6) carry that site in `golden.json`; every other byte is as recorded. */
 
 export const NOW = Date.parse("2026-07-02T12:00:00Z");
 export const TODAY = "2026-07-02";

@@ -536,7 +536,7 @@ test("R7 (T45): the audit also reports the override's ground (only for a premise
 
 /* ------------------------------------------------------------------------------------------------ R9 */
 
-test("R9 (T45; K2845, K2849): the rows C-117.30–.58 are held in ACTION_CATALOGUE_CHECKS after C-117.29, in R9's order, each {check, where, translation} exactly; the codes actions mints (its R8, R74, R77–R88, its copied fence) name actions' sites, as its job names them; the shape codes this module's arms push name the arm that pushes them; action-holds' and action-replies' codes are no C-117 row (C-149, C-150), BEARING_REFUSED among them; no translation names an op, ruling, check number, record id or place; negative control: no other table holds them", () => {
+test("R9 (T45; K2845, K2849): the rows C-117.30–.58 are held in ACTION_CATALOGUE_CHECKS after C-117.29, in R9's order, each {check, where, translation} exactly; the codes actions mints (its R8, R74, R77–R88, its copied fence) name actions' sites, as its job names them, and those action-records now raises its sites (R28); the shape codes this module's arms push name the arm that pushes them; action-holds' and action-replies' codes are no C-117 row (C-149, C-150), BEARING_REFUSED among them; no translation names an op, ruling, check number, record id or place; negative control: no other table holds them", () => {
   const C = AG.ACTION_CATALOGUE_CHECKS;
   const keys = Object.keys(C);
   const t45 = keys.slice(keys.indexOf("SEEKS_REFUSED") + 1);
@@ -558,11 +558,16 @@ test("R9 (T45; K2845, K2849): the rows C-117.30–.58 are held in ACTION_CATALOG
     OVERRIDE_GROUND_REFUSED: "#overrideAndAddressee > is-override-ground", MACHINE_CANNOT_SET_PARTNERS: "#t45Fields > is-machine-set-partners",
     MACHINE_CANNOT_SET_PRESS_TERMS: "#t45Fields > is-machine-set-press-terms", MACHINE_CANNOT_SET_REPLY_OWED: "#t45Fields > is-machine-set-reply-owed",
     PARTNERS_REFUSED: "#t45Fields > is-partners-entity", FOLLOWS_ACTION_REWRITTEN: "#t45Fields > is-follows-action-rewritten",
-    RECEIPT_NOT_ON_SENT: "actionReceipt > is-receipt-on-sent", NO_REPLY_OWED: "actionCorrespond > is-no-reply-owed", STAGE_NOT_IN_LAW: "actionCorrespond > is-stage-in-law",
-    MACHINE_CANNOT_SET_SCOPE: "actionScope > is-scope", SCOPE_NO_REASON: "actionScope > is-scope", SCOPE_UNCHANGED: "actionScope > is-scope",
-    MACHINE_CANNOT_RECORD_PROMISE: "actionPromise > is-promise", PROMISE_REFUSED: "actionPromise > is-promise", MACHINE_CANNOT_SET_COPIED: "#t45Fields > is-machine-set-copied",
+    NO_REPLY_OWED: "actionCorrespond > is-no-reply-owed", STAGE_NOT_IN_LAW: "actionCorrespond > is-stage-in-law",
+    MACHINE_CANNOT_SET_COPIED: "#t45Fields > is-machine-set-copied",
   };
   for (const [code, site] of Object.entries(ACTIONS)) assert.equal(C[code].where, `src/actions/index.mjs ${site}`, code);
+  /* R28 (T47; N961): the receipt, scope and promise acts moved to action-records, and their rows' sites with them. */
+  const RECORDS = {
+    RECEIPT_NOT_ON_SENT: "actionReceipt > is-receipt-on-sent", MACHINE_CANNOT_SET_SCOPE: "actionScope > is-scope", SCOPE_NO_REASON: "actionScope > is-scope",
+    SCOPE_UNCHANGED: "actionScope > is-scope", MACHINE_CANNOT_RECORD_PROMISE: "actionPromise > is-promise", PROMISE_REFUSED: "actionPromise > is-promise",
+  };
+  for (const [code, site] of Object.entries(RECORDS)) assert.equal(C[code].where, `src/action-records/index.mjs ${site}`, code);
   const tables = ["ACTION_FENCE_CHECKS", "ACTION_ACT_CHECKS", "GOVERNING_LAW_CHECKS", "QUOTE_CHECKS", "LIFECYCLE_CHECKS", "RISK_TIER_REVISION_CHECKS", "RECORDS_LAW_FENCE_CHECKS"];
   for (const t of tables) for (const code of t45) assert.ok(!(code in AG[t]), `${code} in ${t}`);
   /* action-holds' and action-replies' codes: no C-117 row here */
@@ -589,7 +594,7 @@ test("R9 (T45; K2845, K2849): the rows C-117.30–.58 are held in ACTION_CATALOG
       if (x.code === "COUNTERPARTY_REFUSED") { assert.equal(fn, "copiedFindings"); continue; }
       assert.ok(x.code in C, `${fn}: ${x.code}`);
       pushedCodes.add(x.code);
-      if (!(x.code in ACTIONS)) assert.equal(C[x.code].where.split(" > ")[0], `src/action-grammar/checks.mjs ${fn}`, x.code);
+      if (!(x.code in ACTIONS) && !(x.code in RECORDS)) assert.equal(C[x.code].where.split(" > ")[0], `src/action-grammar/checks.mjs ${fn}`, x.code);
     }
   }
   assert.deepEqual([...pushedCodes].sort(), ["COPIED_IS_ADDRESSEE", "FOLLOWS_ACTION_REFUSED", "FOLLOWS_ACTION_SELF", "FOUND_ELSEWHERE_NEEDS_CAPTURE",

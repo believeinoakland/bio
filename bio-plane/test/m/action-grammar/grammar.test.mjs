@@ -327,7 +327,8 @@ test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20, .21; C-33.3–
   assert.equal(new Set(rows.map((r) => r.check)).size, rows.length, "no number twice");
   for (const r of rows) {
     assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"]);
-    assert.match(r.where, /^src\/(actions\/index|action-grammar\/checks)\.mjs \S+ > is-[a-z0-9-]+$/);
+    /* R28 (T47): the rows whose raising site moved name action-records' file. */
+    assert.match(r.where, /^src\/(actions\/index|action-records\/index|action-grammar\/checks)\.mjs \S+ > is-[a-z0-9-]+$/);
     assert.ok(r.translation.length > 20);
   }
 });

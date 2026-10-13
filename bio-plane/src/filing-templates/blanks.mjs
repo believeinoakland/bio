@@ -3,7 +3,7 @@
  *
  * `FILING_BLANKS` and `FILING_TEXT_MAX` were copied unchanged from `filings` (`bio-plane/src/filings/index.mjs`:75, :97,
  * its R3 and R6, at T21), with their comments; `filings`' T21 job deleted its copies and reads them here (K624 (1)).
- * `blanksOf` is new. */
+ * `blanksOf` is new. R31 (T47) adds four blanks a member fills, after the fifteen moved, which are unchanged. */
 
 /** R19 (was filings' R3): the blanks a filing fills, a closed set; a template's `{{name}}` outside it is left unfilled
  *  and says so. Each blank's name and the sentence saying what fills it. */
@@ -23,6 +23,11 @@ export const FILING_BLANKS = Object.freeze({
   venue_how: "by what means it is filed (the profile's venue means)",
   group: "the producing group",
   date: "the date the draft was prepared",
+  /* R31 (T47; DEC-209 (3), K3120): four member-filled blanks, filled by `filings` R55's `fills`, never by the record */
+  records: "the records asked for, in the member's words",
+  period: "the period the records cover",
+  form: "the form the records are wanted in",
+  cost_limit: "the most the group will pay for copies before being told",
 });
 /** R19 (was filings' R6): the longest text, in UTF-8 bytes. */
 export const FILING_TEXT_MAX = 65536;

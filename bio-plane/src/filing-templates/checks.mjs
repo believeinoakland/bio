@@ -11,7 +11,10 @@
  * T45 (R15, R28; R23's T45 line): `TEMPLATE_NOT_REVIEWED` and `TEMPLATE_COURT_PETITION`, the next free numbers of this
  * module's own family, C-125.33 and C-125.34 (FILING-TEMPLATES #8 J1), awaiting promotion's stamp.
  * T46 (R29; DEC-194, N913): C-125.33 reads its translation from `words.json` by key (`FILING_TEMPLATES_WORDS` below);
- * C-125.34 keeps its own until `words.json`'s sentence names "your group's Civicsmith" (DEC-149); awaiting T47's stamp. */
+ * C-125.34 keeps its own until `words.json`'s sentence names "your group's Civicsmith" (DEC-149); awaiting T47's stamp.
+ * T47 (R30; N957, K231): C-125.4 `TEMPLATE_BLANK_UNKNOWN` minted at one site, now `blankUnknownRefusal` (R32), which both R2's text check
+ * and R15's profile read call; its `where` re-pointed there, its code, number and translation unmoved; awaiting T48's stamp.
+ * R32 (K3124): that site is provided, `blankUnknownRefusal` (`filings` R56 calls it). */
 
 const at = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
 
@@ -84,7 +87,7 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
       + "particular (general), and a profile named is not held.",
   },
   TEMPLATE_BLANK_UNKNOWN: {
-    check: "C-125.4", where: at("#textRefusal", "is-template-text"),
+    check: "C-125.4", where: at("blankUnknownRefusal", "is-template-blank"),
     translation: "The words name a blank that no filing fills. Use only the blanks filings fill, written {{name}}.",
   },
   TEMPLATE_SCOPE_REFUSED: {
