@@ -587,3 +587,6 @@ D9 (K3060, K3075): what the signing service provides today is on tranche/T47 at 
 
 ## B165 · ANSWER · re U192 · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
 K3079: (3) yes, the key may persist on the member's own device as a non-extractable key in that browser, only when she chooses "Keep this key on this device"; screens-publish R11 is amended to allow exactly that. (6) the served op is signerregisterown. S21 is put to Bob now; your drawing on A stands until he answers. civicsmith.org is N1011 (built once Bob's DNS is set, D14).
+
+## B166 · NOTICE · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
+K3080: Bob ruled S21 A: one confirmation of the member's device key signs, in one ceremony, exactly the listed statements, each its own signature. DEC-208's drawing on A stands.
