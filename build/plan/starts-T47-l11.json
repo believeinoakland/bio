@@ -1,0 +1,115 @@
+{
+ "wizard-scripts": {
+  "notes": [
+   "R35's registry and R36's two scripts are read at PR #33's head as merged at this START; `ai-runs.testInstance()` is a new earlier edge (BOB adds it to `modules.json` from your COMPLETE)."
+  ]
+ },
+ "op-grades": {
+  "notes": [
+   "Grade every op T47 added that your census lists `undetermined`, not only those your entry names; `peopledirectory` is a read (K3104)."
+  ],
+  "reds": "affordances `t33.test.mjs` R12 (people's op map, K3112) with op-declarations"
+ },
+ "affordances": {
+  "notes": [
+   "You merge after op-grades (T47-48)."
+  ],
+  "reds": "your two DEC-198/199 reds (rule 5 (7a)); K3102's sever-on-inquiry test; K3116's R1, R12, R24, R14/R9/R18, R19 \u00d72; K3128's three (rule 5 (8)); K3112's R12 with op-grades and op-declarations"
+ },
+ "tasks": {},
+ "action-producers": {
+  "notes": [
+   "`filings` is a new earlier edge (R25, K3122)."
+  ]
+ },
+ "notice-producers": {
+  "reds": "`accounts.test.mjs`' 8 reds (K3084: the setup holds a sign-in token, credentials R70)"
+ },
+ "queue": {},
+ "setup-page": {
+  "notes": [
+   "Your module is retired as a page (N1002): R1\u2013R34 retired, each naming its new home (B, setup-page); delete its code and tests. You delete only after interface-shell (T47-56), screens-entry (T47-86), instance-setup (T47-75) and control-plane (T47-65) have merged: BOB sends a CHANGE then, and you merge `tranche/T47` before deleting. Until then read and prepare. Your COMPLETE names every file deleted; BOB empties your `paths`."
+  ]
+ },
+ "setup-words": {
+  "notes": [
+   "R7's `WORD_ROWS` are re-taken at PR #33's head as merged at this START (count them there; the entry's 1,728 and 617 were PR #33 @ K3062)."
+  ]
+ },
+ "instance-setup": {
+  "notes": [
+   "R83 removes `setupPage`, `SETUP_HTML` and the `setup-page` edge; BOB drops the edge from `modules.json` at your merge."
+  ],
+  "reds": "membership `members.test.mjs` REC-41 (2) and R132 (3) (rule 5 (6), (7c): your flat `parts`)"
+ },
+ "op-declarations": {
+  "reds": "your eight DEC-198/199 reds (rule 5 (7a)); R49/R6 (`projectlist`, 7c); R19/R30's 2 (K3084); K3112's affordances R12 with op-grades"
+ },
+ "admission": {},
+ "answer-envelope": {
+  "reds": "R8's family-order pins (rule 5 (7b)) and its DEC red (7a)"
+ },
+ "store-door": {},
+ "signin-door": {
+  "notes": [
+   "You are split by copy from `control-plane` (K617, K624): copy the subscription sign-in door (control-plane R65, R78, R85\u2013R87 as your requirements word them) into your own paths, tested at your interface; you merge early, then control-plane's job deletes its copy and re-points to you."
+  ],
+  "new": true
+ },
+ "interface-shell": {
+  "notes": [
+   "Providers of the screen modules: merge early in the screen group; each screen job merges `tranche/T47` when BOB announces your merge."
+  ]
+ },
+ "screens-entry": {
+  "notes": [
+   "It reads instance-setup's `HOSTING_CONTROL` (a new edge `screens-entry \u2192 instance-setup`) and merges after interface-shell and instance-setup."
+  ],
+  "new": true
+ },
+ "screens-wizards": {
+  "new": true
+ },
+ "screens-settings": {},
+ "screens-intake": {
+  "reds": "`held.test.mjs`' stand-in control re-stated for ratification R51 (K3114)"
+ },
+ "screens-daily": {
+  "notes": [
+   "R10's members, activity and last change are drawn once project-roster answers them (N1025, T48): until then the rows draw what `projectlist` answers, and the rest is a `test.todo` naming N1025."
+  ]
+ },
+ "screens-inquiry": {},
+ "screens-investigate": {
+  "new": true
+ },
+ "screens-publish": {
+  "new": true
+ },
+ "screens-action": {
+  "new": true
+ },
+ "control-plane": {
+  "notes": [
+   "You merge after T47-56\u202664 and after signin-door: delete your copy of the sign-in door once BOB announces signin-door's merge (CHANGE), and re-point to it. Your edges to the four new screen modules are in `modules.json`."
+  ],
+  "reds": "K3116's R20 \u00d73, R45, R64 \u00d72 (rule 5 (8)); K3112's split-window tests"
+ },
+ "installer": {
+  "notes": [
+   "Build and test only: its deploy waits on Bob's Cloudflare dashboard act (K2164, N1003), which BOB walks him through; `interface-assets` is a new edge."
+  ]
+ },
+ "plane": {
+  "notes": [
+   "Last in L11 before journey-check: you merge after every other L11 job, merging `tranche/T47` when BOB says. R48's screen set names nine modules."
+  ],
+  "reds": "`test/m/plane/` R5, R9 (rule 5 (7c)); K3116's R17, R38, R39 (and R33)"
+ },
+ "journey-check": {
+  "notes": [
+   "A helper module carrying no product capability, last in L11 (after plane): a Playwright walk of journeys 28 and 3 with screenshots (Chromium is at /opt/pw-browsers; never `playwright install`), failing on any refusal, old page or missing screen. It runs against a plane started from the tranche in your session, never a deploy. membership R140's list test is red until T48's membership job (doubt 4), accepted."
+  ],
+  "new": true
+ }
+}
