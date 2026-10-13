@@ -44,3 +44,7 @@ Size (session_01E2ruMUjxDrmfEsvonrJ9he): test runs 7, module lines 605
 ## J1 · REPORT
 
 Found in other modules: (1) plane test/m/plane/t45.test.mjs R39 calls caseAuthoringOf(...).registerOpenRequests, red before and after this job; its re-point is plane's L11 job (split map §5). (2) plan-work test/m/plan-work/fixture.mjs passes caseAuthoring: null to actionRepliesOf; the dep is now caseInputs. Harmless (no env, nothing registers) but stale.
+
+## J2 · COMPLETE
+
+T47-40 applied: R3/R8 register through case-inputs (given, or caseInputsOf(host) at the composition root); R9 BEARING_REFUSED reads DEC-199's sentence by key with {item} filled, clearing T46's two close reds. Module tests 25/0; format, architecture, coverage (9/9), ownership 0 failures. Record: build/jobs/T47/action-replies.md on job/T47/action-replies.
