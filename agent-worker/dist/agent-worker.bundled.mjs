@@ -1080,7 +1080,8 @@ var LEAD_ID_RE = new RegExp(`^${idPattern("LEAD").source.slice(1, -1)}-[a-z0-9]+
 // ../bio-plane/src/run-rules/checks.mjs
 var RUN_RULES_WORDS = Object.freeze({
   "refusal.AI_RUN_REEXAM_NEEDS_RESPONSE": "Nothing was started: a fresh look at the plan after a reply needs to know which reply. Record the reply first, then ask from it.",
-  "refusal.AI_RUN_REEXAM_OPEN": "Nothing was started: a fresh look at this plan after this reply is already under way. Wait for it, then read what it proposes."
+  "refusal.AI_RUN_REEXAM_OPEN": "Nothing was started: a fresh look at this plan after this reply is already under way. Wait for it, then read what it proposes.",
+  "refusal.MEMBER_RUN_MODE_NOT_ADMITTED": "A run on your own Claude sign-in can check or plan, and this one asks for more. Nothing was sent. A project's or the group's account can run it, where one serves you."
 });
 var AI_RUN_OWN_CHECKS = {
   /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
@@ -1353,12 +1354,13 @@ var AI_RUN_OWN_CHECKS = {
   },
   /* R32 (T46; K2947; `ai-runs` R18): A MEMBER'S OWN SIGN-IN RUN IN A MODE IT DOES NOT SERVE. On her own Claude sign-in
      a member's run is dispatched for her only in `check` or `plan` (Bob's K2892); any other mode is refused by `ai-runs`
-     at its dispatch and read here by key. C-22.30, the next free number after R30's. DEC-83's form. Its translation is
-     interim, until `words.json` holds `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`. */
+     at its dispatch and read here by key. C-22.30, the next free number after R30's. DEC-83's form. T47 (N992; DEC-198):
+     its translation is `words.json`'s `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`, read by key (RUN_RULES_WORDS above) as R31's
+     rows are; T46's interim sentence is gone, and code, number and `where` are unmoved. */
   MEMBER_RUN_MODE_NOT_ADMITTED: {
     check: "C-22.30",
     where: "src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch",
-    translation: "Nothing was started, because on your own Claude sign-in the assistant only checks and plans for you; this kind of work needs your group's Civicsmith to run it."
+    translation: RUN_RULES_WORDS["refusal.MEMBER_RUN_MODE_NOT_ADMITTED"]
   }
 };
 var AI_RUN_ACT_SHAPE_CHECKS = {
