@@ -26,6 +26,7 @@
 - `checks/format.mjs`: 168 modules, 0 failures.
 - `checks/architecture.mjs bio escalation`: 19 product files, 0 failures.
 - `checks/coverage.mjs bio escalation`: 37 of 37 live ids named by a test, 0 failures.
-- `checks/ownership.mjs`: see below, after commit.
+- `checks/ownership.mjs bio escalation tranche/T47`: 6 files changed, 0 failures.
+- `checks/run.mjs bio`: format 0, architecture 3106 product files 0 failures, channels 0. Coverage has 37 failures, all in other modules (screens-*, setup-words, signin-door, tasks, wizard-scripts and others); none is escalation's.
 
 Size (session_01WD3ZmTKBeisfe99Nk6Rbb4): test runs 4, module lines 2374
