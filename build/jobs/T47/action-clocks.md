@@ -16,3 +16,14 @@ Progress on T47-39, pushed on job/T47/action-clocks (6e80269144):
 - Checks: action-clocks 73/73; format, architecture, coverage (23/23) and ownership all 0 failures.
 - Users' tests on this branch: action-producers 45/0, queue 142/0, monitoring 137/0, action-plans 79/0, filings 97/0, plan-work 45/0. action-replies 17/6 is identical on tranche/T47. answer-envelope 25/8: every one of the 8 also fails on tranche/T47 (its catalogue-list reds). No red is opened by this change.
 - How the reading set was read: requirements and all module code and tests read whole by me; the used modules' public parts, layers.md layer 9 and the split map read whole by a helper in this session, which wrote a digest citing each section.
+
+## J2 · REPORT
+
+B2 is done.
+- I merged tranche/T47 into this branch.
+- t45.test.mjs now records receipts and service through action-records' actionReceipt, via a lazy `w.records()` in the fixture (actionRecordsOf on the same host). R2's start is still read through actions.actionRead.
+- This makes two tests red until actions merges: t45 "R2 (T45) a received rule counts from the receipt…" and "R2 (T45) a served rule…".
+  - Cause: actionRecordsOf throws at creation with TABLE_DECLARED ("action_law_proposals is already declared by actions"). On the tranche, actions still declares the six tables that action-records now declares, and a host allows each table to be declared once.
+  - Fix: actions' T47-38 job, whose factory creates action-records and drops its own declarations. Nothing in action-clocks can fix it short of a stand-in that bypasses action-records' factory, so I built none.
+- Every other test passes: action-clocks 71/73, the 2 being the above.
+- I will re-run when your second CHANGE (actions merged, R21) arrives, then apply R21 and complete.
