@@ -43,3 +43,18 @@ Two things for other modules, found in this job (details in my record):
 - `screens-intake`: `test/m/screens-intake/held.test.mjs` (about lines 88–99) has a stand-in asserting "a release read from the body alone is refused (control)". R51 retires that: a release with its fields in the body is now answered as the same fields in the query. The test passes only because it is a stand-in; it states the old rule.
 - `screens-publish` (L11): a sitting is sent as `members: [{id, sha, signature}]` with `op=caseratify` / `op=publishat`. The members' answers come back as `sitting: [...]`, each member's `op=ratify` answer, because `members` in the case answer is already the roster's.
 Also: the plane bundle is staled by my source change (regenerated at the layer's close).
+
+## J3 · COMPLETE
+
+T47-72 is complete on `job/T47/ratification` (pushed). R51 and R52 are met, each named by its tests.
+- **R51:** `release` and `retire` read their act's fields from the body, else the query; the stamps stay the query's. Tested both ways. R32's retire test is re-worded to "the body's stamps are not read".
+- **R52:** built on my J1 readings (all confirmed by B2, K3109).
+  - `op=ratify`'s checks before its commit are now `prepareFinding`, and the steps after it are in `finding.mjs`. Every member of a sitting goes through that same code, and `op=ratify`'s answers are unchanged.
+  - With `op=caseratify`, the case and its members commit in one transaction, and a refusal rolls everything back. The answer lists each member under `sitting`.
+  - With `op=publishat`, the members are held in `checked.members`, checked again by R42 and committed after the case, or the edition stops with them.
+  - Tests are in `sitting.test.mjs`: the 1 + 2 + 5 sitting, and the control where one bad signature commits nothing.
+- **P8:** I read my code and tests whole, with a helper's digest for the rest. I fixed C-92.11 naming no observation, and corrected some stale headers. Two small items are deferred, with reasons in my record.
+- **Results:** ratification 245/245.
+  - Its users' suites have 19 reds. All 19 are also red on `tranche/T47` itself, and none names this module.
+  - format, architecture, coverage (51/51) and ownership show 0 failures for ratification. `checks/run.mjs` architecture shows 0.
+- **Other modules:** one REPORT, J2 (screens-intake's stand-in test; how screens-publish reads the answer). The plane bundle is staled.
