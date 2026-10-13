@@ -1,9 +1,8 @@
-/* The case document's text and the acknowledgement list's two renderings (requirements:
- * `build/requirements/case-authoring.md`, R14, R16, R17, R20, R21, R22, R26, R60). Pure: nothing here touches a table, so a
- * suite can render a document without a store and the gate can be run against bytes this file produced. Moved from
- * `store.mjs` (`#caseDocumentText`, `CASE_CITATION_WORDS`, the `#ack…Lines` family, `#withheldWriterStated`,
- * `#statementSha`; `#fmSafe` is case-grammar's since N424); the comments moved with them, shortened where they only
- * restated the code.
+/* The case document's text (requirements: `build/requirements/case-authoring.md`, R14, R16, R17, R22, R26, R60). Pure:
+ * nothing here touches a table, so a suite can render a document without a store and the gate can be run against bytes
+ * this file produced. Moved from `store.mjs` (`#caseDocumentText`, `CASE_CITATION_WORDS`; `#fmSafe` is case-grammar's
+ * since N424); the comments moved with them, shortened where they only restated the code. The acknowledgement list's
+ * two renderings, `statementSha` and `withheldWriterStated` moved on to `case-inputs` (its R2; T47, N908).
  *
  * THE DOCUMENT IS A DOCUMENT RATHER THAN A SERIALISATION (CASE-5b / DEC-72). The frontmatter is what the gate and the
  * ratify committer read; the BODY is what a person reads, under canonical headings, because what is signed must be a
@@ -14,7 +13,6 @@
  * map holding an array. Hence `completeness` beside `completeness_excluded`, `searched` beside `searched_levels`,
  * `bias_manifest` beside `bias_manifest_bundles`. */
 
-import { createSha256 } from "../record-grammar/index.mjs";
 import { fmSafe, whatChangedBlockLines, whatChangedSectionLines, lensBlockLines,
          lensSectionLines, workingOnLines, methodBlockLines, materialBlockLines, acceptedWorkBlockLines,
          gradingFactsLines, passagesLines } from "../case-grammar/index.mjs";
@@ -25,6 +23,9 @@ import { FLAG_SENTENCE, tensionFrontmatterLines, tensionBodyLines, tensionSenten
 import { CASE_DOCUMENT_FORMAT, attributionFrontmatterLines, attributionBodyLines, captureBlockLines,
          sourceBlockLines } from "../publication/index.mjs";
 import { caseConclusionRowLines } from "../ratification/index.mjs";
+/* R14 (T47; N908; K1333): the acknowledgement list's two renderings are `case-inputs`' (its R2), moved there and imported
+   here, never copied, so the signed document is byte-identical before and after the split. */
+import { ackFrontmatterLines, ackBodyLines } from "../case-inputs/document.mjs";
 /* R69 (N839, K1333, K2608): the review comments' body section is `case-account`'s (its R7), moved there and imported
    here, never copied, so the signed document is byte-identical before and after the split. */
 import { reviewCommentBodyLines } from "../case-account/document.mjs";
@@ -35,12 +36,6 @@ import { barAxisWords } from "../strength/index.mjs";
  *  instead (R3's `BAD_COMPLETENESS`), which is the difference that matters. Idempotent. It is case-grammar's one
  *  spelling (N424), read rather than copied, and re-exported for this module's importers. */
 export { fmSafe };
-
-/** R20: the key an acknowledgement is recorded and matched by: the SHA-256 of the statement exactly as the case
- *  document prints it (`fmSafe`, so a draft's text, an unsigned document's and the act's hash alike). */
-export function statementSha(s) {
-  return createSha256().update(new TextEncoder().encode(fmSafe(s))).hex();
-}
 
 /** R16: the words the document's prose gives each citation `version` (REC-219 / D-579(a)). */
 export const CASE_CITATION_WORDS = Object.freeze({
@@ -58,112 +53,6 @@ export const CEREMONY_HIGHLIGHT_SENTENCE = "A finding in this case rests on some
   + "cannot see. You can still publish. The published case will highlight that this finding rests on a side in "
   + "conflict with a record not shown, and will not name that record or who holds it.";
 
-/* ===========================================================================
- * THE TWO RENDERINGS OF THE ACKNOWLEDGEMENT LIST (R20), ONE SPELLING EACH: written into a document by
- * `caseDocumentText` when `op=publish` authors it, and spliced by `publication.reauthorSection` when an
- * acknowledgement lands on one authored and unsigned, so the list is never printed two ways. The frontmatter run starts
- * at `  statement_sha:` and ends before `completeness_excluded:`; the prose starts at `ACK_PROSE_HEAD` and ends before
- * the blank line that precedes `## What Was Searched`.
- * =========================================================================== */
-
-export function ackFrontmatterLines(acks) {
-  return [
-    `  statement_sha: ${acks.statementSha ?? "null"}`,
-    `  acknowledged: ${acks.rows.length}`,
-    ...(acks.truncated ? ["  acknowledgements_truncated: true"] : []),
-    "completeness_acknowledgements:",
-    ...acks.rows.flatMap((a) => [
-      `  - kind: ${a.kind}`,
-      `    by: ${a.by}`,
-      `    recipient: ${a.recipient == null ? "null" : `"${fmSafe(a.recipient)}"`}`,
-      `    at: "${a.at}"`,
-      /* REC-217: a reading this case holds BY THE PUBLISHER'S LINK carries the draft it was given on. */
-      ...(a.draft ? [`    draft: ${a.draft}`] : [])])];
-}
-
-export const ACK_PROSE_HEAD = "**Who else read this statement.**";
-
-/* REC-194 / §3 rule 13 — THE UNBINDABLE READINGS TRAVEL WITH THE LIST, WHATEVER THE LIST SAYS: counted, never named,
-   because naming them is the claim that cannot be made. D-540: a draft-given participant reading while the WRITER is
-   undetermined is two unknowns at once, counted in its own sentence and never folded into the first. */
-function ackUnboundLines(acks, project) {
-  const u = acks.unboundWriterUndetermined || 0;
-  if (!acks.unbound && !u) return [];
-  return [...(acks.unbound ? ["",
-    `This record also holds ${acks.unbound} acknowledgement${acks.unbound === 1 ? "" : "s"} of this exact `
-    + `statement in ${project} given for a case whose identity was not yet allocated — a draft — and whether `
-    + "any of them is a reading of THIS case is UNDETERMINED: a case id is minted only by publication, and "
-    + "none of them was given on a draft that any publisher named as a case's draft at publication, so a "
-    + "reading of a draft is not a reading of this case. They "
-    + "are counted here and deliberately not named, because naming them would claim they read THIS case's "
-    + "statement, which this record does not establish (BIO_Publication §3 rule 13)."] : []),
-    ...(u ? ["",
-    `This record also holds ${u} acknowledgement${u === 1 ? "" : "s"} of this exact statement in ${project}, `
-    + "given by a participant for a draft, of which it is UNDETERMINED both whether any is a reading of THIS "
-    + "case and whether any is the statement's writer's own, because who wrote the statement is UNDETERMINED. "
-    + "They are counted here, apart, and deliberately not named (BIO_Publication §3 rule 13)."] : [])];
-}
-
-/* REC-217 / §3 rule 13 (BOB #33): THE LINK, IN WORDS, whenever the publisher named a draft, whether or not any reading
-   was given on it: the act happened either way and the owner who signs is signing it. */
-function ackLinkLines(acks) {
-  if (!acks.link) return [];
-  return ["",
-    `Readings given on draft ${acks.link.draft}, which ${acks.link.by} named as this case's draft at `
-    + `publication on ${acks.link.at}, are readings of this case, and each one listed above says so. That `
-    + `link is ${acks.link.by}'s act, recorded with the publication, and not an inference from the statement's `
-    + `words: another draft or case carrying the same sentence binds nothing here (BIO_Publication §3 rule 13).`];
-}
-
-/* NOBODY AND UNDETERMINED ARE DIFFERENT FACTS (REC-194): `acknowledged: 0` is true of this case and is not the whole
-   truth when the record holds readings of this exact sentence it cannot bind to this case. */
-function ackBodyHeadLines(acks, project) {
-  return acks.rows.length
-    ? [`${ACK_PROSE_HEAD} Acknowledged, as a second reader of what this case leaves out, by:`, "",
-       ...acks.rows.map((a) => (a.kind === "recipient"
-         ? `- the recipient of review grant ${a.by}, addressed by its issuer as '${fmSafe(a.recipient)}', `
-           + `on ${a.at}`
-         : `- ${a.by}, a participant of ${project}, on ${a.at}`)
-           + (a.draft ? ` — given on draft ${a.draft}` : "")),
-       ...(acks.truncated ? ["- (the list stops here; more acknowledgements are recorded than this "
-                              + "document lists)"] : [])]
-    : (acks.unbound || acks.unboundWriterUndetermined)
-      ? [`${ACK_PROSE_HEAD} Nobody acknowledged it FOR THIS CASE. An acknowledgement is never `
-         + "required to publish — a group may be one person — and its absence is stated rather than left "
-         + "for a reader to infer."]
-      : [`${ACK_PROSE_HEAD} Nobody but its author acknowledged it. An acknowledgement is never `
-         + "required to publish — a group may be one person — and its absence is stated rather than left "
-         + "for a reader to infer."];
-}
-
-export function ackBodyLines(acks, project) {
-  return [...ackBodyHeadLines(acks, project), ...ackLinkLines(acks), ...ackUnboundLines(acks, project)];
-}
-
-/** R20 (REC-213): what the review copy's list left out, in one sentence a reader reads. The case document's spelling of
- *  the same obligation is `ackBodyLines`; the two must never disagree about the FACT. Four states, none a fallback. A
- *  recipient's row is never withheld (a grant's holder is never the writer), so this speaks only of participants. */
-export function withheldWriterStated(withheld, writerBy) {
-  const n = Number(withheld) || 0;
-  const rows = `${n} acknowledgement${n === 1 ? "" : "s"}`;
-  if (!n)
-    return writerBy
-      ? `Nothing is withheld from this list: this record holds no acknowledgement of this statement by `
-        + `${writerBy}, who wrote it.`
-      : `Nothing is withheld from this list: this record holds no participant's acknowledgement of this `
-        + `statement at this production, so there is none that might be its writer's own.`;
-  return writerBy
-    ? `${rows} of this statement ${n === 1 ? "is" : "are"} recorded and NOT listed above, by the `
-      + `statement's writer, ${writerBy}: a reading by its own writer is not a SECOND reading of it `
-      + `(BIO_Publication §3 rule 11). It is counted here rather than hidden — everything recorded is `
-      + `shown or stated (§6A).`
-    : `${rows} of this statement ${n === 1 ? "is" : "are"} recorded and NOT listed above, and the reason `
-      + `is UNDETERMINED rather than the writer's own: this draft predates the recording of the `
-      + `statement's author, so any participant's acknowledgement of it may be the writer's and this `
-      + `list cannot rule that out (BIO_Publication §3 rule 11). They are counted here rather than `
-      + `hidden — everything recorded is shown or stated (§6A).`;
-}
-
 /** R14: THE CASE DOCUMENT, in `case-grammar`'s `CASE_DOCUMENT_FORMAT` through `publication`'s re-export (`bio-case-document/7`
  *  from T31, identical in fields to `/6`; DEC-124, K1365 (1)). Everything it asserts arrived as an argument (R22): the authored
  *  sentences as the publisher typed them, and every fact the caller read from the record at the act (`searched`,
@@ -171,7 +60,7 @@ export function withheldWriterStated(withheld, writerBy) {
  *  summarised or inferred, and no case-level strength has anywhere to be written (R24).
  *  `subjects` maps each member to the `subject_entity` its pinned bytes state, or null (R60).
  *
- *  `statementBy` null is UNDETERMINED and is STATED, never filled in from `author` (R21, R26). `searched` is required:
+ *  `statementBy` null is UNDETERMINED and is STATED, never filled in from `author` (R14, `case-inputs` R3; R26). `searched` is required:
  *  a document that cannot say what was searched fails the ceremony instead (R11). `frozen` maps each member to
  *  `{edition, pair, axes, grounds}` (rule 12 (b): stated once here instead of in the member). `manifest` absent is
  *  written as NOT IN FORCE with that sentence, never as a blank. `attributions` empty writes neither attribution run,
@@ -309,7 +198,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     `  subject_position: ${position}`,
     `  subject_justification: "${fmSafe(justification)}"`,
     `  author: ${author}`,
-    /* R21 (REC-212 / §3 rule 13) — TWO ACTS, TWO NAMES, IN THE SIGNED BLOCK: `author` prepared and published the case;
+    /* R14 (`case-inputs` R3; REC-212 / §3 rule 13) — TWO ACTS, TWO NAMES, IN THE SIGNED BLOCK: `author` prepared and published the case;
        this is who wrote the sentence `statement` prints. It sits ABOVE `statement_sha` because the acknowledgement
        splice re-writes the run that STARTS there. */
     `  statement_by: ${statementBy ?? "null"}`,
@@ -317,7 +206,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     /* REC-217 / R9: the draft the publisher named, who named it and when, above `statement_sha` for the same reason. */
     ...(acks.link ? [`  draft: ${acks.link.draft}`, `  draft_named_by: ${acks.link.by}`,
                      `  draft_named_at: "${acks.link.at}"`] : []),
-    /* D-150 / §3 rule 11 (R20) — THE STATEMENT'S SECOND READERS, IN THE SIGNED BLOCK. ZERO is a statement. */
+    /* D-150 / §3 rule 11 (R14, `case-inputs` R2) — THE STATEMENT'S SECOND READERS, IN THE SIGNED BLOCK. ZERO is a statement. */
     ...ackFrontmatterLines(acks),
     "completeness_excluded:",
     ...(excluded || []).flatMap((r) => [
@@ -471,7 +360,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     "",
     `Position on putting this case to its subject: ${position}. ${justification}`,
     "",
-    /* R21: WHERE the name came from as well as the name, which makes UNDETERMINED readable rather than blank. ABOVE
+    /* R14 (`case-inputs` R3): WHERE the name came from as well as the name, which makes UNDETERMINED readable rather than blank. ABOVE
        the acknowledgement prose, whose head the splice starts from, so a later acknowledgement leaves it alone. */
     `**Who wrote this statement.** ${statementByStated}`,
     "",

@@ -452,10 +452,9 @@ test("R69 (T43; N850; K2608): case-authoring answers none of accountPropose, acc
   assert.equal(w.cacc.registerReviewComments(() => []).ok, true);
   assert.equal(w.cacc.registerReviewComments(() => []).reason, "REVIEW_COMMENTS_DECLARED");
   /* negative control: what case-authoring keeps */
-  for (const name of ["publishCase", "publishPreflight", "tensionsToDisclose", "acknowledgeStatement", "statementAcknowledgements",
-                      "proposeWhatChanged", "whatChangedDrafts", "calculationsAtPublication"])
+  for (const name of ["publishCase", "publishPreflight", "tensionsToDisclose", "calculationsAtPublication"])
     assert.equal(typeof w.ca[name], "function", name);
-  for (const op of ["publishcase", "publishpreflight", "publishtensions", "whatchangedpropose", "whatchangeddrafts", "statementack"])
+  for (const op of ["publishcase", "publishpreflight", "publishtensions"])
     assert.equal(typeof ops[op], "function", op);
   assert.equal(w.publish(P, "alice", [Q]).ok, true, "and it still publishes");
 });

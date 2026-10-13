@@ -5,8 +5,10 @@
    contradiction (its R13; `runs` below), the review provider (publication R23, which
    `review` registers once extracted) and its `case_drafts` table (review R26's read contract); and what case-carriage's
    `documentCopy` (its R16) answers of a member document's publication copy, when a test sets it (`copies` below). Every test drives
-   `case-authoring` at its interface: `publishCase`, `acknowledgeStatement`, `statementAcknowledgements`, its ops, its
-   exports. */
+   `case-authoring` at its interface: `publishCase`, `publishPreflight`, `tensionsToDisclose`, its ops, its exports. The
+   real `case-inputs` (`w.ci`, T47; N908) is built first, on the same clock, so a test records through it what other acts
+   record about a case (an acknowledgement, a draft of what changed, an outcome, the open requests' source) before the
+   act reads it. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -32,6 +34,7 @@ import { sourcesOf } from "../../../src/sources/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
 import { caseAccountOf } from "../../../src/case-account/index.mjs";
+import { caseInputsOf } from "../../../src/case-inputs/index.mjs";
 import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
 import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
@@ -324,7 +327,8 @@ export function world({ group = "test-group", provider = true, now = null, recor
   const caseInquiry = inqWrap ? inqWrap(deps.inquiry || inquiry) : deps.inquiry || inquiry;
   w.cacc = caseAccountOf(host, { record: caseRecord, membership, inquiry: caseInquiry, runs: aiRuns,
                                  disclosures: judgedDisclosures, now: clockOf });
-  w.ca = caseAuthoringOf(host, { record: caseRecord, membership, basisVersions,
+  w.ci = caseInputsOf(host, { record: caseRecord, membership, publication, publishSchedule, account: w.cacc, now: clockOf });
+  w.ca = caseAuthoringOf(host, { record: caseRecord, membership, basisVersions, inputs: w.ci,
     strength, bias, observations, reevaluation, publication, publishSchedule, ratification: ratWrap ? ratWrap(ratification) : ratification,
     networkNotices, now: clockOf,
     disclosures: judgedDisclosures, events,

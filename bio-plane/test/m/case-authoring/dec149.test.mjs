@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, T0, readingLines, currentLines } from "./fixture.mjs";
-import { caseAuthoringOps, PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, caseDocumentText,
+import { caseAuthoringOps, PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, caseDocumentText,
          searchedSection } from "../../../src/case-authoring/index.mjs";
 import { calculationBodyLines } from "../../../src/case-authoring/document.mjs";
 
@@ -67,19 +67,12 @@ test("R4 (DEC-149): NOT_CONCLUDED's detail for an undetermined stance says the p
   says(r.detail, `latest entry about this question names an act ${YOURS} does not know`);
 });
 
-test("R19 (DEC-149): STATEMENT_ACK_AUTHOR_UNDETERMINED's detail (C-82.7) says the draft was written before your group's Civicsmith stamped an author, and that your group's Civicsmith cannot tell whether you are the first reader; its translation and every other row of this module's three families name no retired word", () => {
-  const { w, P } = setup();
-  w.draft("DRAFT-2026-0001", P, { statement: "A sentence nobody signed for." }, { statementBy: null });
-  const r = w.ca.acknowledgeStatement({ viewer: V("bo"), draft: "DRAFT-2026-0001", reason: "I read it." });
-  assert.equal(r.reason, "STATEMENT_ACK_AUTHOR_UNDETERMINED");
-  says(r.detail, `it was written before ${YOURS} stamped one`, `and ${YOURS} cannot tell here whether you are the first`);
-  /* every row of this module's own three families */
-  for (const row of [...Object.values(PUBLISH_ACT_CHECKS), ...Object.values(CASE_DERIVATION_CHECKS),
-                     ...Object.values(STATEMENT_ACK_CHECKS)])
+test("R29 (DEC-149): every row of this module's own two families names no retired word (C-82's rows, moved to case-inputs R12, are its own to answer, T47)", () => {
+  for (const row of [...Object.values(PUBLISH_ACT_CHECKS), ...Object.values(CASE_DERIVATION_CHECKS)])
     assert.doesNotMatch(row.translation, RETIRED, row.check);
 });
 
-test("R21, R14 (DEC-149): the statement's writer, stated in the case document — a named draft or a draft from before authors were recorded, and drafts whose arguments cannot be read — needs no name for the group's Civicsmith", () => {
+test("R14 (DEC-149; the writer case-inputs R3 answers): the statement's writer, stated in the case document — a named draft or a draft from before authors were recorded, and drafts whose arguments cannot be read — needs no name for the group's Civicsmith", () => {
   /* a named draft that records no author */
   const a = setup();
   a.w.draft("DRAFT-2026-0001", a.P, { statement: AUTHORED.statement }, { statementBy: null });
