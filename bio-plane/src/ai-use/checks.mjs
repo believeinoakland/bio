@@ -63,7 +63,7 @@ export const AI_USE_WORDS = Object.freeze({
     + 'Everything else works as usual.',
   'ai.refused.limit.member': 'The assistant stopped here: you have used the {period} amount each member may use of '
     + '{whose} account. It works again {when}. Everything else works as usual.',
-  'ai.refused.limit.unjudged': 'The assistant stopped here: Civicsmith couldn\'t check the use of {whose} account just '
+  'ai.refused.limit.unjudged': 'The assistant stopped here: your group\'s Civicsmith couldn\'t check the use of {whose} account just '
     + 'now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.',
   'ai.refused.limitinvalid': 'That limit can\'t be set: {field}. A limit is a positive amount in dollars, tokens or calls, '
     + 'for a day or a month.',

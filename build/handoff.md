@@ -1,51 +1,26 @@
 # Handoff
 
-**Update (BOB #166, 2026-10-12, K3056, K3057)** · BOB #166 took over on the secondary (`session_017YpDCnXuqsn5FBKooME6xp`), merged host-governor (B6 done), then Bob said "Stop development": everything else below is still owed, from A1.
-
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #165 (`session_018LZeYsyDy9gwXyhVrZuG8i`, primary account, depth 1), 2026-10-12, after Bob's review (K3049–K3054). **The work resumes on Bob's secondary account** (Bob: "all of this work will be done under the secondary account because it refreshes tomorrow morning"), when Bob says to resume.
-
-## How the work resumes (Bob's acts first, then BOB #166's)
-
-1. **Bob** starts BOB #166 on the secondary account, through ROOT #6 there (`session_01FXbdTJZyPp3Bhcv7pfVSR1`): he opens that session and pastes `START BOB #166: tranche/T47 @ <this handoff's commit>`. If ROOT #6 is gone or past 55% of its window, he starts a new ROOT on the secondary with roles/ROOT.md's prompt, and BOB #166 records its id in `build/manifest.md`.
-2. **BOB #166 takes over** (§5.1) on the secondary. Account-switch rule (rulings-active §1): primary sessions (BOB #165, ROOT #5, the UX-DESIGN session) cannot be rung or archived from there: leave them, no `BOB-final` row for BOB #165. Write BOB's channel Writer line (`mail xwriter`, account secondary); the `BOB` row of `build/channels.md` follows the account at T47's close. Read the channel (UX-DESIGN U178–U181 unread, and any answer to B158, B159) and the lanes (investigation H43, actions H31 at this handoff).
-3. **Read Bob's direction whole before acting:** rulings-active §1 "Real users" (K3052), K3053, K3054, and the review https://claude.ai/artifact/8zmjrqyU4EgKRBy12kLQUn (K3051).
-
-## Bob's direction since the pause (in force)
-
-- **K3052, real users:** a UX real users understand and are comfortable with, journeys that make sense and reflect their interests; the top-level screen exactly what it needs to be, sharp and fully functional, and every other screen too; no user meets an old interface; BOB pushes back, with reasons, on any ruling or plan that would not fit real users (his included). BOB audits every plan screen by screen and journey by journey before it opens; every release is walked as administrator and member before Bob is told it is ready.
-- **K3053, production:** the next release Bob tries carries the installer and the whole journey, seamless: a founder clicking "Create your new Civicsmith group", the install, the founder's group setup, inviting a member, the member joining, their account settings, their first work. All screens, journeys and wizards fully developed, tested and debugged; the dashboards re-centre comes later but today's system must be clean and functional. Identify every held-back task, why it is held, and clear the roadblocks. Claude connect does not work (Bob tried): the release carries enough logging in it to debug it fast, then the assistant's tests are written, run and debugged.
-- **K3054:** tokens are scarce; nothing more on the primary. The release walk-through is for release time, by the automated check (N1004), not by hand now.
-- K3051's D1 and D2 are settled A by K3052 (the address opens the new interface with a designed sign-in; install, setup and join built as designed); D3 is withdrawn (the front door joins T47's L11).
-
-## Everything that needs doing, in order
-
-**A. Before any layer runs (BOB #166, through workers; P20)**
-1. **N1000, the census** of every held entry (`next.md`, `current.md`'s Left-out table, the handoff): its reason, whether it still holds, the act that clears it, who does it. Pull every cleared entry into T47 where its layer has not started (P10). The worker for it was stopped unfinished (K3054): start fresh.
-2. **N1001, the connect trace:** the member's Claude sign-in flow end to end (the `connect` screen, its ops, credentials, agent-runner/agent-worker), its likely failure points on biosmoke7, and a logging design (each step, outcome, refusal code, Anthropic's HTTP status, timing, a correlation id; never a token, secret or code, K1874; readable by BOB from the test instance). Fold it as requirements into T47 (stopped unfinished; start fresh).
-3. **Fold the design:** DEC-200 and the 50-screen registry (PR #33, U178–U181; words.json, file-safety R42's wording, registry rows read by key), and UX-DESIGN's answers to B158 and B159 (front door, sign-in, sign-out, expiry, forgotten password, the founder's link, the installer, the hand-over) into requirements: N999 (front door and administrator's path: `/` opens the new interface, sign-in kept across tabs, interface-shell R3 vs R12 reconciled), N1005 (install, setup, join, places, recovery, help and the sign-in screens in `/app`), N1002 (setup page and legacy-ui retired for users), N1003 (installer journey and deploy), N1004 (automated journey check). If UX-DESIGN has not answered, ring nothing (cross-account): ask Bob to nudge that session.
-4. **The plan audit (K3052):** walk T47's plan, screen by screen and journey by journey, against the design; every missing screen or state becomes an entry. Measure the reading sets (K2053).
-5. **Bring Bob one rendered page:** the census's roadblocks (what BOB cleared, what is his), Q1–Q4 (N1006), the installer's Cloudflare dashboard act (N1003: OAuth client lacks `connectivity-directory.bind`, K2164) walked in plain clicks, the stewards' contact address (K2799, N923), and his weekly meter (secondary).
-
-**B. Resume T47 (paused in L3)**
-6. host-governor is COMPLETE: read its J1 (unread), run ownership, merge (§5.5).
-7. Restart CAPTURE, FILE-SAFETY, SOURCES as `<MODULE> #n+1` on their branches with the fixed prompt (§5.4's restart; their pushes are kept on `job/T47/<module>`). sources has B2 (K3045's answer) to act on. Arm backstop and `WATCH` (into the secondary's ROOT).
-8. Carry T47 through L4–L11 as planned; merge order notes are in each layer's line; the START bodies script form is in `build/plan/starts-T47/`. L11 now also carries N999, N1001, N1002, N1003, N1004, N1005 (and N1006's answers).
-9. Other acts owed from T47's opening, not yet started: N943 (file-safety split map), N945 (bootstrap study: `claimed:false, rearmed:true` on biosmoke7), N996 (credentials split map), N898 (mail tool, process repository, between tranches).
-
-**C. Close T47 and release (only when the whole journey works)**
-10. At the close: merge PR #33 (U180's MERGE; keep the design session's text, K945), merge `main` into the tranche, run every module's tests (K2704) and the checks, archive the plan, PR to `main` (§5.7). Move `build/channels.md`'s `BOB` row to the secondary.
-11. Release: run N1004's journey check on a test instance and look at its screenshots; only when every step passes, cut, sign and deploy (each deploy and signing is Bob's approval in session, K1716; the installer's deploy too), then walk Bob through trying it.
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #166 (`session_017YpDCnXuqsn5FBKooME6xp`, secondary account, depth 1), 2026-10-13, during T47's L6. Read `build/rulings-active.md` whole first; K3056–K3088 are this session's rulings (grep them in `build/rulings.md`).
 
 ## Where things stand
 
-- **T47 open, paused in L3** (`tranche/T47`, plan `build/plan/current.md`, 77 entries T47-1…T47-77; its Counts line says 75). L1 closed (K3035), L2 closed (K3043); requirements for every layer folded (K3028, K3030, K3033, K3038, K3041). L3's four sessions archived (K3046).
-- **Live on biosmoke7:** 0.83.0 = `main` @ `b4dd9d2616` (T46's close), signed and live (K3048). `/` serves the old setup page to everyone; `/app` holds 17 of the design's 50 screens (6 partly); the founder is admitted to `/app` but the session lasts one tab (`sessionStorage`) and `/` never forwards (K3051).
-- **Channel:** BOB's Writer line is BOB #165's (primary). Posted B158, B159 (questions for the undrawn screens and the founder's journey). Unread: U178–U181 (DEC-200, N997 drawn, U180 MERGE).
-- **ROOTs:** primary ROOT #5 (`session_0187SrKsqhqzSTqwDk2hzcXy`) at 45% of its window (K2679: no ROOT #7 needed); secondary ROOT #6 as above.
+- **T47 open, L6 running** (`tranche/T47`, plan `build/plan/current.md`). L1–L3, L5 closed; L4 had no entries. Bob approved three out-of-layer L2 jobs (K3069): credentials (R65–R71), membership (R140–R142), project-roster (R27), all merged (K3077, K3083, K3084).
+- **L6:** 16 jobs started (K3085), addresses in the plan's Jobs line. Merged: ai-use, agent-harness, question-explorer (K3088). Answered and rung: agent-model, ai-runs, agent-worker (K3087, agent-worker R85). Merge order in the L6 section; a job that uses no unmerged L6 job merges when complete.
+- **Accepted reds** (by name, each with its clearing merge): K3084's list (ai-runs until T47-20; answers until T47-84; notice-producers until T47-51; plane until T47-66; op-declarations until T47-53), K3066, K3071, K3083's census rows until T48's stamp, and the plan's rule 5.
+- **Timers:** backstop `trig_01Px4iHoBr9eUCfqfzywRBvW` (into this session), `WATCH #166` `trig_01XqxUK4mZcXsvc5JaL4deuJ` (into ROOT #6). Delete both at takeover (§5.1) and arm your own.
+- **Channel:** UX-DESIGN is on the secondary account now (`session_01Hcg5e3ZdVsyLUxGwEcZsPS`), read through U197. Ring it after every post it must act on (K3082); it rings BOB likewise (K3086, DEC-211). BOB's Writer line carries the registry's account label (primary) until T47's close moves the `BOB` row (K3056, K3062).
+
+## What comes next, in order
+
+1. **Carry L6 to its close** (§5.5, §5.6): agent-runner first measures headless `setup-token` (K3068); if impossible, R27/R28 go to T48 and the rest lands. Regenerate artifacts in the manifest's order at the close.
+2. **L8, L9, L10:** START bodies are written from the plan as for L6 (the script pattern is in this session's K3085 commit; NOTES per module). T47-41 carries the records-request template under R15, held until a professional review (K3081).
+3. **L11's fold (K3062):** merge PR #33's head (`claude/gallant-brown-zg0wc1`, DEC-200–DEC-211, 63 screens) into `tranche/T47` (never edit its files), then write L11's entries from `build/plan/draft-T47-wayin.md` (new module `screens-entry`, registered, K3070), `build/plan/draft-T47-L6-connect.md` §3, `build/plan/draft-signing-service.md` and DEC-206–DEC-210 (the ceremony per Bob's S21 A, K3080; the key kept on the device by her choice, screens-publish R11 amended, K3079; op `signerregisterown`), DEC-203 (People replaces interface-shell R29), DEC-205 (`grouplanguagesset`, `grouplogoset`, `reset`, `tour`), N999, N1002–N1005, N1008. The way-in entries number from T47-86. Audit the plan screen by screen and journey by journey before L11 starts (K3052). N1004's journey check is a not_product module last in L11.
+4. **T47's close and release** (handoff of BOB #165, C10–C11 unchanged): merge PR #33 (U180) at the close, merge `main`, every module's tests, checks, archive, PR to `main`; move `build/channels.md`'s `BOB` row to secondary. Release: images built and published to the public GitHub registry as part of the release (Bob, K3061 D15); N1004's check passes before Bob is told; each deploy is Bob's approval in session.
+5. **Owed outside layers:** N943 and N996 split maps (file-safety 4,871 lines, credentials 4,433); N898 (mail tool); N1009, N1010, N1011 (civicsmith.org, once Bob's DNS is set, D14).
 
 ## Open with Bob
 
-- Q1–Q4 (K3041; N1006): the welcome wizard's entry, what People opens, where readers see a published case, signing in the new interface.
-- The installer's Cloudflare dashboard act (K2164; N1003), to be walked through.
-- The stewards' contact address (K2799; N923).
-- His weekly meter on the secondary at resume.
+- The stewards' contact address (K2799): Bob is setting up civicsmith.org's email this week (K3060 D14).
+- The reviewer for the records-request template (N858, K3081).
+- The installer's Cloudflare dashboard act (K2164, N1003): walk him through it when the installer's L11 job is near.
+- His weekly meter on the secondary.
