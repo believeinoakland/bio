@@ -23,3 +23,15 @@ Merge order in L2: record-core, membership, project-roster, credentials, promoti
 ## B2 · ANSWER · re J1
 
 Your literal reading holds (K3036): aiKeptAway() with no use, fail closed. No change.
+
+## B3 · START
+
+Depth 2. Second T47 job for credentials (out of layer, Bob K3069). Your entry: `build/plan/current.md`, **T47-81 · credentials** (R65–R70).
+Your requirements: `build/requirements/credentials.md` (read whole); R65–R70, marked `*(not yet met: T47)*`, are yours to meet.
+BOB's notes: Bob's own words govern D3 ("inactive" 15 minutes shared, 30 minutes own; signed out at once shared, 12 hours later own; the password again for weighty acts) and D10 ("until that authorization is either revoked (on the Anthropic side) or the token dropped (on the CivicSmith side)… It IS allowed"). Agent-runner R27/R28 and agent-worker R81/R82 (L6) are R70's users: `subscriptionTokenHold` is called by the door after a sign-in's `code` answer; `accountFor` hands the token to ai-runs and agent-worker. `membership.memberByHandle` exists (L2) for R67. The founder's role is `admin`; R70 lets the founder hold a sign-in (trace F2: today `subscriptionConnected({member: "admin"})` is refused and the door ignores the refusal).
+The module is over its size mark (4,027 lines; N996's split is T48's): keep additions lean; say in your record the lines added.
+Read your own code and tests whole where your reading set allows, not only what you change (P20, mechanics §6 step 2; plan rule 2). Deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); every refusal a control. New rows join the row census red until T48's stamp (rule 5 (2)).
+This is an out-of-layer job (Bob, K3069): L3 and L5 have merged or run since your layer closed; merge `tranche/T47` into your branch first (it already is at your START). No module that uses your new services has started; they start after your merge.
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11) and report any red they show.
+Reading set (mechanics §17): over the 600 KB limit as at your earlier T47 START. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
