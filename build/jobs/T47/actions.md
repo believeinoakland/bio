@@ -1,6 +1,6 @@
 # actions (T47)
 
-**Status** · session_011gY15XFsfDazB1rNzzZijc · depth 2 · WORKING · handled B0
+**Status** · session_011gY15XFsfDazB1rNzzZijc · depth 2 · WAITING ON BOB (J1) · handled B0
 
 ## Progress
 
