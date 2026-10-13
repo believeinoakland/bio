@@ -1,15 +1,17 @@
-/* agent-model — HOW A MODEL TURN REACHES CLAUDE (R1–R15). Copied from `agent-worker/src/model.mjs` (Q0-1 seam
+/* agent-model — HOW A MODEL TURN REACHES CLAUDE (R1–R16). Copied from `agent-worker/src/model.mjs` (Q0-1 seam
  * (iii); K617, K1439) and extended with the two providers of K1429 and K1502.
  *
  * WHOSE ACCOUNT (R1, R2, R8, R9, R11). Every call carries the account reference that serves one member's act, as
- * `credentials.accountFor` answers it: the member's own, `{kind: "apikey", key}` or `{kind: "signin", member}`
- * (K2200), or a project's or the group's API key, `{kind: "apikey", level: "project" | "group", key}` (K1755;
+ * `credentials.accountFor` answers it: the member's own, `{kind: "apikey", key}` or `{kind: "signin", member, secret}`
+ * (K2200; T47, K3060 D10), or a project's or the group's API key, `{kind: "apikey", level: "project" | "group", key}` (K1755;
  * T40, D34), sent exactly as a member's key is. The group's copy binds no Claude credential in its environment (K1502): the group's key too arrives per call.
  * Its `kind` picks the provider: an API key goes to the Messages API (`apikey.mjs`), a sign-in to Claude Code in
  * that member's own `agent-runner` container instance, named by the member through the Container Durable Object
- * binding the caller passes (`signin.mjs`; K1819). A sign-in reference carries no secret: the member's stored sign-in
- * stays in their instance. A key is used for the call it came with and kept nowhere; this module reads no
- * environment variable and no binding for one.
+ * binding the caller passes (`signin.mjs`; K1819). A sign-in reference carries the token `credentials` holds for the
+ * member as its `secret` (R16), sent only inside the conversation request's credential; one without it is refused
+ * `SIGNIN_NOT_HELD` before any call. The caller's `trace` and `memberRef`, when given, go as the runner's upgrade
+ * headers. A key or token is used for the call it came with and kept nowhere; this module reads no environment
+ * variable and no binding for one.
  *
  * WHAT IT COST (R13). On the `apikey` path every outcome's `usage` adds `estimated_cost_usd`, the copy's estimate
  * at `MODEL_PRICES`; on the `signin` path it is `null`. `total_cost_usd` stays as the provider states it.
@@ -39,11 +41,12 @@
  * would carry the segment past `bytesBound` is not sent: the SEGMENT stops (never the run), and resuming is what
  * segments are for. The turn bound is checked the same way. */
 import { MODEL_ENDPOINT, MODEL_API_VERSION, withCache, apikeyTurn } from "./apikey.mjs";
-import { RUNNER_URL, RUNNER_VERSION_URL, IMAGE_CAPABILITY, READ_RESULT, signinTurn, signinConverse, renderTranscript }
-  from "./signin.mjs";
+import { RUNNER_URL, RUNNER_VERSION_URL, IMAGE_CAPABILITY, READ_RESULT, TRACE_HEADER, MEMBER_REF_HEADER, TRACE_HEADER_MAX,
+         signinTurn, signinConverse, renderTranscript, traceHeaders } from "./signin.mjs";
 import { USAGE_FIGURES, ESTIMATE, usageOf, sumUsage, refused, READ_FACTS, toolResultContent, factsOf } from "./outcome.mjs";
 
-export { MODEL_ENDPOINT, MODEL_API_VERSION, RUNNER_URL, RUNNER_VERSION_URL, IMAGE_CAPABILITY, USAGE_FIGURES, ESTIMATE,
+export { MODEL_ENDPOINT, MODEL_API_VERSION, RUNNER_URL, RUNNER_VERSION_URL, IMAGE_CAPABILITY, TRACE_HEADER, MEMBER_REF_HEADER,
+         TRACE_HEADER_MAX, USAGE_FIGURES, ESTIMATE,
          usageOf, sumUsage, withCache, renderTranscript, READ_FACTS, READ_RESULT };
 
 /* R1 — the model per mode. Every mode the harness's tables hold has an entry. */
@@ -113,7 +116,8 @@ export function segmentMeter({ turnsBound, bytesBound }) {
   return { turns: 0, turnsBound, bytes: 0, bytesBound, stopped: null };
 }
 
-/* R2, R11 — a reference this module can use, as `{kind: "apikey", secret}` or `{kind: "signin", member}`, or null.
+/* R2, R11, R16 — a reference this module can use, as `{kind: "apikey", secret}` or `{kind: "signin", member, secret}`
+ * (its `secret` checked apart, R16), or null.
  * Its `level`, when present, is `member`, `project` or `group`, and a `project` or `group` reference is only ever an
  * API key; nothing else about it is read. `subscription` is no kind of this module's: it retired with `credentials`
  * R22 (T38). */
@@ -125,7 +129,7 @@ function usable(reference) {
   if (KEY_ONLY.includes(reference.level) && reference.kind !== "apikey") return null;
   if (reference.kind === "apikey" && typeof reference.key === "string" && reference.key) return { kind: "apikey", secret: reference.key };
   if (reference.kind === "signin" && typeof reference.member === "string" && reference.member)
-    return { kind: "signin", member: reference.member };
+    return { kind: "signin", member: reference.member, secret: reference.secret };
   return null;
 }
 
@@ -133,22 +137,30 @@ function usable(reference) {
  * (`idFromName`); anything else (absent, or a bare instance this module cannot name) is no binding for a sign-in. */
 const runnerBinding = (runner) => !!runner && typeof runner.idFromName === "function" && typeof runner.get === "function";
 
-/* The refusals made before any call (R1, R2). */
+const held = (secret) => typeof secret === "string" && secret.length > 0;
+
+/* The refusals made before any call (R1, R2, R16): an unusable reference, then a sign-in holding no token, then a
+ * sign-in with no runner. */
 function precheck(reference, runner) {
   const ref = usable(reference);
   if (!ref) return { refusal: refused(null, "ACCOUNT_REFERENCE_UNUSABLE",
     "a model turn runs only under the account reference that serves a member's act: {kind: \"apikey\", key} or "
-    + "{kind: \"signin\", member}, the member's own, or a project's or the group's API key {kind: \"apikey\", level: "
+    + "{kind: \"signin\", member, secret}, the member's own, or a project's or the group's API key {kind: \"apikey\", level: "
     + "\"project\" or \"group\", key}") };
+  if (ref.kind === "signin" && !held(ref.secret)) return { refusal: refused(null, "SIGNIN_NOT_HELD",
+    "this member's Claude sign-in is not held: they connect their Claude account again") };
   if (ref.kind === "signin" && !runnerBinding(runner)) return { refusal: refused(null, "RUNNER_NOT_CONFIGURED",
     "a sign-in runs in the member's own agent runner instance, and no runner binding that names one was passed") };
   return { ref };
 }
 
+/* R16 — what the sign-in path is handed: the member, the held token, and the upgrade's headers. */
+const signinAccount = (ref, given) => ({ member: ref.member, secret: ref.secret, headers: traceHeaders(given, ref.secret) });
+
 /** THE ONE MODEL CALL (R2, R3, R5): one turn, `request` a Messages API body. An outcome is exactly one of
  *  `{result}`, `{silent: {detail}}`, `{refused: {status, type, message}}`; one that reached the provider carries
  *  `usage`. Never throws. */
-export async function modelCall(reference, request, { runner } = {}) {
+export async function modelCall(reference, request, { runner, trace, memberRef } = {}) {
   try {
     const { ref, refusal } = precheck(reference, runner);
     if (refusal) return refusal;
@@ -158,7 +170,7 @@ export async function modelCall(reference, request, { runner } = {}) {
       const serialized = JSON.stringify(withCache(request));
       return priced(await apikeyTurn(ref.secret, serialized), { model: request.model, serialized, maxTokens: request.max_tokens });
     }
-    return await signinTurn(ref.member, runner, request);
+    return await signinTurn(signinAccount(ref, { trace, memberRef }), runner, request);
   } catch (e) {
     return { silent: { detail: "the model call failed before it was sent" } };
   }
@@ -171,7 +183,7 @@ export async function modelCall(reference, request, { runner } = {}) {
  *  number of model calls that sum covers (N588), so a caller counts calls, not conversations. Any other tool call
  *  is performed by `onTool` and its result returned to the model. */
 export async function converse({ reference, runner, mode, meter, system, messages, tools, finalTool, onTool,
-                                 maxTurns = CONVERSATION_MAX_TURNS }) {
+                                 maxTurns = CONVERSATION_MAX_TURNS, trace, memberRef }) {
   const { ref, refusal } = precheck(reference, runner);
   if (refusal) return refusal;
   const model = Object.prototype.hasOwnProperty.call(MODEL_FOR_MODE, mode) ? MODEL_FOR_MODE[mode] : null;
@@ -185,7 +197,7 @@ export async function converse({ reference, runner, mode, meter, system, message
     return null;
   };
   if (ref.kind === "signin")
-    return signinConverse({ member: ref.member, runner, model, system, messages, tools, finalTool, onTool,
+    return signinConverse({ account: signinAccount(ref, { trace, memberRef }), runner, model, system, messages, tools, finalTool, onTool,
                             maxTurns, charge });
 
   let usage = null;

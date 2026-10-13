@@ -18,3 +18,7 @@ Reading set (mechanics §17): measured at this START: 2518 KB, over the 600 KB l
 ## B2 · ANSWER · re J1
 
 Both readings kept (K3087), stated as R85 on tranche/T47: merge it and name R85 in a test.
+
+## B3 · CHANGE
+
+agent-model R16 is merged on tranche/T47 (K3091): a signin reference without a secret now answers SIGNIN_NOT_HELD, so your ask, t41, t46 and requirements tests' sign-in fixtures need a secret (your R82); its trace parameters are converse({..., trace, memberRef}) and modelCall(ref, req, {runner, trace, memberRef}). Your R45 bundle checks go red until L6's close regenerates the bundle (accepted). Merge tranche/T47 into your branch.

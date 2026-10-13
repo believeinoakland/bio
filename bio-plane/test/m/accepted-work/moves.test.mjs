@@ -47,7 +47,7 @@ test("R8 publisherMoves answers the registered moves' answer unchanged: each mov
 
 test("R8 with no moves registered publisherMoves answers {absent: true}, stated as accepted_work_absent: nothing registered, or a registration of the three functions alone", () => {
   const bare = world({ register: false });
-  const { moves, ...three } = importer().fns;
+  const { moves, flagHistory, ...three } = importer().fns;
   const threeOnly = world({ register: false });
   threeOnly.aw.registerAcceptedWork("case-import", three);
   for (const w of [bare, threeOnly]) {

@@ -10,9 +10,10 @@ export function answersOps(a, url, body) {
   const viewer = q(url, "viewer");
   const grant = q(url, "grant");
   return {
-    /* R7: the door to every rule service (ASK_SCOPE's `rule`) */
+    /* R7: the door to every rule service (ASK_SCOPE's `rule`); R35: the grant's use is the control plane's stamp
+       (`use`, `draft` for a draft's grant), read from the query only, never the body */
     rule: () => a.ruleAnswer({ service: q(url, "service") ?? b.service ?? null, args: plain(b.args) ? b.args : {},
-                               at: q(url, "at") ?? b.at ?? null, viewer, grant }),
+                               at: q(url, "at") ?? b.at ?? null, viewer, grant, use: q(url, "use") ?? "ask" }),
     /* R4: an answer checked against the grant's read log before it is shown */
     answercheck: () => a.check({ answer: b.answer ?? null, grant, viewer, mode: "ask" }),
     /* R13 */

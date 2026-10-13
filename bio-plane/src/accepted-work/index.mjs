@@ -1,10 +1,11 @@
 /* accepted-work — the seam through which earlier modules read another group's accepted work (requirements:
- * `build/requirements/accepted-work.md` R1–R8; N522, N534; DEC-96 items 1, 4; DEC-101 (3); DEC-112 (6); DEC-116 item 8).
+ * `build/requirements/accepted-work.md` R1–R9; N522, N534, N947; DEC-96 items 1, 4; DEC-101 (3); DEC-112 (6); DEC-116 item 8).
  *
  * A group's own finding may rest on a finding of another group's case that the group has accepted. That work is held by
  * `case-import`, late in the order, which fills this module's one registration at start (R1). `strength`,
  * `reevaluation`, `basis-versions` and `publication` read it through R2's reads (with R8's publisher moves, a cited
- * case's new editions and withdrawals as this copy recorded them), and this module refuses, at the
+ * case's new editions and withdrawals as this copy recorded them, and R9's flag history, each flag's opening and clearing
+ * instants), and this module refuses, at the
  * promotion of an inquiry, a leg on such a finding unless an acceptance of the named edition is in force (R3, R4).
  *
  * It holds nothing (R5): no table, no grade, no score. What the source published is answered as the source published
@@ -28,16 +29,21 @@ export const ACCEPTED_WORK_ABSENT = "accepted_work_absent";
 export const ACCEPTED_WORK_UNREADABLE_WHY = "accepted_work_unreadable";
 
 const ABSENT_DETAIL = "no module holding another group's work is registered here, so none can be read";
-const MOVES_ABSENT_DETAIL = "the module holding another group's work keeps no publisher moves here, so none can be read";
+/* R8, R9: a registration that holds the three functions but not the optional one read */
+const OPTIONAL_ABSENT_DETAIL = {
+  moves: "the module holding another group's work keeps no publisher moves here, so none can be read",
+  flagHistory: "the module holding another group's work keeps no flag history here, so none can be read",
+};
 const UNREADABLE_DETAIL = "the module holding another group's work could not answer";
 const DETAIL_MAX = 200;
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+const optionalFn = (v) => v === undefined || typeof v === "function";
 const isThenable = (v) => v !== null && (typeof v === "object" || typeof v === "function") && typeof v.then === "function";
 const cut = (s, n) => (s.length > n ? `${s.slice(0, n)}…` : s);
 
 class AcceptedWork {
-  #record; #source = null;   // {module, finding, openFlags, withdrawals, moves}: R1's one registration
+  #record; #source = null;   // {module, finding, openFlags, withdrawals, moves, flagHistory}: R1's one registration
 
   constructor({ record } = {}) { this.#record = record; }
 
@@ -45,15 +51,15 @@ class AcceptedWork {
 
   /** R1 (K31): the one registration `case-import` fills at start. Both refusals are `membership`'s (its R81): a
    *  registration missing any of the three functions is malformed; a second, by any module, is declared, naming the
-   *  holder. The fourth function, `moves` (R8), is optional: a registration without it is whole, one whose `moves`
-   *  is given but is not a function is malformed. */
+   *  holder. The fourth and fifth functions, `moves` (R8) and `flagHistory` (R9), are optional: a registration
+   *  without either is whole, one whose `moves` or `flagHistory` is given but is not a function is malformed. */
   registerAcceptedWork(module, fns) {
     const whole = isObj(fns) && typeof fns.finding === "function" && typeof fns.openFlags === "function"
-      && typeof fns.withdrawals === "function" && (fns.moves === undefined || typeof fns.moves === "function");
+      && typeof fns.withdrawals === "function" && optionalFn(fns.moves) && optionalFn(fns.flagHistory);
     const refused = listenerRefusal(this.#source, module, whole ? fns.finding : null);
     if (refused) return refused;
     this.#source = { module, finding: fns.finding, openFlags: fns.openFlags, withdrawals: fns.withdrawals,
-                     moves: fns.moves ?? null };
+                     moves: fns.moves ?? null, flagHistory: fns.flagHistory ?? null };
     return { ok: true, module };
   }
 
@@ -72,14 +78,21 @@ class AcceptedWork {
    *  the order this copy recorded them. Absent when no registration, or one without `moves`, is held. */
   publisherMoves(args) { return this.#read("moves", args, ({ after, limit }) => ({ after, limit })); }
 
-  /* The one read: the registered answer as given; `absent` with none registered (or, for `moves`, none given);
-     `unreadable` when the function
-     throws, or answers a promise (every reader here runs inside a synchronous transaction, so a later answer could
-     never be read). The function is handed the read's own fields alone, copied. Writes nothing and never throws. */
+  /** R9: the registered `flagHistory`'s answer, every flag on that edition and on the named finding that was open at
+   *  any instant from `since` through the read, with its opening and clearing instants, in opening order. `since` is
+   *  handed on as given: whether it is an instant is the registered module's to judge. Absent when no registration,
+   *  or one without `flagHistory`, is held. */
+  flagHistoryOn(args) {
+    return this.#read("flagHistory", args, ({ ref, edition, since, viewer }) => ({ ref, edition, since, viewer }));
+  }
+
+  /* The one read: the registered answer as given; `absent` with none registered (or, for `moves` and `flagHistory`,
+     none given); `unreadable` when the function throws, or answers a promise (every reader here runs inside a
+     synchronous transaction, so a later answer could never be read). The function is handed the read's own fields alone, copied. Writes nothing and never throws. */
   #read(name, given, pick) {
     const src = this.#source;
     if (!src) return { absent: true, reason: ACCEPTED_WORK_ABSENT, detail: ABSENT_DETAIL };
-    if (!src[name]) return { absent: true, reason: ACCEPTED_WORK_ABSENT, detail: MOVES_ABSENT_DETAIL };
+    if (!src[name]) return { absent: true, reason: ACCEPTED_WORK_ABSENT, detail: OPTIONAL_ABSENT_DETAIL[name] };
     try {
       const answer = src[name](pick(argsOf(given)));
       if (isThenable(answer)) {
