@@ -22,3 +22,7 @@
 - `checks/run.mjs` over the product: format 0, architecture 0, channels 0. Coverage has 37 failures, all inherited from other modules (screens-*, signin-door, tasks, setup-words, wizard-scripts); none is consequences'.
 
 Size (session_01HtmhyB8kuFW9FP4zpwGv2t): test runs 7, module lines 2178
+
+## J1 · COMPLETE
+
+T47-35 complete. R24's test.todo for N958 is now a test (auditPass and checkBundle clean for success records recorded before and after the promotion and for a part; control: a slug gives C-1.2). R22 calls carryOutcome on caseInputsOf(host); a new test drives the real case-inputs instance and checks its refusals pass through unchanged. Module tests 65/65; format, architecture, coverage and ownership each 0 failures. For BOB: build/modules.json still lists case-authoring in consequences' uses, and it can be dropped (N908). Details are in the record.
