@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS success_records (
 CREATE INDEX IF NOT EXISTS success_records_project ON success_records (project, id);
 -- R22 (T45): ONE ROW PER CARRY, appended to the record carried. kind is
 -- success, harm_addressed or cure; record_id the success record, the part, or
--- the cured determination; ref the standard of a cure; outcome case-authoring's
+-- the cured determination; ref the standard of a cure; outcome case-inputs'
 -- id for the carried outcome.
 CREATE TABLE IF NOT EXISTS consequence_carries (
   seq        INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -7,8 +7,9 @@
    determination's outcomes and supersession directly (filings' and escalation's suites drive the real conformance with
    this module); and the passage text of a content row (content R46 reads it from extraction's units, which this world
    does not index), unless `passages: false` leaves content's own read in place. Every test drives `consequences` at its
-   interface. (T45) A third: case-authoring's `carryOutcome` (its R71), which R22 calls, recording each call, so a test
-   reads what was carried; its own suite proves the service. */
+   interface. (T45) A third: case-inputs' `carryOutcome` (its R9; case-authoring's R71 before T47), which R22 calls,
+   recording each call, so a test reads what was carried; its own suite proves the service, and carry.test.mjs drives
+   R22 over the real case-inputs instance too (T47, N908). */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -177,11 +178,11 @@ export function world({ passages = true, group = "test-group", superseded = null
                standards: stds.map((st) => ({ standard: st, link: cures.get(`${determination}|${st}`) ?? null, ended: [] })) };
     },
   };
-  /* case-authoring R71's `carryOutcome`, as R22 calls it: each call recorded in `carried`; a case named in
-     `noCases` answers its NO_SUCH_CASE, and a text with a quote its BAD_CARRIED_OUTCOME (R71's text rule). */
+  /* case-inputs R9's `carryOutcome`, as R22 calls it: each call recorded in `carried`; a case named in `noCases`
+     answers its NO_SUCH_CASE, and a text with a quote its BAD_CARRIED_OUTCOME (R9's text rule). */
   const carried = [];
   const noCases = new Set(["CASE-2026-0099"]);
-  const caseAuthoring = {
+  const caseInputs = {
     carryOutcome: (a) => {
       if (noCases.has(a.case)) return { ok: false, reason: "NO_SUCH_CASE", detail: "no published case" };
       if (typeof a.text !== "string" || !a.text.trim() || /["\\\r\n]/.test(a.text))
@@ -195,7 +196,7 @@ export function world({ passages = true, group = "test-group", superseded = null
   const inq = new Proxy(inquiry, { get: (t, p) => (p === "supersededBy" && superseded
     ? (id) => superseded.get(id) || [] : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
   const deps = { record, membership, promotion, conformance, content, provenance: prov, inquiry: inq, strength, money,
-    calculations, entities, people, caseAuthoring,
+    calculations, entities, people, caseInputs,
     now: () => clock.now, ...(passages ? { passageText: (id) => texts.get(id) ?? null } : {}) };
   const c = consequencesModule(host, deps);
 
