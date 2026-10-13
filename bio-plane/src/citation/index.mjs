@@ -1,7 +1,8 @@
 /* citation — citing, in the record's own terms "this is why I think that" (requirements: `build/requirements/citation.md`).
  * On a case (a `project`) a citation is a `cites` edge in the case's `references[]`; on a question (an `inquiry`) it is
  * a leg of the question's `basis[]`, with the target in its references too. This module holds that act (`cite`, R1–R3),
- * its withdrawal and restoration on a case (`sever`, `reinstate`, R4: status changes, never deletions) and the one rule
+ * a case drawing one question in without a selection (`drawQuestion`, R14), its withdrawal and restoration on a case's
+ * edge or a question's leg (`sever`, `reinstate`, R4, R15: status changes, never deletions) and the one rule
  * of what may be cited now (`retiredNotCitable`, R5), and the read of who cited a captured passage (`recordedBy`, R13,
  * `./recorded.mjs`), registered with `retrieval` (its R76) where `citationOf` first makes it. It judges nothing about a leg's grammar, grade or the basis
  * graph: it composes legs, and `inquiry` judges them at the write (its R11), as it judges every other leg.
@@ -206,26 +207,37 @@ export class Citation {
 
   /* ---- sever, reinstate (R4) ---- */
 
-  /** R4: SEVERING and REINSTATING a case's `cites` edges, both at weight `refuse` (R7). SEVERING IS NOT DELETION: the
-   *  edge stays, with its target and rel intact, and only its status moves, so a reader can see that the group once
-   *  relied on something and stopped, and why. A REASON IS REQUIRED by both: the catalogue's own remedy for a bad edge
-   *  is "sever with reason" (C-6.1), and State Rules §5.1 has a human confirming or severing. One method for both
-   *  directions, because they are the same operation over the same grammar. */
+  /** R4, R15: SEVERING and REINSTATING a case's `cites` edges and (T47, R15) a question's own legs, both at weight
+   *  `refuse` (R7). SEVERING IS NOT DELETION: the edge stays, with its target and rel intact, and only its status
+   *  moves, so a reader can see that the group once relied on something and stopped, and why. On a question the leg
+   *  itself stays in `basis[]` untouched (role, grade, part, pin): what moves is the status of the `references[]` entry
+   *  naming its target, whatever that entry's relation, which is exactly what `connections.edgeSevered` and
+   *  `leg-earning`'s `restsOnLive` read a leg's severance from. A REASON IS REQUIRED by both: the catalogue's own remedy
+   *  for a bad edge is "sever with reason" (C-6.1), and State Rules §5.1 has a human confirming or severing. One method
+   *  for both directions and both arms, because they are the same operation over the same grammar. */
   #edgeTransition({ project, handle, viewer, owner, reason, author, from, to, verb, resultKey, identity = null }) {
     /* Weight `refuse`, hard-coded exactly as `cite` hard-codes `report`: a caller that could choose the weight would
        make the distinction advisory (R7). */
     const sel = this.retrieval.selectionResolve({ handle, viewer, owner, weight: "refuse" });
     if (!sel.ok) return sel;
 
+    /* Sight is the citing object's, a question's as a case's (R9, R15): an unseen one answers as an absent one. */
     const obj = this.#citingObject(project, viewer);
     if (!obj.ok) return obj;
     const p = obj.head;
-    if (p.type !== "project")
+    /* Through normalizeType, so a legacy focus/problem spelling is the question it names (the MAP RULE). */
+    const onInquiry = normalizeType(p.type) === "inquiry";
+    if (p.type !== "project" && !onInquiry)
       return { ok: false, reason: "NOT_A_PROJECT", project, got: p.type,
-               detail: "cites lives on the citing object and this action edits a Project's edges" };
-    /* REC-134: moving a project's own citation edge is work inside that project (§7.5). */
-    const denied = this.membership.projectAuthority(project, identity, "joined", resultKey === "severed" ? "sever" : "reinstate");
-    if (denied) return denied;
+               detail: "citations live on the citing object, and this is neither a case nor a question, so it holds "
+                     + "no citation to withdraw or restore. A case keeps them in its references; a question keeps "
+                     + "them in the basis its answer rests on." };
+    /* REC-134: moving a project's own citation edge is work inside that project (§7.5). A question is shared material,
+       not a project's (INVESTIGATIVE-SESSION §7), so its arm asks no position, as `cite`'s does not (R1, R15). */
+    if (!onInquiry) {
+      const denied = this.membership.projectAuthority(project, identity, "joined", resultKey === "severed" ? "sever" : "reinstate");
+      if (denied) return denied;
+    }
 
     const why = String(reason ?? "").trim();
     if (!why)
@@ -259,9 +271,8 @@ export class Citation {
     if (offenders.length)
       return { ok: false, reason: "NOT_INFORMATION", project, handle, offenders: offenders.sort(),
                citable: ["information", "inquiry"],
-               detail: "a case's citation edges point at material or at a question, and these members of the "
-                     + "selection are neither, so they carry no citation edge to move. The whole call is "
-                     + "refused rather than narrowed." };
+               detail: "a citation points at material or at a question, and these members of the selection are "
+                     + "neither, so they carry no citation to move. The whole call is refused rather than narrowed." };
 
     /* REC-183 / C-33.39: moving an edge INTO `confirmed` is a citation made now, so it asks cite's question through
        R5's one predicate, with the same code and the same whole-call refusal; otherwise severing, retiring and
@@ -282,9 +293,17 @@ export class Citation {
     const doc = this.#document(project, null);
     if (!doc.ok) return doc;
 
+    /* The entry each member's status lives on. On a case, its `cites` edge. On a question (R15), the `references[]`
+       entry naming a leg's target, under any relation (R2 joins a leg's target there unless it is already referenced),
+       the first such entry as `connections.edgeSevered` reads it; and only a target the question's basis holds a leg
+       on, since a question may reference a document without resting on it (basis ⊆ references, never the reverse). */
+    const legged = new Set(onInquiry && Array.isArray(doc.data.basis)
+      ? doc.data.basis.filter((l) => l && typeof l === "object" && typeof l.target === "string").map((l) => l.target)
+      : []);
     const current = new Map();
     for (const r of Array.isArray(doc.data.references) ? doc.data.references : [])
-      if (r && typeof r === "object" && r.rel === "cites" && typeof r.target === "string")
+      if (r && typeof r === "object" && typeof r.target === "string" && (onInquiry ? legged.has(r.target) : r.rel === "cites")
+          && !current.has(r.target))
         current.set(r.target, r);
 
     /* THE WHOLE SET MOVES OR NONE OF IT DOES. A member in the wrong state means the member is looking at a stale view,
@@ -327,13 +346,18 @@ export class Citation {
       `### Session ${when} | ${verb} ${ids.length} citation${ids.length === 1 ? "" : "s"}`
       + ` | ${author || "member"}\n`
       + `Trigger: selection ${handle}\n`
-      + `Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.\n`);
+      + (onInquiry
+        ? `Changes: basis legs on ${listed} moved to '${to}', each leg kept as it was. Reason: ${why}.\n`
+        : `Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.\n`));
 
     const bytes = new TextEncoder().encode(text);
     if (bytes.length > INLINE_MAX)
       return { ok: false, reason: "CITATION_TOO_LARGE", project, bytes: bytes.length, limit: INLINE_MAX,
-               detail: "the reasons appended to these edges would push bundle.md past the 1MB inline limit" };
-    const promoted = this.#write(project, p, text, when, author, doc.data, "project");
+               detail: "the reasons appended to these citations would push bundle.md past the 1MB inline limit" };
+    /* The type from the DOCUMENT, as `cite` writes it: byte-identical for a case, correct for a question. The write's
+       refusals come back unchanged (a question whose document cannot be revised is refused as any write to it is,
+       inquiry R11; R15). */
+    const promoted = this.#write(project, p, text, when, author, doc.data, doc.data.object_type ?? p.type);
     if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
 
     return { ok: true, project, handle, weight: "refuse", moved: sel.moved, drift: sel.drift,
@@ -341,7 +365,8 @@ export class Citation {
                 prose under the same key would make a success indistinguishable from a refusal to a caller checking
                 `reason`. */
              [resultKey]: ids, why, from, to,
-             bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion, gate: sel.gate };
+             bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion, gate: sel.gate,
+             ...(onInquiry ? { citingObjectType: "inquiry" } : {}) };
   }
 
   sever({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
@@ -766,7 +791,7 @@ export class Citation {
         + `Grades: ${graded} filled from the record's own resolutions to this question's subject; `
         + `${ungraded} left undetermined and stated.`
         + `${nt ? ` Note: ${nt}.` : ""}\n`
-      : `### Session ${when} | Cited ${add.length} Information record${add.length === 1 ? "" : "s"}`
+      : `### Session ${when} | Cited ${add.length} record${add.length === 1 ? "" : "s"}`
         + ` | ${author || "member"}\n`
         + trigger
         + `Changes: cites edges added to ${listed}.`
@@ -818,6 +843,94 @@ export class Citation {
                                  gradesFilled: filled.filter((l) => l.grade).length,
                                  gradesUndetermined: filled.filter((l) => !l.grade).length }
                              : {}) };
+  }
+
+  /* ---- drawQuestion (R14) ---- */
+
+  /** R14 (T47; N975): DRAWING ONE QUESTION INTO A CASE in one served act, with no selection and no document sent by
+   *  the caller: the case gains a `confirmed` `cites` edge to the question, spliced into the case's held document and
+   *  promoted, the edge and the answer exactly those `cite` writes for a one-member selection naming the question, at
+   *  `report` weight (R7). So the case draws on the question (`leg-earning`'s `projectsDrawingOn`) without a member
+   *  revising the whole document. Every refusal is one `cite` already answers, with its code and row; it mints none. */
+  drawQuestion({ project = null, inquiry = null, note = "", author = null, viewer = null, identity = null } = {}) {
+    /* No selection is resolved, so no `owner` is read: the act names its one member itself. */
+    const obj = this.#citingObject(project, viewer);
+    if (!obj.ok) return obj;
+    const p = obj.head;
+    /* A question draws on another question by `cite` (its basis); this act is a case's. */
+    if (p.type !== "project")
+      return { ok: false, reason: "NOT_A_PROJECT", project, got: p.type,
+               detail: "a question is drawn into a case, and this is not a case. A question rests on another "
+                     + "question through a leg of its own basis, which citing onto it writes." };
+    const denied = this.membership.projectAuthority(project, identity, "joined", "drawquestion");
+    if (denied) return denied;
+
+    const nt = String(note ?? "");
+    if (nt.length > NOTE_MAX || /["\\\r\n]/.test(nt))
+      return { ok: false, reason: "BAD_NOTE", ...rowOf(CITE_CHECKS, "BAD_NOTE"),
+               detail: "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline" };
+
+    /* The question, as `cite`'s optional question is judged (R1): an absent one and one this viewer may not see are
+       answered alike. */
+    const qid = given(inquiry) ? String(inquiry).trim() : "";
+    const qh = qid ? this.record.head(qid) : null;
+    if (!qh || !this.membership.inSight(qid, viewer))
+      return { ok: false, reason: "NO_SUCH_QUESTION", ...rowOf(CITE_CHECKS, "NO_SUCH_QUESTION"), project, question: qid || null,
+               detail: "no question by that id is one you can see, so it cannot be drawn into this case; nothing was "
+                     + "written." };
+    if (normalizeType(qh.type) !== "inquiry")
+      return { ok: false, reason: "NOT_AN_INQUIRY", ...rowOf(CITE_CHECKS, "NOT_AN_INQUIRY"), project, question: qid,
+               got: qh.type,
+               detail: `${qid} is not a question, so it cannot be drawn into this case as one; nothing was written.` };
+    if (this.retiredNotCitable(qid))
+      return { ok: false, reason: "RETIRED_NOT_CITABLE", ...rowOf(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
+               project, handle: null, offenders: [qid], drift: false,
+               detail: "the group has RETIRED this, recording that it is superseded or no longer stands, and drawing "
+                     + "on it now would read to every later member as live support. Draw on what superseded it." };
+
+    const doc = this.#document(project, "the project's own bundle.md does not parse under the restricted grammar");
+    if (!doc.ok) return doc;
+    /* SEVERED IS NOT ABSENT (R1's rule): a severed edge is a recorded decision, restored by `reinstate` (R4) with its
+       own reason, never re-drawn. Any other `cites` edge to it means the case already draws on it. */
+    const edge = (Array.isArray(doc.data.references) ? doc.data.references : [])
+      .find((r) => r && typeof r === "object" && r.rel === "cites" && r.target === qid);
+    if (edge && edge.status === "severed")
+      return { ok: false, reason: "SEVERED_EDGE", ...rowOf(CITE_CHECKS, "SEVERED_EDGE"), project, handle: null,
+               offenders: [qid], drift: false,
+               detail: "this case already carries a SEVERED edge to this question, which is a recorded decision to cut "
+                     + "the dependency, not the absence of one. Drawing on it again would neither reverse that "
+                     + "decision silently nor skip past it. Reinstating a severance is a separate action that records "
+                     + "its own reason." };
+    const base = { ok: true, project, handle: null, weight: "report", moved: false, drift: false };
+    if (edge)
+      return { ...base, cited: [], alreadyCited: [qid], severed: [], question: null,
+               bundleSha: p.bundleSha, rowVersion: null,
+               detail: "this case already draws on this question; nothing was written" };
+
+    /* THE WRITE, `cite`'s case arm for a one-member selection: one `confirmed` `cites` edge carrying the note, no
+       pin (a question has no bytes, DEC-21), the references block extended in place and nothing else rewritten. */
+    const spliced = spliceReferences(doc.text, [{ rel: "cites", target: qid, status: "confirmed", note: nt }]);
+    if (!spliced)
+      return { ok: false, reason: "UNSPLICEABLE_REFERENCES", project,
+               detail: "the project's references block is not in a shape this grammar can extend in place. "
+                     + "Drawing a question in edits only that block and never rewrites the rest of the document." };
+    const when = stampInstant("second", this.now());
+    let text = setScalar(spliced, "last_updated", `"${when}"`);
+    text = appendSessionLog(text,
+      `### Session ${when} | Cited 1 record | ${author || "member"}\n`
+      + `Trigger: question ${qid} drawn into this case\n`
+      + `Changes: cites edges added to ${qid}.${nt ? ` Note: ${nt}.` : ""}\n`);
+    const bytes = new TextEncoder().encode(text);
+    if (bytes.length > INLINE_MAX)
+      return { ok: false, reason: "CITATION_TOO_LARGE", project, handle: null, drift: false,
+               requested: 1, bytes: bytes.length, limit: INLINE_MAX,
+               roomFor: 0,
+               detail: "drawing this question in would push this case's bundle.md past the 1MB inline limit. Every "
+                     + "edge is written into the document; nothing has been written." };
+    const promoted = this.#write(project, p, text, when, author, doc.data, doc.data.object_type ?? p.type);
+    if (!promoted.ok) return { ...promoted, project, handle: null, drift: false };
+    return { ...base, cited: [qid], alreadyCited: [], severed: [], question: null, pinned_captures: { [qid]: null },
+             bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion, gate: null, expires: null };
   }
 }
 
@@ -882,5 +995,8 @@ export function citationOps(c, url) {
                            reason: q("reason") ?? "", author: q("author"), identity: q("identity") }),
     reinstate: () => c.reinstate({ project: q("project"), handle: q("handle"), viewer: q("viewer"), owner: q("owner"),
                                    reason: q("reason") ?? "", author: q("author"), identity: q("identity") }),
+    /* R14 (T47; N975): one question drawn into a case, named by `inquiry`; no selection and no document. */
+    drawquestion: () => c.drawQuestion({ project: q("project"), inquiry: q("inquiry"), note: q("note") ?? "",
+                                         author: q("author"), viewer: q("viewer"), identity: q("identity") }),
   };
 }
