@@ -1,7 +1,8 @@
 /* strength over record-core and membership (the real ones) on a real SQLite database (node:sqlite) standing in for a
    Durable Object's storage, with provenance's `register` and `captured_locators` (its R48 read contract) created from
-   its own schema. What it reads from `inquiry` and `basis-versions` are providers the test controls, in the shapes of
-   those modules' Provides (inquiry R13, R14, R16; basis-versions R11, and the version rows and legs), as
+   its own schema. What it reads from `leg-earning` and `inquiry` (the earned registry, the cap, the basis and the
+   subject) and `basis-versions` are providers the test controls, in the shapes of those modules' Provides (leg-earning
+   R1, R2, R4; inquiry R13; basis-versions R11, and the version rows and legs), as
    `strengthOf`'s `deps` take them; so are the registrations it makes with `promotion` (its R39, `registerStep`) and
    `retrieval` (its R62, `registerField`), which record what was registered, and `w.promote` runs the registered
    projection as promotion does, inside one transaction. Every test drives the module at its interface. */

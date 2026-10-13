@@ -4,7 +4,8 @@
  * This module derives the pair over an inquiry's live basis (R1–R6), over one version of it (R7–R10) and over a
  * candidate's legs (R26); says whether the parts of a reading share an upstream origin (R11, R12, R27); judges an
  * observation credited anonymously by what bears it out (R29, R30); answers the pair the search cache holds (R13); and
- * holds the bar, the standard of evidence a project declares and the group's default for new projects (R14–R16).
+ * holds the bar, the standard of evidence a project declares, set by its own act, and the group's default for new
+ * projects (R14–R16, R40).
  *
  * Extracted from the legacy modules (T7, layer 6; K3, K86, K102, N60): `store.mjs` (the bar, DEC-72; the axes and the
  * walk, REC-12, REC-42, MK-2, REC-105; `op=inquirystrength`, REC-34; the pair over a version, PL-14; independence,
@@ -41,6 +42,11 @@
  * T34-31, N576), with the method's version named beside the grade; and the sentences a member reads name the group's
  * Civicsmith as "your group's Civicsmith", or need no name (DEC-149; T34-86).
  *
+ * T47 (layer 6, T47-19; N976, K3003): a project's own bar is set by a served act, `projectBarSet` (`op=projectbarset`),
+ * written into the project's document with a Session Log entry and promoted through promotion, distinct from the
+ * group's default (R40); `MACHINE_CANNOT_DECLARE` and `BAD_GRADE` are each minted at one site both bar acts answer
+ * through (K231).
+ *
  * REACHED as `strengthOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge
  * (`strength_cache` by bundle, `group_strength_bar` exempt, R23), registers its projection with promotion (the cache,
@@ -49,9 +55,11 @@
  * call that hands `retrieval` in, whenever it comes (the plane store's, at boot), as basis-versions takes it; a host with no
  * retrieval (a test's) is not given one, which would join retrieval's projection to every promotion there.
  * `deps`:
- *   record       `recordOf(host)` unless given: `readFile` (a project's bundle.md, R14), `declareTable`, and the
- *                derived-cache convention's `rebuildDerived`, `readDerived`, `markStale` (its R21, R77; R39).
- *   membership   `membershipOf(host)` unless given: `inSight(id, viewer)` (R6, R22), `isAdministrator(id)` (R15).
+ *   record       `recordOf(host)` unless given: `readFile` (a project's bundle.md, R14), `head` and `livePaths` (R40),
+ *                `declareTable`, and the derived-cache convention's `rebuildDerived`, `readDerived`, `markStale` (its
+ *                R21, R77; R39).
+ *   membership   `membershipOf(host)` unless given: `inSight(id, viewer)` (R6, R22), `isAdministrator(id)` (R15),
+ *                `projectAuthority` and `positionalMember` (its R55; R40).
  *   inquiry      the walk's one reader: `basisFor(id) → {legs}`, `earned(subject, targets) → {earned: {capture,
  *                connection, testimony}, subject_entity, subject_known}`, `legCapped(stated, earned, targetId)` and
  *                `restingOn(id)` (leg-earning R1, R2, R4), `subjectEntityOf(id)` and `onGrounded(module, fn)` (inquiry's,
@@ -62,7 +70,8 @@
  *   versions     `currentOf(project, inquiry, viewer) → {version} | null` (basis-versions R11). Default:
  *                `basisVersionsOf(host)`, reached lazily on the first read that names a project. The version rows and
  *                legs are read from `inquiry_basis_versions` and `inquiry_basis_version_legs`.
- *   promotion    `promotionOf(host)` unless given: `registerStep(module, {project})` (R13), `fact("producingGroup")`.
+ *   promotion    `promotionOf(host)` unless given: `registerStep(module, {project})` (R13), `fact("producingGroup")`,
+ *                `promote(pkg)` (R40).
  *   retrieval    when given: `registerField(module, field, {table, key, col})` (R23).
  *   producingGroup  the store's recorded group or null; default: promotion's fact `producingGroup`.
  *   now          the clock for the instants it writes, an ISO string (default: the wall clock).
@@ -157,6 +166,73 @@ export function barAxisWords(bar) {
     .join(", ");
 }
 
+/* R15, R40: a refusal of the bar's own rows (C-32.9, C-107), with its code, row and translation (DEC-49). */
+function barRefusal(code, detail, extra) {
+  const row = STRENGTH_BAR_CHECKS[code];
+  return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+}
+
+/* R15, R40 (K231): the one site `MACHINE_CANNOT_DECLARE` (C-32.9) is minted, for the group's default and a project's
+   own bar alike: a bar is a declaration by people about their own work, so an empty or machine author is refused.
+   `whose` names whose declaration it is. Null to proceed. */
+function machineCannotDeclare(author, whose) {
+  const who = String(author ?? "").trim();
+  /* DEC-49 REGION is-machine-strength-bar */
+  if (!who || isMachineIdentity(who))
+    return barRefusal("MACHINE_CANNOT_DECLARE",
+      `the required evidentiary strength is the ${whose} declaration about its own work. A `
+      + "machine credential may not make it. Sign in as a member.");
+  /* END DEC-49 REGION is-machine-strength-bar */
+  return null;
+}
+
+/* R15, R40 (N208, K275, K231): the one site `BAD_GRADE` (C-107.2) is minted: an axis given that is not a grade. Null to
+   proceed; an axis not given (null or absent) is not asked. */
+function badGrade(capture, connection) {
+  /* DEC-49 REGION is-strength-bar-grade */
+  for (const [axis, v] of [["capture", capture], ["connection", connection]])
+    if (v != null && !BASIS_GRADES.includes(v))
+      return barRefusal("BAD_GRADE", `${axis} must be one of ${BASIS_GRADES.join(", ")}, or null`, { axis });
+  /* END DEC-49 REGION is-strength-bar-grade */
+  return null;
+}
+
+/* R40: a bar as a Session Log states it: an absent one as "no bar", never as a bar of zero. */
+const barLogWords = (bar) => (bar && bar.declared ? barAxisWords(bar) : "no bar");
+
+/* R40: the project document with `required_strength` replaced by `bar` (both axes, null where not given) and
+   `last_updated` set, every other line as it stood; null when the document has no front-matter block to splice. */
+function spliceProjectBar(text, bar, at) {
+  const lines = String(text).split("\n");
+  const end = lines.indexOf("---", 1);
+  if (lines[0] !== "---" || end === -1) return null;
+  const fm = lines.slice(1, end);
+  const block = ["required_strength:", `  capture: ${bar.capture ?? "null"}`, `  connection: ${bar.connection ?? "null"}`];
+  const out = [];
+  let placed = false, skipping = false;
+  for (const l of fm) {
+    if (skipping && /^\s/.test(l)) continue;
+    skipping = false;
+    if (/^required_strength\s*:/.test(l)) { out.push(...block); placed = true; skipping = true; continue; }
+    if (/^last_updated\s*:/.test(l)) continue;
+    out.push(l);
+  }
+  if (!placed) out.push(...block);
+  out.push(`last_updated: "${at}"`);
+  return ["---", ...out, ...lines.slice(end)].join("\n");
+}
+
+/* R40: one Session Log entry, appended at the end of the `## Session Log` section (opened when the document has none),
+   as every act that revises a document writes it (C-13.2). */
+function appendSessionLog(text, entry) {
+  const at = text.indexOf("## Session Log");
+  if (at < 0) return `${text.replace(/\n*$/, "\n")}\n## Session Log\n\n${entry}`;
+  const nxt = text.indexOf("\n## ", at + 1);
+  const cut = nxt === -1 ? text.length : nxt + 1;
+  const head = text.slice(0, cut);
+  return `${head}${head.endsWith("\n") ? "" : "\n"}${entry}${nxt === -1 ? "" : "\n"}${text.slice(cut)}`;
+}
+
 /* N218, T33 (K1612): the reads the walk makes as one reader: the earned registry, the cap and the resting-on reads from
    `leg-earning` (its R1, R2, R4, with its module-level `legCapped`), and the subject and the grouping act's slot from
    `inquiry` (its R13's subject, R42), each module reached on first use. */
@@ -190,6 +266,8 @@ export class Strength {
     return this.#deps.inquiry ||= inquiryReader(() => legEarningOf(this.#deps.host, opts), () => inquiryOf(this.#deps.host, opts));
   }
   set inquiry(v) { this.#deps.inquiry = v; }
+  /* R40: the one write path a project's own bar is promoted through (promotion's `promote`). */
+  get promotion() { return this.#deps.promotion; }
   /* R33: accepted-work's read (its R2), on the same host, reached on the first ref read (K1307). */
   get acceptedWork() {
     if (!this.#deps.acceptedWork && this.#deps.host)
@@ -1278,35 +1356,27 @@ export class Strength {
     if (named)
       return { declared: true, source: "project", project: projectId,
                capture: declared.capture, connection: declared.connection,
-               detail: `required by ${projectId}, the project whose production this case is: capture `
+               detail: `required by ${projectId}, the project whose production this case is: `
                      + `${barAxisWords(declared)}. `
                      + `The bar is the project's own declaration about its own work, stated in advance, and `
                      + `is never set by who a reader is.` };
     return { declared: false, source: "none", project: projectId, capture: null, connection: null,
              detail: `${projectId} declares no required evidentiary strength, so nothing in this case was `
                    + `measured against one. An absent bar is not a bar of zero, and this case makes no `
-                   + `claim to have cleared any standard. A project declares its bar in its own bundle.md, `
-                   + `which is an authored, dated, on-the-record act.` };
+                   + `claim to have cleared any standard. A project declares its bar by its own act, written `
+                   + `into the project's document as an authored, dated, on-the-record entry.` };
   }
 
   /** R15: the group's default bar, the one a new project starts from (DEC-17 as amended). A pair: a scalar would
    *  re-collapse the two axes in the one field a reader is most likely to quote. It is recorded with the administrator's
    *  reason (DEC-88), and its answer carries DEC-105's honest note. */
   strengthBarSet({ group = null, capture = null, connection = null, reason = undefined, author = null } = {}) {
-    const who = String(author ?? "").trim();
-    const refusal = (code, detail, extra) => {
-      const row = STRENGTH_BAR_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
-    };
-    /* DEC-49 REGION is-machine-strength-bar */
-    if (!who || isMachineIdentity(who))
-      return refusal("MACHINE_CANNOT_DECLARE",
-        "the required evidentiary strength is the GROUP's declaration about its own work. A "
-        + "machine credential may not make it. Sign in as a member.");
-    /* END DEC-49 REGION is-machine-strength-bar */
+    const machine = machineCannotDeclare(author, "GROUP's");
+    if (machine) return machine;
+    const who = String(author).trim();
     /* DEC-49 REGION is-admin-strength-bar */
     if (!this.membership.isAdministrator(who))
-      return refusal("STRENGTH_BAR_NOT_ADMIN",
+      return barRefusal("STRENGTH_BAR_NOT_ADMIN",
         "the default bar is declared for the whole group, so only an active administrator may set it. "
         + "Nothing was declared.");
     /* END DEC-49 REGION is-admin-strength-bar */
@@ -1321,11 +1391,8 @@ export class Strength {
                detail: "the default bar is the GROUP's declaration, keyed by its group; this request names no group "
                      + "and this store records none. Nothing was declared." };
     }
-    /* DEC-49 REGION is-strength-bar-grade */
-    for (const [axis, v] of [["capture", capture], ["connection", connection]])
-      if (v != null && !BASIS_GRADES.includes(v))
-        return refusal("BAD_GRADE", `${axis} must be one of ${BASIS_GRADES.join(", ")}, or null`, { axis });
-    /* END DEC-49 REGION is-strength-bar-grade */
+    const bad = badGrade(capture, connection);
+    if (bad) return bad;
     if (capture == null && connection == null)
       return { ok: false, reason: "NO_BAR",
                detail: "declare at least one axis. Withdrawing a bar entirely is a different act from setting "
@@ -1334,7 +1401,7 @@ export class Strength {
     /* DEC-88: the administrator's words, judged trimmed and recorded as judged. Asked last, so nothing is written. */
     const why = typeof reason === "string" ? reason.trim() : "";
     if (!why || why.length > BAR_REASON_MAX)
-      return refusal("BAR_NO_REASON",
+      return barRefusal("BAR_NO_REASON",
         typeof reason !== "string"
           ? "give the reason the group sets this bar, as text in your own words (reason=…). Nothing was declared."
           : !why
@@ -1350,9 +1417,93 @@ export class Strength {
          author=excluded.author, at=excluded.at, reason=excluded.reason`,
       gid, capture, connection, who, at, why);
     return { ok: true, group: gid, capture, connection, author: who, at, reason: why,
-             note: "this is the DEFAULT a project starts from; a project may declare its own in its bundle.md, "
-                 + "which is an authored, dated, on-the-record act visible in every case it governs. "
+             note: "this is the DEFAULT a project starts from; a project may declare its own by its own act, written "
+                 + "into the project's document as an authored, dated, on-the-record entry visible in every case it governs. "
                  + `It gates nothing. ${BAR_HONEST_NOTE}` };
+  }
+
+  /* R16, R40: null when `pid` is a project the viewer may see; else the answer: an absent or unseen project
+     membership's (its R78, N208: minted there), one not a project `NOT_A_PROJECT`. */
+  #projectUnseen(pid, viewer) {
+    const gate = viewerPredicate(viewer);
+    const pb = pid ? this.#one(
+      `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, pid, ...gate.args) : null;
+    if (!pb) return noSuchProject(pid || null);
+    if (normalizeType(pb.object_type) !== "project")
+      return { ok: false, reason: "NOT_A_PROJECT", project: pid, object_type: pb.object_type,
+               detail: `${pid} is a ${pb.object_type}, and a standard of evidence is a property of a `
+                     + `PROJECT (DEC-72).` };
+    return null;
+  }
+
+  /** R40 (T47; N976, K3003; DEC-72, DEC-17): `op=projectbarset`, a project's own bar, the `required_strength` R14 reads,
+   *  set by a member who has joined the project. An authored, dated, on-the-record act: the bar is written into the
+   *  project's document with `last_updated` and one Session Log entry naming the author, the bar before and after and
+   *  the reason, and promoted at the project's current state through `promotion.promote`, whose refusal is answered
+   *  unchanged. Given neither axis it withdraws the bar (both axes null, which R14 reads as absent, never a bar of zero).
+   *  It never reads or changes the group's default (R15), and it gates nothing (R21). */
+  projectBarSet({ project = null, capture = null, connection = null, reason = undefined, author = null, viewer = null,
+                  identity = null } = {}) {
+    const machine = machineCannotDeclare(author, "PROJECT's");
+    if (machine) return machine;
+    const who = String(author).trim();
+    const pid = String(project ?? "").trim();
+    const unseen = this.#projectUnseen(pid, viewer);
+    if (unseen) return unseen;
+    /* membership R55: the act is work inside the project, so the author must have joined it. The control plane's
+       identity stamp when it gives one, else the author's own. */
+    const asked = str(identity) ?? `member:${who}`;
+    const fence = this.membership.projectAuthority(pid, asked, "joined", "projectBarSet");
+    if (fence) return fence;
+    const bad = badGrade(capture, connection);
+    if (bad) return bad;
+    /* DEC-49 REGION is-project-bar-reason */
+    /* The member's words, judged trimmed and recorded as judged. Asked last, so nothing is written. */
+    const why = typeof reason === "string" ? reason.trim() : "";
+    if (!why || why.length > BAR_REASON_MAX)
+      return barRefusal("PROJECT_BAR_NO_REASON",
+        typeof reason !== "string"
+          ? "give the reason the project sets this bar, as text in your own words (reason=…). Nothing was changed."
+          : !why
+          ? "the reason given is blank; say in your own words why the project sets this bar. Nothing was changed."
+          : `the reason given is ${why.length} characters, and a reason is at most ${BAR_REASON_MAX}. `
+            + "Nothing was changed.",
+        { limit: BAR_REASON_MAX });
+    /* END DEC-49 REGION is-project-bar-reason */
+    const head = this.record.head(pid);
+    const doc = this.record.readFile(pid, "bundle.md");
+    if (!head || !doc || typeof doc.text !== "string") return noSuchProject(pid);
+    const previous = this.projectBar(pid);
+    const at = this.now();
+    const next = { capture: capture ?? null, connection: connection ?? null };
+    const spliced = spliceProjectBar(doc.text, next, at);
+    if (spliced === null)
+      return { ok: false, reason: "PROJECT_DOCUMENT_UNREADABLE", project: pid,
+               detail: "the project's document has no front-matter block to hold its bar. Nothing was changed." };
+    const withdrawing = next.capture == null && next.connection == null;
+    const after = withdrawing ? "no bar" : barAxisWords(next);
+    const text = appendSessionLog(spliced,
+      `### Session ${at} | ${withdrawing ? "Withdrew" : "Set"} the project's bar | ${who}\n`
+      + `Trigger: op=projectbarset on ${pid}\n`
+      + `Changes: the project's standard of evidence from ${barLogWords(previous)} to ${after}.\n`
+      /* One line, so a reason's own line breaks never open a section of the document. */
+      + `Reason: ${why.replace(/\s+/g, " ")}\n`);
+    const fm = parseFrontmatter(text).data || {};
+    const carried = (this.record.livePaths(pid) || []).filter((p) => p !== "bundle.md").map((path) => {
+      const f = this.record.readFile(pid, path);
+      return typeof f.text === "string" ? { path, text: f.text, sha256: f.sha256 }
+                                        : { path, blobSha: f.blobSha, sha256: f.sha256, bytes: f.bytes };
+    });
+    const nonce = [...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, "0")).join("");
+    const r = this.promotion.promote({
+      bundleId: pid, base: head.bundleSha, snapKey: `${at.replace(/[-:.]/g, "")}_bar${nonce}`, author: who,
+      files: [{ path: "bundle.md", text }, ...carried],
+      meta: { object_type: head.type, title: head.title, current_state: fm.current_state ?? head.currentState,
+              prior_state: fm.prior_state ?? null, created: fm.created, last_updated: at },
+      actorIdentity: asked, actorViewer: viewer, actorMemberId: this.membership.positionalMember(viewer, asked) });
+    if (!r || r.ok !== true) return r;
+    return { ok: true, project: pid, bar: this.projectBar(pid), previous, author: who, at, reason: why,
+             bundleSha: r.bundleSha };
   }
 
   /** R16: the bar read. `project=` is the answer under DEC-72; `group=` is DEC-17's surviving half, the default that
@@ -1370,15 +1521,8 @@ export class Strength {
                      + "for the default a new project starts from." };
     if (project) {
       const pid = String(project).trim();
-      const gate = viewerPredicate(viewer);
-      const pb = this.#one(
-        `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, pid, ...gate.args);
-      /* N208: the one answer to an absent or unseen project is membership's (its R78), minted there. */
-      if (!pb) return noSuchProject(pid);
-      if (normalizeType(pb.object_type) !== "project")
-        return { ok: false, reason: "NOT_A_PROJECT", project: pid, object_type: pb.object_type,
-                 detail: `${pid} is a ${pb.object_type}, and a standard of evidence is a property of a `
-                       + `PROJECT (DEC-72).` };
+      const unseen = this.#projectUnseen(pid, viewer);
+      if (unseen) return unseen;
       return { ok: true, project: pid, bar: this.projectBar(pid) };
     }
     const gid = String(group ?? "").trim() || this.producingGroup();
@@ -1506,7 +1650,7 @@ function refusePairComposed(out) {
 export { refusePairComposed };
 
 /** The module's ops (K3): `strength` (in-process), `inquirystrength`, `versionstrength`, `partitionindependence`,
- *  `strengthbar`, `strengthbarof`. `viewer` and `author` are the control plane's stamps. */
+ *  `strengthbar`, `projectbarset` (R40), `strengthbarof`. `viewer` and `author` are the control plane's stamps. */
 export function strengthOps(s, url, body) {
   const q = (k) => url.searchParams.get(k);
   return {
@@ -1518,6 +1662,10 @@ export function strengthOps(s, url, body) {
       partition: (body && body.partition !== undefined) ? body.partition : q("partition"),
       version: q("version"), viewer: q("viewer") }),
     strengthbar: () => s.strengthBarSet({ ...(body || {}), author: q("author") }),
+    /* R40: the project from the body, else the query; `author`, `viewer` and `identity` are the control plane's stamps,
+       never the body's. */
+    projectbarset: () => s.projectBarSet({ ...(body || {}), project: (body && body.project != null) ? body.project : q("project"),
+                                           author: q("author"), viewer: q("viewer"), identity: q("identity") }),
     /* `target` still reaches the method, so a withdrawn arm is refused by name rather than 404'd at the router. */
     strengthbarof: () => s.strengthBarOf({ group: q("group"), target: q("target"), project: q("project"),
                                            viewer: q("viewer") }),

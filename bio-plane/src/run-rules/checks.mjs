@@ -13,12 +13,15 @@
  * rows answer, each `en` verbatim, read by key as `membership`'s `HANDLE_WORDS` and `extraction`'s `TRANSCRIBE_WORDS` are;
  * a row's `translation` is the word itself, never a copy. `refusal.AI_RUN_ORIGIN_UNKNOWN` is not held: its sentence speaks
  * only of a planning run, while `originAllowed` mints the code in every mode, so C-22.25 keeps its own sentence until the
- * design stream's covers both (R31). Frozen. */
+ * design stream's covers both (R31). R32 (T47; N992; DEC-198): `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`, which DEC-198 added,
+ * is C-22.30's translation, read the same way. Frozen. */
 export const RUN_RULES_WORDS = Object.freeze({
   'refusal.AI_RUN_REEXAM_NEEDS_RESPONSE': 'Nothing was started: a fresh look at the plan after a reply needs to know which '
     + 'reply. Record the reply first, then ask from it.',
   'refusal.AI_RUN_REEXAM_OPEN': 'Nothing was started: a fresh look at this plan after this reply is already under way. '
     + 'Wait for it, then read what it proposes.',
+  'refusal.MEMBER_RUN_MODE_NOT_ADMITTED': 'A run on your own Claude sign-in can check or plan, and this one asks for more. '
+    + 'Nothing was sent. A project\'s or the group\'s account can run it, where one serves you.',
 });
 
 /* C-22's run rows: C-22.5, .7, .8, .11–.16, .18, T33's .19 (R18), .20 (R19) and .21 (R17), T41's .22 (R19's test
@@ -336,13 +339,13 @@ export const AI_RUN_OWN_CHECKS = {
   },
   /* R32 (T46; K2947; `ai-runs` R18): A MEMBER'S OWN SIGN-IN RUN IN A MODE IT DOES NOT SERVE. On her own Claude sign-in
      a member's run is dispatched for her only in `check` or `plan` (Bob's K2892); any other mode is refused by `ai-runs`
-     at its dispatch and read here by key. C-22.30, the next free number after R30's. DEC-83's form. Its translation is
-     interim, until `words.json` holds `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`. */
+     at its dispatch and read here by key. C-22.30, the next free number after R30's. DEC-83's form. T47 (N992; DEC-198):
+     its translation is `words.json`'s `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`, read by key (RUN_RULES_WORDS above) as R31's
+     rows are; T46's interim sentence is gone, and code, number and `where` are unmoved. */
   MEMBER_RUN_MODE_NOT_ADMITTED: {
     check: 'C-22.30',
     where: 'src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch',
-    translation: 'Nothing was started, because on your own Claude sign-in the assistant only checks and plans for you; '
-      + 'this kind of work needs your group\'s Civicsmith to run it.',
+    translation: RUN_RULES_WORDS['refusal.MEMBER_RUN_MODE_NOT_ADMITTED'],
   },
 };
 

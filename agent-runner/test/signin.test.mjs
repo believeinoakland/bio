@@ -1,60 +1,79 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync, existsSync, readdirSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, readdirSync } from 'node:fs';
 import { stubSdk, success, request, startRunner, conversation, filesUnder, until } from './helpers.mjs';
-import { STORED, GOOD_CODE, ADDRESS } from './stubs/claude-values.mjs';
+import { TOKEN, GOOD_CODE, ADDRESS } from './stubs/claude-values.mjs';
 import { readManifest } from '../src/manifest.mjs';
-import { LOGIN_ARGS, STATUS_ARGS, LOGOUT_ARGS, anthropicAddress, codeOk } from '../src/signin.mjs';
+import { SETUP_ARGS, COLUMNS, anthropicAddress, codeOk, tokenIn, addressIn } from '../src/signin.mjs';
+import { screen } from '../src/screen.mjs';
 
 const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
 const M = 'member-7d1e', OTHER = 'member-0b42';
-const signinReq = (member = M) => request({ credential: { kind: 'signin', member } });
-const creds = (r) => join(r.signin.configDir, '.credentials.json');
-
-// The instance signed in for `member` through R17 and R18.
-async function signedIn(r, member = M) {
-  assert.equal((await r.post('/signin', { member })).status, 200);
-  const done = await r.post('/signin/code', { member, code: GOOD_CODE });
-  assert.deepEqual(done, { status: 200, body: { ok: true, connected: true, member } });
+const runner = (mode, waits) => startRunner(stubSdk(async () => success()).sdk, { mode, waits });
+// R31's words: for the member, never the machinery's names, and never a place.
+const PLACE = /oakland|alameda|california|\bbay area\b/i;
+const MACHINERY = /\binstance\b|\bcontainer\b/i;
+function memberWords(body, what) {
+  assert.equal(typeof body.trace, 'string', `${what}: trace`);
+  assert.ok(body.trace.length > 0);
+  assert.equal(typeof body.detail, 'string', `${what}: detail`);
+  assert.ok(body.detail.length > 0 && body.detail.length <= 300, `${what}: detail at most 300 characters`);
+  assert.ok(!PLACE.test(body.detail) && !MACHINERY.test(body.detail), `${what}: ${body.detail}`);
 }
 
 // Every refusal R17–R20 share before anything starts: a body not JSON, a malformed member.
 const BAD_BODIES = ['not json', '[1]', '"x"', 'null'];
 const BAD_MEMBERS = [undefined, '', 42, null, 'x'.repeat(201), ['m']];
 async function sharedRefusals(r, path, extra = {}) {
-  for (const b of BAD_BODIES) assert.deepEqual(await r.post(path, b), { status: 400, body: { ok: false, code: 'BAD_REQUEST' } }, `${path} ${b}`);
-  for (const member of BAD_MEMBERS)
-    assert.deepEqual(await r.post(path, { member, ...extra }), { status: 400, body: { ok: false, code: 'BAD_MEMBER' } }, `${path} ${member}`);
+  for (const b of BAD_BODIES) {
+    const a = await r.post(path, b);
+    assert.deepEqual([a.status, a.body.code], [400, 'BAD_REQUEST'], `${path} ${b}`);
+    memberWords(a.body, `${path} BAD_REQUEST`);
+  }
+  for (const member of BAD_MEMBERS) {
+    const a = await r.post(path, { member, ...extra });
+    assert.deepEqual([a.status, a.body.code], [400, 'BAD_MEMBER'], `${path} ${member}`);
+    memberWords(a.body, `${path} BAD_MEMBER`);
+  }
 }
 
-test('R17 POST /signin starts the binary\'s own sign-in for the member and answers the address it states, unchanged', async () => {
-  const r = await startRunner(stubSdk(async () => success()).sdk);
+test('R17 R27 POST /signin runs the binary\'s own setup-token in a wide terminal and answers the address it states, unchanged, with an attempt', async () => {
+  const r = await runner();
   try {
     await sharedRefusals(r, '/signin');
     assert.deepEqual(r.claude.runs(), [], 'no refusal starts the binary');
     const a = await r.post('/signin', { member: M });
-    assert.deepEqual(a, { status: 200, body: { ok: true, address: ADDRESS } }, 'the address as the binary states it, its terminal escapes aside');
-    const [login] = r.claude.runs();
-    assert.deepEqual(login.args, LOGIN_ARGS, 'the binary\'s own login, with no option');
-    assert.equal(login.tty, true, 'it runs in a terminal (util-linux script)');
+    assert.equal(a.status, 200);
+    assert.equal(a.body.ok, true);
+    assert.equal(a.body.address, ADDRESS, 'the address as the binary states it, its terminal escapes aside');
+    assert.match(a.body.attempt, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+    const [run] = r.claude.runs();
+    assert.deepEqual(run.args, SETUP_ARGS, 'the binary\'s own setup-token, with no option');
+    assert.deepEqual(SETUP_ARGS, ['setup-token']);
+    assert.equal(run.tty, true, 'it runs in a terminal (util-linux script)');
+    assert.equal(run.columns, COLUMNS, 'a terminal wide enough that neither the address nor the token wraps');
     assert.equal(r.signin.waiting.member, M);
-    // a second start ends the waiting sign-in and starts a new one
+    // a second start ends the waiting attempt and starts a new one
     const first = r.signin.waiting.proc;
-    assert.equal((await r.post('/signin', { member: M })).status, 200);
+    const b = await r.post('/signin', { member: M });
+    assert.equal(b.status, 200);
+    assert.notEqual(b.body.attempt, a.body.attempt);
     assert.notEqual(r.signin.waiting.proc, first);
     await until(() => first.exitCode !== null || first.signalCode !== null);
     // a member at the boundary (200 characters) is taken
+    await r.post('/signout', { member: M });
     assert.equal((await r.post('/signin', { member: 'm'.repeat(200) })).status, 200);
   } finally { await r.stop(); }
 });
 
-test('R17 an address not https: on an Anthropic sign-in host is never answered; no address in 30 s, or an exit, is SIGNIN_UNAVAILABLE', async () => {
+test('R17 R31 an address not https: on an Anthropic sign-in host is never answered; no address in time, or an exit, is SIGNIN_UNAVAILABLE naming its arm', async () => {
   for (const mode of ['foreign', 'plain-http']) {
-    const r = await startRunner(stubSdk(async () => success()).sdk, { mode });
+    const r = await runner(mode);
     try {
       const a = await r.post('/signin', { member: M });
-      assert.deepEqual(a, { status: 502, body: { ok: false, code: 'SIGNIN_ADDRESS_UNEXPECTED' } }, mode);
+      assert.deepEqual([a.status, a.body.code], [502, 'SIGNIN_ADDRESS_UNEXPECTED'], mode);
+      assert.ok(!('address' in a.body) && !JSON.stringify(a.body).includes('example.test'), 'no address answered');
+      memberWords(a.body, mode);
       assert.equal(r.signin.waiting, null, 'the sign-in is ended');
       assert.equal((await r.post('/signin/code', { member: M, code: GOOD_CODE })).body.code, 'NO_SIGNIN_WAITING');
     } finally { await r.stop(); }
@@ -63,73 +82,103 @@ test('R17 an address not https: on an Anthropic sign-in host is never answered; 
     'https://console.anthropic.com/x', 'https://anthropic.com/']) assert.equal(anthropicAddress(ok), true, ok);
   for (const bad of ['http://claude.ai/', 'https://claude.ai.evil.test/', 'https://evilclaude.ai/', 'https://user@claude.ai/', 'https://claude.ai:8443/',
     'javascript:alert(1)', 'not a url', 'https://anthropic.com.example/']) assert.equal(anthropicAddress(bad), false, bad);
-  const silent = await startRunner(stubSdk(async () => success()).sdk, { mode: 'silent', waits: { address: 300 } });
+  const details = new Set();
+  const silent = await runner('silent', { address: 300 });
   try {
     const a = await silent.post('/signin', { member: M });
-    assert.equal(a.status, 502);
-    assert.equal(a.body.code, 'SIGNIN_UNAVAILABLE');
-    assert.match(a.body.detail, /no address within/);
+    assert.deepEqual([a.status, a.body.code], [502, 'SIGNIN_UNAVAILABLE']);
+    assert.match(a.body.detail, /no address within 30 seconds/);
+    memberWords(a.body, 'silent'); details.add(a.body.detail);
     assert.equal(silent.signin.waiting, null);
   } finally { await silent.stop(); }
-  const exits = await startRunner(stubSdk(async () => success()).sdk, { mode: 'exits' });
+  const exits = await runner('exits');
   try {
     const a = await exits.post('/signin', { member: M });
-    assert.equal(a.status, 502);
-    assert.equal(a.body.code, 'SIGNIN_UNAVAILABLE');
-    assert.ok(typeof a.body.detail === 'string' && a.body.detail.length <= 300);
+    assert.deepEqual([a.status, a.body.code], [502, 'SIGNIN_UNAVAILABLE']);
+    assert.match(a.body.detail, /stopped before it gave an address/);
     assert.ok(!('address' in a.body));
+    memberWords(a.body, 'exits'); details.add(a.body.detail);
   } finally { await exits.stop(); }
+  // the third arm: no binary in the image
+  const none = await runner();
+  try {
+    const { signinOf } = await import('../src/signin.mjs');
+    const s = signinOf({ root: none.signinRoot, binary: null });
+    const a = await s.start(M);
+    assert.deepEqual([a.status, a.body.code], [502, 'SIGNIN_UNAVAILABLE']);
+    assert.match(a.body.detail, /Claude Code is missing/);
+    details.add(a.body.detail);
+    assert.equal(a.log.binary_present, false);
+  } finally { await none.stop(); }
+  assert.equal(details.size, 3, 'each arm says which it is');
 });
 
-test('R18 POST /signin/code types the code once at the binary\'s prompt and answers its outcome', async () => {
-  const r = await startRunner(stubSdk(async () => success()).sdk);
+test('R18 R27 POST /signin/code types the code once, ended by a carriage return, and answers the token the binary prints, once', async () => {
+  const r = await runner();
   try {
     await sharedRefusals(r, '/signin/code', { code: GOOD_CODE });
-    assert.deepEqual(await r.post('/signin/code', { member: M, code: GOOD_CODE }), { status: 409, body: { ok: false, code: 'NO_SIGNIN_WAITING' } });
-    await r.post('/signin', { member: M });
-    assert.deepEqual(await r.post('/signin/code', { member: OTHER, code: GOOD_CODE }), { status: 409, body: { ok: false, code: 'NO_SIGNIN_WAITING' } },
-      'a sign-in waits for its own member only');
-    for (const code of ['', 'x'.repeat(2001), 'a\nb', 'a\rb', 'a\tb', 'a\u0000b', 'a\u007fb', 'a\u0085b', 42, null, undefined])
-      assert.deepEqual(await r.post('/signin/code', { member: M, code }), { status: 400, body: { ok: false, code: 'BAD_CODE' } }, JSON.stringify(code));
-    assert.equal(r.signin.waiting.member, M, 'a bad code keeps the waiting sign-in');
+    const none = await r.post('/signin/code', { member: M, code: GOOD_CODE });
+    assert.deepEqual([none.status, none.body.code], [409, 'NO_SIGNIN_WAITING']);
+    memberWords(none.body, 'NO_SIGNIN_WAITING');
+    const s = await r.post('/signin', { member: M });
+    for (const code of ['', 'x'.repeat(2001), 'a\nb', 'a\rb', 'a\tb', 'a\u0000b', 'a\u007fb', 'a\u0085b', 42, null, undefined]) {
+      const a = await r.post('/signin/code', { member: M, code, attempt: s.body.attempt });
+      assert.deepEqual([a.status, a.body.code], [400, 'BAD_CODE'], JSON.stringify(code));
+      memberWords(a.body, 'BAD_CODE');
+    }
+    assert.equal(r.signin.waiting.member, M, 'a bad code keeps the waiting attempt');
     assert.ok(codeOk('x'.repeat(2000)) && codeOk('é#ü'));
-    assert.deepEqual(await r.post('/signin/code', { member: M, code: GOOD_CODE }), { status: 200, body: { ok: true, connected: true, member: M } });
-    assert.ok(existsSync(creds(r)), 'the binary stored the sign-in where it runs');
-    assert.deepEqual(await r.post('/signin/code', { member: M, code: GOOD_CODE }), { status: 409, body: { ok: false, code: 'NO_SIGNIN_WAITING' } },
-      'a sign-in takes one code');
+    const a = await r.post('/signin/code', { member: M, code: GOOD_CODE, attempt: s.body.attempt });
+    assert.equal(a.status, 200);
+    const { trace, trace_detail, ...rest } = a.body;
+    assert.deepEqual(rest, { ok: true, connected: true, member: M, attempt: s.body.attempt, token: TOKEN, valid_for: '1 year' });
+    assert.equal(JSON.stringify(a.body).split(TOKEN).length - 1, 1, 'the token exactly once');
+    assert.equal(r.signin.waiting, null, 'the binary\'s process is ended');
+    const again = await r.post('/signin/code', { member: M, code: GOOD_CODE });
+    assert.equal(again.body.code, 'NO_SIGNIN_WAITING', 'an attempt takes one code');
+    assert.ok(!JSON.stringify(again.body).includes(TOKEN));
   } finally { await r.stop(); }
-  // refused: the binary's words, never the code; then nothing more is typed to it
-  const refused = await startRunner(stubSdk(async () => success()).sdk, { mode: 'refuses' });
+  // the token wrapped across lines and coloured: joined, as the screen shows it
+  const wrapped = await runner('wrapped');
   try {
-    await refused.post('/signin', { member: M });
-    const a = await refused.post('/signin/code', { member: M, code: GOOD_CODE });
-    assert.equal(a.status, 409);
-    assert.equal(a.body.code, 'SIGNIN_REFUSED');
-    assert.match(a.body.detail, /Login failed/);
-    assert.ok(!a.body.detail.includes(GOOD_CODE) && !a.body.detail.includes(GOOD_CODE.split('#')[0]), 'the code is never in the detail');
-    assert.ok(a.body.detail.length <= 300);
-    assert.equal((await refused.post('/signin/code', { member: M, code: GOOD_CODE })).body.code, 'NO_SIGNIN_WAITING');
-    assert.ok(!existsSync(creds(refused)));
-  } finally { await refused.stop(); }
-  // the binary's own "Invalid code" (no `#`) is its outcome too: the sign-in ends
-  const invalid = await startRunner(stubSdk(async () => success()).sdk);
-  try {
-    await invalid.post('/signin', { member: M });
-    const a = await invalid.post('/signin/code', { member: M, code: 'no-state-part' });
-    assert.equal(a.body.code, 'SIGNIN_REFUSED');
-    assert.match(a.body.detail, /Invalid code/);
-    assert.equal((await invalid.post('/signin/code', { member: M, code: GOOD_CODE })).body.code, 'NO_SIGNIN_WAITING');
-  } finally { await invalid.stop(); }
-  // no outcome reported: refused once the outcome wait ends
-  const hangs = await startRunner(stubSdk(async () => success()).sdk, { mode: 'hangs', waits: { outcome: 300 } });
+    await wrapped.post('/signin', { member: M });
+    const a = await wrapped.post('/signin/code', { member: M, code: GOOD_CODE });
+    assert.equal(a.body.token, TOKEN);
+  } finally { await wrapped.stop(); }
+  // the binary's screen, as the real one draws it: words by cursor moves, a cell not re-sent when it already shows
+  assert.equal(screen('\x1b[2GPaste\x1b[8Gcode\r\n'), ' Paste code');
+  assert.equal(screen('ab cXdz\r\x1b[4Gc\x1b[6Gde\r\n'), 'ab cXde', 'a cell not written keeps what it showed');
+  assert.equal(screen('ab code\r\x1b[4Gc\x1b[6Gde\r\n'), 'ab code');
+  assert.equal(addressIn(`\x1b[2GUse\x1b[6Gthe url below to sign in\r\n\x1b]8;id=a;${ADDRESS}\x07${ADDRESS}\x1b]8;;\x07\r\nPaste code here if prompted >`), ADDRESS);
+  assert.equal(addressIn(`Use the url below to sign in\r\n${ADDRESS}\r\n`), null, 'not before its prompt is up');
+  assert.deepEqual(tokenIn(`Your OAuth token (valid for 30 days):\r\n\x1b[33m${TOKEN}\x1b[39m\r\nStore this token securely.`), { token: TOKEN, valid_for: '30 days' });
+});
+
+test('R27 R18 a refused code, no token in time, or a token of another shape answers SIGNIN_REFUSED with no token', async () => {
+  for (const [mode, code, words] of [['refuses', GOOD_CODE, /Claude did not accept the code \(OAuth error: Request failed/],
+    ['ok', 'no-state-part', /OAuth error: Invalid code/], ['long-token', GOOD_CODE, /not with a token/], ['bad-token', GOOD_CODE, /not with a token/]]) {
+    const r = await runner(mode);
+    try {
+      await r.post('/signin', { member: M });
+      const a = await r.post('/signin/code', { member: M, code });
+      assert.deepEqual([a.status, a.body.code], [409, 'SIGNIN_REFUSED'], mode);
+      assert.ok(!('token' in a.body) && !('valid_for' in a.body), `${mode}: no token`);
+      assert.match(a.body.detail, words, mode);
+      assert.ok(!a.body.detail.includes(code.split('#')[0]) && !a.body.detail.includes(TOKEN), `${mode}: neither the code nor a token in the detail`);
+      memberWords(a.body, mode);
+      assert.equal(a.waiting, '0');
+      assert.equal((await r.post('/signin/code', { member: M, code: GOOD_CODE })).body.code, 'NO_SIGNIN_WAITING', 'nothing more is typed to it');
+    } finally { await r.stop(); }
+  }
+  const hangs = await runner('hangs', { outcome: 300 });
   try {
     await hangs.post('/signin', { member: M });
     const a = await hangs.post('/signin/code', { member: M, code: GOOD_CODE });
     assert.equal(a.body.code, 'SIGNIN_REFUSED');
-    assert.match(a.body.detail, /no outcome/);
+    assert.match(a.body.detail, /no answer within 60 seconds/);
   } finally { await hangs.stop(); }
-  // a sign-in waits for its code at most its wait (10 minutes; shortened here), then is ended
-  const late = await startRunner(stubSdk(async () => success()).sdk, { waits: { code: 200 } });
+  // an attempt waits for its code at most its wait (10 minutes; shortened here), then is ended
+  const late = await runner('ok', { code: 200 });
   try {
     await late.post('/signin', { member: M });
     const proc = late.signin.waiting.proc;
@@ -139,165 +188,125 @@ test('R18 POST /signin/code types the code once at the binary\'s prompt and answ
   } finally { await late.stop(); }
 });
 
-test('R19 POST /signin/state answers connected from the binary\'s own report, for this member only', async () => {
-  const r = await startRunner(stubSdk(async () => success()).sdk);
+test('R31 a code naming another attempt than the waiting one is ATTEMPT_SUPERSEDED, typing nothing; the waiting attempt\'s code is typed', async () => {
+  const r = await runner();
+  try {
+    const first = await r.post('/signin', { member: M });
+    const second = await r.post('/signin', { member: M });
+    const a = await r.post('/signin/code', { member: M, code: GOOD_CODE, attempt: first.body.attempt });
+    assert.deepEqual([a.status, a.body.code], [409, 'ATTEMPT_SUPERSEDED']);
+    memberWords(a.body, 'ATTEMPT_SUPERSEDED');
+    assert.equal(a.waiting, '1', 'the waiting attempt is kept');
+    assert.equal(r.signin.waiting.attempt, second.body.attempt);
+    assert.equal(r.signin.waiting.typed, false, 'nothing typed');
+    // control: the waiting attempt's code is typed
+    const b = await r.post('/signin/code', { member: M, code: GOOD_CODE, attempt: second.body.attempt });
+    assert.equal(b.status, 200);
+    assert.equal(b.body.token, TOKEN);
+  } finally { await r.stop(); }
+});
+
+test('R31 every sign-in answer carries trace and trace_detail; a caller\'s trace is kept', async () => {
+  const r = await runner();
+  try {
+    const a = await r.post('/signin/state', { member: M }, { 'x-civicsmith-trace': 'tr-abc-1' });
+    assert.equal(a.body.trace, 'tr-abc-1');
+    assert.deepEqual(Object.keys(a.body.trace_detail).sort(), ['cold', 'ms', 'uptime_s']);
+    assert.equal(a.body.trace_detail.cold, true, 'the first request this process served');
+    const s = await r.post('/signin', { member: M });
+    assert.match(s.body.trace, /^[0-9a-f-]{36}$/, 'minted when the caller sent none');
+    assert.equal(s.body.trace_detail.cold, false);
+    assert.equal(typeof s.body.trace_detail.waiting_age_s, 'number', 'while an attempt waits');
+    for (const k of ['ms', 'uptime_s']) assert.ok(Number.isInteger(s.body.trace_detail[k]) && s.body.trace_detail[k] >= 0);
+    const other = await r.post('/signin', { member: OTHER });
+    assert.equal(other.body.code, 'NOT_THIS_MEMBER');
+    memberWords(other.body, 'NOT_THIS_MEMBER');
+  } finally { await r.stop(); }
+});
+
+test('R19 R27 POST /signin/state answers connected false and whether an attempt waits for the member; it runs nothing', async () => {
+  const r = await runner();
   try {
     await sharedRefusals(r, '/signin/state');
-    assert.deepEqual(await r.post('/signin/state', { member: M }), { status: 200, body: { ok: true, connected: false, member: M } });
-    await signedIn(r);
-    assert.deepEqual(await r.post('/signin/state', { member: M }), { status: 200, body: { ok: true, connected: true, member: M } });
-    assert.deepEqual(r.claude.runs().at(-1).args, STATUS_ARGS, 'learned from the binary\'s report');
+    const pick = (a) => ({ status: a.status, ok: a.body.ok, connected: a.body.connected, waiting: a.body.waiting, member: a.body.member });
+    assert.deepEqual(pick(await r.post('/signin/state', { member: M })), { status: 200, ok: true, connected: false, waiting: false, member: M });
+    await r.post('/signin', { member: M });
     const ran = r.claude.runs().length;
-    assert.deepEqual(await r.post('/signin/state', { member: OTHER }), { status: 200, body: { ok: true, connected: false, member: OTHER } },
-      'another member\'s sign-in is not theirs');
-    assert.equal(r.claude.runs().length, ran, 'another member\'s state runs nothing (R21, K2213)');
-    // the instance's disk no longer holding it (a sleep): not connected
-    rmSync(creds(r));
-    assert.deepEqual(await r.post('/signin/state', { member: M }), { status: 200, body: { ok: true, connected: false, member: M } });
+    assert.deepEqual(pick(await r.post('/signin/state', { member: M })), { status: 200, ok: true, connected: false, waiting: true, member: M });
+    assert.deepEqual(pick(await r.post('/signin/state', { member: OTHER })), { status: 200, ok: true, connected: false, waiting: false, member: OTHER });
+    assert.equal(r.claude.runs().length, ran, 'state runs nothing');
+    await r.post('/signin/code', { member: M, code: GOOD_CODE });
+    const after = await r.post('/signin/state', { member: M });
+    assert.deepEqual(pick(after), { status: 200, ok: true, connected: false, waiting: false, member: M }, 'connected is credentials\', never this instance\'s');
+    assert.ok(!JSON.stringify(after.body).includes(TOKEN));
   } finally { await r.stop(); }
 });
 
-test('R20 POST /signout ends a waiting sign-in and has the binary remove the stored sign-in by its own logout', async () => {
-  const r = await startRunner(stubSdk(async () => success()).sdk);
+test('R20 R27 POST /signout ends a waiting attempt and answers connected false; it runs no logout', async () => {
+  const r = await runner();
   try {
     await sharedRefusals(r, '/signout');
-    assert.deepEqual(await r.post('/signout', { member: M }), { status: 200, body: { ok: true, connected: false, member: M } }, 'also when none was held');
-    await signedIn(r);
-    assert.deepEqual(await r.post('/signout', { member: M }), { status: 200, body: { ok: true, connected: false, member: M } });
-    assert.deepEqual(r.claude.runs().at(-1).args, LOGOUT_ARGS, 'the binary\'s own logout');
-    assert.ok(!existsSync(creds(r)), 'the binary removed it');
-    assert.equal((await r.post('/signin/state', { member: M })).body.connected, false);
-    // a waiting sign-in for the member is ended
+    const pick = (a) => [a.status, a.body.ok, a.body.connected, a.body.member];
+    assert.deepEqual(pick(await r.post('/signout', { member: M })), [200, true, false, M], 'also when none waits');
     await r.post('/signin', { member: M });
     const proc = r.signin.waiting.proc;
-    assert.equal((await r.post('/signout', { member: M })).status, 200);
+    const runs = r.claude.runs().length;
+    assert.deepEqual(pick(await r.post('/signout', { member: M })), [200, true, false, M]);
     assert.equal(r.signin.waiting, null);
     await until(() => proc.exitCode !== null || proc.signalCode !== null);
+    assert.equal(r.claude.runs().length, runs, 'no logout is run: nothing is stored');
     assert.equal((await r.post('/signin/code', { member: M, code: GOOD_CODE })).body.code, 'NO_SIGNIN_WAITING');
   } finally { await r.stop(); }
-  const fails = await startRunner(stubSdk(async () => success()).sdk, { mode: 'logout-fails' });
-  try {
-    await signedIn(fails);
-    const a = await fails.post('/signout', { member: M });
-    assert.equal(a.status, 502);
-    assert.equal(a.body.code, 'SIGNOUT_FAILED');
-    assert.equal((await fails.post('/signin/state', { member: M })).body.connected, true, 'a failed logout leaves it held, and says so');
-  } finally { await fails.stop(); }
 });
 
-test('R21 an instance holds one member\'s sign-in and serves only that member; every other step naming another is refused', async () => {
-  const { calls, sdk } = stubSdk(async () => success());
-  const r = await startRunner(sdk);
+test('R21 R27 an instance keeps nothing but the attempt waiting; NOT_THIS_MEMBER means only that another member\'s attempt waits', async () => {
+  const r = await runner();
   try {
-    await signedIn(r);
-    assert.deepEqual(JSON.parse(readFileSync(join(r.signinRoot, 'member'), 'utf8')), { member: M }, 'the record: a member id, never a secret');
+    await r.post('/signin', { member: M });
     const before = r.claude.runs().length;
-    const refused = { ok: false, code: 'NOT_THIS_MEMBER' };
-    assert.deepEqual(await r.post('/signin', { member: OTHER }), { status: 409, body: refused });
-    assert.deepEqual(await r.post('/signin/code', { member: OTHER, code: GOOD_CODE }), { status: 409, body: refused });
-    assert.deepEqual(await r.post('/signout', { member: OTHER }), { status: 409, body: refused });
-    assert.equal(r.claude.runs().length, before, 'nothing runs for another member');
-    assert.ok(existsSync(creds(r)), 'another member\'s sign-out touches nothing');
-    const { final } = await conversation(r.base, signinReq(OTHER));
-    assert.deepEqual({ ok: final.ok, code: final.code }, { ok: false, code: 'NOT_THIS_MEMBER' });
-    assert.equal(calls.length, 0);
-    // R20 clears the record; then another member may sign in
-    await r.post('/signout', { member: M });
-    assert.ok(!existsSync(join(r.signinRoot, 'member')));
-    await signedIn(r, OTHER);
-    assert.equal((await r.post('/signin/state', { member: OTHER })).body.connected, true);
-    assert.equal((await r.post('/signin/state', { member: M })).body.connected, false);
-  } finally { await r.stop(); }
-});
-
-test('R2 a signin conversation runs under the stored sign-in made for its member, with neither credential variable', async () => {
-  let during = null;
-  const { calls, sdk } = stubSdk(async (call) => { during = existsSync(join(call.options.env.CLAUDE_CONFIG_DIR, '.credentials.json')); return success(); });
-  const r = await startRunner(sdk);
-  try {
-    // none made: NOT_SIGNED_IN, nothing started
-    let { final } = await conversation(r.base, signinReq());
-    assert.deepEqual({ ok: final.ok, code: final.code }, { ok: false, code: 'NOT_SIGNED_IN' });
-    for (const credential of [{ kind: 'signin' }, { kind: 'signin', member: '' }, { kind: 'signin', member: 7 }, { kind: 'signin', secret: 'x' }]) {
-      ({ final } = await conversation(r.base, request({ credential })));
-      assert.equal(final.code, 'NO_CREDENTIAL', JSON.stringify(credential));
+    for (const [path, body] of [['/signin', { member: OTHER }], ['/signin/code', { member: OTHER, code: GOOD_CODE }], ['/signout', { member: OTHER }]]) {
+      const a = await r.post(path, body);
+      assert.deepEqual([a.status, a.body.code], [409, 'NOT_THIS_MEMBER'], path);
     }
-    assert.equal(calls.length, 0);
-    await signedIn(r);
-    ({ final } = await conversation(r.base, signinReq()));
-    assert.equal(final.ok, true);
-    const env = calls[0].options.env;
-    assert.equal(env.CLAUDE_CONFIG_DIR, r.signin.configDir, 'the stored sign-in\'s own directory');
-    assert.ok(!('CLAUDE_CODE_OAUTH_TOKEN' in env) && !('ANTHROPIC_API_KEY' in env), 'neither variable');
-    assert.equal(during, true);
-    assert.ok(env.HOME.startsWith(r.tmpRoot) && env.TMPDIR.startsWith(r.tmpRoot) && calls[0].options.cwd.startsWith(r.tmpRoot));
-    const { mcpServers, abortController, ...passedOptions } = calls[0].options;
-    assert.ok(!JSON.stringify(passedOptions).includes(STORED), 'the module passes nothing of the stored sign-in');
-    // the instance's disk no longer holding it: NOT_SIGNED_IN
-    rmSync(creds(r));
-    ({ final } = await conversation(r.base, signinReq()));
-    assert.deepEqual({ ok: final.ok, code: final.code }, { ok: false, code: 'NOT_SIGNED_IN' });
-    assert.equal(calls.length, 1);
+    assert.equal(r.claude.runs().length, before, 'nothing runs for another member');
+    assert.equal(r.signin.waiting.member, M, 'and the waiting attempt is kept');
+    await r.post('/signin/code', { member: M, code: GOOD_CODE });
+    // nothing kept: the attempt's own directory is gone, and another member may sign in at once
+    await until(() => readdirSync(r.signinRoot).length === 0);
+    assert.equal((await r.post('/signin', { member: OTHER })).status, 200);
+    await r.post('/signout', { member: OTHER });
+    await until(() => readdirSync(r.signinRoot).length === 0);
   } finally { await r.stop(); }
 });
 
-test('R8 a stubbed binary\'s sentinel sign-in and sentinel code are in no answer, relay, error or log line; the sign-in in no file but the binary\'s', async () => {
+test('R8 R27 the token is in the code answer only: in no log line, file, other answer, state or signout answer; the code is in none', async () => {
   const logged = [];
   const orig = { log: console.log, error: console.error, warn: console.warn, out: process.stdout.write, err: process.stderr.write };
+  const r = await runner('echo');
   const answers = [];
-  const { sdk } = stubSdk(async (call, { callTool }) => { await callTool('search', { q: 'x' }); throw new Error('401 from the API'); });
-  const r = await startRunner(sdk);
-  const refused = await startRunner(stubSdk(async () => success()).sdk, { mode: 'refuses' });
+  let tokenAnswer = null, files = [];
   console.log = console.error = console.warn = (...a) => { logged.push(a.join(' ')); };
-  process.stdout.write = process.stderr.write = (s) => { logged.push(String(s)); return true; };
-  let files = [];
+  process.stdout.write = (s, ...a) => { logged.push(String(s)); return orig.out.call(process.stdout, s, ...a); };
+  process.stderr.write = (s, ...a) => { logged.push(String(s)); return orig.err.call(process.stderr, s, ...a); };
   try {
-    for (const [x, path, body] of [[r, '/signin', { member: M }], [r, '/signin/code', { member: M, code: GOOD_CODE }], [r, '/signin/state', { member: M }],
-      [refused, '/signin', { member: M }], [refused, '/signin/code', { member: M, code: GOOD_CODE }]]) answers.push(await x.post(path, body));
-    answers.push((await conversation(r.base, signinReq())).frames);
-    answers.push((await conversation(r.base, signinReq(OTHER))).frames);
-    answers.push(await r.post('/signout', { member: OTHER }));
-    files = [...filesUnder(r.signinRoot), ...filesUnder(r.tmpRoot), ...filesUnder(refused.signinRoot)];
+    answers.push(await r.post('/signin', { member: M }));
+    answers.push(await r.post('/signin/state', { member: M }));
+    tokenAnswer = await r.post('/signin/code', { member: M, code: GOOD_CODE });
+    answers.push(await r.post('/signin/state', { member: M }));
+    answers.push(await r.post('/signout', { member: M }));
+    answers.push(await r.post('/signin/code', { member: M, code: GOOD_CODE }));
+    answers.push((await conversation(r.base, request({ credential: { kind: 'signin', member: M } }))).frames);
+    files = [...filesUnder(r.signinRoot), ...filesUnder(r.tmpRoot)];
   } finally {
     Object.assign(console, { log: orig.log, error: orig.error, warn: orig.warn });
     process.stdout.write = orig.out; process.stderr.write = orig.err;
-    await r.stop(); await refused.stop();
+    await r.stop();
   }
-  const out = JSON.stringify(answers) + logged.join('\n');
-  assert.ok(answers[0].body.address && answers[1].body.connected && answers[5].some((f) => f.tool_use), 'the steps ran');
-  for (const s of [STORED, GOOD_CODE, GOOD_CODE.split('#')[0]]) assert.ok(!out.includes(s), `${s.slice(0, 20)}… never leaves`);
-  const holding = files.filter((f) => f.text.includes(STORED)).map((f) => f.path);
-  assert.deepEqual(holding, [join(r.signin.configDir, '.credentials.json')], 'the sentinel sign-in is only where the binary wrote it');
-  assert.ok(files.every((f) => !f.text.includes(GOOD_CODE.split('#')[0])), 'the code is in no file');
-});
-
-test('R9 a conversation of each kind leaves the instance\'s writable paths as they were, but for the sign-in\'s renewal', async () => {
-  const { sdk } = stubSdk(async (call) => {
-    const env = call.options.env;
-    writeFileSync(join(env.HOME, 'notes'), 'x');
-    writeFileSync(join(env.TMPDIR, 'scratch'), 'x');
-    writeFileSync(join(call.options.cwd, 'work'), 'x');
-    writeFileSync(join(env.CLAUDE_CONFIG_DIR, 'session-cache.json'), 'x');
-    const credsFile = join(env.CLAUDE_CONFIG_DIR, '.credentials.json');
-    if (existsSync(credsFile)) writeFileSync(credsFile, JSON.stringify({ renewed: true }));   // the binary's renewal
-    return success();
-  });
-  const r = await startRunner(sdk);
-  try {
-    await signedIn(r);
-    const listing = () => [...filesUnder(r.signinRoot), ...filesUnder(r.tmpRoot)].map((f) => f.path).sort();
-    const contents = () => Object.fromEntries(filesUnder(r.signinRoot).map((f) => [f.path, f.text]));
-    // the one kind a conversation has (T39), and a refused one (a subscription token), which starts nothing
-    for (const req of [signinReq(), request({ credential: { kind: 'subscription', secret: 'sk-ant-oat01-x' } })]) {
-      const paths0 = listing(), text0 = contents();
-      const { final } = await conversation(r.base, req);
-      assert.equal(final.ok, req.credential.kind === 'signin');
-      await until(() => readdirSync(r.tmpRoot).length === 0);
-      assert.deepEqual(listing(), paths0, `${req.credential.kind}: the same paths after`);
-      const changed = Object.keys(text0).filter((p) => contents()[p] !== text0[p]);
-      assert.deepEqual(changed, req.credential.kind === 'signin' ? [creds(r)] : [], 'only the sign-in\'s renewal differs');
-    }
-  } finally { await r.stop(); }
+  assert.equal(tokenAnswer.body.token, TOKEN, 'the code answer carries it');
+  const out = JSON.stringify(answers) + logged.join('\n') + JSON.stringify(r.lines);
+  for (const s of [TOKEN, GOOD_CODE, GOOD_CODE.split('#')[0]]) assert.ok(!out.includes(s), `${s.slice(0, 24)}… is in no other answer or line`);
+  assert.ok(!JSON.stringify(tokenAnswer.body).includes(GOOD_CODE.split('#')[0]), 'the code is not in the token\'s answer either');
+  assert.ok(files.every((f) => !f.text.includes(TOKEN) && !f.text.includes(GOOD_CODE.split('#')[0])), 'nor in any file');
 });
 
 test('R22 Claude Code runs as published: nothing written under its package after npm ci, no option or variable picks a sign-in method', async () => {
@@ -309,35 +318,37 @@ test('R22 Claude Code runs as published: nothing written under its package after
     if (l.startsWith('COPY')) assert.ok(!/node_modules/.test(l), `${l}: writes nothing under node_modules`);
   }
   assert.ok(!lines.some((l) => /apt-get|apk |claude-agent-sdk/.test(l) && !/npm ci/.test(l)), 'nothing installed or changed for the sign-in');
-  // the options and environment R1, R2 and R17 pass
+  // the options and environment R1, R2 (R28) and R17 (R27) pass
   const PICKS = /^(CLAUDE_CODE_USE_|ANTHROPIC_AUTH_TOKEN$|ANTHROPIC_BASE_URL$|CLAUDE_CODE_OAUTH_REFRESH_TOKEN$|CLAUDE_CODE_OAUTH_SCOPES$|CLAUDE_CODE_OAUTH_CLIENT_ID$|CLAUDE_CODE_CUSTOM_OAUTH_URL$|CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST$|ANTHROPIC_UNIX_SOCKET$|CLAUDE_CODE_API_KEY_HELPER)/;
   const { calls, sdk } = stubSdk(async () => success());
   const r = await startRunner(sdk);
   try {
-    await signedIn(r);
-    await conversation(r.base, signinReq());
+    await r.post('/signin', { member: M });
+    await r.post('/signin/code', { member: M, code: GOOD_CODE });
+    await conversation(r.base, request());
     await r.post('/signin/state', { member: M });
     await r.post('/signout', { member: M });
     for (const c of calls) {
+      // the held token is AT-22's own way to use the token setup-token mints; it removes no method
       for (const k of Object.keys(c.options.env)) assert.ok(!PICKS.test(k), `${k} picks a sign-in method`);
       assert.ok(!('settings' in c.options) && !('extraArgs' in c.options) && !('pathToClaudeCodeExecutable' in c.options),
         'no setting, argument or other binary');
       assert.deepEqual(c.options.settingSources, []);
     }
     const runs = r.claude.runs();
-    assert.deepEqual([...new Set(runs.map((x) => x.args.join(' ')))].sort(), [LOGIN_ARGS, STATUS_ARGS, LOGOUT_ARGS].map((a) => a.join(' ')).sort());
+    assert.deepEqual([...new Set(runs.map((x) => x.args.join(' ')))], [SETUP_ARGS.join(' ')], 'the binary\'s own setup-token alone (AT-22)');
     for (const x of runs) {
       for (const k of x.env) assert.ok(!PICKS.test(k) && k !== 'CLAUDE_CODE_OAUTH_TOKEN' && k !== 'ANTHROPIC_API_KEY', `${k} in the binary's environment`);
-      assert.ok(!x.args.some((a) => /^--(console|claudeai|sso|email)/.test(a)), 'no login option selects a method');
+      assert.ok(!x.args.some((a) => /^--/.test(a)), 'no option selects a method');
     }
   } finally { await r.stop(); }
 });
 
-test('R23 fleet-member.json states terms: AT-14\'s two conditions, its page, who_agrees null; no text says the terms allow the sign-in', () => {
+test('R23 fleet-member.json states terms: AT-14\'s two conditions, its page, who_agrees null; no text says the terms allow the sign-in, U-7 settled by K3061', () => {
   const m = readManifest();
   assert.deepEqual(Object.keys(m.terms), ['condition', 'source', 'who_agrees']);
   assert.equal(m.terms.source, 'https://code.claude.com/docs/en/legal-and-compliance');
-  assert.equal(m.terms.who_agrees, null, 'U-7 (d) is open');
+  assert.equal(m.terms.who_agrees, null);
   // the register's AT-14, quoted
   const register = read('../../build/terms/anthropic.md');
   const at14 = register.slice(register.indexOf('### AT-14'), register.indexOf('### AT-15'));
@@ -347,8 +358,9 @@ test('R23 fleet-member.json states terms: AT-14\'s two conditions, its page, who
   assert.match(m.terms.condition[0], /requires agreeing to our Commercial Terms of Service/);
   assert.match(m.terms.condition[1], /must not be modified.*may not remove, disable, or restrict any authentication method/);
   for (const c of m.terms.condition) assert.ok(quoted.includes(c.replace(/\s+/g, ' ')), `as the register quotes it: ${c.slice(0, 40)}…`);
-  // DEC-156: no text of this module says Anthropic's terms allow the sign-in
+  assert.match(m.note, /K3061/, 'the note cites Bob\'s ruling, not an open U-7');
+  assert.ok(!/U-7 \(d\) is open|U-7 \(a\)-\(d\) open/.test(m.note));
   const ALLOWS = /terms\s+(allow|permit)|(allowed|permitted)\s+by\s+(anthropic|the terms)|anthropic\s+(allows|permits)/i;
   for (const f of ['../fleet-member.json', '../Dockerfile', '../wrangler.jsonc', '../src/signin.mjs', '../src/entry.mjs', '../src/runner.mjs',
-    '../src/worker.mjs', '../src/env.mjs', '../package.json']) assert.ok(!ALLOWS.test(read(f)), f);
+    '../src/worker.mjs', '../src/env.mjs', '../src/screen.mjs', '../src/waits.mjs', '../package.json']) assert.ok(!ALLOWS.test(read(f)), f);
 });

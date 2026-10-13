@@ -442,7 +442,7 @@ export class BasisVersions {
       .map((r) => ({ version: r.name, ord: r.ord, target: r.target_id, content_id: r.content_id ?? null })) };
   }
 
-  /* ================================================================ reads (R8–R11, R22, R23, R37, R39, R41, R42) */
+  /* ================================================================ reads (R8–R11, R22, R23, R37, R39, R41, R42, R50) */
 
   /** D-235: the collections the record holds for one version, read once for `op=basisversions` and `op=suggest`'s
    *  answer. The ground labels come from the legs this answer carries, the blank label a legless part projects dropped.
@@ -700,7 +700,8 @@ export class BasisVersions {
    *  (`project-stage` R2, was publication R45) fences the project. The candidates are the document's live `cites`
    *  targets that the record holds as inquiries, read in one bounded statement, one past the page, so `cursor` (the
    *  last answered) is set only when more follow. `limit` absent, zero or not a number reads as 500, a negative one as 1 (connections R42's reading).
-   *  Writes nothing; never throws: an empty or non-project id, or a project with no document, answers `items: []`. */
+   *  Writes nothing; never throws: an empty or non-project id, or a project with no document, answers `items: []`; a
+   *  `basisFor` that throws reads as no leg, so a failing read never cuts a page short behind a null cursor. */
   projectQuestions({ project = null, after = null, limit = null } = {}) {
     const out = { items: [], cursor: null };
     try {
@@ -722,7 +723,9 @@ export class BasisVersions {
             AND object_type IN (SELECT value FROM json_each(?)) AND bundle_id > ?
           ORDER BY bundle_id LIMIT ?`, JSON.stringify(live), INQUIRY_TYPES, String(after ?? ""), cap + 1);
       for (const r of rows.slice(0, cap)) {
-        const basis = this.inquiry.basisFor(r.bundle_id, { limit: 1 });
+        /* a read that fails reads as one that answered no leg (not ok), so the page and its cursor stay whole */
+        let basis = null;
+        try { basis = this.inquiry.basisFor(r.bundle_id, { limit: 1 }); } catch { basis = null; }
         const { stance } = BasisVersions.#recordIn(fm, pid, r.bundle_id);
         out.items.push({ inquiry: r.bundle_id, legs: !!basis?.ok && Array.isArray(basis.legs) && basis.legs.length > 0,
                          stance: stance ? stance.state : "none" });
@@ -730,6 +733,29 @@ export class BasisVersions {
       if (rows.length > cap) out.cursor = out.items[out.items.length - 1].inquiry;
     } catch { /* never throws: what was read so far stands */ }
     return out;
+  }
+
+  /** R50 (T47; N974, K3003, K3027 doubts 5, 7; `op=projectquestions`): R41 served to a viewer. A project the viewer may
+   *  not see (membership R80), an absent one and one that is not a project answer alike, an empty page and never a
+   *  refusal (R33). Otherwise R41's page less each inquiry the viewer may not see, left out unannounced and uncounted,
+   *  each item carrying the inquiry's title as the record holds it (record-core R34); the cursor is R41's, so a page may
+   *  hold fewer than `limit` and no inquiry is skipped. Writes nothing; never throws. */
+  projectQuestionsFor({ project = null, after = null, limit = null, viewer = null } = {}) {
+    let empty = { ok: true, project: null, items: [], cursor: null };
+    try {
+      const pid = String(project ?? "").trim();
+      empty = { ...empty, project: pid };
+      if (!pid || !this.membership.inSight(pid, viewer)) return empty;
+      const p = this.record.bundleInfo(pid);
+      if (!p || normalizeType(p.type) !== "project") return empty;
+      const page = this.projectQuestions({ project: pid, after, limit });
+      const items = [];
+      for (const it of page.items) {
+        if (!this.membership.inSight(it.inquiry, viewer)) continue;
+        items.push({ ...it, title: this.record.bundleInfo(it.inquiry)?.title ?? null });
+      }
+      return { ok: true, project: pid, items, cursor: page.cursor };
+    } catch { return empty; }   /* never throws: a failure reads as nothing to show */
   }
 
   /** R39 (MK-1 (A), N67): what would carry a member's authored observation into the published record. From each root
@@ -1894,7 +1920,10 @@ export function basisVersionsOps(bv, url, body) {
   return {
     basisversions: () => bv.basisVersions({ id: q("id"), limit: q("limit"), offset: q("offset"), viewer: q("viewer"),
                                             project: q("project") }),
-    versionaccept:   () => bv.versionAccept(versionArgs()),
+    /* R50: the viewer is the URL's stamp, the rest the query's */
+    projectquestions: () => bv.projectQuestionsFor({ project: q("project"), after: q("after"), limit: q("limit"),
+                                                     viewer: q("viewer") }),
+    versionaccept:  () => bv.versionAccept(versionArgs()),
     versionreject:   () => bv.versionReject(versionArgs()),
     versionconsider: () => bv.versionConsider(versionArgs()),
     versionrevert:   () => bv.versionRevert(versionArgs()),

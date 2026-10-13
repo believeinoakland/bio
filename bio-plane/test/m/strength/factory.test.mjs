@@ -150,13 +150,13 @@ test("R33 (K1307): with no acceptedWork given, a ref is read through accepted-wo
     finding: (a) => { asked.push(a); return { ref: a.ref, group: "g2", case: "C-1", edition: a.edition, finding: "INQ-2026-0500-a",
                                              pair: { capture: "C", connection: "B" }, acceptance: null }; },
     openFlags: () => ({ flags: [], complete: true }), withdrawals: () => ({ withdrawals: [], cursor: null }) });
-  assert.notEqual(reg && reg.ok, false, JSON.stringify(reg));
+  assert.ok(reg && reg.ok !== false, JSON.stringify(reg));
   const after = s.strengthOf("INQ-2026-0001-a");
   assert.deepEqual([after.capture.grade, after.connection.grade], ["C", "B"]);
   assert.deepEqual(asked[0], { ref: REF, edition: 4, viewer: null });
 });
 
-test("R1, R37, R39 (K1612): with no reader given, the earned registry, the cap and the resting-on read are leg-earning's own (its R1, R2, R4, R8), on the same host", async () => {
+test("R1, R37 (K1612): with no reader given, the earned registry, the cap and the resting-on read are leg-earning's own (its R1, R2, R4, R8), on the same host", async () => {
   const { legEarningOf, legCapped } = await import("../../../src/leg-earning/index.mjs");
   const h = bareHost();
   const s = strengthOf(h.host);

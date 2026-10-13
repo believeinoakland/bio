@@ -1,7 +1,7 @@
 /* run-rules T46-13 (N897 (2), K2816; N919, K2892; N920; N913, DEC-194): R29, the test-instance exception
    (`partAdmittedOn`, `partAdmitted`, `untestedLabel`); R30, its refusal `AI_PART_NOT_DEPLOYED`; R16, R21 and R14's flags
-   set and gated through R29; R27's `statusreport`; R31, two C-109 rows read by key from `words.json`. Each refusal has its
-   negative control beside it (K874). */
+   set and gated through R29; R27's `statusreport`; R31, two C-109 rows read by key from `words.json`; R32 (T47-71; DEC-198),
+   C-22.30 read by key from it too. Each refusal has its negative control beside it (K874). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { partAdmittedOn, partAdmitted, untestedLabel, partRefusal, UNTESTED_WORDS, partDeployableOn, partDeployable,
@@ -199,7 +199,9 @@ test("R27 (T46): DRAFT_KINDS gains statusreport after the action drafts — reac
 
 test("R31: C-109.13 and C-109.14 take their translations from words.json's refusal.<CODE>, read by key (RUN_RULES_WORDS), codes, numbers and wheres unmoved; C-22.25 AI_RUN_ORIGIN_UNKNOWN keeps its present translation, since words.json's speaks only of a planning run", () => {
   assert.ok(Object.isFrozen(RUN_RULES_WORDS));
-  assert.deepEqual(Object.keys(RUN_RULES_WORDS), ["refusal.AI_RUN_REEXAM_NEEDS_RESPONSE", "refusal.AI_RUN_REEXAM_OPEN"]);
+  /* R32 (T47) adds C-22.30's key after R31's two; t46's R32 test holds it */
+  assert.deepEqual(Object.keys(RUN_RULES_WORDS), ["refusal.AI_RUN_REEXAM_NEEDS_RESPONSE", "refusal.AI_RUN_REEXAM_OPEN",
+                                                   "refusal.MEMBER_RUN_MODE_NOT_ADMITTED"]);
   for (const [key, en] of Object.entries(RUN_RULES_WORDS)) assert.equal(en, WORD(key), `${key} is the list's word, verbatim`);
   for (const [code, n] of [["AI_RUN_REEXAM_NEEDS_RESPONSE", "C-109.13"], ["AI_RUN_REEXAM_OPEN", "C-109.14"]]) {
     const row = AI_RUN_PLAN_CHECKS[code];
@@ -220,21 +222,28 @@ test("R31: C-109.13 and C-109.14 take their translations from words.json's refus
   assert.throws(() => WORD("refusal.NOT_A_CODE"), /holds no word/);
 });
 
-test("R32: MEMBER_RUN_MODE_NOT_ADMITTED (C-22.30, the next free number after R30's) is a row of this module's table in DEC-83's form, minted by ai-runs R18 at dispatchMemberRun's region and read here by key, with R32's interim translation", () => {
+test("R32 (T47; N992; DEC-198): MEMBER_RUN_MODE_NOT_ADMITTED (C-22.30, the next free number after R30's) is a row of this module's table in DEC-83's form, minted by ai-runs R18 at dispatchMemberRun's region and read here by key; its translation is words.json's refusal.MEMBER_RUN_MODE_NOT_ADMITTED, read by key (RUN_RULES_WORDS), T46's interim sentence gone; code, number and where unmoved", () => {
   const row = AI_RUN_OWN_CHECKS.MEMBER_RUN_MODE_NOT_ADMITTED;
   assert.deepEqual(Object.keys(row).sort(), ["check", "translation", "where"]);
   assert.equal(row.check, "C-22.30");
   assert.equal(row.where, "src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch");
-  assert.equal(row.translation, "Nothing was started, because on your own Claude sign-in the assistant only checks and plans "
-    + "for you; this kind of work needs your group's Civicsmith to run it.");
+  /* the list's word, verbatim, read by key: the row's translation is RUN_RULES_WORDS' entry and the list's en */
+  const key = "refusal.MEMBER_RUN_MODE_NOT_ADMITTED";
+  assert.equal(RUN_RULES_WORDS[key], WORD(key), `${key} is the list's word, verbatim`);
+  assert.equal(row.translation, WORD(key));
+  assert.equal(row.translation, RUN_RULES_WORDS[key]);
   assert.equal(AI_RUN_CHECKS.MEMBER_RUN_MODE_NOT_ADMITTED, row);
-  assert.equal(translationOf("MEMBER_RUN_MODE_NOT_ADMITTED"), row.translation);
-  /* interim until words.json holds its key; control: the list does not hold it yet */
-  assert.throws(() => WORD("refusal.MEMBER_RUN_MODE_NOT_ADMITTED"), /holds no word/);
+  assert.equal(translationOf("MEMBER_RUN_MODE_NOT_ADMITTED"), WORD(key));
+  /* control: T46's interim sentence is gone */
+  const interim = "Nothing was started, because on your own Claude sign-in the assistant only checks and plans for you; "
+    + "this kind of work needs your group's Civicsmith to run it.";
+  assert.notEqual(row.translation, interim);
+  assert.equal(Object.values(AI_RUN_CHECKS).some((r) => r.translation === interim), false);
   /* one condition per number, and none retired reused */
   const numbers = Object.values(AI_RUN_CHECKS).map((r) => r.check);
   assert.equal(numbers.filter((n) => n === "C-22.30").length, 1);
   for (const r of Object.values(RETIRED_CHECKS)) assert.notEqual(r.check, "C-22.30");
-  /* control: R30's row is a different condition */
+  /* control: R30's row is a different condition, and a key the list lacks still fails loudly */
   assert.notEqual(row.translation, AI_RUN_OWN_CHECKS.AI_PART_NOT_DEPLOYED.translation);
+  assert.throws(() => WORD("refusal.MEMBER_RUN_MODE_NOT_ADMITTED_X"), /holds no word/);
 });

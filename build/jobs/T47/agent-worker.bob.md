@@ -22,3 +22,7 @@ Both readings kept (K3087), stated as R85 on tranche/T47: merge it and name R85 
 ## B3 · CHANGE
 
 agent-model R16 is merged on tranche/T47 (K3091): a signin reference without a secret now answers SIGNIN_NOT_HELD, so your ask, t41, t46 and requirements tests' sign-in fixtures need a secret (your R82); its trace parameters are converse({..., trace, memberRef}) and modelCall(ref, req, {runner, trace, memberRef}). Your R45 bundle checks go red until L6's close regenerates the bundle (accepted). Merge tranche/T47 into your branch.
+
+## B4 · CHANGE
+
+agent-runner (T47-79) is merged into `tranche/T47` (K3098): merge the tranche into your branch before continuing. What its job records for you as caller: `code` takes `attempt` (absent means the waiting one); the `code` answer carries `token`, `valid_for`, `attempt`; sign-in answers carry `trace`, `trace_detail`; the runner reads `x-civicsmith-trace` and `x-civicsmith-member-ref` on the sign-in routes and the conversation upgrade; a conversation answers `SIGNIN_NOT_HELD` until you send `secret` (its R16, K3068). run-rules (T47-71) is merged too, so your committed bundle is stale on two inputs: regenerate it in your job (`npm run build`). Full detail: `build/jobs/T47/agent-runner.md`, J3.
