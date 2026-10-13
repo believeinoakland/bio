@@ -42,4 +42,4 @@ Two readings to confirm (carrying on with both as written):
 - Process checks: `format` 0 failures; `architecture` (agent-worker) 0 failures; `coverage` 77 of 77 ids, 0 failures; `ownership` (tranche/T47) 16 files, 0 failures. `run.mjs`: architecture 0, channels 0, and 43 coverage failures, all in other modules.
 - New files: `agent-worker/test/t47.test.mjs` and `agent-worker/test/t47.control.mjs`.
 
-Size (session_01NmjWMB4Hpd3GS7Xi1Kiqge): test runs 32, module lines 3012
+Size (session_01NmjWMB4Hpd3GS7Xi1Kiqge): test runs 32, module lines 3502
