@@ -1,6 +1,6 @@
 /* project-roster over a real SQLite database (node:sqlite), beside the real membership it uses, with a stub record-core
    that provides the services both use (bundleInfo, declarePurge, declareTable, getSetting) over a `bundles` table holding the
-   R37 read contract this module reads (bundle_id, object_type, title, current_state, project), passed to `membershipOf` and `projectRosterOf` as a test's own record-core
+   R37 read contract this module reads (bundle_id, object_type, title, current_state, project; and `manifest`), passed to `membershipOf` and `projectRosterOf` as a test's own record-core
    (K61). Every test drives the module at its interface; membership's acts set up the participation it reads. */
 import { DatabaseSync } from "node:sqlite";
 import { membershipOf } from "../../../src/membership/index.mjs";
@@ -31,6 +31,8 @@ export function world() {
   const db = new DatabaseSync(":memory:");
   db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT, project TEXT,
     current_state TEXT)`);
+  /* record-core R37's `manifest` read contract (bundle_id, author, created, rowid), for R27's opener. */
+  db.exec(`CREATE TABLE manifest (bundle_id TEXT NOT NULL, snap_key TEXT NOT NULL, author TEXT, created TEXT NOT NULL)`);
   const declared = [];
   /* record-core's settings (its R25), for R24's active profiles: `jurisdiction_profiles` a test sets directly. */
   const settings = { jurisdiction_profiles: ["test-port-ellery"] };
@@ -63,6 +65,11 @@ export function world() {
     /* A project with its recorded `current_state` (record-core R37), `forming` unless a test names another or null. */
     project(id, title = `Project ${id}`, state = "forming") {
       w.bundle(id, "project", title, null, state); m.reindexProjectSight(id); return id;
+    },
+    /* A manifest entry of `id` written by `author` at `created` (record-core R37), in the order recorded. */
+    entry(id, author, created = new Date().toISOString()) {
+      db.prepare(`INSERT INTO manifest (bundle_id, snap_key, author, created) VALUES (?,?,?,?)`)
+        .run(id, `k${Math.random().toString(36).slice(2)}`, author, created);
     },
     row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; },
     rows(q, ...a) { return sql.exec(q, ...a); },

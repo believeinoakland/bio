@@ -93,20 +93,21 @@ test("R26 each project is {id, name, stage}: name its title (record-core R34), s
   const all = w.r.projectList({ viewer: `${MACHINE_CLASS_PREFIX}member` });
   assert.deepEqual(Object.keys(all).sort(), ["count", "limit", "ok", "projects", "truncated"]);
   assert.deepEqual([all.ok, all.count, all.limit, all.truncated], [true, 6, 200, false]);
+  /* R27 (T47) adds each project's `owner`; no manifest entry is recorded here, so every one answers null */
   assert.deepEqual(all.projects, [
-    { id: "PROJ-0", name: null, stage: "investigating" },
-    { id: "PROJ-A", name: "Project PROJ-A", stage: "forming" },
-    { id: "PROJ-D", name: "Project PROJ-D", stage: "forming" },
-    { id: "PROJ-E", name: "Project PROJ-E", stage: "closed" },
-    { id: "PROJ-F", name: "Project PROJ-F", stage: null },
-    { id: "PROJ-Z", name: "Zeta", stage: null },
+    { id: "PROJ-0", name: null, stage: "investigating", owner: null },
+    { id: "PROJ-A", name: "Project PROJ-A", stage: "forming", owner: null },
+    { id: "PROJ-D", name: "Project PROJ-D", stage: "forming", owner: null },
+    { id: "PROJ-E", name: "Project PROJ-E", stage: "closed", owner: null },
+    { id: "PROJ-F", name: "Project PROJ-F", stage: null, owner: null },
+    { id: "PROJ-Z", name: "Zeta", stage: null, owner: null },
   ]);
   for (const p of all.projects) {
-    assert.deepEqual(Object.keys(p).sort(), ["id", "name", "stage"], p.id);
+    assert.deepEqual(Object.keys(p).sort(), ["id", "name", "owner", "stage"], p.id);
     assert.equal(p.name, w.core.bundleInfo(p.id).title, `${p.id}: R34's title`);
   }
-  /* no question count, no request, nothing of the project beyond its id, title and stage */
-  assert.doesNotMatch(JSON.stringify(all), /question|request|owner|participant/);
+  /* no question count, no request, nothing of the project beyond its id, title, stage and opener (R27) */
+  assert.doesNotMatch(JSON.stringify(all), /question|request|participant/);
   /* the stage is read as recorded, at each read: a change of the recorded state shows at once */
   w.sql.exec(`UPDATE bundles SET current_state='closed' WHERE bundle_id='PROJ-A'`);
   assert.equal(w.r.projectList({ viewer: V("ann") }).projects[0].stage, "closed");
@@ -166,7 +167,8 @@ test("R26 over the real record-core: name its bundleInfo title and stage its bun
   m.projectVisibilitySet({ projectId: "PROJ-B", setting: "discoverable", by: "bob", viewer: V("bob") });
   w.sql.exec(`UPDATE bundles SET current_state='closed', title='Bee' WHERE bundle_id='PROJ-B'`);
   const all = r.projectList({ viewer: `${MACHINE_CLASS_PREFIX}admin` });
-  assert.deepEqual(all.projects, [{ id: "PROJ-A", name: "PROJ-A", stage: "forming" }, { id: "PROJ-B", name: "Bee", stage: "closed" }]);
+  assert.deepEqual(all.projects.map(({ id, name, stage }) => ({ id, name, stage })),
+    [{ id: "PROJ-A", name: "PROJ-A", stage: "forming" }, { id: "PROJ-B", name: "Bee", stage: "closed" }]);
   for (const p of all.projects) assert.deepEqual([p.name, p.stage], [rc.bundleInfo(p.id).title, rc.head(p.id).currentState], p.id);
   assert.deepEqual(ids(r.projectList({ viewer: V("ann") })), ["PROJ-A"]);
   assert.deepEqual(ids(r.projectList({ viewer: V("second") })), ["PROJ-B"], "an administrator: the discoverable one only");
