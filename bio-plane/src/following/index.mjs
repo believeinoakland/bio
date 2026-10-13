@@ -1201,11 +1201,24 @@ export class Following {
   /** R25 (for `notice-producers` R5): the day after which a duty is no longer told: null while it has no link or any
    *  link of it is unanswered; else the latest end day its answered links hold. Writes nothing; never throws. */
   dutyWatchEnd(duty) {
+    const e = this.#dutyEnd(duty);
+    return e ? e.day : null;
+  }
+
+  /** R28 (for `notice-producers` R18): null exactly when `dutyWatchEnd` is; else `{day, at}`, `day` its end day and `at`
+   *  the recorded instant of the answer that made that end hold: the last of the duty's links' answers to be recorded,
+   *  from which none of its links stood unanswered. Writes nothing; never throws. */
+  dutyWatchEndAt(duty) {
+    return this.#dutyEnd(duty);
+  }
+  /* R25, R28: a duty's end from its links' answers, `{day, at}`, or null while it has no link or any link is unanswered.
+     Every answer's `at` is the act's whole-second stamp (`instant`), so the instants compare as text. */
+  #dutyEnd(duty) {
     try {
-      const ls = this.#rows(`SELECT l.link_id, a.until_day FROM watch_links l LEFT JOIN watch_answers a ON a.link_id = l.link_id
+      const ls = this.#rows(`SELECT l.link_id, a.until_day, a.at FROM watch_links l LEFT JOIN watch_answers a ON a.link_id = l.link_id
                              WHERE l.watch_kind='duty' AND l.watch_id=?`, String(duty));
-      if (!ls.length || ls.some((x) => x.until_day == null)) return null;
-      return ls.map((x) => x.until_day).sort().at(-1);
+      if (!ls.length || ls.some((x) => x.until_day == null || x.at == null)) return null;
+      return { day: ls.map((x) => x.until_day).sort().at(-1), at: ls.map((x) => x.at).sort().at(-1) };
     } catch { return null; }
   }
 
