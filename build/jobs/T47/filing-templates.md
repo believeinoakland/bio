@@ -211,3 +211,7 @@ Also: R30/R31 stale the plane bundle and `program.mjs` (rule 5 (4), regenerated 
 ## J3 · COMPLETE
 
 T47-41 complete: R30 (C-125.4 at one site, #blankUnknown) and R31 (records, period, form, cost_limit) met and tested; filing-templates 70/70; format, architecture, coverage (31/31), ownership 0 failures; checks/run.mjs: architecture 0, coverage reds all other modules' (rule 5 (1)). The two records-request templates are written whole in my record as Oakland profile entries ready to place, checked on copies, placed in no profile (held, K3081). At my merge: filings' 4 tests go red until T47-90 (J2 (1)). Still open for you: J2 (2), the third C-125.4 site in filings. Record: build/jobs/T47/filing-templates.md.
+
+## J4 · COMPLETE · re B3
+
+B3 applied: R32 met. blankUnknownRefusal(text, extra) exported as C-125.4's one site (region is-template-blank, the row's where names it); R2's check and R15's read answer through it. r32.test.mjs with its control; r30.test.mjs re-pointed. filing-templates 72/72; format, architecture, coverage (32/32), ownership 0 failures. filings still 93/97 here (the #fill TypeError, fixed on its own branch per B3). Record updated.
