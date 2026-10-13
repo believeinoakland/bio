@@ -51,11 +51,11 @@
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "screen": 123,
+  "screen": 125,
   "act": 591,
   "column": 33,
   "wizard": 306,
-  "total": 1724,
+  "total": 1726,
   "protected": 615
  },
  "words": [
@@ -4896,6 +4896,18 @@
   {
    "key": "screen.calculation.purpose",
    "en": "A calculation shown with its method and inputs, each tied to the record and recomputed when an input changes.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.help-records.name",
+   "en": "Help: How a records request works",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.help-records.purpose",
+   "en": "What the law requires of the office you ask for records, the faster request, and what the city's portal shows.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },

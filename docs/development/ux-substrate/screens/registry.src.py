@@ -106,6 +106,8 @@ screen('money', 'Money trail', 'working', 'Money facts with stage and period; a 
    ('findin','Look for it in this project'),('actioncreate','Ask the city for the record'),('createevent','Record when it moved'),('gradenote','Why B, and what would raise it'),('acquire','Get the city\'s own copy'),('checkrequest','Ask a member who knows budgets'),('hypothesishold','Keep my reading as a hunch')], [12])
 screen('calculation', 'Calculation', 'working', 'A computed fact with its method, or a member\'s spreadsheet bound to the record.',
   [('calculationcreate','Work it out'),('tabledeclare','Declare the table'),('calculationdraw','Draw a random sample'),('addworkbook','Bind your spreadsheet'),('bind','Tie an input to the record'),('recordcheck','Record a second member\'s check'),('calculationaccept','Accept the result'),('testify','Record what you saw at a report'),('spotcheckvisit','Count it for the drawn report')], [9])
+screen('help-records', 'Help: How a records request works', 'working', 'What the California Public Records Act requires of the office, Oakland\'s faster request, what the city\'s portal shows, and what Civicsmith does with a request (Bob\'s D13, K3060; DEC-209).',
+  [], [7])
 screen('help', 'Help: How spot-checks work', 'working', 'A help page: one method explained in plain words, linked from where it is used (Bob, 7 October).',
   [], [9])
 screen('explore', 'Explore connections', 'working', 'Chains between a start and an end, each step cited and graded (K1469, K1487).',
