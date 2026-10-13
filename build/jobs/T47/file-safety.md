@@ -16,7 +16,7 @@
 
 **Deferred** · none.
 
-**Found in other modules** (REPORT J3):
+**Found in other modules** (REPORT J2):
 - Generated artifact made stale: `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) inlines file-safety's source; regenerated at the layer close (mechanics §14). I did not touch it.
 - The row census (`bio-plane/src/gate.mjs`, promotion's stamp) names C-140 through .42 with the old translations of C-140.2, .3, .13, .38: red for those four and the new C-140.43, accepted until T48's stamp (B1, B3).
 - `file-scanner`'s Purpose says "safe-copy makers"; if any text of file-scanner reaches a member, R42a's term rule (DEC-200 (5)) would apply there too. Its own requirements, not mine.
