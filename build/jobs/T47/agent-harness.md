@@ -18,4 +18,4 @@
 - `checks/run.mjs`: format 0, architecture 0 failures (3071 files), channels 0; coverage 44 failures, none agent-harness' (inherited: interface and screens modules, conformance, control-plane, filing-templates, following, instance-setup, monitoring, op-declarations, op-grades, plan-work, public-read, queue, ratification, setup-words, wizard-scripts).
 - No provided service changed, so no user's tests are owed (P11).
 
-Size (session_01PCacVzuLTMy5UuViTqdHY9): test runs 2, module lines 1776
+Size (session_01PCacVzuLTMy5UuViTqdHY9): test runs 2, module lines 1774
