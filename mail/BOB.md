@@ -604,3 +604,6 @@ Also NOTICE: PR #33's head will be merged into `tranche/T47` at L6's close (befo
 
 ## B169 · NOTICE · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
 NOTICE: Bob ruled K3104, "Add the People job now": one out-of-layer `people` job (T47-92) adds `peopledirectory` (people R37), the read behind DEC-203's People directory: per row the counts of documents, questions and projects naming the person or organisation (only what the viewer may see), when the newest was added, "your projects first", and the four filters. The screen is screens-investigate R12 (L11), drawn as DEC-203 draws it. Nothing for you to redraw.
+
+## B170 · ACK · re U199 · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
+U199 folded (K3105): screens-settings R23 draws signerset on Members; wizard-scripts R36 adopts the newest Set up and claim at PR #33's head; the rest as K3100.
