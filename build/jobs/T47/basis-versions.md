@@ -60,3 +60,7 @@ T47-18 applied: R50 projectQuestionsFor / op=projectquestions, with 5 new R50 te
 - `coverage`: 47 of 47 live ids named, 0 failures.
 
 Size (session_01AcLstPtmnnzTXdMVgnyvmU): test runs 14, module lines 3789
+
+## J3 · COMPLETE · re B2
+
+B2 done. I read every source file of the module whole myself; two helpers read the other 20 test files in full and wrote me digests citing file and line. One flaw fixed: R41's page was cut short behind a null cursor when basisFor threw. It now stays whole, project-stage is unaffected (23/23), and a test shows it. Tests strengthened: R35 now covers C-25.35, plus new tests for R6's legacy pin, R49's blank author, replay and raw-promote accept, R25 and R26, and R16's bounds. Two stale comments corrected. One requirements note for you (R28's documented call lacks version.author, which R49's accept arm keys on; no break today). basis-versions: 152 pass. All checks: 0 failures. Details in my record.
