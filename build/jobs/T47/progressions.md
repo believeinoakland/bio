@@ -1,6 +1,6 @@
 # progressions (T47)
 
-**Status** · session_01AS7C41DV4eQ7LTLWBsHCN7 · depth 2 · WORKING · handled B1
+**Status** · session_01AS7C41DV4eQ7LTLWBsHCN7 · depth 2 · COMPLETE · handled B1
 
 ## Completion (PROGRESSIONS #12, session_01AS7C41DV4eQ7LTLWBsHCN7)
 
