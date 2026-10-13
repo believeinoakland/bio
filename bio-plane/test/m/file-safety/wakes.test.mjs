@@ -254,3 +254,35 @@ test("R40: onFileWork(module, fn) registers once (a second by one module LISTENE
   assert.ok(FILE_WORK_BATCHES.includes("render") && FILE_WORK_BATCHES.length === 5);
   assert.doesNotMatch(JSON.stringify([...heard, ...other]), /m1|boss|member|[0-9a-f]{64}/, "no member, file or viewer");
 });
+
+test("R39 (T47; K3063): renderWake, while the render queue cannot be read (the last renderBatch found it unreadable, R43, or the wake's own read fails), answers the last renderBatch plus FILE_SAFETY_POLL_MS, never before now, so the files waiting are read again on the next round; kept across a restart; still null with no renderer bound; once the queue reads again, its ordinary answer", async () => {
+  const w = world();
+  await w.capture(pdf(false, "waits"));
+  /* the last batch found the queue unreadable */
+  w.exec("ALTER TABLE fs_files RENAME TO fs_files_away");
+  assert.equal((await w.fs.renderBatch({})).code, "RENDER_QUEUE_UNREADABLE");
+  const last = w.clock.now;
+  assert.equal(w.fs.renderWake(last), last + POLL, "a poll after the batch");
+  assert.equal(w.fs.renderWake(last + 3 * POLL), last + 3 * POLL, "never before now");
+  assert.equal(restarted(w).renderWake(last), last + POLL, "kept across a restart");
+  /* the queue reads again but the kept instant says unreadable: the poll still, and the next batch clears it */
+  w.exec("ALTER TABLE fs_files_away RENAME TO fs_files");
+  assert.equal(w.fs.renderWake(last), last + POLL);
+  w.tick(POLL);
+  const ok = await w.fs.renderBatch({});
+  assert.deepEqual([ok.ok, ok.rendered, ok.remaining], [true, 1, 0]);
+  assert.equal(w.fs.renderWake(w.clock.now), null, "readable, nothing queued: null as before");
+  /* the wake's own read fails, the last batch having read the queue: a poll after that batch */
+  const ran = w.clock.now;
+  w.exec("ALTER TABLE fs_copies RENAME TO fs_copies_away");
+  assert.equal(w.fs.renderWake(ran), ran + POLL);
+  assert.equal(w.fs.renderWake(ran + 2 * POLL), ran + 2 * POLL, "never before now");
+  /* no renderer bound: null, unreadable or not */
+  const n = world({ bound: false });
+  await n.capture(pdf(false, "unbound"));
+  n.exec("DROP TABLE fs_files");
+  assert.equal((await n.fs.renderBatch({})).code, "RENDERER_ABSENT");
+  assert.equal(n.fs.renderWake(n.clock.now), null);
+  /* negative control: before this clause a failing read answered null; the poll is this clause's */
+  assert.notEqual(w.fs.renderWake(ran), null);
+});
