@@ -596,8 +596,11 @@ export class Filings {
     const blanks = [], unfilled = [];
     for (const n of names) {
       const own = fills && fills.values.has(n) ? { value: fills.values.get(n), source: fills.source, label: fills.label } : null;
-      const val = own || (Object.prototype.hasOwnProperty.call(FILING_BLANKS, n) ? values[n]
-        : { why: "filings fills no blank by this name, so the record holds no value for it" });
+      /* a blank of `FILING_BLANKS` the record never fills (a member-filled one, filing-templates R31: records, period,
+         form, cost_limit) is left unfilled until the member fills it, never read as a value */
+      const val = own || (!Object.prototype.hasOwnProperty.call(FILING_BLANKS, n)
+        ? { why: "filings fills no blank by this name, so the record holds no value for it" }
+        : values[n] || { why: "the record holds no value for this blank: the member fills it in (fills)" });
       if (val && "value" in val) blanks.push({ name: n, value: val.value, source: val.source, ...(val.label ? { label: val.label } : {}) });
       else unfilled.push({ name: n, why: val.why });
     }
