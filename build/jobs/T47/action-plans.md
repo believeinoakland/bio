@@ -53,3 +53,7 @@ Points I relied on from the digests:
   - `node checks/run.mjs` over the product: format 0; architecture 0 failures (3106 files); channels 0; coverage 36 failures, all other modules' ids (screens-*, setup-words, signin-door, tasks, wizard-scripts), none of them action-plans'.
 
 Size (session_01Po9nWpxYmQwZZ27A9oJztP): test runs 10, module lines 3341
+
+## J1 · REPORT
+
+Findings from T47-43, for your record; nothing here blocks the job. (1) setup-words is stale against words.json: bio-plane/src/setup-words/index.mjs:492 (generated from words.json at 3f40899950) still holds the old refusal.DOCUMENT_FIRST_NO_REASON sentence ('What happened isn't documented yet...'), while words.json now holds DEC-199's sentence, which action-plans C-124.63 reads by key (R49). Regenerating it is setup-words' job. (2) C-124.63's changed translation is a row awaiting stamp (T48), so the row census stays red until T48's stamp (plan rule 5 (2)). This change also stales the plane bundle and program.mjs (rule 5 (4)). (3) planRead's R19 checks can now answer {check, option, date, state: 'undetermined', says} when no zone is held (R48). Users' tests: plan-work, following, action-producers and migrate-released are green. The reds in affordances, op-declarations, answer-envelope, control-plane and plane are the same 39 tests that fail on tranche/T47 without my change: inherited, none mine.
