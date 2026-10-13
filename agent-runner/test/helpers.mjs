@@ -4,13 +4,12 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { mkdtempSync, rmSync, readdirSync, readFileSync, statSync, writeFileSync, chmodSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, readdirSync, readFileSync, statSync, writeFileSync, chmodSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { agentRunnerOf } from '../src/entry.mjs';
 import { signinOf } from '../src/signin.mjs';
-import { GOOD_CODE } from './stubs/claude-values.mjs';
 
 export function stubSdk(script) {
   const calls = [];
@@ -48,12 +47,14 @@ export const success = (over = {}) => ({
   ...over,
 });
 
-// The member a conversation names, and a sentinel token no request may bring in (R2, R8; T39).
+// The member a conversation names; the token `credentials` holds for that member, handed down as the credential's
+// `secret` (R28); and a sentinel token no other kind of credential may bring in (R2, R8).
 export const MEMBER = 'member-7d1e';
+export const HELD = 'sk-ant-oat01-HELD-TOKEN-SENTINEL-5e2b';
 export const SENTINEL = 'sk-ant-oat01-SENTINEL-7f3a9c';
 
 export const request = (over = {}) => ({
-  credential: { kind: 'signin', member: MEMBER },
+  credential: { kind: 'signin', member: MEMBER, secret: HELD },
   model: 'claude-sonnet-5-5', system: 'You answer from the record only.', prompt: 'What was filed?',
   tools: [{ name: 'search', description: 'Search the record', input_schema: { type: 'object', properties: { q: { type: 'string' } } } }],
   max_turns: 4, ...over,
@@ -70,27 +71,24 @@ export function stubClaude(dir, mode = 'ok') {
   return { binary, log, runs };
 }
 
-// The runner over `sdk`, its instance's sign-in in its own directory (`signinRoot`) over a stubbed binary in `mode`;
-// with `signedIn`, signed in for that member through R17 and R18 before it is handed over.
-export async function startRunner(sdk, { mode = 'ok', waits, signedIn = null } = {}) {
+// The runner over `sdk` (or a promise of it), its instance's sign-in making each attempt's directory under its own
+// root (`signinRoot`) over a stubbed binary in `mode`. Every line it logs is kept in `lines` (R29), parsed.
+export async function startRunner(sdk, { mode = 'ok', waits } = {}) {
   const tmpRoot = mkdtempSync(join(tmpdir(), 'agent-runner-test-'));
   const outside = mkdtempSync(join(tmpdir(), 'agent-runner-instance-'));
   const signinRoot = join(outside, 'signin'), claude = stubClaude(outside, mode);
+  mkdirSync(signinRoot);
   const signin = signinOf({ root: signinRoot, binary: claude.binary, waits });
-  const server = agentRunnerOf({ sdk, tmpRoot, signin });
+  const lines = [];
+  const server = agentRunnerOf({ sdk, tmpRoot, signin, log: (l) => lines.push(JSON.parse(JSON.stringify(l))) });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const base = `127.0.0.1:${server.address().port}`;
-  const post = async (path, body) => {
-    const res = await fetch(`http://${base}${path}`, { method: 'POST', body: typeof body === 'string' ? body : JSON.stringify(body) });
-    return { status: res.status, body: await res.json() };
+  const post = async (path, body, headers = {}) => {
+    const res = await fetch(`http://${base}${path}`, { method: 'POST', headers, body: typeof body === 'string' ? body : JSON.stringify(body) });
+    return { status: res.status, body: await res.json(), waiting: res.headers.get('x-signin-waiting') };
   };
-  if (signedIn) {
-    const started = await post('/signin', { member: signedIn });
-    const done = await post('/signin/code', { member: signedIn, code: GOOD_CODE });
-    if (started.status !== 200 || !done.body.connected) throw new Error(`the stub sign-in failed: ${JSON.stringify([started, done])}`);
-  }
   return {
-    base, tmpRoot, signinRoot, signin, claude, post,
+    base, tmpRoot, signinRoot, signin, claude, post, lines,
     stop: async () => {
       if (signin.waiting) await signin.signout(signin.waiting.member).catch(() => {});
       server.closeAllConnections?.(); await new Promise((r) => server.close(r));
@@ -101,9 +99,9 @@ export async function startRunner(sdk, { mode = 'ok', waits, signedIn = null } =
 
 // Opens a conversation, sends `req`, answers each relay with `onRelay(tool_use)` and resolves with every frame
 // received and how the connection closed.
-export function conversation(base, req, onRelay = () => ({ content: 'ok' }), { closeAfterRelay = false } = {}) {
+export function conversation(base, req, onRelay = () => ({ content: 'ok' }), { closeAfterRelay = false, headers } = {}) {
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket(`ws://${base}/conversation`);
+    const ws = headers ? new WebSocket(`ws://${base}/conversation`, { headers }) : new WebSocket(`ws://${base}/conversation`);
     const frames = [];
     ws.onopen = () => ws.send(typeof req === 'string' ? req : JSON.stringify(req));
     ws.onmessage = async (ev) => {
