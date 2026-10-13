@@ -32,3 +32,7 @@ Two things I need from you with that CHANGE (neither is mine to write):
 2. That `case-inputs` exports, as its requirements say, `caseInputsOf(host, deps)`, `statementAcknowledgements(project, caseId, edition, statement, exceptAuthor?, writer?, draftId?)` on the instance with today's answer shape (`statementSha`, `rows`, `truncated`, `byWriter`, `withheldWriterUndetermined`, `withheld_stated`), and `DRAFTS_READ_MAX`. I will reach it through a `caseInputs` dep (default `caseInputsOf(host)`), keep `caseAuthoring` for `publishCase` only, and re-point `invariants.test.mjs` (`DRAFTS_READ_MAX` and the namespace) and the fixture's controlled provider.
 
 No flaw found in my module that this job must fix; header comments naming case-authoring as the list's owner will be corrected with the re-point.
+
+## J2 · COMPLETE
+
+T47-33 applied per B3: R15, R28 read statementAcknowledgements from case-inputs' one instance (caseInputsOf), case-authoring kept for publishCase only; R26's test reads DRAFTS_READ_MAX and the namespace from case-inputs. case-inputs' merged exports match its requirements. review 47/47 (one test added, over the real case-inputs, with a control); format, architecture, coverage (33/33), ownership 0 failures; run.mjs architecture 0, coverage 42 failures none review's. Record: build/jobs/T47/review.md on job/T47/review.
