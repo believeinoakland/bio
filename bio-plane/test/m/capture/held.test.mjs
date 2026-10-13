@@ -96,7 +96,9 @@ test("R77 (DEC-97 (1)): heldCaptures lists the Information documents at collecte
                                  collected_since: "2026-01-01T00:00:00Z", age_days: 69,
                                  eligible: null, eligibility_basis: "no batch-release examination is registered, so eligibility is undetermined",
                                  captured_for: null,
-                                 captured_for_basis: "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined" });
+                                 captured_for_basis: "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined",
+                                 /* R77 (T47): the fixture's provenance stand-in has no `captureGrade`, so it does not answer */
+                                 capture: { sha256: H("1"), grade: null } });
   const three = r.held.find((x) => x.bundle_id === "INFO-3");
   assert.deepEqual([three.collected_since, three.age_days, three.source], ["2026-03-01T00:00:00Z", 10, null],
                    "back at collected: aged from when its state last moved; no receipt, no source");

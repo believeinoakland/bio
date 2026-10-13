@@ -30,7 +30,9 @@ export function storage() {
   };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) db.exec(t);
-  db.exec(`CREATE TABLE register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, path TEXT)`);
+  /* provenance R48's contract columns capture reads: `registered` orders a document's captures (R77). */
+  db.exec(`CREATE TABLE register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, path TEXT,
+             registered TEXT NOT NULL DEFAULT '2026-01-01T00:00:00.000Z')`);
   db.exec(`CREATE TABLE captured_locators (address_norm TEXT NOT NULL, address TEXT NOT NULL, capture_sha TEXT NOT NULL,
              via TEXT NOT NULL DEFAULT 'direct', first_retrieved TEXT NOT NULL, last_retrieved TEXT NOT NULL,
              observations INTEGER NOT NULL DEFAULT 1, retrieval_locator TEXT, PRIMARY KEY (address_norm, capture_sha, via))`);
@@ -128,8 +130,8 @@ export function receipt(s, { address, capture, via = "direct", first, last = fir
   s.sql.exec(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved, last_retrieved, observations)
               VALUES (?, ?, ?, ?, ?, ?, ?)`, address, address, capture, via, first, last, observations);
 }
-export function register(s, captureSha, bundleId, { type = "information", project = null } = {}) {
-  s.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path) VALUES (?, ?, 'x')`, captureSha, bundleId);
+export function register(s, captureSha, bundleId, { type = "information", project = null, registered = "2026-01-01T00:00:00.000Z" } = {}) {
+  s.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, registered) VALUES (?, ?, 'x', ?)`, captureSha, bundleId, registered);
   s.sql.exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version, project)
               VALUES (?, ?, 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1, ?)`, bundleId, type, project);
 }
