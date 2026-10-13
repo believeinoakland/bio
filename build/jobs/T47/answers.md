@@ -20,6 +20,18 @@
 
 Size (session_01C7z3ksZT88uRq5xSFCgo2P): test runs 3, module lines 1894
 
+## Completion of B2 (ANSWERS #9)
+
+**Change applied** · B2 (K3089): R35 met. `ruleAnswer` takes `use` (`ask` or `draft`; absent, or any other value, `ask`; `RULE_USES`) and opens the grant's read log with it when the rule answer is the grant's first read, so a draft grant first read by `op=rule` scrubs its later reads as a draft (R30); a log already open keeps its use. `op=rule` reads `use` from the query only (the control plane's stamp), never the body, so a model's body cannot widen a draft to an ask. The plane's half (passing `use=draft` for `op=rule`) is T47-66's. `tranche/T47` merged first.
+
+**Tests and checks** (on `job/T47/answers`, `tranche/T47` merged)
+- `node --test bio-plane/test/m/answers/*.test.mjs`: tests 64, pass 64, fail 0. The new R35 test (`accounts.test.mjs`) fails against the source before this change (negative control run), with its own control: an ask grant unchanged, a body's `use` and an unknown use opening an ask, an open log keeping its use.
+- Users: `store-door` 45/0 and `credentials` 201/0, identical before and after.
+- `checks/format.mjs`: 0 failures; `architecture.mjs … answers`: 0 failures; `coverage.mjs … answers`: 35 of 35 live ids named, 0 failures; `ownership.mjs … tranche/T47`: 0 failures.
+- `checks/run.mjs`: format 0, architecture 0 failures (3071 files), channels 0; coverage 43 failures, none answers'.
+
+Size (session_01C7z3ksZT88uRq5xSFCgo2P): test runs 9, module lines 1902
+
 ## J1 · REPORT
 
 A grant's read log takes its use from its first read. answers' ruleAnswer opens a log with use 'ask' (it takes no use), and the plane passes use 'draft' (plane/store.mjs:634, draftUse) to logRead only; store-door's underGrant skips op=rule. So a draft grant whose first read is op=rule opens as 'ask', and its later draft reads are scrubbed of projects kept away from asks, not from drafts (R30's widening of R2). Fixing it needs both sides: answers' ruleAnswer and rule op taking a use, and the plane passing the draft use for op=rule. Not done in this test-only entry; for BOB to plan.
