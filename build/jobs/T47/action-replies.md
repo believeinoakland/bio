@@ -40,3 +40,7 @@ the split map `build/extraction/case-authoring-split-2.md` §5, §7; this module
   `checks/run.mjs`: architecture 0 failures; coverage's 36 failures are other modules', none action-replies'.
 
 Size (session_01E2ruMUjxDrmfEsvonrJ9he): test runs 7, module lines 605
+
+## J1 · REPORT
+
+Found in other modules: (1) plane test/m/plane/t45.test.mjs R39 calls caseAuthoringOf(...).registerOpenRequests, red before and after this job; its re-point is plane's L11 job (split map §5). (2) plan-work test/m/plan-work/fixture.mjs passes caseAuthoring: null to actionRepliesOf; the dep is now caseInputs. Harmless (no env, nothing registers) but stale.
