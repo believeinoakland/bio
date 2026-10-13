@@ -165,3 +165,7 @@ Size (session_011oUnEgjgR8iwQexLBg4vjp): test runs 16, module lines 3,764.
 ## J5 · REPORT
 
 Readings for you, no change made (details in my record): (1) handleCheck's viewer arm answers a member's own current or earlier handle 'free' (t40:133), left from R124's change; with R129 it should read 'taken' per R16/R123: a requirement touch, as it changes a provided answer. (2) R128's kept exception looks spent: words.json refusal.PROJECT_GUARD_UNCHECKED now says 'Your group's Civicsmith' (de9b00750e, DEC-198 (7)), so C-56.6 can be read by key. (3) R61/R78's 'every act' is sampled; a census test over membershipOps would prove it. Other modules: no test turns red with my change; the 23 reds of the whole test/m run (14 files) fail identically on tranche/T47. The plane bundle is staled by this merge; not touched.
+
+## J6 · COMPLETE
+
+T47-82 applied: R140, screens-entry in MODULE_ORDER after interface-shell (layer 11), tolerated by name only while pathless (all seven today, K3073); its own named test with controls (missing, out of place either side, tolerance arm); T46/T47-7 pins re-pinned; 5 of 12 order tests fail on the old list. Own-test flaws fixed (P8), including T47-7's deferred R60 codes and t35's lower bounds. membership 224/224; members.test.mjs 95/3 (R132 until T47-75, unchanged); format, architecture, coverage 100/100, ownership: 0 failures; run.mjs architecture 0 failures. Pushed job/T47/membership @ 88b67c04c4+mail.
