@@ -53,11 +53,11 @@
   "tab": 2,
   "level": 2,
   "screen": 131,
-  "act": 608,
+  "act": 610,
   "column": 33,
   "wizard": 306,
-  "total": 1786,
-  "protected": 650
+  "total": 1788,
+  "protected": 651
  },
  "words": [
   {
@@ -5425,6 +5425,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.unlock.label.front",
+   "en": "Unlock",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.passwordreset.label.reset",
    "en": "Set my new password",
    "protected": true,
@@ -6511,7 +6517,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_projectaikeepaway.label.projectai",
+   "key": "act.projectaikeepaway.label.projectai",
    "en": "Keep the project's material away from AI, with a reason",
    "protected": true,
    "source": "registry.json"
@@ -7375,6 +7381,12 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
+   "key": "act.unlock.does",
+   "en": "Unlocks this device with your password after it locked while you were away, and takes you back to where you were; nothing was lost. A wrong password counts as a refused sign-in.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
    "key": "act.recover.does",
    "en": "Sets a new password with one of your recovery codes, for any member. The code is spent, and every other sign-in of yours ends.",
    "protected": false,
@@ -8089,7 +8101,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_projectaikeepaway.does",
+   "key": "act.projectaikeepaway.does",
    "en": "Keeps this project's material away from AI, for every use or the ones you choose, with a reason every member sees. It binds every account, whoever pays.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"

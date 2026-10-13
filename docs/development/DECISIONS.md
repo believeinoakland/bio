@@ -3477,3 +3477,17 @@ response: **Bob's direction, drawn by the design session, 2026-10-13.** Two rule
 decided: 2026-10-13 · Bob's direction, drawn by the design session (P17)
 reasoning recorded in: this entry; `screens/mock-screens.js` (AREA_TIPS, ablock, abitem, AREA_ROWS, AREA_BLOCKS, RECENT, CLUSTER, dash-home), `screens/page.src.html` (the styles; the dashboards section's captions and intro), `screens/registry.src.py` (dash-home), `dashboards.html`, `layouts.html`.
 owed: (BOB) nothing until S20 is answered; the home's reads follow it.
+
+### DEC-217 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01DyYKz1UJZVqVzz1E8F4Cyk) (BOB #168's HANDOFF B172, from its audit of L11 against PR #33, K3137: three registry points for the design stream)
+for: bob-session
+question: (1) Which op the locked state's "Unlock" on the group's page is. (2) How the reader's link for a review copy is drawn and worded. (3) Whether `projectaikeepaway` still carries its owed mark.
+why it is Bob's: registry housekeeping under his rulings (DEC-201's way in, D3; journey 21's review copy; DEC-188's keep-away), decided as design detail and reported (P17).
+provisional: `front`'s locked state used `login`; the review-copy screen named the readers but never showed the link; `owed:projectaikeepaway DEC-188` on AI for this project.
+alternative: leave `login` and let interface-shell re-point it; show the link once per reader row.
+recommendation: as below.
+reversal cost: low: registry rows and one section.
+response: **Answered to BOB, 2026-10-13 (U203).** (1) The locked state's "Unlock" is the op `unlock` (credentials R71), listed on `front` beside `login`; its explanation: it unlocks this device with the password after it locked while the member was away and takes them back to where they were; a wrong password counts as a refused sign-in. (2) The reader's link is drawn once on `review-copy`, in its own section after "Share with a named reader": `https://<the group's address>/app/review#grant=<secret>` for the reader just named, "works until 20 October, or until you stop sharing", and, in bold, "Civicsmith sends no email: copy the link and send it to her yourself", with a plain "Copy the link" control; its card says it opens the draft as it stands for that reader, that anyone holding it can read so it goes to that reader only, and that it carries a secret, not the reader's name, so it works only while the sharing stands (screens-publish R2). (3) `projectaikeepaway` is declared and served (op-declarations R41): the owed mark is off, the button on AI for this project carries the served op, and `check_library.py` reads it as served by name, as it reads `ask`, `subscriptionsignin` and `infolevelset`. The only act still owed is `passwordresetlink` (DEC-201).
+decided: 2026-10-13 · the design session, under Bob's rulings (P17)
+reasoning recorded in: this entry; `screens/registry.src.py` (`front`, `projectai`), `screens/mock-screens.js` (`front`'s locked state; `review-copy`; `projectai`), `screens/mock-acts.js` (`unlock`, `projectaikeepaway`), `screens/mock-kit.js`, `screens/check_library.py`, `screens/page.src.html` (`.mk-readerlink`), `screens/words.json` (1,788 words, 651 protected), `layouts.html`.
+owed: (BOB) nothing new: interface-shell R38's re-point of `unlock` can stand down once the registry row is read; screens-publish R2 draws the link as here.

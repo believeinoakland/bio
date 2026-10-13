@@ -78,6 +78,15 @@
      "modules": [
       "setup-page"
      ]
+    },
+    {
+     "op": "unlock",
+     "label": "Unlock",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "credentials"
+     ]
     }
    ],
    "journeys": [
@@ -1977,9 +1986,10 @@
      ]
     },
     {
-     "op": "owed:projectaikeepaway DEC-188",
+     "op": "projectaikeepaway",
      "label": "Keep the project's material away from AI, with a reason",
-     "status": "owed"
+     "status": "declared",
+     "servedBy": "op-declarations R41 (BOB's B172: declared and served, T47)"
     }
    ],
    "journeys": []

@@ -4,6 +4,7 @@
 const ACT_HELP = {
   bootstrap: 'Takes you to Cloudflare\'s own page to allow this installer into your account, then sets up your group\'s Civicsmith there under your short name, or updates it. The short name is permanent: it appears in every address and beside every signature.',
   login: 'Signs you in on this device with your handle and password, for as long as you chose. Several wrong tries pause sign-in from here for a while.',
+  unlock: 'Unlocks this device with your password after it locked while you were away, and takes you back to where you were; nothing was lost. A wrong password counts as a refused sign-in.',
   recover: 'Sets a new password with one of your recovery codes, for any member. The code is spent, and every other sign-in of yours ends.',
   grouplanguagesset: 'Sets the languages your group\'s members use: Civicsmith\'s own words are shown in each, and members choose among them when they join. The places whose rules apply are not changed.',
   grouplogoset: 'Replaces the logo shown beside your group\'s name on its page, its masthead and its published cases. A logo is optional; with none, the name stands alone.',
@@ -123,7 +124,7 @@ const ACT_HELP = {
   projectaccountswitch: 'Turns the project\'s account on or off without removing it. While it is off, members\' own accounts, then the group\'s key, serve in the project.',
   projectaccountremove: 'Removes the project\'s account. Members\' own accounts, then the group\'s key, serve in the project from then on.',
   projectkeynoticeseen: 'Records that you have read what the project\'s key means, before the first act it pays for.',
-  owed_projectaikeepaway: 'Keeps this project\'s material away from AI, for every use or the ones you choose, with a reason every member sees. It binds every account, whoever pays.',
+  projectaikeepaway: 'Keeps this project\'s material away from AI, for every use or the ones you choose, with a reason every member sees. It binds every account, whoever pays.',
   // The Action layer's acts for T45 (DEC-194; B140)
   projectscopeset: 'Makes this project a counsel matter, your own project, or neither, with your reason. A counsel matter\'s correspondence and dates are seen only by its members and never published; your own project is hidden and yours alone.',
   projectapprovalset: 'Chooses which acts in this project need a second member\'s approval before they are sent: a kind of action, a tier, or anything addressed to the public. Your reason is kept with the setting.',
