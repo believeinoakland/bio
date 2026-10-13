@@ -1,6 +1,6 @@
 # membership (T47)
 
-**Status** · session_011oUnEgjgR8iwQexLBg4vjp · depth 2 · WORKING · handled B4
+**Status** · session_011oUnEgjgR8iwQexLBg4vjp · depth 2 · RUNNING until 2026-10-13T18:52:41Z (full test/m run and helper digest) · handled B4
 
 ## Record
 
