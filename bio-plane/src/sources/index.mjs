@@ -30,7 +30,8 @@
  * THE OPS (routed and stamped by `control-plane`, layer 11; `sourcesOps` below): `sourcedisclose` (R2–R5),
  * `sourcelink` (R6), `sourceconsent` and `sourceconsentwithdraw` (R7), `knockerconsent` (R11, no account), `sourcekeyed`
  * (R16; `keyedResultOf`, R17, is read in process by the modules that grade a fact citing a capture), and the
- * reads `sourceof` (R1), `sourcerung` (R9), `sourcereadlog` (R5) and `sourcepublishable` (R8). */
+ * reads `sourceof` (R1), `sourcerung` (R9), `sourcereadlog` (R5) and `sourcepublishable` (R8, at this module's own
+ * instant: a request names none). `sourceChangesSince` (R20) is read in process by `case-carriage` and has no route. */
 
 import { isMachineIdentity, BASIS_GRADES, TESTIMONY_GRADE } from "../record-grammar/index.mjs";
 import { recordOf, stampInstant, instantOrder, mintExhausted } from "../record-core/index.mjs";
@@ -89,6 +90,24 @@ export function evidenceOf(v) {
   }
   return null;
 }
+
+/** R20: an ISO 8601 instant: a date that exists, a time of day (seconds and a fraction optional) and its zone, `Z`
+ *  or an offset `±HH:MM`. A date alone, a local time with no zone, and anything `Date.parse` reads but ISO 8601 does
+ *  not spell (`"2026"`, `"Sep 30 2026"`) are not instants. */
+const INSTANT = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?(?:Z|[+-](\d{2}):(\d{2}))$/;
+export function isInstant(v) {
+  const m = typeof v === "string" ? INSTANT.exec(v) : null;
+  if (!m || Number(m[4]) > 23 || Number(m[5]) > 59 || Number(m[6] ?? 0) > 59 || Number(m[7] ?? 0) > 23 || Number(m[8] ?? 0) > 59)
+    return false;
+  const day = `${m[1]}-${m[2]}-${m[3]}`;
+  const d = new Date(`${day}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === day && Number.isFinite(Date.parse(v));
+}
+
+/** R20: the most changes one answer carries, and the default (N90's bound). */
+export const CHANGES_LIMIT_DEFAULT = 200, CHANGES_LIMIT_MAX = 1000;
+/** The first instant `stampInstant` no longer spells with a four-digit year. */
+const INSTANT_SPELLED_MAX = Date.parse("+010000-01-01T00:00:00Z");
 
 /** A date `YYYY-MM-DD` that exists, or a readable ISO instant. */
 function isWhen(v) {
@@ -570,7 +589,8 @@ export class Sources {
   /** R8: each entry that may be shown to `audience` at `at`, with its value (none for an entry recorded without one)
    *  and its basis; every other entry is left out, and nothing is said about it. Its answer is not a read under sight:
    *  it answers only what consent or the public record already opens to that audience, so it logs nothing (R5, K539).
-   *  It writes nothing and never throws. */
+   *  It writes nothing and never throws. A stated `at` is for in-plane callers (R20's among them); the route asks at
+   *  this module's own instant and passes none (`sourcesOps`, K3045). */
   publishableAt(args = {}) {
     const { source, audience, at = null } = isObj(args) ? args : {};
     try {
@@ -597,6 +617,56 @@ export class Sources {
         out.push(row);
       }
       return { ok: true, source, audience, at: when, entries: out };
+    } catch {
+      return noSuchSource(source);
+    }
+  }
+
+  /* ---- R20: the instants at which what R8 answers could have changed ---- */
+
+  /** R20 (in-plane only: no route, no viewer). Each disclosure appended to `source` (R2, R6) and each consent and
+   *  withdrawal recorded for it (R7, R11) at an instant after `since` and at or before the read's own instant, in
+   *  recorded order, each `{at, act, entry}` and nothing else (R5, R13: no value, audience, evidence, member or sight).
+   *  A caller asks R8 at each `at`, and at `since`, to find a state that held only inside the interval.
+   *
+   *  Recorded order is the instant, then, at one instant, disclosures before consents (a consent names an entry
+   *  already appended), then each table's own order. Every `at` here is written by `#instant()`, one spelling
+   *  (`stampInstant("millisecond")`), so instants compare as text; `since` is put in that spelling first, its
+   *  fraction past the millisecond dropped, which keeps "after" exact for instants held to the millisecond. `next`
+   *  names the last change answered (`d<seq>` or `c<seq>`); an `after` that names no change of this source reads as
+   *  absent, from the first. It writes nothing, logs no read and never throws. */
+  sourceChangesSince(args = {}) {
+    const { source, since, limit, after } = isObj(args) ? args : {};
+    try {
+      if (!this.#source(source)) return noSuchSource(source);
+      if (!isInstant(since)) return { ok: true, source, changes: null, since_invalid: true };
+      const n = typeof limit === "number" || (typeof limit === "string" && limit.trim()) ? Math.trunc(Number(limit)) : NaN;
+      const lim = Number.isFinite(n) ? Math.min(CHANGES_LIMIT_MAX, Math.max(1, n)) : CHANGES_LIMIT_DEFAULT;
+      /* a `since` past year 9999 is after every instant held: its spelling would otherwise sort first as text */
+      const sinceMs = Date.parse(since);
+      const from = sinceMs >= INSTANT_SPELLED_MAX ? "9999-12-31T23:59:59.999Z" : stampInstant("millisecond", sinceMs);
+      const at = this.#instant();
+      let cAt = "", cRank = -1, cSeq = -1;
+      const cur = typeof after === "string" ? /^([dc])(\d{1,15})$/.exec(after) : null;
+      if (cur) {
+        const row = this.#one(cur[1] === "d" ? `SELECT at FROM source_entries WHERE seq = ? AND source_id = ?`
+                                             : `SELECT at FROM source_consents WHERE seq = ? AND source_id = ?`, Number(cur[2]), source);
+        if (row) { cAt = row.at; cRank = cur[1] === "d" ? 0 : 1; cSeq = Number(cur[2]); }
+      }
+      const rows = this.#rows(
+        `SELECT at, r, seq, entry, act FROM (
+           SELECT at, 0 AS r, seq, entry_id AS entry, 'disclosure' AS act FROM source_entries WHERE source_id = ?
+           UNION ALL
+           SELECT at, 1 AS r, seq, entry_id AS entry, CASE act WHEN 'consent' THEN 'consent' ELSE 'withdrawal' END AS act
+             FROM source_consents WHERE source_id = ?)
+         WHERE at > ? AND at <= ? AND (at > ? OR (at = ? AND (r > ? OR (r = ? AND seq > ?))))
+         ORDER BY at, r, seq LIMIT ?`,
+        source, source, from, at, cAt, cAt, cRank, cRank, cSeq, lim + 1);
+      const truncated = rows.length > lim;
+      const page = rows.slice(0, lim);
+      const last = page[page.length - 1];
+      return { ok: true, source, since, at, changes: page.map((c) => ({ at: c.at, act: c.act, entry: c.entry })),
+               limit: lim, truncated, next: truncated ? `${last.r === 0 ? "d" : "c"}${last.seq}` : null };
     } catch {
       return noSuchSource(source);
     }
@@ -745,7 +815,7 @@ export function sourcesOps(s, url, body) {
     sourcekeyed: () => s.markKeyedResult({ captureSha: b.captureSha, service: b.service, terms: b.terms, by: q("by") }),
     sourcerung: () => s.rungOf({ source: q("source_id") ?? b.source, viewer: q("viewer") }),
     sourcereadlog: () => s.readLog({ source: q("source_id") ?? b.source, viewer: q("viewer") }),
-    sourcepublishable: () => s.publishableAt({ source: q("source_id") ?? b.source, audience: q("audience") ?? b.audience,
-                                              at: q("at") ?? b.at ?? null }),
+    /* R8 (T47; K3045): evaluated at this module's own instant; a `now` or `at` in the query or the body is never read */
+    sourcepublishable: () => s.publishableAt({ source: q("source_id") ?? b.source, audience: q("audience") ?? b.audience }),
   };
 }
