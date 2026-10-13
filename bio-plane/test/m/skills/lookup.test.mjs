@@ -90,7 +90,7 @@ test("R33 R18 deployable only in the mode after check (investigate, read from ru
   assert.equal(LEGAL_LOOKUP_MODE, "investigate");
   const layer = legalLookupLayer(lookupCatalog());
   assert.equal(layer.body.deployable_in, LEGAL_LOOKUP_MODE);
-  assert.ok(!DEPLOYED_MODES.includes(LEGAL_LOOKUP_MODE), "investigate is not deployed today (run-rules R9)");
+  assert.ok(!DEPLOYED_MODES.includes(LEGAL_LOOKUP_MODE), "investigate is not deployed today (run-rules R9, as its R14 amends it)");
   assert.equal(layer.load_when, `${LOAD_WHEN}; it is deployable only in the investigate mode with a member's account, `
     + "and the investigate mode is not deployed in this edition");
   const deployed = renderWithModeDeployed();
