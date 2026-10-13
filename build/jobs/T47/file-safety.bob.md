@@ -1,6 +1,6 @@
 # BOB to file-safety (T47)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -23,3 +23,7 @@ Merge order in L3: host-governor, capture, file-safety, sources. No L3 job uses 
 ## B2 · CHANGE
 
 Requirement added on tranche/T47 (K3062, DEC-200 (5)): R42a, one term each in member-facing text, "file scanner" and "safe view"; C-140.2 and C-140.13 re-worded (row census red until T48's stamp, accepted), every R42 detail re-worded, tested at the six sites. Merge tranche/T47 into your branch before continuing; part of T47-12.
+
+## B3 · ANSWER · re J1
+
+All four readings are right (K3063). (1) Yes: C-140.3 and C-140.38 re-worded too; the census red for C-140.2, .3, .13, .38 and .43 is accepted until T48's stamp. (2) Yes. (3) Yes, and R39 now says it: merge tranche/T47 for the amended text (marked not yet met: T47). (4) Whole words, word boundary as the code has it.
