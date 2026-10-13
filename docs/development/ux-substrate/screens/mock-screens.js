@@ -151,13 +151,94 @@ SCR.group = c => ({ rail: 'settings', title: 'Your group', crumbs: ['Settings', 
   ${sec('Who holds the hosting account', `${field('mk-host2', 'Holder', 'Rosa Medina (the Cloudflare account owner)', { act: 'hostingaccessset' })}${acts(btn('hostingaccessset', 'Record it'))}`)}
   ${sec('The group\'s bar', `<div class="row">${btn('strengthbarset', 'Set the group\'s bar')}<span class="muted">Bar: B/B, set by Rosa on 6 October</span></div>`)}` });
 
+/* DEC-214 (Bob, 13 October): elements that convey status, size and activity at a glance, in the visual language (DEC-138):
+   one hue per scale, a word beside every colour, thin marks, nothing explained twice. */
+// eight weeks of acts on something, as bars in the stage hue (the newest week darker), with the word the bars say
+const spark = (vals, word) => { const m = Math.max(...vals, 1); return `<span class="mk-spark" role="img" aria-label="${esc(word)}: ${vals.join(', ')} acts a week over the last eight weeks">${vals.map((v, i) => `<i style="height:${Math.max(2, Math.round(18 * v / m))}px"${i === vals.length - 1 ? ' class="now"' : ''}></i>`).join('')}${word ? `<b>${esc(word)}</b>` : ''}</span>`; };
+// who works on something: initials, at most four, then the count
+const people = names => `<span class="mk-people" role="img" aria-label="${names.length} members: ${names.join(', ')}">${names.slice(0, 4).map(n => `<i>${esc(n[0])}</i>`).join('')}${names.length > 4 ? `<i class="more">+${names.length - 4}</i>` : ''}<span>${names.length}</span></span>`;
+// a reading: a label, a value, and what changed over a named period, in words
+const tile = (label, value, delta, bars) => `<div class="mk-tile"><span class="k">${esc(label)}</span><b class="v">${value}</b>${delta ? `<span class="d">${esc(delta)}</span>` : ''}${bars ? spark(bars, '') : ''}</div>`;
+const tiles = (...t) => `<div class="mk-tiles">${t.join('')}</div>`;
+// the status strip: at most four readings that cross areas and can't wait, each opening its list; the same on every screen
+const strip = items => `<div class="mk-strip" aria-label="What can't wait">${items.map(([n, t, go, tip]) => ref(`<b>${n}</b> ${esc(t)}`, go, tip)).join('')}<span class="mk-strip-sum">${ref(`<b>${items.reduce((a, x) => a + x[0], 0)}</b> can’t wait`, 'queue', `<b>What can’t wait</b>: ${items.map(x => x[0] + ' ' + x[1]).join('; ')}.<span class=more>On a phone the strip is one chip; it opens these as a list.</span>`)}</span></div>`;
+// the next steps in this context, in order, the one to take now marked; each is the act itself
+const nextpath = steps => `<ol class="mk-next">${steps.map(([t, control, cur]) => `<li${cur ? ' aria-current="step"' : ''}><span>${t}</span>${control}</li>`).join('')}</ol>`;
+// a timeline in brief: what they did above the line, what we did below it, in order; undated things never placed
+const tlstrip = evs => `<div class="mk-tl" role="list">${evs.map(e => `<div class="ev ${e.us ? 'us' : 'them'}" role="listitem"><span class="t">${e.us ? '' : `<b>${esc(e.d)}</b>${e.t}`}</span><i></i><span class="t">${e.us ? `<b>${esc(e.d)}</b>${e.t}` : ''}</span></div>`).join('')}</div>`;
+
+/* The projects, each with what a glance should tell: its stage, who works on it, how busy it is, and when it last moved (DEC-214). */
+const PROJ = [
+  ['The Coliseum lease', 'Dev', ['Dev', 'Rosa', 'Teo', 'Mai'], 2, [3, 5, 4, 6, 8, 7, 9, 11], 'busy', 'today', '3 questions · 1 plan · Edition 2 published'],
+  ['Pothole repairs', 'Mai', ['Mai', 'Dev', 'Ben'], 1, [2, 1, 3, 2, 2, 3, 2, 3], 'steady', '2 days ago', '2 questions · a spot-check under way'],
+  ['Sewer fund transfers', 'Ana', ['Ana'], 2, [4, 2, 1, 0, 1, 0, 0, 1], 'quiet', '3 weeks ago', '1 question · a money trail']];
+const projRow = ([n, owner, who, stage, act, word, last, line]) => `<tr><td><b>${ref(n, 'project', `<b>${n}</b> · a project · ${line} · owner: ${owner}`)}</b><span class="mk-small muted" style="display:block">${line}</span></td><td>${ladder('stage', ['Forming', 'Investigating', 'Matured', 'Closed'], stage)}</td><td>${people(who)}</td><td>${spark(act, word)}</td><td class="muted">${last}</td></tr>`;
+const projTable = () => `<div class="tw"><table class="mk-table"><thead><tr><th>Project</th><th>Stage</th><th>Members</th><th>Activity, 8 weeks</th><th>Last change</th></tr></thead><tbody>${PROJ.map(projRow).join('')}</tbody></table></div>`;
+
 SCR.projects = c => ({ rail: 'projects', title: 'Projects', crumbs: ['Projects'], main: `
   ${h1('Projects', 'Each project is one problem the group wants to get to the bottom of. These are the ones you can see.')}
-  ${sheet(
-    row(I('project'), '<b>The Coliseum lease</b><span class="meta">owner Dev · 3 questions · 1 plan</span>', ladder('stage', ['Forming', 'Investigating', 'Matured', 'Closed'], 2)) +
-    row(I('project'), '<b>Pothole repairs</b><span class="meta">owner Mai · 2 questions</span>', ladder('stage', ['Forming', 'Investigating', 'Matured', 'Closed'], 1)) +
-    row(I('project'), '<b>Sewer fund transfers</b><span class="meta">owner Ana · 1 question</span>', ladder('stage', ['Forming', 'Investigating', 'Matured', 'Closed'], 2)))}
+  ${projTable()}
+  ${note('Stage: how far the project has come. Members: who works on it. Activity: acts on it each week over the last eight, with the word the bars say; the newest week is darker.')}
   ${acts(btn('promote', 'Start a project', { tone: 'primary' }))}` });
+
+/* DEC-214: dashboards drawn as treatments to compare for S20 (Bob's direction of 11 October, K2803; the research on the
+   dashboards page). Three arrangements of Home, then two area dashboards: the three tiers (status, what needs you,
+   everything else), whose move it is on every action item, and the five-second and three-step tests. */
+const DASH_ST = { c: 'a', a: 'b', b: 'c' };
+const STRIP = strip([[1, 'due Friday · our move', 'queue', '<b>Decide on the newer lease amendment</b> · due Friday · the group\'s own window<span class=more>Opens your queue at it.</span>'], [1, 'reply overdue · their move', 'action', '<b>Demand to rescind</b> · the City Administrator\'s reply was due 9 October; none recorded<span class=more>Opens the action.</span>'], [2, 'to check', 'queue', '<b>Two checks asked of you</b>: a calculation Ana asked you to check, and 3 photos to vouch for<span class=more>Opens your queue at them.</span>'], [1, 'hint to look at', 'queue', '<b>A hint</b>: a council member\'s disclosed income from a firm whose contract they voted on · machine work, a lead never a finding<span class=more>Opens your queue at it.</span>']]);
+const RECORD = tiles(tile('Documents', '142', '+9 this month', [6, 4, 9, 7, 5, 8, 6, 9]), tile('Questions', '6', '2 meet the bar · 1 new', [0, 1, 0, 0, 1, 0, 0, 1]), tile('Cases', '1', 'published · 2 editions', null), tile('People followed', '10', '2 added this month', [1, 0, 0, 1, 0, 0, 1, 1]));
+const NEEDS_YOU = sheet(
+  row(kindm('todo'), `Vouch for 3 photos you captured on Seminary Avenue<span class="meta">${btn('release', 'Vouch for them')}</span>`, due('', 'Today')) +
+  row(kindm('todo'), `Decide on a newer version of the 2024 lease amendment you cited<span class="meta"><span class="cs-changed">${I('changed')}Changed 3 October</span>${btn('adoptversion', 'Adopt the newer version')}${btn('keepversion', 'Keep the version you cited')}</span>`, due('near', 'Due Friday')) +
+  row(kindm('todo'), `Ana asked you to check a calculation: <span class="rec">812 of 903 reports closed within 7 days</span><span class="meta">${btn('taskresolve', 'Open the check')}</span>`, due('', 'Due 16 October')));
+const NEEDS_GROUP = sheet(
+  row(kindm('status'), `The city's reply to “Demand to rescind” was due 9 October; no reply recorded · <b>their move</b><span class="meta">${ref('Open the action', 'action', '<b>Demand to rescind</b> · a letter the group sent the City Administrator on 19 September · reply overdue')}</span>`, due('overdue', 'Overdue')) +
+  row(kindm('noticed'), `Two documents give different dates for the rent adjustment · nobody has judged it<span class="meta">${ref('Open both', 'document', '<b>Two documents in tension</b> · the lease amendment and the rent notice')}</span>`, '') +
+  row(kindm('status'), `The City Clerk's reply to your records request is due 14 October · <b>their move</b><span class="meta">${ref('The request', 'request', '<b>Records request</b> · inspection logs for pothole reports closed in FY2025 · sent 2 October')}</span>`, due('near', 'Due in 8 days')));
+const AREAS = `<div class="mk-areas">${[['Investigation', '4 documents to check · 6 questions open', 'project'], ['Action', '3 clocks running · 1 overdue reply', 'dash-action'], ['Publication', 'Edition 2 published · nothing waiting to sign', 'published'], ['Members', '6 members · 1 invited', 'members'], ['Administration', 'all well · the assistant on the group\'s key', 'settings']].map(([t, l, go]) => `<div class="cell">${ref(`<b>${t}</b>`, go, `<b>${t}</b> · its dashboard: status first, then what needs you, then everything else`)}<span class="mk-small muted">${l}</span></div>`).join('')}</div>`;
+SCR['dash-home'] = c => { const st = DASH_ST[c.v] || 'a'; const sel = v => v === st ? ' selected' : ''; return { rail: 'home', title: 'Home', crumbs: ['Home'], st, main: `
+  <div class="mk-mockctl"><label for="mk-dst">In this mockup, show</label> <select id="mk-dst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>C · “what needs you” as the home, the areas one step away, a small strip</option><option value="b"${sel('b')}>A · one home with a card per area</option><option value="c"${sel('c')}>B · a dashboard per area under a strip that never moves</option></select></div>
+  <div class="st st-a st-c">${STRIP}</div>
+  <div class="st st-a">${h1('Lakeshore Tenants', 'Rents and leases on city land, and the streets we live on.')}
+   ${sec('Needs you', NEEDS_YOU, { help: 'What is yours to do, soonest first, each with its act. Signing, sending and publishing still go through their full dialog, never one press here.' })}
+   ${sec('Needs the group', NEEDS_GROUP, { help: 'What waits on someone, or on an office: whose move it is, and when it is due.' })}
+   ${sec('The record at a glance', RECORD, { help: 'How much your group holds, and how it grew: the bars are the last eight weeks.' })}
+   ${sec('Projects', projTable())}
+   ${sec('The areas', AREAS, { help: 'Each area\'s dashboard, one step away: status first, then what needs you there, then everything else.' })}
+   ${acts(btn('startfrom', 'Start from…'), btn('promote', 'Start a project'))}</div>
+  <div class="st st-b">${h1('Lakeshore Tenants', 'Rents and leases on city land, and the streets we live on.')}
+   <div class="mk-cards">${[['Investigation', ['4 documents to check', '6 questions open · 2 meet the bar', '7 things came in since you last looked'], btn('promote', 'Open a question'), 'project'], ['Action', ['1 due Friday · our move', '1 reply overdue · their move', '3 clocks running'], ref('Open Action', 'dash-action', '<b>Action</b> · every clock and whose move it is'), null], ['Publication', ['Edition 2 published', 'Nothing waiting to sign'], ref('Open Publication', 'published', '<b>Publication</b> · cases in review, waiting to be signed, scheduled, published'), null], ['Members', ['6 members · 1 invited', 'Teo declared journalism'], ref('Open Members', 'members', '<b>Members</b> · who joined, who is invited, expertise on hand'), null], ['Administration', ['All well', 'The assistant on the group\'s key · 31% of this month\'s limit used'], ref('Open Settings', 'settings', '<b>Administration</b> · the instance, the AI accounts, security tools'), null]].map(([t, lines, control]) => `<div class="mk-card"><b>${t}</b><ul class="mk-list mk-small">${lines.map(l => `<li>${l}</li>`).join('')}</ul>${control}</div>`).join('')}</div>
+   ${note('Five cards, one per area, each with one to three lines of state and one way in. There is no status outside this page: leave it, and the deadline is out of view.')}
+   ${acts(btn('startfrom', 'Start from…'))}</div>
+  <div class="st st-c"><div class="mk-tabs2" role="tablist" aria-label="Areas">${['Investigation', 'Action', 'Publication', 'Members', 'Administration'].map((t, i) => `<span role="tab"${i === 0 ? ' aria-selected="true"' : ''}>${t}</span>`).join('')}</div>
+   ${h1('Investigation', 'No home: Civicsmith opens on the area you last used, under the strip that stays on every screen.')}
+   ${tiles(tile('Documents to check', '4', 'oldest waiting 6 days', null), tile('Questions open', '6', '2 meet the bar', null), tile('Came in since you looked', '7', 'since 4 October', null))}
+   ${sec('Needs you here', sheet(row(kindm('todo'), `Vouch for 3 photos you captured on Seminary Avenue<span class="meta">${btn('release', 'Vouch for them')}</span>`, due('', 'Today')) + row(kindm('todo'), `Ana asked you to check a calculation<span class="meta">${btn('taskresolve', 'Open the check')}</span>`, due('', 'Due 16 October'))))}
+   ${sec('Recent', sheet(row(I('document'), 'Rent schedules 2024 captured by Dev', '<span class="muted">yesterday</span>') + row(I('question'), 'Does “closed” mean “repaired”? opened by Mai', '<span class="muted">3 days ago</span>')))}
+   ${note('Each area gets a full dashboard of its own; the rail would list the five areas in place of Home, Queue, Find, Add, Projects, People and Settings. Work that crosses areas has no one place.')}
+   ${acts(btn('adoptversion', 'Adopt the newer version'), btn('keepversion', 'Keep the version you cited'), btn('startfrom', 'Start from…'), btn('promote', 'Open a question'))}</div>` }; };
+
+SCR['dash-action'] = c => ({ rail: 'queue', title: 'Action', crumbs: ['Action'], main: `
+  ${STRIP}
+  ${h1('Action', 'Every clock that is running, whose move it is, replies that came in, and what waits for a second approval.')}
+  ${tiles(tile('Clocks running', '3', '1 due this week', null), tile('Our move', '1', 'due Friday', null), tile('Their move', '2', '1 overdue', null), tile('Replies to read', '1', 'came in 18 September', null))}
+  ${sec('Needs you', sheet(
+    row(kindm('todo'), `Approve the follow-up letter to the City Administrator, drafted by Rosa<span class="meta">${btn('filingapprove', 'Read and approve it')}</span>`, due('', 'Before Friday')) +
+    row(kindm('status'), `The reply to “Demand to rescind” is overdue since 9 October · <b>their move</b> · the plan's next step is ready<span class="meta">${btn('reminderanswer', 'Remind me again on…')}${btn('taskresolve', 'Start the next step')}</span>`, due('overdue', 'Overdue'))), { help: 'What is yours in Action: each item with whose move it is and its act.' })}
+  ${sec('Every action', `<div class="tw"><table class="mk-table"><thead><tr><th>Action</th><th>To</th><th>Whose move</th><th>The clock</th><th>Next</th></tr></thead><tbody>
+   <tr><td><b>Records request</b> · inspection logs FY2025</td><td>City Clerk</td><td><span class="mk-chip them">Their move</span></td><td>Received 2 October. The city must answer by 14 October: 10 days under the Public Records Act, rolled past a holiday.</td><td class="muted">Record what came back</td></tr>
+   <tr><td><b>Demand to rescind</b></td><td>City Administrator</td><td><span class="mk-chip them">Their move</span></td><td>Sent 19 September; the group gave until 9 October. Overdue.</td><td>Escalate, as the plan sets</td></tr>
+   <tr><td><b>Follow-up letter</b> · draft</td><td>City Administrator</td><td><span class="mk-chip">Our move</span></td><td>Approve by Friday, the plan's checkpoint.</td><td>Approve, then send</td></tr>
+  </tbody></table></div>`, { help: 'Every action your group has open, with whose move it is and its clock as a sentence with its rule and date, never a countdown.' })}
+  ${acts(btn('actioncreate', 'Start an action', { tone: 'primary' }))}` });
+
+SCR['dash-project'] = c => ({ rail: 'projects', title: 'The Coliseum lease', crumbs: ['The Coliseum lease'], main: `
+  ${STRIP}
+  ${h1('The Coliseum lease', 'Whether the city kept the terms of its lease of the Coliseum land, including rent raised in 2024 without a council vote · owner Dev · investigating')}
+  ${sec('Next for you here', nextpath([['Vouch for the 3 photos you captured at the east gate', btn('release', 'Vouch for them'), true], ['Decide on the newer version of the 2024 lease amendment', btn('adoptversion', 'Adopt it') + btn('keepversion', 'Keep the one cited'), false], ['Then Edition 3 can be prepared: the two findings meet the bar', ref('Prepare Edition 3', 'ceremony', '<b>Publication ceremony</b> · the last checks, then signing'), false]]), { help: 'What comes next in this project, for you, in order. The first is the one to take now; each is the act itself.' })}
+  ${sec('This project at a glance', tiles(tile('Documents', '38', '+3 this month', [1, 2, 0, 1, 3, 1, 1, 3]), tile('Questions', '3', '2 meet the bar', null), tile('Events', '9', '2 undetermined in order', null), tile('Members', '4', 'Dev, Rosa, Teo, Mai', null)))}
+  ${sec('The story so far', `${tlstrip([{ d: '12 Jan 2024', t: 'Council approves amendment 1' }, { d: 'Mar 2024', t: 'Rent adjusted without a vote' }, { d: '4 Sep 2026', t: 'We requested the rent schedules', us: true }, { d: '18 Sep 2026', t: 'City Clerk releases schedules' }, { d: '19 Sep 2026', t: 'We sent “Demand to rescind”', us: true }, { d: '9 Oct 2026', t: 'Reply overdue', us: true }])}<div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px">${gapm('undetermined', '<b>Undetermined</b> order: the March adjustment and the April notice, both dated by month.')}${ref('Open the timeline', 'timeline', '<b>Timeline</b> · what they did and what we did, in two lanes, with every event cited')}</div>`, { help: 'What they did above the line, what we did below it, in order. Anything undated is listed on the full timeline, never guessed into place.' })}
+  ${sec('Activity', `<div class="row" style="gap:18px;align-items:center;flex-wrap:wrap">${people(['Dev', 'Rosa', 'Teo', 'Mai'])}${spark([3, 5, 4, 6, 8, 7, 9, 11], 'busy')}<span class="mk-small muted">11 acts this week · Dev captured the rent schedules yesterday · Teo added two events on Monday</span></div>`)}` });
 
 SCR.settings = c => ({ rail: 'settings', title: 'Settings', crumbs: ['Settings'], main: `
   ${h1('Settings', 'Your own settings first; then the group\'s, which only administrators change.')}

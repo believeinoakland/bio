@@ -60,6 +60,12 @@ screen('wizards', 'Wizards', 'working', 'The group\'s wizard library: offered, d
 
 # --- daily work
 screen('projects', 'Projects', 'working', 'Every project the member may see, with its owner, questions and stage (projectlist; DEC-201).', [('promote','Start a project')], [6])
+screen('dash-home', 'Home as a dashboard (three arrangements)', 'working', 'Treatments for S20 (Bob\'s direction of 11 October, K2803; DEC-214): C, "what needs you" as the home with the areas one step away and a strip of four readings; A, one home with a card per area; B, a dashboard per area under the strip with no home. The record at a glance, the projects table, the areas.',
+  [('release','Vouch for photos'),('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('taskresolve','Act on an item'),('promote','Open a question'),('startfrom','Start from…')], [])
+screen('dash-action', 'The Action dashboard', 'working', 'An area dashboard in three tiers (DEC-214): status (clocks running, our move, their move, replies to read), what needs you, then every action with whose move it is and its clock as a sentence.',
+  [('filingapprove','Approve the text'),('reminderanswer','Answer a reminder'),('taskresolve','Start the next step'),('actioncreate','Start an action')], [22])
+screen('dash-project', 'A project\'s dashboard', 'working', 'A project as a dashboard (DEC-214): the next steps for the member here, in order, each the act itself; the project at a glance; the story so far as a timeline in brief; who works on it and how busy it is.',
+  [('release','Vouch for photos'),('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited')], [15])
 screen('unavailable', 'Can\'t open this', 'working', 'An address that leads nowhere, something the member may not see, and the group\'s Civicsmith out of reach (DEC-201).', [], [3])
 screen('queue', 'Your queue', 'working', 'To do, Noticed and Status, grouped by case (DEC-110, DEC-131).',
   [('taskresolve','Act on an item'),('taskforward','Forward to a member'),('proposedispose','Dismiss with a reason'),('queuesnooze','Snooze to a date'),('queuemute','Mute a kind'),

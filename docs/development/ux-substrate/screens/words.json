@@ -51,12 +51,12 @@
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "screen": 125,
-  "act": 594,
+  "screen": 131,
+  "act": 607,
   "column": 33,
   "wizard": 306,
-  "total": 1730,
-  "protected": 618
+  "total": 1749,
+  "protected": 631
  },
  "words": [
   {
@@ -4680,7 +4680,43 @@
   },
   {
    "key": "screen.projects.purpose",
-   "en": "Every project you can see, with its owner and how far it has come.",
+   "en": "Every project you can see: its stage, who works on it, how busy it is, and when it last changed.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.dash-home.name",
+   "en": "Home as a dashboard (three arrangements)",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.dash-home.purpose",
+   "en": "Home drawn three ways for your choice (S20): what needs you first, a card per area, or an area under a strip.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.dash-action.name",
+   "en": "The Action dashboard",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.dash-action.purpose",
+   "en": "The Action area as a dashboard: clocks and whose move it is first, then what needs you, then every action.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.dash-project.name",
+   "en": "A project's dashboard",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.dash-project.purpose",
+   "en": "One project as a dashboard: your next steps here, the project at a glance, its story so far, and its activity.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -5737,6 +5773,84 @@
   {
    "key": "act.promote.label.projects",
    "en": "Start a project",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.release.label.dash-home",
+   "en": "Vouch for photos",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.adoptversion.label.dash-home",
+   "en": "Adopt the newer version",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.keepversion.label.dash-home",
+   "en": "Keep the version you cited",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.taskresolve.label.dash-home",
+   "en": "Act on an item",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.promote.label.dash-home",
+   "en": "Open a question",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.startfrom.label.dash-home",
+   "en": "Start from…",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.filingapprove.label.dash-action",
+   "en": "Approve the text",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.reminderanswer.label.dash-action",
+   "en": "Answer a reminder",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.taskresolve.label.dash-action",
+   "en": "Start the next step",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.actioncreate.label.dash-action",
+   "en": "Start an action",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.release.label.dash-project",
+   "en": "Vouch for photos",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.adoptversion.label.dash-project",
+   "en": "Adopt the newer version",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.keepversion.label.dash-project",
+   "en": "Keep the version you cited",
    "protected": true,
    "source": "registry.json"
   },
