@@ -94,9 +94,15 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
 - **R18** (T45; copy of `queue-producers` R25, which stays) An item whose subject is due on a date carries it as `due` (`YYYY-MM-DD`), the local day in the zone of the subject's jurisdiction (`civil-time.localDay`; the action's office's or venue's for R1 and R4, as `actions` R12 reads it; the instance profile's `time_zone` for R2 and R12), never the UTC day, for `queue` R49's sort: the clock entry's date (R1, R4), the checkpoint's (R2), the review or look-again day (R12). No other item this module produces carries one.
 - **R19** (T45; copy of `queue-producers` R28, which stays) Every member-facing sentence this module answers calls what an action plan addresses a "matter" ("matters"), never a "subject". The item key `subject` and every code and kind are unchanged (DEC-114).
 
+#### T47's L11 fold (K3100)
+
+- **R25** (DEC-212; K1364; wide path rule 6) CONDITION `request-unsent`: one per filing `filings.approvedUnsent` answers the viewer, keyed `CONDITION::request-unsent::<filing>`, to the member who approved it, else the action's creator, else its project's owners; its subject the action, homed under its project, naming what is asked and the approval date; its doors the action's screen, `queuesnooze` and `actionmove` (`abandoned`, reasoned). Test with a control. *(not yet met: T47)*
+
 ## Private
 
 ### Uses
+
+- `filings`: `approvedUnsent` (its R53; R25; K3100).
 
 Each edge points to an earlier module in `build/modules.json` (this module sits after `machinery-producers`, before `queue-producers`):
 - `membership`: `viewerPredicate` and `inSight` (the viewer gate), `memberFacts` (its R68; R1's rule, R9), `participation` (R9), `projectOwners` (its R65), `activeAdmins` (its R86), `isAdministrator` (its R64; R5, R8).

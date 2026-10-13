@@ -20,6 +20,10 @@ The interface's word list as frozen data: each word the screens show, with its k
 
 - **R3** (was `instance-setup` R68, "carried as frozen data") `WORD_ROWS` and each of its rows are frozen: no write changes the list, a row or a field.
 
+#### T47's L11 fold (K3100)
+
+- **R7** (K3062; amends R6) `WORD_ROWS` is `words.json` at PR #33's head (`WORDS_COMMIT` that commit): 1,728 rows, 617 protected, by R1's rule. Test: equal word by word. *(not yet met: T47)*
+
 ## Private
 
 ### Uses

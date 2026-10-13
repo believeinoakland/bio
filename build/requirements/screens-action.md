@@ -33,6 +33,12 @@ The Action layer's working screens: a project's action plan, starting an option 
 **Common**
 - **R7** `interface-shell` R8–R13 and R16 hold on every screen; after an act, the screen re-reads what it changed and draws it; nothing is drawn as sent, approved or started before its answer. Every member-facing sentence calls a plan's subject a "matter" (`action-producers` R19). *(not yet met: T47)*
 
+#### T47's L11 fold (K3100)
+
+- **R8** (DEC-209 (3), (4); `filings` R54, R55) **request**: the period, the form and the cost limit as fields sent as `fills`; the outward warning names that the portal shows the text to anyone; `filingrecordsent` takes the venue's reference (the portal's request number). *(not yet met: T47)*
+- **R9** (DEC-209 (5)) **help-records**, from `request`: what the office must do, the profile's faster request where held (`profiles`' `view`), what the portal shows, what Civicsmith does with the due date; its sources listed. *(not yet met: T47)*
+- **R10** (DEC-212) An action opened from the unsent-request item opens at its step (approved, not sent: the send step). *(not yet met: T47)*
+
 ## Private
 
 ### Uses

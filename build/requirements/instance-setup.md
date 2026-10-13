@@ -141,6 +141,12 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
   - `translations({language, viewer})` (`op=translations`), to a granted speaker of `language` (else `TRANSLATION_NOT_GRANTED`): every word in the list's order with its `en`, `note`, `means`, `protected`, its state, its shown or awaiting text with who adopted it and when, `english_changed` (R68), its stored drafts (labelled machine work, R67), its adoptions, confirmations and undos newest first, and its open marks; and `local_names`, the active profiles' local names (`jurisdictions.combine`'s view, its R70, R72), each with its explanation and official translation in `language` and its source when held, offered first and never a word to draft, adopt or translate (DEC-157 (6)).
   - `interfaceWords({language?, viewer})` (`op=interfacewords`), to any member's session: for `language`, by default the viewer's own (R64), every key with `text`, the group's `shown` translation where one is held and the English otherwise (`fallback: true`), word by word, never blank (DEC-127 (1)), and `en` beside it so the English is one hover away (DEC-157 (5)); an `awaiting` word answers the English. With no language set or held, every word is the English.
 
+#### T47's L11 fold (K3100)
+
+- **R83** (N1002; retires R47's page share; amends the Purpose) `setupPage`, `groupLine`'s page use, `SETUP_HTML` and the `setup-page` use are removed; `HOSTING_CONTROL` stays R47's one holder, read by `screens-entry` R4, R6 and `installer` R34. Test: no export names the page. *(not yet met: T47)*
+- **R84** (DEC-205 (2); DEC-201 (8)) `groupLogoSet({image, by})` (`op=grouplogoset`), an administrator's act: PNG or JPEG by magic bytes, at most 200 KB, `null` clears; refusals `NOT_AN_ADMIN`, `LOGO_REFUSED` (C-64 next free); `groupidentity` answers `logo: true|false`; served public at `/app/assets/group-logo` (control-plane R84). Test: set, read, clear; control: a GIF refused. *(not yet met: T47)*
+- **R85** (DEC-205 (1)) `groupLanguagesSet({languages, by})` (`op=grouplanguagesset`), an administrator's act: 1 to 20 tags `jurisdictions.isLocale` accepts, `LANGUAGE_MALFORMED` else; recorded through `setSetting` (`group_languages`); places unchanged. `groupLanguages()` (`op=grouplanguages`, public) answers the list, or the active profiles' languages while none is set. Test: set and read; control: profiles unchanged. *(not yet met: T47)*
+
 ## Private
 
 ### Uses

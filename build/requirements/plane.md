@@ -28,6 +28,12 @@ The instance's composition root. It builds every module on one Durable Object's 
 
 
 **Settled readings (K1396):** the readings of plane's T31 question stand as K1396 states them; they bind this module's tests.
+
+#### T47's L11 fold (K3100)
+
+- **R47** (K3084; K3060 D10; amends R33) A `signin` account answered by `answers.askAccount` carries its held token (`credentials` R70's `key`) as `secret` in `agent-worker` R6's wire shape, for ask, draft and transcription; R33's "no `secret` for a sign-in" retires; an answer `SIGNIN_TOKEN_REFUSED` calls `credentials.subscriptionTokenRefused`. Test: the secret reaches only the binding's request; control: an API key as before. *(not yet met: T47)*
+- **R48** (N1002; DEC-201; amends R5) The composed page's screens are the nine modules' (`screens-entry` among them), and the route map's tests are re-pinned to the ops of R57–R59 and `tasks` R19. *(not yet met: T47)*
+
 ## Private
 
 ### Uses

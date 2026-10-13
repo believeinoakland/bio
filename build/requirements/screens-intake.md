@@ -40,6 +40,10 @@ Bringing material in and deciding what enters the record: capturing from an addr
 - **R14** (T47; N969; amends R1; `monitoring` R74, `capture-requests` R56) On "From an address": "Watch this address" first sends `monitorset` with `enabled: true` (and the frequency chosen, a word of `MONITOR_FREQ`) for the document the address was captured into (the `acquire` answer's bundle, or the held document for that address), then `monitor` for its first check; a `NOT_MONITORED`, `NO_LOCATOR` or `MONITOR_SET_REFUSED` refusal is drawn by `interface-shell` R13. "Ask for this later" sends `capturerequest` with the address and no `run`, as the member's own request (`capture-requests` R56), and draws what it answers: with `drains: false` the sentence that the request waits until the group's Civicsmith captures unattended. *(not yet met: T47)*
 - **R15** (T47; N688, its screen part; DEC-167; K1844, K1940) **archive** (Add › Held captures › Archive; the registry's 4 acts). Reads `archivelist` for the archive (`acquisition` R41: its grade, its summary, and each entry's name, folder, size and state, every name as the archive states it, never trusted as a place) and `gradenote`. An archive that opened draws its entries as rows (`interface-shell` R19): `filed` rows, held for review beside it at the archive's grade, can be picked; `already_held` rows name the earlier capture they repeat; `not_filed` rows name their reason (`mark.gap.refused`); folders are listed with their files. The hold strip offers `release` and `heldsetaside` (one reason for all picked) and `archivelist` "Show only those not filed". An archive refused whole draws its refusal by its row's words and that nothing in it is filed, with `archivelist` to see what it lists. A file of the archive opens `open-file`. *(not yet met: T47)*
 
+#### T47's L11 fold (K3100)
+
+- **R16** (DEC-200 (2); amends R1, R14) On "From an address", "Watch this address" sends `monitorset` (`enabled: true`, the frequency chosen) and "Check it now" sends `monitor`, two acts. Test: each act alone. *(not yet met: T47)*
+
 ## Private
 
 ### Uses

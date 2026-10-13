@@ -129,6 +129,11 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
 
 
 **Settled readings (K1396):** the readings of affordances's T31 question stand as K1396 states them; they bind this module's tests.
+
+#### T47's L11 fold (K3100)
+
+- **R56** (K3062; amends R54) `ACT_HELP` re-generated from `mock-acts.js` at PR #33's head by R48's reading: `recover`'s text names any member; `owed_passwordresetlink`, `owed_passwordreset`, `owed_grouplanguagesset`, `owed_grouplogoset`, `owed_signrequest` held under those ops once declared; `publish`, `caseratify`, `publishat` under their re-worded texts. *(not yet met: T47)*
+
 ## Private
 
 ### Uses

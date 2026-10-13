@@ -23,7 +23,7 @@ From a case's draft to its public page, and what comes in from outside: preparin
 **ceremony** (Projects › <project> › Publish; the registry's 7 acts; DEC-147, DEC-180, DEC-183; N683, N757, N788)
 - **R3** The ceremony draws its steps in order (What, Strength, Leaves out, People, Photos, Disclosures, Bias, Preview, Ties, Sign), the current one marked, and carries the required "Publication ceremony" wizard (`screens-wizards` R7). Reads `publishpreflight` (each finding against the bar, every refusal that holds before signing, by its words), `publishtensions` (what will be disclosed with the case: unresolved contradictions, the timeline frozen at signing), `photomarks` for each photo the case carries, and `publishschedule` for an edition waiting to publish. Acts: `publishpreflight` "Check again"; `publishtensions` "See everything that will be disclosed". *(not yet met: T47)*
 - **R4** The Photos step (N757, N788; DEC-180, DEC-183): each photo the case carries (relied on or supporting) is shown with its marks; the member draws rectangles on the photo and marks each a person not part of a finding, a number plate, or a city staff member at work (a staff area with a reason), and sends `obscuremark` with those areas, or "nothing to obscure" (`areas: []`); a mark is withdrawn by `obscuremarkwithdraw` with a reason, never erased. The step says what the public copy carries (areas obscured and labelled, camera details removed) and that every photo must be marked or "nothing to obscure" before signing; a photo whose format cannot be covered stops the signing, naming it, by its refusal's words. *(not yet met: T47)*
-- **R5** The Sign step: the member signs the case's statement (`ratification`'s `caseRatifyStatement`) with her own registered key, and the screen sends `caseratify` ("Publish now" signs and publishes) or `publishat` ("Publish at…": a date and a local time in the group's zone, N683; signed now, published then if every check passes again, DEC-147), each with the signature. Both are drawn with their weights (signed; `publish` and `publishat` Irreversible) and are read, not done, at the phone width (`interface-shell` R11, DEC-181). An edition waiting to publish is drawn "Signed · publishes <date>, <time>", not public yet. The Ties step asks the signer to confirm she has no undeclared tie to anyone the case concerns (`publish`'s registry label) before Sign is offered. *(not yet met: T47)*
+- **R5** amended (K1490, K3041; `case-authoring` R76; DEC-208 (2)): the Ties step's "Confirm, and prepare Edition <n> for signing" sends `publish` with `tieAttested: true`; Sign is offered only after it answers. Test: `publish` carries `tieAttested`; control: no Sign before it. *(not yet met: T47)*
 
 **published** (the public frame; the registry's 2 acts; DEC-112, DEC-147 (5))
 - **R6** Drawn in the public frame with no session (`interface-shell` R30) at `/app/published/<case>`: reads `publishedcase` (the edition's findings, each with its two strengths and whether it meets the project's bar, its timeline, the people it names, its evidence, and when it was signed and when published) and `publishededitions`; says whose work the case is and how to read a case. Acts: `verify` "Check the signature"; `publishedcase` "Read the case". Nothing on the page needs an account. *(not yet met: T47)*
@@ -40,6 +40,15 @@ From a case's draft to its public page, and what comes in from outside: preparin
 **Common**
 - **R10** `interface-shell` R8–R13 and R16 hold on every screen; after an act, the screen re-reads what it changed and draws it; nothing is drawn as signed, posted or published before its answer. *(not yet met: T47)*
 
+#### T47's L11 fold (K3100)
+
+- **R12** (DEC-207 (2), (3)) The Sign step: "When it becomes public" (now, or a date and time in the group's zone, offered as `publish_at` says), then one button, "Sign and publish now" (`caseratify`) or "Sign now and publish at <time>" (`publishat`), with `signing.ceremony.who`. *(not yet met: T47)*
+- **R13** (K3080; DEC-207 (4), DEC-208 (1); `ratification` R52) The button asks the password again where due (`interface-shell` R34), then signs in one sitting (`cs.signer.sign`, R41) the case statement (`caseRatifyStatement`) and one `ratifyStatement` per finding the edition pins and per piece of evidence they rest on, each listed; it sends them in the one act R52 takes (until R52 is merged, `caseratify` then each `ratify`); declined, nothing is sent. Nothing is drawn signed before its answer (R10). *(not yet met: T47)*
+- **R14** (DEC-207 (5)) Signed and waiting draws `signing.ceremony.signedat` with "Move the time" (`publishatmove`) and "Cancel publishing" (`publishatcancel`); signed and published draws `signing.ceremony.signednow` with the public page. *(not yet met: T47)*
+- **R15** (DEC-207 (6)–(8), DEC-210) `NO_ATTESTING_KEY` draws `signing.ceremony.nokey` with the keep choice and "Register a signing key in this browser" (`signerregisterown`), returning to the step; at the phone width `signing.ceremony.phone`; `CASE_SIGNER_NOT_AN_OWNER` draws `signing.ceremony.notowner` and "Ask an owner to sign" (`signrequest`). *(not yet met: T47)*
+- **R16** (DEC-116; R8) `docketpost` signs `docketStatement` in `NS_DOCKET` through `cs.signer.sign` within the prepared statement's 60 minutes. *(not yet met: T47)*
+- **R17** (DEC-201 (8)) **review-outside** (published frame, `/app/review#grant=<secret>`, the fragment removed on load): `reviewcopy` (the secret in the body), the link's end date, `reviewcomment`; no session read. *(not yet met: T47)*
+
 ## Private
 
 ### Uses
@@ -52,7 +61,7 @@ From a case's draft to its public page, and what comes in from outside: preparin
 
 ### Invariants
 
-- **R11** No secret this module's screens handle (a review grant's secret, a doorbell's secret phrase, a signature's key) is written to the browser's storage, an address or a later request. *(not yet met: T47)*
+- **R11** amended (K3079 (a)): No secret this module's screens handle is written to the browser's storage, an address or a later request; the one exception is the signing key kept by the member's choice (`interface-shell` R40, R42). *(not yet met: T47)*
 
 ### Satisfies
 

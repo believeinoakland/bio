@@ -235,6 +235,14 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 - **R56** (T47; N980; K3027 doubt 7; `sources` R1, R9) `sourceof` and `sourcerung` are added to `SESSION_OPS.member` and `SESSION_OPS.admin`, their specs otherwise unchanged (reads, classes `admin`, `member`, `probe`, `viewer` stamped, `NEEDS` `null`), so a member's session reads a pulled knock's source by its capture's digest (`sources` R1) and the source's rung (`sources` R9), and the inbox's `sourcelink` names the source read, never one typed. Control: a member's session is admitted to `sourceof`; an `ai` credential is not (no `ai` class, R2). *(not yet met: T47)*
 
 **Settled readings (K1396):** the readings of op-declarations's T31 question stand as K1396 states them; they bind this module's tests.
+
+#### T47's L11 fold (K3100)
+
+- **R57** (K3084; `credentials` R65, R66, R69, R71) Specs: `unlock` and `reauth` (a session's own, `session` stamped as `signout`'s, `password` a body field, mutating, `NEEDS` `null`, `source` and `country` stamped); `passwordresetlink` (an administrator's act, `by` stamped, `member` a body field); `passwordresetlook` and `passwordreset` (public, `link` and `password` body fields only, `source` and `country` stamped). Each tested with a negative control, clearing R19/R30's two reds. *(not yet met: T47)*
+- **R58** (K3061 D3; `credentials` R66) `REAUTH_ACTS`, frozen, names the acts that ask the password again and the argument that makes them so: `caseratify`, `publishat`, `publishatmove`, `ratify`, `docketpost`; `adminendorse`, `adminremove`, `memberset` (a role to or from `admin`), `memberadd` (role `admin`); `subscriptionsignin` (`step: "start"`), `accountreferenceset`, `groupkeyset`, `projectkeyset`, `projectsigninset`; read by `admission` R25 (doubt 10). *(not yet met: T47)*
+- **R59** (DEC-205, DEC-207 (8), N1001) Specs: `grouplogoset`, `grouplanguagesset` (administrators' acts, `by` stamped, `NEEDS` `null`); `grouplanguages` (public read); `signrequest` (`tasks` R19; a member's act, `by` and `viewer` stamped, `NEEDS` `contribute`, `machineClasses: []`); `signintrace` (a test-instance read, administrators' session, `viewer` stamped). R34: each explained in `ACT_HELP` or named in `ACT_HELP_ABSENT`. *(not yet met: T47)*
+- **R60** (K3062; amends R21, R27, R54) R21 and R27 read the registry and library at PR #33's head; the owed acts of `wizard-scripts` R35 are served under their names once R57, R59 declare them; `hostingaccessset` is the act on `setup` and `group`. *(not yet met: T47)*
+
 ## Private
 
 ### Uses

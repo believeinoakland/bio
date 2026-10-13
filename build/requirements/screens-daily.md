@@ -37,6 +37,13 @@ Where a member starts and works each day: the group's home, their queue, finding
 - **R8** (T47; N972; K3027 doubt 5; amends R1; `project-roster` R26, `basis-versions` R50) Home's "What the group is working on" reads `projectlist` (each project the member sees at `FULL`, `{id, name, stage}`) in place of `search` `type:project`, and each project's question count from `projectquestions`, paged to its end; each project is a reference opening `project`, drawn with its count (loading until its pages are read; a failed read drawn `state.failed`, never as none) and its stage on the ladder Forming, Investigating, Matured, Closed as the recorded state names it (a `null` stage drawn `state.undetermined`). A list answered `truncated` says more projects exist than are shown. *(not yet met: T47)*
 - **R9** (T47; N821, its screen side; DEC-129 (7), (2); DEC-198 (4); D52; `wizard-scripts` R23, R33; `interface-shell` R31) Home draws the front door "What happened?" (`door.front.head`, `door.front.intro`) from `startfrom`: each door its words (`door.front.<door>.name`, `.hint`) and its offered scripts, a script starting by `cs.wizard` (the runner, `screens-wizards`); a door `startfrom` leaves out is not drawn, and with no doors the section is not drawn. Beside the doors: the matching work (`door.front.matching`: the member's words searched through `search`, each result a reference) and the blank start (`door.front.blank`: `promote` "Start a project", R1). `startfrom` is now a drawn act (R1's "not drawn in T46" is retired). Control: with "Follow the money" not offered, the `money` door names only what `startfrom` names. *(not yet met: T47)*
 
+#### T47's L11 fold (K3100)
+
+- **R10** (DEC-201 (8)) **projects**: `projectlist` (each project's name, owner, stage on the ladder) with each one's question count (`projectquestions`, paged), `truncated` said; "Start a project" (`promote`). *(not yet met: T47)*
+- **R11** (DEC-201 (7), DEC-202 (4)) Home: with no project and one member, the new-group state ("Nothing is here yet", inviting members, saying who the group is); the welcome offer per `screens-wizards` R7. *(not yet met: T47)*
+- **R12** (DEC-201 (13)) Queue's empty state ("You are up to date"); Find's no-result state (what search covers, "Capture it"). *(not yet met: T47)*
+- **R13** (DEC-212; `action-producers` R25) R3's registered acts gain `actionmove`; the unsent-request item draws "Pick up where you left off" (opening the action's screen at its step), "Keep it for later" (`queuesnooze`) and "Drop the request, with a reason" (`actionmove` to `abandoned`). *(not yet met: T47)*
+
 ## Private
 
 ### Uses

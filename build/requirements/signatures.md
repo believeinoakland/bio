@@ -6,7 +6,7 @@
 
 ### Purpose
 
-Builds and verifies the signed and timestamped statements the plane and the installer exchange: OpenSSH detached signatures (SSHSIG) over a release, a fleet manifest, a bundle ratification or a case ratification; an RFC 3161 timestamp request and response, and the public-archive locator an opt-in co-archive returns; and the self-contained page a human signer uses to produce those signatures offline. It holds no record, no stored private key and no clock, and makes no network call itself — every network call is the caller's. Its one signing service (the release signer) runs on an operator's machine with a seed the caller passes, and never ships in the plane or the installer.
+Builds and verifies the signed and timestamped statements the plane and the installer exchange: OpenSSH detached signatures (SSHSIG) over a release, a fleet manifest, a bundle ratification or a case ratification; an RFC 3161 timestamp request and response, and the public-archive locator an opt-in co-archive returns; and the self-contained page a human signer uses to produce those signatures offline; the in-interface signer (`interface-shell` R40, R41) is, beside the page, a maker of R1's statements, unchanged in format. It holds no record, no stored private key and no clock, and makes no network call itself — every network call is the caller's. Its one signing service (the release signer) runs on an operator's machine with a seed the caller passes, and never ships in the plane or the installer.
 
 ### Provides
 

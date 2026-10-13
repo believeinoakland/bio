@@ -68,7 +68,7 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 
 **The file scanner** (N706, N710, N714, its share; DEC-169 (7); K1892, K1946 T4, T8; K2085)
 - **R44** The install and the update install `file-scanner` as a container member (R38), with exactly the bindings its fleet statement names: the copy's `CAPTURES` bucket (so R13 holds for this member: it reads captured bytes), its two container classes (`SCANNER`, `RENDERER`), and `SECURITY_VPC` only as R45 says; its scheduled trigger as the statement gives it (`17 4 * * *`; the bucket and the cron read from the member's signed `Worker` part, `worker.json`, the bucket named by role; a release without that part installs the member without them and the page names what it lacks; the part is bundler's, N772, K2155); and the bucket prefixes it writes, `clamav/` (the signature mirror) and `reputation/` (the address lists), in the copy's evidence bucket and nowhere else. The plane is bound to it as `FILE_SCANNER` (R12's three acts; `plane` R27). A member left out is named (R38) and the install never fails over it.
-- **R45** The final panel and the update's last screen state that the organization's own security tools are added in your group's Civicsmith, at setup or later (`setup-page` R30), and that the installer takes no tool and no tool's key. A tool reached through a tunnel (`reach: "tunnel"`) needs a Workers VPC service: when the operator names one on the install or update page (optional, nothing preselected), `file-scanner` is bound to it as `SECURITY_VPC`; when none is named, no such binding is written, and a tunnelled tool answers `REACH_NOT_BOUND` in the copy (K1946 T4), as the page says.
+- **R45** The final panel and the update's last screen state that the organization's own security tools are added in your group's Civicsmith, at setup or later (`screens-entry` R6, `screens-settings` R15, was `setup-page` R30), and that the installer takes no tool and no tool's key. A tool reached through a tunnel (`reach: "tunnel"`) needs a Workers VPC service: when the operator names one on the install or update page (optional, nothing preselected), `file-scanner` is bound to it as `SECURITY_VPC`; when none is named, no such binding is written, and a tunnelled tool answers `REACH_NOT_BOUND` in the copy (K1946 T4), as the page says.
 - **R46** (K1892; K1946 T8) Before `verify` (R15) succeeds, the install and the update list the account's Logpush jobs and name, as a failure on the page, any job whose dataset records each request of a Worker (`workers_trace_events`) and whose filter does not exclude the copy's Workers (the plane and its members), since such a job would keep a log of who opened which file. No success is claimed while one is named. When the permission granted cannot read the jobs, the check is stated undetermined, never passed, with the one manual check the operator can make (the account's Logpush jobs in the dashboard); R2 asks no Logs scope for it (Logpush's list needs Logs Write, a write power over the group's logging; K2155).
 
 **The copy's own hosts** (N745, its share; K2038)
@@ -89,10 +89,18 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 - **R25** `resolveVersion` returns `bio-plane/package.json`'s version. It throws, naming the files and what to change, when that version is not semver, when the plane's config declares no `VERSION`, or when that `VERSION` differs.
 - **R26** `checkSignedAsset` returns `null` only for the signed release of that version: the manifest's version equals it, the bytes hash to the manifest's `sha256`, signers are armed, the manifest carries a `sig`, and the signature verifies against `ARMED_SIGNERS`. Otherwise it returns the reason in words. The embed also refuses a release containing any published token value, and writes `release.mjs` as generated.
 
+#### T47's L11 fold (K3100)
+
+- **R50** (N1003; DEC-201 (4), DEC-206 (4)) `GET /` asks only the permanent short name (R41's dialog) and the places (R21), with what is needed stated in one block (R23; doubt 7), then "Before Cloudflare": what will be allowed in plain words and R34's words; "Continue to Cloudflare" sends `POST /begin`. *(not yet met: T47)*
+- **R51** (DEC-201 (4)) The progress page draws one plain line per step as it starts and ends; a stop names the step, what to do, and "nothing was created" where R4 holds; the finished panel shows the checks, the one-time password and address once, the probe key behind "most groups never need it", and hands over to `<address>/app/setup#boot=<password>`. *(not yet met: T47)*
+- **R52** (DEC-201 (8)) `GET /update` draws the version before and after and "Continue to Cloudflare to update"; a stop says the group's Civicsmith keeps running as it was. *(not yet met: T47)*
+- **R53** (DEC-122 (3)) The pages use `interface-assets`' stylesheet and faces, carried in the installer's bundle; no other origin (R35). *(not yet met: T47)*
+
 ## Private
 
 ### Uses
 
+- `interface-assets`: its stylesheet and faces, carried in the bundle (R53; K3100).
 - `signatures`: `verifySshsig`, `NS_RELEASE`, `NS_FLEET`, `fleetStatement` (R8, R11, R26).
 - `jurisdictions`: `list` (R21). *(declared)*
 - `instance-setup`: `GROUP_SLUG_RE` (R2), `FLEET_BINDINGS` (R12's binding names). *(not declared)*

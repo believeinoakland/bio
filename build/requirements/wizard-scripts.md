@@ -130,6 +130,12 @@ Terms. A **script** is R1's record; a **version** R1's version. A version's **st
 **Settled readings (K1396):** the readings of wizard-scripts's T31 question stand as K1396 states them; they bind this module's tests.
 
 **Settled readings (K1397):** the `brokenScripts` and `submittedFor` entry shapes and the factory name stand as K1397 states them; they bind this module's tests.
+
+#### T47's L11 fold (K3100)
+
+- **R35** (K3062; DEC-200–DEC-212; amends R13, R31) The screen registry is re-taken from `registry.json` at PR #33's head (merged into `tranche/T47` at L6's close (K3100)): 63 screens; owed acts `owed:passwordreset`, `owed:passwordresetlink`, `owed:grouplanguagesset`, `owed:grouplogoset`, `owed:signrequest` registered as those ops once declared, `owed:projectaikeepaway` as today. Test: `wizardsAt("group")` and `op=wizardcheck` admit `grouplogoset`; control: `hostingaccess` on `setup` is refused. *(not yet met: T47)*
+- **R36** (K2241; DEC-205 (3), DEC-207 (10), DEC-208 (2)) BOB adopts from `library.json` at that commit version 2 of "Set up and claim" (step 14 `hostingaccessset`) and of "Publication ceremony" (steps 9–11 re-worded), each `approved` by BOB, its version 1 `updated`. *(not yet met: T47)*
+
 ## Private
 
 ### Uses
