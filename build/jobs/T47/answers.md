@@ -39,3 +39,7 @@ A grant's read log takes its use from its first read. answers' ruleAnswer opens 
 ## J2 · COMPLETE
 
 T47-84 applied: standing.test.mjs R19 sign-in arm re-pointed to a held token (credentials R70: subscriptionTokenHold), with a control that the fact alone answers NO_ACCOUNT and a check that the token appears in nothing answers keeps. Test only, no source change. answers 63/63; format, architecture (21 files), coverage (34/34), ownership 0 failures; run.mjs architecture 0 (coverage's 44 failures none answers'). One finding in REPORT J1. Record: build/jobs/T47/answers.md on job/T47/answers.
+
+## J3 · COMPLETE · re B2
+
+B2 applied: R35 met. ruleAnswer takes use (ask|draft, else ask) and opens the grant's read log with it; op=rule reads use from the query only (the control plane's stamp), never the body. Test with negative control (fails on the old source) and controls (ask grant unchanged, body/unknown use open an ask, open log keeps its use). answers 64/64; store-door 45/0, credentials 201/0 unchanged; format, architecture, coverage (35/35), ownership 0 failures; run.mjs architecture 0. Plane half is T47-66's. Record: build/jobs/T47/answers.md.
