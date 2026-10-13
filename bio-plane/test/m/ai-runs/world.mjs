@@ -74,6 +74,8 @@ function cursor(rows) {
 }
 
 export const SEAL = "test-seal-secret-for-ai-runs";
+/** A sentinel sign-in token held for a member (credentials R70: 20 to 2,000 characters). */
+export const SIGNIN_TOKEN = (id) => `sk-ant-oat01-sentinel-signin-token-of-${id}`;
 
 /** inquiry's R49 as this module reaches it (K674): a stub at the interface, answering from `migrated` by question id,
  *  null otherwise; inquiry builds the real one in this layer. */
@@ -166,6 +168,14 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
       const r = await credentials.accountReferenceSet({ member: `member:${id}`, kind, secret, by: `member:${id}` });
       if (!r.ok) throw new Error(`account ${id}: ${JSON.stringify(r)}`);
       return r;
+    },
+    /** (credentials R43, R70; T47) A member's own sign-in, connected and its token held (sealed, `subscriptionTokenHold`). */
+    async signin(id, token = SIGNIN_TOKEN(id)) {
+      const c = credentials.subscriptionConnected({ member: `member:${id}` });
+      if (!c.ok) throw new Error(`signin ${id}: ${JSON.stringify(c)}`);
+      const h = await credentials.subscriptionTokenHold({ member: `member:${id}`, token });
+      if (!h.ok) throw new Error(`signin hold ${id}: ${JSON.stringify(h)}`);
+      return token;
     },
     /** A project owned by `owner`, with `joined` members joined and `invited` ones only invited. */
     project(id, owner, { joined = [], invited = [], discoverable = false } = {}) {

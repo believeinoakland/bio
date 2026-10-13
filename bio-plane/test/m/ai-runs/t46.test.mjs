@@ -1,9 +1,12 @@
 /* ai-runs T46 (T46-14): R78, the test-instance exception (`testInstance`, `partAdmitted`, the `untested` label recorded at
    the open and answered by R10, R19 and R28); R18 as amended, a member's own sign-in run dispatched for her alone at her
-   own act (`dispatchMemberRun`), every other R18 refusal standing. */
+   own act (`dispatchMemberRun`), every other R18 refusal standing; (T47-20) under a segment credential the plane mints
+   (credentials R63), the page-held one retired, the run's end revoking them (R14), the sign-in's held token carried (R79). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, OPEN, INQ, PROJ, ORG, T0, sha, agentWorker } from "./world.mjs";
+import { world, OPEN, INQ, PROJ, ORG, T0, sha, agentWorker, SIGNIN_TOKEN } from "./world.mjs";
+import { AI_RUN_MODE_WRITES } from "../../../src/ai-runs/index.mjs";
+import { AI_RUN_WRITES } from "../../../src/credentials/index.mjs";
 import { AI_RUNS_CHECKS, CIVICSMITH_TEST_SET, untestedLabel } from "../../../src/run-rules/index.mjs";
 
 const PAIR = { CIVICSMITH_TEST_INSTANCE: "biosmoke7", INSTANCE_NAME: "biosmoke7" };
@@ -120,19 +123,20 @@ test("R78, R23's input: an exploring run's origin is judged with investigate's a
   assert.equal(plain.runs.partAdmitted("investigate").admitted, false);
 });
 
-/* ---- R18 (T46; N919; Bob's, K2892): a member's own sign-in run, dispatched for her alone at her act ---- */
+/* ---- R18 (T46; N919; Bob's, K2892; T47, N955): a member's own sign-in run, dispatched for her alone at her act, under a
+   credential minted for the segment (credentials R63) ---- */
 
 const TOKEN_M = `aik-${"a".repeat(64)}`;
-const TOKEN_B = `aik-${"b".repeat(64)}`;
+const SHAPE = /^aik-[0-9a-f]{64}$/;
 
-/** A world where ann's run was opened on her own `ai` credential (`member:ann/tok-m`), in the `bio` object, with the
- *  agent-worker binding `aw`; `account` is how ann's act is served: her own sign-in (`signin`), her API-key reference
- *  (`apikey`), or the group's key (`group`). */
-async function memberWorld(aw, { account = "signin", mode = "check", env = {}, opts = {} } = {}) {
+/** A world where ann's run is hers (`principal` `member:ann`, opened by her session, or `member:ann/tok-m`, on a credential
+ *  of hers minted before T47), with the agent-worker binding `aw`; `account` is how ann's act is served: her own held
+ *  sign-in (`signin`), her API-key reference (`apikey`), or the group's key (`group`). */
+async function memberWorld(aw, { account = "signin", mode = "check", principal = "session", env = {}, opts = {} } = {}) {
   const w = world({ env: { AGENT_WORKER: aw, STORE: { idFromName: (n) => `id:${n}` }, AI_RUN_DISPATCH_WAIT_MS: "50", ...env },
                     ...(mode === "plan" ? { deployedModes: ["check", "plan"] } : {}), ...opts });
   await w.group("ann", "bob", { noAccount: ["ann", "bob"] });
-  if (account === "signin") assert.equal(w.credentials.subscriptionConnected({ member: "member:ann" }).ok, true);
+  if (account === "signin") await w.signin("ann");
   if (account === "apikey") await w.account("ann");
   if (account === "group") {
     assert.equal((await w.credentials.groupKeySet({ key: "group-key-secret", by: "admin" })).ok, true);
@@ -140,14 +144,16 @@ async function memberWorld(aw, { account = "signin", mode = "check", env = {}, o
     assert.equal(w.credentials.groupKeyNoticeSeen({ member: "member:ann", by: "member:ann" }).ok, true);
   }
   await w.account("bob");
-  for (const [who, tok, s] of [["ann", "tok-m", TOKEN_M], ["bob", "tok-b", TOKEN_B]]) {
-    const m = w.credentials.aiCredentialMint({ who, tokenId: tok, secretSha: sha(s), principalKind: "member",
-      taskScope: "investigative", writes: ["airuntick"], note: `${who}'s own key` });
+  let stamp = "member:ann";
+  if (principal === "credential") {
+    const m = w.credentials.aiCredentialMint({ who: "ann", tokenId: "tok-m", secretSha: sha(TOKEN_M), principalKind: "member",
+      taskScope: "investigative", writes: ["airuntick"], note: "ann's own key" });
     assert.equal(m.ok, true, JSON.stringify(m));
+    const c = w.credentials.aiCredentialLook({ secretSha: sha(TOKEN_M) }).credential;
+    stamp = `${c.principal}/${c.tokenId}`;
   }
   w.ctx.id = { equals: (x) => x === "id:bio" };
   w.bundle(INQ);
-  const stamp = (() => { const c = w.credentials.aiCredentialLook({ secretSha: sha(TOKEN_M) }).credential; return `${c.principal}/${c.tokenId}`; })();
   if (mode === "plan") {
     w.project(PROJ, "ann");
     assert.equal(w.runs.registerOpenCheck("action-plans", "plan", () => null).ok, true);
@@ -161,74 +167,146 @@ async function memberWorld(aw, { account = "signin", mode = "check", env = {}, o
   return { w, stamp };
 }
 const runLog = (w) => w.rows(`SELECT * FROM observation_log WHERE authority_kind='run' AND authority='R1' ORDER BY seq`);
+/** The run credentials credentials R63 recorded for `run`, oldest first. */
+const runCreds = (w, run = "R1") => w.rows(`SELECT token_id, secret_sha, principal, scope_writes, run, revoked_at FROM ai_credentials
+                                             WHERE run = ? ORDER BY rowid`, run);
+/** Every row of every table the dispatch could touch, for "the token enters no record". */
+const everything = (w) => w.rows(`SELECT name FROM sqlite_master WHERE type='table'`)
+  .map((t) => JSON.stringify(w.rows(`SELECT * FROM "${t.name}"`))).join("\n");
 
-test("R18 (T46; K2892): a check run a member opened on her own credential, served by her own sign-in, dispatched at her act through dispatchMemberRun, reaches the binding once with her account and her credential and no other member's; no secret enters the record or the answer", async () => {
+test("R18 (T47; N955; credentials R63): a check run opened by her session is dispatched at her act once with a credential minted for that segment — its writes the mode's, its run the run's — reaching the binding with her own sign-in and no other member's; the token is never answered, logged or written", async () => {
   const aw = agentWorker();
   const { w } = await memberWorld(aw);
-  const d = await w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", credential: TOKEN_M, at: "2026-07-01T00:01:00Z" });
+  const d = await w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", at: "2026-07-01T00:01:00Z" });
   assert.deepEqual([d.found, d.dispatched, d.dispatch.state], [true, true, "DISPATCHED"], JSON.stringify(d));
   assert.equal(aw.calls.length, 1);
   assert.equal(aw.calls[0].url, "https://agent-worker/run");
-  assert.deepEqual(aw.calls[0].body, { run_id: "R1", store: "bio", credential: TOKEN_M,
-    account: { kind: "signin", level: "member", member: "member:ann", suggestions: false } });
-  assert.equal("secret" in aw.calls[0].body.account, false, "a sign-in carries no secret key");
-  assert.equal(JSON.stringify(aw.calls[0].body).includes("bob"), false, "no other member's account or credential");
-  for (const t of ["ai_runs", "observation_log"])
-    assert.equal(JSON.stringify(w.rows(`SELECT * FROM ${t}`)).includes(TOKEN_M), false, "the credential enters no record");
-  assert.equal(JSON.stringify(d).includes(TOKEN_M), false, "nor the answer");
-  /* her sign-in's own suggestions switch rides with it (agent-worker R6 as T46 amends it) */
-  assert.equal(w.credentials.accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
-  await w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", credential: TOKEN_M });
-  assert.equal(aw.calls[1].body.account.suggestions, true);
+  const sent = aw.calls[0].body;
+  assert.match(sent.credential, SHAPE, "the minted token in the gate's shape");
+  assert.deepEqual({ ...sent, credential: "·" }, { run_id: "R1", store: "bio", credential: "·",
+    account: { kind: "signin", level: "member", secret: SIGNIN_TOKEN("ann"), member: "member:ann", suggestions: false } });
+  const creds = runCreds(w);
+  assert.equal(creds.length, 1, "one credential minted for the segment");
+  assert.deepEqual([creds[0].principal, creds[0].run, creds[0].secret_sha, JSON.parse(creds[0].scope_writes), creds[0].revoked_at],
+                   ["member:ann", "R1", sha(sent.credential), [...AI_RUN_MODE_WRITES.check], null]);
+  const look = w.credentials.aiCredentialLook({ secretSha: sha(sent.credential) }).credential;
+  assert.deepEqual([look.principal, look.principalKind, look.run, look.revoked], ["member:ann", "member", "R1", false]);
+  assert.equal(JSON.stringify(sent).includes("bob"), false, "no other member's account or credential");
+  assert.equal(JSON.stringify(d).includes(sent.credential), false, "the token is never answered");
+  assert.equal(everything(w).includes(sent.credential), false, "the token enters no record, the log included");
 });
 
-test("R18 (T46; K2892): a plan run on her own sign-in is dispatched the same way", async () => {
+test("R18 (T47): a second dispatch mints anew, revoking the run's earlier segment credential; the run's own earlier member credential (opened before T47) is hers as well", async () => {
+  const aw = agentWorker();
+  const { w } = await memberWorld(aw, { principal: "credential" });
+  assert.equal((await w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" })).dispatched, true);
+  assert.equal((await w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" })).dispatched, true);
+  assert.equal(aw.calls.length, 2);
+  assert.notEqual(aw.calls[0].body.credential, aw.calls[1].body.credential, "minted anew");
+  const creds = runCreds(w);
+  assert.equal(creds.length, 2);
+  assert.deepEqual(creds.map((c) => c.revoked_at !== null), [true, false], "at most one live per run");
+  assert.deepEqual(creds.map((c) => c.secret_sha), aw.calls.map((c) => sha(c.body.credential)));
+  /* her pre-T47 credential is not what the segment carries */
+  assert.equal(aw.calls.some((c) => c.body.credential === TOKEN_M), false);
+});
+
+test("R18 (T47): a plan run's segment credential holds exactly airuntick, optionpropose, airunclose; AI_RUN_MODE_WRITES is frozen and every write it names is one of credentials' AI_RUN_WRITES", async () => {
+  assert.deepEqual(AI_RUN_MODE_WRITES, { check: ["airuntick", "suggest", "capturerequest", "airunclose"],
+                                         plan: ["airuntick", "optionpropose", "airunclose"] });
+  assert.ok(Object.isFrozen(AI_RUN_MODE_WRITES) && Object.isFrozen(AI_RUN_MODE_WRITES.check) && Object.isFrozen(AI_RUN_MODE_WRITES.plan));
+  for (const w of [...AI_RUN_MODE_WRITES.check, ...AI_RUN_MODE_WRITES.plan]) assert.ok(AI_RUN_WRITES.includes(w), w);
   const aw = agentWorker();
   const { w } = await memberWorld(aw, { mode: "plan" });
-  const d = await w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", credential: TOKEN_M });
+  const d = await w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" });
   assert.equal(d.dispatched, true, JSON.stringify(d));
-  assert.deepEqual(aw.calls.map((c) => c.body.account), [{ kind: "signin", level: "member", member: "member:ann", suggestions: false }]);
+  assert.deepEqual(aw.calls.map((c) => c.body.account), [{ kind: "signin", level: "member", secret: SIGNIN_TOKEN("ann"),
+                                                          member: "member:ann", suggestions: false }]);
+  assert.deepEqual(JSON.parse(runCreds(w)[0].scope_writes).sort(), ["airunclose", "airuntick", "optionpropose"]);
 });
 
-test("R18 (T46) controls: another member's `by` is AI_RUN_NOT_PRINCIPAL; absent or invisible {found: false}; an ended run {dispatched: false, status}; the same member on the group's key or her API-key reference withheld MEMBER_PRINCIPAL_RUN; a mode other than check or plan MEMBER_RUN_MODE_NOT_ADMITTED; no credential, another's or a revoked one refused — no call counted on any, nothing written", async () => {
+test("R18 (T47) controls: a `credential` in the request changes nothing and is never read; a mint refused AI_KEPT_AWAY is answered unchanged and sends nothing; a mint that throws or answers nothing is withheld CREDENTIAL_RECORD_SILENT", async () => {
+  /* a credential given (another member's, or nonsense) is ignored: the dispatch mints its own */
+  const aw = agentWorker();
+  const { w } = await memberWorld(aw);
+  for (const credential of [TOKEN_M, "not-a-token", { toString() { throw new Error("read"); } }]) {
+    const d = await w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", credential });
+    assert.equal(d.dispatched, true, JSON.stringify(d));
+  }
+  assert.equal(aw.calls.length, 3);
+  assert.ok(aw.calls.every((c) => SHAPE.test(c.body.credential) && c.body.credential !== TOKEN_M));
+  /* the group's keep-away (credentials R35, R52): the mint's refusal, unchanged, nothing sent, nothing written */
+  const kAw = agentWorker();
+  const k = await memberWorld(kAw);
+  const set = k.w.credentials.aiKeepAwaySet({ on: true, reason: "The group's material stays away from every assistant for now.", by: "admin" });
+  assert.equal(set.ok, true, JSON.stringify(set));
+  const before = k.w.dump();
+  const credsBefore = runCreds(k.w).length;
+  const r = await k.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" });
+  const kept = k.w.credentials.aiRunCredentialMint({ member: "member:ann", run: "R1", writes: ["airuntick"] });
+  assert.equal(kept.code, "AI_KEPT_AWAY");
+  assert.deepEqual([r.found, r.dispatched, r.code, r.check, r.translation], [true, false, kept.code, kept.check, kept.translation]);
+  assert.equal(k.w.dump(), before, "nothing written");
+  assert.equal(runCreds(k.w).length, credsBefore, "nothing minted");
+  assert.equal(kAw.calls.length, 0, "nothing sent");
+  /* the mint itself refused AI_KEPT_AWAY (the keep-away turned on between the account's read and the mint): answered
+     unchanged, nothing sent, nothing written */
+  const mAw = agentWorker();
+  const m = await memberWorld(mAw);
+  const refusal = { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", check: kept.check, translation: kept.translation,
+                    detail: "kept away" };
+  m.w.credentials.aiRunCredentialMint = () => refusal;
+  const mb = m.w.dump();
+  const mr = await m.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" });
+  assert.deepEqual([mr.dispatched, mr.code, mr.check, mr.translation, mr.detail, mr.reason],
+                   [false, "AI_KEPT_AWAY", kept.check, kept.translation, "kept away", "AI_KEPT_AWAY"]);
+  assert.equal(m.w.dump(), mb);
+  assert.equal(mAw.calls.length, 0, "nothing sent");
+  /* a mint that throws, or answers nothing */
+  for (const broken of [() => { throw new Error("store gone"); }, () => undefined]) {
+    const xAw = agentWorker();
+    const x = await memberWorld(xAw);
+    x.w.credentials.aiRunCredentialMint = broken;
+    const s = await x.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" });
+    assert.deepEqual([s.dispatched, s.withheld], [false, "CREDENTIAL_RECORD_SILENT"]);
+    assert.equal(xAw.calls.length, 0, "nothing sent");
+  }
+});
+
+test("R18 (T46, T47) controls: another member's `by` is AI_RUN_NOT_PRINCIPAL; absent or invisible {found: false}; an ended run {dispatched: false, status}; the same member on the group's key or her API-key reference withheld MEMBER_PRINCIPAL_RUN; AGENT_WORKER_UNBOUND, NAMESPACE_UNDETERMINED — no call counted and nothing minted on any", async () => {
   const aw = agentWorker();
   const { w, stamp } = await memberWorld(aw);
   const before = w.dump();
-  const disp = (o) => w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", credential: TOKEN_M, ...o });
-  const notPrincipal = await disp({ by: "member:bob", credential: TOKEN_B });
+  const disp = (o) => w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", ...o });
+  const notPrincipal = await disp({ by: "member:bob" });
   assert.deepEqual([notPrincipal.dispatched, notPrincipal.code, notPrincipal.check],
                    [false, "AI_RUN_NOT_PRINCIPAL", AI_RUNS_CHECKS.AI_RUN_NOT_PRINCIPAL.check]);
   assert.equal((await disp({ by: ORG, viewer: "member:ann" })).code, "AI_RUN_NOT_PRINCIPAL", "a machine is no member");
   assert.deepEqual(await disp({ run: "NOPE" }), { run: "NOPE", found: false, note: "no such run: it either never existed or was purged" });
   assert.equal((await disp({ run: "" })).found, false);
-  /* invisible answers as absent: a sight that sees no run (an unrecognised stamp fails closed, R19) */
   const hidden = await disp({ viewer: "who-knows" });
   assert.deepEqual(hidden, { run: "R1", found: false, note: "no such run: it either never existed or was purged" });
-  /* no credential, another member's, one not on record: nothing sent */
-  assert.equal((await disp({ credential: null })).withheld, "MEMBER_PRINCIPAL_RUN");
-  assert.equal((await disp({ credential: TOKEN_B })).code, "AI_RUN_NOT_PRINCIPAL", "bob's credential is not this run's");
-  assert.equal((await disp({ credential: `aik-${"c".repeat(64)}` })).code, "AI_RUN_NOT_PRINCIPAL", "not on record");
   assert.equal(w.dump(), before, "nothing written");
+  assert.equal(runCreds(w).length, 0, "nothing minted");
   assert.equal(aw.calls.length, 0, "no call counted");
-  /* revoked: refused, nothing sent */
-  const rv = await memberWorld(agentWorker());
-  rv.w.credentials.aiCredentialRevoke({ who: "ann", tokenId: "tok-m" });
-  assert.equal((await rv.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", credential: TOKEN_M })).code, "AI_RUN_NOT_PRINCIPAL");
   /* the same member on the group's key, or on her own API-key reference: withheld MEMBER_PRINCIPAL_RUN, nothing sent */
   for (const account of ["group", "apikey"]) {
     const x = await memberWorld(aw, { account });
     const b = x.w.dump();
-    const r = await x.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", credential: TOKEN_M });
+    const r = await x.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" });
     assert.deepEqual([r.dispatched, r.withheld], [false, "MEMBER_PRINCIPAL_RUN"], account);
     assert.equal(x.w.dump(), b, `nothing written (${account})`);
+    assert.equal(runCreds(x.w).length, 0, `nothing minted (${account})`);
   }
   assert.equal(aw.calls.length, 0, "no call counted");
   /* every other R18 ground stands */
   const unbound = await memberWorld(null);
-  assert.equal((await unbound.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", credential: TOKEN_M })).withheld, "AGENT_WORKER_UNBOUND");
+  assert.equal((await unbound.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" })).withheld, "AGENT_WORKER_UNBOUND");
+  assert.equal(runCreds(unbound.w).length, 0);
   const elsewhere = await memberWorld(aw);
   elsewhere.w.ctx.id = { equals: () => false };
-  assert.equal((await elsewhere.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", credential: TOKEN_M })).withheld, "NAMESPACE_UNDETERMINED");
+  assert.equal((await elsewhere.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" })).withheld, "NAMESPACE_UNDETERMINED");
+  assert.equal(runCreds(elsewhere.w).length, 0);
   assert.equal(aw.calls.length, 0);
   /* an ended run */
   assert.equal((await w.runs.close({ run: "R1", bound: "completed", caller: stamp, viewer: "member:ann", actor: "member:ann" })).terminated, true);
@@ -241,23 +319,22 @@ test("R18 (T46; K2920): a run of a mode other than check or plan on her own sign
   const aw = agentWorker();
   const w = world({ env: { AGENT_WORKER: aw, STORE: { idFromName: (n) => `id:${n}` } }, deployedModes: ["check", "investigate"] });
   await w.group("ann", { noAccount: ["ann"] });
-  assert.equal(w.credentials.subscriptionConnected({ member: "member:ann" }).ok, true);
-  w.credentials.aiCredentialMint({ who: "ann", tokenId: "tok-m", secretSha: sha(TOKEN_M), principalKind: "member",
-    taskScope: "investigative", writes: ["airuntick"], note: "ann's key" });
+  await w.signin("ann");
   w.ctx.id = { equals: (x) => x === "id:bio" };
   w.bundle(INQ);
   await w.runs.open(OPEN({ run: "V" }));
   assert.equal(w.runs.verificationRecord({ mode: "check", run: "V", evidence: ["seen live"], by: "member:ann", at: T0 }).ok, true);
-  const o = await w.runs.open(OPEN({ mode: "investigate", principalPlane: "member:ann/tok-m", principalClaude: "member:ann",
+  const o = await w.runs.open(OPEN({ mode: "investigate", principalPlane: "member:ann", principalClaude: "member:ann",
                                      actor: "member:ann", viewer: "member:ann" }));
   assert.equal(o.started, true, JSON.stringify(o));
   const before = w.dump();
-  const r = await w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", credential: TOKEN_M });
+  const r = await w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" });
   assert.deepEqual([r.dispatched, r.code, r.mode], [false, "MEMBER_RUN_MODE_NOT_ADMITTED", "investigate"]);
   /* its row, run-rules R32 (C-22.30), read by key (B3) */
   assert.deepEqual([r.check, r.translation], [AI_RUNS_CHECKS.MEMBER_RUN_MODE_NOT_ADMITTED.check, AI_RUNS_CHECKS.MEMBER_RUN_MODE_NOT_ADMITTED.translation]);
   assert.equal(r.check, "C-22.30");
   assert.equal(w.dump(), before);
+  assert.equal(runCreds(w).length, 0);
   assert.equal(aw.calls.length, 0);
 });
 
@@ -270,15 +347,77 @@ test("R18 (T46): the wake still withholds a member's own sign-in run as MEMBER_P
   const woke = await w.runs.wake(Date.parse("2026-07-01T00:00:10Z"));
   assert.deepEqual([woke.wakes[0].resume, woke.dispatched], ["MEMBER_PRINCIPAL_RUN", 0]);
   assert.equal(aw.calls.length, 0);
+  assert.equal(runCreds(w).length, 0, "the wake mints nothing");
   for (const answer of [{ status: 403, body: { ok: false, reason: "NO" } }, "throw"]) {
     const x = await memberWorld(agentWorker(answer));
-    const r = await x.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", credential: TOKEN_M });
+    const r = await x.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" });
     assert.deepEqual([r.dispatched, r.dispatch.state], [false, answer === "throw" ? "SILENT" : "REFUSED"]);
     const rows = runLog(x.w);
     assert.equal(rows.length, 1);
     assert.match(rows[0].detail, /did not complete .*still resumable/);
   }
   const slow = await memberWorld(agentWorker("hang"));
-  const r = await slow.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann", credential: TOKEN_M });
+  const r = await slow.w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" });
   assert.deepEqual([r.dispatched, r.dispatch.state, runLog(slow.w).length], [true, "RUNNING", 0]);
+});
+
+test("R14 (T47; N955; credentials R63): after the exit commits a run's ending, every segment credential minted for it is revoked — by a close, a tick that exhausts a bound, and the reaper alike; another run's stays live; a credentials call that throws never changes the exit or its answer", async () => {
+  const aw = agentWorker();
+  const { w, stamp } = await memberWorld(aw);
+  await w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" });
+  const o2 = await w.runs.open(OPEN({ run: "R2", principalPlane: stamp, principalClaude: "member:ann", actor: "member:ann", viewer: "member:ann" }));
+  assert.equal(o2.started, true);
+  await w.runs.dispatchMemberRun({ run: "R2", by: "member:ann" });
+  assert.deepEqual([runCreds(w, "R1")[0].revoked_at, runCreds(w, "R2")[0].revoked_at], [null, null]);
+  const c = await w.runs.close({ run: "R1", bound: "completed", caller: stamp, viewer: "member:ann", actor: "member:ann" });
+  assert.equal(c.terminated, true);
+  assert.notEqual(runCreds(w, "R1")[0].revoked_at, null, "the close revokes R1's");
+  assert.equal(runCreds(w, "R2")[0].revoked_at, null, "another run's stays live");
+  assert.equal(w.credentials.aiCredentialLook({ secretSha: runCreds(w, "R1")[0].secret_sha }).credential.revoked, true);
+  /* the reaper's ending */
+  assert.equal(w.runs.reap(Date.parse("2026-07-02T00:00:00Z")).reaped.find((x) => x.run === "R2").terminated, true);
+  assert.notEqual(runCreds(w, "R2")[0].revoked_at, null);
+  /* a tick that exhausts a bound */
+  const t = await memberWorld(agentWorker());
+  const o3 = await t.w.runs.open(OPEN({ run: "R3", principalPlane: t.stamp, principalClaude: "member:ann", actor: "member:ann",
+                                         viewer: "member:ann", bounds: [{ bound: "fetches", allowed: 1 }] }));
+  assert.equal(o3.started, true);
+  await t.w.runs.dispatchMemberRun({ run: "R3", by: "member:ann" });
+  const tk = await t.w.runs.tick({ run: "R3", consume: { fetches: 1 }, caller: t.stamp, viewer: "member:ann", actor: "member:ann" });
+  assert.equal(tk.ended && tk.ended.terminated, true, JSON.stringify(tk));
+  assert.notEqual(runCreds(t.w, "R3")[0].revoked_at, null);
+  /* control: the credentials call throws — the ending and its answer are as they would be */
+  const x = await memberWorld(agentWorker());
+  x.w.credentials.aiRunCredentialsEnd = () => { throw new Error("store gone"); };
+  const ok = await x.w.runs.close({ run: "R1", bound: "completed", caller: x.stamp, viewer: "member:ann", actor: "member:ann" });
+  assert.deepEqual([ok.terminated, ok.status, ok.bound], [true, "finished", "completed"]);
+  assert.equal(x.w.row(`SELECT status FROM ai_runs WHERE run='R1'`).status, "finished");
+});
+
+test("R79 (T47; K3060 D10, K3068): a sentinel sign-in token held for the payer reaches the stub agent-worker's account.secret and no record or answer; control: an apikey account is unchanged", async () => {
+  const aw = agentWorker();
+  const { w } = await memberWorld(aw);
+  const d = await w.runs.dispatchMemberRun({ run: "R1", by: "member:ann" });
+  assert.equal(d.dispatched, true);
+  assert.deepEqual([aw.calls[0].body.account.kind, aw.calls[0].body.account.secret], ["signin", SIGNIN_TOKEN("ann")]);
+  assert.equal(everything(w).includes(SIGNIN_TOKEN("ann")), false, "the sentinel enters no record");
+  assert.equal(JSON.stringify(d).includes(SIGNIN_TOKEN("ann")), false, "nor the answer");
+  /* control: an API key is carried as before, through the wake's dispatch of an organisation run (scheduler.test.mjs holds
+     the rest of that path) */
+  const TOKEN = "instance-ai-secret-value-7f3c";
+  const aw2 = agentWorker();
+  const x = world({ env: { AGENT_WORKER: aw2, INSTANCE_AI_TOKEN: TOKEN, STORE: { idFromName: (n) => `id:${n}` }, AI_RUN_DISPATCH_WAIT_MS: "50" } });
+  await x.group("ann");
+  x.bundle(INQ);
+  x.credentials.aiCredentialMint({ who: "admin", tokenId: "tok-org", secretSha: sha(TOKEN), principalKind: "organisation",
+    taskScope: "investigative", writes: ["airuntick"], note: "the instance's key" });
+  const cred = x.credentials.aiCredentialLook({ secretSha: sha(TOKEN) }).credential;
+  x.ctx.id = { equals: (v) => v === "id:bio" };
+  await x.runs.open(OPEN({ principalPlane: `${cred.principal}/${cred.tokenId}` }));
+  const reqs = [{ request: "q1", state: "captured" }];
+  x.runs.registerWaitSource("capture-requests", { tickMs: () => 5000, holds: () => [], woken: () => (reqs[0].woken ? [] : ["R1"]),
+    completions: () => reqs.filter((q) => !q.woken), markWoken: () => { reqs[0].woken = true; } });
+  await x.runs.wake(Date.parse("2026-07-01T00:00:10Z"));
+  assert.deepEqual(aw2.calls[0].body.account, { kind: "apikey", level: "member", secret: "secret-of-ann", member: "member:ann",
+                                                suggestions: false });
 });
