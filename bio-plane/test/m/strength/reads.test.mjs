@@ -322,7 +322,7 @@ test("C-107.3, R24: BAR_NO_REASON is this module's row, after C-107.2, its where
   assert.equal(row.where, "src/strength/index.mjs strengthBarSet > is-strength-bar-reason");
   assert.match(row.translation, /2,000 characters/);
   assert.match(row.translation, /Nothing was changed\.$/);
-  assert.deepEqual(Object.values(STRENGTH_BAR_CHECKS).map((r) => r.check), ["C-32.9", "C-107.1", "C-107.2", "C-107.3"]);
+  assert.deepEqual(Object.values(STRENGTH_BAR_CHECKS).map((r) => r.check), ["C-32.9", "C-107.1", "C-107.2", "C-107.3", "C-107.4"]);
   assert.ok(Object.isFrozen(STRENGTH_BAR_CHECKS));
 });
 
