@@ -41,3 +41,7 @@ Four readings I am building on; each is my best reading, so I carry on unless yo
 ## J2 · REPORT
 
 Found outside file-safety (record, Found in other modules): (1) bio-plane/dist/bio-plane.bundled.mjs (not_product) is stale, it inlines file-safety's source; for the layer close's regeneration. (2) The row census in bio-plane/src/gate.mjs holds the old translations of C-140.2, .3, .13, .38 and lacks C-140.43: the red you accepted until T48's stamp (B1, B3). (3) file-scanner's Purpose says "safe-copy makers"; if any file-scanner text reaches a member, DEC-200 (5)'s one-term rule applies there. Not mine to change.
+
+## J3 · COMPLETE
+
+T47-12 applied: R43 (RENDER_QUEUE_UNREADABLE, row C-140.43, region is-render-queue-readable; RENDERER_ABSENT for no binding only), R39's render clause (K3063), R42a (C-140.2, .3, .13, .38 and the six details re-worded), R44 (onOwnServers, whole words). Flaws fixed: renderBatch's catch-all RENDERER_ABSENT; renderWake's null on an unreadable queue. file-safety 59/59; users' suites green or with failures identical on origin/tranche/T47; format, architecture, coverage (44/44), ownership 0 failures; run.mjs architecture 0. Nothing deferred; three findings in REPORT J2. Record: build/jobs/T47/file-safety.md on job/T47/file-safety.
