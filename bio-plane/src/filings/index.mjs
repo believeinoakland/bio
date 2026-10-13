@@ -119,7 +119,9 @@ export const PACKET_REASON_MAX = 2000;
 export const CHRONOLOGY_MAX = 500;
 /** R33: the words that head each lane, as `events` R28 names them. */
 export const LANE_WORDS = Object.freeze({ world: "what they did", ours: "what we did" });
-/** R13: the drafts and the packet versions one `filingsFor` read lists, each. */
+/** R54 (T47): the longest venue reference for a sending, in characters (code points). */
+export const SENT_REFERENCE_MAX = 100;
+/** R13: the drafts and the packet versions one `filingsFor` read lists, each; R53: the most `approvedUnsent` lists. */
 export const FILINGS_FOR_MAX = 200;
 /** R10: the marking every section, the packet's head and every export carry; with no counsel named (Tier 1 or 2, K924),
  *  the group's own. */
@@ -200,7 +202,7 @@ const withRow = (r) => (r && typeof r.then === "function" ? r.then(withRowNow) :
 const SERVICES = Object.freeze(["filingPrepare", "filingApprove", "filingRecordSent", "counselPacket", "counselPacketRead",
                                 "counselPacketExport", "filingsFor", "theoryPropose", "availableActions",
                                 "communicationPrepare", "templateSave", "jointSignatory", "filingSecondApprove",
-                                "holdNoticePrepare", "templatesForAction"]);
+                                "holdNoticePrepare", "templatesForAction", "approvedUnsent"]);
 
 export class Filings {
   #deps;
@@ -586,18 +588,46 @@ export class Filings {
   }
 
   /* R3, R31: `text`'s blanks filled from the record, each naming its source, or left as a visible marker listed with
-     why. A name outside `FILING_BLANKS` (a profile's text `filing-templates` would not offer) is left unfilled too. */
-  #fill(text, values) {
+     why. A name outside `FILING_BLANKS` (a profile's text `filing-templates` would not offer) is left unfilled too.
+     R55 (T47; DEC-209 (3)): a blank the member filled (`fills`, read by `#fills`) takes the member's own value, labelled
+     the member's, in place of the record's. */
+  #fill(text, values, fills = null) {
     const names = blanksOf(text).blanks;
     const blanks = [], unfilled = [];
     for (const n of names) {
-      const val = Object.prototype.hasOwnProperty.call(FILING_BLANKS, n) ? values[n]
-        : { why: "filings fills no blank by this name, so the record holds no value for it" };
-      if (val && "value" in val) blanks.push({ name: n, value: val.value, source: val.source });
+      const own = fills && fills.values.has(n) ? { value: fills.values.get(n), source: fills.source, label: fills.label } : null;
+      const val = own || (Object.prototype.hasOwnProperty.call(FILING_BLANKS, n) ? values[n]
+        : { why: "filings fills no blank by this name, so the record holds no value for it" });
+      if (val && "value" in val) blanks.push({ name: n, value: val.value, source: val.source, ...(val.label ? { label: val.label } : {}) });
       else unfilled.push({ name: n, why: val.why });
     }
     const filled = new Map(blanks.map((b) => [b.name, b.value]));
     return { text: text.replace(BLANK_RE, (_, n) => (filled.has(n) ? filled.get(n) : unfilledMarker(n))), blanks, unfilled };
+  }
+
+  /* R55 (T47; DEC-209 (3)): the member's own values for blanks `text` names, `fills: {<blank>: text}`, read whole before
+     anything is written: a name `text` does not name (or `fills` not a map of names) is refused `FILL_UNKNOWN_BLANK`,
+     naming it; a value that is not non-empty UTF-8 text of at most `FILING_TEXT_MAX` bytes `TEXT_UNWRITABLE`, naming its
+     blank. Answers `{ok: true, fills}`, `fills` null when none is given: its values by name, the source each filled blank
+     names (`fills:<preparer>`: the preparer's own word, never a record id) and its label, the member's own value. */
+  static #fills(fills, text, who, extra = {}) {
+    if (fills == null || (isObj(fills) && !Object.keys(fills).length)) return { ok: true, fills: null };
+    const named = new Set(blanksOf(text).blanks);
+    const unknown = !isObj(fills) ? null : Object.keys(fills).find((n) => !named.has(n));
+    /* DEC-49 REGION is-fill-unknown-blank */
+    if (!isObj(fills) || unknown !== undefined)
+      return { ok: false, reason: "FILL_UNKNOWN_BLANK", ...extra, blank: isObj(fills) ? unknown : null, blanks: [...named],
+               detail: isObj(fills) ? `the text names no blank {{${unknown}}}: a member fills only the blanks the text names`
+                 : "fills is a map of the text's blank names to your own words for each" };
+    /* END DEC-49 REGION is-fill-unknown-blank */
+    for (const [n, v] of Object.entries(fills)) {
+      const bad = Filings.#unwritable(v, { ...extra, blank: n });
+      if (bad) return bad;
+    }
+    return { ok: true, fills: {
+      values: new Map(Object.entries(fills)), source: `fills:${who}`,
+      label: { kind: "member_fill", by: who, machine_work: isMachineIdentity(who),
+               says: "the preparer's own value for this blank, written at preparation: not read from the record" } } };
   }
 
   /* The module that holds the group's templates (`filing-templates`), on the same host unless given; null with none. */
@@ -654,7 +684,7 @@ export class Filings {
    *  names (`filing-templates`, the latest approved by default), into the member's own words (`text`), or, naming
    *  neither, into the latest approved version of the profile's `file` template for the action's kind. */
   filingPrepare({ action = null, template = null, text = undefined, preparer = null, viewer = null, voice = null, audience = null,
-                  language = null, own_doing = null, names_pending = null, textcheck = null } = {}) {
+                  language = null, own_doing = null, names_pending = null, textcheck = null, fills = null } = {}) {
     const who = str(preparer);
     /* DEC-49 REGION is-filing-prepare */
     if (!who) return { ok: false, reason: "FILING_NO_PREPARER", detail: "no stamped preparer: a draft names who prepared it" };
@@ -712,13 +742,16 @@ export class Filings {
       const mismatch = Filings.#kindMismatch(used, a);
       if (mismatch) return mismatch;
     }
+    /* R55 (T47): the member's own values for the blanks the template or the words name */
+    const mf = Filings.#fills(fills, own ? text : used.text, who, { action: a.id });
+    if (!mf.ok) return mf;
     /* T45: the marks the member states (R34, R39, R43, R44, R48), refused whole when malformed */
     const mk = Filings.#marks({ voice, audience, language, own_doing, names_pending, textcheck });
     if (!mk.ok) return mk;
     const when = this.#when();
     const { det, hidden } = this.#restsOn(a, viewer);
     const values = this.#values(a, det, hidden, entry, viewer, when);
-    const filled = this.#fill(own ? text : used.text, values);
+    const filled = this.#fill(own ? text : used.text, values, mf.fills);
     const { blanks, unfilled } = filled;
     /* R40: a request for comment carries the sentence that the reply may be quoted unless it says otherwise */
     const rfc = Filings.#isRfc(a, mk.marks, null);
@@ -789,7 +822,7 @@ export class Filings {
    *  assembled from the record when no words are given. Stored apart, labelled as R5's drafts are; R6's approval and
    *  R7's sending apply to it unchanged. */
   communicationPrepare({ action = null, text = null, purpose = null, from = null, audience = null, voice = null, language = null,
-                         own_doing = null, names_pending = null, textcheck = null, preparer = null, viewer = null } = {}) {
+                         own_doing = null, names_pending = null, textcheck = null, fills = null, preparer = null, viewer = null } = {}) {
     const who = str(preparer);
     const named = typeof purpose === "string" ? purpose.trim() : "";
     const assembled = COMMUNICATION_PURPOSES.includes(named) && (text === null || text === undefined);
@@ -825,6 +858,13 @@ export class Filings {
       /* END DEC-49 REGION is-communication-from */
       fromFacts.push(f);
     }
+    /* R55 (T47; DEC-209 (3)): the member's own values for the blanks the member's words name; a communication reads no
+       template and fills nothing from the record (R23), so a blank no fill names stays as written */
+    const mf = Filings.#fills(fills, assembled ? "" : text, who, { action: a.id });
+    if (!mf.ok) return mf;
+    const own = mf.fills ? [...new Set(blanksOf(text).blanks)].filter((n) => mf.fills.values.has(n))
+      .map((n) => ({ name: n, value: mf.fills.values.get(n), source: mf.fills.source, label: mf.fills.label })) : [];
+    const words = mf.fills ? text.replace(BLANK_RE, (m, n) => (mf.fills.values.has(n) ? mf.fills.values.get(n) : m)) : text;
     const when = this.#when();
     const { det, hidden } = this.#restsOn(a, viewer);
     const v = this.#view();
@@ -835,7 +875,7 @@ export class Filings {
     const rfc = Filings.#isRfc(a, mk.marks, why);
     /* R37, R38: assembled from the record without AI, each part naming its source */
     const parts = assembled ? this.#assembled(why, a, det, hidden, v, facts, mk.marks, viewer, when) : null;
-    let content = parts ? parts.map((x) => x.text).join("\n") : text;
+    let content = parts ? parts.map((x) => x.text).join("\n") : words;
     if (rfc && !content.includes(KEYED["rfc.quoting"])) content = `${content}\n\n${KEYED["rfc.quoting"]}`;
     const review = Filings.#reviewCopy(a);
     let body = review ? `${review.text}\n\n${content}` : content;
@@ -849,7 +889,8 @@ export class Filings {
                                              form: "communication", viewer });
     const notices = Filings.#notices(a, v.view, mk.marks);
     const marks = { ...mk.marks, textcheck: mk.textcheck, from: fromFacts.map((f) => f.finding), printed: [disclosure, review ? review.text : null].filter(Boolean),
-                    ...(review ? { review_copy: review } : {}), rfc, ...(parts ? { parts } : {}), ...(claims ? { claims } : {}) };
+                    ...(review ? { review_copy: review } : {}), rfc, ...(parts ? { parts } : {}), ...(claims ? { claims } : {}),
+                    ...(own.length ? { blanks: own } : {}) };
     return this.record.transact(() => {
       const { id } = this.record.allocId("FIL", when.slice(0, 4));
       this.sql.exec(`INSERT INTO communication_drafts (filing_id, action_id, text, purpose, disclosure, preparer, prepared_at, basis,
@@ -857,7 +898,8 @@ export class Filings {
                     json({ ...outward, notices }), json(marks));
       return { ok: true, id, action: a.id, form: "communication", text: body, purpose: why, disclosure,
                addressee: a.counterparty ?? null, label: proposalLabel(who, "communication"), prepared_by: who, at: when,
-               from: marks.from, ...(parts ? { parts } : {}), ...(claims ? { claims } : {}), outward, notices, marks: mk.marks,
+               from: marks.from, ...(parts ? { parts } : {}), ...(claims ? { claims } : {}), ...(own.length ? { blanks: own } : {}),
+               outward, notices, marks: mk.marks,
                ...(review ? { review_copy: review } : {}),
                ...Filings.#voiceSays(mk.marks.voice),
                evidence: false, says: "a draft communication: nobody has approved or sent it, and nothing is sent until a "
@@ -1405,7 +1447,7 @@ export class Filings {
 
   /** R7: records the sending as one `sent` correspondence entry on the action (actions R15, R16), linked to the draft
    *  both ways. It moves no action state and writes no clock entry: `proposed` carries what a member may choose. */
-  filingRecordSent({ filing = null, at = null, medium = null, artifactSha = null, account = null, author = null,
+  filingRecordSent({ filing = null, at = null, medium = null, artifactSha = null, account = null, reference = null, author = null,
                      viewer = null } = {}) {
     const who = str(author);
     /* DEC-49 REGION is-filing-sent */
@@ -1428,6 +1470,15 @@ export class Filings {
       return { ok: false, reason: "SECOND_APPROVAL_NEEDED", filing: d.filing_id, matched: second.matched,
                detail: "your project asks a second member to approve this act (op=filingsecondapprove) before it is sent" };
     /* END DEC-49 REGION is-filing-sent */
+    /* R54 (T47; DEC-209 (4)): the venue's own number for the sending (a portal's request number), as the member gives it:
+       one line of 1 to 100 characters (code points), kept as written; asked before actions is written to */
+    const ref = reference == null ? null : reference;
+    /* DEC-49 REGION is-sent-reference-malformed */
+    if (ref !== null && (typeof ref !== "string" || !ref.trim() || [...ref].length > SENT_REFERENCE_MAX || /[\r\n\u2028\u2029]/.test(ref)
+                         || WELL_FORMED.test(ref)))
+      return { ok: false, reason: "SENT_REFERENCE_MALFORMED", filing: d.filing_id, max: SENT_REFERENCE_MAX,
+               detail: `the venue's reference is one line of 1 to ${SENT_REFERENCE_MAX} characters, as the venue gave it` };
+    /* END DEC-49 REGION is-sent-reference-malformed */
     if (!this.actions || typeof this.actions.actionCorrespond !== "function")
       return this.#noAction(d.action_id);
     const now = this.#when();
@@ -1442,14 +1493,14 @@ export class Filings {
       if (!c || c.ok === false) return c || this.#noAction(d.action_id);
       const ord = Number.isInteger(Number(c.ord)) ? Number(c.ord) : null;
       this.sql.exec(`INSERT INTO filing_sendings (filing_id, action_id, ord, sent_on, medium, artifact_sha, account,
-                       recorded_by, recorded_at, review_copy) VALUES (?,?,?,?,?,?,?,?,?,?)`,
-        d.filing_id, d.action_id, ord, String(at ?? ""), medium, artifactSha, account, who, now, asReview ? json(asReview) : null);
+                       recorded_by, recorded_at, review_copy, reference) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        d.filing_id, d.action_id, ord, String(at ?? ""), medium, artifactSha, account, who, now, asReview ? json(asReview) : null, ref);
       return { ok: true, ord, entry: c };
     });
     if (!out || out.ok === false) return out;
     return { ok: true, filing: d.filing_id, action: d.action_id, ord: out.ord, recorded_by: who, at: now,
              held_as: out.entry.held_as ?? (artifactSha ? "capture" : "testimony"),
-             proposed: this.#proposed(d, who, viewer), ...(asReview ? { review_copy: asReview } : {}),
+             reference: ref, proposed: this.#proposed(d, who, viewer), ...(asReview ? { review_copy: asReview } : {}),
              says: "recorded as sent by the member named. No action state moved and no clock entry was written: "
                  + "`proposed` is what a member may choose next" };
   }
@@ -2476,7 +2527,7 @@ export class Filings {
     /* R23: the action's communications are listed among its drafts, marked a communication. */
     const drafts = this.#seenRows(FILINGS_FOR_MAX + 1, viewer,
       `SELECT d.filing_id, d.tier, d.preparer, d.prepared_at, d.basis, d.form, d.purpose, d.template, d.marks, ap.approved_by,
-              ap.at AS approved_at, ap.sha, s.ord, s.sent_on, s.recorded_by, s.recorded_at, s.review_copy,
+              ap.at AS approved_at, ap.sha, s.ord, s.sent_on, s.recorded_by, s.recorded_at, s.review_copy, s.reference,
               sa.approved_by AS second_by, sa.at AS second_at
          FROM (SELECT filing_id, tier, preparer, prepared_at, basis, 'filing' AS form, NULL AS purpose, template, marks
                  FROM filing_drafts WHERE action_id=?
@@ -2505,7 +2556,8 @@ export class Filings {
         signatories: this.#rows(`SELECT organisation, role, body_sha, account, recorded_by, at FROM joint_signatories WHERE filing_id=?
                                   ORDER BY at, organisation`, d.filing_id),
         voice: (parse(d.marks) || {}).voice ?? null,
-        sending: d.recorded_by ? { ord: d.ord, sent_on: d.sent_on, recorded_by: d.recorded_by, at: d.recorded_at,
+        /* R54 (T47): the venue's reference, null when the member gave none */
+        sending: d.recorded_by ? { ord: d.ord, sent_on: d.sent_on, recorded_by: d.recorded_by, at: d.recorded_at, reference: d.reference ?? null,
                                    ...(d.review_copy ? { review_copy: parse(d.review_copy) } : {}) } : null })),
       drafts_truncated: drafts.length > FILINGS_FOR_MAX,
       packets: versions.slice(0, FILINGS_FOR_MAX).map((r) => {
@@ -2519,6 +2571,38 @@ export class Filings {
       }),
       packets_truncated: versions.length > FILINGS_FOR_MAX,
     };
+  }
+
+  /** R53 (T47; DEC-212): each filing draft or communication a member approved (R6) and nobody has recorded sent (R7), on
+   *  an action the viewer may see, drawing on no project the viewer may not see (K316, as R13 lists them), oldest
+   *  approval first: `{filing, action, project, approved_by, approved_at}`, `project` the action's (else the one its
+   *  draft drew on, else null); at most `FILINGS_FOR_MAX`, `truncated` saying more are held. The read `action-producers`
+   *  R25's "request left unsent" item draws on. Writes nothing. */
+  approvedUnsent({ viewer = null } = {}) {
+    const items = [];
+    let truncated = false;
+    for (let offset = 0; !truncated; offset += FILINGS_FOR_MAX) {
+      const page = this.#rows(`SELECT ap.filing_id, ap.action_id, ap.approved_by, ap.at,
+                                      COALESCE(d.basis, c.basis) AS basis
+                                 FROM filing_approvals ap
+                                 LEFT JOIN filing_sendings s ON s.filing_id=ap.filing_id
+                                 LEFT JOIN filing_drafts d ON d.filing_id=ap.filing_id
+                                 LEFT JOIN communication_drafts c ON c.filing_id=ap.filing_id
+                                WHERE s.filing_id IS NULL
+                                ORDER BY ap.at, ap.filing_id LIMIT ? OFFSET ?`, FILINGS_FOR_MAX, offset);
+      for (const r of page) {
+        const a = this.#action(r.action_id, viewer);
+        const basis = parse(r.basis);
+        if (!a || !this.#sees(basis, viewer)) continue;
+        if (items.length === FILINGS_FOR_MAX) { truncated = true; break; }
+        items.push({ filing: r.filing_id, action: r.action_id, project: a.project || (isObj(basis) ? str(basis.project) : null),
+                     approved_by: r.approved_by, approved_at: r.at });
+      }
+      if (page.length < FILINGS_FOR_MAX) break;
+    }
+    return { ok: true, items, truncated,
+             says: items.length ? "approved and not yet recorded as sent, oldest approval first"
+               : "no approved draft or communication you may see waits to be recorded as sent" };
   }
 
   /* ---------------------------------------------------------------- R14: candidate theories */
@@ -2734,9 +2818,10 @@ export function filingsOps(f, url, body) {
   const b = body && typeof body === "object" ? body : {};
   return {
     filingprepare: () => f.filingPrepare({ action: b.action ?? q("action"), template: b.template ?? q("template"),
-                                           text: b.text ?? null, ...marksOf(b), preparer: q("author"), viewer: q("viewer") }),
+                                           text: b.text ?? null, fills: b.fills ?? null, ...marksOf(b), preparer: q("author"), viewer: q("viewer") }),
     communicationprepare: () => f.communicationPrepare({ action: b.action ?? q("action"), text: b.text, purpose: b.purpose,
-                                                         from: b.from ?? null, ...marksOf(b), preparer: q("author"), viewer: q("viewer") }),
+                                                         from: b.from ?? null, fills: b.fills ?? null, ...marksOf(b), preparer: q("author"),
+                                                         viewer: q("viewer") }),
     templatesave: () => f.templateSave({ filing: b.filing ?? q("filing"), template: b.template ?? q("template"),
                                          project: b.project ?? null, name: b.name ?? null, kind: b.kind ?? null, use: b.use ?? null,
                                          profiles: b.profiles ?? null, notes: b.notes ?? null, author: q("author"), viewer: q("viewer") }),
@@ -2750,6 +2835,7 @@ export function filingsOps(f, url, body) {
     templatesforaction: () => f.templatesForAction({ action: q("action") ?? b.action ?? null, viewer: q("viewer") }),
     filingsent: () => f.filingRecordSent({ filing: b.filing ?? q("filing"), at: b.at ?? q("at"), medium: b.medium ?? null,
                                            artifactSha: b.artifactSha ?? b.artifact_sha ?? null, account: b.account ?? null,
+                                           reference: b.reference ?? null,
                                            author: q("author"), viewer: q("viewer") }),
     counselpacket: () => f.counselPacket({ action: b.action ?? q("action"), counsel: b.counsel ?? null,
                                            template: b.template ?? q("template"), reason: b.reason, purpose: b.purpose ?? null,
