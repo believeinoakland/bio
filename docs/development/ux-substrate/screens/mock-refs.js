@@ -418,6 +418,7 @@ const TITLE_HELP = {
   "doorbell": "<b>Hand material to Lakeshore Tenants</b>: the page where anyone can give the group documents or information, without an account. It says exactly what happens to what is sent.",
 };
 const SCREEN_HELP = {
+  site: 'Civicsmith\'s own website: what it is, a group\'s published work, the groups that chose to be listed, and how to start a group.',
   install: 'Creates your group\'s Civicsmith in a Cloudflare account your group controls: what you need, a permanent short name, Cloudflare\'s permission, then your one-time password.',
   update: 'Updates your group\'s Civicsmith to a new signed release. Records, members and settings are kept.',
   front: 'Your group\'s own page: who it is, what it has published, how to hand it material and how it works, with members\' sign-in beside it.',

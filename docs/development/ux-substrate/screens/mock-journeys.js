@@ -113,8 +113,10 @@ const J = [
  { n: 27, t: 'Changing the administrators', who: 'Administrators', steps: [
    { s: 'members', act: 'memberset', say: 'Rosa proposes a second administrator.' },
    { s: 'members', act: 'adminendorse', say: 'Administrators endorse; a refusal explains the arithmetic. Only the last administrator is stopped from stepping down.' } ] },
- { n: 28, t: 'From the founder\'s link to a new member\'s first work', who: 'The founder, then a new member (DEC-201; Bob\'s K3053)', steps: [
-   { s: 'install', v: 'start', act: 'bootstrap', say: 'Rosa clicks “Create your new Civicsmith group”. The page says what Civicsmith is and what she needs: a Cloudflare account on Workers Paid, twenty minutes, no Claude account. She picks the short name lakeshore-tenants, reads that it is permanent, and chooses Oakland as the group\'s place.' },
+ { n: 28, t: 'From civicsmith.org to a new member\'s first work', who: 'The founder, then a new member (DEC-201; Bob\'s K3053)', steps: [
+   { s: 'site', v: 'home', act: null, say: 'Rosa hears about Civicsmith from a tenants\' group across town and opens civicsmith.org. She reads what it is, opens a case another group published, and sees that her group would hold its own work.' },
+   { s: 'site', v: 'start', act: null, say: 'On “Start your group” she reads what the group needs: a Cloudflare account on Workers Paid, twenty minutes, no Claude account. The association agrees its treasurer opens the Cloudflare account in the group\'s name, with Rosa added. Then she chooses “Create your group”.' },
+   { s: 'install', v: 'start', act: 'bootstrap', say: 'The installer asks two things. She picks the short name lakeshore-tenants, reads that it is permanent, and chooses Oakland as the group\'s place.' },
    { s: 'install', v: 'cloudflare', act: 'bootstrap', say: 'She reads what Cloudflare will ask her to allow, and that whoever holds the Cloudflare account controls the group\'s Civicsmith. She goes to Cloudflare\'s own page, signs in there and allows it.' },
    { s: 'install', v: 'progress', act: null, say: 'Back from Cloudflare, she watches each step finish in plain words. Had one stopped it, the page would say why, what to do, and that nothing was created.' },
    { s: 'install', v: 'done', act: 'selftest', say: 'The checks pass. She saves the one-time password in her password manager and continues to her group\'s address.' },
@@ -144,7 +146,7 @@ function journeySteps(j, ai) {
 /* Each journey's purpose and front door (the journeys page of step 3, folded in on 13 October 2026; updated for later rulings).
    Shown under the journey's title in the viewer; the walked steps below it are the journey's steps. */
 const JBRIEF = {
- 1: ["A group installs its own Civicsmith, claims it, says who it is, and sets up its administrators.", "The founder's link opens the installer, which says plainly what is needed before starting: a Cloudflare account on the Workers Paid plan and about twenty minutes. Setup follows from its last page."],
+ 1: ["A group installs its own Civicsmith, claims it, says who it is, and sets up its administrators.", "civicsmith.org: “Start your group” says what a group needs, and “Create your group” opens the installer, which asks two things; setup follows from its last page."],
  2: ["A group says what kind of group it is and what moved its members to start it, so Civicsmith can welcome each member in a way that fits.", "Offered as an optional side trip at the end of the setup wizard, returning to setup when done; also run on its own at any time from the group's settings. Never required."],
  3: ["From an invitation link to a member's first useful act.", "An invitation link (from an administrator or the group's website) or the group's join link, opening in the member's chosen language; the welcome wizard picks up from there."],
  4: ["A member who wants the assistant connects their own Claude account. It serves only them; nothing is shared with the group.", "\"Connect your Claude account\" in the assistant panel, or a side trip from the welcome wizard."],
@@ -171,5 +173,5 @@ const JBRIEF = {
  25: ["Work flows both ways: this group brings in, checks and builds on other groups' cases, and other groups do the same with this group's.", "Importing from a link is one act; the read-only band says whose case it is."],
  26: ["A stranger reads a published case, understands its strength, and checks it for themselves.", "The public page explains itself from zero; nothing assumes an account."],
  27: ["Adding a third administrator, or removing one.", "Administrators only."],
- 28: ["From the founder's link to the group's Civicsmith running, and on to a new member's first piece of work, with no break between them.", "The founder's link; then the invitation link the founder sends."],
+ 28: ["From civicsmith.org to the group's Civicsmith running, and on to a new member's first piece of work, with no break between them.", "civicsmith.org; then the invitation link the founder sends."],
 };

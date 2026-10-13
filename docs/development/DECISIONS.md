@@ -3278,3 +3278,22 @@ decided: 2026-10-13 · the design session (P17)
 reasoning recorded in: this entry; `screens/mock-screens.js` (group, setup, tour, reset, front), `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/mock-refs.js`, `screens/mock-shell.js`, `screens/registry.src.py` (61 screens), `screens/library.src.py`, `screens/words.json` (1,707 words, 603 protected), `layouts.html`.
 owed: (BOB, L11) the ops `grouplanguagesset` (or BOB's name), `grouplogoset` and the member's act on a reset link (`passwordreset`, or BOB's name), then the buttons re-pointed from their `owed:` names; the screens `tour` and `reset` built as drawn; registry.json, library.json and words.json re-taken.
 
+### DEC-206 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (Bob's D6, K3060; BOB's B161 (3))
+for: bob-session
+question: The founding journey, starting on civicsmith.org.
+why it is Bob's: the ruling is his (D6: "The founding journey should now start on the website we need to develop at civicsmith.org"); the drawing beneath it is the design session's (P17).
+provisional: DEC-201 (4): the founder's link page as the installer's first page (E2).
+alternative: keep the installer's first page as the founder's start.
+recommendation: as below.
+reversal cost: low: two screens and a journey's first steps.
+response: **Bob's D6 (K3060), drawn by the design session, 2026-10-13.**
+(1) **civicsmith.org** (`site`), Civicsmith's own site, kept by its stewards: "Hold your government to its own word" over installer R42's two lines, exactly; "Start your group" and "See groups at work"; what a group gets (its own Civicsmith in a Cloudflare account it controls, nobody else holding its work; findings anyone can check; wizards for people who have never done this, the assistant optional; free software, Cloudflare's $5 a month the only cost); one group's published case, opened as any reader does; "Already a member?" (members sign in at their own group's address; civicsmith.org holds no accounts); questions to the stewards' address (a marked placeholder until Bob gives it, D14).
+(2) **"Start your group"**: whether Civicsmith fits; what is needed (Workers Paid with a payment method, an account belonging to the group, twenty minutes, no Claude account); decide first who holds the Cloudflare account (and add a second trusted person); what the group will choose, in the installer and then in setup; "Create your group" opens the installer.
+(3) **"Groups at work"**: the groups that chose to be listed (DEC-132's choice of the network directory), each with its place, purpose and published cases, linking to the group's own page; a group kept to its members is not listed.
+(4) **The installer's first page** (`install`) now asks only its two choices (short name, places), with "What you need, on civicsmith.org"; what Civicsmith is and what is needed moved to the site, so neither page repeats the other.
+(5) **Journey 28** is now "From civicsmith.org to a new member's first work" (two new first steps: the site, then "Start your group"); journeys 1 and 28 name civicsmith.org as their front door. 480 steps walk clean across 28 journeys and 62 screens.
+decided: 2026-10-13 · Bob (D6, K3060), drawn by the design session
+reasoning recorded in: this entry; `screens/mock-screens.js` (site, install), `screens/mock-journeys.js` (journey 28, JBRIEF), `screens/mock-shell.js`, `screens/mock-refs.js`, `screens/registry.src.py` (62 screens), `screens/words.json` (1,709 words), `layouts.html`.
+owed: (BOB) civicsmith.org built as drawn (a static site the stewards keep, holding no accounts), with "Create your group" opening the installer; the groups listed only from the network directory's opt-in (DEC-132); the stewards' address once Bob gives it (D14; installer R48); the installer's first page reduced to its two choices; registry.json and words.json re-taken.
+

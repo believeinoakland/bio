@@ -51,11 +51,11 @@
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "screen": 121,
+  "screen": 123,
   "act": 584,
   "column": 33,
   "wizard": 306,
-  "total": 1707,
+  "total": 1709,
   "protected": 603
  },
  "words": [
@@ -4332,6 +4332,18 @@
    "en": "step {i} of {n}",
    "protected": false,
    "source": "mock-shell.js wizardGuide"
+  },
+  {
+   "key": "screen.site.name",
+   "en": "civicsmith.org",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.site.purpose",
+   "en": "Civicsmith's own website: what it is, a group's published work, the groups that chose to be listed, and how to start a group.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
   },
   {
    "key": "screen.install.name",
