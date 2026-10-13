@@ -1,10 +1,10 @@
-/* file-safety R11, R12, R33, R37: the safe view, its render, the safe copy, and that neither is ever a capture. At the
+/* file-safety R11, R12, R43, R33, R37: the safe view, its render, the safe copy, and that neither is ever a capture. At the
    module's interface, over provenance's real tables (R37 reads them) and the scripted renderer and CDR tool. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, enc } from "./fixture.mjs";
+import { world, pdf, sha, enc, T0 } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
-import { FILE_SAFETY_CHECKS, derivedKey } from "../../../src/file-safety/index.mjs";
+import { FILE_SAFETY_CHECKS, FILE_SAFETY_POLL_MS, derivedKey, fileSafetyOps } from "../../../src/file-safety/index.mjs";
 
 const row = (code) => ({ check: FILE_SAFETY_CHECKS[code].check, translation: FILE_SAFETY_CHECKS[code].translation });
 const refused = (r, code) => {
@@ -192,4 +192,68 @@ test("R37: a safe view and a safe copy are never a capture: provenance holds no 
   }
   /* negative control: the original is named there */
   assert.match(prov, new RegExp(s));
+});
+
+test("R43 (T47; N941, K231): with a renderer bound, a render queue that cannot be read (the files queued to render, or the safe copies queued) answers RENDER_QUEUE_UNREADABLE and its row C-140.43 (where renderBatch > is-render-queue-readable, members' words), never RENDERER_ABSENT; it renders, copies and counts nothing and answers no count; its detail names your group's Civicsmith and none of copy, instance, plane or server; the files are read again on the next round (the render wake a poll after it); a fault once rendering began answers the same code with what was done; control: with no renderer bound, RENDERER_ABSENT as before", async () => {
+  const COUNTS = ["rendered", "failed", "none", "data", "copies", "remaining"];
+  assert.deepEqual({ ...FILE_SAFETY_CHECKS.RENDER_QUEUE_UNREADABLE }, { check: "C-140.43",
+    where: "src/file-safety/index.mjs renderBatch > is-render-queue-readable",
+    translation: "The files waiting for a safe view could not be read just now, so nothing was rendered. They are read again on the next round." });
+  const w = world({ scan: { copyScan: () => ({ result: "clean" }) } });
+  const ct = await w.tool("glasswall-halo", { config: { host: "halo.example.org" } });
+  w.exec("UPDATE fs_tools SET use = 'routine' WHERE tool_id = ?", ct);
+  const s = await w.capture(pdf(false, "queued"));
+  const unreadable = (r, what) => {
+    assert.ok(!(r instanceof Response), what);
+    assert.deepEqual({ ok: r.ok, code: r.code, check: r.check, translation: r.translation },
+                     { ok: false, code: "RENDER_QUEUE_UNREADABLE", ...row("RENDER_QUEUE_UNREADABLE") }, what);
+    assert.match(r.detail, /^Your group's Civicsmith /, what);
+    assert.doesNotMatch(r.detail, /copy|instance|plane|server/i, `${what}: ${r.detail}`);
+  };
+  /* the files queued to render cannot be read */
+  w.exec("ALTER TABLE fs_files RENAME TO fs_files_away");
+  const a = await w.fs.renderBatch({});
+  unreadable(a, "views");
+  for (const k of COUNTS) assert.equal(k in a, false, `no count: ${k}`);
+  assert.deepEqual([w.calls("/render").length, w.calls("/provider/cdr").length], [0, 0], "nothing rendered or copied");
+  assert.equal(w.row("SELECT state FROM fs_copies WHERE capture_sha = ?", s).state, "queued", "the copy still waits");
+  /* the next round: the wake a poll after the batch, never null while it waits */
+  const last = w.clock.now;
+  assert.equal(w.fs.renderWake(last), last + FILE_SAFETY_POLL_MS);
+  /* the safe copies queued cannot be read, the files can: nothing is rendered either */
+  w.exec("ALTER TABLE fs_files_away RENAME TO fs_files");
+  w.exec("ALTER TABLE fs_copies RENAME TO fs_copies_away");
+  const b = await w.fs.renderBatch({});
+  unreadable(b, "copies");
+  for (const k of COUNTS) assert.equal(k in b, false, `no count: ${k}`);
+  assert.equal(w.calls("/render").length, 0, "nothing rendered");
+  assert.equal(w.row("SELECT render_state FROM fs_files WHERE capture_sha = ?", s).render_state, "queued");
+  /* through its route too */
+  unreadable(await fileSafetyOps(w.fs, new URL("http://x/renderbatch"), {}, w.env).renderbatch(), "route");
+  /* read again on the next round: readable once more, the batch renders and copies */
+  w.exec("ALTER TABLE fs_copies_away RENAME TO fs_copies");
+  w.tick(FILE_SAFETY_POLL_MS);
+  const c = await w.fs.renderBatch({});
+  assert.deepEqual([c.ok, c.rendered, c.copies.made, c.remaining], [true, 1, 1, 0]);
+  assert.equal(w.fs.renderWake(w.clock.now), null, "nothing left: no wake");
+  /* a fault once rendering began: the same code, with what was done as numbers, never null */
+  const f = world();
+  const one = await f.capture(pdf(false, "one")); f.tick(1000);
+  await f.capture(pdf(false, "two"));
+  const put = f.bucket.put.bind(f.bucket);
+  let puts = 0;
+  f.bucket.put = async (k, ...rest) => { if (k.includes("/derived/") && ++puts > 1) throw new Error("bucket refused"); return put(k, ...rest); };
+  const g = await f.fs.renderBatch({});
+  unreadable(g, "after some were rendered");
+  assert.deepEqual([g.rendered, g.copies_made], [1, 0]);
+  assert.equal(f.row("SELECT render_state FROM fs_files WHERE capture_sha = ?", one).render_state, "done");
+  assert.equal(f.row("SELECT COUNT(*) AS n FROM fs_files WHERE render_state = 'queued'").n, 1, "the rest wait for the next round");
+  /* control: with no renderer bound, RENDERER_ABSENT as before, its row unmoved */
+  const n = world({ bound: false });
+  await n.capture(pdf(false, "unbound"));
+  n.exec("DROP TABLE fs_files");
+  const r = await n.fs.renderBatch({});
+  assert.deepEqual({ code: r.code, check: r.check, where: FILE_SAFETY_CHECKS[r.code].where },
+                   { code: "RENDERER_ABSENT", check: "C-140.13", where: "src/file-safety/index.mjs renderBatch > is-renderer-bound" });
+  assert.equal(n.fs.renderWake(T0), null, "no renderer bound: no wake");
 });

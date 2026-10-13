@@ -427,3 +427,41 @@ test("R41: `refreshReputationLists({at})`, reached by no route, asks file-scanne
   w.exec("DROP TABLE fs_tools");
   assert.deepEqual(await w.fs.refreshReputationLists({}), { ok: true, refreshed: [], failed: [], skipped: [] });
 });
+
+test("R44 (T47; N971; setup-page R30): `onOwnServers(recipient)`, exported, answers true exactly when the recipient is a string that, trimmed, begins with the words \"the organization\" (any case), or names one service with \"the organization's own …\" in parentheses at its end; false for a vendor's service, two places, or a value that is not a string; pure, self-contained (its source alone, carried elsewhere, answers the same) and never throws; R28 and R32 decide routine use by it alone", async () => {
+  const yes = ["the organization", "  The Organization  ", "THE ORGANIZATION's own rack", "the organization's own MetaDefender Core server",
+               "Microsoft (the organization's own Azure storage account)", "Acme ICAP (The Organization's own appliance)"];
+  const no = ["Uva Software, LLC", "OPSWAT, Inc. (Cloud), or the organization's own Core server", "Microsoft (Azure, run by Microsoft)",
+              "Microsoft (the organization's own storage) and Google (the organization's own bucket)", "Microsoft (the organization's own storage) in the cloud",
+              "the organizational partner's cloud", "a vendor for the organization", "", "   ", "not stated"];
+  const odd = [null, undefined, 1, true, {}, [], ["the organization"], { toString() { throw new Error("no"); } }, Symbol("x"), () => "the organization"];
+  for (const r of yes) assert.equal(onOwnServers(r), true, r);
+  for (const r of no) assert.equal(onOwnServers(r), false, r);
+  for (const r of odd) assert.equal(onOwnServers(r), false, String(typeof r));
+  /* pure: the same answer each time, and the argument untouched */
+  const arg = { recipient: "the organization" };
+  for (const r of [...yes, ...no]) assert.equal(onOwnServers(r), onOwnServers(r));
+  onOwnServers(arg); assert.deepEqual(arg, { recipient: "the organization" });
+  /* self-contained: its source, evaluated with nothing else in scope, answers every case the same */
+  const carried = new Function(`"use strict"; return (${onOwnServers.toString()});`)();
+  for (const r of [...yes, ...no, ...odd]) assert.equal(carried(r), onOwnServers(r), String(r && r.toString ? "case" : r));
+  /* R28 and R32 decide by it alone: a generic template whose maker states its recipient takes routine use exactly when
+     onOwnServers says its own servers; the catalogue's own entries alike */
+  const w = world();
+  const entry = w.fs.securityToolCatalogue({ viewer: "member:boss" }).offered.find((d) => d.provider_id === "icap");
+  for (const recipient of [...yes, ...no.filter((r) => r.trim() && r !== "not stated")]) {
+    const r = await w.fs.securityToolAdd({ providerId: "icap", template: { host: "icap.example.org:1344" }, use: "routine", by: "boss",
+      config: { engine_family: ["sophos"], handling: { recipient } }, handlingDigest: entry.handling_digest });
+    assert.equal(r.ok === true, onOwnServers(recipient), `${recipient}: ${r.code}`);
+    if (!r.ok) assert.equal(r.code, "USE_NOT_ALLOWED", recipient);
+  }
+  for (const d of PROVIDERS.filter((x) => !x.template && x.kinds.includes("scan"))) {
+    const r = await w.fs.securityToolAdd({ providerId: d.provider_id, credentials: Object.fromEntries(d.credentials.map((n) => [n, "v"])),
+      handlingDigest: digestOf(d.provider_id), confirmRetention: true, use: "routine", by: "boss",
+      config: { host: "h.example.org", ...Object.fromEntries(d.config.filter((f) => f.required).map((f) => [f.name, "v"])) } });
+    assert.equal(r.ok === true, onOwnServers(d.handling.recipient), d.provider_id);
+  }
+  /* negative control: both answers occur among the catalogue's own recipients */
+  const answers = new Set(PROVIDERS.map((d) => onOwnServers(d.handling.recipient)));
+  assert.deepEqual([...answers].sort(), [false, true]);
+});

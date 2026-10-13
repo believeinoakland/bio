@@ -8,7 +8,8 @@
  * not offered and why"). The finding kinds and their words are R38's one table, `kinds.mjs` (DEC-99).
  *
  * Every sentence speaks in DEC-149's voice ("your group's Civicsmith"), names no place (R26) and carries no figure:
- * figures and names travel in the answer's own fields. */
+ * figures and names travel in the answer's own fields. One term each (R42a, DEC-200 (5)): "file scanner", never "virus
+ * scanner"; "safe view", never "safe-view maker" or "safe-copy maker". */
 
 const at = (fn, region) => `src/file-safety/index.mjs ${fn} > ${region}`;
 const row = (check, where, translation) => Object.freeze({ check, where, translation });
@@ -22,13 +23,13 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
   /* R2, R6, R8, R9, R11, R13, R33: the digest names nothing the record holds. */
   FILE_NOT_HELD: row('C-140.1', at("#held", "is-capture-held"),
     'Your group\'s Civicsmith holds no captured file under that digest, so there is nothing to check or open.'),
-  /* R4, R8 (K1928 Q4), R42: your group's Civicsmith has no scanner installed. */
+  /* R4, R8 (K1928 Q4), R42, R42a: your group's Civicsmith has no file scanner installed. */
   SCANNER_ABSENT: row('C-140.2', at("scanBatch", "is-scanner-bound"),
-    'Your group\'s Civicsmith has no virus scanner installed, so no file was scanned and no note was written. '
-      + 'Whoever installed it can add the scanner; until then a file\'s checks say it was not scanned.'),
+    'Your group\'s Civicsmith has no file scanner installed, so no file was scanned and no note was written. '
+      + 'Whoever installed it can add the file scanner; until then a file\'s checks say it was not scanned.'),
   /* R4, R8, R14: the scanner is installed but did not answer. */
   SCANNER_UNREACHABLE: row('C-140.3', at("scanBatch", "is-scanner-answering"),
-    'The virus scanner your group\'s Civicsmith uses did not answer, so nothing was scanned and no note was '
+    'The file scanner your group\'s Civicsmith uses did not answer, so nothing was scanned and no note was '
       + 'written. It is asked again on its next round.'),
   /* R8: the scan before first opening could not decide. */
   NOT_SCANNED: row('C-140.4', at("#decide", "is-scan-before-opening"),
@@ -62,8 +63,9 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
     'The safe view of this file is not made yet. It is made soon after a file is captured; ask again shortly.'),
   SAFE_VIEW_FAILED: row('C-140.12', at("safeView", "is-safe-view-made"),
     'The safe view of this file could not be made. The reason is stated beside it. The original is unchanged.'),
+  /* R11, R12, R42, R42a: no renderer is bound, the one condition of this code (R43). */
   RENDERER_ABSENT: row('C-140.13', at("renderBatch", "is-renderer-bound"),
-    'Your group\'s Civicsmith has no safe-view maker installed, so no safe view can be made. Whoever installed it '
+    'Your group\'s Civicsmith has no safe view installed, so no safe view can be made. Whoever installed it '
       + 'can add it.'),
   /* R13: a deeper check needs an outside scanner or sandbox the group turned on. */
   NO_OUTSIDE_TOOL: row('C-140.14', at("requestDeeperCheck", "is-outside-tool-on"),
@@ -137,7 +139,7 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
     'The safe copy of this file could not be made. The tool\'s reason is stated beside it. The original is '
       + 'unchanged.'),
   SAFE_COPY_WITHHELD: row('C-140.38', at("safeCopy", "is-copy-clean"),
-    'The safe copy of this file has not been found clean by the virus scanner, so it is not handed out. The safe '
+    'The safe copy of this file has not been found clean by the file scanner, so it is not handed out. The safe '
       + 'view is still there.'),
   /* R35: the forwarded period. */
   FORWARD_PERIOD_INVALID: row('C-140.39', at("forwardSecurityCounts", "is-forward-period"),
@@ -154,6 +156,11 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
   DEEPER_CHECKS_UNREADABLE: row('C-140.42', at("deeperBatch", "is-deeper-readable"),
     'The deeper checks your group asked for could not be read just now, so none was started or asked about. They '
       + 'are read again on the next round.'),
+  /* R43 (T47; N941, K231): a renderer is bound, but the files waiting for a safe view could not be read. New at T47
+     (T47-12); the row awaits promotion's stamp (plan T47). */
+  RENDER_QUEUE_UNREADABLE: row('C-140.43', at("renderBatch", "is-render-queue-readable"),
+    'The files waiting for a safe view could not be read just now, so nothing was rendered. They are read again on '
+      + 'the next round.'),
 });
 
 /* R6 (DEC-169 (1)): each reason a file is high risk, in the words "Opening a file" shows beside the mark. `active` is the

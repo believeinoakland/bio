@@ -1,6 +1,6 @@
 /* file-safety — keeps every captured file safe to open without touching its bytes, digest or grade (layer 3, directly
  * after `capture`; Bob's K1913, K1928, K1929, K1939, K1949 with DEC-168, DEC-169 and DEC-173, packaged by BOB, K2008,
- * K2063; new at T36, T36-11; its own cadences, T37-8). Requirements: `build/requirements/file-safety.md` (R1–R42).
+ * K2063; new at T36, T36-11; its own cadences, T37-8). Requirements: `build/requirements/file-safety.md` (R1–R44).
  *
  * WHAT IT HOLDS. Verdict notes beside each capture naming tool, engine and version (R2, R3); the scan and render queue
  * (R1, R4, R12); scan holds and their release by two members or a second, different engine (R15–R19); deeper checks
@@ -68,9 +68,13 @@ export const FILE_SAFETY_COUNT_KINDS = Object.freeze(["files_scanned", "files_fo
 const CREDENTIAL_COUNT_KINDS = Object.freeze(["signin", "credential", "rate", "handover", "through"]);
 /* R32: the use a tool is put to, and the recipient a routine tool must have (its own servers). */
 export const TOOL_USES = Object.freeze(["on_request", "routine"]);
-/* The catalogue states that recipient in words ("the organization's own MetaDefender Core server", "Microsoft (the
-   organization's own Azure storage account)"), so the rule reads them: the organization itself, or another's service
-   run inside the organization's own account. A service the vendor runs, or one of two places, is not its own servers. */
+/* R44 (N971): whether a tool's stated `handling.recipient` is the organization's own servers, the one rule R28 and R32
+   decide by. The catalogue states that recipient in words ("the organization's own MetaDefender Core server", "Microsoft
+   (the organization's own Azure storage account)"), so the rule reads them: the organization itself (the words "the
+   organization" first, any case), or one service named with, in parentheses at its end, "the organization's own …". A
+   service the vendor runs, or one of two places, is not its own servers; a value that is not a string is not either.
+   Pure and self-contained (it refers to nothing outside its own text and never throws), so `setup-page` R30 carries its
+   source and applies the same rule. */
 export const onOwnServers = (recipient) => typeof recipient === "string"
   && (/^the organization\b/i.test(recipient.trim()) || /^[^,(]+\(the organization's own [^)]+\)$/i.test(recipient.trim()));
 /* R11, R12, R33: where a derived file is kept, under its own digest and outside `captures/`. */
@@ -752,7 +756,7 @@ export class FileSafety {
         this.#count("safe_views");
         return { ok: true, kind: "data", derived: true, of: sha, sheets: s.sheets, original };
       }
-      if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", "Your group's Civicsmith has no safe-view maker installed. Nothing was rendered.", { captureSha: sha });
+      if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", "Your group's Civicsmith has no safe view installed. Nothing was rendered.", { captureSha: sha });
       const row = this.#ensureQueued(sha);
       /* DEC-49 REGION is-safe-view-made */
       if (row.render_state === "failed")
@@ -800,27 +804,45 @@ export class FileSafety {
   }
 
   /** R12: renders queued files (the scheduler's wake), and makes the safe copies a routine tool queued (R32, R33); it
-   *  states the copies and the files still queued after it. */
+   *  states the copies and the files still queued after it. R43: with a renderer bound, a queue that cannot be read
+   *  (the files queued to render, or the safe copies queued) answers RENDER_QUEUE_UNREADABLE, rendering, copying and
+   *  counting nothing; RENDERER_ABSENT keeps its one condition, no renderer bound. */
   async renderBatch({ limit = 20 } = {}) {
+    this.#keep("render", { last: this.now(), unreadable: false });
+    /* DEC-49 REGION is-renderer-bound */
+    if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", "Your group's Civicsmith has no safe view installed. Nothing was rendered.");
+    /* END DEC-49 REGION is-renderer-bound */
+    const lim = clamp(limit, 20, SCAN_BATCH_MAX);
+    const unreadable = (detail, extra) => {
+      this.#keep("render", { last: this.now(), unreadable: true });
+      return refusal("RENDER_QUEUE_UNREADABLE", detail, extra);
+    };
+    let views, queuedCopies;
     try {
-      this.#keep("render", { last: this.now() });
-      /* DEC-49 REGION is-renderer-bound */
-      if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", "Your group's Civicsmith has no safe-view maker installed. Nothing was rendered.");
-      /* END DEC-49 REGION is-renderer-bound */
-      const lim = clamp(limit, 20, SCAN_BATCH_MAX);
-      const out = { rendered: 0, failed: 0, none: 0, data: 0 };
-      for (const row of this.#rows(`SELECT * FROM fs_files WHERE render_state = 'queued' ORDER BY queued_at, capture_sha LIMIT ?`, lim))
-        out[await this.#render(row)]++;
-      const copies = { made: 0, failed: 0, queued: 0 };
+      /* DEC-49 REGION is-render-queue-readable */
+      views = this.#rows(`SELECT * FROM fs_files WHERE render_state = 'queued' ORDER BY queued_at, capture_sha LIMIT ?`, lim);
+      queuedCopies = this.#rows(`SELECT * FROM fs_copies WHERE state = 'queued' ORDER BY queued_at LIMIT ?`, lim);
+      /* END DEC-49 REGION is-render-queue-readable */
+    } catch {
+      return unreadable("Your group's Civicsmith could not read the files waiting for a safe view. Nothing was rendered, made or counted.");
+    }
+    const out = { rendered: 0, failed: 0, none: 0, data: 0 };
+    const copies = { made: 0, failed: 0, queued: 0 };
+    try {
+      for (const row of views) out[await this.#render(row)]++;
       const tool = this.#routineTools("cdr")[0];
-      if (tool) for (const c of this.#rows(`SELECT * FROM fs_copies WHERE state = 'queued' ORDER BY queued_at LIMIT ?`, lim)) {
+      if (tool) for (const c of queuedCopies) {
         const r = await this.#makeCopy(c.capture_sha, tool);
         if (r === "done" || r === "withheld") copies.made++; else copies.failed++;
       }
       copies.queued = Number(this.#one(`SELECT COUNT(*) AS n FROM fs_copies WHERE state = 'queued'`).n);
       const remaining = Number(this.#one(`SELECT COUNT(*) AS n FROM fs_files WHERE render_state = 'queued'`).n);
       return { ok: true, ...out, copies, remaining };
-    } catch { return refusal("RENDERER_ABSENT", "The render queue could not be read. Nothing was rendered."); }
+    } catch {
+      /* a fault once rendering began: what was done is stated, and the rest wait for the next round (as R36's) */
+      return unreadable("Your group's Civicsmith could not read the files waiting for a safe view after some were rendered. The rest wait for the next round.",
+                        { rendered: out.rendered, copies_made: copies.made });
+    }
   }
 
   /* ===== scanning (R4, R5) ===== */
@@ -840,7 +862,7 @@ export class FileSafety {
   async scanBatch({ limit = SCAN_BATCH_MAX, at = null } = {}) {
     try {
       /* DEC-49 REGION is-scanner-bound */
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your group's Civicsmith has no virus scanner installed. No note was written.");
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your group's Civicsmith has no file scanner installed. No note was written.");
       /* END DEC-49 REGION is-scanner-bound */
       const now = Number.isFinite(Date.parse(at)) ? Date.parse(at) : this.now();
       /* R39: the run is kept first, so a batch the scanner refuses still counts as run (its files retried a poll later) */
@@ -1089,7 +1111,7 @@ export class FileSafety {
       if (bar) return bar;
       const { tool, refused } = this.#tool(toolId);
       if (refused) return refused;
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your group's Civicsmith has no virus scanner installed, so no tool can be tested.", { tool_id: tool.tool_id });
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your group's Civicsmith has no file scanner installed, so no tool can be tested.", { tool_id: tool.tool_id });
       const spec = await this.#spec(tool);
       const r = spec ? await this.#scanner("/provider/test", { tool: spec }) : { body: { ok: false, code: "CREDENTIALS_UNAVAILABLE" } };
       const at = iso(this.now());
@@ -1394,7 +1416,7 @@ export class FileSafety {
       /* END DEC-49 REGION is-copy-tool-on */
       const row = this.#one(`SELECT * FROM fs_copies WHERE capture_sha = ?`, h.sha);
       if (row && ["pending", "done", "withheld"].includes(row.state)) return { ok: true, captureSha: h.sha, state: row.state };
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your group's Civicsmith has no virus scanner installed, so no tool can be asked.", { captureSha: h.sha });
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your group's Civicsmith has no file scanner installed, so no tool can be asked.", { captureSha: h.sha });
       return { ok: true, captureSha: h.sha, state: await this.#makeCopy(h.sha, tool) };
     } catch { return refusal("SAFE_COPY_FAILED", "The safe copy could not be asked for.", { captureSha: captureSha ?? null }); }
   }
@@ -1489,7 +1511,7 @@ export class FileSafety {
    *  no route. Writes no note and names no file, address or member (R23); never throws. */
   async refreshReputationLists({ at = null } = {}) {
     try {
-      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your group's Civicsmith has no virus scanner installed, so no list was refreshed.");
+      if (!this.#scannerBinding()) return refusal("SCANNER_ABSENT", "Your group's Civicsmith has no file scanner installed, so no list was refreshed.");
       const when = Number.isFinite(msOf(at)) ? msOf(at) : this.now();
       const refreshed = [], failed = [], skipped = [];
       for (const tool of this.#onTools("url_reputation")) {
@@ -1541,17 +1563,20 @@ export class FileSafety {
 
   /** R39: renderBatch's instant. Null with no renderer bound (the scanner binding, as renderBatch refuses
    *  RENDERER_ABSENT) or while no file's view and no safe copy is queued; else the later of `now` and the last batch
-   *  plus FILE_SAFETY_POLL_MS. */
+   *  plus FILE_SAFETY_POLL_MS. While the queue cannot be read (R43: the last batch found it so, or this read fails), the
+   *  last batch plus FILE_SAFETY_POLL_MS, as deeperWake's, so the files waiting are read again on the next round. */
   renderWake(now) {
+    const n = msOf(now);
+    if (!Number.isFinite(n) || !this.#scannerBinding()) return this.#answer("render", null);
+    const kept = this.#kept("render");
+    const poll = kept && Number.isFinite(kept.last) ? Math.max(n, kept.last + FILE_SAFETY_POLL_MS) : n;
     try {
-      const n = msOf(now);
-      if (!Number.isFinite(n) || !this.#scannerBinding()) return this.#answer("render", null);
+      if (kept && kept.unreadable) return this.#answer("render", poll);
       const views = this.#one(`SELECT 1 AS x FROM fs_files WHERE render_state = 'queued' LIMIT 1`);
       const copies = this.#one(`SELECT 1 AS x FROM fs_copies WHERE state = 'queued' LIMIT 1`);
       if (!views && !copies) return this.#answer("render", null);
-      const kept = this.#kept("render");
-      return this.#answer("render", kept && Number.isFinite(kept.last) ? Math.max(n, kept.last + FILE_SAFETY_POLL_MS) : n);
-    } catch { return null; }
+      return this.#answer("render", poll);
+    } catch { return this.#answer("render", poll); }
   }
 
   /** R39: deeperBatch's instant. Null while no check is queued or running; else the earliest of the last batch plus
