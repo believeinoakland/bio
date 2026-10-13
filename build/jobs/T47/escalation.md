@@ -30,3 +30,11 @@
 - `checks/run.mjs bio`: format 0, architecture 3106 product files 0 failures, channels 0. Coverage has 37 failures, all in other modules (screens-*, setup-words, signin-door, tasks, wizard-scripts and others); none is escalation's.
 
 Size (session_01WD3ZmTKBeisfe99Nk6Rbb4): test runs 4, module lines 2374
+
+## J1 · COMPLETE
+
+T47-42 done except N961, which is held for your CHANGE (action-records is not on the tranche yet). R36: C-116.41 and C-116.14 now read DEC-199's sentences by key from words.json. R37: the three read arms pass no instant, and a query or body `now` is ignored. Escalation's tests: 89 pass, 0 fail. Users' tests: no new failures; the failing tests match `origin/tranche/T47` by name. format, architecture, coverage (37/37) and ownership show 0 failures for escalation.
+REPORT items (details in the record):
+- The plane, release and newgroup bundles and `newgroup/src/release.mjs` carry the two old translations; they are regenerated at layer close.
+- promotion's row census still holds the old translations of C-116.14 and C-116.41; this is accepted until T48's stamp.
+- actions R100's `actionZone` against escalation's `actionFacts(text, t, place)` third argument: worth a check once actions lands.
