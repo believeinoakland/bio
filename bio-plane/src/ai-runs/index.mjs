@@ -56,6 +56,14 @@ function memberIdOf(x) {
   return /^[A-Za-z0-9._-]{1,128}$/.test(id) ? id : null;
 }
 
+/** R18 (T47; N955; credentials R63, K3033): THE WRITES A SEGMENT'S CREDENTIAL HOLDS, by the run's mode: each mode's own,
+ *  every one of them an entry of `credentials.AI_RUN_WRITES` (a mode deployed later adds its own here): `check`'s are
+ *  agent-worker R37's, `plan`'s agent-worker R53's. Frozen. */
+export const AI_RUN_MODE_WRITES = Object.freeze({   /* passed whole: credentials R63 refuses one its list does not name */
+  check: Object.freeze(["airuntick", "suggest", "capturerequest", "airunclose"]),
+  plan: Object.freeze(["airuntick", "optionpropose", "airunclose"]),
+});
+
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
 /** R19's SIGHT OF A RUN, as SQL over the run's context column (D-15's bundle gate, the store's `#bundleGate`, a copy of
@@ -626,7 +634,19 @@ export class AiRuns {
     /* R73: a step-run's ending ties what it produced to its step (steps R9's `recordProduct`) and, for the run's own
        system step, ends it as steps R5 allows a machine, after the run's own ending has committed. A member's step a run
        worked is hers to end. A step that cannot be told is said in the answer; the run's ending stands. */
+    /* R14 (T47; N955; credentials R63): the run's ending revokes every segment credential minted for it (R18), after the
+       exit has committed; the call never throws, and its answer never changes the exit or its answer. */
+    if (done && done.terminated === true) this.#endRunCredentials(run);
     return done && done.terminated === true && row.step ? { ...done, step_end: this.#endStep(row, bound) } : done;
+  }
+
+  /** R14 (T47): `credentials.aiRunCredentialsEnd({run})`, told and not listened to: whatever it answers or throws, the
+   *  ending stands as written. */
+  #endRunCredentials(run) {
+    try {
+      const c = credentialsOf(this.ctx);
+      if (c && typeof c.aiRunCredentialsEnd === "function") c.aiRunCredentialsEnd({ run: String(run) });
+    } catch { /* never changes the exit */ }
   }
 
   /** R73, R74 (steps R5, R9): each record the run's looks name (a capture, content or lead referent, steps R9's product
@@ -2048,17 +2068,13 @@ export class AiRuns {
        answers for the act of the run's member (its R35), `{kind, level, secret, member, suggestions}`: `level` `member`
        for their own reference or (T38; K2299) their own sign-in, `signin`, never re-labelled an API key (K1553), `group`
        for the group's API key, whose use is still that member's act; `secret` is R35's `key`, named as agent-worker R6
-       reads it, and absent for a sign-in, which carries none;
+       reads it: (R79; T47, K3060 D10, K3068) a held sign-in's token carried as an API key's, never logged, stored or
+       answered (the T38 "no secret" sentence retired);
        `member` is the run's account member, `member:<id>`, so agent-worker can check it against the run (its R10). Used
        for this one call and kept nowhere here. The instance Claude account it carried before is retired (K1502). */
     let outcome, timer;
-    let ref = d.payer ? await this.#accountFor(d.payer, "run", d.project) : null;
-    /* R52 (T41): the account that serves now must be the one the run recorded as paying; a run never moves to another */
-    if (ref && !ref.refusal && d.owner && ref.owner !== d.owner) ref = { refusal: { code: "NO_ACCOUNT", reason: "NO_ACCOUNT" } };
-    /* R18 (T46; Bob's, K2892): a member's own run is dispatched on her own sign-in alone; any other account that would
-       serve her (her API-key reference, the group's key, a project's account) is withheld, nothing sent, nothing written. */
-    if (d.signinOnly && !(ref && !ref.refusal && ref.kind === "signin" && ref.level === "member"))
-      return { state: "WITHHELD", status: null, withheld: "MEMBER_PRINCIPAL_RUN" };
+    /* the account, unless the caller resolved it already (R18's member dispatch judges it before minting) */
+    let ref = d.ref !== undefined ? d.ref : await this.#dispatchAccount(d);
     if (!ref || ref.refusal)
       outcome = { state: "REFUSED", status: null,
                   reason: String((ref && ref.refusal && (ref.refusal.code || ref.refusal.reason)) || "NO_ACCOUNT").slice(0, 80) };
@@ -2080,9 +2096,10 @@ export class AiRuns {
     }
     const body = outcome ? null : { run_id: d.run, store: resumer.store, credential: resumer.token,
                                     account: { kind: ref.kind, level: ref.level,
-                                               ...(ref.kind === "signin" ? {} : { secret: ref.key }),
+                                               /* R79: a sign-in's held token rides as an API key's does */
+                                               ...(typeof ref.key === "string" ? { secret: ref.key } : {}),
                                                member: `member:${d.payer}`, suggestions } };
-    ref = null;
+    ref = null; d.ref = null;
     if (body) try {
       const res = await Promise.race([
         this.env.AGENT_WORKER.fetch("https://agent-worker/run", {
@@ -2124,22 +2141,31 @@ export class AiRuns {
     return outcome;
   }
 
+  /** R52 (T41): the account that serves the run's member now, `credentials.accountFor`'s answer as `#accountFor` reads
+   *  it; it must be the one the run recorded as paying (a run never moves to another), else `NO_ACCOUNT`. */
+  async #dispatchAccount(d) {
+    const ref = d.payer ? await this.#accountFor(d.payer, "run", d.project) : null;
+    return ref && !ref.refusal && d.owner && ref.owner !== d.owner ? { refusal: { code: "NO_ACCOUNT", reason: "NO_ACCOUNT" } } : ref;
+  }
+
   /** R18 (T46; N919; Bob's, K2892: a member's own sign-in runs check and plan for that member only): A MEMBER'S OWN RUN,
    *  DISPATCHED AT HER OWN ACT. The wake never dispatches a member's run (`MEMBER_PRINCIPAL_RUN`, above); this is the one
    *  door that does, called by `control-plane`'s door (op `airundispatch`, T46-59). `by` is the door's stamp of who acts,
-   *  `viewer` its sight (`by` when not given), and `credential` the member's own `ai` credential the door was presented
-   *  with, handed in-process and never read from a body, query or record: the segment `agent-worker` runs acts under it
-   *  (its R5), so it must be the credential that opened the run (`<principal>/<tokenId>` equal to its `principal_plane`),
-   *  on record and unrevoked. Its value is used for the one call and kept nowhere, never written or answered.
+   *  `viewer` its sight (`by` when not given). (T47; N955; K2976, K2999, K3027, K3030; credentials R63) The segment acts
+   *  under a credential minted HERE for that segment only, never one a page holds: no credential is taken from the
+   *  request (one given is never read), so a reloaded dock continues the run by the same act.
    *
-   *  In order, nothing sent on any: absent or invisible, `{found: false}`; `by` not the member the run's principal names,
+   *  In order, nothing sent on any: absent or invisible, `{found: false}`; `by` not the member the run's principal names
+   *  (`member:<id>`, opened by her session, or `member:<id>/<tokenId>`, on a credential of hers before T47),
    *  `AI_RUN_NOT_PRINCIPAL` (run-rules R5, relayed); not running, `{dispatched: false, status}`; a mode other than
-   *  `check` or `plan`, `MEMBER_RUN_MODE_NOT_ADMITTED`; then withheld by name as the wake's dispatch is
-   *  (`AGENT_WORKER_UNBOUND`, `NAMESPACE_UNDETERMINED`, `CREDENTIAL_RECORD_SILENT`); no credential presented, or a run
-   *  opened without one (a session's `member:<id>`), `MEMBER_PRINCIPAL_RUN`; a credential not on record, revoked or not
-   *  the run's own, `AI_RUN_NOT_PRINCIPAL`; an account other than her own sign-in, `MEMBER_PRINCIPAL_RUN`. Then the
-   *  wake's call (`#aiRunDispatch`): the 30 s wait, `RUNNING` past it, and one log entry for a refused or incomplete call. */
-  async dispatchMemberRun({ run = null, by = null, viewer = null, credential = null, at = null } = {}) {
+   *  `check` or `plan`, `MEMBER_RUN_MODE_NOT_ADMITTED`; withheld by name as the wake's dispatch is
+   *  (`AGENT_WORKER_UNBOUND`, `NAMESPACE_UNDETERMINED`); an account other than her own sign-in, `MEMBER_PRINCIPAL_RUN`.
+   *  Then `credentials.aiRunCredentialMint({member, run, writes})` with the mode's own writes (`AI_RUN_MODE_WRITES`): a
+   *  refusal answered unchanged with `dispatched: false`, a mint that throws or answers nothing withheld
+   *  `CREDENTIAL_RECORD_SILENT`. Then the wake's call (`#aiRunDispatch`) carrying the minted token: the 30 s wait,
+   *  `RUNNING` past it, and one log entry for a refused or incomplete call. The token is used for that one call and is
+   *  never answered, logged or written; a later mint for the run revokes it, and the run's end (R14) ends them all. */
+  async dispatchMemberRun({ run = null, by = null, viewer = null, at = null } = {}) {
     const iso = AiRuns.#aiIso(at ? Date.parse(at) : Date.now());
     const id = run == null ? "" : String(run).trim();
     const sight = viewer == null || viewer === "" ? by : viewer;
@@ -2176,22 +2202,37 @@ export class AiRuns {
     if (!env.AGENT_WORKER || typeof env.AGENT_WORKER.fetch !== "function") return withheld("AGENT_WORKER_UNBOUND");
     const store = this.#ownNamespace();
     if (!store) return withheld("NAMESPACE_UNDETERMINED");
-    const token = typeof credential === "string" ? credential.trim() : "";
-    /* A run opened by her session (`member:<id>`, no credential) has none the segment could act under. */
-    if (!token || !owner.includes("/")) return withheld("MEMBER_PRINCIPAL_RUN");
-    const look = await this.#credentialLook(token, store);
-    if (!look) return withheld("CREDENTIAL_RECORD_SILENT");
-    const c = look.found ? look.credential : null;
-    if (!c || c.revoked || `${c.principal}/${c.tokenId}` !== String(row.principal_plane)) {
-      const r = runPrincipalGate({ caller: "", principal: owner, act });
-      return { run, found: true, dispatched: false, status: row.status, code: r.code, check: r.check,
-               translation: r.translation, detail: "the credential presented is not the one this run was opened on, or it is "
-                 + "revoked or not on record. Nothing was sent" };
-    }
     const d = { run: row.run, context_id: row.context_id, payer: AiRuns.#memberOfRun(row), step: row.step || null,
-                project: row.context_type === "project" ? row.context_id : null, owner: row.principal_claude, signinOnly: true };
-    const outcome = await this.#aiRunDispatch(d, { store, token, tokenId: c.tokenId }, iso);
-    if (outcome.state === "WITHHELD") return withheld(outcome.withheld);
+                project: row.context_type === "project" ? row.context_id : null, owner: row.principal_claude };
+    /* (T46; Bob's, K2892) on her own sign-in alone: any other account that would serve her (her API-key reference, the
+       group's key, a project's account) is withheld, nothing sent, nothing written. */
+    d.ref = await this.#dispatchAccount(d);
+    /* the group's keep-away (credentials R35, R52) answers no account at all: relayed unchanged, as the mint would
+       refuse it (credentials R63), rather than read as another account */
+    if (d.ref && d.ref.refusal && d.ref.refusal.code === "AI_KEPT_AWAY") {
+      const { ok: _ok, ...kept } = d.ref.refusal;
+      d.ref = null;
+      return { run, found: true, dispatched: false, status: row.status, ...kept, note: "Nothing was sent" };
+    }
+    if (!(d.ref && !d.ref.refusal && d.ref.kind === "signin" && d.ref.level === "member")) {
+      d.ref = null;
+      return withheld("MEMBER_PRINCIPAL_RUN");
+    }
+    /* (T47; credentials R63) the segment's own credential, minted in the plane for this run and the mode's writes */
+    let minted = null;
+    try {
+      minted = credentialsOf(this.ctx).aiRunCredentialMint({ member: `member:${member}`, run: row.run,
+                                                             writes: [...AI_RUN_MODE_WRITES[row.mode]] });
+    } catch { minted = null; }
+    if (!minted || typeof minted !== "object") { d.ref = null; return withheld("CREDENTIAL_RECORD_SILENT"); }
+    if (minted.ok !== true || typeof minted.token !== "string") {
+      d.ref = null;
+      if (typeof minted.code !== "string") return withheld("CREDENTIAL_RECORD_SILENT");
+      const { ok: _ok, token: _t, ...refusal } = minted;
+      return { run, found: true, dispatched: false, status: row.status, ...refusal, note: "Nothing was sent" };
+    }
+    const outcome = await this.#aiRunDispatch(d, { store, token: minted.token, tokenId: minted.tokenId }, iso);
+    minted = null;
     return { run, found: true, dispatched: outcome.state === "DISPATCHED" || outcome.state === "RUNNING", status: row.status,
              dispatch: outcome };
   }
@@ -3122,7 +3163,7 @@ export class AiRuns {
   }
 
   /** R52 (K1503, K1755): the account `credentials.accountFor` (its R35) answers for `member`'s act of `kind` (`run`):
-   *  `{level, kind, key}` when one serves it (`key` null for the member's own sign-in, T38; K2299); else `{refusal}`: `NO_ACCOUNT` read as this module's `AI_NO_ACCOUNT`, any
+   *  `{level, kind, key}` when one serves it (R79; T47: a held sign-in's `key` is its token, credentials R70); else `{refusal}`: `NO_ACCOUNT` read as this module's `AI_NO_ACCOUNT`, any
    *  other refusal of that service (the group key's notice not yet read, a member not active, the seal) relayed as it
    *  came. The caller keeps the key for the one call it serves, or not at all. */
   async #accountFor(member, kind, project = null) {
@@ -3135,8 +3176,9 @@ export class AiRuns {
     const owner = (lvl, proj) => (lvl === "group" ? "group" : lvl === "project" ? `project:${proj}` : `member:${member}`);
     if (a && a.ok === true && typeof a.key === "string" && (a.level === "member" || a.level === "group" || a.level === "project"))
       return { level: a.level, kind: a.kind, key: a.key, owner: owner(a.level, a.project) };
-    /* (T38; K2299) the member's own sign-in (credentials R35, R43): level member, no key; agent-worker R6 carries it
-       with no `secret` key at all. (T41; credentials R54, R56) A project's sign-in, its sole owner's, likewise. */
+    /* (T38; K2299) the member's own sign-in (credentials R35, R43), or (T41; credentials R54, R56) a project's, its sole
+       owner's, answered with no key: carried with no `secret`. (T47; R79, credentials R70) A held sign-in answers its
+       token as `key` and is read by the arm above, its `kind` kept `signin`. */
     if (a && a.ok === true && a.kind === "signin" && (a.level === "member" || a.level === "project"))
       return { level: a.level, kind: "signin", key: null, owner: owner(a.level, a.project) };
     if (!a || a.code === "NO_ACCOUNT" || typeof a.code !== "string") return { refusal: this.#noAccount(member, "A run") };
