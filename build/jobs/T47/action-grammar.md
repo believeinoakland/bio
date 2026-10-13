@@ -33,3 +33,15 @@
 - `format`: 0 failures. `architecture action-grammar`: 0 failures. `coverage action-grammar`: 28 of 28 live ids named; 0 failures. `ownership action-grammar tranche/T47`: 9 files changed; 0 failures. `run.mjs`: format 0, architecture 0, coverage 36 failures (other modules' ids marked not yet met, rule 5 (1); none action-grammar's), channels 0.
 
 Size (session_01C23dRcZuUnxyMW6avDwka9): test runs 12, module lines 2766
+
+## J1 · COMPLETE
+
+T47-36 applied, with one control red until action-records merges (your CHANGE).
+- R27 (N959): clockMovesNotMechanical is R33's date rule alone (no time of day; actions R98 filters). Flaw fixed (P8): a todayIso naming no day read as text after every date and passed every pending->overdue move; it now passes none. actions always hands YYYY-MM-DD, so its behaviour is unchanged.
+- R28 (N961): the twelve rows C-73.2-.5, C-90.2, C-90.6, C-117.39, C-117.48-.52 name src/action-records/index.mjs <fn> > <region>, as R28 lists them. Code, number, translation and region are unmoved; no other row moved (C-32.21 stays #seeksFence). golden.json and t45-rows.mjs follow. Rows named awaiting stamp (T48) in my record.
+- New t47.test.mjs (R27 x5, R28 x4). Module 72/73: the one red is R28's census arm, exactly those 12 rows, "src/action-records/index.mjs is not held" (T47-37 not merged). I re-run on the CHANGE. Negative control against tranche code: 3 of the new tests fail.
+- Red my merge opens in actions (not in rule 5's list, K2704): acts.test.mjs:205 (C-90.2 where pinned to actions) and t45.test.mjs:567 (RECEIPT_NOT_ON_SENT's row looked for under actions). Both pin arms T47-38 moves to action-records (split map 6). actions is 121/0 before and 119/2 after.
+- My reading of R28's census fixture: row-census-1.74.0.jsonl is promotion's, so I did not write it. "The census fixtures following" means T48's stamp. The census adds exactly my 12 rows as changed (rule 5 (2)).
+- Users' other reds (action-replies 6, affordances 7, answer-envelope 8) are identical on tranche/T47. Plane bundle stale (rule 5 (4)).
+- Checks: format, architecture, coverage (28/28), ownership (9 files) all 0 failures. run.mjs: architecture 0, coverage 36 (others', rule 5 (1)).
+Details in my record.
