@@ -46,3 +46,27 @@ B2 (K3037) handled: merged tranche/T47 (f55c1b6820). R23 projectScope in Provide
 ## J4 · QUESTION
 
 R27, my reading (proceeding on it; answer only if wrong). "Its first author, as the project's own record states" = the `author` of the project's first `manifest` entry (record-core R37's read contract: `manifest.bundle_id`, `author`, `created`, `rowid`; first by `created`, then `rowid`), which promotion stamps with the creating session's member id (control-plane `ownerMemberId`/`author` = `sessMember`). "An active member" = a row of membership's `members` (R120: `member_id`, `handle`, `status`) with `status = 'active'`, joined in the same statement. So `owner` is `{member, handle}` for such a row and `null` otherwise: an opener revoked or not yet active, a project opened by a machine credential (author `class:`/`token:` names no member), a project with no manifest entry, and a project the founder opened (`admin` has no `members` row; the founder is a person but not a roster member). If Home should name the founder as owner instead (e.g. `{member: "admin", handle: null}`), say so.
+
+## Completion (PROJECT-ROSTER #6, T47-83)
+
+**Reading set** (mechanics §17, 412 KB at START): read whole: `build/requirements/project-roster.md`; my entry T47-83 and the L2 merge-order line in `build/plan/current.md`; every file of `bio-plane/src/project-roster/` (3) and the test files R27 touches (`fixture.mjs`, `project-list.test.mjs`), with my own module's code read whole, not only what I changed (P20). For the opener I read record-core R34/R37/R42 (the `manifest` read contract) and its `commit`, membership R43/R68/R120 (the `members` read contract), and promotion's project creation and control-plane's `author`/`ownerMemberId` stamps (the creator's member id). No snapshot-branch work named. Merged `tranche/T47` first (e3b4f8a9ed).
+
+**Entry applied** (T47-83).
+- **R27**: `projectList` / `op=projectlist` answers each listed project's `owner`, the member who opened it: the `author` of the project's first `manifest` entry (record-core R37; first by `created`, then `rowid`, the order recorded), joined in the same statement to an `active` row of membership's `members` (R120), as `{member, handle}`; `null` for an opener revoked or not yet active, a machine's creation, the founder (no roster row), an author naming no member, and a project with no entry. Nothing else about the owner. The projects listed and the cap are R26's, unchanged. Writes nothing.
+- My reading of "first author" and the founder's case is J4 (QUESTION); built on it.
+
+**Fixed in my own module (P8).** None found beyond R27; the module header now names `manifest` beside `bundles` among the record-core read contracts it joins.
+
+**Tests.** New `project-owner.test.mjs`, four tests naming R27: two (three) projects opened by two members each answer their opener, whoever wrote after; the first entry is by `created`, then the order recorded; the opener stays when ownership moves; handle live; exactly `{member, handle}`. Revoked opener null, and again `{…}` when reactivated; a not-yet-enrolled member's, a machine's, the founder's, an unknown author's, a null author's and an unrecorded project's opener null. Control: a project the viewer may not see is still absent, with its opener (cal's hidden project never appears for ann, bob, dee, the founder or an administrator); writes nothing; the op answers the same; the cap cuts owners with their projects. Over the real record-core: first commit's author, later commits change nothing. `project-list.test.mjs` (R26): the item shape now carries `owner` (R27), stated; no assertion weakened. Fixture: the stub record-core gains R37's `manifest` (`bundle_id`, `snap_key`, `author`, `created`) and `w.entry()`. Mutation check: dropping the `active` condition fails 2 of 4; reversing the order fails 4; ordering by `rowid` alone fails 1.
+
+**Ran.**
+- `node --test bio-plane/test/m/project-roster/`: tests 50, pass 50, fail 0. No layer tests named in the manifest.
+- Users (P11): no module's code or tests call `projectList`/`projectlist` yet (grep over the repository: only the generated plane bundle); the op list is unchanged (thirteen ops), so plane's and op-declarations' pins are as at J1.
+- Generated artifacts: `fleetbundles.test.mjs`: the plane bundle FAILs (rule 5.4; it bundles `src/project-roster/`, staled again by this change); every worker bundle PASS.
+- Checks: `format` 0 failures (166 modules); `architecture project-roster` 14 files, 0 failures; `coverage project-roster` 27 of 27, 0 failures; `ownership project-roster tranche/T47` 5 files, 0 failures; `checks/run.mjs`: format 0, architecture 0 (3068 files), channels 0, coverage 46 failures, none of them this module's (other modules' not-yet-met ids, rule 5.1).
+
+**Deferred.** None.
+
+**Found in other modules.** None new. Generated artifact staled: the plane bundle (rule 5.4). screens-daily's `projects` screen (DEC-201) reads `owner` when its job starts.
+
+Size (session_01EqRQSrvFHgecXk4RLmgHTk): test runs 9, module lines 3268
