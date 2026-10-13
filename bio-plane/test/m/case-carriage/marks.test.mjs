@@ -341,7 +341,7 @@ test("R12 the marks, their withdrawals and the copies are declared to record-cor
   const { w, p } = scene();
   assert.deepEqual(w.cc.marksDeclaration && w.cc.marksDeclaration.ok, true, JSON.stringify(w.cc.marksDeclaration));
   const declared = w.record.declaredTables().filter((d) => MARK_TABLES.includes(d.name));
-  assert.deepEqual(declared.map((d) => [d.name, d.module ?? "case-carriage", d.version_chain, d.purge, d.export, d.sight, d.derive, d.expunge]),
+  assert.deepEqual(declared.map((d) => [d.name, d.module, d.version_chain, d.purge, d.export, d.sight, d.derive, d.expunge]),
                    CASE_CARRIAGE_MARK_TABLES.map((t) => [t.name, "case-carriage", true, "clear", "admin-only", "source", "stored", "none"]));
   /* every act this module offers, then the rows: each earlier row unchanged, none removed */
   const seen = [];
