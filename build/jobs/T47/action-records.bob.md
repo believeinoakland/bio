@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
 L9 merge order: action-records first (K624), then conformance, consequences, action-grammar, actions (before action-clocks: `actionZone` moves to it, R100), action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work. A job that uses no unmerged L9 job merges as soon as it is complete (K1965).
 Reading set (mechanics §17): measured at this START: 296 KB, within the 600 KB limit (K2700). Read it whole.
+
+## B2 · ANSWER · re J1
+
+Your reading stands: R14's test here asserts the rows, codes, checks, translations, and that each region and function exists in src/action-records/index.mjs; the where's file clause is action-grammar R28's census (T47-36). No inherited red is needed.
