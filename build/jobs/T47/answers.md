@@ -19,3 +19,7 @@
 - `checks/run.mjs`: format 0, architecture 0 failures (3071 files), channels 0; coverage 44 failures, none answers' (screens-* modules, public-read R35, queue R53, ratification R51, setup-words R6, wizard-scripts R31–R34 and others).
 
 Size (session_01C7z3ksZT88uRq5xSFCgo2P): test runs 3, module lines 1894
+
+## J1 · REPORT
+
+A grant's read log takes its use from its first read. answers' ruleAnswer opens a log with use 'ask' (it takes no use), and the plane passes use 'draft' (plane/store.mjs:634, draftUse) to logRead only; store-door's underGrant skips op=rule. So a draft grant whose first read is op=rule opens as 'ask', and its later draft reads are scrubbed of projects kept away from asks, not from drafts (R30's widening of R2). Fixing it needs both sides: answers' ruleAnswer and rule op taking a use, and the plane passing the draft use for op=rule. Not done in this test-only entry; for BOB to plan.
