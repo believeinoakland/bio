@@ -48,7 +48,8 @@
  *                 R34's re-pin; T45).
  *   acceptedWork  `acceptedFinding`, `acceptedLegRefusals`, `publisherMoves` (its R2, R3, R8: R32's accepted findings,
  *                 its refusals minted there, R33's voiding; T45).
- *   caseImport    `importedCase` (its R4: R32's source identity, declared stake and edition date, where it records them).
+ *   caseImport    `importedCase` (its R4: R32's and R39's source identity and declared stake, from the `group_fields` it
+ *                 records at import, read as the reading viewer; it answers no edition date, N995).
  *   now           the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *
  * T35 (N651; K1723, K1713): a standard that does not bind the act's body is a benchmark (R27): never `noncompliant`
@@ -156,6 +157,9 @@ export const ACCEPTED_SAYS = "Another group's finding, accepted by this group at
 /** R32 (K2832): what an accepted finding reads while the source's identity and stake are not recorded at import. */
 export const SOURCE_FACTS_UNRECORDED = "the source group's public identity and declared stake were not recorded when this "
   + "edition was imported, so they read undetermined";
+/** R39 (N951): the label beside an accepted finding's identity and stake read from what case-import recorded at import. */
+export const SOURCE_DECLARATION_SAYS = "the source group's public identity and declared stake as it declared them when they "
+  + "were read at import, current then, never as of the edition's signing";
 /** R33: the sentence beside a void determination. */
 export const VOID_SAYS = "A finding this determination rests on no longer stands, so each outcome reads undetermined "
   + "until a member re-evaluates it by superseding it. The member's recorded outcome is kept beside it.";
@@ -1201,9 +1205,11 @@ export class Conformance {
 
   /* R2, R9, R24, R31–R34 (T45): each pinned finding's basis as read now, and R33's void causes, for one determination
      (`r`) as `viewer` reads it. `memo` (a page's, R11) holds each check's state, each import edition's facts and the
-     publisher moves, read once per page. Answers `{pins: Map(finding row → {basis, frozen?, hidden}), causes}`.
-     Every read is fail-closed: one that cannot complete is a cause `unreadable`, never not-void. Writes nothing. */
-  #bases(r, findingRows, viewer, memo = new Map()) {
+     publisher moves, read once per page. With `sourceFacts` (R9's read, R39), an accepted finding's source identity and
+     stake are read from case-import as `viewer`; a list (R11) answers no basis and reads none. Answers `{pins:
+     Map(finding row → {basis, frozen?, hidden}), causes}`. Every read is fail-closed: one that cannot complete is a
+     cause `unreadable`, never not-void. Writes nothing. */
+  #bases(r, findingRows, viewer, memo = new Map(), sourceFacts = false) {
     const once = (key, ask) => { if (!memo.has(key)) { let v; try { v = ask(); } catch { v = THREW; } memo.set(key, v); } return memo.get(key); };
     const causes = [], pins = new Map();
     for (const x of findingRows) {
@@ -1248,20 +1254,15 @@ export class Conformance {
       /* accepted (R32, R33) */
       const ed = Number(x.edition);
       const imp = importOfRef(x.finding_id);
-      const facts = once(`imp:${imp}:${ed}`, () => this.caseImport.importedCase({ import: imp, edition: ed, viewer: null }));
-      const e = isObj(facts) && facts !== THREW && facts.ok !== false && isObj(facts.edition) ? facts.edition : {};
-      const gf = isObj(e.group_fields) ? e.group_fields : {};
-      const identity = e.identity ?? gf.identity ?? null;
-      const stake = e.stake ?? gf.stake ?? null;
-      const editionDate = e.edition_date ?? gf.edition_date ?? null;
+      const declared = sourceFacts && viewer != null ? this.#sourceFacts(imp, ed, viewer, once) : null;
       const seenBy = viewer == null ? null
         : once(`acc:${x.finding_id}:${ed}:${viewer}`, () => this.acceptedWork.acceptedFinding({ ref: x.finding_id, edition: ed, viewer }));
       const hidden = viewer != null && seenBy === null;
       const live = isObj(seenBy) && isObj(seenBy.pair) ? seenBy.pair : null;
       pins.set(x, { basis: { kind: "accepted", group: x.source_group ?? null, case: x.case_id, edition: ed,
-                             edition_date: editionDate, accepted_at: x.accepted_at ?? null, accepted_by: x.accepted_by ?? null,
-                             identity, stake: stake ?? "undetermined",
-                             ...(identity === null || stake === null ? { identity_says: SOURCE_FACTS_UNRECORDED } : {}),
+                             edition_date: null, accepted_at: x.accepted_at ?? null, accepted_by: x.accepted_by ?? null,
+                             ...(declared ? { identity: declared.identity, stake: declared.stake, identity_label: SOURCE_DECLARATION_SAYS }
+                                          : { identity: null, stake: "undetermined", identity_says: SOURCE_FACTS_UNRECORDED }),
                              says: ACCEPTED_SAYS }, live, hidden });
       const moves = once("moves", () => this.#allMoves());
       if (!Array.isArray(moves)) {
@@ -1285,6 +1286,24 @@ export class Conformance {
       }
     }
     return { pins, causes };
+  }
+
+  /* R32, R39 (N951): the source group's identity and declared stake for an accepted edition, mapped field by field from
+     the `group_fields` `case-import.importedCase` (its R4) answers for that edition, read as `viewer` (R4 answers a
+     viewer who is not an active member as if no import exists). `identity` is `{group, name, domain,
+     domain_verified_at, read_at}`, `stake` `group_fields.stake` as answered (null when the source declared none; a
+     stake not answered at all is undetermined, never read as none declared), never raised or re-read here; nothing is composed and no `identity` key is expected of the answer. Null when
+     `group_fields` is null, the import cannot be read, or the read throws (the caller then answers identity null, stake
+     undetermined). (N995, K3038) R4 answers no date of the source edition, so no `edition_date` is read here. */
+  #sourceFacts(imp, ed, viewer, once) {
+    const facts = once(`imp:${imp}:${ed}:${viewer}`, () => this.caseImport.importedCase({ import: imp, edition: ed, viewer }));
+    const e = isObj(facts) && facts !== THREW && facts.ok !== false && isObj(facts.edition) ? facts.edition : null;
+    const gf = e && Number(e.edition) === ed && isObj(e.group_fields) ? e.group_fields : null;
+    if (!gf) return null;
+    const field = (k) => (Object.hasOwn(gf, k) && gf[k] !== undefined ? gf[k] : null);
+    return { identity: { group: field("group"), name: field("name"), domain: field("domain"),
+                         domain_verified_at: field("domain_verified_at"), read_at: field("read_at") },
+             stake: Object.hasOwn(gf, "stake") && gf.stake !== undefined ? gf.stake : "undetermined" };
   }
 
   /* R33: every publisher move this copy recorded (accepted-work R8), page by page, bounded; null when they cannot be
@@ -1354,7 +1373,7 @@ export class Conformance {
     });
     const pinned = this.#rows(`SELECT * FROM determination_findings WHERE determination_id=? ORDER BY ord LIMIT ?`,
                               did, LIMITS.findings);
-    const bases = this.#bases(r, pinned, viewer);
+    const bases = this.#bases(r, pinned, viewer, new Map(), true);
     const pair = (p) => (isObj(p) ? { capture: axisOf(p.capture), connection: axisOf(p.connection), testimony: axisOf(p.testimony) }
                                   : null);
     const findings = pinned.filter((x) => seen.sees(x.finding_id)).filter((x) => {

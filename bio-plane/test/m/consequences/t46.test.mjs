@@ -8,10 +8,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { world, V, MACHINE } from "./fixture.mjs";
 import { CONSEQUENCES_CHECKS, CONSEQUENCES_WORDS, SEQUENCE_NOT_CAUSE, CAUSE_NOT_STATED, consequencesModule }
   from "../../../src/consequences/index.mjs";
-import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.mjs";
+import { canonicalJson, sha256HexSync, checkBundle } from "../../../src/record-grammar/index.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
   import.meta.url), "utf8")).words;
@@ -208,9 +209,43 @@ test("R24 a success record is a success_record record object, promoted in the ac
   assert.deepEqual([w.record.head(rev.id), w.rows(`SELECT 1 FROM success_records WHERE id=?`, rev.id).length], [null, 0]);
 });
 
-/* R24's audit clause (K2980): a success record audits clean as a part does once record-grammar's checkBundle admits a
-   `success_record` object (N958, T47). Not pinned today (K208). */
-test.todo("R24 (N958, T47) a success record audits clean as a consequence part does: record-grammar's checkBundle admits its SUC- id and its success_record type");
+/* R24's audit clause (K2980; T47, N958, record-grammar R62): a success record, recorded before or after the promotion,
+   audits clean as a consequence part does: record-core's audit (`auditPass`) and record-grammar's `checkBundle` over its
+   stored image, as the audit hands it. */
+const hexOf = (b) => Buffer.from(b).toString("hex");
+async function judged(w, id, rewrite = null) {
+  const files = new Map(), elided = new Set();
+  for (const [p, v] of Object.entries(w.record.readImage(id))) typeof v === "string" ? files.set(p, v) : elided.add(p);
+  const folderName = rewrite ? rewrite.id : id;
+  if (rewrite) files.set("bundle.md", files.get("bundle.md").replace(new RegExp(`^id: ${id}$`, "m"), `id: ${rewrite.id}`));
+  const { findings } = await checkBundle({ folderName, files, elidedPaths: elided,
+    sha256: async (v) => hexOf(createHash("sha256").update(typeof v === "string" ? v : Buffer.from(v)).digest()),
+    sha512: async (b) => new Uint8Array(createHash("sha512").update(Buffer.from(b)).digest()),
+    resolveTarget: (t) => !!w.record.bundleInfo(t) }, { grammars: w.record.grammars() });
+  return findings;
+}
+
+test("R24 (T47, N958) a success record, recorded before or after the promotion, audits with no finding through checkBundle, as a consequence part does; control: one with a slug after its id audits with C-1.2", async () => {
+  const w = setup();
+  const held = heldRow(w, "SUC-2026-4821");
+  assert.deepEqual(w.c.promoteHeldSuccessRecords(), { ok: true, promoted: [held.id], left: [] });
+  const after = w.rec({ sequence: "s", figures: [{ label: "restored", basis: { op: "sum", operands: [{ content: w.cid, figure: "1,000" }] } }] });
+  const rev = w.c.successRevise({ id: after.id, reason: "worded better", statement: "restated", author: V("alice") });
+  const part = w.c.consequenceRecord({ determination: w.D, standard: S, affected: { kind: "fund", description: "f" },
+    period: { from: "2026-01-01", to: "2026-06-30" }, measure: { unit: "money", value: 10 }, basis: { rationale: "r" }, author: V("alice") });
+  assert.deepEqual([after.ok, rev.ok, part.ok], [true, true, true]);
+  const ids = [held.id, after.id, rev.id, part.id];
+  /* The audit: every one clean. */
+  const pass = await w.record.auditPass({ visible: (id) => ids.includes(id) });
+  assert.deepEqual([pass.checked, pass.clean, pass.withErrors, pass.tally, pass.offenders], [4, 4, 0, {}, []]);
+  /* checkBundle over each image: no finding at all, the success records as the part. */
+  for (const id of ids) assert.deepEqual(await judged(w, id), [], id);
+  /* Control: the same object with a slug after its SUC- id audits with its finding. */
+  for (const id of [held.id, after.id]) {
+    const f = await judged(w, id, { id: `${id}-slug` });
+    assert.ok(f.some((x) => x.check === "C-1.2" && x.severity === "error"), `${id}-slug: ${JSON.stringify(f).slice(0, 400)}`);
+  }
+});
 
 /* promotion as this module reaches it, refusing every success record's object as the record does with no producing group
    recorded (promotion R13, C-64.1); every other promotion as it is. */
