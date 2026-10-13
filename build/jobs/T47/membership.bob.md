@@ -35,3 +35,7 @@ Reading set (mechanics §17): over the 600 KB limit as at your earlier T47 START
 ## B4 · ANSWER · re J4
 
 Your reading is right (K3073): the rule governs; the test tolerates by name exactly the modules still without paths, all seven today. R140's parenthetical is corrected on tranche/T47 to name all seven; merge it.
+
+## B5 · CHANGE
+
+New requirement R141 on tranche/T47 (K3076, from CREDENTIALS #14): the handle admin is reserved for the founder; enrolment and handle checks refuse it as taken. Merge tranche/T47 and meet it in this job (it re-opens your COMPLETE if you had posted one).
