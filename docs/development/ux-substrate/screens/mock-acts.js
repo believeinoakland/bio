@@ -266,7 +266,7 @@ const ACT_HELP = {
   reviewcomment: 'Comments on the draft, for the case\'s owner to read.',
   publishpreflight: 'Checks the case is ready to publish and lists anything that would stop it.',
   publishtensions: 'Shows what must be disclosed in the case, such as members\' ties that concern it.',
-  caseratify: 'Signs this edition with your key. Readers can check the signature without the group.',
+  caseratify: 'Signs this edition, its findings and their evidence with your key, and publishes it now. Readers can check each signature without the group.',
   publish: 'Publishes the signed edition for anyone to read. It can never be unpublished; corrections come as a new edition.',
   publishatmove: 'Moves the time this signed edition becomes public. The signature stands; Civicsmith checks again at the new time.',
   publishatcancel: 'Keeps this signed edition unpublished. You can choose a time again, or sign a new edition.',

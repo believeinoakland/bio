@@ -3298,6 +3298,7 @@ reasoning recorded in: this entry; `screens/mock-screens.js` (site, install), `s
 owed: (BOB) civicsmith.org built as drawn (a static site the stewards keep, holding no accounts), with "Create your group" opening the installer; the groups listed only from the network directory's opt-in (DEC-132); the stewards' address once Bob gives it (D14; installer R48); the installer's first page reduced to its two choices; registry.json and words.json re-taken.
 
 ### DEC-207 · answered
+amended: 2026-10-13 by DEC-208 (BOB's B164, what the signing service provides): one sitting for all of a case's signatures, drawn on S21's recommendation A; labels follow the acts.
 raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (Bob's D9, K3060; BOB's Q4, N1006; B161 (4))
 for: bob-session
 question: The signing ceremony and its related questions, worked out from the principles: where signing happens in the new interface (Q4: paste-back through `/sign`, or a signer inside the interface), how the member proves it is them, and what happens without a key, on a phone, or for a member who is not an owner.
@@ -3320,4 +3321,23 @@ response: **Bob's D9 (K3060), worked out from the principles by the design sessi
 decided: 2026-10-13 · Bob's direction (D9), worked out by the design session from the principles
 reasoning recorded in: this entry; `screens/mock-screens.js` (ceremony), `screens/library.src.py`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/mock-shell.js`, `screens/registry.src.py`, `screens/words-t47.src.py`, `screens/words.json` (1,724 words, 615 protected), `screens/page.src.html`, `layouts.html`.
 owed: (BOB, T47-63 or later) the ceremony's last step as drawn: the in-interface signer with the browser-held key (credentials R9; membership's note on the browser-held key), the password re-asked (D3), the device's confirmation, the two buttons, the signed and published states, the side trip to register a key, the phone and not-an-owner states; the op `signrequest` (or BOB's name) putting a prepared edition in the owners' queues; registry.json, library.json and words.json re-taken. BOB may send what the signing service provides (B161 (4)); a difference from this drawing comes back as an entry.
+
+### DEC-208 · open (S21 asked)
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (BOB's B164: what the signing service provides, `build/plan/draft-signing-service.md` on `tranche/T47`; Bob's D9, K3060, K3075)
+for: bob-session
+question: How the ceremony of DEC-207 meets what signing provides today: a case needs 1 + one per finding + one per piece of evidence signatures (ratification R4, R5); `publish` only prepares (with the tie attestation, T47-32) while `caseratify` signs and publishes; the key is a blob today, the on-device key not yet built. And one question that is Bob's (S21): whether one confirmation may cover all of a case's signatures, given his ruling that each use of the key is confirmed (K509 (2)).
+why it is Bob's: S21 asks the meaning of his ruling K509 (2); the rest is the design session's (P17).
+provisional: DEC-207 as drawn (one signature shown).
+alternative: S21's B (a confirmation per signature) or C (fewer signatures, a doctrine change BOB would bring).
+recommendation: S21: A, one confirmation for the ceremony, signing exactly the listed statements and nothing else.
+reversal cost: low: the ceremony's last step and two words.
+response: **Decided by the design session, 2026-10-13, except S21, asked of Bob and drawn on its recommendation A.**
+(1) **One sitting.** The sign step says "One confirmation signs all 8: the edition, its 2 findings, and the 5 pieces of evidence they rest on", with "What your key signs, exactly": each statement line (`bio-ratify-case CASE-2026-0012 2 3b9f…c210`, `bio-ratify FND-… …`, one per piece of evidence), built from the same statements that are signed. The device's window names the 8; the signed state lists the edition, the findings and the evidence as signed, each drawn only on its answer (screens-publish R10).
+(2) **Labels follow the acts** (B164 gap 5): `publish` is "Confirm your ties and prepare the edition for signing" (the Ties step gains "Confirm, and prepare Edition 2 for signing", recording the confirmation inside the edition); `caseratify` "Sign and publish now"; `publishat` "Sign now and publish at a set time". One signer per edition (as today); the note says the member who signs confirms their ties, the confirmation part of what they sign.
+(3) **Where the key comes from:** made on the device inside the interface (K509 (2)) and kept there across visits; "Use a key file you already have" for a key from the signer page; no hand-off to `/sign`. Keeping a non-extractable key across visits is BOB's to rule against screens-publish R11 (B164 §5).
+(4) **A lost key:** withdrawn under Settings › Your account and a new one made in the ceremony; cases it already signed can still be checked (credentials R10).
+(5) **S21** briefed on the page's section 7 (issue, example, options A, B, C, recommendation A and its risk, "S21: A/B/C"); the page's status says one question is open. S20 stays reserved for the dashboards.
+decided: 2026-10-13 · the design session (P17); S21 open with Bob
+reasoning recorded in: this entry; `screens/mock-screens.js` (ceremony), `screens/registry.src.py`, `screens/library.src.py`, `screens/mock-acts.js`, `screens/question.html`, `screens/page.src.html`, `layouts.html`.
+owed: (BOB) the in-interface signer signing the edition, each finding and each piece of evidence under one confirmation (on S21: A; otherwise as Bob answers); the statements shown before signing; the key made and kept on the device (BOB's ruling on screens-publish R11), a key file accepted; the labels as above; registry.json and library.json re-taken.
 

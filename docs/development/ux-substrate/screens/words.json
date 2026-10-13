@@ -6863,19 +6863,19 @@
   },
   {
    "key": "act.caseratify.label.ceremony",
-   "en": "Sign with your key",
+   "en": "Sign and publish now",
    "protected": true,
    "source": "registry.json"
   },
   {
    "key": "act.publish.label.ceremony",
-   "en": "Publish, with your confirmation of no undeclared tie",
+   "en": "Confirm your ties and prepare the edition for signing",
    "protected": true,
    "source": "registry.json"
   },
   {
    "key": "act.publishat.label.ceremony",
-   "en": "Publish at a set time, checked again then",
+   "en": "Sign now and publish at a set time, checked again then",
    "protected": true,
    "source": "registry.json"
   },
@@ -8573,7 +8573,7 @@
   },
   {
    "key": "act.caseratify.does",
-   "en": "Signs this edition with your key. Readers can check the signature without the group.",
+   "en": "Signs this edition, its findings and their evidence with your key, and publishes it now. Readers can check each signature without the group.",
    "protected": true,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -9263,19 +9263,19 @@
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step9.what",
-   "en": "Each member publishing confirms they have no undeclared tie to anyone the case concerns.",
+   "en": "Confirm you have no undeclared tie to anyone the case concerns, and prepare the edition for signing.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step9.why",
-   "en": "Including anyone paid in its money. A tie disclosed is a strength; one found later is not.",
+   "en": "Including anyone paid in its money. Your confirmation goes inside what you sign. A tie disclosed is a strength; one found later is not.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step10.what",
-   "en": "Choose when it becomes public, enter your password again, and sign: your device asks you to confirm with your key.",
+   "en": "Choose when it becomes public, enter your password again, and sign: your device asks you once to confirm with your key, for the edition, its findings and their evidence together.",
    "protected": false,
    "source": "library.json"
   },

@@ -3023,7 +3023,7 @@
     },
     {
      "op": "caseratify",
-     "label": "Sign with your key",
+     "label": "Sign and publish now",
      "status": "declared",
      "modules": [
       "publication",
@@ -3032,7 +3032,7 @@
     },
     {
      "op": "publish",
-     "label": "Publish, with your confirmation of no undeclared tie",
+     "label": "Confirm your ties and prepare the edition for signing",
      "status": "declared",
      "modules": [
       "case-authoring",
@@ -3042,7 +3042,7 @@
     },
     {
      "op": "publishat",
-     "label": "Publish at a set time, checked again then",
+     "label": "Sign now and publish at a set time, checked again then",
      "status": "declared",
      "modules": [
       "publication",

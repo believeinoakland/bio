@@ -54,8 +54,8 @@ wiz('Publication ceremony', 'ceremony', True, [
  ('ceremony', 'publishtensions', 'Read what will be disclosed: the timeline as it stands, and any calculation that differs or is not tied to the record.', 'Readers must see what the case could not settle.'),
  ('ceremony', None, 'Read the group\'s declared bias as it will appear.', 'Every published case carries the lens it was made through.'),
  ('ceremony', None, 'Preview the public page as a stranger will see it.', 'This is how a reader with no account meets your work.'),
- ('ceremony', 'publish', 'Each member publishing confirms they have no undeclared tie to anyone the case concerns.', 'Including anyone paid in its money. A tie disclosed is a strength; one found later is not.'),
- ('ceremony', 'caseratify', 'Choose when it becomes public, enter your password again, and sign: your device asks you to confirm with your key.', 'Only you can sign, and your key never leaves your device. Publishing is permanent; corrections come as a new edition, never by changing this one.'),
+ ('ceremony', 'publish', 'Confirm you have no undeclared tie to anyone the case concerns, and prepare the edition for signing.', 'Including anyone paid in its money. Your confirmation goes inside what you sign. A tie disclosed is a strength; one found later is not.'),
+ ('ceremony', 'caseratify', 'Choose when it becomes public, enter your password again, and sign: your device asks you once to confirm with your key, for the edition, its findings and their evidence together.', 'Only you can sign, and your key never leaves your device. Publishing is permanent; corrections come as a new edition, never by changing this one.'),
  ('ceremony', 'publishat', 'To publish later, sign now with “Sign and publish at…”, such as when a story citing it runs.', 'At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then.'),
 ], [15, 24])
 

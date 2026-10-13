@@ -252,13 +252,13 @@
       {
        "screen": "ceremony",
        "act": "publish",
-       "what": "Each member publishing confirms they have no undeclared tie to anyone the case concerns.",
-       "why": "Including anyone paid in its money. A tie disclosed is a strength; one found later is not."
+       "what": "Confirm you have no undeclared tie to anyone the case concerns, and prepare the edition for signing.",
+       "why": "Including anyone paid in its money. Your confirmation goes inside what you sign. A tie disclosed is a strength; one found later is not."
       },
       {
        "screen": "ceremony",
        "act": "caseratify",
-       "what": "Choose when it becomes public, enter your password again, and sign: your device asks you to confirm with your key.",
+       "what": "Choose when it becomes public, enter your password again, and sign: your device asks you once to confirm with your key, for the edition, its findings and their evidence together.",
        "why": "Only you can sign, and your key never leaves your device. Publishing is permanent; corrections come as a new edition, never by changing this one."
       },
       {
