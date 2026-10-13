@@ -80,7 +80,7 @@ It is the only module marked `legacy` in `modules.json`.
 - **T47-71 · run-rules** · (N992) R32 re-takes what DEC-198/DEC-199 changed in the design files it reads (`registry.json`, `words.json` on `main`), clearing its red · DEC-198, DEC-199.
 - **T47-70 · ai-use** · (N992) R13 re-takes the DEC-198/DEC-199 design files it reads, clearing its five reds · DEC-198, DEC-199.
 - **T47-20 · ai-runs** · (N955) a member's run dispatched at her act with the segment credential `credentials` R63 mints, T46's interim (the page-held one-day credential, K2976, K2999) retired; (N949) R40's "(today only check)" re-worded · text BOB's.
-- **T47-21 · capture-requests** · (N969) a member path for "Ask for this later": `captureRequest` without a running `run` · text BOB's · doubt 6.
+- **T47-21 · capture-requests** · (N969) a member path for "Ask for this later": `captureRequest` without a running `run` · text BOB's · doubt 6; (K3065, CAPTURE #30 J1 (b)) `plane.test.mjs` "R48 in the plane …" fails about 1 in 4 under the full suite: made deterministic (its cause found, never skipped).
 - **T47-22 · skills** · (N949) R18's three-member order re-worded to `plan`'s deployment; (K3038) R31's citations of case-authoring ids moved to case-inputs re-pointed (wording) · text BOB's.
 - **T47-23 · agent-harness** · (N949) R2's public text re-worded · text BOB's.
 - **T47-24 · agent-worker** · (N949) R56 (the switch on the wire for a sign-in) and its Suggestions' T46 note re-worded (agent-model R15) · text BOB's.
