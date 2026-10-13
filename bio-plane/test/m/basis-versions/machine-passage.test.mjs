@@ -199,3 +199,33 @@ test("R49: narrow's new version is asked over its legs, the narrowed one carryin
   const ok = w.bv.narrow(args);
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
 });
+
+test("R49: only a machine identity is exempt — a promotion naming no author is asked (fail closed), a replay is not asked, and a raw promote by a member that moves a held machine-authored version to accepted is asked as versionAccept is", () => {
+  const w = setup();
+  const fn = read();
+  w.bv.onMachinePassage("run-productions", fn);
+  /* a blank author is asked, and refused here like a member */
+  const blank = w.inquiry(Q, block(version("first", [DOC])), { author: "" });
+  assert.equal(blank.reason, "PROPOSAL_NOT_TAKEN_UP", JSON.stringify(blank).slice(0, 200));
+  assert.equal(fn.calls.length, 1);
+  assert.equal(fn.calls[0].author, "");
+  assert.equal(w.record.head(Q), null, "nothing written");
+  /* a replay is not asked: the record re-stating what it said */
+  const n = fn.calls.length;
+  const rep = w.promotion.promote({ bundleId: Q, base: null, snapKey: "replay1", author: ALICE, replay: true,
+    files: [{ path: "bundle.md", text: inqMd(Q, block(version("first", [DOC]))) }], meta: { object_type: "inquiry" } });
+  assert.equal(rep.ok, true, JSON.stringify(rep).slice(0, 300));
+  assert.equal(fn.calls.length, n, "a replay asks nothing");
+  /* a machine's version, then a member's raw promote moving it to accepted: asked, the member as author */
+  const Q2 = "INQ-2026-0002-r";
+  fn.taken = true;
+  assert.equal(w.inquiry(Q2, block(version("m", [DOC], { author: MACHINE })), { author: MACHINE }).ok, true);
+  fn.taken = false;
+  const before = fn.calls.length;
+  const raw = w.revise(Q2, inqMd(Q2, block(version("m", [DOC], { author: MACHINE, state: "accepted", state_by: ALICE, state_at: T, state_reason: "" }))));
+  assert.equal(raw.reason, "PROPOSAL_NOT_TAKEN_UP", JSON.stringify(raw).slice(0, 200));
+  assert.deepEqual(fn.calls.slice(before).map((c) => [c.author, c.legs.map((l) => l.version)]), [[ALICE, ["m"]]]);
+  /* control: once taken up, the same raw promote lands */
+  fn.taken = true;
+  assert.equal(w.revise(Q2, inqMd(Q2, block(version("m", [DOC], { author: MACHINE, state: "accepted", state_by: ALICE, state_at: T, state_reason: "" })))).ok, true);
+});

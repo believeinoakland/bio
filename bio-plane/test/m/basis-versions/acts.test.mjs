@@ -145,22 +145,24 @@ test("R31: one team's act never moves another's stance — CURRENT is written on
   act(w, "accept");
   const a = w.project("A", "alice", [Q]), b = w.project("B", "alice", [Q]);
   act(w, "current", { project: a, identity: ALICE });
-  const bBefore = w.sha(b), qBefore = w.sha(Q);
+  const bBefore = w.sha(b);
   const two = w.revise(Q, inqMd(Q, block(merge(version("first", [DOC], { state: "accepted", state_by: ALICE, state_at: "2026-09-28T01:00:00Z", state_reason: "" }),
     version("inq-leg", [Q2]), version("second", [DOC2], { state: "accepted", state_by: ALICE, state_at: T, state_reason: "" })))));
   assert.equal(two.ok, true, JSON.stringify(two).slice(0, 300));
+  const aBefore = w.sha(a);
   act(w, "current", { project: b, identity: ALICE, version: "second" });
+  assert.equal(w.sha(a), aBefore, "B's act leaves A's bytes alone");
   assert.deepEqual([w.bv.currentOf(a, Q, V("alice")).version, w.bv.currentOf(b, Q, V("alice")).version], ["first", "second"]);
   assert.notEqual(w.sha(b), bBefore);
   assert.equal(w.text(Q).includes("current_versions"), false, "never on the shared question");
 });
 
-test("R12–R15 through the ops: the six dispatch entries read the stamps from the query string only", () => {
+test("R12–R15 through the ops: the six dispatch entries read the stamps from the query string only; the op map holds R50's projectquestions beside them", () => {
   const w = setup();
   const url = new URL(`https://x/?target=${Q}&version=first&author=${encodeURIComponent(ALICE)}&viewer=${encodeURIComponent(V("alice"))}`);
   const ops = basisVersionsOps(w.bv, url, { author: "member:mallory", reason: "moved by body" });
   const r = ops.versionreject();
   assert.deepEqual([r.ok, r.author, r.reason], [true, ALICE, "moved by body"]);
-  assert.deepEqual(Object.keys(ops).sort(), ["basisversions", "conclude", "narrow", "narrowcandidates", "versionaccept", "versionconsider",
+  assert.deepEqual(Object.keys(ops).sort(), ["basisversions", "conclude", "narrow", "narrowcandidates", "projectquestions", "versionaccept", "versionconsider",
     "versioncurrent", "versionhide", "versionreject", "versionrevert", "withdrawconclusion"]);
 });

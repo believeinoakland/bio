@@ -349,3 +349,28 @@ test("R1, R3, R9: over-strictness — a correct version written unlike any fixtu
      "considering", "or", ["ROUTE3", "route 2 audit", "route-1_papers"],
      { by: DAVE, at: "2026-07-03T11:22:33Z", reason: "holding this one until the third route's papers are captured" }]);
 });
+
+test("R6: a held composition stored before the leg_capture line existed is compared with the offered one's leg_capture lines left out, so its first re-projection stores the pin rather than refusing; once stored, the pin is frozen", () => {
+  const { w, caps } = setup();
+  const one = (legs) => ver("pinned", { description: "the minutes as captured carry the vote", grounds: [{ ground: "main" }], legs });
+  const Q = "INQ-2026-1004-legacy-pin";
+  const legs = [{ target: MINUTES, ground: "main", extent_capture: caps[MINUTES] }];
+  assert.equal(w.inquiry(Q, block(one(legs))).ok, true);
+  const full = w.row(`SELECT composition FROM inquiry_basis_versions WHERE bundle_id=? AND name='pinned'`, Q).composition;
+  assert.match(full, /\nleg_capture\t0\t/, "vacuity guard: the offered composition carries the pin");
+  /* the store as written before the pin existed: the same composition with no leg_capture line */
+  const legacy = full.split("\n").filter((l) => !l.startsWith("leg_capture\t")).join("\n");
+  w.st.sql.exec(`UPDATE inquiry_basis_versions SET composition=? WHERE bundle_id=? AND name='pinned'`, legacy, Q);
+  /* an unrelated revision re-projects: not VERSION_FROZEN, and the pin is now stored */
+  const again = w.revise(Q, inqMd(Q, [...block(one(legs)), `criticality: supporting`]));
+  assert.equal(again.ok, true, JSON.stringify(again).slice(0, 300));
+  assert.equal(w.row(`SELECT composition FROM inquiry_basis_versions WHERE bundle_id=? AND name='pinned'`, Q).composition, full);
+  /* control: a legacy composition is still frozen against any other change */
+  w.st.sql.exec(`UPDATE inquiry_basis_versions SET composition=? WHERE bundle_id=? AND name='pinned'`, legacy, Q);
+  const changed = w.revise(Q, inqMd(Q, block(ver("pinned", { description: "a different account of the minutes", grounds: [{ ground: "main" }], legs }))));
+  assert.equal(changed.reason, "VERSION_FROZEN");
+  /* once stored, a pin moved or dropped is frozen */
+  w.st.sql.exec(`UPDATE inquiry_basis_versions SET composition=? WHERE bundle_id=? AND name='pinned'`, full, Q);
+  const dropped = w.revise(Q, inqMd(Q, block(one([{ target: MINUTES, ground: "main" }]))));
+  assert.equal(dropped.reason, "VERSION_FROZEN");
+});
