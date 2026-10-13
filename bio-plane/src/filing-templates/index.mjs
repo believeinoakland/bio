@@ -296,12 +296,11 @@ export class FilingTemplates {
     return out;
   }
   /* R15, R28: why a profile template is not offered, as a refusal, or null (a group template: null). In order: a blank
-     outside FILING_BLANKS, a file template on a court's kind, an attribution that lacks a part. */
+     outside FILING_BLANKS (R30's one site), a file template on a court's kind, an attribution that lacks a part. */
   #profileRefusal(t) {
     if (!t || t.origin !== "profile") return null;
-    const blank = blanksOf(t.profileTemplate.text).unknown;
-    if (blank) return refuse("TEMPLATE_BLANK_UNKNOWN", `{{${blank}}} is not a blank filings fill, so this template is not offered`,
-                             { template: t.id, blank });
+    const blank = this.#blankUnknown(t.profileTemplate.text, ", so this template is not offered", { template: t.id });
+    if (blank) return blank;
     if (t.use === "file" && t.court) return this.#courtPetition(t.kind, t.profiles[0], { template: t.id });
     const lacks = FilingTemplates.#lacks(t.profileTemplate);
     /* DEC-49 REGION is-profile-offered */
@@ -524,14 +523,24 @@ export class FilingTemplates {
     /* END DEC-49 REGION is-template-shape */
     return null;
   }
+  /* R30 (K231: one code, one site): the one answer of C-125.4 `TEMPLATE_BLANK_UNKNOWN`, naming the first blank of `text`
+     outside FILING_BLANKS (`blanksOf`, R19), or null when it names none. Both conditions call it: R2's text check of a
+     group's draft (R3, R4, R6) and R15's read of a profile template, each with its own words after the named blank. */
+  #blankUnknown(text, why, extra) {
+    const { unknown } = blanksOf(text);
+    if (!unknown) return null;
+    /* DEC-49 REGION is-template-blank */
+    return refuse("TEMPLATE_BLANK_UNKNOWN", `{{${unknown}}} is not a blank filings fill${why}`, { ...extra, blank: unknown });
+    /* END DEC-49 REGION is-template-blank */
+  }
   /* R2, R12: a text and any notes. */
   #textRefusal(text, notes) {
     /* DEC-49 REGION is-template-text */
     if (typeof text !== "string" || !text.trim() || WELL_FORMED.test(text) || utf8(text) > FILING_TEXT_MAX)
       return refuse("TEMPLATE_TEXT_REFUSED", `a template's words are non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes`,
                     { max_bytes: FILING_TEXT_MAX });
-    const { unknown } = blanksOf(text);
-    if (unknown) return refuse("TEMPLATE_BLANK_UNKNOWN", `{{${unknown}}} is not a blank filings fill`, { blank: unknown, blanks: Object.keys(FILING_BLANKS) });
+    const blank = this.#blankUnknown(text, "", { blanks: Object.keys(FILING_BLANKS) });
+    if (blank) return blank;
     if (notes !== undefined && notes !== null && (typeof notes !== "string" || notes.length > TEMPLATE_NOTES_MAX || WELL_FORMED.test(notes)))
       return refuse("TEMPLATE_NOTES_REFUSED", `a version's notes are text of at most ${TEMPLATE_NOTES_MAX} characters`, { max: TEMPLATE_NOTES_MAX });
     /* END DEC-49 REGION is-template-text */
@@ -1172,7 +1181,7 @@ export class FilingTemplates {
              offered: OFFERED.includes(view.state) && !t.retired && !not,
              ...(view.state === "approved" && n === this.#latestApproved(t, events) ? { default: true } : {}),
              ...(not ? { not_offered: not } : {}),
-             ...(not && not.reason === "TEMPLATE_BLANK_UNKNOWN" ? { blank_unknown: not } : {}) };
+             ...(not && not.blank ? { blank_unknown: not } : {}) };
   }
 
   /* ================================================================ R25: offeredVersion */
