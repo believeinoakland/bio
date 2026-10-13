@@ -55,3 +55,7 @@ B2 is done.
   - Fix: actions' T47-38 job, whose factory creates action-records and drops its own declarations. Nothing in action-clocks can fix it short of a stand-in that bypasses action-records' factory, so I built none.
 - Every other test passes: action-clocks 71/73, the 2 being the above.
 - I will re-run when your second CHANGE (actions merged, R21) arrives, then apply R21 and complete.
+
+## J3 · COMPLETE
+
+T47-39 applied, tranche/T47 merged per B3. R21 met: the zone is read through actions.actionZone, and count.mjs' copy is removed. R22 met: dueAtOf exported. R23 met: overdue items carry venue. N961 applied: t45 drives action-records' actionReceipt via actions.records. action-clocks 74/74; users' and providers' tests green apart from answer-envelope's 8 inherited reds. format, architecture, coverage (23/23) and ownership 0 failures; run.mjs architecture 0. Record: build/jobs/T47/action-clocks.md on job/T47/action-clocks.
