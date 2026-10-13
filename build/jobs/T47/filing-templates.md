@@ -188,7 +188,7 @@ The text as a member reads it:
 - `format`: 0 failures. `architecture` (filing-templates): 0 failures. `coverage` (filing-templates): 32 of 32 live ids named by a test, 0 failures. `ownership` (tranche/T47): 8 files, 0 failures.
 - `checks/run.mjs` over the product: format 0, architecture 0 (3,106 files), channels 0; coverage 36 failures, all other modules' ids not yet met in T47 (rule 5 (1)), none of mine.
 
-Size (session_01Ake8QYuohMnTaZ46LkyKsD): test runs 9, module lines 1882
+Size (session_01Ake8QYuohMnTaZ46LkyKsD): test runs 9, module lines 1884
 
 ## J1 · QUESTION
 
