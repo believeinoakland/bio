@@ -76,6 +76,84 @@ body:not(.show-src) .src { display: none; }
 .mk-card > b { font:600 var(--t-lg) var(--f-sans); }
 .mk-chip { display:inline-block; padding:1px 8px; border-radius:var(--r-1); font:600 var(--t-xs) var(--f-sans); border:1.5px solid var(--c-ink); color:var(--c-ink); white-space:nowrap; }
 .mk-chip.them { border-color:var(--c-rule-strong); color:var(--c-ink-2); }
+/* DEC-215: use over time (bars and a meter) and the connection graph */
+.mk-usage { display:grid; grid-template-columns:minmax(0,1fr) minmax(260px, 340px); gap:14px 20px; align-items:start; }
+.mk-device[data-device="phone"] .mk-usage { grid-template-columns:minmax(0,1fr); }
+.mk-bars .k { display:inline-block; font:600 var(--t-xs) var(--f-sans); letter-spacing:var(--track-caps); text-transform:uppercase; color:var(--c-muted); margin-bottom:6px; }
+.mk-bars .run { display:flex; align-items:flex-end; gap:3px; height:48px; border-bottom:1px solid var(--c-rule-strong); }
+.mk-bars .run i { flex:1 1 0; min-width:4px; max-width:14px; display:block; background:color-mix(in srgb, var(--c-stage) 45%, var(--c-surface)); border-radius:1px 1px 0 0; cursor:help; }
+.mk-bars .run i.now { background:var(--c-stage); }
+.mk-bars .run i:hover, .mk-bars .run i:focus-visible { outline:2px solid var(--c-focus); outline-offset:1px; }
+.mk-bars .ax { display:flex; justify-content:space-between; font-size:var(--t-xs); color:var(--c-muted); margin:3px 0 4px; }
+.mk-meter { display:grid; gap:4px; margin-top:10px; }
+.mk-meter .l { display:flex; justify-content:space-between; gap:6px 10px; font-size:var(--t-sm); color:var(--c-ink-2); flex-wrap:wrap; }
+.mk-meter .l b { color:var(--c-ink); }
+.mk-meter .track { position:relative; height:10px; background:var(--c-ground-2); border:1px solid var(--c-rule); border-radius:2px; overflow:hidden; }
+.mk-meter .track i { position:absolute; left:0; top:0; bottom:0; background:var(--c-accent); }
+.mk-meter .track b { position:absolute; top:-1px; bottom:-1px; width:1px; background:var(--c-rule-strong); }
+.mk-meter[data-near] .track i { background:var(--c-signal); }
+.mk-meter[data-near] .pct { color:var(--c-signal); font-weight:600; }
+.mk-meter.small { margin-top:4px; } .mk-meter.small .track { height:7px; } .mk-meter.small .l { font-size:var(--t-xs); }
+.mk-graph { display:grid; gap:8px; }
+.mk-trail { display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; font-size:var(--t-sm); }
+.mk-trail .k { color:var(--c-muted); margin-right:4px; cursor:help; }
+.mk-trailbtn { font:500 var(--t-sm) var(--f-sans); padding:3px 8px; border:1px solid var(--c-rule-strong); border-radius:var(--r-1); background:var(--c-surface); color:var(--c-ink); cursor:pointer; }
+.mk-trailbtn.now { font-weight:700; border-color:var(--c-ink); }
+.mk-trail .arr { color:var(--c-muted); }
+.mk-graph .gwrap { overflow-x:auto; border:var(--hair); background:var(--c-surface); }
+.mk-graph svg.g { width:100%; height:auto; max-height:520px; display:block; }
+.mk-device[data-device="phone"] .mk-graph svg.g { width:720px; max-width:none; }
+.mk-graph .node { cursor:pointer; outline:none; }
+.mk-graph .node > circle:first-child, .mk-graph .node > rect:first-child, .mk-graph .node > path:first-child { fill:var(--c-sheet); stroke:var(--c-ink); stroke-width:1.5; }
+.mk-graph .node.centre > circle:first-child, .mk-graph .node.centre > rect:first-child, .mk-graph .node.centre > path:first-child { stroke:var(--c-accent); stroke-width:3; }
+.mk-graph .node > .gap { stroke-dasharray:3 3; stroke:var(--c-ink-2); }
+.mk-graph .node .lim, .mk-glegend .node-lim { fill:none; stroke:var(--c-ink-2); stroke-dasharray:3 3; stroke-width:1.25; }
+.mk-graph .node:hover > :first-child, .mk-graph .node:focus-visible > :first-child { stroke-width:3; }
+.mk-graph .node:focus-visible > :first-child { stroke:var(--c-focus); }
+.mk-graph text { font:11px var(--f-sans); fill:var(--c-ink-2); }
+.mk-graph text.n { font:600 12px var(--f-sans); fill:var(--c-ink); }
+.mk-graph text.lim { font:italic 10.5px var(--f-sans); }
+.mk-graph text.w { paint-order:stroke; stroke:var(--c-surface); stroke-width:3px; stroke-linejoin:round; }
+.mk-graph text.w.lead { font-style:italic; fill:var(--c-muted); }
+.mk-graph .hit { stroke:transparent; stroke-width:16; fill:none; pointer-events:stroke; }
+.e { fill:none; stroke-width:2; stroke-linecap:butt; }
+.e-pos { stroke:var(--c-ink); }
+.e-part { stroke:var(--c-kind-part); stroke-dasharray:1.5 5.5; stroke-linecap:round; stroke-width:2.5; }
+.e-money { stroke:var(--c-kind-money); stroke-width:6; }
+.e-money-in { stroke:var(--c-surface); stroke-width:2; }
+.e-ment { stroke:var(--c-kind-mention); stroke-dasharray:9 4 2 4; }
+.e-lead { stroke:var(--c-muted); stroke-dasharray:7 5; }
+.e-same { stroke:var(--c-ink); stroke-width:1.25; }
+.mk-graph .edge { cursor:help; outline:none; }
+.mk-graph .edge:hover .e:not(.e-money):not(.e-money-in), .mk-graph .edge:focus-visible .e:not(.e-money):not(.e-money-in) { stroke-width:3.5; }
+.mk-graph .edge:hover .e-money, .mk-graph .edge:focus-visible .e-money { stroke-width:8; }
+.mk-graph .edge:focus-visible .e { stroke:var(--c-focus); }
+.gchip rect { fill:var(--c-connection-tint); stroke:var(--c-connection); stroke-width:1.25; }
+.gchip text { font:700 10.5px var(--f-sans); fill:var(--c-connection); }
+.gchip.subject rect { fill:var(--c-subject-tint); stroke:var(--c-subject); }
+.gchip.subject text { fill:var(--c-subject); }
+.mk-glegend { display:flex; flex-wrap:wrap; gap:6px 16px; font-size:var(--t-xs); color:var(--c-ink-2); }
+.mk-glegend .li { display:inline-flex; align-items:center; gap:6px; cursor:help; }
+.mk-glegend svg { width:36px; height:12px; flex:none; overflow:visible; }
+/* DEC-216: the home as a nerve centre; the rail on every dashboard, collapsed where room is wanted */
+.mk-ablocks { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; }
+.mk-ablock { background:var(--c-surface); border:var(--hair); padding:10px 12px; display:grid; gap:6px; align-content:start; }
+.mk-ablock .h { display:flex; justify-content:space-between; gap:6px 10px; align-items:baseline; flex-wrap:wrap; }
+.mk-ablock .h .cs-ref { text-decoration:none; color:var(--c-ink); font-size:var(--t-md); }
+.mk-ablock .need { font:600 var(--t-xs) var(--f-sans); color:var(--c-ink); padding:1px 7px; border:1.5px solid var(--c-ink); border-radius:var(--r-1); white-space:nowrap; }
+.mk-ablock .need.quiet { color:var(--c-muted); border-color:var(--c-rule); font-weight:500; }
+.mk-ablock .rd { display:flex; flex-wrap:wrap; gap:4px 14px; }
+.mk-rd { font-size:var(--t-sm); color:var(--c-ink-2); } .mk-rd b { font-size:var(--t-lg); color:var(--c-ink); margin-right:2px; }
+.mk-abitem { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding:8px 0 4px; border-top:var(--hair); font-size:var(--t-sm); }
+.mk-abitem .t { flex:1 1 140px; }
+.mk-abitem .acts { flex:1 1 100%; display:flex; flex-wrap:wrap; gap:6px; }
+.mk-ablock .mk-list { color:var(--c-ink-2); }
+.mk-cluster .mk-tiles { grid-template-columns:repeat(5, minmax(0, 1fr)); }
+.mk-device[data-device="phone"] .mk-cluster .mk-tiles { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+.mk-page:has(> main[data-st="c"] .mk-cluster) { --rail:64px !important; }
+.mk-page:has(> main[data-st="c"] .mk-cluster) .cs-rail a { justify-content:center; padding:8px 0; font-size:0; gap:0; }
+.mk-page:has(> main[data-st="c"] .mk-cluster) .cs-rail a svg { width:20px; height:20px; }
+.mk-page:has(> main[data-st="c"] .mk-cluster) .cs-rail a .count { display:none; }
 .dashfigs { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap:14px; margin-top:12px; }
 .sub { margin: 22px 0 6px; font: 600 var(--t-lg)/1.25 var(--f-serif, serif); }
 .rings { display: grid; gap: 12px; margin-top: 10px; }
@@ -447,15 +525,16 @@ main:not([data-st]) .mk-frontgrid.st-a, main[data-st="a"] .mk-frontgrid.st-a, ma
 
 <section id="dash">
 <h2 class="sec">Dashboards: first treatments, to compare</h2>
+<p class="intro"><b>Your direction of 13 October, evening (DEC-216):</b> the home is a nerve centre, complete in itself, never only a set of doors to the other dashboards; and every dashboard keeps the rail every other screen has, collapsed to icons where the room is wanted. The three arrangements below are now three orders of the same complete home: the first drawing of A (cards as doors) and of B (no home, the rail replaced by the areas) are withdrawn.</p>
 <p class="intro">Your direction of 11 October: dashboard-like entry points per area, organised like a car's displays. The research is on the dashboards page; its rules are drawn here so you can compare arrangements on real screens before choosing (S20, after you have used the test instance). Every treatment follows the same three tiers: <b>status</b> first (at most four readings, each tied to a deadline or to something blocked on us, each opening its list), then <b>what needs you</b> (each item with its act and whose move it is), then <b>everything else</b>. Two tests on each: what needs you within five seconds; the commonest next step in three steps or fewer.</p>
 <div class="dashfigs">
- <figure class="asfig"><figcaption><b>C · “What needs you” as the home</b> (recommended to try first) · the strip of four readings, then needs you, needs the group, the record at a glance, the projects, and the areas one step away <button type="button" class="cs-btn" data-tone="quiet" data-open="screen:dash-home:0:c">Open in the viewer</button></figcaption><div class="mk-device" data-device="desktop"><div class="mk-scaler" id="fig-dash-c"></div></div></figure>
- <figure class="asfig"><figcaption><b>A · One home with a card per area</b> · the closest to the picture; no status once you leave the home <button type="button" class="cs-btn" data-tone="quiet" data-open="screen:dash-home:0:a">Open in the viewer</button></figcaption><div class="mk-device" data-device="desktop"><div class="mk-scaler" id="fig-dash-a"></div></div></figure>
- <figure class="asfig"><figcaption><b>B · A dashboard per area under a strip that never moves</b> · no home; the rail becomes the five areas <button type="button" class="cs-btn" data-tone="quiet" data-open="screen:dash-home:0:b">Open in the viewer</button></figcaption><div class="mk-device" data-device="desktop"><div class="mk-scaler" id="fig-dash-b"></div></div></figure>
+ <figure class="asfig"><figcaption><b>C · What needs you first, then each area at a glance</b> (recommended to try first) · the strip, needs you, needs the group, every area's block complete, the projects, what changed since you last looked <button type="button" class="cs-btn" data-tone="quiet" data-open="screen:dash-home:0:c">Open in the viewer</button></figcaption><div class="mk-device" data-device="desktop"><div class="mk-scaler" id="fig-dash-c"></div></div></figure>
+ <figure class="asfig"><figcaption><b>A · Each area first, complete</b> · the areas in fixed places, each block carrying what needs you in it with its act; then the rest <button type="button" class="cs-btn" data-tone="quiet" data-open="screen:dash-home:0:a">Open in the viewer</button></figcaption><div class="mk-device" data-device="desktop"><div class="mk-scaler" id="fig-dash-a"></div></div></figure>
+ <figure class="asfig"><figcaption><b>B · The instrument panel</b> · ten readings in fixed places, like a car's cluster, then the lists; the rail collapsed to icons, the same rail as everywhere <button type="button" class="cs-btn" data-tone="quiet" data-open="screen:dash-home:0:b">Open in the viewer</button></figcaption><div class="mk-device" data-device="desktop"><div class="mk-scaler" id="fig-dash-b"></div></div></figure>
  <figure class="asfig"><figcaption><b>The Action dashboard</b> · clocks and whose move it is, then what needs you, then every action with its clock as a sentence <button type="button" class="cs-btn" data-tone="quiet" data-open="screen:dash-action:0">Open in the viewer</button></figcaption><div class="mk-device" data-device="desktop"><div class="mk-scaler" id="fig-dash-action"></div></div></figure>
  <figure class="asfig"><figcaption><b>A project's dashboard</b> · your next steps here in order, the project at a glance, the story so far, who works on it and how busy it is <button type="button" class="cs-btn" data-tone="quiet" data-open="screen:dash-project:0">Open in the viewer</button></figcaption><div class="mk-device" data-device="desktop"><div class="mk-scaler" id="fig-dash-project"></div></div></figure>
 </div>
-<p class="intro" style="margin-top:12px"><b>What reads at a glance, on every treatment (your direction of 13 October).</b> The plumb bob in the masthead of every working screen, so a member knows where they are; a reading as a number with its change in words; activity as eight weeks of bars with the word the bars say; the people on a project as initials; a project's stage as its ladder; the next steps in a project as a numbered path, each the act itself; the story so far as a timeline in brief, what they did above the line and what we did below it. Each is drawn once in the visual language: one hue per scale, a word beside every colour, and nothing explained twice. Open any of the five in the viewer above (Screens: “Home as a dashboard”, “The Action dashboard”, “A project's dashboard”, and Projects) and switch between arrangements with the control on Home.</p>
+<p class="intro" style="margin-top:12px"><b>What reads at a glance, on every treatment (your direction of 13 October).</b> The plumb bob in the masthead of every working screen, so a member knows where they are; a reading as a number with its change in words; activity as eight weeks of bars with the word the bars say; the people on a project as initials; a project's stage as its ladder; the next steps in a project as a numbered path, each the act itself; the story so far as a timeline in brief, what they did above the line and what we did below it. Each is drawn once in the visual language: one hue per scale, a word beside every colour, and nothing explained twice. <b>Added late on 13 October (DEC-215):</b> on every AI account panel (Members, AI for this project, The assistant), beside the month table, the last thirty days as bars of estimated dollars a day, one hue, the newest day darker, each day's date, calls and dollars on hover, and a meter of the period's use against the limit, accent until four fifths of it and rust from there; and a <b>connection graph</b> on Explore connections, a person's page and the money trail: the centre in the middle, what the record joins it to around it, each line in its kind's colour and pattern with the step's word and its grade letter, a declared or hunch step dashed grey as a lead, “stopped at the limit” where exploring stopped, and a click on anything making it the centre and adding it to a trail. The kinds' colours are reserved for them and pass the colour-blindness check in both themes on every pair. Open any of the five in the viewer above (Screens: “Home as a dashboard”, “The Action dashboard”, “A project's dashboard”, and Projects) and switch between arrangements with the control on Home.</p>
 <p class="src">dashboards.html (the research, 11 and 13 October; K2803, B141); the three tiers after GitHub's and Linear's homes and NN/g on dashboards; the five-second and three-step tests after NHTSA's glance limits; DEC-138 (one hue per scale, a word beside every colour)</p>
 </section>
 

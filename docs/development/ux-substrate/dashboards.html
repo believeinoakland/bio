@@ -78,16 +78,23 @@ a { color: var(--accent); }
 
 <main class="wrap">
   <header style="display:grid;gap:12px">
-    <span class="eyebrow">Civicsmith design · research and early thinking · 11 October 2026 · the examples you named added 13 October</span>
+    <span class="eyebrow">Civicsmith design · research and early thinking · 11 October 2026 · the examples you named added 13 October · your two points of the evening of 13 October folded in</span>
     <h1>Dashboards as the way into each part of Civicsmith</h1>
     <p class="lede">You asked the design lane to research how Civicsmith could open onto a high-level dashboard for each major area, the way a car's screens open onto driving, navigation, climate and settings. This page reports what the research found, what changes from the screens you have now, and three ways to do it, with an early recommendation.</p>
-    <div class="status"><span><b>Nothing to answer yet.</b> You said you want to use the test instance first. When you have, I'll bring the choice back to you as question S20.</span></div>
+    <div class="status"><span><b>Nothing to answer yet.</b> You said you want to use the test instance first. When you have, I'll bring the choice back to you as question S20.</span><span><b>Updated 13 October, evening</b>, on your two points: the home is a nerve centre, and every dashboard keeps the rail.</span></div>
   </header>
 
   <section>
     <h2>What you asked for</h2>
     <blockquote>"Dashboard" like interfaces that is the high level primary entry point for major functional areas of the system like investigation, action, membership, administration, and so forth. These dashboards are organizationally similar to modern automotive driver experiences that have high level dashes for driving, navigation, environment control, entertainment, vehicle settings, and so forth.</blockquote>
     <p>I read "and so forth" as including <b>publication</b> (cases under review, waiting to be signed, or published), because it is the area with the most at stake and its own rhythm. That gives five areas: Investigation, Action, Publication, Membership and Administration.</p>
+  </section>
+
+  <section>
+    <h2>Your two points of 13 October, evening</h2>
+    <blockquote>"The home dashboard needs to be a real home, not just a set of buttons to the other dashboards. It has to have a nerve-center like completeness." "The dashboard screens should have the rail like all the other screens, though it might be collapsed."</blockquote>
+    <p><b>Taken as two rules for every treatment.</b> First, the home is complete in itself: what needs you, what needs the group, every area's state (its readings, what needs you in it, a line of what changed), the projects, and what members did since you last looked. An area's dashboard is one step away for the detail, but nothing is found <i>only</i> by going there. Second, every dashboard keeps the rail every other screen has (Home, Queue, Find, Add, Projects, People, Settings); where a dashboard wants the room, the rail collapses to icons, as any member can already make it (its width is theirs). The rail never turns into the list of areas.</p>
+    <p><b>What that changed below.</b> Model A as first drawn, five cards that were doors, is withdrawn: a card per area stays only as a complete block. Model B as first drawn, no home and the rail replaced by the areas, is withdrawn too. The three models are now three <b>orders</b> of the same complete home, so the choice left to you (S20) is which order a member meets first, not what the home contains. The screens page draws all three as states of one screen, with the rail on every one.</p>
   </section>
 
   <section>
@@ -134,64 +141,66 @@ a { color: var(--accent); }
 
   <section class="wide wrap" style="padding:0;max-width:64rem">
     <h2>Three ways to do it</h2>
-    <p>All three share what the research supports: five areas in fixed places, each with a dashboard in the three tiers above, "whose move" and due-soon and overdue on every action item, a written empty state everywhere, and the accessibility rules above. They differ in <b>what you see first</b> and <b>where the status lives</b>.</p>
+    <p>All three share what the research and your two points settle: one complete home with the rail; five areas in fixed places, each with a dashboard in the three tiers above, one step from the home; "whose move" and due-soon and overdue on every action item; a written empty state everywhere; and the accessibility rules above. They differ in <b>what a member meets first</b> and <b>how dense the first screen is</b>.</p>
     <div class="models">
       <article class="model">
-        <div class="sk" aria-hidden="true"><span class="cap">Home</span><div class="grid2"><div class="card"><b>Investigation</b>4 documents to check</div><div class="card"><b>Action</b>2 due this week</div><div class="card"><b>Publication</b>1 to sign</div><div class="card"><b>Members</b>1 invited</div></div><div class="card"><b>Administration</b>all well</div></div>
+        <div class="sk" aria-hidden="true"><div class="strip">1 due Friday · our move · 1 reply overdue · 2 to check</div><div class="row"><div class="rail"><span class="on">Home</span><span>Queue</span><span>Find</span><span>Add</span><span>Projects</span><span>People</span><span>Settings</span></div><div class="main"><span class="cap">Home · Lakeshore Tenants</span><div class="grid2"><div class="card q"><b>Investigation · 3 to do</b>142 documents · 6 questions<br>Vouch for 3 photos · Decide on the newer version</div><div class="card q"><b>Action · 1 to approve</b>3 clocks · 1 our move · 2 theirs<br>Approve the follow-up letter</div><div class="card"><b>Publication</b>1 case · Edition 2 · 0 to sign</div><div class="card"><b>Members</b>6 · 1 invited</div></div><div class="card"><b>Administration</b>release 0.83.0 · the assistant 52% of the limit</div><div class="card">Needs the group · Projects · Since you last looked</div></div></div></div>
         <div class="body">
           <span class="tag">Model A</span>
-          <h3>One home with a card per area</h3>
-          <p>After signing in, a home page shows five large cards, one per area, each with one to three lines of state and one action: "4 documents to check · Ask a question". A card opens its area. There is no status zone outside the home.</p>
+          <h3>Each area first, complete, with what needs you inside it</h3>
+          <p>After signing in, the five areas in fixed places, each block complete: a chip saying what needs you there, two to four readings, a line of what changed, and the items themselves with their acts. Below them, what needs the group, the projects and what members did since you last looked. The strip stays on every screen.</p>
           <div class="gc">
-            <div><h4>Gains</h4><ul><li>The closest to your picture, and the easiest to explain</li><li>One place to start, five doors</li><li>The least to build</li></ul></div>
-            <div><h4>Costs</h4><ul><li>Work that crosses areas has nowhere to show</li><li>Leave the home and the status is gone</li><li>Rarely used areas take as much room as daily ones</li></ul></div>
-            <div><h4>Risk</h4><p>The cards drift into number tiles nobody acts on, and a deadline runs out while a member works inside an area.</p></div>
+            <div><h4>Gains</h4><ul><li>The closest to your picture: the areas are the first thing seen, every day in the same place</li><li>A member who owns one area goes straight to its block</li><li>Nothing is only a door</li></ul></div>
+            <div><h4>Costs</h4><ul><li>What needs you is split across five blocks; a member scans five places, not one list</li><li>Rarely used areas take as much room as daily ones</li><li>Longer than C on a phone</li></ul></div>
+            <div><h4>Risk</h4><p>An item due today sits in the third block down; the five-second test is met only if the chips are read first.</p></div>
           </div>
         </div>
       </article>
       <article class="model">
-        <div class="sk" aria-hidden="true"><div class="strip">2 clocks due · our move · 1 to sign</div><div class="row"><div class="rail"><span class="on">Investig.</span><span>Action</span><span>Publish</span><span>Members</span><span>Admin</span></div><div class="main"><span class="cap">Investigation</span><div class="card">Open questions · strength</div><div class="card q">Needs you: 3</div><div class="card">Recent</div></div></div></div>
+        <div class="sk" aria-hidden="true"><div class="strip">1 due Friday · our move · 1 reply overdue · 2 to check</div><div class="row"><div class="rail" style="width:1.2rem"><span class="on">⌂</span><span>≡</span><span>⌕</span><span>+</span><span>▤</span><span>☺</span><span>⚙</span></div><div class="main"><span class="cap">Home · the panel</span><div class="grid2"><div class="card"><b>4</b>needs you</div><div class="card"><b>1</b>our move</div><div class="card"><b>2</b>their move</div><div class="card"><b>4</b>to check</div><div class="card"><b>142</b>documents</div><div class="card"><b>52%</b>the assistant</div></div><div class="card q">Needs you · 4 items with their acts</div><div class="card">Needs the group · Projects · Since you last looked</div></div></div></div>
         <div class="body">
           <span class="tag">Model B</span>
-          <h3>A dashboard per area, under a status strip that never moves</h3>
-          <p>No separate home: Civicsmith opens on the area you last used. A rail (a bottom bar on phones) switches between five full dashboards. A thin strip across the top, the "instrument cluster", stays on every screen and holds only what crosses areas and can't wait: clocks due that are our move, items waiting for your review or signature, and replies not yet read.</p>
+          <h3>The instrument panel: every reading in a fixed place, then the lists</h3>
+          <p>The home opens on a panel of ten readings in the same places every day, like a car's cluster: needs you, our move, their move, to check, replies to read, documents, questions, cases, members, the assistant's use against its limit. A reading that is zero still shows, so the eye learns where to look; each opens its list. Then what needs you, what needs the group, the projects and what changed. The rail is collapsed to icons to give the panel room; it is the same rail as everywhere, and a member can widen it.</p>
           <div class="gc">
-            <div><h4>Gains</h4><ul><li>The closest to how a car is built: areas change, status stays</li><li>A deadline can't be missed in any area</li><li>Each role gets a full, specific dashboard</li></ul></div>
-            <div><h4>Costs</h4><ul><li>The most to design and build</li><li>The strip needs a strict rule for what earns a place on it</li><li>A strip that stays on screen is harder to make accessible</li></ul></div>
-            <div><h4>Risk</h4><p>Every feature wants a light on the strip until people stop reading it, and there is no single view of "my day".</p></div>
+            <div><h4>Gains</h4><ul><li>The closest to how a car is built: fixed places, read in a glance</li><li>The whole group's state in one band, before any list</li><li>The same shape every day</li></ul></div>
+            <div><h4>Costs</h4><ul><li>Ten numbers before the first thing to do</li><li>A reading needs a threshold or it becomes a number tile nobody acts on</li><li>Two taps to the item: the reading, then the list</li></ul></div>
+            <div><h4>Risk</h4><p>The panel is read as decoration once its numbers stop changing; and a phone shows it as a grid two across.</p></div>
           </div>
         </div>
       </article>
       <article class="model rec">
-        <div class="sk" aria-hidden="true"><div class="strip">2 clocks due · our move · 1 to sign</div><div class="row"><div class="rail"><span class="on">Home</span><span>Investig.</span><span>Action</span><span>Publish</span><span>More</span></div><div class="main"><span class="cap">Needs you</span><div class="card q">Reply arrived: answer the city</div><div class="card q">Sign the Coliseum case</div><div class="card q">Check 4 documents</div><span class="cap">Needs the group</span><div class="card">2 replies unread</div></div></div></div>
+        <div class="sk" aria-hidden="true"><div class="strip">1 due Friday · our move · 1 reply overdue · 2 to check</div><div class="row"><div class="rail"><span class="on">Home</span><span>Queue</span><span>Find</span><span>Add</span><span>Projects</span><span>People</span><span>Settings</span></div><div class="main"><span class="cap">Home · Lakeshore Tenants</span><span class="cap">Needs you</span><div class="card q">Vouch for 3 photos · today</div><div class="card q">Decide on the newer version · Friday</div><div class="card q">Approve the follow-up letter · Friday</div><span class="cap">Needs the group</span><div class="card">Reply overdue · their move</div><span class="cap">Each area at a glance</span><div class="grid2"><div class="card"><b>Investigation</b>142 · 6 · 10</div><div class="card"><b>Action</b>3 clocks</div></div><div class="card">Projects · Since you last looked</div></div></div></div>
         <div class="body">
           <span class="tag">Model C · recommended to try first</span>
-          <h3>"What needs you" as the home, with the area dashboards one step away, and a small status strip</h3>
-          <p>The home is a list in two parts, <b>Needs you</b> and <b>Needs the group</b>: clocks to act on, replies to read, documents to check, drafts to review, cases to sign, invitations. It is sorted by urgency and by whose move it is, and each item carries its action. Above it sits a short status strip (at most four readings, each tied to a deadline or to something blocked on us) that stays on every screen. The five area dashboards are one step away on the rail. This is close to today's Home and Queue, made into one place, with the dashboards added.</p>
+          <h3>What needs you first, then each area at a glance</h3>
+          <p>The home opens on one list in two parts, <b>Needs you</b> and <b>Needs the group</b>: clocks to act on, letters to approve, documents to check, versions to decide on, replies to read, cases to sign, invitations; sorted by urgency and by whose move it is, each item carrying its act. Then every area's block, complete, as in A; the projects; what members did since you last looked. The strip stays on every screen, and the five area dashboards are one step away for the detail.</p>
           <div class="gc">
-            <div><h4>Gains</h4><ul><li>Best for a volunteer who comes in once or twice a week: see what's theirs, do it, leave</li><li>Work that crosses areas sits side by side (a reply, the finding it bears on, the follow-up letter)</li><li>Where GitHub and Linear have moved this year</li></ul></div>
-            <div><h4>Costs</h4><ul><li>It is further from "a dashboard per area" as the very first screen, so the home has to be named well</li><li>It needs firm rules for what enters the list, snoozing, and who owns a shared item</li></ul></div>
+            <div><h4>Gains</h4><ul><li>Best for a volunteer who comes in once or twice a week: see what's theirs, do it, leave; the whole group's state is still on the page</li><li>Work that crosses areas sits side by side (a reply, the finding it bears on, the follow-up letter)</li><li>Where GitHub and Linear have moved this year</li></ul></div>
+            <div><h4>Costs</h4><ul><li>The areas come second, so the home has to be named well as the group's state, not a to-do list</li><li>It needs firm rules for what enters the list, snoozing, and who owns a shared item</li></ul></div>
             <div><h4>Risk</h4><p>The list fills with noise unless items have owners and a way to wait. Signing or sending from the list must still go through the full dialog, never one tap.</p></div>
           </div>
         </div>
       </article>
     </div>
     <div class="tw"><table>
-      <thead><tr><th></th><th>A · Home of cards</th><th>B · Area dashboards and strip</th><th>C · Needs-you home, dashboards, small strip</th></tr></thead>
+      <thead><tr><th></th><th>A · The areas first</th><th>B · The instrument panel</th><th>C · Needs you first</th></tr></thead>
       <tbody>
-        <tr><td>Like a car</td><td>In look (the home tiles)</td><td>In structure (cluster and areas)</td><td>In structure, with "driving" as the home</td></tr>
-        <tr><td>A deadline always in view</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>Like a car</td><td>In structure (the areas in fixed places)</td><td>In structure and look (the cluster)</td><td>In structure, with "driving" as the home</td></tr>
+        <tr><td>Complete home, rail kept</td><td>Yes</td><td>Yes, the rail collapsed</td><td>Yes</td></tr>
+        <tr><td>A deadline always in view</td><td>Yes (the strip)</td><td>Yes (the strip and the panel)</td><td>Yes (the strip)</td></tr>
+        <tr><td>First thing to do, in five seconds</td><td>Fair: read five chips</td><td>Fair: read a number, then open its list</td><td>Best: it is the first line</td></tr>
         <tr><td>An occasional volunteer</td><td>Good</td><td>Fair</td><td>Best</td></tr>
-        <tr><td>A coordinator or editor</td><td>Fair</td><td>Best</td><td>Good</td></tr>
-        <tr><td>Cost to build</td><td>Low</td><td>High</td><td>Medium to high</td></tr>
-        <tr><td>How it usually fails</td><td>Number tiles; a page of links</td><td>A strip nobody reads</td><td>A noisy list</td></tr>
+        <tr><td>A coordinator or editor</td><td>Best</td><td>Good</td><td>Good</td></tr>
+        <tr><td>Cost to build</td><td>Medium</td><td>Medium</td><td>Medium</td></tr>
+        <tr><td>How it usually fails</td><td>Five blocks scanned, the due item missed</td><td>A panel read as decoration</td><td>A noisy list</td></tr>
       </tbody>
     </table></div>
   </section>
 
   <section>
     <h2>Early recommendation</h2>
-    <p><b>Try Model C first, with B's strip kept to four readings.</b> Most Civicsmith members are volunteers who come in between other things. For them, the first question is "what do I need to do?", and only after that "how is the investigation going?". C answers the first on arrival and keeps the second one step away, in a dashboard per area as you asked. The strip carries the one thing a car gets right that matters here: a legal deadline that is ours to meet stays in view wherever you are.</p>
+    <p><b>Try Model C first, with the strip kept to four readings.</b> Most Civicsmith members are volunteers who come in between other things. For them, the first question is "what do I need to do?", and only after that "how is the group doing?". C answers the first on arrival and the second on the same page, in every area's block, with a dashboard per area one step away for the detail. The strip carries the one thing a car gets right that matters here: a legal deadline that is ours to meet stays in view wherever you are. After your two points the three differ only in order and density, so trying C costs nothing that A or B would need back.</p>
     <p><b>The risk</b> is the one each model shares in a different form: a front page that fills with things nobody acts on. The guard is the same in each: every reading has a threshold, and every item has an owner, an action, and a way to wait.</p>
     <p><b>How I'd test it</b> before asking you to choose: sketch the home and the Action dashboard on the layouts page, then walk them with three to five volunteers against the two tests (what needs me within five seconds; the commonest next step in three steps or fewer). Then decide whether the strip earns its place.</p>
   </section>
@@ -200,7 +209,7 @@ a { color: var(--accent); }
     <h2>What happens next</h2>
     <ul>
       <li>Nothing is built from this page. The screens BOB builds for the test instance in the next two tranches are the ones on the layouts page as they stand (your ruling of 11 October, K2816).</li>
-      <li>Once you have used the test instance, tell me what you found yourself looking for, and where. I'll fold that in and bring you the choice as S20, with the sketches above drawn as real screens.</li>
+      <li>Once you have used the test instance, tell me what you found yourself looking for, and where. I'll fold that in and bring you the choice as S20. The three arrangements are already drawn as real screens on the screens page (Home as a dashboard, with a control to switch between them), with the Action and project dashboards.</li>
       <li>Two questions for you then, beyond the model: whether Civicsmith should email members a digest of what needs them, and whether Publication counts as its own area.</li>
     </ul>
   </section>

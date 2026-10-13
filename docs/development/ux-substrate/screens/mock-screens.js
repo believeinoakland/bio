@@ -184,39 +184,75 @@ SCR.projects = c => ({ rail: 'projects', title: 'Projects', crumbs: ['Projects']
 /* DEC-214: dashboards drawn as treatments to compare for S20 (Bob's direction of 11 October, K2803; the research on the
    dashboards page). Three arrangements of Home, then two area dashboards: the three tiers (status, what needs you,
    everything else), whose move it is on every action item, and the five-second and three-step tests. */
+/* DEC-216 (Bob's direction, 13 October, evening): the home is a nerve centre, complete in itself, never only doors to the
+   areas; and every dashboard keeps the rail of every other screen, collapsed to icons where the room is wanted. Three
+   arrangements of the same complete home, drawn as states to compare for S20: C, what needs you first, then each area at a
+   glance; A, the areas first, each block complete with what needs you inside it; B, the instrument panel, every reading in a
+   fixed place, then the lists, under a collapsed rail. */
+const AREA_TIPS = {
+  Investigation: '<b>Investigation</b> · its dashboard: documents to check, questions and how strong their answers are, what came in since you last looked, the people the record follows',
+  Action: '<b>Action</b> · its dashboard: every clock that is running, whose move it is, replies that came in, letters waiting for a second approval',
+  Publication: '<b>Publication</b> · its dashboard: cases in review, waiting for a signature, scheduled, published; comments to answer',
+  Members: '<b>Members</b> · its dashboard: who joined, who is invited, what each may do, expertise on hand',
+  Administration: '<b>Administration</b> · its dashboard: the instance and its release, the assistant\'s accounts and their use this month, security, places and translations',
+};
+const AREA_GO = { Investigation: 'project', Action: 'dash-action', Publication: 'published', Members: 'members', Administration: 'settings' };
+const rd = (n, label) => `<span class="mk-rd"><b>${n}</b>${esc(label)}</span>`;
+// an area at a glance: its name opens its dashboard; what needs you there; two to four readings; a line or two of state; and, in arrangement A, the items themselves
+const ablock = (title, needs, readings, lines, inner) => `<div class="mk-ablock"><div class="h">${ref(`<b>${esc(title)}</b>`, AREA_GO[title], AREA_TIPS[title])}<span class="need${needs ? '' : ' quiet'}">${needs || 'nothing needs you here'}</span></div><div class="rd">${readings.join('')}</div>${lines.length ? `<ul class="mk-list mk-small">${lines.map(l => `<li>${l}</li>`).join('')}</ul>` : ''}${inner || ''}</div>`;
+const abitem = (text, d, b) => `<div class="mk-abitem">${kindm('todo')}<span class="t">${text}</span>${d}<span class="acts">${b}</span></div>`;
+const AREA_ROWS = {
+  Investigation: abitem('Vouch for 3 photos you captured on Seminary Avenue', due('', 'Today'), btn('release', 'Vouch for them')) +
+    abitem('Decide on a newer version of the 2024 lease amendment you cited', due('near', 'Due Friday'), btn('adoptversion', 'Adopt the newer version') + btn('keepversion', 'Keep the version you cited')) +
+    abitem('Ana asked you to check a calculation', due('', 'Due 16 October'), btn('taskresolve', 'Open the check')),
+  Action: abitem('Approve the follow-up letter to the City Administrator, drafted by Rosa', due('near', 'Before Friday'), btn('filingapprove', 'Read and approve it')),
+};
+const AREA_BLOCKS = withRows => `<div class="mk-ablocks">${[
+  ablock('Investigation', '3 to do', [rd(142, ' documents'), rd(6, ' questions open'), rd(10, ' people followed')], ['2 questions meet the bar · 1 new this week', '7 things came in since you last looked: Dev captured the rent schedules yesterday'], withRows ? AREA_ROWS.Investigation : ''),
+  ablock('Action', '1 to approve', [rd(3, ' clocks running'), rd(1, ' our move'), rd(2, ' their move')], ['Our move: the follow-up letter, due Friday', 'Their move: the City Administrator\'s reply, overdue since 9 October; the City Clerk\'s reply, due 14 October'], withRows ? AREA_ROWS.Action : ''),
+  ablock('Publication', '', [rd(1, ' case'), rd(2, ' editions'), rd(0, ' waiting to sign')], ['Edition 2 of the Coliseum case published 18 September', 'A draft is shared for review until 20 October; no comment to answer']),
+  ablock('Members', '', [rd(6, ' members'), rd(1, ' administrator'), rd(1, ' invited')], ['Expertise on hand: Ana, CPA (confirmed); Teo, reporter (declared)', 'Mai K.\'s invitation link is out, unused']),
+  ablock('Administration', '', [rd('0.83.0', ' this release'), rd('usual', ' security level')], ['Places: Oakland, California · languages: English, Español'], meter('This month on the group\'s key', 31.40, 60).replace('class="mk-meter"', 'class="mk-meter small"')),
+].join('')}</div>`;
+const RECENT = sheet(row(I('capture'), 'Dev captured the rent schedules for 2024', '<span class="muted">yesterday</span>') + row(I('timeline'), 'Teo added two events to the Coliseum lease timeline', '<span class="muted">Monday</span>') + row(I('money'), 'Ana started the money trail “Sewer fund transfers, FY2022”', '<span class="muted">3 weeks ago</span>'));
+// B, the instrument panel: the same ten readings in the same places every day; a reading at zero still shows
+const CLUSTER = `<div class="mk-cluster">${tiles(tile('Needs you', '4', '1 due today', null), tile('Our move', '1', 'due Friday', null), tile('Their move', '2', '1 overdue', null), tile('To check', '4', 'oldest waiting 6 days', null), tile('Replies to read', '1', 'came in 18 September', null), tile('Documents', '142', '+9 this month', [6, 4, 9, 7, 5, 8, 6, 9]), tile('Questions', '6', '2 meet the bar', [0, 1, 0, 0, 1, 0, 0, 1]), tile('Cases', '1', 'Edition 2 published', null), tile('Members', '6', '1 invited', null), tile('The assistant', '52%', 'of this month\'s limit', null))}</div>`;
 const DASH_ST = { c: 'a', a: 'b', b: 'c' };
 const STRIP = strip([[1, 'due Friday · our move', 'queue', '<b>Decide on the newer lease amendment</b> · due Friday · the group\'s own window<span class=more>Opens your queue at it.</span>'], [1, 'reply overdue · their move', 'action', '<b>Demand to rescind</b> · the City Administrator\'s reply was due 9 October; none recorded<span class=more>Opens the action.</span>'], [2, 'to check', 'queue', '<b>Two checks asked of you</b>: a calculation Ana asked you to check, and 3 photos to vouch for<span class=more>Opens your queue at them.</span>'], [1, 'hint to look at', 'queue', '<b>A hint</b>: a council member\'s disclosed income from a firm whose contract they voted on · machine work, a lead never a finding<span class=more>Opens your queue at it.</span>']]);
 const RECORD = tiles(tile('Documents', '142', '+9 this month', [6, 4, 9, 7, 5, 8, 6, 9]), tile('Questions', '6', '2 meet the bar · 1 new', [0, 1, 0, 0, 1, 0, 0, 1]), tile('Cases', '1', 'published · 2 editions', null), tile('People followed', '10', '2 added this month', [1, 0, 0, 1, 0, 0, 1, 1]));
 const NEEDS_YOU = sheet(
   row(kindm('todo'), `Vouch for 3 photos you captured on Seminary Avenue<span class="meta">${btn('release', 'Vouch for them')}</span>`, due('', 'Today')) +
   row(kindm('todo'), `Decide on a newer version of the 2024 lease amendment you cited<span class="meta"><span class="cs-changed">${I('changed')}Changed 3 October</span>${btn('adoptversion', 'Adopt the newer version')}${btn('keepversion', 'Keep the version you cited')}</span>`, due('near', 'Due Friday')) +
+  row(kindm('todo'), `Approve the follow-up letter to the City Administrator, drafted by Rosa<span class="meta">${btn('filingapprove', 'Read and approve it')}</span>`, due('near', 'Before Friday')) +
   row(kindm('todo'), `Ana asked you to check a calculation: <span class="rec">812 of 903 reports closed within 7 days</span><span class="meta">${btn('taskresolve', 'Open the check')}</span>`, due('', 'Due 16 October')));
 const NEEDS_GROUP = sheet(
   row(kindm('status'), `The city's reply to “Demand to rescind” was due 9 October; no reply recorded · <b>their move</b><span class="meta">${ref('Open the action', 'action', '<b>Demand to rescind</b> · a letter the group sent the City Administrator on 19 September · reply overdue')}</span>`, due('overdue', 'Overdue')) +
   row(kindm('noticed'), `Two documents give different dates for the rent adjustment · nobody has judged it<span class="meta">${ref('Open both', 'document', '<b>Two documents in tension</b> · the lease amendment and the rent notice')}</span>`, '') +
-  row(kindm('status'), `The City Clerk's reply to your records request is due 14 October · <b>their move</b><span class="meta">${ref('The request', 'request', '<b>Records request</b> · inspection logs for pothole reports closed in FY2025 · sent 2 October')}</span>`, due('near', 'Due in 8 days')));
-const AREAS = `<div class="mk-areas">${[['Investigation', '4 documents to check · 6 questions open', 'project'], ['Action', '3 clocks running · 1 overdue reply', 'dash-action'], ['Publication', 'Edition 2 published · nothing waiting to sign', 'published'], ['Members', '6 members · 1 invited', 'members'], ['Administration', 'all well · the assistant on the group\'s key', 'settings']].map(([t, l, go]) => `<div class="cell">${ref(`<b>${t}</b>`, go, `<b>${t}</b> · its dashboard: status first, then what needs you, then everything else`)}<span class="mk-small muted">${l}</span></div>`).join('')}</div>`;
+  row(kindm('status'), `The City Clerk's reply to your records request is due 14 October · <b>their move</b><span class="meta">${ref('The request', 'request', '<b>Records request</b> · inspection logs for pothole reports closed in FY2025 · sent 2 October')}</span>`, due('near', 'Due tomorrow')));
 SCR['dash-home'] = c => { const st = DASH_ST[c.v] || 'a'; const sel = v => v === st ? ' selected' : ''; return { rail: 'home', title: 'Home', crumbs: ['Home'], st, main: `
-  <div class="mk-mockctl"><label for="mk-dst">In this mockup, show</label> <select id="mk-dst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>C · “what needs you” as the home, the areas one step away, a small strip</option><option value="b"${sel('b')}>A · one home with a card per area</option><option value="c"${sel('c')}>B · a dashboard per area under a strip that never moves</option></select></div>
-  <div class="st st-a st-c">${STRIP}</div>
-  <div class="st st-a">${h1('Lakeshore Tenants', 'Rents and leases on city land, and the streets we live on.')}
+  <div class="mk-mockctl"><label for="mk-dst">In this mockup, show</label> <select id="mk-dst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>C · what needs you first, then each area at a glance</option><option value="b"${sel('b')}>A · each area first, complete, with what needs you inside it</option><option value="c"${sel('c')}>B · the instrument panel: every reading in a fixed place, the rail collapsed</option></select></div>
+  ${STRIP}
+  ${h1('Lakeshore Tenants', 'Rents and leases on city land, and the streets we live on.')}
+  <div class="st st-a">
    ${sec('Needs you', NEEDS_YOU, { help: 'What is yours to do, soonest first, each with its act. Signing, sending and publishing still go through their full dialog, never one press here.' })}
    ${sec('Needs the group', NEEDS_GROUP, { help: 'What waits on someone, or on an office: whose move it is, and when it is due.' })}
-   ${sec('The record at a glance', RECORD, { help: 'How much your group holds, and how it grew: the bars are the last eight weeks.' })}
+   ${sec('Each area at a glance', AREA_BLOCKS(false), { help: 'Every area\'s state, here, so nothing is found only by going there: what needs you in it, its readings, and a line of what changed. The name opens the area\'s dashboard.' })}
    ${sec('Projects', projTable())}
-   ${sec('The areas', AREAS, { help: 'Each area\'s dashboard, one step away: status first, then what needs you there, then everything else.' })}
+   ${sec('Since you last looked', RECENT, { help: 'What members did since you were last here, newest first.' })}
    ${acts(btn('startfrom', 'Start from…'), btn('promote', 'Start a project'))}</div>
-  <div class="st st-b">${h1('Lakeshore Tenants', 'Rents and leases on city land, and the streets we live on.')}
-   <div class="mk-cards">${[['Investigation', ['4 documents to check', '6 questions open · 2 meet the bar', '7 things came in since you last looked'], btn('promote', 'Open a question'), 'project'], ['Action', ['1 due Friday · our move', '1 reply overdue · their move', '3 clocks running'], ref('Open Action', 'dash-action', '<b>Action</b> · every clock and whose move it is'), null], ['Publication', ['Edition 2 published', 'Nothing waiting to sign'], ref('Open Publication', 'published', '<b>Publication</b> · cases in review, waiting to be signed, scheduled, published'), null], ['Members', ['6 members · 1 invited', 'Teo declared journalism'], ref('Open Members', 'members', '<b>Members</b> · who joined, who is invited, expertise on hand'), null], ['Administration', ['All well', 'The assistant on the group\'s key · 31% of this month\'s limit used'], ref('Open Settings', 'settings', '<b>Administration</b> · the instance, the AI accounts, security tools'), null]].map(([t, lines, control]) => `<div class="mk-card"><b>${t}</b><ul class="mk-list mk-small">${lines.map(l => `<li>${l}</li>`).join('')}</ul>${control}</div>`).join('')}</div>
-   ${note('Five cards, one per area, each with one to three lines of state and one way in. There is no status outside this page: leave it, and the deadline is out of view.')}
-   ${acts(btn('startfrom', 'Start from…'))}</div>
-  <div class="st st-c"><div class="mk-tabs2" role="tablist" aria-label="Areas">${['Investigation', 'Action', 'Publication', 'Members', 'Administration'].map((t, i) => `<span role="tab"${i === 0 ? ' aria-selected="true"' : ''}>${t}</span>`).join('')}</div>
-   ${h1('Investigation', 'No home: Civicsmith opens on the area you last used, under the strip that stays on every screen.')}
-   ${tiles(tile('Documents to check', '4', 'oldest waiting 6 days', null), tile('Questions open', '6', '2 meet the bar', null), tile('Came in since you looked', '7', 'since 4 October', null))}
-   ${sec('Needs you here', sheet(row(kindm('todo'), `Vouch for 3 photos you captured on Seminary Avenue<span class="meta">${btn('release', 'Vouch for them')}</span>`, due('', 'Today')) + row(kindm('todo'), `Ana asked you to check a calculation<span class="meta">${btn('taskresolve', 'Open the check')}</span>`, due('', 'Due 16 October'))))}
-   ${sec('Recent', sheet(row(I('document'), 'Rent schedules 2024 captured by Dev', '<span class="muted">yesterday</span>') + row(I('question'), 'Does “closed” mean “repaired”? opened by Mai', '<span class="muted">3 days ago</span>')))}
-   ${note('Each area gets a full dashboard of its own; the rail would list the five areas in place of Home, Queue, Find, Add, Projects, People and Settings. Work that crosses areas has no one place.')}
-   ${acts(btn('adoptversion', 'Adopt the newer version'), btn('keepversion', 'Keep the version you cited'), btn('startfrom', 'Start from…'), btn('promote', 'Open a question'))}</div>` }; };
+  <div class="st st-b">
+   ${sec('Each area, with what needs you in it', AREA_BLOCKS(true), { help: 'The areas first, in fixed places, each complete: what needs you in it with its act, its readings, and a line of what changed. The name opens the area\'s dashboard.' })}
+   ${sec('Needs the group', NEEDS_GROUP, { help: 'What waits on someone, or on an office: whose move it is, and when it is due.' })}
+   ${sec('Projects', projTable())}
+   ${sec('Since you last looked', RECENT, { help: 'What members did since you were last here, newest first.' })}
+   ${acts(btn('startfrom', 'Start from…'), btn('promote', 'Start a project'))}</div>
+  <div class="st st-c">
+   ${sec('The panel', CLUSTER, { help: 'Ten readings in the same places every day, like a car\'s instruments: a reading that is zero still shows, so the eye learns where to look. Each opens its list. The rail is collapsed to icons to give the panel room; it is the same rail as everywhere, and the member can widen it.' })}
+   ${sec('Needs you', NEEDS_YOU, { help: 'What is yours to do, soonest first, each with its act.' })}
+   ${sec('Needs the group', NEEDS_GROUP, { help: 'What waits on someone, or on an office: whose move it is, and when it is due.' })}
+   ${sec('Projects', projTable())}
+   ${sec('Since you last looked', RECENT, { help: 'What members did since you were last here, newest first.' })}
+   ${acts(btn('startfrom', 'Start from…'), btn('promote', 'Start a project'))}</div>` }; };
 
 SCR['dash-action'] = c => ({ rail: 'queue', title: 'Action', crumbs: ['Action'], main: `
   ${STRIP}
@@ -351,7 +387,57 @@ const aiLimits = (id, rows, o = {}) => `<div class="tw"><table class="mk-table">
   <div class="row" style="gap:12px;align-items:end;flex-wrap:wrap">${choice(id + 's', 'Limit on', ['Everything (the overall limit)', ...AI_USES.map(u => u[1]), 'Exploring', ...(o.perMember ? ['Each member\'s use'] : [])], 'Runs', { act: 'ailimitset', help: o.perMember ? 'Each member\'s use: the most any one member\'s acts may use of this account in the period.' : '' })}${field(id + 'a', 'Amount', '2,000,000', { act: 'ailimitset' })}${choice(id + 'u', 'In', o.signin ? ['tokens', 'calls'] : ['dollars, estimated', 'tokens', 'calls'], 'tokens', { act: 'ailimitset', help: o.signin ? 'A subscription doesn\'t report what a use costs, so its limits are in tokens (the text sent and received) or calls.' : 'Dollars are Civicsmith\'s estimate from the tokens used, at Anthropic\'s published prices; Anthropic\'s own bill is what counts. Tokens are the text sent and received; calls, each turn of the assistant.' })}${choice(id + 'p', 'Each', ['day', 'month'], 'month', { act: 'ailimitset', help: 'By your group\'s calendar. A month starts again on the 1st.' })}</div>
   ${checks('For a limit on one use', [['<b>Part of the overall limit</b>: the use counts toward both, and stops at whichever is reached first', true], ['<b>On top of the overall limit</b>: an allowance of its own that doesn\'t count toward the overall one, so this account may spend up to the overall limit plus each allowance on top', false]], { radio: true, act: 'ailimitset' })}
   ${acts(btn('ailimitset', 'Set the limit'))}${note(o.none || 'With no limit, nothing is capped here except Anthropic\'s own spending limit on the key. The first time a limit is reached in a period, this account\'s owners are told once in their queue; a member stopped by it is told whose limit it is, never a cost.')}`;
-const aiUsage = (rows, who) => `<div class="tw"><table class="mk-table"><thead><tr><th>This month</th><th>Calls</th><th>Tokens</th><th>Dollars, estimated</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td></tr>`).join('')}</tbody></table></div>${note(who)}`;
+const aiUsage = (rows, who, over) => { const table = `<div class="tw"><table class="mk-table"><thead><tr><th>This month</th><th>Calls</th><th>Tokens</th><th>Dollars, estimated</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td></tr>`).join('')}</tbody></table></div>`;
+  return (over ? `<div class="mk-usage"><div>${table}</div><div>${usageBars(over.total, over.calls, over.seed || 1)}${(over.meters || []).map(m => meter(...m)).join('')}</div></div>` : table) + note(who); };
+/* DEC-215 (Bob's direction, 13 October, evening): use and cost over time on every AI account panel. Beside the month table,
+   the last 30 days as bars of estimated dollars a day: one series in one hue (the stage hue, as every activity bar), the newest
+   day darker, each day's date, calls and dollars on hover, focus or tap; and a meter of the period's use against the limit,
+   accent until four fifths of it, rust from there (rust is attention). Every number is computed from the same days, summed over
+   members, naming no one (K1450). The mockups' day is Tuesday 13 October 2026. */
+const USAGE_WORDS = {
+  bars: 'Estimated dollars a day, the last 30 days',
+  barsMeans: 'What the assistant\'s work cost each day, estimated from the tokens used at Anthropic\'s published prices; Anthropic\'s own bill is what counts. Summed over everyone this account serves; no day names a member or shows what was asked. The newest day is darker.',
+  meterMeans: 'How much of the limit this period\'s use has taken. The bar turns rust at four fifths of the limit. At the limit the assistant stops for this account until the period starts again, and the account\'s owners are told once in their queue.',
+  noLimit: 'No limit is set, so there is nothing to measure against: only Anthropic\'s own spending limit on the key caps this account.',
+};
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MOCK_TODAY = Date.UTC(2026, 9, 13);
+const dayAt = i => new Date(MOCK_TODAY - (29 - i) * 86400000);   // i = 0 is 30 days ago, 29 is today
+const dayLong = i => { const d = dayAt(i); return `${DAY_NAMES[d.getUTCDay()]} ${d.getUTCDate()} ${MONTH_NAMES[d.getUTCMonth()]}`; };
+const dayShort = i => { const d = dayAt(i); return `${d.getUTCDate()} ${MONTH_NAMES[d.getUTCMonth()].slice(0, 3)}`; };
+const money = n => '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+// thirty days of dollars whose October part sums exactly to the month's total, and calls in step with the dollars (seed varies the shape)
+const aiDays = (total, calls, seed) => {
+  const w = []; for (let i = 0; i < 30; i++) { const wd = dayAt(i).getUTCDay(); const base = wd === 0 || wd === 6 ? 0.35 : 1; w.push(base * (1 + 0.55 * Math.sin(i * 1.7 + seed) + 0.3 * Math.cos(i * 0.9 + seed * 2))); }
+  const oct = w.map((x, i) => dayAt(i).getUTCMonth() === 9 ? x : 0), so = oct.reduce((a, b) => a + b, 0), ss = w.reduce((a, b) => a + b, 0) - so;
+  const sep = w.map((x, i) => dayAt(i).getUTCMonth() === 8 ? x : 0);
+  const octN = oct.filter(Boolean).length, sepN = sep.filter(Boolean).length;
+  const dollars = w.map((x, i) => dayAt(i).getUTCMonth() === 9 ? total * x / so : (total / octN) * 1.15 * x / (ss / sepN)); // September ran a little hotter than October's daily mean
+  const cents = dollars.map(d => Math.round(d * 100));
+  const octIdx = cents.map((c, i) => dayAt(i).getUTCMonth() === 9 ? i : -1).filter(i => i >= 0);
+  cents[octIdx[octIdx.length - 1]] += Math.round(total * 100) - octIdx.reduce((a, i) => a + cents[i], 0);   // the month sums exactly
+  const perCall = total / calls;
+  const n = cents.map(c => Math.max(c > 0 ? 1 : 0, Math.round(c / 100 / perCall)));
+  n[octIdx[octIdx.length - 1]] += calls - octIdx.reduce((a, i) => a + n[i], 0);
+  return cents.map((c, i) => ({ i, d: c / 100, n: n[i] }));
+};
+const usageBars = (total, calls, seed) => {
+  const days = aiDays(total, calls, seed), m = Math.max(...days.map(x => x.d), 0.01);
+  const sum = days.reduce((a, x) => a + x.d, 0), nsum = days.reduce((a, x) => a + x.n, 0), top = days.reduce((a, x) => x.d > a.d ? x : a, days[0]);
+  return `<div class="mk-bars"><span class="k" data-tip="<b>${USAGE_WORDS.bars}</b>: ${USAGE_WORDS.barsMeans}">${USAGE_WORDS.bars}</span>
+   <div class="run">${days.map(x => `<i style="height:${Math.max(2, Math.round(44 * x.d / m))}px"${x.i === 29 ? ' class="now"' : ''} tabindex="0" aria-label="${dayLong(x.i)}: ${x.n} calls, ${money(x.d)}" data-tip="<b>${dayLong(x.i)}</b> · ${x.n} call${x.n === 1 ? '' : 's'} · ${money(x.d)}${x.i === 29 ? ' · today, so far' : ''}"></i>`).join('')}</div>
+   <div class="ax"><span>${dayShort(0)}</span><span>${dayShort(29)}, today</span></div>
+   <span class="mk-small muted">Last 30 days: ${money(sum)}, ${nsum.toLocaleString('en-US')} calls · busiest ${dayLong(top.i)}, ${money(top.d)}</span></div>`;
+};
+// the meter: this period's use against the limit; rust from four fifths. used and limit in dollars; o.unit for tokens
+const meter = (label, used, limit, o = {}) => {
+  if (limit == null) return `<div class="mk-meter" data-tip="<b>${esc(label)}</b>: ${USAGE_WORDS.noLimit}"><div class="l"><span>${esc(label)}: <b>${o.unit ? used.toLocaleString('en-US') + ' ' + o.unit : money(used)}</b> · no limit</span></div><div class="track" aria-hidden="true"></div></div>`;
+  const pct = Math.min(100, Math.round(100 * used / limit)), near = pct >= 80;
+  const show = v => o.unit ? v.toLocaleString('en-US') + ' ' + o.unit : money(v);
+  return `<div class="mk-meter"${near ? ' data-near="1"' : ''} data-tip="<b>${esc(label)}</b>: ${USAGE_WORDS.meterMeans}"><div class="l"><span>${esc(label)}: <b>${show(used)}</b> of the ${show(limit)} limit</span><span class="pct">${pct}%${near ? ' · near the limit' : ''}</span></div><div class="track" role="img" aria-label="${pct} percent of the limit used"><i style="width:${pct}%"></i><b style="left:80%"></b></div></div>`;
+};
+
 const aiKeepAway = (id, whose, on, o = {}) => `${checks(whose === 'group' ? 'Keep our material away from AI' : 'Keep this project\'s material away from AI', [['For every use', !o.uses], ['Only for these uses', !!o.uses]], { radio: true, act: o.act })}${checks('The uses', [...AI_USES.map(u => [u[1], !!(o.uses && o.uses.includes(u[0]))]), ['Exploring', !!(o.uses && o.uses.includes('explore'))]], { act: o.act })}
   ${field(id, 'Why (every member will see this)', o.reason || '', { rec: true, reason: true, act: o.act, help: whose === 'group' ? 'Binds every account, the group\'s, any project\'s and members\' own: for the uses you choose, no assistant reads your group\'s material, whoever pays.' : 'Binds every account, whoever pays: in this project the assistant can\'t be used for the uses you choose, and elsewhere it never reads this project\'s material for them.' })}${acts(btn(o.act, on ? 'Save' : (whose === 'group' ? 'Keep our material away from AI' : 'Keep this project\'s material away'), {}))}`;
 const aiChanges = items => `<ul class="mk-list">${items.map(t => `<li>${t}</li>`).join('')}</ul>`;
@@ -372,7 +458,7 @@ SCR.members = c => ({ rail: 'settings', title: 'Members', crumbs: ['Settings', '
   ${sec('The group\'s API key', `<div class="row"><span class="cs-due" data-due="met">${I('accepted')}Held · on · set by Rosa, 6 October</span></div>${note(AI_WHO_PAYS)}${acts(btn('groupkeyset', 'Replace the key'), btn('groupkeyswitch', 'Switch it off'), btn('groupkeyremove', 'Remove the key'))}`)}
   ${sec('What the group\'s key pays for', aiUses(['ask', 'draft', 'run', 'standing', 'enquire', 'read', 'transcribe', 'account']) + aiExplore('mk-gex', 'No', 'any question of the group'))}
   ${sec('Limits on the group\'s key', aiLimits('mk-glim', [['Everything (overall)', '$60.00 a month', '—', '$31.40'], ['Each member\'s use', '$5.00 a day', '—', '']], { perMember: true }))}
-  ${sec('Use of the group\'s key', aiUsage([['Asking', '220', '1,900,000', '$12.60'], ['Drafting', '35', '400,000', '$2.30'], ['Runs', '41', '2,700,000', '$16.50'], ['All uses', '296', '5,000,000', '$31.40']], 'Summed over members; nobody is named, and nothing asked is shown. A member sees their own use on Settings › The assistant.'))}
+  ${sec('Use of the group\'s key', aiUsage([['Asking', '220', '1,900,000', '$12.60'], ['Drafting', '35', '400,000', '$2.30'], ['Runs', '41', '2,700,000', '$16.50'], ['All uses', '296', '5,000,000', '$31.40']], 'Summed over members; nobody is named, and nothing asked is shown. A member sees their own use on Settings › The assistant.', { total: 31.40, calls: 296, seed: 1, meters: [['This month on the group\'s key', 31.40, 60]] }))}
   ${sec('Keeping our material away from AI', note('Off. Members may use the group\'s key, a project\'s account or their own.') + aiKeepAway('mk-kaw2', 'group', false, { act: 'aikeepaway' }))}
   ${sec('Changes to the group\'s AI settings', aiChanges(['Rosa set each member\'s use of the group\'s key to at most $5.00 a day · 6 October', 'Rosa held the group\'s API key and switched it on · 6 October']))}
   ${sec('Administrators', acts(btn('memberset', 'Change a member\'s status'), btn('adminendorse', 'Endorse an administrator'), btn('adminremove', 'Remove an administrator')))}` });
@@ -465,7 +551,7 @@ SCR.connect = c => { const st = CONNECT_ST[c.wizard && c.wizard.act]; const sel 
     <details class="mk-details"><summary>Using an API key instead</summary>${field('mk-key', 'Your API key', 'sk-ant-…', { help: 'In your web browser: go to console.anthropic.com, sign in, add a payment method, then API keys › Create key, and paste it here. Anthropic bills you for each use. Civicsmith keeps it sealed, never shows or exports it, and uses it only for your questions.' })}${acts(btn('accountreferenceset', 'Connect with this key'))}</details>`)}</div>
   <div class="st st-b st-d">${sec('What your account pays for', aiUses(['ask', 'draft', 'run', 'enquire', 'read', 'transcribe', 'account']))}${sec('Limits on your account', aiLimits('mk-mlim', [['Everything (overall)', '$2.00 a day', '—', '$0.35']], { none: 'Your limits bind only your own account; the group\'s and a project\'s limits never bind it. With no limit, nothing is capped here except Anthropic\'s own spending limit on your key. The first time a limit is reached in a period, you are told once in your queue.' }))}</div>
   <div class="st st-a">${sec('Limits and suggestions', note('On the group\'s key, your administrators set what it pays for and its limits. Today: at most <b>$5.00 a day for each member</b> (you have used $0.80 of it today); suggestions <b>off</b>. If they change either, this shows the new setting.'))}</div>
-  <div class="st st-a st-b st-d">${sec('Your use', aiUsage([['On the group\'s key', '9', '61,000', '$0.80'], ['On Pothole repairs\' account', '14', '120,000', '$0.70'], ['On your own account', '3', '40,000', '$0.35']], 'Only you see this: your own use across every account that paid for it. Never a cost per answer.'))}</div>
+  <div class="st st-a st-b st-d">${sec('Your use', aiUsage([['On the group\'s key', '9', '61,000', '$0.80'], ['On Pothole repairs\' account', '14', '120,000', '$0.70'], ['On your own account', '3', '40,000', '$0.35'], ['All accounts', '26', '221,000', '$1.85']], 'Only you see this: your own use across every account that paid for it. Never a cost per answer.', { total: 1.85, calls: 26, seed: 2, meters: [['Today on the group\'s key, your share of it', 0.80, 5], ['Today on your own account', 0.35, 2]] }))}</div>
   <div class="st st-b">${sec('Disconnect', acts(btn('accountreferenceremove', 'Disconnect your API key')))}</div>
   <div class="st st-d">${sec('Disconnect', acts(btn('subscriptiondisconnect', 'Disconnect your subscription')))}</div>` }; };
 
@@ -766,7 +852,7 @@ SCR.projectai = c => { const st = ({ 'projectsigninset': 'b', 'projectkeynotices
     ${note('Any one owner sets these alone. Every change is recorded with who and when, and every owner sees it below.')}`)}
   ${sec('What it pays for', aiUses(['ask', 'draft', 'run', 'enquire', 'read', 'transcribe', 'account']) + aiExplore('mk-pex', 'Ask every day', 'the questions this project draws on'))}
   <div class="st st-a st-c">${sec('Limits on the project\'s account', aiLimits('mk-plim', [['Everything (overall)', '$20.00 a month', '—', '$6.40'], ['Runs', '2,000,000 tokens a month', 'part of it', '640,000 tokens'], ['Exploring', '$4.00 a month', 'on top of it', '$0.90'], ['Each member\'s use', '$5.00 a day', '—', '']], { perMember: true }))}
-  ${sec('Use of the project\'s account', aiUsage([['Asking', '41', '310,000', '$2.10'], ['Runs', '12', '640,000', '$3.40'], ['Exploring', '3', '120,000', '$0.90'], ['All uses', '56', '1,070,000', '$6.40']], 'Summed over members; nobody is named, and nothing asked is shown.'))}</div>
+  ${sec('Use of the project\'s account', aiUsage([['Asking', '41', '310,000', '$2.10'], ['Runs', '12', '640,000', '$3.40'], ['Exploring', '3', '120,000', '$0.90'], ['All uses', '56', '1,070,000', '$6.40']], 'Summed over members; nobody is named, and nothing asked is shown.', { total: 6.40, calls: 56, seed: 3, meters: [['This month on the project\'s account', 6.40, 20], ['Exploring this month, on top of it', 0.90, 4]] }))}</div>
   <div class="st st-b">${sec('Limits on your sign-in here', aiLimits('mk-plis', [['Everything (overall)', '1,500,000 tokens a month', '—', '410,000 tokens'], ['Runs', '300 calls a month', 'part of it', '18 calls']], { signin: true }))}</div></div>
   ${sec('Keeping this project\'s material away from AI', `<div class="st st-d">${note('Off. If an owner turns it on, you see their reason here, and the assistant stops for the uses they chose, whoever pays.')}</div><div class="st st-a st-b st-c">${aiKeepAway('mk-pkaw', 'project', false, { act: 'owed:projectaikeepaway DEC-188' })}</div>`)}
   <div class="st st-a st-b st-c">${sec('Changes, seen by every owner', aiChanges(['Dev set a limit of $4.00 a month on exploring, on top of the overall limit · 8 October', 'Dev set exploring to Ask every day · 7 October', 'Dev held the project\'s API key and switched it on · 7 October']))}</div>` }; };
@@ -838,9 +924,133 @@ SCR.people = c => { const st = PEOPLE_ST[c.v] || 'a'; const sel = v => v === st 
    ${row(I('nobody'), '<b>No one the record follows matches “Alvarez”.</b> Someone appears here only once your group follows them. If a document names them, open it and tie the name to them under “People it names”; or add them here.', '')}
    ${acts(btn('entitycreate', 'Add someone the record follows', { tone: 'primary', help: ADD_SUBJECT }), ref(I('search') + 'Look for “Alvarez” in documents', 'finder', '<b>Find</b> · searches the documents your group holds, where a name can appear before anyone ties it to a person'))}</div>`}; };
 
+/* DEC-215 (Bob's direction, 13 October, evening): a connection graph a member reads and clicks. The centre in the middle,
+   what it is joined to around it and one ring further out; every line in its kind's colour and line style, with the step's
+   word on it and its connection grade as the letter; a declared or hunch step dashed grey, a lead and never evidence (K1487);
+   where exploring stopped, "stopped at the limit" (K1469). Clicking a thing makes it the centre and adds it to the trail
+   above the graph; the trail walks back. The kinds' colours are reserved for them (palette.json kind-*), checked for colour
+   blindness in both themes (the dataviz validator, every pair), and colour is never the only signal: each kind has its own
+   line style and its word in the legend, which is always shown (principle 8.2). One component serves people, organisations,
+   offices, funds and payments (K1486's words). */
+const KINDS = {
+  pos: { word: 'Position or membership', means: 'holds or held an office, a post or a membership of a body, from a roster, minutes or a register. Drawn as a plain line.' },
+  part: { word: 'Took part', means: 'voted, signed, decided, presented or was party to a recorded event or decision. Drawn as a dotted line.' },
+  money: { word: 'Money', means: 'money moved: who paid whom, with the amount, stage and period the source gives. Drawn as a double line, like a ledger\'s rule.' },
+  ment: { word: 'Mentioned together', means: 'named in the same document, and nothing more: the weakest tie the record holds. Drawn as a dash-dot line.' },
+  same: { word: 'Same person?', means: 'a member\'s claim that two records are one person, graded on the subject-match scale: "claimed the same person, grade B, because…". The records stay linked, never merged. Drawn as a thin line with an equals sign.' },
+  lead: { word: 'Declared or hunch', means: 'a step a member declared or suspects, with no source attached: a lead, never evidence, at the lowest grade. No finding rests on a chain with such a step. Attaching a source makes it evidence. Drawn as a dashed grey line.' },
+};
+const GRAPH_WORDS = {
+  limit: 'Stopped at the limit',
+  limitMeans: 'exploring went as far as its limit of four steps from where it started and stopped here. What lies beyond is undetermined, not absent: click it to explore on from here.',
+  trail: 'where you started and each thing you made the centre since. Click one to go back to it.',
+  grade: 'the letter on a line is that step\'s connection grade: how easily someone else could check the link. A is easiest; D rests on a person\'s word.',
+  centre: 'the centre: everything drawn is joined to it, directly or one step further out.',
+  click: 'Click to make it the centre and follow its connections.',
+};
+const NODE_KIND = { person: 'a person', office: 'an office', org: 'an organisation', fund: 'a fund', doc: 'a document or decision', pay: 'a payment', gap: 'not stated by the source' };
+const GRAPHS = {
+  ortega: { nodes: {
+      ortega: { n: 'J. Ortega', k: 'person', sub: 'Council member, District 3, since 2023' },
+      d3: { n: 'Council District 3', k: 'office', sub: 'a seat on the Oakland City Council' },
+      amend: { n: 'Lease amendment 1', k: 'doc', sub: 'approved 12 January 2024, Council minutes item 7' },
+      pay: { n: '$1.2M to Bayline Properties', k: 'pay', sub: 'paid FY2024, from the annual financial report' },
+      bayline: { n: 'Bayline Properties', k: 'org', sub: 'a company; the payee under the amendment' },
+      chen: { n: 'L. Chen', k: 'person', sub: 'Director of Public Works since March 2022' },
+      city: { n: 'City of Oakland', k: 'org', sub: 'the lessor; the City Administrator signed for it' },
+      sos: { n: 'Company register filing, 2023', k: 'doc', sub: 'the Secretary of State\'s register' },
+    }, edges: [
+      { a: 'ortega', b: 'd3', kind: 'pos', w: 'holds since 2023', g: 'B', cite: 'the council roster on Legistar, captured 3 October, capture B' },
+      { a: 'ortega', b: 'amend', kind: 'part', w: 'voted for', g: 'B', cite: 'Council minutes, 12 January 2024, item 7: 5 for, 2 against' },
+      { a: 'amend', b: 'pay', kind: 'money', w: '$1.2M paid under it, FY2024', g: 'B', cite: 'the city\'s annual financial report FY2024, lease payments note; capture B, a member\'s upload' },
+      { a: 'pay', b: 'bayline', kind: 'money', w: 'paid to', g: 'B', cite: 'the same report line names the payee' },
+      { a: 'amend', b: 'city', kind: 'part', w: 'signed for the city', g: 'B', cite: 'Lease amendment 1, signature page: the City Administrator for the City of Oakland' },
+      { a: 'ortega', b: 'chen', kind: 'ment', w: 'named together', g: 'C', cite: 'Report to council: street maintenance performance, 2026, names both; nothing more is recorded between them' },
+      { a: 'ortega', b: 'bayline', kind: 'lead', w: 'declared', g: 'D', cite: 'declared by Teo on 6 October from a hint (his Form 700 for 2025 lists income from Bayline Properties); no source attached yet. Attach the Form 700 to make it evidence.' },
+      { a: 'bayline', b: 'sos', kind: 'ment', w: 'named in', g: 'C', cite: 'the company register filing of 2023, captured 9 October, capture B' },
+    ], limit: ['bayline'] },
+  chen: { nodes: {
+      chen: { n: 'L. Chen', k: 'person', sub: 'Director of Public Works since March 2022' },
+      pw: { n: 'Public Works', k: 'office', sub: 'a city department' },
+      transp: { n: 'Deputy Director, Transportation', k: 'office', sub: 'a post in Public Works' },
+      ai412: { n: 'Administrative Instruction 4.12', k: 'doc', sub: 'the pothole repair policy, 2023' },
+      cityadmin: { n: 'City Administrator', k: 'office', sub: 'runs the city\'s departments' },
+      linchen: { n: '“Lin Chen”, 2019 minutes', k: 'person', sub: 'a record in the 2019 council minutes' },
+      ortega: { n: 'J. Ortega', k: 'person', sub: 'Council member, District 3' },
+    }, edges: [
+      { a: 'chen', b: 'pw', kind: 'pos', w: 'Director since March 2022', g: 'B', cite: 'the city roster, captured 3 October, capture B' },
+      { a: 'chen', b: 'transp', kind: 'pos', w: 'held 2018–2022', g: 'B', cite: 'Council minutes, 2018 to 2022, on Legistar, capture B' },
+      { a: 'chen', b: 'ai412', kind: 'part', w: 'issued, 2023', g: 'B', cite: 'Administrative Instruction 4.12, signed as Director of Public Works; captured from the city\'s site 12 September, capture B' },
+      { a: 'chen', b: 'cityadmin', kind: 'ment', w: 'named together', g: 'C', cite: 'Report to council: street maintenance performance, 2026, names both' },
+      { a: 'chen', b: 'linchen', kind: 'same', w: 'claimed the same person', g: 'B', cite: 'claimed by Dev, grade B, because both hold the Deputy Director post on the cited dates; a shared identifier would raise it' },
+      { a: 'cityadmin', b: 'ortega', kind: 'ment', w: 'named together', g: 'C', cite: 'the same report names the council member for District 3' },
+      { a: 'transp', b: 'pw', kind: 'pos', w: 'a post within', g: 'A', cite: 'the city\'s organisation chart, captured 3 October, capture A' },
+    ], limit: [] },
+  sewer: { nodes: {
+      sewer: { n: 'Sewer Fund 3100', k: 'fund', sub: 'holds sewer-fee revenue, kept apart from the general fund' },
+      gf: { n: 'General Fund 1010', k: 'fund', sub: 'the city\'s general fund' },
+      gap: { n: 'Not stated', k: 'gap', sub: 'where the $310,000 overhead charge went: the financial report does not say' },
+      council: { n: 'City Council', k: 'office', sub: 'adopted the budget' },
+      overhead: { n: 'Citywide overhead pool', k: 'fund', sub: 'Ana\'s hunch for where the charge went' },
+      pd: { n: 'Police Department', k: 'office', sub: 'spent from the general fund' },
+    }, edges: [
+      { a: 'sewer', b: 'gf', kind: 'money', w: '$4,200,000 adopted · FY2022', g: 'B', cite: 'adopted budget FY2021–23, transfer schedule, p. 88: a budget figure, what was planned; adopted by the council 15 June 2021' },
+      { a: 'sewer', b: 'gf', kind: 'money', w: '$4,750,000 paid · 30 Jun 2022', g: 'B', cite: 'annual financial report FY2022, interfund transfers note, p. 131; the general ledger\'s entry dates it. $550,000 more than adopted' },
+      { a: 'sewer', b: 'gap', kind: 'money', w: '$310,000 overhead charge · FY2022', g: 'B', cite: 'annual financial report FY2022, p. 214; it names neither the payee nor the day. Left out of the trail by Ana as a different transfer' },
+      { a: 'council', b: 'gf', kind: 'part', w: 'adopted the budget, 15 Jun 2021', g: 'B', cite: 'Council minutes, 15 June 2021, the budget resolution' },
+      { a: 'sewer', b: 'overhead', kind: 'lead', w: 'hunch', g: 'D', cite: 'Ana\'s hunch, 8 October: "the Sewer Fund\'s share of citywide overhead". Labelled as hers; never evidence; a cost-allocation plan would settle it' },
+      { a: 'gf', b: 'pd', kind: 'money', w: '$4.1M more than adopted · FY2022', g: 'B', cite: 'annual financial report FY2022, expenditures by department, p. 96; a figure beside the transfer, compared, never merged' },
+    ], limit: [] },
+};
+const G_W = 860, G_H = 660, G_CX = 430, G_CY = 322, G_R1 = 160, G_R2 = 300, G_NR = 22;
+const nodeShape = (k, r) => k === 'person' ? `<circle r="${r}"/>` : k === 'gap' ? `<circle r="${r}" class="gap"/>` : k === 'doc' ? `<path d="M${-r} ${-r * 0.85} h${r * 1.45} l${r * 0.55} ${r * 0.55} v${r * 1.15} h${-2 * r} z"/>` : k === 'pay' ? `<path d="M0 ${-r} L${r} 0 L0 ${r} L${-r} 0 z"/>` : `<rect x="${-r}" y="${-r * 0.78}" width="${2 * r}" height="${1.56 * r}" rx="3"/>`;
+const gchip = (x, y, g, scale) => `<g class="gchip${scale === 'subject' ? ' subject' : ''}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><rect x="-9" y="-8" width="18" height="16" rx="2"/><text text-anchor="middle" y="4">${g}</text></g>`;
+function graphInner(dataId, centre, trail) {
+  const D = GRAPHS[dataId], N = D.nodes;
+  const adj = id => D.edges.filter(e => e.a === id || e.b === id).map(e => e.a === id ? e.b : e.a);
+  const ring1 = [...new Set(adj(centre))].filter(x => x !== centre);
+  const pos = { [centre]: [G_CX, G_CY] };
+  ring1.forEach((id, i) => { const t = -Math.PI / 2 + i * 2 * Math.PI / ring1.length; pos[id] = [G_CX + G_R1 * Math.cos(t) * 1.5, G_CY + G_R1 * Math.sin(t) * 0.9]; });
+  const ring2 = [];
+  ring1.forEach((p, i) => { const t = -Math.PI / 2 + i * 2 * Math.PI / ring1.length; const kids = [...new Set(adj(p))].filter(x => x !== centre && !ring1.includes(x) && !pos[x]);
+    kids.forEach((id, j) => { const a = t + (j - (kids.length - 1) / 2) * 0.55; pos[id] = [G_CX + G_R2 * Math.cos(a) * 1.25, G_CY + G_R2 * Math.sin(a) * 0.93]; ring2.push(id); }); });
+  const shown = Object.keys(pos);
+  const edges = D.edges.filter(e => pos[e.a] && pos[e.b]);
+  const pairCount = {}; edges.forEach(e => { const k = [e.a, e.b].sort().join('|'); pairCount[k] = (pairCount[k] || 0) + 1; }); const pairSeen = {};
+  const edgeSvg = edges.map(e => {
+    const [ax, ay] = pos[e.a], [bx, by] = pos[e.b]; const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+    const k = [e.a, e.b].sort().join('|'); const idx = pairSeen[k] = (pairSeen[k] || 0) + 1; const off = (idx - 1 - (pairCount[k] - 1) / 2) * 26; const side = off === 0 ? (ny < 0 ? 1 : -1) : Math.sign(off);   // a lone label sits above its line; parallel lines carry theirs on their outer sides
+    const ra = (e.a === centre ? 30 : G_NR) + 3, rb = (e.b === centre ? 30 : G_NR) + 3;
+    const x1 = ax + ux * ra + nx * off, y1 = ay + uy * ra + ny * off, x2 = bx - ux * rb + nx * off, y2 = by - uy * rb + ny * off;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    const rk = id => id === centre ? 0 : ring1.includes(id) ? 1 : 2;   // the label sits nearer the end farther from the centre, where lines do not converge; not under a name
+    const f = rk(e.a) < rk(e.b) ? (uy < -0.6 ? 0.5 : 0.66) : rk(e.a) > rk(e.b) ? (uy > 0.6 ? 0.5 : 0.34) : 0.5;
+    const px = x1 + (x2 - x1) * f, py = y1 + (y2 - y1) * f, ldy = ny * side * 14, ldx = nx * side * 14;
+    const vert = Math.abs(nx) > 0.6, anchor = vert ? (ldx > 0 ? 'start' : 'end') : 'middle';
+    const lx = px + ldx * (vert ? 1.15 : 1), ly = py + (vert ? 4 : ldy + (ldy > 0 ? 7 : 0));
+    const line = `x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"`;
+    const kw = KINDS[e.kind].word; const scale = e.kind === 'same' ? 'subject' : 'connection';
+    const tip = `<b>${esc(kw)}</b>: ${esc(N[e.a].n)} → ${esc(e.w)} → ${esc(N[e.b].n)} · ${scale === 'subject' ? 'subject match' : 'connection'} ${e.g} · ${esc(e.cite)}.` + (e.kind === 'lead' ? `<span class=more>A lead, not evidence: no finding rests on it until a source is attached.</span>` : `<span class=more>${esc(GRAPH_WORDS.grade.charAt(0).toUpperCase() + GRAPH_WORDS.grade.slice(1))}</span>`);
+    return `<g class="edge" tabindex="0" data-tip="${esc(tip)}"><line class="hit" ${line}/><line class="e e-${e.kind}" ${line}/>${e.kind === 'money' ? `<line class="e e-money-in" ${line}/>` : ''}<text class="w${e.kind === 'lead' ? ' lead' : ''}" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}">${esc(e.w)}${e.kind === 'same' ? ' =' : ''}</text>${gchip(mx, my, e.g, scale)}</g>`;
+  }).join('');
+  const nodeSvg = shown.map(id => { const n = N[id], [x, y] = pos[id], c = id === centre, r = c ? 30 : G_NR, lim = D.limit.includes(id) && !c;
+    const tip = `<b>${esc(n.n)}</b> · ${NODE_KIND[n.k]}${n.sub ? ' · ' + esc(n.sub) : ''}${c ? ` · ${GRAPH_WORDS.centre}` : ''}${lim ? ` · <b>${GRAPH_WORDS.limit}</b>: ${GRAPH_WORDS.limitMeans}` : ''}${c ? '' : `<span class=more>${GRAPH_WORDS.click}</span>`}`;
+    const name = n.n.length > 26 ? n.n.slice(0, 25) + '…' : n.n;
+    return `<g class="node${c ? ' centre' : ''}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" tabindex="0" role="button" aria-label="${esc(n.n)}, ${NODE_KIND[n.k]}${c ? ', the centre' : ''}" data-tip="${esc(tip)}" onclick="window.CS_GRAPH.go(this,'${id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.CS_GRAPH.go(this,'${id}')}">${nodeShape(n.k, r)}${lim ? `<circle class="lim" r="${r + 7}"/>` : ''}<text class="n" text-anchor="middle" y="${r + 15}">${esc(name)}</text><text text-anchor="middle" y="${r + 28}">${NODE_KIND[n.k]}</text>${lim ? `<text class="lim" text-anchor="middle" y="${r + 41}">${GRAPH_WORDS.limit.toLowerCase()}</text>` : ''}</g>`; }).join('');
+  const trailHtml = `<div class="mk-trail"><span class="k" data-tip="<b>The trail</b>: ${esc(GRAPH_WORDS.trail)}">Trail</span>${trail.map((id, i) => `<button type="button" class="mk-trailbtn${i === trail.length - 1 ? ' now' : ''}" data-tip="<b>${esc(N[id].n)}</b> · ${NODE_KIND[N[id].k]}${i === trail.length - 1 ? ' · the centre now' : `<span class=more>Click to make it the centre again.</span>`}" onclick="window.CS_GRAPH.go(this,'${id}')">${esc(N[id].n)}</button>`).join('<span class="arr" aria-hidden="true">→</span>')}</div>`;
+  const legendLine = k => k === 'money' ? `<line class="e e-money" x1="1" y1="6" x2="35" y2="6"/><line class="e e-money-in" x1="1" y1="6" x2="35" y2="6"/>` : `<line class="e e-${k}" x1="1" y1="6" x2="35" y2="6"/>`;
+  const legend = `<div class="mk-glegend" aria-label="What the lines mean">${Object.entries(KINDS).map(([k, v]) => `<span class="li" data-tip="<b>${esc(v.word)}</b>: ${esc(v.means)}"><svg viewBox="0 0 36 12" aria-hidden="true">${legendLine(k)}</svg>${esc(v.word)}${k === 'lead' ? ' · a lead' : ''}</span>`).join('')}<span class="li" data-tip="<b>The letter on a line</b>: ${esc(GRAPH_WORDS.grade)}"><svg viewBox="0 0 36 12" aria-hidden="true"><g class="gchip" transform="translate(18 6)"><rect x="-8" y="-6" width="16" height="12" rx="2"/><text text-anchor="middle" y="3.5" style="font-size:9px">B</text></g></svg>the step's grade</span><span class="li" data-tip="<b>${GRAPH_WORDS.limit}</b>: ${esc(GRAPH_WORDS.limitMeans)}"><svg viewBox="0 0 36 12" aria-hidden="true"><circle class="node-lim" cx="18" cy="6" r="5"/></svg>${GRAPH_WORDS.limit.toLowerCase()}</span></div>`;
+  return `${trailHtml}<div class="gwrap"><svg class="g" viewBox="0 0 ${G_W} ${G_H}" role="group" aria-label="Connections from ${esc(N[centre].n)}: ${shown.length - 1} things joined to it by ${edges.length} steps">${edgeSvg}${nodeSvg}</svg></div>${legend}`;
+}
+const graph = (gid, dataId, centre) => `<div class="mk-graph" id="${gid}" data-graph="${dataId}" data-centre="${centre}" data-trail="${centre}">${graphInner(dataId, centre, [centre])}</div>`;
+const CS_GRAPH = { go(el, id) { const g = el.closest('.mk-graph'); if (!g) return; const trail = g.dataset.trail.split(','); const i = trail.indexOf(id); const t = i >= 0 ? trail.slice(0, i + 1) : trail.concat(id);
+  g.dataset.centre = id; g.dataset.trail = t.join(','); g.innerHTML = graphInner(g.dataset.graph, id, t); if (typeof window !== 'undefined' && window.CS_TIPFIX) window.CS_TIPFIX(g); const c = g.querySelector('.node.centre'); if (c && c.focus) c.focus({ preventScroll: true }); } };
+if (typeof window !== 'undefined') window.CS_GRAPH = CS_GRAPH;
+
 SCR.person = c => ({ rail: 'people', title: 'Person', crumbs: ['People', 'L. Chen'], main: `
   ${h1('L. Chen', 'Director of Public Works since March 2022 · named in 14 documents')}
-  ${acts(btn('person', 'Open the person'), btn('explore', 'Explore connections', { help: 'Looks for chains of links from L. Chen to another person, organisation, payment or project you choose, each step cited and graded.' }))}
+  ${acts(btn('person', 'Open the person'))}
+  ${sec('Connections', graph('mk-g-person', 'chen', 'chen') + acts(btn('explore', 'Explore connections', { help: 'Looks for chains of links from L. Chen to another person, organisation, payment or project you choose, each step cited and graded.' })), { help: 'Everything the record joins L. Chen to, drawn: his positions, what he took part in, who he is named with, and the record claimed to be the same person. Money would show here too; his Form 700 for 2025 reports no interests, so no money line is drawn. Click anything to make it the centre.' })}
   ${sec('Positions', sheet(row(I('group'), 'Director of Public Works · March 2022–', '<span class="muted">city roster · ' + grade('capture', 'B') + '</span>') + row(I('group'), 'Deputy Director, Transportation · 2018–2022', '<span class="muted">council minutes · ' + grade('capture', 'B') + '</span>')))}
   ${sec('Career, credentials, memberships, interests', sheet(row(I('case'), 'Licensed civil engineer (California)', '<span class="muted">state licence register · ' + grade('capture', 'B') + '</span>') + row(I('money'), 'Form 700 (2025): no reportable interests', '<span class="muted">' + grade('capture', 'B') + '</span>')) + acts(btn('recordpersonfact', 'Add a fact from a document'), btn('followregister', 'Follow the licence register')))}
   ${sec('Same person?', `${sheet(row(grade('subject', 'B'), '“Lin Chen”, Deputy Director, in the 2019 minutes', '<span class="muted">claimed the same person, grade B, because both hold the Deputy Director post on the cited dates</span>'))}${acts(btn('identityclaim', 'Say another record is this person…'), btn('withdrawidentityclaim', 'Withdraw a same-person claim'))}`)}
@@ -882,6 +1092,7 @@ const gapblock = (title, mark, help, a) => `<div class="mk-gapblock"><b>${title}
 SCR.money = c => ({ rail: 'projects', title: 'Money trail', crumbs: ['Sewer fund transfers', 'Money trail'], main: `
   ${h1('Sewer fund transfers, FY2022', 'A money trail · 3 figures · from the Sewer Fund, mostly to the General Fund · started by Ana')}
   ${acts(btn('recordfact', 'Read a figure', { tone: 'primary', help: 'Reads a new amount from a document into this trail, with its stage (budgeted, committed or paid), its accounting period, who paid and who received it, and the passage it comes from.' }), btn('createset', 'Start a money trail', { help: 'Starts a new trail for another question: a named set of figures you include or leave out, each with a reason.' }), btn('committedagainstpaid', 'Committed against paid', { help: 'For a contract, sets what the city committed to pay beside what it has paid so far, from the figures this group holds.' }))}
+  ${sec('Where the money went, as a graph', graph('mk-g-money', 'sewer', 'sewer'), { help: 'The trail drawn: the Sewer Fund in the middle, each figure a double line to where it went with its amount, stage and date, and the council\'s adoption of the budget as a dotted step. A figure whose payee the source does not state ends at “Not stated”; Ana\'s hunch is a dashed grey lead. Click a fund to follow the money on from it.' })}
   <div class="row mk-tablebar"><button type="button" class="cs-btn mk-gapfilter" data-tone="quiet" aria-pressed="false" data-tip="Show only the figures with something undetermined, so you can add evidence to each in turn. Press again for every figure.">${I('undetermined')}Only figures with something undetermined · 1</button><span class="muted mk-small">Open a figure to act on it; tick several to act on them together.</span></div>
   <div class="tw"><table class="mk-table mk-rows"><thead><tr><th class="mk-pickc"><span class="sr">Pick</span></th><th>Figure</th><th>From</th><th>To, where it went</th><th>When it moved</th><th>Stage</th><th>Period</th><th class="num">Amount</th><th>Source</th><th>In this trail?</th></tr></thead><tbody>
   ${mrow('mf1', false, ['Transfer out', '<td>Sewer Fund 3100</td>', '<td><b>General Fund 1010</b></td>', '<td data-sort="" class="muted">did not move: a budget figure, adopted 15 Jun 2021</td>', '<td>adopted</td>', '<td>FY2022</td>', '<td class="num">$4,200,000</td>', `<td>${grade('capture', 'B')}</td>`, '<td>included · "the transfer we ask about"</td>'],
@@ -924,6 +1135,7 @@ SCR.explore = c => ({ rail: 'people', title: 'Explore connections', crumbs: ['Pe
   ${h1('Explore connections', 'From J. Ortega to the Coliseum lease, through money and votes, as of 2026')}
   ${checks('Follow', [['Positions and memberships', true], ['Money', true], ['Took part', true], ['Mentioned together', false], ['Same person?', false]])}
   ${acts(btn('explore', 'Explore', { tone: 'primary' }), btn('explorepreset', 'Use a preset'))}
+  ${sec('From J. Ortega, as a graph', graph('mk-g-explore', 'ortega', 'ortega'), { help: 'The same connections as the chains below, drawn: J. Ortega in the middle, what the record joins him to around him, and one ring further out. Each line\'s colour and pattern say the kind of connection, its word says the step, its letter the step\'s grade; the legend under the graph is always shown. Click anything to make it the centre and follow on from it; the trail above walks back.' })}
   ${sec('Chains found: 2', sheet(
     row(grade('connection', 'B'), '<b>' + ref('J. Ortega', 'person', '<b>J. Ortega</b> · Council District 3 since 2023, from Legistar<span class=why><b>Here:</b> where this chain starts.</span>') + '</b> → voted for → <b>' + ref('Lease amendment 1', 'document', '<b>Lease amendment 1</b> · approved 12 January 2024 · Council minutes, item 7<span class=why><b>Here:</b> the vote that links him to the payments.</span>') + '</b> → paid under → <b>' + ref('$1.2M to Bayline Properties', 'money', '<b>$1.2M to Bayline Properties</b> · paid FY2024 · from the city&#39;s annual financial report, capture B<span class=why><b>Here:</b> where the money in this chain ends up.</span>') + '</b><span class="meta">weakest step B · each step cited</span>', btn('exploreverify', 'Check this chain')) +
     row(grade('connection', 'D'), '<b>J. Ortega</b> → <i>declared, not evidenced</i> → <b>Bayline Properties</b><span class="meta">a lead, not a finding</span>', btn('connectionassert', 'Attach a source to this step'))))}

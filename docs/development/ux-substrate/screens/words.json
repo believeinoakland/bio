@@ -9,13 +9,14 @@
   "draft": 4,
   "photo": 13,
   "handle": 7,
-  "ai": 80,
+  "ai": 89,
   "date": 14,
   "queue": 47,
   "transcribe": 19,
   "capture": 1,
   "document": 5,
   "question": 1,
+  "connection": 27,
   "guide": 7,
   "prepared": 2,
   "label": 52,
@@ -52,11 +53,11 @@
   "tab": 2,
   "level": 2,
   "screen": 131,
-  "act": 607,
+  "act": 608,
   "column": 33,
   "wizard": 306,
-  "total": 1749,
-  "protected": 631
+  "total": 1786,
+  "protected": 650
  },
  "words": [
   {
@@ -1550,6 +1551,223 @@
    "protected": false,
    "source": "DEC-188",
    "note": "DRAWN_ON_BY_A_PROJECT; names no project"
+  },
+  {
+   "key": "connection.kind.pos.name",
+   "en": "Position or membership",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.kind.pos.means",
+   "en": "holds or held an office, a post or a membership of a body, from a roster, minutes or a register. Drawn as a plain line.",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.kind.part.name",
+   "en": "Took part",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.kind.part.means",
+   "en": "voted, signed, decided, presented or was party to a recorded event or decision. Drawn as a dotted line.",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.kind.money.name",
+   "en": "Money",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.kind.money.means",
+   "en": "money moved: who paid whom, with the amount, stage and period the source gives. Drawn as a double line, like a ledger's rule.",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.kind.ment.name",
+   "en": "Mentioned together",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.kind.ment.means",
+   "en": "named in the same document, and nothing more: the weakest tie the record holds. Drawn as a dash-dot line.",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.kind.same.name",
+   "en": "Same person?",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.kind.same.means",
+   "en": "a member's claim that two records are one person, graded on the subject-match scale: \"claimed the same person, grade B, because…\". The records stay linked, never merged. Drawn as a thin line with an equals sign.",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.kind.lead.name",
+   "en": "Declared or hunch",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.kind.lead.means",
+   "en": "a step a member declared or suspects, with no source attached: a lead, never evidence, at the lowest grade. No finding rests on a chain with such a step. Attaching a source makes it evidence. Drawn as a dashed grey line.",
+   "protected": true,
+   "source": "mock-screens.js KINDS"
+  },
+  {
+   "key": "connection.thing.person",
+   "en": "a person",
+   "protected": false,
+   "source": "mock-screens.js NODE_KIND"
+  },
+  {
+   "key": "connection.thing.office",
+   "en": "an office",
+   "protected": false,
+   "source": "mock-screens.js NODE_KIND"
+  },
+  {
+   "key": "connection.thing.org",
+   "en": "an organisation",
+   "protected": false,
+   "source": "mock-screens.js NODE_KIND"
+  },
+  {
+   "key": "connection.thing.fund",
+   "en": "a fund",
+   "protected": false,
+   "source": "mock-screens.js NODE_KIND"
+  },
+  {
+   "key": "connection.thing.doc",
+   "en": "a document or decision",
+   "protected": false,
+   "source": "mock-screens.js NODE_KIND"
+  },
+  {
+   "key": "connection.thing.pay",
+   "en": "a payment",
+   "protected": false,
+   "source": "mock-screens.js NODE_KIND"
+  },
+  {
+   "key": "connection.thing.gap",
+   "en": "not stated by the source",
+   "protected": false,
+   "source": "mock-screens.js NODE_KIND"
+  },
+  {
+   "key": "connection.graph.limit",
+   "en": "Stopped at the limit",
+   "protected": true,
+   "source": "mock-screens.js GRAPH_WORDS"
+  },
+  {
+   "key": "connection.graph.limit.means",
+   "en": "exploring went as far as its limit of four steps from where it started and stopped here. What lies beyond is undetermined, not absent: click it to explore on from here.",
+   "protected": true,
+   "source": "mock-screens.js GRAPH_WORDS"
+  },
+  {
+   "key": "connection.graph.trail.means",
+   "en": "where you started and each thing you made the centre since. Click one to go back to it.",
+   "protected": false,
+   "source": "mock-screens.js GRAPH_WORDS"
+  },
+  {
+   "key": "connection.graph.grade.means",
+   "en": "the letter on a line is that step's connection grade: how easily someone else could check the link. A is easiest; D rests on a person's word.",
+   "protected": true,
+   "source": "mock-screens.js GRAPH_WORDS"
+  },
+  {
+   "key": "connection.graph.centre.means",
+   "en": "the centre: everything drawn is joined to it, directly or one step further out.",
+   "protected": false,
+   "source": "mock-screens.js GRAPH_WORDS"
+  },
+  {
+   "key": "connection.graph.click",
+   "en": "Click to make it the centre and follow its connections.",
+   "protected": false,
+   "source": "mock-screens.js GRAPH_WORDS"
+  },
+  {
+   "key": "connection.graph.trail.label",
+   "en": "Trail",
+   "protected": false,
+   "source": "mock-screens.js graphInner"
+  },
+  {
+   "key": "connection.graph.legend.grade",
+   "en": "the step's grade",
+   "protected": false,
+   "source": "mock-screens.js graphInner"
+  },
+  {
+   "key": "ai.usage.bars",
+   "en": "Estimated dollars a day, the last 30 days",
+   "protected": false,
+   "source": "mock-screens.js USAGE_WORDS"
+  },
+  {
+   "key": "ai.usage.bars.means",
+   "en": "What the assistant's work cost each day, estimated from the tokens used at Anthropic's published prices; Anthropic's own bill is what counts. Summed over everyone this account serves; no day names a member or shows what was asked. The newest day is darker.",
+   "protected": true,
+   "source": "mock-screens.js USAGE_WORDS"
+  },
+  {
+   "key": "ai.usage.meter.means",
+   "en": "How much of the limit this period's use has taken. The bar turns rust at four fifths of the limit. At the limit the assistant stops for this account until the period starts again, and the account's owners are told once in their queue.",
+   "protected": true,
+   "source": "mock-screens.js USAGE_WORDS"
+  },
+  {
+   "key": "ai.usage.nolimit",
+   "en": "No limit is set, so there is nothing to measure against: only Anthropic's own spending limit on the key caps this account.",
+   "protected": false,
+   "source": "mock-screens.js USAGE_WORDS"
+  },
+  {
+   "key": "ai.usage.day",
+   "en": "{day} · {calls} calls · {dollars}",
+   "protected": false,
+   "source": "mock-screens.js usageBars",
+   "note": "a bar's tooltip; \"today, so far\" is appended on the newest day"
+  },
+  {
+   "key": "ai.usage.today",
+   "en": "today, so far",
+   "protected": false,
+   "source": "mock-screens.js usageBars"
+  },
+  {
+   "key": "ai.usage.summary",
+   "en": "Last 30 days: {dollars}, {calls} calls · busiest {day}, {daydollars}",
+   "protected": false,
+   "source": "mock-screens.js usageBars"
+  },
+  {
+   "key": "ai.usage.meter",
+   "en": "{label}: {used} of the {limit} limit",
+   "protected": false,
+   "source": "mock-screens.js meter"
+  },
+  {
+   "key": "ai.usage.meter.near",
+   "en": "near the limit",
+   "protected": true,
+   "source": "mock-screens.js meter"
   },
   {
    "key": "guide.procedure.legalinfo",
@@ -5791,6 +6009,12 @@
   {
    "key": "act.keepversion.label.dash-home",
    "en": "Keep the version you cited",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.filingapprove.label.dash-home",
+   "en": "Approve the text",
    "protected": true,
    "source": "registry.json"
   },

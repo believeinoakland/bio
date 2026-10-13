@@ -1098,7 +1098,7 @@
    "id": "dash-home",
    "name": "Home as a dashboard (three arrangements)",
    "frame": "working",
-   "purpose": "Treatments for S20 (Bob's direction of 11 October, K2803; DEC-214): C, \"what needs you\" as the home with the areas one step away and a strip of four readings; A, one home with a card per area; B, a dashboard per area under the strip with no home. The record at a glance, the projects table, the areas.",
+   "purpose": "Treatments for S20 (Bob's direction of 11 October, K2803; DEC-214; his direction of 13 October, DEC-216: a complete home, the rail on every dashboard): one complete home in three orders: C, what needs you first, then each area at a glance; A, each area first with what needs you inside it; B, the instrument panel, ten readings in fixed places under a collapsed rail. Needs the group, the projects table, what changed since you last looked.",
    "acts": [
     {
      "op": "release",
@@ -1123,6 +1123,14 @@
      "status": "function",
      "modules": [
       "reevaluation"
+     ]
+    },
+    {
+     "op": "filingapprove",
+     "label": "Approve the text",
+     "status": "function",
+     "modules": [
+      "filings"
      ]
     },
     {

@@ -18,7 +18,7 @@ const fail = m => { console.error('build_words: ' + m); process.exit(1); };
 // the mockup scripts, evaluated as the page evaluates them (functions that touch the DOM are never called here)
 const ctx = vm.createContext({ console, CSS: { escape: s => s } });
 const js = ['mock-acts.js', 'mock-kit.js', 'mock-screens.js', 'mock-shell.js', 'mock-refs.js'].map(R).join('\n')
-  + '\n;globalThis.__W = { ACT_HELP, WNAME, WEIGHT, OUTWARD: [...OUTWARD], RAIL, TABS, SCREEN_HELP, RAIL_HELP, COL_HELP, WRITE_ACT };';
+  + '\n;globalThis.__W = { ACT_HELP, WNAME, WEIGHT, OUTWARD: [...OUTWARD], RAIL, TABS, SCREEN_HELP, RAIL_HELP, COL_HELP, WRITE_ACT, KINDS, GRAPH_WORDS, NODE_KIND, USAGE_WORDS };';
 vm.runInContext(js, ctx);
 const W = ctx.__W;
 const page = R('page.src.html');
@@ -237,6 +237,29 @@ add('document.refused.pending', 'The publication copy of a document a member sup
 
 // 4e. A question a project draws on (DEC-188; Bob's ruling that setting aside is each project's own)
 add('question.refused.drawnon', 'This question can\'t be set aside for the whole group, because a project draws on it. Set it aside in your project instead; that leaves it as it is everywhere else.', false, 'DEC-188', 'DRAWN_ON_BY_A_PROJECT; names no project');
+
+// 4i. Use over time and the connection graph (DEC-215): the kinds of connection and what each means (protected: they say what is
+//     evidence and what is a lead, K1487), the graph's own words, and the usage bars' and meter's words (protected where they say
+//     who sees what, K1450)
+for (const [k, v] of Object.entries(W.KINDS)) { add(`connection.kind.${k}.name`, v.word, true, 'mock-screens.js KINDS'); add(`connection.kind.${k}.means`, v.means, true, 'mock-screens.js KINDS'); }
+for (const [k, v] of Object.entries(W.NODE_KIND)) add(`connection.thing.${k}`, v, false, 'mock-screens.js NODE_KIND');
+add('connection.graph.limit', W.GRAPH_WORDS.limit, true, 'mock-screens.js GRAPH_WORDS');
+add('connection.graph.limit.means', W.GRAPH_WORDS.limitMeans, true, 'mock-screens.js GRAPH_WORDS');
+add('connection.graph.trail.means', W.GRAPH_WORDS.trail, false, 'mock-screens.js GRAPH_WORDS');
+add('connection.graph.grade.means', W.GRAPH_WORDS.grade, true, 'mock-screens.js GRAPH_WORDS');
+add('connection.graph.centre.means', W.GRAPH_WORDS.centre, false, 'mock-screens.js GRAPH_WORDS');
+add('connection.graph.click', W.GRAPH_WORDS.click, false, 'mock-screens.js GRAPH_WORDS');
+add('connection.graph.trail.label', 'Trail', false, 'mock-screens.js graphInner');
+add('connection.graph.legend.grade', 'the step\'s grade', false, 'mock-screens.js graphInner');
+add('ai.usage.bars', W.USAGE_WORDS.bars, false, 'mock-screens.js USAGE_WORDS');
+add('ai.usage.bars.means', W.USAGE_WORDS.barsMeans, true, 'mock-screens.js USAGE_WORDS');
+add('ai.usage.meter.means', W.USAGE_WORDS.meterMeans, true, 'mock-screens.js USAGE_WORDS');
+add('ai.usage.nolimit', W.USAGE_WORDS.noLimit, false, 'mock-screens.js USAGE_WORDS');
+add('ai.usage.day', '{day} · {calls} calls · {dollars}', false, 'mock-screens.js usageBars', 'a bar\'s tooltip; "today, so far" is appended on the newest day');
+add('ai.usage.today', 'today, so far', false, 'mock-screens.js usageBars');
+add('ai.usage.summary', 'Last 30 days: {dollars}, {calls} calls · busiest {day}, {daydollars}', false, 'mock-screens.js usageBars');
+add('ai.usage.meter', '{label}: {used} of the {limit} limit', false, 'mock-screens.js meter');
+add('ai.usage.meter.near', 'near the limit', true, 'mock-screens.js meter');
 
 // 4f. The Action layer's words for T45 (DEC-194; BOB's B140): written in words-actions.src.py, which writes words-actions.json
 for (const x of JSON.parse(R('words-actions.json'))) add(x.key, x.en, x.protected, 'DEC-194', x.note || undefined);
