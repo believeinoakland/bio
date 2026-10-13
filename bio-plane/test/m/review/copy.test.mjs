@@ -3,7 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, P, V, SECRET, NOW } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, REVIEW_MARKING, REVIEW_LIST_MAX, REVIEW_TEXT_MAX, noReviewCopy,
-         caseIdentitySentence } from "../../../src/review/index.mjs";
+         caseIdentitySentence, reviewOf } from "../../../src/review/index.mjs";
+import { caseInputsOf, statementSha, withheldWriterStated } from "../../../src/case-inputs/index.mjs";
 
 const DEAD = JSON.stringify(noReviewCopy());
 const draft = (w, extra = {}, author = "ann") => w.r.act({ act: "draft", author, project: P, statement: "S", ...extra });
@@ -178,7 +179,7 @@ test("R14: comments and the grant roster are read under a cap; the recipient see
   assert.equal(rc.comments.length, 4, "comments are the draft's, for both doors");
 });
 
-test("R15: the acknowledgement list is case-authoring's list at this draft's identity, the writer's own rows withheld and counted", () => {
+test("R15: the acknowledgement list is case-inputs' list (its R2) at this draft's identity, the writer's own rows withheld and counted", () => {
   const w = standard();
   w.publishedCase("CASE-2026-0001", P, 1);
   const d = draft(w, { caseId: "CASE-2026-0001", statement: "the statement" }, "ed");
@@ -210,6 +211,45 @@ test("R15: the acknowledgement list is case-authoring's list at this draft's ide
   const n = draft(w);
   w.r.copy({ draft: n.draftId, viewer: V("ann") });
   assert.deepEqual([w.calls.acks.at(-1).caseId, w.calls.acks.at(-1).edition, w.calls.acks.at(-1).draftId], [null, 1, n.draftId]);
+  /* T47 (N908): asked of case-inputs only, never of case-authoring, which no longer holds the list */
+  assert.deepEqual(w.calls.acksViaCaseAuthoring, []);
+});
+
+test("R15, R28 (T47; N908): on a host that hands it no case-inputs, the list is the host's one case-inputs instance's (its R16, R2), the writer's own row withheld and counted", () => {
+  const w = standard();
+  const host = { storage: w.st };
+  const r = reviewOf(host, { record: w.record, membership: w.membership, strength: w.strength,
+                             basisVersions: { testimonyReach: () => ({ self: [], via: [] }) },
+                             caseAuthoring: w.caseAuthoring, now: () => NOW,
+                             publication: { registerReviewProvider: () => ({ ok: true }) },
+                             caseAccount: { registerReviewComments: () => ({ ok: true }) },
+                             ratification: { registerApprovalReader: () => ({ ok: true }) } });
+  assert.equal(r.caseInputs, caseInputsOf(host), "the one instance for the host");
+  const d = r.act({ act: "draft", author: "ed", project: P, statement: "the statement" });
+  r.act({ act: "grant", author: "ann", draft: d.draftId, recipient: "The Reporter", secretSha: SECRET(1) });
+  /* readings of this draft's statement at its identity (no case, edition 1, through this draft), as case-inputs
+     stores them; one of another draft and one of another sentence are not this copy's */
+  const ack = (draftId, statement, kind, by, at, recipient = null) => w.st.sql.exec(
+    `INSERT INTO statement_acknowledgements (project_id, case_id, edition, statement_sha, draft_id, acknowledger_kind,
+     acknowledger, recipient, at, reason) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+    P, null, 1, statementSha(statement), draftId, kind, by, recipient, at, `read by ${by}`);
+  ack(d.draftId, "the statement", "participant", "ann", "2026-09-28T01:00:01.000Z");
+  ack(d.draftId, "the statement", "participant", "ed", "2026-09-28T01:00:02.000Z");
+  ack(d.draftId, "the statement", "recipient", "RVG-x", "2026-09-28T01:00:03.000Z", "The Reporter");
+  ack("DRAFT-2026-0000", "the statement", "participant", "bea", "2026-09-28T01:00:04.000Z");
+  ack(d.draftId, "another statement", "participant", "bea", "2026-09-28T01:00:05.000Z");
+  for (const c of [r.copy({ draft: d.draftId, viewer: V("ann") }), r.copy({ secretSha: SECRET(1), bySecret: true })]) {
+    const s = c.statement_acknowledgements;
+    assert.equal(c.ok, true);
+    assert.equal(s.statement_sha, statementSha("the statement"));
+    assert.deepEqual(s.acknowledgements.map((a) => [a.kind, a.by, a.reason]),
+      [["participant", "ann", "read by ann"], ["recipient", "RVG-x", "read by RVG-x"]]);
+    assert.deepEqual([s.withheld, s.acknowledgements_by_statement_writer_not_listed, s.withheld_stated, s.truncated],
+      [1, 1, withheldWriterStated(1, "ed"), false]);
+    assert.deepEqual([s.act, s.act_requires], [`op=statementack&draft=${d.draftId}`, ["reason"]]);
+  }
+  /* negative control: case-authoring is never asked for the list */
+  assert.deepEqual(w.calls.acksViaCaseAuthoring, []);
 });
 
 /* R28's whole claim over one copy: the link is `op=statementack&draft=<id>` and nothing else (no reader, no words),
@@ -262,7 +302,7 @@ test("R28: the acknowledgement act stays its link, naming nothing of the reader'
     assert.notEqual(r28Breach(c, d.draftId), null, what);
 });
 
-test("R15, R28: each acknowledgement row carries its reason as case-authoring stored it; a row from before DEC-88 carries null, not filled", () => {
+test("R15, R28: each acknowledgement row carries its reason as case-inputs stored it; a row from before DEC-88 carries null, not filled", () => {
   const w = standard();
   const d = draft(w, { statement: "the statement" }, "ed");
   w.ca.acks = [{ project: P, statement: "the statement", kind: "participant", by: "ann", at: "2026-09-28T01:00:01.000Z",
@@ -275,7 +315,7 @@ test("R15, R28: each acknowledgement row carries its reason as case-authoring st
   for (const c of [w.r.copy({ draft: d.draftId, viewer: V("ann") }),
                    (grant(w, d, 1), w.r.copy({ secretSha: SECRET(1), bySecret: true }))]) {
     const rows = c.statement_acknowledgements.acknowledgements;
-    assert.deepEqual(rows, answered, "the rows as case-authoring answers them, byte for byte");
+    assert.deepEqual(rows, answered, "the rows as case-inputs answers them, byte for byte");
     assert.equal(rows[0].reason, "  I read the excluded records  ", "the words as stored, not trimmed or rewritten");
     assert.equal(rows[1].reason, null, "a row recorded before DEC-88: null, stated");
     assert.ok("reason" in rows[1]);
