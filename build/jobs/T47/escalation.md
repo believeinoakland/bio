@@ -47,3 +47,7 @@ REPORT items (details in the record):
 - Tests: 89; pass 88, fail 1 (the one above). Checks: coverage 37 of 37, 0 failures; architecture 20 product files, 0 failures; ownership 0 failures (re-run below).
 
 Size (session_01WD3ZmTKBeisfe99Nk6Rbb4): test runs 8, module lines 2374
+
+## J2 · COMPLETE · re B2
+
+B2 applied: tranche merged; real.test.mjs records the scope through actions.records.actionScope (action-records R5; split map §3), read back through actionRead (N961). It is RED until actions' T47-38 adds the records getter and drops its copies. Today that test fails with TypeError: Cannot read properties of undefined (reading 'actionScope'). Importing actionRecordsOf directly fails architecture (not in escalation's uses), and a second instance throws TABLE_DECLARED. Escalation merges after actions, so please re-run real.test.mjs at the merge. Otherwise 88/89 pass; coverage 37/37, architecture, ownership and format: 0 failures.
