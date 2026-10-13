@@ -38,4 +38,4 @@
   - format, architecture (3066 files) and channels: 0 failures each.
   - coverage: 41 failures, none progressions'. All are other modules' ids marked not yet met (rule 5 (1)).
 
-Size (session_01AS7C41DV4eQ7LTLWBsHCN7): test runs 12, module lines 2131
+Size (session_01AS7C41DV4eQ7LTLWBsHCN7): test runs 12, module lines 2132
