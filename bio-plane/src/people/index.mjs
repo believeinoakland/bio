@@ -1,9 +1,9 @@
 /* people (layer 5; T33-36, K1452, K1455, K1483–K1493): the people the record is about, held fully and never judged.
-   `build/requirements/people.md` R1–R36. Identity claims that LINK two person records and never merge them, with the
+   `build/requirements/people.md` R1–R37. Identity claims that LINK two person records and never merge them, with the
    derived identity cluster (R1–R8); dated person facts and their lawful removal (R9–R12); the reads that gather a
    person's positions, career, credentials, interests, statements and acts from their owning modules (R13–R17);
    staffing as of a date (R18–R19); members' own ties (R20); the protected link from a source to a person (R21) and its
-   internal sight read (R34); who recorded what from a passage, in events R49's shape (R36); the machine's interest checks, held in the hypothesis layer and shown only past their gate
+   internal sight read (R34); the People directory (R37); who recorded what from a passage, in events R49's shape (R36); the machine's interest checks, held in the hypothesis layer and shown only past their gate
    (R22–R25), with their arming notice (R35); the connection owner of the identity kinds (R26) and the ops map (R27).
    CORRECTED FORWARD (R4, R11; N617): every act is stamped (`by`, never null: `NO_BY`), and nothing is edited in place: a
    replaced source link or gate is kept beside the one that replaced it.
@@ -12,14 +12,14 @@
    (`peopleOf(ctx, deps)`, K61) and stores none of them. NO JUDGMENT ON A PERSON (R29): no score, rank or suspicion is
    stored or answered, and a match of a check is "Noticed", the machine's, in the hypothesis layer. */
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER, notAnAdmin, noSuchProject } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, hiddenBundles, listenerRefusal, MODULE_ORDER, notAnAdmin, noSuchProject } from "../membership/index.mjs";
 import { isMachineIdentity, BASIS_GRADES, sha256HexSync, canonicalJson } from "../record-grammar/index.mjs";
 import { validAt, compare, isCalendarDate, bounds } from "../civil-time/index.mjs";
 import { defaultRegistry, BOUNDS } from "../connection-grammar/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf, checkContentExtent, canonicalExtent, extentRelation, CONTENT_EXTENT_KINDS } from "../content/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
-import { noSuchEntity, noEntity, entitiesOf } from "../entities/index.mjs";
+import { noSuchEntity, noEntity, entitiesOf, ORGANISATION_KINDS } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { moneyOf } from "../money/index.mjs";
@@ -62,6 +62,13 @@ export const CANDIDATES_MAX = 200;
 /* R36 (events R49): a read by capture and extent answers 1–500 items, 100 when no limit is given. */
 export const RECORDED_BY_DEFAULT = 100;
 export const RECORDED_BY_MAX = 500;
+/* R37 (DEC-203): the directory's page, its filters and the kinds it lists (entities' person and organisation kinds). */
+export const DIRECTORY_DEFAULT = 50;
+export const DIRECTORY_MAX = 200;
+export const DIRECTORY_Q_MAX = 200;
+export const DIRECTORY_SHOW = Object.freeze(["both", "people", "organisations"]);
+export const DIRECTORY_SINCE = Object.freeze([30, 90, 365]);
+const ORG_KINDS = ORGANISATION_KINDS;
 /* R24 (K1504, M-C8): a machine check's results are shown only at a measured false-alarm rate at most this. */
 export const GATE_RATE_MAX = 0.2;
 /* R24 (DEC-131; N694, K1863): the mark every answered check result carries where it reaches a member, DEC-131's words
@@ -1105,6 +1112,145 @@ export class People {
   }
 
   /* ===================================================================== *
+   * THE PEOPLE DIRECTORY (R37; DEC-203 (1)–(4), K3061 D8, K3104). The people and organisations the record follows, each
+   * counted by the documents, questions and projects naming it through entities' resolutions (its R35) that the viewer
+   * may see. Reads only: entities' and record-core's tables by their read contracts, provenance's register (its R48).
+   * ===================================================================== */
+
+  /** R37: the directory a member scans before knowing a name. Writes nothing; a malformed argument is refused naming
+   *  it; a project the viewer may not see counts as nothing and is never named. */
+  peopleDirectory({ q = null, show = null, office = null, namedIn = null, since = null, cursor = null, limit = null, viewer = null } = {}) {
+    if (this.#denied(viewer)) return People.#noViewer();
+    const absent = (v) => v === null || v === undefined || v === "";
+    const bad = (argument, why) => refuse("BAD_ARGUMENT", `${argument}: ${why}; nothing was read`, { argument });
+    if (!absent(q) && (typeof q !== "string" || q.length > DIRECTORY_Q_MAX)) return bad("q", `a name or office, at most ${DIRECTORY_Q_MAX} characters`);
+    const shown = absent(show) ? "both" : show;
+    if (!DIRECTORY_SHOW.includes(shown)) return bad("show", `one of ${DIRECTORY_SHOW.join(", ")}`);
+    if (!absent(office) && !(filled(office) && ORG_KINDS.includes(this.#entity(office)?.kind)))
+      return bad("office", "the entity id of a body the record follows (an organisation)");
+    const named = absent(namedIn) ? "any" : namedIn;
+    if (!filled(named)) return bad("namedIn", "any, mine, or a project's id");
+    const days = absent(since) ? null : Number(since);
+    if (days !== null && !DIRECTORY_SINCE.includes(days)) return bad("since", `one of ${DIRECTORY_SINCE.join(", ")} days`);
+    const cap = absent(limit) ? DIRECTORY_DEFAULT : Number(limit);
+    if (!Number.isInteger(cap) || cap < 1 || cap > DIRECTORY_MAX) return bad("limit", `a whole number from 1 to ${DIRECTORY_MAX}`);
+    const after = absent(cursor) ? null : People.#cursorKey(cursor);
+    if (after === false) return bad("cursor", "the cursor a page of this read answered");
+
+    const nowIso = this.#now();
+    const today = nowIso.slice(0, 10);
+    const member = viewerPredicate(viewer).member;
+    const kinds = shown === "people" ? ["person"] : shown === "organisations" ? [...ORG_KINDS] : ["person", ...ORG_KINDS];
+    const marks = kinds.map(() => "?").join(",");
+    const followed = this.#rows(`SELECT entity_id, kind FROM entities WHERE kind IN (${marks}) ORDER BY entity_id`, ...kinds);
+    /* The mentions the viewer may see (membership R88: one rule), each with its bundle's type and project and its
+       capture's registration (provenance R48). */
+    const hid = hiddenBundles(viewer);
+    const mentions = this.#rows(`SELECT r.entity_id, r.capture_sha, r.bundle_id, b.object_type, b.project, g.registered
+        FROM resolutions r JOIN entities e ON e.entity_id = r.entity_id
+        LEFT JOIN bundles b ON b.bundle_id = r.bundle_id LEFT JOIN register g ON g.capture_sha = r.capture_sha
+        WHERE e.kind IN (${marks})${hid ? ` AND r.bundle_id NOT IN ${hid.sql}` : ""}`, ...kinds, ...(hid ? hid.args : []));
+    const seen = new Map(), works = new Map();
+    const projectSeen = (p) => { if (!seen.has(p)) seen.set(p, this.#membership.inSight(p, viewer) === true); return seen.get(p); };
+    const worksOn = (p) => {
+      if (!works.has(p)) {
+        let s = null;
+        try { s = member && typeof this.#membership.participation === "function" ? this.#membership.participation(p, member) : null; } catch { s = null; }
+        works.set(p, !!s && s.state === "joined");
+      }
+      return works.get(p);
+    };
+    const tally = new Map();
+    for (const m of mentions) {
+      let t = tally.get(m.entity_id);
+      if (!t) tally.set(m.entity_id, t = { documents: new Set(), questions: new Set(), projects: new Set(), newest: null });
+      t.documents.add(m.capture_sha);
+      if (m.object_type === "inquiry") t.questions.add(m.bundle_id);
+      const project = m.object_type === "project" ? m.bundle_id : filled(m.project) ? m.project : null;
+      if (project && projectSeen(project)) t.projects.add(project);
+      const ms = filled(m.registered) ? Date.parse(m.registered) : NaN;
+      const at = Number.isNaN(ms) ? null : new Date(ms).toISOString();
+      if (at && (t.newest === null || at > t.newest)) t.newest = at;
+    }
+    const cutoff = days === null ? null : new Date(Date.parse(nowIso) - days * 86400000).toISOString();
+    const wantProject = named !== "any" && named !== "mine" ? (projectSeen(named) ? named : null) : undefined;
+    const qn = absent(q) ? null : q.trim().replace(/\s+/g, " ").toLowerCase();
+    const rows = [];
+    for (const e of followed) {
+      const t = tally.get(e.entity_id) || { documents: new Set(), questions: new Set(), projects: new Set(), newest: null };
+      const mine = [...t.projects].some(worksOn);
+      if (named === "mine" && !mine) continue;
+      if (wantProject !== undefined && !(wantProject && t.projects.has(wantProject))) continue;
+      if (cutoff !== null && !(t.newest && t.newest >= cutoff)) continue;
+      const row = { entity: e.entity_id, kind: e.kind, mine, newest_added: t.newest, t };
+      if (qn !== null || office !== null) {
+        const look = this.#directoryLook(e, today, viewer);
+        if (office !== null && !look.posts.some((x) => x.office.entity === office || x.body?.entity === office)) continue;
+        if (qn !== null && !look.words.some((w) => w.includes(qn))) continue;
+        row.look = look;
+      }
+      rows.push(row);
+    }
+    rows.sort(People.#directoryOrder);
+    const start = after ? rows.findIndex((r) => People.#directoryOrder(r, after) > 0) : 0;
+    const rest = start === -1 ? [] : rows.slice(start);
+    const page = rest.slice(0, cap).map((r) => {
+      const look = r.look || this.#directoryLook({ entity_id: r.entity, kind: r.kind }, today, viewer);
+      return { entity: r.entity, kind: r.kind, name: look.name, today: look.today, documents: r.t.documents.size,
+               questions: r.t.questions.size, projects: r.t.projects.size, newest_added: r.newest_added, mine: r.mine };
+    });
+    const last = page.length ? rest[page.length - 1] : null;
+    const truncated = rest.length > cap;
+    return { ok: true, following: rows.length, in_your_projects: rows.filter((r) => r.mine).length, rows: page, limit: cap,
+             truncated, cursor: truncated && last ? People.#cursorOf(last) : null,
+             detail: "the people and organisations the record follows, never the group's own members; each row counts the "
+               + "documents, questions and projects naming it among those you may see, and when the newest was added" };
+  }
+
+  /* R37: the order: named in the viewer's projects first, then the newest added first (never added last), then by id. */
+  static #directoryOrder(a, b) {
+    if (a.mine !== b.mine) return a.mine ? -1 : 1;
+    if (a.newest_added !== b.newest_added) {
+      if (a.newest_added === null) return 1;
+      if (b.newest_added === null) return -1;
+      return a.newest_added > b.newest_added ? -1 : 1;
+    }
+    return a.entity < b.entity ? -1 : a.entity > b.entity ? 1 : 0;
+  }
+  static #cursorOf(r) { return Buffer.from(JSON.stringify([r.mine ? 1 : 0, r.newest_added, r.entity])).toString("base64url"); }
+  /* A cursor's order key, or false when it is not one this read answered. */
+  static #cursorKey(c) {
+    if (typeof c !== "string" || c.length > 400) return false;
+    let k;
+    try { k = JSON.parse(Buffer.from(c, "base64url").toString("utf8")); } catch { return false; }
+    if (!Array.isArray(k) || k.length !== 3 || ![0, 1].includes(k[0]) || !(k[1] === null || typeof k[1] === "string") || !filled(k[2])) return false;
+    return { mine: k[0] === 1, newest_added: k[1], entity: k[2] };
+  }
+
+  /* R37: who a row is today: a person's posts held on `today` (lines' holds, with the body each office is a post in or
+     part of), an organisation's kind, sector and the registry's note; with its name and the words `q` matches. */
+  #directoryLook(e, today, viewer) {
+    const ent = this.#entity(e.entity_id) || {};
+    const name = ent.label ?? null;
+    const words = [name, ...(Array.isArray(ent.aliases) ? ent.aliases.filter((a) => !a.withdrawn).map((a) => a.alias) : [])]
+      .filter(filled).map((s) => s.trim().replace(/\s+/g, " ").toLowerCase());
+    if (e.kind !== "person") return { name, words, posts: [], today: { kind: e.kind, sector: ent.sector ?? null, note: ent.note ?? null } };
+    const label = (id) => { const x = filled(id) ? this.#entity(id) : null; return x ? { entity: id, label: x.label ?? null } : null; };
+    const heldOn = (l) => !l.withdrawn && People.#judge(l.valid, today, People.#through(l)) === "in";
+    const posts = [];
+    for (const l of listOf(this.#lines ? this.#lines.linesOf({ entity: e.entity_id, kinds: ["holds"], direction: "from", limit: READ_LIST_MAX, viewer }) : null)) {
+      if (l.kind !== "holds" || lineFrom(l) !== e.entity_id || !heldOn(l)) continue;
+      const office = label(lineTo(l)) || { entity: lineTo(l), label: null };
+      let body = null;
+      for (const u of listOf(this.#lines.linesOf({ entity: office.entity, kinds: ["post_in", "part_of"], direction: "from", limit: READ_LIST_MAX, viewer })))
+        if (lineFrom(u) === office.entity && heldOn(u)) { body = label(lineTo(u)); if (body) break; }
+      posts.push({ line_id: lineId(l), title: People.#title(l), capacity: l.capacity ?? null, office, body });
+    }
+    for (const x of posts) for (const s of [x.office.label, x.body?.label, x.title]) if (filled(s)) words.push(s.trim().replace(/\s+/g, " ").toLowerCase());
+    return { name, words, posts, today: { posts } };
+  }
+
+  /* ===================================================================== *
    * STAFFING (R18, R19)
    * ===================================================================== */
 
@@ -1597,6 +1743,8 @@ export function peopleOps(p, url, body) {
     personcredentials: () => p.credentialsOf({ entityId: q("id"), at: q("at"), viewer: q("viewer") }),
     personinterests: () => p.interestsOf({ entityId: q("id"), at: q("at"), viewer: q("viewer") }),
     personstatements: () => p.statementsOf({ entityId: q("id"), from: q("from"), to: q("to"), viewer: q("viewer") }),
+    peopledirectory: () => p.peopleDirectory({ q: q("q"), show: q("show"), office: q("office"), namedIn: q("namedIn"), since: q("since"),
+                                                cursor: q("cursor"), limit: q("limit"), viewer: q("viewer") }),
     staffing: () => p.staffingAt({ organisation: q("id"), at: q("at"), viewer: q("viewer") }),
     membertie: () => p.declareTie(b()),
     membertiewithdraw: () => p.withdrawTie(b()),
