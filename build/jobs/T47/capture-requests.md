@@ -1,6 +1,6 @@
 # capture-requests (T47)
 
-**Status** · session_01NZ5W5xidnV9DeKDD7m38zu · depth 2 · RUNNING until 2026-10-13T20:05:30Z (the users' tests (intent, investigation, question-explorer, agent-worker)) · handled B2
+**Status** · session_01NZ5W5xidnV9DeKDD7m38zu · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
