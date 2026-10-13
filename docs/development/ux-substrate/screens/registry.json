@@ -102,9 +102,13 @@
    "purpose": "The administrator's one-time reset link opens here: the member chooses a new password, keeping their handle and work; a used, expired or withdrawn link says so (Bob's D4, K3060; DEC-201, DEC-205).",
    "acts": [
     {
-     "op": "owed:passwordreset DEC-205",
+     "op": "passwordreset",
      "label": "Set my new password",
-     "status": "owed"
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "credentials"
+     ]
     }
    ],
    "journeys": [
@@ -409,6 +413,14 @@
      "op": "owed:passwordresetlink DEC-201",
      "label": "Make a reset link for a member",
      "status": "owed"
+    },
+    {
+     "op": "signerset",
+     "label": "Withdraw a member's signing key",
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
     },
     {
      "op": "membercaps",
@@ -817,14 +829,22 @@
      ]
     },
     {
-     "op": "owed:grouplanguagesset DEC-205",
+     "op": "grouplanguagesset",
      "label": "Save the languages",
-     "status": "owed"
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "instance-setup"
+     ]
     },
     {
-     "op": "owed:grouplogoset DEC-205",
+     "op": "grouplogoset",
      "label": "Change the logo",
-     "status": "owed"
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "instance-setup"
+     ]
     },
     {
      "op": "courtnoticeset",
@@ -3093,9 +3113,13 @@
      ]
     },
     {
-     "op": "owed:signrequest DEC-207",
+     "op": "signrequest",
      "label": "Ask an owner to sign",
-     "status": "owed"
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "tasks"
+     ]
     },
     {
      "op": "publishatmove",

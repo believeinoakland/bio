@@ -22,7 +22,7 @@ const WEIGHT = {
   actionmove:2, actioncorrespond:2, actionpressure:2, actionhold:2, escalationopen:2, escalationadvance:2, declinetoescalate:2, standarddeclare:2,
   standardadopt:2, lawrelate:2, casedraft:2, whatchangedpropose:1, statementack:2, attribute:2, reviewgrant:2, reviewcomment:1, caseimport:2,
   testify:2, acquire:2, captureupload:2, capturerequest:1, hypothesishold:1, connectionassert:2, projectinvite:2, adoptversion:2, reminderanswer:2,
-  taskresolve:2, groupnameset:2, groupdomainset:2, profilesset:2, officesseed:2, assistantset:2, hostingaccessset:2, owed_grouplanguagesset:2, owed_grouplogoset:2, owed_passwordreset:2, owed_signrequest:1, publishatmove:2, publishatcancel:2, enroll:2,
+  taskresolve:2, groupnameset:2, groupdomainset:2, profilesset:2, officesseed:2, assistantset:2, hostingaccessset:2, grouplanguagesset:2, grouplogoset:2, passwordreset:2, signrequest:1, publishatmove:2, publishatcancel:2, enroll:2,
   bootstrap:5, selftest:1, setpassword:2, accountreferenceset:2, projectcreated:2, wizarddraft:2, wizardrevise:1, wizardsubmit:2, wizardapprove:2,
   filingrecordsent:2, owed_groupprofileset:2, owed_groupprofilevisibility:2, memberlanguageset:1, owed_websitekeymint:2, owed_joinlinkset:2,
   owed_noteadd:1, owed_noteconvert:2, translationdraft:1, translationadopt:2, owed_checkrequest:2, knock:2, sourcelink:2,

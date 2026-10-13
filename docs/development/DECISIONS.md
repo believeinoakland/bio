@@ -3408,3 +3408,22 @@ decided: 2026-10-13 · the design session (P17)
 reasoning recorded in: this entry; `screens/mock-screens.js` (queue, site, published), `screens/mock-refs.js`, `screens/mock-shell.js`, `screens/registry.src.py`, `screens/words.json` (1,728 words), `layouts.html`.
 owed: (BOB) the queue's item for an action prepared through a wizard and left unsent (a producer naming the wizard, the step and the date), with its three acts; registry.json and words.json re-taken.
 
+### DEC-213 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (BOB's B168, from its review of T47's L11 fold)
+for: bob-session
+question: Four points from BOB's fold review: the wizard "Set up and claim"'s first step; the installer's first page while civicsmith.org does not serve; the setup page's surfaces with no screen; the wizard's runner and the walk-through op.
+why it is Bob's: it is not: detail beneath Bob's D5, D6 and K509, decided by the design session (P17).
+provisional: as BOB's review describes.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-13.**
+(1) "Set up and claim", step 1, corrected: "Check you have what is needed: a Cloudflare account on the Workers Paid plan ($5 a month, with a payment method) and about twenty minutes." Why: "Civicsmith uses parts of Cloudflare that only the paid plan includes. No Claude account is needed to set up." (Bob's D5; installer R6.)
+(2) The installer's first page while civicsmith.org is not online (installer R23 kept): drawn as its own state, the two choices with "What you need" in one block (Workers Paid with a payment method, an account belonging to the group, twenty minutes, no Claude account); once civicsmith.org serves, the block gives way to the link (DEC-206 (4)). Acceptable as BOB proposes.
+(3) The setup page's surfaces with no screen: the intake form and the bundle history need none (Add, the doorbell and each document's page serve them); an administrator registering a key for a member (`signeradd`) stays undrawn, since a member's key is made only by that member on their own device (K509 (2)); an administrator withdrawing a member's key (`signerset`, credentials R7) is drawn on Members: "Withdraw Teo's signing key", for a lost or stolen device, the key stopping at once and what it signed still checkable.
+(4) Confirmed: "Set up and claim" has no runner in the setup frame (the setup screen's parts are its steps; the wizard is offered by the installer's hand-over), and `tour` is static, so the way-in draft's `walkthrough` op is not needed.
+(5) Served ops re-pointed (B163; K3079): `grouplanguagesset`, `grouplogoset`, `passwordreset`, `signrequest` lose their `owed:` names; `passwordresetlink` and `projectaikeepaway` stay owed until declared.
+decided: 2026-10-13 · the design session (P17)
+reasoning recorded in: this entry; `screens/library.src.py`, `screens/mock-screens.js` (install, members), `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/registry.src.py`, `screens/words.json` (1,730 words, 618 protected), `layouts.html`.
+owed: (BOB) the installer's interim block until civicsmith.org serves; `signerset` on Members as drawn; library.json, registry.json and words.json re-taken.
+

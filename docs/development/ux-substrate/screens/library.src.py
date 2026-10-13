@@ -17,7 +17,7 @@ def wiz(name, start, required, steps, journeys, note=''):
                   versions=[dict(version=1, state='draft', steps=out)]))
 
 wiz('Set up and claim', 'install', True, [
- ('install', None, 'Check you have what is needed: a Cloudflare account and about twenty minutes.', 'The free plan works. Workers Paid ($5 a month) adds recomputing spreadsheets and signing in with a Claude subscription. No Claude account is needed to set up.'),
+ ('install', None, 'Check you have what is needed: a Cloudflare account on the Workers Paid plan ($5 a month, with a payment method) and about twenty minutes.', 'Civicsmith uses parts of Cloudflare that only the paid plan includes. No Claude account is needed to set up.'),
  ('install', 'bootstrap', 'Choose your group\'s short name, then install. It is not the group\'s name: you choose that next, and can change it.', 'The short name is the fixed label in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing.'),
  ('install', 'selftest', 'Let your group\'s Civicsmith test itself. Allow it to run the assistant\'s container if you are asked.', 'The test proves it works before anyone relies on it.'),
  ('install', None, 'Save the one-time password somewhere safe, such as a password manager, then continue.', 'It is shown once, and it is how you become the first administrator. Continuing fills it in; if it is lost before you claim, whoever can sign in to the Cloudflare account can set a new one.'),

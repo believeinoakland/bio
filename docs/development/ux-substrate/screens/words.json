@@ -52,11 +52,11 @@
   "tab": 2,
   "level": 2,
   "screen": 125,
-  "act": 592,
+  "act": 594,
   "column": 33,
   "wizard": 306,
-  "total": 1728,
-  "protected": 617
+  "total": 1730,
+  "protected": 618
  },
  "words": [
   {
@@ -5171,7 +5171,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_passwordreset.label.reset",
+   "key": "act.passwordreset.label.reset",
    "en": "Set my new password",
    "protected": true,
    "source": "registry.json"
@@ -5341,6 +5341,12 @@
   {
    "key": "act.owed_passwordresetlink.label.members",
    "en": "Make a reset link for a member",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.signerset.label.members",
+   "en": "Withdraw a member's signing key",
    "protected": true,
    "source": "registry.json"
   },
@@ -5591,13 +5597,13 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_grouplanguagesset.label.group",
+   "key": "act.grouplanguagesset.label.group",
    "en": "Save the languages",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_grouplogoset.label.group",
+   "key": "act.grouplogoset.label.group",
    "en": "Change the logo",
    "protected": true,
    "source": "registry.json"
@@ -6923,7 +6929,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_signrequest.label.ceremony",
+   "key": "act.signrequest.label.ceremony",
    "en": "Ask an owner to sign",
    "protected": true,
    "source": "registry.json"
@@ -7037,19 +7043,19 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_grouplanguagesset.does",
+   "key": "act.grouplanguagesset.does",
    "en": "Sets the languages your group's members use: Civicsmith's own words are shown in each, and members choose among them when they join. The places whose rules apply are not changed.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_grouplogoset.does",
+   "key": "act.grouplogoset.does",
    "en": "Replaces the logo shown beside your group's name on its page, its masthead and its published cases. A logo is optional; with none, the name stands alone.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_passwordreset.does",
+   "key": "act.passwordreset.does",
    "en": "Sets your new password from the reset link an administrator made for you. The link is spent, every other sign-in of yours ends, and your handle and work stay as they are.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -7289,8 +7295,14 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_signrequest.does",
+   "key": "act.signrequest.does",
    "en": "Tells the project's owners, in their queues, that this edition is prepared and ready to sign. It signs nothing.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.signerset.does",
+   "en": "Withdraws a member's signing key, for a lost or stolen device. It stops working at once; what it already signed can still be checked.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8904,13 +8916,13 @@
   },
   {
    "key": "wizard.WIZ-c887066cc553dd41.step1.what",
-   "en": "Check you have what is needed: a Cloudflare account and about twenty minutes.",
+   "en": "Check you have what is needed: a Cloudflare account on the Workers Paid plan ($5 a month, with a payment method) and about twenty minutes.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-c887066cc553dd41.step1.why",
-   "en": "The free plan works. Workers Paid ($5 a month) adds recomputing spreadsheets and signing in with a Claude subscription. No Claude account is needed to set up.",
+   "en": "Civicsmith uses parts of Cloudflare that only the paid plan includes. No Claude account is needed to set up.",
    "protected": false,
    "source": "library.json"
   },

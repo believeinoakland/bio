@@ -19,7 +19,7 @@ screen('front', 'Your group\'s page', 'public', 'The group\'s own landing page a
 screen('tour', 'How we work, step by step', 'public', 'The walk-through for anyone, offered on the group\'s page before joining (Bob\'s D7, K3060): what the group looks into, how a finding shows its source and its strength, what it publishes and who signs it, handing it material, and how people join (DEC-205).',
   [], [3])
 screen('reset', 'Choose a new password', 'public', 'The administrator\'s one-time reset link opens here: the member chooses a new password, keeping their handle and work; a used, expired or withdrawn link says so (Bob\'s D4, K3060; DEC-201, DEC-205).',
-  [('owed:passwordreset DEC-205','Set my new password')], [3])
+  [('passwordreset','Set my new password')], [3])
 screen('forgot', 'Forgot your password', 'public', 'Getting back in without email: any member with one of their recovery codes, or through an administrator\'s one-time reset link (Bob\'s D4, B3, K3060; credentials R47; DEC-201, DEC-202).',
   [('recover','Set a new password with a recovery code')], [3])
 screen('setup', 'Become your group\'s first administrator', 'setup', 'The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
@@ -33,7 +33,7 @@ screen('join', 'Your invitation', 'setup', 'The invitation link opens here: lang
 screen('home', 'Your group\'s home', 'working', 'What the group is working on, what waits on you, and "What happened?", the door to a first step.',
   [('promote','Start a project'),('startfrom','Start from…')], [3,6])
 screen('members', 'Members', 'working', 'The roster: invitations, capabilities, expertise, administrators, joining through the website.',
-  [('memberadd','Invite a member'),('owed:passwordresetlink DEC-201','Make a reset link for a member'),('membercaps','Change what a member may do'),('memberset','Change a member\'s status'),('adminendorse','Endorse an administrator'),
+  [('memberadd','Invite a member'),('owed:passwordresetlink DEC-201','Make a reset link for a member'),('signerset','Withdraw a member\'s signing key'),('membercaps','Change what a member may do'),('memberset','Change a member\'s status'),('adminendorse','Endorse an administrator'),
    ('adminremove','Remove an administrator'),('expertiseconfirm','Confirm declared expertise'),('invitewithdraw','Withdraw an unused invitation'),('websitekeycreate','Create a website key'),('joinlinkenable','Turn on the reusable join link'),
    ('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('accountusesset','Set what the group\'s key pays for'),('ailimitset','Set a limit on the group\'s key'),('groupkeyremove','Remove the group\'s key'),('aikeepaway','Keep the group\'s material away from AI, with a reason')], [16,27])
 screen('security', 'Security', 'working', 'Administrators only: how hard the group\'s Civicsmith is being tried over a period they choose, by kind and hour against its usual; counts only; told only when risk is high (K1875, K1874, DEC-165).',
@@ -47,7 +47,7 @@ screen('places', 'Places and offices', 'working', 'Administrators: the places wh
 screen('recovery', 'Recovery codes', 'working', 'Every member\'s own one-time recovery codes (D4, K3060), how many are left, and whether two administrators hold them (credentials R46; instance-setup R66; K1888; DEC-200 (8), N997).',
   [('recoverycodesissue','Get new recovery codes')], [2])
 screen('group', 'Your group', 'working', 'Administrators: the settings chosen at setup, changeable here: name and logo, website, languages, the court notice, the hosting account\'s holder, the group\'s bar (DEC-201).',
-  [('groupnameset','Save the name'),('groupdomainset','Verify the website'),('owed:grouplanguagesset DEC-205','Save the languages'),('owed:grouplogoset DEC-205','Change the logo'),('courtnoticeset','Show the court notice'),('hostingaccessset','Record who holds the hosting account'),('strengthbarset','Set the group\'s bar')], [2])
+  [('groupnameset','Save the name'),('groupdomainset','Verify the website'),('grouplanguagesset','Save the languages'),('grouplogoset','Change the logo'),('courtnoticeset','Show the court notice'),('hostingaccessset','Record who holds the hosting account'),('strengthbarset','Set the group\'s bar')], [2])
 screen('settings', 'Settings', 'working', 'Every setting in one list: the member\'s own, then the group\'s for administrators (DEC-201).', [], [2,3])
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
   [('declaretie','Add a tie'),('withdrawtie','Remove a tie')], [5])
@@ -138,7 +138,7 @@ screen('case-editor', 'Case', 'working', 'Prepare the case: scope, statement, wh
 screen('review-copy', 'Review copy', 'working', 'A named outsider\'s revocable view of the draft.',
   [('reviewgrant','Share for review'),('reviewrevoke','Stop sharing'),('reviewcomment','Comment')], [21])
 screen('ceremony', 'Publication ceremony', 'working', 'The required wizard: checks, disclosures, ties confirmed, preview, then signing inside the ceremony (Bob\'s D9, K3060; Q4): when it becomes public, the password asked again (D3), the member\'s own device confirming the key, signed and waiting or published; no key in this browser, a phone, a member who isn\'t an owner (DEC-207).',
-  [('publishpreflight','Check before publishing'),('publishtensions','See what must be disclosed'),('caseratify','Sign and publish now'),('publish','Confirm your ties and prepare the edition for signing'),('publishat','Sign now and publish at a set time, checked again then'),('obscuremark','Mark who and what to obscure in a photo'),('obscuremarkwithdraw','Withdraw a mark on a photo, with a reason'),('signerregisterown','Register a signing key in this browser'),('owed:signrequest DEC-207','Ask an owner to sign'),('publishatmove','Move the publishing time'),('publishatcancel','Cancel publishing')], [15,24])
+  [('publishpreflight','Check before publishing'),('publishtensions','See what must be disclosed'),('caseratify','Sign and publish now'),('publish','Confirm your ties and prepare the edition for signing'),('publishat','Sign now and publish at a set time, checked again then'),('obscuremark','Mark who and what to obscure in a photo'),('obscuremarkwithdraw','Withdraw a mark on a photo, with a reason'),('signerregisterown','Register a signing key in this browser'),('signrequest','Ask an owner to sign'),('publishatmove','Move the publishing time'),('publishatcancel','Cancel publishing')], [15,24])
 screen('review-outside', 'A review copy, from outside', 'published', 'What an outside reviewer sees from a review link: the draft, how long the link works, and their comment (journey 21; DEC-201).', [('reviewcomment','Send your comment')], [21])
 screen('published', 'Published case', 'published', 'The public page: findings, strengths, timeline, people named, evidence; checkable without the group.',
   [('verify','Check the signature'),('publishedcase','Read the case')], [26])

@@ -22,8 +22,8 @@
       {
        "screen": "install",
        "act": null,
-       "what": "Check you have what is needed: a Cloudflare account and about twenty minutes.",
-       "why": "The free plan works. Workers Paid ($5 a month) adds recomputing spreadsheets and signing in with a Claude subscription. No Claude account is needed to set up."
+       "what": "Check you have what is needed: a Cloudflare account on the Workers Paid plan ($5 a month, with a payment method) and about twenty minutes.",
+       "why": "Civicsmith uses parts of Cloudflare that only the paid plan includes. No Claude account is needed to set up."
       },
       {
        "screen": "install",
