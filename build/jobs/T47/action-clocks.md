@@ -27,7 +27,7 @@
 - `checks/format.mjs`: 0 failures. `architecture.mjs … action-clocks`: 0 failures. `coverage.mjs … action-clocks`: 23 of 23 live ids named, 0 failures. `ownership.mjs … tranche/T47`: 0 failures.
 - `checks/run.mjs`: format 0, architecture 0 failures (3122 files), channels 0; coverage 29 failures, none action-clocks'.
 
-Size (session_01DV7d612TSVz2gLVE9X2Re4): test runs 14, module lines 2122
+Size (session_01DV7d612TSVz2gLVE9X2Re4): test runs 14, module lines 2104
 
 
 ## J1 · REPORT
