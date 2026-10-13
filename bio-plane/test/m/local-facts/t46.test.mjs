@@ -71,7 +71,7 @@ const KEPT = {
   RULE_NOT_CONFIRMED: "Only a rule your group confirmed and still applies can be offered to the shared profile. Nothing was "
     + "written.",
 };
-/* Codes, numbers and wheres, unmoved by R16. */
+/* Codes, numbers and wheres, unmoved by R16 (C-126.7's `where` moved since by R17, T47, to its one builder). */
 const ROWS = {
   MACHINE_CANNOT_CONFIRM: ["C-126.1", "src/local-facts/index.mjs machineRefusal > is-fact-member"],
   NO_SUCH_FACT: ["C-126.2", "src/local-facts/index.mjs noSuchFact > is-fact-named"],
@@ -79,7 +79,7 @@ const ROWS = {
   FACT_HOW_REFUSED: ["C-126.4", "src/local-facts/index.mjs factConfirm > is-fact-how"],
   FACT_VALUE_REFUSED: ["C-126.5", "src/local-facts/index.mjs factConfirm > is-fact-correction"],
   MACHINE_CANNOT_DRAFT_RULE: ["C-126.6", "src/local-facts/rules.mjs machineRuleRefusal > is-rule-member"],
-  RULE_SECTION_UNKNOWN: ["C-126.7", "src/local-facts/rules.mjs ruleDraft > is-rule-section"],
+  RULE_SECTION_UNKNOWN: ["C-126.7", "src/local-facts/rules.mjs sectionRefusal > is-rule-section"],
   RULE_ENTRY_INVALID: ["C-126.8", "src/local-facts/rules.mjs ruleDraft > is-rule-entry"],
   RULE_NO_SOURCE: ["C-126.9", "src/local-facts/rules.mjs ruleDraft > is-rule-source"],
   RULE_IN_PROFILE: ["C-126.10", "src/local-facts/rules.mjs ruleDraft > is-rule-new"],

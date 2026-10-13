@@ -171,11 +171,7 @@ export class GroupRules {
     const machine = machineRuleRefusal(b.by);
     if (machine) return machine;
     const section = b.section;
-    /* DEC-49 REGION is-rule-section */
-    if (!RULE_SECTIONS.includes(section))
-      return refusal("RULE_SECTION_UNKNOWN", `a group's rule is drafted in ${RULE_SECTIONS.join(" or ")}.`,
-                     { section: typeof section === "string" ? section.slice(0, 40) : null, sections: [...RULE_SECTIONS] });
-    /* END DEC-49 REGION is-rule-section */
+    if (!RULE_SECTIONS.includes(section)) return sectionRefusal(section);
     const at = this.instant();
     const c = this.#combined();
     const errors = this.#entryErrors(section, b.entry, c && c.ok ? c.view : null, at);
@@ -295,9 +291,7 @@ export class GroupRules {
   groupRules(a = {}) {
     try {
       const b = isObj(a) ? a : {};
-      if (b.section !== undefined && b.section !== null && !RULE_SECTIONS.includes(b.section))
-        return refusal("RULE_SECTION_UNKNOWN", `a group's rule is drafted in ${RULE_SECTIONS.join(" or ")}.`,
-                       { section: typeof b.section === "string" ? b.section.slice(0, 40) : null, sections: [...RULE_SECTIONS] });
+      if (b.section !== undefined && b.section !== null && !RULE_SECTIONS.includes(b.section)) return sectionRefusal(b.section);
       if (!namesMember(b.viewer)) return { ok: true, rules: [], count: 0 };
       const rules = this.#rules().filter((r) => !b.section || r.section === b.section).map((r) => ({
         rule: r.rule, section: r.section, state: r.state, entry: r.entry, source: r.source, reason: r.reason,
@@ -367,6 +361,15 @@ function machineRuleRefusal(by) {
   return refusal("MACHINE_CANNOT_DRAFT_RULE", "drafting or withdrawing a group's rule is a named member's act; an "
                  + "assistant's draft reaches a member as its run's output. Nothing was written.");
   /* END DEC-49 REGION is-rule-member */
+}
+
+/* R10, R12, R17: a section that is neither `deadlines` nor `legal_facts`, given to a draft or to the read of the group's
+   rules; the one builder of RULE_SECTION_UNKNOWN, so both answer the same refusal. */
+function sectionRefusal(section) {
+  /* DEC-49 REGION is-rule-section */
+  return refusal("RULE_SECTION_UNKNOWN", `a group's rule is drafted in ${RULE_SECTIONS.join(" or ")}.`,
+                 { section: typeof section === "string" ? section.slice(0, 40) : null, sections: [...RULE_SECTIONS] });
+  /* END DEC-49 REGION is-rule-section */
 }
 
 /* R10, R13: a reason of 1 to 500 characters. */

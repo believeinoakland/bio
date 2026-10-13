@@ -112,7 +112,7 @@ export function standardsWorld() {
   return s;
 }
 
-export function world({ now = "2026-09-01T00:00:00.000Z", nowMs = null, zone = ZONE } = {}) {
+export function world({ now = "2026-09-01T00:00:00.000Z", nowMs = null, zone = ZONE, env = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -130,7 +130,7 @@ export function world({ now = "2026-09-01T00:00:00.000Z", nowMs = null, zone = Z
   const tz = { zone };
   const p = progressionsOf(host, { record, extraction, provenance, entities: mean.entities_,
                                    events: ev.provider, standards: std.provider, zoneOf: () => tz.zone,
-                                   now: () => clock.now, nowMs: clock.nowMs == null ? null : () => clock.nowMs });
+                                   now: () => clock.now, nowMs: clock.nowMs == null ? null : () => clock.nowMs, env });
   p.migrate();
   const w = {
     st, host, record, p, clock, mean, dates, ev, std, tz,
