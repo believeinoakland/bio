@@ -32,3 +32,7 @@ Size (session_01MumH1LDmj58bzBZXFqYHEm): test runs 8, module lines 2795
 ## J1 · REPORT
 
 R31's reading shape (obscured gains kind, null on a row stating none) opens 7 reds in other modules' tests, each deep-comparing a read-back obscured to {copy, label, marked}; each needs kind: null in its expected value (or the kind its writer hands from T47-26): case-carriage obscured.test.mjs:31 (R1); public-read obscured.test.mjs:156 (R3) and :366 (R23); case-disclosures documents.test.mjs:234 and photos.test.mjs:251 (R7); case-authoring documents.test.mjs:147 and photos.test.mjs:60 (R14). Also case-checker's program.mjs stale (rule 5.4). Before/after counts and detail in my record. Open for BOB, not taken: R14 still chooses the cleaned-copy line by the copy's bytes (its T39 test pins 'never by the row'); whether it should read R31's kind first is R14's wording, not this entry's.
+
+## J2 · COMPLETE
+
+T47-25 applied: R30 met as built (tests name it with both controls); R31 obscured_kind written/read (photo | document, other values null, absent writes no line; detail ruled in record); R8, R23, R29 cross-references re-pointed. case-grammar 152/152; format, architecture, coverage (31/31), ownership 0 failures; run.mjs architecture 0. 7 reds in users' tests from R31's shape (REPORT J1). Record: build/jobs/T47/case-grammar.md on job/T47/case-grammar.
