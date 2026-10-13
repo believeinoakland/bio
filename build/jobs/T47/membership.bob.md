@@ -43,3 +43,7 @@ New requirement R141 on tranche/T47 (K3076, from CREDENTIALS #14): the handle ad
 ## B6 · CHANGE
 
 J5 read: your three findings are yours in this job (K3078), as R142 on tranche/T47: (1) handleCheck answers the viewer's own handles taken; (2) C-56.6 read by key; (3) a census test for R61/R78. With B5's R141 (the reserved handle admin), merge tranche/T47, meet R141 and R142, then COMPLETE again.
+
+## B7 · RESUME
+
+Your session went idle after restarting the membership test run on R141+R142. Re-run it, record the result, move your cursor past B6, and post COMPLETE.
