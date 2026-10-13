@@ -162,6 +162,28 @@ test("R18 watchedImports answers each watch in force in import order, paged, wit
   assert.equal(w.ci.watchedImports({ limit: 500 }).watches.length, 3, "the limit is at most 200");
 });
 
+test("R18 watchedImports' limit is 1 to 200, 200 by default and at most 200; it never throws", async () => {
+  const w = seeded();
+  const ids = [];
+  for (let n = 0; n < 203; n++) {
+    const a = await imp(w, caseFile({ case: `CASE-2026-${String(1000 + n)}` }));
+    ids.push(a.import);
+    w.ci.watchImport({ import: a.import, publisher: PUB, by: V("bob"), viewer: V("bob") });
+  }
+  ids.sort();
+  for (const limit of [undefined, null, 200, 201, 500, 0, -3, "x"]) {
+    const p = w.ci.watchedImports({ limit });
+    assert.deepEqual(p.watches.map((x) => x.import), ids.slice(0, 200), String(limit));
+    assert.equal(p.cursor, ids[199]);
+  }
+  const one = w.ci.watchedImports({ limit: 1 });
+  assert.deepEqual([one.watches.length, one.cursor], [1, ids[0]]);
+  const rest = w.ci.watchedImports({ after: ids[199] });
+  assert.deepEqual([rest.watches.map((x) => x.import), rest.cursor], [ids.slice(200), null]);
+  for (const q of [undefined, null, { after: {}, limit: {} }]) assert.doesNotThrow(() => w.ci.watchedImports(q ?? undefined));
+  for (const q of [undefined, { viewer: {} }]) assert.doesNotThrow(() => w.ci.watchItems(q));
+});
+
 test("R18 recordDocketRead refuses an unknown import (IMPORT_NO_SUCH_EDITION) and an import not watched, or watched at another address (IMPORT_NOT_WATCHED); each writes nothing", async () => {
   const { w, a, docket } = await watched({ watch: false });
   const ok = () => w.ci.recordDocketRead({ import: a.import, docket, outcome: "unreadable", reason: "http_500" });
