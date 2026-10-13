@@ -1,6 +1,6 @@
 # sources (T47)
 
-**Status** · session_01AiGMiDQpBd9gx4BdycAt9K · depth 2 · WORKING · handled B2
+**Status** · session_01AiGMiDQpBd9gx4BdycAt9K · depth 2 · COMPLETE · handled B2
 
 ## Completion (SOURCES #15)
 
