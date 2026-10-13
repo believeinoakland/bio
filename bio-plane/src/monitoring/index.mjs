@@ -424,6 +424,43 @@ function withSessionEntry(text, checked, line) {
   return text.slice(0, cut) + entry + "\n" + text.slice(cut);
 }
 
+/* R74: the document with its front matter's `monitoring.enabled` set to `enabled` and, when `frequency` is given, its
+   `monitoring.frequency` to that word, and `last_updated` to `at`, line by line, so nothing else can move (R34's reason:
+   reformatting is a change). A document with no `monitoring` block gains one at the end of its front matter. Null when
+   there is no front matter. */
+function withMonitoring(text, enabled, frequency, at) {
+  const lines = String(text).split("\n");
+  if (lines[0] !== "---") return null;
+  const close = lines.indexOf("---", 1);
+  if (close < 0) return null;
+  const fm = lines.slice(1, close);
+  const set = (block, key, value, indent) => {
+    const i = block.findIndex((l) => new RegExp(`^\\s+${key}:`).test(l));
+    if (i >= 0) block[i] = `${block[i].match(/^\s+/)[0]}${key}: ${value}`;
+    else block.push(`${indent}${key}: ${value}`);
+  };
+  let start = fm.findIndex((l) => /^monitoring:/.test(l));
+  let block;
+  if (start < 0) { start = fm.length; block = []; fm.push("monitoring:"); }
+  else {
+    let end = start + 1;
+    while (end < fm.length && (/^\s+\S/.test(fm[end]) || fm[end].trim() === "")) end++;
+    while (end > start + 1 && fm[end - 1].trim() === "") end--;
+    block = fm.slice(start + 1, end);
+    /* a value on the key's own line is no block the record's grammar reads (it reads no inline map): the key is
+       written as a block */
+    fm[start] = "monitoring:";
+    fm.splice(start + 1, end - start - 1);
+  }
+  const indent = (block.find((l) => /^\s+\S/.test(l)) || "  x").match(/^\s+/)[0];
+  set(block, "enabled", String(enabled), indent);
+  if (frequency != null) set(block, "frequency", frequency, indent);
+  fm.splice(start + 1, 0, ...block);
+  const lu = fm.findIndex((l) => /^last_updated:/.test(l));
+  if (lu >= 0) fm[lu] = `last_updated: ${at}`;
+  return ["---", ...fm, ...lines.slice(close)].join("\n");
+}
+
 /** R17, R52: one recorded setting as the plan row and the act state it: the frequency, the reason (a canned key with
  *  its sentence, or the member's own words), who set it and when. */
 function settingView(x) {
@@ -1957,6 +1994,88 @@ export class Monitoring {
   }
 
   /* ================================================================== *
+   * A member's act setting a bundle's monitoring (R74; T47, N969)
+   * ================================================================== */
+
+  /** R74 (N969; K3027 doubt 6): a member asks that a bundle be monitored, or no longer: its document's
+   *  `monitoring.enabled` is written (`true` or `false`, the block added when the document has none) and, when given,
+   *  `monitoring.frequency`, a word of `MONITOR_FREQ`. Refused, in this order, each writing nothing: an empty or machine
+   *  author; no `bundleId` (R1's required-argument refusal); a bundle absent or unseen by the viewer (R1's `ABSENT`,
+   *  identically); `enabled` not a boolean or a `frequency` not of `MONITOR_FREQ`; with `enabled: true`, no public https
+   *  `source.locator` (R1's `NO_LOCATOR`). A document already in the asked state answers `{ok: true, existed: true}` and
+   *  writes nothing. Otherwise one promotion authored by the member (never `writer: mechanical`), changing only those
+   *  fields and `last_updated`, with a Session Log entry; every other file carried; promotion's own refusal of the
+   *  member's revision is answered as it gives it. It fetches nothing and ticks nothing: `op=monitor` (R1) and the plan
+   *  (R15, R16) read the new state from the next read. Answers `{ok: true, bundleId, enabled, frequency, revision}`. */
+  async monitorSet({ bundleId = null, enabled, frequency = null, author = null, viewer = null } = {}) {
+    const op = "monitorset";
+    const who = typeof author === "string" ? author.trim() : "";
+    /* DEC-49 REGION is-monitor-set-member */
+    if (!who || isMachineIdentity(who))
+      return frequencyRefusal("MACHINE_CANNOT_SET_MONITORING", "whether a document is watched is asked by a named member; "
+        + "a machine may propose it (R33) and never sets it. Nothing was written.");
+    /* END DEC-49 REGION is-monitor-set-member */
+    if (typeof bundleId !== "string" || !bundleId)
+      return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument: "bundleId",
+               shape: "a non-empty string in the POST body", error: "monitorset needs a bundleId",
+               detail: "op=monitorset needs 'bundleId' in the shape a non-empty string in the POST body, and this request "
+                     + "carried none the operation could use. Nothing was changed." };
+    /* R1's fail-closed read: absent and unseen are one answer. */
+    const img = this.membership.inSight(bundleId, viewer) ? this.record.readImage(bundleId) : null;
+    if (!img || typeof img["bundle.md"] !== "string") return { ok: false, reason: "ABSENT", bundleId };
+    const freq = frequency === undefined ? null : frequency;
+    /* DEC-49 REGION is-monitor-set-shape */
+    if (typeof enabled !== "boolean")
+      return frequencyRefusal("MONITOR_SET_REFUSED", "'enabled' must be true or false. Nothing was written.",
+                              { field: "enabled" });
+    if (freq !== null && !(typeof freq === "string" && MONITOR_FREQ.includes(freq)))
+      return frequencyRefusal("MONITOR_SET_REFUSED", `'frequency', when given, must be one of ${MONITOR_FREQ.join(", ")}. `
+        + "Nothing was written.", { field: "frequency" });
+    /* END DEC-49 REGION is-monitor-set-shape */
+    const live = img["bundle.md"];
+    const fm = parseFrontmatter(live).data || {};
+    const locator = fm.source?.locator;
+    if (enabled && (typeof locator !== "string" || !isPublicHttpsLocator(locator)))
+      return { ok: false, reason: "NO_LOCATOR", bundleId,
+               detail: "monitoring needs a public https locator in source.locator. Nothing was written." };
+    const mon = fm.monitoring && typeof fm.monitoring === "object" && !Array.isArray(fm.monitoring) ? fm.monitoring : {};
+    const heldFreq = typeof mon.frequency === "string" ? mon.frequency : null;
+    if (mon.enabled === enabled && (freq === null || heldFreq === freq))
+      return { ok: true, existed: true, bundleId, enabled, frequency: heldFreq };
+    const at = stampInstant("second", this.now());
+    const spliced = withMonitoring(live, enabled, freq, at);
+    const member = who.startsWith("member:") ? who.slice("member:".length) : who;
+    const text = spliced === null ? null : withSessionEntry(spliced, at, `Monitoring set by ${member}: `
+      + (enabled ? "this document is watched" : "this document is no longer watched")
+      + (freq !== null ? `, ${freq}` : "") + " (a member's act; nothing was fetched).");
+    /* The written document must say what was asked; a front matter that could not carry it is promotion's to refuse,
+       so the unreadable document is sent and its refusal answered (promotion R17). */
+    const sent = text ?? live;
+    const carried = [];
+    for (const [path, v] of Object.entries(img)) {
+      if (path === "bundle.md" || path.startsWith("_history/")) continue;
+      if (typeof v === "string")
+        carried.push({ path, text: v, bytes: new TextEncoder().encode(v).length, sha256: await sha256Hex(v) });
+      else carried.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
+    }
+    const stamp = at.replace(/[-:]/g, "") + "_" +
+      [...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("");
+    const r = await this.promotion.promote({
+      bundleId, base: await sha256Hex(live), snapKey: stamp, author: who,
+      meta: { object_type: fm.object_type, title: fm.title, current_state: fm.current_state,
+              prior_state: fm.prior_state ?? null, created: fm.created, last_updated: at },
+      files: [{ path: "bundle.md", text: sent, bytes: new TextEncoder().encode(sent).length, sha256: await sha256Hex(sent) },
+              ...carried],
+      actorIdentity: who, actorViewer: viewer ?? who, actorMemberId: member });
+    /* promotion's refusal of the member's revision, answered as it gives it */
+    if (!r || r.ok !== true) return r && typeof r === "object" ? r
+      : { ok: false, reason: null, detail: "the promotion gave no answer. Nothing was written." };
+    const after = parseFrontmatter(sent).data?.monitoring || {};
+    return { ok: true, bundleId, enabled: after.enabled === true,
+             frequency: typeof after.frequency === "string" ? after.frequency : null, revision: r.bundleSha ?? null };
+  }
+
+  /* ================================================================== *
    * For `scheduler` (R19–R24, R45)
    * ================================================================== */
 
@@ -3222,6 +3341,9 @@ export function monitoringOps(m, url, body) {
     monitorslate: () => m.slate({ viewer: q("viewer"), now: q("now"), limit: q("limit") }),
     /* R52: the body's fields, then the control plane's `author` and `viewer` stamps, so a body never supplies them. */
     addressfrequencyset: () => m.addressFrequencySet({ ...b, author: q("author"), viewer: q("viewer") }),
+    /* R74: the same, for a member's act setting a bundle's monitoring. */
+    monitorset: () => m.monitorSet({ bundleId: b.bundleId ?? null, enabled: b.enabled, frequency: b.frequency ?? null,
+                                     author: q("author"), viewer: q("viewer") }),
   };
 }
 
