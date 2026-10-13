@@ -48,3 +48,15 @@ Size (session_01NZ5W5xidnV9DeKDD7m38zu): test runs 22, module lines 2643
 ## J2 · COMPLETE
 
 T47-21 applied: R56, a member's own request with no run ("Ask for this later"), with all nine J1 readings (K3089). The table is rebuilt once with run, target and principal_claude nullable. K3065's plane flake: its cause was the scheduler's alarm drain, armed at once by R44, racing op=capturerequestdrain (busy, or the row already taken); the plane tests now assert on the row's end state, bounded, and nothing was skipped. capture-requests 122/122 (t47.test.mjs 13 new; 1 new plane test); users scheduler 129, link-sweep 29, intent 82, investigation 32, question-explorer 32 (after merging tranche/T47, which carried its R3 fix), agent-worker 16, all green. format, architecture, coverage (56/56) and ownership 0 failures; run.mjs architecture 0, with no coverage red of mine. Nothing deferred. Record: build/jobs/T47/capture-requests.md on job/T47/capture-requests.
+
+## B3 · CHANGE handled
+
+R48 in the plane read `draining`. The cause was my own `drained()` helper: it took any state but `requested` as judged, so it returned while a tick (the alarm's or the op's) was still out with the fetch. It now waits for a terminal state, or for `requested` under a code, never `draining`, bounded at about 10 s of rounds.
+
+Stress runs then exposed a second race, in R19. Re-reading the held row could catch a later tick's re-judgement: after the source's 503 the host governor cools off, so a later tick holds the row `CAPTURE_CONDUCT_HOST_HELD` instead. Two changes fix it:
+- The held host now answers 500. That is still R19's hold (`CAPTURE_FETCH_FAILED`, reason `other`), but the governor does not cool off on it (it does on 429, 403 and 503), so every tick judges the row the same way.
+- The retry's "nothing written" check reads the row when no tick is out with it, drives no drain, and compares only what a retry writes (`state`, `expires`).
+
+Nothing was skipped. `plane.test.mjs` ran green 22 of 22: 10 times in sequence, and 12 times four at a time in parallel. capture-requests 122/122; ownership 0 failures (2 files); coverage 56/56.
+
+Size (session_01NZ5W5xidnV9DeKDD7m38zu): test runs 70, module lines 2643
