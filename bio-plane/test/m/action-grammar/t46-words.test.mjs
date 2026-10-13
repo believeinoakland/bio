@@ -99,10 +99,11 @@ test("R26: each code this module's arms push is answered through its row with th
     if (control) assert.deepEqual(pushed(control).findings, [], `${code}: control`);
   }
   /* the codes actions mints at its own sites read their rows here the same way */
+  /* (R28, T47: the receipt, scope and promise rows name action-records, which raises them now) */
   for (const code of ["DETERMINATION_NOT_NONCOMPLIANT", "MACHINE_CANNOT_SET_PARTNERS", "MACHINE_CANNOT_SET_PRESS_TERMS", "RECEIPT_NOT_ON_SENT",
     "MACHINE_CANNOT_SET_REPLY_OWED", "NO_REPLY_OWED", "STAGE_NOT_IN_LAW", "FOLLOWS_ACTION_REWRITTEN", "MACHINE_CANNOT_SET_SCOPE", "SCOPE_NO_REASON",
     "SCOPE_UNCHANGED", "MACHINE_CANNOT_RECORD_PROMISE", "PROMISE_REFUSED"]) {
-    assert.match(C[code].where, /^src\/actions\/index\.mjs /, code);
+    assert.match(C[code].where, /^src\/(actions|action-records)\/index\.mjs /, code);
     assert.equal(C[code].translation, en(`refusal.${code}`), code);
   }
 });

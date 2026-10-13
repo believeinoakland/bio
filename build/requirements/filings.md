@@ -93,6 +93,7 @@ Rows (T45), C-115's next numbers at the job's stamp, translations BOB's drafts a
 - **R53** (DEC-212) `approvedUnsent({viewer})`: each filing draft or communication approved (R6) and not recorded sent (R7) on an action the viewer may see, `{filing, action, project, approved_by, approved_at}`, oldest first, at most 200 with `truncated`; writes nothing. *(not yet met: T47)*
 - **R54** (DEC-209 (4)) `filingRecordSent` takes `reference`, the venue's own number for the sending (1–100 characters, one line), recorded on the `sent` entry and answered by R13; malformed `SENT_REFERENCE_MALFORMED` (C-115 next free). *(not yet met: T47)*
 - **R55** (DEC-209 (3)) `filingPrepare` and `communicationPrepare` take `fills: {<blank>: text}`, the member's own values for blanks the template names, each filled and labelled the member's (R3); a blank the template does not name is refused `FILL_UNKNOWN_BLANK`. *(not yet met: T47)*
+- **R56** (T47; K231, K3124; `filing-templates` R32) A member's own words naming a blank outside `FILING_BLANKS` are refused through `filing-templates.blankUnknownRefusal`, answered as it gives it; this module never spells C-125.4. Test: the refusal is the provider's, row and blank equal; control: words of known blanks pass. *(not yet met: T47)*
 
 ## Private
 
