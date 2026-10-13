@@ -45,8 +45,8 @@ function published() {
   return { w, env, pin };
 }
 
-/* The rows DEC-149 re-worded (checks.mjs:44–47, :82, :89–91, :103–104, :110–112, :118, :130, :140–142, :151), each
-   whole as it now reads. */
+/* The rows DEC-149 re-worded (C-68.5, C-98.1, C-98.2, C-98.4, C-98.5, C-98.6, C-98.8, C-98.9, C-98.10), each whole as it
+   now reads. */
 const ROWS = {
   NO_PUBLISHED_STORE: "This group's Civicsmith was set up without the storage it keeps its published documents in, so it "
     + "cannot hand over the published document's contents. The document is published; this is a fact about how this "
@@ -96,18 +96,18 @@ test("R17 R3 R5 R18 (T34-87, DEC-149) every refusal carrying a re-worded row ans
   assert.deepEqual([np.reason, np.translation], ["NOT_PUBLISHED", ROWS.NOT_PUBLISHED]);
   const nr = w.read("publicread", { name: "nosuchread" });
   assert.deepEqual([nr.reason, nr.translation], ["PUBLIC_READ_NOT_REGISTERED", ROWS.PUBLIC_READ_NOT_REGISTERED]);
-  /* index.mjs:262 */
+  /* the unregistered read's own detail */
   assert.equal(nr.detail, `no public read named "nosuchread" is registered on ${VOICE}, so there is nothing to serve under that name`);
   const never = await (await call(w, env, "publishedbytes", { sha256: "e".repeat(64) })).json();
   assert.deepEqual([never.reason, never.translation], ["NO_PUBLISHED_PART", ROWS.NO_PUBLISHED_PART]);
-  /* worker.mjs:544–545: no published store bound */
+  /* publishedbytes with no published store bound */
   const noStore = await call(w, {}, "publishedbytes", { sha256: pin });
   assert.equal(noStore.status, 503);
   const ns = await noStore.json();
   assert.deepEqual([ns.reason, ns.translation], ["NO_PUBLISHED_STORE", ROWS.NO_PUBLISHED_STORE]);
   assert.equal(ns.detail, `${VOICE} has no published object store configured, so its published bytes are not servable. `
     + `The hash is genuine and ${VOICE} cannot hand over the bytes.`);
-  /* worker.mjs:112: a store bound and no object at the hash */
+  /* a store bound and no object at the hash */
   assert.equal(publishedObjectMissing().detail,
                `that hash is published, and ${VOICE} holds no bytes for it in its published store, so they cannot be `
                + "handed over. The hash is genuine.");
@@ -120,22 +120,22 @@ test("R17 R3 R5 R18 (T34-87, DEC-149) every refusal carrying a re-worded row ans
 
 test("R3 R4 R5 (T34-87, DEC-149) publishedManifest's detail, publishedCase's case_detail, an unavailable finding body and publishedcase's verification say \"this group's Civicsmith\"", async () => {
   const { w, env, pin } = published();
-  /* index.mjs:471 */
+  /* the published manifest's detail */
   assert.equal(w.read("publishedmanifest", {}).detail,
                "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without the cooperation or "
                + `continued existence of ${VOICE}. Nothing unpublished appears, by construction: this reads the published `
                + "projection and never the working corpus.");
-  /* index.mjs:1048 */
+  /* the published case's case_detail */
   const c = w.read("publishedcase", { id: CASE });
   assert.equal(c.ok, true);
   assert.match(c.case_detail, /the last of these is a DISCLOSURE the reader weighs, never a verdict this group's Civicsmith reached \(DEC-20, DEC-46\)/);
-  /* worker.mjs:832 */
+  /* the Worker's verification sentence */
   const served = await (await call(w, env, "publishedcase", { id: CASE })).json();
   assert.equal(served.verification.detail,
                "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by "
                + "its own sha256, and EACH FINDING's signature covers that finding's own record sha. Nothing here prevents "
                + `a modified copy; everything here makes one detectable by anyone holding it, without the cooperation of ${VOICE}.`);
-  /* worker.mjs:753: the body stated unavailable */
+  /* a finding's body stated unavailable */
   env.PUBLISHED.m.delete(`bio/published/${pin}`);
   const body = (await (await call(w, env, "publishedcase", { id: CASE })).json()).findings[0].body;
   assert.equal(body.state, "unavailable");
@@ -144,4 +144,30 @@ test("R3 R4 R5 (T34-87, DEC-149) publishedManifest's detail, publishedCase's cas
   assert.equal(body.translation, ROWS.OBJECT_MISSING);
   for (const r of [w.read("publishedmanifest", {}).detail, c.case_detail, served.verification.detail, body.detail])
     assert.doesNotMatch(r, OLD_VOICE);
+});
+
+/* T47-29 (N954): DEC-149 over every sentence a reader meets, not the named ones only. */
+import { everyAnswer, sentences } from "./served.mjs";
+test("R17 R3 R4 R5 R6 R7 R18 R21 R30 (T47-29, DEC-149) every member-facing sentence this module serves, on every route and in every packaging, every refusal and every row, speaks of \"this group's Civicsmith\" and never of this copy, this instance or this plane (negative control: the walk finds the old voice planted in an answer)", async () => {
+  const all = await everyAnswer();
+  assert.ok(all.length > 50, "every route, packaging, refusal and row is gathered");
+  let read = 0;
+  for (const [where, answer] of all) for (const [path, s] of sentences(answer)) {
+    read++;
+    assert.doesNotMatch(s, OLD_VOICE, `${where} ${path}: ${s.slice(0, 160)}`);
+  }
+  assert.ok(read > 200, `the walk read the sentences (${read})`);
+  /* the new voice is met where a sentence speaks of who serves */
+  const voiced = all.flatMap(([, a]) => sentences(a)).filter(([, s]) => s.toLowerCase().includes(VOICE.toLowerCase()));
+  assert.ok(voiced.length >= 10, "the new voice is spoken across the answers");
+  /* negative control */
+  const planted = sentences({ ok: false, detail: "this instance holds no such thing" });
+  assert.equal(planted.some(([, s]) => OLD_VOICE.test(s)), true);
+  bindPublishedPlane({
+    json, STORE_SILENT_REASON: "STORE_DID_NOT_ANSWER", STORE_SILENT_DETAIL: "silent", PUBLISHED_STORE: "bio",
+    doAnswer: async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
+                               return out && out.ok === true ? { answered: true, result: out.result } : { answered: false }; },
+    storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502),
+    requiredArgument: (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }),
+  });
 });

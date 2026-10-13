@@ -104,6 +104,10 @@ test("R5 (T46) the store lowercases alike: verify, publishedcase and withheld, t
     assert.deepEqual(w.pr.withheldOf(f), w.pr.withheldOf(pin), "withheldOf");
   }
   for (const f of forms(never)) assert.deepEqual(w.pr.verifySha(f), nLower);
+  /* withheldOf over a hash an order withholds, so each form answers the order and not an empty map */
+  w.stamps.stamp({ case: "CASE-2026-0001", editions: [1], entry: { seq: 4 }, effect: "remove", parts: [pin] });
+  assert.deepEqual(Object.keys(w.pr.withheldOf(pin).withheld), [pin], "the order withholds it");
+  for (const f of forms(pin)) assert.deepEqual(w.pr.withheldOf(f), w.pr.withheldOf(pin), "withheldOf, under an order");
   /* control: a string that is not 64 hex digits is not rewritten by the store (nothing published answers to it) */
   const odd = pin.toUpperCase().slice(1);
   assert.deepEqual(w.pr.verifySha(odd), { published: false, sha256: odd, matches: [] });

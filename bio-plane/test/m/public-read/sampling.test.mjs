@@ -323,8 +323,10 @@ test("R29 (T46) every surface the text names answers each edition's own two inst
   for (const b of list.bundles) assert.equal(Object.hasOwn(b, "signed_at") || Object.hasOwn(b, "published_at"), false, "a finding's row");
   /* publishedEditions: a finding the newest edition pins answers that edition's instants (both editions pin it, so the sole
      case edition is named per row) */
+  let named = 0;
   for (const r of w.read("publishededitions", { id: F }).editions)
-    if (r.case_edition != null) assert.deepEqual(dates(r), D[r.case_edition]);
+    if (r.case_edition != null) { assert.deepEqual(dates(r), D[r.case_edition]); named++; }
+  assert.ok(named > 0, "a row names its case edition, so its instants are checked");
   /* control: swapping the row's instants swaps the answer */
   hold(w, 1, D[1][1], D[1][0]);
   assert.deepEqual(dates(w.read("publishedcase", { id: CASE, edition: 1 })), [D[1][1], D[1][0]]);
