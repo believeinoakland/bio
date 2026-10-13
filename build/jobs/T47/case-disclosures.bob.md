@@ -18,3 +18,7 @@ Reading set (mechanics §17): measured at this START: 1261 KB, over the 600 KB l
 ## B2 · ANSWER · re J1
 
 Both readings stand (K3109): (a) label_key stays beside case-carriage R22's object in R6 and is never written by R7; (b) fail closed as you state. Your arms over the real case-carriage and case-grammar are expected red until their merges; I send a CHANGE when both are merged.
+
+## B3 · CHANGE
+
+case-grammar (T47-25) is merged into tranche/T47 (K3111): merge the tranche into your branch. Its R31 read shape answers obscured as {copy, label, marked, kind} (kind null on a row stating none, else what the writer handed). Your test(s) documents.test.mjs:234 and photos.test.mjs:251 (R7) deep-compare the old shape and are red now: bring each expected value in line (kind: null, or the kind its writer hands from T47-26) in this job; they are accepted red by name until your merge.
