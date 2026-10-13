@@ -262,3 +262,27 @@ test("R56 migrate: a table created before T47, with run, target and principal_cl
     'e.org', 'acquire', 'civicsmith', 'member:ann', NULL, 'requested', 0, 't', 't', 'x')`);
   assert.equal(st.sql.exec(`SELECT count(*) AS n FROM capture_requests`).toArray()[0].n, 2);
 });
+
+test("R56 R55 a member's request may carry a step she sees (judged with her as the asker), tied to it on completion; one she does not see is refused CAPTURE_REQUEST_NO_STEP before anything is written", async () => {
+  const w = world().scene();
+  const s = w.steps.stepCreate({ place: { questions: ["INQ-1"] }, work: "fetch the minutes later", by: ANN });
+  assert.equal(s.ok, true, JSON.stringify(s));
+  const a = mine(w, { step: s.step });
+  assert.deepEqual([a.ok, a.step], [true, s.step]);
+  const d = await w.cr.drain({});
+  assert.deepEqual(d.captured[0].step_product, { ok: true, step: s.step });
+  /* Control: a step on a question in a project she has not joined is unseen: refused, nothing written */
+  w.project("PROJ-H");
+  w.participant("PROJ-H", "inner");
+  w.bundle("INQ-H");
+  w.st.sql.exec(`UPDATE bundles SET project='PROJ-H' WHERE bundle_id = 'INQ-H'`);
+  w.membership.reindexProjectSight("INQ-H");
+  const hidden = w.steps.stepCreate({ place: { questions: ["INQ-H"] }, work: "hidden", by: "member:inner" });
+  assert.equal(hidden.ok, true);
+  const before = count(w);
+  const x = mine(w, { address: "https://later.example.org/h", step: hidden.step });
+  assert.deepEqual([x.ok, x.code], [false, "CAPTURE_REQUEST_NO_STEP"]);
+  assert.equal(count(w), before);
+  /* and the same step is hers to name when she is the one who sees it */
+  assert.equal(mine(w, { address: "https://later.example.org/i", step: hidden.step }, { caller: "member:inner", viewer: V("inner") }).ok, true);
+});
