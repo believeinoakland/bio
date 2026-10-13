@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { world as actionsWorld, V, actionMd, CP, MACHINE, NOW_MS } from "../actions/fixture.mjs";
 import { actionRepliesOf } from "../../../src/action-replies/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
+import { caseInputsOf } from "../../../src/case-inputs/index.mjs";
 
 export { V, MACHINE, NOW_MS };
 export const M = V("alice"), BOB = V("bob");
@@ -29,15 +30,18 @@ const inquiryMd = (id) => ["---", `id: ${id}`, "object_type: inquiry", `title: $
   'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "A finding.", ""].join("\n");
 
 /** The world: `actions`' own, three inquiries and a document held, and this module over them. With `signing`, the real
- *  `case-authoring` on the same host (`w.ca`) is handed to `actionRepliesOf`, which registers with it (R3); without,
- *  none is, and nothing is registered. */
-export function world({ signing = false } = {}) {
+ *  `case-authoring` on the same host (`w.ca`, whose sign step reads the open requests) is built first, and the
+ *  `case-inputs` instance it creates there (`w.ci`) is handed to `actionRepliesOf`, which registers with it (R3; T47,
+ *  N908); without, none is, and nothing is registered. With `root`, it is started as the composition root starts it,
+ *  with its environment and no `case-inputs` given, and reaches the host's own. */
+export function world({ signing = false, root = false } = {}) {
   const w = actionsWorld({ conformance: {} });
   for (const id of [INQ, INQ2, INQ3]) assert.equal(w.promote(id, inquiryMd(id), { extra: { replay: true } }).ok, true);
   w.doc(INFO);
   w.ca = signing ? caseAuthoringOf(w.host, { record: w.record, membership: w.membership }) : null;
-  w.r = actionRepliesOf(w.host, { record: w.record, membership: w.membership, actions: w.a, caseAuthoring: w.ca,
-                                  now: () => w.clock.ms });
+  w.ci = signing ? caseInputsOf(w.host) : null;
+  w.r = actionRepliesOf(w.host, { record: w.record, membership: w.membership, actions: w.a, now: () => w.clock.ms,
+                                  ...(root ? { env: {} } : { caseInputs: w.ci }) });
   /** A request for comment (or another kind) created by a member; throws when refused. */
   w.rfc = (id, opts = {}) => {
     const p = w.promote(id, rfcMd(id, opts));
