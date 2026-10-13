@@ -114408,26 +114408,30 @@ var ACCEPTED_WORK_CHECKS = {
 var ACCEPTED_WORK_ABSENT = "accepted_work_absent";
 var ACCEPTED_WORK_UNREADABLE_WHY = "accepted_work_unreadable";
 var ABSENT_DETAIL = "no module holding another group's work is registered here, so none can be read";
-var MOVES_ABSENT_DETAIL = "the module holding another group's work keeps no publisher moves here, so none can be read";
+var OPTIONAL_ABSENT_DETAIL = {
+  moves: "the module holding another group's work keeps no publisher moves here, so none can be read",
+  flagHistory: "the module holding another group's work keeps no flag history here, so none can be read"
+};
 var UNREADABLE_DETAIL = "the module holding another group's work could not answer";
 var DETAIL_MAX = 200;
 var isObj32 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var optionalFn = (v) => v === void 0 || typeof v === "function";
 var isThenable2 = (v) => v !== null && (typeof v === "object" || typeof v === "function") && typeof v.then === "function";
 var cut5 = (s, n2) => s.length > n2 ? `${s.slice(0, n2)}\u2026` : s;
 var AcceptedWork = class {
   #record;
   #source = null;
-  // {module, finding, openFlags, withdrawals, moves}: R1's one registration
+  // {module, finding, openFlags, withdrawals, moves, flagHistory}: R1's one registration
   constructor({ record } = {}) {
     this.#record = record;
   }
   /* ---------------------------------------------------------------- R1: the registration */
   /** R1 (K31): the one registration `case-import` fills at start. Both refusals are `membership`'s (its R81): a
    *  registration missing any of the three functions is malformed; a second, by any module, is declared, naming the
-   *  holder. The fourth function, `moves` (R8), is optional: a registration without it is whole, one whose `moves`
-   *  is given but is not a function is malformed. */
+   *  holder. The fourth and fifth functions, `moves` (R8) and `flagHistory` (R9), are optional: a registration
+   *  without either is whole, one whose `moves` or `flagHistory` is given but is not a function is malformed. */
   registerAcceptedWork(module, fns) {
-    const whole2 = isObj32(fns) && typeof fns.finding === "function" && typeof fns.openFlags === "function" && typeof fns.withdrawals === "function" && (fns.moves === void 0 || typeof fns.moves === "function");
+    const whole2 = isObj32(fns) && typeof fns.finding === "function" && typeof fns.openFlags === "function" && typeof fns.withdrawals === "function" && optionalFn(fns.moves) && optionalFn(fns.flagHistory);
     const refused5 = listenerRefusal(this.#source, module, whole2 ? fns.finding : null);
     if (refused5) return refused5;
     this.#source = {
@@ -114435,7 +114439,8 @@ var AcceptedWork = class {
       finding: fns.finding,
       openFlags: fns.openFlags,
       withdrawals: fns.withdrawals,
-      moves: fns.moves ?? null
+      moves: fns.moves ?? null,
+      flagHistory: fns.flagHistory ?? null
     };
     return { ok: true, module };
   }
@@ -114457,14 +114462,20 @@ var AcceptedWork = class {
   publisherMoves(args) {
     return this.#read("moves", args, ({ after: after2, limit }) => ({ after: after2, limit }));
   }
-  /* The one read: the registered answer as given; `absent` with none registered (or, for `moves`, none given);
-     `unreadable` when the function
-     throws, or answers a promise (every reader here runs inside a synchronous transaction, so a later answer could
-     never be read). The function is handed the read's own fields alone, copied. Writes nothing and never throws. */
+  /** R9: the registered `flagHistory`'s answer, every flag on that edition and on the named finding that was open at
+   *  any instant from `since` through the read, with its opening and clearing instants, in opening order. `since` is
+   *  handed on as given: whether it is an instant is the registered module's to judge. Absent when no registration,
+   *  or one without `flagHistory`, is held. */
+  flagHistoryOn(args) {
+    return this.#read("flagHistory", args, ({ ref, edition, since, viewer }) => ({ ref, edition, since, viewer }));
+  }
+  /* The one read: the registered answer as given; `absent` with none registered (or, for `moves` and `flagHistory`,
+     none given); `unreadable` when the function throws, or answers a promise (every reader here runs inside a
+     synchronous transaction, so a later answer could never be read). The function is handed the read's own fields alone, copied. Writes nothing and never throws. */
   #read(name3, given6, pick4) {
     const src = this.#source;
     if (!src) return { absent: true, reason: ACCEPTED_WORK_ABSENT, detail: ABSENT_DETAIL };
-    if (!src[name3]) return { absent: true, reason: ACCEPTED_WORK_ABSENT, detail: MOVES_ABSENT_DETAIL };
+    if (!src[name3]) return { absent: true, reason: ACCEPTED_WORK_ABSENT, detail: OPTIONAL_ABSENT_DETAIL[name3] };
     try {
       const answer2 = src[name3](pick4(argsOf(given6)));
       if (isThenable2(answer2)) {
@@ -115081,19 +115092,8 @@ var VERSION_ACT_CHECKS = {
   },
   /* D-271 — DEC-32 RULE 4's ANTI-GAMING KEYSTONE, ENACTED AT THE ONE ACT THAT
      CASHES IT IN.
-     THE NUMBER BETWEEN C-25.31 AND THIS ROW IS DELIBERATELY SKIPPED, and it is
-     NOT SPELLED HERE ON PURPOSE — it is held by a concurrent unmerged item (PL-2's
-     verification pass), which measured it free when it looked, and stepping over
-     an id somebody holds is cheaper than the collision seven items paid for in one
-     day. **Writing the numeral in this comment ALLOCATED IT AS A CHECK**:
-     the retired `scripts/coverage.mjs` (gone since T18, K739) built the catalogue with
-     `checksSrc.matchAll(/C-\d+\.\d+/g)` over the RAW source of this file, comments
-     included, so a number named in prose becomes a check `--strict` then demands
-     an assertion for. Measured at this item: the catalogue read 225 where the
-     rows are 224, and `--strict` EXITED 1 naming a check nobody had written.
-     Same class as the census that graded a file by a token in its comments, in a
-     second instrument and this one GATED — delegated with the receipt rather than
-     fixed here, because the harvest regex is not this item's span.
+     C-25.32 sits between C-25.31 and this row, allocated after this row was minted (VERSION_REASON_MALFORMED
+     above); no number in the family is skipped.
      THE TRANSLATION REUSES THE RECORD'S EXISTING MEMBER-FACING PHRASE — "would
      carry the answer on its own", already the wording in BASIS_VERSION_CHECKS —
      rather than authoring a third spelling of it. DEC-32 clause 1 and D-226 ban
@@ -116311,7 +116311,7 @@ var BasisVersions = class _BasisVersions {
       bundleId
     ).map((r) => ({ version: r.name, ord: r.ord, target: r.target_id, content_id: r.content_id ?? null })) };
   }
-  /* ================================================================ reads (R8–R11, R22, R23, R37, R39, R41, R42) */
+  /* ================================================================ reads (R8–R11, R22, R23, R37, R39, R41, R42, R50) */
   /** D-235: the collections the record holds for one version, read once for `op=basisversions` and `op=suggest`'s
    *  answer. The ground labels come from the legs this answer carries, the blank label a legless part projects dropped.
    *  `composition_grades: "authored"` says the frozen string keeps what was AUTHORED while `legs[]` publishes what the
@@ -116618,7 +116618,8 @@ var BasisVersions = class _BasisVersions {
    *  (`project-stage` R2, was publication R45) fences the project. The candidates are the document's live `cites`
    *  targets that the record holds as inquiries, read in one bounded statement, one past the page, so `cursor` (the
    *  last answered) is set only when more follow. `limit` absent, zero or not a number reads as 500, a negative one as 1 (connections R42's reading).
-   *  Writes nothing; never throws: an empty or non-project id, or a project with no document, answers `items: []`. */
+   *  Writes nothing; never throws: an empty or non-project id, or a project with no document, answers `items: []`; a
+   *  `basisFor` that throws reads as no leg, so a failing read never cuts a page short behind a null cursor. */
   projectQuestions({ project = null, after: after2 = null, limit = null } = {}) {
     const out = { items: [], cursor: null };
     try {
@@ -116643,7 +116644,12 @@ var BasisVersions = class _BasisVersions {
         cap + 1
       );
       for (const r of rows4.slice(0, cap)) {
-        const basis = this.inquiry.basisFor(r.bundle_id, { limit: 1 });
+        let basis = null;
+        try {
+          basis = this.inquiry.basisFor(r.bundle_id, { limit: 1 });
+        } catch {
+          basis = null;
+        }
         const { stance } = _BasisVersions.#recordIn(fm, pid, r.bundle_id);
         out.items.push({
           inquiry: r.bundle_id,
@@ -116655,6 +116661,30 @@ var BasisVersions = class _BasisVersions {
     } catch {
     }
     return out;
+  }
+  /** R50 (T47; N974, K3003, K3027 doubts 5, 7; `op=projectquestions`): R41 served to a viewer. A project the viewer may
+   *  not see (membership R80), an absent one and one that is not a project answer alike, an empty page and never a
+   *  refusal (R33). Otherwise R41's page less each inquiry the viewer may not see, left out unannounced and uncounted,
+   *  each item carrying the inquiry's title as the record holds it (record-core R34); the cursor is R41's, so a page may
+   *  hold fewer than `limit` and no inquiry is skipped. Writes nothing; never throws. */
+  projectQuestionsFor({ project = null, after: after2 = null, limit = null, viewer = null } = {}) {
+    let empty2 = { ok: true, project: null, items: [], cursor: null };
+    try {
+      const pid = String(project ?? "").trim();
+      empty2 = { ...empty2, project: pid };
+      if (!pid || !this.membership.inSight(pid, viewer)) return empty2;
+      const p3 = this.record.bundleInfo(pid);
+      if (!p3 || normalizeType(p3.type) !== "project") return empty2;
+      const page2 = this.projectQuestions({ project: pid, after: after2, limit });
+      const items = [];
+      for (const it of page2.items) {
+        if (!this.membership.inSight(it.inquiry, viewer)) continue;
+        items.push({ ...it, title: this.record.bundleInfo(it.inquiry)?.title ?? null });
+      }
+      return { ok: true, project: pid, items, cursor: page2.cursor };
+    } catch {
+      return empty2;
+    }
   }
   /** R39 (MK-1 (A), N67): what would carry a member's authored observation into the published record. From each root
    *  the evidence graph is walked through every basis leg AND every version leg (an older reading of the basis is still
@@ -118107,6 +118137,13 @@ function basisVersionsOps(bv, url, body) {
       offset: q10("offset"),
       viewer: q10("viewer"),
       project: q10("project")
+    }),
+    /* R50: the viewer is the URL's stamp, the rest the query's */
+    projectquestions: () => bv.projectQuestionsFor({
+      project: q10("project"),
+      after: q10("after"),
+      limit: q10("limit"),
+      viewer: q10("viewer")
     }),
     versionaccept: () => bv.versionAccept(versionArgs()),
     versionreject: () => bv.versionReject(versionArgs()),
@@ -121190,7 +121227,7 @@ var PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
 var STRENGTH_BAR_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE: {
     check: "C-32.9",
-    where: at13("strengthBarSet", "is-machine-strength-bar"),
+    where: at13("machineCannotDeclare", "is-machine-strength-bar"),
     translation: "How much evidence this group requires of itself is the group's own declaration about the standard it works to, and everything filed afterwards is measured against it. An automated credential cannot set that bar for the people it works for. Sign in to change it."
   },
   STRENGTH_BAR_NOT_ADMIN: {
@@ -121202,7 +121239,7 @@ var STRENGTH_BAR_CHECKS = Object.freeze({
      refusal is `CONDITION_BAD_GRADE`, another condition (K238). */
   BAD_GRADE: {
     check: "C-107.2",
-    where: at13("strengthBarSet", "is-strength-bar-grade"),
+    where: at13("badGrade", "is-strength-bar-grade"),
     translation: "A standard of evidence is stated in the grades the record uses, A to D, one for how the documents were captured and one for how firmly they connect. One of the two given is not a grade. Nothing was changed."
   },
   /* DEC-88 (K1025): the administrator's own words on why the group sets this bar, recorded with it and answered beside
@@ -121211,6 +121248,14 @@ var STRENGTH_BAR_CHECKS = Object.freeze({
     check: "C-107.3",
     where: at13("strengthBarSet", "is-strength-bar-reason"),
     translation: "A standard of evidence for the whole group is set with a reason: say in your own words why the group works to this standard, in at most 2,000 characters. The reason is kept with it and shown wherever it is read. Nothing was changed."
+  },
+  /* R40 (T47; N976, K3003): a project's own standard of evidence, set by a member of the project, is recorded with the
+     member's own words on why, as the group's default is (C-107.3), because a bar raised or lowered with no reason given
+     is one nobody can weigh. */
+  PROJECT_BAR_NO_REASON: {
+    check: "C-107.4",
+    where: at13("projectBarSet", "is-project-bar-reason"),
+    translation: "A project's standard of evidence is set with a reason: say in your own words why the project works to this standard, in at most 2,000 characters. The reason is kept with it. Nothing was changed."
   }
 });
 
@@ -121304,6 +121349,61 @@ var typeOfId = (id) => normalizeType(OBJECT_TYPES[String(id ?? "").split("-")[0]
 function barAxisWords(bar) {
   return ["capture", "connection"].map((axis) => bar[axis] == null ? `no bar set on the ${axis} axis` : `${axis} ${bar[axis]}`).join(", ");
 }
+function barRefusal(code, detail, extra) {
+  const row14 = STRENGTH_BAR_CHECKS[code];
+  return { ok: false, reason: code, code, check: row14.check, translation: row14.translation, detail, ...extra || {} };
+}
+function machineCannotDeclare(author, whose) {
+  const who3 = String(author ?? "").trim();
+  if (!who3 || isMachineIdentity(who3))
+    return barRefusal(
+      "MACHINE_CANNOT_DECLARE",
+      `the required evidentiary strength is the ${whose} declaration about its own work. A machine credential may not make it. Sign in as a member.`
+    );
+  return null;
+}
+function badGrade(capture2, connection) {
+  for (const [axis, v] of [["capture", capture2], ["connection", connection]])
+    if (v != null && !BASIS_GRADES.includes(v))
+      return barRefusal("BAD_GRADE", `${axis} must be one of ${BASIS_GRADES.join(", ")}, or null`, { axis });
+  return null;
+}
+var barLogWords = (bar) => bar && bar.declared ? barAxisWords(bar) : "no bar";
+function spliceProjectBar(text7, bar, at47) {
+  const lines2 = String(text7).split("\n");
+  const end2 = lines2.indexOf("---", 1);
+  if (lines2[0] !== "---" || end2 === -1) return null;
+  const fm = lines2.slice(1, end2);
+  const block2 = ["required_strength:", `  capture: ${bar.capture ?? "null"}`, `  connection: ${bar.connection ?? "null"}`];
+  const out = [];
+  let placed2 = false, skipping = false;
+  for (const l2 of fm) {
+    if (skipping && /^\s/.test(l2)) continue;
+    skipping = false;
+    if (/^required_strength\s*:/.test(l2)) {
+      out.push(...block2);
+      placed2 = true;
+      skipping = true;
+      continue;
+    }
+    if (/^last_updated\s*:/.test(l2)) continue;
+    out.push(l2);
+  }
+  if (!placed2) out.push(...block2);
+  out.push(`last_updated: "${at47}"`);
+  return ["---", ...out, ...lines2.slice(end2)].join("\n");
+}
+function appendSessionLog3(text7, entry4) {
+  const at47 = text7.indexOf("## Session Log");
+  if (at47 < 0) return `${text7.replace(/\n*$/, "\n")}
+## Session Log
+
+${entry4}`;
+  const nxt = text7.indexOf("\n## ", at47 + 1);
+  const cut10 = nxt === -1 ? text7.length : nxt + 1;
+  const head = text7.slice(0, cut10);
+  return `${head}${head.endsWith("\n") ? "" : "\n"}${entry4}${nxt === -1 ? "" : "\n"}${text7.slice(cut10)}`;
+}
 function inquiryReader(earning, inquiry) {
   return {
     basisFor: (id, o) => earning().basisFor(id, o),
@@ -121352,6 +121452,10 @@ var Strength = class _Strength {
   }
   set inquiry(v) {
     this.#deps.inquiry = v;
+  }
+  /* R40: the one write path a project's own bar is promoted through (promotion's `promote`). */
+  get promotion() {
+    return this.#deps.promotion;
   }
   /* R33: accepted-work's read (its R2), on the same host, reached on the first ref read (K1307). */
   get acceptedWork() {
@@ -122590,7 +122694,7 @@ var Strength = class _Strength {
         project: projectId,
         capture: declared2.capture,
         connection: declared2.connection,
-        detail: `required by ${projectId}, the project whose production this case is: capture ${barAxisWords(declared2)}. The bar is the project's own declaration about its own work, stated in advance, and is never set by who a reader is.`
+        detail: `required by ${projectId}, the project whose production this case is: ${barAxisWords(declared2)}. The bar is the project's own declaration about its own work, stated in advance, and is never set by who a reader is.`
       };
     return {
       declared: false,
@@ -122598,25 +122702,18 @@ var Strength = class _Strength {
       project: projectId,
       capture: null,
       connection: null,
-      detail: `${projectId} declares no required evidentiary strength, so nothing in this case was measured against one. An absent bar is not a bar of zero, and this case makes no claim to have cleared any standard. A project declares its bar in its own bundle.md, which is an authored, dated, on-the-record act.`
+      detail: `${projectId} declares no required evidentiary strength, so nothing in this case was measured against one. An absent bar is not a bar of zero, and this case makes no claim to have cleared any standard. A project declares its bar by its own act, written into the project's document as an authored, dated, on-the-record entry.`
     };
   }
   /** R15: the group's default bar, the one a new project starts from (DEC-17 as amended). A pair: a scalar would
    *  re-collapse the two axes in the one field a reader is most likely to quote. It is recorded with the administrator's
    *  reason (DEC-88), and its answer carries DEC-105's honest note. */
   strengthBarSet({ group = null, capture: capture2 = null, connection = null, reason: reason2 = void 0, author = null } = {}) {
-    const who3 = String(author ?? "").trim();
-    const refusal38 = (code, detail, extra) => {
-      const row14 = STRENGTH_BAR_CHECKS[code];
-      return { ok: false, reason: code, code, check: row14.check, translation: row14.translation, detail, ...extra || {} };
-    };
-    if (!who3 || isMachineIdentity(who3))
-      return refusal38(
-        "MACHINE_CANNOT_DECLARE",
-        "the required evidentiary strength is the GROUP's declaration about its own work. A machine credential may not make it. Sign in as a member."
-      );
+    const machine3 = machineCannotDeclare(author, "GROUP's");
+    if (machine3) return machine3;
+    const who3 = String(author).trim();
     if (!this.membership.isAdministrator(who3))
-      return refusal38(
+      return barRefusal(
         "STRENGTH_BAR_NOT_ADMIN",
         "the default bar is declared for the whole group, so only an active administrator may set it. Nothing was declared."
       );
@@ -122633,9 +122730,8 @@ var Strength = class _Strength {
         detail: "the default bar is the GROUP's declaration, keyed by its group; this request names no group and this store records none. Nothing was declared."
       };
     }
-    for (const [axis, v] of [["capture", capture2], ["connection", connection]])
-      if (v != null && !BASIS_GRADES.includes(v))
-        return refusal38("BAD_GRADE", `${axis} must be one of ${BASIS_GRADES.join(", ")}, or null`, { axis });
+    const bad2 = badGrade(capture2, connection);
+    if (bad2) return bad2;
     if (capture2 == null && connection == null)
       return {
         ok: false,
@@ -122644,7 +122740,7 @@ var Strength = class _Strength {
       };
     const why2 = typeof reason2 === "string" ? reason2.trim() : "";
     if (!why2 || why2.length > BAR_REASON_MAX)
-      return refusal38(
+      return barRefusal(
         "BAR_NO_REASON",
         typeof reason2 !== "string" ? "give the reason the group sets this bar, as text in your own words (reason=\u2026). Nothing was declared." : !why2 ? "the reason given is blank; say in your own words why the group sets this bar. Nothing was declared." : `the reason given is ${why2.length} characters, and a reason is at most ${BAR_REASON_MAX}. Nothing was declared.`,
         { limit: BAR_REASON_MAX }
@@ -122669,7 +122765,120 @@ var Strength = class _Strength {
       author: who3,
       at: at47,
       reason: why2,
-      note: `this is the DEFAULT a project starts from; a project may declare its own in its bundle.md, which is an authored, dated, on-the-record act visible in every case it governs. It gates nothing. ${BAR_HONEST_NOTE}`
+      note: `this is the DEFAULT a project starts from; a project may declare its own by its own act, written into the project's document as an authored, dated, on-the-record entry visible in every case it governs. It gates nothing. ${BAR_HONEST_NOTE}`
+    };
+  }
+  /* R16, R40: null when `pid` is a project the viewer may see; else the answer: an absent or unseen project
+     membership's (its R78, N208: minted there), one not a project `NOT_A_PROJECT`. */
+  #projectUnseen(pid, viewer) {
+    const gate = viewerPredicate(viewer);
+    const pb = pid ? this.#one(
+      `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+      pid,
+      ...gate.args
+    ) : null;
+    if (!pb) return noSuchProject(pid || null);
+    if (normalizeType(pb.object_type) !== "project")
+      return {
+        ok: false,
+        reason: "NOT_A_PROJECT",
+        project: pid,
+        object_type: pb.object_type,
+        detail: `${pid} is a ${pb.object_type}, and a standard of evidence is a property of a PROJECT (DEC-72).`
+      };
+    return null;
+  }
+  /** R40 (T47; N976, K3003; DEC-72, DEC-17): `op=projectbarset`, a project's own bar, the `required_strength` R14 reads,
+   *  set by a member who has joined the project. An authored, dated, on-the-record act: the bar is written into the
+   *  project's document with `last_updated` and one Session Log entry naming the author, the bar before and after and
+   *  the reason, and promoted at the project's current state through `promotion.promote`, whose refusal is answered
+   *  unchanged. Given neither axis it withdraws the bar (both axes null, which R14 reads as absent, never a bar of zero).
+   *  It never reads or changes the group's default (R15), and it gates nothing (R21). */
+  projectBarSet({
+    project = null,
+    capture: capture2 = null,
+    connection = null,
+    reason: reason2 = void 0,
+    author = null,
+    viewer = null,
+    identity = null
+  } = {}) {
+    const machine3 = machineCannotDeclare(author, "PROJECT's");
+    if (machine3) return machine3;
+    const who3 = String(author).trim();
+    const pid = String(project ?? "").trim();
+    const unseen = this.#projectUnseen(pid, viewer);
+    if (unseen) return unseen;
+    const asked = str13(identity) ?? `member:${who3}`;
+    const fence4 = this.membership.projectAuthority(pid, asked, "joined", "projectBarSet");
+    if (fence4) return fence4;
+    const bad2 = badGrade(capture2, connection);
+    if (bad2) return bad2;
+    const why2 = typeof reason2 === "string" ? reason2.trim() : "";
+    if (!why2 || why2.length > BAR_REASON_MAX)
+      return barRefusal(
+        "PROJECT_BAR_NO_REASON",
+        typeof reason2 !== "string" ? "give the reason the project sets this bar, as text in your own words (reason=\u2026). Nothing was changed." : !why2 ? "the reason given is blank; say in your own words why the project sets this bar. Nothing was changed." : `the reason given is ${why2.length} characters, and a reason is at most ${BAR_REASON_MAX}. Nothing was changed.`,
+        { limit: BAR_REASON_MAX }
+      );
+    const head = this.record.head(pid);
+    const doc = this.record.readFile(pid, "bundle.md");
+    if (!head || !doc || typeof doc.text !== "string") return noSuchProject(pid);
+    const previous = this.projectBar(pid);
+    const at47 = this.now();
+    const next = { capture: capture2 ?? null, connection: connection ?? null };
+    const spliced = spliceProjectBar(doc.text, next, at47);
+    if (spliced === null)
+      return {
+        ok: false,
+        reason: "PROJECT_DOCUMENT_UNREADABLE",
+        project: pid,
+        detail: "the project's document has no front-matter block to hold its bar. Nothing was changed."
+      };
+    const withdrawing = next.capture == null && next.connection == null;
+    const after2 = withdrawing ? "no bar" : barAxisWords(next);
+    const text7 = appendSessionLog3(
+      spliced,
+      `### Session ${at47} | ${withdrawing ? "Withdrew" : "Set"} the project's bar | ${who3}
+Trigger: op=projectbarset on ${pid}
+Changes: the project's standard of evidence from ${barLogWords(previous)} to ${after2}.
+Reason: ${why2.replace(/\s+/g, " ")}
+`
+    );
+    const fm = parseFrontmatter(text7).data || {};
+    const carried = (this.record.livePaths(pid) || []).filter((p3) => p3 !== "bundle.md").map((path) => {
+      const f17 = this.record.readFile(pid, path);
+      return typeof f17.text === "string" ? { path, text: f17.text, sha256: f17.sha256 } : { path, blobSha: f17.blobSha, sha256: f17.sha256, bytes: f17.bytes };
+    });
+    const nonce = [...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, "0")).join("");
+    const r = this.promotion.promote({
+      bundleId: pid,
+      base: head.bundleSha,
+      snapKey: `${at47.replace(/[-:.]/g, "")}_bar${nonce}`,
+      author: who3,
+      files: [{ path: "bundle.md", text: text7 }, ...carried],
+      meta: {
+        object_type: head.type,
+        title: head.title,
+        current_state: fm.current_state ?? head.currentState,
+        prior_state: fm.prior_state ?? null,
+        created: fm.created,
+        last_updated: at47
+      },
+      actorIdentity: asked,
+      actorViewer: viewer,
+      actorMemberId: this.membership.positionalMember(viewer, asked)
+    });
+    if (!r || r.ok !== true) return r;
+    return {
+      ok: true,
+      project: pid,
+      bar: this.projectBar(pid),
+      previous,
+      author: who3,
+      at: at47,
+      reason: why2,
+      bundleSha: r.bundleSha
     };
   }
   /** R16: the bar read. `project=` is the answer under DEC-72; `group=` is DEC-17's surviving half, the default that
@@ -122687,21 +122896,8 @@ var Strength = class _Strength {
       };
     if (project) {
       const pid = String(project).trim();
-      const gate = viewerPredicate(viewer);
-      const pb = this.#one(
-        `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-        pid,
-        ...gate.args
-      );
-      if (!pb) return noSuchProject(pid);
-      if (normalizeType(pb.object_type) !== "project")
-        return {
-          ok: false,
-          reason: "NOT_A_PROJECT",
-          project: pid,
-          object_type: pb.object_type,
-          detail: `${pid} is a ${pb.object_type}, and a standard of evidence is a property of a PROJECT (DEC-72).`
-        };
+      const unseen = this.#projectUnseen(pid, viewer);
+      if (unseen) return unseen;
       return { ok: true, project: pid, bar: this.projectBar(pid) };
     }
     const gid = String(group ?? "").trim() || this.producingGroup();
@@ -122851,6 +123047,15 @@ function strengthOps(s, url, body) {
       viewer: q10("viewer")
     }),
     strengthbar: () => s.strengthBarSet({ ...body || {}, author: q10("author") }),
+    /* R40: the project from the body, else the query; `author`, `viewer` and `identity` are the control plane's stamps,
+       never the body's. */
+    projectbarset: () => s.projectBarSet({
+      ...body || {},
+      project: body && body.project != null ? body.project : q10("project"),
+      author: q10("author"),
+      viewer: q10("viewer"),
+      identity: q10("identity")
+    }),
     /* `target` still reaches the method, so a withdrawn arm is refused by name rather than 404'd at the router. */
     strengthbarof: () => s.strengthBarOf({
       group: q10("group"),
@@ -123336,7 +123541,7 @@ function setFrontmatterLines(text7, key2, lines2) {
   if (end2 === -1) return t2;
   return [...all.slice(0, end2), ...lines2, ...all.slice(end2)].join("\n");
 }
-function appendSessionLog3(text7, entry4) {
+function appendSessionLog4(text7, entry4) {
   const at47 = text7.indexOf("## Session Log");
   if (at47 < 0) return text7.replace(/\s*$/, "\n") + "\n## Session Log\n\n" + entry4 + "\n";
   const nxt = text7.indexOf("\n## ", at47 + 1);
@@ -126306,7 +126511,7 @@ var Contradiction = class _Contradiction {
       if (!lines2.length || !/^resolution:/.test(lines2[0])) lines2 = ["resolution:", ...lines2.map((l2) => `  ${l2.replace(/^\s*/, "")}`)];
       let text7 = setFrontmatterLines(md.text, "resolution", lines2);
       text7 = setOrAddScalar3(text7, "last_updated", `"${when}"`);
-      text7 = appendSessionLog3(text7, `- ${when} \xB7 ${who3} \xB7 resolution recorded as ${fmSafe3(res.kind)} (contradiction ${row14.candidate})`);
+      text7 = appendSessionLog4(text7, `- ${when} \xB7 ${who3} \xB7 resolution recorded as ${fmSafe3(res.kind)} (contradiction ${row14.candidate})`);
       const written2 = this.#p().promote({
         bundleId: id,
         base: head.bundleSha,
@@ -153983,7 +154188,8 @@ __export(checks_exports42, {
 });
 var RUN_RULES_WORDS = Object.freeze({
   "refusal.AI_RUN_REEXAM_NEEDS_RESPONSE": "Nothing was started: a fresh look at the plan after a reply needs to know which reply. Record the reply first, then ask from it.",
-  "refusal.AI_RUN_REEXAM_OPEN": "Nothing was started: a fresh look at this plan after this reply is already under way. Wait for it, then read what it proposes."
+  "refusal.AI_RUN_REEXAM_OPEN": "Nothing was started: a fresh look at this plan after this reply is already under way. Wait for it, then read what it proposes.",
+  "refusal.MEMBER_RUN_MODE_NOT_ADMITTED": "A run on your own Claude sign-in can check or plan, and this one asks for more. Nothing was sent. A project's or the group's account can run it, where one serves you."
 });
 var AI_RUN_OWN_CHECKS = {
   /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
@@ -154256,12 +154462,13 @@ var AI_RUN_OWN_CHECKS = {
   },
   /* R32 (T46; K2947; `ai-runs` R18): A MEMBER'S OWN SIGN-IN RUN IN A MODE IT DOES NOT SERVE. On her own Claude sign-in
      a member's run is dispatched for her only in `check` or `plan` (Bob's K2892); any other mode is refused by `ai-runs`
-     at its dispatch and read here by key. C-22.30, the next free number after R30's. DEC-83's form. Its translation is
-     interim, until `words.json` holds `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`. */
+     at its dispatch and read here by key. C-22.30, the next free number after R30's. DEC-83's form. T47 (N992; DEC-198):
+     its translation is `words.json`'s `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`, read by key (RUN_RULES_WORDS above) as R31's
+     rows are; T46's interim sentence is gone, and code, number and `where` are unmoved. */
   MEMBER_RUN_MODE_NOT_ADMITTED: {
     check: "C-22.30",
     where: "src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch",
-    translation: "Nothing was started, because on your own Claude sign-in the assistant only checks and plans for you; this kind of work needs your group's Civicsmith to run it."
+    translation: RUN_RULES_WORDS["refusal.MEMBER_RUN_MODE_NOT_ADMITTED"]
   }
 };
 var AI_RUN_ACT_SHAPE_CHECKS = {
@@ -155428,7 +155635,7 @@ var AI_USE_WORDS = Object.freeze({
   "ai.refused.limit": "The assistant stopped here: {whose} {period} limit for {use} is reached. It works again {when}. Everything else works as usual.",
   "ai.refused.limit.overall": "The assistant stopped here: {whose} {period} limit is reached. It works again {when}. Everything else works as usual.",
   "ai.refused.limit.member": "The assistant stopped here: you have used the {period} amount each member may use of {whose} account. It works again {when}. Everything else works as usual.",
-  "ai.refused.limit.unjudged": "The assistant stopped here: Civicsmith couldn't check the use of {whose} account just now, and it spends nothing it can't count. Try again in a moment. Everything else works as usual.",
+  "ai.refused.limit.unjudged": "The assistant stopped here: your group's Civicsmith couldn't check the use of {whose} account just now, and it spends nothing it can't count. Try again in a moment. Everything else works as usual.",
   "ai.refused.limitinvalid": "That limit can't be set: {field}. A limit is a positive amount in dollars, tokens or calls, for a day or a month.",
   "ai.limitfield.owner": "it doesn't say which account it is for",
   "ai.limitfield.scope": "that isn't something a limit can cover",
@@ -158637,6 +158844,11 @@ function memberIdOf3(x) {
   const id = bare5.split("/")[0];
   return /^[A-Za-z0-9._-]{1,128}$/.test(id) ? id : null;
 }
+var AI_RUN_MODE_WRITES = Object.freeze({
+  /* passed whole: credentials R63 refuses one its list does not name */
+  check: Object.freeze(["airuntick", "suggest", "capturerequest", "airunclose"]),
+  plan: Object.freeze(["airuntick", "optionpropose", "airunclose"])
+});
 var safeJson26 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
@@ -159200,7 +159412,17 @@ var AiRuns = class _AiRuns {
         at: at47
       };
     });
+    if (done && done.terminated === true) this.#endRunCredentials(run2);
     return done && done.terminated === true && row14.step ? { ...done, step_end: this.#endStep(row14, bound) } : done;
+  }
+  /** R14 (T47): `credentials.aiRunCredentialsEnd({run})`, told and not listened to: whatever it answers or throws, the
+   *  ending stands as written. */
+  #endRunCredentials(run2) {
+    try {
+      const c = credentialsOf(this.ctx);
+      if (c && typeof c.aiRunCredentialsEnd === "function") c.aiRunCredentialsEnd({ run: String(run2) });
+    } catch {
+    }
   }
   /** R73, R74 (steps R5, R9): each record the run's looks name (a capture, content or lead referent, steps R9's product
    *  kinds) tied to its step; then its own system step `ended` with every outcome undetermined for a completed run, or
@@ -160476,10 +160698,7 @@ var AiRuns = class _AiRuns {
    *  complete appends ONE entry saying so, because the wake entry above it said the run was handed over. */
   async #aiRunDispatch(d, resumer, iso8) {
     let outcome, timer;
-    let ref = d.payer ? await this.#accountFor(d.payer, "run", d.project) : null;
-    if (ref && !ref.refusal && d.owner && ref.owner !== d.owner) ref = { refusal: { code: "NO_ACCOUNT", reason: "NO_ACCOUNT" } };
-    if (d.signinOnly && !(ref && !ref.refusal && ref.kind === "signin" && ref.level === "member"))
-      return { state: "WITHHELD", status: null, withheld: "MEMBER_PRINCIPAL_RUN" };
+    let ref = d.ref !== void 0 ? d.ref : await this.#dispatchAccount(d);
     if (!ref || ref.refusal)
       outcome = {
         state: "REFUSED",
@@ -160507,12 +160726,14 @@ var AiRuns = class _AiRuns {
       account: {
         kind: ref.kind,
         level: ref.level,
-        ...ref.kind === "signin" ? {} : { secret: ref.key },
+        /* R79: a sign-in's held token rides as an API key's does */
+        ...typeof ref.key === "string" ? { secret: ref.key } : {},
         member: `member:${d.payer}`,
         suggestions
       }
     };
     ref = null;
+    d.ref = null;
     if (body) try {
       const res = await Promise.race([
         this.env.AGENT_WORKER.fetch("https://agent-worker/run", {
@@ -160545,22 +160766,30 @@ var AiRuns = class _AiRuns {
     }
     return outcome;
   }
+  /** R52 (T41): the account that serves the run's member now, `credentials.accountFor`'s answer as `#accountFor` reads
+   *  it; it must be the one the run recorded as paying (a run never moves to another), else `NO_ACCOUNT`. */
+  async #dispatchAccount(d) {
+    const ref = d.payer ? await this.#accountFor(d.payer, "run", d.project) : null;
+    return ref && !ref.refusal && d.owner && ref.owner !== d.owner ? { refusal: { code: "NO_ACCOUNT", reason: "NO_ACCOUNT" } } : ref;
+  }
   /** R18 (T46; N919; Bob's, K2892: a member's own sign-in runs check and plan for that member only): A MEMBER'S OWN RUN,
    *  DISPATCHED AT HER OWN ACT. The wake never dispatches a member's run (`MEMBER_PRINCIPAL_RUN`, above); this is the one
    *  door that does, called by `control-plane`'s door (op `airundispatch`, T46-59). `by` is the door's stamp of who acts,
-   *  `viewer` its sight (`by` when not given), and `credential` the member's own `ai` credential the door was presented
-   *  with, handed in-process and never read from a body, query or record: the segment `agent-worker` runs acts under it
-   *  (its R5), so it must be the credential that opened the run (`<principal>/<tokenId>` equal to its `principal_plane`),
-   *  on record and unrevoked. Its value is used for the one call and kept nowhere, never written or answered.
+   *  `viewer` its sight (`by` when not given). (T47; N955; K2976, K2999, K3027, K3030; credentials R63) The segment acts
+   *  under a credential minted HERE for that segment only, never one a page holds: no credential is taken from the
+   *  request (one given is never read), so a reloaded dock continues the run by the same act.
    *
-   *  In order, nothing sent on any: absent or invisible, `{found: false}`; `by` not the member the run's principal names,
+   *  In order, nothing sent on any: absent or invisible, `{found: false}`; `by` not the member the run's principal names
+   *  (`member:<id>`, opened by her session, or `member:<id>/<tokenId>`, on a credential of hers before T47),
    *  `AI_RUN_NOT_PRINCIPAL` (run-rules R5, relayed); not running, `{dispatched: false, status}`; a mode other than
-   *  `check` or `plan`, `MEMBER_RUN_MODE_NOT_ADMITTED`; then withheld by name as the wake's dispatch is
-   *  (`AGENT_WORKER_UNBOUND`, `NAMESPACE_UNDETERMINED`, `CREDENTIAL_RECORD_SILENT`); no credential presented, or a run
-   *  opened without one (a session's `member:<id>`), `MEMBER_PRINCIPAL_RUN`; a credential not on record, revoked or not
-   *  the run's own, `AI_RUN_NOT_PRINCIPAL`; an account other than her own sign-in, `MEMBER_PRINCIPAL_RUN`. Then the
-   *  wake's call (`#aiRunDispatch`): the 30 s wait, `RUNNING` past it, and one log entry for a refused or incomplete call. */
-  async dispatchMemberRun({ run: run2 = null, by = null, viewer = null, credential = null, at: at47 = null } = {}) {
+   *  `check` or `plan`, `MEMBER_RUN_MODE_NOT_ADMITTED`; withheld by name as the wake's dispatch is
+   *  (`AGENT_WORKER_UNBOUND`, `NAMESPACE_UNDETERMINED`); an account other than her own sign-in, `MEMBER_PRINCIPAL_RUN`.
+   *  Then `credentials.aiRunCredentialMint({member, run, writes})` with the mode's own writes (`AI_RUN_MODE_WRITES`): a
+   *  refusal answered unchanged with `dispatched: false`, a mint that throws or answers nothing withheld
+   *  `CREDENTIAL_RECORD_SILENT`. Then the wake's call (`#aiRunDispatch`) carrying the minted token: the 30 s wait,
+   *  `RUNNING` past it, and one log entry for a refused or incomplete call. The token is used for that one call and is
+   *  never answered, logged or written; a later mint for the run revokes it, and the run's end (R14) ends them all. */
+  async dispatchMemberRun({ run: run2 = null, by = null, viewer = null, at: at47 = null } = {}) {
     const iso8 = _AiRuns.#aiIso(at47 ? Date.parse(at47) : Date.now());
     const id = run2 == null ? "" : String(run2).trim();
     const sight = viewer == null || viewer === "" ? by : viewer;
@@ -160614,35 +160843,46 @@ var AiRuns = class _AiRuns {
     if (!env.AGENT_WORKER || typeof env.AGENT_WORKER.fetch !== "function") return withheld("AGENT_WORKER_UNBOUND");
     const store = this.#ownNamespace();
     if (!store) return withheld("NAMESPACE_UNDETERMINED");
-    const token = typeof credential === "string" ? credential.trim() : "";
-    if (!token || !owner.includes("/")) return withheld("MEMBER_PRINCIPAL_RUN");
-    const look = await this.#credentialLook(token, store);
-    if (!look) return withheld("CREDENTIAL_RECORD_SILENT");
-    const c = look.found ? look.credential : null;
-    if (!c || c.revoked || `${c.principal}/${c.tokenId}` !== String(row14.principal_plane)) {
-      const r = runPrincipalGate({ caller: "", principal: owner, act: act2 });
-      return {
-        run: run2,
-        found: true,
-        dispatched: false,
-        status: row14.status,
-        code: r.code,
-        check: r.check,
-        translation: r.translation,
-        detail: "the credential presented is not the one this run was opened on, or it is revoked or not on record. Nothing was sent"
-      };
-    }
     const d = {
       run: row14.run,
       context_id: row14.context_id,
       payer: _AiRuns.#memberOfRun(row14),
       step: row14.step || null,
       project: row14.context_type === "project" ? row14.context_id : null,
-      owner: row14.principal_claude,
-      signinOnly: true
+      owner: row14.principal_claude
     };
-    const outcome = await this.#aiRunDispatch(d, { store, token, tokenId: c.tokenId }, iso8);
-    if (outcome.state === "WITHHELD") return withheld(outcome.withheld);
+    d.ref = await this.#dispatchAccount(d);
+    if (d.ref && d.ref.refusal && d.ref.refusal.code === "AI_KEPT_AWAY") {
+      const { ok: _ok, ...kept } = d.ref.refusal;
+      d.ref = null;
+      return { run: run2, found: true, dispatched: false, status: row14.status, ...kept, note: "Nothing was sent" };
+    }
+    if (!(d.ref && !d.ref.refusal && d.ref.kind === "signin" && d.ref.level === "member")) {
+      d.ref = null;
+      return withheld("MEMBER_PRINCIPAL_RUN");
+    }
+    let minted = null;
+    try {
+      minted = credentialsOf(this.ctx).aiRunCredentialMint({
+        member: `member:${member2}`,
+        run: row14.run,
+        writes: [...AI_RUN_MODE_WRITES[row14.mode]]
+      });
+    } catch {
+      minted = null;
+    }
+    if (!minted || typeof minted !== "object") {
+      d.ref = null;
+      return withheld("CREDENTIAL_RECORD_SILENT");
+    }
+    if (minted.ok !== true || typeof minted.token !== "string") {
+      d.ref = null;
+      if (typeof minted.code !== "string") return withheld("CREDENTIAL_RECORD_SILENT");
+      const { ok: _ok, token: _t, ...refusal38 } = minted;
+      return { run: run2, found: true, dispatched: false, status: row14.status, ...refusal38, note: "Nothing was sent" };
+    }
+    const outcome = await this.#aiRunDispatch(d, { store, token: minted.token, tokenId: minted.tokenId }, iso8);
+    minted = null;
     return {
       run: run2,
       found: true,
@@ -161488,7 +161728,7 @@ var AiRuns = class _AiRuns {
     }
   }
   /** R52 (K1503, K1755): the account `credentials.accountFor` (its R35) answers for `member`'s act of `kind` (`run`):
-   *  `{level, kind, key}` when one serves it (`key` null for the member's own sign-in, T38; K2299); else `{refusal}`: `NO_ACCOUNT` read as this module's `AI_NO_ACCOUNT`, any
+   *  `{level, kind, key}` when one serves it (R79; T47: a held sign-in's `key` is its token, credentials R70); else `{refusal}`: `NO_ACCOUNT` read as this module's `AI_NO_ACCOUNT`, any
    *  other refusal of that service (the group key's notice not yet read, a member not active, the seal) relayed as it
    *  came. The caller keeps the key for the one call it serves, or not at all. */
   async #accountFor(member2, kind2, project = null) {
@@ -182227,7 +182467,11 @@ var CAPTURE_REQUESTS_SCHEMA = `
 -- exactly where the daemon's captures always have, at collected and never
 -- higher.
 --
--- BOTH PRINCIPALS ARE COLUMNS AND NEITHER IS NULLABLE (DEC-27(b), DEC-55.4).
+-- BOTH PRINCIPALS ARE COLUMNS (DEC-27(b), DEC-55.4). R56 (T47) made run,
+-- target and principal_claude nullable for ONE kind of row: a member's own
+-- request ("Ask for this later"), which no run made and no cascade paid for,
+-- so its plane principal (her session stamp) is its whole attribution. Every
+-- run's request still carries both; the drain still refuses one that cannot.
 -- They are RECORDED AT THE REQUEST rather than resolved at the drain (the plane
 -- principal is the caller's stamp, REC-168; the Claude principal is the run's),
 -- because a run is scratch with an expiry and the attribution must survive it:
@@ -182248,14 +182492,14 @@ var CAPTURE_REQUESTS_SCHEMA = `
 -- construction and not by a class list.
 CREATE TABLE IF NOT EXISTS capture_requests (
   request           TEXT PRIMARY KEY,
-  run               TEXT NOT NULL,    -- the run that asked. NO FOREIGN KEY, section 14b.7's rule for versions applied one level down
-  target            TEXT NOT NULL,    -- the inquiry the run is working under: a bundle id, which is what purge's per-bundle arm can find
+  run               TEXT,             -- the run that asked. NO FOREIGN KEY, section 14b.7's rule for versions applied one level down. NULL only on a member's own request (R56, T47)
+  target            TEXT,             -- the inquiry the run is working under: a bundle id, which is what purge's per-bundle arm can find. NULL only on a member's own request that names none (R56)
   address           TEXT NOT NULL,    -- the public https locator asked for
   host              TEXT NOT NULL,    -- derived at the write from address
   purpose           TEXT NOT NULL,    -- the user-agent purpose token this fetch will carry
   ua_mode           TEXT NOT NULL,    -- civicsmith (civicos before T31, read as civicsmith: R14, DEC-124), or member-browser (BOB-3, permitted for public documents)
   principal_plane   TEXT NOT NULL,    -- the caller's stamp (REC-168): whose scope the writes ran under
-  principal_claude  TEXT NOT NULL,    -- the run's: WHICH LEVEL of the cascade paid
+  principal_claude  TEXT,             -- the run's: WHICH LEVEL of the cascade paid. NULL only on a member's own request (R56): no run, no cascade
   state             TEXT NOT NULL,    -- requested | draining | captured | refused | expired (D-523, a C-83 render hold released UNDETERMINED at expires)
   code              TEXT,             -- the DEC-49 wire code, when the drain refused or held this row
   detail            TEXT,             -- what the drain said, so a held row explains itself without a second call
@@ -182417,14 +182661,28 @@ var CAPTURE_REQUESTS_ADDITIVE = Object.freeze([
   ["co_archive", "INTEGER"],
   ["step", "TEXT"]
 ]);
+var CAPTURE_REQUESTS_NULLABLE = Object.freeze(["run", "target", "principal_claude"]);
+var PRE_T47 = "capture_requests_pre_t47";
 function migrateCaptureRequests(sql) {
-  const have = [...sql.exec(`PRAGMA table_info(capture_requests)`)].map((r) => r.name);
+  const info = [...sql.exec(`PRAGMA table_info(capture_requests)`)];
+  const have = info.map((r) => r.name);
   if (have.length) {
     for (const [column, decl] of CAPTURE_REQUESTS_ADDITIVE)
       if (!have.includes(column)) sql.exec(`ALTER TABLE capture_requests ADD COLUMN ${column} ${decl}`);
   }
   const bare5 = CAPTURE_REQUESTS_SCHEMA.split("\n").filter((l2) => !l2.trim().startsWith("--")).join("\n");
+  const strict = info.some((r) => CAPTURE_REQUESTS_NULLABLE.includes(r.name) && Number(r.notnull) === 1);
+  if (strict) {
+    sql.exec(`ALTER TABLE capture_requests RENAME TO ${PRE_T47}`);
+    for (const ix of [...sql.exec(`SELECT name FROM sqlite_master WHERE type='index' AND tbl_name=? AND sql IS NOT NULL`, PRE_T47)])
+      sql.exec(`DROP INDEX IF EXISTS "${ix.name}"`);
+  }
   for (const stmt of bare5.split(";")) if (stmt.trim()) sql.exec(stmt);
+  if (strict) {
+    const cols = [...sql.exec(`PRAGMA table_info(${PRE_T47})`)].map((r) => r.name).map((c) => `"${c}"`).join(", ");
+    sql.exec(`INSERT INTO capture_requests (${cols}) SELECT ${cols} FROM ${PRE_T47}`);
+    sql.exec(`DROP TABLE ${PRE_T47}`);
+  }
 }
 
 // src/capture-requests/checks.mjs
@@ -182787,6 +183045,15 @@ function captureRequestAttribution(row14) {
   const actor = `${MACHINE_AUTHOR_PREFIX}daemon`;
   const plane2 = String(row14 && row14.principal_plane || "").trim();
   const claude = String(row14 && row14.principal_claude || "").trim();
+  if (isMemberRequest(row14))
+    return {
+      ok: true,
+      actor,
+      machine_attributed: true,
+      at_the_request_of: { member: plane2.slice("member:".length), inquiry: row14.target || null },
+      principals: { plane: plane2 },
+      statement: `the daemon captured this, at the request of ${plane2}`
+    };
   if (!row14 || !plane2 || !claude)
     return { ok: false, code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL", plane: plane2 || null, claude: claude || null };
   return {
@@ -182799,6 +183066,16 @@ function captureRequestAttribution(row14) {
     statement: `the daemon captured this, at the investigative session's request (run ${row14.run}), under ${plane2}, paid by ${claude}`
   };
 }
+var MEMBER_SESSION = /^member:[A-Za-z0-9._:-]{1,128}$/;
+function memberSession(stamp4) {
+  const s = typeof stamp4 === "string" ? stamp4.trim() : "";
+  return MEMBER_SESSION.test(s) ? s : null;
+}
+function isMemberRequest(row14) {
+  return !!row14 && (row14.run === null || row14.run === void 0 || String(row14.run).trim() === "") && memberSession(row14.principal_plane) !== null;
+}
+var MEMBER_REQUEST_WAITS = "your request is kept, and it waits until your group's Civicsmith captures unattended: nothing is fetched for it until then.";
+var MEMBER_REQUEST_DRAINS = "requested. Your group's Civicsmith captures it on its next unattended round, under the conduct every capture it makes follows.";
 function unattendedBound(env) {
   return !!(env && (typeof env.DAEMON_TOKEN === "string" && env.DAEMON_TOKEN !== "" || typeof env.ADMIN_TOKEN === "string" && env.ADMIN_TOKEN !== ""));
 }
@@ -182883,14 +183160,15 @@ var CaptureRequests = class _CaptureRequests {
       return { ok: false, reason: code, code, check: row14.check, translation: row14.translation, detail, ...extra || {} };
     };
     const run2 = text5(args.run).trim();
+    const mine = run2 ? null : memberSession(caller);
     const runRow = run2 ? this.#deps.runs.runFor(run2, viewer) : null;
-    if (!runRow)
+    if (!runRow && !mine)
       return refusal38(
         "CAPTURE_REQUEST_NO_RUN",
         run2 ? `no run named '${run2.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.` : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation (DEC-47), and a request naming no session names no authorisation.",
         { run: run2 || null }
       );
-    const notPrincipal = runPrincipalGate({
+    const notPrincipal = mine ? null : runPrincipalGate({
       caller,
       principal: runRow.principal_plane,
       act: "requesting a capture under a run"
@@ -182906,7 +183184,7 @@ var CaptureRequests = class _CaptureRequests {
         run: run2,
         note: "a capture request names a run its caller holds. Nothing was requested or written"
       };
-    if (runRow.status !== "running")
+    if (!mine && runRow.status !== "running")
       return refusal38(
         "CAPTURE_REQUEST_NO_RUN",
         `no run named '${run2.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.`,
@@ -182931,10 +183209,10 @@ var CaptureRequests = class _CaptureRequests {
         "this address has no host your group's Civicsmith can read, and the per-host pacing DEC-47 requires is computed from one.",
         { address }
       );
-    const unheld = this.#addressRefused(address, viewer);
+    const unheld = mine ? null : this.#addressRefused(address, viewer);
     if (unheld) return unheld;
     const target = text5(args.target).trim();
-    if (!this.#inquiryInSight(target, viewer))
+    if (!(mine && !target) && !this.#inquiryInSight(target, viewer))
       return refusal38(
         "CAPTURE_REQUEST_NOT_AN_INQUIRY",
         `${target.slice(0, 60) || "(none)"} is not a question readable here. A requested capture is accountable to the question it was asked under, and a fetch belonging to nothing is a fetch nobody can account for afterwards.`,
@@ -182957,7 +183235,8 @@ var CaptureRequests = class _CaptureRequests {
     }
     const stepRaw = args.step ?? null;
     const step = typeof stepRaw === "string" ? stepRaw.trim() : stepRaw === null ? "" : null;
-    if (step === null || step && !this.#stepSeen(step, runPrincipalOf(runRow.principal_plane)))
+    const asker = mine || runPrincipalOf(runRow.principal_plane);
+    if (step === null || step && !this.#stepSeen(step, asker))
       return refusal38(
         "CAPTURE_REQUEST_NO_STEP",
         `${step ? step.slice(0, 60) : shown2(stepRaw)} is not a step this request's asker can see here. A request made for a step is tied to it, so it names one its asker can see. Nothing was requested or written.`,
@@ -182999,23 +183278,26 @@ var CaptureRequests = class _CaptureRequests {
     if (coRaw !== null && !runPrincipalOf(caller).startsWith("member:"))
       return coArchiveRefusal("not-a-members", `the choice about a public archive copy is a member's, and this request was not made under a member's own credential. Send no co_archive to let the group's setting decide.`);
     const coArchive = coRaw === null ? null : coRaw ? 1 : 0;
-    const purpose = text5(args.purpose).trim();
+    const purpose = text5(args.purpose).trim() || (mine ? "acquire" : "");
     const uaMode = uaModeOf(text5(args.ua_mode ?? args.uaMode ?? "civicsmith").trim());
     const callerPlane = text5(caller).trim();
     const sweepRaw = args.sweep ?? null;
     const sweep = typeof sweepRaw === "string" ? sweepRaw.trim() || null : sweepRaw === null ? null : shown2(sweepRaw);
-    const standing = this.#one(
+    const standing = mine ? this.#one(`SELECT * FROM capture_requests WHERE run IS NULL AND principal_plane=? AND address=? AND render=?
+                     AND state IN ('requested','draining','captured')`, callerPlane, address, render6) : this.#one(
       `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
       run2,
       address,
       render6
     );
+    const drains = mine ? this.configured() : null;
+    const told = mine ? { drains, detail: drains ? MEMBER_REQUEST_DRAINS : MEMBER_REQUEST_WAITS } : {};
     if (standing)
       return {
         ok: true,
         request: standing.request,
-        run: run2,
-        target: standing.target,
+        run: standing.run ?? null,
+        target: standing.target ?? null,
         address,
         host: standing.host,
         purpose: standing.purpose,
@@ -183028,7 +183310,8 @@ var CaptureRequests = class _CaptureRequests {
         state: standing.state,
         requested: false,
         already: true,
-        principals: { plane: standing.principal_plane, claude: standing.principal_claude }
+        principals: { plane: standing.principal_plane, claude: standing.principal_claude ?? null },
+        ...told
       };
     const nowMs = instantMs(at47) ?? this.#nowMs();
     const now = stampInstant("second", nowMs);
@@ -183044,14 +183327,14 @@ var CaptureRequests = class _CaptureRequests {
          co_archive, step)
        VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?,?,?,?)`,
       request,
-      run2,
-      target,
+      run2 || null,
+      target || null,
       address,
       host,
       purpose,
       uaMode,
       callerPlane,
-      String(runRow.principal_claude ?? ""),
+      mine ? null : String(runRow.principal_claude ?? ""),
       now,
       now,
       expires,
@@ -183089,8 +183372,9 @@ var CaptureRequests = class _CaptureRequests {
       already: false,
       requested_at: written2.requested_at,
       expires: written2.expires,
-      principals: { plane: written2.principal_plane, claude: written2.principal_claude },
-      detail: "requested. Your group's Civicsmith does not fetch on a caller's timing: the daemon drains this queue, and DEC-47's conduct rules are applied there."
+      principals: { plane: written2.principal_plane, claude: written2.principal_claude ?? null },
+      detail: "requested. Your group's Civicsmith does not fetch on a caller's timing: the daemon drains this queue, and DEC-47's conduct rules are applied there.",
+      ...told
     };
   }
   /** Is `id` an inquiry this viewer can see (membership's predicate over record-core's `bundles` read contract)? A
@@ -183634,7 +183918,8 @@ var CaptureRequests = class _CaptureRequests {
         code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL",
         detail: `this request names ${attribution.plane && !attribution.claude ? "only the plane principal" : ""}${!attribution.plane && attribution.claude ? "only the Claude-account principal" : ""}${!attribution.plane && !attribution.claude ? "neither principal" : ""}, and DEC-27(b) requires the record to state BOTH: whose plane scope the writes ran under, and WHICH LEVEL of the Claude-account cascade paid. No fetch is made for an act the record could not attribute.`
       };
-    const unheld = this.#addressRefused(q10.address, runPrincipalOf(q10.principal_plane));
+    const mine = isMemberRequest(q10);
+    const unheld = mine ? null : this.#addressRefused(q10.address, runPrincipalOf(q10.principal_plane));
     if (unheld) return { ...unheld, ok: false, terminal: true };
     if (!CAPTURE_PURPOSES.includes(q10.purpose))
       return {
@@ -183672,6 +183957,8 @@ var CaptureRequests = class _CaptureRequests {
           detail: `the agent this fetch would carry names no contact anybody could reach. D-94's ladder MEASURED that removing the contact component flips admission 200 to 403 uniformly, so this is the component that decides whether the fetch happens at all \u2014 and being blocked honestly is a fact we can record.`
         };
     }
+    if (q10.sweep != null && mine)
+      return sweepOutOfScope(`a member's own request is filed under no sweep, and this one names ${String(q10.sweep).slice(0, 80)}; ${q10.address} was not fetched under it`);
     const sweep = q10.sweep == null ? null : await this.#sweepAdmits(q10);
     if (sweep && !sweep.ok) return sweep;
     if (this.#hostHeld(q10.host, nowMs))
@@ -183784,7 +184071,7 @@ var CaptureRequests = class _CaptureRequests {
           ...verdict.sweep ? {
             origin: { kind: "sweep", matched_sweep: verdict.sweep, deeming_actor: deemingActor(verdict.attribution) },
             scope: verdict.scope
-          } : { origin: { matched_sweep: q10.target, deeming_actor: deemingActor(verdict.attribution) } }
+          } : { origin: { matched_sweep: q10.target ?? null, deeming_actor: deemingActor(verdict.attribution) } }
         }
       });
       const out = res && res.body;
@@ -183877,7 +184164,7 @@ var CaptureRequests = class _CaptureRequests {
           "",
           "## Summary",
           "",
-          `The document served at ${q10.address}, captured by the daemon at an investigative session's request under ${q10.target}${q10.sweep ? `, filed under the sweep ${q10.sweep}` : ""}. Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`,
+          (q10.run ? `The document served at ${q10.address}, captured by the daemon at an investigative session's request under ${q10.target}${q10.sweep ? `, filed under the sweep ${q10.sweep}` : ""}.` : `The document served at ${q10.address}, captured by the daemon at the request of ${q10.principal_plane}${q10.target ? ` under ${q10.target}` : ""}.`) + ` Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`,
           "",
           "## Provenance Notes",
           "",
@@ -183886,7 +184173,7 @@ var CaptureRequests = class _CaptureRequests {
           "## Session Log",
           "",
           `### Session ${at47} | Collected | ${attribution.actor}`,
-          `Trigger: capture request ${q10.request} (run ${q10.run})`,
+          `Trigger: capture request ${q10.request} (${q10.run ? `run ${q10.run}` : `asked by ${q10.principal_plane}`})`,
           "Changes: created from the daemon's capture of the requested address.",
           "",
           "## Review Notes",
@@ -183982,9 +184269,37 @@ var CaptureRequests = class _CaptureRequests {
     if (gate.scope === "DENY") return { sql: "0=1", args: [] };
     return { sql: `EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = ${col} AND (${gate.sql}))`, args: gate.args };
   }
+  /** R23 as R56 amends it: a request row is seen by the viewers who see `col`'s bundle (its target, or for R26's leads
+   *  its lead); a member's own request with no target by her alone (her session's viewer stamp), never a machine's. */
+  static #rowGate(col, viewer) {
+    const base2 = _CaptureRequests.#gate(col, viewer);
+    const her = viewerPredicate(viewer).member;
+    return {
+      sql: `((cr.target IS NOT NULL AND ${base2.sql}) OR (cr.target IS NULL AND cr.run IS NULL AND cr.principal_plane = ?))`,
+      args: [...base2.args, her ? `member:${her}` : "\0"]
+    };
+  }
+  /** R42, R56: whether `viewer` sees a request row: its target's sight, or for a member's request with no target, hers. */
+  #rowSeen(row14, viewer) {
+    if (!row14) return false;
+    if (row14.target) return this.#inquiryInSight(row14.target, viewer);
+    const her = viewerPredicate(viewer).member;
+    return isMemberRequest(row14) && !!her && row14.principal_plane === `member:${her}`;
+  }
+  /** observation-log R13's `sweep` resolution for a look this module wrote (R28): the request's target and lead, or for
+   *  a member's request with no target, whether the viewer is she (R56). Null for an unknown id. */
+  lookSight(request, viewer) {
+    const r = request ? this.#one(
+      `SELECT run, target, lead_inquiry, principal_plane FROM capture_requests WHERE request = ? LIMIT 1`,
+      String(request)
+    ) : null;
+    if (!r) return null;
+    if (!r.target && isMemberRequest(r)) return this.#rowSeen(r, viewer);
+    return [r.target, r.lead_inquiry].filter(Boolean);
+  }
   #bounded(where, args, order4, limit, gateCol, viewer) {
     const cap = clamp6(limit, CAPTURE_REQUEST_READ_LIMIT, CAPTURE_REQUEST_READ_MAX);
-    const seen = _CaptureRequests.#gate(gateCol, viewer);
+    const seen = _CaptureRequests.#rowGate(gateCol, viewer);
     const found3 = this.#rows(
       `SELECT cr.* FROM capture_requests cr WHERE ${[...where, `(${seen.sql})`].join(" AND ")} ORDER BY ${order4} LIMIT ?`,
       ...args,
@@ -184046,7 +184361,7 @@ var CaptureRequests = class _CaptureRequests {
       const { request = null, viewer = null } = a && typeof a === "object" ? a : {};
       const id = text5(request).trim();
       if (!id) return null;
-      const seen = _CaptureRequests.#gate("cr.target", viewer);
+      const seen = _CaptureRequests.#rowGate("cr.target", viewer);
       const r = this.#one(
         `SELECT cr.* FROM capture_requests cr WHERE cr.request = ? AND (${seen.sql}) LIMIT 1`,
         id,
@@ -184091,12 +184406,12 @@ var CaptureRequests = class _CaptureRequests {
       completions_truncated: done.length > n2
     };
   }
-  /** R29: stamps `run_woken_at` on each named completion not yet woken; answers how many were stamped. */
+  /** R29: stamps `run_woken_at` on each named completion of a run not yet woken; answers how many were stamped. */
   markWoken({ requests = [], at: at47 = null } = {}) {
     const iso8 = at47 || stampInstant("second", this.#nowMs());
     let marked = 0;
     for (const id of Array.isArray(requests) ? requests : []) {
-      const r = this.#one(`SELECT request FROM capture_requests WHERE request = ? AND run_woken_at IS NULL
+      const r = this.#one(`SELECT request FROM capture_requests WHERE request = ? AND run_woken_at IS NULL AND run IS NOT NULL
                              AND state IN ('captured','refused','expired')`, String(id));
       if (!r) continue;
       this.#sql.exec(`UPDATE capture_requests SET run_woken_at = ? WHERE request = ?`, iso8, r.request);
@@ -184190,7 +184505,7 @@ var CaptureRequests = class _CaptureRequests {
         const part = shas.slice(i, i + CAPTURED_FOR_CHUNK);
         for (const r of this.#rows(
           `SELECT DISTINCT target, principal_plane FROM capture_requests
-            WHERE state='captured' AND capture_sha IN (${part.map(() => "?").join(",")})`,
+            WHERE state='captured' AND target IS NOT NULL AND capture_sha IN (${part.map(() => "?").join(",")})`,
           ...part
         )) {
           const key2 = JSON.stringify([r.target, r.principal_plane]);
@@ -184244,7 +184559,7 @@ var CaptureRequests = class _CaptureRequests {
     const args = a && typeof a === "object" ? a : {};
     const request = text5(args.request).trim();
     const row14 = request ? this.#one(`SELECT * FROM capture_requests WHERE request=?`, request) : null;
-    if (!row14 || row14.state !== "refused" || !SOURCE_REASONS.includes(row14.source_reason) || !this.#inquiryInSight(row14.target, viewer)) {
+    if (!row14 || row14.state !== "refused" || !SOURCE_REASONS.includes(row14.source_reason) || !this.#rowSeen(row14, viewer)) {
       const c = CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_NOT_RETRYABLE;
       return {
         ok: false,
@@ -184689,6 +185004,7 @@ function platformHost(v) {
 }
 function deemingActor(attribution) {
   const a = attribution && attribution.ok ? attribution : null;
+  if (a && a.at_the_request_of.member !== void 0) return a.principals.plane;
   return a ? `run ${a.at_the_request_of.run} under ${a.principals.plane}, paid by ${a.principals.claude}` : null;
 }
 function lookAuthority(q10) {
@@ -184767,10 +185083,7 @@ function captureRequestsOf(host, deps = {}) {
       if (counted && counted.ok === false)
         throw new Error(`capture-requests: record-core refused its figures: ${counted.reason}`);
     }
-    d.observations.registerAuthority("sweep", (request) => {
-      const b = c.bundlesOf(request);
-      return b ? [b.target, b.lead_inquiry].filter(Boolean) : null;
-    });
+    d.observations.registerAuthority("sweep", (request, viewer) => c.lookSight(request, viewer));
     if (d.capture && typeof d.capture.registerReader === "function")
       d.capture.registerReader("captured-for", CAPTURE_REQUESTS_MODULE, (a) => c.capturedFor(a));
     if (d.steps && typeof d.steps.registerArrivalSource === "function")
@@ -213980,7 +214293,7 @@ function setScalar6(text7, key2, value) {
   }
   return text7;
 }
-function appendSessionLog4(text7, entry4) {
+function appendSessionLog5(text7, entry4) {
   const at47 = text7.indexOf("## Session Log");
   if (at47 < 0) return text7 + "\n## Session Log\n\n" + entry4;
   const nxt = text7.indexOf("\n## ", at47 + 1);
@@ -214293,27 +214606,33 @@ var Citation = class {
     });
   }
   /* ---- sever, reinstate (R4) ---- */
-  /** R4: SEVERING and REINSTATING a case's `cites` edges, both at weight `refuse` (R7). SEVERING IS NOT DELETION: the
-   *  edge stays, with its target and rel intact, and only its status moves, so a reader can see that the group once
-   *  relied on something and stopped, and why. A REASON IS REQUIRED by both: the catalogue's own remedy for a bad edge
-   *  is "sever with reason" (C-6.1), and State Rules §5.1 has a human confirming or severing. One method for both
-   *  directions, because they are the same operation over the same grammar. */
+  /** R4, R15: SEVERING and REINSTATING a case's `cites` edges and (T47, R15) a question's own legs, both at weight
+   *  `refuse` (R7). SEVERING IS NOT DELETION: the edge stays, with its target and rel intact, and only its status
+   *  moves, so a reader can see that the group once relied on something and stopped, and why. On a question the leg
+   *  itself stays in `basis[]` untouched (role, grade, part, pin): what moves is the status of the `references[]` entry
+   *  naming its target, whatever that entry's relation, which is exactly what `connections.edgeSevered` and
+   *  `leg-earning`'s `restsOnLive` read a leg's severance from. A REASON IS REQUIRED by both: the catalogue's own remedy
+   *  for a bad edge is "sever with reason" (C-6.1), and State Rules §5.1 has a human confirming or severing. One method
+   *  for both directions and both arms, because they are the same operation over the same grammar. */
   #edgeTransition({ project, handle, viewer, owner, reason: reason2, author, from, to, verb, resultKey: resultKey2, identity = null }) {
     const sel = this.retrieval.selectionResolve({ handle, viewer, owner, weight: "refuse" });
     if (!sel.ok) return sel;
     const obj = this.#citingObject(project, viewer);
     if (!obj.ok) return obj;
     const p3 = obj.head;
-    if (p3.type !== "project")
+    const onInquiry = normalizeType(p3.type) === "inquiry";
+    if (p3.type !== "project" && !onInquiry)
       return {
         ok: false,
         reason: "NOT_A_PROJECT",
         project,
         got: p3.type,
-        detail: "cites lives on the citing object and this action edits a Project's edges"
+        detail: "citations live on the citing object, and this is neither a case nor a question, so it holds no citation to withdraw or restore. A case keeps them in its references; a question keeps them in the basis its answer rests on."
       };
-    const denied = this.membership.projectAuthority(project, identity, "joined", resultKey2 === "severed" ? "sever" : "reinstate");
-    if (denied) return denied;
+    if (!onInquiry) {
+      const denied = this.membership.projectAuthority(project, identity, "joined", resultKey2 === "severed" ? "sever" : "reinstate");
+      if (denied) return denied;
+    }
     const why2 = String(reason2 ?? "").trim();
     if (!why2)
       return {
@@ -214350,7 +214669,7 @@ var Citation = class {
         handle,
         offenders: offenders.sort(),
         citable: ["information", "inquiry"],
-        detail: "a case's citation edges point at material or at a question, and these members of the selection are neither, so they carry no citation edge to move. The whole call is refused rather than narrowed."
+        detail: "a citation points at material or at a question, and these members of the selection are neither, so they carry no citation to move. The whole call is refused rather than narrowed."
       };
     if (to === "confirmed") {
       const retiredMembers = sel.members.filter((id) => this.retiredNotCitable(id));
@@ -214368,9 +214687,10 @@ var Citation = class {
     }
     const doc = this.#document(project, null);
     if (!doc.ok) return doc;
+    const legged = new Set(onInquiry && Array.isArray(doc.data.basis) ? doc.data.basis.filter((l2) => l2 && typeof l2 === "object" && typeof l2.target === "string").map((l2) => l2.target) : []);
     const current2 = /* @__PURE__ */ new Map();
     for (const r of Array.isArray(doc.data.references) ? doc.data.references : [])
-      if (r && typeof r === "object" && r.rel === "cites" && typeof r.target === "string")
+      if (r && typeof r === "object" && typeof r.target === "string" && (onInquiry ? legged.has(r.target) : r.rel === "cites") && !current2.has(r.target))
         current2.set(r.target, r);
     const wrong = [];
     for (const id of sel.members) {
@@ -214407,12 +214727,13 @@ var Citation = class {
     const ids = [...sel.members].sort();
     const shown3 = ids.slice(0, CITE_LOG_SAMPLE);
     const listed2 = shown3.join(", ") + (ids.length > shown3.length ? `, and ${ids.length - shown3.length} more` : "");
-    text7 = appendSessionLog4(
+    text7 = appendSessionLog5(
       text7,
       `### Session ${when} | ${verb} ${ids.length} citation${ids.length === 1 ? "" : "s"} | ${author || "member"}
 Trigger: selection ${handle}
-Changes: cites edges to ${listed2} moved to '${to}'. Reason: ${why2}.
-`
+` + (onInquiry ? `Changes: basis legs on ${listed2} moved to '${to}', each leg kept as it was. Reason: ${why2}.
+` : `Changes: cites edges to ${listed2} moved to '${to}'. Reason: ${why2}.
+`)
     );
     const bytes2 = new TextEncoder().encode(text7);
     if (bytes2.length > INLINE_MAX)
@@ -214422,9 +214743,9 @@ Changes: cites edges to ${listed2} moved to '${to}'. Reason: ${why2}.
         project,
         bytes: bytes2.length,
         limit: INLINE_MAX,
-        detail: "the reasons appended to these edges would push bundle.md past the 1MB inline limit"
+        detail: "the reasons appended to these citations would push bundle.md past the 1MB inline limit"
       };
-    const promoted = this.#write(project, p3, text7, when, author, doc.data, "project");
+    const promoted = this.#write(project, p3, text7, when, author, doc.data, doc.data.object_type ?? p3.type);
     if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
     return {
       ok: true,
@@ -214442,7 +214763,8 @@ Changes: cites edges to ${listed2} moved to '${to}'. Reason: ${why2}.
       to,
       bundleSha: promoted.bundleSha,
       rowVersion: promoted.rowVersion,
-      gate: sel.gate
+      gate: sel.gate,
+      ...onInquiry ? { citingObjectType: "inquiry" } : {}
     };
   }
   sever({ project, handle, viewer = null, owner = null, reason: reason2 = "", author = null, identity = null } = {}) {
@@ -214891,9 +215213,9 @@ Changes: cites edges to ${listed2} moved to '${to}'. Reason: ${why2}.
     const graded = filled21.length - ungraded;
     const setMovedNote = !fromFound && answerChanged(sel.drift, sel.moved) ? " (the set had moved since it was made; citing is report-weight and proceeded)" : "";
     const trigger = (fromFound ? `Trigger: a part of ${foundDoc} found by search in capture ${foundCapture}` : `Trigger: selection ${handle}${setMovedNote}`) + (questionId ? `; for question ${questionId}` : "") + "\n";
-    text7 = appendSessionLog4(text7, ontoInquiry ? `### Session ${when} | Rested this question on ${add2.length} record${add2.length === 1 ? "" : "s"} (${rl}) | ${author || "member"}
+    text7 = appendSessionLog5(text7, ontoInquiry ? `### Session ${when} | Rested this question on ${add2.length} record${add2.length === 1 ? "" : "s"} (${rl}) | ${author || "member"}
 ` + trigger + `Changes: basis legs added for ${listed2}, each with role ${rl}. Grades: ${graded} filled from the record's own resolutions to this question's subject; ${ungraded} left undetermined and stated.${nt ? ` Note: ${nt}.` : ""}
-` : `### Session ${when} | Cited ${add2.length} Information record${add2.length === 1 ? "" : "s"} | ${author || "member"}
+` : `### Session ${when} | Cited ${add2.length} record${add2.length === 1 ? "" : "s"} | ${author || "member"}
 ` + trigger + `Changes: cites edges added to ${listed2}.${nt ? ` Note: ${nt}.` : ""}
 `);
     const bytes2 = new TextEncoder().encode(text7);
@@ -214956,6 +215278,138 @@ Changes: cites edges to ${listed2} moved to '${to}'. Reason: ${why2}.
         gradesFilled: filled21.filter((l2) => l2.grade).length,
         gradesUndetermined: filled21.filter((l2) => !l2.grade).length
       } : {}
+    };
+  }
+  /* ---- drawQuestion (R14) ---- */
+  /** R14 (T47; N975): DRAWING ONE QUESTION INTO A CASE in one served act, with no selection and no document sent by
+   *  the caller: the case gains a `confirmed` `cites` edge to the question, spliced into the case's held document and
+   *  promoted, the edge and the answer exactly those `cite` writes for a one-member selection naming the question, at
+   *  `report` weight (R7). So the case draws on the question (`leg-earning`'s `projectsDrawingOn`) without a member
+   *  revising the whole document. Every refusal is one `cite` already answers, with its code and row; it mints none. */
+  drawQuestion({ project = null, inquiry = null, note = "", author = null, viewer = null, identity = null } = {}) {
+    const obj = this.#citingObject(project, viewer);
+    if (!obj.ok) return obj;
+    const p3 = obj.head;
+    if (p3.type !== "project")
+      return {
+        ok: false,
+        reason: "NOT_A_PROJECT",
+        project,
+        got: p3.type,
+        detail: "a question is drawn into a case, and this is not a case. A question rests on another question through a leg of its own basis, which citing onto it writes."
+      };
+    const denied = this.membership.projectAuthority(project, identity, "joined", "drawquestion");
+    if (denied) return denied;
+    const nt = String(note ?? "");
+    if (nt.length > NOTE_MAX7 || /["\\\r\n]/.test(nt))
+      return {
+        ok: false,
+        reason: "BAD_NOTE",
+        ...rowOf15(CITE_CHECKS, "BAD_NOTE"),
+        detail: "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline"
+      };
+    const qid = given3(inquiry) ? String(inquiry).trim() : "";
+    const qh = qid ? this.record.head(qid) : null;
+    if (!qh || !this.membership.inSight(qid, viewer))
+      return {
+        ok: false,
+        reason: "NO_SUCH_QUESTION",
+        ...rowOf15(CITE_CHECKS, "NO_SUCH_QUESTION"),
+        project,
+        question: qid || null,
+        detail: "no question by that id is one you can see, so it cannot be drawn into this case; nothing was written."
+      };
+    if (normalizeType(qh.type) !== "inquiry")
+      return {
+        ok: false,
+        reason: "NOT_AN_INQUIRY",
+        ...rowOf15(CITE_CHECKS, "NOT_AN_INQUIRY"),
+        project,
+        question: qid,
+        got: qh.type,
+        detail: `${qid} is not a question, so it cannot be drawn into this case as one; nothing was written.`
+      };
+    if (this.retiredNotCitable(qid))
+      return {
+        ok: false,
+        reason: "RETIRED_NOT_CITABLE",
+        ...rowOf15(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
+        project,
+        handle: null,
+        offenders: [qid],
+        drift: false,
+        detail: "the group has RETIRED this, recording that it is superseded or no longer stands, and drawing on it now would read to every later member as live support. Draw on what superseded it."
+      };
+    const doc = this.#document(project, "the project's own bundle.md does not parse under the restricted grammar");
+    if (!doc.ok) return doc;
+    const edge = (Array.isArray(doc.data.references) ? doc.data.references : []).find((r) => r && typeof r === "object" && r.rel === "cites" && r.target === qid);
+    if (edge && edge.status === "severed")
+      return {
+        ok: false,
+        reason: "SEVERED_EDGE",
+        ...rowOf15(CITE_CHECKS, "SEVERED_EDGE"),
+        project,
+        handle: null,
+        offenders: [qid],
+        drift: false,
+        detail: "this case already carries a SEVERED edge to this question, which is a recorded decision to cut the dependency, not the absence of one. Drawing on it again would neither reverse that decision silently nor skip past it. Reinstating a severance is a separate action that records its own reason."
+      };
+    const base2 = { ok: true, project, handle: null, weight: "report", moved: false, drift: false };
+    if (edge)
+      return {
+        ...base2,
+        cited: [],
+        alreadyCited: [qid],
+        severed: [],
+        question: null,
+        bundleSha: p3.bundleSha,
+        rowVersion: null,
+        detail: "this case already draws on this question; nothing was written"
+      };
+    const spliced = spliceReferences3(doc.text, [{ rel: "cites", target: qid, status: "confirmed", note: nt }]);
+    if (!spliced)
+      return {
+        ok: false,
+        reason: "UNSPLICEABLE_REFERENCES",
+        project,
+        detail: "the project's references block is not in a shape this grammar can extend in place. Drawing a question in edits only that block and never rewrites the rest of the document."
+      };
+    const when = stampInstant("second", this.now());
+    let text7 = setScalar6(spliced, "last_updated", `"${when}"`);
+    text7 = appendSessionLog5(
+      text7,
+      `### Session ${when} | Cited 1 record | ${author || "member"}
+Trigger: question ${qid} drawn into this case
+Changes: cites edges added to ${qid}.${nt ? ` Note: ${nt}.` : ""}
+`
+    );
+    const bytes2 = new TextEncoder().encode(text7);
+    if (bytes2.length > INLINE_MAX)
+      return {
+        ok: false,
+        reason: "CITATION_TOO_LARGE",
+        project,
+        handle: null,
+        drift: false,
+        requested: 1,
+        bytes: bytes2.length,
+        limit: INLINE_MAX,
+        roomFor: 0,
+        detail: "drawing this question in would push this case's bundle.md past the 1MB inline limit. Every edge is written into the document; nothing has been written."
+      };
+    const promoted = this.#write(project, p3, text7, when, author, doc.data, doc.data.object_type ?? p3.type);
+    if (!promoted.ok) return { ...promoted, project, handle: null, drift: false };
+    return {
+      ...base2,
+      cited: [qid],
+      alreadyCited: [],
+      severed: [],
+      question: null,
+      pinned_captures: { [qid]: null },
+      bundleSha: promoted.bundleSha,
+      rowVersion: promoted.rowVersion,
+      gate: null,
+      expires: null
     };
   }
 };
@@ -215032,6 +215486,15 @@ function citationOps(c, url) {
       owner: q10("owner"),
       reason: q10("reason") ?? "",
       author: q10("author"),
+      identity: q10("identity")
+    }),
+    /* R14 (T47; N975): one question drawn into a case, named by `inquiry`; no selection and no document. */
+    drawquestion: () => c.drawQuestion({
+      project: q10("project"),
+      inquiry: q10("inquiry"),
+      note: q10("note") ?? "",
+      author: q10("author"),
+      viewer: q10("viewer"),
       identity: q10("identity")
     })
   };
@@ -219076,13 +219539,15 @@ function answersOps(a, url, body) {
   const viewer = q9(url, "viewer");
   const grant = q9(url, "grant");
   return {
-    /* R7: the door to every rule service (ASK_SCOPE's `rule`) */
+    /* R7: the door to every rule service (ASK_SCOPE's `rule`); R35: the grant's use is the control plane's stamp
+       (`use`, `draft` for a draft's grant), read from the query only, never the body */
     rule: () => a.ruleAnswer({
       service: q9(url, "service") ?? b.service ?? null,
       args: plain16(b.args) ? b.args : {},
       at: q9(url, "at") ?? b.at ?? null,
       viewer,
-      grant
+      grant,
+      use: q9(url, "use") ?? "ask"
     }),
     /* R4: an answer checked against the grant's read log before it is shown */
     answercheck: () => a.check({ answer: b.answer ?? null, grant, viewer, mode: "ask" }),
@@ -219118,6 +219583,7 @@ var RULE_SERVICES_SETTING = "answers_rule_services";
 var ASK_MODES = Object.freeze(["ask", "standing"]);
 var ASK_ACCOUNT_KINDS = Object.freeze(["ask", "draft"]);
 var GRANT_USES = Object.freeze(["ask", "draft", "standing"]);
+var RULE_USES = Object.freeze(["ask", "draft"]);
 var LOGS_MAX = 512;
 var plain17 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var filled16 = (v) => typeof v === "string" && v.trim() !== "";
@@ -219312,8 +219778,10 @@ var Answers = class {
     return { ok: true, on: on === true };
   }
   /** R7: one rule service's answer, as of `at` (now when absent), recorded in the read log of the grant it was asked
-   *  under. Non-mutating; never throws. */
-  async ruleAnswer({ service = null, args = null, viewer = null, at: at47 = null, grant = null } = {}) {
+   *  under. Non-mutating; never throws. (R35; K3089) `use` (`ask` or `draft`; absent or any other: `ask`) opens the
+   *  grant's read log with it when this is the grant's first read, so a draft grant first read by `op=rule` is scrubbed
+   *  as a draft (R30); a log already open keeps the use it opened with. */
+  async ruleAnswer({ service = null, args = null, viewer = null, at: at47 = null, grant = null, use = "ask" } = {}) {
     if (this.record.getSetting(RULE_SERVICES_SETTING) !== true)
       return refusal21("RULE_SERVICES_OFF", "the rule services are switched off in your group's Civicsmith");
     const fn = BUILT_IN_SERVICES[service] || this.services.get(service);
@@ -219340,7 +219808,7 @@ var Answers = class {
       ...r.quote_only !== void 0 ? { quote_only: r.quote_only } : {},
       ...r.limits ? { limits: r.limits } : {}
     };
-    const log = grant ? this.#logFor(grant, viewer) : null;
+    const log = grant ? this.#logFor(grant, viewer, RULE_USES.includes(use) ? use : "ask") : null;
     if (log) return log.addRule(scrubRead(answer2, this.hidden(viewer, log.use)), asOf);
     return answer2;
   }
@@ -232837,7 +233305,7 @@ var EDITION_STATEMENT_CLAUSES = [
 ];
 var EDITION_STATEMENT_ACTS = Object.freeze({
   proposes: Object.freeze([
-    Object.freeze({ id: "whatchangedpropose", defined_by: "case-authoring R39" })
+    Object.freeze({ id: "whatchangedpropose", defined_by: "case-inputs R6" })
   ]),
   leaves_to_a_member: Object.freeze([
     Object.freeze({ id: "publish", defined_by: "case-authoring R38" }),
@@ -233665,14 +234133,14 @@ function judgementLayers() {
        ADDRESS of the thing that actually refuses, so a run reading this learns
        where the gate is rather than being told what it says. */
     deployment_sequence: {
-      load_when: "the run is launched, or a member asks which mode is deployed and why",
+      load_when: "the run is launched, or a member asks which modes are deployed and why",
       sourcing: "authored",
       body: {
         sequence: DEPLOYMENT_SEQUENCE,
         gate: GATE_ADDRESS,
         ruled_in: SEQUENCING_SOURCE,
         restated_in: SEQUENCING_ALSO_NAMED_IN,
-        note: "this layer is INSTRUCTION and it holds no flag of its own. The mode that is deployed is read from FL-3's landed table at the address above, which is CODE and is the first row every run takes, and by the plane's open from the run's rules, whose record this layer carries unchanged; this text neither restates those flags nor could change them. What it adds is the REASON for the order and the enabling condition for the second mode, both of which are facts a run should be able to state and neither of which any code can be asked to hold."
+        note: "this layer is INSTRUCTION and it holds no flag of its own, and this module deploys no mode. Which modes are deployed (the order's first, and any mode deployed apart from the chain by its own flag) is read from FL-3's landed table at the address above, which is CODE and is the first row every run takes, and by the plane's open from the run's rules, whose record this layer carries unchanged; this text neither restates those flags nor could change them. What it adds is the REASON for the order and who owns each later mode's enabling condition, both of which are facts a run should be able to state and neither of which any code can be asked to hold."
       }
     },
     judgement_boundary: {
