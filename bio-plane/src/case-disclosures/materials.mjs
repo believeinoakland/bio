@@ -48,8 +48,9 @@ export function materialHeld(m, io) {
 
 /** R7 (K1134 Q6, BOB's decision 15): the `materials:` and `material_attestations:` rows (`case-grammar` R12) for the
  *  materials `chainsOf` reached, each with what `materialHeld` found, and `obscured` for a photo or a member document R6
- *  carries as its copy, else null (T37, N757; T39, N806): `{copy, label, marked}` for a photo (T40; DEC-185 (1)),
- *  `{copy, label}` for a member document; R6's `label_key` is the reader's surface's and is not written. Its
+ *  carries as its copy, else null (T37, N757; T39, N806): `{copy, label, marked, kind}` for a photo (T40; DEC-185 (1)),
+ *  `{copy, label, kind}` for a member document, `kind` case-carriage's marker as R6 handed it (R32; T47, N953), so the
+ *  signed edition records which kind of copy it carries; R6's `label_key` is the reader's surface's and is not written. Its
  *  fingerprints, origin and archived copy stay the original's. `facts(sha)` is R2's read of a capture (grade,
  *  co-attestation, signed accounts), `origin(sha)` its earliest captured address, `registered(sha)` its register row,
  *  `member(m)` the attesting member's row or rows as R10 states them, `group` the producing group's slug. Rows, in the
@@ -67,7 +68,8 @@ export function materialRows(materials, { project, group, at, facts, origin, reg
     rows.push({ ref: m.ref, kind: m.kind, sha: m.sha, text_sha: m.held.text_sha, origin: origin(m.sha),
                 archived_copy: f ? f.co_archive ?? null : null, included: m.included, rests_under: m.rests_under,
                 obscured: m.obscured ? { copy: m.obscured.copy, label: m.obscured.label,
-                                         ...(typeof m.obscured.marked === "boolean" ? { marked: m.obscured.marked } : {}) }
+                                         ...(typeof m.obscured.marked === "boolean" ? { marked: m.obscured.marked } : {}),
+                                         kind: m.obscured.kind ?? null }
                   : null });
     attestations.push(...member(m, f).map((x) => ({ ref: m.ref, by_kind: "member", recorded_in: null, ...x })));
     if (f && f.timestamp_at)
@@ -171,7 +173,27 @@ export function photoRead(read) {
     return unread("the marks read answered a shape it does not state");
   if (state !== "unchecked" && !copy && !refused)
     return unread(`the photo is checked (${state}) but holds neither a copy nor a refused cover`);
-  return { photo: true, state, marks: a.marks, copy: refused || state === "unchecked" ? null : copy, refused };
+  const carried = state !== "unchecked" && !refused ? copy : null;
+  /* R32 (T47; N953; `case-carriage` R22): a photo carried as its copy is answered with case-carriage's own `obscured`
+     object, handed on whole, `kind` included; one that names another copy, another kind, or a `marked` its standing
+     marks do not give is an answer R10 does not state */
+  const obscured = carried ? obscuredRead(a.obscured, carried, "photo") : null;
+  if (carried && (!obscured || obscured.marked !== (state === "marked")))
+    return unread("the marks read answered a copy with no obscured object R22 states for it");
+  return { photo: true, state, marks: a.marks, copy: carried, refused, ...(obscured ? { obscured } : {}) };
+}
+
+/** R32 (T47; N953, K3038; `case-carriage` R22, `case-grammar` R31): case-carriage's `obscured` object for a copy, handed on
+ *  unchanged, or null when it is not the one R22 answers for that copy: an object whose `copy` is the copy the answer
+ *  names (a SHA-256), whose `label` is words, whose `kind` is the read's own (`photo` from `photoMarks`, `document` from
+ *  `documentCopy`), and, for a photo, whose `marked` is a boolean. Nothing here derives `kind`, from a label's words or
+ *  otherwise. */
+export function obscuredRead(o, copy, kind) {
+  if (!o || typeof o !== "object" || Array.isArray(o)) return null;
+  if (typeof o.copy !== "string" || !HEX64.test(o.copy) || o.copy.toLowerCase() !== copy) return null;
+  if (typeof o.label !== "string" || !o.label || o.kind !== kind) return null;
+  if (kind === "photo" && typeof o.marked !== "boolean") return null;
+  return o;
 }
 
 /** R6 (T39; N806; K2315, K2333): the states `case-carriage.documentCopy` (its R16) answers a document capture. */
@@ -194,8 +216,11 @@ export function documentRead(read) {
   if (a.state === "undetermined") return unread("case-carriage could not read the copy's state");
   if (a.state === "photo") return unread("the copy's state read answered photo for a document that is no photo");
   if (a.state === "copy") {
-    return typeof a.copy === "string" && HEX64.test(a.copy) ? { state: "copy", copy: a.copy.toLowerCase(), refused: null }
-      : unread("the copy's state read answered copy with no SHA-256");
+    if (typeof a.copy !== "string" || !HEX64.test(a.copy)) return unread("the copy's state read answered copy with no SHA-256");
+    /* R32 (T47): its `obscured` object, `kind` "document", handed on whole */
+    const obscured = obscuredRead(a.obscured, a.copy.toLowerCase(), "document");
+    return obscured ? { state: "copy", copy: a.copy.toLowerCase(), refused: null, obscured }
+      : unread("the copy's state read answered copy with no obscured object R22 states for it");
   }
   if (a.state === "refused")
     return a.refused && typeof a.refused === "object" && typeof a.refused.code === "string" && a.refused.code

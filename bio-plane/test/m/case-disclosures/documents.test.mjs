@@ -25,8 +25,10 @@ const CLEAN_REFUSALS = ["ENCRYPTED", "EMBEDDED_FILE", "IMAGE_NOT_CLEANABLE", "HT
 const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
 const wordOf = (key) => (Array.isArray(WORDS) ? WORDS : WORDS.words || Object.values(WORDS).find(Array.isArray)).find((w) => w && w.key === key);
 /* R6 (K2483): a member document's copy, as R6 answers it; R7's row drops the key */
-const CLEANED = (copy) => ({ copy, label: COPY_CLEANED_LABEL, label_key: "document.cleaned.label" });
-const OBSCURED = (copy) => ({ copy, label: OBSCURED_LABEL, marked: true, label_key: "photo.obscured.label" });
+/* (T47; R32) case-carriage R22's object, `kind` included, handed on whole with K2483's key beside it */
+const CLEANED = (copy) => ({ copy, label: COPY_CLEANED_LABEL, kind: "document", label_key: "document.cleaned.label" });
+const OBSCURED = (copy) => ({ copy, label: OBSCURED_LABEL, marked: true, kind: "photo", label_key: "photo.obscured.label" });
+const R22 = (copy) => ({ copy, label: COPY_CLEANED_LABEL, kind: "document" });
 const copyOf = (copy) => ({ state: "copy", copy, refused: null });
 const refusedBy = (code) => ({ state: "refused", copy: null, refused: { code, detail: `doc-clean refused: ${code}` } });
 function refused(r, code) {
@@ -219,19 +221,22 @@ test("R6: documentRead reads R16's answer — public, clean and pending as state
   assert.deepEqual(DOCUMENT_STATES, ["public", "clean", "copy", "refused", "pending", "undetermined", "photo"]);
   for (const state of ["public", "clean", "pending"])
     assert.deepEqual(documentRead(() => ({ state, copy: null, refused: null })), { state, copy: null, refused: null });
-  assert.deepEqual(documentRead(() => ({ state: "copy", copy: COPY.toUpperCase(), refused: null })), { state: "copy", copy: COPY, refused: null });
+  assert.deepEqual(documentRead(() => ({ state: "copy", copy: COPY.toUpperCase(), refused: null, obscured: R22(COPY) })),
+    { state: "copy", copy: COPY, refused: null, obscured: R22(COPY) });
   assert.deepEqual(documentRead(() => ({ state: "refused", copy: null, refused: { code: "ENCRYPTED", detail: "d" } })),
     { state: "refused", copy: null, refused: { code: "ENCRYPTED", detail: "d" } });
   assert.deepEqual(documentRead(() => ({ state: "refused", copy: null, refused: { code: "ENCRYPTED" } })).refused, { code: "ENCRYPTED", detail: null });
   for (const bad of [() => { throw new Error("x"); }, () => undefined, () => 7, () => ({ ok: false }), () => ({}),
                      () => ({ state: "undetermined" }), () => ({ state: "photo" }), () => ({ state: "copy", copy: { sha256: COPY } }),
-                     () => ({ state: "refused", refused: { code: "" } })]) {
+                     () => ({ state: "refused", refused: { code: "" } }),
+                     /* (T47; R32) a copy whose obscured object R22 does not state */
+                     () => ({ state: "copy", copy: COPY, refused: null })]) {
     const r = documentRead(bad);
     assert.deepEqual([r.state, r.copy, r.refused, typeof r.why], ["undetermined", null, null, "string"]);
   }
 });
 
-test("R7: a member document R6 answers with obscured is written as a photo's copy row is — its original's fingerprint, extracted text's fingerprint, origin and archived copy, included: false, and obscured {copy, label: COPY_CLEANED_LABEL} — with its attestations as any document's; case-grammar's reader reads the rows back", () => {
+test("R7: a member document R6 answers with obscured is written as a photo's copy row is — its original's fingerprint, extracted text's fingerprint, origin and archived copy, included: false, and obscured {copy, label: COPY_CLEANED_LABEL, kind: document} (T47, R32) — with its attestations as any document's; case-grammar's reader reads the rows back", () => {
   const w = setup();
   const a = w.doc(DOC, { co_archive: { service: "archive.example", locator: "https://archive.example/web/a" } }, { receipt: true });
   const d = w.doc(DOC2);
@@ -245,7 +250,7 @@ test("R7: a member document R6 answers with obscured is written as a photo's cop
   assert.deepEqual(out.materials.rows, [
     { ref: DOC, kind: "document", sha: a, text_sha: held.text_sha, origin: `https://example.org/${DOC}`,
       archived_copy: w.cd.captureFacts(a).co_archive, included: false, rests_under: "load_bearing",
-      obscured: { copy: COPY, label: COPY_CLEANED_LABEL } },
+      obscured: R22(COPY) },
     { ref: DOC2, kind: "document", sha: d, text_sha: reached.materials[1].held.text_sha, origin: null,
       archived_copy: null, included: true, rests_under: "load_bearing", obscured: null }]);
   assert.equal(out.materials.rows[0].archived_copy, "https://archive.example/web/a");
@@ -253,8 +258,8 @@ test("R7: a member document R6 answers with obscured is written as a photo's cop
   assert.deepEqual([own(DOC), own(DOC2)], [["project", "group"], ["project", "group"]], "as any document's");
   const fm = w.fm(["---", `format: ${CASE_DOCUMENT_FORMAT}`,
     ...materialBlockLines({ materials: out.materials.rows, attestations: out.materials.attestations }), "---", ""].join("\n"));
-  /* case-grammar R12 (T40; K2537): a row without `obscured_marked` reads `marked` by its label, so a member document's
-     copy reads back marked: true; R7 writes it as {copy, label} */
+  /* case-grammar R12 (T40; K2537), R31 (T47): a row without `obscured_marked` reads `marked` by its label, so a member
+     document's copy reads back marked: true, and its `kind` back as written; R7 writes it as {copy, label, kind} */
   assert.deepEqual(materialsOf(fm).materials, out.materials.rows.map((r) => (r.obscured ? { ...r, obscured: { ...r.obscured, marked: true } } : r)));
 });
 
@@ -280,7 +285,7 @@ test("R6, R7 over the real case-carriage (its R15, R16): a member document (no r
   assert.deepEqual(r.materials[1].obscured, CLEANED(sha(copied)));
   assert.equal(r.materials[1].included, false);
   const out = w.cd.disclosureBlocks({ reached: r, project: "PROJ-x", author: "alice", at: AT });
-  assert.deepEqual([out.materials.rows[1].sha, out.materials.rows[1].obscured], [member, { copy: sha(copied), label: COPY_CLEANED_LABEL }]);
+  assert.deepEqual([out.materials.rows[1].sha, out.materials.rows[1].obscured], [member, R22(sha(copied))]);
   /* refused by doc-clean */
   const enc = w.doc(DOC3, {}, { text: "an encrypted file" });
   w.finding(Q2, [{ target: DOC3 }]);

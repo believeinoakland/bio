@@ -36,8 +36,10 @@ function setup() { const w = world(); for (const m of ["alice", "bo"]) w.member(
 const judged = (w, members, supporting = [], viewer = V("alice")) =>
   w.cd.materialsJudged(w.prepared(members), w.roles(members, supporting), viewer);
 /* R6 (T40; DEC-185 (1); K2483): a photo's copy, marked or with nothing to obscure, as R6 answers it; R7's row drops the key */
-const OB = (copy) => ({ copy, label: OBSCURED_LABEL, marked: true, label_key: "photo.obscured.label" });
-const PUB = (copy) => ({ copy, label: PUBLISHED_LABEL, marked: false, label_key: "photo.published.label" });
+/* (T47; R32) case-carriage R22's object, `kind` "photo" included, handed on whole with K2483's key beside it */
+const OB = (copy) => ({ copy, label: OBSCURED_LABEL, marked: true, kind: "photo", label_key: "photo.obscured.label" });
+const PUB = (copy) => ({ copy, label: PUBLISHED_LABEL, marked: false, kind: "photo", label_key: "photo.published.label" });
+const R22 = (copy, marked) => ({ copy, label: marked ? OBSCURED_LABEL : PUBLISHED_LABEL, marked, kind: "photo" });
 const rowOf = ({ label_key, ...o }) => o;
 const actor = (w, capture, who) => w.st.sql.exec(`INSERT INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`,
                                                   capture, who, "2026-09-27T10:00:00Z");
@@ -231,10 +233,10 @@ test("R6: photoRead reads R10's answer — no photo, a photo's state over its st
   assert.deepEqual(PHOTO_STATES, ["marked", "nothing_to_obscure", "unchecked"]);
   assert.deepEqual(photoRead(() => ({ ok: true, capture: "s", photo: false })), { photo: false });
   const marks = [mark("M", AREA)], none = [mark("M", [])];
-  assert.deepEqual(photoRead(() => ({ ok: true, photo: true, state: "marked", marks, copy: { sha256: COPY2 }, refused: null })),
-    { photo: true, state: "marked", marks, copy: COPY2, refused: null });
-  assert.deepEqual(photoRead(() => ({ ok: true, photo: true, state: "nothing_to_obscure", marks: none, copy: { sha256: COPY2 }, refused: null })),
-    { photo: true, state: "nothing_to_obscure", marks: none, copy: COPY2, refused: null });
+  assert.deepEqual(photoRead(() => ({ ok: true, photo: true, state: "marked", marks, copy: { sha256: COPY2 }, refused: null, obscured: R22(COPY2, true) })),
+    { photo: true, state: "marked", marks, copy: COPY2, refused: null, obscured: R22(COPY2, true) });
+  assert.deepEqual(photoRead(() => ({ ok: true, photo: true, state: "nothing_to_obscure", marks: none, copy: { sha256: COPY2 }, refused: null, obscured: R22(COPY2, false) })),
+    { photo: true, state: "nothing_to_obscure", marks: none, copy: COPY2, refused: null, obscured: R22(COPY2, false) });
   assert.deepEqual(photoRead(() => ({ ok: true, photo: true, state: "marked", marks, copy: { sha256: COPY2 }, refused: { code: "PNG_INTERLACED", detail: "d" } })),
     { photo: true, state: "marked", marks, copy: null, refused: { code: "PNG_INTERLACED", detail: "d" } });
   assert.deepEqual(photoRead(() => ({ ok: true, photo: true, state: "unchecked", marks: [], copy: { sha256: COPY2 }, refused: null })),
@@ -242,13 +244,15 @@ test("R6: photoRead reads R10's answer — no photo, a photo's state over its st
   for (const bad of [() => { throw new Error("x"); }, () => undefined, () => 7, () => ({ ok: false }), () => ({ ok: true }),
                      () => ({ ok: true, photo: true, state: "marked", marks, copy: null, refused: { code: 3 } }),
                      () => ({ ok: true, photo: true, state: "marked", marks: [null], copy: { sha256: COPY } }),
-                     () => ({ ok: true, photo: true, state: "nothing_to_obscure", marks, copy: { sha256: COPY } })]) {
+                     () => ({ ok: true, photo: true, state: "nothing_to_obscure", marks, copy: { sha256: COPY } }),
+                     /* (T47; R32) a copy whose obscured object R22 does not state */
+                     () => ({ ok: true, photo: true, state: "marked", marks, copy: { sha256: COPY }, refused: null })]) {
     const r = photoRead(bad);
     assert.deepEqual([r.photo, r.unread, typeof r.why], [null, true, "string"]);
   }
 });
 
-test("R7: a photo R6 answers with obscured is written with its original's fingerprint, extracted text's fingerprint, origin and archived copy, included: false, and obscured {copy, label, marked} (T40), PUBLISHED_LABEL for an unmarked copy, no label_key; its attestations as any document's; every other row states obscured: null; case-grammar's reader reads the rows back", () => {
+test("R7: a photo R6 answers with obscured is written with its original's fingerprint, extracted text's fingerprint, origin and archived copy, included: false, and obscured {copy, label, marked, kind} (T40; T47, R32: kind photo), PUBLISHED_LABEL for an unmarked copy, no label_key; its attestations as any document's; every other row states obscured: null; case-grammar's reader reads the rows back", () => {
   const w = setup();
   const p = w.doc(DOC, { co_archive: { service: "archive.example", locator: "https://archive.example/web/p" } }, { receipt: true });
   const d = w.doc(DOC2), n = w.doc(DOC3);
@@ -269,7 +273,7 @@ test("R7: a photo R6 answers with obscured is written with its original's finger
   const kinds = (ref) => out.materials.attestations.filter((a) => a.ref === ref).map((a) => a.by_kind);
   const own = (ref) => kinds(ref).filter((k) => k !== "co_attestation");
   assert.deepEqual([own(DOC), own(DOC2)], [["project", "group"], ["project", "group"]], "as any document's");
-  /* case-grammar R12: `obscured` written flat and read back as {copy, label, marked} (T40; T40-16a, case-grammar's T41 entry) */
+  /* case-grammar R12, R31: `obscured` written flat and read back as {copy, label, marked, kind} (T40; T47) */
   const fm = w.fm(["---", `format: ${CASE_DOCUMENT_FORMAT}`,
     ...materialBlockLines({ materials: out.materials.rows, attestations: out.materials.attestations }), "---", ""].join("\n"));
   assert.deepEqual(materialsOf(fm).materials, out.materials.rows);
