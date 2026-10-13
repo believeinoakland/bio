@@ -4,9 +4,9 @@
  * visibly the same work. It is an optional field of `bio-case-document/5`, with no new format version: a `/5` document
  * without it names no notice; `/6` states everything `/5` states (R1), so it is an optional field of `/6` and `/7` too.
  *
- * ONE WRITER, ONE READING, in R8's form: `case-authoring` writes the line with `workingOnLines` (its R41, as
- * `network-notices.noticeReferenceOf` answers), and `workingOnOf` is the one reading of it, so no module parses it a
- * second way. `isNoticeReference` is the shape: `ratification` refuses a case document whose `working_on` is present
+ * ONE WRITER, ONE READING, in R8's form (R30; T47, N952): `case-authoring` writes the line with `workingOnLines` (its
+ * R41, as `network-notices.noticeReferenceOf` answers), and `workingOnOf` is the one reading of it, so no module parses it
+ * a second way: `public-read` R19 answers a case's project reference through it. `isNoticeReference` is the shape: `ratification` refuses a case document whose `working_on` is present
  * and not one (its R38, under the case-document catalogue); this module refuses nothing. The writer writes what it is
  * handed, folded onto one line but never trimmed or corrected, so a malformed value reaches that refusal as it was
  * handed and is never made well-formed here. Pure; nothing here throws. */
@@ -29,7 +29,7 @@ export function isNoticeReference(value) {
   return typeof value === "string" && NOTICE_REFERENCE_PATTERN.test(value);
 }
 
-/** R10: the `working_on:` line, from the notice id; no line when there is none (`null` or `undefined`), so a case
+/** R10, R30: the `working_on:` line, from the notice id; no line when there is none (`null` or `undefined`), so a case
  *  whose project has no notice names none. Any other value is written as handed, quoted on one line (line breaks made a
  *  space, double quotes and backslashes made apostrophes, never trimmed), for `ratification` R38 to refuse. */
 export function workingOnLines(notice) {
@@ -37,8 +37,9 @@ export function workingOnLines(notice) {
   return [`${WORKING_ON_KEY}: "${String(notice).replace(/\r\n|\r|\n/g, " ").replace(/["\\]/g, "'")}"`];
 }
 
-/** R10: the notice a `/5` or `/6` document names as its project reference, read back from its front matter: the id when
- *  `working_on` is a notice reference; null when it carries none, so it names no notice, and for any other format. A
+/** R10, R30: the notice a `/5` or later document names as its project reference (any format R1's
+ *  `caseDocumentRequiresTensionSection` holds for), read back from its front matter: the id when `working_on` is a notice
+ *  reference; null when it carries none, so it names no notice, and for any earlier format. A
  *  value present and not a notice reference names no notice either (`ratification` R38 refuses such a document before
  *  it is written). Pure; never throws. */
 export function workingOnOf(fm) {
