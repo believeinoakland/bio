@@ -2,6 +2,22 @@
 
 **Status** · session_017ZBDmksjrNtUgd9oEHF8Hy · depth 2 · WAITING ON BOB (J2) · handled B3
 
+## Completion (CASE-DISCLOSURES #12)
+
+**Entry applied** · T47-76 (N953, K3038, K3096): R32 met, on J1's reading confirmed by B2 (K3109). R6 answers case-carriage R22's `obscured` object whole (`kind` included) with K2483's `label_key` beside it; R7 writes `{copy, label, marked (a photo's), kind}` into the `materials:` row, so case-grammar R31 writes `obscured_kind`; nothing derives `kind`; an answer naming a copy whose object R22 does not state fails closed (PHOTO_MARKS_UNDETERMINED / DOCUMENT_COPY_UNDETERMINED). Details in Progress below.
+
+**After B4 (case-carriage T47-26 and case-grammar T47-25 merged, K3115)** · tranche merged in; every arm over the real case-carriage and through case-grammar's read-back green with no further change.
+
+**Found in other modules (REPORT J3)** · case-authoring: its `photos.test.mjs`:36 stand-in for `photoMarks` answers the pre-R22 shape (a copy with no `obscured` object), so R34's two photo arms ("R34 (T38; DEC-183 (1)): signing is refused while any photo …" and "R34: steps gains photos …") now see the photos as unread (R32 fails closed) and go red; the stand-in needs R22's `obscured: {copy, label, marked, kind: "photo"}` (CASE-AUTHORING #28's). Every other red in case-authoring (3), plane (2) and answer-envelope (6) is the same title for title before and after my change (diffed against tranche/T47's case-disclosures).
+
+**Tests and checks** (on `job/T47/case-disclosures` with tranche/T47 merged per B4)
+- `node --test test/m/case-disclosures/`: tests 99, pass 99, fail 0.
+- Users: case-account 41/0, case-check 34/0, review 46/0; case-authoring 205/5 (3 inherited + the 2 above); plane 221/2 and answer-envelope 27/6 inherited, identical before and after.
+- `format.mjs` 0; `architecture.mjs … case-disclosures` 0 (18 files); `coverage.mjs … case-disclosures` 32 of 32, 0; `ownership.mjs … tranche/T47` 0 (7 files).
+- `checks/run.mjs`: format 0, architecture 0 (3106 files), channels 0; coverage 38 failures, none case-disclosures'.
+
+Size (session_017ZBDmksjrNtUgd9oEHF8Hy): test runs 16, module lines 2290
+
 ## Progress (CASE-DISCLOSURES #12)
 
 **Entry** · T47-76 (N953, K3038, K3096): R32 applied on my J1 reading, awaiting BOB's answer and case-carriage's and case-grammar's T47 merges (B1: CHANGE when they do).
