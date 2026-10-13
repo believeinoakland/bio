@@ -31,6 +31,7 @@ These are left for my next job, given this job's size.
 **Tests and checks.**
 - `node --test bio-plane/test/m/case-carriage/`: tests 88, pass 88, fail 0, todo 0.
 - Users' tests on my branch. Before the B2 merge: publication 141/0, public-read 186/0, case-disclosures 97/0, case-check 34/0, scheduler 129/0, control-plane 242/0. After it: publication 141/0, case-check 34/0, case-disclosures 95/2, public-read 184/2, case-authoring 207/3. Before it: affordances 242/3, op-declarations 144/12, answer-envelope 32/1, plane 221/2. Every red is the same set at `origin/tranche/T47` without my change (above).
+- `test/system/migrate-released.test.mjs`: 1 pass, 0 fail.
 - `format.mjs` 0 failures. `architecture.mjs bio case-carriage`: 14 files, 0 failures. `coverage.mjs bio case-carriage`: 22 of 22 live ids, 0 failures. `ownership.mjs bio case-carriage tranche/T47`: 0 failures.
 - `run.mjs bio` (K2950): format 0, architecture 0, channels 0; coverage 43 failures, none case-carriage's (rule 5 (1)).
 
