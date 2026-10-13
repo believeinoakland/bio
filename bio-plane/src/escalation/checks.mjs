@@ -15,10 +15,17 @@
 
 /* R33 (T46; N910, DEC-194): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module
    answers, each `en` verbatim, read by key, as membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are: the
-   two rows R31 mints. A row's `translation` is the word itself, never a copy. `refusal.NOT_OPEN` is not taken (R35). */
+   two rows R31 mints. R36 (T47; N962, N992; DEC-198, DEC-199): and two rows' translations, C-116.41's, whose sentence
+   names every act an escalation changes through, stop pursuing and reopen among them, and C-116.14's, which names no
+   escalation, so R34's one answer to a viewer who may not see it holds in its translation as in its fields. A row's
+   `translation` is the word itself, never a copy. `refusal.NOT_OPEN` is not taken (R35). */
 export const ESCALATION_WORDS = Object.freeze({
   'refusal.MACHINE_CANNOT_STOP': 'Only a member stops or reopens an escalation. Nothing was written.',
   'refusal.NOT_STOPPED': 'Only an escalation your group stopped pursuing can be reopened. Nothing was written.',
+  'refusal.ESCALATION_BY_ACT_ONLY': 'An escalation changes only through its own acts: open, attach, evaluate, advance, decline, '
+    + 'suspend, resume, stop pursuing, reopen and end, so its record never disagrees with itself. Nothing was written.',
+  'refusal.ALREADY_ATTACHED': 'This action is already attached to an escalation. An action is attached to one escalation, at '
+    + 'one stage. Nothing was written.',
 });
 
 const at = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
@@ -81,8 +88,7 @@ export const ESCALATION_CHECKS = Object.freeze({
   },
   ALREADY_ATTACHED: {
     check: 'C-116.14', where: at("escalationAttach", "is-attached-once"),
-    translation: 'That action is already attached to an escalation. An action belongs to one escalation, at one stage. '
-      + 'Nothing was written.',
+    translation: ESCALATION_WORDS['refusal.ALREADY_ATTACHED'],
   },
   NOT_ACCOUNTABILITY: {
     check: 'C-116.15', where: at("escalationAttach", "is-accountability-purpose"),
@@ -214,8 +220,7 @@ export const ESCALATION_CHECKS = Object.freeze({
   },
   ESCALATION_BY_ACT_ONLY: {
     check: 'C-116.41', where: at("check", "is-escalation-act"),
-    translation: 'An escalation changes only through its own acts (open, attach, evaluate, advance, decline, suspend, '
-      + 'resume, end), so its history and what is read from it never disagree. Nothing was written.',
+    translation: ESCALATION_WORDS['refusal.ESCALATION_BY_ACT_ONLY'],
   },
   ESCALATION_HISTORY_REWRITTEN: {
     check: 'C-116.42', where: at("check", "is-escalation-append-only"),
