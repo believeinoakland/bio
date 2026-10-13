@@ -14,7 +14,6 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
 import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
-import { actionRecordsOf } from "../../../src/action-records/index.mjs";
 import { localFactsOf } from "../../../src/local-facts/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { Retrieval, PROJECTION_TABLE } from "../../../src/retrieval/index.mjs";
@@ -150,9 +149,9 @@ export function world({ profiles = ["test-port-ellery"], override = null } = {})
   let n = 0;
   const w = {
     st, host, record, membership, promotion, actions, localFacts, c, clock, determinations, steps,
-    /** `action-records` on this host (its R15: the one instance per host), whose `actionReceipt` (its R4) records the
-     *  receipts and service `actionRead` answers and R2 counts from (N961). */
-    records: () => actionRecordsOf(host, { record, membership, now: () => clock.ms }),
+    /** `action-records` on this host, the one instance `actions` creates and holds (its `records`; action-records R15),
+     *  whose `actionReceipt` (its R4) records the receipts and service `actionRead` answers and R2 counts from (N961). */
+    records: () => actions.records,
     /** The real standards module on this host (R7, R13), created on first use; its text's content ids resolve, through a
      *  content stand-in, to the document `INFO-2026-0099-std`, which the first call promotes. */
     standards: () => {
