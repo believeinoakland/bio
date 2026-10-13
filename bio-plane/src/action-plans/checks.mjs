@@ -13,10 +13,9 @@ const at = (fn, region) => `src/action-plans/index.mjs ${fn} > ${region}`;
 
 /* R47 (T46; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module
    answers, each `en` verbatim, read by key as `membership`'s `HANDLE_WORDS` and `extraction`'s `TRANSCRIBE_WORDS` are:
-   six rows' translations (`refusal.<CODE>`) and the closing note's prompt (R20, `plan.close.lessons`). The rows keep their
-   codes, numbers and `where`s. `refusal.DOCUMENT_FIRST_NO_REASON` is not taken in T46: its sentence says the matter is
-   not documented, while R42 also refuses a malformed `why_first` once it is, so C-124.63 keeps its own words and the
-   difference is BOB's (R47). */
+   seven rows' translations (`refusal.<CODE>`) and the closing note's prompt (R20, `plan.close.lessons`). The rows keep
+   their codes, numbers and `where`s. (T47, R49; DEC-199, N963) `refusal.DOCUMENT_FIRST_NO_REASON` is DEC-199's sentence,
+   true of R42's absent and malformed `why_first` alike, so C-124.63 reads it by key too: one code for both arms. */
 export const PLAN_WORDS = Object.freeze({
   'refusal.SCENARIO_OUT_OF_RANGE': 'A scenario is numbered 1, 2, 3 and on. Nothing was written.',
   'refusal.NO_SUCH_SCENARIO': 'This plan has no such scenario. Nothing was changed.',
@@ -24,6 +23,9 @@ export const PLAN_WORDS = Object.freeze({
   'refusal.SCENARIO_NOT_SET_ASIDE': "This scenario isn't set aside, so there is nothing to restore. Nothing was changed.",
   'refusal.PLAN_NOT_OPEN': 'Only an open plan can be paused. Nothing was changed.',
   'refusal.PLAN_NOT_PAUSED': 'Only a paused plan can be resumed. Nothing was changed.',
+  'refusal.DOCUMENT_FIRST_NO_REASON': 'Acting before what happened is documented needs your reason: why you are acting '
+    + 'first, on one line with no quotation marks or backslash, at most 500 characters. The reason is missing or isn\'t '
+    + 'in that form. Give it, or document what happened first. Nothing was written.',
   'plan.close.lessons': 'What would your group do differently next time? (optional, at most 4,000 characters)',
 });
 
@@ -340,9 +342,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   },
   DOCUMENT_FIRST_NO_REASON: {
     check: 'C-124.63', where: at("optionStart", "is-document-first"),
-    translation: 'This step goes outside the group before the infraction it is about has been documented. That is your '
-      + 'call to make: say in your own words, in 1 to 500 characters with no quotation mark, backslash or line break, why '
-      + 'this goes first. Nothing was written.',
+    translation: PLAN_WORDS['refusal.DOCUMENT_FIRST_NO_REASON'],
   },
   LOOK_AGAIN_REFUSED: {
     check: 'C-124.64', where: at("#pauseAct", "is-look-again-day"),
