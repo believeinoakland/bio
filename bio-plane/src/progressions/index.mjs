@@ -40,8 +40,9 @@
  *                `time_zone` that `factStatus` answers, else `{zone: null, why}` when none or several govern. Read
  *                lazily, each read.
  *   now          the module's clock for the instants it writes, an ISO string (default: the wall clock).
- *   nowMs        the instance's configured clock for the overdue reads, milliseconds (R16), else `env.BIO_NOW_MS`,
- *                else the wall clock. */
+ *   nowMs        the instance's configured clock for the overdue reads, a function answering milliseconds (R16),
+ *                else `env.BIO_NOW_MS`, else the wall clock. `op=proposals` and `op=captureprogressions` read it and
+ *                never a request's instant (R43). */
 
 import { recordOf, perItem } from "../record-core/index.mjs";
 import { viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
@@ -1263,10 +1264,11 @@ export class Progressions {
    * THE FEEDS (R18, R19; REC-6, REC-7, REC-9, REC-184, D-552).
    * ===================================================================== */
 
-  /** R18 (`op=proposals`): one walk over every threaded instance. `instances[]` each instance with an open finding
-   *  (missing, then overdue, then any other kind); `proposals[]` one per (progression, stage) of the missing findings,
-   *  carrying its instances; `dispositions[]` every decision recorded. A finding an applying decision governs leaves
-   *  the first two and stays in the third (D-79: aged, never vanished). */
+  /** R18 (`op=proposals`): one walk over every threaded instance, at `nowMs` when an in-plane caller passes its own
+   *  instant (R16), else at the configured clock; the route passes none (R43). `instances[]` each instance with an
+   *  open finding (missing, then overdue, then any other kind); `proposals[]` one per (progression, stage) of the
+   *  missing findings, carrying its instances; `dispositions[]` every decision recorded. A finding an applying
+   *  decision governs leaves the first two and stays in the third (D-79: aged, never vanished). */
   proposalsFeed(nowMs) {
     const now = this.nowMs(nowMs);
     const recorded = new Map();
@@ -1340,7 +1342,8 @@ export class Progressions {
 
   /** R19 (`op=captureprogressions`): every (progression, entity, stage) at which a capture is placed, each instance
    *  assembled once, with its missing, overdue and other findings, each carrying `established`, `needs_confirmation`
-   *  and its decision, and the instance's `open_finding_count`. */
+   *  and its decision, and the instance's `open_finding_count`. Overdue is judged at `nowMs` when an in-plane caller
+   *  passes one, else at the configured clock; the route passes none (R43, K3033). */
   captureProgressions({ captureSha, nowMs } = {}) {
     /* R19 (N285): a request naming no digest is extraction's one answer (its R63), minted there */
     if (typeof captureSha !== "string" || !captureSha)
@@ -1524,8 +1527,10 @@ export function progressionOps(p, url, body) {
     instance: () => p.readInstance({ progressionKey: q("key"), entityId: q("id"), viewer: q("viewer") }),
     discharge: () => p.dischargeStage({ ...(body || {}), viewer: q("viewer") }),
     exceptions: () => p.readExceptions({ progressionKey: q("key"), entityId: q("id"), viewer: q("viewer") }),
-    proposals: () => p.proposalsFeed(q("now")),
-    captureprogressions: () => p.captureProgressions({ captureSha: q("sha256"), nowMs: q("now") }),
+    /* R43 (N983): both are evaluated at the server's instant, R16's configured clock, since their answers (which stage
+       is overdue, `overdue_count`) may gate an act; a `now` or `nowMs` in the query or the body is never read. */
+    proposals: () => p.proposalsFeed(),
+    captureprogressions: () => p.captureProgressions({ captureSha: q("sha256") }),
   };
 }
 
