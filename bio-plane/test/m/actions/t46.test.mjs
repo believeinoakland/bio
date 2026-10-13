@@ -1,6 +1,7 @@
 /* actions' T46 entry at its interface (T46-32; N922, N913; DEC-194; K2874, K2953): R98, the mechanical clock write
-   admitting a timed entry once its instant has passed in its zone (amending R33), and R99, the five keyed sentences
-   answered with their keys and the words `words.json` holds for them, read by key (amending R74, R82, R87, R92, R93).
+   admitting a timed entry once its instant has passed in its zone (amending R33), and R99, the keyed sentences
+   answered with their keys and the words `words.json` holds for them, read by key (amending R74, R82, R87, R92, R93; four
+   since T47, R87's moved to `action-records`).
    Each refusal beside its control; the jurisdiction view is the test profile's (America/Halifax, UTC-3 in September). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -97,8 +98,10 @@ test("R98 dueInstant reads an entry's time of day as action-clocks' dueAtOf does
 
 /* ================================================================ R99: the keyed sentences, read by key */
 
-const KEYS = ["actions.override.ground_not_stated", "actions.reply.not_owed", "actions.scope.published_stays",
-              "actions.openitems.not_office", "actions.recognition.promise_only"];
+const KEYS = ["actions.override.ground_not_stated", "actions.reply.not_owed", "actions.openitems.not_office",
+              "actions.recognition.promise_only"];
+/* R87's key moved with its act to action-records (its R14; T47, N961). */
+const SCOPE_KEY = "actions.scope.published_stays";
 /* The sentences as T45 worded them, which none of these answers any longer. */
 const T45 = ["This override was stated before a ground was asked for; it reads as written, with its reason alone.",
   "This body owes the group no reply, so silence is never recorded as a non-response.",
@@ -110,7 +113,7 @@ const said = (x, key) => {
   assert.equal(x.says, actions.ACTIONS_WORDS[key], `${key} read from ACTIONS_WORDS`);
 };
 
-test("R99 ACTIONS_WORDS holds exactly the five keys, each words.json's en verbatim, read by key; T45_SENTENCES answers each key with them", () => {
+test("R99 ACTIONS_WORDS holds exactly the four keys this module answers, each words.json's en verbatim, read by key; T45_SENTENCES answers each key with them", () => {
   assert.ok(Object.isFrozen(actions.ACTIONS_WORDS));
   assert.deepEqual(Object.keys(actions.ACTIONS_WORDS).sort(), [...KEYS].sort());
   for (const k of KEYS) assert.equal(actions.ACTIONS_WORDS[k], en(k), `${k} verbatim`);
@@ -147,14 +150,15 @@ test("R99 R82 reply_owed: false answers actions.reply.not_owed with its words, {
   assert.equal(w.a.actionCorrespond({ target: B, direction: "no_response", at: "2026-09-20", account: "silence", viewer: M, author: M }).ok, true);
 });
 
-test("R99 R87 actionScope answers actions.scope.published_stays with its words; a refused statement answers none", () => {
+test("R99 (T47) actions.scope.published_stays moved with R87 to action-records (its R14): this module holds and answers none of it, and the scope's act answers it there", () => {
+  assert.equal(SCOPE_KEY in actions.ACTIONS_WORDS, false);
+  assert.ok(!Object.values(actions.T45_SENTENCES).some((x) => x.key === SCOPE_KEY));
   const w = world();
   w.action(A);
-  const set = w.a.actionScope({ target: A, confidential: true, reason: "a source's safety", viewer: M, author: M });
-  assert.equal(set.ok, true);
-  said(set.published, KEYS[2]);
-  const again = w.a.actionScope({ target: A, confidential: true, reason: "again", viewer: M, author: M });
-  assert.deepEqual([again.reason, again.published], ["SCOPE_UNCHANGED", undefined]);
+  const set = w.a.records.actionScope({ target: A, confidential: true, reason: "a source's safety", viewer: M, author: M });
+  assert.deepEqual([set.ok, set.published.key, set.published.says], [true, SCOPE_KEY, en(SCOPE_KEY)], "answered by action-records");
+  /* the control: no answer of this module carries the key, the read of a confidential action included */
+  assert.ok(!JSON.stringify(w.a.actionRead({ id: A, viewer: M })).includes(SCOPE_KEY));
 });
 
 test("R99 R92 openItemsWith a non-office addressee answers actions.openitems.not_office with its words; an office answers none", () => {
@@ -162,7 +166,7 @@ test("R99 R92 openItemsWith a non-office addressee answers actions.openitems.not
   w.action(A);
   const aud = w.a.openItemsWith({ counterparty: { state: "audience", description: "readers" }, viewer: M });
   assert.deepEqual(aud.items, []);
-  said(aud, KEYS[3]);
+  said(aud, KEYS[2]);
   const office = w.a.openItemsWith({ counterparty: { state: "named", role: "Town Clerk", body: "Town of Port Ellery" }, viewer: M });
   assert.deepEqual([office.items.map((x) => x.action), office.key], [[A], undefined]);
 });
@@ -178,7 +182,7 @@ test("R99 R93 a recognition resting on nothing answers actions.recognition.promi
   assert.equal(w.promote(B, actionMd(B, [...CP, "action_kind: recognition_letter", "action_basis:", `  - target: ${CO}`, "    kind: rests_on"])).ok, true);
   const basis = w.a.actionRead({ id: A, viewer: M }).recognition_basis;
   assert.equal(basis.basis, "promise_only");
-  said(basis, KEYS[4]);
+  said(basis, KEYS[3]);
   assert.deepEqual(w.a.actionRead({ id: B, viewer: M }).recognition_basis, { basis: "compliant" });
 });
 
@@ -186,9 +190,9 @@ test("R99 no answer of this module carries the sentences T45 worded", () => {
   const w = world();
   w.promote(A, actionMd(A, [...CP, "action_kind: other", "reply_owed: false", 'reply_owed_reason: "r"', "premise_override:", '  reason: "old"',
     "breach: true"]), { extra: { replay: true } });
-  const text = JSON.stringify([w.a.actionRead({ id: A, viewer: M }), w.a.actionScope({ target: A, confidential: true, reason: "r", viewer: M, author: M }),
+  const text = JSON.stringify([w.a.actionRead({ id: A, viewer: M }),
     w.a.openItemsWith({ counterparty: { state: "audience", description: "x" }, viewer: M }),
     w.a.actionCorrespond({ target: A, direction: "no_response", at: "2026-09-20", account: "s", viewer: M, author: M })]);
   for (const old of T45) assert.ok(!text.includes(old), old);
-  for (const k of KEYS.slice(0, 4)) assert.ok(text.includes(JSON.stringify(en(k)).slice(1, -1)), k);
+  for (const k of KEYS.slice(0, 3)) assert.ok(text.includes(JSON.stringify(en(k)).slice(1, -1)), k);
 });

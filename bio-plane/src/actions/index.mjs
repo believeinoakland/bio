@@ -12,7 +12,9 @@
  * its tables and declares them to record-core's purge (R36), registers its check and projection with promotion (R1–R3,
  * R7, R11, R33), action-grammar's audit arm with record-core (R51), its facts and projection decoration with retrieval (R12,
  * R25; retrieval R53, R56), its "what we did" and trigger sources with events and duties (R66, R67), its none-exists
- * reader with intent (R71), and its own-act reader and own-sending check with consequences and standards (R97). The
+ * reader with intent (R71), and its own-act reader and own-sending check with consequences and standards (R97); and it
+ * creates `action-records` (T47, N961; its R15), whose proposals, receipts, scopes and promises the read answers and
+ * whose four judgments its acts ask (R18, R23, R64, R70; the getter `records`). The
  * pressure marks and litigation holds, their reads and their registrations with doorbell and ratification, are
  * `action-holds`' since T45 (R48, R52, R54–R60, R69; K2781 (1)). `place()` and `zoneOf` give the group's zone to modules
  * with no office (R68); `actionZone` is the one zone an action's clock is read in (R100; `action-clocks` reads it).
@@ -52,26 +54,27 @@ import { localFactsOf } from "../local-facts/index.mjs";
 import { entitiesOf, noSuchEntity, ORGANISATION_KINDS } from "../entities/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { eventsOf } from "../events/index.mjs";
-import { standardsOf, noSuchStandard } from "../standards/index.mjs";
+import { standardsOf } from "../standards/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
 import { intentOf } from "../intent/index.mjs";
 import { localDay, overdueOn, isCalendarDate, bounds } from "../civil-time/index.mjs";
 import { combine, get as profileOf } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity,
-         createSha256, BUNDLE_ID_RE, idPattern } from "../record-grammar/index.mjs";
+         createSha256, idPattern } from "../record-grammar/index.mjs";
 import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
-         correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, lifecycleFindings, lawProposalLabel,
-         LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, RISK_TIER_REASON_MAX, RISK_TIER_HISTORY_MAX, riskTierHistoryOf,
+         correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, lifecycleFindings,
+         CITATION_MAX, RISK_TIER_REASON_MAX, RISK_TIER_HISTORY_MAX, riskTierHistoryOf,
          governingLawsOf, requestLifecycleOf, consequenceState, respondsToEdgeFindings, checkActionExtension,
          recordsLawRefusal, recordsLawOf, counterpartyName, counterpartyFindings, actionKinds, addresseeIsOffice,
          counterpartyOffice,
          clockMovesNotMechanical, ACTION_FENCE_CHECKS, ACTION_ACT_CHECKS, GOVERNING_LAW_CHECKS, QUOTE_CHECKS,
          LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS,
-         ACTION_CATALOGUE_CHECKS, seeksOf, seeksFindings, SEEKS_MAX, OVERRIDE_GROUNDS, PROMISE_KINDS, SUCCESS_RECORD_ID_RE,
+         ACTION_CATALOGUE_CHECKS, seeksOf, OVERRIDE_GROUNDS, SUCCESS_RECORD_ID_RE,
          premiseOverrideOf, overrideGroundFindings, copiedFindings, partnersFindings, pressTermsFindings,
          entryFieldFindings, actionFieldFindings, stageInLaw } from "../action-grammar/index.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
+import { actionRecordsOf, actionRecordsOps, ActionRecords } from "../action-records/index.mjs";
 
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
 
@@ -81,12 +84,6 @@ export const NOTE_MAX = 500;
    op is a single append with no human step inside it. It is a COURTESY: promote's CAS on `base` is what actually
    prevents a lost update, and this only stops two members interleaving two accounts of the same exchange. */
 export const CORRESPOND_LEASE_MS = 30000;
-/* REC-195: the most PROPOSALS one action's read returns (each at most GOVERNING_LAWS_MAX citations). A cut, published
-   beside the answer — never a claim that no more exist. R28: the same bound for proposed tiers. */
-export const LAW_PROPOSALS_READ_MAX = 12;
-export const RISK_PROPOSALS_READ_MAX = 12;
-/** R73: the most proposals of what a request seeks one action's read lists (R19's bound). */
-export const SEEKS_PROPOSALS_READ_MAX = 12;
 /** R27: the most quotes one read answers. */
 export const QUOTES_MAX = 500;
 /** R30: the most actions one page lists. */
@@ -103,20 +100,10 @@ const ENTITY_ID_RE = idPattern("ENT");
 export const PRESSURE_KINDS = Object.freeze(["legal", "retaliation", "discrediting", "other"]);
 /** R71 (intent R33): the most answers `noneExistsFor` gives. */
 export const NONE_EXISTS_MAX = 50;
-/** R28: the longest basis a proposed tier carries. */
-export const RISK_PROPOSAL_BASIS_MAX = 500;
 /** R74 (T45): the quick route offered beside `OVERRIDE_NO_GROUND` (reconciliation R16). */
 export const QUICK_ROUTE = Object.freeze({ kind: "one_finding_case" });
-/** R80 (T45): what a receipt record says happened to a sent entry. */
-export const RECEIPT_KINDS = Object.freeze(["receipt", "service"]);
-/** R80: the longest `how` and `party` of a receipt record. */
-export const RECEIPT_TEXT_MAX = 200;
-/** R88 (T45): the longest promise. */
-export const PROMISE_TEXT_MAX = 500;
 /** R92 (T45): the most open items one read answers. */
 export const OPEN_ITEMS_MAX = 200;
-/** R80, R74: a local date-time, `YYYY-MM-DDTHH:MM`. */
-const LOCAL_DT_RE = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d$/;
 /* R74: the flat keys a premise override's ground is held under (K2849). */
 /* R81, R83, R94: the flat keys an entry's T45 fields are held under (K2849). */
 const ENTRY_FIELD_KEYS = Object.freeze(["speaker", "office_words", "office_status", "found_elsewhere", "found_elsewhere_note"]);
@@ -129,17 +116,16 @@ export const ACTIONS_WORDS = Object.freeze({
   "actions.override.ground_not_stated": "No ground was recorded for acting before a determination (this was done before "
     + "a ground was asked for).",
   "actions.reply.not_owed": "No reply is owed: {reason}",
-  "actions.scope.published_stays": "This changes what is published from now on. A case already signed stays as it was.",
   "actions.openitems.not_office": "Open items are listed only when the action is addressed to an office.",
   "actions.recognition.promise_only": "This thanks the office for a promise. Nothing yet shows the promise kept.",
 });
-/* The member-facing sentences T45 added (R74, R82, R87, R92, R93), each answered as its key and the words `words.json`
+/* The member-facing sentences T45 added (R74, R82, R92, R93; R87's `actions.scope.published_stays` is `action-records`'
+   since T47, its R14), each answered as its key and the words `words.json`
    holds for it (R99): filings and the surfaces render the key, `says` its words. */
 const keyed = (key) => Object.freeze({ key, says: ACTIONS_WORDS[key] });
 export const T45_SENTENCES = Object.freeze({
   ground_not_stated: keyed("actions.override.ground_not_stated"),
   reply_not_owed: keyed("actions.reply.not_owed"),
-  scope_published_stays: keyed("actions.scope.published_stays"),
   openitems_not_office: keyed("actions.openitems.not_office"),
   recognition_promise_only: keyed("actions.recognition.promise_only"),
 });
@@ -373,7 +359,7 @@ export class Actions {
   /* R95 (T45): the response listeners, one per module (K31's pattern). */
   #responseListeners = [];
 
-  constructor({ storage, record, membership, promotion, host = null, retrieval = null, content = null,
+  constructor({ storage, record, membership, promotion, host = null, records = null, retrieval = null, content = null,
                 conformance = null, entities = null, lines = null, events = null, standards = null, duties = null,
                 progressions = null, consequences = null, projectRoster = null, localFacts = null, now = null,
                 env = null } = {}) {
@@ -381,13 +367,21 @@ export class Actions {
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, retrieval, content, conformance: conformance ?? undefined, entities, lines, events, standards, duties,
+    this.#deps = { host, records, retrieval, content, conformance: conformance ?? undefined, entities, lines, events, standards, duties,
                    progressions, consequences, projectRoster, localFacts };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
 
   get retrieval() { return this.#deps.retrieval ||= retrievalOf(this.#deps.host); }
+  /* T47 (N961; split map §3): what this module records apart from the action's document, `action-records` (its R15):
+     the proposals, receipts, scopes and promises the read answers (R25, R66, R30), and the four single-site judgments
+     (R18, R23, R64, R70). Created at this module's creation (`actionsOf`); a test may pass its own. */
+  get records() {
+    return this.#deps.records ||= actionRecordsOf(this.#deps.host, { storage: { sql: this.sql }, record: this.record,
+      membership: this.membership, progressions: this.#deps.progressions || null,
+      standards: this.#deps.standards || null, now: this.now, env: this.env });
+  }
   get content() { return this.#deps.content ||= contentOf(this.#deps.host); }
   /* R9: the subject registry's `readEntity` (entities R5), for an addressee's `entity_id`. */
   get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host); }
@@ -438,9 +432,6 @@ export class Actions {
     /* R11: the leg's pinned capture, on a table created before it had the column. */
     const cols = [...this.sql.exec(`PRAGMA table_info(action_basis)`)].map((r) => r.name);
     if (!cols.includes("extent_capture")) this.sql.exec(`ALTER TABLE action_basis ADD COLUMN extent_capture TEXT`);
-    /* R64, R19: a proposed law's held standard, on a table created before it had the column. */
-    const pcols = [...this.sql.exec(`PRAGMA table_info(action_law_proposals)`)].map((r) => r.name);
-    if (!pcols.includes("standard")) this.sql.exec(`ALTER TABLE action_law_proposals ADD COLUMN standard TEXT`);
     /* R74 (T45): an override's ground, on a table created before it had the column. */
     const ocols = [...this.sql.exec(`PRAGMA table_info(action_overrides)`)].map((r) => r.name);
     if (!ocols.includes("ground")) this.sql.exec(`ALTER TABLE action_overrides ADD COLUMN ground TEXT`);
@@ -941,7 +932,7 @@ export class Actions {
           { findings: [{ check: "C-2.10", detail: "law_standard is stated with no law on a records_request (R64)",
                          repairs: ["state the law by its citation", "or remove law_standard"] }] });
       if (lawStd !== null) {
-        const r = this.#standardSeen(lawStd, viewer);
+        const r = this.records.standardSeen(lawStd, viewer);
         if (r) return r;
       }
     }
@@ -959,16 +950,6 @@ export class Actions {
     }
     return null;
   }
-  /* R64: null when `id` is a standard the viewer may read, else `standards.noSuchStandard`'s one answer. */
-  #standardSeen(id, viewer) {
-    const sid = typeof id === "string" ? id.trim() : "";
-    const st = this.standards;
-    let r = null;
-    if (sid && BUNDLE_ID_RE.test(sid) && sid.startsWith("STD-") && st) {
-      try { r = st.standardRead({ id: sid, viewer }); } catch { r = null; }
-    }
-    return r && r.ok ? null : noSuchStandard(sid || (typeof id === "string" ? id : null));
-  }
   /* R65: null when `id` is a registered entity of kind `proceeding`, else the refusal. */
   #proceedingRefusal(id) {
     const pid = typeof id === "string" ? id.trim() : "";
@@ -984,7 +965,7 @@ export class Actions {
 
   /* R70, R72 (H30 (1); K2505, K2552, K2553, K2561): a creation or revision stating `seeks`, or changing or removing it,
      is judged before any write: a machine or unstamped author may not (R72: what a request asks the records for is a
-     member's statement; a machine proposes it, R73); then `#seeksRefusal` (R70). Asked only when `seeks` moved, so a later
+     member's statement; a machine proposes it, `action-records` R3); then `action-records.seeksRefusal` (R70, its R10). Asked only when `seeks` moved, so a later
      revision is never refused for a progression's later version. */
   #seeksFence(heldFm, nextFm, who) {
     const key = (fm) => JSON.stringify(fm && fm.seeks !== undefined && fm.seeks !== null ? fm.seeks : null);
@@ -995,30 +976,8 @@ export class Actions {
         + "statement; a machine credential may not state, change or remove it, and may propose it "
         + "(op=actionseekspropose). Nothing was written.");
     /* END DEC-49 REGION is-machine-state-seeks */
-    return this.#seeksRefusal(nextFm);
-  }
-
-  /* R70, R73: action-grammar's `seeksFindings` (its R13) over `fm`, with the facts read here through
-     `progressions.readProgression`, one entry per distinct progression an item names: its declared stage keys, or null
-     for a progression the record does not hold. A definition that cannot be read is read as not held (fail closed), and
-     the refusal says so. The refusal is the grammar's own (C-117.29), relayed with every finding; null when none. */
-  #seeksRefusal(fm) {
-    const stages = {};
-    let unreadable = false;
-    const items = Array.isArray(fm.seeks) ? fm.seeks : [];
-    for (const p of new Set(items.map((x) => (x && typeof x === "object" ? x.progression : null))
-                              .filter((x) => typeof x === "string" && x.trim()))) {
-      let r = null;
-      try { r = this.progressions ? this.progressions.readProgression({ progressionKey: p }) : null; } catch { r = null; }
-      if (!r || r.ok === false) { unreadable = true; stages[p] = null; continue; }
-      stages[p] = r.found ? (r.stages || []).map((st) => st.stage_key) : null;
-    }
-    const found = [];
-    seeksFindings(fm, { stages }, found);
-    const errors = found.filter((x) => x.severity === "error");
-    if (!errors.length) return null;
-    return refuse(errors[0].code, errors[0].message, { findings: findingsOf(errors),
-      ...(unreadable ? { cause: "PROGRESSIONS_UNREADABLE" } : {}) });
+    /* R70 (T47; N961): the judgment is `action-records.seeksRefusal` (its R10); the fence is this module's. */
+    return this.records.seeksRefusal(nextFm);
   }
 
   /* T45: the errors of an action-grammar arm (R15, R20–R23), as the refusal reads them. */
@@ -2153,7 +2112,8 @@ export class Actions {
     /* END DEC-49 REGION is-machine-set-laws */
     if (!target)
       return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const read = this.#lawEntries(laws);
+    /* R18 (T47; N961): the list's shape is `action-records.lawEntries` (its R7), the one site of C-73.2–C-73.5. */
+    const read = this.records.lawEntries(laws);
     if (!read.ok) return read;
     const entries = read.entries;
 
@@ -2170,10 +2130,10 @@ export class Actions {
       return { ok: false, reason: "NO_DOCUMENT", target,
                detail: "this action has no readable bundle.md, so its governing laws cannot be set" };
     const fm = parseFrontmatter(liveMd.content).data || {};
-    /* R64: each named standard is one the author may read, else standards' one answer. */
+    /* R64: each named standard is one the author may read (`action-records.standardSeen`, its R9). */
     for (const e of entries) {
       if (!e.standard) continue;
-      const r = this.#standardSeen(e.standard, viewer ?? who);
+      const r = this.records.standardSeen(e.standard, viewer ?? who);
       if (r) return { ...r, target };
     }
     const before = governingLawsOf(fm);
@@ -2208,59 +2168,6 @@ export class Actions {
     if (!promoted.ok) return { ...promoted, target };
     return { ok: true, target, laws: entries, by: who, at: when,
              replaced: before.state === "stated" ? before.laws : null, weight: "single" };
-  }
-
-  /* D-149 — WHAT A WELL-FORMED LIST OF GOVERNING LAWS IS, decided in ONE place.
-   *
-   * EXTRACTED FROM `actionLaws` BY REC-195, and the extraction is the point rather than tidiness. REC-195 adds a
-   * SECOND caller — `actionLawsPropose`, the machine's proposal — and a second caller judging the same shape is
-   * how REC-46's eleven-copies-of-one-predicate failure arrives at a grammar. The alternative was a second family
-   * of refusal codes saying the same four things about the same four conditions, which would have made the
-   * catalogue claim the plane draws a distinction it does not draw. So both acts ask this, both refuse with
-   * C-73.2..5, and a change to what a citation may be cannot reach one act and miss the other.
-   *
-   * IT JUDGES THE SHAPE AND NEVER THE LAW. Whether a citation is the RIGHT law for the agency asked is a member's
-   * reading and the plane does not try (D-149: the plane encodes no law's rules). Returns the parsed entries or
-   * the refusal, and writes nothing. */
-  /* An instance method that reads no instance state: written so for the legacy refusal-code guard, which could not
-     see a static method (deleted in T20, K879). DEC-49's totality over these codes is control-plane's
-     `test/m/control-plane/families.test.mjs` (its R22). */
-  #lawEntries(laws) {
-    let list = laws;
-    if (typeof list === "string") { try { list = JSON.parse(list); } catch { list = null; } }
-    const entries = [];
-    /* DEC-49 REGION is-laws-entry — D-149/C-73.2-5. The conditions on the LIST's own shape. */
-    if (!Array.isArray(list) || !list.length)
-      return { ok: false, reason: "NO_LAWS", legal_levels: LAW_LEVELS,
-               detail: "the act names at least one law as {level, citation}. An action whose laws nobody has "
-                     + "stated reads UNDETERMINED on its own; an empty list is not a statement." };
-    if (list.length > GOVERNING_LAWS_MAX)
-      return { ok: false, reason: "TOO_MANY_LAWS", count: list.length, max: GOVERNING_LAWS_MAX,
-               detail: `one act states at most ${GOVERNING_LAWS_MAX} governing laws` };
-    const seen = new Set();
-    for (let i = 0; i < list.length; i++) {
-      const e = list[i];
-      const level = e && typeof e === "object" ? String(e.level ?? "").trim() : "";
-      const citation = e && typeof e === "object" && typeof e.citation === "string" ? e.citation.trim() : "";
-      if (!LAW_LEVELS.includes(level))
-        return { ok: false, reason: "BAD_LAW_LEVEL", index: i, level, legal: LAW_LEVELS,
-                 detail: `laws[${i}].level is one of ${LAW_LEVELS.join(", ")}` };
-      if (!citation || citation.length > CITATION_MAX || /["\\\r\n]/.test(citation))
-        return { ok: false, reason: "BAD_CITATION", index: i,
-                 detail: `laws[${i}].citation is 1 to ${CITATION_MAX} characters with no quote, backslash or `
-                       + "newline: the restricted frontmatter grammar has no escapes" };
-      const key = `${level}\u0000${citation.toLowerCase()}`;
-      if (seen.has(key))
-        return { ok: false, reason: "BAD_CITATION", index: i,
-                 detail: `laws[${i}] repeats an earlier entry: a law is named once at its level` };
-      seen.add(key);
-      /* R64 (K1446): an entry may name a held standard; the citation stays the member's own statement. Whether the
-         standard is one the caller may read is asked by each act once the action is found. */
-      const std = e.standard === undefined || e.standard === null || e.standard === "" ? null : String(e.standard).trim();
-      entries.push({ level, citation, ...(std ? { standard: std } : {}) });
-    }
-    /* END DEC-49 REGION is-laws-entry */
-    return { ok: true, entries };
   }
 
   /* D-149: REPLACE the top-level `governing_laws:` block (the key line and its indented rows) with `entries`,
@@ -2335,7 +2242,8 @@ export class Actions {
     const next = riskTierState(asked);
     const why = typeof reason === "string" ? reason.trim() : "";
     const text0 = Actions.#appendRiskTierHistory(liveMd.content, null);
-    if (next !== 1 && next !== 2 && next !== 3) return this.#badRiskTier(target, tier, "the act");
+    /* R23 (T47; N961): C-90.2 is answered by `action-records.badRiskTier` (its R8), its one site. */
+    if (next !== 1 && next !== 2 && next !== 3) return this.records.badRiskTier(target, tier, "the act");
     /* DEC-49 REGION is-risk-tier-act */
     if (!why || why.length > RISK_TIER_REASON_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "RISK_TIER_REASON_REFUSED", target, max: RISK_TIER_REASON_MAX,
@@ -2381,16 +2289,6 @@ export class Actions {
              risk_tier_history: riskTierHistoryOf(after), weight: "single" };
   }
 
-  /* R23, R28 (C-90.2): the one site that answers a tier that is not 1, 2 or 3, for the act and for a proposal alike
-     (one condition, one code). */
-  #badRiskTier(target, tier, who) {
-    /* DEC-49 REGION is-bad-risk-tier */
-    return refuse("BAD_RISK_TIER", `${who} states a tier of 1 (file freely), 2 (file with caution) or 3 (do not file `
-      + "without counsel). Undetermined is what an action reads when nobody has assessed it, not a tier to set.",
-      { target, tier: tier ?? null, legal: [1, 2, 3] });
-    /* END DEC-49 REGION is-bad-risk-tier */
-  }
-
   /* REC-214: APPEND one entry to the top-level `risk_tier_history:` block, or open the block before the closing
      fence when absent — `#replaceGoverningLaws`' grammar, but it only ever ADDS rows after the last one. With
      `entry` null it answers only whether the block can be appended to (the act asks before it refuses anything
@@ -2422,82 +2320,6 @@ export class Actions {
       }
     return [...lines.slice(0, hi), "risk_tier_history:", ...lines.slice(hi + 1, last + 1), ...rows,
             ...lines.slice(last + 1)].join("\n");
-  }
-
-  /** op=actionlawspropose — REC-195 (D-149's remaining half; `BIO_Case_Making_v0_1.md` §2, *A RECORDS REQUEST
-   *  NAMES EVERY LAW THAT GOVERNS IT*): A PROPOSAL OF CITATIONS AND LEVELS, STORED APART FROM THE MEMBER'S
-   *  LIST AND LABELLED MACHINE WORK.
-   *
-   *  THE RULING'S OWN WORDS: *the machine may propose the list from the counterparty, labelled as machine work,
-   *  and never sets it.* D-149 built the half that REFUSES (the machine fence at C-32.18) and said in this
-   *  file's own comment that no proposal was built. This is that proposal, and every line of it is about the
-   *  difference between the two halves.
-   *
-   *  IT NEVER SETS THE LIST, AND THAT IS STRUCTURAL RATHER THAN POLICED. This method does not call `promote`, it
-   *  writes no file, and it never touches `governing_laws`, `governing_laws_by` or `governing_laws_at`. The list
-   *  is the member's and moves only through `actionLaws`; the fence that keeps a revision from moving it
-   *  (C-73.1) is untouched and unreachable from here, because nothing here writes bytes at all. The module test of
-   *  R18 and R19 (`test/m/actions/acts.test.mjs`) holds that a proposal leaves the list as it stands.
-   *
-   *  ANY CREDENTIAL MAY PROPOSE, AND THE LABEL CARRIES THE MEANING — `themePropose`'s shape, for its reason
-   *  (§8.4 fence 3). A fence admitting only machines would be a fence TIGHTER THAN ITS RULE: D-149 says a
-   *  machine MAY propose, not that nobody else may, and a member's proposal to whoever states the list is a
-   *  real act with an obvious surface. What the record owes is the LABEL, and `lawProposalLabel` composes it in
-   *  one place so the plane answers the question rather than publishing an identity for a surface to judge.
-   *
-   *  THE WHOLE PROPOSAL, REPLACED, PER PROPOSER. A proposer restating replaces its OWN standing proposal and
-   *  nobody else's: two machines proposing different lists are two proposals, and the record says who proposed
-   *  which. There is no act that clears one and none that adopts one — adopting is `op=actionlaws`, which is a
-   *  member's authored statement of the laws and not an acceptance of anybody's suggestion. **NOTHING HERE OR
-   *  IN THE READ DERIVES A RELATION BETWEEN A PROPOSAL AND THE LIST**, even when they hold the same citations:
-   *  that a member's list came FROM a machine's proposal is a claim about why somebody acted, and the record
-   *  cannot support it. */
-  actionLawsPropose({ target, laws = null, proposer = null, viewer = null } = {}) {
-    const who = String(proposer ?? "").trim();
-    if (!who)
-      return { ok: false, reason: "NO_AUTHOR",
-               detail: "this call carries nobody. The plane stamps the proposer from the credential that "
-                     + "asked, and a proposal nobody can be named for is one the record could say nothing "
-                     + "about: the label IS the act." };
-    if (!target)
-      return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const read = this.#lawEntries(laws);
-    if (!read.ok) return read;
-    const entries = read.entries;
-
-    const gate = viewerPredicate(viewer);
-    const b = this.#one(
-      `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-      target, ...gate.args);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type,
-               detail: "governing laws belong to an action: they are the laws its request is made under." };
-    /* R64, R19: a proposal may name a held standard with a law; it is one the proposer may read. */
-    for (const e of entries) {
-      if (!e.standard) continue;
-      const r = this.#standardSeen(e.standard, viewer ?? who);
-      if (r) return { ...r, target };
-    }
-    const at = stampInstant("second", this.#nowMs(null));
-    /* REPLACE THIS PROPOSER'S OWN ROWS AND NOBODY ELSE'S. Keyed on both columns, never on the bundle alone. */
-    this.sql.exec(`DELETE FROM action_law_proposals WHERE bundle_id=? AND proposed_by=?`, target, who);
-    entries.forEach((e, i) => this.sql.exec(
-      `INSERT INTO action_law_proposals (bundle_id, proposed_by, ord, level, citation, standard, proposed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`, target, who, i, e.level, e.citation, e.standard ?? null, at));
-
-    /* THE ACT'S OWN ANSWER SAYS WHAT IT DID NOT DO, read through the ONE reader of the list (`governingLawsOf`)
-       so the act and the action's own read cannot disagree about whose the list is. */
-    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
-    const fm = liveMd && liveMd.content !== null ? (parseFrontmatter(liveMd.content).data || {}) : null;
-    const listed = governingLawsOf(fm);
-    return { ok: true, target, weight: "single",
-             proposal: { ...lawProposalLabel(who), at, laws: entries },
-             governing_laws: listed, evidence: false,
-             says: `${entries.length} citation${entries.length === 1 ? " is" : "s are"} proposed for this `
-                 + `action. This is not the action's list of governing laws and did not change it: that list `
-                 + `${listed.state === "stated" ? `is ${listed.laws.length} law(s) stated by a member` : "is UNDETERMINED"}`
-                 + ", and only a member's own act states it." };
   }
 
   /* REC-24 (g): write the `responds_to` edge onto the CAPTURED REPLY, pointing
@@ -2754,11 +2576,12 @@ export class Actions {
       basis: legs,
       correspondence: ledger,
       governing_laws: governingLawsOf(fm),
-      governing_laws_proposals: this.#lawProposalsFor(row.bundle_id),
-      risk_tier_proposals: this.#riskProposalsFor(row.bundle_id),
+      /* R25 (T47; N961): the proposals stored apart are `action-records`' (its R1–R3), read through it. */
+      governing_laws_proposals: this.records.lawProposalsFor(row.bundle_id),
+      risk_tier_proposals: this.records.riskProposalsFor(row.bundle_id),
       /* R70, R73: what a records request seeks, as a member stated it, and the proposals of it stored apart. */
       seeks: seeksOf(fm),
-      seeks_proposals: this.#seeksProposalsFor(row.bundle_id),
+      seeks_proposals: this.records.seeksProposalsFor(row.bundle_id),
       records_law: fm.action_kind === "records_request" ? recordsLawOf(fm, this.#lawAuthor(row.bundle_id, fm)) : null,
       lifecycle: requestLifecycleOf(fm, localToday(now, actionZone(fm, view)) ?? ""),
       /* R26, DEC-14: the ACTION'S OWN OUTCOME, never the breach's consequence (which `consequences` holds). */
@@ -2805,7 +2628,8 @@ export class Actions {
       press_terms_history: history("press_terms"),
       reply_owed: { owed, ...(owed ? {} : { ...T45_SENTENCES.reply_not_owed, reason: replyOwedReason(fm) }),
                     history: history("reply_owed") },
-      receipts: this.#receiptsOf(id),
+      /* R25 (T47; N961): the receipts, scope and promises are `action-records`' (its R4–R6), read through it. */
+      receipts: this.records.receiptsOf(id),
       entries: (Array.isArray(fm.correspondence) ? fm.correspondence : []).map((e, ord) => {
         const p = Actions.entryFields(e) || {};
         return { ord, ...(p.speaker !== undefined ? { speaker: p.speaker } : {}),
@@ -2817,10 +2641,10 @@ export class Actions {
       }).filter((x) => Object.keys(x).length > 1),
       follows_action: fm.follows_action && typeof fm.follows_action === "object" ? fm.follows_action : null,
       followed_by: this.#followedBy(id, viewer),
-      /* R87 (K2850): the latest scope statement, false with none, and its statements. */
-      confidential: this.#confidential(id),
-      scope: this.#scopeOf(id),
-      promises: this.#promisesOf(id),
+      /* action-records R5 (was R87; K2850): the latest scope statement, false with none, and its statements. */
+      confidential: this.records.confidential(id),
+      scope: this.records.scopeOf(id),
+      promises: this.records.promisesOf(id),
     };
     /* R9 (T45): the venue's delivery point beside an office addressee, where the profile's venue for the kind states one. */
     const facts = kindEntry && kindEntry.venue && Array.isArray(kindEntry.venue.facts) ? kindEntry.venue.facts : [];
@@ -2926,7 +2750,7 @@ export class Actions {
     if (typeof fm.law_standard === "string" && fm.law_standard.trim())
       named.push({ law: "records", citation: typeof fm.law === "string" ? fm.law : null, standard: fm.law_standard.trim() });
     const law_standards = named.map((n) => {
-      if (this.#standardSeen(n.standard, viewer))
+      if (this.records.standardSeen(n.standard, viewer))
         return { ...n, in_force: null, says: "no standard you may read answers to this id" };
       let f = null;
       try { f = date ? this.standards.inForceAt({ standard: n.standard, date, viewer }) : null; } catch { f = null; }
@@ -3061,7 +2885,7 @@ export class Actions {
                    counterparty: counterpartyName(fm.counterparty), counterparty_state: fm.counterparty?.state ?? null,
                    /* R9 (T45): a press addressee's holder, kept inside the group: the read and this list only. */
                    ...(cp && cp.kind === "press" && typeof cp.holder === "string" && cp.holder.trim() ? { holder: { name: cp.holder.trim() } } : {}),
-                   ...(voids ? { basis_void: voids } : {}), confidential: this.#confidential(r.bundle_id) });
+                   ...(voids ? { basis_void: voids } : {}), confidential: this.records.confidential(r.bundle_id) });
       }
       if (truncated || rows.length <= max) break;
     }
@@ -3176,7 +3000,8 @@ export class Actions {
       const ledger = Array.isArray(fm.correspondence) ? fm.correspondence : [];
       const firstSent = ledger.filter((e) => e && typeof e === "object" && e.direction === "sent")
         .map((e) => String(e.at ?? "").slice(0, 10)).filter(isCalendarDate).sort()[0];
-      if (!firstSent || this.#confidential(id) || this.#counselMatter(id)) continue;
+      /* R66 (T47; N961): confidential is `action-records.confidential` (its R5). */
+      if (!firstSent || this.records.confidential(id) || this.#counselMatter(id)) continue;
       ledger.forEach((e, ord) => {
         if (!e || typeof e !== "object" || !Actions.#inWindow(e.at, from, to)) return;
         if (pub && e.direction !== "sent") return;
@@ -3228,7 +3053,8 @@ export class Actions {
     return out;
   }
 
-  /* ================================================================ T45: receipt, scope, promises, open items, listeners */
+  /* ================================================================ T45: open items, listeners (receipt, scope and promises are
+     `action-records`' since T47, its R4–R6) */
 
   /** R95 (T45; Actions D21; v0.2 rule 16): `registerResponseListener(module, fn)`, one registration per module (K31's
    *  pattern, `membership.listenerRefusal`). After a `received` entry is promoted by `actionCorrespond`, each `fn({action,
@@ -3253,162 +3079,6 @@ export class Actions {
   }
   static #logListener(module, e) {
     try { console.error(`actions: response listener of ${module} threw: ${String(e && e.message || e).slice(0, 200)}`); } catch { /* the entry stands */ }
-  }
-
-  /** R80 (T45; S1 §C 9; v0.2 rule 6): a member records that the `sent` entry at `ord` was received by the addressee
-   *  (`receipt`) or that a party was served (`service`), how and when, held as a capture or her account (R34's rule).
-   *  Its own table, appended; the ledger entry is never rewritten. `action-clocks` R2 reads it as the start of a count
-   *  from receipt or service. */
-  actionReceipt({ target, ord = null, kind = "receipt", at = "", how = "", party = "", artifactSha = "", account = "",
-                  viewer = null, author = null } = {}) {
-    const who = String(author ?? "").trim();
-    if (!who || isMachineIdentity(who))
-      return withRow({ ok: false, reason: "MACHINE_CANNOT_CORRESPOND", target: target ?? null,
-               detail: "a receipt is a named member's record that the group's sending reached its addressee. A machine "
-                     + "credential may not record one. Sign in as a member." });
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const when = String(at ?? "").trim();
-    const m = LOCAL_DT_RE.exec(when);
-    if (!(isCalendarDate(when) || (m && isCalendarDate(m[1]))))
-      return withRow({ ok: false, reason: "BAD_DATE", at: when, target,
-               detail: "a receipt is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has" });
-    const sha = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
-    const acct = String(account ?? "").trim();
-    if (sha && acct) return withRow({ ok: false, reason: "CAPTURE_AND_TESTIMONY", target,
-      detail: "a receipt is held as the captured bytes OR a named member's account, never both." });
-    if (!sha && !acct) return withRow({ ok: false, reason: "NEITHER_CAPTURE_NOR_TESTIMONY", target,
-      detail: "a receipt is held as captured bytes the register holds, or as a named member's account." });
-    if (sha && !/^[0-9a-f]{64}$/.test(sha)) return { ok: false, reason: "BAD_SHA", target, detail: "artifact_sha is a sha256 hash (64 hex characters)" };
-    const k = String(kind ?? "").trim() || "receipt";
-    const h = String(how ?? "").trim(), pty = String(party ?? "").trim();
-    for (const [name, v, need] of [["how", h, true], ["party", pty, k === "service"], ["account", acct, false]])
-      if ((need && !v) || v.length > (name === "account" ? NOTE_MAX : RECEIPT_TEXT_MAX))
-        return { ok: false, reason: `BAD_${name.toUpperCase()}`, target,
-                 detail: `${name} is ${need ? "1" : "0"} to ${name === "account" ? NOTE_MAX : RECEIPT_TEXT_MAX} characters` };
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    const ledger = (this.#heldFm(target) || {}).correspondence;
-    const n = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
-    const entry = Array.isArray(ledger) && Number.isInteger(n) ? ledger[n] : undefined;
-    /* DEC-49 REGION is-receipt-on-sent */
-    if (!entry || typeof entry !== "object" || entry.direction !== "sent" || !RECEIPT_KINDS.includes(k))
-      return refuse("RECEIPT_NOT_ON_SENT", `a receipt is recorded on a sent entry of this action, as ${RECEIPT_KINDS.join(" or ")}; `
-        + "the entry named is not a sent one. Nothing was written.", { target, ord: ord ?? null, legal: [...RECEIPT_KINDS] });
-    /* END DEC-49 REGION is-receipt-on-sent */
-    if (sha && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
-      return withRow({ ok: false, reason: "UNREGISTERED_ARTIFACT", target, artifact_sha: sha,
-               detail: "this hash names no capture in this store. Capture it first, or record a named account instead." });
-    const recorded = stampInstant("second", this.#nowMs(null));
-    const seq = this.record.transact(() => {
-      const next = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_receipts WHERE bundle_id=? AND ord=?`, target, n).n;
-      this.sql.exec(`INSERT INTO action_receipts (bundle_id, ord, seq, kind, at, how, party, artifact_sha, account, author,
-        recorded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`, target, n, next, k, when, h, pty || null, sha || null, acct || null,
-        who, recorded);
-      return next;
-    });
-    return { ok: true, target, ord: n, seq, kind: k, at: when, how: h, ...(pty ? { party: pty } : {}),
-             held_as: sha ? "capture" : "testimony", ...(sha ? { artifact_sha: sha } : { account: acct }),
-             author: who, recorded_at: recorded, weight: "single" };
-  }
-  /* R80, R25 (K2845): every receipt record, oldest first, so an entry's latest is its last. */
-  #receiptsOf(id) {
-    return this.#rows(`SELECT ord, seq, kind, at, how, party, artifact_sha, account, author, recorded_at
-      FROM action_receipts WHERE bundle_id=? ORDER BY recorded_at, ord, seq`, id)
-      .map((r) => ({ ord: r.ord, seq: r.seq, kind: r.kind, at: r.at, how: r.how, ...(r.party !== null ? { party: r.party } : {}),
-        held_as: r.artifact_sha ? "capture" : "testimony", ...(r.artifact_sha ? { artifact_sha: r.artifact_sha } : { account: r.account }),
-        by: r.author, recorded_at: r.recorded_at }));
-  }
-
-  /** R87 (T45; Actions D4; v0.2 rule 15): a member sets (`true`) or removes (`false`) the action's confidential scope,
-   *  with a reason, each statement appended. A confidential action is seen inside the group as before and never answered
-   *  by R66 or anything that feeds published output; the change never touches a signed edition (`publication` R63). */
-  actionScope({ target, confidential = null, reason = "", viewer = null, author = null } = {}) {
-    const who = String(author ?? "").trim();
-    const why = String(reason ?? "").trim();
-    /* DEC-49 REGION is-scope */
-    if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_SET_SCOPE", "whether an action is confidential is a member's act; a machine credential "
-        + "may not set or remove it. Nothing was written.", { target: target ?? null });
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const want = confidential === true || confidential === "true" ? 1 : confidential === false || confidential === "false" ? 0 : null;
-    if (want === null) return { ok: false, reason: "BAD_SCOPE", target, legal: [true, false],
-                                detail: "confidential is true (set the scope) or false (remove it)" };
-    if (!why) return refuse("SCOPE_NO_REASON", "setting or removing an action's confidential scope carries the member's "
-      + "reason. Nothing was written.", { target });
-    if (why.length > NOTE_MAX || /["\\\r\n]/.test(why))
-      return { ok: false, reason: "BAD_REASON", target, detail: `reason is at most ${NOTE_MAX} characters with no quote, backslash or line break` };
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    if (this.#confidential(target) === !!want)
-      return refuse("SCOPE_UNCHANGED", `this action is already ${want ? "confidential" : "not confidential"}; nothing was `
-        + "written.", { target, confidential: !!want });
-    /* END DEC-49 REGION is-scope */
-    const at = stampInstant("second", this.#nowMs(null));
-    this.record.transact(() => {
-      const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_scopes WHERE bundle_id=?`, target).n;
-      this.sql.exec(`INSERT INTO action_scopes (bundle_id, seq, confidential, reason, by, at) VALUES (?,?,?,?,?,?)`,
-        target, seq, want, why, who, at);
-    });
-    return { ok: true, target, confidential: !!want, reason: why, by: who, at, scope: this.#scopeOf(target),
-             published: T45_SENTENCES.scope_published_stays, weight: "single" };
-  }
-  /* R87, R66: whether the action's latest scope statement is confidential. */
-  #confidential(id) {
-    const r = this.#one(`SELECT confidential FROM action_scopes WHERE bundle_id=? ORDER BY seq DESC LIMIT 1`, id);
-    return !!(r && r.confidential);
-  }
-  /* R87, R25: the scope and its statements, oldest first. */
-  #scopeOf(id) {
-    const statements = this.#rows(`SELECT seq, confidential, reason, by, at FROM action_scopes WHERE bundle_id=? ORDER BY seq`, id)
-      .map((r) => ({ seq: r.seq, confidential: !!r.confidential, reason: r.reason, by: r.by, at: r.at }));
-    return { confidential: statements.length ? statements[statements.length - 1].confidential : false, statements };
-  }
-
-  /** R88 (T45; Actions D4; v0.2 rule 15): a member records a promise the group made to a person (`PROMISE_KINDS`), or
-   *  one ending an earlier promise (`ends`, its position, with `text` its reason). Appended, never edited; every viewer
-   *  who may see the action reads every promise; nothing published carries one (R66). */
-  actionPromise({ target, kind = "", text = "", ends = null, viewer = null, author = null } = {}) {
-    const who = String(author ?? "").trim();
-    const k = String(kind ?? "").trim(), t = String(text ?? "").trim();
-    const endsAt = ends === null || ends === undefined || ends === "" ? null
-      : Number.isInteger(ends) ? ends : /^\d+$/.test(String(ends).trim()) ? Number(String(ends).trim()) : NaN;
-    const kinds = PROMISE_KINDS;
-    const promiseRefused = (why) => refuse("PROMISE_REFUSED", `${why} Nothing was written.`,
-      { target: target ?? null, legal: [...kinds], max: PROMISE_TEXT_MAX });
-    /* DEC-49 REGION is-promise */
-    if (!who || isMachineIdentity(who))
-      return refuse("MACHINE_CANNOT_RECORD_PROMISE", "a promise the group made to a person is recorded by a member; a "
-        + "machine credential may not record one. Nothing was written.", { target: target ?? null });
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    if (!kinds.includes(k) || !t || t.length > PROMISE_TEXT_MAX || Number.isNaN(endsAt))
-      return promiseRefused(`a promise is {kind, text, ends?}: kind one of ${kinds.join(", ")}, the text 1 to `
-        + `${PROMISE_TEXT_MAX} characters, and ends the position of an earlier promise it ends.`);
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    if (endsAt !== null && !this.#promisesOf(target).standing.some((p) => p.seq === endsAt))
-      return promiseRefused(`ends names promise ${endsAt}, and no promise standing on this action is at that position.`);
-    /* END DEC-49 REGION is-promise */
-    const at = stampInstant("second", this.#nowMs(null));
-    const seq = this.record.transact(() => {
-      const next = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_promises WHERE bundle_id=?`, target).n;
-      this.sql.exec(`INSERT INTO action_promises (bundle_id, seq, kind, text, ends, by, at) VALUES (?,?,?,?,?,?,?)`,
-        target, next, k, t, endsAt, who, at);
-      return next;
-    });
-    return { ok: true, target, seq, kind: k, text: t, ...(endsAt !== null ? { ends: endsAt } : {}), by: who, at,
-             promises: this.#promisesOf(target), weight: "single" };
-  }
-  /* R88, R25: every promise on the action, standing apart from ended (one a later statement ends). */
-  #promisesOf(id) {
-    const all = this.#rows(`SELECT seq, kind, text, ends, by, at FROM action_promises WHERE bundle_id=? ORDER BY seq`, id)
-      .map((r) => ({ seq: r.seq, kind: r.kind, text: r.text, ...(r.ends !== null ? { ends: r.ends } : {}), by: r.by, at: r.at }));
-    const ended = new Map(all.filter((p) => p.ends !== undefined).map((p) => [p.ends, p]));
-    const notes = all.filter((p) => p.ends === undefined);
-    return { standing: notes.filter((p) => !ended.has(p.seq)),
-             ended: notes.filter((p) => ended.has(p.seq)).map((p) => ({ ...p, ended_by: ended.get(p.seq) })) };
   }
 
   /** R92 (T45; N892 (a); Actions D28a; v0.2 rule 21): the group's open actions the viewer may see addressed to the same
@@ -3470,166 +3140,12 @@ export class Actions {
     return !!this.#one(`SELECT 1 AS y FROM correspondence WHERE direction='sent' AND artifact_sha=?`, sha);
   }
 
-  /* ================================================================ proposals (R19, R28) */
-
-  /** R28 (REC-215): a proposed tier, stored apart, labelled; it never touches `risk_tier` or its history. */
-  actionRiskPropose({ target, tier = null, basis = null, proposer = null, viewer = null } = {}) {
-    const who = String(proposer ?? "").trim();
-    if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const asked = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
-    if (asked !== 1 && asked !== 2 && asked !== 3) return this.#badRiskTier(target, tier, "a proposal");
-    const why = typeof basis === "string" ? basis.trim() : "";
-    /* DEC-49 REGION is-risk-propose-basis */
-    if (!why || why.length > RISK_PROPOSAL_BASIS_MAX || /["\\\r\n]/.test(why))
-      return refuse("RISK_PROPOSAL_BASIS_REFUSED", `a proposed tier carries its basis: 1 to ${RISK_PROPOSAL_BASIS_MAX} `
-        + "characters with no quote, backslash or line break", { target, max: RISK_PROPOSAL_BASIS_MAX });
-    /* END DEC-49 REGION is-risk-propose-basis */
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    const at = stampInstant("second", this.#nowMs(null));
-    this.sql.exec(`INSERT INTO action_risk_proposals (bundle_id, proposed_by, tier, basis, proposed_at) VALUES (?,?,?,?,?)
-      ON CONFLICT(bundle_id, proposed_by) DO UPDATE SET tier=excluded.tier, basis=excluded.basis, proposed_at=excluded.proposed_at`,
-      target, who, asked, why, at);
-    const held = riskTierState((this.#heldFm(target) || {}).risk_tier);
-    return { ok: true, target, weight: "single", evidence: false,
-             proposal: { ...proposalLabelFor(who, "risk_tier"), tier: asked, tier_words: RISK_TIERS[asked], basis: why, at },
-             risk_tier: held, risk_tier_words: RISK_TIERS[held] ?? null,
-             says: `a tier of ${asked} is proposed for this action. This is not the action's risk tier and did not change `
-                 + `it: the tier is ${held === "undetermined" ? "undetermined" : held}, and only a member's own act sets it.` };
-  }
-
-  /** R73 (K2561; R70): a proposal of what a records request seeks, as R19 is to `actionLaws`: stored apart, labelled,
-   *  replacing only its proposer's own standing proposal; it writes no file and never changes `seeks`. Its items are
-   *  judged as R70 judges a statement (`SEEKS_REFUSED`, C-117.29, every finding carried), on the target's own kind. */
-  actionSeeksPropose({ target, seeks = null, proposer = null, viewer = null } = {}) {
-    const who = String(proposer ?? "").trim();
-    if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    const held = this.#heldFm(target) || {};
-    let list = seeks;
-    if (typeof list === "string") { try { list = JSON.parse(list); } catch { /* judged as given: not a list */ } }
-    const asked = { action_kind: held.action_kind, seeks: list === undefined || list === null ? [] : list };
-    const r = this.#seeksRefusal(asked);
-    if (r) return { ...r, target };
-    const items = seeksOf(asked);
-    const at = stampInstant("second", this.#nowMs(null));
-    this.record.transact(() => {
-      this.sql.exec(`DELETE FROM action_seeks_proposals WHERE bundle_id=? AND proposed_by=?`, target, who);
-      items.forEach((x, i) => this.sql.exec(`INSERT INTO action_seeks_proposals (bundle_id, proposed_by, ord, progression,
-        entity, stage, proposed_at) VALUES (?,?,?,?,?,?,?)`, target, who, i, x.progression, x.entity, x.stage, at));
-    });
-    const stated = seeksOf(held);
-    return { ok: true, target, weight: "single", evidence: false,
-             proposal: { ...proposalLabelFor(who, "seeks"), at, seeks: items },
-             seeks: stated,
-             says: `${items.length} stage${items.length === 1 ? " is" : "s are"} proposed as what this request seeks. This `
-                 + `is not the action's seeks and did not change it: ${stated.length ? `it names ${stated.length} stage(s) a `
-                 + "member stated" : "no member has stated what it seeks"}, and only a member's own write states it.` };
-  }
-
-  /* R73: the standing proposals of what the request seeks, newest first, at most 12, with `truncated` and a sentence. */
-  #seeksProposalsFor(id) {
-    const cap = SEEKS_PROPOSALS_READ_MAX;
-    const rows = this.#rows(`SELECT proposed_by, ord, progression, entity, stage, proposed_at FROM action_seeks_proposals
-      WHERE bundle_id=? ORDER BY proposed_at DESC, proposed_by, ord LIMIT ?`, id, (cap + 1) * SEEKS_MAX + 1);
-    const by = new Map();
-    for (const r of rows) {
-      if (!by.has(r.proposed_by)) by.set(r.proposed_by, { ...proposalLabelFor(r.proposed_by, "seeks"), at: r.proposed_at, seeks: [] });
-      by.get(r.proposed_by).seeks.push({ progression: r.progression, entity: r.entity, stage: r.stage });
-    }
-    const all = [...by.values()];
-    const proposals = all.slice(0, cap);
-    return { proposals, limit: cap, truncated: all.length > cap,
-             says: proposals.length
-               ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of what this request seeks. A proposal is `
-                 + "not the action's seeks: that is a member's own statement, shown beside this one."
-               : "no proposal of what this request seeks stands in the record. That is a statement about proposals and "
-                 + "about nothing else." };
-  }
-
-  /* R28: the standing tier proposals, newest first, at most 12, with `truncated` and a sentence also when empty. */
-  #riskProposalsFor(id) {
-    const cap = RISK_PROPOSALS_READ_MAX;
-    const rows = this.#rows(`SELECT proposed_by, tier, basis, proposed_at FROM action_risk_proposals WHERE bundle_id=?
-      ORDER BY proposed_at DESC, proposed_by LIMIT ?`, id, cap + 1);
-    const proposals = rows.slice(0, cap).map((r) => ({ ...proposalLabelFor(r.proposed_by, "risk_tier"), tier: r.tier,
-      tier_words: RISK_TIERS[r.tier] ?? null, basis: r.basis, at: r.proposed_at }));
-    return { proposals, limit: cap, truncated: rows.length > cap,
-             says: proposals.length
-               ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of this action's risk tier. A proposal is `
-                 + "not the tier: the tier is the member's own act, stated beside this one."
-               : "no proposal of this action's risk tier stands in the record. That is a statement about proposals and "
-                 + "about nothing else." };
-  }
-
-  #lawProposalsFor(bundleId) {
-    const cap = LAW_PROPOSALS_READ_MAX;
-    const rowCap = (cap + 1) * GOVERNING_LAWS_MAX;
-    const rows = this.#rows(
-      `SELECT proposed_by, ord, level, citation, standard, proposed_at FROM action_law_proposals
-        WHERE bundle_id=? ORDER BY proposed_at DESC, proposed_by, ord LIMIT ?`, bundleId, rowCap + 1);
-    const byProposer = new Map();
-    for (const r of rows) {
-      if (!byProposer.has(r.proposed_by))
-        byProposer.set(r.proposed_by, { ...lawProposalLabel(r.proposed_by), at: r.proposed_at, laws: [] });
-      byProposer.get(r.proposed_by).laws.push({ level: r.level, citation: r.citation, ...(r.standard ? { standard: r.standard } : {}) });
-    }
-    const all = [...byProposer.values()];
-    const proposals = all.slice(0, cap);
-    const machine = proposals.filter((p) => p.machine_work).length;
-    return {
-      proposals, limit: cap, truncated: all.length > cap,
-      says: proposals.length
-        ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of the laws that govern this `
-          + `action, ${machine} of them machine work. A proposal is not this action's list of governing laws `
-          + `and nothing here states which laws apply: the list is the member's own act, and it is stated `
-          + `beside this one.`
-        : "no proposal of the laws governing this action stands in the record. That is a statement about "
-          + "proposals and about nothing else: whether any law governs this request is answered beside this, "
-          + "and a member states it.",
-    };
-  }
 }
 
 /* The acts answer their catalogue-backed refusals with code, check and translation (the Provides' "Terms"). */
-for (const m of ["actionMove", "actionCorrespond", "actionLaws", "actionLawsPropose", "actionRiskTier", "actionQuotes",
-                 "actionReceipt", "actionScope", "actionPromise",
-                 "actionRiskPropose", "actionSeeksPropose", "actionCreate", "check"]) {
+for (const m of ["actionMove", "actionCorrespond", "actionLaws", "actionRiskTier", "actionQuotes", "actionCreate", "check"]) {
   const fn = Actions.prototype[m];
   Actions.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
-}
-
-/* R19, R28: the label of a proposal stored apart. The governing-laws sentence is action-grammar's `lawProposalLabel`
-   (REC-195); the tier's says, in each state, what the proposal is not. (The clock entry's moved to `action-clocks` with
-   R32, K617.) */
-const PROPOSAL_SAYS = {
-  risk_tier: {
-    machine_proposed: "a machine credential proposed this risk tier. That is machine work, labelled as machine work: it "
-      + "can set a tier beside the action for members to weigh and it can never set the tier. Nothing here is this "
-      + "action's risk tier, and nothing becomes it until a member states it themselves",
-    member_proposed: "a member proposed this risk tier to whoever states it. It is a proposal and not the tier: only the "
-      + "risk-tier act sets that, and the record holds who made the proposal",
-    unstated: "the record does not say who proposed this risk tier",
-  },
-  seeks: {
-    machine_proposed: "a machine credential proposed what this records request seeks. That is machine work, labelled as "
-      + "machine work: it sets stages beside the action for members to weigh and never states what it seeks; nothing "
-      + "becomes it until a member states it themselves",
-    member_proposed: "a member proposed what this records request seeks to whoever states it. It is a proposal and not "
-      + "the action's seeks: only a member's own write states that, and the record holds who made the proposal",
-    unstated: "the record does not say who proposed what this records request seeks",
-  },
-};
-function proposalLabelFor(who, subject) {
-  const base = lawProposalLabel(who);
-  return { by: base.by, state: base.state, machine_work: base.machine_work, says: PROPOSAL_SAYS[subject][base.state] };
 }
 
 const instances = new WeakMap();
@@ -3650,6 +3166,9 @@ export function actionsOf(host, deps) {
     a.migrate();
     void a.conformance;   /* R8: conformance joins the host before this module's step runs (K252) */
     record.declarePurge("actions", [...ACTIONS_TABLES]);
+    /* T47 (N961; split map §7 risk 1): `action-records` is created here, so its six tables exist and are declared at
+       every boot, in the same change that drops them from ACTIONS_TABLES (its R15). */
+    void a.records;
     promotion.registerStep("actions", { check: (c) => a.check(c), project: (c) => a.project(c) });
     record.registerAuditCheck("actions", (image) => a.audit(image));
     const retrieval = d.retrieval === null ? null : a.retrieval;
@@ -3703,19 +3222,15 @@ export function actionsOps(a, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
   return {
+    /* T47 (N961): the six acts moved to `action-records` (its R1–R6) keep their ops, spread here from its map (its R15)
+       until the plane spreads that map itself (its L11 job); the same arms, so a second spread changes nothing. An owner
+       handed with no `action-records` instance of its own (a stand-in in a test of the map) is handed the arms itself. */
+    ...actionRecordsOps(a.records instanceof ActionRecords ? a.records : a, url, body),
     actionmove: () => a.actionMove({ target: q("target"), to: q("to"), reason: q("reason"), resolution: q("resolution"),
                                      viewer: q("viewer"), author: q("author") }),
     actionlaws: () => a.actionLaws({ target: q("target") || b.target, laws: b.laws, viewer: q("viewer"), author: q("author") }),
     actionrisktier: () => a.actionRiskTier({ target: q("target") || b.target, tier: q("tier") ?? b.tier ?? null,
                                              reason: q("reason") ?? b.reason ?? null, viewer: q("viewer"), author: q("author") }),
-    actionlawspropose: () => a.actionLawsPropose({ target: q("target") || b.target, laws: b.laws, viewer: q("viewer"),
-                                                   proposer: q("proposer") }),
-    /* R73 (K2561): a proposal of what a records request seeks (declared and routed by L11). */
-    actionseekspropose: () => a.actionSeeksPropose({ target: q("target") || b.target, seeks: b.seeks ?? q("seeks"),
-                                                     viewer: q("viewer"), proposer: q("proposer") }),
-    actionriskpropose: () => a.actionRiskPropose({ target: q("target") || b.target, tier: q("tier") ?? b.tier ?? null,
-                                                   basis: q("basis") ?? b.basis ?? null, viewer: q("viewer"),
-                                                   proposer: q("proposer") }),
     actioncorrespond: () => a.actionCorrespond({ target: q("target"), direction: q("direction"), at: q("at"),
       medium: q("medium"), party: q("party"), artifactSha: q("artifact_sha"), account: q("account"),
       quoteAmount: q("quote_amount"), quoteCurrency: q("quote_currency"), quoteBasis: q("quote_basis"),
@@ -3743,16 +3258,7 @@ export function actionsOps(a, url, body) {
     /* R42 (N231): the kinds this instance accepts, a read for every signed-in class (the op's spec is the control
        plane's). */
     actionkinds: () => ({ ok: true, kinds: a.kinds() }),
-    /* T45: receipt or service of a sent entry (R80), the confidential scope (R87), a promise (R88), and the open items
-       with an office (R92, a read), each with the stamps the control plane makes (declared by op-declarations). */
-    actionreceipt: () => a.actionReceipt({ target: q("target") || b.target, ord: q("ord") ?? b.ord ?? null,
-      kind: q("kind") ?? b.kind ?? "receipt", at: q("at") ?? b.at ?? "", how: q("how") ?? b.how ?? "",
-      party: q("party") ?? b.party ?? "", artifactSha: q("artifact_sha") ?? b.artifact_sha ?? "",
-      account: q("account") ?? b.account ?? "", viewer: q("viewer"), author: q("author") }),
-    actionscope: () => a.actionScope({ target: q("target") || b.target, confidential: q("confidential") ?? b.confidential ?? null,
-      reason: q("reason") ?? b.reason ?? "", viewer: q("viewer"), author: q("author") }),
-    actionpromise: () => a.actionPromise({ target: q("target") || b.target, kind: q("kind") ?? b.kind ?? "",
-      text: q("text") ?? b.text ?? "", ends: q("ends") ?? b.ends ?? null, viewer: q("viewer"), author: q("author") }),
+    /* R92 (T45): the open items with an office, a read. */
     openitemswith: () => a.openItemsWith({ counterparty: b.counterparty ?? q("counterparty"), action: q("action") ?? b.action ?? null,
       viewer: q("viewer") }),
   };
