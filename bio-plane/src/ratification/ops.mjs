@@ -23,7 +23,7 @@ import { withRegisterChecks } from "../provenance/index.mjs";
 import { parseFrontmatter, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { rowOf, withCaseMemberChecks } from "./checks.mjs";
 import { findingFactsRefusal, findingShas, findingPublishArgs, copyFinding, reuseCheck, casesToAssemble,
-         findingAnswer } from "./finding.mjs";
+         findingAnswer, statedIn, editionsToAssemble } from "./finding.mjs";
 import { machineCaseRefusal, operatorCaseRefusal, testimonyCaseRefusal, attributionUnchosenRefusal,
          attributionStaleRefusal } from "./refusals.mjs";
 
@@ -90,6 +90,16 @@ async function caseCeremony(req, stub, ctx, later) {
       return json({ ok: false, reason: "MALFORMED",
                     detail: "publishat requires caseId, edition (integer), expectedSha, sig (armored SSH signature over "
                           + "the case document's sha) and at ({date: YYYY-MM-DD, time: HH:MM}, in the group's time zone)" }, 400);
+    /* R52: the sitting's members, `[{id, sha, signature}]`, each a finding the edition pins or evidence one rests on,
+       signed by the same member in the same sitting; absent or empty is a case signed alone. */
+    const sitting = body.members === undefined || body.members === null ? [] : body.members;
+    if (!Array.isArray(sitting)
+        || sitting.some((m) => !m || typeof m !== "object" || typeof m.id !== "string" || !m.id.trim()
+                            || typeof m.sha !== "string" || !m.sha.trim() || typeof m.signature !== "string")
+        || new Set(sitting.map((m) => m.id)).size !== sitting.length)
+      return json({ ok: false, reason: "MALFORMED",
+                    detail: "members, when given, is a list of {id, sha, signature}, each a bundle once: the finding or "
+                          + "evidence id, the sha it was signed at, and the armored SSH signature over it" }, 400);
 
     const factsOut = await doAnswer(stub.fetch(
       `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}`
@@ -171,6 +181,17 @@ async function caseCeremony(req, stub, ctx, later) {
       return json({ ok: false, reason: "GATE_REFUSED", gateVersion: gate.gateVersion,
                     findings: gate.findings, store: storeName, tokenClass: cls }, 409);
 
+    /* R52: EACH MEMBER OF THE SITTING, verified as op=ratify verifies it (R4) before anything commits: under the session's
+       sight, against the one key the case's signature verified against (the same signer), C-92.12 counting the
+       statements of the document being signed. The first refusal is answered naming its member; nothing is written. */
+    const members = [];
+    for (const m of sitting) {
+      const prep = await prepareFinding({ bundleId: m.id, expectedSha: m.sha, sig: m.signature }, stub, ctx,
+        { viewer: sessViewer, keys: [sv.keyB64], statedInSitting: statedIn(attr), tag: { member: m.id } });
+      if (prep.response) return prep.response;
+      members.push(prep.prepared);
+    }
+
     /* REC-128 (R12): the SIGNATURE says who authorised (`attestor`, the verified key's member, null when absent and
        never the session); the SESSION ROW says who delivered (a member, or the founder, DEC-33), never the signature
        and never `sessMember`. REC-125's fence above guarantees a session here, so `sessRights` is the row. */
@@ -183,7 +204,8 @@ async function caseCeremony(req, stub, ctx, later) {
         method: "POST", body: JSON.stringify({
           caseId: facts.doc.case_id, edition: Number(facts.doc.edition), docSha: facts.doc.doc_sha,
           sigArmored: body.sig, attestorKey: sv.keyB64, attestorMember: attestor?.member_id ?? null,
-          gateVersion: gate.gateVersion, deliveredBy, at: { date: body.at.date ?? null, time: body.at.time ?? null } }) }));
+          gateVersion: gate.gateVersion, deliveredBy, at: { date: body.at.date ?? null, time: body.at.time ?? null },
+          ...(members.length ? { members: members.map((f) => findingPublishArgs({ ...f, deliveredBy })) } : {}) }) }));
       if (sOut.refused) return storeRefused(sOut, relay);
       if (!sOut.answered) return storeSilent("publishat/schedule", sOut.correlation);
       const sr = sOut.result || {};
@@ -200,11 +222,13 @@ async function caseCeremony(req, stub, ctx, later) {
         sigArmored: body.sig, attestorKey: sv.keyB64,
         attestorMember: attestor?.member_id ?? null, gateVersion: gate.gateVersion,
         deliveredBy,
+        /* R52: each member's commit, after the case's, in the same transaction */
+        ...(members.length ? { members: members.map((f) => findingPublishArgs({ ...f, deliveredBy })) } : {}),
       }) }));
     if (out.refused) return storeRefused(out, relay);
     if (!out.answered) return storeSilent("caseratify/commit", out.correlation);
     const answered = out.result;
-    const { completedCase, evidenceMaterials, ...r } = answered || {};
+    const { completedCase, evidenceMaterials, memberCommits, ...r } = answered || {};
     if (!answered || !r.ok)
       return json({ ok: false, ...(r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: answered }),
                     store: storeName, tokenClass: cls }, 409);
@@ -213,11 +237,33 @@ async function caseCeremony(req, stub, ctx, later) {
        assembled here, by the one function op=ratify uses. `completedCase` is the store's internal
        state and is destructured OFF the answer above, never spread into it (REC-58's pick). */
     const materialsCopied = await copyMaterials(env, storeName, Array.isArray(evidenceMaterials) ? evidenceMaterials : []);
-    const container = completedCase && completedCase.complete && !completedCase.manifest_sha
-      ? await assembleCaseContainer({ env, stub, storeName, cs: completedCase, via: "caseratify" })
-      : null;
+    /* R52: each member committed with the case is copied and re-checked as op=ratify does after its commit (R6), and
+       the editions complete now (the case's own, or one its members completed) are assembled once, after every copy. */
+    const commits = Array.isArray(memberCommits) ? memberCommits : [];
+    const copies = [];
+    for (const [i, c] of commits.entries()) copies.push(await copyFinding(env, storeName, members[i]));
+    let container = null;
+    const containers = new Map();
+    for (const cs of editionsToAssemble(completedCase, commits)) {
+      container = await assembleCaseContainer({ env, stub, storeName, cs, via: "caseratify" });
+      containers.set(`${cs.case_id ?? cs.caseId ?? ""}#${cs.edition}`, container);
+    }
+    const memberAnswers = [];
+    for (const [i, c] of commits.entries()) {
+      const reuseReport = await reuseCheck({ env, ask: askOf(stub, doAnswer), bundleId: c.bundleId,
+                                             silentReason: ctx.STORE_SILENT_REASON, silentDetail: ctx.STORE_SILENT_DETAIL });
+      const own = c.pub.case ? containers.get(`${c.pub.case.case_id ?? c.pub.caseId ?? ""}#${c.pub.case.edition}`) : null;
+      memberAnswers.push(findingAnswer({ bundleId: c.bundleId, expectedSha: members[i].expectedSha, pub: c.pub,
+        container: own ?? null, attestorMember: members[i].attestorMember, gateVersion: members[i].gateVersion,
+        deliveredBy: delivererOf(deliveredBy), copy: copies[i], reuseReport, shaCount: members[i].shas.length }));
+    }
+    /* what still awaits is the last state the commits read (a member's commit completes the edition) */
+    const lastState = [...commits].reverse().find((c) => Array.isArray(c.pub?.case?.awaiting));
+    if (lastState) r.awaiting = lastState.pub.case.awaiting;
     return json({ ok: true, ...r, gateVersion: gate.gateVersion, materials_copied: materialsCopied,
                   ...(container ? { container } : {}),
+                  /* R52: each member of the sitting, as op=ratify answers it (`members` is the roster's) */
+                  ...(commits.length ? { sitting: memberAnswers } : {}),
                   attestor: { member: attestor?.member_id ?? null, key_b64: sv.keyB64 },
                   /* REC-128: who carried the signature in, beside who made it. On a
                      retry of the same signature (`existed`) the store wrote nothing,

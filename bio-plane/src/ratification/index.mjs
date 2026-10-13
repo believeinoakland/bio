@@ -47,7 +47,7 @@
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { provenanceOf, partsHeld } from "../provenance/index.mjs";
+import { provenanceOf, partsHeld, withRegisterChecks } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
@@ -66,7 +66,7 @@ import { moneyOf } from "../money/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { approvalSubjectSha, approvalsOf } from "../case-grammar/index.mjs";
 import { checkCaseDocument, caseMemberFindings, caseMemberImageFindings, completenessFields,
-         RATIFY_SCOPE_CHECKS, rowOf } from "./checks.mjs";
+         RATIFY_SCOPE_CHECKS, rowOf, withCaseMemberChecks } from "./checks.mjs";
 import { operatorCaseRefusal, machineCaseRefusal, testimonyCaseRefusal, attributionUnchosenRefusal,
          attributionStaleRefusal, conclusionMovedRefusal, noAttestingKeyRefusal,
          anonymousTestimonyRefusal, approvalMissingRefusal, approvalsRead, approvalsNotCarried } from "./refusals.mjs";
@@ -75,7 +75,9 @@ import { retire } from "./retire.mjs";
 import { checkedOf, checkedDiffers, scheduleUncheckableRefusal, scheduledStop, refusedStop, commitStops,
          unreadableStop } from "./schedule.mjs";
 import { copyMaterials } from "./ops.mjs";
-import { verifySshsig, caseRatifyStatement, NS_RATIFY } from "../sshsig.mjs";
+import { findingFactsRefusal, findingShas, findingPublishArgs, copyFinding, reuseCheck, statedIn,
+         editionsToAssemble } from "./finding.mjs";
+import { verifySshsig, caseRatifyStatement, ratifyStatement, NS_RATIFY } from "../sshsig.mjs";
 import { assembleCaseContainer } from "../publication/worker.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 
@@ -844,7 +846,7 @@ export class Ratification {
    *  this one transaction, `publish-schedule` R1 in place of the commit, its answer relayed as given. The same signature
    *  and `at` again answer its `existed`. Nothing of R3's commit, R36, R37 or R39 happens here: each happens at R42. */
   publishAt({ caseId, edition, docSha, sigArmored, attestorKey, attestorMember, gateVersion, deliveredBy = null,
-              at = null } = {}) {
+              at = null, members = null } = {}) {
     const id = String(caseId ?? "").trim();
     const ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1 || !docSha || !at || typeof at !== "object")
@@ -862,15 +864,23 @@ export class Ratification {
       const waiting = this.#waitingEntry(id, ed);
       if (waiting) return this.publishSchedule.scheduleEdition({ ...args, checked: waiting.checked ?? null });
       const PASSED = "PUBLISH_AT_COMMIT_WOULD_PASS";
+      const sitting = sittingOf(members);
       const probe = this.record.transact(() => {
         const c = this.publication.commitCaseEdition(this.#commitArgs(plan, { sigArmored, attestorKey,
           attestorMember: signer, gateVersion, deliveredBy }, stampInstant("millisecond")));
-        return c && c.ok ? { ok: false, reason: PASSED } : c || { ok: false, reason: "CASE_PUBLISH_FAILED", caseId: id, edition: ed };
+        if (!c || !c.ok) return c || { ok: false, reason: "CASE_PUBLISH_FAILED", caseId: id, edition: ed };
+        /* R52: the sitting's members, each through R5's commit after the case, made and rolled back with it */
+        const m = sitting.length ? this.#commitMembers(sitting) : { ok: true };
+        return m.ok ? { ok: false, reason: PASSED } : m;
       });
       if (!probe || probe.reason !== PASSED) return probe;
       const checked = this.#checkedNow(plan, signer, attestorKey, stampInstant("millisecond"));
       if (!checked.ok) return scheduleUncheckableRefusal(id, ed, checked.unreadable);
-      return this.publishSchedule.scheduleEdition({ ...args, checked: checked.checked });
+      /* R52: the sitting's signatures held with the waiting edition, beside what R41 records (not one of its compared
+         parts), for R42 to check again and commit after the case */
+      return this.publishSchedule.scheduleEdition({ ...args, checked: sitting.length
+        ? { ...checked.checked, members: sitting.map((m) => ({ id: m.bundleId, sha: m.bundleSha, signature: m.sigArmored })) }
+        : checked.checked });
     });
   }
 
@@ -906,6 +916,18 @@ export class Ratification {
       else { keyB64 = sv.keyB64; attestor = signers.find((k) => k.key_b64 === sv.keyB64)?.member_id ?? null; }
     }
     const signer = attestor ?? (entry.signer ? String(entry.signer).replace(/^member:/, "") : null);
+    /* R52: the sitting's members held with the edition, each checked again now, before anything commits */
+    const heldMembers = entry.checked && Array.isArray(entry.checked.members) ? entry.checked.members : [];
+    const members = [];
+    if (heldMembers.length && keyB64) {
+      const d0 = this.#caseDocumentRow(id, ed);
+      const a0 = d0 ? this.caseTensions.attributionFacts({ text: d0.text, case_id: id, edition: ed }) : null;
+      const statedInSitting = statedIn(a0);
+      for (const m of heldMembers) {
+        const h = await this.#heldMember(m, { statedInSitting, signer, keyB64, deliveredBy });
+        if (h.stop) stopped.push(h.stop); else members.push(h.prepared);
+      }
+    }
     const hold = { seals: null };
     const out = this.record.transact(() => {
       const plan = this.#casePlan({ id, ed, docSha, attestorMember: signer, deliveredBy, sigArmored: sig, retry: false });
@@ -951,24 +973,59 @@ export class Ratification {
         stopped.push(...commitStops(done && done.existed ? { reason: "CASE_EDITION_ALREADY_RATIFIED" } : done));
         return { ok: false, stopped };
       }
+      /* R52: the held members after the case, in this transaction; a refusal stops the edition with them */
+      if (members.length) {
+        const c = this.#commitMembers(members.map((p) => p.args));
+        if (!c.ok) {
+          const s = refusedStop(c);
+          stopped.push({ ...s, cause: { ...s.cause, member: c.member } });
+          return { ok: false, stopped };
+        }
+        return { ...done, memberCommits: c.commits };
+      }
       return done;
     });
     if (!out || out.ok === false) return { stopped: out && out.stopped && out.stopped.length ? out.stopped : stopped };
     /* after the commit, as after R3's: R37's sealed weeks, R39's copy and R6's container; none changes the answer */
     const after = { seals: hold.seals ? await hold.seals : null };
     const w = this.#deps.worker;
+    const commits = Array.isArray(out.memberCommits) ? out.memberCommits : [];
+    /* R6 after R52: the case editions complete now, the case's own or one its members' commits completed */
+    const toAssemble = editionsToAssemble(out.completedCase, commits);
     if (w && w.env && w.storeName) {
       try { after.materials_copied = await copyMaterials(w.env, w.storeName, out.evidenceMaterials || []); }
       catch (e) { after.materials_copied = { ok: false, reason: "COPY_FAILED", detail: String((e && e.message) || e).slice(0, 160) }; }
-      if (out.completedCase && w.stub)
-        try { after.container = await assembleCaseContainer({ env: w.env, stub: w.stub, storeName: w.storeName,
-                                                              cs: out.completedCase, via: "publishscheduled" }); }
-        catch (e) { after.container = { ok: false, reason: "ASSEMBLY_FAILED", detail: String((e && e.message) || e).slice(0, 160) }; }
+      /* R52: each member's bytes copied and its reused parts re-fetched as op=ratify does (R6) */
+      if (commits.length) {
+        after.members = [];
+        for (const [i, c] of commits.entries()) {
+          const row = { bundleId: c.bundleId, edition: c.pub.edition ?? null, existed: !!c.pub.existed };
+          try { const cp = await copyFinding(w.env, w.storeName, members[i]);
+                row.published = { shas: members[i].shas.length, copied: cp.copied, alreadyPresent: cp.present, r2: cp.r2state,
+                                  ...(cp.partsPublished ? { parts: cp.partsPublished } : {}) }; }
+          catch (e) { row.published = { ok: false, reason: "COPY_FAILED", detail: String((e && e.message) || e).slice(0, 160) }; }
+          if (w.stub) {
+            const rep = await reuseCheck({ env: w.env, ask: askDoor(w.stub), bundleId: c.bundleId,
+                                           silentReason: "STORE_DID_NOT_ANSWER", silentDetail: "the store did not answer" })
+              .catch((e) => ({ ok: false, reason: "REUSE_CHECK_FAILED", detail: String((e && e.message) || e).slice(0, 160) }));
+            if (rep) row.reuse = rep;
+          }
+          after.members.push(row);
+        }
+      }
+      if (toAssemble.length && w.stub)
+        for (const cs of toAssemble)
+          try { after.container = await assembleCaseContainer({ env: w.env, stub: w.stub, storeName: w.storeName,
+                                                                cs, via: "publishscheduled" }); }
+          catch (e) { after.container = { ok: false, reason: "ASSEMBLY_FAILED", detail: String((e && e.message) || e).slice(0, 160) }; }
     } else
-      after.not_done = { materials: (out.evidenceMaterials || []).length, container: !!out.completedCase,
+      after.not_done = { materials: (out.evidenceMaterials || []).length, container: toAssemble.length > 0,
+        ...(commits.length ? { members: commits.map((c) => c.bundleId) } : {}),
         detail: "the published bucket is not reachable from here, so the materials held in the evidence store were not "
               + "copied and a complete edition's container was not assembled; a re-sent op=caseratify with the same "
-              + "signature does both (R39, R6). The edition is published and this answer stands." };
+              + "signature does both (R39, R6). The edition is published and this answer stands."
+              + (commits.length ? " The members committed with it were not copied either; re-sending each one's "
+                                  + "op=ratify with the same signature copies it (R6)." : "") };
     return { published: true, published_at: out.ratified_at, caseId: id, edition: ed, after };
   }
 
@@ -1029,7 +1086,7 @@ export class Ratification {
      async, so the act answers once it settles: its answer is `seals`, and a failure never changes the ceremony's
      answer. It is stated there, and the `working-on-attest` consumer retries the opening. */
   async ratifyCaseDocument({ caseId, edition, docSha, sigArmored, attestorKey, attestorMember,
-                             gateVersion, deliveredBy = null } = {}) {
+                             gateVersion, deliveredBy = null, members = null } = {}) {
     const id = String(caseId ?? "").trim();
     const ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1 || !docSha) return { ok: false, reason: "MALFORMED" };
@@ -1042,14 +1099,23 @@ export class Ratification {
                      + `mean this plane asserting a group's case on their behalf. Review the case document `
                      + `(op=casedocument) and ratify it (op=caseratify).` };
     const hold = { seals: null };
+    /* R52: the sitting's members (each `publish`'s arguments, verified by the Worker), committed after the case in this
+       one transaction; a member's refusal rolls the case back with it, so nothing is written. A retry of the case's own
+       signature (`existed`) still commits them, each idempotent. */
+    const sitting = sittingOf(members);
+    const withMembers = (done) => {
+      if (!done || !done.ok || !sitting.length) return done;
+      const m = this.#commitMembers(sitting);
+      return m.ok ? { ...done, memberCommits: m.commits } : m;
+    };
     const out = this.record.transact(() => {
       const plan = this.#casePlan({ id, ed, docSha, attestorMember, deliveredBy, sigArmored, retry: true });
-      if (!plan.plan) return plan;
+      if (!plan.plan) return withMembers(plan);
       /* R3 (DEC-147): an edition `publish-schedule` holds waiting (its R1) is not published now: an owner cancels the set
          time (its R3) and signs again. Nothing is written. */
       const waiting = this.#waitingRefusal(id, ed);
       if (waiting) return waiting;
-      return this.#commitPlan(plan, { sigArmored, attestorKey, attestorMember, gateVersion, deliveredBy }, hold);
+      return withMembers(this.#commitPlan(plan, { sigArmored, attestorKey, attestorMember, gateVersion, deliveredBy }, hold));
     });
     return hold.seals ? { ...out, seals: await hold.seals } : out;
   }
@@ -1306,6 +1372,53 @@ export class Ratification {
              awaiting: Array.isArray(committed.awaiting) ? committed.awaiting : [] };
   }
 
+  /* R52: each member of a sitting through R5's commit (`publish`), in the caller's transaction and in the sitting's
+     order, after the case; the first refusal is answered naming its member (the caller's transaction then rolls back). */
+  #commitMembers(list) {
+    const commits = [];
+    for (const m of list) {
+      const pub = this.publish(m);
+      if (!pub || !pub.ok)
+        return { ...(pub && pub.reason ? pub : { reason: "PUBLISH_FAILED", detail: pub ?? null }), ok: false,
+                 member: m.bundleId ?? null };
+      commits.push({ bundleId: m.bundleId, pub });
+    }
+    return { ok: true, commits };
+  }
+
+  /* R52 in R42: a held member of a sitting checked again at the set time, as R4 checks it but for the credential: the
+     gate facts read for the signer (R7's sight), C-58.1, C-53.10, C-53.11, C-92.12 (the waiting document's statements
+     counting, as at signing), RATIFY_STALE, the signature against the one key the case verified against now, and the
+     store-half gate with its register and case-member arms. Bias's C-26 arm is the control plane's and is not reached
+     here: it reads only the image, whose bytes RATIFY_STALE has just shown unchanged since signing passed it. Answers
+     `{stop}` or `{prepared}` (`publish`'s arguments, and what the copy needs). */
+  async #heldMember(m, { statedInSitting, signer, keyB64, deliveredBy }) {
+    const id = m && typeof m.id === "string" ? m.id : null;
+    const stop = (r) => { const s = refusedStop(r); return { stop: { ...s, cause: { ...s.cause, member: id } } }; };
+    if (!id || typeof m.sha !== "string" || typeof m.signature !== "string")
+      return { stop: unreadableStop(`a held member's signature (${id ?? "unnamed"})`) };
+    const viewer = `member:${signer}`;
+    const facts = this.gateFacts(id, viewer);
+    if (!facts || !facts.ok) return stop(facts || { reason: "ABSENT" });
+    const early = findingFactsRefusal(facts, { bundleId: id, expectedSha: m.sha, statedInSitting });
+    if (early) return stop(early.body);
+    const sv = await verifySshsig(m.signature, ratifyStatement(id, m.sha), NS_RATIFY, [keyB64]);
+    if (!sv.ok) return stop({ reason: `SIG_${sv.reason}`, detail: sv.detail });
+    const image = this.record.readImage(id) || {};
+    const seen = (b) => { try { return this.membership.inSight(b, viewer) === true; } catch { return false; } };
+    const known = this.#rows(`SELECT bundle_id FROM bundles`).map((r) => r.bundle_id).filter(seen);
+    const { parted, ...registerGate } = await this.ratifyGate({ bundleId: id, image, knownIds: known,
+      registers: facts.registers, publishedRegistry: facts.publishedRegistry,
+      publishedCaseRegistry: facts.publishedCaseRegistry, earnedRegistry: facts.earnedRegistry });
+    const partedRows = new Map(Array.isArray(parted) ? parted : []);
+    const gate = withCaseMemberChecks(image, withRegisterChecks(image, registerGate), parseFrontmatter);
+    if (!gate.ok) return stop({ reason: "GATE_REFUSED", findings: gate.findings });
+    const { shas, partShaSet } = await findingShas(image, partedRows, facts.registers);
+    return { prepared: { shas, partShaSet, partedRows,
+      args: findingPublishArgs({ bundleId: id, expectedSha: m.sha, image, shas, sig: m.signature, keyB64,
+                                 attestorMember: signer, gateVersion: gate.gateVersion, deliveredBy }) } };
+  }
+
   /* R37: `openSeals`' answer, or, when it refuses, throws or rejects, the failure stated; never a throw. */
   #openSeals(caseId, edition) {
     const unopened = (reason, detail) => ({ ok: false, opened: false, reason,
@@ -1506,6 +1619,19 @@ export class Ratification {
 const COPIED_HOLDS = new Set(["evidence", "derived"]);
 const copiedMaterials = (x) => (Array.isArray(x) ? x : Array.isArray(x?.materials) ? x.materials : [])
   .filter((m) => m && COPIED_HOLDS.has(m.held) && typeof m.sha === "string").map((m) => ({ sha: m.sha, held: m.held }));
+
+/* R52: a sitting's members as handed to the store half, each `publish`'s arguments; anything else is none. */
+const sittingOf = (members) => (Array.isArray(members) ? members.filter((m) => m && typeof m === "object") : []);
+
+/* A store read through this host's own door (`worker.stub`), read as the control plane's chokepoint reads it. */
+const askDoor = (stub) => async (path, init) => {
+  try {
+    const res = await stub.fetch(path, init);
+    const out = res && typeof res.json === "function" ? await res.json() : res;
+    return out && typeof out === "object" && out.ok === true && "result" in out ? { answered: true, result: out.result }
+      : out && typeof out === "object" && !("ok" in out) ? { answered: true, result: out } : { answered: false };
+  } catch { return { answered: false }; }
+};
 
 const instances = new WeakMap();
 

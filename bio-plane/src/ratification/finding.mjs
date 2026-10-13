@@ -402,3 +402,18 @@ export function findingAnswer({ bundleId, expectedSha, pub, container, attestorM
                         ...(copy.partsPublished ? { parts: copy.partsPublished } : {}) },
            ...(reuseReport ? { reuse: reuseReport } : {}) };
 }
+
+/** R52: the observations a case document's attribution facts state a chosen level for, which C-92.12 counts as stated
+ *  for a member of the same sitting (C-92.10 and C-92.11 having passed for that document). */
+export const statedIn = (attr) => new Set((attr && Array.isArray(attr.stated) ? attr.stated : [])
+  .filter((r) => r && r.observation && r.level && r.level !== "null").map((r) => String(r.observation)));
+
+/** R6 after R52: the case editions to assemble once, the case commit's own complete edition and each member commit's,
+ *  one per edition, the last state read of each. */
+export function editionsToAssemble(completedCase, commits) {
+  const byEdition = new Map();
+  for (const cs of [completedCase, ...(commits || []).flatMap((c) => casesToAssemble(c.pub))])
+    if (cs && cs.complete && !cs.manifest_sha) byEdition.set(`${cs.case_id ?? cs.caseId ?? ""}#${cs.edition}`, cs);
+  return [...byEdition.values()];
+}
+
