@@ -1,0 +1,212 @@
+[
+ {
+  "key": "refusal.MACHINE_CANNOT_SET_MONITORING",
+  "en": "Only a member turns watching on or off, and this came from an automated credential. Nothing was changed.",
+  "protected": false,
+  "note": "C-18.20"
+ },
+ {
+  "key": "refusal.MONITOR_SET_REFUSED",
+  "en": "Say whether this document is watched, yes or no, and, if you give one, how often, as one of the listed frequencies ({field} isn't). Nothing was changed.",
+  "protected": false,
+  "note": "C-18.21, naming the field"
+ },
+ {
+  "key": "refusal.PROJECT_BAR_NO_REASON",
+  "en": "Setting this project's bar needs your reason, kept on the record with the change. Nothing was changed.",
+  "protected": false,
+  "note": "C-107.4"
+ },
+ {
+  "key": "refusal.RENDER_QUEUE_UNREADABLE",
+  "en": "Your group's Civicsmith couldn't read its list of files waiting for a safe view, so none was made just now. Try again in a moment; if it keeps happening, tell an administrator.",
+  "protected": false,
+  "note": "C-140.43; a safe view is installed but its queue could not be read"
+ },
+ {
+  "key": "refusal.SETTING_INVALID",
+  "en": "That isn't a value this setting takes. Choose one of the setting's own values. Nothing was changed.",
+  "protected": false,
+  "note": "C-102.32"
+ },
+ {
+  "key": "refusal.SETTING_NOT_JSON",
+  "en": "That value can't be kept as a setting: a setting holds words, numbers, yes or no, or a list of those. Nothing was changed.",
+  "protected": false,
+  "note": "C-102.33"
+ },
+ {
+  "key": "refusal.AI_RUN_CREDENTIAL_MALFORMED",
+  "en": "The run couldn't start: the pass it needs to work for you was malformed. Nothing was sent. Try again; if it happens again, tell an administrator.",
+  "protected": false,
+  "note": "C-29.41"
+ },
+ {
+  "key": "ai.label.untested.writinghelp",
+  "en": "Not yet tested: this help with writing hasn't yet passed Civicsmith's tests on real matters. Read it through before you use any of it.",
+  "protected": true,
+  "note": "on writinghelp's marked answer on a test instance"
+ },
+ {
+  "key": "refusal.SIGN_IN_REFUSED",
+  "en": "That handle and password don't match. Check both and try again; after several tries, sign-in pauses for a while to keep others from guessing.",
+  "protected": false,
+  "note": "credentials R4; never says which handles exist"
+ },
+ {
+  "key": "refusal.SIGN_IN_PAUSED",
+  "en": "Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn't a judgement on you. Try again at {time}.",
+  "protected": false,
+  "note": "credentials R38; {time} the local time the pause ends"
+ },
+ {
+  "key": "refusal.RECOVERY_REFUSED",
+  "en": "That didn't work: the handle, the code or both aren't right, or the code was already used. Check them and try again. Nothing was changed.",
+  "protected": false,
+  "note": "credentials R47; one answer for every arm"
+ },
+ {
+  "key": "refusal.NOT_SIGNED_IN",
+  "en": "You aren't signed in here any more: your sign-in ended, or you signed out on another device. Sign in again to go back to where you were.",
+  "protected": false,
+  "note": "credentials R39"
+ },
+ {
+  "key": "refusal.PASSWORD_TOO_SHORT",
+  "en": "A password needs at least 12 characters. A short sentence you can remember works well. Nothing was changed.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "refusal.CURRENT_PASSWORD_WRONG",
+  "en": "Your current password isn't right, so it wasn't changed. Check it and try again.",
+  "protected": false,
+  "note": "credentials R3"
+ },
+ {
+  "key": "refusal.ALREADY_CLAIMED",
+  "en": "Your group's Civicsmith already has its first administrator, so this one-time password no longer works. If that was you, sign in instead.",
+  "protected": false,
+  "note": "credentials R1"
+ },
+ {
+  "key": "refusal.NO_SUCH_INVITATION",
+  "en": "This invitation link doesn't work: it may have been used, passed its seven days, or been withdrawn. Ask whoever sent it for a new one.",
+  "protected": false,
+  "note": "one answer for each arm"
+ },
+ {
+  "key": "refusal.NO_SUCH_JOIN_LINK",
+  "en": "This join link doesn't work: it may have been replaced or turned off. Ask the group for its current link.",
+  "protected": false,
+  "note": "membership R104; one answer for each arm"
+ },
+ {
+  "key": "refusal.JOIN_LINK_DAILY_CAP",
+  "en": "The group's join link has let in as many people as it allows today. Try again tomorrow.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "refusal.NO_COVER",
+  "en": "Say the name the group will know you by. Only its administrators see it. Nothing was changed.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "session.signedout",
+  "en": "You are signed out on this device. Your work is saved in your group's Civicsmith, not here.",
+  "protected": false,
+  "note": "the front door after signing out"
+ },
+ {
+  "key": "session.ended",
+  "en": "You were signed out after a while away, so nobody else at this device can use your sign-in. Sign in again to go back to the page you were on.",
+  "protected": false,
+  "note": "D3 (K3061): 15 minutes idle on a shared device; 12 hours on one kept signed in"
+ },
+ {
+  "key": "session.locked",
+  "en": "Locked after 30 minutes away. Enter your password to go on where you were; nothing was lost.",
+  "protected": false,
+  "note": "D3 (K3061): a device kept signed in"
+ },
+ {
+  "key": "session.reauth",
+  "en": "For this, enter your password again: signing or publishing a case, changing administrators and connecting Claude always ask.",
+  "protected": true,
+  "note": "D3 (K3061)"
+ },
+ {
+  "key": "session.keep",
+  "en": "My own: keep me signed in (it locks after 30 minutes away; you sign in again after 12 hours)",
+  "protected": false,
+  "note": "D3 (K3061)"
+ },
+ {
+  "key": "session.shared",
+  "en": "Shared or public: sign me out after 15 minutes away",
+  "protected": false,
+  "note": "D3 (K3061)"
+ },
+ {
+  "key": "signin.founderhint",
+  "en": "Did you set this group up? Your handle is admin.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "signing.ceremony.who",
+  "en": "You sign as {signer}, an owner of {project}. The public page will read “Published by {group} · signed by {signer}”. Once public, anyone can read it and check your signature without asking the group; it can be corrected by a new edition, never removed.",
+  "protected": true,
+  "note": "the sign step"
+ },
+ {
+  "key": "signing.ceremony.device",
+  "en": "Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key never leaves this device, and Civicsmith never sees it.",
+  "protected": true,
+  "note": "while the device confirms"
+ },
+ {
+  "key": "signing.ceremony.declined",
+  "en": "Your device didn't confirm, so nothing was signed or published. Everything is as it was; sign again when you are ready.",
+  "protected": true,
+  "note": "device cancelled or failed"
+ },
+ {
+  "key": "signing.ceremony.signedat",
+  "en": "Signed. Edition {edition} becomes public on {date} at {time} ({zone}). Until then it waits, not public. At that time Civicsmith checks again and publishes only if nothing changed since you signed.",
+  "protected": true,
+  "note": "publishat done"
+ },
+ {
+  "key": "signing.ceremony.signednow",
+  "en": "Signed and published. Edition {edition} is public now: anyone can read it and check your signature without the group.",
+  "protected": true,
+  "note": "caseratify done"
+ },
+ {
+  "key": "signing.ceremony.nokey",
+  "en": "You have no signing key in this browser. Register one here: it is made on this device and never leaves it, and every use asks you to confirm. Then you come back to this step, with nothing lost.",
+  "protected": true,
+  "note": "NO_ATTESTING_KEY before signing"
+ },
+ {
+  "key": "signing.ceremony.keepkey",
+  "en": "Keep this key on this device, so you can sign here again without loading it. Leave this unticked on a computer others use: you then load your key file each time you sign.",
+  "protected": true,
+  "note": "K3079: kept only when the member chooses"
+ },
+ {
+  "key": "signing.ceremony.notowner",
+  "en": "Only an owner of {project} signs its cases: {owners}. Everything you prepared stays as it is. Ask one of them to sign.",
+  "protected": true,
+  "note": "CASE_SIGNER_NOT_AN_OWNER before signing"
+ },
+ {
+  "key": "signing.ceremony.phone",
+  "en": "Signing and publishing finish on a larger screen. Everything here can be read on a phone. Open {project} on a computer to sign: the ceremony is where you left it.",
+  "protected": true,
+  "note": "principle 8.6"
+ }
+]

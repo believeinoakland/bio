@@ -3146,3 +3146,284 @@ response: **Decided by the design session, 2026-10-12.**
 decided: 2026-10-12 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-actions.src.py`, `screens/words-t46.src.py`; `screens/mock-acts.js`; `screens/words.json` (1,608 words, 570 protected).
 owed: (BOB) docket, case-authoring (R73's sentences, the no-window and not-laid-out rows by key), action-replies, action-plans (R47, C-124.63), escalation (C-116.41, C-116.14) read these by key once on `main`; affordances and op-declarations take the two helps.
+
+### DEC-200 · answered
+raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (BOB's B156 and B157, T47's opening and its L11 fold; K3027, K3041; N971, N976, N978, N984, N997)
+for: bob-session
+question: Words T47 returned as untrue (`attest`, `monitor`, the project's bar, the scanner's name), four registry corrections, and the refusals and help T47's new ops need.
+why it is Bob's: it is not: words and registry detail beneath DEC-83, DEC-149, DEC-169 and Bob's rulings on evidence strength (DEC-72, DEC-17); decided by the design session (P17) and reported.
+provisional: each module's own rows and interface-shell R28's re-points.
+alternative: none needed.
+recommendation: as decided below.
+reversal cost: low; words read by key, registry re-taken.
+response: **Decided by the design session, 2026-10-12.**
+(1) `attest`'s help says what it is: an independent timestamp over the copy's fingerprint, adding no signature of the member's and saying nothing of whether the copy is true (N978).
+(2) Watching: `monitor` checks once ("Check it now"; on a document "Check for a new version now"); `monitorset` turns watching on or off and sets how often ("Watch this address", "Watch for changes") on `capture` and `document` (N978, B157 1).
+(3) Bars: the project screen's act is `projectbarset` ("Set this project's bar", reasoned; its help says it never changes the group's bar and holds nothing back); `strengthbarset`'s help names the group's bar, for the group settings screen that will draw it (N976, B157 2).
+(4) `project` gains `drawquestion` ("Draw on a question from elsewhere") after `promote` (B157 3); `calculation` gains `spotcheckvisit` ("Count it for the drawn report") after `testify` ("Record what you saw at a report") (B157 4).
+(5) One term for members: "file scanner" (the security screen: "a file scanner (ClamAV, which looks for viruses and other harmful code…)"); and "safe view", never "safe-view maker". file-safety R42's rows take these words (N971).
+(6) Words (`screens/words-t47.src.py`): `refusal.MACHINE_CANNOT_SET_MONITORING`, `MONITOR_SET_REFUSED` ({field}), `PROJECT_BAR_NO_REASON`, `RENDER_QUEUE_UNREADABLE`, `SETTING_INVALID`, `SETTING_NOT_JSON`, `AI_RUN_CREDENTIAL_MALFORMED`; `ai.label.untested.writinghelp` (N984). Help (`mock-acts.js`): `monitorset`, `projectbarset`, `drawquestion`, `spotcheckvisit`, and the reads `projectquestions`, `projectlist`. T47's other new ops (sever and reinstate on a question's own leg, the set-aside list, a knock's source) take their help once their ops are named.
+(7) `check_library.py` consults the newest `origin/tranche/T<n>` for acts `main` does not yet serve, marking each `onTranche`.
+(8) N997, drawn: Settings › Places and offices (`places`: the places whose rules apply, `profilesset`; the place wanted, `placewanted`, with who set it and when; offices and seats with their origin, `officesseed` and `entitycreate`) and Settings › Recovery codes (`recovery`: the administrator's own codes held, how many unused and when issued, `recoverycodesstate`; `recoverycodesissue`, shown once, spending earlier codes; whether a second administrator holds codes, `adminrecoverystep`), both administrators only and linked from Members' new "More for administrators". The help screen (`help`) was already drawn and needs only its module. `monitorset` and `recoverycodesissue` weigh Reversible.
+decided: 2026-10-12 · the design session (P17)
+reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js` (Add, Document, Project, Calculation, Security, Members, Places and offices, Recovery codes), `screens/mock-shell.js`, `screens/mock-refs.js`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/words-t47.src.py`, `screens/build_words.mjs`, `screens/words.json` (1,636 words, 580 protected), `screens/check_library.py`, `layouts.html`.
+owed: (BOB, T47 or T48) `registry.json` (50 screens) and `words.json` re-taken; screens for `places` and `recovery` (N997); the new rows and helps read by key (monitoring, strength, file-safety, record-core, credentials, screens-settings, affordances, op-declarations); file-safety R42 re-worded to "file scanner" and "safe view".
+
+### DEC-201 · answered
+amended: 2026-10-12 by DEC-202 (Bob's answers K3060, K3061): the front door is the group's own page (D2); sign-in lasts as D3 rules; members hold recovery codes too (D4); the walk-through is offered to anyone (D7).
+raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (BOB's B158 and B159; Bob's K3052, K3053; BOB's review K3051 and design audit `build/plan/draft-T47-design-audit.md`)
+for: bob-session
+question: The way into Civicsmith, drawn whole: the front door, signing in and out, an ended sign-in, a forgotten password, the founder's link and every installer step, the hand-over to setup, setup's recovery codes and finish, joining by invitation and by join link and a dead link, a new member's first visit, group settings, the Projects list, the Settings index, the outside reviewer's view, the update page, and the states for an address that can't be opened; then one walked journey from the founder's link to a new member's first work.
+why it is Bob's: it is not: screens beneath Bob's K3052 (real users; no old interface; the top-level screen exactly right) and K3053 (the whole founder-to-member journey seamless), decided by the design session (P17) and reported. Five parts follow the recommendation of a question Bob has not yet answered on BOB's review page (K3059: https://claude.ai/artifact/PBPQJXA99HiP6UyKUhV24H) and change with his answer, named in (10).
+provisional: none drawn; the old setup page and the installer's own page.
+alternative: wait for Bob's answers before drawing.
+recommendation: draw now on the recommendations, so building can start the day he answers.
+reversal cost: low: mockups and words.
+response: **Decided by the design session, 2026-10-12.**
+(1) **The front door** (`front`, the group's address for anyone not signed in): the group's name and its public purpose; "Your handle" and "Password" (the founder's handle is admin, said in the field's help); "On this device: keep me signed in for 30 days, or sign me out when I close the browser"; "Sign in" (`login`); "Forgot your password?"; "Not a member yet? Members join by invitation…"; and for everyone, the group's published cases and "Hand material to the group" (the doorbell). States: refused, paused (with the time it ends), just signed out, and a sign-in that ended on its own (why, and that signing in returns to the page the member was on).
+(2) **Forgotten password** (`forgot`): an administrator sets a new password with a recovery code (`recover`; refused in one sentence for every arm); a member asks an administrator for a reset link (Members gains "Make a reset link", `owed:passwordresetlink DEC-201`: one-time, seven days, sent by the administrator, ending the member's other sign-ins); if every administrator is locked out, the hosting account's holder sets a new one-time password.
+(3) **Signing out**: Your account gains "Sign out on this device" (`signout`) and "Sign out everywhere" (`signouteverywhere`); the masthead menu's "Sign out" lands on the front door's signed-out state.
+(4) **Create your group** (`install`, from the founder's link to the hand-over): the founder's link page ("Create your new Civicsmith group": what Civicsmith is, what you need, the permanent short name, the group's places); before Cloudflare (what Cloudflare will ask to allow, in plain words, and who controls the account); the progress, one plain line per step; a stop (one example, an account already holding a Civicsmith, and the others named: the free plan, no payment method, permission not granted, a log recording who opens which file), each saying nothing was created; finished (the checks, the one-time password shown once, the address, a probe key behind "most groups never need it", and "Continue to your group's Civicsmith: become its first administrator"). No member key (installer R16). Places are chosen here, as built (installer R21), and setup shows them as changeable.
+(5) **Setup**: recovery codes shown once right after the claim (`recoverycodesissue`); a "Finished" step with "Open your group's Civicsmith"; "Administrators see spending by member" corrected to the key's use summed over members (DEC-188 (5)); "safe-copy maker" reworded.
+(6) **Joining**: the reusable join link's first step (the name the group will know you by, `joinlinkinvite`); a dead link ("This link no longer works", one sentence for used, expired, withdrawn or switched off); "Already a member? Sign in"; after joining the member is signed in and Home opens.
+(7) **Home**: a new member's first visit offers to continue the guided welcome (the wizard "Welcome a new member"); a new group's founder sees "Nothing is here yet" with inviting members and saying who the group is.
+(8) **New screens**: Your group (`group`: name and logo, website, languages, the court notice, the hosting account's holder, the group's bar), Settings (`settings`, every setting in one list, the member's own then the group's), Projects (`projects`), Can't open this (`unavailable`: nothing here, not yours, out of reach and retrying), A review copy from outside (`review-outside`: what an outside reviewer sees, `reviewcomment`), and Update (`update`). Members links "More for administrators".
+(9) **Journey 28**, "From the founder's link to a new member's first work", walked: link page, Cloudflare, progress, finished, claim, recovery codes, setup's finish, a new group's Home, Mai's invitation, joining, her first visit, her account, "What happened?", her first testimony, signing out on a shared computer, and signing in the next morning on her own phone. 474 steps walk clean across 28 journeys and 58 screens.
+(10) **Following a recommendation of a question Bob has not yet answered** (BOB's page): the front door shows sign-in with the published cases and doorbell (A3); a member's lost password goes through an administrator's reset link (B1); a sign-in lasts 30 days on one's own device or ends with the browser (C2); the installer requires Workers Paid, as built (D1; it contradicts the earlier "the free plan works", now removed); the founder's link page is the installer's first page (E2); the welcome is offered on Home (Q1 A). Each changes with his answer.
+(11) **Not yet drawn**: People (Q2, Bob's), the browser signing hand-over at publishing (Q4, Bob's), and joining while sign-in is paused (it says what the front door's paused state says). The journeys page (5 October, frozen on the secondary account) still says the free plan works and that a handle can change: republished from this account when it next changes.
+(13) Empty states drawn: Queue with nothing waiting ("You are up to date"), Find with no results (what search covers and "Capture it"), and a new project with no questions (how to start one, or draw one in). Other screens' empty reads draw the kit's "Nothing here" until given their own.
+(12) Words (`screens/words-t47.src.py`): `refusal.SIGN_IN_REFUSED`, `SIGN_IN_PAUSED` ({time}), `RECOVERY_REFUSED`, `NOT_SIGNED_IN`, `PASSWORD_TOO_SHORT`, `CURRENT_PASSWORD_WRONG`, `ALREADY_CLAIMED`, `NO_SUCH_INVITATION`, `NO_SUCH_JOIN_LINK`, `JOIN_LINK_DAILY_CAP`, `NO_COVER`; `session.signedout`, `session.ended`, `session.keep`, `session.shared`, `signin.founderhint`; help for `login`, `recover`, `signout`, `signouteverywhere`, `joinlinkinvite`, `owed:passwordresetlink`, and `bootstrap` re-worded.
+decided: 2026-10-12 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (install, update, front, forgot, setup, join, home, members, account, group, settings, projects, unavailable, review-outside), `screens/mock-journeys.js` (journey 28), `screens/mock-shell.js`, `screens/mock-refs.js`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/registry.src.py` (58 screens), `screens/words-t47.src.py`, `screens/words.json` (1,690 words, 596 protected), `screens/page.src.html`, `layouts.html`.
+owed: (BOB, T47's L11, N999, N1002, N1003, N1005) build the front door at `/` with sign-in, signing out and an ended sign-in, the forgotten password, the installer's pages as drawn, the hand-over into setup, setup's codes and finish, joining's states, Home's first-visit and new-group states, and the eight new screens; a requirement and op for the member's reset link (`owed:passwordresetlink`, once Bob answers B); sign-in length per Bob's C; registry.json and words.json re-taken.
+
+### DEC-202 · answered
+raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (Bob's answers to BOB's D1–D15, K3060 and K3061, folded into DEC-201's drawings)
+amended: 2026-10-13 by DEC-203: (5)'s People is drawn as BOB decided it (D8, K3061).
+for: bob-session
+question: How Bob's answers of 12 October change the way in drawn by DEC-201.
+why it is Bob's: the rulings are his (K3060, K3061, given through BOB, cited here, not ruled again); the drawing beneath them is the design session's (P17).
+provisional: DEC-201 (10)'s recommendations.
+alternative: none.
+recommendation: as below.
+reversal cost: low: mockups and words.
+response: **Bob's rulings through BOB (K3060, K3061), drawn by the design session, 2026-10-12.**
+(1) D2: the front door (`front`, now "Your group's page") presents as the group's own page, not Civicsmith's: the group's logo and name as a masthead, its purpose, what it has published (with each case's edition, date, signer and one line), "Have something for us?" (the doorbell), "How we work" (with the walk-through), and members' sign-in as a panel beside them; "Lakeshore Tenants uses Civicsmith" at the foot.
+(2) D3: "This device is: my own (keep me signed in; it locks after 30 minutes away, you sign in again after 12 hours) or shared or public (signed out after 15 minutes away)". New state: locked ("Welcome back, Mai… Enter your password to go on where you were; nothing was lost", "Unlock"); the ended state says the member was signed out after a while away. Words `session.keep`, `session.shared`, `session.ended` re-worded; `session.locked`, `session.reauth` new (signing or publishing a case, changing administrators and connecting Claude always ask for the password again).
+(3) D4 (B3): every member holds recovery codes, ten, shown once on joining; Recovery codes is each member's own screen (Settings › Yours); Forgot your password offers a code to anyone, then an administrator's reset link for one without codes.
+(4) D7: "See how it works, step by step" on the group's page offers the walk-through to anyone, before joining or being invited; Home's first-visit offer stays for members.
+(5) Not yet drawn, for the successor on the secondary account (HANDOFF §0): People as BOB decided (D8); the founding journey from civicsmith.org (D6) and the signing ceremony from the principles (D9), both after the refresh.
+decided: 2026-10-12 · Bob (K3060, K3061), drawn by the design session
+reasoning recorded in: this entry; `screens/mock-screens.js` (front, forgot, recovery, join, settings, members), `screens/page.src.html`, `screens/registry.src.py`, `screens/mock-shell.js`, `screens/mock-refs.js`, `screens/words-t47.src.py`, `screens/words.json` (1,692 words, 597 protected), `layouts.html`.
+owed: (BOB) the group's page at `/` as drawn; sessions per D3 (idle sign-out, lock, re-asking the password for the four acts); recovery codes for every member at joining (credentials R46 widened beyond administrators) and the member's reset link (`owed:passwordresetlink`); the walk-through reachable before joining.
+
+### DEC-203 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (BOB's decision under Bob's delegation, D8, K3061; N1008)
+for: bob-session
+question: What a member sees on People, drawn as BOB decided it under Bob's delegation.
+why it is Bob's: it is not: Bob delegated D8 ("What do you think members should see when they click on the People group? Do that."), BOB decided its content (K3061), and the drawing beneath it is the design session's (P17), reported as done.
+provisional: interface-shell R29 (T47): People opens Find over the people and organisation kinds.
+alternative: R29 as written, a search with no list until the member types.
+recommendation: as K3061 decided: a directory a member can scan before knowing a name.
+reversal cost: low: a mockup and its words.
+response: **Decided by BOB under Bob's delegation (K3061), drawn by the design session, 2026-10-13.**
+(1) **People** (`people`, the rail's People and the phone's More): "The people and organisations your group's record follows: officials, staff, companies and public bodies", saying in the same sentence that the group's own members are not listed and are under Settings › Members (a link). Offices are not rows: an office is a post, shown as the role on its holder's row and as a filter.
+(2) **Search and filters** (all `search`, with `type` set to the person and organisation kinds): a search box ("Name or office": a name, a name they are also known by, or an office), then four filters in one row (two on a phone): Show (people and organisations, people, organisations); Holding an office in (any body, or one body); Named in (any project, your projects, or one project); Named recently (at any time, the last 30 or 90 days, the last year: named in something the group added in that time).
+(3) **Order**: "In your projects" first (named in the documents or questions of a project the member works on), then "Everyone else the record follows"; within each, the newest added first. A line above says how many the record follows and how many are in the member's projects, and what each row counts.
+(4) **Each row**: the kind's mark (a person or an organisation); the name, which opens their page (`person`) and whose card says who they are; who they are today (role and office, or for an organisation what it is); "named in 14 documents, 2 questions and 1 project · newest added 2 October" (counting only what the member may see; "in no question or project yet" when so); and "Explore connections" (`explore`), starting from them. The person's own page gains the same "Explore connections".
+(5) **Adding**: "Add someone the record follows" (`entitycreate`: the name, person or organisation, and the member's note on who they are and why the group follows them).
+(6) **Empty states**: a record that follows no one yet ("A person or organisation comes in one of two ways: a member ties a name in a captured document to them, on the document under 'People it names', or adds them here with a note…", with "Add someone the record follows" and "Capture a document"); and a search that finds no one ("No one the record follows matches 'Alvarez'… Someone appears here only once your group follows them", with adding and "Look for 'Alvarez' in documents", which opens Find).
+(7) **Journeys**: journey 10 now finds L. Chen on People before opening his page; journey 13 starts "Explore connections" from J. Ortega's row on People. 476 steps walk clean across 28 journeys and 59 screens.
+decided: 2026-10-13 · BOB under Bob's delegation (K3061), drawn by the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (people, person), `screens/mock-journeys.js` (journeys 10 and 13), `screens/mock-shell.js`, `screens/mock-refs.js`, `screens/registry.src.py` (59 screens), `screens/words.json` (1,698 words, 601 protected), `layouts.html`.
+owed: (BOB, L11, N1008) People built as drawn, replacing interface-shell R29: a read answering the people and organisations the record follows with, per row, who they are today, the counts of documents, questions and projects naming them among those the viewer may see, and when the newest was added, ordered the member's projects first and newest added first, with the four filters; "Explore connections" on each row and on the person's page; `entitycreate` for a person or organisation from People; the two empty states; registry.json and words.json re-taken.
+
+### DEC-204 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (Bob's direction in chat, 13 October)
+for: bob-session
+question: Where the journeys page's material lives, now that Bob reviews only Civicsmith Screens.
+why it is Bob's: the direction is his ("The material in the Journey's document should be integrated into the comprehensive CivicSmith Screens that has been the working document for the UX design … Once integrated, I'm not going to refer to the Journeys document."); how it is folded is the design session's (P17, DEC-137's journey organisation).
+provisional: two pages, the journeys page (step 3) and the screens page (step 5).
+alternative: none.
+recommendation: as below.
+reversal cost: low: one page's sections.
+response: **Bob, 2026-10-13: "The material in the Journey's document should be integrated into the comprehensive CivicSmith Screens that has been the working document for the UX design. https://claude.ai/artifact/4FjPjGmCVppDnMYfM7xkCw … Once integrated, I'm not going to refer to the Journeys document."** Folded by the design session:
+(1) **The working page** is https://claude.ai/artifact/4FjPjGmCVppDnMYfM7xkCw (built from `layouts.html`); the copy published earlier the same day (https://claude.ai/artifact/ExhZXk6f9DD7kXyWWj3NyP) now only points to it.
+(2) **New section "Who the screens are for"**, before section 1: who we design for (the three rings, what is folded in, newsrooms as a core audience, every ring's readers in other languages and on phones, kinds of group), the wide path's eight rules, and where members start (problems they live with, the other ways in, what it means for the design), updated where later rulings overtook it: publishing at a set time (DEC-147), Home's "What happened?" (DEC-198), the assistant on a member's own account or the group's key (K1755).
+(3) **Each journey in the viewer** shows its purpose and front door under its title, beside who takes it; journeys 1, 6, 10, 13 and 17's front doors are updated (the installer from the founder's link, "What happened?", People, the group's key), and journey 28 gains its own. The walked steps are the journey's steps; the journeys page's step lists are not carried, so no two lists compete.
+(4) **"What the journeys can't do yet"** beside the journeys: the five gaps still open by ruling or stage (places not held, DEC-151; plain-words reading of a rule; public registers and outside alerts; the assistant proposing people, events and money; sharing packs). Gaps since closed are dropped.
+(5) **Section 6** lists step 3's questions J1 to J13, all answered (DEC-128 to DEC-137); and its Home row now says "What happened?".
+(6) **Not carried:** each journey card's "what changed", "built now" and "still to come" (a record of 5–6 October against T33, overtaken by the tranches since); the seventeen wizard outlines (the wizard library holds each wizard written in full, DEC-148).
+(7) **The journeys page** (https://claude.ai/artifact/SbK4jAc8ZptpE9swYMkF1R, `journeys.html`) opens with a note that it is folded into Civicsmith Screens and no longer updated.
+decided: 2026-10-13 · Bob's direction, folded by the design session (P17)
+reasoning recorded in: this entry; `screens/page.src.html` (section "Who the screens are for", the viewer's journey brief, the gaps, section 6), `screens/mock-journeys.js` (`JBRIEF`), `screens/mock-refs.js`, `layouts.html`, `journeys.html`.
+owed: nothing to BOB: the page's reading sections build nothing; the build reads `registry.json`, `library.json` and `words.json`, unchanged by this entry.
+
+### DEC-205 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (BOB's B162, from its way-in draft, K3064)
+for: bob-session
+question: Five drawing points BOB raised against DEC-201 and DEC-202.
+why it is Bob's: it is not: screen detail beneath Bob's K3052, K3053, K3060 and K3061, decided by the design session (P17) and reported.
+provisional: DEC-201 and DEC-202 as drawn.
+alternative: none.
+recommendation: as below.
+reversal cost: low: mockups and words.
+response: **Decided by the design session, 2026-10-13.**
+(1) **A group's languages are their own act** on Your group (`group`): "Save the languages" (`owed:grouplanguagesset DEC-205`, the name BOB may change when it serves it): sets the languages the group's members use, leaving the places unchanged; `profilesset` stays setup's act for places and languages together.
+(2) **The logo**: "Change the logo" (`owed:grouplogoset DEC-205`, BOB's `grouplogoset`), beside "Save the name"; help: it replaces the logo beside the group's name on its page, its masthead and its published cases; a logo is optional.
+(3) **`hostingaccessset`**, not the read `hostingaccess`, on `setup`, `group` and the wizard "Set up and claim" (step 14); its help and weight re-keyed.
+(4) **`recover`'s help** says it serves any member: "Sets a new password with one of your recovery codes, for any member. The code is spent, and every other sign-in of yours ends." (DEC-202 (3)).
+(5) **Two new screens.** `reset`, "Choose a new password": the administrator's one-time reset link opens it for one member (who made it, for whom, until when); "Set my new password" (`owed:passwordreset DEC-205`); the handle and work kept, every other sign-in ended, recovery codes still working; states: set ("Sign in"), and a link used, expired or withdrawn ("Ask an administrator for a new one. Nothing was changed."). `tour`, "How we work, step by step": the walk-through for anyone from the group's page (Bob's D7), six steps (what we look into; every finding shows its source; how strong the evidence is; what we publish and who signs it; have something for us?; taking part), Back, Next and "Stop here" back to the group's page, no account and nothing recorded; the group's page's "See how it works, step by step" now opens it, where it opened Home. People (B161) is DEC-203.
+decided: 2026-10-13 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (group, setup, tour, reset, front), `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/mock-refs.js`, `screens/mock-shell.js`, `screens/registry.src.py` (61 screens), `screens/library.src.py`, `screens/words.json` (1,707 words, 603 protected), `layouts.html`.
+owed: (BOB, L11) the ops `grouplanguagesset` (or BOB's name), `grouplogoset` and the member's act on a reset link (`passwordreset`, or BOB's name), then the buttons re-pointed from their `owed:` names; the screens `tour` and `reset` built as drawn; registry.json, library.json and words.json re-taken.
+
+### DEC-206 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (Bob's D6, K3060; BOB's B161 (3))
+for: bob-session
+question: The founding journey, starting on civicsmith.org.
+why it is Bob's: the ruling is his (D6: "The founding journey should now start on the website we need to develop at civicsmith.org"); the drawing beneath it is the design session's (P17).
+provisional: DEC-201 (4): the founder's link page as the installer's first page (E2).
+alternative: keep the installer's first page as the founder's start.
+recommendation: as below.
+reversal cost: low: two screens and a journey's first steps.
+response: **Bob's D6 (K3060), drawn by the design session, 2026-10-13.**
+(1) **civicsmith.org** (`site`), Civicsmith's own site, kept by its stewards: "Hold your government to its own word" over installer R42's two lines, exactly; "Start your group" and "See groups at work"; what a group gets (its own Civicsmith in a Cloudflare account it controls, nobody else holding its work; findings anyone can check; wizards for people who have never done this, the assistant optional; free software, Cloudflare's $5 a month the only cost); one group's published case, opened as any reader does; "Already a member?" (members sign in at their own group's address; civicsmith.org holds no accounts); questions to the stewards' address (a marked placeholder until Bob gives it, D14).
+(2) **"Start your group"**: whether Civicsmith fits; what is needed (Workers Paid with a payment method, an account belonging to the group, twenty minutes, no Claude account); decide first who holds the Cloudflare account (and add a second trusted person); what the group will choose, in the installer and then in setup; "Create your group" opens the installer.
+(3) **"Groups at work"**: the groups that chose to be listed (DEC-132's choice of the network directory), each with its place, purpose and published cases, linking to the group's own page; a group kept to its members is not listed.
+(4) **The installer's first page** (`install`) now asks only its two choices (short name, places), with "What you need, on civicsmith.org"; what Civicsmith is and what is needed moved to the site, so neither page repeats the other.
+(5) **Journey 28** is now "From civicsmith.org to a new member's first work" (two new first steps: the site, then "Start your group"); journeys 1 and 28 name civicsmith.org as their front door. 480 steps walk clean across 28 journeys and 62 screens.
+decided: 2026-10-13 · Bob (D6, K3060), drawn by the design session
+reasoning recorded in: this entry; `screens/mock-screens.js` (site, install), `screens/mock-journeys.js` (journey 28, JBRIEF), `screens/mock-shell.js`, `screens/mock-refs.js`, `screens/registry.src.py` (62 screens), `screens/words.json` (1,709 words), `layouts.html`.
+owed: (BOB) civicsmith.org built as drawn (a static site the stewards keep, holding no accounts), with "Create your group" opening the installer; the groups listed only from the network directory's opt-in (DEC-132); the stewards' address once Bob gives it (D14; installer R48); the installer's first page reduced to its two choices; registry.json and words.json re-taken.
+
+### DEC-207 · answered
+amended: 2026-10-13 by DEC-208 (BOB's B164, what the signing service provides): one sitting for all of a case's signatures, drawn on S21's recommendation A; labels follow the acts.
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (Bob's D9, K3060; BOB's Q4, N1006; B161 (4))
+for: bob-session
+question: The signing ceremony and its related questions, worked out from the principles: where signing happens in the new interface (Q4: paste-back through `/sign`, or a signer inside the interface), how the member proves it is them, and what happens without a key, on a phone, or for a member who is not an owner.
+why it is Bob's: the direction is his (D9: "The signing ceremony is a key journey… Answering this and other related questions is a piece of the work you need to be completed (based on principles)"); the answers are the design session's, from the principles, reported as done (P17).
+provisional: the ceremony's single "Sign with your key" button beside "Publish at…" and "Publish now"; Q4 open.
+alternative: paste-back through `/sign` (signatures R30, R31): the member copies a statement to a separate page, signs there and pastes the signature back.
+recommendation: as below. Paste-back fails principle 4.1 (the tool fades) and K3052's real-users test.
+reversal cost: low: the ceremony's last step and its words.
+response: **Bob's D9 (K3060), worked out from the principles by the design session, 2026-10-13.**
+(1) **Signing happens inside the ceremony** (Q4: the in-interface signer), never on a separate page or by pasting a signature back (principle 4.1).
+(2) **One choice of when, one button.** "When it becomes public" (now, or a set time); then "Sign and publish at 6:00 on 19 November" (`publishat`) or "Sign and publish now" (`caseratify`): both sign the same statement (ratification R39). The three buttons drawn before ("Sign", "Publish at", "Publish now") are gone.
+(3) **The act says what it does** (4.4, 4.5, 9.3): outward mark; "You sign as Dev, an owner of The Coliseum lease. The public page will read 'Published by Lakeshore Tenants · signed by Dev'. Once public, anyone can read it and check your signature without asking the group; it can be corrected by a new edition, never removed."
+(4) **Proving it is you** (1.5, 1.6; D3; K509 (2)): the password asked again in the dialog (`session.reauth`); then the member's own device confirms the use of the signing key (passphrase, fingerprint or device PIN), the key never leaving the device and Civicsmith never seeing it. A cancelled or failed confirmation signs and publishes nothing, and returns to the last step unchanged (`signing.ceremony.declined`).
+(5) **After signing:** signed and waiting ("Move the time", `publishatmove`; "Cancel publishing", `publishatcancel`), or signed and published (open the public page).
+(6) **No key in this browser** (ratification R18's `NO_ATTESTING_KEY`): "Register a signing key in this browser" (`signerregisterown`) as a side trip from the step, returning to it with nothing lost; a key on another computer can sign from there.
+(7) **On a phone** (8.6): everything reads; signing and publishing finish on a larger screen, where the ceremony is where the member left it.
+(8) **A member who is not an owner** (`CASE_SIGNER_NOT_AN_OWNER`): names the owners who can sign; what was prepared stays; "Ask an owner to sign" (`owed:signrequest DEC-207`) puts it ready in the owners' queues.
+(9) **Ties:** every member who signs confirms their own (case-disclosures R27), said beside the confirmation.
+(10) Words (`screens/words-t47.src.py`, protected): `signing.ceremony.who`, `.device`, `.declined`, `.signedat`, `.signednow`, `.nokey`, `.notowner`, `.phone`. The wizard "Publication ceremony"'s last two steps re-worded to match.
+decided: 2026-10-13 · Bob's direction (D9), worked out by the design session from the principles
+reasoning recorded in: this entry; `screens/mock-screens.js` (ceremony), `screens/library.src.py`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/mock-shell.js`, `screens/registry.src.py`, `screens/words-t47.src.py`, `screens/words.json` (1,724 words, 615 protected), `screens/page.src.html`, `layouts.html`.
+owed: (BOB, T47-63 or later) the ceremony's last step as drawn: the in-interface signer with the browser-held key (credentials R9; membership's note on the browser-held key), the password re-asked (D3), the device's confirmation, the two buttons, the signed and published states, the side trip to register a key, the phone and not-an-owner states; the op `signrequest` (or BOB's name) putting a prepared edition in the owners' queues; registry.json, library.json and words.json re-taken. BOB may send what the signing service provides (B161 (4)); a difference from this drawing comes back as an entry.
+
+### DEC-208 · answered
+amended: 2026-10-13 by DEC-210 (BOB's K3079): the key stays on the device only when the member chooses "Keep this key on this device".
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (BOB's B164: what the signing service provides, `build/plan/draft-signing-service.md` on `tranche/T47`; Bob's D9, K3060, K3075)
+for: bob-session
+question: How the ceremony of DEC-207 meets what signing provides today: a case needs 1 + one per finding + one per piece of evidence signatures (ratification R4, R5); `publish` only prepares (with the tie attestation, T47-32) while `caseratify` signs and publishes; the key is a blob today, the on-device key not yet built. And one question that is Bob's (S21): whether one confirmation may cover all of a case's signatures, given his ruling that each use of the key is confirmed (K509 (2)).
+why it is Bob's: S21 asks the meaning of his ruling K509 (2); the rest is the design session's (P17).
+provisional: DEC-207 as drawn (one signature shown).
+alternative: S21's B (a confirmation per signature) or C (fewer signatures, a doctrine change BOB would bring).
+recommendation: S21: A, one confirmation for the ceremony, signing exactly the listed statements and nothing else.
+reversal cost: low: the ceremony's last step and two words.
+response: **Bob, 2026-10-13, through the development process: "S21 A" (K3080, cited here, not ruled again): one confirmation of the member's own device key signs, in one ceremony, exactly the listed statements, each its own signature. The rest decided by the design session, 2026-10-13.**
+(1) **One sitting.** The sign step says "One confirmation signs all 8: the edition, its 2 findings, and the 5 pieces of evidence they rest on", with "What your key signs, exactly": each statement line (`bio-ratify-case CASE-2026-0012 2 3b9f…c210`, `bio-ratify FND-… …`, one per piece of evidence), built from the same statements that are signed. The device's window names the 8; the signed state lists the edition, the findings and the evidence as signed, each drawn only on its answer (screens-publish R10).
+(2) **Labels follow the acts** (B164 gap 5): `publish` is "Confirm your ties and prepare the edition for signing" (the Ties step gains "Confirm, and prepare Edition 2 for signing", recording the confirmation inside the edition); `caseratify` "Sign and publish now"; `publishat` "Sign now and publish at a set time". One signer per edition (as today); the note says the member who signs confirms their ties, the confirmation part of what they sign.
+(3) **Where the key comes from:** made on the device inside the interface (K509 (2)) and kept there across visits; "Use a key file you already have" for a key from the signer page; no hand-off to `/sign`. Keeping a non-extractable key across visits is BOB's to rule against screens-publish R11 (B164 §5).
+(4) **A lost key:** withdrawn under Settings › Your account and a new one made in the ceremony; cases it already signed can still be checked (credentials R10).
+(5) **S21** briefed on the page's section 7 (issue, example, options A, B, C, recommendation A and its risk, "S21: A/B/C"); the page's status says one question is open. S20 stays reserved for the dashboards.
+decided: 2026-10-13 · Bob (S21: A, K3080) and the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (ceremony), `screens/registry.src.py`, `screens/library.src.py`, `screens/mock-acts.js`, `screens/question.html`, `screens/page.src.html`, `layouts.html`.
+owed: (BOB) the in-interface signer signing the edition, each finding and each piece of evidence under one confirmation (on S21: A; otherwise as Bob answers); the statements shown before signing; the key made and kept on the device (BOB's ruling on screens-publish R11), a key file accepted; the labels as above; registry.json and library.json re-taken.
+
+### DEC-209 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (Bob's D13, K3060: "research the CPRA's requirements and NextRequest together, to generate the template"; N858, N1008)
+for: bob-session
+question: The records-request template, from the California Public Records Act's requirements and how Oakland's NextRequest portal handles a request.
+why it is Bob's: the direction is his (D13); the research and the drawing are the design session's (P17). Offering the template to members waits on the template process (filing-templates R15: a named writer, sources, a professional review), which is BOB's.
+provisional: the request screen's placeholder text ("Under the public records act named in your group's profile…").
+alternative: none.
+recommendation: as below.
+reversal cost: low: a template, a screen's fields and a help page.
+response: **Researched and drawn by the design session, 2026-10-13.**
+(1) **What the law requires** (Government Code, FindLaw, current as of 1 January 2026): an answer within 10 days, with the reasons and when records will be ready (§ 7922.535(a)); longer only by written notice, for listed unusual circumstances, never more than 14 days (§ 7922.535(b), (c)); help to focus a request (§ 7922.600); the reasonably segregable rest released (§ 7922.525(b)); a refusal in writing naming who decided (§ 7922.540); electronic records electronically, in a format kept (§ 7922.570); only the direct cost of duplication (§ 7922.530(a)), of producing the copy for electronic records unless data must be compiled, extracted or programmed (§ 7922.575), and photographing with one's own equipment free (§ 7922.530(b)); no limit because of a request's purpose (§ 7921.300). Oakland's Immediate Disclosure Request: three business days (Oakland Municipal Code § 2.20.230, as the group's places measured it in T33).
+(2) **What the portal does** (oaklandca.nextrequest.com, read 13 October 2026): requests go through a form (description, attachments, department, optional contact details); each request's page shows its full text to anyone, with its dates, department and the city's point of contact; the page read did not show the requester's name, which the design does not promise; without contact details there are no updates and the records can be collected only if posted publicly or by contacting the department; past releases are searchable (118,632 requests listed).
+(3) **The template** (the request screen, `request`): addressed to the office; the CPRA named with its citation; the records, the period and the form asked for; electronic format (§ 7922.570); release the rest and refuse in writing naming who decided (§§ 7922.525(b), 7922.540); help us focus it (§ 7922.600); the 10-day answer (§ 7922.535); tell us first above a cost limit, the direct-cost rule for electronic copies (§ 7922.575); signed by the member for the group. It asks for records, never the reason: "Describe the records, not why you want them. The law doesn't let the office limit access because of why you ask (§ 7921.300), and the city's portal shows this text to anyone." The request screen gains the period, the form and the cost limit as fields filling the template.
+(4) **Sending through the portal:** "How to send it" (Make request; paste the approved text; choose the department; contact details optional, with what is lost without them; note the request number); the outward warning widened: the portal shows the request's text to anyone, so whatever it says about the group's work becomes public; the portal's request number recorded with the sending.
+(5) **A help page**, "How a records request works" (`help-records`), from the request screen: what the office must do, the faster request in Oakland, the city's portal, and what Civicsmith does with the due date; its sources listed.
+(6) The Immediate Disclosure Request template is the same text headed "Immediate Disclosure Request", citing Oakland Municipal Code § 2.20.230 and asking for the answer within three business days; whether the ordinance requires that heading was not confirmed from its text, and is the professional review's to check.
+decided: 2026-10-13 · Bob's direction (D13), researched and drawn by the design session
+reasoning recorded in: this entry; `screens/mock-screens.js` (request, help-records), `screens/mock-kit.js`, `screens/mock-refs.js`, `screens/mock-shell.js`, `screens/registry.src.py` (63 screens), `screens/words.json` (1,726 words), `layouts.html`.
+owed: (BOB, N858) the two templates ("Records request" and "Records request with immediate disclosure") into the California and Oakland profiles under the template process (filing-templates R15: a named writer, the sources above, a professional review before any member is offered them), with the period, form and cost-limit fields; the portal's request number recorded with the sending (`filingrecordsent`); the channel's words (the portal shows the text to anyone) on the profile's NextRequest venue; the help page from the profile's facts; registry.json and words.json re-taken.
+
+### DEC-210 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (BOB's B165, K3079)
+for: bob-session
+question: How a member's signing key is kept, now that BOB allows a non-extractable key to persist in the member's browser only when she chooses it (screens-publish R11 amended, K3079).
+why it is Bob's: it is not: BOB's ruling on its own requirement, drawn by the design session (P17).
+provisional: DEC-208 (3): the key kept on the device across visits.
+alternative: none.
+recommendation: as below.
+reversal cost: low: one choice and one word.
+response: **Drawn by the design session, 2026-10-13.** The ceremony's "no signing key in this browser" step offers, before "Register a signing key in this browser", the member's own choice: "Keep this key on this device, so you can sign here again without loading it. Leave this unticked on a computer others use: you then load your key file each time you sign." (`signing.ceremony.keepkey`, protected); unticked, the key is saved as a key file protected by a passphrase the member chooses, and "Use a key file you already have" loads it. The served op is `signerregisterown` (K3079 (6)), as the registry already names it.
+decided: 2026-10-13 · the design session (P17), on BOB's K3079
+reasoning recorded in: this entry; `screens/mock-screens.js` (ceremony), `screens/words-t47.src.py`, `screens/words.json` (1,727 words, 616 protected), `layouts.html`.
+owed: (BOB) the choice as drawn, the key persisted only when ticked; words.json re-taken.
+
+### DEC-211 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (BOB's B167 after Bob's K3082)
+for: bob-session
+question: May the design session ring BOB's session (a one-time routine into it) when it posts something BOB must act on, against its standing rule of never messaging the development process's sessions?
+why it is Bob's: it changes his own standing rule for this session.
+provisional: outbox only; BOB reads it at its own checks.
+alternative: outbox only.
+recommendation: allow a content-free "check the channel" ring only, the entry itself staying on the mail branch.
+reversal cost: none.
+response: **Bob, 2026-10-13: "yes, you can ring BOB - when you and BOB are both running under the same account. But sometimes you're running under different accounts. So pay attention."** Recorded: the design session rings BOB's session when it posts an entry BOB must act on, only while both run under the same account. The test, each time: BOB's current session id (its latest outbox entry or Writer line) resolves with `get_session` from this session; if it does not, they are on different accounts, and the outbox alone carries the entry. The ring is a one-time routine into BOB's session (`create_trigger`, `persistent_session_id` BOB's, `run_once_at` a minute ahead) whose only words are "MAIL from UX-DESIGN: check the channel: U<n>."; it carries no content and no instruction beyond reading the channel. Everything else of the standing rule holds: never start, steer or message BOB's or its jobs' sessions otherwise.
+decided: 2026-10-13 · Bob
+reasoning recorded in: this entry; HANDOFF §0.
+owed: (BOB) nothing to build; BOB records the ruling as it records K3082's.
+
+### DEC-212 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (Bob's question: "Are all UX design tasks defined so far completed at this point?")
+for: bob-session
+question: The design work still owed from earlier handoffs, found in answering Bob: the reminder for a wizard draft left unsent (K1364; journeys page journey 19, step 9; HANDOFF §4's list of 6 October), and two loose ends in the mockups' sample data.
+why it is Bob's: it is not: detail beneath K1364 and the wide path's sixth rule (DEC-129), decided by the design session (P17).
+provisional: undrawn; the sample data inconsistent.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-13.**
+(1) **A request left unsent** (K1364; wide path rule 6, "their unfinished work listed where they will see it"): Your queue, under its project, a Status item: "You left a records request unsent: inspection logs for pothole reports closed in FY2025 · Get a record · approved on 9 October, not yet sent · nothing has gone to the office", with "Pick up where you left off" (opens the request at its step), "Keep it for later" (`queuesnooze`) and "Drop the request, with a reason" (`actionmove` to `abandoned`, actions R7's resolutions; nothing was sent, so the office never sees it). The queue now lists 10 items.
+(2) **Edition 2's date:** the published case read "published 14 November" while the ceremony scheduled the same edition for 19 November; every page now says it was published on 19 November, at the time Dev set when signing.
+(3) **The work orders' grade:** two cards said capture A where the record and the calculation say B; both now say B ("captured by Dev from the city's open-data portal").
+(4) **Checked and not a loose end:** "Ben" is the group's sixth member (Lakeshore Tenants has 6 members); the queue's dates read consistently.
+decided: 2026-10-13 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (queue, site, published), `screens/mock-refs.js`, `screens/mock-shell.js`, `screens/registry.src.py`, `screens/words.json` (1,728 words), `layouts.html`.
+owed: (BOB) the queue's item for an action prepared through a wizard and left unsent (a producer naming the wizard, the step and the date), with its three acts; registry.json and words.json re-taken.
+
+### DEC-213 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (BOB's B168, from its review of T47's L11 fold)
+for: bob-session
+question: Four points from BOB's fold review: the wizard "Set up and claim"'s first step; the installer's first page while civicsmith.org does not serve; the setup page's surfaces with no screen; the wizard's runner and the walk-through op.
+why it is Bob's: it is not: detail beneath Bob's D5, D6 and K509, decided by the design session (P17).
+provisional: as BOB's review describes.
+alternative: none.
+recommendation: as below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-13.**
+(1) "Set up and claim", step 1, corrected: "Check you have what is needed: a Cloudflare account on the Workers Paid plan ($5 a month, with a payment method) and about twenty minutes." Why: "Civicsmith uses parts of Cloudflare that only the paid plan includes. No Claude account is needed to set up." (Bob's D5; installer R6.)
+(2) The installer's first page while civicsmith.org is not online (installer R23 kept): drawn as its own state, the two choices with "What you need" in one block (Workers Paid with a payment method, an account belonging to the group, twenty minutes, no Claude account); once civicsmith.org serves, the block gives way to the link (DEC-206 (4)). Acceptable as BOB proposes.
+(3) The setup page's surfaces with no screen: the intake form and the bundle history need none (Add, the doorbell and each document's page serve them); an administrator registering a key for a member (`signeradd`) stays undrawn, since a member's key is made only by that member on their own device (K509 (2)); an administrator withdrawing a member's key (`signerset`, credentials R7) is drawn on Members: "Withdraw Teo's signing key", for a lost or stolen device, the key stopping at once and what it signed still checkable.
+(4) Confirmed: "Set up and claim" has no runner in the setup frame (the setup screen's parts are its steps; the wizard is offered by the installer's hand-over), and `tour` is static, so the way-in draft's `walkthrough` op is not needed.
+(5) Served ops re-pointed (B163; K3079): `grouplanguagesset`, `grouplogoset`, `passwordreset`, `signrequest` lose their `owed:` names; `passwordresetlink` and `projectaikeepaway` stay owed until declared.
+decided: 2026-10-13 · the design session (P17)
+reasoning recorded in: this entry; `screens/library.src.py`, `screens/mock-screens.js` (install, members), `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/registry.src.py`, `screens/words.json` (1,730 words, 618 protected), `layouts.html`.
+owed: (BOB) the installer's interim block until civicsmith.org serves; `signerset` on Members as drawn; library.json, registry.json and words.json re-taken.
+

@@ -242,6 +242,8 @@ add('question.refused.drawnon', 'This question can\'t be set aside for the whole
 for (const x of JSON.parse(R('words-actions.json'))) add(x.key, x.en, x.protected, 'DEC-194', x.note || undefined);
 // 4g. T46's words (DEC-198; BOB's B149): written in words-t46.src.py, which writes words-t46.json
 for (const x of JSON.parse(R('words-t46.json'))) add(x.key, x.en, x.protected, 'DEC-198', x.note || undefined);
+// 4h. T47's words (DEC-200; BOB's B156, B157): written in words-t47.src.py, which writes words-t47.json
+for (const x of JSON.parse(R('words-t47.json'))) add(x.key, x.en, x.protected, 'DEC-200', x.note || undefined);
 
 // 5. The frame: rail, phone tabs, explanation levels
 for (const [k, name] of W.RAIL) { add(`rail.${k}.name`, name, false, 'mock-shell.js RAIL'); if (W.RAIL_HELP[k]) add(`rail.${k}.holds`, W.RAIL_HELP[k], false, 'mock-refs.js RAIL_HELP'); }

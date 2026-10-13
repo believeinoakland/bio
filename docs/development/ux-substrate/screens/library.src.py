@@ -17,7 +17,7 @@ def wiz(name, start, required, steps, journeys, note=''):
                   versions=[dict(version=1, state='draft', steps=out)]))
 
 wiz('Set up and claim', 'install', True, [
- ('install', None, 'Check you have what is needed: a Cloudflare account and about twenty minutes.', 'The free plan works. Workers Paid ($5 a month) adds recomputing spreadsheets and signing in with a Claude subscription. No Claude account is needed to set up.'),
+ ('install', None, 'Check you have what is needed: a Cloudflare account on the Workers Paid plan ($5 a month, with a payment method) and about twenty minutes.', 'Civicsmith uses parts of Cloudflare that only the paid plan includes. No Claude account is needed to set up.'),
  ('install', 'bootstrap', 'Choose your group\'s short name, then install. It is not the group\'s name: you choose that next, and can change it.', 'The short name is the fixed label in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing.'),
  ('install', 'selftest', 'Let your group\'s Civicsmith test itself. Allow it to run the assistant\'s container if you are asked.', 'The test proves it works before anyone relies on it.'),
  ('install', None, 'Save the one-time password somewhere safe, such as a password manager, then continue.', 'It is shown once, and it is how you become the first administrator. Continuing fills it in; if it is lost before you claim, whoever can sign in to the Cloudflare account can set a new one.'),
@@ -30,7 +30,7 @@ wiz('Set up and claim', 'install', True, [
  ('setup', 'aikeepaway', "Read what the assistant is (and open More about this for the detail), then choose whether to keep the group's material away from AI.", "Any member may connect their own Claude account unless you keep the material away from AI; then members see who chose it and your reason. Everything works without the assistant."),
  ('setup', 'groupkeyset', 'If the group will pay for the assistant, paste its Anthropic API key here. It is never shown again.', 'It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group\'s account. Leave it empty and members bring their own.'),
  ('setup', 'courtnoticeset', 'Choose whether members are told what a court can reach.', 'A court order your group cannot defeat can require anything not public to be shown. Some groups want every member told; the explanation is always one tap away.'),
- ('setup', 'hostingaccess', 'Record who holds the hosting account.', 'If you are ever unreachable, this is how the group gets back in.'),
+ ('setup', 'hostingaccessset', 'Record who holds the hosting account.', 'If you are ever unreachable, this is how the group gets back in.'),
  ('setup', 'memberadd', 'Invite your first members, and a second administrator now or later.', 'With one administrator the group depends on one person. A second means it is never stuck.'),
  ('group-identity', None, 'Optional: say who your group is. You will come back here when you finish or stop.', 'It shapes how each member is welcomed. It locks nothing and is never required.', {'via': 'Say who your group is'}),
 ], [1, 2])
@@ -54,9 +54,9 @@ wiz('Publication ceremony', 'ceremony', True, [
  ('ceremony', 'publishtensions', 'Read what will be disclosed: the timeline as it stands, and any calculation that differs or is not tied to the record.', 'Readers must see what the case could not settle.'),
  ('ceremony', None, 'Read the group\'s declared bias as it will appear.', 'Every published case carries the lens it was made through.'),
  ('ceremony', None, 'Preview the public page as a stranger will see it.', 'This is how a reader with no account meets your work.'),
- ('ceremony', 'publish', 'Each member publishing confirms they have no undeclared tie to anyone the case concerns.', 'Including anyone paid in its money. A tie disclosed is a strength; one found later is not.'),
- ('ceremony', 'caseratify', 'Sign with your key.', 'Publishing is permanent. Corrections come as a new edition, never by changing this one.'),
- ('ceremony', 'publishat', 'Publish now, or choose the time it becomes public, such as when a story citing it runs.', 'At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then.'),
+ ('ceremony', 'publish', 'Confirm you have no undeclared tie to anyone the case concerns, and prepare the edition for signing.', 'Including anyone paid in its money. Your confirmation goes inside what you sign. A tie disclosed is a strength; one found later is not.'),
+ ('ceremony', 'caseratify', 'Choose when it becomes public, enter your password again, and sign: your device asks you once to confirm with your key, for the edition, its findings and their evidence together.', 'Only you can sign, and your key never leaves your device. Publishing is permanent; corrections come as a new edition, never by changing this one.'),
+ ('ceremony', 'publishat', 'To publish later, sign now with “Sign and publish at…”, such as when a story citing it runs.', 'At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then.'),
 ], [15, 24])
 
 wiz('Get a record', 'finder', False, [

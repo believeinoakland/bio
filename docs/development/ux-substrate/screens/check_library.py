@@ -49,6 +49,12 @@ def load(src, name):
 def main():
     ref = sys.argv[sys.argv.index('--ref') + 1] if '--ref' in sys.argv else 'origin/main'
     ref, declared, functions = op_universe(ref)
+    # An act served by the open tranche but not yet on the ref (the design stream works ahead of main): the newest
+    # origin/tranche/T<n> branch is consulted for acts the ref lacks, and each such act is marked with that branch.
+    tranches = subprocess.run(['git', 'for-each-ref', '--format=%(refname:short)', 'refs/remotes/origin/tranche/'],
+                              cwd=ROOT, capture_output=True, text=True).stdout.split()
+    tranches = sorted((r for r in tranches if re.fullmatch(r'origin/tranche/T\d+', r)), key=lambda r: int(r.rsplit('T', 1)[1]))
+    ahead = op_universe(tranches[-1]) if tranches and tranches[-1] != ref else None
     screens, lib = load('registry.src.py', 'S'), load('library.src.py', 'L')
     fails, warns, owed = [], [], {}
     g2 = {}; exec(compile(open(os.path.join(HERE, 'library.src.py')).read(), 'library.src.py', 'exec'), g2)
@@ -69,6 +75,9 @@ def main():
                 kinds['owed'] += 1; owed.setdefault(op, set()).add(s['id']); a['status'] = 'owed'
             elif op in declared: kinds['declared'] += 1; a['status'] = 'declared'; a['modules'] = sorted(declared[op])
             elif op in functions: kinds['function'] += 1; a['status'] = 'function'; a['modules'] = sorted(functions[op])
+            elif ahead and (op in ahead[1] or op in ahead[2]):
+                kinds['declared'] += 1; a['status'] = 'declared'; a['onTranche'] = ahead[0]
+                a['modules'] = sorted(ahead[1].get(op) or ahead[2].get(op))
             elif op in SERVED_BY_DOOR: kinds['declared'] += 1; a['status'] = 'declared'; a['servedBy'] = SERVED_BY_DOOR[op]
             else: fails.append(f"registry {s['id']}: act {op!r} is no op or requirement function at {ref}")
     if len({s['id'] for s in screens}) != len(screens): fails.append('registry: duplicate screen id')

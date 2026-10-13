@@ -8,28 +8,47 @@ def screen(id, name, frame, purpose, acts, journeys):
                   acts=[dict(op=a[0], label=a[1]) for a in acts], journeys=journeys))
 
 # --- the group's Civicsmith: setting up, joining, accounts
-screen('install', 'Install Civicsmith', 'setup', 'The installer page: what is needed, the short name, installing the signed release into the group\'s own account.',
-  [('bootstrap','Install with this short name'),('selftest','Let it test itself')], [1])
+screen('site', 'civicsmith.org', 'setup', 'Civicsmith\'s own website, where the founding journey starts (Bob\'s D6, K3060): what Civicsmith is (installer R42\'s two lines), what a group gets, a case a group published, the groups that chose to be listed (DEC-132), members sent to their own group\'s address; "Start your group": whether it fits, what is needed (Workers Paid), who holds the Cloudflare account, what the group will choose, then "Create your group" opens the installer (DEC-206).',
+  [], [1,28])
+screen('install', 'Create your Civicsmith group', 'setup', 'The founder\'s link and the installer, in order: what Civicsmith is and what is needed, the short name and places, Cloudflare\'s permission, the progress and any stop, the checks and the one-time password, the hand-over to setup (DEC-201).',
+  [('bootstrap','Continue to Cloudflare'),('selftest','Run the checks again')], [1,28])
+screen('update', 'Update your group\'s Civicsmith', 'setup', 'The hosting account\'s holder updates the group\'s Civicsmith to a signed release; records, members and settings are kept (installer R1, DEC-201).',
+  [('bootstrap','Continue to Cloudflare to update')], [1])
+screen('front', 'Your group\'s page', 'public', 'The group\'s own landing page at its address (Bob\'s D2, K3060): who it is, what it has published, handing it material, how it works; members sign in beside it, with an own device kept signed in (locks after 30 minutes away, signs out after 12 hours) or a shared one (signed out after 15 minutes away) (D3, K3061); refused, paused, signed out, ended and locked (credentials R4, R38; DEC-201, DEC-202).',
+  [('login','Sign in')], [3,28])
+screen('tour', 'How we work, step by step', 'public', 'The walk-through for anyone, offered on the group\'s page before joining (Bob\'s D7, K3060): what the group looks into, how a finding shows its source and its strength, what it publishes and who signs it, handing it material, and how people join (DEC-205).',
+  [], [3])
+screen('reset', 'Choose a new password', 'public', 'The administrator\'s one-time reset link opens here: the member chooses a new password, keeping their handle and work; a used, expired or withdrawn link says so (Bob\'s D4, K3060; DEC-201, DEC-205).',
+  [('passwordreset','Set my new password')], [3])
+screen('forgot', 'Forgot your password', 'public', 'Getting back in without email: any member with one of their recovery codes, or through an administrator\'s one-time reset link (Bob\'s D4, B3, K3060; credentials R47; DEC-201, DEC-202).',
+  [('recover','Set a new password with a recovery code')], [3])
 screen('setup', 'Become your group\'s first administrator', 'setup', 'The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
   [('claim','Claim with the one-time password'),('groupnameset','Name the group'),('groupdomainset','Verify the web address'),('profilesset','Choose places and languages'),
    ('officesseed','Review offices and seats'),('entitycreate','Add an office yourself'),('placewanted','Name a place not yet listed'),('aikeepaway','Keep the group\'s material away from AI, with a reason'),('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('ailimitset','Set each member\'s daily use of the group\'s key'),('courtnoticeset','Choose whether members are told what a court can reach'),
-   ('hostingaccess','Record who holds the hosting account'),('securitytooladd','Add a security tool (optional)'),('memberadd','Invite a member or a second administrator')], [1])
+   ('hostingaccessset','Record who holds the hosting account'),('securitytooladd','Add a security tool (optional)'),('memberadd','Invite a member or a second administrator'),('recoverycodesissue','Show my recovery codes')], [1,28])
 screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpose, and who sees them (DEC-132).',
   [('groupdescriptionset','Save who your group is, and who sees it'),('groupdescriptiondraft','Ask the assistant to help write it')], [2])
 screen('join', 'Your invitation', 'setup', 'The invitation link opens here: language, handle, password.',
-  [('invitelook','Read the invitation'),('memberlanguageset','Choose your language'),('handlecheck','See whether a handle is free'),('enroll','Join with a handle and password')], [3])
+  [('invitelook','Read the invitation'),('memberlanguageset','Choose your language'),('handlecheck','See whether a handle is free'),('enroll','Join with a handle and password'),('joinlinkinvite','Join through the group\'s join link')], [3,28])
 screen('home', 'Your group\'s home', 'working', 'What the group is working on, what waits on you, and "What happened?", the door to a first step.',
   [('promote','Start a project'),('startfrom','Start from…')], [3,6])
 screen('members', 'Members', 'working', 'The roster: invitations, capabilities, expertise, administrators, joining through the website.',
-  [('memberadd','Invite a member'),('membercaps','Change what a member may do'),('memberset','Change a member\'s status'),('adminendorse','Endorse an administrator'),
+  [('memberadd','Invite a member'),('owed:passwordresetlink DEC-201','Make a reset link for a member'),('signerset','Withdraw a member\'s signing key'),('membercaps','Change what a member may do'),('memberset','Change a member\'s status'),('adminendorse','Endorse an administrator'),
    ('adminremove','Remove an administrator'),('expertiseconfirm','Confirm declared expertise'),('invitewithdraw','Withdraw an unused invitation'),('websitekeycreate','Create a website key'),('joinlinkenable','Turn on the reusable join link'),
    ('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('accountusesset','Set what the group\'s key pays for'),('ailimitset','Set a limit on the group\'s key'),('groupkeyremove','Remove the group\'s key'),('aikeepaway','Keep the group\'s material away from AI, with a reason')], [16,27])
 screen('security', 'Security', 'working', 'Administrators only: how hard the group\'s Civicsmith is being tried over a period they choose, by kind and hour against its usual; counts only; told only when risk is high (K1875, K1874, DEC-165).',
   [('securitymap','Show the level for a period'),('securitytooladd','Add a security tool'),('securitytooltest','Test a security tool'),('securitytoolremove','Remove a security tool')], [27])
 screen('account', 'Your account', 'working', 'Handle, password, language, expertise, signing key, theme.',
-  [('expertisedeclare','Declare your expertise'),('setpassword','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('memberlanguageset','Choose your language'),('infolevelset','Choose how much is explained')], [3,16])
+  [('expertisedeclare','Declare your expertise'),('signout','Sign out on this device'),('signouteverywhere','Sign out everywhere'),('setpassword','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('memberlanguageset','Choose your language'),('infolevelset','Choose how much is explained')], [3,16])
 screen('connect', 'The assistant', 'working', 'The member\'s own API key or subscription token, or the group\'s key where it offers one, or none; which account pays for an act; their own account\'s uses and limits; their own use across every payer (K1547, K1755, DEC-188).',
   [('groupkeynoticeseen','Read what the group\'s key means'),('disclosureshown','Read what connecting means'),('subscriptionsignin','Open Anthropic\'s sign-in page'),('accountreferenceset','Connect with your own API key'),('subscriptiondisconnect','Disconnect your subscription'),('accountusesset','Set what your account pays for'),('ailimitset','Set a limit on your account'),('accountreferenceremove','Disconnect')], [4,17])
+screen('places', 'Places and offices', 'working', 'Administrators: the places whose rules apply, the place a group wants that Civicsmith does not hold yet, and the offices and seats the group deals with (setup-page R13; instance-setup R50, R62; DEC-200 (8), N997).',
+  [('profilesset','Choose the places whose rules apply'),('placewanted','Save the place you want'),('officesseed','Fill in the offices again'),('entitycreate','Add an office yourself')], [2])
+screen('recovery', 'Recovery codes', 'working', 'Every member\'s own one-time recovery codes (D4, K3060), how many are left, and whether two administrators hold them (credentials R46; instance-setup R66; K1888; DEC-200 (8), N997).',
+  [('recoverycodesissue','Get new recovery codes')], [2])
+screen('group', 'Your group', 'working', 'Administrators: the settings chosen at setup, changeable here: name and logo, website, languages, the court notice, the hosting account\'s holder, the group\'s bar (DEC-201).',
+  [('groupnameset','Save the name'),('groupdomainset','Verify the website'),('grouplanguagesset','Save the languages'),('grouplogoset','Change the logo'),('courtnoticeset','Show the court notice'),('hostingaccessset','Record who holds the hosting account'),('strengthbarset','Set the group\'s bar')], [2])
+screen('settings', 'Settings', 'working', 'Every setting in one list: the member\'s own, then the group\'s for administrators (DEC-201).', [], [2,3])
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
   [('declaretie','Add a tie'),('withdrawtie','Remove a tie')], [5])
 screen('notes', 'Your notes', 'working', 'A member\'s own notes, seen only by them (DEC-136).',
@@ -40,13 +59,15 @@ screen('wizards', 'Wizards', 'working', 'The group\'s wizard library: offered, d
   [('wizards','See the library'),('wizarddraft','Record a new wizard'),('wizardrevise','Revise a draft'),('wizardsubmit','Submit for approval'),('wizardapprove','Approve'),('wizardretire','Retire')], [])
 
 # --- daily work
+screen('projects', 'Projects', 'working', 'Every project the member may see, with its owner, questions and stage (projectlist; DEC-201).', [('promote','Start a project')], [6])
+screen('unavailable', 'Can\'t open this', 'working', 'An address that leads nowhere, something the member may not see, and the group\'s Civicsmith out of reach (DEC-201).', [], [3])
 screen('queue', 'Your queue', 'working', 'To do, Noticed and Status, grouped by case (DEC-110, DEC-131).',
   [('taskresolve','Act on an item'),('taskforward','Forward to a member'),('proposedispose','Dismiss with a reason'),('queuesnooze','Snooze to a date'),('queuemute','Mute a kind'),
-   ('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('reminderanswer','Answer a reminder'),('promote','Open a question from a hint'),('projectkeyset','Add an API key for a project'),('exploreapprove','Let the assistant explore today')], [19,23])
+   ('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('reminderanswer','Answer a reminder'),('promote','Open a question from a hint'),('projectkeyset','Add an API key for a project'),('exploreapprove','Let the assistant explore today'),('actionmove','Drop an unsent request, with a reason')], [19,23])
 screen('finder', 'Find', 'working', 'Search what the group holds; hold a set together; see where nobody looked.',
   [('search','Search'),('select','Hold these together'),('findin','Find in these'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('calculationcreate','Count')], [6,7])
 screen('capture', 'Add', 'working', 'Capture a document from an address or a file, photograph a handout, or record what you saw.',
-  [('acquire','Capture from an address'),('captureupload','Capture a file or photo'),('testify','Record what you saw or heard'),('capturerequest','Ask for a capture later'),('monitor','Watch this address'),('writinghelp','Help me write this')], [6,7,9,15])
+  [('acquire','Capture from an address'),('captureupload','Capture a file or photo'),('testify','Record what you saw or heard'),('capturerequest','Ask for a capture later'),('monitorset','Watch this address'),('monitor','Check it now'),('writinghelp','Help me write this')], [6,7,9,15])
 screen('held', 'Held captures', 'working', 'Captures not yet vouched for, per member and project (DEC-97).',
   [('heldcaptures','See held captures'),('release','Vouch for them'),('heldsetaside','Set aside with a reason'),('heldrestore','Restore')], [15])
 screen('archive', 'Archive', 'working', 'A captured ZIP: every file with its state (filed with the archive\'s grade and held for review, already held, or not filed with its reason); vouching or setting files aside; an archive refused whole (K1852, DEC-167).',
@@ -54,14 +75,14 @@ screen('archive', 'Archive', 'working', 'A captured ZIP: every file with its sta
 screen('open-file', 'Opening a file', 'working', 'Before a file opens: its risk, the safe view, the deeper check, its checks as notes, and a hold released by two members or a second engine; nothing records who opened what (K1888, K1892, K1929, DEC-168).',
   [('openoriginal','Open the original'),('openwithwarning','Open the original after the warning, without a deeper check'),('safeview','Read the safe view'),('deepercheck','Ask for a deeper check'),('releasescanhold','Release, with a reason')], [7,15])
 screen('document', 'Document', 'working', 'One captured document: its copy, grade note, passages, versions and what cites it.',
-  [('gradenote','Read the grade note'),('release','Vouch for this copy'),('cite','Cite a passage'),('retire','Retire'),('attest','Attest'),('identityclaim','Say this is a person we follow'),('monitor','Watch for changes'),('findin','Find in this'),('pagetranscribe','Have the assistant read pages'),('transcribe','Type a page\'s words yourself')], [7,15,23])
+  [('gradenote','Read the grade note'),('release','Vouch for this copy'),('cite','Cite a passage'),('retire','Retire'),('attest','Attest'),('identityclaim','Say this is a person we follow'),('monitorset','Watch for changes'),('monitor','Check for a new version now'),('findin','Find in this'),('pagetranscribe','Have the assistant read pages'),('transcribe','Type a page\'s words yourself')], [7,15,23])
 screen('find-in', 'Find in this', 'working', 'One control on a document, a held set or a project: pick what to find; each result cites its passage and becomes a fact only by a member\'s own act (DEC-164, K1468).',
   [('findin','Find in this'),('standingquestionset','Keep finding this as documents arrive'),('recordpersonfact','Add a fact from this passage'),('recorddatedfact','Record a dated fact'),
    ('standarddeclare','Hold this as a standard'),('recordfact','Read into a money fact'),('tabledeclare','Declare the table'),('cite','Cite in the question'),('search','See all in Find')], [6,10])
 
 # --- projects and questions
 screen('project', 'Project', 'working', 'A project\'s home: objective, bar, questions, stage, plans, members.',
-  [('promote','Open a question'),('findin','Find in this project'),('strengthbarset','Set the project\'s bar'),('projectinvite','Invite a member to the project'),('projectjoin','Join'),('planopen','Plan what to do')], [6,9,15])
+  [('promote','Open a question'),('drawquestion','Draw on a question from elsewhere'),('findin','Find in this project'),('projectbarset','Set this project\'s bar'),('projectinvite','Invite a member to the project'),('projectjoin','Join'),('planopen','Plan what to do')], [6,9,15])
 screen('projectai', 'AI for this project', 'working', 'Who pays for the assistant\'s work in a project: its own API key, or its sole member\'s sign-in; what it pays for; its limits; its use summed, naming no member; keeping the project\'s material away from AI; every change, seen by every owner (DEC-188).',
   [('projectkeyset','Hold the project\'s API key'),('projectsigninset','Use your own sign-in for the project'),('projectaccountswitch','Switch the project\'s account on or off'),('projectaccountremove','Remove the project\'s account'),('projectkeynoticeseen','Read what the project\'s key means'),('accountusesset','Set what the project\'s account pays for'),('ailimitset','Set a limit on the project\'s account'),('owed:projectaikeepaway DEC-188','Keep the project\'s material away from AI, with a reason')], [])
 screen('question', 'Question', 'working', 'A question and what supports it or cuts against it; strength against the bar; concluding.',
@@ -74,15 +95,19 @@ screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it 
   [('airunopen','Ask the assistant to work on this'),('suggest','Suggest'),('airunclose','Stop the run')], [17])
 
 # --- the record's subjects
+screen('people', 'People', 'working', 'A directory of the people and organisations the record follows, never the group\'s own members (Settings › Members): search and filters (office or body, project, newest added), each row with who they are today, how many documents, questions and projects name them and when the newest was added, those in the member\'s projects first; a row opens the person, and "Explore connections" starts from it; an empty state saying how someone enters the record, and a search that finds no one (Bob\'s D8, K3061; DEC-203; replaces interface-shell R29\'s Find over people).',
+  [('search','Search people and organisations'),('explore','Explore connections'),('entitycreate','Add someone the record follows')], [10,13])
 screen('person', 'Person', 'working', 'Positions, career, credentials, memberships, interests, statements; same person?',
-  [('person','Open the person'),('recordpersonfact','Add a fact from a document'),('identityclaim','Say another record is this person'),('withdrawidentityclaim','Withdraw a same-person claim'),('followregister','Follow a register'),('personexpunge','Remove a fact where the law requires')], [10])
+  [('person','Open the person'),('explore','Explore connections'),('recordpersonfact','Add a fact from a document'),('identityclaim','Say another record is this person'),('withdrawidentityclaim','Withdraw a same-person claim'),('followregister','Follow a register'),('personexpunge','Remove a fact where the law requires')], [10])
 screen('timeline', 'Timeline', 'working', 'What they did and what we did, in two lanes (K1462, K1494).',
   [('createevent','Record an event'),('addparticipant','Add who took part'),('relate','Link events'),('recorddatedfact','Record a dated fact'),('hypothesishold','Keep a suspected cause as a hunch'),('findin','Look for dates in this project')], [11])
 screen('money', 'Money trail', 'working', 'Money facts with stage and period; a trail; reconciling sources (K1457, K1468).',
   [('recordfact','Read a figure into a money fact'),('createset','Start a money trail'),('include','Include with a reason'),('exclude','Leave out with a reason'),('reconcile','Compare two sources'),('committedagainstpaid','Committed against paid'),('authoritychain','What authorised it'),
    ('findin','Look for it in this project'),('actioncreate','Ask the city for the record'),('createevent','Record when it moved'),('gradenote','Why B, and what would raise it'),('acquire','Get the city\'s own copy'),('checkrequest','Ask a member who knows budgets'),('hypothesishold','Keep my reading as a hunch')], [12])
 screen('calculation', 'Calculation', 'working', 'A computed fact with its method, or a member\'s spreadsheet bound to the record.',
-  [('calculationcreate','Work it out'),('tabledeclare','Declare the table'),('calculationdraw','Draw a random sample'),('addworkbook','Bind your spreadsheet'),('bind','Tie an input to the record'),('recordcheck','Record a second member\'s check'),('calculationaccept','Accept the result'),('testify','Record what you found at a report')], [9])
+  [('calculationcreate','Work it out'),('tabledeclare','Declare the table'),('calculationdraw','Draw a random sample'),('addworkbook','Bind your spreadsheet'),('bind','Tie an input to the record'),('recordcheck','Record a second member\'s check'),('calculationaccept','Accept the result'),('testify','Record what you saw at a report'),('spotcheckvisit','Count it for the drawn report')], [9])
+screen('help-records', 'Help: How a records request works', 'working', 'What the California Public Records Act requires of the office, Oakland\'s faster request, what the city\'s portal shows, and what Civicsmith does with a request (Bob\'s D13, K3060; DEC-209).',
+  [], [7])
 screen('help', 'Help: How spot-checks work', 'working', 'A help page: one method explained in plain words, linked from where it is used (Bob, 7 October).',
   [], [9])
 screen('explore', 'Explore connections', 'working', 'Chains between a start and an end, each step cited and graded (K1469, K1487).',
@@ -112,8 +137,9 @@ screen('case-editor', 'Case', 'working', 'Prepare the case: scope, statement, wh
   [('casedraft','Prepare the draft'),('whatchangedpropose','Draft "what changed"'),('statementack','Acknowledge what it leaves out'),('attribute','Name a person with the reason'),('writinghelp','Help me write this')], [15,23])
 screen('review-copy', 'Review copy', 'working', 'A named outsider\'s revocable view of the draft.',
   [('reviewgrant','Share for review'),('reviewrevoke','Stop sharing'),('reviewcomment','Comment')], [21])
-screen('ceremony', 'Publication ceremony', 'working', 'The required wizard: checks, disclosures, ties confirmed, preview, signing.',
-  [('publishpreflight','Check before publishing'),('publishtensions','See what must be disclosed'),('caseratify','Sign with your key'),('publish','Publish, with your confirmation of no undeclared tie'),('publishat','Publish at a set time, checked again then'),('obscuremark','Mark who and what to obscure in a photo'),('obscuremarkwithdraw','Withdraw a mark on a photo, with a reason')], [15,24])
+screen('ceremony', 'Publication ceremony', 'working', 'The required wizard: checks, disclosures, ties confirmed, preview, then signing inside the ceremony (Bob\'s D9, K3060; Q4): when it becomes public, the password asked again (D3), the member\'s own device confirming the key, signed and waiting or published; no key in this browser, a phone, a member who isn\'t an owner (DEC-207).',
+  [('publishpreflight','Check before publishing'),('publishtensions','See what must be disclosed'),('caseratify','Sign and publish now'),('publish','Confirm your ties and prepare the edition for signing'),('publishat','Sign now and publish at a set time, checked again then'),('obscuremark','Mark who and what to obscure in a photo'),('obscuremarkwithdraw','Withdraw a mark on a photo, with a reason'),('signerregisterown','Register a signing key in this browser'),('signrequest','Ask an owner to sign'),('publishatmove','Move the publishing time'),('publishatcancel','Cancel publishing')], [15,24])
+screen('review-outside', 'A review copy, from outside', 'published', 'What an outside reviewer sees from a review link: the draft, how long the link works, and their comment (journey 21; DEC-201).', [('reviewcomment','Send your comment')], [21])
 screen('published', 'Published case', 'published', 'The public page: findings, strengths, timeline, people named, evidence; checkable without the group.',
   [('verify','Check the signature'),('publishedcase','Read the case')], [26])
 screen('imported', 'Another group\'s case', 'imported', 'An imported case in its read-only project, recreated finding by finding.',

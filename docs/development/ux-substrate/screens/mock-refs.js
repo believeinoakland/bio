@@ -34,7 +34,7 @@ const SCREEN_REFS = {
     ["shield laws",null,"<b>Shield laws</b> · laws in many states, California among them, that can protect journalists from being forced to reveal unpublished sources","A member such as a reporter may have protections the rest of the group does not."]
   ],
   "group-identity": [
-    ["how members are welcomed","home","<b>The welcome</b> · what a member sees first on Home · “What brought you here?” and its starting points","The kind and focus you give here decide which starting points Home offers first."],
+    ["how members are welcomed","home","<b>The welcome</b> · what a member sees first on Home · “What happened?” and its starting points","The kind and focus you give here decide which starting points Home offers first."],
     ["Draft · the assistant's",null,"<b>Draft · the assistant's</b> · a label on words the assistant wrote · stays until a member edits and keeps them","Nothing here is saved as the group's own until a member keeps it."]
   ],
   "join": [
@@ -337,7 +337,7 @@ const SCREEN_REFS = {
     ["owner of the project",null,"<b>Owner of The Coliseum lease</b> · Dev · only an owner signs the project's cases","Your signature stands for the group; readers see “signed by an owner of the project”."]
   ],
   "published": [
-    ["Edition 2",null,"<b>Edition 2</b> · the current edition of this case · published 14 November 2026 · corrects Edition 1, which stays readable","Corrections, if any, come as a new edition listed on the case's public docket."],
+    ["Edition 2",null,"<b>Edition 2</b> · the current edition of this case · published 19 November 2026 · corrects Edition 1, which stays readable","Corrections, if any, come as a new edition listed on the case's public docket."],
     ["Lakeshore Tenants",null,"<b>Lakeshore Tenants</b> · the group that made this case · tenants near the Oakland Coliseum, meeting since 2025","The authors; the case is signed by one of them and can be checked without them."],
     ["council vote the lease requires",null,"<b>Lease §7.2</b> · a clause of the Coliseum lease · a change to the rent needs a council vote","The rule this finding measures the rent adjustments against."],
     ["this project's bar",null,"<b>The project's bar</b> · the least strength a finding needs before the group relies on it · here B for both grades","This finding meets it; the bar is the group's own, set before publishing."],
@@ -413,17 +413,32 @@ const TITLE_HELP = {
   "case-editor": "<b>The Coliseum lease · Edition 2</b>: Dev's draft of the next edition of your group's published case. Nothing here is public until an owner signs and publishes it.",
   "review-copy": "<b>Share Edition 2 for review</b>: lets named outside readers see the draft of The Coliseum lease, Edition 2, before it is published. You can stop a reader's access at any time.",
   "ceremony": "<b>Publish Edition 2</b>: the last checks and the signing of The Coliseum lease, Edition 2. Once published it is permanent and public; it can be corrected by a new edition, never removed.",
-  "published": "<b>The Coliseum lease</b>: your group's published case as anyone reads it: Edition 2, published 14 November 2026, which corrects Edition 1.",
+  "published": "<b>The Coliseum lease</b>: your group's published case as anyone reads it: Edition 2, published 19 November 2026, which corrects Edition 1.",
   "imported": "<b>Port lease revenue</b>: a case published by West Oakland Neighbors (Edition 2), imported by Dev on 1 October. Nothing in it counts for your group until a member accepts it.",
   "doorbell": "<b>Hand material to Lakeshore Tenants</b>: the page where anyone can give the group documents or information, without an account. It says exactly what happens to what is sent.",
 };
 const SCREEN_HELP = {
-  install: 'Installs Civicsmith in a Cloudflare account your group controls. Here you choose the group\'s permanent short name and let the installation test itself.',
+  site: 'Civicsmith\'s own website: what it is, a group\'s published work, the groups that chose to be listed, and how to start a group.',
+  install: 'Creates your group\'s Civicsmith in a Cloudflare account your group controls: what you need, a permanent short name, Cloudflare\'s permission, then your one-time password.',
+  update: 'Updates your group\'s Civicsmith to a new signed release. Records, members and settings are kept.',
+  front: 'Your group\'s own page: who it is, what it has published, how to hand it material and how it works, with members\' sign-in beside it.',
+  'help-records': 'What the law requires of the office you ask for records, the faster request, and what the city\'s portal shows.',
+  tour: 'How your group works, in six short steps, for anyone: no account needed, nothing recorded.',
+  reset: 'Choose a new password from the one-time reset link an administrator made for you.',
+  forgot: 'How to get back in without email: use one of your recovery codes, or ask an administrator for a one-time reset link.',
+  group: 'Administrators only: your group\'s name, website, languages, court notice, hosting account and bar.',
+  settings: 'Every setting in one list: yours first, then the group\'s.',
+  projects: 'Every project you can see, with its owner and how far it has come.',
+  people: 'The people and organisations your group\'s record follows, those named in your projects first, each with how often the record names them. Your own members are under Settings › Members.',
+  unavailable: 'What you see when an address leads nowhere, when something isn\'t yours to see, or when your group\'s Civicsmith can\'t be reached.',
+  'review-outside': 'What someone outside the group sees when asked to review a draft case: the draft and a place to comment.',
   setup: 'The first administrator\'s setup: claim the installation, then name the group, choose its places and languages, and decide how members reach the assistant.',
   'group-identity': 'What kind of group yours is, what it focuses on and why it exists. It shapes how members are welcomed and locks nothing.',
   join: 'Your invitation to join a group. Choose your language, the name the group will know you by, and a password.',
   home: 'Your group\'s home: what it is working on and what is waiting on you. Start here each day.',
   members: 'Everyone in your group and what each may do. Administrators invite members, set what they may do, and see who holds the hosting account.',
+  places: 'Administrators only: the places whose rules your group\'s Civicsmith follows (deadlines, holidays, offices, records laws), and the offices and seats your group deals with.',
+  recovery: 'Your own recovery codes, which let you set a new password if you lose yours. Each works once.',
   security: 'Administrators only: how hard your group\'s Civicsmith is being tried, by kind and by hour, against its own usual. Counts only; nothing names who tried.',
   account: 'Your own settings: your handle, password, signing key, language and expertise.',
   connect: 'Whether and how the assistant serves you: on your group\'s key, your own Claude account, or not at all. Set your limit and suggestions here.',
