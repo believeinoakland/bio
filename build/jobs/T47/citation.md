@@ -60,3 +60,7 @@ No other user module moves. run-productions 58/0, answer-envelope 32/1, plane 22
 - `run.mjs bio`: coverage 43 failures, all other modules' ids not yet met (accepted red 1), none citation's; channels 0 failures.
 
 Size (session_015r8XRY7Rnu53uAFBQvCPSA): test runs 10, module lines 1523
+
+## J3 · COMPLETE
+
+T47-17 applied: R14 drawQuestion (op drawquestion) and R15 sever/reinstate on a question's legs. 102/102 citation tests; format, architecture (module and whole product), coverage 15/15 and ownership 0 failures. One new red my merge opens: affordances plane.test.mjs:423 (J2 item 2), to be named at merge. Record: build/jobs/T47/citation.md, Completion.
