@@ -177,7 +177,7 @@ test("R14: a project's bar: a declared axis carries its letter, an undeclared on
   assert.match(none.detail, /An absent bar is not a bar of zero/);
 });
 
-test("R15, R24: a machine is refused C-32.9; a member who is not an active administrator C-107.1; the founder may", () => {
+test("R15, R24: a machine is refused C-32.9; a member who is not an active administrator C-107.1; an active administrator may", () => {
   const w = projected();
   w.member(ADMIN, "admin");
   w.member(MEMBER);
@@ -192,7 +192,7 @@ test("R15, R24: a machine is refused C-32.9; a member who is not an active admin
     const r = w.s.strengthBarSet({ reason: REASON, capture: "B", author: who });
     assert.equal(r.reason, "STRENGTH_BAR_NOT_ADMIN", who);
     assert.equal(r.check, "C-107.1");
-    assert.ok(r.translation.length > 20);
+    assert.equal(r.translation, STRENGTH_BAR_CHECKS.STRENGTH_BAR_NOT_ADMIN.translation);
   }
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM group_strength_bar`)[0].n, 0, "nothing was written");
   assert.equal(w.s.strengthBarSet({ reason: REASON, capture: "B", author: ADMIN }).ok, true);

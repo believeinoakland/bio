@@ -1498,7 +1498,7 @@ export class Strength {
     const r = this.promotion.promote({
       bundleId: pid, base: head.bundleSha, snapKey: `${at.replace(/[-:.]/g, "")}_bar${nonce}`, author: who,
       files: [{ path: "bundle.md", text }, ...carried],
-      meta: { object_type: head.type, title: head.title, current_state: head.currentState,
+      meta: { object_type: head.type, title: head.title, current_state: fm.current_state ?? head.currentState,
               prior_state: fm.prior_state ?? null, created: fm.created, last_updated: at },
       actorIdentity: asked, actorViewer: viewer, actorMemberId: this.membership.positionalMember(viewer, asked) });
     if (!r || r.ok !== true) return r;

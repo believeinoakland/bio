@@ -327,3 +327,77 @@ test("R14: a declared bar's detail states each axis once, in words for one not d
   assert.match(none.detail, /A project declares its bar by its own act, written into the project's document/);
   assert.doesNotMatch(none.detail, /bundle\.md/);
 });
+
+test("R40: a bar a member wrote by a full revision is replaced in place, read as previous, and the document ends with one bar", () => {
+  const w = world();
+  const P = w.project("Hand written", "alice", ["required_strength:", "  capture: D", "  connection: C"]);
+  w.join(P, "bob");
+  const r = w.s.projectBarSet(byBob(w, { project: P, capture: "A", connection: null }));
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.equal(r.previous.capture, "D");
+  assert.equal(r.previous.connection, "C");
+  const text = w.doc(P);
+  assert.equal((text.match(/^required_strength:/gm) || []).length, 1);
+  assert.deepEqual(parseFrontmatter(text).data.required_strength, { capture: "A", connection: null });
+  assert.match(text, /from capture D, connection C to capture A, no bar set on the connection axis\./);
+});
+
+test("R40: the act promotes at the project's current state, whatever it is (here closed as resolved), and moves no state", () => {
+  const w = world();
+  const head = w.record.head(w.P);
+  const text = w.doc(w.P).replace("current_state: forming", "current_state: closed\nclosed_reason: resolved")
+    .replace("prior_state: null", "prior_state: forming");
+  const closed = w.s.promotion.promote({ bundleId: w.P, base: head.bundleSha, snapKey: "kclose", author: "bob",
+    actorIdentity: V("bob"), actorViewer: V("bob"), meta: { object_type: "project" },
+    files: [{ path: "bundle.md", text }, { path: "notes/plan.md", text: "Kept as it is.\n" }] });
+  assert.equal(closed.ok, true, JSON.stringify(closed));
+  assert.equal(w.record.head(w.P).currentState, "closed");
+  const r = w.s.projectBarSet(byBob(w));
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.equal(w.record.head(w.P).currentState, "closed");
+  const fm = parseFrontmatter(w.doc(w.P)).data;
+  assert.equal(fm.current_state, "closed");
+  assert.equal(fm.closed_reason, "resolved");
+  assert.equal(w.mode.packages.at(-1).meta.current_state, "closed");
+});
+
+test("R40: the act never reads the group's default: with one set first, previous is still the project's own absence and the document carries only what the act gave", () => {
+  const w = world();
+  assert.equal(w.s.strengthBarSet({ capture: "A", connection: "A", reason: "A high floor.", author: "ann" }).ok, true);
+  const r = w.s.projectBarSet(byBob(w, { capture: "C", connection: null }));
+  assert.equal(r.previous.declared, false);
+  assert.equal(r.previous.source, "none");
+  assert.deepEqual(parseFrontmatter(w.doc(w.P)).data.required_strength, { capture: "C", connection: null });
+});
+
+test("R40: an absent or unseen project is exactly membership.noSuchProject's answer, one not a project R16's NOT_A_PROJECT, and an unjoined author exactly membership.projectAuthority's refusal", async () => {
+  const { noSuchProject } = await import("../../../src/membership/index.mjs");
+  const w = world();
+  assert.deepEqual(w.s.projectBarSet(byBob(w, { project: "PROJ-2026-9999-zzz" })), noSuchProject("PROJ-2026-9999-zzz"));
+  assert.deepEqual(w.s.projectBarSet(byBob(w, { author: "dave", viewer: V("dave"), identity: V("dave") })), noSuchProject(w.P));
+  assert.deepEqual(w.s.projectBarSet(byBob(w, { project: w.I })),
+                   w.s.strengthBarOf({ project: w.I, viewer: V("bob") }));
+  assert.deepEqual(w.s.projectBarSet(byBob(w, { author: "carol", viewer: V("carol"), identity: V("carol") })),
+                   w.membership.projectAuthority(w.P, V("carol"), "joined", "projectBarSet"));
+});
+
+test("R40, R21: the bar gates nothing: a question's pair and its gated read are the same before and after the project's bar is set", () => {
+  const w = world();
+  const pair0 = w.s.strengthOf(w.I), read0 = w.s.inquiryStrength({ id: w.I, viewer: V("bob") });
+  assert.equal(w.s.projectBarSet(byBob(w, { capture: "A", connection: "A" })).ok, true);
+  assert.deepEqual(w.s.strengthOf(w.I), pair0);
+  assert.deepEqual(w.s.inquiryStrength({ id: w.I, viewer: V("bob") }), read0);
+});
+
+test("R28: the sentences the act answers (its bar's detail, and each refusal's translation) carry no analyst's word", async () => {
+  const { analystHits } = await import("./vocabulary.mjs");
+  const w = world();
+  const ok = w.s.projectBarSet(byBob(w));
+  const gone = w.s.projectBarSet(byBob(w, { capture: null, connection: null }));
+  const refusals = [byBob(w, { author: "class:ai" }), byBob(w, { capture: "Z" }), byBob(w, { reason: "" })]
+    .map((a) => w.s.projectBarSet(a).translation);
+  for (const t of [ok.bar.detail, ok.previous.detail, gone.bar.detail, ...refusals]) {
+    assert.ok(typeof t === "string" && t.length > 20, t);
+    assert.deepEqual(analystHits(t), [], t);
+  }
+});

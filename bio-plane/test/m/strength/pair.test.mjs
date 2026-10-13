@@ -225,7 +225,7 @@ test("R19: no leg counts above what the record earns, on the live pair, a versio
   assert.equal(v.pair.capture.grade, "B", "a version's inquiry leg contributes the target's own capped answer (R2)");
 });
 
-test("R17: the grouping act's before and after are strengthOf's answers, so a regrouping shows in them", () => {
+test("R4: a regrouping into sets that each carry it shows in strengthOf, the answer R17's registration carries before and after", () => {
   const w = world();
   const legs = [
     { target: "INFO-2026-0001-a", grade: "A", axis: "connection", source: "resolution" },
