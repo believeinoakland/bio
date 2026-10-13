@@ -69,3 +69,6 @@
 
 Size (session_017tqJqUTKpFeyBvHdxfwpzn): test runs 34, module lines 2116
 
+## J1 · REPORT
+
+Found reading R16 against accepted-work R1/R8: case-import R16's 'a viewer who is not an active member is answered null' cannot be reached for `withdrawals` and `moves`, since accepted-work R1/R8 give them only {after, limit}, no viewer. No code is wrong; a wording point for R16 or accepted-work R1, BOB's to place. Also: this job stales the plane bundle (rule 5 (4)), for L8's close.
