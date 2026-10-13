@@ -19,7 +19,7 @@
 - `checks/format.mjs`: 168 modules, 0 failures; `architecture.mjs … review`: 9 files, 50 imports, 0 failures; `coverage.mjs … review`: 33 of 33 live ids named, 0 failures; `ownership.mjs … review tranche/T47`: 5 files, 0 failures.
 - `checks/run.mjs`: format 0, architecture 0 failures (3097 files), channels 0; coverage 42 failures, none review's (screens and other modules, inherited).
 
-Size (session_016AUno3QNTCjsViWYp6mtmK): test runs 5, module lines 1041
+Size (session_016AUno3QNTCjsViWYp6mtmK): test runs 5, module lines 1317
 
 ## J1 · REPORT
 
