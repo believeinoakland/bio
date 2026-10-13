@@ -1,6 +1,6 @@
 # case-authoring (T47)
 
-**Status** · session_01RymrBMQ5XEGoEKerL7JfqT · depth 2 · COMPLETE · handled B3
+**Status** · session_01RymrBMQ5XEGoEKerL7JfqT · depth 2 · COMPLETE · handled B4
 
 ## Completion (CASE-AUTHORING #28)
 
@@ -14,6 +14,7 @@
 - R76 (K1490, K3041): no code change (`tieAttested === true` already the only confirmation); tested at the interface.
 - N992: R73's rows are case-inputs R17's; this module spells no open-request sentence. The sign step's unread line now carries its key (`signing.openrequest.unread`) beside its sentence, so every line it shows is keyed.
 - B2: `obscured`'s read shape gains `kind` (case-grammar R31): documents.test.mjs and photos.test.mjs expect `kind: null`.
+- B4 (case-disclosures T47-76, K3117): photos.test.mjs' `photoMarks` stand-in answers case-carriage R22's `obscured` `{copy, label, marked, kind: "photo"}`; the photo rows now expect `kind: "photo"` and documents.test.mjs' member-document copy `kind: "document"`, as the writer hands them. Re-run: case-authoring tests 190, pass 190, fail 0; format 0, architecture 0, coverage 48/48, ownership 0. Size (session_01RymrBMQ5XEGoEKerL7JfqT): test runs 20, module lines 3008
 
 **Tests.** Deleted here because case-inputs holds them: the moved-only arms of statement, drafts, outcomes, openrequests, waiting, invariants and dec149, and t46-words.test.mjs whole (K3022's one case-authoring red goes with it). Kept and re-tagged: R14 (the acknowledgement list as printed, the writer printed, each asked once per act), R27 (no statementack here; the dead answer is case-inputs'), R34 (the sign-step lines are `openRequestLine`'s, every row keyed; the unread line keyed), R38 (the adopted draft read through `whatChangedDraftOf`, the drafts untouched), R58, R65, R74, R25 (an acknowledger's stamp is case-inputs R13's, as the document lists it). New: signing.test.mjs (R75, R76); invariants' case-inputs R11/R16 arms (this module declares nothing; case-inputs' tables declared as its own; a refused declaration there is thrown by this factory and no instance kept). The fixture builds the real case-inputs (`w.ci`) on the same clock before case-authoring.
 
@@ -46,3 +47,7 @@ T47-32 complete on `job/T47/case-authoring` (merged `tranche/T47` through K3112)
 - Tests: case-authoring 190/190. Checks: format 0, architecture 0, coverage 48/48, ownership 0; run.mjs architecture 0, coverage failures none of mine.
 - Reds this merge opens in users (vs `tranche/T47` run the same way): review invariants.test.mjs (moved `DRAFTS_READ_MAX`; T47-33; NOT in rule 5 (8)'s list, please name it); action-replies R3 x3, R8 (T47-40); affordances R1 R12 R24, R14 R9 R18, R19 x2 (T47-49); control-plane R20 x3, R45, R64 x2 (T47-65); plane R17, R38, R39 (+ R33, not established as mine; its file failed to load on the baseline) (T47-66). consequences, case-check, tasks, op-declarations: nothing new.
 - Generated artifact staled: the plane bundle (inputs lose `src/case-authoring/schema.mjs`), rule 5 (4).
+
+## J3 · COMPLETE
+
+B4 applied after merging tranche/T47 (K3117): photos.test.mjs' photoMarks stand-in answers case-carriage R22's obscured {copy, label, marked, kind: "photo"}; the photo rows expect kind "photo", and documents.test.mjs' member-document copy expects kind "document" as case-carriage now hands it (its other R14 arm, red after the merge the same way). case-authoring tests 190/190; format 0, architecture 0, coverage 48/48, ownership 0. Record updated.
