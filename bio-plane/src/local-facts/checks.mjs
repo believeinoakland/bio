@@ -68,7 +68,7 @@ export const LOCAL_FACTS_CHECKS = Object.freeze({
     translation: RULE_WORDS['refusal.MACHINE_CANNOT_DRAFT_RULE'],
   },
   RULE_SECTION_UNKNOWN: {
-    check: "C-126.7", where: atRule("ruleDraft", "is-rule-section"),
+    check: "C-126.7", where: atRule("sectionRefusal", "is-rule-section"),
     translation: RULE_WORDS['refusal.RULE_SECTION_UNKNOWN'],
   },
   RULE_ENTRY_INVALID: {
