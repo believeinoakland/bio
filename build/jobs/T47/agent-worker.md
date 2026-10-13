@@ -1,6 +1,6 @@
 # agent-worker (T47)
 
-**Status** · session_01NmjWMB4Hpd3GS7Xi1Kiqge · depth 2 · RUNNING until 2026-10-13T20:44:43Z (agent-worker, control-plane and plane tests after B4's merge) · handled B4
+**Status** · session_01NmjWMB4Hpd3GS7Xi1Kiqge · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
