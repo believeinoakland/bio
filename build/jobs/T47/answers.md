@@ -30,7 +30,7 @@ Size (session_01C7z3ksZT88uRq5xSFCgo2P): test runs 3, module lines 1894
 - `checks/format.mjs`: 0 failures; `architecture.mjs … answers`: 0 failures; `coverage.mjs … answers`: 35 of 35 live ids named, 0 failures; `ownership.mjs … tranche/T47`: 0 failures.
 - `checks/run.mjs`: format 0, architecture 0 failures (3071 files), channels 0; coverage 43 failures, none answers'.
 
-Size (session_01C7z3ksZT88uRq5xSFCgo2P): test runs 9, module lines 1902
+Size (session_01C7z3ksZT88uRq5xSFCgo2P): test runs 9, module lines 1899
 
 ## J1 · REPORT
 
