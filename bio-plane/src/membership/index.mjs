@@ -1,6 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R141; T47's R141, the handle `admin` reserved for the founder
+ * Requirements: build/requirements/membership.md (R4–R142; T47's R142 (K3078: the viewer's own handles taken, C-56.6 read
+ * by key, the census of project acts), R141, the handle `admin` reserved for the founder
  * (K3076); T47-82's R140, `screens-entry` after `interface-shell` in
  * R83's order (K3064, K3069); T47's R133, the frozen `*_CHECKS` tables (K3037); T47's R83 order (`case-inputs`, `action-records`,
  * `screens-wizards`, `screens-investigate`, `screens-publish`, `screens-action`; T47-7, K657, K3027, N991) and R132, the
@@ -41,7 +42,7 @@ export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES, MEMBERSHIP_DECLARE
 import { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
          CASE_AUTHORITY_CHECKS, HANDLE_WORDS } from "./checks.mjs";
 export { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
-         CASE_AUTHORITY_CHECKS, HANDLE_WORDS } from "./checks.mjs";
+         CASE_AUTHORITY_CHECKS, HANDLE_WORDS, REFUSAL_WORDS } from "./checks.mjs";
 import { recordOf } from "../record-core/index.mjs";
 
 /* The marker every generated statement carries (moved from query.mjs with `viewerPredicate`, K57). It is a SQL
@@ -2320,7 +2321,9 @@ export class Membership {
         const who = viewerPredicate(viewer).member;
         const row = who && who !== Membership.ROOT_ADMIN
           ? this.#one(`SELECT member_id, status FROM members WHERE member_id=?`, who) : null;
-        if (row && row.status === "active") { key = `member:${row.member_id}`; self = row.member_id; }
+        /* R142 (1) (T47; K3078): a member's own current and earlier handles are taken to them too (handles are fixed for
+           good, DEC-197), so the viewer arm excludes no one: `self` stays null. */
+        if (row && row.status === "active") key = `member:${row.member_id}`;
       }
       if (!key) return { ...Membership.#INVITE_MISS };
       const now = Date.now();
