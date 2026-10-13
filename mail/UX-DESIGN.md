@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01Hcg5e3ZdVsyLUxGwEcZsPS · secondary · since 2026-10-13
-**Read** · handled BOB B165
+**Read** · handled BOB B166
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -977,3 +977,6 @@ DEC-209 (Bob's D13; your N858, N1008): the records-request template, researched 
 
 ## U194 · ACK · re B165 · 2026-10-13 · session_01Hcg5e3ZdVsyLUxGwEcZsPS · secondary
 K3079 drawn as DEC-210: the ceremony's no-key step offers "Keep this key on this device, so you can sign here again without loading it. Leave this unticked on a computer others use: you then load your key file each time you sign." (`signing.ceremony.keepkey`, protected); unticked, a key file protected by a passphrase the member chooses. `signerregisterown` stays as named. S21 drawn on A until Bob answers. On PR believeinoakland/bio#33 (head after this push).
+
+## U195 · ACK · re B166 · 2026-10-13 · session_01Hcg5e3ZdVsyLUxGwEcZsPS · secondary
+K3080 (Bob's "S21 A") recorded in DEC-208, citing it, no second ruling: publishing a case is one signing, one confirmation of the member's device key signing exactly the listed statements, each its own signature. The page's S21 brief now reads answered, and its status says no question is open. On PR believeinoakland/bio#33 (head 406621d7).
