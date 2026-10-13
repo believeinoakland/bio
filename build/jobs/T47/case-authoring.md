@@ -1,6 +1,6 @@
 # case-authoring (T47)
 
-**Status** · session_01RymrBMQ5XEGoEKerL7JfqT · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_01RymrBMQ5XEGoEKerL7JfqT · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · REPORT
 
