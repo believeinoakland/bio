@@ -20737,19 +20737,19 @@ var RecordCore = class _RecordCore {
    *  so is a module's second registration; no module name, no non-empty list of names, or no function is
    *  `COUNTS_MALFORMED`. A refused registration registers nothing. It writes nothing. */
   registerCounts(module, keys, counts) {
-    const refuse29 = (code, detail, more) => {
+    const refuse30 = (code, detail, more) => {
       const row14 = RECORD_CORE_CHECKS[code];
       return { ...more, ok: false, reason: code, code, check: row14.check, translation: row14.translation, detail };
     };
     if (typeof module !== "string" || !module.trim() || !Array.isArray(keys) || keys.length === 0 || !keys.every((k) => typeof k === "string" && k.trim() !== "") || typeof counts !== "function")
-      return refuse29("COUNTS_MALFORMED", "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.", { module: typeof module === "string" ? module : null });
+      return refuse30("COUNTS_MALFORMED", "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.", { module: typeof module === "string" ? module : null });
     let clash = this.#countsBy.some((r) => r.module === module) ? { heldBy: module } : null;
     for (let i = 0; !clash && i < keys.length; i++) {
       const held2 = keys.indexOf(keys[i]) < i ? module : this.#countsBy.find((r) => r.keys.includes(keys[i]))?.module;
       if (held2) clash = { key: keys[i], heldBy: held2 };
     }
     if (clash)
-      return refuse29("COUNTS_DECLARED", clash.key === void 0 ? `${module} has already registered its figures; nothing more was registered.` : `the figure ${clash.key} is already reported by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
+      return refuse30("COUNTS_DECLARED", clash.key === void 0 ? `${module} has already registered its figures; nothing more was registered.` : `the figure ${clash.key} is already reported by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
     this.#countsBy.push({ module, keys: [...keys], counts });
     return { ok: true, module, keys: [...keys] };
   }
@@ -22082,12 +22082,12 @@ function governorOf(ctx, { env = null, now = null, random = null, record = null 
     return g;
   }
   const given6 = SUPPLIED.get(g);
-  const refuse29 = (name3) => {
+  const refuse30 = (name3) => {
     throw new Error(`governorOf: a caller supplied a different \`${name3}\` for a storage whose governor already holds another one a caller gave; host-governor refuses it rather than run against either silently (R26)`);
   };
-  if (env != null && given6.has("env") && !sameEnv(g.env, env)) refuse29("env");
-  for (const name3 of ["now", "random"]) if (opts[name3] != null && given6.has(name3) && g[name3] !== opts[name3]) refuse29(name3);
-  if (record != null && record !== g.core) refuse29("record");
+  if (env != null && given6.has("env") && !sameEnv(g.env, env)) refuse30("env");
+  for (const name3 of ["now", "random"]) if (opts[name3] != null && given6.has(name3) && g[name3] !== opts[name3]) refuse30(name3);
+  if (record != null && record !== g.core) refuse30("record");
   for (const name3 of Object.keys(opts))
     if (opts[name3] != null && !given6.has(name3)) {
       g[name3] = opts[name3];
@@ -23139,7 +23139,7 @@ var MODULE_ORDER = Object.freeze([
 var isObj2 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var LISTENER_REFUSAL_FIELDS = /* @__PURE__ */ new Set(["ok", "reason", "code", "detail", "module", "check", "translation"]);
 function listenerRefusal(held2, module, fn, extra) {
-  const refuse29 = (code, detail, fields) => {
+  const refuse30 = (code, detail, fields) => {
     const row14 = MEMBERSHIP_CHECKS[code];
     let own10 = {};
     try {
@@ -23149,8 +23149,8 @@ function listenerRefusal(held2, module, fn, extra) {
     }
     return { ...own10, ok: false, reason: code, code, detail, ...fields, check: row14.check, translation: row14.translation };
   };
-  const malformed6 = (detail) => refuse29("LISTENER_MALFORMED", detail, {});
-  const declared2 = (detail, holder3) => refuse29("LISTENER_DECLARED", detail, { module: holder3 });
+  const malformed6 = (detail) => refuse30("LISTENER_MALFORMED", detail, {});
+  const declared2 = (detail, holder3) => refuse30("LISTENER_DECLARED", detail, { module: holder3 });
   try {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return malformed6("a listener names the module that registers it and its function");
@@ -25798,20 +25798,20 @@ var Membership = class _Membership {
   /** R109: an administrator records the description; each call appends a whole record and overwrites none. */
   groupDescriptionSet({ kinds: kinds3, otherKind = null, focus = null, purpose = null, visibility = null, by = null } = {}) {
     if (!this.isAdministrator(by)) return notAnAdmin(by, "describing the group");
-    const refuse29 = (code, detail, extra) => _Membership.#rowRefusal(code, `${detail} Nothing was written.`, extra);
+    const refuse30 = (code, detail, extra) => _Membership.#rowRefusal(code, `${detail} Nothing was written.`, extra);
     if (!Array.isArray(kinds3) || kinds3.some((k) => !_Membership.GROUP_KINDS.includes(k)))
-      return refuse29("GROUP_KIND_UNKNOWN", `the kinds are a list drawn from ${_Membership.GROUP_KINDS.join(", ")}, and may be empty.`);
+      return refuse30("GROUP_KIND_UNKNOWN", `the kinds are a list drawn from ${_Membership.GROUP_KINDS.join(", ")}, and may be empty.`);
     const ks = [...new Set(kinds3)];
     const other = ks.includes("other") ? _Membership.#text(otherKind) : null;
     if (ks.includes("other") && !other)
-      return refuse29("GROUP_KIND_OTHER_EMPTY", "`other` was chosen, and the kind it describes was left empty.");
+      return refuse30("GROUP_KIND_OTHER_EMPTY", "`other` was chosen, and the kind it describes was left empty.");
     const f17 = _Membership.#text(focus), p3 = _Membership.#text(purpose);
     for (const [name3, v, max] of [["otherKind", other, 120], ["focus", f17, 1e3], ["purpose", p3, 4e3]])
       if (v !== null && v.length > max)
-        return refuse29("GROUP_DESCRIPTION_TOO_LONG", `${name3} is at most ${max} characters.`, { field: name3, max });
+        return refuse30("GROUP_DESCRIPTION_TOO_LONG", `${name3} is at most ${max} characters.`, { field: name3, max });
     const vis = visibility === void 0 || visibility === null ? "members" : visibility;
     if (vis !== "members" && vis !== "public")
-      return refuse29("GROUP_VISIBILITY_UNKNOWN", "the description is seen by `members` or by the `public` too.");
+      return refuse30("GROUP_VISIBILITY_UNKNOWN", "the description is seen by `members` or by the `public` too.");
     const at48 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(`INSERT INTO group_description (kinds, other_kind, focus, purpose, visibility, set_by, at)
                    VALUES (?,?,?,?,?,?,?)`, JSON.stringify(ks), other, f17, p3, vis, by, at48);
@@ -31884,19 +31884,19 @@ var Provenance = class {
    *  from a total that something was withheld. Nothing publishes how many rows
    *  the gate removed, because that count is the leak (REC-36). */
   versionChain({ addressNorm = null, at: at48 = null, limit = null, offset = 0, viewer = null } = {}) {
-    const refuse29 = (key2, detail) => {
+    const refuse30 = (key2, detail) => {
       const row14 = VERSION_CHAIN_CHECKS[key2];
       return { ok: false, reason: key2, check: row14.check, translation: row14.translation, detail };
     };
     const addr = addressNorm == null ? "" : String(addressNorm).trim();
     if (!addr)
-      return refuse29(
+      return refuse30(
         "VERSION_CHAIN_NO_ADDRESS",
         "op=versionchain answers for ONE document address: pass address=<url>. The plane normalises it with the same normaliser the capture wrote it with, so the address you captured is the address that answers."
       );
     const anchor = at48 == null ? "" : String(at48).trim().toLowerCase();
     if (anchor && !/^[0-9a-f]{64}$/.test(anchor))
-      return refuse29(
+      return refuse30(
         "VERSION_CHAIN_BAD_ANCHOR",
         `at=${JSON.stringify(String(at48).slice(0, 80))} is not a sha256. A version is anchored by the capture identity of its bytes, which is 64 hex characters.`
       );
@@ -31950,7 +31950,7 @@ var Provenance = class {
     if (anchor) {
       anchorRow = shape(this.#one(`${CHAIN2} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor));
       if (!anchorRow)
-        return refuse29(
+        return refuse30(
           "VERSION_CHAIN_NO_SUCH_VERSION",
           `no version with capture ${anchor.slice(0, 12)}\u2026 is held at ${addr}. A capture the record does not hold, one filed at a different address, and one inside a project you were not invited to answer identically here, deliberately.`
         );
@@ -37143,7 +37143,7 @@ function expandRecurrence(args) {
   let k = 0;
   const span3 = r.freq === "WEEKLY" ? 7 * r.interval : r.freq === "MONTHLY" ? 28 * r.interval : 365 * r.interval;
   if (fromDay - dtDay > 2 * span3) k = Math.max(0, Math.floor((fromDay - dtDay) / (r.freq === "WEEKLY" ? 7 * r.interval : r.freq === "MONTHLY" ? 31 * r.interval : 366 * r.interval)) - 1);
-  const instances79 = [];
+  const instances80 = [];
   const notes2 = [];
   let truncated6 = false;
   for (let guard = 0; guard < 1e5; guard++, k++) {
@@ -37172,7 +37172,7 @@ function expandRecurrence(args) {
         notes2.push(`${dayText(n2)} excluded (EXDATE)`);
         continue;
       }
-      if (instances79.length >= MAX_INSTANCES) {
+      if (instances80.length >= MAX_INSTANCES) {
         truncated6 = true;
         stop2 = true;
         break;
@@ -37180,7 +37180,7 @@ function expandRecurrence(args) {
       if (it.shifted) notes2.push(`${dayText(n2)}: the wall time does not occur in ${zone}; the instance is the time after the gap`);
       const w = it.t + offsetAt(it.t, zone), wn = Math.floor(w / 86400), ws = w - wn * 86400;
       const p24 = (x) => String(x).padStart(2, "0");
-      instances79.push({
+      instances80.push({
         value: ds.dt.precision === "day" ? dayText(wn) : `${dayText(wn)}T${p24(Math.floor(ws / 3600))}:${p24(Math.floor(ws / 60) % 60)}`,
         precision: ds.dt.precision === "day" ? "day" : "minute",
         zone,
@@ -37190,8 +37190,8 @@ function expandRecurrence(args) {
     if (stop2) break;
   }
   const trace = { rrule, dtstart, zone, from, to, limits: { months: MAX_MONTHS, instances: MAX_INSTANCES }, notes: notes2, runtime: runtimeVersions() };
-  if (truncated6) trace.notes.push(`stopped at ${instances79.length >= MAX_INSTANCES ? `${MAX_INSTANCES} instances` : `${MAX_MONTHS} months after from`}`);
-  return { instances: instances79, truncated: truncated6, trace };
+  if (truncated6) trace.notes.push(`stopped at ${instances80.length >= MAX_INSTANCES ? `${MAX_INSTANCES} instances` : `${MAX_MONTHS} months after from`}`);
+  return { instances: instances80, truncated: truncated6, trace };
 }
 function periodFor(y, f17) {
   const [mm, dd] = f17.start.split("-").map(Number);
@@ -40622,10 +40622,10 @@ var DERIVATION_FIELDS = Object.freeze(["kind", "from", "to", "as_of", "method"].
 function derivedConnectionLegFindings(label, leg2, findings) {
   const l2 = leg2 && typeof leg2 === "object" ? leg2 : {};
   if (typeof l2.target !== "string" || !DERIVED_CONNECTION_ID_RE.test(l2.target)) return false;
-  const refuse29 = (message2, repairs) => findings.push(derivedLegRefusal(message2, repairs));
+  const refuse30 = (message2, repairs) => findings.push(derivedLegRefusal(message2, repairs));
   const missing2 = DERIVATION_FIELDS.filter((k) => typeof l2[k] !== "string" || l2[k].trim() === "");
   for (const k of missing2) {
-    refuse29(
+    refuse30(
       `${label}.${k} is missing or empty on a leg on a derived connection (${l2.target}): the leg carries the five fields the connection was derived from (${DERIVATION_FIELDS.join(", ")}), each a non-empty string, so a reader can derive it again`,
       [`state ${k} on ${label}, as the connection's derivation gives it`]
     );
@@ -40639,7 +40639,7 @@ function derivedConnectionLegFindings(label, leg2, findings) {
       method: l2.derivation_method
     });
     if (id !== l2.target) {
-      refuse29(
+      refuse30(
         `${label}.target ${l2.target} is not the id of the derivation the leg carries (${id}): a derived connection is named by the SHA-256 of its five fields, so a leg whose target and fields disagree names two different connections`,
         [
           `set ${label}.target to ${id}, the id its derivation_* fields give`,
@@ -40653,7 +40653,7 @@ function derivedConnectionLegFindings(label, leg2, findings) {
     l2,
     `a derived connection (${l2.target})`,
     "its grade is its chain's, the weakest hop of the derivation, and never authored",
-    refuse29
+    refuse30
   );
   return true;
 }
@@ -40697,7 +40697,7 @@ function readBiasApplied(row14) {
 }
 function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, checkId = INQUIRY_GRAMMAR_CHECKS.BIAS_APPLICATION_MALFORMED.check } = {}) {
   let n2 = 0;
-  const refuse29 = (message2, repairs) => {
+  const refuse30 = (message2, repairs) => {
     findings.push(biasApplicationRefusal(checkId, message2, repairs));
     n2++;
   };
@@ -40705,7 +40705,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
   let entries;
   if (plainObject(value)) {
     if (carries(value.bias_applied)) {
-      refuse29(
+      refuse30(
         `${label}.bias_applied is not how a bias application is written: each one is written beside the other fields as numbered keys, ${FORM2}`,
         [`write each application as ${FORM2}, and remove bias_applied from ${label}`]
       );
@@ -40716,12 +40716,12 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
       if (!m) continue;
       const shown3 = k.slice(0, 60);
       if (!isCanonicalN(m[1])) {
-        refuse29(
+        refuse30(
           `${label}.${shown3} is not a key of a bias application: its number is written 1, 2, 3 and so on`,
           [`renumber ${shown3} on ${label}, the applications numbered from 1`]
         );
       } else if (!BIAS_APPLICATION_KEYS.includes(m[2])) {
-        refuse29(
+        refuse30(
           `${label}.${shown3} is not a key of a bias application, which writes ${BIAS_APPLICATION_KEYS.join(", ")} only`,
           [`remove ${shown3} from ${label}`]
         );
@@ -40731,7 +40731,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
     if (numbers.size !== top2) {
       const gaps = [];
       for (let i = 1; i <= top2 && gaps.length < 5; i++) if (!numbers.has(i)) gaps.push(i);
-      refuse29(
+      refuse30(
         `${label}'s bias applications are numbered up to ${top2} with ${gaps.join(", ")}${gaps.length === 5 ? " and more" : ""} missing: they are numbered from 1 with none left out, so a reader can tell none was dropped`,
         [`renumber the bias_<n>_ keys on ${label} 1, 2, 3 and so on`]
       );
@@ -40746,7 +40746,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
     if (!carries(value) || Array.isArray(value) && value.length === 0) return 0;
     const at48 = `${label}.bias_applied`;
     if (!Array.isArray(value)) {
-      refuse29(
+      refuse30(
         `${at48} is not a list: it lists each bias statement applied here, one {statement, effect} each`,
         [`make ${at48} a list of {statement, effect} items, or drop it \u2014 where no statement was applied there is none`]
       );
@@ -40756,7 +40756,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
     value.forEach((a, j) => {
       const item3 = `${at48}[${j}]`;
       if (!plainObject(a)) {
-        refuse29(
+        refuse30(
           `${item3} is not an object: an application names the statement applied and its effect, {statement, effect}`,
           [`state ${item3} as {statement, effect}, with from and to when the effect is grade_lowered`]
         );
@@ -40764,7 +40764,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
       }
       for (const k of Object.keys(a)) {
         if (!BIAS_APPLICATION_KEYS.includes(k)) {
-          refuse29(
+          refuse30(
             `${item3}.${k.slice(0, 40)} is not part of a bias application, which carries ${BIAS_APPLICATION_KEYS.join(", ")} only`,
             [`remove ${k.slice(0, 40)} from ${item3}`]
           );
@@ -40775,7 +40775,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
   }
   const count2 = Array.isArray(value) ? value.length : entries.length;
   if (count2 > BIAS_MAX) {
-    refuse29(
+    refuse30(
       `${label} carries ${count2} bias applications: at most ${BIAS_MAX} are recorded in one place`,
       [`keep the ${BIAS_MAX} applications that bear on it, or divide the question`]
     );
@@ -40784,19 +40784,19 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
   for (const { a, item: item3, field: field3 } of entries) {
     const st = a.statement;
     if (typeof st !== "string" || st.trim() === "") {
-      refuse29(
+      refuse30(
         `${field3("statement")} is missing or empty: an application names the bias statement applied, by its id as the project's declared bias holds it`,
         [`state ${field3("statement")}, the id of the statement in the project's declared bias`]
       );
     } else if ([...st].length > BIAS_STATEMENT_MAX || /["'\\\r\n#]/.test(st)) {
-      refuse29(
+      refuse30(
         `${field3("statement")} cannot be written in the record: a statement id is at most ${BIAS_STATEMENT_MAX} characters, with no quote, backslash, newline or #`,
         [`name the statement by an id of at most ${BIAS_STATEMENT_MAX} characters without those marks, as the declared bias holds it`]
       );
     }
     const effect = a.effect;
     if (typeof effect !== "string" || !effects.includes(effect)) {
-      refuse29(
+      refuse30(
         `${field3("effect")} '${String(effect).slice(0, 40)}' is not one of: ${effects.join(", ")}`,
         [`state what the statement did: ${effects.join(", ")}`]
       );
@@ -40804,16 +40804,16 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
     }
     if (effect === "grade_lowered") {
       const okFrom = BASIS_GRADES.includes(a.from), okTo = BASIS_GRADES.includes(a.to);
-      if (!okFrom) refuse29(
+      if (!okFrom) refuse30(
         `${field3("from")} '${String(a.from).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(", ")}: a lowered grade names the letter it was lowered from`,
         [`state ${field3("from")}, the grade before the statement was applied`]
       );
-      if (!okTo) refuse29(
+      if (!okTo) refuse30(
         `${field3("to")} '${String(a.to).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(", ")}: a lowered grade names the letter it was lowered to`,
         [`state ${field3("to")}, the grade after the statement was applied`]
       );
       if (okFrom && okTo && BASIS_GRADES.indexOf(a.to) <= BASIS_GRADES.indexOf(a.from)) {
-        refuse29(
+        refuse30(
           `${item3} lowers the grade from ${a.from} to ${a.to}, which is not lower: a statement applied as grade_lowered names a weaker letter than the one it started from`,
           [
             `state the letters the grade moved between, ${field3("to")} weaker than ${field3("from")}`,
@@ -40823,7 +40823,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
       }
     } else {
       for (const k of ["from", "to"]) {
-        if (carries(a[k])) refuse29(
+        if (carries(a[k])) refuse30(
           `${field3(k)} is set on a ${effect} application: only grade_lowered names the letters a grade moved between`,
           [`remove ${field3(k)}`]
         );
@@ -40832,7 +40832,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
     if (typeof st === "string" && st.trim() !== "") {
       const key2 = `${st}\0${effect}`;
       if (seen.has(key2)) {
-        refuse29(
+        refuse30(
           `${item3} applies the statement ${st.slice(0, 60)} as ${effect} a second time (${seen.get(key2)} already does): one statement's one effect here is recorded once`,
           [`remove ${item3}`]
         );
@@ -54874,7 +54874,7 @@ var Credentials = class _Credentials {
     if (typeof handle === "string" && handle !== "") role = this.#roleByHandle(handle);
     const gate = await this.#gate({ role, source: source2, country, password });
     if (gate.paused) return gate.paused;
-    const refuse29 = () => {
+    const refuse30 = () => {
       this.#refusedAttempt(gate, country);
       return _Credentials.#refused();
     };
@@ -54882,10 +54882,10 @@ var Credentials = class _Credentials {
       const m = this.#memberFacts(role.slice(7));
       if (!m || m.status !== "active") {
         await _Credentials.#payLoginCost(password);
-        return refuse29();
+        return refuse30();
       }
     }
-    if (!await this.#passwordMatches(role, password)) return refuse29();
+    if (!await this.#passwordMatches(role, password)) return refuse30();
     const token = _Credentials.#rand(32);
     const now = Date.now();
     const own10 = device === "own";
@@ -55778,14 +55778,14 @@ var Credentials = class _Credentials {
      `member` naming no member of the roster ('organisation', a project, a machine class) is refused as any principal
      but the acting member is: NOT_YOUR_ACCOUNT, or ACCOUNT_MEMBER_NOT_ACTIVE when it names the actor themself (K1756). */
   #accountBar(member2, by) {
-    const refuse29 = (code, detail) => _Credentials.#row(ACCOUNT_CHECKS, code, detail);
+    const refuse30 = (code, detail) => _Credentials.#row(ACCOUNT_CHECKS, code, detail);
     if (by === null || by === void 0 || by === "" || isMachineIdentity(by))
-      return refuse29("MACHINE_CANNOT_HOLD_ACCOUNT", "a member's Claude account is held only by that member's own act, from their own signed-in session; this caller has no member behind it. Nothing was written.");
+      return refuse30("MACHINE_CANNOT_HOLD_ACCOUNT", "a member's Claude account is held only by that member's own act, from their own signed-in session; this caller has no member behind it. Nothing was written.");
     const id = _Credentials.#memberOf(member2);
     if (id === null || _Credentials.#memberOf(by) !== id)
       return _Credentials.#notYours("a member's Claude account is acted on only by that member; another member, an administrator or the founder cannot. Nothing was written.");
     if (!this.#holderActive(id))
-      return refuse29("ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member holds a Claude account reference. Nothing was written.");
+      return refuse30("ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member holds a Claude account reference. Nothing was written.");
     return null;
   }
   /* R22–R24, R27, R35: NOT_YOUR_ACCOUNT, minted here alone; `detail` is the asking act's fixed sentence. */
@@ -57270,17 +57270,17 @@ var Credentials = class _Credentials {
      default and set only by their own act, as a reference's is; a sign-in is never refused for being one. */
   async aiGrantMintStanding({ member: member2 = null, question = null } = {}) {
     const id = _Credentials.#memberOf(member2);
-    const refuse29 = (code, detail) => _Credentials.#row(ACCOUNT_CHECKS, code, detail, { member: id });
+    const refuse30 = (code, detail) => _Credentials.#row(ACCOUNT_CHECKS, code, detail, { member: id });
     if (id === null || isMachineIdentity(member2) || this.#memberFacts(id)?.status !== "active")
-      return refuse29("ACCOUNT_MEMBER_NOT_ACTIVE", "a standing question runs only for an active member. Nothing was minted.");
+      return refuse30("ACCOUNT_MEMBER_NOT_ACTIVE", "a standing question runs only for an active member. Nothing was minted.");
     const away = this.aiKeptAway({ use: "standing" });
     if (away) return away;
     const serving = this.#servingAccount(id);
     if (!serving) return this.#noAccount(id);
     if (!serving.standing)
-      return refuse29("STANDING_SWITCH_OFF", `standing questions are off for the ${serving.level === "group" ? "group's key" : serving.signin ? "member's own sign-in" : "member's own account"}, which would serve this one. Nothing was minted.`);
+      return refuse30("STANDING_SWITCH_OFF", `standing questions are off for the ${serving.level === "group" ? "group's key" : serving.signin ? "member's own sign-in" : "member's own account"}, which would serve this one. Nothing was minted.`);
     if (typeof question !== "string" || question.trim() === "")
-      return refuse29("NO_QUESTION", "no standing question was named. Nothing was minted.");
+      return refuse30("NO_QUESTION", "no standing question was named. Nothing was minted.");
     return this.#mintGrant(id, "", Date.now() + AI_GRANT_TTL_SECONDS * 1e3, "standing");
   }
   /* R28, R31: the live grant a token names, or null: unexpired and, for an ask's, its session live and the member's;
@@ -57667,13 +57667,13 @@ var Credentials = class _Credentials {
     };
     const admin = this.#roleIsActive(asked);
     const given6 = typeof code === "string" && code.trim() !== "";
-    const refuse29 = () => {
+    const refuse30 = () => {
       this.#refusedAttempt(gate, country);
       return _Credentials.#recoveryRefused();
     };
     if (!(matches2() !== null && admin && given6)) {
       await _Credentials.#payLoginCost(password);
-      return refuse29();
+      return refuse30();
     }
     const hashed = await _Credentials.#hashFor(password);
     const done = this.#tx(() => {
@@ -57686,7 +57686,7 @@ var Credentials = class _Credentials {
       this.sql.exec(`INSERT INTO recoveries (role, at) VALUES (?,?)`, asked, at48);
       return { ok: true, role: asked, remaining: unspent(asked).length };
     });
-    if (!done) return refuse29();
+    if (!done) return refuse30();
     this.#succeeded(gate);
     return done;
   }
@@ -58634,20 +58634,20 @@ function captureOf(ctx, opts = {}) {
     return c;
   }
   const given6 = supplied.get(c);
-  const refuse29 = (name3) => {
+  const refuse30 = (name3) => {
     throw new Error(`captureOf: a caller supplied a different \`${name3}\` for a storage whose capture already holds another one a caller gave; capture refuses it rather than run against either silently (R58)`);
   };
-  if (opts.env != null && given6.has("env") && !sameEnv2(c.env, opts.env)) refuse29("env");
-  if (opts.governor != null && given6.has("governor") && c.governor !== opts.governor) refuse29("governor");
-  if (opts.ownHosts != null && given6.has("ownHosts") && !Capture.sameHosts(c.ownHosts, opts.ownHosts)) refuse29("ownHosts");
-  if (typeof opts.now === "function" && given6.has("now") && c.clock !== opts.now) refuse29("now");
+  if (opts.env != null && given6.has("env") && !sameEnv2(c.env, opts.env)) refuse30("env");
+  if (opts.governor != null && given6.has("governor") && c.governor !== opts.governor) refuse30("governor");
+  if (opts.ownHosts != null && given6.has("ownHosts") && !Capture.sameHosts(c.ownHosts, opts.ownHosts)) refuse30("ownHosts");
+  if (typeof opts.now === "function" && given6.has("now") && c.clock !== opts.now) refuse30("now");
   for (const [name3, held2] of [
     ["record", () => c.core],
     ["provenance", () => c.provenance],
     ["attestation", () => c.attestation],
     ["acquisition", () => c.acquisition]
   ])
-    if (opts[name3] != null && opts[name3] !== held2()) refuse29(name3);
+    if (opts[name3] != null && opts[name3] !== held2()) refuse30(name3);
   if (opts.env != null && !given6.has("env")) {
     c.env = opts.env;
     given6.add("env");
@@ -75774,11 +75774,11 @@ WHERE ${gate.sql}`,
   };
 }
 function savedForm(query = {}, relation2 = null) {
-  const refuse29 = (reason2, detail, warnings = []) => ({ ok: false, reason: reason2, detail, warnings });
+  const refuse30 = (reason2, detail, warnings = []) => ({ ok: false, reason: reason2, detail, warnings });
   try {
     const o = query && typeof query === "object" ? query : {};
     if (Array.isArray(o.ids) ? o.ids.length > 0 : o.ids !== void 0 && o.ids !== null)
-      return refuse29("SAVED_QUERY_SELECTION", "it carries ids: a selection, not a search, and a selection is not re-run");
+      return refuse30("SAVED_QUERY_SELECTION", "it carries ids: a selection, not a search, and a selection is not re-run");
     const q10 = typeof o.q === "string" ? o.q : "";
     const implicitOp = o.implicitOp === "or" ? "or" : "and";
     const drops = [];
@@ -75794,11 +75794,11 @@ function savedForm(query = {}, relation2 = null) {
     const plan = compile4({ q: q10, implicitOp, zone: o.zone ?? null }, relation2);
     drops.push(...plan.drops);
     if (drops.length)
-      return refuse29("SAVED_QUERY_DROPS", `compiling it drops ${drops.length === 1 ? "a term" : `${drops.length} terms`}, so what would be saved is not what would run`, drops);
-    if (plan.ast === null) return refuse29("SAVED_QUERY_EMPTY", "no term of it compiles");
+      return refuse30("SAVED_QUERY_DROPS", `compiling it drops ${drops.length === 1 ? "a term" : `${drops.length} terms`}, so what would be saved is not what would run`, drops);
+    if (plan.ast === null) return refuse30("SAVED_QUERY_EMPTY", "no term of it compiles");
     return { ok: true, form: { v: 1, q: q10, implicitOp, sort, dir } };
   } catch {
-    return refuse29(
+    return refuse30(
       "SAVED_QUERY_DROPS",
       "its sort cannot be read, so what would be saved is not what would run",
       ["sort: not readable"]
@@ -91240,12 +91240,12 @@ async function knockOp(req, env, store, { json: json24, requiredArgument: requir
   if (req.method !== "POST") return json24({ ok: false, error: "knock is a POST" }, 405);
   const place4 = typeof country === "string" && country ? country : null;
   const stamp4 = place4 ? `&country=${encodeURIComponent(place4)}` : "";
-  const refuse29 = async (answer2, status) => {
+  const refuse30 = async (answer2, status) => {
     await tallyRefusal(store, doAnswer2, place4);
     return json24(answer2, status);
   };
   const raw = await req.arrayBuffer();
-  if (raw.byteLength > KNOCK.maxBytes + 4096) return refuse29(knockEnvelopeTooLarge(), 413);
+  if (raw.byteLength > KNOCK.maxBytes + 4096) return refuse30(knockEnvelopeTooLarge(), 413);
   let body;
   try {
     body = JSON.parse(new TextDecoder().decode(raw));
@@ -91253,7 +91253,7 @@ async function knockOp(req, env, store, { json: json24, requiredArgument: requir
     body = null;
   }
   if (!body || typeof body.contentB64 !== "string" && typeof body.contentText !== "string")
-    return refuse29({ ok: false, ...requiredArgument2(
+    return refuse30({ ok: false, ...requiredArgument2(
       "knock",
       "contentB64 or contentText",
       "a JSON body with contentB64=<base64> or contentText=<text>",
@@ -91263,13 +91263,13 @@ async function knockOp(req, env, store, { json: json24, requiredArgument: requir
   try {
     bytes2 = typeof body.contentB64 === "string" ? Uint8Array.from(atob(body.contentB64), (c) => c.charCodeAt(0)) : new TextEncoder().encode(body.contentText);
   } catch {
-    return refuse29({ ok: false, ...requiredArgument2("knock", "contentB64", "<base64>", "contentB64 is not valid base64") }, 400);
+    return refuse30({ ok: false, ...requiredArgument2("knock", "contentB64", "<base64>", "contentB64 is not valid base64") }, 400);
   }
-  if (bytes2.length === 0) return refuse29(knockEmpty(), 400);
+  if (bytes2.length === 0) return refuse30(knockEmpty(), 400);
   const evidence = typeof env.CAPTURES?.put === "function";
   const cap = evidence ? KNOCK.maxBytes : KNOCK.maxInline;
-  if (bytes2.length > cap) return refuse29(knockPayloadTooLarge(cap, evidence), 413);
-  if (isWeakKnockerSecret(body.knockerSecret)) return refuse29(knockerSecretWeak(), 400);
+  if (bytes2.length > cap) return refuse30(knockPayloadTooLarge(cap, evidence), 413);
+  if (isWeakKnockerSecret(body.knockerSecret)) return refuse30(knockerSecretWeak(), 400);
   const source2 = req.headers.get("cf-connecting-ip") || "unknown";
   const out = await doAnswer2(store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source2)}${stamp4}`, {
     method: "POST",
@@ -95041,10 +95041,10 @@ var Duties = class _Duties {
   }
   #derive(d, fields, from, to, asOf, viewer) {
     const view = this.view();
-    const { instances: instances79, errors } = this.#instances(d.duty_id, d.version, fields, from, to, viewer);
+    const { instances: instances80, errors } = this.#instances(d.duty_id, d.version, fields, from, to, viewer);
     const occurrences2 = [];
     const inForce = this.inForce(fields, asOf.slice(0, 10), viewer);
-    for (const inst of instances79) {
+    for (const inst of instances80) {
       if (d.withdrawn_at && inst.date && !isUndet(inst.date) && compare2(inst.date, d.withdrawn_at) === "after") continue;
       const key2 = _Duties.occurrenceKey(d.duty_id, d.version, inst.kind, inst.ref);
       occurrences2.push(this.#occurrence(d, fields, inst, key2, asOf, view, inForce, viewer));
@@ -95143,8 +95143,8 @@ var Duties = class _Duties {
   /* An occurrence key the duty derives in a broad window around `asOf` (two years either side), or null. */
   #occurrenceAt(d, fields, key2, asOf) {
     const day2 = asOf.slice(0, 10);
-    const { instances: instances79 } = this.#instances(d.duty_id, d.version, fields, addDays2(day2, -731), addDays2(day2, 731), INTERNAL);
-    for (const inst of instances79) if (_Duties.occurrenceKey(d.duty_id, d.version, inst.kind, inst.ref) === key2) return inst;
+    const { instances: instances80 } = this.#instances(d.duty_id, d.version, fields, addDays2(day2, -731), addDays2(day2, 731), INTERNAL);
+    for (const inst of instances80) if (_Duties.occurrenceKey(d.duty_id, d.version, inst.kind, inst.ref) === key2) return inst;
     return null;
   }
   /** R12: a member matches an event (or a held exception) to an occurrence, recorded with who, when and why, and
@@ -99957,18 +99957,18 @@ var Retrieval = class _Retrieval {
    *  (REC-36). THE REFUSALS ARE DEC-49's SHAPE, from this module's own rows (C-23.1, C-23.2). */
   meaningRows(input = {}) {
     const known3 = Object.keys(MEANING);
-    const refuse29 = (key2, detail) => {
+    const refuse30 = (key2, detail) => {
       const row14 = MEANING_READ_CHECKS[key2];
       return { ok: false, reason: key2, check: row14.check, translation: row14.translation, detail };
     };
     const asked = input.rows == null ? "" : String(input.rows).trim().toLowerCase();
     if (!asked)
-      return refuse29(
+      return refuse30(
         "MEANING_ROWS_NO_ARM",
         `op=meaningrows answers at MEANING grain and must be told which: rows=${known3.join("|")}. Each reads a different table and answers a different question, so there is no default that would not be answering something you did not ask.`
       );
     if (!known3.includes(asked))
-      return refuse29(
+      return refuse30(
         "MEANING_ROWS_UNKNOWN_ARM",
         `no meaning of the kind ${JSON.stringify(asked)} is held. The kinds that are: ` + known3.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; ")
       );
@@ -103003,8 +103003,8 @@ var EVALUATORS = {
     const p3 = deps.progressions;
     if (!p3 || typeof p3.proposalsFeed !== "function") return { results: [], denominator: { n: null, why: "the progressions module is not reachable here" }, evaluated: 0 };
     const feed = await p3.proposalsFeed(Date.parse(deps.now));
-    const instances79 = list3(feed, "instances").filter(plain3).slice(0, UNITS_MAX);
-    const rows4 = instances79.map((x) => {
+    const instances80 = list3(feed, "instances").filter(plain3).slice(0, UNITS_MAX);
+    const rows4 = instances80.map((x) => {
       const ooo = list3(x.findings, "findings").filter((f17) => plain3(f17) && f17.kind === "out_of_order");
       return { x, ooo, row: { instance: `${x.progression_key ?? x.progressionKey}\0${x.entity_id ?? x.entityId}`, late: ooo.length ? "true" : "false" } };
     });
@@ -108578,7 +108578,7 @@ var Progressions = class _Progressions {
       const d = recorded.get(pk + "::" + sk);
       return !!(d && d.applies);
     };
-    const instances79 = [];
+    const instances80 = [];
     const groups = /* @__PURE__ */ new Map();
     for (const p3 of this.#pairs()) {
       const inst = this.#assemble(p3.progression_key, p3.entity_id);
@@ -108590,7 +108590,7 @@ var Progressions = class _Progressions {
       const findings = [...missing2, ...overdueF, ...others];
       if (!findings.length) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
-      instances79.push({
+      instances80.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -108670,10 +108670,10 @@ var Progressions = class _Progressions {
     })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return {
       ok: true,
-      instances: instances79,
+      instances: instances80,
       proposals,
       dispositions,
-      instance_count: instances79.length,
+      instance_count: instances80.length,
       proposal_count: proposals.length,
       disposition_count: dispositions.length
     };
@@ -108697,7 +108697,7 @@ var Progressions = class _Progressions {
       established: f17.grade_determined === true && isEstablished(f17.grade),
       needs_confirmation: f17.grade === "C"
     });
-    const instances79 = [];
+    const instances80 = [];
     for (const r of rows4) {
       const ck = r.progression_key + "\0" + r.entity_id;
       let a = assembled.get(ck);
@@ -108716,7 +108716,7 @@ var Progressions = class _Progressions {
       const missing2 = inst.findings.filter((f17) => f17.kind === "missing_predecessor");
       const others = inst.findings.filter((f17) => f17.kind !== "missing_predecessor");
       const findings = [...missing2, ...a.overdue, ...others].map(project).map((f17) => ({ ...f17, disposition: a.decided.get(f17.stage_key) ?? null }));
-      instances79.push({
+      instances80.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -108729,7 +108729,7 @@ var Progressions = class _Progressions {
         open_finding_count: findings.filter((f17) => !(f17.disposition && f17.disposition.applies)).length
       });
     }
-    return { ok: true, capture_sha: captureSha, count: instances79.length, instances: instances79 };
+    return { ok: true, capture_sha: captureSha, count: instances80.length, instances: instances80 };
   }
   /* ===================================================================== *
    * THE CONNECTION OWNER (R40; connection-grammar R2, R6–R9; B1a.8).
@@ -116534,18 +116534,18 @@ var BasisVersions = class _BasisVersions {
    *  (the bound counts VERSIONS); an inquiry the viewer may not see answers exactly as one with no versions, and
    *  `inquiry_present` appears only when it is visible. The run a version names is reported, never joined (§14b.7). */
   basisVersions({ id = null, limit = null, offset = 0, viewer = null, project = null } = {}) {
-    const refuse29 = (key2, detail) => {
+    const refuse30 = (key2, detail) => {
       const row14 = BASIS_VERSION_CHECKS[key2];
       return { ok: false, reason: key2, check: row14.check, code: key2, translation: row14.translation, detail };
     };
     const inq = id == null ? "" : String(id).trim();
     if (!inq)
-      return refuse29(
+      return refuse30(
         "BASIS_VERSIONS_NO_INQUIRY",
         "op=basisversions answers for ONE inquiry: pass id=<INQ-\u2026>. Versions are versions of a question's basis, and there is no default question."
       );
     if (!isInquiryId(inq))
-      return refuse29(
+      return refuse30(
         "BASIS_VERSIONS_NOT_AN_INQUIRY",
         `${inq.slice(0, 60)} is not an inquiry. Only an inquiry has a basis, so only an inquiry has versions of one; an empty list here would say this thing has none when it could not have any.`
       );
@@ -116956,7 +116956,7 @@ var BasisVersions = class _BasisVersions {
     const a = args || {};
     const to = VERSION_ACT_TO[act2] ?? null;
     const preview = a.preview === true || a.preview === "1" || a.preview === "true";
-    const refuse29 = (key2, detail, extra) => {
+    const refuse30 = (key2, detail, extra) => {
       const row15 = VERSION_ACT_CHECKS[key2];
       return {
         ok: false,
@@ -116971,40 +116971,40 @@ var BasisVersions = class _BasisVersions {
     };
     const target = String(a.target ?? "").trim();
     if (!target)
-      return refuse29(
+      return refuse30(
         "VERSION_ACT_NO_INQUIRY",
         "a reading belongs to one question: pass target=<INQ-\u2026>. There is no default question and there must not be one."
       );
     if (!isInquiryId(target))
-      return refuse29(
+      return refuse30(
         "VERSION_ACT_NOT_AN_INQUIRY",
         `${target.slice(0, 60)} is not an inquiry, so it holds no readings of its evidence to act on.`,
         { target }
       );
     const vname = String(a.version ?? "").trim();
     if (!vname)
-      return refuse29(
+      return refuse30(
         "VERSION_ACT_NO_VERSION",
         "a question can hold several readings of its evidence: pass version=<name>. Acting on the wrong one is worse than being asked which was meant.",
         { target }
       );
     const who3 = String(a.author ?? "").trim();
     if (!who3 || isMachineIdentity(who3))
-      return refuse29(
+      return refuse30(
         "MACHINE_CANNOT_MOVE_VERSION",
         `op=version${act2} moves what the record stands on or shows, and the credential that called it is ${who3 ? "a machine" : "unnamed"}. A machine credential may COMPOSE an account of the evidence and propose it, and may never accept it, turn it down, set it aside, hide it, or make it what a project stands on. Sign in as a member.`,
         { target, version: vname }
       );
     const b = this.#visible(target, a.viewer ?? null);
     if (!b)
-      return refuse29(
+      return refuse30(
         "VERSION_ACT_NO_SUCH_VERSION",
         "no question by that id is readable here, so it holds no reading by that name either.",
         { target, version: vname }
       );
     let text7 = this.#doc(target);
     if (text7 === null)
-      return refuse29(
+      return refuse30(
         "VERSION_ACT_UNWRITABLE",
         "this question has no readable file, so nothing about its readings can be moved.",
         { target, version: vname }
@@ -117013,7 +117013,7 @@ var BasisVersions = class _BasisVersions {
     const rows4 = Array.isArray(fm.basis_versions) ? fm.basis_versions : [];
     const idx = rows4.findIndex((r) => r && typeof r === "object" && String(r.name ?? "").trim() === vname);
     if (idx < 0)
-      return refuse29(
+      return refuse30(
         "VERSION_ACT_NO_SUCH_VERSION",
         `this question holds no reading named '${vname.slice(0, 60)}'. Readings are named so a member can ask for one by name, and a name nobody wrote is refused rather than matched to the nearest.`,
         { target, version: vname, known: rows4.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) }
@@ -117021,7 +117021,7 @@ var BasisVersions = class _BasisVersions {
     const row14 = rows4[idx];
     const from = typeof row14.state === "string" ? row14.state.trim() : "";
     if (act2 !== "current" && setVersionField(text7, vname, "hidden", row14.hidden === true) === null)
-      return refuse29(
+      return refuse30(
         "VERSION_ACT_UNWRITABLE",
         "this question's version block could not be rewritten in place, so nothing was changed.",
         { target, version: vname }
@@ -117031,7 +117031,7 @@ var BasisVersions = class _BasisVersions {
       if (!member2.ok)
         return { ...member2, ok: false, reason: member2.reason, code: member2.code, act: act2, target, version: vname };
       if (member2.value)
-        return refuse29(
+        return refuse30(
           "PUBLISHED_CANNOT_MOVE_VERSION",
           `'${vname}' belongs to a question that is PUBLISHED, and a published case froze this finding at the version its members signed. Moving a reading from ${from || "no recorded state"} to ${to} would change what this finding rests on underneath an edition already on the record, leaving it deriving something the published bytes contradict. Reopen it (op=reopen), move the reading, and publish what changed as a new edition \u2014 the route DEC-12 built for exactly this, and the one op=inquiryground and op=inquirydivide already send you down. The pinned edition keeps its own signature and keeps answering.`,
           { target, version: vname, from, to, state: b.current_state }
@@ -117039,19 +117039,19 @@ var BasisVersions = class _BasisVersions {
     }
     const why2 = String(a.reason ?? "").trim();
     if (versionNeedsReason(to) && !why2)
-      return refuse29(
+      return refuse30(
         "VERSION_NO_REASON",
         `op=version${act2} records WHY. ${to === "rejected" ? "The record of what was turned down is the anti-omission instrument (\xA76 rule 4) and it is worthless without the reason" : "Setting a reading aside without saying why leaves the next reader unable to tell a judgement from an oversight"}.`,
         { target, version: vname, from, to }
       );
     if (why2.length > VERSION_REASON_MAX || /["\\\r\n]/.test(why2) || versionNeedsReason(to) && why2.length < VERSION_REASON_MIN)
-      return refuse29(
+      return refuse30(
         "VERSION_REASON_MALFORMED",
         `a reason is at most ${VERSION_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes. A reason for setting a reading aside or turning it down is at least ${VERSION_REASON_MIN} characters, the shortest the record keeps.`,
         { target, version: vname, reason_length: why2.length }
       );
     if (to !== null && !(VERSION_MACHINE.edges[from] || []).includes(to))
-      return refuse29(
+      return refuse30(
         "VERSION_ILLEGAL_TRANSITION",
         `'${vname}' is ${from || "in no recorded state"} and op=version${act2} would make it ${to}. The states are not a one-way ladder and being considered or turned down is reversible, but a reading a member ACCEPTED is a historical fact: it is corrected by turning it down or by putting it back under consideration, never by returning it to something nobody acted on.`,
         { target, version: vname, from, to, legal: VERSION_MACHINE.edges[from] || [] }
@@ -117062,7 +117062,7 @@ var BasisVersions = class _BasisVersions {
       if (inqTargets.length) {
         const cycle = this.inquiry.cyclePath(target, inqTargets);
         if (cycle)
-          return refuse29(
+          return refuse30(
             "VERSION_BASIS_CYCLE",
             `accepting '${vname}' would close a cycle: ${cycle.join(" -> ")}. An inquiry's basis is a DAG, and the chain above already rests on ${target}.`,
             { target, version: vname, path: cycle }
@@ -117079,7 +117079,7 @@ var BasisVersions = class _BasisVersions {
         const missing2 = declared2.filter((d) => !said11.includes(d));
         const unknown = said11.filter((s) => !declared2.includes(s));
         if (missing2.length || unknown.length)
-          return refuse29(
+          return refuse30(
             "VERSION_AFFIRMATION_INCOMPLETE",
             `'${vname.slice(0, 60)}' rests on ${declared2.length} separately sufficient parts and this answer counts the STRONGEST of them, so accepting it is a claim that each one would carry the finding on its own. ${missing2.length ? `Not affirmed: ${missing2.slice(0, 8).join(", ")}.` : ``}${unknown.length ? ` Named but not part of this reading: ${unknown.slice(0, 8).join(", ")}.` : ``} Pass affirmed=<every part, comma-separated>. DEC-32 rule 4: this cannot be carried by omission or by default, because that is exactly how a finding gets strengthened by repackaging.`,
             { target, version: vname, declared: declared2, affirmed: said11, missing: missing2, unknown }
@@ -117090,14 +117090,14 @@ var BasisVersions = class _BasisVersions {
     let projectId = null, projectRow = null;
     if (act2 === "current") {
       if (from !== "accepted")
-        return refuse29(
+        return refuse30(
           "VERSION_NOT_ACCEPTED",
           `'${vname}' is ${from || "in no recorded state"}. Current implies accepted (\xA76 rule 5), and exploring an unaccepted reading is done by CALCULATING OVER IT rather than by making it what everyone stands on \u2014 once a stance is shared, designating one temporarily would move a whole team's ground so one member could examine a possibility.`,
           { target, version: vname, from }
         );
       projectId = String(a.project ?? "").trim();
       if (!projectId)
-        return refuse29(
+        return refuse30(
           "VERSION_CURRENT_NO_PROJECT",
           "pass project=<PROJ-\u2026>: what a project stands on is the project's own dated declaration, and there is no default project.",
           { target, version: vname }
@@ -117108,7 +117108,7 @@ var BasisVersions = class _BasisVersions {
         if (existence) return existence;
       }
       if (!projectRow || normalizeType(projectRow.object_type) !== "project")
-        return refuse29(
+        return refuse30(
           "VERSION_CURRENT_UNRELATED",
           `${projectId.slice(0, 60)} is not a project readable here, so it holds no stance to move.`,
           { target, version: vname, project: projectId }
@@ -117117,13 +117117,13 @@ var BasisVersions = class _BasisVersions {
       if (denied) return denied;
       const ptext = this.#doc(projectId);
       if (!drawsOn(ptext !== null ? parseFrontmatter(ptext).data || {} : {}, target))
-        return refuse29(
+        return refuse30(
           "VERSION_CURRENT_UNRELATED",
           `${projectId} does not draw on ${target}, so it has no stance on this question to move. Cite the question into the project first.`,
           { target, version: vname, project: projectId }
         );
       if (setCurrentVersionRow(ptext, target, vname, who3, "") === null)
-        return refuse29(
+        return refuse30(
           "VERSION_ACT_UNWRITABLE",
           `${projectId}'s current_versions block could not be rewritten in place, so its stance cannot be recorded.`,
           { target, version: vname, project: projectId }
@@ -117173,7 +117173,7 @@ var BasisVersions = class _BasisVersions {
     }
     if (act2 === "hide" && text7 !== null) text7 = setVersionField(text7, vname, "hidden", hidden);
     if (text7 === null)
-      return refuse29(
+      return refuse30(
         "VERSION_ACT_UNWRITABLE",
         "this question's version block could not be rewritten in place, so nothing was changed.",
         { target, version: vname }
@@ -119239,13 +119239,14 @@ function addresseeIsOffice(cp) {
 function clockMovesNotMechanical(heldClock, nextClock, todayIso) {
   const held2 = Array.isArray(heldClock) ? heldClock : [];
   const next = Array.isArray(nextClock) ? nextClock : [];
+  const today2 = typeof todayIso === "string" && DATE_RE3.test(todayIso.slice(0, 10)) ? todayIso.slice(0, 10) : null;
   const bad2 = [];
   for (let i = 0; i < Math.max(held2.length, next.length); i++) {
     const a = held2[i], b = next[i];
     const sa = a && typeof a === "object" ? a.status : void 0;
     const sb = b && typeof b === "object" ? b.status : void 0;
     if (sa === sb) continue;
-    const passed = a && typeof a.date === "string" && DATE_RE3.test(a.date) && a.date < String(todayIso).slice(0, 10);
+    const passed = !!today2 && a && typeof a.date === "string" && DATE_RE3.test(a.date) && a.date < today2;
     if (sa === "pending" && sb === "overdue" && passed) continue;
     bad2.push({ ord: i, from: sa ?? null, to: sb ?? null });
   }
@@ -119680,21 +119681,21 @@ function overrideGroundFindings(override, findings) {
     return;
   }
   const parts = g.kind === "legal_deadline" ? ["kind", "citation", "date"] : ["kind", "what", "when"];
-  const refuse29 = (part, why2) => findings.push(coded(
+  const refuse30 = (part, why2) => findings.push(coded(
     `premise_override.ground.${part} ${why2} (R15)`,
     "OVERRIDE_GROUND_REFUSED",
     [`state the ${g.kind} ground's ${parts.slice(1).join(" and ")}, and nothing else`]
   ));
-  for (const k of extraKeys(g, parts)) refuse29(k, `is not a part of a ${g.kind} ground`);
+  for (const k of extraKeys(g, parts)) refuse30(k, `is not a part of a ${g.kind} ground`);
   if (g.kind === "legal_deadline") {
     if (!writable(g.citation, CITATION_MAX2))
-      refuse29("citation", `is not a citation of 1 to ${CITATION_MAX2} characters with no quote, backslash or line break`);
-    if (!isCalendarDate(g.date)) refuse29("date", `'${String(g.date ?? "").slice(0, 40)}' is not a real calendar date (YYYY-MM-DD)`);
+      refuse30("citation", `is not a citation of 1 to ${CITATION_MAX2} characters with no quote, backslash or line break`);
+    if (!isCalendarDate(g.date)) refuse30("date", `'${String(g.date ?? "").slice(0, 40)}' is not a real calendar date (YYYY-MM-DD)`);
   } else {
     if (!writable(g.what, FIELD_TEXT_MAX))
-      refuse29("what", `is not 1 to ${FIELD_TEXT_MAX} characters with no quote, backslash or line break`);
+      refuse30("what", `is not 1 to ${FIELD_TEXT_MAX} characters with no quote, backslash or line break`);
     if (!isCalendarDate(g.when) && !isLocalMinute(g.when))
-      refuse29("when", `'${String(g.when ?? "").slice(0, 40)}' is not a real date (YYYY-MM-DD) or a local time (YYYY-MM-DDTHH:MM)`);
+      refuse30("when", `'${String(g.when ?? "").slice(0, 40)}' is not a real date (YYYY-MM-DD) or a local time (YYYY-MM-DDTHH:MM)`);
   }
 }
 function officeEqual(a, b) {
@@ -120073,23 +120074,23 @@ var GOVERNING_LAW_CHECKS = {
   },
   NO_LAWS: {
     check: "C-73.2",
-    where: "src/actions/index.mjs #lawEntries > is-laws-entry",
+    where: "src/action-records/index.mjs lawEntries > is-laws-entry",
     translation: "The act names at least one law, each by its citation and its level. With none named there is nothing to set: a request whose laws nobody has stated reads as undetermined on its own, and setting an empty list would not make that any truer."
   },
   BAD_LAW_LEVEL: {
     check: "C-73.3",
-    where: "src/actions/index.mjs #lawEntries > is-laws-entry",
+    where: "src/action-records/index.mjs lawEntries > is-laws-entry",
     /* N246 (R18): the levels are the profile's (`jurisdictions` R31), named here from `LAW_LEVELS` itself. */
     translation: `Each law is stated at one of its levels: ${LAW_LEVELS.join(", ")}. One entry named a level outside those, so nothing was written.`
   },
   BAD_CITATION: {
     check: "C-73.4",
-    where: "src/actions/index.mjs #lawEntries > is-laws-entry",
+    where: "src/action-records/index.mjs lawEntries > is-laws-entry",
     translation: "Each law is named by its citation \u2014 a short reference such as a code section \u2014 and one entry was empty, too long, repeated, or held a quotation mark, backslash or line break, which this record cannot store. Nothing was written."
   },
   TOO_MANY_LAWS: {
     check: "C-73.5",
-    where: "src/actions/index.mjs #lawEntries > is-laws-entry",
+    where: "src/action-records/index.mjs lawEntries > is-laws-entry",
     translation: "One act states at most twelve governing laws. A request governed at the federal, state and local levels names a handful; a longer list is more likely a list of every law that might apply than of the ones that do. Nothing was written."
   },
   /* D-695 (R6): C-2.10's records-law arm (R4) at the write, a member's and a machine's alike: C-32.20 asks WHO
@@ -120213,9 +120214,10 @@ var RISK_TIER_REVISION_CHECKS = {
     where: "src/actions/index.mjs #tierFence > is-promote-risk-tier",
     translation: "After an action is created, its risk tier changes only through the risk-tier act, which records who changed it, when and why, and keeps every earlier tier readable. This write would have changed the tier, or the record of its earlier tiers, some other way, so nothing was written. Use the risk-tier act."
   },
+  /* T47 (R28; N961): C-90.2's and C-90.6's sites moved to `action-records` (`badRiskTier`, `actionRiskPropose`). */
   BAD_RISK_TIER: {
     check: "C-90.2",
-    where: "src/actions/index.mjs #badRiskTier > is-bad-risk-tier",
+    where: "src/action-records/index.mjs badRiskTier > is-bad-risk-tier",
     translation: 'A risk tier is 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). The act states one of those three; "not assessed" is what an action reads when nobody has stated one, and is not something to set. Nothing was written.'
   },
   RISK_TIER_REASON_REFUSED: {
@@ -120237,7 +120239,7 @@ var RISK_TIER_REVISION_CHECKS = {
      C-90.2's own code (BAD_RISK_TIER), the same condition. */
   RISK_PROPOSAL_BASIS_REFUSED: {
     check: "C-90.6",
-    where: "src/actions/index.mjs actionRiskPropose > is-risk-propose-basis",
+    where: "src/action-records/index.mjs actionRiskPropose > is-risk-propose-basis",
     translation: "A proposed risk tier carries its basis: what the proposer read the tier from, in its own words, kept beside the proposal. The basis was missing, longer than 500 characters, or held a quotation mark, backslash or line break, which this record cannot store. Nothing was written, and the action's tier was never going to change."
   }
 };
@@ -120437,7 +120439,8 @@ var ACTION_CATALOGUE_CHECKS = {
      `action-replies`' codes are their own families, C-149 and C-150 (K2845): `BEARING_REFUSED`, which R24 pushes, is
      C-150's row. Translations the job's drafts for BOB, the UX stream's to revise. New in T45 layer 9; awaiting T46's
      stamp. Since T46 (R26; N913) twenty-four of them read their translation by key from `ACTION_GRAMMAR_WORDS` above;
-     C-117.32, .41, .55, .57 and .58 keep the T45 drafts. */
+     C-117.32, .41, .55, .57 and .58 keep the T45 drafts. Since T47 (R28; N961) the receipt, scope and promise rows
+     (C-117.39, C-117.48–.52) name their sites in `action-records`, which raises them now. */
   DETERMINATION_NOT_NONCOMPLIANT: {
     check: "C-117.30",
     where: "src/actions/index.mjs #breachRefusal > is-breach-not-noncompliant",
@@ -120485,7 +120488,7 @@ var ACTION_CATALOGUE_CHECKS = {
   },
   RECEIPT_NOT_ON_SENT: {
     check: "C-117.39",
-    where: "src/actions/index.mjs actionReceipt > is-receipt-on-sent",
+    where: "src/action-records/index.mjs actionReceipt > is-receipt-on-sent",
     translation: ACTION_GRAMMAR_WORDS["refusal.RECEIPT_NOT_ON_SENT"]
   },
   OFFICE_STATUS_UNKNOWN: {
@@ -120530,27 +120533,27 @@ var ACTION_CATALOGUE_CHECKS = {
   },
   MACHINE_CANNOT_SET_SCOPE: {
     check: "C-117.48",
-    where: "src/actions/index.mjs actionScope > is-scope",
+    where: "src/action-records/index.mjs actionScope > is-scope",
     translation: ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_SET_SCOPE"]
   },
   SCOPE_NO_REASON: {
     check: "C-117.49",
-    where: "src/actions/index.mjs actionScope > is-scope",
+    where: "src/action-records/index.mjs actionScope > is-scope",
     translation: ACTION_GRAMMAR_WORDS["refusal.SCOPE_NO_REASON"]
   },
   SCOPE_UNCHANGED: {
     check: "C-117.50",
-    where: "src/actions/index.mjs actionScope > is-scope",
+    where: "src/action-records/index.mjs actionScope > is-scope",
     translation: ACTION_GRAMMAR_WORDS["refusal.SCOPE_UNCHANGED"]
   },
   MACHINE_CANNOT_RECORD_PROMISE: {
     check: "C-117.51",
-    where: "src/actions/index.mjs actionPromise > is-promise",
+    where: "src/action-records/index.mjs actionPromise > is-promise",
     translation: ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_RECORD_PROMISE"]
   },
   PROMISE_REFUSED: {
     check: "C-117.52",
-    where: "src/actions/index.mjs actionPromise > is-promise",
+    where: "src/action-records/index.mjs actionPromise > is-promise",
     translation: ACTION_GRAMMAR_WORDS["refusal.PROMISE_REFUSED"]
   },
   FOUND_ELSEWHERE_REFUSED: {
@@ -135775,14 +135778,14 @@ function coverJpeg(d, areas, maxPixels) {
   }
   const { frame, qt, hts, scan } = h;
   const nc = frame.comps.length;
-  const refuse29 = (note) => fromDct(new DctRefusal("UNSUPPORTED_PROCESS", { note }));
-  if (nc !== 1 && nc !== 3) throw refuse29(`${nc} components`);
-  if (scan.comps.length !== nc) throw refuse29(`multi-scan sequential: ${scan.comps.length} of ${nc} components in the first scan`);
+  const refuse30 = (note) => fromDct(new DctRefusal("UNSUPPORTED_PROCESS", { note }));
+  if (nc !== 1 && nc !== 3) throw refuse30(`${nc} components`);
+  if (scan.comps.length !== nc) throw refuse30(`multi-scan sequential: ${scan.comps.length} of ${nc} components in the first scan`);
   const hmax = Math.max(...frame.comps.map((c) => c.h)), vmax = Math.max(...frame.comps.map((c) => c.v));
   for (const c of frame.comps) {
     const hx = hmax / c.h, vx = vmax / c.v;
     if (!(c.h >= 1 && c.v >= 1 && (hx === 1 || hx === 2) && (vx === 1 || vx === 2)))
-      throw refuse29(`sampling ${frame.comps.map((x) => `${x.h}x${x.v}`).join(",")}`);
+      throw refuse30(`sampling ${frame.comps.map((x) => `${x.h}x${x.v}`).join(",")}`);
   }
   const ycc = nc === 3 && colourTransformOf(h).ycc;
   const single2 = nc === 1;
@@ -152906,17 +152909,17 @@ function publishRefusalStatus(pub) {
 async function prepareFinding({ bundleId, expectedSha, sig }, stub, ctx, { viewer, keys = null, statedInSitting = null, tag: tag2 = {} } = {}) {
   const { json: json24, doAnswer: doAnswer2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, storeName, cls: cls3, withBiasChecks: withBiasChecks2 } = ctx;
   const relay2 = { json: json24, storeRefusal: storeRefusal2 };
-  const refuse29 = (b, status) => ({ response: json24({ ...b, ...tag2, store: storeName, tokenClass: cls3 }, status) });
+  const refuse30 = (b, status) => ({ response: json24({ ...b, ...tag2, store: storeName, tokenClass: cls3 }, status) });
   const v = encodeURIComponent(viewer);
   const factsOut = await doAnswer2(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(bundleId)}&viewer=${v}`));
   if (factsOut.refused) return { response: storeRefused(factsOut, relay2) };
   if (!factsOut.answered) return { response: storeSilent2("ratify/gatefacts", factsOut.correlation) };
   const facts = factsOut.result;
-  if (!facts.ok) return refuse29(facts, 404);
+  if (!facts.ok) return refuse30(facts, 404);
   const early = findingFactsRefusal(facts, { bundleId, expectedSha, statedInSitting });
-  if (early) return refuse29(early.body, early.status);
+  if (early) return refuse30(early.body, early.status);
   if (!facts.signers.length)
-    return refuse29({
+    return refuse30({
       ok: false,
       reason: "NO_SIGNERS",
       detail: "no active registered signing keys; an admin must register a member key before anything can be ratified"
@@ -152928,7 +152931,7 @@ async function prepareFinding({ bundleId, expectedSha, sig }, stub, ctx, { viewe
     keys || facts.signers.map((s) => s.key_b64)
   );
   if (!sv.ok)
-    return refuse29({
+    return refuse30({
       ok: false,
       reason: "SIG_" + sv.reason,
       ...sv.keyB64 ? { keyB64: sv.keyB64 } : {},
@@ -152968,7 +152971,7 @@ async function prepareFinding({ bundleId, expectedSha, sig }, stub, ctx, { viewe
     parseFrontmatter
   );
   if (!gate.ok)
-    return refuse29({ ok: false, reason: "GATE_REFUSED", gateVersion: gate.gateVersion, findings: gate.findings }, 409);
+    return refuse30({ ok: false, reason: "GATE_REFUSED", gateVersion: gate.gateVersion, findings: gate.findings }, 409);
   const { shas, partShaSet } = await findingShas(image, partedRows, facts.registers);
   return { prepared: {
     bundleId,
@@ -163150,7 +163153,7 @@ function judge2(args) {
   if (malformed6.length) return { ok: false, refusals: [...new Set(malformed6)].map((field3) => ({ code: "MALFORMED", field: field3 })) };
   const refusals = [];
   const seen = /* @__PURE__ */ new Set();
-  const refuse29 = (r) => {
+  const refuse30 = (r) => {
     const k = canonicalJson(r);
     if (!seen.has(k)) {
       seen.add(k);
@@ -163166,7 +163169,7 @@ function judge2(args) {
   const copyrighted = judged.filter((r) => r.access !== "free");
   for (const r of copyrighted) {
     const caps3 = new Set((r.captures || []).map(shaKey).filter(Boolean));
-    for (const m of materials) if (m.included === true && caps3.has(shaKey(m.sha))) refuse29({ code: "COPYRIGHTED_TEXT_CARRIED", standard: r.standard, sha: shaKey(m.sha) });
+    for (const m of materials) if (m.included === true && caps3.has(shaKey(m.sha))) refuse30({ code: "COPYRIGHTED_TEXT_CARRIED", standard: r.standard, sha: shaKey(m.sha) });
   }
   const reliedOn = new Set(passages.filter((p3) => str32(p3.finding) && str32(p3.content_id)).map((p3) => p3.content_id));
   for (const r of copyrighted) {
@@ -163174,7 +163177,7 @@ function judge2(args) {
     const quoted5 = [];
     for (const q10 of r.passages || []) if (isObj37(q10) && str32(q10.content)) quoted5.push(q10.content);
     for (const p3 of passages) if (str32(p3.content_id) && caps3.has(shaKey(p3.capture_sha))) quoted5.push(p3.content_id);
-    for (const content of quoted5) if (!reliedOn.has(content)) refuse29({ code: "COPYRIGHTED_PASSAGE_UNRELIED", standard: r.standard, content });
+    for (const content of quoted5) if (!reliedOn.has(content)) refuse30({ code: "COPYRIGHTED_PASSAGE_UNRELIED", standard: r.standard, content });
   }
   const members3 = Array.isArray(fm.case_findings) ? fm.case_findings.map(String) : [];
   const legs = gradingFactsOf(fm) || {};
@@ -163191,7 +163194,7 @@ function judge2(args) {
     const found3 = [.../* @__PURE__ */ new Set([...wordsIn([c.claim, c.claim_detail]), ...caseWords])];
     const words13 = NONCONFORMING_WORDS.filter((w) => found3.includes(w));
     for (const standard2 of [...new Set(rows4.map((r) => r.standard))]) for (const word3 of words13)
-      refuse29({ code: "BENCHMARK_CALLED_NONCONFORMING", finding: finding6, standard: standard2, word: word3 });
+      refuse30({ code: "BENCHMARK_CALLED_NONCONFORMING", finding: finding6, standard: standard2, word: word3 });
   }
   const out = refusals.length ? { ok: false, refusals } : { ok: true };
   if (unjudged.length) out.unjudged = unjudged;
@@ -177689,6 +177692,7 @@ var measureWords = (calc) => `what the office does, as measured by ${calc}`;
 var ACT_RE2 = idPattern("ACT");
 var ACCEPTED_SAYS = "Another group's finding, accepted by this group at the edition named: read-only, never stronger than that edition.";
 var SOURCE_FACTS_UNRECORDED = "the source group's public identity and declared stake were not recorded when this edition was imported, so they read undetermined";
+var SOURCE_DECLARATION_SAYS = "the source group's public identity and declared stake as it declared them when they were read at import, current then, never as of the edition's signing";
 var VOID_SAYS = "A finding this determination rests on no longer stands, so each outcome reads undetermined until a member re-evaluates it by superseding it. The member's recorded outcome is kept beside it.";
 var MOVE_PAGES_MAX = 50;
 var VOID_SCAN_BATCHES = 50;
@@ -179059,9 +179063,11 @@ var Conformance = class _Conformance {
    * ===================================================================== */
   /* R2, R9, R24, R31–R34 (T45): each pinned finding's basis as read now, and R33's void causes, for one determination
      (`r`) as `viewer` reads it. `memo` (a page's, R11) holds each check's state, each import edition's facts and the
-     publisher moves, read once per page. Answers `{pins: Map(finding row → {basis, frozen?, hidden}), causes}`.
-     Every read is fail-closed: one that cannot complete is a cause `unreadable`, never not-void. Writes nothing. */
-  #bases(r, findingRows, viewer, memo = /* @__PURE__ */ new Map()) {
+     publisher moves, read once per page. With `sourceFacts` (R9's read, R39), an accepted finding's source identity and
+     stake are read from case-import as `viewer`; a list (R11) answers no basis and reads none. Answers `{pins:
+     Map(finding row → {basis, frozen?, hidden}), causes}`. Every read is fail-closed: one that cannot complete is a
+     cause `unreadable`, never not-void. Writes nothing. */
+  #bases(r, findingRows, viewer, memo = /* @__PURE__ */ new Map(), sourceFacts = false) {
     const once = (key2, ask2) => {
       if (!memo.has(key2)) {
         let v;
@@ -179124,12 +179130,7 @@ var Conformance = class _Conformance {
       }
       const ed = Number(x.edition);
       const imp = importOfRef(x.finding_id);
-      const facts = once(`imp:${imp}:${ed}`, () => this.caseImport.importedCase({ import: imp, edition: ed, viewer: null }));
-      const e2 = isObj41(facts) && facts !== THREW && facts.ok !== false && isObj41(facts.edition) ? facts.edition : {};
-      const gf = isObj41(e2.group_fields) ? e2.group_fields : {};
-      const identity = e2.identity ?? gf.identity ?? null;
-      const stake = e2.stake ?? gf.stake ?? null;
-      const editionDate = e2.edition_date ?? gf.edition_date ?? null;
+      const declared2 = sourceFacts && viewer != null ? this.#sourceFacts(imp, ed, viewer, once) : null;
       const seenBy = viewer == null ? null : once(`acc:${x.finding_id}:${ed}:${viewer}`, () => this.acceptedWork.acceptedFinding({ ref: x.finding_id, edition: ed, viewer }));
       const hidden = viewer != null && seenBy === null;
       const live7 = isObj41(seenBy) && isObj41(seenBy.pair) ? seenBy.pair : null;
@@ -179138,12 +179139,10 @@ var Conformance = class _Conformance {
         group: x.source_group ?? null,
         case: x.case_id,
         edition: ed,
-        edition_date: editionDate,
+        edition_date: null,
         accepted_at: x.accepted_at ?? null,
         accepted_by: x.accepted_by ?? null,
-        identity,
-        stake: stake ?? "undetermined",
-        ...identity === null || stake === null ? { identity_says: SOURCE_FACTS_UNRECORDED } : {},
+        ...declared2 ? { identity: declared2.identity, stake: declared2.stake, identity_label: SOURCE_DECLARATION_SAYS } : { identity: null, stake: "undetermined", identity_says: SOURCE_FACTS_UNRECORDED },
         says: ACCEPTED_SAYS
       }, live: live7, hidden });
       const moves = once("moves", () => this.#allMoves());
@@ -179179,6 +179178,30 @@ var Conformance = class _Conformance {
       }
     }
     return { pins, causes };
+  }
+  /* R32, R39 (N951): the source group's identity and declared stake for an accepted edition, mapped field by field from
+     the `group_fields` `case-import.importedCase` (its R4) answers for that edition, read as `viewer` (R4 answers a
+     viewer who is not an active member as if no import exists). `identity` is `{group, name, domain,
+     domain_verified_at, read_at}`, `stake` `group_fields.stake` as answered (null when the source declared none; a
+     stake not answered at all is undetermined, never read as none declared), never raised or re-read here; nothing is composed and no `identity` key is expected of the answer. Null when
+     `group_fields` is null, the import cannot be read, or the read throws (the caller then answers identity null, stake
+     undetermined). (N995, K3038) R4 answers no date of the source edition, so no `edition_date` is read here. */
+  #sourceFacts(imp, ed, viewer, once) {
+    const facts = once(`imp:${imp}:${ed}:${viewer}`, () => this.caseImport.importedCase({ import: imp, edition: ed, viewer }));
+    const e2 = isObj41(facts) && facts !== THREW && facts.ok !== false && isObj41(facts.edition) ? facts.edition : null;
+    const gf = e2 && Number(e2.edition) === ed && isObj41(e2.group_fields) ? e2.group_fields : null;
+    if (!gf) return null;
+    const field3 = (k) => Object.hasOwn(gf, k) && gf[k] !== void 0 ? gf[k] : null;
+    return {
+      identity: {
+        group: field3("group"),
+        name: field3("name"),
+        domain: field3("domain"),
+        domain_verified_at: field3("domain_verified_at"),
+        read_at: field3("read_at")
+      },
+      stake: Object.hasOwn(gf, "stake") && gf.stake !== void 0 ? gf.stake : "undetermined"
+    };
   }
   /* R33: every publisher move this copy recorded (accepted-work R8), page by page, bounded; null when they cannot be
      read (none registered, a failed read, or more than the bound). */
@@ -179258,7 +179281,7 @@ var Conformance = class _Conformance {
       did,
       LIMITS.findings
     );
-    const bases2 = this.#bases(r, pinned, viewer);
+    const bases2 = this.#bases(r, pinned, viewer, /* @__PURE__ */ new Map(), true);
     const pair2 = (p3) => isObj41(p3) ? { capture: axisOf(p3.capture), connection: axisOf(p3.connection), testimony: axisOf(p3.testimony) } : null;
     const findings = pinned.filter((x) => seen.sees(x.finding_id)).filter((x) => {
       if (bases2.pins.get(x).hidden) {
@@ -179534,12 +179557,12 @@ var Conformance = class _Conformance {
       ...args.slice(1),
       n2
     );
-    let listed2 = [], truncated6 = false, findingsOf2 = /* @__PURE__ */ new Map(), causesOf = /* @__PURE__ */ new Map(), scanCursor = null;
+    let listed2 = [], truncated6 = false, findingsOf3 = /* @__PURE__ */ new Map(), causesOf = /* @__PURE__ */ new Map(), scanCursor = null;
     if (wantVoid === null) {
       const page2 = select(args[0], cap + 1);
       truncated6 = page2.length > cap;
       listed2 = page2.slice(0, cap);
-      findingsOf2 = byItem(FINDINGS_SQL, listed2.map((r) => r.determination_id));
+      findingsOf3 = byItem(FINDINGS_SQL, listed2.map((r) => r.determination_id));
     } else {
       let from = args[0];
       for (let batch = 0; ; batch++) {
@@ -179558,7 +179581,7 @@ var Conformance = class _Conformance {
             break;
           }
           listed2.push(r);
-          findingsOf2.set(r.determination_id, fo.get(r.determination_id) || []);
+          findingsOf3.set(r.determination_id, fo.get(r.determination_id) || []);
           causesOf.set(r.determination_id, causes);
         }
         if (truncated6 || rows4.length < DETERMINATIONS_PAGE_MAX) break;
@@ -179574,7 +179597,7 @@ var Conformance = class _Conformance {
     const items = listed2.map((r) => {
       const [by] = supersededBy.get(r.determination_id) || [];
       const seen = this.#sight(viewer, sight);
-      const pinned = (findingsOf2.get(r.determination_id) || []).slice(0, LIMITS.findings);
+      const pinned = (findingsOf3.get(r.determination_id) || []).slice(0, LIMITS.findings);
       const bases2 = this.#bases(r, pinned, viewer, memo);
       const voided = _Conformance.voidOf(causesOf.get(r.determination_id) ?? bases2.causes);
       return seen.mark({
@@ -180581,7 +180604,7 @@ CREATE TABLE IF NOT EXISTS success_records (
 CREATE INDEX IF NOT EXISTS success_records_project ON success_records (project, id);
 -- R22 (T45): ONE ROW PER CARRY, appended to the record carried. kind is
 -- success, harm_addressed or cure; record_id the success record, the part, or
--- the cured determination; ref the standard of a cure; outcome case-authoring's
+-- the cured determination; ref the standard of a cure; outcome case-inputs'
 -- id for the carried outcome.
 CREATE TABLE IF NOT EXISTS consequence_carries (
   seq        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -180885,7 +180908,7 @@ var Consequences = class {
     calculations = null,
     entities: entities2 = null,
     people = null,
-    caseAuthoring = null,
+    caseInputs = null,
     passageText = null,
     now = null
   } = {}) {
@@ -180904,7 +180927,7 @@ var Consequences = class {
       calculations,
       entities: entities2,
       people,
-      caseAuthoring,
+      caseInputs,
       passageText
     };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
@@ -180937,8 +180960,8 @@ var Consequences = class {
   get people() {
     return this.#deps.people ||= this.#deps.host ? peopleOf(this.#deps.host) : null;
   }
-  get caseAuthoring() {
-    return this.#deps.caseAuthoring ||= this.#deps.host ? caseAuthoringOf(this.#deps.host) : null;
+  get caseInputs() {
+    return this.#deps.caseInputs ||= this.#deps.host ? caseInputsOf(this.#deps.host) : null;
   }
   /* R19 (T45): the one registered reader of the group's own acts (`actions` fills it). */
   #ownActReader = null;
@@ -182281,7 +182304,8 @@ var Consequences = class {
     };
   }
   /* ===================================================================== *
-   * R22 (T45): CARRYING AN OUTCOME INTO THE CASE'S NEXT EDITION, only through case-authoring's `carryOutcome` (its R71).
+   * R22 (T45): CARRYING AN OUTCOME INTO THE CASE'S NEXT EDITION, only through case-inputs' `carryOutcome` (its R9; T47, N908),
+   * reached on the one case-inputs instance for the host (`caseInputsOf`); its refusals and answer pass through unchanged.
    * Only text and cites pass: figures, sequence and cause stay here, unpublished, so a carried outcome states no cause.
    * ===================================================================== */
   /** R22: `{carry, case, text?, author, viewer}`, `carry` one of `{success: id}`, `{addressed: part}` or
@@ -182330,11 +182354,11 @@ var Consequences = class {
       if (cure.ok === false) return cure;
       out = { record: cure.determination, ref: cure.standard, kind: CARRY_KINDS.cure, text: text7, cites: cure.cites, on: cure.on };
     }
-    const ca = this.caseAuthoring;
+    const ci = this.caseInputs;
     const by = memberOf5(author);
     const at48 = this.#when();
     return this.record.transact(() => {
-      const r = ca.carryOutcome({ case: caseId, kind: out.kind, text: out.text, cites: out.cites, on: out.on, by });
+      const r = ci.carryOutcome({ case: caseId, kind: out.kind, text: out.text, cites: out.cites, on: out.on, by });
       if (!r || r.ok !== true) return r;
       this.sql.exec(
         `INSERT INTO consequence_carries (record_id, kind, ref, case_id, outcome, by, at) VALUES (?,?,?,?,?,?,?)`,
@@ -188485,6 +188509,46 @@ CREATE TABLE IF NOT EXISTS action_quotes (
 CREATE INDEX IF NOT EXISTS action_quotes_counterparty ON action_quotes(counterparty);
 
 
+-- R8 (K600 (a)): WHO STATED A PREMISE OVERRIDE, AND WHEN. The reason is the
+-- document's own (premise_override: {reason}); this module stamps the author and
+-- the time of the promotion that first carried it, once, and never again: the
+-- override is never edited or removed (PREMISE_OVERRIDE_REWRITTEN).
+CREATE TABLE IF NOT EXISTS action_overrides (
+  bundle_id   TEXT PRIMARY KEY, -- the action
+  reason      TEXT NOT NULL,    -- as the document states it
+  ground      TEXT,             -- R74 (T45): the ground as stated, JSON, NULL before T45
+  stated_by   TEXT,             -- the promotion's author
+  at          TEXT NOT NULL     -- when it first landed
+);
+
+-- R79, R82 (T45): WHO CHANGED AN ACTION'S PRESS TERMS OR ITS REPLY-OWED STATE,
+-- AND WHEN. The values are the document's own; the projection appends a row each
+-- time a promotion carries a value that differs from the latest row's.
+CREATE TABLE IF NOT EXISTS action_field_history (
+  bundle_id    TEXT NOT NULL,
+  field        TEXT NOT NULL,    -- press_terms | reply_owed
+  seq          INTEGER NOT NULL,
+  value        TEXT NOT NULL,    -- JSON of the stated value
+  reason       TEXT,             -- reply_owed: the member's reason
+  by           TEXT,
+  at           TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, field, seq)
+);
+`;
+var ACTIONS_TABLES = Object.freeze([
+  "action_basis",
+  "correspondence",
+  "action_quotes",
+  "action_overrides",
+  "action_field_history"
+]);
+function migrateActions(sql) {
+  const bare5 = ACTIONS_SCHEMA.split("\n").filter((l2) => !l2.trim().startsWith("--")).join("\n");
+  for (const s of bare5.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+}
+
+// src/action-records/schema.mjs
+var ACTION_RECORDS_SCHEMA = `
 -- REC-195 (D-149's remaining half, BIO_Case_Making_v0_1.md \xA72): A MACHINE'S
 -- PROPOSAL OF THE LAWS GOVERNING AN ACTION, STORED APART FROM THE MEMBER'S LIST.
 --
@@ -188510,7 +188574,7 @@ CREATE INDEX IF NOT EXISTS action_quotes_counterparty ON action_quotes(counterpa
 -- column mapping an agency to a law.
 --
 -- Carries bundle_id, so it clears in BOTH purge arms through the TABLES list
--- (D-113), and the module test of R36 holds that list against this file. A proposal
+-- (D-113), and the module test of R11 (here; R36 in actions) holds that list against this file. A proposal
 -- outliving the action it was made against would attach itself to whatever
 -- bundle was next allocated that id -- somebody else's request wearing a
 -- machine's citations.
@@ -188537,18 +188601,6 @@ CREATE TABLE IF NOT EXISTS action_risk_proposals (
   basis       TEXT NOT NULL,   -- what the proposer read the tier from, as written
   proposed_at TEXT NOT NULL,
   PRIMARY KEY (bundle_id, proposed_by)
-);
-
--- R8 (K600 (a)): WHO STATED A PREMISE OVERRIDE, AND WHEN. The reason is the
--- document's own (premise_override: {reason}); this module stamps the author and
--- the time of the promotion that first carried it, once, and never again: the
--- override is never edited or removed (PREMISE_OVERRIDE_REWRITTEN).
-CREATE TABLE IF NOT EXISTS action_overrides (
-  bundle_id   TEXT PRIMARY KEY, -- the action
-  reason      TEXT NOT NULL,    -- as the document states it
-  ground      TEXT,             -- R74 (T45): the ground as stated, JSON, NULL before T45
-  stated_by   TEXT,             -- the promotion's author
-  at          TEXT NOT NULL     -- when it first landed
 );
 
 -- R73 (K2561): A PROPOSAL OF WHAT A RECORDS REQUEST SEEKS, stored apart from the
@@ -188608,80 +188660,39 @@ CREATE TABLE IF NOT EXISTS action_promises (
   at           TEXT NOT NULL,
   PRIMARY KEY (bundle_id, seq)
 );
-
--- R79, R82 (T45): WHO CHANGED AN ACTION'S PRESS TERMS OR ITS REPLY-OWED STATE,
--- AND WHEN. The values are the document's own; the projection appends a row each
--- time a promotion carries a value that differs from the latest row's.
-CREATE TABLE IF NOT EXISTS action_field_history (
-  bundle_id    TEXT NOT NULL,
-  field        TEXT NOT NULL,    -- press_terms | reply_owed
-  seq          INTEGER NOT NULL,
-  value        TEXT NOT NULL,    -- JSON of the stated value
-  reason       TEXT,             -- reply_owed: the member's reason
-  by           TEXT,
-  at           TEXT NOT NULL,
-  PRIMARY KEY (bundle_id, field, seq)
-);
 `;
-var ACTIONS_TABLES = Object.freeze([
-  "action_basis",
-  "correspondence",
-  "action_quotes",
+var ACTION_RECORDS_TABLES = Object.freeze([
   "action_law_proposals",
   "action_risk_proposals",
-  "action_overrides",
   "action_seeks_proposals",
   "action_receipts",
   "action_scopes",
-  "action_promises",
-  "action_field_history"
+  "action_promises"
 ]);
-function migrateActions(sql) {
-  const bare5 = ACTIONS_SCHEMA.split("\n").filter((l2) => !l2.trim().startsWith("--")).join("\n");
+function migrateActionRecords(sql) {
+  const bare5 = ACTION_RECORDS_SCHEMA.split("\n").filter((l2) => !l2.trim().startsWith("--")).join("\n");
   for (const s of bare5.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  const cols = [...sql.exec(`PRAGMA table_info(action_law_proposals)`)].map((r) => r.name);
+  if (!cols.includes("standard")) sql.exec(`ALTER TABLE action_law_proposals ADD COLUMN standard TEXT`);
 }
 
-// src/actions/index.mjs
-var NOTE_MAX4 = 500;
-var CORRESPOND_LEASE_MS = 3e4;
+// src/action-records/index.mjs
 var LAW_PROPOSALS_READ_MAX = 12;
 var RISK_PROPOSALS_READ_MAX = 12;
 var SEEKS_PROPOSALS_READ_MAX = 12;
-var QUOTES_MAX = 500;
-var ACTIONS_PAGE_MAX = 200;
-var ACTION_LEGS_MAX = 500;
-var ACTION_LEDGER_MAX = 500;
-var PLAN_ID_RE = new RegExp(`^${idPattern("PLN").source.slice(1, -1)}(-[a-z0-9]+)*$`);
-var ENTITY_ID_RE4 = idPattern("ENT");
-var PRESSURE_KINDS2 = Object.freeze(["legal", "retaliation", "discrediting", "other"]);
-var NONE_EXISTS_MAX = 50;
 var RISK_PROPOSAL_BASIS_MAX = 500;
-var QUICK_ROUTE = Object.freeze({ kind: "one_finding_case" });
 var RECEIPT_KINDS = Object.freeze(["receipt", "service"]);
 var RECEIPT_TEXT_MAX = 200;
 var PROMISE_TEXT_MAX = 500;
-var OPEN_ITEMS_MAX = 200;
+var NOTE_MAX4 = 500;
 var LOCAL_DT_RE2 = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d$/;
-var ENTRY_FIELD_KEYS = Object.freeze(["speaker", "office_words", "office_status", "found_elsewhere", "found_elsewhere_note"]);
-var OVERRIDE_KEYS = Object.freeze(["ground_kind", "ground_citation", "ground_date", "ground_what", "ground_when"]);
-var ACTIONS_WORDS = Object.freeze({
-  "actions.override.ground_not_stated": "No ground was recorded for acting before a determination (this was done before a ground was asked for).",
-  "actions.reply.not_owed": "No reply is owed: {reason}",
-  "actions.scope.published_stays": "This changes what is published from now on. A case already signed stays as it was.",
-  "actions.openitems.not_office": "Open items are listed only when the action is addressed to an office.",
-  "actions.recognition.promise_only": "This thanks the office for a promise. Nothing yet shows the promise kept."
+var ACTION_RECORDS_WORDS = Object.freeze({
+  "actions.scope.published_stays": "This changes what is published from now on. A case already signed stays as it was."
 });
-var keyed = (key2) => Object.freeze({ key: key2, says: ACTIONS_WORDS[key2] });
-var T45_SENTENCES = Object.freeze({
-  ground_not_stated: keyed("actions.override.ground_not_stated"),
-  reply_not_owed: keyed("actions.reply.not_owed"),
-  scope_published_stays: keyed("actions.scope.published_stays"),
-  openitems_not_office: keyed("actions.openitems.not_office"),
-  recognition_promise_only: keyed("actions.recognition.promise_only")
+var SCOPE_PUBLISHED_STAYS = Object.freeze({
+  key: "actions.scope.published_stays",
+  says: ACTION_RECORDS_WORDS["actions.scope.published_stays"]
 });
-var replyOwedReason = (fm) => fm && typeof fm.reply_owed_reason === "string" && fm.reply_owed_reason.trim() ? fm.reply_owed_reason.trim() : null;
-var LAWS_ACT = Symbol("d149-laws-act");
-var RISK_TIER_ACT = Symbol("rec214-risk-tier-act");
 var ROWS = Object.assign(
   {},
   ACTION_FENCE_CHECKS,
@@ -188700,6 +188711,849 @@ function withRow5(r) {
   return { ...r, code: r.code ?? r.reason, check: r.check ?? row14.check, translation: r.translation ?? row14.translation };
 }
 var refuse18 = (code, detail, extra) => withRow5({ ok: false, reason: code, detail, ...extra || {} });
+var findingsOf = (list6) => list6.filter((x) => x.severity === "error").map((x) => ({ check: x.check, detail: x.message, ...x.code ? { code: x.code } : {}, ...x.repairs ? { repairs: x.repairs } : {} }));
+var ActionRecords = class {
+  #deps;
+  constructor({
+    storage,
+    record,
+    host = null,
+    membership = null,
+    progressions = null,
+    standards = null,
+    now = null,
+    env = null
+  } = {}) {
+    this.sql = storage.sql;
+    this.record = record;
+    this.#deps = { host, membership, progressions, standards };
+    this.env = env && typeof env === "object" ? env : {};
+    this.now = typeof now === "function" ? now : null;
+  }
+  /* R15: each dependency reached lazily on the same host unless a test passes its own; a host on which one cannot be
+     created answers null, and what it would have answered is answered as R9 and R10 state (not seen; not held). */
+  #reach(name3, make) {
+    if (this.#deps[name3] === void 0 || this.#deps[name3] === null) {
+      try {
+        this.#deps[name3] = make(this.#deps.host);
+      } catch {
+        this.#deps[name3] = false;
+      }
+    }
+    return this.#deps[name3] || null;
+  }
+  get membership() {
+    return this.#reach("membership", (h) => membershipOf(h, { record: this.record }));
+  }
+  /* R10: the progression definitions (`readProgression`, its R5). */
+  get progressions() {
+    return this.#reach("progressions", (h) => progressionsOf(h));
+  }
+  /* R9: the held standards (`standardRead`, its R5). */
+  get standards() {
+    return this.#reach("standards", (h) => standardsOf(h));
+  }
+  /** R15: creates the tables (idempotent), `action_law_proposals`' `standard` column added where absent. */
+  migrate() {
+    migrateActionRecords(this.sql);
+  }
+  #rows(q10, ...a) {
+    return [...this.sql.exec(q10, ...a)];
+  }
+  #one(q10, ...a) {
+    for (const r of this.sql.exec(q10, ...a)) return r;
+    return null;
+  }
+  /* The instance clock: an explicit `now` (the caller's as-of), then the injected clock, then `env.BIO_NOW_MS`, then
+     the wall. An ABSENT param is null or "" and falls through, never read as the epoch. */
+  #nowMs(explicit) {
+    if (explicit !== void 0 && explicit !== null && explicit !== "") {
+      const e2 = Number(explicit);
+      if (Number.isFinite(e2) && e2 >= 0) return e2;
+    }
+    if (this.now) {
+      const n2 = Number(this.now());
+      if (Number.isFinite(n2) && n2 >= 0) return n2;
+    }
+    const v = Number(this.env && this.env.BIO_NOW_MS);
+    if (Number.isFinite(v) && v >= 0) return v;
+    return Date.now();
+  }
+  /* K57's small helpers, copied from `actions` (the map's §2). */
+  #heldFm(id) {
+    const f17 = this.record.readFile(id, "bundle.md");
+    if (!f17 || typeof f17.text !== "string") return null;
+    const fm = parseFrontmatter(f17.text).data;
+    return fm && typeof fm === "object" ? fm : null;
+  }
+  /* R11: an action the viewer may not see is answered as an absent one (membership R43, the one sight rule). */
+  #visibleAction(id, viewer) {
+    const gate = viewerPredicate(viewer);
+    return this.#one(
+      `SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+      id,
+      ...gate.args
+    );
+  }
+  /* ================================================================ the single-site judgments (R7–R10) */
+  /** R7 (was `actions` R18, its list-shape clause) — D-149: WHAT A WELL-FORMED LIST OF GOVERNING LAWS IS, decided in
+   *  ONE place.
+   *
+   *  EXTRACTED FROM `actionLaws` BY REC-195, and the extraction is the point rather than tidiness. REC-195 adds a
+   *  SECOND caller — `actionLawsPropose`, the machine's proposal — and a second caller judging the same shape is
+   *  how REC-46's eleven-copies-of-one-predicate failure arrives at a grammar. The alternative was a second family
+   *  of refusal codes saying the same four things about the same four conditions, which would have made the
+   *  catalogue claim the plane draws a distinction it does not draw. So both acts ask this (`actions.actionLaws`, its
+   *  R18, and R1 here), both refuse with C-73.2..5, and a change to what a citation may be cannot reach one act and
+   *  miss the other.
+   *
+   *  IT JUDGES THE SHAPE AND NEVER THE LAW. Whether a citation is the RIGHT law for the agency asked is a member's
+   *  reading and the plane does not try (D-149: the plane encodes no law's rules). Returns the parsed entries or
+   *  the refusal (with its row), and writes nothing. It reads no instance state. */
+  lawEntries(laws) {
+    let list6 = laws;
+    if (typeof list6 === "string") {
+      try {
+        list6 = JSON.parse(list6);
+      } catch {
+        list6 = null;
+      }
+    }
+    const entries = [];
+    if (!Array.isArray(list6) || !list6.length)
+      return withRow5({
+        ok: false,
+        reason: "NO_LAWS",
+        legal_levels: LAW_LEVELS,
+        detail: "the act names at least one law as {level, citation}. An action whose laws nobody has stated reads UNDETERMINED on its own; an empty list is not a statement."
+      });
+    if (list6.length > GOVERNING_LAWS_MAX)
+      return withRow5({
+        ok: false,
+        reason: "TOO_MANY_LAWS",
+        count: list6.length,
+        max: GOVERNING_LAWS_MAX,
+        detail: `one act states at most ${GOVERNING_LAWS_MAX} governing laws`
+      });
+    const seen = /* @__PURE__ */ new Set();
+    for (let i = 0; i < list6.length; i++) {
+      const e2 = list6[i];
+      const level = e2 && typeof e2 === "object" ? String(e2.level ?? "").trim() : "";
+      const citation2 = e2 && typeof e2 === "object" && typeof e2.citation === "string" ? e2.citation.trim() : "";
+      if (!LAW_LEVELS.includes(level))
+        return withRow5({
+          ok: false,
+          reason: "BAD_LAW_LEVEL",
+          index: i,
+          level,
+          legal: LAW_LEVELS,
+          detail: `laws[${i}].level is one of ${LAW_LEVELS.join(", ")}`
+        });
+      if (!citation2 || citation2.length > CITATION_MAX2 || /["\\\r\n]/.test(citation2))
+        return withRow5({
+          ok: false,
+          reason: "BAD_CITATION",
+          index: i,
+          detail: `laws[${i}].citation is 1 to ${CITATION_MAX2} characters with no quote, backslash or newline: the restricted frontmatter grammar has no escapes`
+        });
+      const key2 = `${level}\0${citation2.toLowerCase()}`;
+      if (seen.has(key2))
+        return withRow5({
+          ok: false,
+          reason: "BAD_CITATION",
+          index: i,
+          detail: `laws[${i}] repeats an earlier entry: a law is named once at its level`
+        });
+      seen.add(key2);
+      const std = e2.standard === void 0 || e2.standard === null || e2.standard === "" ? null : String(e2.standard).trim();
+      entries.push({ level, citation: citation2, ...std ? { standard: std } : {} });
+    }
+    return { ok: true, entries };
+  }
+  /** R8 (was `actions` R23, its `BAD_RISK_TIER` site; C-90.2): the one site that answers a tier that is not 1, 2 or 3,
+   *  for `actions.actionRiskTier` and for a proposal (R2) alike (one condition, one code). `who` names the stater ("the
+   *  act", "a proposal"). Writes nothing. */
+  badRiskTier(target, tier, who3) {
+    return refuse18(
+      "BAD_RISK_TIER",
+      `${who3} states a tier of 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). Undetermined is what an action reads when nobody has assessed it, not a tier to set.`,
+      { target, tier: tier ?? null, legal: [1, 2, 3] }
+    );
+  }
+  /** R9 (was `actions` R64, its "a standard the viewer may see" clause; K1446): null when `id` is a `STD-` id the viewer
+   *  may read (`standards.standardRead`), else `standards.noSuchStandard`'s one answer, absent and invisible alike; a read
+   *  that throws, or a host with no standards, is not seen. Writes nothing. */
+  standardSeen(id, viewer) {
+    const sid = typeof id === "string" ? id.trim() : "";
+    const st = this.standards;
+    let r = null;
+    if (sid && BUNDLE_ID_RE.test(sid) && sid.startsWith("STD-") && st) {
+      try {
+        r = st.standardRead({ id: sid, viewer });
+      } catch {
+        r = null;
+      }
+    }
+    return r && r.ok ? null : noSuchStandard(sid || (typeof id === "string" ? id : null));
+  }
+  /** R10 (was `actions` R70, its judgment; R73): action-grammar's `seeksFindings` (its R13) over `fm`, with the facts read
+   *  here through `progressions.readProgression`, once per distinct progression an item names: its declared stage keys,
+   *  or null for a progression the record does not hold. A definition that cannot be read is read as not held (fail
+   *  closed), and the refusal says so (`cause: "PROGRESSIONS_UNREADABLE"`). The refusal is the grammar's own (C-117.29),
+   *  relayed with every finding; null when none. Writes nothing. */
+  seeksRefusal(fm) {
+    const stages2 = {};
+    let unreadable2 = false;
+    const items = fm && Array.isArray(fm.seeks) ? fm.seeks : [];
+    for (const p3 of new Set(items.map((x) => x && typeof x === "object" ? x.progression : null).filter((x) => typeof x === "string" && x.trim()))) {
+      let r = null;
+      try {
+        r = this.progressions ? this.progressions.readProgression({ progressionKey: p3 }) : null;
+      } catch {
+        r = null;
+      }
+      if (!r || r.ok === false) {
+        unreadable2 = true;
+        stages2[p3] = null;
+        continue;
+      }
+      stages2[p3] = r.found ? (r.stages || []).map((st) => st.stage_key) : null;
+    }
+    const found3 = [];
+    seeksFindings(fm || {}, { stages: stages2 }, found3);
+    const errors = found3.filter((x) => x.severity === "error");
+    if (!errors.length) return null;
+    return refuse18(errors[0].code, errors[0].message, {
+      findings: findingsOf(errors),
+      ...unreadable2 ? { cause: "PROGRESSIONS_UNREADABLE" } : {}
+    });
+  }
+  /* ================================================================ proposals stored apart (R1–R3) */
+  /** op=actionlawspropose — R1 (was `actions` R19; REC-195, D-149's remaining half; `BIO_Case_Making_v0_1.md` §2,
+   *  *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*): A PROPOSAL OF CITATIONS AND LEVELS, STORED APART FROM THE
+   *  MEMBER'S LIST AND LABELLED MACHINE WORK.
+   *
+   *  THE RULING'S OWN WORDS: *the machine may propose the list from the counterparty, labelled as machine work,
+   *  and never sets it*. D-149 built the half that REFUSES (the machine fence at C-32.18); this is the proposal, and
+   *  every line of it is about the difference between the two halves.
+   *
+   *  IT NEVER SETS THE LIST, AND THAT IS STRUCTURAL RATHER THAN POLICED. This method does not call `promote`, it
+   *  writes no file, and it never touches `governing_laws`, `governing_laws_by` or `governing_laws_at`. The list
+   *  is the member's and moves only through `actions.actionLaws`; the fence that keeps a revision from moving it
+   *  (C-73.1) is untouched and unreachable from here, because nothing here writes bytes at all. This module's test of
+   *  R1 holds that a proposal leaves the list as it stands.
+   *
+   *  ANY CREDENTIAL MAY PROPOSE, AND THE LABEL CARRIES THE MEANING — `themePropose`'s shape, for its reason
+   *  (§8.4 fence 3). A fence admitting only machines would be a fence TIGHTER THAN ITS RULE: D-149 says a
+   *  machine MAY propose, not that nobody else may, and a member's proposal to whoever states the list is a
+   *  real act with an obvious surface. What the record owes is the LABEL, and `lawProposalLabel` composes it in
+   *  one place so the plane answers the question rather than publishing an identity for a surface to judge.
+   *
+   *  THE WHOLE PROPOSAL, REPLACED, PER PROPOSER. A proposer restating replaces its OWN standing proposal and
+   *  nobody else's: two machines proposing different lists are two proposals, and the record says who proposed
+   *  which. There is no act that clears one and none that adopts one — adopting is `op=actionlaws`, which is a
+   *  member's authored statement of the laws and not an acceptance of anybody's suggestion. **NOTHING HERE OR
+   *  IN THE READ DERIVES A RELATION BETWEEN A PROPOSAL AND THE LIST**, even when they hold the same citations:
+   *  that a member's list came FROM a machine's proposal is a claim about why somebody acted, and the record
+   *  cannot support it. */
+  actionLawsPropose({ target, laws = null, proposer = null, viewer = null } = {}) {
+    const who3 = String(proposer ?? "").trim();
+    if (!who3)
+      return {
+        ok: false,
+        reason: "NO_AUTHOR",
+        detail: "this call carries nobody. The plane stamps the proposer from the credential that asked, and a proposal nobody can be named for is one the record could say nothing about: the label IS the act."
+      };
+    if (!target)
+      return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const read3 = this.lawEntries(laws);
+    if (!read3.ok) return read3;
+    const entries = read3.entries;
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return {
+        ok: false,
+        reason: "NOT_AN_ACTION",
+        target,
+        object_type: b.object_type,
+        detail: "governing laws belong to an action: they are the laws its request is made under."
+      };
+    for (const e2 of entries) {
+      if (!e2.standard) continue;
+      const r = this.standardSeen(e2.standard, viewer ?? who3);
+      if (r) return { ...r, target };
+    }
+    const at48 = stampInstant("second", this.#nowMs(null));
+    this.record.transact(() => {
+      this.sql.exec(`DELETE FROM action_law_proposals WHERE bundle_id=? AND proposed_by=?`, target, who3);
+      entries.forEach((e2, i) => this.sql.exec(
+        `INSERT INTO action_law_proposals (bundle_id, proposed_by, ord, level, citation, standard, proposed_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        target,
+        who3,
+        i,
+        e2.level,
+        e2.citation,
+        e2.standard ?? null,
+        at48
+      ));
+    });
+    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
+    const fm = liveMd && liveMd.content !== null ? parseFrontmatter(liveMd.content).data || {} : null;
+    const listed2 = governingLawsOf(fm);
+    return {
+      ok: true,
+      target,
+      weight: "single",
+      proposal: { ...lawProposalLabel(who3), at: at48, laws: entries },
+      governing_laws: listed2,
+      evidence: false,
+      says: `${entries.length} citation${entries.length === 1 ? " is" : "s are"} proposed for this action. This is not the action's list of governing laws and did not change it: that list ${listed2.state === "stated" ? `is ${listed2.laws.length} law(s) stated by a member` : "is UNDETERMINED"}, and only a member's own act states it.`
+    };
+  }
+  /** R2 (was `actions` R28; REC-215): a proposed tier, stored apart, labelled; it never touches `risk_tier` or its
+   *  history. A proposer's restatement replaces its own proposal only. */
+  actionRiskPropose({ target, tier = null, basis = null, proposer = null, viewer = null } = {}) {
+    const who3 = String(proposer ?? "").trim();
+    if (!who3) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const asked = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
+    if (asked !== 1 && asked !== 2 && asked !== 3) return this.badRiskTier(target, tier, "a proposal");
+    const why2 = typeof basis === "string" ? basis.trim() : "";
+    if (!why2 || why2.length > RISK_PROPOSAL_BASIS_MAX || /["\\\r\n]/.test(why2))
+      return refuse18("RISK_PROPOSAL_BASIS_REFUSED", `a proposed tier carries its basis: 1 to ${RISK_PROPOSAL_BASIS_MAX} characters with no quote, backslash or line break`, { target, max: RISK_PROPOSAL_BASIS_MAX });
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    const at48 = stampInstant("second", this.#nowMs(null));
+    this.sql.exec(
+      `INSERT INTO action_risk_proposals (bundle_id, proposed_by, tier, basis, proposed_at) VALUES (?,?,?,?,?)
+      ON CONFLICT(bundle_id, proposed_by) DO UPDATE SET tier=excluded.tier, basis=excluded.basis, proposed_at=excluded.proposed_at`,
+      target,
+      who3,
+      asked,
+      why2,
+      at48
+    );
+    const held2 = riskTierState((this.#heldFm(target) || {}).risk_tier);
+    return {
+      ok: true,
+      target,
+      weight: "single",
+      evidence: false,
+      proposal: { ...proposalLabelFor(who3, "risk_tier"), tier: asked, tier_words: RISK_TIERS[asked], basis: why2, at: at48 },
+      risk_tier: held2,
+      risk_tier_words: RISK_TIERS[held2] ?? null,
+      says: `a tier of ${asked} is proposed for this action. This is not the action's risk tier and did not change it: the tier is ${held2 === "undetermined" ? "undetermined" : held2}, and only a member's own act sets it.`
+    };
+  }
+  /** R3 (was `actions` R73; K2561; R10): a proposal of what a records request seeks, as R1 is to `actions.actionLaws`:
+   *  stored apart, labelled, replacing only its proposer's own standing proposal; it writes no file and never changes
+   *  `seeks`. Its items are judged as R10 judges a statement (`SEEKS_REFUSED`, C-117.29, every finding carried), on the
+   *  target's own kind. */
+  actionSeeksPropose({ target, seeks = null, proposer = null, viewer = null } = {}) {
+    const who3 = String(proposer ?? "").trim();
+    if (!who3) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    const held2 = this.#heldFm(target) || {};
+    let list6 = seeks;
+    if (typeof list6 === "string") {
+      try {
+        list6 = JSON.parse(list6);
+      } catch {
+      }
+    }
+    const asked = { action_kind: held2.action_kind, seeks: list6 === void 0 || list6 === null ? [] : list6 };
+    const r = this.seeksRefusal(asked);
+    if (r) return { ...r, target };
+    const items = seeksOf(asked);
+    const at48 = stampInstant("second", this.#nowMs(null));
+    this.record.transact(() => {
+      this.sql.exec(`DELETE FROM action_seeks_proposals WHERE bundle_id=? AND proposed_by=?`, target, who3);
+      items.forEach((x, i) => this.sql.exec(`INSERT INTO action_seeks_proposals (bundle_id, proposed_by, ord, progression,
+        entity, stage, proposed_at) VALUES (?,?,?,?,?,?,?)`, target, who3, i, x.progression, x.entity, x.stage, at48));
+    });
+    const stated3 = seeksOf(held2);
+    return {
+      ok: true,
+      target,
+      weight: "single",
+      evidence: false,
+      proposal: { ...proposalLabelFor(who3, "seeks"), at: at48, seeks: items },
+      seeks: stated3,
+      says: `${items.length} stage${items.length === 1 ? " is" : "s are"} proposed as what this request seeks. This is not the action's seeks and did not change it: ${stated3.length ? `it names ${stated3.length} stage(s) a member stated` : "no member has stated what it seeks"}, and only a member's own write states it.`
+    };
+  }
+  /** R1 (was `actions` R19, R25's share): the standing law proposals, newest first, at most `LAW_PROPOSALS_READ_MAX`
+   *  proposers, with `truncated` and a sentence also when empty. Writes nothing. */
+  lawProposalsFor(bundleId) {
+    const cap = LAW_PROPOSALS_READ_MAX;
+    const rowCap = (cap + 1) * GOVERNING_LAWS_MAX;
+    const rows4 = this.#rows(
+      `SELECT proposed_by, ord, level, citation, standard, proposed_at FROM action_law_proposals
+        WHERE bundle_id=? ORDER BY proposed_at DESC, proposed_by, ord LIMIT ?`,
+      bundleId,
+      rowCap + 1
+    );
+    const byProposer = /* @__PURE__ */ new Map();
+    for (const r of rows4) {
+      if (!byProposer.has(r.proposed_by))
+        byProposer.set(r.proposed_by, { ...lawProposalLabel(r.proposed_by), at: r.proposed_at, laws: [] });
+      byProposer.get(r.proposed_by).laws.push({ level: r.level, citation: r.citation, ...r.standard ? { standard: r.standard } : {} });
+    }
+    const all = [...byProposer.values()];
+    const proposals = all.slice(0, cap);
+    const machine3 = proposals.filter((p3) => p3.machine_work).length;
+    return {
+      proposals,
+      limit: cap,
+      truncated: all.length > cap,
+      says: proposals.length ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of the laws that govern this action, ${machine3} of them machine work. A proposal is not this action's list of governing laws and nothing here states which laws apply: the list is the member's own act, and it is stated beside this one.` : "no proposal of the laws governing this action stands in the record. That is a statement about proposals and about nothing else: whether any law governs this request is answered beside this, and a member states it."
+    };
+  }
+  /** R2 (was `actions` R28): the standing tier proposals, newest first, at most `RISK_PROPOSALS_READ_MAX`, with
+   *  `truncated` and a sentence also when empty. Writes nothing. */
+  riskProposalsFor(id) {
+    const cap = RISK_PROPOSALS_READ_MAX;
+    const rows4 = this.#rows(`SELECT proposed_by, tier, basis, proposed_at FROM action_risk_proposals WHERE bundle_id=?
+      ORDER BY proposed_at DESC, proposed_by LIMIT ?`, id, cap + 1);
+    const proposals = rows4.slice(0, cap).map((r) => ({
+      ...proposalLabelFor(r.proposed_by, "risk_tier"),
+      tier: r.tier,
+      tier_words: RISK_TIERS[r.tier] ?? null,
+      basis: r.basis,
+      at: r.proposed_at
+    }));
+    return {
+      proposals,
+      limit: cap,
+      truncated: rows4.length > cap,
+      says: proposals.length ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of this action's risk tier. A proposal is not the tier: the tier is the member's own act, stated beside this one.` : "no proposal of this action's risk tier stands in the record. That is a statement about proposals and about nothing else."
+    };
+  }
+  /** R3 (was `actions` R73): the standing proposals of what the request seeks, newest first, at most
+   *  `SEEKS_PROPOSALS_READ_MAX`, with `truncated` and a sentence also when empty. Writes nothing. */
+  seeksProposalsFor(id) {
+    const cap = SEEKS_PROPOSALS_READ_MAX;
+    const rows4 = this.#rows(`SELECT proposed_by, ord, progression, entity, stage, proposed_at FROM action_seeks_proposals
+      WHERE bundle_id=? ORDER BY proposed_at DESC, proposed_by, ord LIMIT ?`, id, (cap + 1) * SEEKS_MAX + 1);
+    const by = /* @__PURE__ */ new Map();
+    for (const r of rows4) {
+      if (!by.has(r.proposed_by)) by.set(r.proposed_by, { ...proposalLabelFor(r.proposed_by, "seeks"), at: r.proposed_at, seeks: [] });
+      by.get(r.proposed_by).seeks.push({ progression: r.progression, entity: r.entity, stage: r.stage });
+    }
+    const all = [...by.values()];
+    const proposals = all.slice(0, cap);
+    return {
+      proposals,
+      limit: cap,
+      truncated: all.length > cap,
+      says: proposals.length ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of what this request seeks. A proposal is not the action's seeks: that is a member's own statement, shown beside this one.` : "no proposal of what this request seeks stands in the record. That is a statement about proposals and about nothing else."
+    };
+  }
+  /* ================================================================ members' side records (R4–R6) */
+  /** R4 (was `actions` R80; T45; S1 §C 9; v0.2 rule 6): a member records that the `sent` entry at `ord` was received by
+   *  the addressee (`receipt`) or that a party was served (`service`), how and when, held as a capture or her account
+   *  (`actions` R34's rule). Its own table, appended; the ledger entry is never rewritten. `action-clocks` R2 reads it,
+   *  through `actions.actionRead`, as the start of a count from receipt or service. */
+  actionReceipt({
+    target,
+    ord = null,
+    kind: kind2 = "receipt",
+    at: at48 = "",
+    how = "",
+    party = "",
+    artifactSha = "",
+    account: account2 = "",
+    viewer = null,
+    author = null
+  } = {}) {
+    const who3 = String(author ?? "").trim();
+    if (!who3 || isMachineIdentity(who3))
+      return withRow5({
+        ok: false,
+        reason: "MACHINE_CANNOT_CORRESPOND",
+        target: target ?? null,
+        detail: "a receipt is a named member's record that the group's sending reached its addressee. A machine credential may not record one. Sign in as a member."
+      });
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const when = String(at48 ?? "").trim();
+    const m = LOCAL_DT_RE2.exec(when);
+    if (!(isCalendarDate(when) || m && isCalendarDate(m[1])))
+      return withRow5({
+        ok: false,
+        reason: "BAD_DATE",
+        at: when,
+        target,
+        detail: "a receipt is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has"
+      });
+    const sha2 = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
+    const acct = String(account2 ?? "").trim();
+    if (sha2 && acct) return withRow5({
+      ok: false,
+      reason: "CAPTURE_AND_TESTIMONY",
+      target,
+      detail: "a receipt is held as the captured bytes OR a named member's account, never both."
+    });
+    if (!sha2 && !acct) return withRow5({
+      ok: false,
+      reason: "NEITHER_CAPTURE_NOR_TESTIMONY",
+      target,
+      detail: "a receipt is held as captured bytes the register holds, or as a named member's account."
+    });
+    if (sha2 && !/^[0-9a-f]{64}$/.test(sha2)) return { ok: false, reason: "BAD_SHA", target, detail: "artifact_sha is a sha256 hash (64 hex characters)" };
+    const k = String(kind2 ?? "").trim() || "receipt";
+    const h = String(how ?? "").trim(), pty = String(party ?? "").trim();
+    for (const [name3, v, need] of [["how", h, true], ["party", pty, k === "service"], ["account", acct, false]])
+      if (need && !v || v.length > (name3 === "account" ? NOTE_MAX4 : RECEIPT_TEXT_MAX))
+        return {
+          ok: false,
+          reason: `BAD_${name3.toUpperCase()}`,
+          target,
+          detail: `${name3} is ${need ? "1" : "0"} to ${name3 === "account" ? NOTE_MAX4 : RECEIPT_TEXT_MAX} characters`
+        };
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    const ledger = (this.#heldFm(target) || {}).correspondence;
+    const n2 = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
+    const entry4 = Array.isArray(ledger) && Number.isInteger(n2) ? ledger[n2] : void 0;
+    if (!entry4 || typeof entry4 !== "object" || entry4.direction !== "sent" || !RECEIPT_KINDS.includes(k))
+      return refuse18("RECEIPT_NOT_ON_SENT", `a receipt is recorded on a sent entry of this action, as ${RECEIPT_KINDS.join(" or ")}; the entry named is not a sent one. Nothing was written.`, { target, ord: ord ?? null, legal: [...RECEIPT_KINDS] });
+    if (sha2 && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha2))
+      return withRow5({
+        ok: false,
+        reason: "UNREGISTERED_ARTIFACT",
+        target,
+        artifact_sha: sha2,
+        detail: "this hash names no capture in this store. Capture it first, or record a named account instead."
+      });
+    const recorded = stampInstant("second", this.#nowMs(null));
+    const seq = this.record.transact(() => {
+      const next = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_receipts WHERE bundle_id=? AND ord=?`, target, n2).n;
+      this.sql.exec(
+        `INSERT INTO action_receipts (bundle_id, ord, seq, kind, at, how, party, artifact_sha, account, author,
+        recorded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        target,
+        n2,
+        next,
+        k,
+        when,
+        h,
+        pty || null,
+        sha2 || null,
+        acct || null,
+        who3,
+        recorded
+      );
+      return next;
+    });
+    return {
+      ok: true,
+      target,
+      ord: n2,
+      seq,
+      kind: k,
+      at: when,
+      how: h,
+      ...pty ? { party: pty } : {},
+      held_as: sha2 ? "capture" : "testimony",
+      ...sha2 ? { artifact_sha: sha2 } : { account: acct },
+      author: who3,
+      recorded_at: recorded,
+      weight: "single"
+    };
+  }
+  /** R4 (`actions` R80, R25; K2845): every receipt record, oldest first, so an entry's latest is its last. */
+  receiptsOf(id) {
+    return this.#rows(`SELECT ord, seq, kind, at, how, party, artifact_sha, account, author, recorded_at
+      FROM action_receipts WHERE bundle_id=? ORDER BY recorded_at, ord, seq`, id).map((r) => ({
+      ord: r.ord,
+      seq: r.seq,
+      kind: r.kind,
+      at: r.at,
+      how: r.how,
+      ...r.party !== null ? { party: r.party } : {},
+      held_as: r.artifact_sha ? "capture" : "testimony",
+      ...r.artifact_sha ? { artifact_sha: r.artifact_sha } : { account: r.account },
+      by: r.author,
+      recorded_at: r.recorded_at
+    }));
+  }
+  /** R5 (was `actions` R87; T45; Actions D4; v0.2 rule 15): a member sets (`true`) or removes (`false`) the action's
+   *  confidential scope, with a reason, each statement appended. A confidential action is seen inside the group as
+   *  before and never answered by `actions` R66 or anything that feeds published output; the change never touches a
+   *  signed edition (`publication` R63), the answer saying so (R14). */
+  actionScope({ target, confidential = null, reason: reason2 = "", viewer = null, author = null } = {}) {
+    const who3 = String(author ?? "").trim();
+    const why2 = String(reason2 ?? "").trim();
+    if (!who3 || isMachineIdentity(who3))
+      return refuse18("MACHINE_CANNOT_SET_SCOPE", "whether an action is confidential is a member's act; a machine credential may not set or remove it. Nothing was written.", { target: target ?? null });
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const want = confidential === true || confidential === "true" ? 1 : confidential === false || confidential === "false" ? 0 : null;
+    if (want === null) return {
+      ok: false,
+      reason: "BAD_SCOPE",
+      target,
+      legal: [true, false],
+      detail: "confidential is true (set the scope) or false (remove it)"
+    };
+    if (!why2) return refuse18("SCOPE_NO_REASON", "setting or removing an action's confidential scope carries the member's reason. Nothing was written.", { target });
+    if (why2.length > NOTE_MAX4 || /["\\\r\n]/.test(why2))
+      return { ok: false, reason: "BAD_REASON", target, detail: `reason is at most ${NOTE_MAX4} characters with no quote, backslash or line break` };
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (this.confidential(target) === !!want)
+      return refuse18("SCOPE_UNCHANGED", `this action is already ${want ? "confidential" : "not confidential"}; nothing was written.`, { target, confidential: !!want });
+    const at48 = stampInstant("second", this.#nowMs(null));
+    this.record.transact(() => {
+      const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_scopes WHERE bundle_id=?`, target).n;
+      this.sql.exec(
+        `INSERT INTO action_scopes (bundle_id, seq, confidential, reason, by, at) VALUES (?,?,?,?,?,?)`,
+        target,
+        seq,
+        want,
+        why2,
+        who3,
+        at48
+      );
+    });
+    return {
+      ok: true,
+      target,
+      confidential: !!want,
+      reason: why2,
+      by: who3,
+      at: at48,
+      scope: this.scopeOf(target),
+      published: SCOPE_PUBLISHED_STAYS,
+      weight: "single"
+    };
+  }
+  /** R5 (`actions` R87, R66; K2850): whether the action's latest scope statement is confidential; false with none. */
+  confidential(id) {
+    const r = this.#one(`SELECT confidential FROM action_scopes WHERE bundle_id=? ORDER BY seq DESC LIMIT 1`, id);
+    return !!(r && r.confidential);
+  }
+  /** R5 (`actions` R87, R25): the scope and its statements, oldest first. */
+  scopeOf(id) {
+    const statements = this.#rows(`SELECT seq, confidential, reason, by, at FROM action_scopes WHERE bundle_id=? ORDER BY seq`, id).map((r) => ({ seq: r.seq, confidential: !!r.confidential, reason: r.reason, by: r.by, at: r.at }));
+    return { confidential: statements.length ? statements[statements.length - 1].confidential : false, statements };
+  }
+  /** R6 (was `actions` R88; T45; Actions D4; v0.2 rule 15): a member records a promise the group made to a person
+   *  (`PROMISE_KINDS`), or one ending an earlier promise (`ends`, its position, with `text` its reason). Appended, never
+   *  edited; every viewer who may see the action reads every promise (through `actions.actionRead`); nothing published
+   *  carries one (`actions` R66). */
+  actionPromise({ target, kind: kind2 = "", text: text7 = "", ends = null, viewer = null, author = null } = {}) {
+    const who3 = String(author ?? "").trim();
+    const k = String(kind2 ?? "").trim(), t2 = String(text7 ?? "").trim();
+    const endsAt = ends === null || ends === void 0 || ends === "" ? null : Number.isInteger(ends) ? ends : /^\d+$/.test(String(ends).trim()) ? Number(String(ends).trim()) : NaN;
+    const kinds3 = PROMISE_KINDS;
+    const promiseRefused = (why2) => refuse18(
+      "PROMISE_REFUSED",
+      `${why2} Nothing was written.`,
+      { target: target ?? null, legal: [...kinds3], max: PROMISE_TEXT_MAX }
+    );
+    if (!who3 || isMachineIdentity(who3))
+      return refuse18("MACHINE_CANNOT_RECORD_PROMISE", "a promise the group made to a person is recorded by a member; a machine credential may not record one. Nothing was written.", { target: target ?? null });
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!kinds3.includes(k) || !t2 || t2.length > PROMISE_TEXT_MAX || Number.isNaN(endsAt))
+      return promiseRefused(`a promise is {kind, text, ends?}: kind one of ${kinds3.join(", ")}, the text 1 to ${PROMISE_TEXT_MAX} characters, and ends the position of an earlier promise it ends.`);
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (endsAt !== null && !this.promisesOf(target).standing.some((p3) => p3.seq === endsAt))
+      return promiseRefused(`ends names promise ${endsAt}, and no promise standing on this action is at that position.`);
+    const at48 = stampInstant("second", this.#nowMs(null));
+    const seq = this.record.transact(() => {
+      const next = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_promises WHERE bundle_id=?`, target).n;
+      this.sql.exec(
+        `INSERT INTO action_promises (bundle_id, seq, kind, text, ends, by, at) VALUES (?,?,?,?,?,?,?)`,
+        target,
+        next,
+        k,
+        t2,
+        endsAt,
+        who3,
+        at48
+      );
+      return next;
+    });
+    return {
+      ok: true,
+      target,
+      seq,
+      kind: k,
+      text: t2,
+      ...endsAt !== null ? { ends: endsAt } : {},
+      by: who3,
+      at: at48,
+      promises: this.promisesOf(target),
+      weight: "single"
+    };
+  }
+  /** R6 (`actions` R88, R25): every promise on the action, standing apart from ended (one a later statement ends). */
+  promisesOf(id) {
+    const all = this.#rows(`SELECT seq, kind, text, ends, by, at FROM action_promises WHERE bundle_id=? ORDER BY seq`, id).map((r) => ({ seq: r.seq, kind: r.kind, text: r.text, ...r.ends !== null ? { ends: r.ends } : {}, by: r.by, at: r.at }));
+    const ended = new Map(all.filter((p3) => p3.ends !== void 0).map((p3) => [p3.ends, p3]));
+    const notes2 = all.filter((p3) => p3.ends === void 0);
+    return {
+      standing: notes2.filter((p3) => !ended.has(p3.seq)),
+      ended: notes2.filter((p3) => ended.has(p3.seq)).map((p3) => ({ ...p3, ended_by: ended.get(p3.seq) }))
+    };
+  }
+};
+for (const m of ["actionLawsPropose", "actionRiskPropose", "actionSeeksPropose", "actionReceipt", "actionScope", "actionPromise"]) {
+  const fn = ActionRecords.prototype[m];
+  ActionRecords.prototype[m] = function(...a) {
+    return withRow5(fn.apply(this, a));
+  };
+}
+var PROPOSAL_SAYS2 = {
+  risk_tier: {
+    machine_proposed: "a machine credential proposed this risk tier. That is machine work, labelled as machine work: it can set a tier beside the action for members to weigh and it can never set the tier. Nothing here is this action's risk tier, and nothing becomes it until a member states it themselves",
+    member_proposed: "a member proposed this risk tier to whoever states it. It is a proposal and not the tier: only the risk-tier act sets that, and the record holds who made the proposal",
+    unstated: "the record does not say who proposed this risk tier"
+  },
+  seeks: {
+    machine_proposed: "a machine credential proposed what this records request seeks. That is machine work, labelled as machine work: it sets stages beside the action for members to weigh and never states what it seeks; nothing becomes it until a member states it themselves",
+    member_proposed: "a member proposed what this records request seeks to whoever states it. It is a proposal and not the action's seeks: only a member's own write states that, and the record holds who made the proposal",
+    unstated: "the record does not say who proposed what this records request seeks"
+  }
+};
+function proposalLabelFor(who3, subject) {
+  const base2 = lawProposalLabel(who3);
+  return { by: base2.by, state: base2.state, machine_work: base2.machine_work, says: PROPOSAL_SAYS2[subject][base2.state] };
+}
+var instances54 = /* @__PURE__ */ new WeakMap();
+function actionRecordsOf(host, deps) {
+  let r = instances54.get(host);
+  if (!r) {
+    const d = deps || {};
+    const storage = d.storage || host.storage;
+    const record = d.record || recordOf(host);
+    const made3 = new ActionRecords({ ...d, host, storage, record });
+    made3.migrate();
+    const declared2 = record.declarePurge("action-records", [...ACTION_RECORDS_TABLES]);
+    if (declared2 && declared2.ok === false)
+      throw new Error(`action-records: its tables could not be declared (${declared2.reason}: ${declared2.detail ?? ""})`);
+    instances54.set(host, made3);
+    r = made3;
+  }
+  return r;
+}
+function actionRecordsOps(r, url, body) {
+  const q10 = (k) => url.searchParams.get(k);
+  const b = body && typeof body === "object" ? body : {};
+  return {
+    actionlawspropose: () => r.actionLawsPropose({
+      target: q10("target") || b.target,
+      laws: b.laws,
+      viewer: q10("viewer"),
+      proposer: q10("proposer")
+    }),
+    /* R3 (K2561): a proposal of what a records request seeks (declared and routed by L11). */
+    actionseekspropose: () => r.actionSeeksPropose({
+      target: q10("target") || b.target,
+      seeks: b.seeks ?? q10("seeks"),
+      viewer: q10("viewer"),
+      proposer: q10("proposer")
+    }),
+    actionriskpropose: () => r.actionRiskPropose({
+      target: q10("target") || b.target,
+      tier: q10("tier") ?? b.tier ?? null,
+      basis: q10("basis") ?? b.basis ?? null,
+      viewer: q10("viewer"),
+      proposer: q10("proposer")
+    }),
+    /* R4–R6 (T45): receipt or service of a sent entry, the confidential scope, a promise, each with the stamps the
+       control plane makes (declared by op-declarations). */
+    actionreceipt: () => r.actionReceipt({
+      target: q10("target") || b.target,
+      ord: q10("ord") ?? b.ord ?? null,
+      kind: q10("kind") ?? b.kind ?? "receipt",
+      at: q10("at") ?? b.at ?? "",
+      how: q10("how") ?? b.how ?? "",
+      party: q10("party") ?? b.party ?? "",
+      artifactSha: q10("artifact_sha") ?? b.artifact_sha ?? "",
+      account: q10("account") ?? b.account ?? "",
+      viewer: q10("viewer"),
+      author: q10("author")
+    }),
+    actionscope: () => r.actionScope({
+      target: q10("target") || b.target,
+      confidential: q10("confidential") ?? b.confidential ?? null,
+      reason: q10("reason") ?? b.reason ?? "",
+      viewer: q10("viewer"),
+      author: q10("author")
+    }),
+    actionpromise: () => r.actionPromise({
+      target: q10("target") || b.target,
+      kind: q10("kind") ?? b.kind ?? "",
+      text: q10("text") ?? b.text ?? "",
+      ends: q10("ends") ?? b.ends ?? null,
+      viewer: q10("viewer"),
+      author: q10("author")
+    })
+  };
+}
+
+// src/actions/index.mjs
+var NOTE_MAX5 = 500;
+var CORRESPOND_LEASE_MS = 3e4;
+var QUOTES_MAX = 500;
+var ACTIONS_PAGE_MAX = 200;
+var ACTION_LEGS_MAX = 500;
+var ACTION_LEDGER_MAX = 500;
+var PLAN_ID_RE = new RegExp(`^${idPattern("PLN").source.slice(1, -1)}(-[a-z0-9]+)*$`);
+var ENTITY_ID_RE4 = idPattern("ENT");
+var PRESSURE_KINDS2 = Object.freeze(["legal", "retaliation", "discrediting", "other"]);
+var NONE_EXISTS_MAX = 50;
+var QUICK_ROUTE = Object.freeze({ kind: "one_finding_case" });
+var OPEN_ITEMS_MAX = 200;
+var ENTRY_FIELD_KEYS = Object.freeze(["speaker", "office_words", "office_status", "found_elsewhere", "found_elsewhere_note"]);
+var OVERRIDE_KEYS = Object.freeze(["ground_kind", "ground_citation", "ground_date", "ground_what", "ground_when"]);
+var ACTIONS_WORDS = Object.freeze({
+  "actions.override.ground_not_stated": "No ground was recorded for acting before a determination (this was done before a ground was asked for).",
+  "actions.reply.not_owed": "No reply is owed: {reason}",
+  "actions.openitems.not_office": "Open items are listed only when the action is addressed to an office.",
+  "actions.recognition.promise_only": "This thanks the office for a promise. Nothing yet shows the promise kept."
+});
+var keyed = (key2) => Object.freeze({ key: key2, says: ACTIONS_WORDS[key2] });
+var T45_SENTENCES = Object.freeze({
+  ground_not_stated: keyed("actions.override.ground_not_stated"),
+  reply_not_owed: keyed("actions.reply.not_owed"),
+  openitems_not_office: keyed("actions.openitems.not_office"),
+  recognition_promise_only: keyed("actions.recognition.promise_only")
+});
+var replyOwedReason = (fm) => fm && typeof fm.reply_owed_reason === "string" && fm.reply_owed_reason.trim() ? fm.reply_owed_reason.trim() : null;
+var LAWS_ACT = Symbol("d149-laws-act");
+var RISK_TIER_ACT = Symbol("rec214-risk-tier-act");
+var ROWS2 = Object.assign(
+  {},
+  ACTION_FENCE_CHECKS,
+  ACTION_ACT_CHECKS,
+  GOVERNING_LAW_CHECKS,
+  QUOTE_CHECKS,
+  LIFECYCLE_CHECKS,
+  RISK_TIER_REVISION_CHECKS,
+  RECORDS_LAW_FENCE_CHECKS,
+  ACTION_CATALOGUE_CHECKS
+);
+function withRow6(r) {
+  if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string") return r;
+  const row14 = ROWS2[r.reason];
+  if (!row14) return r;
+  return { ...r, code: r.code ?? r.reason, check: r.check ?? row14.check, translation: r.translation ?? row14.translation };
+}
+var refuse19 = (code, detail, extra) => withRow6({ ok: false, reason: code, detail, ...extra || {} });
 var NO_SUCH_ACTION_DETAIL = "no action answers to that id here. An action you may not see is answered exactly as one that does not exist, so this is not a hint either way.";
 var NO_SUCH_ACTION_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "action", "detail"]);
 function noSuchAction(actionId, extra = null) {
@@ -188753,7 +189607,7 @@ function contactId(v) {
   if (typeof v !== "string" || !v.trim()) return null;
   return v.trim().replace(/^member:/, "");
 }
-var findingsOf = (list6) => list6.filter((x) => x.severity === "error").map((x) => ({ check: x.check, detail: x.message, ...x.code ? { code: x.code } : {}, ...x.repairs ? { repairs: x.repairs } : {} }));
+var findingsOf2 = (list6) => list6.filter((x) => x.severity === "error").map((x) => ({ check: x.check, detail: x.message, ...x.code ? { code: x.code } : {}, ...x.repairs ? { repairs: x.repairs } : {} }));
 function actionClockNext(fm) {
   const pending = (Array.isArray(fm?.clock) ? fm.clock : []).filter((e2) => e2 && typeof e2 === "object" && e2.status === "pending" && typeof e2.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(e2.date)).map((e2) => e2.date).sort();
   return pending.length ? pending[0] : null;
@@ -188768,6 +189622,34 @@ function zoneOf(place4) {
     const tz = place4 && typeof place4 === "object" ? place4.time_zone : null;
     const v = tz && typeof tz === "object" ? tz.value : tz;
     return typeof v === "string" && v.trim() ? v.trim() : null;
+  } catch {
+    return null;
+  }
+}
+function actionZone(fm, view) {
+  try {
+    if (!view || typeof view !== "object") return null;
+    const cp = fm && typeof fm === "object" && fm.counterparty && typeof fm.counterparty === "object" ? fm.counterparty : null;
+    let pid = null;
+    if (cp && cp.state === "named" && (cp.kind === void 0 || cp.kind === null || cp.kind === "office") && typeof cp.role === "string" && cp.role.trim()) {
+      const role = cp.role.trim(), body = typeof cp.body === "string" ? cp.body.trim() : null;
+      const c = (Array.isArray(view.counterparties) ? view.counterparties : []).find((x) => x && x.role === role && (body === null || x.body === body));
+      pid = c && typeof c.profile === "string" ? c.profile : null;
+    } else {
+      const k = (Array.isArray(view.action_kinds) ? view.action_kinds : []).find((x) => x && x.kind === (fm && typeof fm === "object" ? fm.action_kind : null) && x.venue);
+      pid = k && typeof k.profile === "string" ? k.profile : null;
+    }
+    if (pid) {
+      let p3 = null;
+      try {
+        p3 = get(pid);
+      } catch {
+        p3 = null;
+      }
+      const z = zoneOf(p3);
+      if (z) return z;
+    }
+    return zoneOf(view);
   } catch {
     return null;
   }
@@ -188796,7 +189678,7 @@ function closeOf(fm, day2, place4) {
 function actionOverdue(fm, nowMs, place4 = null) {
   const next = actionClockNext(fm);
   if (!next) return false;
-  const zone = zoneOf(place4);
+  const zone = typeof place4 === "string" ? zoneOf(place4) : actionZone(fm, place4);
   if (!zone) return null;
   const at48 = instantOf2(nowMs);
   const entries = (Array.isArray(fm.clock) ? fm.clock : []).filter((e2) => e2 && typeof e2 === "object" && e2.status === "pending" && e2.date === next);
@@ -188869,6 +189751,7 @@ var Actions = class _Actions {
     membership,
     promotion,
     host = null,
+    records = null,
     retrieval = null,
     content = null,
     conformance = null,
@@ -188890,6 +189773,7 @@ var Actions = class _Actions {
     this.promotion = promotion;
     this.#deps = {
       host,
+      records,
       retrieval,
       content,
       conformance: conformance ?? void 0,
@@ -188908,6 +189792,20 @@ var Actions = class _Actions {
   }
   get retrieval() {
     return this.#deps.retrieval ||= retrievalOf(this.#deps.host);
+  }
+  /* T47 (N961; split map §3): what this module records apart from the action's document, `action-records` (its R15):
+     the proposals, receipts, scopes and promises the read answers (R25, R66, R30), and the four single-site judgments
+     (R18, R23, R64, R70). Created at this module's creation (`actionsOf`); a test may pass its own. */
+  get records() {
+    return this.#deps.records ||= actionRecordsOf(this.#deps.host, {
+      storage: { sql: this.sql },
+      record: this.record,
+      membership: this.membership,
+      progressions: this.#deps.progressions || null,
+      standards: this.#deps.standards || null,
+      now: this.now,
+      env: this.env
+    });
   }
   get content() {
     return this.#deps.content ||= contentOf(this.#deps.host);
@@ -188990,8 +189888,6 @@ var Actions = class _Actions {
     migrateActions(this.sql);
     const cols = [...this.sql.exec(`PRAGMA table_info(action_basis)`)].map((r) => r.name);
     if (!cols.includes("extent_capture")) this.sql.exec(`ALTER TABLE action_basis ADD COLUMN extent_capture TEXT`);
-    const pcols = [...this.sql.exec(`PRAGMA table_info(action_law_proposals)`)].map((r) => r.name);
-    if (!pcols.includes("standard")) this.sql.exec(`ALTER TABLE action_law_proposals ADD COLUMN standard TEXT`);
     const ocols = [...this.sql.exec(`PRAGMA table_info(action_overrides)`)].map((r) => r.name);
     if (!ocols.includes("ground")) this.sql.exec(`ALTER TABLE action_overrides ADD COLUMN ground TEXT`);
   }
@@ -189036,9 +189932,9 @@ var Actions = class _Actions {
     const c = combine(ids);
     return c && c.ok ? c.view : null;
   }
-  /** R12, R68 (K1444 (iii); N611, K1681): the active profiles' combined view as they stand at the call (K1649), the
-   *  place a clock is read in (its `time_zone`, its offices' hours), or null when none can be read. Provided to
-   *  `retrieval` and `queue-producers` with `zoneOf`, so none spells its own. Writes nothing; never throws. */
+  /** R68 (K1444 (iii); N611, K1681; T47, N960): the active profiles' combined view as they stand at the call (K1649),
+   *  the read for a module with no office (its `time_zone` the group's zone, `zoneOf(place())`), or null when none can
+   *  be read. An action's clock is never read in it: it is read in R100's `actionZone`. Writes nothing; never throws. */
   place() {
     try {
       return this.#view();
@@ -189060,6 +189956,14 @@ var Actions = class _Actions {
     }
     if (v && v.ok === true && v.view && typeof v.view === "object") return v.view;
     return this.#view();
+  }
+  /** R10, R100: the view this module reads (`#governing`), for R100's `actionZone`; null with none. Never throws. */
+  governingView() {
+    try {
+      return this.#governing();
+    } catch {
+      return null;
+    }
   }
   /* R81 (T45): the response statuses the governing view holds for `kind` (jurisdictions R58, R77: an entry with no
      `applies_to` applies to every kind), as tokens; null when the view holds none. */
@@ -189271,7 +190175,7 @@ var Actions = class _Actions {
     const was = head ? _Actions.#lawsKey(heldFm) : JSON.stringify([null, null, null]);
     const now = _Actions.#lawsKey(nextFm);
     if (was !== now)
-      return refuse18(
+      return refuse19(
         "GOVERNING_LAWS_REWRITTEN",
         `${head ? "this revision of" : "this creation of"} ${bundleId} sets or changes its governing laws without op=actionlaws. The laws that govern a request are a member's authored statement, set by that act and carried forward unchanged by every other write. Nothing was written.`,
         { bundleId }
@@ -189285,7 +190189,7 @@ var Actions = class _Actions {
   #machineRiskTierRefusal({ who: who3, nextTier, heldTier, cur, act: act2 }) {
     const heldSet = heldTier === 1 || heldTier === 2 || heldTier === 3;
     if ((!who3 || isMachineIdentity(who3)) && (act2 || (nextTier === 1 || nextTier === 2 || nextTier === 3 || heldSet) && nextTier !== heldTier))
-      return refuse18(
+      return refuse19(
         "MACHINE_CANNOT_SET_RISK_TIER",
         (act2 ? `op=actionrisktier is a member's authored revision of this action's risk tier (held: ${heldTier}).` : cur ? `this revision states risk_tier ${nextTier} where the version it replaces states ${heldTier}.` : `this creation states risk_tier ${nextTier}.`) + " A risk tier is a member's assessment of the legal exposure of filing this action, and only a member's authored act sets 1, 2 or 3. A machine credential may carry a member's tier forward unchanged, and may leave the tier unstated (undetermined) only where no member has set one; it may not remove a member's tier. Nothing was written.",
         { risk_tier: nextTier, held: cur ? heldTier : null }
@@ -189304,7 +190208,7 @@ var Actions = class _Actions {
     const tierMoved = head ? nextTier !== heldTier : false;
     const histMoved = histKey(nextFm) !== (head ? histKey(heldFm) : "[]");
     if (tierMoved || histMoved)
-      return refuse18(
+      return refuse19(
         "RISK_TIER_REWRITTEN",
         (tierMoved ? `this revision of ${bundleId} states risk_tier ${nextTier} where the version it replaces states ${heldTier}` : `this ${head ? "revision" : "creation"} of ${bundleId} ${head ? "changes" : "states"} its risk_tier_history`) + " without op=actionrisktier. After intake a risk tier is revised by that act alone \u2014 it records who, when and why, and keeps every earlier tier readable. Nothing was written.",
         { bundleId, ...head ? { held: heldTier } : {}, risk_tier: nextTier }
@@ -189316,7 +190220,7 @@ var Actions = class _Actions {
     const lawOf = (fm) => fm && typeof fm.law === "string" && fm.law.trim() ? fm.law.trim() : null;
     const was = creation ? null : lawOf(heldFm), now = lawOf(nextFm);
     if ((!who3 || isMachineIdentity(who3)) && was !== now)
-      return refuse18(
+      return refuse19(
         "MACHINE_CANNOT_STATE_RECORDS_LAW",
         "which law governs a records request is a member's statement. A machine credential may write a records_request stating no law, and may propose one (op=actionlawspropose); it may not state, change or remove the law. Nothing was written.",
         { held: was, law: now }
@@ -189334,10 +190238,10 @@ var Actions = class _Actions {
     if (kindMoved) {
       const kinds3 = this.kinds();
       if (!kinds3.includes(nextFm.action_kind))
-        return refuse18("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind your group's Civicsmith offers: one of ${kinds3.join(", ")}. Nothing was written.`, { legal: kinds3 });
+        return refuse19("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind your group's Civicsmith offers: one of ${kinds3.join(", ")}. Nothing was written.`, { legal: kinds3 });
     }
     if (riskTierState(nextFm.risk_tier) === null)
-      return refuse18("RISK_TIER_REFUSED", `risk_tier '${String(nextFm.risk_tier).slice(0, 20)}' is not 1, 2, 3 or undetermined. Nothing was written.`, { legal: Object.keys(RISK_TIERS) });
+      return refuse19("RISK_TIER_REFUSED", `risk_tier '${String(nextFm.risk_tier).slice(0, 20)}' is not 1, 2, 3 or undetermined. Nothing was written.`, { legal: Object.keys(RISK_TIERS) });
     const cp = nextFm.counterparty;
     const cpMoved = creation || !heldFm || JSON.stringify(heldFm.counterparty ?? null) !== JSON.stringify(cp ?? null);
     if (cpMoved && cp !== void 0 && cp !== null) {
@@ -189351,14 +190255,14 @@ var Actions = class _Actions {
       else if (!cf.length && eid && addresseeIsOffice(cp) && eidKind !== "office")
         cf.push({ check: "C-2.10", severity: "error", message: `counterparty.entity_id '${eid.slice(0, 40)}' names ${eidKind ? `an entity of kind ${eidKind}` : "no entity the subject registry holds"}: an office addressee's entity is an office entity (R9, arm: office)` });
       if (cf.length || office)
-        return refuse18(
+        return refuse19(
           "COUNTERPARTY_REFUSED",
           cf.length ? cf[0].message : "a named counterparty is an office, stated by its official role and the body it belongs to (R9). Nothing was written.",
-          { findings: findingsOf(cf.length ? cf : [{ check: "C-2.10", severity: "error", message: "counterparty names no office (role and body)" }]) }
+          { findings: findingsOf2(cf.length ? cf : [{ check: "C-2.10", severity: "error", message: "counterparty names no office (role and body)" }]) }
         );
     }
     if (nextFm.current_state === "resolved" && !RESOLUTIONS.includes(nextFm.resolution))
-      return refuse18("ACTION_RESOLUTION_REFUSED", `a resolved action names how it ended: one of ${RESOLUTIONS.join(", ")}. Nothing was written.`, { legal: RESOLUTIONS });
+      return refuse19("ACTION_RESOLUTION_REFUSED", `a resolved action names how it ended: one of ${RESOLUTIONS.join(", ")}. Nothing was written.`, { legal: RESOLUTIONS });
     const clock2 = nextFm.clock;
     if (clock2 !== void 0 && clock2 !== null) {
       const bad2 = [];
@@ -189371,10 +190275,10 @@ var Actions = class _Actions {
           if (!["pending", "met", "overdue", "waived"].includes(e2.status)) bad2.push({ check: "C-11.1", detail: `clock[${i}].status '${e2.status}' is not one of: pending, met, overdue, waived` });
         }
       });
-      if (bad2.length) return refuse18("CLOCK_REFUSED", bad2[0].detail, { findings: bad2 });
+      if (bad2.length) return refuse19("CLOCK_REFUSED", bad2[0].detail, { findings: bad2 });
     }
     if (!creation && (!who3 || isMachineIdentity(who3) || writer === "mechanical")) {
-      const nowMs = this.#nowMs(null), zone = zoneOf(this.place());
+      const nowMs = this.#nowMs(null), zone = actionZone(heldFm || nextFm, this.governingView());
       const today2 = localToday(nowMs, zone) ?? "0000-00-00";
       const heldClock = heldFm && Array.isArray(heldFm.clock) ? heldFm.clock : [];
       const nextClock = Array.isArray(clock2) ? clock2 : [];
@@ -189382,7 +190286,7 @@ var Actions = class _Actions {
       const moved = clockMovesNotMechanical(heldClock, nextClock, today2).filter((m) => !(m.from === "pending" && m.to === "overdue" && timedEntryPassed(heldClock[m.ord], zone, nowMs)));
       const reshaped = heldClock.length !== nextClock.length || heldClock.some((e2, i) => _Actions.#clockShape(e2) !== _Actions.#clockShape(nextClock[i]));
       if (moved.length || reshaped || !recheck && JSON.stringify(heldClock) !== JSON.stringify(nextClock))
-        return refuse18("CLOCK_STATUS_NOT_MECHANICAL", "a machine write may move a pending clock entry whose date, or stated time of day, has passed to overdue, and nothing else: it never adds, removes or re-dates an entry or sets another status. Nothing was written.", { moves: moved });
+        return refuse19("CLOCK_STATUS_NOT_MECHANICAL", "a machine write may move a pending clock entry whose date, or stated time of day, has passed to overdue, and nothing else: it never adds, removes or re-dates an entry or sets another status. Nothing was written.", { moves: moved });
     }
     return null;
   }
@@ -189408,30 +190312,30 @@ var Actions = class _Actions {
     const held2 = key2(heldFm), next = key2(nextFm);
     if (held2 !== next) {
       if (!who3 || isMachineIdentity(who3))
-        return refuse18("MACHINE_CANNOT_OVERRIDE", "a premise override is a member's open statement that the group acts on a breach it has not determined, on a stated ground and with the reason why. A machine credential may not state or change one. Nothing was written.");
+        return refuse19("MACHINE_CANNOT_OVERRIDE", "a premise override is a member's open statement that the group acts on a breach it has not determined, on a stated ground and with the reason why. A machine credential may not state or change one. Nothing was written.");
       const o = nextFm.premise_override;
       const firstBreach = nextFm.breach === true && !(heldFm && heldFm.breach === true);
       if (held2 !== "null" || !firstBreach)
-        return refuse18("PREMISE_OVERRIDE_REWRITTEN", held2 !== "null" ? "this write edits or removes the action's premise override. It is stated once and kept as it was. Nothing was written." : "a premise override is stated on the creation or revision that first marks the action a breach, and on no other write. Nothing was written.");
+        return refuse19("PREMISE_OVERRIDE_REWRITTEN", held2 !== "null" ? "this write edits or removes the action's premise override. It is stated once and kept as it was. Nothing was written." : "a premise override is stated on the creation or revision that first marks the action a breach, and on no other write. Nothing was written.");
       const keys = o && typeof o === "object" && !Array.isArray(o) ? Object.keys(o) : null;
-      if (!keys || keys.some((k) => k !== "reason" && !OVERRIDE_KEYS.includes(k)) || typeof o.reason !== "string" || !o.reason.trim() || o.reason.length > NOTE_MAX4 || /["\\\r\n]/.test(o.reason))
-        return refuse18(
+      if (!keys || keys.some((k) => k !== "reason" && !OVERRIDE_KEYS.includes(k)) || typeof o.reason !== "string" || !o.reason.trim() || o.reason.length > NOTE_MAX5 || /["\\\r\n]/.test(o.reason))
+        return refuse19(
           "PREMISE_OVERRIDE_REFUSED",
-          `premise_override is {ground, reason}: the reason 1 to ${NOTE_MAX4} characters with no quote, backslash or line break, and nothing else beside them. Nothing was written.`,
-          { max: NOTE_MAX4 }
+          `premise_override is {ground, reason}: the reason 1 to ${NOTE_MAX5} characters with no quote, backslash or line break, and nothing else beside them. Nothing was written.`,
+          { max: NOTE_MAX5 }
         );
       const found3 = [];
       overrideGroundFindings(_Actions.overrideOf(nextFm), found3);
       const errors = found3.filter((x) => x.severity === "error");
       if (errors.length)
-        return refuse18(errors[0].code, errors[0].message + ". Nothing was written.", {
-          findings: findingsOf(errors),
+        return refuse19(errors[0].code, errors[0].message + ". Nothing was written.", {
+          findings: findingsOf2(errors),
           ...errors[0].code === "OVERRIDE_NO_GROUND" ? { grounds: [...OVERRIDE_GROUNDS], quick_route: { ...QUICK_ROUTE } } : {}
         });
     }
     const cp = nextFm.counterparty;
     if (nextFm.breach === true && cp !== void 0 && cp !== null && !addresseeIsOffice(cp))
-      return refuse18("ADDRESSEE_NOT_AN_OFFICE", `an action recorded for a breach is addressed to the office responsible, by its official role and body; this one is addressed to ${cp && typeof cp === "object" && cp.state === "named" ? `a ${cp.kind}` : `${cp && cp.state ? `an addressee ${cp.state}` : "no office"}`}. Nothing was written.`, { counterparty_state: cp && typeof cp === "object" ? cp.state ?? null : null });
+      return refuse19("ADDRESSEE_NOT_AN_OFFICE", `an action recorded for a breach is addressed to the office responsible, by its official role and body; this one is addressed to ${cp && typeof cp === "object" && cp.state === "named" ? `a ${cp.kind}` : `${cp && cp.state ? `an addressee ${cp.state}` : "no office"}`}. Nothing was written.`, { counterparty_state: cp && typeof cp === "object" ? cp.state ?? null : null });
     return null;
   }
   /* R45 (D5), R46 (Bob's ruling 1 of 2026-09-29): the group's contact, set or changed by a member and naming one; the
@@ -189440,7 +190344,7 @@ var Actions = class _Actions {
     const same3 = (k) => JSON.stringify(heldFm && heldFm[k] !== void 0 ? heldFm[k] : null) === JSON.stringify(nextFm[k] !== void 0 ? nextFm[k] : null);
     if (!same3("contact")) {
       if (!who3 || isMachineIdentity(who3))
-        return refuse18("MACHINE_CANNOT_SET_CONTACT", "the group's contact for an action is a member's choice; a machine credential may not set or change it. Nothing was written.");
+        return refuse19("MACHINE_CANNOT_SET_CONTACT", "the group's contact for an action is a member's choice; a machine credential may not set or change it. Nothing was written.");
       const id = contactId(nextFm.contact);
       let facts = null;
       if (id) {
@@ -189455,11 +190359,11 @@ var Actions = class _Actions {
     const has3 = (fm, k) => fm && fm[k] !== void 0 && fm[k] !== null && fm[k] !== "";
     if (c.head) {
       if (!same3("plan") || !same3("option"))
-        return refuse18("PLAN_LINK_REWRITTEN", "the plan and option an action was started from are set when it is created and never set, changed or removed by a revision. Nothing was written.");
+        return refuse19("PLAN_LINK_REWRITTEN", "the plan and option an action was started from are set when it is created and never set, changed or removed by a revision. Nothing was written.");
     } else if (has3(nextFm, "plan") || has3(nextFm, "option")) {
       const plan = nextFm.plan, option = nextFm.option;
       if (typeof plan !== "string" || !PLAN_ID_RE.test(plan) || !(typeof option === "string" && /^[A-Za-z0-9_.:-]{1,80}$/.test(option) || Number.isInteger(option)))
-        return refuse18("PLAN_LINK_REFUSED", "plan is a PLN- id and option a token of 1 to 80 letters, digits, '_', '.', ':' or '-', stated together. Nothing was written.");
+        return refuse19("PLAN_LINK_REFUSED", "plan is a PLN- id and option a token of 1 to 80 letters, digits, '_', '.', ':' or '-', stated together. Nothing was written.");
     }
     return null;
   }
@@ -189472,9 +190376,9 @@ var Actions = class _Actions {
     const lawStd = val5(nextFm, "law_standard");
     if (JSON.stringify(val5(heldFm, "law_standard")) !== JSON.stringify(lawStd)) {
       if (!who3 || isMachineIdentity(who3))
-        return refuse18("MACHINE_CANNOT_STATE_RECORDS_LAW", "which law governs a records request, and the held standard it names, are a member's statement. A machine credential may propose one (op=actionlawspropose); it may not state, change or remove it. Nothing was written.", { held: val5(heldFm, "law_standard"), law_standard: lawStd });
+        return refuse19("MACHINE_CANNOT_STATE_RECORDS_LAW", "which law governs a records request, and the held standard it names, are a member's statement. A machine credential may propose one (op=actionlawspropose); it may not state, change or remove it. Nothing was written.", { held: val5(heldFm, "law_standard"), law_standard: lawStd });
       if (lawStd !== null && (nextFm.action_kind !== "records_request" || typeof nextFm.law !== "string" || !nextFm.law.trim()))
-        return refuse18(
+        return refuse19(
           "RECORDS_LAW_REFUSED",
           "law_standard names the held standard of a records request's stated law; this action states no law, or is not a records_request. Nothing was written.",
           { findings: [{
@@ -189484,14 +190388,14 @@ var Actions = class _Actions {
           }] }
         );
       if (lawStd !== null) {
-        const r = this.#standardSeen(lawStd, viewer);
+        const r = this.records.standardSeen(lawStd, viewer);
         if (r) return r;
       }
     }
     const proc2 = val5(nextFm, "proceeding");
     if (JSON.stringify(val5(heldFm, "proceeding")) !== JSON.stringify(proc2)) {
       if (!who3 || isMachineIdentity(who3))
-        return refuse18("MACHINE_CANNOT_SET_PROCEEDING", "the proceeding an action belongs to is a member's statement; a machine credential may not set, change or remove it. Nothing was written.");
+        return refuse19("MACHINE_CANNOT_SET_PROCEEDING", "the proceeding an action belongs to is a member's statement; a machine credential may not set, change or remove it. Nothing was written.");
       if (proc2 !== null) {
         const r = this.#proceedingRefusal(proc2);
         if (r) return r;
@@ -189499,70 +190403,25 @@ var Actions = class _Actions {
     }
     return null;
   }
-  /* R64: null when `id` is a standard the viewer may read, else `standards.noSuchStandard`'s one answer. */
-  #standardSeen(id, viewer) {
-    const sid = typeof id === "string" ? id.trim() : "";
-    const st = this.standards;
-    let r = null;
-    if (sid && BUNDLE_ID_RE.test(sid) && sid.startsWith("STD-") && st) {
-      try {
-        r = st.standardRead({ id: sid, viewer });
-      } catch {
-        r = null;
-      }
-    }
-    return r && r.ok ? null : noSuchStandard(sid || (typeof id === "string" ? id : null));
-  }
   /* R65: null when `id` is a registered entity of kind `proceeding`, else the refusal. */
   #proceedingRefusal(id) {
     const pid = typeof id === "string" ? id.trim() : "";
     const kind2 = pid ? this.#entityKind(pid) : null;
     if (!kind2) return noSuchEntity(pid || null, { end: "proceeding" });
     if (kind2 !== "proceeding")
-      return refuse18("NOT_A_PROCEEDING", `proceeding names an entity of kind ${kind2}; an action belongs to an entity of kind proceeding. Nothing was written.`, { entity_id: pid, kind: kind2 });
+      return refuse19("NOT_A_PROCEEDING", `proceeding names an entity of kind ${kind2}; an action belongs to an entity of kind proceeding. Nothing was written.`, { entity_id: pid, kind: kind2 });
     return null;
   }
   /* R70, R72 (H30 (1); K2505, K2552, K2553, K2561): a creation or revision stating `seeks`, or changing or removing it,
      is judged before any write: a machine or unstamped author may not (R72: what a request asks the records for is a
-     member's statement; a machine proposes it, R73); then `#seeksRefusal` (R70). Asked only when `seeks` moved, so a later
+     member's statement; a machine proposes it, `action-records` R3); then `action-records.seeksRefusal` (R70, its R10). Asked only when `seeks` moved, so a later
      revision is never refused for a progression's later version. */
   #seeksFence(heldFm, nextFm, who3) {
     const key2 = (fm) => JSON.stringify(fm && fm.seeks !== void 0 && fm.seeks !== null ? fm.seeks : null);
     if (key2(heldFm) === key2(nextFm)) return null;
     if (!who3 || isMachineIdentity(who3))
-      return refuse18("MACHINE_CANNOT_STATE_SEEKS", "which stages a records request asks the records for is a member's statement; a machine credential may not state, change or remove it, and may propose it (op=actionseekspropose). Nothing was written.");
-    return this.#seeksRefusal(nextFm);
-  }
-  /* R70, R73: action-grammar's `seeksFindings` (its R13) over `fm`, with the facts read here through
-     `progressions.readProgression`, one entry per distinct progression an item names: its declared stage keys, or null
-     for a progression the record does not hold. A definition that cannot be read is read as not held (fail closed), and
-     the refusal says so. The refusal is the grammar's own (C-117.29), relayed with every finding; null when none. */
-  #seeksRefusal(fm) {
-    const stages2 = {};
-    let unreadable2 = false;
-    const items = Array.isArray(fm.seeks) ? fm.seeks : [];
-    for (const p3 of new Set(items.map((x) => x && typeof x === "object" ? x.progression : null).filter((x) => typeof x === "string" && x.trim()))) {
-      let r = null;
-      try {
-        r = this.progressions ? this.progressions.readProgression({ progressionKey: p3 }) : null;
-      } catch {
-        r = null;
-      }
-      if (!r || r.ok === false) {
-        unreadable2 = true;
-        stages2[p3] = null;
-        continue;
-      }
-      stages2[p3] = r.found ? (r.stages || []).map((st) => st.stage_key) : null;
-    }
-    const found3 = [];
-    seeksFindings(fm, { stages: stages2 }, found3);
-    const errors = found3.filter((x) => x.severity === "error");
-    if (!errors.length) return null;
-    return refuse18(errors[0].code, errors[0].message, {
-      findings: findingsOf(errors),
-      ...unreadable2 ? { cause: "PROGRESSIONS_UNREADABLE" } : {}
-    });
+      return refuse19("MACHINE_CANNOT_STATE_SEEKS", "which stages a records request asks the records for is a member's statement; a machine credential may not state, change or remove it, and may propose it (op=actionseekspropose). Nothing was written.");
+    return this.records.seeksRefusal(nextFm);
   }
   /* T45: the errors of an action-grammar arm (R15, R20–R23), as the refusal reads them. */
   static #errors(list6) {
@@ -189575,7 +190434,7 @@ var Actions = class _Actions {
   }
   /* T45: the refusal minted from a grammar arm's first finding, every finding carried; `dflt` when it names no code. */
   static #fromFindings(errors, dflt, extra = {}) {
-    return errors.length ? refuse18(errors[0].code || dflt, errors[0].message, { findings: findingsOf(errors), ...extra }) : null;
+    return errors.length ? refuse19(errors[0].code || dflt, errors[0].message, { findings: findingsOf2(errors), ...extra }) : null;
   }
   /* T45 (R33, R77–R79, R82, R86, R94; R81, R83 at the write): the fields an action states beside its addressee, each
      asked only when it moved, so a later revision is never refused for a field it carries forward. A machine or
@@ -189587,12 +190446,12 @@ var Actions = class _Actions {
     const moved = (k) => JSON.stringify(heldFm && heldFm[k] !== void 0 ? heldFm[k] : null) !== JSON.stringify(nextFm[k] !== void 0 ? nextFm[k] : null);
     const stated3 = (k) => nextFm[k] !== void 0 && nextFm[k] !== null;
     if (moved("copied")) {
-      if (machine3) return refuse18("MACHINE_CANNOT_SET_COPIED", "the offices an action copies are a member's statement; a machine credential may not set or change them. Nothing was written.");
+      if (machine3) return refuse19("MACHINE_CANNOT_SET_COPIED", "the offices an action copies are a member's statement; a machine credential may not set or change them. Nothing was written.");
       if (stated3("copied")) {
         const r = _Actions.#fromFindings(_Actions.#pushed(copiedFindings, nextFm), "COUNTERPARTY_REFUSED");
         if (r) return r;
         const bad2 = (Array.isArray(nextFm.copied) ? nextFm.copied : []).map((e2, i) => ({ e: e2, i })).find(({ e: e2 }) => e2 && typeof e2.entity_id === "string" && e2.entity_id.trim() && (this.#entityKind(e2.entity_id.trim()) === "person" || addresseeIsOffice(e2) && this.#entityKind(e2.entity_id.trim()) !== "office"));
-        if (bad2) return refuse18(
+        if (bad2) return refuse19(
           "COUNTERPARTY_REFUSED",
           `copied[${bad2.i}].entity_id names a person or no office the subject registry holds: a copied office is an office, never a private individual (R77, R9). Nothing was written.`,
           { findings: [{ check: "C-2.10", detail: `copied[${bad2.i}].entity_id: not an office entity (R9, arm: office)` }] }
@@ -189600,7 +190459,7 @@ var Actions = class _Actions {
       }
     }
     if (moved("partners")) {
-      if (machine3) return refuse18("MACHINE_CANNOT_SET_PARTNERS", "the partner organisations of a joint action are a member's statement; a machine credential may not set or change them. Nothing was written.");
+      if (machine3) return refuse19("MACHINE_CANNOT_SET_PARTNERS", "the partner organisations of a joint action are a member's statement; a machine credential may not set or change them. Nothing was written.");
       if (stated3("partners")) {
         const r = _Actions.#fromFindings(_Actions.#pushed(partnersFindings, nextFm), "PARTNERS_REFUSED");
         if (r) return r;
@@ -189610,7 +190469,7 @@ var Actions = class _Actions {
           if (!eid) continue;
           const kind2 = this.#entityKind(eid);
           if (!ORGANISATION_KINDS2.includes(kind2))
-            return refuse18(
+            return refuse19(
               "PARTNERS_REFUSED",
               `partners[${i}].entity_id names ${kind2 ? `an entity of kind ${kind2}` : "no entity the subject registry holds"}: a partner is an organisation, never a person. Nothing was written.`,
               { entry: i, findings: [{ check: "C-2.10", detail: `partners[${i}].entity_id is not an organisation (R78)` }] }
@@ -189619,14 +190478,14 @@ var Actions = class _Actions {
       }
     }
     if (moved("press_terms")) {
-      if (machine3) return refuse18("MACHINE_CANNOT_SET_PRESS_TERMS", "the terms agreed with the press are a member's statement; a machine credential may not set or change them. Nothing was written.");
+      if (machine3) return refuse19("MACHINE_CANNOT_SET_PRESS_TERMS", "the terms agreed with the press are a member's statement; a machine credential may not set or change them. Nothing was written.");
       if (stated3("press_terms")) {
         const r = _Actions.#fromFindings(_Actions.#pushed(pressTermsFindings, nextFm), "PRESS_TERMS_REFUSED");
         if (r) return r;
       }
     }
     if (moved("reply_owed") || moved("reply_owed_reason")) {
-      if (machine3) return refuse18("MACHINE_CANNOT_SET_REPLY_OWED", "whether a body owes the group a reply is a member's statement; a machine credential may not set or change it. Nothing was written.");
+      if (machine3) return refuse19("MACHINE_CANNOT_SET_REPLY_OWED", "whether a body owes the group a reply is a member's statement; a machine credential may not set or change it. Nothing was written.");
       const r = _Actions.#fromFindings(_Actions.#pushed(
         actionFieldFindings,
         { reply_owed: nextFm.reply_owed, reply_owed_reason: nextFm.reply_owed_reason },
@@ -189635,7 +190494,7 @@ var Actions = class _Actions {
       if (r) return r;
     }
     if (moved("follows_action")) {
-      if (heldFm) return refuse18("FOLLOWS_ACTION_REWRITTEN", "the action an action follows is stated when it is created and never set, changed or removed by a revision. Nothing was written.");
+      if (heldFm) return refuse19("FOLLOWS_ACTION_REWRITTEN", "the action an action follows is stated when it is created and never set, changed or removed by a revision. Nothing was written.");
       if (stated3("follows_action")) {
         const r = _Actions.#fromFindings(_Actions.#pushed(
           actionFieldFindings,
@@ -189673,7 +190532,7 @@ var Actions = class _Actions {
     const e2 = ledger[i];
     if (speakerMoved && e2.speaker !== void 0 && e2.speaker !== null) {
       if (!who3 || isMachineIdentity(who3))
-        return refuse18("MACHINE_CANNOT_SET_CONTACT", "who spoke for the group in a sending is a member's statement; a machine credential may not set it. Nothing was written.");
+        return refuse19("MACHINE_CANNOT_SET_CONTACT", "who spoke for the group in a sending is a member's statement; a machine credential may not set it. Nothing was written.");
     }
     const r = _Actions.#fromFindings(_Actions.#errors(entryFieldFindings(
       ledger,
@@ -189728,7 +190587,7 @@ var Actions = class _Actions {
     const part = legs > ACTION_LEGS_MAX ? "action_basis" : "correspondence";
     const count2 = part === "action_basis" ? legs : ledger;
     const limit = part === "action_basis" ? ACTION_LEGS_MAX : ACTION_LEDGER_MAX;
-    return refuse18("ACTION_TOO_LARGE", `this action's ${part} holds ${count2} entries; an action holds at most ${limit}. Nothing was written.`, { part, count: count2, limit });
+    return refuse19("ACTION_TOO_LARGE", `this action's ${part} holds ${count2} entries; an action holds at most ${limit}. Nothing was written.`, { part, count: count2, limit });
   }
   /** R1–R3, R5–R8, R33: this module's check, run inside every promotion before the write (promotion R39). */
   check(c) {
@@ -189761,14 +190620,14 @@ var Actions = class _Actions {
       if (large) return large;
       const af = [];
       actionBasisFindings(nextFm, af);
-      if (af.some((x) => x.severity === "error")) return refuse18("ACTION_BASIS_REFUSED", void 0, { findings: findingsOf(af) });
+      if (af.some((x) => x.severity === "error")) return refuse19("ACTION_BASIS_REFUSED", void 0, { findings: findingsOf2(af) });
       const cf = [];
       correspondenceFindings(nextFm, cf);
-      if (cf.some((x) => x.severity === "error")) return refuse18("CORRESPONDENCE_REFUSED", void 0, { findings: findingsOf(cf) });
+      if (cf.some((x) => x.severity === "error")) return refuse19("CORRESPONDENCE_REFUSED", void 0, { findings: findingsOf2(cf) });
       for (const leg2 of Array.isArray(nextFm.action_basis) ? nextFm.action_basis : []) {
         if (!leg2 || typeof leg2.target !== "string") continue;
         if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg2.target) && !(leg2.kind === "rests_on" && this.#successRecord(leg2.target, pkg.actorViewer ?? pkg.viewer ?? c.viewer ?? (who3 || null))))
-          return refuse18("ACTION_BASIS_REFUSED", void 0, { target: leg2.target, findings: [{
+          return refuse19("ACTION_BASIS_REFUSED", void 0, { target: leg2.target, findings: [{
             check: "C-2.10",
             detail: `action_basis target '${leg2.target}' does not resolve in this store: an action that names why it exists names something that exists, or it points a reader at nothing while claiming a reason`
           }] });
@@ -189777,7 +190636,7 @@ var Actions = class _Actions {
         if (!e2 || typeof e2.artifact_sha !== "string" || !e2.artifact_sha.trim()) continue;
         const sha2 = e2.artifact_sha.trim().replace(/^sha256:/, "").toLowerCase();
         if (!this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha2))
-          return refuse18("CORRESPONDENCE_REFUSED", void 0, { artifact_sha: sha2, findings: [{
+          return refuse19("CORRESPONDENCE_REFUSED", void 0, { artifact_sha: sha2, findings: [{
             check: "C-2.10",
             detail: `correspondence artifact_sha '${sha2.slice(0, 16)}...' does not resolve in the register: an entry claiming captured bytes names bytes this store holds, or it is testimony and says so with an account and an author (DEC-13)`,
             repairs: ["capture the artifact first (op=capture), then record its sha", "or record a named account instead"]
@@ -189789,11 +190648,11 @@ var Actions = class _Actions {
     if (nextFm && typeof nextFm === "object" && !pkg.replay) {
       const rf = [];
       respondsToEdgeFindings(nextFm, rf);
-      if (rf.some((x) => x.severity === "error")) return refuse18("RESPONDS_TO_REFUSED", void 0, { findings: findingsOf(rf) });
+      if (rf.some((x) => x.severity === "error")) return refuse19("RESPONDS_TO_REFUSED", void 0, { findings: findingsOf2(rf) });
       for (const r of Array.isArray(nextFm.references) ? nextFm.references : []) {
         if (!r || typeof r !== "object" || r.rel !== "responds_to") continue;
         if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.target))
-          return refuse18("RESPONDS_TO_REFUSED", void 0, { target: r.target, findings: [{
+          return refuse19("RESPONDS_TO_REFUSED", void 0, { target: r.target, findings: [{
             check: "C-6.1",
             detail: `responds_to target '${r.target}' does not resolve in this store: this document claims to be what came back from an ask that is not here`
           }] });
@@ -189851,8 +190710,8 @@ var Actions = class _Actions {
     if (superseded) return determinationSuperseded(superseded.id, superseded.by);
     if (voided) return determinationVoided(voided.id, voided.causes);
     if (notNoncompliant)
-      return refuse18("DETERMINATION_NOT_NONCOMPLIANT", "an action recorded for a breach rests on a determination that the government acted out of conformance with at least one standard it names; the determination it names records no noncompliant outcome. Nothing was written.", { determination: notNoncompliant });
-    return refuse18(
+      return refuse19("DETERMINATION_NOT_NONCOMPLIANT", "an action recorded for a breach rests on a determination that the government acted out of conformance with at least one standard it names; the determination it names records no noncompliant outcome. Nothing was written.", { determination: notNoncompliant });
+    return refuse19(
       "ACTION_NO_DETERMINATION",
       readable ? "an action recorded for a breach rests on a live conformance determination you may see, as a rests_on leg. None of its legs names one. Nothing was written." : "an action recorded for a breach rests on a conformance determination, and no determination can be read on your group's Civicsmith yet, so none could be found. Nothing was written.",
       readable ? {} : { cause: "CONFORMANCE_UNAVAILABLE" }
@@ -190009,7 +190868,10 @@ var Actions = class _Actions {
     const findings = [];
     respondsToEdgeFindings(fm, findings);
     if (fm.object_type === "action")
-      checkActionExtension({ fm, nowMs: this.#nowMs(null), actionKinds: this.kinds(), zone: zoneOf(this.place()) }, findings);
+      checkActionExtension(
+        { fm, nowMs: this.#nowMs(null), actionKinds: this.kinds(), zone: actionZone(fm, this.governingView()) },
+        findings
+      );
     return findings;
   }
   /* REC-24 (c): MOVING AN ACTION THROUGH ITS OWN STATE MACHINE — the first op
@@ -190075,11 +190937,11 @@ var Actions = class _Actions {
         reason: "ACTION_MOVE_NO_REASON",
         detail: "an action moves for a stated reason, authored by the member moving it and never prefilled. A state change with no account of why cannot be checked by anyone."
       };
-    if (why2.length > NOTE_MAX4 || /["\\\r\n]/.test(why2))
+    if (why2.length > NOTE_MAX5 || /["\\\r\n]/.test(why2))
       return {
         ok: false,
         reason: "BAD_REASON",
-        detail: `reason is at most ${NOTE_MAX4} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
+        detail: `reason is at most ${NOTE_MAX5} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
       };
     if (!target)
       return { ok: false, reason: "NO_TARGET", detail: "one action moves at a time: pass target=<action id>" };
@@ -190337,11 +191199,11 @@ Reason: ${why2}
         detail: "nothing arrived, so there are no bytes to hash. A non-response is recorded as a named account with its date (DEC-13)."
       };
     for (const [name3, v] of [["account", acct], ["medium", String(medium ?? "")], ["party", String(party ?? "")]])
-      if (v.length > NOTE_MAX4 || /["\\\r\n]/.test(v))
+      if (v.length > NOTE_MAX5 || /["\\\r\n]/.test(v))
         return {
           ok: false,
           reason: `BAD_${name3.toUpperCase()}`,
-          detail: `${name3} is at most ${NOTE_MAX4} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
+          detail: `${name3} is at most ${NOTE_MAX5} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`
         };
     const quote2 = {};
     for (const [k, v] of [
@@ -190379,7 +191241,7 @@ Reason: ${why2}
         ...extra || {}
       };
     };
-    for (const [k, max] of [["exemptions", NOTE_MAX4], ["due_cite", CITATION_MAX2]])
+    for (const [k, max] of [["exemptions", NOTE_MAX5], ["due_cite", CITATION_MAX2]])
       if (life[k] !== void 0 && (life[k].length > max || /["\\\r\n]/.test(life[k])))
         return refusal39(
           "LIFECYCLE_TEXT_UNWRITABLE",
@@ -190395,10 +191257,10 @@ Reason: ${why2}
         );
       }
     for (const k of ["quote_currency", "quote_basis"])
-      if (quote2[k] !== void 0 && (quote2[k].length > NOTE_MAX4 || /["\\\r\n]/.test(quote2[k])))
+      if (quote2[k] !== void 0 && (quote2[k].length > NOTE_MAX5 || /["\\\r\n]/.test(quote2[k])))
         return refusal39(
           "QUOTE_TEXT_UNWRITABLE",
-          `${k} is at most ${NOTE_MAX4} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`,
+          `${k} is at most ${NOTE_MAX5} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`,
           { field: k }
         );
     const mark = pressure === null || pressure === void 0 || pressure === "" ? null : _Actions.#pressureOf(pressure);
@@ -190455,7 +191317,7 @@ Reason: ${why2}
     const fm = parseFrontmatter(liveMd.content).data || {};
     if (direction === "no_response" && fm.reply_owed === false) {
       this.#releaseLease(target, who3);
-      return refuse18("NO_REPLY_OWED", "this action states that the body owes the group no reply, so silence is never recorded as a non-response. Nothing was written.", {
+      return refuse19("NO_REPLY_OWED", "this action states that the body owes the group no reply, so silence is never recorded as a non-response. Nothing was written.", {
         target,
         reply_owed: false,
         ...T45_SENTENCES.reply_not_owed,
@@ -190545,7 +191407,7 @@ Reason: ${why2}
       const inLaw = stageInLaw(life.stage, this.#lawStages(fm.law));
       if (inLaw === "not_in_law") {
         this.#releaseLease(target, who3);
-        return refuse18("STAGE_NOT_IN_LAW", `stage '${life.stage}' is not one the law this request is made under lists, as your group's jurisdiction states it. Nothing was written.`, {
+        return refuse19("STAGE_NOT_IN_LAW", `stage '${life.stage}' is not one the law this request is made under lists, as your group's jurisdiction states it. Nothing was written.`, {
           target,
           stage: life.stage,
           stages: (this.#lawStages(fm.law) || []).map((x) => x && x.stage)
@@ -190643,11 +191505,11 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     if (sp) fields.speaker = sp;
     const os = obj(officeStatus), fe = obj(foundElsewhere);
     if (sp && !tok3(sp))
-      return refuse18("SPEAKER_REFUSED", "speaker is the member id of the member who spoke for the group in this sending. Nothing was written.");
+      return refuse19("SPEAKER_REFUSED", "speaker is the member id of the member who spoke for the group in this sending. Nothing was written.");
     if (os && (os.bad || !text7(os.words) || !tok3(os.status)))
-      return refuse18("OFFICE_STATUS_WITHOUT_OUTCOME", "office_status is {words, status?}: the office's own wording, with no quote, backslash or line break, and a status the profile holds. Nothing was written.");
+      return refuse19("OFFICE_STATUS_WITHOUT_OUTCOME", "office_status is {words, status?}: the office's own wording, with no quote, backslash or line break, and a status the profile holds. Nothing was written.");
     if (fe && (fe.bad || !tok3(fe.kind ?? "") || !text7(fe.note)))
-      return refuse18("FOUND_ELSEWHERE_REFUSED", "found_elsewhere is {kind, note?}: a kind and a note with no quote, backslash or line break. Nothing was written.");
+      return refuse19("FOUND_ELSEWHERE_REFUSED", "found_elsewhere is {kind, note?}: a kind and a note with no quote, backslash or line break. Nothing was written.");
     if (os && os.words !== void 0) fields.office_words = os.words;
     if (os && os.status !== void 0) fields.office_status = String(os.status);
     if (fe) fields.found_elsewhere = String(fe.kind);
@@ -190683,15 +191545,15 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
      `action-holds`' since T45 and judges its own. */
   #pressureRefusal({ who: who3, mark, direction }) {
     if (!who3 || isMachineIdentity(who3))
-      return refuse18("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the group is a member's judgement; a machine credential may not mark it. Nothing was written.");
-    if (!mark || !PRESSURE_KINDS2.includes(mark.kind) || !mark.note || mark.note.length > NOTE_MAX4 || /["\\\r\n]/.test(mark.raw))
-      return refuse18(
+      return refuse19("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the group is a member's judgement; a machine credential may not mark it. Nothing was written.");
+    if (!mark || !PRESSURE_KINDS2.includes(mark.kind) || !mark.note || mark.note.length > NOTE_MAX5 || /["\\\r\n]/.test(mark.raw))
+      return refuse19(
         "PRESSURE_REFUSED",
-        `a pressure mark is {kind, note}: kind one of ${PRESSURE_KINDS2.join(", ")}, the note 1 to ${NOTE_MAX4} characters with no quote, backslash or line break. Nothing was written.`,
-        { legal: PRESSURE_KINDS2, max: NOTE_MAX4 }
+        `a pressure mark is {kind, note}: kind one of ${PRESSURE_KINDS2.join(", ")}, the note 1 to ${NOTE_MAX5} characters with no quote, backslash or line break. Nothing was written.`,
+        { legal: PRESSURE_KINDS2, max: NOTE_MAX5 }
       );
     if (direction !== "received")
-      return refuse18("PRESSURE_NOT_RECEIVED", `pressure is marked on a received entry; this one is ${direction || "not one"}. Nothing was written.`);
+      return refuse19("PRESSURE_NOT_RECEIVED", `pressure is marked on a received entry; this one is ${direction || "not one"}. Nothing was written.`);
     return null;
   }
   /** R47: `actionCreate` is the same write as a promotion of an action document (R1–R3, R5–R11, R45, R46 and action-grammar R3 and R6 at the act): the plane
@@ -190829,7 +191691,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
       };
     if (!target)
       return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const read3 = this.#lawEntries(laws);
+    const read3 = this.records.lawEntries(laws);
     if (!read3.ok) return read3;
     const entries = read3.entries;
     const gate = viewerPredicate(viewer);
@@ -190859,7 +191721,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const fm = parseFrontmatter(liveMd.content).data || {};
     for (const e2 of entries) {
       if (!e2.standard) continue;
-      const r = this.#standardSeen(e2.standard, viewer ?? who3);
+      const r = this.records.standardSeen(e2.standard, viewer ?? who3);
       if (r) return { ...r, target };
     }
     const before3 = governingLawsOf(fm);
@@ -190918,81 +191780,6 @@ Replaced: ${before3.state === "stated" ? before3.laws.map((e2) => `${e2.level} $
       replaced: before3.state === "stated" ? before3.laws : null,
       weight: "single"
     };
-  }
-  /* D-149 — WHAT A WELL-FORMED LIST OF GOVERNING LAWS IS, decided in ONE place.
-   *
-   * EXTRACTED FROM `actionLaws` BY REC-195, and the extraction is the point rather than tidiness. REC-195 adds a
-   * SECOND caller — `actionLawsPropose`, the machine's proposal — and a second caller judging the same shape is
-   * how REC-46's eleven-copies-of-one-predicate failure arrives at a grammar. The alternative was a second family
-   * of refusal codes saying the same four things about the same four conditions, which would have made the
-   * catalogue claim the plane draws a distinction it does not draw. So both acts ask this, both refuse with
-   * C-73.2..5, and a change to what a citation may be cannot reach one act and miss the other.
-   *
-   * IT JUDGES THE SHAPE AND NEVER THE LAW. Whether a citation is the RIGHT law for the agency asked is a member's
-   * reading and the plane does not try (D-149: the plane encodes no law's rules). Returns the parsed entries or
-   * the refusal, and writes nothing. */
-  /* An instance method that reads no instance state: written so for the legacy refusal-code guard, which could not
-     see a static method (deleted in T20, K879). DEC-49's totality over these codes is control-plane's
-     `test/m/control-plane/families.test.mjs` (its R22). */
-  #lawEntries(laws) {
-    let list6 = laws;
-    if (typeof list6 === "string") {
-      try {
-        list6 = JSON.parse(list6);
-      } catch {
-        list6 = null;
-      }
-    }
-    const entries = [];
-    if (!Array.isArray(list6) || !list6.length)
-      return {
-        ok: false,
-        reason: "NO_LAWS",
-        legal_levels: LAW_LEVELS,
-        detail: "the act names at least one law as {level, citation}. An action whose laws nobody has stated reads UNDETERMINED on its own; an empty list is not a statement."
-      };
-    if (list6.length > GOVERNING_LAWS_MAX)
-      return {
-        ok: false,
-        reason: "TOO_MANY_LAWS",
-        count: list6.length,
-        max: GOVERNING_LAWS_MAX,
-        detail: `one act states at most ${GOVERNING_LAWS_MAX} governing laws`
-      };
-    const seen = /* @__PURE__ */ new Set();
-    for (let i = 0; i < list6.length; i++) {
-      const e2 = list6[i];
-      const level = e2 && typeof e2 === "object" ? String(e2.level ?? "").trim() : "";
-      const citation2 = e2 && typeof e2 === "object" && typeof e2.citation === "string" ? e2.citation.trim() : "";
-      if (!LAW_LEVELS.includes(level))
-        return {
-          ok: false,
-          reason: "BAD_LAW_LEVEL",
-          index: i,
-          level,
-          legal: LAW_LEVELS,
-          detail: `laws[${i}].level is one of ${LAW_LEVELS.join(", ")}`
-        };
-      if (!citation2 || citation2.length > CITATION_MAX2 || /["\\\r\n]/.test(citation2))
-        return {
-          ok: false,
-          reason: "BAD_CITATION",
-          index: i,
-          detail: `laws[${i}].citation is 1 to ${CITATION_MAX2} characters with no quote, backslash or newline: the restricted frontmatter grammar has no escapes`
-        };
-      const key2 = `${level}\0${citation2.toLowerCase()}`;
-      if (seen.has(key2))
-        return {
-          ok: false,
-          reason: "BAD_CITATION",
-          index: i,
-          detail: `laws[${i}] repeats an earlier entry: a law is named once at its level`
-        };
-      seen.add(key2);
-      const std = e2.standard === void 0 || e2.standard === null || e2.standard === "" ? null : String(e2.standard).trim();
-      entries.push({ level, citation: citation2, ...std ? { standard: std } : {} });
-    }
-    return { ok: true, entries };
   }
   /* D-149: REPLACE the top-level `governing_laws:` block (the key line and its indented rows) with `entries`,
      or open it before the closing fence when absent — `#spliceCorrespondence`'s grammar, whole-block. Returns
@@ -191086,7 +191873,7 @@ Replaced: ${before3.state === "stated" ? before3.laws.map((e2) => `${e2.level} $
     const next = riskTierState(asked);
     const why2 = typeof reason2 === "string" ? reason2.trim() : "";
     const text0 = _Actions.#appendRiskTierHistory(liveMd.content, null);
-    if (next !== 1 && next !== 2 && next !== 3) return this.#badRiskTier(target, tier, "the act");
+    if (next !== 1 && next !== 2 && next !== 3) return this.records.badRiskTier(target, tier, "the act");
     if (!why2 || why2.length > RISK_TIER_REASON_MAX || /["\\\r\n]/.test(why2))
       return {
         ok: false,
@@ -191166,15 +191953,6 @@ Reason: ${why2}
       weight: "single"
     };
   }
-  /* R23, R28 (C-90.2): the one site that answers a tier that is not 1, 2 or 3, for the act and for a proposal alike
-     (one condition, one code). */
-  #badRiskTier(target, tier, who3) {
-    return refuse18(
-      "BAD_RISK_TIER",
-      `${who3} states a tier of 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). Undetermined is what an action reads when nobody has assessed it, not a tier to set.`,
-      { target, tier: tier ?? null, legal: [1, 2, 3] }
-    );
-  }
   /* REC-214: APPEND one entry to the top-level `risk_tier_history:` block, or open the block before the closing
      fence when absent — `#replaceGoverningLaws`' grammar, but it only ever ADDS rows after the last one. With
      `entry` null it answers only whether the block can be appended to (the act asks before it refuses anything
@@ -191217,93 +191995,6 @@ Reason: ${why2}
       ...rows4,
       ...lines2.slice(last + 1)
     ].join("\n");
-  }
-  /** op=actionlawspropose — REC-195 (D-149's remaining half; `BIO_Case_Making_v0_1.md` §2, *A RECORDS REQUEST
-   *  NAMES EVERY LAW THAT GOVERNS IT*): A PROPOSAL OF CITATIONS AND LEVELS, STORED APART FROM THE MEMBER'S
-   *  LIST AND LABELLED MACHINE WORK.
-   *
-   *  THE RULING'S OWN WORDS: *the machine may propose the list from the counterparty, labelled as machine work,
-   *  and never sets it.* D-149 built the half that REFUSES (the machine fence at C-32.18) and said in this
-   *  file's own comment that no proposal was built. This is that proposal, and every line of it is about the
-   *  difference between the two halves.
-   *
-   *  IT NEVER SETS THE LIST, AND THAT IS STRUCTURAL RATHER THAN POLICED. This method does not call `promote`, it
-   *  writes no file, and it never touches `governing_laws`, `governing_laws_by` or `governing_laws_at`. The list
-   *  is the member's and moves only through `actionLaws`; the fence that keeps a revision from moving it
-   *  (C-73.1) is untouched and unreachable from here, because nothing here writes bytes at all. The module test of
-   *  R18 and R19 (`test/m/actions/acts.test.mjs`) holds that a proposal leaves the list as it stands.
-   *
-   *  ANY CREDENTIAL MAY PROPOSE, AND THE LABEL CARRIES THE MEANING — `themePropose`'s shape, for its reason
-   *  (§8.4 fence 3). A fence admitting only machines would be a fence TIGHTER THAN ITS RULE: D-149 says a
-   *  machine MAY propose, not that nobody else may, and a member's proposal to whoever states the list is a
-   *  real act with an obvious surface. What the record owes is the LABEL, and `lawProposalLabel` composes it in
-   *  one place so the plane answers the question rather than publishing an identity for a surface to judge.
-   *
-   *  THE WHOLE PROPOSAL, REPLACED, PER PROPOSER. A proposer restating replaces its OWN standing proposal and
-   *  nobody else's: two machines proposing different lists are two proposals, and the record says who proposed
-   *  which. There is no act that clears one and none that adopts one — adopting is `op=actionlaws`, which is a
-   *  member's authored statement of the laws and not an acceptance of anybody's suggestion. **NOTHING HERE OR
-   *  IN THE READ DERIVES A RELATION BETWEEN A PROPOSAL AND THE LIST**, even when they hold the same citations:
-   *  that a member's list came FROM a machine's proposal is a claim about why somebody acted, and the record
-   *  cannot support it. */
-  actionLawsPropose({ target, laws = null, proposer = null, viewer = null } = {}) {
-    const who3 = String(proposer ?? "").trim();
-    if (!who3)
-      return {
-        ok: false,
-        reason: "NO_AUTHOR",
-        detail: "this call carries nobody. The plane stamps the proposer from the credential that asked, and a proposal nobody can be named for is one the record could say nothing about: the label IS the act."
-      };
-    if (!target)
-      return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const read3 = this.#lawEntries(laws);
-    if (!read3.ok) return read3;
-    const entries = read3.entries;
-    const gate = viewerPredicate(viewer);
-    const b = this.#one(
-      `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-      target,
-      ...gate.args
-    );
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return {
-        ok: false,
-        reason: "NOT_AN_ACTION",
-        target,
-        object_type: b.object_type,
-        detail: "governing laws belong to an action: they are the laws its request is made under."
-      };
-    for (const e2 of entries) {
-      if (!e2.standard) continue;
-      const r = this.#standardSeen(e2.standard, viewer ?? who3);
-      if (r) return { ...r, target };
-    }
-    const at48 = stampInstant("second", this.#nowMs(null));
-    this.sql.exec(`DELETE FROM action_law_proposals WHERE bundle_id=? AND proposed_by=?`, target, who3);
-    entries.forEach((e2, i) => this.sql.exec(
-      `INSERT INTO action_law_proposals (bundle_id, proposed_by, ord, level, citation, standard, proposed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      target,
-      who3,
-      i,
-      e2.level,
-      e2.citation,
-      e2.standard ?? null,
-      at48
-    ));
-    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
-    const fm = liveMd && liveMd.content !== null ? parseFrontmatter(liveMd.content).data || {} : null;
-    const listed2 = governingLawsOf(fm);
-    return {
-      ok: true,
-      target,
-      weight: "single",
-      proposal: { ...lawProposalLabel(who3), at: at48, laws: entries },
-      governing_laws: listed2,
-      evidence: false,
-      says: `${entries.length} citation${entries.length === 1 ? " is" : "s are"} proposed for this action. This is not the action's list of governing laws and did not change it: that list ${listed2.state === "stated" ? `is ${listed2.laws.length} law(s) stated by a member` : "is UNDETERMINED"}, and only a member's own act states it.`
-    };
   }
   /* REC-24 (g): write the `responds_to` edge onto the CAPTURED REPLY, pointing
      back at the action it answered. The edge lives on the responding document
@@ -191598,7 +192289,7 @@ Changes: responds_to edge added to ${actionId}.
     }
     if ((!fm || !Object.keys(fm).length) && row14 && row14.bundle_id) fm = this.#heldFm(row14.bundle_id) || {};
     const now = this.#nowMs(nowMs);
-    const place4 = this.place();
+    const view = this.governingView();
     const ledger = this.#rows(
       `SELECT ord, direction, at, medium, party, artifact_bundle_id, artifact_sha, account, author, recorded_at
          FROM correspondence WHERE bundle_id=? ORDER BY ord`,
@@ -191623,19 +192314,20 @@ Changes: responds_to edge added to ${actionId}.
       counterparty_state: typeof cp.state === "string" ? cp.state : row14.action_counterparty_state ?? null,
       resolution: typeof fm.resolution === "string" ? fm.resolution : row14.action_resolution ?? null,
       clock_next: actionClockNext(fm),
-      clock_overdue: actionOverdue(fm, now, place4),
+      clock_overdue: actionOverdue(fm, now, view),
       clock_overdue_cached: row14.action_clock_overdue === null || row14.action_clock_overdue === void 0 ? null : !!row14.action_clock_overdue,
       as_of: new Date(now).toISOString(),
       basis: legs,
       correspondence: ledger,
       governing_laws: governingLawsOf(fm),
-      governing_laws_proposals: this.#lawProposalsFor(row14.bundle_id),
-      risk_tier_proposals: this.#riskProposalsFor(row14.bundle_id),
+      /* R25 (T47; N961): the proposals stored apart are `action-records`' (its R1–R3), read through it. */
+      governing_laws_proposals: this.records.lawProposalsFor(row14.bundle_id),
+      risk_tier_proposals: this.records.riskProposalsFor(row14.bundle_id),
       /* R70, R73: what a records request seeks, as a member stated it, and the proposals of it stored apart. */
       seeks: seeksOf(fm),
-      seeks_proposals: this.#seeksProposalsFor(row14.bundle_id),
+      seeks_proposals: this.records.seeksProposalsFor(row14.bundle_id),
       records_law: fm.action_kind === "records_request" ? recordsLawOf(fm, this.#lawAuthor(row14.bundle_id, fm)) : null,
-      lifecycle: requestLifecycleOf(fm, localToday(now, zoneOf(place4)) ?? ""),
+      lifecycle: requestLifecycleOf(fm, localToday(now, actionZone(fm, view)) ?? ""),
       /* R26, DEC-14: the ACTION'S OWN OUTCOME, never the breach's consequence (which `consequences` holds). */
       own_outcome: consequenceState(fm),
       responses: this.#rows(
@@ -191693,7 +192385,8 @@ Changes: responds_to edge added to ${actionId}.
         ...owed ? {} : { ...T45_SENTENCES.reply_not_owed, reason: replyOwedReason(fm) },
         history: history("reply_owed")
       },
-      receipts: this.#receiptsOf(id),
+      /* R25 (T47; N961): the receipts, scope and promises are `action-records`' (its R4–R6), read through it. */
+      receipts: this.records.receiptsOf(id),
       entries: (Array.isArray(fm.correspondence) ? fm.correspondence : []).map((e2, ord) => {
         const p3 = _Actions.entryFields(e2) || {};
         return {
@@ -191707,10 +192400,10 @@ Changes: responds_to edge added to ${actionId}.
       }).filter((x) => Object.keys(x).length > 1),
       follows_action: fm.follows_action && typeof fm.follows_action === "object" ? fm.follows_action : null,
       followed_by: this.#followedBy(id, viewer),
-      /* R87 (K2850): the latest scope statement, false with none, and its statements. */
-      confidential: this.#confidential(id),
-      scope: this.#scopeOf(id),
-      promises: this.#promisesOf(id)
+      /* action-records R5 (was R87; K2850): the latest scope statement, false with none, and its statements. */
+      confidential: this.records.confidential(id),
+      scope: this.records.scopeOf(id),
+      promises: this.records.promisesOf(id)
     };
     const facts = kindEntry && kindEntry.venue && Array.isArray(kindEntry.venue.facts) ? kindEntry.venue.facts : [];
     const dp = facts.find((f17) => f17 && f17.fact === "delivery_point");
@@ -191826,7 +192519,7 @@ Changes: responds_to edge added to ${actionId}.
     if (typeof fm.law_standard === "string" && fm.law_standard.trim())
       named2.push({ law: "records", citation: typeof fm.law === "string" ? fm.law : null, standard: fm.law_standard.trim() });
     const law_standards = named2.map((n2) => {
-      if (this.#standardSeen(n2.standard, viewer))
+      if (this.records.standardSeen(n2.standard, viewer))
         return { ...n2, in_force: null, says: "no standard you may read answers to this id" };
       let f17 = null;
       try {
@@ -192002,7 +192695,7 @@ Changes: responds_to edge added to ${actionId}.
           /* R9 (T45): a press addressee's holder, kept inside the group: the read and this list only. */
           ...cp && cp.kind === "press" && typeof cp.holder === "string" && cp.holder.trim() ? { holder: { name: cp.holder.trim() } } : {},
           ...voids ? { basis_void: voids } : {},
-          confidential: this.#confidential(r.bundle_id)
+          confidential: this.records.confidential(r.bundle_id)
         });
       }
       if (truncated6 || rows4.length <= max) break;
@@ -192026,7 +192719,7 @@ Changes: responds_to edge added to ${actionId}.
    *  (`lines.structureAt`); undetermined ones apart, with why. A suggestion: it writes nothing and sets nothing. */
   addresseeSuggest({ action = null, subject = null, viewer = null } = {}) {
     const subj = typeof subject === "string" ? subject.trim() : "";
-    if (!subj) return refuse18("NO_SUBJECT", "an addressee is suggested for a subject: an entity (ENT-) or a record the action rests on. Nothing was read.");
+    if (!subj) return refuse19("NO_SUBJECT", "an addressee is suggested for a subject: an entity (ENT-) or a record the action rests on. Nothing was read.");
     let at48 = null, basis = "today";
     if (action) {
       const b = this.#visibleAction(String(action), viewer);
@@ -192156,7 +192849,7 @@ Changes: responds_to edge added to ${actionId}.
       if (!ends.some((x) => x && ids.has(x))) continue;
       const ledger = Array.isArray(fm.correspondence) ? fm.correspondence : [];
       const firstSent = ledger.filter((e2) => e2 && typeof e2 === "object" && e2.direction === "sent").map((e2) => String(e2.at ?? "").slice(0, 10)).filter(isCalendarDate).sort()[0];
-      if (!firstSent || this.#confidential(id) || this.#counselMatter(id)) continue;
+      if (!firstSent || this.records.confidential(id) || this.#counselMatter(id)) continue;
       ledger.forEach((e2, ord) => {
         if (!e2 || typeof e2 !== "object" || !_Actions.#inWindow(e2.at, from, to)) return;
         if (pub && e2.direction !== "sent") return;
@@ -192219,7 +192912,8 @@ Changes: responds_to edge added to ${actionId}.
     }
     return out;
   }
-  /* ================================================================ T45: receipt, scope, promises, open items, listeners */
+  /* ================================================================ T45: open items, listeners (receipt, scope and promises are
+     `action-records`' since T47, its R4–R6) */
   /** R95 (T45; Actions D21; v0.2 rule 16): `registerResponseListener(module, fn)`, one registration per module (K31's
    *  pattern, `membership.listenerRefusal`). After a `received` entry is promoted by `actionCorrespond`, each `fn({action,
    *  ord, project, recorder, at})` is called once, after the write's transaction. */
@@ -192253,255 +192947,6 @@ Changes: responds_to edge added to ${actionId}.
     } catch {
     }
   }
-  /** R80 (T45; S1 §C 9; v0.2 rule 6): a member records that the `sent` entry at `ord` was received by the addressee
-   *  (`receipt`) or that a party was served (`service`), how and when, held as a capture or her account (R34's rule).
-   *  Its own table, appended; the ledger entry is never rewritten. `action-clocks` R2 reads it as the start of a count
-   *  from receipt or service. */
-  actionReceipt({
-    target,
-    ord = null,
-    kind: kind2 = "receipt",
-    at: at48 = "",
-    how = "",
-    party = "",
-    artifactSha = "",
-    account: account2 = "",
-    viewer = null,
-    author = null
-  } = {}) {
-    const who3 = String(author ?? "").trim();
-    if (!who3 || isMachineIdentity(who3))
-      return withRow5({
-        ok: false,
-        reason: "MACHINE_CANNOT_CORRESPOND",
-        target: target ?? null,
-        detail: "a receipt is a named member's record that the group's sending reached its addressee. A machine credential may not record one. Sign in as a member."
-      });
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const when = String(at48 ?? "").trim();
-    const m = LOCAL_DT_RE2.exec(when);
-    if (!(isCalendarDate(when) || m && isCalendarDate(m[1])))
-      return withRow5({
-        ok: false,
-        reason: "BAD_DATE",
-        at: when,
-        target,
-        detail: "a receipt is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has"
-      });
-    const sha2 = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
-    const acct = String(account2 ?? "").trim();
-    if (sha2 && acct) return withRow5({
-      ok: false,
-      reason: "CAPTURE_AND_TESTIMONY",
-      target,
-      detail: "a receipt is held as the captured bytes OR a named member's account, never both."
-    });
-    if (!sha2 && !acct) return withRow5({
-      ok: false,
-      reason: "NEITHER_CAPTURE_NOR_TESTIMONY",
-      target,
-      detail: "a receipt is held as captured bytes the register holds, or as a named member's account."
-    });
-    if (sha2 && !/^[0-9a-f]{64}$/.test(sha2)) return { ok: false, reason: "BAD_SHA", target, detail: "artifact_sha is a sha256 hash (64 hex characters)" };
-    const k = String(kind2 ?? "").trim() || "receipt";
-    const h = String(how ?? "").trim(), pty = String(party ?? "").trim();
-    for (const [name3, v, need] of [["how", h, true], ["party", pty, k === "service"], ["account", acct, false]])
-      if (need && !v || v.length > (name3 === "account" ? NOTE_MAX4 : RECEIPT_TEXT_MAX))
-        return {
-          ok: false,
-          reason: `BAD_${name3.toUpperCase()}`,
-          target,
-          detail: `${name3} is ${need ? "1" : "0"} to ${name3 === "account" ? NOTE_MAX4 : RECEIPT_TEXT_MAX} characters`
-        };
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    const ledger = (this.#heldFm(target) || {}).correspondence;
-    const n2 = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
-    const entry4 = Array.isArray(ledger) && Number.isInteger(n2) ? ledger[n2] : void 0;
-    if (!entry4 || typeof entry4 !== "object" || entry4.direction !== "sent" || !RECEIPT_KINDS.includes(k))
-      return refuse18("RECEIPT_NOT_ON_SENT", `a receipt is recorded on a sent entry of this action, as ${RECEIPT_KINDS.join(" or ")}; the entry named is not a sent one. Nothing was written.`, { target, ord: ord ?? null, legal: [...RECEIPT_KINDS] });
-    if (sha2 && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha2))
-      return withRow5({
-        ok: false,
-        reason: "UNREGISTERED_ARTIFACT",
-        target,
-        artifact_sha: sha2,
-        detail: "this hash names no capture in this store. Capture it first, or record a named account instead."
-      });
-    const recorded = stampInstant("second", this.#nowMs(null));
-    const seq = this.record.transact(() => {
-      const next = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_receipts WHERE bundle_id=? AND ord=?`, target, n2).n;
-      this.sql.exec(
-        `INSERT INTO action_receipts (bundle_id, ord, seq, kind, at, how, party, artifact_sha, account, author,
-        recorded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-        target,
-        n2,
-        next,
-        k,
-        when,
-        h,
-        pty || null,
-        sha2 || null,
-        acct || null,
-        who3,
-        recorded
-      );
-      return next;
-    });
-    return {
-      ok: true,
-      target,
-      ord: n2,
-      seq,
-      kind: k,
-      at: when,
-      how: h,
-      ...pty ? { party: pty } : {},
-      held_as: sha2 ? "capture" : "testimony",
-      ...sha2 ? { artifact_sha: sha2 } : { account: acct },
-      author: who3,
-      recorded_at: recorded,
-      weight: "single"
-    };
-  }
-  /* R80, R25 (K2845): every receipt record, oldest first, so an entry's latest is its last. */
-  #receiptsOf(id) {
-    return this.#rows(`SELECT ord, seq, kind, at, how, party, artifact_sha, account, author, recorded_at
-      FROM action_receipts WHERE bundle_id=? ORDER BY recorded_at, ord, seq`, id).map((r) => ({
-      ord: r.ord,
-      seq: r.seq,
-      kind: r.kind,
-      at: r.at,
-      how: r.how,
-      ...r.party !== null ? { party: r.party } : {},
-      held_as: r.artifact_sha ? "capture" : "testimony",
-      ...r.artifact_sha ? { artifact_sha: r.artifact_sha } : { account: r.account },
-      by: r.author,
-      recorded_at: r.recorded_at
-    }));
-  }
-  /** R87 (T45; Actions D4; v0.2 rule 15): a member sets (`true`) or removes (`false`) the action's confidential scope,
-   *  with a reason, each statement appended. A confidential action is seen inside the group as before and never answered
-   *  by R66 or anything that feeds published output; the change never touches a signed edition (`publication` R63). */
-  actionScope({ target, confidential = null, reason: reason2 = "", viewer = null, author = null } = {}) {
-    const who3 = String(author ?? "").trim();
-    const why2 = String(reason2 ?? "").trim();
-    if (!who3 || isMachineIdentity(who3))
-      return refuse18("MACHINE_CANNOT_SET_SCOPE", "whether an action is confidential is a member's act; a machine credential may not set or remove it. Nothing was written.", { target: target ?? null });
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const want = confidential === true || confidential === "true" ? 1 : confidential === false || confidential === "false" ? 0 : null;
-    if (want === null) return {
-      ok: false,
-      reason: "BAD_SCOPE",
-      target,
-      legal: [true, false],
-      detail: "confidential is true (set the scope) or false (remove it)"
-    };
-    if (!why2) return refuse18("SCOPE_NO_REASON", "setting or removing an action's confidential scope carries the member's reason. Nothing was written.", { target });
-    if (why2.length > NOTE_MAX4 || /["\\\r\n]/.test(why2))
-      return { ok: false, reason: "BAD_REASON", target, detail: `reason is at most ${NOTE_MAX4} characters with no quote, backslash or line break` };
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    if (this.#confidential(target) === !!want)
-      return refuse18("SCOPE_UNCHANGED", `this action is already ${want ? "confidential" : "not confidential"}; nothing was written.`, { target, confidential: !!want });
-    const at48 = stampInstant("second", this.#nowMs(null));
-    this.record.transact(() => {
-      const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_scopes WHERE bundle_id=?`, target).n;
-      this.sql.exec(
-        `INSERT INTO action_scopes (bundle_id, seq, confidential, reason, by, at) VALUES (?,?,?,?,?,?)`,
-        target,
-        seq,
-        want,
-        why2,
-        who3,
-        at48
-      );
-    });
-    return {
-      ok: true,
-      target,
-      confidential: !!want,
-      reason: why2,
-      by: who3,
-      at: at48,
-      scope: this.#scopeOf(target),
-      published: T45_SENTENCES.scope_published_stays,
-      weight: "single"
-    };
-  }
-  /* R87, R66: whether the action's latest scope statement is confidential. */
-  #confidential(id) {
-    const r = this.#one(`SELECT confidential FROM action_scopes WHERE bundle_id=? ORDER BY seq DESC LIMIT 1`, id);
-    return !!(r && r.confidential);
-  }
-  /* R87, R25: the scope and its statements, oldest first. */
-  #scopeOf(id) {
-    const statements = this.#rows(`SELECT seq, confidential, reason, by, at FROM action_scopes WHERE bundle_id=? ORDER BY seq`, id).map((r) => ({ seq: r.seq, confidential: !!r.confidential, reason: r.reason, by: r.by, at: r.at }));
-    return { confidential: statements.length ? statements[statements.length - 1].confidential : false, statements };
-  }
-  /** R88 (T45; Actions D4; v0.2 rule 15): a member records a promise the group made to a person (`PROMISE_KINDS`), or
-   *  one ending an earlier promise (`ends`, its position, with `text` its reason). Appended, never edited; every viewer
-   *  who may see the action reads every promise; nothing published carries one (R66). */
-  actionPromise({ target, kind: kind2 = "", text: text7 = "", ends = null, viewer = null, author = null } = {}) {
-    const who3 = String(author ?? "").trim();
-    const k = String(kind2 ?? "").trim(), t2 = String(text7 ?? "").trim();
-    const endsAt = ends === null || ends === void 0 || ends === "" ? null : Number.isInteger(ends) ? ends : /^\d+$/.test(String(ends).trim()) ? Number(String(ends).trim()) : NaN;
-    const kinds3 = PROMISE_KINDS;
-    const promiseRefused = (why2) => refuse18(
-      "PROMISE_REFUSED",
-      `${why2} Nothing was written.`,
-      { target: target ?? null, legal: [...kinds3], max: PROMISE_TEXT_MAX }
-    );
-    if (!who3 || isMachineIdentity(who3))
-      return refuse18("MACHINE_CANNOT_RECORD_PROMISE", "a promise the group made to a person is recorded by a member; a machine credential may not record one. Nothing was written.", { target: target ?? null });
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    if (!kinds3.includes(k) || !t2 || t2.length > PROMISE_TEXT_MAX || Number.isNaN(endsAt))
-      return promiseRefused(`a promise is {kind, text, ends?}: kind one of ${kinds3.join(", ")}, the text 1 to ${PROMISE_TEXT_MAX} characters, and ends the position of an earlier promise it ends.`);
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    if (endsAt !== null && !this.#promisesOf(target).standing.some((p3) => p3.seq === endsAt))
-      return promiseRefused(`ends names promise ${endsAt}, and no promise standing on this action is at that position.`);
-    const at48 = stampInstant("second", this.#nowMs(null));
-    const seq = this.record.transact(() => {
-      const next = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_promises WHERE bundle_id=?`, target).n;
-      this.sql.exec(
-        `INSERT INTO action_promises (bundle_id, seq, kind, text, ends, by, at) VALUES (?,?,?,?,?,?,?)`,
-        target,
-        next,
-        k,
-        t2,
-        endsAt,
-        who3,
-        at48
-      );
-      return next;
-    });
-    return {
-      ok: true,
-      target,
-      seq,
-      kind: k,
-      text: t2,
-      ...endsAt !== null ? { ends: endsAt } : {},
-      by: who3,
-      at: at48,
-      promises: this.#promisesOf(target),
-      weight: "single"
-    };
-  }
-  /* R88, R25: every promise on the action, standing apart from ended (one a later statement ends). */
-  #promisesOf(id) {
-    const all = this.#rows(`SELECT seq, kind, text, ends, by, at FROM action_promises WHERE bundle_id=? ORDER BY seq`, id).map((r) => ({ seq: r.seq, kind: r.kind, text: r.text, ...r.ends !== null ? { ends: r.ends } : {}, by: r.by, at: r.at }));
-    const ended = new Map(all.filter((p3) => p3.ends !== void 0).map((p3) => [p3.ends, p3]));
-    const notes2 = all.filter((p3) => p3.ends === void 0);
-    return {
-      standing: notes2.filter((p3) => !ended.has(p3.seq)),
-      ended: notes2.filter((p3) => ended.has(p3.seq)).map((p3) => ({ ...p3, ended_by: ended.get(p3.seq) }))
-    };
-  }
   /** R92 (T45; N892 (a); Actions D28a; v0.2 rule 21): the group's open actions the viewer may see addressed to the same
    *  office as `counterparty` (an addressee, or its JSON) or as `action`'s addressee: equal `entity_id`, else equal role
    *  and body. Each with its kind, state, first sent date and whether its reply is overdue (R12), and the count of
@@ -192527,7 +192972,7 @@ Changes: responds_to edge added to ${actionId}.
     const office = counterpartyOffice(cp);
     if (!office || office.legacy)
       return { ok: true, items: [], overdue_replies: 0, truncated: false, ...T45_SENTENCES.openitems_not_office };
-    const now = this.#nowMs(null), place4 = this.place();
+    const now = this.#nowMs(null), view = this.governingView();
     const items = [];
     let truncated6 = false;
     for (const { id, fm } of this.#visibleActions(viewer)) {
@@ -192545,7 +192990,7 @@ Changes: responds_to edge added to ${actionId}.
         kind: fm.action_kind ?? null,
         state,
         first_sent: sent ? String(sent.at).slice(0, 10) : null,
-        clock_overdue: actionOverdue(fm, now, place4)
+        clock_overdue: actionOverdue(fm, now, view)
       });
     }
     return {
@@ -192580,186 +193025,16 @@ Changes: responds_to edge added to ${actionId}.
     if (!sha2) return false;
     return !!this.#one(`SELECT 1 AS y FROM correspondence WHERE direction='sent' AND artifact_sha=?`, sha2);
   }
-  /* ================================================================ proposals (R19, R28) */
-  /** R28 (REC-215): a proposed tier, stored apart, labelled; it never touches `risk_tier` or its history. */
-  actionRiskPropose({ target, tier = null, basis = null, proposer = null, viewer = null } = {}) {
-    const who3 = String(proposer ?? "").trim();
-    if (!who3) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const asked = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
-    if (asked !== 1 && asked !== 2 && asked !== 3) return this.#badRiskTier(target, tier, "a proposal");
-    const why2 = typeof basis === "string" ? basis.trim() : "";
-    if (!why2 || why2.length > RISK_PROPOSAL_BASIS_MAX || /["\\\r\n]/.test(why2))
-      return refuse18("RISK_PROPOSAL_BASIS_REFUSED", `a proposed tier carries its basis: 1 to ${RISK_PROPOSAL_BASIS_MAX} characters with no quote, backslash or line break`, { target, max: RISK_PROPOSAL_BASIS_MAX });
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    const at48 = stampInstant("second", this.#nowMs(null));
-    this.sql.exec(
-      `INSERT INTO action_risk_proposals (bundle_id, proposed_by, tier, basis, proposed_at) VALUES (?,?,?,?,?)
-      ON CONFLICT(bundle_id, proposed_by) DO UPDATE SET tier=excluded.tier, basis=excluded.basis, proposed_at=excluded.proposed_at`,
-      target,
-      who3,
-      asked,
-      why2,
-      at48
-    );
-    const held2 = riskTierState((this.#heldFm(target) || {}).risk_tier);
-    return {
-      ok: true,
-      target,
-      weight: "single",
-      evidence: false,
-      proposal: { ...proposalLabelFor(who3, "risk_tier"), tier: asked, tier_words: RISK_TIERS[asked], basis: why2, at: at48 },
-      risk_tier: held2,
-      risk_tier_words: RISK_TIERS[held2] ?? null,
-      says: `a tier of ${asked} is proposed for this action. This is not the action's risk tier and did not change it: the tier is ${held2 === "undetermined" ? "undetermined" : held2}, and only a member's own act sets it.`
-    };
-  }
-  /** R73 (K2561; R70): a proposal of what a records request seeks, as R19 is to `actionLaws`: stored apart, labelled,
-   *  replacing only its proposer's own standing proposal; it writes no file and never changes `seeks`. Its items are
-   *  judged as R70 judges a statement (`SEEKS_REFUSED`, C-117.29, every finding carried), on the target's own kind. */
-  actionSeeksPropose({ target, seeks = null, proposer = null, viewer = null } = {}) {
-    const who3 = String(proposer ?? "").trim();
-    if (!who3) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    const held2 = this.#heldFm(target) || {};
-    let list6 = seeks;
-    if (typeof list6 === "string") {
-      try {
-        list6 = JSON.parse(list6);
-      } catch {
-      }
-    }
-    const asked = { action_kind: held2.action_kind, seeks: list6 === void 0 || list6 === null ? [] : list6 };
-    const r = this.#seeksRefusal(asked);
-    if (r) return { ...r, target };
-    const items = seeksOf(asked);
-    const at48 = stampInstant("second", this.#nowMs(null));
-    this.record.transact(() => {
-      this.sql.exec(`DELETE FROM action_seeks_proposals WHERE bundle_id=? AND proposed_by=?`, target, who3);
-      items.forEach((x, i) => this.sql.exec(`INSERT INTO action_seeks_proposals (bundle_id, proposed_by, ord, progression,
-        entity, stage, proposed_at) VALUES (?,?,?,?,?,?,?)`, target, who3, i, x.progression, x.entity, x.stage, at48));
-    });
-    const stated3 = seeksOf(held2);
-    return {
-      ok: true,
-      target,
-      weight: "single",
-      evidence: false,
-      proposal: { ...proposalLabelFor(who3, "seeks"), at: at48, seeks: items },
-      seeks: stated3,
-      says: `${items.length} stage${items.length === 1 ? " is" : "s are"} proposed as what this request seeks. This is not the action's seeks and did not change it: ${stated3.length ? `it names ${stated3.length} stage(s) a member stated` : "no member has stated what it seeks"}, and only a member's own write states it.`
-    };
-  }
-  /* R73: the standing proposals of what the request seeks, newest first, at most 12, with `truncated` and a sentence. */
-  #seeksProposalsFor(id) {
-    const cap = SEEKS_PROPOSALS_READ_MAX;
-    const rows4 = this.#rows(`SELECT proposed_by, ord, progression, entity, stage, proposed_at FROM action_seeks_proposals
-      WHERE bundle_id=? ORDER BY proposed_at DESC, proposed_by, ord LIMIT ?`, id, (cap + 1) * SEEKS_MAX + 1);
-    const by = /* @__PURE__ */ new Map();
-    for (const r of rows4) {
-      if (!by.has(r.proposed_by)) by.set(r.proposed_by, { ...proposalLabelFor(r.proposed_by, "seeks"), at: r.proposed_at, seeks: [] });
-      by.get(r.proposed_by).seeks.push({ progression: r.progression, entity: r.entity, stage: r.stage });
-    }
-    const all = [...by.values()];
-    const proposals = all.slice(0, cap);
-    return {
-      proposals,
-      limit: cap,
-      truncated: all.length > cap,
-      says: proposals.length ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of what this request seeks. A proposal is not the action's seeks: that is a member's own statement, shown beside this one.` : "no proposal of what this request seeks stands in the record. That is a statement about proposals and about nothing else."
-    };
-  }
-  /* R28: the standing tier proposals, newest first, at most 12, with `truncated` and a sentence also when empty. */
-  #riskProposalsFor(id) {
-    const cap = RISK_PROPOSALS_READ_MAX;
-    const rows4 = this.#rows(`SELECT proposed_by, tier, basis, proposed_at FROM action_risk_proposals WHERE bundle_id=?
-      ORDER BY proposed_at DESC, proposed_by LIMIT ?`, id, cap + 1);
-    const proposals = rows4.slice(0, cap).map((r) => ({
-      ...proposalLabelFor(r.proposed_by, "risk_tier"),
-      tier: r.tier,
-      tier_words: RISK_TIERS[r.tier] ?? null,
-      basis: r.basis,
-      at: r.proposed_at
-    }));
-    return {
-      proposals,
-      limit: cap,
-      truncated: rows4.length > cap,
-      says: proposals.length ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of this action's risk tier. A proposal is not the tier: the tier is the member's own act, stated beside this one.` : "no proposal of this action's risk tier stands in the record. That is a statement about proposals and about nothing else."
-    };
-  }
-  #lawProposalsFor(bundleId) {
-    const cap = LAW_PROPOSALS_READ_MAX;
-    const rowCap = (cap + 1) * GOVERNING_LAWS_MAX;
-    const rows4 = this.#rows(
-      `SELECT proposed_by, ord, level, citation, standard, proposed_at FROM action_law_proposals
-        WHERE bundle_id=? ORDER BY proposed_at DESC, proposed_by, ord LIMIT ?`,
-      bundleId,
-      rowCap + 1
-    );
-    const byProposer = /* @__PURE__ */ new Map();
-    for (const r of rows4) {
-      if (!byProposer.has(r.proposed_by))
-        byProposer.set(r.proposed_by, { ...lawProposalLabel(r.proposed_by), at: r.proposed_at, laws: [] });
-      byProposer.get(r.proposed_by).laws.push({ level: r.level, citation: r.citation, ...r.standard ? { standard: r.standard } : {} });
-    }
-    const all = [...byProposer.values()];
-    const proposals = all.slice(0, cap);
-    const machine3 = proposals.filter((p3) => p3.machine_work).length;
-    return {
-      proposals,
-      limit: cap,
-      truncated: all.length > cap,
-      says: proposals.length ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of the laws that govern this action, ${machine3} of them machine work. A proposal is not this action's list of governing laws and nothing here states which laws apply: the list is the member's own act, and it is stated beside this one.` : "no proposal of the laws governing this action stands in the record. That is a statement about proposals and about nothing else: whether any law governs this request is answered beside this, and a member states it."
-    };
-  }
 };
-for (const m of [
-  "actionMove",
-  "actionCorrespond",
-  "actionLaws",
-  "actionLawsPropose",
-  "actionRiskTier",
-  "actionQuotes",
-  "actionReceipt",
-  "actionScope",
-  "actionPromise",
-  "actionRiskPropose",
-  "actionSeeksPropose",
-  "actionCreate",
-  "check"
-]) {
+for (const m of ["actionMove", "actionCorrespond", "actionLaws", "actionRiskTier", "actionQuotes", "actionCreate", "check"]) {
   const fn = Actions.prototype[m];
   Actions.prototype[m] = function(...a) {
-    return withRow5(fn.apply(this, a));
+    return withRow6(fn.apply(this, a));
   };
 }
-var PROPOSAL_SAYS2 = {
-  risk_tier: {
-    machine_proposed: "a machine credential proposed this risk tier. That is machine work, labelled as machine work: it can set a tier beside the action for members to weigh and it can never set the tier. Nothing here is this action's risk tier, and nothing becomes it until a member states it themselves",
-    member_proposed: "a member proposed this risk tier to whoever states it. It is a proposal and not the tier: only the risk-tier act sets that, and the record holds who made the proposal",
-    unstated: "the record does not say who proposed this risk tier"
-  },
-  seeks: {
-    machine_proposed: "a machine credential proposed what this records request seeks. That is machine work, labelled as machine work: it sets stages beside the action for members to weigh and never states what it seeks; nothing becomes it until a member states it themselves",
-    member_proposed: "a member proposed what this records request seeks to whoever states it. It is a proposal and not the action's seeks: only a member's own write states that, and the record holds who made the proposal",
-    unstated: "the record does not say who proposed what this records request seeks"
-  }
-};
-function proposalLabelFor(who3, subject) {
-  const base2 = lawProposalLabel(who3);
-  return { by: base2.by, state: base2.state, machine_work: base2.machine_work, says: PROPOSAL_SAYS2[subject][base2.state] };
-}
-var instances54 = /* @__PURE__ */ new WeakMap();
+var instances55 = /* @__PURE__ */ new WeakMap();
 function actionsOf(host, deps) {
-  let a = instances54.get(host);
+  let a = instances55.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -192767,15 +193042,16 @@ function actionsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     a = new Actions({ ...d, host, storage, record, membership, promotion });
-    instances54.set(host, a);
+    instances55.set(host, a);
     a.migrate();
     void a.conformance;
     record.declarePurge("actions", [...ACTIONS_TABLES]);
+    void a.records;
     promotion.registerStep("actions", { check: (c) => a.check(c), project: (c) => a.project(c) });
     record.registerAuditCheck("actions", (image) => a.audit(image));
     const retrieval = d.retrieval === null ? null : a.retrieval;
     if (retrieval) {
-      retrieval.registerActionFacts("actions", (md, nowMs) => actionFacts(md, nowMs, a.place()));
+      retrieval.registerActionFacts("actions", (md, nowMs) => actionFacts(md, nowMs, a.governingView()));
       retrieval.registerProjectionDecoration("actions", (row14, { nowMs, viewer } = {}) => normalizeType(row14 && row14.object_type) === "action" ? { action: a.derived(row14, nowMs, viewer ?? null) } : {});
     }
     const events = d.events === null ? null : a.events;
@@ -192807,6 +193083,10 @@ function actionsOps(a, url, body) {
   const q10 = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
   return {
+    /* T47 (N961): the six acts moved to `action-records` (its R1–R6) keep their ops, spread here from its map (its R15)
+       until the plane spreads that map itself (its L11 job); the same arms, so a second spread changes nothing. An owner
+       handed with no `action-records` instance of its own (a stand-in in a test of the map) is handed the arms itself. */
+    ...actionRecordsOps(a.records instanceof ActionRecords ? a.records : a, url, body),
     actionmove: () => a.actionMove({
       target: q10("target"),
       to: q10("to"),
@@ -192822,26 +193102,6 @@ function actionsOps(a, url, body) {
       reason: q10("reason") ?? b.reason ?? null,
       viewer: q10("viewer"),
       author: q10("author")
-    }),
-    actionlawspropose: () => a.actionLawsPropose({
-      target: q10("target") || b.target,
-      laws: b.laws,
-      viewer: q10("viewer"),
-      proposer: q10("proposer")
-    }),
-    /* R73 (K2561): a proposal of what a records request seeks (declared and routed by L11). */
-    actionseekspropose: () => a.actionSeeksPropose({
-      target: q10("target") || b.target,
-      seeks: b.seeks ?? q10("seeks"),
-      viewer: q10("viewer"),
-      proposer: q10("proposer")
-    }),
-    actionriskpropose: () => a.actionRiskPropose({
-      target: q10("target") || b.target,
-      tier: q10("tier") ?? b.tier ?? null,
-      basis: q10("basis") ?? b.basis ?? null,
-      viewer: q10("viewer"),
-      proposer: q10("proposer")
     }),
     actioncorrespond: () => a.actionCorrespond({
       target: q10("target"),
@@ -192903,35 +193163,7 @@ function actionsOps(a, url, body) {
     /* R42 (N231): the kinds this instance accepts, a read for every signed-in class (the op's spec is the control
        plane's). */
     actionkinds: () => ({ ok: true, kinds: a.kinds() }),
-    /* T45: receipt or service of a sent entry (R80), the confidential scope (R87), a promise (R88), and the open items
-       with an office (R92, a read), each with the stamps the control plane makes (declared by op-declarations). */
-    actionreceipt: () => a.actionReceipt({
-      target: q10("target") || b.target,
-      ord: q10("ord") ?? b.ord ?? null,
-      kind: q10("kind") ?? b.kind ?? "receipt",
-      at: q10("at") ?? b.at ?? "",
-      how: q10("how") ?? b.how ?? "",
-      party: q10("party") ?? b.party ?? "",
-      artifactSha: q10("artifact_sha") ?? b.artifact_sha ?? "",
-      account: q10("account") ?? b.account ?? "",
-      viewer: q10("viewer"),
-      author: q10("author")
-    }),
-    actionscope: () => a.actionScope({
-      target: q10("target") || b.target,
-      confidential: q10("confidential") ?? b.confidential ?? null,
-      reason: q10("reason") ?? b.reason ?? "",
-      viewer: q10("viewer"),
-      author: q10("author")
-    }),
-    actionpromise: () => a.actionPromise({
-      target: q10("target") || b.target,
-      kind: q10("kind") ?? b.kind ?? "",
-      text: q10("text") ?? b.text ?? "",
-      ends: q10("ends") ?? b.ends ?? null,
-      viewer: q10("viewer"),
-      author: q10("author")
-    }),
+    /* R92 (T45): the open items with an office, a read. */
     openitemswith: () => a.openItemsWith({
       counterparty: b.counterparty ?? q10("counterparty"),
       action: q10("action") ?? b.action ?? null,
@@ -193089,30 +193321,6 @@ function actionOffices(fm, view) {
 }
 var officeKey2 = (o) => typeof o === "string" ? `role:${o}` : o && typeof o.venue === "string" ? `venue:${o.venue}` : o && typeof o.role === "string" ? `role:${o.role}` : null;
 var civilOffice = (o) => !o ? null : o.venue ? { venue: o.venue } : o.role;
-function actionZone(fm, view) {
-  if (!view || typeof view !== "object") return null;
-  const o = actionOffices(fm, view)[0];
-  let pid = null;
-  if (o && o.role) {
-    const c = (Array.isArray(view.counterparties) ? view.counterparties : []).find((x) => x && x.role === o.role && (o.body === null || x.body === o.body));
-    pid = c && typeof c.profile === "string" ? c.profile : null;
-  } else if (o && o.venue) {
-    const k = (Array.isArray(view.action_kinds) ? view.action_kinds : []).find((x) => x && x.kind === o.venue);
-    pid = k && typeof k.profile === "string" ? k.profile : null;
-  }
-  if (pid) {
-    let p3 = null;
-    try {
-      p3 = get(pid);
-    } catch {
-      p3 = null;
-    }
-    const z2 = p3 && p3.time_zone && p3.time_zone.value;
-    if (typeof z2 === "string" && z2) return z2;
-  }
-  const z = view.time_zone && view.time_zone.value;
-  return typeof z === "string" && z ? z : null;
-}
 function localDayOf(ms5, zone) {
   if (typeof zone !== "string" || !zone || !Number.isFinite(ms5)) return null;
   let d = null;
@@ -193519,19 +193727,58 @@ var CLOCK_TEXT_MAX = 500;
 var IN_PROCESS = "class:daemon";
 var owedOf = (e2) => e2 && typeof e2 === "object" && CLOCK_OWED_BY2.includes(e2.owed_by) ? e2.owed_by : "undetermined";
 var isGroupOwn = (e2) => owedOf(e2) === "group" || !!e2 && GROUP_OWN_KINDS.includes(e2.basis_kind);
-var DUE_AT_RE2 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
-var dueAtOf = (e2, zone) => e2 && typeof e2.due_at === "string" && DUE_AT_RE2.test(e2.due_at) ? { due_at: e2.due_at, due_zone: typeof e2.due_zone === "string" && e2.due_zone ? e2.due_zone : typeof zone === "function" ? zone() : zone } : { due_at: null, due_zone: null };
+var DUE_AT_RE2 = /^(\d{4}-\d{2}-\d{2})T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
+var isLocalDateTime2 = (v) => {
+  const m = typeof v === "string" ? DUE_AT_RE2.exec(v) : null;
+  return !!m && isCalendarDate(m[1]);
+};
+function dueAtOf(entry4, zone) {
+  const none = { due_at: null, due_zone: null };
+  try {
+    if (!entry4 || typeof entry4 !== "object") return none;
+    const at48 = entry4.due_at;
+    if (!isLocalDateTime2(at48)) return none;
+    const own10 = entry4.due_zone;
+    if (typeof own10 === "string" && own10.trim()) return { due_at: at48, due_zone: own10 };
+    let z = zone;
+    if (typeof z === "function") {
+      try {
+        z = z();
+      } catch {
+        z = null;
+      }
+    }
+    return { due_at: at48, due_zone: typeof z === "string" && z ? z : null };
+  } catch {
+    return none;
+  }
+}
+function venueOf2(fm, view) {
+  const none = (why2) => ({ venue: null, venue_why: why2 });
+  try {
+    const o = actionOffices(fm, view)[0];
+    if (o && typeof o.role === "string") return { venue: { kind: "office", role: o.role, body: o.body ?? null } };
+    if (o && typeof o.venue === "string") {
+      const k = (view && Array.isArray(view.action_kinds) ? view.action_kinds : []).find((x) => x && x.kind === o.venue);
+      const name3 = k && k.venue && typeof k.venue.name === "string" ? k.venue.name : null;
+      return { venue: { kind: "venue", action_kind: o.venue, name: name3 } };
+    }
+    return none("the action is addressed to no office, and the view gives its kind no venue");
+  } catch {
+    return none("the action's office or venue cannot be read");
+  }
+}
 var OVERDUE_SAYS = "a date on this action's clock has passed: a question about a date, not a finding about anyone";
 var CLOSED_ACTION_STATES = Object.freeze(["resolved", "abandoned"]);
-function withRow6(r) {
+function withRow7(r) {
   if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string") return r;
   const row14 = ACTION_CLOCK_CHECKS[r.reason];
   if (!row14) return r;
   return { ...r, code: r.code ?? r.reason, check: r.check ?? row14.check, translation: r.translation ?? row14.translation };
 }
-var refuse19 = (code, detail, extra) => withRow6({ ok: false, reason: code, detail, ...extra || {} });
+var refuse20 = (code, detail, extra) => withRow7({ ok: false, reason: code, detail, ...extra || {} });
 function clockEntryRefused(arm, detail, extra) {
-  return withRow6({ ok: false, reason: "CLOCK_ENTRY_REFUSED", detail, ...extra || {}, arm });
+  return withRow7({ ok: false, reason: "CLOCK_ENTRY_REFUSED", detail, ...extra || {}, arm });
 }
 var isDay2 = (v) => typeof v === "string" && isCalendarDate(v);
 var clampLimit2 = (v, dflt, max) => {
@@ -193696,7 +193943,7 @@ var ActionClocks = class {
   #today(explicit = null) {
     return new Date(this.#nowMs(explicit)).toISOString().slice(0, 10);
   }
-  /* R3, R5, R6 (K1444 (iii); actions R12): the local day of the instance clock in the action's zone (`actionZone`), or
+  /* R3, R5, R6 (K1444 (iii); actions R12): the local day of the instance clock in the action's zone (R21: `actions.actionZone`, its R100), or
      null when no zone is held: undetermined, never the UTC day. */
   #localToday(fm, view, explicit = null) {
     return this.#judged(fm, view, explicit).day;
@@ -193870,7 +194117,7 @@ var ActionClocks = class {
   pendingClocks({ before: before3, limit = null, after: after2 = null, viewer = null } = {}) {
     const day2 = String(before3 ?? "").slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day2))
-      return refuse19("PENDING_CLOCKS_BAD_BEFORE", "before= is a date, YYYY-MM-DD", { before: before3 ?? null });
+      return refuse20("PENDING_CLOCKS_BAD_BEFORE", "before= is a date, YYYY-MM-DD", { before: before3 ?? null });
     const max = clampLimit2(limit, PENDING_CLOCKS_MAX, PENDING_CLOCKS_MAX);
     const gate = viewerPredicate(viewer);
     let view;
@@ -193925,7 +194172,8 @@ var ActionClocks = class {
    *  and `due_zone` where the entry states a time of day (else null), `steps` standing for the entry (R16) and, where
    *  an adopted duty's occurrence stands for it, `noticed_by` (R17). It is a question about a date, never a finding:
    *  `says` names no failure. While the action states `reply_owed: false` (`actions` R82), no entry `owed_by: body` is
-   *  listed. Writes nothing. */
+   *  listed. (T47; N968) Each item also carries `venue`, the office or venue the entry is owed at (R23, `venueOf`), with
+   *  `venue_why` when none is held. Writes nothing. */
   overdueClocks({ after: after2 = null, limit = null, viewer = null, now = null } = {}) {
     const asOf = this.#today(now);
     const view = this.#view();
@@ -193960,7 +194208,11 @@ var ActionClocks = class {
         const past = dated && today2 !== null ? e2.date < today2 : today2 === null ? null : false;
         if (!(e2.status === "overdue" || e2.status === "pending" && past === true)) return null;
         if (fm.reply_owed === false && owedOf(e2) === "body") return null;
-        if (!who3.has(r.bundle_id)) who3.set(r.bundle_id, { project: this.#projectOf(fm, viewer), created_by: this.#createdBy(r.bundle_id) });
+        if (!who3.has(r.bundle_id)) who3.set(r.bundle_id, {
+          project: this.#projectOf(fm, viewer),
+          created_by: this.#createdBy(r.bundle_id),
+          ...venueOf2(fm, view)
+        });
         const noticed = this.#noticedBy(r.bundle_id, fm, e2, viewer, instant5);
         return {
           action: r.bundle_id,
@@ -194435,7 +194687,7 @@ var ActionClocks = class {
   #machineReminder(author) {
     const who3 = String(author ?? "").trim();
     if (!who3 || isMachineIdentity(who3))
-      return refuse19("MACHINE_CANNOT_SET_REMINDER", "a reminder is a member's own request to be reminded, set, changed and answered by that member alone. A machine credential never sets one, and a call that carries nobody is not a member. Nothing was changed.");
+      return refuse20("MACHINE_CANNOT_SET_REMINDER", "a reminder is a member's own request to be reminded, set, changed and answered by that member alone. A machine credential never sets one, and a call that carries nobody is not a member. Nothing was changed.");
     return null;
   }
   /* R4, R6: the action as the viewer may see it, through `actions`' read (its R29); absent, invisible and not an action
@@ -194632,7 +194884,7 @@ var ActionClocks = class {
     const due2 = Number.isInteger(pos) && pos >= 0 && today2 !== null ? this.#rows(`SELECT rid, day FROM action_reminders WHERE bundle_id=? AND entry=? AND set_by=? AND day <= ?
                       AND answered_at IS NULL AND removed_at IS NULL ORDER BY day, rid`, a.id, pos, who3, today2) : [];
     if (!due2.length)
-      return refuse19("NO_SUCH_REMINDER", "no reminder of yours on this entry has come due and is waiting for an answer. Nothing was answered.", { target: a.id, entry: Number.isInteger(pos) ? pos : entry4 ?? null });
+      return refuse20("NO_SUCH_REMINDER", "no reminder of yours on this entry has come due and is waiting for an answer. Nothing was answered.", { target: a.id, entry: Number.isInteger(pos) ? pos : entry4 ?? null });
     const day2 = on === null || on === void 0 || on === "" ? null : String(on).trim();
     if (day2 !== null && (!isDay2(day2) || !(day2 > today2)))
       return reminderRefused("on", `on '${day2.slice(0, 20)}' is not a date written YYYY-MM-DD after today (${today2}): a further reminder is for a later day. Nothing was answered.`, { target: a.id, entry: pos, today: today2 });
@@ -194680,7 +194932,7 @@ var ActionClocks = class {
   } = {}) {
     const who3 = String(author ?? "").trim();
     if (!who3 || isMachineIdentity(who3))
-      return refuse19("MACHINE_CANNOT_ADOPT_CLOCK", "a deadline is put on an action's clock by a member, in their own act; a machine credential proposes one and never adopts it, and a call that carries nobody is not a member. Nothing was written.", { target: target ?? null });
+      return refuse20("MACHINE_CANNOT_ADOPT_CLOCK", "a deadline is put on an action's clock by a member, in their own act; a machine credential proposes one and never adopts it, and a call that carries nobody is not a member. Nothing was written.", { target: target ?? null });
     const a = this.#actionFor(target, viewer);
     if (!a) return noSuchAction(target ?? null);
     const key2 = String(proposal ?? "");
@@ -194688,13 +194940,13 @@ var ActionClocks = class {
     const p3 = at48 > 0 ? this.#one(`SELECT * FROM action_clock_proposals WHERE bundle_id=? AND rule=? AND proposed_by=?
                                     AND adopted_at IS NULL`, a.id, key2.slice(0, at48), key2.slice(at48 + 1)) : null;
     if (!p3)
-      return refuse19(
+      return refuse20(
         "NO_SUCH_CLOCK_PROPOSAL",
         `no standing proposal '${key2.slice(0, 120)}' on this action: name the key op=clockpropose answered (<rule>@<proposer>), for a proposal not yet adopted. Nothing was written.`,
         { target: a.id, proposal: key2.slice(0, 200) || null }
       );
     if (p3.date === null || p3.date === void 0)
-      return refuse19(
+      return refuse20(
         "CLOCK_PROPOSAL_UNDETERMINED",
         `the proposed deadline has no date: ${p3.why || "it is undetermined"}. A member states such an entry by their own revision of the action, with its basis. Nothing was written.`,
         { target: a.id, proposal: key2, why: p3.why ?? null }
@@ -194735,7 +194987,7 @@ var ActionClocks = class {
     }
     const when = stampInstant("second", this.#nowMs(null));
     const due2 = kept.due && typeof kept.due === "object" ? kept.due : null;
-    const timed = !amend.date && due2 && typeof due2.value === "string" && DUE_AT_RE2.test(due2.value) && due2.value.slice(0, 10) === entry4.date ? { due_at: due2.value, ...typeof due2.zone === "string" && due2.zone ? { due_zone: due2.zone } : {} } : {};
+    const timed = !amend.date && due2 && isLocalDateTime2(due2.value) && due2.value.slice(0, 10) === entry4.date ? { due_at: due2.value, ...typeof due2.zone === "string" && due2.zone ? { due_zone: due2.zone } : {} } : {};
     const written2 = {
       text: amend.text ?? entry4.text,
       description: amend.description ?? entry4.description,
@@ -194801,7 +195053,7 @@ var ActionClocks = class {
   } = {}) {
     const who3 = String(author ?? "").trim();
     if (!who3 || isMachineIdentity(who3))
-      return refuse19("MACHINE_CANNOT_STATE_CLOCK", "a deadline is put on an action's clock by a member, in their own act; a machine credential may propose one and never states it, and a call that carries nobody is not a member. Nothing was written.", { target: target ?? null });
+      return refuse20("MACHINE_CANNOT_STATE_CLOCK", "a deadline is put on an action's clock by a member, in their own act; a machine credential may propose one and never states it, and a call that carries nobody is not a member. Nothing was written.", { target: target ?? null });
     const a = this.#actionFor(target, viewer);
     if (!a) return noSuchAction(target ?? null);
     const ext = { target: a.id };
@@ -194841,7 +195093,7 @@ var ActionClocks = class {
         return clockEntryRefused(name3, `${name3} belongs to another basis kind than '${k}'. Nothing was written.`, ext);
     if (dueAt !== null && dueAt !== void 0 && dueAt !== "") {
       const t2 = String(dueAt);
-      if (!DUE_AT_RE2.test(t2) || t2.slice(0, 10) !== String(date) || !isDay2(t2.slice(0, 10)))
+      if (!isLocalDateTime2(t2) || t2.slice(0, 10) !== String(date))
         return clockEntryRefused("due_at", "due_at is a time on the entry's own date, written YYYY-MM-DDTHH:MM. Nothing was written.", ext);
       own10.due_at = t2;
       if (dueZone !== null && dueZone !== void 0 && dueZone !== "") {
@@ -195253,19 +195505,19 @@ function basisWords(b) {
 for (const m of ["pendingClocks", "clockPropose", "reminderSet", "reminderAnswer", "clockAdopt", "clockState"]) {
   const fn = ActionClocks.prototype[m];
   ActionClocks.prototype[m] = function(...a) {
-    return withRow6(fn.apply(this, a));
+    return withRow7(fn.apply(this, a));
   };
 }
-var instances55 = /* @__PURE__ */ new WeakMap();
+var instances56 = /* @__PURE__ */ new WeakMap();
 function actionClocksOf(host, deps) {
-  let a = instances55.get(host);
+  let a = instances56.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     a = new ActionClocks({ ...d, host, storage, record, membership });
-    instances55.set(host, a);
+    instances56.set(host, a);
     a.migrate();
     void a.actions;
     for (const t2 of ["action_reminders", "action_clock_proposals"])
@@ -195353,7 +195605,12 @@ var FILING_BLANKS = Object.freeze({
   venue: "where the kind is filed (the profile's venue name)",
   venue_how: "by what means it is filed (the profile's venue means)",
   group: "the producing group",
-  date: "the date the draft was prepared"
+  date: "the date the draft was prepared",
+  /* R31 (T47; DEC-209 (3), K3120): four member-filled blanks, filled by `filings` R55's `fills`, never by the record */
+  records: "the records asked for, in the member's words",
+  period: "the period the records cover",
+  form: "the form the records are wanted in",
+  cost_limit: "the most the group will pay for copies before being told"
 });
 var FILING_TEXT_MAX = 65536;
 var BLANK_RE = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/g;
@@ -195439,7 +195696,7 @@ var FILING_TEMPLATE_CHECKS = Object.freeze({
   },
   TEMPLATE_BLANK_UNKNOWN: {
     check: "C-125.4",
-    where: at32("#textRefusal", "is-template-text"),
+    where: at32("blankUnknownRefusal", "is-template-blank"),
     translation: "The words name a blank that no filing fills. Use only the blanks filings fill, written {{name}}."
   },
   TEMPLATE_SCOPE_REFUSED: {
@@ -195825,12 +196082,12 @@ var clamp7 = (v, dflt, max) => {
 };
 var listOf6 = (v) => (Array.isArray(v) ? v : typeof v === "string" ? v.split(",") : []).map((x) => String(x ?? "").trim()).filter(Boolean);
 var OFFERED = Object.freeze(["approved", "updated"]);
-function withRow7(r) {
+function withRow8(r) {
   if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string" || r.check) return r;
   const row14 = rowOf13(r.reason);
   return row14 ? { ...r, code: r.code ?? r.reason, check: row14.check, translation: row14.translation } : r;
 }
-var refuse20 = (code, detail, extra) => withRow7({ ok: false, reason: code, detail, ...extra || {} });
+var refuse21 = (code, detail, extra) => withRow8({ ok: false, reason: code, detail, ...extra || {} });
 function noTemplateGrant() {
   const row14 = FILING_TEMPLATE_CHECKS.NO_TEMPLATE_GRANT;
   return {
@@ -195841,6 +196098,15 @@ function noTemplateGrant() {
     translation: row14.translation,
     detail: "nothing answers to this review link: a link is read only while its grant is open and its version is in draft or in review; any other answers exactly as one that never existed."
   };
+}
+function blankUnknownRefusal(text7, extra = null, why2 = "") {
+  const { unknown } = blanksOf(text7);
+  if (!unknown) return null;
+  return refuse21(
+    "TEMPLATE_BLANK_UNKNOWN",
+    `{{${unknown}}} is not a blank filings fill${typeof why2 === "string" ? why2 : ""}`,
+    { ...extra && typeof extra === "object" ? extra : {}, blank: unknown }
+  );
 }
 function templateHandle(name3) {
   if (typeof name3 !== "string") return null;
@@ -195909,38 +196175,38 @@ var FilingTemplates = class _FilingTemplates {
   #machine(act2, who3) {
     if (str44(who3) && !isMachineIdentity(who3)) return null;
     const code = act2 === "review" ? "MACHINE_CANNOT_REVIEW_TEMPLATE" : act2 === "approve" ? "MACHINE_CANNOT_APPROVE_TEMPLATE" : "MACHINE_CANNOT_DRAFT_TEMPLATE";
-    return refuse20(code, str44(who3) ? `'${String(who3).trim().slice(0, 60)}' is a machine identity: a machine proposes wording and comments, labelled, and nothing else` : "no member is named as the one acting: this call carries nobody");
+    return refuse21(code, str44(who3) ? `'${String(who3).trim().slice(0, 60)}' is a machine identity: a machine proposes wording and comments, labelled, and nothing else` : "no member is named as the one acting: this call carries nobody");
   }
   /* ================================================================ the one-condition answers */
   /* R3, R24, R25: absent and invisible are one answer. */
   #noTemplate(asked) {
-    return refuse20(
+    return refuse21(
       "NO_SUCH_TEMPLATE",
       "no template by that id is readable here; one you may not see answers the same",
       { template: str44(typeof asked === "string" ? asked : null) }
     );
   }
   #scope(t2, detail) {
-    return refuse20("TEMPLATE_SCOPE_REFUSED", detail, { template: t2 ? t2.id : null });
+    return refuse21("TEMPLATE_SCOPE_REFUSED", detail, { template: t2 ? t2.id : null });
   }
   #retired(t2) {
-    return refuse20(
+    return refuse21(
       "TEMPLATE_RETIRED",
       `the template was retired: ${t2.retired.reason}`,
       { template: t2.id, retired: t2.retired }
     );
   }
   #notADraft(t2, n2, state) {
-    return refuse20("NOT_A_DRAFT", `the version is ${state}, past draft: its text is fixed`, { version: versionId(t2.id, n2), state });
+    return refuse21("NOT_A_DRAFT", `the version is ${state}, past draft: its text is fixed`, { version: versionId(t2.id, n2), state });
   }
   #notInReview(t2, n2, state) {
-    return refuse20("NOT_IN_REVIEW", `the version is ${state}, not in review`, { version: versionId(t2.id, n2), state });
+    return refuse21("NOT_IN_REVIEW", `the version is ${state}, not in review`, { version: versionId(t2.id, n2), state });
   }
   #notAnApprover(t2, detail) {
-    return refuse20("NOT_AN_APPROVER", detail, { template: t2.id });
+    return refuse21("NOT_AN_APPROVER", detail, { template: t2.id });
   }
   #fromRefusal(detail) {
-    return refuse20("TEMPLATE_FROM_REFUSED", detail);
+    return refuse21("TEMPLATE_FROM_REFUSED", detail);
   }
   /* ================================================================ the profiles (R1, R15) */
   #activeIds() {
@@ -196010,7 +196276,7 @@ var FilingTemplates = class _FilingTemplates {
     return null;
   }
   #courtPetition(kind2, profile, extra = {}) {
-    return refuse20(
+    return refuse21(
       "TEMPLATE_COURT_PETITION",
       `the kind's venue in the profile '${String(profile).slice(0, 60)}' is a court: no template the group files in its own name is kept for it until a licensed professional can certify one; a brief template may serve it`,
       { kind: kind2, profile, ...extra }
@@ -196029,19 +196295,15 @@ var FilingTemplates = class _FilingTemplates {
     return out;
   }
   /* R15, R28: why a profile template is not offered, as a refusal, or null (a group template: null). In order: a blank
-     outside FILING_BLANKS, a file template on a court's kind, an attribution that lacks a part. */
+     outside FILING_BLANKS (R30, R32's one site), a file template on a court's kind, an attribution that lacks a part. */
   #profileRefusal(t2) {
     if (!t2 || t2.origin !== "profile") return null;
-    const blank5 = blanksOf(t2.profileTemplate.text).unknown;
-    if (blank5) return refuse20(
-      "TEMPLATE_BLANK_UNKNOWN",
-      `{{${blank5}}} is not a blank filings fill, so this template is not offered`,
-      { template: t2.id, blank: blank5 }
-    );
+    const blank5 = blankUnknownRefusal(t2.profileTemplate.text, { template: t2.id }, ", so this template is not offered");
+    if (blank5) return blank5;
     if (t2.use === "file" && t2.court) return this.#courtPetition(t2.kind, t2.profiles[0], { template: t2.id });
     const lacks = _FilingTemplates.#lacks(t2.profileTemplate);
     if (lacks.length)
-      return refuse20(
+      return refuse21(
         "TEMPLATE_NOT_REVIEWED",
         `the profile's template is not offered: its attribution lacks ${lacks.join(", ")}`,
         { template: t2.id, lacks }
@@ -196321,7 +196583,7 @@ var FilingTemplates = class _FilingTemplates {
   /* R1: the template's own fields, in R1's order. */
   #shapeRefusal({ kind: kind2, use, profiles: profiles2, name: name3, project }) {
     if (typeof kind2 !== "string" || !KIND_RE2.test(kind2))
-      return refuse20(
+      return refuse21(
         "TEMPLATE_KIND_REFUSED",
         "a kind is lower-case letters, digits and underscores, beginning with a letter",
         { kind: typeof kind2 === "string" ? kind2.slice(0, 60) : null }
@@ -196330,37 +196592,37 @@ var FilingTemplates = class _FilingTemplates {
     for (const p3 of listed2) {
       const held2 = this.#profile(p3);
       if (held2 && !this.#kindIn(held2, kind2))
-        return refuse20("TEMPLATE_KIND_UNKNOWN", `the profile '${p3}' holds no action kind '${kind2}'`, { kind: kind2, profile: p3 });
+        return refuse21("TEMPLATE_KIND_UNKNOWN", `the profile '${p3}' holds no action kind '${kind2}'`, { kind: kind2, profile: p3 });
     }
     if (!TEMPLATE_USES2.includes(use))
-      return refuse20("TEMPLATE_USE_REFUSED", "a template's use is file or brief", { use: typeof use === "string" ? use.slice(0, 20) : null });
+      return refuse21("TEMPLATE_USE_REFUSED", "a template's use is file or brief", { use: typeof use === "string" ? use.slice(0, 20) : null });
     if (profiles2 !== "general") {
-      if (!listed2.length) return refuse20("TEMPLATE_PROFILE_UNKNOWN", "a template names the profiles it is written for, or general", { profile: null });
+      if (!listed2.length) return refuse21("TEMPLATE_PROFILE_UNKNOWN", "a template names the profiles it is written for, or general", { profile: null });
       const missing2 = listed2.find((p3) => !this.#profile(p3));
-      if (missing2) return refuse20("TEMPLATE_PROFILE_UNKNOWN", `no profile '${missing2.slice(0, 60)}' is held`, { profile: missing2.slice(0, 60) });
+      if (missing2) return refuse21("TEMPLATE_PROFILE_UNKNOWN", `no profile '${missing2.slice(0, 60)}' is held`, { profile: missing2.slice(0, 60) });
     }
     if (use === "file" && this.#tierOf(kind2, profiles2) === 3)
-      return refuse20("TEMPLATE_TIER3_FILE", "the kind's tier is 3: no file template is kept for it; a brief template may serve it", { kind: kind2 });
+      return refuse21("TEMPLATE_TIER3_FILE", "the kind's tier is 3: no file template is kept for it; a brief template may serve it", { kind: kind2 });
     const court = use === "file" ? this.#courtIn(kind2, profiles2) : null;
     if (court) return this.#courtPetition(kind2, court);
     if (!oneLine5(name3, TEMPLATE_NAME_MAX2))
-      return refuse20("TEMPLATE_NAME_REFUSED", `a template is named in one line of 1 to ${TEMPLATE_NAME_MAX2} characters`, { max: TEMPLATE_NAME_MAX2 });
+      return refuse21("TEMPLATE_NAME_REFUSED", `a template is named in one line of 1 to ${TEMPLATE_NAME_MAX2} characters`, { max: TEMPLATE_NAME_MAX2 });
     const taken = this.#rows(`SELECT template_id FROM tpl_templates WHERE project IS ? AND name=?`, project, name3.trim()).map((r) => this.#groupTemplate(r.template_id)).find((t2) => t2 && !t2.retired && !t2.widened);
-    if (taken) return refuse20("TEMPLATE_NAME_TAKEN", "the scope's library already holds a template by this name", { name: name3.trim() });
+    if (taken) return refuse21("TEMPLATE_NAME_TAKEN", "the scope's library already holds a template by this name", { name: name3.trim() });
     return null;
   }
   /* R2, R12: a text and any notes. */
   #textRefusal(text7, notes2) {
     if (typeof text7 !== "string" || !text7.trim() || WELL_FORMED2.test(text7) || utf86(text7) > FILING_TEXT_MAX)
-      return refuse20(
+      return refuse21(
         "TEMPLATE_TEXT_REFUSED",
         `a template's words are non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes`,
         { max_bytes: FILING_TEXT_MAX }
       );
-    const { unknown } = blanksOf(text7);
-    if (unknown) return refuse20("TEMPLATE_BLANK_UNKNOWN", `{{${unknown}}} is not a blank filings fill`, { blank: unknown, blanks: Object.keys(FILING_BLANKS) });
+    const blank5 = blankUnknownRefusal(text7, { blanks: Object.keys(FILING_BLANKS) });
+    if (blank5) return blank5;
     if (notes2 !== void 0 && notes2 !== null && (typeof notes2 !== "string" || notes2.length > TEMPLATE_NOTES_MAX || WELL_FORMED2.test(notes2)))
-      return refuse20("TEMPLATE_NOTES_REFUSED", `a version's notes are text of at most ${TEMPLATE_NOTES_MAX} characters`, { max: TEMPLATE_NOTES_MAX });
+      return refuse21("TEMPLATE_NOTES_REFUSED", `a version's notes are text of at most ${TEMPLATE_NOTES_MAX} characters`, { max: TEMPLATE_NOTES_MAX });
     return null;
   }
   #notesRefusal(notes2) {
@@ -196417,7 +196679,7 @@ var FilingTemplates = class _FilingTemplates {
       events = this.#events(t2.id);
       const open = this.#openVersion(t2, events);
       if (open !== null)
-        return refuse20(
+        return refuse21(
           "TEMPLATE_DRAFT_OPEN",
           `version ${open} is ${this.#stateOf(events, open)}: finish or withdraw it first`,
           { version: versionId(t2.id, open), state: this.#stateOf(events, open) }
@@ -196564,7 +196826,7 @@ var FilingTemplates = class _FilingTemplates {
     skill_pack = null
   } = {}) {
     const who3 = str44(proposer);
-    if (!who3) return refuse20("TEMPLATE_NO_PROPOSER", "no stamped proposer: a proposal names who made it");
+    if (!who3) return refuse21("TEMPLATE_NO_PROPOSER", "no stamped proposer: a proposal names who made it");
     let t2 = null;
     if (template !== null && template !== void 0 && template !== "") {
       t2 = this.#template(template, viewer);
@@ -196576,7 +196838,7 @@ var FilingTemplates = class _FilingTemplates {
     const bad2 = this.#textRefusal(text7);
     if (bad2) return bad2;
     if (!textUpTo(why2, PROPOSAL_WHY_MAX))
-      return refuse20("TEMPLATE_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX} characters`, { max: PROPOSAL_WHY_MAX });
+      return refuse21("TEMPLATE_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX} characters`, { max: PROPOSAL_WHY_MAX });
     const at48 = this.#when();
     const cut10 = (v) => str44(v) ? String(v).trim().slice(0, 200) : null;
     return this.record.transact(() => {
@@ -196643,11 +196905,11 @@ var FilingTemplates = class _FilingTemplates {
       const facts = id ? this.#call(() => this.membership.memberFacts(id)) : null;
       const standing = id && (facts && facts.status === "active" || this.#call(() => this.membership.isAdministrator(id)) === true);
       if (!standing || !this.#canSee(t2, `member:${id}`))
-        return refuse20("REVIEWER_UNKNOWN", `'${a.slice(0, 80)}' is not a member who can read the template`, { reviewer: a.slice(0, 80) });
+        return refuse21("REVIEWER_UNKNOWN", `'${a.slice(0, 80)}' is not a member who can read the template`, { reviewer: a.slice(0, 80) });
       ids.push(id);
     }
     if (!ids.length && !this.#liveGrants(t2.id, n2, events).length)
-      return refuse20("NO_REVIEWERS", "name a member to review it, or open a review grant on the version first");
+      return refuse21("NO_REVIEWERS", "name a member to review it, or open a review grant on the version first");
     const at48 = this.#when();
     const sha2 = this.#latestRevision(t2.id, n2).sha;
     const name_ = this.#nameOf(member2);
@@ -196682,14 +196944,14 @@ var FilingTemplates = class _FilingTemplates {
     const state = this.#stateOf(this.#events(t2.id), n2);
     if (!["draft", "in_review"].includes(state)) return this.#notInReview(t2, n2, state);
     if (!oneLine5(recipient, GRANT_FIELD_MAX) || !oneLine5(organisation, GRANT_FIELD_MAX))
-      return refuse20(
+      return refuse21(
         "GRANT_RECIPIENT_REFUSED",
         `the reviewer and their organisation, each one line of 1 to ${GRANT_FIELD_MAX} characters`,
         { max: GRANT_FIELD_MAX }
       );
     const s = typeof secretSha === "string" ? secretSha.trim() : "";
     if (!SHA_RE4.test(s) || this.#one(`SELECT 1 AS x FROM tpl_grants WHERE secret_sha=?`, s))
-      return refuse20("GRANT_NO_SECRET", "no fresh secret digest was stamped for this grant: your group's Civicsmith makes the secret");
+      return refuse21("GRANT_NO_SECRET", "no fresh secret digest was stamped for this grant: your group's Civicsmith makes the secret");
     const at48 = this.#when();
     return this.record.transact(() => {
       const id = this.#mint("TRG", at48.slice(0, 4));
@@ -196728,7 +196990,7 @@ var FilingTemplates = class _FilingTemplates {
     if (machine3) return machine3;
     const g = str44(grant) ? this.#one(`SELECT * FROM tpl_grants WHERE grant_id=?`, str44(grant)) : null;
     const t2 = g ? this.#template(g.template_id, viewer) : null;
-    if (!t2) return refuse20("NO_SUCH_GRANT", "no review grant by that id is readable here", { grant: str44(grant) });
+    if (!t2) return refuse21("NO_SUCH_GRANT", "no review grant by that id is readable here", { grant: str44(grant) });
     const member2 = this.#member(by);
     if (!member2 || !this.#call(() => this.membership.isJoinedParticipant(t2.project, member2)))
       return this.#scope(t2, "a review grant is revoked by a joined participant of the template's project");
@@ -196804,9 +197066,9 @@ var FilingTemplates = class _FilingTemplates {
     if (state !== "in_review") return this.#notInReview(t2, n2, state);
     const present3 = this.#latestRevision(t2.id, n2).sha;
     if (!REVIEW_OUTCOMES2.includes(outcome) || !oneLine5(scope, REVIEW_SCOPE_MAX) || comment !== null && comment !== void 0 && !textUpTo(comment, REVIEW_COMMENT_MAX, 0) || reviewer.kind === "professional" && credential !== null && credential !== void 0 && !oneLine5(credential, REVIEW_CREDENTIAL_MAX))
-      return refuse20("REVIEW_REFUSED", `outcome is one of ${REVIEW_OUTCOMES2.join(", ")}; scope 1 to ${REVIEW_SCOPE_MAX} characters; comment at most ${REVIEW_COMMENT_MAX}; credential at most ${REVIEW_CREDENTIAL_MAX}`, { outcomes: REVIEW_OUTCOMES2 });
+      return refuse21("REVIEW_REFUSED", `outcome is one of ${REVIEW_OUTCOMES2.join(", ")}; scope 1 to ${REVIEW_SCOPE_MAX} characters; comment at most ${REVIEW_COMMENT_MAX}; credential at most ${REVIEW_CREDENTIAL_MAX}`, { outcomes: REVIEW_OUTCOMES2 });
     if (sha2 !== null && sha2 !== void 0 && sha2 !== "" && sha2 !== present3)
-      return refuse20("REVIEW_STALE", "the text reviewed is not the version's present text", { sha: present3 });
+      return refuse21("REVIEW_STALE", "the text reviewed is not the version's present text", { sha: present3 });
     const at48 = this.#when();
     const cred = reviewer.kind === "professional" && str44(credential) ? credential.trim() : null;
     this.sql.exec(
@@ -196854,7 +197116,7 @@ var FilingTemplates = class _FilingTemplates {
     if (widening) {
       if (t2.origin === "profile") return this.#notAnApprover(t2, "a profile's template is already offered to the whole group");
       if (!OFFERED.includes(state) || t2.retired)
-        return refuse20(
+        return refuse21(
           "TEMPLATE_NOT_APPROVED",
           `the version is ${t2.retired ? "of a retired template" : state}: only an approved project template is widened`,
           { version: versionId(t2.id, n2), state }
@@ -196873,7 +197135,7 @@ var FilingTemplates = class _FilingTemplates {
     const v = this.#one(`SELECT author FROM tpl_versions WHERE template_id=? AND version=?`, t2.id, n2);
     const others = this.#contributors(t2.id, n2).filter((c) => c.kind === "member" && c.member !== v.author);
     if (v.author === member2 && !others.length)
-      return refuse20(
+      return refuse21(
         "APPROVER_IS_AUTHOR",
         "you are the version's author and its only member contributor: another member approves it",
         { version: versionId(t2.id, n2) }
@@ -196886,7 +197148,7 @@ var FilingTemplates = class _FilingTemplates {
     const blocking = standing.filter((x) => x.outcome === "changes_requested");
     const met = standing.some((x) => x.kind === needs && x.outcome === "no_concerns") || needs === "professional" && !!why2;
     if (blocking.length || !met)
-      return refuse20(
+      return refuse21(
         "REVIEWS_INSUFFICIENT",
         blocking.length ? "a review requesting changes stands" : tier === 1 ? "a Tier 1 kind needs one member's review with no concerns" : `${tier === "undetermined" ? "an undetermined tier" : `Tier ${tier}`} needs a professional's review with no concerns, or the approver's reason for going without one (1 to ${APPROVAL_REASON_MAX} characters)`,
         { version: versionId(t2.id, n2), tier, needs, reviews: _FilingTemplates.#summary(standing, sha2) }
@@ -196924,8 +197186,8 @@ var FilingTemplates = class _FilingTemplates {
     if (version === null || version === void 0 || version === "") {
       const approver = t2.origin !== "profile" && !!member2 && (t2.widened ? this.#call(() => this.membership.isAdministrator(member2)) === true : this.#call(() => this.membership.isProjectOwner(t2.project, member2)) === true);
       if (!approver) return this.#notAnApprover(t2, t2.origin === "profile" ? "a profile's template is read-only here" : t2.widened ? "an administrator retires a group-wide template" : "an owner of the template's project retires it");
-      if (!why2) return refuse20("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
-      if (t2.retired) return refuse20("TEMPLATE_ALREADY_ENDED", "the template was already retired", { template: t2.id, ended: { ending: "retired", ...t2.retired } });
+      if (!why2) return refuse21("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
+      if (t2.retired) return refuse21("TEMPLATE_ALREADY_ENDED", "the template was already retired", { template: t2.id, ended: { ending: "retired", ...t2.retired } });
       const at49 = this.#when();
       const name_2 = this.#nameOf(member2);
       this.sql.exec(`INSERT INTO tpl_events (template_id, version, bundle_id, event, actor, actor_name, detail, at)
@@ -196944,10 +197206,10 @@ var FilingTemplates = class _FilingTemplates {
     if (!v || !member2 || v.author !== member2) return this.#scope(t2, "a version is withdrawn by its author");
     const state = this.#stateOf(events, n2);
     if (OFFERED.includes(state)) return this.#notADraft(t2, n2, state);
-    if (!why2) return refuse20("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
+    if (!why2) return refuse21("TEMPLATE_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX} characters`, { max: ENDING_REASON_MAX });
     if (state === "withdrawn") {
       const e2 = events.find((x) => x.version === n2 && x.event === "withdrawn");
-      return refuse20("TEMPLATE_ALREADY_ENDED", "the version was already withdrawn", {
+      return refuse21("TEMPLATE_ALREADY_ENDED", "the version was already withdrawn", {
         version: versionId(t2.id, n2),
         ended: { ending: "withdrawn", by: { id: e2.actor, name: e2.actor_name }, at: e2.at, reason: (parse10(e2.detail) || {}).reason ?? null }
       });
@@ -196978,7 +197240,7 @@ var FilingTemplates = class _FilingTemplates {
     }
     const isNote = note === true || note === "true" || note === "1" || note === 1;
     if (!by || !textUpTo(text7, COMMENT_MAX))
-      return refuse20(
+      return refuse21(
         "COMMENT_REFUSED",
         by ? `a comment is 1 to ${COMMENT_MAX} characters` : "a comment names who wrote it: this call carries nobody",
         { max: COMMENT_MAX }
@@ -196987,7 +197249,7 @@ var FilingTemplates = class _FilingTemplates {
       if (by.kind !== "member" || !t2.project || !this.#call(() => this.membership.isJoinedParticipant(t2.project, by.id)))
         return this.#scope(t2, "a note is added by a member who may revise the template");
       if (this.#stateOf(this.#events(t2.id), n2) === "draft")
-        return refuse20("COMMENT_REFUSED", "a draft's notes are edited by revising it (op=templaterevise, notes=)", { max: COMMENT_MAX });
+        return refuse21("COMMENT_REFUSED", "a draft's notes are edited by revising it (op=templaterevise, notes=)", { max: COMMENT_MAX });
     }
     const at48 = this.#when();
     this.sql.exec(`INSERT INTO tpl_comments (template_id, version, bundle_id, text, note, kind, author, author_name, organisation, at)
@@ -197047,7 +197309,7 @@ var FilingTemplates = class _FilingTemplates {
   templatesFor({ kind: kind2 = null, profile = null, use = null, state = null, viewer = null } = {}) {
     const st = str44(state);
     if (st && st !== "offered" && !TEMPLATES_STATES_LISTED.includes(st))
-      return refuse20("TEMPLATES_STATE_REFUSED", `state is offered or one of ${TEMPLATES_STATES_LISTED.join(", ")}`, { states: TEMPLATES_STATES_LISTED });
+      return refuse21("TEMPLATES_STATE_REFUSED", `state is offered or one of ${TEMPLATES_STATES_LISTED.join(", ")}`, { states: TEMPLATES_STATES_LISTED });
     const k = str44(kind2), p3 = str44(profile), u = str44(use);
     if (st === "proposed") {
       const rows4 = this.#rows(`SELECT * FROM tpl_proposals p WHERE NOT EXISTS (SELECT 1 FROM tpl_revisions r WHERE r.adopted=p.proposal_id)
@@ -197128,7 +197390,7 @@ var FilingTemplates = class _FilingTemplates {
       offered: OFFERED.includes(view.state) && !t2.retired && !not,
       ...view.state === "approved" && n2 === this.#latestApproved(t2, events) ? { default: true } : {},
       ...not ? { not_offered: not } : {},
-      ...not && not.reason === "TEMPLATE_BLANK_UNKNOWN" ? { blank_unknown: not } : {}
+      ...not && not.blank ? { blank_unknown: not } : {}
     };
   }
   /* ================================================================ R25: offeredVersion */
@@ -197137,7 +197399,7 @@ var FilingTemplates = class _FilingTemplates {
      first scope holding the handle answers; two there are ambiguous. As `{t}`, or a refusal; writes nothing. */
   #byName(name3, project, viewer) {
     if (typeof name3 !== "string" || !TEMPLATE_NAME_REF_RE.test(name3))
-      return refuse20("TEMPLATE_REF_REFUSED", "a template is named as @ and its name's handle: lower-case letters and digits, runs joined by single hyphens", { name: typeof name3 === "string" ? name3.slice(0, 80) : null });
+      return refuse21("TEMPLATE_REF_REFUSED", "a template is named as @ and its name's handle: lower-case letters and digits, runs joined by single hyphens", { name: typeof name3 === "string" ? name3.slice(0, 80) : null });
     const handle = name3.slice(1), proj = str44(project);
     const fits = (t2) => t2 && !t2.retired && templateHandle(t2.name) === handle && this.#canSee(t2, viewer);
     const group = this.#rows(`SELECT template_id FROM tpl_templates ORDER BY template_id`).map((r) => this.#groupTemplate(r.template_id));
@@ -197149,7 +197411,7 @@ var FilingTemplates = class _FilingTemplates {
     for (const scope of scopes) {
       const hits = scope.filter(fits);
       if (hits.length > 1)
-        return refuse20("TEMPLATE_NAME_AMBIGUOUS", "two templates you can see go by that name in the same scope, so neither was chosen: name the template by its id", { name: name3 });
+        return refuse21("TEMPLATE_NAME_AMBIGUOUS", "two templates you can see go by that name in the same scope, so neither was chosen: name the template by its id", { name: name3 });
       if (hits.length === 1) return { t: hits[0] };
     }
     return this.#noTemplate(null);
@@ -197160,7 +197422,7 @@ var FilingTemplates = class _FilingTemplates {
   offeredVersion({ template = null, name: name3 = null, project = null, version = null, viewer = null } = {}) {
     const given6 = (v) => v !== null && v !== void 0 && v !== "";
     if (given6(template) === given6(name3)) {
-      return refuse20("TEMPLATE_REF_REFUSED", given6(template) ? "a template is named by its id or by its name, not both" : "no template is named: give its id, or @ and its name");
+      return refuse21("TEMPLATE_REF_REFUSED", given6(template) ? "a template is named by its id or by its name, not both" : "no template is named: give its id, or @ and its name");
     }
     let t2;
     if (given6(name3)) {
@@ -197179,7 +197441,7 @@ var FilingTemplates = class _FilingTemplates {
     const n2 = version === null || version === void 0 || version === "" ? latest3 : this.#versionOf(t2, version);
     const state = n2 === null ? null : t2.origin === "profile" ? "approved" : this.#stateOf(events, n2);
     if (n2 === null || !OFFERED.includes(state))
-      return refuse20(
+      return refuse21(
         "TEMPLATE_NOT_OFFERED",
         n2 === null ? version ? "no such version of this template" : "the template has no approved version" : `the version is ${state}: only an approved or updated version is offered`,
         { template: t2.id, ...n2 !== null ? { version: versionId(t2.id, n2), state } : {} }
@@ -197318,19 +197580,19 @@ for (const m of [
 ]) {
   const fn = FilingTemplates.prototype[m];
   FilingTemplates.prototype[m] = function(...a) {
-    return withRow7(fn.apply(this, a));
+    return withRow8(fn.apply(this, a));
   };
 }
-var instances56 = /* @__PURE__ */ new WeakMap();
+var instances57 = /* @__PURE__ */ new WeakMap();
 function filingTemplatesOf(host, deps) {
-  let f17 = instances56.get(host);
+  let f17 = instances57.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     f17 = new FilingTemplates({ ...d, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances56.set(host, f17);
+    instances57.set(host, f17);
     f17.migrate();
     record.declarePurge("filing-templates", [...FILING_TEMPLATES_TABLES]);
     record.registerMintSeed("filing-templates", FILING_TEMPLATES_MINT_SEED.map((x) => [...x]));
@@ -197610,7 +197872,7 @@ function migrateActionHolds(sql) {
 }
 
 // src/action-holds/index.mjs
-var NOTE_MAX5 = 500;
+var NOTE_MAX6 = 500;
 var PRESSURE_KINDS3 = Object.freeze(["legal", "retaliation", "discrediting", "other"]);
 var HOLD_STATES = Object.freeze(["in_place", "released"]);
 var HOLD_FROM_KINDS = Object.freeze(["mark", "pressure", "docket_entry", "counsel_matter"]);
@@ -197622,14 +197884,14 @@ var PROJECT_ID_RE = { test: (x) => BUNDLE_ID_RE.test(x) && x.startsWith("PROJ-")
 var PRESSURE_REF_RE = /^(PROJ-[^#\s]+)#pressure\/([1-9]\d*)$/;
 var WHOLE = -1;
 var HOLD_MODE = Symbol("dec113-hold-mode");
-var ROWS2 = Object.assign({}, ACTION_ACT_CHECKS, ACTION_CATALOGUE_CHECKS, ACTION_HOLDS_CHECKS);
-function withRow8(r) {
+var ROWS3 = Object.assign({}, ACTION_ACT_CHECKS, ACTION_CATALOGUE_CHECKS, ACTION_HOLDS_CHECKS);
+function withRow9(r) {
   if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string") return r;
-  const row14 = ROWS2[r.reason];
+  const row14 = ROWS3[r.reason];
   if (!row14) return r;
   return { ...r, code: r.code ?? r.reason, check: r.check ?? row14.check, translation: r.translation ?? row14.translation };
 }
-var refuse21 = (code, detail, extra) => withRow8({ ok: false, reason: code, detail, ...extra || {} });
+var refuse22 = (code, detail, extra) => withRow9({ ok: false, reason: code, detail, ...extra || {} });
 var HOLD_NOT_IN_PLACE_DETAIL = "a hold notice is recorded for a hold in place, and the hold at this place is not in place: none has been placed there, or it was released. Nothing was written.";
 function holdNotInPlace(place4 = null) {
   let keys = {};
@@ -197771,15 +198033,15 @@ var ActionHolds = class _ActionHolds {
      `action-grammar`'s rows (C-117.14–.16), which `actions`' `actionCorrespond` mints too. */
   #pressureRefusal({ who: who3, mark, direction }) {
     if (!who3 || isMachineIdentity(who3))
-      return refuse21("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the group is a member's judgement; a machine credential may not mark it. Nothing was written.");
-    if (!mark || !PRESSURE_KINDS3.includes(mark.kind) || !mark.note || mark.note.length > NOTE_MAX5 || /["\\\r\n]/.test(mark.raw))
-      return refuse21(
+      return refuse22("MACHINE_CANNOT_MARK_PRESSURE", "marking pressure directed at the group is a member's judgement; a machine credential may not mark it. Nothing was written.");
+    if (!mark || !PRESSURE_KINDS3.includes(mark.kind) || !mark.note || mark.note.length > NOTE_MAX6 || /["\\\r\n]/.test(mark.raw))
+      return refuse22(
         "PRESSURE_REFUSED",
-        `a pressure mark is {kind, note}: kind one of ${PRESSURE_KINDS3.join(", ")}, the note 1 to ${NOTE_MAX5} characters with no quote, backslash or line break. Nothing was written.`,
-        { legal: PRESSURE_KINDS3, max: NOTE_MAX5 }
+        `a pressure mark is {kind, note}: kind one of ${PRESSURE_KINDS3.join(", ")}, the note 1 to ${NOTE_MAX6} characters with no quote, backslash or line break. Nothing was written.`,
+        { legal: PRESSURE_KINDS3, max: NOTE_MAX6 }
       );
     if (direction !== "received")
-      return refuse21("PRESSURE_NOT_RECEIVED", `pressure is marked on a received entry; this one is ${direction || "not one"}. Nothing was written.`);
+      return refuse22("PRESSURE_NOT_RECEIVED", `pressure is marked on a received entry; this one is ${direction || "not one"}. Nothing was written.`);
     return null;
   }
   /** R1: `actionPressure` marks pressure on a received entry already recorded, in this module's own table; the entry
@@ -197800,7 +198062,7 @@ var ActionHolds = class _ActionHolds {
     const n2 = positionOf(ord);
     const entry4 = Number.isInteger(n2) ? ledger[n2] : void 0;
     if (!entry4 || typeof entry4 !== "object")
-      return refuse21(
+      return refuse22(
         "PRESSURE_NO_ENTRY",
         "no correspondence entry stands at that position. Nothing was written.",
         { target, ord: ord ?? null, entries: ledger.length }
@@ -197808,7 +198070,7 @@ var ActionHolds = class _ActionHolds {
     const notReceived = this.#pressureRefusal({ who: who3, mark, direction: entry4.direction });
     if (notReceived) return { ...notReceived, target, ord: n2 };
     if (this.#one(`SELECT ord FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n2) || entry4.pressure_kind !== void 0)
-      return refuse21("PRESSURE_MARKED", "that entry is already marked as pressure, and a mark is never rewritten. Nothing was written.", { target, ord: n2 });
+      return refuse22("PRESSURE_MARKED", "that entry is already marked as pressure, and a mark is never rewritten. Nothing was written.", { target, ord: n2 });
     const at48 = stampInstant("second", this.#nowMs());
     this.sql.exec(
       `INSERT INTO action_pressure (bundle_id, ord, kind, note, marked_by, at) VALUES (?,?,?,?,?,?)`,
@@ -197834,7 +198096,7 @@ var ActionHolds = class _ActionHolds {
     const hasOrd = given2(ord);
     const n2 = hasOrd ? positionOf(ord) : null;
     if (names2 > 1 || hasOrd && (!given2(target) || !Number.isInteger(n2)))
-      return { refusal: refuse21("HOLD_PLACE_REFUSED", "a hold is placed at exactly one place: an action, an entry of one by its position (a whole number from zero), or a project. Nothing was written.") };
+      return { refusal: refuse22("HOLD_PLACE_REFUSED", "a hold is placed at exactly one place: an action, an entry of one by its position (a whole number from zero), or a project. Nothing was written.") };
     if (shapeOnly) return { place: null };
     if (given2(target)) {
       const id = str45(String(target));
@@ -197845,7 +198107,7 @@ var ActionHolds = class _ActionHolds {
       if (!hasOrd) return { place: { kind: "action", bundle: id, ord: WHOLE, target: id } };
       const ledger = (this.#heldFm(id) || {}).correspondence;
       if (!Array.isArray(ledger) || !ledger[n2] || typeof ledger[n2] !== "object")
-        return { refusal: refuse21("HOLD_PLACE_REFUSED", "no correspondence entry of that action stands at that position, so no hold can be placed on it. Nothing was written.", { target: id, ord: n2 }) };
+        return { refusal: refuse22("HOLD_PLACE_REFUSED", "no correspondence entry of that action stands at that position, so no hold can be placed on it. Nothing was written.", { target: id, ord: n2 }) };
       return { place: { kind: "entry", bundle: id, ord: n2, target: id } };
     }
     if (given2(caseId)) {
@@ -197895,7 +198157,7 @@ var ActionHolds = class _ActionHolds {
     const keys = f17 ? Object.keys(f17) : [];
     const kind2 = keys.length === 1 && HOLD_FROM_KINDS.includes(keys[0]) ? keys[0] : null;
     const v = kind2 ? f17[kind2] : null;
-    const no9 = () => ({ refusal: refuse21("HOLD_FROM_REFUSED", "what prompted a hold is a pressure mark, a pressure record, a docket entry marked as legal pressure, or a counsel matter, standing at the place the hold is placed; this names none you can see there. Nothing was written.", { from: kind2 ? { [kind2]: v } : null }) });
+    const no9 = () => ({ refusal: refuse22("HOLD_FROM_REFUSED", "what prompted a hold is a pressure mark, a pressure record, a docket entry marked as legal pressure, or a counsel matter, standing at the place the hold is placed; this names none you can see there. Nothing was written.", { from: kind2 ? { [kind2]: v } : null }) });
     if (kind2 === "mark") {
       const m = objectOf(v);
       const t2 = m ? str45(String(m.target ?? "")) : "", n2 = m ? positionOf(m.ord) : NaN;
@@ -197968,14 +198230,14 @@ var ActionHolds = class _ActionHolds {
     const preview = mode === "preview", release2 = mode === "release";
     const h = release2 ? "released" : typeof hold === "string" ? hold.trim() : "";
     const why2 = typeof reason2 === "string" ? reason2.trim() : "";
-    const machine3 = !preview && (!who3 || isMachineIdentity(who3)) ? refuse21("MACHINE_CANNOT_SET_HOLD", "saying whether a litigation hold is in place is a member's judgement; a machine credential may not state it. Nothing was written.") : null;
-    const shape = !preview && (!HOLD_STATES.includes(h) || !why2 || why2.length > NOTE_MAX5 || /["\\\r\n]/.test(why2)) ? refuse21("HOLD_REFUSED", `a litigation hold is one of ${HOLD_STATES.join(", ")}, with a reason of 1 to ${NOTE_MAX5} characters and no quote, backslash or line break. Nothing was written.`, { legal: HOLD_STATES, max: NOTE_MAX5 }) : null;
+    const machine3 = !preview && (!who3 || isMachineIdentity(who3)) ? refuse22("MACHINE_CANNOT_SET_HOLD", "saying whether a litigation hold is in place is a member's judgement; a machine credential may not state it. Nothing was written.") : null;
+    const shape = !preview && (!HOLD_STATES.includes(h) || !why2 || why2.length > NOTE_MAX6 || /["\\\r\n]/.test(why2)) ? refuse22("HOLD_REFUSED", `a litigation hold is one of ${HOLD_STATES.join(", ")}, with a reason of 1 to ${NOTE_MAX6} characters and no quote, backslash or line break. Nothing was written.`, { legal: HOLD_STATES, max: NOTE_MAX6 }) : null;
     if (machine3) return machine3;
     const names2 = { target, ord, project, caseId, viewer };
     const shaped = this.#placeOf({ ...names2, shapeOnly: true });
     if (shaped.refusal) return shaped.refusal;
     if (mode === "hold" && h === "released")
-      return refuse21("HOLD_RELEASE_IS_ITS_OWN_ACT", "a hold is released by its own act, op=actionholdrelease, which states what the release restarts. Nothing was written.", { target });
+      return refuse22("HOLD_RELEASE_IS_ITS_OWN_ACT", "a hold is released by its own act, op=actionholdrelease, which states what the release restarts. Nothing was written.", { target });
     if (shape) return { ...shape, ...target ? { target } : {} };
     let named2 = [];
     if (mode === "hold") {
@@ -197998,7 +198260,7 @@ var ActionHolds = class _ActionHolds {
       return { ok: true, ...where, hold: latest3 ? latest3.hold : null, restarts: seen, out_of_view: seen.length < all.length };
     }
     if (release2 && latest3 && latest3.hold === "released")
-      return refuse21("HOLD_ALREADY_RELEASED", "this place's hold is already released; a release ends a hold in place. Nothing was written.", where);
+      return refuse22("HOLD_ALREADY_RELEASED", "this place's hold is already released; a release ends a hold in place. Nothing was written.", where);
     for (const p3 of named2) {
       const seen = this.#projectSeen(p3, viewer);
       if (seen) return seen;
@@ -198096,7 +198358,7 @@ var ActionHolds = class _ActionHolds {
     const ids = Array.isArray(list6) ? list6 : null;
     const distinct2 = ids ? new Set(ids) : null;
     if ((!absent || exact2) && (!ids || ids.some((x) => typeof x !== "string" || !PROJECT_ID_RE.test(x)) || distinct2.size > HOLD_PROJECTS_MAX || exact2 && (!ids.length || distinct2.size !== ids.length)))
-      return refuse21(
+      return refuse22(
         "HOLD_PROJECTS_REFUSED",
         `projects is a list of ${exact2 ? "1 to " : "at most "}${HOLD_PROJECTS_MAX} distinct project ids (PROJ-\u2026)${exact2 ? ", each named once" : ""}. Nothing was ${exact2 ? "read" : "written"}.`,
         { max: HOLD_PROJECTS_MAX }
@@ -198170,7 +198432,7 @@ var ActionHolds = class _ActionHolds {
    *  refusals answer an absent or invisible one. Writes nothing. */
   holdsOf({ target = null, ord = null, project = null, case: caseId = null, viewer = null } = {}) {
     const at48 = this.#placeOf({ target, ord, project, caseId, viewer });
-    if (at48.refusal) return withRow8(at48.refusal);
+    if (at48.refusal) return withRow9(at48.refusal);
     const { place: place4 } = at48;
     const notices = this.#rows(`SELECT seq, sent_on, medium, artifact_sha, account, recorded_by, recorded_at FROM hold_notices
       WHERE bundle_id=? AND ord=? ORDER BY seq`, place4.bundle, place4.ord).map((n2) => ({
@@ -198484,8 +198746,8 @@ var ActionHolds = class _ActionHolds {
     if (sha2 && !/^[0-9a-f]{64}$/.test(sha2))
       return { refusal: { ok: false, reason: "BAD_SHA", detail: "artifact_sha is a sha256 hash (64 hex characters)" } };
     for (const [name3, v] of [["account", acct], ["medium", String(medium ?? "").trim()]])
-      if (v.length > NOTE_MAX5 || /["\\\r\n]/.test(v))
-        return { refusal: { ok: false, reason: `BAD_${name3.toUpperCase()}`, detail: `${name3} is at most ${NOTE_MAX5} characters and cannot contain a quote, a backslash, or a newline` } };
+      if (v.length > NOTE_MAX6 || /["\\\r\n]/.test(v))
+        return { refusal: { ok: false, reason: `BAD_${name3.toUpperCase()}`, detail: `${name3} is at most ${NOTE_MAX6} characters and cannot contain a quote, a backslash, or a newline` } };
     if (sha2 && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha2))
       return { refusal: { ok: false, reason: "UNREGISTERED_ARTIFACT", artifact_sha: sha2, detail: "this hash names no capture in this store. Capture it first (op=capture), or record a named account instead." } };
     return { sha: sha2 || null, account: acct || null };
@@ -198497,7 +198759,7 @@ var ActionHolds = class _ActionHolds {
   holdNoticeSent({ place: place4 = null, at: at48 = null, medium = null, artifactSha = null, account: account2 = null, viewer = null, author = null } = {}) {
     const who3 = String(author ?? "").trim();
     if (!who3 || isMachineIdentity(who3))
-      return refuse21("MACHINE_CANNOT_SEND", "recording that the hold notice was sent is a member's statement of what she did; a machine credential may not make it. Nothing was written.");
+      return refuse22("MACHINE_CANNOT_SEND", "recording that the hold notice was sent is a member's statement of what she did; a machine credential may not make it. Nothing was written.");
     const p3 = objectOf(place4) || {};
     const found3 = this.#placeOf({
       target: p3.target ?? null,
@@ -198506,16 +198768,16 @@ var ActionHolds = class _ActionHolds {
       caseId: p3.case ?? null,
       viewer
     });
-    if (found3.refusal) return withRow8(found3.refusal);
+    if (found3.refusal) return withRow9(found3.refusal);
     const { place: pl } = found3;
     const where = _ActionHolds.#placeKeys(pl);
     const latest3 = this.#one(`SELECT hold FROM action_holds WHERE bundle_id=? AND ord=? ORDER BY seq DESC LIMIT 1`, pl.bundle, pl.ord);
     if (!latest3 || latest3.hold !== "in_place") return holdNotInPlace(where);
     const day2 = String(at48 ?? "").trim();
     if (!isCalendarDate(day2))
-      return withRow8({ ok: false, reason: "BAD_DATE", at: day2, detail: "the day the notice was sent is a YYYY-MM-DD the calendar has. Nothing was written." });
+      return withRow9({ ok: false, reason: "BAD_DATE", at: day2, detail: "the day the notice was sent is a YYYY-MM-DD the calendar has. Nothing was written." });
     const held2 = this.#heldAs({ artifactSha, account: account2, medium });
-    if (held2.refusal) return withRow8({ ...held2.refusal, ...where });
+    if (held2.refusal) return withRow9({ ...held2.refusal, ...where });
     const med = String(medium ?? "").trim() || null;
     const recorded = stampInstant("second", this.#nowMs());
     const seq = this.record.transact(() => {
@@ -198560,9 +198822,9 @@ var ActionHolds = class _ActionHolds {
     if (!PROJECT_ID_RE.test(p3) || !this.#seesFull(p3, viewer)) return noSuchProject(p3 || null);
     const day2 = String(at48 ?? "").trim();
     if (!isCalendarDate(day2))
-      return withRow8({ ok: false, reason: "BAD_DATE", at: day2, detail: "the day the pressure arrived is a YYYY-MM-DD the calendar has. Nothing was written." });
+      return withRow9({ ok: false, reason: "BAD_DATE", at: day2, detail: "the day the pressure arrived is a YYYY-MM-DD the calendar has. Nothing was written." });
     const held2 = this.#heldAs({ artifactSha, account: account2, medium: null });
-    if (held2.refusal) return withRow8({ ...held2.refusal, project: p3 });
+    if (held2.refusal) return withRow9({ ...held2.refusal, project: p3 });
     const recorded = stampInstant("second", this.#nowMs());
     const seq = this.record.transact(() => {
       const n2 = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM pressure_records WHERE bundle_id=?`, p3).n;
@@ -198676,19 +198938,19 @@ for (const m of [
 ]) {
   const fn = ActionHolds.prototype[m];
   ActionHolds.prototype[m] = function(...a) {
-    return withRow8(fn.apply(this, a));
+    return withRow9(fn.apply(this, a));
   };
 }
-var instances57 = /* @__PURE__ */ new WeakMap();
+var instances58 = /* @__PURE__ */ new WeakMap();
 function actionHoldsOf(host, deps) {
-  let h = instances57.get(host);
+  let h = instances58.get(host);
   if (!h) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     h = new ActionHolds({ ...d, host, storage, record, membership });
-    instances57.set(host, h);
+    instances58.set(host, h);
     h.migrate();
     const declared2 = record.declarePurge("action-holds", [...ACTION_HOLDS_TABLES]);
     if (declared2 && declared2.ok === false && !(declared2.reason === "TABLE_DECLARED" && declared2.declaredBy === "action-holds"))
@@ -198970,7 +199232,9 @@ var FILINGS_COLUMNS = Object.freeze([
   ["filing_approvals", "outward", "TEXT"],
   ["filing_approvals", "body_sha", "TEXT"],
   ["filing_sendings", "review_copy", "TEXT"],
-  ["counsel_packets", "purpose", "TEXT"]
+  ["counsel_packets", "purpose", "TEXT"],
+  /* T47 (R54; DEC-209 (4)): the venue's own reference for the sending, as the member gave it, or null */
+  ["filing_sendings", "reference", "TEXT"]
 ]);
 var FILINGS_TABLES = Object.freeze([
   { name: "filing_drafts", keys: ["action_id"] },
@@ -199245,6 +199509,18 @@ var FILINGS_CHECKS = Object.freeze({
     check: "C-115.56",
     where: at34("#marks", "is-filing-mark-refused"),
     translation: "Something you marked about this text (whose voice it is, its audience, its language, the sentences about the group's own doing, or what it names) is not in a form that can be recorded. Nothing was prepared."
+  },
+  /* T47 (DEC-209 (3), (4); K3100): R54's venue reference at sending and R55's member's own fills, the family's next
+     numbers in the requirements' order. */
+  SENT_REFERENCE_MALFORMED: {
+    check: "C-115.57",
+    where: at34("filingRecordSent", "is-sent-reference-malformed"),
+    translation: "The venue's reference for this sending is one line of 1 to 100 characters, as the venue gave it. Nothing was recorded."
+  },
+  FILL_UNKNOWN_BLANK: {
+    check: "C-115.58",
+    where: at34("#fills", "is-fill-unknown-blank"),
+    translation: "You filled in a blank the text does not have. Fill only the blanks the text names. Nothing was prepared."
   }
 });
 function rowOf14(code) {
@@ -199414,6 +199690,7 @@ var COUNSEL_FIELD_MAX = 200;
 var PACKET_REASON_MAX = 2e3;
 var CHRONOLOGY_MAX = 500;
 var LANE_WORDS = Object.freeze({ world: "what they did", ours: "what we did" });
+var SENT_REFERENCE_MAX = 100;
 var FILINGS_FOR_MAX = 200;
 var counselMarking = (counsel) => counsel && counsel.name ? `Prepared for review by ${counsel.name}, ${counsel.organisation}. Not legal advice. Not for filing.` : "Prepared for the group's own review. Not legal advice. Not for filing.";
 var COMMUNICATION_PURPOSE_MAX = 500;
@@ -199471,7 +199748,7 @@ var withRowNow = (r) => {
   const row14 = r && r.ok === false && !r.check ? rowOf14(r.reason) : null;
   return row14 ? { ...r, code: r.reason, check: row14.check, translation: row14.translation } : r;
 };
-var withRow9 = (r) => r && typeof r.then === "function" ? r.then(withRowNow) : withRowNow(r);
+var withRow10 = (r) => r && typeof r.then === "function" ? r.then(withRowNow) : withRowNow(r);
 var SERVICES2 = Object.freeze([
   "filingPrepare",
   "filingApprove",
@@ -199487,7 +199764,8 @@ var SERVICES2 = Object.freeze([
   "jointSignatory",
   "filingSecondApprove",
   "holdNoticePrepare",
-  "templatesForAction"
+  "templatesForAction",
+  "approvedUnsent"
 ]);
 var Filings = class _Filings {
   #deps;
@@ -199534,7 +199812,7 @@ var Filings = class _Filings {
     this.now = typeof now === "function" ? now : () => stampInstant("second");
     for (const m of SERVICES2) {
       const fn = this[m].bind(this);
-      this[m] = (...a) => withRow9(fn(...a));
+      this[m] = (...a) => withRow10(fn(...a));
     }
   }
   /* The earlier modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -199916,17 +200194,53 @@ var Filings = class _Filings {
     return null;
   }
   /* R3, R31: `text`'s blanks filled from the record, each naming its source, or left as a visible marker listed with
-     why. A name outside `FILING_BLANKS` (a profile's text `filing-templates` would not offer) is left unfilled too. */
-  #fill(text7, values) {
+     why. A name outside `FILING_BLANKS` (a profile's text `filing-templates` would not offer) is left unfilled too.
+     R55 (T47; DEC-209 (3)): a blank the member filled (`fills`, read by `#fills`) takes the member's own value, labelled
+     the member's, in place of the record's. */
+  #fill(text7, values, fills = null) {
     const names2 = blanksOf(text7).blanks;
     const blanks = [], unfilled = [];
     for (const n2 of names2) {
-      const val5 = Object.prototype.hasOwnProperty.call(FILING_BLANKS, n2) ? values[n2] : { why: "filings fills no blank by this name, so the record holds no value for it" };
-      if (val5 && "value" in val5) blanks.push({ name: n2, value: val5.value, source: val5.source });
+      const own10 = fills && fills.values.has(n2) ? { value: fills.values.get(n2), source: fills.source, label: fills.label } : null;
+      const val5 = own10 || (!Object.prototype.hasOwnProperty.call(FILING_BLANKS, n2) ? { why: "filings fills no blank by this name, so the record holds no value for it" } : values[n2] || { why: "the record holds no value for this blank: the member fills it in (fills)" });
+      if (val5 && "value" in val5) blanks.push({ name: n2, value: val5.value, source: val5.source, ...val5.label ? { label: val5.label } : {} });
       else unfilled.push({ name: n2, why: val5.why });
     }
     const filled21 = new Map(blanks.map((b) => [b.name, b.value]));
     return { text: text7.replace(BLANK_RE2, (_, n2) => filled21.has(n2) ? filled21.get(n2) : unfilledMarker(n2)), blanks, unfilled };
+  }
+  /* R55 (T47; DEC-209 (3)): the member's own values for blanks `text` names, `fills: {<blank>: text}`, read whole before
+     anything is written: a name `text` does not name (or `fills` not a map of names) is refused `FILL_UNKNOWN_BLANK`,
+     naming it; a value that is not non-empty UTF-8 text of at most `FILING_TEXT_MAX` bytes `TEXT_UNWRITABLE`, naming its
+     blank. Answers `{ok: true, fills}`, `fills` null when none is given: its values by name, the source each filled blank
+     names (`fills:<preparer>`: the preparer's own word, never a record id) and its label, the member's own value. */
+  static #fills(fills, text7, who3, extra = {}) {
+    if (fills == null || isObj45(fills) && !Object.keys(fills).length) return { ok: true, fills: null };
+    const named2 = new Set(blanksOf(text7).blanks);
+    const unknown = !isObj45(fills) ? null : Object.keys(fills).find((n2) => !named2.has(n2));
+    if (!isObj45(fills) || unknown !== void 0)
+      return {
+        ok: false,
+        reason: "FILL_UNKNOWN_BLANK",
+        ...extra,
+        blank: isObj45(fills) ? unknown : null,
+        blanks: [...named2],
+        detail: isObj45(fills) ? `the text names no blank {{${unknown}}}: a member fills only the blanks the text names` : "fills is a map of the text's blank names to your own words for each"
+      };
+    for (const [n2, v] of Object.entries(fills)) {
+      const bad2 = _Filings.#unwritable(v, { ...extra, blank: n2 });
+      if (bad2) return bad2;
+    }
+    return { ok: true, fills: {
+      values: new Map(Object.entries(fills)),
+      source: `fills:${who3}`,
+      label: {
+        kind: "member_fill",
+        by: who3,
+        machine_work: isMachineIdentity(who3),
+        says: "the preparer's own value for this blank, written at preparation: not read from the record"
+      }
+    } };
   }
   /* The module that holds the group's templates (`filing-templates`), on the same host unless given; null with none. */
   get filingTemplates() {
@@ -199939,7 +200253,7 @@ var Filings = class _Filings {
     const id = isObj45(asked) ? str46(asked.id) : str46(asked);
     const version = isObj45(asked) && asked.version != null && asked.version !== "" ? asked.version : null;
     if (!t2 || typeof t2.offeredVersion !== "function")
-      return withRow7({
+      return withRow8({
         ok: false,
         reason: "NO_SUCH_TEMPLATE",
         template: id,
@@ -199999,7 +200313,8 @@ var Filings = class _Filings {
     language = null,
     own_doing = null,
     names_pending = null,
-    textcheck = null
+    textcheck = null,
+    fills = null
   } = {}) {
     const who3 = str46(preparer);
     if (!who3) return { ok: false, reason: "FILING_NO_PREPARER", detail: "no stamped preparer: a draft names who prepared it" };
@@ -200039,14 +200354,8 @@ var Filings = class _Filings {
     if (own10) {
       const bad2 = _Filings.#unwritable(text7, { action: a.id });
       if (bad2) return bad2;
-      const { unknown } = blanksOf(text7);
-      if (unknown) return withRow7({
-        ok: false,
-        reason: "TEMPLATE_BLANK_UNKNOWN",
-        blank: unknown,
-        blanks: Object.keys(FILING_BLANKS),
-        detail: `{{${unknown}}} is not a blank filings fill`
-      });
+      const unknown = blankUnknownRefusal(text7, { blanks: Object.keys(FILING_BLANKS) });
+      if (unknown) return unknown;
     } else {
       const profileTpl = entry4 && isObj45(entry4.template) && entry4.template.use === "file" && str46(entry4.template.id) ? entry4.template : null;
       if (!named2 && !profileTpl) {
@@ -200080,12 +200389,14 @@ var Filings = class _Filings {
       const mismatch2 = _Filings.#kindMismatch(used, a);
       if (mismatch2) return mismatch2;
     }
+    const mf = _Filings.#fills(fills, own10 ? text7 : used.text, who3, { action: a.id });
+    if (!mf.ok) return mf;
     const mk = _Filings.#marks({ voice, audience, language, own_doing, names_pending, textcheck });
     if (!mk.ok) return mk;
     const when = this.#when();
     const { det, hidden } = this.#restsOn(a, viewer);
     const values = this.#values(a, det, hidden, entry4, viewer, when);
-    const filled21 = this.#fill(own10 ? text7 : used.text, values);
+    const filled21 = this.#fill(own10 ? text7 : used.text, values, mf.fills);
     const { blanks, unfilled } = filled21;
     const rfc = _Filings.#isRfc(a, mk.marks, null);
     const content = rfc && !filled21.text.includes(KEYED["rfc.quoting"]) ? `${filled21.text}
@@ -200227,6 +200538,7 @@ ${body}`;
     own_doing = null,
     names_pending = null,
     textcheck = null,
+    fills = null,
     preparer = null,
     viewer = null
   } = {}) {
@@ -200276,6 +200588,10 @@ ${body}`;
       };
       fromFacts.push(f17);
     }
+    const mf = _Filings.#fills(fills, assembled ? "" : text7, who3, { action: a.id });
+    if (!mf.ok) return mf;
+    const own10 = mf.fills ? [...new Set(blanksOf(text7).blanks)].filter((n2) => mf.fills.values.has(n2)).map((n2) => ({ name: n2, value: mf.fills.values.get(n2), source: mf.fills.source, label: mf.fills.label })) : [];
+    const words13 = mf.fills ? text7.replace(BLANK_RE2, (m, n2) => mf.fills.values.has(n2) ? mf.fills.values.get(n2) : m) : text7;
     const when = this.#when();
     const { det, hidden } = this.#restsOn(a, viewer);
     const v = this.#view();
@@ -200285,7 +200601,7 @@ ${body}`;
     const facts = [...matters, ...fromFacts.filter((f17) => !matters.some((x) => x.finding === f17.finding))];
     const rfc = _Filings.#isRfc(a, mk.marks, why2);
     const parts = assembled ? this.#assembled(why2, a, det, hidden, v, facts, mk.marks, viewer, when) : null;
-    let content = parts ? parts.map((x) => x.text).join("\n") : text7;
+    let content = parts ? parts.map((x) => x.text).join("\n") : words13;
     if (rfc && !content.includes(KEYED["rfc.quoting"])) content = `${content}
 
 ${KEYED["rfc.quoting"]}`;
@@ -200325,7 +200641,8 @@ ${body}`;
       ...review ? { review_copy: review } : {},
       rfc,
       ...parts ? { parts } : {},
-      ...claims ? { claims } : {}
+      ...claims ? { claims } : {},
+      ...own10.length ? { blanks: own10 } : {}
     };
     return this.record.transact(() => {
       const { id } = this.record.allocId("FIL", when.slice(0, 4));
@@ -200358,6 +200675,7 @@ ${body}`;
         from: marks2.from,
         ...parts ? { parts } : {},
         ...claims ? { claims } : {},
+        ...own10.length ? { blanks: own10 } : {},
         outward,
         notices,
         marks: mk.marks,
@@ -201032,6 +201350,7 @@ ${body}` : body;
     medium = null,
     artifactSha = null,
     account: account2 = null,
+    reference = null,
     author = null,
     viewer = null
   } = {}) {
@@ -201067,6 +201386,15 @@ ${body}` : body;
         matched: second4.matched,
         detail: "your project asks a second member to approve this act (op=filingsecondapprove) before it is sent"
       };
+    const ref = reference == null ? null : reference;
+    if (ref !== null && (typeof ref !== "string" || !ref.trim() || [...ref].length > SENT_REFERENCE_MAX || /[\r\n\u2028\u2029]/.test(ref) || WELL_FORMED3.test(ref)))
+      return {
+        ok: false,
+        reason: "SENT_REFERENCE_MALFORMED",
+        filing: d.filing_id,
+        max: SENT_REFERENCE_MAX,
+        detail: `the venue's reference is one line of 1 to ${SENT_REFERENCE_MAX} characters, as the venue gave it`
+      };
     if (!this.actions || typeof this.actions.actionCorrespond !== "function")
       return this.#noAction(d.action_id);
     const now = this.#when();
@@ -201087,7 +201415,7 @@ ${body}` : body;
       const ord = Number.isInteger(Number(c.ord)) ? Number(c.ord) : null;
       this.sql.exec(
         `INSERT INTO filing_sendings (filing_id, action_id, ord, sent_on, medium, artifact_sha, account,
-                       recorded_by, recorded_at, review_copy) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+                       recorded_by, recorded_at, review_copy, reference) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
         d.filing_id,
         d.action_id,
         ord,
@@ -201097,7 +201425,8 @@ ${body}` : body;
         account2,
         who3,
         now,
-        asReview ? json12(asReview) : null
+        asReview ? json12(asReview) : null,
+        ref
       );
       return { ok: true, ord, entry: c };
     });
@@ -201110,6 +201439,7 @@ ${body}` : body;
       recorded_by: who3,
       at: now,
       held_as: out.entry.held_as ?? (artifactSha ? "capture" : "testimony"),
+      reference: ref,
       proposed: this.#proposed(d, who3, viewer),
       ...asReview ? { review_copy: asReview } : {},
       says: "recorded as sent by the member named. No action state moved and no clock entry was written: `proposed` is what a member may choose next"
@@ -202433,7 +202763,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       FILINGS_FOR_MAX + 1,
       viewer,
       `SELECT d.filing_id, d.tier, d.preparer, d.prepared_at, d.basis, d.form, d.purpose, d.template, d.marks, ap.approved_by,
-              ap.at AS approved_at, ap.sha, s.ord, s.sent_on, s.recorded_by, s.recorded_at, s.review_copy,
+              ap.at AS approved_at, ap.sha, s.ord, s.sent_on, s.recorded_by, s.recorded_at, s.review_copy, s.reference,
               sa.approved_by AS second_by, sa.at AS second_at
          FROM (SELECT filing_id, tier, preparer, prepared_at, basis, 'filing' AS form, NULL AS purpose, template, marks
                  FROM filing_drafts WHERE action_id=?
@@ -202471,11 +202801,13 @@ ${inbandBlock(quartet)}`, inband: quartet };
         signatories: this.#rows(`SELECT organisation, role, body_sha, account, recorded_by, at FROM joint_signatories WHERE filing_id=?
                                   ORDER BY at, organisation`, d.filing_id),
         voice: (parse11(d.marks) || {}).voice ?? null,
+        /* R54 (T47): the venue's reference, null when the member gave none */
         sending: d.recorded_by ? {
           ord: d.ord,
           sent_on: d.sent_on,
           recorded_by: d.recorded_by,
           at: d.recorded_at,
+          reference: d.reference ?? null,
           ...d.review_copy ? { review_copy: parse11(d.review_copy) } : {}
         } : null
       })),
@@ -202497,6 +202829,48 @@ ${inbandBlock(quartet)}`, inband: quartet };
         };
       }),
       packets_truncated: versions.length > FILINGS_FOR_MAX
+    };
+  }
+  /** R53 (T47; DEC-212): each filing draft or communication a member approved (R6) and nobody has recorded sent (R7), on
+   *  an action the viewer may see, drawing on no project the viewer may not see (K316, as R13 lists them), oldest
+   *  approval first: `{filing, action, project, approved_by, approved_at}`, `project` the action's (else the one its
+   *  draft drew on, else null); at most `FILINGS_FOR_MAX`, `truncated` saying more are held. The read `action-producers`
+   *  R25's "request left unsent" item draws on. Writes nothing. */
+  approvedUnsent({ viewer = null } = {}) {
+    const items = [];
+    let truncated6 = false;
+    for (let offset = 0; !truncated6; offset += FILINGS_FOR_MAX) {
+      const page2 = this.#rows(`SELECT ap.filing_id, ap.action_id, ap.approved_by, ap.at,
+                                      COALESCE(d.basis, c.basis) AS basis
+                                 FROM filing_approvals ap
+                                 LEFT JOIN filing_sendings s ON s.filing_id=ap.filing_id
+                                 LEFT JOIN filing_drafts d ON d.filing_id=ap.filing_id
+                                 LEFT JOIN communication_drafts c ON c.filing_id=ap.filing_id
+                                WHERE s.filing_id IS NULL
+                                ORDER BY ap.at, ap.filing_id LIMIT ? OFFSET ?`, FILINGS_FOR_MAX, offset);
+      for (const r of page2) {
+        const a = this.#action(r.action_id, viewer);
+        const basis = parse11(r.basis);
+        if (!a || !this.#sees(basis, viewer)) continue;
+        if (items.length === FILINGS_FOR_MAX) {
+          truncated6 = true;
+          break;
+        }
+        items.push({
+          filing: r.filing_id,
+          action: r.action_id,
+          project: a.project || (isObj45(basis) ? str46(basis.project) : null),
+          approved_by: r.approved_by,
+          approved_at: r.at
+        });
+      }
+      if (page2.length < FILINGS_FOR_MAX) break;
+    }
+    return {
+      ok: true,
+      items,
+      truncated: truncated6,
+      says: items.length ? "approved and not yet recorded as sent, oldest approval first" : "no approved draft or communication you may see waits to be recorded as sent"
     };
   }
   /* ---------------------------------------------------------------- R14: candidate theories */
@@ -202597,7 +202971,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
     };
     const t2 = this.filingTemplates;
     if (!t2 || typeof t2.templateDraft !== "function")
-      return withRow7({
+      return withRow8({
         ok: false,
         reason: "NO_SUCH_TEMPLATE",
         template: str46(template),
@@ -202715,15 +203089,15 @@ ${inbandBlock(quartet)}`, inband: quartet };
     return { case: caseId, edition, ...b, determinations_read: true };
   }
 };
-var instances58 = /* @__PURE__ */ new WeakMap();
+var instances59 = /* @__PURE__ */ new WeakMap();
 function filingsOf(host, deps) {
-  let f17 = instances58.get(host);
+  let f17 = instances59.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     f17 = new Filings({ ...d, host, storage, record });
-    instances58.set(host, f17);
+    instances59.set(host, f17);
     f17.migrate();
     record.declarePurge("filings", FILINGS_TABLES);
     f17.publicRead.registerEvidenceBlock("filings", "available_actions", (arg) => f17.evidenceBlock(arg));
@@ -202746,6 +203120,7 @@ function filingsOps(f17, url, body) {
       action: b.action ?? q10("action"),
       template: b.template ?? q10("template"),
       text: b.text ?? null,
+      fills: b.fills ?? null,
       ...marksOf(b),
       preparer: q10("author"),
       viewer: q10("viewer")
@@ -202755,6 +203130,7 @@ function filingsOps(f17, url, body) {
       text: b.text,
       purpose: b.purpose,
       from: b.from ?? null,
+      fills: b.fills ?? null,
       ...marksOf(b),
       preparer: q10("author"),
       viewer: q10("viewer")
@@ -202797,6 +203173,7 @@ function filingsOps(f17, url, body) {
       medium: b.medium ?? null,
       artifactSha: b.artifactSha ?? b.artifact_sha ?? null,
       account: b.account ?? null,
+      reference: b.reference ?? null,
       author: q10("author"),
       viewer: q10("viewer")
     }),
@@ -203097,7 +203474,9 @@ __export(checks_exports59, {
 });
 var ESCALATION_WORDS = Object.freeze({
   "refusal.MACHINE_CANNOT_STOP": "Only a member stops or reopens an escalation. Nothing was written.",
-  "refusal.NOT_STOPPED": "Only an escalation your group stopped pursuing can be reopened. Nothing was written."
+  "refusal.NOT_STOPPED": "Only an escalation your group stopped pursuing can be reopened. Nothing was written.",
+  "refusal.ESCALATION_BY_ACT_ONLY": "An escalation changes only through its own acts: open, attach, evaluate, advance, decline, suspend, resume, stop pursuing, reopen and end, so its record never disagrees with itself. Nothing was written.",
+  "refusal.ALREADY_ATTACHED": "This action is already attached to an escalation. An action is attached to one escalation, at one stage. Nothing was written."
 });
 var at35 = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
 var ESCALATION_CHECKS = Object.freeze({
@@ -203159,7 +203538,7 @@ var ESCALATION_CHECKS = Object.freeze({
   ALREADY_ATTACHED: {
     check: "C-116.14",
     where: at35("escalationAttach", "is-attached-once"),
-    translation: "That action is already attached to an escalation. An action belongs to one escalation, at one stage. Nothing was written."
+    translation: ESCALATION_WORDS["refusal.ALREADY_ATTACHED"]
   },
   NOT_ACCOUNTABILITY: {
     check: "C-116.15",
@@ -203297,7 +203676,7 @@ var ESCALATION_CHECKS = Object.freeze({
   ESCALATION_BY_ACT_ONLY: {
     check: "C-116.41",
     where: at35("check", "is-escalation-act"),
-    translation: "An escalation changes only through its own acts (open, attach, evaluate, advance, decline, suspend, resume, end), so its history and what is read from it never disagree. Nothing was written."
+    translation: ESCALATION_WORDS["refusal.ESCALATION_BY_ACT_ONLY"]
   },
   ESCALATION_HISTORY_REWRITTEN: {
     check: "C-116.42",
@@ -203345,7 +203724,7 @@ function escalationOps(escalation, url, body) {
   const act2 = (name3) => () => escalation[name3]({ ...body || {}, author: q10("author"), viewer: q10("viewer") });
   return {
     escalationopen: act2("escalationOpen"),
-    escalation: () => escalation.escalationRead({ id: q10("id"), nowMs: numberParam(url, "now"), viewer: q10("viewer") }),
+    escalation: () => escalation.escalationRead({ id: q10("id"), viewer: q10("viewer") }),
     escalationattach: act2("escalationAttach"),
     escalationevaluate: act2("escalationEvaluate"),
     escalationadvance: act2("escalationAdvance"),
@@ -203355,16 +203734,11 @@ function escalationOps(escalation, url, body) {
     escalationresume: act2("escalationResume"),
     escalationstoppursuing: act2("escalationStopPursuing"),
     escalationreopen: act2("escalationReopen"),
-    escalationsdue: () => escalation.escalationsDue({
-      nowMs: numberParam(url, "now"),
-      limit: numberParam(url, "limit"),
-      viewer: q10("viewer")
-    }),
+    escalationsdue: () => escalation.escalationsDue({ limit: numberParam(url, "limit"), viewer: q10("viewer") }),
     declinetoescalate: act2("declineToEscalate"),
     escalationstatus: () => escalation.escalationStatus({ determination: q10("determination"), viewer: q10("viewer") }),
     escalationreasondraft: () => escalation.escalationReasonDraft({
       determination: q10("determination"),
-      nowMs: numberParam(url, "now"),
       viewer: q10("viewer")
     })
   };
@@ -205134,9 +205508,9 @@ for (const name3 of [
     }
   } });
 }
-var instances59 = /* @__PURE__ */ new WeakMap();
+var instances60 = /* @__PURE__ */ new WeakMap();
 function escalationOf(host, deps) {
-  let i = instances59.get(host);
+  let i = instances60.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -205162,7 +205536,7 @@ function escalationOf(host, deps) {
       entities: entities2,
       lines: lines2
     });
-    instances59.set(host, i);
+    instances60.set(host, i);
     i.migrate();
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -205484,6 +205858,7 @@ var PLAN_WORDS = Object.freeze({
   "refusal.SCENARIO_NOT_SET_ASIDE": "This scenario isn't set aside, so there is nothing to restore. Nothing was changed.",
   "refusal.PLAN_NOT_OPEN": "Only an open plan can be paused. Nothing was changed.",
   "refusal.PLAN_NOT_PAUSED": "Only a paused plan can be resumed. Nothing was changed.",
+  "refusal.DOCUMENT_FIRST_NO_REASON": "Acting before what happened is documented needs your reason: why you are acting first, on one line with no quotation marks or backslash, at most 500 characters. The reason is missing or isn't in that form. Give it, or document what happened first. Nothing was written.",
   "plan.close.lessons": "What would your group do differently next time? (optional, at most 4,000 characters)"
 });
 var ACTION_PLAN_CHECKS = Object.freeze({
@@ -205807,7 +206182,7 @@ var ACTION_PLAN_CHECKS = Object.freeze({
   DOCUMENT_FIRST_NO_REASON: {
     check: "C-124.63",
     where: at36("optionStart", "is-document-first"),
-    translation: "This step goes outside the group before the infraction it is about has been documented. That is your call to make: say in your own words, in 1 to 500 characters with no quotation mark, backslash or line break, why this goes first. Nothing was written."
+    translation: PLAN_WORDS["refusal.DOCUMENT_FIRST_NO_REASON"]
   },
   LOOK_AGAIN_REFUSED: {
     check: "C-124.64",
@@ -205843,7 +206218,7 @@ var REASON_MAX15 = 500;
 var SUMMARY_MAX2 = 200;
 var DETAIL_MAX2 = 5e3;
 var WHY_MAX4 = 500;
-var NOTE_MAX6 = 500;
+var NOTE_MAX7 = 500;
 var SUBJECTS_MAX = 50;
 var PHASES_MAX = 50;
 var DATES_MAX = 20;
@@ -205948,8 +206323,8 @@ function checkPhases(phases2, { chosen, subjects }) {
     }
     let condition = null;
     if (p3.condition !== void 0 && p3.condition !== null) {
-      if (typeof p3.condition !== "string" || !p3.condition.trim() || p3.condition.length > NOTE_MAX6)
-        return bad2(`a condition is words of 1 to ${NOTE_MAX6} characters`);
+      if (typeof p3.condition !== "string" || !p3.condition.trim() || p3.condition.length > NOTE_MAX7)
+        return bad2(`a condition is words of 1 to ${NOTE_MAX7} characters`);
       condition = p3.condition;
     }
     let branches = null;
@@ -206084,6 +206459,7 @@ var OFFER_WORDS = Object.freeze({
 });
 var CLOSE_NOTE_PROMPT = Object.freeze({ key: "plan.close.lessons", en: PLAN_WORDS["plan.close.lessons"] });
 var LOOK_AGAIN_UNDETERMINED = "no time zone is held for this place, so the day to look again cannot be told and no plan is answered due by it";
+var DAY_UNDETERMINED = "no time zone is held for this place, so the plan's local day is undetermined and the date is not compared with the UTC day in its place";
 var PAUSED_SAYS = "the plan is paused: what it set running continues (its actions' dates, escalations and watches), and its own checkpoints are not due until it is resumed. Every act stays open to members.";
 var PREVIEW = Symbol("action-plans start preview");
 var PREVIEW_SAYS = "a preview of starting this option: what the action would be, the matters it would rest on and the reminders it would set. Nothing was written: no action, no id, no reminder.";
@@ -206476,7 +206852,7 @@ var ActionPlans = class {
     const dates = [];
     if (a.dates !== void 0 && a.dates !== null) {
       const list6 = Array.isArray(a.dates) ? a.dates : null;
-      const bad2 = !list6 || list6.length > DATES_MAX || list6.some((d) => !isObj47(d) || !isDay3(d.date) || !isLine(d.basis, NOTE_MAX6));
+      const bad2 = !list6 || list6.length > DATES_MAX || list6.some((d) => !isObj47(d) || !isDay3(d.date) || !isLine(d.basis, NOTE_MAX7));
       if (bad2)
         return refusal32("DATE_REFUSED", `regulated dates are a list of at most ${DATES_MAX} {date: YYYY-MM-DD, basis}, each basis naming the statute, order or commitment that sets it. Nothing was written.`);
       for (const d of list6) dates.push({ date: d.date, basis: d.basis });
@@ -207526,8 +207902,8 @@ var ActionPlans = class {
     const n2 = /^[0-9]+$/.test(String(scenario ?? "")) ? Number(scenario) : NaN;
     const sc = this.#scenarios(o.p.id).find((x) => x.scenario === n2) || null;
     const ph = sc ? sc.phases.find((x) => x.id === phase) : null;
-    if (!sc || !ph || !ph.checkpoint || !JUDGEMENTS.includes(judged) || note !== void 0 && note !== null && (typeof note !== "string" || note.length > NOTE_MAX6))
-      return refusal32("CHECKPOINT_REFUSED", !sc ? "the plan holds no scenario of that number. Nothing was written." : !ph ? "the scenario holds no phase of that id. Nothing was written." : !ph.checkpoint ? "that phase has no checkpoint. Nothing was written." : !JUDGEMENTS.includes(judged) ? "a judgement is met or not_met. Nothing was written." : `a note is at most ${NOTE_MAX6} characters. Nothing was written.`);
+    if (!sc || !ph || !ph.checkpoint || !JUDGEMENTS.includes(judged) || note !== void 0 && note !== null && (typeof note !== "string" || note.length > NOTE_MAX7))
+      return refusal32("CHECKPOINT_REFUSED", !sc ? "the plan holds no scenario of that number. Nothing was written." : !ph ? "the scenario holds no phase of that id. Nothing was written." : !ph.checkpoint ? "that phase has no checkpoint. Nothing was written." : !JUDGEMENTS.includes(judged) ? "a judgement is met or not_met. Nothing was written." : `a note is at most ${NOTE_MAX7} characters. Nothing was written.`);
     const { judged: held2, times } = this.#timed(o.p, sc, viewer);
     const t2 = times.get(ph.id);
     const nowMs = this.#nowMs();
@@ -207768,7 +208144,8 @@ var ActionPlans = class {
       return { state: "undetermined", says: "where the plan stands could not be read at the close, so no summary was kept" };
     }
   }
-  /* R20: a closed plan's close: who, when, why, the note and the frozen summary. */
+  /* R20, R50: a closed plan's close: `at` the instant the close was recorded (the one field naming the plan's closing
+     instant, which other modules read), who, why, the note and the frozen summary. */
   #closedView(p3) {
     const h = this.#one(`SELECT * FROM plan_history WHERE plan_id=? AND kind='close' ORDER BY seq DESC LIMIT 1`, p3.id);
     const e2 = h ? unjson2(h.entry_json, {}) : {};
@@ -207895,7 +208272,7 @@ var ActionPlans = class {
   plansToLookAgain({ nowMs, limit } = {}) {
     const now = Number.isFinite(nowMs) ? nowMs : this.#nowMs();
     const cap = Number.isInteger(limit) && limit > 0 ? Math.min(limit, DUE_MAX2) : DUE_MAX2;
-    const today2 = this.#localDay(now);
+    const today2 = this.#localDay(now, this.#zone());
     if (today2 === null)
       return { ok: true, as_of: iso3(now), day: { state: "undetermined", says: LOOK_AGAIN_UNDETERMINED }, items: [], truncated: false, limit: cap };
     const items = [];
@@ -207917,14 +208294,17 @@ var ActionPlans = class {
     items.sort((a, b) => a.look_again < b.look_again ? -1 : a.look_again > b.look_again ? 1 : a.plan < b.plan ? -1 : 1);
     return { ok: true, as_of: iso3(now), day: today2, items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
   }
-  /* R46 (b): the local day of `nowMs` in the zone the place states (actions R68), or null when no zone is held or the
-     day cannot be read (K1444 (iii): never the UTC day in its place). */
-  #localDay(nowMs) {
-    const zone = zoneOf(this.actions.place());
-    if (!zone) return null;
+  /* R46 (b), R48: the zone the place states (actions R68), or null when none is held. */
+  #zone() {
+    return zoneOf(this.actions.place()) || null;
+  }
+  /* R46 (b), R48: the local day of `ms` in `zone`, or null when no zone is held or the day cannot be read (K1444 (iii):
+     never the UTC day in its place). */
+  #localDay(ms5, zone) {
+    if (!zone || !Number.isFinite(ms5)) return null;
     let d;
     try {
-      d = localDay(iso3(nowMs), zone);
+      d = localDay(iso3(ms5), zone);
     } catch {
       return null;
     }
@@ -208146,14 +208526,22 @@ var ActionPlans = class {
      fact, asked of every subject it serves, seen or not (R35 withholds the subject, not what the plan says of it). */
   #checks(p3, options, scenarios, live7, now, viewer, held2) {
     const out = [];
-    const today2 = dayOf6(now);
+    const zone = this.#zone();
+    const today2 = this.#localDay(now, zone);
     const outward = (o) => !!o.addressee;
     const pending = (o) => !["declined", "done"].includes(o.disposition) && !o.action;
     for (const o of options) {
       if (o.disposition === "declined") continue;
-      if (pending(o)) {
-        for (const d of o.dates || [])
-          if (d.date < today2) out.push({ check: "date_past", option: o.id, date: d.date, says: `${o.id}'s regulated date ${d.date} has passed (${d.basis})` });
+      if (pending(o)) for (const d of o.dates || []) {
+        if (today2 === null)
+          out.push({
+            check: "date_past",
+            option: o.id,
+            date: d.date,
+            state: "undetermined",
+            says: `whether ${o.id}'s regulated date ${d.date} has passed cannot be told: ${DAY_UNDETERMINED}`
+          });
+        else if (d.date < today2) out.push({ check: "date_past", option: o.id, date: d.date, says: `${o.id}'s regulated date ${d.date} has passed (${d.basis})` });
       }
       const states = (o.subjects_liveness || []).map((b) => b.liveness.state);
       if (states.length && !states.includes("live") && o.says)
@@ -208176,9 +208564,19 @@ var ActionPlans = class {
     const byId = new Map(options.map((o) => [o.id, o]));
     for (const sc of scenarios.filter((x) => !x.set_aside)) {
       for (const ph of sc.phases) {
-        const start = ph.earliest ? dayOf6(msOf(ph.earliest)) : null;
+        const start = ph.earliest ? this.#localDay(msOf(ph.earliest), zone) : null;
         for (const oid of ph.options) {
           const o = byId.get(oid);
+          if (o && ph.earliest && start === null) for (const d of o.dates || [])
+            out.push({
+              check: "date_before_phase",
+              scenario: sc.scenario,
+              phase: ph.id,
+              option: oid,
+              date: d.date,
+              state: "undetermined",
+              says: `whether ${oid}'s regulated date ${d.date} falls before phase ${ph.id} can start cannot be told: ${DAY_UNDETERMINED}`
+            });
           if (o && start) {
             for (const d of o.dates || [])
               if (d.date < start) out.push({
@@ -208616,9 +209014,9 @@ for (const name3 of [
     }
   } });
 }
-var instances60 = /* @__PURE__ */ new WeakMap();
+var instances61 = /* @__PURE__ */ new WeakMap();
 function actionPlansOf(host, deps) {
-  let i = instances60.get(host);
+  let i = instances61.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -208644,7 +209042,7 @@ function actionPlansOf(host, deps) {
       duties: lazy("duties", () => dutiesOf(host, base2)),
       aiRuns: lazy("aiRuns", () => aiRunsOf(host))
     });
-    instances60.set(host, i);
+    instances61.set(host, i);
     i.migrate();
     record.declarePurge("action-plans", ACTION_PLANS_TABLES);
     promotion.registerStep("action-plans", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -208717,21 +209115,23 @@ function actionPlansOps(m, url, body) {
 var checks_exports61 = {};
 __export(checks_exports61, {
   ACTION_REPLY_CHECKS: () => ACTION_REPLY_CHECKS,
-  ACTION_REPLY_WORDS: () => ACTION_REPLY_WORDS
+  ACTION_REPLY_WORDS: () => ACTION_REPLY_WORDS,
+  fillWords: () => fillWords4
 });
 var ACTION_REPLY_WORDS = Object.freeze({
   "refusal.MACHINE_CANNOT_RECORD_BEARING": "Only a member lays out a reply claim by claim. The assistant may propose a layout for you to check. Nothing was written.",
   "refusal.BEARING_NOT_RFC": "A reply is laid out claim by claim only for a request for comment, once its reply is received. Nothing was written.",
-  "refusal.BEARING_REFUSED": "Each claim is one the request laid out, listed once, with how the reply bears on it and a note of at most 500 characters. Nothing was written.",
+  "refusal.BEARING_REFUSED": "Lay out from 1 to 50 claims, each one the request laid out, listed once, with how the reply bears on it and a note of at most 500 characters. {item} isn't. Nothing was written.",
   "refusal.MACHINE_CANNOT_LINK": "Only a member records what arose from a reply. Nothing was written.",
   "refusal.AROSE_FROM_NOT_A_RESPONSE": "Only a received reply can be what something arose from. Nothing was written.",
   "refusal.AROSE_FROM_LINKED": "That link is already recorded. Nothing was written."
 });
-function words7(key2) {
+function fillWords4(key2, fill = {}) {
   const en = ACTION_REPLY_WORDS[key2];
   if (typeof en !== "string" || !en) throw new Error(`action-replies: ${key2} is not one of this module's words (words.json)`);
-  return en;
+  return en.replace(/\{([a-z_]+)\}/g, (m, k) => Object.prototype.hasOwnProperty.call(fill, k) ? String(fill[k]) : m);
 }
+var words7 = (key2) => fillWords4(key2);
 var ACTION_REPLY_CHECKS = {
   /* R1, R4 (v0.2 rule 1): laying out a reply claim by claim is a member's act; a machine may only propose one. */
   MACHINE_CANNOT_RECORD_BEARING: {
@@ -208745,7 +209145,8 @@ var ACTION_REPLY_CHECKS = {
     where: "src/action-replies/index.mjs #bearingTarget > is-bearing-rfc",
     translation: words7("refusal.BEARING_NOT_RFC")
   },
-  /* R1 (action-grammar R24): each claim is one the request put, once, with one of the three bearings. */
+  /* R1 (action-grammar R24): each claim is one the request put, once, with one of the three bearings. R9 (T47; DEC-199):
+     the row holds the sentence with `{item}` for the screen; the refusal answers it filled with the item named. */
   BEARING_REFUSED: {
     check: "C-150.3",
     where: "src/action-replies/index.mjs #bearingShape > is-bearing-shape",
@@ -208830,13 +209231,20 @@ var MATTER_MAX = 200;
 var CLOSED_STATES = Object.freeze(["resolved", "abandoned"]);
 var NOT_ADDRESSED = "not_addressed";
 var PAGE2 = 200;
-function withRow10(r) {
+function withRow11(r) {
   if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string") return r;
   const row14 = ACTION_REPLY_CHECKS[r.reason];
   if (!row14) return r;
   return { ...r, code: r.code ?? r.reason, check: r.check ?? row14.check, translation: r.translation ?? row14.translation };
 }
-var refuse22 = (code, detail, extra) => withRow10({ ok: false, reason: code, detail, ...extra || {} });
+var refuse23 = (code, detail, extra) => withRow11({ ok: false, reason: code, detail, ...extra || {} });
+var CLAIM_SHOWN_MAX = 60;
+function bearingItem(claims, index2) {
+  if (index2 === null) return "The list of claims";
+  const c = Array.isArray(claims) ? claims[index2] : void 0;
+  const claim = c && typeof c === "object" && !Array.isArray(c) && typeof c.claim === "string" ? c.claim.trim() : "";
+  return claim ? `Claim ${index2 + 1} (${claim.slice(0, CLAIM_SHOWN_MAX)})` : `Claim ${index2 + 1}`;
+}
 function ordOf5(v) {
   if (typeof v === "number" && Number.isInteger(v) && v >= 0) return v;
   if (typeof v === "string" && /^\d{1,6}$/.test(v.trim())) return Number(v.trim());
@@ -208929,7 +209337,7 @@ var ActionReplies = class _ActionReplies {
     if (a.ok === false) return a;
     const e2 = _ActionReplies.#entry(a, ord);
     if (a.kind !== "request_for_comment" || !e2 || e2.direction !== "received")
-      return refuse22("BEARING_NOT_RFC", a.kind !== "request_for_comment" ? "this action is not a request for comment; only a reply to one is laid out claim by claim" : "the entry named is not a reply received on this request", { target, ord: ord ?? null, kind: a.kind ?? null });
+      return refuse23("BEARING_NOT_RFC", a.kind !== "request_for_comment" ? "this action is not a request for comment; only a reply to one is laid out claim by claim" : "the entry named is not a reply received on this request", { target, ord: ord ?? null, kind: a.kind ?? null });
     return { ok: true, a, ord: e2.ord };
   }
   /* R1 (action-grammar R24): the layout's shape, its claims among the legs; the claims as stored, or the refusal. */
@@ -208940,9 +209348,12 @@ var ActionReplies = class _ActionReplies {
     if (errs.length) {
       const first = errs[0];
       const named2 = /claims\[(\d+)\]/.exec(String(first.message ?? first.detail ?? ""));
-      return refuse22("BEARING_REFUSED", first.message ?? first.detail ?? null, {
+      const item3 = first.item ?? (named2 ? Number(named2[1]) : null);
+      return refuse23("BEARING_REFUSED", first.message ?? first.detail ?? null, {
         target,
-        item: first.item ?? (named2 ? Number(named2[1]) : null),
+        item: item3,
+        /* R9: DEC-199's sentence, read by key, its `{item}` filled; never answered unfilled */
+        translation: fillWords4("refusal.BEARING_REFUSED", { item: bearingItem(claims, Number.isInteger(item3) ? item3 : null) }),
         findings: errs.map((f17) => ({
           check: f17.check,
           detail: f17.message ?? f17.detail ?? null,
@@ -208962,7 +209373,7 @@ var ActionReplies = class _ActionReplies {
   actionReplyBearing({ target, ord = null, claims = null, author = null, viewer = null } = {}) {
     const who3 = typeof author === "string" ? author.trim() : "";
     if (!who3 || isMachineIdentity(who3))
-      return refuse22("MACHINE_CANNOT_RECORD_BEARING", "a reply is laid out by a member; a machine may propose a layout");
+      return refuse23("MACHINE_CANNOT_RECORD_BEARING", "a reply is laid out by a member; a machine may propose a layout");
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
     const t2 = this.#bearingTarget(target, ord, viewer);
     if (t2.ok === false) return t2;
@@ -209092,18 +209503,18 @@ var ActionReplies = class _ActionReplies {
   aroseFromLink({ target, ord = null, arising = null, author = null, viewer = null } = {}) {
     const who3 = typeof author === "string" ? author.trim() : "";
     if (!who3 || isMachineIdentity(who3))
-      return refuse22("MACHINE_CANNOT_LINK", "what arose from a response is linked by a member");
+      return refuse23("MACHINE_CANNOT_LINK", "what arose from a response is linked by a member");
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
     const a = this.#action(target, viewer);
     if (a.ok === false) return a;
     const e2 = _ActionReplies.#entry(a, ord);
     if (!e2 || e2.direction !== "received")
-      return refuse22("AROSE_FROM_NOT_A_RESPONSE", "the entry named is not a reply received", { target, ord: ord ?? null });
+      return refuse23("AROSE_FROM_NOT_A_RESPONSE", "the entry named is not a reply received", { target, ord: ord ?? null });
     const ar = _ActionReplies.#arising(arising);
-    if (!ar) return refuse22("AROSE_FROM_REFUSED", "arising is {project} or {plan, matter}", { target });
+    if (!ar) return refuse23("AROSE_FROM_REFUSED", "arising is {project} or {plan, matter}", { target });
     if (ar.project && !this.#seesProject(ar.project, who3)) return noSuchProject(ar.project, { target });
     const held2 = ar.project ? this.#one(`SELECT seq FROM action_arose_from WHERE bundle_id=? AND ord=? AND project=?`, target, e2.ord, ar.project) : this.#one(`SELECT seq FROM action_arose_from WHERE bundle_id=? AND ord=? AND plan=? AND matter=?`, target, e2.ord, ar.plan, ar.matter);
-    if (held2) return refuse22("AROSE_FROM_LINKED", "this link is already recorded", { target, ord: e2.ord, arising: ar });
+    if (held2) return refuse23("AROSE_FROM_LINKED", "this link is already recorded", { target, ord: e2.ord, arising: ar });
     const at48 = this.#at();
     const w = this.record.transact(() => {
       this.sql.exec(
@@ -209142,7 +209553,7 @@ var ActionReplies = class _ActionReplies {
     const viewer = viewerArg ?? (arising && typeof arising === "object" ? arising.viewer ?? null : null);
     const bare5 = arising && typeof arising === "object" && !Array.isArray(arising) ? Object.fromEntries(Object.entries(arising).filter(([k]) => k !== "viewer")) : arising;
     const ar = _ActionReplies.#arising(bare5);
-    if (!ar) return refuse22("AROSE_FROM_REFUSED", "arising is {project} or {plan, matter}");
+    if (!ar) return refuse23("AROSE_FROM_REFUSED", "arising is {project} or {plan, matter}");
     if (ar.project && !this.#seesProject(ar.project, viewer)) return noSuchProject(ar.project);
     if (ar.plan && !this.#seesBundle(ar.plan, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: ar.plan };
     const rows4 = ar.project ? this.#rows(`SELECT bundle_id, ord, linked_by, linked_at FROM action_arose_from WHERE project=? ORDER BY seq`, ar.project) : this.#rows(
@@ -209158,7 +209569,7 @@ var ActionReplies = class _ActionReplies {
   }
   /* ================================================================ R3: the open requests at signing */
   /** R3: each request for comment the viewer may see, not resolved or abandoned, whose `advances` or `rests_on` legs
-   *  name a bundle among `members`, as `case-authoring` R70's rows. Writes nothing; throws when it cannot read. */
+   *  name a bundle among `members`, as `case-inputs` R8's rows. Writes nothing; throws when it cannot read. */
   openRequestsOn({ case: caseId = null, members: members3 = [], viewer = null } = {}) {
     void caseId;
     const ids = new Set((Array.isArray(members3) ? members3 : []).map((m) => typeof m === "string" ? m : m && typeof m === "object" ? m.bundle_id : null).filter((x) => typeof x === "string" && x));
@@ -209211,34 +209622,34 @@ var ActionReplies = class _ActionReplies {
 for (const m of ["actionReplyBearing", "actionBearingPropose", "bearingsOf", "aroseFromLink", "aroseFrom", "arisenFrom"]) {
   const fn = ActionReplies.prototype[m];
   ActionReplies.prototype[m] = function(...a) {
-    return withRow10(fn.apply(this, a));
+    return withRow11(fn.apply(this, a));
   };
 }
-var instances61 = /* @__PURE__ */ new WeakMap();
+var instances62 = /* @__PURE__ */ new WeakMap();
 function actionRepliesOf(host, deps) {
-  let r = instances61.get(host);
+  let r = instances62.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     r = new ActionReplies({ ...d, host, storage, record, membership });
-    instances61.set(host, r);
+    instances62.set(host, r);
     r.migrate();
     const declared2 = record.declarePurge("action-replies", [...ACTION_REPLIES_TABLES]);
     if (declared2 && declared2.ok === false)
       throw new Error(`action-replies: record-core refused its table declaration: ${declared2.reason} (${declared2.table})`);
-    let ca = null;
-    if (d.caseAuthoring !== null && (d.caseAuthoring || d.env)) {
+    let ci = null;
+    if (d.caseInputs !== null && (d.caseInputs || d.env)) {
       try {
-        ca = d.caseAuthoring || caseAuthoringOf(host);
+        ci = d.caseInputs || caseInputsOf(host);
       } catch {
-        ca = null;
+        ci = null;
       }
     }
     const inst = r;
-    if (ca && typeof ca.registerOpenRequests === "function")
-      ca.registerOpenRequests("action-replies", { openRequestsOn: (args) => inst.openRequestsOn(args || {}) });
+    if (ci && typeof ci.registerOpenRequests === "function")
+      ci.registerOpenRequests("action-replies", { openRequestsOn: (args) => inst.openRequestsOn(args || {}) });
   }
   return r;
 }
@@ -213238,16 +213649,16 @@ function readingGuidesOps(s, url, body) {
     // R13 (K2820)
   };
 }
-var instances62 = /* @__PURE__ */ new WeakMap();
+var instances63 = /* @__PURE__ */ new WeakMap();
 function readingGuidesOf(host, deps) {
-  let s = instances62.get(host);
+  let s = instances63.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     s = new ReadingGuides({ ...d, storage, record, membership });
-    instances62.set(host, s);
+    instances63.set(host, s);
     record.declareTable("reading-guides", READING_GUIDES_TABLE_CLASSES.map((e2) => ({ ...e2, keys: [...e2.keys] })));
   }
   return s;
@@ -213435,12 +213846,7 @@ var DRAFT_LABEL = Object.freeze({
   says: "assembled by the system from where the plan stands, each item naming its source; machine work, not a member's report"
 });
 var ASSISTANT = "class:ai";
-var ASSIST_LABEL = Object.freeze({
-  by: ASSISTANT,
-  state: lawProposalState(ASSISTANT),
-  machine_work: lawProposalState(ASSISTANT) === "machine_proposed",
-  says: "the assistant drafted this report from the items where the plan stands; machine work, labelled as machine work. The report kept is the member's, in the words the member kept"
-});
+var ASSIST_LABEL = Object.freeze(proposalLabel(ASSISTANT, "status_report"));
 var MET_STATES = Object.freeze(["met", "met_late"]);
 var OUTCOME_MAX = 1e3;
 var DECIDED_MAX = 4e3;
@@ -213797,7 +214203,9 @@ var PlanWork = class {
   }
   /** R4: one item per due review, for `action-producers` (`plan-review-due`): for each member's standing rhythm on a
    *  plan not closed, the latest occurrence at or before `nowMs`, after the rhythm was set, with no review entry
-   *  recorded since it. Each occurrence is one item, so a review is told once. No rhythm, no item. Writes nothing. */
+   *  recorded since it. Each occurrence is one item, so a review is told once. No rhythm, no item. R18: each item also
+   *  carries `recurrence`, the rhythm as the member set it with who and when, and `since`, the local day (in the
+   *  rhythm's zone) of the plan's last review entry, else of the rhythm's setting. Writes nothing. */
   planReviewsDue({ nowMs, limit } = {}) {
     const now = this.#nowMs(nowMs);
     const cap = Number.isInteger(limit) && limit > 0 ? Math.min(limit, DUE_MAX3) : DUE_MAX3;
@@ -213815,7 +214223,16 @@ var PlanWork = class {
       if (!due2) continue;
       const last = this.#lastReview(p3.id);
       if (last && msOf2(last.at) >= msOf2(due2.instant)) continue;
-      items.push({ plan: p3.id, project: p3.project, member: r.member, due: due2.instant, day: due2.value, zone: rec.zone });
+      items.push({
+        plan: p3.id,
+        project: p3.project,
+        member: r.member,
+        due: due2.instant,
+        day: due2.value,
+        zone: rec.zone,
+        recurrence: { rrule: rec.rrule, dtstart: rec.dtstart, zone: rec.zone, by: r.member, at: r.at },
+        since: last ? { day: dayIn3(last.at, rec.zone), from: "review" } : { day: dayIn3(r.at, rec.zone), from: "rhythm_set" }
+      });
     }
     items.sort((a, b) => msOf2(a.due) - msOf2(b.due) || (a.plan < b.plan ? -1 : a.plan > b.plan ? 1 : 0));
     return { ok: true, as_of: iso5(now), items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
@@ -214179,8 +214596,8 @@ var PlanWork = class {
   }
   /** R8, R14: a member keeps a status report with the plan, 1 to 8,000 characters; never required, never published.
    *  `from` is one line of the member's own (as R8 took it), or `{assistant: true, as_of?}`: the text began as the
-   *  assistant's draft (R14), kept as `{draft: "assistant", as_of, label}`, labelled machine work; the report is the
-   *  member's. */
+   *  assistant's draft (R14), read back as `{draft: "assistant", as_of, label}`, labelled by R16's `status_report`
+   *  label; the report is the member's. */
   statusReportSave(args = {}) {
     const { plan, text: text7, from, author, viewer } = args;
     const o = this.#act(plan, author, viewer);
@@ -214585,12 +215002,14 @@ function reportFrom(from) {
   if (typeof from === "string") return isLine(from, 200) ? { stored: from } : { r: refuseText(null, 200, "from") };
   const asOf = isObj47(from) ? from.as_of : void 0;
   if (isObj47(from) && from.assistant === true && Object.keys(from).every((k) => k === "assistant" || k === "as_of") && (asOf === void 0 || asOf === null || typeof asOf === "string" && ISO_TS_RE.test(asOf)))
-    return { stored: JSON.stringify({ draft: "assistant", as_of: asOf ?? null, label: ASSIST_LABEL }) };
+    return { stored: JSON.stringify({ draft: "assistant", as_of: asOf ?? null }) };
   return { r: refuseText(null, 200, "from", { says: "from is one line of your own, or {assistant: true, as_of?} when the text began as the assistant's draft" }) };
 }
 function fromOf2(stored2) {
   if (typeof stored2 !== "string") return null;
-  return stored2.startsWith("{") ? unjson3(stored2, stored2) : stored2;
+  if (!stored2.startsWith("{")) return stored2;
+  const f17 = unjson3(stored2, null);
+  return isObj47(f17) && f17.draft === "assistant" ? { draft: "assistant", as_of: f17.as_of ?? null, label: ASSIST_LABEL } : stored2;
 }
 function standingCure(r, standard2) {
   const s = (Array.isArray(r && r.standards) ? r.standards : []).find((x) => isObj47(x) && x.standard === standard2);
@@ -214612,6 +215031,14 @@ function prepView(rows4) {
     take_ups: rows4.filter((r) => r.act === "take_up").map((r) => ({ by: r.author, target: r.target ?? null, at: r.at })),
     done: done ? { by: done.author, at: done.at } : null
   };
+}
+function dayIn3(instant5, zone) {
+  try {
+    const d = localDay(instant5, zone);
+    return typeof d === "string" ? d : null;
+  } catch {
+    return null;
+  }
 }
 function safeExpand(a) {
   try {
@@ -214685,9 +215112,9 @@ for (const name3 of [
     }
   } });
 }
-var instances63 = /* @__PURE__ */ new WeakMap();
+var instances64 = /* @__PURE__ */ new WeakMap();
 function planWorkOf(host, deps) {
-  let i = instances63.get(host);
+  let i = instances64.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -214711,7 +215138,7 @@ function planWorkOf(host, deps) {
       actionHolds: lazy("actionHolds", () => actionHoldsOf(host, base2)),
       actionReplies: lazy("actionReplies", () => actionRepliesOf(host, base2))
     });
-    instances63.set(host, i);
+    instances64.set(host, i);
     i.migrate();
     record.declarePurge("plan-work", PLAN_WORK_TABLES);
     i.registered = register2(i);
@@ -215207,7 +215634,7 @@ function recordedBy2(c, memo, args) {
 var CITE_EDGE_BYTES = 83;
 var CITE_PIN_BYTES = 85;
 var CITE_LOG_SAMPLE = 20;
-var NOTE_MAX7 = 200;
+var NOTE_MAX8 = 200;
 var EXTENT_VALUE_MAX = 200;
 var EDGE_REASON_MAX4 = 160;
 var EDGE_NOTE_MAX = 480;
@@ -215640,7 +216067,7 @@ Trigger: selection ${handle}
       if (denied) return denied;
     }
     const nt = String(note ?? "");
-    if (nt.length > NOTE_MAX7 || /["\\\r\n]/.test(nt))
+    if (nt.length > NOTE_MAX8 || /["\\\r\n]/.test(nt))
       return {
         ok: false,
         reason: "BAD_NOTE",
@@ -216028,7 +216455,7 @@ Trigger: selection ${handle}
     const denied = this.membership.projectAuthority(project, identity, "joined", "drawquestion");
     if (denied) return denied;
     const nt = String(note ?? "");
-    if (nt.length > NOTE_MAX7 || /["\\\r\n]/.test(nt))
+    if (nt.length > NOTE_MAX8 || /["\\\r\n]/.test(nt))
       return {
         ok: false,
         reason: "BAD_NOTE",
@@ -216140,7 +216567,7 @@ Changes: cites edges added to ${qid}.${nt ? ` Note: ${nt}.` : ""}
     };
   }
 };
-var instances64 = /* @__PURE__ */ new WeakMap();
+var instances65 = /* @__PURE__ */ new WeakMap();
 function inquiryServices2(k) {
   return {
     earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds),
@@ -216150,7 +216577,7 @@ function inquiryServices2(k) {
   };
 }
 function citationOf(host, deps) {
-  let c = instances64.get(host);
+  let c = instances65.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -216161,7 +216588,7 @@ function citationOf(host, deps) {
     const inquiry = d.inquiry || inquiryServices2(inquiryOf(host, { record, membership, promotion, content }));
     const provenance = d.provenance || provenanceOf(host, { record, membership, promotion });
     c = new Citation({ ...d, storage: d.storage || host.storage, record, membership, promotion, content, retrieval, provenance, inquiry });
-    instances64.set(host, c);
+    instances65.set(host, c);
     if (retrieval && typeof retrieval.registerRecordedBy === "function")
       retrieval.registerRecordedBy("citation", (a) => c.recordedBy(a));
   }
@@ -216951,12 +217378,12 @@ var truthy = (v) => v === true || v === "true" || v === "1" || v === 1;
 var OFFERED2 = Object.freeze(["approved"]);
 var KEEP_AWAY_USE = "draft";
 var BASE_ADOPTION = "base:";
-function withRow11(r) {
+function withRow12(r) {
   if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string" || r.check) return r;
   const row14 = rowOf16(r.reason);
   return row14 ? { ...r, code: r.code ?? r.reason, check: row14.check, translation: row14.translation } : r;
 }
-var refuse23 = (code, detail, extra) => withRow11({ ok: false, reason: code, code, detail, ...extra || {} });
+var refuse24 = (code, detail, extra) => withRow12({ ok: false, reason: code, code, detail, ...extra || {} });
 var versionId2 = (script, version) => `${script}@${version}`;
 function parseVersionId2(v) {
   const m = typeof v === "string" ? VERSION_RE2.exec(v.trim()) : null;
@@ -217258,48 +217685,48 @@ var WizardScripts = class _WizardScripts {
   /* R19: a machine, or a call stamped with nobody, is refused by shape before anything else is asked. */
   #machine(act2, who3) {
     if (str50(who3) && !isMachineIdentity(who3)) return null;
-    return refuse23(act2 === "approve" ? "MACHINE_CANNOT_APPROVE_WIZARD" : "MACHINE_CANNOT_DRAFT_WIZARD", str50(who3) ? `'${String(who3).trim().slice(0, 60)}' is a machine identity: a machine proposes steps, labelled, and nothing else` : "no member is named as the one acting: this call carries nobody");
+    return refuse24(act2 === "approve" ? "MACHINE_CANNOT_APPROVE_WIZARD" : "MACHINE_CANNOT_DRAFT_WIZARD", str50(who3) ? `'${String(who3).trim().slice(0, 60)}' is a machine identity: a machine proposes steps, labelled, and nothing else` : "no member is named as the one acting: this call carries nobody");
   }
   /* ================================================================ the one-condition answers */
   /* R20: absent and invisible are one answer. */
   #noWizard(asked) {
-    return refuse23(
+    return refuse24(
       "NO_SUCH_WIZARD",
       "no wizard script by that id is readable here; one you may not see answers the same",
       { script: typeof asked === "string" ? parseVersionId2(asked)?.script ?? str50(asked) : null }
     );
   }
   #scope(s, detail) {
-    return refuse23("WIZARD_SCOPE_REFUSED", detail, { script: s ? s.id : null });
+    return refuse24("WIZARD_SCOPE_REFUSED", detail, { script: s ? s.id : null });
   }
   #notGranted(detail) {
-    return refuse23("WIZARD_EDITOR_NOT_GRANTED", detail);
+    return refuse24("WIZARD_EDITOR_NOT_GRANTED", detail);
   }
   #notADraft(s, n2, state) {
-    return refuse23("NOT_A_DRAFT", `the version is ${state}, past draft: its steps are fixed`, { version: versionId2(s.id, n2), state });
+    return refuse24("NOT_A_DRAFT", `the version is ${state}, past draft: its steps are fixed`, { version: versionId2(s.id, n2), state });
   }
   #notAnApprover(s, detail) {
-    return refuse23("NOT_AN_APPROVER", detail, { script: s.id });
+    return refuse24("NOT_AN_APPROVER", detail, { script: s.id });
   }
   #notTheGroups(s) {
-    return refuse23(
+    return refuse24(
       "WIZARD_NOT_THE_GROUPS",
       "a Civicsmith script is read-only to every group: groups cannot edit or retire it",
       { script: s.id, origin: "civicsmith" }
     );
   }
   #ended(s, ended, extra) {
-    return refuse23(
+    return refuse24(
       "WIZARD_ALREADY_ENDED",
       ended.ending === "retired" ? "the script was already retired" : "the version was already withdrawn",
       { script: s.id, ...extra || {}, ended }
     );
   }
   #stepRefusal(bad2) {
-    return refuse23("WIZARD_STEP_REFUSED", bad2.why, { step: bad2.step });
+    return refuse24("WIZARD_STEP_REFUSED", bad2.why, { step: bad2.step });
   }
   #useRefusal(detail) {
-    return refuse23("WIZARD_USE_REFUSED", detail);
+    return refuse24("WIZARD_USE_REFUSED", detail);
   }
   /* R6, R7: R12's refusals as one answer: the first, naming its step, with every one. */
   static #checked(refusals, warnings, extra) {
@@ -217661,7 +218088,7 @@ var WizardScripts = class _WizardScripts {
     library = CIVICSMITH_LIBRARY,
     door = null
   } = {}) {
-    if (this.reg) return refuse23("WIZARD_ALREADY_REGISTERED", "the registration is made once per construction, and it was");
+    if (this.reg) return refuse24("WIZARD_ALREADY_REGISTERED", "the registration is made once per construction, and it was");
     this.reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible, library });
     const fn = (f17) => typeof f17 === "function" ? f17 : null;
     this.door = isObj54(door) ? { findExisting: fn(door.findExisting), pointer: fn(door.pointer) } : { findExisting: null, pointer: null };
@@ -217747,17 +218174,17 @@ var WizardScripts = class _WizardScripts {
   }
   /* ================================================================ R3: wizardDraft */
   #recordingRefusal(recorded) {
-    if (!Array.isArray(recorded)) return refuse23("WIZARD_STEP_REFUSED", "a recording is a list of {screen, act}", { step: null });
-    if (recorded.length > STEPS_MAX) return refuse23("WIZARD_STEP_REFUSED", `a script has at most ${STEPS_MAX} steps`, { step: null });
+    if (!Array.isArray(recorded)) return refuse24("WIZARD_STEP_REFUSED", "a recording is a list of {screen, act}", { step: null });
+    if (recorded.length > STEPS_MAX) return refuse24("WIZARD_STEP_REFUSED", `a script has at most ${STEPS_MAX} steps`, { step: null });
     for (let i = 0; i < recorded.length; i++) {
       const s = recorded[i];
       if (isObj54(s) && Object.keys(s).some((k) => k !== "screen" && k !== "act"))
-        return refuse23("WIZARD_RECORDING_CARRIES_VALUES", "a recorded step holds its screen and act, never a typed value", { step: i + 1 });
+        return refuse24("WIZARD_RECORDING_CARRIES_VALUES", "a recorded step holds its screen and act, never a typed value", { step: i + 1 });
     }
     for (let i = 0; i < recorded.length; i++) {
       const s = recorded[i];
       if (!isObj54(s) || !oneLine6(s.screen, NAME_FIELD_MAX) || s.act !== void 0 && s.act !== null && !oneLine6(s.act, NAME_FIELD_MAX))
-        return refuse23("WIZARD_STEP_REFUSED", "a recorded step is {screen, act}", { step: i + 1 });
+        return refuse24("WIZARD_STEP_REFUSED", "a recorded step is {screen, act}", { step: i + 1 });
     }
     return null;
   }
@@ -217800,13 +218227,13 @@ var WizardScripts = class _WizardScripts {
     if (!recording && !source2 && !this.#liveGrant(member2))
       return this.#notGranted("a blank start needs the advanced editor, which an administrator grants");
     if (recording || base2 && given6(from)) {
-      if (source2) return refuse23("WIZARD_STEP_REFUSED", "a draft starts from one of a recording, a source or a copy", { step: null });
+      if (source2) return refuse24("WIZARD_STEP_REFUSED", "a draft starts from one of a recording, a source or a copy", { step: null });
       const bad2 = this.#recordingRefusal(recorded);
       if (bad2) return bad2;
     }
     const named2 = base2 && !given6(name3) ? base2.s.name.slice(0, WIZARD_NAME_MAX) : name3;
     if (!target && !oneLine6(named2, WIZARD_NAME_MAX))
-      return refuse23("WIZARD_NAME_REFUSED", `a script is named in one line of 1 to ${WIZARD_NAME_MAX} characters`, { max: WIZARD_NAME_MAX });
+      return refuse24("WIZARD_NAME_REFUSED", `a script is named in one line of 1 to ${WIZARD_NAME_MAX} characters`, { max: WIZARD_NAME_MAX });
     const pairs = recording ? recorded.map((s) => ({ screen: s.screen.trim(), act: str50(s.act) })) : base2 ? source2.steps.map((s) => ({ screen: s.screen, act: s.act ?? null })) : null;
     const steps = canonicalSteps(recording ? pairs.map((p3) => ({ ...p3, what: "", why: "" })) : source2 ? source2.steps : []);
     const at48 = this.#when();
@@ -217916,7 +218343,7 @@ var WizardScripts = class _WizardScripts {
     model = null
   } = {}) {
     const who3 = str50(proposer);
-    if (!who3) return refuse23("WIZARD_NO_PROPOSER", "no stamped proposer: a proposal names who made it");
+    if (!who3) return refuse24("WIZARD_NO_PROPOSER", "no stamped proposer: a proposal names who made it");
     let s = null, proj = null;
     if (str50(script)) {
       s = this.#script(script, viewer);
@@ -217930,7 +218357,7 @@ var WizardScripts = class _WizardScripts {
     const bad2 = Array.isArray(steps) && !steps.length ? { step: null, why: "a proposal proposes at least one step" } : stepShape(steps);
     if (bad2) return this.#stepRefusal(bad2);
     if (!textUpTo2(why2, PROPOSAL_WHY_MAX2))
-      return refuse23("WIZARD_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX2} characters`, { max: PROPOSAL_WHY_MAX2 });
+      return refuse24("WIZARD_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX2} characters`, { max: PROPOSAL_WHY_MAX2 });
     const at48 = this.#when();
     const cut10 = (v) => str50(v) ? String(v).trim().slice(0, 200) : null;
     const canon6 = canonicalSteps(steps);
@@ -217997,7 +218424,7 @@ var WizardScripts = class _WizardScripts {
     const who3 = member2 ? this.#nameOf(member2) : null;
     if (truthy(widen)) {
       if (state !== "approved" || s.retired)
-        return refuse23(
+        return refuse24(
           "WIZARD_NOT_APPROVED",
           `the version is ${s.retired ? "of a retired script" : state}: only an approved project script is widened`,
           { version: versionId2(s.id, n2), state }
@@ -218018,13 +218445,13 @@ var WizardScripts = class _WizardScripts {
       return { ok: true, script: s.id, existed: false, scope: "group", widened: { by: { id: member2, name: who3 }, at: at49 } };
     }
     if (state !== "submitted")
-      return refuse23("NOT_SUBMITTED", `the version is ${state}, not submitted`, { version: versionId2(s.id, n2), state });
+      return refuse24("NOT_SUBMITTED", `the version is ${state}, not submitted`, { version: versionId2(s.id, n2), state });
     if (!this.#mayApprove(s, member2))
       return this.#notAnApprover(s, s.widened ? "an administrator approves a group-wide script" : "an owner of the script's project approves it");
     const v = this.#one(`SELECT author FROM wiz_versions WHERE script_id=? AND version=?`, s.id, n2);
     const others = this.#contributors(s.id, n2).filter((c) => c.kind === "member" && c.member !== v.author);
     if (v.author === member2 && !others.length)
-      return refuse23(
+      return refuse24(
         "APPROVER_IS_AUTHOR",
         "you are the version's author and its only member contributor: another member approves it",
         { version: versionId2(s.id, n2) }
@@ -218076,7 +218503,7 @@ var WizardScripts = class _WizardScripts {
     if (!this.#isAdmin(admin)) return notAnAdmin(str50(by), "granting the advanced wizard editor");
     const id = str50(member2) ? str50(member2).replace(/^member:/, "") : null;
     const facts = id ? this.#call(() => this.membership.memberFacts(id)) : null;
-    if (!facts) return refuse23("WIZARD_EDITOR_MEMBER_UNKNOWN", "no member by that id", { member: id ? id.slice(0, 80) : null });
+    if (!facts) return refuse24("WIZARD_EDITOR_MEMBER_UNKNOWN", "no member by that id", { member: id ? id.slice(0, 80) : null });
     const held2 = this.#liveGrant(id);
     if (held2) return {
       ok: true,
@@ -218108,7 +218535,7 @@ var WizardScripts = class _WizardScripts {
     const admin = this.#member(by);
     if (!this.#isAdmin(admin)) return notAnAdmin(str50(by), "revoking the advanced wizard editor");
     const g = str50(grant) ? this.#one(`SELECT * FROM wiz_editor_grants WHERE grant_id=?`, str50(grant)) : null;
-    if (!g) return refuse23("WIZARD_NO_SUCH_GRANT", "no editor grant by that id", { grant: str50(grant) });
+    if (!g) return refuse24("WIZARD_NO_SUCH_GRANT", "no editor grant by that id", { grant: str50(grant) });
     const held2 = this.#one(`SELECT * FROM wiz_editor_revocations WHERE grant_id=?`, g.grant_id);
     if (held2) return { ok: true, grant: g.grant_id, existed: true, revoked: { by: { id: held2.actor, name: held2.actor_name }, at: held2.at } };
     const at48 = this.#when();
@@ -218129,7 +218556,7 @@ var WizardScripts = class _WizardScripts {
     const member2 = this.#member(by);
     const why2 = textUpTo2(reason2, ENDING_REASON_MAX2);
     const reasonRefused = () => {
-      return refuse23("WIZARD_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX2} characters`, { max: ENDING_REASON_MAX2 });
+      return refuse24("WIZARD_REASON_REFUSED", `give the reason in 1 to ${ENDING_REASON_MAX2} characters`, { max: ENDING_REASON_MAX2 });
     };
     if (version === null || version === void 0 || version === "") {
       if (!this.#mayApprove(s, member2))
@@ -218222,7 +218649,7 @@ var WizardScripts = class _WizardScripts {
   wizards({ state = null, viewer = null } = {}) {
     const st = str50(state);
     if (st && st !== "offered" && !WIZARDS_STATES_LISTED.includes(st))
-      return refuse23("WIZARDS_STATE_REFUSED", `state is offered or one of ${WIZARDS_STATES_LISTED.join(", ")}`, { states: WIZARDS_STATES_LISTED });
+      return refuse24("WIZARDS_STATE_REFUSED", `state is offered or one of ${WIZARDS_STATES_LISTED.join(", ")}`, { states: WIZARDS_STATES_LISTED });
     const me = this.#member(viewer);
     if (st === "proposed") {
       const rows4 = this.#rows(`SELECT * FROM wiz_proposals p WHERE NOT EXISTS (SELECT 1 FROM wiz_revisions r WHERE r.adopted=p.proposal_id)
@@ -218504,12 +218931,12 @@ var WizardScripts = class _WizardScripts {
     const asked = { op: typeof op === "string" ? op.slice(0, 80) : null };
     if (!at48.offered && at48.code === KEPT_AWAY && isObj54(away) && away.ok === false) return { ...away, ...asked };
     if (!at48.offered && at48.code === "AI_NO_ACCOUNT" && door && noAccount) return { ...door, ...asked };
-    if (!at48.offered) return refuse23(at48.code, "the assistant does not help word this field", asked);
+    if (!at48.offered) return refuse24(at48.code, "the assistant does not help word this field", asked);
     const text7 = typeof told === "string" ? told : Array.isArray(told) ? told.filter((x) => typeof x === "string").join("\n") : "";
     if (!text7.trim() || text7.length > TOLD_MAX)
-      return refuse23("WRITING_HELP_NOTHING_TOLD", `tell the assistant what to say, in 1 to ${TOLD_MAX} characters`, { max: TOLD_MAX });
+      return refuse24("WRITING_HELP_NOTHING_TOLD", `tell the assistant what to say, in 1 to ${TOLD_MAX} characters`, { max: TOLD_MAX });
     if (door) return { ...door, ...asked };
-    return refuse23(
+    return refuse24(
       "ASSISTANT_DRAFT_UNAVAILABLE",
       "the assistant's draft is not served yet: nothing was drafted and the field is unchanged",
       { firsthand: FIRSTHAND_ACTS.includes(String(op).trim()) }
@@ -218536,9 +218963,9 @@ var WizardScripts = class _WizardScripts {
     const steps = this.#steps(h.s, h.n);
     const k = step === null || step === void 0 || step === "" ? null : Number(step);
     if (!WIZARD_EVENTS.includes(event2))
-      return refuse23("WIZARD_PROGRESS_REFUSED", "use is counted as start, step or finish: stopping is not an event", { events: WIZARD_EVENTS });
+      return refuse24("WIZARD_PROGRESS_REFUSED", "use is counted as start, step or finish: stopping is not an event", { events: WIZARD_EVENTS });
     if (event2 === "step" ? !(Number.isInteger(k) && k >= 1 && k <= steps.length) : k !== null)
-      return refuse23("WIZARD_PROGRESS_REFUSED", event2 === "step" ? `a step reached is one of the script's, 1 to ${steps.length}` : "only a step reached names a step", { events: WIZARD_EVENTS });
+      return refuse24("WIZARD_PROGRESS_REFUSED", event2 === "step" ? `a step reached is one of the script's, 1 to ${steps.length}` : "only a step reached names a step", { events: WIZARD_EVENTS });
     this.sql.exec(`INSERT INTO wiz_tallies (version_id, event, step, day) VALUES (?,?,?,?)`, versionId2(h.s.id, h.n), event2, k, this.#day());
     return { ok: true };
   }
@@ -218663,12 +219090,12 @@ for (const m of [
 ]) {
   const fn = WizardScripts.prototype[m];
   WizardScripts.prototype[m] = function(...a) {
-    return withRow11(fn.apply(this, a));
+    return withRow12(fn.apply(this, a));
   };
 }
-var instances65 = /* @__PURE__ */ new WeakMap();
+var instances66 = /* @__PURE__ */ new WeakMap();
 function wizardScriptsOf(host, deps) {
-  let w = instances65.get(host);
+  let w = instances66.get(host);
   if (!w) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -218677,7 +219104,7 @@ function wizardScriptsOf(host, deps) {
     const filingTemplates = d.filingTemplates || filingTemplatesOf(host, { record, membership });
     const credentials = d.credentials || (() => credentialsOf(host, { record, membership }));
     w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, credentials, env: d.env ?? host.env ?? null });
-    instances65.set(host, w);
+    instances66.set(host, w);
     w.migrate();
     record.declareTable("wizard-scripts", WIZARD_SCRIPTS_TABLE_CLASSES.map((t2) => ({ ...t2 })));
     record.registerMintSeed("wizard-scripts", WIZARD_SCRIPTS_MINT_SEED.map((x) => [...x]));
@@ -219163,12 +219590,12 @@ var AffordanceFacts = class {
     return { ok: true, screens, wizard_scripts, writing_help_refused: w.writingHelpRefused() };
   }
 };
-var instances66 = /* @__PURE__ */ new WeakMap();
+var instances67 = /* @__PURE__ */ new WeakMap();
 function affordancesOf(host, deps) {
-  let a = instances66.get(host);
+  let a = instances67.get(host);
   if (!a) {
     a = new AffordanceFacts(host, deps);
-    instances66.set(host, a);
+    instances67.set(host, a);
   }
   return a;
 }
@@ -220710,17 +221137,17 @@ var Answers = class {
     return standingAnswersFor(this, a);
   }
 };
-var instances67 = /* @__PURE__ */ new WeakMap();
+var instances68 = /* @__PURE__ */ new WeakMap();
 function answersOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let a = instances67.get(storage);
+  let a = instances68.get(storage);
   if (!a) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const useCheck = d.useCheck || ((x) => aiUseOf(host, { record, membership }).useCheck(x));
     a = new Answers({ ...d, storage: d.storage || storage, record, membership, useCheck });
-    instances67.set(storage, a);
+    instances68.set(storage, a);
     const declared2 = record.declareTable("answers", ANSWERS_TABLES);
     if (!declared2 || declared2.ok === false) throw new Error(`answers' tables could not be declared: ${JSON.stringify(declared2)}`);
   }
@@ -233397,9 +233824,9 @@ Changes: reading '${name3}' proposed as ${kind2}, in state suggested, carrying r
     return out;
   }
 };
-var instances68 = /* @__PURE__ */ new WeakMap();
+var instances69 = /* @__PURE__ */ new WeakMap();
 function runProductionsOf(host, deps) {
-  let p3 = instances68.get(host);
+  let p3 = instances69.get(host);
   if (!p3) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -233423,7 +233850,7 @@ function runProductionsOf(host, deps) {
       legEarning: d.legEarning || legEarningOf(host, { record, membership, content }),
       now: d.now || null
     });
-    instances68.set(host, p3);
+    instances69.set(host, p3);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
     p3.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p3.candidates(a));
     const inquiry = d.inquiry || inquiryOf(host, { record, membership, content });
@@ -242272,21 +242699,21 @@ var chars2 = (s) => [...s].length;
 var ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 var dayNumber4 = (d) => Date.UTC(Number(d.slice(0, 4)), Number(d.slice(5, 7)) - 1, Number(d.slice(8, 10))) / 864e5;
 var yamlString = (s) => `"${String(s).replace(/\\/g, "'").replace(/"/g, "'").replace(/[\r\n]+/g, " ").trim()}"`;
-function refuse24(code, detail, extra = {}) {
+function refuse25(code, detail, extra = {}) {
   const row14 = INVESTIGATION_CHECKS[code];
   return { ...extra, ok: false, reason: code, code, check: row14.check, translation: row14.translation, detail };
 }
-var instances69 = /* @__PURE__ */ new WeakMap();
+var instances70 = /* @__PURE__ */ new WeakMap();
 var storageOf3 = (host) => host && host.storage ? host.storage : host;
 function investigationOf(host, deps = {}) {
   const storage = storageOf3(host);
-  let s = instances69.get(storage);
+  let s = instances70.get(storage);
   if (!s) {
     const record = deps.record ?? recordOf(host);
     const membership = deps.membership ?? membershipOf(host, { record });
     const promotion = deps.promotion ?? promotionOf(host, { record, membership });
     s = new Investigation(storage, { ...deps, record, membership, promotion, host });
-    instances69.set(storage, s);
+    instances70.set(storage, s);
     s.migrate();
     const r = promotion.registerStep(OWNER3, { check: (c) => s.check(c) });
     if (r && r.ok === false) throw new Error(`investigation: registerStep refused: ${r.reason || r.code}`);
@@ -242444,7 +242871,7 @@ var Investigation = class _Investigation {
   /* An act's gate: a member (`INVESTIGATION_MEMBER_ONLY` for a machine), seeing the project, joined in it. */
   #memberGate(project, by, act2) {
     const a = this.#actor(by);
-    if (a && a.machine) return { refusal: refuse24("INVESTIGATION_MEMBER_ONLY", `${act2} is a member's act`) };
+    if (a && a.machine) return { refusal: refuse25("INVESTIGATION_MEMBER_ONLY", `${act2} is a member's act`) };
     if (!a) return { refusal: noSuchProject(filled17(project) ? project : null) };
     const seen = this.#projectSeen(project, a.viewer);
     if (seen) return { refusal: seen };
@@ -242555,20 +242982,20 @@ var Investigation = class _Investigation {
      `MILESTONE_ITEM_UNKNOWN`, answered as absent. */
   #items(project, waitsOn, viewer) {
     if (!Array.isArray(waitsOn) || waitsOn.length === 0)
-      return { refusal: refuse24("MILESTONE_WAITS_ON_NOTHING", "a milestone names at least one question or step it waits on") };
+      return { refusal: refuse25("MILESTONE_WAITS_ON_NOTHING", "a milestone names at least one question or step it waits on") };
     const qs = this.#questionsSeen(project, viewer);
-    if (qs === null) return { refusal: refuse24("MILESTONE_ITEM_UNKNOWN", "the questions this project draws on could not be read") };
+    if (qs === null) return { refusal: refuse25("MILESTONE_ITEM_UNKNOWN", "the questions this project draws on could not be read") };
     const qids = new Set(qs.map((q10) => q10.inquiry));
     const out = [];
     for (const raw of waitsOn) {
       const it = typeof raw === "string" ? { kind: isStepId(raw.trim()) ? "step" : "question", ref: raw.trim() } : isObj55(raw) ? { kind: raw.kind, ref: typeof raw.ref === "string" ? raw.ref.trim() : raw.question ?? raw.step ?? "" } : null;
       if (it && !filled17(it.kind) && isObj55(raw)) it.kind = raw.question ? "question" : raw.step ? "step" : "";
       if (!it || !ITEM_KINDS2.includes(it.kind) || !filled17(it.ref))
-        return { refusal: refuse24("MILESTONE_ITEM_UNKNOWN", "an item is a question or a step, by id", { item: raw ?? null }) };
+        return { refusal: refuse25("MILESTONE_ITEM_UNKNOWN", "an item is a question or a step, by id", { item: raw ?? null }) };
       if (it.kind === "question" && !qids.has(it.ref))
-        return { refusal: refuse24("MILESTONE_ITEM_UNKNOWN", "no question this project draws on by that id that you can see", { item: it.ref }) };
+        return { refusal: refuse25("MILESTONE_ITEM_UNKNOWN", "no question this project draws on by that id that you can see", { item: it.ref }) };
       if (it.kind === "step" && !this.#stepOfProject(it.ref, project, qids, viewer))
-        return { refusal: refuse24("MILESTONE_ITEM_UNKNOWN", "no step of this project by that id that you can see", { item: it.ref }) };
+        return { refusal: refuse25("MILESTONE_ITEM_UNKNOWN", "no step of this project by that id that you can see", { item: it.ref }) };
       if (!out.some((o) => o.kind === it.kind && o.ref === it.ref)) out.push({ kind: it.kind, ref: it.ref });
     }
     return { items: out };
@@ -242598,8 +243025,8 @@ var Investigation = class _Investigation {
   milestoneSet({ project = null, name: name3 = null, date = null, waitsOn = null, by = null } = {}) {
     const g = this.#memberGate(project, by, "milestoneSet");
     if (g.refusal) return g.refusal;
-    if (!filled17(name3) || chars2(name3.trim()) > NAME_MAX2) return refuse24("MILESTONE_NO_NAME", `a milestone's name is 1\u2013${NAME_MAX2} characters`);
-    if (!filled17(date) || !isCalendarDate(date)) return refuse24("MILESTONE_BAD_DATE", "a milestone's date is YYYY-MM-DD");
+    if (!filled17(name3) || chars2(name3.trim()) > NAME_MAX2) return refuse25("MILESTONE_NO_NAME", `a milestone's name is 1\u2013${NAME_MAX2} characters`);
+    if (!filled17(date) || !isCalendarDate(date)) return refuse25("MILESTONE_BAD_DATE", "a milestone's date is YYYY-MM-DD");
     const it = this.#items(project, waitsOn, g.actor.viewer);
     if (it.refusal) return it.refusal;
     const at48 = this.#at();
@@ -242615,10 +243042,10 @@ var Investigation = class _Investigation {
   /* A milestone held and not removed, and the act's gate on its project. */
   #milestoneGate(milestone, by, act2) {
     const m = Number.isSafeInteger(Number(milestone)) && milestone !== null && milestone !== "" ? this.#one(`SELECT * FROM inv_milestones WHERE milestone_id = ? AND removed_at IS NULL`, Number(milestone)) : null;
-    const noSuch2 = refuse24("NO_SUCH_MILESTONE", "no milestone by that number is held that you can see", { milestone: milestone ?? null });
+    const noSuch2 = refuse25("NO_SUCH_MILESTONE", "no milestone by that number is held that you can see", { milestone: milestone ?? null });
     if (!m) return { refusal: noSuch2 };
     const a = this.#actor(by);
-    if (!a || a.machine || this.#projectSeen(m.project_id, a.viewer)) return { refusal: a && a.machine ? refuse24("INVESTIGATION_MEMBER_ONLY", `${act2} is a member's act`) : noSuch2 };
+    if (!a || a.machine || this.#projectSeen(m.project_id, a.viewer)) return { refusal: a && a.machine ? refuse25("INVESTIGATION_MEMBER_ONLY", `${act2} is a member's act`) : noSuch2 };
     const bad2 = this.#membership.projectAuthority(m.project_id, a.viewer, "joined", act2);
     return bad2 ? { refusal: bad2 } : { m, actor: a };
   }
@@ -242627,8 +243054,8 @@ var Investigation = class _Investigation {
     const g = this.#milestoneGate(milestone, by, "milestoneRevise");
     if (g.refusal) return g.refusal;
     const { m } = g;
-    if (name3 !== void 0 && (!filled17(name3) || chars2(name3.trim()) > NAME_MAX2)) return refuse24("MILESTONE_NO_NAME", `a milestone's name is 1\u2013${NAME_MAX2} characters`);
-    if (date !== void 0 && (!filled17(date) || !isCalendarDate(date))) return refuse24("MILESTONE_BAD_DATE", "a milestone's date is YYYY-MM-DD");
+    if (name3 !== void 0 && (!filled17(name3) || chars2(name3.trim()) > NAME_MAX2)) return refuse25("MILESTONE_NO_NAME", `a milestone's name is 1\u2013${NAME_MAX2} characters`);
+    if (date !== void 0 && (!filled17(date) || !isCalendarDate(date))) return refuse25("MILESTONE_BAD_DATE", "a milestone's date is YYYY-MM-DD");
     let add2 = [];
     if (waitsOn !== void 0) {
       const it = this.#items(m.project_id, waitsOn, g.actor.viewer);
@@ -242658,7 +243085,7 @@ var Investigation = class _Investigation {
   milestoneRemove({ milestone = null, reason: reason2 = null, by = null } = {}) {
     const g = this.#milestoneGate(milestone, by, "milestoneRemove");
     if (g.refusal) return g.refusal;
-    if (!filled17(reason2) || chars2(reason2) > REASON_MAX17) return refuse24("INVESTIGATION_NO_REASON", `say why, in 1\u2013${REASON_MAX17} characters`);
+    if (!filled17(reason2) || chars2(reason2) > REASON_MAX17) return refuse25("INVESTIGATION_NO_REASON", `say why, in 1\u2013${REASON_MAX17} characters`);
     const at48 = this.#at();
     return this.#record.transact(() => {
       this.#sql.exec(`UPDATE inv_milestones SET removed_by = ?, removed_at = ?, removed_reason = ? WHERE milestone_id = ?`, by, at48, reason2.trim(), g.m.milestone_id);
@@ -242672,8 +243099,8 @@ var Investigation = class _Investigation {
     if (g.refusal) return g.refusal;
     const ref = typeof item3 === "string" ? item3.trim() : isObj55(item3) ? String(item3.ref ?? item3.question ?? item3.step ?? "").trim() : "";
     const row14 = this.#itemRows(g.m.milestone_id).find((r) => !r.removed_at && r.ref === ref);
-    if (!row14) return refuse24("MILESTONE_ITEM_UNKNOWN", "this milestone waits on no item by that id", { item: ref || null });
-    if (!filled17(reason2) || chars2(reason2) > REASON_MAX17) return refuse24("INVESTIGATION_NO_REASON", `say why, in 1\u2013${REASON_MAX17} characters`);
+    if (!row14) return refuse25("MILESTONE_ITEM_UNKNOWN", "this milestone waits on no item by that id", { item: ref || null });
+    if (!filled17(reason2) || chars2(reason2) > REASON_MAX17) return refuse25("INVESTIGATION_NO_REASON", `say why, in 1\u2013${REASON_MAX17} characters`);
     const at48 = this.#at();
     return this.#record.transact(() => {
       this.#sql.exec(`UPDATE inv_milestone_items SET removed_by = ?, removed_at = ?, removed_reason = ? WHERE item_id = ?`, by, at48, reason2.trim(), row14.item_id);
@@ -242820,7 +243247,7 @@ var Investigation = class _Investigation {
   milestoneReminder({ milestone = null, at: at48 = null, by = null } = {}) {
     const g = this.#milestoneGate(milestone, by, "milestoneReminder");
     if (g.refusal) return g.refusal;
-    if (!filled17(at48) || !isCalendarDate(at48)) return refuse24("MILESTONE_BAD_DATE", "a reminder names a calendar day, YYYY-MM-DD");
+    if (!filled17(at48) || !isCalendarDate(at48)) return refuse25("MILESTONE_BAD_DATE", "a reminder names a calendar day, YYYY-MM-DD");
     const when = this.#at();
     return this.#record.transact(() => {
       this.#sql.exec(
@@ -242844,7 +243271,7 @@ var Investigation = class _Investigation {
     if (question === void 0 || question === null || question === "") return { question: null, qs: this.#questionsSeen(project, viewer) };
     const qs = this.#questionsSeen(project, viewer);
     if (!qs || !qs.some((q10) => q10.inquiry === question))
-      return { refusal: refuse24("NO_SUCH_QUESTION", "no question this project draws on by that id that you can see", { question }) };
+      return { refusal: refuse25("NO_SUCH_QUESTION", "no question this project draws on by that id that you can see", { question }) };
     return { question, qs };
   }
   /** R6, R8: `reportDraft({project, question?, viewer})` composes, by code and with no AI, from the record since the
@@ -242978,14 +243405,14 @@ ${ls2.map((l2) => `- ${l2.text} [${l2.source.kind} ${l2.source.id}]`).join("\n")
     if (g.refusal) return g.refusal;
     const rq = this.#reportQuestion(project, question, g.actor.viewer);
     if (rq.refusal) return rq.refusal;
-    if (!filled17(text7) || chars2(text7) > REPORT_MAX2) return refuse24("REPORT_NO_TEXT", `a report is 1\u2013${REPORT_MAX2} characters`);
+    if (!filled17(text7) || chars2(text7) > REPORT_MAX2) return refuse25("REPORT_NO_TEXT", `a report is 1\u2013${REPORT_MAX2} characters`);
     const at48 = this.#at();
     if (since !== null && since !== void 0 && (!filled17(since) || !ISO.test(since) || Date.parse(since) > Date.parse(at48) + 1e3))
-      return refuse24("REPORT_BAD_SINCE", "since is an ISO instant no later than now");
+      return refuse25("REPORT_BAD_SINCE", "since is an ISO instant no later than now");
     let corr = null;
     if (corrects !== null && corrects !== void 0) {
       corr = this.#one(`SELECT report_id FROM inv_reports WHERE report_id = ? AND project_id = ?`, Number(corrects), project);
-      if (!corr) return refuse24("REPORT_NO_TEXT", "the report it corrects is not one of this project's", { corrects });
+      if (!corr) return refuse25("REPORT_NO_TEXT", "the report it corrects is not one of this project's", { corrects });
     }
     const steps = rq.qs === null ? null : this.#workSteps(project, g.actor.viewer, rq.qs, rq.question);
     const snapshot = Object.fromEntries((steps ?? []).map((s) => [s.step, s.state]));
@@ -243057,11 +243484,11 @@ ${ls2.map((l2) => `- ${l2.text} [${l2.source.kind} ${l2.source.id}]`).join("\n")
     const g = this.#memberGate(project, by, "interviewKeep");
     if (g.refusal) return g.refusal;
     const mine = _Investigation.#answers(answers2);
-    if (!mine) return refuse24("INTERVIEW_BAD_ANSWERS", `six answers, each 0\u2013${ANSWER_MAX} characters, at least one written`);
+    if (!mine) return refuse25("INTERVIEW_BAD_ANSWERS", `six answers, each 0\u2013${ANSWER_MAX} characters, at least one written`);
     let draft = null;
     if (from_draft !== null && from_draft !== void 0) {
       draft = isObj55(from_draft) ? _Investigation.#answers(from_draft.answers) : null;
-      if (!draft) return refuse24("INTERVIEW_BAD_ANSWERS", "the assistant's draft holds the same six answers");
+      if (!draft) return refuse25("INTERVIEW_BAD_ANSWERS", "the assistant's draft holds the same six answers");
     }
     const kept = mine.map((answer2, i) => {
       const began = !!draft && draft[i] !== "";
@@ -243142,18 +243569,18 @@ ${ls2.map((l2) => `- ${l2.text} [${l2.source.kind} ${l2.source.id}]`).join("\n")
   narrativeClaim({ project = null, source: source2 = null, text: text7 = null, about = null, by = null } = {}) {
     const g = this.#memberGate(project, by, "narrativeClaim");
     if (g.refusal) return g.refusal;
-    if (!filled17(text7) || chars2(text7.trim()) > CLAIM_MAX) return refuse24("CLAIM_NO_TEXT", `a claim is 1\u2013${CLAIM_MAX} characters`);
-    if (about !== null && about !== void 0 && (!filled17(about) || chars2(about) > ABOUT_MAX)) return refuse24("CLAIM_NO_TEXT", `what it is about is 1\u2013${ABOUT_MAX} characters`);
+    if (!filled17(text7) || chars2(text7.trim()) > CLAIM_MAX) return refuse25("CLAIM_NO_TEXT", `a claim is 1\u2013${CLAIM_MAX} characters`);
+    if (about !== null && about !== void 0 && (!filled17(about) || chars2(about) > ABOUT_MAX)) return refuse25("CLAIM_NO_TEXT", `what it is about is 1\u2013${ABOUT_MAX} characters`);
     let src;
     if (isObj55(source2) && source2.own === true && Object.keys(source2).length === 1) src = { own: true };
     else if (isObj55(source2) && source2.interview !== void 0 && Number.isInteger(source2.answer)) {
       const iv = this.#one(`SELECT * FROM inv_interviews WHERE interview_id = ? AND project_id = ?`, Number(source2.interview), project);
-      if (!iv) return refuse24("NO_SUCH_INTERVIEW", "no interview of this project by that number", { interview: source2.interview });
+      if (!iv) return refuse25("NO_SUCH_INTERVIEW", "no interview of this project by that number", { interview: source2.interview });
       const a = (parse17(iv.answers_json) ?? [])[source2.answer];
       if (!a || typeof a.answer !== "string" || !a.answer.includes(text7.trim()))
-        return refuse24("CLAIM_BAD_SOURCE", "the claim is not a quoted span of that answer");
+        return refuse25("CLAIM_BAD_SOURCE", "the claim is not a quoted span of that answer");
       src = { interview: Number(iv.interview_id), answer: source2.answer };
-    } else return refuse24("CLAIM_BAD_SOURCE", "a claim's source is {interview, answer} or {own: true}");
+    } else return refuse25("CLAIM_BAD_SOURCE", "a claim's source is {interview, answer} or {own: true}");
     const warning = this.#warning(`${text7}
 ${about ?? ""}`, g.actor.viewer);
     const at48 = this.#at();
@@ -243180,14 +243607,14 @@ ${about ?? ""}`, g.actor.viewer);
   claimFindStep({ claim = null, question = null, run: run2 = null, by = null } = {}) {
     const c = this.#claimRow(claim);
     const a = this.#actor(by);
-    const noSuch2 = refuse24("NO_SUCH_CLAIM", "no claim by that number is held that you can see", { claim: claim ?? null });
+    const noSuch2 = refuse25("NO_SUCH_CLAIM", "no claim by that number is held that you can see", { claim: claim ?? null });
     if (!c || !a) return noSuch2;
     const viewer = a.machine ? this.#principal(by, run2) : a.viewer;
-    if (!viewer) return refuse24("PLAN_NOT_YOUR_RUN", "the assistant proposes only for a run it holds", { run: run2 ?? null });
+    if (!viewer) return refuse25("PLAN_NOT_YOUR_RUN", "the assistant proposes only for a run it holds", { run: run2 ?? null });
     if (this.#projectSeen(c.project_id, viewer)) return noSuch2;
     if (filled17(question)) {
       const qs = this.#questionsSeen(c.project_id, viewer);
-      if (!qs || !qs.some((q10) => q10.inquiry === question)) return refuse24("NO_SUCH_QUESTION", "no question this project draws on by that id that you can see", { question });
+      if (!qs || !qs.some((q10) => q10.inquiry === question)) return refuse25("NO_SUCH_QUESTION", "no question this project draws on by that id that you can see", { question });
     }
     const place4 = filled17(question) ? { questions: [question] } : { project: c.project_id };
     const work = `${FIND_WORK_PREFIX}${c.text}`.slice(0, 500);
@@ -243210,10 +243637,10 @@ ${about ?? ""}`, g.actor.viewer);
   claimFound({ claim = null, record = null, step = null, by = null } = {}) {
     const c = this.#claimRow(claim);
     const a = this.#actor(by);
-    if (a && a.machine) return refuse24("INVESTIGATION_MEMBER_ONLY", "marking a claim found is a member's act");
-    if (!c || !a || this.#projectSeen(c.project_id, a.viewer)) return refuse24("NO_SUCH_CLAIM", "no claim by that number is held that you can see", { claim: claim ?? null });
+    if (a && a.machine) return refuse25("INVESTIGATION_MEMBER_ONLY", "marking a claim found is a member's act");
+    if (!c || !a || this.#projectSeen(c.project_id, a.viewer)) return refuse25("NO_SUCH_CLAIM", "no claim by that number is held that you can see", { claim: claim ?? null });
     const find2 = c.find_step ?? (filled17(step) ? step : null);
-    if (!find2) return refuse24("CLAIM_NO_FIND_STEP", "the claim has no find step yet");
+    if (!find2) return refuse25("CLAIM_NO_FIND_STEP", "the claim has no find step yet");
     const at48 = this.#at();
     return this.#record.transact(() => {
       const t2 = this.#steps.stepProduct({ step: find2, record, by });
@@ -243280,7 +243707,7 @@ ${about ?? ""}`, g.actor.viewer);
    *  nothing of it. */
   firsthandAccount({ words: words13 = null, observedAt = null, title = null, by = null } = {}) {
     const a = this.#actor(by);
-    if (!a || a.machine) return refuse24("INVESTIGATION_MEMBER_ONLY", "a firsthand account is a person's own word");
+    if (!a || a.machine) return refuse25("INVESTIGATION_MEMBER_ONLY", "a firsthand account is a person's own word");
     const r = this.#provenance.testify({ words: words13, observedAt, title, author: by });
     if (!r || r.ok !== true) return r;
     const handle = this.#handle(a.member);
@@ -243299,16 +243726,16 @@ ${about ?? ""}`, g.actor.viewer);
   /** R20, R21: `planPropose({project, kind, text, question?, run, by})`, from mode `enquire`: a proposed question or step
    *  drawn from a member's words, stored apart and labelled the system's; never a question or step until accepted. */
   planPropose({ project = null, kind: kind2 = null, text: text7 = null, question = null, run: run2 = null, by = null } = {}) {
-    if (!isMachineIdentity(by)) return refuse24("PLAN_NOT_A_MACHINE", "a proposal is the assistant's; a member writes her own");
+    if (!isMachineIdentity(by)) return refuse25("PLAN_NOT_A_MACHINE", "a proposal is the assistant's; a member writes her own");
     const viewer = this.#principal(by, run2);
-    if (!viewer) return refuse24("PLAN_NOT_YOUR_RUN", "the assistant proposes only for a run it holds", { run: run2 ?? null });
+    if (!viewer) return refuse25("PLAN_NOT_YOUR_RUN", "the assistant proposes only for a run it holds", { run: run2 ?? null });
     const seen = this.#projectSeen(project, viewer);
     if (seen) return seen;
-    if (!PLAN_KINDS.includes(kind2)) return refuse24("PLAN_BAD_KIND", `a proposal is a ${PLAN_KINDS.join(" or a ")}`);
-    if (!filled17(text7) || chars2(text7.trim()) > PLAN_MAX) return refuse24("PLAN_NO_TEXT", `1\u2013${PLAN_MAX} characters`);
+    if (!PLAN_KINDS.includes(kind2)) return refuse25("PLAN_BAD_KIND", `a proposal is a ${PLAN_KINDS.join(" or a ")}`);
+    if (!filled17(text7) || chars2(text7.trim()) > PLAN_MAX) return refuse25("PLAN_NO_TEXT", `1\u2013${PLAN_MAX} characters`);
     if (filled17(question)) {
       const qs = this.#questionsSeen(project, viewer);
-      if (!qs || !qs.some((q10) => q10.inquiry === question)) return refuse24("NO_SUCH_QUESTION", "no question this project draws on by that id", { question });
+      if (!qs || !qs.some((q10) => q10.inquiry === question)) return refuse25("NO_SUCH_QUESTION", "no question this project draws on by that id", { question });
     }
     const at48 = this.#at();
     const state = lawProposalState(by);
@@ -243362,15 +243789,15 @@ ${about ?? ""}`, g.actor.viewer);
   planAccept({ proposal = null, form = null, text: text7 = null, reason: reason2 = null, by = null } = {}) {
     const p3 = Number.isSafeInteger(Number(proposal)) && proposal !== null && proposal !== "" ? this.#one(`SELECT * FROM inv_plan_proposals WHERE proposal_id = ?`, Number(proposal)) : null;
     const a = this.#actor(by);
-    if (a && a.machine) return refuse24("INVESTIGATION_MEMBER_ONLY", "accepting a proposal is a member's act");
-    if (!p3 || !a || this.#projectSeen(p3.project_id, a.viewer)) return refuse24("NO_SUCH_PLANNING_PROPOSAL", "no planning proposal by that number is held that you can see", { proposal: proposal ?? null });
+    if (a && a.machine) return refuse25("INVESTIGATION_MEMBER_ONLY", "accepting a proposal is a member's act");
+    if (!p3 || !a || this.#projectSeen(p3.project_id, a.viewer)) return refuse25("NO_SUCH_PLANNING_PROPOSAL", "no planning proposal by that number is held that you can see", { proposal: proposal ?? null });
     const g = this.#memberGate(p3.project_id, by, "planAccept");
     if (g.refusal) return g.refusal;
-    if (p3.status !== "proposed") return refuse24("PLAN_DECIDED", `this proposal was ${p3.status === "accepted" ? "taken up" : "set aside"}`, { proposal: Number(p3.proposal_id) });
-    if (!ACCEPTANCE_FORMS.includes(form)) return refuse24("PLAN_BAD_FORM", `the form is one of ${ACCEPTANCE_FORMS.join(", ")}`);
+    if (p3.status !== "proposed") return refuse25("PLAN_DECIDED", `this proposal was ${p3.status === "accepted" ? "taken up" : "set aside"}`, { proposal: Number(p3.proposal_id) });
+    if (!ACCEPTANCE_FORMS.includes(form)) return refuse25("PLAN_BAD_FORM", `the form is one of ${ACCEPTANCE_FORMS.join(", ")}`);
     const words13 = form === "as_proposed" ? p3.text : text7;
-    if (!filled17(words13) || chars2(words13.trim()) > PLAN_MAX) return refuse24("PLAN_NO_TEXT", `1\u2013${PLAN_MAX} characters`);
-    if (reason2 !== null && reason2 !== void 0 && (!filled17(reason2) || chars2(reason2) > REASON_MAX17)) return refuse24("INVESTIGATION_NO_REASON", `1\u2013${REASON_MAX17} characters`);
+    if (!filled17(words13) || chars2(words13.trim()) > PLAN_MAX) return refuse25("PLAN_NO_TEXT", `1\u2013${PLAN_MAX} characters`);
+    if (reason2 !== null && reason2 !== void 0 && (!filled17(reason2) || chars2(reason2) > REASON_MAX17)) return refuse25("INVESTIGATION_NO_REASON", `1\u2013${REASON_MAX17} characters`);
     const at48 = this.#at();
     return this.#record.transact(() => {
       let made3;
@@ -243564,7 +243991,7 @@ ${about ?? ""}`, g.actor.viewer);
     const g = this.#memberGate(project, by, act2);
     if (g.refusal) return g;
     const q10 = this.#quiet(project);
-    if (!q10.quiet) return { refusal: refuse24("QUIET_NOT_QUIET", q10.undetermined ?? q10.why ?? "the work has not gone quiet", { project }) };
+    if (!q10.quiet) return { refusal: refuse25("QUIET_NOT_QUIET", q10.undetermined ?? q10.why ?? "the work has not gone quiet", { project }) };
     return { actor: g.actor };
   }
   /** R18: `projectWatch({project, by})`: keep watching the sources `intent` R7 names (`monitoring` reads
@@ -243629,10 +244056,10 @@ ${about ?? ""}`, g.actor.viewer);
    *  fails answered `{unread}` in its place; a refusal, or a failure before the write, records nothing. */
   watchArrival({ project = null, source: source2 = null, at: at48 = null } = {}) {
     const src = typeof source2 === "string" ? source2.trim() : isObj55(source2) ? json17(source2) : "";
-    if (!src || chars2(src) > REASON_MAX17 || !filled17(at48) || !ISO.test(at48)) return refuse24("ARRIVAL_BAD", "an arrival is {project, source, at: an ISO instant}");
+    if (!src || chars2(src) > REASON_MAX17 || !filled17(at48) || !ISO.test(at48)) return refuse25("ARRIVAL_BAD", "an arrival is {project, source, at: an ISO instant}");
     const b = filled17(project) ? this.#record.bundleInfo(project) : null;
     if (!b || b.type !== "project" || !this.#watched(project))
-      return refuse24("PROJECT_NOT_WATCHED", "no member chose to watch this project's sources", { project: filled17(project) ? project : null });
+      return refuse25("PROJECT_NOT_WATCHED", "no member chose to watch this project's sources", { project: filled17(project) ? project : null });
     const when = this.#at();
     const done = this.#record.transact(() => {
       this.#sql.exec(`INSERT INTO inv_watch_arrivals (project_id, source, arrived_at, at) VALUES (?,?,?,?)`, project, src, at48, when);
@@ -243665,8 +244092,8 @@ ${about ?? ""}`, g.actor.viewer);
   projectCloseWithGaps({ project = null, reason: reason2 = null, note = null, by = null } = {}) {
     const g = this.#doorGate(project, by, "projectCloseWithGaps");
     if (g.refusal) return g.refusal;
-    if (!CLOSED_REASONS2.includes(reason2)) return refuse24("CLOSE_BAD_REASON", `the reason is one of ${CLOSED_REASONS2.join(", ")}`);
-    if (note !== null && note !== void 0 && (!filled17(note) || chars2(note) > REASON_MAX17)) return refuse24("INVESTIGATION_NO_REASON", `1\u2013${REASON_MAX17} characters`);
+    if (!CLOSED_REASONS2.includes(reason2)) return refuse25("CLOSE_BAD_REASON", `the reason is one of ${CLOSED_REASONS2.join(", ")}`);
+    if (note !== null && note !== void 0 && (!filled17(note) || chars2(note) > REASON_MAX17)) return refuse25("INVESTIGATION_NO_REASON", `1\u2013${REASON_MAX17} characters`);
     const gaps = this.#intent.gaps({ project, viewer: g.actor.viewer });
     const kept = gaps && gaps.ok !== false ? { gaps: gaps.gaps ?? [], ...gaps.why ? { why: gaps.why } : {} } : { gaps: null, why: "the gaps could not be read" };
     const at48 = this.#at();
@@ -247365,17 +247792,17 @@ var Monitoring = class {
     }
   }
 };
-var instances70 = /* @__PURE__ */ new WeakMap();
+var instances71 = /* @__PURE__ */ new WeakMap();
 function monitoringOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let m = instances70.get(storage);
+  let m = instances71.get(storage);
   if (!m) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     m = new Monitoring({ ...d, host, storage: d.storage || storage, record, membership, promotion });
-    instances70.set(storage, m);
+    instances71.set(storage, m);
     m.migrate();
     record.declarePurge("monitoring", [...MONITORING_TABLES]);
     if (typeof record.registerCounts === "function")
@@ -248251,10 +248678,10 @@ var LinkSweep = class {
 };
 
 // src/link-sweep/index.mjs
-var instances71 = /* @__PURE__ */ new WeakMap();
+var instances72 = /* @__PURE__ */ new WeakMap();
 function linkSweepOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let s = instances71.get(storage);
+  let s = instances72.get(storage);
   if (!s) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -248276,7 +248703,7 @@ function linkSweepOf(host, deps) {
       captureRequests: lazy(d.captureRequests, () => captureRequestsOf(host, { record })),
       monitoring: lazy(d.monitoring, () => monitoringOf(host, { record, membership, promotion }))
     });
-    instances71.set(storage, s);
+    instances72.set(storage, s);
     s.migrate();
     record.declarePurge(LINK_SWEEP_MODULE, LINK_SWEEP_TABLES.map((t2) => ({ name: t2.name, keys: [...t2.keys] })));
     s.registration = s.registerWithMonitoring();
@@ -249326,9 +249753,9 @@ function moneyChecksOps(c, url, body) {
     moneynoticed: () => c.noticed({ project: q10("project"), viewer: q10("viewer"), limit: q10("limit") })
   };
 }
-var instances72 = /* @__PURE__ */ new WeakMap();
+var instances73 = /* @__PURE__ */ new WeakMap();
 function moneyChecksOf(host, deps) {
-  let c = instances72.get(host);
+  let c = instances73.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -249343,7 +249770,7 @@ function moneyChecksOf(host, deps) {
       progressions: d.progressions || progressionsOf(host, { record }),
       money: d.money || moneyOf2(host, { record, membership })
     });
-    instances72.set(host, c);
+    instances73.set(host, c);
     c.migrate();
     const declared2 = record.declareTable("money-checks", moneyChecksTables((scope) => c.rebuild(scope)));
     if (declared2 && declared2.ok === false) throw new Error(`money-checks: record-core refused its tables: ${declared2.reason}`);
@@ -250340,7 +250767,7 @@ var STATIC_ONLY = "only its static form is followed: the register is not re-rend
 var NOT_PUBLIC = "not reproducible by the public: it was read with a member's own credential or for a fee";
 var POLICY_PAGE = 200;
 var said9 = (v) => typeof v === "string" && v.trim() !== "";
-var refuse25 = (code, detail, extra) => code === "WATCH_END_REFUSED" ? watchEndRefusal(detail, extra) : followRefusal(code, detail, extra);
+var refuse26 = (code, detail, extra) => code === "WATCH_END_REFUSED" ? watchEndRefusal(detail, extra) : followRefusal(code, detail, extra);
 function watchEndRefusal(detail, extra = {}) {
   try {
     return frequencyRefusal("WATCH_END_REFUSED", detail, extra);
@@ -250366,10 +250793,10 @@ function wholeSecondFrom(v) {
     return null;
   }
 }
-var instances73 = /* @__PURE__ */ new WeakMap();
+var instances74 = /* @__PURE__ */ new WeakMap();
 function followingOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let f17 = instances73.get(storage);
+  let f17 = instances74.get(storage);
   if (!f17) {
     const record = deps.record || recordOf(host);
     const membership = deps.membership || membershipOf(host, { record });
@@ -250394,7 +250821,7 @@ function followingOf(host, deps = {}) {
       duties: lazy(deps.duties, () => dutiesOf(host, { record, membership })),
       answers: lazy(deps.answers, () => answersOf(host, { record, membership }))
     });
-    instances73.set(storage, f17);
+    instances74.set(storage, f17);
     f17.migrate();
     f17.registered = f17.registerWatches();
   }
@@ -250534,9 +250961,9 @@ var Following = class {
   /* R1: the refusals every follow shares: a machine (or absent) author, and a home the author may not see. */
   #actorRefusal(author, viewer, home2) {
     if (!said9(author) || isMachineIdentity(author))
-      return refuse25("MACHINE_CANNOT_FOLLOW", "a follow is a member's own act; the machine follows nothing of its own accord");
+      return refuse26("MACHINE_CANNOT_FOLLOW", "a follow is a member's own act; the machine follows nothing of its own accord");
     if (home2 != null && (!said9(home2) || !this.membership.inSight(home2, viewer ?? author)))
-      return refuse25("NO_SUCH_HOME", "the follow's home is a bundle you may see, whose project it lives in");
+      return refuse26("NO_SUCH_HOME", "the follow's home is a bundle you may see, whose project it lives in");
     return null;
   }
   #cadence(c) {
@@ -250625,15 +251052,15 @@ var Following = class {
     if (r) return r;
     const ents = this.entities;
     const seen = said9(body) && ents.has(body.trim()) && viewerPredicate(viewer ?? author).scope !== "DENY";
-    if (!seen) return refuse25("NO_SUCH_BODY", "no body by that id is registered that you may see");
+    if (!seen) return refuse26("NO_SUCH_BODY", "no body by that id is registered that you may see");
     const id = this.#legistarId(body.trim());
-    if (!id) return refuse25("NO_LEGISTAR_ID", "the body holds no identifier in a scheme the active profiles name for Legistar");
+    if (!id) return refuse26("NO_LEGISTAR_ID", "the body holds no identifier in a scheme the active profiles name for Legistar");
     if (!said9(from) || !isCalendarDate(from.trim()) || until != null && (!said9(until) || !isCalendarDate(until.trim()) || until.trim() < from.trim()))
-      return refuse25("BAD_PERIOD", "a follow names the days it covers: from (a day), and until (a day not before it) or none");
+      return refuse26("BAD_PERIOD", "a follow names the days it covers: from (a day), and until (a day not before it) or none");
     const c = this.#cadence(cadence);
-    if (!c) return refuse25("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse26("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
     const e2 = this.#endsGiven(ends);
-    if (e2.bad) return refuse25("WATCH_END_REFUSED", e2.bad);
+    if (e2.bad) return refuse26("WATCH_END_REFUSED", e2.bad);
     return this.#insert("body", { kind: "body", id: body.trim(), legistar: id }, {
       home: home2,
       author,
@@ -250655,8 +251082,8 @@ var Following = class {
   /** R1: a follow ends only by its author's act. */
   unfollow({ follow, author } = {}) {
     const row14 = this.#follow(follow);
-    if (!row14) return refuse25("NO_SUCH_FOLLOW", "no follow by that id is held");
-    if (!said9(author) || author !== row14.author) return refuse25("NOT_THE_AUTHOR", "a follow is ended only by the member who made it");
+    if (!row14) return refuse26("NO_SUCH_FOLLOW", "no follow by that id is held");
+    if (!said9(author) || author !== row14.author) return refuse26("NOT_THE_AUTHOR", "a follow is ended only by the member who made it");
     if (row14.ended_at) return { ok: true, already: true, follow: row14.follow_id, ended_at: row14.ended_at };
     const at48 = instant3(this.now());
     this.#sql.exec(`UPDATE follows SET ended_at=?, ended_by=?, ended_reason='author' WHERE follow_id=?`, at48, author, row14.follow_id);
@@ -250667,16 +251094,16 @@ var Following = class {
    *  A policy watch takes none (R20). */
   followEnd({ follow, ends, by, viewer = null } = {}) {
     if (!said9(by) || isMachineIdentity(by))
-      return refuse25("MACHINE_CANNOT_FOLLOW", "a follow's end date is set by a member's own act");
+      return refuse26("MACHINE_CANNOT_FOLLOW", "a follow's end date is set by a member's own act");
     this.#endExpired(this.now());
     const row14 = this.#follow(follow);
-    if (!row14 || !this.#sees(row14, viewer ?? by)) return refuse25("NO_SUCH_FOLLOW", "no follow by that id you may see is held");
+    if (!row14 || !this.#sees(row14, viewer ?? by)) return refuse26("NO_SUCH_FOLLOW", "no follow by that id you may see is held");
     if (row14.kind === "policy")
-      return refuse25("WATCH_END_REFUSED", "a policy's watch is the group's standing watch: it takes no end date and ends only with the policy");
-    if (by !== row14.author) return refuse25("NOT_THE_AUTHOR", "a follow's end date is set by the member who made it");
-    if (row14.ended_at) return refuse25("WATCH_ENDED", "the follow has already ended");
+      return refuse26("WATCH_END_REFUSED", "a policy's watch is the group's standing watch: it takes no end date and ends only with the policy");
+    if (by !== row14.author) return refuse26("NOT_THE_AUTHOR", "a follow's end date is set by the member who made it");
+    if (row14.ended_at) return refuse26("WATCH_ENDED", "the follow has already ended");
     const e2 = this.#endsGiven(ends);
-    if (e2.bad) return refuse25("WATCH_END_REFUSED", e2.bad);
+    if (e2.bad) return refuse26("WATCH_END_REFUSED", e2.bad);
     return this.#setEnds(row14, e2.ends, by);
   }
   /* R22, R25: append an end date setting and tell the listeners (the next due is unchanged; the follow's end moved). */
@@ -250701,21 +251128,21 @@ var Following = class {
   followRegister({ address, render: render6 = false, gated = null, cadence = null, home: home2 = null, ends = null, author, viewer = null } = {}) {
     const r = this.#actorRefusal(author, viewer, home2);
     if (r) return r;
-    if (!said9(address) || !isPublicHttpsLocator(address.trim())) return refuse25("NO_LOCATOR", "a register is followed at a public https locator");
-    if (render6 !== true && render6 !== false && render6 != null) return refuse25("BAD_RENDER", "render is true or false");
+    if (!said9(address) || !isPublicHttpsLocator(address.trim())) return refuse26("NO_LOCATOR", "a register is followed at a public https locator");
+    if (render6 !== true && render6 !== false && render6 != null) return refuse26("BAD_RENDER", "render is true or false");
     const g = this.#gated(gated);
-    if (g.bad) return refuse25("BAD_GATE", g.bad);
+    if (g.bad) return refuse26("BAD_GATE", g.bad);
     const c = this.#cadence(cadence);
-    if (!c) return refuse25("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse26("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
     const e2 = this.#endsGiven(ends);
-    if (e2.bad) return refuse25("WATCH_END_REFUSED", e2.bad);
+    if (e2.bad) return refuse26("WATCH_END_REFUSED", e2.bad);
     return this.#insert("register", { kind: "register", address: address.trim(), render: render6 === true }, { home: home2, author, cadence: c, gated: g.gated, ends: e2.ends });
   }
   /** R9: a register's own query for one identifier a member names for a person. */
   followPersonQuery({ register: register3, scheme, value, address, person: person2 = null, gated = null, cadence = null, home: home2 = null, ends = null, author, viewer = null } = {}) {
     const r = this.#actorRefusal(author, viewer, home2);
     if (r) return r;
-    const no9 = (detail) => refuse25("PERSON_QUERY_NOT_NAMED", detail);
+    const no9 = (detail) => refuse26("PERSON_QUERY_NOT_NAMED", detail);
     const view = this.view();
     const sch = (Array.isArray(view.identifier_schemes) ? view.identifier_schemes : []).find((s) => s && s.scheme === scheme);
     if (!said9(register3) || !sch || !Array.isArray(sch.systems) || !sch.systems.includes(register3))
@@ -250726,11 +251153,11 @@ var Following = class {
     if (!said9(home2)) return no9("a person query's follow lives in its author's project: name its home");
     if (person2 != null && !(said9(person2) && this.entities.has(person2.trim()))) return no9("the person named is not a registered entity");
     const g = this.#gated(gated);
-    if (g.bad) return refuse25("BAD_GATE", g.bad);
+    if (g.bad) return refuse26("BAD_GATE", g.bad);
     const c = this.#cadence(cadence);
-    if (!c) return refuse25("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse26("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
     const e2 = this.#endsGiven(ends);
-    if (e2.bad) return refuse25("WATCH_END_REFUSED", e2.bad);
+    if (e2.bad) return refuse26("WATCH_END_REFUSED", e2.bad);
     return this.#insert("person-query", {
       kind: "person-query",
       register: register3,
@@ -250773,14 +251200,14 @@ var Following = class {
   followPortal({ address, query = null, key: key2, cadence = null, home: home2 = null, ends = null, author, viewer = null } = {}) {
     const r = this.#actorRefusal(author, viewer, home2);
     if (r) return r;
-    if (!said9(address) || !isPublicHttpsLocator(address.trim())) return refuse25("NO_LOCATOR", "a portal is followed at a public https locator");
+    if (!said9(address) || !isPublicHttpsLocator(address.trim())) return refuse26("NO_LOCATOR", "a portal is followed at a public https locator");
     const q10 = portalKey(address.trim(), query);
-    if (!q10) return refuse25("NO_LOCATOR", "a portal is followed at a public https locator");
-    if (!said9(key2)) return refuse25("NO_KEY", "a portal follow declares the field that keys its rows");
+    if (!q10) return refuse26("NO_LOCATOR", "a portal is followed at a public https locator");
+    if (!said9(key2)) return refuse26("NO_KEY", "a portal follow declares the field that keys its rows");
     const c = this.#cadence(cadence);
-    if (!c) return refuse25("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse26("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
     const e2 = this.#endsGiven(ends);
-    if (e2.bad) return refuse25("WATCH_END_REFUSED", e2.bad);
+    if (e2.bad) return refuse26("WATCH_END_REFUSED", e2.bad);
     const held2 = this.#rows(`SELECT follow_id, subject FROM follows WHERE kind='portal' AND ended_at IS NULL`).find((x) => {
       const s = json19(x.subject);
       return s && s.address === q10 && s.key === key2.trim();
@@ -250791,10 +251218,10 @@ var Following = class {
   /** R4 (K1505 (15)): the body and notice period of a `per_meeting` watch. */
   perMeetingBody({ address, body, notice = null, author, viewer = null } = {}) {
     if (!said9(author) || isMachineIdentity(author))
-      return refuse25("MACHINE_CANNOT_FOLLOW", "naming a watch's body is a member's own act");
+      return refuse26("MACHINE_CANNOT_FOLLOW", "naming a watch's body is a member's own act");
     const sub = this.#perMeetingSubjects(this.now()).find((s) => s.address === (said9(address) ? address.trim() : null) && this.membership.inSight(s.bundle, viewer ?? author));
-    if (!sub) return refuse25("NO_SUCH_MEETING_ADDRESS", "no address you may see is watched per meeting");
-    if (!said9(body) || !this.entities.has(body.trim())) return refuse25("NO_SUCH_BODY", "no body by that id is registered that you may see");
+    if (!sub) return refuse26("NO_SUCH_MEETING_ADDRESS", "no address you may see is watched per meeting");
+    if (!said9(body) || !this.entities.has(body.trim())) return refuse26("NO_SUCH_BODY", "no body by that id is registered that you may see");
     const at48 = instant3(this.now());
     this.#sql.exec(
       `INSERT INTO per_meeting_links (address, bundle_id, body, notice, author, at) VALUES (?,?,?,?,?,?)`,
@@ -251228,15 +251655,15 @@ var Following = class {
   /** R8: a register behind an account or a fee, refreshed only by the act of the member whose credential it uses. */
   async refreshRegister({ follow, author, credential = null, price = null } = {}) {
     const f17 = this.#follow(follow);
-    if (!f17 || f17.ended_at || !["register", "person-query"].includes(f17.kind)) return refuse25("NO_SUCH_FOLLOW", "no live register follow by that id is held");
+    if (!f17 || f17.ended_at || !["register", "person-query"].includes(f17.kind)) return refuse26("NO_SUCH_FOLLOW", "no live register follow by that id is held");
     const gated = json19(f17.gated);
-    if (!gated) return refuse25("NOT_GATED", "a public register is read on the tick; a member's refresh is for one behind an account or a fee");
+    if (!gated) return refuse26("NOT_GATED", "a public register is read on the tick; a member's refresh is for one behind an account or a fee");
     if (!said9(author) || isMachineIdentity(author) || author !== f17.author)
-      return refuse25("NOT_THE_FOLLOWER", "only the member who follows this register refreshes it, with their own credential");
+      return refuse26("NOT_THE_FOLLOWER", "only the member who follows this register refreshes it, with their own credential");
     if (gated.kind === "fee" && price !== gated.price)
-      return refuse25("PRICE_FIRST", `this register charges ${gated.price}; the refresh runs only once that price is accepted as shown`, { price: gated.price });
+      return refuse26("PRICE_FIRST", `this register charges ${gated.price}; the refresh runs only once that price is accepted as shown`, { price: gated.price });
     if (gated.kind === "account" && (!credential || typeof credential !== "object"))
-      return refuse25("NO_CREDENTIAL", "an account-gated register is read with the member's own credential");
+      return refuse26("NO_CREDENTIAL", "an account-gated register is read with the member's own credential");
     const s = json19(f17.subject) || {};
     const t2 = await this.#take(f17, s.address, this.now(), {
       render: s.render === true,
@@ -251245,7 +251672,7 @@ var Following = class {
       notPublic: true,
       title: `Refreshed by its member: ${s.address}`
     });
-    if (t2.failed) return refuse25("NOT_READ", t2.failed.reason);
+    if (t2.failed) return refuse26("NOT_READ", t2.failed.reason);
     this.#sql.exec(`UPDATE follows SET last_read=?, last_outcome=? WHERE follow_id=?`, instant3(this.now()), t2.same ? "unchanged" : "captured", f17.follow_id);
     this.#tell(Number(f17.follow_id), this.#nextDue(f17.follow_id));
     return { ok: true, follow: Number(f17.follow_id), capture: t2.sha, unchanged: t2.same, reproducible_by_public: false, note: NOT_PUBLIC };
@@ -251621,16 +252048,16 @@ ${s.address}`, Number(w.follow_id));
   /** R23: a member's act recording that a plan set a watch running, for some of its matters or all of them. */
   watchLink({ plan, matters = null, watch = null, author, viewer = null } = {}) {
     if (!said9(author) || isMachineIdentity(author))
-      return refuse25("MACHINE_CANNOT_LINK_WATCH", "linking a watch to a plan is a member's own act");
+      return refuse26("MACHINE_CANNOT_LINK_WATCH", "linking a watch to a plan is a member's own act");
     const who3 = viewer ?? author;
     const p3 = this.#plan(plan, who3);
     if (!p3) return noSuchPlan(said9(String(plan ?? "")) ? String(plan) : null);
     if (p3.state === "closed") return refusePlanClosed(p3.id);
     const kind2 = watch && typeof watch === "object" ? watch.kind : null;
     const wid = watch && typeof watch === "object" && watch.id != null ? String(watch.id).trim() : null;
-    if (!WATCH_KINDS.includes(kind2) || !said9(wid)) return refuse25("NO_SUCH_WATCH", "no watch of that kind that you may see is held under that id");
+    if (!WATCH_KINDS.includes(kind2) || !said9(wid)) return refuse26("NO_SUCH_WATCH", "no watch of that kind that you may see is held under that id");
     const w = this.#watch(kind2, wid, kind2 === "question" ? author : who3);
-    if (!w) return refuse25("NO_SUCH_WATCH", "no watch of that kind that you may see is held under that id");
+    if (!w) return refuse26("NO_SUCH_WATCH", "no watch of that kind that you may see is held under that id");
     let keys = null;
     if (matters != null) {
       const list6 = Array.isArray(matters) ? matters : [matters];
@@ -251653,7 +252080,7 @@ ${s.address}`, Number(w.follow_id));
       }
       if (!keys.length) keys = null;
     }
-    if (w.ended) return refuse25("WATCH_ENDED", "that watch has already ended");
+    if (w.ended) return refuse26("WATCH_ENDED", "that watch has already ended");
     const id = w.id;
     const had = this.#one(`SELECT * FROM watch_links WHERE plan=? AND watch_kind=? AND watch_id=?`, p3.id, kind2, id);
     if (had) return { ok: true, existed: true, ...this.#linkView(had) };
@@ -251794,23 +252221,23 @@ ${s.address}`, Number(w.follow_id));
    *  is set in its owner's terms in the same act. */
   watchAnswer({ link, keep: keep2 = null, stop: stop2 = null, author, viewer = null } = {}) {
     if (!said9(author) || isMachineIdentity(author))
-      return refuse25("MACHINE_CANNOT_LINK_WATCH", "answering whether to keep a watch is a member's own act");
+      return refuse26("MACHINE_CANNOT_LINK_WATCH", "answering whether to keep a watch is a member's own act");
     const who3 = viewer ?? author;
     const l2 = this.#link(link);
-    if (!l2 || !this.#seesLink(l2, who3)) return refuse25("NO_SUCH_WATCH", "no link of a watch you may see is held under that id");
+    if (!l2 || !this.#seesLink(l2, who3)) return refuse26("NO_SUCH_WATCH", "no link of a watch you may see is held under that id");
     const had = this.#one(`SELECT * FROM watch_answers WHERE link_id=?`, l2.link_id);
     if (had) return { ok: true, existed: true, link: Number(l2.link_id), answer: had.answer, until: had.until_day, by: had.author, at: had.at };
     const nowMs = this.now();
     const e2 = this.#question24(l2, nowMs, null);
     if (!e2 || !e2.recipients.includes(author))
-      return refuse25("WATCH_NOT_ASKED", "there is no question about this watch that is yours to answer now");
-    if (e2.relied_on) return refuse25("WATCH_RELIED_ON", "something else still relies on this watch, so it is not offered for keeping or stopping");
+      return refuse26("WATCH_NOT_ASKED", "there is no question about this watch that is yours to answer now");
+    if (e2.relied_on) return refuse26("WATCH_RELIED_ON", "something else still relies on this watch, so it is not offered for keeping or stopping");
     const keeping = keep2 != null && keep2 !== false, stopping = stop2 === true;
-    if (keeping === stopping) return refuse25("WATCH_END_REFUSED", "an answer either keeps the watch until a day, or stops it now");
+    if (keeping === stopping) return refuse26("WATCH_END_REFUSED", "an answer either keeps the watch until a day, or stops it now");
     let until = null;
     if (keeping) {
       const g = this.#endsGiven(keep2 && typeof keep2 === "object" ? keep2.until : null, nowMs);
-      if (g.bad || !g.ends) return refuse25("WATCH_END_REFUSED", g.bad || "keeping a watch names the day it is kept until");
+      if (g.bad || !g.ends) return refuse26("WATCH_END_REFUSED", g.bad || "keeping a watch names the day it is kept until");
       until = g.ends;
     }
     const today2 = this.#today(nowMs);
@@ -251848,7 +252275,7 @@ ${s.address}`, Number(w.follow_id));
   #endWatch(l2, until, by, today2) {
     if (l2.watch_kind === "follow") {
       const f17 = this.#follow(l2.watch_id);
-      if (!f17) return refuse25("NO_SUCH_WATCH", "the follow is no longer held");
+      if (!f17) return refuse26("NO_SUCH_WATCH", "the follow is no longer held");
       if (until) return this.#setEnds(f17, until, by);
       return { ok: true, follow: Number(f17.follow_id), ended_at: this.#endByAnswer(f17, by), ended_reason: "answer" };
     }
@@ -251919,10 +252346,10 @@ ${s.address}`, Number(w.follow_id));
   /** R11: between two snapshots of one portal follow, what was added, removed and changed by key. Writes nothing. */
   snapshotDiff({ follow, from, to, viewer = null } = {}) {
     const f17 = this.#follow(follow);
-    if (!f17 || f17.kind !== "portal" || !this.#sees(f17, viewer)) return refuse25("NO_SUCH_FOLLOW", "no portal follow by that id you may see");
+    if (!f17 || f17.kind !== "portal" || !this.#sees(f17, viewer)) return refuse26("NO_SUCH_FOLLOW", "no portal follow by that id you may see");
     const snap = (n2) => this.#one(`SELECT * FROM portal_snapshots WHERE follow_id=? AND seq=?`, f17.follow_id, Number(n2));
     const a = snap(from), b = snap(to);
-    if (!a || !b) return refuse25("NO_SUCH_SNAPSHOT", "both snapshots are of this follow, by their sequence numbers");
+    if (!a || !b) return refuse26("NO_SUCH_SNAPSHOT", "both snapshots are of this follow, by their sequence numbers");
     const key2 = (json19(f17.subject) || {}).key;
     const base2 = {
       ok: true,
@@ -251945,7 +252372,7 @@ ${s.address}`, Number(w.follow_id));
   /** R10: a portal's snapshots, each a vintage whose validity is its capture instant (`civil-time` `validAt`). */
   snapshots({ follow, at: at48 = null, viewer = null } = {}) {
     const f17 = this.#follow(follow);
-    if (!f17 || f17.kind !== "portal" || !this.#sees(f17, viewer)) return refuse25("NO_SUCH_FOLLOW", "no portal follow by that id you may see");
+    if (!f17 || f17.kind !== "portal" || !this.#sees(f17, viewer)) return refuse26("NO_SUCH_FOLLOW", "no portal follow by that id you may see");
     const list6 = this.#rows(`SELECT seq, capture_sha, at, why FROM portal_snapshots WHERE follow_id=? ORDER BY seq`, f17.follow_id).map((x) => ({
       seq: Number(x.seq),
       capture: x.capture_sha,
@@ -252878,9 +253305,9 @@ var Scheduler = class {
   }
 };
 var DAILY_OWNER = Object.freeze([["duty-transitions", "duties"], ["interest-checks", "people"], ["money-detectors", "moneyChecks"]]);
-var instances74 = /* @__PURE__ */ new WeakMap();
+var instances75 = /* @__PURE__ */ new WeakMap();
 function schedulerOf(ctx, env = null, deps = {}) {
-  let s = instances74.get(ctx);
+  let s = instances75.get(ctx);
   if (!s) {
     const e2 = env || {};
     const owners2 = deps.owners || {
@@ -252907,7 +253334,7 @@ function schedulerOf(ctx, env = null, deps = {}) {
     };
     const zone = deps.zone || (() => viewZone3(recordOf(ctx)));
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e2, owners: owners2, zone });
-    instances74.set(ctx, s);
+    instances75.set(ctx, s);
     if (!deps.owners)
       s.listenTo({
         retrieval: retrievalOf(ctx),
@@ -258361,9 +258788,9 @@ function compose3() {
   return Object.freeze(out);
 }
 var CHECK_FAMILIES = compose3();
-var ROWS3 = new Map(Object.values(CHECK_FAMILIES).flatMap((rows4) => Object.entries(rows4)).filter(([, row14]) => translated(row14)).map(([code, row14]) => [code, { check: row14.check ?? null, translation: row14.translation }]));
+var ROWS4 = new Map(Object.values(CHECK_FAMILIES).flatMap((rows4) => Object.entries(rows4)).filter(([, row14]) => translated(row14)).map(([code, row14]) => [code, { check: row14.check ?? null, translation: row14.translation }]));
 function dec49Row(code) {
-  const row14 = ROWS3.get(code);
+  const row14 = ROWS4.get(code);
   return row14 ? { ...row14 } : null;
 }
 
@@ -261448,7 +261875,7 @@ function aiPanelSend(op, owner, el, cs) {
 }
 
 // src/screens-settings/words.mjs
-var ROWS4 = [
+var ROWS5 = [
   // ---- words held under WORD_ROWS keys (interface-shell R5) ----
   ["handle.fixed", "Your handle is fixed: it names your work in the group and in published cases, and no one else can ever take it.", false],
   ["act.memberlanguageset.does", "Sets the language your group's Civicsmith speaks to you. Documents stay in their own language.", false],
@@ -261709,7 +262136,7 @@ var ROWS4 = [
   ["screen.notes.turn.pair", "A cause, who someone is or a relation is about two records, from and to. Nothing was sent.", false],
   ["screen.notes.turn.nomade", "Give the id of the observation or question you made. Nothing was sent.", false]
 ];
-var SCREEN_WORDS = Object.freeze(ROWS4.map((r) => Object.freeze(r)));
+var SCREEN_WORDS = Object.freeze(ROWS5.map((r) => Object.freeze(r)));
 
 // src/screens-settings/index.mjs
 var ROW3 = new Map(SCREEN_WORDS.map((r) => [r[0], r]));
@@ -271604,37 +272031,37 @@ function cardinalityGroups(feed) {
   }
   return out.sort((a, b) => b.n - a.n || cmpKey(a, b));
 }
-function gradeOver(instances79) {
-  const undetermined3 = instances79.some((i) => !i.grade_determined || !i.grade);
+function gradeOver(instances80) {
+  const undetermined3 = instances80.some((i) => !i.grade_determined || !i.grade);
   return {
     grade_determined: !undetermined3,
-    grade: undetermined3 ? null : instances79.map((i) => i.grade).reduce((a, b) => weakerGrade(a, b))
+    grade: undetermined3 ? null : instances80.map((i) => i.grade).reduce((a, b) => weakerGrade(a, b))
   };
 }
 function proposalSeen(p3, seen) {
-  const instances79 = (p3.instances || []).filter(seen);
-  if (!instances79.length) return null;
-  const overdue_count = instances79.filter((i) => i.overdue === true).length;
+  const instances80 = (p3.instances || []).filter(seen);
+  if (!instances80.length) return null;
+  const overdue_count = instances80.filter((i) => i.overdue === true).length;
   const overdue = overdue_count > 0;
   return {
     ...p3,
-    instances: instances79,
-    n: instances79.length,
+    instances: instances80,
+    n: instances80.length,
     overdue_count,
     overdue,
-    ...gradeOver(instances79),
+    ...gradeOver(instances80),
     kinds: overdue ? ["missing_predecessor", "overdue_successor"] : ["missing_predecessor"]
   };
 }
 function groupSeen(g, seen) {
-  const instances79 = g.instances.filter(seen);
-  if (!instances79.length) return null;
+  const instances80 = g.instances.filter(seen);
+  if (!instances80.length) return null;
   return {
     ...g,
-    instances: instances79,
-    n: instances79.length,
-    document_count: instances79.reduce((s, i) => s + (Number(i.document_count) || 0), 0),
-    ...gradeOver(instances79)
+    instances: instances80,
+    n: instances80.length,
+    document_count: instances80.reduce((s, i) => s + (Number(i.document_count) || 0), 0),
+    ...gradeOver(instances80)
   };
 }
 function cardinalityDetail(g) {
@@ -271642,8 +272069,8 @@ function cardinalityDetail(g) {
   return `${g.n} ${plural(g.n, "instance", "instances")} of this progression thread more than one document at '${stageName(g)}' (${g.document_count} in all), which is declared to hold ${held2}: a finding, which decides nothing about which of them belongs (framework 8.2)`;
 }
 function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, subjectsMax = 8 } = {}) {
-  const subjectsFor = (instances79, into = []) => {
-    for (const inst of instances79)
+  const subjectsFor = (instances80, into = []) => {
+    for (const inst of instances80)
       for (const b of subjectsOf(inst.progression_key, inst.entity_id) || [])
         if (!into.includes(b)) into.push(b);
     return into;
@@ -275634,9 +276061,9 @@ var QuestionExplorer = class {
     return this.aiRuns.groupTestResults({ part: EXPLORE_TEST_PART, viewer });
   }
 };
-var instances75 = /* @__PURE__ */ new WeakMap();
+var instances76 = /* @__PURE__ */ new WeakMap();
 function questionExplorerOf(host, deps) {
-  let p3 = instances75.get(host);
+  let p3 = instances76.get(host);
   if (!p3) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -275661,7 +276088,7 @@ function questionExplorerOf(host, deps) {
       principal: d.principal || EXPLORE_PRINCIPAL,
       now: d.now || null
     });
-    instances75.set(host, p3);
+    instances76.set(host, p3);
     p3.migrate();
     record.declarePurge(QUESTION_EXPLORER_MODULE, QUESTION_EXPLORER_TABLES);
   }
@@ -276752,16 +277179,16 @@ var Review = class {
     return out;
   }
 };
-var instances76 = /* @__PURE__ */ new WeakMap();
+var instances77 = /* @__PURE__ */ new WeakMap();
 function reviewOf(host, deps) {
-  let r = instances76.get(host);
+  let r = instances77.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     r = new Review({ ...d, host, storage, record, membership });
-    instances76.set(host, r);
+    instances77.set(host, r);
     r.migrate();
     record.declarePurge("review", REVIEW_TABLES);
     r.seedLedger();
@@ -282736,7 +283163,7 @@ var wizardRegistration = ({ door = null } = {}) => ({
 });
 
 // src/explore/answer.mjs
-var refuse26 = (refused5, why2) => ({ refused: refused5, why: why2 });
+var refuse27 = (refused5, why2) => ({ refused: refused5, why: why2 });
 var isObj56 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var filled19 = (v) => typeof v === "string" && v.trim() !== "";
 var isRefusal3 = (a) => isObj56(a) && filled19(a.refused);
@@ -282746,19 +283173,19 @@ var HUNCH_MARK = HUNCH_LABEL;
 var NOT_ASSERTED = "Each step is a cited connection the record holds; the answer asserts nothing beyond them.";
 function viewerRefusal(viewer) {
   if (viewer === void 0 || viewer === null || viewer === "") {
-    return refuse26("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
+    return refuse27("VIEWER_MISSING", "a read names the member reading; an absent viewer is neither an administrator nor the public");
   }
   return null;
 }
 function nodeRefusal(node, name3, required2) {
   if (node === void 0 || node === null || node === "") {
-    return required2 ? refuse26("NO_NODE", `no ${name3} is named: a walk starts from a record id`) : null;
+    return required2 ? refuse27("NO_NODE", `no ${name3} is named: a walk starts from a record id`) : null;
   }
-  if (!isRecordId(node)) return refuse26("BAD_NODE", `${name3} ${String(node).slice(0, 60)} is not a record id the id grammar knows`);
+  if (!isRecordId(node)) return refuse27("BAD_NODE", `${name3} ${String(node).slice(0, 60)} is not a record id the id grammar knows`);
   return null;
 }
 function dateRefusal(at48, name3 = "at") {
-  if (at48 === void 0 || at48 === null || at48 === "") return refuse26("NO_DATE", `no ${name3} is stated: an exploration is always as of a stated date, never of "now"`);
+  if (at48 === void 0 || at48 === null || at48 === "") return refuse27("NO_DATE", `no ${name3} is stated: an exploration is always as of a stated date, never of "now"`);
   let b;
   try {
     b = bounds(
@@ -282766,17 +283193,17 @@ function dateRefusal(at48, name3 = "at") {
       at48
     );
   } catch (e2) {
-    return refuse26("BAD_DATE", `${name3} is not a date-time {value, precision, zone} or an instant: ${String(
+    return refuse27("BAD_DATE", `${name3} is not a date-time {value, precision, zone} or an instant: ${String(
       /** @type {any} */
       e2?.message ?? e2
     )}`);
   }
-  if (b && (b.refused || b.undetermined)) return refuse26("BAD_DATE", `${name3}: ${b.why}`);
+  if (b && (b.refused || b.undetermined)) return refuse27("BAD_DATE", `${name3}: ${b.why}`);
   return null;
 }
 function depthOrRefusal(depth) {
   const d = depthOf(depth);
-  return typeof d === "number" ? { depth: d } : { refusal: refuse26(d.refused, d.why) };
+  return typeof d === "number" ? { depth: d } : { refusal: refuse27(d.refused, d.why) };
 }
 var dateText2 = (at48) => typeof at48 === "string" ? at48 : isObj56(at48) ? `${at48.value} (${at48.precision}, ${at48.zone})` : String(at48);
 
@@ -282882,9 +283309,9 @@ var QUANTITY_OF_PATH = "the quantity its last step states";
 var PATH_ORDER = "fewest steps first, then the earliest start of validity, then the steps' ids";
 function resolveKinds(registry, kinds3) {
   if (kinds3 === void 0 || kinds3 === null) return { kinds: registry.owners().flatMap((o) => o.kinds.map((k) => k.kind)) };
-  if (!Array.isArray(kinds3) || kinds3.some((k) => !filled19(k))) return { refusal: refuse26("UNKNOWN_KIND", "kinds is a list of the kinds owners registered") };
+  if (!Array.isArray(kinds3) || kinds3.some((k) => !filled19(k))) return { refusal: refuse27("UNKNOWN_KIND", "kinds is a list of the kinds owners registered") };
   const unknown = kinds3.find((k) => registry.kindOf(k) === null);
-  if (unknown !== void 0) return { refusal: refuse26("UNKNOWN_KIND", `no owner registered the kind ${String(unknown).slice(0, 60)}`) };
+  if (unknown !== void 0) return { refusal: refuse27("UNKNOWN_KIND", `no owner registered the kind ${String(unknown).slice(0, 60)}`) };
   return { kinds: [...new Set(kinds3)] };
 }
 function checkWalkArgs(registry, a) {
@@ -282895,9 +283322,9 @@ function checkWalkArgs(registry, a) {
   if (k.refusal) return k;
   const d = depthOrRefusal(arg.depth);
   if (d.refusal) return d;
-  if (arg.sortBy !== void 0 && arg.sortBy !== null && !filled19(arg.sortBy)) return { refusal: refuse26("UNKNOWN_QUANTITY", "sortBy names a quantity a step states") };
+  if (arg.sortBy !== void 0 && arg.sortBy !== null && !filled19(arg.sortBy)) return { refusal: refuse27("UNKNOWN_QUANTITY", "sortBy names a quantity a step states") };
   if (arg.scope !== void 0 && arg.scope !== null && !(isObj56(arg.scope) && filled19(arg.scope.inquiry))) {
-    return { refusal: refuse26("BAD_SCOPE", "a scope is {inquiry}: the working inquiry whose hunch steps may be walked") };
+    return { refusal: refuse27("BAD_SCOPE", "a scope is {inquiry}: the working inquiry whose hunch steps may be walked") };
   }
   return { kinds: k.kinds, depth: d.depth };
 }
@@ -282960,7 +283387,7 @@ function walk2(ctx, w) {
   if (w.to !== void 0 && w.to !== null) paths = paths.filter((p3) => p3.hops[p3.hops.length - 1].from === w.to || p3.hops[p3.hops.length - 1].to === w.to);
   if (w.sortBy) {
     const stated3 = found3.some((hops) => hops.some((h) => isObj56(h.quantities) && typeof h.quantities[w.sortBy] === "number"));
-    if (!stated3) return refuse26("UNKNOWN_QUANTITY", `no step in the walk states the quantity ${w.sortBy}`);
+    if (!stated3) return refuse27("UNKNOWN_QUANTITY", `no step in the walk states the quantity ${w.sortBy}`);
   }
   paths = /** @type {any[]} */
   orderPaths(paths, w.sortBy ? { by: w.sortBy } : {});
@@ -283138,7 +283565,7 @@ var pathBetween = (ctx, a) => {
   const x = argOf(a);
   const v = viewerRefusal(x.viewer);
   if (v) return v;
-  if (x.to === void 0 || x.to === null || x.to === "") return refuse26("NO_NODE", "no to is named: a path between two records names both");
+  if (x.to === void 0 || x.to === null || x.to === "") return refuse27("NO_NODE", "no to is named: a path between two records names both");
   return presetWalk(ctx, "pathBetween", { from: x.from, to: x.to, at: x.at, depth: x.depth, viewer: x.viewer });
 };
 var OVERLAP_SENTENCE = "An overlap is a cited fact: both held a connection of this kind to the same record in the same span. It does not say the two are acquainted.";
@@ -283255,7 +283682,7 @@ function rederive(ctx, arg) {
   const r0 = viewerRefusal(a.viewer) || nodeRefusal(a.from, "from", true) || nodeRefusal(a.to, "to", true);
   if (r0) return r0;
   if (a.scope !== void 0 && a.scope !== null && !(isObj56(a.scope) && filled19(a.scope.inquiry))) {
-    return refuse26("BAD_SCOPE", "a scope is {inquiry}: the inquiry the leg naming the derived connection belongs to");
+    return refuse27("BAD_SCOPE", "a scope is {inquiry}: the inquiry the leg naming the derived connection belongs to");
   }
   const scope = a.scope ? a.scope.inquiry : null;
   for (const f17 of ["kind", "as_of", "method", "id"]) if (!filled19(a[f17])) return no6(`${f17} is not stated, so the derivation cannot be recomputed`);
@@ -283333,10 +283760,10 @@ function timelineOver(ctx, arg) {
   const a = isObj56(arg) ? arg : {};
   const v = viewerRefusal(a.viewer);
   if (v) return v;
-  if (!Array.isArray(a.set) || a.set.length === 0) return refuse26("NO_SET", "a timeline is over a set of record ids the caller names");
+  if (!Array.isArray(a.set) || a.set.length === 0) return refuse27("NO_SET", "a timeline is over a set of record ids the caller names");
   const events = typeof ctx.events === "function" ? ctx.events() : ctx.events;
   const money = typeof ctx.money === "function" ? ctx.money() : ctx.money;
-  if (!events || typeof events.timeline !== "function") return refuse26("NOT_AVAILABLE", "your group's Civicsmith has no events record connected, so no timeline can be read");
+  if (!events || typeof events.timeline !== "function") return refuse27("NOT_AVAILABLE", "your group's Civicsmith has no events record connected, so no timeline can be read");
   const t2 = events.timeline({ set: a.set, from: a.from ?? null, to: a.to ?? null, viewer: a.viewer });
   if (isRefusal3(t2) || isObj56(t2) && t2.ok === false) return t2;
   const out = [];
@@ -283376,7 +283803,7 @@ function exploreOps(explore, url, body) {
     explore: () => explore.explore({ ...args, viewer }),
     explorepreset: () => {
       const name3 = args.preset ?? url.searchParams.get("preset");
-      if (!PRESET_NAMES.includes(name3)) return refuse26("UNKNOWN_PRESET", `a preset is one of ${PRESET_NAMES.join(", ")}`);
+      if (!PRESET_NAMES.includes(name3)) return refuse27("UNKNOWN_PRESET", `a preset is one of ${PRESET_NAMES.join(", ")}`);
       const { preset: _p, ...rest } = args;
       return name3 === "presets" ? explore.presets() : explore[name3]({ ...rest, viewer });
     },
@@ -283565,18 +283992,18 @@ var parse22 = (s) => {
   }
 };
 var isThenable3 = (v) => v !== null && (typeof v === "object" || typeof v === "function") && typeof v.then === "function";
-function refuse27(code, detail, extra = {}) {
+function refuse28(code, detail, extra = {}) {
   const row14 = HYPOTHESES_CHECKS[code];
   return { ok: false, reason: code, code, check: row14.check, translation: row14.translation, detail, ...extra };
 }
-var instances77 = /* @__PURE__ */ new WeakMap();
+var instances78 = /* @__PURE__ */ new WeakMap();
 var live6 = /* @__PURE__ */ new Set();
 var storageOf4 = (host) => host && host.storage ? host.storage : host;
 function ownerNeighbours4(args) {
   const a = isObj58(args) ? args : {};
   const { host, ...rest } = a;
   let h = null;
-  if (host !== void 0 && host !== null) h = instances77.get(storageOf4(host)) ?? null;
+  if (host !== void 0 && host !== null) h = instances78.get(storageOf4(host)) ?? null;
   else if (live6.size === 1) h = [...live6][0];
   if (!h) return {
     refused: "OWNER_HOST_AMBIGUOUS",
@@ -283587,7 +284014,7 @@ function ownerNeighbours4(args) {
 defaultRegistry.registerOwner({ owner: OWNER4, kinds: [...HUNCH_KINDS], neighbours: ownerNeighbours4 });
 function hypothesesOf(host, deps = {}) {
   const storage = storageOf4(host);
-  let h = instances77.get(storage);
+  let h = instances78.get(storage);
   if (!h) {
     const record = deps.record ?? recordOf(host);
     const membership = deps.membership ?? membershipOf(host, { record });
@@ -283599,7 +284026,7 @@ function hypothesesOf(host, deps = {}) {
       host,
       explore: deps.explore ?? null
     });
-    instances77.set(storage, h);
+    instances78.set(storage, h);
     live6.add(h);
     h.migrate();
     const r = promotion.registerStep(OWNER4, { check: (c) => h.check(c) });
@@ -283736,8 +284163,8 @@ var Hypotheses = class _Hypotheses {
   #inquiry(id, viewer) {
     const b = filled20(id) ? this.#record.bundleInfo(id) : null;
     if (!b || !this.#membership.inSight(id, viewer))
-      return { refusal: refuse27("NO_SUCH_BUNDLE", "no inquiry by that id is held, or it is not one you may see", { inquiry: filled20(id) ? id : null }) };
-    if (b.type !== "inquiry") return { refusal: refuse27("NOT_AN_INQUIRY", `${id} is a ${b.type}, not an inquiry`, { inquiry: id }) };
+      return { refusal: refuse28("NO_SUCH_BUNDLE", "no inquiry by that id is held, or it is not one you may see", { inquiry: filled20(id) ? id : null }) };
+    if (b.type !== "inquiry") return { refusal: refuse28("NOT_AN_INQUIRY", `${id} is a ${b.type}, not an inquiry`, { inquiry: id }) };
     return { bundle: b };
   }
   /* The hypothesis `id` names, when the viewer may see its inquiry; else null (absent and hidden alike). */
@@ -283746,12 +284173,12 @@ var Hypotheses = class _Hypotheses {
     return r && this.#membership.inSight(r.bundle_id, viewer) ? r : null;
   }
   static #noSuch(id) {
-    return refuse27("NO_SUCH_HYPOTHESIS", "no hypothesis by that id is held, or it is not one you may see", { hypothesis_id: filled20(id) ? id : null });
+    return refuse28("NO_SUCH_HYPOTHESIS", "no hypothesis by that id is held, or it is not one you may see", { hypothesis_id: filled20(id) ? id : null });
   }
   /* ---- the nodes (R1) ---- */
   /* `about` read for `kind`: `{about, from, to}` or a refusal naming the node. */
   static #about(kind2, about) {
-    const bad2 = (detail, node) => ({ refusal: refuse27("BAD_ABOUT", detail, node === void 0 ? {} : { node }) });
+    const bad2 = (detail, node) => ({ refusal: refuse28("BAD_ABOUT", detail, node === void 0 ? {} : { node }) });
     const known3 = (v) => typeof v === "string" && isRecordId(v);
     if (isObj58(about) && ("from" in about || "to" in about)) {
       for (const end2 of ["from", "to"])
@@ -283771,10 +284198,10 @@ var Hypotheses = class _Hypotheses {
   hold({ inquiry = null, kind: kind2 = null, statement = null, about = null, by = null } = {}) {
     const q10 = this.#inquiry(inquiry, by);
     if (q10.refusal) return q10.refusal;
-    if (isMachineIdentity(by)) return refuse27("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member holds a hypothesis (K1473)");
+    if (isMachineIdentity(by)) return refuse28("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member holds a hypothesis (K1473)");
     if (!HYPOTHESIS_KINDS.includes(kind2))
-      return refuse27("UNKNOWN_HYPOTHESIS_KIND", `a hypothesis is one of ${HYPOTHESIS_KINDS.join(", ")}`, { kinds: [...HYPOTHESIS_KINDS] });
-    if (!filled20(statement)) return refuse27("HYPOTHESIS_NO_STATEMENT", "a hypothesis states, in the member's words, what they think");
+      return refuse28("UNKNOWN_HYPOTHESIS_KIND", `a hypothesis is one of ${HYPOTHESIS_KINDS.join(", ")}`, { kinds: [...HYPOTHESIS_KINDS] });
+    if (!filled20(statement)) return refuse28("HYPOTHESIS_NO_STATEMENT", "a hypothesis states, in the member's words, what they think");
     const a = _Hypotheses.#about(kind2, about);
     if (a.refusal) return a.refusal;
     const at48 = this.#now();
@@ -283793,8 +284220,8 @@ var Hypotheses = class _Hypotheses {
   #amendable(hypothesisId, reason2, by) {
     const r = this.#held(hypothesisId, by);
     if (!r) return { refusal: _Hypotheses.#noSuch(hypothesisId) };
-    if (isMachineIdentity(by)) return { refusal: refuse27("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member changes a hypothesis (K1473)") };
-    if (!filled20(reason2)) return { refusal: refuse27("HYPOTHESIS_NO_REASON", "a change to a hypothesis says why, in the member's words") };
+    if (isMachineIdentity(by)) return { refusal: refuse28("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member changes a hypothesis (K1473)") };
+    if (!filled20(reason2)) return { refusal: refuse28("HYPOTHESIS_NO_REASON", "a change to a hypothesis says why, in the member's words") };
     return { row: r, reason: reason2.trim().slice(0, REASON_MAX18) };
   }
   /** R2: `revise({hypothesisId, statement?, about?, reason, by})` appends a revision; the hypothesis keeps its id. */
@@ -283802,9 +284229,9 @@ var Hypotheses = class _Hypotheses {
     const m = this.#amendable(hypothesisId, reason2, by);
     if (m.refusal) return m.refusal;
     const r = m.row;
-    if (r.withdrawn) return refuse27("HYPOTHESIS_WITHDRAWN", `${r.hypothesis_id} was withdrawn; a withdrawn hypothesis is not revised`, { hypothesis_id: r.hypothesis_id });
+    if (r.withdrawn) return refuse28("HYPOTHESIS_WITHDRAWN", `${r.hypothesis_id} was withdrawn; a withdrawn hypothesis is not revised`, { hypothesis_id: r.hypothesis_id });
     if (statement !== void 0 && statement !== null && !filled20(statement))
-      return refuse27("HYPOTHESIS_NO_STATEMENT", "a revised statement says, in the member's words, what they now think");
+      return refuse28("HYPOTHESIS_NO_STATEMENT", "a revised statement says, in the member's words, what they now think");
     const text7 = filled20(statement) ? statement.trim().slice(0, STATEMENT_MAX3) : r.statement;
     let a = { about: parse22(r.about_json), from: r.from_node, to: r.to_node };
     if (about !== void 0 && about !== null) {
@@ -283939,18 +284366,18 @@ var Hypotheses = class _Hypotheses {
    *  `HYPOTHESIS_PROPOSAL_NO_RUN`. Answers `{ok, proposal, kind, label: "the system's", at}`. */
   hypothesisPropose({ inquiry = null, kind: kind2 = null, statement = null, about = null, how = null, false_alarm_rate = null, run: run2 = null } = {}) {
     const b = filled20(inquiry) ? this.#record.bundleInfo(inquiry) : null;
-    if (!b) return refuse27("NO_SUCH_BUNDLE", "no inquiry by that id is held", { inquiry: filled20(inquiry) ? inquiry : null });
-    if (b.type !== "inquiry") return refuse27("NOT_AN_INQUIRY", `${inquiry} is a ${b.type}, not an inquiry`, { inquiry });
+    if (!b) return refuse28("NO_SUCH_BUNDLE", "no inquiry by that id is held", { inquiry: filled20(inquiry) ? inquiry : null });
+    if (b.type !== "inquiry") return refuse28("NOT_AN_INQUIRY", `${inquiry} is a ${b.type}, not an inquiry`, { inquiry });
     if (!HYPOTHESIS_KINDS.includes(kind2))
-      return refuse27("UNKNOWN_HYPOTHESIS_KIND", `a hypothesis is one of ${HYPOTHESIS_KINDS.join(", ")}`, { kinds: [...HYPOTHESIS_KINDS] });
-    if (!filled20(statement)) return refuse27("HYPOTHESIS_NO_STATEMENT", "a proposal states what the system suggests");
+      return refuse28("UNKNOWN_HYPOTHESIS_KIND", `a hypothesis is one of ${HYPOTHESIS_KINDS.join(", ")}`, { kinds: [...HYPOTHESIS_KINDS] });
+    if (!filled20(statement)) return refuse28("HYPOTHESIS_NO_STATEMENT", "a proposal states what the system suggests");
     const a = _Hypotheses.#about(kind2, about);
     if (a.refusal) return a.refusal;
-    if (!filled20(how)) return refuse27("PROPOSAL_NO_HOW", "a proposal of the system's says how it was worked out");
+    if (!filled20(how)) return refuse28("PROPOSAL_NO_HOW", "a proposal of the system's says how it was worked out");
     const rate = typeof false_alarm_rate === "number" ? false_alarm_rate : NaN;
     if (!Number.isFinite(rate) || rate < 0 || rate > 1)
-      return refuse27("PROPOSAL_NO_RATE", "a proposal of the system's carries its measured false-alarm rate, a number from 0 to 1", { false_alarm_rate: false_alarm_rate ?? null });
-    if (!filled20(run2)) return refuse27("HYPOTHESIS_PROPOSAL_NO_RUN", "a proposal of the system's names the run that made it");
+      return refuse28("PROPOSAL_NO_RATE", "a proposal of the system's carries its measured false-alarm rate, a number from 0 to 1", { false_alarm_rate: false_alarm_rate ?? null });
+    if (!filled20(run2)) return refuse28("HYPOTHESIS_PROPOSAL_NO_RUN", "a proposal of the system's names the run that made it");
     const at48 = this.#now();
     return this.#record.transact(() => {
       const id = this.#record.allocId("HYP", at48.slice(0, 4));
@@ -283988,12 +284415,12 @@ var Hypotheses = class _Hypotheses {
   #openProposal(id, by) {
     const p3 = isHypothesisId(id) ? this.#one(`SELECT * FROM ${PROPOSALS_TABLE} WHERE proposal_id = ?`, id) : null;
     if (!p3 || !this.#membership.inSight(p3.bundle_id, by))
-      return { refusal: refuse27("NO_SUCH_HYPOTHESIS_PROPOSAL", "no proposal by that id is held, or it is not one you may see", { proposal: filled20(id) ? id : null }) };
-    if (isMachineIdentity(by)) return { refusal: refuse27("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member takes up or sets aside the system's proposal (K1473)") };
+      return { refusal: refuse28("NO_SUCH_HYPOTHESIS_PROPOSAL", "no proposal by that id is held, or it is not one you may see", { proposal: filled20(id) ? id : null }) };
+    if (isMachineIdentity(by)) return { refusal: refuse28("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member takes up or sets aside the system's proposal (K1473)") };
     return { row: p3 };
   }
   static #notOpen(p3) {
-    return refuse27(
+    return refuse28(
       "PROPOSAL_NOT_OPEN",
       `${p3.proposal_id} was already ${p3.state === "taken_up" ? "taken up" : "set aside"}`,
       { proposal: p3.proposal_id, status: p3.state }
@@ -284008,10 +284435,10 @@ var Hypotheses = class _Hypotheses {
     if (m.refusal) return m.refusal;
     const p3 = m.row;
     if (!ACCEPTANCE_FORMS.includes(form))
-      return refuse27("PROPOSAL_FORM_UNKNOWN", `taking up is one of ${ACCEPTANCE_FORMS.join(", ")}`, { forms: [...ACCEPTANCE_FORMS] });
+      return refuse28("PROPOSAL_FORM_UNKNOWN", `taking up is one of ${ACCEPTANCE_FORMS.join(", ")}`, { forms: [...ACCEPTANCE_FORMS] });
     if (p3.state !== "open") return _Hypotheses.#notOpen(p3);
     if (form !== "as_proposed" && !filled20(statement))
-      return refuse27("HYPOTHESIS_NO_STATEMENT", `taking up ${form === "edited" ? "edited" : "with your own instead"} states the hypothesis in your own words`);
+      return refuse28("HYPOTHESIS_NO_STATEMENT", `taking up ${form === "edited" ? "edited" : "with your own instead"} states the hypothesis in your own words`);
     const words13 = form === "as_proposed" ? p3.statement : statement;
     return this.#record.transact(() => {
       const h = this.hold({ inquiry: p3.bundle_id, kind: p3.kind, statement: words13, about: parse22(p3.about_json), by });
@@ -284035,7 +284462,7 @@ var Hypotheses = class _Hypotheses {
     const m = this.#openProposal(proposal, by);
     if (m.refusal) return m.refusal;
     const p3 = m.row;
-    if (!filled20(reason2)) return refuse27("PROPOSAL_NO_REASON", "setting the system's proposal aside says why, in the member's words");
+    if (!filled20(reason2)) return refuse28("PROPOSAL_NO_REASON", "setting the system's proposal aside says why, in the member's words");
     if (p3.state !== "open") return _Hypotheses.#notOpen(p3);
     const at48 = this.#now();
     const why2 = reason2.trim().slice(0, REASON_MAX18);
@@ -284111,21 +284538,21 @@ var Hypotheses = class _Hypotheses {
     return this.#one(`SELECT note_id, member, text, at FROM member_notes WHERE note_id = ? AND member = ?`, n2, member2);
   }
   static #noSuchNote(note) {
-    return refuse27("NO_SUCH_NOTE", "no note of yours is held by that number", { note: typeof note === "number" || typeof note === "string" ? note : null });
+    return refuse28("NO_SUCH_NOTE", "no note of yours is held by that number", { note: typeof note === "number" || typeof note === "string" ? note : null });
   }
   /* R11's text checks, shared by `noteWrite` and `noteRevise`: a refusal, or null. */
   static #badText(text7) {
-    if (!filled20(text7)) return refuse27("NOTE_NO_TEXT", "a note holds the member's words, and this one holds none");
+    if (!filled20(text7)) return refuse28("NOTE_NO_TEXT", "a note holds the member's words, and this one holds none");
     const bytes2 = UTF86.encode(text7).length;
     if (bytes2 > NOTE_MAX_BYTES)
-      return refuse27("NOTE_TOO_LONG", `a note holds at most ${NOTE_MAX_BYTES} bytes, and this one is ${bytes2}`, { max_bytes: NOTE_MAX_BYTES, bytes: bytes2 });
+      return refuse28("NOTE_TOO_LONG", `a note holds at most ${NOTE_MAX_BYTES} bytes, and this one is ${bytes2}`, { max_bytes: NOTE_MAX_BYTES, bytes: bytes2 });
     return null;
   }
   /** R11: `noteWrite({text, by})` keeps one note in the member's words, refused (never cut) past its bound; the first
    *  note a member keeps while the group tells members what a court can reach answers the court statement, once. */
   noteWrite({ text: text7 = null, by = null } = {}) {
     const member2 = this.#noteMember(by);
-    if (!member2) return refuse27("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a member keeps a note of their own");
+    if (!member2) return refuse28("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a member keeps a note of their own");
     const bad2 = _Hypotheses.#badText(text7);
     if (bad2) return bad2;
     let tell2 = false;
@@ -284152,7 +284579,7 @@ var Hypotheses = class _Hypotheses {
    *  its number and its turns, and its earlier text is kept nowhere (R14, R15). Never answers the court statement. */
   noteRevise({ note = null, text: text7 = null, by = null } = {}) {
     const member2 = this.#noteMember(by);
-    if (!member2) return refuse27("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author revises it");
+    if (!member2) return refuse28("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author revises it");
     const n2 = this.#ownNote(note, member2);
     if (!n2) return _Hypotheses.#noSuchNote(note);
     const bad2 = _Hypotheses.#badText(text7);
@@ -284168,7 +284595,7 @@ var Hypotheses = class _Hypotheses {
    *  nothing marking that it existed; what a turn made stays its owner's, unchanged. */
   noteDelete({ note = null, by = null } = {}) {
     const member2 = this.#noteMember(by);
-    if (!member2) return refuse27("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author deletes it");
+    if (!member2) return refuse28("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author deletes it");
     const n2 = this.#ownNote(note, member2);
     if (!n2) return _Hypotheses.#noSuchNote(note);
     const noteId = Number(n2.note_id);
@@ -284205,10 +284632,10 @@ var Hypotheses = class _Hypotheses {
    *  stays its author's alone; a turn never deletes it. */
   noteTurn({ note = null, into = null, by = null, hunch = null, made: made3 = null } = {}) {
     const member2 = this.#noteMember(by);
-    if (!member2) return refuse27("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author turns it");
+    if (!member2) return refuse28("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author turns it");
     const n2 = this.#ownNote(note, member2);
     if (!n2) return _Hypotheses.#noSuchNote(note);
-    if (!NOTE_TURNS.includes(into)) return refuse27("NOTE_TURN_UNKNOWN", `a note becomes one of ${NOTE_TURNS.join(", ")}`, { turns: [...NOTE_TURNS] });
+    if (!NOTE_TURNS.includes(into)) return refuse28("NOTE_TURN_UNKNOWN", `a note becomes one of ${NOTE_TURNS.join(", ")}`, { turns: [...NOTE_TURNS] });
     const noteId = Number(n2.note_id);
     const append = (id2) => {
       const at48 = this.#now();
@@ -284218,7 +284645,7 @@ var Hypotheses = class _Hypotheses {
     if (into === "hunch") {
       const length = n2.text.trim().length;
       if (length > STATEMENT_MAX3)
-        return refuse27(
+        return refuse28(
           "NOTE_TOO_LONG_FOR_HUNCH",
           `a hunch's statement holds at most ${STATEMENT_MAX3} characters, and this note is ${length}`,
           { max_characters: STATEMENT_MAX3, characters: length, note: noteId }
@@ -284232,7 +284659,7 @@ var Hypotheses = class _Hypotheses {
     }
     const id = typeof made3 === "string" ? made3.trim() : made3;
     if (typeof id !== "string" || !isRecordId(id))
-      return refuse27("NOTE_TURN_NOT_MADE", `name the ${into} your own act made from this note by the record's id`, { made: typeof made3 === "string" ? made3 : null });
+      return refuse28("NOTE_TURN_NOT_MADE", `name the ${into} your own act made from this note by the record's id`, { made: typeof made3 === "string" ? made3 : null });
     return this.#record.transact(() => append(id));
   }
   /* ---- a note shared with a project (R19–R21; D18) ---- */
@@ -284243,7 +284670,7 @@ var Hypotheses = class _Hypotheses {
    *  `PROJECT_ACT_NOT_A_PARTICIPANT` (its R55; an unknown or unseen project alike). */
   noteShare({ note = null, project = null, by = null } = {}) {
     const member2 = this.#noteMember(by);
-    if (!member2) return refuse27("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author shares it");
+    if (!member2) return refuse28("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author shares it");
     const n2 = this.#ownNote(note, member2);
     if (!n2) return _Hypotheses.#noSuchNote(note);
     const proj = filled20(project) ? project.trim() : "";
@@ -284283,9 +284710,9 @@ var Hypotheses = class _Hypotheses {
    *  nothing: `MACHINE_CANNOT_NOTE`; `NO_SUCH_SHARE` (absent, withdrawn or another's, one answer). */
   noteUnshare({ share = null, by = null } = {}) {
     const member2 = this.#noteMember(by);
-    if (!member2) return refuse27("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a share's author withdraws it");
+    if (!member2) return refuse28("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a share's author withdraws it");
     const s = typeof share === "string" && SHARE_ID_RE.test(share.trim()) ? this.#one(`SELECT * FROM ${SHARES_TABLE} WHERE share_id = ? AND member = ? AND withdrawn_at IS NULL`, share.trim(), member2) : null;
-    if (!s) return refuse27("NO_SUCH_SHARE", "no share of yours stands by that id", { share: typeof share === "string" ? share : null });
+    if (!s) return refuse28("NO_SUCH_SHARE", "no share of yours stands by that id", { share: typeof share === "string" ? share : null });
     const at48 = this.#now();
     return this.#record.transact(() => {
       this.#sql.exec(`UPDATE ${SHARES_TABLE} SET text = NULL, warning_json = NULL, withdrawn_at = ? WHERE share_id = ?`, at48, s.share_id);
@@ -284526,7 +284953,7 @@ var ADMISSION_TABLES = Object.freeze([Object.freeze({
   derive: "stored",
   version_chain: false
 })]);
-var instances78 = /* @__PURE__ */ new WeakMap();
+var instances79 = /* @__PURE__ */ new WeakMap();
 var DoorWindow = class {
   constructor({ storage, fingerprint: fingerprint2 }) {
     this.storage = storage;
@@ -284575,7 +285002,7 @@ var DoorWindow = class {
 };
 function admissionOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let a = instances78.get(storage);
+  let a = instances79.get(storage);
   if (!a) {
     const record = deps.record || recordOf(ctx);
     const fingerprint2 = typeof deps.fingerprint === "function" ? deps.fingerprint : (address) => doorbellOf(ctx).sourceFingerprint(address);
@@ -284584,7 +285011,7 @@ function admissionOf(ctx, deps = {}) {
     const d = record.declareTable("admission", ADMISSION_TABLES.map((t2) => ({ ...t2 })));
     if (d && d.ok === false && d.reason !== "TABLE_DECLARED")
       throw new Error(`admission: record-core refused its table: ${d.reason}`);
-    instances78.set(storage, a);
+    instances79.set(storage, a);
   }
   return a;
 }
@@ -284965,7 +285392,7 @@ async function decodePng(bytes2) {
 // ../pdf-worker/src/picturepixels.mjs
 var PICTURE_FRAME_MAX = 4096 * 3072 * 3;
 var PICTURE_SOURCE_MAX = 16384 * 12288 * 3;
-var refuse28 = (reason2, detail = {}) => {
+var refuse29 = (reason2, detail = {}) => {
   if (!(reason2 in REFUSALS)) throw new Error(`undeclared refusal: ${reason2}`);
   return { ok: false, reason: reason2, why: REFUSALS[reason2], ...detail };
 };
@@ -285111,8 +285538,8 @@ async function renderPictureToPixels(bytes2, pageIndex, { maxEdge, grey = false 
   if (!Number.isInteger(maxEdge) || maxEdge < 1) throw new TypeError("renderPictureToPixels: maxEdge must be a positive integer");
   const b = bytes2 instanceof Uint8Array ? bytes2 : bytes2 instanceof ArrayBuffer ? new Uint8Array(bytes2) : null;
   const format = b && sniff(b);
-  if (!format) return refuse28("NOT_A_PICTURE");
-  if (pageIndex !== 0) return refuse28("NO_SUCH_PAGE", { page: pageIndex, pageCount: 1 });
+  if (!format) return refuse29("NOT_A_PICTURE");
+  if (pageIndex !== 0) return refuse29("NO_SUCH_PAGE", { page: pageIndex, pageCount: 1 });
   if (format === "jpeg") {
     let h;
     try {
@@ -285168,20 +285595,20 @@ async function answer(r, { source: source2, orientation, k }) {
 }
 function overBound({ width, height, comps }, bound, name3) {
   const samples2 = width * height * comps;
-  return samples2 > bound ? refuse28("IMAGE_TOO_LARGE", { page: 0, width, height, comps, samples: samples2, bound, bound_name: name3 }) : null;
+  return samples2 > bound ? refuse29("IMAGE_TOO_LARGE", { page: 0, width, height, comps, samples: samples2, bound, bound_name: name3 }) : null;
 }
 function overReduced({ width, height, comps }, k) {
   const samples2 = Math.ceil(width / k) * Math.ceil(height / k) * comps;
-  return samples2 > PICTURE_FRAME_MAX ? refuse28("IMAGE_TOO_LARGE", { page: 0, width, height, comps, reduced_by: k, samples: samples2, bound: PICTURE_FRAME_MAX, bound_name: "PICTURE_FRAME_MAX" }) : null;
+  return samples2 > PICTURE_FRAME_MAX ? refuse29("IMAGE_TOO_LARGE", { page: 0, width, height, comps, reduced_by: k, samples: samples2, bound: PICTURE_FRAME_MAX, bound_name: "PICTURE_FRAME_MAX" }) : null;
 }
 function jpegRefusal(e2) {
-  if (!(e2 instanceof DctRefusal)) return refuse28("DECODE_FAILED", { page: 0, note: String(e2 && e2.message || e2) });
-  return refuse28(DCT_TO_REFUSAL[e2.code] || "DECODE_FAILED", { page: 0, jpeg: e2.code, ...e2.detail });
+  if (!(e2 instanceof DctRefusal)) return refuse29("DECODE_FAILED", { page: 0, note: String(e2 && e2.message || e2) });
+  return refuse29(DCT_TO_REFUSAL[e2.code] || "DECODE_FAILED", { page: 0, jpeg: e2.code, ...e2.detail });
 }
 function pngRefusal(e2) {
-  if (!(e2 instanceof PngRefusal)) return refuse28("DECODE_FAILED", { page: 0, note: String(e2 && e2.message || e2) });
+  if (!(e2 instanceof PngRefusal)) return refuse29("DECODE_FAILED", { page: 0, note: String(e2 && e2.message || e2) });
   const reason2 = e2.code === "UNSUPPORTED" ? PNG_FEATURE_REASONS[e2.detail?.feature] ?? "UNSUPPORTED_FILTER" : PNG_CODE_REASONS[e2.code] || "DECODE_FAILED";
-  return refuse28(reason2, { page: 0, png: e2.code, ...e2.detail });
+  return refuse29(reason2, { page: 0, png: e2.code, ...e2.detail });
 }
 
 // src/plane/transcribe.mjs
