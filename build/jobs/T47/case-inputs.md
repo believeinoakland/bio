@@ -39,3 +39,7 @@
   - `node checks/run.mjs`: architecture 3095 product files, 0 failures; coverage 43 failures, none case-inputs' (other modules' ids not yet met, rule 5 (1)); channels 0 failures.
 
 Size (session_01JhCwgpR5tXvnB2cSJcVRTT): test runs 21, module lines 1322
+
+## J1 · COMPLETE
+
+T47-31 complete on job/T47/case-inputs: src/case-inputs/ by copy (map §2) with R17's words by key, 46 tests naming R1–R17, all pass; format, architecture, coverage, ownership 0 failures with the modules.json row set locally. For you at merge (K1043): paths ["bio-plane/src/case-inputs/"], tests ["bio-plane/test/m/case-inputs/"], uses gaining jurisdictions (tests only, R15). One fix beyond the copy: acknowledgeStatement is one transaction (publication R21). Reports for record-grammar (ID_TABLE: OUTC, WCD owner), record-core (mintExhausted sentences) and for case-authoring's delete (openRequestSentence not carried; OPEN_REQUEST_KEYS now seven): see the record's Completion.
