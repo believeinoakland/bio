@@ -12,7 +12,8 @@
  * New with them (N242's share, DEC-49): C-18.10, the row of C-18.5's refusal at the write, `GATHERING_REFUSED`,
  * which until now reached the wire with no translation (queue's C-19.2 `INBOX_REFUSED` is its twin). All three rows
  * were taken by the stamp 1.49.0 (T19's promotion job). T22 (R52, K1019): C-18.11–C-18.15, the refusals of an address's
- * frequency setting (`FREQUENCY_CHECKS`), taken by 1.53.0 (T23's promotion job).
+ * frequency setting (`FREQUENCY_CHECKS`), taken by 1.53.0 (T23's promotion job). T47 (R74, N969): C-18.20 and
+ * C-18.21, the refusals of a member's act setting a bundle's monitoring (`MONITOR_SET_CHECKS`), awaiting T48's stamp.
  *
  * T24 (N506, K1159): the link sweep's arms of C-18.5 (`sweepErrors`, its fields, cadences and bounds, the term matcher)
  * left with the sweep for `link-sweep`, a later module, which hands them back at composition through R66's registration
@@ -133,14 +134,32 @@ export const WATCH_END_CHECKS = Object.freeze({
   }),
 });
 
+/* C-18.20 and C-18.21 — R74's refusals of a member's act setting a bundle's `monitoring.enabled` (T47; N969; K3027
+   doubt 6), each with nothing written: the next free rows of the C-18 family this table holds, awaiting T48's stamp. The
+   translations are BOB's drafts, the UX stream's to re-word. */
+export const MONITOR_SET_CHECKS = Object.freeze({
+  MACHINE_CANNOT_SET_MONITORING: Object.freeze({
+    check: 'C-18.20',
+    where: at('monitorSet', 'is-monitor-set-member'),
+    translation: 'Only a member asks for a document to be watched, and this came from an automated credential. '
+      + 'Nothing was changed.',
+  }),
+  MONITOR_SET_REFUSED: Object.freeze({
+    check: 'C-18.21',
+    where: at('monitorSet', 'is-monitor-set-shape'),
+    translation: 'Say whether this document is watched, yes or no, and, if you give one, how often, as one of the '
+      + 'listed frequencies. Nothing was changed.',
+  }),
+});
+
 /** R42: every row this module holds, keyed by code, for a reader that looks one up by the code an answer carries. */
 export const MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS,
-                                                 ...WATCH_END_CHECKS });
+                                                 ...WATCH_END_CHECKS, ...MONITOR_SET_CHECKS });
 
 /** A refusal answer naming one of this module's rows (DEC-49): its code, row and member's sentence, and the detail.
- *  R52's rows and R71's (which shares R52's first two). */
+ *  R52's rows, R71's (which shares R52's first two) and R74's. */
 export function frequencyRefusal(code, detail, extra) {
-  const row = FREQUENCY_CHECKS[code] || WATCH_END_CHECKS[code];
+  const row = FREQUENCY_CHECKS[code] || WATCH_END_CHECKS[code] || MONITOR_SET_CHECKS[code];
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
 }
 
