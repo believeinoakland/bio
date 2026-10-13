@@ -16,7 +16,7 @@
    through publication's R21, as case-authoring does) and its lapse reads by a stand-in for `case-carriage` the test
    controls (`lapse`); the real `accepted-work`, its one registration filled by a stand-in for `case-import` built from
    its stated R16 functions (`finding`, `openFlags`, `withdrawals`, `moves`) over the test's `imports`, and
-   `case-import`'s `importedCase` (its R4) over the same. Every test drives `conformance` at its interface. */
+   `case-import`'s `importedCase` (its R4 as T46 built it: `group_fields`, its viewer rule) over the same. Every test drives `conformance` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -229,7 +229,8 @@ export function world({ group = "test-group" } = {}) {
   /* case-import's R16 functions and R4 read, standing in, over `imports`: `findings` keyed "ref|edition" → {group,
      case, pair, acceptance}; `moves` the publisher moves as accepted-work R8 answers them; `editions` keyed
      "import|edition" → the importedCase edition's facts; `fail` makes every read throw (unreadable) */
-  const imports = { findings: new Map(), moves: [], editions: new Map(), hiddenFrom: [], fail: false };
+  const imports = { findings: new Map(), moves: [], editions: new Map(), hiddenFrom: [], fail: false, caseFail: false,
+                    caseReads: [] };
   const acceptedWork = acceptedWorkOf(host, { record, promotion });
   acceptedWork.registerAcceptedWork("case-import", {
     finding: ({ ref, edition, viewer }) => {
@@ -247,10 +248,21 @@ export function world({ group = "test-group" } = {}) {
       return { moves: structuredClone(page), cursor: from + limit < imports.moves.length ? page[page.length - 1].move : null };
     },
   });
+  /* importedCase as case-import R4 states it (T46): a viewer who is not an active member (one never sent included) is
+     answered as if no import exists; an edition answers `group_fields` (R34's keys and `read_at`) or `group_fields:
+     null` with its note. `editions` "import|edition" → `{group_fields?, ...}` as the edition answers; `caseFail` makes
+     the read throw; `caseReads` lists each read's viewer. */
   const caseImport = {
-    importedCase: ({ import: imp, edition }) => {
-      const e = imports.editions.get(`${imp}|${edition}`);
-      return e ? { ok: true, import: imp, edition: { edition, ...e } } : { ok: false, reason: "IMPORT_NO_SUCH_EDITION" };
+    importedCase: ({ import: imp, edition, viewer = null }) => {
+      imports.caseReads.push(viewer);
+      if (imports.caseFail) throw new Error("the import could not be read");
+      const m = typeof viewer === "string" && viewer.startsWith("member:") ? viewer.slice(7) : null;
+      const active = m && st.sql.exec(`SELECT status FROM members WHERE member_id=?`, m).toArray()[0]?.status === "active";
+      const e = active ? imports.editions.get(`${imp}|${edition}`) : null;
+      if (!e) return { ok: false, reason: "IMPORT_NO_SUCH_EDITION" };
+      const gf = e.group_fields === undefined ? null : e.group_fields;
+      return { ok: true, import: imp, edition: { edition, imported_at: NOW, imported_by: "olive", ...e, group_fields: gf,
+                                                 ...(gf === null ? { group_fields_note: "not recorded at import" } : {}) } };
     },
   };
   const c = conformanceOf(host, { record, membership, promotion, content, inquiry: k, strength, reevaluation,

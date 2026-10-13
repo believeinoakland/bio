@@ -81,12 +81,13 @@ test("R2 R32 R9: another group's finding accepted at the edition named is pinned
     identity_says: SOURCE_FACTS_UNRECORDED, says: ACCEPTED_SAYS });
   const pair = { capture: { state: "graded", grade: "B" }, connection: { state: "graded", grade: "C" }, testimony: null };
   assert.deepEqual([f.frozen, f.live], [pair, pair], "the source edition's pair, never raised");
-  /* recorded at import, the source's identity, stake and edition date are read from case-import */
-  w.imports.editions.set(`${IMP}|3`, { group_fields: { identity: "Hayward Parents for Accountability", stake: "parents of pupils",
-                                                       edition_date: "2026-09-03" } });
+  /* recorded at import, the source's identity and stake are read from case-import's group_fields (R39) */
+  w.imports.editions.set(`${IMP}|3`, { group_fields: { group: "hayward-parents", name: "Hayward Parents for Accountability",
+    domain: "haywardparents.org", domain_verified_at: "2026-09-01T00:00:00Z", stake: "parents of pupils", detail: null,
+    read_at: "2026-09-19T00:00:00Z" } });
   const b = w.c.determinationRead({ id: d.id, viewer: V("pat") }).findings[0].basis;
-  assert.deepEqual([b.identity, b.stake, b.edition_date, "identity_says" in b],
-                   ["Hayward Parents for Accountability", "parents of pupils", "2026-09-03", false]);
+  assert.deepEqual([b.identity.name, b.stake, b.edition_date, "identity_says" in b],
+                   ["Hayward Parents for Accountability", "parents of pupils", null, false]);
   /* the same ref named by `finding`, as an id, reaches the same kind */
   assert.equal(w.c.determine(input({ findings: [{ finding: ref, edition: 3 }] })).ok, true);
 });
