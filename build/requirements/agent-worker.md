@@ -79,7 +79,7 @@ The answer:
 **`POST /ask`** (Q1-4; ladders §9.4 L1; K1450, K1474, K1479, K1502)
 - **R54** `POST /ask` takes `{question, grant, account, conversation?}`: `grant` the member's short-lived, read-only `ai` grant (`credentials` R27), `account` the account `credentials.accountFor` answers for that member's ask (R6's shape: the member's own reference, else the group's API key while held and on, K1755), `conversation` the earlier turns of this one ask, which the member's device holds (nothing is kept here or in the plane, K1450). Refusals before any model call: no `PLANE` binding as R1; a body not JSON as R2; no grant 401 `NO_GRANT`; no account 409 `NO_ACCOUNT`; a member over the use ceiling, as the plane answers it (`ai-runs` R50, relayed unchanged, R43). It then interprets the question (at most one clarifying question, `answers` R3), writes its queries, reads through the grant only the ops of R55, composes an answer in `answers`' contract with the turns `agent-model` runs for mode `ask` under that account (`converse`, within `run-rules`' per-ask bounds, its R17), hands it to the plane's `answers` checks (`checkAnswer`, its R4, over the read log the plane holds for the grant) and returns only what the checks pass, with what they withheld named. It writes no run row and no observation, and reports each model call's `usage` to the plane (`ai-runs` R48's `countAskUsage`). Progress is streamed as each step begins (interpreting, each read with its op, composing, checking), carrying no text the checks have not passed. (T35; F1, K1874) Every plane call the ask makes carries the grant as R60 states, never in the address.
 - **R55** (K1450; the canon audit's R37 row) `ASK_OPS`, the ask's whole reach, equals `answers`' `ASK_SCOPE` (its R1) and `credentials`' `AI_GRANT_OPS` (its R28), both ways, by a test (R44's pattern): law, profiles, the registry, `lines`, `duties` and occurrences, the frontier and the bar, `timeline`, `eventsFor`, `moneyOf`, `committedAgainstPaid`, `holderAt`, `careerOf`, `explore`, calculation results and money facts, and the rule services; never a `sources*` op, member history, an administrative op or an export, and no write. A tool call naming any other op is refused here before any plane call, and the refusal is returned to the model as the tool's result.
-- **R56** (K1479, K1502; T47, N949) The suggestions switch of the account that serves the act is honoured: it arrives on the wire as the `account`'s `suggestions` (R6), which the plane fills from that account's own switch (`credentials` R25, R55: a member's reference's, a sign-in's own since T46, the group's for the group key, R37 there), and this module reads it there and asks `credentials` nothing; only when it is `true` is `skills`' `suggestions` layer (its R35) loaded, for an ask, a run and a draft alike; when it is off, as by default, the pack's DEC-27 clause governs and the ask, and every run started by that member, offers no unprompted suggestion. A standing question's AI half reads its author's switch the same way. (T47; N949: wording only, no behaviour moved) *(not yet met: T47)*
+- **R56** (K1479, K1502; T47, N949) The suggestions switch of the account that serves the act is honoured: it arrives on the wire as the `account`'s `suggestions` (R6), which the plane fills from that account's own switch (`credentials` R25, R55: a member's reference's, a sign-in's own since T46, the group's for the group key, R37 there), and this module reads it there and asks `credentials` nothing; only when it is `true` is `skills`' `suggestions` layer (its R35) loaded, for an ask, a run and a draft alike; when it is off, as by default, the pack's DEC-27 clause governs and the ask, and every run started by that member, offers no unprompted suggestion. A standing question's AI half reads its author's switch the same way. (T47; N949: wording only, no behaviour moved)
 - **R57** (K1503: D-260; K1755) A run is continued only under the account that serves the act of the member who started it (a standing question's author for its AI half), as `credentials.accountFor` answers it: that member's own reference, or the group's API key, the run then still that member's act, attributed to that member: with none, it is refused `NO_ACCOUNT` by name (R6) before any plane write, and the run stays as it was; a run is never continued under another member's account. (N796, Bob K2425; K2472) The member's own Claude sign-in (credentials R35, `kind` `signin`) serves that member's act as the reference does; for a standing question's AI half it serves only while that sign-in's `standing` use is on (credentials R32, R55: the grant is minted or refused there, and this module refuses nothing of its own for a sign-in). Tests drive a standing run on a sign-in both ways.
 - **R58** (Q0-4; §7 item 10) One truth for model turns: the module states in its header, its answer (R28) and its `GET /version` answer that it runs model turns through `agent-model` exactly when a reference arrived and a mode's turns ran; no text of it says it runs none while it does, or the reverse. (T42; N832) That one sentence (the header, `GET /version`, R28) names `/transcribe` among the paths that run turns when an account arrives.
 
@@ -127,7 +127,7 @@ The answer:
     - with `hold: true`, the sentinel is in the answer once and in no log line;
     - without it, it is in no answer and `held: false`;
     - control: a `start` answer is relayed unchanged.
-  - *(not yet met: T47)*
+  -
 - **R82** (b; K3060 D10; amends R6, R32, R33, R71) A `signin` account carries its `secret`, the token `credentials` holds for that member (`credentials` need C2).
   - **Wire shape.** On the wire it is `{kind: "signin", level: "member" | "project", member, secret, suggestions?}`. It is handed to `agent-model` as `{kind: "signin", member, secret}` (its R16).
   - **What lifts.** R6's refusal of a `signin` account carrying a `secret` (`BAD_ACCOUNT`) is lifted.
@@ -137,7 +137,7 @@ The answer:
     - for `/ask`, `/run`, `/draft` and `/transcribe`, a `signin` account with a sentinel `secret` reaches the stub runner's first frame, and no answer, trace or log line;
     - none gives `SIGNIN_NOT_HELD`;
     - control: an `apikey` account is unchanged.
-  - *(not yet met: T47)*
+  -
 - **R83** (c; trace §3 R66a; K1874) `POST /signin` writes one JSON line per step.
   - **Headers.** It reads `x-civicsmith-trace` and `x-civicsmith-member-ref` (minting a `trace` when absent) and passes both to the runner.
   - **The line.** `{event: "signin.worker", trace, step, member_ref, outcome, code?, runner_status, runner_content_type, ms_runner, runner_text_bytes, held?}`.
@@ -146,7 +146,7 @@ The answer:
   - **Tests:**
     - sentinel code and sentinel token in no line;
     - a stub runner answering text/plain 500 is logged with its status and head, and answered `RUNNER_SILENT` carrying both.
-  - *(not yet met: T47)*
+  -
 - **R84** (d; trace F6; amends R43's reach, not its rule) Every `/signin` answer carries `trace`, and every refusal reaches the member in words.
   - **`trace` added.** Every `/signin` answer, success or refusal, its own or the runner's relayed, carries `trace`. Adding it rewords nothing (R43).
   - **Its own refusals.** `RUNNER_NOT_CONFIGURED`, `BAD_BODY`, `BAD_MEMBER`, `BAD_STEP`, `BAD_CODE` and `RUNNER_SILENT` each carry a `detail` written for the member in DEC-149's words (R64).
@@ -155,8 +155,8 @@ The answer:
     - each own refusal carries `trace` and a `detail` with no place word;
     - a relayed runner refusal is unchanged but for `trace`;
     - `SIGNIN_CODES` equals the codes the module and the runner's tests produce.
-  - *(not yet met: T47)*
-- **R85** (T47; K3087; amends R66, R84) `/signin`'s `code` relays `{member, code, attempt?}`: an `attempt` the door sends, a string of at most 200 characters, is passed on unchanged (another shape is not passed, and the runner's own check answers); `start`'s `attempt` reaches the door in the runner's answer unchanged. R84's `SIGNIN_CODES` is proven by driving each own refusal and a stub runner answering each code agent-runner's requirements name (R17–R20, R26–R28, R31), plus `SIGNIN_NOT_HELD` and `SIGNIN_TOKEN_REFUSED`, never by reading another module's source. *(not yet met: T47)*
+  -
+- **R85** (T47; K3087; amends R66, R84) `/signin`'s `code` relays `{member, code, attempt?}`: an `attempt` the door sends, a string of at most 200 characters, is passed on unchanged (another shape is not passed, and the runner's own check answers); `start`'s `attempt` reaches the door in the runner's answer unchanged. R84's `SIGNIN_CODES` is proven by driving each own refusal and a stub runner answering each code agent-runner's requirements name (R17–R20, R26–R28, R31), plus `SIGNIN_NOT_HELD` and `SIGNIN_TOKEN_REFUSED`, never by reading another module's source.
 
 ## Private
 
