@@ -2,6 +2,34 @@
 
 **Status** · session_01DV7d612TSVz2gLVE9X2Re4 · depth 2 · WORKING · handled B2
 
+## Completion (ACTION-CLOCKS #13)
+
+**Entry applied** · T47-39: R21, R22, R23 met; N961 applied (test only); R2's wording re-point needs no code.
+- **R21 (N960)** Every day is read in `actions.actionZone(fm, view)` (actions R100), imported from `actions`. `count.mjs`' own `actionZone` and its `jurisdictions.get` import are removed, and `index.mjs` no longer exports one. R1's fallback `due_zone`, R3's and R5's local day and `zone`, R14's `TZID`, R15's day and R2's count each read actions' zone. `actionOffices` stays here: it is the office-calendar read for R10 and R11 and the read for R23, and actions R100 provides only the zone. Tested with two active profiles of different zones (the test profile and the first profile).
+- **R22 (N965)** `dueAtOf(entry, zone)` is exported. It is pure and never throws. A `due_at` is a real local date-time (hour 00–23, minute and second 00–59, a calendar day), and `clockState` and `clockAdopt` judge it the same way, so `T24:00` is `CLOCK_ENTRY_REFUSED`, arm `due_at` (ruled here, a detail: the old pattern admitted hour 99).
+- **R23 (N968)** Each `overdueClocks` item carries `venue`, read through the same office-or-venue read as the zone (`venueOf(fm, view)`, exported):
+  - `{kind: "office", role, body}` for an office addressee;
+  - else `{kind: "venue", action_kind, name}`, with `name` the view's `action_kinds[].venue.name`;
+  - else `null` with `venue_why`.
+- **N961** `t45.test.mjs` records receipts and service through action-records' `actionReceipt`, reached as `actions.records`, the one instance actions creates (no import of a module this one does not use).
+
+**Flaws fixed in my module (P8)** · deferred by ACTION-CLOCKS #12: `worked.test.mjs` O2–O4 now have negative controls; `factreader.test.mjs` "the count says so" now checks the count's statement; `overdue.test.mjs` R7 checks the document is unchanged by the reads themselves.
+
+**Kept, with why** · `computeDeadline` still anchors a stated start day in `UTC` when no zone is held (`count.mjs`). It counts from a day the ledger states, never from the local day of an instant, and R2's pure-caller tests count with no view. R21's "never the UTC day" governs the local day of the instance clock, which no read here takes in UTC.
+
+**Read** · My requirements, all module code (`index.mjs`, `count.mjs`, `checks.mjs`, `ics.mjs`, `schema.mjs`) and all tests, each whole, by me. Over the 600 KB limit (mechanics §17 (3)): a helper in this session read whole and digested, citing each section, the used modules' public parts named in my Uses (actions, jurisdictions, action-records, civil-time), `build/layers.md` layer 9 and its shared rules, and the split map §§4–8. The sources stayed binding. After B3, I read actions' `actionZone` and `records` getter whole.
+
+**Found in other modules** · none beyond the TABLE_DECLARED clash already reported (J2), which actions' merge resolved.
+
+**Tests and checks** (on `job/T47/action-clocks` with `tranche/T47` merged per B3)
+- `node --test bio-plane/test/m/action-clocks/`: tests 74, pass 74, fail 0.
+- Users' and providers' tests: action-producers 45/0, queue 142/0, monitoring 137/0, action-plans 79/0, filings 107/0, action-replies 25/0, plan-work 45/0, actions 130/0, action-records 19/0. answer-envelope 25/8: the 8 are its catalogue-list reds, each also red on tranche/T47 (inherited).
+- `checks/format.mjs`: 0 failures. `architecture.mjs … action-clocks`: 0 failures. `coverage.mjs … action-clocks`: 23 of 23 live ids named, 0 failures. `ownership.mjs … tranche/T47`: 0 failures.
+- `checks/run.mjs`: format 0, architecture 0 failures (3122 files), channels 0; coverage 29 failures, none action-clocks'.
+
+Size (session_01DV7d612TSVz2gLVE9X2Re4): test runs 14, module lines 2122
+
+
 ## J1 · REPORT
 
 Progress on T47-39, pushed on job/T47/action-clocks (6e80269144):
