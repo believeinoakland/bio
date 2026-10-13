@@ -23,3 +23,7 @@
 - `node checks/run.mjs`: format 0 failures; architecture 3071 product files, 0 failures; coverage 44 failures, none in `steps` (inherited reds of other modules, the screens modules among them); channels 0 failures.
 
 Size (session_012f8rr5zRBWCgyNPRtB6UTZ): test runs 3, module lines 1710
+
+## J1 · COMPLETE
+
+T47-16 applied: R23's laterFound truncated tested by name (5,001 → true; control 5,000 → false; oldest first; before any filter; no member or a failed read → [] and false). No code change needed: it already answered so. 46/46 steps tests pass; format, architecture, coverage (29/29), ownership 0 failures; run.mjs coverage reds are other modules only. Record: build/jobs/T47/steps.md.
