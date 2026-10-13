@@ -452,8 +452,17 @@ export class CaseInputs {
    * the draft door or, for an unsigned case document, publication's standing test (its R1). Every caller neither door
    * admits gets the one dead answer. POSITION is membership's `isJoinedParticipant`: sight is not a place.
    * ========================================================================================================== */
-  acknowledgeStatement({ draft = null, caseId = null, edition = null, secretSha = null, viewer = null,
-                         bySecret = false, reason = undefined } = {}) {
+  /** R1–R5: one act, inside one transaction (record-core R32), since it inserts its row and re-authors an unsigned
+   *  document's list through publication R21, which writes only inside its caller's transaction: either both land or
+   *  neither does. The providers are reached first, outside it, so one created lazily on the host keeps its tables
+   *  whatever the act answers. */
+  acknowledgeStatement(args = {}) {
+    void this.publication; void this.publishSchedule;
+    return this.record.transact(() => this.#acknowledgeStatement(args));
+  }
+
+  #acknowledgeStatement({ draft = null, caseId = null, edition = null, secretSha = null, viewer = null,
+                          bySecret = false, reason = undefined } = {}) {
     const review = this.#review();
     let project, ident, statement, statementAuthor, kind, by, grantId = null, recipient = null, draftId = null;
     /* D-568: whether the draft asked for a new case; the answer states the edition through the provider's rule. */

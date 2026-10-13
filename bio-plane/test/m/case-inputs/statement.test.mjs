@@ -401,3 +401,16 @@ test("R5: op=statementack takes the grant's secretSha only from the internal req
     .statementack();
   assert.deepEqual(noFlag, DEAD, "no viewer stamp and no bySecret in the query: no door");
 });
+
+test("R2: an acknowledgement and the re-authoring of its unsigned document's list are one act: when the splice fails, no acknowledgement is recorded and the document is unchanged; control: the same act with the splice working records both", () => {
+  const { w, P } = setup();
+  const pub = w.prepare(P, "alice");
+  const before = w.snapshot();
+  const splice = w.publication.reauthorSection;
+  w.publication.reauthorSection = () => { throw new Error("the splice failed"); };
+  assert.throws(() => ack(w, { viewer: V("bo"), caseId: pub.caseId, edition: 1 }), /the splice failed/);
+  w.publication.reauthorSection = splice;
+  assert.deepEqual(w.snapshot(), before, "nothing written: no row, the document as it was");
+  const ok = ack(w, { viewer: V("bo"), caseId: pub.caseId, edition: 1 });
+  assert.deepEqual([ok.ok, w.count("statement_acknowledgements"), ok.case_documents[0].reauthored], [true, 1, true]);
+});
