@@ -242,6 +242,7 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 - **R58** (K3061 D3; `credentials` R66) `REAUTH_ACTS`, frozen, names the acts that ask the password again and the argument that makes them so: `caseratify`, `publishat`, `publishatmove`, `ratify`, `docketpost`; `adminendorse`, `adminremove`, `memberset` (a role to or from `admin`), `memberadd` (role `admin`); `subscriptionsignin` (`step: "start"`), `accountreferenceset`, `groupkeyset`, `projectkeyset`, `projectsigninset`; read by `admission` R25 (doubt 10). *(not yet met: T47)*
 - **R59** (DEC-205, DEC-207 (8), N1001) Specs: `grouplogoset`, `grouplanguagesset` (administrators' acts, `by` stamped, `NEEDS` `null`); `grouplanguages` (public read); `signrequest` (`tasks` R19; a member's act, `by` and `viewer` stamped, `NEEDS` `contribute`, `machineClasses: []`); `signintrace` (a test-instance read, administrators' session, `viewer` stamped). R34: each explained in `ACT_HELP` or named in `ACT_HELP_ABSENT`. *(not yet met: T47)*
 - **R60** (K3062; amends R21, R27, R54) R21 and R27 read the registry and library at PR #33's head; the owed acts of `wizard-scripts` R35 are served under their names once R57, R59 declare them; `hostingaccessset` is the act on `setup` and `group`. *(not yet met: T47)*
+- **R61** (K3104; `people` R37) The spec of `peopledirectory`: a member's read, `viewer` stamped, `q`, `show`, `office`, `namedIn`, `since`, `cursor`, `limit` query fields, `NEEDS` `null`, explained in `ACT_HELP` (R34). Test with a negative control. *(not yet met: T47)*
 
 ## Private
 

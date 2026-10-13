@@ -47,7 +47,7 @@ The investigation's tools beside a question: a person the record follows and the
 #### T47's L11 fold (K3100)
 
 - **R11** (N997) **help**: "How spot-checks work" in plain words, reached from `calculation`. *(not yet met: T47)*
-- **R12** (DEC-203 (1)–(3); K3061 D8) **people**: the people and organisations the record follows, never the group's members (a link to Settings › Members); search ("Name or office") and four filters (show; holding an office in; named in; named recently); "In your projects" first, then the rest, newest added first; the counts line. Rows and order from `peopledirectory` (doubt 1); with it not served, rows from `search` with `type` person and organisation, newest first, no counts, saying so. *(not yet met: T47)*
+- **R12** (DEC-203 (1)–(3); K3061 D8) **people**: the people and organisations the record follows, never the group's members (a link to Settings › Members); search ("Name or office") and four filters (show; holding an office in; named in; named recently); "In your projects" first, then the rest, newest added first; the counts line. Rows, counts and order from `peopledirectory` (`people` R37; Bob, K3104). *(not yet met: T47)*
 - **R13** (DEC-203 (4)–(6)) Each row: the kind's mark, the name opening `person`, who they are today, the counts as answered, "Explore connections" (`explore`); "Add someone the record follows" (`entitycreate`, with the member's note); the two empty states. *(not yet met: T47)*
 - **R14** (DEC-200 (4); amends R5) On `calculation`, "Record what you saw at a report" sends `testify` and "Count it for the drawn report" sends `spotcheckvisit`, two acts. *(not yet met: T47)*
 
