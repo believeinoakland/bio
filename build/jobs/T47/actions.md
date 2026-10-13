@@ -102,3 +102,7 @@ Size (session_011gY15XFsfDazB1rNzzZijc): test runs 24, module lines 3436
 ## J1 · REPORT
 
 R100 (N960) is done and pushed (2c0477fb82). actions now exports actionZone(fm, view), the one zone an action's clock is read in. R12, R25, R51, R92 and R98 read it; place() and zoneOf stay as R68's read for modules with no office. New t47.test.mjs (5 R100 tests); t34's R68 pin is re-stated. actions passes 126/0. Users' tests (P11): the reds in action-replies, affordances, op-declarations, control-plane and plane (42 failing tests) fail identically without my change. action-clocks (T47-39) can import actionZone from actions once this merges. I am waiting for your CHANGE after T47-37 (action-records) merges before deleting the copies and re-pointing.
+
+## J2 · COMPLETE
+
+T47-38 complete on job/T47/actions. N960 R100 actionZone; N961: copies deleted, re-pointed through a records getter, action-records created in actionsOf, ACTIONS_TABLES down to five. actions 130/0; format, architecture, coverage (67/67), ownership 0 failures; run.mjs shows no actions or action-records failures. New reds are only the planned split window (rule 5 (8)): affordances 3, escalation 1, action-clocks 2. A choice of mine for your rulings: actionsOps spreads actionRecordsOps until plane's L11 job spreads it itself, which keeps the six ops served and op-declarations green. Deferred: whether my t45 row census, which reads source text, stays. Details are in the record's Completion section.
