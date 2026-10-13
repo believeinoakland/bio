@@ -25,3 +25,7 @@
 - `checks/run.mjs` over the product: format 0 and architecture 0 failures (3071 files); coverage 44 failures, none of them run-rules' (other modules' ids not yet met, rule 5 (1)); channels 0.
 
 Size (session_01VsBmbSSGdjn5TmTXq5yUur): test runs 7, module lines 4221
+
+## J1 · COMPLETE
+
+Complete (commits 6ed66ab0d3, 97a09258c5). R32: refusal.MEMBER_RUN_MODE_NOT_ADMITTED (DEC-198) joins RUN_RULES_WORDS verbatim and the C-22.30 row reads it by key; T46's interim sentence is gone; code, number and where unmoved. t46.test.mjs R32 re-pinned to the key (R31's key-list pin now three). My inherited red is cleared: run-rules 60/0. format, architecture, coverage 32/32 and ownership clean; run.mjs shows no run-rules failure. REPORT: agent-worker's generated bundle is staled by this change (requirements.test.mjs R45 x2, STALE BUNDLE, run-rules being an input). It is regenerated at L6's close or by AGENT-WORKER's job; I did not touch it. The other users fail exactly as on the baseline, so nothing new. My module reads nothing from registry.json. Details in my record.
