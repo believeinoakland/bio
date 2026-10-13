@@ -145,6 +145,12 @@ export const STATEMENT_ACK_REASON_MAX = 2000;
  *  stream gives the words. */
 export const NOTICE_SEALS_SENTENCE = "This project has a public notice that the group is working on it, so publishing "
   + "this edition also opens the notice's sealed weeks for the work this edition publishes.";
+/** R75 (N683; DEC-147): what the sign step says of "Publish at…" when ratification's pre-flight is not reached, and
+ *  when it is reached and answers no offer; in neither case is one made. */
+export const PUBLISH_AT_NOT_REACHED_SENTENCE = "Whether this edition can be published at a set time is not known yet: the "
+  + "signing check is not reached, so only publishing now is described here.";
+export const PUBLISH_AT_UNANSWERED_SENTENCE = "The signing check did not say whether this edition can be published at a "
+  + "set time, so only publishing now is offered.";
 /** R34 (DEC-112 (4)): what step one adds, one plain sentence until the UX design stream gives the words. */
 export const REPUBLISH_SENTENCE = "The published case republishes in full every document it includes, and judging whether "
   + "they may be republished, copyright included, is the group's.";
@@ -2059,9 +2065,11 @@ export class CaseAuthoring {
       return { reached: false, refusals: [], why: "ratification offers no pre-flight of the signing ceremony here" };
     let out = null;
     try { out = r.caseRatifyPreflight({ text, signer, viewer }); } catch { out = null; }
-    /* K552 (5): `{ok: true, ready, refusals}`, or `PREFLIGHT_UNDETERMINED`, which is itself the blocker. */
+    /* K552 (5): `{ok: true, ready, refusals}`, or `PREFLIGHT_UNDETERMINED`, which is itself the blocker. R75 (N683;
+       ratification R44): its `publish_at` offer is carried as it answers it, read from this one call. */
     if (out && out.ok === true && Array.isArray(out.refusals))
-      return { reached: true, refusals: out.refusals.filter((x) => x && typeof x === "object") };
+      return { reached: true, refusals: out.refusals.filter((x) => x && typeof x === "object"),
+               publish_at: out.publish_at && typeof out.publish_at === "object" ? out.publish_at : null };
     const undetermined = out && out.ok === false ? out
       : { ok: false, reason: "PREFLIGHT_UNDETERMINED", detail: "ratification's pre-flight gave no answer" };
     return { reached: false, refusals: [undetermined], why: undetermined.detail ?? "ratification's pre-flight is undetermined" };
@@ -2154,6 +2162,12 @@ export class CaseAuthoring {
         open_requests: this.#openRequestsStep(seen.openRequestsAt || null, a.viewer ?? null),
         ratification: ratify.reached ? { reached: true, refusals: ratify.refusals }
                                      : { reached: false, why: ratify.why },
+        /* R75 (T47; N683; DEC-147; ratification R44): "Publish at…" beside "Publish now", exactly as ratification's
+           pre-flight answers it, in the group's zone; never a blocker, never `first`, never `ready`. Not reached, it is
+           null with the sentence saying so, never an offer. */
+        publish_at: ratify.reached && ratify.publish_at ? ratify.publish_at : null,
+        ...(ratify.reached && ratify.publish_at ? {} : { publish_at_stated: ratify.reached
+          ? PUBLISH_AT_UNANSWERED_SENTENCE : PUBLISH_AT_NOT_REACHED_SENTENCE }),
         next: ok ? `op=caseratify over op=publish's document (case ${answer.caseId}, edition ${answer.edition})`
                  : "op=publish first" },
     ];
