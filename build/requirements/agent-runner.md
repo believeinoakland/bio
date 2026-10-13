@@ -44,6 +44,113 @@ Terms. The **caller** is `agent-model`'s `signin` path (its R2), through the Con
 - **R22** (AT-14) Claude Code runs as published: no file of the installed `@anthropic-ai/claude-agent-sdk` package, the Claude Code it carries included, is changed, wrapped or replaced in the image after `npm ci` (R16), and no option, setting or environment variable this module passes removes, disables or restricts a sign-in method Claude Code offers. A test reads the `Dockerfile` (no step after `npm ci` writes under that package's directory) and the options and environment R1, R2 and R17 pass, and finds no setting that selects or forbids a sign-in method.
 - **R23** (AT-14; U-7 (d); DEC-156) `fleet-member.json` states `terms`, `{condition, source, who_agrees}`, recording AT-14's condition for whoever deploys this member: `condition` AT-14's two conditions as the register quotes them (agreeing to Anthropic's Commercial Terms of Service; Claude Code run unmodified, no authentication method removed), `source` AT-14's page, `who_agrees` `null` while U-7 (d) is open. No text of this module says Anthropic's terms allow the sign-in (DEC-156: Bob's decision is to build, not a reading of the terms; U-7 (a)–(d) open). A test reads the field.
 
+**The sign-in held through its wait; the token Claude Code mints, handed up once; conversations on the held token; the trace** (T47; N1001; K3060 D10, K3061 D10; K1874; trace F1, F3, F5, F6, F10)
+
+- **R25** (a; trace F1; amends R12) The container stays awake for the whole of a sign-in, from `start` to the code's outcome, and the sleep timer never ends a waiting sign-in.
+  - **Start of the hold.** When a `POST /signin` the class passes to its container answers 200, the class records in its own Durable Object storage a hold until `start + CODE_WAIT_MS + OUTCOME_WAIT_MS + 30 s` (10 min 90 s, from R18's constants, exported).
+  - **During the hold.** `onActivityExpired` does not stop the container while the hold is in force. It renews the activity timeout and stops nothing.
+  - **End of the hold.** The hold is cleared when any of these answers:
+    - `POST /signin/code` with an outcome (200, or 409 `SIGNIN_REFUSED` or `NO_SIGNIN_WAITING`);
+    - `POST /signout`;
+    - a later `POST /signin` that answers other than 200.
+    It also clears when its deadline passes. After that, `sleepAfter` (2 minutes) governs as before.
+  - **What the class reads.** Only the path and status of these answers, never a body (R8). It adds no route or answer of its own.
+  - **Unchanged.** A conversation-only instance sleeps as today, and R18's 10-minute wait for the code is unchanged.
+  - **Tests**, with a stubbed `Container` base and a fake clock:
+    - after a 200 `start`, expiries at +3 and +9 minutes stop nothing, and an expiry at +12 minutes stops the container;
+    - after a `code` answer, the next expiry stops it;
+    - after a `start` answered 502, the next expiry stops it;
+    - control: an instance that never saw `start` stops at its first expiry.
+  - *(not yet met: T47)*
+- **R26** (a; trace F3; amends R12) A start is fast, and a failed start is said in JSON.
+  - The container's server listens before the Agent SDK is loaded. `GET /version` and the four sign-in routes answer without it. A conversation that arrives before the SDK has loaded waits for it.
+  - When the library cannot start the container or reach its port (any answer of `containerFetch` that is not JSON), the class answers JSON 503 `RUNNER_NOT_STARTED` with:
+    - `status` (the library's own status);
+    - `detail`: the library's words, at most 120 characters, with any URL query and anything R29 scrubs removed.
+  - It never answers the library's plain text.
+  - **Tests:**
+    - with an SDK loader that never resolves, `/signin/state` answers;
+    - a stub base answering text/plain 500 "Failed to start container: …" gives JSON 503 `RUNNER_NOT_STARTED` with that status;
+    - control: a JSON answer passes through unchanged.
+  - *(not yet met: T47)*
+- **R27** (b; K3060 D10, K3061 D10; AT-22; amends R8, R17, R18, R19, R21, R22) The sign-in mints a token that Civicsmith holds.
+  - **`start`.** It runs the unmodified binary's own `claude setup-token` in place of `claude auth login`, through the same pseudo-terminal (R17, R16), with a terminal wide enough that neither the address nor the token is wrapped. It answers the address the binary states, checked as R17 checks it, with R17's refusals.
+  - **`code`.** It types the code once, as R18 does. The binary reports success by printing its token after `Your OAuth token (valid for …):`.
+    - The runner reads the token from that output only: terminal escapes removed (`plain()`), lines joined, the token a single run of `[A-Za-z0-9._-]`, 20 to 2,000 characters.
+    - It answers 200 `{ok: true, connected: true, member, attempt, token, valid_for}`, `valid_for` the binary's own words ("1 year"). This is the one answer that ever carries the token, to its one caller (`agent-worker` R81).
+    - It then ends the binary's process and drops every copy of its output.
+  - **Failure.** A failure, no token within `OUTCOME_WAIT_MS`, or a token of another shape answers 409 `SIGNIN_REFUSED`, its `detail` scrubbed as R29 says. No answer carries `token` then.
+  - **What the instance keeps.** No stored sign-in, and no member record beyond the waiting attempt. `NOT_THIS_MEMBER` now means only "a sign-in is waiting for another member" (R21).
+  - **`state`.** R19's `state` answers `{ok: true, connected: false, waiting, member}`, `waiting` true while an attempt for `member` waits. Whether a member is connected is `credentials`', not this instance's.
+  - **`signout`.** R20's `signout` ends a waiting attempt and answers `connected: false`. It runs no logout, since there is nothing stored.
+  - **What this changes in R8 and R22.** R8's "the stored sign-in is written … only by the binary" is replaced: the token is the binary's output, read once, answered once, and never logged, written to disk, kept after the answer, or put in any other answer, relay or error. R22's test admits `setup-token`, the binary's own command, as AT-22 directs.
+  - **Tests**, with a stubbed binary that prints a sentinel token in the binary's own words, wrapped and with escapes:
+    - the `code` answer carries it exactly once;
+    - no log line, file under the writable paths, other answer, or `state`/`signout` answer carries it;
+    - controls: a binary that prints "OAuth error: …" gives `SIGNIN_REFUSED` with no `token`; a token over 2,000 characters gives `SIGNIN_REFUSED`.
+  - *(not yet met: T47)*
+- **R28** (b; K3060 D10; AT-22; amends R2, R8, R9, R21) A conversation runs on the held token.
+  - **The credential.** The conversation request's credential is `{kind: "signin", member, secret}`, `secret` the token `credentials` holds for `member` (handed down by `agent-model` R16).
+  - **How the query runs.**
+    - `CLAUDE_CODE_OAUTH_TOKEN` is set to `secret` in that query's environment only (AT-22's way).
+    - `CLAUDE_CONFIG_DIR` is a fresh directory inside the conversation's temporary directory, gone when it ends (R9).
+    - No stored sign-in is read, and `keepOnly` is retired.
+    - Everything else R2 sets stands: the environment replaced whole, no `ANTHROPIC_API_KEY`.
+  - **Refusals.**
+    - A `signin` credential with no non-empty string `secret` answers `{ok: false, code: "SIGNIN_NOT_HELD"}` and starts nothing.
+    - A query the binary ends on Anthropic refusing the token (an authentication failure as the binary reports it; START fixes the strings from the pinned binary) answers `{ok: false, code: "SIGNIN_TOKEN_REFUSED", detail}`, so the member is told to connect again (§2, credentials need C4).
+    - R2's `NO_CREDENTIAL` cases stand, except that a `signin` credential carrying a `secret` is no longer one of them.
+  - **The token's reach.** It is never logged, echoed, put in a relay, error, answer or file, nor passed to anything but that query's environment (R8).
+  - **The instance.** It stays named by the member (agent-model R2), so each member's conversations run apart. It holds nothing between them.
+  - **Tests:**
+    - a sentinel `secret` reaches the stubbed SDK's `options.env.CLAUDE_CODE_OAUTH_TOKEN` and nothing else: no answer, log line or file after the query;
+    - no `secret` gives `SIGNIN_NOT_HELD` with nothing started;
+    - a stub SDK result reporting an authentication failure gives `SIGNIN_TOKEN_REFUSED`;
+    - control: R2's `apikey`- and `subscription`-kind refusals are unchanged.
+  - *(not yet met: T47)*
+- **R29** (c; trace §3 R8a; K1874; amends R8's "logs nothing of a request") Each sign-in step and each conversation writes exactly one JSON line to stdout.
+  - **Sign-in lines.** `{event: "signin.runner", trace, attempt, step, member_ref, outcome, code?, status, ms, cold, uptime_s, binary_present, binary_exit?, said_head?}`.
+    - `start` adds `address_host` (the hostname only) and `ms_to_address`.
+    - `code` adds `ms_to_outcome` and `waited_s` (seconds since its `start`).
+    - `state` adds `waiting`.
+  - **Conversation lines.** `{event: "conversation.runner", trace?, member_ref, outcome, code?, ms, num_turns}`.
+  - **Where the fields come from.**
+    - `trace` is the `x-civicsmith-trace` header the caller sent, else one minted here.
+    - `member_ref` is the `x-civicsmith-member-ref` header the caller sent, else `null`. The bare member id is never logged.
+    - `outcome` is `ok`, `refused` or `failed`, and `code` the refusal code.
+    - `said_head` is the binary's last words, at most 200 characters, after `plain()`. It has removed: every copy of the code; every URL query; and anything token-shaped (`sk-ant-…`, a JWT, any run of 32 or more `[A-Za-z0-9._-]`).
+  - **Never logged:** a code, token, `secret`, address path or query, prompt, system text, tool content, result text, header, or body.
+  - **Tests:** a stubbed binary echoing a sentinel code and printing a sentinel token, and a conversation with a sentinel `secret`. No stdout line carries any sentinel, and each step writes exactly one line with the named fields.
+  - *(not yet met: T47)*
+- **R30** (c; trace §3 R13a, R10a; amends R12) The Worker class logs its lifecycle and its egress, one JSON line each.
+  - **Lifecycle.** `{event: "runner.lifecycle", instance_ref, what, ms?, error_head?, signin_hold}`, where:
+    - `what` is `start`, `started`, `activity_expired`, `held_awake`, `stop` or `error` (`onStart`, `onStop`, `onError` and R25's `onActivityExpired` overridden, each calling `super` where it stops);
+    - `instance_ref` is the first 12 hex characters of the Durable Object id;
+    - `signin_hold` says whether R25's hold was in force.
+  - **Egress.** One `static outboundByHost` handler per `fleet-member.json` `egress` host passes the request to `fetch` unchanged and logs `{event: "runner.egress", instance_ref, host, method, path_template, status, ms}`.
+    - `path_template` is the path with each segment longer than 24 characters replaced by `:id`. It never carries a query, header or body.
+    - This makes Anthropic's HTTP status on `/v1/oauth/token`, `/api/oauth/…` and `/v1/messages` visible.
+    - A host outside `egress` is still refused by the library before any handler (R10 unchanged), and is not logged here.
+  - **Tests:**
+    - a stubbed base fires each lifecycle hook and finds one line each;
+    - the egress handler, given a request carrying a sentinel in its query, headers and body, logs none of them and passes the request through unchanged;
+    - control: the handlers' hosts equal `egress`.
+  - *(not yet met: T47)*
+- **R31** (d; trace F5 (b), F6; amends R17, R18) Every step answers a member-readable refusal and joins its start and code.
+  - **`attempt`.** `start` answers `attempt` (a UUID). `code` takes `attempt`, and one naming another attempt than the waiting one answers 409 `ATTEMPT_SUPERSEDED`, typing nothing and keeping the waiting attempt.
+  - **Refusals of the sign-in routes.** Every refusal of `/signin`, `/signin/code`, `/signin/state` and `/signout`, and `RUNNER_NOT_STARTED` (R26), carries:
+    - `trace`;
+    - `detail` written for the member: at most 300 characters, in DEC-149's words ("your group's Civicsmith", never "instance" or "container"), naming what happened and what to do.
+    - `SIGNIN_UNAVAILABLE`'s `detail` names which of its arms it is (no binary, no address in time, the binary exited).
+  - **`trace_detail`.** Each answer carries `{ms, cold, uptime_s, waiting_age_s?}`, a closed list of non-secret fields for the door's trace (§3).
+  - **Tests:**
+    - two `start`s, then a code naming the first attempt, gives `ATTEMPT_SUPERSEDED`;
+    - each refusal carries `trace` and a `detail` with no place word (R11's sweep) and no sentinel;
+    - control: a code naming the waiting attempt is typed.
+  - *(not yet met: T47)*
+
+R23 and R17's sentences that U-7 is open ("No text of this module says Anthropic's terms allow the sign-in"; "whether starting it … stays open (U-7 (b))") are re-worded to cite K3061: Bob settled U-2 and U-7 as allowed. Wording only.
+
 ## Private
 
 ### Uses

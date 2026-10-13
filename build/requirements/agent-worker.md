@@ -119,6 +119,44 @@ The answer:
 - **R79** (T46; N897 (2); K2816 (2); `draft-T46-trial.md` §1.2, §6 B8) `POST /ask` takes an optional `untested`, the label object as `run-rules`' `untestedLabel` answers it (its R29), anything else 400 `BAD_BODY`, and puts it unchanged on its last `answer` event. `POST /draft` takes it the same way and answers it unchanged beside `draft`, for every task (R59, R68, R76). It has no other effect: nothing is gated, read or kept by it. Tests: an ask with the label carries it on the last `answer` event only, and a draft answers it; control: without it, neither carries `untested`; a malformed one `BAD_BODY`.
 - **R80** (T46; N919; Bob's, K2892: a member's own sign-in runs check and plan for that member only; M-T46-4; amends R5, R10) **Only if M-T46-4, measured at `ai-runs`' T46 START, finds it refused today:** `POST /run` takes a run a member opened on her own sign-in and `ai-runs` R18 dispatches at her act: R5 admits the credential that dispatch carries for her principal, R10's recorded payer is that member and the arrived account her own `signin` (R6), and every other refusal of R1–R11 stands. If M-T46-4 finds `/run` already takes it, nothing here changes and this requirement is met by the tests that show it. Tests: a member's own sign-in run dispatched as `ai-runs` R18 sends it runs a segment on her stub runner instance; control: the same run carrying another member's account is `RUN_NAMES_A_DIFFERENT_PAYER`.
 
+- **R81** (b; K3060 D10; K1874; amends R66, R67, R36) A `code` answer's token goes to the door once.
+  - **Relayed under `hold`.** When the runner's `code` answer carries `token`, this module relays it only when the door's request body states `hold: true`: the door's statement that it hands the token to `credentials` and removes it from what the member's browser sees (`control-plane`, §3). The answer is then relayed unchanged.
+  - **Dropped without it.** Without `hold: true`, `token` and `valid_for` are removed and the answer gains `held: false`, so no token can reach a browser through a door that does not hold it.
+  - **Never kept.** The token is never logged, stored, echoed in a refusal, or sent anywhere else. It exists here only between reading the runner's body and writing the answer.
+  - **Tests**, with a stub `RUNNER` answering a sentinel token:
+    - with `hold: true`, the sentinel is in the answer once and in no log line;
+    - without it, it is in no answer and `held: false`;
+    - control: a `start` answer is relayed unchanged.
+  - *(not yet met: T47)*
+- **R82** (b; K3060 D10; amends R6, R32, R33, R71) A `signin` account carries its `secret`, the token `credentials` holds for that member (`credentials` need C2).
+  - **Wire shape.** On the wire it is `{kind: "signin", level: "member" | "project", member, secret, suggestions?}`. It is handed to `agent-model` as `{kind: "signin", member, secret}` (its R16).
+  - **What lifts.** R6's refusal of a `signin` account carrying a `secret` (`BAD_ACCOUNT`) is lifted.
+  - **No secret.** A `signin` account with no non-empty `secret` is refused 409 `SIGNIN_NOT_HELD` before any plane write or model call, its `detail` saying the member connects their Claude account again.
+  - **Unchanged.** R32's cascade judges a `signin` account `available` when its `member` equals the wire's `member` and its `secret` is non-empty. R36 holds: the secret is never stored, logged or echoed.
+  - **Tests:**
+    - for `/ask`, `/run`, `/draft` and `/transcribe`, a `signin` account with a sentinel `secret` reaches the stub runner's first frame, and no answer, trace or log line;
+    - none gives `SIGNIN_NOT_HELD`;
+    - control: an `apikey` account is unchanged.
+  - *(not yet met: T47)*
+- **R83** (c; trace §3 R66a; K1874) `POST /signin` writes one JSON line per step.
+  - **Headers.** It reads `x-civicsmith-trace` and `x-civicsmith-member-ref` (minting a `trace` when absent) and passes both to the runner.
+  - **The line.** `{event: "signin.worker", trace, step, member_ref, outcome, code?, runner_status, runner_content_type, ms_runner, runner_text_bytes, held?}`.
+  - **A non-JSON runner answer.** The line adds `runner_text_head`: the first 120 characters, with the code, any URL query and anything token-shaped removed (R29's scrub). The `RUNNER_SILENT` answer gains `runner_status` and `runner_text_head`.
+  - **Never logged:** the code, address, token, body or any header but the two named.
+  - **Tests:**
+    - sentinel code and sentinel token in no line;
+    - a stub runner answering text/plain 500 is logged with its status and head, and answered `RUNNER_SILENT` carrying both.
+  - *(not yet met: T47)*
+- **R84** (d; trace F6; amends R43's reach, not its rule) Every `/signin` answer carries `trace`, and every refusal reaches the member in words.
+  - **`trace` added.** Every `/signin` answer, success or refusal, its own or the runner's relayed, carries `trace`. Adding it rewords nothing (R43).
+  - **Its own refusals.** `RUNNER_NOT_CONFIGURED`, `BAD_BODY`, `BAD_MEMBER`, `BAD_STEP`, `BAD_CODE` and `RUNNER_SILENT` each carry a `detail` written for the member in DEC-149's words (R64).
+  - **The list for `words.json`.** The module exports `SIGNIN_CODES`, every code `/signin` can answer: its own, plus `agent-runner`'s R17–R20, R26–R28 and R31 codes, `SIGNIN_NOT_HELD` and `SIGNIN_TOKEN_REFUSED`. The design stream's `refusal.<code>` keys are checked against it at L11 (§3).
+  - **Tests:**
+    - each own refusal carries `trace` and a `detail` with no place word;
+    - a relayed runner refusal is unchanged but for `trace`;
+    - `SIGNIN_CODES` equals the codes the module and the runner's tests produce.
+  - *(not yet met: T47)*
+
 ## Private
 
 ### Uses

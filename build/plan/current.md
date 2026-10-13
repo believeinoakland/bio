@@ -79,13 +79,17 @@ It is the only module marked `legacy` in `modules.json`.
 - **T47-19 · strength** · (N976) a project's own bar (`required_strength` in its document) set by a served act, distinct from the group's `strengthbarset` · text BOB's.
 - **T47-71 · run-rules** · (N992) R32 re-takes what DEC-198/DEC-199 changed in the design files it reads (`registry.json`, `words.json` on `main`), clearing its red · DEC-198, DEC-199.
 - **T47-70 · ai-use** · (N992) R13 re-takes the DEC-198/DEC-199 design files it reads, clearing its five reds · DEC-198, DEC-199.
-- **T47-20 · ai-runs** · (N955) a member's run dispatched at her act with the segment credential `credentials` R63 mints, T46's interim (the page-held one-day credential, K2976, K2999) retired; (N949) R40's "(today only check)" re-worded · text BOB's.
+- **T47-20 · ai-runs** · (K3060 D10, K3068) R79: the run's dispatch carries a `signin` account's held token as an API key's; (N955) a member's run dispatched at her act with the segment credential `credentials` R63 mints, T46's interim (the page-held one-day credential, K2976, K2999) retired; (N949) R40's "(today only check)" re-worded · text BOB's.
 - **T47-21 · capture-requests** · (N969) a member path for "Ask for this later": `captureRequest` without a running `run` · text BOB's · doubt 6; (K3065, CAPTURE #30 J1 (b)) `plane.test.mjs` "R48 in the plane …" fails about 1 in 4 under the full suite: made deterministic (its cause found, never skipped).
 - **T47-22 · skills** · (N949) R18's three-member order re-worded to `plan`'s deployment; (K3038) R31's citations of case-authoring ids moved to case-inputs re-pointed (wording) · text BOB's.
 - **T47-23 · agent-harness** · (N949) R2's public text re-worded · text BOB's.
 - **T47-24 · agent-worker** · (N949) R56 (the switch on the wire for a sign-in) and its Suggestions' T46 note re-worded (agent-model R15) · text BOB's.
 
-**L6 merge order:** accepted-work, steps, citation, basis-versions, strength, run-rules, ai-use, ai-runs, capture-requests, skills, agent-harness, agent-worker.
+- **T47-78 · agent-model** · (N1001, K3060 D10, K3061 D10) R16: a `signin` reference carries the held token as `secret`, sent only in the conversation request's credential; `SIGNIN_NOT_HELD`, the runner's `SIGNIN_TOKEN_REFUSED` passed as types; trace headers forwarded; R2 amended · text BOB's.
+- **T47-79 · agent-runner** · (N1001, K3060 D10, K3061 D10; K1874) R25: the container held awake through a sign-in (the class's `onActivityExpired` hold, start to outcome, at most 10 min 90 s); R26: listen before the SDK loads, a failed start answered JSON `RUNNER_NOT_STARTED`; R27: `start`/`code` run the binary's own `setup-token` (AT-22), and the token it prints is answered once in the `code` answer, the instance storing no sign-in; R28: conversations on the held token through `CLAUDE_CODE_OAUTH_TOKEN` in the query's environment only, `SIGNIN_NOT_HELD`, `SIGNIN_TOKEN_REFUSED`; R29–R30: one JSON line per step, conversation, lifecycle event and egress call (Anthropic's HTTP status), never a token, secret or code; R31: `attempt`, `ATTEMPT_SUPERSEDED`, member-readable `detail` and `trace` on every refusal; R2, R8, R9, R12, R17–R23 amended (R23/R17's U-7 sentences cite K3061) · the image rebuilt and published by the release (N780) · START measures `setup-token` under `script` in the image up to its address and prompt (doubt 1) · text BOB's.
+- **T47-80 · agent-worker** · (N1001, K3060 D10; K1874) R81: a `code` answer's token relayed only under the door's `hold: true`, else dropped (`held: false`); R82: a `signin` account carries `secret` (R6's refusal lifted), `SIGNIN_NOT_HELD`; R83: one JSON line per `/signin` step, trace and member-ref headers passed on, `RUNNER_SILENT` with the runner's status and text head; R84: `trace` on every answer, member-readable `detail` on its own refusals, `SIGNIN_CODES` exported for the words; R66, R67, R6, R32, R36 amended · after T47-78, T47-79 · text BOB's.
+
+**L6 merge order:** accepted-work, steps, citation, basis-versions, strength, run-rules, ai-use, ai-runs, capture-requests, skills, agent-harness, agent-model, agent-runner, agent-worker (K3068). The way-in draft's T47-78…80 are renumbered from T47-81 at L11's fold.
 
 ### L8
 - **T47-25 · case-grammar** · (N952) Provides states `workingOnOf`; (N953) a stored marker for a cleaned document copy (R12), so a re-wording of `COPY_CLEANED_LABEL` never re-keys a signed edition · text BOB's.
@@ -151,7 +155,7 @@ It is the only module marked `legacy` in `modules.json`.
 
 **L11 merge order:** wizard-scripts, op-grades, affordances, action-producers, notice-producers, queue, setup-page, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, interface-shell, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, plane last.
 
-**Counts:** L1 6 · L2 5 · L3 4 · L5 2 · L6 12 · L8 10 · L9 11 · L10 2 · L11 23 = **75** (66 drafted, 9 added at the opening for N983, N988, N989, N990, N992; K3027). Merge orders are re-checked against `modules.json` at each layer's START.
+**Counts:** L1 6 · L2 5 · L3 4 · L5 2 · L6 14 · L8 10 · L9 11 · L10 2 · L11 23 = **75** (66 drafted, 9 added at the opening for N983, N988, N989, N990, N992; K3027). Merge orders are re-checked against `modules.json` at each layer's START.
 
 ## New modules: places (K617, K657, K1043, K624)
 

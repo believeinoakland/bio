@@ -108,6 +108,14 @@ Terms. A **run** is `{run, status, label, mode, context_type, context_id, princi
 **T46: the test-instance exception** (T46-14; N897 (2); K2816; `draft-T46-trial.md` §1.1, §1.2)
 - **R78** (T46; K2816 (2); amends R10, R19, R23's input, R28, R40) `testInstance()` answers `true` exactly when the Worker environment's `CIVICSMITH_TEST_INSTANCE` is a string equal to the environment's `INSTANCE_NAME`, both non-empty. Otherwise, and when either cannot be read, it answers `false`. No op, body, query or table reaches it. `partAdmitted(part)` answers `run-rules.partAdmittedOn(set, part, {verifications, testBars}, {testInstance: testInstance()})` (its R29) on what this record holds, replacing `#partDeployable` as the one gate (module tests keep `deps.testSet`). R40 (open) admits a mode only when `partAdmitted(mode).admitted` is true, its flag being in `DEPLOYED_MODES` as now, and refuses otherwise as now (C-109.1). R23's `investigateDeployable`, handed to `run-rules.originAllowed`, reads `partAdmitted("investigate").admitted`. A run opened on the exception records `untested` (the label) at the open, never derived later (R32). R10's answer, R19's `session.untested` and R28's `runFor` answer it (null for a run the bar admitted). No R75 record is written or read differently on a test instance, and nothing here counts toward any part's bar. Tests: an open in mode `check` on an empty set with the environment pair equal opens, recording and answering `untested`; control: `CIVICSMITH_TEST_INSTANCE` `biosmoke8`, empty, or absent is refused C-109.1 with nothing written; a `CIVICSMITH_TEST_INSTANCE` in the open's body is ignored; `runFor` carries the label.
 
+- **R79** (T47; K3060 D10; amends R18) The run's dispatch carries a `signin` account's `secret`, `accountFor`'s `key` (the held token, credentials need C2), as it carries an API key's.
+  - This replaces the T38 sentence "no `secret` key at all" (`index.mjs`:2083, :3141).
+  - The secret stays where an API key's does: never logged, stored or answered.
+  - **Tests:**
+    - a sentinel token held for the payer reaches the stub agent-worker's `account.secret` and no record;
+    - control: an `apikey` account is unchanged.
+  - *(not yet met: T47)*
+
 ## Private
 
 ### Uses
