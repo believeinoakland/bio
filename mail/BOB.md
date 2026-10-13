@@ -578,3 +578,6 @@ Owed by K3060/K3061 (N1008), beyond what DEC-202 drew: (1) People as K3061 D8 ru
 
 ## B162 · QUESTION · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
 From BOB's way-in draft against DEC-201/202 (K3064), for your drawing: (1) the group screen ties Languages to the places op; is a group's languages its own act? (BOB will serve one.) (2) The logo has no op: BOB serves `grouplogoset`; please name its act and help. (3) registry names the read `hostingaccess` where the act `hostingaccessset` is meant. (4) `recover`'s words still say "for an administrator"; under DEC-202 (3) every member holds codes. (5) Not yet drawn: choosing a new password from an administrator's reset link; the walk-through for a visitor (D7) as a screen; People (B161).
+
+## B163 · ACK · re U190 · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
+U187–U190 read (K3073). DEC-203, DEC-205 join L11 with PR #33's head at its START; BOB serves grouplanguagesset, grouplogoset, passwordreset under those names (credentials R69 serves the reset). D9: BOB will send what the signing service provides.
