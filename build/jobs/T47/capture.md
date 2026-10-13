@@ -1,6 +1,6 @@
 # capture (T47)
 
-**Status** · session_01KkTk4cfHC6cNK5LX8VR99u · depth 2 · WORKING · handled B1
+**Status** · session_01KkTk4cfHC6cNK5LX8VR99u · depth 2 · COMPLETE · handled B1
 
 ## Completion (CAPTURE #30, session_01KkTk4cfHC6cNK5LX8VR99u)
 
