@@ -53,7 +53,10 @@ test("R29 C-125.34 TEMPLATE_COURT_PETITION keeps its present translation, not wo
   assert.notEqual(row.translation, en("refusal.TEMPLATE_COURT_PETITION"));
   assert.match(en("refusal.TEMPLATE_COURT_PETITION"), /\bCivicsmith\b/, "words.json's sentence names Civicsmith");
   assert.doesNotMatch(en("refusal.TEMPLATE_COURT_PETITION"), /your group's Civicsmith/);
-  const kept = Object.fromEntries(Object.entries(rows).filter(([c]) => c !== "TEMPLATE_NOT_REVIEWED"));
+  /* T47 (R30) moved C-125.4's `where` to its one site, which r30.test.mjs pins; read here at its T46 place, so this pin
+     still proves no other check, where or translation moved */
+  const kept = Object.fromEntries(Object.entries(rows).filter(([c]) => c !== "TEMPLATE_NOT_REVIEWED")
+    .map(([c, r]) => [c, c === "TEMPLATE_BLANK_UNKNOWN" ? { ...r, where: AT("#textRefusal", "is-template-text") } : r]));
   assert.deepEqual([Object.keys(kept).length, sha256HexSync(canonicalJson(kept))], [KEPT.count, KEPT.sha256],
     "no other row's check, where or translation moved");
   for (const [code, r] of Object.entries(kept)) assert.ok(!Object.values(ft.FILING_TEMPLATES_WORDS).includes(r.translation), code);
