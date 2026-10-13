@@ -21,4 +21,4 @@
 - `format`: 0 failures. `architecture` (consequences): 0 failures. `coverage` (consequences): 25 of 25 live ids named, 0 failures. `ownership` (tranche/T47): 7 files, 0 failures.
 - `checks/run.mjs` over the product: format 0, architecture 0, channels 0. Coverage has 37 failures, all inherited from other modules (screens-*, signin-door, tasks, setup-words, wizard-scripts); none is consequences'.
 
-Size (session_01HtmhyB8kuFW9FP4zpwGv2t): test runs 7, module lines 2175
+Size (session_01HtmhyB8kuFW9FP4zpwGv2t): test runs 7, module lines 2178
