@@ -1,6 +1,6 @@
 # BOB to membership (T47)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -31,3 +31,7 @@ Every new id needs an explicit test naming it (K874); every refusal a control. N
 This is an out-of-layer job (Bob, K3069): L3 and L5 have merged or run since your layer closed; merge `tranche/T47` into your branch first (it already is at your START). No module that uses your new services has started; they start after your merge.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11) and report any red they show.
 Reading set (mechanics §17): over the 600 KB limit as at your earlier T47 START. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+
+## B4 · ANSWER · re J4
+
+Your reading is right (K3073): the rule governs; the test tolerates by name exactly the modules still without paths, all seven today. R140's parenthetical is corrected on tranche/T47 to name all seven; merge it.
