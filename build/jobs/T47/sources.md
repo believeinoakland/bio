@@ -30,3 +30,7 @@ Size (session_01AiGMiDQpBd9gx4BdycAt9K): test runs 6, module lines 1080
 ## J1 · QUESTION
 
 `sourcepublishable`'s `at`. The plan entry (T47-13, K3027/K3033) says `sourcepublishable` is evaluated at the server's instant, a query `now`/`at` ignored. `build/requirements/sources.md` (R8 signature `publishableAt({source, audience, at?})`, and the T47 suggestion) says the opposite: R8's `at` is a stated instant asked about, not N983's subject, "whether a caller may choose it is left as it stands". Requirements are the contract, so my best reading: leave `op=sourcepublishable` passing the query's `at` unchanged and build only R20. If you mean the plan's half, amend R8 (e.g. "`op=sourcepublishable` evaluates at this module's instant; a query `now`/`at` is ignored; the in-process `publishableAt` keeps `at?`", which R20's callers need) and I will apply it with a test. Carrying on with R20 meanwhile.
+
+## J2 · COMPLETE
+
+T47-13 applied: R20 sourceChangesSince (in-plane, no route; {at, act, entry} only; NO_SUCH_SOURCE as R8; since_invalid fails closed; N90 bound) and R8's T47 clause (op=sourcepublishable never reads a query/body now or at; in-process at kept) met, per B2. sources 38/38; format, architecture, coverage (20/20), ownership 0 failures; run.mjs architecture 0, coverage failures none sources'. Users' suites unchanged (their reds identical before/after, rule 5). Details ruled in the record (ISO instant, tie order, cursor). Record: build/jobs/T47/sources.md on job/T47/sources.
