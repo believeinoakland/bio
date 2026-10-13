@@ -23,7 +23,81 @@
   - green: action-holds 37/0, action-clocks 70/0, filings 97/0, escalation 85/0, action-plans 79/0, plan-work 45/0, monitoring 137/0, machinery-producers 24/0, action-producers 45/0, queue 142/0;
   - red: action-replies 17/6, affordances 238/7, op-declarations 144/12, control-plane 235/7, plane 218/5. Those 42 failing tests fail identically with my change stashed, so they are inherited reds, not this job's.
 
-**Next:** wait for BOB's CHANGE after T47-37 (action-records) merges. Then: merge `tranche/T47`; delete the copies (split map §2); re-point through a `records` getter (§3); create `action-records` in `actionsOf`; drop the six tables from `ACTIONS_TABLES`; re-tag and move tests (per the digest: acts:81, acts:193, read:122, t33:146, t41:163, t41:185, t45:248, t45:374, t45:398, t45:512, t45:532, t45:548, t46:113, t46:150, t46:185).
+**Next:** done after B2; see Completion.
+
+## Completion
+
+**Read:** as the Progress section says. The requirements and my code (`index.mjs`, `schema.mjs`) I read whole myself, before and after the merge of `tranche/T47` (P20). After B2 I also read:
+- ACTION-RECORDS #1's Completion and the code I now call: `ActionRecords`' constructor, `#reach` and the four judgments' and seven reads' signatures, `actionRecordsOf`, `actionRecordsOps`;
+- the test files I changed (`acts`, `read`, `t33`, `t41`, `t45`, `t46`), at every arm the helper's digest named.
+
+**Entries applied:** T47-38.
+- **(N960) R100, R12, R25, R51, R68, R92, R98:** as in Progress (commit 2c0477fb82).
+- **(N961) the split** (split map §2, §3; commit after B2):
+  - **Deleted from `index.mjs`:**
+    - the constants `LAW_/RISK_/SEEKS_PROPOSALS_READ_MAX`, `RISK_PROPOSAL_BASIS_MAX`, `RECEIPT_KINDS`, `RECEIPT_TEXT_MAX`, `PROMISE_TEXT_MAX`, `LOCAL_DT_RE`;
+    - `#standardSeen`, `#seeksRefusal`, `#lawEntries`, `#badRiskTier`;
+    - `actionLawsPropose`, `actionReceipt`, `#receiptsOf`, `actionScope`, `#confidential`, `#scopeOf`, `actionPromise`, `#promisesOf`, `actionRiskPropose`, `actionSeeksPropose`, the three `#…ProposalsFor`;
+    - `PROPOSAL_SAYS`, `proposalLabelFor`;
+    - the six acts from the `withRow` wrapper list;
+    - the key `actions.scope.published_stays` and `T45_SENTENCES.scope_published_stays` (R99: four keys stay);
+    - `migrate()`'s `standard` column on `action_law_proposals`;
+    - the imports nothing reads any more.
+  - **Deleted from `schema.mjs`:** the six tables' DDL, and the six from `ACTIONS_TABLES`, which now holds `action_basis`, `correspondence`, `action_quotes`, `action_overrides`, `action_field_history` (R36).
+  - **Re-pointed through a getter `records`** (`actionRecordsOf` on the same host; the `progressions` and `standards` a caller gave are handed on, otherwise action-records reaches its own):
+    - `#heldLinks`, `actionLaws` and `#t33Read` → `standardSeen` (R64);
+    - `#seeksFence` → `seeksRefusal` (R70);
+    - `actionLaws` → `lawEntries` (R18);
+    - `actionRiskTier` → `badRiskTier` (R23);
+    - `derived` → the three proposal reads;
+    - `#t45Read` → `receiptsOf`, `confidential`, `scopeOf`, `promisesOf` (R25);
+    - `actionsFor` and `eventSource` → `confidential` (R30, R66).
+  - **`actionsOf` creates action-records** in the same commit that drops the six tables (split map §7 risk 1). Its tables exist and are declared at every boot.
+  - **A choice of mine** (for `build/rulings.md` if BOB keeps it): `actionsOps` spreads `actionRecordsOps` (action-records R15) at the head of its map. Without it, the six ops would go unserved by the composed plane until plane's L11 job spreads action-records' own map. The arms are the same, so that later spread changes nothing, and BOB may then drop this line. An owner handed with no action-records instance of its own (op-declarations' proxy stand-in) is handed the arms itself, so the op-declarations tests that drive these ops through actions' map stay green.
+- **Size:** `index.mjs` 3,721 → 3,265 lines, `schema.mjs` 284 → 171; actions now 3,436 lines in all (the map said about 3,440).
+
+**Flaws in my own module (P8):**
+- None found in the code beyond the split.
+- `t45.test.mjs`' row census ("each code this module mints has its row … names a region its source holds") reads `index.mjs` as text. Job rule: tests check behaviour, never source text. It is DEC-49's region census over this module's rows, the same check action-grammar's census makes. I kept it, with the moved codes taken out of its list. **Deferred:** whether this module should keep a census of its own is BOB's. It overlaps action-grammar R28's census and could be dropped there.
+
+**Tests (all at the interface):**
+- New `t47.test.mjs`: R100 with R12, R25, R92, R51, R98, R33 (5 tests).
+- Re-stated: `t34` R68 (3 titles).
+- **The moved acts' own arms now live in `action-records`' tests.** The arms that stay here are re-tagged and drive the moved acts only as setup, through `w.a.records`:
+  - `acts`: R18 R25; the new "R18 (T47)" `lawEntries` site (every list refusal equals the judgment's, its `where` action-records', its place among the refusals, with a control); the new "R23 (T47)" `badRiskTier` site (with its control); R25's tier proposals (replacing the R28 test).
+  - `read`: R51 R36's purge.
+  - `t33`: R64 R18 R25; the new "R64 (T47)" `standardSeen` at `actionLaws`, `law_standard` and the read, with its control.
+  - `t41`: the new "R70 (T47)" `seeksRefusal` (the write's refusal equals the judgment's; R72's machine arm is asked first and the judgment is not; with its control); R25's seeks proposals with the op served through the map (replacing the two R73 tests).
+  - `t45`: R25 receipts and R25 promises (replacing R80 and R88); "R66 R25 R30 (T47)" confidential (replacing R87); R33 (T45) less the moved arms; the new "R33 (T47)" (action-records R12 reached on this instance, with a member control); "R36 (T47)" (the five tables, the six action-records', all purged with the action); the row census less the moved codes.
+  - `t46`: R99's four keys; the new "R99 (T47)" (the scope key is not this module's, and action-records answers it).
+- B2's two arms are in line: `acts.test.mjs:205`'s `where` now reads `src/action-records/index.mjs badRiskTier > is-bad-risk-tier`, and `t45.test.mjs:567`'s receipt, scope and promise codes are out of this module's census.
+
+**Found in other modules:**
+- **Split-window reds, as rule 5 (8) names them** (`affordances` until T47-49, `escalation` until T47-42, `action-clocks` until T47-39). These tests drive the moved acts on the actions instance and are now red:
+  - affordances: "R19: actions' actionscope …", "R51 R10 R20: a machine is offered none …", "R51 R18: each act the facts offer on an action …" (3);
+  - escalation: "R6 R30 over the real actions (T45-27, K2859) …" (`actions.actionScope`) (1);
+  - action-clocks: "R2 (T45) a received rule counts from the receipt …" and "R2 (T45) a served rule …" (2).
+- **op-declarations:** none opened, because of the map spread above. Its tests that drive `actionseekspropose`, `actionreceipt` and `actionscope` through `actionsOps` should drive `actionRecordsOps` once the plane spreads that (its L11 job, T47-53).
+- **plane (L11):** spread `actionRecordsOps(actionRecordsOf(ctx), …)` in `store.mjs` (split map §5). Actions' interim spread can then go (BOB's call).
+- **action-clocks (T47-39):** `actionZone` is exported by `actions` now; its R21 can import it.
+- **action-grammar:** ACTION-RECORDS #1's finding stands. C-32.4 and C-33.6–.9 are minted at two sites, actions' `actionCorrespond` and action-records' `actionReceipt`, and each `where` names only the first. This job changes neither site.
+- **Generated artifact:** the plane bundle (`not_product`) is staled by this change (rule 5 (4), regenerated at L9's close). Its inputs gain `src/action-records/*.mjs` through actions' import.
+
+**Tests and checks run:**
+- actions: `node --test test/m/actions/`: 130 pass, 0 fail.
+- Users (P11), after the split, each compared with the merged tranche without my change:
+  - green: action-records 19/0, action-holds 37/0, action-plans 79/0, plan-work 45/0, monitoring 137/0, machinery-producers 24/0, action-producers 45/0, queue 142/0, action-grammar 73/0, `test/conclude-project.test.mjs` 1/0, `test/docdates.mjs` 1/0;
+  - action-clocks 68/2, escalation 84/1, affordances 235/10: the window's 6 named above, the other 7 affordances reds inherited;
+  - filings 93/4, action-replies 17/6, op-declarations 144/12, control-plane 235/7, plane 218/5: each identical with my change stashed (inherited);
+  - MIGRATE_RESULT.
+- Checks, from the process repository:
+  - `format.mjs`: 168 modules, 167 requirements files; 0 failures.
+  - `architecture.mjs … actions`: 17 product files, 77 relative imports; 0 failures.
+  - `coverage.mjs … actions`: 67 of 67 live requirement ids named by a test; 0 failures.
+  - `ownership.mjs … actions tranche/T47`: 11 files changed; 0 failures.
+  - `run.mjs`: architecture 3118 product files, 0 failures; coverage 32 failures, none actions' or action-records' (other modules' ids not yet met, rule 5 (1)); channels 0 failures.
+
+Size (session_011gY15XFsfDazB1rNzzZijc): test runs 24, module lines 3436
 
 ## J1 · REPORT
 
