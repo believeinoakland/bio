@@ -39,3 +39,7 @@ Your reading is right (K3073): the rule governs; the test tolerates by name exac
 ## B5 · CHANGE
 
 New requirement R141 on tranche/T47 (K3076, from CREDENTIALS #14): the handle admin is reserved for the founder; enrolment and handle checks refuse it as taken. Merge tranche/T47 and meet it in this job (it re-opens your COMPLETE if you had posted one).
+
+## B6 · CHANGE
+
+J5 read: your three findings are yours in this job (K3078), as R142 on tranche/T47: (1) handleCheck answers the viewer's own handles taken; (2) C-56.6 read by key; (3) a census test for R61/R78. With B5's R141 (the reserved handle admin), merge tranche/T47, meet R141 and R142, then COMPLETE again.
