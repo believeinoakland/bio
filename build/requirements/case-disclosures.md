@@ -165,6 +165,7 @@ This module judges each against the owner's lists and the record at the act, and
 #### Hunch debt (Publication §3 rule 4; DEC-20)
 
 - **R16** (was `case-authoring` R12) `hunchDebt(prepared)` answers `UNCLEARED_HUNCH` (C-120.7), naming each member, leg and target whose live basis (`inquiry.basisFor`) carries a leg whose grade source is `hunch`, or null. It is asked of every member, load-bearing or supporting. A member whose basis cannot be read is not passed: the same `UNCLEARED_HUNCH` answer names it under `undetermined: [{target, why}]` beside the hunches, saying whether it rests on a hunch is not known (R18, R23: the read states less and the answer fails closed; K1346).
+- **R32** (T47; N953, K3038; `case-grammar` R31; `case-carriage` R22; amends R6 (4) and R7) A material carried as its copy is answered with the `obscured` object `case-carriage` answers for it (R22: `documentCopy`'s for a cleaned member document, `photoMarks`' for a photo), whole and with its `kind` marker; R6 hands it on unchanged and R7 writes it into the material's `materials:` row (`case-grammar` R12, R31), so each signed edition records which kind of copy it carries. This module never derives `kind` from a label's words. Tests: a cleaned document's row states `obscured_kind` `document`, a photo's copy `photo`; control: a material carried whole states no `obscured`. *(not yet met: T47)*
 
 ## Private
 
