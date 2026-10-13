@@ -89,8 +89,10 @@ screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it 
   [('airunopen','Ask the assistant to work on this'),('suggest','Suggest'),('airunclose','Stop the run')], [17])
 
 # --- the record's subjects
+screen('people', 'People', 'working', 'A directory of the people and organisations the record follows, never the group\'s own members (Settings › Members): search and filters (office or body, project, newest added), each row with who they are today, how many documents, questions and projects name them and when the newest was added, those in the member\'s projects first; a row opens the person, and "Explore connections" starts from it; an empty state saying how someone enters the record, and a search that finds no one (Bob\'s D8, K3061; DEC-203; replaces interface-shell R29\'s Find over people).',
+  [('search','Search people and organisations'),('explore','Explore connections'),('entitycreate','Add someone the record follows')], [10,13])
 screen('person', 'Person', 'working', 'Positions, career, credentials, memberships, interests, statements; same person?',
-  [('person','Open the person'),('recordpersonfact','Add a fact from a document'),('identityclaim','Say another record is this person'),('withdrawidentityclaim','Withdraw a same-person claim'),('followregister','Follow a register'),('personexpunge','Remove a fact where the law requires')], [10])
+  [('person','Open the person'),('explore','Explore connections'),('recordpersonfact','Add a fact from a document'),('identityclaim','Say another record is this person'),('withdrawidentityclaim','Withdraw a same-person claim'),('followregister','Follow a register'),('personexpunge','Remove a fact where the law requires')], [10])
 screen('timeline', 'Timeline', 'working', 'What they did and what we did, in two lanes (K1462, K1494).',
   [('createevent','Record an event'),('addparticipant','Add who took part'),('relate','Link events'),('recorddatedfact','Record a dated fact'),('hypothesishold','Keep a suspected cause as a hunch'),('findin','Look for dates in this project')], [11])
 screen('money', 'Money trail', 'working', 'Money facts with stage and period; a trail; reconciling sources (K1457, K1468).',

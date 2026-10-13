@@ -1968,6 +1968,44 @@
    ]
   },
   {
+   "id": "people",
+   "name": "People",
+   "frame": "working",
+   "purpose": "A directory of the people and organisations the record follows, never the group's own members (Settings › Members): search and filters (office or body, project, newest added), each row with who they are today, how many documents, questions and projects name them and when the newest was added, those in the member's projects first; a row opens the person, and \"Explore connections\" starts from it; an empty state saying how someone enters the record, and a search that finds no one (Bob's D8, K3061; DEC-203; replaces interface-shell R29's Find over people).",
+   "acts": [
+    {
+     "op": "search",
+     "label": "Search people and organisations",
+     "status": "declared",
+     "modules": [
+      "agent-worker",
+      "retrieval"
+     ]
+    },
+    {
+     "op": "explore",
+     "label": "Explore connections",
+     "status": "declared",
+     "modules": [
+      "explore"
+     ]
+    },
+    {
+     "op": "entitycreate",
+     "label": "Add someone the record follows",
+     "status": "declared",
+     "modules": [
+      "entities",
+      "setup-page"
+     ]
+    }
+   ],
+   "journeys": [
+    10,
+    13
+   ]
+  },
+  {
    "id": "person",
    "name": "Person",
    "frame": "working",
@@ -1979,6 +2017,14 @@
      "status": "declared",
      "modules": [
       "people"
+     ]
+    },
+    {
+     "op": "explore",
+     "label": "Explore connections",
+     "status": "declared",
+     "modules": [
+      "explore"
      ]
     },
     {

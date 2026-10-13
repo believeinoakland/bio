@@ -654,9 +654,52 @@ SCR.answers = c => ({ rail: 'find', title: 'Ask', main: c.ai ? `
 SCR.assistant = c => ({ rail: 'projects', title: 'The assistant', crumbs: ['Pothole repairs', 'Question'], dock: 'assistant', main: SCR.question(c).main });
 
 /* ---------------- the record's subjects ---------------- */
+/* DEC-203 (Bob's D8, K3061, decided by BOB under his delegation): People is a directory of the people and organisations the
+   record follows, never the group's own members (Settings › Members). Those named in the member's own projects come first;
+   within each part, the newest added first. Each row: who they are today, how many documents, questions and projects
+   name them among those the member may see, and when the newest was added; the name opens their page, and "Explore
+   connections" starts from them. Counts are worked out from the mockup's own record (L. Chen's 14 documents as on `person`). */
+const PEOPLE_ST = { empty: 'b', nomatch: 'c' };
+const PEOPLE_YOURS = [
+  ['L. Chen', 'subject', 'Director of Public Works since March 2022', 14, 2, 1, '2 October'],
+  ['Public Works Department', 'group', 'A city department · repairs streets and sewers', 11, 2, 1, '2 October'],
+  ['Hon. M. Ferris', 'subject', 'Judge, Superior Court · hears the lease rent case', 2, 1, 1, '1 October'],
+  ['Oakland City Council', 'group', 'The city\'s elected council · votes on leases and budgets', 23, 4, 2, '28 September'],
+  ['Asha Rao', 'subject', 'City Clerk since March 2021', 4, 1, 1, '18 September'],
+  ['Bayline Properties', 'group', 'A company · paid under the Coliseum lease', 5, 1, 1, '18 September'],
+  ['J. Ortega', 'subject', 'Council member for District 3 since 2023', 9, 2, 1, '12 September']];
+const PEOPLE_OTHERS = [
+  ['K. Osei', 'subject', 'Budget Director, Finance Department, since 2021', 3, 1, 1, '28 September'],
+  ['Finance Department', 'group', 'A city department · keeps the city\'s funds and accounts', 4, 1, 1, '28 September'],
+  ['Port of Oakland', 'group', 'A port authority, run apart from the city\'s departments', 2, 0, 0, '20 August']];
+const nOf = (k, one, many) => `${k} ${k === 1 ? one : many}`;
+const personRow = ([name, ic, who, d, q, p, last]) => row(I(ic),
+  `<b>${ref(name, 'person', `<b>${name}</b> · ${ic === 'subject' ? 'a person' : 'an organisation'} the record follows · ${who}<span class=more>Click to open ${ic === 'subject' ? 'their page: positions, career and interests' : 'its page: what the record holds on it and who holds its offices'}, each dated and cited.</span>`)}</b> · ${who}<span class="meta">${q || p ? `named in ${nOf(d, 'document', 'documents')}, ${nOf(q, 'question', 'questions')} and ${nOf(p, 'project', 'projects')}` : `named in ${nOf(d, 'document', 'documents')}, in no question or project yet`} · newest added ${last}</span>`,
+  btn('explore', 'Explore connections', { help: `Looks for chains of links from ${name} to another person, organisation, payment or project you choose, each step cited and graded.` }));
+const ADD_SUBJECT = 'Adds a person or organisation your group\'s record should follow: the name, whether a person or an organisation, and your note on who they are and why the group follows them. Facts about them are then added from documents, each cited.';
+SCR.people = c => { const st = PEOPLE_ST[c.v] || 'a'; const sel = v => v === st ? ' selected' : ''; return { st, rail: 'people', title: 'People', crumbs: ['People'], main: `
+  <div class="mk-mockctl"><label for="mk-epeople">In this mockup, show</label> <select id="mk-epeople" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>the directory in use</option><option value="b"${sel('b')}>a group whose record follows no one yet</option><option value="c"${sel('c')}>a search that finds no one</option></select></div>
+  ${h1('People', `The people and organisations your group's record follows: officials, staff, companies and public bodies. Your own group's members are not listed here; they are under ${ref('Settings › Members', 'members', '<b>Members</b> · your group\'s own members, their invitations and what each may do')}.`)}
+  <div class="st st-a">
+  <div class="mk-search" data-act="search"><input class="cs-input" id="mk-pq" placeholder="Name or office" aria-label="Search people and organisations"><span>${btn('search', 'Search', { tone: 'primary', icon: 'search', help: 'Searches the people and organisations your group\'s record follows, by name, a name they are also known by, or office, with the filters below. To search inside documents, use Find.' })}</span></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end">
+   ${choice('mk-pk', 'Show', ['People and organisations', 'People', 'Organisations'], 'People and organisations', { act: 'search' })}
+   ${choice('mk-po', 'Holding an office in', ['Any body', 'City Council', 'City Clerk', 'Finance Department', 'Public Works Department', 'Superior Court'], 'Any body', { act: 'search' })}
+   ${choice('mk-pp', 'Named in', ['Any project', 'Your projects', 'The Coliseum lease', 'Pothole repairs', 'Sewer fund transfers'], 'Any project', { act: 'search' })}
+   ${choice('mk-pr', 'Named recently', ['At any time', 'In the last 30 days', 'In the last 90 days', 'In the last year'], 'At any time', { act: 'search' })}</div>
+  ${note('The record follows 10 people and organisations; 7 are named in your projects. Each row counts the documents, questions and projects that name them, among those you may see, and says when the newest of them was added to the record.')}
+  ${sec('In your projects', sheet(PEOPLE_YOURS.map(personRow).join('')), { help: 'Named in Pothole repairs or The Coliseum lease, the projects you work on. Newest added first.' })}
+  ${sec('Everyone else the record follows', sheet(PEOPLE_OTHERS.map(personRow).join('')), { help: 'Followed by your group but not named in your projects. Newest added first.' })}
+  ${acts(btn('entitycreate', 'Add someone the record follows', { help: ADD_SUBJECT }))}</div>
+  <div class="st st-b">${row(I('nobody'), '<b>Your group\'s record follows no one yet.</b> A person or organisation comes in one of two ways: a member ties a name in a captured document to them, on the document under “People it names”, or adds them here with a note on who they are and why the group follows them.', '')}
+   ${acts(btn('entitycreate', 'Add someone the record follows', { tone: 'primary', help: ADD_SUBJECT }), ref(I('add') + 'Capture a document', 'capture', '<b>Add</b> · capture a document from its address, a file or photo; the people it names can then be tied to it'))}</div>
+  <div class="st st-c"><div class="mk-search" data-act="search"><input class="cs-input" id="mk-pq0" value="Alvarez" aria-label="Search people and organisations"><span>${btn('search', 'Search', { tone: 'primary', icon: 'search', help: 'Searches the people and organisations your group\'s record follows, by name, a name they are also known by, or office. To search inside documents, use Find.' })}</span></div>
+   ${row(I('nobody'), '<b>No one the record follows matches “Alvarez”.</b> Someone appears here only once your group follows them. If a document names them, open it and tie the name to them under “People it names”; or add them here.', '')}
+   ${acts(btn('entitycreate', 'Add someone the record follows', { tone: 'primary', help: ADD_SUBJECT }), ref(I('search') + 'Look for “Alvarez” in documents', 'finder', '<b>Find</b> · searches the documents your group holds, where a name can appear before anyone ties it to a person'))}</div>`}; };
+
 SCR.person = c => ({ rail: 'people', title: 'Person', crumbs: ['People', 'L. Chen'], main: `
   ${h1('L. Chen', 'Director of Public Works since March 2022 · named in 14 documents')}
-  ${btn('person', 'Open the person')}
+  ${acts(btn('person', 'Open the person'), btn('explore', 'Explore connections', { help: 'Looks for chains of links from L. Chen to another person, organisation, payment or project you choose, each step cited and graded.' }))}
   ${sec('Positions', sheet(row(I('group'), 'Director of Public Works · March 2022–', '<span class="muted">city roster · ' + grade('capture', 'B') + '</span>') + row(I('group'), 'Deputy Director, Transportation · 2018–2022', '<span class="muted">council minutes · ' + grade('capture', 'B') + '</span>')))}
   ${sec('Career, credentials, memberships, interests', sheet(row(I('case'), 'Licensed civil engineer (California)', '<span class="muted">state licence register · ' + grade('capture', 'B') + '</span>') + row(I('money'), 'Form 700 (2025): no reportable interests', '<span class="muted">' + grade('capture', 'B') + '</span>')) + acts(btn('recordpersonfact', 'Add a fact from a document'), btn('followregister', 'Follow the licence register')))}
   ${sec('Same person?', `${sheet(row(grade('subject', 'B'), '“Lin Chen”, Deputy Director, in the 2019 minutes', '<span class="muted">claimed the same person, grade B, because both hold the Deputy Director post on the cited dates</span>'))}${acts(btn('identityclaim', 'Say another record is this person…'), btn('withdrawidentityclaim', 'Withdraw a same-person claim'))}`)}

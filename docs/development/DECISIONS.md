@@ -3199,6 +3199,7 @@ owed: (BOB, T47's L11, N999, N1002, N1003, N1005) build the front door at `/` wi
 
 ### DEC-202 · answered
 raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (Bob's answers to BOB's D1–D15, K3060 and K3061, folded into DEC-201's drawings)
+amended: 2026-10-13 by DEC-203: (5)'s People is drawn as BOB decided it (D8, K3061).
 for: bob-session
 question: How Bob's answers of 12 October change the way in drawn by DEC-201.
 why it is Bob's: the rulings are his (K3060, K3061, given through BOB, cited here, not ruled again); the drawing beneath them is the design session's (P17).
@@ -3215,3 +3216,24 @@ response: **Bob's rulings through BOB (K3060, K3061), drawn by the design sessio
 decided: 2026-10-12 · Bob (K3060, K3061), drawn by the design session
 reasoning recorded in: this entry; `screens/mock-screens.js` (front, forgot, recovery, join, settings, members), `screens/page.src.html`, `screens/registry.src.py`, `screens/mock-shell.js`, `screens/mock-refs.js`, `screens/words-t47.src.py`, `screens/words.json` (1,692 words, 597 protected), `layouts.html`.
 owed: (BOB) the group's page at `/` as drawn; sessions per D3 (idle sign-out, lock, re-asking the password for the four acts); recovery codes for every member at joining (credentials R46 widened beyond administrators) and the member's reset link (`owed:passwordresetlink`); the walk-through reachable before joining.
+
+### DEC-203 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (BOB's decision under Bob's delegation, D8, K3061; N1008)
+for: bob-session
+question: What a member sees on People, drawn as BOB decided it under Bob's delegation.
+why it is Bob's: it is not: Bob delegated D8 ("What do you think members should see when they click on the People group? Do that."), BOB decided its content (K3061), and the drawing beneath it is the design session's (P17), reported as done.
+provisional: interface-shell R29 (T47): People opens Find over the people and organisation kinds.
+alternative: R29 as written, a search with no list until the member types.
+recommendation: as K3061 decided: a directory a member can scan before knowing a name.
+reversal cost: low: a mockup and its words.
+response: **Decided by BOB under Bob's delegation (K3061), drawn by the design session, 2026-10-13.**
+(1) **People** (`people`, the rail's People and the phone's More): "The people and organisations your group's record follows: officials, staff, companies and public bodies", saying in the same sentence that the group's own members are not listed and are under Settings › Members (a link). Offices are not rows: an office is a post, shown as the role on its holder's row and as a filter.
+(2) **Search and filters** (all `search`, with `type` set to the person and organisation kinds): a search box ("Name or office": a name, a name they are also known by, or an office), then four filters in one row (two on a phone): Show (people and organisations, people, organisations); Holding an office in (any body, or one body); Named in (any project, your projects, or one project); Named recently (at any time, the last 30 or 90 days, the last year: named in something the group added in that time).
+(3) **Order**: "In your projects" first (named in the documents or questions of a project the member works on), then "Everyone else the record follows"; within each, the newest added first. A line above says how many the record follows and how many are in the member's projects, and what each row counts.
+(4) **Each row**: the kind's mark (a person or an organisation); the name, which opens their page (`person`) and whose card says who they are; who they are today (role and office, or for an organisation what it is); "named in 14 documents, 2 questions and 1 project · newest added 2 October" (counting only what the member may see; "in no question or project yet" when so); and "Explore connections" (`explore`), starting from them. The person's own page gains the same "Explore connections".
+(5) **Adding**: "Add someone the record follows" (`entitycreate`: the name, person or organisation, and the member's note on who they are and why the group follows them).
+(6) **Empty states**: a record that follows no one yet ("A person or organisation comes in one of two ways: a member ties a name in a captured document to them, on the document under 'People it names', or adds them here with a note…", with "Add someone the record follows" and "Capture a document"); and a search that finds no one ("No one the record follows matches 'Alvarez'… Someone appears here only once your group follows them", with adding and "Look for 'Alvarez' in documents", which opens Find).
+(7) **Journeys**: journey 10 now finds L. Chen on People before opening his page; journey 13 starts "Explore connections" from J. Ortega's row on People. 476 steps walk clean across 28 journeys and 59 screens.
+decided: 2026-10-13 · BOB under Bob's delegation (K3061), drawn by the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (people, person), `screens/mock-journeys.js` (journeys 10 and 13), `screens/mock-shell.js`, `screens/mock-refs.js`, `screens/registry.src.py` (59 screens), `screens/words.json` (1,698 words, 601 protected), `layouts.html`.
+owed: (BOB, L11, N1008) People built as drawn, replacing interface-shell R29: a read answering the people and organisations the record follows with, per row, who they are today, the counts of documents, questions and projects naming them among those the viewer may see, and when the newest was added, ordered the member's projects first and newest added first, with the four filters; "Explore connections" on each row and on the person's page; `entitycreate` for a person or organisation from People; the two empty states; registry.json and words.json re-taken.

@@ -51,12 +51,12 @@
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "screen": 115,
-  "act": 575,
+  "screen": 117,
+  "act": 579,
   "column": 33,
   "wizard": 306,
-  "total": 1692,
-  "protected": 597
+  "total": 1698,
+  "protected": 601
  },
  "words": [
   {
@@ -4748,6 +4748,18 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.people.name",
+   "en": "People",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.people.purpose",
+   "en": "The people and organisations your group's record follows, those named in your projects first, each with how often the record names them. Your own members are under Settings › Members.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "screen.person.name",
    "en": "Person",
    "protected": false,
@@ -6146,8 +6158,32 @@
    "source": "registry.json"
   },
   {
+   "key": "act.search.label.people",
+   "en": "Search people and organisations",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.explore.label.people",
+   "en": "Explore connections",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.entitycreate.label.people",
+   "en": "Add someone the record follows",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.person.label.person",
    "en": "Open the person",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.explore.label.person",
+   "en": "Explore connections",
    "protected": true,
    "source": "registry.json"
   },

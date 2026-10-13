@@ -33,6 +33,7 @@ const J = [
  { n: 10, t: 'Following a person', who: 'Any member; often an investigator or reporter', steps: [
    { s: 'document', act: 'identityclaim', say: 'Dev meets a name in the repair policy: L. Chen, Director of Public Works.' },
    { s: 'find-in', act: 'recordpersonfact', v: 'project', say: 'He uses "Find in this project" for people and offices: L. Chen is named in 6 of its 14 documents, each with its passage. Nothing is recorded until he records it.' },
+   { s: 'people', act: 'search', say: 'He opens People and searches for “Chen”: L. Chen is listed under his projects, named in 14 documents, 2 questions and 1 project.' },
    { s: 'person', act: 'person', say: 'He opens the person\'s page: positions over time, each dated and cited.' },
    { s: 'person', act: 'recordpersonfact', say: 'He adds a fact from a captured document: a licence from the state register.' },
    { s: 'person', act: 'identityclaim', say: '"Lin Chen" in the 2019 minutes: he records "claimed the same person, grade B, because…". Records are linked, never merged.' },
@@ -41,7 +42,7 @@ const J = [
  { n: 11, t: 'Building a timeline', who: 'Members; the project owner', wiz: 'Build a timeline' },
  { n: 12, t: 'Following a money trail', who: 'Members; often an accountant', wiz: 'Follow the money' },
  { n: 13, t: 'Exploring connections', who: 'Investigators', steps: [
-   { s: 'person', act: null, say: 'From a council member\'s page, Teo chooses "Explore connections".' },
+   { s: 'people', act: 'explore', say: 'Teo opens People. J. Ortega, the council member for District 3, is listed under his projects, named in 9 documents, 2 questions and 1 project. On his row Teo chooses "Explore connections".' },
    { s: 'explore', act: 'explore', say: 'He picks the kinds to follow (money, votes, positions) and an end point: the Coliseum lease.' },
    { s: 'explore', act: 'exploreverify', say: 'Each chain shows every step cited and graded; the weakest step sets its grade.' },
    { s: 'explore', act: 'connectionassert', say: 'A declared step is a lead, not evidence. He attaches a source to make it evidence.' },

@@ -51,7 +51,7 @@ function mast(c, s) {
 // names the thing shown (a question's words, a person's name); the path names the screen.
 const PATH = {
   install: ['Civicsmith', 'Create your group'], update: ['Civicsmith', 'Update'], front: ['Lakeshore Tenants'], forgot: ['Lakeshore Tenants', 'Forgot your password'], 'review-outside': ['Lakeshore Tenants', 'Review copy'],
-  group: ['Settings', 'Your group'], settings: ['Settings'], projects: ['Projects'], unavailable: ['Can\'t open this'], setup: ['Set up', 'Places and languages'], join: ['Lakeshore Tenants', 'Your invitation'],
+  group: ['Settings', 'Your group'], settings: ['Settings'], projects: ['Projects'], people: ['People'], unavailable: ['Can\'t open this'], setup: ['Set up', 'Places and languages'], join: ['Lakeshore Tenants', 'Your invitation'],
   doorbell: ['Lakeshore Tenants', 'Hand material over'], published: ['Lakeshore Tenants', 'Published cases', 'The Coliseum lease'],
   home: ['Home'], queue: ['Queue'], 'due-date': ['Queue', 'Due date'], inbox: ['Queue', 'Inbox'],
   finder: ['Find'], capture: ['Add'], held: ['Add', 'Held captures'], archive: ['Add', 'Held captures', 'Archive'], 'open-file': ['Projects', 'The Coliseum lease', 'Opening a file'],
@@ -173,7 +173,7 @@ const railW = () => window.CS_RAILW || 184;
 const GROUP_CARD = '<b>Lakeshore Tenants</b> · your group · tenants near the Coliseum, meeting since 2025 · checks whether the city keeps its own rules and promises · 6 members<span class=more>Click to see who your group is.</span>';
 const GROUP_PUBLIC = '<b>Lakeshore Tenants</b> · a tenants\' group near the Oakland Coliseum · checks whether the city keeps its own rules and promises · its published cases are signed by its project owners';
 const ICON_KIND = { capture: 'A document or a capture', subject: 'A person or organisation the record follows', group: 'An office, a member or a group', question: 'A question', finding: 'A finding', case: 'A case', plan: 'A plan or an action', timeline: 'An event', money: 'A money item', clock: 'Something with a time limit', camera: 'A photo', changed: 'Something that changed', tension: 'Two things that disagree', hold: 'Held, not yet in the record', signed: 'Signed', wizard: 'A wizard' };
-const CRUMB_GO = { Home: 'home', Queue: 'queue', Find: 'finder', Add: 'capture', Projects: 'project', People: 'person', Settings: 'account' };
+const CRUMB_GO = { Home: 'home', Queue: 'queue', Find: 'finder', Add: 'capture', Projects: 'project', People: 'people', Settings: 'account' };
 function decorate(html, id, c) {
   if (typeof document === 'undefined') return html;
   const t = document.createElement('template'); t.innerHTML = html; const R = t.content;

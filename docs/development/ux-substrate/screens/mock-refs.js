@@ -425,6 +425,7 @@ const SCREEN_HELP = {
   group: 'Administrators only: your group\'s name, website, languages, court notice, hosting account and bar.',
   settings: 'Every setting in one list: yours first, then the group\'s.',
   projects: 'Every project you can see, with its owner and how far it has come.',
+  people: 'The people and organisations your group\'s record follows, those named in your projects first, each with how often the record names them. Your own members are under Settings › Members.',
   unavailable: 'What you see when an address leads nowhere, when something isn\'t yours to see, or when your group\'s Civicsmith can\'t be reached.',
   'review-outside': 'What someone outside the group sees when asked to review a draft case: the draft and a place to comment.',
   setup: 'The first administrator\'s setup: claim the installation, then name the group, choose its places and languages, and decide how members reach the assistant.',
