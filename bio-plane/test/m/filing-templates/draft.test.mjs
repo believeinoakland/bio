@@ -162,8 +162,10 @@ test("R3 refusals in order: MACHINE_CANNOT_DRAFT_TEMPLATE, NO_SUCH_TEMPLATE, TEM
 });
 
 test("R19 FILING_BLANKS and FILING_TEXT_MAX are exported frozen and unchanged from filings' at the move; blanksOf answers the names in order and the first unknown", () => {
-  /* filings' value at the move (`filings/index.mjs`:75–:97, T21), each sentence unchanged */
-  assert.deepEqual({ ...ft.FILING_BLANKS }, {
+  /* filings' value at the move (`filings/index.mjs`:75–:97, T21), each sentence unchanged, first and in order; R31 (T47)
+     adds four after them, which r31.test.mjs pins */
+  const moved = Object.fromEntries(Object.entries(ft.FILING_BLANKS).slice(0, 15));
+  assert.deepEqual(moved, {
     counterparty_role: "the official role of the office the action is addressed to (the action's counterparty)",
     counterparty_body: "the body of that office (an office's arm only)",
     counterparty_organisation: "the organisation of a reporter, an organisation or another group the action is addressed to",
@@ -184,7 +186,7 @@ test("R19 FILING_BLANKS and FILING_TEXT_MAX are exported frozen and unchanged fr
   assert.equal(ft.FILING_TEXT_MAX, 65536);
   assert.deepEqual(Object.keys(ft.FILING_BLANKS), ["counterparty_role", "counterparty_body", "counterparty_organisation",
     "counterparty_description", "act", "act_date", "standards", "findings", "governing_laws", "law", "clock", "venue",
-    "venue_how", "group", "date"]);
+    "venue_how", "group", "date", "records", "period", "form", "cost_limit"], "the fifteen moved, then R31's four");
   for (const v of Object.values(ft.FILING_BLANKS)) assert.equal(typeof v, "string");
   assert.deepEqual(ft.blanksOf("{{law}} {{group}} {{law}} {{ venue }}"), { blanks: ["law", "group", "venue"], unknown: null });
   assert.deepEqual(ft.blanksOf("{{group}} {{x_y}} {{zz}}"), { blanks: ["group", "x_y", "zz"], unknown: "x_y" });

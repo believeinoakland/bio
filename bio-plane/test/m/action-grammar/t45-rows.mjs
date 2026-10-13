@@ -1,7 +1,8 @@
 /* action-grammar R9 (T45-25; reconciliation R21; K2845, K2849): the rows C-117.30–.58 this job adds, as drafted, each
    {check, where, translation} exactly; pinned here so a later change to one is a change to a test. New in T45 layer 9,
    awaiting T46's stamp. Since T46 (R26; N913) twenty-four of them translate by `words.json`'s `refusal.<CODE>`: `ROWS_NOW`
-   below is each row as it now reads, `T45_ROWS` the record of T45's drafts. */
+   below is each row as it now reads, `T45_ROWS` the record of T45's drafts. Since T47 (R28; N961) the `where`s of C-117.39 and
+   C-117.48–.52 name `src/action-records/index.mjs`, whose acts raise them now. */
 import { readFileSync } from "node:fs";
 
 export const T45_ROWS = {
@@ -52,7 +53,7 @@ export const T45_ROWS = {
   },
   RECEIPT_NOT_ON_SENT: {
     check: "C-117.39",
-    where: "src/actions/index.mjs actionReceipt > is-receipt-on-sent",
+    where: "src/action-records/index.mjs actionReceipt > is-receipt-on-sent",
     translation: "Receipt is recorded for something the group sent: when and how the addressee received it. The entry named records something received, or a reply that never came, so nothing was written.",
   },
   OFFICE_STATUS_UNKNOWN: {
@@ -97,27 +98,27 @@ export const T45_ROWS = {
   },
   MACHINE_CANNOT_SET_SCOPE: {
     check: "C-117.48",
-    where: "src/actions/index.mjs actionScope > is-scope",
+    where: "src/action-records/index.mjs actionScope > is-scope",
     translation: "Whether an action is kept confidential inside the group is a member's decision, made with a reason. The credential that asked here is an automated one, so it cannot set or remove it. Nothing was written. Sign in to do it yourself.",
   },
   SCOPE_NO_REASON: {
     check: "C-117.49",
-    where: "src/actions/index.mjs actionScope > is-scope",
+    where: "src/action-records/index.mjs actionScope > is-scope",
     translation: "Keeping an action confidential, or ending that, is recorded with a reason in your own words, up to 500 characters with no quotation mark, backslash or line break. No such reason was given, so nothing was written.",
   },
   SCOPE_UNCHANGED: {
     check: "C-117.50",
-    where: "src/actions/index.mjs actionScope > is-scope",
+    where: "src/action-records/index.mjs actionScope > is-scope",
     translation: "The action already has that scope, so there is nothing to change. Nothing was written.",
   },
   MACHINE_CANNOT_RECORD_PROMISE: {
     check: "C-117.51",
-    where: "src/actions/index.mjs actionPromise > is-promise",
+    where: "src/action-records/index.mjs actionPromise > is-promise",
     translation: "A promise the group made to a person, an embargo or a source's anonymity, is recorded by a member who answers for it. The credential that asked here is an automated one, so it cannot record one. Nothing was written. Sign in to record it yourself.",
   },
   PROMISE_REFUSED: {
     check: "C-117.52",
-    where: "src/actions/index.mjs actionPromise > is-promise",
+    where: "src/action-records/index.mjs actionPromise > is-promise",
     translation: "A promise is recorded as an embargo, anonymity or other, with words of up to 500 characters; one that ends an earlier promise names a promise still standing. This one was not of that form, so nothing was written.",
   },
   FOUND_ELSEWHERE_REFUSED: {
