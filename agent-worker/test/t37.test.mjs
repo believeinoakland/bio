@@ -79,6 +79,8 @@ async function signin(body, { env = {}, answer = honest, noRunner = false, metho
   return { ...w.result, runner: r.calls, named: r.named, plane: p.calls, lines: w.lines, fetched: w.fetched, keys: [...keys] };
 }
 const codeOf = (r) => [r.status, r.out?.code];
+/* R84 (T47): every /signin answer carries `trace`; this is the answer without it. */
+const bare = (o) => { if (o === null || typeof o !== "object") return o; const { trace: _t, ...rest } = o; return rest; };
 
 section("R66 · POST /signin: refusals before any runner call, in order");
 {
@@ -121,7 +123,7 @@ section("R66 · each step sent to the member's own instance, the runner's answer
       [[[MEMBER, ROUTES[step], "", "POST"]], [MEMBER]]);
     t(`R66: step ${step}'s request body is ${step === "code" ? "{member, code}" : "{member}"}, nothing else`,
       JSON.parse(r.runner[0]?.body ?? "null"), step === "code" ? { member: MEMBER, code: CODE } : { member: MEMBER });
-    t(`R66: step ${step} answers the runner's answer (200)`, [r.status, r.out],
+    t(`R66, R84: step ${step} answers the runner's answer (200), unchanged but for trace`, [r.status, bare(r.out)],
       [200, JSON.parse(await honest(ROUTES[step], { member: MEMBER }).text())]);
   }
   const other = await signin({ member: "MEMBER-OTHER", step: "state" });
@@ -130,21 +132,23 @@ section("R66 · each step sent to the member's own instance, the runner's answer
   /* Refusals and odd bodies from the runner pass through byte for byte, status and body (R43). */
   const raw = `{"ok":false,"reason":"NOT_THIS_MEMBER","code":"NOT_THIS_MEMBER","detail":"another member's sign-in is held here",  "extra":[1,2]}`;
   const refused = await signin({ member: MEMBER, step: "start" }, { answer: () => new Response(raw, { status: 409 }) });
-  t("R66, R43: a runner refusal (409 NOT_THIS_MEMBER) is answered unchanged, status and body, byte for byte",
-    [refused.status, refused.text], [409, raw]);
+  t("R66, R43, R84: a runner refusal (409 NOT_THIS_MEMBER) is answered unchanged, status and body, its keys in order, but for trace",
+    [refused.status, JSON.stringify(bare(refused.out)), typeof refused.out?.trace], [409, JSON.stringify(JSON.parse(raw)), "string"]);
   for (const [status, body] of [[409, { ok: false, reason: "NO_SIGNIN_WAITING", code: "NO_SIGNIN_WAITING" }],
                                 [409, { ok: false, reason: "SIGNIN_REFUSED", code: "SIGNIN_REFUSED", detail: "the code was not accepted" }],
                                 [502, { ok: false, reason: "SIGNIN_UNAVAILABLE", code: "SIGNIN_UNAVAILABLE", detail: "no address in 30 s" }],
                                 [502, { ok: false, reason: "SIGNIN_ADDRESS_UNEXPECTED", code: "SIGNIN_ADDRESS_UNEXPECTED" }],
                                 [400, { ok: false, reason: "BAD_CODE", code: "BAD_CODE" }]]) {
     const x = await signin({ member: MEMBER, step: "code", code: CODE }, { answer: () => Response.json(body, { status }) });
-    t(`R66, R43: the runner's ${status} ${body.code} is answered unchanged`, [x.status, x.out], [status, body]);
+    t(`R66, R43, R84: the runner's ${status} ${body.code} is answered unchanged but for trace`, [x.status, bare(x.out)], [status, body]);
   }
   const scalar = await signin({ member: MEMBER, step: "state" }, { answer: () => new Response("null", { status: 200 }) });
-  t("R66: a JSON answer of any shape is the runner's and passes unchanged", [scalar.status, scalar.text], [200, "null"]);
+  t("R84 (T47): a JSON answer that is not an object cannot carry trace, so it is not relayed: 502 RUNNER_SILENT with the runner's status and head",
+    [codeOf(scalar), scalar.out?.runner_status, scalar.out?.runner_text_head], [[502, "RUNNER_SILENT"], 200, "null"]);
 
   const threw = await signin({ member: MEMBER, step: "start" }, { answer: () => { throw new Error("container is starting"); } });
-  t("R66: a runner that throws: 502 RUNNER_SILENT with detail", [codeOf(threw), typeof threw.out?.detail, /container is starting/.test(threw.out?.detail)],
+  t("R66, R84: a runner that throws: 502 RUNNER_SILENT with the member's words in detail and the binding's own beside them",
+    [codeOf(threw), typeof threw.out?.detail, /container is starting/.test(threw.out?.detail_from_binding)],
     [[502, "RUNNER_SILENT"], "string", true]);
   const html = await signin({ member: MEMBER, step: "state" }, { answer: () => new Response("<html>bad gateway</html>", { status: 502 }) });
   t("R66: a runner that answers no JSON: 502 RUNNER_SILENT with detail", [codeOf(html), typeof html.out?.detail], [[502, "RUNNER_SILENT"], "string"]);
@@ -204,7 +208,7 @@ section("R67, R36 · the code from Anthropic's page reaches that one request's b
     [[502, "RUNNER_SILENT"], false]);
 
   /* The sign-in address reaches no answer but the start answer that carries it. */
-  t("R67: the sign-in address is in the start answer, unchanged", drives[0].out, { ok: true, address: ADDRESS });
+  t("R67: the sign-in address is in the start answer, unchanged", bare(drives[0].out), { ok: true, address: ADDRESS });
   t("R67: the sign-in address is in no other step's answer", drives.slice(1).filter((d) => d.text.includes("SIGNIN-ADDRESS-SENTINEL")).length, 0);
   t("R67: every step went to the instance named by its member", drives.flatMap((d) => d.named), [MEMBER, MEMBER, MEMBER, MEMBER]);
   /* Nothing is kept between calls: a state step after a code step sends no code and answers none. */

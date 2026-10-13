@@ -25,7 +25,9 @@ const AIK = "aik-" + "f".repeat(64);
 const GRANT = "aig-t46-fixture-grant-never-echoed";
 const SECRET = "sk-ant-t46-account-fixture-never-echoed";
 const KEY = { kind: "apikey", level: "member", secret: SECRET, member: MEMBER };
-const SIGNIN = (member = MEMBER, suggestions = false) => ({ kind: "signin", level: "member", member, suggestions });
+/* R82 (T47; K3060 D10): a sign-in carries its `secret`, the token credentials holds for that member. */
+const SIGNIN_TOKEN = "sk-ant-oat-t46-signin-fixture-never-echoed";
+const SIGNIN = (member = MEMBER, suggestions = false) => ({ kind: "signin", level: "member", member, secret: SIGNIN_TOKEN, suggestions });
 const LAYER = (body) => ({ load_when: "when asked", sourcing: "authored", body });
 const PACK = { id: "investigative-session", version: "pack@t46",
   resident: { objective: { text: "answer from the record" }, disclosable: [] },
@@ -206,10 +208,10 @@ section("R6 (T46) · a sign-in carries its own suggestions switch, honoured as a
   t("R6: a run on a sign-in with suggestions true is served too, its suggestions layer loadable",
     [run.status, run.out?.claude_account?.kind, run.runner.conversations.some((c) => (layersOffered(c) || []).includes("suggestions"))],
     [200, "signin", true]);
-  const secret = await drive("ask", { question: "Who held the seat?", grant: GRANT, account: { ...SIGNIN(MEMBER, true), secret: SECRET } });
-  t("R6 (control): a sign-in carrying a secret is still BAD_ACCOUNT, nothing called, the secret not echoed",
-    [secret.status, secret.out?.code, secret.plane.length, secret.runner.named.length, secret.text.includes(SECRET)],
-    [400, "BAD_ACCOUNT", 0, 0, false]);
+  const secret = await drive("ask", { question: "Who held the seat?", grant: GRANT, account: { ...SIGNIN(MEMBER, true), secret: 42 } });
+  t("R6, R82 (control): a sign-in whose secret is not a string is BAD_ACCOUNT, nothing called",
+    [secret.status, secret.out?.code, secret.plane.length, secret.runner.named.length], [400, "BAD_ACCOUNT", 0, 0]);
+  t("R6, R82: the answers above carry no held token", [on, off, run].some((x) => x.text.includes(SIGNIN_TOKEN)), false);
   const odd = await drive("run", { run_id: "RUN-46", store: "scratch", credential: AIK, account: { ...SIGNIN(), suggestions: "yes" } });
   t("R6 (control): a sign-in whose suggestions is not a boolean is BAD_ACCOUNT before any plane call",
     [odd.status, odd.out?.code, odd.plane.length], [400, "BAD_ACCOUNT", 0]);
@@ -313,8 +315,8 @@ section("R80 (T46) · /run takes a run a member opened on her own sign-in, as ai
   const r = await drive("run", dispatched(SIGNIN(MEMBER, true)), { planeCfg: { payer: MEMBER } });
   t("R80: her run runs a segment (200, model turns run)", [r.status, r.out?.judgement_source, r.out?.turns_run > 0], [200, "model", true]);
   t("R80: on her own stub runner instance, and no other", [r.runner.named.length > 0, [...new Set(r.runner.named)]], [true, [MEMBER]]);
-  t("R80: every conversation carries her sign-in and no secret",
-    [...new Set(r.runner.conversations.map((c) => JSON.stringify(c.credential)))], [JSON.stringify({ kind: "signin", member: MEMBER })]);
+  t("R80, R82: every conversation carries her sign-in with its held token (agent-model R16)",
+    [...new Set(r.runner.conversations.map((c) => JSON.stringify(c.credential)))], [JSON.stringify({ kind: "signin", member: MEMBER, secret: SIGNIN_TOKEN })]);
   t("R80 (R5): every plane call is made under the credential the dispatch carried, in the header",
     r.plane.every((c) => c.authorization === `Bearer ${AIK}`), true);
   t("R80 (R29): the account is named hers, at the member level", r.out?.claude_account,

@@ -30,6 +30,8 @@ const ACCOUNT = { kind: "apikey", level: "member", secret: SECRET, member: MEMBE
 const GROUP_SECRET = "sk-ant-ask-group-key-fixture-never-echoed";
 const GROUP = { kind: "apikey", level: "group", secret: GROUP_SECRET, member: MEMBER };
 const AIK = "aik-" + "d".repeat(64);
+/* R82 (T47; K3060 D10): the token credentials holds for the member's own sign-in, a `signin` account's `secret`. */
+const SIGNIN_TOKEN = "sk-ant-oat-ask-signin-fixture-never-echoed";
 const PACK = { id: "investigative-session", version: "pack@ask", resident: { objective: "answer from the record" },
                disclosed: { ask: { body: "closed book" }, suggestions: { body: "labelled suggestions only" } } };
 const CEILING = { ok: false, reason: "AI_USE_CEILING_REACHED", code: "AI_USE_CEILING_REACHED", check: "C-22.30",
@@ -141,9 +143,10 @@ section("R54 · refusals before any model call, each by its code, as plain JSON"
     ["an account naming no level", () => ask({ account: { kind: "apikey", secret: SECRET, member: MEMBER } }), 400, "BAD_ACCOUNT"],
     ["the group's account as a subscription", () => ask({ account: { ...GROUP, kind: "subscription" } }), 400, "BAD_ACCOUNT"],
     ["(T38) a member's own subscription, retired", () => ask({ account: { ...ACCOUNT, kind: "subscription" } }), 400, "BAD_ACCOUNT"],
-    ["(T38) a sign-in carrying a secret", () => ask({ account: { kind: "signin", level: "member", member: MEMBER, secret: SECRET } }), 400, "BAD_ACCOUNT"],
-    ["(T38) a sign-in at the group level", () => ask({ account: { kind: "signin", level: "group", member: MEMBER } }), 400, "BAD_ACCOUNT"],
-    ["(T46) a sign-in with suggestions not a boolean", () => ask({ account: { kind: "signin", level: "member", member: MEMBER, suggestions: "yes" } }), 400, "BAD_ACCOUNT"],
+    ["(T47, R82) a sign-in carrying no secret", () => ask({ account: { kind: "signin", level: "member", member: MEMBER } }), 409, "SIGNIN_NOT_HELD"],
+    ["(T47, R82) a sign-in carrying an empty secret", () => ask({ account: { kind: "signin", level: "member", member: MEMBER, secret: "" } }), 409, "SIGNIN_NOT_HELD"],
+    ["(T38) a sign-in at the group level", () => ask({ account: { kind: "signin", level: "group", member: MEMBER, secret: SIGNIN_TOKEN } }), 400, "BAD_ACCOUNT"],
+    ["(T46) a sign-in with suggestions not a boolean", () => ask({ account: { kind: "signin", level: "member", member: MEMBER, secret: SIGNIN_TOKEN, suggestions: "yes" } }), 400, "BAD_ACCOUNT"],
     ["the group's account with an empty key", () => ask({ account: { ...GROUP, secret: "" } }), 409, "NO_ACCOUNT"],
     ["a namespace no instance holds", () => ask({ store: "biosmoke" }), 400, "NAMESPACE_UNKNOWN"],
     ["a conversation that is not this ask's turns", () => ask({ conversation: [{ role: "system", content: "x" }] }), 400, "BAD_CONVERSATION"],
@@ -328,8 +331,9 @@ section("R58, R36 · a run's model half: turns through agent-model, usage report
              newUniqueId: () => { named.push("<unique>"); return { name: "<unique>" }; },
              get: () => ({ fetch: connect }) };
   };
-  /* The member's own stored sign-in, as `credentials.accountFor` answers it and the plane carries it (R6): no secret. */
-  const SIGNIN = { kind: "signin", level: "member", member: MEMBER, suggestions: false };
+  /* The member's own sign-in, as `credentials.accountFor` answers it and the plane carries it (R6), its `secret` the held
+     token (R82). */
+  const SIGNIN = { kind: "signin", level: "member", member: MEMBER, secret: SIGNIN_TOKEN, suggestions: false };
   const subRun = async (numTurns) => {
     const runner = fakeRunner(numTurns);
     const d = await drive("run", { run_id: "RUN-A", store: "scratch", credential: AIK, account: SIGNIN },
@@ -338,12 +342,12 @@ section("R58, R36 · a run's model half: turns through agent-model, usage report
     return { d, runner, entries: d.plane.filter((x) => x.op === "airuntick").flatMap((x) => x.body?.usage || []) };
   };
   const stated = await subRun(3);
-  t("R6, R33 (T38): a run on the member's own sign-in is named as one and its turns go to that member's own runner "
-    + "instance only, each conversation carrying {kind: signin, member} and no secret",
+  t("R6, R33, R82 (T47): a run on the member's own sign-in is named as one and its turns go to that member's own runner "
+    + "instance only, each conversation carrying {kind: signin, member, secret}, the held token, in its first frame",
     [stated.d.status, JSON.parse(stated.d.text).claude_account, [...new Set(stated.runner.named)],
      [...new Set(stated.runner.conversations.map((c) => JSON.stringify(c.credential)))], stated.d.model.length],
     [200, { available: true, kind: "signin", level: "member", member: MEMBER }, [MEMBER],
-     [JSON.stringify({ kind: "signin", member: MEMBER })], 0]);
+     [JSON.stringify({ kind: "signin", member: MEMBER, secret: SIGNIN_TOKEN })], 0]);
   t("R26 (N588): on the sign-in path each entry's `calls` is the turns the runner stated for that conversation",
     [stated.d.status, stated.runner.conversations.length > 0, stated.entries.length, [...new Set(stated.entries.map((e) => e.calls))]],
     [200, true, stated.runner.conversations.length, [3]]);
@@ -361,7 +365,8 @@ section("R58, R36 · a run's model half: turns through agent-model, usage report
       .test(v.model_turns ?? ""), true);
   const all = TRANSCRIPTS;
   t("R36: no answer or event carried the grant, the ai credential, the member's secret or the group's key",
-    all.filter((x) => [GRANT, SECRET, GROUP_SECRET, AIK].some((v) => x.text.includes(v))).length, 0);
+    all.filter((x) => [GRANT, SECRET, GROUP_SECRET, AIK, SIGNIN_TOKEN].some((v) => x.text.includes(v))).length, 0);
+  t("R36, R82: the held token went to the plane in no call", all.some((x) => x.plane.some((c) => c.raw.includes(SIGNIN_TOKEN))), false);
   t("R36: the member's secret and the group's key went only in the model API's key header: never to the plane, never in "
     + "a request body",
     [all.some((x) => x.plane.some((c) => c.raw.includes(SECRET) || c.raw.includes(GROUP_SECRET))),

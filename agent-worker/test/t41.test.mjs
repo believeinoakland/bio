@@ -30,9 +30,13 @@ const PROJECT_KEY = "sk-ant-t41-project-key-fixture-never-echoed";
 const MEMBER_KEY = "sk-ant-t41-member-key-fixture-never-echoed";
 /* credentials R56's cascade step 1, carried in R6's wire shape (`key` named `secret`; R71). */
 const PKEY = (member = MEMBER) => ({ kind: "apikey", level: "project", project: PROJECT, secret: PROJECT_KEY, member });
-const PSIGNIN = (member = MEMBER) => ({ kind: "signin", level: "project", project: PROJECT, member, suggestions: false });
+/* R82 (T47; K3060 D10): a sign-in carries its `secret`, the token credentials holds for that one member. */
+const SIGNIN_TOKEN = "sk-ant-oat-t41-signin-fixture-never-echoed";
+const PSIGNIN = (member = MEMBER) => ({ kind: "signin", level: "project", project: PROJECT, member, secret: SIGNIN_TOKEN, suggestions: false });
 const MKEY = (member = MEMBER) => ({ kind: "apikey", level: "member", secret: MEMBER_KEY, member });
-const SIGNIN = (member = MEMBER) => ({ kind: "signin", level: "member", member, suggestions: false });
+const SIGNIN = (member = MEMBER) => ({ kind: "signin", level: "member", member, secret: SIGNIN_TOKEN, suggestions: false });
+/* R82: the credential a sign-in's conversation sends in its first frame (agent-model R16). */
+const SIGNIN_CREDENTIAL = JSON.stringify({ kind: "signin", member: MEMBER, secret: SIGNIN_TOKEN });
 const PACK = { id: "investigative-session", version: "pack@t41", resident: { objective: "answer from the record" },
                disclosed: { ask: { body: "closed book" }, suggestions: { body: "labelled suggestions only" } } };
 const STANDING_OFF = { ok: false, reason: "STANDING_SWITCH_OFF", code: "STANDING_SWITCH_OFF", check: "C-29.26",
@@ -139,7 +143,7 @@ const stubbed = (account, extra) => runBody(account, { judgements: [], ...extra 
 const askBody = (account, extra = {}) => ({ question: "Who held the seat in March?", grant: GRANT, account, ...extra });
 const last = (r) => (r.lines ? r.lines[r.lines.length - 1] : null);
 const credentialsSent = (r) => [...new Set(r.runner.conversations.map((c) => JSON.stringify(c.credential)))];
-const secretsIn = (r) => [PROJECT_KEY, MEMBER_KEY].filter((s) => r.text.includes(s));
+const secretsIn = (r) => [PROJECT_KEY, MEMBER_KEY, SIGNIN_TOKEN].filter((s) => r.text.includes(s));
 
 section("R32, R71 · the cascade judges a project's account at its own level, carrying its project, never a secret");
 {
@@ -169,12 +173,14 @@ section("R33, R71 · the reference handed to agent-model: a project's key as a k
 {
   t("R33, R71: a project's API key becomes {kind: apikey, key} at the project level, naming no project",
     await cascadeToken(PKEY()), { level: "project", reference: { kind: "apikey", key: PROJECT_KEY } });
-  t("R33, R71: a project's sign-in becomes exactly the member's own {kind: signin, member} (agent-runner R2)",
+  const own = { kind: "signin", member: MEMBER, secret: SIGNIN_TOKEN };
+  t("R33, R71, R82: a project's sign-in becomes exactly the member's own {kind: signin, member, secret} (agent-model R16)",
     [await cascadeToken(PSIGNIN()), (await cascadeToken(PSIGNIN()))?.reference ?? null, (await cascadeToken(SIGNIN()))?.reference ?? null],
-    [{ level: "project", reference: { kind: "signin", member: MEMBER } }, { kind: "signin", member: MEMBER }, { kind: "signin", member: MEMBER }]);
+    [{ level: "project", reference: own }, own, own]);
   t("R33, R71 (control): null for a project's account naming no project, or with no key",
-    [await cascadeToken({ ...PKEY(), project: "" }), await cascadeToken({ ...PKEY(), secret: "" }), await cascadeToken({ ...PSIGNIN(), member: "" })],
-    [null, null, null]);
+    [await cascadeToken({ ...PKEY(), project: "" }), await cascadeToken({ ...PKEY(), secret: "" }), await cascadeToken({ ...PSIGNIN(), member: "" }),
+     await cascadeToken({ ...PSIGNIN(), secret: "" })],
+    [null, null, null, null]);
 }
 
 section("R6, R29, R71 · through POST /run: a project's account is taken, named with its project, and never echoed");
@@ -196,7 +202,8 @@ section("R6, R29, R71 · through POST /run: a project's account is taken, named 
     ["a project's account naming a project of over 200 characters", { ...PKEY(), project: "P".repeat(201) }, 400, "BAD_ACCOUNT"],
     ["a member's own account carrying a project", { ...MKEY(), project: PROJECT }, 400, "BAD_ACCOUNT"],
     ["the group's API key carrying a project", { kind: "apikey", level: "group", secret: MEMBER_KEY, member: MEMBER, project: PROJECT }, 400, "BAD_ACCOUNT"],
-    ["a project's sign-in carrying a secret", { ...PSIGNIN(), secret: PROJECT_KEY }, 400, "BAD_ACCOUNT"],
+    ["a project's sign-in carrying no secret (R82, T47)", { ...PSIGNIN(), secret: undefined }, 409, "SIGNIN_NOT_HELD"],
+    ["a project's sign-in carrying an empty secret (R82, T47)", { ...PSIGNIN(), secret: "" }, 409, "SIGNIN_NOT_HELD"],
     ["a project's sign-in with suggestions not a boolean (T46)", { ...PSIGNIN(), suggestions: "on" }, 400, "BAD_ACCOUNT"],
     ["a project's sign-in naming no member", { ...PSIGNIN(), member: "" }, 400, "BAD_ACCOUNT"],
     ["a project's account of a retired kind", { ...PKEY(), kind: "subscription" }, 400, "BAD_ACCOUNT"],
@@ -283,17 +290,17 @@ section("R71, R57 · model turns on a project's account: its key to the Messages
     [k.status, k.out?.judgement_source, k.model.length > 0, [...new Set(k.model.map((c) => c.key))], k.runner.named, secretsIn(k)],
     [200, "model", true, [PROJECT_KEY], [], []]);
   const s = await drive("run", runBody(PSIGNIN()));
-  t("R71, R57: a run's turns on a project's sign-in run in that member's own runner instance only, each conversation "
-    + "carrying exactly {kind: signin, member}, no project and no secret, and no API-key call",
+  t("R71, R57, R82: a run's turns on a project's sign-in run in that member's own runner instance only, each conversation "
+    + "carrying exactly {kind: signin, member, secret}, no project, and no API-key call",
     [s.status, s.out?.judgement_source, [...new Set(s.runner.named)], credentialsSent(s), s.model.length],
-    [200, "model", [MEMBER], [JSON.stringify({ kind: "signin", member: MEMBER })], 0]);
+    [200, "model", [MEMBER], [SIGNIN_CREDENTIAL], 0]);
   const own = await drive("run", runBody(SIGNIN()));
   t("R71 (control): the member's own sign-in sends the very same credential to the very same instance",
     [own.status, [...new Set(own.runner.named)], credentialsSent(own)], [s.status, [...new Set(s.runner.named)], credentialsSent(s)]);
   const a = await drive("ask", askBody(PSIGNIN()));
   t("R71, R6: an ask on a project's sign-in is answered, its turns in that member's own runner instance as the member's own",
     [a.status, last(a)?.event, [...new Set(a.runner.named)], credentialsSent(a), a.model.length],
-    [200, "answer", [MEMBER], [JSON.stringify({ kind: "signin", member: MEMBER })], 0]);
+    [200, "answer", [MEMBER], [SIGNIN_CREDENTIAL], 0]);
 }
 
 section("R57 (N796, K2425, K2472) · a standing question's AI half on its author's own sign-in, the standing use on and off");
@@ -303,9 +310,9 @@ section("R57 (N796, K2425, K2472) · a standing question's AI half on its author
      own for a sign-in: it answers exactly as it does on the author's own reference. */
   const on = await drive("ask", askBody(SIGNIN()));
   t("R57: the standing use on, the author's own sign-in serves the AI half: answered, its turns in the author's own "
-    + "runner instance only, carrying {kind: signin, member}, no API-key call",
+    + "runner instance only, carrying {kind: signin, member, secret}, no API-key call",
     [on.status, last(on)?.event, last(on)?.ok, [...new Set(on.runner.named)], credentialsSent(on), on.model.length],
-    [200, "answer", true, [MEMBER], [JSON.stringify({ kind: "signin", member: MEMBER })], 0]);
+    [200, "answer", true, [MEMBER], [SIGNIN_CREDENTIAL], 0]);
   t("R57: every plane call of it carries the standing grant and nothing else", [...new Set(on.plane.map((c) => c.token))], [GRANT]);
   const ref = await drive("ask", askBody(MKEY()));
   t("R57 (control): the author's own reference reaches the same answer by the same reads: a sign-in is never refused "
