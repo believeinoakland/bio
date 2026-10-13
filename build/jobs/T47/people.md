@@ -42,3 +42,7 @@ No new `uses` edge: entities, lines, membership, provenance and record-core are 
 - `node checks/run.mjs`: format 0 failures, architecture 0 failures over 3083 files, channels 0 failures. Coverage has 44 failures, all other modules' (L11 not yet built); none is people's.
 
 Size (session_01RqNJSwaQHYSnZPXzUrGVfv): test runs 9, module lines 2171
+
+## J2 · REPORT
+
+affordances' test "R12: each new module's op map holds exactly the ops graded for it" (bio-plane/test/m/affordances/t33.test.mjs:147) is red since people's map serves peopledirectory (R37), which no grade table holds yet; it turns green with L11's T47-48 (grade) and T47-53 (op-declarations R61). Not people's to change. Also: op-declarations/t38.test.mjs:76 is red on tranche/T47 and green on my branch, unrelated to people.
