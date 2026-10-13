@@ -169,3 +169,50 @@ Readings for you, no change made (details in my record): (1) handleCheck's viewe
 ## J6 · COMPLETE
 
 T47-82 applied: R140, screens-entry in MODULE_ORDER after interface-shell (layer 11), tolerated by name only while pathless (all seven today, K3073); its own named test with controls (missing, out of place either side, tolerance arm); T46/T47-7 pins re-pinned; 5 of 12 order tests fail on the old list. Own-test flaws fixed (P8), including T47-7's deferred R60 codes and t35's lower bounds. membership 224/224; members.test.mjs 95/3 (R132 until T47-75, unchanged); format, architecture, coverage 100/100, ownership: 0 failures; run.mjs architecture 0 failures. Pushed job/T47/membership @ 88b67c04c4+mail.
+
+**B5, B6 (CHANGE; R141 K3076, R142 K3078).** I merged `tranche/T47` and met both.
+- **R141.** The handle `admin` is reserved for the founder. It is always taken, through the one taken-test (`#heldByAnother`).
+  - Enrolment answers `HANDLE_TAKEN`, and every handle check answers `taken`, by invitation or by a member, with R123's suggestion `admin-2`.
+  - Any other case, such as `Admin`, is refused by R12's lower-case pattern: `BAD_HANDLE`, or `not_allowed` in a check.
+  - Test: `t47-admin-handle.test.mjs`, 2 tests. Controls: `administrator` enrols, and `admin-2`, `administrator` and `admins` read free. Both tests fail on the code without the reservation.
+- **R142 (1).** `handleCheck`'s viewer arm excludes no one, so a member's own current and earlier handles read `taken` to them, the same answer anyone gets.
+  - Tested in `t47-r142.test.mjs`. Control: a handle nobody holds reads free to them.
+  - `t40-handles.test.mjs` line 133 is re-pinned to `taken`.
+  - The invitation arm keeps its exclusion, since an invitee has no handle yet.
+- **R142 (2).** R128's exception is spent. C-56.6's translation is now `words.json`'s `refusal.PROJECT_GUARD_UNCHECKED`, held verbatim in a new `REFUSAL_WORDS` export (re-exported from `index.mjs`).
+  - The test checks that the row and the minted refusal carry that text, read by key.
+  - Control: MEMBERSHIP #34's old draft is not the row's text.
+- **R142 (3).** A census over `membershipOps` proves R61 and R78 for every act. The ops named `project*` are exactly the 7 the census table lists.
+  - On an id naming nothing, each op gives its requirement's own answer:
+    - invite and visibility answer `noSuchProject`;
+    - join answers `NOT_INVITED`;
+    - leave answers `notAParticipant`;
+    - remove answers `NOT_THE_OWNER`;
+    - owner arithmetic answers `ownerMath(0)`.
+  - On a hidden project, the same holds for a member viewer and an unrecognised one, and the answer is byte-identical to the absent case.
+  - `projectclaimowner` takes no viewer (it is the internal R31 call), so only its absent answer is checked.
+  - Controls: a census missing an op is refused; a project at EXISTENCE, and a participant, are both told apart from the absent case.
+- **Controls on the old code:** R142 (1) and (2) and the re-pinned t40 test fail there. R142 (3) passes there, as expected: it proves behaviour that already held.
+
+*Other modules:*
+- **Row census.** C-56.6's translation changed. `test/system/row-census.test.mjs` names it among its rows changed without a record.
+  - The census is already red on `tranche/T47` without my change, from other modules' rows (C-126.7, C-140.x).
+  - C-56.6 joins it until T48's stamp, by rule 5 (2) as B3 states. I did not touch the census pin, which is promotion's.
+- **Whole `test/m` run:** 11317 tests, 11279 pass, 23 fail.
+  - The 23 are in the same 14 files as before (action-replies t46 among them). Those files give 113 tests and 23 failures on the current `tranche/T47`, in a worktree, as here.
+  - No other module's test turns red with my change.
+- The plane bundle is staled by this merge. I did not touch it.
+
+*Tests and checks* (commit c8438c878a):
+- `node --test test/m/membership/`: tests 229, pass 229, fail 0.
+- `node test/members.test.mjs`: 95 pass, 3 fail. The 3 are R132's, red until T47-75, unchanged.
+- `checks/format.mjs`: 166 modules, 164 requirements files; 0 failures.
+- `checks/architecture.mjs … membership`: 0 failures.
+- `checks/coverage.mjs … membership`: 102 of 102 live ids named; 0 failures.
+- `checks/ownership.mjs … membership tranche/T47`: 0 failures.
+- `checks/run.mjs`:
+  - architecture: 3070 files, 0 failures;
+  - coverage: 45 failures, none of them membership's;
+  - channels: 0 failures.
+
+Size (session_011oUnEgjgR8iwQexLBg4vjp): test runs 27, module lines 3,775.
