@@ -28,3 +28,7 @@ Also stale: `case-checker`'s generated `program.mjs` (its R13 test). That is rul
 - `checks/run.mjs`: format 0, architecture 0 failures (3084 files), channels 0; coverage 43 failures, none case-grammar's (other modules' T47 ids, rule 5.1).
 
 Size (session_01MumH1LDmj58bzBZXFqYHEm): test runs 8, module lines 2795
+
+## J1 · REPORT
+
+R31's reading shape (obscured gains kind, null on a row stating none) opens 7 reds in other modules' tests, each deep-comparing a read-back obscured to {copy, label, marked}; each needs kind: null in its expected value (or the kind its writer hands from T47-26): case-carriage obscured.test.mjs:31 (R1); public-read obscured.test.mjs:156 (R3) and :366 (R23); case-disclosures documents.test.mjs:234 and photos.test.mjs:251 (R7); case-authoring documents.test.mjs:147 and photos.test.mjs:60 (R14). Also case-checker's program.mjs stale (rule 5.4). Before/after counts and detail in my record. Open for BOB, not taken: R14 still chooses the cleaned-copy line by the copy's bytes (its T39 test pins 'never by the row'); whether it should read R31's kind first is R14's wording, not this entry's.
