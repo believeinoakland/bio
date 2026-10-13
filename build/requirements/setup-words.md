@@ -22,7 +22,7 @@ The interface's word list as frozen data: each word the screens show, with its k
 
 #### T47's L11 fold (K3100)
 
-- **R7** (K3062; amends R6) `WORD_ROWS` is `words.json` at PR #33's head (`WORDS_COMMIT` that commit): 1,728 rows, 617 protected, by R1's rule. Test: equal word by word. *(not yet met: T47)*
+- **R7** (K3062; amends R6) `WORD_ROWS` is `words.json` as merged into `tranche/T47` at L11's START (K3127; `WORDS_COMMIT` that merge's commit), its counts as read there (1,749 rows, 631 protected at PR #33 @ 1d41495eda; K3137), by R1's rule. Test: equal word by word. *(not yet met: T47)*
 
 ## Private
 
