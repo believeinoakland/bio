@@ -155,12 +155,12 @@ test("R31: one team's act never moves another's stance — CURRENT is written on
   assert.equal(w.text(Q).includes("current_versions"), false, "never on the shared question");
 });
 
-test("R12–R15 through the ops: the six dispatch entries read the stamps from the query string only", () => {
+test("R12–R15 through the ops: the six dispatch entries read the stamps from the query string only; the op map holds R50's projectquestions beside them", () => {
   const w = setup();
   const url = new URL(`https://x/?target=${Q}&version=first&author=${encodeURIComponent(ALICE)}&viewer=${encodeURIComponent(V("alice"))}`);
   const ops = basisVersionsOps(w.bv, url, { author: "member:mallory", reason: "moved by body" });
   const r = ops.versionreject();
   assert.deepEqual([r.ok, r.author, r.reason], [true, ALICE, "moved by body"]);
-  assert.deepEqual(Object.keys(ops).sort(), ["basisversions", "conclude", "narrow", "narrowcandidates", "versionaccept", "versionconsider",
+  assert.deepEqual(Object.keys(ops).sort(), ["basisversions", "conclude", "narrow", "narrowcandidates", "projectquestions", "versionaccept", "versionconsider",
     "versioncurrent", "versionhide", "versionreject", "versionrevert", "withdrawconclusion"]);
 });
