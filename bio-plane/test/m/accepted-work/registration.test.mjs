@@ -62,7 +62,7 @@ test("R1 the registered functions are called with the arguments the reads name: 
 
 test("R1 the fourth function, moves, is optional: a registration of the three alone is accepted and answers the three reads (publisherMoves then absent); one carrying moves is accepted and answers it; a moves given but not a function makes the registration LISTENER_MALFORMED", () => {
   const s = importer();
-  const { moves, ...three } = s.fns;
+  const { moves, flagHistory, ...three } = s.fns;
   const w = world({ register: false });
   assert.deepEqual(w.aw.registerAcceptedWork("case-import", three), { ok: true, module: "case-import" });
   s.publish(REF, 1); s.accept(REF, 1); s.move(REF, "edition", 2);
