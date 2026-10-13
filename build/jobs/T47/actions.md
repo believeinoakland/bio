@@ -89,7 +89,7 @@
   - green: action-records 19/0, action-holds 37/0, action-plans 79/0, plan-work 45/0, monitoring 137/0, machinery-producers 24/0, action-producers 45/0, queue 142/0, action-grammar 73/0, `test/conclude-project.test.mjs` 1/0, `test/docdates.mjs` 1/0;
   - action-clocks 68/2, escalation 84/1, affordances 235/10: the window's 6 named above, the other 7 affordances reds inherited;
   - filings 93/4, action-replies 17/6, op-declarations 144/12, control-plane 235/7, plane 218/5: each identical with my change stashed (inherited);
-  - MIGRATE_RESULT.
+  - `test/system/migrate-released.test.mjs` 1/0 (893 s).
 - Checks, from the process repository:
   - `format.mjs`: 168 modules, 167 requirements files; 0 failures.
   - `architecture.mjs … actions`: 17 product files, 77 relative imports; 0 failures.
