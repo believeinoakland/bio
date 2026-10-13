@@ -94,3 +94,26 @@ test("R1 R2 R3 R4 (K899 (1)) the store side's answers and refusals say no bundle
                          ["publishedmanifest", {}]])
     noWord(w.read(op, q), `${op} ${JSON.stringify(q)}`);
 });
+
+/* T47-29 (N954): K899 over every sentence a reader meets, not the named answers only. */
+import { everyAnswer, sentences as everySentence } from "./served.mjs";
+test("R1 R2 R3 R4 R5 R6 R7 R17 R18 R21 R30 (K899 (1); T47-29) every human sentence this module serves, on every route and in every packaging, every refusal and every row, says no bundle outside an identifier (negative control: the walk finds the word planted in a sentence)", async () => {
+  const all = await everyAnswer();
+  assert.ok(all.length > 50, "every route, packaging, refusal and row is gathered");
+  let read = 0;
+  for (const [where, answer] of all) for (const [path, s] of everySentence(answer)) {
+    read++;
+    assert.deepEqual(wordOutsideIdentifiers(s), [], `${where} ${path}: ${s.slice(0, 160)}`);
+  }
+  assert.ok(read > 200, `the walk read the sentences (${read})`);
+  /* the identifiers stay */
+  assert.ok(all.some(([, a]) => JSON.stringify(a).includes('"bundle_id"')), "bundle_id is still the field's name");
+  assert.deepEqual(wordOutsideIdentifiers("a bundle of facts, and `bundle_id`"), ["bundle"], "negative control");
+  bindPublishedPlane({
+    json, STORE_SILENT_REASON: "STORE_DID_NOT_ANSWER", STORE_SILENT_DETAIL: "silent", PUBLISHED_STORE: "bio",
+    doAnswer: async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
+                               return out && out.ok === true ? { answered: true, result: out.result } : { answered: false }; },
+    storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502),
+    requiredArgument: (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }),
+  });
+});

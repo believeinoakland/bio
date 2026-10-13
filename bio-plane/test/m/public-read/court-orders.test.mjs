@@ -155,3 +155,76 @@ test("R28 the same bytes are withheld wherever they would be served: a finding a
   assert.deepEqual(Object.keys(s.w.read("withheld", { sha256: `${s.pins[s.F]},${"0".repeat(64)}` }).withheld), [s.pins[s.F]]);
   assert.deepEqual(s.w.read("withheld", { sha256: "" }).withheld, {});
 });
+
+/* R28 "wherever served" (T47-29; N954): every route that serves an edition's bytes, each asked for every item the order
+   withholds. A zip part is read back, and each answer is checked for the withheld bytes themselves. */
+const routeBytes = async (s, sha256, extra = {}) => {
+  const r = await call(s.w, s.env, "publishedbytes", { sha256, ...extra });
+  return { status: r.status, body: new Uint8Array(await r.arrayBuffer()) };
+};
+test("R28 a whole edition removed is withheld on every route that serves its bytes: each file its case file lists at publishedbytes, the manifest raw and as every part's zip, each finding's bytes, the signed document, and the Worker's and the store's publishedcase, the public index and the editions read; a hash no order names is served as before", async () => {
+  const s = await assembled();
+  const manifest = JSON.parse(new TextDecoder().decode((await routeBytes(s, s.manifest)).body));
+  const files = manifest.files;
+  assert.ok(files.length >= 8, "the case file lists its document, signature, findings, their facts and passages, and its complete edition");
+  /* before: each is served */
+  for (const f of files) assert.equal((await routeBytes(s, f.sha256)).status, 200, `${f.path} is served before the order`);
+  /* bytes of each file, to look for in every withheld answer */
+  const held = new Map();
+  for (const f of files) held.set(f.sha256, (await routeBytes(s, f.sha256)).body);
+  s.w.stamps.stamp({ case: CASE, editions: [1], entry: ENTRY, effect: "remove" });
+  for (const f of files) {
+    const r = await routeBytes(s, f.sha256);
+    assert.equal(r.status, 451, `${f.path} (${f.kind}) at publishedbytes`);
+    assert.deepEqual(Object.keys(JSON.parse(new TextDecoder().decode(r.body)).withheld), [f.sha256]);
+  }
+  assert.equal((await routeBytes(s, s.manifest)).status, 451, "the manifest raw");
+  for (const p of manifest.parts)
+    assert.equal((await routeBytes(s, s.manifest, { format: "zip", part: p.index })).status, 451, `part ${p.index}'s zip`);
+  /* the Worker's publishedcase: no finding's body, no document text, no manifest, every file marked */
+  const wc = await call(s.w, s.env, "publishedcase", { id: CASE });
+  assert.equal(wc.status, 200);
+  const wtext = await wc.text();
+  const r = JSON.parse(wtext);
+  assert.deepEqual(r.findings.map((f) => f.body.state), ["withheld", "withheld"]);
+  assert.equal(r.manifest, null);
+  assert.deepEqual(r.document, { withheld: true, doc_sha: s.doc, detail: WITHHELD_SENTENCE });
+  assert.ok(r.files.length === files.length && r.files.every((f) => f.withheld === true), "every listed file is marked withheld");
+  /* none of the withheld text reaches any answer that would carry it */
+  const docText = new TextDecoder().decode(held.get(s.doc));
+  const answers = { "Worker publishedcase": wtext, "store publishedcase": JSON.stringify(s.w.read("publishedcase", { id: CASE })),
+    "by finding": JSON.stringify(s.w.read("publishedcase", { id: s.F, caseId: CASE })),
+    "by hash": JSON.stringify(s.w.read("publishedcase", { sha256: s.pins[s.G] })),
+    publishedmanifest: JSON.stringify(s.w.read("publishedmanifest")), publishedlist: JSON.stringify(s.w.read("publishedlist")),
+    "publishededitions F": JSON.stringify(s.w.read("publishededitions", { id: s.F })) };
+  const scope = docText.match(/## Scope\n\n([^\n]+)/)[1];
+  for (const [where, text] of Object.entries(answers)) {
+    assert.equal(text.includes(scope), false, `${where}: the withheld document's scope is not served`);
+    for (const id of [s.F, s.G]) assert.equal(text.includes(`"title":"Finding ${id}"`), false, `${where}: ${id}'s frozen title is not served`);
+  }
+  const ed = s.w.read("publishededitions", { id: s.F }).editions[0];
+  assert.deepEqual([ed.scope, ed.bias_acknowledgement, ed.completeness, ed.case_withheld.orders[0].effect], [null, null, null, "remove"]);
+  /* control: a published hash no order names is still served */
+  const other = publishedSix();
+  assert.equal((await call(other.w, other.env, "publishedbytes", { sha256: other.pins[other.F] })).status, 200);
+});
+
+test("R28 a seal over one file of the case file withholds it on every route that serves it (its hash, the part's zip that carries it, its mark on the listing) and nothing at another hash; files sharing its hash are one object and are withheld with it (J1 (5)); the unseal serves it again on each", async () => {
+  const s = await assembled();
+  const manifest = JSON.parse(new TextDecoder().decode((await routeBytes(s, s.manifest)).body));
+  let seq = 20;
+  for (const f of manifest.files.filter((x) => x.kind !== "case_document")) {
+    s.w.stamps.stamp({ case: CASE, editions: [1], entry: { seq: seq++ }, effect: "seal", parts: [f.path] });
+    assert.equal((await routeBytes(s, f.sha256)).status, 451, `${f.path} sealed at its hash`);
+    const zip = await routeBytes(s, s.manifest, { format: "zip", part: f.part });
+    assert.equal(zip.status, 451, `${f.path}: its part's zip`);
+    const twins = manifest.files.filter((x) => x.sha256 === f.sha256).map((x) => x.path);
+    const listed = s.w.read("publishedcase", { id: CASE }).files;
+    assert.deepEqual(listed.filter((x) => x.withheld).map((x) => x.path), twins, `${f.path}: only it and its hash's twins are marked`);
+    for (const o of manifest.files.filter((x) => x.sha256 !== f.sha256 && x.kind !== "case_document"))
+      assert.equal((await routeBytes(s, o.sha256)).status, 200, `${o.path} is served while ${f.path} is sealed`);
+    s.w.stamps.stamp({ case: CASE, editions: [1], entry: { seq: seq++ }, effect: "unseal", parts: [f.path] });
+    assert.equal((await routeBytes(s, f.sha256)).status, 200, `${f.path} unsealed`);
+    assert.equal((await routeBytes(s, s.manifest, { format: "zip", part: f.part })).status, 200, `${f.path}: its part again`);
+  }
+});

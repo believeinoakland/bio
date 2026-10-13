@@ -15,7 +15,7 @@
  * half (`../publication/worker.mjs`, `../container.mjs`, `../inband.mjs`: R5–R7, R9) is this module's by `paths` and
  * stays at those paths (K697, K702); the door's routes reach it through `./door.mjs`. Its refusal rows are its own,
  * in `./checks.mjs` (R17); the case document's tensions and blocks are read from `case-grammar`, and a member document's
- * cleaned copy is told by `case-carriage`'s `COPY_CLEANED_LABEL` (R3's `label_key`; K2527).
+ * cleaned copy is told by the row's stored marker, `case-grammar` R31's `obscured.kind` (R35, R3's `label_key`).
  *
  * REACHED as `publicReadOf(host, deps)` (K61): one instance per host, created on the first call with `deps`, returned
  * to every later caller. `deps`:
@@ -42,7 +42,6 @@ import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
 import { caseFilePath, calculationsOf, timelineOf, signedCitations } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
-import { COPY_CLEANED_LABEL } from "../case-carriage/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { WITHHELD_SENTENCE, withholdingOf } from "./courtorders.mjs";
 import { delivererOf } from "../deliverer.mjs";
@@ -60,16 +59,22 @@ const signedParts = (doc) => {
   try { const p = parseFrontmatter(doc.text); return p.data ? { fm: p.data, body: p.body } : null; }
   catch { return null; }
 };
-/* R3 (T41; N798, N811; DEC-179, DEC-185 (1), DEC-187): the key a reader's surface shows a copy's label by. A member
-   document's cleaned copy is the one whose signed label is `case-carriage`'s `COPY_CLEANED_LABEL` word for word (its R15:
-   every such copy carries it, and no photo's does; nothing else in the row tells the two apart). A photo's copy is keyed
-   by `case-grammar` R12's `marked`: `obscured_marked` when the row states it, else its label (not null is marked), so
-   every earlier edition keys as it labels (K2527). */
+/* R3, R35 (T47; N953; `case-grammar` R31): the key a reader's surface shows a copy's label by, chosen by what the signed
+   row states, never by the label's current words. `obscured.kind` (`case-grammar` R31's stored marker) `document` is a
+   member document's cleaned copy, `photo` a photo's copy. A row stating no kind (signed before T47) is a cleaned copy
+   only when its signed label is, word for word, the cleaned-copy label as worded when the marker was introduced, held
+   here frozen and never read from `case-carriage`, so a later re-wording of its `COPY_CLEANED_LABEL` re-keys no
+   edition. A photo's copy is keyed by `case-grammar` R12's `marked` (`obscured_marked` when the row states it, else its
+   label: not null is marked), so every earlier edition keys as it labels (K2527). */
 export const LABEL_KEY_MARKED = "photo.obscured.label";
 export const LABEL_KEY_UNMARKED = "photo.published.label";
 export const LABEL_KEY_CLEANED = "document.cleaned.label";
-const labelKeyOf = (obscured) => (obscured.label === COPY_CLEANED_LABEL ? LABEL_KEY_CLEANED
-  : obscured.marked === true ? LABEL_KEY_MARKED : LABEL_KEY_UNMARKED);
+export const CLEANED_LABEL_AT_MARKER = "Details of who made this file, and of its pictures, removed for publication; the "
+  + "group holds the original";
+const photoKeyOf = (obscured) => (obscured.marked === true ? LABEL_KEY_MARKED : LABEL_KEY_UNMARKED);
+const labelKeyOf = (obscured) => (obscured.kind === "document" ? LABEL_KEY_CLEANED
+  : obscured.kind === "photo" ? photoKeyOf(obscured)
+  : obscured.label === CLEANED_LABEL_AT_MARKER ? LABEL_KEY_CLEANED : photoKeyOf(obscured));
 /* R3: the `materials` and `material_attestations` blocks as signed (`case-grammar` R11, R12), each row carried as its copy
    also answering its `label_key` beside its label; a row without `obscured` gains nothing. */
 const keyedMaterialsOf = (fm) => {
