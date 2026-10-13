@@ -86,7 +86,8 @@ test("R2 who may set it is the owner's own act: the member alone (NOT_YOUR_CEILI
 
 test("R2 usd on a sign-in is refused LIMIT_UNIT_UNAVAILABLE (a member's sign-in, a project's sign-in account), writing nothing; on an API key it is set, and tokens or calls on a sign-in are set", async () => {
   const w = await standard();
-  w.c.subscriptionConnected({ member: "cy" });
+  /* T47 (K3084; credentials R70): a sign-in serves cy only while its token is held, the fact alone answering not connected */
+  assert.equal((await w.c.subscriptionTokenHold({ member: "cy", token: "sk-ant-oat01-held-signin-token-of-cy" })).ok, true);
   w.project("S", "cy");
   assert.equal(w.c.projectSigninSet({ project: "S", by: "cy" }).ok, true);
   const before = w.snapshot();
