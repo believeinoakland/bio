@@ -40,8 +40,8 @@ export const EDGE_REASON_MAX = 160;
 
 const one = (sql, q, ...a) => [...sql.exec(q, ...a)][0] ?? null;
 
-/** R28–R31: retire the selection `handle` from verified, whole set or nothing. `author`, `viewer` and `owner` are the
- *  control plane's stamps, never the caller's. */
+/** R28–R31: retire the selection `handle` from verified: the whole set examined before anything moves, then written
+ *  member by member (R30). `author`, `viewer` and `owner` are the control plane's stamps, never the caller's. */
 export function retire({ sql, promotion, retrieval, connections },
                        { handle, reason = "", viewer = null, owner = null, author = null } = {}) {
   /* R28: the reason, trimmed, asked before anything else is read. */
