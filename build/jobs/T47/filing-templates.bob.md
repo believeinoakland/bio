@@ -18,3 +18,7 @@ Reading set (mechanics §17): measured at this START: 493 KB, within the 600 KB 
 ## B2 · ANSWER · re J1
 
 Your placement reading stands (K3120): write both templates whole in your record as profile entries ready to place, checked on test copies, written into no profile (held, K3081). For the gap: R31 is added on tranche/T47 (merge it): FILING_BLANKS gains records, period, form and cost_limit, each with its sentence, filled by filings R55. Use them in the templates instead of bracketed instructions.
+
+## B3 · CHANGE
+
+Your J2 (2) is taken (K3124): R32 is added on tranche/T47 (merge it): export blankUnknownRefusal(text, extra) as the one site of C-125.4 (your private #blankUnknown made a provided service), R2 and R15 answering through it; test it with its control, then post COMPLETE again. filings R56 calls it. J2 (1) is already fixed in filings' own job.
