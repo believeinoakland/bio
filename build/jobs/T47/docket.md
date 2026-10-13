@@ -43,3 +43,7 @@ Size (session_01LdRUdodYLfpSaz5xmhmwfA): test runs 5, module lines 1648
 ## J1 · REPORT
 
 Found outside docket's code (details in my record, 'Found elsewhere'): (1) docket.md R29 says words.json holds none of docket's other rows, but words.json also holds refusal.DOCKET_PRESSURE_REFUSED, word for word C-129.13's present translation. Should C-129.13 read by key too? (2) docket.md's Uses list is stale against the code: positionalMember, homeOf, mintOpaqueId/readFile/evidenceStore/registerMintSeed are used but not listed; viewerPredicate, publishedEditionsOf, ratifiedCases and createSha256 are listed but never called; acquisition R21 is read through provenance.json, not called. (3) layers.md's docket Uses line (:178) omits events, case-tensions and project-roster.
+
+## J2 · COMPLETE
+
+T47-28 applied. R12: withdrawalOf already answered entry; it now has its own test against docketPublic's entry id. R29: C-129.29 reads words.json's refusal.DOCKET_OUTCOME_UNREADABLE by key (DOCKET_WORDS), tested over all four arms plus prepare. Fixed a non-deterministic participant test. Docket: 78/78 pass. format, architecture, coverage and ownership: 0 failures. run.mjs: architecture 0; the coverage failures are none of docket's. Users' tests: 5 inherited failures, which also fail without my change. Record on job/T47/docket.
