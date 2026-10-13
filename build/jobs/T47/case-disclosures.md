@@ -16,7 +16,7 @@
 - `format.mjs` 0; `architecture.mjs … case-disclosures` 0 (18 files); `coverage.mjs … case-disclosures` 32 of 32, 0; `ownership.mjs … tranche/T47` 0 (7 files).
 - `checks/run.mjs`: format 0, architecture 0 (3106 files), channels 0; coverage 38 failures, none case-disclosures'.
 
-Size (session_017ZBDmksjrNtUgd9oEHF8Hy): test runs 16, module lines 2290
+Size (session_017ZBDmksjrNtUgd9oEHF8Hy): test runs 16, module lines 2446
 
 ## Progress (CASE-DISCLOSURES #12)
 
