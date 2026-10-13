@@ -33,11 +33,11 @@ test("R12 (T40) obscured_marked is written flat after obscured_label when handed
     const fm = fmOf(text);
     assert.deepEqual(Object.keys(fm.materials[0]), [...CG.MATERIAL_FIELDS, ...CG.MATERIAL_OBSCURED_FIELDS, CG.MATERIAL_OBSCURED_MARKED_FIELD], "one flat row");
     assert.deepEqual(CG.materialsOf(fm).materials.map((r) => r.obscured), [
-      { copy: PLAIN_COPY, label: PUBLISHED_LABEL, marked: false }, { copy: COPY, label: OBSCURED_LABEL, marked: true }], format);
+      { copy: PLAIN_COPY, label: PUBLISHED_LABEL, marked: false, kind: null }, { copy: COPY, label: OBSCURED_LABEL, marked: true, kind: null }], format);
   }
   /* a marked copy with no label, as written */
   assert.deepEqual(CG.materialsOf(fmOf(doc(CG.CASE_DOCUMENT_FORMAT, CG.materialsLines([{ ...PHOTO_ROW, obscured: { copy: COPY, label: null, marked: true } }]))))
-    .materials[0].obscured, { copy: COPY, label: null, marked: true });
+    .materials[0].obscured, { copy: COPY, label: null, marked: true, kind: null });
 });
 
 test("R12 (T40) negative controls: a row handed no marked (or one that is no boolean) is written byte for byte as before T40, and reads marked by its label: non-null marked, null unmarked; an observation row never states it; never throws", () => {

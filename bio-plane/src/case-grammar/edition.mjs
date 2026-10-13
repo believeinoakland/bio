@@ -9,7 +9,7 @@
  * THE BLOCKS, as a `/5` document's front matter carries them (the grammar `parseFrontmatter` reads: a map, and arrays
  * of flat rows):
  *   what_changed:     a map `statement_sha`, `began_as` (`member` or `machine_draft`), `draft` (the machine draft's id,
- *                     null for `member`), `adopted_as_drafted` (true when the member signed the draft's words unchanged,
+ *                     `case-inputs` R6, was `case-authoring` R39, N908; null for `member`), `adopted_as_drafted` (true when the member signed the draft's words unchanged,
  *                     false when they rewrote them, null for `member`).
  *   lens_statements:  one row per statement in force: `bundle`, `id`, `kind`, `subject`, `text`, `justification`,
  *                     `withheld` (how many of its citations are not printed).
