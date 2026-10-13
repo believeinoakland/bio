@@ -205,3 +205,7 @@ Two findings in `filings`, from R30 and R31 (both met here, pushed at 362e7b3253
 (2) A third site spells C-125.4. `filings` index.mjs:685 answers `TEMPLATE_BLANK_UNKNOWN` itself for a member's own words (`blanksOf` there, then `templatesRow` adds my row), so the code is minted outside this module, against K231/K275 and R30's "no other site spells the code". My R30 test checks my module's files only, so it passes. To close it: this module exports the one function (today the private `#blankUnknown`) as a provided service, e.g. `blankUnknownRefusal(text, extra)` answering the refusal with its row or null, and `filings` calls it at :685. That changes a service I provide, so it needs R30 (and filings') wording first; I can do my half in this job on a CHANGE. Otherwise it waits for a later tranche and I list it as found.
 
 Also: R30/R31 stale the plane bundle and `program.mjs` (rule 5 (4), regenerated at L9's close).
+
+## J3 · COMPLETE
+
+T47-41 complete: R30 (C-125.4 at one site, #blankUnknown) and R31 (records, period, form, cost_limit) met and tested; filing-templates 70/70; format, architecture, coverage (31/31), ownership 0 failures; checks/run.mjs: architecture 0, coverage reds all other modules' (rule 5 (1)). The two records-request templates are written whole in my record as Oakland profile entries ready to place, checked on copies, placed in no profile (held, K3081). At my merge: filings' 4 tests go red until T47-90 (J2 (1)). Still open for you: J2 (2), the third C-125.4 site in filings. Record: build/jobs/T47/filing-templates.md.
