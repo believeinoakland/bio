@@ -60,7 +60,7 @@ It is the only module marked `legacy` in `modules.json`.
 ### L3
 - **T47-68 · host-governor** · (N983, K3027) `governorstate` is evaluated at the server's instant (the module's clock; a query `now` ignored), stated in its requirement and tested at the interface · text BOB's.
 - **T47-11 · capture** · (N979) `heldCaptures` (R77) rows carry the capture's grade and digest; (N969) a read listing set-aside documents, so `heldrestore` is reachable beyond one visit (doubt 6); (N971) Provides states `INFORMATION_GRAMMAR`; (N983, K3033) `sourcereach` (capture's route) evaluated at the server's instant, a clock seam added · SCREENS-INTAKE #1 J1, J4 · text BOB's.
-- **T47-12 · file-safety** · (N941) R14: an unreadable queue with a renderer bound answers its own code, a new C-140 row (K231); (N971) Provides states `onOwnServers` · text BOB's · doubt 3 (size).
+- **T47-12 · file-safety** · (N941) R14: an unreadable queue with a renderer bound answers its own code, a new C-140 row (K231); (N971) Provides states `onOwnServers`; (K3062, DEC-200 (5)) R42a: "file scanner" and "safe view" in its rows and details (B3 CHANGE) · text BOB's · doubt 3 (size).
 - **T47-13 · sources** · (N947) answers the instants at which a source's disclosures and consents changed; (N983, K3027, K3033) `sourcepublishable` evaluated at the server's instant (a query `now`/`at` ignored) · text BOB's.
 
 **L3 merge order:** host-governor, capture, file-safety, sources.
@@ -165,6 +165,8 @@ It is the only module marked `legacy` in `modules.json`.
 **Edges added:** case-authoring, review, consequences (dropping case-authoring), action-replies, plane → `case-inputs`; actions, plane → `action-records`; control-plane → the four screens. No edge points later.
 
 ## BOB's acts (no job)
+
+- **The way in (K3062):** at L11's START merge PR #33's head (`claude/gallant-brown-zg0wc1`) into `tranche/T47` and write L11's entries from DEC-200–DEC-202's 58 screens (N999, N1002, N1003, N1005, N1008: `front`, `forgot`, `install`, `update`, `group`, `settings`, `projects`, `unavailable`, `review-outside`, People, the extended screens; the plan audit of K3052 against them); before L6's START add N1001's entries (agent-runner keeps a member's container awake through a sign-in; agent-worker, control-plane and screens-settings log each step and show every refusal in words; the held token of K3060 D10 as far as it lives outside credentials).
 
 - **Citations of moved ids (K3038):** case-account R6, case-check, filings R24 re-pointed by BOB (wording, no job); control-plane, op-declarations, op-grades, wizard-scripts at L11's fold.
 - **Requirements before each START (P18):** `case-inputs`, `action-records` (split maps §4); the L11 screens' requirements from `registry.json` and the layouts page (a `draft-T47-interface.md`, as T46's); the N-entries' wording marked "text BOB's".
