@@ -36,3 +36,7 @@ These are left for my next job, given this job's size.
 - `run.mjs bio` (K2950): format 0, architecture 0, channels 0; coverage 43 failures, none case-carriage's (rule 5 (1)).
 
 Size (session_011eGTRVSA7J71sihm3rkt2U): test runs 16, module lines 1651
+
+## J1 · COMPLETE
+
+T47-26 applied, B2 processed (tranche merged after case-grammar). R19: flagHistoryOn (accepted-work R9) latches a flag opened and cleared inside the interval; an unreadable history withdraws its row. R21: sourceChangesSince (sources R20), paged, judges each row at each changed instant, so a consent withdrawn and restored lapses the row; changes that cannot be read whole lapse it. R22: photoMarks/obscureMark/obscureMarkWithdraw answer obscured {copy, label, marked, kind: photo} with a copy; documentCopy in state copy answers obscured {copy, label: COPY_CLEANED_LABEL, kind: document}; round trip through case-grammar R31 tested. The module's tests: 88 pass, 0 fail, 0 todo. format, architecture (14 files), coverage (22/22), ownership: 0 failures; run.mjs architecture 0. Users' reds (case-disclosures 2, public-read 2, case-authoring 3, affordances 3, op-declarations 12, answer-envelope 1, plane 2) are identical at origin/tranche/T47 without my change; migrate-released passes. REPORT in my record: case-disclosures R6/R7 still build their own obscured object; R22's answers carry it whole for them to hand on (N953). Merge-ready.
