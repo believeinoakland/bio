@@ -1546,13 +1546,16 @@ export function ratificationOf(host, deps) {
 /** R32: the module's store-half ops (K3), spread into the plane's op map (`plane/store.mjs`): `gatefacts` (R7), `ratifygate` (R4's
  *  gate, N417), `casegate` (R2's gate), `caseratify` (R3), `publishat` (R40), `casetestimony` (R35), `caseapproval` (R49)
  *  and `publish` (R5), the internal hops of the two ceremonies,
- *  `release` (R20–R27) and `retire` (R28–R31). `viewer`, and release's and retire's `owner` and `author`, are the
- *  control plane's stamps, read from the query, never from the body. `casegate`'s grant digest `secretSha` is the one
+ *  `release` (R20–R27) and `retire` (R28–R31), whose own fields (`handle`, `acknowledgment`, `mitigation`, `reason`) are
+ *  the body's when it states them, else the query's (R51). `viewer`, and release's and retire's `owner` and `author`, are
+ *  the control plane's stamps, read from the query, never from the body. `casegate`'s grant digest `secretSha` is the one
  *  exception: read from the internal request's body only, where the control plane sets it after removing any a caller
  *  sent; a `secretSha` in the query is never read (N761; K2129, K2175). */
 export function ratificationOps(r, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
+  /* R51 (T47; N988): an act's own field, the body's when the body states it as a string, else the query's; never a stamp. */
+  const act = (k) => (typeof b[k] === "string" ? b[k] : q(k));
   return {
     gatefacts: () => r.gateFacts(q("id"), q("viewer") ?? null),
     ratifygate: () => r.ratifyGate(b),
@@ -1564,9 +1567,9 @@ export function ratificationOps(r, url, body) {
     casetestimony: () => r.caseTestimony(b),
     caseapproval: () => r.caseApproval(b),
     publish: () => r.publish(b),
-    release: () => r.release({ handle: q("handle"), acknowledgment: q("acknowledgment"), mitigation: q("mitigation"),
-                               viewer: q("viewer"), owner: q("owner"), author: q("author") }),
-    retire: () => r.retire({ handle: q("handle"), reason: q("reason"), viewer: q("viewer"), owner: q("owner"),
+    release: () => r.release({ handle: act("handle"), acknowledgment: act("acknowledgment"),
+                               mitigation: act("mitigation"), viewer: q("viewer"), owner: q("owner"), author: q("author") }),
+    retire: () => r.retire({ handle: act("handle"), reason: act("reason"), viewer: q("viewer"), owner: q("owner"),
                              author: q("author") }),
   };
 }
