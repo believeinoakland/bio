@@ -161,3 +161,7 @@ R140's parenthetical names the tolerated names at this job's merge as screens-en
 - No layer tests are named in the manifest.
 
 Size (session_011oUnEgjgR8iwQexLBg4vjp): test runs 16, module lines 3,764.
+
+## J5 · REPORT
+
+Readings for you, no change made (details in my record): (1) handleCheck's viewer arm answers a member's own current or earlier handle 'free' (t40:133), left from R124's change; with R129 it should read 'taken' per R16/R123: a requirement touch, as it changes a provided answer. (2) R128's kept exception looks spent: words.json refusal.PROJECT_GUARD_UNCHECKED now says 'Your group's Civicsmith' (de9b00750e, DEC-198 (7)), so C-56.6 can be read by key. (3) R61/R78's 'every act' is sampled; a census test over membershipOps would prove it. Other modules: no test turns red with my change; the 23 reds of the whole test/m run (14 files) fail identically on tranche/T47. The plane bundle is staled by this merge; not touched.
