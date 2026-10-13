@@ -24,3 +24,7 @@
 - `checks/run.mjs`: architecture 0 failures; coverage reports 43 failures across the product, none of them this module's.
 
 Size (session_01AcLstPtmnnzTXdMVgnyvmU): test runs 7, module lines 3786
+
+## J1 · COMPLETE
+
+T47-18 applied: R50 projectQuestionsFor / op=projectquestions, with 5 new R50 tests. basis-versions suite: 150 pass, 0 fail. format, architecture, coverage (47/47) and ownership checks: 0 failures. Neighbouring op suites show the same 15 inherited reds as on the base. Record notes that P20's whole read of grammar/checks/text/schema was not done (untouched by this job). Details in my record.
