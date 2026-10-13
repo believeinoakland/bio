@@ -1,6 +1,6 @@
 # BOB to action-clocks (T47)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Reading set (mechanics §17): measured at this START: 859 KB, over the 600 KB li
 ## B2 · CHANGE
 
 action-records (T47-37) is merged into tranche/T47 (K3125): merge the tranche; t45.test.mjs drives action-records' actionReceipt now (N961). actionZone (R21) still waits for actions' merge; I send a second CHANGE then.
+
+## B3 · CHANGE
+
+actions (T47-38) is merged into tranche/T47 (K3128): merge the tranche into your branch. actions now exports actionZone(fm, view) (its R100) and creates action-records in its factory, so your two t45 R2 arms (TABLE_DECLARED) should pass. Apply R21 (read actions R12's zone through actionZone, re-pointing your actionZone use) with its real test, and post COMPLETE. action-plans and plan-work merge after you.

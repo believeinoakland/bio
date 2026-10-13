@@ -78,7 +78,7 @@ test("R17 a received capture of another bundle gains one responds_to edge naming
   assert.equal(sent.responds_to, undefined, "a sent artifact responds to nothing");
 });
 
-test("R18 actionLaws: refusals in order; the whole list replaced, stamped and logged; R19 the proposal never sets it", () => {
+test("R18 R25 actionLaws: refusals in order; the whole list replaced, stamped and logged; a proposal stored apart (action-records R1) never sets it, and the read answers it beside the list", () => {
   const w = world();
   w.action(A);
   const L = (laws, x) => w.a.actionLaws({ target: A, laws, viewer: M, author: M, ...x });
@@ -102,17 +102,35 @@ test("R18 actionLaws: refusals in order; the whole list replaced, stamped and lo
   assert.equal(fm.governing_laws_by, M); assert.equal(fm.governing_laws.length, 1);
   const two = L([{ level: "county", citation: "C 1" }, { level: "city", citation: "B 2" }]);
   assert.deepEqual(two.replaced, ok);
-  const p = w.a.actionLawsPropose({ target: A, laws: [{ level: "state", citation: "Other" }], proposer: MACHINE, viewer: MACHINE });
-  assert.deepEqual([p.ok, p.evidence, p.proposal.state, p.proposal.machine_work], [true, false, "machine_proposed", true]);
-  assert.equal(p.governing_laws.laws.length, 2, "the list as it stands");
+  /* the proposals stored apart are action-records' (its R1); the read answers them beside the member's list */
+  assert.equal(w.a.records.actionLawsPropose({ target: A, laws: [{ level: "state", citation: "Other" }], proposer: MACHINE, viewer: MACHINE }).ok, true);
   assert.equal(w.fm(A).governing_laws.length, 2, "never changes the list");
-  assert.deepEqual(reasons([w.a.actionLawsPropose({ target: A, laws: ok }), w.a.actionLawsPropose({ laws: ok, proposer: M }),
-    w.a.actionLawsPropose({ target: A, laws: [], proposer: M }), w.a.actionLawsPropose({ target: "INFO-2026-0404-x", laws: ok, proposer: M })]),
-    ["NO_AUTHOR", "NO_TARGET", "NO_LAWS", "NO_SUCH_BUNDLE"]);
-  w.a.actionLawsPropose({ target: A, laws: [{ level: "city", citation: "Mine" }], proposer: M, viewer: M });
-  w.a.actionLawsPropose({ target: A, laws: [{ level: "city", citation: "Mine2" }], proposer: M, viewer: M });
-  const block = w.a.actionRead({ id: A, viewer: M }).governing_laws_proposals;
-  assert.equal(block.proposals.length, 2, "a proposer replaces its own proposal only");
+  w.a.records.actionLawsPropose({ target: A, laws: [{ level: "city", citation: "Mine" }], proposer: M, viewer: M });
+  const read = w.a.actionRead({ id: A, viewer: M });
+  assert.deepEqual(read.governing_laws_proposals, w.a.records.lawProposalsFor(A), "read through action-records, unchanged");
+  assert.equal(read.governing_laws_proposals.proposals.length, 2);
+  assert.equal(read.governing_laws.laws.length, 2, "the member's list, apart");
+});
+
+test("R18 (T47) the list's shape is judged by action-records.lawEntries (its R7), the one site of C-73.2–C-73.5, at its place among the act's refusals", () => {
+  const w = world();
+  w.action(A);
+  const bad = [[], "not json", Array(13).fill(0).map((_, i) => ({ level: "city", citation: `B${i}` })), [{ level: "local", citation: "x" }],
+    [{ level: "city", citation: "" }], [{ level: "city", citation: "a" }, { level: "city", citation: "A" }]];
+  for (const laws of bad) {
+    const act = w.a.actionLaws({ target: A, laws, viewer: M, author: M });
+    const judged = w.a.records.lawEntries(laws);
+    assert.deepEqual([act.reason, act.check, act.translation, act.detail], [judged.reason, judged.check, judged.translation, judged.detail],
+      JSON.stringify(laws).slice(0, 60));
+    assert.match(grammar.GOVERNING_LAW_CHECKS[act.reason].where, /^src\/action-records\/index\.mjs lawEntries > /, "one site");
+  }
+  /* after the machine fence and the target, before the action is looked for */
+  assert.equal(w.a.actionLaws({ target: A, laws: [], viewer: MACHINE, author: MACHINE }).reason, "MACHINE_CANNOT_SET_LAWS");
+  assert.equal(w.a.actionLaws({ target: "", laws: [], viewer: M, author: M }).reason, "NO_TARGET");
+  assert.equal(w.a.actionLaws({ target: "ACTN-2026-0404-no", laws: [], viewer: M, author: M }).reason, "NO_LAWS");
+  /* the control: a well-formed list is the entries the judgment answers, written as given */
+  const ok = [{ level: "state", citation: "Act s.1" }];
+  assert.deepEqual(w.a.actionLaws({ target: A, laws: ok, viewer: M, author: M }).laws, w.a.records.lawEntries(ok).entries);
 });
 
 test("R15 R22 the act refuses by action-grammar's quote and lifecycle grammar (its R4, R5), first found, then DUE_CITE_NOT_GOVERNING; no due date computed", () => {
@@ -166,6 +184,21 @@ test("R23 R24 actionRiskTier: refusals in order; one appended history entry; the
   assert.deepEqual(r2.risk_tier_history.revisions[0], r.risk_tier_history.revisions[0], "never edits an earlier entry");
 });
 
+test("R23 (T47) BAD_RISK_TIER is answered by action-records.badRiskTier (its R8), the one site of C-90.2, in its place among the act's refusals", () => {
+  const w = world();
+  w.action(A, ["risk_tier: 1"]);
+  for (const tier of [4, 0, "undetermined", "x", null]) {
+    const act = w.a.actionRiskTier({ target: A, tier, reason: "exposure", viewer: M, author: M });
+    assert.deepEqual(act, w.a.records.badRiskTier(A, tier, "the act"), String(tier));
+    assert.equal(act.check, "C-90.2");
+  }
+  assert.equal(grammar.RISK_TIER_REVISION_CHECKS.BAD_RISK_TIER.where, "src/action-records/index.mjs badRiskTier > is-bad-risk-tier");
+  /* after NOT_AN_ACTION, before the reason is judged; the control: 1, 2 or 3 is not refused by it */
+  assert.equal(w.a.actionRiskTier({ target: "ACTN-2026-0404-x", tier: 4, reason: "", viewer: M, author: M }).reason, "NO_SUCH_BUNDLE");
+  assert.equal(w.a.actionRiskTier({ target: A, tier: 4, reason: "", viewer: M, author: M }).reason, "BAD_RISK_TIER");
+  assert.equal(w.a.actionRiskTier({ target: A, tier: 2, reason: "", viewer: M, author: M }).reason, "RISK_TIER_REASON_REFUSED");
+});
+
 test("R27 actionQuotes: one axis; by request with absence levels; by counterparty exactly; at most 500", () => {
   const w = world();
   const s = w.doc("INFO-2026-0001-d");
@@ -190,29 +223,19 @@ test("R27 actionQuotes: one axis; by request with absence levels; by counterpart
   assert.ok(!Object.keys(by.quotes[0]).some((k) => /compar|exceed|rank/.test(k)), "no field compares quotes");
 });
 
-test("R28 actionRiskPropose: refusals; stored apart and labelled; never the tier; the read lists at most 12, newest first", () => {
+test("R25 the read answers the tier proposals action-records holds (its R2), apart from the member's tier, at most 12, newest first", () => {
   const w = world();
   w.action(A, ["risk_tier: 1"]);
-  const P = (x) => w.a.actionRiskPropose({ target: A, tier: 3, basis: "the office is a court", proposer: MACHINE, viewer: MACHINE, ...x });
-  assert.deepEqual(reasons([P({ proposer: "" }), P({ target: "" }), P({ tier: 0 }), P({ basis: "" }), P({ basis: 'a"b' }),
-    P({ basis: "x".repeat(501) }), P({ target: "ACTN-2026-0404-x" })]),
-    ["NO_AUTHOR", "NO_TARGET", "BAD_RISK_TIER", "RISK_PROPOSAL_BASIS_REFUSED", "RISK_PROPOSAL_BASIS_REFUSED",
-     "RISK_PROPOSAL_BASIS_REFUSED", "NO_SUCH_BUNDLE"]);
-  assert.equal(P({ basis: "" }).check, "C-90.6");
-  /* C-90.2 is one condition at the act and at a proposal, answered through one site (N297's guard, arm G). */
-  const bt = P({ tier: 7 });
-  assert.deepEqual([bt.reason, bt.check, bt.translation], ["BAD_RISK_TIER", "C-90.2", grammar.RISK_TIER_REVISION_CHECKS.BAD_RISK_TIER.translation]);
-  assert.equal(grammar.RISK_TIER_REVISION_CHECKS.BAD_RISK_TIER.where, "src/actions/index.mjs #badRiskTier > is-bad-risk-tier");
+  const P = (x) => w.a.records.actionRiskPropose({ target: A, tier: 3, basis: "the office is a court", proposer: MACHINE, viewer: MACHINE, ...x });
   const before = w.text(A);
-  const p = P({});
-  assert.deepEqual([p.ok, p.evidence, p.proposal.machine_work, p.risk_tier], [true, false, true, 1]);
-  assert.equal(w.text(A), before, "writes no file and never touches the tier");
-  P({ tier: 2 });
+  assert.equal(P({}).ok, true);
+  assert.equal(w.text(A), before, "the proposal writes no file and never touches the tier");
   for (let i = 0; i < 13; i++) { w.clock.ms += 1000; P({ proposer: V(`m${i}`), viewer: V(`m${i}`) }); }
-  const block = w.a.actionRead({ id: A, viewer: M }).risk_tier_proposals;
-  assert.equal(block.proposals.length, 12); assert.equal(block.truncated, true);
-  assert.equal(block.proposals[0].by, V("m12"), "newest first");
-  assert.equal(new Set(block.proposals.map((x) => x.by)).size, 12, "one standing proposal per proposer");
+  const read = w.a.actionRead({ id: A, viewer: M });
+  assert.deepEqual(read.risk_tier_proposals, w.a.records.riskProposalsFor(A), "read through action-records, unchanged");
+  assert.deepEqual([read.risk_tier_proposals.proposals.length, read.risk_tier_proposals.truncated], [12, true]);
+  assert.equal(read.risk_tier_proposals.proposals[0].by, V("m12"), "newest first");
+  assert.equal(read.risk_tier, 1, "the member's tier, apart");
   const empty = world(); empty.action(A);
   assert.match(empty.a.actionRead({ id: A, viewer: M }).risk_tier_proposals.says, /no proposal/);
 });

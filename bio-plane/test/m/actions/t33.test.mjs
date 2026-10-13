@@ -143,7 +143,7 @@ const standardsStandIn = () => ({
     : { state: "in_force", why: "its period covers the date", standard }),
 });
 
-test("R64 R18 R19 a governing law may name a held standard the viewer may see; the citation stays the member's; the read answers both with the standard's state on the action's date", () => {
+test("R64 R18 R25 a governing law may name a held standard the viewer may see; the citation stays the member's; the read answers both with the standard's state on the action's date", () => {
   const w = world({ deps: { standards: standardsStandIn() } });
   w.action(A);
   const L = (laws, x) => w.a.actionLaws({ target: A, laws, viewer: M, author: M, ...x });
@@ -165,13 +165,34 @@ test("R64 R18 R19 a governing law may name a held standard the viewer may see; t
   /* the standard's state follows the action's date */
   w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-05-01", account: "asked", viewer: M, author: M });
   assert.equal(w.a.actionRead({ id: A, viewer: M }).law_standards[1].in_force.state, "in_force");
-  /* R19: a proposal may name one; it is stored apart and read back with it; one the proposer may not see is refused */
-  const p = w.a.actionLawsPropose({ target: A, laws: [{ level: "state", citation: "Records Act", standard: S1 }], proposer: MACHINE, viewer: MACHINE });
-  assert.deepEqual([p.ok, p.proposal.laws[0].standard], [true, S1]);
-  assert.equal(w.a.actionLawsPropose({ target: A, laws: [{ level: "state", citation: "x", standard: "STD-2026-0404-none" }],
-    proposer: MACHINE, viewer: MACHINE }).reason, "NO_SUCH_STANDARD");
+  /* R25: a proposal stored apart (action-records R1) may name one, and the read answers it with it */
+  assert.equal(w.a.records.actionLawsPropose({ target: A, laws: [{ level: "state", citation: "Records Act", standard: S1 }],
+    proposer: MACHINE, viewer: MACHINE }).ok, true);
   assert.equal(w.a.actionRead({ id: A, viewer: M }).governing_laws_proposals.proposals[0].laws[0].standard, S1);
   assert.equal(w.fm(A).governing_laws.length, 3, "a proposal never sets the list");
+});
+
+test("R64 (T47) whether a standard is one the viewer may see is action-records.standardSeen (its R9), asked by actionLaws, by the records law's write and by the read", () => {
+  const w = world({ deps: { standards: standardsStandIn() } });
+  w.action(A);
+  for (const [id, viewer] of [["STD-2026-0404-none", M], [S1, "nobody"], ["not an id", M], ["", M]]) {
+    const judged = w.a.records.standardSeen(id, viewer);
+    assert.deepEqual(judged, noSuchStandard(id), `${id} for ${viewer}`);
+  }
+  /* actionLaws answers its refusal, with the target beside it */
+  assert.deepEqual(w.a.actionLaws({ target: A, laws: [{ level: "state", citation: "x", standard: "STD-2026-0404-none" }], viewer: M, author: M }),
+    { ...w.a.records.standardSeen("STD-2026-0404-none", M), target: A });
+  /* the records law's held standard, at the write */
+  const rr = (std) => actionMd(B, [...CP, "action_kind: records_request", "law: Records Act s.3", `law_standard: ${std}`]);
+  assert.deepEqual(w.promote(B, rr("STD-2026-0404-none")).reason, w.a.records.standardSeen("STD-2026-0404-none", M).reason);
+  /* the control: a standard the viewer may see is null there, and lands at both acts */
+  assert.equal(w.a.records.standardSeen(S1, M), null);
+  assert.equal(w.promote(B, rr(S1)).ok, true);
+  assert.equal(w.a.actionLaws({ target: A, laws: [{ level: "state", citation: "x", standard: S1 }], viewer: M, author: M }).ok, true);
+  /* the read: a standard the viewer may not see is answered unread */
+  const unseen = w.a.actionRead({ id: B, viewer: "nobody" });
+  assert.equal(unseen.ok, false, "an action the viewer may not see is not read at all");
+  assert.equal(w.a.actionRead({ id: B, viewer: M }).law_standards[0].in_force.state, "in_force");
 });
 
 test("R64 R5 a records-request law may name a held standard as `law_standard`: a member's statement, of a stated law, the viewer may see", () => {

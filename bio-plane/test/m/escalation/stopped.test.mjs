@@ -193,7 +193,9 @@ test("R33 R21 the stop and the reopening are the document's state: stopping writ
 
 test("R33 the two rows take C-116's next numbers, minted with their translations from words.json, read by key (ESCALATION_WORDS holds words.json's en verbatim, and each row's translation is that word): MACHINE_CANNOT_STOP C-116.47 (refusal.MACHINE_CANNOT_STOP), NOT_STOPPED C-116.48 (refusal.NOT_STOPPED); each number held by one code, each code minted at one site", () => {
   for (const [key, en] of Object.entries(ESCALATION_WORDS)) assert.equal(en, WORD(key), key);
-  assert.deepEqual(Object.keys(ESCALATION_WORDS).sort(), ["refusal.MACHINE_CANNOT_STOP", "refusal.NOT_STOPPED"]);
+  /* R36 (T47) adds C-116.41's and C-116.14's words beside R33's two (t47.test.mjs) */
+  assert.deepEqual(Object.keys(ESCALATION_WORDS).sort(), ["refusal.ALREADY_ATTACHED", "refusal.ESCALATION_BY_ACT_ONLY",
+                                                          "refusal.MACHINE_CANNOT_STOP", "refusal.NOT_STOPPED"]);
   const rows = { MACHINE_CANNOT_STOP: "C-116.47", NOT_STOPPED: "C-116.48" };
   for (const [code, check] of Object.entries(rows)) {
     const row = ESCALATION_CHECKS[code];
