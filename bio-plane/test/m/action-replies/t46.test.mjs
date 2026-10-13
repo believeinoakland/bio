@@ -168,15 +168,18 @@ test("R7 the six rows take their translations from words.json's refusal.<CODE>, 
 
 test("R7 each act answers the re-worded row's words beside its control, BEARING_REFUSED at its one site here", () => {
   const { w, got } = answered();
-  const tr = (r, code) => {
+  /* R9 (T47) amends R7 for BEARING_REFUSED: the act answers the key's sentence with its `{item}` filled (t47.test.mjs) */
+  const tr = (r, code, item = null) => {
     assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, code, code, TAKEN[code][0]], JSON.stringify(r).slice(0, 300));
-    assert.equal(r.translation, en(`refusal.${code}`), code);
+    assert.equal(r.translation, item === null ? en(`refusal.${code}`) : en(`refusal.${code}`).replace("{item}", item), code);
   };
   const good = [{ claim: INQ, bearing: "new_evidence" }];
   tr(w.r.actionReplyBearing({ target: RFC, ord: got, claims: good, author: MACHINE, viewer: MACHINE }), "MACHINE_CANNOT_RECORD_BEARING");
   tr(w.r.actionReplyBearing({ target: RFC, ord: 0, claims: good, author: M, viewer: M }), "BEARING_NOT_RFC");
-  tr(w.r.actionReplyBearing({ target: RFC, ord: got, claims: [{ claim: INQ3, bearing: "new_evidence" }], author: M, viewer: M }), "BEARING_REFUSED");
-  tr(w.r.actionBearingPropose({ target: RFC, ord: got, claims: [], proposer: MACHINE, viewer: MACHINE }), "BEARING_REFUSED");
+  tr(w.r.actionReplyBearing({ target: RFC, ord: got, claims: [{ claim: INQ3, bearing: "new_evidence" }], author: M, viewer: M }), "BEARING_REFUSED",
+     `Claim 1 (${INQ3})`);
+  tr(w.r.actionBearingPropose({ target: RFC, ord: got, claims: [], proposer: MACHINE, viewer: MACHINE }), "BEARING_REFUSED",
+     "The list of claims");
   assert.equal(w.r.actionReplyBearing({ target: RFC, ord: got, claims: good, author: M, viewer: M }).ok, true, "the control lands");
   w.bundle(PROJ, "project");
   w.participant(PROJ, "alice");
