@@ -35,3 +35,14 @@ Done while case-inputs is unmerged (commits 879ab186d0, then signing.test.mjs):
 - Module tests: 214, 213 pass, 1 fail: t46-words.test.mjs:193 (K3022's inherited red, DEC-199 removed `signing.openrequest.nowindow`), which leaves with the R73 arms at the delete.
 
 Waiting for your CHANGE after T47-31 merges to delete the copies (§3, §4). Plan for the tests at that point, so you can object before: statement, drafts, outcomes, openrequests, waiting, invariants and dec149's arms of class "moved code only" are deleted here (case-inputs holds them); t46-words.test.mjs is deleted whole (its row arms are case-inputs R10/R17's; its sign-step arms are re-kept in openrequests.test.mjs as R34 end-to-end, reading `case-inputs.openRequestLine`); the end-to-end arms stay re-tagged R14 (acknowledgement listed, writer printed), R74 (outcomes), R34 (sign-step lines), R38 (adopted draft), R58, driving the moved setup acts through `caseInputsOf(host)`. invariants' K2675 arm is re-pointed: case-authoring now declares nothing, so its factory's throw is case-inputs'. account.test.mjs:454's "what case-authoring keeps" control is re-worded to assert the moved methods are gone.
+
+## J2 · COMPLETE
+
+T47-32 complete on `job/T47/case-authoring` (merged `tranche/T47` through K3112). Details in the record's Completion section.
+
+- Copies deleted and re-pointed per split map §3, §4: `#publishCase`, `#whatChangedJudged`, `#openRequestsStep` ask case-inputs through the getter `inputs`; the factory creates it beside case-account; `schema.mjs`, `declarePurge`, `migrate` and `caseAuthoringOwns` gone; no re-export of a moved symbol kept. Module 3,008 lines with comments.
+- R74, R75, R76 met and tested; R9, R14, R25, R27, R29, R34, R38, R65 met as re-worded, each tested. B2's `kind: null` applied.
+- One behaviour choice, yours to overrule: the sign step's unread line now carries `key: signing.openrequest.unread` beside its sentence (every line keyed). R75's two "not offered" sentences are plain placeholders for the UX stream.
+- Tests: case-authoring 190/190. Checks: format 0, architecture 0, coverage 48/48, ownership 0; run.mjs architecture 0, coverage failures none of mine.
+- Reds this merge opens in users (vs `tranche/T47` run the same way): review invariants.test.mjs (moved `DRAFTS_READ_MAX`; T47-33; NOT in rule 5 (8)'s list, please name it); action-replies R3 x3, R8 (T47-40); affordances R1 R12 R24, R14 R9 R18, R19 x2 (T47-49); control-plane R20 x3, R45, R64 x2 (T47-65); plane R17, R38, R39 (+ R33, not established as mine; its file failed to load on the baseline) (T47-66). consequences, case-check, tasks, op-declarations: nothing new.
+- Generated artifact staled: the plane bundle (inputs lose `src/case-authoring/schema.mjs`), rule 5 (4).
