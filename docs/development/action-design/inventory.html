@@ -1,0 +1,258 @@
+<title>Action Layer Inventory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+/* One reading column; tables break out to a wider measure. Tokens from build/layers-view.html. */
+:root{
+  --bg:#F4F6F8; --panel:#FFFFFF; --ink:#18202B; --muted:#5B6676; --rule:#D8DEE6; --chip:#E9EEF3;
+  --accent:#1D6A86;
+  --ok:#2F6B3A; --ok-bg:#DCEEDD; --part:#8A5A12; --part-bg:#F5E6C8; --gap:#9A3B2E; --gap-bg:#F6E0DA;
+  --serif:"Source Serif 4",Georgia,serif; --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}
+body{background:var(--bg);color:var(--ink);font:15.5px/1.6 var(--sans)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:32px 64px}
+.wrap > *:not(.tw){max-width:74ch}
+h1{font:600 clamp(28px,4vw,36px)/1.15 var(--serif);margin:0 0 12px;text-wrap:balance}
+h2{font:600 22px/1.25 var(--serif);margin:44px 0 12px;padding-top:18px;border-top:1px solid var(--rule);text-wrap:balance}
+p,ul,ol{margin:0 0 14px}
+li{margin:0 0 8px}
+li > ul{margin-top:8px}
+a{color:var(--accent)}
+code{font:0.88em var(--mono);background:var(--chip);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.lede{color:var(--muted);font-size:14.5px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.eyebrow{display:block;font:500 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.tw{overflow-x:auto;margin:6px 0 20px;border:1px solid var(--rule);border-radius:8px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:13.5px;line-height:1.5}
+th{font:500 11.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule);background:color-mix(in srgb,var(--chip) 60%,var(--panel))}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td:first-child{min-width:150px}
+.v{display:inline-block;font:500 12px/1.3 var(--mono);padding:3px 7px;border-radius:5px;margin-bottom:4px}
+.v.gap{color:var(--gap);background:var(--gap-bg)}
+.v.part{color:var(--part);background:var(--part-bg)}
+.v.ok{color:var(--ok);background:var(--ok-bg)}
+.v.wire{color:var(--part);background:var(--part-bg);outline:1px dashed var(--part)}
+.v.design{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--panel))}
+table.wide{min-width:1180px}
+</style>
+<div class="wrap">
+<h1>The Action layer: what we know</h1>
+<p class="lede"><span class="eyebrow">Status</span> ACTION_DESIGN #1, 2026-09-29. Step 1 of the week's Action design work: an inventory of what the canon, the approved requirements and the code say about Actions, tested against Bob's framing of 2026-09-29. It decides nothing. Read at <code>main</code> @ <code>5bb688333c</code>. The four detailed inventories it draws on, every claim cited by file and section, are in <code>sources/</code> beside this file: <code>canon-mission.md</code> (Roadmap, Design Requirements, Functional Architecture, System Design, DEC rulings), <code>canon-constructs.md</code> (State Rules, Publication, Membership, Case Making, AI Roles, Interaction Constructs, the UX substrate), <code>build-state.md</code> (layer 9's requirements, rulings and plan) and <code>code.md</code> (the built modules, routing, UI, profiles, tests).</p>
+<h2>1. In brief</h2>
+<ol>
+<li><strong>The Action layer is built, not blank.</strong> All six modules (standards, conformance, consequences, actions, filings, escalation) were approved by Bob on 2026-09-26 and built in T8, then hardened in T9, T11 and T12. They hold about 9,400 lines of source and 7,000 of tests; all 181 of their tests pass today, and all 45 of their ops are routed. What is missing is the part a member would touch: screens for five of the six modules, filing templates in the real profile, anything that tells a member a deadline passed or a stage is due, and any AI skill that prepares the work.</li>
+<li><strong>What is built is a narrow model:</strong> one group whose members all stand alike, acting against a government office, because of a breach. The approved layer contract says so: "An action rests on a published finding and on a standard held in the record."</li>
+<li><strong>The canon is broader than the build, and Bob's framing is closer to the canon.</strong> The Functional Architecture defines the layer as "Turn findings into outputs: work products, publications, escalations, communications, and ongoing tracking." The System Design says CivicOS exists to "answer questions, make a case, tell a story, and take action." Case Making records Bob (2026-08-03): an action plan "may differ based on the user type (journalist, activist, lawyer, etc.)".</li>
+<li><strong>But the canon never designed that breadth.</strong> No record holds a kind of actor. No role says who may send or speak for the group. No action kind exists for recognising compliance or telling a success story. Nothing composes a communication, and an action has one addressee. The action plan is designed but has no module.</li>
+<li><strong>Five doctrines constrain any widening.</strong> Standards and bars are "indexed on the work, not the person" (DEC-17, DEC-54). "We take no position on what the policies should be" (Operational Principle 1). The machine may do the looking, and the member does the concluding (DEC-24). Bad actors are "identified by evidence, never assumed by role" (Case Making §4). No tool may gate an action (Design Requirement 12).</li>
+</ol>
+<h2>2. Bob's framing, tested</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Bob's point</th>
+<th>The canon</th>
+<th>The approved requirements</th>
+<th>The code</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Different kinds of groups</strong> (activists, journalists, lawyers, auditors, unions) act differently</td>
+<td>Recognised in words, never as data. Case Making's frame: media report, activists fix, administrators respond, lawyers support or change a claim ("the list is open"). DEC-27: "I'm a journalist" may lead the assistant to <em>propose</em> a project's action repertoire. Roadmap §12 has a group "type" field with no stated effect.</td>
+<td>Not modelled. One instance is one group.</td>
+<td>No group type anywhere.</td>
+<td><strong class="v gap">Gap in the requirements.</strong> The canon's rule is that the work varies (the project, its bar, its output act), never a gate on who someone is.</td>
+</tr>
+<tr>
+<td><strong>Roles within a group</strong>: sharing resources, information, perspectives</td>
+<td>Four capabilities (contribute, publish, create projects, administer); project owner, joined and invited; declared expertise that "gates nothing" and routes tasks. Plan steps carry a free-form resources list.</td>
+<td>Not modelled. Any member with <code>contribute</code> may take every layer-9 act.</td>
+<td>None.</td>
+<td><strong class="v gap">Gap.</strong> Nothing says who drafts, approves, sends or speaks for the group.</td>
+</tr>
+<tr>
+<td><strong>A group takes several actions</strong>, and different kinds</td>
+<td>Supported and argued for. A project initiates "zero or more Actions". The founding case ran three enforcement actions at once. A plan holds many steps and may serve several findings.</td>
+<td>Yes, through a determination: many actions per determination, several attached at escalation stages 5 and 7.</td>
+<td>Yes.</td>
+<td><strong class="v ok">Covered</strong>, with limits: one open escalation per determination, one addressee per action.</td>
+</tr>
+<tr>
+<td><strong>A group declines to act</strong></td>
+<td>Supported. Escalation happens "if the group chooses to pursue it", and a plan keeps the options it declined, with reasons.</td>
+<td>An escalation's proposed stage can be declined with a reason. Deciding not to escalate at all leaves no trace (UX open question 8).</td>
+<td>As required.</td>
+<td><strong class="v part">Partly covered.</strong></td>
+</tr>
+<tr>
+<td><strong>Actions with no rule broken</strong> (a reporter's story of a community success)</td>
+<td>Allowed in spirit. Layer 3 covers findings in general, "Documenting compliance is important because it demonstrates that BIO examines facts evenhandedly", and CivicOS should "tell a story". But no kind, stage or example exists, and the action plan is triggered by nonconformity.</td>
+<td>Tolerated, not designed. The breach rule binds only actions marked <code>breach: true</code>, so others pass, but no kind or purpose names them. A compliant determination leads to nothing but escalation's exit check.</td>
+<td>Kinds <code>other</code>, <code>media</code>, <code>public_comment</code> exist, with no shape.</td>
+<td><strong class="v gap">Gap.</strong> It also conflicts with the layer contract's wording.</td>
+</tr>
+<tr>
+<td><strong>Communications</strong>: press, public, other groups</td>
+<td>Media outreach is a Tier 1 action. Publication says a new audience should cost "a new <code>action_kind</code> and a rendering", never a field on the case. Certification and persistence are "unmade".</td>
+<td>An addressee must be a government office, so a journalist or newspaper cannot be one. Publication has no audience or story construct.</td>
+<td>Nothing composes a communication.</td>
+<td><strong class="v gap">Gap.</strong> UX use case 124: "No requirement shapes the communication itself."</td>
+</tr>
+<tr>
+<td><strong>Lawyers</strong></td>
+<td>User type (DEC-17: a lawyer's project may need "beyond a reasonable doubt"); Tier 3 counsel; legal organisations.</td>
+<td>Outside named counsel only (the counsel packet); profile legal organisations.</td>
+<td>As required.</td>
+<td><strong class="v part">Partly covered</strong>, as a recipient only.</td>
+</tr>
+<tr>
+<td><strong>Auditors</strong> (city or independent)</td>
+<td>Only as venues and addressees (City Auditor complaints, grand jury, State Controller).</td>
+<td>An office marked <code>oversight</code>; stage 7's audit request.</td>
+<td>As required.</td>
+<td><strong class="v gap">Gap as actors.</strong> They exist only as offices.</td>
+</tr>
+<tr>
+<td><strong>Unions and special interests</strong></td>
+<td>Never as actors. The only mention puts unions in the "protection network" (Roadmap §1). Interests are handled by disclosure (Requirement 6) and declared bias. Operational Principle 1 and stage 7 exclude policy advocacy.</td>
+<td>Absent.</td>
+<td>Absent.</td>
+<td><strong class="v gap">Gap, and a doctrine question</strong> (§6, question 4).</td>
+</tr>
+</tbody>
+</table></div>
+<h2>3. What the canon holds</h2>
+<p><strong>Kinds of action named:</strong> records requests; grand jury complaints; State Controller referrals; City Auditor whistleblower complaints; Brown Act reports; public comment; council testimony; media outreach (all Tier 1); records court petitions (Tier 2); Prop 218 challenges, taxpayer actions, consent-decree motions and constitutional claims (Tier 3); litigation support; a request for comment to a case's subject before publication (DEC-13); political accountability (asking officials to act, oversight and audit requests, testimony, legislation that restores an existing requirement; stage 7); forum posts, directory entries and "working on" signals to other groups; a review copy (DEC-31); <code>other</code>. Every named action, venue and deadline is Californian.</p>
+<p><strong>Stages:</strong> Design Requirement 7's seven (documentation, notification, clock starts, response evaluation, legal tools, sustained attention, political accountability). The canon promises each stage "defined entry conditions, defined actions, defined timelines, and documented trigger conditions" and defines none; the approved <code>escalation</code> requirements supply them.</p>
+<p><strong>Risk tiers</strong> (Design Requirement 8, amended by Bob 2026-09-26): 1 file freely, 2 file with caution, 3 do not file without counsel (a counsel packet is prepared for counsel the group names; it is never published and never fileable). A tier is set only by a member, never defaults, and is revised only by an authored act with a reason (D-182).</p>
+<p><strong>Clocks:</strong> "The clock runs. Deadlines are deadlines" (Operational Principle 3). Every dated deadline names the statute, order or commitment it comes from. The canon holds six deadline designs with no stated relation among them: the action's clock, due dates on correspondence, task clocks, progression intervals, plan-step deadlines and escalation stage 3.</p>
+<p><strong>Addressees:</strong> an office, named in its official capacity, never a person (Requirement 6: "Accountability belongs to the role and the institution").</p>
+<p><strong>What leaves the instance:</strong> a published case (signed, irreversible); an evidence package ("the primary output of the escalation protocol", fully public, open to "any actor to pick up"); filing templates for Tiers 1–2; the counsel packet; the review copy, which "never leaves the instance". Anything addressed carries its hash, date, author and both threshold floors in-band (Publication §3 rule 9). An action leaves only through a member's own hands and is recorded afterwards (DEC-31, provisional). The action plan is never published (DEC-25, deferred).</p>
+<p><strong>The action plan</strong> (Case Making, designed, no module): steps with dependencies, deadlines, outcome-keyed branches, resources and a disposition (chosen, declined with reason, done, blocked). The machine suggests and checks and never adopts a step. "The gate belongs at the ACT, not at the reasoning" (DEC-26).</p>
+<p><strong>The human boundary:</strong> "AI skills provide support. Humans make every decision" (Roadmap §10). "No tool has authority to approve, reject, or gate any work product or action" (Requirement 12). The phrase "the AI prepares, never files" is the layer contract's; the canon holds the substance but never those words.</p>
+<h2>4. What is approved and built</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>module</th>
+<th>what it holds</th>
+<th>tests</th>
+<th>the gaps that matter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>standards</td>
+<td>What a government act is measured against: statute, regulation, ordinance, court, policy, commitment; its captured text, citation, period in force, and source from the profile.</td>
+<td>18 pass</td>
+<td>No Legal/Policy Lookup skill exists to propose standards.</td>
+</tr>
+<tr>
+<td>conformance</td>
+<td>A member's determination that a named act is compliant, noncompliant or unclear, per standard, resting on findings published in a ratified case of the same project. A machine compares, never determines.</td>
+<td>36 pass</td>
+<td>Needs the whole case and ratification path first. Nothing acts on a compliant determination.</td>
+</tr>
+<tr>
+<td>consequences</td>
+<td>What a breach did, to whom (a class, fund, program, service or body, never a person), measured, computed from the record or assessed by a member, with causation as its own finding; whether each part is addressed.</td>
+<td>24 pass</td>
+<td>None structural.</td>
+</tr>
+<tr>
+<td>actions</td>
+<td>The Action object: kind, tier, addressee office, clock with bases, legs, lifecycle, correspondence ledger, governing laws, fee quotes, the action's own outcome. <code>breach: true</code> actions must rest on a live determination.</td>
+<td>40 pass</td>
+<td>Created only through the generic promote op. The only product kinds are records request, request for comment and other.</td>
+</tr>
+<tr>
+<td>filings</td>
+<td>Tier 1–2 drafts filled from the profile's template, each blank naming its source; a member approves, sends by the venue's own means, and records it. Tier 3: the counsel packet.</td>
+<td>34 pass</td>
+<td>The real profile has no templates, so every Tier 1–2 draft is refused there.</td>
+</tr>
+<tr>
+<td>escalation</td>
+<td>Seven stages from a live noncompliant determination; a met trigger is proposed and a member advances or declines; it ends only when compliance is restored and consequences are addressed.</td>
+<td>29 pass</td>
+<td>Nothing tells a member a stage is due.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Where the chain breaks today:</strong></p>
+<ul>
+<li><strong>No screens</strong> for standards, determinations, consequences, filings, counsel packets or escalation. The old interface has only the action loop, and its intake form writes the addressee in a shape the plane now refuses (read, not run).</li>
+<li><strong>Nothing is pushed.</strong> Monitoring's deadline recheck is never called, and the queue has no kind for an overdue clock or a due escalation. Both answer when asked; neither tells anyone.</li>
+<li><strong>No skills.</strong> The only skill pack is the investigative session.</li>
+<li><strong>The real profile</strong> has 13 action kinds, 5 offices (all unmeasured), 1 deadline, no holidays and no templates.</li>
+</ul>
+<h2>5. Where the documents disagree</h2>
+<ol>
+<li><strong>The layer contract against the canon.</strong> "An action rests on a published finding" contradicts records requests made to find out, the request for comment before publication (DEC-13), the review copy (DEC-31), and DEC-26's gate ("established", not "published"). The contract's aim, "to bring the government back into conformance", is narrower than the Functional Architecture's Layer 3.</li>
+<li><strong>Mechanical or human escalation.</strong> Requirement 7 says "when trigger conditions are met, the next stage activates"; the Roadmap says "Human decides". The approved requirements chose proposal and a member's act (K102). Requirement 7's text was not amended.</li>
+<li><strong>Seven stages or six.</strong> Requirement 7 now has seven; the Roadmap, Skill 8, the Functional Architecture and Requirement 12 still say six.</li>
+<li><strong>Clocks stored or derived.</strong> State Rules makes the clock "the authoritative deadline register", marked overdue by a machine (I-11, I-20); Case Making says "the clock is never encoded" and status is derived when read.</li>
+<li><strong>Addressee shape.</strong> State Rules shows a free string; the requirements refuse it and require an office by role and body.</li>
+<li><strong>Kinds.</strong> State Rules lists seven kinds, including California's <code>cpra_request</code>; the requirements moved to a law-neutral <code>records_request</code> and kinds from the profile. Publication's test counts a new audience as a new product kind.</li>
+<li><strong>Three outcome vocabularies:</strong> the action's resolution (complied, denied, escalated, withdrawn), the correspondence outcome (granted, denied, partial, reversed, affirmed, none stated) and escalation's evaluation (complied, partial, denied, none). None fits a story published or a thank-you delivered.</li>
+<li><strong>Edges.</strong> <code>action_basis</code>, <code>responds_to</code> and <code>references</code> sit outside State Rules' closed edge vocabulary, which says new kinds "require a spec revision".</li>
+<li><strong>Two outbound models.</strong> State Rules' distribution ladder (internal and external audiences, recipients' stale copies) was never reconciled with case publication.</li>
+<li><strong>Tier per kind or per action.</strong> The reference platforms document classifies kinds; State Rules puts the tier on each action; filings take the stricter of the two.</li>
+<li><strong>The plan against escalation.</strong> A plan is a set of options, including those declined; escalation is one pursued breach. Nothing relates them (UX open question 9).</li>
+<li><strong>Audience and user type.</strong> Publication makes an audience a reader, distinct from a user type; Case Making grounds plan variation in user type; no record holds either.</li>
+<li><strong>The status of Case Making.</strong> It is canon "whole" in <code>requirements/README.md</code>; its own banner calls it non-authoritative ("several body sentences are now false as written").</li>
+<li><strong>"Layer 3"</strong> means Action in the Functional Architecture's analysis, and "the UI surfaces" in its 2026-07-27 addition.</li>
+<li><strong>Two stances toward government.</strong> The Roadmap's "war" and "protection network" (unions, the City Attorney, the external auditor and Council) against System Design and Case Making: "all stakeholders are presumed to want better outcomes."</li>
+<li><strong>DEC-26's refusal of an unestablished outward act</strong> against Requirement 12 (no tool gates an action) and Requirement 8 ("Any individual can initiate" Tier 1).</li>
+</ol>
+<h2>6. The gaps</h2>
+<p><strong>Bob's to decide (requirements, doctrine, architecture, UX), each to come with a recommendation:</strong></p>
+<ol>
+<li><strong>Who the "groups" are.</strong> The canon has three different ideas under that word: a <em>user type</em> (journalist, lawyer; varies journeys and repertoire), an <em>audience</em> (a reader of a published case) and an <em>addressee</em> (an office). Bob's framing could mean kinds of CivicOS groups, kinds of project or member within one group, or outside parties a group works with.</li>
+<li><strong>The layer's scope.</strong> Keep "restore conformance", or widen to the canon's "turn findings into outputs", with breach actions keeping the stricter rule?</li>
+<li><strong>Action purposes beyond a breach:</strong> informing, recognising compliance, a success story, outreach, coalition work, supportive testimony. Each needs a kind or purpose, an outcome vocabulary, and a place in publication or action.</li>
+<li><strong>Unions and special interests against Operational Principle 1.</strong> Can a group with a stake use CivicOS, and what disclosure keeps it inside the doctrine?</li>
+<li><strong>Roles for acting:</strong> who may draft, approve, send, sign or speak for the group; whether sending anything is an attested (signed) act; how "No group speaks for Believe in Oakland" applies.</li>
+<li><strong>Communications as a construct:</strong> one message to many addressees, to non-government recipients (press, other groups, the public), certification by a licensed professional, and confidential referral to an oversight body.</li>
+<li><strong>The action plan:</strong> designed, no module; its relation to escalation; whether any of it is published (DEC-25).</li>
+<li><strong>What "consequences addressed" and an adequate response mean</strong> in practice.</li>
+<li><strong>Cross-group work:</strong> joint actions, one group accepting another's work, the directory and "working on" signals (UX open questions 12 and 29).</li>
+<li><strong>Evidence grade per tier:</strong> may a Tier 2 or 3 action, or a counsel packet, rest on Grade B evidence?</li>
+<li><strong>A home document for the Action layer.</strong> It has no level-1 design and no row in System Design §3; its design is spread across State Rules §4.4, Case Making, Design Requirements 7–8 and the requirements.</li>
+</ol>
+<p><strong>BOB's to plan (build and wiring), no decision of Bob's needed:</strong></p>
+<ul>
+<li>Schedule monitoring's deadline recheck; give the queue kinds for an overdue clock and a due escalation.</li>
+<li>An op to create an action, and read ops for an action and its lists.</li>
+<li>Act entries in <code>affordances</code> for standards, determinations, consequences, filings and escalation.</li>
+<li>Profile data: templates, holidays, measured offices and deadlines.</li>
+<li>Verify that a member can create a <code>breach: true</code> action through promote (reported refused in T9, probably fixed, not pinned by a test).</li>
+<li>The old interface's intake writes an addressee the plane refuses; the new UI is designed elsewhere.</li>
+</ul>
+<p><strong>Record-keeping defects found:</strong></p>
+<ul>
+<li><code>build/requirements/actions.md</code> still marks R4–R11, R22, R28–R33, R40 and R41 "not yet met", and monitoring R34–R35 and publication R36–R37 likewise, though all are built and tested.</li>
+<li><code>build/plan/next.md</code> still lists N61, N129 and N130, which T8 applied (K232).</li>
+<li>DEC-1 to DEC-67 (including DEC-13, 14, 17, 24, 26, 27, 54) are not readable on <code>main</code>: <code>docs/archive/ledgers/DECISIONS-2026-08.md</code> there is only a pointer to the retired <code>coord</code> branch, yet the canon cites them.</li>
+<li>State Rules §4.4 was not amended for any of the requirements' changes.</li>
+</ul>
+<h2>7. The path for the week</h2>
+<ol>
+<li><strong>Inventory</strong> (this document).</li>
+<li><strong>Bob's framing questions</strong>, one page: §6 items 1–4 first, since the rest depend on them, each with a recommendation drawn from the canon.</li>
+<li><strong>A completeness matrix:</strong> actor kinds × action purposes × stages of the work (prepare, decide, send, track, close), each cell traced to canon, requirement, or gap. Use the UX substrate's use cases (UC-110 to UC-129) and audiences as its rows.</li>
+<li><strong>Requirement changes</strong>, drafted for BOB to fold: deltas to the six modules and to <code>publication</code>, and any new module (the action plan, communications) for Bob as architecture.</li>
+<li><strong>Design</strong> of the member's path through acting, with the UX substrate, and the test list each requirement needs (P7: every requirement tested at the interface).</li>
+<li><strong>Build</strong> follows the process: the drafts go to BOB, who plans them into a tranche; module jobs write and test the code.</li>
+</ol>
+</div>

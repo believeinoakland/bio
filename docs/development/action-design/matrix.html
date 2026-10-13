@@ -1,0 +1,463 @@
+<title>Action Completeness Matrix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+/* One reading column; tables break out to a wider measure. Tokens from build/layers-view.html. */
+:root{
+  --bg:#F4F6F8; --panel:#FFFFFF; --ink:#18202B; --muted:#5B6676; --rule:#D8DEE6; --chip:#E9EEF3;
+  --accent:#1D6A86;
+  --ok:#2F6B3A; --ok-bg:#DCEEDD; --part:#8A5A12; --part-bg:#F5E6C8; --gap:#9A3B2E; --gap-bg:#F6E0DA;
+  --serif:"Source Serif 4",Georgia,serif; --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --bg:#11161D; --panel:#18202A; --ink:#E4E9EF; --muted:#9AA6B5; --rule:#2B3542; --chip:#222C38;
+  --accent:#5FB3CF; --ok:#8FD19B; --ok-bg:#1C3822; --part:#E0B060; --part-bg:#43341A; --gap:#F09A86; --gap-bg:#472019;
+}
+body{background:var(--bg);color:var(--ink);font:15.5px/1.6 var(--sans)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:32px 64px}
+.wrap > *:not(.tw){max-width:74ch}
+h1{font:600 clamp(28px,4vw,36px)/1.15 var(--serif);margin:0 0 12px;text-wrap:balance}
+h2{font:600 22px/1.25 var(--serif);margin:44px 0 12px;padding-top:18px;border-top:1px solid var(--rule);text-wrap:balance}
+p,ul,ol{margin:0 0 14px}
+li{margin:0 0 8px}
+li > ul{margin-top:8px}
+a{color:var(--accent)}
+code{font:0.88em var(--mono);background:var(--chip);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.lede{color:var(--muted);font-size:14.5px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.eyebrow{display:block;font:500 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.tw{overflow-x:auto;margin:6px 0 20px;border:1px solid var(--rule);border-radius:8px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:13.5px;line-height:1.5}
+th{font:500 11.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule);background:color-mix(in srgb,var(--chip) 60%,var(--panel))}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td:first-child{min-width:150px}
+.v{display:inline-block;font:500 12px/1.3 var(--mono);padding:3px 7px;border-radius:5px;margin-bottom:4px}
+.v.gap{color:var(--gap);background:var(--gap-bg)}
+.v.part{color:var(--part);background:var(--part-bg)}
+.v.ok{color:var(--ok);background:var(--ok-bg)}
+.v.wire{color:var(--part);background:var(--part-bg);outline:1px dashed var(--part)}
+.v.design{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--panel))}
+table.wide{min-width:1180px}
+</style>
+<div class="wrap">
+<h1>The Action layer: completeness matrix</h1>
+<p class="lede"><span class="eyebrow">Status</span> DRAFT by ACTION_DESIGN #1, 2026-09-30. Step 3 of the week's Action design work: every purpose an action can serve, walked through every stage of the work, then every kind of actor and every role within a group, each cell traced to canon, an approved requirement, the action-plan design, or a gap. Its last two sections list the requirement changes it implies and Bob's decisions D1–D6, which Bob agreed on 2026-09-30 as recommended; the requirement drafts that follow from them are in <code>drafts/</code>. Sources: <code>INVENTORY.md</code> and its <code>sources/</code>, <code>ACTION-PLAN.md</code> (rules A1–A16, Bob's rulings 1–10), and <code>build/requirements/</code> at <code>main</code> @ <code>5bb688333c</code>.</p>
+<p><strong>How to read a cell.</strong> <strong class="v ok">Built</strong>: an approved requirement covers it and the code has it. <strong class="v wire">Wiring</strong>: built, but not connected, so it never reaches a member. <strong class="v design">Designed</strong>: in the action-plan design, not yet a requirement. <strong class="v part">Partly</strong>: some of it is covered; the cell says what is missing. <strong class="v gap">Gap</strong>: nothing covers it. References: <code>actions</code> R15 means requirement R15 of the <code>actions</code> module; A7 means rule A7 of the action plan.</p>
+<h2>1. In brief</h2>
+<ol>
+<li><strong>The legal and breach track is nearly complete.</strong> From seeking evidence through Tier 3, the stages are built. What stops it is wiring: nothing tells a member a deadline passed or a stage is due, and the real profile has no filing templates.</li>
+<li><strong>Everything outside the legal track stops at the second column.</strong> Awareness, journalistic, grassroots and recognition options can be planned (the design covers them) but nothing helps prepare them, their addressee has no shape (an action can only be addressed to a government office), nothing tracks them and no outcome fits them.</li>
+<li><strong>Actors other than activists appear only as recipients or offices.</strong> Journalists, auditors, administrators and unions have no place as users, and journalists and other groups cannot be addressed at all.</li>
+<li><strong>Roles within a group are thin.</strong> Any contributing member may approve, send and speak for the group; nothing records who did so on the group's behalf beyond the author stamp.</li>
+<li><strong>Two new gaps surfaced:</strong> a plan has no rule for when it closes, and filing drafts and counsel-packet exports leave without the in-band stamp the canon requires of anything addressed (Publication §3 rule 9), though <code>publication</code> already provides it (<code>inbandQuartet</code>, its R16).</li>
+</ol>
+<h2>2. Purposes × stages of the work</h2>
+<p>The stages: <strong>Plan</strong> (an option in a plan), <strong>Prepare</strong> (drafting, with or without the assistant), <strong>Decide</strong> (a member chooses, approves), <strong>Send</strong> (it leaves the group, and the record says so), <strong>Track</strong> (replies, clocks, being told), <strong>Close</strong> (the outcome is recorded; any escalation exits).</p>
+<div class="tw"><table class="wide">
+<thead>
+<tr>
+<th>purpose</th>
+<th>Plan</th>
+<th>Prepare</th>
+<th>Decide</th>
+<th>Send</th>
+<th>Track</th>
+<th>Close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Seek evidence</strong> (records request, request for comment)</td>
+<td><strong class="v design">Designed</strong> A12: may start while the matter is only suspected</td>
+<td><strong class="v part">Partly</strong>: a machine may propose governing laws and a clock (<code>actions</code> R19, R32); no skill drives it; the real profile has no template</td>
+<td><strong class="v ok">Built</strong>: a member creates it (through the generic promote op, no dedicated op), states tier and laws (<code>actions</code> R18, R23); a request for comment names its inquiries and window (R1, DEC-13)</td>
+<td><strong class="v ok">Built</strong>: the member sends by the venue's own means and records <code>sent</code> (<code>actions</code> R15–R16)</td>
+<td><strong class="v wire">Wiring</strong>: replies captured (R15, R17), the records-request lifecycle and due dates derived (R21, R25); an overdue date is never pushed (<code>monitoring</code> R34 unscheduled, no queue kind)</td>
+<td><strong class="v ok">Built</strong>: resolution (R7) and the action's own outcome (R26, DEC-14)</td>
+</tr>
+<tr>
+<td><strong>Mitigation</strong> (a demand to, or negotiation with, the office)</td>
+<td><strong class="v design">Designed</strong> A4, A8–A9: a checkpoint such as "earnest commitment by week 8"</td>
+<td><strong class="v gap">Gap</strong>: no drafting help; no kind beyond <code>other</code></td>
+<td><strong class="v ok">Built</strong>: a breach action at escalation stage 2 (<code>escalation</code> R5, R9), or kind <code>other</code></td>
+<td><strong class="v ok">Built</strong>: recorded <code>sent</code> (<code>actions</code> R15)</td>
+<td><strong class="v wire">Wiring</strong>: a member evaluates the response (complied, partial, denied, none; <code>escalation</code> R10); triggers are derived when read (R16), never pushed (<code>monitoring</code> R35 unwired)</td>
+<td><strong class="v ok">Built</strong>: escalation ends only on compliance restored and consequences addressed (<code>escalation</code> R14, K172)</td>
+</tr>
+<tr>
+<td><strong>Legal, Tier 1–2</strong> (complaint, referral, court petition)</td>
+<td><strong class="v design">Designed</strong> A4: tier on each legal option</td>
+<td><strong class="v part">Partly</strong>: drafts fill the profile's template, each blank naming its source (<code>filings</code> R1–R5); the real profile has no templates, so every draft is refused there</td>
+<td><strong class="v ok">Built</strong>: a member approves; the stricter tier governs (<code>filings</code> R6)</td>
+<td><strong class="v part">Partly</strong>: filed by the venue's own means and recorded (<code>filings</code> R7); the draft carries no in-band stamp (<strong class="v gap">Gap</strong>, Publication §3 rule 9)</td>
+<td><strong class="v wire">Wiring</strong>: clock entries proposed from profile deadlines (<code>actions</code> R32, <code>filings</code> R7); never pushed</td>
+<td><strong class="v ok">Built</strong> (<code>actions</code> R7, R26; <code>escalation</code> R14)</td>
+</tr>
+<tr>
+<td><strong>Legal, Tier 3</strong> (counsel)</td>
+<td><strong class="v design">Designed</strong> A4</td>
+<td><strong class="v ok">Built</strong>: the counsel packet and candidate theories (<code>filings</code> R8–R12, R14); needs a determination</td>
+<td><strong class="v ok">Built</strong>: a member names counsel and exports (<code>filings</code> R11)</td>
+<td><strong class="v part">Partly</strong>: the export leaves by the member's hand (DEC-31, provisional); never published (R11); no in-band stamp (<strong class="v gap">Gap</strong>)</td>
+<td><strong class="v part">Partly</strong>: counsel files; only a member's recorded correspondence brings it back</td>
+<td><strong class="v ok">Built</strong> (<code>actions</code> R26; <code>escalation</code> R14)</td>
+</tr>
+<tr>
+<td><strong>Oversight and political accountability</strong> (asking officials to act, oversight or audit requests, testimony, enforcing legislation)</td>
+<td><strong class="v design">Designed</strong>, with ruling 6: lobbying only to enforce an existing requirement</td>
+<td><strong class="v gap">Gap</strong>: no drafting help</td>
+<td><strong class="v ok">Built</strong>: attached at stage 7 with its purpose; offices marked elected or oversight (<code>escalation</code> R12, <code>jurisdictions</code> R24)</td>
+<td><strong class="v ok">Built</strong>: recorded <code>sent</code></td>
+<td><strong class="v wire">Wiring</strong>: as mitigation</td>
+<td><strong class="v ok">Built</strong> (<code>escalation</code> R14)</td>
+</tr>
+<tr>
+<td><strong>Awareness</strong> (public campaign, public comment, testimony at a meeting)</td>
+<td><strong class="v design">Designed</strong> A4: addressed to a described audience</td>
+<td><strong class="v gap">Gap</strong>: nothing composes a message (UX use case 124)</td>
+<td><strong class="v part">Partly</strong>: public comment to a body fits (the office is the addressee); a campaign to the public has no addressee shape (<code>actions</code> R9)</td>
+<td><strong class="v part">Partly</strong>: as for Decide</td>
+<td><strong class="v gap">Gap</strong>: no reply, reach or response beyond an office's</td>
+<td><strong class="v gap">Gap</strong>: no resolution fits (R7: complied, denied, escalated, withdrawn)</td>
+</tr>
+<tr>
+<td><strong>Journalistic</strong> (briefing reporters, a story, a feature)</td>
+<td><strong class="v design">Designed</strong></td>
+<td><strong class="v gap">Gap</strong>: no rendering for an audience (Publication §6: "a new action_kind and a rendering")</td>
+<td><strong class="v gap">Gap</strong>: <code>media</code> exists as a profile kind, but a reporter or outlet cannot be the addressee (<code>actions</code> R9)</td>
+<td><strong class="v part">Partly</strong>: the published case is public; an embargoed copy is a review copy that never leaves the instance (DEC-31)</td>
+<td><strong class="v gap">Gap</strong></td>
+<td><strong class="v part">Partly</strong>: "a story ran" can be recorded as the action's own outcome (R26, DEC-14); no resolution fits</td>
+</tr>
+<tr>
+<td><strong>Grassroots</strong> (organizing residents, working with other groups)</td>
+<td><strong class="v design">Designed</strong></td>
+<td><strong class="v gap">Gap</strong></td>
+<td><strong class="v gap">Gap</strong>: no addressee but an office; no joint action with another group (UX open questions 12, 29)</td>
+<td><strong class="v gap">Gap</strong></td>
+<td><strong class="v gap">Gap</strong></td>
+<td><strong class="v gap">Gap</strong></td>
+</tr>
+<tr>
+<td><strong>Recognition</strong> (a success story, commending compliance)</td>
+<td><strong class="v design">Designed</strong>, ruling 5: a plan may start from a compliant determination</td>
+<td><strong class="v gap">Gap</strong></td>
+<td><strong class="v part">Partly</strong>: kind <code>other</code> with a leg to the determination (the breach rule does not bind it, <code>actions</code> R8); a letter to the office fits</td>
+<td><strong class="v part">Partly</strong>: as correspondence</td>
+<td><strong class="v gap">Gap</strong></td>
+<td><strong class="v gap">Gap</strong>: no outcome value</td>
+</tr>
+<tr>
+<td><strong>The plan itself</strong></td>
+<td><strong class="v design">Designed</strong> A1–A3</td>
+<td><strong class="v design">Designed</strong> A5–A6: the assistant suggests; no skill exists yet</td>
+<td><strong class="v design">Designed</strong> A7</td>
+<td>not applicable (A15: never published)</td>
+<td><strong class="v design">Designed</strong> A9, A13: needs monitoring and the queue</td>
+<td><strong class="v gap">Gap</strong>: no rule says when a plan closes</td>
+</tr>
+</tbody>
+</table></div>
+<h2>3. Actors</h2>
+<p>Canon places actor differences in three places: the <strong>project</strong> (its bar, DEC-17; its repertoire, proposed by the assistant from a self-identification, DEC-27), the <strong>audience</strong> of a publication (Publication §6), and the <strong>addressee</strong> of an action (an office). Nothing is indexed on who a person is (DEC-54).</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>actor</th>
+<th>as a user (runs a project)</th>
+<th>as an addressee or recipient</th>
+<th>as an audience</th>
+<th>status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Community activists</strong></td>
+<td><strong class="v ok">Built</strong>: the default model</td>
+<td>not applicable</td>
+<td>yes</td>
+<td><strong class="v ok">Built</strong></td>
+</tr>
+<tr>
+<td><strong>Journalists</strong></td>
+<td><strong class="v part">Partly</strong>: a project's own bar (DEC-17); a repertoire proposed from "I'm a journalist" (DEC-27, not built)</td>
+<td><strong class="v gap">Gap</strong>: not an office, so cannot be addressed</td>
+<td>yes (Publication §6)</td>
+<td><strong class="v gap">Gap</strong> as addressee</td>
+</tr>
+<tr>
+<td><strong>Lawyers</strong></td>
+<td><strong class="v part">Partly</strong>: a project's bar ("beyond a reasonable doubt")</td>
+<td><strong class="v ok">Built</strong>: named counsel receives the packet (<code>filings</code> R8–R11)</td>
+<td>yes</td>
+<td><strong class="v part">Partly</strong></td>
+</tr>
+<tr>
+<td><strong>City auditors, oversight bodies</strong></td>
+<td><strong class="v gap">Gap</strong></td>
+<td><strong class="v ok">Built</strong>: an office marked <code>oversight</code>; stage 7 audit and oversight requests (<code>jurisdictions</code> R24, <code>escalation</code> R12)</td>
+<td>only in reference research</td>
+<td><strong class="v part">Partly</strong></td>
+</tr>
+<tr>
+<td><strong>Independent auditors, CPAs</strong></td>
+<td><strong class="v part">Partly</strong>: declared expertise, which "gates nothing" (Membership §1.3)</td>
+<td><strong class="v gap">Gap</strong></td>
+<td>not named</td>
+<td><strong class="v gap">Gap</strong></td>
+</tr>
+<tr>
+<td><strong>Labor unions, special interests</strong></td>
+<td><strong class="v gap">Gap</strong>: a doctrine question (Operational Principle 1; disclosure, Requirement 6; declared bias)</td>
+<td><strong class="v gap">Gap</strong></td>
+<td>not named</td>
+<td><strong class="v gap">Gap</strong>, Bob's</td>
+</tr>
+<tr>
+<td><strong>Government administrators</strong> (responding to the community)</td>
+<td><strong class="v gap">Gap</strong>: named as stakeholders (Case Making §4), no path as users</td>
+<td><strong class="v ok">Built</strong>: as an office</td>
+<td>yes</td>
+<td><strong class="v part">Partly</strong></td>
+</tr>
+<tr>
+<td><strong>Other civic groups</strong></td>
+<td>not applicable</td>
+<td><strong class="v gap">Gap</strong>: no joint action; no act records accepting another group's work (UX open question 12)</td>
+<td>yes (peer instances)</td>
+<td><strong class="v gap">Gap</strong></td>
+</tr>
+<tr>
+<td><strong>Affected residents</strong></td>
+<td>not applicable</td>
+<td><strong class="v gap">Gap</strong> as addressees</td>
+<td>yes</td>
+<td><strong class="v part">Partly</strong>: counted as a class in consequences (<code>consequences</code> R10)</td>
+</tr>
+</tbody>
+</table></div>
+<h2>4. Roles within a group</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>role in acting</th>
+<th>who may today</th>
+<th>canon</th>
+<th>status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Prepare</strong> a draft or option</td>
+<td>any credential, the machine included, labelled (<code>filings</code> R5); a member adds plan options (A6)</td>
+<td>the machine may do the looking (DEC-24)</td>
+<td><strong class="v ok">Built</strong> / <strong class="v design">Designed</strong></td>
+</tr>
+<tr>
+<td><strong>Choose</strong> an option; <strong>approve</strong> a filing</td>
+<td>any member with <code>contribute</code> (<code>filings</code> R6); a joined participant for plans (A1, A7)</td>
+<td>no approver role named</td>
+<td><strong class="v part">Partly</strong></td>
+</tr>
+<tr>
+<td><strong>Send</strong>, file, or <strong>speak for the group</strong></td>
+<td>any member with <code>contribute</code>; the sending is recorded, never signed</td>
+<td>"No group speaks for Believe in Oakland" (Operational Principle 7); attribution levels (Publication §3 rule 7)</td>
+<td><strong class="v gap">Gap</strong>: no spokesperson or contact, no attested sending</td>
+</tr>
+<tr>
+<td><strong>Record</strong> replies and outcomes</td>
+<td>any member, never a machine (<code>actions</code> R15)</td>
+<td>a reply is captured, not summarised (DEC-13)</td>
+<td><strong class="v ok">Built</strong></td>
+</tr>
+<tr>
+<td><strong>Bring resources</strong> (expertise, standing, time)</td>
+<td>declared expertise; a free-form note on a plan step (A15)</td>
+<td>resources are "an attached list, not a model" (Case Making)</td>
+<td><strong class="v part">Partly</strong></td>
+</tr>
+<tr>
+<td><strong>Judge a checkpoint</strong></td>
+<td>a joined participant (A9)</td>
+<td>the member does the concluding (DEC-24)</td>
+<td><strong class="v design">Designed</strong></td>
+</tr>
+</tbody>
+</table></div>
+<h2>5. The changes this implies</h2>
+<p><strong>For the action-plan requirements (a new module; adding it is BOB's, Bob 2026-09-30):</strong> A1–A16, plus the closing rule it lacked, approved by Bob 2026-09-30: a member closes a plan with a reason; it never closes itself; a closed plan stays readable and a subject it held may join another plan.</p>
+<p><strong>For requirements, needing Bob's decision first (§6):</strong>
+- <code>actions</code>: an addressee that is not a government office (§6 D1); the plan and option an action came from (A12); an outcome for actions that are not requests (§6 D3).
+- A way to prepare communications: messages, briefings and renderings for an audience (§6 D2).</p>
+<p><strong>For BOB, no decision of Bob's needed:</strong>
+- <code>filings</code>: carry <code>publication</code>'s in-band stamp (its R16) on every draft and counsel-packet export, as Publication §3 rule 9 requires.
+- <code>monitoring</code>, <code>scheduler</code>, <code>queue</code>: schedule the deadline recheck; queue kinds for an overdue clock, a due escalation stage and a plan checkpoint.
+- <code>actions</code>: an op to create an action, and read ops for an action and its lists.
+- <code>skills</code>: an action-planning skill that suggests options (A5) and proposes standards and theories, driving the proposal ops that exist.
+- <code>jurisdictions</code>: the real profile's templates, holidays, measured offices and deadlines.</p>
+<h2>6. Bob's decisions (agreed 2026-09-30, as recommended)</h2>
+<ul>
+<li><strong>D1 · Addressees beyond government offices.</strong> Recommended: an action may be addressed to a reporter or outlet, another civic group, or an organisation, each named by role and organisation, never as a private individual (Requirement 6); an awareness option may address a described audience ("residents of the district"). Without this, four of the ten purposes cannot be sent.</li>
+<li><strong>D2 · Preparing communications.</strong> Recommended: the assistant drafts a message or briefing for an option as a proposal, stored apart and labelled, from the published case and the plan; a member edits and adopts it; it leaves by the member's hand and carries the in-band stamp. This is Publication §6's "new action_kind and a rendering", placed in the Action layer.</li>
+<li><strong>D3 · Outcomes for actions that are not requests.</strong> Recommended: add <code>completed</code> to the resolutions, with the action's own outcome (DEC-14) saying what happened ("the story ran on 2026-10-14"), and keep impact claims needing outside evidence.</li>
+<li><strong>D4 · Actor kinds.</strong> Recommended: a project may declare the kind of work it does (reporting, fixing, legal, oversight), which shapes what the assistant suggests and nothing else (DEC-27, DEC-54); no attribute on a person.</li>
+<li><strong>D5 · Roles for outward acts.</strong> Recommended: no new capability. A started option may name the member who is the group's contact for it, shown with the action; sending stays recorded and unsigned until a group needs more.</li>
+<li><strong>D6 · Unions and special interests</strong> (carried from the inventory, §6 item 4). Recommended: any group may use CivicOS; one with a stake in the matter discloses it (Requirement 6) and its lobbying is limited by ruling 6.</li>
+</ul>
+<h2>7. After the rulings (re-run 2026-09-30)</h2>
+<p>Every cell of §2–§4 re-checked against Bob's rulings of 2026-09-29 and 2026-09-30 and the drafts (<code>drafts/action-plans.md</code> as AP, <code>drafts/deltas.md</code>). <strong>Drafted</strong>: a requirement draft now covers it. <strong>Resolved</strong>: Bob ruled that nothing more is needed. <strong>Deferred</strong>: Bob deferred it, with a trigger.</p>
+<div class="tw"><table class="wide">
+<thead>
+<tr>
+<th>purpose</th>
+<th>Plan</th>
+<th>Prepare</th>
+<th>Decide</th>
+<th>Send</th>
+<th>Track</th>
+<th>Close</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Seek evidence</strong></td>
+<td><strong>Drafted</strong> AP R1, R18</td>
+<td><strong>Drafted</strong>: skill (deltas §5), communication drafts (<code>filings</code> R23), profile templates (§6)</td>
+<td><strong class="v ok">Built</strong>, with a create op <strong>Drafted</strong> (<code>actions</code> R46)</td>
+<td><strong class="v ok">Built</strong>; in-band stamp <strong>Drafted</strong> (<code>filings</code> R22)</td>
+<td><strong>Drafted</strong>: deadline recheck and queue kinds (§4)</td>
+<td><strong class="v ok">Built</strong></td>
+</tr>
+<tr>
+<td><strong>Mitigation</strong></td>
+<td><strong>Drafted</strong> AP R9, R14–R16</td>
+<td><strong>Drafted</strong> (<code>filings</code> R23)</td>
+<td><strong class="v ok">Built</strong></td>
+<td><strong class="v ok">Built</strong>; stamp <strong>Drafted</strong></td>
+<td><strong>Drafted</strong> (§4)</td>
+<td><strong class="v ok">Built</strong></td>
+</tr>
+<tr>
+<td><strong>Legal, Tier 1–2</strong></td>
+<td><strong>Drafted</strong> AP R9</td>
+<td><strong>Drafted</strong>: templates (§6), skill (§5)</td>
+<td><strong class="v ok">Built</strong></td>
+<td><strong>Drafted</strong>: stamp (R22); grades beside the venue's standard (<code>actions</code> R48, <code>jurisdictions</code> R39)</td>
+<td><strong>Drafted</strong> (§4)</td>
+<td><strong class="v ok">Built</strong></td>
+</tr>
+<tr>
+<td><strong>Legal, Tier 3</strong></td>
+<td><strong>Drafted</strong></td>
+<td><strong class="v ok">Built</strong>; grades <strong>Drafted</strong> (R48)</td>
+<td><strong class="v ok">Built</strong></td>
+<td><strong>Drafted</strong> (R22); override disclosure (<code>filings</code> R24)</td>
+<td><strong>Resolved</strong>: counsel files; a member records what returns</td>
+<td><strong class="v ok">Built</strong></td>
+</tr>
+<tr>
+<td><strong>Oversight, political accountability</strong></td>
+<td><strong>Drafted</strong>, lobbying AP R12</td>
+<td><strong>Drafted</strong> (R23)</td>
+<td><strong class="v ok">Built</strong></td>
+<td><strong class="v ok">Built</strong>; stamp <strong>Drafted</strong></td>
+<td><strong>Drafted</strong> (§4)</td>
+<td><strong class="v ok">Built</strong></td>
+</tr>
+<tr>
+<td><strong>Awareness</strong></td>
+<td><strong>Drafted</strong></td>
+<td><strong>Drafted</strong> (R23)</td>
+<td><strong>Drafted</strong>: audience addressee (<code>actions</code> R9)</td>
+<td><strong>Drafted</strong> (R9, R22, R23)</td>
+<td><strong>Drafted</strong>: replies recorded as correspondence with any addressee; reach is not measured, by design (no metrics)</td>
+<td><strong>Drafted</strong>: <code>completed</code> and the action's own outcome (<code>actions</code> R7, R26)</td>
+</tr>
+<tr>
+<td><strong>Journalistic</strong></td>
+<td><strong>Drafted</strong></td>
+<td><strong>Drafted</strong> (R23)</td>
+<td><strong>Drafted</strong>: press addressee (R9)</td>
+<td><strong>Drafted</strong></td>
+<td><strong>Drafted</strong></td>
+<td><strong>Drafted</strong> (R7)</td>
+</tr>
+<tr>
+<td><strong>Grassroots</strong></td>
+<td><strong>Drafted</strong></td>
+<td><strong>Drafted</strong> (R23)</td>
+<td><strong>Drafted</strong>: group, organisation or audience addressee (R9); joint action <strong>Deferred</strong></td>
+<td><strong>Drafted</strong></td>
+<td><strong>Drafted</strong></td>
+<td><strong>Drafted</strong> (R7)</td>
+</tr>
+<tr>
+<td><strong>Recognition</strong></td>
+<td><strong>Drafted</strong>: a compliant subject (AP R1)</td>
+<td><strong>Drafted</strong> (R23)</td>
+<td><strong class="v ok">Built</strong></td>
+<td><strong>Drafted</strong></td>
+<td><strong>Drafted</strong></td>
+<td><strong>Drafted</strong> (R7)</td>
+</tr>
+<tr>
+<td><strong>The plan itself</strong></td>
+<td><strong>Drafted</strong> AP R1–R3</td>
+<td><strong>Drafted</strong> AP R11, R21; skill (§5)</td>
+<td><strong>Drafted</strong> AP R13</td>
+<td>not applicable</td>
+<td><strong>Drafted</strong> AP R15–R17; queue (§4)</td>
+<td><strong>Drafted</strong> AP R20</td>
+</tr>
+</tbody>
+</table></div>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>actor or role</th>
+<th>after the rulings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Journalists, lawyers, auditors, CPAs, administrators as users</td>
+<td><strong>Drafted</strong>: a project declares its kind of work (AP R21, D4); nothing on a person</td>
+</tr>
+<tr>
+<td>Journalists, outlets, organisations, other groups, residents as addressees</td>
+<td><strong>Drafted</strong> (<code>actions</code> R9, D1)</td>
+</tr>
+<tr>
+<td>Unions and special interests</td>
+<td><strong>Resolved</strong> (D6: any group, disclosing a stake; lobbying AP R12)</td>
+</tr>
+<tr>
+<td>Joint action with another group</td>
+<td><strong>Deferred</strong> (trigger: a coalition asks)</td>
+</tr>
+<tr>
+<td>Approve, send, speak for the group</td>
+<td><strong>Resolved</strong>: any contributing member; a started option may name the group's contact (<code>actions</code> R44, D5); sending stays unsigned</td>
+</tr>
+<tr>
+<td>Bring resources</td>
+<td><strong>Resolved</strong>: a note on a step, no budgets (ruling 3)</td>
+</tr>
+<tr>
+<td>Opposition: pressure against the group</td>
+<td><strong>Drafted</strong> (<code>actions</code> R47); a legal threat prompts a litigation-hold reminder (§4, DEC-61)</td>
+</tr>
+<tr>
+<td>Certification by a licensed professional</td>
+<td><strong>Deferred</strong> (trigger: a group needs a licensed name on an output)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Bob, 2026-09-30:</strong> content with where this stands, and asks that completing the Action design, and the development BOB manages from it, be given priority high enough that Action-related development catches up with the rest of CivicOS and keeps up.</p>
+<p><strong>The result.</strong> No cell is a gap. Everything is built, drafted, resolved by a ruling, or deferred by Bob with a trigger.</p>
+</div>
