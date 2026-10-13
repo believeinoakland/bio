@@ -6,7 +6,7 @@ import { noSuchPlan, refusePlanClosed } from "../../../src/action-plans/index.mj
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { URL } from "node:url";
 import { DRAFT_LABEL, ASSIST_LABEL, ASSISTANT, planWorkOps } from "../../../src/plan-work/index.mjs";
-import { proposalLabel } from "../../../src/record-grammar/index.mjs";
+import { proposalLabel, PROPOSAL_STATES } from "../../../src/record-grammar/index.mjs";
 
 /* A plan with: a started action awaiting a response with a pending entry; an overridden breach action; a declined
    option; a scenario set aside; an escalation; a held project and a hold due on the action. */
@@ -222,4 +222,27 @@ test("R14: statusReportSave's from records that the text began as the assistant'
     assert.equal(code(save({ from })), "PLAN_WORK_TEXT_REFUSED", JSON.stringify(from));
   assert.equal(code(save({ from: { assistant: true }, ...by("alice"), author: MACHINE })), "MACHINE_CANNOT_PLAN", "the assistant keeps nothing itself");
   assert.equal(w.count("pw_reports"), before);
+});
+
+test("R16: a report saved from the assistant's draft is labelled through record-grammar's proposalLabel(by, \"status_report\"); one written by the member alone carries no draft label", () => {
+  const w = world();
+  const save = (extra = {}) => w.pw.statusReportSave({ plan: w.PL, text: "Where we are, in my words.", ...by("alice"), ...extra });
+  const r = save({ from: { assistant: true, as_of: "2026-10-01T12:00:00Z" } });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  /* the label is record-grammar's, at its one site: its state and sentence the status_report subject's */
+  assert.deepEqual(r.from.label, proposalLabel(ASSISTANT, "status_report"));
+  assert.deepEqual(ASSIST_LABEL, proposalLabel(ASSISTANT, "status_report"));
+  assert.deepEqual([r.from.label.state, r.from.label.machine_work], ["machine_proposed", true]);
+  assert.equal(r.from.label.says, PROPOSAL_STATES.status_report.machine_proposed);
+  const kept = w.pw.statusReports({ plan: w.PL, viewer: V("bob") }).reports.at(-1);
+  assert.deepEqual(kept.from.label, proposalLabel(ASSISTANT, "status_report"), "read back with the same label");
+  assert.deepEqual([kept.by, kept.text], [V("alice"), "Where we are, in my words."], "the report kept stays the member's");
+  /* control: a report written by the member alone, with no from or her own one-line from, carries no draft label */
+  save();
+  save({ from: "my notes of Monday" });
+  const mine = w.pw.statusReports({ plan: w.PL, viewer: V("bob") }).reports.slice(-2);
+  assert.deepEqual(mine.map((x) => x.from), [null, "my notes of Monday"]);
+  assert.doesNotMatch(JSON.stringify(mine), /machine_proposed|label/);
+  /* never published: an outsider reads the plan's reports as absent */
+  assert.deepEqual(w.pw.statusReports({ plan: w.PL, viewer: V("dave") }), noSuchPlan(w.PL));
 });
