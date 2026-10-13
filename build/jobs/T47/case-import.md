@@ -72,3 +72,7 @@ Size (session_017tqJqUTKpFeyBvHdxfwpzn): test runs 34, module lines 2116
 ## J1 · REPORT
 
 Found reading R16 against accepted-work R1/R8: case-import R16's 'a viewer who is not an active member is answered null' cannot be reached for `withdrawals` and `moves`, since accepted-work R1/R8 give them only {after, limit}, no viewer. No code is wrong; a wording point for R16 or accepted-work R1, BOB's to place. Also: this job stales the plane bundle (rule 5 (4)), for L8's close.
+
+## J2 · COMPLETE
+
+T47-30 applied: R24 flagHistory registered with accepted-work R9 (flagHistoryFacts: flags open at any instant from since through the read, opened_at/cleared_at, complete; a non-instant since answers complete:false; non-member null); R17's citation corrected (public-read R21/R25, docket R24). Tests: case-import 109/109 (R24 x3, R17 x1, plus R5-R7 order and R18 bounds found reading the tests whole). Users green except reds identical on untouched tranche/T47 (rule 5 7a/7b/7c/8). format, architecture, coverage (24/24), ownership: 0 failures; run.mjs coverage 44 other modules only. Record: build/jobs/T47/case-import.md.
