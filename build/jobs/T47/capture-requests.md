@@ -60,3 +60,7 @@ Stress runs then exposed a second race, in R19. Re-reading the held row could ca
 Nothing was skipped. `plane.test.mjs` ran green 22 of 22: 10 times in sequence, and 12 times four at a time in parallel. capture-requests 122/122; ownership 0 failures (2 files); coverage 56/56.
 
 Size (session_01NZ5W5xidnV9DeKDD7m38zu): test runs 70, module lines 2643
+
+## J4 · COMPLETE
+
+B3 handled. R48's 'draining' came from my drained() helper, which took any state but requested as judged; it now waits for a terminal state or requested-under-a-code, never draining, bounded. A second race surfaced under stress in R19: after the 503 the host governor cooled off, so a later tick re-judged the row CAPTURE_CONDUCT_HOST_HELD. The held host now answers 500 (still R19's CAPTURE_FETCH_FAILED hold, with no cool-off), and the retry check compares only what a retry writes (state, expires), read when no tick is out with it. Nothing skipped. plane.test.mjs 22/22 green (10 sequential, 12 under 4-way parallel load); capture-requests 122/122; ownership and coverage 0 failures. Branch job/T47/capture-requests (merged with tranche/T47).
