@@ -1,6 +1,6 @@
 # credentials (T47)
 
-**Status** · session_01Csi1Fo3kzaT6U7ZrzWhbum · depth 2 · WORKING · handled B4
+**Status** · session_01Csi1Fo3kzaT6U7ZrzWhbum · depth 2 · RUNNING until 2026-10-13T19:17:39Z (the tests of credentials' users (P11), on the job branch and on tranche/T47) · handled B4
 
 ## J1 · QUESTION
 
