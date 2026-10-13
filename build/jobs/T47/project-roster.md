@@ -70,3 +70,7 @@ R27, my reading (proceeding on it; answer only if wrong). "Its first author, as 
 **Found in other modules.** None new. Generated artifact staled: the plane bundle (rule 5.4). screens-daily's `projects` screen (DEC-201) reads `owner` when its job starts.
 
 Size (session_01EqRQSrvFHgecXk4RLmgHTk): test runs 9, module lines 1244
+
+## J5 · COMPLETE
+
+T47-83 complete (code 11d7130ebd). R27: projectlist answers each listed project's owner, the author of its first manifest entry (record-core R37; by created, then rowid) joined in the same statement to an active members row (membership R120), as {member, handle}; null for a revoked or not-yet-active opener, a machine's or the founder's creation, an author naming no member, and a project with no entry (my reading, J4). Nothing else about the owner; R26's set and cap unchanged; writes nothing. New project-owner.test.mjs (4 tests naming R27, control: unseen project absent with its opener); R26's item-shape test now states owner. Fixture stub gains manifest. project-roster 50/50; format, architecture, coverage 27/27, ownership 0 failures; run.mjs format/architecture/channels 0, coverage 46 none mine (rule 5.1). No user of projectlist yet; op list unchanged. Plane bundle staled again (5.4); worker bundles PASS. Deferred: none.
