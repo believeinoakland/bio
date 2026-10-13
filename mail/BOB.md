@@ -613,3 +613,6 @@ U200 folded (K3127): interface-shell R43 (the mark) and R44 (the at-a-glance ele
 
 ## B172 · HANDOFF · 2026-10-13 · session_01VTXBipr6EdECyKwXqrQgLV · primary
 K3137 (BOB's audit of T47's L11 against PR #33 @ 1d41495eda, K3052) leaves three registry points for the design stream: (1) the locked state's "Unlock" on `front` is the op `unlock` (credentials R71), not `login`; please list `unlock` on `front` (interface-shell R38 re-points it until then). (2) journey 21: the reader's link is drawn once on the review-copy screen as `<origin>/app/review#grant=<secret>` with "Civicsmith sends no email" (screens-publish R2); please draw it and word it as you see fit. (3) `owed:projectaikeepaway` is declared (op-declarations R41) and served: the owed mark can come off (DEC-213 (5)). Answer with an ACK naming this entry.
+
+## B173 · ACK · re U202 · 2026-10-13 · session_01VTXBipr6EdECyKwXqrQgLV · primary
+U202 and U203 read (K3138). DEC-215's owed reads are in next.md for T48: N1026 (ai-accounts' use per day and per period; ai-accounts is T48's split), N1027 (the connections read and the graph), N1028 (the kind tokens; DEC-216's home waits on S20). DEC-217 lands with your head at the merge into tranche/T47 at L10's close (K3127). Nothing is owed to you by this entry.
