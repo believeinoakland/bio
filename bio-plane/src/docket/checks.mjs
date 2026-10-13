@@ -15,7 +15,9 @@
  * condition. Both await the stamp (T36's promotion job).
  * At T45 (N855, N880; K2781 (3)) C-129.29 arrived for an outcome entry's own statement (R1), awaiting the stamp, and
  * C-129.19 (DOCKET_NO_SUMMARY) re-worded to cover an outcome's summary too (R1), reading changed until the stamp. A
- * counsel matter's refusal (R28) is `publication`'s row C-122 (its R78), answered from its export, never copied here. */
+ * counsel matter's refusal (R28) is `publication`'s row C-122 (its R78), answered from its export, never copied here.
+ * At T47 (R29; DEC-199, N992) C-129.29 takes its translation from `words.json`'s `refusal.DOCKET_OUTCOME_UNREADABLE`, read
+ * by key (`DOCKET_WORDS` below), its code, number and `where` unmoved; the row reads changed until T48's stamp. */
 
 const at = (fn, region) => `src/docket/index.mjs ${fn} > ${region}`;
 const FILER = at("#filerRefusal", "is-docket-filer");
@@ -26,6 +28,16 @@ const ENTRY = at("#entryRefusal", "is-docket-entry");
 const KIND = at("#kindRefusal", "is-docket-kind");
 const POST = at("docketPost", "is-docket-post");
 const ORDER = at("#orderRefusal", "is-docket-order");
+
+/* T47 (R29; DEC-194, DEC-199, N992): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) a
+   row translates by, each `en` verbatim, read by key (`refusal.<CODE>`), as membership's `HANDLE_WORDS` and
+   extraction's `TRANSCRIBE_WORDS` are. The design stream's words: re-worded there, then re-taken here by key; a row
+   never holds a copy of its sentence. DEC-199's sentence is true of every arm R1 refuses with it. */
+export const DOCKET_WORDS = Object.freeze({
+  "refusal.DOCKET_OUTCOME_UNREADABLE": "An outcome is stated only on an outcome entry, with what it was (corrected by the "
+    + "office, or a harm addressed) and the date it happened, no later than the day it is filed. This entry's outcome is "
+    + "missing, isn't one of those, or is on another kind of entry. Nothing was written.",
+});
 
 export const DOCKET_CHECKS = Object.freeze({
   MACHINE_CANNOT_FILE_DOCKET: {
@@ -172,11 +184,10 @@ export const DOCKET_CHECKS = Object.freeze({
     translation: "An unsealing order names a part that no sealing order on this case's docket names. Nothing was "
       + "published.",
   },
-  /* R1 (T45; N855, N880): an outcome entry's own statement; a row awaiting promotion's stamp. */
+  /* R1 (T45; N855, N880): an outcome entry's own statement; R29 (T47): its words read by key, the row awaiting T48's stamp. */
   DOCKET_OUTCOME_UNREADABLE: {
     check: "C-129.29", where: FORM,
-    translation: "An outcome entry says what the outcome was (a cure, or a harm addressed) and the date it happened, "
-      + "no later than today; an entry of any other kind says neither. Nothing was written.",
+    translation: DOCKET_WORDS["refusal.DOCKET_OUTCOME_UNREADABLE"],
   },
 });
 

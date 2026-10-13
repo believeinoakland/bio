@@ -63,7 +63,7 @@ import { DOCKET_CHECKS, rowOf } from "./checks.mjs";
 import { DOCKET_TABLES, migrateDocket } from "./schema.mjs";
 import { renderFeed, docketAddress, feedAddress, ATOM_MEDIA_TYPE } from "./feed.mjs";
 
-export { DOCKET_CHECKS } from "./checks.mjs";
+export { DOCKET_CHECKS, DOCKET_WORDS } from "./checks.mjs";
 export { DOCKET_SCHEMA, DOCKET_TABLES } from "./schema.mjs";
 export { docketAddress, feedAddress, feedHref, ATOM_MEDIA_TYPE, FEED_ID_PREFIX } from "./feed.mjs";
 

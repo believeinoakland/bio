@@ -47,15 +47,10 @@ test("R1 a case absent, with no ratified edition, or whose project the viewer do
 
 test("R1 `author` not a joined participant of the project is DOCKET_NOT_A_PARTICIPANT", () => {
   const w = seeded();
-  /* carol is invited, sees the project, and has not joined */
-  const r = file(w, {}, "carol");
-  if (r.reason === "NO_SUCH_CASE") {
-    /* an invited participant who does not see the project in full is answered NO_SUCH_CASE first; a member who sees it
-       as the viewer but files as a non-participant is the arm itself */
-    refusedThenAccepted(w, () => file(w, { author: V("carol"), viewer: V("bob") }), () => file(w), "DOCKET_NOT_A_PARTICIPANT");
-  } else {
-    rowOk(r, "DOCKET_NOT_A_PARTICIPANT");
-  }
+  /* carol is invited, sees the project in full, and has not joined: the arm itself, writing nothing; bob, joined, files */
+  refusedThenAccepted(w, () => file(w, {}, "carol"), () => file(w, {}, "bob"), "DOCKET_NOT_A_PARTICIPANT");
+  /* a member who sees it as the viewer but files as a non-participant is refused the same */
+  refusedThenAccepted(w, () => file(w, { author: V("carol"), viewer: V("bob") }), () => file(w), "DOCKET_NOT_A_PARTICIPANT");
   refusedThenAccepted(w, () => file(w, { author: V("dave"), viewer: V("bob") }), () => file(w, {}, "alice"), "DOCKET_NOT_A_PARTICIPANT");
 });
 
