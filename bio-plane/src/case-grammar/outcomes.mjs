@@ -1,7 +1,7 @@
 /* case-grammar — the outcomes carried into an edition (requirements: `build/requirements/case-grammar.md` R29, with R14,
  * R23 and R6; T45: N855 (6c), Actions D5, D6c; `BIO_Action_v0_2.md` §3 "Success record" and §4 rule 17). A member's act
  * carries an outcome the group recorded (a success, a cure, a harm addressed) into the case's next edition
- * (`case-authoring` R71, called by `consequences`' carrying act); `case-authoring`'s `publishCase` writes every pending
+ * (`case-inputs` R9 and `case-authoring` R74, was `case-authoring` R71, called by `consequences`' carrying act; N908); `case-authoring`'s `publishCase` writes every pending
  * one into this block with `outcomesLines`, and its body section with `outcomesSectionLines`, so the bytes are written
  * one way, and `outcomesOf` is the one reading of them, for the complete edition (R14) and every later reader.
  *
