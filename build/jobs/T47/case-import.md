@@ -1,6 +1,6 @@
 # case-import (T47)
 
-**Status** · session_017tqJqUTKpFeyBvHdxfwpzn · depth 2 · WORKING · handled B1
+**Status** · session_017tqJqUTKpFeyBvHdxfwpzn · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
