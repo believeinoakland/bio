@@ -43,3 +43,7 @@ Size (session_01AS7C41DV4eQ7LTLWBsHCN7): test runs 12, module lines 2132
 ## J1 · REPORT
 
 (a) R43 names only op=proposals, and progressions' T47 Suggestions bullet still says captureprogressions 'is left as it is and reported to BOB'. T47-69 and K3033 ('progressions also captureprogressions (same rule, K3027)') make it part of this job, so I applied R43's rule to both ops and tested captureprogressions under 'R43 R19'. R43 (or R19) and that bullet need wording to match. (b) src/progressions/index.mjs changed, which stales the plane bundle; regenerate at the layer close (I did not write it).
+
+## J2 · COMPLETE
+
+T47-69 applied: op=proposals and op=captureprogressions are evaluated at R16's configured clock; a now or nowMs in the query or the body is never read; in-plane callers keep their own instant. New serverclock.test.mjs (R43, 4 tests, reproduced failing on the old routes). progressions 67/67; queue-producers, calculations, intent, queue and money-checks green. format, architecture and ownership: 0 failures; coverage 43/43; run.mjs coverage reds are other modules' (rule 5 (1)). One REPORT (J1). Record on job/T47/progressions.
