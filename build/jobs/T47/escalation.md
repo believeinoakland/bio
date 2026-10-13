@@ -38,3 +38,12 @@ REPORT items (details in the record):
 - The plane, release and newgroup bundles and `newgroup/src/release.mjs` carry the two old translations; they are regenerated at layer close.
 - promotion's row census still holds the old translations of C-116.14 and C-116.41; this is accepted until T48's stamp.
 - actions R100's `actionZone` against escalation's `actionFacts(text, t, place)` third argument: worth a check once actions lands.
+
+## CHANGE B2 (action-records merged, K3125)
+
+- Merged `tranche/T47`. `real.test.mjs` (R6 R30 over the real actions) now records the confidential scope through action-records' `actionScope` (its R5), reached through actions' getter `actions.records` (split map §3), and reads it back through `actions.actionRead`. N961 is applied.
+- Two other routes fail: importing `actionRecordsOf` is refused by architecture (escalation does not use action-records), and on today's tranche a second instance throws `TABLE_DECLARED` because actions still declares the copied tables.
+- **Red until actions' T47-38 merges.** That job deletes actions' copies and creates action-records from its factory with the `records` getter. Until then the test answers `TypeError: Cannot read properties of undefined (reading 'actionScope')`. Escalation merges after actions (L9 order), so it should be green at escalation's merge. BOB checks it there; the test is not weakened.
+- Tests: 89; pass 88, fail 1 (the one above). Checks: coverage 37 of 37, 0 failures; architecture 20 product files, 0 failures; ownership 0 failures (re-run below).
+
+Size (session_01WD3ZmTKBeisfe99Nk6Rbb4): test runs 8, module lines 2374

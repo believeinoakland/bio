@@ -7,7 +7,6 @@ import assert from "node:assert/strict";
 import { scene, V } from "../conformance/fixture.mjs";
 import { escalationOf } from "../../../src/escalation/index.mjs";
 import { actionsOf, noSuchAction } from "../../../src/actions/index.mjs";
-import { actionRecordsOf } from "../../../src/action-records/index.mjs";
 import { noSuchDetermination, determinationSuperseded } from "../../../src/conformance/index.mjs";
 
 function real() {
@@ -365,9 +364,9 @@ test("R6 R30 over the real actions (T45-27, K2859): a notification action statin
   const set = x.w.c.determinationRead({ id: d.id, viewer: V("pat") }).act.event;
   const items = () => x.esc.timelineSource({ set: [set], viewer: V("pat") }).items;
   assert.ok(items().some((i) => i.kind === "attach"), JSON.stringify(items()).slice(0, 300));
-  /* the scope is action-records' act (its R5; the split map §5, N961), read back through actions.actionRead */
-  const records = actionRecordsOf(w.host, { record: w.record, membership: w.membership, now: () => w.clock.now });
-  const scoped = records.actionScope({ target: quiet, confidential: true, reason: "Counsel asked us to keep it in the group.",
+  /* the scope is action-records' act (its R5; the split map §5, N961), reached through actions' getter (§3), read back
+     through actions.actionRead */
+  const scoped = x.esc.actions.records.actionScope({ target: quiet, confidential: true, reason: "Counsel asked us to keep it in the group.",
     author: V("pat"), viewer: V("pat") });
   assert.equal(scoped.ok, true, JSON.stringify(scoped).slice(0, 400));
   assert.deepEqual(items(), []);
