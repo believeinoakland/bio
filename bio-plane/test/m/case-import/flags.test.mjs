@@ -234,3 +234,84 @@ test("R14 each refusal carries its row in this module's own table, a new family,
   assert.deepEqual(withRow({ ok: false, reason: "IMPORT_FLAG_NOT_OPEN" }).check, CASE_IMPORT_CHECKS.IMPORT_FLAG_NOT_OPEN.check);
   assert.deepEqual(withRow({ ok: false, reason: "SOMEONE_ELSES" }), { ok: false, reason: "SOMEONE_ELSES" });
 });
+
+/* ================================================================ R24 (T47; N947): the flags' history, through accepted-work R9 */
+
+/* a world with alice's import, its flags opened and cleared at set instants: `[finding|null, open, clear|null]` */
+async function history(specs) {
+  const w = seeded();
+  const a = await imp(w);
+  const ids = [];
+  for (const [finding, open, cleared] of specs) {
+    w.clock.now = Date.parse(open);
+    const f = flag(w, a, finding ? { finding } : {});
+    ids.push(f.flag);
+    if (cleared) { w.clock.now = Date.parse(cleared); clear(w, f.flag); }
+  }
+  const read = (since, x = {}) => w.acceptedWork.flagHistoryOn({ ref: importedFindingRef(a.import, F1), edition: 1, since,
+                                                                   viewer: V("alice"), ...x });
+  return { w, a, ids, read };
+}
+
+test("R24 the registration carries flagHistory: every flag open at any instant from since through the read, the edition's own and the named finding's, in the order flagged, each with its opening and clearing instants", async () => {
+  const { w, ids, read } = await history([
+    [F1, "2026-10-01T09:00:00Z", "2026-10-02T09:00:00Z"],    /* cleared before since: not answered */
+    [null, "2026-10-03T09:00:00Z", null],                    /* the edition's own, open: cleared_at null */
+    [F1, "2026-10-06T09:00:00Z", "2026-10-07T09:00:00Z"],    /* flagged and cleared after since: both instants */
+    [F2, "2026-10-06T10:00:00Z", null],                      /* another finding's: not answered */
+    [F1, "2026-10-04T09:00:00Z", "2026-10-08T09:00:00Z"],    /* open at since, cleared since */
+    [F1, "2026-10-09T09:00:00Z", null],                      /* opened after since, open */
+  ]);
+  const since = "2026-10-05T00:00:00Z";
+  const before = w.snapshot();
+  const got = read(since);
+  assert.ok(!(got instanceof Promise), "read as the plane, synchronously");
+  assert.deepEqual(got, { complete: true, flags: [
+    { flag: ids[1], finding: null, issue: "the payroll figure is a year off", opened_at: "2026-10-03T09:00:00Z", cleared_at: null },
+    { flag: ids[2], finding: F1, issue: "the payroll figure is a year off", opened_at: "2026-10-06T09:00:00Z", cleared_at: "2026-10-07T09:00:00Z" },
+    { flag: ids[4], finding: F1, issue: "the payroll figure is a year off", opened_at: "2026-10-04T09:00:00Z", cleared_at: "2026-10-08T09:00:00Z" },
+    { flag: ids[5], finding: F1, issue: "the payroll figure is a year off", opened_at: "2026-10-09T09:00:00Z", cleared_at: null },
+  ] });
+  /* a since before every flag answers each of them; R16's openFlags still answers only the open ones */
+  assert.deepEqual(read("2026-09-01T00:00:00Z").flags.map((f) => f.flag), [ids[0], ids[1], ids[2], ids[4], ids[5]]);
+  assert.deepEqual(w.acceptedWork.openFlagsOn({ ref: importedFindingRef(w.ci.importedCases({ viewer: V("alice") }).imports[0].import, F1),
+                                               edition: 1, viewer: V("alice") }).flags.map((f) => f.flag), [ids[1], ids[5]]);
+  /* a since after every clear answers only the flags open now */
+  assert.deepEqual(read("2026-10-12T00:00:00Z").flags.map((f) => f.flag), [ids[1], ids[5]]);
+  assert.deepEqual(w.snapshot(), before, "it writes nothing");
+});
+
+test("R24 the controls: a flag flagged and cleared after since is answered with both instants; one cleared before since is not; one open is answered with cleared_at null", async () => {
+  const { ids, read } = await history([
+    [F1, "2026-10-10T10:00:00Z", "2026-10-10T11:00:00Z"],
+    [F1, "2026-10-10T12:00:00Z", null],
+  ]);
+  assert.deepEqual(read("2026-10-10T09:59:59Z").flags.map((f) => [f.flag, f.opened_at, f.cleared_at]),
+                   [[ids[0], "2026-10-10T10:00:00Z", "2026-10-10T11:00:00Z"], [ids[1], "2026-10-10T12:00:00Z", null]]);
+  assert.deepEqual(read("2026-10-10T11:00:01Z").flags.map((f) => f.flag), [ids[1]], "cleared before since: not answered");
+  /* a clear at since, or in the second since falls in (a clear is stamped to the second), was not before it: answered */
+  assert.deepEqual(read("2026-10-10T11:00:00Z").flags.map((f) => f.flag), ids);
+  assert.deepEqual(read("2026-10-10T11:00:00.999Z").flags.map((f) => f.flag), ids);
+  assert.deepEqual(read("2026-10-10T11:00:01.000Z").flags.map((f) => f.flag), [ids[1]]);
+});
+
+test("R24 a since that is not an instant record-core stamps answers complete: false and no flags; a non-member is answered null; it never throws", async () => {
+  const { w, a, read } = await history([[F1, "2026-10-10T10:00:00Z", null]]);
+  for (const since of [null, undefined, "", "yesterday", "2026-10-10", "2026-10-10T10:00:00", "2026-10-10T10:00:00+00:00",
+                       "2026-10-10T10:00:00.5Z", "2026-10-10 10:00:00Z", " 2026-10-10T10:00:00Z", "2026-13-10T10:00:00Z", 1791900000000, {}])
+    assert.deepEqual(read(since), { flags: [], complete: false }, JSON.stringify(since));
+  /* the controls: either of record-core's spellings (its R47) */
+  for (const since of ["2026-10-01T00:00:00Z", "2026-10-01T00:00:00.000Z", "2026-10-01T00:00:00.250Z"])
+    assert.equal(read(since).flags.length, 1, since);
+  /* a viewer who is not an active member is answered null; a viewer never sent is the plane reading */
+  for (const v of [V("carol"), V("dave"), "class:ai"]) assert.equal(read("2026-10-01T00:00:00Z", { viewer: v }), null);
+  assert.equal(read("2026-10-01T00:00:00Z", { viewer: null }).flags.length, 1);
+  /* not held: no flags, complete */
+  assert.deepEqual(read("2026-10-01T00:00:00Z", { edition: 2 }), { flags: [], complete: true });
+  assert.deepEqual(read("2026-10-01T00:00:00Z", { ref: "nonsense" }), { flags: [], complete: true });
+  assert.deepEqual(w.ci.flagHistoryFacts({ ref: importedFindingRef(a.import, F1), edition: "1", since: "2026-10-01T00:00:00Z" }),
+                   { flags: [], complete: true });
+  /* never throws, whatever it is given */
+  for (const q of [undefined, null, 7, { ref: {}, edition: {}, since: [] }]) assert.doesNotThrow(() => w.ci.flagHistoryFacts(q ?? undefined));
+  assert.equal(w.acceptedWork.flagHistoryOn({}).absent, undefined, "registered: never absent");
+});
