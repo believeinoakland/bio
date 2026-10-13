@@ -22,3 +22,7 @@
 - `checks/run.mjs` over the product: format 0, architecture 0 (3071 files), channels 0. Coverage has 44 failures, all in other modules (screens-*, public-read, queue, ratification, setup-words, wizard-scripts and others). None is in question-explorer.
 
 Size (session_01U1i7DL5k9H2qhkGKyhkRkY): test runs 2, module lines 1 changed (test file +2/−1 net; module about 1,450 lines)
+
+## J1 · COMPLETE
+
+T47-85 applied: choosing.test.mjs R3 now holds alice's sign-in token (credentials R70 subscriptionTokenHold) instead of the bare fact; what it proves is unchanged. Test only. question-explorer 32/32 pass. format, architecture, coverage and ownership: 0 failures for this module. run.mjs: format, architecture and channels at 0; its 44 coverage failures are all in other modules. Nothing deferred, nothing found elsewhere. Record on job/T47/question-explorer.
