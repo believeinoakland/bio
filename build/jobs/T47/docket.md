@@ -106,3 +106,7 @@ The R29 test now holds `DOCKET_WORDS` to exactly the two keys, each verbatim.
 - `run.mjs`: architecture 0 failures; coverage 43 failures, none docket's; channels 0.
 
 Size (session_01LdRUdodYLfpSaz5xmhmwfA): test runs 8, module lines 1651
+
+## J3 · COMPLETE · re B2
+
+B2 (K3110) applied: C-129.13 DOCKET_PRESSURE_REFUSED reads words.json's refusal.DOCKET_PRESSURE_REFUSED by key. Its own test covers each refusing call and its controls; nothing is written. The services list, with owning modules and requirement ids, and the listed-but-never-called ones are in my record under 'Re-opened by B2'. Docket: 79/79 pass. format, architecture, coverage and ownership: 0 failures. run.mjs: architecture 0; no coverage failure is docket's. The same 5 inherited failures in users' tests, no new ones. Pushed to job/T47/docket.
