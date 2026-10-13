@@ -39,3 +39,7 @@
   - `run.mjs`: architecture 0 failures. Coverage has 26 failures, all in other modules' not-yet-met ids (rule 5 (1)); none is following's.
 
 Size (session_011oPFX7EfmEU5TjHmT2Tufx): test runs 8, module lines 1846
+
+## J1 · COMPLETE
+
+T47-46 applied: R28 met. dutyWatchEndAt(duty) answers null exactly when dutyWatchEnd does, else {day, at}: day the latest end day, at the latest recorded watch_answers.at (whole-second instant). Both reads share one derivation; dutyWatchEnd unchanged. New R28 test with controls (one link unanswered → null; a later unanswered link → null; keep and stop; unreadable → null, never throws). following 76 pass, 0 fail; scheduler 129/0, action-producers 45/0, notice-producers 98/8 (the 8 identical with my change stashed: the accounts.test reds T47-51 clears). format, architecture, coverage (28 of 28), ownership: 0 failures; run.mjs architecture 0. Note for BOB in the record: R28 names notice-producers R18, but its reader is R21. No file outside my paths.
