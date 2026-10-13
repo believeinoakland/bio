@@ -18,3 +18,7 @@ Reading set (mechanics §17): measured at this START: 1965 KB, over the 600 KB l
 ## B2 · CHANGE
 
 case-grammar (T47-25) is merged into tranche/T47 (K3111): merge the tranche into your branch. Its R31 read shape answers obscured as {copy, label, marked, kind} (kind null on a row stating none, else what the writer handed). Your test(s) documents.test.mjs:147 and photos.test.mjs:60 (R14) deep-compare the old shape and are red now: bring each expected value in line (kind: null, or the kind its writer hands from T47-26) in this job; they are accepted red by name until your merge.
+
+## B3 · CHANGE
+
+case-inputs (T47-31) is merged into tranche/T47 (K3112): merge the tranche into your branch, then delete the copies and re-point as split map §3, §4 say, with the test plan of your J1. From CASE-INPUTS #1's record: openRequestSentence is not carried (R17 leaves no plain-sentence row); OPEN_REQUEST_KEYS is now seven keys (the six row keys and unread); R34's sign step takes openRequestLine and OPEN_REQUESTS_UNREAD_SENTENCE from case-inputs, every line keyed, so a step that tested key: null changes. case-authoring's uses names case-inputs (K3109).
