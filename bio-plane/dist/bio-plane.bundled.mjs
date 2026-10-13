@@ -235611,6 +235611,7 @@ __export(checks_exports74, {
   GATH_ID_RE: () => GATH_ID_RE,
   GATH_STATUS_ENUM: () => GATH_STATUS_ENUM,
   MONITORING_CHECKS: () => MONITORING_CHECKS,
+  MONITOR_SET_CHECKS: () => MONITOR_SET_CHECKS,
   WATCH_END_CHECKS: () => WATCH_END_CHECKS,
   checkGatheringGrammar: () => checkGatheringGrammar,
   frequencyRefusal: () => frequencyRefusal
@@ -235682,14 +235683,27 @@ var WATCH_END_CHECKS = Object.freeze({
     translation: "A watch ends on a calendar day, today or later, or has no end date. That day could not be used. Nothing was changed."
   })
 });
+var MONITOR_SET_CHECKS = Object.freeze({
+  MACHINE_CANNOT_SET_MONITORING: Object.freeze({
+    check: "C-18.20",
+    where: at43("monitorSet", "is-monitor-set-member"),
+    translation: "Only a member asks for a document to be watched, and this came from an automated credential. Nothing was changed."
+  }),
+  MONITOR_SET_REFUSED: Object.freeze({
+    check: "C-18.21",
+    where: at43("monitorSet", "is-monitor-set-shape"),
+    translation: "Say whether this document is watched, yes or no, and, if you give one, how often, as one of the listed frequencies. Nothing was changed."
+  })
+});
 var MONITORING_CHECKS = Object.freeze({
   ...DRIVE_TICK_CHECKS,
   ...GATHERING_CHECKS,
   ...FREQUENCY_CHECKS,
-  ...WATCH_END_CHECKS
+  ...WATCH_END_CHECKS,
+  ...MONITOR_SET_CHECKS
 });
 function frequencyRefusal(code, detail, extra) {
-  const row14 = FREQUENCY_CHECKS[code] || WATCH_END_CHECKS[code];
+  const row14 = FREQUENCY_CHECKS[code] || WATCH_END_CHECKS[code] || MONITOR_SET_CHECKS[code];
   return { ok: false, reason: code, code, check: row14.check, translation: row14.translation, detail, ...extra || {} };
 }
 var GATH_ID_RE = new RegExp(`^${idPattern("GATH").source.slice(1, -1)}-[a-z0-9]+(-[a-z0-9]+)*$`);
@@ -244658,6 +244672,39 @@ function withSessionEntry(text7, checked, line2) {
   const cut10 = nxt === -1 ? text7.length : nxt + 1;
   return text7.slice(0, cut10) + entry4 + "\n" + text7.slice(cut10);
 }
+function withMonitoring(text7, enabled, frequency, at48) {
+  const lines2 = String(text7).split("\n");
+  if (lines2[0] !== "---") return null;
+  const close = lines2.indexOf("---", 1);
+  if (close < 0) return null;
+  const fm = lines2.slice(1, close);
+  const set = (block3, key2, value, indent2) => {
+    const i = block3.findIndex((l2) => new RegExp(`^\\s+${key2}:`).test(l2));
+    if (i >= 0) block3[i] = `${block3[i].match(/^\s+/)[0]}${key2}: ${value}`;
+    else block3.push(`${indent2}${key2}: ${value}`);
+  };
+  let start = fm.findIndex((l2) => /^monitoring:/.test(l2));
+  let block2;
+  if (start < 0) {
+    start = fm.length;
+    block2 = [];
+    fm.push("monitoring:");
+  } else {
+    let end2 = start + 1;
+    while (end2 < fm.length && (/^\s+\S/.test(fm[end2]) || fm[end2].trim() === "")) end2++;
+    while (end2 > start + 1 && fm[end2 - 1].trim() === "") end2--;
+    block2 = fm.slice(start + 1, end2);
+    fm[start] = "monitoring:";
+    fm.splice(start + 1, end2 - start - 1);
+  }
+  const indent = (block2.find((l2) => /^\s+\S/.test(l2)) || "  x").match(/^\s+/)[0];
+  set(block2, "enabled", String(enabled), indent);
+  if (frequency != null) set(block2, "frequency", frequency, indent);
+  fm.splice(start + 1, 0, ...block2);
+  const lu = fm.findIndex((l2) => /^last_updated:/.test(l2));
+  if (lu >= 0) fm[lu] = `last_updated: ${at48}`;
+  return ["---", ...fm, ...lines2.slice(close)].join("\n");
+}
 function settingView(x) {
   const custom = x.reason === CUSTOM_REASON;
   return {
@@ -246281,6 +246328,103 @@ var Monitoring = class {
     }
   }
   /* ================================================================== *
+   * A member's act setting a bundle's monitoring (R74; T47, N969)
+   * ================================================================== */
+  /** R74 (N969; K3027 doubt 6): a member asks that a bundle be monitored, or no longer: its document's
+   *  `monitoring.enabled` is written (`true` or `false`, the block added when the document has none) and, when given,
+   *  `monitoring.frequency`, a word of `MONITOR_FREQ`. Refused, in this order, each writing nothing: an empty or machine
+   *  author; no `bundleId` (R1's required-argument refusal); a bundle absent or unseen by the viewer (R1's `ABSENT`,
+   *  identically); `enabled` not a boolean or a `frequency` not of `MONITOR_FREQ`; with `enabled: true`, no public https
+   *  `source.locator` (R1's `NO_LOCATOR`). A document already in the asked state answers `{ok: true, existed: true}` and
+   *  writes nothing. Otherwise one promotion authored by the member (never `writer: mechanical`), changing only those
+   *  fields and `last_updated`, with a Session Log entry; every other file carried; promotion's own refusal of the
+   *  member's revision is answered as it gives it. It fetches nothing and ticks nothing: `op=monitor` (R1) and the plan
+   *  (R15, R16) read the new state from the next read. Answers `{ok: true, bundleId, enabled, frequency, revision}`. */
+  async monitorSet({ bundleId = null, enabled, frequency = null, author = null, viewer = null } = {}) {
+    const op = "monitorset";
+    const who3 = typeof author === "string" ? author.trim() : "";
+    if (!who3 || isMachineIdentity(who3))
+      return frequencyRefusal("MACHINE_CANNOT_SET_MONITORING", "whether a document is watched is asked by a named member; a machine may propose it (R33) and never sets it. Nothing was written.");
+    if (typeof bundleId !== "string" || !bundleId)
+      return {
+        ok: false,
+        reason: "REQUIRED_ARGUMENT_MISSING",
+        op,
+        argument: "bundleId",
+        shape: "a non-empty string in the POST body",
+        error: "monitorset needs a bundleId",
+        detail: "op=monitorset needs 'bundleId' in the shape a non-empty string in the POST body, and this request carried none the operation could use. Nothing was changed."
+      };
+    const img = this.membership.inSight(bundleId, viewer) ? this.record.readImage(bundleId) : null;
+    if (!img || typeof img["bundle.md"] !== "string") return { ok: false, reason: "ABSENT", bundleId };
+    const freq = frequency === void 0 ? null : frequency;
+    if (typeof enabled !== "boolean")
+      return frequencyRefusal(
+        "MONITOR_SET_REFUSED",
+        "'enabled' must be true or false. Nothing was written.",
+        { field: "enabled" }
+      );
+    if (freq !== null && !(typeof freq === "string" && MONITOR_FREQ.includes(freq)))
+      return frequencyRefusal("MONITOR_SET_REFUSED", `'frequency', when given, must be one of ${MONITOR_FREQ.join(", ")}. Nothing was written.`, { field: "frequency" });
+    const live7 = img["bundle.md"];
+    const fm = parseFrontmatter(live7).data || {};
+    const locator = fm.source?.locator;
+    if (enabled && (typeof locator !== "string" || !isPublicHttpsLocator(locator)))
+      return {
+        ok: false,
+        reason: "NO_LOCATOR",
+        bundleId,
+        detail: "monitoring needs a public https locator in source.locator. Nothing was written."
+      };
+    const mon = fm.monitoring && typeof fm.monitoring === "object" && !Array.isArray(fm.monitoring) ? fm.monitoring : {};
+    const heldFreq = typeof mon.frequency === "string" ? mon.frequency : null;
+    if (mon.enabled === enabled && (freq === null || heldFreq === freq))
+      return { ok: true, existed: true, bundleId, enabled, frequency: heldFreq };
+    const at48 = stampInstant("second", this.now());
+    const spliced = withMonitoring(live7, enabled, freq, at48);
+    const member2 = who3.startsWith("member:") ? who3.slice("member:".length) : who3;
+    const text7 = spliced === null ? null : withSessionEntry(spliced, at48, `Monitoring set by ${member2}: ` + (enabled ? "this document is watched" : "this document is no longer watched") + (freq !== null ? `, ${freq}` : "") + " (a member's act; nothing was fetched).");
+    const sent = text7 ?? live7;
+    const carried = [];
+    for (const [path, v] of Object.entries(img)) {
+      if (path === "bundle.md" || path.startsWith("_history/")) continue;
+      if (typeof v === "string")
+        carried.push({ path, text: v, bytes: new TextEncoder().encode(v).length, sha256: await sha256Hex13(v) });
+      else carried.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
+    }
+    const stamp4 = at48.replace(/[-:]/g, "") + "_" + [...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("");
+    const r = await this.promotion.promote({
+      bundleId,
+      base: await sha256Hex13(live7),
+      snapKey: stamp4,
+      author: who3,
+      meta: {
+        object_type: fm.object_type,
+        title: fm.title,
+        current_state: fm.current_state,
+        prior_state: fm.prior_state ?? null,
+        created: fm.created,
+        last_updated: at48
+      },
+      files: [
+        { path: "bundle.md", text: sent, bytes: new TextEncoder().encode(sent).length, sha256: await sha256Hex13(sent) },
+        ...carried
+      ],
+      actorIdentity: who3,
+      actorViewer: viewer ?? who3,
+      actorMemberId: member2
+    });
+    if (!r || r.ok !== true) return r && typeof r === "object" ? r : { ok: false, reason: null, detail: "the promotion gave no answer. Nothing was written." };
+    const after2 = parseFrontmatter(sent).data?.monitoring || {};
+    return {
+      ok: true,
+      bundleId,
+      enabled: after2.enabled === true,
+      frequency: typeof after2.frequency === "string" ? after2.frequency : null,
+      revision: r.bundleSha ?? null
+    };
+  }
+  /* ================================================================== *
    * For `scheduler` (R19–R24, R45)
    * ================================================================== */
   /** R45 (N222): monitoring runs on every instance where a document asks, so it is configured everywhere: no binding
@@ -247832,6 +247976,15 @@ function monitoringOps(m, url, body) {
     /* R30: the administrator's pause, `by` the control plane's stamp; and the due slate through the viewer's sight. */
     monitorpause: () => m.pause({ paused: typeof b.paused === "boolean" ? b.paused : null, by: q10("actor") || null }),
     monitorslate: () => m.slate({ viewer: q10("viewer"), now: q10("now"), limit: q10("limit") }),
+    /* R74: a member's act setting a bundle's monitoring; the body's fields, then the control plane's `author` and
+       `viewer` stamps, so a body never supplies them. Before R52's, which the route map keeps last of this module's ops. */
+    monitorset: () => m.monitorSet({
+      bundleId: b.bundleId ?? null,
+      enabled: b.enabled,
+      frequency: b.frequency ?? null,
+      author: q10("author"),
+      viewer: q10("viewer")
+    }),
     /* R52: the body's fields, then the control plane's `author` and `viewer` stamps, so a body never supplies them. */
     addressfrequencyset: () => m.addressFrequencySet({ ...b, author: q10("author"), viewer: q10("viewer") })
   };
@@ -252287,11 +252440,23 @@ ${s.address}`, Number(w.follow_id));
   /** R25 (for `notice-producers` R5): the day after which a duty is no longer told: null while it has no link or any
    *  link of it is unanswered; else the latest end day its answered links hold. Writes nothing; never throws. */
   dutyWatchEnd(duty) {
+    const e2 = this.#dutyEnd(duty);
+    return e2 ? e2.day : null;
+  }
+  /** R28 (for `notice-producers` R18): null exactly when `dutyWatchEnd` is; else `{day, at}`, `day` its end day and `at`
+   *  the recorded instant of the answer that made that end hold: the last of the duty's links' answers to be recorded,
+   *  from which none of its links stood unanswered. Writes nothing; never throws. */
+  dutyWatchEndAt(duty) {
+    return this.#dutyEnd(duty);
+  }
+  /* R25, R28: a duty's end from its links' answers, `{day, at}`, or null while it has no link or any link is unanswered.
+     Every answer's `at` is the act's whole-second stamp (`instant`), so the instants compare as text. */
+  #dutyEnd(duty) {
     try {
-      const ls2 = this.#rows(`SELECT l.link_id, a.until_day FROM watch_links l LEFT JOIN watch_answers a ON a.link_id = l.link_id
+      const ls2 = this.#rows(`SELECT l.link_id, a.until_day, a.at FROM watch_links l LEFT JOIN watch_answers a ON a.link_id = l.link_id
                              WHERE l.watch_kind='duty' AND l.watch_id=?`, String(duty));
-      if (!ls2.length || ls2.some((x) => x.until_day == null)) return null;
-      return ls2.map((x) => x.until_day).sort().at(-1);
+      if (!ls2.length || ls2.some((x) => x.until_day == null || x.at == null)) return null;
+      return { day: ls2.map((x) => x.until_day).sort().at(-1), at: ls2.map((x) => x.at).sort().at(-1) };
     } catch {
       return null;
     }
