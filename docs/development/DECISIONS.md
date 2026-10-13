@@ -3237,3 +3237,25 @@ response: **Decided by BOB under Bob's delegation (K3061), drawn by the design s
 decided: 2026-10-13 · BOB under Bob's delegation (K3061), drawn by the design session (P17)
 reasoning recorded in: this entry; `screens/mock-screens.js` (people, person), `screens/mock-journeys.js` (journeys 10 and 13), `screens/mock-shell.js`, `screens/mock-refs.js`, `screens/registry.src.py` (59 screens), `screens/words.json` (1,698 words, 601 protected), `layouts.html`.
 owed: (BOB, L11, N1008) People built as drawn, replacing interface-shell R29: a read answering the people and organisations the record follows with, per row, who they are today, the counts of documents, questions and projects naming them among those the viewer may see, and when the newest was added, ordered the member's projects first and newest added first, with the four filters; "Explore connections" on each row and on the person's page; `entitycreate` for a person or organisation from People; the two empty states; registry.json and words.json re-taken.
+
+### DEC-204 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (Bob's direction in chat, 13 October)
+for: bob-session
+question: Where the journeys page's material lives, now that Bob reviews only Civicsmith Screens.
+why it is Bob's: the direction is his ("The material in the Journey's document should be integrated into the comprehensive CivicSmith Screens that has been the working document for the UX design … Once integrated, I'm not going to refer to the Journeys document."); how it is folded is the design session's (P17, DEC-137's journey organisation).
+provisional: two pages, the journeys page (step 3) and the screens page (step 5).
+alternative: none.
+recommendation: as below.
+reversal cost: low: one page's sections.
+response: **Bob, 2026-10-13: "The material in the Journey's document should be integrated into the comprehensive CivicSmith Screens that has been the working document for the UX design. https://claude.ai/artifact/4FjPjGmCVppDnMYfM7xkCw … Once integrated, I'm not going to refer to the Journeys document."** Folded by the design session:
+(1) **The working page** is https://claude.ai/artifact/4FjPjGmCVppDnMYfM7xkCw (built from `layouts.html`); the copy published earlier the same day (https://claude.ai/artifact/ExhZXk6f9DD7kXyWWj3NyP) now only points to it.
+(2) **New section "Who the screens are for"**, before section 1: who we design for (the three rings, what is folded in, newsrooms as a core audience, every ring's readers in other languages and on phones, kinds of group), the wide path's eight rules, and where members start (problems they live with, the other ways in, what it means for the design), updated where later rulings overtook it: publishing at a set time (DEC-147), Home's "What happened?" (DEC-198), the assistant on a member's own account or the group's key (K1755).
+(3) **Each journey in the viewer** shows its purpose and front door under its title, beside who takes it; journeys 1, 6, 10, 13 and 17's front doors are updated (the installer from the founder's link, "What happened?", People, the group's key), and journey 28 gains its own. The walked steps are the journey's steps; the journeys page's step lists are not carried, so no two lists compete.
+(4) **"What the journeys can't do yet"** beside the journeys: the five gaps still open by ruling or stage (places not held, DEC-151; plain-words reading of a rule; public registers and outside alerts; the assistant proposing people, events and money; sharing packs). Gaps since closed are dropped.
+(5) **Section 6** lists step 3's questions J1 to J13, all answered (DEC-128 to DEC-137); and its Home row now says "What happened?".
+(6) **Not carried:** each journey card's "what changed", "built now" and "still to come" (a record of 5–6 October against T33, overtaken by the tranches since); the seventeen wizard outlines (the wizard library holds each wizard written in full, DEC-148).
+(7) **The journeys page** (https://claude.ai/artifact/SbK4jAc8ZptpE9swYMkF1R, `journeys.html`) opens with a note that it is folded into Civicsmith Screens and no longer updated.
+decided: 2026-10-13 · Bob's direction, folded by the design session (P17)
+reasoning recorded in: this entry; `screens/page.src.html` (section "Who the screens are for", the viewer's journey brief, the gaps, section 6), `screens/mock-journeys.js` (`JBRIEF`), `screens/mock-refs.js`, `layouts.html`, `journeys.html`.
+owed: nothing to BOB: the page's reading sections build nothing; the build reads `registry.json`, `library.json` and `words.json`, unchanged by this entry.
+

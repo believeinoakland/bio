@@ -34,7 +34,7 @@ const SCREEN_REFS = {
     ["shield laws",null,"<b>Shield laws</b> · laws in many states, California among them, that can protect journalists from being forced to reveal unpublished sources","A member such as a reporter may have protections the rest of the group does not."]
   ],
   "group-identity": [
-    ["how members are welcomed","home","<b>The welcome</b> · what a member sees first on Home · “What brought you here?” and its starting points","The kind and focus you give here decide which starting points Home offers first."],
+    ["how members are welcomed","home","<b>The welcome</b> · what a member sees first on Home · “What happened?” and its starting points","The kind and focus you give here decide which starting points Home offers first."],
     ["Draft · the assistant's",null,"<b>Draft · the assistant's</b> · a label on words the assistant wrote · stays until a member edits and keeps them","Nothing here is saved as the group's own until a member keeps it."]
   ],
   "join": [

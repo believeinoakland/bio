@@ -140,3 +140,36 @@ function journeySteps(j, ai) {
   }
   return j.steps.filter(x => !x.only || (x.only === 'ai') === ai);
 }
+
+/* Each journey's purpose and front door (the journeys page of step 3, folded in on 13 October 2026; updated for later rulings).
+   Shown under the journey's title in the viewer; the walked steps below it are the journey's steps. */
+const JBRIEF = {
+ 1: ["A group installs its own Civicsmith, claims it, says who it is, and sets up its administrators.", "The founder's link opens the installer, which says plainly what is needed before starting: a Cloudflare account on the Workers Paid plan and about twenty minutes. Setup follows from its last page."],
+ 2: ["A group says what kind of group it is and what moved its members to start it, so Civicsmith can welcome each member in a way that fits.", "Offered as an optional side trip at the end of the setup wizard, returning to setup when done; also run on its own at any time from the group's settings. Never required."],
+ 3: ["From an invitation link to a member's first useful act.", "An invitation link (from an administrator or the group's website) or the group's join link, opening in the member's chosen language; the welcome wizard picks up from there."],
+ 4: ["A member who wants the assistant connects their own Claude account. It serves only them; nothing is shared with the group.", "\"Connect your Claude account\" in the assistant panel, or a side trip from the welcome wizard."],
+ 5: ["A member tells the group about their own ties to anyone it may look into, so a case can disclose them honestly while the member stays safe.", "\"Your ties\" in the member's own settings; also asked at the publication ceremony."],
+ 6: ["Someone joins because something in their life isn't working. Civicsmith helps turn that frustration into a question about the city's own standards that the record can answer.", "Home asks “What happened?”; describing a problem in one's own words is a complete first step."],
+ 7: ["Getting a government record: often it is already public and only needs finding; when it is not, asking the office for it under the law that requires it to answer.", "The most common first action a newcomer takes, so it gets its own wizard, which looks for the record before asking for it."],
+ 8: ["Every due date can say where it comes from and how it was counted, so a member can trust it, or challenge it.", "\"How was this worked out?\" on any due date."],
+ 9: ["The city says it filled 90% of reported potholes this year. Is that true? Civicsmith holds the claim, the city's own records, members' spot-checks and the calculation together, so anyone can check the answer.", "Most members start with \"is that really true?\"; capturing the claim is a complete first step."],
+ 10: ["Who holds a post, what they decided and signed, their career, credentials, memberships and interests, each fact dated and cited.", "People, a name in a document, a vote in the minutes, or a council seat: each opens the person's page."],
+ 11: ["What happened, in order: what the city and others did, and what the group did, in two lanes never mixed.", "\"Timeline\" on any project, person, proceeding or contract."],
+ 12: ["Where money comes from and where it goes: budgeted, adopted, committed, paid, across years and relabelling, with the rules that govern it.", "A budget line, a transfer in the annual financial report, a contract amount."],
+ 13: ["Connections are the heart of an investigation: following a chain from a donor to a vote to a contract to a payment, each step cited and graded.", "“Explore connections” on a person's page, on any row of People, or on a fund, contract or proceeding page."],
+ 14: ["A lawsuit, a grand-jury report or a regulatory proceeding: its parties, its register of filings, its orders and their deadlines.", "\"A court case or legal proceeding\" under \"Start from…\"."],
+ 15: ["The core of Civicsmith: evidence gathered, a question answered, a case signed and published.", "Capturing one document or recording one observation needs nothing else first."],
+ 16: ["A lawyer, accountant, auditor, engineer or journalist joins, says what they know, and is asked to check work in their field.", "Declaring expertise is one field at joining; everything else is the ordinary member's path."],
+ 17: ["Asking the assistant to find, read, answer and check, and deciding what to keep.", "Opening the panel and asking in plain words, once the member's own Claude account is connected (journey 4) or the group offers its API key. A member reached by no account uses Civicsmith without the assistant: every journey stays open, with the assistant's steps left out."],
+ 18: ["A member asks Civicsmith to keep checking a question for them until a date, and is told once when something new turns up.", "\"Keep asking this\" after an answer."],
+ 19: ["What is waiting on a member today, in one list.", "The queue opens with a one-line explanation of its three kinds, shown once."],
+ 20: ["Material handed in through the group's doorbell becomes evidence, or is set aside.", "The doorbell page is the whole journey for the outsider: one page, plain words."],
+ 21: ["Showing a draft case to named outsiders before publishing.", "The reviewer needs no account and is told plainly what they are reading and for how long."],
+ 22: ["Deciding what to do about a problem, doing it, following it to an outcome, and closing the plan.", "A plan can be opened from any question with one act; the plan page explains itself."],
+ 23: ["A document a published case rests on changes or disappears, or a law it relies on is amended.", "Members meet this only through the queue; nothing new to learn."],
+ 24: ["A court orders the group to remove, redact, seal or unseal something it published. The group complies openly, never silently.", "The order itself, captured like any document."],
+ 25: ["Work flows both ways: this group brings in, checks and builds on other groups' cases, and other groups do the same with this group's.", "Importing from a link is one act; the read-only band says whose case it is."],
+ 26: ["A stranger reads a published case, understands its strength, and checks it for themselves.", "The public page explains itself from zero; nothing assumes an account."],
+ 27: ["Adding a third administrator, or removing one.", "Administrators only."],
+ 28: ["From the founder's link to the group's Civicsmith running, and on to a new member's first piece of work, with no break between them.", "The founder's link; then the invitation link the founder sends."],
+};
