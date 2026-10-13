@@ -42,13 +42,13 @@ const FINDING = ["---", "object_type: inquiry", "basis:", "  - target: INQ-2026-
                  "## Question", "", "Q?", ""].join("\n");
 /* Each relay: the op and query that reach it, and what the store answers before it (the reads it relays last). */
 const RELAYS = [
-  { name: "publishedbytes/verify (worker :392)", op: "publishedbytes", q: { sha256: SHA }, fails: "verify", before: {} },
-  { name: "publishedbytes/withheld (R28)", op: "publishedbytes", q: { sha256: SHA }, fails: "withheld",
+  { name: "publishedbytes: the published-hash check before any byte is served", op: "publishedbytes", q: { sha256: SHA }, fails: "verify", before: {} },
+  { name: "publishedbytes: the court-order check (R28) before any byte is served", op: "publishedbytes", q: { sha256: SHA }, fails: "withheld",
     before: { verify: { published: true, matches: [{ kind: "part", path: "x.md" }] } } },
-  { name: "publishedbytes/publishedcasedoctext (:405)", op: "publishedbytes", q: { sha256: SHA }, fails: "publishedcasedoctext",
+  { name: "publishedbytes: a signed case document's text, read to be re-hashed", op: "publishedbytes", q: { sha256: SHA }, fails: "publishedcasedoctext",
     before: { verify: { published: true, matches: [{ kind: "case_document", path: "case.md" }] }, withheld: { ok: true, withheld: {} } } },
-  { name: "publishedcase (:522)", op: "publishedcase", q: { id: "INQ-2026-0001" }, fails: "publishedcase", before: {} },
-  { name: "publishedcase/publishedtargets (:633, thrown)", op: "publishedcase", q: { id: "INQ-2026-0001" }, fails: "publishedtargets",
+  { name: "publishedcase: the store's case read", op: "publishedcase", q: { id: "INQ-2026-0001" }, fails: "publishedcase", before: {} },
+  { name: "publishedcase: a finding's basis legs resolved against the published registry, inside the renderer", op: "publishedcase", q: { id: "INQ-2026-0001" }, fails: "publishedtargets",
     before: { publishedcase: { ok: true, findings: [{ bundle_id: "INQ-2026-0001", bundle_sha: BODY_SHA }] } } },
 ];
 function stubOf(relay, kind) {
@@ -91,6 +91,8 @@ test("R9 a reply that is no answer is STORE_DID_NOT_ANSWER at 502: no stack reac
     const bare = await call(relay, "bare");
     assert.deepEqual([bare.status, bare.body.reason, "correlation" in bare.body], [502, "STORE_DID_NOT_ANSWER", false], relay.name);
   }
-  /* the thrown relay names the sub-read it relays */
-  assert.equal((await call(RELAYS[4], "internal")).body.op, "publishedcase/publishedtargets");
+  /* the relay inside the renderer names the sub-read it relays, and the case is not served half-rendered */
+  const inner = await call(RELAYS[4], "internal");
+  assert.equal(inner.body.op, "publishedcase/publishedtargets");
+  assert.equal(Object.hasOwn(inner.body, "findings"), false, "no finding of a case whose basis went unread is served");
 });

@@ -1,6 +1,6 @@
 # BOB to case-authoring (T47)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -22,3 +22,7 @@ case-grammar (T47-25) is merged into tranche/T47 (K3111): merge the tranche into
 ## B3 · CHANGE
 
 case-inputs (T47-31) is merged into tranche/T47 (K3112): merge the tranche into your branch, then delete the copies and re-point as split map §3, §4 say, with the test plan of your J1. From CASE-INPUTS #1's record: openRequestSentence is not carried (R17 leaves no plain-sentence row); OPEN_REQUEST_KEYS is now seven keys (the six row keys and unread); R34's sign step takes openRequestLine and OPEN_REQUESTS_UNREAD_SENTENCE from case-inputs, every line keyed, so a step that tested key: null changes. case-authoring's uses names case-inputs (K3109).
+
+## B4 · CHANGE
+
+case-disclosures (T47-76) is merged into tranche/T47 (K3117): merge the tranche into your branch. Its R32 fails closed on a photo answer without obscured, so your photos.test.mjs:36 photoMarks stand-in (pre-R22 shape: copy, no obscured) turns R34's two photo arms red ('R34 (T38; DEC-183 (1)): signing is refused …' and 'R34: steps gains photos …'). Bring the stand-in to case-carriage R22's shape, obscured {copy, label, marked, kind: "photo"}, run your tests and post COMPLETE again; your re-merge closes L8.

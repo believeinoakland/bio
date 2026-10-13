@@ -3,7 +3,8 @@
    and undone before the read answers the row, its control (no lapse in the interval) answers none, with nothing changed
    since `since` it answers exactly what R4, R5 or R13 answers at the read, and its fail-closed arms. `accepted-work`,
    `sources` and `doc-clean` are the real modules; what case-import registers is the fixture's stand-in (`w.importer`).
-   The clauses K2949 leaves to T47 (N947) are named as `test.todo`. */
+   (T47; N947) The flags' history (accepted-work R9) and the instants a source changed (sources R20) latch a flag opened
+   and cleared, and a consent withdrawn and given again, inside the interval. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, caseFm, caseText, makePng, V, NOW, sha } from "./fixture.mjs";
@@ -136,7 +137,62 @@ test("R19 fail closed: a withdrawal history that cannot be read whole, or a `sin
   assert.deepEqual(calls, []);
 });
 
-test.todo("R19 (T47; N947) a flag opened after `since` and cleared before the read answers undisclosed, once accepted-work answers the flags' history (each flag's opening and clearing instants): not readable in T46 (K2949)");
+/* accepted-work R9's history entry: a flag on REF's edition 2, opened at `opened`, cleared at `cleared` (null: open) */
+const flagHist = (flag, opened, cleared, issue = "a date is wrong") => ({ flag, finding: "INQ-2026-0042-their-finding", issue,
+                                                                         opened_at: opened, cleared_at: cleared });
+
+test("R19 (T47; N947) a flag opened after `since` and cleared before the read answers undisclosed through accepted-work's flagHistoryOn (its R9), as the signer, each distinct (ref, edition) asked once; the same flag disclosed in the block answers none; a flag both open now and in the history is named once", () => {
+  const w = world();
+  const cleared = flagHist("FLAG-5", "2026-09-28T02:00:00.000Z", "2026-09-28T02:30:00.000Z", "the count was wrong");
+  const calls = w.importer({ finding: (a) => accepted(a), openFlags: noFlags,
+    flagHistory: (a) => ({ flags: a.ref === REF ? [cleared] : [], complete: true }) });
+  const fm = caseFm({ acceptedWork: [awRow(), awRow({ ref: REF2 }), awRow()] });
+  const before = w.snapshot();
+  assert.equal(w.cc.acceptedWorkLapsed(fm, "olive"), null, "R4 at the read: no flag is open");
+  assert.deepEqual(w.cc.acceptedWorkLapsedSince(fm, "olive", SINCE),
+                   { withdrawn: [], undisclosed: [{ ref: REF, edition: 2, flag: "FLAG-5", issue: "the count was wrong" }] });
+  assert.deepEqual(calls.filter((c) => c[0] === "flagHistory").map((c) => c[1]),
+                   [{ ref: REF, edition: 2, since: SINCE, viewer: "member:olive" }, { ref: REF2, edition: 2, since: SINCE, viewer: "member:olive" }],
+                   "once per distinct (ref, edition), with since, as the signer");
+  assert.deepEqual(w.snapshot(), before, "writes nothing");
+  /* control: the flag disclosed in the block answers none */
+  assert.equal(w.cc.acceptedWorkLapsedSince(caseFm({ acceptedWork: [awRow(), awRow({ ref: REF2 })], acceptedWorkFlags: [flagRow("FLAG-5")] }),
+                                            "olive", SINCE), null);
+  /* a flag open now (R4) and in the history is named once, R4's first */
+  const o = world();
+  o.importer({ finding: (a) => accepted(a), openFlags: () => ({ flags: [{ flag: "FLAG-1", issue: "a" }], complete: true }),
+               flagHistory: () => ({ flags: [flagHist("FLAG-1", NOW, null, "a"), flagHist("FLAG-9", NOW, "2026-09-28T02:00:00.000Z", "i")], complete: true }) });
+  assert.deepEqual(o.cc.acceptedWorkLapsedSince(caseFm({ acceptedWork: [awRow()] }), "olive", SINCE),
+                   { withdrawn: [], undisclosed: [{ ref: REF, edition: 2, flag: "FLAG-1", issue: "a" }, { ref: REF, edition: 2, flag: "FLAG-9", issue: "i" }] });
+});
+
+test("R19 (T47; N947) fail closed: a flags' history answering absent (none registered), unreadable, not an object, complete not true or flags not a list answers that (ref, edition) withdrawn, its flags not named; every other row is judged as before", () => {
+  const fm = caseFm({ acceptedWork: [awRow(), awRow({ ref: REF2 })] });
+  const histories = [
+    ["none registered (absent)", null],
+    ["unreadable", () => ({ unreadable: true })],
+    ["throws (unreadable)", () => { throw new Error("down"); }],
+    ["answers later (unreadable)", async () => ({ flags: [], complete: true })],
+    ["null", () => null],
+    ["not an object", () => "none"],
+    ["not complete", () => ({ flags: [], complete: false })],
+    ["flags not a list", () => ({ flags: "none", complete: true })],
+  ];
+  for (const [label, h] of histories) {
+    const w = world();
+    const fh = h === null ? null : (a) => (a.ref === REF ? h(a) : { flags: [], complete: true });
+    w.importer({ finding: (a) => accepted(a), openFlags: (a) => ({ flags: a.ref === REF ? [{ flag: "FLAG-1", issue: "a" }] : [], complete: true }),
+                 flagHistory: fh });
+    const expected = h === null ? { withdrawn: [{ ref: REF, edition: 2 }, { ref: REF2, edition: 2 }], undisclosed: [] }
+                                : { withdrawn: [{ ref: REF, edition: 2 }], undisclosed: [] };
+    assert.deepEqual(w.cc.acceptedWorkLapsedSince(fm, "olive", SINCE), expected, label);
+  }
+  /* control: the same history readable answers the open flag undisclosed and withdraws nothing */
+  const w = world();
+  w.importer({ finding: (a) => accepted(a), openFlags: (a) => ({ flags: a.ref === REF ? [{ flag: "FLAG-1", issue: "a" }] : [], complete: true }),
+               flagHistory: (a) => ({ flags: a.ref === REF ? [flagHist("FLAG-1", NOW, null, "a")] : [], complete: true }) });
+  assert.deepEqual(w.cc.acceptedWorkLapsedSince(fm, "olive", SINCE), { withdrawn: [], undisclosed: [{ ref: REF, edition: 2, flag: "FLAG-1", issue: "a" }] });
+});
 
 /* ---------------------------------------------------------------- R20 */
 
@@ -315,7 +371,8 @@ test("R21 fail closed: a source that cannot be read answers its rows lapsed; a `
   }
   /* answered at since only: a source readable at the read but not at since */
   const cc = new CaseCarriage({ storage: w.st, record: w.record, now: () => w.clock.now,
-    sources: { publishableAt: (a) => (a.at === "2026-09-28T00:59:00Z" ? null : w.src.publishableAt(a)) } });
+    sources: { publishableAt: (a) => (a.at === "2026-09-28T00:59:00Z" ? null : w.src.publishableAt(a)),
+               sourceChangesSince: (a) => w.src.sourceChangesSince(a) } });
   assert.deepEqual(cc.sourcesLapsedSince(text, "2026-09-28T00:59:00Z"), every);
   assert.deepEqual(cc.sourcesLapsedSince(text, NOW).map((x) => x.stated), ["an unnamed source"]);
   const asked = [];
@@ -325,4 +382,62 @@ test("R21 fail closed: a source that cannot be read answers its rows lapsed; a `
   assert.deepEqual(asked, []);
 });
 
-test.todo("R21 (T47; N947) a row that lapsed only between `since` and the read (a consent withdrawn and given again) answers lapsed, once sources answers the instants its disclosures and consents changed: not readable in T46 (K2949)");
+test("R21 (T47; N947) a consent withdrawn and given again between `since` and the read answers the row lapsed, judged at each instant sources' sourceChangesSince (its R20) names; with no change in the interval it answers exactly what it answers at `since` and at the read; writes nothing", () => {
+  const { w, source } = sourcesWorld();
+  w.clock.now = "2026-09-28T01:10:00Z";
+  const employer = disclose(w, source);
+  disclose(w, source, { attribute: "role", value: "clerk" });
+  w.clock.now = "2026-09-28T01:20:00Z";
+  const text = caseText({ sources: statedRows(w, CAP, source) });
+  w.clock.now = "2026-09-28T02:00:00Z";
+  assert.equal(w.src.withdrawConsent({ source, entry: employer, audience: "public", by: V("olive") }).ok, true);
+  w.clock.now = "2026-09-28T02:30:00Z";
+  assert.equal(w.src.recordConsent({ source, entry: employer, audience: "public", evidence: "signed again", by: V("olive") }).ok, true);
+  w.clock.now = "2026-09-28T03:00:00Z";
+  assert.deepEqual(w.cc.sourcesLapsed(text, w.clock.now), [], "R5 at the read: it holds again");
+  assert.deepEqual(w.cc.sourcesLapsed(text, SINCE), [], "R5 at since: it held");
+  const before = w.snapshot();
+  const lapsed = w.cc.sourcesLapsedSince(text, SINCE);
+  assert.deepEqual(lapsed.map((x) => [x.capture, x.stated]), [[CAP, "attribute employer: the water board"]]);
+  assert.deepEqual(lapsed, w.cc.sourcesLapsed(text, "2026-09-28T02:00:00.000Z"), "as R5 judges it at the withdrawal's instant");
+  assert.deepEqual(w.snapshot(), before, "writes nothing");
+  /* control: no change in the interval answers exactly what it answers at since and at the read */
+  assert.deepEqual(w.cc.sourcesLapsedSince(text, "2026-09-28T02:45:00Z"), []);
+  assert.deepEqual(w.cc.sourcesLapsedSince(text, "2026-09-28T02:45:00Z"), w.cc.sourcesLapsed(text, "2026-09-28T02:45:00Z"));
+});
+
+test("R21 (T47; N947) a source's changes are read whole through `next` until not truncated, a change on a later page judged; a source whose changes cannot be read (NO_SUCH_SOURCE, not ok, changes null, since_invalid, throws, a cursor that does not move) answers its rows lapsed though they hold at since and at the read", () => {
+  const { w, source } = sourcesWorld();
+  w.clock.now = "2026-09-28T01:10:00Z";
+  const employer = disclose(w, source);
+  const rows = statedRows(w, CAP, source);
+  const text = caseText({ sources: rows });
+  w.clock.now = "2026-09-28T02:00:00Z";
+  w.src.withdrawConsent({ source, entry: employer, audience: "public", by: V("olive") });
+  w.clock.now = "2026-09-28T02:30:00Z";
+  w.src.recordConsent({ source, entry: employer, audience: "public", evidence: "signed again", by: V("olive") });
+  w.clock.now = "2026-09-28T03:00:00Z";
+  const real = w.src.sourceChangesSince({ source, since: SINCE });
+  assert.equal(real.changes.length, 2);
+  /* page one names only the consent given again; the withdrawal is on page two */
+  const asked = [];
+  const paged = (a) => { asked.push(a);
+    return a.after === undefined ? { ...real, changes: [real.changes[1]], truncated: true, next: "c1" }
+                                 : { ...real, changes: [real.changes[0]], truncated: false, next: null }; };
+  const make = (sourceChangesSince) => new CaseCarriage({ storage: w.st, record: w.record, now: () => w.clock.now,
+    sources: { publishableAt: (a) => w.src.publishableAt(a), sourceChangesSince } });
+  assert.deepEqual(make(paged).sourcesLapsedSince(text, SINCE), rows.map((r) => ({ capture: r.capture, stated: r.stated, basis: r.basis })));
+  assert.deepEqual(asked.map((a) => [a.source, a.since, a.after]), [[source, SINCE, undefined], [source, SINCE, "c1"]]);
+  /* fail closed, though the row holds at since and at the read */
+  const every = sourceRowsStanding(rows, () => null);
+  const quiet = { ok: true, source, since: SINCE, at: w.clock.now, changes: [], limit: 1000, truncated: false, next: null };
+  assert.deepEqual(make(() => quiet).sourcesLapsedSince(text, SINCE), [], "control: no change answers none");
+  for (const [label, fn] of [["NO_SUCH_SOURCE", () => ({ ok: false, reason: "NO_SUCH_SOURCE" })], ["not ok", () => ({ ok: false })],
+                             ["changes null", () => ({ ...quiet, changes: null })], ["since_invalid", () => ({ ok: true, source, changes: null, since_invalid: true })],
+                             ["throws", () => { throw new Error("down"); }], ["null", () => null],
+                             ["a change with no instant", () => ({ ...quiet, changes: [{ at: "later", act: "consent", entry: "E" }] })],
+                             ["a cursor that does not move", () => ({ ...quiet, changes: [real.changes[1]], truncated: true, next: "c9" })],
+                             ["truncated with no cursor", () => ({ ...quiet, changes: [real.changes[1]], truncated: true, next: null })],
+                             ["none offered", undefined]])
+    assert.deepEqual(make(fn).sourcesLapsedSince(text, SINCE), every, label);
+});

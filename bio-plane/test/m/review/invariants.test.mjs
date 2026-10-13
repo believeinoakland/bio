@@ -10,7 +10,8 @@ import * as strength from "../../../src/strength/index.mjs";
 import * as basisVersionsChecks from "../../../src/basis-versions/checks.mjs";
 import * as publication from "../../../src/publication/index.mjs";
 import * as caseAuthoring from "../../../src/case-authoring/index.mjs";
-import { DRAFTS_READ_MAX } from "../../../src/case-authoring/index.mjs";
+import * as caseInputs from "../../../src/case-inputs/index.mjs";
+import { DRAFTS_READ_MAX } from "../../../src/case-inputs/index.mjs";
 
 /** Every act and read, over two drafts (one naming a case), a grant, a revocation, comments and the list. */
 function battery(w) {
@@ -119,7 +120,8 @@ test("R23, R27, R30, R31: C-87.1–C-87.11 and C-32.16 held here with their ids 
      fence rows C-32.16 was split from by number stand at their own homes (C-32.2 basis-versions', C-32.6 case-authoring's) */
   const rowsOf = (ns) => Object.values(ns).filter((v) => v && typeof v === "object" && !Array.isArray(v))
     .flatMap((fam) => Object.values(fam)).filter((r) => r && typeof r === "object" && typeof r.check === "string");
-  const elsewhere = [recordCore, membership, strength, basisVersionsChecks, publication, caseAuthoring].flatMap(rowsOf);
+  const elsewhere = [recordCore, membership, strength, basisVersionsChecks, publication, caseAuthoring, caseInputs]
+    .flatMap(rowsOf);
   assert.ok(elsewhere.length > 50, "the homes' rows were read");
   for (const r of [...Object.values(REVIEW_COPY_CHECKS), ...elsewhere]) assert.notEqual(r.check, "C-87.12");
   for (const r of elsewhere)
@@ -186,8 +188,9 @@ test("R26: REVIEW_LIST_MAX, statedEdition and caseIdentitySentence are exported 
                         statement_by: "ed", created_at: "2026-09-28T05:00:00.000Z" });
 });
 
-test("R26: case-authoring's own copy of the bound, DRAFTS_READ_MAX, equals REVIEW_LIST_MAX (K242)", () => {
+test("R26: case-inputs' own copy of the bound, DRAFTS_READ_MAX (its R3; case-authoring's before T47), equals REVIEW_LIST_MAX (K242)", () => {
   assert.equal(DRAFTS_READ_MAX, REVIEW_LIST_MAX);
+  assert.equal(caseInputs.DRAFTS_READ_MAX, 500);
 });
 
 /* DEC-149 (T34-87): words that call the group's Civicsmith a machine ("this instance", "this plane", "the plane", "this

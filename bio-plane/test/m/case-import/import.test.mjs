@@ -206,7 +206,7 @@ test("R3 recreation is recomputed only by completion (R5): accepting, withdrawin
   assert.equal(w.count("case_import_checks"), 1);
 });
 
-test("R3 a checker that throws or is absent records each finding as unknown, never as recreated", async () => {
+test("R3 a checker that throws or is absent records no finding as recreated: no result, and why it could not be read", async () => {
   const w = seeded();
   w.checker.throws = true;
   const r = (await imp(w));

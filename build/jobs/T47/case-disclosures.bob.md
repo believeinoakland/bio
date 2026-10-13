@@ -1,6 +1,6 @@
 # BOB to case-disclosures (T47)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -22,3 +22,7 @@ Both readings stand (K3109): (a) label_key stays beside case-carriage R22's obje
 ## B3 · CHANGE
 
 case-grammar (T47-25) is merged into tranche/T47 (K3111): merge the tranche into your branch. Its R31 read shape answers obscured as {copy, label, marked, kind} (kind null on a row stating none, else what the writer handed). Your test(s) documents.test.mjs:234 and photos.test.mjs:251 (R7) deep-compare the old shape and are red now: bring each expected value in line (kind: null, or the kind its writer hands from T47-26) in this job; they are accepted red by name until your merge.
+
+## B4 · CHANGE
+
+case-carriage (T47-26) and case-grammar (T47-25) are merged into tranche/T47 (K3115): merge the tranche into your branch, re-run your arms over the real case-carriage and case-grammar's read-back, and post COMPLETE. case-carriage R22 now answers obscured with kind (document copy: {copy, label: COPY_CLEANED_LABEL, kind: document}; photo: {copy, label, marked, kind: photo}); hand it on whole (R32).
