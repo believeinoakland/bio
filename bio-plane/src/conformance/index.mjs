@@ -159,7 +159,7 @@ export const SOURCE_FACTS_UNRECORDED = "the source group's public identity and d
   + "edition was imported, so they read undetermined";
 /** R39 (N951): the label beside an accepted finding's identity and stake read from what case-import recorded at import. */
 export const SOURCE_DECLARATION_SAYS = "the source group's public identity and declared stake as it declared them when they "
-  + "were read at import (read_at), current then, never as of the edition's signing";
+  + "were read at import, current then, never as of the edition's signing";
 /** R33: the sentence beside a void determination. */
 export const VOID_SAYS = "A finding this determination rests on no longer stands, so each outcome reads undetermined "
   + "until a member re-evaluates it by superseding it. The member's recorded outcome is kept beside it.";
@@ -1291,8 +1291,8 @@ export class Conformance {
   /* R32, R39 (N951): the source group's identity and declared stake for an accepted edition, mapped field by field from
      the `group_fields` `case-import.importedCase` (its R4) answers for that edition, read as `viewer` (R4 answers a
      viewer who is not an active member as if no import exists). `identity` is `{group, name, domain,
-     domain_verified_at, read_at}`, `stake` `group_fields.stake` as answered (null when the source declared none), never
-     raised, defaulted or re-read here; nothing is composed and no `identity` key is expected of the answer. Null when
+     domain_verified_at, read_at}`, `stake` `group_fields.stake` as answered (null when the source declared none; a
+     stake not answered at all is undetermined, never read as none declared), never raised or re-read here; nothing is composed and no `identity` key is expected of the answer. Null when
      `group_fields` is null, the import cannot be read, or the read throws (the caller then answers identity null, stake
      undetermined). (N995, K3038) R4 answers no date of the source edition, so no `edition_date` is read here. */
   #sourceFacts(imp, ed, viewer, once) {
@@ -1303,7 +1303,7 @@ export class Conformance {
     const field = (k) => (Object.hasOwn(gf, k) && gf[k] !== undefined ? gf[k] : null);
     return { identity: { group: field("group"), name: field("name"), domain: field("domain"),
                          domain_verified_at: field("domain_verified_at"), read_at: field("read_at") },
-             stake: field("stake") };
+             stake: Object.hasOwn(gf, "stake") && gf.stake !== undefined ? gf.stake : "undetermined" };
   }
 
   /* R33: every publisher move this copy recorded (accepted-work R8), page by page, bounded; null when they cannot be

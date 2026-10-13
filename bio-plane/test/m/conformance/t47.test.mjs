@@ -30,7 +30,7 @@ test("R39 R32: an edition imported with group_fields answers identity {group, na
                                  domain_verified_at: FIELDS.domain_verified_at, read_at: FIELDS.read_at });
   assert.deepEqual(b.stake, FIELDS.stake, "the stake as answered, never re-read or composed");
   assert.equal(b.identity_label, SOURCE_DECLARATION_SAYS);
-  assert.match(SOURCE_DECLARATION_SAYS, /read_at/);
+  assert.match(SOURCE_DECLARATION_SAYS, /when they were read at import/);
   assert.match(SOURCE_DECLARATION_SAYS, /never as of the edition's signing/);
   assert.deepEqual(["identity_says" in b, b.says, b.kind], [false, ACCEPTED_SAYS, "accepted"]);
   /* each field as answered: a null field stays null, and `detail` is no part of the identity */
@@ -40,6 +40,10 @@ test("R39 R32: an edition imported with group_fields answers identity {group, na
   /* the stake "undetermined" (the source could not read it) is answered as given */
   w.imports.editions.set(`${IMP}|2`, { group_fields: { ...FIELDS, stake: "undetermined" } });
   assert.equal(basis().stake, "undetermined");
+  /* a stake not answered at all is undetermined, never defaulted to null (none declared) */
+  const { stake: _s, ...noStake } = FIELDS;
+  w.imports.editions.set(`${IMP}|2`, { group_fields: noStake });
+  assert.deepEqual([basis().stake, basis().identity.name], ["undetermined", FIELDS.name]);
 });
 
 test("R39: an edition imported with stake: null answers stake: null (the source declared none), its identity read, never defaulted to undetermined", () => {
@@ -49,7 +53,7 @@ test("R39: an edition imported with stake: null answers stake: null (the source 
   assert.deepEqual([b.stake, b.identity.name, "identity_says" in b, b.identity_label], [null, FIELDS.name, false, SOURCE_DECLARATION_SAYS]);
 });
 
-test("R39: group_fields null, an import that cannot be read, a read that throws, or a reader case-import does not answer each answer identity: null, stake: \"undetermined\" with the sentence that they were not recorded at import", () => {
+test("R39: group_fields null, an import that cannot be read, a read that throws, an answer for another edition, or a reader case-import does not answer each answer identity: null, stake: \"undetermined\" with the sentence that they were not recorded at import", () => {
   const { w, basis } = acceptedScene();
   const unrecorded = (b) => assert.deepEqual([b.identity, b.stake, b.identity_says, "identity_label" in b],
                                              [null, "undetermined", SOURCE_FACTS_UNRECORDED, false]);
@@ -65,6 +69,10 @@ test("R39: group_fields null, an import that cannot be read, a read that throws,
   w.imports.caseFail = true;
   unrecorded(basis());
   w.imports.caseFail = false;
+  /* an answer for another edition than the one accepted is not this edition's */
+  w.imports.editions.set(`${IMP}|2`, { edition: 3, group_fields: FIELDS });
+  unrecorded(basis());
+  w.imports.editions.set(`${IMP}|2`, { group_fields: FIELDS });
   /* olive is an active member: read (the control); made inactive, case-import answers as if no import exists */
   assert.equal(basis(V("olive")).identity.name, FIELDS.name);
   w.st.sql.exec(`UPDATE members SET status='suspended' WHERE member_id='olive'`);
