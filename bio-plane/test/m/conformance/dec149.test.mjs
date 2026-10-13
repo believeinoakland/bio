@@ -7,7 +7,8 @@ import assert from "node:assert/strict";
 import { scene, V } from "./fixture.mjs";
 import { CONFORMANCE_CHECKS, PROPOSAL_SAYS, FLAG_SAYS, FACTS_SAY, OUTCOMES_DIFFER_SAYS, PARTICIPANTS_SAY,
          NO_OFFICE_ENTITY, ACTOR_BEFORE_ENTITIES, UNALIASED_SAYS, CAUSE_NOT_ESTABLISHED, noSuchDetermination,
-         determinationSuperseded } from "../../../src/conformance/index.mjs";
+         determinationSuperseded, determinationVoided, ACCEPTED_SAYS, SOURCE_FACTS_UNRECORDED, SOURCE_DECLARATION_SAYS,
+         VOID_SAYS, BELOW_BENCHMARK, BINDS_NOT_READ, MEASURE_SAYS } from "../../../src/conformance/index.mjs";
 
 /* the names DEC-149 retires for the group's Civicsmith */
 const NAMES_THE_PLANE = /\b(this|the) (instance|plane|server)\b|\bthis copy\b/i;
@@ -29,10 +30,12 @@ test("R21 DEC-149: STANDARD_SIDE_UNNAMED (C-113.28) says your group's Civicsmith
     assert.deepEqual(w.c.comparisonFacts({ contradiction: x.inquiry, standardSide, viewer: V("pat") }), r);
 });
 
-test("R12 R19 R20 R21 R22 R25 R26 DEC-149: no refusal row or member-facing sentence of this module names the group's Civicsmith as this instance, plane, server or copy", () => {
+test("R12 R19 R20 R21 R22 R25 R26 R27 R29 R32 R33 R39 DEC-149: no refusal row or member-facing sentence of this module names the group's Civicsmith as this instance, plane, server or copy", () => {
   for (const [code, row] of Object.entries(CONFORMANCE_CHECKS)) assert.doesNotMatch(row.translation, NAMES_THE_PLANE, code);
   for (const s of [PROPOSAL_SAYS, FLAG_SAYS, FACTS_SAY, OUTCOMES_DIFFER_SAYS, PARTICIPANTS_SAY, NO_OFFICE_ENTITY,
-                   ACTOR_BEFORE_ENTITIES, UNALIASED_SAYS, CAUSE_NOT_ESTABLISHED,
+                   ACTOR_BEFORE_ENTITIES, UNALIASED_SAYS, CAUSE_NOT_ESTABLISHED, ACCEPTED_SAYS, SOURCE_FACTS_UNRECORDED,
+                   SOURCE_DECLARATION_SAYS, VOID_SAYS, BELOW_BENCHMARK, BINDS_NOT_READ, MEASURE_SAYS,
+                   determinationVoided("CONF-2026-0001-determination", []).detail,
                    noSuchDetermination("CONF-2026-0001-determination").detail,
                    determinationSuperseded("CONF-2026-0001-determination", null).detail])
     assert.doesNotMatch(s, NAMES_THE_PLANE, s.slice(0, 60));
