@@ -77,8 +77,8 @@ test("R35 a row carried as its copy is keyed by the kind its signed row states: 
   ];
   const { by, text } = await keyed(rows);
   /* the marker is in the signed bytes, one per copy row */
-  assert.equal((text.match(/obscured_kind: document/g) || []).length, 3, "the writer states each document marker");
-  assert.equal((text.match(/obscured_kind: photo/g) || []).length, 4, "the writer states each photo marker");
+  assert.equal((text.match(/obscured_kind: "?document"?$/gm) || []).length, 3, "the writer states each document marker");
+  assert.equal((text.match(/obscured_kind: "?photo"?$/gm) || []).length, 4, "the writer states each photo marker");
   assert.deepEqual(Object.fromEntries(rows.map((r) => [r.ref, by[r.ref].label_key])), {
     "INFO-2026-0050-today": "document.cleaned.label",
     "INFO-2026-0051-reworded": "document.cleaned.label",
