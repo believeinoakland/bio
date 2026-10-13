@@ -73,6 +73,7 @@ ol.rules b { display: block; font-size: var(--t-md); margin-bottom: 2px; }
 .vdots { display: flex; flex-wrap: wrap; gap: 4px; }
 .vdots button { width: 26px; height: 26px; border: 1.5px solid var(--c-rule-strong); border-radius: 2px; background: var(--c-surface); font: 600 11px var(--f-sans); color: var(--c-ink-2); cursor: pointer; padding: 0; }
 .vdots button[aria-current="true"] { background: var(--c-ink); color: var(--c-sheet); border-color: var(--c-ink); }
+.mk-osprompt { display: grid; gap: 4px; max-width: 360px; margin: 4px auto; padding: 14px 16px; border: 1.5px solid var(--c-rule-strong); border-radius: 10px; background: var(--c-sheet); box-shadow: 0 6px 18px rgb(0 0 0 / .12); font-size: var(--t-sm); }
 .vwhat { margin: 0 0 8px; font-size: var(--t-sm); color: var(--c-ink-2); max-width: 76ch; }
 .vsay { background: var(--c-surface); border: var(--hair); border-left: 3px solid var(--c-ink); padding: 10px 12px; font-size: var(--t-md); min-height: 44px; }
 .vsay .noai { display: block; margin-top: 6px; font-size: var(--t-sm); color: var(--c-ink-2); }
@@ -263,7 +264,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 .mk-more summary { cursor: pointer; font-weight: 600; color: var(--c-accent-strong, var(--c-accent)); }
 .mk-more h4 { margin: 12px 0 4px; font-size: var(--t-sm); }
 .mk-more p { font-weight: 400; margin: 4px 0; }
-.st { display: none; } main:not([data-st]) .st-a, main[data-st="a"] .st-a, main[data-st="b"] .st-b, main[data-st="c"] .st-c, main[data-st="d"] .st-d, main[data-st="e"] .st-e, main[data-st="f"] .st-f { display: block; }
+.st { display: none; } main:not([data-st]) .st-a, main[data-st="a"] .st-a, main[data-st="b"] .st-b, main[data-st="c"] .st-c, main[data-st="d"] .st-d, main[data-st="e"] .st-e, main[data-st="f"] .st-f, main[data-st="g"] .st-g { display: block; }
 main:not([data-st]) .mk-frontgrid.st-a, main[data-st="a"] .mk-frontgrid.st-a, main[data-st="b"] .mk-frontgrid.st-b, main[data-st="c"] .mk-frontgrid.st-c, main[data-st="d"] .mk-frontgrid.st-d, main[data-st="e"] .mk-frontgrid.st-e { display: grid; }
 .mk-mockctl { border: 1px dashed var(--c-rule-strong); padding: 6px 10px; font-size: var(--t-sm); color: var(--c-muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .mk-mockctl select { width: auto; max-width: 100%; font-size: var(--t-sm); padding: 2px 6px; }
 .cs-ref { color: inherit; text-decoration: underline; text-decoration-color: var(--c-accent); text-underline-offset: 3px; } .cs-ref:hover { color: var(--c-accent-strong, var(--c-accent)); }

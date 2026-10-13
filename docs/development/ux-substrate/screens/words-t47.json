@@ -154,5 +154,53 @@
   "en": "Did you set this group up? Your handle is admin.",
   "protected": false,
   "note": ""
+ },
+ {
+  "key": "signing.ceremony.who",
+  "en": "You sign as {signer}, an owner of {project}. The public page will read “Published by {group} · signed by {signer}”. Once public, anyone can read it and check your signature without asking the group; it can be corrected by a new edition, never removed.",
+  "protected": true,
+  "note": "the sign step"
+ },
+ {
+  "key": "signing.ceremony.device",
+  "en": "Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key never leaves this device, and Civicsmith never sees it.",
+  "protected": true,
+  "note": "while the device confirms"
+ },
+ {
+  "key": "signing.ceremony.declined",
+  "en": "Your device didn't confirm, so nothing was signed or published. Everything is as it was; sign again when you are ready.",
+  "protected": true,
+  "note": "device cancelled or failed"
+ },
+ {
+  "key": "signing.ceremony.signedat",
+  "en": "Signed. Edition {edition} becomes public on {date} at {time} ({zone}). Until then it waits, not public. At that time Civicsmith checks again and publishes only if nothing changed since you signed.",
+  "protected": true,
+  "note": "publishat done"
+ },
+ {
+  "key": "signing.ceremony.signednow",
+  "en": "Signed and published. Edition {edition} is public now: anyone can read it and check your signature without the group.",
+  "protected": true,
+  "note": "caseratify done"
+ },
+ {
+  "key": "signing.ceremony.nokey",
+  "en": "You have no signing key in this browser. Register one here: it is made on this device and never leaves it, and every use asks you to confirm. Then you come back to this step, with nothing lost.",
+  "protected": true,
+  "note": "NO_ATTESTING_KEY before signing"
+ },
+ {
+  "key": "signing.ceremony.notowner",
+  "en": "Only an owner of {project} signs its cases: {owners}. Everything you prepared stays as it is. Ask one of them to sign.",
+  "protected": true,
+  "note": "CASE_SIGNER_NOT_AN_OWNER before signing"
+ },
+ {
+  "key": "signing.ceremony.phone",
+  "en": "Signing and publishing finish on a larger screen. Everything here can be read on a phone. Open {project} on a computer to sign: the ceremony is where you left it.",
+  "protected": true,
+  "note": "principle 8.6"
  }
 ]

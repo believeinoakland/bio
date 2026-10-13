@@ -3002,7 +3002,7 @@
    "id": "ceremony",
    "name": "Publication ceremony",
    "frame": "working",
-   "purpose": "The required wizard: checks, disclosures, ties confirmed, preview, signing.",
+   "purpose": "The required wizard: checks, disclosures, ties confirmed, preview, then signing inside the ceremony (Bob's D9, K3060; Q4): when it becomes public, the password asked again (D3), the member's own device confirming the key, signed and waiting or published; no key in this browser, a phone, a member who isn't an owner (DEC-207).",
    "acts": [
     {
      "op": "publishpreflight",
@@ -3064,6 +3064,37 @@
      "status": "declared",
      "modules": [
       "case-carriage"
+     ]
+    },
+    {
+     "op": "signerregisterown",
+     "label": "Register a signing key in this browser",
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
+    },
+    {
+     "op": "owed:signrequest DEC-207",
+     "label": "Ask an owner to sign",
+     "status": "owed"
+    },
+    {
+     "op": "publishatmove",
+     "label": "Move the publishing time",
+     "status": "declared",
+     "modules": [
+      "publish-schedule",
+      "queue-producers"
+     ]
+    },
+    {
+     "op": "publishatcancel",
+     "label": "Cancel publishing",
+     "status": "declared",
+     "modules": [
+      "publish-schedule",
+      "queue-producers"
      ]
     }
    ],

@@ -3297,3 +3297,27 @@ decided: 2026-10-13 · Bob (D6, K3060), drawn by the design session
 reasoning recorded in: this entry; `screens/mock-screens.js` (site, install), `screens/mock-journeys.js` (journey 28, JBRIEF), `screens/mock-shell.js`, `screens/mock-refs.js`, `screens/registry.src.py` (62 screens), `screens/words.json` (1,709 words), `layouts.html`.
 owed: (BOB) civicsmith.org built as drawn (a static site the stewards keep, holding no accounts), with "Create your group" opening the installer; the groups listed only from the network directory's opt-in (DEC-132); the stewards' address once Bob gives it (D14; installer R48); the installer's first page reduced to its two choices; registry.json and words.json re-taken.
 
+### DEC-207 · answered
+raised: 2026-10-13 · the UX design session with Bob on his secondary account (session_01Hcg5e3ZdVsyLUxGwEcZsPS; the design work moved to the secondary account by K3060 D1) (Bob's D9, K3060; BOB's Q4, N1006; B161 (4))
+for: bob-session
+question: The signing ceremony and its related questions, worked out from the principles: where signing happens in the new interface (Q4: paste-back through `/sign`, or a signer inside the interface), how the member proves it is them, and what happens without a key, on a phone, or for a member who is not an owner.
+why it is Bob's: the direction is his (D9: "The signing ceremony is a key journey… Answering this and other related questions is a piece of the work you need to be completed (based on principles)"); the answers are the design session's, from the principles, reported as done (P17).
+provisional: the ceremony's single "Sign with your key" button beside "Publish at…" and "Publish now"; Q4 open.
+alternative: paste-back through `/sign` (signatures R30, R31): the member copies a statement to a separate page, signs there and pastes the signature back.
+recommendation: as below. Paste-back fails principle 4.1 (the tool fades) and K3052's real-users test.
+reversal cost: low: the ceremony's last step and its words.
+response: **Bob's D9 (K3060), worked out from the principles by the design session, 2026-10-13.**
+(1) **Signing happens inside the ceremony** (Q4: the in-interface signer), never on a separate page or by pasting a signature back (principle 4.1).
+(2) **One choice of when, one button.** "When it becomes public" (now, or a set time); then "Sign and publish at 6:00 on 19 November" (`publishat`) or "Sign and publish now" (`caseratify`): both sign the same statement (ratification R39). The three buttons drawn before ("Sign", "Publish at", "Publish now") are gone.
+(3) **The act says what it does** (4.4, 4.5, 9.3): outward mark; "You sign as Dev, an owner of The Coliseum lease. The public page will read 'Published by Lakeshore Tenants · signed by Dev'. Once public, anyone can read it and check your signature without asking the group; it can be corrected by a new edition, never removed."
+(4) **Proving it is you** (1.5, 1.6; D3; K509 (2)): the password asked again in the dialog (`session.reauth`); then the member's own device confirms the use of the signing key (passphrase, fingerprint or device PIN), the key never leaving the device and Civicsmith never seeing it. A cancelled or failed confirmation signs and publishes nothing, and returns to the last step unchanged (`signing.ceremony.declined`).
+(5) **After signing:** signed and waiting ("Move the time", `publishatmove`; "Cancel publishing", `publishatcancel`), or signed and published (open the public page).
+(6) **No key in this browser** (ratification R18's `NO_ATTESTING_KEY`): "Register a signing key in this browser" (`signerregisterown`) as a side trip from the step, returning to it with nothing lost; a key on another computer can sign from there.
+(7) **On a phone** (8.6): everything reads; signing and publishing finish on a larger screen, where the ceremony is where the member left it.
+(8) **A member who is not an owner** (`CASE_SIGNER_NOT_AN_OWNER`): names the owners who can sign; what was prepared stays; "Ask an owner to sign" (`owed:signrequest DEC-207`) puts it ready in the owners' queues.
+(9) **Ties:** every member who signs confirms their own (case-disclosures R27), said beside the confirmation.
+(10) Words (`screens/words-t47.src.py`, protected): `signing.ceremony.who`, `.device`, `.declined`, `.signedat`, `.signednow`, `.nokey`, `.notowner`, `.phone`. The wizard "Publication ceremony"'s last two steps re-worded to match.
+decided: 2026-10-13 · Bob's direction (D9), worked out by the design session from the principles
+reasoning recorded in: this entry; `screens/mock-screens.js` (ceremony), `screens/library.src.py`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/mock-shell.js`, `screens/registry.src.py`, `screens/words-t47.src.py`, `screens/words.json` (1,724 words, 615 protected), `screens/page.src.html`, `layouts.html`.
+owed: (BOB, T47-63 or later) the ceremony's last step as drawn: the in-interface signer with the browser-held key (credentials R9; membership's note on the browser-held key), the password re-asked (D3), the device's confirmation, the two buttons, the signed and published states, the side trip to register a key, the phone and not-an-owner states; the op `signrequest` (or BOB's name) putting a prepared edition in the owners' queues; registry.json, library.json and words.json re-taken. BOB may send what the signing service provides (B161 (4)); a difference from this drawing comes back as an entry.
+

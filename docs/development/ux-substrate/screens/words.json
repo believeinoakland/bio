@@ -22,7 +22,7 @@
   "project": 7,
   "grouprule": 1,
   "refusal": 156,
-  "signing": 7,
+  "signing": 15,
   "case": 11,
   "docket": 2,
   "advocacy": 3,
@@ -52,11 +52,11 @@
   "tab": 2,
   "level": 2,
   "screen": 123,
-  "act": 584,
+  "act": 591,
   "column": 33,
   "wizard": 306,
-  "total": 1709,
-  "protected": 603
+  "total": 1724,
+  "protected": 615
  },
  "words": [
   {
@@ -4189,6 +4189,62 @@
    "source": "DEC-200"
   },
   {
+   "key": "signing.ceremony.who",
+   "en": "You sign as {signer}, an owner of {project}. The public page will read “Published by {group} · signed by {signer}”. Once public, anyone can read it and check your signature without asking the group; it can be corrected by a new edition, never removed.",
+   "protected": true,
+   "source": "DEC-200",
+   "note": "the sign step"
+  },
+  {
+   "key": "signing.ceremony.device",
+   "en": "Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key never leaves this device, and Civicsmith never sees it.",
+   "protected": true,
+   "source": "DEC-200",
+   "note": "while the device confirms"
+  },
+  {
+   "key": "signing.ceremony.declined",
+   "en": "Your device didn't confirm, so nothing was signed or published. Everything is as it was; sign again when you are ready.",
+   "protected": true,
+   "source": "DEC-200",
+   "note": "device cancelled or failed"
+  },
+  {
+   "key": "signing.ceremony.signedat",
+   "en": "Signed. Edition {edition} becomes public on {date} at {time} ({zone}). Until then it waits, not public. At that time Civicsmith checks again and publishes only if nothing changed since you signed.",
+   "protected": true,
+   "source": "DEC-200",
+   "note": "publishat done"
+  },
+  {
+   "key": "signing.ceremony.signednow",
+   "en": "Signed and published. Edition {edition} is public now: anyone can read it and check your signature without the group.",
+   "protected": true,
+   "source": "DEC-200",
+   "note": "caseratify done"
+  },
+  {
+   "key": "signing.ceremony.nokey",
+   "en": "You have no signing key in this browser. Register one here: it is made on this device and never leaves it, and every use asks you to confirm. Then you come back to this step, with nothing lost.",
+   "protected": true,
+   "source": "DEC-200",
+   "note": "NO_ATTESTING_KEY before signing"
+  },
+  {
+   "key": "signing.ceremony.notowner",
+   "en": "Only an owner of {project} signs its cases: {owners}. Everything you prepared stays as it is. Ask one of them to sign.",
+   "protected": true,
+   "source": "DEC-200",
+   "note": "CASE_SIGNER_NOT_AN_OWNER before signing"
+  },
+  {
+   "key": "signing.ceremony.phone",
+   "en": "Signing and publishing finish on a larger screen. Everything here can be read on a phone. Open {project} on a computer to sign: the ceremony is where you left it.",
+   "protected": true,
+   "source": "DEC-200",
+   "note": "principle 8.6"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -6836,6 +6892,30 @@
    "source": "registry.json"
   },
   {
+   "key": "act.signerregisterown.label.ceremony",
+   "en": "Register a signing key in this browser",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_signrequest.label.ceremony",
+   "en": "Ask an owner to sign",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.publishatmove.label.ceremony",
+   "en": "Move the publishing time",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.publishatcancel.label.ceremony",
+   "en": "Cancel publishing",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.reviewcomment.label.review-outside",
    "en": "Send your comment",
    "protected": true,
@@ -7180,6 +7260,12 @@
   {
    "key": "act.setpassword.does",
    "en": "Changes your password. Every other session signed in as you ends, so anyone using an old one must sign in again with the new password.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_signrequest.does",
+   "en": "Tells the project's owners, in their queues, that this edition is prepared and ready to sign. It signs nothing.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8498,6 +8584,18 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
+   "key": "act.publishatmove.does",
+   "en": "Moves the time this signed edition becomes public. The signature stands; Civicsmith checks again at the new time.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.publishatcancel.does",
+   "en": "Keeps this signed edition unpublished. You can choose a time again, or sign a new edition.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
    "key": "act.publishat.does",
    "en": "Publishes at a set time. Civicsmith checks again then, and does not publish if anything changed since signing.",
    "protected": true,
@@ -9177,19 +9275,19 @@
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step10.what",
-   "en": "Sign with your key.",
+   "en": "Choose when it becomes public, enter your password again, and sign: your device asks you to confirm with your key.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step10.why",
-   "en": "Publishing is permanent. Corrections come as a new edition, never by changing this one.",
+   "en": "Only you can sign, and your key never leaves your device. Publishing is permanent; corrections come as a new edition, never by changing this one.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-426b9c2e8b128b6b.step11.what",
-   "en": "Publish now, or choose the time it becomes public, such as when a story citing it runs.",
+   "en": "To publish later, sign now with “Sign and publish at…”, such as when a story citing it runs.",
    "protected": false,
    "source": "library.json"
   },

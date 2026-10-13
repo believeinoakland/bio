@@ -137,7 +137,7 @@ const GLOBAL_REFS = [
 ];
 // Attach references by text: every occurrence on the screen, inside running text too, never inside a link, button, field,
 // heading or an element that already explains itself. Per-screen entries win over GLOBAL ones (things named on many screens).
-const NO_REF = 'a,button,select,option,textarea,input,label,h1,legend,summary,[data-tip],.cs-grade,.cs-btn,.mk-crumbs,.mk-mockctl,.id,script,style';
+const NO_REF = '.mk-osprompt,a,button,select,option,textarea,input,label,h1,legend,summary,[data-tip],.cs-grade,.cs-btn,.mk-crumbs,.mk-mockctl,.id,script,style';
 function attachRefs(id, html) {
   if (typeof document === 'undefined') return html;
   const own = (REFS[id] || []).map(r => [...r, true]);

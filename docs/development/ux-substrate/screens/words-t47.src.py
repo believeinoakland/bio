@@ -49,6 +49,17 @@ w('session.keep', 'My own: keep me signed in (it locks after 30 minutes away; yo
 w('session.shared', 'Shared or public: sign me out after 15 minutes away', False, 'D3 (K3061)')
 w('signin.founderhint', 'Did you set this group up? Your handle is admin.', False)
 
+# --- Signing inside the ceremony (DEC-207; Bob's D9, K3060; Q4). Protected: words before and around a signed, outward act.
+w('signing.ceremony.who', 'You sign as {signer}, an owner of {project}. The public page will read “Published by {group} · signed by {signer}”. Once public, anyone can read it and check your signature without asking the group; it can be corrected by a new edition, never removed.', True, 'the sign step')
+w('signing.ceremony.device', 'Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key never leaves this device, and Civicsmith never sees it.', True, 'while the device confirms')
+w('signing.ceremony.declined', 'Your device didn\'t confirm, so nothing was signed or published. Everything is as it was; sign again when you are ready.', True, 'device cancelled or failed')
+w('signing.ceremony.signedat', 'Signed. Edition {edition} becomes public on {date} at {time} ({zone}). Until then it waits, not public. At that time Civicsmith checks again and publishes only if nothing changed since you signed.', True, 'publishat done')
+w('signing.ceremony.signednow', 'Signed and published. Edition {edition} is public now: anyone can read it and check your signature without the group.', True, 'caseratify done')
+w('signing.ceremony.nokey', 'You have no signing key in this browser. Register one here: it is made on this device and never leaves it, and every use asks you to confirm. Then you come back to this step, with nothing lost.', True, 'NO_ATTESTING_KEY before signing')
+w('signing.ceremony.notowner', 'Only an owner of {project} signs its cases: {owners}. Everything you prepared stays as it is. Ask one of them to sign.', True, 'CASE_SIGNER_NOT_AN_OWNER before signing')
+w('signing.ceremony.phone', 'Signing and publishing finish on a larger screen. Everything here can be read on a phone. Open {project} on a computer to sign: the ceremony is where you left it.', True, 'principle 8.6')
+
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 keys = [x['key'] for x in W]
 assert len(keys) == len(set(keys)), 'duplicate key'
