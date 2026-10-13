@@ -1,11 +1,11 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R26). T45 adds a project's scope (R21–R23: a counsel matter, a
+ * Requirements: build/requirements/project-roster.md (R1–R27). T45 adds a project's scope (R21–R23: a counsel matter, a
  * member's own project; the guard membership calls before an invitation or a visibility change, its R128) and the
  * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`; T46 (R25)
  * reads their refusals' words by key from `words.json` (`checks.mjs`' `PROJECT_SCOPE_WORDS`); T47 (R26) lists the
- * projects a viewer sees at FULL with each one's recorded stage. Split from membership for
+ * projects a viewer sees at FULL with each one's recorded stage, and R27 each one's opener. Split from membership for
  * size at T38 (N783; K617, K624, K2270: variant C1′ of `build/plan/membership-split.md`), by copy: each act's
  * behaviour is membership's as T37 left it, its answers byte for byte. Inviting, joining, leaving and removing, the
  * visibility setting, what a caller may see of a project, the fence and the participation record stay `membership`'s.
@@ -15,8 +15,8 @@
  * reaching record-core by `recordOf(ctx)` and membership by `membershipOf(ctx)` on the same `ctx`; a test may pass its
  * own as `projectRosterOf(ctx, { record, membership })`. This module writes only its own five tables (`schema.mjs`).
  * It reads membership's tables only through membership's stated read contract (its R120) and writes them only through
- * `participationWrite` (its R118); it joins record-core's `bundles` only on its read contract (record-core R37) and
- * asks every other bundle fact of `core.bundleInfo` (R34). Calls go one way: membership never calls this module but
+ * `participationWrite` (its R118); it joins record-core's `bundles` and `manifest` only on its read contract
+ * (record-core R37) and asks every other bundle fact of `core.bundleInfo` (R34). Calls go one way: membership never calls this module but
  * through the two notice slots and the one guard this module registers in (membership R116, R117, R128). */
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
@@ -647,19 +647,35 @@ export class ProjectRoster {
    *
    *  `stage` is the project document's recorded `current_state` (record-core R37) as recorded, null when none is: not
    *  `project-stage`'s derived stage, a later module this one cannot use. `name` is its title (record-core R34). No
-   *  question count: Home takes it from basis-versions' read. `limit` and `truncated` are R9's rule. Writes nothing. */
+   *  question count: Home takes it from basis-versions' read. `limit` and `truncated` are R9's rule. Writes nothing.
+   *
+   *  R27 (T47; DEC-201 `projects`): each project's `owner`, the member who opened it (its first author, as the record
+   *  states), `{member, handle}`, the founder's `{member: "admin", handle: "admin"}`, or null when that opener is no
+   *  longer an active member or names none; nothing else about them. */
   projectList(asked = {}) {
     const { viewer = null, limit = null } = asked && typeof asked === "object" ? asked : {};
     const gate = viewerPredicate(viewer);
     const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_LIST_LIMIT);
+    /* R27: the opener joined in the same statement, so the page and its owners cannot disagree: the project's first
+       manifest entry's `author` (record-core R37: `manifest`, first by `created`, then `rowid`, the order it recorded
+       them), matched to an ACTIVE row of membership's `members` (its R120). The founder has no roster row and is
+       answered as the founder, `admin` by handle (credentials R67; K3074). An opener revoked or not yet active, a
+       machine's creation (whose author names no member) and a project with no entry join nothing, and answer null. */
     const rows = this.#rows(
-      `SELECT b.bundle_id AS id, b.current_state AS state FROM bundles b
+      `SELECT b.bundle_id AS id, b.current_state AS state, o.member_id AS owner, o.handle AS owner_handle,
+              b.opener = ? AS founder
+         FROM (SELECT b.*, (SELECT x.author FROM manifest x WHERE x.bundle_id = b.bundle_id
+                             ORDER BY x.created, x.rowid LIMIT 1) AS opener
+                 FROM bundles b WHERE b.object_type = 'project') b
+         LEFT JOIN members o ON o.status = 'active' AND o.member_id = b.opener
         WHERE b.object_type = 'project' AND (${gate.sql})
         ORDER BY b.bundle_id
-        LIMIT ?`, ...gate.args, cap + 1);
+        LIMIT ?`, ROOT_ADMIN, ...gate.args, cap + 1);
     const truncated = rows.length > cap;
     const projects = (truncated ? rows.slice(0, cap) : rows).map((r) => ({ id: r.id,
-      name: this.#bundle(r.id)?.title ?? null, stage: typeof r.state === "string" && r.state !== "" ? r.state : null }));
+      name: this.#bundle(r.id)?.title ?? null, stage: typeof r.state === "string" && r.state !== "" ? r.state : null,
+      owner: r.founder ? { member: ROOT_ADMIN, handle: ROOT_ADMIN }
+        : r.owner ? { member: r.owner, handle: r.owner_handle ?? null } : null }));
     return { ok: true, projects, count: projects.length, limit: cap, truncated };
   }
 
@@ -973,7 +989,7 @@ export function projectRosterOps(r, url, body, env) {
     projectvisibility: () => r.projectVisibility({ projectId: q("projectId"), viewer: q("viewer") }),
     /* D-479: `limit` reaches the directory's page (the cap is the caller's to LOWER, not to raise). */
     projectdirectory: () => r.projectDirectory({ viewer: q("viewer"), limit: q("limit") }),
-    /* T47 (R26): the projects the stamped viewer sees at FULL, with each one's recorded stage. */
+    /* T47 (R26, R27): the projects the stamped viewer sees at FULL, with each one's recorded stage and opener. */
     projectlist: () => r.projectList({ viewer: q("viewer"), limit: q("limit") }),
     projectparticipants: () => r.projectParticipants({ projectId: q("projectId"), by: q("by") }),
     /* REC-150: `by` and `viewer` are the control plane's stamps. */
