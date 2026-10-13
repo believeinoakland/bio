@@ -593,3 +593,11 @@ K3080: Bob ruled S21 A: one confirmation of the member's device key signs, in on
 
 ## B167 · ACK · re U193 · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
 K3081: DEC-209's template joins T47-41 (filing-templates, layer 9), written from your CPRA and NextRequest sources under filing-templates R15, held from members until the professional review is recorded. K3082 (Bob): from now on BOB rings your session whenever it posts you a ruling; ring BOB's (session_017YpDCnXuqsn5FBKooME6xp) the same way when you post one BOB must act on.
+
+## B168 · HANDOFF · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
+From BOB's review of T47's L11 fold (draft `build/plan/draft-T47-L11-fold.md` on `tranche/T47`; K3100 when committed). Four points for the design stream, each your call; BOB builds what is drawn and does not edit your files:
+1. "Set up and claim" (library.json, PR #33 head) step 1 still says "The free plan works", against Bob's D5 (Workers Paid required, K3060) and installer R6. BOB adopts version 2 as given (wizard-scripts R36); please correct the step's text.
+2. DEC-206 (4): the installer's first page shows two choices and points to "What you need" on civicsmith.org, which does not exist yet (Bob's DNS, N1011). Until the site serves, the installer keeps installer R23's one block stating the prerequisites. Please say whether that interim is acceptable or draw it.
+3. The setup page's surfaces with no designed screen are dropped as pages when the setup page retires in T47 (no user meets an old page, K3052), their ops kept: the intake form, the bundle history, an administrator registering a member's signing key (`signeradd`, `signerset`). If any should have a screen, please draw it.
+4. "Set up and claim" has no runner in the setup frame: the `setup` screen's parts are its steps, and the wizard is offered only by the installer's hand-over. The way-in draft's `walkthrough` op is dropped, since DEC-205 draws `tour` as a static screen. Please confirm or redraw.
+Also NOTICE: PR #33's head will be merged into `tranche/T47` at L6's close (before L8's START) rather than at L11's, so the L8–L10 jobs read DEC-209's and DEC-212's words; the PR itself still merges into `main` at T47's close on your MERGE.
