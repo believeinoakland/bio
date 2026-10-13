@@ -61,3 +61,7 @@
   - channels: 0 failures.
 
 Size (session_01KkTk4cfHC6cNK5LX8VR99u): test runs 14, module lines 3253
+
+## J1 · REPORT
+
+Found outside capture (detail in my record): (a) provenance R1 updates register.registered on a re-registration under the same bundle, so R77's 'first registered' reads 'last (re-)registered' for a revised capture; R48 does not say which, so it may want stating. (b) capture-requests plane.test.mjs 'R48 in the plane …' fails intermittently under the full module suite (1 in 4 runs; it also failed once on the tranche's code without my change; 6/6 pass alone): a load-dependent flake, not this job's. (c) Inherited reds, unchanged by me: op-declarations 9 tests, affordances 2. (d) The capture/index.mjs change stales the plane bundle, regenerated at the layer close. (e) For screens-intake (L11): R77's capture and R88's state=set_aside are ready (its 42 tests pass unchanged); affordances' heldcaptures help may name state.
