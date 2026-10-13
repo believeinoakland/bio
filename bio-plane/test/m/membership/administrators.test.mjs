@@ -74,7 +74,9 @@ test("R8 a carried removal revokes, tells R79's listeners in the act (credential
   w.m.onRevoked("capture-sources", ({ memberId }) => { seen = w.m.memberFacts(memberId).status; });
   const r = w.m.adminRemove({ memberId: "third", by: "second", reason: "two" });
   assert.deepEqual([r.ok, r.removed, r.reasons], [true, true, ["one", "two"]]);
-  assert.match(r.alsoDo, /ADMIN_TOKEN|hosting/);
+  /* R8 (T47-82, P8): both halves named, rotating the root of trust and reviewing hosting access */
+  assert.match(r.alsoDo, /rotating ADMIN_TOKEN/);
+  assert.match(r.alsoDo, /reviewing hosting-account membership/);
   assert.deepEqual(w.row(`SELECT status, status_by FROM members WHERE member_id='third'`),
     { status: "revoked", status_by: "second" });
   assert.deepEqual(w.creds.revoked.map(({ memberId, by }) => [memberId, by]), [["third", "second"]],

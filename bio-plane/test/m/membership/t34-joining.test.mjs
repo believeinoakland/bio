@@ -320,8 +320,15 @@ test("R104 joinLinkInvite: NO_SUCH_JOIN_LINK alike for never made, replaced, off
   const replaced = w.m.joinLinkReplace({ by: "admin" });
   const answers = [];
   for (const link of ["0".repeat(64), l.link, "nope", null, undefined, 3]) answers.push(JSON.stringify(await w.m.joinLinkInvite({ link, cover: "x" })));
-  const off = w.m.joinLinkEnable({ dailyCap: 1, by: "admin" });   // refused: one is live
-  assert.equal(off.reason, "JOIN_LINK_ON");
+  const second = w.m.joinLinkEnable({ dailyCap: 1, by: "admin" });   // refused: one is live
+  assert.equal(second.reason, "JOIN_LINK_ON");
+  /* T47-82 (P8): a link switched off answers alike too (the title's "off"), on a group of its own, so the live link
+     below stays live. */
+  const w2 = await world().group();
+  const switched = w2.m.joinLinkEnable({ dailyCap: 1, by: "admin" });
+  assert.equal(w2.m.joinLinkOff({ by: "admin" }).ok, true);
+  answers.push(JSON.stringify(await w2.m.joinLinkInvite({ link: switched.link, cover: "x" })));
+  assert.equal(answers.length, 7);
   assert.equal(new Set(answers).size, 1);
   rowOf(JSON.parse(answers[0]), "NO_SUCH_JOIN_LINK");
   assert.equal((await w.m.joinLinkInvite({ link: replaced.link, cover: " " })).reason, "NO_COVER");

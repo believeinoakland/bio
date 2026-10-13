@@ -124,8 +124,7 @@ test("R121 N793 noSuchMember is the one site of NO_SUCH_MEMBER: its row C-96.47,
   assert.equal(noSuchMember(null, { task: "T-1" }).detail, r.detail, "one fixed sentence for every caller");
   const x = noSuchMember("zed", { task: "T-1", reason: "MINE", detail: "mine", member: "other", ok: true });
   assert.deepEqual([x.task, x.reason, x.detail, x.member, x.ok], ["T-1", "NO_SUCH_MEMBER", r.detail, "zed", false]);
-  const hostile = { get boom() { throw new Error("x"); } };
-  Object.defineProperty(hostile, "boom", { enumerable: true, get() { throw new Error("x"); } });
+  const hostile = { get boom() { throw new Error("x"); } };   // an enumerable getter that throws
   assert.doesNotThrow(() => noSuchMember({ toString() { throw new Error("y"); } }, hostile));
   assert.equal(noSuchMember("a", [1]).reason, "NO_SUCH_MEMBER");
 });
