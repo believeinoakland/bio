@@ -215,4 +215,4 @@ T47-82 applied: R140, screens-entry in MODULE_ORDER after interface-shell (layer
   - coverage: 45 failures, none of them membership's;
   - channels: 0 failures.
 
-Size (session_011oUnEgjgR8iwQexLBg4vjp): test runs 27, module lines 3,775.
+Size (session_011oUnEgjgR8iwQexLBg4vjp): test runs 27, module lines 3,777.
