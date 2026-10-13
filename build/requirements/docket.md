@@ -88,7 +88,7 @@ Terms.
 
 **Taking back, and withdrawal**
 - **R11** A `take-back` entry names an earlier public entry of the case (`takes_back`, its `seq`) with a reason; both stay answered, and reads mark the earlier one taken back. A record entry is taken back the same way, by a later record entry with a reason, and reads `taken-back`. Nothing in this module deletes an entry. Taking back a `withdrawal` or a `court-order` (R25) is refused `DOCKET_WITHDRAWAL_FINAL`, and taking back a `take-back` `DOCKET_TAKE_BACK_FINAL`. (DEC-116 items 6, 7; K1480)
-- **R12** A `withdrawal` entry, placed on `listed` by the manager, names one ratified edition or `all` (every edition ratified at its `date`; an edition ratified later is not withdrawn), with a published `reason` (`DOCKET_NO_REASON` as R1). An edition already withdrawn, or `all` when every ratified edition is, is refused `DOCKET_ALREADY_WITHDRAWN`. A withdrawal is never lifted (R11); standing behind the case again is a new edition. `withdrawalOf({case, edition})` answers the withdrawal entry naming that edition, `{seq, entry, date, reason, digest}` (`entry` the public entry's id, which `public-read` R20's link to it reads; T47, N952), or null; viewer-free, it writes nothing. The edition itself is untouched and answers forever (`publication` R24). (DEC-116 item 7; N470) *(not yet met: T47)*
+- **R12** A `withdrawal` entry, placed on `listed` by the manager, names one ratified edition or `all` (every edition ratified at its `date`; an edition ratified later is not withdrawn), with a published `reason` (`DOCKET_NO_REASON` as R1). An edition already withdrawn, or `all` when every ratified edition is, is refused `DOCKET_ALREADY_WITHDRAWN`. A withdrawal is never lifted (R11); standing behind the case again is a new edition. `withdrawalOf({case, edition})` answers the withdrawal entry naming that edition, `{seq, entry, date, reason, digest}` (`entry` the public entry's id, which `public-read` R20's link to it reads; T47, N952), or null; viewer-free, it writes nothing. The edition itself is untouched and answers forever (`publication` R24). (DEC-116 item 7; N470)
 - **R13** At start this module fills `reevaluation`'s docket registration once (its R30) with `withdrawals({after, limit})` (each withdrawal: the case, its owning project, the editions it names, each member finding of each named edition at its pin as `{bundle_id, sha, edition}` (read through `publication`), the signing instant, its `seq` and its entry id; K1270) and `contested({after, limit})` (each record entry with `contests: true`: the case, the edition, the edition's member findings at their pins, the filing instant, the entry). After a withdrawal's post (R5) or a contesting filing (R1) commits, it calls `reevaluation.docketActed` (its R30) once with the act's kind, case and entry; a throw there never undoes the act. (DEC-116 items 3, 7)
 
 **A court order (K1480; Publication §5D, "A court order has its own path")**
@@ -110,7 +110,7 @@ Terms.
 - **R28** (T45; N892; Actions D4; v0.2 rule 15; `project-roster` R21, R23) `docketFile` (R1), `docketPrepare` (R4) and `docketPost` (R5) refuse, writing nothing, when `project-roster.projectScope` (its R23) answers `counsel_matter` for the case's owning project at the act: with `publication` R78's row, `COUNSEL_MATTER_NOT_PUBLISHED` (one code, one row), after R1's `DOCKET_NOT_A_PARTICIPANT` (for `docketFile`) or R4's `DOCKET_NOT_THE_MANAGER` (for the other two) and before every form check. Entries already public stay public and answer forever (R16; a scope changes nothing already published, `project-roster` R21); R27's marks are still answered, so a hold can still be placed from one. Controls: the same acts on a case whose project's scope is `none` proceed; a case whose project became a counsel matter after an entry was placed still answers that entry in R14.
 
 **Its words** (T47; DEC-199; N992)
-- **R29** (T47; N992; DEC-194, DEC-199; amends R1, R22) C-129.29 `DOCKET_OUTCOME_UNREADABLE` takes its translation from `words.json`'s `refusal.DOCKET_OUTCOME_UNREADABLE`, read by key (as `membership`'s `HANDLE_WORDS` and `extraction`'s `TRANSCRIBE_WORDS` are), never a copy: DEC-199's sentence, true of every arm R1 refuses with it (an outcome missing, of an unknown kind, dated after its filing, or stated on another kind of entry). Its code, number, `where` and behaviour are unmoved; (K3110) C-129.13 `DOCKET_PRESSURE_REFUSED` likewise reads `words.json`'s `refusal.DOCKET_PRESSURE_REFUSED` by key, with its own control; this module's other rows, which `words.json` does not hold, keep theirs. The changed row waits for T48's promotion stamp (plan rule 5 (2)). Control: the row's translation equals its key's sentence, and each of R1's four outcome refusals answers it. *(not yet met: T47)*
+- **R29** (T47; N992; DEC-194, DEC-199; amends R1, R22) C-129.29 `DOCKET_OUTCOME_UNREADABLE` takes its translation from `words.json`'s `refusal.DOCKET_OUTCOME_UNREADABLE`, read by key (as `membership`'s `HANDLE_WORDS` and `extraction`'s `TRANSCRIBE_WORDS` are), never a copy: DEC-199's sentence, true of every arm R1 refuses with it (an outcome missing, of an unknown kind, dated after its filing, or stated on another kind of entry). Its code, number, `where` and behaviour are unmoved; (K3110) C-129.13 `DOCKET_PRESSURE_REFUSED` likewise reads `words.json`'s `refusal.DOCKET_PRESSURE_REFUSED` by key, with its own control; this module's other rows, which `words.json` does not hold, keep theirs. The changed row waits for T48's promotion stamp (plan rule 5 (2)). Control: the row's translation equals its key's sentence, and each of R1's four outcome refusals answers it.
 
 **Public reads** (no credential; served by `public-read` R21)
 - **R14** `docketPublic({case})` answers the case's public entries, oldest first, each with its JSON, armored signature and first-published instant, a taken-back entry marked so (R11), the bytes of each `listed` entry's capture by its hash (R7; never for a `receipt` or a `reactions` entry), and `last_entry`, the latest entry's date (null when none). A case with no ratified edition answers null, as an absent one. The `record` shelf never appears. (DEC-116 items 1, 8; DEC-100 item 2)
@@ -130,23 +130,23 @@ Terms.
 ## Private
 
 ### Uses
-- `record-grammar`: canonical JSON, `createSha256`, the id grammar.
-- `signatures`: `verifySshsig` (its R2); the new `NS_DOCKET` and `docketStatement` (its R39, R40).
-- `record-core`: `transact`; `stampInstant` (its R47); `declarePurge` (its R21); `registerCounts` (its R63).
-- `membership`: `isProjectOwner` and `isJoinedParticipant` (its R54), `sight` (its R44), `viewerPredicate`.
+(K3115: re-taken from DOCKET #9's record, the services the code calls.)
+- `record-core`: `transact` (its R32); `mintOpaqueId` (R6, R7; R62's `MINT_EXHAUSTED`); `registerMintSeed` (R70, R71); `declarePurge` (R21); `registerCounts` (R63); `readFile` (R13, R14); `evidenceStore` (R38); `stampInstant` (R47).
+- `membership`: `sight` (its R44); `isProjectOwner` and `isJoinedParticipant` (R54); `positionalMember` (R76).
 - `credentials`: `attestingKeys` (its R11).
 - `promotion`: the `producingGroup` fact (its R40).
-- `provenance`: the `register` and `captured_locators` read contract (its R48) and the evidence store's bytes.
-- `attestation`: the co-archive outcome a capture's entry records (its R3, R7).
-- `acquisition`: the filed `origin` of a capture (its R21), for `found_by`.
+- `provenance`: `homeOf` (its R4, R5); the `register` and `captured_locators` read contract (R48), which carries acquisition's filed `origin` for `found_by`.
+- `attestation`: `attestationsOf` (its R7).
 - `entities`: `readEntity` (its R5), the subject's name (R6).
 - `inquiry`: `subjectEntityOf` (its R43).
-- `reevaluation`: the new docket registration and `docketActed` (its R30).
+- `reevaluation`: `registerDocket` and `docketActed` (its R30).
+- `publication`: `stampEdition` and `registerOrderSource` (its R62); `cases`, `published_cases`, `published_case_members` and `case_documents` under its R40; its R78 row, `COUNSEL_MATTER_NOT_PUBLISHED`, answered by R28.
 - `case-grammar`: `whatChangedOf` (its R8).
-- `publication`: `cases`, `published_cases`, `published_case_members` and `case_documents` under its R40; `publishedEditionsOf` (its R37); `ratifiedCases` (its R43); `stampEdition` (its R62, T33-64).
-- `case-tensions` (T33-62): `caseTensions` (its R4, was `publication` R50), R9 (c).
+- `case-tensions` (T33-62): `caseTensions` (its R4), R9 (c).
 - `events` (T33-64): `registerEventSource` (its R30), R26.
-- `project-roster` (T45; N892): `projectScope` (its R23), for R28. A `modules.json` edge (103 → 35). `publication`: its R78 row, `COUNSEL_MATTER_NOT_PUBLISHED`, answered by R28.
+- `project-roster` (T45; N892): `projectScope` (its R23), for R28.
+- `record-grammar`: `canonicalJson`, `sha256HexSync`, `parseFrontmatter`, `isMachineIdentity`.
+- `signatures`: `verifySshsig` (its R2); `NS_DOCKET` and `docketStatement` (its R39, R40).
 
 ### Invariants
 - **R16** One way: a public entry is never altered or deleted; only a whole-store purge clears this module's tables, and a bundle purge leaves the docket standing. (DEC-116 items 6, 7; DEC-12, DEC-19)
