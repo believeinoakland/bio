@@ -30,3 +30,7 @@ T47-44 complete on job/T47/plan-work; details in the record's Completion section
 - Tests: plan-work 50/50. Users' tests: 75 failing, the identical set before my change; none new. Checks: format 0, architecture 0, coverage 18/18, ownership 0; run.mjs architecture 0, coverage failures none mine.
 - Generated artifact staled: the plane bundle (input src/plan-work/index.mjs), for the layer close.
 - action-producers (T47-50, R24) can fill queue.plan-review-due.detail from R18's recurrence and since.day.
+
+**B2 (CHANGE) applied.** Merged `tranche/T47`; `test/m/plan-work/fixture.mjs` passes `caseInputs: null` to `actionRepliesOf` in place of the stale `caseAuthoring: null` (registers none, either way, on the tranche's action-replies and on T47-40's). plan-work tests 50/50; format 0, architecture 0, coverage 18/18, ownership 0.
+
+Size (session_0178ZGpF7DFhbLEP9pukeAin, after B2): test runs 5, module lines 1423
