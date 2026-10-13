@@ -19,7 +19,7 @@
  * SUCCESS RECORD (R17–R21): a member's statement of what changed and when, on evidence, with figures computed as R2
  * computes a part, a sequence that is never a cause, and a cause only on evidence other than the group's own act (the
  * reader `actions` registers, R19). A success record is never a consequence part (R23). An outcome (a success, a harm
- * addressed, a cure) is carried into a case's next edition only through `case-authoring.carryOutcome` (R22).
+ * addressed, a cure) is carried into a case's next edition only through `case-inputs.carryOutcome` (R22; T47, N908).
  *
  * T46 (N911, R24): each success record is a `success_record` record object (`SUC-`, record-grammar R59), promoted through
  * `promotion` with history, audit and export as a part is (R14); one held in this module's rows before T46 is promoted at
@@ -53,7 +53,8 @@
  *   entities       `readEntity` (R10: the person entity, its label and aliases); default `entitiesOf(host)`.
  *   people         `sourceLinkSight(person)` (its R34; N600): the source↔person link's sight, null when no link is
  *                  held (R10, R16); default `peopleOf(host)`.
- *   caseAuthoring  `carryOutcome` (its R71; R22); default `caseAuthoringOf(host)`. (T45) conformance's
+ *   caseInputs     `carryOutcome` (its R9; R22): the one instance for the host, `caseInputsOf(host)` (its R16), unless
+ *                  given (T47, N908: `case-authoring` R71 before). (T45) conformance's
  *                  `determinationVoided`, `curesOf` (its R33, R37; R1, R22); civil-time's `isCalendarDate`, `parseEdtf`
  *                  (R17); membership's `noSuchProject`, `listenerRefusal` (R17, R19).
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
@@ -72,7 +73,7 @@ import { moneyOf } from "../money/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { peopleOf } from "../people/index.mjs";
-import { caseAuthoringOf } from "../case-authoring/index.mjs";
+import { caseInputsOf } from "../case-inputs/index.mjs";
 import { isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { isCalendarDate, parseEdtf } from "../civil-time/index.mjs";
@@ -120,7 +121,7 @@ export const STATEMENT_MAX = 2000;
 export const SUCCESS_LIMITS = Object.freeze({ evidence: 50, figures: 20, sequence: 1000 });
 /** R20 (T45): the longest page of success records. */
 export const SUCCESS_PAGE_MAX = 200;
-/** R22 (T45): what an outcome carried into a case's next edition is (case-authoring R71's kinds). */
+/** R22 (T45): what an outcome carried into a case's next edition is (case-inputs R9's kinds, `case-grammar`'s `OUTCOME_KINDS`). */
 export const CARRY_KINDS = Object.freeze({ success: "success", addressed: "harm_addressed", cure: "cure" });
 /** R19 (T45), R25 (T46): the keys of the sentences a success record's read answers beside its sequence and its absent
  *  cause; their words are `words.json`'s, read by key (`CONSEQUENCES_WORDS`). */
@@ -309,13 +310,13 @@ export class Consequences {
 
   constructor({ storage, record, membership, promotion, host = null, conformance = null, content = null,
                 provenance = null, inquiry = null, strength = null, money = null, calculations = null, entities = null,
-                people = null, caseAuthoring = null, passageText = null, now = null } = {}) {
+                people = null, caseInputs = null, passageText = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, conformance, content, provenance, inquiry, strength, money, calculations, entities, people,
-                   caseAuthoring, passageText };
+                   caseInputs, passageText };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
 
@@ -329,7 +330,7 @@ export class Consequences {
   get calculations() { return this.#deps.calculations ||= (this.#deps.host ? calculationsOf(this.#deps.host) : null); }
   get entities() { return this.#deps.entities ||= (this.#deps.host ? entitiesOf(this.#deps.host) : null); }
   get people() { return this.#deps.people ||= (this.#deps.host ? peopleOf(this.#deps.host) : null); }
-  get caseAuthoring() { return this.#deps.caseAuthoring ||= (this.#deps.host ? caseAuthoringOf(this.#deps.host) : null); }
+  get caseInputs() { return this.#deps.caseInputs ||= (this.#deps.host ? caseInputsOf(this.#deps.host) : null); }
 
   /* R19 (T45): the one registered reader of the group's own acts (`actions` fills it). */
   #ownActReader = null;
@@ -1384,7 +1385,8 @@ export class Consequences {
   }
 
   /* ===================================================================== *
-   * R22 (T45): CARRYING AN OUTCOME INTO THE CASE'S NEXT EDITION, only through case-authoring's `carryOutcome` (its R71).
+   * R22 (T45): CARRYING AN OUTCOME INTO THE CASE'S NEXT EDITION, only through case-inputs' `carryOutcome` (its R9; T47, N908),
+   * reached on the one case-inputs instance for the host (`caseInputsOf`); its refusals and answer pass through unchanged.
    * Only text and cites pass: figures, sequence and cause stay here, unpublished, so a carried outcome states no cause.
    * ===================================================================== */
 
@@ -1419,11 +1421,11 @@ export class Consequences {
       if (cure.ok === false) return cure;
       out = { record: cure.determination, ref: cure.standard, kind: CARRY_KINDS.cure, text, cites: cure.cites, on: cure.on };
     }
-    const ca = this.caseAuthoring;
+    const ci = this.caseInputs;
     const by = memberOf(author);
     const at = this.#when();
     return this.record.transact(() => {
-      const r = ca.carryOutcome({ case: caseId, kind: out.kind, text: out.text, cites: out.cites, on: out.on, by });
+      const r = ci.carryOutcome({ case: caseId, kind: out.kind, text: out.text, cites: out.cites, on: out.on, by });
       if (!r || r.ok !== true) return r;
       this.sql.exec(`INSERT INTO consequence_carries (record_id, kind, ref, case_id, outcome, by, at) VALUES (?,?,?,?,?,?,?)`,
                     out.record, out.kind, out.ref, String(caseId), String(r.outcome), str(author), at);
@@ -1573,7 +1575,7 @@ function standingLink(res, standard) {
 /* R22: evidence ids as case-account R5's cites: a passage by its content id, a finding by its id. */
 const citesOf = (ids) => ids.map((x) => (HEX64.test(String(x)) ? { kind: "passage", ref: String(x) } : { kind: "finding", ref: String(x) }));
 
-/* R22: case-authoring's `by` is the member's own id, the stamp without its `member:` mark. */
+/* R22: case-inputs' `by` is the member's own id, the stamp without its `member:` mark. */
 const memberOf = (who) => (str(who) ? str(who).replace(/^member:/, "") : null);
 
 /** R17: a real calendar date (`civil-time.isCalendarDate`) or an EDTF band (`civil-time.parseEdtf`). */
