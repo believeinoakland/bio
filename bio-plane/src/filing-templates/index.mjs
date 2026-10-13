@@ -112,6 +112,20 @@ export function noTemplateGrant() {
   /* END DEC-49 REGION is-no-template-grant */
 }
 
+/** R30, R32 (K231, K3124: one code, one site): THE ONE ANSWER of C-125.4 `TEMPLATE_BLANK_UNKNOWN`, a provided service.
+ *  The refusal with its row, naming the first blank of `text` outside FILING_BLANKS (`blanksOf`, R19), `extra`'s fields
+ *  merged; or null when every blank `text` names is in FILING_BLANKS. R2's text check (R3, R4, R6) and R15's profile
+ *  read answer through it, and `filings` calls it for a member's own words (its R56). `why` follows the named blank in
+ *  the detail (R15's read: the template is not offered). Writes nothing and never throws. */
+export function blankUnknownRefusal(text, extra = null, why = "") {
+  const { unknown } = blanksOf(text);
+  if (!unknown) return null;
+  /* DEC-49 REGION is-template-blank */
+  return refuse("TEMPLATE_BLANK_UNKNOWN", `{{${unknown}}} is not a blank filings fill${typeof why === "string" ? why : ""}`,
+                { ...(extra && typeof extra === "object" ? extra : {}), blank: unknown });
+  /* END DEC-49 REGION is-template-blank */
+}
+
 /** R26: a template's handle: its name case-folded, each run of characters other than ASCII letters and digits one `-`,
  *  no `-` at either end ("Records request" → `records-request`); null for a name with no ASCII letter or digit. */
 export function templateHandle(name) {
@@ -296,10 +310,10 @@ export class FilingTemplates {
     return out;
   }
   /* R15, R28: why a profile template is not offered, as a refusal, or null (a group template: null). In order: a blank
-     outside FILING_BLANKS (R30's one site), a file template on a court's kind, an attribution that lacks a part. */
+     outside FILING_BLANKS (R30, R32's one site), a file template on a court's kind, an attribution that lacks a part. */
   #profileRefusal(t) {
     if (!t || t.origin !== "profile") return null;
-    const blank = this.#blankUnknown(t.profileTemplate.text, ", so this template is not offered", { template: t.id });
+    const blank = blankUnknownRefusal(t.profileTemplate.text, { template: t.id }, ", so this template is not offered");
     if (blank) return blank;
     if (t.use === "file" && t.court) return this.#courtPetition(t.kind, t.profiles[0], { template: t.id });
     const lacks = FilingTemplates.#lacks(t.profileTemplate);
@@ -523,23 +537,13 @@ export class FilingTemplates {
     /* END DEC-49 REGION is-template-shape */
     return null;
   }
-  /* R30 (K231: one code, one site): the one answer of C-125.4 `TEMPLATE_BLANK_UNKNOWN`, naming the first blank of `text`
-     outside FILING_BLANKS (`blanksOf`, R19), or null when it names none. Both conditions call it: R2's text check of a
-     group's draft (R3, R4, R6) and R15's read of a profile template, each with its own words after the named blank. */
-  #blankUnknown(text, why, extra) {
-    const { unknown } = blanksOf(text);
-    if (!unknown) return null;
-    /* DEC-49 REGION is-template-blank */
-    return refuse("TEMPLATE_BLANK_UNKNOWN", `{{${unknown}}} is not a blank filings fill${why}`, { ...extra, blank: unknown });
-    /* END DEC-49 REGION is-template-blank */
-  }
   /* R2, R12: a text and any notes. */
   #textRefusal(text, notes) {
     /* DEC-49 REGION is-template-text */
     if (typeof text !== "string" || !text.trim() || WELL_FORMED.test(text) || utf8(text) > FILING_TEXT_MAX)
       return refuse("TEMPLATE_TEXT_REFUSED", `a template's words are non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes`,
                     { max_bytes: FILING_TEXT_MAX });
-    const blank = this.#blankUnknown(text, "", { blanks: Object.keys(FILING_BLANKS) });
+    const blank = blankUnknownRefusal(text, { blanks: Object.keys(FILING_BLANKS) });
     if (blank) return blank;
     if (notes !== undefined && notes !== null && (typeof notes !== "string" || notes.length > TEMPLATE_NOTES_MAX || WELL_FORMED.test(notes)))
       return refuse("TEMPLATE_NOTES_REFUSED", `a version's notes are text of at most ${TEMPLATE_NOTES_MAX} characters`, { max: TEMPLATE_NOTES_MAX });

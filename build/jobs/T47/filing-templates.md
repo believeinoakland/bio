@@ -173,20 +173,22 @@ The text as a member reads it:
 > {{group}}
 > {{date}}
 
+- **R32** (B3 CHANGE, K3124): the one site is provided: `blankUnknownRefusal(text, extra)` (was the private `#blankUnknown`), exported; R2's check and R15's read answer through it; the row's `where` names it; `filings` R56 calls it. Tests: `r32.test.mjs` (the answer naming the blank, extra merged; control null; a draft's refusal equal to the export's); `r30.test.mjs` re-pointed to the export.
+
 **Deferred:** none of my own.
 
 **Found in another module** (reported as J2):
 1. `filings` `#fill` (index.mjs:594) throws instead of leaving an unfilled marker when a blank in `FILING_BLANKS` has no value in the record (against `filings` R3). R31 makes it reachable: `filings` tests 93 pass, 4 fail with R31 (97/97 before). The fix is `filings`' (T47-90, R55).
-2. `filings` index.mjs:685 spells C-125.4 `TEMPLATE_BLANK_UNKNOWN` itself for a member's own words: a third site, against K231/K275. Closing it needs this module to export its one function as a provided service and `filings` to call it (a requirement change; offered in J2).
+2. `filings` index.mjs:685 spells C-125.4 `TEMPLATE_BLANK_UNKNOWN` itself for a member's own words: a third site, against K231/K275. Taken by BOB (K3124): R32 here, `filings` R56 calls it.
 3. Generated artifacts made stale: the plane bundle and `program.mjs` (rule 5 (4)).
 
 **Tests and checks**
-- `node --test bio-plane/test/m/filing-templates/`: tests 70, pass 70, fail 0.
+- `node --test bio-plane/test/m/filing-templates/`: after R32, tests 72, pass 72, fail 0.
 - Users (P11): filings 93/97 (the 4 above, red only with R31); wizard-scripts 82/82; action-producers 45/45; affordances 238/245, answer-envelope 25/33, control-plane 235/242, plane 218/223: the same failures on the tranche without my change (inherited, rule 5).
-- `format`: 0 failures. `architecture` (filing-templates): 0 failures. `coverage` (filing-templates): 31 of 31 live ids named by a test, 0 failures. `ownership` (tranche/T47): 8 files, 0 failures.
+- `format`: 0 failures. `architecture` (filing-templates): 0 failures. `coverage` (filing-templates): 32 of 32 live ids named by a test, 0 failures. `ownership` (tranche/T47): 8 files, 0 failures.
 - `checks/run.mjs` over the product: format 0, architecture 0 (3,106 files), channels 0; coverage 36 failures, all other modules' ids not yet met in T47 (rule 5 (1)), none of mine.
 
-Size (session_01Ake8QYuohMnTaZ46LkyKsD): test runs 7, module lines 1879
+Size (session_01Ake8QYuohMnTaZ46LkyKsD): test runs 9, module lines 1882
 
 ## J1 · QUESTION
 

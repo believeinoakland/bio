@@ -11,7 +11,7 @@ import * as ft from "../../../src/filing-templates/index.mjs";
 
 const A = V("alice"), B = V("bob");
 const ROW = ft.FILING_TEMPLATE_CHECKS.TEMPLATE_BLANK_UNKNOWN;
-const SITE = { fn: "#blankUnknown", region: "is-template-blank" };
+const SITE = { fn: "blankUnknownRefusal", region: "is-template-blank" };
 const answered = (r) => [r.ok, r.reason, r.code, r.check, r.translation];
 const BLANK = [false, "TEMPLATE_BLANK_UNKNOWN", "TEMPLATE_BLANK_UNKNOWN", "C-125.4", ROW.translation];
 /* the harbour profile with one template whose text names `text`'s blanks, attributed whole (R15's four parts) */
@@ -62,7 +62,7 @@ test("R30 C-125.4 TEMPLATE_BLANK_UNKNOWN: a group's draft, revision and proposal
   assert.equal(cw.ft.templateRead({ template: "TPL-test-r30", viewer: A }).blank_unknown, undefined);
 });
 
-test("R30 the row's where names the one site, #blankUnknown, its region found there, and no other site of the module spells the code (the census arm); its code, number and translation unmoved", async () => {
+test("R30 the row's where names the one site, blankUnknownRefusal (R32), its region found there, and no other site of the module spells the code (the census arm); its code, number and translation unmoved", async () => {
   assert.equal(ROW.where, `src/filing-templates/index.mjs ${SITE.fn} > ${SITE.region}`);
   assert.equal(ROW.check, "C-125.4");
   assert.equal(ROW.translation, "The words name a blank that no filing fills. Use only the blanks filings fill, written {{name}}.");
@@ -71,8 +71,8 @@ test("R30 the row's where names the one site, #blankUnknown, its region found th
   const [i, j] = [src.indexOf(open), src.indexOf(close)];
   assert.ok(i > 0 && j > i, "the region is in the module's index");
   assert.equal(src.indexOf(open, i + 1), -1, "one region");
-  const fnAt = src.lastIndexOf(`${SITE.fn}(`, i);
-  assert.ok(fnAt > 0 && !src.slice(fnAt, i).includes("\n  }\n"), "the region is inside #blankUnknown");
+  const fnAt = src.lastIndexOf(`function ${SITE.fn}(`, i);
+  assert.ok(fnAt > 0 && !src.slice(fnAt, i).includes("\n  }\n"), "the region is inside blankUnknownRefusal");
   /* the code, as a string the module answers, is spelled inside that region alone */
   const spelled = [...src.matchAll(/"TEMPLATE_BLANK_UNKNOWN"/g)].map((m) => m.index);
   assert.ok(spelled.length >= 1);
