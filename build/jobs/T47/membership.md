@@ -92,3 +92,7 @@ Size (session_016WwjpKLhCxuVTMA1W4e1CC): test runs 18, module lines 3,762.
 ## J3 · COMPLETE
 
 B2 applied (replaces J2's COMPLETE, which I posted before reading B2): tranche/T47 merged; R133 met — every exported *_CHECKS table and its rows frozen (five tables and one row were not), tested by name in t47-check-tables.test.mjs (frozen, writes throw, one row per code across tables with a negative control, module-level refusals carry their row; 2 of 4 fail on the unfrozen tables). membership 223/223; members.test.mjs unchanged (R132, 3 red until T47-75); format, architecture, coverage 99/99, ownership: 0 failures. Record updated.
+
+## J4 · QUESTION
+
+R140's parenthetical names the tolerated names at this job's merge as screens-entry, screens-wizards, screens-investigate, screens-publish, screens-action. But build/modules.json on tranche/T47 still gives case-inputs (L8) and action-records (L9) no paths: their jobs have not run. My reading, which I am building: the rule governs ('the tolerated names are exactly those still without paths'), so the test tolerates by name the seven new modules (T47's six and screens-entry) only while each is pathless, and today that is all seven; the parenthetical is read as the screens alone being at issue for this job. Nothing waits on the answer; say if you read it otherwise, or if you will correct the parenthetical.
