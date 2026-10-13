@@ -46,3 +46,7 @@ Size (session_01RqNJSwaQHYSnZPXzUrGVfv): test runs 9, module lines 2171
 ## J2 · REPORT
 
 affordances' test "R12: each new module's op map holds exactly the ops graded for it" (bio-plane/test/m/affordances/t33.test.mjs:147) is red since people's map serves peopledirectory (R37), which no grade table holds yet; it turns green with L11's T47-48 (grade) and T47-53 (op-declarations R61). Not people's to change. Also: op-declarations/t38.test.mjs:76 is red on tranche/T47 and green on my branch, unrelated to people.
+
+## J3 · COMPLETE
+
+T47-92 applied: R37 peopleDirectory / op=peopledirectory, on J1's readings (B2, K3106). people 53/53; users' tests 26 fail on base and branch, the only new one the affordances R12 red reported in J2; format, architecture, coverage (37/37), ownership 0 failures. Record: build/jobs/T47/people.md on job/T47/people.
