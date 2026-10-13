@@ -52,6 +52,9 @@
   --c-elsewhere: #4B4F7A;
   --c-elsewhere-tint: #E8E9F2;
   --c-focus: #1D4E44;
+  --c-kind-money: #773AC1;
+  --c-kind-part: #0092C3;
+  --c-kind-mention: #DF407F;
   color-scheme: light;
 
   /* type: the three voices */
@@ -117,6 +120,9 @@
   --c-elsewhere: #AEB2E6;
   --c-elsewhere-tint: #24263B;
   --c-focus: #9AD8C7;
+  --c-kind-money: #A473FF;
+  --c-kind-part: #007BAA;
+  --c-kind-mention: #D5305F;
   color-scheme: dark;
   --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 8px 24px rgb(0 0 0 / .5);
 } }
@@ -152,6 +158,9 @@
   --c-elsewhere: #AEB2E6;
   --c-elsewhere-tint: #24263B;
   --c-focus: #9AD8C7;
+  --c-kind-money: #A473FF;
+  --c-kind-part: #007BAA;
+  --c-kind-mention: #D5305F;
   color-scheme: dark;
   --shadow-float: 0 1px 2px rgb(0 0 0 / .4), 0 8px 24px rgb(0 0 0 / .5);
 }
@@ -189,6 +198,9 @@
   --c-elsewhere: #4B4F7A;
   --c-elsewhere-tint: #E8E9F2;
   --c-focus: #1D4E44;
+  --c-kind-money: #773AC1;
+  --c-kind-part: #0092C3;
+  --c-kind-mention: #DF407F;
   color-scheme: light;
 }
 .cs[data-theme] { background: var(--c-ground); color: var(--c-ink); }

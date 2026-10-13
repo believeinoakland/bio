@@ -78,6 +78,15 @@
      "modules": [
       "setup-page"
      ]
+    },
+    {
+     "op": "unlock",
+     "label": "Unlock",
+     "status": "declared",
+     "onTranche": "origin/tranche/T47",
+     "modules": [
+      "credentials"
+     ]
     }
    ],
    "journeys": [
@@ -1095,6 +1104,154 @@
    ]
   },
   {
+   "id": "dash-home",
+   "name": "Home as a dashboard (three arrangements)",
+   "frame": "working",
+   "purpose": "Treatments for S20 (Bob's direction of 11 October, K2803; DEC-214; his direction of 13 October, DEC-216: a complete home, the rail on every dashboard): one complete home in three orders: C, what needs you first, then each area at a glance; A, each area first with what needs you inside it; B, the instrument panel, ten readings in fixed places under a collapsed rail. Needs the group, the projects table, what changed since you last looked.",
+   "acts": [
+    {
+     "op": "release",
+     "label": "Vouch for photos",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "ratification"
+     ]
+    },
+    {
+     "op": "adoptversion",
+     "label": "Adopt the newer version",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "keepversion",
+     "label": "Keep the version you cited",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "filingapprove",
+     "label": "Approve the text",
+     "status": "function",
+     "modules": [
+      "filings"
+     ]
+    },
+    {
+     "op": "taskresolve",
+     "label": "Act on an item",
+     "status": "declared",
+     "modules": [
+      "tasks"
+     ]
+    },
+    {
+     "op": "promote",
+     "label": "Open a question",
+     "status": "declared",
+     "modules": [
+      "action-producers",
+      "basis-versions",
+      "control-plane",
+      "promotion"
+     ]
+    },
+    {
+     "op": "startfrom",
+     "label": "Start from…",
+     "status": "function",
+     "modules": [
+      "wizard-scripts"
+     ]
+    }
+   ],
+   "journeys": []
+  },
+  {
+   "id": "dash-action",
+   "name": "The Action dashboard",
+   "frame": "working",
+   "purpose": "An area dashboard in three tiers (DEC-214): status (clocks running, our move, their move, replies to read), what needs you, then every action with whose move it is and its clock as a sentence.",
+   "acts": [
+    {
+     "op": "filingapprove",
+     "label": "Approve the text",
+     "status": "function",
+     "modules": [
+      "filings"
+     ]
+    },
+    {
+     "op": "reminderanswer",
+     "label": "Answer a reminder",
+     "status": "declared",
+     "modules": [
+      "action-clocks"
+     ]
+    },
+    {
+     "op": "taskresolve",
+     "label": "Start the next step",
+     "status": "declared",
+     "modules": [
+      "tasks"
+     ]
+    },
+    {
+     "op": "actioncreate",
+     "label": "Start an action",
+     "status": "declared",
+     "modules": [
+      "actions"
+     ]
+    }
+   ],
+   "journeys": [
+    22
+   ]
+  },
+  {
+   "id": "dash-project",
+   "name": "A project's dashboard",
+   "frame": "working",
+   "purpose": "A project as a dashboard (DEC-214): the next steps for the member here, in order, each the act itself; the project at a glance; the story so far as a timeline in brief; who works on it and how busy it is.",
+   "acts": [
+    {
+     "op": "release",
+     "label": "Vouch for photos",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "ratification"
+     ]
+    },
+    {
+     "op": "adoptversion",
+     "label": "Adopt the newer version",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "keepversion",
+     "label": "Keep the version you cited",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    }
+   ],
+   "journeys": [
+    15
+   ]
+  },
+  {
    "id": "unavailable",
    "name": "Can't open this",
    "frame": "working",
@@ -1829,9 +1986,10 @@
      ]
     },
     {
-     "op": "owed:projectaikeepaway DEC-188",
+     "op": "projectaikeepaway",
      "label": "Keep the project's material away from AI, with a reason",
-     "status": "owed"
+     "status": "declared",
+     "servedBy": "op-declarations R41 (BOB's B172: declared and served, T47)"
     }
    ],
    "journeys": []

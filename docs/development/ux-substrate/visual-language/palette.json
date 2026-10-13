@@ -31,7 +31,10 @@
   "machine-tint": "#ECEEF0",
   "elsewhere": "#4B4F7A",
   "elsewhere-tint": "#E8E9F2",
-  "focus": "#1D4E44"
+  "focus": "#1D4E44",
+  "kind-money": "#773AC1",
+  "kind-part": "#0092C3",
+  "kind-mention": "#DF407F"
  },
  "dark": {
   "ground": "#11181C",
@@ -64,7 +67,10 @@
   "machine-tint": "#232B32",
   "elsewhere": "#AEB2E6",
   "elsewhere-tint": "#24263B",
-  "focus": "#9AD8C7"
+  "focus": "#9AD8C7",
+  "kind-money": "#A473FF",
+  "kind-part": "#007BAA",
+  "kind-mention": "#D5305F"
  },
  "pairs": {
   "text": [
@@ -300,6 +306,18 @@
    ],
    [
     "muted",
+    "surface"
+   ],
+   [
+    "kind-money",
+    "surface"
+   ],
+   [
+    "kind-part",
+    "surface"
+   ],
+   [
+    "kind-mention",
     "surface"
    ]
   ]

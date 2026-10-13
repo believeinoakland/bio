@@ -40,7 +40,7 @@ function wizardGuide(w) {
     <p class="mk-small muted">Stopping is fine: nothing is lost, and nobody is told.</p></div></div></aside>`;
 }
 function mast(c, s) {
-  return `<header class="cs-mast"><span class="grp">${G.name}</span><span class="spacer"></span>
+  return `<header class="cs-mast"><span class="cs-mark" role="img" aria-label="Civicsmith"><svg viewBox="0 0 60 90"><use href="#i-mark"/></svg></span><span class="grp">${G.name}</span><span class="spacer"></span>
     <span class="mk-mastsearch">${I('search')}<span>Search</span></span>
     <button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-lvltoggle aria-label="Explanations: Alt+Shift+I switches" data-tip="<b>Explanations</b>: promptly, every explanation opens when you rest on something for half a second. On a longer pause, marks and names still do; what screens, sections and acts are waits a second and a half, so less opens while you move. Keyboard focus and a tap always show everything at once. Click or press Alt+Shift+I to switch.">${I('question')}<span class="mk-hide-phone">${typeof window !== 'undefined' && window.CS_LEVEL === 1 ? 'On a longer pause' : 'Explain promptly'}</span></button>
     ${c.ai ? `<button type="button" class="cs-btn" data-tone="quiet" aria-label="The assistant">${I('machine')}<span class="mk-hide-phone">Assistant</span></button>` : ''}
@@ -51,7 +51,7 @@ function mast(c, s) {
 // names the thing shown (a question's words, a person's name); the path names the screen.
 const PATH = {
   site: ['civicsmith.org'], install: ['Civicsmith', 'Create your group'], update: ['Civicsmith', 'Update'], front: ['Lakeshore Tenants'], forgot: ['Lakeshore Tenants', 'Forgot your password'], tour: ['Lakeshore Tenants', 'How we work'], 'help-records': ['Help', 'How a records request works'], reset: ['Lakeshore Tenants', 'Choose a new password'], 'review-outside': ['Lakeshore Tenants', 'Review copy'],
-  group: ['Settings', 'Your group'], settings: ['Settings'], projects: ['Projects'], people: ['People'], unavailable: ['Can\'t open this'], setup: ['Set up', 'Places and languages'], join: ['Lakeshore Tenants', 'Your invitation'],
+  group: ['Settings', 'Your group'], settings: ['Settings'], projects: ['Projects'], people: ['People'], 'dash-home': ['Home'], 'dash-action': ['Action'], 'dash-project': ['The Coliseum lease'], unavailable: ['Can\'t open this'], setup: ['Set up', 'Places and languages'], join: ['Lakeshore Tenants', 'Your invitation'],
   doorbell: ['Lakeshore Tenants', 'Hand material over'], published: ['Lakeshore Tenants', 'Published cases', 'The Coliseum lease'],
   home: ['Home'], queue: ['Queue'], 'due-date': ['Queue', 'Due date'], inbox: ['Queue', 'Inbox'],
   finder: ['Find'], capture: ['Add'], held: ['Add', 'Held captures'], archive: ['Add', 'Held captures', 'Archive'], 'open-file': ['Projects', 'The Coliseum lease', 'Opening a file'],
@@ -178,6 +178,7 @@ function decorate(html, id, c) {
   if (typeof document === 'undefined') return html;
   const t = document.createElement('template'); t.innerHTML = html; const R = t.content;
   const set = (el, tip, lvl, go) => { if (!el || el.dataset.tip) return; el.dataset.tip = tip; if (lvl) el.dataset.level = lvl; if (go) el.dataset.goto = go; };
+  set(R.querySelector('.cs-mast .cs-mark'), '<b>Civicsmith</b>: the plumb bob is Civicsmith\'s mark. Wherever you see it, you are in your group\'s own Civicsmith, and the name beside it says whose.', 2);
   set(R.querySelector('.cs-mast .grp'), GROUP_CARD, 1, 'group-identity');
   set(R.querySelector('.mk-mastsearch'), '<b>Search</b>: everything your group holds, documents, questions, people and more. Press / to start typing.', 2);
   set(R.querySelector('.cs-mast [aria-label="The assistant"]'), '<b>The assistant</b>: opens beside your work. It answers only from what your group holds, on the account that serves you, and never concludes, signs or sends.', 2);

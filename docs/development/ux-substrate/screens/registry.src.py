@@ -15,7 +15,7 @@ screen('install', 'Create your Civicsmith group', 'setup', 'The founder\'s link 
 screen('update', 'Update your group\'s Civicsmith', 'setup', 'The hosting account\'s holder updates the group\'s Civicsmith to a signed release; records, members and settings are kept (installer R1, DEC-201).',
   [('bootstrap','Continue to Cloudflare to update')], [1])
 screen('front', 'Your group\'s page', 'public', 'The group\'s own landing page at its address (Bob\'s D2, K3060): who it is, what it has published, handing it material, how it works; members sign in beside it, with an own device kept signed in (locks after 30 minutes away, signs out after 12 hours) or a shared one (signed out after 15 minutes away) (D3, K3061); refused, paused, signed out, ended and locked (credentials R4, R38; DEC-201, DEC-202).',
-  [('login','Sign in')], [3,28])
+  [('login','Sign in'),('unlock','Unlock')], [3,28])
 screen('tour', 'How we work, step by step', 'public', 'The walk-through for anyone, offered on the group\'s page before joining (Bob\'s D7, K3060): what the group looks into, how a finding shows its source and its strength, what it publishes and who signs it, handing it material, and how people join (DEC-205).',
   [], [3])
 screen('reset', 'Choose a new password', 'public', 'The administrator\'s one-time reset link opens here: the member chooses a new password, keeping their handle and work; a used, expired or withdrawn link says so (Bob\'s D4, K3060; DEC-201, DEC-205).',
@@ -60,6 +60,12 @@ screen('wizards', 'Wizards', 'working', 'The group\'s wizard library: offered, d
 
 # --- daily work
 screen('projects', 'Projects', 'working', 'Every project the member may see, with its owner, questions and stage (projectlist; DEC-201).', [('promote','Start a project')], [6])
+screen('dash-home', 'Home as a dashboard (three arrangements)', 'working', 'Treatments for S20 (Bob\'s direction of 11 October, K2803; DEC-214; his direction of 13 October, DEC-216: a complete home, the rail on every dashboard): one complete home in three orders: C, what needs you first, then each area at a glance; A, each area first with what needs you inside it; B, the instrument panel, ten readings in fixed places under a collapsed rail. Needs the group, the projects table, what changed since you last looked.',
+  [('release','Vouch for photos'),('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('filingapprove','Approve the text'),('taskresolve','Act on an item'),('promote','Open a question'),('startfrom','Start from…')], [])
+screen('dash-action', 'The Action dashboard', 'working', 'An area dashboard in three tiers (DEC-214): status (clocks running, our move, their move, replies to read), what needs you, then every action with whose move it is and its clock as a sentence.',
+  [('filingapprove','Approve the text'),('reminderanswer','Answer a reminder'),('taskresolve','Start the next step'),('actioncreate','Start an action')], [22])
+screen('dash-project', 'A project\'s dashboard', 'working', 'A project as a dashboard (DEC-214): the next steps for the member here, in order, each the act itself; the project at a glance; the story so far as a timeline in brief; who works on it and how busy it is.',
+  [('release','Vouch for photos'),('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited')], [15])
 screen('unavailable', 'Can\'t open this', 'working', 'An address that leads nowhere, something the member may not see, and the group\'s Civicsmith out of reach (DEC-201).', [], [3])
 screen('queue', 'Your queue', 'working', 'To do, Noticed and Status, grouped by case (DEC-110, DEC-131).',
   [('taskresolve','Act on an item'),('taskforward','Forward to a member'),('proposedispose','Dismiss with a reason'),('queuesnooze','Snooze to a date'),('queuemute','Mute a kind'),
@@ -84,7 +90,7 @@ screen('find-in', 'Find in this', 'working', 'One control on a document, a held 
 screen('project', 'Project', 'working', 'A project\'s home: objective, bar, questions, stage, plans, members.',
   [('promote','Open a question'),('drawquestion','Draw on a question from elsewhere'),('findin','Find in this project'),('projectbarset','Set this project\'s bar'),('projectinvite','Invite a member to the project'),('projectjoin','Join'),('planopen','Plan what to do')], [6,9,15])
 screen('projectai', 'AI for this project', 'working', 'Who pays for the assistant\'s work in a project: its own API key, or its sole member\'s sign-in; what it pays for; its limits; its use summed, naming no member; keeping the project\'s material away from AI; every change, seen by every owner (DEC-188).',
-  [('projectkeyset','Hold the project\'s API key'),('projectsigninset','Use your own sign-in for the project'),('projectaccountswitch','Switch the project\'s account on or off'),('projectaccountremove','Remove the project\'s account'),('projectkeynoticeseen','Read what the project\'s key means'),('accountusesset','Set what the project\'s account pays for'),('ailimitset','Set a limit on the project\'s account'),('owed:projectaikeepaway DEC-188','Keep the project\'s material away from AI, with a reason')], [])
+  [('projectkeyset','Hold the project\'s API key'),('projectsigninset','Use your own sign-in for the project'),('projectaccountswitch','Switch the project\'s account on or off'),('projectaccountremove','Remove the project\'s account'),('projectkeynoticeseen','Read what the project\'s key means'),('accountusesset','Set what the project\'s account pays for'),('ailimitset','Set a limit on the project\'s account'),('projectaikeepaway','Keep the project\'s material away from AI, with a reason')], [])
 screen('question', 'Question', 'working', 'A question and what supports it or cuts against it; strength against the bar; concluding.',
   [('cite','Cite a passage'),('sever','Remove a citation'),('reinstate','Reinstate'),('narrow','Narrow the question'),('conclude','Conclude'),('withdrawconclusion','Withdraw the conclusion'),
    ('hypothesishold','Keep a hunch'),('planopen','Plan what to do'),('checkrequest','Ask for a check by expertise'),
