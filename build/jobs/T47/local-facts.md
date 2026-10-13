@@ -21,3 +21,7 @@
 **Checks** (process repository) · format: 165 modules, 164 requirements files; 0 failures · architecture local-facts: 16 product files, 51 relative imports; 0 failures · coverage local-facts: 17 of 17 live requirement ids named by a test; 0 failures · ownership local-facts tranche/T47: 5 files changed; 0 failures · `checks/run.mjs`: architecture 3066 product files, 9360 relative imports, 0 failures; coverage 41 failures, every one another module's T47 ids not yet met (rule 5.1), none local-facts'; channels 0 failures.
 
 Size (session_01G56L1KMznsLn8FVL1J9JKD): test runs 2, module lines 1383
+
+## J1 · COMPLETE
+
+T47-14 applied: R17. RULE_SECTION_UNKNOWN is now built in one place, rules.mjs sectionRefusal; ruleDraft and groupRules both call it. C-126.7's where moves to 'src/local-facts/rules.mjs sectionRefusal > is-rule-section' (red in the row census until T48's stamp, rule 5 (2)). New t47.test.mjs has three tests naming R17; t46's row pin follows the moved where. 63/63 pass. format, architecture, coverage (17/17) and ownership: 0 failures. run.mjs: architecture 0 failures; coverage reds are all other modules' (rule 5.1). Made stale, not written: the plane bundle, release/bio-plane.bundled.mjs and newgroup's release.mjs and bundle. Nothing found in other modules. Details in the record.
