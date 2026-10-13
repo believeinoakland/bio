@@ -47,3 +47,7 @@ T47-32 complete on `job/T47/case-authoring` (merged `tranche/T47` through K3112)
 - Tests: case-authoring 190/190. Checks: format 0, architecture 0, coverage 48/48, ownership 0; run.mjs architecture 0, coverage failures none of mine.
 - Reds this merge opens in users (vs `tranche/T47` run the same way): review invariants.test.mjs (moved `DRAFTS_READ_MAX`; T47-33; NOT in rule 5 (8)'s list, please name it); action-replies R3 x3, R8 (T47-40); affordances R1 R12 R24, R14 R9 R18, R19 x2 (T47-49); control-plane R20 x3, R45, R64 x2 (T47-65); plane R17, R38, R39 (+ R33, not established as mine; its file failed to load on the baseline) (T47-66). consequences, case-check, tasks, op-declarations: nothing new.
 - Generated artifact staled: the plane bundle (inputs lose `src/case-authoring/schema.mjs`), rule 5 (4).
+
+## J3 · COMPLETE
+
+B4 applied after merging tranche/T47 (K3117): photos.test.mjs' photoMarks stand-in answers case-carriage R22's obscured {copy, label, marked, kind: "photo"}; the photo rows expect kind "photo", and documents.test.mjs' member-document copy expects kind "document" as case-carriage now hands it (its other R14 arm, red after the merge the same way). case-authoring tests 190/190; format 0, architecture 0, coverage 48/48, ownership 0. Record updated.
