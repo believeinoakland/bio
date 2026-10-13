@@ -23,11 +23,17 @@ CREATE TABLE IF NOT EXISTS credentials (
 -- whose sessions were held as tokens is carried over as their digests at boot
 -- (Credentials#migrate), so they stay live and no token stays stored.
 CREATE TABLE IF NOT EXISTS sessions (
-  token_sha TEXT PRIMARY KEY,
-  role      TEXT NOT NULL,
-  expires   INTEGER NOT NULL,
-  created   TEXT NOT NULL
+  token_sha    TEXT PRIMARY KEY,
+  role         TEXT NOT NULL,
+  expires      INTEGER NOT NULL,
+  created      TEXT NOT NULL,
+  device       TEXT,
+  last_active  INTEGER,
+  reauth_until INTEGER
 );
+-- R65 (T47; K3061 D3): 'device' is 'own' or 'shared' (NULL, a session made before the column, reads 'shared');
+-- 'last_active' the instant (ms) of its last request not marked background, NULL read as the boot that carried it;
+-- R66: 'reauth_until' the end (ms) of the window the password asked again opens, NULL for none.
 CREATE INDEX IF NOT EXISTS sessions_expires ON sessions(expires);
 CREATE INDEX IF NOT EXISTS sessions_role ON sessions(role);
 
@@ -300,9 +306,11 @@ CREATE TABLE IF NOT EXISTS ai_keep_away (
   uses   TEXT
 );
 
--- R43 (DEC-156; K1819): that a member is connected through their own Claude subscription, and since when. A FACT
--- ONLY: no login, no code from Anthropic's page, no token and no digest of any of them; the sign-in lives in the
--- member's own agent-runner container, where the Claude Code binary wrote it. Seen by its member alone.
+-- R43 (DEC-156; K1819): that a member is connected through their own Claude subscription, and since when. Seen by its
+-- member alone. (T47; R70, K3060 D10, K3061 D10, replacing K1819's "never holds a token") 'sealed' and 'iv' hold the
+-- sign-in's token, sealed as a reference is (R23) under 'member:<id>', kind 'signin'; no digest is kept. A row with no
+-- token (every connection made before T47) answers not connected. 'valid_until' is the instant the binary stated the
+-- token lasts to, NULL when it stated none; 'refused_at' the instant Anthropic refused it (the token then dropped).
 CREATE TABLE IF NOT EXISTS subscription_connections (
   member_id TEXT PRIMARY KEY,
   since     TEXT NOT NULL,
@@ -318,8 +326,26 @@ CREATE TABLE IF NOT EXISTS subscription_connections (
   use_enquire    INTEGER NOT NULL DEFAULT 1,
   use_read       INTEGER NOT NULL DEFAULT 1,
   use_transcribe INTEGER NOT NULL DEFAULT 1,
-  use_account    INTEGER NOT NULL DEFAULT 1
+  use_account    INTEGER NOT NULL DEFAULT 1,
+  sealed         TEXT,
+  iv             TEXT,
+  valid_until    TEXT,
+  refused_at     TEXT
 );
+
+-- R69 (T47; K3060 D4): an administrator's one-time password reset link for a member. Only the link's SHA-256 is kept,
+-- never the link: who it is for, who made it and when, when it expires (7 days), and when it was spent (a reset) or
+-- ended (a newer link, or the member's revocation). At most one is live per member. Never exported.
+CREATE TABLE IF NOT EXISTS password_reset_links (
+  link_sha   TEXT PRIMARY KEY,
+  member_id  TEXT NOT NULL,
+  made_by    TEXT NOT NULL,
+  made_at    TEXT NOT NULL,
+  expires_at INTEGER NOT NULL,
+  spent_at   TEXT,
+  ended_at   TEXT
+);
+CREATE INDEX IF NOT EXISTS password_reset_links_member ON password_reset_links(member_id);
 
 -- R54 (T40; N812, D34, K2353): a project's one AI account, set by one of its owners: an Anthropic API key ('apikey',
 -- sealed as the group key is, under 'project:<id>'; no digest) or the acting owner's own sign-in ('signin', holding
@@ -419,6 +445,15 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
   ["keyed_services", "form", "TEXT"],
   /* R63 (T47): the run a segment's credential is bound to; NULL for every earlier credential */
   ["ai_credentials", "run", "TEXT"],
+  /* R65, R66 (T47): a session's device, its last activity and its re-ask window */
+  ["sessions", "device", "TEXT"],
+  ["sessions", "last_active", "INTEGER"],
+  ["sessions", "reauth_until", "INTEGER"],
+  /* R70 (T47): a sign-in's held token, sealed, and what is known of its life */
+  ["subscription_connections", "sealed", "TEXT"],
+  ["subscription_connections", "iv", "TEXT"],
+  ["subscription_connections", "valid_until", "TEXT"],
+  ["subscription_connections", "refused_at", "TEXT"],
   /* R55 (T40; N812): every account's switch for each kind of use. The defaults keep today's behaviour (ask, draft and
      run on; explore 'no'); `standing` and `suggestions` keep their stored values (R25, R37). */
   ["account_references", "use_ask", "INTEGER NOT NULL DEFAULT 1"],
@@ -461,7 +496,7 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
 export const CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap", "signers", "ai_credentials",
   "account_references", "keyed_services", "ai_grants", "group_key", "group_key_acts", "group_key_notices",
   "signin_window", "security_counts", "security_pending", "security_key", "recovery_codes", "recoveries",
-  "subscription_connections", "ai_keep_away"];
+  "subscription_connections", "ai_keep_away", "password_reset_links"];
 
 /* R30 (plan T33, Rules (6)): each table's classes for record-core's `declareTable` (its R21), declared explicitly.
    Every table is purge-exempt (R18) and never expunged. Account references, keyed-service keys, password hashes,
@@ -483,6 +518,8 @@ export const CREDENTIALS_TABLES = Object.freeze([
   ["signin_window", "never", "group"], ["security_counts", "never", "group"], ["security_pending", "never", "group"],
   ["security_key", "never", "group"], ["recovery_codes", "never", "group"], ["recoveries", "never", "group"],
   ["subscription_connections", "never", "owner"], ["ai_keep_away", "admin-only", "group"],
+  /* R69 (T47): the reset links, as the recovery codes are */
+  ["password_reset_links", "never", "group"],
 ].map(([name, exp, sight]) => Object.freeze({ name, ...CLASSES, export: exp, sight })));
 
 /* R30, R61 (T41): the change history of every account, one table keyed by `owner` (the requirements' T41

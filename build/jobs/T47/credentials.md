@@ -1,6 +1,6 @@
 # credentials (T47)
 
-**Status** · session_011wSZT8CGnm3MLDqCvn7JJo · depth 2 · COMPLETE · handled B2
+**Status** · session_01Csi1Fo3kzaT6U7ZrzWhbum · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -68,3 +68,113 @@ These are in my tests path. I did not change them in this job: fixing them is a 
 - `checks/run.mjs`: architecture 3060 files, 0 failures; coverage's 12 failures are other modules' T47 ids (rule 5 (1)), none of them credentials'.
 
 Size (session_011wSZT8CGnm3MLDqCvn7JJo): test runs 8, module lines 4027
+
+## J3 · QUESTION
+
+T47-81: my readings, which I am building now. Answer only where you want otherwise.
+
+1. **`SESSION_LOCKED`.** R65 names no code for an act under a locked session. Your way-in draft (§4 item 1, and admission's T47-77) names a row `SESSION_LOCKED` minted here. I mint it once, in C-29, as an in-plane read `sessionLockedRefusal` for admission to relay. My own acts under a locked session answer it too: `passwordChange` and `aiGrantMint`. Locked `session()` answers `locked: true` with no capability, `administer` false and `rootOfTrust` false, so a gate that misses the flag grants nothing.
+2. **`REAUTH_DUE`.** R66's row is minted by an in-plane `reauthDue({token})`. It answers null while the session's window is open and the refusal otherwise, a locked or ended session included. Admission (T47-77) relays it, and so does whichever gate serves `accountreferenceset` and the sign-in's `start`; this module receives no session stamp on those acts. `reauth` on a locked session also clears the lock, since it is the same password. A wrong password is `SIGN_IN_REFUSED`, counted under R38 as `unlock`'s is.
+3. **The founder as an account holder (R70, C5).** The founder (`admin`, once claimed) counts as active wherever R22's refusals ask "active". That covers `subscriptionTokenHold` and `subscriptionConnected`, and also disconnecting, the switches (R55), the state (R23) and recovery codes (R68). Otherwise the founder could hold a token they could not drop. The alternative is R70's hold alone.
+4. **R70's "clearing a project's sign-in (R54) drop the token".** A project's sign-in account holds no token of its own: it uses its member's held token. So removing or replacing a project's sign-in account (`projectAccountRemove`, `projectKeySet`, `projectSigninSet`) leaves the member's own token in place. Her token is dropped by her disconnection, her revocation, or Anthropic's refusal (R43, R16, `subscriptionTokenRefused`); each of those also clears every project's sign-in account of hers, as today. The alternative is that a project owner's removal of a sign-in account also disconnects that member personally.
+5. **R68's refusal.** `recoveryCodesIssue` by anyone but an active member or the claimed founder (a machine, unstamped, revoked) can no longer be `NOT_AN_ADMIN`. It gets a new row, `RECOVERY_CODES_NOT_A_MEMBER` (C-96.53, beside `RECOVERY_REFUSED`). `RECOVERY_REFUSED`'s translation is re-worded from "administrator" to "member" (a row change for the census).
+6. **R69's rows (C-29).** These are `RESET_LINK_DEAD` (look and reset, one answer for every dead arm) and `RESET_LINK_MEMBER_NOT_ACTIVE` (the make, for anyone but an active member; the founder recovers by codes or ADMIN_TOKEN). A dead link in `passwordReset` is counted under R38 and in R44's `signin`, as a refused recovery is. The ops are `passwordresetlink`, `passwordresetlook` and `passwordreset`, with the link from the body only, never the query.
+7. **R65's `shared` cap.** A `shared` session keeps R4's `ttlSeconds` cap (12 hours by default) beside its 15 minutes of idle time. An `own` one is capped at 30 days. The `session` route reads `background=1` from the query as "not activity"; that flag is control-plane's to send.
+8. **REPORT (membership):** the handle `admin` is not reserved. R16's handle pattern lets a member enrol as `admin`, while R67 makes `admin` the founder's handle. Such a member could sign in only by role, never by handle. Membership should reserve the handle `admin`. I map `admin` to the founder before asking `memberByHandle`, so no member can sign in as the founder.
+
+## J4 · COMPLETE
+
+T47-81 complete (R65–R71). Commits on `job/T47/credentials`: the job, then one fix found by the users' tests.
+
+**Reading set (mechanics §17).** I read whole: the requirements (public and private), `index.mjs`, `schema.mjs`, `checks.mjs`, layers.md's layer 2 contract, the plan's T47-81, and the way-in and L6-connect drafts' credentials sections. Two helpers each read in full and wrote a digest citing each section (K2032):
+- the module's 23 test files, 5,494 lines;
+- the public parts of membership, record-core and record-grammar, `requirements/README.md`, and the requirement lines of the users that name these services.
+
+**Entries applied**
+- **R65 sessions by device and inactivity.**
+  - `login` takes `device` (`own` or `shared`; absent or anything else is `shared`). It is recorded on the session and answered.
+  - Activity is any `session()` read not marked `background` (the route reads `background=1`); a read while locked is not activity.
+  - A `shared` session ends after 15 idle minutes, and keeps R4's `ttlSeconds` cap (R71 (7)).
+  - An `own` session locks after 30 idle minutes, ends 12 hours after it locked, and ends in any case 30 days after its sign-in.
+  - A locked `session()` answers `locked: true` with no capability, `administer` false and `rootOfTrust` false.
+  - `unlock({token, password})` is under R38's window and compared as R41 states. A wrong password is `SIGN_IN_REFUSED`, counted, leaving the session locked.
+  - New session columns, additive: `device`, `last_active`, `reauth_until`. A row with no `last_active` counts as active now: `migrate` sets it at boot, and so do other modules' fixtures, which insert sessions directly.
+- **R66 / R71 (2).**
+  - `reauth` opens a 5-minute window, answered as `session().reauthUntil`.
+  - `reauth` also clears a lock. A wrong password is `SIGN_IN_REFUSED`, counted.
+  - `reauthDue({token})` is the in-plane one site of `REAUTH_DUE` (C-29.42). It answers null inside the window, and the refusal otherwise, a locked or unknown session included.
+- **R71 (1).** `SESSION_LOCKED` (C-29.43) is minted once, by the exported static `Credentials.sessionLockedRefusal()`. `passwordChange` and `aiGrantMint` answer it under a locked session, and an ask grant is not admitted while its session is locked. Sign-out is served while locked.
+- **R67 sign-in by handle.**
+  - `login` and `recover` take a `handle`, which wins over `role`. `admin` is the founder's, mapped before `membership.memberByHandle`.
+  - An unknown handle becomes the role `handle:<h>`, under which no credential is held. Every arm is therefore one refusal at one cost (tested within 5×).
+  - The window is keyed by the resolved role.
+- **R68 / R71 (5).**
+  - Any active member, or the claimed founder, issues codes; anyone else is refused `RECOVERY_CODES_NOT_A_MEMBER` (C-96.53).
+  - `recover` serves any active member's role.
+  - `RECOVERY_REFUSED`'s translation and detail now say "member".
+- **R69 / R71 (6).**
+  - `passwordResetLinkMake`, `passwordResetLook` and `passwordReset`, on the ops `passwordresetlink`, `passwordresetlook` and `passwordreset`. The link is read from the body only.
+  - A new table, `password_reset_links`: only the SHA-256 of a link, with `made_by` and `made_at`. It is declared never exported and exempt from purge.
+  - One live link per member; it lasts 7 days.
+  - The reset is under R38's window. It sets the password as R3 does, ends every session of the member, and spends the link.
+  - `RESET_LINK_DEAD` (C-29.46) is one answer for every dead arm (unknown, expired, spent, superseded, or ended by revocation, R16). A dead reset is counted under R38 and R44.
+  - `RESET_LINK_MEMBER_NOT_ACTIVE` is C-29.47.
+- **R70 / R71 (3), (4).**
+  - `subscriptionTokenHold` seals the token under `member:<id>`, kind `signin`, in new columns of `subscription_connections`. It records the fact and a `signin_set` change, and answers `{ok, since}`.
+  - Its refusals are `ACCOUNT_MEMBER_NOT_ACTIVE` and `SUBSCRIPTION_TOKEN_MALFORMED` (C-29.45).
+  - `valid_until` is computed from `validFor` when that is a whole number of days or years ("1 year", "30 days", or a bare number of days).
+  - "Connected" now means a token is held. A fact with none answers not connected, and the cascade goes on.
+  - `accountFor` answers `key` for a held sign-in, at the member's level and the project's. A project's sign-in account whose member holds no token is `SIGNIN_NOT_HELD` (C-29.44).
+  - `subscriptionTokenRefused` drops the token, records `refused_at`, records a change, and clears her projects' sign-in accounts.
+  - Disconnection and revocation drop the token with the row, as before. Removing or replacing a project's sign-in account leaves the member's token.
+  - `accountReferenceState.subscription` is `{connected, since, held, valid_until?, refused_at?, uses}`.
+  - The claimed founder counts as active wherever R22's refusals ask it (`#holderActive`).
+- **R16.** Revocation also ends the member's live reset links.
+
+**Improvement made (P8).** My T47-9 test of R63 read the credential's `expired` at the real clock, outside its fake clock, so it went red once today passed the minting instant plus 6 hours. It now reads at the mint's instant. This was a test flaw, not a code flaw.
+
+**Tests changed for the amended requirements.** None was weakened; each change follows a requirement:
+- a fixture `signin(id)`, which holds a sentinel token, replaces the bare `subscriptionConnected` wherever a test needs a serving sign-in (R70);
+- the session's and login's shapes and the session columns (R65, R66);
+- recovery codes for ordinary members (R68);
+- the founder may hold an account (R71 (3));
+- the row and route censuses gain the new rows and routes;
+- the seam's table counts gain `password_reset_links`.
+
+New file: `t47-signin.test.mjs`, 22 tests naming R65–R71, each limit tested at a fake clock one second either side, each refusal with its control.
+
+**Size.** Module lines: 4,027 → 4,433 (+406). The job's whole diff: 16 files, +1,072 / −159.
+
+**Deferred:** none.
+
+**Found in other modules (REPORT).** The tests of credentials' users (P11), run on this branch and on `tranche/T47` and compared. Every red that is new on this branch has one of two causes.
+1. **R70: a bare `subscriptionConnected` no longer serves.** Each of these tests connects a sign-in by the fact alone, and each needs `subscriptionTokenHold` (or a fixture that holds a token) and a `key` on a sign-in account:
+   - ai-runs `scheduler.test.mjs` and `t46.test.mjs` (6);
+   - ai-use `limits.test.mjs` R2 (1; its other 5 reds are on the base);
+   - answers `standing.test.mjs` R19 (1);
+   - question-explorer `choosing.test.mjs` R3 (1);
+   - notice-producers `accounts.test.mjs` (8, via its `setup`);
+   - plane `t46.test.mjs` R33 (1; the "no secret for a sign-in" test that T47-66 retires).
+
+   Their L6 and L11 entries (T47-20, -70, -66, and the users' own) re-point to the held token. notice-producers, answers and question-explorer have no T47 entry for this as far as I can see, so BOB should place them.
+2. **My five new routes have no spec yet.** op-declarations R19 and R30 (2 new reds) list `unlock`, `reauth`, `passwordresetlink`, `passwordresetlook` and `passwordreset` as served without a spec. T47-53 (R58) adds them.
+
+**Same on both branches.** case-authoring (1), affordances (2), answer-envelope (1) and plane R5/R9 (1) are red on both, accepted under rule 5. reading-pipeline's 2 reds on the base did not recur here.
+
+**No generated artifact.** No generated artifact reads credentials directly; the plane bundle is staled as by any merge (rule 5 (4)).
+
+**For the gates (no change made here).**
+- `session()` now answers `device`, `locked` and `reauthUntil`.
+- control-plane should send `background=1` for background requests and pass `handle` and `device` to `login`.
+- admission relays `sessionLockedRefusal` and `reauthDue`.
+- `src/gate.mjs`' running comment list of codes does not yet name C-29.42–.47 or C-96.53.
+
+**Checks.**
+- Module tests: `node --test test/m/credentials/` gives 201 pass, 0 fail.
+- `format`: 0 failures.
+- `architecture`: 0 failures for credentials (27 files).
+- `coverage`: 70 of 70 live ids named by a test, 0 failures.
+- `ownership`: 0 failures.
+- `checks/run.mjs`: format, architecture and channels at 0. Coverage has 45 failures, none of them credentials'; all are other modules' not-yet-met ids (rule 5 (1)).
+
+Size (session_01Csi1Fo3kzaT6U7ZrzWhbum): test runs 34, module lines 4433

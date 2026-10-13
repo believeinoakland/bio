@@ -6,7 +6,7 @@
    id is tested with a negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, realWorld, PASSWORD, SEAL } from "./fixture.mjs";
+import { world, realWorld, PASSWORD, SEAL, SIGNIN_TOKEN } from "./fixture.mjs";
 import { ACCOUNT_CHECKS, USE_KINDS, USE_SWITCHES, EXPLORE_VALUES, CREDENTIALS_PROJECT_TABLES, Credentials, credentialsOf }
   from "../../../src/credentials/index.mjs";
 import { notAnAdmin, noSuchProject, notTheOwner } from "../../../src/membership/index.mjs";
@@ -26,7 +26,7 @@ async function projectWorld(opts) {
   assert.equal(w.join("P", "ann", "bob").ok, true);
   w.project("S", "cy");
   w.project("D", "dee", "discoverable");
-  w.c.subscriptionConnected({ member: "cy" });
+  await w.signin("cy");
   return w;
 }
 
@@ -225,7 +225,7 @@ test("R54 projectKeySet holds an Anthropic API key, replacing any earlier accoun
 
 test("R54 projectSigninSet makes the acting owner's own sign-in the project's account, holding no secret: PROJECT_NOT_SOLE_MEMBER (C-29.34) while the project has any other participant, owners included; SIGNIN_NOT_CONNECTED (C-29.35) when the owner is not connected; each writing nothing", async () => {
   const w = await projectWorld();
-  w.c.subscriptionConnected({ member: "ann" });
+  await w.signin("ann");
   const before = w.snapshot();
   /* P has bob joined: refused, whether ann is connected or not */
   const r = w.c.projectSigninSet({ project: "P", by: "ann" });
@@ -243,7 +243,7 @@ test("R54 projectSigninSet makes the acting owner's own sign-in the project's ac
     [{ kind: "signin", sealed: null, iv: null, member_id: "cy", is_on: 0 }], "no secret, only the member it is; off when first set");
   /* a second owner joined: refused (owners included) */
   assert.equal(w.join("D", "dee", "eve").ok, true);
-  w.c.subscriptionConnected({ member: "dee" });
+  await w.signin("dee");
   assert.equal(w.c.projectSigninSet({ project: "D", by: "dee" }).reason, "PROJECT_NOT_SOLE_MEMBER");
   /* replacing: a key replaces the sign-in, and a sign-in a key */
   await w.c.projectKeySet({ project: "S", key: KEY, by: "cy" });
@@ -256,7 +256,7 @@ test("R54 a sign-in account serves only while its member is the project's only p
   const w = await projectWorld();
   w.c.projectSigninSet({ project: "S", by: "cy" });
   w.c.projectAccountSwitch({ project: "S", on: true, by: "cy" });
-  const signin = { ok: true, kind: "signin", level: "project", project: "S", member: "cy" };
+  const signin = { ok: true, kind: "signin", level: "project", project: "S", member: "cy", key: SIGNIN_TOKEN("cy") };   /* (T47) R70 */
   assert.deepEqual(await w.c.accountFor({ member: "cy", act: act("ask", "cy", "S") }), signin);
   assert.deepEqual(w.c.projectAccountState({ project: "S", viewer: "cy" }).serving, true);
   /* eve joins: not refused; the account stops serving at once */
@@ -265,7 +265,8 @@ test("R54 a sign-in account serves only while its member is the project's only p
   assert.deepEqual([st.held, st.on, st.serving], [true, true, false]);
   assert.deepEqual(w.c.projectAccountState({ project: "S", viewer: "eve" }), { ok: true, on: true, serving: false }, "a joined participant");
   /* the cascade goes on: cy's own sign-in serves her, eve has nothing; then the group's */
-  assert.deepEqual(await w.c.accountFor({ member: "cy", act: act("ask", "cy", "S") }), { ok: true, kind: "signin", level: "member", member: "cy" });
+  assert.deepEqual(await w.c.accountFor({ member: "cy", act: act("ask", "cy", "S") }), { ok: true, kind: "signin", level: "member", member: "cy",
+    key: SIGNIN_TOKEN("cy") });
   assert.equal((await w.c.accountFor({ member: "eve", act: act("ask", "eve", "S") })).reason, "NO_ACCOUNT");
   await w.c.groupKeySet({ key: "sk-group", by: "admin" });
   w.c.groupKeySwitch({ on: true, by: "admin" });
@@ -277,7 +278,7 @@ test("R54 a sign-in account serves only while its member is the project's only p
   /* cleared when her sign-in is */
   w.c.subscriptionDisconnect({ member: "cy", by: "cy" });
   assert.equal(w.c.projectAccountState({ project: "S", viewer: "cy" }).held, false);
-  w.c.subscriptionConnected({ member: "cy" });
+  await w.signin("cy");
   w.c.projectSigninSet({ project: "S", by: "cy" });
   w.m.memberSet({ memberId: "cy", status: "revoked", by: "admin" });
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM project_accounts WHERE project_id='S'`).n, 0, "and by her revocation (R16)");

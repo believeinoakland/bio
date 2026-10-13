@@ -4,16 +4,17 @@
    (R35, which reads R43's fact); a `subscription` reference stored before T38 is never answered and is removed at the
    module's migration, the member's state then showing none (R23). The ask grant mints for a member a sign-in serves
    (R27). (T41; N796, Bob K2425) Their standing questions are governed by their sign-in's own `standing` switch (R55),
-   off by default: T38's refusal of a sign-in (K2275) is lifted (R32). */
+   off by default: T38's refusal of a sign-in (K2275) is lifted (R32). (T47; R70, K3060 D10) A sign-in serves only while
+   its token is held here, and `accountFor` answers that token as its `key` for the one call it serves. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, PASSWORD } from "./fixture.mjs";
+import { world, PASSWORD, SIGNIN_TOKEN } from "./fixture.mjs";
 import { ACCOUNT_CHECKS, ACCOUNT_KINDS } from "../../../src/credentials/index.mjs";
 
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
 const refusal = (code) => ({ ok: false, reason: code, code, check: ACCOUNT_CHECKS[code].check, translation: ACCOUNT_CHECKS[code].translation });
 const TOKEN = "sk-ant-oat01-T38-SENTINEL-4c1e";
-const signin = (member) => ({ ok: true, kind: "signin", level: "member", member });
+const signin = (member) => ({ ok: true, kind: "signin", level: "member", member, key: SIGNIN_TOKEN(member) });   /* (T47) R70 */
 
 /* A reference of the retired kind, as a store written before T38 holds it (sealed bytes need not open: it is never read). */
 const plantSubscription = (w, id) => w.sql.exec(`INSERT INTO account_references (member_id, kind, sealed, iv, set_at, suggestions, standing)
@@ -46,16 +47,16 @@ test("R22 the kind is `apikey` only: `subscription` (and any other) is refused U
   assert.deepEqual((await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" })).kind, "apikey");
 });
 
-test("R35 R43 a member with no reference of their own who is connected is answered {kind: signin, level: member, member}, carrying no secret, for each of their own acts; their own key comes first, the sign-in before the group key (no notice asked); it writes nothing", async () => {
+test("R35 R43 R70 a member with no reference of their own who is connected is answered {kind: signin, level: member, member} (T47: with her held token as key), for each of their own acts; their own key comes first, the sign-in before the group key (no notice asked); it writes nothing", async () => {
   const w = await world().group("ann", "bob");
-  w.c.subscriptionConnected({ member: "ann" });
+  await w.signin("ann");
   w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });   /* R55: standing off by default */
   const before = w.snapshot();
   for (const kind of ["ask", "draft", "run", "standing"])
     for (const [member, actor] of [["ann", "ann"], ["member:ann", "ann"], ["ann", "member:ann"]]) {
       const r = await w.c.accountFor({ member, act: { kind, member: actor } });
       assert.deepEqual(r, signin("ann"), `${kind} ${member} ${actor}`);
-      assert.deepEqual(Object.keys(r), ["ok", "kind", "level", "member"], "no key, no secret");
+      assert.deepEqual(Object.keys(r), ["ok", "kind", "level", "member", "key"], "(T47; R70) the held token, for this call");
     }
   /* any act but the member's own is refused as before */
   for (const act of [null, { kind: "ask" }, { kind: "ask", member: "bob" }, { kind: "export", member: "ann" }, { kind: "run", member: "class:ai" }])
@@ -78,7 +79,7 @@ test("R35 R43 a member with no reference of their own who is connected is answer
   w.c.groupKeyNoticeSeen({ member: "ann", by: "ann" });
   assert.equal((await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).level, "group");
   /* connected again: the sign-in again, before the group key */
-  w.c.subscriptionConnected({ member: "ann" });
+  await w.signin("ann");
   assert.deepEqual(await w.c.accountFor({ member: "ann", act: { kind: "run", member: "ann" } }), signin("ann"));
   /* revoked: the fact is cleared (R16) and nothing serves her */
   w.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" });
@@ -87,7 +88,7 @@ test("R35 R43 a member with no reference of their own who is connected is answer
 
 test("R35 while the group keeps its material away the sign-in is refused AI_KEPT_AWAY like every account, before the fact is read", async () => {
   const w = await world().group("ann");
-  w.c.subscriptionConnected({ member: "ann" });
+  await w.signin("ann");
   w.c.aiKeepAwaySet({ on: true, reason: "an order", by: "admin" });
   const r = await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } });
   assert.deepEqual([r.reason, r.keep_away.reason], ["AI_KEPT_AWAY", "an order"]);
@@ -102,7 +103,7 @@ test("R35 R23 R24 R25 a `subscription` reference stored before T38 is never answ
   const bobStanding = (await w.c.aiGrantMintStanding({ member: "bob", question: "q" })).token;
   plantSubscription(w, "ann");
   plantSubscription(w, "cy");
-  w.c.subscriptionConnected({ member: "cy" });
+  await w.signin("cy");
   /* a standing grant of ann's, minted while her token served (as a store before T38 may hold) */
   w.sql.exec(`INSERT INTO ai_grants (grant_sha, member_id, session, expires, kind) VALUES (?, 'ann', '', ?, 'standing')`,
     "a".repeat(64), Date.now() + 600e3);
@@ -124,29 +125,30 @@ test("R35 R23 R24 R25 a `subscription` reference stored before T38 is never answ
     assert.deepEqual(w.c.accountReferenceState({ member: id, viewer: id }),
       { ok: true, held: false, kind: null, set_at: null, suggestions: false, standing: false, uses: null,
         subscription: id === "cy" ? { connected: true, since: w.c.accountReferenceState({ member: "cy", viewer: "cy" }).subscription.since,
-                                      uses: { ask: true, draft: true, run: true, standing: false, explore: "no", enquire: true, read: true, transcribe: true, account: true, suggestions: false } }
-                                  : { connected: false, since: null, uses: null } }, id);
+                                      held: true, uses: { ask: true, draft: true, run: true, standing: false, explore: "no", enquire: true, read: true, transcribe: true, account: true, suggestions: false } }
+                                  : { connected: false, since: null, held: false, uses: null } }, id);
   assert.deepEqual(await w.c.accountFor({ member: "bob", act: ask("bob") }), { ok: true, kind: "apikey", level: "member", key: "sk-bob" });
   const after = w.snapshot();
   w.c.migrate();
   assert.equal(w.snapshot(), after, "a later boot changes nothing");
 });
 
-test("R43 the connected fact is what R35 reads: recorded by subscriptionConnected, cleared by the member's own disconnect and by revocation; it holds no login, and R35's answer carries none", async () => {
+test("R43 R70 the connected fact is what R35 reads: (T47) recorded with its held token, cleared by the member's own disconnect and by revocation; it holds no login, and R35's answer carries only the held token", async () => {
   const w = await world().group("ann");
   const s = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
   assert.equal(typeof s, "string");
   assert.equal(w.c.subscriptionConnected({ member: "ann", token: TOKEN }).reason, "SUBSCRIPTION_LOGIN_REFUSED");
   assert.equal((await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } })).reason, "NO_ACCOUNT", "a refused call records nothing");
-  w.c.subscriptionConnected({ member: "ann" });
+  await w.signin("ann");
   const r = await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } });
   assert.deepEqual(r, signin("ann"));
   assert.ok(!JSON.stringify([r, w.snapshot()]).includes(TOKEN));
+  assert.ok(!w.snapshot().includes(SIGNIN_TOKEN("ann")), "(T47; R70) the held token only sealed");
 });
 
 test("R27 R32 R25 a member served by their own sign-in is granted an ask (no notice asked, the group key on or off); refused NO_ACCOUNT once disconnected with no other account; (T41; N796) their standing questions governed by their sign-in's own standing switch, off by default, and its grant ended when the sign-in is disconnected", async () => {
   const w = await world().group("ann", "bob");
-  w.c.subscriptionConnected({ member: "ann" });
+  await w.signin("ann");
   const s = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
   const mint = () => w.c.aiGrantMint({ member: "ann", by: "ann", session: s });
   const g = await mint();

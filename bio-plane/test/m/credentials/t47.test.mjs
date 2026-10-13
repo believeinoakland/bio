@@ -146,7 +146,7 @@ test("R63 aiRunCredentialMint: in-plane, member-scoped, its run on its row, its 
     [sha(ok.token), "member", "member:ann", "ann", "RUN-1", null]);
   assert.ok(!w.snapshot().includes(ok.token.slice(4)), "the token is stored nowhere");
   /* the gate's lookup and the list answer its run, writes and expiry */
-  const look = w.c.aiCredentialLook({ secretSha: sha(ok.token) });
+  const look = await at(t0, () => w.c.aiCredentialLook({ secretSha: sha(ok.token) }));   /* at the mint's instant */
   assert.deepEqual([look.found, look.credential.run, look.credential.writes, look.credential.expiresAt, look.credential.expired,
                     look.credential.revoked, look.credential.principal, look.credential.principalKind],
     [true, "RUN-1", ["airuntick", "suggest", "airunclose"], expiresAt, false, false, "member:ann", "member"]);
@@ -183,7 +183,7 @@ test("R63 revocation: the next segment's mint revokes every earlier credential o
   assert.equal(broken.c.aiRunCredentialsEnd({ run: "RUN-A" }).ok, false);
   /* the member's sign-in disconnected: her run credentials end; cy's do not */
   const c1 = mint("cy", "RUN-C");
-  assert.equal(w.c.subscriptionConnected({ member: "ann" }).ok, true);
+  assert.equal((await w.signin("ann")).ok, true);
   const b2 = mint("ann", "RUN-B");
   assert.deepEqual(w.c.subscriptionDisconnect({ member: "ann", by: "ann" }), { ok: true, disconnected: true });
   assert.deepEqual([live(b2), live(c1)], [false, true]);

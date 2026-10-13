@@ -62,7 +62,7 @@ test("R3 setPassword stores a salted derived hash, replacing any earlier one, ne
 test("R4 login: one refusal for every failing case, same detail, same cost; success returns token and expiry", async () => {
   const w = await world().group("ann", "bob", "dee");
   const ok = await w.c.login({ role: "member:ann", password: PASSWORD("ann"), ttlSeconds: 60 });
-  assert.deepEqual(Object.keys(ok).sort(), ["expires", "ok", "role", "token"]);
+  assert.deepEqual(Object.keys(ok).sort(), ["device", "expires", "ok", "role", "token"]);   /* (T47) R65's device */
   assert.deepEqual([ok.ok, ok.role], [true, "member:ann"]);
   assert.match(ok.token, /^[0-9a-f]{64}$/);
   assert.ok(ok.expires > Date.now() && ok.expires <= Date.now() + 60_000);
@@ -123,8 +123,10 @@ test("R5 session resolves rights at each call through membership's sessionRights
   const fTok = await tok("admin", FOUNDER_PASSWORD);
   const f = w.c.session(fTok);
   assert.deepEqual({ ...f, expires: 0 }, { role: "admin", expires: 0, capabilities: [...Membership.CAPABILITIES],
-    administer: true, member: "admin", handle: null, rootOfTrust: true });
-  assert.deepEqual({ ...f, role: undefined, expires: undefined },
+    administer: true, member: "admin", handle: null, rootOfTrust: true, device: "shared", locked: false, reauthUntil: null });
+  /* (T47) beside membership's R92, R65's device and lock and R66's window */
+  const own = ({ device, locked, reauthUntil, ...rest }) => rest;
+  assert.deepEqual({ ...own(f), role: undefined, expires: undefined },
     { role: undefined, expires: undefined, ...w.m.sessionRights("admin") }, "exactly membership's R92");
   const sTok = await tok("member:second", PASSWORD("second"));
   const s = w.c.session(sTok);
@@ -137,7 +139,7 @@ test("R5 session resolves rights at each call through membership's sessionRights
   assert.equal(w.c.session(aTok).administer, false);
   for (const t of [fTok, sTok, aTok]) {
     const r = w.c.session(t);
-    assert.deepEqual({ ...r, role: undefined, expires: undefined },
+    assert.deepEqual({ ...own(r), role: undefined, expires: undefined },
       { role: undefined, expires: undefined, ...w.m.sessionRights(r.role) }, r.role);
   }
   /* an inactive member holds none (the row flipped without the session delete: the race R5 covers) */
@@ -145,7 +147,7 @@ test("R5 session resolves rights at each call through membership's sessionRights
   const r = w.c.session(aTok);
   assert.deepEqual([r.role, r.capabilities, r.administer, r.rootOfTrust], ["member:ann", [], false, false]);
   /* an unrecognised role holds none */
-  w.sql.exec(`INSERT INTO sessions (token_sha, role, expires, created) VALUES (?, 'class:probe', ?, 'x')`, sha("odd"), Date.now() + 1e6);
+  w.sql.exec(`INSERT INTO sessions (token_sha, role, expires, created, last_active) VALUES (?, 'class:probe', ?, 'x', ?)`, sha("odd"), Date.now() + 1e6, Date.now());
   assert.deepEqual([w.c.session("odd").capabilities, w.c.session("odd").administer], [[], false]);
   /* expired: null, and the row is removed */
   w.sql.exec(`INSERT INTO sessions (token_sha, role, expires, created) VALUES (?, 'admin', ?, 'x')`, sha("old"), Date.now() - 1);
