@@ -129,8 +129,9 @@ test("R123 handleCheck never says who holds a handle or that it was someone's ea
   const earlier = await w.m.handleCheck({ invite: w.inv, handle: "ann" });
   assert.deepEqual({ ...earlier, handle: "x", suggestion: "x" }, { ...current, handle: "x", suggestion: "x" });
   for (const a of [current, earlier]) assert.doesNotMatch(JSON.stringify(a), /"(member|memberId|member_id|by|holder|formerly)"/);
-  /* a member's own earlier handle reads free to them, taken to everyone else (no change is made, R129) */
-  assert.equal((await w.m.handleCheck({ viewer: V("ann"), handle: "ann" })).state, "free");
+  /* R142 (1) (T47): a member's own earlier handle, and their current one, read taken to them as to everyone else */
+  assert.equal((await w.m.handleCheck({ viewer: V("ann"), handle: "ann" })).state, "taken");
+  assert.equal((await w.m.handleCheck({ viewer: V("ann"), handle: "ann-new" })).state, "taken");
   assert.equal((await w.m.handleCheck({ viewer: V("bob"), handle: "ann" })).state, "taken");
   /* negative control: a handle nobody held is free */
   assert.equal((await w.m.handleCheck({ invite: w.inv, handle: "zed" })).state, "free");

@@ -78,7 +78,11 @@ test("R60 R44 T42 the hold's reach opens nothing inside the project: no bundle o
      `existenceAct` first (null for an ordinary member at a hidden project: NONE), then `noSuchProject`, byte for byte
      the answer for an id naming nothing */
   assert.equal(w.m.existenceAct("PROJ-H", V("dee")), null);
-  assert.deepEqual(noSuchProject("PROJ-H"), { ...noSuchProject("PROJ-NEVER"), project: "PROJ-H" });
+  /* T47-82 (P8): an act's own answer, not noSuchProject compared with itself */
+  const named = w.m.projectInvite({ projectId: "PROJ-H", handle: "dee", by: "dee", viewer: V("dee") });
+  const never = w.m.projectInvite({ projectId: "PROJ-NEVER", handle: "dee", by: "dee", viewer: V("dee") });
+  assert.deepEqual(named, noSuchProject("PROJ-H"));
+  assert.deepEqual(named, { ...never, project: "PROJ-H" });
   /* and a member at a discoverable project's EXISTENCE is answered C-70.1 with its id and name only, no owners */
   const ex = w.m.existenceAct("PROJ-D", V("dee"));
   assert.deepEqual([ex.code, ex.project, ex.name, "owners" in ex], ["PROJECT_SEEN_NOT_A_PARTICIPANT", "PROJ-D",

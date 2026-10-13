@@ -1,6 +1,9 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R132; T47's R83 order (`case-inputs`, `action-records`,
+ * Requirements: build/requirements/membership.md (R4–R142; T47's R142 (K3078: the viewer's own handles taken, C-56.6 read
+ * by key, the census of project acts), R141, the handle `admin` reserved for the founder
+ * (K3076); T47-82's R140, `screens-entry` after `interface-shell` in
+ * R83's order (K3064, K3069); T47's R133, the frozen `*_CHECKS` tables (K3037); T47's R83 order (`case-inputs`, `action-records`,
  * `screens-wizards`, `screens-investigate`, `screens-publish`, `screens-action`; T47-7, K657, K3027, N991) and R132, the
  * pre-auth `bootstrap` answer's invariant (REC-41), held by `test/members.test.mjs` (the answer is `instance-setup`'s and
  * `credentials`'; nothing here builds it); T46's R131 `join_doors` declared `export: never` (K2928);
@@ -39,7 +42,7 @@ export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES, MEMBERSHIP_DECLARE
 import { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
          CASE_AUTHORITY_CHECKS, HANDLE_WORDS } from "./checks.mjs";
 export { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
-         CASE_AUTHORITY_CHECKS, HANDLE_WORDS } from "./checks.mjs";
+         CASE_AUTHORITY_CHECKS, HANDLE_WORDS, REFUSAL_WORDS } from "./checks.mjs";
 import { recordOf } from "../record-core/index.mjs";
 
 /* The marker every generated statement carries (moved from query.mjs with `viewerPredicate`, K57). It is a SQL
@@ -266,6 +269,7 @@ export function notTheOwner(by, projectId, extra = null) {
    before `control-plane` in layer 11. T47-7 (K657, K3027, N991): `case-inputs` after `case-account` in layer 8,
    `action-records` after `action-grammar` in layer 9, `screens-wizards` after `interface-shell`, and
    `screens-investigate`, `screens-publish`, `screens-action` after `screens-inquiry` and before `control-plane`, in
+   layer 11. T47-82 (R140; K3064, K3069): `screens-entry` directly after `interface-shell`, before `screens-wizards`, in
    layer 11. */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
@@ -294,7 +298,7 @@ export const MODULE_ORDER = Object.freeze([
   /* 11 */ "wizard-scripts", "op-grades", "affordances", "tasks", "machinery-producers", "action-producers",
            "queue-producers",
            "notice-producers", "queue", "setup-page", "setup-words", "instance-setup", "op-declarations", "admission",
-           "answer-envelope", "store-door", "interface-assets", "interface-shell", "screens-wizards",
+           "answer-envelope", "store-door", "interface-assets", "interface-shell", "screens-entry", "screens-wizards",
            "screens-settings", "screens-intake", "screens-daily", "screens-inquiry", "screens-investigate",
            "screens-publish", "screens-action", "control-plane", "plane", "legacy-ui", "installer", "stewards",
 ]);
@@ -608,7 +612,7 @@ export class Membership {
   }
 
   /* R11 (section 4.8; DEC-134 (3)): the group's answer to who holds hosting access. It is asked at setup
-     (`instance-setup`'s act), never on adding an administrator, so `memberAdd` asks nothing about it. The group's answer, recorded by an administrator; append-only, the latest record is the answer. */
+     (the setup page's act, `setup-page` R15; K1851), never on adding an administrator, so `memberAdd` asks nothing about it. The group's answer, recorded by an administrator; append-only, the latest record is the answer. */
   hostingAccessSet({ holders = null, note = null, by = null } = {}) {
     if (!this.isAdministrator(by)) return notAnAdmin(by, "recording who holds hosting access (4.8)");   /* R84 */
     const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);   /* C-96.11 */
@@ -1129,7 +1133,7 @@ export class Membership {
     return !!m && m.role === "admin" && m.status === "active";
   }
 
-  /* R85 (N332, K412): a named service (control-plane R27's existence read calls it), asking no viewer: it states only
+  /* R85 (N332, K412): a named service (`store-door` R2's existence read calls it), asking no viewer: it states only
      the setting, and its callers gate what they show by R44. Total: an id the index does not hold, or one that is not
      a string, reads `hidden`, and nothing it is handed makes it throw.
      The CURRENT setting, READ FROM THE SIGHT INDEX (D-497) rather than recomputed from the act log here.
@@ -2245,8 +2249,10 @@ export class Membership {
   static HANDLE_CHECK_STATED = `at most ${Membership.HANDLE_CHECK_WINDOW.perKey} handle checks in any `
     + `${Membership.HANDLE_CHECK_WINDOW.windowMs / 60_000} minutes for one invitation or one member`;
 
-  /* Whether another member than `self` holds `handle` now, whatever their status, or held it before (R16). */
+  /* Whether another member than `self` holds `handle` now, whatever their status, or held it before (R16); and R141
+     (T47; K3076; credentials R67): `admin` is the founder's, so it is always taken, for enrolment and every check. */
   #heldByAnother(handle, self) {
+    if (handle === Membership.ROOT_ADMIN) return true;
     return !!this.#one(`SELECT 1 AS x FROM members WHERE handle=? AND member_id<>?
                         UNION ALL SELECT 1 AS x FROM handle_history WHERE from_handle=? AND member_id<>? LIMIT 1`,
       handle, self ?? "", handle, self ?? "");
@@ -2315,7 +2321,9 @@ export class Membership {
         const who = viewerPredicate(viewer).member;
         const row = who && who !== Membership.ROOT_ADMIN
           ? this.#one(`SELECT member_id, status FROM members WHERE member_id=?`, who) : null;
-        if (row && row.status === "active") { key = `member:${row.member_id}`; self = row.member_id; }
+        /* R142 (1) (T47; K3078): a member's own current and earlier handles are taken to them too (handles are fixed for
+           good, DEC-197), so the viewer arm excludes no one: `self` stays null. */
+        if (row && row.status === "active") key = `member:${row.member_id}`;
       }
       if (!key) return { ...Membership.#INVITE_MISS };
       const now = Date.now();

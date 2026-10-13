@@ -53,6 +53,14 @@ export const HANDLE_WORDS = Object.freeze({
   'handle.refused.paused': 'Too many handles checked in a short time. Try again in {minutes} minutes.',
 });
 
+/* R142 (2) (T47; K3078; DEC-198 (7), DEC-194): the refusal words of `words.json` this module's rows read by key, each `en`
+   verbatim. R128's kept exception is spent: C-56.6 reads `refusal.PROJECT_GUARD_UNCHECKED`, which now says "your group's
+   Civicsmith" (R112). */
+export const REFUSAL_WORDS = Object.freeze({
+  'refusal.PROJECT_GUARD_UNCHECKED': 'Your group\'s Civicsmith couldn\'t check whether this project\'s own rules allow that, '
+    + 'so nothing was changed. Try again in a moment.',
+});
+
 export const MEMBERSHIP_CHECKS = frozenRows({
   NOT_AN_ADMIN: Object.freeze({
     check: 'C-96.1', where: at("notAnAdmin", "is-custodial-admin"),
@@ -245,12 +253,11 @@ export const MEMBERSHIP_CHECKS = frozenRows({
   }),
   /* ===== T45 (T45-2; N893, Actions D4; R128): the project-act guard could not answer (a throw, a promise or an answer
      it does not give), so the invitation or the visibility setting fails closed. The next free number of C-56, a
-     person's acts in a project (C-56.5 is project-roster's; K107 (3), K174). The translation is MEMBERSHIP #34's draft, re-wordable by
-     the UX stream (draft-T45-lower §10). ===== */
+     person's acts in a project (C-56.5 is project-roster's; K107 (3), K174). T47 (R142 (2), K3078): its translation is
+     `words.json`'s `refusal.PROJECT_GUARD_UNCHECKED`, read by key (a row change for T48's stamp). ===== */
   PROJECT_GUARD_UNCHECKED: Object.freeze({
     check: 'C-56.6', where: at("#projectActGuarded", "is-project-guard-checked"),
-    translation: 'Whether this project\'s own rules allow that could not be checked, so nothing was changed. Try again '
-      + 'in a moment.',
+    translation: REFUSAL_WORDS['refusal.PROJECT_GUARD_UNCHECKED'],
   }),
 });
 

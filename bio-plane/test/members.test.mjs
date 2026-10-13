@@ -67,10 +67,9 @@ const t = (label, got, want) => {
 };
 
 console.log("\n--- roster administration is admin-only ---");
-/* Ruth is the SECOND member of this group, so she must be an administrator:
-   the first invitation a group issues creates a second administrator, and there
-   are no ordinary members until two exist (Membership Architecture 4.2, 4.3).
-   This suite predates that rule and used to invite her as an ordinary member. */
+/* Ruth is invited as an administrator, the group's second. (When this was written an ordinary member could not come
+   before two administrators existed, Membership Architecture 4.2, 4.3; DEC-134 (1) retired that floor, membership R12,
+   and the suite keeps her an administrator for the custodial checks below.) */
 const add = await POST("op=memberadd&token=t-admin-1", { memberId: "ruth", cover: "the CPA from Tuesday", role: "admin" });
 t("admin creates a member", add.result.ok, true);
 t("the invite appears exactly once", typeof add.result.invite, "string");
@@ -340,7 +339,7 @@ t("and the refusal CITES the decision that licenses the claim, so a member can c
 
 console.log("\n--- revocation closes every door ---");
 /* Revocation is demonstrated on an ORDINARY member. Ruth is an administrator
-   here (4.2: the second member of a group must be one), and an administrator
+   here (invited as one, above), and an administrator
    cannot be revoked by another administrator at all: that takes the section 4.7
    vote, and at two administrators it is impossible by design. This suite used
    to revoke Ruth directly, which the rule now correctly refuses. */
@@ -351,7 +350,7 @@ const men = await POST("op=enroll", { invite: add2.result.invite,
 t("the ordinary member enrols", men.result.ok, true);
 const mlg = await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" });
 const M = "token=" + mlg.result.token;
-t("and holds a live session", (await GET(`op=list&${M}`)).result.length >= 0, true);
+t("and holds a live session", Array.isArray((await GET(`op=list&${M}`)).result), true);   /* T47-82 (P8): a check that can fail */
 t("revoke", (await POST(`op=memberset&${A}`, { memberId: "meilan", status: "revoked" })).result.ok, true);
 t("revoked member's session is dead", (await GET(`op=list&${M}`)).error, "unauthenticated");
 const revoked = (await POST("op=login", { role: "member:meilan", password: "meilan-passphrase-1" })).result;

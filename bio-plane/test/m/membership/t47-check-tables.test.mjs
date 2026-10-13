@@ -72,13 +72,16 @@ test("R133 the refusals the module-level functions mint carry their one row, che
     noSuchMember("nobody"), notTheOwner("x", "PROJ-2026-1-x"),
     listenerRefusal([], "", () => {}), listenerRefusal([{ module: "m" }], "m", () => {}),
   ];
-  for (const r of minted) {
+  const carriesItsRow = (r) => {
     assert.equal(r.ok, false);
     const row = rows.get(r.code);
     assert.ok(row, `${r.code} has a row`);
     assert.deepEqual([r.check, r.translation], [row.check, row.translation], r.code);
-  }
-  /* negative control: a refusal whose translation departs from its row is seen */
-  const forged = { ...minted[0], translation: "forged" };
-  assert.notEqual(forged.translation, rows.get(forged.code).translation);
+  };
+  for (const r of minted) carriesItsRow(r);
+  /* negative control (T47-82, P8: the same check, run on forgeries, so it can fail): a translation or check departing
+     from its row, and a code with no row, are each refused */
+  assert.throws(() => carriesItsRow({ ...minted[0], translation: "forged" }));
+  assert.throws(() => carriesItsRow({ ...minted[1], check: "C-0.0" }));
+  assert.throws(() => carriesItsRow({ ...minted[2], code: "NO_SUCH_CODE" }));
 });

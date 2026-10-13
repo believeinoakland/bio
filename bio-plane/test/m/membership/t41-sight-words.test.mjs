@@ -71,7 +71,7 @@ test("R43 T41 an administrator, the founder included, sees a hidden project and 
   assert.deepEqual(seen(w, V("second")), ["INFO-I"], "an inactive administrator is no administrator");
 });
 
-test("R44 R13 T41 EXISTENCE has two forms: a member outside a discoverable project, and an administrator neither invited nor joined to a hidden one", async () => {
+test("R44 T41 EXISTENCE has two forms: a member outside a discoverable project, and an administrator neither invited nor joined to a hidden one", async () => {
   const w = await d54World();
   for (const v of ADMINS) {
     assert.equal(w.m.sight("PROJ-H", v), EXISTENCE, `${v}: H`);

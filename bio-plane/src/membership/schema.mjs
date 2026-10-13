@@ -198,9 +198,10 @@ CREATE TABLE IF NOT EXISTS group_description (
   at          TEXT NOT NULL
 );
 
--- R124 (DEC-186 (1)-(3)): EVERY CHANGE A MEMBER MAKES TO THEIR OWN HANDLE, append-only: never deleted or rewritten
--- (R57). A handle a member held before (from_handle) stays taken for every other member (R16, R124), so "formerly"
--- never names another member; R17's rows read it as "formerly". Exempt from purge with the members (R115).
+-- (was R124's; DEC-186 (1)-(3)) EVERY CHANGE A MEMBER MADE TO THEIR OWN HANDLE, append-only: never deleted or
+-- rewritten (R57). Since T46 no handle is changed (DEC-197, R129), so nothing appends a row; the rows changes made
+-- before then left stand, and a handle a member held before (from_handle) stays taken for every other member (R16).
+-- Exempt from purge with the members (R115).
 CREATE TABLE IF NOT EXISTS handle_history (
   seq         INTEGER PRIMARY KEY AUTOINCREMENT,
   member_id   TEXT NOT NULL,
@@ -253,7 +254,7 @@ export const MEMBERSHIP_ADDITIVE_COLUMNS = [
 export const MEMBERSHIP_EXEMPT_TABLES = ["members", "member_expertise", "admin_votes", "hosting_access",
   /* R111 (T34): the doors, the group's description and the court-notice setting. */
   "join_doors", "group_description", "court_notice",
-  /* R124, R123 (T40): the handle history and the handle check's window. */
+  /* R57, R16 (was R124's, T40) and R123: the handle history and the handle check's window. */
   "handle_history", "handle_check_window"];
 /* R131 (T46; K2928): the tables declared through record-core's `declareTable` (its R21) with classes of their own rather
    than its default form. `join_doors` holds each door's `secret_hash`, so it is `export: never`: no export, an
