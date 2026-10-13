@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
 L9 merge order: action-records first (K624), then conformance, consequences, action-grammar, actions (before action-clocks: `actionZone` moves to it, R100), action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work. A job that uses no unmerged L9 job merges as soon as it is complete (K1965).
 Reading set (mechanics §17): measured at this START: 493 KB, within the 600 KB limit (K2700). Read it whole.
+
+## B2 · ANSWER · re J1
+
+Your placement reading stands (K3120): write both templates whole in your record as profile entries ready to place, checked on test copies, written into no profile (held, K3081). For the gap: R31 is added on tranche/T47 (merge it): FILING_BLANKS gains records, period, form and cost_limit, each with its sentence, filled by filings R55. Use them in the templates instead of bracketed instructions.
