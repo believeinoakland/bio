@@ -13,7 +13,7 @@ const wrangler = () => parseJsonc(readFileSync(new URL('../wrangler.jsonc', impo
 async function hosted(script = async () => success()) {
   const restore = installRuntime();
   const { calls, sdk } = stubSdk(script);
-  const image = await startRunner(sdk, { signedIn: MEMBER });
+  const image = await startRunner(sdk);
   const mod = await loadWorker();
   const ctx = fakeCtx(image.base);
   const runner = new mod.AgentRunner(ctx, {});
@@ -69,7 +69,7 @@ test('R12 the conversation\'s WebSocket upgrade passes through: R1–R4 answer t
     assert.deepEqual(through.final, { ok: true, result: 'done', stop_reason: 'end_turn', num_turns: 2,
       usage: { input_tokens: 100, output_tokens: 20, cache_read_input_tokens: 5, cache_creation_input_tokens: 7, total_cost_usd: 0.0123 } });
     assert.deepEqual(relays.map((r) => [r.name, r.input]), [['search', { q: 'minutes' }]]);
-    assert.equal(h.calls[0].options.env.CLAUDE_CONFIG_DIR, h.image.signin.configDir, 'the query ran under the member\'s stored sign-in in the image');
+    assert.equal(h.calls[0].options.env.CLAUDE_CODE_OAUTH_TOKEN, req.credential.secret, 'the query ran on the held token in the image (R28)');
     // an error answer comes back the same way
     const bad = await conversationThrough(h.runner, request({ credential: null }));
     assert.deepEqual({ ok: bad.final.ok, code: bad.final.code }, { ok: false, code: 'NO_CREDENTIAL' });

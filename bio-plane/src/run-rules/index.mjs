@@ -4,7 +4,7 @@
  * is deployed (`./deployment.mjs`, R9, R14, R16, R19, R21, R22, R24, R25, R27), the test bar and Civicsmith's test set
  * (`./test-bar.mjs`, `./test-set.mjs`, R19 as amended), the one deploy gate with the test-instance exception, its label
  * and its refusal (`./test-bar.mjs`, R29, R30), and the table of every run refusal's row, with the words it reads by key
- * (`./checks.mjs`, R11, R15, R20, R28, R30, R31). Pure: no storage, no clock, no viewer. */
+ * (`./checks.mjs`, R11, R15, R20, R28, R30, R31, R32). Pure: no storage, no clock, no viewer. */
 export * from "./rules.mjs";
 export * from "./deployment.mjs";
 export * from "./test-set.mjs";

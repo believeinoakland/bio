@@ -1,8 +1,8 @@
 /* accepted-work over the modules it uses, each the real one (record-core, membership, promotion), on a real SQLite
    database (node:sqlite) standing in for a Durable Object's storage, at the plane's shape (`sql.exec` answers a cursor).
    `case-import`'s registration (R1) is a stand-in the test controls: what another group's case holds, which editions
-   this group has accepted, the open flags and the withdrawals. Every test drives `accepted-work` at its interface:
-   its registration, its reads, its leg check, and an inquiry's promotion through `promotion`. */
+   this group has accepted, the open flags (with their history) and the withdrawals. Every test drives `accepted-work`
+   at its interface: its registration, its reads, its leg check, and an inquiry's promotion through `promotion`. */
 import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
@@ -93,10 +93,11 @@ export function world({ register = true } = {}) {
 
 /** A stand-in for `case-import`'s registration (its R16): `held` maps `ref\0edition` to the finding as published;
  *  `accepted` holds the `ref\0edition` pairs whose acceptance is in force; `moved` the publisher moves in the order
- *  recorded (its R18); `calls` records each call. */
+ *  recorded (its R18); `flagged` every flag with its opening and clearing instants (its R8); `calls` records each call. */
 export function importer() {
   const s = {
-    held: new Map(), accepted: new Set(), flags: [], withdrawn: [], moved: [], calls: [], throws: null, hidden: new Set(),
+    held: new Map(), accepted: new Set(), flags: [], withdrawn: [], moved: [], flagged: [], calls: [], throws: null,
+    hidden: new Set(),
     publish(ref, edition, extra = {}) {
       s.held.set(`${ref}\u0000${edition}`, { ref, import: ref.slice(9, 73), group: "other-group", case: "CASE-1", edition,
         finding: ref.slice(74), manifest_sha: "c".repeat(64), result: "recreated", pair: { evidence: "B", inference: "B" },
@@ -113,6 +114,10 @@ export function importer() {
       s.moved.push({ move: `M${seq}`, import: ref.slice(9, 73), group: "other-group", case: "CASE-1", kind, edition, seq,
         date: "2026-10-03", at: NOW, what_changed: kind === "edition" ? `edition ${edition}: a date corrected` : null,
         reason: kind === "withdrawal" ? "the source was retracted" : null, key_listed: true, taken_back: null, ...extra });
+    },
+    /** A flag on an edition (or its named finding), opened at `opened_at` and, when given, cleared at `cleared_at`. */
+    flag(ref, edition, flag, opened_at, cleared_at = null, extra = {}) {
+      s.flagged.push({ ref, edition, flag, finding: ref.slice(74), issue: `issue ${flag}`, opened_at, cleared_at, ...extra });
     },
     fns: {
       finding(args) {
@@ -146,6 +151,18 @@ export function importer() {
         const limit = Number.isInteger(args.limit) && args.limit >= 1 && args.limit <= 200 ? args.limit : 200;
         const page = s.moved.slice(after, after + limit);
         return { moves: page, cursor: after + limit < s.moved.length ? page[page.length - 1].move : null };
+      },
+      /* its R8's flags and clears: every flag open at any instant from `since` through now, in opening order */
+      flagHistory(args) {
+        s.calls.push(["flagHistory", args]);
+        if (s.throws) throw new Error(s.throws);
+        if (s.hidden.has(args.viewer)) return { flags: [], complete: true };
+        return { flags: s.flagged
+          .filter((f) => f.ref === args.ref && f.edition === args.edition
+            && (f.cleared_at === null || typeof args.since !== "string" || f.cleared_at >= args.since))
+          .sort((a, b) => (a.opened_at < b.opened_at ? -1 : a.opened_at > b.opened_at ? 1 : 0))
+          .map(({ flag, finding, issue, opened_at, cleared_at }) => ({ flag, finding, issue, opened_at, cleared_at })),
+          complete: true };
       },
     },
   };

@@ -267,5 +267,6 @@ test("R30: a leg the viewer may not see is withheld whole and never corroborates
   const seen = w.s.testimonyCorroboration({ inquiry: "INQ-2026-0002-a", levels: two, viewer: "member:alice" });
   assert.deepEqual(seen.legs.map((x) => x.target_id), [OBS2, OBS]);
   assert.equal(seen.out_of_view, undefined);
-  for (const axis of STRENGTH_AXES) assert.ok(axis in w.s.strengthOf(INQ, { levels }), "the pair is unchanged in shape");
+  const shaped = w.s.strengthOf(INQ, { levels });
+  for (const axis of STRENGTH_AXES) assert.ok(["graded", "unrated", "undetermined"].includes(shaped[axis].state), "the pair is unchanged in shape");
 });

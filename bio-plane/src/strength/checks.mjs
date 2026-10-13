@@ -1,11 +1,14 @@
-/* strength's refusal rows (requirements: `build/requirements/strength.md`, R7, R10, R11, R15, R24). DEC-49: every
+/* strength's refusal rows (requirements: `build/requirements/strength.md`, R7, R10, R11, R15, R24, R40). DEC-49: every
  * refusal this module answers carries its code, its catalogue row and the member's translation.
  *
  * Moved here from the check catalogue with their ids and translations unchanged (K6, R24): C-30 (the pair over a
  * version, with its default state set and the hunch roster), C-71 (independence over a partition) and C-32.9
  * (`MACHINE_CANNOT_DECLARE`, from `MACHINE_FENCE_CHECKS`). R15's new refusal, `STRENGTH_BAR_NOT_ADMIN`, is this
  * module's own family, C-107, allocated at the extraction (K107 (3), K181), and so is R15's `BAD_GRADE` (N208, K275),
- * and R15's `BAR_NO_REASON` (DEC-88; K1025, C-107.3, stamped by 1.53.0). */
+ * and R15's `BAR_NO_REASON` (DEC-88; K1025, C-107.3, stamped by 1.53.0). T47 (R40; N976, K3003): a project's own bar is
+ * set by a served act, refused `PROJECT_BAR_NO_REASON` (C-107.4) without its reason; `MACHINE_CANNOT_DECLARE` and
+ * `BAD_GRADE` are each minted at one site, the one function both bar acts answer through (K231), so their `where`s name
+ * those functions, their codes, numbers and translations unchanged. */
 
 import { VERSION_STATES } from "../basis-versions/index.mjs";
 
@@ -219,14 +222,14 @@ export const PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
 });
 
 /* ===========================================================================
- * The group's default bar (R15). C-32.9 moved from the machine fences, where it was the one of the twelve that fully
+ * The bar (R15, R40): the group's default and a project's own. C-32.9 moved from the machine fences, where it was the one of the twelve that fully
  * succeeded under a complete payload when its predicate was neutered (D-229). C-107.1 is K102's: the default a new
  * project starts from is set by an active administrator, as an organisation-wide AI key is (membership R62).
  * =========================================================================== */
 export const STRENGTH_BAR_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE: {
     check: 'C-32.9',
-    where: at('strengthBarSet', 'is-machine-strength-bar'),
+    where: at('machineCannotDeclare', 'is-machine-strength-bar'),
     translation: 'How much evidence this group requires of itself is the group\'s own declaration '
       + 'about the standard it works to, and everything filed afterwards is measured against it. '
       + 'An automated credential cannot set that bar for the people it works for. Sign in to '
@@ -243,7 +246,7 @@ export const STRENGTH_BAR_CHECKS = Object.freeze({
      refusal is `CONDITION_BAD_GRADE`, another condition (K238). */
   BAD_GRADE: {
     check: 'C-107.2',
-    where: at('strengthBarSet', 'is-strength-bar-grade'),
+    where: at('badGrade', 'is-strength-bar-grade'),
     translation: 'A standard of evidence is stated in the grades the record uses, A to D, one for how the documents '
       + 'were captured and one for how firmly they connect. One of the two given is not a grade. Nothing was changed.',
   },
@@ -255,5 +258,14 @@ export const STRENGTH_BAR_CHECKS = Object.freeze({
     translation: 'A standard of evidence for the whole group is set with a reason: say in your own words why the group '
       + 'works to this standard, in at most 2,000 characters. The reason is kept with it and shown wherever it is read. '
       + 'Nothing was changed.',
+  },
+  /* R40 (T47; N976, K3003): a project's own standard of evidence, set by a member of the project, is recorded with the
+     member's own words on why, as the group's default is (C-107.3), because a bar raised or lowered with no reason given
+     is one nobody can weigh. */
+  PROJECT_BAR_NO_REASON: {
+    check: 'C-107.4',
+    where: at('projectBarSet', 'is-project-bar-reason'),
+    translation: 'A project\'s standard of evidence is set with a reason: say in your own words why the project works to '
+      + 'this standard, in at most 2,000 characters. The reason is kept with it. Nothing was changed.',
   },
 });

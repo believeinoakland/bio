@@ -1,6 +1,6 @@
 # BOB to capture-requests (T47)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Reading set (mechanics §17): measured at this START: 912 KB, over the 600 KB li
 ## B2 · ANSWER · re J1
 
 All nine readings kept (K3089).
+
+## B3 · CHANGE
+
+Merged (K3098), but `test/m/capture-requests/plane.test.mjs` R48 ("R48 in the plane: a requested capture, drained and promoted, is listed by capture's op=heldcaptures…", line 223) fails about one run in five on `tranche/T47`: at line 229 the row reads `state: "draining"` where `captured` is expected (attempts 1). It looks like the same scheduler-drain race you fixed in the other plane tests. Please make this test robust the same way (assert the row's end state, bounded; never skip it), run the file at least ten times green, and post COMPLETE again; it is accepted red by name until your re-merge.

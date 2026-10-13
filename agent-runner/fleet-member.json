@@ -6,10 +6,10 @@
   "surface": {
     "GET /version": "R5: 200 {ok: true, name: \"agent-runner\", version, capabilities}",
     "GET /conversation (WebSocket upgrade)": "R1-R4: one conversation request, its relays and its answer",
-    "POST /signin": "R17: {member} -> 200 {ok: true, address}, the sign-in address the binary states",
-    "POST /signin/code": "R18: {member, code} -> 200 {ok: true, connected: true, member}, or 409 SIGNIN_REFUSED",
-    "POST /signin/state": "R19: {member} -> 200 {ok: true, connected, member}",
-    "POST /signout": "R20: {member} -> 200 {ok: true, connected: false, member}",
+    "POST /signin": "R17, R27, R31: {member} -> 200 {ok: true, address, attempt}, the sign-in address the binary's setup-token states",
+    "POST /signin/code": "R18, R27, R31: {member, code, attempt} -> 200 {ok: true, connected: true, member, attempt, token, valid_for}, or 409 SIGNIN_REFUSED",
+    "POST /signin/state": "R19, R27: {member} -> 200 {ok: true, connected: false, waiting, member}",
+    "POST /signout": "R20, R27: {member} -> 200 {ok: true, connected: false, member}",
     "anything else": "R6: 404 {ok: false, code: \"UNKNOWN\"}"
   },
   "image": {
@@ -54,5 +54,5 @@
     "source": "https://code.claude.com/docs/en/legal-and-compliance",
     "who_agrees": null
   },
-  "note": "The fleet-member marker of a container member (R7, R14). `entry` is the image's Node entry; `bundle` is the Worker hosting its class (`src/worker.mjs`, R12), built by `npm run build` and guarded as every member's bundle is. `class_name`, `max_instances` and `bind` (the binding through which its caller reaches it) are copied by bundler into the release's `container.json` part (bundler R25). `image.digest` is written by the release when it publishes the image (T33-D1), with the same digest in `wrangler.jsonc`'s `containers[0].image`; an install names the image only as `repository@digest` (src/manifest.mjs imageReference, R7). `egress` is the container's allow-list, applied by the Worker's class when it starts the container (R10, R13). `egress` names the model API and the host Claude Code's own sign-in, its renewal and its logout reach from the container (platform.claude.com, K2211). `terms` records AT-14's condition for whoever deploys this member, as `build/terms/anthropic.md` AT-14 quotes it (read 2026-10-06); `who_agrees` stays null while U-7 (d) is open, and nothing here reads the terms as allowing the member's sign-in (DEC-156; U-7 (a)-(d) open)."
+  "note": "The fleet-member marker of a container member (R7, R14). `entry` is the image's Node entry; `bundle` is the Worker hosting its class (`src/worker.mjs`, R12), built by `npm run build` and guarded as every member's bundle is. `class_name`, `max_instances` and `bind` (the binding through which its caller reaches it) are copied by bundler into the release's `container.json` part (bundler R25). `image.digest` is written by the release when it publishes the image (T33-D1), with the same digest in `wrangler.jsonc`'s `containers[0].image`; an install names the image only as `repository@digest` (src/manifest.mjs imageReference, R7). `egress` is the container's allow-list, applied by the Worker's class when it starts the container (R10, R13). `egress` names the model API and the host Claude Code's own sign-in reaches from the container to mint its token (platform.claude.com, K2211). `terms` records AT-14's condition for whoever deploys this member, as `build/terms/anthropic.md` AT-14 quotes it (read 2026-10-06); Bob settled U-2 and U-7 (K3061); `who_agrees` stays null until the release names who agrees."
 }

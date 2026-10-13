@@ -62,6 +62,8 @@ export const ASK_MODES = Object.freeze(["ask", "standing"]);
 export const ASK_ACCOUNT_KINDS = Object.freeze(["ask", "draft"]);
 /** R30: the uses a grant reads under (credentials' `USE_KINDS` that mint an ask's or a standing question's grant). */
 export const GRANT_USES = Object.freeze(["ask", "draft", "standing"]);
+/** R35 (K3089): the uses `ruleAnswer` and `op=rule` open a grant's read log with. */
+export const RULE_USES = Object.freeze(["ask", "draft"]);
 /** The most read logs held at once (each lives at most a grant's life). */
 const LOGS_MAX = 512;
 
@@ -219,8 +221,10 @@ export class Answers {
   }
 
   /** R7: one rule service's answer, as of `at` (now when absent), recorded in the read log of the grant it was asked
-   *  under. Non-mutating; never throws. */
-  async ruleAnswer({ service = null, args = null, viewer = null, at = null, grant = null } = {}) {
+   *  under. Non-mutating; never throws. (R35; K3089) `use` (`ask` or `draft`; absent or any other: `ask`) opens the
+   *  grant's read log with it when this is the grant's first read, so a draft grant first read by `op=rule` is scrubbed
+   *  as a draft (R30); a log already open keeps the use it opened with. */
+  async ruleAnswer({ service = null, args = null, viewer = null, at = null, grant = null, use = "ask" } = {}) {
     if (this.record.getSetting(RULE_SERVICES_SETTING) !== true)
       return refusal("RULE_SERVICES_OFF", "the rule services are switched off in your group's Civicsmith");
     const fn = BUILT_IN_SERVICES[service] || this.services.get(service);
@@ -236,7 +240,7 @@ export class Answers {
       : { ok: true, service, value: r.value ?? null, basis: r.basis ?? null, grade: r.grade ?? null, status: r.status ?? null,
           label: r.label ?? null, as_of: asOf,
           ...(r.quote_only !== undefined ? { quote_only: r.quote_only } : {}), ...(r.limits ? { limits: r.limits } : {}) };
-    const log = grant ? this.#logFor(grant, viewer) : null;
+    const log = grant ? this.#logFor(grant, viewer, RULE_USES.includes(use) ? use : "ask") : null;
     if (log) return log.addRule(scrubRead(answer, this.hidden(viewer, log.use)), asOf);
     return answer;
   }

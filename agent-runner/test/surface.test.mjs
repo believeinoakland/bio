@@ -23,7 +23,7 @@ const raw = (base, text) => new Promise((resolve, reject) => {
 test('R5 GET /version answers 200 with the name, the version the image was built with, and its capabilities: "image" as R24 is met', async () => {
   const data = Buffer.from('a page').toString('base64');
   const { calls, sdk } = stubSdk(async (call, { callTool }) => { await callTool('search', {}); return success(); });
-  const r = await startRunner(sdk, { signedIn: MEMBER });
+  const r = await startRunner(sdk);
   try {
     const res = await fetch(`http://${r.base}/version`);
     assert.equal(res.status, 200);
@@ -63,8 +63,9 @@ test('R7 the fleet manifest names one digest-pinned image, its surface and its b
   assert.equal(m.kind, 'container');
   assert.deepEqual(Object.keys(m.surface), ['GET /version', 'GET /conversation (WebSocket upgrade)', 'POST /signin',
     'POST /signin/code', 'POST /signin/state', 'POST /signout', 'anything else']);
-  for (const [k, r] of [['POST /signin', 'R17'], ['POST /signin/code', 'R18'], ['POST /signin/state', 'R19'], ['POST /signout', 'R20']])
+  for (const [k, r] of [['POST /signin', 'R17, R27, R31'], ['POST /signin/code', 'R18, R27, R31'], ['POST /signin/state', 'R19, R27'], ['POST /signout', 'R20, R27']])
     assert.ok(m.surface[k].startsWith(`${r}:`), k);
+  assert.match(m.surface['POST /signin/code'], /token, valid_for/, 'the code answer carries the token (R27)');
   assert.equal(typeof m.terms, 'object', 'R23\'s terms are stated');
   assert.equal(m.build.dockerfile, 'Dockerfile');
   const dockerfile = readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8');
@@ -117,9 +118,9 @@ test('R11 no place is named in its behaviour, outward text or configuration; the
   const manifest = readManifest(), wranglerText = read('../wrangler.jsonc');
   const texts = [...configurationTexts(manifest, wranglerText), read('../Dockerfile'), JSON.stringify(pkg),
     read('../src/worker.mjs'), read('../src/entry.mjs'), read('../src/runner.mjs'), read('../src/ws.mjs'), read('../src/manifest.mjs'),
-    read('../src/env.mjs'), read('../src/signin.mjs')];
+    read('../src/env.mjs'), read('../src/signin.mjs'), read('../src/screen.mjs'), read('../src/waits.mjs')];
   const { sdk } = stubSdk(async (call, { callTool }) => { await callTool('search', {}); return success(); });
-  const r = await startRunner(sdk, { signedIn: MEMBER });
+  const r = await startRunner(sdk);
   try {
     texts.push(await (await fetch(`http://${r.base}/version`)).text(), await (await fetch(`http://${r.base}/x`)).text());
     texts.push(JSON.stringify((await conversation(r.base, request())).frames));

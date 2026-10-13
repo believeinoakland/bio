@@ -114,7 +114,7 @@ It is the only module marked `legacy` in `modules.json`.
 - **T47-32 · case-authoring** · (N908) deletes the copies, re-points to `case-inputs` (§3), creates it in its factory, drops `schema.mjs` and its purge declaration, retires R19–R21, R28, R39, R59, R62, R70, R71, R73, adds R74, re-words R9, R14, R27, R29, R34, R38, R65; (K1490, K3041) the signing act takes each signer's attestation that she has no undeclared tie, refused without it (the requirement folded at L8's START); (N992) R73's no-window and not-laid-out open-request rows read DEC-199's sentences by key; (N683) ratification R44's `publish_at` offer carried into R34's step 5 · split map §3, §4; N683 BOB's · after T47-31 · doubt 4.
 - **T47-33 · review** · (N908) R18, R20 read `statementAcknowledgements` from `case-inputs`; `invariants.test.mjs` re-pointed · split map §5 · after T47-31.
 
-**L8 merge order:** case-inputs first (K624), then case-grammar, case-carriage, publication, docket, ratification, case-disclosures, public-read, case-import, case-authoring, review (re-checked against `modules.json` at L8's START).
+**L8 merge order:** case-inputs first (K624), then case-grammar, case-carriage, publication, docket, public-read, ratification, case-import, case-disclosures, case-authoring, review (`modules.json` order, re-checked K3096).
 
 ### L9
 - **T47-34 · conformance** · (N951) R32's identity mapping stated against case-import R4 as T46 built it (R39); (N995, K3038) the source edition's date it reads (`edition_date`) named from what case-import R4 answers, or the read removed, tested · text BOB's.

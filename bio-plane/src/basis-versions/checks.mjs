@@ -156,7 +156,7 @@ export function isSufficiencyUnclaimed(assertedBy) {
  * and called by this module's promotion check. A version that cannot land cannot
  * audit clean either.
  *
- * DEC-49's SHAPE, on VERSION_CHAIN_CHECKS' precedent above: the C-number, the
+ * DEC-49's SHAPE (the check catalogue's, which this file carries): the C-number, the
  * wire code and the CANNED TRANSLATION are ONE ROW, read from one place rather
  * than copied. `basisVersionFindings` reads the C-number OUT of this map at every
  * push site and passes the key as the finding's `code`, so there is no second
@@ -629,19 +629,8 @@ export const VERSION_ACT_CHECKS = {
   },
   /* D-271 — DEC-32 RULE 4's ANTI-GAMING KEYSTONE, ENACTED AT THE ONE ACT THAT
      CASHES IT IN.
-     THE NUMBER BETWEEN C-25.31 AND THIS ROW IS DELIBERATELY SKIPPED, and it is
-     NOT SPELLED HERE ON PURPOSE — it is held by a concurrent unmerged item (PL-2's
-     verification pass), which measured it free when it looked, and stepping over
-     an id somebody holds is cheaper than the collision seven items paid for in one
-     day. **Writing the numeral in this comment ALLOCATED IT AS A CHECK**:
-     the retired `scripts/coverage.mjs` (gone since T18, K739) built the catalogue with
-     `checksSrc.matchAll(/C-\d+\.\d+/g)` over the RAW source of this file, comments
-     included, so a number named in prose becomes a check `--strict` then demands
-     an assertion for. Measured at this item: the catalogue read 225 where the
-     rows are 224, and `--strict` EXITED 1 naming a check nobody had written.
-     Same class as the census that graded a file by a token in its comments, in a
-     second instrument and this one GATED — delegated with the receipt rather than
-     fixed here, because the harvest regex is not this item's span.
+     C-25.32 sits between C-25.31 and this row, allocated after this row was minted (VERSION_REASON_MALFORMED
+     above); no number in the family is skipped.
      THE TRANSLATION REUSES THE RECORD'S EXISTING MEMBER-FACING PHRASE — "would
      carry the answer on its own", already the wording in BASIS_VERSION_CHECKS —
      rather than authoring a third spelling of it. DEC-32 clause 1 and D-226 ban

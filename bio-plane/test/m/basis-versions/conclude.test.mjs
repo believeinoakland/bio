@@ -43,7 +43,8 @@ test("R16: refusals in order — a machine for either act; no conclusion without
   assert.equal(conclude(w, { project: p, conclusion: "my words", falsifier: "f" }).reason, "CONCLUSION_IS_THE_CLAIM");
   assert.equal(conclude(w, { conclusion: "c" }).reason, "NO_FALSIFIER");
   assert.equal(conclude(w, { conclusion: "c", falsifier: "f", noFalsifier: "1" }).reason, "FALSIFIER_AND_NONE_STATED");
-  for (const [k, v] of [["conclusion", 'has "quotes"'], ["falsifier", "x".repeat(501)], ["commentary", "a\nb"]])
+  for (const [k, v] of [["conclusion", 'has "quotes"'], ["falsifier", "x".repeat(501)], ["commentary", "a\nb"],
+                        ["commentary", "x".repeat(501)], ["conclusion", "x".repeat(501)], ["falsifier", "back\\slash"]])
     assert.equal(conclude(w, { project: p, falsifier: "f", ...(k === "conclusion" ? { project: null } : {}), [k]: v }).reason,
       `BAD_${k.toUpperCase()}`, k);
   assert.equal(conclude(w, { target: "", conclusion: "c", falsifier: "f" }).reason, "NO_TARGET");
