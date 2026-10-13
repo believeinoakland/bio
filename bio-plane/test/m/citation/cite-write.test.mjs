@@ -133,7 +133,7 @@ test("R2: a member already cited is reported, not rewritten; with nothing new th
   assert.match(nowhere.detail, /^every member of the selection was already cited; nothing was written\. The part of the document this call named was written NOWHERE/);
 });
 
-test("R3: the write moves last_updated and appends one Session Log entry naming the author, the selection, at most 20 ids and a count of the rest, and the note", async () => {
+test("R3: the write moves last_updated and appends one Session Log entry naming the author, the selection, at most 20 ids and a count of the rest, and the note; it counts records, a question among them, never calling them all information", async () => {
   const w = world();
   const ids = [];
   for (let i = 1; i <= 23; i++) { const id = `INFO-2026-${String(i).padStart(4, "0")}`; w.info(id, { captured: false }); ids.push(id); }
@@ -144,7 +144,7 @@ test("R3: the write moves last_updated and appends one Session Log entry naming 
   assert.equal(w.fm(p).last_updated, STAMP);
   assert.equal(w.record.head(p).rowVersion, 2);
   const log = w.md(p).split("## Session Log\n\n")[1];
-  assert.equal(log, `### Session ${STAMP} | Cited 23 Information records | member:ann\nTrigger: selection ${h}\n`
+  assert.equal(log, `### Session ${STAMP} | Cited 23 records | member:ann\nTrigger: selection ${h}\n`
     + `Changes: cites edges added to ${ids.slice(0, CITE_LOG_SAMPLE).join(", ")}, and 3 more. Note: all of them.\n`);
   assert.equal(CITE_LOG_SAMPLE, 20);
   /* One record, no note; the author defaults to "member". */
@@ -152,7 +152,14 @@ test("R3: the write moves last_updated and appends one Session Log entry naming 
   const one = await w.select(["INFO-2026-0001"]);
   w.cit.cite({ project: p2, handle: one, viewer: V("ann"), owner: "o", identity: V("ann") });
   assert.equal(w.md(p2).split("## Session Log\n\n")[1],
-    `### Session ${STAMP} | Cited 1 Information record | member\nTrigger: selection ${one}\nChanges: cites edges added to INFO-2026-0001.\n`);
+    `### Session ${STAMP} | Cited 1 record | member\nTrigger: selection ${one}\nChanges: cites edges added to INFO-2026-0001.\n`);
+  /* A question cited by a case is a record, not "an Information record". */
+  w.inquiry("INQ-2026-0001");
+  const p3 = w.project("Third");
+  const qs = await w.select(["INQ-2026-0001"]);
+  assert.equal(w.cit.cite({ project: p3, handle: qs, ...ANN }).ok, true);
+  assert.match(w.md(p3), new RegExp(`### Session ${STAMP} \\| Cited 1 record \\| member:ann\\n`));
+  assert.doesNotMatch(w.md(p3), /Information record/);
 });
 
 test("R3: on an inquiry the entry states the role and how many legs were graded and left undetermined, inside the document's existing Session Log", async () => {

@@ -171,13 +171,13 @@ test("R11: each check moved here with its number, code and translation unchanged
     assert.deepEqual(homes.filter((h) => h.code === code || h.check === row.check), [], `${code} (${row.check}) is held only here`);
 });
 
-test("K3, R1, R7: the op routes — the control plane's stamps are read from the query, the part arrives whole as a bag, a found match as one JSON parameter with the optional question, and no weight is read from the caller", async () => {
+test("K3, R1, R7, R14: the op routes — the control plane's stamps are read from the query, the part arrives whole as a bag, a found match as one JSON parameter with the optional question, and no weight is read from the caller", async () => {
   const calls = [];
   const fake = new Proxy({}, { get: (_, act) => (a) => { calls.push([act, a]); return { ok: true, act }; } });
   const url = new URL("http://x/?project=P&handle=H&viewer=member:ann&owner=o&note=n&author=member:ann&identity=member:ann"
     + "&role=supports&weight=refuse&extent_kind=pdf-page&extent_page=2&content_id=&other=1&reason=why");
   const ops = citationOps(fake, url);
-  assert.deepEqual(Object.keys(ops).sort(), ["cite", "reinstate", "sever"]);
+  assert.deepEqual(Object.keys(ops).sort(), ["cite", "drawquestion", "reinstate", "sever"]);
   ops.cite(); ops.sever(); ops.reinstate();
   assert.deepEqual(calls[0], ["cite", { project: "P", handle: "H", viewer: "member:ann", owner: "o", note: "n", author: "member:ann",
     identity: "member:ann", role: "supports", extent: { extent_kind: "pdf-page", extent_page: "2", content_id: "" },
@@ -195,6 +195,13 @@ test("K3, R1, R7: the op routes — the control plane's stamps are read from the
   assert.deepEqual([calls[5][1].found, calls[5][1].question, calls[5][1].handle], [m, "INQ-1", null]);
   citationOps(fake, new URL("http://x/?project=P&found=%7Bnot-json")).cite();
   assert.equal(calls[6][1].found, "{not-json");
+  /* R14: `drawquestion` reads the case, the question, the note and the stamps; no selection, no weight, no document. */
+  citationOps(fake, url).drawquestion();
+  citationOps(fake, new URL("http://x/?project=P&inquiry=INQ-1&note=n&viewer=member:ann&author=member:ann&identity=member:ann&weight=refuse&handle=H")).drawquestion();
+  assert.deepEqual(calls[7], ["drawQuestion", { project: "P", inquiry: null, note: "n", author: "member:ann", viewer: "member:ann", identity: "member:ann" }]);
+  assert.deepEqual(calls[8], ["drawQuestion", { project: "P", inquiry: "INQ-1", note: "n", author: "member:ann", viewer: "member:ann", identity: "member:ann" }]);
+  citationOps(fake, new URL("http://x/?project=P&inquiry=INQ-1")).drawquestion();
+  assert.equal(calls[9][1].note, "");
   /* Through the real module: a cite over the route lands, weight report. */
   const w = world();
   w.info("INFO-2026-0001");
