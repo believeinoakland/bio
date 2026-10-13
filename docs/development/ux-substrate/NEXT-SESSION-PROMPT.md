@@ -10,12 +10,12 @@ Setup:
    - Read BOB's outbox (mail/BOB.md) past B159, and look for new K-rulings that touch the design (build/rulings.md on main and on the open tranche branch, past K3061).
    - Read the layouts page (https://claude.ai/artifact/PjJoJCxMe1LHjt3wPq6rfa) and the dashboards page (https://claude.ai/artifact/W1XPnKZA8eRucNseHSLQXa) before you ever republish them; if you can't edit them from this account, publish new ones as HANDOFF §0 says, and watch them for my comments.
    - Subscribe to the open pull request HANDOFF §0 names, and arm your own safety-net check-in (HANDOFF §6).
-   - Then answer anything new in BOB's outbox, and do HANDOFF §0's first work: fold my answers of 12 October (K3060, K3061) into the screens.
+   - Then answer anything new in BOB's outbox, and do HANDOFF §0's first work: draw People as BOB decided it under my delegation (D8, K3061). My other answers of 12 October (K3060, K3061) are already drawn (DEC-202).
 5. Report in a few lines what you found and did.
 
 From then on, I review the layouts page by comments sent to Claude, and sometimes give direction in chat. For each comment, change the page, rebuild, walk, commit, push, republish, then reply in the thread in plain words and resolve it.
 
-The next major design focus is my direction of 11 October (K2803): recentering the UX on dashboard-like entry points per area. I want to use the test instance first; HANDOFF §0 says how to carry it until then.
+After People: the founding journey starting on a website at civicsmith.org (D6), and the signing ceremony designed from the principles (D9). Then my direction of 11 October (K2803): recentering the UX on dashboard-like entry points per area, after I have used the test instance (S20).
 
 Same rules as before:
 - Bring me only my questions: what Civicsmith must do, who may see what, policy, and the meaning of my rulings. Put the issue before the recommendation. No question is open with me; the next is S20.
