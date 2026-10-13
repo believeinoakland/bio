@@ -1,6 +1,6 @@
 # people (T47)
 
-**Status** · session_01RqNJSwaQHYSnZPXzUrGVfv · depth 2 · RUNNING until 2026-10-13T21:11:32Z (users' tests (14 modules)) · handled B2
+**Status** · session_01RqNJSwaQHYSnZPXzUrGVfv · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
