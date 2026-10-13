@@ -101,4 +101,8 @@ The R29 test now holds `DOCKET_WORDS` to exactly the two keys, each verbatim.
 
 **Tests and checks after the change:**
 - `node --test test/m/docket/`: tests 79, pass 79, fail 0.
-- The checks are re-run below.
+- Users' tests (promotion, answer-envelope, affordances): the same 5 inherited failures as before, no new ones.
+- `format`: 0 failures. `architecture … docket`: 0 failures. `coverage … docket`: 29 of 29. `ownership … docket tranche/T47`: 0 failures.
+- `run.mjs`: architecture 0 failures; coverage 43 failures, none docket's; channels 0.
+
+Size (session_01LdRUdodYLfpSaz5xmhmwfA): test runs 8, module lines 1651
