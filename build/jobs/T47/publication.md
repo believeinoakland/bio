@@ -27,3 +27,7 @@
 - `node checks/run.mjs`: format 0, architecture 0 failures (3084 files), channels 0; coverage 44 failures, none publication's (inherited reds of other modules).
 
 Size (session_015AcW75HnAxLc3A1Ud8w5dy): test runs 4, module lines 3635
+
+## J1 · COMPLETE
+
+T47-27 applied. R53's T47 field list and R23's case-inputs clause were already met by the code; each clause now has its own tests (t47.test.mjs, 4 tests with controls) and the R23 comments name case-inputs. Module tests 145 pass, 0 fail (R30 todo, D-246). format, architecture, coverage (48/48), ownership: 0 failures for publication. Record: build/jobs/T47/publication.md. Requirements' 'not yet met: T47' marks on R23 and R53 can be lifted (BOB's file).
