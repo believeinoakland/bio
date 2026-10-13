@@ -310,3 +310,42 @@ test("R22 \"all\" that would accept nothing writes nothing: IMPORT_ACCEPT_GAPS_U
   (await imp(w, caseFile({ findings: [F1], edition: 2 })));
   (await refusedThenAccepted(w, async () => all(w, a), async () => all(w, a, { edition: 2 }), "IMPORT_NO_SUCH_FINDING"));
 });
+
+/* ================================================================ R5–R7: the refusals' order, in full */
+
+test("R5 an import or edition not held is IMPORT_DOCUMENT_NOT_MISSING, after R1's two; nothing written", async () => {
+  for (const x of [{ import: "e".repeat(64) }, { import: null }, { edition: 2 }]) {
+    const w = seeded();
+    const a = (await scripted(w));
+    (await refusedThenAccepted(w, async () => complete(w, a, LETTER, x), async () => complete(w, a, LETTER), "IMPORT_DOCUMENT_NOT_MISSING"));
+  }
+  const w = seeded();
+  const a = (await scripted(w));
+  rowOk(await complete(w, a, NOTE, { import: "e".repeat(64), by: MACHINE }), "MACHINE_CANNOT_IMPORT");
+  rowOk(await complete(w, a, NOTE, { import: "e".repeat(64) }, "carol"), "IMPORT_NOT_A_MEMBER");
+});
+
+test("R6 the refusals in order: a finding not recreated is named before a finding recreated in part whose gaps are unstated", async () => {
+  const w = seeded();
+  const a = (await scripted(w));
+  const r = accept(w, a, { findings: [F2, F3] });
+  rowOk(r, "IMPORT_ACCEPT_NOT_RECREATED");
+  assert.deepEqual(r.findings, [F3]);
+  rowOk(accept(w, a, { findings: [F2] }), "IMPORT_ACCEPT_GAPS_UNSTATED");
+  /* and every earlier refusal before it, one step at a time */
+  rowOk(accept(w, a, { findings: [F2, F3, "INQ-2026-0999-none"] }), "IMPORT_NO_SUCH_FINDING");
+  rowOk(accept(w, a, { findings: [F3], reason: "" }), "IMPORT_ACCEPT_NO_REASON");
+  rowOk(accept(w, a, { findings: [F3], reason: "", edition: 9 }), "IMPORT_NO_SUCH_EDITION");
+  rowOk(accept(w, a, { findings: [F3], reason: "", edition: 9 }, "carol"), "IMPORT_NOT_A_MEMBER");
+  rowOk(accept(w, a, { findings: [F3], reason: "", edition: 9, by: MACHINE }), "MACHINE_CANNOT_IMPORT");
+});
+
+test("R7 the refusals in order: R1's two, then the edition, then the reason, then nothing accepted", async () => {
+  const w = seeded();
+  const a = (await scripted(w));
+  rowOk(withdraw(w, a, { reason: "", edition: 9, by: MACHINE }), "MACHINE_CANNOT_IMPORT");
+  rowOk(withdraw(w, a, { reason: "", edition: 9 }, "carol"), "IMPORT_NOT_A_MEMBER");
+  rowOk(withdraw(w, a, { reason: "", edition: 9 }), "IMPORT_NO_SUCH_EDITION");
+  rowOk(withdraw(w, a, { reason: "" }), "IMPORT_ACCEPT_NO_REASON");
+  rowOk(withdraw(w, a), "IMPORT_NOTHING_ACCEPTED");
+});

@@ -1,5 +1,5 @@
 /* case-import — another group's case file, imported into a read-only project (requirements:
- * `build/requirements/case-import.md` R1–R23; DEC-112 (6), DEC-96 items 1, 2, 4, DEC-92, DEC-45, DEC-46 (3), DEC-101 (3),
+ * `build/requirements/case-import.md` R1–R24; DEC-112 (6), DEC-96 items 1, 2, 4, DEC-92, DEC-45, DEC-46 (3), DEC-101 (3),
  * DEC-116 item 8; `BIO_Publication_v0_1.md` §5A, §5C "Import"; N520, N522, N534, K1256, K1257, K1273, K1339, K1366).
  *
  * A member imports another group's case file (R1). The copy holds it as an IMPORT, one per source group, case and lens,
@@ -30,7 +30,7 @@
  *
  * Nothing an import holds is a record bundle (R2): it lives in this module's own tables, append-only (R12), and no act
  * here edits, promotes, ratifies or publishes it. `accepted-work` (layer 6) reads it for the modules before this one
- * through the registration this module fills at start (R16); `case-authoring` reads `acceptanceOf` and `openFlagsOn`
+ * through the registration this module fills at start (R16, R24); `case-authoring` reads `acceptanceOf` and `openFlagsOn`
  * directly (R9).
  *
  * A NEW MODULE (T28, layer 8, directly after `case-checker`). REACHED as `caseImportOf(host, deps)` (K61): one instance
@@ -55,7 +55,7 @@
  * UX design stream's; this module answers facts and the checker's statement, never their final words. No place is named
  * here (R15). */
 
-import { recordOf, stampInstant } from "../record-core/index.mjs";
+import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
@@ -118,7 +118,8 @@ const AXES = Object.freeze(["capture", "connection", "testimony"]);
 const ID = { acceptance: "IMA", withdrawal: "IMW", flag: "IMF", move: "IMM" };
 /** R18 check 1: the docket entry's format, one format under two labels, as `docket` spells them (its R6; DEC-124, K1365). */
 export const DOCKET_ENTRY_FORMATS = ENTRY_FORMATS;
-/** R17: the query a watch's docket address carries (`docket` R23, R24; `public-read` R25). */
+/** R17: the query a watch's docket address carries: the route `public-read` R21 and R25 serve, answering `docket` R24's
+ *  public answer (N951). */
 export const docketAddressOf = (publisher, caseId) =>
   `${publisher}?op=docketpublic&case=${encodeURIComponent(caseId)}&captures=omit`;
 /** R18: the two kinds of verified entry that are publisher moves (K1339, K1366 F1). */
@@ -1637,6 +1638,34 @@ export class CaseImport {
     return { flags, complete: true };
   }
 
+  /** R24 (`accepted-work` R9; `case-carriage` R19): every flag on the edition a ref names, the edition's own and the named
+   *  finding's, that was open at any instant from `since` through the read, open now or cleared since, in the order
+   *  flagged, each `{flag, finding, issue, opened_at, cleared_at}` (`cleared_at` null while open), with `complete: true`.
+   *  A `since` that is not an instant `record-core` stamps (R47, either precision) answers `complete: false` and no flags;
+   *  a viewer who may not see the import, null. A clear is stamped to the second, so it is compared with `since` at the
+   *  second: a flag cleared in the second `since` falls in is answered, never dropped. Read as the plane; writes nothing
+   *  and never throws. */
+  flagHistoryFacts({ ref = null, edition = null, since = null, viewer = null } = {}) {
+    try {
+      if (!this.#sees(viewer)) return null;
+      const ms = typeof since === "string" ? Date.parse(since) : NaN;
+      if (!Number.isFinite(ms) || ms < 0 || (stampInstant("second", ms) !== since && stampInstant("millisecond", ms) !== since))
+        return { flags: [], complete: false };
+      const from = stampInstant("second", ms);
+      const p = typeof ref === "string" ? parseImportedFindingRef(ref.trim()) : null;
+      const e = p && Number.isInteger(edition) ? this.#edition(p.import, edition) : null;
+      if (!e) return { flags: [], complete: true };
+      const flags = this.#rows(`SELECT f.rn, f.finding, f.issue, f.at, c.at AS cleared_at FROM case_import_flags f
+                                  LEFT JOIN case_import_clears c ON c.flag_rn = f.rn
+                                 WHERE f.import_id=? AND f.edition=? AND (f.finding IS NULL OR f.finding=?) ORDER BY f.rn`,
+                                e.import_id, Number(e.edition), p.finding)
+        .filter((f) => f.cleared_at === null || f.cleared_at === undefined || instantOrder(f.cleared_at, from) >= 0)
+        .map((f) => ({ flag: idOf("flag", f.rn), finding: f.finding ?? null, issue: f.issue, opened_at: f.at,
+                       cleared_at: f.cleared_at ?? null }));
+      return { flags, complete: true };
+    } catch { return { flags: [], complete: false }; }
+  }
+
   /** R16 (`accepted-work` R1's `withdrawals`): the withdrawals of acceptances, in withdrawal order after `after`, at most
    *  `limit` (1 to 1,000, default 200), with `cursor` the last one listed when more follow. Read as the plane. */
   withdrawals({ after = null, limit = null } = {}) {
@@ -1651,14 +1680,16 @@ export class CaseImport {
              cursor: more ? idOf("withdrawal", rows[rows.length - 1].rn) : null };
   }
 
-  /** R16: fills `accepted-work`'s registration (its R1) once, each function synchronous; the answer is kept. */
+  /** R16: fills `accepted-work`'s registration (its R1) once, each function synchronous, with R24's `flagHistory` (its R9);
+   *  the answer is kept. */
   start() {
     if (this.registration) return this.registration;
     this.registration = this.#call(() => this.acceptedWork.registerAcceptedWork("case-import", {
       finding: (q) => this.findingFacts(q || {}),
       openFlags: (q) => this.openFlagsFacts(q || {}),
       withdrawals: (q) => this.withdrawals(q || {}),
-      moves: (q) => this.moves(q || {}) }), { ok: false, reason: "REGISTRATION_FAILED" });
+      moves: (q) => this.moves(q || {}),
+      flagHistory: (q) => this.flagHistoryFacts(q || {}) }), { ok: false, reason: "REGISTRATION_FAILED" });
     return this.registration;
   }
 }

@@ -189,7 +189,8 @@ const MACHINE_VIEWER = "class:daemon";
 const shaOf = (text) => createSha256().update(new TextEncoder().encode(String(text))).hex();
 
 /* R23 (K240, K244): the doors a review provider gives, and the answer each gives when no module has registered one: no
-   draft reads, no grant admits, no identity or edition is stated, and the dead answer is a bare NO_REVIEW_COPY refusal.
+   draft reads, no grant admits, no identity or edition is stated, and the dead answer is a bare NO_REVIEW_COPY refusal;
+   `case-authoring` (its R9) and `case-inputs` (every grant door of its R1; T47, N908) read it through `reviewProvider()`.
    It carries no catalogue row: review holds C-87 and is not a use of this module, and this answers only while no
    module has filled R23. */
 const REVIEW_DOORS = Object.freeze(["draftForMember", "draftIdentity", "caseIdentitySentence", "statedEdition",
@@ -289,7 +290,8 @@ export class Publication {
 
   /* ---------------------------------------------------------------- R23: the review provider */
 
-  /** R23 (K240): a later module fills, once at start, the review doors this module and `case-authoring` read:
+  /** R23 (K240): a later module fills, once at start, the review doors this module, `case-authoring` and `case-inputs`
+   *  (T47, N908) read:
    *  `draftForMember(id, viewer)` (a draft the member may read, or null), `draftIdentity(draft)` (its case identity),
    *  `caseIdentitySentence(caseId, edition, newCase)` and `statedEdition(identity, newCase)` (the sentence and edition a
    *  draft states), `liveGrant(secretSha)`, `grantAdmitsCaseEdition(secretSha, caseId, edition)` and `deadAnswer()`.

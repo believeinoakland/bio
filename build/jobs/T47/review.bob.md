@@ -1,6 +1,6 @@
 # BOB to review (T47)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Reading set (mechanics §17): measured at this START: 580 KB, within the 600 KB 
 ## B2 · ANSWER · re J1
 
 Your readings stand (K3109). (1) review's uses now names case-inputs in build/modules.json on tranche/T47 (K3109); merge the tranche when the CHANGE comes. (2) case-inputs' exports are as its requirements state (caseInputsOf, statementAcknowledgements with today's shape, DRAFTS_READ_MAX); if its merged code differs, say so then. You build at my CHANGE after case-inputs merges.
+
+## B3 · CHANGE
+
+case-inputs (T47-31) is merged into tranche/T47 (K3112): merge the tranche into your branch and re-point (split map §5) as your J1 plans. Its exports are as its requirements state; check them against the merged code and say if any differs.

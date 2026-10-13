@@ -175,7 +175,7 @@ A new product module, not a split: each published case's docket, the dated entri
 | --- | --- | --- |
 | docket | A case's docket: record entries any member files, public entries the manager signs (listed, reactions elsewhere), the required core as To-dos, standing, take-back by a later entry, withdrawal of an edition (never lifted), the public read and an Atom feed per case. It sends nothing, and no entry is evidence. | new (DEC-116, DEC-100; `BIO_Publication_v0_1.md` §5D) |
 
-Uses: `docket` uses record-grammar, signatures, record-core, membership, credentials, promotion, provenance, attestation, acquisition, entities, inquiry, reevaluation, case-grammar and publication; `public-read`, `network-notices` and `plane` gain it (and, proposed in `plan/t27-dec116-shared.md`, `queue-producers`, `affordances`, `op-declarations` and `control-plane`). `reevaluation` (layer 7) reads it only through the registration it offers (its R30). Membership's `MODULE_ORDER` (its R83) is re-pinned to the new order in T27's layer 2.
+Uses: `docket` uses record-grammar, signatures, record-core, membership, credentials, promotion, provenance, attestation, entities, inquiry, reevaluation, case-grammar, publication, case-tensions, events and project-roster (K3115); `public-read`, `network-notices` and `plane` gain it (and, proposed in `plan/t27-dec116-shared.md`, `queue-producers`, `affordances`, `op-declarations` and `control-plane`). `reevaluation` (layer 7) reads it only through the registration it offers (its R30). Membership's `MODULE_ORDER` (its R83) is re-pinned to the new order in T27's layer 2.
 
 ## Layer 8: case-checker and case-import (DEC-112, DEC-96; N520, K1256, K1257)
 

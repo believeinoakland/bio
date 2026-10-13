@@ -349,6 +349,45 @@ test("R20, R26: the store half's `release` op reads the handle, the account and 
   assert.deepEqual([ok.ok, ok.released], [true, ["INFO-2026-0570"]]);
 });
 
+test("R51: release reads its handle, acknowledgment and mitigation from the body, else the query: a body carrying them answers as the same fields in the query do, never NO_ACKNOWLEDGMENT or NO_MITIGATION; a body carrying author, viewer or owner changes no stamp", async () => {
+  const url = (q) => new URL(`http://do/release?${new URLSearchParams(q)}`);
+  const stamps = { viewer: WHO, owner: OWNER, author: WHO };
+  const drive = async (where) => {
+    const w = setup();
+    w.info("INFO-2026-0575");
+    const h = await w.select(["INFO-2026-0575"]);
+    const fields = { handle: h, acknowledgment: ` ${ACK} `, mitigation: MIT };
+    const r = where === "body"
+      ? ratificationOps(w.r, url(stamps), { ...fields, author: V("mallory"), viewer: V("mallory"), owner: "someone-else" }).release()
+      : ratificationOps(w.r, url({ ...stamps, ...fields }), null).release();
+    return { w, r: { ...r, handle: r.handle === h ? "<h>" : r.handle } };
+  };
+  const body = await drive("body"), query = await drive("query");
+  assert.deepEqual(body.r, query.r, "answered alike");
+  assert.deepEqual([body.r.ok, body.r.released, body.r.acknowledgment, body.r.mitigation], [true, ["INFO-2026-0575"], ACK, MIT]);
+  for (const x of [body, query]) {
+    assert.equal(x.w.state("INFO-2026-0575"), "verified");
+    assert.equal(parseFrontmatter(x.w.md("INFO-2026-0575")).data.state_history.at(-1).author, WHO,
+                 "the author is the query's stamp, never the body's");
+  }
+  /* controls: a body with no author stamp in the query is still a machine's release; the body's own field wins; a field
+     the body does not state as a string is the query's */
+  const w = setup();
+  w.info("INFO-2026-0576");
+  const h = await w.select(["INFO-2026-0576"]);
+  const machine = ratificationOps(w.r, url({ viewer: WHO, owner: OWNER }),
+                                  { handle: h, acknowledgment: ACK, mitigation: MIT, author: WHO }).release();
+  assert.equal(machine.reason, "MACHINE_CANNOT_RELEASE", "an author in the body is no stamp");
+  const noAck = ratificationOps(w.r, url({ ...stamps, handle: h, acknowledgment: ACK, mitigation: MIT }), { acknowledgment: "" }).release();
+  assert.equal(noAck.reason, "NO_ACKNOWLEDGMENT", "the body's own (empty) acknowledgment is the one read");
+  const noMit = ratificationOps(w.r, url({ ...stamps, handle: h, acknowledgment: ACK, mitigation: MIT }), { mitigation: " " }).release();
+  assert.equal(noMit.reason, "NO_MITIGATION");
+  assert.equal(w.state("INFO-2026-0576"), "collected");
+  const odd = ratificationOps(w.r, url({ ...stamps, handle: "nope", acknowledgment: ACK, mitigation: MIT }),
+                              { handle: h, acknowledgment: null, mitigation: 3 }).release();
+  assert.deepEqual([odd.ok, odd.released, odd.mitigation], [true, ["INFO-2026-0576"], MIT], "non-string fields in the body are not read");
+});
+
 test("R15: no place is named in the release's answers", async () => {
   const w = setup();
   w.info("INFO-2026-0580", { files: [] });

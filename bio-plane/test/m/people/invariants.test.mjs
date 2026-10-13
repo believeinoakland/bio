@@ -15,7 +15,7 @@ test("R27 peopleOps publishes one route arm per op above, each answering what it
   const ops = peopleOps(w.p, url(""), {});
   assert.deepEqual(Object.keys(ops).sort(), ["career", "identity", "identityclaim", "identitywithdraw", "interestcheckdefine", "interestcheckgate",
     "interestchecks", "interestcheckswitch", "membertie", "membertiewithdraw", "memberties", "person", "personcredentials", "personexpunge",
-    "personfact", "personfactwithdraw", "personinterests", "personstatements", "samepersoncandidates", "sourcepersonlink", "sourcepersonlinks", "staffing"].sort());
+    "personfact", "personfactwithdraw", "peopledirectory", "personinterests", "personstatements", "samepersoncandidates", "sourcepersonlink", "sourcepersonlinks", "staffing"].sort());
   const claim = peopleOps(w.p, url(""), { a: p, b: q, kind: "same_as", basis: "testimony", note: "n", by: ANN }).identityclaim();
   assert.equal(claim.ok, true);
   const viaOp = peopleOps(w.p, url(`id=${p}&viewer=${encodeURIComponent(ANN)}`), null).identity();
