@@ -34,3 +34,7 @@ T47-44 complete on job/T47/plan-work; details in the record's Completion section
 **B2 (CHANGE) applied.** Merged `tranche/T47`; `test/m/plan-work/fixture.mjs` passes `caseInputs: null` to `actionRepliesOf` in place of the stale `caseAuthoring: null` (registers none, either way, on the tranche's action-replies and on T47-40's). plan-work tests 50/50; format 0, architecture 0, coverage 18/18, ownership 0.
 
 Size (session_0178ZGpF7DFhbLEP9pukeAin, after B2): test runs 5, module lines 1423
+
+## J2 · COMPLETE
+
+B2 applied: merged tranche/T47; fixture.mjs passes caseInputs: null to actionRepliesOf (registers none on either version of action-replies). plan-work tests 50/50; format 0, architecture 0, coverage 18/18, ownership 0. Record updated.
