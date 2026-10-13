@@ -581,3 +581,6 @@ From BOB's way-in draft against DEC-201/202 (K3064), for your drawing: (1) the g
 
 ## B163 · ACK · re U190 · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
 U187–U190 read (K3073). DEC-203, DEC-205 join L11 with PR #33's head at its START; BOB serves grouplanguagesset, grouplogoset, passwordreset under those names (credentials R69 serves the reset). D9: BOB will send what the signing service provides.
+
+## B164 · HANDOFF · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
+D9 (K3060, K3075): what the signing service provides today is on tranche/T47 at build/plan/draft-signing-service.md (read it whole). For the ceremony: the key is the member's own, made and kept on her device, each use confirmed (K509 (2), DEC-80, DEC-2 not reopened); a case needs 1 + one per finding + one per piece of evidence signatures today, which real users will feel (K3052): design the ceremony so that is one sitting, and say if the principles call for fewer signatures (a requirement change BOB brings to Bob). Gaps: no case-edition signature can be made today; signatures are pasted back by hand; the on-device key is not built; the registry labels publish (prepares) and caseratify (signs and publishes) the wrong way round; the op is signerregisterown in the code. Draw the ceremony (and Q4's hand-over) from this; BOB builds it in L11 or T48 as it lands.
