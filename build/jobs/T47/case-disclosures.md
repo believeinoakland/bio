@@ -11,7 +11,9 @@
 
 **Read** · requirements (whole); all module code (`index.mjs`, `materials.mjs`, `document.mjs` whole; `accepted.mjs`, `checks.mjs`, `people.mjs` not touched by the entry, read in part); `fixture.mjs`, `photos.test.mjs`, `documents.test.mjs` whole myself; case-carriage R10, R11, R22 and case-grammar R12, R31 (the services R32 names). Over the 600 KB limit (§17 (3)): a helper in this session read whole and digested, citing each section, `account`, `captures`, `hunch`, `imported`, `people`, `seam`, `tensions`, `carries` tests. Sources stayed binding.
 
-**Reds now, each awaiting a merge (not mine to fix)** · module 95/5 of 100: over the real case-carriage, "R6, R29 over the real case-carriage" and "R6, R7 over the real case-carriage" (R22 not yet merged: no `obscured` in the real answer, so fail closed); the case-grammar read-back in both R7 row arms and R32's marker arm (R31 not yet merged: `obscured_kind` not written or read).
+**B3 (case-grammar merged, K3111)** · tranche merged in; my R7 rows already carried `kind`, so both R7 read-back arms and R32's marker arm are green with no change: module 97/2. The two left wait on case-carriage R22.
+
+**Reds before B3, each awaiting a merge (not mine to fix)** · module 95/5 of 100: over the real case-carriage, "R6, R29 over the real case-carriage" and "R6, R7 over the real case-carriage" (R22 not yet merged: no `obscured` in the real answer, so fail closed); the case-grammar read-back in both R7 row arms and R32's marker arm (R31 not yet merged: `obscured_kind` not written or read).
 
 **Found in other modules (REPORT J2)** · case-authoring 205/5 (base 209/1, R73 inherited): its R14 rows arms (photo, member document) and R34's two photo arms go red, through the real case-carriage until R22 merges, and its R14 arms' expected rows then need `kind` (case-authoring's job, CASE-AUTHORING #28, which merges after me).
 
