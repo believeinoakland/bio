@@ -3,8 +3,9 @@
    at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, caseFm, caseText, sha, V, NOW } from "./fixture.mjs";
-import { caseCarriageOf, CASE_CARRIAGE_EXEMPT } from "../../../src/case-carriage/index.mjs";
+import { world, caseFm, caseText, makePng, sha, V, NOW } from "./fixture.mjs";
+import { caseCarriageOf, CASE_CARRIAGE_EXEMPT, CASE_CARRIAGE_CHECKS, CASE_CARRIAGE_WORDS, OBSCURED_LABEL, PUBLISHED_LABEL,
+         COPY_CLEANED_LABEL } from "../../../src/case-carriage/index.mjs";
 
 const DOC = "INFO-2026-0001-minutes", CASE = "CASE-2026-0001";
 const KEPT = ["published_material_texts", "published_case_materials"];
@@ -63,7 +64,7 @@ test("R6 content-addressed and append-only: a held text or an edition's list is 
   assert.deepEqual(w.cc.heldMaterialsOf(CASE, 1), [{ sha: docSha, held: "inline" }]);
 });
 
-test("R7 no place is named in this module's behaviour or outward text", () => {
+test("R7 no place is named in this module's behaviour or outward text: every service's answers, its refusals' rows and words, its labels and its faults", async () => {
   const w = world();
   w.member("olive");
   const docSha = w.doc(DOC);
@@ -84,8 +85,29 @@ test("R7 no place is named in this module's behaviour or outward text", () => {
   w.knock(cap);
   const lapsed = w.cc.sourcesLapsed(caseText({ sources: [{ capture: cap, stated: "name: someone", basis: "consent" }] }), NOW);
   assert.ok(held.unheld.length >= 3 && tokens.unheld.length && aw && lapsed.length, "every outward answer is exercised");
+  /* (T47) the marks, copies and interval reads, with a refusal of each kind of act */
+  const photo = w.photo("INFO-2026-0020-photo", makePng(10, 10));
+  const marked = await w.cc.obscureMark({ captureSha: photo, areas: [{ rect: [1, 1, 4, 4], kind: "person" }], by: V("olive") });
+  const marks = [marked, w.cc.photoMarks({ captureSha: photo, viewer: V("olive") }),
+    await w.cc.obscureMark({ captureSha: photo, areas: [{ rect: [1, 1, 4, 4], kind: "staff" }], by: V("olive") }),
+    await w.cc.obscureMark({ captureSha: photo, areas: "x", by: V("olive") }),
+    await w.cc.obscureMark({ captureSha: docSha, areas: [], by: V("olive") }),
+    await w.cc.obscureMark({ captureSha: photo, areas: [], by: "machine:assistant" }),
+    await w.cc.obscureMarkWithdraw({ captureSha: photo, mark: 99, reason: "r", by: V("olive") }),
+    await w.cc.obscureMarkWithdraw({ captureSha: photo, mark: marked.mark, reason: "", by: V("olive") }),
+    w.cc.photoMarks({ captureSha: sha("none"), viewer: V("olive") })];
+  const docs = [w.cc.documentCopy(docSha), w.cc.documentCopy(sha("unheld")), await w.cc.copyBatch({}), w.cc.copyWake(Date.parse(NOW)), w.cc.faults()];
+  const mfm = caseFm({ materials: [row(DOC, docSha), { ...row("INFO-2026-0020-photo", photo), included: false, obscured: { copy: sha("old"), label: "x" } }] });
+  const since = [w.cc.marksLapsed(mfm), w.cc.marksLapsedSince(mfm, "2026-09-28T00:00:00Z"), w.cc.marksLapsedSince(mfm, null),
+    w.cc.acceptedWorkLapsedSince(caseFm({ acceptedWork: [{ member: "INQ-2026-0001", leg_of: "INQ-2026-0001", ref, group: "g",
+      case: "CASE-2026-0042", edition: 2, finding: "INQ-2026-0042-x", manifest_sha: "b".repeat(64), pair: {}, result: "recreated",
+      gaps: [], accepted_by: V("olive"), accepted_at: NOW, reason: "r" }] }), "olive", null),
+    w.cc.sourcesLapsedSince(caseText({ sources: [{ capture: cap, stated: "name: someone", basis: "consent" }] }), "2026-09-28T00:00:00Z")];
+  assert.ok(marks.every((m) => m && typeof m === "object") && marks.filter((m) => m.ok === false).length === 7
+            && since.every((x) => x === null || (Array.isArray(x) ? x.length : x.withdrawn.length)), "every outward answer is exercised");
   const outward = JSON.stringify([held, tokens, aw, lapsed, w.cc.heldMaterialsOf(CASE, 1), w.cc.publishedMaterialText(docSha),
-                                  w.cc.publishedMaterialText(big), w.cc.purgeDeclaration]);
+                                  w.cc.publishedMaterialText(big), w.cc.purgeDeclaration, marks, docs, since,
+                                  CASE_CARRIAGE_CHECKS, CASE_CARRIAGE_WORDS, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL]);
   for (const place of ["Oakland", "California", "Alameda", "Berkeley", "San Francisco", "Sacramento", "Brown Act", "CPRA",
                        "United States", "County", "City of"])
     assert.equal(outward.includes(place), false, `names ${place}`);
