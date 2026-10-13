@@ -23,8 +23,9 @@ import { PUBLISHED_TOKEN_HASHES, sha256hex } from "../../bio-plane/src/tokens.mj
 /** The levels an account arrives at (R32, R71; `credentials` R35, R56), in the order `credentials`' cascade tries them:
  *  a project's account, the member's own, the group's API key. Nothing else may restate them. */
 export const CASCADE_ORDER = Object.freeze(["project", "member", "group"]);
-/** The kinds `agent-model` takes (its R2): an API key, or (T38; N785, K2200) the member's own stored sign-in, which
- *  carries no secret (`credentials` R35's sign-in answer). `subscription` is retired (`credentials` R22). */
+/** The kinds `agent-model` takes (its R2): an API key, or (T38; N785, K2200) the member's own sign-in, which since T47
+ *  carries its `secret`, the token `credentials` holds for that member (R82; K3060 D10; `agent-model` R16).
+ *  `subscription` is retired (`credentials` R22). */
 export const ACCOUNT_KINDS = Object.freeze(["apikey", "signin"]);
 /** The kinds each level holds: the group's account is an API key only (`credentials` R33; `agent-model` R11); a
  *  project's is an API key or its one member's own sign-in (`credentials` R54; R71). */
@@ -47,14 +48,15 @@ const levelOf = (account) => (isObject(account) && CASCADE_ORDER.includes(accoun
 
 /** R32 — the arrived account's state at its level: `unset` (no account at a level R32 judges, no non-empty secret, or a
  *  kind its level does not hold), `revoked_by_publication` (its SHA-256 is published in this repository) or
- *  `available`. An account naming no level, or another (an instance's), is judged at no level. A `signin` account has
- *  no secret: it is `available` exactly when its `member` is a non-empty string, the member whose own stored sign-in
- *  serves the act, and `unset` otherwise (T38). A project's account naming no project is `unset` (R71). */
+ *  `available`. An account naming no level, or another (an instance's), is judged at no level. A `signin` account is
+ *  `available` exactly when its `member` is a non-empty string, the member whose own sign-in serves the act, and (T47,
+ *  R82) its `secret`, the held token, is non-empty and unpublished; `unset` otherwise. A project's account naming no
+ *  project is `unset` (R71). */
 async function levelState(account) {
   if (!isObject(account) || !CASCADE_ORDER.includes(account.level)) return LEVEL_UNSET;
   if (!LEVEL_KINDS[account.level].includes(account.kind)) return LEVEL_UNSET;
   if (account.level === "project" && !projectOf(account)) return LEVEL_UNSET;
-  if (account.kind === "signin") return memberOf(account) ? LEVEL_AVAILABLE : LEVEL_UNSET;
+  if (account.kind === "signin" && !memberOf(account)) return LEVEL_UNSET;
   const v = secretOf(account);
   if (v.length === 0) return LEVEL_UNSET;
   if (PUBLISHED_TOKEN_HASHES.has(await sha256hex(v))) return LEVEL_REVOKED;
@@ -97,15 +99,16 @@ export async function resolveClaudeCascade(account) {
 
 /**
  * R33 — `{level, reference}` exactly when R32 resolves, else null; `level` the account's own (`project`, `member` or
- * `group`). `reference` is in `agent-model`'s terms (`{kind: "apikey", key}` or `{kind: "signin", member}`, the member
- * whose own runner instance holds the sign-in; T38), for the one call it serves; never logged, echoed or kept by any
- * state of this module (R36). A project's sign-in is that one member's own and becomes exactly the member's own
- * reference; no reference names the project (R71; `agent-runner` R2).
+ * `group`). `reference` is in `agent-model`'s terms (`{kind: "apikey", key}` or, R82, `{kind: "signin", member,
+ * secret}`, the member whose own runner instance runs the conversation on the token `credentials` holds; its R16), for
+ * the one call it serves; never logged, echoed or kept by any state of this module (R36). A project's sign-in is that
+ * one member's own and becomes exactly the member's own reference; no reference names the project (R71;
+ * `agent-runner` R2).
  */
 export async function cascadeToken(account) {
   const st = await resolveClaudeCascade(account);
   if (!st.available) return null;
   return { level: st.level,
-           reference: account.kind === "signin" ? { kind: "signin", member: memberOf(account) }
+           reference: account.kind === "signin" ? { kind: "signin", member: memberOf(account), secret: secretOf(account) }
                                                 : { kind: "apikey", key: secretOf(account) } };
 }

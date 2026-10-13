@@ -3754,63 +3754,126 @@ var SIGNIN_ROUTES = Object.freeze({
   signout: "/signout"
 });
 var MEMBER_MAX = 200;
+var TRACE_HEADER = "x-civicsmith-trace";
+var MEMBER_REF_HEADER = "x-civicsmith-member-ref";
+var TEXT_HEAD_MAX = 120;
+var OWN_CODES = Object.freeze(["RUNNER_NOT_CONFIGURED", "BAD_BODY", "BAD_MEMBER", "BAD_STEP", "BAD_CODE", "RUNNER_SILENT"]);
+var RUNNER_CODES = Object.freeze([
+  "BAD_REQUEST",
+  "BAD_MEMBER",
+  "NOT_THIS_MEMBER",
+  "SIGNIN_ADDRESS_UNEXPECTED",
+  "SIGNIN_UNAVAILABLE",
+  "NO_SIGNIN_WAITING",
+  "BAD_CODE",
+  "SIGNIN_REFUSED",
+  "SIGNOUT_FAILED",
+  "RUNNER_NOT_STARTED",
+  "ATTEMPT_SUPERSEDED",
+  "SIGNIN_NOT_HELD",
+  "SIGNIN_TOKEN_REFUSED"
+]);
+var SIGNIN_CODES = Object.freeze([.../* @__PURE__ */ new Set([...OWN_CODES, ...RUNNER_CODES])].sort());
 var RUNNER_ORIGIN = "https://agent-runner";
-var DETAIL_MAX2 = 300;
+var TRACE_SHAPE = /^[A-Za-z0-9._:-]{1,128}$/;
+var MEMBER_REF_SHAPE = /^[\x21-\x7e]{1,200}$/;
+var ATTEMPT_MAX = 200;
 var isObject4 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
-function scrubbed(text, code) {
+function scrub2(text, code) {
   let s = String(text ?? "");
   if (typeof code === "string" && code) s = s.split(code).join("[the code]");
-  return s.slice(0, DETAIL_MAX2);
+  return s.replace(/\?[^\s"'<>]*/g, "?[query]").replace(/sk-ant-[A-Za-z0-9._-]*/g, "[token]").replace(/eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*/g, "[token]").replace(/[A-Za-z0-9._-]{32,}/g, "[token]");
 }
+var textHead = (text, code) => scrub2(text, code).slice(0, TEXT_HEAD_MAX);
+var WORDS = {
+  RUNNER_NOT_CONFIGURED: "Your group's Civicsmith cannot connect a Claude account yet: the part that runs a member's own Claude sign-in is not installed. Nothing was sent. An administrator can install it.",
+  BAD_BODY: "Your group's Civicsmith could not read this sign-in request, so nothing was sent. Try again from your settings.",
+  BAD_MEMBER: "Your group's Civicsmith could not tell whose sign-in this is, so nothing was sent. Sign in to your group's Civicsmith again, then try again.",
+  BAD_STEP: "Your group's Civicsmith did not recognise this sign-in step, so nothing was sent. Try again from your settings.",
+  BAD_CODE: "The code from Anthropic's page was missing, so nothing was sent. Paste the whole code Anthropic's page shows you, including any part after a # sign, and try again.",
+  RUNNER_SILENT: "Your group's Civicsmith could not reach the part that runs your Claude sign-in, so what happened to this step is not known. Wait a minute and try again; if it keeps happening, tell an administrator the reference."
+};
 async function handleSignin(req, env, deps) {
-  const { refusal: refusal3 } = deps;
+  const { refusal: refusal3, json: json2, now = () => Date.now(), log = (line2) => console.log(line2), mint = () => crypto.randomUUID() } = deps;
+  const sentTrace = req.headers.get(TRACE_HEADER);
+  const trace = typeof sentTrace === "string" && TRACE_SHAPE.test(sentTrace) ? sentTrace : mint();
+  const sentRef = req.headers.get(MEMBER_REF_HEADER);
+  const memberRef = typeof sentRef === "string" && MEMBER_REF_SHAPE.test(sentRef) ? sentRef : null;
+  const line = {
+    event: "signin.worker",
+    trace,
+    step: null,
+    member_ref: memberRef,
+    outcome: null,
+    runner_status: null,
+    runner_content_type: null,
+    ms_runner: null,
+    runner_text_bytes: null
+  };
+  const written = (response, fields) => {
+    log(JSON.stringify({ ...line, ...fields }));
+    return response;
+  };
+  const own2 = (code2, status, extra = {}, outcome = "refused") => written(refusal3(code2, WORDS[code2], status, { trace, ...extra }), { outcome, code: code2, ...lineOf(extra) });
+  const lineOf = (extra) => "runner_text_head" in extra ? { runner_text_head: extra.runner_text_head } : {};
   const runner = env.RUNNER;
   if (!runner || typeof runner.idFromName !== "function" || typeof runner.get !== "function")
-    return refusal3(
-      "RUNNER_NOT_CONFIGURED",
-      "this member reaches a member's own Claude sign-in only through the runner binding, and the binding is absent, so nothing was sent.",
-      503
-    );
+    return own2("RUNNER_NOT_CONFIGURED", 503, {}, "failed");
   const body = await req.json().catch(() => null);
-  if (!isObject4(body)) return refusal3("BAD_BODY", "the request body could not be read as a JSON object.", 400);
+  if (!isObject4(body)) return own2("BAD_BODY", 400);
   const { member, step } = body;
   if (!(typeof member === "string" && member.trim().length > 0 && member.length <= MEMBER_MAX))
-    return refusal3(
-      "BAD_MEMBER",
-      `member is the member whose own sign-in this is, as the door stamps it: a non-empty string of at most ${MEMBER_MAX} characters.`,
-      400
-    );
-  if (!Object.hasOwn(SIGNIN_ROUTES, step))
-    return refusal3("BAD_STEP", `step is one of ${Object.keys(SIGNIN_ROUTES).join(", ")}.`, 400);
+    return own2("BAD_MEMBER", 400);
+  if (!Object.hasOwn(SIGNIN_ROUTES, step)) return own2("BAD_STEP", 400);
+  line.step = step;
   const code = step === "code" ? body.code : void 0;
-  if (step === "code" && !(typeof code === "string" && code.length > 0))
-    return refusal3(
-      "BAD_CODE",
-      "the code step carries the code from Anthropic's page: a non-empty string. Nothing was sent.",
-      400
-    );
-  const payload = step === "code" ? { member, code } : { member };
+  if (step === "code" && !(typeof code === "string" && code.length > 0)) return own2("BAD_CODE", 400);
+  const hold = body.hold === true;
+  const payload = step === "code" ? { member, code, ...typeof body.attempt === "string" && body.attempt.length <= ATTEMPT_MAX ? { attempt: body.attempt } : {} } : { member };
+  const headers = { "content-type": "application/json", [TRACE_HEADER]: trace, ...memberRef ? { [MEMBER_REF_HEADER]: memberRef } : {} };
   let res, text;
+  const started = now();
   try {
     const stub = runner.get(runner.idFromName(member));
-    res = await stub.fetch(`${RUNNER_ORIGIN}${SIGNIN_ROUTES[step]}`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+    res = await stub.fetch(`${RUNNER_ORIGIN}${SIGNIN_ROUTES[step]}`, { method: "POST", headers, body: JSON.stringify(payload) });
     text = await res.text();
   } catch (e) {
-    return refusal3("RUNNER_SILENT", "the member's own runner did not answer, so the step's outcome is not known: " + scrubbed(e?.message ?? e, code), 502);
+    line.ms_runner = Math.max(0, now() - started);
+    return own2(
+      "RUNNER_SILENT",
+      502,
+      { runner_status: res?.status ?? null, detail_from_binding: textHead(e?.message ?? e, code) },
+      "failed"
+    );
   }
+  line.ms_runner = Math.max(0, now() - started);
+  line.runner_status = res.status;
+  line.runner_content_type = (res.headers.get("content-type") ?? "").slice(0, 100) || null;
+  line.runner_text_bytes = new TextEncoder().encode(text).length;
   let answer;
   try {
     answer = JSON.parse(text);
   } catch {
     answer = void 0;
   }
-  if (answer === void 0)
-    return refusal3("RUNNER_SILENT", `the member's own runner answered with no JSON, so the step's outcome is not known (status ${res.status}).`, 502);
-  return new Response(text, { status: res.status, headers: { "content-type": "application/json" } });
+  if (!isObject4(answer))
+    return own2("RUNNER_SILENT", 502, { runner_status: res.status, runner_text_head: textHead(text, code) }, "failed");
+  let out = answer, held;
+  if (step === "code" && Object.hasOwn(answer, "token")) {
+    if (hold) held = true;
+    else {
+      const { token: _token, valid_for: _validFor, ...rest } = answer;
+      out = { ...rest, held: false };
+      held = false;
+    }
+  }
+  const relayed = typeof out.trace === "string" ? out : { ...out, trace };
+  const refused2 = !(res.status >= 200 && res.status < 300) || answer.ok === false;
+  return written(json2(relayed, res.status), {
+    outcome: refused2 ? "refused" : "ok",
+    ...refused2 && typeof answer.code === "string" && /^[A-Z][A-Z0-9_]{0,59}$/.test(answer.code) ? { code: answer.code } : {},
+    ...held !== void 0 ? { held } : {}
+  });
 }
 
 // src/transcribe.mjs
@@ -4294,7 +4357,7 @@ async function levelState(account) {
   if (!isObject6(account) || !CASCADE_ORDER.includes(account.level)) return LEVEL_UNSET;
   if (!LEVEL_KINDS[account.level].includes(account.kind)) return LEVEL_UNSET;
   if (account.level === "project" && !projectOf(account)) return LEVEL_UNSET;
-  if (account.kind === "signin") return memberOf(account) ? LEVEL_AVAILABLE : LEVEL_UNSET;
+  if (account.kind === "signin" && !memberOf(account)) return LEVEL_UNSET;
   const v = secretOf(account);
   if (v.length === 0) return LEVEL_UNSET;
   if (PUBLISHED_TOKEN_HASHES.has(await sha256hex(v))) return LEVEL_REVOKED;
@@ -4327,7 +4390,7 @@ async function cascadeToken(account) {
   if (!st.available) return null;
   return {
     level: st.level,
-    reference: account.kind === "signin" ? { kind: "signin", member: memberOf(account) } : { kind: "apikey", key: secretOf(account) }
+    reference: account.kind === "signin" ? { kind: "signin", member: memberOf(account), secret: secretOf(account) } : { kind: "apikey", key: secretOf(account) }
   };
 }
 
@@ -5234,12 +5297,19 @@ async function accountOf(body) {
       409,
       { capability: "unavailable" }
     ) };
-  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || (a.level === "project" ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX) : a.project !== void 0) || a.kind === "signin" && (a.secret !== void 0 || a.suggestions !== void 0 && typeof a.suggestions !== "boolean"))
+  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || (a.level === "project" ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX) : a.project !== void 0) || a.kind === "signin" && (a.secret !== void 0 && a.secret !== null && typeof a.secret !== "string" || a.suggestions !== void 0 && typeof a.suggestions !== "boolean"))
     return { refusal: refusal2(
       "BAD_ACCOUNT",
-      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a project's account names its project, and no other does; a signin account is the member's own and carries no secret, and its suggestions switch, when sent, is true or false. What arrived is not one, and this member judges only what it is handed.`,
+      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a project's account names its project, and no other does; a signin account is the member's own, its secret the token held for that member, and its suggestions switch, when sent, is true or false. What arrived is not one, and this member judges only what it is handed.`,
       400,
       { field: "account" }
+    ) };
+  if (a.kind === "signin" && !(typeof a.secret === "string" && a.secret.length > 0))
+    return { refusal: refusal2(
+      "SIGNIN_NOT_HELD",
+      "Your group's Civicsmith holds no Claude sign-in for you to use, so nothing was done. Connect your Claude account again in your settings, then try again.",
+      409,
+      { capability: "unavailable" }
     ) };
   const cascade = await resolveClaudeCascade(a);
   if (!cascade.available)
