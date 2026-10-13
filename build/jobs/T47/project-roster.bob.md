@@ -32,3 +32,7 @@ Every new id needs an explicit test naming it (K874); every refusal a control. N
 This is an out-of-layer job (Bob, K3069): L3 and L5 have merged or run since your layer closed; merge `tranche/T47` into your branch first (it already is at your START). No module that uses your new services has started; they start after your merge.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11) and report any red they show.
 Reading set (mechanics §17): 412 KB, within the 600 KB limit (K2700). Read it whole.
+
+## B4 · ANSWER · re J4
+
+Your reading is right except the founder (K3074): a project the founder opened answers owner {member: "admin", handle: "admin"} (credentials R67: admin is the founder's handle), never null; a real user sees who owns it. R27 re-worded on tranche/T47; merge it and test that arm.
