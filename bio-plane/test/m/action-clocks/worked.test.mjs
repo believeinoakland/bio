@@ -89,8 +89,11 @@ test("R2 worked examples O1–O6 and N6 (the City's portal, CPRA §7922.535): 10
   assert.equal(due("2026-10-05"), "2026-10-15", "O1");
   assert.notEqual(due("2026-10-05"), "2026-10-14");
   assert.equal(due("2026-10-01"), "2026-10-12", "O2: Sun 10-11 rolled to Mon");
+  assert.equal(date({ ...cpra, roll: false }, "2026-10-01"), "2026-10-11", "O2's negative: no roll gives the Sunday");
   assert.equal(due("2026-09-30"), "2026-10-12", "O3: Sat 10-10 rolled to Mon");
+  assert.equal(date({ ...cpra, roll: false }, "2026-09-30"), "2026-10-10", "O3's negative: no roll gives the Saturday");
   assert.equal(due("2026-08-26"), "2026-09-08", "O4: Sat 09-05 past Labor Day to Tue");
+  assert.equal(date(cpra, "2026-08-26", without(cpra.closures, "2026-09-07")), "2026-09-07", "O4's negative: Labor Day not a closure gives the Monday");
   assert.equal(due("2026-10-02"), "2026-10-12", "O5: Columbus Day is not a closure (AB 268)");
   assert.notEqual(due("2026-10-02"), "2026-10-13");
   /* O6 / N6: from Tue 2026-09-15 the law's day is Mon 09-28 (Native American Day 09-25 a judicial holiday); the City's

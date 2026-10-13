@@ -7,7 +7,7 @@
    (id → {project, sees: [viewers]}), and content a stand-in presenting no capture; local-facts is the real one (R10, R11),
    and so are promotion (R13's revision) and standards (R7, R13; created on first use). `override` maps a profile id to
    a profile object the instance resolves in its place (both this module and local-facts take `combine`, local-facts
-   `get`), so a test can run on a variant of the test profile. T45: steps is the real one (R16), registered with at start.
+   `get`), so a test can run on a variant of the test profile. T45: steps is the real one (R16), registered with at start. T47: action-records is the real one (`w.records()`; N961).
    Every test drives `action-clocks` at its interface. */
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
@@ -149,6 +149,9 @@ export function world({ profiles = ["test-port-ellery"], override = null } = {})
   let n = 0;
   const w = {
     st, host, record, membership, promotion, actions, localFacts, c, clock, determinations, steps,
+    /** `action-records` on this host, the one instance `actions` creates and holds (its `records`; action-records R15),
+     *  whose `actionReceipt` (its R4) records the receipts and service `actionRead` answers and R2 counts from (N961). */
+    records: () => actions.records,
     /** The real standards module on this host (R7, R13), created on first use; its text's content ids resolve, through a
      *  content stand-in, to the document `INFO-2026-0099-std`, which the first call promotes. */
     standards: () => {

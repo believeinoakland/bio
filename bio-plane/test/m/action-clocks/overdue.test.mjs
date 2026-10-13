@@ -30,7 +30,7 @@ test("R3 overdueClocks lists every overdue or past pending entry of open visible
   const r = w.c.overdueClocks({ viewer: M });
   assert.deepEqual(r.items.map(key), [`${A}:0`, `${A}:3`, `${D}:0`]);
   assert.deepEqual(r.items[0], { action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", status: "pending", past: true,
-                                 project: null, created_by: M, basis_of: { kind: null, citation: "Act s.2" }, local_day: "2026-09-28",
+                                 project: null, created_by: M, venue: { kind: "office", role: "Town Clerk", body: "Town of Port Ellery" }, basis_of: { kind: null, citation: "Act s.2" }, local_day: "2026-09-28",
                                  zone: "America/Halifax", owed_by: "undetermined", due_at: null, due_zone: null, steps: [],
                                  says: clocks.OVERDUE_SAYS });
   assert.equal(r.items[0].created_by, M, "the creator, not the later reviser");
@@ -116,6 +116,7 @@ test("R7 overdue is derived at the read and a stored status is reported beside t
   /* the document is the same before and after every read: nothing is computed into it. */
   const text = w.text(A);
   w.c.overdueClocks({ viewer: M }); w.c.pendingClocks({ before: "2027-01-01", viewer: M });
+  assert.equal(w.text(A), text, "the reads leave the document as it was");
   w.actions.actionCorrespond({ target: A, direction: "received", at: "2026-09-01", account: "got it", viewer: M, author: M });
   const t2 = w.text(A);
   const p = w.c.clockPropose({ target: A, rule: "records_answer", proposer: MACHINE, viewer: MACHINE });
