@@ -520,10 +520,11 @@ export class Credentials {
 
   /* R65 (T47; K3061 D3): a session row's state at `now`: `ended` past its cap, or idle past its device's limit; `locked`
      for an `own` one idle `ownLock` or more, until `ownEndAfterLock` after; else `live`. Idle is counted from its last
-     activity (its creation when none is recorded). */
+     activity; a row with none recorded (written before the column, or outside this module) is counted active now, as
+     `migrate` counts it from the boot, and its first read records it. */
   static #stateOf(s, now) {
-    const last = Number.isFinite(Number(s.last_active)) && s.last_active !== null ? Number(s.last_active)
-      : (Date.parse(s.created) || 0);
+    const last = s.last_active !== null && s.last_active !== undefined && Number.isFinite(Number(s.last_active))
+      ? Number(s.last_active) : now;
     const idle = now - last;
     if (s.expires < now) return "ended";
     if (s.device !== "own") return idle >= SESSION_LIMITS.sharedIdle ? "ended" : "live";
