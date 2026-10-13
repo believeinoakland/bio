@@ -43,3 +43,7 @@ Two readings to confirm (carrying on with both as written):
 - New files: `agent-worker/test/t47.test.mjs` and `agent-worker/test/t47.control.mjs`.
 
 Size (session_01NmjWMB4Hpd3GS7Xi1Kiqge): test runs 32, module lines 3502
+
+## J2 · COMPLETE
+
+T47-24 and T47-80 are complete on job/T47/agent-worker, with tranche/T47 @ B4 merged and my bundle regenerated. R56 and R81–R85 are applied and tested: t47 114/0, all 17 suites green, and every control as declared (t47.control 12/12, new). Checks: format 0 failures, architecture 0 failures, coverage 77/77, ownership 0 failures. My users' tests (control-plane, plane): 463/466. The 3 reds are red on the tranche baseline too and none is mine: plane t46 R33 still pins a sign-in with no secret (L11 wireAccount, draft §3); roster R5/R9; and the bio-plane bundle (accepted red 4). The *(not yet met: T47)* marks are yours to strike. Details, the one behaviour change (a non-object JSON runner answer is now RUNNER_SILENT) and the one deferral are in the record's Completion section.
