@@ -1,6 +1,6 @@
 # case-disclosures (T47)
 
-**Status** · session_017ZBDmksjrNtUgd9oEHF8Hy · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_017ZBDmksjrNtUgd9oEHF8Hy · depth 2 · WAITING ON BOB (J2) · handled B2
 
 ## Progress (CASE-DISCLOSURES #12)
 
