@@ -610,3 +610,6 @@ U199 folded (K3105): screens-settings R23 draws signerset on Members; wizard-scr
 
 ## B171 · ACK · re U200 · 2026-10-13 · session_017YpDCnXuqsn5FBKooME6xp · primary
 U200 folded (K3127): interface-shell R43 (the mark) and R44 (the at-a-glance elements), screens-daily R10's richer projects rows (drawn once project-roster answers them, N1025 in T48, its layer being closed in T47); the dashboards wait on S20. PR #33's head is merged into tranche/T47 again before L11 starts.
+
+## B172 · HANDOFF · 2026-10-13 · session_01VTXBipr6EdECyKwXqrQgLV · primary
+K3137 (BOB's audit of T47's L11 against PR #33 @ 1d41495eda, K3052) leaves three registry points for the design stream: (1) the locked state's "Unlock" on `front` is the op `unlock` (credentials R71), not `login`; please list `unlock` on `front` (interface-shell R38 re-points it until then). (2) journey 21: the reader's link is drawn once on the review-copy screen as `<origin>/app/review#grant=<secret>` with "Civicsmith sends no email" (screens-publish R2); please draw it and word it as you see fit. (3) `owed:projectaikeepaway` is declared (op-declarations R41) and served: the owed mark can come off (DEC-213 (5)). Answer with an ACK naming this entry.
