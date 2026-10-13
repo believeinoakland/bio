@@ -42,3 +42,7 @@ Also, for R39, not a question: the read of `importedCase` now passes the reading
 - `checks/run.mjs`: format 0, architecture 0 (none in my files), channels 0. Coverage has 36 failures, all in other modules (screens-*, setup-words, signin-door, tasks, wizard-scripts); none is conformance's.
 
 Size (session_01NR4xupHUaVCnuPH6iymd1X): test runs 7, module lines 2770
+
+## J2 · COMPLETE
+
+T47-34 applied: R39 (identity and stake mapped field by field from case-import R4's group_fields, read as the reading viewer, not viewer null, which R4 answers as a non-member) and edition_date's read removed (always null, K3121). Conformance 114/114; checks format/architecture/coverage/ownership 0 failures. Users' tests 614/621, the 6 failures action-replies' own and red on tranche/T47 too. Deferred to BOB: C-113.6 NO_FINDINGS translation still says 'published finding' (words, stamp). Record: Completion section.
