@@ -40,3 +40,7 @@ R16 "Headers" says the upgrade request carries `x-civicsmith-trace` and `x-civic
 - `checks/run.mjs`: format 0, architecture 0 (3071 files), channels 0. Coverage has 43 failures, all in other modules (rule 5's inherited reds) and none in agent-model.
 
 Size (session_01BU1bQnhpmnD4TghBiv62gD): test runs 7, module lines 2374
+
+## J2 · REPORT
+
+agent-worker (T47-80, ordered after mine): with R16 in, 4 of its 16 test files go red (ask, t41, t46, requirements). The cause is its sign-in fixtures sending {kind: signin, member} with no secret: they now get SIGNIN_NOT_HELD, and several assert 'no secret'. This is its own R82. Its R45 bundle checks also fail because its committed bundle includes agent-model's source; that is its generated artifact, regenerated at layer close, and I wrote none. Same suite before my change: 0 fail. For its R83, the trace and member reference go to agent-model as converse({..., trace, memberRef}) and modelCall(ref, req, {runner, trace, memberRef}) (J1).
