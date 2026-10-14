@@ -28,26 +28,38 @@ export const PERSON = (o = {}) => ({ ok: true, found: true, entity_id: ENT, at: 
     question: null, citation: { captureSha: SHA, extent: { kind: "pdf-page", page: 2 } }, grade: "B", by: "member:mai", at: "2026-10-02T09:00:00Z", withdrawn: null }],
   posts: [{ member: ENT, line_id: "LIN-2026-0040", kind: "holds", from: ENT, to: ORG, capacity: "employee", title: "Director of Public Works",
     valid: { from: "2022-03-01", to: null, precision: "day", zone: "UTC" }, grade: { assertion: "B", ends: ["B", "B"] }, citation: { captureSha: SHA, extent: { kind: "pdf-page", page: 0 } } }],
-  duties: [], undetermined: [], truncated: {}, limit: 500, ...o });
+  duties: [], undetermined: [], truncated: {}, limit: 500,
+  claims: [{ claim_id: "IDC-2026-0001", a: ENT, b: "ENT-2026-0019", kind: "same_as", grade: "B", why: "both hold the Deputy Director post on the cited dates", by: "member:dev", at: "2026-10-03T09:00:00Z" },
+    { claim_id: "IDC-2026-0002", a: ENT, b: "ENT-2026-0021", kind: "unsure", grade: "C", why: "the same surname", by: "member:mai", at: "2026-10-04T09:00:00Z" }], ...o });
 export const DIRECTORY = (o = {}) => ({ ok: true, following: 3, in_your_projects: 1, limit: 50, truncated: false, cursor: null,
   rows: [{ entity: ENT, kind: "person", name: "L. Chen", today: { posts: [{ line_id: "LIN-1", title: "Director of Public Works", capacity: "employee", office: { entity: "ENT-9", label: "Director" }, body: { entity: ORG, label: "Public Works Department" } }] },
     documents: 14, questions: 2, projects: 1, newest_added: "2026-10-02T09:00:00Z", mine: true },
-  { entity: ORG, kind: "body", name: "Public Works Department", today: { kind: "body", sector: "government", note: "A city department · repairs streets and sewers" },
+  { entity: ORG, kind: "body", name: "Public Works Department", today: { kind: "body", sector: "government", note: "A city department · repairs streets and sewers", note_by: "member:mai", machine: false },
     documents: 11, questions: 0, projects: 0, newest_added: "2026-09-28T09:00:00Z", mine: false }], ...o });
 export const WALK = (o = {}) => ({ ok: true, from: ENT, at: { value: "2026-10-14", precision: "day", zone: "UTC" }, kinds: [], order: { by: "fewest steps first" },
   paths: [{ hops: [{ id: "lines:holds:1", from: ENT, to: ORG, kind: "line:holds:employee", owner: "lines", valid: {}, evidence: [{ source: "capture:" + SHA, extent: { kind: "pdf-page", page: 1 } }], grade: { assertion: "B", ends: ["B", "B"] }, derived: null },
     { id: "co:5", from: ORG, to: "ENT-2026-0200", kind: "mentioned_together", owner: "connections", valid: {}, evidence: [], grade: { assertion: "C", ends: ["C", "C"] }, derived: { method: "co-mention@1", inputs: [ORG, "ENT-2026-0200"], as_of: "2026-10-14" } }],
     grade: { assertion: "C", end: "C" }, label: "evidenced", marks: [{ hop: "co:5", mark: "derived" }], at_date: "in" },
-  { hops: [{ id: "entities:proxy_for:2", from: ENT, to: "ENT-2026-0300", kind: "proxy_for", owner: "entities", valid: {}, evidence: [], grade: { assertion: "D", ends: ["D", "D"] }, derived: null, label: "declared, not evidenced" }],
-    grade: { assertion: "D", end: "D" }, label: "lead", lead: { hops: ["entities:proxy_for:2"], sentence: "a lead" }, marks: [{ hop: "entities:proxy_for:2", mark: "declared, not evidenced" }], at_date: "in" }],
+  { hops: [{ id: "REL-2026-0002", from: ENT, to: "ENT-2026-0300", kind: "proxy_for", owner: "entities", valid: {}, evidence: [], grade: { assertion: "D", ends: ["D", "D"] }, derived: null, label: "declared, not evidenced" }],
+    grade: { assertion: "D", end: "D" }, label: "lead", lead: { hops: ["REL-2026-0002"], sentence: "a lead" }, marks: [{ hop: "REL-2026-0002", mark: "declared, not evidenced" }], at_date: "in" }],
   hubs: [], fanout_truncated: [], owner_refusals: [], visited: 5, depth: 8, budget_ms: 10000, elapsed_ms: 4, owner_calls: 3, complete: true, note: "", ...o });
 export const VOCAB = { vocabularies: { connection_kinds: { values: ["line:holds:employee", "money_flow", "mentioned_together", "proxy_for"],
-  words: { "line:holds:employee": { word: "held the post (employee)" }, money_flow: { word: "money" }, mentioned_together: { word: "mentioned together" }, proxy_for: { word: "proxy for" } } } } };
+  words: { "line:holds:employee": { word: "held the post (employee)", group: "pos" }, money_flow: { word: "money", group: "money" }, mentioned_together: { word: "mentioned together", group: "ment" }, proxy_for: { word: "proxy for", group: "same" }, event_voted: { word: "voted", group: "part" }, step_source: { word: "stated in a source", group: "pos" } } } } };
+VOCAB.vocabularies.connection_kinds.values.push("event_voted", "step_source");
+/** `exploregraph`'s answer: a person one ring out and an organisation two rings out, the far node a stop (explore R21). */
+export const GRAPH_PERSON = "ENT-2026-0200";
+export const GRAPH = (o = {}) => ({ ok: true, centre: ENT, at: { value: "2026-10-14", precision: "day", zone: "UTC" },
+  nodes: [{ id: ENT, ring: 0, id_kind: "ENT" }, { id: GRAPH_PERSON, ring: 1, id_kind: "ENT" }, { id: ORG, ring: 2, id_kind: "ENT" }],
+  steps: [{ id: "co:1", from: ENT, to: GRAPH_PERSON, kind: "mentioned_together", word: "mentioned together", class: "derived", grade: { assertion: "C", ends: ["C", "C"] }, evidence: [{ source: "capture:" + SHA }], valid: {} },
+    { id: "lines:holds:1", from: GRAPH_PERSON, to: ORG, kind: "line:holds:employee", word: "held the post (employee)", class: "evidentiary", grade: { assertion: "B", ends: ["B", "B"] }, evidence: [{ capture_sha: SHA, extent: { kind: "pdf-page", page: 1 } }], valid: {} }],
+  stopped: [{ node: ORG, why: "ring" }], visited: 3, budget_ms: 10000, elapsed_ms: 2, ...o });
 export const TIMELINE = (o = {}) => ({ ok: true, set: [ENT],
   world: { label: "what they did", items: [
-    { event_id: "EVT-2026-0001", kind: "vote", status: "EventScheduled", when: { start: "2024-01-12T08:00:00Z", end: "2024-01-13T08:00:00Z", precision: "day", zone: "UTC", value: "2024-01-12" }, roles: [], concerns: true, of: [ENT], order: { undetermined: false } },
-    { event_id: "EVT-2026-0002", kind: "decision", status: "EventScheduled", when: { start: null, end: null, precision: "edtf", zone: "UTC", value: "2024-03" }, roles: [], concerns: true, of: [ENT], order: { undetermined: true, with: ["EVT-2026-0003"], band: {} } }],
-    placed_nowhere: [{ event_id: "EVT-2026-0009", kind: "statement", status: "EventScheduled", when: null, roles: [], concerns: false, of: [ENT] }], limit: 100, truncated: false },
+    { event_id: "EVT-2026-0001", kind: "vote", status: "EventScheduled", when: { start: "2024-01-12T08:00:00Z", end: "2024-01-13T08:00:00Z", precision: "day", zone: "UTC", value: "2024-01-12" }, roles: [], concerns: true, of: [ENT], order: { undetermined: false },
+      participants: [{ participant_id: 1, entity_id: ORG, role: "decider", attestation_id: 1, grades: { attestation: "B", resolution: "B" } }, { participant_id: 2, entity_id: ENT, role: "voted", vote_value: "for", attestation_id: 1, grades: { attestation: "B", resolution: "B" } },
+        { participant_id: 3, entity_id: "ENT-2026-0300", role: "voted", vote_value: "against", attestation_id: 1, grades: { attestation: "C", resolution: "C" } }], participants_total: 3, participants_truncated: false, grade: "B" },
+    { event_id: "EVT-2026-0002", kind: "decision", status: "EventScheduled", when: { start: null, end: null, precision: "edtf", zone: "UTC", value: "2024-03" }, roles: [], concerns: true, of: [ENT], order: { undetermined: true, with: ["EVT-2026-0003"], band: {} }, participants: [], participants_total: 0, participants_truncated: false, grade: "C" }],
+    placed_nowhere: [{ event_id: "EVT-2026-0009", kind: "statement", status: "EventScheduled", when: null, roles: [], concerns: false, of: [ENT], participants: [], participants_total: 0, grade: null, grade_why: "placed nowhere: no attestation you can see dates this event, so none governs its time" }], limit: 100, truncated: false },
   ours: { label: "what we did", sources: [{ source: "actions", items: [{ at: "2026-09-04", label: "We requested the rent schedules", ref: ACT, kind: "request" }], truncated: false }] }, ...o });
 export const EVENT = (id) => ({ ok: true, found: true, event: { event_id: id, kind: "vote", attestations: [{ attestation_id: 1, capture_sha: SHA, extent: { kind: "pdf-page", page: 6 }, grade: "B" }],
   participants: [{ participant_id: 1, entity_id: ORG, role: "decider", superseded: false }] } });
@@ -76,7 +88,8 @@ export const ESTIMATE = CALCULATION({ calc_id: "CALC-2026-0002", kind: "estimate
 export const ENTITY = { ok: true, found: true, entity: { entity_id: PROC, kind: "proceeding", label: "the lease rent case", note: "From the court's caption", proceeding: { forum: "ENT-2026-0101", forum_kind: "court", number: "RG26-114502", kind: "civil" } } };
 export const PARTIES = { ok: true, proceeding: PROC, parties: [{ party: "ENT-2026-0102", role: "petitioner", line: { line_id: "LIN-2", citation: { captureSha: SHA } } }, { party: "ENT-2026-0103", role: "respondent", line: { line_id: "LIN-3" } }], truncated: false };
 export const DUTIES = { ok: true, duties: [{ duty_id: "DUT-1", modality: "duty", obligor: "ENT-2026-0103", performance: { act: "produce the 2024 rent schedules" }, source: { kind: "court" }, arising_in: PROC, time: { basis: "window", date: "2026-10-30" }, adoption: { clause: "Order ¶3" }, withdrawn: null, in_force: { state: "in_force" } }] };
-export const FOLLOWS = { ok: true, as_of: "2026-10-14T00:00:00Z", items: [{ follow: 3, kind: "register", subject: { kind: "register", address: "https://court.example/register/RG26" }, last_read: "2026-10-01T06:00:00Z", gated: { kind: "account" } }] };
+export const FOLLOWS = { ok: true, as_of: "2026-10-14T00:00:00Z", items: [{ follow: 3, kind: "register", subject: { kind: "register", address: "https://court.example/register/RG26", proceeding: PROC }, last_read: "2026-10-01T06:00:00Z", gated: { kind: "account" } },
+  { follow: 4, kind: "register", subject: { kind: "register", address: "https://court.example/register/OTHER", proceeding: "ENT-2026-0999" }, last_read: "2026-10-02T06:00:00Z" }] };
 export const ACTION = { ok: true, id: ACT, kind: "records_request", counterparty: { role: "City Clerk", body: "City Council" },
   clock: [{ text: "pra_10day", description: "The City Clerk's reply", date: "2026-10-14", basis: "Gov. Code §7922.535(a)", status: "pending" }], clock_next: "2026-10-14" };
 export const PROPOSALS = { ok: true, action: ACT, proposals: [{ key: "pra_10day@member:mai", rule: "pra_10day", date: "2026-10-14", undetermined: null, basis: "Gov. Code §7922.535(a) (profile basis: the 10-day window)",
@@ -85,6 +98,14 @@ export const PROPOSALS = { ok: true, action: ACT, proposals: [{ key: "pra_10day@
 export const STANDARD = { ok: true, id: STD, cite: "Administrative Instruction 4.12, §3", kind: "policy", issuer: "Public Works", reason: "The Director shall repair each reported pothole within seven calendar days of the report.",
   text: ["CNT-2026-0001"], texts: [{ content_id: "CNT-2026-0001", standing: "current", newer: null }], period: { from: "2023-01-01", to: null } };
 export const RELATIONS = { ok: true, standard: STD, temporal: [], referential: [{ id: "lrel-1", type: "implements", from: { standard: STD }, to: { standard: "STD-2026-0001-ordinance" }, reason: "The instruction implements the repair ordinance.", direction: "out", withdrawn: null }], truncated: false };
+export const STD_PROPOSALS = (q = {}) => {
+  const all = [{ id: "STDP-2026-0001", cite: "90% of potholes filled within 72 hours", kind: "policy", issuer: "Public Works", why: "the department's own goal", label: { by: "class:legal_lookup", state: "machine_proposed", machine_work: true, says: "Proposed by the assistant: machine work" },
+      proposed_by: "class:legal_lookup", proposed_at: "2026-10-05T09:00:00Z", has_text: true, adoption: null },
+    { id: "STDP-2026-0002", cite: "Repair crews log each pothole", kind: "policy", issuer: "Public Works", why: "a member's suggestion", label: { by: "member:mai", state: "member_proposed", machine_work: false, says: "Proposed by mai" },
+      proposed_by: "member:mai", proposed_at: "2026-10-04T09:00:00Z", has_text: false, adoption: { standard: STD, by: "member:dev", at: "2026-10-06T09:00:00Z" } }];
+  const state = q.state || "open";
+  return { ok: true, project: q.project, state, items: all.filter((x) => state === "all" || (state === "open") === !x.adoption), truncated: false };
+};
 export const TIES = { ok: true, member: "mai", count: 2, truncated: false, ties: [{ tie_id: "MTI-2026-0001", member: "mai", entity: "ENT-2026-0700", kind: "employer", note: "East Bay Transit", attribution: "group", at: "x", withdrawn: null },
   { tie_id: "MTI-2026-0002", member: "mai", entity: "ENT-2026-0701", kind: "relative", note: "a cousin on the Planning Commission staff", attribution: "name", at: "x", withdrawn: null }] };
 
@@ -114,6 +135,10 @@ export function plane(o = {}) {
     standard: ok(STANDARD),
     lawrelations: ok(RELATIONS),
     proposals: ok({ ok: true, proposals: [] }),
+    exploregraph: ok(GRAPH()),
+    standardproposals: (r) => ok(STD_PROPOSALS(r.query)),
+    standards: ok({ ok: true, items: [{ id: "STD-2026-0001-ordinance", cite: "Municipal Code §12.04" }, { id: STD, cite: "Administrative Instruction 4.12, §3" }], truncated: false }),
+    sequence: ok({ ok: true, answer: "undetermined", why: "the sources date them no closer" }),
     memberties: ok(TIES),
     clocksics: ok({ ok: true, filename: "deadlines.ics", content_type: "text/calendar; charset=utf-8", ics: "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n", events: 1, left_out: { undated: 0 } }),
     ...(o.plane || {}),
@@ -159,3 +184,8 @@ export async function press(p, op, { reason, within, fields, el } = {}) {
 /** Every text node drawn that reads as a word key: a key the page holds no word for is drawn as itself. */
 export const rawKeys = (root) => textNodes(root).map((t) => String(t.data).trim()).filter((t) => /^[a-z][\w-]*(\.[\w-]+){2,}$/.test(t));
 export { ok, textNodes };
+
+/** The address each screen is opened at. */
+export const PATHS = { people: "/app/people", person: "/app/person/" + ENT, explore: "/app/explore/" + ENT, timeline: "/app/timeline/" + P,
+  money: "/app/money/" + MSR, calculation: "/app/calculation/" + CALC, help: "/app/help", proceeding: "/app/proceeding/" + PROC,
+  "due-date": "/app/due-date/" + ACT, standard: "/app/standard/" + STD, ties: "/app/ties" };

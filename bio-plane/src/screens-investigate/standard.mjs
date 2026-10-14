@@ -6,47 +6,63 @@
 import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
 
+function place(view) {
+  const id = String(view.subject || "").split("/")[0];
+  return { project: { id: /^PROJ-/.test(id) ? id : "", title: /^PROJ-/.test(id) ? id : "" } };
+}
+
 function reads(view) {
-  const id = String(view.subject || "");
+  const [id, mode] = String(view.subject || "").split("/");
+  const state = mode === "adopted" || mode === "all" ? mode : "open";
   const out = {};
   if (/^STD-/.test(id)) {
     out.standard = { op: "standard", query: { id }, subject: true };
     out.relations = { op: "lawrelations", query: { id } };
+    out.laws = { op: "standards", query: { limit: "200" } };
   }
-  if (view.reachable) out.proposals = { op: "proposals", query: {} };
+  /* R19 (N1029): the project's proposals, a member's among them, whether or not the assistant is reachable */
+  if (/^PROJ-/.test(id)) out.proposals = { op: "standardproposals", query: { project: id, state } };
   return out;
 }
 
 function render(cs, view) {
   const S = "screen.standard.";
   const P = view.parts;
-  const id = String(view.subject || "");
+  const [id, mode] = String(view.subject || "").split("/");
+  const state = mode === "adopted" || mode === "all" ? mode : "open";
   const s = view.data.standard && view.data.standard.state === "ok" ? view.data.standard.value : null;
   const out = [cs.title(s ? s.cite || id : cs.w("screen.standard.name"), { thing: { kind: "standard", facts: s ? [s.kind || "", s.issuer || ""] : [] } })];
   if (/^STD-/.test(id)) out.push(cs.state("standard", view, (v) => {
     const texts = Array.isArray(v.texts) ? v.texts : (v.text || []).map((c) => ({ content_id: c }));
     const per = v.period || {};
-    return `<p class="cs-sub">${cs.w(S + "sub", { kind: cs.w(S + "kind." + (["statute", "regulation", "ordinance", "court", "policy", "commitment", "standard"].includes(v.kind) ? v.kind : "standard")), issuer: v.issuer || "" })}`
+    return `<p class="mk-sub">${cs.w(S + "sub", { kind: cs.w(S + "kind." + (["statute", "regulation", "ordinance", "court", "policy", "commitment", "standard"].includes(v.kind) ? v.kind : "standard")), issuer: v.issuer || "" })}`
       + ` · ${per.from ? cs.w(per.to ? S + "inforce.span" : S + "inforce.since", { from: cs.date(per.from), to: per.to ? cs.date(per.to) : "" }) : cs.mark("gap", "undetermined", { reason: cs.w(S + "inforce.none") })}</p>`
       + (v.reason ? `<blockquote class="mk-passage rec">${cs.esc(v.reason)}</blockquote>` : "")
-      + (texts.length ? `<p class="cs-meta">${cs.w(S + "words")} ${texts.map((t) => cs.ref("passage", t.content_id, t.content_id, [t.standing || ""])).join(", ")}</p>` : "")
+      + (texts.length ? `<p class="mk-small">${cs.w(S + "words")} ${texts.map((t) => cs.ref("passage", t.content_id, t.content_id, [t.standing || ""])).join(", ")}</p>` : "")
       + (v.text_withheld ? cs.mark("gap", "withheld") : "");
   }));
   if (/^STD-/.test(id)) out.push(cs.sec(S + "laws", cs.state("relations", view, (v) => {
     const all = (v.temporal || []).concat(v.referential || []).filter((r) => !r.withdrawn);
     return all.length ? cs.sheet(all.map((r) => cs.row(`<b>${cs.w(S + "rel." + (r.type || "refers_to"))}</b>`,
-      cs.esc(((r.direction === "in" ? r.from : r.to) || {}).standard || ""), `<span class="cs-meta">${cs.esc(r.reason || "")}</span>`)).join("")) : `<p>${cs.w(S + "laws.none")}</p>`;
+      cs.esc(((r.direction === "in" ? r.from : r.to) || {}).standard || ""), `<span class="mk-small">${cs.esc(r.reason || "")}</span>`)).join("")) : "";
   })
     + cs.choice("st-type", S + "type", ["implements", "refers_to", "amends", "repeals", "defines", "excepts"].map((k) => [k, S + "rel." + k]), {})
-    + cs.field("st-to", S + "to", { help: S + "to.help" }) + cs.field("st-citation", S + "citation", {}) + cs.field("st-effective", S + "effective", { type: "date", help: S + "effective.help" })
+    + cs.choice("st-to", S + "to", view.parts.options(view, "laws", (v) => v.items, (x) => ({ value: x.id, text: x.cite || x.id })).filter((o) => o.value !== id), {}) + cs.field("st-citation", S + "citation", {}) + cs.field("st-effective", S + "effective", { type: "date", help: S + "effective.help" })
     + cs.act("lawrelate", { label: "act.lawrelate.label.standard" })));
-  /* the assistant's proposals: machine work, only while it is reachable, never a standard until adopted */
-  if (view.reachable) out.push(cs.sec(S + "proposals", cs.state("proposals", view, (v) => {
-    const list = (Array.isArray(v.proposals) ? v.proposals : []).filter((p) => p && (p.proposal_id || p.cite));
-    return list.length ? cs.sheet(list.map((p) => cs.row(cs.mark("origin", "machine"), `<span class="rec">${cs.esc(p.cite || p.proposal_id)}</span> · ${cs.w(S + "notyet")}`, `<span class="cs-meta">${cs.esc(p.proposal_id || "")}</span>`)).join(""))
-      : `<p>${cs.w(S + "proposals.none")}</p>`;
-  }) + cs.field("st-proposal", S + "proposal", { help: S + "proposal.help" })
-    + cs.act("standardadopt", { label: "act.standardadopt.label.standard" })));
+  /* R19: the project's proposals under their state, each labelled with who proposed it, why, and what became of it */
+  if (/^PROJ-/.test(id)) out.push(cs.sec(S + "proposals", `<div class="mk-acts">${["open", "adopted", "all"].map((k) =>
+    `<a class="cs-btn" data-tone="quiet" data-nav href="/app/standard/${encodeURIComponent(id)}${k === "open" ? "" : "/" + k}" aria-pressed="${k === state}">${cs.w(S + "state." + k)}</a>`).join("")}</div>`
+    + cs.state("proposals", view, (v) => {
+      const list = (Array.isArray(v.items) ? v.items : []).filter((p) => p && p.id);
+      return (list.length ? cs.sheet(list.map((p) => {
+        const lab = p.label || {};
+        return cs.row(lab.machine_work ? cs.mark("origin", "machine") : "",
+          `<b>${cs.esc(p.cite || p.id)}</b> · ${cs.esc(lab.says || "")} <span class="mk-small">${cs.w(S + "proposedby", { by: String(p.proposed_by || lab.by || "").replace(/^(member|class):/, ""), date: cs.date(p.proposed_at || "") })}</span>`
+          + (p.why ? `<br><span class="rec">${cs.esc(p.why)}</span>` : "") + `<br><span class="mk-small">${cs.w(S + "notyet")}</span>`,
+          p.adoption ? `<span class="mk-small">${cs.w(S + "adopted", { by: String(p.adoption.by || "").replace(/^member:/, ""), date: cs.date(p.adoption.at || "") })}</span> ${cs.ref("standard", p.adoption.standard, p.adoption.standard, [])}`
+            : cs.act("standardadopt", { label: "act.standardadopt.label.standard", data: { proposal: p.id } }));
+      }).join("")) : "") + (v.truncated ? `<p class="mk-small">${cs.w(S + "proposals.more")}</p>` : "");
+    })));
   /* "Hold this as a standard", from a passage */
   out.push(cs.sec(S + "declare", cs.field("st-cite", S + "cite", { help: S + "cite.help" })
     + cs.choice("st-kind", S + "kindpick", ["policy", "ordinance", "regulation", "statute", "commitment", "standard"].map((k) => [k, S + "kind." + k]), {})
@@ -69,8 +85,8 @@ const acts = [
   /* adopting a proposal is the member's own act, with her own reason */
   { op: "standardadopt", label: "act.standardadopt.label.standard",
     send(view, el, cs) {
-      const proposal = String(cs.value("st-proposal") || "").trim();
-      if (!proposal) return { refuse: "screen.standard.adopt.empty" };
+      const proposal = String((el && el.dataset && el.dataset.proposal) || "").trim();
+      if (!proposal) return null;
       return { body: { proposal } };
     },
     done(view, answer, cs) { const r = answer && answer.result !== undefined ? answer.result : answer; if (r && r.id) cs.go("standard", r.id); } },
@@ -93,20 +109,21 @@ export const STANDARD_WORDS = [
   ["inforce.none", "when it is in force is not recorded"],
   ["words", "Its words as written:"],
   ["laws", "Related laws"],
-  ["laws.none", "No law is related to this standard yet."],
   ...["implements", "refers_to", "amends", "repeals", "renumbers", "recodifies", "defines", "excepts", "incorporates"].map((k) => ["rel." + k,
     { implements: "Implements", refers_to: "Refers to", amends: "Amends", repeals: "Repeals", renumbers: "Renumbers", recodifies: "Recodifies", defines: "Defines a term of", excepts: "Makes an exception to", incorporates: "Incorporates" }[k]]),
   ["type", "How it relates"],
-  ["to", "The law (a standard's id)"],
-  ["to.help", "The statute, regulation or ordinance, held as a standard."],
+  ["to", "The law it relates to"],
   ["citation", "The passage that says so (a content id)"],
   ["effective", "In effect from (for an amendment or repeal)"],
   ["effective.help", "The day the change takes effect."],
-  ["proposals", "Proposed by the assistant"],
-  ["proposals.none", "The assistant has proposed no standard here."],
+  ["proposals", "Proposed standards"],
+  ["proposals.more", "More proposals are held than are shown."],
+  ["state.open", "Open"],
+  ["state.adopted", "Adopted"],
+  ["state.all", "All"],
+  ["proposedby", "proposed by {by}, {date}"],
+  ["adopted", "adopted by {by}, {date} as"],
   ["notyet", "not a standard until a member adopts it"],
-  ["proposal", "The proposal to adopt"],
-  ["proposal.help", "Its id. Adopting it is your own act, with your own reason."],
   ["declare", "Hold a standard"],
   ["cite", "Its citation"],
   ["cite.help", "As the city cites it, for example \"Administrative Instruction 4.12, §3\"."],
@@ -116,7 +133,6 @@ export const STANDARD_WORDS = [
   ["text.help", "The passage that states the requirement, as captured."],
   ["from", "In force from (optional)"],
   ["declare.empty", "Give its citation, who set it and the passage that states it."],
-  ["adopt.empty", "Name the proposal to adopt."],
   ["relate.empty", "Name the law and the passage that relates them."],
   ["relate.effective", "An amendment or repeal needs the day it takes effect."],
 ].map(([k, en]) => row("screen.standard." + k, en));
@@ -126,4 +142,4 @@ const words = ["screen.standard.name", "screen.standard.purpose",
   "mark.origin.machine.name", "mark.origin.machine.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
   "mark.gap.withheld.name", "mark.gap.withheld.means", "state.empty", "state.loading", "state.failed", ...STANDARD_WORDS];
 
-export const STANDARD_SCREEN = Object.freeze({ id: "standard", reads, render, acts, words, parts: PARTS });
+export const STANDARD_SCREEN = Object.freeze({ id: "standard", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads, place, render, acts, words, parts: PARTS });

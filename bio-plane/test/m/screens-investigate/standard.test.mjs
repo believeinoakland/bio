@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, plane, STD } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, plane, STD, P, STD_PROPOSALS } from "./fixtures.mjs";
 
 const at = "/app/standard/" + STD;
 const reachable = (o = {}) => ({ boot: { plane: { ...plane(o), assistantstate: ok({ on: true }), accountreference: ok({ held: true }) } } });
@@ -18,16 +18,35 @@ test("R8 reads the standard (its words as written, its source passage, its issue
   assert.match(m.textContent, /Implements.*STD-2026-0001-ordinance/s);
 });
 
-test("R8 the proposals only while the assistant is reachable, each labelled machine work, not a standard until a member adopts it (control: not reachable, not read, not drawn)", async () => {
-  const p = await open(at);
-  assert.equal(p.byOp("proposals").length, 0);
-  assert.equal(button(p, "standardadopt"), null);
-  const props = ok({ ok: true, proposals: [{ proposal_id: "STDP-2026-0001", cite: "90% of potholes filled within 72 hours" }] });
-  const q = await open(at, reachable({ plane: { proposals: props } }));
-  assert.equal(q.byOp("proposals").length, 1);
-  const s = main(q).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === "Proposed by the assistant");
-  assert.match(s.textContent, /90% of potholes filled within 72 hours · not a standard until a member adopts it/);
-  assert.ok(s.querySelector('.cs-origin[data-origin="machine"]'));
+const proj = "/app/standard/" + P;
+
+test("R19 the project's proposals are read from standardproposals (the project, state open by default), each under its state with its label, why and what became of it, each \"not a standard until a member adopts it\"; adopted and all are choices; control: a proposal of another project is not listed", async () => {
+  const p = await open(proj);
+  const r = p.byOp("standardproposals");
+  assert.deepEqual([r.length, r[0].query.project, r[0].query.state], [1, P, "open"]);
+  const sec = main(p).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === "Proposed standards");
+  assert.match(sec.textContent, /90% of potholes filled within 72 hours.*Proposed by the assistant: machine work.*the department's own goal.*not a standard until a member adopts it/s);
+  assert.ok(sec.querySelector('.cs-origin[data-origin="machine"]'), "machine work is marked");
+  assert.doesNotMatch(sec.textContent, /Repair crews log each pothole/, "the adopted one is not under open");
+  assert.ok(button(p, "standardadopt", sec), "an open one can be adopted");
+  const choices = sec.querySelectorAll("a.cs-btn").map((a) => a.getAttribute("href"));
+  assert.deepEqual(choices, [proj, proj + "/adopted", proj + "/all"]);
+  const q = await open(proj + "/adopted");
+  assert.equal(q.byOp("standardproposals")[0].query.state, "adopted");
+  const s2 = main(q).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === "Proposed standards");
+  assert.match(s2.textContent, /Repair crews log each pothole.*adopted by dev, 6 October 2026 as/s);
+  assert.equal(button(q, "standardadopt"), null, "an adopted one is not adopted again");
+  const all = await open(proj + "/all");
+  assert.equal(all.byOp("standardproposals")[0].query.state, "all");
+  const other = await open(proj, { plane: { standardproposals: ok({ ok: true, project: P, state: "open", items: [], truncated: false }) } });
+  assert.doesNotMatch(main(other).textContent, /90% of potholes/, "a proposal the read does not answer for this project is not listed");
+});
+
+test("R19 the section is drawn whether or not the assistant is reachable; truncated is said", async () => {
+  const p = await open(proj, { plane: { standardproposals: ok({ ...STD_PROPOSALS({ project: P }), truncated: true }) } });
+  assert.match(main(p).textContent, /90% of potholes filled within 72 hours/);
+  assert.match(main(p).textContent, /More proposals are held than are shown/);
+  assert.equal(p.byOp("proposals").length, 0, "the old assistant-only read is gone");
 });
 
 test("R8 standarddeclare \"Hold this as a standard\" from a passage; standardadopt by the member's own act; lawrelate \"Relate to a law\"", async () => {
@@ -35,9 +54,10 @@ test("R8 standarddeclare \"Hold this as a standard\" from a passage; standardado
   fill(p, { "st-type": "implements", "st-to": "STD-2026-0001-ordinance", "st-citation": "CNT-2026-0001" });
   await press(p, "lawrelate", { reason: "§3 carries out the ordinance's §2" });
   assert.deepEqual(p.byOp("lawrelate")[0].body, { type: "implements", from: STD, to: "STD-2026-0001-ordinance", citation: "CNT-2026-0001", reason: "§3 carries out the ordinance's §2" });
-  fill(p, { "st-proposal": "STDP-2026-0001" });
-  await press(p, "standardadopt", { reason: "the budget's own target" });
-  assert.deepEqual(p.byOp("standardadopt")[0].body, { proposal: "STDP-2026-0001", reason: "the budget's own target" });
+  const q = await open(proj, { plane: { standardadopt: ok({ ok: true, id: "STD-2026-0010-policy" }) } });
+  await press(q, "standardadopt", { reason: "the budget's own target" });
+  assert.deepEqual(q.byOp("standardadopt")[0].body, { proposal: "STDP-2026-0001", reason: "the budget's own target" });
+  assert.equal(q.location.pathname, "/app/standard/STD-2026-0010-policy");
   fill(p, { "st-cite": "Budget 2026, performance target 4", "st-kind": "commitment", "st-issuer": "City Council", "st-text": "CNT-2026-0030, CNT-2026-0031", "st-from": "2026-07-01" });
   await press(p, "standarddeclare", { reason: "the council adopted it" });
   assert.deepEqual(p.byOp("standarddeclare")[0].body, { cite: "Budget 2026, performance target 4", kind: "commitment", issuer: "City Council", text: ["CNT-2026-0030", "CNT-2026-0031"], period: { from: "2026-07-01", to: null }, reason: "the council adopted it" });

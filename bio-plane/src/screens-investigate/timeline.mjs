@@ -14,6 +14,7 @@ function reads(view) {
   const id = String(view.subject || "");
   return {
     project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
+    people: { op: "peopledirectory", query: { limit: "200" } },
     questions: { op: "list", query: { type: "inquiry", limit: "500" } },
   };
 }
@@ -42,25 +43,32 @@ function render(cs, view) {
     if (w.precision === "upper_bound") return cs.w(S + "onorbefore", { date: cs.date(w.end || w.value || "") });
     return cs.date(w.value || w.start || "") || cs.esc(String(w.value || ""));
   };
-  const detail = (eid) => {
-    const e = P.later(cs, view, "event:" + eid, "event", { query: { id: eid } });
-    return cs.state(e, (v) => {
-      const ev = v.event || {};
-      const people = (ev.participants || []).filter((x) => !x.superseded).map((x) => cs.w(S + "role", { role: x.role || "" }) + " " + P.refOf(cs, x.entity_id, x.entity_id, [x.role || ""])).join(", ");
-      const grades = (ev.attestations || []).map((a) => a.grade).filter((g) => /^[A-D]$/.test(g || "")).sort();
-      const src = (ev.attestations || []).find((a) => a.capture_sha);
-      return `<span class="cs-meta">${people || cs.w(S + "nobody")}</span> `
-        + (grades.length ? cs.grade(src ? "capture" : "testimony", grades[grades.length - 1]) : cs.mark("gap", "unrated"))
-        + (src ? " " + P.refOf(cs, src.capture_sha, cs.w(S + "source"), [], "capture") : "");
-    });
+  /* R20: who took part and the event's grade, as `timeline` answers them for the item (no read per event) */
+  const detail = (it) => {
+    const ps = Array.isArray(it.participants) ? it.participants : [];
+    const total = Number(it.participants_total) || ps.length;
+    const people = ps.map((x) => cs.w(S + "role", { role: cs.w(S + "roles." + (["decider", "voted", "signatory", "actor", "party", "present", "speaker", "author"].includes(x.role) ? x.role : "actor")) })
+      + " " + P.refOf(cs, x.entity_id, x.entity_id, [x.role || ""]) + (x.role === "voted" && x.vote_value ? " (" + cs.esc(x.vote_value) + ")" : "")
+      + (x.grades && /^[A-D]$/.test(x.grades.attestation || "") ? " " + cs.grade("capture", x.grades.attestation) : "")).join("; ");
+    const grade = /^[A-D]$/.test(it.grade || "") ? cs.grade("capture", it.grade)
+      : cs.mark("gap", "unrated", { reason: it.grade_why || "" });
+    return `<span class="mk-small">${people || cs.w(S + "nobody")}${total > ps.length ? " " + cs.w(S + "more.people", { n: String(total - ps.length) }) : ""}</span> ${grade}`;
   };
+  /* R20: two events dates leave unordered, ordered by a cited relation: said so, the relation a reference */
+  const citedOrder = (it) => (it.order && it.order.undetermined ? (it.order.with || []).map((w) => {
+    const q = P.later(cs, view, "seq:" + it.event_id + ":" + w, "sequence", { query: { a: it.event_id, b: w } });
+    const v = q.state === "ok" ? q.value : null;
+    return v && v.basis === "cited" && (v.answer === "before" || v.answer === "after")
+      ? `<p class="mk-small">${cs.w(S + (v.answer === "before" ? "order.cited.before" : "order.cited.after"), { other: w })} ${P.refOf(cs, String(v.relation_id), cs.w(S + "order.relation"), [], "record")}</p>` : "";
+  }).join("") : "");
   const item = (it) => {
-    const order = it.order && it.order.undetermined
-      ? `<div class="cs-gapblock">${cs.mark("gap", "undetermined", { reason: cs.w(S + "order.why", { with: (it.order.with || []).join(", ") }) })}`
-        + `<p class="cs-meta">${cs.w(S + "order.evidence")}</p>`
-        + `<div class="cs-actrow">${cs.act("recorddatedfact", { label: S + "cite.date", data: { event: it.event_id } })}${cs.act("relate", { label: S + "cite.first", data: { event: it.event_id } })}`
-        + `${cs.act("findin", { label: S + "find.dates" })}</div></div>` : "";
-    return `<div class="mk-ev" data-event="${cs.esc(it.event_id)}"><span class="mk-date">${when(it.when)}</span> <b>${P.refOf(cs, it.event_id, it.kind ? cs.w(S + "kind", { kind: it.kind }) : it.event_id, [it.status || ""], "event")}</b> ${detail(it.event_id)}${order}</div>`;
+    const open = it.order && it.order.undetermined;
+    const order = open
+      ? `<div class="mk-gapblock">${cs.mark("gap", "undetermined", { reason: cs.w(S + "order.why", { with: (it.order.with || []).join(", ") }) })}`
+        + `<p class="mk-small">${cs.w(S + "order.evidence")}</p>`
+        + `<div class="mk-acts">${cs.act("recorddatedfact", { label: S + "cite.date", data: { event: it.event_id } })}${cs.act("relate", { label: S + "cite.first", data: { event: it.event_id, kind: "precedes" } })}`
+        + `${cs.act("findin", { label: S + "find.dates" })}</div></div>${citedOrder(it)}` : "";
+    return `<div class="mk-ev" data-event="${cs.esc(it.event_id)}"><span class="mk-date">${when(it.when)}</span> <b>${P.refOf(cs, it.event_id, it.kind ? cs.w(S + "kind", { kind: it.kind }) : it.event_id, [it.status || ""], "event")}</b> ${detail(it)}${order}</div>`;
   };
   /* the project's set: the people, organisations and events its document cites, and the events recorded here since */
   const set = doc ? [...new Set(doc.refs.filter((r) => /^(ENT|EVT)-/.test(String(r.target || "")) && r.status !== "severed").map((r) => r.target)
@@ -75,16 +83,14 @@ function render(cs, view) {
     const ours = v.ours || { sources: [] };
     const ourItems = (ours.sources || []).flatMap((s) => (s.items || []).filter((x) => !x.placed_nowhere).map((x) => Object.assign({ source: s.source }, x)));
     const ourFails = (ours.sources || []).filter((s) => s.error);
-    return `<div class="mk-lanes"><section class="mk-lane" data-lane="world"><h2 tabindex="0">${cs.w(S + "lane.world")}</h2>`
-      + ((world.items || []).length ? world.items.map(item).join("") : `<p class="cs-meta">${cs.w(S + "lane.empty")}</p>`)
-      + (world.truncated ? `<p class="cs-meta">${cs.w(S + "more")}</p>` : "") + "</section>"
-      + `<section class="mk-lane us" data-lane="ours"><h2 tabindex="0">${cs.w(S + "lane.ours")}</h2>`
-      + (ourItems.length ? ourItems.map((x) => `<div class="mk-ev us"><span class="mk-date">${cs.date(x.at) || cs.esc(String(x.at || ""))}</span> <b>${P.refOf(cs, x.ref, x.label || x.ref, [x.kind || ""], /^ACTN-/.test(String(x.ref)) ? "action" : undefined)}</b></div>`).join("")
-        : `<p class="cs-meta">${cs.w(S + "lane.empty")}</p>`)
+    return `<div class="mk-lanes"><section data-lane="world"><h2 class="mk-lanehead" tabindex="0">${cs.w(S + "lane.world")}</h2>`
+      + (world.items || []).map(item).join("")
+      + (world.truncated ? `<p class="mk-small">${cs.w(S + "more")}</p>` : "") + "</section>"
+      + `<section data-lane="ours"><h2 class="mk-lanehead" tabindex="0">${cs.w(S + "lane.ours")}</h2>`
+      + (ourItems.map((x) => `<div class="mk-ev us"><span class="mk-date">${cs.date(x.at) || cs.esc(String(x.at || ""))}</span> <b>${P.refOf(cs, x.ref, x.label || x.ref, [x.kind || ""], /^ACTN-/.test(String(x.ref)) ? "action" : undefined)}</b></div>`).join("")
+        )
       + ourFails.map((s) => cs.mark("gap", "undetermined", { reason: cs.w(S + "lane.failed", { source: s.source || "" }) })).join("") + "</section></div>"
-      + cs.sec(S + "undated.head", (world.placed_nowhere || []).length
-        ? cs.sheet(world.placed_nowhere.map((x) => cs.row("", P.refOf(cs, x.event_id, x.kind ? cs.w(S + "kind", { kind: x.kind }) : x.event_id, [], "event"), `<span class="cs-meta">${cs.w(S + "undated.apart")}</span>`)).join(""))
-        : `<p class="cs-meta">${cs.w(S + "undated.none")}</p>`);
+      + ((world.placed_nowhere || []).length ? cs.sec(S + "undated.head", cs.sheet(world.placed_nowhere.map((x) => cs.row("", P.refOf(cs, x.event_id, x.kind ? cs.w(S + "kind", { kind: x.kind }) : x.event_id, [], "event"), `<span class="mk-small">${cs.w(S + "undated.apart")}</span>`)).join(""))) : "");
   }));
   /* the acts: each from a passage the member names (its fingerprint, and its page) */
   const evs = tl && tl.state === "ok" ? ((tl.value.world || {}).items || []).concat((tl.value.world || {}).placed_nowhere || []) : [];
@@ -96,7 +102,7 @@ function render(cs, view) {
     cs.field("tl-sha", S + "sha", { help: S + "sha.help" }) + cs.field("tl-page", S + "page", {})
     + cs.choice("tl-kind", S + "evkind", ["vote", "meeting", "decision", "award", "statement", "filing", "other"].map((k) => [k, S + "evkind." + k]), {})
     + cs.act("createevent", { label: "act.createevent.label.timeline", tone: "primary" })
-    + evChoice("tl-event", S + "event") + cs.field("tl-who", S + "who", { help: S + "who.help" })
+    + evChoice("tl-event", S + "event") + cs.choice("tl-who", S + "who", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })), {})
     + cs.choice("tl-role", S + "rolepick", ["decider", "voted", "signatory", "actor", "party", "present", "speaker", "author"].map((r) => [r, S + "roles." + r]), {})
     + cs.field("tl-vote", S + "vote", {})
     + cs.act("addparticipant", { label: "act.addparticipant.label.timeline" })
@@ -108,7 +114,7 @@ function render(cs, view) {
     + cs.choice("tl-question", S + "question", qChoice, {}) + cs.field("tl-hunch", S + "hunch", { area: true, rec: true })
     + cs.act("hypothesishold", { label: "act.hypothesishold.label.timeline" })
     + cs.act("findin", { label: "act.findin.label.timeline" })));
-  if (view.ui.said) out.push(`<p class="cs-note">${cs.w(view.ui.said)}</p>`);
+  if (view.ui.said) out.push(`<p class="mk-note">${cs.w(view.ui.said)}</p>`);
   return out.join("");
 }
 
@@ -142,6 +148,8 @@ const acts = [
       const from = String(el.dataset.event || cs.value("tl-event") || ""), to = String(cs.value("tl-to") || "");
       const at = view.parts.passage(cs.value("tl-sha"), cs.value("tl-page"));
       if (!from || !to || from === to || !at) return { refuse: "screen.timeline.relate.empty" };
+      /* "Cite which came first": the member's chosen event came first, so `precedes` runs from it */
+      if (el.dataset.kind === "precedes") return { body: { from, to, kind: "precedes", attestation: at } };
       return { body: { from, to, kind: String(cs.value("tl-rel") || "answers"), attestation: at } };
     },
     done(view) { view.ui.later = {}; } },
@@ -169,6 +177,10 @@ const acts = [
 ];
 
 export const TIMELINE_WORDS = [
+  row(S + "more.people", "and {n} more"),
+  row(S + "order.cited.before", "Order cited, not dated: this came before {other}."),
+  row(S + "order.cited.after", "Order cited, not dated: this came after {other}."),
+  row(S + "order.relation", "the relation that says so"),
   row(S + "undated", "the source states no date"),
   row(S + "month", "{month} {year} (month known)"),
   row(S + "onorbefore", "on or before {date}"),
@@ -181,16 +193,14 @@ export const TIMELINE_WORDS = [
   row(S + "cite.date", "Cite an exact date for one of them"),
   row(S + "cite.first", "Cite which came first"),
   row(S + "find.dates", "Look for their dates in this project"),
-  row(S + "noset", "This project's document names no person, organisation or event yet, so its timeline holds nothing. Record an event below, or tie the people it is about to the project."),
-  row(S + "empty", "No event is recorded for the people and events this project follows."),
+  row(S + "noset", "This project's document names no person, organization or event yet, so its timeline holds nothing. Start with “Record an event” below."),
+  row(S + "empty", "No event is recorded yet for the people and events this project follows. Start with “Record an event” below."),
   row(S + "lane.world", "What they did"),
   row(S + "lane.ours", "What we did"),
-  row(S + "lane.empty", "Nothing in this lane yet."),
   row(S + "lane.failed", "what {source} holds could not be read"),
   row(S + "more", "More events are held than are shown."),
   row(S + "undated.head", "Undated"),
   row(S + "undated.apart", "listed apart, never guessed into place"),
-  row(S + "undated.none", "Every event here has a date."),
   row(S + "record.head", "Add to the timeline"),
   row(S + "record.head.holds", "Each act records from a passage you name: the document's fingerprint, and its page."),
   row(S + "sha", "The document"),
@@ -206,7 +216,6 @@ export const TIMELINE_WORDS = [
   row(S + "evkind.other", "Something else"),
   row(S + "event", "The event"),
   row(S + "who", "Who took part"),
-  row(S + "who.help", "The person or organisation, by its record id."),
   row(S + "rolepick", "As"),
   row(S + "roles.decider", "Decided"),
   row(S + "roles.voted", "Voted"),

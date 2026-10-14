@@ -41,7 +41,7 @@ test("R6 recordline \"Add a party by role\"; followregister (a register needing 
   assert.match(sec(p, "The register").textContent, /new filings come only by a member's own capture/);
   fill(p, { "pr-register": "https://court.example/register/RG26", "pr-login-0": true });
   await press(p, "followregister");
-  assert.deepEqual(p.byOp("followregister")[0].body, { address: "https://court.example/register/RG26", gated: { kind: "account" } });
+  assert.deepEqual(p.byOp("followregister")[0].body, { address: "https://court.example/register/RG26", proceeding: PROC, gated: { kind: "account" } }, "R16: the screen's own entity id");
   fill(p, { "pr-obligor": "ENT-2026-0103", "pr-act": "produce the 2024 rent schedules", "pr-clause": "Order ¶3", "pr-due": "2026-10-30" });
   await press(p, "declare");
   assert.deepEqual(p.byOp("declare")[0].body, { modality: "duty", obligor: "ENT-2026-0103", performance: { act: "produce the 2024 rent schedules" }, source: { kind: "court" }, clause: "Order ¶3", arising_in: PROC,
@@ -57,4 +57,17 @@ test("R6 each act names what it needs (control: nothing sent), and a refusal is 
   fill(p, { "pr-party": "ENT-2026-0104", "pr-sha": SHA });
   await press(p, "recordline");
   assert.match(sec(p, "Parties").textContent, /A party is joined to a proceeding\./);
+});
+
+test("R16 Follow its register sends proceeding, the screen's own entity id, and the register list shows only the follows follows answers with that proceeding; control: a register followed from another proceeding's screen is not listed here", async () => {
+  const p = await open(at, { plane: { followregister: ok({ ok: true }) } });
+  const regs = sec(p, "The register").textContent;
+  assert.match(regs, /court\.example\/register\/RG26/);
+  assert.doesNotMatch(regs, /register\/OTHER/, "another proceeding's register is not listed");
+  fill(p, { "pr-register": "https://court.example/register/NEW" });
+  await press(p, "followregister");
+  assert.equal(p.byOp("followregister")[0].body.proceeding, PROC);
+  assert.equal(p.byOp("follows").length >= 2, true, "the list is read again after");
+  const q = await open(at, { plane: { follows: ok({ ok: true, items: [{ follow: 9, kind: "register", subject: { kind: "register", address: "https://court.example/register/ELSEWHERE", proceeding: "ENT-2026-0999" } }] }) } });
+  assert.doesNotMatch(main(q).textContent, /ELSEWHERE/);
 });
