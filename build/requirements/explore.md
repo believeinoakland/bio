@@ -57,6 +57,7 @@ Terms. A **hop** is one connection in `connection-grammar`'s shape `{id, from, t
 
 ### Uses
 
+- `connections`: only `real-connections.test.mjs`'s fixture (R24 over the real `step_source` registration; K3252). The walk itself reads `connections` through the registry, never by import (K3203).
 - `record-grammar`: `idPattern` (R1).
 - `civil-time`: `validAt`, three-valued intersection (R4, R11).
 - `connection-grammar`: `owners`, `kindOf`, each owner's `neighbours`, `BOUNDS`, `depthOf`, `chainGrade`, `chainLabel`, `orderPaths`, `exhausted`, `derivedId` (R1–R6, R12). Since T36, `hubBoundOf` (R5, R20).
