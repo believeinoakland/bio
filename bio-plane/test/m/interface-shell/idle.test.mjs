@@ -149,3 +149,12 @@ test("R34 cancelling the password dialog sends nothing more; cs.reauth() answers
   await q.click('[data-shell="reauth"]');
   assert.equal(q.root().querySelector('button[data-act="setpassword"]').getAttribute("data-got"), "true");
 });
+
+test("R33 (the harness for the screens' tests) clock.tickActive runs the page clock with the member's input every ten minutes: no lock and no sign-out over days; control: tick alone locks", async () => {
+  const p = await boot({ screens: SCREENS, plane: { projectdirectory: ok({ projects: [] }) } });
+  await p.clock.tickActive(3 * 24 * 60 * MIN);
+  assert.equal(lockOf(p), null);
+  assert.equal(p.byOp("signout").length, 0);
+  await p.clock.tick(31 * MIN);
+  assert.ok(lockOf(p));
+});

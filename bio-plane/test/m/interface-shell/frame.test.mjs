@@ -1,10 +1,10 @@
-/* interface-shell R7, R8, R9, R20, R25, R26: the working frame, the path, the router, the dock, Settings and the rail. */
+/* interface-shell R7, R8, R9, R20, R26, R28, R30, R35–R37, R43, R45, R48: the working frame and the public and setup frames, the path, the router and unavailable, the dock, the places, the band, the mark and the rail. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { PATHS, FRAMES } from "../../../src/interface-shell/index.mjs";
-import { boot, ok, refused, silent, pending, httpError, STORE_KEY } from "./harness.mjs";
+import { boot, ok, refused, silent, pending, httpError, STORE_KEY, tabs } from "./harness.mjs";
 import { ALL, ASSISTANT, FRONT, DOORBELL, PUBLISHED, JOIN, PERSON } from "./screens.fixture.mjs";
 
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "w", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
@@ -382,4 +382,30 @@ test("R48 the main frame's root carries data-screen of the registered screen it 
   assert.equal(nf.root().querySelector("#cs-main").getAttribute("data-screen"), null, "a subject not found");
   const d = await boot({ screens: [...ALL, DOORBELL], path: "/app/doorbell", session: null });
   assert.equal(d.root().querySelector("#cs-main").getAttribute("data-screen"), "doorbell", "the public frame's root");
+});
+
+test("R30 R32 a public screen asks no session record: the record is not read while it is drawn, and is read once a working screen needs it; another tab's sign-in leaves a public or setup screen as it is", async () => {
+  const reads = [];
+  const p = await boot({ screens: [...ALL, DOORBELL], path: "/app/doorbell" });
+  const get = p.win.localStorage.getItem;
+  p.win.localStorage.getItem = (k) => { reads.push(k); return get(k); };
+  await p.back("/app/doorbell");
+  assert.ok(!reads.includes(STORE_KEY), "not read for the public frame");
+  await p.back("/app/held");
+  assert.ok(reads.includes(STORE_KEY), "read once a working screen needs it");
+  assert.equal(p.root().querySelector("#cs-main").getAttribute("data-screen"), "held");
+  /* another tab signs in: the doorbell and join stay where they are; a tab on front opens the page kept */
+  const t = tabs();
+  const door = await boot({ screens: [...ALL, DOORBELL, FRONT], tabs: t, session: null, path: "/app/doorbell" });
+  const joining = await boot({ screens: [...ALL, JOIN, FRONT], tabs: t, session: null, path: "/app/join" });
+  const front = await boot({ screens: [...ALL, FRONT], tabs: t, session: null, path: "/app/held", plane: { heldcaptures: ok({ items: [] }) } });
+  const signer = await boot({ screens: [...ALL, FRONT], tabs: t, session: null, path: "/", plane: { login: ok({ token: "tok-9", expires: 0 }) } });
+  signer.doc.getElementById("f-handle").value = "mai";
+  await signer.click('button[data-act="login"]');
+  for (const x of [door, joining, front]) await x.settle();
+  assert.equal(door.location.pathname, "/app/doorbell");
+  assert.equal(door.root().querySelector("#cs-main").getAttribute("data-screen"), "doorbell");
+  assert.equal(joining.location.pathname, "/app/join");
+  assert.equal(joining.root().querySelector("#cs-main").getAttribute("data-screen"), "join");
+  assert.equal(front.root().querySelector("#cs-main").getAttribute("data-screen"), "held");
 });

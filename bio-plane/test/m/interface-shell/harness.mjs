@@ -166,6 +166,9 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     await settle();
   }
   page.byOp = (op) => requests.filter((r) => r.op === op);
+  /* R33: the clock run while the member keeps working (a key pressed every ten minutes), so a test that runs the page
+     for days is not locked or signed out by the idle limits */
+  clock.tickActive = async (ms) => { let left = ms; while (left > 0) { const step = Math.min(left, 10 * 60 * 1000); doc.body.dispatchEvent(new Event("keydown", { bubbles: true, key: "Shift" })); await clock.tick(step); left -= step; } };
   return page;
 }
 /* Pages sharing one browser's localStorage, as tabs do (R32). */

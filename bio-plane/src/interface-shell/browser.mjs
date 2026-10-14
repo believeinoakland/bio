@@ -59,7 +59,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   const STATE_KEY = D.storeKey + ":state", ACTIVE_KEY = D.storeKey + ":active", RETURN_KEY = D.storeKey + ":return";
   let S = null, ME = null, LOCKED = false, ENTRY = { state: null, handle: null }, STARTED = false;
   /* R46: the fragment, read once on load and removed from the address before any request; page memory only */
-  let FRAGMENT = {};
+  let FRAGMENT = {}, RECORD_READ = false;
   function readRecord() {
     try {
       const s = JSON.parse(local.get(D.storeKey) || "null");
@@ -78,7 +78,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (!S) return;
     keepReturn();
     const handle = S.w || (ME && ME.handle) || null;
-    S = null; ME = null; LOCKED = false; REAUTH = null; stopIdle();
+    /* a dialog still open over the screen answers no */
+    if (REAUTH) { const r = REAUTH; REAUTH = null; r.resolve(false); }
+    if (DIALOG) { const d = DIALOG; DIALOG = null; if (d.resolve) d.resolve(d.kind === "register" ? null : false); }
+    OVERLAY_REFUSAL = "";
+    S = null; ME = null; LOCKED = false; stopIdle();
     clearRecord(why);
     ENTRY = { state: why, handle };
     route();
@@ -865,8 +869,14 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     MAIN = null; DOCKI = null; ENTRY_PAGE = false; RING = null;
     ROUTE = parse(win.location.pathname);
     MENU = false;
-    const id = ROUTE.screen;
-    /* R30: a screen of the public or published frame, drawn without a session, whatever the record holds */
+    let id = ROUTE.screen;
+    /* R30: a screen of the public or published frame, drawn without a session, asking no record */
+    if (sessionless(id) && !ROUTE.root) return show(id);
+    if (!S && !RECORD_READ) {
+      RECORD_READ = true;
+      S = readRecord();
+      if (S && ROUTE.root) { win.history.replaceState({}, "", "/app"); ROUTE = parse(win.location.pathname); id = ROUTE.screen; }
+    }
     if (sessionless(id)) return show(id);
     if (!S) {
       /* R45: a screen of the setup frame asks no session before one exists */
@@ -1456,7 +1466,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       const rec = readRecord();
       const why = local.get(STATE_KEY);
       if (S && !rec) return over(why === "ended" ? "ended" : "signedout");
-      if (rec && (!S || rec.t !== S.t)) { S = rec; ME = null; LOCKED = false; ENTRY = { state: null, handle: null }; if (!working()) win.history.replaceState({}, "", takeReturn()); route(); return; }
+      if (rec && (!S || rec.t !== S.t)) {
+        S = rec; ME = null; LOCKED = false; ENTRY = { state: null, handle: null };
+        /* a public, published or setup screen stays as it is (R30, R45; screens-entry R11); `front` opens the page kept */
+        if (ROUTE && ROUTE.root) win.history.replaceState({}, "", takeReturn());
+        if (ROUTE && (ROUTE.root || working())) route(); else draw();
+        return;
+      }
       if (S && rec && why === "locked" && !LOCKED) return lock(true);
       if (S && LOCKED && why !== "locked") { LOCKED = false; OVERLAY_REFUSAL = ""; activity(); armIdle(); draw(); }
     });
@@ -1613,10 +1629,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     forward();
     takeFragment();
     if (GUIDE) GUIDEI = instance(GUIDE, null, "g", null);
-    S = readRecord();
-    if (S && local.get(STATE_KEY) === "locked") LOCKED = false;
-    /* R32: `/` with a live record opens Home */
-    if (S && !/^\/app(\/|$)/.test(String(win.location.pathname || "/"))) win.history.replaceState({}, "", "/app");
+    /* R32: the record read when a screen first needs it (never for a public or published one, R30); `/` with a live
+       record opens Home */
     /* R36: the test-instance band, read once without a session */
     call("bootstrap", { public: true }).then((b) => { BOOT = b.kind === "ok" && b.value && typeof b.value === "object" ? b.value : null; if (BOOT && BOOT.test_instance === true) draw(); });
     await route();
