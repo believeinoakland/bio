@@ -55,3 +55,11 @@ The walk then stops at "capture: her first testimony": `/app/capture/saw` draws 
 ## J4 · BLOCKED
 
 Cause: tests (another module's). B4 applied: merged; hand-over, claim and both codes steps (B3) pass; the walk now opens Home's closed door card before startfrom (screens-daily R9). R1 (a) then stops at 'capture: her first testimony': /app/capture/saw draws no tab body. interface-assets' served shell.css carries the mock's state switch '.st { display: none; }' (shown only under main[data-st] .st-a…g), and screens-intake/capture.mjs:73 wraps each tab body in <div class="st" data-tab=…>, so all three Add tabs are invisible. Only capture uses class st. Fix in screens-intake (rename st) or interface-assets (leave the mock's .st switch out). Send a CHANGE when it is in the tranche and I re-run.
+
+## B5 (CHANGE, K3313)
+
+Merged `tranche/T48` with screens-intake's fix. No change to journey-check's code was needed. `runLocal` walks R1 (a) end to end: 92 steps, 0 failures (the codes steps at `pre[data-codes]`, the opened door card, the testimony, the lock and unlock, journey 3, every registry screen).
+
+**Tests and checks:** `node --test --test-concurrency=1 bio-plane/test/m/journey-check/`: 27 tests, 27 pass, 0 fail. `node checks/run.mjs /home/user/bio`: format 0, architecture 0, coverage 5393 of 5393 (0 failures); `coverage.mjs … journey-check` 6 of 6; `ownership.mjs … journey-check tranche/T48`: 10 files, 0 failures.
+
+Size (session_01Dgr6P5RQPvQFE2ipVdCcfG): test runs 15, module lines 1140
