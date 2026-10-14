@@ -72,3 +72,7 @@
   - coverage 44 failures, all other modules' ids not yet met (rule 5 (1)), none of them events'.
 
 Size (session_01Hh14tQpXPK6FZSMjo3UbV7): test runs 12, module lines 2688
+
+## J1 · COMPLETE
+
+T48-19 applied: R50 (timeline world items carry participants, participants_total/_truncated, grade/grade_why; sight R40), R51 (precedes: MEMBER_ACT_ONLY, ORDER_ALREADY_DATED; sequence basis cited / dates with cited agrees; disagreement undetermined; no chain; event_precedes link, 24 owner kinds), R52 (proceedingStatusAt answers entities.notAProceeding). N1063: pages.test R35 walk bounded by statements and rows (deterministic), not a clock; same fix in owner.test's page-cost test; passes 8-way. P8: roles in eventsFor/timeline/statementsOf now only through attestations in sight. events 75/75 after merging tranche/T48 (B3). Users of events: 17 fails in 12 files, identical on tranche/T48 without this change (none events'). format, architecture, coverage (52/52), ownership: 0 failures; run.mjs coverage 44, all others' not-yet-met (rule 5 (1)). Record: build/jobs/T48/events.md.
