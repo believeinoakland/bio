@@ -1309,6 +1309,303 @@ var oakland_alameda_default = {
       basis: "K303, 2026-10-11 actions-law"
     }
   ],
+  /* R92 (T48): where else to go, each read on the body's own page on 2026-10-14 (`test/fixtures/pointers.mjs`). Legal aid:
+     the organisations the State Bar's Pro Bono Opportunities Directory lists under Alameda County, every one a Legal
+     Services Trust Fund grantee by that directory's own words (K3190); Legal Assistance for Seniors is listed but its site
+     refused the read (403), so it is absent. Hours are held only where a page prints them for the line or office named. */
+  pointers: [
+    {
+      kind: "legalaid",
+      name: "AIDS Legal Referral Panel",
+      does: "Civil legal services for people living with HIV/AIDS in the Bay Area: direct representation, placement with volunteer attorneys, and connection to non-legal service providers.",
+      contacts: [{ how: "phone", value: "(415) 701-1100" }, { how: "address", value: "1663 Mission Street, Suite 720, San Francisco, California 94103" }, { how: "web", value: "https://www.alrp.org/get-legal-help/" }],
+      source: "https://www.alrp.org/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "legalaid",
+      name: "Homeless Action Center",
+      does: "Free public benefits advocacy for unhoused and disabled residents of Alameda County.",
+      contacts: [{ how: "phone", value: "510-775-0035" }, { how: "address", value: "2601 San Pablo Avenue, Oakland, CA 94612" }, { how: "web", value: "https://homelessactioncenter.org/" }],
+      hours: { weekly: ["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "13:00", close: "17:00" })), status: "researched", basis: "2026-10-14 pointers" },
+      source: "https://homelessactioncenter.org/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "legalaid",
+      name: "API Legal Outreach",
+      does: "Culturally competent and linguistically appropriate legal representation, social services and advocacy for low-income women, seniors, recent immigrants and youth.",
+      contacts: [{ how: "phone", value: "(510) 251-2846" }, { how: "address", value: "310 8th St., Suite 305, Oakland, CA 94607" }, { how: "web", value: "https://www.apilegaloutreach.org/contact/" }],
+      source: "https://www.apilegaloutreach.org/contact/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "legalaid",
+      name: "Bay Area Legal Aid",
+      does: "Free civil legal help to low-income people in the Bay Area, including advice, self-help clinics and representation.",
+      contacts: [{ how: "phone", value: "800-551-5554" }, { how: "address", value: "1735 Telegraph Avenue, Oakland, CA 94612" }, { how: "web", value: "https://baylegal.org/" }],
+      source: "https://baylegal.org/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "legalaid",
+      name: "Centro Legal de la Raza",
+      does: "A legal aid nonprofit giving bilingual legal representation, education and advocacy to low-income, immigrant communities and communities of color in the Bay Area.",
+      contacts: [{ how: "phone", value: "510-437-1554" }, { how: "address", value: "3400 E. 12th Street, Oakland, CA 94601" }, { how: "web", value: "https://www.centrolegal.org/" }],
+      source: "https://www.centrolegal.org/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "legalaid",
+      name: "Family Violence Law Center",
+      does: "Survivor-centered legal and crisis intervention services for people in Alameda County facing domestic violence and sexual assault.",
+      contacts: [{ how: "phone", value: "800-947-8301" }, { how: "address", value: "470 27th Street, Oakland, CA 94612" }, { how: "web", value: "https://fvlc.org/" }],
+      source: "https://fvlc.org/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "legalaid",
+      name: "Justice & Diversity Center of the Bar Association of San Francisco",
+      does: "Pro bono legal services for low-income people.",
+      contacts: [{ how: "phone", value: "(415) 982-1600" }, { how: "address", value: "50 Fremont St., Suite 1700, San Francisco, California 94105" }, { how: "web", value: "https://www.sfbar.org/jdc/" }],
+      hours: { weekly: ["mon", "tue", "wed", "thu", "fri"].map((day) => ({ day, open: "09:00", close: "17:00" })), status: "researched", basis: "2026-10-14 pointers" },
+      source: "https://www.sfbar.org/jdc/jdc-contact-us/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "legalaid",
+      name: "La Raza Centro Legal",
+      does: "Free legal services and advocacy that advance civil and human rights and access to justice.",
+      contacts: [{ how: "phone", value: "415-575-3500" }, { how: "email", value: "info@lrcl.org" }, { how: "address", value: "474 Valencia Street, Suite 295, San Francisco, CA 94103" }],
+      source: "https://www.lrcl.org/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "legalaid",
+      name: "Lawyers' Committee for Civil Rights of the San Francisco Bay Area",
+      does: "Free legal services, direct representation and legal education for low-income and historically marginalized communities.",
+      contacts: [{ how: "phone", value: "415.543.9444" }, { how: "address", value: "131 Steuart Street, Suite 400, San Francisco, CA 94105" }, { how: "web", value: "https://lccrsf.org/" }],
+      source: "https://lccrsf.org/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "legalaid",
+      name: "Legal Access Alameda",
+      does: "The pro bono arm of the Alameda County Bar Association: free legal assistance for Alameda County's low-income litigants from volunteer attorneys.",
+      contacts: [{ how: "phone", value: "(510) 302-2222 *4" }, { how: "web", value: "https://www.legalaccess.org/" }],
+      source: "https://www.legalaccess.org/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "legalaid",
+      name: "Legal Services for Children",
+      does: "Legal and social work services for children and youth in crisis in the San Francisco Bay Area.",
+      contacts: [{ how: "phone", value: "(415) 780-6366" }, { how: "phone", value: "(415) 780-6367" }, { how: "address", value: "870 Market Street, Suite 356, San Francisco, CA 94102" }],
+      hours: { weekly: ["mon", "thu"].map((day) => ({ day, open: "13:30", close: "16:30" })), status: "researched", basis: "2026-10-14 pointers" },
+      languages: ["en", "es"],
+      source: "https://lsc-sf.org/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "legalaid",
+      name: "Asian Law Alliance",
+      does: "Free legal services, education about key rights, and advocacy with and for underserved community members.",
+      contacts: [{ how: "phone", value: "(408) 287-9710" }, { how: "address", value: "991 W. Hedding Street #202, San Jose, CA 95126" }, { how: "web", value: "https://asianlawalliance.org/" }],
+      source: "https://asianlawalliance.org/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "legalaid",
+      name: "Social Justice Collaborative",
+      does: "Free and low-cost legal representation for immigrant families across Northern and Central California, in clients' languages.",
+      contacts: [{ how: "phone", value: "(510) 992-3964" }, { how: "email", value: "office@socialjusticecollaborative.org" }, { how: "address", value: "1832 Second Street, Berkeley, CA 94710" }],
+      source: "https://www.socialjusticecollaborative.org/en",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    /* The courts' self-help pages: the Superior Court's own center, and the Judicial Council's statewide guide. */
+    {
+      kind: "selfhelp",
+      name: "Self-Help Center of the Superior Court of California, County of Alameda",
+      does: "Procedural information and help with forms for people with a case in the court who do not have a lawyer; no legal advice.",
+      contacts: [{ how: "phone", value: "(510) 272-1393" }, { how: "web", value: "https://www.alameda.courts.ca.gov/self-help" }],
+      hours: { weekly: ["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "14:00", close: "16:00" })), status: "researched", basis: "2026-10-14 pointers" },
+      source: "https://www.alameda.courts.ca.gov/self-help",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "selfhelp",
+      name: "Self-Help Guide to the California Courts",
+      does: "The Judicial Council's guides and information for people handling a court case on their own.",
+      contacts: [{ how: "web", value: "https://selfhelp.courts.ca.gov/" }],
+      source: "https://selfhelp.courts.ca.gov/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    /* The City's service line; its short code is not held, only the number and page the City prints with it. */
+    {
+      kind: "service",
+      name: "OAK 311",
+      does: "The City of Oakland's line for reporting problems such as potholes, illegal dumping, graffiti and city building maintenance.",
+      contacts: [{ how: "phone", value: "(510) 615-5566" }, { how: "web", value: "https://www.oaklandca.gov/My-Household/Report-an-Issue-OAK-311" }],
+      source: "https://www.oaklandca.gov/My-Household/Report-an-Issue-OAK-311",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    /* Each office the Council's roster lists, by its seat, never by its holder; none is chosen by a member's address. */
+    {
+      kind: "representative",
+      name: "Oakland City Council, At-Large office",
+      does: "The office of the Councilmember elected at large, who represents the whole city on the Oakland City Council.",
+      contacts: [{ how: "phone", value: "(510) 238-7008" }, { how: "email", value: "atlarge@oaklandca.gov" }],
+      source: "https://www.oaklandca.gov/Government/City-Council-Leadership/Leadership",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "representative",
+      name: "Oakland City Council, District 1 office",
+      does: "The office of the Councilmember elected for District 1, who represents District 1 on the Oakland City Council.",
+      contacts: [{ how: "phone", value: "510-238-7001" }, { how: "email", value: "zunger@oaklandca.gov" }],
+      source: "https://www.oaklandca.gov/Government/City-Council-Leadership/Leadership",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "representative",
+      name: "Oakland City Council, District 2 office",
+      does: "The office of the Councilmember elected for District 2, who represents District 2 on the Oakland City Council.",
+      contacts: [{ how: "phone", value: "510-238-7021" }, { how: "email", value: "district2@oaklandca.gov" }],
+      source: "https://www.oaklandca.gov/Government/City-Council-Leadership/Leadership",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "representative",
+      name: "Oakland City Council, District 3 office",
+      does: "The office of the Councilmember elected for District 3, who represents District 3 on the Oakland City Council.",
+      contacts: [{ how: "phone", value: "(510) 238-7003" }, { how: "email", value: "District3@oaklandca.gov" }],
+      source: "https://www.oaklandca.gov/Government/City-Council-Leadership/Leadership",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "representative",
+      name: "Oakland City Council, District 4 office",
+      does: "The office of the Councilmember elected for District 4, who represents District 4 on the Oakland City Council.",
+      contacts: [{ how: "phone", value: "510-238-7004" }, { how: "email", value: "District4@oaklandca.gov" }],
+      source: "https://www.oaklandca.gov/Government/City-Council-Leadership/Leadership",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "representative",
+      name: "Oakland City Council, District 5 office",
+      does: "The office of the Councilmember elected for District 5, who represents District 5 on the Oakland City Council.",
+      contacts: [{ how: "phone", value: "510-238-7005" }, { how: "email", value: "Ngallo@oaklandca.gov" }],
+      source: "https://www.oaklandca.gov/Government/City-Council-Leadership/Leadership",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "representative",
+      name: "Oakland City Council, District 6 office",
+      does: "The office of the Councilmember elected for District 6, who represents District 6 on the Oakland City Council.",
+      contacts: [{ how: "phone", value: "(510) 238-7006" }, { how: "email", value: "District6@oaklandca.gov" }],
+      source: "https://www.oaklandca.gov/Government/City-Council-Leadership/Leadership",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "representative",
+      name: "Oakland City Council, District 7 office",
+      does: "The office of the Councilmember elected for District 7, who represents District 7 on the Oakland City Council.",
+      contacts: [{ how: "phone", value: "510-238-7007" }, { how: "email", value: "District7@oaklandca.gov" }],
+      source: "https://www.oaklandca.gov/Government/City-Council-Leadership/Leadership",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    /* Public offices whose own pages say they take one person's complaint. */
+    {
+      kind: "agency",
+      name: "Community Police Review Agency",
+      does: "Takes a member of the public's complaint about the conduct of an Oakland police officer.",
+      contacts: [{ how: "phone", value: "(510) 238-3159" }, { how: "web", value: "https://apps.oaklandca.gov/CPRAPublic/" }, { how: "address", value: "250 Frank Ogawa Plaza, Suite 6302, Oakland, CA 94612" }],
+      hours: { weekly: ["mon", "tue", "wed", "thu", "fri"].map((day) => ({ day, open: "09:00", close: "17:00" })), status: "researched", basis: "2026-10-14 pointers" },
+      source: "https://www.oaklandca.gov/Public-Safety-Streets/Report-Police-Misconduct",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "agency",
+      name: "Public Ethics Commission",
+      does: "Takes complaints of violations of government ethics, campaign finance or transparency laws in the City of Oakland.",
+      contacts: [{ how: "phone", value: "(510) 238-3593" }, { how: "email", value: "ethicscommission@oaklandca.gov" }, { how: "address", value: "250 Frank H Ogawa Plaza, Suite 6303, Oakland, CA 94612" }],
+      source: "https://www.oaklandca.gov/Government/Boards-Commissions/Public-Ethics-Commission/File-a-Complaint-with-the-Public-Ethics-Commission",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "agency",
+      name: "Rent Adjustment Program",
+      does: "Takes a tenant's petition challenging certain rent increases or seeking a decrease in rent for a loss in service, for units under the Rent Adjustment Ordinance.",
+      contacts: [{ how: "phone", value: "(510) 238-3721" }, { how: "email", value: "RAP@oaklandca.gov" }, { how: "address", value: "250 Frank H. Ogawa Plaza, Suite 5313, Oakland, CA 94612" }],
+      hours: { weekly: ["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "09:30", close: "16:30" })), status: "researched", basis: "2026-10-14 pointers" },
+      source: "https://www.oaklandca.gov/Community/Housing-Programs-Support/Rent-Adjustment-Program-RAP/For-Tenants/File-a-Tenant-Petition",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "agency",
+      name: "City Auditor's Whistleblower Program",
+      does: "A confidential hotline, open to residents, for complaints of fraud, waste and abuse in the City of Oakland, with interpreters.",
+      contacts: [{ how: "phone", value: "1-888-329-6390" }, { how: "web", value: "https://secure.ethicspoint.com/domain/media/en/gui/23089/issues.html?locationid=-1" }],
+      source: "https://www.oaklandauditor.com/whistleblower/submit-a-complaint/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    /* Newsrooms that publish a tip channel on their own sites. */
+    {
+      kind: "tipline",
+      name: "San Francisco Chronicle",
+      does: "A daily newspaper that takes news tips, including sensitive tips to its investigative team.",
+      contacts: [{ how: "email", value: "metro@sfchronicle.com" }, { how: "phone", value: "(415) 777-7239" }, { how: "mail", value: "News Tips, The San Francisco Chronicle, 901 Mission Street, San Francisco CA 94103" }],
+      source: "https://projects.sfchronicle.com/newstips/",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "tipline",
+      name: "KTVU Fox 2",
+      does: "A television newsroom in Oakland that takes news tips and story ideas.",
+      contacts: [{ how: "email", value: "newstips@fox.com" }, { how: "phone", value: "(510) 874-0242" }],
+      source: "https://www.ktvu.com/about-us",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    },
+    {
+      kind: "tipline",
+      name: "CalMatters",
+      does: "A newsroom covering California that takes news tips, by email or through confidential channels.",
+      contacts: [{ how: "email", value: "tips@calmatters.org" }, { how: "web", value: "https://calmatters.org/about/contact-us/#news-tips" }],
+      source: "https://calmatters.org/about/contact-us/#news-tips",
+      status: "researched",
+      basis: "2026-10-14 pointers"
+    }
+  ],
   /* Each office's published closure days for 2026, by the list that governs it (K925). The City's and the
      State's are employers' paid-holiday lists, read as closure days (K925 (2)); the City's 09-09 and 11-11,
      marked "(HVA) If applicable", are left out until a member confirms (K925 (3)). The county's own list
@@ -2524,6 +2821,74 @@ var test_port_ellery_default = {
       basis: "TEST"
     }
   ],
+  /* R91: the places outside Civicsmith a member is sent to, every kind, two legal-aid societies, and every `how`. */
+  pointers: [
+    {
+      kind: "legalaid",
+      name: "Marlow Commons Legal Society (test)",
+      does: "Free advice and representation on housing, benefits and debt for people on a low income in Marlow County.",
+      contacts: [{ how: "web", value: "https://legal.marlow-county.example/help" }, { how: "phone", value: "+1 555 0100" }],
+      hours: { weekly: ["mon", "wed", "fri"].map((day) => ({ day, open: "10:00", close: "15:00" })), status: "researched", basis: "TEST" },
+      languages: ["en-GB", "pl", "cy"],
+      source: "https://legal.marlow-county.example/about",
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      kind: "legalaid",
+      name: "Harbourside Tenants' Advice Centre (test)",
+      does: "Advice for tenants of Port Ellery facing eviction or disrepair.",
+      contacts: [{ how: "email", value: "advice@tenants.port-ellery.example" }],
+      source: "https://tenants.port-ellery.example/",
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      kind: "selfhelp",
+      name: "Marlow County Court Help Desk (test)",
+      does: "Helps people without a solicitor fill in the court's own forms.",
+      contacts: [{ how: "address", value: "1 Assize Row, Marlow" }],
+      source: "https://court.marlow-county.example/help-desk",
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      kind: "service",
+      name: "Port Ellery Town Services Line (test)",
+      does: "Takes reports of potholes, broken lamps and missed bin collections in Port Ellery.",
+      contacts: [{ how: "phone", value: "+1 555 0311" }, { how: "web", value: "https://www.port-ellery.example/report" }],
+      source: "https://www.port-ellery.example/report",
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      kind: "agency",
+      name: "Marlow County Ombudsman (test)",
+      does: "Investigates one person's complaint about a county service.",
+      contacts: [{ how: "mail", value: "Ombudsman, County Hall, Marlow" }],
+      source: "Test Stat. \xA7 14.2",
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      kind: "representative",
+      name: "Harbour Ward Selectperson's office (test)",
+      does: "The Selectboard member elected for the Harbour Ward, who takes up a resident's problem with the town.",
+      contacts: [{ how: "email", value: "harbour.ward@port-ellery.example" }],
+      source: "https://minutes.port-ellery.example/selectboard",
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      kind: "tipline",
+      name: "The Ellery Gazette newsdesk (test)",
+      does: "A local newspaper that takes tips from readers about the town.",
+      contacts: [{ how: "web", value: "https://gazette.port-ellery.example/tips" }],
+      source: "https://gazette.port-ellery.example/tips",
+      status: "researched",
+      basis: "TEST"
+    }
+  ],
   /* R73: official names, never translated as ordinary words (DEC-157 (6)). */
   local_names: [
     {
@@ -2576,9 +2941,10 @@ var ID_TABLE = Object.freeze([
   row("THEME", "connections"),
   row("LEAD", "observation-log"),
   row("TASK", "tasks"),
-  /* Drawn at random by record-core's opaque minter (its R6), four random digits and the caller's tail. */
+  /* Drawn at random by record-core's opaque minter (its R6), four random digits and the caller's tail. T48-1 (R63; N1017,
+     K3112): `WCD`, an edition statement's draft, is `case-inputs`', which has minted it since T47 (its R6). */
   row("CASE", "case-authoring"),
-  row("WCD", "case-authoring"),
+  row("WCD", "case-inputs"),
   row("DRAFT", "review"),
   row("RVG", "review"),
   row("SRC", "sources"),
@@ -2624,8 +2990,14 @@ var ID_TABLE = Object.freeze([
      layer's other record objects are. `consequences` has minted `SUC-<year>-<4 digits>` in its own rows since T45, which is
      this form, so every one of those ids stays valid. It is a record object promoted with history like a finding, so it
      has a type (`success_record`, types.mjs) and a machine (`STATES`, document.mjs), and it is not a bundle prefix (R1):
-     no heading set and no `checkBundle` schema. */
-  row("SUC", "consequences")
+     no heading set. Since T47 (R62; N958) `checkBundle` admits its document, a bare `SUC` core under `success_record@1`
+     (bundle.mjs), without making `SUC` one of R1's prefixes. */
+  row("SUC", "consequences"),
+  /* T48-1 (R63; N1017, K3112): a carried outcome (`case-inputs`, its R9), sequential, drawn at random by record-core's
+     opaque minter (its R6) as `WCD` is. `case-inputs` has minted `OUTC-<year>-<4 digits>` since T47, which is this form,
+     so every one of those ids stays valid. A row of its owner's table, not a bundle prefix (R1): no type, no heading set,
+     no machine and no `checkBundle` schema. */
+  row("OUTC", "case-inputs")
 ]);
 var YEAR = "\\d{4}";
 var CORE = { sequential: "\\d{4,}", opaque: "[a-z0-9]{16}" };
@@ -2680,7 +3052,7 @@ var OBJECT_TYPES = {
   PLN: "action_plan",
   /* T33-1 (B0.1, C:A-6; K1470): the types of T33's new objects, one per prefix of `ID_TABLE` (ids.mjs). They are rows of
      their owners' tables, not bundle documents: R1's prefix set, `HEADINGS`, `STATES` and `checkBundle`'s schemas gain
-     none of them, and `checkBundle` admits only the bundle prefixes' types (bundle.mjs). */
+     none of them, and `checkBundle` admits only the bundle prefixes' types and `SUC`'s, below (bundle.mjs). */
   CALC: "calculation",
   EVT: "event",
   LIN: "line",
@@ -3110,7 +3482,8 @@ var STATES = {
   /* T46-1 (R59; N911, K2845): `consequences`' success record (its R17, `SUC-`, `success_record` in `OBJECT_TYPES`). It is
      RECORDED once and never moves, as a standard, a determination and a consequence part are: a correction is a successor
      (`successRevise`). Promoted with history like a finding (consequences R14's pattern), so it has this machine; it is not
-     a bundle prefix (R1), so `HEADINGS` and `checkBundle`'s schemas gain nothing. */
+     a bundle prefix (R1), so `HEADINGS` gains nothing. Since T47 (R62; N958) `checkBundle` admits its document under
+     `success_record@1` and judges its state by this machine (bundle.mjs). */
   success_record: {
     legal: ["recorded"],
     edges: { recorded: [] }
@@ -3356,7 +3729,9 @@ var SECTIONS = Object.freeze([
   /* T45 (R79, R80, R86) */
   "legal_facts",
   "procedure_guides",
-  "phrasings"
+  "phrasings",
+  /* T48 (R89) */
+  "pointers"
 ]);
 var SPACES = Object.freeze([
   "enactment",
@@ -3479,6 +3854,8 @@ var RRULE_PARTS = Object.freeze(["FREQ", "INTERVAL", "BYDAY", "BYMONTHDAY", "BYS
 var LOCAL_NAME_KINDS = Object.freeze(["office", "law", "program", "place"]);
 var TIERS = Object.freeze([1, 2, 3]);
 var CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
+var POINTER_KINDS = Object.freeze(["legalaid", "selfhelp", "service", "agency", "representative", "tipline"]);
+var POINTER_HOW = Object.freeze([...CONTACT_HOW, "address"]);
 var TEMPLATE_FIELDS = Object.freeze([
   "id",
   "version",
@@ -4681,6 +5058,10 @@ var statementIdPattern = () => {
   return new RegExp(`^[A-Z]+${core.source.slice(head.length, -1)}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$`);
 };
 var OPAQUE_ID_RE = statementIdPattern();
+var RELEASE_KEYS = Object.freeze([
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICiA6JRm52rE3agZAKqb/4ATA34c8jEp3Yef0KZyCe18 bio-release",
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdvnsYToN22fqksnV1gLYWEJJmQA6vMyXnThPJMm7yJ bio-release-recovery"
+]);
 
 // src/index.mjs
 var CFG = {
