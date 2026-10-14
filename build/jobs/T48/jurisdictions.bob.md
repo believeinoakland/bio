@@ -1,0 +1,17 @@
+# BOB to jurisdictions (T48)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T48), layer 1, jurisdictions: **T48-2 · jurisdictions** · (N847; DEC-227 (3), (4); K3183, K3186, K3190) R89–R92 add a `pointers` section to the profile: its shape, its validation codes, `combine`, and the test profile's pointers. Oakland's pointers are researched by the job from each body's own page, with the source and a dated basis. The job follows BOB's criterion (K3190): legal aid an official list names as serving the county; agencies whose own pages take one person's complaint; newsrooms that publish a tip channel. Nothing comes from the mockup, and no emergency number is held · n847 fold §1 · text BOB's.
+Your requirements: `build/requirements/jurisdictions.md` (read whole), folded by K3197; the ids marked `*(not yet met: T48)*` are yours to meet.
+BOB's notes for this job:
+jurisdictions (T48-2): R89–R92 new (amending R14, R21, R22, R28, R30, R35): the `pointers` section, `POINTER_KINDS`, R90's validation codes and `combine`'s union, the test profile's pointers (R91), and the first profile's researched pointers (R92). R92: research each pointer from the body's own published page with your web tool, recording the address as `source` and the day read as the dated basis; follow K3190's criterion exactly as R92 states it; nothing from memory, the mockup or an aggregator; no emergency number. Name the official legal-aid list you used in your record. A host your network refuses: name it in your record and leave that pointer out; if no primary page can be reached at all, R92 alone is deferred (BLOCKED to BOB with the cause) and R89–R91 still merge. `how: "address"` is admitted for pointers only (R89).
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); a clause added to an id other tests already name needs its own test that says so; every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 1047 KB, over the 600 KB limit (most of it your module's data files). Read your requirements and code whole; generated or vendored data and large data fixtures are not part of the set (K2053, K2083); for what remains over the limit, give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+Merge order in L1: record-grammar, jurisdictions, signatures, bundler, court-citations, ooxml, file-scanner; bundler waits on signatures' merge (it uses R46, R47); every other job merges as soon as it is complete.
