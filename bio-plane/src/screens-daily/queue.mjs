@@ -120,11 +120,12 @@ export const queue = Object.freeze({
         : "";
       return drawn + open;
     };
-    // R13 (DEC-212; `action-producers` R25): the unsent request: "Pick up where you left off" opens the action's screen,
+    // R13 (DEC-212; `action-producers` R25): the unsent request: "Pick up where you left off" opens the records request at
+    // its step (the `request` screen takes the action's id; K3145),
     // "Keep it for later" snoozes its case (`queue` R21), "Drop the request, with a reason" moves the action to `abandoned`.
     const unsentActs = function (it, cas) {
       const id = it.subject && it.subject.id ? String(it.subject.id) : "";
-      const pick = id ? '<a class="cs-btn" data-tone="quiet" data-nav href="/app/action/' + encodeURIComponent(id) + '">' + cs.w("screen.queue.unsent.pickup") + "</a>" : "";
+      const pick = id ? '<a class="cs-btn" data-tone="quiet" data-nav href="/app/request/' + encodeURIComponent(id) + '">' + cs.w("screen.queue.unsent.pickup") + "</a>" : "";
       const f = "qa-" + (seq++);
       const snoozeBtn = cas ? cs.act("queuesnooze", { label: "screen.queue.unsent.keep", data: { project: String(cas.id), f: f } }) : "";
       const snooze = snoozeBtn ? '<details class="mk-actd"><summary>' + cs.w("screen.queue.unsent.keep") + "</summary>"

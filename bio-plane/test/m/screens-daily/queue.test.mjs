@@ -220,7 +220,7 @@ test("R13 (DEC-212): the unsent-request item draws \"Pick up where you left off\
   const p = await open("/app/queue", { queue: ok({ items: [UNSENT, ITEMS[0]] }) });
   const row = itemOf(p, "CONDITION::request-unsent::FIL-3");
   assert.deepEqual(opsOf(row), ["queuesnooze", "actionmove"], "its own acts only: no mute, no other door");
-  const pick = row.querySelector('a[data-nav][href="/app/action/ACT-9"]');
+  const pick = row.querySelector('a[data-nav][href="/app/request/ACT-9"]'); // the request screen, at its step (K3145)
   assert.equal(pick.textContent, "Pick up where you left off");
   assert.equal(row.querySelector('button[data-act="queuesnooze"]').closest("details").querySelector("summary").textContent, "Keep it for later");
   assert.match(row.querySelector('button[data-act="actionmove"]').textContent, /^Drop the request, with a reason/);
