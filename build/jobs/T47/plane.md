@@ -62,3 +62,14 @@ Two readings, best reading first, carrying on with each:
 - `checks/run.mjs`: architecture 0 failures (3,125 files); coverage 24 failures, all other modules' not-yet-met ids (accepted red 5(1)), none plane's.
 
 Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 21, module lines 2128
+
+## J4 · COMPLETE
+
+**Re-run after B6 (K3150), against `tranche/T47` with project-roster and notice-producers merged.**
+- **(1)** `caseInputsOps` was already spread directly before case-authoring's map (R45, commit f2ecffe676 on this branch). `statementack`, `whatchangedpropose` and `whatchangeddrafts` reach their handlers through the door. Tested in `t47.test.mjs` R45, green. CONTROL-PLANE #32 read `tranche/T47`, which does not carry the plane's merge yet.
+- **(2)** `actionClocks: () => actionClocksOf(ctx)` is added to the owner map's getters. Test (`t47.test.mjs`, "R45, R35 (T47; K3150)"): `clockpropose` through the door answers what the plane's one action-clocks instance answers, and a spy on that instance is reached once. It is red on the tranche until control-plane's owner map (its `of.actionClocks()` arm) merges. With control-plane's `owner-ops.mjs` from `job/T47/control-plane` copied in temporarily, it passes; that copy was not committed.
+- **Plane tests:** 232 tests, 228 pass, 4 fail. The fourth is the new clockpropose test, which waits on control-plane. The other three are unchanged from J3: wizards R19 (op-declarations), the T47 ops test (`signrequest`, tasks), and the page test (control-plane R81/R82 and the screen modules).
+- **Checks:** architecture 0 failures, coverage 49 of 49, ownership 0 failures.
+- R49 still waits on signin-door's CHANGE.
+
+Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 25, module lines 2130
