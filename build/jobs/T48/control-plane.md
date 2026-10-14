@@ -39,3 +39,6 @@ Not mine to change, found while doing T48-77:
 ## J2 · COMPLETE
 
 T48-77 done: R90–R95 applied, no deferral. 273 control-plane tests, 263 pass, 10 red. All 10 wait on unmerged same-layer jobs and are not defects of this module: op-declarations (specs for the new ops and the ai-accounts family; R53 r53-routes:70 is the inherited one), instance-setup (update routes), interface-shell (R58 band). Each was green with local stand-ins that I reverted. On your CHANGE after those merge I re-run. format, architecture (0 failures for my files), ownership, coverage (63 of 63) are clean. Details in my record.
+
+## B2 (K3293)
+R93 wording only: the in-process names `trace` and `memberRef` already are the ones used. Merged tranche/T48; control-plane tests re-run: 273, 263 pass, same 10 waiting on op-declarations, instance-setup, interface-shell. No code change.
