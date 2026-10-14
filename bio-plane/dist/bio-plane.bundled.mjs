@@ -261890,7 +261890,7 @@ function renderCapture(cs, view) {
       ...draft ? { draft: "screen.capture.saw.draft", draftFills: { handle: draft.handle } } : {}
     }) + (draft && draft.untested ? `<p class="mk-small muted" data-label="untested">${cs.w("ai.label.untested")}</p>` : "") + (view.reachable ? `<div class="mk-acts">${cs.act("writinghelp", { label: "act.writinghelp.label.capture" })}</div><p class="mk-small muted">${cs.w("screen.capture.help.only")}</p>` : "") + cs.field("ci-where", "screen.capture.saw.where", { value: U.where || "" }) + cs.field("ci-when", "screen.capture.saw.when", { help: "screen.capture.saw.whenhelp", value: U.when || "" }) + `<p class="mk-small muted">${cs.w("photo.reminder")}</p><div class="mk-acts">${cs.act("testify", { tone: "primary" })}</div>` + (U.testified ? said11("screen.capture.saw.done", { id: U.testified }) : "") + `<p class="mk-note">${cs.w("screen.capture.saw.after")}</p>`;
   }
-  return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.capture.sub")}</p></div><nav class="mk-tabs2" role="tablist" aria-label="${cs.w("screen.capture.tabs")}">${tabs}</nav><div class="st" data-tab="${tab}">${body}</div>`;
+  return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.capture.sub")}</p></div><nav class="mk-tabs2" role="tablist" aria-label="${cs.w("screen.capture.tabs")}">${tabs}</nav><div data-tab="${tab}">${body}</div>`;
 }
 function sendAcquire(view, el, cs) {
   const address = String(cs.value("ci-address") || "").trim();
