@@ -38,7 +38,7 @@ It is the only module marked `legacy` in `modules.json`. `setup-page` is not leg
    5. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close;
    6. **the credentials split windows** (split map §7):
       - from T48-10's merge to T48-11's: the moved C-29.13…45 codes are held by two `checks.mjs` files (row census; closed by T48-12);
-      - from T48-11's merge until T48-65: answer-envelope `families.test.mjs` R2;
+      - from T48-11's merge until T48-65: answer-envelope `families.test.mjs` R2 and `envelope.test.mjs` R14 (:305), and control-plane `envelope.test.mjs`:433 (R32, R39, R46) until T48-65 and T48-77 (K3218);
    7. **T47's close reds (K3192):**
       - S, 37 outside legacy-ui (N1052): each module's `{role}` sign-ins, until its entry: T48-8, -9, -12, -13, -14, -16, -17, -32, -54, -60, -37;
       - D, 17 (N1053, N1054): DEC-221 spellings and DEC-226 acts, until T48-33, -46, -51, -57 (N1053) and T48-63, -57 (N1054);
