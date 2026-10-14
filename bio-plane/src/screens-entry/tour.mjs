@@ -18,9 +18,9 @@ export const tour = {
       + `<a class="cs-btn" data-tone="quiet" href="/app/front" data-nav>${W(n === total ? S + "end" : S + "stop")}</a>`;
     return cs.title()
       + `<div class="cs-wizard" data-step="${n}"><span class="step">${W(S + "step", { n: String(n), total: String(total) })}</span>`
-      + `<h2 class="what">${W(S + "step" + n + ".title")}</h2><p>${W(S + "step" + n + ".body")}</p><div class="nav cs-actrow">${nav}</div></div>`
-      + (n === 5 ? `<p><a class="cs-btn" href="/app/doorbell" data-nav>${W(S + "doorbell")}</a></p>` : "")
-      + `<p class="cs-small">${W(S + "nothing")}</p>`;
+      + `<h2 class="what">${W(S + "step" + n + ".title")}</h2><p>${W(S + "step" + n + ".body")}</p><div class="nav">${nav}</div></div>`
+      + (n === 5 ? `<div class="mk-acts"><a class="cs-btn" href="/app/doorbell" data-nav>${W(S + "doorbell")}</a></div>` : "")
+      + `<p class="mk-small">${W(S + "nothing")}</p>`;
   },
 
   acts: [],

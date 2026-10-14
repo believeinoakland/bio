@@ -38,27 +38,31 @@ export const setup = {
     const hosting = () => {
       const p = [];
       for (let i = 1; i < 20; i++) { const k = "screen.hosting.s" + i; const t = W(k); if (t === k) break; p.push(`<p>${t}</p>`); }
-      return `<div class="cs-note" id="hosting-control"><p><b>${W("screen.hosting.heading")}</b></p>${p.join("")}<p>${W("screen.hosting.guide")}</p></div>`;
+      return `<div class="mk-note" id="hosting-control"><p><b>${W("screen.hosting.heading")}</b></p>${p.join("")}<p>${W("screen.hosting.guide")}</p></div>`;
     };
     const codes = () => (ui.codes
-      ? cs.sec("screen.entry.codes.heading", `<p>${W("screen.entry.codes.what")}</p><pre class="cs-codes" aria-label="${W("screen.entry.codes.list")}">${ui.codes.map(E).join("\n")}</pre><div class="cs-actrow">${String(cs.save("recovery-codes.txt", ui.codes.join("\n") + "\n", { label: "screen.entry.codes.save" }) || "")}${String(cs.copy(ui.codes.join("\n"), { label: "screen.entry.codes.copy" }) || "")}</div>`)
+      ? cs.sec("screen.entry.codes.heading", `<p class="mk-note">${W("screen.entry.codes.what")}</p><pre class="cs-codes" aria-label="${W("screen.entry.codes.list")}">${ui.codes.map(E).join("\n")}</pre><div class="mk-acts">${String(cs.save("recovery-codes.txt", ui.codes.join("\n") + "\n", { label: "screen.entry.codes.save" }) || "")}${String(cs.copy(ui.codes.join("\n"), { label: "screen.entry.codes.copy" }) || "")}</div>`)
       : ui.nocodes ? `<p class="cs-row">${W("screen.entry.codes.none")}</p>` : "");
-    const out = [cs.title(), `<p class="cs-sub">${W(S + "lede")}</p>`];
+    const out = [cs.title()];
+    // R15: the lede ("Claim what you just installed…") follows the claimed state: drawn only while the instance answers
+    // that it is not yet claimed and no one here has claimed it
+    const unclaimed = !signed && !ui.claimed && !!ok(data.boot) && boot.claimed !== true;
+    if (unclaimed) out.push(`<p class="mk-sub" data-lede>${W(S + "lede")}</p>`);
 
     // ---- the claim (R6): before a session exists ----
     if (!signed) {
       if (ui.claimed) {
-        out.push(`<p class="cs-row" data-state="claimed">${W(S + "claimed.nosignin")}</p><p><a class="cs-btn" data-tone="primary" href="/app/front" data-nav>${W("screen.entry.signin")}</a></p>`);
+        out.push(`<p class="cs-row" data-state="claimed">${W(S + "claimed.nosignin")}</p><div class="mk-acts"><a class="cs-btn" data-tone="primary" href="/app/front" data-nav>${W("screen.entry.signin")}</a></div>`);
         return out.join("");
       }
       out.push(cs.state(data.boot, (b) => {
-        if (b.claimed === true) return `<p class="cs-row" data-state="taken">${W(S + "taken")}</p><p><a class="cs-btn" href="/app/front" data-nav>${W("screen.entry.backtofront")}</a></p>`;
+        if (b.claimed === true) return `<p class="cs-row" data-state="taken">${W(S + "taken")}</p><div class="mk-acts"><a class="cs-btn" href="/app/front" data-nav>${W("screen.entry.backtofront")}</a></div>`;
         if (b.bootstrapConfigured === false) return `<p class="cs-row" data-state="unarmed">${W(S + "unarmed")}</p>`;
         return cs.sec(S + "claim", hosting()
           + cs.field("su-otp", S + "otp", { help: S + "otp.help", autocomplete: "off", value: typeof fragment.boot === "string" ? fragment.boot : "" })
           + cs.field("su-pw", S + "own", { type: "password", help: S + "own.help", autocomplete: "new-password" })
           + cs.field("su-pw2", "screen.entry.again", { type: "password", help: S + "again.help", autocomplete: "new-password" })
-          + `<div class="cs-actrow">${cs.act("claim", { tone: "primary" })}</div>`);
+          + `<div class="mk-acts">${cs.act("claim", { tone: "primary" })}</div>`);
       }));
       return out.join("");
     }
@@ -78,16 +82,19 @@ export const setup = {
       ["hosting", !!host.current], ["admins", !!ui.invite], ["security", tools.length > 0],
     ];
     out.push(`<p class="cs-row" data-state="claimed">${W(S + "claimed")}</p>`);
-    out.push(`<nav aria-label="${W(S + "steps")}"><ol class="cs-steps">${steps.map(([k, done]) => `<li${done ? ' class="done"' : ""}>${W(S + "step." + k)}${done ? ` <span class="cs-small">${W(S + "step.done")}</span>` : ""}</li>`).join("")}</ol></nav>`);
-    out.push(codes() || cs.sec("screen.entry.codes.heading", `<p>${W("screen.entry.codes.what")}</p><div class="cs-actrow">${cs.act("recoverycodesissue")}</div>`));
+    // the design's steps: each done one marked, the first open one current (R14: "Name" stays open while it is skipped)
+    const current = steps.findIndex(([, done]) => !done);
+    out.push(`<nav aria-label="${W(S + "steps")}"><ol class="mk-steps">${steps.map(([k, done], i) => `<li${done ? ' class="done"' : ""}${i === current ? ' aria-current="step"' : ""}>${W(S + "step." + k)}${done ? ` <span class="sr">${W(S + "step.done")}</span>` : ""}</li>`).join("")}</ol></nav>`);
+    out.push(codes() || cs.sec("screen.entry.codes.heading", `<p class="mk-note">${W("screen.entry.codes.what")}</p><div class="mk-acts">${cs.act("recoverycodesissue")}</div>`));
 
-    // name and website
+    // R14: the group's name, the first part after the codes, before any other; its help says where the name shows, and
+    // while it is skipped every page says "Your group"
     out.push(cs.sec(S + "name", (id.display_name ? `<p>${W(S + "name.now", { name: id.display_name })}</p>` : "")
       + cs.field("su-name", S + "name.field", { help: S + "name.help", value: id.display_name || "" })
-      + `<div class="cs-actrow">${cs.act("groupnameset")}</div>`
+      + `<div class="mk-acts">${cs.act("groupnameset")}</div>`
       + (id.domain && id.domain_verified_at ? `<p>${W(S + "domain.verified", { domain: id.domain })}</p>` : "")
       + cs.field("su-domain", S + "domain", { help: S + "domain.help", value: id.domain || "" })
-      + `<div class="cs-actrow">${cs.act("groupdomainset")}</div>`));
+      + `<div class="mk-acts">${cs.act("groupdomainset")}</div>`));
 
     // places and languages
     out.push(cs.sec(S + "places", cs.state(data.profiles, (p) => {
@@ -95,68 +102,71 @@ export const setup = {
       const on = new Set(active.map((x) => x.id));
       const list = [...active, ...choices.filter((c) => !on.has(c.id))];
       return `<p>${active.length ? W(S + "places.now") : W(S + "places.none")}</p>`
-        + (active.length ? `<ul class="cs-list">${active.map((x) => `<li>${E(x.name || x.id)}</li>`).join("")}</ul>` : "")
-        + (list.length ? `<fieldset class="cs-field" id="su-pf"><legend>${W(S + "places.choose")}</legend><span class="help" id="su-pf-help">${W(S + "places.help")}</span>`
+        + (active.length ? `<ul class="mk-list">${active.map((x) => `<li>${E(x.name || x.id)}</li>`).join("")}</ul>` : "")
+        // the design's checks (`mk-checks`), each place by its own name, the help a note before them (R12)
+        + (list.length ? `<p class="mk-note">${W(S + "places.help")}</p><fieldset class="mk-checks" id="su-pf"><legend>${W(S + "places.choose")}</legend>`
           + list.map((x, i) => `<label><input type="checkbox" id="su-pf-${i}" value="${E(x.id)}"${on.has(x.id) ? " checked" : ""}> ${E(x.name || x.id)}</label>`).join("")
-          + `</fieldset><div class="cs-actrow">${cs.act("profilesset", { data: { ids: list.map((x) => x.id).join(" ") } })}</div>` : "");
+          + `</fieldset><div class="mk-acts">${cs.act("profilesset", { data: { ids: list.map((x) => x.id).join(" ") } })}</div>` : "");
     }) + ((ok(data.place) || {}).name ? `<p>${W(S + "place.wanted.now", { name: data.place.value.name })}</p>` : "")
       + cs.field("su-place", S + "place.wanted", { help: S + "place.wanted.help" })
-      + `<div class="cs-actrow">${cs.act("placewanted")}</div>`));
+      + `<div class="mk-acts">${cs.act("placewanted")}</div>`));
 
     // offices and seats
-    out.push(cs.sec(S + "offices", `<p>${W(S + "offices.what")}</p><div class="cs-actrow">${cs.act("officesseed")}</div>`
+    out.push(cs.sec(S + "offices", `<p class="mk-note">${W(S + "offices.what")}</p><div class="mk-acts">${cs.act("officesseed")}</div>`
       + (ui.office ? `<p>${W(S + "office.added", { label: ui.office })}</p>` : "")
       + cs.field("su-office", S + "office.field") + cs.field("su-office-note", S + "office.note")
-      + `<div class="cs-actrow">${cs.act("entitycreate")}</div>`));
+      + `<div class="mk-acts">${cs.act("entitycreate")}</div>`));
 
     // the assistant: keeping the material away from AI (with its reason), the group's key, its switch, the daily limit
-    out.push(cs.sec(S + "assistant", `<p>${W(S + "assistant.what")}</p><p>${W(S + "assistant.own")}</p><p>${W(S + "assistant.paid")}</p>`
+    out.push(cs.sec(S + "assistant", `<p class="mk-note">${W(S + "assistant.what")}</p><p class="mk-note">${W(S + "assistant.own")}</p><p class="mk-note">${W(S + "assistant.paid")}</p>`
       + (keep.on === true ? `<p data-state="keepaway">${W(S + "keepaway.on")} <span class="rec">${E(keep.reason || "")}</span></p>` : "")
       + `<p>${W(S + "keepaway")}</p>`
       + cs.field("su-why", S + "keepaway.why", { area: true, rec: true, help: S + "keepaway.help" })
-      + `<div class="cs-actrow">${cs.act("aikeepaway", { data: { on: keep.on === true ? "off" : "on" } })}</div>`
+      + `<div class="mk-acts">${cs.act("aikeepaway", { data: { on: keep.on === true ? "off" : "on" } })}</div>`
       + (gk.held === true ? `<p data-state="groupkey">${W(S + "key.held", { state: { html: W(gk.on ? S + "key.on" : S + "key.off") } })}</p>` : "")
       + cs.field("su-key" + (ui.keyGen || 0), S + "key", { type: "password", help: S + "key.help", autocomplete: "off" })
-      + `<div class="cs-actrow">${cs.act("groupkeyset")}${gk.held === true ? cs.act("groupkeyswitch", { label: gk.on ? S + "key.switchoff" : S + "key.switchon", data: { on: gk.on ? "off" : "on" } }) : ""}</div>`
+      + `<div class="mk-acts">${cs.act("groupkeyset")}${gk.held === true ? cs.act("groupkeyswitch", { label: gk.on ? S + "key.switchoff" : S + "key.switchon", data: { on: gk.on ? "off" : "on" } }) : ""}</div>`
       + (ui.limit ? `<p>${W(S + "limit.set")}</p>` : "")
       + cs.field("su-limit", S + "limit", { help: S + "limit.help" })
-      + `<div class="cs-actrow">${cs.act("ailimitset")}</div>`));
+      + `<div class="mk-acts">${cs.act("ailimitset")}</div>`));
 
     // what a court can reach
-    out.push(cs.sec(S + "court", `<p>${W(S + "court.what")}</p>`
+    out.push(cs.sec(S + "court", `<p class="mk-note">${W(S + "court.what")}</p>`
       + (court.choice === "tell" || court.choice === "dont" ? `<p>${W(S + "court.now." + court.choice)}</p>` : "")
       + cs.checks("su-court", S + "court.legend", [["tell", S + "court.tell", court.choice === "tell"], ["dont", S + "court.dont", court.choice === "dont"]], { radio: true })
-      + `<div class="cs-actrow">${cs.act("courtnoticeset")}</div>`));
+      + `<div class="mk-acts">${cs.act("courtnoticeset")}</div>`));
 
     // the hosting account, beside HOSTING_CONTROL's words
     out.push(cs.sec(S + "hosting", hosting()
       + (host.current ? `<p>${W(S + "hosting.now", { holders: String(host.current.holders || "") })}</p>` : "")
       + cs.field("su-holders", S + "hosting.field") + cs.field("su-hnote", S + "hosting.note")
-      + `<div class="cs-actrow">${cs.act("hostingaccessset")}</div>`));
+      + `<div class="mk-acts">${cs.act("hostingaccessset")}</div>`));
 
     // a second administrator: the invitation shown once
-    out.push(cs.sec(S + "admins", `<p>${W(S + "admins.what")}</p>`
-      + (ui.invite ? `<div class="cs-shown" data-shown="invite"><p>${W(S + "admins.shown", { date: { html: cs.date(ui.invite.expires) } })}</p><p><code>${E(ui.invite.link)}</code></p></div>` : "")
+    out.push(cs.sec(S + "admins", `<p class="mk-note">${W(S + "admins.what")}</p>`
+      + (ui.invite ? `<div class="cs-row" data-shown="invite"><p>${W(S + "admins.shown", { date: { html: cs.date(ui.invite.expires) } })}</p><p><code>${E(ui.invite.link)}</code></p></div>` : "")
       + cs.field("su-adm-id", S + "admins.id", { help: S + "admins.id.help", autocomplete: "off" })
       + cs.field("su-adm-cover", S + "admins.cover", { autocomplete: "off" })
-      + `<div class="cs-actrow">${cs.act("memberadd")}</div>`));
+      + `<div class="mk-acts">${cs.act("memberadd")}</div>`));
 
     // security tools: each offered tool with the fields its entry names; the scanner's sentence only while one runs
-    out.push(cs.sec(S + "security", (boot.part_scanner === true ? `<p>${W(S + "security.scanner")}</p>` : "") + `<p>${W(S + "security.what")}</p>`
+    out.push(cs.sec(S + "security", (boot.part_scanner === true ? `<p class="mk-note">${W(S + "security.scanner")}</p>` : "") + `<p class="mk-note">${W(S + "security.what")}</p>`
       + (ui.tool ? `<p data-state="tool">${W(ui.tool.passed ? S + "security.passed" : S + "security.failed", { tool: ui.tool.name })}</p>` : "")
       + tools.map((t) => `<p>${W(S + "security.held", { tool: t.name || t.label || t.provider_id || t.tool_id || "" })}</p>`).join("")
-      + cs.state(data.catalogue, (c) => (Array.isArray(c.offered) ? c.offered : []).map((t, i) => {
+      // R12: an empty catalogue draws nothing (a failed read is still drawn as failed)
+      + (data.catalogue && data.catalogue.state === "empty" ? "" : cs.state(data.catalogue, (c) => (Array.isArray(c.offered) ? c.offered : []).map((t, i) => {
         const name = t.name || t.label || t.provider_id || "";
         const cfg = Array.isArray(t.config) ? t.config : [];
         const creds = Array.isArray(t.credentials) ? t.credentials : [];
-        return `<fieldset class="cs-field" id="su-st-${i}"><legend>${E(name)}</legend>`
-          + cfg.map((f, k) => `<label for="su-st-${i}-cfg-${k}">${E(f.label || f.name)}</label><input id="su-st-${i}-cfg-${k}" type="text" class="cs-input">`).join("")
-          + creds.map((n, k) => `<label for="su-st-${i}-cred-${k}">${E(n)}</label><input id="su-st-${i}-cred-${k}" type="password" class="cs-input" autocomplete="off">`).join("")
+        // each of the tool's own fields by the kit's field, its name the entry's (R12)
+        return `<fieldset class="mk-checks" id="su-st-${i}"><legend>${E(name)}</legend>`
+          + cfg.map((f, k) => cs.field(`su-st-${i}-cfg-${k}`, S + "security.field", { fills: { field: f.label || f.name } })).join("")
+          + creds.map((n, k) => cs.field(`su-st-${i}-cred-${k}`, S + "security.field", { type: "password", autocomplete: "off", fills: { field: n } })).join("")
           + `<label><input type="checkbox" id="su-st-${i}-keep"> ${W(S + "security.keep")}</label>`
-          + cs.act("securitytooladd", { data: { tool: String(i) } }) + "</fieldset>";
-      }).join(""), { empty: "state.empty" })));
+          + `<div class="mk-acts">${cs.act("securitytooladd", { data: { tool: String(i) } })}</div></fieldset>`;
+      }).join("")))));
 
-    out.push(cs.sec(S + "finished", `<p>${W(S + "finished.what")}</p><p><a class="cs-btn" data-tone="primary" href="/app" data-nav>${W(S + "finished.go")}</a></p>`));
+    out.push(cs.sec(S + "finished", `<p class="mk-note">${W(S + "finished.what")}</p><div class="mk-acts"><a class="cs-btn" data-tone="primary" href="/app" data-nav>${W(S + "finished.go")}</a></div>`));
     return out.join("");
   },
 
