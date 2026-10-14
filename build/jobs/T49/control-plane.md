@@ -42,3 +42,8 @@ Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 11, module lines 3763
 ## Completion (CHANGE B2, B3)
 - **B2 (K3369):** `doorWindowGate({ req, env, op, spec, doAnswer, credential, background })` at the public ops' window (`index.mjs`:731). Admission's job has not merged, so its current signature ignores the two new arguments; admission R27 counts them once it merges.
 - **B3:** `tranche/T49` merged (setup-words, op-capabilities, interface-assets). Against the real `word`/`hasWord` and the op-declarations stand-in only: `test/m/control-plane/` 287 tests, 283 pass. Red: `totality.test.mjs` (rule 5 (3), as before) and three e2e tests, `t46-e2e` `home` and `capture`, `t47-e2e` wizard front door. All three fail identically on `tranche/T49` without my change (screens not yet merged, rule 5 (7) (B)); not caused here.
+
+## J2 · COMPLETE
+
+CHANGE B2 and B3 processed (record "Completion (CHANGE B2, B3)", pushed). B2: doorWindowGate now receives credential and background (admission's merge makes it count them). B3: tranche/T49 merged; against the real setup-words: 287 tests, 283 pass (op-declarations R71/R72 still a local stand-in). Reds: totality census (rule 5 (3)) and three e2e (t46 home and capture, t47 wizard front door), which fail identically on tranche/T49 without my change (screens unmerged, rule 5 (7) (B)). Checks: architecture 0, coverage 67/67, ownership 0 failures. Still waiting on op-declarations (T49-17) to re-run R97/R98 against the real specs.
+Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 15, module lines 3763
