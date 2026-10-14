@@ -27,3 +27,7 @@
 - Generated artifacts: none of mine staled (the plane bundle and `program.mjs` rebuild at the layer close).
 
 Size (session_01195GX87EMHUXKVysBHVQkZ): test runs 9, module lines 3903
+
+## J1 · COMPLETE
+
+membership T49-1 complete on job/T49/membership @ 16cd2dcba4: R144 (founderHandleSet, op=founderhandleset, founderHandle(), the handle taken for R16/R123, sessionRights handle), R141 re-worded, R145 MODULE_ORDER; plan rule 6 done. FOUNDER_HANDLE_NOT_FOUNDER is C-96.54. Membership tests 242/0; checks format, architecture, coverage, ownership 0 failures. Deferred: the R132 fixture clause (the plane routes founderhandleset only at T49-29/30). The admin-grep findings and one reading call (R77 names the founder-owner by her handle) are in my record. See build/jobs/T49/membership.md.
