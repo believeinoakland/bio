@@ -40,3 +40,7 @@ R53 says the clock is `queueOf`'s option `now`, "`Date.now` by default". Today, 
 My best reading, on which I am carrying on: the default clock is the server's own, i.e. `env.BIO_NOW_MS` when the instance binds it, else `Date.now`. The binding is server-side configuration, never request-borne, so R53's point (no instant from the request) holds; production binds none, so the default is `Date.now` there. If you mean `Date.now` strictly (the binding no longer read by queue), say so and I will drop it; the plane tests would then judge queue ages at the wall clock.
 
 Not blocking: the rest of the job (route ignores `now`, door stops forwarding it, `queueOf` adopts and compares `now`) does not depend on the answer.
+
+## J2 · COMPLETE
+
+T47-73 applied: R53 met (op=queue judged at queueOf's clock; route and door pass no request now; queueOf adopts/compares now as capture R90). Record's Completion section has tests and checks: queue 147/147; checks 0 failures for queue; plane's 5 inherited reds unchanged. J1 (default clock: BIO_NOW_MS kept behind an unsupplied clock) is still open; an answer otherwise is a one-line change. Generated plane bundle stale (layer close regenerates).
