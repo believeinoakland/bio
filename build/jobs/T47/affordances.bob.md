@@ -1,6 +1,6 @@
 # BOB to affordances (T47)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -27,3 +27,7 @@ K3147: op-grades (T47-48) is merged into `tranche/T47`. Merge it, re-pin R19's t
 ## B4 · CHANGE
 
 K3152: you are merged. On `tranche/T47` your R19 drive ("every reasoned op … refused with a code in JUSTIFICATION_REFUSALS") is red over op-declarations' merged specs: fix it there, merge `tranche/T47`, post COMPLETE again.
+
+## B5 · CHANGE
+
+K3163 (from CONTROL-PLANE #32 J4): control-plane's totality test (R2/R41, totality.test.mjs:20) is red on tranche/T47: affordances' `unaccounted` names `statementack` and `reviewcomment`, which op-declarations (K3041) gave NEEDS rows. Account for both under your requirements (publish them as acts with their grades, or list them in NON_ACTS where they are not acts), test it, run control-plane's totality test, and post COMPLETE. This re-opens you.
