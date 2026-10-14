@@ -14,6 +14,7 @@ import { answersOps } from "../../../src/answers/ops.mjs";
 import { dutiesOps } from "../../../src/duties/index.mjs";
 import { readingGuidesOps } from "../../../src/reading-guides/index.mjs";
 import { actionsOps } from "../../../src/actions/index.mjs";
+import { actionRecordsOps } from "../../../src/action-records/index.mjs";
 import { actionClocksOps } from "../../../src/action-clocks/index.mjs";
 import { actionHoldsOps } from "../../../src/action-holds/index.mjs";
 import { actionRepliesOps } from "../../../src/action-replies/index.mjs";
@@ -28,6 +29,7 @@ import { localFactsOps } from "../../../src/local-facts/index.mjs";
 import { caseAccountOps } from "../../../src/case-account/index.mjs";
 import { T46_SHARES } from "../../../src/op-declarations/t46.mjs";
 import { T47_SHARES } from "../../../src/op-declarations/t47.mjs";
+import { T48_SHARES } from "../../../src/op-declarations/t48.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, OP_STAMPS, OP_FAMILIES, OP_KINDS, OP_ALIASES, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS,
         UNATTENDED_BY_DECISION, ACT_GATE, ACT_HELP_ABSENT, PLAN_RUN_SCOPE } = O;
@@ -115,8 +117,11 @@ const R49 = {
 /* each owner's map, and the ops no owner's map serves yet with the job that builds their arm (R6 holds at L11's close).
    T46 (N935): local-facts' map serves `grouprules` (its R12) and case-account's map, `caseAccountOps`, serves R13's two
    (its R15), so neither is named for the plane any longer. */
+/* T48 (actions R103): the plane spreads `actionRecordsOps` beside `actionsOps`; `actionreceipt`, `actionscope` and
+   `actionpromise` moved to action-records and are served by the pair */
+const actionsPair = (a, url, body, ...rest) => ({ ...actionsOps(a, url, body, ...rest), ...actionRecordsOps(a, url, body, ...rest) });
 const MAPS = { following: followingOps, answers: answersOps, duties: dutiesOps, "reading-guides": readingGuidesOps,
-  actions: actionsOps, "action-clocks": actionClocksOps, "action-holds": actionHoldsOps, "action-replies": actionRepliesOps,
+  actions: actionsPair, "action-clocks": actionClocksOps, "action-holds": actionHoldsOps, "action-replies": actionRepliesOps,
   "action-plans": actionPlansOps, "plan-work": planWorkOps, filings: filingsOps, conformance: conformanceOps,
   consequences: consequencesOps, "case-check": caseCheckOps, "project-roster": projectRosterOps, "local-facts": localFactsOps,
   "case-account": caseAccountOps };
@@ -204,7 +209,7 @@ test("R49, R4: each T45 stamp reaches its owner where the owner reads it, throug
   /* local-facts' acts take by from the body: a query by does not reach it (the door overwrites the body's) */
   assert.equal(await reaches(localFactsOps, "ruledraft", { query: { by: SENT } }), false);
   /* a query-stamped actor is not taken from the body */
-  for (const [map, op, k] of [[followingOps, "followend", "by"], [actionsOps, "actionscope", "author"],
+  for (const [map, op, k] of [[followingOps, "followend", "by"], [actionsPair, "actionscope", "author"],
                               [planWorkOps, "matteroutcomeset", "author"], [conformanceOps, "curelink", "author"]])
     assert.equal((await drive(map, op, { body: { [k]: SENT }, query: { [k]: "member:real" } })).includes(SENT), false, op);
 });
@@ -272,9 +277,10 @@ test("R49, R5, R7, R51: t45.mjs is frozen data — each share names an owner who
     assert.ok(Object.isFrozen(f) && Object.isFrozen(f.ops) && Object.isFrozen(f.actor), f.owner);
     assert.ok(!BASE.includes(f.owner), `${f.owner} has a family already`);
     /* T46 (R50, R51): a family T45 gave an owner also holds that owner's T46 share (`t46.mjs`), and T47 (R55) its T47
-       share (`t47.mjs`: project-roster's `projectlist`) */
+       share (`t47.mjs`: project-roster's `projectlist`), and T48 (R64, R67) its T48 share (`t48.mjs`: action-holds'
+       `pressurefor`, action-replies' `actionreplyquoting`, action-plans' `planask`, filings' `filingread`) */
     assert.deepEqual(plain(OP_FAMILIES[f.owner].kinds),
-      plain({ ...f.ops, ...(T46_SHARES[f.owner]?.ops ?? {}), ...(T47_SHARES[f.owner]?.ops ?? {}) }), f.owner);
+      plain({ ...f.ops, ...(T46_SHARES[f.owner]?.ops ?? {}), ...(T47_SHARES[f.owner]?.ops ?? {}), ...(T48_SHARES[f.owner]?.ops ?? {}) }), f.owner);
   }
   for (const k of ["owners", "publishgate"]) assert.ok(Object.isFrozen(OP_KINDS[k]), k);
   for (const op of ["infractiondraft", "bearingdraft"]) {

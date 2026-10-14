@@ -295,7 +295,10 @@ test("R54, R60 (K3062; DEC-198–DEC-217): R21 read against the registry at PR #
   assert.ok(!capture.acts.some((a) => a.op === "capture") && capture.acts.some((a) => a.op === "captureupload"));
   const declared = regActs.filter((a) => a.status === "declared");
   assert.deepEqual(declared.filter((a) => !Object.hasOwn(OPS, a.op)).map((a) => a.op), []);
-  assert.deepEqual(owedOf(regActs), ["passwordresetlink"]);
+  /* T48 (R65; PR #34's merge, `4664e8efd4`): DEC-226 adds the update screen's three owed acts, `updatestart`,
+     `updatelater` and `updateskip` (the second also on the queue), each declared under its own name by R66 */
+  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart"]);
+  for (const op of ["updatestart", "updatelater", "updateskip"]) assert.ok(Object.hasOwn(OPS, op) && both(op) && !Object.hasOwn(OP_ALIASES, op), op);
   assert.ok(Object.hasOwn(OPS, "passwordresetlink") && !Object.hasOwn(OP_ALIASES, "passwordresetlink"));
   for (const op of ["projectaikeepaway", "itemtakeup", "actionscope", "filingsecondapprove", "escalationstoppursuing",
                     "infolevelset", "subscriptionsignin", "passwordreset", "grouplanguagesset", "grouplogoset", "signrequest", "unlock"])
@@ -311,8 +314,12 @@ test("R54, R60 (K3062; DEC-198–DEC-217): R21 read against the registry at PR #
 });
 
 test("R54, R60 (wizard-scripts R31, R35, R36): R27 read against the library at PR #33's head — it marks no act owed, and every act its scripts' steps name is a declared op or an alias, the four R52 named owed carried under their own names in both session sets (negative control: an undeclared step is seen)", () => {
-  assert.equal(JSON.stringify(library).match(/owed:/g), null);
-  const steps = library.scripts.flatMap((s) => s.versions.flatMap((v) => v.steps.map((st) => st.act))).filter(Boolean);
+  /* T48 (R65): at PR #34's merge the update wizard's one step marks `owed:updatestart K3158`, read as served once R66
+     declares it; no other act is owed */
+  assert.deepEqual(JSON.stringify(library).match(/owed:[a-z]+/g), ["owed:updatestart"]);
+  /* T48 (R65): a step marked `owed:<op> <ref>` names the op R66 declares, read as served */
+  const steps = library.scripts.flatMap((s) => s.versions.flatMap((v) => v.steps.map((st) => st.act))).filter(Boolean)
+    .map((act) => act.replace(/^owed:/, "").split(" ")[0]);
   assert.deepEqual([...new Set(steps)].filter((op) => !Object.hasOwn(OPS, op)), []);
   for (const op of ["actionscope", "itemtakeup", "escalationstoppursuing", "subscriptionsignin"])
     assert.ok(steps.includes(op) && both(op) && !Object.hasOwn(OP_ALIASES, op), op);
