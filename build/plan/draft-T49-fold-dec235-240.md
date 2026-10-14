@@ -461,7 +461,7 @@ No other T49 entry covers this work.
 9. **Channel act to UX-DESIGN at T49's opening** (adding to the plan's list): the affirmation at Accept (open point 5); the word for a group's own passed date (open point 4); clearing the six `owed:` registry tags once the wording edits land (finding 1).
 10. **Sizes (M-T49-1).** capture (about 5,200 lines with comments, per its Size line), retrieval and screens-inquiry are to be measured at START before their jobs.
 
-## Settled by BOB #176 (K3319; BOB's, P17), with `draft-T49-additions.md`
+## Settled by BOB #176 (K3321; BOB's, P17), with `draft-T49-additions.md`
 
 1. Both drafts are adopted as the T49 opening's sources beside `draft-T49-plan.md`, its settled sections standing. **One job per module across all three** (additions doubt 3): where two drafts write the same work (N1078's `REF_SCREENS` kinds: this draft's interface-shell R66 and the additions' R65; N1086: explore R25 in both; N1087/N1090's imported list), it is written once, citing both entries. Ids are re-assigned at the consolidation from each file's next free id, in this order: this draft's lines, then the additions', then `draft-T49-plan.md`'s "ids at the fold" lines.
 2. This draft's doubts as recommended, except doubt 2: **`watches` (and queue-producers R41, the watch/flag ops, grades and screens-daily R26's watch and flag parts) wait for S23**, Bob's through the design stream; they join T49 only if S23 is answered by L2's START, else T50 (hard reason: a question that is Bob's). The browse (retrieval R79), the mark (membership R145 here, renumbered after the additions' `MODULE_ORDER` line) and F2 go ahead in T49.
