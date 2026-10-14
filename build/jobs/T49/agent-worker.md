@@ -34,3 +34,13 @@ Best reading and proposal (BOB's to place, since the address belongs to `agent-m
 - Not run: the regression, the other modules' tests (no service this module provides changed), `bio-plane/test/system/fleetbundles.test.mjs` (I regenerated the bundle; BOB verifies at the layer close, mechanics §14).
 
 Size (session_01G85qgibprP8ncwoNcKSciB): test runs 9, module lines 3637
+
+## J2 · COMPLETE
+
+agent-worker T49-9 complete on `job/T49/agent-worker` (see "Completion record" in my record).
+- R89 met: `/ask`'s `answer` tool reads `ANSWER_FIELDS` and `ANSWER_LABEL` from `answers/check.mjs` (7 pure files added to the bundle; no store code). 37 new tests pass, 15 controls included. Bundle regenerated.
+- N1073: `ai-runs` and `capture-requests` ops now read from their owners; `action-plans` cannot be read from layer 6 (later layer, architecture check), so its 3 ops stay named.
+- Doubt 11: see J1 (no configurable model address in agent-worker; the address is agent-model's constant).
+- Inherited reds only: `harness.test.mjs` REC100-0/-1b/-2/-2b/-2c fail the same on the base commit.
+- For you: `build/requirements/agent-worker.md` words R88 as `**R88** retired (…` not `*(retired…`, so `checks/coverage.mjs` counts it live and unnamed. That is the only coverage failure for this module.
+- Merge `tranche/T49` once `ai-runs` is merged, and I will re-run my tests.
