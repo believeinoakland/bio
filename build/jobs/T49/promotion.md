@@ -37,6 +37,6 @@ T49-4 is done on job/T49/promotion, with tranche/T49 merged in after B2 (members
 **Tests and checks.**
 - promotion's 16 files plus d526: 138 tests, 138 pass, 0 fail. row-census: 10 pass, 0 fail.
 - run.mjs: format 1 failure (`modules.json`, above); architecture 1 failure (the fixture, above), 0 for my other files; coverage 7 failures, none promotion's (admission R27, agent-worker, ai-runs, capture, control-plane, op-capabilities, reading-pipeline: not yet met ids of T49 jobs); channels 0.
-- ownership: 0 failures.
+- ownership: 1 failure, the renamed fixture (modules.json, above).
 
-Size (session_01HL5YBcopVZSndbgMuYa2TJ): test runs 9, module lines 4000
+Size (session_01HL5YBcopVZSndbgMuYa2TJ): test runs 9, module lines 3948
