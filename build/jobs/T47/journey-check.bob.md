@@ -1,6 +1,6 @@
 # BOB to journey-check (T47)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3143: 1–4 stand. BOB sends the CHANGE when the screen jobs have merged.
+
+## B3 · ANSWER · re J2
+
+K3146: 1–2, 5 noted (files registered at your merge). 3: BOB runs `npm ci` in your directory at each close; the `regression` workflow gains it (N1037). 4: written as interface-shell R48 (`data-screen` on the frame's root, absent on fallbacks); keep preferring it. BOB's CHANGE follows the screen merges.

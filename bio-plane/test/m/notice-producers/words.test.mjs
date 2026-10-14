@@ -63,3 +63,26 @@ test("R16 R17 (T44) {date}: date.daymonth in the current year, date.daymonthyear
   }
   assert.notEqual(untilWords("month", 11), WORDS["ai.when.month"].replace("{month}", "November"));
 });
+
+/* R20 (T47; N889; DEC-198 (3)): R5's, R6's, R13's, R14's and R15's sentences, each by key */
+const R20_KEYS = [...["overdue", "undetermined"].flatMap((st) => [`queue.temporal-expectation-due.${st}.summary`, `queue.temporal-expectation-due.${st}.detail`]),
+  ...["inquiry-recheck-due", "policy-changed-noticed", "scan-found", "security-tool-off"].flatMap((k) => [`queue.${k}.summary`, `queue.${k}.detail`])];
+
+test("R20 every key R20 names is in words.json and held here verbatim, with the placeholders R20 fills; R12's item has no key (its plain sentence); a key the file lacks fails", () => {
+  assert.equal(R20_KEYS.length, 12);
+  for (const key of R20_KEYS) {
+    assert.equal(typeof WORDS[key], "string", `${key} is in words.json`);
+    assert.equal(NOTICE_WORDS[key], WORDS[key], `${key} is held, verbatim`);
+  }
+  const holes = (key) => [...WORDS[key].matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+  assert.deepEqual(holes("queue.temporal-expectation-due.overdue.detail"), ["basis", "date", "office", "what"]);
+  assert.deepEqual(holes("queue.temporal-expectation-due.undetermined.detail"), ["basis", "from", "office", "reason", "to", "what"]);
+  assert.deepEqual(holes("queue.inquiry-recheck-due.detail"), ["date", "question", "what", "who"]);
+  assert.deepEqual(holes("queue.policy-changed-noticed.detail"), ["date"]);
+  assert.deepEqual(holes("queue.scan-found.detail"), ["date", "engine", "meanings", "names"]);
+  assert.deepEqual(holes("queue.security-tool-off.detail"), ["tool"]);
+  /* negative control: R12 has no key in the file, and none is held here */
+  for (const k of Object.keys(WORDS)) assert.doesNotMatch(k, /^queue\.security-level-high\./, k);
+  assert.equal(Object.keys(NOTICE_WORDS).some((k) => k.startsWith("queue.security-level-high")), false);
+  assert.throws(() => wordsOf("queue.temporal-expectation-due.pending.summary", {}), /no words for/);
+});
