@@ -1,6 +1,6 @@
 # screens-investigate (T47)
 
-**Status** · session_01P6a5EYGfQdk3KLWzPsHMLA · depth 2 · WAITING ON BOB (J2) · handled B7
+**Status** · session_01P6a5EYGfQdk3KLWzPsHMLA · depth 2 · WAITING ON BOB (J3) · handled B7
 
 ## J1 · QUESTION
 
