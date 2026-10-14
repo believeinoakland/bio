@@ -25,3 +25,7 @@
 - `checks/run.mjs` over the product: the only failures are other modules' coverage (inherited) — none for action-replies, none architecture.
 
 Size (session_01QhpiJEWup9HwKXyDqimoCa): test runs 9, module lines 705
+
+## J1 · COMPLETE
+
+R10, R11 and R4 are met. Module tests: 31 pass, 0 fail. Checks: format, architecture, coverage and ownership are all 0 failures. Details are in my record. One thing for the L11 owners: the new op actionreplyquoting has no op-declarations spec yet. op-declarations t45 'R49, R6' fails on exactly that, and op-grades, affordances and the plane's map tests will also need the op. Nothing deferred.
