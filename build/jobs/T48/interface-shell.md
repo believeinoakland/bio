@@ -23,3 +23,26 @@
 **Contract decisions (BOB's level, mine as the shell's owner; for BOB to record):** (1) a screen lists its own absence codes as `absent: [codes]` on the screen object (R61's "`ABSENT_CODES`"); `checkScreens` refuses a non-list. (2) R56's "class literal" is read from the screens' and guide's serialised functions and the shell's program; a class made at run time is not checked (a literal cut open, as `cs-tag-` + kind, is skipped).
 
 **Tests and checks so far:** with local stand-ins (never committed) for the unmerged same-layer services (`interface-assets`' `shell.css`, `op-grades`' `MARKS`, `op-declarations`' `planask`/`stepsource`/`stepsourcewithdraw`, `wizard-scripts`' `elsewhere`/`updates` rows) and setup-words' finished re-take: `node --test test/m/interface-shell/*.test.mjs` 134 pass, 0 fail (new `design.test.mjs`, 14 tests, R52–R64 each with a control; amended tests renamed to the ids that amend them). `format` 0 failures; `architecture` 0; `coverage` interface-shell 62 of 62; `ownership` 0 failures (13 files).
+
+## J1 · REPORT
+
+T48-69's code and tests are pushed (R52–R64). The details are in my record. I hold COMPLETE until the services I build against have merged, because my module now imports them: `interface-assets` R7 (`ASSET_FILES["shell.css"]`), `op-grades` R42 (`MARKS`), `op-declarations`' `planask`, `stepsource` and `stepsourcewithdraw`, `wizard-scripts` R38 (`elsewhere`, `updates`), and `setup-words` R8 (`screen.elsewhere.name`). Against local stand-ins of these, never committed, my 134 tests pass. When they are on `tranche/T48`, send me a CHANGE. I will then merge the tranche, re-run, and post COMPLETE.
+
+For you to place:
+1. **Screen modules go red under R56, as planned.** `interfacePage` now refuses any class that no stylesheet defines. Until each screen job maps its classes, those modules' tests are red (this branch with the stand-ins: entry 6 failing, wizards 17, settings 77, intake 55, daily 59, inquiry 63, investigate 78, publish 52, action 46). `control-plane`'s page test is red for the same reason. The undefined classes, per module:
+   - entry: cs-fronthead, cs-flogo, cs-sub, cs-actrow, cs-small, cs-frontgrid, cs-signin, cs-note, cs-codes, cs-steps, cs-list, cs-shown
+   - wizards: cs-form, cs-list, cs-note, cs-label-untested, cs-actrow, cs-wizmarks
+   - settings: cs-list, cs-note, cs-table, cs-form, cs-shown, cs-notice, cs-situation, cs-label-untested, cs-draft-label, cs-kv, cs-tag-machine
+   - intake: cs-tab, cs-refusal, cs-untested, st, tw
+   - daily: mk-count, mk-owner, mk-last, mk-actd, mk-sorts, sep, label, cs-untested
+   - inquiry: cs-sub, cs-label, cs-meta, cs-refusal, cs-note, cs-rec, cs-strengthbox, cs-facts, cs-id, cs-passage, cs-machine, cs-form, cs-list, cs-table
+   - investigate: cs-sub, cs-filters, cs-note, cs-meta, cs-refusal, cs-actrow, cs-chain, cs-hops, cs-gapblock, mk-lane, cs-visit, cs-current, cs-proposal
+   - publish: cs-actrow, cs-note, cs-list
+   - action: mk-form, mk-done, mk-grid, src
+
+   The shell no longer styles `cs-actrow` and `cs-list`. They were copies of the design's `mk-acts` and `mk-list`, and the screens map to those.
+2. **Other modules' tests that read the kit's old markup.** screens-wizards' `page.test` reads `cs-ring`; the ring is now the design's `cs-target`. screens-action's `contract.test` reads `nav.cs-crumbs li`; the path is now the design's `mk-crumbs`, with `a`, `i` and `b` and no list. screens-daily's `projects.test` reads `cs-spark` and `cs-people`, now `mk-spark` and `mk-people`. The hook classes `cs-crumbs`, `cs-rows`, `cs-r` and `cs-panel` are still drawn.
+3. **Two contract decisions to record (BOB's level).** First: a screen lists its own absence codes as `absent: [codes]` on its screen object. That is R61's "ABSENT_CODES"; screens-investigate R26 builds to it. Second: R56 checks the classes written as literals in the functions and skips a class made at run time.
+4. **R56's list and the ASK to UX-DESIGN.** These shell styles stay because no design class fits: `cs-menuwrap`, `cs-menu`, `cs-actwrap`, `cs-slot`, `cs-rowname`, `cs-testband`, `cs-overlay`, `cs-image`, `cs-areas-box`, `cs-area`. Also mine: the frame's fixed-height rules, the avatar drawn as a button, and the group's name kept on one line. `HOOK_CLASSES` lists `cs-crumbs`, `cs-rows`, `cs-r` and `cs-panel`.
+5. **Words for the UX handoff.** New: `shell.band.working` (R57's interim), `shell.group.unnamed` ("Your group") and `shell.unread` ("This could not be read.", R61's "could not be read", which has no key). Retired: `shell.level`.
+6. **interface-assets' J1.** I rely on `shell.css` carrying the design's phone rules under the 760 px query: `.mk-hide-phone` and `.mk-mastsearch span` hidden, the tabs as a grid in the fifth row, the `mk-rows` card rules. Their `:root:root` proposal suits me. The frame's height and scrolling are my own rules, keyed on `#cs-root`, so they do not depend on how `.mk-page` is rewritten.
