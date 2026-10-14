@@ -34,3 +34,7 @@ Should scheduler add a guard (new requirement text, yours)? Proposal: a consumer
 **BOB's answer B2 (K3363), applied.** (1) No guard in T49: scheduler completes unchanged; the guard is N1114, scheduler's entry in T50 (text BOB's then). (2) The root cause is `instance-setup`'s R88 (the update-check tick ignores the alarm's `now`); the 3-line fix is N1113 in T50, after instance-setup's split, citing my scratch evidence. (3) `plane` R12 stays red, accepted by name until N1113 merges in T50 (it no longer clears at T49-29 alone). Live instances are unaffected: the stamp and the alarm read the same clock there.
 
 **Whole-product run (`checks/run.mjs`).** format 0 failures; architecture 0 failures (3351 files); coverage 17 failures, all in other modules (interface-shell, journey-check, op-capabilities, screens-*, setup-words, site: not built yet), none in scheduler (26 of 26 named).
+
+## J3 · COMPLETE
+
+T49-12 complete, scheduler unchanged (B2, K3363). Diagnosis in the record: plane R12's remaining failure is instance-setup R88 (update-check tick ignores the alarm's now); N1113 (T50) fixes it, guard is N1114 (T50). plane R12 stays red, accepted by name until N1113 merges. Scheduler tests 128/129 (only R12 red); format, architecture, ownership, coverage(scheduler 26/26) 0 failures; whole-product run: only other modules' coverage failures. Size (session_01QZbGvrbfgrrJ5Li8Y5hW5Y): test runs 4, module lines 0.
