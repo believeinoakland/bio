@@ -124,11 +124,13 @@ const BARE = {
   docket: [`/app/docket/${P}`, {}, ["docket", "image"], `/app/docket/${P}/${C}`, "docket"],
 };
 for (const [id, [path, boot, never, full, read]] of Object.entries(BARE)) {
-  test(`R10 (K3171) ${id} opened with no subject in its address sends no subject read and draws "Nothing is here" (control: with it, it reads)`, async () => {
+  test(`R10 (K3171, K3179) ${id} opened with no subject in its address sends no subject read and draws "Nothing is here" (control: with it, it reads)`, async () => {
     const p = await open(path, { boot });
     for (const op of never) assert.equal(p.byOp(op).length, 0, `${path}: no ${op}`);
     assert.ok(main(p).querySelector('[data-unavailable="nothing"]'), `${path}: Nothing is here`);
-    assert.match(text(p), /Nothing is here/);
+    assert.equal(main(p).querySelector("h1").textContent, "Nothing is here", "K3179: the shell's own title");
+    assert.equal(main(p).querySelector('[data-unavailable="nothing"]').textContent, "This address leads nowhere in your group's Civicsmith.");
+    assert.ok(!/Can't open this/.test(text(p)), "K3179 (control): not screen.unavailable.name's heading");
     assert.deepEqual(rawKeys(p.root()), []);
     const q = await open(full, { boot });
     assert.ok(q.byOp(read).length > 0, `${full} reads ${read}`);
