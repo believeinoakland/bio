@@ -4,12 +4,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { open, has, lacks, said, all, texts, FOUNDER } from "./kit.mjs";
+import { open, has, lacks, said, all, texts, FOUNDER, SCREENS } from "./kit.mjs";
 import * as SHELL from "../../../src/interface-shell/index.mjs";
 
-// ---- the served stylesheets (interface-shell R56): civicsmith.css, shell.css and the shell's own STYLE ----
-/* Read from the design's own files, which `interface-assets` serves (R1: civicsmith.css as it is; R7: shell.css made
-   from the page's `<style>`), so no module this one does not use is imported. */
+// ---- the served stylesheets (interface-shell R56): its own check over what each screen draws, no stand-in ----
+/* `checkClasses` throws for a class in a `class` attribute that civicsmith.css, shell.css and the shell's STYLE do not
+   define and `HOOK_CLASSES` does not list; each drawing is handed to it as a screen holding that HTML. */
+const served = (who, html) => { SHELL.checkClasses([{ id: who, html }], null, ""); return true; };
+
+/* R13's two rules, read from the design page's `<style>`, which `interface-assets` serves as shell.css (its R7), so no
+   module this one does not use is imported. */
 const DESIGN = (path) => fs.readFileSync(new URL("../../../../docs/development/ux-substrate/" + path, import.meta.url), "utf8");
 /* `shell.css` as interface-assets R7 generates it: the product rules of the design page's `<style>` (every selector
    naming an `mk-` or `cs-` class, none a mock-only or the page's own; a rule under the phone device's frame carried
@@ -43,11 +47,6 @@ function shellCss() {
   return out.join("\n");
 }
 const SHELL_CSS = shellCss();
-const STYLE = (() => { const p = SHELL.interfacePage([]); return p.slice(p.indexOf("<style>") + 7, p.indexOf("</style>")); })();
-const defined = (text) => new Set([...text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{[^{}]*\}/g, "{}").matchAll(/\.([a-zA-Z][\w-]*)/g)].map((m) => m[1]));
-const SERVED = new Set([...defined(DESIGN("visual-language/civicsmith.css")), ...defined(SHELL_CSS), ...defined(STYLE), ...(Array.isArray(SHELL.HOOK_CLASSES) ? SHELL.HOOK_CLASSES.map((h) => (Array.isArray(h) ? h[0] : h && h.class ? h.class : h)) : [])]);
-// the script hooks this module draws for another to read, until interface-shell's HOOK_CLASSES lists them (R56)
-const HOOKS = new Map([["cs-codes", "journey-check reads the ten recovery codes"]]);
 
 // ---- every screen in its states, over a full plane and over an empty one ----
 const CODES = ["AAAA-1111", "BBBB-2222"];
@@ -115,18 +114,22 @@ const classes = (s) => all(s.tree, (e) => e.attrs.class !== undefined).flatMap((
 
 test("R12 every class the six screens draw is one a served stylesheet defines (civicsmith.css, shell.css, the shell's STYLE) or a listed script hook (interface-shell R56)", async () => {
   for (const table of [FULL, EMPTY]) {
-    for (const [id, s] of await drawings(table)) {
-      for (const c of classes(s)) assert.ok(SERVED.has(c) || HOOKS.has(c), `${id}: class ${c} is defined by no served stylesheet`);
-    }
+    for (const [id, s] of await drawings(table)) assert.ok(served(id, s.drawn()), id);
   }
+  // and the real SCREENS compose under R56
+  assert.match(SHELL.interfacePage(SCREENS), /<script nonce=/);
   // the design's own spellings, never the old cs- ones
   const front = await open("front", { table: FULL });
   for (const c of ["mk-fronthead", "mk-frontgrid", "mk-signin", "mk-acts", "mk-small"]) assert.ok(classes(front).includes(c), c);
-  for (const c of ["cs-frontgrid", "cs-signin", "cs-fronthead", "cs-flogo", "cs-note", "cs-sub", "cs-small", "cs-steps", "cs-shown", "cs-form", "cs-actrow"]) {
-    for (const [id, s] of await drawings(FULL)) assert.ok(!classes(s).includes(c), `${id}: ${c}`);
+  for (const [id, s] of await drawings(FULL)) {
+    for (const c of ["cs-frontgrid", "cs-signin", "cs-fronthead", "cs-flogo", "cs-note", "cs-sub", "cs-small", "cs-steps", "cs-shown", "cs-form", "cs-actrow", "cs-list", "cs-codes"]) assert.ok(!classes(s).includes(c), `${id}: ${c}`);
   }
-  // control: a class no stylesheet defines is found
-  assert.ok(!SERVED.has("cs-nonesuch") && SERVED.has("mk-door") && SERVED.has("mk-frontgrid"));
+  // the recovery codes keep their hook as an attribute
+  const codes = (await drawings(FULL)).filter(([id]) => /after (claim|enroll)/.test(id)).map(([, s]) => all(s.tree, (e) => e.tag === "pre" && "data-codes" in e.attrs).length);
+  assert.deepEqual(codes, [1, 1]);
+  // control: a class no stylesheet defines is refused, a design class composes
+  assert.throws(() => served("control", '<div class="cs-nonesuch"></div>'), /cs-nonesuch/);
+  assert.ok(served("control", '<div class="mk-door mk-frontgrid"></div>'));
 });
 
 test("R12 every labelled field is drawn with the kit's field: no cs-form, no bare <label> with .help, every text field and select inside a cs-field", async () => {
