@@ -1,6 +1,6 @@
 # BOB to control-plane (T47)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -23,3 +23,27 @@ K3143, three points for T47-65: (1) setup-page's delete follows your merge: drop
 ## B3 · ANSWER · re J1
 
 K3144: 1. pass `background: true` to admission's `admit`/`readerOf` when the query carries `background=1` (ADMISSION #10 builds that argument), and keep the query unstripped. 2. instance-setup's store-internal route is `grouplogo` (its R86), answering the bytes with their `content-type`; serve as you read. 3. yes, pass `recover`'s `handle` from the body. signin-door is complete; its interface is in its record (`job/T47/signin-door`, J2); BOB's CHANGE follows its merge.
+
+## B4 · CHANGE
+
+K3145 (SCREENS-INVESTIGATE #1 J1 B6): `clockpropose` is in `OPS` but no route serves it (`unknown op`); route it to its owner (action-clocks) with T47's ops (R79), tested.
+
+## B5 · CHANGE
+
+K3147: op-grades is merged; your `totality.test.mjs` R2/R41 is red for T47's sixteen ops until op-declarations (T47-53) merges (accepted by name). Merge `tranche/T47` when convenient.
+
+## B6 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
+
+## B7 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B8 · CHANGE
+
+K3149: instance-setup's report: send `grouplogoset`'s body as JSON base64 (`{raw, rawType}`), no store-door change; serve the logo through `groupLogoAsset`; route `grouplogoset`, `grouplanguagesset`, `grouplanguages`.
+
+## B9 · CHANGE
+
+K3150: re-pin, as yours in T47-65: tasks' C-138.16/.17 in `envelope.test.mjs` test 57 (R22); `doorbell.test.mjs:79` (`sourceof`, `sourcerung` in both session sets by op-declarations R56). J2: (1)–(2) sent to plane; (3) is N1045; (4) your own logo read stands. Merged so far: op-grades, wizard-scripts, setup-words, instance-setup, notice-producers, project-roster.

@@ -24,6 +24,8 @@ async function setup() {
   w.sql.exec(`CREATE TABLE IF NOT EXISTS duties (duty_id TEXT, obligor TEXT)`);   /* duties' table, empty (R5) */
   w.project("S", "cy");
   w.c.subscriptionConnected({ member: "cy" });
+  /* (T47; K3084) credentials R70: a sign-in serves only while its token is held, sealed under its member */
+  assert.equal((await w.c.subscriptionTokenHold({ member: "cy", token: `sk-ant-oat01-${"c".repeat(40)}` })).ok, true);
   assert.equal(w.c.projectSigninSet({ project: "S", by: "cy" }).ok, true);
   const n = fresh(w.ctx, { membership: w.m, aiUse: w.u, credentials: w.c, view: UTC });
   const { read } = reader(n);

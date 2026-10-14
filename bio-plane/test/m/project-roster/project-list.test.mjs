@@ -93,8 +93,9 @@ test("R26 each project is {id, name, stage}: name its title (record-core R34), s
   const all = w.r.projectList({ viewer: `${MACHINE_CLASS_PREFIX}member` });
   assert.deepEqual(Object.keys(all).sort(), ["count", "limit", "ok", "projects", "truncated"]);
   assert.deepEqual([all.ok, all.count, all.limit, all.truncated], [true, 6, 200, false]);
-  /* R27 (T47) adds each project's `owner`; no manifest entry is recorded here, so every one answers null */
-  assert.deepEqual(all.projects, [
+  /* R27 (T47) adds each project's `owner`; no manifest entry is recorded here, so every one answers null. R28 (T47) adds
+     `members`, `activity` and `lastChange`, held whole by R28's own tests; here only that they are present */
+  assert.deepEqual(all.projects.map(({ id, name, stage, owner }) => ({ id, name, stage, owner })), [
     { id: "PROJ-0", name: null, stage: "investigating", owner: null },
     { id: "PROJ-A", name: "Project PROJ-A", stage: "forming", owner: null },
     { id: "PROJ-D", name: "Project PROJ-D", stage: "forming", owner: null },
@@ -103,10 +104,11 @@ test("R26 each project is {id, name, stage}: name its title (record-core R34), s
     { id: "PROJ-Z", name: "Zeta", stage: null, owner: null },
   ]);
   for (const p of all.projects) {
-    assert.deepEqual(Object.keys(p).sort(), ["id", "name", "owner", "stage"], p.id);
+    assert.deepEqual(Object.keys(p).sort(), ["activity", "id", "lastChange", "members", "name", "owner", "stage"], p.id);
     assert.equal(p.name, w.core.bundleInfo(p.id).title, `${p.id}: R34's title`);
   }
-  /* no question count, no request, nothing of the project beyond its id, title, stage and opener (R27) */
+  /* no question count, no request, nothing of the project beyond its id, title, stage, opener (R27), members and
+     activity (R28) */
   assert.doesNotMatch(JSON.stringify(all), /question|request|participant/);
   /* the stage is read as recorded, at each read: a change of the recorded state shows at once */
   w.sql.exec(`UPDATE bundles SET current_state='closed' WHERE bundle_id='PROJ-A'`);

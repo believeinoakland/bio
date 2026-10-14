@@ -2,7 +2,7 @@
    (R11, R21), at the module's interface (T34-52; DEC-139 (4)). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, draft, approved, V, STEPS, step, SCREENS, OPS, MACHINE_REFUSED, MACHINE_DRAFTS, LIBRARY } from "./fixture.mjs";
+import { seeded, draft, approved, restart, V, STEPS, step, SCREENS, OPS, MACHINE_REFUSED, MACHINE_DRAFTS, LIBRARY } from "./fixture.mjs";
 import * as wz from "../../../src/wizard-scripts/index.mjs";
 
 const A = V("alice"), F = V("frank"), E = V("erin"), D = V("dave");
@@ -79,6 +79,23 @@ test("R12 WIZARD_VIA_REFUSED at approval and at registration: a group script who
   assert.equal(w.wz.wizardSubmit({ version: d.version, author: F, viewer: F }).ok, true);
   w.wz.wizardRetire({ script: target.script, reason: "gone", by: A, viewer: A });
   assert.equal(refused(w.wz.wizardApprove({ version: d.version, by: A, viewer: A }), "WIZARD_VIA_REFUSED").step, 2);
+  /* at registration: an approved script whose side trip's target (a library script) is not registered is broken, withheld
+     and logged with its first refusal; it returns when the target is registered again */
+  const lib = LIBRARY[1];
+  const t = w.wz.wizardDraft({ project: w.P, name: "To the library", recorded: [{ screen: "case-home", act: "casenote" }, { screen: "case-home", act: null }],
+                               author: F, viewer: F });
+  w.wz.wizardRevise({ version: t.version, steps: [step("case-home", "casenote"), step("case-home", null, { via: lib.id })], author: F, viewer: F });
+  w.wz.wizardSubmit({ version: t.version, author: F, viewer: F });
+  assert.equal(w.wz.wizardApprove({ version: t.version, by: A, viewer: A }).ok, true);
+  const gone = restart(w, { library: LIBRARY.filter((e) => e.id !== lib.id) });
+  assert.ok(gone.registered.broken.includes(t.version), "broken at registration");
+  assert.ok(!gone.wizardsAt({ screen: "case-home", viewer: F }).scripts.some((x) => x.version === t.version), "withheld");
+  const log = gone.brokenScripts({ viewer: A }).entries.filter((e) => e.script === t.script);
+  assert.deepEqual(log.map((e) => [e.kind, e.refusal && e.refusal.code]), [["withdrawn", "WIZARD_VIA_REFUSED"]]);
+  const back = restart(w, {});
+  assert.ok(back.registered.returned.includes(t.version), "returned when the target is registered again");
+  assert.ok(back.wizardsAt({ screen: "case-home", viewer: F }).scripts.some((x) => x.version === t.version));
+  assert.deepEqual(back.brokenScripts({ viewer: A }).entries.filter((e) => e.script === t.script).map((e) => e.kind), ["withdrawn", "restored"]);
 });
 
 test("R21 the registry form answers each step's via, the side trip's script id, or null when it has none", () => {
