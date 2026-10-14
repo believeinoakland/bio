@@ -41,3 +41,13 @@ Nothing.
 - Layer tests: none named in the manifest.
 
 Size (session_01W8zKiP2U6MWJEErzftUsXV): test runs 34, module lines 2287
+
+## J1 · REPORT
+
+REPORT (T49-20 interface-shell), findings in other modules; each is also in my record.
+
+1. Tests of other modules that go red at this merge (K2704), the only new reds after running every screen module's tests and the tests that import this module, here and on tranche/T49, with the same stand-ins: screens-intake/inbox.test.mjs (imports interface-shell/words.mjs, deleted by R70); screens-settings/words.test.mjs (imports SHELL_WORDS, no longer exported); screens-publish/ceremony.test.mjs "R4 each photo shown with its marks" (pins img.cs-image, now mk-image); control-plane/t48-door.test.mjs R95 (pins cs-testband, line 317; now .cs-band[data-band="test"]).
+2. D28 measured: the console line is Chromium's own network log of the 403, not a page call (the module calls no console method). R68's third clause is dropped as R68 says; journey-check's console check must admit "Failed to load resource: the server responded with a status of 403" for a status its step expects. A verbose "[DOM] Password field is not contained in a form" line also appears for the lock and password dialogs; journey-check should not count it.
+3. bio-plane/dist/bio-plane.bundled.mjs and its manifest are stale by this change (yours at the layer close).
+4. ADMIN_ACTS names joindoors, securitytools, securitytoolcatalogue and securitytoolevents, which OPS declares as reads; inert in the shell. Left as R50 names them.
+5. This branch loads only after setup-words (word, hasWord) and interface-assets (the mk-* classes) have merged; I tested against local stand-ins of both, not committed.
