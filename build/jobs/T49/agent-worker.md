@@ -33,4 +33,4 @@ Best reading and proposal (BOB's to place, since the address belongs to `agent-m
 - Process checks from `civicos-process` over the product: `format` 0 failures; `architecture` 0 failures; `ownership` 0 failures; `coverage` 80 of 81 live ids named, the one unnamed being R88 (above).
 - Not run: the regression, the other modules' tests (no service this module provides changed), `bio-plane/test/system/fleetbundles.test.mjs` (I regenerated the bundle; BOB verifies at the layer close, mechanics §14).
 
-Size (session_01G85qgibprP8ncwoNcKSciB): test runs 9, module lines 2814
+Size (session_01G85qgibprP8ncwoNcKSciB): test runs 9, module lines 3637
