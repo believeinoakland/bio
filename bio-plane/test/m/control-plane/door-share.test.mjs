@@ -18,10 +18,11 @@ const declining = (log = []) => ({
   publicInstanceGroup: async () => ({ answered: true, result: {} }),
 });
 
-test("R24, R2 (door share): op=login is relayed by the door to bio's `login` route with the role (admin unless named) and the password only, at the store's status; invitelook and enroll to the store the caller names, the body whole; a store failure is R23's 502, never 200; no hook is reached", async () => {
+test("R24, R2, R83 (door share; T47, K3084): op=login is relayed by the door to bio's `login` route with the body's handle, password and device only (no role, a role sent dropped), at the store's status; invitelook and enroll to the store the caller names, the body whole; a store failure is R23's 502, never 200; no hook is reached", async () => {
   for (const [op, params, sent, ns, want] of [
-    ["login", {}, { role: "member:ann", password: "pw", extra: "dropped" }, "bio", { role: "member:ann", password: "pw" }],
-    ["login", { store: "bio" }, { password: "pw" }, "bio", { role: "admin", password: "pw" }],
+    ["login", {}, { handle: "ann", password: "pw", device: "own", role: "member:ann", extra: "dropped" }, "bio",
+     { handle: "ann", password: "pw", device: "own" }],
+    ["login", { store: "bio" }, { password: "pw" }, "bio", { password: "pw" }],
     ["invitelook", {}, { invite: "inv-1", x: 1 }, "bio", { invite: "inv-1", x: 1 }],
     ["invitelook", { store: "scratch" }, { invite: "inv-1" }, "scratch", { invite: "inv-1" }],
     ["enroll", {}, { invite: "inv-1", handle: "ann", password: "pw" }, "bio", { invite: "inv-1", handle: "ann", password: "pw" }],

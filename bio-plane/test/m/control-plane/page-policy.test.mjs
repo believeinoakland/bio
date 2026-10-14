@@ -1,4 +1,4 @@
-/* answer-envelope R6, through control-plane's door (was control-plane R51; DEC-122 (3); N528; F17, K1881; K2037 (a)): every `text/html` response the plane serves — the signer page, the setup page,
+/* answer-envelope R6, through control-plane's door (was control-plane R51; DEC-122 (3); N528; F17, K1881; K2037 (a)): every `text/html` response the plane serves — the signer page, the interface page at `/` (R82; the setup page before T47),
    and any page a module's hook answers through the door — carries a content security policy under which a browser loads
    no script, style, font, image or connection from another origin and sends nothing elsewhere. The policy is parsed and
    judged directive by directive, never matched as text. */
@@ -11,15 +11,18 @@ const parse = (header) => Object.fromEntries(String(header || "").split(";").map
   .map((d) => { const [name, ...sources] = d.split(/\s+/); return [name.toLowerCase(), sources]; }));
 /* The effective sources for a fetch directive (its own, else default-src's). */
 const sourcesFor = (p, name) => p[name] ?? p["default-src"];
-/* A source admits only this origin when it is a keyword other than a wildcard, or `data:` (no network). */
-const ownOnly = (sources) => Array.isArray(sources) && sources.length > 0 && sources.every((s) =>
-  ["'self'", "'none'", "'unsafe-inline'", "data:"].includes(s) || /^'nonce-[A-Za-z0-9+/=]+'$/.test(s));
+/* A source admits only this origin when it is a keyword other than a wildcard, or `data:` (no network); (T47; K3164;
+   answer-envelope R6) `blob:` too, in `img-src` alone (a member's own file, previewed before it is sent). */
+const ownOnly = (sources, blob = false) => Array.isArray(sources) && sources.length > 0 && sources.every((s) =>
+  ["'self'", "'none'", "'unsafe-inline'", "data:", ...(blob ? ["blob:"] : [])].includes(s) || /^'nonce-[A-Za-z0-9+/=]+'$/.test(s));
 function assertOwnOrigin(header, where) {
   assert.equal(typeof header, "string", `${where}: no policy`);
   const p = parse(header);
   for (const d of ["script-src", "style-src", "font-src", "img-src", "connect-src", "frame-src", "worker-src",
                    "media-src", "object-src", "manifest-src"])
-    assert.ok(ownOnly(sourcesFor(p, d)), `${where}: ${d} = ${sourcesFor(p, d)}`);
+    assert.ok(ownOnly(sourcesFor(p, d), d === "img-src"), `${where}: ${d} = ${sourcesFor(p, d)}`);
+  /* `blob:` nowhere but `img-src` (control) */
+  for (const [d, v] of Object.entries(p)) if (d !== "img-src") assert.equal(v.includes("blob:"), false, `${where}: ${d} admits blob:`);
   /* nothing is sent elsewhere: a form posts only here, and no <base> can redirect relative addresses */
   assert.ok(ownOnly(p["form-action"]), `${where}: form-action`);
   assert.ok(ownOnly(p["base-uri"]), `${where}: base-uri`);
@@ -29,7 +32,7 @@ function assertOwnOrigin(header, where) {
   return scripts[0].slice(7, -1);
 }
 
-test("R51 (answer-envelope R6): the signer page and the setup page (bio's and scratch's) are served with a policy that admits no other origin for any script, style, font, image, connection, frame or worker, posts forms only here and fixes the base (negative control: a policy naming another origin is caught by the judge)", async () => {
+test("R51 (answer-envelope R6): the signer page and the page at `/` (bio's and scratch's; the interface page since T47, R82) are served with a policy that admits no other origin for any script, style, font, image, connection, frame or worker, posts forms only here and fixes the base (negative control: a policy naming another origin is caught by the judge)", async () => {
   const { env } = world();
   for (const [path, params] of [["/sign", {}], ["/sign/", {}], ["/", {}], ["/", { store: "scratch" }]]) {
     const r = await call(env, { path, params });
@@ -37,7 +40,7 @@ test("R51 (answer-envelope R6): the signer page and the setup page (bio's and sc
     assert.match(r.headers.get("content-type"), /^text\/html/, path);
     assertOwnOrigin(r.headers.get("content-security-policy"), `${path} ${JSON.stringify(params)}`);
   }
-  /* the pages' bytes are unchanged by the policy (the setup page's no-store kept) */
+  /* the pages' bytes are unchanged by the policy (the page's no-store kept) */
   const setup = await call(env, { path: "/" });
   assert.equal(setup.headers.get("cache-control"), "no-store");
   /* negative controls: the judge refuses another origin, a wildcard and a missing directive's fallback to one */

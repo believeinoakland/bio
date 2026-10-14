@@ -1,13 +1,13 @@
 /* control-plane R64 (N761; F1's rule for digests; plan T37 rule 4): a secret's digest reaches the store only in the body of
    the store's internal request, never its query. Driven through `makeFetch(hooks)` over a fake env whose store answers
-   each route through its OWNER's own ops map (`reviewOps`, `caseAuthoringOps`, `filingTemplatesOps`, `credentialsOps`),
+   each route through its OWNER's own ops map (`reviewOps`, `caseInputsOps`, `filingTemplatesOps`, `credentialsOps`),
    each over a stand-in instance that records what the map handed it: so "the owner admits it as before" is the owner's
    own reading of the request, and a digest the door put anywhere but the body would reach the owner as null. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, call, opCalls, sha, hex64, FORGED } from "./harness.mjs";
 const { reviewOps } = await import("../../../src/review/index.mjs");
-const { caseAuthoringOps } = await import("../../../src/case-authoring/index.mjs");
+const { caseInputsOps } = await import("../../../src/case-inputs/index.mjs");
 const { filingTemplatesOps } = await import("../../../src/filing-templates/index.mjs");
 const { credentialsOps } = await import("../../../src/credentials/index.mjs");
 
@@ -25,7 +25,7 @@ function owners() {
                       templateComment: rec("templatecomment"), templateReviewGrant: rec("templatereviewgrant") };
   const credentials = { aiCredentialMint: (a) => { seen.push({ route: "aicredentialmint", secretSha: a.secretSha ?? null }); return { ok: true, tokenId: "agent-1" }; } };
   const answer = (c) => {
-    const maps = [reviewOps(review, c.url, c.body), caseAuthoringOps(authoring, c.url, c.body),
+    const maps = [reviewOps(review, c.url, c.body), caseInputsOps(authoring, c.url, c.body),
                   filingTemplatesOps(templates, c.url, c.body), credentialsOps(credentials, c.url, c.body, {})];
     const map = maps.find((m) => Object.hasOwn(m, c.route) && [...PRESENTED, ...MINTED].includes(c.route));
     return map ? new Response(JSON.stringify({ ok: true, result: map[c.route]() })) : null;
@@ -77,7 +77,7 @@ test("R64 (negative control): an owner's map reads no digest from the query — 
   for (const op of [...PRESENTED, ...MINTED]) {
     const url = new URL(`http://do/${op}?draft=D1&version=TPL-1@1&bySecret=1&secretSha=${digest}`);
     const maps = [reviewOps({ act: (a) => ({ ok: true, a }), copy: (a) => ({ a }), comment: (a) => ({ a }) }, url, {}),
-                  caseAuthoringOps({ acknowledgeStatement: (a) => ({ a }) }, url, {}),
+                  caseInputsOps({ acknowledgeStatement: (a) => ({ a }) }, url, {}),
                   filingTemplatesOps(Object.fromEntries(["templateRead", "templateComments", "templateReview", "templateComment",
                                                          "templateReviewGrant"].map((k) => [k, (a) => ({ a })])), url, {}),
                   credentialsOps({ aiCredentialMint: (a) => ({ a }) }, url, {}, {})];
