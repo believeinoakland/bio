@@ -107,6 +107,13 @@ export const REVIEW_MARKING = "REVIEW COPY — NOT A PUBLICATION. This is a draf
   + "not yet have is listed under `missing`, in the publish gates' own words.";
 
 const SECRET_SHA = /^[0-9a-f]{64}$/;
+/* R34: record-core's stamp form, `stampInstant("second" | "millisecond")`: UTC, a `Z`, whole seconds or milliseconds. */
+const STAMP_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
+/* R34: a real calendar instant, not a date the stamp's shape only resembles (February 30 reads back as March). */
+function validInstant(s) {
+  const t = Date.parse(s);
+  return !Number.isNaN(t) && stampInstant(s.includes(".") ? "millisecond" : "second", t) === s;
+}
 
 /* D-448: ONE CONSTRUCTOR FOR EVERY REFUSAL (REC-79's single-helper shape, as BIO_Assistant_and_AI_Roles_v0_1.md rule 10
    restates DEC-49), reading the canned translation off the row rather than repeating a sentence here. ADDITIVE ON THE
@@ -323,16 +330,23 @@ export class Review {
     return { caseId: named, edition: this.#topEdition(named) + 1 };
   }
 
+  /* R34: a grant's end date has come: `until` is the instant from which it is dead; none (NULL) never lapses. An `until`
+     the record cannot read as an instant is never ranked, so it lapses nothing (the act refuses one at issue). */
+  #lapsed(until, at) {
+    return until != null && instantOrder(until, at) <= 0;
+  }
+
   /** R8: THE LIVE-GRANT PREDICATE, the one place a grant is judged, read by the copy, its comment, the case document and
    *  the acknowledgements alike, so they cannot disagree. Live: a grant with this fingerprint exists, is NOT REVOKED,
    *  its draft exists, and the draft STILL STANDS AT THE CASE IDENTITY THE GRANT WAS BOUND TO (so a grant whose edition
-   *  was published and signed is dead exactly as a revoked one). A malformed fingerprint is never live. Answers
+   *  was published and signed is dead exactly as a revoked one). A malformed fingerprint is never live. R34 (T48): a
+   *  grant is dead from its `until` on, as a revoked one; nothing is written when it lapses. Answers
    *  `{grant, draft}` or null. */
   liveGrant(secretSha) {
     const s = String(secretSha ?? "");
     if (!SECRET_SHA.test(s)) return null;
     const g = this.#one(`SELECT * FROM review_grants WHERE secret_sha=? AND revoked_at IS NULL`, s);
-    if (!g) return null;
+    if (!g || this.#lapsed(g.until, this.#when())) return null;
     const d = this.#draftRow(g.draft_id);
     if (!d) return null;
     const now = this.draftIdentity(d);
@@ -475,7 +489,7 @@ export class Review {
   }
 
   /* R6: issue a grant bound to the draft's case identity at issue. */
-  #grant(who, { draft = null, recipient = "", secretSha = null } = {}) {
+  #grant(who, { draft = null, recipient = "", secretSha = null, until = null } = {}) {
     const d = this.#draftRow(draft);
     if (!d || !this.membership.isProjectOwner(d.project_id, who)) return notReviewOwner("grant");
     const to = String(recipient ?? "").trim();
@@ -493,6 +507,17 @@ export class Review {
                "the read secret's fingerprint is set by the control plane and was absent.");
     /* END DEC-49 REGION is-review-secret */
     const when = this.#when();
+    /* R34 (T48; N1038; DEC-100): the reader's end date, after R6's refusals: an instant in record-core's stamp form
+       (UTC, whole seconds or milliseconds, a real calendar instant) later than this act's own. Absent (null or not sent)
+       is a grant live until revoked; an empty string is present, and is no instant. */
+    const end = until === null || until === undefined ? null : until;
+    /* DEC-49 REGION is-review-until */
+    if (end !== null && !(typeof end === "string" && STAMP_INSTANT.test(end) && validInstant(end)
+                          && instantOrder(end, when) > 0))
+      return refusal("REVIEW_BAD_UNTIL",
+               "a reader's end date is an instant in the record's form, after this act's own: "
+             + "YYYY-MM-DDTHH:MM:SSZ or YYYY-MM-DDTHH:MM:SS.sssZ. Nothing was written.");
+    /* END DEC-49 REGION is-review-until */
     const ident = this.draftIdentity(d);
     /* REC-151: OPAQUE, never the RVG counter (Membership v2 §7): a grant is its project owner's alone. */
     this.seedLedger();
@@ -500,15 +525,16 @@ export class Review {
       (g) => !!this.#one(`SELECT 1 FROM review_grants WHERE grant_id=?`, g));
     /* R27 (N322, K275): record-core's one answer (its R62, C-59.6), naming a grant id. */
     if (!id) return mintExhausted("RVG");
-    this.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at)
-                   VALUES (?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, who, when);
+    this.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at,
+                   until) VALUES (?,?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, who, when, end);
     /* D-568: the ROW binds at the internal key; the ANSWER states the edition only where the record holds one. */
     const newCase = !!JSON.parse(d.params).newCase;
     return { ok: true, grantId: id, draftId: d.draft_id, caseId: ident.caseId,
              edition: statedEdition(ident, newCase),
-             recipient: to, issuedBy: who, issuedAt: when,
+             recipient: to, issuedBy: who, issuedAt: when, until: end,
              boundTo: `this grant reads ${caseIdentitySentence(ident.caseId, ident.edition, newCase)} and nothing `
-                    + `else. It ends when it is revoked, and when that edition is published and signed.` };
+                    + `else. It ends when it is revoked, and when that edition is published and signed.`
+                    + (end ? ` It also ends at ${end}.` : "") };
   }
 
   /* R7: withdraw a grant, once; a repeat answers the first revocation. */
@@ -619,7 +645,7 @@ export class Review {
                      grant_id: c.grant_id ?? null, recipient: c.author_kind === "recipient" ? c.recipient : null,
                      text: c.text, at: c.at }));
     /* R14: THE RECIPIENT DOOR SEES ITS OWN GRANT; THE MEMBER DOOR SEES THE ROSTER, under the cap, LIVE judged once for
-       the draft (every grant here is this draft's, so live is unrevoked and bound to the identity it stands at now). A
+       the draft (every grant here is this draft's, so live is unrevoked, not lapsed (R34: each states its `until`) and bound to the identity it stands at now). A
        grant bound to no case was given at (NULL, 1) for a draft either new or derived, and the row does not record
        which: a live one states the draft's own stated edition, a dead one null (D-568). */
     let grantPart;
@@ -627,11 +653,13 @@ export class Review {
       grantPart = { grant: { grant_id: grant.grant_id, recipient: grant.recipient, issued_by: grant.issued_by,
                              issued_at: grant.issued_at } };
     } else {
+      const lapseAt = this.#when();
       const grantRows = this.#rows(`SELECT grant_id, case_id, edition, recipient, secret_sha, issued_by, issued_at,
-                                           revoked_by, revoked_at FROM review_grants WHERE draft_id=?
+                                           revoked_by, revoked_at, until FROM review_grants WHERE draft_id=?
                                     ORDER BY issued_at, grant_id LIMIT ?`, d.draft_id, cap + 1);
       const grants = grantRows.slice(0, cap).map((g) => {
-        const live = !g.revoked_at && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition;
+        const live = !g.revoked_at && !this.#lapsed(g.until, lapseAt)
+                     && (g.case_id ?? null) === (ident.caseId ?? null) && Number(g.edition) === ident.edition;
         return { ...g, live, edition: g.case_id ? g.edition : live ? statedEdition(ident, !!params.newCase) : null };
       });
       grantPart = { grants, grants_truncated: grantRows.length > cap };
@@ -1008,7 +1036,7 @@ export function reviewOps(r, url, body) {
     /* REC-149: `viewer` is stamped, and asked only for existence. */
     casedraft: () => r.act({ ...b, act: "draft", author: q("author"), viewer: q("viewer") }),
     reviewgrant: () => r.act({ act: "grant", draft: b.draft ?? q("draft"), recipient: b.recipient ?? q("recipient"),
-                               author: q("author"), secretSha: sha }),
+                               until: b.until ?? q("until"), author: q("author"), secretSha: sha }),
     reviewrevoke: () => r.act({ act: "revoke", grant: b.grant ?? q("grant"), author: q("author") }),
     reviewcopy: () => r.copy({ draft: q("draft"), secretSha: sha, viewer: q("viewer"),
                                bySecret: q("bySecret") === "1", limit: q("limit") }),
