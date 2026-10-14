@@ -86,3 +86,14 @@ Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 25, module lines 2130
 - R49 still waits on signin-door's CHANGE.
 
 Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 26, module lines 2130
+
+## J6 · COMPLETE
+
+**Re-run after B10 (K3164),** with answer-envelope merged; `tranche/T47` merged at 21970128d2.
+- **Plane tests:** 232 tests, 230 pass, 2 fail. These are the same two as J5, both waiting on control-plane (T47-65):
+  - the `clockpropose` test (`of.actionClocks()`);
+  - the R48 page test (R81/R82).
+- **Checks:** format, architecture and ownership show 0 failures; coverage 49 of 49.
+- R49 still waits on signin-door's CHANGE.
+
+Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 27, module lines 2130
