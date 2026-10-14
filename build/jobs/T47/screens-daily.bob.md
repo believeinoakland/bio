@@ -23,3 +23,7 @@ screens-daily R10 changed on `tranche/T47` (Bob's K3142): each projects row draw
 ## B3 · ANSWER · re J1
 
 K3143: (1) Home draws no welcome offer itself: the guide's `marks` (screens-wizards, drawn by the shell under the path) are Home's R11 offers. (2) your reading stands. (3) the owner is project-roster R27, merged (in `projectlist` already); members, activity, last change are R28 (T47-93, my B2): no `test.todo`. (4)–(6) stand.
+
+## B4 · CHANGE
+
+K3145 (SCREENS-ACTION #1 J1): R13's "Pick up where you left off" opens `/app/request/<action>` for a records request (the `request` screen takes an action id and opens at its step).
