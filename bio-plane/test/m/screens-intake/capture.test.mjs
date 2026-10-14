@@ -361,7 +361,7 @@ test("R2 UPLOAD_NO_STATEMENT, EMPTY, TOO_LARGE and MEMBER_SESSION_REQUIRED are e
   }
   assert.equal(texts.size, 4);
   /* control: another code is the shell's */
-  const p = await open("/app/capture/file", { plane: { captureupload: refused("REQUIRED_ARGUMENT_MISSING", "A name over 300 characters.") } });
+  const p = await open("/app/capture/file", { plane: { captureupload: refused("SOME_CODE_WITH_NO_WORD", "A name over 300 characters.") } });
   fill(p, filled);
   assert.match((await press(p, "captureupload")).slot().textContent, /A name over 300 characters\./);
 });

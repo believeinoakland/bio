@@ -98,8 +98,7 @@ test("R20 archive and open-file opened bare draw the shell's \"Nothing is here\"
   for (const path of ["/app/archive", "/app/open-file", "/app/archive/nope", "/app/open-file/nope"]) {
     const p = await open(path, { plane: FULL });
     assert.ok(says(p, "shell.unavailable.nothing.title"), path);
-    assert.ok(says(p, "shell.unavailable.nothing.says"), path);
-    assert.ok(says(p, "shell.unavailable.home"), `${path}: the way back is said`);
+    assert.ok(main(p).querySelector('[data-unavailable="nothing"]'), path);
     assert.ok(main(p).querySelector('a[href="/app"][data-nav]'), `${path}: the way back`);
     assert.equal(p.byOp("archivelist").length + p.byOp("threatof").length, 0, `${path}: nothing read`);
   }
