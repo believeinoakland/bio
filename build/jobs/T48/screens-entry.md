@@ -67,3 +67,7 @@ T48-84 applied: R12 (design classes, kit fields, nothing empty or zero), R13 (tw
 ## J4 · COMPLETE
 
 B3 (K3302) applied: tranche merged; forgot draws FORGOT_HELP (by key from setup-fleet) for every visitor, HOSTING_CONTROL on setup only, with its control. Module tests 61/61; control-plane t46-app/e2e 9/9; format, architecture, coverage (15/15), ownership, channels 0 failures for screens-entry.
+
+## J5 · REPORT
+
+For journey-check: R56 left no hook class for the recovery codes (HOOK_CLASSES does not list cs-codes, and no design class fits), so setup and join now draw them as <pre data-codes>. journey-check's journeys.mjs (lines 65-68) reads 'pre.cs-codes' and must read 'pre[data-codes]'. Also: control-plane's t46-app and t46-e2e are red from screens-settings' cs-list, not from screens-entry.
