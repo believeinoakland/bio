@@ -78,7 +78,7 @@ export function sourceStatement(entry) {
 }
 
 /** R1, R14 (DEC-112 (5), DEC-119 (1); `case-authoring` R37, K1134 reading 6): how a source whose identity a case
- *  withholds is labelled, and the reason it states. The reason names the source's lack of consent and of a public
+ *  withholds is labeled, and the reason it states. The reason names the source's lack of consent and of a public
  *  record (`sources` R8), never what was withheld. The words are the UX stream's; until it gives them, these. */
 export const WITHHELD_SOURCE_LABEL = "Withheld";
 export const WITHHELD_SOURCE_REASON = "the source has not consented to being named, and no public record names them";
