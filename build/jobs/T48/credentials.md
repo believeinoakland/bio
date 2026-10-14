@@ -29,3 +29,7 @@
 - `format.mjs`: 0 failures. `architecture.mjs credentials`: 4 failures, all item 1 (0 with the edge, checked with `modules.json` edited and restored). `coverage.mjs credentials`: 49 of 49 live ids named; 0 failures. `ownership.mjs credentials tranche/T48`: 18 files, 0 failures. `run.mjs`: format 0, architecture 4 (item 1), coverage 46 failures none credentials', channels 0.
 
 Size (session_019yjReZUpXMLtca7kaoYDyK): test runs 14, module lines 2600
+
+## J1 · REPORT
+
+Found in other modules (record, 'Found in other modules'): (1) modules.json: credentials' uses must gain ai-accounts (BOB's file); until then architecture shows 4 failures for my files, all that edge, 0 with it. (2) Two tests besides families.test.mjs R2 go red with DISCLOSURE_DUE leaving credentials' checks.mjs (split map §7 risk 3, cleared by T48-65): answer-envelope test/m/answer-envelope/envelope.test.mjs R14 (:305) and control-plane test/m/control-plane/envelope.test.mjs:433 (R32 R39 R46); they want naming as accepted reds. (3) ai-accounts R26 does not notify on subscriptionTokenRefused, so R73's 'Anthropic's refusal' never reaches credentials: a refused sign-in leaves her run credentials live (as before T48); the gap is ai-accounts'. (4) The plane bundle is staled by this merge (rule 5 (5)).
