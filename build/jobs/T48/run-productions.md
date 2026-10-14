@@ -41,3 +41,7 @@
 - `checks/run.mjs`: architecture 0 failures, format 0, channels 0. Coverage has 37 failures, all other modules' ids marked *(not yet met: T48)* (rule 5.1); none are run-productions'.
 
 Size (session_018nMYfxcYttRowYHBgGe42y): test runs 9, module lines 2309
+
+## J1 · COMPLETE
+
+T48-31 applied: readPages reads aiKeepAwayState and projectsKeptAway from ai-accounts (aiAccountsOf); credentials no longer imported, so uses can drop it at merge. Fixed in my code: the project limit's read now fails closed on a throw. The reading test follows, plus a new R24 test (group limit; every unreadable arm). Tests 59/0; format, architecture, coverage (25/25), ownership 0 failures; run.mjs architecture 0. Reported, wording only, all predating T48: run-productions.md Uses/Provides put runPrincipalGate under ai-runs R5 (it is run-rules R5) and the retired-target predicate under inquiry R3 (it is citation R5), and neither run-rules nor citation is named in Uses; basis-versions R25 still says the candidate source is registered by ai-runs. Record: build/jobs/T48/run-productions.md.
