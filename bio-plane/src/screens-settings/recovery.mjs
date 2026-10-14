@@ -26,7 +26,7 @@ export const recovery = {
     // the one-administrator step, while not met (instance-setup R66)
     const st = data.step && data.step.state === "ok" ? data.step.value : null;
     if (st && st.met === false)
-      out.push(`<div class="cs-note" data-note="step"><p>${W(st.administrators === 1 ? "screen.members.recovery.one" : "screen.members.recovery.many", { administrators: st.administrators })}</p>${st.administrators < 2 ? `<p><a href="/app/members#members-invite" data-nav>${W("screen.members.recovery.add")}</a></p>` : ""}</div>`);
+      out.push(`<div class="mk-msg" data-note="step"><p>${W(st.administrators === 1 ? "screen.members.recovery.one" : "screen.members.recovery.many", { administrators: st.administrators })}</p>${st.administrators < 2 ? `<p><a href="/app/members#members-invite" data-nav>${W("screen.members.recovery.add")}</a></p>` : ""}</div>`);
 
     // the member's own codes: how many are left, and when issued
     out.push(cs.sec(S + "held.heading", cs.state(data.codes, (v) => `<p data-state="codes">${v.held && v.remaining > 0 ? W(S + "held", { remaining: v.remaining, date: D(v.issuedAt) }) : v.held ? W(S + "spent", { date: D(v.issuedAt) }) : W(S + "none")}</p>`)));
@@ -35,7 +35,7 @@ export const recovery = {
     const issue = cs.act("recoverycodesissue");
     if (issue) {
       const shown = Array.isArray(ui.codes) && ui.codes.length
-        ? `<div class="cs-shown" data-shown="codes"><p>${W(S + "shown")}</p><ol class="cs-list">${ui.codes.map((c) => `<li><code>${E(c)}</code></li>`).join("")}</ol></div>` : "";
+        ? `<div class="mk-msg" data-shown="codes"><p>${W(S + "shown")}</p><ol class="cs-list">${ui.codes.map((c) => `<li><code>${E(c)}</code></li>`).join("")}</ol></div>` : "";
       out.push(cs.sec(S + "issue.heading", `<p>${W(S + "spends")}</p>${shown}${issue}`));
     }
     return out.join("");

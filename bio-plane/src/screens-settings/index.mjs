@@ -21,6 +21,7 @@ import { recovery } from "./recovery.mjs";
 import { identity } from "./identity.mjs";
 import { security } from "./security.mjs";
 import { translations } from "./translations.mjs";
+import { updates } from "./updates.mjs";
 import { aiPanel, aiPanelSend } from "./panel.mjs";
 import { SCREEN_WORDS } from "./words.mjs";
 
@@ -31,6 +32,7 @@ const own = (...prefixes) => SCREEN_WORDS.filter((r) => prefixes.some((p) => r[0
 const USES = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore", "suggestions"];
 const PANEL = [...own("screen.panel."), ...USES.map((u) => `ai.use.${u}.name`), "ai.explore.no", "ai.explore.ask", "ai.explore.yes",
   "ai.refused.limitinvalid", "ai.refused.unitunavailable", "ai.refused.switchvalue",
+  ...["bars", "bars.means", "day", "today", "summary", "meter", "meter.means", "meter.near", "nolimit"].map((k) => `ai.usage.${k}`),
   ...["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].map((f) => `ai.limitfield.${f}`)];
 const STATES = ["state.loading", "state.empty", "state.failed"];
 const LABELS = (screen, ops) => ops.flatMap((op) => [`act.${op}.label.${screen}`, `act.${op}.does`]);
@@ -50,11 +52,11 @@ const WORDS = {
     ...LABELS("connect", ["groupkeynoticeseen", "disclosureshown", "subscriptionsignin", "accountreferenceset", "accountusesset", "ailimitset", "accountreferenceremove", "subscriptiondisconnect"])],
   notes: [...STATES, "screen.notes.name", ...own("screen.notes."), "ai.label.untested",
     ...LABELS("notes", ["notewrite", "noteturn", "noterevise", "notedelete", "writinghelp"])],
-  settings: [...STATES, ...own("screen.settings."), ...["settings", "account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "places", "security", "translations", "wizards"]
+  settings: [...STATES, ...own("screen.settings."), ...["settings", "account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "places", "security", "updates", "translations", "wizards"]
     .flatMap((id) => [`screen.${id}.name`, `screen.${id}.purpose`])],
-  group: [...STATES, "screen.group.name", ...own("screen.group."),
+  group: [...STATES, "screen.group.name", ...own("screen.group."), "settings.set.setup",
     ...LABELS("group", ["groupnameset", "grouplogoset", "groupdomainset", "grouplanguagesset", "courtnoticeset", "hostingaccessset", "strengthbarset"])],
-  places: [...STATES, "screen.places.name", ...own("screen.places."), ...LABELS("places", ["profilesset", "placewanted", "officesseed", "entitycreate"])],
+  places: [...STATES, "screen.places.name", ...own("screen.places."), "places.elsewhere.head", "places.elsewhere.says", "places.elsewhere.open", ...LABELS("places", ["profilesset", "placewanted", "officesseed", "entitycreate"])],
   recovery: [...STATES, "screen.recovery.name", ...own("screen.recovery."), "screen.members.recovery.one", "screen.members.recovery.many", "screen.members.recovery.add",
     ...LABELS("recovery", ["recoverycodesissue"])],
   "group-identity": [...STATES, "screen.group-identity.name", ...own("screen.group-identity."), "ai.label.untested",
@@ -62,6 +64,12 @@ const WORDS = {
   security: [...STATES, "screen.security.name", ...own("screen.security."), "instance.part.scanner.present", "instance.part.scanner.absent",
     "instance.part.safeview.present", "instance.part.safeview.absent", "instance.part.unknown", "instance.scanner.absent.step",
     ...LABELS("security", ["securitymap", "securitytooladd", "securitytooltest", "securitytoolremove"])],
+  updates: [...STATES, "screen.updates.name", ...own("screen.updates."), "settings.set.setup", "updates.running.head", "updates.running.release", "updates.running.checked",
+    "updates.running.checked_note", "updates.ready.head", "updates.ready.release", "updates.ready.security", "updates.ready.security_says", "updates.ready.signed",
+    "updates.notes.members", "updates.notes.admins", "updates.notes.must", "updates.notes.plain", "updates.act.later", "updates.act.update", "updates.act.skip",
+    "updates.act.skip_with_reason", "updates.skip.why", "updates.skip.says", "updates.handoff.head", "updates.handoff.says", "updates.handoff.for", "updates.handoff.explain",
+    "updates.handoff.copy", "updates.none", "updates.earlier.head", "updates.earlier.installed", "updates.earlier.skipped",
+    ...LABELS("updates", ["updatestart", "updatelater", "updateskip"])],
   translations: [...STATES, "screen.translations.name", ...own("screen.translations."),
     ...LABELS("translations", ["translationdraft", "translationadopt", "translationgrant", "translationconfirm", "translationrevert"])],
 };
@@ -75,4 +83,4 @@ const freeze = (s) => Object.freeze({
   parts: PARTS,
 });
 
-export const SCREENS = Object.freeze([settings, members, account, connect, notes, group, identity, places, recovery, security, translations].map(freeze));
+export const SCREENS = Object.freeze([settings, members, account, connect, notes, group, identity, places, recovery, security, translations /* TEMP-UPDATES */].map(freeze));

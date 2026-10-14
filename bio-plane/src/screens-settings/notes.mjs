@@ -25,22 +25,22 @@ export const notes = {
     // a note's field, holding the assistant's draft when one was asked for it, labelled as the assistant's
     const textField = (id, field, value) => {
       const dr = ui.draft && ui.draft.field === field ? ui.draft : null;
-      const label = dr ? W(S + "draft.label", { handle: dr.askedBy }) : W(field === "new" ? S + "new.field" : S + "revise.field");
       const help = view.reachable ? cs.act("writinghelp", { data: { field, id } }) : "";
       // the test-instance label beside the draft's own, only where the answer carries `untested` (R11)
-      return `<label for="${id}">${label}</label>${dr && dr.untested ? ` <span class="cs-label-untested">${W("ai.label.untested")}</span>` : ""}<textarea id="${id}" class="cs-input rec${dr ? " cs-draft" : ""}">${E(dr ? dr.text : value)}</textarea>${help}`;
+      return cs.field(id, field === "new" ? S + "new.field" : S + "revise.field", { area: true, rec: true, value: dr ? dr.text : value, ...(dr ? { draft: S + "draft.label", draftFills: { handle: dr.askedBy } } : {}) })
+        + (dr && dr.untested ? ` <span class="mk-tag">${W("ai.label.untested")}</span>` : "") + help;
     };
-    const out = [cs.title(), `<p>${W(S + "private")}</p><p class="cs-note">${W(S + "protects")}</p>`];
+    const out = [cs.title(), `<p>${W(S + "private")}</p><p class="mk-note">${W(S + "protects")}</p>`];
 
     // the court sentence, once (R7)
-    if (ui.court) out.push(`<p class="cs-notice" data-shown="court">${W(S + "court")}</p>`);
+    if (ui.court) out.push(`<p class="mk-msg" data-shown="court">${W(S + "court")}</p>`);
 
     // a new note
     const write = cs.act("notewrite");
-    if (write) out.push(`<div class="cs-form">${textField("mn-new", "new", "")}${write}</div>`);
+    if (write) out.push(`<div>${textField("mn-new", "new", "")}${write}</div>`);
 
-    // the notes kept, each with its acts in its panel (interface-shell R19)
-    out.push(cs.sec(S + "kept.heading", cs.state(data.notes, (v) => cs.rows({
+    // the notes kept, each with its acts in its panel (interface-shell R19); none kept is told nothing (R28)
+    if (!data.notes || data.notes.state !== "empty") out.push(cs.sec(S + "kept.heading", cs.state(data.notes, (v) => cs.rows({
       id: "notes", cols: [S + "col.note", S + "col.when"], items: v.notes || [], key: (n) => String(n.note), name: (n) => String(n.text).slice(0, 60),
       cells: (n) => [
         `<span class="rec">${E(n.text)}</span>`,
@@ -50,17 +50,17 @@ export const notes = {
         const id = String(n.note);
         const p = [];
         const rev = cs.act("noterevise", { data: { note: id } });
-        if (rev) p.push(`<div class="cs-form">${textField("mn-r" + id, "note:" + id, n.text)}${rev}</div>`);
+        if (rev) p.push(`<div>${textField("mn-r" + id, "note:" + id, n.text)}${rev}</div>`);
         const turn = cs.act("noteturn", { data: { note: id } });
-        if (turn) p.push(`<div class="cs-form"><fieldset><legend>${W(S + "turn.into")}</legend>${["observation", "hunch", "question"].map((k, i) => `<input type="radio" id="mn-${k}${id}" name="mn-into${id}"${i === 0 ? " checked" : ""}><label for="mn-${k}${id}">${W(S + "turn." + k)}</label>`).join("")}</fieldset>
-<label for="mn-made${id}">${W(S + "turn.made")}</label><span class="help">${W(S + "turn.made.help")}</span><input id="mn-made${id}" type="text" class="cs-input">
-<label for="mn-inq${id}">${W(S + "turn.inquiry")}</label><span class="help">${W(S + "turn.inquiry.help")}</span><input id="mn-inq${id}" type="text" class="cs-input">
-<label for="mn-kind${id}">${W(S + "turn.kind")}</label><select id="mn-kind${id}" class="cs-input">${["cause", "identity", "relation", "flow", "other"].map((k) => `<option value="${k}">${W(S + "turn.kind." + k)}</option>`).join("")}</select>
-<label for="mn-about${id}">${W(S + "turn.about")}</label><span class="help">${W(S + "turn.about.help")}</span><input id="mn-about${id}" type="text" class="cs-input">${turn}</div>`);
+        if (turn) p.push(`<div><fieldset><legend>${W(S + "turn.into")}</legend>${["observation", "hunch", "question"].map((k, i) => `<input type="radio" id="mn-${k}${id}" name="mn-into${id}"${i === 0 ? " checked" : ""}><label for="mn-${k}${id}">${W(S + "turn." + k)}</label>`).join("")}</fieldset>
+${cs.field("mn-made" + id, S + "turn.made", { help: S + "turn.made.help" })}
+${cs.field("mn-inq" + id, S + "turn.inquiry", { help: S + "turn.inquiry.help" })}
+${cs.choice("mn-kind" + id, S + "turn.kind", ["cause", "identity", "relation", "flow", "other"].map((k) => [k, S + "turn.kind." + k]))}
+${cs.field("mn-about" + id, S + "turn.about", { help: S + "turn.about.help" })}${turn}</div>`);
         p.push(cs.act("notedelete", { data: { note: id } }));
         return p.join("");
       },
-    }), { empty: S + "empty" })));
+    }))));
     return out.join("");
   },
 

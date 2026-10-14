@@ -1,7 +1,7 @@
 /* Settings › Places and offices at the module's interface (R19). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, day, has, lacks, open, said } from "./kit.mjs";
+import { acts, all, day, has, lacks, open, said, textOf } from "./kit.mjs";
 import { ADMIN, MEMBER, env, placesTable } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
@@ -53,4 +53,37 @@ test("R19 places: officesseed and entitycreate (an office with the member's note
   const m = await open("places", { me: MEMBER, table: placesTable() });
   assert.deepEqual(ops(m), []);
   assert.ok(!m.p.requests.some((r) => r.op === "placewantedstate"), "the place wanted is an administrator's read");
+});
+
+/* R25: where else to go */
+const elsewhere = (pointer) => placesTable({ startfrom: env({ ok: true, scripts: [], doors: [], routes: [{ route: "blank" }, { route: "elsewhere", pointer }], blank: true, matches: [] }) });
+const link = (o) => all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === "elsewhere");
+
+test("R25 places draws Where else to go: how many places are listed (from three pointers) and the reference opening elsewhere; no act", async () => {
+  const a = await open("places", { me: ADMIN, table: placesTable() });
+  assert.ok(a.p.requests.some((r) => r.op === "startfrom"), "reads startfrom");
+  has(a, "places.elsewhere.head");
+  has(a, "places.elsewhere.says", { n: 3 });
+  const l = link(a);
+  assert.equal(l.length, 1);
+  assert.equal(l[0].attrs.href, "/app/elsewhere");
+  assert.equal(textOf(l[0]), said("places.elsewhere.open"));
+  assert.ok(!ops(a).some((o) => /elsewhere|pointer/.test(o)), "the group neither chooses nor edits the list: no act for it");
+});
+
+test("R25 control: none listed draws the reference alone; a pointer of null is drawn failed, never as none", async () => {
+  const none = await open("places", { me: ADMIN, table: elsewhere({ places: [], pointers: [] }) });
+  has(none, "places.elsewhere.head");
+  assert.equal(link(none).length, 1);
+  assert.ok(!none.text.includes(said("places.elsewhere.says", { n: 0 }).split(" 0 ")[0] + " 0 "), "no words for zero");
+  assert.equal(all(none.tree, (e) => e.attrs["data-state"] === "elsewhere").length, 0);
+  const failed = await open("places", { me: ADMIN, table: elsewhere(null) });
+  assert.equal(link(failed).length, 0, "no reference to a list that could not be read");
+  const sec = all(failed.tree, (e) => e.tag === "section" && all(e, (h) => h.tag === "h2").some((h) => textOf(h) === said("places.elsewhere.head")))[0];
+  assert.ok(sec && all(sec, (e) => e.attrs["data-state"] === "failed").length === 1, "drawn failed");
+  assert.ok(!failed.text.includes(said("places.elsewhere.says", { n: 0 }).slice(0, 12)));
+  // a member who does not administer is not drawn the administrators' note
+  const m = await open("places", { me: MEMBER, table: placesTable() });
+  assert.ok(!m.p.requests.some((r) => r.op === "startfrom"));
+  assert.equal(link(m).length, 0);
 });

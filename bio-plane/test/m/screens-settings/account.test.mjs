@@ -57,12 +57,22 @@ test("R3 the explanation level: infolevelset sent through the shell's setting, k
   assert.equal(all(lv2, (e) => e.tag === "option" && e.attrs.selected !== undefined)[0].attrs.value, "pause");
 });
 
-test("R3 memberlanguageset sends the tag, or null to follow the device", async () => {
-  const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
-  has(a, "screen.account.language.now", { language: "es" });
+test("R3, R31 memberlanguageset sends the tag the member chose by name, or null to follow the device; no tag is drawn or typed", async () => {
+  const a = await open("account", { me: MEMBER, table: accountTable(MEMBER, { memberlanguage: env({ ok: true, language: "es", set_at: "2026-10-03T00:00:00Z" }) }) });
+  has(a, "screen.account.language.now", { language: "Español" });
+  // chosen by name among the group's languages, in the member's language; the tags are values, never text
+  const sel = all(a.tree, (e) => e.attrs.id === "ma-lang")[0];
+  assert.deepEqual(all(sel, (e) => e.tag === "option").map((o) => textOf(o)), [said("screen.account.language.device"), "Inglés", "Español", "Vietnamita"]);
+  assert.deepEqual(all(sel, (e) => e.tag === "option").map((o) => o.attrs.value), ["", "en", "es", "vi"]);
+  assert.ok(!/\b(en|es|vi)\b/.test(a.text.replace(/Español|Inglés|Vietnamita/g, "")), "no tag drawn");
+  assert.equal(all(a.tree, (e) => e.tag === "input" && e.attrs.id === "ma-lang").length, 0, "no tag is typed");
   assert.deepEqual((await a.press("memberlanguageset", { values: { "ma-lang": "vi" } })).sent[0].body, { language: "vi" });
   assert.deepEqual((await a.press("memberlanguageset", { values: { "ma-lang": "" } })).sent[0].body, { language: null });
   assert.equal(a.p.requests.at(-1).op, "memberlanguage", "R8: read again after the act");
+  // control: a regional tag is shown by its name too, and its tag is not
+  const r = await open("account", { me: MEMBER, table: accountTable(MEMBER, { memberlanguage: env({ ok: true, language: "en-US", set_at: "2026-10-03T00:00:00Z" }) }) });
+  assert.ok(!r.text.includes("en-US"), "a regional tag is never shown");
+  assert.ok(r.text.includes("English"));
 });
 
 test("R3 setpassword: current and new, the new typed twice alike, sent only when alike (setup-page R3's rule)", async () => {
@@ -99,7 +109,7 @@ test("R3 a member without a capability an act needs is not offered it; the found
 
 test("R12 account draws the appearance control by cs.appearance(), never the shell's buttons of its own", () => {
   const spec = SCREENS.find((x) => x.id === "account");
-  const kit = { w: (k) => k, esc: (x) => String(x), date: () => "", title: () => "", state: () => "", sec: (k, inner) => inner, act: () => "", level: () => "prompt", appearance: () => "<KIT-APPEARANCE>" };
+  const kit = { w: (k) => k, esc: (x) => String(x), date: () => "", title: () => "", state: () => "", sec: (k, inner) => inner, act: () => "", choice: () => "", field: () => "", level: () => "prompt", appearance: () => "<KIT-APPEARANCE>" };
   const html = spec.render(kit, { me: MEMBER, data: {}, ui: {} });
   assert.ok(html.includes("<KIT-APPEARANCE>"), "the kit's control");
   assert.ok(!/data-shell="theme"/.test(html), "no theme button of its own");

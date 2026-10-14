@@ -18,6 +18,8 @@ export const members = {
       roster: { op: "memberlist", empty: (v) => !v.members || v.members.length === 0 },
       groupkey: { op: "groupkeystate" },
       keepaway: { op: "aikeepawaystate" },
+      // `claimed` says whether the founder holds the instance: the founder is then an administrator (membership R64, R86), with or without a roster row (R29)
+      boot: { op: "bootstrap" },
     };
     if (view.subject) r.expertise = { op: "expertiselist", query: { memberId: view.subject } };
     // the owners refuse these to a member who does not administer (instance-setup R66; credentials R60; ai-use R12)
@@ -28,6 +30,8 @@ export const members = {
       r.limits = { op: "ailimits", query: { owner: "group" } };
       r.usage = { op: "aiusage", query: { owner: "group" } };
       r.history = { op: "accounthistory", query: { owner: "group" } };
+      // thirty days of bars and a meter against each limit, summed (R26)
+      r.over = { op: "aiuseovertime", query: { owner: "group" } };
     }
     return r;
   },
@@ -56,10 +60,14 @@ export const members = {
     out.push(cs.state(data.roster, (v) => {
       const list = v.members || [];
       const active = list.filter((m) => m.status === "active");
-      let h = `<p>${W(S + "count", { members: active.length, administrators: active.filter((m) => m.role === "admin").length })}</p>`;
       const rec = okv(data.recovery);
+      // administrators as membership R64 and R86 define them: the founder once claimed, then each active member with role admin; never roster rows alone (R29)
+      const boot = okv(data.boot);
+      const counted = boot && typeof boot.claimed === "boolean" ? active.filter((m) => m.role === "admin" && m.member_id !== "admin").length + (boot.claimed ? 1 : 0)
+        : rec && Number.isInteger(rec.administrators) ? rec.administrators : null;
+      let h = counted === null ? cs.state({ state: "failed" }, () => "") : `<p>${W(S + "count", { members: active.length, administrators: counted })}</p>`;
       if (admin && rec && rec.met === false)
-        h += `<div class="cs-note" data-note="recovery"><p>${W(rec.administrators === 1 ? S + "recovery.one" : S + "recovery.many", { administrators: rec.administrators })} ${W(rec.codes_held ? S + "recovery.codes" : S + "recovery.nocodes", { remaining: rec.remaining })}</p><p>${rec.administrators < 2 ? `<a href="#members-invite">${W(S + "recovery.add")}</a> ` : ""}${rec.codes_held ? "" : `<a href="/app/recovery" data-nav>${W(S + "recovery.issue")}</a>`}</p></div>`;
+        h += `<div class="mk-msg" data-note="recovery"><p>${W(rec.administrators === 1 ? S + "recovery.one" : S + "recovery.many", { administrators: rec.administrators })} ${W(rec.codes_held ? S + "recovery.codes" : S + "recovery.nocodes", { remaining: rec.remaining })}</p><p>${rec.administrators < 2 ? `<a href="#members-invite">${W(S + "recovery.add")}</a> ` : ""}${rec.codes_held ? "" : `<a href="/app/recovery" data-nav>${W(S + "recovery.issue")}</a>`}</p></div>`;
       const cols = [S + "col.handle", ...(admin ? [S + "col.cover"] : []), S + "col.role", S + "col.caps", S + "col.status", S + "col.expertise"];
       const expOf = (m) => {
         const ex = okv(data.expertise);
@@ -93,7 +101,7 @@ export const members = {
           if (m.role === "admin" && m.status === "proposed") { const c = cs.act("adminendorse", { data: { member: id } }); if (c) p.push(`<p>${W(S + "endorse.what", { handle: label })}</p>${c}`); }
           if (m.role === "admin" && m.status === "active" && id !== me.member) {
             const c = cs.act("adminremove", { data: { member: id } });
-            if (c) p.push(`<label for="mr-${E(id)}">${W(S + "remove.reason")}</label><textarea id="mr-${E(id)}" class="cs-input rec" maxlength="2000"></textarea>${c}`);
+            if (c) p.push(`${cs.field("mr-" + id, S + "remove.reason", { area: true, rec: true, max: 2000 })}${c}`);
           }
           if (m.invitation === "live") p.push(cs.act("invitewithdraw", { data: { member: id } }));
           // a reset link for a member who has joined (credentials R69), shown once; an administrator's act, which the
@@ -101,7 +109,7 @@ export const members = {
           if (admin && m.handle && m.status === "active" && id !== me.member) {
             // its label is held under the owed act's key in `words.json` (DEC-201 (2))
             const c = cs.act("passwordresetlink", { label: "act.owed_passwordresetlink.label.members", data: { member: id } });
-            if (c) p.push(`${ui.reset && ui.reset.member === id ? `<div class="cs-shown" data-shown="reset"><p>${W(S + "reset.shown", { handle: label, expires: D(ui.reset.expires) })}</p><p><code>${E(ui.reset.link)}</code></p><p>${W(S + "reset.noemail")}</p></div>` : ""}${c}`);
+            if (c) p.push(`${ui.reset && ui.reset.member === id ? `<div class="mk-msg" data-shown="reset"><p>${W(S + "reset.shown", { handle: label, expires: D(ui.reset.expires) })}</p><p><code>${E(ui.reset.link)}</code></p><p>${W(S + "reset.noemail")}</p></div>` : ""}${c}`);
           }
           // the member's active signing keys, each withdrawn for a lost or stolen device (credentials R10)
           const sg = okv(data.signers);
@@ -119,30 +127,27 @@ export const members = {
     // inviting (R2): the short id, the cover and the capabilities ticked; the invitation shown once
     const add = cs.act("memberadd");
     if (add) {
-      const shown = ui.invite ? `<div class="cs-shown" data-shown="invite"><p>${W(S + "invite.shown", { handle: ui.invite.memberId, expires: D(ui.invite.expires) })}</p><p><code>${E(ui.invite.link)}</code></p></div>` : "";
-      out.push(`<div id="members-invite">${cs.sec(S + "invite.heading", `${shown}<div class="cs-form"><label for="mi-id">${W(S + "invite.id")}</label><span class="help">${W(S + "invite.id.help")}</span><input id="mi-id" type="text" class="cs-input" autocomplete="off">
-<label for="mi-cover">${W(S + "invite.cover")}</label><input id="mi-cover" type="text" class="cs-input" autocomplete="off">
-<fieldset><legend>${W(S + "invite.caps")}</legend>${vocabulary.map((v) => `<input type="checkbox" id="mi-cap-${v}"${v === "contribute" ? " checked" : ""}><label for="mi-cap-${v}">${E(capName(v))}</label>`).join("")}<input type="checkbox" id="mi-cap-administer"><label for="mi-cap-administer">${E(capName("administer"))}</label></fieldset>${add}</div><p class="cs-note">${W(S + "invite.noemail")}</p>`)}</div>`);
+      const shown = ui.invite ? `<div class="mk-msg" data-shown="invite"><p>${W(S + "invite.shown", { handle: ui.invite.memberId, expires: D(ui.invite.expires) })}</p><p><code>${E(ui.invite.link)}</code></p></div>` : "";
+      out.push(`<div id="members-invite">${cs.sec(S + "invite.heading", `${shown}${cs.field("mi-id", S + "invite.id", { help: S + "invite.id.help", autocomplete: "off" })}${cs.field("mi-cover", S + "invite.cover", { autocomplete: "off" })}<fieldset><legend>${W(S + "invite.caps")}</legend>${vocabulary.map((v) => `<input type="checkbox" id="mi-cap-${v}"${v === "contribute" ? " checked" : ""}><label for="mi-cap-${v}">${E(capName(v))}</label>`).join("")}<input type="checkbox" id="mi-cap-administer"><label for="mi-cap-administer">${E(capName("administer"))}</label></fieldset>${add}<p class="mk-note">${W(S + "invite.noemail")}</p>`)}</div>`);
     }
 
     // joining through the group's website: a website key, or the reusable join link, each shown once
     const wk = cs.act("websitekeycreate"), jl = cs.act("joinlinkenable");
     if (wk || jl) {
       let shown = "";
-      if (ui.websiteKey) shown += `<div class="cs-shown" data-shown="websitekey"><p>${W(S + "website.keyshown")}</p><p><code>${E(ui.websiteKey)}</code></p></div>`;
-      if (ui.joinLink) shown += `<div class="cs-shown" data-shown="joinlink"><p>${W(S + "website.linkshown")}</p><p><code>${E(ui.joinLink)}</code></p></div>`;
-      out.push(cs.sec(S + "website.heading", `<p>${W(S + "website.what")}</p>${shown}<div class="cs-form"><label for="mw-cap">${W(S + "website.cap")}</label><input id="mw-cap" type="text" inputmode="numeric" class="cs-input">
-<label for="mw-days">${W(S + "website.days")}</label><input id="mw-days" type="text" inputmode="numeric" class="cs-input">${wk}${jl}</div>`));
+      if (ui.websiteKey) shown += `<div class="mk-msg" data-shown="websitekey"><p>${W(S + "website.keyshown")}</p><p><code>${E(ui.websiteKey)}</code></p></div>`;
+      if (ui.joinLink) shown += `<div class="mk-msg" data-shown="joinlink"><p>${W(S + "website.linkshown")}</p><p><code>${E(ui.joinLink)}</code></p></div>`;
+      out.push(cs.sec(S + "website.heading", `<p>${W(S + "website.what")}</p>${shown}${cs.field("mw-cap", S + "website.cap")}${cs.field("mw-days", S + "website.days")}${wk}${jl}`));
     }
 
     // the group's API key (R2): held and on, never the key; a key typed is sent in the body only, then switched on
     out.push(cs.sec(S + "key.heading", cs.state(data.groupkey, (g) => {
       let h = `<p data-state="groupkey">${g.held === undefined ? W(g.on ? S + "key.on" : S + "key.off") : !g.held ? W(S + "key.none") : W(g.on ? S + "key.heldon" : S + "key.heldoff", { by: names(g.by), date: D(g.set_at) })}</p>`;
       const set = cs.act("groupkeyset");
-      if (set) h += `<div class="cs-form"><label for="mk-key${ui.keyGen || 0}">${W(g.held ? S + "key.replace" : S + "key.field")}</label><input id="mk-key${ui.keyGen || 0}" type="password" class="cs-input" autocomplete="off">${set}</div>`;
+      if (set) h += `${cs.field("mk-key" + (ui.keyGen || 0), g.held ? S + "key.replace" : S + "key.field", { type: "password", autocomplete: "off" })}${set}`;
       if (g.held) h += cs.act("groupkeyswitch", { label: g.on ? S + "key.switchoff" : S + "key.switchon", data: { on: g.on ? "off" : "on" } }) + cs.act("groupkeyremove");
       return h;
-    }) + `<p class="cs-note">${W("ai.whopays")}</p>`));
+    }) + `<p class="mk-note">${W("ai.whopays")}</p>`));
 
     // the AI account panel over the group's key (R9), for those who may read it
     if (admin && view.parts && view.parts.aiPanel) out.push(view.parts.aiPanel(cs, view, { owner: "group", explore: true, perMember: true, names }));
@@ -155,7 +160,7 @@ export const members = {
       if (on) {
         const USES = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore"];
         const chosen = v.on && Array.isArray(v.uses) && v.uses.length < USES.length ? v.uses : null;
-        h += `<div class="cs-form"><p>${W("act.aikeepaway.does")}</p><fieldset><legend>${W(S + "keepaway.which")}</legend><input type="radio" id="mk-all" name="mk-scope"${chosen ? "" : " checked"}><label for="mk-all">${W(S + "keepaway.all")}</label><input type="radio" id="mk-some" name="mk-scope"${chosen ? " checked" : ""}><label for="mk-some">${W(S + "keepaway.some")}</label></fieldset><fieldset><legend>${W(S + "keepaway.uses")}</legend>${USES.map((u) => `<input type="checkbox" id="mk-use-${u}"${chosen && chosen.indexOf(u) >= 0 ? " checked" : ""}><label for="mk-use-${u}">${W("ai.use." + u + ".name")}</label>`).join("")}</fieldset><label for="mk-why">${W(S + "keepaway.reason")}</label><textarea id="mk-why" class="cs-input rec" maxlength="2000">${v.on ? E(v.reason || "") : ""}</textarea>${on}${v.on ? cs.act("aikeepaway", { label: S + "keepaway.turnoff", data: { on: "off" } }) : ""}</div>`;
+        h += `<div><p>${W("act.aikeepaway.does")}</p><fieldset><legend>${W(S + "keepaway.which")}</legend><input type="radio" id="mk-all" name="mk-scope"${chosen ? "" : " checked"}><label for="mk-all">${W(S + "keepaway.all")}</label><input type="radio" id="mk-some" name="mk-scope"${chosen ? " checked" : ""}><label for="mk-some">${W(S + "keepaway.some")}</label></fieldset><fieldset><legend>${W(S + "keepaway.uses")}</legend>${USES.map((u) => `<input type="checkbox" id="mk-use-${u}"${chosen && chosen.indexOf(u) >= 0 ? " checked" : ""}><label for="mk-use-${u}">${W("ai.use." + u + ".name")}</label>`).join("")}</fieldset>${cs.field("mk-why", S + "keepaway.reason", { area: true, rec: true, max: 2000, value: v.on ? v.reason || "" : "" })}${on}${v.on ? cs.act("aikeepaway", { label: S + "keepaway.turnoff", data: { on: "off" } }) : ""}</div>`;
       }
       return h;
     })));
@@ -238,7 +243,7 @@ export const members = {
     { op: "accountusesset", rereads: ["uses", "history"],
       send(view, el, cs) { return view.parts.aiPanelSend("accountusesset", "group", el, cs); },
       refusals: { SWITCH_VALUE_INVALID: "ai.refused.switchvalue" } },
-    { op: "ailimitset", rereads: ["limits"],
+    { op: "ailimitset", rereads: ["limits", "over"],
       send(view, el, cs) { return view.parts.aiPanelSend("ailimitset", "group", el, cs); },
       refusals: { AI_LIMIT_INVALID: (r, cs) => cs.w("ai.refused.limitinvalid", { field: String(cs.w("ai.limitfield." + (["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"].indexOf(r && r.field) >= 0 ? r.field : "amount"))).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) }), LIMIT_UNIT_UNAVAILABLE: "ai.refused.unitunavailable" } },
     // on only with a reason of 1 to 2,000 characters in the administrator's own words, its field the act's reason

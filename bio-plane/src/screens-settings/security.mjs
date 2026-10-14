@@ -48,8 +48,10 @@ export const security = {
       const sum = (k) => (v.buckets || []).reduce((n, b) => n + (Number(b.counts && b.counts[k]) || 0), 0);
       const usual = (k) => (v.buckets || []).reduce((n, b) => n + (Number(b.usual && b.usual[k]) || 0), 0);
       const lvl = ["Ordinary", "Raised", "High"].indexOf(v.level) >= 0 ? v.level.toLowerCase() : "ordinary";
-      return `<p data-state="level">${W(S + "level." + lvl)} ${W(S + "period", { from: D(v.from), to: D(v.to) })}</p><p>${W(S + "total", { count: Number(t.count || 0).toLocaleString("en"), usual: Number(t.usual || 0).toLocaleString("en") })}</p><table class="cs-table"><thead><tr><th>${W(S + "col.kind")}</th><th>${W(S + "col.count")}</th><th>${W(S + "col.usual")}</th></tr></thead><tbody>${KINDS.map((k) => `<tr><td>${W(S + "kind." + k)}</td><td>${E(sum(k).toLocaleString("en"))}</td><td>${E(usual(k).toLocaleString("en"))}</td></tr>`).join("")}</tbody></table>`;
-    }) + `<div class="cs-form"><label for="se-from">${W(S + "from")}</label><input id="se-from" type="date" class="cs-input"><label for="se-to">${W(S + "to")}</label><input id="se-to" type="date" class="cs-input">${cs.act("securitymap")}</div>`));
+      // no count is drawn at zero (R28): a kind with neither a count nor a usual is left out
+      const rows = KINDS.filter((k) => sum(k) > 0 || usual(k) > 0);
+      return `<p data-state="level">${W(S + "level." + lvl)} ${W(S + "period", { from: D(v.from), to: D(v.to) })}</p>${Number(t.count || 0) > 0 || Number(t.usual || 0) > 0 ? `<p>${W(S + "total", { count: Number(t.count || 0).toLocaleString("en"), usual: Number(t.usual || 0).toLocaleString("en") })}</p>` : ""}${rows.length ? `<table class="mk-table"><thead><tr><th>${W(S + "col.kind")}</th><th>${W(S + "col.count")}</th><th>${W(S + "col.usual")}</th></tr></thead><tbody>${rows.map((k) => `<tr><td>${W(S + "kind." + k)}</td><td>${E(sum(k).toLocaleString("en"))}</td><td>${E(usual(k).toLocaleString("en"))}</td></tr>`).join("")}</tbody></table>` : ""}`;
+    }) + `${cs.field("se-from", S + "from", { type: "date" })}${cs.field("se-to", S + "to", { type: "date" })}${cs.act("securitymap")}`));
 
     // what is built in, as the plane answers it, and the scanner's queue
     out.push(cs.sec(S + "parts.heading", cs.state(data.boot, (b) => {
@@ -58,23 +60,23 @@ export const security = {
       if (b.part_scanner === false) h += `<p>${W("instance.scanner.absent.step")}</p>`;
       if (b.part_scanner === true) {
         const sc = data.scan && data.scan.state === "ok" ? data.scan.value : null;
-        if (sc) h += `<p data-state="queue">${W(S + "queue", { queued: Number(sc.queued || 0), held: Number(sc.held || 0) })}</p>`;
+        if (sc && (Number(sc.queued || 0) > 0 || Number(sc.held || 0) > 0)) h += `<p data-state="queue">${W(S + "queue", { queued: Number(sc.queued || 0), held: Number(sc.held || 0) })}</p>`;
       }
       return h;
     })));
 
     // the tools held: each row's acts in its panel
-    out.push(cs.sec(S + "tools.heading", (ui.tested ? `<p data-shown="tested">${W(ui.tested.on ? S + "tested.on" : S + "tested.off", { detail: ui.tested.detail || "" })}</p>` : "") + cs.state(data.tools, (v) => cs.rows({
+    if (!data.tools || data.tools.state !== "empty" || ui.tested) out.push(cs.sec(S + "tools.heading", (ui.tested ? `<p data-shown="tested">${W(ui.tested.on ? S + "tested.on" : S + "tested.off", { detail: ui.tested.detail || "" })}</p>` : "") + cs.state(data.tools, (v) => cs.rows({
       id: "tools", cols: [S + "col.tool", S + "col.state", S + "col.added"], items: (v.tools || []).filter((t) => t.state !== "removed"), key: (t) => t.tool_id, name: (t) => E(t.provider_id),
       cells: (t) => [E(t.provider_id), W(S + "state." + (["added", "on", "test_failed", "off"].indexOf(t.state) >= 0 ? t.state : "added")) + (t.use === "routine" ? " · " + W(S + "every.on") : ""), E(D(t.added_at))],
       acts: (t) => cs.act("securitytooltest", { data: { tool: t.tool_id } }) + cs.act("securitytoolremove", { data: { tool: t.tool_id } }),
     }), { empty: S + "tools.none" })));
 
     // what happened to them
-    out.push(cs.sec(S + "events.heading", cs.state(data.events, (v) => `<ul class="cs-list">${(v.events || []).map((e) => `<li>${W(S + "event." + (["added", "test_passed", "test_failed", "removed", "switched_off"].indexOf(e.event) >= 0 ? e.event : "added"), { tool: e.tool_id })} · ${cs.date(e.at, { year: true })}${e.reason ? ` · <span class="rec">${E(e.reason)}</span>` : ""}</li>`).join("")}</ul>`, { empty: S + "events.none" })));
+    if (!data.events || data.events.state !== "empty") out.push(cs.sec(S + "events.heading", cs.state(data.events, (v) => `<ul class="cs-list">${(v.events || []).map((e) => `<li>${W(S + "event." + (["added", "test_passed", "test_failed", "removed", "switched_off"].indexOf(e.event) >= 0 ? e.event : "added"), { tool: e.tool_id })} · ${cs.date(e.at, { year: true })}${e.reason ? ` · <span class="rec">${E(e.reason)}</span>` : ""}</li>`).join("")}</ul>`, { empty: S + "events.none" })));
 
     // the catalogue: each entry's panel says what the tool is sent and keeps, then asks what its config lists
-    out.push(cs.sec(S + "catalogue.heading", cs.state(data.catalogue, (v) => cs.rows({
+    if (!data.catalogue || data.catalogue.state !== "empty") out.push(cs.sec(S + "catalogue.heading", cs.state(data.catalogue, (v) => cs.rows({
       id: "catalogue", cols: [S + "col.tool", S + "col.does"], items: v.offered || [], key: (t) => t.provider_id, name: (t) => E(t.vendor + " " + t.product),
       cells: (t) => [E(t.vendor + " · " + t.product), (t.kinds || []).map((k) => W(S + "does." + (["scan", "cdr", "sandbox", "url_reputation", "log_sink"].indexOf(k) >= 0 ? k : "scan"))).join(", ")],
       acts: (t) => {
@@ -83,11 +85,12 @@ export const security = {
         const h = t.handling || {};
         const p = "sa-" + String(t.provider_id).replace(/[^A-Za-z0-9_-]/g, "_");
         const list = (x) => (Array.isArray(x) ? x.join(", ") : String(x === undefined || x === null ? "" : x));
-        let f = `<dl class="cs-kv" data-handling="${E(t.provider_id)}"><dt>${W(S + "h.sends")}</dt><dd>${E(list(h.sends))}</dd><dt>${W(S + "h.never")}</dt><dd>${E(list(h.never_sends))}</dd><dt>${W(S + "h.recipient")}</dt><dd>${E(list(h.recipient))}</dd><dt>${W(S + "h.region")}</dt><dd>${E(list(h.region))}</dd><dt>${W(S + "h.files")}</dt><dd>${E(list(h.file_retention))}</dd><dt>${W(S + "h.results")}</dt><dd>${E(list(h.result_retention))}</dd><dt>${W(S + "h.sharing")}</dt><dd>${W(S + "sharing." + (["none", "vendor_internal_research", "third_parties", "public"].indexOf(h.sample_sharing) >= 0 ? h.sample_sharing : "none"))}</dd></dl>`;
-        f += `<div class="cs-form">`;
-        if (t.template) f += `<label for="${p}-host">${W(S + "host")}</label><input id="${p}-host" type="text" class="cs-input" autocomplete="off">`;
-        for (const c of Array.isArray(t.config) ? t.config : []) if (c && c.name) f += `<label for="${p}-c-${E(c.name)}">${E(c.label || c.name)}${c.required ? "" : " · " + W(S + "optional")}</label><input id="${p}-c-${E(c.name)}" type="text" class="cs-input" autocomplete="off">`;
-        for (const k of Array.isArray(t.credentials) ? t.credentials : []) f += `<label for="${p}-k-${E(k)}">${E(k)}</label><input id="${p}-k-${E(k)}" type="password" class="cs-input" autocomplete="off">`;
+        let f = `<dl class="mk-dl" data-handling="${E(t.provider_id)}"><dt>${W(S + "h.sends")}</dt><dd>${E(list(h.sends))}</dd><dt>${W(S + "h.never")}</dt><dd>${E(list(h.never_sends))}</dd><dt>${W(S + "h.recipient")}</dt><dd>${E(list(h.recipient))}</dd><dt>${W(S + "h.region")}</dt><dd>${E(list(h.region))}</dd><dt>${W(S + "h.files")}</dt><dd>${E(list(h.file_retention))}</dd><dt>${W(S + "h.results")}</dt><dd>${E(list(h.result_retention))}</dd><dt>${W(S + "h.sharing")}</dt><dd>${W(S + "sharing." + (["none", "vendor_internal_research", "third_parties", "public"].indexOf(h.sample_sharing) >= 0 ? h.sample_sharing : "none"))}</dd></dl>`;
+        f += `<div>`;
+        if (t.template) f += cs.field(p + "-host", S + "host", { autocomplete: "off" });
+        // a field named by the catalogue's own label (record data, a word's fill, so escaped and never read as a key)
+        for (const c of Array.isArray(t.config) ? t.config : []) if (c && c.name) f += cs.field(`${p}-c-${c.name}`, c.required ? S + "field" : S + "field.optional", { fills: { label: c.label || c.name }, autocomplete: "off" });
+        for (const k of Array.isArray(t.credentials) ? t.credentials : []) f += cs.field(`${p}-k-${k}`, S + "field", { type: "password", fills: { label: k }, autocomplete: "off" });
         if (h.sample_sharing === "vendor_internal_research") f += `<input type="checkbox" id="${p}-keep"><label for="${p}-keep">${W(S + "keep")}</label>`;
         if (onOwn(h.recipient)) f += `<input type="checkbox" id="${p}-every"><label for="${p}-every">${W(S + "every")}</label>`;
         return f + add + "</div>";

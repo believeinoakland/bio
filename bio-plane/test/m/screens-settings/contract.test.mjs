@@ -64,12 +64,12 @@ test("the shell serves the screens: interfacePage passes its R21 check, and the 
 test("SCREEN_WORDS: frozen [key, en, protected] rows, keys distinct, under the screens' own keys or the shell's named rows", () => {
   assert.ok(Object.isFrozen(SCREEN_WORDS));
   const keys = new Set();
-  const named = new Set(["handle.fixed", "act.memberlanguageset.does", "act.groupkeyremove.does", "act.subscriptionsignin.does"]);
+  const named = new Set(["handle.fixed", "act.memberlanguageset.does", "act.groupkeyremove.does", "act.subscriptionsignin.does", "settings.set.setup"]);
   for (const r of SCREEN_WORDS) {
     assert.ok(Object.isFrozen(r) && r.length === 3 && typeof r[0] === "string" && typeof r[1] === "string" && typeof r[2] === "boolean", String(r));
     assert.ok(!keys.has(r[0]), `${r[0]} once`);
     keys.add(r[0]);
-    assert.ok(/^screen\.(settings|members|account|connect|notes|panel|group|group-identity|places|recovery|security|translations)\./.test(r[0]) || named.has(r[0]), r[0]);
+    assert.ok(/^screen\.(settings|members|account|connect|notes|panel|group|group-identity|places|recovery|security|translations|updates)\./.test(r[0]) || named.has(r[0]), r[0]);
     // DEC-149: the group's own Civicsmith is "your group's Civicsmith", never bare
     // (the software itself, "Civicsmith's tests", is not the group's)
     for (const m of r[1].matchAll(/Civicsmith(?!'s tests)/g)) assert.equal(r[1].slice(Math.max(0, m.index - 8), m.index), "group's ", `${r[0]}: ${r[1]}`);

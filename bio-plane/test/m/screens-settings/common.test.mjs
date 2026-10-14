@@ -3,8 +3,8 @@
    the browser's storage, an address or a later request), driven over every act of every screen. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { all, day, has, lacks, open, panelOf, rowOf } from "./kit.mjs";
-import { ADMIN, MEMBER, membersTable, accountTable, connectTable, notesTable, groupTable, placesTable, recoveryTable, identityTable, securityTable, translationsTable, env } from "./fixtures.mjs";
+import { all, ancestor, day, has, lacks, open, panelOf, rowOf, textOf } from "./kit.mjs";
+import { ADMIN, MEMBER, membersTable, membersTableMember, accountTable, connectTable, notesTable, groupTable, placesTable, recoveryTable, identityTable, securityTable, translationsTable, env } from "./fixtures.mjs";
 
 const SECRET = "SENTINEL-SECRET-0123456789";
 
@@ -36,7 +36,7 @@ const PRESSES = [
   ["connect", "groupkeynoticeseen", {}, "group"],
   ["connect", "disclosureshown", { data: { version: "D311-1" } }, "none", { disclosureof: (q) => env({ ok: true, member: q.member, version: "D311-1", shown: false, shown_at: null }) }],
   ["connect", "subscriptionsignin", { data: { step: "code" }, values: { "mc-code0": SECRET } }, "none"],
-  ["connect", "accountreferenceset", { values: { "mc-key0": SECRET } }, "none"],
+  ["connect", "accountreferenceset", { choose: { "mc-way": "apikey" }, values: { "mc-key0": SECRET } }, "none"],
   ["connect", "accountusesset", { data: { sw: "ask", to: "off" } }, "own"],
   ["connect", "ailimitset", { data: { remove: "" }, values: { "aio-scope": "overall", "aio-amount": "9", "aio-unit": "calls", "aio-period": "day" } }, "own"],
   ["connect", "accountreferenceremove", {}, "own"],
@@ -108,9 +108,11 @@ test("R8 every act of every screen, once answered, reads again what it changes a
 test("R8 nothing is drawn as done before the answer: while an act has not answered, the screen is unchanged", async () => {
   for (const [screen, op, press, situation, extra] of PRESSES) {
     const o = await open(screen, { me: meOf(screen), table: tableOf(screen, situation, { [op]: "pending" }, extra), subject: subjectOf(screen), reachable: true });
+    // a path chosen first (a choice redraws the screen; that is not the act's doing)
+    for (const [cid, v] of Object.entries(press.choose || {})) await o.choose(cid, v);
     const before = o.text;
     // pressed as a member would, any reason the shell asks answered; the act is sent and never answers
-    await o.press(op, press);
+    await o.press(op, { ...press, choose: {} });
     o.redraw();
     assert.ok(o.p.all.some((r) => r.op === op), `${screen} ${op} sent`);
     assert.equal(o.text, before, `${screen} ${op}`);
@@ -134,5 +136,69 @@ test("R10 no key, code or password typed is kept in the browser's storage, put i
       // once the act succeeds, its field is drawn anew, empty
       if (answer === "ok") for (const el of o.b.doc.querySelectorAll("input, textarea")) assert.ok(!String(el.value).includes(SECRET), `${what}: no field still holds it (${el.id})`);
     }
+  }
+});
+
+/* R28: the common line. Every element these screens draw uses a class a served stylesheet defines (interface-shell R56),
+   and a section, list or reading that holds nothing is not drawn. */
+import { readFileSync } from "node:fs";
+import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
+import { walk } from "./kit.mjs";
+
+const rootOf = new URL("../../../../", import.meta.url);
+const styleOf = (src) => (/<style[^>]*>([\s\S]*?)<\/style>/.exec(src) || [, ""])[1];
+// the served stylesheets: `civicsmith.css`, `shell.css` (the design page's product rules, interface-assets R7; the design's own
+// source until that file is served) and the shell's own `STYLE`
+const served = (() => {
+  const css = (n) => { const f = ASSET_FILES[n]; return f ? Buffer.from(f.body || f).toString("utf8") : ""; };
+  const shell = css("shell.css") || styleOf(readFileSync(new URL("docs/development/ux-substrate/screens/page.src.html", rootOf), "utf8"));
+  const own = /const STYLE = `([\s\S]*?)`;/.exec(readFileSync(new URL("bio-plane/src/interface-shell/index.mjs", rootOf), "utf8"));
+  return new Set([...(css("civicsmith.css") + shell + (own ? own[1] : "")).matchAll(/\.([A-Za-z][\w-]*)/g)].map((m) => m[1]));
+})();
+
+const RUNS = [
+  ["settings", { me: ADMIN, table: {} }], ["settings", { me: MEMBER, table: {} }],
+  ["members", { me: ADMIN, table: membersTable(), subject: "ana" }], ["members", { me: MEMBER, table: membersTableMember() }],
+  ["members", { me: ADMIN, table: membersTable({ memberlist: env({ members: [] }), aikeepawaystate: env({ on: true, reason: "r", set_by: "rosa", set_at: "2026-10-02T00:00:00Z", uses: ["ask"] }), groupkeystate: env({ ok: true, held: false, on: false }) }) }],
+  ["account", { me: MEMBER, table: accountTable(MEMBER) }], ["connect", { me: MEMBER, table: connectTable(MEMBER, "none") }], ["connect", { me: MEMBER, table: connectTable(MEMBER, "own") }],
+  ["connect", { me: MEMBER, table: connectTable(MEMBER, "group") }], ["connect", { me: MEMBER, table: connectTable(MEMBER, "subscription") }],
+  ["notes", { me: MEMBER, table: notesTable(MEMBER), reachable: true }], ["notes", { me: MEMBER, table: notesTable(MEMBER, { notes: env({ ok: true, notes: [] }) }) }],
+  ["group", { me: ADMIN, table: groupTable() }], ["group", { me: MEMBER, table: groupTable() }],
+  ["places", { me: ADMIN, table: placesTable() }], ["places", { me: MEMBER, table: placesTable() }], ["recovery", { me: ADMIN, table: recoveryTable() }],
+  ["group-identity", { me: ADMIN, table: identityTable(), reachable: true }], ["group-identity", { me: MEMBER, table: identityTable() }],
+  ["security", { me: ADMIN, table: securityTable() }], ["translations", { me: ADMIN, table: translationsTable(), subject: "es", reachable: true }],
+];
+// what the kit itself draws and interface-shell R56 re-spells (`cs.rows`' pick box, `cs-pickc`; not a class this module writes)
+const KIT_DRAWN = new Set(["cs-pickc"]);
+// a state each read can be in: answering, or not at all (failed)
+const FAILING = (table) => Object.fromEntries(Object.keys(table).map((k) => [k, "none"]));
+
+test("R28 every element every screen draws uses a class a served stylesheet defines; a section holds something; control: a read that failed is still drawn failed", async () => {
+  assert.ok(served.has("mk-note") && served.has("cs-field") && !served.has("cs-form"), "the served set is the design's");
+  for (const [id, opt] of RUNS) for (const what of ["ok", "failed"]) {
+    const o = await open(id, { ...opt, table: what === "ok" ? opt.table : { ...opt.table, ...FAILING(opt.table) } });
+    const where = `${id} (${what}, ${opt.me.administer ? "administrator" : "member"})`;
+    for (const n of walk(o.tree)) {
+      for (const c of String((n.attrs && n.attrs.class) || "").split(/\s+/).filter(Boolean)) assert.ok(served.has(c) || KIT_DRAWN.has(c), `${where}: the class ${c} is defined by no served stylesheet`);
+      // a section that holds nothing is not drawn
+      if (n.tag === "section") assert.ok(n.children.filter((c) => c.tag && c.tag !== "h2").length > 0, `${where}: an empty section ${textOf(n)}`);
+      // no bare label with a help beside it (cs.field draws them apart); no cs-form
+      assert.ok(!/\bcs-form\b/.test((n.attrs && n.attrs.class) || ""), `${where}: cs-form`);
+    }
+    if (what === "failed" && id !== "settings" && id !== "recovery") assert.ok(all(o.tree, (e) => e.attrs["data-state"] === "failed").length >= 1 || id === "group-identity" && !opt.me.administer || id === "translations" || id === "security" && !opt.me.administer, `${where}: drawn failed`);
+  }
+});
+
+test("R28 every labelled field is drawn with cs.field: its label and its help are boxes of their own, tied by aria-describedby; a field has no bare label with a help beside it", async () => {
+  for (const [id, opt] of RUNS) {
+    const o = await open(id, { ...opt, reachable: true });
+    for (const inp of all(o.tree, (e) => ["input", "textarea"].includes(e.tag) && !["checkbox", "radio", "hidden"].includes(e.attrs.type))) {
+      const box = ancestor(inp, (e) => /\bcs-field\b/.test(e.attrs.class || ""));
+      assert.ok(box, `${id}: ${inp.attrs.id} is not drawn with cs.field`);
+      const label = all(box, (e) => e.tag === "label" && e.attrs.for === inp.attrs.id)[0];
+      assert.ok(label, `${id}: ${inp.attrs.id} has its label`);
+      for (const h of all(box, (e) => /\bhelp\b/.test(e.attrs.class || ""))) { assert.ok(!ancestor(h, (e) => e === label) && inp.attrs["aria-describedby"] === h.attrs.id, `${id}: ${inp.attrs.id}'s help is apart and tied`); }
+    }
+    for (const sel of all(o.tree, (e) => e.tag === "select")) assert.ok(ancestor(sel, (e) => /\bcs-field\b/.test(e.attrs.class || "")), `${id}: ${sel.attrs.id} is not drawn with cs.choice`);
   }
 });
