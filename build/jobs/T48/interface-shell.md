@@ -65,3 +65,7 @@ My tests: 135 pass, 0 fail, with one local stand-in left (never committed). That
 **Final tests and checks** (on `tranche/T48` merged, no stand-in): `node --test test/m/interface-shell/*.test.mjs`: 136 pass, 0 fail. `format` 0 failures; `architecture` 0 failures (18 product files); `coverage` interface-shell 62 of 62; `ownership` 13 files, 0 failures; `checks/run.mjs`: format, architecture, channels 0 failures, coverage's 12 failures are other modules' not-yet-built ids.
 
 Size (session_01MDeDZmkgwHShmUu5piZFAA): test runs 26, module lines 2414
+
+## J3 · COMPLETE
+
+T48-69 complete: R52–R64 met; B2–B4 applied (ABSENT_CODES read; the section explanation is escaped once, now tested, so no double escape existed). On tranche/T48 merged, no stand-in: 136 tests pass, 0 fail; format, architecture, coverage (62/62), ownership 0 failures. The screen jobs' undefined classes and old-markup reads are in J1. Details in the record.
