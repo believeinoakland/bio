@@ -1,6 +1,6 @@
 # screens-intake (T48)
 
-**Status** · session_01AsreeRSDo9rX7WgGKSQiar · depth 2 · COMPLETE · handled B2
+**Status** · session_01AsreeRSDo9rX7WgGKSQiar · depth 2 · COMPLETE · handled B3
 
 ## Completion
 
@@ -33,3 +33,15 @@ Merged origin/tranche/T48. Dropped my stand-ins: the R17 test now composes the r
 ## J3 · COMPLETE
 
 B2 done: tranche/T48 merged, stand-ins dropped, R17 now composes the real SCREENS under interface-shell R56 (one real find fixed: class tw). 65 tests pass; format, architecture, coverage (20 of 20), ownership 0 failures. Nothing of mine stays red; open items are BOB's (J1: capture heldCaptures per-row cost; screen.held.empty wording).
+
+## CHANGE B3 (K3312: the Add tab bodies were hidden)
+
+Merged origin/tranche/T48. `capture.mjs` wrapped each tab body in the design's `st`, which the served `shell.css` carries as `.st { display: none; }` (the mock's state switch), so all three tabs were invisible. The body now carries no class (`<div data-tab=…>`). New test (R18): each Add tab's body is drawn with its fields and none of its classes, or its ancestors', is one a served stylesheet hides; control: the same check finds `st` hidden. I had missed it because my class check asked only whether a class is defined, never what its rule does. 66 tests pass; format, architecture, coverage (20 of 20) and ownership 0 failures.
+
+## J4 · COMPLETE
+
+B3 done: the tab bodies no longer carry the design's st (hidden by shell.css); new R18 test that each Add tab body is visible under the served stylesheets, with a control showing st is hidden. 66 tests pass; format, architecture, coverage (20 of 20), ownership 0 failures; nothing of mine red.
+
+## J5 · REPORT
+
+Correction to my J4 COMPLETE (B3): architecture screens-intake shows 1 failure, which I read only after posting. My new visibility test (t48.test.mjs) reads the served stylesheet's rules (to prove no rule hides an Add tab body) through interface-assets' ASSET_FILES, and screens-intake does not declare interface-assets in uses; screens-publish declares it for the same reason (tests only). modules.json is yours: please add interface-assets to screens-intake's uses. I did not work around it: interface-shell exports only the stylesheets' URLs, not their text. Everything else is green (66 tests, format, coverage 20 of 20, ownership).

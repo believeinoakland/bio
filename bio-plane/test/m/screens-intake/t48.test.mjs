@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { checkClasses } from "../../../src/interface-shell/index.mjs";
+import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { open, html, text, main, btn, fill, press, ok, refused } from "./page.mjs";
 import { pending } from "../interface-shell/harness.mjs";
@@ -95,5 +96,25 @@ test("R20 archive and open-file opened bare draw the shell's \"Nothing is here\"
     assert.doesNotMatch(text(p), /Name an archive|Name a file/, path);
     assert.ok(main(p).querySelector('a[href="/app"][data-nav]'), `${path}: the way back`);
     assert.equal(p.byOp("archivelist").length + p.byOp("threatof").length, 0, `${path}: nothing read`);
+  }
+});
+
+/* classes a served stylesheet hides: a rule whose selector ends in the class and whose block holds `display: none` */
+const hiddenBy = (cls) => {
+  const css = ASSET_FILES["civicsmith.css"].body + ASSET_FILES["shell.css"].body;
+  return [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].some(([, sel, block]) => /display\s*:\s*none/.test(block)
+    && sel.split(",").some((x) => new RegExp(`\\.${cls}(?![\\w-])[^\\s>+~]*\\s*$`).test(x.trim())));
+};
+
+test("R18 each Add tab's body is visible under the served stylesheets: no class on it is one they hide (control: the design's st is hidden)", async () => {
+  assert.ok(hiddenBy("st"), "control: the served shell.css hides the design's `st`");
+  for (const tab of ["address", "file", "saw"]) {
+    const p = await open(`/app/capture/${tab}`, { plane: FULL, reachable: true });
+    const body = main(p).querySelector(`[data-tab="${tab}"]`);
+    assert.ok(body, `${tab}: a body is drawn`);
+    assert.ok(body.querySelector("input, textarea"), `${tab}: with its fields`);
+    for (let e = body; e && e !== main(p); e = e.parentNode)
+      for (const c of (e.getAttribute && e.getAttribute("class") || "").split(/\s+/).filter(Boolean))
+        assert.ok(!hiddenBy(c), `${tab}: class ${c} is hidden by a served stylesheet`);
   }
 });
