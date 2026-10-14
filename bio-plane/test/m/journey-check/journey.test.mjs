@@ -5,6 +5,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, mkdtempSync, rmSync, readdirSync } from "node:fs";
 import { createServer } from "node:http";
+import { spawn } from "node:child_process";
+import { pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fakeAccount, AUTHORIZE, TOKEN, API } from "../../../src/journey-check/account.mjs";
@@ -85,4 +87,56 @@ test("R1 (b): the live arm reads the administrator's and a member's credentials 
     const printed = r.report + readFileSync(join(out, "report.json"), "utf8");
     for (const v of Object.values(env)) if (v.includes("secret")) assert.equal(printed.includes(v), false, "a password printed");
   } finally { server.close(); rmSync(out, { recursive: true, force: true }); }
+});
+
+/* A child node process running `code` (an ES module, `RUN` and `LOCAL` the arm's modules); it must end by itself, with no
+   open handles, within `deadline` ms. Answers whether it did, its exit code and what it printed. */
+const RUN = pathToFileURL(join(DIR, "run.mjs")).href, LOCAL = pathToFileURL(join(DIR, "local.mjs")).href;
+function ends(code, deadline) {
+  return new Promise((done) => {
+    const child = spawn(process.execPath, ["--input-type=module", "-e", `const RUN = ${JSON.stringify(RUN)}, LOCAL = ${JSON.stringify(LOCAL)};\n${code}`],
+      { stdio: ["ignore", "pipe", "pipe"] });
+    let out = "", err = "";
+    child.stdout.on("data", (d) => (out += d));
+    child.stderr.on("data", (d) => (err += d));
+    const t = setTimeout(() => child.kill("SIGKILL"), deadline);
+    child.on("exit", (status, signal) => { clearTimeout(t); done({ ended: signal === null, status, out, err }); });
+  });
+}
+const lastJson = (s) => JSON.parse(s.trim().split("\n").at(-1));
+/* the local arm forced to fail as `opts` say; prints what it answered and the handles left once it returned */
+const forced = (opts) => `const { runLocal } = await import(RUN);
+const { localWorld } = await import(LOCAL);
+const out = (await import("node:fs")).mkdtempSync((await import("node:path")).join((await import("node:os")).tmpdir(), "jc-dispose-"));
+const r = await runLocal({ out, ${opts} });
+(await import("node:fs")).rmSync(out, { recursive: true, force: true });
+console.log(JSON.stringify({ ok: r.ok, failures: r.walk.failures, handles: process.getActiveResourcesInfo() }));`;
+const DEADLINE = 60000;
+
+test("R1 (a): every way the local arm can stop closes its world, browser and servers; control: a world left open keeps its process alive past the deadline", { timeout: 600000 }, async () => {
+  /* control: the check sees open handles. A world started and never closed (its Miniflare instances running) does not end. */
+  const leak = await ends(`const { localWorld } = await import(LOCAL); await localWorld(); console.log("started");`, DEADLINE);
+  assert.equal(leak.ended, false, "a world left open was not caught: " + leak.err);
+  assert.match(leak.out, /started/);
+
+  /* playwright-core unloadable: the world is started, the browser cannot be, the arm says so and closes the world */
+  const noPlaywright = await ends(forced(`launch: async () => { throw new Error("playwright-core cannot be loaded (forced)"); }`), DEADLINE);
+  assert.equal(noPlaywright.ended, true, "the arm left handles open when the browser could not start: " + noPlaywright.err);
+  const a = lastJson(noPlaywright.out);
+  assert.equal(a.ok, false);
+  assert.ok(a.failures.some((f) => f.kind === FAIL.STEP && /playwright-core cannot be loaded \(forced\)/.test(f.detail)), JSON.stringify(a.failures));
+
+  /* a world that cannot start: nothing is left open, the arm says why */
+  const noWorld = await ends(forced(`world: async () => { throw new Error("the world cannot start (forced)"); }`), DEADLINE);
+  assert.equal(noWorld.ended, true, noWorld.err);
+  assert.ok(lastJson(noWorld.out).failures.some((f) => /the world cannot start \(forced\)/.test(f.detail)));
+
+  /* a walker step that throws: the world refuses every request of the browser, so the installer's first page fails;
+     the browser, its pages and the world all close */
+  const stepThrows = await ends(forced(`world: async () => { const w = await localWorld();
+    return { ...w, route: (ctx, onForeign) => ctx.route("**/*", (r) => { onForeign(r.request().url()); return r.abort("blockedbyclient"); }) }; }`), DEADLINE);
+  assert.equal(stepThrows.ended, true, "the arm left handles open after a step threw: " + stepThrows.err);
+  const c = lastJson(stepThrows.out);
+  assert.equal(c.ok, false);
+  assert.ok(c.failures.some((f) => f.kind === FAIL.STEP && f.step === "install: the installer's first page"), JSON.stringify(c.failures));
 });

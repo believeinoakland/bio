@@ -46,7 +46,8 @@ export function planeOptions(bindings, { dir, self, outbound }) {
   return { opts, skipped };
 }
 
-/* Starts the world; `world.close()` ends it. `unanswered` lists every outbound request nothing in the walk answered. */
+/* Starts the world; `world.close()` ends it: both Miniflare instances and their storage. `unanswered` lists every
+   outbound request nothing in the walk answered. */
 export async function localWorld() {
   const dir = mkdtempSync(join(tmpdir(), "journey-check-"));
   const unanswered = [];
@@ -67,10 +68,19 @@ export async function localWorld() {
   });
   /* The installer's module exports constants beside its handler; workerd takes every export as an entry point, so it
      is run through an entry, held in memory beside it, that exports its handler alone. */
-  const installer = new Miniflare({ ...BASE, scriptPath: join(dirname(INSTALLER_ENTRY), "journey-entry.mjs"),
-    script: `import worker from ${JSON.stringify(INSTALLER_ENTRY)};\nexport default worker;\n`,
-    outboundService: async (req) => account.handle(req) });
-  await installer.ready;
+  let installer = null;
+  const close = async () => {
+    if (installer) await installer.dispose().catch(() => {});
+    if (plane) await plane.dispose().catch(() => {});
+    rmSync(dir, { recursive: true, force: true });
+  };
+  /* A world that cannot start closes what it started before it says so. */
+  try {
+    installer = new Miniflare({ ...BASE, scriptPath: join(dirname(INSTALLER_ENTRY), "journey-entry.mjs"),
+      script: `import worker from ${JSON.stringify(INSTALLER_ENTRY)};\nexport default worker;\n`,
+      outboundService: async (req) => account.handle(req) });
+    await installer.ready;
+  } catch (e) { await close(); throw e; }
 
   /* What a request to `url` reaches: the installer, the consent page, the copy, or nothing. */
   async function answer(url, init) {
@@ -108,10 +118,6 @@ export async function localWorld() {
     account, installer, route, copyBase, unanswered, skipped: () => skipped,
     fetchCopy: (req) => planeFetch(req),
     unansweredAll: () => [...account.unanswered.map((x) => `installer: ${x}`), ...unanswered],
-    async close() {
-      await installer.dispose().catch(() => {});
-      if (plane) await plane.dispose().catch(() => {});
-      rmSync(dir, { recursive: true, force: true });
-    },
+    close,
   };
 }

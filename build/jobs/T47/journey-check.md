@@ -1,6 +1,6 @@
 # journey-check (T47)
 
-**Status** · session_01BwKVcuP4ZCR6FppN1MM9Zx · depth 2 · COMPLETE · handled B8
+**Status** · session_01S9q7e1Keok91bq6py8jvPf · depth 2 · COMPLETE · handled B9
 
 ## J1 · QUESTION
 
@@ -62,3 +62,23 @@ B6 applied: tranche/T47 merged (435fb2ed7c); the local walk on the tranche runs 
 **Checks** (in a scratch tree with my paths and tests registered, as BOB will): format 0 failures; architecture "14 product files, 21 relative imports; 0 failures"; coverage "3 of 3 live requirement ids named by a test; 0 failures"; ownership 0 failures but the scratch `modules.json` line; `node checks/run.mjs`: architecture 0 failures over the product (K2950), coverage 5197 of 5198 (the one missing id is not journey-check's), channels 0 failures.
 
 Size (session_01BwKVcuP4ZCR6FppN1MM9Zx): test runs 21, module lines 1167
+
+## J7 · COMPLETE
+
+**Completion record, re-opened job (B9, K3184; JOURNEY-CHECK #2). tranche/T47 merged at 38e51bbd2f; pushed 8d61565452.**
+
+**Cause, reproduced first:** with playwright-core absent, `runLocal` started the world (two Miniflare instances, the installer's and the plane's) *before* its `try`, then called `browser()`, which threw; the `finally` that closes the world never ran, so workerd stayed up and `node --test` never exited (reproduced here: the local-arm test killed at 120 s, no output).
+
+**Applied:**
+- `run.mjs`: `runLocal` starts the world and the browser *inside* its try; the `finally` closes the browser if one started and the world if one started, on every path (a step that throws, the guard's refusal, a world or browser that cannot start). Every error becomes a walk failure; the arm always returns its walk. `browser()` names the cause when playwright-core cannot be loaded (`npm ci` in the module's directory). `runLive` closes each browser context in a `finally` as well as the browser. Both arms take `launch` (the browser's start, default `browser`) so a test can force it to fail.
+- `local.mjs`: a world that fails partway through starting closes what it started (Miniflare, its temporary storage) before it rethrows; `close()` is the same function.
+- New test (journey.test.mjs, R1 (a)): each forced failure runs in a child node process and must **end by itself within 60 s**: playwright-core unloadable (`launch` throws: world started, then closed); a world that cannot start; a walker step that throws (a real world and Chromium, every request refused, the installer's first step fails). Each also checks the failure is reported. **Control:** a child that starts `localWorld()` and never closes it is still running at the deadline, so the check does catch open handles.
+- Also: walker.test's `after` no longer throws when the browser never started. The K3137 sweep test compared against a fixed list that still held `dash-home`, which DEC-218 removed from the registry; it now asserts that the sweep skips exactly the excepted and installer screens the registry lists, with `site`, `install` and `update` required among them. The requirement is unchanged.
+
+**Tests:** `node --test test/m/journey-check/` from `bio-plane/`, after `npm ci`: tests 17, pass 17, fail 0 (end-to-end local arm still 90 steps green). **CI's failure mode:** with playwright-core removed, the same command **ends in 68 s** (tests 18, pass 4, fail 14: each browser test fails at import, never skips), where it used to hang.
+**Checks:** format: 2 failures, both `setup-page`'s modules.json entries naming its deleted files (not journey-check's; for BOB); architecture "14 product files, 21 relative imports; 0 failures"; coverage "3 of 3 live requirement ids named by a test; 0 failures"; ownership "5 files changed by journey-check between tranche/T47 and HEAD; 0 failures"; `run.mjs`: architecture 0 failures over the product, coverage 5198 of 5198, channels 0 failures.
+
+**Files:** no new files; the registered paths and tests are unchanged.
+**Deferred:** none. **Found elsewhere:** `setup-page`'s `paths`/`tests` in `build/modules.json` name directories its delete removed (format check, above).
+
+Size (session_01S9q7e1Keok91bq6py8jvPf): test runs 7, module lines 1228
