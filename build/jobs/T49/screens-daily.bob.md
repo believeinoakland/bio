@@ -19,3 +19,7 @@ Every new id needs an explicit test naming it (K874); every refusal a control.
 Inherited reds: the plan's rule 5 as it stands at your START (its (10): membership R83's `MODULE_ORDER`, from setup-words' move, K3368); none is yours unless named here or in your entry.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+K3369: (1) project-roster (L2) is closed. If any read the member can make answers her invited state (project-roster R1's participants for a project she can see, or membership's participation through an op), use it and meet R29; if none does, report R29 not met and build nothing on a guess: N1118 adds participation to projectlist in T50. (2) Your reading stands: {project: <question>, question: <question>, found, role}. (3) Yes, title: beside objective:.
