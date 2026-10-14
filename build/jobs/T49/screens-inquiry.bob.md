@@ -47,3 +47,7 @@ K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged int
 ## B8 · ANSWER · re J4
 
 K3375: your fallbacks stand (draw only what is answered; no grade mark rather than Unrated); the missing reads are N1124 (T50).
+
+## B9 · CHANGE
+
+K3379: op-declarations, control-plane, plane and site are merged into tranche/T49, with the design's DEC-262 words and rows.mjs regenerated: merge the tranche branch. One finding for you (JOURNEY-CHECK J1, its R8): signed in as the founder, `project.mjs` asks `projectdirectory`, which answers `{ok:true, result:{ok:false, code:PROJECT_DIRECTORY_NEEDS_A_MEMBER}}` (project-roster takes the founder's viewer as no member; its fix is N1129, T50). Under D29 (rule 6) that is a refusal inside a 200: do not ask `projectdirectory` when `whoami` says the reader is the founder (she sees every discoverable project whole, D54), and never draw it as a failure. A test: the founder's project page sends no `projectdirectory`; control: a member's does.
