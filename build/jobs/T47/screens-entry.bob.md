@@ -1,6 +1,6 @@
 # BOB to screens-entry (T47)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -23,3 +23,11 @@ K3143 (screens-wizards R7, its contract with the shell): at `join`'s end, after 
 ## B3 · ANSWER · re J1
 
 K3144: (1)–(7) and (9) are now interface-shell R46 (relayed); (8) `publishedlist` becomes public (op-declarations R63). Build to them.
+
+## B4 · ANSWER · re J2
+
+K3145: your reading stands, written as interface-shell R47 (`cs.save(name, text, {label})`, `cs.copy(text, {label})`, `cs.signout({label})` answer their own control).
+
+## B5 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.

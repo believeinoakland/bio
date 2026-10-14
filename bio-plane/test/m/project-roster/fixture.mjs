@@ -49,14 +49,17 @@ export function world() {
   };
   const sql = sqlOver(db);
   const ctx = { storage: { sql } };
+  /* R28: the host's clock, the server's instant; a test fixes it with `w.time.now` (milliseconds), else now. */
+  const time = { now: null };
+  const clock = () => time.now ?? Date.now();
   const m = membershipOf(ctx, { record: core });
   m.migrate();
   const creds = standIns(m);
-  const r = projectRosterOf(ctx, { record: core, membership: m });
+  const r = projectRosterOf(ctx, { record: core, membership: m, clock });
   if (projectRosterOf(ctx) !== r) throw new Error("projectRosterOf answers one instance per storage");
   r.migrate();
   const w = {
-    db, sql, core, m, r, declared, creds, ctx, settings,
+    db, sql, core, m, r, declared, creds, ctx, settings, time,
     bundle(id, type = "information", title = `title of ${id}`, project = null, state = null) {
       db.prepare(`INSERT INTO bundles (bundle_id, object_type, title, project, current_state) VALUES (?,?,?,?,?)`)
         .run(id, type, title, project, state);
@@ -124,9 +127,10 @@ export async function realWorld() {
   const m = membershipOf(ctx);
   m.migrate();
   const creds = standIns(m);
-  const r = projectRosterOf(ctx);
+  const time = { now: null };
+  const r = projectRosterOf(ctx, { clock: () => time.now ?? Date.now() });
   r.migrate();
-  const w = { db, sql, rc, m, r, creds,
+  const w = { db, sql, rc, m, r, creds, time,
     async claim() { creds.claimed = true; },
     async enrol(id, role = "member") {
       const a = await m.memberAdd({ memberId: id, cover: `cover of ${id}`, role, by: "admin" });

@@ -35,9 +35,8 @@ test("R17 op=bootstrap: service, this isolate's version (0.0.0 unset), bootstrap
   assert.equal(r.status, 200);
   assert.deepEqual(r.body, { ok: true, service: "bio-plane", version: "plane-3", bootstrapConfigured: true,
                              claimed: false, rearmed: false, consumedAt: null, storeVersion: "store-7",
-                             /* T46: R80's test_instance and R81's parts, always answered (none bound here) */
-                             test_instance: false, parts: [{ part: "signin", present: false }, { part: "scanner", present: false },
-                                                           { part: "safe_view", present: false }] });
+                             /* R80's test_instance and R82's three flat parts, always answered (none bound here) */
+                             test_instance: false, part_signin: false, part_scanner: false, part_safe_view: false });
   assert.equal(stub.seen[0], "http://do/bootstrap?fp=fp9");
   assert.equal((await read(await bootstrapReport({}, "x", { stub, ...io }))).body.version, "0.0.0");
   for (const tok of [undefined, ""]) assert.equal((await read(await bootstrapReport({ ADMIN_TOKEN: tok }, "x", { stub, ...io }))).body.bootstrapConfigured, false);
@@ -141,7 +140,7 @@ test("R3 R10 R11 over the wire: a credentialed reader gets the row or the identi
   const idc = await read(await groupIdentityOp(env, "bio", { viewer: "admin", cls: "member" }, io));
   assert.equal(idc.body.result.display_name_recorded, "River Town Watch");
   const idp = await read(await groupIdentityOp(env, "bio", {}, io));
-  assert.deepEqual(Object.keys(idp.body.result).sort(), ["display_name", "domain", "domain_verified_at", "group", "ok"]);
+  assert.deepEqual(Object.keys(idp.body.result).sort(), ["display_name", "domain", "domain_verified_at", "group", "logo", "ok"] /* R84: logo, whether one is set */);
   assert.equal("tokenClass" in idp.body, false);
   const dead = envOver({ fetch: async () => new Response("", { status: 500 }) });
   for (const r of [await instanceGroupOp(dead, "bio", {}, io), await instanceGroupOp(dead, "bio", { viewer: "admin" }, io),

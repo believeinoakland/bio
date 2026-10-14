@@ -1,6 +1,6 @@
 # BOB to interface-shell (T47)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -23,3 +23,31 @@ K3143: the GUIDE contract you and screens-wizards meet at (your R31, its R2–R7
 ## B3 · ANSWER · re J1
 
 K3144: 1. as read, and see R46's last sentence. 2. edge `interface-shell → signatures` added; drop the setup-page import (BOB drops the edge at your merge). 3. as read. Also new R46 on `tranche/T47`: the kit contract screens-entry and screens-settings need (`view.session`, `view.fragment`, `cs.signin`, `cs.signout`, `cs.signedOut`, `cs.save`, `cs.copy`, `cs.signer.publicLine`, public acts in the public and setup frames). Their J1s on `job/T47/screens-entry` and `job/T47/screens-settings` give the detail. Merge `tranche/T47`.
+
+## B4 · CHANGE
+
+K3145: new R47 on `tranche/T47`: `cs.save`, `cs.copy`, `cs.signout` each answer their own bound control (`{label}`); `cs.signer.sign([{label, bytes, namespace}])` → `{ok: true, signatures}` or `{ok: false, declined: true}`, `cs.signer.register({keep})` → `{ok: true, keyB64}`, the key-file control inside `sign`; `REF_SCREENS` gains `person`, `proceeding`, `standard` with cards; `ADMIN_ACTS` gains `personexpunge`. Merge `tranche/T47`.
+
+## B5 · CHANGE
+
+K3146: new R48 on `tranche/T47` (from JOURNEY-CHECK #1): the frame's root carries `data-screen="<id>"` of the registered screen drawn, none on the shell's own fallbacks; test with a control. Merge `tranche/T47`.
+
+## B6 · CHANGE
+
+K3147: new R49 on `tranche/T47`: `cs.image(op, params, {alt})` (fetched with the session's `Authorization`, drawn from a page-made object address), `cs.areas(image, {areas, label})` (rectangles drawn by pointer, touch and keyboard over it, answering pixel rectangles), and `cs.choice` driving the act it governs (one button following the choice). Also R46's `view.fragment` carries `grant` for `review-outside`. Merge `tranche/T47`.
+
+## B7 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
+
+## B8 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B9 · CHANGE
+
+K3149: new R50: `ADMIN_ACTS` completed (passwordresetlink, signerset, the group settings, profilesset, placewanted, officesseed, translationgrant/revert, securitytool*), and R11's phone hold covers every act `op-grades.phoneOf` answers false for. op-grades, wizard-scripts, setup-words and instance-setup are merged. Merge `tranche/T47`.
+
+## B10 · CHANGE
+
+K3150: R49's signatures, as SCREENS-PUBLISH #1 builds to them: `cs.image(op, params, {alt})` answers the image's HTML; `cs.areas(imageHtml, {id, areas, label})` answers the control's HTML, its rectangles read at the act by `cs.value(id)` as `[{left, top, width, height}]`; `cs.choice(id, labelKey, options, {acts: {<value>: op}})` makes one button follow the choice.

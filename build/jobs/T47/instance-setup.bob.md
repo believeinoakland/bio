@@ -1,6 +1,6 @@
 # BOB to instance-setup (T47)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3144: no window. Keep `setupPage` exported, marked retiring, until control-plane drops its import (T47-65); R83's "no export names the page" test is a `test.todo` naming T47-65 meanwhile. BOB sends a CHANGE after control-plane merges and you remove it then. New R86 on `tranche/T47`: `grouplogoset` takes the raw bytes as the body (`{raw, rawType}`), a store-internal route `grouplogo` answers the bytes with their `content-type` (control-plane serves it), `grouplanguages` answers `{languages: [tags]}`, `grouplanguagesset` takes `{languages}`. Merge `tranche/T47`.
+
+## B3 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
