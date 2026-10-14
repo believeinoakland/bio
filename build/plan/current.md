@@ -220,6 +220,8 @@ No edge points later. **Module dropped:** `setup-page` (rule 3).
 
 ## BOB's acts (no job)
 
+- **Before L11's START (K3254):** fold `build/plan/draft-T48-L11-design-fold.md` (reviewed): its requirement text into each module's requirements, its entries T48-85 (screens-intake) and T48-86 (queue-producers) and its "also" lines on T48-55…84 into L11, its 7 open points as settled in K3254; then measure L11's reading sets. Rule 5 (8)'s acceptance of 0.84.0's release check is withdrawn (K3250): the next release is cut after L11 merges and journey-check R5 and R6 pass.
+
 - **The opening act** (rule 3), and **requirements before each START** (P18). These are folded per layer from: the split map (ai-accounts R1–R33, credentials R72–R73); the n847 fold (jurisdictions R89–R92, people R38, wizard-scripts R37–R38, setup-words R8, op-declarations R65, interface-assets R5, interface-shell R52–R54, screens-wizards R10, screens-settings R25, screens-daily R14–R16, screens-investigate R15, plane R51); the reviewed draft (R88 out); and each "text BOB's" entry.
 - **One channel act to UX-DESIGN at the opening.** It asks for:
   - `signing.openrequest.noquote`; the "read in my language" control and its labels; `refusal.LANGUAGE_NOT_SET`; action-replies' three refusals; help for `actionreplyquoting`, `proceedingdates` and `readtranslate`; a dates lane on `proceeding` if wanted;
