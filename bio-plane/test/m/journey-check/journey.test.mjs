@@ -1,7 +1,7 @@
 /* journey-check R1: the walk run by `npm run journey`, in its two arms. The local arm is walked end to end, from the
    installer over its fake Cloudflare account through the hand-over into a plane under Miniflare, journey 28 and journey 3,
    then every registry screen; the live arm signs in with credentials read from the environment, never printed. */
-import { test } from "node:test";
+import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, mkdtempSync, rmSync, readdirSync } from "node:fs";
 import { createServer } from "node:http";
@@ -51,15 +51,69 @@ test("R1 (a): the fake Cloudflare account grants a token only for the PKCE verif
   assert.deepEqual(acct.unanswered, [`GET ${API}/accounts/${acct.account}/queues`]);
 });
 
-test("R1 (a): the local arm, with no account: the installer over its fake account, the hand-over into a plane under Miniflare, journey 28 and journey 3, every registry screen drawn; each step screenshotted", { timeout: 900000 }, async () => {
+/* The local arm walked once, end to end, shared by the tests that name what it walks (R1 (a), R7, R9–R11, R13, R14). It is
+   the tranche's acceptance test: it passes only when every module it walks through does what its steps assert. */
+let localRun = null;
+const local = () => (localRun ||= (async () => {
   const out = mkdtempSync(join(tmpdir(), "jc-local-"));
+  const r = await runLocal({ out });
+  return { r, out, shots: readdirSync(out).filter((f) => f.endsWith(".png")) };
+})());
+after(async () => { if (localRun) rmSync((await localRun).out, { recursive: true, force: true }); });
+const stepsOf = (r, journey) => r.walk.steps.filter((s) => s.journey === journey);
+const numbered = (r, journey) => stepsOf(r, journey).filter((s) => /^\d+ · /.test(s.label));
+
+test("R1 (a): the local arm, with no account: the installer over its fake account, the hand-over into a plane under Miniflare, journey 28, journey 3, the journeys to a conclusion and every registry screen drawn; each step screenshotted", { timeout: 2400000 }, async () => {
+  const { r, shots } = await local();
+  assert.equal(r.ok, true, r.report);
+  assert.equal(shots.length, r.walk.steps.length);
+  for (const j of ["journey 28", "journey 3", "R9 as administrator", "R10 as member", "R7 as the founder, her handle held"]) assert.ok(stepsOf(r, j).length, j);
+});
+
+test("R9: the local arm walks the journey as administrator, steps 1 to 12, each through the screens' own controls, each holding", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  const steps = [...numbered(r, "journey 28"), ...numbered(r, "R9 as administrator")];
+  const n = [...new Set(steps.map((s) => Number(s.label.split(" · ")[0])))];
+  assert.deepEqual(n, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], r.report);
+  assert.deepEqual(steps.filter((s) => !s.ok).map((s) => s.label), [], r.report);
+});
+
+test("R10: the local arm walks the same journey as a member, on her own subscription: her connection, her run, projectai, planask and Ask", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  const steps = stepsOf(r, "R10 as member");
+  for (const want of [/connects her own Claude subscription/, /projectai/, /planask/, /^9 · run the assistant/, /^10 · /, /^11 · Ask/])
+    assert.ok(steps.some((s) => want.test(s.label) && s.ok), `${want}: ${r.report}`);
+  assert.deepEqual(steps.filter((s) => !s.ok).map((s) => s.label), [], r.report);
+});
+
+test("R11: the local arm binds agent-worker, the runner's stand-in with the fake model, a stub city site and the test-instance mark: it walks R9", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  assert.ok(numbered(r, "R9 as administrator").some((s) => s.label.startsWith("9 · ") && s.ok), r.report);
+  assert.ok(numbered(r, "R9 as administrator").some((s) => s.label.startsWith("5 · capture by address") && s.ok), r.report);
+});
+
+test("R11 control: with no fake model bound, step 9 fails by name", { timeout: 2400000 }, async () => {
+  const out = mkdtempSync(join(tmpdir(), "jc-nomodel-"));
   try {
-    const r = await runLocal({ out });
-    assert.equal(r.ok, true, r.report);
-    const shots = readdirSync(out).filter((f) => f.endsWith(".png"));
-    assert.equal(shots.length, r.walk.steps.length);
-    for (const j of ["journey 28", "journey 3", "screens"]) assert.ok(r.walk.steps.some((s) => s.journey === j), j);
+    const r = await runLocal({ out, model: false, parts: [] });
+    const nine = r.walk.steps.find((s) => s.label.startsWith("9 · run the assistant"));
+    assert.ok(nine && !nine.ok, r.report);
+    assert.ok(r.walk.failures.some((f) => f.step === nine.label), r.report);
+    /* the steps before it held: the sign-in answered without a model */
+    assert.deepEqual(numbered(r, "R9 as administrator").filter((s) => Number(s.label.split(" · ")[0]) < 9 && !s.ok).map((s) => s.label), [], r.report);
   } finally { rmSync(out, { recursive: true, force: true }); }
+});
+
+test("R7: the walk as stated: signed in as the founder, no screen draws admin as a person's name or handle", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  assert.ok(r.walk.steps.some((s) => s.journey.startsWith("R7 as the founder")));
+  assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.ADMIN_NAME).map((f) => f.detail), []);
+});
+
+test("R13: the local arm pairs each step of design journey 29 with the mock's drawing of it", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  assert.ok(r.walk.pairs.filter((p) => /journey-29-step-/.test(p)).length >= 14, r.report);
+  assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.DESIGN).map((f) => f.detail), []);
 });
 
 test("R1 (b): the live arm reads the administrator's and a member's credentials from the environment and never prints them; control: without them it refuses before any request", async () => {

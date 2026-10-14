@@ -55,7 +55,7 @@ export async function drawnState(page, id) {
 
 /* R7 (N1072; K3265; DEC-230 (3)): `admin` drawn as a person's name or handle. The word `admin` standing alone in a
    screen's drawn text names a person (an owner, an author, who is signed in); "administrator" and its kin are other
-   words, and a handle is written in lower case, so `Admin` opening a sentence is not one. DEC-230's own step for a founder with no handle says she signs in as admin until she chooses: its two words
+   words, an address holding it is an address, and a handle is written in lower case, so `Admin` opening a sentence is not one. DEC-230's own step for a founder with no handle says she signs in as admin until she chooses: its two words
    (`ADMIN_WORDS`, read through `word`) are excepted wherever drawn, and nothing else is. Answers each place it is
    drawn, `[{at}]`, with the text around it. */
 export const ADMIN_WORDS = Object.freeze(["founder.handle.says", "founder.handle.later.help"]);
@@ -63,6 +63,6 @@ export function adminAsName(text, { except = [] } = {}) {
   let t = String(text).replace(/\s+/g, " ");
   for (const re of except) t = t.replace(new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g"), " ");
   const out = [];
-  for (const m of t.matchAll(/(?<![\w-])admin(?![\w-])/g)) out.push({ at: t.slice(Math.max(0, m.index - 40), m.index + 45).trim() });
+  for (const m of t.matchAll(/(?<![\w\-/.@])admin(?![\w\-/@])/g)) out.push({ at: t.slice(Math.max(0, m.index - 40), m.index + 45).trim() });
   return out;
 }

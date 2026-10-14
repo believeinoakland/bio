@@ -64,11 +64,13 @@ async function device(walk, b, route, viewport = { width: 1280, height: 900 }) {
 }
 
 /* The local arm (R1 (a), R9–R11), with no account. `world` starts the world, `launch` the browser; `model: false` binds
-   the runner with no fake model (R11's control). Journey 28 (its founder claiming by her own handle, R9 step 1), journey
+   the runner with no fake model (R11's control); `parts` names which walks follow journey 28 and R9 (all by default:
+   `journey 3`, `R10`, `sweep`, `R13`). Journey 28 (its founder claiming by her own handle, R9 step 1), journey
    3, then the journey to a first conclusion as administrator (R9) and as the member journey 28 joined (R10), then the
    sweep. Whatever stops the walk (a step, the guard's refusal, a world or a browser that cannot start), the browser and
    the world, with their servers and Miniflare instances, are closed before it answers. */
-export async function runLocal({ out = join(OUT, "local"), world: makeWorld, launch = browser, model = true } = {}) {
+export const PARTS = Object.freeze(["journey 3", "R10", "sweep", "R13"]);
+export async function runLocal({ out = join(OUT, "local"), world: makeWorld, launch = browser, model = true, parts = PARTS } = {}) {
   const { localWorld, INSTALLER_ORIGIN } = await import("./local.mjs");
   const walk = new Walk({ out, arm: "local", ownHosts: [new URL(INSTALLER_ORIGIN).host, "dash.cloudflare.com"] });
   const who = credentials();
@@ -88,26 +90,32 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
     const mai = await device(walk, b, route);
     const phone = await device(walk, b, route, { width: 390, height: 844 });
     await walkMember(walk, mai.page, { base: copy, invite, member: who.member, phone: phone.page });
-    const teo = await device(walk, b, route);
-    walk.journey = "journey 3";
-    const second = await inviteMember(walk, founder.page, copy, { id: "teo", cover: "Teo, from flat 9" });
-    await walkWelcome(walk, teo.page, { base: copy, link: second, member: who.newcomer });
+    if (parts.includes("journey 3")) {
+      const teo = await device(walk, b, route);
+      walk.journey = "journey 3";
+      const second = await inviteMember(walk, founder.page, copy, { id: "teo", cover: "Teo, from flat 9" });
+      await walkWelcome(walk, teo.page, { base: copy, link: second, member: who.newcomer });
+    }
     /* each journey that stops has said why; the next is still walked, and the sweep after them */
     const going = (e) => { if (!(e instanceof StepFailed)) throw e; return null; };
     const r9 = await walkAdministrator(walk, founder.page, { base: copy, founder: who.founder }).catch(going);
-    walk.journey = "R10 as member";
-    if (!r9) walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made");
-    else await (async () => {
-      await signInBy(walk, mai.page, copy, who.member, "she signs in on her own computer");
-      await walkMemberJourney(walk, mai.page, { base: copy, member: who.member, inviter: founder.page, project: r9.project });
-    })().catch(going);
-    await sweepAsFounder(walk, founder.page, copy, { handle: who.founder.handle });
+    if (parts.includes("R10")) {
+      walk.journey = "R10 as member";
+      if (!r9) walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made");
+      else await (async () => {
+        await signInBy(walk, mai.page, copy, who.member, "she signs in on her own computer");
+        await walkMemberJourney(walk, mai.page, { base: copy, member: who.member, inviter: founder.page, project: r9.project });
+      })().catch(going);
+    }
+    if (parts.includes("sweep")) await sweepAsFounder(walk, founder.page, copy, { handle: who.founder.handle });
     /* R13: design journey 29, step by step, each LIVE step beside the mock's drawing of it */
-    walk.journey = "R13 design journey 29";
-    const mock = await designMock(b, { dir: join(out, "design") });
-    try {
-      for (const f of await journeyPairs(walk, b, mock, { out, liveOf: (st) => journey29Live(walk, st) })) walk.pairs.push(relative(out, f));
-    } finally { await mock.close(); }
+    if (parts.includes("R13")) {
+      walk.journey = "R13 design journey 29";
+      const mock = await designMock(b, { dir: join(out, "design") });
+      try {
+        for (const f of await journeyPairs(walk, b, mock, { out, liveOf: (st) => journey29Live(walk, st) })) walk.pairs.push(relative(out, f));
+      } finally { await mock.close(); }
+    }
   } catch (e) {
     failed(walk, e);
   } finally {

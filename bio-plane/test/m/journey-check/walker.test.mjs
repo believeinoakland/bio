@@ -92,6 +92,12 @@ test("R8 (D29): a refusal carried inside an HTTP 200 fails the step: fixtures of
   }
 });
 
+test("R8: an expected refusal is excused where the step names it, `{at, code}`, and nowhere else", async () => {
+  /* D5's refusal sits at result.plan.help: expected there, it passes; expected elsewhere, it still fails */
+  assert.deepEqual((await walked("/app/d5", { expect: [{ at: /\.help$/, code: "AI_RUN_NOT_PROJECT_MEMBER" }] })).failures, []);
+  assert.deepEqual(kinds(await walked("/app/d5", { expect: [{ at: /^result$/, code: "AI_RUN_NOT_PROJECT_MEMBER" }] })), [FAIL.REFUSED]);
+});
+
 test("R8: every sign of a refusal, at any depth: ok, started, dispatched or found false, and a non-empty withheld; control: an answer that holds none, and an empty withheld, carry none", () => {
   const codes = (b) => refusalsIn(b).map((r) => `${r.at}=${r.code}`);
   assert.deepEqual(codes({ ok: false, code: "A" }), ["=A"]);

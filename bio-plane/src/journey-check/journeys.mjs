@@ -386,12 +386,12 @@ export const credentials = () => ({
 
 /* R7: the sweep as the founder, her handle held or with none: no screen draws `admin` as a person's name or handle. With
    no handle, DEC-230's own words are excepted (they say she signs in as admin until she chooses); with one, nothing is. */
-export function sweepAsFounder(walk, page, base, { handle }) {
+export function sweepAsFounder(walk, page, base, { handle, screens = undefined }) {
   const except = handle ? [] : ADMIN_WORDS.map((k) => wordPattern(k));
-  return sweep(walk, page, base, { journey: handle ? "R7 as the founder, her handle held" : "R7 as the founder, with no handle",
+  return sweep(walk, page, base, { ...(screens ? { screens } : {}), journey: handle ? "R7 as the founder, her handle held" : "R7 as the founder, with no handle",
     each: async (p, s, drawn) => {
       if (!drawn) return;
-      for (const a of adminAsName(await p.locator("body").innerText(), { except }))
-        walk.fail(FAIL.ADMIN_NAME, `${s.id} draws admin as a name: …${a.at}…`);
+      const at = adminAsName(await p.locator("body").innerText(), { except });
+      if (at.length) walk.fail(FAIL.ADMIN_NAME, `${s.id} draws admin as a name: ${at.map((a) => `…${a.at}…`).join(" | ")}`);
     } });
 }
