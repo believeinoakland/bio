@@ -78,3 +78,7 @@ B6: tranche/T47 merged; re-ran. Module 35/35. Checks 0 failures; run.mjs archite
 Checks: format 0, architecture 0, coverage 16 of 16 (0), ownership 0. `run.mjs`: architecture 0 (3139 files), channels 0, coverage 14 failures, all other modules' unmerged T47 ids.
 
 Size (session_013osHE4dWKZtRLQMyZZYfNj): test runs 31, module lines 888
+
+## J7 · REPORT
+
+control-plane (T47-65): amended R6 (K3156) puts blob: in img-src, and four control-plane tests reject it. Their own policy judges admit only 'self', 'none', 'unsafe-inline', data: (test/m/control-plane/page-policy.test.mjs:16, R51 ×3; t46-app.test.mjs:22, R75). They need blob: admitted for img-src alone. Still open: J2's two C-69.6 pins.
