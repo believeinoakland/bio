@@ -1,3 +1,12 @@
 # op-declarations (T47)
 
 **Status** · session_013zNbUpqqR8G8FJUPnd2dkD · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+Four readings, each my best; I carry on with them unless you answer otherwise.
+
+1. **R61 `peopledirectory` "explained in `ACT_HELP` (R34)"**: no text for it exists anywhere — not in `ACT_HELP` on this branch, not in `mock-acts.js` at PR #33's head (neither under `peopledirectory` nor `owed_peopledirectory`). Reading: it is named in `ACT_HELP_ABSENT` under the read ground (a read a screen draws from) until the design stream gives a text; I name it back to you for UX-DESIGN.
+2. **R34 against `ACT_HELP` (R54, R59)**: `mock-acts.js` at PR #33's head now holds texts for `drawquestion`, `projectbarset`, `monitorset`, `projectlist`, `projectquestions` (R54 expected none), and for `unlock`, `grouplanguagesset`, `grouplogoset`, `passwordreset`, `signrequest`, `statusreportassist`, `airundispatch`, `joindoors`, `clockproposals` (`passwordresetlink` as `owed_passwordresetlink`). `ACT_HELP` on my branch (affordances not yet merged) has none of them. Reading: R34 is read against `ACT_HELP` as affordances R54/R56 re-generates it, so I will re-pin `ACT_HELP_ABSENT` when you announce affordances' merge (a CHANGE); until then the ops with no text in the mock either (`sourceof`, `sourcerung`, `reauth`, `passwordresetlook`, `grouplanguages`, `signintrace`, `peopledirectory`) are named in `ACT_HELP_ABSENT`, and the rest are named there provisionally against today's `ACT_HELP`.
+3. **R6 for R59's ops**: `grouplogoset`, `grouplanguagesset`, `grouplanguages` (instance-setup R84, R85) and `signrequest` (tasks R19) are served by no map on my branch; `signintrace` is signin-door R5's route. Reading: I declare them now, the totality test names each served by its L11 job until that job's map is merged, and I merge `tranche/T47` on your CHANGE after instance-setup and tasks merge, before COMPLETE.
+4. **R58 `REAUTH_ACTS`' shape** (admission R25 reads it): a frozen map from op to `null` (every call asks the password again) or a frozen `{arg, is, orWas?}`: `memberset: {arg: "role", is: "admin", orWas: "admin"}` (to or from admin; "from" needs the target's current role, admission's to ask), `memberadd: {arg: "role", is: "admin"}`, `subscriptionsignin: {arg: "step", is: "start"}`; every other named op `null`. The detail is BOB's; tell me if admission's job wants another shape.
