@@ -18,3 +18,7 @@
 **Tests and checks:** `node --test bio-plane/test/m/public-read/` → tests 198, pass 198, fail 0. `node checks/format.mjs` 0 failures; `architecture.mjs public-read`: 53 product files, 0 failures; `coverage.mjs public-read`: 35 of 35 live ids named, 0 failures; `ownership.mjs public-read tranche/T48`: 0 failures. `checks/run.mjs`: format 0, architecture 0 (3293 files), channels 0; coverage 33 failures in other modules only (none in public-read).
 
 Size (session_01EUHjhURjxtZgVYaLZuARnQ): test runs 4, module lines 2559
+
+## J1 · COMPLETE
+
+T48-40 applied: R3's marked rule and R35's null-kind rule were already met by the code; each now has its confirming test (label-key.test.mjs, cleaned-key.test.mjs). K3261 done ('labeled'). Module tests 198/198; format, architecture, coverage, ownership 0 failures. Stale generated: bio-plane/dist and release bundled files embed the old 'labelled current' sentence (bundler's). Record: build/jobs/T48/public-read.md.
