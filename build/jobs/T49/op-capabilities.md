@@ -18,3 +18,7 @@
 **Deferred.** None. **Found in another module.** Nothing. The empty overlap between the hand rows and `FAMILY_NEEDS` (map §2) is for T49-17's composition test: this module's tests cannot import op-declarations (architecture refuses it), so I did not test it here.
 
 Size (session_01PAsfLsftny7fjfWK1VEbrx): test runs 8, module lines 927
+
+## J1 · COMPLETE
+
+T49-16 complete: op-capabilities built by copy (index.mjs 927 lines; 323 rows by value = pre-split, 185/7/1/130); tests rows/frozen/lazy name R1-R3, 9 pass; format, architecture, coverage, ownership 0 failures with paths set in a scratch modules.json. Please fill modules.json: paths [bio-plane/src/op-capabilities/], tests [bio-plane/test/m/op-capabilities/]. op-declarations untouched. Details in my record.
