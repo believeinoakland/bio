@@ -67,7 +67,8 @@ export const request = Object.freeze({
       const office = a.addressee ? cs.esc([a.addressee.role, a.addressee.body].filter(Boolean).join(", "))
         + (a.addressee.holder_on_date && a.addressee.holder_on_date.holder ? " · " + cs.w("screen.request.holder", { holder: a.addressee.holder_on_date.holder }) : "") : "";
       const sub = '<p class="mk-sub">' + office + "</p>";
-      const laws = Array.isArray(a.governing_laws) ? a.governing_laws : [];
+      // the laws a member stated, as `action` answers them (`actions` R25: `{state, laws, by, at}`)
+      const laws = a.governing_laws && Array.isArray(a.governing_laws.laws) ? a.governing_laws.laws : [];
       const pr = view.data.profiles;
       const offered = P.laws(pr && pr.state === "ok" ? pr.value : null);
       const picker = offered.length

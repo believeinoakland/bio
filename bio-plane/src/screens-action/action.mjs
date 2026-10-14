@@ -2,8 +2,9 @@
    Action: headed by its title (a null drawn absent), what it is, to whom, when and by whom it was sent, its clock entries
    with their due dates and state, its replies, its scope, its hold and pressure (the marks `pressurefor` answers); "Waiting on <office>'s reply" while one is owed. A passed date is drawn as
    canon's question ("no reply recorded by <date>"), never "overdue" until a member determines it (`action-producers` R1).
-   An action holding an approved, unsent text offers to pick up where it was left (R10). The subject is the action's
-   id. Every function here is self-contained (interface-shell R21 (1)). */
+   An action holding an approved, unsent text offers to pick up where it was left (R10). It draws "The law it goes under"
+   (R16) and "Its risk" (R17), each apart from its proposals. The subject is the action's id. It holds no member-facing
+   English (R19). Every function here is self-contained (interface-shell R21 (1)). */
 import { draftsOf, stepOf } from "./send-steps.mjs";
 
 export const action = Object.freeze({
@@ -30,11 +31,24 @@ export const action = Object.freeze({
       pressure: { op: "pressurefor", query: { action: view.subject },
         empty: function (v) { return !v || !Array.isArray(v.items) || v.items.length === 0; } },
       projects: { op: "list", query: { type: "project", limit: "500" } },
+      // R16: the laws the group's places name, from which a law is chosen or proposed.
+      profiles: { op: "profiles", empty: function () { return false; } },
     };
   },
 
   parts: {
     draftsOf: draftsOf, stepOf: stepOf,
+    // R16: the records-request laws the profile names (each citation once), with the window the profile gives.
+    lawsOf: function (profiles) {
+      const v = profiles && profiles.view ? profiles.view : {};
+      const seen = new Set();
+      return (Array.isArray(v.deadlines) ? v.deadlines : []).filter(function (d) {
+        if (!d || !d.citation || seen.has(d.citation)) return false;
+        seen.add(d.citation);
+        return true;
+      });
+    },
+    who: function (by) { return String(by || "").replace(/^member:/, ""); },
     // The states an action may move to from where it stands (actions' state edges).
     moves: function (from) {
       return { planned: ["active", "abandoned"], active: ["awaiting_response", "resolved", "abandoned"],
@@ -142,6 +156,60 @@ export const action = Object.freeze({
         pressureSec = cs.sec("screen.action.pressuremarks", (all.length ? marks(all) : "") + (more.state !== "ok" ? cs.state(more.page) : ""));
       } else if (pr && pr.state === "failed") pressureSec = cs.sec("screen.action.pressuremarks", cs.state("pressure"));
 
+      // R16: the law it goes under: the laws a member stated (each by level and citation, with the window the group's places
+      // give it), who stated them and when, or that none is; a change by choosing among the laws the places name; the
+      // proposals apart, each marked not the law; and another law proposed.
+      const pf = view.data.profiles;
+      const offered = P.lawsOf(pf && pf.state === "ok" ? pf.value : null);
+      const gl = a.governing_laws && typeof a.governing_laws === "object" && !Array.isArray(a.governing_laws) ? a.governing_laws : {};
+      const stated = Array.isArray(gl.laws) ? gl.laws : [];
+      const LEVELS = ["state", "city", "county", "federal"];
+      const lawLine = function (l) {
+        const d = offered.find(function (x) { return x.citation === l.citation; });
+        return (LEVELS.includes(l.level) ? cs.w("screen.request.level." + l.level) + " · " : "") + cs.esc(l.citation || "")
+          + (d && d.amount ? " · " + cs.w("screen.request.window." + (d.count === "business" ? "business" : "calendar"), { n: String(d.amount) }) : "");
+      };
+      const levels = function (id) { return cs.choice(id, "screen.request.level", LEVELS.map(function (k) { return [k, "screen.request.level." + k]; })); };
+      const optionsOf = function (list) {
+        return list.map(function (d) { return { value: d.citation, text: d.citation }; });
+      };
+      const lawsStated = gl.state === "stated" && stated.length
+        ? cs.sheet(stated.map(function (l) { return cs.row("", lawLine(l), "", ""); }).join(""))
+          + (gl.by && gl.at ? '<p class="mk-note">' + cs.w("law.stated", { who: P.who(gl.by), date: { html: cs.date(gl.at) } }) + "</p>" : "")
+        : '<p class="mk-note">' + cs.w("law.undetermined") + "</p>";
+      const lawProposals = a.governing_laws_proposals && Array.isArray(a.governing_laws_proposals.proposals) ? a.governing_laws_proposals.proposals : [];
+      const lawProposed = lawProposals.length
+        ? '<p class="eyebrow">' + cs.w("law.proposed") + "</p>" + cs.sheet(lawProposals.map(function (x) {
+          return cs.row("", (Array.isArray(x.laws) ? x.laws : []).map(lawLine).join("<br>"),
+            '<span class="meta">' + (x.machine_work ? cs.mark("origin", "machine") + " · " : "") + cs.w("law.proposal.not", { who: P.who(x.by), date: { html: cs.date(x.at) } }) + "</span>", "");
+        }).join("")) : "";
+      const lawChange = offered.length
+        ? cs.choice("law-pick", "screen.request.law", optionsOf(offered)) + levels("law-level") + '<div class="mk-acts">' + cs.act("actionlaws", { label: "law.change" }) + "</div>" : "";
+      const others = offered.filter(function (d) { return !stated.some(function (l) { return l.citation === d.citation; }); });
+      const lawPropose = others.length
+        ? cs.choice("lawp-pick", "screen.request.law", optionsOf(others)) + levels("lawp-level") + '<div class="mk-acts">' + cs.act("actionlawspropose", { label: "law.propose" }) + "</div>" : "";
+      const lawSec = cs.sec("law.title", lawsStated + lawProposed + lawChange + lawPropose, { help: "law.help" });
+
+      // R17: its risk: the tier in its own words, the latest revision, a revision with a reason, and the proposals apart.
+      const tier = [1, 2, 3].includes(Number(a.risk_tier)) ? Number(a.risk_tier) : "undetermined";
+      const hist = a.risk_tier_history && Array.isArray(a.risk_tier_history.revisions) ? a.risk_tier_history.revisions.filter(function (r) { return r && r.readable; }) : [];
+      const tierWords = function (t) { return cs.w("risk.tier." + ([1, 2, 3].includes(Number(t)) ? Number(t) : "undetermined")); };
+      const latest = hist.length ? hist[hist.length - 1] : null;
+      const riskPs = a.risk_tier_proposals && Array.isArray(a.risk_tier_proposals.proposals) ? a.risk_tier_proposals.proposals : [];
+      // a machine proposal is drawn only while the assistant is reachable; a member's whether or not
+      const shownPs = riskPs.filter(function (x) { return !x.machine_work || view.reachable; });
+      const riskProposed = shownPs.length
+        ? '<p class="eyebrow">' + cs.w("risk.proposed") + "</p>" + cs.sheet(shownPs.map(function (x) {
+          return cs.row("", cs.w("risk.proposal", { who: P.who(x.by), tier: String(x.tier), words: tierWords(x.tier) }),
+            '<span class="meta">' + (x.machine_work ? cs.mark("origin", "machine") + " · " : "") + cs.w("risk.proposal.not") + "</span>", "");
+        }).join("")) : "";
+      const riskSec = cs.sec("risk.title",
+        '<p class="mk-note">' + (tier === "undetermined" ? cs.w("risk.tier.undetermined") : cs.w("risk.tier", { tier: String(tier) }) + " · " + tierWords(tier)) + "</p>"
+        + (latest ? '<p class="mk-note">' + cs.w("risk.set", { who: P.who(latest.by), date: { html: cs.date(latest.at) }, reason: latest.reason, prior: tierWords(latest.prior) }) + "</p>" : "")
+        + riskProposed
+        + cs.choice("risk-tier", "risk.title", [1, 2, 3].map(function (t) { return [String(t), "risk.tier." + t]; }))
+        + '<div class="mk-acts">' + cs.act("actionrisktier", { label: "risk.revise" }) + "</div>", { help: "risk.help" });
+
       // R5: move, hold and scope.
       const moves = P.moves(state);
       const move = moves.length ? cs.choice("move-to", "screen.action.move.to", moves.map(function (m) { return [m, "screen.plan.actionstate." + m]; }))
@@ -153,7 +221,7 @@ export const action = Object.freeze({
       const scope = '<p class="mk-note">' + cs.w(a.confidential ? "screen.action.scope.confidential" : "screen.action.scope.open") + "</p>"
         + cs.act("actionscope", { data: { to: a.confidential ? "false" : "true" } });
       const manage = cs.sec("screen.action.manage", '<div class="mk-acts">' + move + "</div>" + hold + scope);
-      return head + pickup + wait + clocks + replies + pressureSec + manage;
+      return head + pickup + wait + clocks + replies + pressureSec + lawSec + riskSec + manage;
     });
   },
 
@@ -200,6 +268,42 @@ export const action = Object.freeze({
       },
       rereads: [],
       done: function (view, answer, cs) { cs.set("reminded", true); },
+    },
+    {
+      // R16: "Change the law…": the law chosen among those the group's places name replaces the action's list (the act logs
+      // what it replaced); its level is the one a stated law of the same citation holds, else the one chosen.
+      op: "actionlaws",
+      send: function (view, el, cs) {
+        const pf = view.data.profiles;
+        const offered = view.parts.lawsOf(pf && pf.state === "ok" ? pf.value : null);
+        const c = offered.find(function (d) { return d.citation === cs.value("law-pick"); });
+        if (!c) return null;
+        const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : {};
+        const held = a.governing_laws && Array.isArray(a.governing_laws.laws) ? a.governing_laws.laws.find(function (l) { return l.citation === c.citation; }) : null;
+        return { body: { target: view.subject, laws: [{ level: held ? held.level : cs.value("law-level") || "state", citation: c.citation }] } };
+      },
+      rereads: ["action"],
+    },
+    {
+      // R16: "Propose another law…": a proposal beside the list, which it never changes.
+      op: "actionlawspropose",
+      send: function (view, el, cs) {
+        const pf = view.data.profiles;
+        const offered = view.parts.lawsOf(pf && pf.state === "ok" ? pf.value : null);
+        const c = offered.find(function (d) { return d.citation === cs.value("lawp-pick"); });
+        if (!c) return null;
+        return { body: { target: view.subject, laws: [{ level: cs.value("lawp-level") || "state", citation: c.citation }] } };
+      },
+      rereads: ["action"],
+    },
+    {
+      // R17: "Revise, with a reason…": the tier a member sets, with the reason the shell asks and sends.
+      op: "actionrisktier",
+      send: function (view, el, cs) {
+        const t = Number(cs.value("risk-tier"));
+        return [1, 2, 3].includes(t) ? { body: { target: view.subject, tier: t } } : null;
+      },
+      rereads: ["action"],
     },
     {
       // R5: "Record a litigation hold", with a reason (the shell asks it).
