@@ -1,0 +1,12 @@
+Depth 2. Your entries: `build/plan/current.md` (T48), layer 9, actions:
+- **T48-48 · actions** · (N1024) `actionCorrespond` calls T48-47's site; (K3128) its `t45` row-census test reads the census through its interface; (N1035, K3145) `action` answers its project and title (its pressure marks are action-holds' T48-81, K3207); (K231, K3207) R104: R65's refusal through `entities.notAProceeding`; (N1040, K3147) `actionsOps` stops spreading `actionRecordsOps` · text BOB's · after T48-47.
+Your requirements: `build/requirements/actions.md` (read whole); every line marked `*(not yet met: T48)*` is yours to meet (R101, R102, R103, R104).
+BOB's notes for this job:
+T48-48 uses action-records' site (T48-47) and entities' `notAProceeding` (R53, merged in L5): build against the entries' text; when BOB's CHANGE says action-records is merged, merge `tranche/T48` into your branch. You are the provider for screens-action's T48-76 (L11): state `action`'s project and title answer exactly as your requirement says.
+Reading (K3271, mechanics §6 step 2, which replaces plan rule 2): read in full your requirements, your entries, your layer's contract in `build/layers.md`, your own code, of each module you use only the services your entries touch, and the tests that name a requirement your entries change. Your other tests are run, not read. No digest helpers. Say in your record what you read; deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); a clause added to an id other tests already name needs its own test that says so; every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+Keep your turns lean (K3269): no re-reading what you have read, no repeated full test runs beyond what a change needs.
+Merge order in L9: action-records first (K3189), then conformance, action-grammar, actions, action-holds, action-replies, filing-templates, filings, action-plans; a job that uses no unmerged same-layer change merges as soon as it is complete.
