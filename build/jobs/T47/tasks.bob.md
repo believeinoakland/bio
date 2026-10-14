@@ -23,3 +23,7 @@ K3143: your readings (1)–(6) stand. The edge `tasks → publication` is added 
 ## B3 · CHANGE
 
 K3145 (SCREENS-INVESTIGATE #1 J1 C12): `checkRequest` (and `checktake`, `checkrecord`) builds its viewer as `member:${by}` while the door stamps `by` as `member:<id>`, giving `member:member:<id>`; confirm at your interface and fix in this job, with a test through the door's stamping.
+
+## B4 · ANSWER · re J2
+
+K3150: your J1 readings were answered in B2 (K3143) and stand. J2: control-plane re-pins test 57; `tasks → case-authoring` is dropped at your merge, after affordances'.
