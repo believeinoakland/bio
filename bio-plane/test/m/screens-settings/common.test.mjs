@@ -109,9 +109,10 @@ test("R8 nothing is drawn as done before the answer: while an act has not answer
   for (const [screen, op, press, situation, extra] of PRESSES) {
     const o = await open(screen, { me: meOf(screen), table: tableOf(screen, situation, { [op]: "pending" }, extra), subject: subjectOf(screen), reachable: true });
     const before = o.text;
-    o.press(op, press);
-    await new Promise((res) => setTimeout(res, 2));
+    // pressed as a member would, any reason the shell asks answered; the act is sent and never answers
+    await o.press(op, press);
     o.redraw();
+    assert.ok(o.p.all.some((r) => r.op === op), `${screen} ${op} sent`);
     assert.equal(o.text, before, `${screen} ${op}`);
   }
 });
