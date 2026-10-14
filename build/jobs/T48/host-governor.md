@@ -24,3 +24,7 @@
   - coverage: 46 failures, none of them host-governor's (other modules' ids not yet named, e.g. queue R54, screens-*).
 
 Size (session_018WszZPFcBb984RMAWXHUB2): test runs 2, module lines 435
+
+## J1 · COMPLETE
+
+T48-13 applied, test only: in ops.test.mjs' shared before, members now sign in by {handle: id} and the founder by {handle: "admin"}. That clears the 12 K3192 reds: host-governor 43/43 pass. No code or requirement changed. format, architecture, coverage (28/28) and ownership show 0 failures, and run.mjs shows architecture 0. I read my code and tests whole and found no flaw. Record: build/jobs/T48/host-governor.md on job/T48/host-governor.
