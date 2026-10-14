@@ -36,3 +36,7 @@ Size (session_01KiRCNVjfgc28PWXvd9HUux): test runs 9, module lines 2118
 ## J1 · REPORT
 
 Stale generated artifact (mechanics §14): installer's newgroup/dist/newgroup.bundled.mjs embeds this module's profiles, so T48-2 stales it; bio-plane/test/system/newgroup-bundle-fresh.test.mjs (C) fails (committed sha256 93be7abf…, fresh build d5784fb8…). Not rebuilt by me; regenerate at L1's close with the plane bundle and program.mjs (rule 5.5). No other user module's tests change (542 files: 20 failures identical before and after).
+
+## J2 · COMPLETE
+
+T48-2 applied: R89–R92. pointers section, POINTER_KINDS, R90's codes and combine's union (a pointer's hours tagged with every giver's basis); test profile's 7 pointers (R91); first profile's 31 pointers, each read 2026-10-14 on the body's own page, reads in test/fixtures/pointers.mjs (R92). Legal-aid list: State Bar Pro Bono Opportunities Directory, Alameda County heading (every program an LSTF grantee by its own words); 13 of 14 held, lashicap.org refused (403). Every kind held; no emergency number. 141/141 pass; format, architecture, coverage (92/92), ownership 0 failures; run.mjs reds only other L1 modules' not-yet-met ids (rule 5.1). Two test flaws fixed (t45 tautology, t37 dead assertion). One REPORT (J2): installer bundle staled. Details in the record.
