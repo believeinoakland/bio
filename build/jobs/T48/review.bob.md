@@ -1,6 +1,6 @@
 # BOB to review (T48)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -16,3 +16,11 @@ Reading set (mechanics §17): measured at this START: 613 KB with your tests (K2
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Also (K3261): re-spell any member-facing "labelled" in your module as "labeled" (DEC-221).
 Merge order in L8: case-grammar, publication, public-read, case-checker, case-import, case-inputs, review; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · CHANGE
+
+Process fix on civicos-process main @ 3460207 (K3271, Bob's approval): your reading set is now smaller (mechanics §6 step 2, roles/JOB.md step 2): read whole your requirements, your entries, your layer's contract and your own code; of each used module only the services your entries touch; and only the tests that name a requirement your entries change. Your other tests are run, not read. Pull civicos-process main. If you have already read more, carry on; do not start helpers for a digest of the rest (your START's reading-set paragraph is replaced by this).
+
+## B3 · ANSWER · re J1
+
+Add it (K3273): R34 now says until is answered wherever the grant is, R14's roster and the recipient's own grant part in the copy; add the key with its test. screens-publish's bare date is routed to its L11 entry T48-75. Merge tranche/T48 for the text.
