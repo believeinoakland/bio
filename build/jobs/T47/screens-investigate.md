@@ -2,6 +2,20 @@
 
 **Status** · session_01P6a5EYGfQdk3KLWzPsHMLA · depth 2 · WAITING ON BOB (J3) · handled B8
 
+## Completion
+
+**Entries applied (T47-62):** `person` (R1), `explore` (R2), `timeline` (R3), `money` (R4), `calculation` (R5) with R14's two acts (`testify`, then `spotcheckvisit`), `proceeding` (R6), `due-date` (R7; B4's subject `<action>~<entry position>`), `standard` (R8), `ties` (R9), R10 on every screen, `help` (R11), `people` (R12, R13). B2 applied: `clocksics`' text saved with `cs.save`. Readings taken, as J1 (B2: they stand) and J2 record them: the subjects (`money`: a trail `MSR-` or a project; `timeline`: a project, its set the people and events its document cites); acts' labels the registry's keys; reasoned acts naming the member's own words as `reasonField`; `screen.help.purpose` held in DEC-149's form.
+
+**Files** (for `modules.json`): paths `bio-plane/src/screens-investigate/` (`index`, `words`, `row`, `parts`, `people`, `person`, `explore`, `timeline`, `money`, `calculation`, `proceeding`, `due-date`, `standard`, `ties` `.mjs`); tests `bio-plane/test/m/screens-investigate/` (`fixtures.mjs`, and `common`, `people`, `person`, `explore`, `timeline`, `money`, `calculation`, `proceeding`, `due-date`, `standard`, `ties` `.test.mjs`).
+
+**Deferred, with why:** none in this module. What J1 found the plane does not serve stands as BOB ruled (B2): `money` cannot list a project's trails (N1029–N1033 in `next.md`); `standard`'s `proposals` is progressions' feed, so the proposals section draws only entries shaped as standard proposals; `clockpropose` is unrouted (forwarded to control-plane), so "Work out the due date" is refused on every press until it is; explore's depth stop, `exploreverify`'s scope and `connectionassert`'s meaning are as J1 B7 reads them.
+
+**Found in other modules (reported in J1, J2):** interface-shell's `REF_SCREENS`, `ADMIN_ACTS`, `clocksics` download (all met by its R47); screens-inquiry's `promote` sending `files[].content` where promotion reads `text` (forwarded); tasks' `checkRequest` viewer `member:member:` (forwarded); an administrator's `spotcheckvisit` refused `NOT_YOUR_TESTIMONY` (next.md); `op-grades` not a declared use, so R1's consequence test carries R21's words as a literal.
+
+**Tests and checks** (on `job/T47/screens-investigate` after B8's merge, no overlay): `node --test bio-plane/test/m/screens-investigate/`: 78 tests, 78 pass, 0 fail. `node --test bio-plane/test/m/interface-shell/`: 119 pass, 0 fail. With this module's `paths` and `tests` set in `modules.json` (locally, not committed: BOB's act): `format` 0 failures; `architecture … screens-investigate` 26 product files, 0 failures; `coverage … screens-investigate` 14 of 14 live ids named, 0 failures; `ownership … screens-investigate tranche/T47` 27 files, 0 failures. `node checks/run.mjs`: this module's only failures are "owned by no module" and its ids unnamed, both from its empty `modules.json` entry.
+
+Size (session_01P6a5EYGfQdk3KLWzPsHMLA): test runs 34, module lines 2273
+
 ## J1 · QUESTION
 
 Survey of the ops my screens read and act through (their owners' handlers on tranche/T47) against my requirements. Where a requirement cannot be met as worded I give my best reading; I build on it now and change course on your ANSWER. Items marked (report) are other modules' flaws, for your ruling; nothing there is mine to change.
