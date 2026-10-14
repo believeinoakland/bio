@@ -23,3 +23,7 @@
 - `checks/run.mjs`: format 0, architecture 0 failures, channels 0; coverage 32 failures, none case-grammar's (other modules' ids named by no test, rule 5.1).
 
 Size (session_01YKW8GwS3kRscPxRh48DN1m): test runs 6, module lines 2801
+
+## J1 · COMPLETE
+
+T48-38 applied: R32 met (the complete edition lists a carried copy by R31's stored kind first, by the copy's bytes only when none is stored; T39 test re-stated, three R32 tests with the named controls); R3 and R29 already name SECTIONS and OUTCOME_KINDS and are pinned by tests; 'labelled' re-spelled. case-grammar 155/155; format, architecture, coverage (32/32), ownership 0 failures. Stale generated artifact: case-checker program.mjs (its R13 test red until layer-close regeneration, rule 5.4). Details in the record.
