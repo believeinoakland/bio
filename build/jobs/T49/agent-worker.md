@@ -44,3 +44,5 @@ agent-worker T49-9 complete on `job/T49/agent-worker` (see "Completion record" i
 - Inherited reds only: `harness.test.mjs` REC100-0/-1b/-2/-2b/-2c fail the same on the base commit.
 - For you: `build/requirements/agent-worker.md` words R88 as `**R88** retired (…` not `*(retired…`, so `checks/coverage.mjs` counts it live and unnamed. That is the only coverage failure for this module.
 - Merge `tranche/T49` once `ai-runs` is merged, and I will re-run my tests.
+
+**After B3 (ai-runs merged).** Merged `tranche/T49` into my branch (clean); bundle rebuilt, byte-identical. All agent-worker suites re-run: the only failures are REC100-0/1b/2/2b/2c (accepted until T49-29). `checks/run.mjs`: format, architecture and ownership show 0 failures for my files; coverage for agent-worker is clean now that R88 is marked in the checks' form. J1 answered by B2 (option (a)); nothing built.
