@@ -1,8 +1,9 @@
-/* T42 (T42-4; N831; K2442, K2480), at the interface: `accountUsesOf({owner})`, an in-plane read of one account's uses
-   for a caller that does not own it (ai-use R3, R6, R9): answered as R60 answers the account's owners, without a viewer
-   and without `keptAway`; a malformed owner answered `held: false`; a store that cannot be read answered
-   `unreadable: true`, never a default; never a key or its digest; reached by no route (R62). Every assertion has a
-   negative control (K874). */
+/* T42 (T42-4; N831; K2442, K2480), ported from credentials' t42 (T48-10; split map §6), at the interface:
+   `accountUsesOf({owner})`, an in-plane read of one account's uses for a caller that does not own it (ai-use R3, R6,
+   R9): answered as R15 (was credentials R60) answers the account's owners, without a viewer and without `keptAway`; a
+   malformed owner answered `held: false`; a store that cannot be read answered `unreadable: true`, never a default;
+   never a key or its digest; reached by no route (R17, was credentials R62). Every assertion has a negative control
+   (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -17,7 +18,7 @@ const noKeptAway = (r) => { const { keptAway, ...rest } = r; return rest; };
 /* ann owns P (hidden) with bob joined, and holds her own reference; cy owns S alone, connected through her
    subscription; dee owns D (hidden) with no account; eve holds nothing; second an administrator; the founder claimed.
    P holds a project key with `explore` at `ask`; the group key is held with `standing` on; cy's sign-in has `read`
-   off; material limits are set on the group and on P, so R60's answer carries `keptAway` R62's must not. */
+   off; material limits are set on the group and on P, so R15's answer carries `keptAway` R17's must not. */
 async function usesWorld() {
   const w = await world().group("ann", "bob", "cy", "dee", "eve");
   w.project("P", "ann");
@@ -36,16 +37,16 @@ async function usesWorld() {
   return w;
 }
 
-/* Each owner with the viewer R60 answers it to. */
+/* Each owner with the viewer R15 answers it to. */
 const OWNED = [["group", "admin"], ["project:P", "ann"], ["project:S", "cy"], ["project:D", "dee"], ["member:ann", "ann"],
                ["member:cy", "cy"], ["member:eve", "eve"]];
 
-test("R62 accountUsesOf answers each account's uses exactly as R60 answers them to its owners, for group, project:<id> and member:<id> (with accounts), without keptAway", async () => {
+test("R17 (was credentials R62): accountUsesOf answers each account's uses exactly as R15 answers them to its owners, for group, project:<id> and member:<id> (with accounts), without keptAway", async () => {
   const w = await usesWorld();
   for (const [owner, viewer] of OWNED) {
     const r60 = w.c.accountUses({ owner, viewer });
-    assert.equal(r60.ok, true, `${owner}: R60 answers its owner`);
-    assert.ok(Array.isArray(r60.keptAway), `${owner}: R60 carries keptAway`);
+    assert.equal(r60.ok, true, `${owner}: R15 answers its owner`);
+    assert.ok(Array.isArray(r60.keptAway), `${owner}: R15 carries keptAway`);
     const r62 = w.c.accountUsesOf({ owner });
     assert.deepEqual(r62, noKeptAway(r60), owner);
     assert.equal("keptAway" in r62, false, `${owner}: no keptAway`);
@@ -62,11 +63,11 @@ test("R62 accountUsesOf answers each account's uses exactly as R60 answers them 
     accounts: { reference: { held: false, uses: null }, signin: { held: true, uses: { ...DEFAULTS, read: false } } } });
   assert.deepEqual(w.c.accountUsesOf({ owner: "member:eve" }), { ok: true, owner: "member:eve", held: false, uses: null,
     accounts: { reference: { held: false, uses: null }, signin: { held: false, uses: null } } });
-  /* it follows a change as R60 does */
+  /* it follows a change as R15 does */
   w.c.accountUsesSet({ owner: "project:P", switch: "explore", on: "yes", by: "ann" });
   assert.equal(w.c.accountUsesOf({ owner: "project:P" }).uses.explore, "yes");
   assert.deepEqual(w.c.accountUsesOf({ owner: "project:P" }), noKeptAway(w.c.accountUses({ owner: "project:P", viewer: "ann" })));
-  /* the group key before any act on it: held false, its defaults, as R60 */
+  /* the group key before any act on it: held false, its defaults, as R15 */
   const fresh = await world().group();
   assert.deepEqual(fresh.c.accountUsesOf({ owner: "group" }), noKeptAway(fresh.c.accountUses({ owner: "group", viewer: "admin" })));
   assert.deepEqual(fresh.c.accountUsesOf({ owner: "group" }), { ok: true, owner: "group", held: false, uses: DEFAULTS });
@@ -75,15 +76,15 @@ test("R62 accountUsesOf answers each account's uses exactly as R60 answers them 
   assert.notDeepEqual(noKeptAway(w.c.accountUses({ owner: "member:cy", viewer: "cy" })), w.c.accountUsesOf({ owner: "member:ann" }));
 });
 
-test("R62 accountUsesOf takes no viewer: it answers where R60 refuses every caller but the owners, including a hidden project the founder cannot see, and a viewer passed changes nothing", async () => {
+test("R17 (was credentials R62): accountUsesOf takes no viewer: it answers where R15 refuses every caller but the owners, including a hidden project the founder cannot see, and a viewer passed changes nothing", async () => {
   const w = await usesWorld();
-  /* negative control: R60 refuses these callers */
+  /* negative control: R15 refuses these callers */
   assert.equal(w.c.accountUses({ owner: "project:P", viewer: "admin" }).ok, false, "the founder cannot see hidden P");
   assert.equal(w.c.accountUses({ owner: "project:P", viewer: "eve" }).ok, false);
   assert.equal(w.c.accountUses({ owner: "member:ann", viewer: "admin" }).ok, false);
   assert.equal(w.c.accountUses({ owner: "group", viewer: "ann" }).ok, false);
   assert.equal(w.c.accountUses({ owner: "group", viewer: null }).ok, false);
-  /* R62 answers each with no viewer at all */
+  /* R17 answers each with no viewer at all */
   for (const [owner, viewer] of OWNED) {
     const r62 = w.c.accountUsesOf({ owner });
     assert.deepEqual(r62, noKeptAway(w.c.accountUses({ owner, viewer })), owner);
@@ -95,7 +96,7 @@ test("R62 accountUsesOf takes no viewer: it answers where R60 refuses every call
   assert.deepEqual(w.c.accountUsesOf(), { ok: true, owner: null, held: false, uses: null }, "called with nothing");
 });
 
-test("R62 an owner not spelled as R55's (group, project:<id>, member:<id>) is answered held: false, uses: null", async () => {
+test("R17 (was credentials R62): an owner not spelled as R14's (group, project:<id>, member:<id>) is answered held: false, uses: null", async () => {
   const w = await usesWorld();
   for (const owner of [null, undefined, "", "organisation", "Group", "group ", "project", "project:", "member", "member:",
                        "ann", "member:member:ann", "member:class:ai", "class:ai", 42, {}, ["group"]]) {
@@ -109,7 +110,7 @@ test("R62 an owner not spelled as R55's (group, project:<id>, member:<id>) is an
   assert.equal(w.c.accountUsesOf({ owner: "project:nowhere" }).kind, null, "a well-spelled project is read, holding none");
 });
 
-test("R62 when the account cannot be read it answers held: null, uses: null, unreadable: true, never a default value, and never throws", async () => {
+test("R17 (was credentials R62): when the account cannot be read it answers held: null, uses: null, unreadable: true, never a default value, and never throws", async () => {
   for (const [owner, table] of [["group", "group_key"], ["project:P", "project_accounts"], ["member:ann", "account_references"],
                                 ["member:cy", "subscription_connections"]]) {
     const w = await usesWorld();
@@ -122,7 +123,7 @@ test("R62 when the account cannot be read it answers held: null, uses: null, unr
     assert.doesNotThrow(() => { r = w.c.accountUsesOf({ owner }); }, owner);
     assert.deepEqual(r, { ok: true, owner, held: null, uses: null, unreadable: true }, owner);
   }
-  /* the group key with no row reads its defaults (R60); with no table it reads none: no switch is on */
+  /* the group key with no row reads its defaults (R15); with no table it reads none: no switch is on */
   const w = await world().group();
   assert.deepEqual(w.c.accountUsesOf({ owner: "group" }).uses, DEFAULTS);
   w.sql.exec(`DROP TABLE group_key`);
@@ -131,7 +132,7 @@ test("R62 when the account cannot be read it answers held: null, uses: null, unr
   assert.deepEqual(w.c.accountUsesOf({ owner: "organisation" }), { ok: true, owner: "organisation", held: false, uses: null });
 });
 
-test("R62 accountUsesOf never carries a key or a digest of one, and writes nothing", async () => {
+test("R17 (was credentials R62): accountUsesOf never carries a key or a digest of one, and writes nothing", async () => {
   const w = await usesWorld();
   const before = w.snapshot();
   const said = JSON.stringify([...OWNED.map(([owner]) => w.c.accountUsesOf({ owner })),
@@ -150,10 +151,10 @@ test("R62 accountUsesOf never carries a key or a digest of one, and writes nothi
   assert.equal(w.snapshot(), before, "it writes nothing");
 });
 
-test("R62 no route reaches accountUsesOf: the ops map serves no accountusesof, while R60's accountuses is routed", async () => {
+test("R17 (was credentials R62): no route reaches accountUsesOf: the ops map serves no accountusesof, while R15's accountuses is routed", async () => {
   const w = await usesWorld();
   const ops = w.ops("owner=project:P&viewer=ann");
-  /* negative control: R60's read is routed */
+  /* negative control: R15's read is routed */
   assert.equal(typeof ops.accountuses, "function");
   assert.equal(ops.accountuses().ok, true);
   for (const name of Object.keys(ops)) assert.ok(!/usesof/i.test(name), name);
@@ -161,15 +162,15 @@ test("R62 no route reaches accountUsesOf: the ops map serves no accountusesof, w
   assert.equal(Object.hasOwn(ops, "accountUsesOf"), false);
 });
 
-test("R62 (K2620) a revoked member's member:<id> is answered held: false, uses: null, as R60 refuses every viewer for it, though the reference survives R16; a live member's account still answers held", async () => {
+test("R17 R27 (was credentials R62, R16) (K2620) a revoked member's member:<id> is answered held: false, uses: null, as R15 refuses every viewer for it, though the reference survives R27; a live member's account still answers held", async () => {
   const w = await usesWorld();
   await w.enrol("fay");
   assert.equal((await w.c.accountReferenceSet({ member: "fay", kind: "apikey", secret: "sk-ant-T42-fay-SENTINEL", by: "fay" })).ok, true);
-  /* negative control: before her revocation fay's account answers held, as R60 answers her */
+  /* negative control: before her revocation fay's account answers held, as R15 answers her */
   assert.equal(w.c.accountUsesOf({ owner: "member:fay" }).held, true);
   assert.deepEqual(w.c.accountUsesOf({ owner: "member:fay" }), noKeptAway(w.c.accountUses({ owner: "member:fay", viewer: "fay" })));
   assert.equal(w.m.memberSet({ memberId: "fay", status: "revoked", by: "admin" }).ok, true);
-  /* the reference survives R16 (its reach unchanged), and R60 now refuses fay herself */
+  /* the reference survives R27 (its reach unchanged), and R15 now refuses fay herself */
   assert.ok(w.row(`SELECT member_id FROM account_references WHERE member_id='fay'`), "the reference is kept");
   assert.equal(w.c.accountUses({ owner: "member:fay", viewer: "fay" }).ok, false);
   const before = w.snapshot();

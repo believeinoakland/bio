@@ -1,6 +1,6 @@
 # screens-wizards — requirements
 
-**Status** · New in T47 (T47-57; K657, K1043, K569, K3027 doubt 2): a module built fresh, layer 11 directly after `interface-shell` and before `screens-settings` (N897 (1); N821's runner, its screen side; N551, its share: the welcome and first-question wizards' order; N572: DEC-140's "Show me where"; DEC-120, DEC-121, DEC-139 (4), DEC-148, DEC-158). Drafted in `build/plan/draft-T47-interface.md` §2.1, worded here by BOB (P5). No ids move. Not yet met (T47).
+**Status** · New in T47 (T47-57; K657, K1043, K569, K3027 doubt 2): a module built fresh, layer 11 directly after `interface-shell` and before `screens-settings` (N897 (1); N821's runner, its screen side; N551, its share: the welcome and first-question wizards' order; N572: DEC-140's "Show me where"; DEC-120, DEC-121, DEC-139 (4), DEC-148, DEC-158). Drafted in `build/plan/draft-T47-interface.md` §2.1, worded here by BOB (P5). No ids move. Not yet met (T47). Last changed T48 (T48-70: R10 new, amending R2, the guide's line `wizard.guide.elsewhere` on every step of a script a door offers; N847; DEC-227 (1); K3190, K3195); marked not yet met (T48).
 
 **Size (P6).** Estimated 1,800–2,400 lines with comments, its own keyed sentences included, measured at its START (M-T47-1, K617).
 
@@ -32,6 +32,8 @@ Terms. A **script**, a **version**, a **step**, **offered** and a **side trip** 
 - **R6** The runner reports progress only through `wizardprogress` (`start`, each `step` reached, `finish`), which carries nothing naming the member, the case, the project or the instant beyond the day (`wizard-scripts` R15); stopping sends nothing. A running wizard's place is kept in the page's memory only, never in the browser's storage, an address or a request, so leaving the page ends it.
 - **R7** (N551, its share; DEC-148) Home offers the required "Welcome a new member" first, and "Your first question" after it, to a member who has finished neither on this device (the finish kept on the device, never sent), as wizard marks at the top of Home; the ceremony screen (`screens-publish`) carries the required "Publication ceremony" as its wizard mark. A required wizard is offered, never forced. The welcome offered on Home after `join` continues at its first step on a working screen (step 3): its two `join` steps are counted done by the enrolment (one `wizardprogress` `start` and the `step` reached at the join's end, sent once the member's session exists); "Not now" keeps the offer (K3137; journey 28).
 
+- **R10** (T48; N847; DEC-227 (1); `wizard-scripts` R33, R37; amends R2) While the guide runs a script that any of `startfrom`'s doors names (its `doors[].scripts`), every step carries one quiet line, `wizard.guide.elsewhere`, its `{link}` the reference `wizard.guide.elsewhere_link` opening `elsewhere` (its card `screen.elsewhere.name` and `.purpose`, `interface-shell` R16). The guide reads `startfrom` once when a run starts; a read that fails draws no line and stops nothing. Opening the screen sends nothing and keeps the run where it was (R6). Test: "Get a record" carries the line on every step; control: "Welcome a new member", which no door names, carries none. *(not yet met: T48)*
+
 **Common**
 - **R8** `interface-shell` R8–R13 hold on `wizards`; after an act, the screen re-reads what it changed.
 
@@ -42,7 +44,7 @@ Terms. A **script**, a **version**, a **step**, **offered** and a **side trip** 
 - `interface-shell`: the kit `cs` and the screen contract (its R21), the dock's one panel, `cs.ring`, `cs.wizard` and the recording hook (its R31), `cs.fill` (its R27).
 - `setup-words`: `WORD_ROWS` keys (`wizard.<id>.*`, `screen.wizards.*`).
 - `wizard-scripts`: `SCREEN_REGISTRY` (its R13, R31), in tests only.
-- Through the plane: `wizard-scripts` (`wizards`, `wizardread`, `wizardsat`, `wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove`, `wizardretire`, `wizardprogress`, `baseupdates`; its R3–R11, R15, R26), and each op a `{machine: <op>}` draft names (`writinghelp`, `whatchangedpropose`, `escalationreasondraft`, `groupdescriptiondraft`, the T45 drafts; their owners).
+- Through the plane: `wizard-scripts` (`startfrom`, its R23, R33, R37; R10), (`wizards`, `wizardread`, `wizardsat`, `wizarddraft`, `wizardrevise`, `wizardsubmit`, `wizardapprove`, `wizardretire`, `wizardprogress`, `baseupdates`; its R3–R11, R15, R26), and each op a `{machine: <op>}` draft names (`writinghelp`, `whatchangedpropose`, `escalationreasondraft`, `groupdescriptiondraft`, the T45 drafts; their owners).
 - Tests only: `op-declarations` (`OPS`).
 
 ### Invariants
@@ -51,7 +53,7 @@ Terms. A **script**, a **version**, a **step**, **offered** and a **side trip** 
 
 ### Satisfies
 
-- Registry screen `wizards` (`docs/development/ux-substrate/screens/registry.json` at `a0fab7abf0`; DEC-139); the dock's wizard guide (`mock-shell.js`' `wizardGuide`, `layouts.html` §3 "Journeys and wizards, walked"); N897 (1); N821 (the runner, its screen side); N572, DEC-140 (R2: "Show me where", Alt+Shift+W).
+- Registry screen `wizards` (`docs/development/ux-substrate/screens/registry.json` at `a0fab7abf0`; DEC-139); the dock's wizard guide (`mock-shell.js`' `wizardGuide`, `layouts.html` §3 "Journeys and wizards, walked"); N897 (1); N821 (the runner, its screen side); N572, DEC-140 (R2: "Show me where", Alt+Shift+W). DEC-227 (1) (the guide's line on door-offered scripts): R10.
 - DEC-120 (1), (2) (a wizard runs with no AI and no key; drafts in fields, the member alone acting): R2, R4. DEC-121 (1)–(6) (the libraries, authoring by recording, approval, use tallied unattributed): R1, R3, R6, R9. DEC-139 (4) (side trips): R5. DEC-148 (the library, its required flows): R7. DEC-158 (copy a wizard to change it): R1. DEC-153 (4) (no machine help on a refused act): R4. K1364 B3, B4.
 
 ### Suggestions

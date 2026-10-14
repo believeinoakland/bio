@@ -98,39 +98,16 @@ test("R12 R15 R53 the AI credential routes: `who` from the query over the body, 
     "signout", "signouteverywhere", "subscriptiondisconnect", "unlock"]);
 });
 
-test("R22 R23 R24 R25 R27 R28 R29 R31 R32 R33 R35 R36 R37 R51 the T33-20, T34 and T36 account rows: each id once, across every family, each where naming its one site, frozen; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
-  const { ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS } = await import("../../../src/credentials/index.mjs");
+test("R27 R28 R29 R31 R32 R65 R66 R69 the C-29 and keyed-service rows this module holds: each id once, across every family, each where naming its one site, frozen; (T48) the AI accounts' rows left this file for ai-accounts; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
+  const { ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS } = await import("../../../src/credentials/checks.mjs");
   const want = {
-    MACHINE_CANNOT_HOLD_ACCOUNT: ["C-29.13", W("#accountBar", "is-account-own-act")],
-    NOT_YOUR_ACCOUNT: ["C-29.14", W("#notYours", "is-account-theirs")],
-    ACCOUNT_MEMBER_NOT_ACTIVE: ["C-29.15", W("#accountBar", "is-account-own-act")],
-    UNKNOWN_ACCOUNT_KIND: ["C-29.17", W("accountReferenceSet", "is-account-kind")],
-    NO_SECRET: ["C-29.19", W("#noSecret", "is-secret-given")],
-    NO_ACCOUNT: ["C-29.20", W("#noAccount", "is-account-held")],
-    UNKNOWN_SWITCH: ["C-29.21", W("#switchName", "is-account-switch")],
-    ACCOUNT_SEAL_UNAVAILABLE: ["C-29.22", W("#sealRefusal", "is-seal-bound")],
     GRANT_OP_REFUSED: ["C-29.23", W("aiGrantAdmit", "is-grant-op")],
     GRANT_NOT_HELD: ["C-29.24", W("#grantNotHeld", "is-grant-held")],
     STANDING_SWITCH_OFF: ["C-29.25", W("aiGrantMintStanding", "is-standing-grant")],
     NO_QUESTION: ["C-29.26", W("aiGrantMintStanding", "is-standing-grant")],
-    GROUP_KEY_NOTICE_DUE: ["C-29.27", W("#noticeDue", "is-group-key-notice-seen")],
-    SUBSCRIPTION_LOGIN_REFUSED: ["C-29.29", W("subscriptionConnected", "is-subscription-fact")],
-    AI_KEPT_AWAY: ["C-29.31", W("aiKeptAway", "is-kept-away")],   /* T37: one site, the read every gate asks (K231) */
-    AI_KEEP_AWAY_NO_REASON: ["C-29.32", W("#keepAwayReason", "is-keep-away-reason")],   /* T37: re-coded; T40: its site shared with R57 */
-    /* T40 (R54–R58): the next free numbers of C-29 */
-    PROJECT_NOT_SOLE_MEMBER: ["C-29.34", W("projectSigninSet", "is-project-sole-member")],
-    SIGNIN_NOT_CONNECTED: ["C-29.35", W("projectSigninSet", "is-signin-connected")],
-    SWITCH_VALUE_INVALID: ["C-29.36", W("#valueInvalid", "is-switch-value")],
-    AI_USE_SWITCHED_OFF: ["C-29.37", W("#switchedOff", "is-use-switched-on")],
-    PROJECT_AI_KEPT_AWAY: ["C-29.38", W("aiKeptAway", "is-project-kept-away")],
-    PROJECT_KEY_NOTICE_DUE: ["C-29.39", W("#projectNoticeDue", "is-project-key-notice-seen")],
-    /* (T47-9; R64, K231) the disclosure-first order's one site, C-69.6's code and sentence moved here */
-    DISCLOSURE_DUE: ["C-29.40", W("disclosureDue", "is-disclosure-shown")],
-    /* (T47-81; R65, R66, R69, R70, R71) the next free numbers of C-29 at the job's START */
+    /* (T47-81; R65, R66, R69, R71) the next free numbers of C-29 at that job's START */
     REAUTH_DUE: ["C-29.42", W("reauthDue", "is-reauth-window")],
     SESSION_LOCKED: ["C-29.43", W("sessionLockedRefusal", "is-session-unlocked")],
-    SIGNIN_NOT_HELD: ["C-29.44", W("#signinNotHeld", "is-signin-held")],
-    SUBSCRIPTION_TOKEN_MALFORMED: ["C-29.45", W("subscriptionTokenHold", "is-signin-token-shape")],
     RESET_LINK_DEAD: ["C-29.46", W("#resetLinkDead", "is-reset-link-live")],
     RESET_LINK_MEMBER_NOT_ACTIVE: ["C-29.47", W("passwordResetLinkMake", "is-reset-link-member")],
     UNKNOWN_KEYED_SERVICE: ["C-96.19", W("#keyedService", "is-keyed-service")],
@@ -150,31 +127,17 @@ test("R22 R23 R24 R25 R27 R28 R29 R31 R32 R33 R35 R36 R37 R51 the T33-20, T34 an
   }
   const ids = [SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, CREDENTIALS_CHECKS, ...fresh].flatMap((f) => Object.values(f).map((r) => r.check));
   assert.equal(new Set(ids).size, ids.length, "one row per id across the module");
+  /* (T48; K3101) the moved rows are ai-accounts' alone: none of their ids or codes is held in this module's checks.mjs */
+  const CR = await import("../../../src/credentials/checks.mjs");
+  const { AI_ACCOUNT_CHECKS } = await import("../../../src/ai-accounts/index.mjs");
+  const held = Object.values(CR).filter((t) => t && typeof t === "object").flatMap((t) => Object.entries(t));
+  for (const [code, r] of Object.entries(AI_ACCOUNT_CHECKS)) {
+    assert.ok(!held.some(([c, x]) => c === code || x?.check === r.check), `${code} (${r.check}) left credentials' checks.mjs`);
+    assert.match(r.where, /^src\/ai-accounts\//, code);
+  }
+  assert.ok(!("AI_WORDS" in CR), "AI_WORDS is ai-accounts'");
   assert.ok(!ids.includes("C-29.18"), "C-29.18, the held-back kind's row, is retired and not reused (K1547)");
   assert.ok(!ids.includes("C-29.16") && !("ACCOUNT_LEVEL_MEMBER_ONLY" in ACCOUNT_CHECKS), "C-29.16 retired with R26 (K1756), not reused");
-});
-
-test("R33 R34 R36 R37 the group key's routes: `by` and `viewer` from the query over the body; the key from the body only and never answered; the notice for the session's own member", async () => {
-  const w = await world().group("ann");
-  assert.equal((await w.ops("by=ann", { key: "sk-route-group", by: "admin" }).groupkeyset()).reason, "NOT_AN_ADMIN",
-    "the stamp wins over the body's `by`");
-  const set = await w.ops("by=second&key=sk-from-query", { key: "sk-route-group" }).groupkeyset();
-  assert.deepEqual(Object.keys(set).sort(), ["ok", "set_at"]);
-  assert.deepEqual(w.ops("by=admin", { on: true, by: "ann" }).groupkeyswitch(), { ok: true, on: true });
-  /* (T41; DEC-188 (8)) the group key's switches are set through `accountusesset`, `owner` `group`; `groupswitchset` retired */
-  assert.deepEqual(w.ops("by=admin", { owner: "group", switch: "standing", on: true }).accountusesset(),
-    { ok: true, owner: "group", switch: "standing", on: true });
-  const full = w.ops("viewer=second").groupkeystate();
-  assert.deepEqual([full.held, full.on, full.by, full.standing], [true, true, "second", true]);
-  assert.deepEqual(w.ops("viewer=ann").groupkeystate(), { ok: true, on: true });
-  assert.equal(w.ops("viewer=ann").groupkeynotice().due, true);
-  assert.equal(w.ops("by=ann", { member: "second" }).groupkeynoticeseen().ok, true, "recorded for the stamped member, never the body's");
-  assert.deepEqual([w.ops("viewer=ann").groupkeynotice().due, w.ops("viewer=second").groupkeynotice().due], [false, true]);
-  const served = await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } });
-  assert.equal(served.key, "sk-route-group", "the body's key, never the query's");
-  assert.deepEqual(w.ops("by=ann", { by: "admin" }).groupkeyremove().reason, "NOT_AN_ADMIN");
-  assert.deepEqual(w.ops("by=admin").groupkeyremove(), { ok: true, removed: true });
-  assert.ok(!JSON.stringify([set, full]).includes("sk-route-group"));
 });
 
 test("R22 R23 R25 R27 R29 the T33-20 routes: `by`, `viewer`, `member` and `session` from the query over the body; the secret from the body only; never answered back", async () => {

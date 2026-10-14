@@ -32,13 +32,13 @@ It is the only module marked `legacy` in `modules.json`. `setup-page` is not leg
    1. coverage: every id marked *(not yet met: T48)*, until its module's merge;
    2. row census:
       - T47's L3+ rows (59: 37 changed, 21 arrived, 1 departed, C-69.6; K3192), until T48-12;
-      - rows that T48's L3+ jobs add, move or change, until T49's stamp: C-113.6 (N1023); C-32.4 and C-33.6–.9's `where`s (N1024); C-115.47 moved to filing-templates; action-replies' three C-150 rows; instance-setup's `LANGUAGE_NOT_SET` and N1047's rows; duties' reason codes (N1044); C-87.17 `REVIEW_BAD_UNTIL` (T48-44) and the re-pointed `where`s of C-32.4, C-33.5–.9 (T48-46, -47; K3207);
+      - rows that T48's L3+ jobs add, move or change, until T49's stamp: C-113.6 (N1023); C-32.4 and C-33.6–.9's `where`s (N1024); C-115.47 moved to filing-templates; action-replies' three C-150 rows; instance-setup's `LANGUAGE_NOT_SET` and N1047's rows; duties' reason codes (N1044); op-declarations' store-internal-routes census of membership's `lookedsince` arm, until T48-63 (K3211); C-87.17 `REVIEW_BAD_UNTIL` (T48-44) and the re-pointed `where`s of C-32.4, C-33.5–.9 (T48-46, -47; K3207);
    3. **module order (N1014, N1055; K3192 group R):** membership `module-order.test.mjs`:13, :151, :218, :325 (R140) and `t9-notice-sight-bounds.test.mjs`:161 (R79), and promotion `m/promotion/registry.test.mjs`:64, until T48-9;
    4. **legacy-ui** (stays, K3190): `statement-ack.test.mjs` (N794), `progression-revision.test.mjs` and `queue-recipients.test.mjs` (N865), and its 8 tests failing at the `{role}` sign-in (N1057), through T48;
    5. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close;
    6. **the credentials split windows** (split map §7):
       - from T48-10's merge to T48-11's: the moved C-29.13…45 codes are held by two `checks.mjs` files (row census; closed by T48-12);
-      - from T48-11's merge until T48-65: answer-envelope `families.test.mjs` R2;
+      - from T48-11's merge until T48-65: answer-envelope `families.test.mjs` R2 and `envelope.test.mjs` R14 (:305), and control-plane `envelope.test.mjs`:433 (R32, R39, R46) until T48-65 and T48-77 (K3218);
    7. **T47's close reds (K3192):**
       - S, 37 outside legacy-ui (N1052): each module's `{role}` sign-ins, until its entry: T48-8, -9, -12, -13, -14, -16, -17, -32, -54, -60, -37;
       - D, 17 (N1053, N1054): DEC-221 spellings and DEC-226 acts, until T48-33, -46, -51, -57 (N1053) and T48-63, -57 (N1054);
@@ -164,7 +164,7 @@ It is the only module marked `legacy` in `modules.json`. `setup-page` is not leg
   - the acts `updatestart`, `updatelater` (two weeks; the next day for a security fix) and `updateskip`.
 
   (N670) R87 `readingLanguage`. (N1036, K3189) Home's lines (the release, the security level, places and languages) are re-tested at START · text BOB's · P6 watch (M-T48-1).
-- **T48-63 · op-declarations** · (N996; split map doubt 4) the moved ops form an `ai-accounts` family. (N1039) its frozen tables are built lazily. (N1045) R56's control holds at the door, with T48-64. (N1047) specs for the notice read and the three update acts. (N1054) its design-pinned tests are re-pinned after PR #33, and the DEC-226 acts are tolerated by name until those specs land in this job. (N880, N882, N670) R64: specs for `actionreplyquoting`, `proceedingdates` and `readtranslate`, and `followregister`'s `proceeding`. (N1026, K3206) the spec of `aiuseovertime` (ai-use R14), beside `ailimits`. (DEC-227) R65: R21 and R27 read the registry and library at PR #34's merge · text BOB's.
+- **T48-63 · op-declarations** · (N996; split map doubt 4) the moved ops form an `ai-accounts` family. (N1039) its frozen tables are built lazily. (N1045) R56's control holds at the door, with T48-64. (N1047) specs for the notice read and the three update acts. (N1054) its design-pinned tests are re-pinned after PR #33, and the DEC-226 acts are tolerated by name until those specs land in this job. (N880, N882, N670) R64: specs for `actionreplyquoting`, `proceedingdates` and `readtranslate`, and `followregister`'s `proceeding`. (N1026, K3206) the spec of `aiuseovertime` (ai-use R14), beside `ailimits`; (N1036, K3211) the spec of `lookedsince` (membership R143). (DEC-227) R65: R21 and R27 read the registry and library at PR #34's merge · text BOB's.
 - **T48-64 · admission** · (N1045, K3150) a member-scoped `ai` credential is not admitted to `sourceof`; tested · text BOB's.
 - **T48-65 · answer-envelope** · (N996) `CHECK_FAMILY_FILES` adds `src/ai-accounts/checks.mjs` directly before credentials', and the order test pins it, clearing rule 5 (6). (N1039) its frozen tables are built lazily.
 - **T48-66 · store-door** · (N996 §5) `dispatch.mjs`' `aiKeptAway`, `accountFor` and `subscriptionConnected` are read from `ai-accounts`. It keeps `credentials` for `aiGrantAdmit`, `signerRegisterOwn` and `signerRevokeOwn`.

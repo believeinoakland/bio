@@ -1,6 +1,6 @@
 # machinery-producers — requirements
 
-**Status** · In force: split from `queue-producers` by copy for size (K617, K1850), meaning unchanged: R1–R5 marked "was" and retired there; R6–R10 copies of its R11, R12, R13, R24 and R36, which stay. Last changed T34 at its split (T34-95); every requirement met (MACHINERY-PRODUCERS #1, K1863).
+**Status** · In force: split from `queue-producers` by copy for size (K617, K1850), meaning unchanged: R1–R5 marked "was" and retired there; R6–R10 copies of its R11, R12, R13, R24 and R36, which stay. Last changed T34 at its split (T34-95); every requirement met (MACHINERY-PRODUCERS #1, K1863). Last changed T48 (T48-58: Purpose widened; R11 new, the administrators' update to-do, and R12 new, the read it is derived from, passed in by the plane's composition; N1047; DEC-226 (1); K3158, K3189, K3195); marked not yet met (T48).
 
 **Size (P6).** About 1,050 lines. It takes about 840 lines from `queue-producers/index.mjs` (353–802, 1842–1939, 1943–2027, 3031–3237) and copies about 200 lines of helpers. That leaves `queue-producers` at about 3,155.
 
@@ -8,7 +8,7 @@
 
 ### Purpose
 
-The feed's conditions about our own machinery: a host our governor holds, a capture left partial or finished unattended, a render held or expired, an address due a recheck or eligible for the archive fallback, a sweep that needs a member's look, and a working-on notice that needs its owners. Each is derived on read and writes nothing. Each names its subjects and home subjects for `queue-producers` to answer in `feedItems` and for `queue` to home, offer, mint and publish.
+The feed's conditions about our own machinery: a host our governor holds, a capture left partial or finished unattended, a render held or expired, an address due a recheck or eligible for the archive fallback, a sweep that needs a member's look, and a working-on notice that needs its owners; and (T48) the administrators' to-do when a newer release of the group's Civicsmith is ready. Each is derived on read and writes nothing. Each names its subjects and home subjects for `queue-producers` to answer in `feedItems` and for `queue` to home, offer, mint and publish.
 
 ### Provides
 
@@ -52,8 +52,17 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
 
   Each is keyed `CONDITION::<kind>::<notice>`.
 
+**The update to-do** (T48; N1047; DEC-226 (1); K3158, K3189)
+- **R11** (T48; N1047; DEC-226 (1); K3189; `instance-setup` R89; `queue` R54) `conditionItems` also answers, to each active administrator (`membership.activeAdmins`, its R86), the to-do for a release ready to install, derived on read from the notice read R12 is handed. *(not yet met: T48)*
+  - One item, class `OBLIGATION`, kind `update-ready`, id `OBLIGATION::update-ready::<version>`, for the newest verified release the read answers as ready: newer than the running one, neither skipped nor started, and not set aside by `updatelater` until a date still to come. A newer release replaces an unanswered older one, so at most one such item exists.
+  - `assignee_role` is `admin`, `age` runs from when the release was found, and `detail` carries `version`, `date` and `security` (true when the notice marks a security fix), for the words `queue.update.ready` and the security mark (DEC-226 (1)). `options` carries `updatelater` through `optionsOf`; the way to "See what changes" is the screen's, not an option. It has no subject bundle, so its home set is ungrouped.
+  - The item leaves every administrator's queue when the read answers any administrator's decision on that release (`updatestart`, `updateskip`, or `updatelater` until its date), or when the running version is that release or newer.
+  - A member who is not an administrator is answered no such item. It writes nothing.
+  - Tests: a ready release gives each of two administrators one item; a second, newer release replaces it; control: after one administrator's `updatelater` neither has the item until its date; a member gets none.
+- **R12** (T48; K3189; K31's pattern) The read R11 derives from is handed to this module in process by the plane's composition (`plane` R52), never imported: `deps.updateNotice()`, answering `instance-setup`'s notice read (its R89). With none handed, or one that throws or answers malformed, R11 answers no item and the answer's facts name `update-ready` in `failed`, never a guess. Control: with no read handed, the other producers answer as before. *(not yet met: T48)*
+
 **The words members see** (DEC-107, DEC-131; H15, H19)
-- **R9** (copy of `queue-producers` R24, which stays) Every member-facing sentence this module answers calls a CONDITION item a "status", never a "condition" or a "signal".
+- **R9** (copy of `queue-producers` R24, which stays) Every member-facing sentence this module answers calls a CONDITION item a "status", never a "condition" or a "signal". (T48) R11's to-do is a to-do ("To do", `queue` R48), never an "obligation".
   - This covers an item's `summary` and `detail`, every sentence under it, and the words of its options.
   - "signal" leaves member text (DEC-131).
   - The internal codes, kinds and item ids are unchanged (`CONDITION`, `CONDITION::…`).
@@ -66,7 +75,8 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
 
 - `record-grammar`: `MACHINE_AUTHOR_PREFIX` (R2).
 - `record-core`: `manifestByAuthor` (its R53), `stampInstant` (R2).
-- `membership`: `viewerPredicate` (the viewer gate), and the projects a member owns (its R65; R5).
+- `membership`: `viewerPredicate` (the viewer gate), and the projects a member owns (its R65; R5); (T48) `activeAdmins` (its R86; R11).
+- Handed in, not used (T48; K3189; K31's pattern): `instance-setup`'s notice read (its R89), by the plane's composition (R12). No `modules.json` edge: `instance-setup` is later in the order.
 - `host-governor`: `governorHolding` (its R14; R2).
 - `provenance`: `register` (capture to bundle) and `captured_locators` by host (R2, R3).
 - `capture`: `liveCaptureSessions` (its R46; R2); `ACQUIRE_GRADE_NOTE` (its R76; R3).
@@ -89,6 +99,7 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
 - `docs/architecture/BIO_Interaction_Constructs_v0_1.md`: Revision 0.2 (QUEUE: the CONDITION class); U (`undetermined` stated: `age`, the `subject_bound` home set).
 - `docs/development/NOTIFICATIONS.md`: the CONDITION class, the item contract.
 - DEC-36; DEC-95 (1) (R3); DEC-111 (R5); DEC-107, DEC-131 (R9); K1036 (8) (R4).
+- (T48) K3158 (Bob: notify administrators when a release is ready) and DEC-226 (1) (the to-do, one for every administrator, leaving every queue when one acts): R11, R12.
 
 ### Suggestions
 

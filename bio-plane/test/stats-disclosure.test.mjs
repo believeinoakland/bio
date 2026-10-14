@@ -108,7 +108,9 @@ const enrol = async (memberId, role) => {
                                         capabilities: ["contribute", "publish"] }, ADMIN);
   const en = await post("enroll", { invite: add.invite, handle: memberId, password: `${memberId}-passphrase-1` });
   if (!en.ok) throw new Error(`enroll ${memberId}: ${JSON.stringify(en)}`);
-  const lg = await post("login", { role: `member:${memberId}`, password: `${memberId}-passphrase-1` });
+  /* T48 (T48-8; N1052, K3192): a member signs in by the handle they chose at enrolment (credentials R67), never by a
+     `{role}` (the founder's handle is `admin`, reserved, membership R141) */
+  const lg = await post("login", { handle: memberId, password: `${memberId}-passphrase-1` });
   if (!lg.token) throw new Error(`login ${memberId}: ${JSON.stringify(lg)}`);
   return lg.token;
 };

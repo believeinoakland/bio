@@ -1,17 +1,17 @@
-/* Each member's own Claude account reference (R22–R25; T33-20, T33-20b, K1502, K1503, K1547), at the interface: an API
+/* Each member's own Claude account reference (R1–R4, were credentials R22–R25; T33-20, T33-20b, K1502, K1503, K1547), at the interface: an API
    key (T38: the subscription token retired, refused UNKNOWN_ACCOUNT_KIND; K2200), held only by the member's own act, sealed at rest under that member, never shown or
    exported, unsealed only for that member's own asks, runs and standing questions; the member's two switches. A set
-   naming any principal but the acting member is refused as R22 refuses another member (R26 retired, K1755, K1756);
-   the group's own key is R33's act (`group-key.test.mjs`). */
+   naming any principal but the acting member is refused as R1 refuses another member (credentials R26 retired, K1755,
+   K1756); the group's own key is R5's act (`group-key.test.mjs`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, SEAL } from "./fixture.mjs";
-import { ACCOUNT_CHECKS, ACCOUNT_KINDS, ACCOUNT_SWITCHES, credentialsOf } from "../../../src/credentials/index.mjs";
+import { AI_ACCOUNT_CHECKS, ACCOUNT_KINDS, ACCOUNT_SWITCHES, aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 
 const SENTINEL = "sk-ant-SENTINEL-7f3a9c";
 const SUB = "sk-ant-oat01-SUBSCRIPTION-SENTINEL-51d2";   /* a subscription token's shape, from `claude setup-token`: refused since T38 */
-const refusal = (code) => ({ ok: false, reason: code, code, check: ACCOUNT_CHECKS[code].check,
-                             translation: ACCOUNT_CHECKS[code].translation });
+const refusal = (code) => ({ ok: false, reason: code, code, check: AI_ACCOUNT_CHECKS[code].check,
+                             translation: AI_ACCOUNT_CHECKS[code].translation });
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
 const set = (w, member, by, extra = {}) => w.c.accountReferenceSet({ member, kind: "apikey", secret: SENTINEL, by, ...extra });
 
@@ -23,7 +23,7 @@ async function accountWorld(opts) {
   return w;
 }
 
-test("R22 accountReferenceSet: refusals in order, each writing nothing; the member's own act holds one reference, replacing any earlier one; the answer never the secret", async () => {
+test("R1 (was credentials R22) accountReferenceSet: refusals in order, each writing nothing; the member's own act holds one reference, replacing any earlier one; the answer never the secret", async () => {
   const w = await accountWorld();
   const before = w.snapshot();
   /* MACHINE_CANNOT_HOLD_ACCOUNT first: no member behind the caller */
@@ -44,7 +44,7 @@ test("R22 accountReferenceSet: refusals in order, each writing nothing; the memb
     for (const secret of [null, undefined, "", "   ", 7])
       assert.deepEqual(shape(await w.c.accountReferenceSet({ member: "ann", kind, secret, by: "ann" })),
         refusal("NO_SECRET"), `${kind} ${String(secret)}`);
-  /* the refusals R22 names come before the kind, for a subscription token as for a key */
+  /* the refusals R1 names come before the kind, for a subscription token as for a key */
   for (const [member, by, code] of [["ann", "class:ai", "MACHINE_CANNOT_HOLD_ACCOUNT"], ["ann", "second", "NOT_YOUR_ACCOUNT"],
                                     ["ann", "admin", "NOT_YOUR_ACCOUNT"], ["dee", "dee", "ACCOUNT_MEMBER_NOT_ACTIVE"],
                                     ["organisation", "ann", "NOT_YOUR_ACCOUNT"]])
@@ -54,7 +54,7 @@ test("R22 accountReferenceSet: refusals in order, each writing nothing; the memb
   /* the one kind (T38: `subscription` retired); the held-back refusal is retired */
   assert.deepEqual(ACCOUNT_KINDS, ["apikey"]);
   assert.ok(Object.isFrozen(ACCOUNT_KINDS));
-  assert.ok(!("ACCOUNT_KIND_NOT_OFFERED" in ACCOUNT_CHECKS));
+  assert.ok(!("ACCOUNT_KIND_NOT_OFFERED" in AI_ACCOUNT_CHECKS));
   /* the member's own act, by either spelling of the stamp */
   const ok = await set(w, "ann", "ann");
   assert.deepEqual(Object.keys(ok).sort(), ["kind", "ok", "set_at"]);
@@ -82,7 +82,7 @@ test("R22 accountReferenceSet: refusals in order, each writing nothing; the memb
     { ok: true, kind: "apikey", secret: "sk-bob" });
 });
 
-test("R22 R25 accountReferenceRemove: the same refusals, by the member's own act only; removing turns both switches off; a member with no reference has no assistant", async () => {
+test("R1 R4 (were credentials R22 R25) accountReferenceRemove: the same refusals, by the member's own act only; removing turns both switches off; a member with no reference has no assistant", async () => {
   const w = await accountWorld();
   await set(w, "ann", "ann");
   w.c.accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "ann" });
@@ -106,7 +106,7 @@ test("R22 R25 accountReferenceRemove: the same refusals, by the member's own act
   assert.deepEqual([s.held, s.suggestions, s.standing], [true, false, false]);
 });
 
-test("R23 the reference, an API key, is sealed under its member: stored only encrypted, no digest, never in any answer, list, log, error or export; its state to the member alone", async () => {
+test("R2 (was credentials R23) the reference, an API key, is sealed under its member: stored only encrypted, no digest, never in any answer, list, log, error or export; its state to the member alone", async () => {
   const logs = [];
   const orig = { log: console.log, warn: console.warn, error: console.error, info: console.info };
   for (const k of Object.keys(orig)) console[k] = (...a) => logs.push(a.map(String).join(" "));
@@ -128,7 +128,6 @@ test("R23 the reference, an API key, is sealed under its member: stored only enc
     for (const op of Object.values(w.ops("by=ann&member=ann&viewer=member:ann"))) {
       try { await keep(op()); } catch (e) { answers.push(String(e && e.stack)); }
     }
-    await keep(w.c.signerList()); await keep(w.c.aiCredentials({})); await keep(w.c.keyedServices());
     /* stored only encrypted: no column of any table carries the secret, nor its SHA-256 */
     const { createHash } = await import("node:crypto");
     const dump = w.snapshot();
@@ -149,7 +148,7 @@ test("R23 the reference, an API key, is sealed under its member: stored only enc
     assert.equal(w.row(`SELECT kind FROM account_references WHERE member_id='bob'`).kind, "apikey");
     assert.equal(w.c.accountReferenceState({ member: "bob", viewer: "member:bob" }).kind, "apikey");
     assert.deepEqual(shape(w.c.accountReferenceState({ member: "bob", viewer: "second" })), refusal("NOT_YOUR_ACCOUNT"));
-    /* its table is declared never exported, seen by its owner alone (R30) */
+    /* its table is declared never exported, seen by its owner alone (R28, was credentials R30) */
     const d = w.core.declared.get("account_references").classes;
     assert.deepEqual([d.export, d.sight], ["never", "owner"]);
     /* state: the member alone, by either spelling; any other viewer NOT_YOUR_ACCOUNT, writing nothing */
@@ -169,13 +168,13 @@ test("R23 the reference, an API key, is sealed under its member: stored only enc
     assert.equal((await w.c.accountReferenceFor({ member: "ann", act: { kind: "ask", member: "ann" } })).reason,
       "ACCOUNT_SEAL_UNAVAILABLE");
     /* and under the copy's own seal secret: another secret opens nothing */
-    const other = credentialsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: "another-secret" });
+    const other = aiAccountsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: "another-secret" });
     assert.equal((await other.accountReferenceFor({ member: "bob", act: { kind: "ask", member: "bob" } })).reason,
       "ACCOUNT_SEAL_UNAVAILABLE");
   } finally { Object.assign(console, orig); }
 });
 
-test("R23 with no seal secret bound a reference is neither stored nor read (ACCOUNT_SEAL_UNAVAILABLE), writing nothing", async () => {
+test("R2 (was credentials R23) with no seal secret bound a reference is neither stored nor read (ACCOUNT_SEAL_UNAVAILABLE), writing nothing", async () => {
   const w = await accountWorld({ sealSecret: null });
   const before = w.snapshot();
   assert.deepEqual(shape(await set(w, "ann", "ann")), refusal("ACCOUNT_SEAL_UNAVAILABLE"));
@@ -185,7 +184,7 @@ test("R23 with no seal secret bound a reference is neither stored nor read (ACCO
   assert.ok(SEAL.length > 0);
 });
 
-test("R24 accountReferenceFor unseals a key only for the member's own ask, run or standing question; any other act NOT_YOUR_ACCOUNT; none NO_ACCOUNT by name", async () => {
+test("R3 (was credentials R24) accountReferenceFor unseals a key only for the member's own ask, run or standing question; any other act NOT_YOUR_ACCOUNT; none NO_ACCOUNT by name", async () => {
   const w = await accountWorld();
   await set(w, "ann", "ann");
   for (const kind of ["ask", "draft", "run", "standing"])
@@ -216,7 +215,7 @@ test("R24 accountReferenceFor unseals a key only for the member's own ask, run o
   assert.equal(w.snapshot(), held, "it writes nothing");
 });
 
-test("R25 R55 (T41: accountSwitchSet retired into accountUsesSet) a reference's two switches, off by default, set only by the member's own act; UNKNOWN_SWITCH; a member with no reference NO_ACCOUNT; nothing for another member", async () => {
+test("R4 R14 (were credentials R25 R55) (T41: accountSwitchSet retired into accountUsesSet) a reference's two switches, off by default, set only by the member's own act; UNKNOWN_SWITCH; a member with no reference NO_ACCOUNT; nothing for another member", async () => {
   const w = await accountWorld();
   assert.deepEqual(ACCOUNT_SWITCHES, ["suggestions", "standing"]);
   await set(w, "ann", "ann");
@@ -237,7 +236,7 @@ test("R25 R55 (T41: accountSwitchSet retired into accountUsesSet) a reference's 
   assert.deepEqual([st("ann"), st("bob")], [[true, false], [false, false]], "the member's own, nobody else's");
   w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "member:ann" });
   assert.deepEqual(st("ann"), [true, true]);
-  /* (T40; R55) a value that is not a boolean is SWITCH_VALUE_INVALID, writing nothing */
+  /* (T40; R14, was credentials R55) a value that is not a boolean is SWITCH_VALUE_INVALID, writing nothing */
   const held = w.snapshot();
   for (const on of ["yes", 1, null, undefined, "ask"])
     assert.deepEqual(shape(w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on, by: "ann" })), refusal("SWITCH_VALUE_INVALID"), String(on));
@@ -255,7 +254,7 @@ test("R25 R55 (T41: accountSwitchSet retired into accountUsesSet) a reference's 
   assert.equal(w.snapshot(), n);
 });
 
-test("R22 K1756: a set or removal naming any principal but the acting member (the organisation, a project, a machine class, another member) is refused as R22 refuses another member, writing nothing; no refusal names a level any more", async () => {
+test("R1 (was credentials R22) K1756: a set or removal naming any principal but the acting member (the organisation, a project, a machine class, another member) is refused as R1 refuses another member, writing nothing; no refusal names a level any more", async () => {
   const w = await accountWorld();
   const before = w.snapshot();
   for (const member of ["organisation", "PROJ-2026-0001", "class:ai", "member:bob", "bob", "", null, 7]) {
@@ -268,7 +267,7 @@ test("R22 K1756: a set or removal naming any principal but the acting member (th
     assert.deepEqual(shape(await w.c.accountReferenceSet({ member: "organisation", level, kind: "apikey", secret: SENTINEL, by: "ann" })),
       refusal("NOT_YOUR_ACCOUNT"), level);
   assert.equal(w.snapshot(), before);
-  assert.ok(!("ACCOUNT_LEVEL_MEMBER_ONLY" in ACCOUNT_CHECKS), "C-29.16 retired with R26");
+  assert.ok(!("ACCOUNT_LEVEL_MEMBER_ONLY" in AI_ACCOUNT_CHECKS), "C-29.16 retired with credentials R26");
   assert.equal((await set(w, "ann", "ann", { level: "group" })).ok, true, "the member's own act holds their own reference");
   assert.deepEqual(w.rows(`SELECT member_id FROM account_references`).map((r) => r.member_id), ["ann"]);
 });

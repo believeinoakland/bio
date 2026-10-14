@@ -1,4 +1,4 @@
-/* The group's Anthropic API key (R33–R37; K1755, K1756, K1757), at the interface: set, switched and removed only by an
+/* The group's Anthropic API key (R5–R9, were credentials R33–R37; K1755, K1756, K1757), at the interface: set, switched and removed only by an
    active administrator, off when first set and off by default, sealed at rest under the copy and never shown,
    exported, logged or answered; its state to administrators in full and `{on}` to other members; serving, through
    `accountFor`, only acts of active members who hold no reference of their own, once each has read its notice; its own
@@ -6,12 +6,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
-import { ACCOUNT_CHECKS, Credentials, credentialsOf } from "../../../src/credentials/index.mjs";
+import { AI_ACCOUNT_CHECKS, AiAccounts, aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { notAnAdmin } from "../../../src/membership/index.mjs";
 
 const KEY = "sk-ant-api03-GROUP-SENTINEL-9b1e";
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
-const refusal = (code) => ({ ok: false, reason: code, code, check: ACCOUNT_CHECKS[code].check, translation: ACCOUNT_CHECKS[code].translation });
+const refusal = (code) => ({ ok: false, reason: code, code, check: AI_ACCOUNT_CHECKS[code].check, translation: AI_ACCOUNT_CHECKS[code].translation });
 const ask = (member) => ({ kind: "ask", member });
 
 /* ann and bob active members, dee revoked, cal invited; second an administrator; the founder claimed. */
@@ -23,7 +23,7 @@ async function groupWorld(opts) {
 }
 const acts = (w) => w.rows(`SELECT act, detail, actor FROM group_key_acts ORDER BY seq`);
 
-test("R33 groupKeySet, groupKeyRemove, groupKeySwitch: active administrators only (NOT_AN_ADMIN through membership, a machine refused the same); an empty key NO_SECRET; each refusal writing nothing", async () => {
+test("R5 (was credentials R33) groupKeySet, groupKeyRemove, groupKeySwitch: active administrators only (NOT_AN_ADMIN through membership, a machine refused the same); an empty key NO_SECRET; each refusal writing nothing", async () => {
   const w = await groupWorld();
   const before = w.snapshot();
   for (const by of ["ann", "dee", "cal", "nobody", "class:admin", "class:ai", "token:ai", null, ""]) {
@@ -45,7 +45,7 @@ test("R33 groupKeySet, groupKeyRemove, groupKeySwitch: active administrators onl
   assert.equal(bare.snapshot(), b0);
 });
 
-test("R33 R34 the key held: off when first set and off by default; a replacement keeps the switch; removal switches it off; each act recorded with its administrator and instant, never the key", async () => {
+test("R5 R6 (were credentials R33 R34) the key held: off when first set and off by default; a replacement keeps the switch; removal switches it off; each act recorded with its administrator and instant, never the key", async () => {
   const w = await groupWorld();
   const DEFAULTS = { ask: true, draft: true, run: true, standing: false, explore: "no", enquire: true, read: true, transcribe: true, account: true, suggestions: false };
   const OFF = { ask: false, draft: false, run: false, standing: false, explore: "no", enquire: false, read: false, transcribe: false, account: false, suggestions: false };
@@ -71,7 +71,7 @@ test("R33 R34 the key held: off when first set and off by default; a replacement
   assert.deepEqual(w.c.groupKeyRemove({ by: "second" }), { ok: true, removed: true });
   assert.deepEqual(w.c.groupKeyState({ viewer: "admin" }),
     { ok: true, held: false, on: false, set_at: null, by: null, suggestions: false, standing: false, uses: OFF },
-    "R37 (T40): removal turns off every R55 switch of the group key");
+    "R9 (T40): removal turns off every R14 switch of the group key");
   assert.deepEqual(w.c.groupKeyRemove({ by: "admin" }), { ok: true, removed: false });
   /* set again after removal: off again */
   await w.c.groupKeySet({ key: KEY, by: "admin" });
@@ -86,7 +86,7 @@ test("R33 R34 the key held: off when first set and off by default; a replacement
   for (const r of w.rows(`SELECT at FROM group_key_acts`)) assert.match(r.at, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
 });
 
-test("R34 sealed at rest under the copy: in no table, answer, route, log or error, nor its digest or base64; declared never exported; another seal secret or a row moved opens nothing", async () => {
+test("R6 (was credentials R34) sealed at rest under the copy: in no table, answer, route, log or error, nor its digest or base64; declared never exported; another seal secret or a row moved opens nothing", async () => {
   const logs = [];
   const orig = { log: console.log, warn: console.warn, error: console.error, info: console.info };
   for (const k of Object.keys(orig)) console[k] = (...a) => logs.push(a.map(String).join(" "));
@@ -106,7 +106,6 @@ test("R34 sealed at rest under the copy: in no table, answer, route, log or erro
       for (const op of Object.values(w.ops(query, { key: KEY, on: true, switch: "standing" }))) {
         try { await keep(op()); } catch (e) { answers.push(String(e && e.stack)); }
       }
-    await keep(w.c.keyedServices());
     const { createHash } = await import("node:crypto");
     const dump = w.snapshot();
     const said = JSON.stringify(answers) + logs.join("\n");
@@ -120,11 +119,11 @@ test("R34 sealed at rest under the copy: in no table, answer, route, log or erro
     /* the key opens for a served member's act only (the routes above removed it, so it is set and switched on again) */
     await w.c.groupKeySet({ key: KEY, by: "admin" });
     w.c.groupKeySwitch({ on: true, by: "admin" });
-    w.c.accountUsesSet({ owner: "group", switch: "ask", on: true, by: "admin" });   /* R37 (T40): the removal turned it off */
+    w.c.accountUsesSet({ owner: "group", switch: "ask", on: true, by: "admin" });   /* R9 (T40): the removal turned it off */
     w.c.groupKeyNoticeSeen({ member: "ann", by: "ann" });
     assert.deepEqual(await w.c.accountFor({ member: "ann", act: ask("ann") }), { ok: true, kind: "apikey", level: "group", key: KEY });
     /* under the copy's own seal secret: another opens nothing */
-    const other = credentialsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: "another-secret" });
+    const other = aiAccountsOf({ storage: { sql: w.sql } }, { record: w.core, membership: w.m, sealSecret: "another-secret" });
     assert.deepEqual(shape(await other.accountFor({ member: "ann", act: ask("ann") })), refusal("ACCOUNT_SEAL_UNAVAILABLE"));
     /* bound to its owner: a member's sealed reference moved into the group key's row does not open */
     await w.c.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-bob", by: "bob" });
@@ -134,7 +133,7 @@ test("R34 sealed at rest under the copy: in no table, answer, route, log or erro
   } finally { Object.assign(console, orig); }
 });
 
-test("R34 R37 groupKeyState: an active administrator (the founder included) reads {held, on, set_at, by} and the two switches; any other active member {on}; anyone else NOT_AN_ADMIN; it writes nothing", async () => {
+test("R6 R9 (were credentials R34 R37) groupKeyState: an active administrator (the founder included) reads {held, on, set_at, by} and the two switches; any other active member {on}; anyone else NOT_AN_ADMIN; it writes nothing", async () => {
   const w = await groupWorld();
   await w.c.groupKeySet({ key: KEY, by: "admin" });
   w.c.groupKeySwitch({ on: true, by: "admin" });
@@ -153,10 +152,10 @@ test("R34 R37 groupKeyState: an active administrator (the founder included) read
   assert.deepEqual(w.c.groupKeyState({ viewer: "ann" }), { ok: true, on: false });
 });
 
-test("R35 accountFor: the member's own reference when held ({kind, level: member, key}); else the group key when held and on ({kind: apikey, level: group, key}) for an active member who has read its notice; else NO_ACCOUNT; any act but the member's own NOT_YOUR_ACCOUNT; it writes nothing", async () => {
+test("R7 (was credentials R35) accountFor: the member's own reference when held ({kind, level: member, key}); else the group key when held and on ({kind: apikey, level: group, key}) for an active member who has read its notice; else NO_ACCOUNT; any act but the member's own NOT_YOUR_ACCOUNT; it writes nothing", async () => {
   const w = await groupWorld();
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ant-api03-ann", by: "ann" });
-  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });   /* R55: standing is off by default */
+  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });   /* R14: standing is off by default */
   w.c.accountUsesSet({ owner: "group", switch: "standing", on: true, by: "admin" });
   const before = w.snapshot();
   /* any act but the member's own ask, run or standing question */
@@ -200,11 +199,11 @@ test("R35 accountFor: the member's own reference when held ({kind, level: member
   assert.ok(!Object.keys(w.ops()).some((op) => /accountfor/i.test(op)));
 });
 
-test("R36 groupKeyNotice answers {due, text} until the member's own groupKeyNoticeSeen records it, once; another's act or a machine's refused as R22; R35 refuses GROUP_KEY_NOTICE_DUE (C-29.27) before it", async () => {
+test("R8 (was credentials R36) groupKeyNotice answers {due, text} until the member's own groupKeyNoticeSeen records it, once; another's act or a machine's refused as R1; R7 refuses GROUP_KEY_NOTICE_DUE (C-29.27) before it", async () => {
   const w = await groupWorld();
   const n = w.c.groupKeyNotice({ member: "ann" });
   assert.deepEqual(Object.keys(n).sort(), ["due", "ok", "text"]);
-  assert.deepEqual([n.ok, n.due, n.text], [true, true, Credentials.GROUP_KEY_NOTICE_TEXT]);
+  assert.deepEqual([n.ok, n.due, n.text], [true, true, AiAccounts.GROUP_KEY_NOTICE_TEXT]);
   assert.match(n.text, /questions, and the material read to answer them, go to Anthropic under the group's API account/);
   const before = w.snapshot();
   assert.deepEqual(w.c.groupKeyNotice({ member: "member:ann" }), n);
@@ -227,7 +226,7 @@ test("R36 groupKeyNotice answers {due, text} until the member's own groupKeyNoti
   assert.equal(w.core.declared.get("group_key_notices").classes.sight, "owner");
 });
 
-test("R37 R55 (T41: groupSwitchSet retired into accountUsesSet, owner group) the group key's own suggestions and standing, off by default, set by an active administrator only; UNKNOWN_SWITCH; they govern acts the group key serves, a member's own switches the acts their reference serves; removing the key turns both off", async () => {
+test("R9 R14 (were credentials R37 R55) (T41: groupSwitchSet retired into accountUsesSet, owner group) the group key's own suggestions and standing, off by default, set by an active administrator only; UNKNOWN_SWITCH; a member's own switches stay hers (credentials R32's minting arm stays in credentials); removing the key turns both off", async () => {
   const w = await groupWorld();
   const g = () => { const s = w.c.groupKeyState({ viewer: "admin" }); return [s.suggestions, s.standing]; };
   assert.deepEqual(g(), [false, false], "off by default");
@@ -240,7 +239,7 @@ test("R37 R55 (T41: groupSwitchSet retired into accountUsesSet, owner group) the
   assert.equal(w.snapshot(), before, "no refusal writes");
   assert.deepEqual(w.c.accountUsesSet({ owner: "group", switch: "suggestions", on: true, by: "second" }), { ok: true, owner: "group", switch: "suggestions", on: true });
   assert.deepEqual(g(), [true, false]);
-  assert.equal(w.c.accountUsesSet({ owner: "group", switch: "standing", on: "yes", by: "admin" }).reason, "SWITCH_VALUE_INVALID", "T40: R55's values");
+  assert.equal(w.c.accountUsesSet({ owner: "group", switch: "standing", on: "yes", by: "admin" }).reason, "SWITCH_VALUE_INVALID", "T40: R14's values");
   assert.deepEqual(w.c.accountUsesSet({ owner: "group", switch: "standing", on: false, by: "admin" }), { ok: true, owner: "group", switch: "standing", on: false });
   w.c.accountUsesSet({ owner: "group", switch: "standing", on: true, by: "admin" });
   assert.deepEqual(g(), [true, true]);
@@ -251,13 +250,7 @@ test("R37 R55 (T41: groupSwitchSet retired into accountUsesSet, owner group) the
   w.c.groupKeySwitch({ on: true, by: "admin" });
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
   assert.equal(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).standing, false);
-  assert.equal((await w.c.aiGrantMintStanding({ member: "ann", question: "q" })).reason, "STANDING_SWITCH_OFF", "her own switch governs her");
-  assert.equal((await w.c.aiGrantMintStanding({ member: "bob", question: "q" })).ok, true, "the group key's governs bob");
-  w.c.accountUsesSet({ owner: "group", switch: "standing", on: false, by: "admin" });
-  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });
-  assert.equal((await w.c.aiGrantMintStanding({ member: "ann", question: "q" })).ok, true);
-  assert.equal((await w.c.aiGrantMintStanding({ member: "bob", question: "q" })).reason, "STANDING_SWITCH_OFF");
-  /* R25: a member's switch is still theirs alone; an administrator cannot set it */
+  /* R4: a member's switch is still theirs alone; an administrator cannot set it */
   assert.equal(w.c.accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "admin" }).reason, "NOT_YOUR_ACCOUNT");
   /* removing the key turns both off */
   w.c.accountUsesSet({ owner: "group", switch: "suggestions", on: true, by: "admin" });
