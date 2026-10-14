@@ -13,6 +13,11 @@ const ROWS = [
   // ---- held under a key `WORD_ROWS` does not hold yet: the test-instance label, as screens-inquiry R7 words it ----
   ["ai.label.untested", "Not yet tested: this part of the assistant has not yet passed Civicsmith's tests on real matters. Check what it says against the record.", true],
 
+  // ---- R11: the chip's words, held under the keys the requirement names until words.json holds them ----
+  ["wizard.marks.chip", "{n} wizards start here", false],
+  ["wizard.marks.chip.one", "1 wizard starts here", false],
+  ["wizard.mark.recommended", "Recommended for everyone", false],
+
   // ---- the library (R1) ----
   [S + "empty", "No wizards to show here. Your group's wizards are listed to the owners of their projects and to administrators.", false],
   [S + "col.name", "Wizard", false],
@@ -130,13 +135,10 @@ const ROWS = [
   [G + "recording.saved", "Saved as a draft. Write each step's what and why in Settings › Wizards.", false],
   [G + "recording.none", "Record at least one act before saving. Nothing was sent.", false],
   [G + "recording.noname", "Name the wizard before saving. Nothing was sent.", false],
-  [G + "marks", "{n} wizards start here", false],
-  [G + "marks.one", "1 wizard starts here", false],
   [G + "marks.means", "A wizard walks you through this screen step by step; it points at the real control and never presses it.", false],
   [G + "mark.start", "Start: {name}", false],
   [G + "mark.finished", "finished by {n}", false],
   [G + "mark.draft", "your draft, run only by you", false],
-  [G + "mark.required", "Required", false],
   [G + "welcome", "Welcome. Your group's wizard can walk you through your first screens; start it when you are ready.", false],
   [G + "welcome.continue", "Continue: {name}", false],
   [G + "notnow", "Not now", false],

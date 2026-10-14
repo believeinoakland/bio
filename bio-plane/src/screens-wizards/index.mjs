@@ -22,7 +22,9 @@ const LIBRARY_WORDS = WORD_ROWS.map((r) => r[0]).filter((k) => k.startsWith("wiz
 const STATES = ["state.loading", "state.empty", "state.failed"];
 const LABELS = (screen, ops) => ops.flatMap((op) => [`act.${op}.label.${screen}`, `act.${op}.does`]);
 /* the guide's sentences `words.json` already holds (DEC-140; `mock-shell.js`' `wizardGuide`) */
-const GUIDE_WORDS = ["guide.step", "guide.sidetrip", "guide.stopping", "guide.showwhere", "guide.draft", "guide.press"];
+const GUIDE_WORDS = ["guide.step", "guide.sidetrip", "guide.stopping", "guide.showwhere", "guide.draft", "guide.press",
+  "wizard.guide.elsewhere", "wizard.guide.elsewhere_link", "screen.elsewhere.name", "screen.elsewhere.purpose",
+  "wizard.marks.chip", "wizard.marks.chip.one", "wizard.mark.recommended"];
 
 const WORDS = {
   wizards: [...STATES, "screen.wizards.name", "screen.wizards.purpose", ...own("screen.wizards."), ...LIBRARY_WORDS,
