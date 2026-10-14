@@ -197,7 +197,7 @@ These drafts are written and need only placing and renumbering: N1072 (membershi
 - **M-T49-1** (K617, at each START, own code only, K2513), measured on `tranche/T48` at this draft:
   - promotion 3,936 (the stamp's rows);
   - membership 3,826 (with R144);
-  - op-declarations 3,771 (with five specs);
+  - op-declarations **4,026 after T48-63 (OP-DECLARATIONS #23's Size line): past ~4,000, so BOB splits it before T49-16 (P6, K617), its entry naming the split (K3298)**;
   - control-plane 3,712;
   - public-read 3,674;
   - filings 3,594 (with R60–R63);

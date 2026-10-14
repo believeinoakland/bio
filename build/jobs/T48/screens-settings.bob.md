@@ -26,3 +26,7 @@ K3293: screens-settings R26 now also exports the bars and meters as aiUsageBars(
 ## B3 · ANSWER · re J1
 
 K3297: Intl.DisplayNames is right; interface-shell R21's contract now lists Intl beside the language's globals. Hold your unkeyed words as your own rows (I am asking UX-DESIGN). Also from screens-inquiry: your AI account panel (drawn inside projectai) still draws cs-form and cs-note, which no served stylesheet defines: your R20. wizard-scripts is merged; op-declarations not yet.
+
+## B4 · CHANGE
+
+K3298: op-declarations and wizard-scripts are merged into tranche/T48: merge it, put updates back in SCREENS, re-run.

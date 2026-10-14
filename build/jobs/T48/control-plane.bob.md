@@ -24,3 +24,7 @@ K3293: control-plane R93's wording now names the in-process values passed to the
 ## B3 · CHANGE
 
 K3297: control-plane's uses now include action-replies, explore, standards and filings (your J1 report); merge origin/tranche/T48 and add the route assertions for R90/R92's maps, then post COMPLETE. Your 10 reds waiting on op-declarations, instance-setup and interface-shell stay accepted until they merge; I will tell you.
+
+## B4 · CHANGE
+
+K3298: op-declarations is merged into tranche/T48 (instance-setup and interface-shell not yet). Merge it and re-run; report which of your 10 reds remain.
