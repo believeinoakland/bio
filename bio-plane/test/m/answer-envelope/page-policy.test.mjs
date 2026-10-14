@@ -18,9 +18,11 @@ const parse = (header) => Object.fromEntries(String(header || "").split(";").map
   .map((d) => { const [name, ...sources] = d.split(/\s+/); return [name.toLowerCase(), sources]; }));
 /* The effective sources for a fetch directive (its own, else default-src's). */
 const sourcesFor = (p, name) => p[name] ?? p["default-src"];
-/* A source admits only this origin when it is a keyword other than a wildcard, or `data:` (no network). */
-const ownOnly = (sources) => Array.isArray(sources) && sources.length > 0 && sources.every((s) =>
-  ["'self'", "'none'", "'unsafe-inline'", "data:"].includes(s));
+/* A source admits only this origin when it is a keyword other than a wildcard, or `data:` (no network); for images
+   also `blob:`, an object address the page makes itself (R6, K3156). */
+const OWN = ["'self'", "'none'", "'unsafe-inline'", "data:"];
+const ownOnly = (sources, extra = []) => Array.isArray(sources) && sources.length > 0 && sources.every((s) =>
+  OWN.includes(s) || extra.includes(s));
 const NONCE_SOURCE = /^'nonce-([A-Za-z0-9+/_-]+={0,2})'$/;
 /* A text with each script start tag's nonce attribute removed. */
 const unNonced = (html) => html.replace(/<script\b[^>]*>/gi, (tag) => tag.replace(/\snonce(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'>]+))?/gi, ""));
@@ -32,9 +34,11 @@ const scriptTags = (html) => html.match(/<script\b[^>]*>/gi) || [];
 function judge(header, body, where) {
   assert.equal(typeof header, "string", `${where}: no policy`);
   const p = parse(header);
-  for (const d of ["style-src", "font-src", "img-src", "connect-src", "frame-src", "worker-src", "media-src", "object-src",
+  for (const d of ["style-src", "font-src", "connect-src", "frame-src", "worker-src", "media-src", "object-src",
                    "manifest-src"])
     assert.ok(ownOnly(sourcesFor(p, d)), `${where}: ${d} = ${sourcesFor(p, d)}`);
+  /* images: this origin, `data:` and `blob:` (R6, K3156), nothing else */
+  assert.ok(ownOnly(sourcesFor(p, "img-src"), ["blob:"]), `${where}: img-src = ${sourcesFor(p, "img-src")}`);
   /* nothing is sent elsewhere: a form posts only here, and no <base> can redirect relative addresses */
   assert.ok(ownOnly(p["form-action"]), `${where}: form-action`);
   assert.ok(ownOnly(p["base-uri"]), `${where}: base-uri`);
@@ -110,6 +114,27 @@ test("R6, R16: the signer page and `interfacePage` (at `/` and at `/app/*`; the 
                              [ok, "<script>x()</script>"], [ok, '<script nonce="BBBBBBBBBBBBBBBBBBBBBB==">x()</script>'],
                              [ok, `${good}<script>y()</script>`]])
     assert.throws(() => judge(bad, body, "bad"), undefined, `${bad} | ${body}`);
+});
+
+test("R6 (K3156; interface-shell R49): every HTML response's img-src is exactly 'self' data: blob:, so an image the page makes from bytes it holds (an object address) is drawn and no other origin is; no other directive admits blob: or another origin (negative controls: the judge refuses blob: in connect-src or script-src, and a host or wildcard in img-src)", async () => {
+  for (const [where, page] of pages()) {
+    const r = await M.withPagePolicy(html(page));
+    const header = r.headers.get("content-security-policy");
+    const p = parse(header);
+    assert.deepEqual(p["img-src"], ["'self'", "data:", "blob:"], where);
+    for (const [name, sources] of Object.entries(p)) if (name !== "img-src") assert.equal(sources.includes("blob:"), false, `${where}: ${name}`);
+    assert.equal(/https?:|wss?:|\*/.test(header), false, `${where}: no other origin in ${header}`);
+    judge(header, await r.text(), where);
+  }
+  const rest = "base-uri 'none'; form-action 'self'; script-src 'nonce-AAAAAAAAAAAAAAAAAAAAAA=='";
+  const good = '<script nonce="AAAAAAAAAAAAAAAAAAAAAA==">x()</script>';
+  assert.doesNotThrow(() => judge(`default-src 'self'; img-src 'self' data: blob:; ${rest}`, good, "control"));
+  for (const bad of [`default-src 'self'; img-src 'self' data: blob:; connect-src 'self' blob:; ${rest}`,
+                     `default-src 'self' blob:; img-src 'self' data: blob:; ${rest}`,
+                     `default-src 'self'; img-src 'self' https://img.example; ${rest}`,
+                     `default-src 'self'; img-src *; ${rest}`])
+    assert.throws(() => judge(bad, good, "bad"), undefined, bad);
+  assert.throws(() => judge(`default-src 'self'; img-src 'self'; base-uri 'none'; form-action 'self'; script-src 'nonce-AAAAAAAAAAAAAAAAAAAAAA==' blob:`, good, "bad"));
 });
 
 test("R6: each nonce is 128 bits from the CSPRNG, fresh for every response (no two of 2,000 the same), in CSP's nonce grammar", async () => {

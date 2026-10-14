@@ -12,12 +12,13 @@ import { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHE
    carries, so a browser loads no script, style, font, image or connection from another origin and sends nothing
    elsewhere. The pages served (since T47 `interface-shell`'s `interfacePage` at `/` and `/app/*`, the setup page no longer
    served, R16; and the signer page) carry their script and style inline or from their own origin, fetching only `/api`
-   on it.
+   on it. `img-src` also admits `blob:` (K3156; `interface-shell` R49's `cs.image`): an object address the page makes
+   itself from bytes it holds, which names no other origin; no other directive admits it.
    Since T35 a script runs only by the response's own nonce: `script-src` is `'nonce-<n>'` alone (no `'self'`, no host,
    no `'unsafe-inline'`, no `'unsafe-eval'`), the nonce fresh for every response (128 bits from the platform's CSPRNG),
    and every `<script>` element of the page served is given it here, so the pages run as before and a script they did
    not ship does not. Styles stay inline (`style-src` is not F17's). */
-const PAGE_POLICY = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; "
+const PAGE_POLICY = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; "
   + "connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'";
 const pagePolicy = (nonce) => `${PAGE_POLICY}; script-src 'nonce-${nonce}'`;
 
