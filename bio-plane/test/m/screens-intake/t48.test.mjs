@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { checkClasses } from "../../../src/interface-shell/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
-import { open, html, text, main, btn, fill, press, ok, refused } from "./page.mjs";
+import { open, html, text, main, btn, fill, press, ok, refused, word, says } from "./page.mjs";
 import { pending } from "../interface-shell/harness.mjs";
 
 const SHA = "a".repeat(64);
@@ -26,6 +26,11 @@ const FULL = {
 };
 const EMPTY = { heldcaptures: ok({ ok: true, held: [] }), verdictnotes: ok({ ok: true, notes: [] }), inbox: ok({ inbox: [] }),
   archivelist: ok({ ok: true, archive: {}, summary: {}, entries: [] }), scanstatus: ok({ queued: 0, overdue: 0, held: 0 }) };
+/* every counted phrase these screens draw, at zero */
+const ZEROS = [["screen.archive.sum.filed", { count: 0 }], ["screen.archive.sum.held", { count: 0 }], ["screen.archive.sum.notfiled", { count: 0 }],
+               ["screen.archive.sum.folders", { count: 0 }], ["screen.archive.facts.entries", { entries: 0 }], ["screen.open-file.status.queued", { count: 0 }],
+               ["screen.open-file.status.overdue", { count: 0 }], ["screen.open-file.status.held", { count: 0 }], ["screen.held.archive.filed", { count: 0 }],
+               ["screen.held.archive.notfiled", { count: 0 }]];
 const PATHS = ["/app/capture/address", "/app/capture/file", "/app/capture/saw", "/app/held", `/app/archive/${SHA}`, `/app/open-file/${SHA}`,
                "/app/inbox", "/app/inbox/K-1", "/app/archive", "/app/open-file"];
 
@@ -47,11 +52,11 @@ test("R17 no cs-form, no bare label with help; every field is cs.field", async (
 test("R17 every screen drawn over an empty fixture shows no empty section and no zero; a failed read is still drawn failed (control)", async () => {
   for (const path of ["/app/held", `/app/archive/${SHA}`, `/app/open-file/${SHA}`, "/app/inbox"]) {
     const p = await open(path, { plane: { ...FULL, ...EMPTY }, me: { ...(await import("./page.mjs")).MEMBER, administer: true } });
-    assert.doesNotMatch(text(p), /(^|[^\d.])0 (files|overdue|held|not filed|folders|entries)/, `${path}: a count at zero`);
+    for (const [k, vars] of ZEROS) assert.ok(!text(p).includes(word(k, vars)), `${path}: ${k} drawn at zero`);
     assert.doesNotMatch(html(p), /<section[^>]*>\s*<h2>[^<]*<\/h2>\s*<\/section>/, `${path}: an empty section`);
   }
   const e = await open("/app/held", { plane: { ...FULL, ...EMPTY } });
-  assert.doesNotMatch(text(e), /Set aside/, "an empty held screen draws its one empty state only");
+  assert.ok(!says(e, "screen.held.setaside"), "an empty held screen draws its one empty state only");
   const f = await open("/app/held", { plane: { heldcaptures: refused("STORE_SILENT", "The record did not answer.") } });
   assert.ok(main(f).querySelector('[data-state="failed"]'), "a failed read is drawn failed");
 });
@@ -63,7 +68,7 @@ test("R18 before a capture the address tab has the underlined tab bar, one act r
   assert.equal(main(p).querySelectorAll(".mk-tabs2 a[data-nav]").length, 3);
   assert.equal(main(p).querySelectorAll(".mk-acts").length, 1, "one act row");
   assert.ok(!btn(p, "monitorset") && !btn(p, "monitor"));
-  assert.doesNotMatch(text(p), /Watching it for changes/);
+  assert.ok(!says(p, "screen.capture.address.watch"));
   fill(p, { "ci-address": "https://x.example/a" });
   await press(p, "acquire");
   assert.equal(main(p).querySelectorAll(".mk-acts").length, 1, "still one act row");
@@ -74,14 +79,14 @@ test("R18 before a capture the address tab has the underlined tab bar, one act r
 test("R19 an empty Set aside is not drawn; one that holds a row is; a failed read is drawn failed; a read that has not answered draws nothing for it", async () => {
   const held = FULL.heldcaptures;
   const none = await open("/app/held", { plane: { heldcaptures: (req) => (req.query.state === "set_aside" ? ok({ ok: true, held: [] }) : held(req)) } });
-  assert.doesNotMatch(text(none), /Set aside/);
+  assert.ok(!says(none, "screen.held.setaside"));
   const some = await open("/app/held", { plane: { heldcaptures: held } });
-  assert.match(text(some), /Set aside/);
+  assert.ok(says(some, "screen.held.setaside"));
   assert.ok(btn(some, "heldrestore"));
   const bad = await open("/app/held", { plane: { heldcaptures: (req) => (req.query.state === "set_aside" ? refused("STORE_SILENT", "x") : held(req)) } });
   assert.ok(main(bad).querySelector('[data-state="failed"]'));
   const slow = await open("/app/held", { plane: { heldcaptures: (req) => (req.query.state === "set_aside" ? pending : held(req)) } });
-  assert.doesNotMatch(text(slow), /Set aside/);
+  assert.ok(!says(slow, "screen.held.setaside"));
 });
 
 test("R19 the held reads ask a bounded page, so the unfiltered read the walk saw stall is no longer asked for 200 rows with their archive listings", async () => {
@@ -92,8 +97,9 @@ test("R19 the held reads ask a bounded page, so the unfiltered read the walk saw
 test("R20 archive and open-file opened bare draw the shell's \"Nothing is here\" with the way back, never \"Name an archive\" or \"Name a file\"", async () => {
   for (const path of ["/app/archive", "/app/open-file", "/app/archive/nope", "/app/open-file/nope"]) {
     const p = await open(path, { plane: FULL });
-    assert.match(text(p), /Nothing is here/, path);
-    assert.doesNotMatch(text(p), /Name an archive|Name a file/, path);
+    assert.ok(says(p, "shell.unavailable.nothing.title"), path);
+    assert.ok(says(p, "shell.unavailable.nothing.says"), path);
+    assert.ok(says(p, "shell.unavailable.home"), `${path}: the way back is said`);
     assert.ok(main(p).querySelector('a[href="/app"][data-nav]'), `${path}: the way back`);
     assert.equal(p.byOp("archivelist").length + p.byOp("threatof").length, 0, `${path}: nothing read`);
   }

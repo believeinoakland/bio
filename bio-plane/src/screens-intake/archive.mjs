@@ -1,7 +1,7 @@
 /* The `archive` screen (Add › Held captures › Archive; R15; DEC-167, N688's screen part; K1844, K1940), at
  * `/app/archive/<the archive's SHA-256>`. Self-contained functions over the kit `cs` (interface-shell R21 (1)). */
 
-import { sendRelease } from "./held.mjs";
+import { sendRelease, RELEASE_REFUSALS } from "./held.mjs";
 
 /* R15: `archivelist` for the archive (acquisition R41) and `gradenote` (capture R76), by the archive's digest. */
 function archiveReads(view) {
@@ -41,11 +41,13 @@ function renderArchive(cs, view) {
         + said("screen.archive.refused.none")
         + (U.listed ? cs.sec("screen.archive.lists", list(entries)) : `<div class="mk-acts">${cs.act("archivelist", { label: "screen.archive.see" })}</div>`);
     }
-    /* R17: each count of the summary is drawn only above zero; an archive that opened with none draws no summary line */
+    /* R17: each count of the summary is drawn only above zero, as its own phrase (`screen.archive.sum.*`); an archive that opened
+       with none draws no summary line. (`screen.archive.summary` holds all four counts in one sentence, which R17 forbids
+       at zero: J3.) */
     const sumParts = (m) => [["filed", m.filed], ["held", m.already_held], ["notfiled", m.not_filed], ["folders", m.folders]]
       .filter(([, n]) => n > 0).map(([k, n]) => cs.w(`screen.archive.sum.${k}`, { count: n })).join(", ");
     out += (a.opened === false ? said("screen.archive.notopened", { waiting: sum.waiting ?? 0 })
-        : sumParts(sum) ? said("screen.archive.summary", { parts: sumParts(sum) }) : "")
+        : sumParts(sum) ? `<p class="mk-note" role="status">${sumParts(sum)}.</p>` : "")
       + (g && g.grade ? `<p class="mk-small">${cs.w("screen.archive.gradeabout", { grade: g.grade })}</p>` : "");
     return out + (entries.length ? cs.sec("screen.archive.files", list(entries)
       + `<p class="mk-small muted">${cs.w("screen.archive.names")}</p>`) : "")
@@ -74,7 +76,9 @@ function renderArchive(cs, view) {
     }) : "";
     const other = rest.map((e) => {
       const name = e.state === "folder" ? `<span class="id">${cs.esc(e.name ?? "")}</span>` : opens(e);
-      const what = e.state === "already_held" ? cs.w("screen.archive.alreadyheld")
+      /* the earlier capture's date, when the entry states it (`held_at`); else the plain count of one already held (J3) */
+      const what = e.state === "already_held" ? (e.held_at ? cs.w("screen.archive.alreadyheld", { name: String(e.name ?? ""), date: { html: cs.date(e.held_at) } })
+          : cs.w("screen.archive.sum.held", { count: 1 }))
         : e.state === "folder" ? cs.w("screen.archive.folder", { count: inFolder(e) })
         : e.state === "link" ? cs.w("screen.archive.link", { target: e.target ?? "" })
         : e.state === "not_filed" ? cs.mark("gap", "refused", { reason: e.translation || e.code || "" })
@@ -138,6 +142,6 @@ export const ARCHIVE_SCREEN = Object.freeze({
     Object.freeze({ op: "gradenote", label: "act.gradenote.label.archive", send: sendGradeNote, done: doneGradeNote }),
     Object.freeze({ op: "archivelist", label: "act.archivelist.label.archive", send: sendList, done: doneList }),
     Object.freeze({ op: "heldsetaside", label: "act.heldsetaside.label.archive", send: sendSetAside, done: doneSetAside }),
-    Object.freeze({ op: "release", label: "act.release.label.archive", send: sendRelease, done: doneArchiveRelease, reasonField: "acknowledgment" }),
+    Object.freeze({ op: "release", label: "act.release.label.archive", send: sendRelease, done: doneArchiveRelease, reasonField: "acknowledgment", refusals: RELEASE_REFUSALS }),
   ]),
 });
