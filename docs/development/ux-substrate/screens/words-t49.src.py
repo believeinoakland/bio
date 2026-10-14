@@ -136,6 +136,14 @@ w6('screen.explore.nocentre', 'Choose where to start: a person, an organization,
 def w7(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-257' + (': ' + note if note else '')))
 REWRITE7 = {
   'screen.capture.file.wherehelp': 'Filled from the photo where it says; correct it if it is wrong.',
+  'screen.connect.group.allowance': 'The group pays, up to {limit} for each member, a limit your administrators set (you have used {used} of it {when}).',
+  'screen.connect.group.allowance.reached': 'At the limit, the assistant pauses for you until the next {period}; everything else works as usual.',
+  'screen.connect.own.apikey': 'The assistant serves you on your own Claude account (API key ending …{last4}). Only you use it; you pay for it.',
+  'screen.connect.own.subscription': "The assistant serves you on your own Claude subscription ({plan}), signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.",
+  'screen.connect.none': "The assistant isn't serving you yet. Your group doesn't pay for the assistant; if you want it, connect your own account below, or skip it.",
+  'screen.connect.keptaway.ask': "Everything else works: searching, counting and your group's templates take the assistant's place. If you think this should change, ask an administrator.",
+  'screen.connect.signin.help': "Your group's Civicsmith never sees your Claude password, and the code is used once and never kept. Your subscription then serves only your own questions, and you can disconnect at any time. Needs a Pro or Max plan, and your group's Civicsmith on Workers Paid.",
+  'screen.connect.grouplimits': "On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member (you have used {used} of it today); suggestions {suggestions}. If they change either, this shows the new setting.",
   'screen.setup.otp.help': "Filled in for you when you continued from the installer's last page, where it was shown once. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to the Cloudflare account can set a new one.",
   'screen.setup.security.scanner': 'Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view.',
   'screen.setup.assistant.own': "Any member may connect their own Claude subscription or API key, which then serves only them, unless you keep your group's material away from AI.",
@@ -187,6 +195,25 @@ w7('screen.capture.file.zip', "A ZIP archive is opened as it is captured: its fi
 w7('screen.capture.saw.photo', 'Add a photo or recording you made then')
 w7('screen.capture.saw.photo.optional', 'optional; it is kept beside your account')
 w7('screen.capture.saw.record', 'Record what you saw', False, "testify's button")
+# connect
+w7('screen.connect.project.serves', "In {project}, the project's own account serves you instead.")
+w7('screen.connect.own.none', 'You have no account of your own connected.')
+w7('screen.connect.own.more', 'Need more? Connect your own account: it then serves you instead, on your own limit.')
+w7('screen.connect.outward', "Outward · leaves your group's Civicsmith", True, 'the mark on what leaves the group (protected: says who can see something)')
+w7('screen.connect.read.button', 'I have read this', False, "groupkeynoticeseen's and disclosureshown's button")
+w7('screen.connect.own.instead', "If you connect your own account, it serves you instead of the group's key, and only you.")
+w7('screen.connect.signin.withcode', 'Connect with this code', False, "subscriptionsignin's second button")
+w7('screen.connect.reauth.summary', 'If you signed in a while ago, it asks for your password first')
+w7('screen.connect.refusal.reference', 'Each refusal carries a reference, such as “{example}”, to give an administrator; nothing you typed is lost.')
+w7('screen.connect.apikey.connect', 'Connect with this key', False, "accountreferenceset's button")
+w7('screen.connect.uses.head', 'What your account pays for')
+w7('screen.connect.limits.head', 'Limits on your account')
+w7('screen.connect.limits.none', "Your limits bind only your own account; the group's and a project's limits never bind it. With no limit, nothing is capped here except Anthropic's own spending limit on your key. The first time a limit is reached in a period, you are told once in your queue.")
+w7('screen.connect.use.project', 'On {whose} account', False, "a row of your use: {whose} is the project's name, possessive")
+w7('screen.connect.meter.groupshare', "Today on the group's key, your share of it")
+w7('screen.connect.meter.own', 'Today on your own account')
+w7('screen.connect.use.note', 'Only you see this: your own use across every account that paid for it. Never a cost per answer.')
+w7('screen.connect.disconnect.button', 'Disconnect your API key', False, "accountreferenceremove's button")
 # find-in
 w7('screen.find-in.scope.this', 'This document: {document}', False, 'a choice of where to look')
 w7('screen.find-in.office.heldby', '{office}, held today by {name}')

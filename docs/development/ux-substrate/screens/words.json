@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 2850,
+  "screen": 2868,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,8 +96,8 @@
   "tab": 2,
   "act": 732,
   "column": 33,
-  "total": 5600,
-  "protected": 794
+  "total": 5618,
+  "protected": 795
  },
  "words": [
   {
@@ -24985,24 +24985,24 @@
   },
   {
    "key": "screen.connect.keptaway.ask",
-   "en": "Everything else works. If you think this should change, ask an administrator.",
+   "en": "Everything else works: searching, counting and your group's templates take the assistant's place. If you think this should change, ask an administrator.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.connect.own.subscription",
-   "en": "The assistant serves you on your own Claude subscription. Only you use it.",
+   "en": "The assistant serves you on your own Claude subscription ({plan}), signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.connect.own.apikey",
-   "en": "The assistant serves you on your own Claude API key. Only you use it; you pay for it.",
+   "en": "The assistant serves you on your own Claude account (API key ending …{last4}). Only you use it; you pay for it.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.connect.own.thengroup",
@@ -25020,17 +25020,17 @@
   },
   {
    "key": "screen.connect.group.allowance",
-   "en": "You may use up to {amount} {unit} of it each {period}, a limit your administrators set.",
+   "en": "The group pays, up to {limit} for each member, a limit your administrators set (you have used {used} of it {when}).",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.connect.group.allowance.reached",
-   "en": "You have used the {amount} {unit} you may use of it this {period}; the assistant pauses for you until the next one.",
+   "en": "At the limit, the assistant pauses for you until the next {period}; everything else works as usual.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.connect.group.more",
@@ -25041,10 +25041,10 @@
   },
   {
    "key": "screen.connect.none",
-   "en": "The assistant isn't serving you yet. Your group doesn't offer its key; if you want the assistant, connect your own account below, or skip it.",
+   "en": "The assistant isn't serving you yet. Your group doesn't pay for the assistant; if you want it, connect your own account below, or skip it.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.connect.notice.heading",
@@ -25132,10 +25132,10 @@
   },
   {
    "key": "screen.connect.signin.help",
-   "en": "Your group's Civicsmith never sees your Claude password. Your subscription then serves only your own questions, and you can disconnect at any time.",
+   "en": "Your group's Civicsmith never sees your Claude password, and the code is used once and never kept. Your subscription then serves only your own questions, and you can disconnect at any time. Needs a Pro or Max plan, and your group's Civicsmith on Workers Paid.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.connect.signin.connect",
@@ -25237,10 +25237,10 @@
   },
   {
    "key": "screen.connect.grouplimits",
-   "en": "On the group's key, your administrators set what it pays for and its limits. If they change either, this shows the new setting.",
+   "en": "On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member (you have used {used} of it today); suggestions {suggestions}. If they change either, this shows the new setting.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.connect.disconnect.heading",
@@ -29268,6 +29268,120 @@
    "protected": false,
    "source": "DEC-257",
    "note": "testify's button"
+  },
+  {
+   "key": "screen.connect.project.serves",
+   "en": "In {project}, the project's own account serves you instead.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.connect.own.none",
+   "en": "You have no account of your own connected.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.connect.own.more",
+   "en": "Need more? Connect your own account: it then serves you instead, on your own limit.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.connect.outward",
+   "en": "Outward · leaves your group's Civicsmith",
+   "protected": true,
+   "source": "DEC-257",
+   "note": "the mark on what leaves the group (protected: says who can see something)"
+  },
+  {
+   "key": "screen.connect.read.button",
+   "en": "I have read this",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "groupkeynoticeseen's and disclosureshown's button"
+  },
+  {
+   "key": "screen.connect.own.instead",
+   "en": "If you connect your own account, it serves you instead of the group's key, and only you.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.connect.signin.withcode",
+   "en": "Connect with this code",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "subscriptionsignin's second button"
+  },
+  {
+   "key": "screen.connect.reauth.summary",
+   "en": "If you signed in a while ago, it asks for your password first",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.connect.refusal.reference",
+   "en": "Each refusal carries a reference, such as “{example}”, to give an administrator; nothing you typed is lost.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.connect.apikey.connect",
+   "en": "Connect with this key",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "accountreferenceset's button"
+  },
+  {
+   "key": "screen.connect.uses.head",
+   "en": "What your account pays for",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.connect.limits.head",
+   "en": "Limits on your account",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.connect.limits.none",
+   "en": "Your limits bind only your own account; the group's and a project's limits never bind it. With no limit, nothing is capped here except Anthropic's own spending limit on your key. The first time a limit is reached in a period, you are told once in your queue.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.connect.use.project",
+   "en": "On {whose} account",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "a row of your use: {whose} is the project's name, possessive"
+  },
+  {
+   "key": "screen.connect.meter.groupshare",
+   "en": "Today on the group's key, your share of it",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.connect.meter.own",
+   "en": "Today on your own account",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.connect.use.note",
+   "en": "Only you see this: your own use across every account that paid for it. Never a cost per answer.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.connect.disconnect.button",
+   "en": "Disconnect your API key",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "accountreferenceremove's button"
   },
   {
    "key": "screen.find-in.scope.this",

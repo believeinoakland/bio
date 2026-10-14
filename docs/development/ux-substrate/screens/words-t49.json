@@ -1225,6 +1225,114 @@
    "note": "DEC-257: testify's button"
   },
   {
+   "key": "screen.connect.project.serves",
+   "en": "In {project}, the project's own account serves you instead.",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.connect.own.none",
+   "en": "You have no account of your own connected.",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.connect.own.more",
+   "en": "Need more? Connect your own account: it then serves you instead, on your own limit.",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.connect.outward",
+   "en": "Outward · leaves your group's Civicsmith",
+   "protected": true,
+   "note": "DEC-257: the mark on what leaves the group (protected: says who can see something)"
+  },
+  {
+   "key": "screen.connect.read.button",
+   "en": "I have read this",
+   "protected": false,
+   "note": "DEC-257: groupkeynoticeseen's and disclosureshown's button"
+  },
+  {
+   "key": "screen.connect.own.instead",
+   "en": "If you connect your own account, it serves you instead of the group's key, and only you.",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.connect.signin.withcode",
+   "en": "Connect with this code",
+   "protected": false,
+   "note": "DEC-257: subscriptionsignin's second button"
+  },
+  {
+   "key": "screen.connect.reauth.summary",
+   "en": "If you signed in a while ago, it asks for your password first",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.connect.refusal.reference",
+   "en": "Each refusal carries a reference, such as “{example}”, to give an administrator; nothing you typed is lost.",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.connect.apikey.connect",
+   "en": "Connect with this key",
+   "protected": false,
+   "note": "DEC-257: accountreferenceset's button"
+  },
+  {
+   "key": "screen.connect.uses.head",
+   "en": "What your account pays for",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.connect.limits.head",
+   "en": "Limits on your account",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.connect.limits.none",
+   "en": "Your limits bind only your own account; the group's and a project's limits never bind it. With no limit, nothing is capped here except Anthropic's own spending limit on your key. The first time a limit is reached in a period, you are told once in your queue.",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.connect.use.project",
+   "en": "On {whose} account",
+   "protected": false,
+   "note": "DEC-257: a row of your use: {whose} is the project's name, possessive"
+  },
+  {
+   "key": "screen.connect.meter.groupshare",
+   "en": "Today on the group's key, your share of it",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.connect.meter.own",
+   "en": "Today on your own account",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.connect.use.note",
+   "en": "Only you see this: your own use across every account that paid for it. Never a cost per answer.",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.connect.disconnect.button",
+   "en": "Disconnect your API key",
+   "protected": false,
+   "note": "DEC-257: accountreferenceremove's button"
+  },
+  {
    "key": "screen.find-in.scope.this",
    "en": "This document: {document}",
    "protected": false,
@@ -2047,6 +2155,14 @@
   "queue.milestone-overdue.summary": "Past its date: {milestone}",
   "queue.temporal-expectation-due.undetermined.summary": "Its date may have passed: {duty}",
   "screen.capture.file.wherehelp": "Filled from the photo where it says; correct it if it is wrong.",
+  "screen.connect.group.allowance": "The group pays, up to {limit} for each member, a limit your administrators set (you have used {used} of it {when}).",
+  "screen.connect.group.allowance.reached": "At the limit, the assistant pauses for you until the next {period}; everything else works as usual.",
+  "screen.connect.own.apikey": "The assistant serves you on your own Claude account (API key ending …{last4}). Only you use it; you pay for it.",
+  "screen.connect.own.subscription": "The assistant serves you on your own Claude subscription ({plan}), signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.",
+  "screen.connect.none": "The assistant isn't serving you yet. Your group doesn't pay for the assistant; if you want it, connect your own account below, or skip it.",
+  "screen.connect.keptaway.ask": "Everything else works: searching, counting and your group's templates take the assistant's place. If you think this should change, ask an administrator.",
+  "screen.connect.signin.help": "Your group's Civicsmith never sees your Claude password, and the code is used once and never kept. Your subscription then serves only your own questions, and you can disconnect at any time. Needs a Pro or Max plan, and your group's Civicsmith on Workers Paid.",
+  "screen.connect.grouplimits": "On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member (you have used {used} of it today); suggestions {suggestions}. If they change either, this shows the new setting.",
   "screen.setup.otp.help": "Filled in for you when you continued from the installer's last page, where it was shown once. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to the Cloudflare account can set a new one.",
   "screen.setup.security.scanner": "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view.",
   "screen.setup.assistant.own": "Any member may connect their own Claude subscription or API key, which then serves only them, unless you keep your group's material away from AI.",
@@ -2084,6 +2200,14 @@
  },
  "rewrite_dec": {
   "screen.capture.file.wherehelp": "DEC-257",
+  "screen.connect.group.allowance": "DEC-257",
+  "screen.connect.group.allowance.reached": "DEC-257",
+  "screen.connect.own.apikey": "DEC-257",
+  "screen.connect.own.subscription": "DEC-257",
+  "screen.connect.none": "DEC-257",
+  "screen.connect.keptaway.ask": "DEC-257",
+  "screen.connect.signin.help": "DEC-257",
+  "screen.connect.grouplimits": "DEC-257",
   "screen.setup.otp.help": "DEC-257",
   "screen.setup.security.scanner": "DEC-257",
   "screen.setup.assistant.own": "DEC-257",

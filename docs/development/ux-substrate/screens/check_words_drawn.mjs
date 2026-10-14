@@ -65,7 +65,7 @@ if (errs.length) { for (const e of errs) console.log('SCRIPT ERROR:', e); consol
 
 // 2. The keyed words: exact sentences, and {placeholder} templates
 const norm = t => String(t).replace(/[’‘]/g, "'").replace(/[“”]/g, '"').replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
-const SPL = /(?<=[.!?])(?<!\b(?:[A-Z]|Prof|Gov|Dr|Mr|Ms|Mrs|St|No)\.)\s+(?=[A-Z"(])/;   // never after an initial ("L. Chen")
+const SPL = /(?<=[.!?⁂])(?<!\b(?:[A-Z]|Prof|Gov|Dr|Mr|Ms|Mrs|St|No)\.)\s+(?=[A-Z"({])/;   // never after an initial ("L. Chen")
 const sents = t => t.split(SPL).map(x => x.trim()).filter(Boolean);
 const bare = t => t.replace(/[.:…]$/, '');   // a closing period or colon, or the ellipsis of a button that asks more
 const PH = /\{[A-Za-z_][\w.]*\}/;
