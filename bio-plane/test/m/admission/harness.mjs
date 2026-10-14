@@ -29,6 +29,12 @@ export async function doAnswer(res) {
 
 const ok = (result) => new Response(JSON.stringify({ ok: true, result }));
 
+/* credentials' REAUTH_DUE answer as its `reauthDue` gives it (its R66, R71 (2)): its row, read from its checks */
+const { ACCOUNT_CHECKS } = await import("../../../src/credentials/checks.mjs");
+export const REAUTH_DUE_ANSWER = Object.freeze({ ok: false, reason: "REAUTH_DUE", code: "REAUTH_DUE",
+  check: ACCOUNT_CHECKS.REAUTH_DUE.check, translation: ACCOUNT_CHECKS.REAUTH_DUE.translation,
+  detail: "this act asks for the password again, and it was not given in the last 5 minutes. Nothing was changed." });
+
 /** A fake env. `sessions` maps a 64-hex token to its session row; `creds` maps an `aik-` value to its credential row
  *  (looked up by SHA-256, as the module asks). Each inner request is recorded with its route, query, body and `x-bio-`
  *  headers. `answer(call)` may return a Response to override a route. */
@@ -61,6 +67,12 @@ export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [] } 
             const HAND = { t: "x-bio-session", sha: "x-bio-credential-sha" };
             const arg = (k) => headers[HAND[k]] ?? null;
             if (call.route === "session") return ok({ session: sessions[arg("t")] ?? null });
+            /* (T47) credentials' `reauthDue` by the internal route its R71 (2) is asked through (K3084): null while the
+               session named is unlocked and its `reauthUntil` is ahead, else its REAUTH_DUE row (ACCOUNT_CHECKS') */
+            if (call.route === "reauthdue") {
+              const s = sessions[arg("t")];
+              return ok({ due: s && s.locked !== true && Number(s.reauthUntil) > Date.now() ? null : REAUTH_DUE_ANSWER });
+            }
             if (call.route === "aicredentiallook") {
               const c = bySha.get(arg("sha"));
               return ok(c ? { found: true, credential: c } : { found: false });
@@ -85,8 +97,11 @@ export function world(opts = {}) {
   const allCaps = opts.caps ?? ["contribute", "publish", "create_projects"];
   const S = { founder: hex64(), ann: hex64(), bare: hex64() };
   const K = { ann: aik(), revoked: aik(), confined: aik(), org: aik() };
-  const sessions = { [S.founder]: founder(allCaps), [S.ann]: member("ann", allCaps), [S.bare]: member("bea", []),
-                     ...(opts.sessions || {}) };
+  /* (T47; R25) each signed-in caller here has given its password again within the window (credentials R66), so an
+     act op-declarations' REAUTH_ACTS names reaches the gates the other tests judge; t47.test.mjs drives the window shut */
+  const open = { reauthUntil: Date.now() + 60 * 60e3 };
+  const sessions = { [S.founder]: { ...founder(allCaps), ...open }, [S.ann]: { ...member("ann", allCaps), ...open },
+                     [S.bare]: { ...member("bea", []), ...open }, ...(opts.sessions || {}) };
   const creds = {
     [K.ann]: cred({ tokenId: "agent-ann", principal: "member:ann", writes: opts.writes ?? [] }),
     [K.revoked]: cred({ tokenId: "agent-old", revoked: true, revokedAt: "2026-09-01", revokedBy: "ann" }),
@@ -121,8 +136,9 @@ export function requestOf({ token, params = {}, via = "header", method = "POST",
 /** The gates in the door's order, for a request naming `op` with `token` and `params`. Answers one of
  *  `{ refusal }`, `{ silent }`, `{ public: true, url }` (a public op past R1–R3) or `{ caller, url, credential }`.
  *  `via` sends the credential: "header" by default, "body", or "query" (refused by R20's gate). */
-export async function gate(env, { op, token, params = {}, method = "POST", tables, via = "header" }) {
-  const { url, req, body } = requestOf({ token, params, via, method });
+export async function gate(env, { op, token, params = {}, method = "POST", tables, via = "header", extraBody = {},
+                                  reauthActs, background }) {
+  const { url, req, body } = requestOf({ token, params, via, method, extraBody });
   const spec = Object.hasOwn(O.OPS, op) ? O.OPS[op] : undefined;
   assert.ok(spec, `test asks an op with a spec: ${op}`);
   const ns = A.namespaceGate(url);
@@ -138,7 +154,8 @@ export async function gate(env, { op, token, params = {}, method = "POST", table
   const pinned = A.pinnedNamespaceGate(url, op, spec);
   if (pinned) return { refusal: pinned };
   if (spec.classes === null) return { public: true, url, credential };
-  const a = await A.admit({ url, env, op, spec, method, presented, doAnswer, credential, ...(tables ? { tables } : {}) });
+  const a = await A.admit({ url, env, op, spec, method, presented, doAnswer, credential, body, ...(tables ? { tables } : {}),
+                           ...(reauthActs ? { reauthActs } : {}), ...(background !== undefined ? { background } : {}) });
   if (!a.caller) return a;
   const fence = A.bearerFence(op, a.caller);
   if (fence) return { refusal: fence };
@@ -172,7 +189,8 @@ export function refused(r, status, code, check, secrets = []) {
 }
 
 /** The inner requests that are not the credential lookups. */
-export const opCalls = (env) => env.calls.filter((c) => c.route !== "session" && c.route !== "aicredentiallook");
+export const opCalls = (env) => env.calls.filter((c) => c.route !== "session" && c.route !== "aicredentiallook"
+                                                    && c.route !== "reauthdue");
 
 /* R21's store side (`window.mjs`) over a real SQLite database (node:sqlite): a storage, a record-core stub that registers
    declarations as record-core R21 does, and the doorbell over the same storage (T43; K2708, K2710): `doorbellOf` creates

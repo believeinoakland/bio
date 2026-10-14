@@ -1,4 +1,5 @@
-/* tasks — the obligation inbox and "Ask for a check" (requirements: `build/requirements/tasks.md`, R1–R17).
+/* tasks — the obligation inbox, "Ask for a check" and "Ask an owner to sign" (requirements: `build/requirements/tasks.md`,
+ * R1–R19).
  * Split out of `queue` at T16 (N363; Bob's K507, seams K531, `build/plan/draft-N363-queue-split.md`): tasks routed from
  * captures whose authority is undetermined, drained from capture's queue under the task grammar (C-19.1), listed to the
  * members who may see their subjects, and forwarded or resolved by their assignee, anyone when unassigned, or an
@@ -11,6 +12,8 @@
  *                  addressed by expertise and sight (membership R106) or to a named member, each addressee's To do,
  *                  the first take, and the check or reasoned concern (R13–R15, R17).
  *   checkRequests, checksOf                          the requester's read of their requests, and the checks on a target (R16).
+ *   signRequest                                      "Ask an owner to sign" (T47; DEC-207 (8)): a prepared case edition put in
+ *                  each owner's To do, closed by that owner or when the edition is signed (R19).
  *
  * REACHED as `tasksOf(ctx, deps)` (K61): one instance per Durable Object storage, created on the first call. At that
  * call it seeds its TASK ledger row (R5) and declares its table to record-core's purge (R8). When the declaration holds,
@@ -27,7 +30,7 @@
  * The ops are `tasksOps`' entries, which control-plane's routes spread into the plane's one map.
  */
 
-import { isMachineStamp, isPublicHttpsLocator, ISO_TS_RE as ISO_INSTANT } from "../record-grammar/index.mjs";
+import { isMachineStamp, isPublicHttpsLocator, ISO_TS_RE as ISO_INSTANT, parseFrontmatter } from "../record-grammar/index.mjs";
 import { recordOf, stampInstant, perItem, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, noSuchMember } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
@@ -62,11 +65,18 @@ const asQuery = (q) => (q && typeof q === "object" && !Array.isArray(q) ? q : {}
 export const CHECK_TASK_KIND = "check-requested";
 const CHECK_VERDICTS = Object.freeze(["check", "concern"]);
 const CHECK_NOTE_MAX = 1000, CHECK_REASON_MAX = 4000;
+/* R19 (DEC-207 (8)): the task kind an owner's To do to sign a prepared edition carries. */
+export const SIGN_TASK_KIND = "sign-requested";
 /* membership R21's normalisation of a label (trimmed, whitespace collapsed, at most 120), so the label recorded on a
    request is the one membership R106 addressed by. */
 const normLabel = (label) => String(label ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
 /* A text the member wrote, trimmed; empty reads as null. */
 const trimmed = (v) => { const t = v === null || v === undefined ? "" : String(v).trim(); return t || null; };
+/* R10, R13–R15, R19 (K3145): the member a `by` stamp names. The control plane stamps a session's `by` in the viewer's
+   form, `member:<id>` (admission's `resolveSession`; the founder's bare `admin`, a machine's `class:<cls>`), so the
+   `member:` prefix is folded here and every sight, ownership and fact is asked of `member:<id>` once, never
+   `member:member:<id>`. A bare id (a caller in process) is taken as it is. */
+const memberOfStamp = (by) => (typeof by === "string" && by.startsWith("member:") ? by.slice("member:".length) : by);
 /* An opaque id for a request or a check: 16 characters drawn at random, telling no reader how many exist. */
 const opaque = (prefix) => {
   const A = "abcdefghijklmnopqrstuvwxyz0123456789", u = new Uint8Array(16);
@@ -233,6 +243,7 @@ export class Tasks {
       status: row.status, created: row.created,
       ...(row.resolved_at ? { resolved_at: row.resolved_at } : {}),
       history,
+      ...(row.kind === SIGN_TASK_KIND ? { sign: this.#signOf(row.id) } : {}),
     };
   }
 
@@ -430,6 +441,7 @@ export class Tasks {
    *  `queued` is not — `task_queue` rows carry a capture sha and no bundle, so
    *  the number names nothing. */
   taskList({ assignee = null, status = null, refersTo = null, limit = 200, viewer = null } = {}) {
+    this.#closeSigned();
     const cap = clampLimit(limit, 200, 1000);
     /* `tk.` and not a bare column: see #bundleGate's refusal. */
     const seen = this.#bundleGate("tk.refers_to", viewer);
@@ -474,6 +486,7 @@ export class Tasks {
    *  statuses or other assignees never crowd them out; an empty `statuses` or `assignees` answers none. */
   recentTasks(q = {}) {
     const { viewer = null, limit = 200, statuses = null, assignees = null } = asQuery(q);
+    this.#closeSigned();
     try {
       const cap = clampLimit(limit, 200, 1000);
       const strings = (a) => (Array.isArray(a) ? a.filter((x) => typeof x === "string") : null);
@@ -491,6 +504,7 @@ export class Tasks {
    *  descending, then `id`, at most `limit` (1–1,000, default 200), each as `taskList` gives a task. */
   resolvedTasks(q = {}) {
     const { viewer = null, since = null, limit = 200 } = asQuery(q);
+    this.#closeSigned();
     try {
       const cap = clampLimit(limit, 200, 1000);
       const seen = this.#bundleGate("tk.refers_to", viewer);
@@ -505,6 +519,7 @@ export class Tasks {
   taskExists(q = {}) {
     const { id = null, viewer = null } = asQuery(q);
     if (typeof id !== "string" || !id) return false;
+    this.#closeSigned();
     try {
       const seen = this.#bundleGate("tk.refers_to", viewer);
       return !!this.#one(`SELECT 1 AS x FROM tasks tk WHERE tk.id=? AND (${seen.sql})`, id, ...seen.args);
@@ -658,6 +673,7 @@ export class Tasks {
                      + "and prepare what it needs, and may not close it — an unassigned task is nobody's "
                      + "work, and closing nobody's work is still closing. Sign in as a member." };
     /* END DEC-49 REGION is-machine-resolve */
+    this.#closeSigned();
     const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
     if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
     if (row.status === "resolved") return { ok: true, id, already: true, resolved_at: row.resolved_at };
@@ -675,6 +691,12 @@ export class Tasks {
         return Tasks.#checkRefusal("CHECK_CLOSES_BY_RECORD",
           "this To do is the check its holder took, and it closes when the check or a concern is recorded; nothing was changed");
         /* END DEC-49 REGION is-check-closes-by-record */
+      this.#closeTodo({ task: id, history: row.history }, { at, event: "resolved", actor });
+      return { ok: true, id, status: "resolved", resolved_at: at };
+    }
+    /* R19: an owner's To do to sign is closed by that owner (or, under R3's fence, an administrator who sees it), and only
+       that To do: the other owners' stay open until each closes theirs or the edition is signed. It is no C-19.1 task. */
+    if (row.kind === SIGN_TASK_KIND) {
       this.#closeTodo({ task: id, history: row.history }, { at, event: "resolved", actor });
       return { ok: true, id, status: "resolved", resolved_at: at };
     }
@@ -766,7 +788,8 @@ export class Tasks {
   }
 
   /** R13: ask for a check on `target`, by expertise `label` or of the named `member`, with an optional `note`. */
-  checkRequest({ target = null, label, member, note = null, by = null, now = null } = {}) {
+  checkRequest({ target = null, label, member, note = null, by: stamp = null, now = null } = {}) {
+    const by = memberOfStamp(stamp);
     const machine = this.#refuseMachineCheck(by);
     if (machine) return machine;
     const info = typeof target === "string" && target ? this.#record.bundleInfo(target) : null;
@@ -826,7 +849,8 @@ export class Tasks {
   }
 
   /** R14: take the request. Exactly one take succeeds: the take is one conditional write under the request's key. */
-  checkTake({ request = null, by = null, now = null } = {}) {
+  checkTake({ request = null, by: stamp = null, now = null } = {}) {
+    const by = memberOfStamp(stamp);
     const machine = this.#refuseMachineCheck(by);
     if (machine) return machine;
     const { row: req, facts, refused } = this.#requestFor(request, by);
@@ -858,12 +882,13 @@ export class Tasks {
       if (e && e.exhausted) return mintExhausted("TASK");
       throw e;
     }
-    if (!todo) return this.checkTake({ request, by, now });     /* another take landed first: answer as it stands */
+    if (!todo) return this.checkTake({ request, by: stamp, now });     /* another take landed first: answer as it stands */
     return { ok: true, request: req.request, target: req.target, taken: { handle, at }, todo };
   }
 
   /** R15: the taker records a check or a reasoned concern; one record per request; it gates nothing. */
-  checkRecord({ request = null, verdict = null, reason = null, by = null, now = null } = {}) {
+  checkRecord({ request = null, verdict = null, reason = null, by: stamp = null, now = null } = {}) {
+    const by = memberOfStamp(stamp);
     const machine = this.#refuseMachineCheck(by);
     if (machine) return machine;
     const { row: req, facts, refused } = this.#requestFor(request, by);
@@ -959,6 +984,124 @@ export class Tasks {
       if (!this.#membership.inSight(target, viewer)) return [];
       return this.#rows(`SELECT * FROM check_records WHERE target=? ORDER BY at, check_id`, target).map((r) => Tasks.#recordOf(r));
     } catch { return []; }
+  }
+
+  /* ------------------------------------------------------------------ "Ask an owner to sign" (R19; DEC-207 (8))
+     A member who may see a case asks its project's owners to sign an edition prepared and not yet signed: each active
+     owner gets a To do, a task of kind `sign-requested` on the project (R14's form; the project, not the case, so R2's and
+     R6's gate, which reads a task's subject as a bundle, answers it to whoever sees the project and to no one else, R9),
+     open, role `member`, and the request is recorded once per edition in this module's own append-only tables (R17's form).
+     Each To do closes when its owner resolves it (R3), or when the edition is signed: no signing notice reaches a module
+     of this layer, so every read of the inbox and every act on it first closes the To dos whose edition is now signed
+     (`#closeSigned`). The edition is read from publication's stated read contract (its R40: `cases`, `case_documents`),
+     as case-authoring reads its own preparation back (its R14). */
+
+  /** R19: the edition `(caseId, edition)` as prepared and unsigned, with its project, or null. The project is the case's
+   *  (`cases`), else the one the preparation's own frontmatter names (`case_project`, as case-authoring reads it); it is
+   *  a project bundle held here, or there is none. Never throws. */
+  #preparedEdition(caseId, edition) {
+    try {
+      const doc = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=? AND sig_armored IS NULL`, caseId, edition);
+      if (!doc) return null;
+      const cased = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, caseId);
+      let project = cased ? cased.project_id : null;
+      if (!project) {
+        const named = (parseFrontmatter(String(doc.text)).data || {}).case_project;
+        project = typeof named === "string" && named.trim() ? named.trim() : null;
+      }
+      const info = project ? this.#record.bundleInfo(project) : null;
+      return info && info.type === "project" ? { caseId, edition, project } : null;
+    } catch { return null; }
+  }
+
+  /** R19: the sign request an owner's To do answers to, as a task carries it (`sign`), or null. */
+  #signOf(task) {
+    try {
+      const r = this.#one(`SELECT r.request, r.case_id, r.edition FROM sign_todos t JOIN sign_requests r ON r.request = t.request
+                            WHERE t.task=?`, task);
+      return r ? { request: r.request, case: r.case_id, edition: Number(r.edition) } : null;
+    } catch { return null; }
+  }
+
+  /** R19: every open To do to sign whose edition is now signed is closed, in the signing's instant and under its signer
+   *  (publication R40: `case_documents`' `ratified_at` and `attestor_member`). Asked before every read of and act on the
+   *  inbox; on a store without the tables it does nothing and never throws. */
+  #closeSigned() {
+    let due;
+    try {
+      due = this.#rows(`SELECT t.id AS task, t.history AS history, d.ratified_at AS at, d.attestor_member AS signer
+                          FROM sign_todos s JOIN tasks t ON t.id = s.task AND t.status <> 'resolved'
+                          JOIN sign_requests r ON r.request = s.request
+                          JOIN case_documents d ON d.case_id = r.case_id AND d.edition = r.edition AND d.sig_armored IS NOT NULL`);
+    } catch { return; }
+    for (const d of due) {
+      const at = typeof d.at === "string" && ISO_INSTANT.test(d.at) ? d.at : this.#instant(null);
+      this.#closeTodo(d, { at, event: "signed", actor: d.signer ?? null });
+    }
+  }
+
+  /** R19: ask the owners of the case's project to sign the prepared `edition` of `case`. Refusals, each writing nothing:
+   *  `MACHINE_CANNOT_ASK_SIGN` (an empty or machine `by`); `NO_SUCH_CASE_EDITION` (absent, invisible to `by`, or not
+   *  prepared: one answer); `SIGN_ALREADY_ASKED`, answered with the first request. */
+  signRequest({ case: caseId = null, edition = null, by: stamp = null, now = null } = {}) {
+    const by = memberOfStamp(stamp);
+    if (typeof by !== "string" || !by || isMachineStamp(by))
+      /* DEC-49 REGION is-machine-sign */
+      return Tasks.#checkRefusal("MACHINE_CANNOT_ASK_SIGN",
+        "asking a project's owners to sign is a member's act, and this caller is no member's session; nothing was written");
+      /* END DEC-49 REGION is-machine-sign */
+    const ed = edition === null || edition === undefined || edition === "" ? NaN : Number(edition);
+    const facts = this.#membership.memberFacts(by);
+    const prepared = typeof caseId === "string" && caseId && Number.isInteger(ed) && ed >= 1 ? this.#preparedEdition(caseId, ed) : null;
+    if (!prepared || !facts || facts.status !== "active" || !this.#membership.inSight(prepared.project, `member:${by}`))
+      return { ok: false, reason: "NO_SUCH_CASE_EDITION", code: "NO_SUCH_CASE_EDITION",
+               detail: "no edition of that case is prepared and waiting to be signed where you can see it; nothing was written" };
+    const firstOf = () => {
+      const r = this.#one(`SELECT * FROM sign_requests WHERE case_id=? AND edition=?`, caseId, ed);
+      return r ? { request: r.request, case: r.case_id, edition: Number(r.edition), by: r.by, at: r.at, asked: Number(r.asked) } : null;
+    };
+    const already = (first) =>
+      /* DEC-49 REGION is-sign-asked */
+      Tasks.#checkRefusal("SIGN_ALREADY_ASKED",
+        `the owners were already asked to sign edition ${first.edition} of this case at ${first.at}; nothing was written`, { first });
+      /* END DEC-49 REGION is-sign-asked */
+    const held = firstOf();
+    if (held) return already(held);
+    this.#closeSigned();     /* the inbox as it stands before this act adds to it; no refusal above writes */
+    const at = this.#instant(now);
+    /* membership R65 (the owners, in the order they became owners) and R68: each active owner */
+    const owners = this.#membership.projectOwners(prepared.project)
+      .filter((m) => (this.#membership.memberFacts(m) || {}).status === "active");
+    const request = opaque("signreq");
+    let won = false;
+    try {
+      this.#atomically(() => {
+        this.sql.exec(`INSERT OR IGNORE INTO sign_requests (request, case_id, edition, project, by, at, asked) VALUES (?,?,?,?,?,?,?)`,
+          request, caseId, ed, prepared.project, by, at, owners.length);
+        const first = this.#one(`SELECT request FROM sign_requests WHERE case_id=? AND edition=?`, caseId, ed);
+        if (!first || first.request !== request) return;
+        won = true;
+        const subject = `Edition ${ed} of ${caseId} is prepared and ready to sign`;
+        for (const m of owners) {
+          this.seedLedger();
+          const id = this.#record.mintOpaqueId("TASK", at.slice(0, 4), "-sign",
+            (x) => !!this.#one(`SELECT 1 AS x FROM tasks WHERE id=?`, x));
+          if (!id) throw Object.assign(new Error("MINT_EXHAUSTED"), { exhausted: true });
+          this.sql.exec(
+            `INSERT INTO tasks (id, kind, refers_to, capture_sha, subject_text, subject_desc, locators,
+                                assignee, assignee_role, status, created, resolved_at, history)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            id, SIGN_TASK_KIND, prepared.project, null, subject, null, null, m, "member", "open", at, null,
+            JSON.stringify([{ at, event: "created", actor: by }]));
+          this.sql.exec(`INSERT INTO sign_todos (request, member, task, at) VALUES (?,?,?,?)`, request, m, id, at);
+        }
+      });
+    } catch (e) {
+      if (e && e.exhausted) return mintExhausted("TASK");
+      throw e;
+    }
+    if (!won) return already(firstOf());     /* another ask landed first: answered with it */
+    return { ok: true, request, case: caseId, edition: ed, at, asked: owners.length };
   }
 
   static PER_ITEM_MAX = PER_ITEM_MAX;   /* affordances.mjs: ONE number, published as set_acts[].max_items */
@@ -1093,5 +1236,7 @@ export function tasksOps(t, url, body) {
     checkrecord: () => t.checkRecord({ request: body?.request, verdict: body?.verdict, reason: body?.reason, by: s("by") }),
     checkrequests: () => t.checkRequests({ viewer: s("viewer"), after: s("after"), limit: s("limit") }),
     checksof: () => t.checksOf({ target: s("target"), viewer: s("viewer") }),
+    /* R19 (DEC-207 (8)): `by` and `viewer` the URL's stamps (op-declarations R59; control-plane R84), the edition the body's */
+    signrequest: () => t.signRequest({ case: body?.case, edition: body?.edition, by: s("by"), viewer: s("viewer") }),
   };
 }
