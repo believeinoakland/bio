@@ -18,3 +18,7 @@ Size (session_01Qp58hwvG5avLezx8s8j93H): test runs 8, module lines 871
 ## J3 · COMPLETE
 
 B2 applied: tranche/T48 merged (setup-words in). With the real WORD_ROWS every screens-wizards test passes (words.test included); format, architecture (12 files), coverage (12 of 12) and ownership show 0 failures. The only change since my first COMPLETE is the R10 test's text comparison. Size (session_01Qp58hwvG5avLezx8s8j93H): test runs 10, module lines 871
+
+## J4 · COMPLETE
+
+B3 applied: tranche/T48 merged (interface-shell in). Stand-in dropped: R12's test now runs interface-shell's own checkClasses over the real SCREENS and GUIDE (it found cs-list and cs-actrow, now mk-list and mk-acts). Tests updated to the shell's changes: ring class cs-target, crumbs 'Settings › Wizards'. All screens-wizards tests pass; format, architecture (12 files), coverage (12 of 12) and ownership 0 failures. Nothing stays red that is mine. Open item for the shell: the chip still sits in cs-guidemarks wherever the shell puts it (its R59), unchanged by me. Size (session_01Qp58hwvG5avLezx8s8j93H): test runs 14, module lines 871
