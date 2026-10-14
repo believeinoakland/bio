@@ -1,6 +1,6 @@
 # interface-shell (T48)
 
-**Status** · session_01MDeDZmkgwHShmUu5piZFAA · depth 2 · WORKING · handled B1
+**Status** · session_01MDeDZmkgwHShmUu5piZFAA · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## Work (T48-69), to be completed once the same-layer services merge
 
