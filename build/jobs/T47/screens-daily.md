@@ -1,6 +1,6 @@
 # screens-daily (T47)
 
-**Status** · session_0162xmsCFHXbjgNsPJ9QiCQ2 · depth 2 · WAITING ON BOB (J2) · handled B3
+**Status** · session_0162xmsCFHXbjgNsPJ9QiCQ2 · depth 2 · WAITING ON BOB (J2) · handled B4
 
 **Progress (2026-10-14 00:20 UTC).** Read whole: my requirements, my code and tests (all of `src/screens-daily/`, `test/m/screens-daily/`), interface-shell's public part and kit, the layer and plan entries, the T47 drafts' sections named at START, the registry, words, library and mockup drawings of `home`, `projects`, `queue`, `finder`. Built R8–R13 on my readings and B2/B3 (K3143): Home's projects from `projectlist` with paged counts, the front doors, the new-group state; the new `projects` screen (owner R27, members/activity/last change R28); the queue's up-to-date state and unsent-request item; Find's no-result state. Checks: format, architecture, coverage (13 of 13), ownership: 0 failures. Tests: 64 of 64 pass in a scratch worktree with local stand-ins for the unmerged providers (registry re-take, words R7, `projectlist`/`projectquestions` in `OPS`, `cs.wizard`/`cs.initials`/`cs.activity`); on this branch they wait on those merges. Next: on each CHANGE, merge `tranche/T47`, re-point the R9 and R10 tests from the stand-ins to the kit as built (`p.wizards`, `p.initials`, `p.activity` are the stand-ins' hooks), run, then COMPLETE.
 
