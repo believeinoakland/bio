@@ -1,26 +1,29 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #172 (`session_01MiANWqYjrveVVJ3EzpQ39S`, secondary account, depth 1), 2026-10-14 ~14:25 UTC, at about 29% context (the new 30% threshold, K3271), right after L8's start and the effort revision; no step half done. Read `build/rulings-active.md` whole first; K3256–K3272 are this session's rulings.
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #173 (`session_01X41MB8GRNsYeuzhPeMPDaL`, secondary account, depth 1), 2026-10-14 ~15:05 UTC, at about 28% context, right after L10's start; no step half done. Read `build/rulings-active.md` whole first; K3274–K3286 are this session's rulings.
 
 ## Where things stand
 
-- **T48 open** on `tranche/T48`. **L1–L6 closed** (L6 K3267, K3270; bundles regenerated). **L7 has no job.** **L8 running** (K3270): seven jobs, sessions in the plan's Jobs line; CASE-CHECKER #12 on the default model, the other six on `claude-sonnet-5-5`, a measured trial (K3269): compare their `metrics/T48.csv` rows with L6's (185M tokens over 12 jobs, ~15M each). Each has START (B1) and the K3271 CHANGE (B2); all rung. Merge order and STARTs in `starts-T48/*.txt`. L9–L11 STARTs not yet written (pattern: the L8 script in K3270's commit; `build/plan/reading-sets.py`; next session numbers by `git grep -o "<MODULE> #[0-9]*" build/`).
-- **The effort revision (Bob, K3271)** is on civicos-process `main` @ 3460207: a job reads its requirements, entries, layer contract, own code, the used services its entries touch and the tests naming a requirement its entries change (its other tests run, not read); **BOB refreshes at 30%**; a module whose only entries change no behavior may wait up to three tranches, the plan naming each wait (P19). Write every later START's reading-set line to the new rule (no digest helpers), and apply the P19 wait when writing L9–L11 STARTs and T49's plan. Bob's directive (K3269): cut tokens per tranche; report tokens per tranche and per job beside the work.
-- **biosmoke7** is discarded (Bob, K3260); `bobux` too (Bob, K3263). At the release after L11: install `biosmoke8` (Bob founds it), re-point `agent-worker` and `civicos`, then remove the `biosmoke7` worker and `biosmoke7_Store`, and `bobux` with `bobux_Store` (K3262; `build/plan/draft-T48-biosmoke7-inventory.md`; shared workers, containers, R2 stay). Then `JOURNEY_ADMIN_*` must name biosmoke8's founder (Bob's one act in the environment settings, walked through then). There is no default password (credentials R1); `sparky` is a member (K3258); T48-87 fixes Members' administrator count.
-- **Founder's handle (Bob, K3265, "B")**: N1072 for T49; the draft `build/plan/draft-T49-N1072-founder-handle.md` (a worker's) is to be reviewed before T49 opens; its UX doubts go to UX-DESIGN.
-- **Fan-out fixes (K3268)** in rulings-active §5; N1073 (tests that hand-list others), N1074 (service index, process tooling), N1075 (all member words by key, decided A under Bob's delegation, K3269).
-- **Channel:** UX-DESIGN read through U217; BOB's B188–B196 unread by it (B195 biosmoke7, B196 founder handle). Lanes unchanged (investigation H43, actions H31).
+- **T48 open** on `tranche/T48`. **L1–L9 closed** (L8 K3275, L9 K3285; bundles regenerated each time). **L10 running** (K3286): FOLLOWING #8 (`session_01QH7GDMqWRepVCj3VBS4ktb`) and SCHEDULER #35 (`session_018FNXLVRCc8F5GW3WK111dG`), both on `claude-sonnet-5-5`, START (B1) posted and rung for 15:04. Merge order: following, scheduler.
+- **L11 is ready to start** when L10 closes: 29 jobs (K3279 added screens-entry; 86 jobs in T48). STARTs are written in `build/plan/starts-T48/*.txt` (generated from the plan, including every "also" line through K3284; if you add an also line, re-generate that module's START the same way: entries + marks + the K3271 reading line). **Models (K3286):** interface-assets, interface-shell, screens-entry, screens-daily and journey-check on the default model (omit `model`); the other 24 on `claude-sonnet-5-5`. Next session numbers: `git grep -h -o "<MODULE> #[0-9]*" build/ | sort -t'#' -k2 -n | tail -1`, plus one.
+- **Accepted reds until their L11 merges** (K3280–K3283): op-declarations R19 census and `t45.test.mjs` (pressurefor, filingread, actionreplyquoting), plane `split.test.mjs`, affordances R1/R12 op-map tests; C-115.47 in two `checks.mjs` files until T49's stamp. Coverage's 23 failures are L10–L11 ids.
+- **Model trial result (K3275):** Sonnet jobs ~5.5–6.8M tokens each against ~15M on the default; L8 32.7M (+14.7M default), L9 61.6M. Report tokens per job at the close (K3269).
+- **Bob's weekly meter:** 59% at ~15:00 (K3285).
+- **Channel:** UX-DESIGN read through U221 (now UX design #13, `session_018wYsHFkiS5mNbyuRzpFoDX`); B197 (the founder-handle asks, DEC-230 owed) and B198 (ACK) posted. **U220: MERGE of PR #36** (`claude/gallant-brown-zg0wc1`) at T48's close. Lanes unchanged (investigation H43, actions H31).
+- **T49 preparation:** N1072 draft settled (K3277, `draft-T49-N1072-founder-handle.md`); N1073 census (`draft-T49-N1073-hand-lists.md`); N1076 (noquote key), N1077 (DEC-229's document page fold, once on `main`).
+- Bob asked whether T48's result will be usable; answered: core journeys yes, 21 undrawn legacy-ui gaps remain (DEC-228's "to draw"); the release walk (K3052) is the proof.
 
 ## What comes next, in order
 
-1. **Take over** (§5.1): archive BOB #172, write its BOB-final row; delete its backstop `trig_01NTK1ryztVThkcpuvWiMTe2` and `WATCH #172` (`trig_01LfWK5kMvmBsJoiPZ58WTRv`, into ROOT #6); arm your own.
-2. **Watch L8** (§5.4); merge in order; close L8 (regenerate: case-checker's `program.mjs` then bundles). Record the model trial's result as a ruling. Then L9, L10.
-3. **Before L11's START:** apply K3254's fold (`draft-T48-L11-design-fold.md`), T48-87, and the "also" lines; STARTs under K3271.
-4. Alongside (P18): review the N1072 draft; list N1073's hand-listing tests (a worker).
+1. **Take over** (§5.1): archive BOB #173, write its BOB-final row; delete its backstop `trig_01BrM5Yx3gseBQAAmmDRExC5` and `WATCH #173` (`trig_01Es1gbrcjSSxdBzebS8PbPa`, into ROOT #6); arm your own.
+2. **Watch L10**; merge; close L10 (regenerate per manifest order; archive, rows).
+3. **Start L11** (§5.3) from the prepared STARTs; merge in the plan's L11 order (plane after control-plane, installer after plane, journey-check last).
+4. **Close T48** (§5.7): merge PR #36 first (U220), merge `main` into the tranche, `module-tests.mjs` and checks, archive the plan, PR `tranche/T48` → `main` merged with the GitHub merge tool. Then the release (biosmoke8, K3260/K3262) and the walk as administrator and member (K3052).
+5. Alongside (P18): T49's plan from `next.md`.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
-- T48's close merges `tranche/T48` into `main` by PR with the GitHub merge tool, method merge (§5.7 (3); CLAUDE.md standing direction; standing list `mcp__github__merge_pull_request`); no refusal recorded.
+- T48's close merges PR #36 (design stream, §5.7 (1), U220) and then `tranche/T48` into `main` by PR with the GitHub merge tool, method merge (§5.7 (3); CLAUDE.md standing direction; standing list `mcp__github__merge_pull_request`); no refusal recorded.
 - Deploys and Cloudflare removals are Bob's approval in session each time (K1715; never on the standing list).
 
 ## Open with Bob
