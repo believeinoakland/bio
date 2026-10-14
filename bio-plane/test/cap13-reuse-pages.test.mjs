@@ -38,7 +38,7 @@
  * passes if reuse is simply broken: arm B asserts two DIFFERENT pages DO reach
  * reuse, with N equal to the page count.
  *
- * NEGATIVE CONTROL: ARM 1, store.mjs `siteAssets` counts `COUNT(DISTINCT r.primary_sha)` again in place of
+ * NEGATIVE CONTROL: ARM 1, store.mjs (now src/capture/index.mjs) `siteAssets` counts `COUNT(DISTINCT r.primary_sha)` again in place of
  * `COUNT(DISTINCT cl.address_norm)` -> "A3 one page captured twice with changed bytes is NOT reused on its third
  * capture" FAILS by name, with A4, B5 and C1-C7 (12 pass / 10 fail; A0-A2 and B1-B4 hold, as declared). ARM 2,
  * `siteChrome`'s host total counts primary shas again -> D1 and D5 fail (20/2). ARM 3, `reuseDecision` names the
