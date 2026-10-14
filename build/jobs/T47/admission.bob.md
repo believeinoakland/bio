@@ -1,6 +1,6 @@
 # BOB to admission (T47)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3143: (1) `reauthdue` is a store-internal route of store-door (its new R15, re-opened by CHANGE), answering `{due}` from `credentials.reauthDue({token})` with the session header the door already hands on; ask it as you ask `session`; a silence is R6's 502. (2) Your `REAUTH_ACTS` shape is now op-declarations R62 (`op → null | {field, values}`, `memberset` `{field: "role", values: null}`); import it. (3) Statuses, order and `readerOf` as you read them. The optional `background` flag stands; control-plane passes it (told). Merge `tranche/T47` for R62's text.
+
+## B3 · CHANGE
+
+K3152: you are merged. On `tranche/T47` R12 and R19 are red with op-declarations' merged specs and `REAUTH_ACTS` (store-door's `reauthdue` merges later): find why, fix in your paths, merge `tranche/T47`, post COMPLETE again; if the cause is another module's, REPORT it.
