@@ -1,6 +1,6 @@
 # screens-publish — requirements
 
-**Status** · New in T47 (T47-63; K657, K1043, K569, K3027 doubt 2): a module built fresh, layer 11 after `screens-investigate` and before `screens-action` (N897 (1); N788's Photos step, N757's marking on screen, N683's "Publish at…"; DEC-78, DEC-96, DEC-100, DEC-112, DEC-116, DEC-147, DEC-180, DEC-181, DEC-183). Drafted in `build/plan/draft-T47-interface.md` §2.3, worded here by BOB (P5). No ids move. Not yet met (T47).
+**Status** · New in T47 (T47-63; K657, K1043, K569, K3027 doubt 2): a module built fresh, layer 11 after `screens-investigate` and before `screens-action` (N897 (1); N788's Photos step, N757's marking on screen, N683's "Publish at…"; DEC-78, DEC-96, DEC-100, DEC-112, DEC-116, DEC-147, DEC-180, DEC-181, DEC-183). Drafted in `build/plan/draft-T47-interface.md` §2.3, worded here by BOB (P5). No ids move. Not yet met (T47). Last changed T48 (T48-75: R18 new, amending R2 and R17, the reader's link's end date, N1038, `review` R34; R19 new, amending R6, the published page's evidence and complete edition, K3190 census P1, DEC-228; K3195); marked not yet met (T48).
 
 **Size (P6).** Estimated 2,600–3,200 lines with comments, its own keyed sentences included, measured at its START (M-T47-1, K617).
 
@@ -49,6 +49,11 @@ From a case's draft to its public page, and what comes in from outside: preparin
 - **R16** (DEC-116; R8) `docketpost` signs `docketStatement` in `NS_DOCKET` through `cs.signer.sign` within the prepared statement's 60 minutes.
 - **R17** (DEC-201 (8)) **review-outside** (published frame, `/app/review#grant=<secret>`, the fragment removed on load): `reviewcopy` (the secret in the body), the link's end date, `reviewcomment`; no session read.
 
+#### T48 (T48-75)
+
+- **R18** (T48; N1038; DEC-100; K3147; `review` R34; amends R2, R17) `reviewgrant` sends `until`, the end of the day the member chose in the group's zone as an instant (`record-core`'s stamp form); each reader's row draws "until <date>" (`cs.date`) from the grant's `until`, and a lapsed grant is drawn ended; `review-outside` draws the link's end date from the same answer. `REVIEW_BAD_UNTIL` is drawn by its words and the form keeps what was typed. Test: a grant ending in three days draws that date; controls: a past date is refused and nothing shared; a grant with no `until` draws "until you stop sharing". *(not yet met: T48)*
+- **R19** (T48; K3190, census P1; DEC-228; `public-read` R3, R5) On `published`, each evidence row with a full SHA-256 opens its bytes through `publishedbytes` by that hash, as a public op with no `Authorization` header (`interface-shell` R30); a row with no sha draws no link. "Download the complete edition" fetches the edition through `publishedcase` (`cs.download`), with no credential. Its words are this module's `SCREEN_WORDS` rows from the mockup until the design stream keys them. The "Verify any hash" panel is not drawn (DEC-228: to draw). Test: an evidence row opens its bytes with no header; control: a row with no sha draws no link. *(not yet met: T48)*
+
 ## Private
 
 ### Uses
@@ -56,7 +61,7 @@ From a case's draft to its public page, and what comes in from outside: preparin
 - `interface-shell`: the kit `cs` and the screen contract (its R21), the public frame (its R30).
 - `setup-words`: `WORD_ROWS` keys.
 - `wizard-scripts`: `SCREEN_REGISTRY` (its R13, R31), in tests only.
-- Through the plane: `review` (`casedraft`, `reviewgrant`, `reviewrevoke`, `reviewcomment`, `reviewcomments`, `casedrafts`), `case-inputs` (`statementack`, `whatchangedpropose`, `whatchangeddrafts`), `case-authoring` (`casedocument`, `publishpreflight`, `publishtensions`, `publish`), `case-check` (`casecheck`), `publication` (`attribute`), `case-carriage` (`obscuremark`, `obscuremarkwithdraw`, `photomarks`), `ratification` (`caseratify`, `publishat`, `caseRatifyStatement`), `publish-schedule` (`publishschedule`), `public-read` (`publishedcase`, `publishededitions`, `verify`), `case-import`, `docket`, `doorbell` (`knock`), `instance-setup` (`groupidentity`), `wizard-scripts` (`writinghelp`).
+- Through the plane: `review` (`casedraft`, `reviewgrant`, `reviewrevoke`, `reviewcomment`, `reviewcomments`, `casedrafts`), `case-inputs` (`statementack`, `whatchangedpropose`, `whatchangeddrafts`), `case-authoring` (`casedocument`, `publishpreflight`, `publishtensions`, `publish`), `case-check` (`casecheck`), `publication` (`attribute`), `case-carriage` (`obscuremark`, `obscuremarkwithdraw`, `photomarks`), `ratification` (`caseratify`, `publishat`, `caseRatifyStatement`), `publish-schedule` (`publishschedule`), `public-read` (`publishedcase`, `publishededitions`, `verify`; T48: `publishedbytes`, its R5; R19), `case-import`, `docket`, `doorbell` (`knock`), `instance-setup` (`groupidentity`), `wizard-scripts` (`writinghelp`).
 - Tests only: `op-declarations` (`OPS`).
 
 ### Invariants
@@ -66,6 +71,7 @@ From a case's draft to its public page, and what comes in from outside: preparin
 ### Satisfies
 
 - Registry screens `case-editor`, `review-copy`, `ceremony`, `published`, `imported`, `docket`, `doorbell` (`docs/development/ux-substrate/screens/registry.json` at `a0fab7abf0`; DEC-139); their drawings in `mock-screens.js` at that commit; N897 (1).
+- (T48) DEC-228 (P1, drawn): R19. N1038, DEC-100: R18.
 - DEC-100 (R2, R8); DEC-147 (R5, R6), N683 (R5); DEC-180, DEC-183, N757, N788 (R4); DEC-181 (R5); DEC-112, DEC-96 (R6, R7); DEC-116 (R8); DEC-78 (R9); DEC-88 (R1's acknowledgement reason).
 
 ### Suggestions

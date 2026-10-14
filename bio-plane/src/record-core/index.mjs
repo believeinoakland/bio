@@ -21,7 +21,8 @@
    K2616, K2617): `ACD`, a case account draft, opaque in `ID_TABLE` with `legacy: "sequential"` since record-grammar's
    T42 job (its R55), minted opaque by its form alone and named by its own sentence (R62, R76). T46 (T46-3; N904): the
    strict `getSetting` tells an unreadable setting (`SETTING_UNREADABLE`) from an unset one (R83). T47 (T47-6; N939):
-   `setSetting` refuses a value that does not round-trip through JSON, `SETTING_NOT_JSON` under its own row (R84). */
+   `setSetting` refuses a value that does not round-trip through JSON, `SETTING_NOT_JSON` under its own row (R84). T48
+   (T48-8; N1018, K3112): `WCD` and `OUTC`, `case-inputs`' opaque prefixes, each named by its own sentence (R62). */
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES, ID_TABLE } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
@@ -105,13 +106,18 @@ function manifestFiles(filesJson) {
 
 /* ---- no free opaque id (R62, C-59.6): module-level ---- */
 
-/* What each opaque-minted prefix's id is called in R62's detail: R3's set (`RecordCore.GATED_ID_PREFIXES`), and `SRC`, a
-   source, which `sources` mints opaque through `mintOpaqueId` and never through the counter (N376, K540). */
+/* What each opaque-minted prefix's id is called in R62's detail: R3's set (`RecordCore.GATED_ID_PREFIXES`), `SRC`, a
+   source, which `sources` mints opaque through `mintOpaqueId` and never through the counter (N376, K540), and `case-inputs`'
+   two prefixes, minted the same way (T48). */
 const MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task", SRC: "source",
   /* T33 (R76): the opaque prefixes of `ID_TABLE`, which `allocId` draws a 16-character tail for; `CALC` since T34 (K1728),
      `STP` and `GUD` since T41 (record-grammar R51, R53; K2431), `ACD` since T42 (record-grammar R55; K2616, K2617) */
   EVT: "event", LIN: "line", MNY: "money fact", PFA: "person fact", IDC: "identity claim", CALC: "calculation",
-  STP: "step", GUD: "reading guide", ACD: "case account draft" });
+  STP: "step", GUD: "reading guide", ACD: "case account draft",
+  /* T48 (R62; N1018, K3112): `case-inputs`' two opaque prefixes (its R6, R9; record-grammar R46) */
+  OUTC: "carried outcome" });
+/* A prefix whose id reads better named after the word "id" than before it: `WCD`, whose object is a phrase (T48, R62). */
+const MINTED_ID_FOR = Object.freeze({ WCD: "a draft of a new edition's statement of what changed" });
 
 /* R76 (S0-2): the prefixes `ID_TABLE` gives the opaque form, read from record-grammar's one table, never restated. Minting
    follows `form` alone: a row that also carries `legacy: "sequential"` (`CALC`, K1728; `ACD`, K2616) is minted opaque, its counter never
@@ -123,19 +129,20 @@ const TAIL_LENGTH = 16;      /* measures-T33/assistant-substrate.md §5: under 1
 /** R62 (N322, N250, K275, K392): THE ONE ANSWER TO ONE CONDITION, no free opaque id could be drawn (`mintOpaqueId`
  *  answered null, R9). Every act of any module that meets it answers through here, so `MINT_EXHAUSTED` is minted at
  *  one site under one row (C-59.6). `detail` is one fixed sentence per prefix, naming the id that could not be drawn
- *  and saying nothing was written, the same for every caller; a prefix neither in R3's set, `SRC` nor R76's opaque set is
- *  named by no object. `extra`
+ *  and saying nothing was written, the same for every caller; a prefix neither in R3's set, `SRC`, R76's opaque set nor
+ *  `case-inputs`' `WCD` and `OUTC` (T48) is named by no object. `extra`
  *  adds the caller's own fields and never replaces these. It writes nothing and never throws. */
 export function mintExhausted(prefix, extra) {
   const asked = typeof prefix === "string" ? prefix : "";        /* only a string names a prefix */
-  const what = Object.hasOwn(MINTED_OBJECT, asked) ? `${MINTED_OBJECT[asked]} ` : "";
+  const what = Object.hasOwn(MINTED_ID_FOR, asked) ? `id for ${MINTED_ID_FOR[asked]}`
+    : Object.hasOwn(MINTED_OBJECT, asked) ? `${MINTED_OBJECT[asked]} id` : "id";
   let own = {};
   try { if (extra && typeof extra === "object" && !Array.isArray(extra)) own = { ...extra }; } catch { own = {}; }
   const row = RECORD_CORE_CHECKS.MINT_EXHAUSTED;
   /* DEC-49 REGION is-mint-exhausted */
   return { ...own, ok: false, reason: "MINT_EXHAUSTED", code: "MINT_EXHAUSTED", check: row.check,
            translation: row.translation, prefix: asked,
-           detail: `your group's Civicsmith could not find a free ${what}id: every one it drew was already taken. Nothing was written.` };
+           detail: `your group's Civicsmith could not find a free ${what}: every one it drew was already taken. Nothing was written.` };
   /* END DEC-49 REGION is-mint-exhausted */
 }
 

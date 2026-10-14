@@ -1,6 +1,6 @@
 # installer — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. The per-member assistant disclosure is at connect time, in the copy (`instance-setup` R54), not on the installer's pages. Last changed T35 (T35-75: R15 amended; R41, R42 new; K1874, K1943); every requirement met (INSTALLER #9, K2054) except R13 and R24 (MULTI-INSTANCE-ISOLATION; K102). Last changed T46 (T46-60: R49 new, the installer never writes, reads or names `CIVICSMITH_TEST_INSTANCE`, N897 (2); R38, R23 amended, a container part whose image the account cannot pull named in member words before and after the install, N897 (4); R48 re-stated without the stewards' address, which Bob gives before any public release and on which R48 alone waits, N923, K2782, K2799, K2878; `draft-T46-trial.md` §1.2, §3.2; K2960); those marked not yet met (T46).
+**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. The per-member assistant disclosure is at connect time, in the copy (`instance-setup` R54), not on the installer's pages. Last changed T35 (T35-75: R15 amended; R41, R42 new; K1874, K1943); every requirement met (INSTALLER #9, K2054) except R13 and R24 (MULTI-INSTANCE-ISOLATION; K102). Last changed T46 (T46-60: R49 new, the installer never writes, reads or names `CIVICSMITH_TEST_INSTANCE`, N897 (2); R38, R23 amended, a container part whose image the account cannot pull named in member words before and after the install, N897 (4); R48 re-stated without the stewards' address, which Bob gives before any public release and on which R48 alone waits, N923, K2782, K2799, K2878; `draft-T46-trial.md` §1.2, §3.2; K2960); those marked not yet met (T46). Last changed T48 (T48-79: R55 new, amending R1, R8, R17, R43, R52 and R54, `/update` installs the release chosen in Settings › Updates and no other, verified with `signatures`' release keys, with its states; N1047; DEC-226 (4); K3158, K3189, K3195); marked not yet met (T48). Its deploy is Bob's act (K1716).
 
 **Size (P6).** About 1,770 lines of source (about 1,220 without comment-only and blank lines), and a 1,632-line test battery (`newgroup/test/`). Well under 4,000.
 
@@ -97,12 +97,20 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 - **R53** (DEC-122 (3)) The pages use `interface-assets`' stylesheet and faces, carried in the installer's bundle; no other origin (R35).
 - **R54** (T47; K3144; amends R1, R41) R1's 404 excepts `GET /app/assets/<name>` for exactly the names of `interface-assets`' `ASSET_FILES`, answered byte for byte with their type and an immutable cache header, nothing stored. R41's dialog: nothing sends `/begin` before the founder's confirming act in it; `/begin` is sent by R50's "Continue to Cloudflare". `GET /update` draws the release it installs; the version before and after is drawn on the progress page and the finished panel from R17's read. The finished panel draws no "Run the checks again".
 
+#### T48 (T48-79)
+
+- **R55** (T48; N1047; DEC-226 (4); K3158; `signatures` R45; `instance-setup` R90; amends R1, R8, R17, R43, R52, R54) `GET /update?version=<V>` (the address `instance-setup` R90's `updatestart` answers) updates to release `V` and no other: *(not yet met: T48)*
+  - `V` of R47's form (`signatures`) is carried through `POST /begin` (`mode: "update"`, beside the slug) in R2's cookie; any other value, or none, draws the update page saying no release was chosen, with a link back to Settings › Updates, and `/begin` refuses it 400 by name. No credential is read from the address.
+  - The release installed is the repository's or the built-in one whose version is exactly `V`, its bytes hashing to its manifest and its `sig` verifying in the release namespace against `signatures`' `RELEASE_KEYS` (R8's checks; `ARMED_SIGNERS` read from there, never a copy, R43); a release of any other version, or one failing a check, is not installed, and the page names why and says the group's Civicsmith runs as before (`installer.update.stopped`). The newer-than-built-in rule of R8 does not choose for an update: `V` does.
+  - The page draws the release running (`installer.update.running`, from R17's read), the release chosen (`installer.update.chosen`, `installer.update.only`), `installer.update.checked`, and "Continue to Cloudflare to update" (`act.bootstrap.label.update`). Its states, on the progress page (R51): updating (`installer.update.progress.*`, the versions before and after, each step as it runs); a stop (`installer.update.stopped`, nothing changed, "Try again", `installer.update.tryagain`, which begins again with the same `V`); finished (`installer.update.done.*`, the release now running, and "Back to your group's Civicsmith", `installer.update.back`). Nothing is written by the installer (R18's act stays the operator's).
+  - Tests: an update with `V` equal to a signed fake release installs it and draws finished; controls: `V` naming a version the installer cannot find installs nothing; a release of `V` signed by a key outside `RELEASE_KEYS` installs nothing and draws the stop.
+
 ## Private
 
 ### Uses
 
 - `interface-assets`: its stylesheet and faces, carried in the bundle (R53; K3100).
-- `signatures`: `verifySshsig`, `NS_RELEASE`, `NS_FLEET`, `fleetStatement` (R8, R11, R26).
+- `signatures`: `verifySshsig`, `NS_RELEASE`, `NS_FLEET`, `fleetStatement` (R8, R11, R26); (T48) `RELEASE_KEYS` (its R45; R43, R55), already a use.
 - `jurisdictions`: `list` (R21). *(declared)*
 - `instance-setup`: `GROUP_SLUG_RE` (R2), `FLEET_BINDINGS` (R12's binding names), `HOSTING_CONTROL` (`hostingControlBlock`; R34, R50; K3144). *(not declared)*
 - `runtime-limits`: declared, but nothing calls it (Decided by BOB).
