@@ -33,3 +33,10 @@ Also, unrequested but safe, I add: an update refuses V older than the release th
 **Found in other modules:** none. `newgroup/dist/newgroup.bundled.mjs` is stale against my change and against `interface-assets`: BOB regenerates at L11's close (`npm run build` in `newgroup/`).
 
 Size (session_01FJwBuMxzVKopTjwTCEXYxZ): test runs 14, module lines 2681
+
+## J3 · COMPLETE
+
+B4 applied (merged origin/tranche/T48). R34 (T48): the install's last screen now draws `hostingControlBlock("notice", {deployer: true})`, so `HOSTING_RECOVERY_DEPLOYER` follows the block's sentences (`newgroup/src/index.mjs`, one line). Tests: new R34 (T48) test in `t48.test.mjs` (the panel carries the block as instance-setup draws it, the deployer text after the sentences; control: the sentences alone lack it); the older R34 test now compares with the deployer form. `newgroup/dist` not regenerated.
+- wizard 209/0; requirements+t47+t48: 68 tests, 67 pass, 1 fail = t47 R53 (stale `civicsmith.css` in the committed bundle, accepted in B3); `newgroup-bundle-fresh` red for the same cause.
+- Checks: format 0 failures; architecture installer 20 files, 54 imports, 0 failures; coverage installer 55 of 55; ownership 0 failures.
+Size (session_01FJwBuMxzVKopTjwTCEXYxZ): test runs 19, module lines 2682
