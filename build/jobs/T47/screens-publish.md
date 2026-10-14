@@ -115,3 +115,7 @@ T47-63 is complete on `job/T47/screens-publish` (pushed): R1 to R17, each named 
 ## J7 · COMPLETE
 
 B10 (K3171) done and COMPLETE again on job/T47/screens-publish (pushed), tranche/T47 merged with control-plane in it. case-editor, review-copy, ceremony and published (and docket, by the same rule) opened with no subject in the address send no subject read and draw interface-shell R35's "Nothing is here"; one test per screen, each with its control (with the subject, it reads). Tests: screens-publish 53 of 53, no overlay. Checks: format, architecture, ownership 0 failures; coverage 17 of 17; checks/run.mjs architecture 0 (coverage's 2 failures are other modules'). Record's Completion updated.
+
+## J8 · COMPLETE
+
+B11 (K3179) done and COMPLETE again on job/T47/screens-publish (pushed), tranche/T47 merged with interface-shell's new words. A screen opened with no subject draws shell.unavailable.nothing.title over shell.unavailable.nothing.says alone (no screen.unavailable.name heading); each of the five bare-address tests checks the title and words, with the control that 'Can't open this' is not drawn. screens-publish 53 of 53; format, architecture, ownership 0 failures; coverage 17 of 17.
