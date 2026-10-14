@@ -219,6 +219,7 @@ test("R9: with no doors the section is not drawn; startfrom is a drawn act once 
 // A guide standing in for screens-wizards' runner (interface-shell R31): it draws in the dock which script it was started on.
 const GUIDE = {
   words: [],
+  acts: [],
   render(cs, view) { return view.ui.running ? '<p id="started">' + cs.esc(view.ui.running + "@" + view.ui.version) + "</p>" : ""; },
   start(cs, view, o) { view.ui.running = o.script; view.ui.version = o.version; },
 };
