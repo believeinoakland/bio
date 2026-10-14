@@ -42,3 +42,7 @@ B2 applied: `tranche/T47` merged; R10's rows draw members, activity and last cha
 
 1. **The kit's `cs.initials` and `cs.activity` signatures** (interface-shell R44) are not written anywhere I can read. I call `cs.initials(handles)` (a list of handle strings, the members' handles from R28's `{member, handle}`) and `cs.activity(counts)` (eight integers, oldest first; the kit chooses the word the bars say). If INTERFACE-SHELL builds them otherwise, please pass me its signatures by CHANGE; my tests use a stand-in only until interface-shell merges.
 2. **R10's owner.** R28 still answers no owner. Reading: the owner is drawn only when a row carries `owner` (none does today); no test claims it until a provider answers it. Say if you want it from elsewhere.
+
+## J3 · COMPLETE
+
+T47-60 built: R8–R13 with B2–B9 (K3142–K3157) applied; record "Completion" on job/T47/screens-daily gives entries, readings, tests and checks. Tests: on this branch 56 pass, 8 fail, all eight waiting on interface-shell's merge (cs.wizard with the guide option, cs.initials, cs.activity, tickActive); with job/T47/interface-shell merged in a scratch worktree, 64 of 64. Checks: format, architecture, ownership 0 failures; coverage 13 of 13. J2 is answered by interface-shell's kit as built (cs.initials(names), cs.activity(weeks, word)); I re-run and post COMPLETE again on the CHANGE that merges it.
