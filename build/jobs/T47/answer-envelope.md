@@ -82,3 +82,7 @@ Size (session_013osHE4dWKZtRLQMyZZYfNj): test runs 31, module lines 888
 ## J7 · REPORT
 
 control-plane (T47-65): amended R6 (K3156) puts blob: in img-src, and four control-plane tests reject it. Their own policy judges admit only 'self', 'none', 'unsafe-inline', data: (test/m/control-plane/page-policy.test.mjs:16, R51 ×3; t46-app.test.mjs:22, R75). They need blob: admitted for img-src alone. Still open: J2's two C-69.6 pins.
+
+## J8 · COMPLETE
+
+B7: R6 img-src is 'self' data: blob: (T47-94), tested with controls (blob: in no other directive, no other origin). B8, B9: tranche/T47 merged; re-ran. Module 36/36. Checks 0 failures; run.mjs architecture 0. Users, tranche alone → with this job: store-door 0 → 0 failing, plane 7 → 7, interface-shell 0 → 0, control-plane 20 → 26 (J2's two C-69.6 pins plus four blob: judges, J7).
