@@ -2242,6 +2242,11 @@
      "op": "owed:versioncurrent DEC-235",
      "label": "Stand on a reading for a project",
      "status": "owed"
+    },
+    {
+     "op": "owed:readtranslate DEC-240",
+     "label": "Read in my language",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -3559,6 +3564,16 @@
      "label": "Send your comment",
      "status": "declared",
      "modules": [
+      "review"
+     ]
+    },
+    {
+     "op": "statementack",
+     "label": "Acknowledge what the case does not cover",
+     "status": "declared",
+     "modules": [
+      "case-authoring",
+      "case-inputs",
       "review"
      ]
     }

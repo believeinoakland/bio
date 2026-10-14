@@ -2500,5 +2500,137 @@
   "en": "Opens a question with this action carried as its reference. You write the question; the action is where it comes from, not evidence in it.",
   "protected": false,
   "note": "DEC-239"
+ },
+ {
+  "key": "queue.muted.title",
+  "en": "Muted",
+  "protected": false,
+  "note": "DEC-240: queue R14 mute"
+ },
+ {
+  "key": "queue.muted.help",
+  "en": "What you have stopped from reaching your queue. Only you see it. Turning one back on brings new items from then on.",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "queue.muted.kind",
+  "en": "{kind}, in {project}",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "queue.muted.case",
+  "en": "Everything from {project}",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "queue.muted.by",
+  "en": "muted by you, {date}",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "queue.muted.unmute",
+  "en": "Turn back on",
+  "protected": false,
+  "note": "DEC-240: queuemute with unmute (queue R19, R20)"
+ },
+ {
+  "key": "published.check.title",
+  "en": "Check a file you hold",
+  "protected": false,
+  "note": "DEC-240: P1, verify (public-read R1)"
+ },
+ {
+  "key": "published.check.help",
+  "en": "Anyone can check whether a file they were given is one this case rests on, without asking the group.",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "published.check.field",
+  "en": "Its SHA-256",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "published.check.field.help",
+  "en": "The file's fingerprint: a 64-character code your computer can work out from the file. Paste it here; the file itself never leaves your computer.",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "published.check.go",
+  "en": "Check it",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "published.check.yes",
+  "en": "This edition holds it: the evidence for finding {n}, \"{finding}\".",
+  "protected": true,
+  "note": "DEC-240: publishedCase({sha256}) names the finding (public-read R3)"
+ },
+ {
+  "key": "published.check.no",
+  "en": "This edition holds no file with that fingerprint. It may be a different copy, or not part of this case.",
+  "protected": true,
+  "note": "DEC-240"
+ },
+ {
+  "key": "capture.unfinished",
+  "en": "Unfinished: your capture of \"{title}\" waits for {n} of its attachments · started {ago}",
+  "protected": false,
+  "note": "DEC-240: D3; a read of the member's open capture sessions is owed"
+ },
+ {
+  "key": "capture.finish",
+  "en": "Finish it",
+  "protected": false,
+  "note": "DEC-240: acquire with continue (acquisition R12)"
+ },
+ {
+  "key": "capture.finish.help",
+  "en": "Fetches the attachments this capture still lacks, from the same page. The page itself is not fetched again. A capture left unfinished for an hour is closed with what it has.",
+  "protected": false,
+  "note": "DEC-240; capture R22"
+ },
+ {
+  "key": "review.statement.title",
+  "en": "What the case says it does not cover",
+  "protected": false,
+  "note": "DEC-240: C2"
+ },
+ {
+  "key": "review.statement.help",
+  "en": "The group says what its case leaves out, so no reader mistakes the gap for something the case covers. You can acknowledge that you read it.",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "review.statement.note",
+  "en": "Your note",
+  "protected": false,
+  "note": "DEC-240: the reason statementack requires"
+ },
+ {
+  "key": "review.statement.note.help",
+  "en": "Required. Say what you read, for example that the gap is fairly stated. Readers of the published case are told that you acknowledged it.",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "review.statement.ack",
+  "en": "Acknowledge it",
+  "protected": false,
+  "note": "DEC-240: statementack, reasoned"
+ },
+ {
+  "key": "instance.test.band",
+  "en": "Test Civicsmith",
+  "protected": false,
+  "note": "DEC-240: N1049, the band's name before instance.test.notice"
  }
 ]

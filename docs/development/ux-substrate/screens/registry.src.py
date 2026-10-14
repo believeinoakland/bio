@@ -97,7 +97,7 @@ screen('question', 'Question', 'working', 'A question and what supports it or cu
    ('hypothesishold','Keep a hunch'),('planopen','Plan what to do'),('checkrequest','Ask for a check by expertise'),
    ('heldrestore','Restore a set-aside document, with a reason'),('search','Find another source'),
    ('inquiryground','Say what each passage carries'),('versionaccept','Accept a reading'),('versionhide','Hide a reading'),('owed:versionconsider DEC-235','Weigh a reading'),
-   ('owed:versionreject DEC-235','Reject a reading'),('owed:versionrevert DEC-235','Undo the decision on a reading'),('owed:versioncurrent DEC-235','Stand on a reading for a project')], [6,9,15,16])
+   ('owed:versionreject DEC-235','Reject a reading'),('owed:versionrevert DEC-235','Undo the decision on a reading'),('owed:versioncurrent DEC-235','Stand on a reading for a project'),('owed:readtranslate DEC-240','Read in my language')], [6,9,15,16])
 screen('answers', 'Ask', 'working', 'Ask in plain words (with the assistant) or by search (without); keep asking.',
   [('ask','Ask'),('ruleanswer','Show how this was counted'),('search','Search instead'),('standingquestionset','Keep asking this'),('standingquestionend','Stop asking')], [17,18])
 screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it serves; runs only on the member\'s own account.',
@@ -148,7 +148,7 @@ screen('review-copy', 'Review copy', 'working', 'A named outsider\'s revocable v
   [('reviewgrant','Share for review'),('reviewrevoke','Stop sharing'),('reviewcomment','Comment')], [21])
 screen('ceremony', 'Publication ceremony', 'working', 'The required wizard: checks, disclosures, ties confirmed, preview, then signing inside the ceremony (Bob\'s D9, K3060; Q4): when it becomes public, the password asked again (D3), the member\'s own device confirming the key, signed and waiting or published; no key in this browser, a phone, a member who isn\'t an owner (DEC-207).',
   [('publishpreflight','Check before publishing'),('publishtensions','See what must be disclosed'),('caseratify','Sign and publish now'),('publish','Confirm your ties and prepare the edition for signing'),('publishat','Sign now and publish at a set time, checked again then'),('obscuremark','Mark who and what to obscure in a photo'),('obscuremarkwithdraw','Withdraw a mark on a photo, with a reason'),('signerregisterown','Register a signing key in this browser'),('signrequest','Ask an owner to sign'),('publishatmove','Move the publishing time'),('publishatcancel','Cancel publishing')], [15,24])
-screen('review-outside', 'A review copy, from outside', 'published', 'What an outside reviewer sees from a review link: the draft, how long the link works, and their comment (journey 21; DEC-201).', [('reviewcomment','Send your comment')], [21])
+screen('review-outside', 'A review copy, from outside', 'published', 'What an outside reviewer sees from a review link: the draft, how long the link works, and their comment (journey 21; DEC-201).', [('reviewcomment','Send your comment'),('statementack','Acknowledge what the case does not cover')], [21])
 screen('published', 'Published case', 'published', 'The public page: findings, strengths, timeline, people named, evidence; checkable without the group.',
   [('verify','Check the signature'),('publishedcase','Read the case')], [26])
 screen('imported', 'Another group\'s case', 'imported', 'An imported case in its read-only project, recreated finding by finding.',

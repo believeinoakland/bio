@@ -39,6 +39,10 @@
 .cs-band[data-band="review"] svg { color: var(--c-signal); }
 .cs-band[data-band="imported"]  { background: var(--c-elsewhere-tint); color: var(--c-ink); border-bottom: 3px double var(--c-elsewhere); }
 .cs-band[data-band="imported"] svg { color: var(--c-elsewhere); }
+/* DEC-240 (N1049; interface-shell R53): the test-instance band, across the whole frame above the rail and the work, on every screen of a test
+   Civicsmith; machine work's colors, the rule dashed for what has not yet passed its tests. */
+.cs-band[data-band="test"]      { background: var(--c-machine-tint); color: var(--c-ink); border-bottom: 3px dashed var(--c-machine); }
+.cs-band[data-band="test"] svg { color: var(--c-machine); }
 .cs-band[data-band="published"] { display: none; } /* the published frame never carries the working band */
 .cs-pubhead { padding: var(--s-6) var(--s-4) var(--s-4); border-bottom: 2px solid var(--c-ink); }
 .cs-pubhead .grp { font: 600 var(--t-3xl)/1.1 var(--f-serif); letter-spacing: -.01em; }

@@ -11,9 +11,9 @@
   "handle": 7,
   "ai": 89,
   "date": 14,
-  "queue": 60,
+  "queue": 66,
   "transcribe": 19,
-  "capture": 1,
+  "capture": 4,
   "document": 45,
   "question": 36,
   "connection": 32,
@@ -42,7 +42,7 @@
   "monitoring": 2,
   "following": 5,
   "door": 27,
-  "instance": 9,
+  "instance": 10,
   "statusreport": 1,
   "members": 6,
   "ref": 26,
@@ -62,7 +62,7 @@
   "translate": 7,
   "proceeding": 6,
   "duty": 6,
-  "published": 1,
+  "published": 8,
   "shell": 13,
   "settings": 1,
   "entity": 33,
@@ -70,13 +70,14 @@
   "risk": 12,
   "law": 8,
   "action": 4,
+  "review": 5,
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "act": 692,
+  "act": 695,
   "column": 33,
-  "total": 2299,
-  "protected": 715
+  "total": 2324,
+  "protected": 719
  },
  "words": [
   {
@@ -7428,6 +7429,160 @@
    "note": "DEC-239"
   },
   {
+   "key": "queue.muted.title",
+   "en": "Muted",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240: queue R14 mute"
+  },
+  {
+   "key": "queue.muted.help",
+   "en": "What you have stopped from reaching your queue. Only you see it. Turning one back on brings new items from then on.",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240"
+  },
+  {
+   "key": "queue.muted.kind",
+   "en": "{kind}, in {project}",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240"
+  },
+  {
+   "key": "queue.muted.case",
+   "en": "Everything from {project}",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240"
+  },
+  {
+   "key": "queue.muted.by",
+   "en": "muted by you, {date}",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240"
+  },
+  {
+   "key": "queue.muted.unmute",
+   "en": "Turn back on",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240: queuemute with unmute (queue R19, R20)"
+  },
+  {
+   "key": "published.check.title",
+   "en": "Check a file you hold",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240: P1, verify (public-read R1)"
+  },
+  {
+   "key": "published.check.help",
+   "en": "Anyone can check whether a file they were given is one this case rests on, without asking the group.",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240"
+  },
+  {
+   "key": "published.check.field",
+   "en": "Its SHA-256",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240"
+  },
+  {
+   "key": "published.check.field.help",
+   "en": "The file's fingerprint: a 64-character code your computer can work out from the file. Paste it here; the file itself never leaves your computer.",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240"
+  },
+  {
+   "key": "published.check.go",
+   "en": "Check it",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240"
+  },
+  {
+   "key": "published.check.yes",
+   "en": "This edition holds it: the evidence for finding {n}, \"{finding}\".",
+   "protected": true,
+   "source": "DEC-240",
+   "note": "DEC-240: publishedCase({sha256}) names the finding (public-read R3)"
+  },
+  {
+   "key": "published.check.no",
+   "en": "This edition holds no file with that fingerprint. It may be a different copy, or not part of this case.",
+   "protected": true,
+   "source": "DEC-240",
+   "note": "DEC-240"
+  },
+  {
+   "key": "capture.unfinished",
+   "en": "Unfinished: your capture of \"{title}\" waits for {n} of its attachments · started {ago}",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240: D3; a read of the member's open capture sessions is owed"
+  },
+  {
+   "key": "capture.finish",
+   "en": "Finish it",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240: acquire with continue (acquisition R12)"
+  },
+  {
+   "key": "capture.finish.help",
+   "en": "Fetches the attachments this capture still lacks, from the same page. The page itself is not fetched again. A capture left unfinished for an hour is closed with what it has.",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240; capture R22"
+  },
+  {
+   "key": "review.statement.title",
+   "en": "What the case says it does not cover",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240: C2"
+  },
+  {
+   "key": "review.statement.help",
+   "en": "The group says what its case leaves out, so no reader mistakes the gap for something the case covers. You can acknowledge that you read it.",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240"
+  },
+  {
+   "key": "review.statement.note",
+   "en": "Your note",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240: the reason statementack requires"
+  },
+  {
+   "key": "review.statement.note.help",
+   "en": "Required. Say what you read, for example that the gap is fairly stated. Readers of the published case are told that you acknowledged it.",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240"
+  },
+  {
+   "key": "review.statement.ack",
+   "en": "Acknowledge it",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240: statementack, reasoned"
+  },
+  {
+   "key": "instance.test.band",
+   "en": "Test Civicsmith",
+   "protected": false,
+   "source": "DEC-240",
+   "note": "DEC-240: N1049, the band's name before instance.test.notice"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -9715,6 +9870,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_readtranslate.label.question",
+   "en": "Read in my language",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.ask.label.answers",
    "en": "Ask",
    "protected": true,
@@ -10495,6 +10656,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.statementack.label.review-outside",
+   "en": "Acknowledge what the case does not cover",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.verify.label.published",
    "en": "Check the signature",
    "protected": true,
@@ -11060,7 +11227,7 @@
   },
   {
    "key": "act.queuemute.does",
-   "en": "Stops this kind of item reaching you. You can turn it back on in your settings.",
+   "en": "Stops this kind of item, or a project's items, reaching your queue. What you muted is listed under Muted at the foot of your queue, where you can turn each back on.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -11288,6 +11455,12 @@
   },
   {
    "key": "act.readtranslate.does",
+   "en": "Shows this passage in the language you read, as machine work, with the original one tap away. Nothing is saved, and the original is never replaced.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_readtranslate.does",
    "en": "Shows this passage in the language you read, as machine work, with the original one tap away. Nothing is saved, and the original is never replaced.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
