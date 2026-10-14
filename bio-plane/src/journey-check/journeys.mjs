@@ -187,9 +187,13 @@ export async function walkMember(walk, page, { base, invite, member, phone }) {
   });
   await walk.step(page, "home: what happened? a problem I live with", async (p) => {
     await open(walk, p, base, "/app", "home");
-    /* the door for "A problem I live with"; its first offered script starts in the wizard runner */
+    /* the door for "A problem I live with", opened as a person opens it (a door is a closed card, screens-daily R9); its
+       first offered script starts in the wizard runner */
     const door = '[data-door]:has-text("problem")';
-    await (await control(p, "startfrom", { within: (await p.locator(door).count()) ? door : null })).click();
+    if (!(await p.locator(door).count())) throw new Error(`no door for a problem she lives with on ${where(p)}`);
+    const card = p.locator(door).first();
+    if ((await card.evaluate((e) => e.tagName)) === "DETAILS" && !(await card.evaluate((e) => e.open))) await card.locator("summary").first().click();
+    await (await control(p, "startfrom", { within: door })).click();
     await settle(p);
   });
   await walk.step(page, "capture: her first testimony, labelled as hers", async (p) => {

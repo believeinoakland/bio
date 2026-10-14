@@ -45,3 +45,9 @@ Merged `tranche/T48` (7f9a2d7a34); `journeys.mjs` reads the recovery codes at `p
 ## J3 · BLOCKED
 
 Cause: tests (another module's). B3 applied: recovery codes read at pre[data-codes]; merged tranche/T48 @7f9a2d7a34. journey-check tests 26/27; R1 (a) fails because the copy answers every interface page with PLANE_INTERNAL_ERROR 500: interface-shell's checkClasses (index.mjs:325) throws 'screen home draws the class mk-count, which no served stylesheet defines'. mk-count is drawn by screens-daily/project-rows.mjs:46 and defined in no stylesheet interface-assets serves. Fix belongs to screens-daily (or interface-assets' stylesheet); once it is in the tranche, send a CHANGE and I re-run R1 (a), which also walks B3's codes step.
+
+## B4 (ANSWER, K3307, K3310)
+
+Merged `tranche/T48` again. The hand-over, the claim and both recovery-code steps (B3's `pre[data-codes]`) now pass. Brought the walk in line with screens-daily's doors (R9: a door is a closed `<details class="mk-door">` card): the step "home: what happened?" opens the problem door's card before pressing its first `startfrom`, as a person does.
+
+The walk then stops at "capture: her first testimony": `/app/capture/saw` draws its tabs and no tab body. Cause, not journey-check's: interface-assets' served `shell.css` (R7, the design's page stylesheet) carries the mock's state switch `.st { display: none; }` (shown only under `main[data-st]` `.st-a`…`.st-g`), and `screens-intake/capture.mjs:73` wraps every tab's body in `<div class="st" data-tab=…>`. So all three tabs of Add (address, file, what I saw) draw nothing visible; no other screen uses class `st`. Fix: screens-intake drops or renames `st`, or interface-assets leaves the mock's `.st` switch out of the served rules.
