@@ -119,7 +119,7 @@ async function servedWorld() {
   w.c.accountUsesSet({ owner: "group", switch: "standing", on: true, by: "admin" });
   w.c.groupKeyNoticeSeen({ member: "bob", by: "bob" });
   w.session = {};
-  for (const id of ["ann", "bob"]) w.session[id] = (await w.c.login({ role: `member:${id}`, password: PASSWORD(id) })).token;
+  for (const id of ["ann", "bob"]) w.session[id] = (await w.c.login({ handle: `${id}`, password: PASSWORD(id) })).token;
   return w;
 }
 

@@ -30,7 +30,7 @@ async function projectWorld(opts) {
 
 test("R27 aiGrantMint takes `project`, asking R56 for {kind: ask, member, project}: refused PROJECT_KEY_NOTICE_DUE as GROUP_KEY_NOTICE_DUE is, and every refusal of the cascade; minted once the project's account serves", async () => {
   const w = await projectWorld();
-  const s = (await w.c.login({ role: "member:bob", password: PASSWORD("bob") })).token;
+  const s = (await w.c.login({ handle: "bob", password: PASSWORD("bob") })).token;
   const mint = (project) => w.c.aiGrantMint({ member: "bob", by: "bob", session: s, project });
   assert.equal((await mint()).reason, "NO_ACCOUNT");
   await w.c.projectKeySet({ project: "P", key: KEY, by: "ann" });
