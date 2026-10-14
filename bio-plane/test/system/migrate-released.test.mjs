@@ -155,6 +155,9 @@ const RELEASES = [
      on it, so 0.83.0 boots on that store. The commit is dist/cut-0.82.0's signed cut (K2938, K2939), whose release/
      holds it. */
   ["0.82.0", "ff78c6607f039557ccea90c039e5e1346e33caf5"],
+  /* 0.83.0: deployed to biosmoke7 2026-10-12 (K3048) and not distributed; biosmoke7's store migrated and was written
+     on it, so 0.84.0 boots on that store. The commit is dist/cut-0.83.0's signed cut (K3048), whose release/ holds it. */
+  ["0.83.0", "add6de3bde7bbb0c65c1dc55cf72406a994d371a"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
