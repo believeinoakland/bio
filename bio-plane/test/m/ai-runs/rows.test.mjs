@@ -6,36 +6,29 @@ import assert from "node:assert/strict";
 import { world, OPEN, INQ, ORG, ANN } from "./world.mjs";
 import { AI_RUNS_CHECKS } from "../../../src/run-rules/index.mjs";
 
-/** Every code this module's acts mint, with its catalogue number (R35, R40, R46, R47, R52, R73, R75). The ceiling
+/** Every code this module's acts mint, with its catalogue number (R35, R40, R46, R47, R52, R73, R75, R78), read from the owner's
+ *  declaration (N1073, K3268): `run-rules`' table (its R11, R15), the rows whose site is a function of this module's file. A row
+ *  whose site is a pure rule `run-rules` mints and this module relays (`projectGate`, `checkBound`, …) is run-rules' own. The ceiling
  *  codes (R50, retired with R48–R51 to `ai-use`, K624) are not this module's: `ai-use` mints `AI_LIMIT_REACHED` and
  *  `AI_LIMIT_INVALID` in its own table (its R8). */
-export const MINTED = {
-  AI_RUN_CAPABILITY_UNAVAILABLE: "C-33.29", AI_RUN_NO_CONTEXT: "C-33.30", AI_RUN_ALREADY_OPEN: "C-33.31",
-  AI_RUN_RERUN_SELF: "C-33.45", AI_RUN_RERUN_UNKNOWN: "C-33.46", AI_RUN_RERUN_OTHER_CONTEXT: "C-33.47",
-  AI_RUNS_NO_CONTEXT_TYPE: "C-36.1", AI_RUNS_UNKNOWN_CONTEXT_TYPE: "C-36.2", AI_RUNS_NO_CONTEXT_ID: "C-36.3",
-  SURFACE_NO_RUN: "C-66.1", SURFACE_RUN_NOT_RUNNING: "C-66.2", SURFACE_NO_BOUND: "C-66.3", SURFACE_BOUND_REACHED: "C-66.4",
-  AI_RUN_MODE_NOT_DEPLOYED: "C-109.1", AI_RUN_PLAN_REQUIRED: "C-109.2", AI_RUN_PLAN_UNEXPECTED: "C-109.3",
-  AI_RUN_PLAN_NEEDS_PROJECT: "C-109.4", AI_RUN_PLAN_NEEDS_MEMBER: "C-109.5", AI_RUN_PLAN_NO_SEARCH: "C-109.6",
-  AI_RUN_MODE_UNCHECKED: "C-109.7",
-  /* T45 (R77; T45-11): the re-examination run's two, in run-rules' C-109 after the retired .12 (run-rules R15's table) */
-  AI_RUN_REEXAM_NEEDS_RESPONSE: "C-109.13", AI_RUN_REEXAM_OPEN: "C-109.14",
-  /* T33-50 (run-rules R20, K1601) */
-  AI_NO_ACCOUNT: "C-109.10",
-  /* T41 (run-rules C-22.24–.28, B4, K2485; the origin codes are minted by run-rules' originAllowed and relayed) */
-  AI_GROUP_TEST_INVALID: "C-22.24", AI_RUN_EXPLORE_NEEDS_STEP: "C-22.26", AI_RUN_STEP_UNKNOWN: "C-22.28",
-};
+export const MINTED = Object.freeze(Object.fromEntries(Object.entries(AI_RUNS_CHECKS)
+  .filter(([, row]) => /^src\/ai-runs\/index\.mjs /.test(row.where)).map(([code, row]) => [code, row.check])));
 
 test("R35 (K624): the retired ceiling codes are no longer minted here — run-rules keeps them retired, their numbers never reused", () => {
   for (const code of ["AI_USE_CEILING_REACHED", "AI_USE_COPY_CEILING_REACHED", "AI_CEILING_INVALID"])
     assert.equal(Object.prototype.hasOwnProperty.call(MINTED, code), false, code);
-  /* control: a code this module still mints is listed */
+  /* control: a code this module still mints is listed, and one it only relays from run-rules is not */
   assert.equal(MINTED.AI_NO_ACCOUNT, "C-109.10");
+  assert.equal(Object.prototype.hasOwnProperty.call(MINTED, "AI_RUN_NOT_PROJECT_MEMBER"), false);
 });
 
 test("R35: each check this module's acts mint has its row in run-rules' table, read by key — its number, a translation and a where naming this module's site", () => {
+  assert.ok(Object.keys(MINTED).length >= 26, "the declaration names every code this module mints");
+  assert.equal(new Set(Object.values(MINTED)).size, Object.keys(MINTED).length, "a catalogue number is one code's");
   for (const [code, check] of Object.entries(MINTED)) {
     const row = AI_RUNS_CHECKS[code];
     assert.ok(row, `${code} has a row`);
+    assert.match(check, /^C-\d+\.\d+$/, code);
     assert.equal(row.check, check, code);
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
     assert.match(row.where, /^src\/ai-runs\/index\.mjs /, code);
