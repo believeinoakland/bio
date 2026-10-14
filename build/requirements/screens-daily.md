@@ -1,6 +1,6 @@
 # screens-daily — requirements
 
-**Status** · New in T46 (T46-57; K657, K1043): a module built fresh, layer 11 after `screens-intake` (N897 (1), Bob's K2816; DEC-110, DEC-131, DEC-139, DEC-164; N698's screen part). Drafted in `build/plan/draft-T46-interface.md` §2.5, worded here by BOB (P5). No ids move. Not yet met (T46).
+**Status** · New in T46 (T46-57; K657, K1043): a module built fresh, layer 11 after `screens-intake` (N897 (1), Bob's K2816; DEC-110, DEC-131, DEC-139, DEC-164; N698's screen part). Drafted in `build/plan/draft-T46-interface.md` §2.5, worded here by BOB (P5). No ids move. Not yet met (T46). Last changed T47 (T47-60: R8 new, amending R1, Home's projects from `projectlist` with each one's question count from `projectquestions`, N972; R9 new, the front door "What happened?" from `startfrom`'s doors, its scripts started through the wizard runner, DEC-198 (4)); marked not yet met (T47).
 
 **Size (P6).** Estimated 2,200–2,800 lines with comments, its own keyed sentences included, measured at its START (M-T46-1, K617).
 
@@ -33,12 +33,24 @@ Where a member starts and works each day: the group's home, their queue, finding
 **Common**
 - **R7** `interface-shell` R8–R13 hold on every screen; after an act, the screen re-reads what it changed and draws it.
 
+**T47: the group's projects with their counts, and the front door** (T47)
+- **R8** (T47; N972; K3027 doubt 5; amends R1; `project-roster` R26, `basis-versions` R50) Home's "What the group is working on" reads `projectlist` (each project the member sees at `FULL`, `{id, name, stage}`) in place of `search` `type:project`, and each project's question count from `projectquestions`, paged to its end; each project is a reference opening `project`, drawn with its count (loading until its pages are read; a failed read drawn `state.failed`, never as none) and its stage on the ladder Forming, Investigating, Matured, Closed as the recorded state names it (a `null` stage drawn `state.undetermined`). A list answered `truncated` says more projects exist than are shown.
+- **R9** (T47; N821, its screen side; DEC-129 (7), (2); DEC-198 (4); D52; `wizard-scripts` R23, R33; `interface-shell` R31) Home draws the front door "What happened?" (`door.front.head`, `door.front.intro`) from `startfrom`: each door its words (`door.front.<door>.name`, `.hint`) and its offered scripts, a script starting by `cs.wizard` (the runner, `screens-wizards`); a door `startfrom` leaves out is not drawn, and with no doors the section is not drawn. Beside the doors: the matching work (`door.front.matching`: the member's words searched through `search`, each result a reference) and the blank start (`door.front.blank`: `promote` "Start a project", R1). `startfrom` is now a drawn act (R1's "not drawn in T46" is retired). Control: with "Follow the money" not offered, the `money` door names only what `startfrom` names.
+
+#### T47's L11 fold (K3100)
+
+- **R10** (DEC-201 (8)) **projects**: `projectlist` (each project's name, owner, stage on the ladder) with each one's question count (`projectquestions`, paged), `truncated` said; "Start a project" (`promote`); (DEC-214 (3), K3127) each row also draws its members (`cs.initials`), activity over eight weeks (`cs.activity`) and last change, as `projectlist` answers them (`project-roster` R28, Bob's K3142).
+- **R11** (DEC-201 (7), DEC-202 (4)) Home: with no project and one member, the new-group state ("Nothing is here yet", inviting members, saying who the group is); the welcome offer per `screens-wizards` R7.
+- **R12** (DEC-201 (13)) Queue's empty state ("You are up to date"); Find's no-result state (what search covers, "Capture it").
+- **R13** (DEC-212; `action-producers` R25) R3's registered acts gain `actionmove`; the unsent-request item draws "Pick up where you left off" (opening the action's screen at its step), "Keep it for later" (`queuesnooze`) and "Drop the request, with a reason" (`actionmove` to `abandoned`).
+
 ## Private
 
 ### Uses
 
 - `interface-shell`: the kit `cs` and the screen contract (its R21).
 - `setup-words`: `WORD_ROWS` keys.
+- (T47) Through the plane: `project-roster` (`projectlist`, R26; R8), `basis-versions` (`projectquestions`, R50; R8), `wizard-scripts` (`startfrom`, R23, R33; R9). `screens-wizards`' runner, reached through the shell's `cs.wizard` (`interface-shell` R31), never imported.
 - Through the plane: `queue` (R6, R17, R48, R49), `tasks`, `project-roster` (`projectdirectory`), `promotion`, `retrieval` (`search`, `select`, `selection`, `findin`, `frontier`), `calculations`, `people`, `events`, `standards`, `money`, `citation`, `answers` (`rule`, the standing questions), `agent-worker` R54, `reevaluation`, `action-clocks`, `inquiry`, `credentials`, `ai-use`, `instance-setup` (`groupidentity`).
 - Tests only: `op-declarations` (`OPS`).
 
@@ -48,7 +60,7 @@ None numbered here: `interface-shell` R23 and R24 (no place named; no log of who
 
 ### Satisfies
 
-- Registry screens `home`, `queue`, `finder`, `find-in`, `answers` (DEC-139 (3), (7)); N897 (1).
+- Registry screens `home`, `queue`, `finder`, `find-in`, `answers` (DEC-139 (3), (7)); N897 (1). (T47) N972 (R8); DEC-129, DEC-198 (4), D52, N821's screen side (R9).
 - DEC-110, DEC-131 (R2, R3); DEC-164, N698 (R5); K1468 (R5).
 
 ### Suggestions

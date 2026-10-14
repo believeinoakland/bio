@@ -87,7 +87,7 @@ test("R46 (b): plansToLookAgain answers a look_again day on the local day of now
   assert.deepEqual(w2.ap.plansToLookAgain({ nowMs: ms("2027-06-01T12:00:00Z") }).items, [], "no profile, no zone");
 });
 
-test("R47: C-124.30 and C-124.58–.62 take their translations from words.json's refusal.<CODE>, read by key, answered so at the interface; codes, numbers and wheres unmoved; DOCUMENT_FIRST_NO_REASON keeps its own (control)", () => {
+test("R47: C-124.30 and C-124.58–.62 take their translations from words.json's refusal.<CODE>, read by key, answered so at the interface; codes, numbers and wheres unmoved; a row words.json does not hold keeps its own (control); C-124.63's words are R49's (T47) and tested there", () => {
   const rows = { SCENARIO_OUT_OF_RANGE: "C-124.30", NO_SUCH_SCENARIO: "C-124.58", SCENARIO_ALREADY_SET_ASIDE: "C-124.59",
                  SCENARIO_NOT_SET_ASIDE: "C-124.60", PLAN_NOT_OPEN: "C-124.61", PLAN_NOT_PAUSED: "C-124.62" };
   for (const [c, check] of Object.entries(rows)) {
@@ -118,11 +118,12 @@ test("R47: C-124.30 and C-124.58–.62 take their translations from words.json's
     assert.deepEqual([r.check, r.translation], [rows[c], WORDS[`refusal.${c}`]], c);
     assert.match(r.where ?? ACTION_PLAN_CHECKS[c].where, /^src\/action-plans\/index\.mjs /);
   }
-  /* control: C-124.63 keeps its present translation in T46 (returned to BOB), which words.json's sentence is not */
-  assert.equal(ACTION_PLAN_CHECKS.DOCUMENT_FIRST_NO_REASON.check, "C-124.63");
-  assert.notEqual(ACTION_PLAN_CHECKS.DOCUMENT_FIRST_NO_REASON.translation, WORDS["refusal.DOCUMENT_FIRST_NO_REASON"]);
-  assert.match(ACTION_PLAN_CHECKS.DOCUMENT_FIRST_NO_REASON.translation, /^This step goes outside the group before the infraction/);
-  assert.equal("refusal.DOCUMENT_FIRST_NO_REASON" in PLAN_WORDS, false);
+  /* control: this module's other rows, which words.json does not hold, keep theirs (R47). (T47: R49 amends R47's clause
+     on C-124.63, which now reads DEC-199's sentence by key; its test is t47's.) */
+  for (const [c, r] of Object.entries(ACTION_PLAN_CHECKS))
+    if (!(`refusal.${c}` in WORDS)) assert.equal(`refusal.${c}` in PLAN_WORDS, false, c);
+  assert.equal(WORDS["refusal.PLAN_NO_TITLE"], undefined);
+  assert.match(ACTION_PLAN_CHECKS.PLAN_NO_TITLE.translation, /^A plan needs a title of 1 to 200 characters/);
 });
 
 test("R47 R20: the closing note is prompted with the key plan.close.lessons and words.json's words for it, read by key; a closed plan asks for none (control)", () => {

@@ -5,7 +5,7 @@ import { editionStatementLayer, EDITION_STATEMENT_CLAUSES, EDITION_STATEMENT_ACT
          EDITION_STATEMENT_SECTION, PUBLICATION_SOURCE, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { SRC, read, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
 
-/* The acts R31 names, as `op=affordances` would publish them once case-authoring's proposal op lands (op-declarations'
+/* The acts R31 names, as `op=affordances` would publish them once case-inputs' proposal op lands (op-declarations'
    L11 job): the proposal open to a machine and the member's acts to a session, each an entry of the plane's shape. */
 const PROPOSES = ["whatchangedpropose"];
 const MEMBER = ["publish", "caseratify"];
@@ -59,7 +59,8 @@ test("R31 acts: whatchangedpropose, and the member-only publish and caseratify, 
   assert.deepEqual(acts.leaves_to_a_member.map((a) => a.id), MEMBER);
   for (const a of [...acts.proposes, ...acts.leaves_to_a_member])
     assert.equal(a.act, byId.get(a.id), `${a.id} is the catalogue's own entry, unchanged`);
-  assert.deepEqual(acts.proposes.map((a) => a.defined_by), ["case-authoring R39"]);
+  /* K3038: the proposal moved from case-authoring R39 to case-inputs R6; the signing act stays case-authoring's. */
+  assert.deepEqual(acts.proposes.map((a) => a.defined_by), ["case-inputs R6"]);
   assert.deepEqual(acts.leaves_to_a_member.map((a) => a.defined_by), ["case-authoring R38", "ratification R2"]);
   assert.equal(acts.proposes[0].act.mode, "machine");
   for (const a of acts.leaves_to_a_member) assert.notEqual(a.act.mode, "machine", `${a.id} is left to a member`);

@@ -1,7 +1,7 @@
 /* following R14 (T45), R22–R26: a follow's end date; a watch linked to the plan that set it running; the once-only
    question at the plan's close or when every promise is met; its answer in the watch owner's terms; the plan's watches
    for "where it stands" (v0.2 rules 1, 17, 18; K2781 (2)). R27 (T46): when every promise was met, read from plan-work's
-   one source (its R13, R15). */
+   one source (its R13, R15). R28 (T47): when a duty's end took hold (`dutyWatchEndAt`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, body, sha, MEMBER, BOB, OUTSIDER, MACHINE, T0, DAY } from "./fixture.mjs";
@@ -509,6 +509,52 @@ test("R25 refusals, in order and writing nothing: a machine author, no such link
   /* control */
   assert.equal(ans({}).ok, true);
   assert.equal(count(w, "watch_answers"), 1);
+});
+
+/* ---------------------------------------------------------------- R28 */
+
+test("R28 dutyWatchEndAt answers null exactly when dutyWatchEnd does, else {day, at}: the latest end day, and the recorded instant of the last answer, from which no link stood unanswered (control: one link unanswered, null); for a keep as for a stop; it writes nothing and never throws", () => {
+  const w = planned();
+  w.plan("PL-2", { project: PRJ });
+  w.plan("PL-3", { project: PRJ });
+  w.duty("DUT-1", { project: PRJ, met: [null] });
+  w.duty("DUT-2", { project: PRJ, met: [null] });
+  const both = (d) => [w.f.dutyWatchEnd(d), w.f.dutyWatchEndAt(d)];
+  /* no link: null, as dutyWatchEnd */
+  assert.deepEqual(both("DUT-1"), [null, null]);
+  const a = link(w, { kind: "duty", id: "DUT-1" }).link;
+  const b = link(w, { kind: "duty", id: "DUT-1" }, { plan: "PL-2" }).link;
+  const c = link(w, { kind: "duty", id: "DUT-2" }).link;
+  w.close("PL-1", "2026-10-06T10:00:00Z");
+  w.close("PL-2", "2026-10-06T11:00:00Z");
+  assert.deepEqual(both("DUT-1"), [null, null], "linked, nothing answered");
+  /* the first answer, on the 6th, holds the later end day; the second, on the 8th, the earlier */
+  w.f.watchAnswer({ link: a, keep: { until: "2027-03-01" }, author: MEMBER });
+  assert.deepEqual(both("DUT-1"), [null, null], "control: one link answered, one not");
+  w.t = T0 + 2 * DAY;
+  const second = w.f.watchAnswer({ link: b, keep: { until: "2027-02-01" }, author: MEMBER });
+  assert.equal(second.at, "2026-10-08T12:00:00Z");
+  assert.deepEqual(both("DUT-1"), ["2027-03-01", { day: "2027-03-01", at: "2026-10-08T12:00:00Z" }],
+                   "the latest end day, held at the instant the last answer was recorded");
+  /* a link added later and still unanswered: the end no longer holds */
+  link(w, { kind: "duty", id: "DUT-1" }, { plan: "PL-3" });
+  assert.deepEqual(both("DUT-1"), [null, null]);
+  /* a stop: its day is the day it was answered, its instant the answer's */
+  w.t = T0 + 3 * DAY;
+  const s = w.f.watchAnswer({ link: c, stop: true, author: MEMBER });
+  assert.deepEqual([s.answer, s.until, s.at], ["stop", "2026-10-09", "2026-10-09T12:00:00Z"]);
+  assert.deepEqual(both("DUT-2"), ["2026-10-09", { day: "2026-10-09", at: "2026-10-09T12:00:00Z" }]);
+  /* dutyWatchEnd unchanged; an absent or malformed duty answers null */
+  for (const d of [undefined, null, {}, "", "DUT-9"]) assert.deepEqual(both(d), [null, null], JSON.stringify(d));
+  /* it writes nothing */
+  const before = JSON.stringify(w.rows(`SELECT * FROM watch_links`)) + JSON.stringify(w.rows(`SELECT * FROM watch_answers`));
+  w.f.dutyWatchEndAt("DUT-2");
+  assert.equal(JSON.stringify(w.rows(`SELECT * FROM watch_links`)) + JSON.stringify(w.rows(`SELECT * FROM watch_answers`)), before);
+  /* a link it cannot read answers null, as dutyWatchEnd does, and never throws */
+  w.st.sql.exec(`ALTER TABLE watch_answers RENAME TO watch_answers_away`);
+  assert.deepEqual(both("DUT-2"), [null, null]);
+  w.st.sql.exec(`ALTER TABLE watch_answers_away RENAME TO watch_answers`);
+  assert.deepEqual(both("DUT-2")[1], { day: "2026-10-09", at: "2026-10-09T12:00:00Z" });
 });
 
 /* ---------------------------------------------------------------- R26 */

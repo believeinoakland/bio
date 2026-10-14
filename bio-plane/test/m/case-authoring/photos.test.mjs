@@ -1,4 +1,4 @@
-/* case-authoring (T37; N757; DEC-180 (3), (4); K2206): a marked photo in the document, carried by its copy (R14), and
+/* case-authoring (T37; N757; DEC-180 (3), (4); K2206; T47: case-carriage R22's obscured shape): a marked photo in the document, carried by its copy (R14), and
    the ceremony's Photos step (R34), over the real case-disclosures (its R6, R7, R29) with case-carriage's `photoMarks`
    (its R10) a stand-in at its interface: each capture's marks state is the test's to set. (T38; DEC-183 (1); K2220,
    K2303) The Photos step is a gate: signing is refused while any photo the case relies on is unchecked (R34). */
@@ -20,9 +20,11 @@ const word = (key) => WORDS.words.find((x) => x.key === key).en;
 const AREA = { mark: 1, areas: [{ rect: [0, 0, 10, 10], kind: "person" }], by: "alice", at: "2026-09-27T00:00:00.000Z" };
 const NONE = { mark: 1, areas: [], by: "alice", at: "2026-09-27T00:00:00.000Z" };
 const ANSWERS = {
-  marked: { state: "marked", marks: [AREA], copy: { sha256: COPY, covered: 1, width: 10, height: 10 }, refused: null },
+  marked: { state: "marked", marks: [AREA], copy: { sha256: COPY, covered: 1, width: 10, height: 10 }, refused: null,
+            obscured: { copy: COPY, label: OBSCURED_LABEL, marked: true, kind: "photo" } },
   unchecked: { state: "unchecked", marks: [], copy: null, refused: null },
-  nothing: { state: "nothing_to_obscure", marks: [NONE], copy: { sha256: COPY2, covered: 0, width: 10, height: 10 }, refused: null },
+  nothing: { state: "nothing_to_obscure", marks: [NONE], copy: { sha256: COPY2, covered: 0, width: 10, height: 10 }, refused: null,
+             obscured: { copy: COPY2, label: PUBLISHED_LABEL, marked: false, kind: "photo" } },
   refused: { state: "marked", marks: [AREA], copy: null, refused: { code: "FORMAT_NOT_COVERABLE", detail: "HEIC" } },
 };
 const ratified = (real) => new Proxy(real, { get: (t, p) => (p === "caseRatifyPreflight"
@@ -57,15 +59,15 @@ function refused(r, code) {
     [code, code, CASE_DISCLOSURE_CHECKS[code].check, CASE_DISCLOSURE_CHECKS[code].translation]);
 }
 
-test("R14: a marked photo is stated as carried by its copy — its materials: row included: false with obscured: {copy, label, marked} (case-grammar R12 since T41), the copy's SHA-256 and case-carriage's OBSCURED_LABEL — a photo with nothing to obscure by its copy labelled PUBLISHED_LABEL (T38; N779; K2541), and the document stores it unsigned; a capture that is no photo travels whole with obscured null", () => {
+test("R14: a marked photo is stated as carried by its copy — its materials: row included: false with obscured: {copy, label, marked, kind} (case-grammar R12 since T41; kind as case-carriage R22 hands it, case-grammar R31 since T47), the copy's SHA-256 and case-carriage's OBSCURED_LABEL — a photo with nothing to obscure by its copy labelled PUBLISHED_LABEL (T38; N779; K2541), and the document stores it unsigned; a capture that is no photo travels whole with obscured null", () => {
   const { w, P, shas } = setup({ states: { [DOC]: "marked", [DOC2]: "nothing" } });
   const r = w.ca.publishCase(args(P, [Q, Q2]));
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
   const rows = Object.fromEntries(materialsOf(w.fm(docOf(w, r))).materials.map((m) => [m.ref, m]));
   /* case-grammar R12 (T41): `marked` read back beside the copy and label; (K2541) a copy with nothing to obscure now
      carries case-carriage's PUBLISHED_LABEL (case-disclosures R29), and is written unmarked */
-  assert.deepEqual([rows[DOC].sha, rows[DOC].included, rows[DOC].obscured], [shas[DOC], false, { copy: COPY, label: OBSCURED_LABEL, marked: true }]);
-  assert.deepEqual([rows[DOC2].sha, rows[DOC2].included, rows[DOC2].obscured], [shas[DOC2], false, { copy: COPY2, label: PUBLISHED_LABEL, marked: false }]);
+  assert.deepEqual([rows[DOC].sha, rows[DOC].included, rows[DOC].obscured], [shas[DOC], false, { copy: COPY, label: OBSCURED_LABEL, marked: true, kind: "photo" }]);
+  assert.deepEqual([rows[DOC2].sha, rows[DOC2].included, rows[DOC2].obscured], [shas[DOC2], false, { copy: COPY2, label: PUBLISHED_LABEL, marked: false, kind: "photo" }]);
   assert.deepEqual([rows[DOC3].included, rows[DOC3].obscured], [true, null]);
   assert.equal(w.row(`SELECT sig_armored FROM case_documents WHERE case_id=?`, r.caseId).sig_armored, null, "stored unsigned");
   /* negative control: with no photo at all, every row travels whole */

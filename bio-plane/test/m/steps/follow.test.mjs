@@ -173,3 +173,47 @@ test("R23: laterFound's `at` is compared as an instant, never as a string (an en
   assert.equal(r.truncated, true);
   assert.equal(r.found.length, LATER_FOUND_SCAN);
 });
+
+test("R23 (T47): laterFound answers {ok, found, truncated}, reading at most LATER_FOUND_SCAN (5,000) entries oldest first, before any is filtered by at, sight or recipient; truncated: 5,001 entries answer truncated: true (control: 5,000 answer false); a viewer naming no member, or a read that fails, answers found [] and truncated false", async () => {
+  const { LATER_FOUND_SCAN } = await import("../../../src/steps/index.mjs");
+  assert.equal(LATER_FOUND_SCAN, 5000);
+  const w = world();
+  w.draw(Q, P1);                                              /* Ann is a recipient of Q; Out is not */
+  const id = w.step({ by: CAT });
+  w.observationLog.observe({ actor_class: "member", actor: CAT, authority_kind: "step", authority: id, level: "document",
+    subject_kind: "address", subject: "https://example.org/t.pdf", state: "LOOKED_ABSENT", detail: "not posted" });
+  w.bundle("INFO-2026-0006-t", { type: "information" });
+  w.capture("3".repeat(64), "INFO-2026-0006-t");
+  w.observationLog.observe({ actor_class: "plane", authority_kind: "acquire", authority: "INFO-2026-0006-t", level: "document",
+    subject_kind: "address", subject: "https://example.org/t.pdf", state: "PRESENT", result_kind: "capture", result_ref: "3".repeat(64), detail: "new" });
+  const e = w.rows(`SELECT * FROM step_later_found`)[0];
+  /* the store holds 5,000 entries, each its own look of the step answered by the same arrival */
+  w.st.db.exec("BEGIN");
+  for (let i = 1; i < LATER_FOUND_SCAN; i++)
+    w.st.sql.exec(`INSERT INTO step_later_found (step_id, look_seq, observation_seq, at, looked_at) VALUES (?,?,?,?,?)`, id, e.look_seq + i, e.observation_seq, e.at, e.looked_at);
+  w.st.db.exec("COMMIT");
+  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM step_later_found`)[0].n, LATER_FOUND_SCAN);
+  const c = w.s.laterFound({ viewer: ANN });
+  assert.deepEqual(Object.keys(c).sort(), ["found", "ok", "truncated"]);
+  assert.deepEqual([c.ok, c.truncated, c.found.length], [true, false, LATER_FOUND_SCAN], "the control: 5,000 entries answer truncated false");
+  assert.equal(w.s.laterFound({ viewer: OUT }).truncated, false, "the control, for one told nothing");
+
+  /* one more: 5,001 held */
+  const newest = e.look_seq + LATER_FOUND_SCAN;
+  w.st.sql.exec(`INSERT INTO step_later_found (step_id, look_seq, observation_seq, at, looked_at) VALUES (?,?,?,?,?)`, id, newest, e.observation_seq, e.at, e.looked_at);
+  const r = w.s.laterFound({ viewer: ANN });
+  assert.deepEqual([r.ok, r.truncated, r.found.length], [true, true, LATER_FOUND_SCAN], "5,001 entries answer truncated true");
+  assert.equal(r.found[0].look, Number(e.look_seq), "oldest first");
+  assert.equal(r.found.some((f) => f.look === newest), false, "the entry past the bound is not read");
+  /* the bound is taken before any filter: by at, by sight and recipient */
+  const early = w.s.laterFound({ viewer: ANN, at: "2000-01-01T00:00:00Z" });
+  assert.deepEqual([early.found, early.truncated], [[], true], "every entry filtered out by at, the bound still said");
+  const out = w.s.laterFound({ viewer: OUT });
+  assert.deepEqual([out.found, out.truncated], [[], true], "no entry told to her, the bound still said");
+
+  /* a viewer naming no member, and a read that fails: found [] and truncated false, always present */
+  for (const v of [null, "", AI, "nobody"])
+    assert.deepEqual(w.s.laterFound({ viewer: v }), { ok: true, found: [], truncated: false }, String(v));
+  w.st.db.exec(`DROP TABLE step_later_found`);
+  assert.deepEqual(w.s.laterFound({ viewer: ANN }), { ok: true, found: [], truncated: false }, "a read that fails");
+});

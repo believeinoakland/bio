@@ -67,6 +67,12 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
 - **R15** No credential, session token or secret appears in any refusal this module answers, and no place is named in its behaviour or outward text (the door's own rule, applied to this module's share).
 - **R16** (K723; was control-plane's `caseReader`) `readerOf` answers who is asking for a public op that answers working material only to some (op=instancegroup's whole row, op=groupidentity's claim, an unsigned case document, a review copy without a secret), and never refuses: a binding class stands as `class:<cls>` exactly when `OPS.index` admits that class and R4 lands it in the store the op reads; a live session as its viewer (the founder's `admin`, else `member:<id>`); an agent credential as its principal when R10 admits it to `index`; anyone else, an unknown or expired credential included, as no one (`""`). A store that does not answer a lookup is a silence (R6), never a statement about the caller.
 
+#### T47's L11 fold (K3100)
+
+- **R23** (K3043; `credentials` R63) An `ai` credential whose row carries a `run` is admitted to a write only when the write names that run; a write naming another run is refused `AI_BEYOND_TASK_SCOPE`. Test with a control.
+- **R24** (K3084; `credentials` R65, R71 (1)) A locked session is admitted only to `unlock`, `reauth` and `signout`; any other op answers `credentials.sessionLockedRefusal`, relayed as given. Test with a control.
+- **R25** (K3084; `credentials` R66, R71 (2); `op-declarations` R58) An act `REAUTH_ACTS` names, with its argument, is refused by `credentials.reauthDue({token})`'s answer unless null. Test: inside and outside the window; control: an act not named.
+
 ### Satisfies
 
 - `docs/architecture/BIO_Membership_Architecture_v2.md` §4.6 (the root of trust: export), §4.9 (governance acts are a named administrator's own session), §4.10 (the session ops), §5 (capabilities enforced at the op layer).

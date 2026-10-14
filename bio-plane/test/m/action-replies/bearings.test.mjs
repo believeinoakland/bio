@@ -84,7 +84,9 @@ test("R1 BEARING_REFUSED: a claim not among the legs (the control's opposite), a
   for (const [claims, item] of cases) {
     const r = lay(w, claims);
     assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, "BEARING_REFUSED", "BEARING_REFUSED", "C-150.3"], JSON.stringify(claims));
-    assert.equal(r.translation, ACTION_REPLY_CHECKS.BEARING_REFUSED.translation);
+    /* R9 (T47) amends this: the row's sentence with its `{item}` filled (t47.test.mjs) */
+    assert.equal(r.translation, ACTION_REPLY_CHECKS.BEARING_REFUSED.translation.replace("{item}",
+      item === null ? "The list of claims" : `Claim ${item + 1}${claims[item] && claims[item].claim ? ` (${claims[item].claim})` : ""}`));
     assert.ok(r.findings.length >= 1 && r.findings.every((f) => f.check === "C-2.10"), JSON.stringify(r.findings));
     if (item !== null) assert.equal(r.item, item, "the item is named");
   }

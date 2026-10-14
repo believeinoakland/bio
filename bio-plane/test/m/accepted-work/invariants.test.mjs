@@ -25,8 +25,8 @@ test("R5 no table, and nothing regrades: making the module adds no table; the pa
   assert.ok(!/grade|strength|trust/i.test(text), "nothing graded into the document");
   /* its interface: the registration, the reads, the leg check; no grading, composing or scoring function */
   const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(w.aw)).filter((m) => m !== "constructor").sort();
-  assert.deepEqual(methods, ["acceptanceWithdrawals", "acceptedFinding", "acceptedLegRefusals", "check", "openFlagsOn",
-                             "publisherMoves", "registerAcceptedWork"]);
+  assert.deepEqual(methods, ["acceptanceWithdrawals", "acceptedFinding", "acceptedLegRefusals", "check", "flagHistoryOn",
+                             "openFlagsOn", "publisherMoves", "registerAcceptedWork"]);
   assert.deepEqual(Object.keys(accepted).sort(),
     ["ACCEPTED_WORK_ABSENT", "ACCEPTED_WORK_CHECKS", "ACCEPTED_WORK_UNREADABLE_WHY", "acceptedWorkOf"]);
 });

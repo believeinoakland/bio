@@ -1101,23 +1101,21 @@ function walkTextBody(bodyXml, { withText = true } = {}) {
   const hyperlinks = [];
   const annotations = [];
   const marks = [];               // { id, para } — where a changed region sits
-  const openChanges = new Map();  // id → { para, text } for a change-start span
 
   /* The tracked-changes declaration block is read separately below; strip it
    * so its deleted paragraphs never enter the body sequence. */
   const served = stripElement(bodyXml, "tracked-changes");
 
   const RE = tokens();
-  let m, prev = 0;
+  let m;
   let para = -1;
   let inPara = false;
   let depthInPara = 0;
   let skipDepth = 0;              // inside an annotation: its text is its own
   let paraStart = -1;
-  const openStack = [];
 
   while ((m = RE.exec(served)) !== null) {
-    if (m[1] === undefined) { prev = RE.lastIndex; continue; }
+    if (m[1] === undefined) continue;
     const name = localOf(m[1]);
     const closing = m[0][1] === "/";
     const selfClosed = m[3] === "/";
@@ -1125,7 +1123,6 @@ function walkTextBody(bodyXml, { withText = true } = {}) {
     if (skipDepth > 0) {
       if (!closing && !selfClosed) skipDepth++;
       else if (closing) skipDepth--;
-      prev = RE.lastIndex;
       continue;
     }
 
@@ -1138,20 +1135,18 @@ function walkTextBody(bodyXml, { withText = true } = {}) {
       const ann = elementsNested(rest, "annotation", 1)[0];
       annotations.push({ attrs: attrsOf(m[2]), inner: ann ? ann.inner : "", para: para >= 0 ? para : null });
       skipDepth = 1;
-      prev = RE.lastIndex;
       continue;
     }
 
     if (!closing && (name === "p" || name === "h")) {
       if (!selfClosed) {
-        if (!inPara) { para++; inPara = true; depthInPara = 1; paraStart = RE.lastIndex; openStack.length = 0; }
+        if (!inPara) { para++; inPara = true; depthInPara = 1; paraStart = RE.lastIndex; }
         else depthInPara++;   /* a paragraph inside a paragraph is not ODF, but
                                  a producer's nesting must not desynchronise
                                  the counter */
       } else {
         if (!inPara) { para++; paragraphs.push({ para, text: "" }); }
       }
-      prev = RE.lastIndex;
       continue;
     }
     if (closing && (name === "p" || name === "h") && inPara) {
@@ -1164,7 +1159,6 @@ function walkTextBody(bodyXml, { withText = true } = {}) {
         inPara = false;
         paraStart = -1;
       }
-      prev = RE.lastIndex;
       continue;
     }
 
@@ -1173,15 +1167,13 @@ function walkTextBody(bodyXml, { withText = true } = {}) {
     if (!closing && name === "a" && attrs.href != null) {
       hyperlinks.push({ href: attrs.href, para: para >= 0 ? para : null });
     } else if (name === "change-start" && attrs["change-id"] != null) {
-      openChanges.set(attrs["change-id"], { para: para >= 0 ? para : null });
       marks.push({ id: attrs["change-id"], para: para >= 0 ? para : null });
     } else if (name === "change" && attrs["change-id"] != null) {
       /* A bare `<text:change/>` is the position a deletion was taken FROM. */
       marks.push({ id: attrs["change-id"], para: para >= 0 ? para : null });
     }
-    prev = RE.lastIndex;
   }
-  return { paragraphs, hyperlinks, annotations, marks, openChanges };
+  return { paragraphs, hyperlinks, annotations, marks };
 }
 
 /** The inserted text of every change region, taken from the BODY between

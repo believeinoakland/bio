@@ -1,4 +1,4 @@
-/* op-declarations: WHAT EACH OP IS (R1–R53; T45's ops in `t45.mjs`, R49; T46's owners' shares in `t46.mjs`, R50, R51). Every op's spec, the act lists that drive the stamps and the fences, the
+/* op-declarations: WHAT EACH OP IS (R1–R61; T45's ops in `t45.mjs`, R49; T46's owners' shares in `t46.mjs`, R50, R51; T47's shares, families and `REAUTH_ACTS` in `t47.mjs`, R55, R57–R59, R61). Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table, the recorded decisions that a verb is not a person's, and the act gate read
    from those tables. It declares; it judges no caller and routes nothing (`admission` and `control-plane` read it).
    Copied from `control-plane/ops.mjs` at the control-plane split (T18, K617, K624 (1), (2)), which control-plane's own
@@ -10,6 +10,7 @@
 import { decorate } from "../affordances.mjs";
 import { T45_SHARES, T45_FAMILIES } from "./t45.mjs";
 import { T46_SHARES } from "./t46.mjs";
+import { T47_SHARES, T47_FAMILIES, REAUTH_ACTS } from "./t47.mjs";
 
 /* R5: a set that answers `has`, `size` and iteration as a Set does and has no way to change. Its members live in a
    private field, so `Set.prototype.add.call` finds no set to add to; it has no `add`, `delete` or `clear` of its own
@@ -177,10 +178,10 @@ const BODY = (key) => Object.freeze({ key, at: "body" });
    `member`, and the ask grant's mint the `session` itself, R22–R27; answers' `ask` the asking `member`). */
 /* T45 (R49): an owner's share of T45's ops (`t45.mjs`' `T45_SHARES`) joins its family here; the family keeps its own
    citation (R48 states case-account's whole) and the share's is `T45_SHARES`' own. T46 (R50, R51): and its share of
-   T46's (`t46.mjs`' `T46_SHARES`), the same way. */
+   T46's (`t46.mjs`' `T46_SHARES`), the same way, and T47 (R55, R57, R59, R61) its share of T47's (`t47.mjs`). */
 const withShare = (d, t) => (t ? { ...d, actor: d.actor ?? t.actor ?? null, proposer: d.proposer ?? t.proposer ?? null,
   extra: { ...(d.extra ?? {}), ...(t.extra ?? {}) }, ops: { ...d.ops, ...t.ops } } : d);
-const family = (d) => familyOf(withShare(withShare(d, T45_SHARES[d.owner]), T46_SHARES[d.owner]));
+const family = (d) => familyOf(withShare(withShare(withShare(d, T45_SHARES[d.owner]), T46_SHARES[d.owner]), T47_SHARES[d.owner]));
 const familyOf = ({ owner, cite, actor = null, proposer = null, extra = {}, ops }) => {
   const of = (pred) => frozenList(Object.keys(ops).filter((op) => pred(ops[op])));
   for (const [op, k] of Object.entries(ops)) if (!Object.hasOwn(OP_KINDS, k)) throw new TypeError(`op-declarations: ${op}: no kind ${k}`);
@@ -570,6 +571,8 @@ const OP_FAMILIES = Object.freeze({
     ops: { pagetranscribe: "member" } }),
   /* T45 (R49): the owners T45 gives a family, from `t45.mjs`. */
   ...Object.fromEntries(T45_FAMILIES.map((d) => [d.owner, family(d)])),
+  /* T47 (R55, R59): the owners T47 gives a family, from `t47.mjs`. */
+  ...Object.fromEntries(T47_FAMILIES.map((d) => [d.owner, family(d)])),
 });
 const FAMILY_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds)));
 /* T34: a public kind's op is in no session set (every caller reaches it); every other family op is in both. */
@@ -656,7 +659,7 @@ const OPS = frozenTable(aliasRows({
   selftest:   { classes: ["admin", "member", "probe"],           mutating: false },
   livefire:   { classes: ["admin", "probe"],                     mutating: true  },
   /* Working corpus (`bundles`): a title names what the group is looking into, so never public; the public list is
-     `publishedlist` (D-30). */
+     `publishedlist` (D-30), public itself since T47 (R63). */
   index:      { classes: ["admin", "member", "probe"],           mutating: false },
   /* S-10 step 1: the metadata projection retrieval filters on; working corpus, op=index's fence. */
   projection: { classes: ["admin", "member", "probe"],           mutating: false },
@@ -752,6 +755,10 @@ const OPS = frozenTable(aliasRows({
   selectionrelease:{ classes: ["admin", "member", "probe"],      mutating: true  },
   /* Citing Information in a Project (weight `report`): promotes the Project with the new edges (D-21). */
   cite:            { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* T47 (R55; citation R14; N975, N977): a question drawn into a project with a note, `cite`'s classes, capability and
+     stamps (`EDGE_ACTIONS`, `POSITIONAL_ACTS`: `author`, `viewer` and `identity`); `project`, `inquiry` and `note` the
+     request's. */
+  drawquestion:    { classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11: bulk disposition of Problems, weight `refuse`, contribute-gated. */
   dispose:         { classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11: bulk retirement, heavier than dispose (`retired` is terminal); refuses anything a live `cites` edge points
@@ -943,6 +950,10 @@ const OPS = frozenTable(aliasRows({
      not mutating. Publish's classes and its stamps. */
   publishpreflight: { classes: ["admin", "member", "probe"],       mutating: false },
   strengthbar:  { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* T47 (R55; strength R40, C-32.9): a project's own bar, `strengthbar`'s stamps (`DECLARATION_ACTIONS`), a member
+     session's only (`machineClasses: []`; strength refuses a machine by name), `contribute`; `project`, `capture`,
+     `connection` and `reason` the request's. */
+  projectbarset: { classes: ["admin", "member", "probe"], machineClasses: [], mutating: true },
   strengthbarof:{ classes: ["admin", "member", "probe"],           mutating: false },
   publishededitions: { classes: ["admin", "member", "probe"],      mutating: false },
   /* REC-22: the public read path answers from the published projection only; bytes by hash, never by path. */
@@ -972,7 +983,9 @@ const OPS = frozenTable(aliasRows({
      resolve beside it. */
   casedrafts:     { classes: ["admin", "member", "probe"],           mutating: false },
   excludedby:   { classes: ["admin", "member", "probe"],           mutating: false },
-  publishedlist:{ classes: ["admin", "member", "probe"],           mutating: false },
+  /* T47 (R63; K3144): the published cases' list is public, as the door serves it (screens-entry reads it with no
+     session); it answers only what is already published, so nothing is stamped and no session set holds it. */
+  publishedlist:{ classes: null,                                   mutating: false },
   inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
   inboxget:     { classes: ["admin", "member", "probe"],           mutating: false },
   inboxresolve: { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -1311,6 +1324,10 @@ const OPS = frozenTable(aliasRows({
   /* T22 (K1019; monitoring R17, R52; R9): an address's own frequency, a source owner's reasoned act — a machine reaches
      it and monitoring refuses it by name (MACHINE_CANNOT_SET_FREQUENCY) — `author` and `viewer` query-stamped. */
   addressfrequencyset: { classes: ["admin", "member", "probe"],     mutating: true  },
+  /* T47 (R55; monitoring R74): a bundle's monitoring switched and its frequency set, a member session's only
+     (`machineClasses: []`; MACHINE_CANNOT_SET_MONITORING), `author` and `viewer` query-stamped as
+     `addressfrequencyset`'s (`MONITORING_ACTIONS`); `bundleId`, `enabled` and `frequency` the body's. */
+  monitorset:          { classes: ["admin", "member", "probe"], machineClasses: [], mutating: true },
   /* T23 (the link sweep, K1094; R10), served since T24 by `link-sweep` (its R9; N506): the sweeps a member may see, a
      read for a member session, viewer-stamped; link-sweep answers a bearer's call as monitoring answers its reads. */
   sweeps:             { classes: ["admin", "member", "probe"],      mutating: false },
@@ -1510,7 +1527,8 @@ const READING_READS = listed(["reading", "readingref", "readingname", "textprove
    edge it creates records the SOURCE's assertion rather than the member's. The
    member's act is deciding to admit the observed connection into the graph; the
    edge itself says asserted_by: source. */
-const EDGE_ACTIONS = listed(["cite", "sever", "reinstate", "linkproject"]);
+/* T47 (R55; citation R14): `drawquestion` joins them, `cite`'s act list, so it is stamped as `cite` is. */
+const EDGE_ACTIONS = listed(["cite", "sever", "reinstate", "linkproject", "drawquestion"]);
 /* S-11 step 3. The first selection-backed action to move an OBJECT's state
    rather than an edge's, so it takes the same server-side viewer, owner and
    author stamps the edge actions take: a caller that could name the viewer
@@ -1567,7 +1585,8 @@ const ACTION_ACTIONS = listed(["actionmove", "actioncorrespond", "actionlaws", "
    session act whose AUTHOR is part of the declaration — "you can lower your own
    bar; you cannot do it quietly" — so it takes the author stamp without being a
    state action on any object. */
-const DECLARATION_ACTIONS = listed(["strengthbar"]);
+/* T47 (R55; strength R40): a project's own bar joins it, stamped as `strengthbar` (`author`, `viewer`, `identity`). */
+const DECLARATION_ACTIONS = listed(["strengthbar", "projectbarset"]);
 /* REC-45 / DEC-32: AUTHORING THE STRUCTURE of an inquiry's basis. Its own array
    and NOT folded into STATE_ACTIONS, on the same reasoning REC-24 wrote for
    ACTION_ACTIONS and for the same benefit: it moves NO state. An inquiry that
@@ -1716,6 +1735,16 @@ const CAPTURE_READS = listed(["heldcaptures", "gradenote", "doorbelltally"]);
 const SOURCE_ACTIONS = listed(["sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw"]);
 /* N364 (sources R1, R5, R9): the reads that answer by the caller's sight, `viewer` stamped. */
 const SOURCE_READS = listed(["sourceof", "sourcerung", "sourcereadlog"]);
+/* T47 (R56; N980; K3027 doubt 7): the two of them a member's session reaches, in BOTH sets, so the inbox's
+   `sourcelink` names the source read by a pulled knock's capture digest (`sources` R1) and its rung (R9). Reads, specs
+   unchanged; an `ai` credential is no class of theirs (R2). */
+/* (not exported: a session reach, not an act list naming stamps, R4) */
+const SESSION_SOURCE_READS = listed(["sourceof", "sourcerung"]);
+/* T47 (K3041; `draft-T47-interface.md` §5 gap 1): the publication's acts and reads the publish screens draw, in BOTH
+   sets so `interface-shell` R12 draws them and `ACT_GATE` answers `session` for them; each op's own gate and author
+   stamping unchanged — `statementack` and `reviewcomment` stay public at the class gate (a recipient by the grant's
+   secret), `publishpreflight` and `publishtensions` reads with `publish`'s classes. */
+const PUBLISH_SCREEN_OPS = listed(["statementack", "reviewcomment", "publishpreflight", "publishtensions"]);
 /* REC-155 — `BIO_Membership_Architecture_v2.md` §4.10 (RULED by BOB #19, 2026-09-21): five of the seven ops
    that no session reached and no decision explained JOIN BOTH SESSION SETS. Both sets for D-136's reason at
    the spread below: `SESSION_OPS.admin` is the FOUNDER'S session alone, and none of the five is the founder's.
@@ -1839,7 +1868,9 @@ const RUN_PRODUCTION_ACTIONS = listed(["suggest", "extractpropose", "capturerequ
    so it is cite's position. Its handler stamps the identity itself (it returns above the stamp site); listed here so the
    set of positional acts is read in one place. */
 const POSITIONAL_ACTS = listed(["cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude",
-                         "withdrawconclusion", "linkproject"]);
+                         "withdrawconclusion", "linkproject",
+                         /* T47 (R55; citation R14): drawing a question into a project, cite's position. */
+                         "drawquestion"]);
 /* PL-12 / D-84: the bias object's ONE write. `op=biasmanifest` and
    `op=biasinhale` are not here for the reason restated on AI_RUN_ACTIONS above —
    SESSION_OPS gates MUTATING ops alone — and `op=biasinhale` in particular is
@@ -1961,7 +1992,8 @@ const CONTRADICTION_READS = listed(["contradictioncandidates", "contradictionten
 /* T22 (K1019; monitoring R52; R9): an address's own frequency, a source owner's act; monitoring reads `author` (bare or
    positional) and `viewer` from the query, so it joins `QUERY_AUTHOR_ACTIONS` below, and with it the action layer's
    viewer stamp. Its own array, one per module, for the reason every array here is one. */
-const MONITORING_ACTIONS = listed(["addressfrequencyset"]);
+/* T47 (R55; monitoring R74): `monitorset` joins it, `addressfrequencyset`'s stamps. */
+const MONITORING_ACTIONS = listed(["addressfrequencyset", "monitorset"]);
 /* T23 (K1094; R10), link-sweep's since T24 (its R9; N506): the sweeps read, viewer-stamped (link-sweep's ops map reads
    `viewer` from the query); it joins `ACTION_LAYER_READS` below as monitoring's act joins the action layer's acts, so the
    same stamp reaches it. Its own array, its owner's, for the reason every array here is one. */
@@ -2182,6 +2214,11 @@ const SESSION_OPS = Object.freeze({
                    ...ROSTER_SELF_ACTIONS,
                    /* N364: a member's own key, capture's member acts and sources' acts, in BOTH sets. */
                    ...OWN_KEY_ACTIONS, ...CAPTURE_MEMBER_ACTIONS, ...SOURCE_ACTIONS,
+                   /* T47 (R56; N980; sources R1, R9): a pulled knock's source read by its capture's digest and the
+                      source's rung, so a member's session reads them (specs unchanged). */
+                   ...SESSION_SOURCE_READS,
+                   /* T47 (K3041): the publication's own reads and doors the publish screens draw, specs unchanged. */
+                   ...PUBLISH_SCREEN_OPS,
                    /* REC-155: §4.10's five, in BOTH sets for D-136's reason above — none
                       of them is the founder's act, and an enrolled administrator is a
                       `member` kind. */
@@ -2351,6 +2388,7 @@ const SESSION_OPS = Object.freeze({
                    ...CUSTODIAL_ACTIONS,
                    ...ROSTER_SELF_ACTIONS,
                    ...OWN_KEY_ACTIONS, ...CAPTURE_MEMBER_ACTIONS, ...SOURCE_ACTIONS,
+                   ...SESSION_SOURCE_READS, ...PUBLISH_SCREEN_OPS,
                    ...PROVENANCE_JUDGEMENT_ACTIONS, ...CALIBRATION_WRITE_ACTIONS,
                    "governorstate", "governorconfig",
                    /* K372 (monitoring R30): the daemon's pause, `governorconfig`'s route — the founder's session. */
@@ -3143,6 +3181,17 @@ const NEEDS = Object.freeze(aliasRows({
   heldsetaside:        "contribute",
   heldrestore:         "contribute",
   addressfrequencyset: "contribute",
+  /* T47 (R55): drawing a question into a project writes its citation edges, `cite`'s capability; a project's own bar
+     and a bundle's monitoring are written in a member's name, `contribute` as R55 states (a project's bar is its
+     members' working setting, not the group's publication surface `strengthbar` rides). */
+  drawquestion:        "contribute",
+  projectbarset:       "contribute",
+  monitorset:          "contribute",
+  /* T47 (K3041): the review copy's two doors, now in both session sets, take NO WORKING CAPABILITY, as the template
+     grant's doors (`templatereview`, `templatecomment`): a recipient reaches them by the secret with no session to hold
+     one, and the owner judges a member's call. PRESENT, null, for R3's totality. */
+  statementack:        null,
+  reviewcomment:       null,
   /* NO CAPABILITY for capture's three reads, on `contradictionpairs`' reasoning (asking the record is reading it);
      PRESENT, null, as capture's other reads (`knocksof`, `lateattestations`), so affordances names each in NON_ACTS
      (its R7, R12). `escalationstatus` takes `escalationsdue`'s shape: no row. */
@@ -3257,6 +3306,10 @@ const NEEDS = Object.freeze(aliasRows({
      this table does not carry as stale (its R12), K516's precedent. */
   credit:                null,
   recover:               null,
+  /* T47 (R57; K3147): the reset link's use, public, takes NO WORKING CAPABILITY and is PRESENT, null, as `recover` is,
+     because op-grades names it in NON_ACTS (its R37); the link's look and the group's languages are `publicread`s, whose
+     kind gives the row. */
+  passwordreset:         null,
   /* T36 (R32): the scheduler's four wakes over the files take NO WORKING CAPABILITY — none is a session's act — and are
      PRESENT, null, as `moneydetectorsrun`'s, because op-grades grades each (its R24) and affordances' totality reads a
      graded key this table lacks as stale (its R12), K516's precedent. */
@@ -3388,7 +3441,19 @@ const UNATTENDED_BY_DECISION = Object.freeze({
    under the last; `infolevelset`, `escalationstoppursuing`, `escalationreopen` and `textcheck` are explained by
    `ACT_HELP` under their own names (affordances R53), and `handlechange` by the refusal sentence affordances R53 holds
    for it, so none of the five is named. T46 (R34, R49; K3005): affordances R53 re-generates `ACT_HELP` from PR #28's
-   `mock-acts.js`, which explains 39 of T45's member ops; they leave the read and last grounds, so no op is both. */
+   `mock-acts.js`, which explains 39 of T45's member ops; they leave the read and last grounds, so no op is both.
+   T47 (R34, R54–R56, R59, R61; K3041): read against `ACT_HELP` as it stands before affordances' T47 job (T47-49)
+   re-generates it from PR #33's `mock-acts.js`: the member ops T47 declares with no text there are named — the reads
+   `sourceof`, `sourcerung`, `projectlist`, `projectquestions`, `peopledirectory` and `signintrace` under the read ground,
+   the acts `drawquestion`, `projectbarset`, `monitorset`, `unlock`, `reauth`, `passwordresetlink`, `grouplogoset`,
+   `grouplanguagesset` and `signrequest` under the last; the four publication ops K3041 brings into the session sets
+   (`statementack`, `reviewcomment`, `publishpreflight`, `publishtensions`) are explained there already.
+   T47 (R34, R54, R56; K3152): re-pinned against `ACT_HELP` as affordances' T47 job merged it from PR #33's
+   `mock-acts.js`: the ops it now explains leave every ground (among them `projectlist`, `projectquestions`,
+   `drawquestion`, `projectbarset`, `monitorset`, `unlock`, `passwordresetlink`, `grouplogoset`, `grouplanguagesset`,
+   `signrequest`, `statusreportassist`, `airundispatch`, `joindoors`, `clockproposals`, `captureupload`, `ask`,
+   `signout`); `capture`, whose text the design withdrew with its control (the capture screen names `captureupload`,
+   R54), joins the no-control ground. */
 const ACT_HELP_ABSENT = Object.freeze({
   alias: Object.freeze({ ground: "An alias of a declared op (R21): its op's explanation serves it.",
     ops: frozenList([
@@ -3402,90 +3467,89 @@ const ACT_HELP_ABSENT = Object.freeze({
       "actionquotes", "adminrecoverystep", "advocacychecks", "aiactual", "aiestimate", "aikeepawaystate", "ailimits",
       "aiusage", "applicationrecipes", "asktallies", "assistantstate", "audit", "baseupdates", "bearingnotes",
       "bindsat", "calculation", "calculationevaluate", "captureprogressions", "capturerequestplatformhosts", "career",
-      "checkrequests", "checksof", "citationresolve", "claims", "clocklateness", "clockproposals", "clocksics",
-      "coarchivestate", "concerns", "connections", "contradictionpairs", "costmessages", "courtnotice", "cures",
-      "datedfacts", "directorysubmission", "disclosureof", "docket", "docketinvitation", "docketprepare",
-      "doorbelltally", "dutiesof", "duty", "dutyoccurrences", "dutysetagainst", "dutytransitions", "editioninforce",
-      "entitieskind", "entity", "entitybyalias", "escalationreasondraft", "escalationstatus", "event", "eventforact",
-      "eventsfor", "exceptions", "exploretimeline", "extractproposals", "factsdue", "factstatus", "finddoors",
-      "findingkind", "follows", "forcesof", "governorstate", "groupkeynotice", "groupkeystate", "grouprules",
-      "grouptestresults", "guide", "guidefor", "guideproposals", "guides", "holderat", "hypotheses", "identity",
-      "importedcase", "importedcases", "inbox", "inboxget", "infolevel", "inforceat", "inforcethroughof", "instance",
-      "interestchecks", "interfacewords", "interview", "interviewform", "investigationproposals", "joindoors",
-      "keyedservices", "lawaddresses", "lawrelations", "line", "linesof", "matterpromiseduties", "matters",
-      "meaningrows", "memberlanguage", "memberties", "milestones", "money", "moneyamountchecks", "moneycheckparams",
-      "moneydetectors", "moneyjunction", "moneynoticed", "moneyof", "moneyset", "moneysummable", "narrowcandidates",
-      "notes", "noticeprepare", "notices", "originalstate", "overridesof", "partiesof", "patterns",
-      "personcredentials", "personinterests", "personstatements", "photomarks", "placewantedstate", "plancomments",
-      "planreviewopen", "planreviews", "plantimeline", "powersof", "poweruses", "prepitems", "proceedinglinks",
-      "proceedingstatus", "progression", "projectaccountstate", "projectaikeepawaystate", "projectholds",
-      "projectkeynotice", "projectsshownon", "projectstanding", "proposals", "publishschedule", "questionfollowstate",
-      "questionwaits", "quietstate", "reading", "readingname", "readingref", "recordsrequests", "recordsteps",
-      "recoverycodesstate", "relation", "reportdraft", "reports", "resolutions", "reviewcomments", "safecopy",
-      "samepersoncandidates", "scanfindings", "scanstatus", "searchfields", "searchindexcheck",
-      "securitytoolcatalogue", "securitytoolevents", "securitytools", "selection", "selectionlist", "sequence",
-      "shares", "snapshotdiff", "snapshots", "sourcepersonlinks", "spotcheck", "staffing", "standardsfor", "standing",
-      "standinganswers", "statementsof", "statusreportassist", "statusreportdraft", "statusreports", "stepproducts",
-      "stepproposals", "steps", "stepslike", "stillstanding", "structureat", "successread", "successrecords", "sweeps",
-      "table", "tablesat", "templatecomments", "templateread", "templates", "templatesforaction", "textattest",
+      "checkrequests", "checksof", "citationresolve", "claims", "clocklateness", "clocksics", "coarchivestate",
+      "concerns", "connections", "contradictionpairs", "costmessages", "courtnotice", "cures", "datedfacts",
+      "directorysubmission", "disclosureof", "docket", "docketinvitation", "docketprepare", "doorbelltally",
+      "dutiesof", "duty", "dutyoccurrences", "dutysetagainst", "dutytransitions", "editioninforce", "entitieskind",
+      "entity", "entitybyalias", "escalationreasondraft", "escalationstatus", "event", "eventforact", "eventsfor",
+      "exceptions", "exploretimeline", "extractproposals", "factsdue", "factstatus", "finddoors", "findingkind",
+      "follows", "forcesof", "governorstate", "groupkeynotice", "groupkeystate", "grouprules", "grouptestresults",
+      "guide", "guidefor", "guideproposals", "guides", "holderat", "hypotheses", "identity", "importedcase",
+      "importedcases", "inbox", "inboxget", "infolevel", "inforceat", "inforcethroughof", "instance", "interestchecks",
+      "interfacewords", "interview", "interviewform", "investigationproposals", "keyedservices", "lawaddresses",
+      "lawrelations", "line", "linesof", "matterpromiseduties", "matters", "meaningrows", "memberlanguage",
+      "memberties", "milestones", "money", "moneyamountchecks", "moneycheckparams", "moneydetectors", "moneyjunction",
+      "moneynoticed", "moneyof", "moneyset", "moneysummable", "narrowcandidates", "notes", "noticeprepare", "notices",
+      "originalstate", "overridesof", "partiesof", "patterns", "peopledirectory", "personcredentials",
+      "personinterests", "personstatements", "photomarks", "placewantedstate", "plancomments", "planreviewopen",
+      "planreviews", "plantimeline", "powersof", "poweruses", "prepitems", "proceedinglinks", "proceedingstatus",
+      "progression", "projectaccountstate", "projectaikeepawaystate", "projectholds", "projectkeynotice",
+      "projectsshownon", "projectstanding", "proposals", "publishschedule", "questionfollowstate", "questionwaits",
+      "quietstate", "reading", "readingname", "readingref", "recordsrequests", "recordsteps", "recoverycodesstate",
+      "relation", "reportdraft", "reports", "resolutions", "reviewcomments", "safecopy", "samepersoncandidates",
+      "scanfindings", "scanstatus", "searchfields", "searchindexcheck", "securitytoolcatalogue", "securitytoolevents",
+      "securitytools", "selection", "selectionlist", "sequence", "shares", "signintrace", "snapshotdiff", "snapshots",
+      "sourceof", "sourcepersonlinks", "sourcerung", "spotcheck", "staffing", "standardsfor", "standing",
+      "standinganswers", "statementsof", "statusreportdraft", "statusreports", "stepproducts", "stepproposals",
+      "steps", "stepslike", "stillstanding", "structureat", "successread", "successrecords", "sweeps", "table",
+      "tablesat", "templatecomments", "templateread", "templates", "templatesforaction", "textattest",
       "textprovenance", "threatof", "timeline", "translations", "usesof", "verdictnotes", "versionnotice",
       "watchquestions", "whatchangeddrafts", "whereitstands", "whowassent", "wizardcandidates", "wizardcheck",
       "wizardread", "wizardsat", "wizarduse", "workbook", "workbookexport", "workbookinputs", "workbooklint"]) }),
-  nocontrol: Object.freeze({ ground: "A step another act takes, which no control on a screen offers: a promotion's lease and identifier, a run's tick, the count of a check or a wizard's progress.",
+  nocontrol: Object.freeze({ ground: "A step another act takes, which no control on a screen offers: a promotion's lease and identifier, a run's tick, the count of a check, a wizard's progress, or a capture a tool files (the screen's upload is captureupload).",
     ops: frozenList([
-      "airuntick", "allocid", "answercheck", "lease", "wizardprogress"]) }),
+      "airuntick", "allocid", "answercheck", "capture", "lease", "wizardprogress"]) }),
   unexplained: Object.freeze({ ground: "An act the design has not yet explained; named back to the design stream (DEC-174 (3)).",
     ops: frozenList([
       "accountpropose", "actalias", "actionholdrelease", "actionlawspropose", "actionriskpropose", "actionrisktier",
       "actionseekspropose", "addressedrecord", "addressfrequencyset", "adminresign", "aicredentialmint",
-      "aicredentialrevoke", "aigrantmint", "airundispatch", "airunverify", "aliaswithdraw", "approvalruleset", "ask",
-      "aspirationdeadend", "aspirationdeclare", "aspirationdepart", "aspirationretire", "assessmentrecord",
-      "attesttext", "bearingnote", "biasadopt", "biasdebtresolve", "bindingadopt", "calibrate", "calibrationsignal",
-      "calibrationsubject", "captureaccount", "capturerequestplatformmark", "capturerequestplatformunmark",
-      "capturerequestretry", "captureupload", "caseapprove", "caseimportdocument", "checkrecord", "checktake",
-      "claimfindstep", "claimfound", "clockstate", "coarchiveset", "comparisonpropose", "connect", "connectionchoose",
-      "consequencerecord", "consequencerevise", "contentmint", "contradictionclarify", "contradictiondismiss",
-      "contradictionoptin", "contradictionpropose", "contradictionrecommend", "contradictionresolve",
-      "contradictionrespond", "contradictiontakeup", "costmessage", "counselpacket", "counselpacketexport",
-      "courttreat", "cureunlink", "determine", "discharge", "discretionrecord", "dispose", "docketdecline",
-      "docketpressure", "dutyadopt", "dutymatch", "dutypropose", "dutyrevise", "dutytransition", "dutywithdraw",
-      "editacts", "entityalias", "entityidentify", "escalationattach", "escalationdecline", "escalationevaluate",
-      "escalationresume", "escalationsuspend", "eventattest", "eventgovern", "eventimport", "eventmerge",
-      "eventrelationwithdraw", "eventsplit", "exportrender", "extractpropose", "factconfirm", "filemembershipjudge",
-      "filemembershipstore", "findaccept", "findmute", "followbody", "followpersonquery", "followportal", "goalclose",
-      "goaldeclare", "goallink", "grouptestset", "guideadopt", "guidedraft", "guideoffer", "guidepropose",
-      "guideproposetocivicsmith", "guideretire", "guidereview", "holdnoticeprepare", "hostingaccessset",
-      "hypothesisrevise", "hypothesissetaside", "hypothesistakeup", "hypothesiswithdraw", "importacceptwithdraw",
-      "importflagclear", "importunwatch", "inquirydivide", "inquiryground", "interestcheckdefine", "interestcheckgate",
-      "interestcheckswitch", "interviewkeep", "joinlinkoff", "joinlinkreplace", "joinlinkset", "keyedserviceset",
-      "keyedserviceswitch", "lawpropose", "lawwithdraw", "lead", "leadlook", "leadshare", "linecurrentthrough",
-      "linewithdraw", "linkproject", "memberpairingset", "milestoneitemremove", "milestonereminder", "milestoneremove",
-      "milestonerevise", "milestoneset", "moneycheckparam", "moneydetectordefine", "moneydetectorgate",
-      "moneydetectorswitch", "moneyfundtype", "moneyingest", "moneysetpropose", "moneywithdraw", "monitorpause",
-      "narrativeclaim", "noteshare", "noteunshare", "noticepost", "objectivecondition", "optionrevise",
-      "participantcorrect", "patterngate", "patternswitch", "permeetingbody", "personfactwithdraw", "planaccept",
-      "plancomment", "planreviewrecord", "planreviewrhythm", "plansubjectremove", "prepitemadd", "prepitemdone",
-      "prepitemtakeup", "progressiondefine", "projectclosewithgaps", "projectfork", "projectleave", "projectowneradd",
-      "projectownerremove", "projectownerrescue", "projectremove", "projectrequest", "projectrequestanswer",
-      "projectrequestwithdraw", "projectvisibilityset", "projectwatch", "proposalaccept", "provenancechain",
-      "provenanceroute", "publishatcancel", "publishatmove", "questionfollow", "ratify", "readoptin", "readpages",
-      "reattest", "recordset", "recordsrequestanswer", "recordsrequestopen", "recoverycodesissue",
-      "reevaluationrecord", "refreshregister", "registerimport", "relationdeclare", "relationwithdraw", "reopen",
-      "reportkeep", "resolutiondefect", "resolve", "resolvetestify", "reviewpropose", "ruleservicesswitch",
-      "safecopyrequest", "seatsseed", "signeradd", "signerset", "signout", "signouteverywhere", "sourceconsent",
-      "sourceconsentwithdraw", "sourcedisclose", "sourcekeyed", "sourcepersonlink", "spotcheckvisit",
-      "standardadoption", "standardbenchmark", "standardforce", "standardforcepropose", "standardforcewithdraw",
-      "standardimpose", "standardinforcethrough", "standardinforcethroughwithdraw", "standardpropose",
-      "standardrelease", "standingaiswitch", "statusreportsave", "stepaccept", "stepbywhen", "stepcostadd",
-      "stepcostremove", "stepcreate", "stepdelete", "stepend", "steplearn", "stepoutcome", "stepproduct", "steprefer",
-      "stepreminder", "stepsrunai", "stepstart", "stepwait", "stepwaitremove", "subscriptiondisconnect",
-      "successrevise", "templateapprove", "templatecomment", "templatedraft", "templategrantrevoke", "templatepropose",
-      "templateretire", "templatereview", "templatereviewgrant", "templaterevise", "templatesave", "templatesubmit",
-      "themedeclare", "themeplace", "themepropose", "themewithdraw", "theorypropose", "thread", "transcriptionattest",
-      "translationmark", "triage", "unfollow", "unpack", "uselink", "usesfreeze", "useunlink", "usewithdraw",
-      "versionaccept", "versionconsider", "versioncurrent", "versionhide", "versionreject", "versionrevert",
-      "waitlook", "websitekeyrevoke", "websitekeyset", "wizardeditorgrant", "wizardeditorrevoke", "wizardpropose",
-      "workbooklintexplain", "workbookmethodnote", "workbookrecompute", "workbookunbind", "workobjective"]) }),
+      "aicredentialrevoke", "aigrantmint", "airunverify", "aliaswithdraw", "approvalruleset", "aspirationdeadend",
+      "aspirationdeclare", "aspirationdepart", "aspirationretire", "assessmentrecord", "attesttext", "bearingnote",
+      "biasadopt", "biasdebtresolve", "bindingadopt", "calibrate", "calibrationsignal", "calibrationsubject",
+      "captureaccount", "capturerequestplatformmark", "capturerequestplatformunmark", "capturerequestretry",
+      "caseapprove", "caseimportdocument", "checkrecord", "checktake", "claimfindstep", "claimfound", "clockstate",
+      "coarchiveset", "comparisonpropose", "connect", "connectionchoose", "consequencerecord", "consequencerevise",
+      "contentmint", "contradictionclarify", "contradictiondismiss", "contradictionoptin", "contradictionpropose",
+      "contradictionrecommend", "contradictionresolve", "contradictionrespond", "contradictiontakeup", "costmessage",
+      "counselpacket", "counselpacketexport", "courttreat", "cureunlink", "determine", "discharge", "discretionrecord",
+      "dispose", "docketdecline", "docketpressure", "dutyadopt", "dutymatch", "dutypropose", "dutyrevise",
+      "dutytransition", "dutywithdraw", "editacts", "entityalias", "entityidentify", "escalationattach",
+      "escalationdecline", "escalationevaluate", "escalationresume", "escalationsuspend", "eventattest", "eventgovern",
+      "eventimport", "eventmerge", "eventrelationwithdraw", "eventsplit", "exportrender", "extractpropose",
+      "factconfirm", "filemembershipjudge", "filemembershipstore", "findaccept", "findmute", "followbody",
+      "followpersonquery", "followportal", "goalclose", "goaldeclare", "goallink", "grouptestset", "guideadopt",
+      "guidedraft", "guideoffer", "guidepropose", "guideproposetocivicsmith", "guideretire", "guidereview",
+      "holdnoticeprepare", "hypothesisrevise", "hypothesissetaside", "hypothesistakeup", "hypothesiswithdraw",
+      "importacceptwithdraw", "importflagclear", "importunwatch", "inquirydivide", "inquiryground",
+      "interestcheckdefine", "interestcheckgate", "interestcheckswitch", "interviewkeep", "joinlinkoff",
+      "joinlinkreplace", "joinlinkset", "keyedserviceset", "keyedserviceswitch", "lawpropose", "lawwithdraw", "lead",
+      "leadlook", "leadshare", "linecurrentthrough", "linewithdraw", "linkproject", "memberpairingset",
+      "milestoneitemremove", "milestonereminder", "milestoneremove", "milestonerevise", "milestoneset",
+      "moneycheckparam", "moneydetectordefine", "moneydetectorgate", "moneydetectorswitch", "moneyfundtype",
+      "moneyingest", "moneysetpropose", "moneywithdraw", "monitorpause", "narrativeclaim", "noteshare", "noteunshare",
+      "noticepost", "objectivecondition", "optionrevise", "participantcorrect", "patterngate", "patternswitch",
+      "permeetingbody", "personfactwithdraw", "planaccept", "plancomment", "planreviewrecord", "planreviewrhythm",
+      "plansubjectremove", "prepitemadd", "prepitemdone", "prepitemtakeup", "progressiondefine",
+      "projectclosewithgaps", "projectfork", "projectleave", "projectowneradd", "projectownerremove",
+      "projectownerrescue", "projectremove", "projectrequest", "projectrequestanswer", "projectrequestwithdraw",
+      "projectvisibilityset", "projectwatch", "proposalaccept", "provenancechain", "provenanceroute", "questionfollow",
+      "ratify", "readoptin", "readpages", "reattest", "reauth", "recordset", "recordsrequestanswer",
+      "recordsrequestopen", "reevaluationrecord", "refreshregister", "registerimport", "relationdeclare",
+      "relationwithdraw", "reopen", "reportkeep", "resolutiondefect", "resolve", "resolvetestify", "reviewpropose",
+      "ruleservicesswitch", "safecopyrequest", "seatsseed", "signeradd", "sourceconsent", "sourceconsentwithdraw",
+      "sourcedisclose", "sourcekeyed", "sourcepersonlink", "standardadoption", "standardbenchmark", "standardforce",
+      "standardforcepropose", "standardforcewithdraw", "standardimpose", "standardinforcethrough",
+      "standardinforcethroughwithdraw", "standardpropose", "standardrelease", "standingaiswitch", "statusreportsave",
+      "stepaccept", "stepbywhen", "stepcostadd", "stepcostremove", "stepcreate", "stepdelete", "stepend", "steplearn",
+      "stepoutcome", "stepproduct", "steprefer", "stepreminder", "stepsrunai", "stepstart", "stepwait",
+      "stepwaitremove", "successrevise", "templateapprove", "templatecomment", "templatedraft", "templategrantrevoke",
+      "templatepropose", "templateretire", "templatereview", "templatereviewgrant", "templaterevise", "templatesave",
+      "templatesubmit", "themedeclare", "themeplace", "themepropose", "themewithdraw", "theorypropose", "thread",
+      "transcriptionattest", "translationmark", "triage", "unfollow", "unpack", "uselink", "usesfreeze", "useunlink",
+      "usewithdraw", "versionaccept", "versionconsider", "versioncurrent", "versionhide", "versionreject",
+      "versionrevert", "waitlook", "websitekeyrevoke", "websitekeyset", "wizardeditorgrant", "wizardeditorrevoke",
+      "wizardpropose", "workbooklintexplain", "workbookmethodnote", "workbookrecompute", "workbookunbind",
+      "workobjective"]) }),
 });
 
-export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS, CASE_IMPORT_ACTIONS, CASE_IMPORT_READS, CASE_IMPORT_BY, CASE_CHECKER_PUBLIC_READS, WIZARD_SCRIPTS_ACTIONS, WIZARD_SCRIPTS_AUTHOR, WIZARD_SCRIPTS_BY, WIZARD_PROPOSAL_ACTIONS, WIZARD_PROGRESS_ACTIONS, WIZARD_SCRIPTS_READS, WIZARD_CHECK_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_HOLDS_ACTIONS, ACTION_HOLDS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, OP_KINDS, OP_FAMILIES, FAMILY_OPS, FAMILY_SESSION_OPS, OP_ALIASES, ASK_GRANT_OPS, OP_STAMPS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION, ACT_HELP_ABSENT };
+export { REAUTH_ACTS, OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS, CASE_IMPORT_ACTIONS, CASE_IMPORT_READS, CASE_IMPORT_BY, CASE_CHECKER_PUBLIC_READS, WIZARD_SCRIPTS_ACTIONS, WIZARD_SCRIPTS_AUTHOR, WIZARD_SCRIPTS_BY, WIZARD_PROPOSAL_ACTIONS, WIZARD_PROGRESS_ACTIONS, WIZARD_SCRIPTS_READS, WIZARD_CHECK_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_HOLDS_ACTIONS, ACTION_HOLDS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, OP_KINDS, OP_FAMILIES, FAMILY_OPS, FAMILY_SESSION_OPS, OP_ALIASES, ASK_GRANT_OPS, OP_STAMPS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION, ACT_HELP_ABSENT };

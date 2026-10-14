@@ -1,6 +1,6 @@
 /* T9's share beyond R78 (K285): R79 the revocation notice (N123), R80 `inSight` (N142), R81 `listenerRefusal` (N202,
-   moved from promotion), R82 the bounds on R11's history, R19's pairings and the votes behind R39's and R40's deciders
-   (N70). */
+   moved from promotion), R113 the bounds on R11's history and R19's pairings (N70; was R82's half, T38: the deciders'
+   bound is `project-roster` R7's). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";

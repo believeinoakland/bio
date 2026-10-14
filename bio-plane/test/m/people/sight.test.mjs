@@ -61,7 +61,8 @@ test("R21 a source is linked to a registered person with evidence and a non-empt
   assert.equal(w.record.declaredTables().find((d) => d.name === "source_person_links").export, "never");
   const reads = JSON.stringify([w.p.personAt({ entityId: p, at: "2020-01-01", viewer: ANN }), w.p.careerOf({ entityId: p, viewer: ANN }),
     w.p.identityOf({ entityId: p, viewer: ANN }), w.p.interestsOf({ entityId: p, viewer: ANN }), w.p.credentialsOf({ entityId: p, viewer: ANN }),
-    w.p.statementsOf({ entityId: p, viewer: ANN }), w.p.samePersonCandidates({ entityId: p, viewer: ANN })]);
+    w.p.statementsOf({ entityId: p, viewer: ANN }), w.p.samePersonCandidates({ entityId: p, viewer: ANN }),
+    w.p.peopleDirectory({ viewer: ANN })]);
   assert.ok(!reads.includes("SRC-2026-1234abcd") && !/\bsource_link|is a source|as a source\b/i.test(reads), "no person read states it, even to a listed member");
   /* corrected forward: the later link governs; the one it replaced is kept with who replaced it and when */
   const first = w.one(`SELECT * FROM source_person_links WHERE person=?`, p);

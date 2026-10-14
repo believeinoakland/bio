@@ -183,3 +183,51 @@ test("R15: control: with one duty unmet, met_at is null; a met reading not yet r
   read();
   assert.deepEqual(w.snapshot(), rows, "writes nothing");
 });
+
+test("R17: matterPromiseDuties takes nowMs, the instant the duties are read as of; this module's clock when absent", () => {
+  const { w, read } = promised();
+  read();
+  assert.equal(w.dutyCalls.at(-1).asOf, "2026-10-10T00:00:00Z", "nowMs is duties' asOf");
+  w.clock.now = "2026-10-11T08:30:00Z";
+  w.pw.matterPromiseDuties({ plan: w.PL, matter: w.S1, viewer: V("bob") });
+  assert.equal(w.dutyCalls.at(-1).asOf, "2026-10-11T08:30:00Z", "absent: the module's clock");
+});
+
+test("R17: met_at is the as_of of the first reading of the unbroken met run that ends each occurrence's recorded transitions, the latest of those; never an instant of the derivation", () => {
+  const { w, t, read } = promised();
+  /* control: read overdue, then met, then met again: the first met reading's as_of */
+  w.transitions = [t("DUT-1", "overdue", "2026-10-03T00:00:00Z"), t("DUT-1", "met", "2026-10-04T10:00:00Z"), t("DUT-1", "met", "2026-10-06T10:00:00Z"),
+                   t("DUT-2", "met_late", "2026-10-02T00:00:00Z")];
+  const r = read();
+  assert.deepEqual([r.all_met, r.met_at], [true, "2026-10-04T10:00:00Z"]);
+  assert.equal("met_at_why" in r, false, "no why when met_at is an instant");
+  /* a run broken and begun again: its new start */
+  w.transitions.push(t("DUT-2", "overdue", "2026-10-05T00:00:00Z"), t("DUT-2", "met_late", "2026-10-07T00:00:00Z"));
+  assert.equal(read().met_at, "2026-10-07T00:00:00Z");
+  /* never the derivation's instant: the occurrences duties derives carry other instants, and none is answered */
+  const derived = w.dutiesAnswer;
+  w.dutiesAnswer = (a) => { const x = derived(a); x.duties.forEach((d) => d.occurrences.forEach((o) => { o.as_of = "2026-10-10T00:00:00Z"; o.met_at = "2026-10-09T00:00:00Z"; })); return x; };
+  assert.equal(read().met_at, "2026-10-07T00:00:00Z");
+});
+
+test("R17: when all_met holds but met_at cannot be stated, met_at is null with met_at_why; met_at_why is absent when all_met is false", () => {
+  const { w, t, state, read } = promised();
+  /* control: an occurrence whose last reading is overdue (derived met since, not yet recorded) answers null with its why */
+  w.transitions = [t("DUT-1", "met", "2026-10-04T10:00:00Z"), t("DUT-2", "met_late", "2026-10-05T00:00:00Z"), t("DUT-2", "overdue", "2026-10-06T00:00:00Z")];
+  const r = read();
+  assert.deepEqual([r.ok, r.all_met, r.met_at], [true, true, null]);
+  assert.equal(typeof r.met_at_why, "string"); assert.match(r.met_at_why, /DUT-2/);
+  /* readings that cannot be read: null with why */
+  w.transitionsAnswer = () => ({ ok: false, reason: "NO_SUCH_DUTY" });
+  const u = read();
+  assert.deepEqual([u.met_at, typeof u.met_at_why], [null, "string"]);
+  w.transitionsAnswer = null;
+  /* all_met false: met_at null and no why */
+  state["DUT-1"] = "pending";
+  const f = read();
+  assert.deepEqual([f.all_met, f.met_at, "met_at_why" in f], [false, null, false]);
+  /* a matter with no promise: all_met false, no why */
+  const { w: w2, s: s2 } = setup();
+  w2.correspond(s2.action, "received", "2026-10-03");
+  assert.equal("met_at_why" in w2.pw.matterPromiseDuties({ plan: w2.PL, matter: w2.S1, viewer: V("bob") }), false);
+});

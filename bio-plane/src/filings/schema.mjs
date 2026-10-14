@@ -163,7 +163,7 @@ CREATE TABLE IF NOT EXISTS filing_hold_notices (
 );
 `;
 
-/* Columns added after a table was first created (T18: R22, R24, R25, R26; T21: R29, R31; T22: R8's reason): each is
+/* Columns added after a table was first created (T18: R22, R24, R25, R26; T21: R29, R31; T22: R8's reason; T45; T47: R54): each is
    added to a table that lacks it, so an instance whose tables predate it keeps its rows. A row written before reads
    the column null. */
 export const FILINGS_COLUMNS = Object.freeze([
@@ -188,6 +188,8 @@ export const FILINGS_COLUMNS = Object.freeze([
   ["filing_approvals", "body_sha", "TEXT"],
   ["filing_sendings", "review_copy", "TEXT"],
   ["counsel_packets", "purpose", "TEXT"],
+  /* T47 (R54; DEC-209 (4)): the venue's own reference for the sending, as the member gave it, or null */
+  ["filing_sendings", "reference", "TEXT"],
 ]);
 
 /** K23, R19: each table keyed to the action it is about, so a single-bundle purge of that action clears its rows. */

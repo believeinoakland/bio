@@ -1,6 +1,6 @@
 # screens-inquiry — requirements
 
-**Status** · New in T46 (T46-58; K657, K1043): a module built fresh, layer 11 after `screens-daily`, last of the six interface modules (N897 (1), (2), Bob's K2816; N919, Bob's K2892: a member's own sign-in runs check and plan for that member only; DEC-82, DEC-139, DEC-160, DEC-190). Drafted in `build/plan/draft-T46-interface.md` §2.6, worded here by BOB (P5). No ids move. Not yet met (T46).
+**Status** · New in T46 (T46-58; K657, K1043): a module built fresh, layer 11 after `screens-daily`, last of the six interface modules (N897 (1), (2), Bob's K2816; N919, Bob's K2892: a member's own sign-in runs check and plan for that member only; DEC-82, DEC-139, DEC-160, DEC-190). Drafted in `build/plan/draft-T46-interface.md` §2.6, worded here by BOB (P5). No ids move. Not yet met (T46). Last changed T47 (T47-61: R8 new, `cs.choice` over record data and the dock's `cs.later`, N986; R9 new, the project's questions from `projectquestions`, N974; R10 new, the project's own bar drawn and set by `projectbarset`, N976; R11 new, "Open a question" drawn into the project by `drawquestion`, N975; R12 new, `sever` and `reinstate` on a question's own legs, N977; R13 new, amending R6, the dock holds no credential and a reloaded dock continues the run, N955; R14 new, `projectai`, N721); marked not yet met (T47).
 
 **Size (P6).** Estimated 2,400–3,000 lines with comments, its own keyed sentences included, measured at its START (M-T46-1, K617).
 
@@ -8,7 +8,7 @@
 
 ### Purpose
 
-The investigation's working screens: a project's home, one question with what supports and cuts against it, one captured document with its passages, and the assistant's panel beside them. Pure: every read and act is an op, through `interface-shell`.
+The investigation's working screens: a project's home, one question with what supports and cuts against it, one captured document with its passages, and the assistant's panel beside them; since T47, the project's own AI account (`projectai`). Pure: every read and act is an op, through `interface-shell`.
 
 ### Provides
 
@@ -34,12 +34,27 @@ The investigation's working screens: a project's home, one question with what su
 **Common**
 - **R5** `interface-shell` R8–R13 and R16 hold on every screen; every grade is drawn as one mark (the scale's hue and icon and the letter) explaining itself (`mark.scale.<s>.*`, `mark.grade.reading`).
 
+**T47: the project's own questions and bar, a question's own legs, a dock that holds no credential, and the project's AI account** (T47)
+- **R8** (T47; N986; K3013; `interface-shell` R27) A choice among record data (a project, a question, a passage) is drawn by `cs.choice` with data options, never as word keys. The dock, while a run it started is running, re-reads `airun` by `cs.later` on the page clock (at most once every 10 seconds, stopping when the member leaves the screen), so a run that ended by itself is drawn ended without the member's next act.
+- **R9** (T47; N974; amends R1, R2's K3003 clause; `basis-versions` R50) The project's questions are read through `projectquestions` (each `{inquiry, title}`, paged), in place of deriving them from the project's `image`; each is a reference opening `question`, with its `inquirystrength`.
+- **R10** (T47; N976; amends R1; `strength` R40, R14) The project shows its own bar as `strengthbarof` answers it for the project (a declared axis by its letter, an undeclared one in words, no bar as absent, never as zero), and offers "Set the project's bar" as `projectbarset` (both axes, either, or neither to withdraw it) with the member's reason (its weight's reason field, `interface-shell` R11), to a joined member. `strengthbarset` (the group's bar) is not drawn on the project.
+- **R11** (T47; N975; amends R1's K3003 clause; `citation` R14) "Open a question" writes the inquiry (`promote`, with `project:`) and then draws it into the project (`drawquestion` with the new inquiry), so it shows among the project's questions at once; a refusal of the second step is drawn beside the act and the question stays open on its own screen. The project also offers `drawquestion` for a question the member chooses (found by `search`), answered `alreadyCited` when the project already draws on it.
+- **R12** (T47; N977; amends R2's K3003 clause; `citation` R15) `question` draws `sever` on each live leg (its reference `confirmed` or `proposed`) and `reinstate` on each severed one, each with the member's reason, the act naming the question as its citing object and the leg's target as the selection; a severed leg is drawn severed with its reason, and stays in its section.
+- **R13** (T47; N955; amends R6; `ai-runs` R18, `credentials` R63, `control-plane` R77) The dock holds no credential: "Work on this" opens the run under the member's session (`airunopen`, with R6's fields and `principalClaude` `member:<whoami.member>`) and sends `airundispatch` with `run` alone under the session, the segment's credential minted in the plane (`credentials` R63); no `aicredentialmint` or `aicredentialrevoke` is sent and no credential is held, stored or drawn. A reloaded dock continues a running run of hers by the same act (`airundispatch` for that run). R6's T46 clause (the page-held one-day credential, K2976, K2999) is retired. Refusals of the dispatch (`ACCOUNT_MEMBER_NOT_ACTIVE`, `AI_RUN_CREDENTIAL_MALFORMED`, `AI_KEPT_AWAY`, `CREDENTIAL_RECORD_SILENT`, `AI_RUN_NOT_PRINCIPAL`, `MEMBER_RUN_MODE_NOT_ADMITTED`, `AGENT_WORKER_UNBOUND`) are drawn by their words (`interface-shell` R13). Control: no request the dock sends carries an `ai` credential in a header, body or address; after a reload the same run is dispatched.
+- **R14** (T47; N721; DEC-188 (1), (7); amends R1) The project links "AI for this project" to **projectai** (Projects › <project> › AI for this project; the registry's 8 acts). Reads `projectaccountstate`, `projectkeynotice`, `projectaikeepawaystate`, and for the project's account `accountuses`, `ailimits`, `aiusage` and `accounthistory` with `owner: "project:<id>"`, drawn by the AI account panel `screens-settings` R9 holds (one render over an `owner`). Acts, each an owner's of the project: `projectkeyset` (the key in the request's body only, never drawn again), `projectsigninset` (the acting owner's own sign-in, offered only while the project has no other participant and her sign-in is connected, `credentials` R54), `projectaccountswitch`, `projectaccountremove`, `projectkeynoticeseen` (the notice, `mark.outward.means`, before the first use), `accountusesset` and `ailimitset` with that `owner`, and `projectaikeepaway` (on only with a reason, saying first what it does). Refusals by their words (`ai.refused.notsole` among them).
+
+#### T47's L11 fold (K3100)
+
+- **R15** (DEC-200 (2)) On `document`, "Watch for changes" sends `monitorset` and "Check for a new version now" sends `monitor`.
+- **R16** (DEC-200 (3), (4); amends R10, R11) On `project`, "Draw on a question from elsewhere" chooses among the questions the member may see (`cs.choice` over record data) and sends `drawquestion`; "Set this project's bar" is `projectbarset` by its registry label.
+
 ## Private
 
 ### Uses
 
 - `interface-shell`: the kit `cs` and the screen contract (its R21), the dock (its R20).
 - `setup-words`: `WORD_ROWS` keys.
+- (T47) `screens-settings`: R9's AI account panel render, reused for `projectai` (R14), a new `modules.json` edge (earlier in layer 11). Through the plane: `basis-versions` (`projectquestions`, R50; R9), `strength` (`projectbarset`, R40; R10), `citation` (`drawquestion`, R14, R15; R11, R12), `ai-runs` (R18 as T47 amends it; R13), `credentials` (R54, R59–R61; R14), `ai-use` (R14).
 - Through the plane: `project-roster`, `project-stage`, `strength`, `promotion`, `membership` (project acts), `action-plans` (`planopen`), `inquiry`, `basis-versions`, `citation`, `contradiction`, `hypotheses`, `tasks` (`checkrequest`), `capture`, `ratification`, `attestation`, `monitoring`, `people`, `content`, `extraction` (`pagetranscribe`), `reading-pipeline`, `ai-runs` (R18, R78), `run-productions`, `credentials` (`projectaccountstate`), `control-plane` (R77, the member-run door).
 - Tests only: `op-declarations` (`OPS`).
 
@@ -49,7 +64,7 @@ None numbered here: `interface-shell` R23 and R24 (no place named; no log of who
 
 ### Satisfies
 
-- Registry screens `project`, `question`, `document`, `assistant` (DEC-139 (1), (7)); N897 (1), (2) (R7).
+- Registry screens `project`, `question`, `document`, `assistant` (DEC-139 (1), (7)); N897 (1), (2) (R7). (T47) `projectai` (`registry.json` at `a0fab7abf0`; DEC-188 (1), (7); N721): R14; N955 (R13), N974 (R9), N975 (R11), N976 (R10), N977 (R12), N986 (R8).
 - DEC-82, DEC-160 (R2, R5), DEC-190 (R3); canon §P (the assistant: R4), §U (undetermined); N919, K2892 (R6).
 
 ### Suggestions

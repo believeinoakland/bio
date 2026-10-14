@@ -303,7 +303,7 @@ test("R22: everything the document asserts arrived as an argument or was read fr
   const conc = w.ratification.caseConclusionFor(P, Q, V("alice"), "concluded");
   assert.deepEqual([fm.case_conclusions[0].relationship, fm.case_conclusions[0].falsifier], [conc.relationship, conc.falsifier]);
   assert.deepEqual(r.bias_manifest.stated, w.bias.biasManifest({ scope: "project", scopeId: P, viewer: PLANE_VIEWER, limit: 1 }).stated);
-  const list = w.ca.statementAcknowledgements(P, r.caseId, 1, AUTHORED.statement, "alice", { by: "alice" }, null, null);
+  const list = w.ci.statementAcknowledgements(P, r.caseId, 1, AUTHORED.statement, "alice", { by: "alice" }, null, null);
   assert.deepEqual([fm.completeness.statement_sha, fm.completeness.acknowledged], [list.statementSha, list.rows.length]);
   /* the same arguments and the same record give the same bytes (nothing is composed at random) */
   const text = caseDocumentText({ caseId: "CASE-2026-0001", edition: 1, project: P, scope: "s", bias: "b",

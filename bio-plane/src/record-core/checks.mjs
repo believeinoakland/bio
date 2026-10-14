@@ -33,7 +33,12 @@
  * (ANONYMOUS_LEASE, R10, R61) and the settings' four (R25), now answered with their rows (R81), taking the next free
  * numbers of C-102 (K174). Every member-facing sentence here calls the group's own Civicsmith "your group's Civicsmith"
  * (R82): `BUILD_FAULT` and the sixteen rows that end with it, C-102.13 and .14 (which now end with it too, the same
- * sentence), C-59.6, C-59.8, C-102.17, .18 and .25. All are `awaiting stamp` for promotion's T35 layer-2 stamp (T35-16). */
+ * sentence), C-59.6, C-59.8, C-102.17, .18 and .25. All are `awaiting stamp` for promotion's T35 layer-2 stamp (T35-16).
+ *
+ * T47 (RECORD-CORE #22, T47-6; N939, K3030, DEC-49): C-102.33 is new, `setSetting`'s refusal of a value that does not
+ * round-trip through JSON (R84), `SETTING_NOT_JSON`, beside the four settings rows and the next free number of C-102
+ * (K174). It is a new code for a new condition: C-102.32 `SETTING_INVALID` keeps R26's setting alone. A build fault,
+ * ending with `BUILD_FAULT` (R82). `awaiting stamp` for promotion's T47 layer-2 stamp (T47-10). */
 
 const at = (fn, region) => `src/record-core/index.mjs ${fn} > ${region}`;
 const BUILD_FAULT = 'This is a fault in how your group\'s Civicsmith was built, not in the record, and nothing in the record changed.';
@@ -200,7 +205,8 @@ export const RECORD_CORE_CHECKS = Object.freeze({
     translation: 'An edit is held only under the name of whoever is editing, and this request carried no name, so nothing '
       + 'was held, ended or changed.',
   }),
-  /* New (T35, R81; N655): the settings' four refusals (R25, R26), in the order `setSetting` asks them. */
+  /* New (T35, R81; N655): the settings' refusals (R25, R26), in the order `setSetting` asks them; T47's SETTING_NOT_JSON
+     (R84) asked after the value is required and before R26's setting. */
   SETTING_NAME_REQUIRED: Object.freeze({
     check: 'C-102.29', where: at("setSetting", "is-setting-refused"),
     translation: 'A part of your group\'s Civicsmith tried to record a setting without naming it, so nothing was recorded. '
@@ -215,6 +221,11 @@ export const RECORD_CORE_CHECKS = Object.freeze({
     check: 'C-102.31', where: at("setSetting", "is-setting-refused"),
     translation: 'A part of your group\'s Civicsmith tried to record a setting without giving it a value, so nothing was '
       + 'recorded. ' + BUILD_FAULT,
+  }),
+  SETTING_NOT_JSON: Object.freeze({
+    check: 'C-102.33', where: at("setSetting", "is-setting-refused"),
+    translation: 'A part of your group\'s Civicsmith tried to record a setting with a value that cannot be stored as it was '
+      + 'given, so nothing was recorded. ' + BUILD_FAULT,
   }),
   SETTING_INVALID: Object.freeze({
     check: 'C-102.32', where: at("setSetting", "is-setting-refused"),

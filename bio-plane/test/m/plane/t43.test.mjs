@@ -9,12 +9,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { storage, Store } from "./fixture.mjs";
+import { storage, Store, disclosed } from "./fixture.mjs";
 import { SCREENS } from "../../../src/plane/screens.mjs";
 import { screenFailures } from "../../../src/plane/wizards.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { assistantGateOf } from "../../../src/plane/ask.mjs";
-import { transcriberOf, renderPages, TRANSCRIBE_PICTURE_EDGE, TRANSCRIBE_IMAGE_MAX_BYTES } from "../../../src/plane/transcribe.mjs";
+import { renderPages, TRANSCRIBE_PICTURE_EDGE, TRANSCRIBE_IMAGE_MAX_BYTES } from "../../../src/plane/transcribe.mjs";
 import { gatedOp } from "../../../src/plane/door.mjs";
 import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
@@ -160,6 +160,7 @@ async function planeHolding(bytes, worker) {
   assert.equal(credentialsOf(ctx).aiKeepAwaySet({ on: false, by: "ada" }).ok, true);
   sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
             VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
+  await disclosed(ctx);   /* R44 (T47): the disclosure first, as the assembled plane asks */
   assert.equal((await credentialsOf(ctx).accountReferenceSet({ member: "member:ann", kind: "apikey", secret: SENTINEL, by: "member:ann" })).ok, true);
   assert.equal(aiRunsOf(ctx).testBarRecord(PASSED).ok, true);
   const d = shaOf(bytes);

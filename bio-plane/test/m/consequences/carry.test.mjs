@@ -1,10 +1,13 @@
 /* consequences R22 (T45; Actions D5, D6c; the plan's reconciliation R3): one member's act carries a success, a harm
-   addressed or a cure into a case's next edition, only through case-authoring's `carryOutcome` (its R71), passing the
-   text and the cites alone, so a carried outcome never states a cause; each carry is appended to the record carried. */
+   addressed or a cure into a case's next edition, only through case-inputs' `carryOutcome` (its R9; case-authoring's R71
+   before T47, N908), passing the text and the cites alone, so a carried outcome never states a cause; each carry is
+   appended to the record carried. The first three tests drive the fixture's recording stand-in; the last drives the
+   one real case-inputs instance on the host, as the module reaches it (`caseInputsOf`, T47). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
-import { CONSEQUENCES_CHECKS, CARRY_KINDS } from "../../../src/consequences/index.mjs";
+import { CONSEQUENCES_CHECKS, CARRY_KINDS, Consequences } from "../../../src/consequences/index.mjs";
+import { caseInputsOf } from "../../../src/case-inputs/index.mjs";
 
 const S = "STD-2026-0001-law";
 const CASE = "CASE-2026-0001";
@@ -121,4 +124,57 @@ test("R22: a carry changes the case only through carryOutcome; when it refuses, 
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM consequence_carries`)[0].n, 0);
   /* A determination absent to the author reads as conformance answers it, never as a cure. */
   assert.deepEqual(w.carry({ cure: { determination: w.D, standard: S } }, { author: V("bob"), text: "t" }).reason, "NO_SUCH_DETERMINATION");
+});
+
+/* publication R40's `cases` and `case_documents` (publication's schema, its columns copied as a stand-in: publication is not this module's use): whether a case has a ratified edition, its project, and which
+   outcomes a ratified edition's document holds. */
+const CASES_DDL = `CREATE TABLE IF NOT EXISTS cases (case_id TEXT PRIMARY KEY, project_id TEXT NOT NULL, opened TEXT NOT NULL);
+  CREATE TABLE IF NOT EXISTS case_documents (case_id TEXT NOT NULL, edition INTEGER NOT NULL, doc_sha TEXT NOT NULL,
+    text TEXT NOT NULL, authored_at TEXT NOT NULL, authored_by TEXT, sig_armored TEXT, attestor_key TEXT,
+    attestor_member TEXT, delivered_by TEXT, gate_version TEXT, ratified_at TEXT, draft_id TEXT, PRIMARY KEY (case_id, edition))`;
+
+test("R22 (T47, N908): carryOutcome is reached on the one case-inputs instance for the host (caseInputsOf); its refusals and answer pass through unchanged", () => {
+  const w = setup();
+  w.st.db.exec(CASES_DDL);
+  w.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES (?,?,?)`, CASE, w.P, "2026-05-01T00:00:00Z");
+  w.invite("carol");
+  /* The module with no case-inputs given: it reaches the host's one instance, the same every caller gets. */
+  const { caseInputs, ...deps } = w.deps;
+  const c = new Consequences({ ...deps, storage: w.st, host: w.host });
+  const ci = caseInputsOf(w.host);
+  const direct = (over) => ({ case: CASE, kind: "cure", text: "cured", cites: [{ kind: "finding", ref: INQ }], on: "2026-05-20",
+                              by: "alice", ...over });
+  const carry = (carry, over = {}) => c.outcomeCarry({ carry, case: CASE, author: V("alice"), ...over });
+  /* Its refusals, passed through unchanged: each equals the answer case-inputs gives the same call, and writes nothing. */
+  const refusals = [
+    ["NO_SUCH_CASE", () => carry({ success: w.success.id }, { case: "CASE-2026-0099" }), direct({ case: "CASE-2026-0099" })],
+    ["CARRY_NOT_A_PARTICIPANT", () => carry({ success: w.success.id }, { author: V("carol") }), direct({ by: "carol" })],
+    ["BAD_CARRIED_OUTCOME", () => carry({ cure: { determination: w.D, standard: S } }, { text: 'he said "fixed"' }),
+     direct({ text: 'he said "fixed"' })],
+    ["BAD_CARRIED_OUTCOME", () => carry({ cure: { determination: w.D, standard: S } }, { text: undefined }), direct({ text: undefined })],
+  ];
+  for (const [code, act, call] of refusals) {
+    const before = w.snapshot();
+    const r = act();
+    assert.equal(r.reason, code, JSON.stringify(r));
+    assert.deepEqual(r, ci.carryOutcome(call), `${code}: case-inputs' answer, whole`);
+    assert.deepEqual(w.snapshot(), before, `${code} writes nothing`);
+  }
+  assert.deepEqual(ci.pendingOutcomes(CASE), []);
+  /* Control: each of the three kinds carries; the answer is case-inputs', and the outcome is pending on its one instance. */
+  const s = carry({ success: w.success.id });
+  const a = carry({ addressed: w.part });
+  const k = carry({ cure: { determination: w.D, standard: S } }, { text: "The office published the report" });
+  for (const r of [s, a, k]) assert.deepEqual(Object.keys(r).sort(), ["ok", "outcome"], JSON.stringify(r));
+  assert.ok([s, a, k].every((r) => r.ok === true && /^OUTC/.test(r.outcome)));
+  const pending = caseInputsOf(w.host).pendingOutcomes(CASE);
+  assert.deepEqual(pending.map((o) => [o.outcome, o.kind, o.text, o.on, o.carried_by]), [
+    [s.outcome, "success", "The City published both reports", "2026-05-14", "alice"],
+    [a.outcome, "harm_addressed", "the fund was restored in full", "2026-06-02", "alice"],
+    [k.outcome, "cure", "The office published the report", "2026-05-20", "alice"]]);
+  /* Only text and cites passed: the success record's cause, figures and sequence are nowhere in what case-inputs holds. */
+  const held = JSON.stringify(pending);
+  for (const word of ["our demand caused it", w.other, "after our demand"]) assert.equal(held.includes(word), false, word);
+  assert.deepEqual(c.successRecordRead({ id: w.success.id, viewer: V("alice") }).success.carries.map((x) => x.carried), [s.outcome]);
+  assert.equal(w.carried.length, 0, "the fixture's stand-in was not called");
 });

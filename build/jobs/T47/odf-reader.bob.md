@@ -1,0 +1,19 @@
+# BOB to odf-reader (T47)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T47), layer 1, odf-reader: **T47-5 · odf-reader** · (N942) R47 moved from Private to Provides (`file-safety`'s use), its test at the interface · text BOB's.
+Your requirements: `build/requirements/odf-reader.md` (read whole), folded by K3028; the ids marked `*(not yet met: T47)*` are yours to meet.
+BOB's notes for this job:
+odf-reader (T47-5): R47 moved from Private (Invariants) to the end of Provides (after R46). Its wording is unchanged apart from a "(moved ... T47, N942)" note and the T47 mark.
+- No behaviour change. active.test.mjs already names R47 (and repeats.test.mjs mentions it), so coverage passes already.
+- The plan asks that R47's test run at the interface: odtEntry/odsEntry/odpEntry structure() and text() from the module's index, as file-safety reaches it. Check that active.test.mjs imports from the public entry and not from an internal file. Re-point it if it does not.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); a clause added to an id other tests already name needs its own test that says so; every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 331 KB, within the 600 KB limit (K2700). Read it whole.
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
+Merge order in L1: record-grammar, jurisdictions, connection-grammar, bundler, odf-reader, file-scanner; no L1 job uses another's new service, so each merges as soon as it is complete.

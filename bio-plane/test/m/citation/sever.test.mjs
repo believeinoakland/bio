@@ -67,7 +67,7 @@ test("R4: a proposed edge may be severed, an entry with no note line gains one, 
   assert.equal(edge(w, p, "INFO-2026-0002").note, `Severed ${STAMP}: no longer relied on`);
 });
 
-test("R4: the refusals in order — the selection, NO_SUCH_PROJECT (absent or unseen alike), NOT_A_PROJECT (an inquiry included), the actor joined, NO_REASON, BAD_REASON", async () => {
+test("R4, R15: the refusals in order — the selection, NO_SUCH_PROJECT (absent or unseen alike), NOT_A_PROJECT (neither a case nor, since T47, a question), the actor joined, NO_REASON, BAD_REASON", async () => {
   const { w, p, h } = await setup();
   /* D54's negative controls: projects an administrator sees whole, one set discoverable and a hidden one it is invited to. */
   const disc = w.project("Open door", "ann", { visibility: "discoverable" });
@@ -80,8 +80,10 @@ test("R4: the refusals in order — the selection, NO_SUCH_PROJECT (absent or un
     const absent = w.cit[act]({ project: "PROJ-2026-0000-x", handle: hv, viewer: V("vera"), owner: "v", identity: V("vera"), reason: "" });
     assert.deepEqual([unseen.reason, { ...unseen, project: 0 }], ["NO_SUCH_PROJECT", { ...absent, project: 0 }]);
     assert.deepEqual(unseen, noSuchProject(p), "membership's one answer (its R78)");
-    const onQ = w.cit[act]({ project: "INQ-2026-0001", handle: h, ...ANN, reason: "" });
-    assert.deepEqual([onQ.reason, onQ.got], ["NOT_A_PROJECT", "inquiry"]);
+    const onInfo = w.cit[act]({ project: "INFO-2026-0003", handle: h, ...ANN, reason: "" });
+    assert.deepEqual([onInfo.reason, onInfo.got], ["NOT_A_PROJECT", "information"]);
+    /* R15: a question is no longer NOT_A_PROJECT; the call goes on to its reason. */
+    assert.equal(w.cit[act]({ project: "INQ-2026-0001", handle: h, ...ANN, reason: "" }).reason, "NO_REASON");
     const ha = await w.select(["INFO-2026-0001"], { viewer: V("adm"), owner: "a" });
     /* D54: an administrator neither invited nor joined to the hidden project sees it at EXISTENCE only: membership's
        existence answer (its R77, with the owners' handles), before position; seen whole, it is refused by position. */

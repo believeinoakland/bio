@@ -1,0 +1,84 @@
+# journey-check (T47)
+
+**Status** · session_01S9q7e1Keok91bq6py8jvPf · depth 2 · COMPLETE · handled B9
+
+## J1 · QUESTION
+
+Q1 (decides only when I can COMPLETE, not what I build). The R1 walk drives screens that L11's other jobs are building now (setup, join, front's sign-in and lock, members' invite, account, capture's testify, screens-wizards' welcome); none is merged into `tranche/T47` yet, so a full journey-28 / journey-3 walk cannot pass on my branch today.
+
+My best reading, which I am building on:
+1. Now: the module under `bio-plane/src/journey-check/` (walker, fake Cloudflare account served over HTTP, installer Worker and plane each under Miniflare, run from their files on disk, never imported) and tests under `bio-plane/test/m/journey-check/`: R2's detectors and R3's refusal tested against small local pages and a fake bootstrap (each failure a control beside a clean pass), and R1's local arm as an end-to-end test. Steps are written from the design (mock-journeys.js journey 28, library.json "Welcome a new member", registry acts as `button[data-act]`, words.json for labels).
+2. The local arm runs the plane from the tranche's source (`bio-plane/src/plane/index.mjs`, as plane's worker.test.mjs does), not the stale embedded release; the hand-over gives it exactly the bindings and secrets the installer uploaded to the fake account, plus `CIVICSMITH_TEST_INSTANCE` = `INSTANCE_NAME` set by the walk as the deployer (installer R49, D15).
+3. I push that, then wait for your CHANGE announcing the L11 screen jobs merged; I merge `tranche/T47`, fit each step to the built screens, run both journeys green and COMPLETE. If a screen breaks the walk, I REPORT it against its module's requirements rather than bend the walk.
+4. The live arm (b) is built and its refusal tested, but not run against biosmoke7 by me (no credentials in this session, and K3053 runs it at the release); `npm run journey -- --live <url>` with `JOURNEY_ADMIN_*`/`JOURNEY_MEMBER_*` env vars.
+Answer only if any of 1–4 is wrong.
+
+## J2 · REPORT
+
+Progress and findings (pushed 373f7a941a on job/T47/journey-check). Nothing here blocks me; I wait for your CHANGE (K3143).
+
+1. **Built.** The local arm walks the installer half of journey 28 green today: the installer Worker under Miniflare over the fake account (PKCE consent, plan probe, buckets, uploads with keep_bindings, read-back, prefix, address), the copy started from `bio-plane/src/plane/index.mjs` with the uploaded bindings, R3's guard (`test_instance: true`) passing before the hand-over. It then fails, correctly, at the hand-over: `/` is the setup page (control-plane R82, still unmerged). R2 and R3 tests: 11 pass; R1: 3 pass, the end-to-end local arm red as J1 said.
+2. **Files to register** (modules.json `paths`/`tests`): `bio-plane/src/journey-check/` and `bio-plane/test/m/journey-check/`. In a scratch tree with those set: architecture 0 failures, coverage 3 of 3, ownership 0 failures but the scratch modules.json line. `out/` and `node_modules/` are ignored by the module's own `.gitignore`.
+3. **For the plane's `npm test` and the `regression` workflow (not_product / BOB):** the plane's glob `test/m/**/*.test.mjs` now includes my tests, which need `npm ci` in `bio-plane/src/journey-check/` (playwright-core 1.56.1, exact, locked; Chromium from `/opt/pw-browsers`, never `playwright install`). Without it they fail at import, never skip. Please add that `npm ci` wherever the plane's tests run, or tell me to read it differently.
+4. **Improvement in interface-shell (R2's "screen not drawn"):** the shell draws an unregistered screen and a registered screen whose subject is not found with nearly the same markup, so I read its fallbacks from their shape (a one-step path and one empty state; a title and "comes later"). A mark on the frame, `#cs-main` (and the setup/public frames' root) carrying `data-screen="<id>"` of the registered screen it drew, absent on the shell's own fallbacks, would make the check exact; my walker already prefers it when present. Yours to decide whether it is worth a requirement now or in T48.
+5. The installer's named exports (constants beside the handler) are refused by workerd as entry points when the file itself is the entry; I run it through an in-memory entry exporting `default` alone. Its deploy goes through wrangler's bundle, so this is likely harmless in production; noted for installer in case its tests ever run it under Miniflare directly.
+
+## J3 · REPORT
+
+B4 applied: tranche/T47 merged (8e3bcd60cc), tests re-run, pushed 9237ca735c. The installer's redesigned pages (R50–R53: the permanence dialog, 'Before Cloudflare', the streamed rows, the hand-over to /app/setup#boot=) are walked green over the fake account. The walk now stops at the hand-over: /app/setup with no session is sent to /, which is still the setup page (interface-shell R45's setup frame, screens-entry and control-plane R82 not yet merged). journey-check tests: 14 pass, 1 fail (R1 (a) end to end, as J1). Not COMPLETE; I wait for your next CHANGE.
+
+## J4 · REPORT
+
+B5 applied: tranche/T47 merged (0186d4ad1e), steps fitted to the merged screens, pushed. On the tranche the walk stops at the hand-over (`setup` not yet served: control-plane R81). To find defects before control-plane merges, I ran it in a scratch tree with `origin/job/T47/control-plane` (a51db587fb) merged in (nothing pushed from it): **90 steps; journey 28 (install → hand-over → claim → codes → name → Home → invite → join → codes → welcome → expertise → "What happened?" → testimony → sign out → sign in kept on her phone → lock → unlock) and journey 3 (the welcome, steps 1–7, side trips skipped) walk green, 56 of 60 swept screens clean**, once finding 1 below is patched in the scratch tree. Two findings in other modules, each against its requirements; I have not bent the walk around either:
+
+1. **screens-intake R3 (testimony):** `testify` answers `{ok, bundle_id, …}` (provenance's testify), but `doneTestify` sets `testified` from `answer.id || answer.bundleId`, so "Recorded as your testimony: {id}" (`screen.capture.saw.done`) is never drawn: the member gets no word that her first piece of work was kept. One-line fix in `bio-plane/src/screens-intake/capture.mjs` (read `bundle_id`); with it the step passes. Until it is fixed, journey 28 fails at its testimony step.
+2. **screens-publish (the sweep, R2's "any ok:false not expected"):** opened at their bare address (no subject), `case-editor` and `review-copy` read `casedrafts` and `ceremony` reads `reviewcopy`, each refused `NO_REVIEW_COPY` (404), and `published` sends `publishedcase` with no case → `REQUIRED_ARGUMENT_MISSING` (400). Neither code is one interface-shell R35 draws as an absence (`NOT_FOUND`, `NO_SUCH_*`, `*_NOT_FOUND`, `NOT_VISIBLE`, `NOT_A_PARTICIPANT`), which is the set my sweep expects. Either the screens send no subject read without a subject (drawing "Nothing is here"), or the absence answers are mapped to R35's family; yours to route.
+3. A look, not a failure: in the working frame the test-instance band (interface-shell R36) is drawn as a narrow block above the rail rather than across the frame (see any working screenshot); for interface-shell or UX-DESIGN if worth it.
+
+Walker readings (mine, P17 details, stated for the record): the member's sign-in "next morning" is on a second device (a phone-width browser), as journey 28 says, so the lock and unlock are walked there; the sweep opens each screen at its bare address and expects only R35's absence answers. journey-check tests: 15 pass, 1 fail (R1 (a) end to end on the tranche). Waiting for your CHANGE after control-plane.
+
+## J5 · REPORT
+
+B6 applied: tranche/T47 merged (435fb2ed7c); the local walk on the tranche runs journey 28 green through 17 steps (install, hand-over into /app/setup, claim, ten codes, the group's name, Home, invitation, join, her codes, the welcome, expertise, 'What happened?') and is red at one step only: 'capture: her first testimony' (finding 1, screens-intake: testify answers bundle_id, the confirmation reads id/bundleId, so nothing says it was recorded). It stops there, so journey 3 and the sweep do not run on the tranche yet; in the scratch preview they were green but for finding 2 (screens-publish, four bare-address screens). Nothing red is journey-check's own. I re-run on your next CHANGE.
+
+## J6 · COMPLETE
+
+**Completion record (T47-88, journey-check; B7, B8 applied: tranche/T47 merged at 37aed3dd14).**
+
+**Entry applied:** T47-88 with K3137's addition. R1, R2, R3 met.
+- **R1 (a)** `npm run journey` (from `bio-plane/src/journey-check/`): the installer Worker (`newgroup/src/index.mjs`, run under Miniflare through an in-memory entry exporting its handler alone) over a stateful fake Cloudflare account answered over HTTP (PKCE consent and token, plan probe, buckets, uploads with `keep_bindings`, read-back, prefix, address, Logpush); the hand-over into the tranche's own plane (`bio-plane/src/plane/index.mjs`) under Miniflare, started with exactly the bindings the installer uploaded plus `CIVICSMITH_TEST_INSTANCE` = `INSTANCE_NAME` (the deployer's act; installer R49 untouched). Journey 28 (install's four stages, hand-over, claim, ten codes, group name, Home, invitation, join, her ten codes, the welcome continued, first settings, "What happened?", first testimony, sign out, sign in kept on her phone, lock at 30 minutes, unlock) and journey 3 (the welcome's seven steps, its two optional side trips skipped), then every registry screen. **On the tranche: 90 steps, 0 failures.** **R1 (b)** `npm run journey -- --live <address>` with `JOURNEY_ADMIN_HANDLE/PASSWORD`, `JOURNEY_MEMBER_HANDLE/PASSWORD` from the environment, never printed: signs in as each and opens `/` and every working screen. Built and tested against a stand-in; not run against biosmoke7 by me (J1 (4), K3143).
+- **R2** each step screenshotted into `out/<arm>/` (ignored by git), with `report.txt`/`report.json`; fails on an unexpected `ok: false`, any 4xx/5xx, a page error, the setup page or any non-interface document on the copy, legacy-ui's host or any address outside the walk, and a registry screen not drawn (interface-shell R48's `data-screen` preferred, the shell's fallbacks read otherwise); `site` and the `dash-*` treatments excepted (K3137). Secrets (passwords, the one-time password, the probe key, invitation links) are redacted from every report and masked in screenshots.
+- **R3** bootstrap must answer `test_instance: true` exactly before anything is written; the walker's only own request is that read.
+
+**Readings of mine (P17 details):** the member's next-morning sign-in, the lock and unlock are walked on a second, phone-width device, as journey 28 says; the sweep opens each screen at its bare address and expects only interface-shell R35's absence answers (`NOT_FOUND`, `NO_SUCH_*`, `*_NOT_FOUND`, `NOT_VISIBLE`, `NOT_A_PARTICIPANT`).
+
+**Files (register in modules.json):** paths `bio-plane/src/journey-check/` (`account.mjs`, `guard.mjs`, `journey.mjs`, `journeys.mjs`, `local.mjs`, `run.mjs`, `screens.mjs`, `walker.mjs`, `package.json`, `package-lock.json`, `.gitignore`); tests `bio-plane/test/m/journey-check/` (`guard.test.mjs`, `journey.test.mjs`, `walker.test.mjs`). Needs `npm ci` in its directory (K3146).
+
+**Deferred:** none.
+
+**Found in other modules:** reported and fixed in this tranche: screens-intake's testimony confirmation (J4 (1), K3173); screens-publish's bare-address reads (J4 (2), K3174); the test band's look (J4 (3), N1049). New, seen in this run's screenshots, none failing R2 (for routing): (a) **People** (`people`): an office seeded at setup shows its internal note to members, e.g. "as the active jurisdiction profile oakland-alameda, counterparties[0] (basis: 2026-10-05 time-law, …) names it; seeded at setup" — profile ids and array indices in words a real user reads (instance-setup's seeding note, or the screen drawing it); (b) **published** at a bare address heads "Can't open this" over "Nothing is here: this address leads nowhere", two states' words at once (interface-shell R35's unavailable words); (c) in the working masthead the founder's account button (`admin`) is drawn empty, no initial (interface-shell, the masthead's initial from `ME.handle`).
+
+**Tests:** `node --test test/m/journey-check/` from `bio-plane/`: tests 16, pass 16, fail 0 (the end-to-end local arm in 139 s). Plane tests scanning `src/` (lines, file-safety, plane worker, docket, admission t43, people invariants) with my files present: pass 38, fail 0.
+**Checks** (in a scratch tree with my paths and tests registered, as BOB will): format 0 failures; architecture "14 product files, 21 relative imports; 0 failures"; coverage "3 of 3 live requirement ids named by a test; 0 failures"; ownership 0 failures but the scratch `modules.json` line; `node checks/run.mjs`: architecture 0 failures over the product (K2950), coverage 5197 of 5198 (the one missing id is not journey-check's), channels 0 failures.
+
+Size (session_01BwKVcuP4ZCR6FppN1MM9Zx): test runs 21, module lines 1167
+
+## J7 · COMPLETE
+
+**Completion record, re-opened job (B9, K3184; JOURNEY-CHECK #2). tranche/T47 merged at 38e51bbd2f; pushed 8d61565452.**
+
+**Cause, reproduced first:** with playwright-core absent, `runLocal` started the world (two Miniflare instances, the installer's and the plane's) *before* its `try`, then called `browser()`, which threw; the `finally` that closes the world never ran, so workerd stayed up and `node --test` never exited (reproduced here: the local-arm test killed at 120 s, no output).
+
+**Applied:**
+- `run.mjs`: `runLocal` starts the world and the browser *inside* its try; the `finally` closes the browser if one started and the world if one started, on every path (a step that throws, the guard's refusal, a world or browser that cannot start). Every error becomes a walk failure; the arm always returns its walk. `browser()` names the cause when playwright-core cannot be loaded (`npm ci` in the module's directory). `runLive` closes each browser context in a `finally` as well as the browser. Both arms take `launch` (the browser's start, default `browser`) so a test can force it to fail.
+- `local.mjs`: a world that fails partway through starting closes what it started (Miniflare, its temporary storage) before it rethrows; `close()` is the same function.
+- New test (journey.test.mjs, R1 (a)): each forced failure runs in a child node process and must **end by itself within 60 s**: playwright-core unloadable (`launch` throws: world started, then closed); a world that cannot start; a walker step that throws (a real world and Chromium, every request refused, the installer's first step fails). Each also checks the failure is reported. **Control:** a child that starts `localWorld()` and never closes it is still running at the deadline, so the check does catch open handles.
+- Also: walker.test's `after` no longer throws when the browser never started. The K3137 sweep test compared against a fixed list that still held `dash-home`, which DEC-218 removed from the registry; it now asserts that the sweep skips exactly the excepted and installer screens the registry lists, with `site`, `install` and `update` required among them. The requirement is unchanged.
+
+**Tests:** `node --test test/m/journey-check/` from `bio-plane/`, after `npm ci`: tests 17, pass 17, fail 0 (end-to-end local arm still 90 steps green). **CI's failure mode:** with playwright-core removed, the same command **ends in 68 s** (tests 18, pass 4, fail 14: each browser test fails at import, never skips), where it used to hang.
+**Checks:** format: 2 failures, both `setup-page`'s modules.json entries naming its deleted files (not journey-check's; for BOB); architecture "14 product files, 21 relative imports; 0 failures"; coverage "3 of 3 live requirement ids named by a test; 0 failures"; ownership "5 files changed by journey-check between tranche/T47 and HEAD; 0 failures"; `run.mjs`: architecture 0 failures over the product, coverage 5198 of 5198, channels 0 failures.
+
+**Files:** no new files; the registered paths and tests are unchanged.
+**Deferred:** none. **Found elsewhere:** `setup-page`'s `paths`/`tests` in `build/modules.json` name directories its delete removed (format check, above).
+
+Size (session_01S9q7e1Keok91bq6py8jvPf): test runs 7, module lines 1228

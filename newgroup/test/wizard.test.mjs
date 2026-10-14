@@ -239,7 +239,7 @@ console.log("\n--- front page and begin ---");
 {
   const home = await req("/");
   const homeBody = await home.text();
-  t("GET / is the wizard", homeBody.includes("Set up your group's Civicsmith"), true);
+  t("GET / is the wizard", homeBody.includes("Create your new Civicsmith group"), true);
   t("the front page offers no mode choice", homeBody.includes('name="mode"'), false);
   t("the front page is hard-wired to install", homeBody.includes('mode:"install"'), true);
   t("it points elsewhere for updates", homeBody.includes('href="/update"'), true);
@@ -611,7 +611,7 @@ console.log("\n--- install: Workers Free is refused by name, nothing created ---
   t("the refusal names the Workers Paid plan", body.includes("Workers Paid plan is needed"), true);
   t("it names the cost", body.includes("$5/month"), true);
   t("it names what to do", body.includes("dash.cloudflare.com") && body.includes("enable Workers Paid"), true);
-  t("it says nothing was installed", body.includes("Nothing was installed"), true);
+  t("it says nothing was created", body.includes("Nothing was created"), true);
   t("REFUSED BEFORE ANYTHING WAS CREATED — free-town would otherwise be the half-installed instance: no bucket, no script",
     [calls.filter((c) => c.u.endsWith("/r2/buckets") && c.method === "POST").length,
      calls.filter((c) => c.method === "PUT" && c.u.endsWith("/scripts/free-town")).length], [0, 0]);

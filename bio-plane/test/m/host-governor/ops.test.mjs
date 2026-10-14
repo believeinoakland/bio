@@ -176,6 +176,65 @@ test("R27, R18, R19: with the relay handed, an answer is answered as before, and
   }
 });
 
+/* R28: instants a caller might send, in every spelling a reader of `now` would take: far past, far future, text. */
+const INSTANTS = ["0", "1", "99999999999999", "-5", "2026-10-12T00:00:00Z", "abc", ""];
+
+test("R28: op=governorstate takes no instant from the request: a `now` or `nowMs` in the query answers as the same request without it, and none reaches the store", async () => {
+  const w = world();
+  const { cooloff_until: until } = w.g.governorReport({ host: "held.example", status: 429 });   // held until T0 + 60 s
+  w.g.governorAdmit({ host: "free.example" });
+  w.step(5_000);                                                 // the module's own clock, inside the hold
+  for (const hostQ of ["", "&host=held.example", "&host=free.example", "&host=zzz.example"]) {
+    const plainCalls = [];
+    const plain = await governorOp("governorstate", url(`op=governorstate${hostQ}`), storeOver(w.g, plainCalls));
+    const plainRelayed = await relayed("governorstate", `op=governorstate${hostQ}`, storeOver(w.g));
+    for (const t of INSTANTS) for (const key of ["now", "nowMs"]) {
+      const q = `op=governorstate${hostQ}&${key}=${encodeURIComponent(t)}`;
+      const calls = [];
+      assert.deepEqual(await governorOp("governorstate", url(q), storeOver(w.g, calls)), plain, q);
+      assert.deepEqual(calls, plainCalls, q);                   // the store is asked exactly as without it
+      const r = await relayed("governorstate", q, storeOver(w.g));
+      assert.deepEqual([r.status, r.body], [plainRelayed.status, plainRelayed.body], q);
+    }
+    const both = `op=governorstate${hostQ}&now=99999999999999&nowMs=0`;
+    assert.deepEqual(await governorOp("governorstate", url(both), storeOver(w.g)), plain, both);
+  }
+  // the rows are as recorded: the hold a caller's instant would have lapsed is still answered as recorded
+  const held = await governorOp("governorstate", url(`op=governorstate&host=held.example&now=${until + 1}`), storeOver(w.g));
+  assert.deepEqual(held.body.hosts, [w.row("held.example")]);
+});
+
+test("R28: the Durable Object's governorstate route never reads a `now` or `nowMs` from the body or the query, and answers as without them", () => {
+  const w = world();
+  w.g.governorReport({ host: "held.example", status: 503 });
+  w.g.governorAdmit({ host: "free.example" });
+  const before = w.g.governorState({}).hosts;
+  const route = (u, body) => governorRoutes(w.g, new URL(u), body).governorstate();
+  /* A body whose instants throw when read: any read of them fails the call. */
+  const trap = (fields) => {
+    const o = { ...fields };
+    for (const key of ["now", "nowMs"])
+      Object.defineProperty(o, key, { enumerable: true, get() { throw new Error(`R28: the route read the body's \`${key}\``); } });
+    return o;
+  };
+  for (const host of [undefined, "held.example", "free.example", "zzz.example"]) {
+    const fields = host === undefined ? {} : { host };
+    const plain = route("http://x/governorstate", fields);
+    assert.deepEqual(route("http://x/governorstate", trap(fields)), plain, String(host));
+    for (const t of INSTANTS) {
+      assert.deepEqual(route("http://x/governorstate", { ...fields, now: t, nowMs: t }), plain, `${host} ${t}`);
+      assert.deepEqual(route("http://x/governorstate", { ...fields, now: Number(t), nowMs: Number(t) }), plain, `${host} ${t}`);
+      const hq = host === undefined ? "" : `host=${host}&`;
+      assert.deepEqual(route(`http://x/governorstate?${hq}now=${encodeURIComponent(t)}&nowMs=${encodeURIComponent(t)}`, null),
+                       route(`http://x/governorstate${host === undefined ? "" : `?host=${host}`}`, null), `${host} ${t} (query)`);
+    }
+    // the module's own clock moving changes nothing either: the rows judge no instant
+    w.step(3_600_000);
+    assert.deepEqual(route("http://x/governorstate", fields), plain, `${host}, an hour on`);
+  }
+  assert.deepEqual(w.g.governorState({}).hosts, before);          // a read, with or without an instant, writes nothing
+});
+
 test("R18, R19: the Worker's arm answers exactly the two ops, and null for any other, asking the store nothing", async () => {
   assert.deepEqual([...GOVERNOR_OPS], ["governorstate", "governorconfig"]);
   const untouched = { fetch: async () => { throw new Error("asked the store"); } };
@@ -297,4 +356,27 @@ test("R18, R14: through the whole plane, a refusal reported to the Durable Objec
   assert.equal((await route("governoradmit", { host: "held.example" })).reason, "cooling_off");
   const again = await call(`op=governorstate&host=held.example`, T.admin);
   assert.deepEqual([again.hosts[0].refused_total, again.hosts[0].granted], [1, 0]);
+});
+
+test("R28: through the whole plane, op=governorstate carrying a `now` or `nowMs` in its query or body answers exactly as the same request without it", async () => {
+  const ns = await mf.getDurableObjectNamespace("STORE");
+  const obj = ns.get(ns.idFromName("bio"));
+  const held = (await (await obj.fetch("http://x/governorreport", { method: "POST",
+    body: JSON.stringify({ host: "r28.example", status: 429 }) })).json()).result;
+  assert.equal(held.recorded, true);
+  for (const tok of [T.admin, S.founder, S.cai]) {
+    for (const hostQ of ["&host=r28.example", ""]) {
+      const plain = await call(`op=governorstate${hostQ}`, tok);
+      assert.equal(plain.ok, true);
+      for (const t of ["0", String(held.cooloff_until + 1), "99999999999999", "2026-10-12T00:00:00Z", "abc"]) {
+        const e = encodeURIComponent(t);
+        for (const [q, body] of [[`op=governorstate${hostQ}&now=${e}`, undefined], [`op=governorstate${hostQ}&nowMs=${e}`, undefined],
+                                 [`op=governorstate${hostQ}`, { now: t, nowMs: t }], [`op=governorstate${hostQ}`, { now: Number(t), nowMs: Number(t) }],
+                                 [`op=governorstate${hostQ}&now=${e}&nowMs=${e}`, { now: t, nowMs: t }]])
+          assert.deepEqual(await call(q, tok, body), plain, `${q} ${JSON.stringify(body)}`);
+      }
+    }
+  }
+  const one = await call(`op=governorstate&host=r28.example&now=${held.cooloff_until + 1}`, T.admin);
+  assert.deepEqual([one.hosts[0].cooloff_until, one.hosts[0].refusals], [held.cooloff_until, 1]);   // as recorded
 });

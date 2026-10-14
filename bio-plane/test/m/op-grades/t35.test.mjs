@@ -28,12 +28,14 @@ test("R21: personexpunge keeps its `reasoned` rung and its NON_ACTS sentence, st
   assert.doesNotMatch(s.replace("<date>", "").replace("<member>", ""), /<[a-z]+>/, "only the two fields to fill");
 });
 
-test("R21 R22 (K2049): IRREVERSIBLE_WEIGHT, frozen, holds every op RUNGS grades `irreversible` (publish, publishat, "
-   + "publishatmove), personexpunge and standardrelease, and no other op; it changes no rung", () => {
+test("R21 R22 R37 (K2049): IRREVERSIBLE_WEIGHT, frozen, holds every op RUNGS grades `irreversible` (publishat, "
+   + "publishatmove; publish left it at R37, T47), personexpunge and standardrelease, and no other op; it changes no rung",
+() => {
   assert.ok(Object.isFrozen(IRREVERSIBLE_WEIGHT));
   const irreversible = Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible" && !Object.hasOwn(OP_ALIASES, op));
-  /* R32 (T45; K2839): case-check's publishcheck, graded as publish, joins by R21's rule */
-  assert.deepEqual(irreversible.sort(), ["publish", "publishat", "publishatmove", "publishcheck"]);
+  /* R37 (T47): publish, and publishcheck graded as it (K2839), prepare and are `terminal`: neither carries the weight */
+  assert.deepEqual(irreversible.sort(), ["publishat", "publishatmove"]);
+  for (const op of ["publish", "publishcheck"]) assert.ok(!IRREVERSIBLE_WEIGHT.includes(op), op);
   assert.deepEqual([...IRREVERSIBLE_WEIGHT].sort(), [...irreversible, "personexpunge", "standardrelease"].sort());
   assert.equal(new Set(IRREVERSIBLE_WEIGHT).size, IRREVERSIBLE_WEIGHT.length);
   assert.equal(RUNGS.personexpunge, "reasoned", "the weight is not a rung");
@@ -86,7 +88,9 @@ test("R22 R3: every op op-declarations R30 declares is graded — coarchiveset `
     [...Object.keys(R22_WRITES), ...Object.keys(B3_WRITES)].sort());
   for (const [op, e] of Object.entries(T35_RUNG_ABSENT)) assert.ok(e.is.length > 40, op);
   /* each beside the op R22 names as its precedent */
-  for (const [op, like] of [["unpack", "inboxpull"], ["unpack", "caseimport"], ["noterevise", "notewrite"],
+  /* (T47) R35 moved inboxpull, R22's first precedent for unpack, to `reversible`; caseimport stays the precedent */
+  assert.notEqual(gradeOf("unpack"), gradeOf("inboxpull"));
+  for (const [op, like] of [["unpack", "caseimport"], ["noterevise", "notewrite"],
     ["notedelete", "notewrite"], ["signout", "reminderset"], ["recoverycodesissue", "signeradd"],
     ["recover", "knockerconsent"]]) assert.equal(gradeOf(op), gradeOf(like), `${op} as ${like}`);
   for (const [op, why] of Object.entries(R22_REASONS)) assert.equal(NON_ACTS[op], why, op);

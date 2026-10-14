@@ -1,6 +1,6 @@
 # sources — requirements
 
-**Status** · In force: approved by Bob 2026-09-30 (K509 (1): a new product module after `capture` in layer 3), its questions ruled as recommended (K509 (4), (5)). Last changed T33 (T33-22: R16–R19; K1449, K1492); every requirement met.
+**Status** · In force: approved by Bob 2026-09-30 (K509 (1): a new product module after `capture` in layer 3), its questions ruled as recommended (K509 (4), (5)). Last changed T47 (T47-13: R20 new, `sourceChangesSince`, the instants at which a source's disclosures and consents changed, for `case-carriage` R21; N947, K2949); marked not yet met (T47). Before that T33 (T33-22: R16–R19; K1449, K1492); every other requirement met.
 
 **Size (P6).** New. Expected well under 4,000 lines: a history table, a consent table, a read log and their reads.
 
@@ -31,7 +31,11 @@ Terms. A **source** is the person behind a capture that was given to the group r
 
 **publishableAt({source, audience, at?}), rungOf({source, viewer})**
 - **R8** `publishableAt` answers each entry that may be shown to `audience`, with its value (a `recorded: false` entry answers none) and its basis: `consent` (R7, not withdrawn at `at`) or `public_elsewhere` (a `knownTo: public` entry whose evidence is a citation, and never a `hostile` one alone, which answers as R3's claim sentence). Every other entry is left out, and nothing is said about it. The group is never the first to make a detail more public (item 5(a)). It writes nothing and never throws.
+  (T47; N983, K3027, K3033, K3045) `op=sourcepublishable` evaluates at this module's own instant (its clock seam in tests): a query `now` or `at` is ignored; the in-process `publishableAt({source, audience, at?})` keeps its stated `at` for in-plane callers (R20's among them).
 - **R9** `rungOf` answers the ladder: `unknown`; `same_knocker` (proved by the secret); `partly_known`; `known_to_group`; `publicly_known`. Each rung comes with who knows and how, from the history, and a withheld value stays withheld (R5).
+
+**sourceChangesSince({source, since, limit?, after?})** (T47; N947)
+- **R20** (T47; N947; K2949; `case-carriage` R21) An in-plane read, reached by no route and answered to no viewer, of the instants after `since` at which what R8 answers for `source` could have changed: each disclosure appended (R2, R6), and each consent and withdrawal recorded (R7, R11), at an instant after `since` and at or before the read's own instant (this module's clock). It answers `{ok: true, source, since, at, changes, limit, truncated, next}`, `at` the read's instant and `changes` in recorded order, each `{at, act, entry}`: `act` one of `disclosure`, `consent`, `withdrawal`; `entry` the entry's id. It answers no value, audience, evidence, member or sight (R5, R13), so evaluating R8 at each `at` (and at `since`) is how a caller finds a state that held only inside the interval (a consent withdrawn and given again). A `source` no source answers to answers `NO_SUCH_SOURCE` (C-121.1) as R8 does; a `since` that is not an ISO 8601 instant answers `{ok: true, source, changes: null, since_invalid: true}`, never an empty list, so a caller fails closed. At most `limit` changes (default 200, clamped 1…1000), with `truncated` and `next`, the cursor passed back as `after` (N90's bound). It writes nothing, logs no read (R5) and never throws.
 
 **onDisclosure(listener)** (a registration later modules fill once at start; K31's pattern)
 - **R10** Each registration goes through `membership.listenerRefusal`, and each listener is called after every R2, R6 or R7 commit with `{source, entry, rung_before, rung_after}`; an R6 `same_secret` link that moves the linked source's rung also calls each listener for that source, with the same entry. A listener's failure never undoes the act.
@@ -92,6 +96,8 @@ Rows C-121.1–C-121.10 (R14; N364; C-121.7–.10 K1549), a new family, "a sourc
 - **Tests.** Each C-121 refusal gets a negative control; R5's withheld value and read log; R3's hostile claim never reads confirmed; R7's withdrawal leaves an earlier publication's statement unchanged; R11's refusal byte-identical for a wrong secret, an unknown entry and a malformed call; R13's exemption declared.
 
 - **T33 (T33-22).** R17's cap of one rank below the capture's own letter is this fold's reading of "a lower grade" (K1492 (3)), named to BOB. The callers that grade a fact citing a marked capture (`people`, `strength`) apply `grade_cap` in their own requirements; until they do, the mark is stated beside the capture and the cap is not yet applied anywhere. The price shown first (K1449) is the member-facing surface's, the design stream's. R16's refusal codes are this fold's. R19's `export: "never"` for the marks and stored values is this fold's reading of K1489, named to BOB.
+
+- **T47 (T47-13).** R20 serves `case-carriage` R21's T47 mark (N947): `sourcesLapsedSince` asks R8 at each instant R20 names; that use is case-carriage's (its L8 job, T47-26). The plan's T47-13 also names `sourcereach` (N983); that op is `capture`'s (its R8, `capture/index.mjs`), so it is folded there as `capture` R90, and this module answers no read at a caller's `now` (R8's `at`, which `op=sourcepublishable` passes from the query, is a stated instant asked about, not the read's own instant, and N983 does not name it; whether a caller may choose it is left as it stands).
 
 ## Open for Bob
 

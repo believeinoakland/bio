@@ -1,16 +1,16 @@
-/* case-authoring: an edition of the case waiting to be published at a set time (R58, R59; N681, K1833, DEC-147). The
+/* case-authoring: an edition of the case waiting to be published at a set time (R58; N681, K1833, DEC-147). The
    edition waits through publish-schedule's real `scheduleEdition` (its R1), is cancelled through its `publishAtCancel`
-   (its R3), and is read by `publishCase` and `acknowledgeStatement` through its `waitingEditionOf` (its R7; N823, K2438). The group's
+   (its R3), and is read by `publishCase` through its `waitingEditionOf` (its R7; N823, K2438); R59's acknowledgement
+   half is `case-inputs` R4's, and its tests (T47; N908). The group's
    zone is the test profile's (`jurisdictions` R41). Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, WHAT_CHANGED } from "./fixture.mjs";
-import { CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
+import { CASE_DERIVATION_CHECKS, caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
 const AT = { date: "2026-10-01", time: "09:00" };
-const WORDS = "I read what this case leaves out and agree it is stated.";
 /* an edition above 1 states its completeness afresh (R10) and what changed (R38) */
 const FRESH = { statement: "It does not cover the later amendments to the award.",
                 subjectJustification: "The award is public, and the question is whether its terms were kept.",
@@ -136,44 +136,4 @@ test("R58, R34: publishPreflight answers CASE_EDITION_WAITING first, exactly as 
   carries(pre.first, "CASE_EDITION_WAITING");
   assert.equal(pre.ready, false);
   assert.deepEqual(w.snapshot(), before);
-});
-
-test("R59: on the case door a document publish-schedule holds waiting is signed: STATEMENT_ACK_ALREADY_SIGNED (C-82.3), in R19's order (no subject first; an outsider the dead answer), nothing written or re-authored; cancelled, it is acknowledged as an unsigned preparation and re-authored", () => {
-  const { w, A } = setup();
-  const one = w.publish(A, "alice", [Q]);
-  wait(w, one.caseId, 1);
-  const sha = docOf(w, one.caseId, 1).doc_sha;
-  const before = w.snapshot();
-  const r = w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: one.caseId, edition: 1, reason: WORDS });
-  carries(r, "STATEMENT_ACK_ALREADY_SIGNED", STATEMENT_ACK_CHECKS);
-  assert.deepEqual([r.caseId, r.edition], [one.caseId, 1]);
-  assert.match(r.detail, /waiting to be published/);
-  /* R19's order: C-82.2 before it; one without standing answers the dead answer before it */
-  carries(w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: one.caseId, reason: WORDS }), "STATEMENT_ACK_NO_SUBJECT",
-          STATEMENT_ACK_CHECKS);
-  assert.equal(w.ca.acknowledgeStatement({ viewer: V("zed"), caseId: one.caseId, edition: 1, reason: WORDS }).reason,
-               "NO_REVIEW_COPY");
-  assert.deepEqual(w.snapshot(), before, "nothing written, nothing re-authored");
-  assert.equal(docOf(w, one.caseId, 1).doc_sha, sha);
-  /* cancelled: again a preparation (publish-schedule R3), acknowledged and its list re-authored, so its hash moves */
-  cancel(w, one.caseId, 1);
-  const ok = w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: one.caseId, edition: 1, reason: WORDS });
-  assert.equal(ok.ok, true, JSON.stringify(ok));
-  assert.equal(ok.case_documents[0].reauthored, true);
-  assert.notEqual(docOf(w, one.caseId, 1).doc_sha, sha);
-});
-
-test("R59: a draft named for an edition that waits reaches no unsigned document: the reading is recorded at the draft, the waiting document is not re-authored, and its link states the edition signed", () => {
-  const { w, A } = setup();
-  w.draft("DRAFT-2026-0001", A, { statement: "It does not cover the award's later amendments." }, { statementBy: "alice" });
-  const one = w.publish(A, "alice", [Q], { draft: "DRAFT-2026-0001" });
-  assert.equal(one.ok, true, JSON.stringify(one));
-  wait(w, one.caseId, 1);
-  const sha = docOf(w, one.caseId, 1).doc_sha;
-  const r = w.ca.acknowledgeStatement({ viewer: V("bo"), draft: "DRAFT-2026-0001", reason: WORDS });
-  assert.equal(r.ok, true, JSON.stringify(r));
-  assert.deepEqual(r.case_documents, [], "no document re-authored");
-  assert.equal(r.draft_link.signed, true);
-  assert.match(r.listed, /already SIGNED/);
-  assert.equal(docOf(w, one.caseId, 1).doc_sha, sha);
 });

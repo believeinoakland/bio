@@ -1,4 +1,5 @@
-/* ratification — the case ceremony's refusals that hold before a signature exists, one builder each (R2, R3, R18).
+/* ratification — the case ceremony's refusals that hold before a signature exists, one builder each (R2, R3, R18), and
+ * the group's approvals before signing (R49, R50: `approvalsRead`, `approvalMissingRefusal`, `approvalsNotCarried`).
  * `op=caseratify` (`./ops.mjs`, R2), the case commit (`./index.mjs` `ratifyCaseDocument`, R3) and the ceremony's
  * pre-flight (`./index.mjs` `caseRatifyPreflight`, R18) all answer through these, so each code is minted at one site
  * and the pre-flight's refusal is the act's own, byte for byte (DEC-49; the guard's one-site rule). A row's `where`
@@ -86,10 +87,13 @@ export function attributionStaleRefusal(caseId, edition, attr) {
     return !st || st.level !== r.level || (st.shown ?? null) !== (r.shown ?? null);
   });
   if (!drift.length && stated.length === current.length) return null;
+  /* a statement the document makes for what no longer reaches it is the drift when nothing in force moved */
+  const currentKeys = new Set(current.map((r) => JSON.stringify(keyOf(r))));
+  const stray = stated.filter((r) => !currentKeys.has(JSON.stringify(keyOf(r))));
   /* DEC-49 REGION is-attribution-stale */
   return { ok: false, reason: "ATTRIBUTION_STATEMENT_STALE", ...rowOf("ATTRIBUTION_STATEMENT_STALE"),
     caseId, edition,
-    observations: (drift.length ? drift : current).slice(0, 50).map(idOf),
+    observations: (drift.length ? drift : stray.length ? stray : current).slice(0, 50).map(idOf),
     detail: `the case document's attribution statements do not match what the authors and attesting members chose `
           + `for this edition; re-prepare it (op=publish) and sign the new bytes` };
   /* END DEC-49 REGION is-attribution-stale */

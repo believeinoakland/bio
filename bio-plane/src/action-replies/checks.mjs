@@ -1,4 +1,4 @@
-/* action-replies — its catalogue rows (requirements: `build/requirements/action-replies.md`, R1, R2, R7; family C-150,
+/* action-replies — its catalogue rows (requirements: `build/requirements/action-replies.md`, R1, R2, R7, R9; family C-150,
  * reserved for this module, K2794). `NO_SUCH_PROJECT` is membership's row (its R78), answered through
  * `membership.noSuchProject`; `BEARING_REFUSED`'s findings are `action-grammar`'s (`bearingFindings`, its R24, C-2.10),
  * carried on this module's row, its one minting site (K231, K2845). */
@@ -12,19 +12,21 @@ export const ACTION_REPLY_WORDS = Object.freeze({
     + 'for you to check. Nothing was written.',
   'refusal.BEARING_NOT_RFC': 'A reply is laid out claim by claim only for a request for comment, once its reply is received. '
     + 'Nothing was written.',
-  'refusal.BEARING_REFUSED': 'Each claim is one the request laid out, listed once, with how the reply bears on it and a note '
-    + 'of at most 500 characters. Nothing was written.',
+  'refusal.BEARING_REFUSED': 'Lay out from 1 to 50 claims, each one the request laid out, listed once, with how the reply '
+    + 'bears on it and a note of at most 500 characters. {item} isn\'t. Nothing was written.',
   'refusal.MACHINE_CANNOT_LINK': 'Only a member records what arose from a reply. Nothing was written.',
   'refusal.AROSE_FROM_NOT_A_RESPONSE': 'Only a received reply can be what something arose from. Nothing was written.',
   'refusal.AROSE_FROM_LINKED': 'That link is already recorded. Nothing was written.',
 });
 
-/* R7: a row's translation, read by key; a throw for a key the list lacks (a missing sentence is silent, a throw loud). */
-function words(key) {
+/* R7, R9: a sentence read by key, its `{placeholders}` filled from `fill` (one not given is left for the screen); a throw
+   for a key the list lacks (a missing sentence is silent, a throw loud). */
+export function fillWords(key, fill = {}) {
   const en = ACTION_REPLY_WORDS[key];
   if (typeof en !== 'string' || !en) throw new Error(`action-replies: ${key} is not one of this module's words (words.json)`);
-  return en;
+  return en.replace(/\{([a-z_]+)\}/g, (m, k) => (Object.prototype.hasOwnProperty.call(fill, k) ? String(fill[k]) : m));
 }
+const words = (key) => fillWords(key);
 
 export const ACTION_REPLY_CHECKS = {
   /* R1, R4 (v0.2 rule 1): laying out a reply claim by claim is a member's act; a machine may only propose one. */
@@ -39,7 +41,8 @@ export const ACTION_REPLY_CHECKS = {
     where: 'src/action-replies/index.mjs #bearingTarget > is-bearing-rfc',
     translation: words('refusal.BEARING_NOT_RFC'),
   },
-  /* R1 (action-grammar R24): each claim is one the request put, once, with one of the three bearings. */
+  /* R1 (action-grammar R24): each claim is one the request put, once, with one of the three bearings. R9 (T47; DEC-199):
+     the row holds the sentence with `{item}` for the screen; the refusal answers it filled with the item named. */
   BEARING_REFUSED: {
     check: 'C-150.3',
     where: 'src/action-replies/index.mjs #bearingShape > is-bearing-shape',

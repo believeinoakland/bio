@@ -5,7 +5,9 @@
    plane's own), the member's short-lived read-only grant is minted at that act, the account is unsealed for this one
    ask, the switch that governs it read, and the question goes to agent-worker's `/ask` with the grant and the account
    in agent-worker R6's shape. agent-worker's answer (its NDJSON stream, or its plain refusal) is handed back unchanged.
-   The secret leaves the object only in that one call and is kept nowhere; every refusal is its owner's, in its words. */
+   The secret leaves the object only in that one call and is kept nowhere; every refusal is its owner's, in its words.
+   (T47; R47; K3084, K3060 D10) A sign-in's secret is its held token (`credentials` R70's `key`), sent as an API key's
+   is; an answer refusing that token (`SIGNIN_TOKEN_REFUSED`) has `credentials` drop it (`subscriptionTokenRefused`). */
 import { credentialsOf, AI_GRANT_TTL_SECONDS } from "../credentials/index.mjs";
 import { instanceSetupOf } from "../setup.mjs";
 import { answersOf } from "../answers/index.mjs";
@@ -178,8 +180,9 @@ const accountOf = (a) => (a && a.account && typeof a.account === "object" ? a.ac
  *  (`accountReferenceState().subscription.uses.suggestions`, read for the member it serves, the asking member's own;
  *  a project's sign-in serving another member has no in-plane read for this act, so none is offered, K1798), the
  *  member's reference's for an API key at level `member`, the group key's for `group`; a project's API key offers none.
- *  A `signin` account carries no `secret` (that member's sign-in serves; agent-worker R6 refuses one present
- *  BAD_ACCOUNT); a project's account names its project. Anything that throws reads the switch as off. */
+ *  R47 (T47; K3084; agent-worker R82; credentials R70): every account carries its `key` as `secret`, a `signin`
+ *  account's being its held token, as an API key's is; a project's account names its project. Anything that throws
+ *  reads the switch as off. */
 export function wireAccount(c, ref, who) {
   let suggestions = false;
   try {
@@ -197,8 +200,46 @@ export function wireAccount(c, ref, who) {
     }
   } catch { suggestions = false; }
   const account = { kind: ref.kind, level: ref.level, ...(ref.level === "project" ? { project: ref.project } : {}),
-                    ...(ref.kind === "signin" ? {} : { secret: ref.key }), member: who, suggestions };
+                    secret: ref.key, member: who, suggestions };
   return { account, suggestions };
+}
+
+/* R47 (T47; K3084; credentials R70; agent-runner's `SIGNIN_TOKEN_REFUSED`): the code an answer carries when Anthropic
+   refused the sign-in's token. */
+export const SIGNIN_TOKEN_REFUSED = "SIGNIN_TOKEN_REFUSED";
+const refusesToken = (a) => !!a && typeof a === "object" && (a.code === SIGNIN_TOKEN_REFUSED || a.reason === SIGNIN_TOKEN_REFUSED);
+
+/** R47: what an answer refusing a sign-in's token sets off: for a `signin` account, `credentials` drops the token it
+ *  holds for the member whose sign-in served (`subscriptionTokenRefused`, its R70), once; for any other account, or
+ *  an answer refusing nothing, nothing. Never throws. */
+export function tokenRefusal(c, ref) {
+  let done = false;
+  return (answer) => {
+    if (done || !ref || ref.kind !== "signin" || !refusesToken(answer)) return false;
+    done = true;
+    try { c.subscriptionTokenRefused({ member: ref.member }); } catch { /* credentials' own; the answer stands */ }
+    return true;
+  };
+}
+
+/* R47: agent-worker's answer to an ask handed back unchanged, its bytes as they came, while each NDJSON line (or the
+   one JSON body of a refusal made before any stream) is read for a refusal of the sign-in's token. */
+function watched(res, heard) {
+  if (!res.body) return new Response(res.body, { status: res.status, headers: res.headers });
+  const decoder = new TextDecoder();
+  let held = "";
+  const look = (line) => { const t = line.trim(); if (!t) return; try { heard(JSON.parse(t)); } catch { /* not JSON */ } };
+  const body = res.body.pipeThrough(new TransformStream({
+    transform(chunk, ctl) {
+      ctl.enqueue(chunk);
+      held += decoder.decode(chunk, { stream: true });
+      const lines = held.split("\n");
+      held = lines.pop();
+      for (const line of lines) look(line);
+    },
+    flush() { held += decoder.decode(); look(held); },
+  }));
+  return new Response(body, { status: res.status, headers: res.headers });
 }
 
 /** On the `bio` object: judge the account and its limit (`answers.askAccount`), mint the grant (unless one was
@@ -230,8 +271,9 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
     token = g.token;
   }
   /* K1806, R33 (agent-worker R6, R54; credentials R35, R55; T46): the account that serves this ask in R6's wire shape,
-     with that account's own suggestions switch, and no secret for a sign-in (`wireAccount`). R40 (agent-worker R79): the
-     test-instance label, when the ask was admitted on the exception. */
+     with that account's own suggestions switch, a sign-in's secret its held token (R47, `wireAccount`). R40
+     (agent-worker R79): the test-instance label, when the ask was admitted on the exception. */
+  const heard = tokenRefusal(c, accountOf(judged));
   let { account } = wireAccount(c, accountOf(judged), member);
   const out = JSON.stringify({ question, ...(conversation !== undefined ? { conversation } : {}), ...(store ? { store } : {}),
                                grant: token, account, ...(gate.untested ? { untested: gate.untested } : {}) });
@@ -242,7 +284,8 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
   } catch {
     return json({ ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member did not answer. Nothing was kept." }, 502);
   }
-  return new Response(res.body, { status: res.status, headers: res.headers });
+  /* R47: handed back unchanged, a refusal of the sign-in's token dropping it */
+  return watched(res, heard);
 }
 
 /** plane R19 (N686; K1837, K1841, K2038, K2041, K2062; control-plane R57, agent-worker R59, credentials R27, R35, R37):
@@ -314,7 +357,9 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
      as given, before any grant is minted or anything posted. */
   const judged = await answersOf(ctx).askAccount({ member: who, kind: "draft" });
   if (!judged || judged.ok !== true) return out(409, judged);
-  /* R33 (T46; M-T46-6, K2946): the serving account's own switch, and no secret for a sign-in (`wireAccount`) */
+  /* R33 (T46; M-T46-6, K2946): the serving account's own switch; R47 (T47): a sign-in's secret its held token
+     (`wireAccount`), and an answer refusing that token has credentials drop it */
+  const heard = tokenRefusal(c, accountOf(judged));
   let { account, suggestions } = wireAccount(c, accountOf(judged), who);
   /* R41 (K2824): an action draft's records, from the member's own reads, before any grant is minted */
   let records = {};
@@ -353,6 +398,7 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
   let answer;
   try { answer = await res.json(); }
   catch { return out(502, { ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member's answer was not JSON. Nothing was kept." }, grant, suggestions); }
+  heard(answer);
   return out(res.status, answer, grant, suggestions);
 }
 

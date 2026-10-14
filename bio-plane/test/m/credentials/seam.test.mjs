@@ -2,7 +2,7 @@
    that registers them, at the interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, realWorld, PASSWORD } from "./fixture.mjs";
+import { world, realWorld, PASSWORD, SIGNIN_TOKEN } from "./fixture.mjs";
 import { credentialsOf, CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES, CREDENTIALS_HISTORY_TABLE } from "../../../src/credentials/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 
@@ -106,7 +106,7 @@ test("R18 R30 every credentials table is declared exempt from purge, and a whole
   const codes = w.c.recoveryCodesIssue({ by: "second" }).codes;
   assert.equal((await w.c.recover({ role: "member:second", code: codes[0], password: "recovered-passphrase", source: "fp-a" })).ok, true);
   assert.equal((await w.c.login({ role: "member:nobody", password: "wrong-passphrase", source: "fp-b", country: "US" })).ok, false);
-  assert.equal(w.c.subscriptionConnected({ member: "second" }).ok, true);
+  assert.equal((await w.c.subscriptionTokenHold({ member: "second", token: SIGNIN_TOKEN("second") })).ok, true);   /* T47: R70 */
   const sess = (await w.c.login({ role: "member:second", password: "recovered-passphrase" })).token;
   assert.equal(typeof sess, "string");
   w.c.signerAdd({ keyB64: "AAAAsecond", memberId: "second", by: "admin" });
@@ -117,12 +117,13 @@ test("R18 R30 every credentials table is declared exempt from purge, and a whole
   assert.equal((await w.c.groupKeySet({ key: "sk-group", by: "second" })).ok, true);
   assert.equal(w.c.groupKeyNoticeSeen({ member: "second", by: "second" }).ok, true);
   assert.equal(w.c.aiKeepAwaySet({ on: true, reason: "a review", by: "second" }).ok, true);   /* T36: R51's table */
+  assert.equal(w.c.passwordResetLinkMake({ member: "second", by: "admin" }).ok, true);   /* T47: R69's table */
   const count = () => Object.fromEntries(CREDENTIALS_EXEMPT_TABLES.map((t) => [t, w.row(`SELECT COUNT(*) AS n FROM ${t}`).n]));
   const before = count();
   assert.deepEqual(before, { credentials: 2, sessions: 1, bootstrap: 1, signers: 1, ai_credentials: 1,
     account_references: 1, keyed_services: 1, ai_grants: 1, group_key: 1, group_key_acts: 1, group_key_notices: 1,
     signin_window: 2, security_counts: 1, security_pending: 1, security_key: 1, recovery_codes: 10, recoveries: 1,
-    subscription_connections: 1, ai_keep_away: 1 });
+    subscription_connections: 1, ai_keep_away: 1, password_reset_links: 1 });
   assert.equal(w.rc.purge({}).ok, true);
   assert.deepEqual(count(), before, "a whole-store purge clears none of them");
   assert.equal(w.rc.purge({ bundleId: "second" }).ok, true);

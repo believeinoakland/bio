@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
-import { store, deployed, GATE_FLAGS, GATE_SET } from "./fixture.mjs";
+import { store, deployed, GATE_FLAGS, GATE_SET, disclosed } from "./fixture.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { askOp, assistantGateOf } from "../../../src/plane/ask.mjs";
 import { answersOf } from "../../../src/answers/index.mjs";
@@ -41,6 +41,7 @@ async function world({ account = true, worker = true } = {}) {
   sql.exec(`INSERT INTO sessions (token_sha, role, expires, created) VALUES (?, 'member:ann', ?, 'x')`,
            createHash("sha256").update(SESSION).digest("hex"), Date.now() + 3600e3);
   if (account) {
+    await disclosed(x.ctx);   /* R44 (T47): the disclosure first, as the assembled plane asks */
     const r = await credentialsOf(x.ctx).accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ant-zz-ann", by: "member:ann" });
     assert.equal(r.ok, true, JSON.stringify(r));
   }
@@ -202,6 +203,7 @@ test("K1806, R33 (agent-worker R6, R54; credentials R35; K1755; T46: N897 (3)): 
   assert.deepEqual(x.asks[0][1].account, { kind: "apikey", level: "group", secret: "sk-ant-zz-group", member: "member:ann", suggestions: true },
                    "R33 (T46): the group's key serves ann's own ask, with the group key's own suggestions switch");
   /* her own reference, once set, serves her first */
+  await disclosed(x.ctx);   /* R44 (T47): the disclosure first, as the assembled plane asks */
   assert.equal((await c.accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ant-zz-ann", by: "member:ann" })).ok, true);
   await x.s.ask({ member: "member:ann", session: SESSION, question: "q" });
   assert.equal(x.asks[1][1].account.level, "member");

@@ -214,7 +214,8 @@ test("R40 a session is held only as its token's SHA-256: login stores the digest
   const w = await world().group("ann");
   const { token } = await w.c.login({ role: "member:ann", password: PASSWORD("ann") });
   assert.deepEqual(w.rows(`SELECT token_sha, role FROM sessions`).map((r) => [r.token_sha, r.role]), [[sha(token), "member:ann"]]);
-  assert.deepEqual(Object.keys(w.row(`SELECT * FROM sessions`)).sort(), ["created", "expires", "role", "token_sha"]);
+  assert.deepEqual(Object.keys(w.row(`SELECT * FROM sessions`)).sort(), ["created", "device", "expires", "last_active",
+    "reauth_until", "role", "token_sha"], "(T47) R65's device and activity, R66's window: no token");
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann", by: "ann" });
   await w.c.aiGrantMint({ member: "ann", by: "ann", session: token });
   assert.ok(!w.snapshot().includes(token), "no row of any table holds the token");
@@ -248,7 +249,7 @@ test("R40 sessions held as tokens when the migration runs are carried over as th
   const a = await m.memberAdd({ memberId: "ann", cover: "c", by: "admin" });
   await m.enroll({ invite: a.invite, handle: "ann", password: PASSWORD("ann") });
   const cols = db.prepare(`PRAGMA table_info(sessions)`).all().map((r) => r.name);
-  assert.deepEqual(cols, ["token_sha", "role", "expires", "created"]);
+  assert.deepEqual(cols, ["token_sha", "role", "expires", "created", "device", "last_active", "reauth_until"]);   /* (T47) R65, R66 */
   const dump = () => JSON.stringify(db.prepare(`SELECT name FROM sqlite_master WHERE type='table'`).all()
     .map(({ name }) => db.prepare(`SELECT * FROM "${name}"`).all()));
   for (const t of [live, other, gone]) assert.ok(!dump().includes(t), "no token stays stored");
@@ -294,12 +295,15 @@ test("R41 the stored hash and a recovery code are compared in constant time: a v
   assert.equal((await w.c.recover({ role: "member:second", code: codes[0], password: "new-passphrase-1" })).ok, true);
 });
 
-test("R46 recoveryCodesIssue: an active administrator, the founder included, gets ten one-time codes for their own role, answered once, at least 80 bits each, only their SHA-256 kept; anyone else NOT_AN_ADMIN, issuing nothing", async () => {
+test("R46 R68 recoveryCodesIssue: an active member (T47: not only an administrator), the founder included, gets ten one-time codes for their own role, answered once, at least 80 bits each, only their SHA-256 kept; anyone else RECOVERY_CODES_NOT_A_MEMBER (C-96.53), issuing nothing", async () => {
   const w = await world().group("ann", "dee");
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
   const before = w.snapshot();
-  for (const by of ["ann", "dee", "nobody", "class:admin", "class:ai", "token:ai", null, ""])
-    assert.deepEqual(w.c.recoveryCodesIssue({ by }), notAnAdmin(by === "" ? "" : by ?? null, "issuing recovery codes"), String(by));
+  for (const by of ["dee", "nobody", "class:admin", "class:ai", "token:ai", "member:class:ai", null, ""]) {
+    const r = w.c.recoveryCodesIssue({ by });
+    assert.deepEqual([r.ok, r.code, r.check, r.translation], [false, "RECOVERY_CODES_NOT_A_MEMBER", "C-96.53",
+      SIGN_IN_CHECKS.RECOVERY_CODES_NOT_A_MEMBER.translation], String(by));
+  }
   assert.equal(w.snapshot(), before, "issuing nothing");
   assert.equal(RECOVERY_CODE_COUNT, 10);
   const r = w.c.recoveryCodesIssue({ by: "second" });
@@ -329,17 +333,21 @@ test("R46 recoveryCodesIssue: an active administrator, the founder included, get
   assert.equal((await w.c.recover({ role: "member:second", code: r.codes[0], password: "new-passphrase-1" })).reason, "RECOVERY_REFUSED");
   assert.equal((await w.c.recover({ role: "member:second", code: again.codes[0], password: "new-passphrase-1" })).ok, true);
   assert.equal(w.c.recoveryCodesState({ by: "admin" }).remaining, 10, "the founder's untouched");
+  /* (T47; R68) an ordinary member issues their own */
+  assert.equal(w.c.recoveryCodesIssue({ by: "ann" }).codes.length, 10);
+  assert.equal(w.c.recoveryCodesState({ by: "ann" }).remaining, 10);
   /* anyone else's state is their own, none held */
-  for (const by of ["ann", "class:admin", null])
+  for (const by of ["dee", "class:admin", null])
     assert.deepEqual(w.c.recoveryCodesState({ by }), { ok: true, held: false, remaining: 0, issuedAt: null }, String(by));
 });
 
-test("R47 recover: R38's window, then PASSWORD_TOO_SHORT, then one RECOVERY_REFUSED at one cost for every other arm, each writing nothing but its count", async () => {
-  const w = await world().group("ann", "third");
+test("R47 R68 recover: R38's window, then PASSWORD_TOO_SHORT, then one RECOVERY_REFUSED at one cost for every other arm, each writing nothing but its count", async () => {
+  const w = await world().group("ann", "third", "rev");
+  w.m.memberSet({ memberId: "rev", status: "revoked", by: "admin" });
   const codes = w.c.recoveryCodesIssue({ by: "second" }).codes;
   const founderCodes = w.c.recoveryCodesIssue({ by: "admin" }).codes;
-  /* `ann` holds codes issued while she was an administrator, then made ordinary: her codes no longer serve */
-  w.sql.exec(`INSERT INTO recovery_codes (code_sha, role, issued_at) VALUES (?, 'member:ann', 't')`, sha("ANNSCODE0000000000AA"));
+  /* (T47; R68) `rev` holds a code though revoked (planted after R16 spent hers): a revoked member's code no longer serves */
+  w.sql.exec(`INSERT INTO recovery_codes (code_sha, role, issued_at) VALUES (?, 'member:rev', 't')`, sha("ANNSCODE0000000000AA"));
   await at(into(0.3), async () => {
     assert.deepEqual(await w.c.recover({ role: "member:second", code: codes[0], password: "short", source: "a" }),
       { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 });
@@ -348,7 +356,7 @@ test("R47 recover: R38's window, then PASSWORD_TOO_SHORT, then one RECOVERY_REFU
       { role: "member:second", code: "WRONG-WRONG-WRONG-WRONG" }, // not among its codes
       { role: "member:second", code: "" },                       // no code
       { role: "member:second" },
-      { role: "member:ann", code: "ANNSCODE0000000000AA" },      // its code, but not an administrator now
+      { role: "member:rev", code: "ANNSCODE0000000000AA" },      // its code, but not an active member now
       { role: "member:ghost", code: codes[2] },
       { role: "admin", code: codes[3] },
       { role: null, code: founderCodes[0] },

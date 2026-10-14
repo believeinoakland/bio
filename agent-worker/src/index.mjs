@@ -53,10 +53,12 @@
  * runs turns the same way, one conversation per page under the account that
  * serves the member's `transcribe` act (an API key or, since T46, the member's own sign-in), handing the model only the page's
  * picture the plane rendered, as a tool's result, and answers the AI's reading
- * of each page: no plane call. `POST /signin` (R66, R67)
+ * of each page: no plane call. `POST /signin` (R66, R67, R81–R84)
  * relays one step of a member's own Claude sign-in to that member's own
  * `agent-runner` instance on the same `RUNNER` binding and holds nothing of it:
- * no plane call, no model turn.
+ * no plane call, no model turn; the token the sign-in mints passes to the door
+ * once, only under its `hold` (R81), and comes back on each act as the `signin`
+ * account's `secret` (R82).
  *
  * WHAT IT MUST NOT DO (fleet rules 2/3, inherited from I6 and asserted in the
  * suite behaviourally, at this member's interface — what it reads from `env`,
@@ -91,7 +93,9 @@
  *     sealed in `credentials`, K1755) arrive PER CALL and are never stored,
  *     logged or echoed, so this member cannot act except while somebody is
  *     asking it to; so does the code from Anthropic's page a member's own
- *     sign-in takes (R66, R67), sent only to that member's own runner instance.
+ *     sign-in takes (R66, R67), sent only to that member's own runner instance,
+ *     and the token that sign-in mints (R81, R82), relayed to the door once and
+ *     arriving per call as a `signin` account's `secret`.
  *     The copy binds no Claude credential in its environment.
  *   - JUDGE ITS OWN SCOPE. D-199 (2): what an agent may reach is a row a member
  *     AUTHORED, read from the record at the plane's gate by `aiTaskScope`. A copy
@@ -1499,11 +1503,12 @@ const planeRefused = (runId, store, asked) =>
  *  required at that level and carried at no other. A body still carrying the old cascade's `claude_accounts` is
  *  refused naming that field, and a member whom no account serves has no assistant, refused by name before any plane
  *  call (D-260 as K1503 reads it). The secret is read here for the call it serves and goes no further than
- *  `agent-model` (R36). (T38; N785, K2200) A `signin` account, the member's own stored sign-in (or a one-member
- *  project's, which is that member's own), is `{kind: "signin", level: "member" | "project", member, suggestions}`
- *  and carries no secret: one carrying a `secret` is refused `BAD_ACCOUNT`. (T46; N897 (3); credentials R55) Its
- *  `suggestions` is the sign-in's own switch, honoured as a reference's is (R56): absent is off, and one that is not a
- *  boolean is refused `BAD_ACCOUNT`. (T41; N796, K2425) Whether a sign-in may serve a standing question's AI half is
+ *  `agent-model` (R36). (T38; N785, K2200) A `signin` account, the member's own sign-in (or a one-member project's,
+ *  which is that member's own), is (T47, R82; K3060 D10) `{kind: "signin", level: "member" | "project", member, secret,
+ *  suggestions?}`, `secret` the token `credentials` holds for that member: one with no non-empty `secret` is refused
+ *  409 `SIGNIN_NOT_HELD` before any plane call or model turn, and one whose `secret` is not a string `BAD_ACCOUNT`.
+ *  (T46; N897 (3); credentials R55) Its `suggestions` is the sign-in's own switch, honoured as a reference's is (R56):
+ *  absent is off, and one that is not a boolean is refused `BAD_ACCOUNT`. (T41; N796, K2425) Whether a sign-in may serve a standing question's AI half is
  *  `credentials`' (its R32, R55, the sign-in's `standing` use): this module refuses nothing of its own for a sign-in. */
 /** R71: a project's id as the account carries it, a short name and never a secret. */
 const PROJECT_ID_MAX = 200;
@@ -1525,15 +1530,21 @@ async function accountOf(body) {
       || (a.level === "project"
         ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX)
         : a.project !== undefined)
-      || (a.kind === "signin" && (a.secret !== undefined
+      || (a.kind === "signin" && ((a.secret !== undefined && a.secret !== null && typeof a.secret !== "string")
         || (a.suggestions !== undefined && typeof a.suggestions !== "boolean"))))
     return { refusal: refusal("BAD_ACCOUNT",
       `account is the account that serves the member's act: {kind, level, secret, member}, kind one of `
       + `${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), `
       + "and member the member whose act it serves; a project's account names its project, and no other does; a "
-      + "signin account is the member's own and carries no secret, and its suggestions switch, when sent, is true or "
-      + "false. What arrived is not one, and this member judges only what it is handed.",
+      + "signin account is the member's own, its secret the token held for that member, and its suggestions switch, "
+      + "when sent, is true or false. What arrived is not one, and this member judges only what it is handed.",
       400, { field: "account" }) };
+  /* R82 (T47; K3060 D10): a sign-in serves an act only on the token `credentials` holds for the member; with none held
+     (every connection made before T47 among them) the member connects again, and nothing was done. */
+  if (a.kind === "signin" && !(typeof a.secret === "string" && a.secret.length > 0))
+    return { refusal: refusal("SIGNIN_NOT_HELD",
+      "Your group's Civicsmith holds no Claude sign-in for you to use, so nothing was done. Connect your Claude account "
+      + "again in your settings, then try again.", 409, { capability: "unavailable" }) };
   const cascade = await resolveClaudeCascade(a);
   if (!cascade.available)
     return { refusal: refusal(CASCADE_NO_ACCOUNT, cascade.detail, 409,

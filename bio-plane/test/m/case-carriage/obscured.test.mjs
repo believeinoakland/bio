@@ -28,17 +28,17 @@ async function scene() {
   return { w, p, copy: r.copy.sha256 };
 }
 
-test("R1 case-grammar reads the obscured row this module's tests write (the one spelling), with (T41; K2537) its R12 `marked`: stated, or read by the label when absent", async () => {
+test("R1 case-grammar reads the obscured row this module's tests write (the one spelling), with (T41; K2537) its R12 `marked`: stated, or read by the label when absent; (T47; case-grammar R31) `kind` null on a row stating none", async () => {
   const { p, copy } = await scene();
   const read = (ob) => materialsOf(caseFm({ materials: [obscuredRow(PHOTO, p, copy, { obscured: ob })] })).materials[0];
   const m = read({ copy, label: OBSCURED_LABEL });
-  assert.deepEqual(m.obscured, { copy, label: OBSCURED_LABEL, marked: true }, "no marked stated: read by its label, non-null");
+  assert.deepEqual(m.obscured, { copy, label: OBSCURED_LABEL, marked: true, kind: null }, "no marked stated: read by its label, non-null");
   assert.equal(m.included, false);
-  assert.deepEqual(read({ copy, label: OBSCURED_LABEL, marked: true }).obscured, { copy, label: OBSCURED_LABEL, marked: true });
-  assert.deepEqual(read({ copy, label: PUBLISHED_LABEL, marked: false }).obscured, { copy, label: PUBLISHED_LABEL, marked: false },
+  assert.deepEqual(read({ copy, label: OBSCURED_LABEL, marked: true }).obscured, { copy, label: OBSCURED_LABEL, marked: true, kind: null });
+  assert.deepEqual(read({ copy, label: PUBLISHED_LABEL, marked: false }).obscured, { copy, label: PUBLISHED_LABEL, marked: false, kind: null },
                    "an unmarked photo's copy: PUBLISHED_LABEL, marked false");
   /* negative control: an edition signed before T40, no label and no marked, reads unmarked */
-  assert.deepEqual(read({ copy, label: null }).obscured, { copy, label: null, marked: false });
+  assert.deepEqual(read({ copy, label: null }).obscured, { copy, label: null, marked: false, kind: null });
 });
 
 /* ---------------------------------------------------------------- R1 */

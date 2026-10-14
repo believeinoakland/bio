@@ -37,10 +37,15 @@ Terms. A **check request** is R13's record; its **target** a bundle id (a findin
 - **R16** `checkRequests({viewer, after?, limit?})` answers the requests the viewer made, newest first, at most `limit` (1–500, default 200) with `truncated` and `next`: each `{request, target, label, member, note, at, addressed, taken, check}`, `taken` null while no one has taken it (so the requester sees that no one has, DEC-135 (6)) or `{handle, at}`, and `check` null or R15's record. A request whose target the viewer may no longer see is left out and not counted (R9). `checksOf({target, viewer})` answers every check recorded on `target` (R15's records, oldest first), so a check shows wherever its target shows (DEC-135 (4)); a target the viewer may not see answers `[]`, as one with none. Each writes nothing and never throws.
 - **R17** Requests, takes and checks are append-only in this module's own tables, declared to the whole-store purge (R8; K23); nothing is overwritten or deleted. A machine never requests, takes or records a check (Design Requirement 12). Each refusal R3, R13–R15 add carries its row in this module's own check family (`checks.mjs`). No place is named in their behaviour or outward text.
 
+#### T47's L11 fold (K3100)
+
+- **R19** (DEC-207 (8)) `signRequest({case, edition, by, viewer})` (`op=signrequest`): a member who may see the case asks its project's owners to sign a prepared edition; refusals, each writing nothing: a machine `by` `MACHINE_CANNOT_ASK_SIGN`, `NO_SUCH_CASE_EDITION` (absent, invisible or not prepared, one answer), `SIGN_ALREADY_ASKED` (answered with the first); each owner gets a To do of kind `sign-requested` on the case (R14's form), resolved by the owner or when the edition is signed. Test with a control.
+
 ## Private
 
 ### Uses
 
+- `case-authoring`: the prepared edition a sign request names (R19; K3100).
 - `record-grammar`: `isMachineStamp`, `isPublicHttpsLocator`, `ISO_TS_RE`, `BUNDLE_ID_RE` (R1, R3, R4); `idPattern` (R12; T33-86).
 - `record-core`: `stampInstant`, `mintOpaqueId`, `mintExhausted` (its R62; R1), `bundleInfo`, `seedMintLedger` (its R40), `registerCounts` (its R63) (R5), `registerAuditCheck` (its R59; R4), `declarePurge` (R8), `perItem` (its R50–R52; R3).
 - `membership`: `viewerPredicate` and `GATE_MARK` (the `taskList` gate, R2, R6), `projectOwners` (its R65), `memberFacts` (its R68), `activeAdmins` (its R86), `isAdministrator` (its R64) (R1, R3); `checkAddressees` (its R106; R13), `inSight` (its R80), `isProjectOwner` (its R54) and `expertiseList` (its R24) (R13–R16; T34); `noSuchMember` (its R121, T38: R3's `NO_SUCH_MEMBER`).

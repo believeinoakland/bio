@@ -3,7 +3,8 @@
    body's date while no reply is owed; R7's `stated` kind; R16 one date, one reminder, over the real `steps`; R17 a
    duty's Noticed item; R18 who owes an entry, the member's statement of one (`clockState`) and `ourDeadlines`. On the
    test profile and variants of it; instance clock 2026-09-28T12:00Z, zone America/Halifax (UTC−3). Receipts and
-   service are recorded through the real `actions.actionReceipt` (its R80); `duties` (R17) is a stand-in answering
+   service are recorded through the real `action-records.actionReceipt` (its R4, was `actions` R80; T47, N961) and read
+   through `actions.actionRead`; `duties` (R17) is a stand-in answering
    `dutiesOf` and `occurrencesOf` in `duties` R7's and R9's shapes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -34,9 +35,9 @@ function variant() {
   assert.equal(combine([p]).ok, true, JSON.stringify(combine([p]).errors || []).slice(0, 400));
   return p;
 }
-/* actions R80: a member records a receipt or service on the sent entry at `ord`. */
+/* action-records R4 (was actions R80; N961): a member records a receipt or service on the sent entry at `ord`. */
 const receipt = (w, target, ord, kind, at, extra = {}) =>
-  assert.equal(w.actions.actionReceipt({ target, ord, kind, at, how: "the clerk's stamp", account: "seen by me", viewer: M, author: M, ...extra }).ok, true);
+  assert.equal(w.records().actionReceipt({ target, ord, kind, at, how: "the clerk's stamp", account: "seen by me", viewer: M, author: M, ...extra }).ok, true);
 const sent = (w, id, at) => assert.equal(w.actions.actionCorrespond({ target: id, direction: "sent", at, account: "sent", viewer: M, author: M }).ok, true);
 
 test("R2 (T45) a received rule counts from the receipt actions records when one is held, saying so in its trace; with none, from the first sent entry, saying \"receipt not recorded: counted from sending\"", () => {
@@ -48,7 +49,7 @@ test("R2 (T45) a received rule counts from the receipt actions records when one 
   const s = P();
   assert.deepEqual([s.entry.date, s.start, s.start_from, s.start_note, s.trace.start_from, s.trace.start_note],
     ["2026-09-07", "2026-09-01", "sent", "receipt not recorded: counted from sending", "sent", "receipt not recorded: counted from sending"]);
-  /* a receipt recorded on the sent entry (Thu 3 Sept): counted from it, the trace saying so; the latest record (the last, actions R80) governs. */
+  /* a receipt recorded on the sent entry (Thu 3 Sept): counted from it, the trace saying so; the latest record (the last, action-records R4) governs. */
   receipt(w, A, 0, "receipt", "2026-09-02");
   receipt(w, A, 0, "receipt", "2026-09-03T09:30");
   assert.equal(w.actions.actionRead({ id: A, viewer: M }).receipts.length, 2, "actions' read answers both");

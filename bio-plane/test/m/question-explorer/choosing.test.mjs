@@ -110,12 +110,13 @@ test("R3: the run opens through ai-runs in the investigate run path, origin expl
   assert.equal(w3.count("explore_runs"), 0);
 });
 
-test("R3: a principal served by a sign-in explores only while that sign-in account's explore use is on; off (its default) it is refused as any account whose explore use is off (credentials R55 and ai-use R6, the real modules)", async () => {
+test("R3: a principal served by a sign-in explores only while that sign-in account's explore use is on; off (its default) it is refused as any account whose explore use is off (credentials R55 and ai-use R6, the real modules; the sign-in held, credentials R70)", async () => {
   const w = await world().standard();
-  /* A project whose account is its sole member's own sign-in (credentials R43, R54). */
+  /* A project whose account is its sole member's own sign-in (credentials R43, R54), its token held (credentials R70:
+     a sign-in with no token held answers not connected). */
   w.project(PROJ, ["alice"], { owners: ["alice"] });
   w.draw(Q, PROJ);
-  assert.equal(w.credentials.subscriptionConnected({ member: "alice" }).ok, true);
+  assert.equal((await w.credentials.subscriptionTokenHold({ member: "alice", token: "sign-in-token-of-alice-0123456789" })).ok, true);
   assert.equal(w.credentials.projectSigninSet({ project: PROJ, by: "alice" }).ok, true);
   /* Off: the sign-in account's switch at its default, no. */
   const off = w.p.exploreTick(w.clock.now);

@@ -16,10 +16,14 @@
  * N820, N796, DEC-188 (1), (7), (8)), four more kinds of use, `accountUsesSet` the one act that sets an account's
  * switches, a sign-in's own standing switch, the refusals' words read by key from `words.json`, and each account's
  * panel reads: its uses and keep-aways, and its change history; and, from T42 (T42-4; N831), the in-plane read of
- * an account's uses for a caller that does not own it. A project's name (R58) is its bundle's title, read
- * through record-core's `bundleInfo` (its R34).
+ * an account's uses for a caller that does not own it; and, from T47 (T47-9; N981, N955, K231, K2976), the
+ * disclosure-first order held here (an API-key reference refused `DISCLOSURE_DUE` until the disclosure is recorded,
+ * through the one disclosure read a later module registers) and a run segment's credential minted in the plane; and,
+ * from T47's second job (T47-81; K3060 D4, D10, K3061 D3, K3076), sessions by device and inactivity with their lock,
+ * the password asked again, sign-in by handle, every member's recovery codes, the administrator's reset link, and a
+ * member's sign-in token held sealed here. A project's name (R58) is its bundle's title, read through record-core's `bundleInfo` (its R34).
  *
- * Requirements: build/requirements/credentials.md (R1–R62; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
+ * Requirements: build/requirements/credentials.md (R1–R71; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
  * 2, CREDENTIALS #1): the code is copied from `membership/index.mjs` and `schema.mjs`, without change of meaning, and
  * reads `members` only through membership's services (`memberFacts`, `sessionRights`, `isAdministrator`,
  * `activeAdmins`, `notAnAdmin`), never by SQL. Who the members are, and what each may do, is membership's; this module
@@ -35,7 +39,8 @@
  */
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, sha256HexSync } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject, notTheOwner } from "../membership/index.mjs";
+import { Membership, membershipOf, notAnAdmin, noSuchMember, noSuchProject, notTheOwner, listenerRefusal }
+  from "../membership/index.mjs";
 import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES,
          CREDENTIALS_HISTORY_TABLE } from "./schema.mjs";
 export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES, CREDENTIALS_HISTORY_TABLE } from "./schema.mjs";
@@ -93,6 +98,14 @@ export const KEEP_AWAY_REASON = Object.freeze({ min: 1, max: 2000 });
 export const SIGN_IN_WINDOW = Object.freeze({ perSource: 10, perRole: 10, windowMs: 10 * 60 * 1000 });
 export const SIGN_IN_STATED = `at most ${SIGN_IN_WINDOW.perSource} refused attempts from one place, and `
   + `${SIGN_IN_WINDOW.perRole} for one account, in any ${SIGN_IN_WINDOW.windowMs / 60000} minutes`;
+/* R63 (T47; N955, K2976, K3033): the write ops the runner makes on a run, in every deployed mode: `check`'s (agent-worker
+   R37) and `plan`'s (agent-worker R53, `optionpropose` with `airuntick` and `airunclose`). A run segment's credential
+   holds a non-empty list of these and nothing else; `ai-runs` passes the run's mode's own. A mode deployed later adds
+   its writes here in its own entry. */
+export const AI_RUN_WRITES = Object.freeze(["airuntick", "suggest", "capturerequest", "airunclose", "optionpropose"]);
+/* R63: a run segment's credential's life, in seconds: under one day (the job's value, six hours, well past any one
+   segment's wall-clock bound), never renewed; the next segment mints its own. */
+export const AI_RUN_CREDENTIAL_TTL_SECONDS = 6 * 3600;
 /* R42 (F15; K1934 (2)): an agent credential's life in whole days, and its default. */
 export const AI_CREDENTIAL_EXPIRY_DAYS = Object.freeze({ min: 1, max: 365, default: 90 });
 /* R44 (N703; DEC-165, DEC-166; K1934 (2)): the tally's kinds, and how long its counts are kept. */
@@ -105,6 +118,18 @@ export const SECURITY_NOTE = "A country is not proof of who is behind an attempt
 export const SECURITY_THRESHOLD = Object.freeze({ atLeast: 10, times: 5, usualDays: 28 });
 /* R46 (K1888): how many recovery codes an issue gives. */
 export const RECOVERY_CODE_COUNT = 10;
+/* R65 (T47; Bob K3061 D3, "as recommended"; K3070): a session's device, `shared` when not said, and its limits in ms.
+   A `shared` session ends after `sharedIdle` without activity; an `own` one locks after `ownLock`, ends `ownEndAfterLock`
+   after it locked, and ends `ownMax` after its sign-in in any case (BOB's cap, P17). */
+export const SESSION_DEVICES = Object.freeze(["own", "shared"]);
+export const SESSION_LIMITS = Object.freeze({ sharedIdle: 15 * 60e3, ownLock: 30 * 60e3, ownEndAfterLock: 12 * 3600e3,
+  ownMax: 30 * 24 * 3600e3 });
+/* R66 (T47; K3061 D3): the window the password asked again opens, in ms (BOB's, P17). */
+export const REAUTH_WINDOW_MS = 5 * 60e3;
+/* R69 (T47; K3060 D4): an administrator's reset link lives this many days. */
+export const RESET_LINK_DAYS = 7;
+/* R70 (T47; K3060 D10): a held sign-in token's length bounds, in characters. */
+export const SIGNIN_TOKEN_LENGTH = Object.freeze({ min: 20, max: 2000 });
 
 const HOUR_MS = 3600 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -160,6 +185,11 @@ export class Credentials {
     this.sql.exec(`UPDATE recovery_codes SET spent_at=? WHERE role=? AND spent_at IS NULL`, Credentials.#instant(at),
       `member:${memberId}`);
     this.#signinCleared(memberId, by, "revoked");
+    /* R69 (T47): their live reset links end with them */
+    this.sql.exec(`UPDATE password_reset_links SET ended_at=? WHERE member_id=? AND spent_at IS NULL AND ended_at IS NULL`,
+      stampSecond(), memberId);
+    /* R63: her run segments' credentials are revoked with her (a cleared sign-in revokes them too, above) */
+    this.#revokeRunCredentials(`principal=?`, [`member:${memberId}`], stampSecond(), Credentials.#memberOf(by));
     /* REC-159: the cascade is the revoking act's, so the keys it revokes name its actor. R21: a key it revokes takes
        the act's own time (the notice's `at`) as `status_at`; a key already revoked keeps its own. */
     this.sql.exec(
@@ -190,6 +220,8 @@ export class Credentials {
        row has no `expires_at`, since every mint records one, so a later boot finds none to give. */
     this.sql.exec(`UPDATE ai_credentials SET expires_at=? WHERE expires_at IS NULL`,
       stampSecond(Date.now() + AI_CREDENTIAL_EXPIRY_DAYS.default * DAY_MS));
+    /* R65: a session made before activity was recorded is counted active from this boot */
+    this.sql.exec(`UPDATE sessions SET last_active=? WHERE last_active IS NULL`, Date.now());
     this.#tx(() => this.#retiredReferences());
     this.#tx(() => this.#carryHistory());
     this.declareTables();
@@ -362,18 +394,17 @@ export class Credentials {
                      + "the operator's bearer and an unstamped call have no member behind them. Nothing was changed." };
     }
     /* END DEC-49 REGION is-password-change-own */
-    const s = this.#liveSession(session);
+    const s = this.#liveSession(session, { locked: true });
     if (!s) return Credentials.#notSignedIn();
+    if (s.state === "locked") return Credentials.sessionLockedRefusal();   /* R65: a locked session serves no act */
     const role = s.role;
     const gate = await this.#gate({ role, source, country, password: current });
     if (gate.paused) return gate.paused;
     if (typeof password !== "string" || password.length < 12)
       return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
-    const c = this.#one(`SELECT salt, hash, iterations FROM credentials WHERE role=?`, role);
-    const got = c ? await Credentials.#derive(String(current ?? ""), c.salt, c.iterations) : null;
-    if (!c) await Credentials.#payLoginCost(current);
+    const matches = await this.#passwordMatches(role, current);
     /* DEC-49 REGION is-current-password */
-    if (!c || !Credentials.#same(got, c.hash)) {
+    if (!matches) {
       this.#refusedAttempt(gate, country);
       const row = SIGN_IN_CHECKS.CURRENT_PASSWORD_WRONG;
       return { ok: false, reason: "CURRENT_PASSWORD_WRONG", code: "CURRENT_PASSWORD_WRONG", check: row.check,
@@ -440,8 +471,13 @@ export class Credentials {
      well as the sessions; that arm never touches a password, so it pays the same cost first and answers the same
      words, byte for byte. R38's window is asked first; each refusal counts toward it and toward R44's tally. R40: the
      session is stored as its token's digest and the token answered once. R41: the derived hash is compared in
-     constant time. */
-  async login({ role = ROOT, password, ttlSeconds = 43200, source = null, country = null } = {}) {
+     constant time. (T47; R67) `handle`, when given, names the role (`#roleByHandle`): a handle no member holds is a role
+     no credential is held under, the same refusal at the same cost. (R65) `device`, `own` or `shared` (anything else,
+     or none, `shared`), is recorded on the session; an `own` session ends `ownMax` after its sign-in at most, a `shared`
+     one `ttlSeconds` after (12 hours unless said), each sooner when idle (`#stateOf`). */
+  async login({ role = ROOT, handle = null, password, ttlSeconds = 43200, device = "shared", source = null,
+                country = null } = {}) {
+    if (typeof handle === "string" && handle !== "") role = this.#roleByHandle(handle);
     const gate = await this.#gate({ role, source, country, password });
     if (gate.paused) return gate.paused;
     const refuse = () => { this.#refusedAttempt(gate, country); return Credentials.#refused(); };
@@ -452,43 +488,143 @@ export class Credentials {
         return refuse();
       }
     }
-    const c = this.#one(`SELECT salt, hash, iterations FROM credentials WHERE role=?`, role);
-    if (!c) {
-      await Credentials.#payLoginCost(password);
-      return refuse();
-    }
-    const got = await Credentials.#derive(String(password ?? ""), c.salt, c.iterations);
-    if (!Credentials.#same(got, c.hash)) return refuse();
+    if (!(await this.#passwordMatches(role, password))) return refuse();
     const token = Credentials.#rand(32);
-    const expires = Date.now() + ttlSeconds * 1000;
-    this.sql.exec(`DELETE FROM sessions WHERE expires < ?`, Date.now());
-    this.sql.exec(`INSERT INTO sessions (token_sha, role, expires, created) VALUES (?,?,?,?)`,
-      Credentials.#tokenSha(token), role, expires, new Date().toISOString());
+    const now = Date.now();
+    const own = device === "own";
+    const expires = now + (own ? SESSION_LIMITS.ownMax : ttlSeconds * 1000);
+    this.sql.exec(`DELETE FROM sessions WHERE expires < ?`, now);
+    this.sql.exec(`INSERT INTO sessions (token_sha, role, expires, created, device, last_active) VALUES (?,?,?,?,?,?)`,
+      Credentials.#tokenSha(token), role, expires, new Date(now).toISOString(), own ? "own" : "shared", now);
     this.#succeeded(gate);
-    return { ok: true, role, token, expires };
+    return { ok: true, role, token, expires, device: own ? "own" : "shared" };
+  }
+
+  /* R67 (T47; DEC-201 `front`): the role a handle names: the founder's for `admin`, `member:<id>` for the member who
+     holds it (membership R119, whatever their status: R4 judges it), else `handle:<handle>`, a role under which no
+     credential is ever held, so that arm costs and answers as every other refusal. */
+  #roleByHandle(handle) {
+    if (handle === ROOT) return ROOT;
+    let m = null;
+    try { m = this.membership.memberByHandle(handle); } catch { m = null; }
+    return m && typeof m.member_id === "string" ? `member:${m.member_id}` : `handle:${handle}`;
+  }
+
+  /* R4, R41: whether `password` derives the hash stored for `role`, at one derivation's cost whether or not a
+     credential is held. */
+  async #passwordMatches(role, password) {
+    const c = this.#one(`SELECT salt, hash, iterations FROM credentials WHERE role=?`, role);
+    if (!c) { await Credentials.#payLoginCost(password); return false; }
+    return Credentials.#same(await Credentials.#derive(String(password ?? ""), c.salt, c.iterations), c.hash);
+  }
+
+  /* R65 (T47; K3061 D3): a session row's state at `now`: `ended` past its cap, or idle past its device's limit; `locked`
+     for an `own` one idle `ownLock` or more, until `ownEndAfterLock` after; else `live`. Idle is counted from its last
+     activity; a row with none recorded (written before the column, or outside this module) is counted active now, as
+     `migrate` counts it from the boot, and its first read records it. */
+  static #stateOf(s, now) {
+    const last = s.last_active !== null && s.last_active !== undefined && Number.isFinite(Number(s.last_active))
+      ? Number(s.last_active) : now;
+    const idle = now - last;
+    if (s.expires < now) return "ended";
+    if (s.device !== "own") return idle >= SESSION_LIMITS.sharedIdle ? "ended" : "live";
+    if (idle >= SESSION_LIMITS.ownLock + SESSION_LIMITS.ownEndAfterLock) return "ended";
+    return idle >= SESSION_LIMITS.ownLock ? "locked" : "live";
   }
 
   /* R5: what a session is, and what it may do (Membership Architecture v2 §5), resolved HERE at every read through
      membership's `sessionRights` (its R92) rather than cached on the session row: a capability change or a revocation
-     takes effect on the next request, not on the next login. R40: found by the digest of the token presented. */
-  session(token) {
+     takes effect on the next request, not on the next login. R40: found by the digest of the token presented.
+     (T47; R65) An ended session answers null and is ended with its grants; a locked one answers `locked: true`
+     holding no capability (it serves only `unlock` and sign-out, and a gate that missed the flag grants nothing); a
+     request not marked `background` is activity, counted only while the session is not locked. (R66) `reauthUntil`
+     is the end of the password's re-ask window while it is open, else null. */
+  session(token, { background = false } = {}) {
     if (typeof token !== "string" || token === "") return null;
     this.#settleSoon();
     const sha = Credentials.#tokenSha(token);
-    const s = this.#one(`SELECT role, expires FROM sessions WHERE token_sha=?`, sha);
+    const s = this.#one(`SELECT role, expires, created, device, last_active, reauth_until FROM sessions WHERE token_sha=?`,
+      sha);
     if (!s) return null;
-    if (s.expires < Date.now()) { this.sql.exec(`DELETE FROM sessions WHERE token_sha=?`, sha); return null; }
+    const now = Date.now();
+    const state = Credentials.#stateOf(s, now);
+    if (state === "ended") { this.#tx(() => this.#endSessions([sha])); return null; }
+    const locked = state === "locked";
+    if (!locked && background !== true) this.sql.exec(`UPDATE sessions SET last_active=? WHERE token_sha=?`, now, sha);
     const r = this.membership.sessionRights(s.role) || {};
-    return { role: s.role, expires: s.expires, capabilities: r.capabilities ?? [], administer: r.administer === true,
-             member: r.member ?? null, handle: r.handle ?? null, rootOfTrust: r.rootOfTrust === true };
+    return { role: s.role, expires: s.expires, capabilities: locked ? [] : r.capabilities ?? [],
+             administer: !locked && r.administer === true, member: r.member ?? null, handle: r.handle ?? null,
+             rootOfTrust: !locked && r.rootOfTrust === true, device: s.device === "own" ? "own" : "shared", locked,
+             reauthUntil: !locked && Number(s.reauth_until) > now ? Number(s.reauth_until) : null };
   }
 
-  /* R39 (F14): the session a token names, while it is live, as its stored row; null for an unknown, expired or ended
-     one. */
-  #liveSession(token) {
+  /* R39 (F14): the session a token names, while it is live, as its stored row with its `state` (R65); null for an
+     unknown, expired or ended one, and for a locked one unless `locked` admits it (sign-out and `unlock`). */
+  #liveSession(token, { locked = false } = {}) {
     if (typeof token !== "string" || token === "") return null;
-    const s = this.#one(`SELECT token_sha, role, expires FROM sessions WHERE token_sha=?`, Credentials.#tokenSha(token));
-    return s && s.expires >= Date.now() ? s : null;
+    const s = this.#one(`SELECT token_sha, role, expires, created, device, last_active, reauth_until FROM sessions
+                         WHERE token_sha=?`, Credentials.#tokenSha(token));
+    if (!s) return null;
+    const state = Credentials.#stateOf(s, Date.now());
+    return state === "live" || (state === "locked" && locked) ? { ...s, state } : null;
+  }
+
+  /* R65 (T47; K3061 D3): SESSION_LOCKED, minted here alone: an act or read under a locked session, which serves only
+     `unlock` and sign-out. An in-plane answer `admission` relays (its T47-77), and this module's own acts answer. */
+  static sessionLockedRefusal() {
+    /* DEC-49 REGION is-session-unlocked */
+    return Credentials.#row(ACCOUNT_CHECKS, "SESSION_LOCKED", "this session is locked after a while without use: only "
+      + "unlocking it with the password, or signing out, is served. Nothing was changed.");
+    /* END DEC-49 REGION is-session-unlocked */
+  }
+
+  /* R65 `unlock` and R66 `reauth`: the password of the session's own role asked again, under R38's window and compared
+     as R41 states; a wrong one is SIGN_IN_REFUSED, leaving the session as it was. On success, in one act, the lock is
+     cleared (activity now) and, for `reauth`, the re-ask window opens for REAUTH_WINDOW_MS. */
+  async #passwordAgain({ token, password, source, country }, reauth) {
+    const s = this.#liveSession(token, { locked: true });
+    if (!s) return Credentials.#notSignedIn();
+    const gate = await this.#gate({ role: s.role, source, country, password });
+    if (gate.paused) return gate.paused;
+    if (!(await this.#passwordMatches(s.role, password))) {
+      this.#refusedAttempt(gate, country);
+      return Credentials.#refused();
+    }
+    const now = Date.now();
+    const done = this.#tx(() => {
+      if (!this.#liveSession(token, { locked: true })) return null;
+      this.sql.exec(`UPDATE sessions SET last_active=?${reauth ? ", reauth_until=?" : ""} WHERE token_sha=?`, now,
+        ...(reauth ? [now + REAUTH_WINDOW_MS] : []), s.token_sha);
+      return { ok: true, role: s.role, locked: false, ...(reauth ? { reauthUntil: now + REAUTH_WINDOW_MS } : {}) };
+    });
+    if (!done) return Credentials.#notSignedIn();
+    this.#succeeded(gate);
+    return done;
+  }
+
+  /* R65: clears a locked session's lock with its password (`op=unlock`, the session the door authenticated). */
+  unlock({ token = null, password = null, source = null, country = null } = {}) {
+    return this.#passwordAgain({ token, password, source, country }, false);
+  }
+
+  /* R66: opens the password's re-ask window on the session (`op=reauth`); a locked session is unlocked by it too. */
+  reauth({ token = null, password = null, source = null, country = null } = {}) {
+    return this.#passwordAgain({ token, password, source, country }, true);
+  }
+
+  /* R66 (T47; K3061 D3): REAUTH_DUE, minted here alone (K231): an in-plane read, reached by no route, that the gate
+     serving each weighty act (signing or publishing a case, changing administrators, connecting Claude) relays: null
+     while the session `token` names is live, unlocked and inside its re-ask window, else the refusal. Writes nothing;
+     never throws. */
+  reauthDue({ token = null } = {}) {
+    try {
+      const s = this.#liveSession(token);
+      if (s && Number(s.reauth_until) > Date.now()) return null;
+    } catch { /* due */ }
+    /* DEC-49 REGION is-reauth-window */
+    return Credentials.#row(ACCOUNT_CHECKS, "REAUTH_DUE", "this act asks for the password again, and it was not given "
+      + `in the last ${REAUTH_WINDOW_MS / 60e3} minutes. Nothing was changed.`);
+    /* END DEC-49 REGION is-reauth-window */
   }
 
   static #notSignedIn() {
@@ -511,7 +647,7 @@ export class Credentials {
 
   /* R39: ends the session `token` names. */
   signOut({ token = null } = {}) {
-    const s = this.#liveSession(token);
+    const s = this.#liveSession(token, { locked: true });
     if (!s) return Credentials.#notSignedIn();
     this.#tx(() => this.#endSessions([s.token_sha]));
     return { ok: true, ended: 1 };
@@ -520,7 +656,7 @@ export class Credentials {
   /* R39: ends every session held under the role of the session `token` names, that one included; `ended` counts the
      live ones. Another role's sessions are not touched. */
   signOutEverywhere({ token = null } = {}) {
-    const s = this.#liveSession(token);
+    const s = this.#liveSession(token, { locked: true });
     if (!s) return Credentials.#notSignedIn();
     const now = Date.now();
     const all = this.#rows(`SELECT token_sha, expires FROM sessions WHERE role=?`, s.role);
@@ -625,6 +761,12 @@ export class Credentials {
         this.sql.exec(`DELETE FROM security_pending WHERE role=?`, roleKey);
       });
     } catch { /* dropped */ }
+  }
+
+  /* R22, R46, R70 (T47; K3069, C5): whether `id` holds as an active member: an active member of the roster, or the
+     founder (`admin`) once the instance is claimed (R17), who holds no member row. */
+  #holderActive(id) {
+    return id === ROOT ? this.claimed() : this.#memberFacts(id)?.status === "active";
   }
 
   /* membership R68: a member's standing, or null. Never throws here: an unreadable answer is no member. */
@@ -1059,7 +1201,81 @@ export class Credentials {
              confinedTo: row.confined_to || null,
              /* R42: when it expires, and whether it has, from `expiresAt` on; never renewed. */
              expiresAt: row.expires_at || null,
-             expired: typeof row.expires_at === "string" && row.expires_at !== "" && Date.now() >= Date.parse(row.expires_at) };
+             expired: typeof row.expires_at === "string" && row.expires_at !== "" && Date.now() >= Date.parse(row.expires_at),
+             /* R63: the run a segment's credential is bound to, null for every credential R12 mints */
+             run: row.run || null };
+  }
+
+  /* ===== A RUN SEGMENT'S CREDENTIAL (R63; T47, N955; K2976, K2999, K3027, K3033) =====
+   *
+   * The `ai` credential one segment of a member's own run is dispatched under, minted HERE, in the plane, at her act
+   * (`ai-runs`' dispatch), so no credential is ever minted by or held in her page. In-plane only: no route reaches it
+   * and no viewer is answered. Member-scoped (its principal the member, R14), recorded as R12 records one (`minted_by`
+   * the member, only its token's SHA-256 kept), with the run on its row; its writes a non-empty list of AI_RUN_WRITES;
+   * it expires AI_RUN_CREDENTIAL_TTL_SECONDS after minting, never renewed. At most one is live per run: a new mint
+   * revokes every earlier one of the same run, and the run's end (`aiRunCredentialsEnd`), the member's revocation (R16)
+   * and her sign-in's disconnection (R43) revoke them, changing nothing else. The token has the shape the gate reads
+   * (`aik-` and 64 hexadecimal characters, admission's AI_TOKEN_SHAPE) and is answered once, never logged or stored. */
+  aiRunCredentialMint({ member = null, run = null, writes = null } = {}) {
+    const id = Credentials.#memberOf(member);
+    if (id === null || isMachineIdentity(member) || isMachineIdentity(id) || this.#memberFacts(id)?.status !== "active")
+      return Credentials.#row(ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "a run's credential is minted only for an "
+        + "active member's own run. Nothing was minted.", { member: id });
+    const malformed = Credentials.#runCredentialFault(run, writes);
+    if (malformed) return malformed;
+    /* R35 (K231): the one keep-away read, asked with no use or project (R63: `aiKeptAway()`), as R27 is refused */
+    const away = this.aiKeptAway();
+    if (away) return away;
+    const token = `aik-${Credentials.#rand(32)}`;
+    const tokenId = `run-${Credentials.#rand(12)}`;
+    const nowMs = Date.now();
+    const now = stampSecond(nowMs);
+    const expiresAt = stampSecond(nowMs + AI_RUN_CREDENTIAL_TTL_SECONDS * 1000);
+    const declared = AI_RUN_WRITES.filter((w) => writes.includes(w));
+    this.#tx(() => {
+      this.#revokeRunCredentials(`run=?`, [run], now, id);   /* the next segment: every earlier one of this run */
+      this.sql.exec(
+        `INSERT INTO ai_credentials (token_id, secret_sha, principal_kind, principal, task_scope, scope_writes, scope_note,
+           minted_by, minted_at, confined_to, expires_at, run)
+         VALUES (?, ?, 'member', ?, 'run', ?, ?, ?, ?, NULL, ?, ?)`,
+        tokenId, sha256HexSync(token), `member:${id}`, JSON.stringify(declared),
+        "minted by your group's Civicsmith for one segment of your run", id, now, expiresAt, run);
+    });
+    return { ok: true, tokenId, token, run, writes: declared, expiresAt };
+  }
+
+  /* R63: AI_RUN_CREDENTIAL_MALFORMED, minted here alone, naming what: `run` a non-empty string, `writes` a non-empty
+     list of AI_RUN_WRITES entries. */
+  static #runCredentialFault(run, writes) {
+    const what = typeof run !== "string" || run.trim() === "" ? "run"
+      : !Array.isArray(writes) || !writes.length || !writes.every((w) => typeof w === "string" && AI_RUN_WRITES.includes(w))
+        ? "writes" : null;
+    if (what === null) return null;
+    /* DEC-49 REGION is-ai-run-credential-shape */
+    return Credentials.#row(AI_CREDENTIAL_CHECKS, "AI_RUN_CREDENTIAL_MALFORMED", what === "run"
+      ? "a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted."
+      : `a run's credential holds a non-empty list of the runner's writes, each one of ${AI_RUN_WRITES.join(", ")}, and `
+        + "this was not one. Nothing was minted.", { what });
+    /* END DEC-49 REGION is-ai-run-credential-shape */
+  }
+
+  /* R63: the live run credentials `where` names revoked at `at`, `by` recorded (null when no one's act ends them);
+     every other credential, and everything else, unchanged. Answers how many. Inside the caller's act. */
+  #revokeRunCredentials(where, args, at, by = null) {
+    const live = this.#rows(`SELECT token_id FROM ai_credentials WHERE run IS NOT NULL AND revoked_at IS NULL AND ${where}`,
+      ...args);
+    for (const r of live)
+      this.sql.exec(`UPDATE ai_credentials SET revoked_at=?, revoked_by=? WHERE token_id=?`, at, by, r.token_id);
+    return live.length;
+  }
+
+  /* R63: the run's end, the in-plane call `ai-runs` makes when the run leaves `running` (its R14): every credential of
+     `run` revoked. Answers `{ok: true, revoked}`; never throws (a store that cannot be written answers `ok: false`). */
+  aiRunCredentialsEnd({ run = null } = {}) {
+    if (typeof run !== "string" || run.trim() === "") return { ok: true, revoked: 0 };
+    try {
+      return { ok: true, revoked: this.#tx(() => this.#revokeRunCredentials(`run=?`, [run], stampSecond())) };
+    } catch { return { ok: false, revoked: 0, unreadable: true }; }
   }
 
   /* ===== EACH MEMBER'S OWN CLAUDE ACCOUNT (R22–R25; T33-20, K1502, K1503) =====
@@ -1094,7 +1310,7 @@ export class Credentials {
     if (id === null || Credentials.#memberOf(by) !== id)
       return Credentials.#notYours("a member's Claude account is acted on only by that member; another member, an "
         + "administrator or the founder cannot. Nothing was written.");
-    if (this.#memberFacts(id)?.status !== "active")
+    if (!this.#holderActive(id))   /* (T47; R70) the claimed founder holds as a member does */
       return refuse("ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member holds a Claude account reference. Nothing was "
         + "written.");
     /* END DEC-49 REGION is-account-own-act */
@@ -1300,6 +1516,11 @@ export class Credentials {
     /* END DEC-49 REGION is-account-kind */
     const empty = Credentials.#noSecret(secret);
     if (empty) return empty;
+    /* R22 (T47; N981, K231): an API key is held only once the disclosure of what connecting means is recorded for
+       her, asked after every refusal above, through R64's one site; `by` is the door's stamp, the form the disclosure
+       is recorded under (control-plane R65 asks it so) */
+    const due = kind === "apikey" ? this.disclosureDue({ member: by }) : null;
+    if (due) return due;
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
     const id = Credentials.#memberOf(member);
@@ -1313,6 +1534,44 @@ export class Credentials {
       this.#change(`member:${id}`, "key_set", { account: "reference", kind }, by, null, setAt);   /* R61 */
     });
     return { ok: true, kind, set_at: setAt };
+  }
+
+  /* ===== THE DISCLOSURE-FIRST ORDER (R64; T47, N981; K231, K3027, K3030) =====
+   *
+   * Before a member's own account is connected she is shown what connecting means, and `instance-setup` (its R54)
+   * records that it was shown. That record is a later module's, so this module cannot read it: one later module
+   * (instance-setup, or the composition root on its behalf) registers, once at start, its `disclosureOf`, and
+   * `disclosureDue` asks it. This is the one site that mints DISCLOSURE_DUE (K231): R22 refuses through it, and
+   * control-plane R65's refusal of a sign-in's `start` answers through it. Fail closed: anything but `shown: true`, a
+   * throw, or an answer that is not one (a promise among them) is the refusal. With none registered nothing is asked
+   * and nothing is held (a module test with no instance-setup). */
+  #disclosureSource = null;   // {module, fn}
+
+  /* R64: one registration, whoever makes it; its refusals are membership's R81, naming the holder. */
+  registerDisclosureRead(module, fn) {
+    const refused = listenerRefusal(this.#disclosureSource, module, fn);
+    if (refused) return refused;
+    this.#disclosureSource = { module, fn };
+    return { ok: true, module };
+  }
+
+  /* R64: an in-plane read, reached by no route and answered to no viewer: null when the registered read answers
+     `shown: true` for `member` (or none is registered), else the one DISCLOSURE_DUE refusal. Writes nothing; never
+     throws. */
+  disclosureDue({ member = null } = {}) {
+    const source = this.#disclosureSource;
+    if (source === null) return null;
+    let shown = false;
+    try {
+      const a = source.fn({ member });
+      shown = !!a && typeof a === "object" && typeof a.then !== "function" && a.shown === true;
+    } catch { shown = false; }
+    if (shown) return null;
+    /* DEC-49 REGION is-disclosure-shown */
+    return Credentials.#row(ACCOUNT_CHECKS, "DISCLOSURE_DUE", "you have not yet been shown what connecting your own "
+      + "Claude account means, so nothing was connected or sent. Read it, then try again.",
+      { member: typeof member === "string" ? member : null });
+    /* END DEC-49 REGION is-disclosure-shown */
   }
 
   /* R22, R25, R32: the member removes their reference, which turns both switches off and ends at once every standing
@@ -1339,14 +1598,20 @@ export class Credentials {
       return Credentials.#notYours("a member's Claude account is seen only by that "
         + "member. Nothing was read.");
     const r = this.#reference(id, `kind, set_at, ${Credentials.#USES_COLUMNS}`);
-    const sub = this.#one(`SELECT since, ${Credentials.#USES_COLUMNS} FROM subscription_connections WHERE member_id=?`, id);
+    const row = this.#one(`SELECT since, sealed, valid_until, refused_at, ${Credentials.#USES_COLUMNS}
+                           FROM subscription_connections WHERE member_id=?`, id);
+    const sub = row && row.sealed ? row : null;   /* R70: connected only while a token is held */
     return { ok: true, held: !!r, kind: r ? r.kind : null, set_at: r ? r.set_at : null,
              suggestions: !!(r && r.suggestions), standing: !!(r && r.standing),
              /* R55 (T40): every switch of the reference, null when none is held */
              uses: r ? Credentials.#usesOf(r) : null,
              /* R43: whether the member is connected through their own subscription, and since when; never a login;
-                (T40, R55) the sign-in's own switches, null when not connected */
-             subscription: { connected: !!sub, since: sub ? sub.since : null, uses: sub ? Credentials.#usesOf(sub) : null } };
+                (T40, R55) the sign-in's own switches, null when not connected; (T47; R70) whether its token is held,
+                until when the binary said it lasts, and when Anthropic refused it, each only when known */
+             subscription: { connected: !!sub, since: sub ? sub.since : null, held: !!sub,
+                             ...(sub && sub.valid_until ? { valid_until: sub.valid_until } : {}),
+                             ...(row && row.refused_at && !sub ? { refused_at: row.refused_at } : {}),
+                             uses: sub ? Credentials.#usesOf(sub) : null } };
   }
 
   /* ===== EACH ACCOUNT'S CHANGES (R61; T41, DEC-188 (1)) =====
@@ -1421,12 +1686,19 @@ export class Credentials {
       /* R32 (T41): a standing question's grant her sign-in served ends with it (none when a reference of hers served it) */
       if (!this.#reference(id, "member_id")) this.sql.exec(`DELETE FROM ai_grants WHERE member_id=? AND kind='standing'`, id);
       this.#change(`member:${id}`, "removed", { account: "signin", why }, by);
+      /* R63: her run segments' credentials end with her sign-in */
+      this.#revokeRunCredentials(`principal=?`, [`member:${id}`], stampSecond(), Credentials.#memberOf(by));
     }
+    this.#projectSigninsCleared(id, by);
+    return held;
+  }
+
+  /* R54, R71 (4): every project's sign-in account that is `id`'s, cleared with her sign-in; each a change (R61). */
+  #projectSigninsCleared(id, by) {
     for (const p of this.#rows(`SELECT project_id FROM project_accounts WHERE kind='signin' AND member_id=?`, id)) {
       this.sql.exec(`DELETE FROM project_accounts WHERE project_id=?`, p.project_id);
       this.#change(Credentials.#ownerOfProject(p.project_id), "removed", { kind: "signin", member: id, why: "signin_cleared" }, by);
     }
-    return held;
   }
 
   /* R60, R61: the owners of the account `owner` names are those R55 lets set its switches; anyone else is refused as
@@ -1513,7 +1785,8 @@ export class Credentials {
     }
     const id = Credentials.#memberOf(owner);
     const ref = this.#reference(id, Credentials.#USES_COLUMNS);
-    const sub = this.#one(`SELECT ${Credentials.#USES_COLUMNS} FROM subscription_connections WHERE member_id=?`, id);
+    const sub = this.#one(`SELECT ${Credentials.#USES_COLUMNS} FROM subscription_connections WHERE member_id=?
+                           AND sealed IS NOT NULL`, id);
     const one = (r) => ({ held: !!r, uses: r ? Credentials.#usesOf(r) : null });
     return { ok: true, owner, held: !!(ref || sub), uses: ref ? Credentials.#usesOf(ref) : sub ? Credentials.#usesOf(sub) : null,
              accounts: { reference: one(ref), signin: one(sub) } };
@@ -1544,12 +1817,12 @@ export class Credentials {
 
   /* ===== A CONNECTED SUBSCRIPTION (R43; N678's share, DEC-156; K1819, K1922) =====
    *
-   * A member's Claude subscription is connected through the hosted, unmodified Claude Code's own sign-in, and that
-   * sign-in lives where the Claude Code binary wrote it, in the member's own agent-runner container. THIS MODULE HOLDS
-   * THE FACT ONLY: that the member is connected, and since when. It never takes the login, the code from Anthropic's
-   * page, a token, or a digest of any of them; a call carrying anything but the member is refused, recording nothing.
-   * Since T38 (N785, K2200) `accountFor` (R35) reads it: a member with no reference of their own who is connected is
-   * served by their own sign-in, `{kind: "signin", level: "member", member}`, which carries no secret. */
+   * A member's Claude subscription is connected through the hosted, unmodified Claude Code's own sign-in. R43's call
+   * records the fact alone and never takes the login, the code from Anthropic's page, a token, or a digest of any of
+   * them; a call carrying anything but the member is refused, recording nothing. (T47; R70, K3060 D10) The token the
+   * sign-in prints is held here, sealed, by `subscriptionTokenHold` (below), and a fact with no token held answers not
+   * connected. `accountFor` (R35) reads it: a member with no reference of their own whose sign-in is held is served by
+   * it, `{kind: "signin", level: "member", member, key}`. */
 
   /* R43: an in-plane call, reached by no route and answered to no viewer. */
   subscriptionConnected(args = {}) {
@@ -1561,10 +1834,10 @@ export class Credentials {
     /* END DEC-49 REGION is-subscription-fact */
     const member = args?.member ?? null;
     const id = Credentials.#memberOf(member);
-    if (id === null || isMachineIdentity(member) || this.#memberFacts(id)?.status !== "active")
+    if (id === null || isMachineIdentity(member) || !this.#holderActive(id))
       return Credentials.#row(ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member is connected through "
         + "their subscription. Nothing was recorded.");
-    if (!this.#connected(id))
+    if (!this.#one(`SELECT member_id FROM subscription_connections WHERE member_id=?`, id))
       this.#tx(() => {
         const since = stampSecond();
         this.sql.exec(`INSERT OR IGNORE INTO subscription_connections (member_id, since) VALUES (?,?)`, id, since);
@@ -1573,8 +1846,97 @@ export class Credentials {
     return { ok: true, member: id, since: this.#one(`SELECT since FROM subscription_connections WHERE member_id=?`, id).since };
   }
 
-  /* R43, R35: whether the member is connected through their subscription (the fact R35 reads). */
-  #connected(id) { return !!this.#one(`SELECT member_id FROM subscription_connections WHERE member_id=?`, id); }
+  /* R43, R35: whether the member is connected through their subscription (the fact R35 reads); (T47; R70) only while
+     its token is held: a fact with none answers not connected. */
+  #connected(id) {
+    return !!this.#one(`SELECT member_id FROM subscription_connections WHERE member_id=? AND sealed IS NOT NULL`, id);
+  }
+
+  /* ===== THE HELD SIGN-IN TOKEN (R70; T47, Bob K3060 D10, K3061 D10: "It IS allowed"; K3068) =====
+   *
+   * Replacing K1819's "held only on the container's disk": the token Claude Code's own `setup-token` prints at a
+   * member's sign-in (agent-runner R27) is held HERE, sealed under the member as a reference is (R23), until Anthropic
+   * refuses it or it is dropped here (her disconnection, R43; her revocation, R16). It is handed only to the one call
+   * it serves (`accountFor`'s `key`), and never logged, answered to a viewer, put in a URL or kept as a digest. The
+   * founder, once claimed, holds one as a member does (C5, for Bob's own testing, D11). */
+
+  /* R70: an in-plane call, reached by no route: the door's, after a sign-in's `code` answer. */
+  async subscriptionTokenHold({ member = null, token = null, validFor = null } = {}) {
+    const id = Credentials.#memberOf(member);
+    if (id === null || isMachineIdentity(member) || isMachineIdentity(id) || !this.#holderActive(id))
+      return Credentials.#row(ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member, or the founder, "
+        + "holds a sign-in. Nothing was recorded.");
+    /* DEC-49 REGION is-signin-token-shape */
+    if (typeof token !== "string" || token.length < SIGNIN_TOKEN_LENGTH.min || token.length > SIGNIN_TOKEN_LENGTH.max)
+      return Credentials.#row(ACCOUNT_CHECKS, "SUBSCRIPTION_TOKEN_MALFORMED", `a sign-in's token is ${SIGNIN_TOKEN_LENGTH.min} `
+        + `to ${SIGNIN_TOKEN_LENGTH.max} characters, and this was not one. Nothing was recorded.`);
+    /* END DEC-49 REGION is-signin-token-shape */
+    const unsealable = this.#seal();
+    if (unsealable) return unsealable;
+    const { sealed, iv } = await this.#encrypt(`member:${id}`, "signin", token);
+    const now = Date.now();
+    const since = stampSecond(now);
+    const validUntil = Credentials.#validUntil(validFor, now);
+    this.#tx(() => {
+      this.sql.exec(`INSERT INTO subscription_connections (member_id, since, sealed, iv, valid_until) VALUES (?,?,?,?,?)
+                     ON CONFLICT(member_id) DO UPDATE SET since=excluded.since, sealed=excluded.sealed, iv=excluded.iv,
+                       valid_until=excluded.valid_until, refused_at=NULL`, id, since, sealed, iv, validUntil);
+      this.#change(`member:${id}`, "signin_set", { account: "signin" }, id, null, since);   /* R61, never the token */
+    });
+    return { ok: true, since };
+  }
+
+  /* R70: the instant `validFor` reaches from `now` when the binary stated a whole number of days or years ("1 year",
+     "30 days"; a bare whole number is days), else null. */
+  static #validUntil(validFor, now) {
+    const m = typeof validFor === "number" ? [null, String(validFor), "day"]
+      : typeof validFor === "string" ? /^\s*(\d{1,4})\s*(day|year)s?\s*$/i.exec(validFor) : null;
+    if (!m || !Number.isSafeInteger(Number(m[1])) || Number(m[1]) < 1) return null;
+    const n = Number(m[1]);
+    if (m[2].toLowerCase() === "day") return stampSecond(now + n * DAY_MS);
+    const d = new Date(now);
+    d.setUTCFullYear(d.getUTCFullYear() + n);
+    return stampSecond(d.getTime());
+  }
+
+  /* R70: an in-plane call, when an act on her token was answered SIGNIN_TOKEN_REFUSED: the token is dropped and
+     `refused_at` recorded (the fact stays, answering not connected), a change of her account (R61), and (R71 (4)) her
+     projects' sign-in accounts cleared; her own switches stay for her next sign-in. Answers `{ok: true, dropped}`; never throws. */
+  subscriptionTokenRefused({ member = null } = {}) {
+    try {
+      const id = Credentials.#memberOf(member);
+      if (id === null || !this.#connected(id)) return { ok: true, dropped: false };
+      const at = stampSecond();
+      this.#tx(() => {
+        this.sql.exec(`UPDATE subscription_connections SET sealed=NULL, iv=NULL, valid_until=NULL, refused_at=? WHERE member_id=?`,
+          at, id);
+        this.#change(`member:${id}`, "removed", { account: "signin", why: "refused" }, null, null, at);
+        this.#projectSigninsCleared(id, null);   /* R71 (4) */
+      });
+      return { ok: true, dropped: true };
+    } catch { return { ok: false, dropped: false, unreadable: true }; }
+  }
+
+  /* R70: a held sign-in's token, unsealed for the one call it serves, `{key}`; or `{refusal}`: SIGNIN_NOT_HELD with none
+     held, ACCOUNT_SEAL_UNAVAILABLE when it does not open. */
+  async #signinKey(id) {
+    const r = this.#one(`SELECT sealed, iv FROM subscription_connections WHERE member_id=? AND sealed IS NOT NULL`, id);
+    if (!r) return { refusal: Credentials.#signinNotHeld(id) };
+    const unsealable = this.#seal();
+    if (unsealable) return { refusal: unsealable };
+    const key = await this.#decrypt(`member:${id}`, "signin", r.sealed, r.iv);
+    return key === null ? { refusal: Credentials.#sealRefusal("the sign-in does not open under the seal secret of your "
+      + "group's Civicsmith, which has changed; its member signs in again. Nothing was used.") } : { key };
+  }
+
+  /* R70: SIGNIN_NOT_HELD, minted here alone: a sign-in account chosen whose token is not held. */
+  static #signinNotHeld(member) {
+    /* DEC-49 REGION is-signin-held */
+    return Credentials.#row(ACCOUNT_CHECKS, "SIGNIN_NOT_HELD", "the Claude sign-in that serves this act is not held: "
+      + "it was never connected since sign-ins are held, or Anthropic no longer accepts it. Its member signs in again. "
+      + "Nothing was used.", { member });
+    /* END DEC-49 REGION is-signin-held */
+  }
 
   /* R43: the member's own act (R22's refusals) clears it; so does their revocation (R16). */
   subscriptionDisconnect({ member = null, by = null } = {}) {
@@ -1677,13 +2039,16 @@ export class Credentials {
     if (unsealable) return unsealable;
     const { sealed, iv } = await this.#encrypt(Credentials.#GROUP_KEY_OWNER, "apikey", key);
     const setAt = stampSecond();
-    const first = !this.#groupKeyFacts().held;
-    this.sql.exec(
-      `INSERT INTO group_key (id, sealed, iv, is_on, set_by, set_at) VALUES (1,?,?,0,?,?)
-       ON CONFLICT(id) DO UPDATE SET sealed=excluded.sealed, iv=excluded.iv, set_by=excluded.set_by,
-         set_at=excluded.set_at, is_on=CASE WHEN ? THEN 0 ELSE group_key.is_on END`,
-      sealed, iv, Credentials.#memberOf(by), setAt, first ? 1 : 0);
-    this.#groupKeyAct("set", null, by);
+    /* the key and its record (R33, R61) in one act */
+    this.#tx(() => {
+      const first = !this.#groupKeyFacts().held;
+      this.sql.exec(
+        `INSERT INTO group_key (id, sealed, iv, is_on, set_by, set_at) VALUES (1,?,?,0,?,?)
+         ON CONFLICT(id) DO UPDATE SET sealed=excluded.sealed, iv=excluded.iv, set_by=excluded.set_by,
+           set_at=excluded.set_at, is_on=CASE WHEN ? THEN 0 ELSE group_key.is_on END`,
+        sealed, iv, Credentials.#memberOf(by), setAt, first ? 1 : 0);
+      this.#groupKeyAct("set", null, by);
+    });
     return { ok: true, set_at: setAt };
   }
 
@@ -1694,8 +2059,10 @@ export class Credentials {
     if (bar) return bar;
     const held = this.#groupKeyFacts().held;
     const off = USE_SWITCHES.map((k) => `${Credentials.#USE_COLUMN[k]}=${k === "explore" ? "'no'" : "0"}`).join(", ");
-    this.sql.exec(`UPDATE group_key SET sealed=NULL, iv=NULL, is_on=0, set_by=NULL, set_at=NULL, ${off} WHERE id=1`);
-    this.#groupKeyAct("remove", null, by);
+    this.#tx(() => {
+      this.sql.exec(`UPDATE group_key SET sealed=NULL, iv=NULL, is_on=0, set_by=NULL, set_at=NULL, ${off} WHERE id=1`);
+      this.#groupKeyAct("remove", null, by);
+    });
     return { ok: true, removed: held };
   }
 
@@ -1704,8 +2071,10 @@ export class Credentials {
     const bar = this.#adminBar(by, "switching the group's Anthropic API key");
     if (bar) return bar;
     const v = on === true ? 1 : 0;
-    this.sql.exec(`INSERT INTO group_key (id, is_on) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET is_on=excluded.is_on`, v);
-    this.#groupKeyAct("switch", v ? "on" : "off", by);
+    this.#tx(() => {
+      this.sql.exec(`INSERT INTO group_key (id, is_on) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET is_on=excluded.is_on`, v);
+      this.#groupKeyAct("switch", v ? "on" : "off", by);
+    });
     return { ok: true, on: this.#groupKeyFacts().on };
   }
 
@@ -1771,7 +2140,8 @@ export class Credentials {
   #servingAccount(id) {
     const own = this.#reference(id, "suggestions, standing");
     if (own) return { level: "member", suggestions: !!own.suggestions, standing: !!own.standing };
-    const sub = this.#one(`SELECT suggestions, standing FROM subscription_connections WHERE member_id=?`, id);
+    const sub = this.#one(`SELECT suggestions, standing FROM subscription_connections WHERE member_id=?
+                           AND sealed IS NOT NULL`, id);
     if (sub) return { level: "member", signin: true, suggestions: !!sub.suggestions, standing: !!sub.standing };
     const g = this.#groupKeyFacts();
     return g.on ? { level: "group", suggestions: g.suggestions, standing: g.standing } : null;
@@ -1779,13 +2149,13 @@ export class Credentials {
 
   /* R35: the account that serves a member's act: their own reference when held, `{kind, level: "member", key}`,
      whatever the group key's state (DEC-172 (1), (5)); else (T38; N785, K2200), when they are connected through their
-     subscription (R43), their own sign-in, `{kind: "signin", level: "member", member}`, carrying no secret (agent-runner
-     R2 opens that member's sign-in); else the group key when held and on, `{kind: "apikey", level: "group", key}`, for
+     subscription (R43), their own sign-in, `{kind: "signin", level: "member", member, key}`, `key` the held token (T47;
+     R70); else the group key when held and on, `{kind: "apikey", level: "group", key}`, for
      an active member who has read its notice (R36); else NO_ACCOUNT. While the group keeps its
      material away (R51), every account is refused AI_KEPT_AWAY first, before any is read. `act` as R24's. Writes
      nothing; called only by the modules that run the assistant. (T40; R56) `act` takes `project`, and the cascade
      begins with that project's account, `{kind: "apikey", level: "project", project, key}` or `{kind: "signin", level:
-     "project", project, member}`; the account the cascade chooses is the one used (#resolve). */
+     "project", project, member, key}`; the account the cascade chooses is the one used (#resolve). */
   async accountFor({ member = null, act = null } = {}) {
     const away = this.aiKeptAway({ use: act && typeof act === "object" ? act.kind : null });
     if (away) return away;
@@ -1795,9 +2165,12 @@ export class Credentials {
         + "Nothing was used.");
     const r = this.#resolve(id, act.kind, Credentials.#projectOf(act));
     if (r.refusal) return r.refusal;
-    if (r.kind === "signin")
-      return r.level === "project" ? { ok: true, kind: "signin", level: "project", project: r.project, member: r.member }
-                                   : { ok: true, kind: "signin", level: "member", member: id };
+    if (r.kind === "signin") {   /* (T47; R70) a held sign-in, its token as `key` for the one call it serves */
+      const k = await this.#signinKey(r.level === "project" ? r.member : id);
+      if (k.refusal) return k.refusal;
+      return r.level === "project" ? { ok: true, kind: "signin", level: "project", project: r.project, member: r.member, key: k.key }
+                                   : { ok: true, kind: "signin", level: "member", member: id, key: k.key };
+    }
     if (r.level === "member") {
       const own = await this.#ownReference(id);
       if (!own) return this.#noAccount(id);
@@ -1842,7 +2215,9 @@ export class Credentials {
       const p = this.#projectAccountRow(project);
       if (p && p.is_on && this.#serves(p)) {
         if (!Credentials.#usesOf(p)[use]) return { refusal: Credentials.#switchedOff("project", use, project) };
-        if (p.kind === "signin") return { level: "project", kind: "signin", project, member: p.member_id };
+        if (p.kind === "signin")   /* (T47; R70) chosen, so its token not held is SIGNIN_NOT_HELD, never the next */
+          return this.#connected(p.member_id) ? { level: "project", kind: "signin", project, member: p.member_id }
+            : { refusal: Credentials.#signinNotHeld(p.member_id) };
         if (this.#memberFacts(id)?.status !== "active")
           return { refusal: Credentials.#row(ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "a project's key serves only "
             + "acts of active members. Nothing was used.") };
@@ -1854,7 +2229,8 @@ export class Credentials {
     const own = this.#reference(id, `kind, ${Credentials.#USES_COLUMNS}`);
     if (own) return Credentials.#usesOf(own)[use] ? { level: "member", kind: own.kind }
                                                     : { refusal: Credentials.#switchedOff("own", use) };
-    const sub = this.#one(`SELECT ${Credentials.#USES_COLUMNS} FROM subscription_connections WHERE member_id=?`, id);
+    const sub = this.#one(`SELECT ${Credentials.#USES_COLUMNS} FROM subscription_connections WHERE member_id=?
+                           AND sealed IS NOT NULL`, id);
     if (sub) return Credentials.#usesOf(sub)[use] ? { level: "member", kind: "signin", member: id }
                                                     : { refusal: Credentials.#switchedOff("own", use) };
     const g = this.#groupKeyRow();
@@ -2348,11 +2724,12 @@ export class Credentials {
     const away = this.aiKeptAway({ use: "ask" });   /* R27 mints only for a member R35 serves: none while kept away (DEC-172) */
     if (away) return away;
     const id = Credentials.#memberOf(member);
-    const sessionSha = typeof session === "string" && session !== "" ? Credentials.#tokenSha(session) : null;
-    const s = sessionSha ? this.#one(`SELECT role, expires FROM sessions WHERE token_sha=?`, sessionSha) : null;
-    if (!s || s.role !== `member:${id}` || s.expires < Date.now())
+    const s = this.#liveSession(session, { locked: true });
+    if (!s || s.role !== `member:${id}`)
       return Credentials.#notYours("an ask's grant is minted only under the member's own "
         + "live session. Nothing was minted.");
+    if (s.state === "locked") return Credentials.sessionLockedRefusal();   /* R65 */
+    const sessionSha = s.token_sha;
     const served = this.#resolve(id, "ask", project === undefined ? null : project);
     if (served.refusal) return served.refusal;
     return this.#mintGrant(id, sessionSha, Math.min(Date.now() + AI_GRANT_TTL_SECONDS * 1000, s.expires), "ask");
@@ -2391,8 +2768,9 @@ export class Credentials {
     const now = Date.now();
     if (!g || g.expires < now) return null;
     if (g.kind === "standing") return g;
-    const s = this.#one(`SELECT role, expires FROM sessions WHERE token_sha=?`, g.session);   /* R40: the digest */
-    return s && s.expires >= now && s.role === `member:${g.member_id}` ? g : null;
+    const s = this.#one(`SELECT role, expires, created, device, last_active FROM sessions WHERE token_sha=?`, g.session);   /* R40: the digest */
+    /* R65: its session live and not locked */
+    return s && Credentials.#stateOf(s, now) === "live" && s.role === `member:${g.member_id}` ? g : null;
   }
 
   static #grantNotHeld() {
@@ -2684,20 +3062,22 @@ export class Credentials {
   /* The founder's role is `admin`; a member's `member:<id>`. */
   static #roleFor(id) { return id === ROOT ? ROOT : `member:${id}`; }
 
-  /* R47: whether `role` is an active administrator now (membership R64). */
-  #roleIsAdmin(role) {
-    try {
-      if (role === ROOT) return this.membership.isAdministrator(ROOT) === true;
-      return typeof role === "string" && role.startsWith("member:") && role.length > 7
-        && this.membership.isAdministrator(role.slice(7)) === true;
-    } catch { return false; }
+  /* R47 (T47; R68): whether `role` is an active member's, or the founder's once claimed, now. */
+  #roleIsActive(role) {
+    return role === ROOT || (typeof role === "string" && role.startsWith("member:") && role.length > 7)
+      ? this.#holderActive(role === ROOT ? ROOT : role.slice(7)) : false;
   }
 
-  /* R46: ten codes for `by`'s own role; issuing again spends every earlier unspent code of that role. */
+  /* R46 (T47; R68, K3060 D4): ten codes for `by`'s own role, any active member's or the claimed founder's; issuing
+     again spends every earlier unspent code of that role. Anyone else is refused RECOVERY_CODES_NOT_A_MEMBER. */
   recoveryCodesIssue({ by = null } = {}) {
-    const bar = this.#adminBar(by, "issuing recovery codes");
-    if (bar) return bar;
-    const role = Credentials.#roleFor(Credentials.#memberOf(by));
+    const who = Credentials.#memberOf(by);
+    /* DEC-49 REGION is-recovery-codes-member */
+    if (who === null || isMachineIdentity(by) || isMachineIdentity(who) || !this.#holderActive(who))
+      return Credentials.#row(SIGN_IN_CHECKS, "RECOVERY_CODES_NOT_A_MEMBER", "recovery codes are issued to an active "
+        + "member for their own account, from their own signed-in session. Nothing was issued.", { by: by ?? null });
+    /* END DEC-49 REGION is-recovery-codes-member */
+    const role = Credentials.#roleFor(who);
     const issuedAt = stampSecond();
     const codes = Array.from({ length: RECOVERY_CODE_COUNT }, () => Credentials.#newCode());
     this.#tx(() => {
@@ -2724,15 +3104,17 @@ export class Credentials {
     const row = SIGN_IN_CHECKS.RECOVERY_REFUSED;
     return { ok: false, reason: "RECOVERY_REFUSED", code: "RECOVERY_REFUSED", check: row.check, translation: row.translation,
              detail: "no password was set and nothing was written. Either that role holds no recovery code, or the code "
-                   + "given is not one of its unspent codes, or the role is not an active administrator now. Which of "
+                   + "given is not one of its unspent codes, or the role is not an active member's now. Which of "
                    + "those happened is not said: it is one answer deliberately, so that a refusal cannot be used to "
                    + "find out which roles hold codes." };
     /* END DEC-49 REGION is-recovery-code */
   }
 
-  /* R47: reached without a credential. */
-  async recover({ role = null, code = null, password = null, source = null, country = null } = {}) {
-    const asked = typeof role === "string" ? role : "";
+  /* R47: reached without a credential. (T47; R67) `handle`, when given, names the role as `login`'s does; (R68) any
+     active member's role recovers. */
+  async recover({ role = null, handle = null, code = null, password = null, source = null, country = null } = {}) {
+    const asked = typeof handle === "string" && handle !== "" ? this.#roleByHandle(handle)
+      : typeof role === "string" ? role : "";
     const gate = await this.#gate({ role: asked, source, country, password });
     if (gate.paused) return gate.paused;
     if (typeof password !== "string" || password.length < 12) {
@@ -2747,7 +3129,7 @@ export class Credentials {
       for (const r of unspent(asked)) if (Credentials.#same(presented, r.code_sha, { digests: true })) hit = r.code_sha;
       return hit;
     };
-    const admin = this.#roleIsAdmin(asked);
+    const admin = this.#roleIsActive(asked);
     const given = typeof code === "string" && code.trim() !== "";
     const refuse = () => { this.#refusedAttempt(gate, country); return Credentials.#recoveryRefused(); };
     if (!(matches() !== null && admin && given)) {
@@ -2758,7 +3140,7 @@ export class Credentials {
     /* asked again in the one act that spends it, so a code is spent once whatever runs beside it */
     const done = this.#tx(() => {
       const hit = matches();
-      if (hit === null || !this.#roleIsAdmin(asked)) return null;
+      if (hit === null || !this.#roleIsActive(asked)) return null;
       const at = stampSecond();
       this.#storePassword(asked, hashed);
       this.sql.exec(`UPDATE recovery_codes SET spent_at=? WHERE code_sha=?`, at, hit);
@@ -2767,6 +3149,82 @@ export class Credentials {
       return { ok: true, role: asked, remaining: unspent(asked).length };
     });
     if (!done) return refuse();
+    this.#succeeded(gate);
+    return done;
+  }
+
+  /* ===== THE ADMINISTRATOR'S RESET LINK (R69; T47, K3060 D4) =====
+   *
+   * An administrator makes a one-time link for a member who cannot sign in: one live per member (a new one ends the
+   * earlier), RESET_LINK_DAYS days, answered once and kept only as its SHA-256, with who made it and when. The member
+   * looks it up and sets a new password through it, both reached with no credential; the reset is under R38's window,
+   * sets the password as R3 does, ends every session of the member and spends the link. Every dead arm (unknown,
+   * expired, spent, ended by a newer link or by the member's revocation, R16) is the one RESET_LINK_DEAD. */
+
+  /* R69: the live link a presented one names, or null. */
+  #liveResetLink(link) {
+    if (typeof link !== "string" || link === "") return null;
+    const r = this.#one(`SELECT link_sha, member_id, expires_at FROM password_reset_links
+                         WHERE link_sha=? AND spent_at IS NULL AND ended_at IS NULL`, sha256HexSync(link));
+    return r && r.expires_at > Date.now() && this.#holderActive(r.member_id) ? r : null;
+  }
+
+  static #resetLinkDead() {
+    /* DEC-49 REGION is-reset-link-live */
+    return Credentials.#row(ACCOUNT_CHECKS, "RESET_LINK_DEAD", "this reset link does not work: it was used, it expired, "
+      + "a newer one replaced it, or it never existed. Which, it does not say. Nothing was changed.");
+    /* END DEC-49 REGION is-reset-link-live */
+  }
+
+  /* R69 `passwordResetLinkMake` (`op=passwordresetlink`): an active administrator's act, for an active member. */
+  passwordResetLinkMake({ member = null, by = null } = {}) {
+    const bar = this.#adminBar(by, "making a password reset link");
+    if (bar) return bar;
+    const id = Credentials.#memberOf(member);
+    /* DEC-49 REGION is-reset-link-member */
+    if (id === null || id === ROOT || isMachineIdentity(id) || this.#memberFacts(id)?.status !== "active")
+      return Credentials.#row(ACCOUNT_CHECKS, "RESET_LINK_MEMBER_NOT_ACTIVE", "a reset link is made only for an active "
+        + "member of the group. Nothing was made.", { member: id });
+    /* END DEC-49 REGION is-reset-link-member */
+    const link = `rl-${Credentials.#rand(32)}`;
+    const now = Date.now();
+    const expiresAt = now + RESET_LINK_DAYS * DAY_MS;
+    this.#tx(() => {
+      this.sql.exec(`UPDATE password_reset_links SET ended_at=? WHERE member_id=? AND spent_at IS NULL AND ended_at IS NULL`,
+        stampSecond(now), id);
+      this.sql.exec(`INSERT INTO password_reset_links (link_sha, member_id, made_by, made_at, expires_at) VALUES (?,?,?,?,?)`,
+        sha256HexSync(link), id, Credentials.#memberOf(by), stampSecond(now), expiresAt);
+    });
+    return { ok: true, member: id, link, expiresAt: stampSecond(expiresAt) };
+  }
+
+  /* R69 `passwordResetLook` (`op=passwordresetlook`, public): live, with the member's handle and when it expires; or
+     RESET_LINK_DEAD for every other arm. Writes nothing. */
+  passwordResetLook({ link = null } = {}) {
+    const r = this.#liveResetLink(link);
+    return r ? { ok: true, live: true, handle: this.#memberFacts(r.member_id)?.handle ?? null,
+                 expiresAt: stampSecond(r.expires_at) } : Credentials.#resetLinkDead();
+  }
+
+  /* R69 `passwordReset` (`op=passwordreset`, public): R38's window (under the link's member, or one role of its own
+     for a dead link), a password of 12 or more, then the link; a dead link is counted as a refused recovery is. */
+  async passwordReset({ link = null, password = null, source = null, country = null } = {}) {
+    const found = this.#liveResetLink(link);
+    const gate = await this.#gate({ role: found ? `member:${found.member_id}` : "reset-link", source, country, password });
+    if (gate.paused) return gate.paused;
+    if (typeof password !== "string" || password.length < 12) return { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 };
+    const hashed = await Credentials.#hashFor(password);   /* one derivation, dead link or live */
+    const done = found && this.#tx(() => {
+      const live = this.#liveResetLink(link);
+      if (!live) return null;
+      const role = `member:${live.member_id}`;
+      this.#storePassword(role, hashed);
+      this.sql.exec(`UPDATE password_reset_links SET spent_at=? WHERE link_sha=?`, stampSecond(), live.link_sha);
+      const all = this.#rows(`SELECT token_sha FROM sessions WHERE role=?`, role).map((r) => r.token_sha);
+      this.#endSessions(all);
+      return { ok: true, member: live.member_id, ended: all.length };
+    });
+    if (!done) { this.#refusedAttempt(gate, country); return Credentials.#resetLinkDead(); }
     this.#succeeded(gate);
     return done;
   }
@@ -2941,7 +3399,17 @@ export function credentialsOps(c, url, body, env) {
       return c.passwordChange({ current: b.current ?? null, password: b.password ?? null, by: url.searchParams.get("by"),
                                 session: url.searchParams.get("session"), ...doorStamps(url) });
     },
-    session: () => ({ session: c.session(url.searchParams.get("t")) }),
+    /* (T47; R65) a request the door marks `background=1` is no activity */
+    session: () => ({ session: c.session(url.searchParams.get("t"), { background: url.searchParams.get("background") === "1" }) }),
+    /* R65, R66 (T47): the password asked again on the session the control plane authenticated (`session`, its stamp),
+       from the body only; `source` and `country` the door's */
+    unlock: () => c.unlock({ token: url.searchParams.get("session"), password: bodyField("password"), ...doorStamps(url) }),
+    reauth: () => c.reauth({ token: url.searchParams.get("session"), password: bodyField("password"), ...doorStamps(url) }),
+    /* R69 (T47): the administrator's reset link, `by` the stamp; the look and the reset reached with no credential, the
+       link from the body only, never an address */
+    passwordresetlink: () => c.passwordResetLinkMake({ member: bodyField("member") ?? url.searchParams.get("member"), by: by() }),
+    passwordresetlook: () => c.passwordResetLook({ link: bodyField("link") }),
+    passwordreset: () => c.passwordReset({ link: bodyField("link"), password: bodyField("password"), ...doorStamps(url) }),
     /* R39 (F14): the session the control plane authenticated (`session`, its stamp). */
     signout: () => c.signOut({ token: url.searchParams.get("session") }),
     signouteverywhere: () => c.signOutEverywhere({ token: url.searchParams.get("session") }),

@@ -1,6 +1,6 @@
 # odf-reader — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T35 (T35-76: R47; K1903); every requirement met (K1919).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T35 (T35-76: R47; K1903); every requirement met (K1919). Last changed T47 (T47-5: R47 moved from Private to Provides, `file-safety`'s use, wording unchanged, N942); met (K3029).
 
 ## Public
 
@@ -222,6 +222,16 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
 - **R44** (N27, D-415; K278) `odsEntry.text()` also carries `rangeUnits: [{source: "named-range" | "database-range", name, scope, hidden: false, unit}]`, one per `<table:named-range>` (document-scoped, `scope: null`; or inside a `<table:table>`, `scope` that sheet's name) and `<table:database-range>` (`scope` its sheet) whose address names one rectangle on one sheet of this document, `unit` its `sheet-range` reference from `office-readers`' `rangeUnitFor` (grid `null`, R42); and `rangeUnitsSkipped: [{source, name, ref, why}]` for every other, and for every `<table:named-expression>` (`source: "named-expression"`, `why: "not_a_range_reference"`). `why` is one of `multi_area`, `broken_reference`, `not_a_range_reference`, `whole_row_or_column`, `external_workbook`, `multi_sheet_reference`, `no_such_sheet`, `empty_reference` (`office-readers` R9's vocabulary). `hidden` is `false`: ODF has no hidden flag on a name. Over the guard, or with no readable `<office:spreadsheet>` body, both are `null`, never `[]`: an `.ods` declares its names only in `content.xml`, which was not read (R41).
 - **R45** (N30) Repeats are expanded within a bound: `ODF_REPEAT_EXPANSION_MAX` (262,144, exported) units per `content.xml` read, a unit being one cell given at one address (a carrying cell's `table:number-columns-repeated` and its row's `table:number-rows-repeated` multiplied, R15–R19; a link attached at a repeated address rides on its cell, R17), one hidden row range listed (R16), or one space a `<text:s text:c>` stands for (R11, R19, R24); a link a cell carries costs one unit at each repeated address after its first, where it is literal markup (R17). What a repeat copies is bounded too: a repeated cell's displayed text, at each address after its first, counts its characters against `MEASURED_OOXML_TEXT_BOUND_BYTES` (20,971,520), so repeats yield no more text than that bound admits written out (K428). An empty run advanced over, and every figure that only accumulates (R12's `rows`/`cols`, R18's used extent), costs none. The reader never expands past the bound: the read that would cross it stops, and the entry answers as over the size guard (R10, R13, R20, R27 for `text()`, R10's shape for each `structure()`), with the marker `{text: "undetermined", why: "over_repeat_bound", units, bound, boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units"}` (or, past the text bound, `units` the characters reached, `bound` 20,971,520, `boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES"`, `metric: "repeated_text_chars"`) in place of the guard's, `units` the count reached when it stopped (one past the bound). What R28–R30 read from outside `content.xml` is still answered, and `odfEvidentiaryDigest` (R32–R37), which expands nothing, is unaffected. It never ends in `reader_failed` for a repeat's size (R38).
 - **R46** (C:A-4; K1448) `odsEntry.text()` gives each sheet a `cells` list in `office-readers` R30's contract, field for field: `[{source, value, type, declared, cached, formula}]`, one per cell holding a value or a formula (a repeated cell once at each address it is given, within R45's bound), in row then column order. `value` is the cell's value attribute exactly as written (`office:value`, `office:date-value`, `office:time-value`, `office:boolean-value`, `office:string-value`), or its text when it has none, never re-rendered through a binary float. `declared` is its `office:value-type` as written; `type` maps it: `float`, `percentage` and `currency` to `number`, `date` to `date`, `time` to `time`, `boolean` to `boolean`, `string` to `text`, and a cell with no value type and a text to `text` (`office-readers` R30's set). For a cell carrying `table:formula`, `formula` is the formula verbatim (R15) and `cached` its value attribute as written (`null` when it carries none); otherwise both are `null`. Nothing is recalculated. Over the guard, or over R45's bound, `cells` is `null`, never `[]`.
+- **R47** (K1888, K1903; moved from Private to Provides T47, N942, its wording unchanged) `structure()` and `text()` both carry `active`, the same list from one
+  builder: every part of the file that can act when it is opened, found and read, never run, in
+  the shape of office-readers R32. One item per finding, in central-directory order: `{kind:"odf-basic",
+  part}` for each member under a `Basic/` directory (a Basic library) and `{kind:"odf-basic", part,
+  event}` for each `script:event-listener` in `content.xml` or `styles.xml` (`event` its
+  `script:event-name`); `{kind:"embedded-file", part}` for each member under an `Object …/`
+  sub-document directory or a `ObjectReplacements/` part's source; `{kind:"odf-script", part}` for each member under the package root's `Scripts/` (embedded Python,
+  BeanShell or JavaScript macros; K1917); `{kind:"launch", part, event}` for each
+  `presentation:event-listener` whose `presentation:action` is `execute`; `{kind:"unread", part, why}` for a
+  part it could not read for this list. A file with none answers `[]`.
 
 ## Private
 
@@ -252,16 +262,6 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
   or refusal code in that file names `odf.mjs` or belongs to it). The IC-1 reference builders
   it calls are owned by `office-readers`; the C-45.x checks that validate a citation against
   them are owned by `content`.
-- **R47** (K1888, K1903) `structure()` and `text()` both carry `active`, the same list from one
-  builder: every part of the file that can act when it is opened, found and read, never run, in
-  the shape of office-readers R32. One item per finding, in central-directory order: `{kind:"odf-basic",
-  part}` for each member under a `Basic/` directory (a Basic library) and `{kind:"odf-basic", part,
-  event}` for each `script:event-listener` in `content.xml` or `styles.xml` (`event` its
-  `script:event-name`); `{kind:"embedded-file", part}` for each member under an `Object …/`
-  sub-document directory or a `ObjectReplacements/` part's source; `{kind:"odf-script", part}` for each member under the package root's `Scripts/` (embedded Python,
-  BeanShell or JavaScript macros; K1917); `{kind:"launch", part, event}` for each
-  `presentation:event-listener` whose `presentation:action` is `execute`; `{kind:"unread", part, why}` for a
-  part it could not read for this list. A file with none answers `[]`.
 
 ### Satisfies
 

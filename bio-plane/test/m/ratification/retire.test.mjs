@@ -282,21 +282,53 @@ test("R30, R33: a member whose bundle.md is gone at its turn is NO_DOCUMENT, one
 
 /* ---- R32: the op ---- */
 
-test("R32: the ops map answers retire beside the other nine, reading the handle, the reason and the control plane's stamps from the query, never from the body", async () => {
+test("R32: the ops map answers retire beside the other nine, reading the control plane's stamps from the query, never from the body", async () => {
   const w = setup();
   await w.verified("INFO-2026-0760");
   const h = await w.select(["INFO-2026-0760"]);
   const url = (q) => new URL(`http://do/retire?${new URLSearchParams(q)}`);
   assert.deepEqual(Object.keys(ratificationOps(w.r, url({}), null)).sort(),
     ["caseapproval", "casegate", "caseratify", "casetestimony", "gatefacts", "publish", "publishat", "ratifygate", "release", "retire"]);
-  const body = { handle: h, reason: WHY, viewer: WHO, owner: OWNER, author: WHO };
-  const fromBody = ratificationOps(w.r, url({}), body).retire();
-  assert.deepEqual([fromBody.ok, fromBody.reason], [false, "NO_REASON"], "the body is not read");
-  const theirs = ratificationOps(w.r, url({ handle: h, reason: WHY, viewer: WHO, owner: "someone-else", author: WHO }), body).retire();
+  const stamps = { viewer: WHO, owner: OWNER, author: WHO };
+  const fromBody = ratificationOps(w.r, url({ handle: h, reason: WHY }), stamps).retire();
+  assert.equal(fromBody.ok, false, "stamps in the body are not read");
+  assert.equal(w.state("INFO-2026-0760"), "verified");
+  const theirs = ratificationOps(w.r, url({ handle: h, reason: WHY, viewer: WHO, owner: "someone-else", author: WHO }), stamps).retire();
   assert.equal(theirs.reason, "NOT_YOURS", "the owner stamp is the query's");
-  const ok = ratificationOps(w.r, url({ handle: h, reason: WHY, viewer: WHO, owner: OWNER, author: V("vera") }), body).retire();
+  const ok = ratificationOps(w.r, url({ handle: h, reason: WHY, viewer: WHO, owner: OWNER, author: V("vera") }), stamps).retire();
   assert.deepEqual([ok.ok, ok.retired, ok.reason], [true, ["INFO-2026-0760"], WHY]);
   assert.equal(parseFrontmatter(w.md("INFO-2026-0760")).data.state_history.at(-1).author, V("vera"), "the author stamp is the query's");
+});
+
+test("R51: retire reads its handle and reason from the body, else the query: a body carrying them answers as the same fields in the query do, never NO_REASON; a body carrying author, viewer or owner changes no stamp", async () => {
+  const url = (q) => new URL(`http://do/retire?${new URLSearchParams(q)}`);
+  const stamps = { viewer: WHO, owner: OWNER, author: WHO };
+  const drive = async (where) => {
+    const w = setup();
+    await w.verified("INFO-2026-0765");
+    const h = await w.select(["INFO-2026-0765"]);
+    const fields = { handle: h, reason: `  ${WHY} ` };
+    const r = where === "body"
+      ? ratificationOps(w.r, url(stamps), { ...fields, author: V("mallory"), viewer: V("mallory"), owner: "someone-else" }).retire()
+      : ratificationOps(w.r, url({ ...stamps, ...fields }), null).retire();
+    return { w, r: { ...r, handle: r.handle === h ? "<h>" : r.handle } };
+  };
+  const body = await drive("body"), query = await drive("query");
+  assert.deepEqual(body.r, query.r, "answered alike");
+  assert.deepEqual([body.r.ok, body.r.reason, body.r.retired], [true, WHY, ["INFO-2026-0765"]]);
+  for (const x of [body, query]) {
+    assert.equal(x.w.state("INFO-2026-0765"), "retired");
+    assert.equal(parseFrontmatter(x.w.md("INFO-2026-0765")).data.state_history.at(-1).author, WHO,
+                 "the author is the query's stamp, never the body's");
+  }
+  /* controls: the body's field wins over the query's; a field the body does not state as a string is the query's */
+  const w = setup();
+  await w.verified("INFO-2026-0766");
+  const h = await w.select(["INFO-2026-0766"]);
+  const empty = ratificationOps(w.r, url({ ...stamps, handle: h, reason: WHY }), { reason: "  " }).retire();
+  assert.deepEqual([empty.ok, empty.reason], [false, "NO_REASON"], "the body's own (empty) reason is the one read");
+  const odd = ratificationOps(w.r, url({ ...stamps, handle: "nope", reason: WHY }), { handle: h, reason: 7 }).retire();
+  assert.deepEqual([odd.ok, odd.reason, odd.retired], [true, WHY, ["INFO-2026-0766"]], "a non-string reason in the body is not read");
 });
 
 test("R15: no place is named in the retirement's answers", async () => {

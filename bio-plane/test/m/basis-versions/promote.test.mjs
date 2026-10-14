@@ -25,8 +25,6 @@ test("R6: for an inquiry that is not a replay, the grammar refuses BASIS_VERSION
   assert.deepEqual([unheld.reason, unheld.version, unheld.target, unheld.findings[0].check, unheld.findings[0].code],
                    ["VERSION_LEG_UNRESOLVED", "first", "INFO-2026-0099-z", "C-25.16", "VERSION_LEG_UNRESOLVED"]);
   assert.ok(unheld.findings[0].translation && unheld.findings[0].repairs.length === 2);
-  const named = block(version("first", [DOC]));
-  named.push(...[]);
   const cid = w.inquiry(Q, block(merge(version("first", []), { legs: [{ version: "first", target: DOC, role: "supports", ground: "main",
     content_id: "f".repeat(64) }], grounds: [{ version: "first", ground: "main", asserted_by: "member:alice", at: "2026-09-27T00:00:00Z" }] })));
   assert.equal(cid.reason, "BASIS_VERSION_REFUSED");

@@ -38,8 +38,9 @@
  *
  * A CONTAINER MEMBER (bundler R26; N624, K1705) deploys the same way, with one step
  * before it: its image, named by digest in its own marker, is pulled and pushed to
- * Cloudflare's registry with the account's token (the project's own copy; a group's
- * copy pulls from the public registry by digest at install, M-Q8), and the generated
+ * Cloudflare's registry with the account's token (the project's own copy; since K2912
+ * the images are named on `ghcr.io/believeinoakland` and copied into each account's
+ * registry, K3028), and the generated
  * config's `containers[].image` names that pushed copy. A member with several classes
  * (T36-2) pushes each class's image and points each `containers[]` entry at its own
  * class's copy, by `class_name`. A token that cannot reach

@@ -26,8 +26,10 @@ const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const filled = (v) => typeof v === 'string' && v.trim() !== '';
 
 /**
- * Whether `v` is a record id of record-grammar's id grammar: an `ID_TABLE` id core (record-grammar R47), alone or
- * followed by a bundle slug.
+ * Whether `v` is a record id of record-grammar's id grammar (R21), as `checkConnection` reads `from` and `to` (R1): an
+ * id core of its prefix in that prefix's `ID_TABLE` form, a legacy form included (`idPattern`, record-grammar R47),
+ * alone or followed by `-` and a slug of `-`-joined runs of `[a-z0-9]`. Anything else, a non-string included, is false.
+ * Never throws.
  * @param {unknown} v
  */
 export function isRecordId(v) {

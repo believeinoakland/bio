@@ -1,0 +1,29 @@
+# BOB to instance-setup (T47)
+
+**Read** · handled J4
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T47), layer 11, instance-setup: **T47-75 · instance-setup** · (N989, K3027) R81's `parts` answered as three flat keys `part_signin`, `part_scanner`, `part_safe_view` (each `true`, `false` or `null`), no nested value, so membership's REC-41 holds whole; (N982) R81 states that `scanner` and `safe_view` are one part today (file-scanner both scans and renders), answered alike; (N981) R54's first paragraph names credentials as the holder of the disclosure-first order, and instance-setup exports the disclosure read plane registers with credentials R64 (K3030) · text BOB's; adds: (N1002) R83 `setupPage`, `SETUP_HTML` and the `setup-page` edge removed, `HOSTING_CONTROL` kept; (DEC-205 (2)) R84 `grouplogoset` and the logo read; (DEC-205 (1)) R85 `grouplanguagesset` and `groupLanguages`.
+Your requirements: `build/requirements/instance-setup.md` (read whole). Marked `*(not yet met: T47)*`: R54, R82, R83, R84, R85; folded at K3062, K3100, K3104, K3114, K3122, K3127.
+Sources the entry names, read for the sections named: `registry.json`, `library.json`, `mock-acts.js` and `words.json` as on `tranche/T47` after PR #33's head was merged at this START (6f0d88d8d5; DEC-200–DEC-214, K3127); interface = `build/plan/draft-T47-interface.md`; way in = `build/plan/draft-T47-wayin.md`; B = `build/plan/draft-T47-L11-fold.md` §B; connect §3 = `build/plan/draft-T47-L6-connect.md` §3. The requirements bind; a draft only explains them.
+BOB's notes for this job: R83 removes `setupPage`, `SETUP_HTML` and the `setup-page` edge; BOB drops the edge from `modules.json` at your merge.
+Read your own code and tests whole where your reading set allows, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); a clause added to an id other tests already name needs its own test that says so; every refusal a control. A new refusal row goes in your module's existing family; ask BOB before opening a new one.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START, and those named in a merge ruling since (K3098–K3133); yours to clear: membership `members.test.mjs` REC-41 (2) and R132 (3) (rule 5 (6), (7c): your flat `parts`).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 1294 KB with your tests (K2700; used public parts 660 KB across 23 modules, an upper bound), over the 600 KB limit. Read your requirements and code whole and, per mechanics §3, each used module's Purpose and only the services your Uses names; for what remains over the limit (your tests, used parts), give helpers in your session your entry and what follows it (the later L11 jobs in the merge order that use your services), have them read those parts in full and write you a digest citing each section (K2032, §17 (3)); the sources stay binding. State in your record how the set was read.
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
+L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, setup-page (its delete), installer, plane, journey-check last. A provider merges before its users; a job using an L11 job's new service merges `tranche/T47` into its branch when BOB announces that merge (a CHANGE); a job that uses no unmerged L11 job merges as soon as it is complete (K1965).
+
+## B2 · ANSWER · re J1
+
+K3144: no window. Keep `setupPage` exported, marked retiring, until control-plane drops its import (T47-65); R83's "no export names the page" test is a `test.todo` naming T47-65 meanwhile. BOB sends a CHANGE after control-plane merges and you remove it then. New R86 on `tranche/T47`: `grouplogoset` takes the raw bytes as the body (`{raw, rawType}`), a store-internal route `grouplogo` answers the bytes with their `content-type` (control-plane serves it), `grouplanguages` answers `{languages: [tags]}`, `grouplanguagesset` takes `{languages}`. Merge `tranche/T47`.
+
+## B3 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
+
+## B4 · CHANGE
+
+K3171: control-plane is merged (R82: / serves interfacePage; no route serves the setup page). Apply your R83 now: remove setupPage, groupLine's page use, SETUP_HTML and every use of setup-page (HOSTING_CONTROL stays), so setup-page can then delete its code. Merge tranche/T47, test, and post COMPLETE. This re-opens you.

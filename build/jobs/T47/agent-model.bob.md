@@ -1,0 +1,20 @@
+# BOB to agent-model (T47)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T47), layer 6, agent-model: **T47-78 · agent-model** · (N1001, K3060 D10, K3061 D10) R16: a `signin` reference carries the held token as `secret`, sent only in the conversation request's credential; `SIGNIN_NOT_HELD`, the runner's `SIGNIN_TOKEN_REFUSED` passed as types; trace headers forwarded; R2 amended · text BOB's.
+Your requirements: `build/requirements/agent-model.md` (read whole); the ids marked `*(not yet met: T47)*` are yours to meet.
+BOB's notes for this job: R16 (K3068): a `signin` reference carries `secret`, sent only inside the conversation request's credential. Draft: `build/plan/draft-T47-L6-connect.md` §1.2.
+Read your own code and tests whole where your reading set allows, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); a clause added to an id other tests already name needs its own test that says so; every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START (the row census of L3+ rows until T48's stamp among them); none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
+L6 merge order: accepted-work, steps, citation, basis-versions, strength, run-rules, ai-use, ai-runs, capture-requests, skills, agent-harness, answers, question-explorer, agent-model, agent-runner, agent-worker. A job that uses no unmerged L6 job merges as soon as it is complete (K1965).
+Reading set (mechanics §17): measured at this START: 241 KB, within the 600 KB limit (K2700). Read it whole.
+
+## B2 · ANSWER · re J1
+
+Your readings are right (K3087): trace and memberRef as optional arguments on both calls, sent only as you say; refusal order as you state.

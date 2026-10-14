@@ -24,6 +24,8 @@ export const PASSWORD = (id) => `${id}-passphrase-x`;
 /* R40: a session is held as its token's SHA-256, computed here independently of the module. */
 export const sha = (text) => createHash("sha256").update(String(text)).digest("hex");
 export const FOUNDER_PASSWORD = "founder-passphrase-1";
+/* (T47; R70) the sign-in token a member's Claude Code `setup-token` would print, one per member, a sentinel. */
+export const SIGNIN_TOKEN = (id) => `sk-ant-oat01-sentinel-${id}-0123456789`;
 
 /* A record-core stub whose `declarePurge` and `declareTable` answer as record-core's R21 does: a table declared twice,
    or by two modules, is refused naming its holder; an entry missing a class, or with a value outside R21's, is
@@ -87,6 +89,10 @@ export function world({ sealSecret = SEAL } = {}) {
       const e = await m.enroll({ invite: a.invite, handle: id, password: PASSWORD(id) });
       if (e.ok) await c.setPassword({ role: `member:${id}`, password: PASSWORD(id) });
       return e;
+    },
+    /* (T47; R70) `id` signs in through their Claude subscription: the door holds the token the sign-in printed. */
+    async signin(id, validFor = null) {
+      return c.subscriptionTokenHold({ member: id, token: SIGNIN_TOKEN(id), validFor });
     },
     /* The founder plus a second administrator, so ordinary members may be added; then each member, enrolled. */
     async group(...members) {

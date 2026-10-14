@@ -6,7 +6,7 @@
  * writes each member through the same `moveMember` below, so the two transitions splice a document one way.
  *
  * S-11 step 5, the last rung of the ladder: bulk RELEASE of Information, collected -> verified over a selection, weight
- * `refuse`, whole set or nothing. Decided by Bob 2026-07-27 and specified in Intake Doctrine v1.2: what legitimizes a
+ * `refuse`, the whole set examined before anything moves (the writes are per member, R25). Decided by Bob 2026-07-27 and specified in Intake Doctrine v1.2: what legitimizes a
  * bulk release is volume plus little-to-no variance in the trustworthiness of the collection, whatever origin brought
  * it in, because verification asserts only that a document APPEARS to be what it claims to be, never accuracy.
  *
@@ -42,8 +42,9 @@ const rows = (sql, q, ...a) => [...sql.exec(q, ...a)];
 const one = (sql, q, ...a) => rows(sql, q, ...a)[0] ?? null;
 const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 
-/** R20–R27: release the selection `handle` from collected to verified, whole set or nothing. `author`, `viewer` and
- *  `owner` are the control plane's stamps, never the caller's. */
+/** R20–R27: release the selection `handle` from collected to verified: the whole set examined before anything moves,
+ *  then written member by member (R25). `author`, `viewer` and `owner` are the control plane's stamps, never the
+ *  caller's. */
 export function release(deps,
                         { handle, acknowledgment = "", mitigation = "", viewer = null, owner = null, author = null } = {}) {
   const { sql, promotion, retrieval } = deps;

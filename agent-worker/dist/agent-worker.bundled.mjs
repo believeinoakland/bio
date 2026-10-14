@@ -630,15 +630,15 @@ var proposalKey = (o) => canonical({
 function planDedup(candidates, plan) {
   const p = plan && typeof plan === "object" ? plan : {};
   const pages = Array.isArray(p.planning_runs) ? p.planning_runs.flatMap((r) => list(r?.proposals)) : [];
-  const held = new Set([...list(p.options), ...list(p.proposals), ...pages].filter((o) => o && typeof o === "object").map(proposalKey));
+  const held2 = new Set([...list(p.options), ...list(p.proposals), ...pages].filter((o) => o && typeof o === "object").map(proposalKey));
   const queue = [], dropped = [];
   for (const c of list(candidates)) {
     const key = proposalKey(c);
-    if (held.has(key)) {
+    if (held2.has(key)) {
       dropped.push(c);
       continue;
     }
-    held.add(key);
+    held2.add(key);
     queue.push(c);
   }
   return { queue, dropped };
@@ -757,9 +757,9 @@ function textOnly(answer) {
   const dropped = [];
   const walk = (v, path) => {
     if (typeof v === "string") {
-      const held = bytesIn(v);
-      if (held) {
-        dropped.push({ path: path || "(the answer)", held });
+      const held2 = bytesIn(v);
+      if (held2) {
+        dropped.push({ path: path || "(the answer)", held: held2 });
         return void 0;
       }
       return v;
@@ -1080,7 +1080,8 @@ var LEAD_ID_RE = new RegExp(`^${idPattern("LEAD").source.slice(1, -1)}-[a-z0-9]+
 // ../bio-plane/src/run-rules/checks.mjs
 var RUN_RULES_WORDS = Object.freeze({
   "refusal.AI_RUN_REEXAM_NEEDS_RESPONSE": "Nothing was started: a fresh look at the plan after a reply needs to know which reply. Record the reply first, then ask from it.",
-  "refusal.AI_RUN_REEXAM_OPEN": "Nothing was started: a fresh look at this plan after this reply is already under way. Wait for it, then read what it proposes."
+  "refusal.AI_RUN_REEXAM_OPEN": "Nothing was started: a fresh look at this plan after this reply is already under way. Wait for it, then read what it proposes.",
+  "refusal.MEMBER_RUN_MODE_NOT_ADMITTED": "A run on your own Claude sign-in can check or plan, and this one asks for more. Nothing was sent. A project's or the group's account can run it, where one serves you."
 });
 var AI_RUN_OWN_CHECKS = {
   /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
@@ -1353,12 +1354,13 @@ var AI_RUN_OWN_CHECKS = {
   },
   /* R32 (T46; K2947; `ai-runs` R18): A MEMBER'S OWN SIGN-IN RUN IN A MODE IT DOES NOT SERVE. On her own Claude sign-in
      a member's run is dispatched for her only in `check` or `plan` (Bob's K2892); any other mode is refused by `ai-runs`
-     at its dispatch and read here by key. C-22.30, the next free number after R30's. DEC-83's form. Its translation is
-     interim, until `words.json` holds `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`. */
+     at its dispatch and read here by key. C-22.30, the next free number after R30's. DEC-83's form. T47 (N992; DEC-198):
+     its translation is `words.json`'s `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`, read by key (RUN_RULES_WORDS above) as R31's
+     rows are; T46's interim sentence is gone, and code, number and `where` are unmoved. */
   MEMBER_RUN_MODE_NOT_ADMITTED: {
     check: "C-22.30",
     where: "src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch",
-    translation: "Nothing was started, because on your own Claude sign-in the assistant only checks and plans for you; this kind of work needs your group's Civicsmith to run it."
+    translation: RUN_RULES_WORDS["refusal.MEMBER_RUN_MODE_NOT_ADMITTED"]
   }
 };
 var AI_RUN_ACT_SHAPE_CHECKS = {
@@ -1930,7 +1932,7 @@ var own = (o, k) => o != null && typeof o === "object" && Object.prototype.hasOw
 function deployedModesFor(flags) {
   const f = flags != null && typeof flags === "object" ? flags : {};
   const verified = own(f, "verification_recorded") ? f.verification_recorded : DEPLOYMENT_SEQUENCE.verification_recorded;
-  const apart = (m, held) => (own(f, m) ? f[m] : held) === true;
+  const apart = (m, held2) => (own(f, m) ? f[m] : held2) === true;
   return Object.freeze([
     ...CHAIN.slice(0, verified == null ? 1 : 2),
     ...DEPLOYMENT_SEQUENCE.order.filter((m) => apart(m, DEPLOYMENT_SEQUENCE.deploys_apart[m]?.deployed)),
@@ -2411,6 +2413,23 @@ function scrub(text, secret, max) {
   if (typeof secret === "string" && secret) s = s.split(secret).join("[secret]");
   return s.slice(0, max);
 }
+function scrubDeep(value, secret) {
+  if (typeof secret !== "string" || !secret) return value;
+  let text;
+  try {
+    text = JSON.stringify(value);
+  } catch {
+    text = null;
+  }
+  if (text != null && !text.includes(secret)) return value;
+  const walk = (v) => {
+    if (typeof v === "string") return v.split(secret).join("[secret]");
+    if (Array.isArray(v)) return v.map(walk);
+    if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [walk(k), walk(x)]));
+    return v;
+  };
+  return walk(value);
+}
 var silent = (detail, secret) => ({ silent: { detail: scrub(detail, secret, DETAIL_MAX) } });
 var refused = (status, type, message, secret) => ({ refused: { status, type: type == null ? null : scrub(type, secret, MESSAGE_MAX), message: scrub(message, secret, MESSAGE_MAX) } });
 var READ_FACTS = Object.freeze({
@@ -2563,11 +2582,11 @@ function relayContent(content) {
   });
 }
 function heldResults(messages) {
-  const held = /* @__PURE__ */ new Map();
+  const held2 = /* @__PURE__ */ new Map();
   for (const m of Array.isArray(messages) ? messages : [])
     for (const b of Array.isArray(m && m.content) ? m.content : [])
-      if (b && b.type === "tool_result") held.set(String(b.tool_use_id), relayContent(b.content));
-  return held;
+      if (b && b.type === "tool_result") held2.set(String(b.tool_use_id), relayContent(b.content));
+  return held2;
 }
 function renderTranscript(messages) {
   const text = (content) => {
@@ -2586,10 +2605,17 @@ ${text(m && m.content)}`).join("\n\n");
 }
 var systemText = (system) => Array.isArray(system) ? system.map((b) => String((b && b.text) ?? "")).join("\n\n") : String(system ?? "");
 var plainTools = (tools) => (Array.isArray(tools) ? tools : []).map((t) => ({ name: t.name, description: t.description, input_schema: t.input_schema }));
-var offeredTools = (tools, held) => [...plainTools(tools), ...held.size ? [plainTools([READ_RESULT])[0]] : []];
-function conversationRequest(member, { model, system, messages, tools, maxTurns }) {
+var offeredTools = (tools, held2) => [...plainTools(tools), ...held2.size ? [plainTools([READ_RESULT])[0]] : []];
+var TRACE_HEADER = "x-civicsmith-trace";
+var MEMBER_REF_HEADER = "x-civicsmith-member-ref";
+var TRACE_HEADER_MAX = 200;
+function traceHeaders({ trace, memberRef } = {}, secret) {
+  const fit = (v) => typeof v === "string" && v.length > 0 && v.length <= TRACE_HEADER_MAX && !(typeof secret === "string" && secret && v.includes(secret));
+  return { ...fit(trace) ? { [TRACE_HEADER]: trace } : {}, ...fit(memberRef) ? { [MEMBER_REF_HEADER]: memberRef } : {} };
+}
+function conversationRequest({ member, secret }, { model, system, messages, tools, maxTurns }) {
   return {
-    credential: { kind: "signin", member },
+    credential: { kind: "signin", member, secret },
     model,
     system: systemText(system),
     prompt: renderTranscript(messages),
@@ -2599,9 +2625,9 @@ function conversationRequest(member, { model, system, messages, tools, maxTurns 
 }
 function answeredHere(u, messages) {
   if (u.name === READ_RESULT.name) {
-    const held = heldResults(messages);
+    const held2 = heldResults(messages);
     const id = String(u.input?.id ?? "");
-    return held.has(id) ? { content: held.get(id) } : { content: `no result '${id.slice(0, 80)}' is held`, error: true };
+    return held2.has(id) ? { content: held2.get(id) } : { content: `no result '${id.slice(0, 80)}' is held`, error: true };
   }
   if (u.name === READ_FACTS.name) {
     const f = factsOf(messages);
@@ -2609,12 +2635,12 @@ function answeredHere(u, messages) {
   }
   return null;
 }
-async function openRunner(runner, member) {
+async function openRunner(runner, { member, secret, headers }) {
   let res;
   try {
-    res = await runner.get(runner.idFromName(member)).fetch(RUNNER_URL, { headers: { Upgrade: "websocket" } });
+    res = await runner.get(runner.idFromName(member)).fetch(RUNNER_URL, { headers: { ...headers, Upgrade: "websocket" } });
   } catch (e) {
-    return silent(e && e.message || e);
+    return silent(e && e.message || e, secret);
   }
   const ws = res && res.webSocket;
   if (!ws) return refused(
@@ -2645,7 +2671,7 @@ async function openRunner(runner, member) {
     ws.addEventListener("close", (ev) => push({ closed: true, detail: `the runner closed the connection (${ev && ev.code})` }));
     ws.addEventListener("error", () => push({ closed: true, detail: "the runner's connection failed" }));
   } catch (e) {
-    return silent(e && e.message || e);
+    return silent(e && e.message || e, secret);
   }
   return {
     send(text) {
@@ -2676,18 +2702,11 @@ function ending(m, usage) {
   if (m.stop_reason === "refusal") return { ...refused(200, "refusal", m.result ?? ""), usage };
   return null;
 }
-async function signinConverse({
-  member,
-  runner,
-  model,
-  system,
-  messages,
-  tools,
-  finalTool,
-  onTool,
-  maxTurns,
-  charge
-}) {
+async function signinConverse(args) {
+  return scrubDeep(await conversation(args), args.account.secret);
+}
+async function conversation({ account, runner, model, system, messages, tools, finalTool, onTool, maxTurns, charge }) {
+  const { member, secret } = account;
   const offered = new Set(plainTools(tools).map((t) => t.name));
   let usage = null;
   let calls = 0;
@@ -2697,11 +2716,11 @@ async function signinConverse({
   if (imageOutsideResult(messages)) return notRelayed();
   if (resultHoldsImage(messages) && !await imagesRelayed()) return notRelayed();
   while (k < maxTurns) {
-    const serialized = JSON.stringify(conversationRequest(member, { model, system, messages, tools, maxTurns: maxTurns - k }));
+    const serialized = JSON.stringify(conversationRequest(account, { model, system, messages, tools, maxTurns: maxTurns - k }));
     const stop = charge(serialized);
     if (stop) return { ...stop, usage, calls };
     k += 1;
-    const conn = await openRunner(runner, member);
+    const conn = await openRunner(runner, account);
     if (!conn.send) return conn.silent ? { ...conn, usage, calls } : { ...conn, usage: unstated(), calls: null };
     conn.send(serialized);
     let answer = null;
@@ -2767,7 +2786,7 @@ async function signinConverse({
       if (answer) return { answer, usage, calls };
       const end = ending(m, usage);
       if (end) return { ...end, calls };
-      messages.push({ role: "assistant", content: [{ type: "text", text: String(m.result || "(no answer)") }] });
+      messages.push({ role: "assistant", content: [{ type: "text", text: scrub(m.result || "(no answer)", secret, Infinity) }] });
       messages.push({ role: "user", content: `Answer by calling the \`${finalTool}\` tool.` });
       break;
     }
@@ -2832,16 +2851,22 @@ function usable(reference) {
   if (KEY_ONLY.includes(reference.level) && reference.kind !== "apikey") return null;
   if (reference.kind === "apikey" && typeof reference.key === "string" && reference.key) return { kind: "apikey", secret: reference.key };
   if (reference.kind === "signin" && typeof reference.member === "string" && reference.member)
-    return { kind: "signin", member: reference.member };
+    return { kind: "signin", member: reference.member, secret: reference.secret };
   return null;
 }
 var runnerBinding = (runner) => !!runner && typeof runner.idFromName === "function" && typeof runner.get === "function";
+var held = (secret) => typeof secret === "string" && secret.length > 0;
 function precheck(reference, runner) {
   const ref = usable(reference);
   if (!ref) return { refusal: refused(
     null,
     "ACCOUNT_REFERENCE_UNUSABLE",
-    `a model turn runs only under the account reference that serves a member's act: {kind: "apikey", key} or {kind: "signin", member}, the member's own, or a project's or the group's API key {kind: "apikey", level: "project" or "group", key}`
+    `a model turn runs only under the account reference that serves a member's act: {kind: "apikey", key} or {kind: "signin", member, secret}, the member's own, or a project's or the group's API key {kind: "apikey", level: "project" or "group", key}`
+  ) };
+  if (ref.kind === "signin" && !held(ref.secret)) return { refusal: refused(
+    null,
+    "SIGNIN_NOT_HELD",
+    "this member's Claude sign-in is not held: they connect their Claude account again"
   ) };
   if (ref.kind === "signin" && !runnerBinding(runner)) return { refusal: refused(
     null,
@@ -2850,6 +2875,7 @@ function precheck(reference, runner) {
   ) };
   return { ref };
 }
+var signinAccount = (ref, given) => ({ member: ref.member, secret: ref.secret, headers: traceHeaders(given, ref.secret) });
 async function converse({
   reference,
   runner,
@@ -2860,7 +2886,9 @@ async function converse({
   tools,
   finalTool,
   onTool,
-  maxTurns = CONVERSATION_MAX_TURNS
+  maxTurns = CONVERSATION_MAX_TURNS,
+  trace,
+  memberRef
 }) {
   const { ref, refusal: refusal3 } = precheck(reference, runner);
   if (refusal3) return refusal3;
@@ -2881,7 +2909,7 @@ async function converse({
   };
   if (ref.kind === "signin")
     return signinConverse({
-      member: ref.member,
+      account: signinAccount(ref, { trace, memberRef }),
       runner,
       model,
       system,
@@ -3754,63 +3782,126 @@ var SIGNIN_ROUTES = Object.freeze({
   signout: "/signout"
 });
 var MEMBER_MAX = 200;
+var TRACE_HEADER2 = "x-civicsmith-trace";
+var MEMBER_REF_HEADER2 = "x-civicsmith-member-ref";
+var TEXT_HEAD_MAX = 120;
+var OWN_CODES = Object.freeze(["RUNNER_NOT_CONFIGURED", "BAD_BODY", "BAD_MEMBER", "BAD_STEP", "BAD_CODE", "RUNNER_SILENT"]);
+var RUNNER_CODES = Object.freeze([
+  "BAD_REQUEST",
+  "BAD_MEMBER",
+  "NOT_THIS_MEMBER",
+  "SIGNIN_ADDRESS_UNEXPECTED",
+  "SIGNIN_UNAVAILABLE",
+  "NO_SIGNIN_WAITING",
+  "BAD_CODE",
+  "SIGNIN_REFUSED",
+  "SIGNOUT_FAILED",
+  "RUNNER_NOT_STARTED",
+  "ATTEMPT_SUPERSEDED",
+  "SIGNIN_NOT_HELD",
+  "SIGNIN_TOKEN_REFUSED"
+]);
+var SIGNIN_CODES = Object.freeze([.../* @__PURE__ */ new Set([...OWN_CODES, ...RUNNER_CODES])].sort());
 var RUNNER_ORIGIN = "https://agent-runner";
-var DETAIL_MAX2 = 300;
+var TRACE_SHAPE = /^[A-Za-z0-9._:-]{1,128}$/;
+var MEMBER_REF_SHAPE = /^[\x21-\x7e]{1,200}$/;
+var ATTEMPT_MAX = 200;
 var isObject4 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
-function scrubbed(text, code) {
+function scrub2(text, code) {
   let s = String(text ?? "");
   if (typeof code === "string" && code) s = s.split(code).join("[the code]");
-  return s.slice(0, DETAIL_MAX2);
+  return s.replace(/\?[^\s"'<>]*/g, "?[query]").replace(/sk-ant-[A-Za-z0-9._-]*/g, "[token]").replace(/eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*/g, "[token]").replace(/[A-Za-z0-9._-]{32,}/g, "[token]");
 }
+var textHead = (text, code) => scrub2(text, code).slice(0, TEXT_HEAD_MAX);
+var WORDS = {
+  RUNNER_NOT_CONFIGURED: "Your group's Civicsmith cannot connect a Claude account yet: the part that runs a member's own Claude sign-in is not installed. Nothing was sent. An administrator can install it.",
+  BAD_BODY: "Your group's Civicsmith could not read this sign-in request, so nothing was sent. Try again from your settings.",
+  BAD_MEMBER: "Your group's Civicsmith could not tell whose sign-in this is, so nothing was sent. Sign in to your group's Civicsmith again, then try again.",
+  BAD_STEP: "Your group's Civicsmith did not recognise this sign-in step, so nothing was sent. Try again from your settings.",
+  BAD_CODE: "The code from Anthropic's page was missing, so nothing was sent. Paste the whole code Anthropic's page shows you, including any part after a # sign, and try again.",
+  RUNNER_SILENT: "Your group's Civicsmith could not reach the part that runs your Claude sign-in, so what happened to this step is not known. Wait a minute and try again; if it keeps happening, tell an administrator the reference."
+};
 async function handleSignin(req, env, deps) {
-  const { refusal: refusal3 } = deps;
+  const { refusal: refusal3, json: json2, now = () => Date.now(), log = (line2) => console.log(line2), mint = () => crypto.randomUUID() } = deps;
+  const sentTrace = req.headers.get(TRACE_HEADER2);
+  const trace = typeof sentTrace === "string" && TRACE_SHAPE.test(sentTrace) ? sentTrace : mint();
+  const sentRef = req.headers.get(MEMBER_REF_HEADER2);
+  const memberRef = typeof sentRef === "string" && MEMBER_REF_SHAPE.test(sentRef) ? sentRef : null;
+  const line = {
+    event: "signin.worker",
+    trace,
+    step: null,
+    member_ref: memberRef,
+    outcome: null,
+    runner_status: null,
+    runner_content_type: null,
+    ms_runner: null,
+    runner_text_bytes: null
+  };
+  const written = (response, fields) => {
+    log(JSON.stringify({ ...line, ...fields }));
+    return response;
+  };
+  const own2 = (code2, status, extra = {}, outcome = "refused") => written(refusal3(code2, WORDS[code2], status, { trace, ...extra }), { outcome, code: code2, ...lineOf(extra) });
+  const lineOf = (extra) => "runner_text_head" in extra ? { runner_text_head: extra.runner_text_head } : {};
   const runner = env.RUNNER;
   if (!runner || typeof runner.idFromName !== "function" || typeof runner.get !== "function")
-    return refusal3(
-      "RUNNER_NOT_CONFIGURED",
-      "this member reaches a member's own Claude sign-in only through the runner binding, and the binding is absent, so nothing was sent.",
-      503
-    );
+    return own2("RUNNER_NOT_CONFIGURED", 503, {}, "failed");
   const body = await req.json().catch(() => null);
-  if (!isObject4(body)) return refusal3("BAD_BODY", "the request body could not be read as a JSON object.", 400);
+  if (!isObject4(body)) return own2("BAD_BODY", 400);
   const { member, step } = body;
   if (!(typeof member === "string" && member.trim().length > 0 && member.length <= MEMBER_MAX))
-    return refusal3(
-      "BAD_MEMBER",
-      `member is the member whose own sign-in this is, as the door stamps it: a non-empty string of at most ${MEMBER_MAX} characters.`,
-      400
-    );
-  if (!Object.hasOwn(SIGNIN_ROUTES, step))
-    return refusal3("BAD_STEP", `step is one of ${Object.keys(SIGNIN_ROUTES).join(", ")}.`, 400);
+    return own2("BAD_MEMBER", 400);
+  if (!Object.hasOwn(SIGNIN_ROUTES, step)) return own2("BAD_STEP", 400);
+  line.step = step;
   const code = step === "code" ? body.code : void 0;
-  if (step === "code" && !(typeof code === "string" && code.length > 0))
-    return refusal3(
-      "BAD_CODE",
-      "the code step carries the code from Anthropic's page: a non-empty string. Nothing was sent.",
-      400
-    );
-  const payload = step === "code" ? { member, code } : { member };
+  if (step === "code" && !(typeof code === "string" && code.length > 0)) return own2("BAD_CODE", 400);
+  const hold = body.hold === true;
+  const payload = step === "code" ? { member, code, ...typeof body.attempt === "string" && body.attempt.length <= ATTEMPT_MAX ? { attempt: body.attempt } : {} } : { member };
+  const headers = { "content-type": "application/json", [TRACE_HEADER2]: trace, ...memberRef ? { [MEMBER_REF_HEADER2]: memberRef } : {} };
   let res, text;
+  const started = now();
   try {
     const stub = runner.get(runner.idFromName(member));
-    res = await stub.fetch(`${RUNNER_ORIGIN}${SIGNIN_ROUTES[step]}`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+    res = await stub.fetch(`${RUNNER_ORIGIN}${SIGNIN_ROUTES[step]}`, { method: "POST", headers, body: JSON.stringify(payload) });
     text = await res.text();
   } catch (e) {
-    return refusal3("RUNNER_SILENT", "the member's own runner did not answer, so the step's outcome is not known: " + scrubbed(e?.message ?? e, code), 502);
+    line.ms_runner = Math.max(0, now() - started);
+    return own2(
+      "RUNNER_SILENT",
+      502,
+      { runner_status: res?.status ?? null, detail_from_binding: textHead(e?.message ?? e, code) },
+      "failed"
+    );
   }
+  line.ms_runner = Math.max(0, now() - started);
+  line.runner_status = res.status;
+  line.runner_content_type = (res.headers.get("content-type") ?? "").slice(0, 100) || null;
+  line.runner_text_bytes = new TextEncoder().encode(text).length;
   let answer;
   try {
     answer = JSON.parse(text);
   } catch {
     answer = void 0;
   }
-  if (answer === void 0)
-    return refusal3("RUNNER_SILENT", `the member's own runner answered with no JSON, so the step's outcome is not known (status ${res.status}).`, 502);
-  return new Response(text, { status: res.status, headers: { "content-type": "application/json" } });
+  if (!isObject4(answer))
+    return own2("RUNNER_SILENT", 502, { runner_status: res.status, runner_text_head: textHead(text, code) }, "failed");
+  let out = answer, held2;
+  if (step === "code" && Object.hasOwn(answer, "token")) {
+    if (hold) held2 = true;
+    else {
+      const { token: _token, valid_for: _validFor, ...rest } = answer;
+      out = { ...rest, held: false };
+      held2 = false;
+    }
+  }
+  const relayed = typeof out.trace === "string" ? out : { ...out, trace };
+  const refused2 = !(res.status >= 200 && res.status < 300) || answer.ok === false;
+  return written(json2(relayed, res.status), {
+    outcome: refused2 ? "refused" : "ok",
+    ...refused2 && typeof answer.code === "string" && /^[A-Z][A-Z0-9_]{0,59}$/.test(answer.code) ? { code: answer.code } : {},
+    ...held2 !== void 0 ? { held: held2 } : {}
+  });
 }
 
 // src/transcribe.mjs
@@ -4209,8 +4300,8 @@ function documentHoldings(resolved) {
     }
     const chain = r.chain && typeof r.chain === "object" ? r.chain : null;
     const key = chain && typeof chain.address_norm === "string" ? chain.address_norm : "";
-    const held = chain ? Number(chain.total) || 0 : 0;
-    if (!key || held < 1) {
+    const held2 = chain ? Number(chain.total) || 0 : 0;
+    if (!key || held2 < 1) {
       unchained.push({
         citation: r.citation ?? null,
         address: r.address ?? null,
@@ -4224,7 +4315,7 @@ function documentHoldings(resolved) {
     if (!doc) {
       doc = {
         address_norm: key,
-        versions_held: held,
+        versions_held: held2,
         truncated: chain.truncated === true,
         cited: [],
         versions_cited: [],
@@ -4294,7 +4385,7 @@ async function levelState(account) {
   if (!isObject6(account) || !CASCADE_ORDER.includes(account.level)) return LEVEL_UNSET;
   if (!LEVEL_KINDS[account.level].includes(account.kind)) return LEVEL_UNSET;
   if (account.level === "project" && !projectOf(account)) return LEVEL_UNSET;
-  if (account.kind === "signin") return memberOf(account) ? LEVEL_AVAILABLE : LEVEL_UNSET;
+  if (account.kind === "signin" && !memberOf(account)) return LEVEL_UNSET;
   const v = secretOf(account);
   if (v.length === 0) return LEVEL_UNSET;
   if (PUBLISHED_TOKEN_HASHES.has(await sha256hex(v))) return LEVEL_REVOKED;
@@ -4327,7 +4418,7 @@ async function cascadeToken(account) {
   if (!st.available) return null;
   return {
     level: st.level,
-    reference: account.kind === "signin" ? { kind: "signin", member: memberOf(account) } : { kind: "apikey", key: secretOf(account) }
+    reference: account.kind === "signin" ? { kind: "signin", member: memberOf(account), secret: secretOf(account) } : { kind: "apikey", key: secretOf(account) }
   };
 }
 
@@ -4432,11 +4523,11 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
           ...pack.ok ? {} : { rendered_basis: "UNDETERMINED", pack_absent: pack.why }
         }
       ) };
-    const { pack: held } = pack;
-    model.pack = held;
+    const { pack: held2 } = pack;
+    model.pack = held2;
     model.messages = [];
-    model.system = parentSystem(held);
-    model.layers = loadableLayers(held, model.suggestions);
+    model.system = parentSystem(held2);
+    model.layers = loadableLayers(held2, model.suggestions);
     model.tools = [
       LOAD_LAYER(model.layers),
       ...session.mode === "plan" ? planJudgeTools(OPTION_KEYS) : judgeTools(LEVELS)
@@ -4864,19 +4955,19 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       return out;
     }
     case "dedup": {
-      const held = planeAnswer(
+      const held2 = planeAnswer(
         await call("basisversions", { id: state.target || "", limit: 50 }),
         "basisversions"
       );
-      if (held.silent) return { silent: held.silent };
+      if (held2.silent) return { silent: held2.silent };
       const proposed = (state.candidates || []).length;
-      if (held.refused) {
-        out.refused = held.refused;
-        out.note = `the record's own versions could NOT be read \u2014 the plane refused '${String(held.refused.code ?? "?")}'` + (held.refused.check ? ` (${held.refused.check})` : "") + `, so this run compared its ${proposed} candidate(s) against NOTHING and says so rather than reporting them all as new. PL-3's check 3 is still the fence`;
+      if (held2.refused) {
+        out.refused = held2.refused;
+        out.note = `the record's own versions could NOT be read \u2014 the plane refused '${String(held2.refused.code ?? "?")}'` + (held2.refused.check ? ` (${held2.refused.check})` : "") + `, so this run compared its ${proposed} candidate(s) against NOTHING and says so rather than reporting them all as new. PL-3's check 3 is still the fence`;
         out.state = { ...state, queue: [...state.candidates || []] };
         return out;
       }
-      const body = held.result ?? {};
+      const body = held2.result ?? {};
       const names = new Set((Array.isArray(body.versions) ? body.versions : []).map((v) => String(v && v.name ? v.name : "")).filter(Boolean));
       const aimedHere = (c) => (c.target ?? state.target ?? null) === (state.target ?? null);
       const elsewhere = (state.candidates || []).filter((c) => c && !aimedHere(c)).length;
@@ -4983,15 +5074,15 @@ async function performPlanStep(call, state, runId) {
       return out;
     }
     case "dedup": {
-      const held = state.planId ? planeAnswer(await call("plan", { id: state.planId }), "plan") : null;
+      const held2 = state.planId ? planeAnswer(await call("plan", { id: state.planId }), "plan") : null;
       const candidates = state.candidates || [];
-      if (!held || held.silent || held.refused) {
-        if (held?.refused) out.refused = held.refused;
-        out.note = `the plan could NOT be read (${held?.refused ? `the plane refused '${String(held.refused.code ?? "?")}'` : held?.silent ? "the plane was silent" : "the run names no plan"}), so ${candidates.length} candidate(s) were compared against NOTHING and say so rather than being reported new`;
+      if (!held2 || held2.silent || held2.refused) {
+        if (held2?.refused) out.refused = held2.refused;
+        out.note = `the plan could NOT be read (${held2?.refused ? `the plane refused '${String(held2.refused.code ?? "?")}'` : held2?.silent ? "the plane was silent" : "the run names no plan"}), so ${candidates.length} candidate(s) were compared against NOTHING and say so rather than being reported new`;
         out.state = { ...state, queue: [...candidates] };
         return out;
       }
-      const doc = held.result && typeof held.result === "object" ? held.result.plan ?? held.result : {};
+      const doc = held2.result && typeof held2.result === "object" ? held2.result.plan ?? held2.result : {};
       const { queue, dropped } = planDedup(candidates, doc);
       out.note = `${candidates.length} candidate(s) compared against the plan's options and proposals; ${dropped.length} already held, dropped before any write; ${queue.length} to propose, in order`;
       out.state = { ...state, queue };
@@ -5234,12 +5325,19 @@ async function accountOf(body) {
       409,
       { capability: "unavailable" }
     ) };
-  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || (a.level === "project" ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX) : a.project !== void 0) || a.kind === "signin" && (a.secret !== void 0 || a.suggestions !== void 0 && typeof a.suggestions !== "boolean"))
+  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || (a.level === "project" ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX) : a.project !== void 0) || a.kind === "signin" && (a.secret !== void 0 && a.secret !== null && typeof a.secret !== "string" || a.suggestions !== void 0 && typeof a.suggestions !== "boolean"))
     return { refusal: refusal2(
       "BAD_ACCOUNT",
-      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a project's account names its project, and no other does; a signin account is the member's own and carries no secret, and its suggestions switch, when sent, is true or false. What arrived is not one, and this member judges only what it is handed.`,
+      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a project's account names its project, and no other does; a signin account is the member's own, its secret the token held for that member, and its suggestions switch, when sent, is true or false. What arrived is not one, and this member judges only what it is handed.`,
       400,
       { field: "account" }
+    ) };
+  if (a.kind === "signin" && !(typeof a.secret === "string" && a.secret.length > 0))
+    return { refusal: refusal2(
+      "SIGNIN_NOT_HELD",
+      "Your group's Civicsmith holds no Claude sign-in for you to use, so nothing was done. Connect your Claude account again in your settings, then try again.",
+      409,
+      { capability: "unavailable" }
     ) };
   const cascade = await resolveClaudeCascade(a);
   if (!cascade.available)

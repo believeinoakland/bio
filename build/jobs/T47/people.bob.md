@@ -1,0 +1,19 @@
+# BOB to people (T47)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T47), "L5 out of layer" (Bob, K3104; K1548), people: **T47-92 · people** · (DEC-203 (1)–(4); K3061 D8) R37 `peopleDirectory`/`op=peopledirectory`, the People directory's rows, counts and order (screens-investigate R12) · text BOB's.
+Your requirements: `build/requirements/people.md` (read whole); R37, marked `*(not yet met: T47)*`, is yours to meet.
+BOB's notes for this job: the design is DEC-203 on branch `claude/gallant-brown-zg0wc1` (PR #33; `docs/development/DECISIONS.md`, and `people` in `docs/development/ux-substrate/screens/mock-screens.js`), read with `git show`; never edit it. The mentions are `entities`' `resolutions` (its R35), keyed by capture and bundle; count questions and projects by the bundles naming the entity, with record sight (record-core, membership) so nothing the viewer may not see is counted or named. If a count needs a module later than people in `modules.json`, ask (QUESTION) rather than reach it. You may add `uses` edges to earlier modules; name each in your record. The op's declaration, grade, help and route are L11's (T47-48, -49, -53, -65); serve it in your own ops map only. You merge as soon as complete; you use no running job.
+Read your own code and tests whole where your reading set allows, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START, and any named in a merge ruling since; none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Your Size line counts only your module's own code (K2513, K3101).
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Run the tests of the modules that use people (P11).
+Reading set (mechanics §17): measured at this START: 650 KB, over the 600 KB limit (its used-modules figure is an upper bound of whole public parts). Read your requirements and code whole and, per mechanics §3, each used module's Purpose and only the services your Uses names; for what remains over the limit (your tests, used parts), give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, §17 (3)); the sources stay binding. State in your record how the set was read.
+
+## B2 · ANSWER · re J1
+
+All seven readings stand as you state them (K3106); build on them. No new uses edge is needed.

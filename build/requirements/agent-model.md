@@ -42,6 +42,18 @@ Terms. An **account reference** is `{kind: "apikey", key}` or (T38; K2200) `{kin
 - **R14** (T42; N832; R12; K2611) A page's picture is record content and reaches the model as R12's record text does: only inside the `tool_result` answering the call it came from, as an `image` block `{type: "image", source: {type: "base64", media_type, data}}` the caller's `onTool` answers in its `blocks`, never in `system` or a `user` turn's own content. On the `apikey` path it is sent unchanged. On the `signin` path a result holding an `image` block is relayed as R15 states, and answers `refused` with type `IMAGE_NOT_RELAYED`, sending nothing, where the runner does not answer `agent-runner` R24's capability (R15; wording K2951). The meter (R6) counts the block's bytes as part of the request.
 - **R15** (T46; N852; K2816 (3); amends R14) On the `signin` path a `tool_result` holding an `image` block is relayed through the runner as `agent-runner` R24 returns it (the block in R14's shape, its media type and bytes unchanged, beside its text blocks in order), no longer refused `IMAGE_NOT_RELAYED`; the picture still reaches the model only inside the `tool_result` answering its call, and the meter counts its bytes. `IMAGE_NOT_RELAYED` stays for a runner that does not answer R24's capability, so an older runner refuses rather than drops the picture. (K2947) A runner answers that capability when its `GET /version` (`agent-runner` R5) lists `"image"` in `capabilities`; the member's runner is asked only when a picture is about to be relayed, at most once per conversation, and any other answer (the key absent, a non-200, a throw, a body not JSON) refuses `IMAGE_NOT_RELAYED` with nothing sent.
 
+- **R16** (b; K3060 D10; amends R2) A `signin` reference carries the held token.
+  - **The reference.** It is `{kind: "signin", member, secret}`. `secret` (the token `credentials` holds) is sent only inside the conversation request's credential, `{kind: "signin", member, secret}`, in the first message on the WebSocket to the member's own instance (`agent-runner` R28). It is never logged, put in a trace, in `usage`, in an outcome or in its `detail`, or sent anywhere else.
+  - **Headers.** The upgrade request carries `x-civicsmith-trace` and `x-civicsmith-member-ref` when the caller gave them, and nothing secret.
+  - **Refusals.**
+    - A `signin` reference with no non-empty string `secret` answers `refused` with type `SIGNIN_NOT_HELD`, making no call.
+    - The runner's `SIGNIN_NOT_HELD` and `SIGNIN_TOKEN_REFUSED` are `refused` with that type, never reworded (R2).
+  - **Tests:**
+    - a sentinel `secret` reaches the stub runner's first frame only, and no outcome, usage or detail;
+    - no `secret` gives `SIGNIN_NOT_HELD` with no runner call;
+    - control: an `apikey` reference is unchanged.
+  -
+
 ## Private
 
 ### Uses

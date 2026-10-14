@@ -1,6 +1,6 @@
 # progressions — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed; R32's amount part moved to `money-checks` R1, its amount-free junction checks staying here (K1505 (8)). Last changed T33 (T33-32: R16, R32 amended; R37–R42 new); every requirement met (PROGRESSIONS #9, K1586).
+**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed; R32's amount part moved to `money-checks` R1, its amount-free junction checks staying here (K1505 (8)). Last changed T47 (T47-69: R43 new, amending R16 and R18, `op=proposals` evaluated at the server's instant, a query `now` ignored; N983, K3027); marked not yet met (T47). Before that T33 (T33-32: R16, R32 amended; R37–R42 new); every other requirement met (PROGRESSIONS #9, K1586).
 
 **Size (P6).** About 1,720 lines move (about 910 without comment-only and blank lines): `store.mjs` 1,439, `schema.mjs` 211, `bio-checks.mjs` 66. If the project-scoped arm of `proposeDispose` (152 lines) goes to `queue` as the map proposes, about 1,560. Well under 4,000.
 
@@ -48,6 +48,8 @@ Terms. A **stage** is `{stage_key, stage_no, label, after_stage, cardinality, wi
 
 **proposalsFeed(now) → {instances, proposals, dispositions, counts}** (`op=proposals`)
 - **R18** One walk over every threaded instance. `instances[]`: each instance with an open finding, missing findings then overdue. `proposals[]`: one per (progression, stage) carrying its instances; the weakest grade across them, null with `grade_determined: false` if any is undetermined; `overdue`, `overdue_count`, `kinds`, `surfaced_by: machine`, `definition_version` and `prior_disposition` (a decision about an earlier version); ordered by instance count, most first, then key. `dispositions[]`: every decision recorded, with its version view. A finding governed by an applying decision leaves `instances` and `proposals` and stays in `dispositions`.
+
+- **R43** (T47; N983; K3027; amends R16, R18) `op=proposals` and `op=captureprogressions` are evaluated at the server's instant, since its answer (which stage is overdue, `overdue_count`) may gate an act: the route takes no instant from the request, a `now` in the query or the body being ignored, never read, so a request carrying one answers exactly as the same request without it. Its overdue findings are judged at R16's configured clock (the instance's clock, which tests set through `progressionsOf`'s `nowMs` option, else `BIO_NOW_MS`, else the wall clock). An in-plane caller (`queue-producers`, `calculations`, `intent`) may still pass its own instant to `proposalsFeed`, as R16 states; no request does.
 
 **captureProgressions({captureSha, now}) → {capture_sha, count, instances}** (`op=captureprogressions`)
 - **R19** `NO_SHA`; every (progression, entity, stage) at which the capture is placed, each instance assembled once, with its missing and overdue findings, each carrying `established`, `needs_confirmation` (grade C) and its disposition; a capture placed nowhere answers an empty list. Each instance carries `open_finding_count`.
@@ -125,6 +127,7 @@ Terms. A **stage** is `{stage_key, stage_no, label, after_stage, cardinality, wi
 - **Vocabulary.** `STAGE_REQUIREDNESS` lives in `affordances.mjs` (layer 11) today; it moves here and `affordances` re-exports it. `DISPOSITIONS` is `promotion`'s one list (its R51), which R35 re-exports here; `inquiry`, `affordances` and `basis-versions` keep re-exporting it through this module and `inquiry` (N340).
 - **Deferred, with its trigger (Framework §8.2):** a stage observed out of order, and a definition scoped to an institution, when a placed document carries its own date.
 - **T33 (T33-32).** R16 no longer reads a reading's date or a registration as a stage's date; an instance threaded before T33 has no own dates until a member names them or `events` holds one per capture, so its overdue findings read undetermined with the bound. `overdue_by_ms` gives way to `overdue_by` in the interval's units; the job keeps `overdue_by_ms` beside it when a caller still reads it. `money-checks` R1 still lists all four of R32's clauses; BOB reconciles it with K1505 (8) (named in this fold's report).
+- **T47 (T47-69).** Today the route passes the query's `now` (`progressionOps`' `proposals: () => p.proposalsFeed(q("now"))`); R43 drops it there. `op=captureprogressions` (R19) is held to the same rule (K3033); both met at T47-69 (K3071).
 - Tests: each refusal gets a negative control; R3, R11 (a `sometimes` stage missing), R13 and R16 (an unparsable `within`) get over-strictness arms. Built work for D-623 and D-688 is on `land/worker/*`, judged by the modules the map names.
 
 ## Open for Bob

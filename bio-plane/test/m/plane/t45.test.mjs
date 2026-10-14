@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
-import { store } from "./fixture.mjs";
+import { store, disclosed } from "./fixture.mjs";
 import { MODULE_MAPS } from "./maps.mjs";
 import { actionHoldsOf, actionHoldsOps, ACTION_HOLDS_TABLES } from "../../../src/action-holds/index.mjs";
 import { actionRepliesOf, actionRepliesOps, ACTION_REPLIES_TABLES } from "../../../src/action-replies/index.mjs";
@@ -17,6 +17,7 @@ import { actionPlansOf } from "../../../src/action-plans/index.mjs";
 import { doorbellOf } from "../../../src/doorbell/index.mjs";
 import { ratificationOf } from "../../../src/ratification/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
+import { caseInputsOf } from "../../../src/case-inputs/index.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { consequencesModule } from "../../../src/consequences/index.mjs";
@@ -71,7 +72,10 @@ test("R39 (K2815, reconciliation R19; doorbell R3, ratification R45, case-author
   };
   held(doorbellOf(c).registerReader("litigation-hold", "zz-probe", f), "action-holds", "doorbell's litigation-hold reader");
   assert.equal(ratificationOf(c).registerHoldReader({ holdsOn: f }).reason, "HOLD_READER_DECLARED", "ratification's hold reader");
-  held(caseAuthoringOf(c).registerOpenRequests("zz-probe", { openRequestsOn: f }), "action-replies", "case-authoring's open requests");
+  /* T47 (N908; case-inputs R8): the open-requests source is case-inputs' since the split, on the one instance
+     case-authoring's factory creates */
+  held(caseInputsOf(c).registerOpenRequests("zz-probe", { openRequestsOn: f }), "action-replies", "case-inputs' open requests");
+  assert.equal(caseAuthoringOf(c).inputs, caseInputsOf(c), "case-authoring's case-inputs is the one the plane routes");
   held(stepsOf(c).registerDueHolder("zz-probe", f), "action-clocks", "steps' due holder");
   held(standardsOf(c).registerOwnSendingCheck("zz-probe", f), "actions", "standards' own-sending check");
   held(consequencesModule(c).registerOwnActReader(f, "zz-probe"), "actions", "consequences' own-act reader");
@@ -171,6 +175,7 @@ async function doors({ gate = null, parts = [] } = {}) {
             VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
   sql.exec(`INSERT INTO sessions (token_sha, role, expires, created) VALUES (?, 'member:ann', ?, 'x')`,
            createHash("sha256").update(SESSION).digest("hex"), Date.now() + 3600e3);
+  await disclosed(x.ctx);   /* R44 (T47): the disclosure first, as the assembled plane asks */
   assert.equal((await credentialsOf(x.ctx).accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ant-zz-ann",
                                                                  by: "member:ann" })).ok, true);
   const grants = () => [...sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c;

@@ -24,7 +24,7 @@ async function usesWorld() {
   assert.equal(w.join("P", "ann", "bob").ok, true);
   w.project("S", "cy");
   w.project("D", "dee");
-  w.c.subscriptionConnected({ member: "cy" });
+  await w.signin("cy");
   assert.equal((await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: KEYS.ann, by: "ann" })).ok, true);
   assert.equal((await w.c.projectKeySet({ project: "P", key: KEYS.project, by: "ann" })).ok, true);
   assert.equal((await w.c.groupKeySet({ key: KEYS.group, by: "admin" })).ok, true);

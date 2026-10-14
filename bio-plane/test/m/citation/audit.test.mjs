@@ -1,7 +1,8 @@
 /* citation: what `cite`, `sever` and `reinstate` write is a document the check catalogue accepts (R2, R4), read back
    through record-core's audit, a different door from the one that wrote it. Converted from the old battery's
    `citeproject-inquiry` (legacy-tests T17, citation's share: "op=audit finds no error on what cite/sever/reinstate
-   rewrote"); its affordances arms are `affordances`'. The documents here are whole ones the catalogue passes before any
+   rewrote"; T47: and `drawQuestion`, R14, and `sever`/`reinstate` on a question, R15); its affordances arms are
+   `affordances`'. The documents here are whole ones the catalogue passes before any
    act, so a finding after one is the act's. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -89,4 +90,23 @@ test("R2, R4: the audit that finds the acts' documents clean is not blind — a 
   const a = await audit(w);
   assert.equal(a.withErrors, 1);
   assert.deepEqual(a.offenders.map((o) => o.bundleId), [caseA]);
+});
+
+test("R15, R14: a question whose leg was severed and reinstated, and a case a question was drawn into, pass the catalogue's audit at every step", async () => {
+  const { w, caseA } = setup();
+  const s = await w.select([DOC, QUESTION2]);
+  assert.equal(w.cit.cite({ project: QUESTION, handle: s, ...ANN, role: "supports", note: "rests on both" }).ok, true);
+  assert.equal(w.cit.drawQuestion({ project: caseA, inquiry: QUESTION, ...ANN, note: "drawn in" }).ok, true);
+  const clean = async (label) => {
+    const a = await audit(w);
+    assert.deepEqual([a.withErrors, findingsOn(a, [QUESTION, caseA])], [0, []], label);
+  };
+  await clean("cited and drawn");
+  assert.equal(w.cit.sever({ project: QUESTION, handle: s, ...ANN, reason: "the ledger was restated" }).ok, true);
+  assert.deepEqual(w.fm(QUESTION).references.map((e) => [e.target, e.status]), [[DOC, "severed"], [QUESTION2, "severed"]]);
+  await clean("severed");
+  assert.equal(w.cit.reinstate({ project: QUESTION, handle: s, ...ANN, reason: "the restatement was withdrawn" }).ok, true);
+  await clean("reinstated");
+  assert.deepEqual(w.fm(QUESTION).basis.map((l) => [l.target, l.role]), [[DOC, "supports"], [QUESTION2, "supports"]]);
+  assert.deepEqual(w.fm(caseA).references.map((e) => [e.target, e.status]), [[QUESTION, "confirmed"]]);
 });

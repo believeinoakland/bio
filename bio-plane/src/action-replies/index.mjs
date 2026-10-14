@@ -4,19 +4,21 @@
  * New at T45 (K2781 (1)), built fresh after `action-clocks`: a member lays out a reply to a request for comment claim by
  * claim, with any proposed layout stored apart (R1); a member links a matter or project to the response it arose from,
  * read both ways (R2); and at signing each open request for comment on a case is answered once as a line of fact
- * through `case-authoring`'s seam (R3). A member does every act; nothing here rates a reply or counts a chain (R4).
+ * through `case-inputs`' seam (its R8; R3). A member does every act; nothing here rates a reply or counts a chain (R4).
  * T46: a proposal is labelled through `record-grammar`'s `bearing` subject (R5); `aroseFromLink`'s refusals and sight as
  * R6 states them; six rows read their words by key (R7, `./checks.mjs`); each open-request row answers `replied` (R8).
+ * T47: the source registers with `case-inputs` (its R8), split from `case-authoring` (N908; R3); `BEARING_REFUSED` answers
+ * DEC-199's sentence with its `{item}` filled (R9).
  *
  * REACHED as `actionRepliesOf(host, deps)` (K61): one instance per host, created on the first call. At creation it
  * creates its tables and declares them to record-core's purge (R4), and registers its open-requests source once with
- * `case-authoring.registerOpenRequests` (its R70; R3) where case-authoring is given or the composition root starts it
- * with its environment; a source already held (`PROVIDER_DECLARED`) stands.
+ * `case-inputs.registerOpenRequests` (its R8; R3) where case-inputs is given or the composition root starts it with its
+ * environment; a source already held (`PROVIDER_DECLARED`) stands.
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership   layer 2: `transact`, `declarePurge`; `sight`, `inSight`.
  *   actions              `actionRead` (its R29), `actionsFor` (its R30): the action, its kind, legs, ledger, clock and
  *                        state, the viewer's sight of it answered as `actions` answers it.
- *   caseAuthoring        `registerOpenRequests` (its R70); `null` registers none.
+ *   caseInputs           `registerOpenRequests` (its R8); `null` registers none.
  *   now                  the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env                  the instance bindings.
  *
@@ -25,10 +27,10 @@
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { actionsOf } from "../actions/index.mjs";
-import { caseAuthoringOf } from "../case-authoring/index.mjs";
+import { caseInputsOf } from "../case-inputs/index.mjs";
 import { bearingFindings, BEARINGS, counterpartyName } from "../action-grammar/index.mjs";
 import { isMachineIdentity, proposalLabel, BUNDLE_ID_RE, idPattern } from "../record-grammar/index.mjs";
-import { ACTION_REPLY_CHECKS } from "./checks.mjs";
+import { ACTION_REPLY_CHECKS, fillWords } from "./checks.mjs";
 import { ACTION_REPLIES_TABLES, migrateActionReplies } from "./schema.mjs";
 
 export { ACTION_REPLY_CHECKS, ACTION_REPLY_WORDS } from "./checks.mjs";
@@ -53,6 +55,17 @@ export function withRow(r) {
   return { ...r, code: r.code ?? r.reason, check: r.check ?? row.check, translation: r.translation ?? row.translation };
 }
 const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detail, ...(extra || {}) });
+
+/* R9 (T47; N992; DEC-199): the item `BEARING_REFUSED`'s sentence names, from the first finding `action-grammar.bearingFindings`
+   pushes (its R24): the list itself when the count is outside 1 to 50 (the finding names no `claims[i]`), else the
+   claim's position in `claims`, counted from 1, with the claim when the entry names one. */
+const CLAIM_SHOWN_MAX = 60;
+function bearingItem(claims, index) {
+  if (index === null) return "The list of claims";
+  const c = Array.isArray(claims) ? claims[index] : undefined;
+  const claim = c && typeof c === "object" && !Array.isArray(c) && typeof c.claim === "string" ? c.claim.trim() : "";
+  return claim ? `Claim ${index + 1} (${claim.slice(0, CLAIM_SHOWN_MAX)})` : `Claim ${index + 1}`;
+}
 
 /* An entry's position: a non-negative integer, given as a number or its digits; null otherwise. */
 function ordOf(v) {
@@ -150,8 +163,10 @@ export class ActionReplies {
       const first = errs[0];
       /* the item the grammar names (`claims[i]` in its message), or null for the list as a whole */
       const named = /claims\[(\d+)\]/.exec(String(first.message ?? first.detail ?? ""));
-      return refuse("BEARING_REFUSED", first.message ?? first.detail ?? null, { target,
-        item: first.item ?? (named ? Number(named[1]) : null),
+      const item = first.item ?? (named ? Number(named[1]) : null);
+      return refuse("BEARING_REFUSED", first.message ?? first.detail ?? null, { target, item,
+        /* R9: DEC-199's sentence, read by key, its `{item}` filled; never answered unfilled */
+        translation: fillWords("refusal.BEARING_REFUSED", { item: bearingItem(claims, Number.isInteger(item) ? item : null) }),
         findings: errs.map((f) => ({ check: f.check, detail: f.message ?? f.detail ?? null, ...(f.code ? { code: f.code } : {}),
                                      ...(f.repairs ? { repairs: f.repairs } : {}) })) });
     }
@@ -338,7 +353,7 @@ export class ActionReplies {
   /* ================================================================ R3: the open requests at signing */
 
   /** R3: each request for comment the viewer may see, not resolved or abandoned, whose `advances` or `rests_on` legs
-   *  name a bundle among `members`, as `case-authoring` R70's rows. Writes nothing; throws when it cannot read. */
+   *  name a bundle among `members`, as `case-inputs` R8's rows. Writes nothing; throws when it cannot read. */
   openRequestsOn({ case: caseId = null, members = [], viewer = null } = {}) {
     void caseId;
     const ids = new Set((Array.isArray(members) ? members : [])
@@ -408,7 +423,7 @@ export { BEARINGS };
 const instances = new WeakMap();
 
 /** K61: the one instance per host; at creation it declares its tables (R4) and registers its open-requests source with
- *  `case-authoring` (its R70; R3). */
+ *  `case-inputs` (its R8; R3). */
 export function actionRepliesOf(host, deps) {
   let r = instances.get(host);
   if (!r) {
@@ -422,15 +437,16 @@ export function actionRepliesOf(host, deps) {
     const declared = record.declarePurge("action-replies", [...ACTION_REPLIES_TABLES]);
     if (declared && declared.ok === false)
       throw new Error(`action-replies: record-core refused its table declaration: ${declared.reason} (${declared.table})`);
-    /* R3 (case-authoring R70): once per host, reached as `actions` reaches intent (the composition root's environment, or
-       given); a source already held (`PROVIDER_DECLARED`) stands. */
-    let ca = null;
-    if (d.caseAuthoring !== null && (d.caseAuthoring || d.env)) {
-      try { ca = d.caseAuthoring || caseAuthoringOf(host); } catch { ca = null; }
+    /* R3 (case-inputs R8; N908): once per host, reached as `actions` reaches intent (the composition root's environment,
+       or given); `case-inputs`' one instance on the host is the one `case-authoring`'s sign step asks. A source already
+       held (`PROVIDER_DECLARED`) stands. */
+    let ci = null;
+    if (d.caseInputs !== null && (d.caseInputs || d.env)) {
+      try { ci = d.caseInputs || caseInputsOf(host); } catch { ci = null; }
     }
     const inst = r;
-    if (ca && typeof ca.registerOpenRequests === "function")
-      ca.registerOpenRequests("action-replies", { openRequestsOn: (args) => inst.openRequestsOn(args || {}) });
+    if (ci && typeof ci.registerOpenRequests === "function")
+      ci.registerOpenRequests("action-replies", { openRequestsOn: (args) => inst.openRequestsOn(args || {}) });
   }
   return r;
 }

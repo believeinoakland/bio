@@ -1,5 +1,5 @@
 /* action-grammar — the action document's arms, readers and rows (requirements: `build/requirements/action-grammar.md`,
- * R1, R2, R3, R7–R15, R20–R26; K6, K64).
+ * R1, R2, R3, R7–R15, R20–R28; K6, K64).
  * Since T45 layer 9 (T45-25; N858, N861, N879, N880, N882–N884, N892 (b); `BIO_Action_v0_2.md`): the vocabularies R2 adds,
  * the press arm's `holder` (R8), the override's ground (R15), the action's new fields (R20–R25: `copied`, `partners`,
  * `press_terms`, an entry's `office_status`, `found_elsewhere` and `speaker`, `reply_owed`, `follows_action`, the claim
@@ -8,6 +8,10 @@
  * finder (R16–R19) are `./phrasings.mjs` and `./finder.mjs`, re-exported here. Each awaiting T46's stamp.
  * Since T46 layer 9 (T46-31; R26; DEC-194, N913; K2953): twenty-four of the C-117.30–.58 rows take their translations from
  * `words.json` by key (`ACTION_GRAMMAR_WORDS`), codes, numbers and `where`s unmoved; awaiting T47's stamp.
+ * Since T47 layer 9 (T47-36; R27, N959; R28, N961, K2982): `clockMovesNotMechanical` states R33's mechanical rule by the date
+ * alone (a timed entry's instant is `actions`' own arm, its R98), and an absent or malformed `todayIso` passes no entry; the
+ * `where`s of the twelve rows whose raising site moved to `action-records` (C-73.2–.5, C-90.2, C-90.6, C-117.39, C-117.48–.52)
+ * name `src/action-records/index.mjs`, codes, numbers and translations unmoved; awaiting T48's stamp.
  * Since T41 layer 9 (T41-46a; H30 (1), K2505): R13's `seeks` (`seeksOf`, `seeksFindings`, C-117.29 `SEEKS_REFUSED`) and the
  * outcome `none_exists` (C-94.5's translation names it); R14's C-32.21 `MACHINE_CANNOT_STATE_SEEKS`, `actions`' fence (K2561);
  * each awaiting T42's stamp.
@@ -266,18 +270,25 @@ export function addresseeIsOffice(cp) { return !!counterpartyOffice(cp); }
 
 /* ---------------------------------------------------------------------------------------------- R33: the clock's mechanical write */
 
-/** R33 (I-11): the one machine write to a clock is `deadline-recheck`, which may move a `pending` entry whose date has
- *  passed to `overdue`, and nothing else. Answers the entries whose status moved otherwise, compared by position. */
+/** R33 (I-11), R27 (T47; N959): the one machine write to a clock is `deadline-recheck`, which may move a `pending` entry
+ *  whose date has passed to `overdue`, and nothing else. Answers, as `[{ord, from, to}]` compared by position, every entry
+ *  whose status moved otherwise. This is R33's DATE rule alone: an entry passes once its held `date` is before
+ *  `todayIso`'s day, and no time of day is read, so a timed entry (`due_at`, `action-clocks` R3) moved on its own day is
+ *  answered like any other; admitting it once its instant has passed is `actions`' own arm (its R98), which filters this
+ *  answer. A `todayIso` that names no day passes no entry. */
 export function clockMovesNotMechanical(heldClock, nextClock, todayIso) {
   const held = Array.isArray(heldClock) ? heldClock : [];
   const next = Array.isArray(nextClock) ? nextClock : [];
+  /* R27: `todayIso`'s day, or null when it names none (before T47 an absent one read as the text "undefined" or "null",
+     after every date, and so passed every entry). */
+  const today = typeof todayIso === "string" && DATE_RE.test(todayIso.slice(0, 10)) ? todayIso.slice(0, 10) : null;
   const bad = [];
   for (let i = 0; i < Math.max(held.length, next.length); i++) {
     const a = held[i], b = next[i];
     const sa = a && typeof a === "object" ? a.status : undefined;
     const sb = b && typeof b === "object" ? b.status : undefined;
     if (sa === sb) continue;
-    const passed = a && typeof a.date === "string" && DATE_RE.test(a.date) && a.date < String(todayIso).slice(0, 10);
+    const passed = !!today && a && typeof a.date === "string" && DATE_RE.test(a.date) && a.date < today;
     if (sa === "pending" && sb === "overdue" && passed) continue;
     bad.push({ ord: i, from: sa ?? null, to: sb ?? null });
   }
@@ -1345,6 +1356,9 @@ export const ACTION_ACT_CHECKS = {
  * for one row, which is the shape D-484 had to consolidate for `NO_BASIS`. So the grammar is one private helper
  * both acts ask, the region travelled with it unchanged, and the codes, the C-numbers and the translations are
  * the same four a member already meets.
+ *
+ * T47 (R28; N961, K2982): the helper moved with the governing-law acts to `action-records` (its `lawEntries`), and the four
+ * rows' `where` with it; `actions` answers its acts through it.
  * ========================================================================= */
 export const GOVERNING_LAW_CHECKS = {
   GOVERNING_LAWS_REWRITTEN: {
@@ -1356,28 +1370,28 @@ export const GOVERNING_LAW_CHECKS = {
   },
   NO_LAWS: {
     check: 'C-73.2',
-    where: 'src/actions/index.mjs #lawEntries > is-laws-entry',
+    where: 'src/action-records/index.mjs lawEntries > is-laws-entry',
     translation: 'The act names at least one law, each by its citation and its level. With none named there is '
       + 'nothing to set: a request whose laws nobody has stated reads as undetermined on its own, and '
       + 'setting an empty list would not make that any truer.',
   },
   BAD_LAW_LEVEL: {
     check: 'C-73.3',
-    where: 'src/actions/index.mjs #lawEntries > is-laws-entry',
+    where: 'src/action-records/index.mjs lawEntries > is-laws-entry',
     /* N246 (R18): the levels are the profile's (`jurisdictions` R31), named here from `LAW_LEVELS` itself. */
     translation: `Each law is stated at one of its levels: ${LAW_LEVELS.join(', ')}. One entry named a level outside `
       + 'those, so nothing was written.',
   },
   BAD_CITATION: {
     check: 'C-73.4',
-    where: 'src/actions/index.mjs #lawEntries > is-laws-entry',
+    where: 'src/action-records/index.mjs lawEntries > is-laws-entry',
     translation: 'Each law is named by its citation — a short reference such as a code section — and one entry '
       + 'was empty, too long, repeated, or held a quotation mark, backslash or line break, which this record '
       + 'cannot store. Nothing was written.',
   },
   TOO_MANY_LAWS: {
     check: 'C-73.5',
-    where: 'src/actions/index.mjs #lawEntries > is-laws-entry',
+    where: 'src/action-records/index.mjs lawEntries > is-laws-entry',
     translation: 'One act states at most twelve governing laws. A request governed at the federal, state and '
       + 'local levels names a handful; a longer list is more likely a list of every law that might apply than '
       + 'of the ones that do. Nothing was written.',
@@ -1550,9 +1564,10 @@ export const RISK_TIER_REVISION_CHECKS = {
       + 'who changed it, when and why, and keeps every earlier tier readable. This write would have changed the '
       + 'tier, or the record of its earlier tiers, some other way, so nothing was written. Use the risk-tier act.',
   },
+  /* T47 (R28; N961): C-90.2's and C-90.6's sites moved to `action-records` (`badRiskTier`, `actionRiskPropose`). */
   BAD_RISK_TIER: {
     check: 'C-90.2',
-    where: 'src/actions/index.mjs #badRiskTier > is-bad-risk-tier',
+    where: 'src/action-records/index.mjs badRiskTier > is-bad-risk-tier',
     translation: 'A risk tier is 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). The '
       + 'act states one of those three; "not assessed" is what an action reads when nobody has stated one, and '
       + 'is not something to set. Nothing was written.',
@@ -1580,7 +1595,7 @@ export const RISK_TIER_REVISION_CHECKS = {
      C-90.2's own code (BAD_RISK_TIER), the same condition. */
   RISK_PROPOSAL_BASIS_REFUSED: {
     check: 'C-90.6',
-    where: 'src/actions/index.mjs actionRiskPropose > is-risk-propose-basis',
+    where: 'src/action-records/index.mjs actionRiskPropose > is-risk-propose-basis',
     translation: 'A proposed risk tier carries its basis: what the proposer read the tier from, in its own words, '
       + 'kept beside the proposal. The basis was missing, longer than 500 characters, or held a quotation mark, '
       + 'backslash or line break, which this record cannot store. Nothing was written, and the action\'s tier '
@@ -1864,7 +1879,8 @@ export const ACTION_CATALOGUE_CHECKS = {
      `action-replies`' codes are their own families, C-149 and C-150 (K2845): `BEARING_REFUSED`, which R24 pushes, is
      C-150's row. Translations the job's drafts for BOB, the UX stream's to revise. New in T45 layer 9; awaiting T46's
      stamp. Since T46 (R26; N913) twenty-four of them read their translation by key from `ACTION_GRAMMAR_WORDS` above;
-     C-117.32, .41, .55, .57 and .58 keep the T45 drafts. */
+     C-117.32, .41, .55, .57 and .58 keep the T45 drafts. Since T47 (R28; N961) the receipt, scope and promise rows
+     (C-117.39, C-117.48–.52) name their sites in `action-records`, which raises them now. */
   DETERMINATION_NOT_NONCOMPLIANT: {
     check: 'C-117.30',
     where: 'src/actions/index.mjs #breachRefusal > is-breach-not-noncompliant',
@@ -1914,7 +1930,7 @@ export const ACTION_CATALOGUE_CHECKS = {
   },
   RECEIPT_NOT_ON_SENT: {
     check: 'C-117.39',
-    where: 'src/actions/index.mjs actionReceipt > is-receipt-on-sent',
+    where: 'src/action-records/index.mjs actionReceipt > is-receipt-on-sent',
     translation: ACTION_GRAMMAR_WORDS["refusal.RECEIPT_NOT_ON_SENT"],
   },
   OFFICE_STATUS_UNKNOWN: {
@@ -1961,27 +1977,27 @@ export const ACTION_CATALOGUE_CHECKS = {
   },
   MACHINE_CANNOT_SET_SCOPE: {
     check: 'C-117.48',
-    where: 'src/actions/index.mjs actionScope > is-scope',
+    where: 'src/action-records/index.mjs actionScope > is-scope',
     translation: ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_SET_SCOPE"],
   },
   SCOPE_NO_REASON: {
     check: 'C-117.49',
-    where: 'src/actions/index.mjs actionScope > is-scope',
+    where: 'src/action-records/index.mjs actionScope > is-scope',
     translation: ACTION_GRAMMAR_WORDS["refusal.SCOPE_NO_REASON"],
   },
   SCOPE_UNCHANGED: {
     check: 'C-117.50',
-    where: 'src/actions/index.mjs actionScope > is-scope',
+    where: 'src/action-records/index.mjs actionScope > is-scope',
     translation: ACTION_GRAMMAR_WORDS["refusal.SCOPE_UNCHANGED"],
   },
   MACHINE_CANNOT_RECORD_PROMISE: {
     check: 'C-117.51',
-    where: 'src/actions/index.mjs actionPromise > is-promise',
+    where: 'src/action-records/index.mjs actionPromise > is-promise',
     translation: ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_RECORD_PROMISE"],
   },
   PROMISE_REFUSED: {
     check: 'C-117.52',
-    where: 'src/actions/index.mjs actionPromise > is-promise',
+    where: 'src/action-records/index.mjs actionPromise > is-promise',
     translation: ACTION_GRAMMAR_WORDS["refusal.PROMISE_REFUSED"],
   },
   FOUND_ELSEWHERE_REFUSED: {

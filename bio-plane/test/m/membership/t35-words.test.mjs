@@ -5,14 +5,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
-import { Membership, listenerRefusal, notAnAdmin, noSuchProject, notAParticipant, MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS,
-         CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS,
-         CASE_AUTHORITY_CHECKS } from "../../../src/membership/index.mjs";
+import * as membership from "../../../src/membership/index.mjs";
+import { Membership, listenerRefusal, notAnAdmin, noSuchProject, notAParticipant, noSuchMember, notTheOwner,
+         MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS } from "../../../src/membership/index.mjs";
 
 const CIVICSMITH = "your group's Civicsmith";
 const FORBIDDEN = /\b(cop(y|ies)|instances?|planes?|servers?)\b/i;
-const TABLES = { MEMBERSHIP_CHECKS, MEMBER_ID_CHECKS, CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS,
-                 PROJECT_VISIBILITY_CHECKS, CASE_AUTHORITY_CHECKS };
+/* T47-82 (P8): every `*_CHECKS` table the module exports, found from the module itself (R133's census), so a later
+   table is held too. */
+const TABLES = Object.fromEntries(Object.entries(membership).filter(([name]) => /_CHECKS$/.test(name)));
 
 /* The member-facing strings of one answer (R112's list): its row's translation, its detail, message and remedy, and
    R108's statement. Codes, field names and ids are not member-facing. */
@@ -113,9 +114,11 @@ test("R112 every row this module holds translates without calling the group's Ci
       assert.equal(typeof row.translation, "string", `${table}.${code}`);
       assert.doesNotMatch(row.translation, FORBIDDEN, `${table}.${code} (${row.check})`);
     }
-  /* T38 (N783): 43 rows since C-56.5, C-33.28, C-70.4 and the nine C-95 rows went to project-roster (whose own words
-     test holds them) and C-96.47 came. */
-  assert.ok(n >= 43, `every row read (${n})`);
+  /* T47-82 (P8): exactly the rows held: 46 since T46 (T38's 43, then C-96.48, C-56.6 and C-96.52); a row added or
+     dropped is a change this test is re-pinned for, never passed by a lower bound. */
+  assert.deepEqual(Object.keys(TABLES).sort(), ["CASE_AUTHORITY_CHECKS", "CUSTODIAL_CHECKS", "MEMBERSHIP_CHECKS",
+    "MEMBER_ID_CHECKS", "PROJECT_AUTHORITY_CHECKS", "PROJECT_VISIBILITY_CHECKS"]);
+  assert.equal(n, 46, `every row read (${n})`);
   /* the rows the sweep moved now name it */
   for (const row of [MEMBERSHIP_CHECKS.LISTENER_MALFORMED, MEMBERSHIP_CHECKS.LISTENER_DECLARED,
                      MEMBER_ID_CHECKS.MEMBER_ID_RESERVED, CUSTODIAL_CHECKS.NO_HOLDERS])
@@ -193,8 +196,13 @@ test("R112 every refusal and answer a battery of this module's acts gives (detai
     ["groupDescriptionSet other", w.m.groupDescriptionSet({ kinds: ["other"], by: "admin" })],
     ["groupDescriptionSet long", w.m.groupDescriptionSet({ kinds: [], focus: "x".repeat(1001), by: "admin" })],
     ["groupDescriptionSet visibility", w.m.groupDescriptionSet({ kinds: [], visibility: "all", by: "admin" })],
+    /* T47-82 (P8): the refusals the battery had left out */
+    ["handleChange fixed", w.m.handleChange({ handle: "ann-2", by: "ann" })],
+    ["noSuchMember", noSuchMember("nobody")],
+    ["notTheOwner", notTheOwner("bob", "PROJ-1")],
+    ["joinDoors not admin", w.m.joinDoors({ by: "bob" })],
   ];
-  /* the doors' daily caps, and a website key's warning */
+  /* the doors' daily caps; the website key's warning is on "websiteKeyCreate ok" above */
   const key = w.m.websiteKeyCreate({ dailyCap: 1, by: "admin" });
   answers.push(["websiteKeyCreate again", key]);
   const link = w.m.joinLinkEnable({ dailyCap: 1, by: "admin" });
@@ -216,6 +224,7 @@ test("R112 every refusal and answer a battery of this module's acts gives (detai
     texts += facing(r).length;
     clean(r, label);
   }
-  /* T38 (N783): the moved acts' refusals are project-roster's battery now. */
-  assert.ok(refusals >= 62 && texts >= 114, `the battery reached ${refusals} refusals and ${texts} texts`);
+  /* T38 (N783): the moved acts' refusals are project-roster's battery now. T47-82 (P8): exact, not lower bounds. */
+  assert.deepEqual([answers.length, refusals, texts], [70, 66, 122],
+    `the battery reached ${answers.length} answers, ${refusals} refusals and ${texts} texts`);
 });

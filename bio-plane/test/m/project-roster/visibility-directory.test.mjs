@@ -111,6 +111,9 @@ test("R9 projectDirectory: needs a member; the discoverable projects the caller 
   assert.deepEqual([exact.count, exact.truncated], [4, false]);
   for (const asked of [10_000, 0, "x", null, -1]) assert.equal(w.r.projectDirectory({ viewer: V("cal"), limit: asked }).limit,
     asked === -1 ? 1 : 200, String(asked));
+  /* T47: a `limit` no number can be read from is the ceiling, never a throw */
+  for (const asked of [Symbol("x"), { valueOf() { throw new Error("no"); } }])
+    assert.equal(w.r.projectDirectory({ viewer: V("cal"), limit: asked }).limit, 200, typeof asked);
   const before = snapshot(w);
   w.r.projectDirectory({ viewer: V("cal") });
   assert.equal(snapshot(w), before, "a read writes nothing");

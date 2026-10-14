@@ -1,5 +1,7 @@
 /* odf-reader: active content, R47 (K1888, K1903, K1904), in office-readers
- * R32's shape (amended by K1917: `odf-script`, `launch`), tested through the three entries' structure() and text(). */
+ * R32's shape (amended by K1917: `odf-script`, `launch`), tested through the three entries' structure() and text().
+ * R47 is a provided service (T47, N942): `file-safety` reads it from these entries' structure(), so every test here
+ * drives the module's public entries, from bytes and from parts()' own output, never an internal function. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { odtEntry, odsEntry, odpEntry } from "../../../src/odf.mjs";
@@ -163,6 +165,23 @@ test("R47 a part that could not be read for the list is stated as unread; what i
     // a Basic module is named, never read: one whose bytes are corrupt is listed and never unread
     assert.deepEqual((await activeOf(e, buildZip(withCd(base, "Basic/Standard/Module1.xml", { crc: 1 })))).filter((i) => i.part.startsWith("Basic/")),
       [{ kind: "odf-basic", part: "Basic/Standard/Module1.xml" }]);
+  }
+});
+
+test("R47 structure() and text() given parts()' own output carry the same list as given the bytes, on every entry", async () => {
+  for (const f of FLAVOURS) {
+    const e = ENTRIES[f];
+    const content = scripted(f, listener("dom:load"));
+    const extra = [{ name: "Basic/Standard/Module1.xml", data: "Sub Main\nEnd Sub" }, { name: "Scripts/python/m.py", data: "x" },
+      { name: "styles.xml", data: stylesXml(listener("dom:focus")) }, { name: "Object 1/content.xml", data: "<x/>" }];
+    for (const bytes of [buildZip(members(f, { content, extra })),
+      buildZip(withCd(members(f, { content, extra }), "content.xml", { usize: OVER_BOUND })), buildZip(members(f))]) {
+      const fromBytes = await activeOf(e, bytes);
+      const p = await e.parts(bytes);
+      assert.equal(p.ok, true);
+      assert.deepEqual((await e.structure(p)).active, fromBytes);
+      assert.deepEqual((await e.text(p)).active, fromBytes);
+    }
   }
 });
 

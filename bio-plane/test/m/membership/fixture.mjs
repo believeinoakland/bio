@@ -56,10 +56,7 @@ export function world({ omit = [] } = {}) {
     /* Invite and enrol a member all the way to active; returns the enrol answer. */
     async enrol(id, role = "member", by = "admin", caps = null) {
       const a = await m.memberAdd({ memberId: id, cover: `cover of ${id}`, role, capabilities: caps, by });
-      if (!a.ok) {
-        if (a.reason !== "CONSENSUS_REQUIRED") return a;
-        return a;
-      }
+      if (!a.ok) return a;   /* a refusal, CONSENSUS_REQUIRED included, is answered as it came */
       return m.enroll({ invite: a.invite, handle: id, password: `${id}-passphrase-x` });
     },
     /* The founder plus a second administrator, so ordinary members may be added. */
@@ -79,7 +76,7 @@ export function world({ omit = [] } = {}) {
 
 export const V = (id) => `member:${id}`;
 
-/* The module over the REAL record-core (its schema and `recordOf`), for what only the two together show (R59). */
+/* The module over the REAL record-core (its schema and `recordOf`), for what only the two together show (R115). */
 export async function realWorld() {
   const db = new DatabaseSync(":memory:");
   const sql = sqlOver(db);

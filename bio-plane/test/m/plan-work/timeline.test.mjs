@@ -154,3 +154,30 @@ test("R4: planReviewRecord records a dated review entry of 1 to 4,000 characters
   const l = w.pw.planReviews({ plan: w.PL, viewer: V("alice") });
   assert.deepEqual(l.reviews.map((x) => [x.review, x.by, x.at]), [[1, V("bob"), "2026-10-01T12:00:00Z"], [2, V("bob"), "2026-10-01T12:00:00Z"]]);
 });
+
+test("R18: each due item also carries recurrence, the rhythm as the member set it with who and when, and since, the local day of the last review else of the rhythm's setting, in the rhythm's zone", () => {
+  const w = world();
+  const due = (iso) => w.pw.planReviewsDue({ nowMs: ms(iso) }).items;
+  w.clock.now = "2026-10-03T05:00:00Z";             /* 2 October, 22:00 in Los Angeles */
+  rhythm(w, WEEKLY);
+  /* control: one never reviewed answers the day its rhythm was set, in the rhythm's zone */
+  const a = due("2026-10-06T20:00:00Z");
+  assert.equal(a.length, 1);
+  assert.deepEqual(a[0].recurrence, { ...WEEKLY, by: V("bob"), at: "2026-10-03T05:00:00Z" });
+  assert.deepEqual(a[0].since, { day: "2026-10-02", from: "rhythm_set" });
+  /* its other fields are unchanged */
+  assert.deepEqual([a[0].plan, a[0].project, a[0].member, a[0].day, a[0].zone], [w.PL, w.P, V("bob"), "2026-10-05", WEEKLY.zone]);
+  /* control: a plan reviewed once answers that review's day, in the rhythm's zone */
+  w.clock.now = "2026-10-08T03:00:00Z";             /* 7 October, 20:00 in Los Angeles */
+  assert.equal(w.pw.planReviewRecord({ plan: w.PL, decided: "Keep waiting.", ...by("alice") }).ok, true);
+  assert.deepEqual(due("2026-10-09T00:00:00Z"), [], "told once: reviewed since");
+  const b = due("2026-10-13T20:00:00Z");
+  assert.deepEqual(b.map((x) => [x.day, x.since]), [["2026-10-12", { day: "2026-10-07", from: "review" }]]);
+  assert.deepEqual(b[0].recurrence, { ...WEEKLY, by: V("bob"), at: "2026-10-03T05:00:00Z" });
+  /* a rhythm set again names its new setting, and the review's day is read in its zone (UTC: the 8th) */
+  w.clock.now = "2026-10-14T12:00:00Z";
+  rhythm(w, { rrule: "FREQ=MONTHLY;BYMONTHDAY=15", dtstart: "2026-10-15", zone: "UTC" }, by("bob"));
+  const c = due("2026-10-15T12:00:00Z");
+  assert.deepEqual(c.map((x) => [x.recurrence.rrule, x.recurrence.at, x.since]),
+    [["FREQ=MONTHLY;BYMONTHDAY=15", "2026-10-14T12:00:00Z", { day: "2026-10-08", from: "review" }]]);
+});

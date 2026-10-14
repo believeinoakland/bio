@@ -11,6 +11,9 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
 import { planeEntry } from "./plane-world.mjs";
+import { CAPTURE_REQUEST_CHECKS } from "../../../src/capture-requests/index.mjs";
+
+const CAPTURE_FETCH_FAILED_CHECK = CAPTURE_REQUEST_CHECKS.CAPTURE_FETCH_FAILED.check;
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -39,7 +42,9 @@ const mf = new Miniflare({
     if (new URL(request.url).host === "index.example.org")
       return new Response(`<!doctype html><html><head><title>Index</title></head><body>${HELD.map((u) =>
         `<a href="${u}">${u}</a>`).join(" ")}</body></html>`, { headers: { "content-type": "text/html; charset=utf-8" } });
-    if (new URL(request.url).host === "down.example.org") return new Response("unavailable", { status: 503 });
+    /* a 500, held (R19) and not a cool-off (host-governor cools off on 429, 403 and 503): every later tick, the alarm's
+       included, judges the row the same way, so its code stays the source's (K3065, B3) */
+    if (new URL(request.url).host === "down.example.org") return new Response("unavailable", { status: 500 });
     if (new URL(request.url).host === "up.example.org")
       return new Response(new TextEncoder().encode(`%PDF-1.4 a document of its own at ${request.url}`), { headers: { "content-type": "application/pdf" } });
     return new Response(new Uint8Array(512).map((_, i) => i % 251), { headers: { "content-type": "application/pdf" } });
@@ -57,6 +62,32 @@ const call = async (op, tok, body, extra = {}) => {
   return { status: r.status, body: unwrap(await r.json()) };
 };
 const forbidden = (r) => r.status === 403 && r.body && r.body.reason === "CLASS_FORBIDDEN";
+
+/* K3065 (CAPTURE #30 J1 (b)): WHY "R48 in the plane" FAILED ABOUT ONE RUN IN FOUR UNDER A LOADED SUITE. Filing a request
+   tells the scheduler (this module's R44, scheduler R9), whose reconcile arms the Durable Object's alarm AT ONCE while a
+   request waits (its `capture-request-drain` consumer is due now whenever R37's `drainPending` is above 0). The alarm
+   runs this same drain (actor `alarm`), so the test's `op=capturerequestdrain` raced it: with the alarm's tick out, the
+   op answered `busy` (R11, not re-entrant); with the alarm's tick done, the op found the row already captured. Either
+   way the op's answer did not list the request. Which tick drains a row is not what these tests measure, so each drives
+   the op until the row it filed has been judged (bounded), and reads the outcome from the row (R23, R24) and the record,
+   never from one tick's answer. */
+const rowOf = async (tok, request) =>
+  (await call("capturerequests&run=RUN-CR-1&limit=1000", tok)).body.requests.find((r) => r.request === request);
+/* Judged: terminal, or held `requested` under a code. Never `draining`: that is a tick (the alarm's, or ours) still
+   out with the fetch, and its outcome is not yet written (B3: R48 read `draining` once in five). */
+async function drained(tok, request, judged = (r) => ["captured", "refused", "expired"].includes(r.state)
+                                                     || (r.state === "requested" && !!r.code)) {
+  for (let i = 0; i < 200; i++) {   /* at most ~10 s of rounds: a loaded run's fetch can stay out a while */
+    await call("capturerequestdrain", "dmn-cr", {});
+    const r = await rowOf(tok, request);
+    if (r && judged(r)) return r;
+    await new Promise((res) => setTimeout(res, 50));
+  }
+  assert.fail(`${request} was not judged by any drain: ${JSON.stringify(await rowOf(tok, request))}`);
+}
+/** The held row (capture R77, R83) a drained request's capture was promoted into, read by its digest. */
+const heldOf = async (tok, sha256) =>
+  ((await call("heldcaptures&limit=1000", tok)).body.held || []).find((r) => r.capture && r.capture.sha256 === sha256);
 
 const MEMBER_UA = "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0";
 let setup = null;
@@ -141,48 +172,52 @@ test("R30 capturerequest: admin, member with contribute and probe; capturereques
 
 test("R16 R31 R14 the spine in the plane: the member's run requests (as civicsmith by default) and nothing is fetched; op=acquire refuses the capture-request arm from every caller; only the daemon's drain fetches, with the Civicsmith agent, and the capture lands", async () => {
   const { RUTH } = await world();
-  const before = SEEN.length;
   const a = (await call("capturerequest", RUTH, { run: "RUN-CR-1", address: "https://spine.example.org/spine.pdf",
                                                 target: "INQ-2026-9000-cr", purpose: "investigate" })).body;
   assert.equal(a.ok, true, JSON.stringify(a));
-  assert.equal(SEEN.length, before, "the door fetched nothing");
+  /* the door's fetching nothing is R9's test (door.test.mjs): here the alarm's drain may already be out (K3065) */
   for (const tok of ["adm-cr", "prb-cr", "dmn-cr", RUTH]) {
     const r = await call("acquire", tok, { via: "capture-request", request: a.request, locator: "https://spine.example.org/spine.pdf" });
     assert.equal(r.body.code ?? r.body.reason, r.status === 403 && r.body.reason === "CLASS_FORBIDDEN" ? "CLASS_FORBIDDEN" : "CAPTURE_NOT_DRAINING", tok);
   }
-  assert.equal(SEEN.filter((u) => u.startsWith("https://spine.example.org/")).length, 0, "no caller made the plane fetch it");
   const d = (await call("capturerequestdrain", "dmn-cr", {})).body;
   assert.equal(d.configured, true);
-  const got = d.captured.find((c) => c.request === a.request);
-  assert.ok(got, JSON.stringify(d).slice(0, 400));
-  assert.equal(got.attribution.actor, "token:daemon");
-  assert.equal(SEEN.filter((u) => u.startsWith("https://spine.example.org/")).length, 1);
+  const row = await drained(RUTH, a.request);
+  assert.equal(row.state, "captured", JSON.stringify(row));
+  assert.equal(row.attribution.actor, "token:daemon");
+  assert.equal(SEEN.filter((u) => u.startsWith("https://spine.example.org/")).length, 1,
+    "fetched once, by a drain: no op=acquire made the plane fetch it");
   assert.equal(a.ua_mode, "civicsmith");
   assert.equal(AGENTS.get("https://spine.example.org/spine.pdf"), civicsmithUserAgent("1.0.0", "cr-plane", "investigate"),
     "the agent that left the instance is acquisition's Civicsmith agent");
-  const read = (await call(`capturerequests&run=RUN-CR-1`, RUTH)).body;
-  assert.equal(read.requests.find((r) => r.request === a.request).state, "captured");
 });
 
-test("R19 R42 R38 in the plane: a source's 503 holds the row under CAPTURE_FETCH_FAILED (C-28.17), read back through op=capturerequests; op=capturerequestretry refuses it CAPTURE_REQUEST_NOT_RETRYABLE (C-28.18) and writes nothing; a new capture drained is promoted", async () => {
+test("R19 R42 R38 in the plane: a source's 500 holds the row under CAPTURE_FETCH_FAILED (C-28.17), read back through op=capturerequests; op=capturerequestretry refuses it CAPTURE_REQUEST_NOT_RETRYABLE (C-28.18) and writes nothing; a new capture drained is promoted", async () => {
   const { RUTH } = await world();
   const ask = (address) => call("capturerequest", RUTH, { run: "RUN-CR-1", address, target: "INQ-2026-9000-cr", purpose: "investigate" });
   const down = (await ask("https://down.example.org/gone.pdf")).body;
   const up = (await ask("https://up.example.org/doc.pdf")).body;
   assert.equal(down && down.ok, true, String(JSON.stringify(down)));
-  const d = (await call("capturerequestdrain", "dmn-cr", {})).body;
-  const held = d.held.find((h) => h.request === down.request);
-  assert.deepEqual([held && held.code, held && held.check], ["CAPTURE_FETCH_FAILED", "C-28.17"], String(JSON.stringify(d)).slice(0, 900));
-  const row = (await call(`capturerequests&run=RUN-CR-1`, RUTH)).body.requests.find((r) => r.request === down.request);
+  const row = await drained(RUTH, down.request);
   assert.deepEqual([row.state, row.code, row.source_reason], ["requested", "CAPTURE_FETCH_FAILED", "other"]);
+  assert.equal(CAPTURE_FETCH_FAILED_CHECK, "C-28.17");
   const r = (await call("capturerequestretry", RUTH, { request: down.request })).body;
   assert.deepEqual([r.ok, r.code, r.check], [false, "CAPTURE_REQUEST_NOT_RETRYABLE", "C-28.18"], JSON.stringify(r));
-  const again = (await call(`capturerequests&run=RUN-CR-1`, RUTH)).body.requests.find((x) => x.request === down.request);
-  assert.deepEqual(again, row, "nothing written");
-  const got = d.captured.find((c) => c.request === up.request);
-  assert.ok(got, JSON.stringify(d).slice(0, 600));
-  assert.equal(got.promoted && got.promoted.ok, true, String(JSON.stringify(got)));
-  assert.match(got.promoted.bundle_id, /^INFO-\d{4}-\d{4}-requested$/);
+  /* what a retry writes (R42: `state` back to requested, `expires` now + 24 h), compared, and nothing else: a later alarm
+     tick may judge the held row again, and judge it again, so only what a retry would write is
+     this assertion's (K3065). Read once no tick is out with it (never `draining`), driving no drain. */
+  let again = await rowOf(RUTH, down.request);
+  for (let i = 0; i < 200 && again.state === "draining"; i++) {
+    await new Promise((res) => setTimeout(res, 50));
+    again = await rowOf(RUTH, down.request);
+  }
+  const wrote = (x) => [x.state, x.expires];
+  assert.deepEqual(wrote(again), wrote(row), "nothing written");
+  const upRow = await drained(RUTH, up.request);
+  assert.equal(upRow.state, "captured", JSON.stringify(upRow));
+  const promoted = await heldOf(RUTH, upRow.capture_sha);
+  assert.ok(promoted, "the new capture was promoted");
+  assert.match(promoted.bundle_id, /^INFO-\d{4}-\d{4}-requested$/);
 });
 
 test("R14 in the plane (N295): a member-browser request under an inquiry created through a member's session is fetched with the agent the control plane stamped and inquiry records (its R44), not refused CAPTURE_CONDUCT_UA_UNRECORDED", async () => {
@@ -191,9 +226,8 @@ test("R14 in the plane (N295): a member-browser request under an inquiry created
   const a = (await call("capturerequest", RUTH, { run: "RUN-CR-1", address, target: "INQ-2026-9001-ua",
                                                 purpose: "investigate", ua_mode: "member-browser" })).body;
   assert.equal(a.ok, true, JSON.stringify(a));
-  const d = (await call("capturerequestdrain", "dmn-cr", {})).body;
-  assert.equal([...d.refused, ...d.held].find((x) => x.request === a.request), undefined, JSON.stringify(d).slice(0, 600));
-  assert.ok(d.captured.find((c) => c.request === a.request), JSON.stringify(d).slice(0, 600));
+  const row = await drained(RUTH, a.request);
+  assert.deepEqual([row.state, row.code], ["captured", null], JSON.stringify(row));
   assert.equal(AGENTS.get(address), MEMBER_UA, "the member's own agent left the instance, verbatim");
 });
 
@@ -202,13 +236,40 @@ test("R48 in the plane: a requested capture, drained and promoted, is listed by 
   const address = "https://up.example.org/held-for.pdf";
   const a = (await call("capturerequest", RUTH, { run: "RUN-CR-1", address, target: "INQ-2026-9000-cr", purpose: "investigate" })).body;
   assert.equal(a.ok, true, JSON.stringify(a));
-  const d = (await call("capturerequestdrain", "dmn-cr", {})).body;
-  const got = d.captured.find((c) => c.request === a.request);
-  assert.equal(got && got.promoted && got.promoted.ok, true, JSON.stringify(d).slice(0, 600));
-  const held = (await call("heldcaptures&limit=1000", RUTH)).body;
-  const row = (held.held || []).find((r) => r.bundle_id === got.promoted.bundle_id);
-  assert.ok(row, JSON.stringify(held).slice(0, 600));
+  const req = await drained(RUTH, a.request);
+  assert.equal(req.state, "captured", JSON.stringify(req));
+  const row = await heldOf(RUTH, req.capture_sha);
+  assert.ok(row, `no held row for ${req.capture_sha}`);
+  assert.match(row.bundle_id, /^INFO-\d{4}-\d{4}-requested$/, "the drained capture, promoted");
   assert.equal(row.captured_for && row.captured_for.withheld, null, JSON.stringify(row));
   assert.deepEqual(row.captured_for.questions.map((q) => [q.question, q.title]), [["INQ-2026-9000-cr", "What?"]]);
   assert.ok(typeof row.captured_for.questions[0].asker === "string" && row.captured_for.questions[0].asker.length > 0);
+});
+
+test("R56 in the plane: a member's session asks for an address with no run (\"Ask for this later\"); the request is hers, drained by the daemon as any is; the same ask through an ai credential is refused CAPTURE_REQUEST_NO_RUN", async () => {
+  const { RUTH } = await world();
+  const address = "https://up.example.org/later.pdf";
+  const a = (await call("capturerequest", RUTH, { address })).body;
+  assert.equal(a.ok, true, JSON.stringify(a));
+  assert.deepEqual([a.run, a.target, a.purpose, a.drains, a.principals], [null, null, "acquire", true,
+                   { plane: "member:ruth", claude: null }]);
+  let row = null;
+  for (let i = 0; i < 200 && !(row && row.state === "captured"); i++) {
+    await call("capturerequestdrain", "dmn-cr", {});
+    row = (await call("capturerequests&limit=1000", RUTH)).body.requests.find((r) => r.request === a.request);
+    await new Promise((res) => setTimeout(res, 50));
+  }
+  assert.equal(row && row.state, "captured", JSON.stringify(row));
+  assert.equal(row.attribution.statement, "the daemon captured this, at the request of member:ruth");
+  assert.equal(SEEN.filter((u) => u === address).length, 1);
+  /* Control: an ai credential the member minted is not her own act */
+  const minted = (await call("aicredentialmint", RUTH, { tokenId: "later-ai", principalKind: "member", principalMember: "ruth",
+    taskScope: "investigative", writes: ["capturerequest"], note: "R56 control" })).body;
+  assert.equal(typeof (minted && minted.token), "string", JSON.stringify(minted).slice(0, 300));
+  const x = (await call("capturerequest", minted.token, { address: "https://up.example.org/later-ai.pdf" })).body;
+  assert.deepEqual([x.ok, x.code, x.check], [false, "CAPTURE_REQUEST_NO_RUN", "C-28.1"], JSON.stringify(x).slice(0, 300));
+  /* Control: another member does not see her request with no target (R23 as R56 amends it) */
+  const { MEMBER } = await world();
+  const other = (await call("capturerequests&limit=1000", MEMBER)).body.requests || [];
+  assert.equal(other.some((r) => r.request === a.request), false);
 });

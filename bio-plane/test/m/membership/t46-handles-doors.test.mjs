@@ -128,7 +128,7 @@ test("R17 T46 memberList's rows carry no `formerly` key, for any caller, whateve
   const lists = [w.m.memberList({ administer: true }), w.m.memberList({ administer: "1" }), w.m.memberList({}),
                  w.m.memberList({ administer: false }), w.ops("").memberlist(), w.ops("administer=1").memberlist()];
   for (const l of lists) {
-    assert.ok(l.members.length >= 4);
+    assert.equal(l.members.length, 4);
     for (const r of l.members) assert.equal("formerly" in r, false, r.member_id);
     assert.doesNotMatch(JSON.stringify(l), /ann-0/, "an earlier handle is not shown");
   }

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
-import { Membership } from "../../../src/membership/index.mjs";
+import { Membership, notAParticipant } from "../../../src/membership/index.mjs";
 
 /* P owned by ann; bob, cal, dee joined; eve invited */
 async function owned() {
@@ -58,13 +58,24 @@ test("R60 an administrator's sight is never a position: every project act of thi
   for (const admin of ["admin", "second"]) {
     const v = admin === "admin" ? "admin" : V(admin);
     assert.equal(w.m.inSight("PROJ-P", v), true, "sees the project");
+    /* T47-82 (P8): each act's own refusal, by code, not merely `ok: false`; and nothing written by any of them. */
+    const before = JSON.stringify([w.m.projectOwners("PROJ-P"), w.m.visibilityOf("PROJ-P"),
+      ["ann", "bob", "fay", admin].map((id) => w.m.participation("PROJ-P", id))]);
     const acts = [
-      w.m.projectInvite({ projectId: "PROJ-P", handle: "fay", by: admin, viewer: v }),
-      w.m.projectRemove({ projectId: "PROJ-P", handle: "bob", by: admin, viewer: v }),
-      w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "hidden", by: admin, viewer: v }),
-      w.m.projectJoin({ projectId: "PROJ-P", by: admin, viewer: v }),
+      ["invite", w.m.projectInvite({ projectId: "PROJ-P", handle: "fay", by: admin, viewer: v }), "NOT_THE_OWNER"],
+      ["remove", w.m.projectRemove({ projectId: "PROJ-P", handle: "bob", by: admin, viewer: v }), "NOT_THE_OWNER"],
+      ["visibility", w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "hidden", by: admin, viewer: v }),
+       "PROJECT_VISIBILITY_NOT_THE_OWNER"],
+      ["join", w.m.projectJoin({ projectId: "PROJ-P", by: admin, viewer: v }), "NOT_INVITED"],
+      ["leave", w.m.projectLeave({ projectId: "PROJ-P", by: admin, viewer: v }), "NOT_A_PARTICIPANT"],
     ];
-    for (const a of acts) assert.equal(a.ok, false, JSON.stringify(a).slice(0, 120));
+    for (const [act, a, code] of acts) {
+      assert.equal(a.ok, false, `${admin} ${act}`);
+      assert.equal(a.reason, code, `${admin} ${act}: ${JSON.stringify(a).slice(0, 120)}`);
+    }
+    assert.deepEqual(acts[4][1], notAParticipant("PROJ-P", admin), "leave answers R87's one refusal");
+    assert.equal(JSON.stringify([w.m.projectOwners("PROJ-P"), w.m.visibilityOf("PROJ-P"),
+      ["ann", "bob", "fay", admin].map((id) => w.m.participation("PROJ-P", id))]), before, `${admin}: nothing written`);
     assert.equal(w.m.projectAuthority("PROJ-P", V(admin), "owner", "an act")?.code, "PROJECT_ACT_NOT_THE_OWNER");
     assert.equal(w.m.projectAuthority("PROJ-P", V(admin), "joined", "an act")?.code, "PROJECT_ACT_NOT_A_PARTICIPANT");
   }

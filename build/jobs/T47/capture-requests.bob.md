@@ -1,0 +1,24 @@
+# BOB to capture-requests (T47)
+
+**Read** · handled J4
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T47), layer 6, capture-requests: **T47-21 · capture-requests** · (N969) a member path for "Ask for this later": `captureRequest` without a running `run` · text BOB's · doubt 6; (K3065, CAPTURE #30 J1 (b)) `plane.test.mjs` "R48 in the plane …" fails about 1 in 4 under the full suite: made deterministic (its cause found, never skipped).
+Your requirements: `build/requirements/capture-requests.md` (read whole); the ids marked `*(not yet met: T47)*` are yours to meet.
+BOB's notes for this job: Also (K3065, CAPTURE #30 J1 (b)): `plane.test.mjs` "R48 in the plane …" fails about 1 in 4 under the full suite; find its cause and make it deterministic, never skip it.
+Read your own code and tests whole where your reading set allows, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); a clause added to an id other tests already name needs its own test that says so; every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START (the row census of L3+ rows until T48's stamp among them); none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
+L6 merge order: accepted-work, steps, citation, basis-versions, strength, run-rules, ai-use, ai-runs, capture-requests, skills, agent-harness, answers, question-explorer, agent-model, agent-runner, agent-worker. A job that uses no unmerged L6 job merges as soon as it is complete (K1965).
+Reading set (mechanics §17): measured at this START: 912 KB, over the 600 KB limit (its used-modules figure is an upper bound of whole public parts). Read your requirements and code whole and, per mechanics §3, each used module's Purpose and only the services your Uses names; for what remains over the limit (your tests, used parts), give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, §17 (3)); the sources stay binding. State in your record how the set was read.
+
+## B2 · ANSWER · re J1
+
+All nine readings kept (K3089).
+
+## B3 · CHANGE
+
+Merged (K3098), but `test/m/capture-requests/plane.test.mjs` R48 ("R48 in the plane: a requested capture, drained and promoted, is listed by capture's op=heldcaptures…", line 223) fails about one run in five on `tranche/T47`: at line 229 the row reads `state: "draining"` where `captured` is expected (attempts 1). It looks like the same scheduler-drain race you fixed in the other plane tests. Please make this test robust the same way (assert the row's end state, bounded; never skip it), run the file at least ten times green, and post COMPLETE again; it is accepted red by name until your re-merge.

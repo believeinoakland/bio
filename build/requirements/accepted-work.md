@@ -1,6 +1,6 @@
 # accepted-work — requirements
 
-**Status** · In force: a new seam module, BOB's (P17; K1273, N522), folded at T28's opening; N534's fold reviewed (K1369). Last changed T31 (N534: R1, R2, R8); every requirement met (ACCEPTED-WORK #2, K1378).
+**Status** · In force: a new seam module, BOB's (P17; K1273, N522), folded at T28's opening; N534's fold reviewed (K1369). Last changed T47 (T47-15: R9 new, amending R1, `flagHistoryOn`, each registered flag's opening and clearing instants; N947, K2949); marked not yet met (T47). Before that T31 (N534: R1, R2, R8); every other requirement met (ACCEPTED-WORK #2, K1378).
 
 **Size (P6).** About 250–400 lines.
 
@@ -50,6 +50,10 @@ Terms.
 
   With no `moves` registered, it answers `{absent: true}`, stated as `accepted_work_absent`. When the registered function throws, it answers `{unreadable: true}`. It writes nothing and never throws. (DEC-101 (3); DEC-116 item 8; P4)
 
+**flagHistoryOn({ref, edition, since, viewer})** (T47; N947)
+
+- **R9** (T47; N947; K2949; amends R1; `case-carriage` R19) The registration (R1) may also carry a fifth function, `flagHistory({ref, edition, since, viewer})`; a registration without it is accepted, and one whose `flagHistory` is given but is not a function is refused `LISTENER_MALFORMED` (R1). It answers `{flags: [{flag, finding, issue, opened_at, cleared_at}], complete}`: every flag on that edition, the edition's own and the named finding's, that was open at any instant from `since` through the read (opened at or before the read and not cleared before `since`), whether open now or cleared since, in opening order; `opened_at` and `cleared_at` the instants the registered module recorded for the flag and its clear (`case-import` R8), `cleared_at` null while it is open. `flagHistoryOn` takes the same arguments and answers the registered function's answer, as R2 states for its reads: with no `flagHistory` registered it answers `{absent: true}`, stated as `accepted_work_absent`; when it throws, `{unreadable: true}`. So a reader (`case-carriage` R19) knows a flag opened and cleared inside an interval. It writes nothing and never throws.
+
 ## Private
 
 ### Uses
@@ -75,6 +79,7 @@ Terms.
 
 ### Suggestions
 
+- **T47 (T47-15).** R9's registered function is filled by `case-import` from R8's flags and clears, which it keeps whole; that registration is `case-import`'s act, not in its plan entry (T47-30) today. Until it is made, R9 answers `absent` in the composed plane and `case-carriage` R19's interval clause (a flag opened and cleared inside the interval) cannot be met in the composed plane: BOB is asked to add the registration to `case-import`'s T47 entry. `since` is passed as given; whether it is an instant is the registered module's to judge (an answer naming none it cannot judge is its own).
 - Tests:
   - A leg on an accepted finding is promoted.
   - A leg on an unaccepted finding is refused C-21.4, and so is a leg naming another edition than the one accepted.

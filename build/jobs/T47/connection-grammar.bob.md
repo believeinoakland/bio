@@ -1,0 +1,20 @@
+# BOB to connection-grammar (T47)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T47), layer 1, connection-grammar: **T47-3 · connection-grammar** · (N948) a requirement stating `isRecordId`'s behaviour, tested at the interface · text BOB's.
+Your requirements: `build/requirements/connection-grammar.md` (read whole), folded by K3028; the ids marked `*(not yet met: T47)*` are yours to meet.
+BOB's notes for this job:
+connection-grammar (T47-3): R21 new (isRecordId(v) stated in Provides; N948). It is the next free id; R1–R20 are taken.
+- It states shape.mjs's isRecordId as it stands: an ID_TABLE core through record-grammar's idPattern (legacy form included), alone or followed by `-` and a slug of [a-z0-9] runs; any other value false; never throws. No code change is expected.
+- The test runs at the interface (the index.mjs export) and names R21. Controls: an unknown prefix, an empty or upper-case slug, an opaque core of the wrong length, a non-string.
+- Users of isRecordId: steps, standards, hypotheses, law-relations, explore, contradiction. None needs a change.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); a clause added to an id other tests already name needs its own test that says so; every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 146 KB, within the 600 KB limit (K2700). Read it whole.
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
+Merge order in L1: record-grammar, jurisdictions, connection-grammar, bundler, odf-reader, file-scanner; no L1 job uses another's new service, so each merges as soon as it is complete.

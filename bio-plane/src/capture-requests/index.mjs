@@ -136,6 +136,15 @@ export function captureRequestAttribution(row) {
   const actor = `${MACHINE_AUTHOR_PREFIX}daemon`;
   const plane = String((row && row.principal_plane) || "").trim();
   const claude = String((row && row.principal_claude) || "").trim();
+  /* R56 (T47): A MEMBER'S OWN REQUEST, made by her act with no run, has one principal and it is the whole of it: no
+     session asked and no cascade paid, so the one-principal refusal is asked only of a run's request. */
+  if (isMemberRequest(row))
+    return {
+      ok: true, actor, machine_attributed: true,
+      at_the_request_of: { member: plane.slice("member:".length), inquiry: row.target || null },
+      principals: { plane },
+      statement: `the daemon captured this, at the request of ${plane}`,
+    };
   if (!row || !plane || !claude)
     return { ok: false, code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL", plane: plane || null, claude: claude || null };
   return {
@@ -147,6 +156,26 @@ export function captureRequestAttribution(row) {
              + `(run ${row.run}), under ${plane}, paid by ${claude}`,
   };
 }
+
+/** R56 (T47): a member's session stamp, `member:<id>` and nothing after it (membership R43's id): the control plane
+ *  stamps a session so, and a member's minted credential `member:<id>/<tokenId>`, which is not her own act. */
+const MEMBER_SESSION = /^member:[A-Za-z0-9._:-]{1,128}$/;
+export function memberSession(stamp) {
+  const s = typeof stamp === "string" ? stamp.trim() : "";
+  return MEMBER_SESSION.test(s) ? s : null;
+}
+
+/** R56: whether a row is a member's own request: no run, its plane principal a member's session. */
+export function isMemberRequest(row) {
+  return !!row && (row.run === null || row.run === undefined || String(row.run).trim() === "")
+    && memberSession(row.principal_plane) !== null;
+}
+
+/** R56: the sentence a member's request carries while unattended capture is not configured (R11). */
+export const MEMBER_REQUEST_WAITS = "your request is kept, and it waits until your group's Civicsmith captures "
+  + "unattended: nothing is fetched for it until then.";
+export const MEMBER_REQUEST_DRAINS = "requested. Your group's Civicsmith captures it on its next unattended round, "
+  + "under the conduct every capture it makes follows.";
 
 /** R11, R37: whether the instance's unattended capture is configured: a daemon or administrator credential is bound
  *  (runtime-limits R26's `bound`: presence only). With the arm in process (K58) the drain no longer needs `env.SELF`
@@ -226,8 +255,11 @@ export class CaptureRequests {
        POSITION — REC-152's `runPrincipalGate`, the caller being the control plane's `principal` stamp, never a field
        sent, its refusal relayed field by field; (c) STATUS — the run is running. */
     const run = text(args.run).trim();
+    /* R56 (T47; N969): A MEMBER'S OWN REQUEST, "Ask for this later": no run, under her own session's stamp (never a
+       machine's, an AI credential's or none, which R1 refuses as before). R1 is not asked; she is the asker. */
+    const mine = run ? null : memberSession(caller);
     const runRow = run ? this.#deps.runs.runFor(run, viewer) : null;
-    if (!runRow)
+    if (!runRow && !mine)
       return refusal("CAPTURE_REQUEST_NO_RUN",
         run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION `
               + `LAUNCH the authorisation for reaching a public source, so a request that cannot name a `
@@ -235,15 +267,15 @@ export class CaptureRequests {
             : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation "
               + "(DEC-47), and a request naming no session names no authorisation.",
         { run: run || null });
-    const notPrincipal = runPrincipalGate({ caller, principal: runRow.principal_plane,
-                                            act: "requesting a capture under a run" });
+    const notPrincipal = mine ? null : runPrincipalGate({ caller, principal: runRow.principal_plane,
+                                                          act: "requesting a capture under a run" });
     /* RELAYED FIELD BY FIELD AND NEVER SPREAD (REC-165's relay: a spread is a return whose VERDICT the DEC-49 guard
        cannot read). The code, check and translation are the gate's own (C-22.12's literal stays there). */
     if (notPrincipal)
       return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
                translation: notPrincipal.translation, detail: notPrincipal.detail, run,
                note: "a capture request names a run its caller holds. Nothing was requested or written" };
-    if (runRow.status !== "running")
+    if (!mine && runRow.status !== "running")
       return refusal("CAPTURE_REQUEST_NO_RUN",
         `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION `
         + `LAUNCH the authorisation for reaching a public source, so a request that cannot name a `
@@ -266,12 +298,15 @@ export class CaptureRequests {
         + "computed from one.", { address });
     /* R49 (T35; F2 as Bob ruled it, K1880; K1881's bound): AN ADDRESS THE RECORD ALREADY HOLDS, query and fragment
        included, within 2,048 characters; judged here and again at the drain (R14), before anything is written. */
-    const unheld = this.#addressRefused(address, viewer);
+    /* R56: not asked of a member's own request: R49 guards what a run read (K1880), and she may fetch any public address
+       herself through op=acquire, so her deferring it widens nothing. */
+    const unheld = mine ? null : this.#addressRefused(address, viewer);
     if (unheld) return unheld;
 
     /* R3: the question the request is accountable to, readable by this viewer; an unseen and an absent one alike. */
     const target = text(args.target).trim();
-    if (!this.#inquiryInSight(target, viewer))
+    /* R56: a member's request may name no question; one it names is judged as a run's is. */
+    if (!(mine && !target) && !this.#inquiryInSight(target, viewer))
       return refusal("CAPTURE_REQUEST_NOT_AN_INQUIRY",
         `${target.slice(0, 60) || "(none)"} is not a question readable here. A requested capture is `
         + `accountable to the question it was asked under, and a fetch belonging to nothing is a fetch `
@@ -303,7 +338,8 @@ export class CaptureRequests {
        a value that is not text and a step nobody here can read are answered alike, before anything is written. */
     const stepRaw = args.step ?? null;
     const step = typeof stepRaw === "string" ? stepRaw.trim() : stepRaw === null ? "" : null;
-    if (step === null || (step && !this.#stepSeen(step, runPrincipalOf(runRow.principal_plane))))
+    const asker = mine || runPrincipalOf(runRow.principal_plane);
+    if (step === null || (step && !this.#stepSeen(step, asker)))
       return refusal("CAPTURE_REQUEST_NO_STEP",
         `${step ? step.slice(0, 60) : shown(stepRaw)} is not a step this request's asker can see here. A request made `
         + `for a step is tied to it, so it names one its asker can see. Nothing was requested or written.`,
@@ -368,7 +404,8 @@ export class CaptureRequests {
        rules is judged again before anything leaves. `purpose` and `ua_mode` ride the row as sent,
        save that R14's alias is written as the mode it names (`civicos` as `civicsmith`, DEC-124): a request is always
        written with `civicsmith`. */
-    const purpose = text(args.purpose).trim();
+    /* R56: a member's request is an acquisition unless it says otherwise. */
+    const purpose = text(args.purpose).trim() || (mine ? "acquire" : "");
     const uaMode = uaModeOf(text(args.ua_mode ?? args.uaMode ?? "civicsmith").trim());
     const callerPlane = text(caller).trim();
     /* R45: THE SWEEP the request asks to be filed under (`"<bundle>#<id>"`), recorded as sent and judged only at the
@@ -381,17 +418,24 @@ export class CaptureRequests {
     /* R6: IDEMPOTENT ON (run, address, render). A run that asks twice for the same document has asked once: the second
        ask returns the standing row, never this call's fields. `render` is in the key because the rendered page and
        the served document are not the same document (D-64). */
-    const standing = this.#one(
-      `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
-      run, address, render);
+    /* R56: a member's request is idempotent on (her stamp, address, render) over her requests with no run. */
+    const standing = mine
+      ? this.#one(`SELECT * FROM capture_requests WHERE run IS NULL AND principal_plane=? AND address=? AND render=?
+                     AND state IN ('requested','draining','captured')`, callerPlane, address, render)
+      : this.#one(
+        `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
+        run, address, render);
+    /* R56: whether the request will be drained, said to the member so it is never silently parked. */
+    const drains = mine ? this.configured() : null;
+    const told = mine ? { drains, detail: drains ? MEMBER_REQUEST_DRAINS : MEMBER_REQUEST_WAITS } : {};
     if (standing)
-      return { ok: true, request: standing.request, run, target: standing.target, address,
+      return { ok: true, request: standing.request, run: standing.run ?? null, target: standing.target ?? null, address,
                host: standing.host, purpose: standing.purpose, ua_mode: uaModeOf(standing.ua_mode),
                lead_inquiry: standing.lead_inquiry ?? null, render: standing.render === 1,
                sweep: standing.sweep ?? null, co_archive: coArchiveOf(standing.co_archive),
                step: standing.step ?? null,
                state: standing.state, requested: false, already: true,
-               principals: { plane: standing.principal_plane, claude: standing.principal_claude } };
+               principals: { plane: standing.principal_plane, claude: standing.principal_claude ?? null }, ...told };
 
     /* R6, R7: THE TIME IS THE IN-PROCESS CALLER'S STATED INSTANT (`at`, a test or the scheduler's replay) OR THIS
        INSTANCE'S CLOCK, never a body's `at` (the op handler passes none), so each request's expiry follows its own
@@ -410,7 +454,8 @@ export class CaptureRequests {
          principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render, sweep,
          co_archive, step)
        VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?,?,?,?)`,
-      request, run, target, address, host, purpose, uaMode, callerPlane, String(runRow.principal_claude ?? ""),
+      request, run || null, target || null, address, host, purpose, uaMode, callerPlane,
+      mine ? null : String(runRow.principal_claude ?? ""),
       now, now, expires, lead || null, render, sweep, coArchive, step || null);
     const written = this.#one(`SELECT * FROM capture_requests WHERE request=?`, request);
     /* R44 (N223): every listener told once, after the write, in the modules' total order; none can change the row or
@@ -428,9 +473,9 @@ export class CaptureRequests {
              step: written.step ?? null,
              state: written.state, requested: true, already: false,
              requested_at: written.requested_at, expires: written.expires,
-             principals: { plane: written.principal_plane, claude: written.principal_claude },
+             principals: { plane: written.principal_plane, claude: written.principal_claude ?? null },
              detail: "requested. Your group's Civicsmith does not fetch on a caller's timing: the daemon drains "
-                   + "this queue, and DEC-47's conduct rules are applied there." };
+                   + "this queue, and DEC-47's conduct rules are applied there.", ...told };
   }
 
   /** Is `id` an inquiry this viewer can see (membership's predicate over record-core's `bundles` read contract)? A
@@ -855,7 +900,8 @@ export class CaptureRequests {
     /* R49 (T35; K1880), DIRECTLY AFTER ATTRIBUTION: the address judged again, so a row filed before R49 held, or returned
        by R42, is never fetched for an address the record does not hold. Terminal. Sight is the asking member's (the
        row's plane principal), as the door judged it with that member's viewer. */
-    const unheld = this.#addressRefused(q.address, runPrincipalOf(q.principal_plane));
+    const mine = isMemberRequest(q);
+    const unheld = mine ? null : this.#addressRefused(q.address, runPrincipalOf(q.principal_plane));
     if (unheld) return { ...unheld, ok: false, terminal: true };
     /* CONDUCT 2 — THE PURPOSE TOKEN, before the agent because it is a COMPONENT of the agent. */
     if (!CAPTURE_PURPOSES.includes(q.purpose))
@@ -896,6 +942,11 @@ export class CaptureRequests {
     }
     /* R45 — THE SWEEP, when the request names one: terminal like the rules above, because it is about what the request
        says, and before rate, so a request its sweep does not admit is never reported as merely paced. */
+    /* R56: a member's own request is filed under no sweep (its deeming actor is her, never a run or a sweep): one
+       naming a sweep is refused by name, never filed as an ordinary request nobody asked for. */
+    if (q.sweep != null && mine)
+      return sweepOutOfScope(`a member's own request is filed under no sweep, and this one names ${String(q.sweep).slice(0, 80)}; `
+                             + `${q.address} was not fetched under it`);
     const sweep = q.sweep == null ? null : await this.#sweepAdmits(q);
     if (sweep && !sweep.ok) return sweep;
     /* CONDUCT 3 — RATE, and BOTH halves are NON-TERMINAL: a held request is still queued. The governor's read is
@@ -994,7 +1045,7 @@ export class CaptureRequests {
                           ...(verdict.sweep
                             ? { origin: { kind: "sweep", matched_sweep: verdict.sweep, deeming_actor: deemingActor(verdict.attribution) },
                                 scope: verdict.scope }
-                            : { origin: { matched_sweep: q.target, deeming_actor: deemingActor(verdict.attribution) } }) } });
+                            : { origin: { matched_sweep: q.target ?? null, deeming_actor: deemingActor(verdict.attribution) } }) } });
       const out = res && res.body;
       const doc = out && out.ok && out.document;
       if (doc) return { ok: true, sha: doc.capture && doc.capture.sha256, grade: doc.capture && doc.capture.grade,
@@ -1054,14 +1105,18 @@ export class CaptureRequests {
           "source:", `  locator: ${JSON.stringify(q.address)}`, `  retrieved: ${retrieved}`,
           "monitoring:", "  enabled: false", "  frequency: none",
           "---", "", "## Summary", "",
-          `The document served at ${q.address}, captured by the daemon at an investigative session's request `
-          + `under ${q.target}${q.sweep ? `, filed under the sweep ${q.sweep}` : ""}. Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`, "",
+          (q.run ? `The document served at ${q.address}, captured by the daemon at an investigative session's request `
+                 + `under ${q.target}${q.sweep ? `, filed under the sweep ${q.sweep}` : ""}.`
+                 /* R56: a member's own request, asked for later by her act. */
+                 : `The document served at ${q.address}, captured by the daemon at the request of ${q.principal_plane}`
+                 + `${q.target ? ` under ${q.target}` : ""}.`)
+          + ` Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`, "",
           "## Provenance Notes", "",
           `${attribution.statement}. Requested ${q.requested_at} as ${q.request}; collected ${at}. Filed at collected `
           + `and never higher: releasing it is a named member's decision.`, "",
           "## Session Log", "",
           `### Session ${at} | Collected | ${attribution.actor}`,
-          `Trigger: capture request ${q.request} (run ${q.run})`,
+          `Trigger: capture request ${q.request} (${q.run ? `run ${q.run}` : `asked by ${q.principal_plane}`})`,
           "Changes: created from the daemon's capture of the requested address.", "",
           "## Review Notes", ""].join("\n");
         const blob = (f) => (f && typeof f.file === "string" && /^[0-9a-f]{64}$/.test(String(f.sha256 || ""))
@@ -1124,9 +1179,36 @@ export class CaptureRequests {
     return { sql: `EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = ${col} AND (${gate.sql}))`, args: gate.args };
   }
 
+  /** R23 as R56 amends it: a request row is seen by the viewers who see `col`'s bundle (its target, or for R26's leads
+   *  its lead); a member's own request with no target by her alone (her session's viewer stamp), never a machine's. */
+  static #rowGate(col, viewer) {
+    const base = CaptureRequests.#gate(col, viewer);
+    const her = viewerPredicate(viewer).member;
+    return { sql: `((cr.target IS NOT NULL AND ${base.sql}) OR (cr.target IS NULL AND cr.run IS NULL AND cr.principal_plane = ?))`,
+             args: [...base.args, her ? `member:${her}` : "\u0000"] };
+  }
+
+  /** R42, R56: whether `viewer` sees a request row: its target's sight, or for a member's request with no target, hers. */
+  #rowSeen(row, viewer) {
+    if (!row) return false;
+    if (row.target) return this.#inquiryInSight(row.target, viewer);
+    const her = viewerPredicate(viewer).member;
+    return isMemberRequest(row) && !!her && row.principal_plane === `member:${her}`;
+  }
+
+  /** observation-log R13's `sweep` resolution for a look this module wrote (R28): the request's target and lead, or for
+   *  a member's request with no target, whether the viewer is she (R56). Null for an unknown id. */
+  lookSight(request, viewer) {
+    const r = request ? this.#one(`SELECT run, target, lead_inquiry, principal_plane FROM capture_requests WHERE request = ? LIMIT 1`,
+                                  String(request)) : null;
+    if (!r) return null;
+    if (!r.target && isMemberRequest(r)) return this.#rowSeen(r, viewer);
+    return [r.target, r.lead_inquiry].filter(Boolean);
+  }
+
   #bounded(where, args, order, limit, gateCol, viewer) {
     const cap = clamp(limit, CAPTURE_REQUEST_READ_LIMIT, CAPTURE_REQUEST_READ_MAX);
-    const seen = CaptureRequests.#gate(gateCol, viewer);
+    const seen = CaptureRequests.#rowGate(gateCol, viewer);
     /* CAP + 1 SO THE ANSWER CAN SAY IT WAS CUT (REC-57), and nothing says how many the gate withheld. */
     const found = this.#rows(
       `SELECT cr.* FROM capture_requests cr WHERE ${[...where, `(${seen.sql})`].join(" AND ")} ORDER BY ${order} LIMIT ?`,
@@ -1168,7 +1250,7 @@ export class CaptureRequests {
       const { request = null, viewer = null } = a && typeof a === "object" ? a : {};
       const id = text(request).trim();
       if (!id) return null;
-      const seen = CaptureRequests.#gate("cr.target", viewer);
+      const seen = CaptureRequests.#rowGate("cr.target", viewer);
       const r = this.#one(`SELECT cr.* FROM capture_requests cr WHERE cr.request = ? AND (${seen.sql}) LIMIT 1`,
                           id, ...seen.args);
       return r ? CaptureRequests.project(r) : null;
@@ -1199,12 +1281,13 @@ export class CaptureRequests {
              completions: done.slice(0, n).map(CaptureRequests.project), completions_truncated: done.length > n };
   }
 
-  /** R29: stamps `run_woken_at` on each named completion not yet woken; answers how many were stamped. */
+  /** R29: stamps `run_woken_at` on each named completion of a run not yet woken; answers how many were stamped. */
   markWoken({ requests = [], at = null } = {}) {
     const iso = at || stampInstant("second", this.#nowMs());
     let marked = 0;
     for (const id of Array.isArray(requests) ? requests : []) {
-      const r = this.#one(`SELECT request FROM capture_requests WHERE request = ? AND run_woken_at IS NULL
+      /* R56: a member's request has no run to wake, so it is never stamped as one's completion. */
+      const r = this.#one(`SELECT request FROM capture_requests WHERE request = ? AND run_woken_at IS NULL AND run IS NOT NULL
                              AND state IN ('captured','refused','expired')`, String(id));
       if (!r) continue;
       this.#sql.exec(`UPDATE capture_requests SET run_woken_at = ? WHERE request = ?`, iso, r.request);
@@ -1285,7 +1368,7 @@ export class CaptureRequests {
         const part = shas.slice(i, i + CAPTURED_FOR_CHUNK);
         for (const r of this.#rows(
           `SELECT DISTINCT target, principal_plane FROM capture_requests
-            WHERE state='captured' AND capture_sha IN (${part.map(() => "?").join(",")})`, ...part)) {
+            WHERE state='captured' AND target IS NOT NULL AND capture_sha IN (${part.map(() => "?").join(",")})`, ...part)) {
           const key = JSON.stringify([r.target, r.principal_plane]);
           if (!pairs.has(key)) pairs.set(key, r);
         }
@@ -1333,7 +1416,7 @@ export class CaptureRequests {
     /* DEC-49 REGION is-capture-request-retry */
     const row = request ? this.#one(`SELECT * FROM capture_requests WHERE request=?`, request) : null;
     if (!row || row.state !== "refused" || !SOURCE_REASONS.includes(row.source_reason)
-        || !this.#inquiryInSight(row.target, viewer)) {
+        || !this.#rowSeen(row, viewer)) {
       const c = CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_NOT_RETRYABLE;
       return { ok: false, reason: "CAPTURE_REQUEST_NOT_RETRYABLE", code: "CAPTURE_REQUEST_NOT_RETRYABLE",
                check: c.check, translation: c.translation, request: request || null,
@@ -1732,6 +1815,7 @@ function platformHost(v) {
 /** R38: the deeming actor of a requested capture's sweep origin: the run and both principals (R10), never a token. */
 function deemingActor(attribution) {
   const a = attribution && attribution.ok ? attribution : null;
+  if (a && a.at_the_request_of.member !== undefined) return a.principals.plane;   /* R56: hers, never a run's */
   return a ? `run ${a.at_the_request_of.run} under ${a.principals.plane}, paid by ${a.principals.claude}` : null;
 }
 
@@ -1809,10 +1893,7 @@ export function captureRequestsOf(host, deps = {}) {
       if (counted && counted.ok === false)
         throw new Error(`capture-requests: record-core refused its figures: ${counted.reason}`);
     }
-    d.observations.registerAuthority("sweep", (request) => {
-      const b = c.bundlesOf(request);
-      return b ? [b.target, b.lead_inquiry].filter(Boolean) : null;
-    });
+    d.observations.registerAuthority("sweep", (request, viewer) => c.lookSight(request, viewer));
     /* R48 (N587; DEC-141): the seam by which a held document's questions and askers reach `capture`, earlier in the
        order (its R83). A capture with no seam (a test's stand-in) is not asked. */
     if (d.capture && typeof d.capture.registerReader === "function")

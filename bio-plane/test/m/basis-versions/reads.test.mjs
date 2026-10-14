@@ -217,6 +217,8 @@ test("R41: projectQuestions answers the inquiries a project draws on by a cites 
   const bp = broken.project("Broken", "bo", [Q]);
   broken.st.sql.exec(`DROP TABLE inquiry_basis`);
   assert.doesNotThrow(() => broken.bv.projectQuestions({ project: bp }));
+  /* a basisFor that throws reads as no leg: the page stays whole and its cursor honest, never cut short behind null */
+  assert.deepEqual(broken.bv.projectQuestions({ project: bp }), { items: [{ inquiry: Q, legs: false, stance: "none" }], cursor: null });
 });
 
 test("R41: limit is clamped to 500 — a project drawing on 501 inquiries answers 500 and a cursor, then the last", () => {

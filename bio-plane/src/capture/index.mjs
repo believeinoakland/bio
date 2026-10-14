@@ -3,7 +3,7 @@
  * allowance), the event queue an undetermined capture raises, a member's upload (R86) and the information grammar
  * (`grammar.mjs`, C-2.7). The acquisition act is `acquisition`'s since T18 (K617): `acquire` and
  * `archiveLookup` hand it this module's store (R73). It writes no bundle: no intake path writes live state.
- * Requirements: build/requirements/capture.md (R8, R15, R21–R29, R37–R40, R43–R46, R55, R57–R59, R63, R64, R68, R69, R73–R79, R81–R87). Extracted from `legacy-store` and
+ * Requirements: build/requirements/capture.md (R8, R15, R21–R29, R37–R40, R43–R46, R55, R57–R59, R63, R64, R68, R69, R73–R79, R81–R90). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
@@ -183,9 +183,17 @@ const reasonGiven = (r) => typeof r === "string" && r.trim() !== "" && [...r].le
 export const SORT_DIRS = Object.freeze(["asc", "desc"]);
 /* R77: the orders `heldCaptures` sorts by. */
 export const HELD_SORTS = Object.freeze(["age", "source", "project"]);
+/* R88 (N969): the lists `heldCaptures` answers: the held documents (R77), or the ones set aside (R79), which a member
+   restores from (R81). */
+export const HELD_STATES = Object.freeze(["held", "set_aside"]);
 /* R77 (DEC-167 (8); K1881, BOB's): the most held files an archive's row carries; the rest are read through
    `acquisition.archiveList`. */
 export const HELD_FILES_IN_ROW = 50;
+
+/* R77 (T47; N979): the capture the register files under a document (provenance R48's read contract), the one first
+   registered, ties by digest. `registered` is compared as an instant (a whole-second and a millisecond spelling of one
+   second order alike), never as text. */
+const REGISTER_FIRST = `SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY julianday(registered), registered, capture_sha LIMIT 1`;
 
 const instances = new WeakMap();
 /* R58 (N122, K155): for each instance, which of its options a caller supplied, so a later caller's option is judged
@@ -206,7 +214,9 @@ const sameEnv = (a, b) => {
  *  `ownHosts` (the group's own hosts, T35, R73; none by default, adopted from the first caller that names them, as
  *  `governor`), and `reputation` (a reader of the reputation tool, acquisition R44) and `fileScanner` (the
  *  `FILE_SCANNER` binding) (T37, R73; each adopted from the first caller that supplies it, a later one ignored, never
- *  compared: a function has no value to compare). A later call's option is never silently
+ *  compared: a function has no value to compare), and `now` (R90: this module's clock, a function answering epoch
+ *  milliseconds, `Date.now` by default; adopted and compared as `env` and `governor` are, a later caller's `now` that is
+ *  another function refused). A later call's option is never silently
  *  dropped (N122: a first caller without `env` stripped the plane's renderer from every later one): an `env` or
  *  `governor` the instance took by default is adopted from the first later caller that supplies it, and one that
  *  differs from what an earlier caller supplied throws, naming the option. A test may pass its own. */
@@ -223,7 +233,8 @@ export function captureOf(ctx, opts = {}) {
                                   made when first reached */
                                acquisition: opts.acquisition ?? null, acquisitionHost: opts.acquisition ? null : ctx });
     instances.set(storage, c);
-    supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation", "acquisition", "ownHosts"].filter((k) => opts[k] != null)));
+    supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation", "acquisition", "ownHosts", "now"]
+      .filter((k) => k === "now" ? typeof opts.now === "function" : opts[k] != null)));
     registerGrammar(c.core);
     registerFigures(c);
     return c;
@@ -237,6 +248,8 @@ export function captureOf(ctx, opts = {}) {
   if (opts.env != null && given.has("env") && !sameEnv(c.env, opts.env)) refuse("env");
   if (opts.governor != null && given.has("governor") && c.governor !== opts.governor) refuse("governor");
   if (opts.ownHosts != null && given.has("ownHosts") && !Capture.sameHosts(c.ownHosts, opts.ownHosts)) refuse("ownHosts");
+  /* R90: the clock is a function, so it is the same only when it is the same function. */
+  if (typeof opts.now === "function" && given.has("now") && c.clock !== opts.now) refuse("now");
   /* R58 (T43; N863, K2672): an option is compared only when the caller supplies it, so a call supplying none reaches no
      other module's instance: `acquisition`'s, made when first reached (its tables with it), is read only to compare. */
   for (const [name, held] of [["record", () => c.core], ["provenance", () => c.provenance], ["attestation", () => c.attestation],
@@ -245,6 +258,7 @@ export function captureOf(ctx, opts = {}) {
   if (opts.env != null && !given.has("env")) { c.env = opts.env; given.add("env"); }
   if (opts.governor != null && !given.has("governor")) { c.governor = opts.governor; given.add("governor"); }
   if (opts.ownHosts != null && !given.has("ownHosts")) { c.ownHosts = Capture.hostsOf(opts.ownHosts); given.add("ownHosts"); }
+  if (typeof opts.now === "function" && !given.has("now")) { c.clock = opts.now; given.add("now"); }
   c.adoptReputation(opts);
   return c;
 }
@@ -278,12 +292,17 @@ export class Capture {
   #reputationReader = null; #fileScanner = null;
 
   constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null,
-                         acquisition = null, acquisitionHost = null, ownHosts = [], reputation = null, fileScanner = null } = {}) {
+                         acquisition = null, acquisitionHost = null, ownHosts = [], reputation = null, fileScanner = null,
+                         now = null } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.core = record;
     this.env = env || {};
     this.governor = governor;
+    /* R90 (N983): this module's clock, a function answering epoch milliseconds, `Date.now` by default; `captureOf` adopts a
+       later caller's (R58). An act that must be judged at the server's instant (`op=sourcereach`) reads it, never a
+       request's. */
+    this.clock = typeof now === "function" ? now : Date.now;
     this.provenance = provenance;
     /* R73 (K1224): attestation's instance, which the acquisition act reaches as `cap.attestation` (its R4's
        `signReceipt`). */
@@ -348,6 +367,14 @@ export class Capture {
   #credentials() {
     if (!this.credentials) this.credentials = credentialsOf({ storage: this.#storage }, { record: this.core });
     return this.credentials;
+  }
+
+  /* R90: this module's clock read once, epoch milliseconds; an answer that is not a finite number (a clock at fault)
+     reads the platform's. */
+  #instant() {
+    let t;
+    try { t = Number(this.clock()); } catch { t = NaN; }
+    return Number.isFinite(t) ? t : Date.now();
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -906,7 +933,10 @@ export class Capture {
 
   /* R77: the SQL of a document's standing: an Information document at `collected` whose latest held act is not a
      set-aside, seen by the viewer (membership R43 over record-core's `bundles`, R37). */
-  static #NOT_SET_ASIDE = `COALESCE((SELECT h.act FROM held_acts h WHERE h.bundle_id = b.bundle_id ORDER BY h.seq DESC LIMIT 1), '') <> 'set_aside'`;
+  static #LATEST_ACT = `COALESCE((SELECT h.act FROM held_acts h WHERE h.bundle_id = b.bundle_id ORDER BY h.seq DESC LIMIT 1), '')`;
+  static #NOT_SET_ASIDE = `${Capture.#LATEST_ACT} <> 'set_aside'`;
+  /* R88: its latest held act is a set-aside. */
+  static #IS_SET_ASIDE = `${Capture.#LATEST_ACT} = 'set_aside'`;
   /* R77: when it was collected: `created` while it has never left `collected` (no prior state), else the instant its
      state last moved, `last_updated` (record-core keeps no other per-state instant). */
   static #SINCE = `CASE WHEN b.prior_state IS NULL THEN b.created ELSE b.last_updated END`;
@@ -921,14 +951,15 @@ export class Capture {
     return { sql: g.sql, args: g.args };
   }
 
-  /* R77: the WHERE terms of a held document: an Information document at `collected`, not set aside, seen by the viewer,
-     and passing the `member` and `project` filters; with their arguments. One builder for the list and for asking
-     whether one document (an archive's, R77's grouping) is a row of it. */
-  #heldWhere({ viewer, who, project }) {
+  /* R77: the WHERE terms of a held document: an Information document at `collected`, not set aside (R88: set aside, for
+     the `set_aside` list), seen by the viewer, and passing the `member` and `project` filters; with their arguments. One
+     builder for the list and for asking whether one document (an archive's, R77's grouping) is a row of it. */
+  #heldWhere({ viewer, who, project, aside = false }) {
     const sight = this.#sightOf(viewer);
     const hasProject = project != null && project !== "";
     return {
-      sql: `b.object_type = 'information' AND b.current_state = 'collected' AND ${Capture.#NOT_SET_ASIDE} AND (${sight.sql})
+      sql: `b.object_type = 'information' AND b.current_state = 'collected'
+            AND ${aside ? Capture.#IS_SET_ASIDE : Capture.#NOT_SET_ASIDE} AND (${sight.sql})
             AND ${who ? `EXISTS (SELECT 1 FROM register r JOIN capture_actors ca ON ca.capture_sha = r.capture_sha
                                   WHERE r.bundle_id = b.bundle_id
                                     AND (CASE WHEN ca.actor LIKE 'member:%' THEN substr(ca.actor, 8) ELSE ca.actor END) = ?)` : "1=1"}
@@ -951,11 +982,16 @@ export class Capture {
    *  file whose archive is not a row is a row of its own, with `archive: {sha256}`. `limit` counts rows, never files:
    *  the page is read in windows and a file shown beside its archive is skipped, so a page holds `limit` rows. */
   async heldCaptures({ member = null, project = null, sort = null, dir = null, limit = null, after = null, viewer = undefined,
-                       now = null } = {}) {
+                       now = null, state = null } = {}) {
     const by = sort == null || sort === "" ? "age" : sort;
     if (!HELD_SORTS.includes(by)) return Capture.#badArgument("heldcaptures", "sort", HELD_SORTS.join(" | "), by);
     const way = dir == null || dir === "" ? (by === "age" ? "desc" : "asc") : dir;
     if (!SORT_DIRS.includes(way)) return Capture.#badArgument("heldcaptures", "dir", SORT_DIRS.join(" | "), way);
+    /* R88: `held` (absent or empty) is R77's list, `set_aside` the documents set aside, by the same sight, filters, sorts,
+       bound and fields, each row also carrying its latest set-aside. */
+    const list = state == null || state === "" ? "held" : state;
+    if (!HELD_STATES.includes(list)) return Capture.#badArgument("heldcaptures", "state", HELD_STATES.join(" | "), list);
+    const aside = list === "set_aside";
     const cap = limitOf(limit);
     const from = after ? keyOf(after, 3) : null;
     if (after && !from) return badCursor();
@@ -965,7 +1001,7 @@ export class Capture {
                                                     : "CASE WHEN project IS NULL OR project = '' THEN '1' ELSE '0' END";
     const asc = by === "age" ? way === "desc" : way === "asc";
     const who = typeof member === "string" && member ? memberIdOf(member) : null;
-    const where = this.#heldWhere({ viewer, who, project });
+    const where = this.#heldWhere({ viewer, who, project, aside });
     const window = (key, n) => this.#rows(
       `SELECT * FROM (SELECT bundle_id, title, project, since, src_address, src_via, src_retrieved, ${k0} AS k0, ${k1} AS k1 FROM (
          SELECT b.bundle_id, b.title, b.project, ${Capture.#SINCE} AS since, ${Capture.#SOURCE("address")} AS src_address,
@@ -1012,10 +1048,33 @@ export class Capture {
                   ...(await this.#eligibility(r.bundle_id)),
                   ...(asked.questions ? { captured_for: Capture.#shown(asked.questions) }
                                       : { captured_for: null, captured_for_basis: asked.basis }),
-                  ...(grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {})) });
+                  ...(grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {})),
+                  capture: this.#captureOfDocument(r.bundle_id),
+                  ...(aside ? { set_aside: this.#latestSetAside(r.bundle_id) } : {}) });
     }
-    return { ok: true, held: rows, sort: by, dir: way, limit: cap, truncated,
+    return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated,
              next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
+  }
+
+  /* R88: a set-aside document's latest set-aside as R79 recorded it, `{reason, author, at}`. */
+  #latestSetAside(bundleId) {
+    const r = this.#one(`SELECT reason, author, at FROM held_acts WHERE bundle_id = ? AND act = 'set_aside' ORDER BY seq DESC LIMIT 1`, bundleId);
+    return r ? { reason: r.reason, author: r.author, at: r.at } : null;
+  }
+
+  /* R77 (T47; N979): the capture a held row stands for, `{sha256, grade}`: the digest the register files under the
+     document (provenance R48; of several, the one first registered, ties by digest) and `provenance.captureGrade`'s
+     answer whole, null when provenance does not answer; null for a document under which the register files no capture. */
+  #captureOfDocument(bundleId) {
+    let reg = null;
+    try { reg = this.#one(REGISTER_FIRST, bundleId); } catch { reg = null; }
+    if (!reg || typeof reg.capture_sha !== "string") return null;
+    let grade = null;
+    try {
+      const g = typeof this.provenance?.captureGrade === "function" ? this.provenance.captureGrade(reg.capture_sha) : null;
+      grade = g && typeof g === "object" && typeof g.then !== "function" ? g : null;
+    } catch { grade = null; }
+    return { sha256: reg.capture_sha, grade };
   }
 
   /* R77 (DEC-167 (8)): for each document of a window, the archives its captures were cut out of or found in
@@ -2260,14 +2319,16 @@ export class Capture {
   }
 
   /** R8. The reachability of one address and whether the fallback threshold is met, with the facts it is computed
-   *  from. Staleness runs from the FIRST failure of the current run, and the age arm needs corroboration. */
+   *  from. Staleness runs from the FIRST failure of the current run, and the age arm needs corroboration. R90 (N983): an
+   *  in-plane caller (`monitoring`'s archive tick) may pass its own `now`; with none (the route never passes one, its
+   *  answer may gate an archive fallback) it is judged at this module's clock (`captureOf`'s `now`). */
   sourceReachability({ addressNorm = null, now = null } = {}) {
     const row = this.#one(`SELECT * FROM source_reachability WHERE address_norm=?`, addressNorm);
     const TH = this.reachabilityThresholds();
     if (!row)
       return { address_norm: addressNorm, known: false, consecutive_failures: 0, governed_refusals: 0,
                fallback_eligible: false, thresholds: TH, basis: "no attempt on this address has ever been recorded" };
-    const at = now && ISO_INSTANT.test(now) ? now : stampSecond();
+    const at = now && ISO_INSTANT.test(now) ? now : stampSecond(this.#instant());
     const byCount = row.consecutive_failures >= TH.failures;
     const since = row.first_failure_since ? Date.parse(row.first_failure_since) : null;
     const staleDays = since === null ? 0 : (Date.parse(at) - since) / 86400000;
@@ -2346,7 +2407,8 @@ export function captureOps(c, url, body, env) {
     derivesitechrome: () => c.deriveSiteChrome({ host: q("host"), limit: q("limit"), after: q("after") }),
     chromeof: () => c.chromeOf({ host: q("host"), ...page }),
     recordsourceoutcome: () => c.recordSourceOutcome(body || {}),
-    sourcereach: () => c.sourceReachability({ addressNorm: q("address"), now: q("now") }),
+    /* R90 (N983, K3027): judged at the server's instant, this module's clock: a `now` in the query or body is never read. */
+    sourcereach: () => c.sourceReachability({ addressNorm: q("address") }),
     taskenqueue: () => c.taskEnqueue(body || {}),
     savecapturesession: () => c.saveCaptureSession(body || {}),
     loadcapturesession: () => c.loadCaptureSession({ session: q("session") }),
@@ -2356,7 +2418,7 @@ export function captureOps(c, url, body, env) {
     /* R76, R77, R79, R81: by the caller's stamped viewer; an unstamped call sees nothing. The author is the stamp. */
     gradenote: () => c.gradeNoteOf({ captureSha: q("capture") ?? (body && body.captureSha), viewer: q("viewer") ?? "" }),
     heldcaptures: () => c.heldCaptures({ member: q("member"), project: q("project"), sort: q("sort"), dir: q("dir"), ...page,
-                                         viewer: q("viewer") ?? "" }),
+                                         state: q("state"), viewer: q("viewer") ?? "" }),
     heldsetaside: () => c.setAside({ ids: body && body.ids, reason: body && body.reason, author: q("by") ?? q("author"),
                                      viewer: q("viewer") ?? "" }),
     heldrestore: () => c.restoreHeld({ ids: body && body.ids, reason: body && body.reason, author: q("by") ?? q("author"),

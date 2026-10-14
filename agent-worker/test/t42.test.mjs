@@ -19,6 +19,8 @@ const section = (s) => console.log(`\n--- ${s} ---`);
 /* ------------------------------------------------------------------------------------------------- fixtures */
 
 const SECRET = "sk-ant-t42-account-sentinel-never-echoed";
+/* R82 (T47): the token credentials holds for the member's own sign-in, a `signin` account's `secret`. */
+const SIGNIN_TOKEN = "sk-ant-oat-t42-signin-fixture-never-echoed";
 const ACCOUNT = { kind: "apikey", level: "member", secret: SECRET, member: MEMBER, suggestions: false };
 const SHA = "a".repeat(64);
 /* A page's picture: a PNG's signature, then the page's own words as bytes (a stub model reads them back). The
@@ -171,13 +173,13 @@ section("R72 · the refusals, before any model call, in order");
   const unset = await transcribe(body({ account: { ...ACCOUNT, secret: "" } }));
   t("R72: an account with no usable key: 409 NO_ACCOUNT, nothing called", [codeOf(unset), nothingCalled(unset)], [[409, "NO_ACCOUNT"], [0, 0, 0]]);
   for (const [label, account] of [["of an unknown kind", { ...ACCOUNT, kind: "subscription" }], ["of an unknown level", { ...ACCOUNT, level: "instance" }],
-                                  ["naming no member", { ...ACCOUNT, member: "" }], ["the group's sign-in", { kind: "signin", level: "group", member: MEMBER, suggestions: false }],
+                                  ["naming no member", { ...ACCOUNT, member: "" }], ["the group's sign-in", { kind: "signin", level: "group", member: MEMBER, secret: SIGNIN_TOKEN, suggestions: false }],
                                   ["a list", [ACCOUNT]]]) {
     const x = await transcribe(body({ account }));
     t(`R72: an account ${label}: 400 BAD_ACCOUNT, nothing called`, [codeOf(x), nothingCalled(x)], [[400, "BAD_ACCOUNT"], [0, 0, 0]]);
   }
-  for (const [label, account] of [["the member's own sign-in", { kind: "signin", level: "member", member: MEMBER, suggestions: false }],
-                                  ["a project's sign-in (R71)", { kind: "signin", level: "project", project: "PRJ-1", member: MEMBER, suggestions: false }]]) {
+  for (const [label, account] of [["the member's own sign-in", { kind: "signin", level: "member", member: MEMBER, secret: SIGNIN_TOKEN, suggestions: false }],
+                                  ["a project's sign-in (R71)", { kind: "signin", level: "project", project: "PRJ-1", member: MEMBER, secret: SIGNIN_TOKEN, suggestions: false }]]) {
     const x = await transcribe(body({ account }));
     /* T46 (N852): TRANSCRIBE_NEEDS_API_KEY is no longer answered; the sign-in's relay of the picture is t46's to show. */
     t(`R72 (T46): ${label} is no longer refused TRANSCRIBE_NEEDS_API_KEY, and no plane call is made`,
@@ -193,7 +195,9 @@ section("R72 · the refusals, before any model call, in order");
   t("R72: BAD_SHA before BAD_PAGES", codeOf(await transcribe(body({ capture_sha: "x", pages: [] }))), [400, "BAD_SHA"]);
   t("R72: BAD_PAGES before the account", codeOf(await transcribe(body({ pages: [], account: undefined }))), [400, "BAD_PAGES"]);
   t("R72: NO_ACCOUNT before BAD_ACCOUNT's neighbours", codeOf(await transcribe(body({ account: null }))), [409, "NO_ACCOUNT"]);
-  t("R72: a sign-in carrying a secret is BAD_ACCOUNT", codeOf(await transcribe(body({ account: { kind: "signin", level: "member", member: MEMBER, secret: "x" } }))), [400, "BAD_ACCOUNT"]);
+  const held = await transcribe(body({ account: { kind: "signin", level: "member", member: MEMBER } }));
+  t("R72, R82 (T47): a sign-in carrying no secret (no token held) is 409 SIGNIN_NOT_HELD, nothing called",
+    [codeOf(held), nothingCalled(held)], [[409, "SIGNIN_NOT_HELD"], [0, 0, 0]]);
   const noPlane = await transcribe(body(), { noPlane: true });
   t("R72: no PLANE binding is needed: the pages are transcribed", [noPlane.status, noPlane.out?.pages?.length], [200, 2]);
   t("R72, R35: the only binding /transcribe reads from env is RUNNER (passed to agent-model as bound)", [...new Set([...ok.keys, ...noPlane.keys])].sort(), ["RUNNER"]);
@@ -286,9 +290,9 @@ section("R75 · nothing kept, no secret and no page data in any answer, refusal 
   const drives = [await transcribe(body()), await transcribe(body(), { model: { per: () => "refuse" } }),
                   await transcribe(body(), { model: { per: () => "silent" } }), await transcribe(body({ capture_sha: "x" })),
                   await transcribe(body({ pages: [{ ...page(1), media_type: "image/jpeg" }] })),
-                  await transcribe(body({ account: { kind: "signin", level: "member", member: MEMBER, suggestions: false } })),
+                  await transcribe(body({ account: { kind: "signin", level: "member", member: MEMBER, secret: SIGNIN_TOKEN, suggestions: false } })),
                   await transcribe(body({ account: { ...ACCOUNT, kind: "nope" } }))];
-  t("R75, R36: no answer or refusal carries the account's secret", drives.filter((d) => d.text.includes(SECRET)).length, 0);
+  t("R75, R36: no answer or refusal carries the account's secret", drives.filter((d) => d.text.includes(SECRET) || d.text.includes(SIGNIN_TOKEN)).length, 0);
   t("R75: no answer or refusal carries a page's data", drives.filter((d) => d.text.includes(page(1).data) || d.text.includes(page(2).data)).length, 0);
   t("R75: no log line carries the secret or a page's data",
     drives.flatMap((d) => d.lines).filter((l) => l.includes(SECRET) || l.includes(PIXEL_SENTINEL) || l.includes(page(1).data)).length, 0);

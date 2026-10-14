@@ -35,7 +35,7 @@ export function world(opts = {}) {
   const actionHolds = actionHoldsOf(w.host, { record: w.record, membership: w.membership, now: () => ms(w.clock.now),
                                               doorbell: null, ratification: null, docket });
   /* action-replies, real (T45-29 merged, K2862): its arose_from links and their two reads */
-  const actionReplies = actionRepliesOf(w.host, { record: w.record, membership: w.membership, actions: w.actions, caseAuthoring: null,
+  const actionReplies = actionRepliesOf(w.host, { record: w.record, membership: w.membership, actions: w.actions, caseInputs: null,
                                                   now: () => ms(w.clock.now) });
   const dutyCalls = [];
   /* duties R14's recorded readings: `w.transitions`, in R13's shape, filtered as `transitionsOf` filters them */

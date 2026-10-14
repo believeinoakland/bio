@@ -7,6 +7,8 @@
  * (R41, R42), holds the re-examination's machine marks apart (R43), and keeps a frozen summary and a note at its close
  * (R20, R44, R45). Since T46 a pause is the document's own state, `paused`, written with its Plan Log entry in one act
  * (R46 (a); record-grammar's `action_plan` states), and the look-again day is read on the place's local day (R46 (b)).
+ * Since T47 the date checks are judged on that local day too (R48), and a closed plan's read names its closing instant
+ * `closed.at` (R50).
  *
  * A new module (T18, layer 9, last): nothing moves from the legacy modules. Escalation's record-object pattern is the
  * model (its index.mjs and doc.mjs).
@@ -99,6 +101,9 @@ const CLOSE_NOTE_PROMPT = Object.freeze({ key: "plan.close.lessons", en: PLAN_WO
 /* R46 (b): what the look-again read says when no zone is held. */
 const LOOK_AGAIN_UNDETERMINED = "no time zone is held for this place, so the day to look again cannot be told and no plan is "
   + "answered due by it";
+/* R48: what a date check says when no zone is held. */
+const DAY_UNDETERMINED = "no time zone is held for this place, so the plan's local day is undetermined and the date is not "
+  + "compared with the UTC day in its place";
 /* R40: what a paused plan's read says of it. */
 const PAUSED_SAYS = "the plan is paused: what it set running continues (its actions' dates, escalations and watches), and "
   + "its own checkpoints are not due until it is resumed. Every act stays open to members.";
@@ -1573,7 +1578,8 @@ export class ActionPlans {
       return { state: "undetermined", says: "where the plan stands could not be read at the close, so no summary was kept" };
     }
   }
-  /* R20: a closed plan's close: who, when, why, the note and the frozen summary. */
+  /* R20, R50: a closed plan's close: `at` the instant the close was recorded (the one field naming the plan's closing
+     instant, which other modules read), who, why, the note and the frozen summary. */
   #closedView(p) {
     const h = this.#one(`SELECT * FROM plan_history WHERE plan_id=? AND kind='close' ORDER BY seq DESC LIMIT 1`, p.id);
     const e = h ? unjson(h.entry_json, {}) : {};
@@ -1676,7 +1682,7 @@ export class ActionPlans {
   plansToLookAgain({ nowMs, limit } = {}) {
     const now = Number.isFinite(nowMs) ? nowMs : this.#nowMs();
     const cap = Number.isInteger(limit) && limit > 0 ? Math.min(limit, DUE_MAX) : DUE_MAX;
-    const today = this.#localDay(now);
+    const today = this.#localDay(now, this.#zone());
     if (today === null)
       return { ok: true, as_of: iso(now), day: { state: "undetermined", says: LOOK_AGAIN_UNDETERMINED }, items: [], truncated: false, limit: cap };
     const items = [];
@@ -1690,13 +1696,14 @@ export class ActionPlans {
     items.sort((a, b) => (a.look_again < b.look_again ? -1 : a.look_again > b.look_again ? 1 : a.plan < b.plan ? -1 : 1));
     return { ok: true, as_of: iso(now), day: today, items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
   }
-  /* R46 (b): the local day of `nowMs` in the zone the place states (actions R68), or null when no zone is held or the
-     day cannot be read (K1444 (iii): never the UTC day in its place). */
-  #localDay(nowMs) {
-    const zone = zoneOf(this.actions.place());
-    if (!zone) return null;
+  /* R46 (b), R48: the zone the place states (actions R68), or null when none is held. */
+  #zone() { return zoneOf(this.actions.place()) || null; }
+  /* R46 (b), R48: the local day of `ms` in `zone`, or null when no zone is held or the day cannot be read (K1444 (iii):
+     never the UTC day in its place). */
+  #localDay(ms, zone) {
+    if (!zone || !Number.isFinite(ms)) return null;
     let d;
-    try { d = localDay(iso(nowMs), zone); } catch { return null; }
+    try { d = localDay(iso(ms), zone); } catch { return null; }
     return typeof d === "string" && isDay(d) ? d : null;
   }
 
@@ -1870,14 +1877,21 @@ export class ActionPlans {
      fact, asked of every subject it serves, seen or not (R35 withholds the subject, not what the plan says of it). */
   #checks(p, options, scenarios, live, now, viewer, held) {
     const out = [];
-    const today = dayOf(now);
+    /* R48: the date checks compare on the plan's local day (R46 (b)'s zone), never the UTC day; with no zone held each is
+       answered undetermined with its reason, never computed on the UTC day and never left out. */
+    const zone = this.#zone();
+    const today = this.#localDay(now, zone);
     const outward = (o) => !!o.addressee;
     const pending = (o) => !["declined", "done"].includes(o.disposition) && !o.action;
     for (const o of options) {
       /* A declined option is set aside: no check is asked of it. */
       if (o.disposition === "declined") continue;
-      if (pending(o)) for (const d of o.dates || [])
-        if (d.date < today) out.push({ check: "date_past", option: o.id, date: d.date, says: `${o.id}'s regulated date ${d.date} has passed (${d.basis})` });
+      if (pending(o)) for (const d of o.dates || []) {
+        if (today === null)
+          out.push({ check: "date_past", option: o.id, date: d.date, state: "undetermined",
+                     says: `whether ${o.id}'s regulated date ${d.date} has passed cannot be told: ${DAY_UNDETERMINED}` });
+        else if (d.date < today) out.push({ check: "date_past", option: o.id, date: d.date, says: `${o.id}'s regulated date ${d.date} has passed (${d.basis})` });
+      }
       const states = (o.subjects_liveness || []).map((b) => b.liveness.state);
       if (states.length && !states.includes("live") && o.says)
         out.push({ check: "subjects_not_live", option: o.id, says: `every matter ${o.id} serves is no longer live` });
@@ -1901,9 +1915,12 @@ export class ActionPlans {
     /* R39: a scenario set aside is not checked. */
     for (const sc of scenarios.filter((x) => !x.set_aside)) {
       for (const ph of sc.phases) {
-        const start = ph.earliest ? dayOf(msOf(ph.earliest)) : null;
+        const start = ph.earliest ? this.#localDay(msOf(ph.earliest), zone) : null;
         for (const oid of ph.options) {
           const o = byId.get(oid);
+          if (o && ph.earliest && start === null) for (const d of o.dates || [])
+            out.push({ check: "date_before_phase", scenario: sc.scenario, phase: ph.id, option: oid, date: d.date, state: "undetermined",
+              says: `whether ${oid}'s regulated date ${d.date} falls before phase ${ph.id} can start cannot be told: ${DAY_UNDETERMINED}` });
           if (o && start) for (const d of o.dates || [])
             if (d.date < start) out.push({ check: "date_before_phase", scenario: sc.scenario, phase: ph.id, option: oid, date: d.date,
               says: `${oid}'s regulated date ${d.date} falls before phase ${ph.id} can start (${start})` });

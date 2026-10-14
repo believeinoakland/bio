@@ -120,7 +120,9 @@ test("R11 (DEC-181) at the phone width a signed act is drawn with what it does a
   await p.click(phone);
   assert.equal(p.byOp("attest").length, 0);
   assert.ok(btn(p, "cite"), "a reversible act is still a phone act");
-  assert.ok(btn(p, "retire"), "a terminal act is not one DEC-181 sends elsewhere");
+  /* R50 (K3156) amends this: a terminal act, which `op-grades.phoneOf` answers false for, is held at the phone width too */
+  assert.equal(btn(p, "retire"), null);
+  assert.ok(p.root().querySelector('[data-phone-act="retire"]'));
 });
 
 test("R12 an act is drawn only when NEEDS[op] is null or a held capability, the op is in the session's set, and, for an administrator's act, whoami's administer is true; absent, never greyed", async () => {

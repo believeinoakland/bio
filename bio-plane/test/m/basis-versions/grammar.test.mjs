@@ -192,19 +192,23 @@ test("R5 (K182): versionAsWritten is the written form of a submission, which ver
     "idempotent: the written form writes as itself");
 });
 
-test("R35: every check this module mints is a catalogue row with its C-number and a translation — C-25.1–C-25.34, C-27.15, C-50.1–C-50.11, C-33.1, C-33.2, C-33.33–C-33.37, C-32.2", () => {
+test("R35: every check this module mints is a catalogue row with its C-number and a translation — C-25.1–C-25.35, C-27.15, C-50.1–C-50.11, C-33.1, C-33.2, C-33.33–C-33.37, C-32.2", () => {
   const nums = (m) => Object.values(m).map((r) => r.check);
-  const want25 = Array.from({ length: 34 }, (_, i) => `C-25.${i + 1}`);
-  assert.deepEqual([...new Set([...nums(BASIS_VERSION_CHECKS), ...nums(VERSION_ACT_CHECKS)])].sort(), [...want25].sort());
+  const want25 = Array.from({ length: 35 }, (_, i) => `C-25.${i + 1}`);
+  /* C-25.35 (BAD_BIAS_APPLIED, R48) is a conclusion's refusal, so its row is in CONCLUDE_ACT_CHECKS */
+  const c25 = [...nums(BASIS_VERSION_CHECKS), ...nums(VERSION_ACT_CHECKS), ...nums(CONCLUDE_ACT_CHECKS)].filter((c) => c.startsWith("C-25."));
+  assert.deepEqual([...new Set(c25)].sort(), [...want25].sort());
+  assert.equal(CONCLUDE_ACT_CHECKS.BAD_BIAS_APPLIED.check, "C-25.35");
+  assert.equal(VERSION_KIND_CHECKS.VERSION_KIND_UNKNOWN.check, "C-27.15");
   assert.deepEqual(nums(NARROW_CHECKS).sort(), Array.from({ length: 11 }, (_, i) => `C-50.${i + 1}`).sort());
   const act = Object.values(CONCLUDE_ACT_CHECKS).map((r) => r.check);
   for (const c of ["C-33.1", "C-33.2", "C-33.33", "C-33.34", "C-33.35", "C-33.36", "C-33.37"]) assert.ok(act.includes(c), c);
   assert.equal(CONCLUDE_ACT_CHECKS.MACHINE_CANNOT_CONCLUDE.check, "C-32.2");
-  for (const m of [BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, NARROW_CHECKS])
+  for (const m of [BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, NARROW_CHECKS, CONCLUDE_ACT_CHECKS, VERSION_KIND_CHECKS])
     for (const [k, r] of Object.entries(m)) assert.ok(typeof r.translation === "string" && r.translation.length > 20, k);
 });
 
 test("R36: no place is named in the translations this module's refusals carry", () => {
-  const rows = JSON.stringify([BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, NARROW_CHECKS]);
+  const rows = JSON.stringify([BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, NARROW_CHECKS, CONCLUDE_ACT_CHECKS, VERSION_KIND_CHECKS]);
   for (const place of ["Oakland", "Alameda", "California"]) assert.equal(rows.includes(place), false, place);
 });

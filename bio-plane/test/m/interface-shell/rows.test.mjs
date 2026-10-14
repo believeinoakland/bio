@@ -17,7 +17,8 @@ test("R19 each row's acts are in a panel opened beneath it, by its name or the k
   assert.equal(panel(0).hidden, true);
   assert.equal(p.root().querySelectorAll('button[data-act="heldrestore"]').every((b) => b.closest("tr.cs-panel")), true, "only in its row's panel");
   const open = rowsOf(p)[0].querySelector('[data-shell="row"]');
-  assert.equal(open.textContent, "Minutes");
+  assert.equal(open.getAttribute("aria-label"), "Acts for Minutes");
+  assert.equal(open.closest(".cs-rowname").textContent, "Minutes" + open.textContent, "beside the row's name");
   assert.equal(open.getAttribute("aria-expanded"), "false");
   await p.click(open);
   assert.equal(panel(0).hidden, false);
@@ -56,7 +57,7 @@ test("R19 sorting keeps each open panel with its row; at the phone width each ro
   await p.click(sort);
   await p.click(p.root().querySelectorAll('[data-shell="sort"]')[0]);
   assert.equal(p.root().querySelectorAll("th")[1].getAttribute("aria-sort"), "descending");
-  const names = rowsOf(p).map((r) => r.querySelector('[data-shell="row"]').textContent);
+  const names = rowsOf(p).map((r) => r.querySelector('[data-shell="row"]').getAttribute("aria-label").replace("Acts for ", ""));
   assert.deepEqual(names, ["Minutes", "Budget"]);
   const budget = rowsOf(p).find((r) => r.textContent.includes("Budget"));
   assert.equal(rowsOf(p).indexOf(budget), 1);

@@ -194,6 +194,48 @@ test("R18 the re-exported record names who owns each later mode's enabling condi
   assert.deepEqual(rendered, layer, "the pack carries the layer as the doctrine renders it");
 });
 
+/* T47 (N949, K2961): R18's wording since `plan`'s deployment (run-rules R14, T46): the order's four members, check and
+   plan the deployed modes today, and this module stating the order and deploying none. */
+test("R18 (T47) the order has four members with plan last; check and plan are the deployed modes today, read through run-rules, plan by its own flag; this module deploys none, and the layer's note says so and names who owns each later mode's enabling condition", () => {
+  const { order, first_deployed_mode: first } = DEPLOYMENT_SEQUENCE;
+  assert.equal(order.length, 4, "four members");
+  assert.equal(order.at(-1), "plan");
+  /* The deployed modes of the order are run-rules' DEPLOYED_MODES, read there and never here: the first, and plan by
+     its own flag (deploys_apart). The chain's later members (investigate, extract) are not deployed. */
+  assert.deepEqual(deployment.DEPLOYED_MODES.filter((m) => order.includes(m)), [first, "plan"]);
+  assert.equal(DEPLOYMENT_SEQUENCE.deploys_apart.plan.deployed, true, "plan deploys by its own flag");
+  for (const m of order.slice(1, -1)) assert.ok(!deployment.DEPLOYED_MODES.includes(m), `${m} is not deployed`);
+  /* This module deploys none: no export of either file names a deployed set or holds a deploy flag but the
+     re-exported order, which is run-rules' own object. */
+  for (const ns of [doctrine, pack]) {
+    assert.deepEqual(Object.keys(ns).filter((k) => /DEPLOY/i.test(k)).filter((k) => k !== "DEPLOYMENT_SEQUENCE"), [],
+      "no deployed set or flag of this module's");
+    if ("DEPLOYMENT_SEQUENCE" in ns) assert.equal(ns.DEPLOYMENT_SEQUENCE, deployment.DEPLOYMENT_SEQUENCE);
+  }
+  const layer = judgementLayers().deployment_sequence;
+  const { sequence, ...rest } = layer.body;
+  assert.equal(sequence, DEPLOYMENT_SEQUENCE);
+  const noFlag = (v, path) => {
+    assert.notEqual(typeof v, "boolean", `${path} is a flag`);
+    assert.notEqual(typeof v, "function", `${path} is a predicate`);
+    if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) noFlag(x, `${path}.${k}`);
+  };
+  noFlag(rest, "deployment_sequence.body");
+  const note = layer.body.note;
+  assert.match(note, /holds no flag of its own, and this module deploys no mode/);
+  assert.match(note, /any mode deployed apart from the chain by its own flag/);
+  assert.match(note, /who owns each later mode's enabling condition/);
+  assert.doesNotMatch(note, /second mode/, "no longer written for a two-step chain");
+  for (const m of order) assert.doesNotMatch(note, new RegExp(`\\b${m}\\b`), `the note types no mode name (${m}): R23`);
+  assert.match(layer.load_when, /which modes are deployed/);
+  assert.deepEqual(controlFlowAuthority(note), []);
+  assert.deepEqual(controlFlowAuthority(layer.load_when), []);
+  /* The re-exported record states the owner of each later mode's condition: the chain's (its enabling_condition_owned_by)
+     and plan's, its own flag set by a reviewed change (deploys_apart.plan.when). */
+  assert.ok(DEPLOYMENT_SEQUENCE.enabling_condition_owned_by.trim().length > 0);
+  assert.match(DEPLOYMENT_SEQUENCE.deploys_apart.plan.when, /reviewed change/);
+});
+
 test("R19 absenceByLevel: one entry per level in order, the level's fact, the next level, both spellings, and the states split by the definitive set", () => {
   const facts = { meaning: "nothing derived", content: "nothing extracted", document: "no document", internet: "nobody looked" };
   const levels = Object.keys(OBSERVATION_LEVELS);

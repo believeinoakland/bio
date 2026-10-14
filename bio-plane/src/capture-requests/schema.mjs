@@ -2,7 +2,8 @@
  * legacy `schema.mjs` at this module's extraction, with the comments that record why it is shaped as it is:
  * `capture_requests` and its indexes, and R46's `capture_request_platforms`. Its three additive columns (`lead_inquiry`, `run_woken_at`, `render`)
  * are in the table as created and are added to a store that predates them by `migrateCaptureRequests`, with R40's
- * `source_reason`, R45's `sweep`, R50's `co_archive` (T35) and R55's `step` (T41); R51's `records_requests` (T35) is its own table. The table is keyed to a bundle by `target` for purge (R35). */
+ * `source_reason`, R45's `sweep`, R50's `co_archive` (T35) and R55's `step` (T41); R51's `records_requests` (T35) is its own table; R56 (T47) makes `run`, `target` and `principal_claude` nullable, rebuilding a
+ * table that predates it. The table is keyed to a bundle by `target` for purge (R35). */
 
 export const CAPTURE_REQUESTS_SCHEMA = `
 -- PL-4 / IS-4 / SWEEP section 4b.1: THE CAPTURE-REQUEST DOOR.
@@ -26,7 +27,11 @@ export const CAPTURE_REQUESTS_SCHEMA = `
 -- exactly where the daemon's captures always have, at collected and never
 -- higher.
 --
--- BOTH PRINCIPALS ARE COLUMNS AND NEITHER IS NULLABLE (DEC-27(b), DEC-55.4).
+-- BOTH PRINCIPALS ARE COLUMNS (DEC-27(b), DEC-55.4). R56 (T47) made run,
+-- target and principal_claude nullable for ONE kind of row: a member's own
+-- request ("Ask for this later"), which no run made and no cascade paid for,
+-- so its plane principal (her session stamp) is its whole attribution. Every
+-- run's request still carries both; the drain still refuses one that cannot.
 -- They are RECORDED AT THE REQUEST rather than resolved at the drain (the plane
 -- principal is the caller's stamp, REC-168; the Claude principal is the run's),
 -- because a run is scratch with an expiry and the attribution must survive it:
@@ -47,14 +52,14 @@ export const CAPTURE_REQUESTS_SCHEMA = `
 -- construction and not by a class list.
 CREATE TABLE IF NOT EXISTS capture_requests (
   request           TEXT PRIMARY KEY,
-  run               TEXT NOT NULL,    -- the run that asked. NO FOREIGN KEY, section 14b.7's rule for versions applied one level down
-  target            TEXT NOT NULL,    -- the inquiry the run is working under: a bundle id, which is what purge's per-bundle arm can find
+  run               TEXT,             -- the run that asked. NO FOREIGN KEY, section 14b.7's rule for versions applied one level down. NULL only on a member's own request (R56, T47)
+  target            TEXT,             -- the inquiry the run is working under: a bundle id, which is what purge's per-bundle arm can find. NULL only on a member's own request that names none (R56)
   address           TEXT NOT NULL,    -- the public https locator asked for
   host              TEXT NOT NULL,    -- derived at the write from address
   purpose           TEXT NOT NULL,    -- the user-agent purpose token this fetch will carry
   ua_mode           TEXT NOT NULL,    -- civicsmith (civicos before T31, read as civicsmith: R14, DEC-124), or member-browser (BOB-3, permitted for public documents)
   principal_plane   TEXT NOT NULL,    -- the caller's stamp (REC-168): whose scope the writes ran under
-  principal_claude  TEXT NOT NULL,    -- the run's: WHICH LEVEL of the cascade paid
+  principal_claude  TEXT,             -- the run's: WHICH LEVEL of the cascade paid. NULL only on a member's own request (R56): no run, no cascade
   state             TEXT NOT NULL,    -- requested | draining | captured | refused | expired (D-523, a C-83 render hold released UNDETERMINED at expires)
   code              TEXT,             -- the DEC-49 wire code, when the drain refused or held this row
   detail            TEXT,             -- what the drain said, so a held row explains itself without a second call
@@ -221,11 +226,31 @@ export const CAPTURE_REQUESTS_ADDITIVE = Object.freeze([
   ["step", "TEXT"],
 ]);
 
+/** R56 (T47): the columns a member's own request leaves NULL, made nullable in a store whose table predates it. */
+export const CAPTURE_REQUESTS_NULLABLE = Object.freeze(["run", "target", "principal_claude"]);
+const PRE_T47 = "capture_requests_pre_t47";
+
 export function migrateCaptureRequests(sql) {
-  const have = [...sql.exec(`PRAGMA table_info(capture_requests)`)].map((r) => r.name);
+  const info = [...sql.exec(`PRAGMA table_info(capture_requests)`)];
+  const have = info.map((r) => r.name);
   if (have.length)
     for (const [column, decl] of CAPTURE_REQUESTS_ADDITIVE)
       if (!have.includes(column)) sql.exec(`ALTER TABLE capture_requests ADD COLUMN ${column} ${decl}`);
   const bare = CAPTURE_REQUESTS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  /* R56: SQLite cannot drop NOT NULL in place, so a table created before T47 is rebuilt once: renamed aside, its
+     indexes dropped (they keep their names across a rename and would stop the schema re-creating them), the table
+     created as it now stands, every row copied, and the old one dropped. Within one synchronous call, so the Durable
+     Object commits it whole. */
+  const strict = info.some((r) => CAPTURE_REQUESTS_NULLABLE.includes(r.name) && Number(r.notnull) === 1);
+  if (strict) {
+    sql.exec(`ALTER TABLE capture_requests RENAME TO ${PRE_T47}`);
+    for (const ix of [...sql.exec(`SELECT name FROM sqlite_master WHERE type='index' AND tbl_name=? AND sql IS NOT NULL`, PRE_T47)])
+      sql.exec(`DROP INDEX IF EXISTS "${ix.name}"`);
+  }
   for (const stmt of bare.split(";")) if (stmt.trim()) sql.exec(stmt);
+  if (strict) {
+    const cols = [...sql.exec(`PRAGMA table_info(${PRE_T47})`)].map((r) => r.name).map((c) => `"${c}"`).join(", ");
+    sql.exec(`INSERT INTO capture_requests (${cols}) SELECT ${cols} FROM ${PRE_T47}`);
+    sql.exec(`DROP TABLE ${PRE_T47}`);
+  }
 }

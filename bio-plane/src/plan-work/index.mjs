@@ -44,8 +44,8 @@ import { conformanceOf } from "../conformance/index.mjs";
 import { dutiesOf, INTERNAL as DUTIES_INTERNAL } from "../duties/index.mjs";
 import { readingGuidesOf } from "../reading-guides/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
-import { expandRecurrence } from "../civil-time/index.mjs";
-import { isMachineIdentity, lawProposalState, parseFrontmatter, sha256HexSync, ISO_TS_RE } from "../record-grammar/index.mjs";
+import { expandRecurrence, localDay } from "../civil-time/index.mjs";
+import { isMachineIdentity, proposalLabel, parseFrontmatter, sha256HexSync, ISO_TS_RE } from "../record-grammar/index.mjs";
 import { PLAN_WORK_TABLES, migratePlanWork } from "./schema.mjs";
 import { PLAN_WORK_CHECKS, refusal } from "./checks.mjs";
 
@@ -70,15 +70,12 @@ export const REEXAM_BOUNDS = Object.freeze([Object.freeze({ bound: "proposals", 
 export const DRAFT_LABEL = Object.freeze({ machine_work: true, by: "system",
   says: "assembled by the system from where the plan stands, each item naming its source; machine work, not a member's report" });
 /** R14: who a report that began as the assistant's draft names as its drafter: a machine identity, so its label's state
- *  is `machine_proposed` (`record-grammar`'s `lawProposalState`). */
+ *  is `machine_proposed`. */
 export const ASSISTANT = "class:ai";
-/** R14: the label a kept report's `from` carries when its text began as the assistant's draft, shaped as `record-grammar`'s
- *  `proposalLabel` answers (`{by, state, machine_work, says}`); record-grammar holds no status-report subject, so the
- *  sentence is this module's (PLAN-WORK #2 J1). */
-export const ASSIST_LABEL = Object.freeze({ by: ASSISTANT, state: lawProposalState(ASSISTANT),
-  machine_work: lawProposalState(ASSISTANT) === "machine_proposed",
-  says: "the assistant drafted this report from the items where the plan stands; machine work, labelled as machine work. "
-    + "The report kept is the member's, in the words the member kept" });
+/** R16 (K2978): the label a kept report's `from` carries when its text began as the assistant's draft, at its one site:
+ *  `record-grammar`'s `proposalLabel(by, "status_report")` (its R61), its state and sentence that subject's. A report
+ *  written by the member alone carries none. */
+export const ASSIST_LABEL = Object.freeze(proposalLabel(ASSISTANT, "status_report"));
 /** R15: the occurrence states that read a duty met (`duties` Terms; a promise kept late is kept). */
 const MET_STATES = Object.freeze(["met", "met_late"]);
 
@@ -380,7 +377,9 @@ export class PlanWork {
 
   /** R4: one item per due review, for `action-producers` (`plan-review-due`): for each member's standing rhythm on a
    *  plan not closed, the latest occurrence at or before `nowMs`, after the rhythm was set, with no review entry
-   *  recorded since it. Each occurrence is one item, so a review is told once. No rhythm, no item. Writes nothing. */
+   *  recorded since it. Each occurrence is one item, so a review is told once. No rhythm, no item. R18: each item also
+   *  carries `recurrence`, the rhythm as the member set it with who and when, and `since`, the local day (in the
+   *  rhythm's zone) of the plan's last review entry, else of the rhythm's setting. Writes nothing. */
   planReviewsDue({ nowMs, limit } = {}) {
     const now = this.#nowMs(nowMs);
     const cap = Number.isInteger(limit) && limit > 0 ? Math.min(limit, DUE_MAX) : DUE_MAX;
@@ -399,7 +398,9 @@ export class PlanWork {
       if (!due) continue;
       const last = this.#lastReview(p.id);
       if (last && msOf(last.at) >= msOf(due.instant)) continue;
-      items.push({ plan: p.id, project: p.project, member: r.member, due: due.instant, day: due.value, zone: rec.zone });
+      items.push({ plan: p.id, project: p.project, member: r.member, due: due.instant, day: due.value, zone: rec.zone,
+                   recurrence: { rrule: rec.rrule, dtstart: rec.dtstart, zone: rec.zone, by: r.member, at: r.at },
+                   since: last ? { day: dayIn(last.at, rec.zone), from: "review" } : { day: dayIn(r.at, rec.zone), from: "rhythm_set" } });
     }
     items.sort((a, b) => msOf(a.due) - msOf(b.due) || (a.plan < b.plan ? -1 : a.plan > b.plan ? 1 : 0));
     return { ok: true, as_of: iso(now), items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
@@ -705,8 +706,8 @@ export class PlanWork {
 
   /** R8, R14: a member keeps a status report with the plan, 1 to 8,000 characters; never required, never published.
    *  `from` is one line of the member's own (as R8 took it), or `{assistant: true, as_of?}`: the text began as the
-   *  assistant's draft (R14), kept as `{draft: "assistant", as_of, label}`, labelled machine work; the report is the
-   *  member's. */
+   *  assistant's draft (R14), read back as `{draft: "assistant", as_of, label}`, labelled by R16's `status_report`
+   *  label; the report is the member's. */
   statusReportSave(args = {}) {
     const { plan, text, from, author, viewer } = args;
     const o = this.#act(plan, author, viewer);
@@ -1044,9 +1045,6 @@ export class PlanWork {
  * PURE HELPERS
  * ===================================================================== */
 
-/* R2: the standing cure link `conformance.curesOf` (its R37) answers for a standard: `{standards: [{standard, link,
-   ended}]}`, the link null when none stands; a link whose curing determination has been superseded reads
-   `cure_standing: false` and is no standing cure. Null when none. */
 /* R8, R14: the items of a status report, in R7's order, each one of R7's whole with its section. */
 function reportItems(w) {
   const items = [];
@@ -1064,16 +1062,21 @@ function reportFrom(from) {
   const asOf = isObj(from) ? from.as_of : undefined;
   if (isObj(from) && from.assistant === true && Object.keys(from).every((k) => k === "assistant" || k === "as_of")
       && (asOf === undefined || asOf === null || (typeof asOf === "string" && ISO_TS_RE.test(asOf))))
-    return { stored: JSON.stringify({ draft: "assistant", as_of: asOf ?? null, label: ASSIST_LABEL }) };
+    return { stored: JSON.stringify({ draft: "assistant", as_of: asOf ?? null }) };
   return { r: refuseText(null, 200, "from", { says: "from is one line of your own, or {assistant: true, as_of?} when the "
     + "text began as the assistant's draft" }) };
 }
-/* R8, R14: a kept `from` as read back. */
+/* R8, R14, R16: a kept `from` as read back; the assistant's draft with R16's label, whatever label an earlier row held. */
 function fromOf(stored) {
   if (typeof stored !== "string") return null;
-  return stored.startsWith("{") ? unjson(stored, stored) : stored;
+  if (!stored.startsWith("{")) return stored;
+  const f = unjson(stored, null);
+  return isObj(f) && f.draft === "assistant" ? { draft: "assistant", as_of: f.as_of ?? null, label: ASSIST_LABEL } : stored;
 }
 
+/* R2: the standing cure link `conformance.curesOf` (its R37) answers for a standard: `{standards: [{standard, link,
+   ended}]}`, the link null when none stands; a link whose curing determination has been superseded reads
+   `cure_standing: false` and is no standing cure. Null when none. */
 function standingCure(r, standard) {
   const s = (Array.isArray(r && r.standards) ? r.standards : []).find((x) => isObj(x) && x.standard === standard);
   return s && isObj(s.link) && s.link.cure_standing !== false ? s.link : null;
@@ -1092,6 +1095,11 @@ function prepView(rows) {
   return { item: add.item, option: add.option_id, text: add.text, by: add.author, at: add.at,
            take_ups: rows.filter((r) => r.act === "take_up").map((r) => ({ by: r.author, target: r.target ?? null, at: r.at })),
            done: done ? { by: done.author, at: done.at } : null };
+}
+
+/* R18: the calendar day in `zone` on which an instant falls (`civil-time.localDay`, its R1); null when it cannot say. */
+function dayIn(instant, zone) {
+  try { const d = localDay(instant, zone); return typeof d === "string" ? d : null; } catch { return null; }
 }
 
 /* R4: civil-time's expansion, read as null when it throws, refuses or is undetermined. */
