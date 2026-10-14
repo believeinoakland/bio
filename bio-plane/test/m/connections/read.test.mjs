@@ -197,7 +197,7 @@ test("R10, R11: connection_grade is the strongest reaching grade else null; the 
 test("R12: every bundle id in a portion's answer is withheld from a viewer who may not see it", () => {
   const w = world();
   w.member("alice"); w.member("bob");
-  const p = w.project("Hidden", "alice");
+  w.project("Hidden", "alice");
   w.entity(E);
   const [a] = w.doc(A, ["alpha"]);
   const [h] = w.doc("INFO-2026-0050-h", ["hidden"]);
@@ -210,7 +210,6 @@ test("R12: every bundle id in a portion's answer is withheld from a viewer who m
   assert.equal(w.k.portionGrade({ contentId: cid, viewer: MACHINE }).reaching[0].other_bundle_id, "INFO-2026-0050-h");
   const cp = w.mint("INFO-2026-0050-h", h, { kind: "document" });
   assert.equal(w.k.portionGrade({ contentId: cp, viewer: V("bob") }).bundle_id, null);
-  assert.ok(p);
 });
 
 test("R13: portionGrades answers R10's grade for at most 200 rows in one read, narrowed to one subject when asked", () => {
