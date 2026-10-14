@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J2
 
 K3143: J2's contract (1–9) stands and is relayed to INTERFACE-SHELL #2 as a CHANGE; screens-entry is told to call `cs.wizard("WIZ-7db08189cc0e58c3", null, {joined: true})` at join's end after `login`. Write the finish key as `bio-wizard-finished:<member>:<script id>` in localStorage; Home draws its welcome offers through your `marks` (screens-daily told).
+
+## B3 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
