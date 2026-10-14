@@ -2043,7 +2043,7 @@
    "id": "question",
    "name": "Question",
    "frame": "working",
-   "purpose": "A question and what supports it or cuts against it; strength against the bar; concluding.",
+   "purpose": "A question and what supports it or cuts against it; what each cited passage carries; strength against the bar; its readings and the one a project stands on; what relies on it; concluding.",
    "acts": [
     {
      "op": "cite",
@@ -2135,6 +2135,50 @@
       "agent-worker",
       "retrieval"
      ]
+    },
+    {
+     "op": "inquiryground",
+     "label": "Say what each passage carries",
+     "status": "declared",
+     "modules": [
+      "inquiry"
+     ]
+    },
+    {
+     "op": "versionaccept",
+     "label": "Accept a reading",
+     "status": "declared",
+     "modules": [
+      "basis-versions"
+     ]
+    },
+    {
+     "op": "versionhide",
+     "label": "Hide a reading",
+     "status": "declared",
+     "modules": [
+      "basis-versions"
+     ]
+    },
+    {
+     "op": "owed:versionconsider DEC-235",
+     "label": "Weigh a reading",
+     "status": "owed"
+    },
+    {
+     "op": "owed:versionreject DEC-235",
+     "label": "Reject a reading",
+     "status": "owed"
+    },
+    {
+     "op": "owed:versionrevert DEC-235",
+     "label": "Undo the decision on a reading",
+     "status": "owed"
+    },
+    {
+     "op": "owed:versioncurrent DEC-235",
+     "label": "Stand on a reading for a project",
+     "status": "owed"
     }
    ],
    "journeys": [

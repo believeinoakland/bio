@@ -15,7 +15,7 @@
   "transcribe": 19,
   "capture": 1,
   "document": 45,
-  "question": 1,
+  "question": 36,
   "connection": 30,
   "guide": 7,
   "prepared": 2,
@@ -69,10 +69,10 @@
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "act": 653,
+  "act": 667,
   "column": 33,
-  "total": 2129,
-  "protected": 674
+  "total": 2178,
+  "protected": 689
  },
  "words": [
   {
@@ -6509,6 +6509,251 @@
    "note": "DEC-234: B201; screens-intake: names no first step"
   },
   {
+   "key": "question.ask",
+   "en": "If this turned out to be wrong, would your answer still hold?",
+   "protected": true,
+   "source": "DEC-235",
+   "note": "DEC-235: DEC-32 clause 2, one per cited passage"
+  },
+  {
+   "key": "question.ask.no",
+   "en": "No, my answer falls",
+   "protected": true,
+   "source": "DEC-235",
+   "note": "DEC-235: DEC-32 clause 2"
+  },
+  {
+   "key": "question.ask.yes",
+   "en": "Yes, because of others I cite",
+   "protected": true,
+   "source": "DEC-235",
+   "note": "DEC-235: DEC-32 clause 2"
+  },
+  {
+   "key": "question.ask.which",
+   "en": "Which ones would still hold it up?",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235"
+  },
+  {
+   "key": "question.ask.title",
+   "en": "What each passage carries",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: the section when a member answers the question per passage"
+  },
+  {
+   "key": "question.ask.help",
+   "en": "One question for each passage you cite. Your answers say which passages your answer can't do without and which ones hold it up together.",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235"
+  },
+  {
+   "key": "question.ask.first.title",
+   "en": "The strength shows once each passage has an answer",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: DEC-32 clause 5, the structure before the strength"
+  },
+  {
+   "key": "question.ask.first.says",
+   "en": "Your answers decide how the strength is worked out, so they come first. Until you answer, each passage counts as one your answer can't do without.",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: DEC-32 clause 4, the default"
+  },
+  {
+   "key": "question.ask.save",
+   "en": "Save the answers",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: inquiryground"
+  },
+  {
+   "key": "question.falls",
+   "en": "If this turned out to be wrong: your answer falls",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: under a cited passage"
+  },
+  {
+   "key": "question.holds",
+   "en": "If this turned out to be wrong: your answer still holds, because of {others}",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: under a cited passage"
+  },
+  {
+   "key": "question.rests.title",
+   "en": "What your answer rests on",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: DEC-32 clause 3, read back"
+  },
+  {
+   "key": "question.rests.any",
+   "en": "Your answer fails if any one of these fails:",
+   "protected": true,
+   "source": "DEC-235",
+   "note": "DEC-235: DEC-32 clause 3"
+  },
+  {
+   "key": "question.rests.all",
+   "en": "{passages}: here your answer fails only if all of them fail",
+   "protected": true,
+   "source": "DEC-235",
+   "note": "DEC-235: DEC-32 clause 3, a set that holds it up together"
+  },
+  {
+   "key": "question.rests.readback",
+   "en": "Read it back: if it isn't what you meant, change an answer above.",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235"
+  },
+  {
+   "key": "question.rests.set",
+   "en": "Set by {who} before the strength was shown, {date}",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: DEC-32 clause 5"
+  },
+  {
+   "key": "question.rests.changed",
+   "en": "Changed by {who} after the strength was shown, {date}: \"{reason}\" · strength before {before}, after {after}",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: DEC-32 clause 6; inquiry R27, R28"
+  },
+  {
+   "key": "question.rests.change",
+   "en": "Change what a passage carries…",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: inquiryground once the strength shows"
+  },
+  {
+   "key": "question.origin.shared",
+   "en": "Shared origin: {passages} both come from {origin}, so one error there could undo both.",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: partitionindependence, strength R11, R12"
+  },
+  {
+   "key": "question.reading.shown",
+   "en": "Reading shown",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: V2, the reading the page counts"
+  },
+  {
+   "key": "question.reading.shown.help",
+   "en": "A reading is one complete account of what supports this question. The page shows the passages as the reading you choose counts them.",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235"
+  },
+  {
+   "key": "question.readings.title",
+   "en": "Readings",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: V2 to V4"
+  },
+  {
+   "key": "question.readings.help",
+   "en": "A reading is one complete account of what supports this question, named and kept exactly as written. The group can weigh several; each project stands on one accepted reading. Its strength is worked out from that reading alone.",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235"
+  },
+  {
+   "key": "question.reading.accepted",
+   "en": "Accepted by {who}, {date}",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235"
+  },
+  {
+   "key": "question.reading.weighing",
+   "en": "Being weighed: {who}, {date}: \"{reason}\"",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: considering"
+  },
+  {
+   "key": "question.reading.suggested",
+   "en": "Suggested by {who}, {date} · not yet weighed",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: suggested; the assistant's through origin(machine) only with the assistant on"
+  },
+  {
+   "key": "question.reading.standson",
+   "en": "{project} stands on this one",
+   "protected": true,
+   "source": "DEC-235",
+   "note": "DEC-235: versioncurrent, basis-versions R13, R15"
+  },
+  {
+   "key": "question.reading.strength",
+   "en": "its strength",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: versionstrength, accepted"
+  },
+  {
+   "key": "question.reading.whatif",
+   "en": "its strength if it were accepted · a what-if",
+   "protected": true,
+   "source": "DEC-235",
+   "note": "DEC-235: versionstrength, strength R8 (DEC-40)"
+  },
+  {
+   "key": "question.readings.more",
+   "en": "{rejected} rejected and {hidden} hidden · Show them",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: versionhide never deletes (R14)"
+  },
+  {
+   "key": "question.relies.title",
+   "en": "What relies on this",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235: V5, backlinks"
+  },
+  {
+   "key": "question.relies.help",
+   "en": "Everything you can see that cites this question. When its strength or its conclusion changes, these are what it touches.",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235"
+  },
+  {
+   "key": "question.relies.project",
+   "en": "project · stands on \"{reading}\"",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235"
+  },
+  {
+   "key": "question.relies.cites",
+   "en": "{kind} · cites this question",
+   "protected": false,
+   "source": "DEC-235",
+   "note": "DEC-235"
+  },
+  {
+   "key": "question.relies.outofview",
+   "en": "Other work you can't see also relies on this question.",
+   "protected": true,
+   "source": "DEC-235",
+   "note": "DEC-235: K960 out_of_view; says nothing of what or how many"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -8700,6 +8945,48 @@
    "source": "registry.json"
   },
   {
+   "key": "act.inquiryground.label.question",
+   "en": "Say what each passage carries",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.versionaccept.label.question",
+   "en": "Accept a reading",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.versionhide.label.question",
+   "en": "Hide a reading",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_versionconsider.label.question",
+   "en": "Weigh a reading",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_versionreject.label.question",
+   "en": "Reject a reading",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_versionrevert.label.question",
+   "en": "Undo the decision on a reading",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_versioncurrent.label.question",
+   "en": "Stand on a reading for a project",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.ask.label.answers",
    "en": "Ask",
    "protected": true,
@@ -10316,6 +10603,48 @@
   {
    "key": "act.owed_founderhandleset.does",
    "en": "Sets the handle you sign in with from now on, once: the name the record shows on your work. Until you choose, you sign in as admin.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.inquiryground.does",
+   "en": "Records, for each passage this question cites, whether your answer falls if that passage turns out wrong, or still holds because of other passages you cite. Civicsmith works the strength out from these answers. Once the strength has been shown, a change needs a reason, and the strength before and after is kept beside it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.versionaccept.does",
+   "en": "Accepts this reading as a sound account of what supports the question. A project can then stand on it. Recorded with your name and the date.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.versionhide.does",
+   "en": "Hides this reading from the list. Nothing is deleted: it stays on the record, and anyone can show the hidden readings again.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_versionconsider.does",
+   "en": "Marks this reading as one the group is weighing, with a reason. It is not yet accepted, so no project can stand on it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_versionreject.does",
+   "en": "Rejects this reading, with a reason. It stays on the record, rejected, and can be weighed again later.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_versionrevert.does",
+   "en": "Takes back the last decision on this reading, with a reason, so it is weighed again.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_versioncurrent.does",
+   "en": "Makes this accepted reading the one the project stands on, with a reason. The question does not change; only the project's choice does, and the earlier choice stays on the record.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

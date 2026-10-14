@@ -1726,5 +1726,215 @@
   "en": "Nothing is held: every capture here has been vouched for or set aside.",
   "protected": false,
   "note": "DEC-234: B201; screens-intake: names no first step"
+ },
+ {
+  "key": "question.ask",
+  "en": "If this turned out to be wrong, would your answer still hold?",
+  "protected": true,
+  "note": "DEC-235: DEC-32 clause 2, one per cited passage"
+ },
+ {
+  "key": "question.ask.no",
+  "en": "No, my answer falls",
+  "protected": true,
+  "note": "DEC-235: DEC-32 clause 2"
+ },
+ {
+  "key": "question.ask.yes",
+  "en": "Yes, because of others I cite",
+  "protected": true,
+  "note": "DEC-235: DEC-32 clause 2"
+ },
+ {
+  "key": "question.ask.which",
+  "en": "Which ones would still hold it up?",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.ask.title",
+  "en": "What each passage carries",
+  "protected": false,
+  "note": "DEC-235: the section when a member answers the question per passage"
+ },
+ {
+  "key": "question.ask.help",
+  "en": "One question for each passage you cite. Your answers say which passages your answer can't do without and which ones hold it up together.",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.ask.first.title",
+  "en": "The strength shows once each passage has an answer",
+  "protected": false,
+  "note": "DEC-235: DEC-32 clause 5, the structure before the strength"
+ },
+ {
+  "key": "question.ask.first.says",
+  "en": "Your answers decide how the strength is worked out, so they come first. Until you answer, each passage counts as one your answer can't do without.",
+  "protected": false,
+  "note": "DEC-235: DEC-32 clause 4, the default"
+ },
+ {
+  "key": "question.ask.save",
+  "en": "Save the answers",
+  "protected": false,
+  "note": "DEC-235: inquiryground"
+ },
+ {
+  "key": "question.falls",
+  "en": "If this turned out to be wrong: your answer falls",
+  "protected": false,
+  "note": "DEC-235: under a cited passage"
+ },
+ {
+  "key": "question.holds",
+  "en": "If this turned out to be wrong: your answer still holds, because of {others}",
+  "protected": false,
+  "note": "DEC-235: under a cited passage"
+ },
+ {
+  "key": "question.rests.title",
+  "en": "What your answer rests on",
+  "protected": false,
+  "note": "DEC-235: DEC-32 clause 3, read back"
+ },
+ {
+  "key": "question.rests.any",
+  "en": "Your answer fails if any one of these fails:",
+  "protected": true,
+  "note": "DEC-235: DEC-32 clause 3"
+ },
+ {
+  "key": "question.rests.all",
+  "en": "{passages}: here your answer fails only if all of them fail",
+  "protected": true,
+  "note": "DEC-235: DEC-32 clause 3, a set that holds it up together"
+ },
+ {
+  "key": "question.rests.readback",
+  "en": "Read it back: if it isn't what you meant, change an answer above.",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.rests.set",
+  "en": "Set by {who} before the strength was shown, {date}",
+  "protected": false,
+  "note": "DEC-235: DEC-32 clause 5"
+ },
+ {
+  "key": "question.rests.changed",
+  "en": "Changed by {who} after the strength was shown, {date}: \"{reason}\" · strength before {before}, after {after}",
+  "protected": false,
+  "note": "DEC-235: DEC-32 clause 6; inquiry R27, R28"
+ },
+ {
+  "key": "question.rests.change",
+  "en": "Change what a passage carries…",
+  "protected": false,
+  "note": "DEC-235: inquiryground once the strength shows"
+ },
+ {
+  "key": "question.origin.shared",
+  "en": "Shared origin: {passages} both come from {origin}, so one error there could undo both.",
+  "protected": false,
+  "note": "DEC-235: partitionindependence, strength R11, R12"
+ },
+ {
+  "key": "question.reading.shown",
+  "en": "Reading shown",
+  "protected": false,
+  "note": "DEC-235: V2, the reading the page counts"
+ },
+ {
+  "key": "question.reading.shown.help",
+  "en": "A reading is one complete account of what supports this question. The page shows the passages as the reading you choose counts them.",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.readings.title",
+  "en": "Readings",
+  "protected": false,
+  "note": "DEC-235: V2 to V4"
+ },
+ {
+  "key": "question.readings.help",
+  "en": "A reading is one complete account of what supports this question, named and kept exactly as written. The group can weigh several; each project stands on one accepted reading. Its strength is worked out from that reading alone.",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.reading.accepted",
+  "en": "Accepted by {who}, {date}",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.reading.weighing",
+  "en": "Being weighed: {who}, {date}: \"{reason}\"",
+  "protected": false,
+  "note": "DEC-235: considering"
+ },
+ {
+  "key": "question.reading.suggested",
+  "en": "Suggested by {who}, {date} · not yet weighed",
+  "protected": false,
+  "note": "DEC-235: suggested; the assistant's through origin(machine) only with the assistant on"
+ },
+ {
+  "key": "question.reading.standson",
+  "en": "{project} stands on this one",
+  "protected": true,
+  "note": "DEC-235: versioncurrent, basis-versions R13, R15"
+ },
+ {
+  "key": "question.reading.strength",
+  "en": "its strength",
+  "protected": false,
+  "note": "DEC-235: versionstrength, accepted"
+ },
+ {
+  "key": "question.reading.whatif",
+  "en": "its strength if it were accepted · a what-if",
+  "protected": true,
+  "note": "DEC-235: versionstrength, strength R8 (DEC-40)"
+ },
+ {
+  "key": "question.readings.more",
+  "en": "{rejected} rejected and {hidden} hidden · Show them",
+  "protected": false,
+  "note": "DEC-235: versionhide never deletes (R14)"
+ },
+ {
+  "key": "question.relies.title",
+  "en": "What relies on this",
+  "protected": false,
+  "note": "DEC-235: V5, backlinks"
+ },
+ {
+  "key": "question.relies.help",
+  "en": "Everything you can see that cites this question. When its strength or its conclusion changes, these are what it touches.",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.relies.project",
+  "en": "project · stands on \"{reading}\"",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.relies.cites",
+  "en": "{kind} · cites this question",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.relies.outofview",
+  "en": "Other work you can't see also relies on this question.",
+  "protected": true,
+  "note": "DEC-235: K960 out_of_view; says nothing of what or how many"
  }
 ]

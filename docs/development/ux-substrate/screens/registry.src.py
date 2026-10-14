@@ -91,10 +91,12 @@ screen('project', 'Project', 'working', 'A project\'s home: objective, bar, ques
   [('promote','Open a question'),('drawquestion','Draw on a question from elsewhere'),('findin','Find in this project'),('projectbarset','Set this project\'s bar'),('projectinvite','Invite a member to the project'),('projectjoin','Join'),('planopen','Plan what to do'),('owed:projectstakeset K3230','Save this project\'s stake'),('writinghelp','Help me write this')], [6,9,15])
 screen('projectai', 'AI for this project', 'working', 'Who pays for the assistant\'s work in a project: its own API key, or its sole member\'s sign-in; what it pays for; its limits; its use summed, naming no member; keeping the project\'s material away from AI; every change, seen by every owner (DEC-188).',
   [('projectkeyset','Hold the project\'s API key'),('projectsigninset','Use your own sign-in for the project'),('projectaccountswitch','Switch the project\'s account on or off'),('projectaccountremove','Remove the project\'s account'),('projectkeynoticeseen','Read what the project\'s key means'),('accountusesset','Set what the project\'s account pays for'),('ailimitset','Set a limit on the project\'s account'),('projectaikeepaway','Keep the project\'s material away from AI, with a reason')], [])
-screen('question', 'Question', 'working', 'A question and what supports it or cuts against it; strength against the bar; concluding.',
+screen('question', 'Question', 'working', 'A question and what supports it or cuts against it; what each cited passage carries; strength against the bar; its readings and the one a project stands on; what relies on it; concluding.',
   [('cite','Cite a passage'),('sever','Remove a citation'),('reinstate','Reinstate'),('narrow','Narrow the question'),('conclude','Conclude'),('withdrawconclusion','Withdraw the conclusion'),
    ('hypothesishold','Keep a hunch'),('planopen','Plan what to do'),('checkrequest','Ask for a check by expertise'),
-   ('heldrestore','Restore a set-aside document, with a reason'),('search','Find another source')], [6,9,15,16])
+   ('heldrestore','Restore a set-aside document, with a reason'),('search','Find another source'),
+   ('inquiryground','Say what each passage carries'),('versionaccept','Accept a reading'),('versionhide','Hide a reading'),('owed:versionconsider DEC-235','Weigh a reading'),
+   ('owed:versionreject DEC-235','Reject a reading'),('owed:versionrevert DEC-235','Undo the decision on a reading'),('owed:versioncurrent DEC-235','Stand on a reading for a project')], [6,9,15,16])
 screen('answers', 'Ask', 'working', 'Ask in plain words (with the assistant) or by search (without); keep asking.',
   [('ask','Ask'),('ruleanswer','Show how this was counted'),('search','Search instead'),('standingquestionset','Keep asking this'),('standingquestionend','Stop asking')], [17,18])
 screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it serves; runs only on the member\'s own account.',
