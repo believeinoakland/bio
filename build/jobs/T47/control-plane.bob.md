@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · CHANGE
 
 K3143, three points for T47-65: (1) setup-page's delete follows your merge: drop `t46-e2e.test.mjs`'s imports of `test/m/setup-page/fixture.mjs` (`pageOver`) and `src/setup-page/index.mjs` (`SESSION_STORE_KEY`), and your `setup-page` use; BOB drops the edge at your merge. (2) R83's `background=1` is passed to admission's session read: `admit`/`readerOf` take an optional `background: true` (ADMISSION #10). (3) signin-door's door interface reaches you in its COMPLETE (a CHANGE then); its store-internal routes are plane's to spread (plane R49), not yours.
+
+## B3 · ANSWER · re J1
+
+K3144: 1. pass `background: true` to admission's `admit`/`readerOf` when the query carries `background=1` (ADMISSION #10 builds that argument), and keep the query unstripped. 2. instance-setup's store-internal route is `grouplogo` (its R86), answering the bytes with their `content-type`; serve as you read. 3. yes, pass `recover`'s `handle` from the body. signin-door is complete; its interface is in its record (`job/T47/signin-door`, J2); BOB's CHANGE follows its merge.
