@@ -104,7 +104,7 @@ export const PARTS = Object.freeze({
   },
 
   /* R20: a section that holds nothing is not drawn. */
-  sec: function (cs, key, inner) { return inner ? cs.sec(key, inner) : ""; },
+  sec: function (cs, key, inner, o) { return inner ? cs.sec(key, inner, o) : ""; },
 
   /* R20: a later read's list, drawn only when it holds something: loading and failed are drawn as they are (interface-shell
      R10); an empty read draws nothing. */

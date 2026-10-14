@@ -118,7 +118,8 @@ test("R17 review-outside: the fragment's secret goes only in reviewcopy's body, 
     assert.ok(!q.url.includes(GRANT_SECRET), "never in an address");
     assert.equal(q.headers.Authorization, undefined, "no credential");
   }
-  assert.ok(drew(p, "screen.review-outside.heading", { case: "The Coliseum lease", edition: "2" }));
+  assert.ok(drew(p, "screen.review-outside.heading", { group: "River Town" }));
+  assert.ok(drew(p, "screen.review-outside.draft", { case: "The Coliseum lease", edition: "2" }), "the draft's title names the case and edition");
   assert.ok(text(p).includes("Rent adjustments under the Coliseum lease"));
 });
 
@@ -179,15 +180,15 @@ test("R23 an empty note is refused and nothing is sent (control); STATEMENT_ACK_
   const p = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: ok({ ok: true }) } });
   const { slot } = await press(p, "statementack", { values: { "ro-note": "   " } });
   assert.equal(p.byOp("statementack").length, 0, "an empty note sends nothing");
-  assert.ok((slot().textContent + text(p)).includes(word("screen.case-editor.ack.reason.needed")));
+  assert.ok((slot().textContent + text(p)).includes(word("refusal.STATEMENT_ACK_NO_REASON")), "an empty note, in the code's own words");
   const q = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: refusedIn("STATEMENT_ACK_NO_REASON") } });
   const a = await press(q, "statementack", { values: { "ro-note": NOTE } });
   assert.equal(q.byOp("statementack").length, 1, "the plane is asked");
-  assert.ok((a.slot().textContent + text(q)).includes(word("screen.case-editor.ack.reason.needed")), "STATEMENT_ACK_NO_REASON by its words");
+  assert.ok((a.slot().textContent + text(q)).includes(word("refusal.STATEMENT_ACK_NO_REASON")), "STATEMENT_ACK_NO_REASON by its words");
   assert.equal(q.doc.getElementById("ro-note").value, NOTE, "the note is kept");
   const dead = await open("/app/review", { boot: OUTSIDE, plane: { ...outsideCopy(), statementack: refused("NO_REVIEW_COPY", "There is no review copy here.", 404) } });
   const d = await press(dead, "statementack", { values: { "ro-note": NOTE } });
-  assert.ok((d.slot().textContent + text(dead)).includes("There is no review copy here."), "the dead answer by its words");
+  assert.ok((d.slot().textContent + text(dead)).includes(word("refusal.NO_REVIEW_COPY")), "the dead answer by its words");
   assert.equal(dead.doc.getElementById("ro-note").value, NOTE, "the note is kept");
   assert.ok(!drew(dead, "screen.review-outside.sent"));
 });

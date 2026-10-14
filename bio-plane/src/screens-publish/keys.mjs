@@ -134,6 +134,6 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.review-outside.comments.go", "screen.review-outside.draft", "screen.review-outside.heading",
     "screen.review-outside.nolink", "screen.review-outside.sent", "screen.review-outside.until",
     "screen.review-outside.untilstopped", "review.statement.title", "review.statement.help", "review.statement.note",
-    "review.statement.note.help", "review.statement.ack", "screen.case-editor.ack.reason.needed",
+    "review.statement.note.help", "review.statement.ack", "refusal.STATEMENT_ACK_NO_REASON", "refusal.NO_REVIEW_COPY",
   ]),
 });

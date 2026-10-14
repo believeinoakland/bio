@@ -21,7 +21,7 @@ test("R6 the published case at /app/published/<case>, in the public frame with n
   assert.ok(drew(p, "screen.published.howtoread"));
   assert.ok(t.includes("The 2024 adjustments were made without the council vote the lease requires."));
   assert.ok(t.includes(word("mark.scale.capture.name") + "B") && t.includes(word("mark.scale.connection.name") + "C"), "two strengths");
-  assert.ok(drew(p, "screen.published.meets"), "meets the project's bar");
+  assert.ok(drew(p, "screen.published.meets", { capture: "B", connection: "C" }), "meets the project's bar, named");
   assert.ok(t.includes("Council approves amendment 1") && t.includes(day("2024-01-12")));
   assert.match(t, /The City Administrator.*signed the March 2024 adjustment/);
   assert.match(t, /Council minutes, 12 January 2024/);
@@ -313,4 +313,14 @@ test("R22 a verify answered ok that carries a refusal is no match found (D29)", 
   await checkIt(p, E1);
   assert.ok(text(p).includes("The check did not run."), "the refusal in the plane's words");
   assert.ok(!drew(p, "published.check.yes", { n: "1", finding: FINDING_SAYS }) && !drew(p, "published.check.no"));
+});
+
+test("R6 a finding below the project's bar is said so; one the bar was not asked of, or no bar was declared for, says nothing about it (standing, case-grammar R15)", async () => {
+  const one = (standing) => ({ publishedcase: ok({ ...EDITION(), findings: [{ ...EDITION().findings[0], standing }] }) });
+  const below = await open(`/app/published/${C}`, { boot: PUBLIC, plane: one({ role: "load_bearing", bar: { capture: "B", connection: "C" }, meets: false, short: ["capture"] }) });
+  assert.ok(drew(below, "screen.published.below", { capture: "B", connection: "C" }) && !drew(below, "screen.published.meets", { capture: "B", connection: "C" }));
+  for (const meets of ["not_asked", "no_bar", null]) {
+    const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: one({ role: "supporting", bar: { capture: null, connection: null }, meets }) });
+    assert.ok(!drew(p, "screen.published.below", { capture: "–", connection: "–" }) && !drew(p, "screen.published.meets", { capture: "–", connection: "–" }), String(meets));
+  }
 });

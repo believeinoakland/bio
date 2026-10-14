@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { interfacePage, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
+import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SCREEN_WORDS } from "../../../src/screens-publish/index.mjs";
 import { open, main, text, drew, ops, choose, press, rawKeys, keptKey, answerSign, tick, ok, refusedIn, silent, pending, hasWord, word, SCREENS, plane as plane0, P, DR, C, GRANT_SECRET } from "./fixtures.mjs";
 
@@ -130,6 +131,10 @@ test("R24 the module holds no English: every key it reads (the design stream's r
     assert.ok(hasWord(k), `${k} is a word`);
     assert.ok(listed.has(k), `${k} is listed by a screen that may draw it`);
   }
+  /* N1068 (DEC-221): "labeled", never "labelled", in the words the module draws */
+  const mine = new Set([...listed]);
+  assert.deepEqual(WORD_ROWS.filter((r) => mine.has(r[0]) && /labell/i.test(r[1])).map((r) => r[0]), [], "N1068: none of its words spells it labelled");
+  assert.deepEqual([["x", "a draft labelled by hand"]].filter((r) => /labell/i.test(r[1])).length, 1, "control: the check sees the spelling");
   assert.deepEqual([...SCREEN_WORDS], [], "no rows of its own");
   assert.equal(Object.isFrozen(SCREEN_WORDS), true);
   assert.equal(hasWord("screen.no-such-screen.no-such-word"), false, "control: a key the list does not hold is not a word");
@@ -144,7 +149,7 @@ test("R24 what each screen draws is the word's text read through setup-words, fi
     ["/app/imported/IMP-2026-0001", {}, [["screen.imported.findings"], ["screen.imported.result.part"]]],
     [`/app/docket/${P}/${C}`, {}, [["screen.docket.order"], ["screen.docket.sub", { case: C }]]],
     ["/app/doorbell", { session: null }, [["screen.doorbell.heading", { group: "River Town" }], ["screen.doorbell.happens.court"]]],
-    ["/app/review", { session: null, hash: "#grant=" + GRANT_SECRET }, [["screen.review-outside.comments.go"], ["review.statement.title"], ["review.statement.note.help"]]],
+    ["/app/review", { session: null, hash: "#grant=" + GRANT_SECRET }, [["screen.review-outside.heading", { group: "River Town" }], ["screen.review-outside.comments.go"], ["review.statement.title"], ["review.statement.note.help"]]],
   ];
   for (const [path, boot, keys] of draws) {
     const p = await open(path, { boot });

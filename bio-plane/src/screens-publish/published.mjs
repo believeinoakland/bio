@@ -49,10 +49,14 @@ export const PUBLISHED = Object.freeze({
       const body = f.body || {};
       const st = Array.isArray(f.strength) ? f.strength : [];
       const axis = function (a) { const x = st.find(function (y) { return y.axis === a; }); return x && x.grade ? cs.grade(a, String(x.grade)) : ""; };
-      const meets = f.meets_bar === true || f.meetsBar === true ? "yes" : f.meets_bar === false || f.meetsBar === false ? "no" : null;
+      // `standing` is the plane's reading of the finding against the project's bar (`case-grammar` R15): `meets` is true
+      // or false when the bar was asked of it, else "not_asked" or "no_bar", for which nothing is said.
+      const stand = f.standing && typeof f.standing === "object" ? f.standing : {};
+      const meets = stand.meets === true ? "yes" : stand.meets === false ? "no" : null;
+      const bar = stand.bar && typeof stand.bar === "object" ? stand.bar : {};
       return '<article class="mk-finding" data-finding="' + cs.esc(f.bundle_id || f.id || String(i)) + '"><span class="eyebrow">' + cs.w("screen.published.finding", { n: String(i + 1) }) + "</span>"
         + '<p class="rec">' + cs.esc(body.conclusion || body.question || f.title || "") + "</p><p>" + axis("capture") + " " + axis("connection")
-        + (meets ? " " + cs.w(meets === "yes" ? "screen.published.meets" : "screen.published.below") : "") + "</p></article>";
+        + (meets ? " " + cs.w(meets === "yes" ? "screen.published.meets" : "screen.published.below", { capture: String(bar.capture || "–"), connection: String(bar.connection || "–") }) : "") + "</p></article>";
     }).join("") : ""));
 
     // Its timeline, the people it names and its evidence, as the edition carries them.
