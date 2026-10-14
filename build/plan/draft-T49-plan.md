@@ -91,7 +91,7 @@ No job.
 
 **L11 merge order:** op-grades, affordances, setup-words, op-declarations, screens-entry, screens-daily, screens-inquiry, control-plane, plane, journey-check last. setup-words merges before any screen that reads DEC-229's or DEC-230's keys. Until T49-21 merges, the screens test against a fake plane (K31's pattern).
 
-**Count:** 22 jobs: L2 5, L7 1, L8 2, L9 4, L11 10. L1, L3–L6 and L10 have none.
+**Count:** 23 jobs: L2 5, L7 1, L8 2, L9 4, L11 11 (with T49-23, K3296). L1, L3–L6 and L10 have none.
 
 ## BOB's acts (no job)
 
@@ -159,7 +159,6 @@ These drafts are written and need only placing and renumbering: N1072 (membershi
 | N880 (Actions D13, and the minutes comparison, U4) | a dependency not yet built: the lane's hand-off (as N858), and no module holds minutes beside a comment |
 | N1046 (a template's text by handle) | a dependency not yet built: no offered script carries a `{template}` draft (wizard-scripts R22). "One job per module" no longer holds |
 | N923 and stewards R7 | Bob's: the stewards' contact address (K2799) |
-| N1011 (civicsmith.org) | Bob's: his DNS and the site's host (K3060 D14, K3079) |
 | N824 (email capture) | Bob's: "D42 - email: A", after upload is in use (K2425) |
 | N751 | a measurement: no fresh policies beyond the 74 read (K2079) |
 | N829 | a measurement: the test set's matters and answers are written by people (K3060 D12) |
@@ -231,3 +230,9 @@ These drafts are written and need only placing and renumbering: N1072 (membershi
 5. Doubt 5: confirmed at the fold against DEC-230 once PR #36 is on `main`.
 6. Doubt 6 as recommended: N1064–N1066 wait (test hygiene, P19), each named, by T51.
 7. Doubt 7 as recommended.
+
+## Added by BOB #174 after Bob's direction (K3296)
+
+- **T49-23 · site** (new module; N1011; DEC-206; Bob K3060 D6, K3296) · civicsmith.org as the design stream draws it (`SCR.site`, its states, its words by key): what a group gets, a published case, "Already a member?", "Start your group" opening the installer, "Groups at work" from the network directory (DEC-132), the stewards' address (D14). A static Worker on Believe in Oakland's Cloudflare account (BOB's placement), served on its `workers.dev` address until Bob's domain is set up. Tests: every state drawn against the mock pair by pair (journey-check's R6 method), every link and the installer hand-off followed, the directory read live and its empty and failed states. Requirements text to write at the opening (`requirements/site.md`, new; `modules.json` places it in L11 after `installer`, with its `MODULE_ORDER` entry). Default model (a new module, K3294). The stewards' address waits on Bob (N923): the page is built and tested with it held as one marked value, and does not go public without it (K2782, K2799).
+- **BOB's acts after T49-23 merges:** deploy the site's Worker (Bob's approval in session, K1715), walk it live, then walk Bob through his domain's DNS in plain steps and confirm it answers on civicsmith.org (K3296).
+- **The release at T48's close (biosmoke8, K3260) and its walk as administrator and member (K3052) are the measure of T48:** Bob is told it is ready only after that walk passes on every screen (K3296).
