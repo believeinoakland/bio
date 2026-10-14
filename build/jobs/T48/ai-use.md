@@ -32,3 +32,9 @@ R14 (`accountUseOverTime`), three points the text leaves open. I am building on 
 1. **`per_member` limit's `used`.** "Every figure is summed over every member" would make a per-member limit's `used` the account's total, which is not what is counted against that limit (R3 counts one member's use). My reading: for `per_member`, `used` is the most any one member used in the period, naming none, exactly as R12's `aiLimits` answers it; every other figure (days, the use and overall limits, the no-limit month) is summed over all members.
 2. **The no-limit entry's unit.** With no limit set, the one month entry needs a `unit`. My reading: `{scope: "overall", unit: "usd", period: "month", period_start, used, limit: null}`, `used` the month's summed estimated dollars, since DEC-215 (1) draws the bars and meter in dollars ("calls follow the dollars"); the overall limit's `used` excludes exclusive uses as R3 does (none exist when no limit is set, so it is the month's whole total).
 3. **"up to `at`".** The counter is kept per local day, so `used` counts the period's days up to and including the local day of `at` (a row on a later day, which only a clock skew could write, is not counted). `limit` is in the limit's unit (`usd` in dollars, as R12 answers `amount`).
+
+## J2 · REPORT
+
+Another module's test made stale by R14: plane `test/m/plane/t41.test.mjs`:124 (R31) pins ai-use's ops to four (`ailimitset`, `ailimits`, `aiusage`, `exploreapprove`). R14's `op=aiuseovertime` makes five, so that one test is red on this branch and green on `tranche/T48`. Its list needs `aiuseovertime` (plane's job, or named at my merge, K2704); the op's spec is T48-63's.
+
+Also: notice-producers' tests build on ai-use's test world and read the accounts as `w.c`. The world keeps `c` as the ai-accounts instance, so they stay green (114 pass). `credentials` can be dropped from ai-use's `uses`: no file of the module or its tests imports it.
