@@ -9,7 +9,7 @@
 **Measured first.** The module's own code: 4,026 lines at the opening (`index.mjs` 3,731, `t45`–`t48` 295). Composed `{...needsRows(), ...FAMILY_NEEDS}` with `aliasRows` applied deep-equals today's `NEEDS` before any delete: 323 hand rows + 500 family rows (498 + `founderhandleset` and `projectownervotes`) + 27 alias rows = 850 keys (848 + the two), no key in both parts, same keys, same values. `founderhandleset`'s kind (`founder`, a new kind; see below) gives a present `null` row.
 
 **Entries applied so far.**
-- R3: `NEEDS` = `Object.freeze(aliasRows(composeNeeds(needsRows(), FAMILY_NEEDS)))`. The 913 moved lines are deleted; `compose.mjs` (13 lines) refuses a family row for a hand-written op by name (the spread's silent override is gone). `index.mjs` 3,731 → 2,844; module 4,026 → 3,167 with `t49.mjs`, `compose.mjs`.
+- R3: `NEEDS` = `Object.freeze(aliasRows(composeNeeds(needsRows(), FAMILY_NEEDS)))`. The 913 moved lines are deleted; `compose.mjs` (13 lines) refuses a family row for a hand-written op by name (the spread's silent override is gone). `index.mjs` 3,731 → about 2,840 with `t49.mjs`, `compose.mjs`.
 - R71: kind `founder` (classes `admin`, `machineClasses: []`, mutating, `null`, `founderOnly`) in `OP_KINDS`; `founderhandleset` in membership's family through `t49.mjs`' `T49_SHARES`; in `SESSION_OPS.admin` alone (`FAMILY_FOUNDER_OPS`, internal; `FAMILY_SESSION_OPS` still means "both sets"). Stamps `by`, `viewer`; `handle` is the body's (membership's map reads it). `claim` unchanged.
 - R72: `projectownervotes` in project-roster's family, kind `ownread`, through `T49_SHARES`; named in `ACT_HELP_ABSENT.read`.
 - `ACT_HELP_ABSENT`: `peopledirectory` removed (affordances' `ACT_HELP` has held its text since T47; the old test pinned it absent: a K3321 (B) red); `founderhandleset` named under `unexplained` until `ACT_HELP` holds it (R71).
@@ -36,3 +36,10 @@ Waiting on you (nothing for Bob):
 Two readings of mine (the record states both): R71 says R34 holds over `founderhandleset`, which is not a member-set op, so the partition test covers the member set plus that op; `projectownervotes` reads its project from the query as `projectId`, which is project-roster's own arm.
 
 No sentence for a key: this module holds no member-facing English.
+
+## Completion (J2)
+
+Entries applied: R3 (composition; `compose.mjs`), R71, R72, K3321 (B)'s ten reds, rule 5 (3), rule 5 (8) (`ACT_HELP_ABSENT` re-pinned against affordances' merged `ACT_HELP`: 49 ops leave the grounds, `founderhandleset` among them; `projectownervotes` stays under the read ground; `projectId` is the query's project, R72 wording per B5). Deferred: none. In other modules: nothing found.
+Tests and checks: `node --test bio-plane/test/m/op-declarations/` 200 pass, 0 fail (after merging `tranche/T49` at B5); `checks/run.mjs`: architecture 0 failures; format's 2 failures are `site` paths (not mine); coverage names no op-declarations id (its 71 of 71 named); ownership 0 failures.
+Words: none drawn. The local untracked op-capabilities copy was removed before the merge.
+Size (session_011hPuqD9y49HjQBBqnz9ub8): test runs 14, module lines 3164
