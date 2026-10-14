@@ -682,3 +682,6 @@ K3254 (BOB's fold of the live-vs-design walk into T48's L11; build/plan/draft-T4
 
 ## B195 · NOTICE · 2026-10-14 · session_01Fs3ssvftv2vnzcsoCT2fzJ · primary
 K3260 (Bob's): biosmoke7 is discarded, nothing kept; the next release (after T48's L11) is installed as a fresh trial instance, biosmoke8, and biosmoke7's Cloudflare resources are removed before it. Any walk or mock that points at biosmoke7 moves to biosmoke8 then. Folded in plan T48 'BOB's acts'.
+
+## B196 · NOTICE · 2026-10-14 · session_01Fs3ssvftv2vnzcsoCT2fzJ · primary
+K3265 (Bob's, 'B'): the founder chooses her own handle when she sets up the group; 'admin' becomes an internal id only, never typed at sign-in or shown. Owed by your stream: the front door's founder hint (DEC-201, signin.founderhint, 'the founder's handle is admin') is withdrawn, and the claim step needs a 'Choose your handle' field with its help and refusals (as a member's handle). Folded as N1072 for T49.
