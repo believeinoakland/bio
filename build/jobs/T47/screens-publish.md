@@ -21,3 +21,17 @@ Five more points found while building, each with my best reading. This adds to J
 3. **`publishededitions` is not public** (`classes: ["admin","member","probe"]`), and its `id` is a finding's id. So R6's public page cannot call it with no credential. Best reading: `published` draws the edition list from `publishedcase`'s own `editions` and does not call `publishededitions`. R6's naming of it is then a wording point (BOB's).
 4. **`reviewgrant` takes no end date.** It takes only `draft` and `recipient` (one line, at most 200 characters). R2 asks for a name, a role and an end date. Best reading: the screen sends `recipient` as "name · role · end date" and also `until` in the body (ignored today). Nothing enforces the end date, so the reader's link works until "Stop sharing". I record this as a finding in `review`, against R2 and DEC-100.
 5. **The case editor's draft text.** R1 names `casedrafts`, `casedocument`, `casecheck` and `whatchangeddrafts`. None of these answers a draft's authored scope, what it leaves out, its acknowledgements or the people it names (`observations`). Best reading: the editor also reads `reviewcopy` for the chosen draft, which answers all of that for a member. R1's list is then a wording point. "Externally compliant" is read from that answer's `gates`.
+
+## J3 · QUESTION
+
+Answering K3147 raises two things for R49 and one for R3. Each has my best reading. Until the shell merges I keep the typed fallback, and the rest of the job goes on.
+
+1. **R49's signatures, to be fixed with INTERFACE-SHELL #2.** My best reading:
+   - `cs.image(op, params, {alt})` answers the HTML of the image.
+   - `cs.areas(imageHtml, {id, areas, label})` answers the HTML of the control. Its rectangles are read at the act with `cs.value(id)` as `[{left, top, width, height}]`.
+   - The kind of each area (a person, a number plate, a city staff member with a reason) is named in the screen's own fields beside it, one row per area. The control does not carry it.
+   - `cs.choice(id, labelKey, options, {acts: {<value>: op}})` makes the one button follow the choice. For example `{now: "caseratify", at: "publishat"}`, with the date and time fields shown only while "at" is chosen.
+
+   Please confirm these, or give the names INTERFACE-SHELL #2 builds.
+2. **Which op `cs.image` reads for a photo.** The Photos step knows each photo by its capture sha (`photosOf`' `sha`, `ref`). Best reading: the member reads the original through the op `open-file` uses for a capture's bytes, with `{capture: sha}`. If the right op is another one, please name it.
+3. **R3's wizard mark.** screens-wizards R7 says the ceremony "carries the required Publication ceremony as its wizard mark". Best reading: the shell or screens-wizards draws a screen's marks from `wizardsat` for the screen shown, and this module draws nothing for it. If instead each screen draws its own marks, I need the kit control that starts the guide, because `cs.wizard` starts it but answers no control. Please say which.
