@@ -62,3 +62,7 @@ B4, B5: tranche/T47 merged (setup-words, instance-setup); re-ran. B5 was already
 **B6 (CHANGE, K3152): re-run after merging `tranche/T47` (adds notice-producers, installer, project-roster, affordances, tasks, op-declarations, admission).** `node --test bio-plane/test/m/answer-envelope/`: 35 pass, 0 fail. Users, `tranche/T47` alone → with this job: `store-door` 45/0 → 45/0; `plane` 216/7 → 216/7; `control-plane` 222/20 → 220/22. Comparing the failing test names (timings stripped), the only two added are J2's C-69.6 pins (R32/R39/R46 and R65); the other 20 fail on the tranche alone. Checks: format 0, architecture 0, coverage 16 of 16 (0), ownership 0. `run.mjs`: architecture 0 (3137 files), channels 0, coverage 16 failures, all other modules' unmerged T47 ids.
 
 Size (session_013osHE4dWKZtRLQMyZZYfNj): test runs 24, module lines 887
+
+## J6 · COMPLETE
+
+B6: tranche/T47 merged; re-ran. Module 35/35. Checks 0 failures; run.mjs architecture 0. Users, tranche alone → with this job: store-door 45/0 → 45/0; plane 216/7 → 216/7; control-plane 222/20 → 220/22. Comparing failing test names, the only two added are J2's C-69.6 pins; the other 20 fail on the tranche alone.
