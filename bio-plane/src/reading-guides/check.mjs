@@ -85,7 +85,7 @@ function conductIn(text, lists = LIST_RES) {
   return found.length ? { list: "registered", patterns: found.map(String) } : null;
 }
 
-/* One item's shape, normalised (trimmed; an empty `where` dropped), or null. */
+/* One item's shape, normalized (trimmed; an empty `where` dropped), or null. */
 function shapeOf(item) {
   if (!isObj(item) || Object.keys(item).some((k) => !ITEM_FIELDS.includes(k))) return null;
   const { label, look_for: lookFor, where } = item;
@@ -146,7 +146,7 @@ function judge(items) {
   return { ok: true, items: shaped };
 }
 
-/* R13: one procedure item's shape, normalised (trimmed; an empty `expect` dropped), `{unsourced: true}` for an item
+/* R13: one procedure item's shape, normalized (trimmed; an empty `expect` dropped), `{unsourced: true}` for an item
    whose citation is absent or blank, or null. */
 function procedureShapeOf(item) {
   if (!isObj(item) || Object.keys(item).some((k) => !PROCEDURE_ITEM_FIELDS.includes(k))) return null;
