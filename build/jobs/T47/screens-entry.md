@@ -2,6 +2,23 @@
 
 **Status** · session_018kvztadrm22jvWsfWwMjCL · depth 2 · WORKING · handled B5
 
+
+## Completion (SCREENS-ENTRY #1)
+
+**Read whole:** `roles/JOB.md`; `build/requirements/screens-entry.md`; the public parts of `interface-shell` (whole), `setup-words`, `instance-setup` (`HOSTING_CONTROL`, R10, R47, R83–R85) and the ops' owners' rows the screens send (`credentials` R47, R65–R71; `membership` R11, R15, R16, R97, R104, R107, R110, R123; `instance-setup` R12, R50, R60; `ai-use` R2; `file-safety` R27–R29); layer 11's contract; T47-86; `draft-T47-interface.md`, `draft-T47-L11-fold.md` §B and §D; the registry entries and `mock-screens.js` drawings of the six screens; interface-shell's code and harness, and its record's Completion (B7). `setup-page`'s code was read only for the claim, sign-in, enrolment, join-link, codes, profiles and security-tool calls it makes (op bodies and answers), not whole.
+
+**Entries applied (T47-86, with B2–B7):** R1–R11 as six screens in `SCREENS`: `front` (masthead, logo, public purpose, published cases, doorbell, tour, sign-in panel with its refused, paused, signed-out, ended and locked states, `unlock`, `cs.signout`), `tour` (six steps, one address each, no request), `forgot` (`recover`, the administrator's link, `HOSTING_CONTROL`'s words), `reset` (`passwordresetlook`/`passwordreset`, live, set, dead), `setup` (claim → `login` admin own → codes shown once, saved or copied; every registry part, skippable and resumable; Finished → `/app`), `join` (`invitelook`; `joinlinkinvite` after the name; dead links; language; handle checked as typed; `enroll` → `login` → `memberlanguageset` → codes → `cs.wizard` welcome (K3143) → Home). Readings: J1 (K3144: interface-shell R46), J2 (K3145: R47).
+
+**Files** (for `modules.json`): paths `bio-plane/src/screens-entry/` (`index.mjs`, `words.mjs`, `front.mjs`, `tour.mjs`, `forgot.mjs`, `reset.mjs`, `setup.mjs`, `join.mjs`); tests `bio-plane/test/m/screens-entry/` (`kit.mjs`, `front.test.mjs`, `public.test.mjs`, `setup.test.mjs`, `join.test.mjs`, `common.test.mjs`, `page.test.mjs`). Uses as listed: `interface-shell`, `setup-words`, `instance-setup` (`setup-fleet.mjs`' `HOSTING_CONTROL`), `op-declarations` (tests).
+
+**Deferred:** language names in `join`'s choice are drawn as the group's tags (`en`, `es`): no word names a language yet (a HANDOFF for the design stream's words).
+
+**Found in other modules (REPORT J5):** interface-shell writes `bio-session:active` (R33's activity instant) on a click in the public frame with no session, so walking `tour` stores something (screens-entry R3's "nothing is stored"); my page test leaves that one shell key out and names it.
+
+**Tests and checks:** `node --test bio-plane/test/m/screens-entry/` on this branch (tranche/T47 merged, B6): 46 pass, 1 fail — `page.test.mjs` needs interface-shell's merge (the tranche's shell has no public frame). Over interface-shell's branch head overlaid in a scratch worktree (never committed): 52 pass, 0 fail. Checks, with this module's `paths`/`tests` set locally (not committed): `format` 0 failures; `architecture` (screens-entry) 0 failures; `coverage` 11 of 11, 0 failures; `ownership` 0 failures; `checks/run.mjs` architecture 0 failures (its coverage failures are other modules').
+
+Size (session_018kvztadrm22jvWsfWwMjCL): test runs 24, module lines 1,027
+
 ## J1 · QUESTION
 
 The kit and the frames my six screens need from interface-shell (R21, R30, R32, R45), and one op class. Each with my best reading; I am building on these readings now. The shell's code on tranche/T47 has no public or setup frame yet (its T47 job has not started building), so the parts below are what I assume INTERFACE-SHELL provides; please relay them to it or correct me.
