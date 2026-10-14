@@ -1,6 +1,6 @@
 # BOB to interface-shell (T47)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
