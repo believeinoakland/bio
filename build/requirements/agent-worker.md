@@ -159,7 +159,7 @@ The answer:
 - **R85** (T47; K3087; amends R66, R84) `/signin`'s `code` relays `{member, code, attempt?}`: an `attempt` the door sends, a string of at most 200 characters, is passed on unchanged (another shape is not passed, and the runner's own check answers); `start`'s `attempt` reaches the door in the runner's answer unchanged. R84's `SIGNIN_CODES` is proven by driving each own refusal and a stub runner answering each code agent-runner's requirements name (R17–R20, R26–R28, R31), plus `SIGNIN_NOT_HELD` and `SIGNIN_TOKEN_REFUSED`, never by reading another module's source.
 
 **Reading in a member's language, and the trace on every path** (T48-37; N670, N1015; K3103, K3190)
-- **R86** (T48; N670; `run-rules` R33; `skills` R49) `POST /draft` takes `task` `{op: "readtranslate", language, text, from_language?}`, sent by the plane's draft door. *(not yet met: T48)*
+- **R86** (T48; N670; `run-rules` R33; `skills` R49) `POST /draft` takes `task` `{op: "readtranslate", language, text, from_language?}`, sent by the plane's draft door.
   - `language` and `from_language` are BCP 47 tags (`instance-setup` R64's form). `text` is 1 to 20,000 characters.
   - It takes `account` and `pack` as R68 does, and never a `grant` (`DRAFT_READ_NOT_ALLOWED`).
   - Refusals come before any model call, in R68's order and codes (`BAD_TASK` for a malformed task).
@@ -168,7 +168,7 @@ The answer:
   - It answers `{ok: true, task, draft: {text, language, from_language}, label: {kind: "machine"}, usage, calls}`. `from_language` is as given, else as the model states it, else null.
   - It stores nothing and makes no plane call. R79's `untested` applies to it as to every task.
   - Tests: a stub model's translation answered with its label; a passage telling the model to read the record comes back only in `draft.text`, with no plane call; controls: a `grant` refused `DRAFT_READ_NOT_ALLOWED`, a `text` of 20,001 characters `BAD_TASK`, the layer absent `PACK_UNDETERMINED` with no model call.
-- **R87** (T48; N1015; K3103; `agent-model` R16; `control-plane` T48-77) `POST /ask`, `/run`, `/draft` and `/transcribe` read the request's `x-civicsmith-trace` and `x-civicsmith-member-ref` headers when the door sends them, in R83's shapes, and pass both to every `agent-model` call the request makes (`converse({…, trace, memberRef})`, and `modelCall` likewise), so a member's runner receives them on its upgrade (`agent-model` R16). *(not yet met: T48)*
+- **R87** (T48; N1015; K3103; `agent-model` R16; `control-plane` T48-77) `POST /ask`, `/run`, `/draft` and `/transcribe` read the request's `x-civicsmith-trace` and `x-civicsmith-member-ref` headers when the door sends them, in R83's shapes, and pass both to every `agent-model` call the request makes (`converse({…, trace, memberRef})`, and `modelCall` likewise), so a member's runner receives them on its upgrade (`agent-model` R16).
   - A header absent or not of R83's shape is passed as absent. Unlike `/signin` (R83), these paths mint no trace and refuse nothing for want of one.
   - They change no other behaviour, answer or refusal, reach no plane call, and are never logged beside a secret (R36).
   - Tests: for each of the four paths, a `signin` account and a stub runner, the sent trace and member ref reach the runner's upgrade request; control: without the headers, the upgrade carries neither and the answer is unchanged.

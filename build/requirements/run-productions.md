@@ -12,7 +12,7 @@ What an AI run produces, and the only way it produces it. The investigative sess
 
 ### Provides
 
-Terms. A **run** and its **bounds** are `ai-runs`'; `ai-runs.runFor` answers a run or null, and its R5 (`runPrincipalGate`) decides whether the caller holds it. A **suggestion** is one basis version `basis-versions` defines. A **proposed reading** is `{run, capture_sha, bundle_id, ref, ref_kind, ref_key, label, fn, fn_version, chain, cap, earned, position, content_id, proposed_by, at}`. `viewer`, `caller`, `author` and `proposedBy` are the control plane's stamps. A refusal names `code` and carries its catalogue `check` and `translation`, except where R13 says.
+Terms. A **run** and its **bounds** are `ai-runs`'; `ai-runs.runFor` answers a run or null, and `run-rules` R5 (`runPrincipalGate`) decides whether the caller holds it. A **suggestion** is one basis version `basis-versions` defines. A **proposed reading** is `{run, capture_sha, bundle_id, ref, ref_kind, ref_key, label, fn, fn_version, chain, cap, earned, position, content_id, proposed_by, at}`. `viewer`, `caller`, `author` and `proposedBy` are the control plane's stamps. A refusal names `code` and carries its catalogue `check` and `translation`, except where R13 says.
 
 **suggest({target, kind, run, name, description, claim, relationship, derived_from, level, observed_at, grounds, legs, author, viewer, caller})** (`op=suggest`) The investigative session's one write.
 - **R1** Shape refusals in order, nothing written on any: `SUGGEST_NO_TARGET` (C-27.1); a target whose id is not an inquiry's, `SUGGEST_NOT_AN_INQUIRY` (C-27.2); a kind outside `SUGGEST_KINDS`, `SUGGEST_UNKNOWN_KIND` (C-27.3); a target absent or invisible, `SUGGEST_NOT_AN_INQUIRY`; a run absent, invisible or unnamed, `SUGGEST_NO_RUN` (C-27.4), the invisible and never-held cases alike but for the id; `run-rules`' R5 relayed whole; a run not `running`, `SUGGEST_RUN_NOT_RUNNING` (C-27.18); a target that is neither the run's context nor, for a project run, a question the project confirmed-cites, `SUGGEST_OUTSIDE_RUN_CONTEXT` (C-27.19); no readable document, `SUGGEST_NO_DOCUMENT` (C-27.17); a name already held in the question, compared as it would be written, `SUGGEST_NAME_TAKEN` (C-27.5); more than 120 legs, `SUGGEST_TOO_MANY_LEGS` (C-27.7); a `level-empty` suggestion without its level (one of `SUGGEST_LEVELS`) and observation address, `SUGGEST_EMPTY_LEVEL_UNSTATED` (C-27.6).
@@ -54,10 +54,12 @@ Terms. A **run** and its **bounds** are `ai-runs`'; `ai-runs.runFor` answers a r
 - `extraction`: `EXTRACT_RUN_MODE`, `proposalChain`, `checkProposedRef`, `proposedReadingGrade`, `mintRatio` (its R41–R43).
 - `content`: `captureFor`, `contentContextFor`, `mint`, the mint label (its R16), and the machine-minted rows of a set of documents (R12).
 - `connections`: `citesInto` (R1's context rule).
-- `inquiry`: the retired-target predicate (R3; `citation`'s once N55 splits it) and the content legs a member cited (R12).
+- `inquiry`: the content legs a member cited (R12).
+- `citation`: the retired-target predicate (its R5; R3).
+- `run-rules`: `runPrincipalGate` (its R5; R15).
 - `basis-versions`: `appendVersion` (R4), the read-back of a version (R5), the held compositions (C-27.10), `SUGGEST_KINDS` (R6), the version legs that cite a row (R12), the candidate source (R14).
 - `strength`: `candidatePair` and `candidateIndependence` (its R26, R27), the pair over a candidate's legs to its depth bound and the independence trace with its origin limit (R3, R5).
-- `ai-runs`: `runFor`, `runPrincipalGate`, `boundOf`, `consumeBound` (R1, R10–R11).
+- `ai-runs`: `runFor`, `boundOf`, `consumeBound` (R1, R10–R11).
 
 ### Invariants
 

@@ -36,7 +36,7 @@ The system exploring a question on its own where an account owner turned explori
 - `run-productions`: proposals while reading (its R21; R13; K2472). A new `modules.json` edge; `run-productions` is earlier (layer 6).
 - `record-grammar`: `ACCEPTANCE_FORMS` (its R52; R6), the proposal labels.
 - `civil-time`, `record-core`, `membership`: days, tables, sight.
-- `ai-accounts` (T48; N996, split map §5; was `credentials`, which this module no longer uses): `aiKeptAway`, the material limits (its R7, R22; R13), and `accountUses`, the account's uses (its R14, R15; R3).
+- `ai-accounts` (T48; N996, split map §5; was `credentials`, which this module no longer uses): `aiKeptAway`, the material limits (its R7, R22; R13), and `accountUsesOf`, the account's uses as read in the plane (its R17; R3).
 - `connections`, `retrieval`: what a run located and reads (R4).
 - `inquiry`: a question's state and subject entity (its R43; R2), R59's person test (R9).
 - `leg-earning`, `basis-versions`, `contradiction`: the question's drawing projects and live basis (R4).
