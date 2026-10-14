@@ -77,3 +77,21 @@ T47-65 complete as far as the merged providers allow; two items stay open on oth
 - `node checks/format.mjs`: 0 failures. `node checks/architecture.mjs … control-plane`: 0 failures (after K3163's edges). `node checks/coverage.mjs … control-plane`: 61 of 62, R87 (signin-door's). `node checks/ownership.mjs … control-plane tranche/T47`: 18 files, 0 failures. `node checks/run.mjs /home/user/bio`: format 0, architecture 0 failures (3,144 files), coverage 13 failures (control-plane's R87; the rest unmerged L11 modules), channels 0.
 
 Size (session_01M87yGfszMDMfmEwotYyttN): test runs 34, module lines 3792
+
+## J6 · COMPLETE
+
+T47-65 complete, every entry applied (B15–B18 included). Branch `job/T47/control-plane` @ 9160703366, `tranche/T47` merged at K3169.
+
+**Since J5:**
+- B16 (K3167): `signin.mjs` deleted; the door routes `subscriptionsignin`, `subscriptiondisconnect` and `signintrace` to signin-door's `subscriptionSignin`, `subscriptionDisconnect`, `signintrace` with `by` the session's member, the request's parsed body and an ask of the store addressed; a revocation's sign-out through its `leaverOf`/`signoutLeaver`; an ask (plane's arm) or a draft (the draft path, `textcheck`) answered `SIGNIN_TOKEN_REFUSED` through its `tokenRefusedSeen`. My tests of the moved ids are gone (they are signin-door's); the door's routing is tested under R2 (t37-door: start, state, disconnect, revocation, signintrace with C-69.7), and the sweeps skip signin-door's three ops as they skipped `subscriptionsignin`.
+- B17/B18 (K3168, K3169): R81: `/app`, `/app/<path>` and `/` answer `interfacePage` over the nine screen modules' `SCREENS` (entry, settings, intake, daily, inquiry, wizards, investigate, publish, action) with screens-wizards' `GUIDE` as `options.guide` (interface-shell R31); the public frame's addresses (`/app/doorbell`, `/app/published/<case>`) served alike, nothing read. R81's end-to-end suite (`t47-e2e.test.mjs`, Miniflare and the real plane): Home's projects from `projectlist` with their counts from `projectquestions`; a wizard ("Check a claim") started from a Home front door through `startfrom`, `wizardread`, `wizardprogress`, the guide running in the dock; `/app/doorbell` with no session handing a file and a note over through `knock` with no Authorization header, read back in the founder's inbox. A helper drafted it; I read it whole and ran it.
+
+**Tests and checks:**
+- `node --test test/m/control-plane/`: ℹ tests 257, ℹ pass 257, ℹ fail 0.
+- Users' tests (P11), `node --test test/m/plane/ test/system/migrate-released.test.mjs`: ℹ tests 224, ℹ pass 217, ℹ fail 7: the same seven as at J5 (plane's composition: instance-setup's 40 routes, case-import/case-account build order, R19 registration, R33, R39 `registerOpenRequests`, project-roster's map; plane T47-66's), none reaching the door.
+- format 0 failures; coverage 57 of 57; ownership 24 files, 0 failures; `checks/run.mjs`: format 0, channels 0, coverage 2 failures (other modules').
+- architecture: **1 failure, an edge for you**: `control-plane/index.mjs` imports `signin-door` (B16's routing), which `modules.json` does not list in control-plane's uses (signin-door is earlier in L11, so the edge points back). Please add control-plane → signin-door.
+
+**Found in other modules:** none new. Still open elsewhere from J2/J4: plane's `caseInputsOps` spread and `actionClocks` getter (T47-66); op-declarations R56's `ai` control (N1045). The helper noticed `startfrom` offers "Get a record" behind no door on a fresh instance (wizard-scripts' `startFrom` shows only scripts offered to the viewer), likely by design; not a finding.
+
+Size (session_01M87yGfszMDMfmEwotYyttN): test runs 46, module lines 3,736
