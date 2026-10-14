@@ -6,7 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { READING_GUIDES_CHECKS, READING_GUIDES_WORDS, PROCEDURE_GUIDE_LABEL, checkGuide,
+import { READING_GUIDES_CHECKS, READING_GUIDES_WORDS, PROCEDURE_GUIDE_LABEL, GUIDE_PROPOSAL_STATES, checkGuide,
          readingGuidesOps } from "../../../src/reading-guides/index.mjs";
 import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.mjs";
 import { world, row, item, ITEMS, ANN, BOB, MACHINE } from "./fixture.mjs";
@@ -38,9 +38,11 @@ const T45 = {
     + "Nothing was written.",
   label: "legal information, not legal advice",
 };
-/* Every other row of the family (17: C-144.1–.3, .5–.18), as T45 left them: their canonical JSON's sha256, so no
-   check, where or translation of theirs moves. */
-const KEPT = { count: 17, sha256: "5f32fbded9573276c596e725febe05eb66afd0b14262654e5cd39ee73014a550" };
+/* Every other row of the family (17: C-144.1–.3, .5–.18): their canonical JSON's sha256, so no check, where or
+   translation of theirs moves. T48 (N1053; DEC-221): C-144.13's one British spelling, "labelled", is re-spelled
+   "labeled"; `T45_KEPT` is T45's pin, which the rows match with that one word put back, so nothing else moved. */
+const KEPT = { count: 17, sha256: "49d38e68c37d4887445ccab5aafbb2c6427ce686041b3c342e6fb105b5642823" };
+const T45_KEPT = "5f32fbded9573276c596e725febe05eb66afd0b14262654e5cd39ee73014a550";
 
 test("R14 C-144.4 and C-144.19 read words.json's refusal.<CODE> by key from READING_GUIDES_WORDS, never a copy; codes, numbers and wheres unmoved; T45's words answered no longer", () => {
   assert.ok(Object.isFrozen(READING_GUIDES_WORDS));
@@ -62,6 +64,9 @@ test("R14 every other row keeps its own translation (words.json holds none of th
   const kept = Object.fromEntries(Object.entries(READING_GUIDES_CHECKS).filter(([c]) => !(c in TAKEN)));
   assert.deepEqual([Object.keys(kept).length, sha256HexSync(canonicalJson(kept))], [KEPT.count, KEPT.sha256],
     "no other row's check, where or translation moved");
+  const t45 = { ...kept, GUIDE_NO_GROUP_SLUG: { ...kept.GUIDE_NO_GROUP_SLUG,
+    translation: kept.GUIDE_NO_GROUP_SLUG.translation.replace("labeled", "labelled") } };
+  assert.equal(sha256HexSync(canonicalJson(t45)), T45_KEPT, "only C-144.13's spelling moved since T45");
   for (const code of Object.keys(kept)) {
     assert.ok(!WORDS.some((w) => w.key === `refusal.${code}`), `words.json holds no refusal.${code}`);
     assert.ok(!Object.values(READING_GUIDES_WORDS).includes(kept[code].translation), code);
@@ -137,4 +142,30 @@ test("R14 GUIDE_ITEM_UNSOURCED is answered by the check and the acts with words.
   assert.equal(w.g.guideDraft({ kind: "bylaw_complaint", purpose: "procedure", items: cited, by: ANN }).ok, true);
   /* a reading guide's item is unchanged by R14: it never answers this row */
   row(checkGuide([item("L", "Look for the date")].map((x) => ({ ...x, citation: "c" }))), "GUIDE_ITEMS_REFUSED");
+});
+
+/* T48 (T48-33; N1053; DEC-221): Civicsmith's own words are American English. The British spellings DEC-221 swept, each
+   as a whole-word stem; its control, the American spelling, passes the same test. */
+const BRITISH = /\b(labell|cancell|modell|travell|organis|recognis|summaris|authoris|analys(e|ed|es|ing)\b|colour|favour|behaviour|honour|neighbour|centre|licence|judgement|grey\b|defence|programme)/i;
+
+test("R14 R11 R12 DEC-221: every row, word, label and refusal this module answers is in American spelling; T48's two re-spellings answered (control: the British pattern catches the old words)", () => {
+  /* the control: the pattern sees the words as they stood before T48 */
+  for (const old of ["your group's places recognise", "An offered guide is labelled with", "labelled as machine work"])
+    assert.match(old, BRITISH, old);
+  const texts = [...Object.values(READING_GUIDES_WORDS), ...Object.values(READING_GUIDES_CHECKS).map((r) => r.translation),
+    ...Object.values(GUIDE_PROPOSAL_STATES), PROCEDURE_GUIDE_LABEL.says];
+  for (const t of texts) assert.doesNotMatch(t, BRITISH, t);
+  assert.match(READING_GUIDES_WORDS["refusal.GUIDE_KIND_UNKNOWN"], /places recognize,/);
+  assert.match(READING_GUIDES_CHECKS.GUIDE_NO_GROUP_SLUG.translation, /^An offered guide is labeled with/);
+  assert.match(GUIDE_PROPOSAL_STATES.machine_proposed, /labeled as machine work/);
+  /* each refusal as answered at the interface, its detail included */
+  const n = world({ slug: null });
+  const slug = n.g.guideOffer({ guide: n.groupGuide(), by: ANN });
+  row(slug, "GUIDE_NO_GROUP_SLUG");
+  assert.equal(slug.detail, "no group slug is recorded, so an offer cannot be labeled. Nothing was sent.");
+  const w = world();
+  const kind = w.g.guideDraft({ kind: "court_order", items: ITEMS, by: ANN });
+  row(kind, "GUIDE_KIND_UNKNOWN");
+  for (const r of [slug, kind]) assert.doesNotMatch(`${r.translation} ${r.detail}`, BRITISH);
+  assert.doesNotMatch(w.g.guidePropose({ kind: "policy", items: ITEMS, run: "R", by: MACHINE }).label.says, BRITISH);
 });
