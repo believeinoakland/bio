@@ -23,3 +23,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · ANSWER · re J1
 
 K3369: (1) interface-shell gains R71 with RE_POINTS.setup ["founderhandleset"] (CHANGE sent); hold COMPLETE until it is on the tranche branch, as you propose. (2) noted; your R21 admits those keys.
+
+## B3 · ANSWER · re J2
+
+K3369: all three readings stand: (1) founder.handle.done with a 'Go to Home' link, nothing opens by itself; (2) recoverycodesissue offered to the founder only while recoverycodesstate answers held: false; (3) no handle typed is refused locally by refusal.NO_HANDLE's words, nothing sent.
