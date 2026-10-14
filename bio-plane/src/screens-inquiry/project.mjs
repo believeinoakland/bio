@@ -270,7 +270,7 @@ const acts = [
         const stamp = now.replace(/[-:]/g, "") + "_" + Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
         return cs.call("promote", { body: { bundleId: id, base: null, snapKey: stamp,
           meta: { object_type: "inquiry", title, current_state: "open", created: now, last_updated: now },
-          files: [{ path: "bundle.md", content: text }] } }).then((p) => {
+          files: [{ path: "bundle.md", text }] } }).then((p) => {
           const pr = res(p);
           if (!p || p.ok === false || !pr || pr.ok === false) return fail(p);
           /* R11: the project draws on it at once (citation R14); a refusal is said here, the question staying open */

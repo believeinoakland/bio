@@ -107,8 +107,12 @@ test("R10 R16 Set this project's bar sends projectbarset with both axes, either 
   assert.ok(!actsIn(main(ana)).includes("projectbarset"));
 });
 
+/* promotion's own reading of a file (its PROMOTED_FILE_CONTENT_UNSTATED rule): each file's words in `text`, never `content` */
+const PROMOTION = (r) => ((r.body.files || []).every((f) => typeof f.text === "string")
+  ? ok({ ok: true, bundleId: r.body.bundleId }) : refusedIn("PROMOTED_FILE_CONTENT_UNSTATED", "A file in this change states no content."));
+
 test("R11 Open a question writes the inquiry, then draws it into the project (drawquestion), then opens it", async () => {
-  const p = await open(at(), { plane: { allocid: ok({ ok: true, id: "INQ-2026-0010" }), promote: ok({ ok: true, bundleId: "x" }),
+  const p = await open(at(), { plane: { allocid: ok({ ok: true, id: "INQ-2026-0010" }), promote: PROMOTION,
     drawquestion: (r) => ok({ ok: true, cited: [r.query.inquiry], alreadyCited: [] }) } });
   fill(p, { "project-question": "Did the 2026 report count working days?" });
   await press(p, "promote");
@@ -120,7 +124,9 @@ test("R11 Open a question writes the inquiry, then draws it into the project (dr
   assert.equal(prom.body.base, null);
   assert.equal(prom.body.meta.object_type, "inquiry");
   assert.equal(prom.body.files[0].path, "bundle.md");
-  const text = prom.body.files[0].content;
+  /* K3145: the file's words in `text`, as promotion reads them, so the promotion lands */
+  assert.deepEqual(Object.keys(prom.body.files[0]).sort(), ["path", "text"]);
+  const text = prom.body.files[0].text;
   assert.match(text, new RegExp(`^id: ${id}$`, "m"));
   assert.match(text, new RegExp(`^project: ${P}$`, "m"));
   assert.match(text, /^current_state: open$/m);
