@@ -1,8 +1,7 @@
 /* screens-investigate R1: a person the record follows, on interface-shell's served page over a scripted plane. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { ok, refusedIn, ADMIN, MEMBER } from "../interface-shell/harness.mjs";
+import { ok, refusedIn, ADMIN } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, button, fill, press, plane, ENT, ORG, SHA } from "./fixtures.mjs";
 
 const at = "/app/person/" + ENT;
@@ -96,7 +95,8 @@ test("R1 personexpunge: the consequence statement (op-grades R21) filled with th
   const d = main(p).querySelector('[data-consequence="personexpunge"]');
   assert.match(d.textContent, /This removes the value for good.*It cannot be undone, by you or by anyone\..*by rosa/s);
   assert.match(d.textContent, /Removed where the law requires, \d+ \w+ \d{4}, by rosa/);
-  const statement = JSON.parse(JSON.stringify((await import("../../../src/op-grades/index.mjs")).CONSEQUENCE_STATEMENTS.personexpunge.statement));
+  /* op-grades' CONSEQUENCE_STATEMENTS.personexpunge.statement (its R21) as it stands on tranche/T47 at K3148 */
+  const statement = "This removes the value for good: from the person's page, from every question that cited it and from every export. It cannot be undone, by you or by anyone. A marker stays in its place: \"Removed where the law requires, <date>, by <member>\". Published cases change only through the docket. Confirm with a reason naming the law or order that requires it: \"Remove it for good, with this reason\".";
   assert.equal(d.querySelector(".ends").textContent.replace(/\d+ \w+ \d{4}/, "<date>").replace("by rosa", "by <member>"), statement, "the statement as op-grades words it");
   const b = button(p, "personexpunge");
   assert.match(b.textContent, /Irreversible/);
