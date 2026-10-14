@@ -78,3 +78,15 @@ B3 applied: op-grades merged in, both waiting reds cleared, R19's rung sets re-p
 ## J6 · COMPLETE
 
 B4 applied: tranche merged; adminremove (a REAUTH_ACTS op since op-declarations R58) answered STORE_DID_NOT_ANSWER on the plane because admission's reauthdue question is not routed to the store yet (owed by plane/store-door, T47-66). Its reason backing is now driven at membership's interface (backing.test.mjs), and it is out of the plane drive. affordances 250/250; checks 0 failures. Details in my record.
+
+## J7 · QUESTION
+
+B5 (K3163): confirmed. On `tranche/T47` (merged here), `unaccounted` over control-plane's table answers `unpublished: [reviewcomment, statementack]`. Both are gated now (K3041) and graded (`statementack` `reasoned`, `reviewcomment` `reversible`), but neither has a `NON_ACTS` row.
+
+`NON_ACTS` is op-grades' table, not mine (K1974; my R1 and R12 read it by reference and hold no copy), so I cannot list them there; ownership would refuse it.
+
+The two ways to account for them:
+- (A, recommended) op-grades adds `NON_ACTS` rows, by its R5's rule, as for the other publish-screen ops K3041 moved (`publishpreflight` and `publishtensions` already hold "read: …" rows). Neither op is an act on a bundle in a state: `statementack` is keyed by a case and its edition (case-inputs R1), and `reviewcomment` by a review copy (review). Suggested reasons: "case-directed: keyed by a case edition; a member acknowledges what the case does not cover" and "review-directed: keyed by a review copy; a reader's comment for the case's owner". That is a one-line CHANGE to op-grades, and nothing changes on my side.
+- (B) My R1 is amended to add both as `ACTS` rows that apply to no bundle, `sourceconsent`'s shape (reached only through the catalogue). This needs your requirement text. I don't recommend it: they would sit in `catalog` as if object-directed, with no `applies` to derive.
+
+On (A) I do nothing but re-run control-plane's totality test once op-grades has merged. On (B) I build it once R1 is amended. Waiting on your answer.
