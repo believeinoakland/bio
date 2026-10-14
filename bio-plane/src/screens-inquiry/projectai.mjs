@@ -20,7 +20,7 @@ function reads(view) {
   const id = String(view.subject || "");
   const owner = "project:" + id;
   return {
-    project: { op: "image", query: { id }, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
+    project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
     participants: { op: "projectparticipants", query: { projectId: id } },
     state: { op: "projectaccountstate", query: { project: id } },
     notice: { op: "projectkeynotice", query: { project: id } },
@@ -47,6 +47,7 @@ function place(view) {
 /** R14: the project's account and its notice, the panel over its account, and keeping its material away from AI. */
 function render(cs, view) {
   const id = String(view.subject || "");
+  if (!id) return "";
   const ui = view.ui;
   const d = view.data || {};
   const W = cs.w, E = cs.esc, S = "screen.projectai.";
@@ -67,7 +68,7 @@ function render(cs, view) {
   const connected = d.signin && d.signin.state === "ok" && d.signin.value && d.signin.value.connected === true;
   const out = [];
   out.push(cs.title(titleOf(), { thing: "project" }));
-  out.push(`<p class="cs-sub">${W(S + "purpose")}</p>`);
+  out.push(`<p class="mk-sub">${W(S + "purpose")}</p>`);
 
   /* the project's account: what it is, who set it and when; an owner's acts on it */
   out.push(cs.sec(S + "account.head", cs.state("state", view, (a) => {
@@ -77,13 +78,12 @@ function render(cs, view) {
       : a.kind === "signin" ? S + "account.signin" : S + "account.key";
     let h = `<p data-account="${E(!a.held ? "none" : a.on === false ? "off" : a.serving === false ? "suspended" : String(a.kind || ""))}">${W(say)}</p>`;
     if (a.held && (a.by || a.set_at))
-      h += `<p class="cs-meta">${W(S + "account.since", { who: String(a.by || "").replace(/^member:/, ""), date: { html: a.set_at ? cs.date(String(a.set_at), { year: true }) : "" } })}</p>`;
-    if (!isOwner) return h + `<p class="cs-meta">${W(S + "owners")}</p>`;
+      h += `<p class="mk-small">${W(S + "account.since", { who: String(a.by || "").replace(/^member:/, ""), date: { html: a.set_at ? cs.date(String(a.set_at), { year: true }) : "" } })}</p>`;
+    if (!isOwner) return h + `<p class="mk-small">${W(S + "owners")}</p>`;
     const gen = ui.keyGen || 0;
     const set = cs.act("projectkeyset", { label: "act.projectkeyset.label.projectai", data: { project: id } });
-    if (set) h += `<div class="cs-form"><label for="pa-key${gen}">${W(a.held ? S + "key.replace" : S + "key.field")}</label>`
-      + `<input id="pa-key${gen}" type="password" class="cs-input" autocomplete="off">${set}<p class="cs-meta">${W(S + "key.never")}</p></div>`;
-    if (sole && connected) h += `<p class="cs-meta">${W(S + "signin.help")}</p>`
+    if (set) h += cs.field("pa-key" + gen, a.held ? S + "key.replace" : S + "key.field", { type: "password", autocomplete: "off", help: S + "key.never" }) + set;
+    if (sole && connected) h += `<p class="mk-small">${W(S + "signin.help")}</p>`
       + cs.act("projectsigninset", { label: "act.projectsigninset.label.projectai", data: { project: id } });
     if (a.held) h += cs.act("projectaccountswitch", { label: a.on === false ? S + "switch.on" : S + "switch.off", data: { on: a.on === false ? "on" : "off" } })
       + cs.act("projectaccountremove", { label: "act.projectaccountremove.label.projectai", data: { project: id } });
@@ -94,10 +94,10 @@ function render(cs, view) {
      what it tells her leaves the group */
   const n = mine && mine.state === "joined" && d.notice && d.notice.state === "ok" ? d.notice.value : null;
   if (n && n.due === true && n.text)
-    out.push(cs.sec(S + "notice.head", `<p class="cs-rec" data-notice="projectkey">${E(String(n.text))}</p>`
-      + `<p class="cs-meta">${W("mark.outward.means")}</p>`
+    out.push(cs.sec(S + "notice.head", `<p class="rec" data-notice="projectkey">${E(String(n.text))}</p>`
+      + `<p class="mk-small">${W("mark.outward.means")}</p>`
       + cs.act("projectkeynoticeseen", { label: "act.projectkeynoticeseen.label.projectai", data: { project: id }, tone: "primary" })));
-  else if (n && n.due === false) out.push(`<p class="cs-meta" data-notice="seen">${W(S + "notice.seen")}</p>`);
+  else if (n && n.due === false) out.push(`<p class="mk-small" data-notice="seen">${W(S + "notice.seen")}</p>`);
 
   /* what the project's account pays for, its limits, its use summed and its changes: screens-settings R9's panel */
   if (isOwner && view.parts && view.parts.aiPanel)
@@ -110,8 +110,7 @@ function render(cs, view) {
       : `<p data-keepaway="off">${W(S + "keepaway.off")}</p>`;
     if (!isOwner) return h;
     const on = cs.act("projectaikeepaway", { label: k.on ? S + "keepaway.turnoff" : "act.projectaikeepaway.label.projectai", data: { on: k.on ? "off" : "on" } });
-    if (on) h += `<div class="cs-form"><p>${W("act.projectaikeepaway.does")}</p><label for="pa-why">${W(S + "keepaway.reason")}</label>`
-      + `<textarea id="pa-why" class="cs-input rec" maxlength="2000"></textarea>${on}</div>`;
+    if (on) h += `<p>${W("act.projectaikeepaway.does")}</p>` + cs.field("pa-why", S + "keepaway.reason", { area: true, rec: true, max: 2000 }) + on;
     return h;
   }, { empty: S + "keepaway.unread" })));
   return out.join("");

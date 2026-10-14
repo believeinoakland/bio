@@ -24,10 +24,11 @@ test("R3 the document drawn: title, source, its grade as one mark, passages with
   const m = main(p);
   assert.equal(m.querySelector("h1").textContent, "Pothole repair policy, Administrative Instruction 4.12");
   assert.match(m.textContent, /Captured 2 October 2026 · https:\/\/example\.org\/ai-4-12\.pdf/);
-  const g = m.querySelector(".cs-facts .cs-grade");
+  const g = m.querySelector(".mk-facts .cs-grade");
   assert.deepEqual([g.getAttribute("data-scale"), g.textContent.slice(-1)], ["capture", "B"]);
   assert.match(m.textContent, /3b9f…c210/);
-  assert.equal(m.querySelector(`a[href="/app/open-file/${D}"]`).textContent, "Open the original", "the original opens through open-file");
+  assert.equal(m.querySelector(`a[href="/app/open-file/${SHA}"]`).textContent, "Open the original", "R22: the original opens through open-file by its digest");
+  assert.ok(!m.querySelector(`a[href="/app/open-file/${D}"]`), "R22: never by the bundle id");
   const passages = m.querySelectorAll("blockquote");
   assert.equal(passages.length, 2);
   assert.match(passages[0].textContent, /within seven calendar days of the report\.”Page 2/);
@@ -54,7 +55,7 @@ test("R3 pagetranscribe only while the assistant is reachable (DEC-190); transcr
 test("R3 an unchanged version chain marks nothing changed; the grade note answers \"Why B?\"", async () => {
   const p = await open(at, { plane: { versionchain: ok({ ok: true, versions: [{ capture_sha: SHA }] }) } });
   assert.ok(!main(p).querySelector("[data-changed]"));
-  assert.match(main(p).textContent, /Only this version is held/);
+  assert.ok(!section(p, "Its versions"), "R20: a chain of one version draws no versions section");
   await press(p, "gradenote", { reason: "to see why" });
   assert.equal(p.byOp("gradenote").at(-1).query.capture, SHA);
   assert.match(section(p, "Why B?").textContent, /a signed copy would raise it to A/);

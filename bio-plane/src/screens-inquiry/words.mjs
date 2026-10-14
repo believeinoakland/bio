@@ -1,9 +1,9 @@
 /* screens-inquiry: the module's own keyed words (interface-shell R5; DEC-179 (5)). Each row is `[key, en, protected]`:
  * a screen's own sentence `screen.<id>.<part>`, with `{placeholders}` filled from the screen's data; and the row the
- * shell's R5 names for this module (a `WORD_ROWS` key whose English names the group's Civicsmith bare, held here in
- * DEC-149's form until `WORD_ROWS` carries a conformed word): `act.pagetranscribe.does`. Since T47 `WORD_ROWS` holds
- * `ai.label.untested` (R7), `ai.refused.keptaway`, `ai.refused.noaccount`, `ai.refused.notdeployed` and
- * `ai.refused.limit.unjudged` in their conformed words, so the screens draw those from it and hold no copy.
+ * shell's R5 names for this module. `WORD_ROWS` holds `act.pagetranscribe.does` (since PR #34's merge, `4664e8efd4`, in
+ * DEC-221's American spelling), `ai.label.untested` (R7), `ai.refused.keptaway`, `ai.refused.noaccount`,
+ * `ai.refused.notdeployed` and `ai.refused.limit.unjudged` in their conformed words, so the screens draw those from it
+ * and hold no copy (R19).
  * The English is the mockups' at the design stream's `3f40899950` (`mock-screens.js`, `mock-shell.js`) where they say
  * it, else BOB's wording in `build/requirements/screens-inquiry.md`. A protected row is a warning before a terminal or
  * signed act, or says who can see something (DEC-157 (4)). These rows go to the design stream as a HANDOFF. */
@@ -19,7 +19,9 @@ const PROJECT = [
   row("screen.project.stage.matured", "Matured"),
   row("screen.project.stage.closed", "Closed"),
   row("screen.project.stage.undetermined", "Undetermined, because {reason}"),
-  row("screen.project.stage.counts", "{read} questions · {with_legs} resting on something · {concluded} concluded"),
+  row("screen.project.stage.read", "{count} questions"),
+  row("screen.project.stage.legs", "{count} resting on something"),
+  row("screen.project.stage.concluded", "{count} concluded"),
   row("screen.project.bar.head", "The project's bar"),
   row("screen.project.bar.declared", "An answer must be at least this strong before the group relies on it."),
   row("screen.project.bar.axisnone", "No bar is set on the {axis} axis."),
@@ -158,8 +160,8 @@ const DOCUMENT = [
   row("screen.document.monitor.done", "Checked for changes just now."),
   row("screen.document.monitorset.done", "Watching this document's address: each new version found is kept beside this one, and you are told."),
   row("screen.document.attest.done", "A timestamp was recorded for this copy."),
-  row("screen.document.transcribe.done", "Your typing was recorded for page {page}, labelled as yours."),
-  row("screen.document.pagetranscribe.done", "The assistant read {pages}. Its words are labelled as its reading."),
+  row("screen.document.transcribe.done", "Your typing was recorded for page {page}, labeled as yours."),
+  row("screen.document.pagetranscribe.done", "The assistant read {pages}. Its words are labeled as its reading."),
 ];
 
 /** The assistant dock's sentences (R4, R6, R7, R13). */
@@ -189,7 +191,6 @@ const ASSISTANT = [
   row("screen.assistant.dispatch.unbound", "The assistant's worker isn't connected to your group's Civicsmith, so the run can't start. An administrator can connect it."),
   row("screen.assistant.dispatch.notrunning", "This run has ended, so it can't be started again. Start a new run."),
   row("screen.assistant.dispatch.unknown", "The run could not be started: {reason}"),
-  row("act.pagetranscribe.does", "Has the assistant read up to 8 pages of this document that your group's Civicsmith's own reading couldn't make out. The account that pays for your acts here pays, within its limits. Its words arrive labelled as the assistant's reading and stay undetermined until a member checks a passage against the page; the page images stay as they are."),
 ];
 
 /** The project's AI account screen's sentences (R14). */
