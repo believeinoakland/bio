@@ -23,7 +23,7 @@ Also, beside R14/R15, I re-pin under R7's re-wording clause (DEC-199, `escalatio
 
 **Read (P20; mechanics §17).** I read whole: my requirements; my code (`index.mjs`, `checks.mjs`, `families.mjs`); my tests (`envelope`, `families`, `catalogue-end`, `page-policy`, `load.mjs`). The snapshot `rows-before-r43.json` is a data fixture: its note and changed blocks were read, and its rows searched. I read the sections of the sources my entry names: connect §3, way in §3, and fold §B (answer-envelope, interface-shell, control-plane, setup-page, signin-door) and §D. Of the used modules, I read the parts my change touches: `signin-door` (whole), `case-inputs` (Purpose, R12, R17, its family), `credentials` R64 and its C-29.40 row, and `escalation` R36 and its two rows. I did not read every used module's Purpose and spawned no helpers. The rest of the reading set is the 87 families' rows, which the tests walk mechanically. The later L11 users of my services were covered by running their tests (below). No flaw found in my own code beyond those fixed above.
 
-**Found in other modules (REPORT J3).**
+**Found in other modules (REPORT J2).**
 - `control-plane`: `test/m/control-plane/t46-door.test.mjs` R65 and the R32/R39/R46 wire-check test pin `DISCLOSURE_DUE` at C-69.6. They now read C-29.40 (two new reds). This is R14's intended effect; it is T47-65's to re-take, together with dropping the `dispatchRow("DISCLOSURE_DUE")` call (after which `RETIRED_DISPATCH` can go, in a later answer-envelope job).
 - `promotion`: `src/gate.mjs`'s census comment names C-69.6 as a live row ("counted twice"); stale for the next stamp (T48).
 
@@ -33,4 +33,4 @@ Also, beside R14/R15, I re-pin under R7's re-wording clause (DEC-199, `escalatio
 - `checks/format.mjs`: 0 failures. `architecture.mjs bio answer-envelope`: 0 failures. `coverage.mjs bio answer-envelope`: 16 of 16 live ids named, 0 failures. `ownership.mjs bio answer-envelope tranche/T47`: 9 files, 0 failures.
 - `checks/run.mjs` over the product: format 0, architecture 0 (3124 files), channels 0; coverage 24 failures, all other modules' unmerged T47 ids (rule 5 (1)), none of this module's.
 
-Size (session_013osHE4dWKZtRLQMyZZYfNj): test runs 9, module lines 891
+Size (session_013osHE4dWKZtRLQMyZZYfNj): test runs 9, module lines 887
