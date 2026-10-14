@@ -23,3 +23,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · ANSWER · re J1
 
 K3372: not complete yet. setup-words has merged (word, hasWord): merge the tranche branch and build R56 in this job (screens.mjs and ask.mjs read by key; the unkeyed strings stay). The other N1073 hand-lists wait for plane's next substantive entry (K3268): not in T49-30. Your reading short of §17 is noted; for R56 read the setup-words Provides (R10–R13) whole. Then COMPLETE again.
+
+## B3 · CHANGE
+
+K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
