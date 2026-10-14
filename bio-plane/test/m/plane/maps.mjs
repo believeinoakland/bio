@@ -21,6 +21,7 @@ import { provenanceRoutesOf, provenanceRouteOps } from "../../../src/provenance-
 import { membershipOf, membershipOps, viewerPredicate } from "../../../src/membership/index.mjs";
 import { projectRosterOf, projectRosterOps } from "../../../src/project-roster/index.mjs";
 import { credentialsOf, credentialsOps } from "../../../src/credentials/index.mjs";
+import { aiAccountsOf, aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
 import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "../../../src/observation-log/index.mjs";
 import { runProductionsOf, runProductionsOps } from "../../../src/run-productions/index.mjs";
 import { captureRequestsOf, captureRequestsOps } from "../../../src/capture-requests/index.mjs";
@@ -92,6 +93,8 @@ import { questionExplorerOf } from "../../../src/question-explorer/index.mjs";
 export const MODULE_MAPS = [
   ["membership", (c, u, b, e) => membershipOps(membershipOf(c), u, b, e)],
   ["project-roster", (c, u, b, e) => projectRosterOps(projectRosterOf(c), u, b, e)],   /* N783 (K2270): directly after membership's */
+  /* R53 (T48; ai-accounts R32): ai-accounts' map directly before credentials' */
+  ["ai-accounts", (c, u, b, e) => aiAccountsOps(aiAccountsOf(c), u, b, e)],
   ["credentials", (c, u, b, e) => credentialsOps(credentialsOf(c), u, b, e)],
   /* R49 (T47): signin-door's store-internal map, beside credentials' */
   ["signin-door", (c, u, b, e) => signinDoorOps(credentialsOf(c), u, b, e)],

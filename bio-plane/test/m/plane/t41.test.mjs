@@ -115,13 +115,13 @@ test("R35 (K2567; reading-guides R1, R6): reading-guides' groupSlug is read from
   }
 });
 
-test("R31 (K2488; ai-use R7, R69): ai-use is the one instance the plane built, its four ops (`ailimitset`, `ailimits`, `aiusage`, `exploreapprove`) routed before ai-runs' over it, answering as its own map; publication's handle guard is held with membership before the first request", async () => {
+test("R31 (K2488; ai-use R7, R69): ai-use is the one instance the plane built, its five ops (`ailimitset`, `ailimits`, `aiusage`, `exploreapprove`, `aiuseovertime`: ai-use R14, T48) routed before ai-runs' over it, answering as its own map; publication's handle guard is held with membership before the first request", async () => {
   const x = await store();
   assert.equal(aiUseOf(x.ctx, { zone: "Pacific/Auckland" }), aiUseOf(x.ctx), "one instance; later deps are not read");
   const u = new URL("http://do/x?viewer=member:nobody&by=member:nobody");
   const map = x.s.routes(u, {});
   const own = aiUseOps(aiUseOf(x.ctx), u, {});
-  assert.deepEqual(OPS(own), ["ailimitset", "ailimits", "aiusage", "exploreapprove"]);
+  assert.deepEqual(OPS(own), ["ailimitset", "ailimits", "aiusage", "exploreapprove", "aiuseovertime"]);
   for (const op of OPS(own)) assert.ok(Object.hasOwn(map, op), `op=${op}`);
   for (const op of ["ailimits", "aiusage"]) assert.equal(JSON.stringify(await map[op]()), JSON.stringify(await own[op]()), `op=${op}`);
   const keys = OPS(map);

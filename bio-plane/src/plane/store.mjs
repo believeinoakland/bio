@@ -30,6 +30,7 @@ import { provenanceRoutesOf, provenanceRouteOps } from "../provenance-routes/ind
 import { membershipOf, membershipOps, viewerPredicate, MODULE_ORDER } from "../membership/index.mjs";
 import { projectRosterOf, projectRosterOps } from "../project-roster/index.mjs";
 import { credentialsOf, credentialsOps } from "../credentials/index.mjs";
+import { aiAccountsOf, aiAccountsOps } from "../ai-accounts/index.mjs";
 import { observationLogOf, observationLogOps, OBSERVATION_LOG_MODULE } from "../observation-log/index.mjs";
 import { runProductionsOf, runProductionsOps } from "../run-productions/index.mjs";
 import { captureRequestsOf, captureRequestsOps } from "../capture-requests/index.mjs";
@@ -114,7 +115,7 @@ import { transcriberOf } from "./transcribe.mjs";
 import { rosterSource } from "../../../roster-reader/index.mjs";
 import { credentialsOf as captureCredentialsOf } from "../capture-sources/credentials.mjs";
 import { registerReaders, rosterReads, ownHostsOf, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
-         ratificationWorker, frontDoorFinder } from "./wiring.mjs";
+         ratificationWorker, frontDoorFinder, frontDoorPointer } from "./wiring.mjs";
 
 /* The name store-door's promotion step (its R5, was control-plane R42) is registered under (K2037). */
 const STEP = "store-door";
@@ -429,7 +430,10 @@ export class Store extends DurableObject {
        library, the member op table, the acts a machine is refused and the labelled machine drafts (its R13). */
     wizardScriptsOf(ctx, { env }).wizardRegister(wizardRegistration({ door: {
       /* K2586 (its R23): the front door's finder over the plane's steps and retrieval, asked at each `startfrom` */
-      findExisting: frontDoorFinder({ steps: () => stepsOf(ctx), retrieval: () => retrievalOf(ctx) }) } }));
+      findExisting: frontDoorFinder({ steps: () => stepsOf(ctx), retrieval: () => retrievalOf(ctx) }),
+      /* R51 (T48; N847; K2591; its R37): the pointer, `jurisdictions.combine` over record-core's `jurisdiction_profiles`
+         read at each call */
+      pointer: frontDoorPointer({ setting: (name) => recordOf(ctx).getSetting(name) }) } }));
     /* K2044, K2054 (admission R21): admission's door window, built at its place in layer 11 so its table is made and
        declared through record-core before the first request; its fingerprint is doorbell's (its R12; K2719). */
     admissionOf(ctx);
@@ -471,8 +475,14 @@ export class Store extends DurableObject {
        nothing and holds no table. */
     actionProducersOf(ctx, { actions: actionsOf(ctx), actionHolds, actionClocks: actionClocksOf(ctx), escalation: escalationOf(ctx),
       actionPlans: actionPlansOf(ctx), planWork: planWorkOf(ctx), filingTemplates, localFacts, following: followingOf(ctx) });
-    const queueProducers = queueProducersOf(ctx, Object.fromEntries(
-      Queue.PRODUCER_DEPS.filter((k) => queueDeps[k] !== undefined).map((k) => [k, queueDeps[k]])));
+    /* R52 (T48; N1047; K3189; machinery-producers R12; instance-setup R88, R89): the update notice read, handed as
+       `deps.updateNotice`: a function calling instance-setup's `updateNoticeState()` on the object's own instance at each
+       call (K31's pattern: instance-setup is built below, so nothing points later), which queue-producers hands on to
+       machinery-producers with the rest of its deps. instance-setup registers its own `update-check` consumer with the
+       scheduler (its R88); this module registers none. */
+    const updateNotice = () => instanceSetupOf(ctx, env).updateNoticeState();
+    const queueProducers = queueProducersOf(ctx, { ...Object.fromEntries(
+      Queue.PRODUCER_DEPS.filter((k) => queueDeps[k] !== undefined).map((k) => [k, queueDeps[k]])), updateNotice });
     queueOf(ctx, { ...queueDeps, producers: queueProducers }).migrate();
     tasksOf(ctx, { env }).migrate();
     /* K1951, K2042, K2046: the daemon's drain of capture's `archive-unpack` events, registered with the scheduler after
@@ -485,7 +495,8 @@ export class Store extends DurableObject {
        credentials once, on this object's own instances, on instance-setup's behalf (credentials is earlier in the order
        and cannot reach it), so `disclosureDue` is asked in the assembled plane: `accountreferenceset` and a sign-in's
        `start` are refused DISCLOSURE_DUE while no disclosure is recorded for the member. */
-    credentialsOf(ctx).registerDisclosureRead("instance-setup", (q) => instanceSetup.disclosureOf(q));
+    /* R53 (T48; ai-accounts R23): the registration is ai-accounts', not credentials' delegate */
+    aiAccountsOf(ctx).registerDisclosureRead("instance-setup", (q) => instanceSetup.disclosureOf(q));
     ctx.blockConcurrencyWhile(async () => {
       const started = await instanceSetup.start();
       /* F16 (K2038; capture R73, capture-sources R65): the group's own hosts, once the store is migrated and started so
@@ -534,6 +545,9 @@ export class Store extends DurableObject {
        a migrated one does, declared to purge (its R18). Its first construction is its start: its invitation and hiding
        listeners (its R15, R16) are registered with membership before the first request. */
     projectRosterOf(this.ctx).migrate();
+    /* R53 (T48; N996): ai-accounts' tables directly before credentials' (its R28; idempotent: credentials' migration
+       runs it too), as the modules' order has it */
+    aiAccountsOf(this.ctx).migrate();
     credentialsOf(this.ctx).migrate();   /* after membership's: its listener and claim fact registered */
     provenanceOf(this.ctx).migrate();
     attestationOf(this.ctx).migrate();   /* `receipt_keys`, `signed_receipts` (N512; attestation R10) */
@@ -614,6 +628,8 @@ export class Store extends DurableObject {
     const a = args && typeof args === "object" ? args : {};
     const asked = {};
     for (const k of ["run", "by", "viewer", "at"]) if (a[k] !== undefined) asked[k] = a[k];
+    /* R55 (T48; N1015; control-plane R93): the door's `trace` and member ref ride beside them, strings only; never a credential */
+    for (const k of ["trace", "memberRef"]) if (typeof a[k] === "string" && a[k] !== "") asked[k] = a[k];
     return aiRunsOf(this.ctx, this.env).dispatchMemberRun(asked);
   }
   /* R40 (T46; K2999; control-plane R20): public-read's group fields of this object (the door asks the `bio` object's). */
@@ -687,12 +703,19 @@ export class Store extends DurableObject {
       url.searchParams.delete("use");
       if (typeof grant === "string" && grant !== "") url.searchParams.set("use", draftUse(ctx, grant) || "ask");
     }
+    const accountOps = aiAccountsOps(aiAccountsOf(ctx), url, body, env);
     return {
       ...membershipOps(membershipOf(ctx), url, body, env),
       /* N783 (K2270): project-roster's ops (`projectowner*`, `projectvisibility`, `projectdirectory`,
          `projectparticipants`, `projectrequest*`), split from membership, directly after its map. */
       ...projectRosterOps(projectRosterOf(ctx), url, body, env),
-      ...credentialsOps(credentialsOf(ctx), url, body, env),
+      /* R53 (T48; N996; ai-accounts R32): ai-accounts' ops directly before credentials', over the one instance
+         credentials' factory creates (`aiAccountsOf`) */
+      ...accountOps,
+      /* credentials' map still spreads ai-accounts' ops over its delegates (its R72, transitional): the names ai-accounts
+         serves are dropped from it here, so each op reaches the one handler once and no op is answered twice */
+      ...Object.fromEntries(Object.entries(credentialsOps(credentialsOf(ctx), url, body, env))
+        .filter(([op]) => !Object.hasOwn(accountOps, op))),
       /* R49 (T47; K3143; signin-door R2, R4, R5): the sign-in door's store-internal routes (`signintokenhold`,
          `signintokenrefused`, `signindisclosuredue`, `signintracekeep`, `signintraceread`), beside credentials' map, over
          the plane's one credentials instance; none has an op spec, so none is served to a caller. */

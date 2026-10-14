@@ -7,10 +7,10 @@
    `pdf-pixels`' (a PDF page by its page renderer, a picture file by its picture renderer), the reading `agent-worker`'s, and the count `ai-use`'s (R9). The account's secret leaves the object only
    in the one `POST /transcribe` request body. */
 import { recordOf } from "../record-core/index.mjs";
-import { credentialsOf } from "../credentials/index.mjs";
+import { aiAccountsOf } from "../ai-accounts/index.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
-import { tokenRefusal } from "./ask.mjs";
+import { tokenRefusal, doorHeaders } from "./ask.mjs";
 import { renderPageToPixels } from "../../../pdf-worker/src/pagepixels.mjs";
 import { renderPictureToPixels } from "../../../pdf-worker/src/picturepixels.mjs";
 
@@ -85,7 +85,7 @@ export async function renderPages(bytes, pages, render = renderPageToPixels, pic
 
 /** R36's AI path for one act of `member`, on this object: `transcribe({account, capture_sha, store, pages, use})`.
  *  `onSha` hears the capture's digest, so the act's id can carry it. */
-function aiPath(ctx, env, { member, at, act, onSha }) {
+function aiPath(ctx, env, { member, at, act, onSha, trace = null, memberRef = null }) {
   return async function transcribe({ account = null, capture_sha = null, pages = [] } = {}) {
     const w = env && env.AGENT_WORKER;
     if (!w || typeof w.fetch !== "function") return { ok: false, reason: "AGENT_WORKER_UNBOUND" };
@@ -108,14 +108,14 @@ function aiPath(ctx, env, { member, at, act, onSha }) {
     let answer, status = null;
     try {
       const res = await w.fetch("https://agent-worker/transcribe", { method: "POST",
-        headers: { "content-type": "application/json" }, body });
+        headers: doorHeaders({ trace, memberRef }), body });
       status = Number.isInteger(res.status) ? res.status : null;
       answer = await res.json();
     } catch { return { ok: false, reason: "AGENT_WORKER_SILENT" }; }
     if (!answer || typeof answer !== "object" || Array.isArray(answer)) return { ok: false, reason: "AGENT_WORKER_SILENT" };
     /* R47 (T47; K3084; credentials R70): an answer refusing a sign-in's token has credentials drop the token it holds
        for the member whose sign-in served, as the ask and the draft do */
-    tokenRefusal(credentialsOf(ctx), a)(answer);
+    tokenRefusal(aiAccountsOf(ctx), a)(answer);
     /* Whatever else it says, usage it carries is counted, in one transaction, under this act (D12). */
     if (answer.usage && typeof answer.usage === "object") {
       const entry = { owner: ownerOf(a, member), member, use: USE, mode: USE,
@@ -147,18 +147,19 @@ class Transcriber {
 
   deployable() { return this.#admitted().admitted === true; }
 
-  keptAway({ project = null, use = null } = {}) { return credentialsOf(this.#ctx).aiKeptAway({ project, use }); }
+  keptAway({ project = null, use = null } = {}) { return aiAccountsOf(this.#ctx).aiKeptAway({ project, use }); }
 
   /* The act's id is minted here at `at` and carries the capture's digest once the AI path is asked for it. */
-  transcription({ member = null, project = null, at = null } = {}) {
+  transcription({ member = null, project = null, at = null, trace = null, memberRef = null } = {}) {
     const instant = typeof at === "string" && at ? at : new Date().toISOString();
     let prefix = "";
     const act = () => `${USE}:${prefix}:${instant}`;
     const ctx = this.#ctx, aiUse = aiUseOf(ctx);
     /* R40 (T46; extraction R74): `untested`, the test-instance label when the part runs on the exception, else null */
-    const tx = { member, project, at: instant, credentials: credentialsOf(ctx), untested: this.#admitted().untested,
+    const tx = { member, project, at: instant, accounts: aiAccountsOf(ctx), untested: this.#admitted().untested,
       useCheck: (q) => aiUse.useCheck(q),
-      transcribe: aiPath(ctx, this.#env, { member, at: instant, act, onSha: (sha) => { prefix = sha.slice(0, 16); } }) };
+      transcribe: aiPath(ctx, this.#env, { member, at: instant, act, trace, memberRef,
+                          onSha: (sha) => { prefix = sha.slice(0, 16); } }) };
     Object.defineProperty(tx, "act", { get: act, enumerable: true });
     return tx;
   }
