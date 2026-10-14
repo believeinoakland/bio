@@ -48,3 +48,7 @@ REPORT (J2), full text in my record's Completion section. For BOB:
 3. Money's expertise field carried the English default "municipal budget": removed, since no key holds it. A key is owed if the default is wanted.
 4. `affordances` R60 was not merged at my START; R27's group test runs on the fixture.
 5. setup-words has not merged: this module's tests import `word`/`hasWord` and load only after it does (I ran them on a local stand-in: 108 pass).
+
+## J3 · COMPLETE
+
+COMPLETE (J3). T49-26 applied: R27 (six groups, `.e-step_source`), R28 (proceeding "Dates", two lanes), R29 (explore with no centre), R30 (words by key; no English in the module or its tests), R10's red cleared, rule 6 (D29, N1073's hand list, N1068, `admin`). Checks from the process repository: format 0 failures, architecture 0 failures (whole product too), coverage 30 of 30 ids named, ownership 0 failures. Tests: 108 pass on a local stand-in for setup-words' `word`/`hasWord`; on the committed tree they load only after setup-words merges (then merge `tranche/T49` and I re-run: send a CHANGE). Details, deferred items and the REPORT in my record.
