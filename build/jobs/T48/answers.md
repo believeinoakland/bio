@@ -41,3 +41,7 @@ Size (session_01949saWF2vA4uRTaJnEYzqR): test runs 7, module lines 1910
 ## J1 · REPORT
 
 affordances: test/m/affordances/t33.test.mjs:151 (R12, the op-map list) is red on tranche/T48 itself and here: explore's op map now also serves 'exploregraph', which the test's list of ops T33 and T35–T47 grant does not hold. Not caused by T48-36; for affordances' job or the plan's accepted reds.
+
+## J2 · COMPLETE
+
+T48-36 applied: accountFor, aiKeptAway, projectsKeptAway (dep accounts, ai-accounts' one instance by default) and NOT_YOUR_ACCOUNT's row (AI_ACCOUNT_CHECKS) read from ai-accounts. credentials is kept only for aiGrantMintStanding, AI_GRANT_TTL_SECONDS and AI_GRANT_OPS. Two fail-closed flaws fixed (KEPT_AWAY_UNREADABLE's row for an unreadable keep-away, ai-accounts R34; kept-away projects dropped when ai-accounts is unreachable). Tests: 64/64; format, architecture, coverage, ownership 0 failures. Nothing deferred. Record: build/jobs/T48/answers.md.
