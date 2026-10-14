@@ -23,3 +23,14 @@ Measure first (your START, item 1), on `tranche/T49` @ 5fa1db6433 with every oth
 6–8, 10–12 follow 5 and 9 and are not reached yet.
 
 I go on building R9–R14 against the screens' own controls and the design (journey 29), and I will re-run the walk each time you merge an L11 job. No question for you now.
+
+## J2 · QUESTION
+
+R7: "signed in as the founder, with a handle held and with none". After screens-entry's T49 claim (its open branch: `claim` takes `su-handle`, then she signs in by it), a group claimed now always has a founder with a handle; a handleless founder exists only in a group claimed before T49 (DEC-230's `founderhandleset` step). The local arm makes its group by the screens' own controls, so it cannot make a handleless founder once that claim lands.
+
+My best reading, which I am building:
+- The local arm sweeps every screen as the founder with her handle held (after R9 step 1) and checks R7 with no exception.
+- Where the group's founder has no handle — the local arm today, until screens-entry merges, and a live instance claimed before T49 (biosmoke8, if it still has one) — the sweep runs as the handleless founder before she chooses, with DEC-230's two words excepted (`founder.handle.says`, `founder.handle.later.help`), then she chooses her handle and the held sweep runs.
+- When the claim took a handle, the walk says "R7 with no handle: not walkable here (the claim took a handle)" in its report, as a note, not a failure; the live arm against a pre-T49 instance walks it.
+
+Is that right, or do you want the handleless sweep made some other way?
