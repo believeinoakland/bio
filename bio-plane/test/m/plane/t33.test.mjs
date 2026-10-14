@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
-import { store, storage, Store } from "./fixture.mjs";
+import { store, storage, Store, disclosed } from "./fixture.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
@@ -138,7 +138,8 @@ test("R21 (K1573): money is handed calculations' bindingOf as its port: a fact r
 test("R21 (K1541): credentials holds the deployment's seal secret, so a member's reference is sealed; unbound, it is refused ACCOUNT_SEAL_UNAVAILABLE", async () => {
   const member = (x) => x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                                                  VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
-  const set = (x) => credentialsOf(x.ctx).accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ant-zz-test", by: "member:ann" });
+  /* R44 (T47): the disclosure first, as the assembled plane asks */
+  const set = async (x) => { await disclosed(x.ctx); return credentialsOf(x.ctx).accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ant-zz-test", by: "member:ann" }); };
   const sealed = await store({ env: { ACCOUNT_SEAL_SECRET: "a-long-seal-secret-for-the-test-only" } });
   member(sealed);
   const ok = await set(sealed);

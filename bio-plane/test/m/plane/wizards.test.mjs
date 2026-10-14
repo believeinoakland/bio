@@ -11,7 +11,6 @@ import { DatabaseSync } from "node:sqlite";
 import { store } from "./fixture.mjs";
 import { MACHINE_DRAFTS, wizardRegistration, irreversibleActs } from "../../../src/plane/wizards.mjs";
 import { caseCheckOf, caseCheckOps } from "../../../src/case-check/index.mjs";
-import { SCREENS } from "../../../src/plane/screens.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { reviewOf, reviewOps } from "../../../src/review/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps, WIZARD_SCRIPTS_TABLES, CIVICSMITH_LIBRARY, SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";

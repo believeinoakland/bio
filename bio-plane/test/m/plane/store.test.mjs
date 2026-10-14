@@ -65,7 +65,7 @@ test("R2: record-core is handed the evidence bucket and the prefix of the object
   assert.equal(recordOf(st.ctx).evidenceStore(), null, "no bucket bound, no evidence store");
 });
 
-test("R2: before the first request every module's start registrations are held, each slot in the modules' order, the stats sight as `plane`, the leg grades as `inquiry` and control-plane's step under its name", async () => {
+test("R2: before the first request every module's start registrations are held, each slot in the modules' order, the stats sight as `plane`, the leg grades as `inquiry` and store-door's step (was control-plane's) under its name", async () => {
   const x = await store();
   /* The stats sight and the leg grades are the one registration of their slot. */
   const second = recordOf(x.ctx).registerStatsSource("probe", () => ({}));
@@ -82,7 +82,7 @@ test("R2: before the first request every module's start registrations are held, 
   for (const t of ["tasks", "queue_state"]) assert.ok(names.includes(t), `table ${t}`);
 });
 
-test("R2, R10 (K1416, K1832; control-plane R42): control-plane's step ranks after every module of layers 1-10 and before every later module of `build/modules.json`, directly before the first layer-11 module, so checks and refusals keep their order; a pure module the order does not rank holds no step", async () => {
+test("R2, R10 (K1416, K1832; control-plane R42): store-door's step (was control-plane's) ranks after every module of layers 1-10 and before every later module of `build/modules.json`, directly before the first layer-11 module, so checks and refusals keep their order; a pure module the order does not rank holds no step", async () => {
   const file = JSON.parse(readFileSync(new URL("../../../../build/modules.json", import.meta.url), "utf8"));
   const mods = (file.modules || file).filter((m) => m.id !== STEP);
   const at = STEP_ORDER.indexOf(STEP);

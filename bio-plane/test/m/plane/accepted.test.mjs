@@ -112,7 +112,10 @@ test("R17: case-import is built after publication, docket and strength and befor
   const at = (m) => { const i = order.indexOf(m); assert.notEqual(i, -1, `${m} declared: ${order.join()}`); return i; };
   assert.ok(at("publication") < at("case-import") && at("docket") < at("case-import"), "after layer 8's earlier modules");
   assert.ok(at("strength") < at("case-import"), "after strength, which it reads");
-  assert.ok(at("case-import") < at("case-authoring"), "before case-authoring");
+  /* T47 (N908): case-authoring holds no table since the split; case-inputs, which its factory creates at its creation
+     (R45), declares the tables case-authoring did, so its declaration marks case-authoring's construction */
+  assert.equal(order.includes("case-authoring"), false, "case-authoring declares no table");
+  assert.ok(at("case-import") < at("case-inputs"), "before case-authoring (its case-inputs)");
   assert.ok(at("case-import") < at("filing-templates"), "before layer 9");
   /* negative control: a table no module declared is free to a probe */
   assert.equal(rc.declarePurge("zz-probe", ["zz_none"]).ok, true);

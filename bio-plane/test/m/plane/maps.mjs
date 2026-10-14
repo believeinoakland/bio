@@ -1,5 +1,5 @@
 /* R5's statement, for the tests: each module's own ops map, built on a host as its module offers it, in the order the
-   plane's route map spreads them (today's order: `src/plane/store.mjs`' `routes`, then instance-setup's, admission's, then store-door's, K2043). */
+   plane's route map spreads them (today's order: `src/plane/store.mjs`' `routes`, then instance-setup's, admission's, control-plane's owner map (its R71), then store-door's, K2043). */
 import { actionsOf, actionsOps } from "../../../src/actions/index.mjs";
 import { actionClocksOf, actionClocksOps } from "../../../src/action-clocks/index.mjs";
 import { actionHoldsOf, actionHoldsOps } from "../../../src/action-holds/index.mjs";
@@ -45,6 +45,8 @@ import { strengthOf, strengthOps } from "../../../src/strength/index.mjs";
 import { reevaluationOf, reevaluationOps } from "../../../src/reevaluation/index.mjs";
 import { reviewOf, reviewOps } from "../../../src/review/index.mjs";
 import { caseAuthoringOf, caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
+import { caseInputsOf, caseInputsOps } from "../../../src/case-inputs/index.mjs";
+import { actionRecordsOf, actionRecordsOps } from "../../../src/action-records/index.mjs";
 import { caseAccountOf, caseAccountOps } from "../../../src/case-account/index.mjs";
 import { ratificationOf, ratificationOps } from "../../../src/ratification/index.mjs";
 import { publicationOf, publicationOps } from "../../../src/publication/index.mjs";
@@ -124,6 +126,8 @@ export const MODULE_MAPS = [
   ["basis-versions", (c, u, b) => basisVersionsOps(basisVersionsOf(c), u, b)],
   ["strength", (c, u, b) => strengthOps(strengthOf(c), u, b)],
   ["reevaluation", (c, u, b) => reevaluationOps(reevaluationOf(c), u, b)],
+  /* R45 (T47): case-inputs' map directly before case-authoring's */
+  ["case-inputs", (c, u, b) => caseInputsOps(caseInputsOf(c), u, b)],
   ["case-authoring", (c, u, b) => caseAuthoringOps(caseAuthoringOf(c), u, b)],
   /* plane R39 (T46; N935; case-account R15): case-account's own map, over the plane's one instance */
   ["case-account", (c, u, b) => caseAccountOps(caseAccountOf(c), u, b)],
@@ -152,6 +156,8 @@ export const MODULE_MAPS = [
   ["ai-runs", (c, u, b, e) => aiRunsOps(aiRunsOf(c, e), u, b)],
   ["answers", (c, u, b) => answersOps(answersOf(c), u, b)],
   ["retrieval", (c, u, b) => retrievalRoutes(retrievalOf(c), u, b)],
+  /* R45 (T47): action-records' map directly before actions' */
+  ["action-records", (c, u, b) => actionRecordsOps(actionRecordsOf(c), u, b)],
   ["actions", (c, u, b) => actionsOps(actionsOf(c), u, b)],
   ["action-holds", (c, u, b) => actionHoldsOps(actionHoldsOf(c), u, b)],   /* plane R39 (T45): directly after actions' */
   ["action-clocks", (c, u, b) => actionClocksOps(actionClocksOf(c), u, b)],
