@@ -98,7 +98,7 @@ One dependency-free CONTAINER reader shared by every OOXML and OpenDocument form
   - Never throws.
 
 **Start-up cost** (T48-6; N1039; K3147: the plane's global scope over its 500 ms budget)
-- **R34** (T48; N1039; K3147) Evaluating the module computes none of its derived tables (the CRC-32 table among them, and any table built by a loop or a spread at import): each is built on its first use and reused after. Every exported name keeps its value and shape, the frozen ones frozen, and every service's answer is unchanged (R1–R33). Test: the module's import is measured as `bundler` R31 measures a global scope; `crc32` answers the known vectors on its first and later calls, and `CONTAINER_FLAVOURS`, `IMAGE_MIME_BY_EXT`, `VBA_AUTORUN_NAMES` and `VBA_SUSPICIOUS_KEYWORDS` equal their T47 values. *(not yet met: T48)*
+- **R34** (T48; N1039; K3147) Evaluating the module computes none of its derived tables (the CRC-32 table among them, and any table built by a loop or a spread at import): each is built on its first use and reused after. Every exported name keeps its value and shape, the frozen ones frozen, and every service's answer is unchanged (R1–R33). Test: the module's import is measured as `bundler` R31 measures a global scope; `crc32` answers the known vectors on its first and later calls, and `CONTAINER_FLAVOURS`, `IMAGE_MIME_BY_EXT`, `VBA_AUTORUN_NAMES` and `VBA_SUSPICIOUS_KEYWORDS` equal their T47 values.
 
 ## Private
 
