@@ -51,3 +51,7 @@ REPORT (T49-20 interface-shell), findings in other modules; each is also in my r
 3. bio-plane/dist/bio-plane.bundled.mjs and its manifest are stale by this change (yours at the layer close).
 4. ADMIN_ACTS names joindoors, securitytools, securitytoolcatalogue and securitytoolevents, which OPS declares as reads; inert in the shell. Left as R50 names them.
 5. This branch loads only after setup-words (word, hasWord) and interface-assets (the mk-* classes) have merged; I tested against local stand-ins of both, not committed.
+
+## J2 · COMPLETE
+
+COMPLETE: T49-20 interface-shell. R65 to R70 applied (record has the detail): the design's classes and a trimmed STYLE, the eight new reference kinds, the design's test band, explanations that close and long text that wraps (the third R68 clause dropped: D28 is Chromium's network log), the More page and refusal.reference, words by key (words.mjs deleted). N1073 lines and rule 6 done. Module tests 147 pass, 0 fail; format, architecture, coverage (68 of 68) and ownership 0 failures. Needs setup-words and interface-assets merged first. Findings in the REPORT.
