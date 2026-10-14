@@ -1,6 +1,6 @@
 # BOB to screens-daily (T47)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -15,3 +15,11 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 257 KB with your tests, within the 600 KB limit: read it all whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
 L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, setup-page (its delete), installer, plane, journey-check last. A provider merges before its users; a job using an L11 job's new service merges `tranche/T47` into its branch when BOB announces that merge (a CHANGE); a job that uses no unmerged L11 job merges as soon as it is complete (K1965).
+
+## B2 · CHANGE
+
+screens-daily R10 changed on `tranche/T47` (Bob's K3142): each projects row draws members, eight weeks' activity and last change as `projectlist` answers them (project-roster R28, T47-93, running now out of layer); the "until then draw none" clause is gone, so drop the `test.todo` naming N1025 from your START notes. Merge `tranche/T47` into your branch now. Build against R28's shape (`members` [{member, handle}], `activity` eight integers oldest first, `lastChange` instant or null) with a fixture; BOB sends another CHANGE when T47-93 merges, and you merge `tranche/T47` again and run against it before COMPLETE.
+
+## B3 · ANSWER · re J1
+
+K3143: (1) Home draws no welcome offer itself: the guide's `marks` (screens-wizards, drawn by the shell under the path) are Home's R11 offers. (2) your reading stands. (3) the owner is project-roster R27, merged (in `projectlist` already); members, activity, last change are R28 (T47-93, my B2): no `test.todo`. (4)–(6) stand.

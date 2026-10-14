@@ -33,6 +33,7 @@ The instance's composition root. It builds every module on one Durable Object's 
 
 - **R47** (K3084; K3060 D10; amends R33) A `signin` account answered by `answers.askAccount` carries its held token (`credentials` R70's `key`) as `secret` in `agent-worker` R6's wire shape, for ask, draft and transcription; R33's "no `secret` for a sign-in" retires; an answer `SIGNIN_TOKEN_REFUSED` calls `credentials.subscriptionTokenRefused`. Test: the secret reaches only the binding's request; control: an API key as before. *(not yet met: T47)*
 - **R48** (N1002; DEC-201; amends R5) The composed page's screens are the nine modules' (`screens-entry` among them), and the route map's tests are re-pinned to the ops of `op-declarations` R57–R59 and R61 (`peopledirectory`, K3137) and `tasks` R19. *(not yet met: T47)*
+- **R49** (T47; K3143; `signin-door` R2, R4, R5) The store's route map spreads `signin-door`'s store-internal map (`signinDoorOps`: `signintokenhold`, `signintokenrefused`, `signindisclosuredue`, `signintracekeep`, `signintraceread`) beside `credentialsOps`; none is served to a caller. *(not yet met: T47)*
 
 ## Private
 
