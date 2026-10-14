@@ -12,7 +12,7 @@
 - **R14** The name part stays first after the codes; the steps are the design's `mk-steps`, the first open step `aria-current="step"`, "Name" open while skipped (done marked for readers by an `sr` span).
 - **R15** `setup`'s lede is drawn only while `bootstrap` answers unclaimed and no one here has claimed or is signed in.
 
-**Best readings (J1, pending BOB's answer; none decides what I build next):** the two new rows' words; no monogram while unnamed (initials of "Your group" would be no one's).
+**Best readings (J1; confirmed by BOB, B2, K3295):** the two new rows held as interim words for UX-DESIGN to key; no monogram while unnamed (initials of "Your group" would be no one's).
 
 **Deferred:** none in this module.
 
