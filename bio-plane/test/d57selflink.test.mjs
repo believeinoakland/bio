@@ -22,7 +22,7 @@
  *   4. the over-strictness arm: a GENUINE two-capture bracket (different bytes
  *      before and after) still reads "changed", naming two different hashes.
  *
- * NEGATIVE CONTROL: (run 2026-09-23, D-57 worker) two arms on bio-plane/src/store.mjs resolveLinks, each ALONE,
+ * NEGATIVE CONTROL: (run 2026-09-23, D-57 worker) two arms on bio-plane/src/store.mjs (now src/capture/index.mjs) resolveLinks, each ALONE,
  * restored by cp from a pristine copy and verified by sha256 (6d932ec1...) AND cmp, 2,858,269 bytes. (a) the
  * self-reference TEST removed (`selfCap` forced null, so the self-link falls through to the one-capture arm) ->
  * 22 pass 2 fail, by name: "the self-link states a SELF-REFERENCE basis" and "and its detail names the
@@ -90,7 +90,7 @@ const signIn = async () => {
   if (!add || !add.invite) throw new Error(`memberadd: ${JSON.stringify(add)}`);
   const en = await post("op=enroll", { invite: add.invite, handle: "m1", password: "m1-passphrase-d57" });
   if (!en || !en.ok) throw new Error(`enroll: ${JSON.stringify(en)}`);
-  const lg = await post("op=login", { role: "member:m1", password: "m1-passphrase-d57" });
+  const lg = await post("op=login", { handle: "m1", password: "m1-passphrase-d57" });
   if (!lg || !lg.token) throw new Error(`login: ${JSON.stringify(lg)}`);
   return { authorization: `Bearer ${lg.token}` };
 };
@@ -165,4 +165,5 @@ t("naming two DIFFERENT hashes",
 
 console.log(`\nd57selflink: ${pass} pass, ${fail} fail`);
 await mf.dispose();
+if (pass === 0) { console.log("no assertion ran: the suite did not reach its body"); process.exit(1); }
 process.exit(fail ? 1 : 0);
