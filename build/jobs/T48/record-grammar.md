@@ -51,3 +51,7 @@ None of these is an input to a bundle that the R63 change did not already stale 
 - No module's code needs a change for R63. Every reader takes the row from `ID_TABLE`: record-core's `OPAQUE_PREFIXES` is unchanged, since `OUTC` is sequential, and no reader keys on a row's `owner`.
 
 Size (session_01P1VBJ85hjxVdZM5G9HKPT5): test runs 4, module lines 2618
+
+## J1 · COMPLETE
+
+T48-1 complete (record 65b7347508). R63: ID_TABLE gains OUTC (case-inputs, sequential), last; WCD's owner is case-inputs; no other row changed; OUTC gets no type/headings/STATES/schema. N994: the stale SUC comments in ids.mjs and document.mjs corrected; also own comment/whitespace flaws in types.mjs, labels.mjs, bundle.mjs (no behaviour change). record-grammar 101/101 (R63's two tests fail against the old ids.mjs). format, architecture, coverage (61/61), ownership 0 failures; run.mjs architecture 0 (coverage's 6 are other L1 modules' T48 ids, rule 5.1). Users' suites (18 modules) vs tranche base: base reds identical (record-core stats-disclosure, agent-worker 4 files). Mine are 3 generated artifacts: case-checker program.mjs (5.5); AGENT-WORKER'S BUNDLE (ids.mjs is its input; fleetbundles red; not in 5.5; node bio-plane/scripts/bundles.mjs); NEWGROUP'S BUNDLE (not in 5.5; cd newgroup && npm run build). Nothing deferred.
