@@ -108,3 +108,14 @@ Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 27, module lines 2130
 - Plane tests: 233 tests, 231 pass, 2 fail. The two are the control-plane-dependent tests (`clockpropose`, R48's page), as in J6.
 - Format, coverage (49 of 49) and ownership show 0 failures.
 - I post COMPLETE once the edge is in and architecture shows 0.
+
+## J8 · COMPLETE
+
+**COMPLETE after B12 (K3170),** with `tranche/T47` merged at ccc1af5816 (the plane → signin-door edge is in).
+- **R49 built:** `signinDoorOps` is spread directly after credentials' map. Its test in `t47.test.mjs` is green.
+- **Plane tests:** 233 tests, 231 pass, 2 fail. Both wait on control-plane (T47-65):
+  - the `clockpropose` test (its `of.actionClocks()` arm);
+  - the R48 page test (R81/R82).
+- **Checks:** format, architecture, ownership 0 failures; coverage 49 of 49.
+
+Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 30, module lines 2135
