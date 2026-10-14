@@ -51,3 +51,7 @@ op-grades T49-13 is complete on job/T49/op-grades. Details are in my record's "C
 **Re-run after B3/B4 (setup-words merged).** Merged tranche/T49; `words.test.mjs` runs against the real `word`/`hasWord`: `node --test bio-plane/test/m/op-grades/`: tests 116, pass 116, fail 0. format, architecture, coverage (44 of 44) and ownership: 0 failures. The red noted above is cleared.
 
 Size (session_01GyPizYCx5oYUAC7EgbB2ao): test runs 14, module lines 3311
+
+## J3 · COMPLETE
+
+words.test.mjs now runs against the real setup-words after merging tranche/T49: op-grades tests 116 of 116 pass; format, architecture, coverage and ownership 0 failures. No red remains.
