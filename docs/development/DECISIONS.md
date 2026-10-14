@@ -4066,3 +4066,45 @@ response: **The design session, 2026-10-14.** (1) **Keyed:** 56 new keys (admiss
 decided: 2026-10-14 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-258), `screens/words-reads.src.mjs`, `screens/words-reads.json`; `words.json`.
 owed: (BOB, K3366) each L11 module reads exactly its `reads` through `word(key, vars)`, holds none of its English, and its `renamed` keys take the design's; its requirements name keys, not sentences; `unkeyed` stays in source. (design) `refusal.AGENT_WORKER_UNBOUND`'s words (they speak of signing in; the module reads `ai.refused.notdeployed` meanwhile); a group's own draft note distinct from `draft.machine.label`; the other 147 modules (DEC-260).
+
+### DEC-259 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_01BTQuPg86LEUTdpXJuPbtM2; the development process also runs on his primary account since K1428) (DEC-257's owed: line; Bob, 14 October: "Move all the strings.")
+for: bob-session
+question: The drawn sentences on the 58 screens off T49's path that no keyed word matched.
+why it is Bob's: design detail beneath K3268 and K3365; decided by the design session, reported to Bob as done.
+provisional: 688 drawn sentences on 58 screens matched no keyed word.
+alternative: none: the guard's baseline may only fall.
+recommendation: as below.
+reversal cost: low: words and drawings only.
+response: **The design session, 2026-10-14.** Every screen draws only keyed words: 688 to 0 on the 58 screens, 0 on all 69; `screens/words-drawn-baseline.json` is all zeros, so any new unkeyed sentence fails the build. 281 new keys (`screen.<id>.<slug>`, templates where a sentence carries sample data) and 77 reworded (mostly modules' old rows, DEC-252, where the drawing governs), in `screens/words-drawn.src.py`. Drawings: about 100 sample records marked `.mk-data`; about 25 buttons take their act's label; about 15 sentences take a design key's wording (the shorter key governing, its detail dropped); three pronouns and one internal code corrected.
+decided: 2026-10-14 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `words-drawn.json`, `build_words.mjs` (4m), `check_words_drawn.mjs`, `words-drawn-baseline.json`, `mock-screens.js`, `mock-shell.js`; `words.json`.
+owed: (BOB, N1116, T50) the screen modules read these keys; rewordings that change placeholders (`archive.summary`, `calculation.counts`, `calculation.range`, `help-records.must.*` with `{cite}`, `held.waiting`, `request.howsend.*`) supply the new ones. (design) the ceremony screen's sentence on saving a signing key as a file, which contradicts "never leaves" this device: settle which is true.
+
+### DEC-260 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_01BTQuPg86LEUTdpXJuPbtM2; the development process also runs on his primary account since K1428) (Bob, 14 October, to the design session: "Move all the strings. Otherwise we'll end up running far more jobs in the future."; BOB's K3366, B219: N1116 for T50)
+for: bob-session
+question: The member-facing English still written inline in the 148 modules outside T49's L11, and the keys each of them reads.
+why it is Bob's: Bob directed the move; its detail is the design session's (P17), reported to Bob as done.
+provisional: an inventory of `tranche/T49` found about 7,500 strings that a member reads or may read (3,945 member-facing, 3,591 uncertain) in 148 modules; 37 modules' tests compare copied sentences word for word.
+alternative: key only what is certainly member-facing. Rejected: an uncertain string left in source can still reach a member; each was keyed unless a trace showed no member reads it.
+recommendation: as below.
+reversal cost: low: data files only.
+response: **The design session, 2026-10-14.** (1) **Keyed:** 5,806 new keys in four batch files (`screens/words-mod-1.src.py` to `-4`): refusals by code (`refusal.<CODE>`, one wording per code across modules, the design's existing wording governing where a code had one), and module sentences `<module>.<slug>` or `<module>.<field>.<slug>`; American spelling; internal codes and design-document references removed from member text; template variables as `{placeholders}`. Existing keys reused wherever one already says it. (2) **Lists:** every module (168 with DEC-258's twenty) is in `screens/words-reads.json` with its `reads`, its `unkeyed` (4,323 strings in these 148, each with its reason: the assistant's skill doctrine, which is the model's instructions; refusal details the shell never draws; the project files' own headings and session-log lines, which code finds by their exact words; wire grammar, diagnostics, provenance and API notes) and any `renamed`. The generator, `words-reads.src.mjs`, merges the batches' `words-reads-mod-<n>.json` and fails on any listed key that is not a word. `words.json` holds 11,807.
+decided: 2026-10-14 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-mod-1.src.py` to `words-mod-4.src.py` and their `.json`, `screens/words-reads-mod-1.json` to `-4.json`, `screens/words-reads.src.mjs`, `screens/words-reads.json`, `screens/build_words.mjs` (4n); `words.json`.
+owed: (BOB, N1116, T50) each of the 148 modules reads exactly its `reads` through `setup-words`' `word(key, vars)` and holds none of its English; its verbatim-copy tests become key tests; its requirements name keys, not sentences; `unkeyed` stays in source. (design) a second reading of the `unkeyed` lists' 'uncertain' entries as the modules move, any a member turns out to read keyed at once.
+
+### DEC-261 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_01BTQuPg86LEUTdpXJuPbtM2; the development process also runs on his primary account since K1428) (BOB's B221, SITE #1 J1, K3372: civicsmith.org's generator writes no inline English, so its pages wait on these keys)
+for: bob-session
+question: The keys civicsmith.org's pages need that `words.json` lacked, and `site.groups.rule`'s "below" with no rule drawn.
+why it is Bob's: design detail beneath DEC-206, DEC-223, DEC-247 and DEC-255; decided by the design session, reported to Bob as done.
+provisional: the site's drawing showed these words, but they were short labels the guard does not count, so no key held them.
+alternative: none.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-14.** BOB's proposed keys and words adopted, as the drawing shows them: `screen.site.nav.home` "What Civicsmith is", `.nav.start` "Start a group", `.nav.groups` "Groups at work" (also the groups page's heading), `.onecase.head` "One group's work", `.questions.head` "Questions", `.need.head` "What you need", `.costs.head` "What it costs", `.create` "Create your group", `.groups.visit` "Visit", `.uses.ask.example` "Did the city collect the rent its lease requires?" (fills `uses.ask`'s `{example}`), `.questions.unset` "The address to write to is published here before the site opens." (R6's marked placeholder), `.onecase.title` "{case}, Edition {edition}", `.onecase.meta` "{group}, {place} · signed by {signer} · {date}", `.groups.cases.many`, `.groups.case.many`, `.notfound` "There is no such page on civicsmith.org." `site.groups.rule` now reads "only under a published listing rule" (no "below"): the rule's own text is keyed and drawn once Bob approves it (DEC-255). `screen.site.steps.name`'s `{places}` stays as designed: only released profiles fill it.
+decided: 2026-10-14 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-261; `site.groups.rule`), `screens/mock-screens.js` (`SCR.site`); `words.json` (11,823).
+owed: (BOB) SITE #1 reads these keys. (design) the listing rule's keys and drawing on Bob's approval; B220's placeholder questions.
