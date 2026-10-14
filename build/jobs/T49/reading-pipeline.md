@@ -38,3 +38,7 @@
 - `node checks/run.mjs`: format 0, architecture 0, channels 0; coverage 19 failures, none this module's (above).
 
 Size (session_01GqCLDeeJthzed1vQ19Mi4Q): test runs 9, module lines 1724
+
+## J1 · COMPLETE
+
+T49-6 reading-pipeline complete. R32 applied: a capture read as text through no format entry (HTML, plain text) now answers doc-para text_units from its decoded text (HTML: visible text only); R22 proven over the module's whole outward text against jurisdictions' full place list (N1065). Module tests 120/120, users' tests 382/382, format/architecture/coverage/ownership 0 failures. For you: remove 'not yet met: T49' from R32; the plane bundle is stale by this change; an extraction-side test of capture_text/Find is not mine (record). Three detail decisions (title dropped, only HTML stripped, pre whitespace collapsed) are in the record. Live counts of captures over the 8 MiB text bound need biosmoke8.
