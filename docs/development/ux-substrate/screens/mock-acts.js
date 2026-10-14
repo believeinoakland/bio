@@ -141,6 +141,8 @@ const ACT_HELP = {
   projectleave: 'Tells the owners you are leaving the project, with a note if you like. An owner can leave once another owner remains.',
   owed_projectfork: 'Starts a new project of your own from this one, with you as its only owner and the visibility you choose.',
   projectownerrescue: 'Makes an administrator an owner of a project whose owners are all gone, with a reason on its record. Never for a project a member kept for themselves alone.',
+  owed_watchitem: 'Puts what you picked on your watch list: Find shows it under Watched by you, and a change to it reaches your queue. Only you see what you watch.',
+  owed_secondlook: 'Asks the group to look at what you picked again, with a note saying why. It shows under Flagged for a second look until a member clears the flag.',
   inquiryground: 'Records, for each passage this question cites, whether your answer falls if that passage turns out wrong, or still holds because of other passages you cite. Civicsmith works the strength out from these answers. Once the strength has been shown, a change needs a reason, and the strength before and after is kept beside it.',
   versionaccept: 'Accepts this reading as a sound account of what supports the question. A project can then stand on it. Recorded with your name and the date.',
   versionhide: 'Hides this reading from the list. Nothing is deleted: it stays on the record, and anyone can show the hidden readings again.',

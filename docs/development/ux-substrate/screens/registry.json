@@ -1382,7 +1382,7 @@
    "id": "finder",
    "name": "Find",
    "frame": "working",
-   "purpose": "Search what the group holds; hold a set together; see where nobody looked.",
+   "purpose": "Search what the group holds, or browse it by kind and state with no words; hold a set together; see where nobody looked.",
    "acts": [
     {
      "op": "search",
@@ -1433,6 +1433,16 @@
      "modules": [
       "calculations"
      ]
+    },
+    {
+     "op": "owed:watchitem DEC-238",
+     "label": "Watch",
+     "status": "owed"
+    },
+    {
+     "op": "owed:secondlook DEC-238",
+     "label": "Flag for a second look",
+     "status": "owed"
     }
    ],
    "journeys": [

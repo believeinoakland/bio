@@ -66,13 +66,14 @@
   "shell": 13,
   "settings": 1,
   "entity": 33,
+  "find": 26,
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "act": 681,
+  "act": 685,
   "column": 33,
-  "total": 2238,
-  "protected": 700
+  "total": 2268,
+  "protected": 705
  },
  "words": [
   {
@@ -7074,6 +7075,188 @@
    "note": "DEC-237"
   },
   {
+   "key": "find.query.placeholder",
+   "en": "Words to find, or leave it empty to browse",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.browse.says",
+   "en": "With no words, Find lists everything your group holds, newest first.",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238: F1"
+  },
+  {
+   "key": "find.browse.new.means",
+   "en": "New since you last looked counts from your last visit to Home; looking here does not move it.",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238: lookedsince moves the mark (membership R143), so Find reads it without moving it (owed)"
+  },
+  {
+   "key": "find.kind.label",
+   "en": "Show",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.kind.all",
+   "en": "Everything",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.kind.document",
+   "en": "Documents",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.kind.question",
+   "en": "Questions",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.kind.action",
+   "en": "Actions",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.kind.entity",
+   "en": "People and organizations",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.kind.plan",
+   "en": "Plans",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.state.label",
+   "en": "Only",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.state.any",
+   "en": "Anything",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.state.new",
+   "en": "New since you last looked",
+   "protected": true,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.state.secondlook",
+   "en": "Flagged for a second look",
+   "protected": true,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.state.watched",
+   "en": "Watched by you",
+   "protected": true,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.row.kind.document",
+   "en": "Document",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238: F2, each result names its kind"
+  },
+  {
+   "key": "find.row.kind.passage",
+   "en": "Passage",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.row.kind.person",
+   "en": "Person",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.row.kind.organization",
+   "en": "Organization",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.row.kind.question",
+   "en": "Question",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.row.kind.action",
+   "en": "Action",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.row.kind.plan",
+   "en": "Plan",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.row.new",
+   "en": "new since you last looked",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.row.watched",
+   "en": "watched by you",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.row.secondlook",
+   "en": "flagged for a second look by {who}, {date}: \"{note}\"",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
+   "key": "find.picked",
+   "en": "{n} picked",
+   "protected": false,
+   "source": "DEC-238",
+   "note": "DEC-238"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -8829,6 +9012,18 @@
   {
    "key": "act.calculationcreate.label.finder",
    "en": "Count",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_watchitem.label.finder",
+   "en": "Watch",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_secondlook.label.finder",
+   "en": "Flag for a second look",
    "protected": true,
    "source": "registry.json"
   },
@@ -11007,6 +11202,18 @@
   {
    "key": "act.projectownerrescue.does",
    "en": "Makes an administrator an owner of a project whose owners are all gone, with a reason on its record. Never for a project a member kept for themselves alone.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_watchitem.does",
+   "en": "Puts what you picked on your watch list: Find shows it under Watched by you, and a change to it reaches your queue. Only you see what you watch.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_secondlook.does",
+   "en": "Asks the group to look at what you picked again, with a note saying why. It shows under Flagged for a second look until a member clears the flag.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

@@ -70,8 +70,8 @@ screen('elsewhere', 'Where else to go', 'working', 'What a member sees when what
 screen('queue', 'Your queue', 'working', 'To do, Noticed and Status, grouped by case (DEC-110, DEC-131).',
   [('taskresolve','Act on an item'),('taskforward','Forward to a member'),('owed:updatelater K3158','Not now'),('proposedispose','Dismiss with a reason'),('queuesnooze','Snooze to a date'),('queuemute','Mute a kind'),
    ('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('reminderanswer','Answer a reminder'),('promote','Open a question from a hint'),('projectkeyset','Add an API key for a project'),('exploreapprove','Let the assistant explore today'),('actionmove','Drop an unsent request, with a reason')], [19,23])
-screen('finder', 'Find', 'working', 'Search what the group holds; hold a set together; see where nobody looked.',
-  [('search','Search'),('select','Hold these together'),('findin','Find in these'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('calculationcreate','Count')], [6,7])
+screen('finder', 'Find', 'working', 'Search what the group holds, or browse it by kind and state with no words; hold a set together; see where nobody looked.',
+  [('search','Search'),('select','Hold these together'),('findin','Find in these'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('calculationcreate','Count'),('owed:watchitem DEC-238','Watch'),('owed:secondlook DEC-238','Flag for a second look')], [6,7])
 screen('capture', 'Add', 'working', 'Capture a document from an address or a file, photograph a handout, or record what you saw.',
   [('acquire','Capture from an address'),('captureupload','Capture a file or photo'),('testify','Record what you saw or heard'),('capturerequest','Ask for a capture later'),('monitorset','Watch this address'),('monitor','Check it now'),('writinghelp','Help me write this')], [6,7,9,15])
 screen('held', 'Held captures', 'working', 'Captures not yet vouched for, per member and project (DEC-97).',
