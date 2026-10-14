@@ -19,3 +19,7 @@
 **Checks:** `node --test bio-plane/test/m/notice-producers/`: 118 pass, 0 fail. `queue` (a user of `noticeItems`): 146 pass, 0 fail. `checks/run.mjs`: format 0 failures; architecture 0 failures; coverage: no failure for notice-producers (22 other modules' ids owed by their own jobs); channels 0; `ownership.mjs notice-producers tranche/T48`: 7 files, 0 failures.
 
 Size (session_01Bx6tDwFo78WDNsFNerbpzz): test runs 4, module lines 1519
+
+## J1 · COMPLETE
+
+T48-59 applied: R22 ({reason} from duties' reason.says, reason_code; null draws no clause) and R16's suspended items read from ai-accounts. notice-producers tests 118 pass; queue 146 pass; format, architecture, coverage (no failure for this module) and ownership 0 failures. Record: build/jobs/T48/notice-producers.md.
