@@ -1,35 +1,31 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #176 (`session_011tQStFmjnPTj3QBKSpxdv1`, secondary account, depth 1), 2026-10-14 ~19:20 UTC, at 32% context, with T48 closed and no step half done. Read `build/rulings-active.md` whole first; K3317–K3324 are this session's rulings (K3319 unused).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #177 (`session_01D5nWnUwh7sTvRjQeaMvvXb`, secondary account, depth 1), 2026-10-14 ~20:00 UTC, near 30% context, T49 open with L2 running and no step half done. Read `build/rulings-active.md` whole first; K3326–K3334 are this session's rulings.
 
 ## Where things stand
 
-- **T48 closed** (K3322): PR #38 merged, `main` @ 4073f14425 contains `archive/T48.md`. PR #36 (design stream, DEC-229–DEC-240) merged into `main` first (K3318). Bob's meter at the close: 68% (K3323); the 80% pause (K2341) stands.
-- **Bob's direction K3320 governs T49:** a release Bob can install, sign in to, whose screens are usable, in which he creates a project, connects an assistant and works a real investigation, proven by journey-check's extended walk and then BOB's live walk of biosmoke8 before Bob hears "ready". He was firm: no skipping, no excuses.
-- **The discovery walk** of T48's code (`build/plan/draft-T49-walk.md`): 10 BLOCKER, 19 MAJOR, 3 MINOR groups (D1–D32). Scope decided in K3324 (journey first; off-journey work needing its own job waits for T50 under the meter).
-- **T49's plan is drafted, NOT reviewed:** `build/plan/draft-T49-final.md` (a worker's, 32 jobs: L2 4, L3 1, L4 1, L5 1, L6 2, L8 1, L9 1, L10 1, L11 20; new modules `op-capabilities` and `site`; journey-check T49-32 merges last as the acceptance test). Its sources: `draft-T49-plan.md` (settled K3292), `draft-T49-fold-dec235-240.md` and `draft-T49-additions.md` (settled, K3321), `draft-T49-walk.md`, next.md through N1098.
-- **K3321's accepted reds** (18 modules) each name the T49 entry that clears them; legacy-ui's N1057 stays.
-- **Channel:** UX-DESIGN read through U235 (design #14 handed over to #15); B206 ACK, B207 NOTICE of K3320 posted. Lanes unchanged (investigation H43, actions H31).
-- **Timers:** none of mine (WATCH #176 deleted at T48's close; no backstop armed).
+- **T49 is open** (K3327) on `tranche/T49`, cut from `main` @ f498560a37 (T48's close plus PR #37, design DEC-238 S23 and DEC-241–DEC-246, merged at the boundary, K3326). Plan `build/plan/current.md`: 32 jobs, its foot "Settled by BOB #177" and the fold notes govern. Opening act done (K3328: `op-capabilities`, `site` in `modules.json`; `site` uses `interface-assets`, K3334). `next.md` is T50's.
+- **L2 running** (K3330), all on Sonnet: MEMBERSHIP #39 (`session_01195GX87EMHUXKVysBHVQkZ`) MERGED (K3336, after the handoff commit; CHANGE B3/B2 sent to project-roster and credentials to re-run against it); PROJECT-ROSTER #8 (`session_018CGBk9NjLEcazf7iqf4TiN`) COMPLETE (J3; K3332 applied), waiting for membership to merge first; CREDENTIALS #16 (`session_01C6HsrkoFjNZGt4BJNLj9Gm`) WORKING; PROMOTION #47 (`session_01HL5YBcopVZSndbgMuYa2TJ`) waiting (J1) for BOB's CHANGE once the other three merged, then stamps. BOB's cursors: membership J1, project-roster J3, promotion J1, credentials J2 (answered B3, K3337: handle optional at the service, NO_TOKEN_FP dropped). Screen jobs' STARTs carry membership's `admin`-in-`by` list (K3336).
+- **Folded:** L2 (K3329, with N945's credentials R77), L3–L10 (K3331), L11 (a) (K3333: op-capabilities.md, op-declarations, op-grades, admission, control-plane, rule 7's wording edits). **Not yet folded:** L11 (b), `build/plan/draft-T49-fold-L11-b.md` (78 KB, a worker's; its §0 findings and §15 settled in K3334, its body NOT yet reviewed whole).
+- **Channel:** UX-DESIGN read through U244; B208 ACK, B209 QUESTION (the opening's asks: dock withheld keys, D30 words, invitation queue kind, D8's member reading, Accept affirmation, passed date, owed tags, carried keys), B210 QUESTION (site sections before any group is listed; place sentence with `{places}`). The Writer line on `mail/BOB` is still BOB #176's predecessor's (xwriter refuses `--account secondary` while `channels.md` lists BOB on primary, K3056): known, changed only at a close. Lanes unchanged (investigation H43, actions H31).
+- **Timers:** backstop `trig_01UREtrAKBd3LdzQJ7eEzg7Z` (20:20Z, into BOB #177), WATCH #177 `trig_01UGkRTAsLM5v1AQsCRjqdTi` (into ROOT #6, 21:01Z). Delete both at takeover and arm your own.
 
 ## What comes next, in order
 
-1. **Take over** (§5.1): archive BOB #176, write its BOB-final row under T48 (`build/metrics/T48.csv`); no timers of mine to delete.
-2. **Review `draft-T49-final.md` whole** (P20) and settle its 16 doubts (BOB's, P17), recording a ruling. Two points the worker flagged as possibly Bob's: **D22** (every capture by address is sent to `web.archive.org/save` without asking, signatures R22): read canon first; if canon is silent on asking, it is Bob's (values, legal exposure) with options (always / ask per capture / a group setting) and a recommendation. **D8's rest** (whether a member may author a reading, not only the assistant) is UX: ask UX-DESIGN in the opening's channel act. Also told to Bob and not yet answered: BOB's reading that K2892 covers a member's own API key (K3324 (3)); if he says subscription only, change T49-8.
-3. **Open T49** (§5.2) from `main` @ 4073f14425: `current.md` from the reviewed draft, Status line, WATCH, legacy census (legacy-ui stays: S2–S4 undrawn), the opening act's `modules.json` changes (op-capabilities, site, MODULE_ORDER per the draft), the channel act to UX-DESIGN (the draft's list plus D8's reading authorship and D25's queue kind), tell Bob in one line, start L2 (L1 has no job).
-4. **At T49's close**: cut the release, install biosmoke8 with the test-instance mark as a secret (K3324 (4); each deploy Bob's approval in session, K1715), remove biosmoke7's resources (K3260, K3262), and walk the whole journey live as administrator and member, including a real assistant run (Bob's own subscription for the test instance, K3060; agent-runner's images, N780). Bob is told "ready" only after that walk passes (K3320, K3296).
+1. **Take over** (§5.1): Status line with `mail bob --tranche T49`; `mail check`; channel; arm backstop and WATCH; delete mine; archive BOB #177 and write its BOB-final row under T49 (`build/metrics/T49.csv`, create it with the header of T48's).
+2. **L2 merges** (§5.5): project-roster and credentials once each records COMPLETE after its CHANGE, then CHANGE promotion to stamp and merge it last. Close L2 (§5.6: regenerate artifacts per the manifest, `checks/run.mjs`, archive the four sessions with their rows).
+3. **L3–L10**: each START carries its "START must say" lines from `draft-T49-fold-L3-L10.md`, plus the common text of `build/plan/starts-T49/membership.txt`'s lower half; models per plan rule 3.
+4. **Before L11's START:** review `draft-T49-fold-L11-b.md` whole (P20) and fold it with K3334's settlements; also fold the op-capabilities split per `build/extraction/op-declarations-split.md` (reviewed in `draft-T49-fold-L11-a.md` §0). Name in rule 5 the two new reds K3334 lists.
+5. **At T49's close**: as `current.md` "BOB's acts (no job)" says: release cut, images (N780), biosmoke8 with the test mark as a secret (D10), biosmoke7 removed, journey-check R12 live, BOB's own live walk as administrator and member, then "ready" to Bob; the site to `workers.dev`.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
 - T49's close: PR `tranche/T49` → `main` with the GitHub merge tool, method merge (§5.7 (3), K2273); no refusal recorded.
-- A design-stream PR, on its MERGE, at T49's close (§13.1 item 5; K1177); none open now.
+- A design-stream PR on its MERGE, at T49's close (§13.1 item 5; K1177); none open now.
 - Deploys and Cloudflare removals (biosmoke8, biosmoke7, the site's Worker): Bob's approval in session each time (K1715; never on the standing list).
 
 ## Open with Bob
 
-- Whether runs on a member's own API key are fine (BOB's reading of K2892, K3324 (3)): told, not yet answered.
-- **The stewards' contact address** (N923; civicsmith.org and any public release wait on it).
-- **Translations** (N670's R88, K3190).
-- **civicsmith.org's DNS and email** (K3060 D14), after T49's `site` is proven.
-- **The records-request template's reviewer** (N858).
-- (UX-DESIGN's S23 to Bob: who sees a watch and a flag; DEC-238's watches wait for T50.)
+- His weekly meter at T49's opening (asked; does not hold the tranche).
+- Whether runs on a member's own API key are fine (K3324 (3), BOB's reading of K2892; T49-8 builds it): told, not yet answered.
+- The stewards' contact address (N923); translations (N670's R88, K3190); civicsmith.org's DNS and email (K3060 D14, after the site is proven); the records-request template's reviewer (N858).

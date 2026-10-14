@@ -77,6 +77,28 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
 
 - **R26** (T48; N1045; K3150; amends R10; `op-declarations` R56, R70; `sources` R1, R9) `sourceof` and `sourcerung` answer who a source is, so a member's reach alone never admits an `ai` credential to them: an `ai` caller, a member-scoped credential included, is refused `AI_BEYOND_TASK_SCOPE` (C-29.6) there unless its declared task scope names the op (R13), before any store call. A member's session is admitted as before. Test: a member-scoped `ai` credential asking `sourceof` is refused; controls: the member's own session is admitted; the same credential is admitted to another read its member reaches.
 
+#### T49 (T49-18)
+
+- **R27** (T49; D24 **M**; K1881, a protective limit, BOB's; amends R21, R22) **A signed-in session's own window.** A request to a public op that does not mutate (`classes: null` and `mutating: false`: `bootstrap`, `groupidentity`, `instancegroup` and the other public reads) is counted in that session's own window, never in its source's (R21), when it presents a live session: R20's `token`, resolved by R6 through `credentials.session`, the founder's or a member's.
+  - The bound is `SESSION_WINDOW`, exported frozen as `{limit: 3000, windowMs: 600000}`: at most 3,000 such requests per session in any 10 minutes, estimated as R21 estimates (two buckets, `prev × (1 − elapsed/W) + cur`).
+  - At `≥ limit` the request is refused 429 `DOOR_RATE_LIMITED` (R21's row, C-38.9). The refusal carries `retryAfter` in whole seconds and `stated`, which is `SESSION_WINDOW_STATED`, the sentence composed from the same constants ("at most 3000 requests from one signed-in session in any 10 minutes"). Nothing of the op is read or written.
+  - Every other request to a public op is counted by source, as R21 states:
+    - one presenting no credential, or an unknown, expired or ended one;
+    - an `ai` credential or a binding token;
+    - every request to a mutating public op (`claim`, `recover`, `enroll`, R17's doors, the review and template doors, `knock`), whatever it presents.
+  - A session that cannot be resolved (R6's store silence) is counted by source, as before.
+  - The session window's counts hold a digest of the session token (never the token), the bucket and the count, nothing else. They are dropped once both buckets have passed. A count that cannot be read or written admits the request (it fails open), named in the log by correlation id only.
+  - The source is still made and stamped wherever R21's stamps need it.
+  - A refusal is counted in R22's tally as kind `rate`, with `country` `null` (a credential naming a member, DEC-166 (2)).
+  - The limit is confirmed at this job's START against M-T49-4, so that at least 400 page loads in 10 minutes fit within it. If M-T49-4 finds more than 7 public requests per page load, BOB re-sets `limit` (K1881) before the job's work. *(not yet met: T49)*
+  - Tests:
+    - 400 signed-in page loads in 10 minutes, under one session and from one source, are admitted (each load makes the public reads M-T49-4 measures, at least `bootstrap` and `groupidentity`), and that source's window is not counted by them.
+    - The session's request past `limit` is refused 429 with `SESSION_WINDOW_STATED`.
+  - Controls:
+    - 301 anonymous requests from one source are refused at the 301st;
+    - a request presenting an unknown 64-hex token is counted by source;
+    - a signed-in session's `enroll` is counted by source.
+
 ### Satisfies
 
 - `docs/architecture/BIO_Membership_Architecture_v2.md` §4.6 (the root of trust: export), §4.9 (governance acts are a named administrator's own session), §4.10 (the session ops), §5 (capabilities enforced at the op layer).

@@ -128,8 +128,8 @@ test("R115 R111 R57 members' tables are declared exempt from purge; participatio
   const [d] = w.declared;
   assert.equal(d.module, "membership");
   assert.deepEqual(new Set(d.opts.exempt), new Set(["members", "member_expertise", "admin_votes", "hosting_access",
-    "group_description", "court_notice", "handle_history", "handle_check_window"]),
-    "R111's tables and the handle history (R57, R16) (with R123's check window) beside R115's; join_doors is R131's");
+    "group_description", "court_notice", "handle_history", "handle_check_window", "founder_handle"]),
+    "R111's tables and the handle history (R57, R16) (with R123's check window) beside R115's, and R144's founder handle; join_doors is R131's");
   /* R131 (T46): join_doors is declared apart, with its own classes, exempt from purge as R111 states; R143 (T48):
      home_looks, the members' Home marks, likewise, exempt as the members are */
   assert.deepEqual(w.tablesDeclared.map((x) => [x.module, x.entries.map((e) => [e.name, e.purge])]),

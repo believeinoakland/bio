@@ -1,6 +1,6 @@
 # BOB to project-roster (T49)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -20,3 +20,7 @@ Merge order in L2: membership, project-roster, credentials, promotion last (the 
 ## B2 · ANSWER · re J1
 
 Your reading of the string positions stands. R29 now also reaches R3's, R4's and R5's answers (have, awaiting, deciders, owners, by, and the owners a refusal names): a handle field names the founder by her held handle or null, never admin; founder: true only on {member, handle} objects. R23's by is a member id other modules read: it keeps admin. R29's text says so (K3332, on tranche/T49): merge the tranche branch, apply it, and record COMPLETE again. Membership's merge follows as a CHANGE.
+
+## B3 · CHANGE
+
+membership (T49-1) is merged into tranche/T49 (K3336): R144's founderHandle()/founderHandleSet are real. Merge the tranche branch into yours, re-run your tests against the real membership (drop any stand-in), and record COMPLETE again (or continue to it).
