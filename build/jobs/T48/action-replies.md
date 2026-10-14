@@ -24,4 +24,4 @@
 - `format`: 168 modules, 167 requirements files; 0 failures. `architecture action-replies`: 10 product files, 28 relative imports; 0 failures. `coverage action-replies`: 11 of 11 live ids named; 0 failures. `ownership action-replies tranche/T48`: 0 failures.
 - `checks/run.mjs` over the product: the only failures are other modules' coverage (inherited) — none for action-replies, none architecture.
 
-Size (session_01QhpiJEWup9HwKXyDqimoCa): test runs 9, module lines 570
+Size (session_01QhpiJEWup9HwKXyDqimoCa): test runs 9, module lines 705
