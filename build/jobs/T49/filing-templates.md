@@ -1,6 +1,6 @@
 # filing-templates (T49)
 
-**Status** · session_01DLu9hNhnNY3UX3zTHQrEQY · depth 2 · WORKING · handled B0
+**Status** · session_01DLu9hNhnNY3UX3zTHQrEQY · depth 2 · WAITING ON BOB (J1) · handled B0
 
 ## Record (T49-11, test only, claude-haiku-5-5)
 
