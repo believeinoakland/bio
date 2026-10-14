@@ -89,6 +89,12 @@ async function drained(tok, request, judged = (r) => ["captured", "refused", "ex
 const heldOf = async (tok, sha256) =>
   ((await call("heldcaptures&limit=1000", tok)).body.held || []).find((r) => r.capture && r.capture.sha256 === sha256);
 
+/* credentials R66, R71 (2): connecting Claude asks for the password again; the member's session re-authenticates
+   (`op=reauth`, the session the control plane stamps) just before it, its window being 5 minutes */
+const reauth = async (tok, id) => {
+  const r = (await call("reauth", tok, { password: `${id}-passphrase-1` })).body;
+  assert.equal(r && r.ok, true, JSON.stringify(r));
+};
 const MEMBER_UA = "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0";
 let setup = null;
 async function world() {
@@ -96,7 +102,8 @@ async function world() {
   const enrol = async (id, role, capabilities) => {
     const add = (await call("memberadd", "adm-cr", { memberId: id, cover: `c-${id}`, role, capabilities })).body;
     await call("enroll", undefined, { invite: add.invite, handle: id, password: `${id}-passphrase-1` });
-    return (await call("login", undefined, { role: `member:${id}`, password: `${id}-passphrase-1` })).body.token;
+    /* credentials R67 (N1052): a member signs in by the handle they enrolled under */
+    return (await call("login", undefined, { handle: id, password: `${id}-passphrase-1` })).body.token;
   };
   const RUTH = await enrol("ruth", "admin", ["contribute", "publish"]);
   await enrol("sam", "admin", ["contribute"]);
@@ -124,6 +131,12 @@ async function world() {
   await create("INQ-2026-9001-ua", { "User-Agent": MEMBER_UA });
   /* N585 (K1614; ai-runs R52): a run carries the account of the member whose act opened it, so the opener connects
      their own account first, through the op the control plane routes (credentials R22), the member named by the stamp */
+  /* instance-setup R54, ai-accounts R23: the disclosure of what connecting means is shown and recorded first, at the
+     version the plane answers (`op=disclosureof`), by her own session */
+  const version = (await call("disclosureof", RUTH, { member: "member:ruth" })).body.version;
+  const shown = (await call("disclosureshown", RUTH, { member: "member:ruth", version })).body;
+  assert.deepEqual([shown.ok, shown.shown], [true, true], JSON.stringify(shown));
+  await reauth(RUTH, "ruth");
   const acct = (await call("accountreferenceset", RUTH, { member: "ruth", kind: "apikey", secret: "sk-cr-plane" })).body;
   assert.equal(acct.ok, true, JSON.stringify(acct));
   const run = (await call("airunopen", RUTH, { run: "RUN-CR-1", contextType: "inquiry", contextId: "INQ-2026-9000-cr",

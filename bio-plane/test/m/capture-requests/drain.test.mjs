@@ -541,6 +541,20 @@ test("R11 R15 op=capturerequestdrain drives the same drain", async () => {
   assert.deepEqual([d.configured, d.actor, d.captured.length], [true, "suite", 1]);
 });
 
+test("R20 R12 op=capturerequestdrain reads no clock from its body: a body's `now` two days ahead releases nothing early, and the tick is stamped by this module's clock (as R6's door reads no `at`)", async () => {
+  const w = world().scene();
+  const id = w.ask().request;
+  const ahead = T0 + 2 * CAPTURE_REQUEST_TTL_MS;
+  const d = await captureRequestsOps(w.cr, new URL("http://x/capturerequestdrain"), { now: ahead }).capturerequestdrain();
+  assert.deepEqual([d.expired.length, d.captured.length, w.req(id).state], [0, 1, "captured"]);
+  assert.notEqual(Date.parse(d.at), ahead);
+  /* Control: the in-process caller's stated instant is still the drain's clock (the scheduler's replay, a test) */
+  const w2 = world().scene();
+  const id2 = w2.ask().request;
+  const d2 = await w2.cr.drain({ now: ahead });
+  assert.deepEqual([d2.expired.map((e) => e.request), w2.req(id2).state], [[id2], "expired"]);
+});
+
 test("R39 a request for an address the record holds a capture of is fired with that capture's digest (heldSha, capture R61); the source's 304 records the held capture, already held, no new bundle; bytes identical to it are that capture", async () => {
   const w = world().scene();
   w.run("R-2");
