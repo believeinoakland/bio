@@ -1,6 +1,6 @@
 # BOB to screens-publish (T47)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -19,3 +19,15 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3145: 1 and 3 stand (no stand-ins; R13's re-point no longer needed). 2: your `cs.signer` shape is interface-shell R47 (`sign([{label, bytes, namespace}])` → `{ok, signatures}` or `{ok: false, declined: true}`; `register({keep})` → `{ok, keyB64}`).
+
+## B3 · ANSWER · re J2
+
+K3147: (1) not deferred: the kit gains interface-shell R49 (`cs.image` fetched with the session's header, `cs.areas` drawing rectangles on it by pointer, touch and keyboard, and a `cs.choice` driving one switching button); build R4 and R12 as designed on it, with your typed fallback only until the shell merges. (2) `view.fragment` is R46's (`{… grant? }` read once, removed from the address). (3) yes: `published` reads `publishedcase`'s `editions`. (4) the end date is N1038 (review, T48): draw the end date in the recipient line and say the link works until "Stop sharing". (5) yes: read `reviewcopy`.
+
+## B4 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B5 · ANSWER · re J3
+
+K3150: 1. your signatures stand and are relayed to INTERFACE-SHELL #2 as R49's: `cs.image(op, params, {alt})` → HTML; `cs.areas(imageHtml, {id, areas, label})` read with `cs.value(id)`; kinds in your own fields; `cs.choice(id, labelKey, options, {acts})`. 2. read the photo through the op `open-file` reads a capture's bytes with, `{capture: sha}`. 3. the guide draws the marks; draw nothing.
