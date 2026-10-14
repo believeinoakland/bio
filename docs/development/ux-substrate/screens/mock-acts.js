@@ -113,6 +113,7 @@ const ACT_HELP = {
   deepercheck: 'Runs every check on this file: read whole, the built-in scanner again, and your group\'s outside tools. A clean result opens the original to everyone for 24 hours.',
   releasescanhold: 'Gives your reason to release a file a scanner flagged. A second member\'s reason releases it; the machine never can.',
   cite: 'Cites this passage in a question, as support or as cutting against it. A citation always points at the original document.',
+  owed_founderhandleset: 'Sets the handle you sign in with from now on, once: the name the record shows on your work. Until you choose, you sign in as admin.',
   connectionchoose: 'Picks which mention of them on this page the record reads as the one that connects them: where they are named on the point that matters. Until a member chooses, Civicsmith takes the strongest-graded mention. Your choice is dated and attributed; a later choice replaces it.',
   retire: 'Stops using this copy in new work, with a reason. Questions that cite it are told.',
   attest: 'Has an independent timestamp service certify that this exact copy existed by now: a timestamp over its fingerprint. It adds no signature of yours and says nothing about whether the copy is true.',

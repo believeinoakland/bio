@@ -35,7 +35,7 @@ w('refusal.SCANNER_ABSENT', 'Your group\'s Civicsmith has no file scanner instal
 w('refusal.RENDERER_ABSENT', 'Your group\'s Civicsmith has no safe view installed, so this file can\'t be shown safely here. The original stays held; whoever installed your group\'s Civicsmith can add a safe view.', False, 'file-safety R42')
 
 # --- Handles (DEC-197): fixed at joining; handlechange kept as an op that refuses every change (K2903)
-w('refusal.HANDLE_FIXED', 'Handles don\'t change in Civicsmith: yours names your work for good, and no one else can ever take it.' + ' Nothing was changed.', False, 'DEC-197; membership R124 refuses every change')
+w('refusal.HANDLE_FIXED', 'Your handle is already chosen, and a handle never changes in Civicsmith: it names your work for good, and no one else can ever take it.' + ' Nothing was changed.', False, 'DEC-197; membership R124 refuses every change')
 
 # --- The status report's assistant (plan-work R8's arm, statusreportassist)
 w('refusal.ASSISTANT_DRAFT_UNAVAILABLE', 'The assistant can\'t draft this report for you right now. The plan\'s items are listed below: write the report from them, as you would without the assistant.', False, 'answers carrying R8\'s items')

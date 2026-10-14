@@ -22,7 +22,7 @@
   "label": 52,
   "project": 7,
   "grouprule": 1,
-  "refusal": 157,
+  "refusal": 160,
   "signing": 16,
   "case": 11,
   "docket": 2,
@@ -48,21 +48,24 @@
   "members": 6,
   "ref": 26,
   "session": 6,
-  "signin": 1,
   "updates": 32,
   "home": 2,
   "installer": 18,
   "wizard": 315,
   "elsewhere": 27,
   "places": 3,
+  "screen": 136,
+  "signin": 1,
+  "forgot": 1,
+  "founder": 6,
+  "member": 2,
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "screen": 133,
-  "act": 619,
+  "act": 621,
   "column": 33,
-  "total": 1940,
-  "protected": 658
+  "total": 1957,
+  "protected": 659
  },
  "words": [
   {
@@ -3779,7 +3782,7 @@
   },
   {
    "key": "refusal.HANDLE_FIXED",
-   "en": "Handles don't change in Civicsmith: yours names your work for good, and no one else can ever take it. Nothing was changed.",
+   "en": "Your handle is already chosen, and a handle never changes in Civicsmith: it names your work for good, and no one else can ever take it. Nothing was changed.",
    "protected": false,
    "source": "DEC-198",
    "note": "DEC-197; membership R124 refuses every change"
@@ -4431,12 +4434,6 @@
    "protected": false,
    "source": "DEC-200",
    "note": "D3 (K3061)"
-  },
-  {
-   "key": "signin.founderhint",
-   "en": "Did you set this group up? Your handle is admin.",
-   "protected": false,
-   "source": "DEC-200"
   },
   {
    "key": "signing.ceremony.who",
@@ -5410,6 +5407,118 @@
    "protected": false,
    "source": "DEC-229",
    "note": "DEC-229"
+  },
+  {
+   "key": "screen.setup.handle",
+   "en": "Choose your handle",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230: the claim step's field label"
+  },
+  {
+   "key": "screen.setup.handle.help",
+   "en": "The record shows your handle on your work and on every case you sign, so choose it with care: it can't be changed, and no one else can ever take it. It needn't be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit.",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230"
+  },
+  {
+   "key": "screen.setup.claimed",
+   "en": "Claimed. {group} is yours, and you're signed in as {handle} on this device.",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230"
+  },
+  {
+   "key": "signin.handle.help",
+   "en": "The name the group knows you by: chosen when you joined, or when you set the group up.",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230: the front door's handle field"
+  },
+  {
+   "key": "forgot.handle.help",
+   "en": "The handle you sign in with: the name the group knows you by.",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230: the recovery page's handle field"
+  },
+  {
+   "key": "refusal.NO_HANDLE",
+   "en": "Choose a handle first: it's the name you'll sign in with. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230; membership R16, the claim"
+  },
+  {
+   "key": "refusal.BAD_HANDLE",
+   "en": "A handle uses only lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230; membership R12"
+  },
+  {
+   "key": "refusal.HANDLE_TAKEN",
+   "en": "That handle is already taken here: choose another. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230; membership R16, R124"
+  },
+  {
+   "key": "founder.handle.title",
+   "en": "Choose your handle",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230: the step a founder who claimed before T49 sees after signing in (screens-entry R14)"
+  },
+  {
+   "key": "founder.handle.says",
+   "en": "Until now you've signed in as admin, a name every Civicsmith group's founder shared. Choose the handle you'll sign in with from now on: the record shows it on your work and on every case you sign. You choose it once; it can't be changed.",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230"
+  },
+  {
+   "key": "founder.handle.choose",
+   "en": "Choose this handle",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230"
+  },
+  {
+   "key": "founder.handle.later",
+   "en": "Later",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230"
+  },
+  {
+   "key": "founder.handle.later.help",
+   "en": "Opens Home. You still sign in as admin until you choose, and this step comes back at your next sign-in.",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230"
+  },
+  {
+   "key": "founder.handle.done",
+   "en": "From now on you sign in as {handle}; admin no longer works.",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230"
+  },
+  {
+   "key": "member.founder.unnamed",
+   "en": "The group's founder",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230: shown wherever the founder's name would be, until a handle is chosen; never admin"
+  },
+  {
+   "key": "member.founder.unnamed.help",
+   "en": "The person who set up this group's Civicsmith, who hasn't chosen a handle yet. Their work will show it once they do.",
+   "protected": false,
+   "source": "DEC-230",
+   "note": "DEC-230"
   },
   {
    "key": "rail.home.name",
@@ -6393,6 +6502,12 @@
   {
    "key": "act.claim.label.setup",
    "en": "Claim with the one-time password",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_founderhandleset.label.setup",
+   "en": "Choose this handle",
    "protected": true,
    "source": "registry.json"
   },
@@ -9015,6 +9130,12 @@
   {
    "key": "act.cite.does",
    "en": "Cites this passage in a question, as support or as cutting against it. A citation always points at the original document.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_founderhandleset.does",
+   "en": "Sets the handle you sign in with from now on, once: the name the record shows on your work. Until you choose, you sign in as admin.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

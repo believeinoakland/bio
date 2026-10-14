@@ -1,4 +1,4 @@
-# The words T48 owes the design stream (DEC-226, BOB's B179: the update screens; DEC-227, BOB's B185: the 'elsewhere' pointer; DEC-229, the document page, DEC-228 (1)).
+# The words T48 owes the design stream (DEC-226, BOB's B179: the update screens; DEC-227, BOB's B185: the 'elsewhere' pointer; DEC-229, the document page, DEC-228 (1); DEC-230, the founder's handle, B196, B197).
 # Each entry: (key, English, protected, note). Placeholders in {braces} are filled by the screen. No place, law or venue
 # appears here: a pointer's name, what it does and how to reach it come from the group's place profile (jurisdictions).
 # Run: python3 docs/development/ux-substrate/screens/words-t48.src.py, then node build_words.mjs (it reads words-t48.json).
@@ -142,6 +142,24 @@ w('document.names.chosen.record', 'chosen by the record (strongest grade)', Fals
 w('document.names.chosen.member', 'chosen by {who} on {date}: "{why}"', False, 'DEC-229')
 w('document.names.explore.help', 'Starts the connection graph from this document: everyone it names, what it links to, and what cites it.', False, 'DEC-229')
 w('document.names.none', 'This copy names no one the record follows yet. A name becomes a link when a member says it is a person the record follows.', False, 'DEC-229')
+
+# DEC-230: the founder's handle (K3265, K3277, N1072, T49; screens-entry R12 to R14): no word tells anyone a handle
+w('screen.setup.handle', 'Choose your handle', False, 'DEC-230: the claim step\'s field label')
+w('screen.setup.handle.help', 'The record shows your handle on your work and on every case you sign, so choose it with care: it can\'t be changed, and no one else can ever take it. It needn\'t be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit.', False, 'DEC-230')
+w('screen.setup.claimed', 'Claimed. {group} is yours, and you\'re signed in as {handle} on this device.', False, 'DEC-230')
+w('signin.handle.help', 'The name the group knows you by: chosen when you joined, or when you set the group up.', False, 'DEC-230: the front door\'s handle field')
+w('forgot.handle.help', 'The handle you sign in with: the name the group knows you by.', False, 'DEC-230: the recovery page\'s handle field')
+w('refusal.NO_HANDLE', 'Choose a handle first: it\'s the name you\'ll sign in with. Nothing was changed.', False, 'DEC-230; membership R16, the claim')
+w('refusal.BAD_HANDLE', 'A handle uses only lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Nothing was changed.', False, 'DEC-230; membership R12')
+w('refusal.HANDLE_TAKEN', 'That handle is already taken here: choose another. Nothing was changed.', False, 'DEC-230; membership R16, R124')
+w('founder.handle.title', 'Choose your handle', False, 'DEC-230: the step a founder who claimed before T49 sees after signing in (screens-entry R14)')
+w('founder.handle.says', 'Until now you\'ve signed in as admin, a name every Civicsmith group\'s founder shared. Choose the handle you\'ll sign in with from now on: the record shows it on your work and on every case you sign. You choose it once; it can\'t be changed.', False, 'DEC-230')
+w('founder.handle.choose', 'Choose this handle', False, 'DEC-230')
+w('founder.handle.later', 'Later', False, 'DEC-230')
+w('founder.handle.later.help', 'Opens Home. You still sign in as admin until you choose, and this step comes back at your next sign-in.', False, 'DEC-230')
+w('founder.handle.done', 'From now on you sign in as {handle}; admin no longer works.', False, 'DEC-230')
+w('member.founder.unnamed', 'The group\'s founder', False, 'DEC-230: shown wherever the founder\'s name would be, until a handle is chosen; never admin')
+w('member.founder.unnamed.help', 'The person who set up this group\'s Civicsmith, who hasn\'t chosen a handle yet. Their work will show it once they do.', False, 'DEC-230')
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 keys = [x['key'] for x in W]

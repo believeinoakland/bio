@@ -136,7 +136,7 @@
    "id": "setup",
    "name": "Become your group's first administrator",
    "frame": "setup",
-   "purpose": "The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.",
+   "purpose": "The founder claims it, choosing their own handle, names the group, reviews offices and seats, offers the assistant and records the hosting account; a founder who claimed before handles were chosen picks one once, at the next sign-in.",
    "acts": [
     {
      "op": "claim",
@@ -145,6 +145,11 @@
      "modules": [
       "credentials"
      ]
+    },
+    {
+     "op": "owed:founderhandleset K3265",
+     "label": "Choose this handle",
+     "status": "owed"
     },
     {
      "op": "groupnameset",

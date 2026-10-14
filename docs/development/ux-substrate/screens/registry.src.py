@@ -22,8 +22,8 @@ screen('reset', 'Choose a new password', 'public', 'The administrator\'s one-tim
   [('passwordreset','Set my new password')], [3])
 screen('forgot', 'Forgot your password', 'public', 'Getting back in without email: any member with one of their recovery codes, or through an administrator\'s one-time reset link (Bob\'s D4, B3, K3060; credentials R47; DEC-201, DEC-202).',
   [('recover','Set a new password with a recovery code')], [3])
-screen('setup', 'Become your group\'s first administrator', 'setup', 'The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
-  [('claim','Claim with the one-time password'),('groupnameset','Name the group'),('groupdomainset','Verify the web address'),('profilesset','Choose places and languages'),
+screen('setup', 'Become your group\'s first administrator', 'setup', 'The founder claims it, choosing their own handle, names the group, reviews offices and seats, offers the assistant and records the hosting account; a founder who claimed before handles were chosen picks one once, at the next sign-in.',
+  [('claim','Claim with the one-time password'),('owed:founderhandleset K3265','Choose this handle'),('groupnameset','Name the group'),('groupdomainset','Verify the web address'),('profilesset','Choose places and languages'),
    ('officesseed','Review offices and seats'),('entitycreate','Add an office yourself'),('placewanted','Name a place not yet listed'),('aikeepaway','Keep the group\'s material away from AI, with a reason'),('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('ailimitset','Set each member\'s daily use of the group\'s key'),('courtnoticeset','Choose whether members are told what a court can reach'),
    ('hostingaccessset','Record who holds the hosting account'),('securitytooladd','Add a security tool (optional)'),('memberadd','Invite a member or a second administrator'),('recoverycodesissue','Show my recovery codes')], [1,28])
 screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpose, and who sees them (DEC-132).',

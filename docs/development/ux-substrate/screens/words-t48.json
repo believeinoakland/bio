@@ -778,5 +778,101 @@
   "en": "This copy names no one the record follows yet. A name becomes a link when a member says it is a person the record follows.",
   "protected": false,
   "note": "DEC-229"
+ },
+ {
+  "key": "screen.setup.handle",
+  "en": "Choose your handle",
+  "protected": false,
+  "note": "DEC-230: the claim step's field label"
+ },
+ {
+  "key": "screen.setup.handle.help",
+  "en": "The record shows your handle on your work and on every case you sign, so choose it with care: it can't be changed, and no one else can ever take it. It needn't be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit.",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "screen.setup.claimed",
+  "en": "Claimed. {group} is yours, and you're signed in as {handle} on this device.",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "signin.handle.help",
+  "en": "The name the group knows you by: chosen when you joined, or when you set the group up.",
+  "protected": false,
+  "note": "DEC-230: the front door's handle field"
+ },
+ {
+  "key": "forgot.handle.help",
+  "en": "The handle you sign in with: the name the group knows you by.",
+  "protected": false,
+  "note": "DEC-230: the recovery page's handle field"
+ },
+ {
+  "key": "refusal.NO_HANDLE",
+  "en": "Choose a handle first: it's the name you'll sign in with. Nothing was changed.",
+  "protected": false,
+  "note": "DEC-230; membership R16, the claim"
+ },
+ {
+  "key": "refusal.BAD_HANDLE",
+  "en": "A handle uses only lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Nothing was changed.",
+  "protected": false,
+  "note": "DEC-230; membership R12"
+ },
+ {
+  "key": "refusal.HANDLE_TAKEN",
+  "en": "That handle is already taken here: choose another. Nothing was changed.",
+  "protected": false,
+  "note": "DEC-230; membership R16, R124"
+ },
+ {
+  "key": "founder.handle.title",
+  "en": "Choose your handle",
+  "protected": false,
+  "note": "DEC-230: the step a founder who claimed before T49 sees after signing in (screens-entry R14)"
+ },
+ {
+  "key": "founder.handle.says",
+  "en": "Until now you've signed in as admin, a name every Civicsmith group's founder shared. Choose the handle you'll sign in with from now on: the record shows it on your work and on every case you sign. You choose it once; it can't be changed.",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "founder.handle.choose",
+  "en": "Choose this handle",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "founder.handle.later",
+  "en": "Later",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "founder.handle.later.help",
+  "en": "Opens Home. You still sign in as admin until you choose, and this step comes back at your next sign-in.",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "founder.handle.done",
+  "en": "From now on you sign in as {handle}; admin no longer works.",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "member.founder.unnamed",
+  "en": "The group's founder",
+  "protected": false,
+  "note": "DEC-230: shown wherever the founder's name would be, until a handle is chosen; never admin"
+ },
+ {
+  "key": "member.founder.unnamed.help",
+  "en": "The person who set up this group's Civicsmith, who hasn't chosen a handle yet. Their work will show it once they do.",
+  "protected": false,
+  "note": "DEC-230"
  }
 ]
