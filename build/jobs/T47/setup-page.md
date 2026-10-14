@@ -16,3 +16,10 @@
 - `modules.json`: `interface-shell`, `instance-setup`, `control-plane` still list `setup-page` in `uses`; BOB empties my `paths` and `tests` (K3070).
 
 **Read whole, flaws found (P8, P20).** All fall away with the delete, so none is fixed separately: `partOf` reads `bootstrap`'s nested `parts` array, which T47-75 replaces with flat `part_*` keys (R34, retired with its work); in the tests (digest), many arms check the page's source text rather than behaviour, the second R28 arm in `nonce.test.mjs` checks a policy string it builds itself, and `fixture.mjs` cites an "R48" the module never had.
+
+## J1 · REPORT
+
+Read and prepared; waiting for your CHANGE to delete. Two things another module must do before my delete lands:
+1. control-plane (T47-65, merges before my delete): `bio-plane/test/m/control-plane/t46-e2e.test.mjs:13,14` imports `pageOver` from `test/m/setup-page/fixture.mjs` and `SESSION_STORE_KEY` from `src/setup-page/index.mjs`. T47-65's entry does not name this re-point; unless control-plane drops both imports, deleting my tests and code breaks its test. (Also instance-setup's `test/m/instance-setup/page.test.mjs:9` and interface-shell's `src/interface-shell/index.mjs:9,76` and `test/m/interface-shell/session.test.mjs:7` import my exports; their entries, R83 and R32, appear to cover it.)
+2. Generated artifacts my delete makes stale (I never write them, mechanics §14): `bio-plane/dist/bio-plane.bundled.mjs`, `bio-plane.bundle.json` (plane) and `newgroup/src/release.mjs`, `newgroup/dist/newgroup.bundled.mjs` (installer); both owners merge after me.
+Also `modules.json`: interface-shell, instance-setup and control-plane still list `setup-page` in `uses`. Details in my record.
