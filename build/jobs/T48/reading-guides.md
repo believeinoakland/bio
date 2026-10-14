@@ -36,3 +36,7 @@
 - `node checks/run.mjs` over the product: architecture 0 failures (3286 files); format and channels 0 failures; coverage 37 failures, all other modules' (none reading-guides').
 
 Size (session_018odTxsr93zd9rhZFcRLGLi): test runs 5, module lines 1160
+
+## J1 · REPORT
+
+Found outside my module (DEC-221, American English in every member word): record-grammar's PROPOSAL_STATES and labels.mjs still say "labelled as machine work" in member-facing proposal labels, as do sentences in action-records, actions, action-clocks, case-checker, skilldoctrine.mjs and setup-words' copies; the requirement texts (record-grammar R42, R49, R50, R54, R60, R61; reading-guides R2, R6, R12) also spell it "labelled". Mine now reads "labeled" (P8). Also: bio-plane/dist and release bundles carry reading-guides' source and are stale until the layer-close regeneration.
