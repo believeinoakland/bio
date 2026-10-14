@@ -105,7 +105,7 @@ const JOIN = new Set(['of', 'and', 'the', 'a', 'at', 'in', 'on', 'to', 'de', 'la
 const sample = s => { if (/^"[^"]+"$/.test(s)) return true;   // wholly a quotation: words people wrote
   const ws = s.match(/[\p{L}\p{N}][\p{L}\p{N}'’.$%-]*/gu) || [];
   return !ws.some(x => x === 'by') && !/^(For|From|With|To)$/.test(ws[0]) && ws.every(x => /^[\p{N}$]/u.test(x) || /^\p{Lu}/u.test(x) || JOIN.has(x.toLowerCase())); };
-const nwords = s => (s.match(/[A-Za-z][\w'’-]*/g) || []).length;
+const nwords = s => (s.match(/\p{L}[\p{L}\p{N}'’-]*/gu) || []).length;
 
 // 3. Count each screen's drawn sentences that are not keyed
 const unmatched = {};

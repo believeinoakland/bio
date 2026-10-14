@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 2801,
+  "screen": 2825,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "tab": 2,
   "act": 732,
   "column": 33,
-  "total": 5528,
+  "total": 5552,
   "protected": 794
  },
  "words": [
@@ -12336,10 +12336,10 @@
   },
   {
    "key": "screen.home.line.languages",
-   "en": "Languages: {languages}",
+   "en": "languages: {languages}",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-daily's own rows"
+   "note": "adopted from screens-daily's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.home.line.aiused",
@@ -12350,10 +12350,10 @@
   },
   {
    "key": "screen.home.line.ailimit",
-   "en": "This month on the group's key: {used} of {limit}, estimated",
+   "en": "This month on the group's key: {used} of the {limit} limit",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-daily's own rows"
+   "note": "adopted from screens-daily's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.home.projects",
@@ -29360,6 +29360,151 @@
   {
    "key": "screen.find-in.proposed.labeled",
    "en": "Each is labeled machine work, graded no higher than its method earns, and becomes a fact only by the same acts, by a member.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.strip.hint.one",
+   "en": "1 hint to look at",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.strip.hint.other",
+   "en": "{n} hints to look at",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.welcome.what",
+   "en": "The guided start you began when you joined shows you around in about ten minutes more: how the group judges evidence, your settings, and a first step. Stop it at any point and pick it up later here.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.welcome.continue",
+   "en": "Continue the guided welcome",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.todo.vouch",
+   "en": "Vouch for {count} photos you captured on {place}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.todo.newer",
+   "en": "Decide on a newer version of {document} you cited",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.todo.approve",
+   "en": "Approve {filing}, drafted by {name}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.todo.approve.button",
+   "en": "Read and approve it",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "filingapprove's button"
+  },
+  {
+   "key": "screen.home.todo.check",
+   "en": "{name} asked you to check a calculation: {calculation}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.group.noreply",
+   "en": "{office}'s reply to “{action}” was due {date}; no reply recorded",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.group.tension",
+   "en": "Two documents give different dates for {what}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.group.unjudged",
+   "en": "nobody has judged it",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.group.requestdue",
+   "en": "{office}'s reply to your records request is due {date}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.area.meetbar",
+   "en": "{count} questions meet the bar",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.area.edition",
+   "en": "Edition {n} of {case} published {date}; a draft is shared for review until {until}, no comment to answer",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.area.camein",
+   "en": "{count} things came in since you last looked: {latest}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.area.ourmove",
+   "en": "Our move: {what}, due {date}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.area.theirmove",
+   "en": "Their move: {reply}, none recorded by {date}; {reply2}, due {due}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.area.nothing",
+   "en": "nothing needs you here",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.area.expertise",
+   "en": "Expertise on hand: {people}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.area.invitation",
+   "en": "{name}'s invitation link is out, unused",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.since.captured",
+   "en": "{name} captured {document}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.since.events",
+   "en": "{name} added {count} events to {timeline}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.home.since.trail",
+   "en": "{name} started the money trail “{trail}”",
    "protected": false,
    "source": "DEC-257"
   },

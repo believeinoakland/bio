@@ -150,6 +150,8 @@ REWRITE7 = {
   'screen.capture.file.choosehelp': 'on a phone, the camera opens',
   'screen.home.strip.group': 'Needs the group',
   'screen.find-in.scope.project': 'Everything in {project} ({count} documents)',
+  'screen.home.line.languages': 'languages: {languages}',
+  'screen.home.line.ailimit': "This month on the group's key: {used} of the {limit} limit",
   'screen.project.questions.empty': 'Start with one question the record could answer, such as “{example}”. Documents, notes and plans gather under it.',
   'screen.project.account.project': "Paid for by the project's own API key",
   'screen.question.opened': 'Opened by {name}, {date} · {project}',
@@ -198,6 +200,31 @@ w7('screen.find-in.proposed.head', 'Proposed by the assistant')
 w7('screen.find-in.proposed.notyet', 'Not in the first release.')
 w7('screen.find-in.proposed.later', 'Switched on once it has been measured: at your request, and for a question you name, the assistant will also propose people, events and money figures that search can\'t match, such as "{example}" in {document}, a person your group doesn\'t follow yet.')
 w7('screen.find-in.proposed.labeled', 'Each is labeled machine work, graded no higher than its method earns, and becomes a fact only by the same acts, by a member.')
+# home
+w7('screen.home.strip.hint.one', '1 hint to look at')
+w7('screen.home.strip.hint.other', '{n} hints to look at')
+w7('screen.home.welcome.what', 'The guided start you began when you joined shows you around in about ten minutes more: how the group judges evidence, your settings, and a first step. Stop it at any point and pick it up later here.')
+w7('screen.home.welcome.continue', 'Continue the guided welcome')
+w7('screen.home.todo.vouch', 'Vouch for {count} photos you captured on {place}')
+w7('screen.home.todo.newer', 'Decide on a newer version of {document} you cited')
+w7('screen.home.todo.approve', 'Approve {filing}, drafted by {name}')
+w7('screen.home.todo.approve.button', 'Read and approve it', False, "filingapprove's button")
+w7('screen.home.todo.check', '{name} asked you to check a calculation: {calculation}')
+w7('screen.home.group.noreply', "{office}'s reply to “{action}” was due {date}; no reply recorded")
+w7('screen.home.group.tension', 'Two documents give different dates for {what}')
+w7('screen.home.group.unjudged', 'nobody has judged it')
+w7('screen.home.group.requestdue', "{office}'s reply to your records request is due {date}")
+w7('screen.home.area.meetbar', '{count} questions meet the bar')
+w7('screen.home.area.edition', 'Edition {n} of {case} published {date}; a draft is shared for review until {until}, no comment to answer')
+w7('screen.home.area.camein', '{count} things came in since you last looked: {latest}')
+w7('screen.home.area.ourmove', 'Our move: {what}, due {date}')
+w7('screen.home.area.theirmove', 'Their move: {reply}, none recorded by {date}; {reply2}, due {due}')
+w7('screen.home.area.nothing', 'nothing needs you here')
+w7('screen.home.area.expertise', 'Expertise on hand: {people}')
+w7('screen.home.area.invitation', "{name}'s invitation link is out, unused")
+w7('screen.home.since.captured', '{name} captured {document}')
+w7('screen.home.since.events', '{name} added {count} events to {timeline}')
+w7('screen.home.since.trail', '{name} started the money trail “{trail}”')
 # project
 w7('screen.project.account.exploring', 'exploring: {frequency}.', False, "after the uses the project's account pays for")
 w7('screen.project.account.open', 'Open AI for this project')
