@@ -761,7 +761,9 @@ const anyVersionEdgeTo = (f, to) =>
  * this answer is about the target and naming its dependents would be §7.9's
  * reverse walk by a new door), and (N345) contradiction_inquiry (whether an
  * inquiry's document carries `contradiction`: `conclude` or `contradictionresolve`), and (N365)
- * contradiction_sides_seen (whether the viewer sees both sides of the candidate it names: `contradictionresolve`). */
+ * contradiction_sides_seen (whether the viewer sees both sides of the candidate it names: `contradictionresolve`), and
+ * (R55) legs_in {live, severed} (how many questions the viewer may see hold a leg on an information target, by the leg's
+ * status: a question's own leg is severed and reinstated by `sever` and `reinstate`, citation R15). */
 export const ACTS = [
   /* S-11 step 5. collected -> verified is the one legal edge; the named-member
      and entry-requirement guards are act-time refusals the store words itself. */
@@ -1441,9 +1443,14 @@ export const ACTS = [
      `op=affordances` answer down for every object. An absent count offers nothing
      that needs one, which is the SAFE direction: an act is not published where the
      fact behind it is not known, and DEC-8's rule is about never publishing one the op refuses. */
+  /* R55 (T47; N977; citation R15): AND A QUESTION'S OWN LEG. `op=sever` now also acts on an inquiry's legs, with the
+     question as its citing object and no joined project asked, so on an information target it is offered where a question
+     the caller may see holds a live leg on it (`legs_in.live`, R14), as reinstate is where one holds a severed leg. Counts
+     only, through `countOf`: an absent fact offers nothing (R10). */
   { id: "sever", label: "Sever a citation", weight: "refuse",
     types: ["information", "inquiry", "project"],
     applies: (f, ty) => ((ty === "information" || ty === "inquiry") && countOf(f.cited_by_case?.confirmed) > 0)
+                     || (ty === "information" && countOf(f.legs_in?.live) > 0)
                      || (ty === "project" && countOf(f.cites_out?.confirmed) > 0 && f.project_participant !== false) },
   /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
      refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
@@ -1466,7 +1473,8 @@ export const ACTS = [
      is exported and two suites call it with hand-built facts. */
   { id: "reinstate", label: "Reinstate a severed citation", weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f, ty) => ((ty === "information" || ty === "inquiry") && countOf(f.cited_by_case?.severed) > 0
+    applies: (f, ty) => ((ty === "information" || ty === "inquiry")
+                         && (countOf(f.cited_by_case?.severed) > 0 || (ty === "information" && countOf(f.legs_in?.severed) > 0))
                          && !(ty === "information" && f.current_state === "retired"))
                      || (ty === "project" && countOf(f.cites_out?.severed_reinstatable) > 0
                          && f.project_participant !== false) },

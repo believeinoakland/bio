@@ -69,9 +69,9 @@ Terms. An **op spec**, a **class**, the **session sets** and a **capability** ar
 
 #### T47's L11 fold (K3100)
 
-- **R23** (K3043; `credentials` R63) An `ai` credential whose row carries a `run` is admitted to a write only when the write names that run; a write naming another run is refused `AI_BEYOND_TASK_SCOPE`. Test with a control. *(not yet met: T47)*
-- **R24** (K3084; `credentials` R65, R71 (1)) A locked session is admitted only to `unlock`, `reauth` and `signout`; any other op answers `credentials.sessionLockedRefusal`, relayed as given. Test with a control. *(not yet met: T47)*
-- **R25** (K3084; `credentials` R66, R71 (2); `op-declarations` R58) An act `REAUTH_ACTS` names, with its argument, is refused by `credentials.reauthDue({token})`'s answer unless null. Test: inside and outside the window; control: an act not named. *(not yet met: T47)*
+- **R23** (K3043; `credentials` R63) An `ai` credential whose row carries a `run` is admitted to a write only when the write names that run; a write naming another run is refused `AI_BEYOND_TASK_SCOPE`. Test with a control.
+- **R24** (K3084; `credentials` R65, R71 (1)) A locked session is admitted only to `unlock`, `reauth` and `signout`; any other op answers `credentials.sessionLockedRefusal`, relayed as given. Test with a control.
+- **R25** (K3084; `credentials` R66, R71 (2); `op-declarations` R58) An act `REAUTH_ACTS` names, with its argument, is refused by `credentials.reauthDue({token})`'s answer unless null. Test: inside and outside the window; control: an act not named.
 
 ### Satisfies
 
