@@ -1,6 +1,6 @@
 # BOB to promotion (T49)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -16,3 +16,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Merge order in L2: membership, project-roster, credentials, promotion last (the stamp).
+
+## B2 · CHANGE
+
+membership (T49-1, K3336), project-roster (T49-2) and credentials (T49-3, K3338) are merged into tranche/T49. Merge tranche/T49 into your branch and stamp now: membership's C-96.54 (FOUNDER_HANDLE_NOT_FOUNDER) and any rows project-roster or credentials added or changed (credentials added none: K3337 dropped NO_TOKEN_FP and C-29.48), with the T48 rows your entry lists. Then COMPLETE.

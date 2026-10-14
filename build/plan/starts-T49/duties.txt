@@ -1,0 +1,12 @@
+Depth 2. Your entry: `build/plan/current.md` (T49), layer 5, duties: **T49-7 · duties**.
+Your requirements: `build/requirements/duties.md` (read whole); no requirement changes in T49 (test only).
+BOB's notes for this job:
+duties (T49-7): (N1097, K3321 (B)) `t48-reasons.test.mjs` R33 reads `duty.reason.trigger_undated` by key from the file it names, never a literal. Test only: no requirement changes.
+Inherited red: duties R33 (rule 5 (7) (B)), cleared by this job. You are alone in L5.
+Reading set (mechanics §17, K3271): measured 819 KB with all your tests, 656 KB without them (the used public parts are an upper bound), over the 600 KB limit. Read your requirements, entries, layer contract and own code whole; for the used modules' services your entries touch, if they exceed what you can read, give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Read your own code whole, and the tests that name a requirement your entries change; run your other tests without reading them (plan rule 2, K3271, mechanics §6 step 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Plan rule 6 applies to you: N1075 (read member-facing sentences by key where `words.json` keys them), N1068 ("labeled"), the `admin` grep (N1072), N1073 (your listed hand-lists), and D29 (no `ok: true` carrying a refusal treated as success). As a Haiku test-only job (rule 6), do only N1068 and the `admin` grep.
+Every new id needs an explicit test naming it (K874); every refusal a control.
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).

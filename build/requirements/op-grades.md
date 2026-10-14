@@ -207,6 +207,13 @@ Terms. A **rung** is one of `RUNG_LADDER`. A **ground** is one of `RUNG_ABSENCE_
 **The design walk folded** (T48; WALK-084 #2; K3250, K3254)
 - **R42** (T48; K3250, K3254 (4); walk C9, row 21; `interface-shell` R64) `MARKS` is a frozen map from op to weight name. It covers each op that a registered screen lists as an act and that has no rung in `RUNGS` (a read, or an op in `RUNG_ABSENT` under a ground other than `undetermined`). Its values are the design kit's `WEIGHT` (`mock-kit.js` at `ASSETS_COMMIT`), with an absent op taken as Reasoned, the kit's default; each entry names its source. It grades nothing: `RUNGS`, `RUNG_ABSENT` and `phoneOf` are unchanged. Test: it is total over the registry's rungless acts; `login` is reversible and `promote` reasoned. Control: no op in `RUNGS` is in `MARKS`.
 
+**T49's grades** (T49; R32's pattern; each op tested by name with a negative control, K874; `affordances` R12's totality holding over them)
+- **R43** (T49; N1072, N1091; R3, R5; `op-declarations` R71, R72; `membership` R144, R129; `project-roster` R30)
+  - `founderhandleset` (`membership` R144): `RUNG_ABSENT`, ground `caller-owned`, as `handlechange` (R29, R34) and `setpassword` (R27). It is the founder's own handle and asks no reason. No published act takes it back: a second set is refused `HANDLE_FIXED`, and so is every `handlechange` (`membership` R129). So by R3 it is neither `reversible` nor `reasoned`. `NON_ACTS` gives it "member-directed: the founder's own handle, the one she signs in and is known by, chosen once and never changed (`HANDLE_FIXED`); writes no record and moves no bundle".
+  - `projectownervotes` (`project-roster` R30): a read, `NON_ACTS` "read: the owner changes of a project still waiting on agreement, who has agreed and who is awaited, answered only to a viewer who sees the project whole".
+  - Neither is in `MACHINE_REFUSALS` (`membership` refuses any `by` but the founder's, `FOUNDER_HANDLE_NOT_FOUNDER`). By R18 `founderhandleset` carries `phone: true`. No vocabulary or prompt is added. `IRREVERSIBLE_WEIGHT` and `CONSEQUENCE_STATEMENTS` gain none. R3's tally of `undetermined` ops is unchanged. *(not yet met: T49)*
+  - Controls: `RUNG_ABSENT.founderhandleset.ground` is `caller-owned`, and `founderhandleset` is not in `RUNGS`. `projectownervotes` has no rung.
+
 ## Private
 
 ### Uses

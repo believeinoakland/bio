@@ -2,36 +2,36 @@
    (K637), against this module's services. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, PASSWORD, FOUNDER_PASSWORD, sha } from "./fixture.mjs";
+import { world, PASSWORD, FOUNDER_PASSWORD, sha, FOUNDER_HANDLE } from "./fixture.mjs";
 import { Credentials } from "../../../src/credentials/index.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
 
 test("R1 claim sets the founder's password once; too short refused; a replaced bootstrap credential re-arms", async () => {
   const w = world();
-  assert.deepEqual(await w.c.claim({ password: "short", tokenFp: "fp-1" }), { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 });
-  assert.equal((await w.c.claim({ password: "x".repeat(11), tokenFp: "fp-1" })).reason, "PASSWORD_TOO_SHORT");
+  assert.deepEqual(await w.c.claim({ password: "short", handle: FOUNDER_HANDLE, tokenFp: "fp-1" }), { ok: false, reason: "PASSWORD_TOO_SHORT", minimum: 12 });
+  assert.equal((await w.c.claim({ password: "x".repeat(11), handle: FOUNDER_HANDLE, tokenFp: "fp-1" })).reason, "PASSWORD_TOO_SHORT");
   assert.equal((await w.c.claim({ tokenFp: "fp-1" })).reason, "PASSWORD_TOO_SHORT");
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM credentials`).n, 0);
-  const ok = await w.c.claim({ password: "x".repeat(12), tokenFp: "fp-1" });
+  const ok = await w.c.claim({ password: "x".repeat(12), handle: FOUNDER_HANDLE, tokenFp: "fp-1" });
   assert.deepEqual([ok.ok, ok.role], [true, "admin"]);
   assert.match(ok.consumedAt, /^\d{4}-\d\d-\d\dT/);
-  const again = await w.c.claim({ password: "y".repeat(12), tokenFp: "fp-1" });
+  const again = await w.c.claim({ password: "y".repeat(12), handle: FOUNDER_HANDLE, tokenFp: "fp-1" });
   assert.deepEqual(again, { ok: false, reason: "ALREADY_CLAIMED", consumedAt: ok.consumedAt });
-  assert.equal((await w.c.claim({ password: "y".repeat(12) })).reason, "ALREADY_CLAIMED", "no fingerprint never re-arms");
-  assert.equal((await w.c.login({ role: "admin", password: "x".repeat(12) })).ok, true);
-  assert.equal((await w.c.login({ role: "admin", password: "y".repeat(12) })).ok, false);
-  const rearmed = await w.c.claim({ password: "z".repeat(12), tokenFp: "fp-2" });
+  assert.equal((await w.c.claim({ password: "y".repeat(12), handle: FOUNDER_HANDLE })).reason, "ALREADY_CLAIMED", "no fingerprint never re-arms (R77)");
+  assert.equal((await w.c.login({ handle: FOUNDER_HANDLE, password: "x".repeat(12) })).ok, true);
+  assert.equal((await w.c.login({ handle: FOUNDER_HANDLE, password: "y".repeat(12) })).ok, false);
+  const rearmed = await w.c.claim({ password: "z".repeat(12), handle: FOUNDER_HANDLE, tokenFp: "fp-2" });
   assert.equal(rearmed.ok, true);
-  assert.equal((await w.c.login({ role: "admin", password: "z".repeat(12) })).ok, true);
-  assert.equal((await w.c.login({ role: "admin", password: "x".repeat(12) })).ok, false, "the re-armed claim replaced it");
-  assert.equal((await w.c.claim({ password: "w".repeat(12), tokenFp: "fp-2" })).reason, "ALREADY_CLAIMED");
+  assert.equal((await w.c.login({ handle: FOUNDER_HANDLE, password: "z".repeat(12) })).ok, true);
+  assert.equal((await w.c.login({ handle: FOUNDER_HANDLE, password: "x".repeat(12) })).ok, false, "the re-armed claim replaced it");
+  assert.equal((await w.c.claim({ password: "w".repeat(12), handle: FOUNDER_HANDLE, tokenFp: "fp-2" })).reason, "ALREADY_CLAIMED");
 });
 
 test("R2 bootstrapState: claimed, re-armed by a different fingerprint, the claim instant, nobody named", async () => {
   const w = world();
   assert.deepEqual(w.c.bootstrapState("fp-1"), { claimed: false, rearmed: false, consumedAt: null });
   assert.deepEqual(w.c.bootstrapState(), { claimed: false, rearmed: false, consumedAt: null });
-  const c = await w.c.claim({ password: "x".repeat(12), tokenFp: "fp-1" });
+  const c = await w.c.claim({ password: "x".repeat(12), handle: FOUNDER_HANDLE, tokenFp: "fp-1" });
   assert.deepEqual(w.c.bootstrapState("fp-1"), { claimed: true, rearmed: false, consumedAt: c.consumedAt });
   assert.deepEqual(w.c.bootstrapState(null), { claimed: true, rearmed: false, consumedAt: c.consumedAt });
   assert.deepEqual(w.c.bootstrapState("fp-2"), { claimed: false, rearmed: true, consumedAt: null });
@@ -55,19 +55,19 @@ test("R3 setPassword stores a salted derived hash, replacing any earlier one, ne
   assert.notEqual(a.hash, b.hash);
   assert.match(b.hash, /^[0-9a-f]{64}$/);
   assert.doesNotMatch(JSON.stringify(w.rows(`SELECT * FROM credentials`)), /password/);
-  assert.equal((await w.c.login({ role: "member:xena", password: "first-password-1" })).ok, false);
-  assert.equal((await w.c.login({ role: "member:xena", password: "second-password-2" })).ok, true);
+  assert.equal((await w.c.login({ handle: "xena", password: "first-password-1" })).ok, false);
+  assert.equal((await w.c.login({ handle: "xena", password: "second-password-2" })).ok, true);
 });
 
 test("R4 login: one refusal for every failing case, same detail, same cost; success returns token and expiry", async () => {
   const w = await world().group("ann", "bob", "dee");
-  const ok = await w.c.login({ role: "member:ann", password: PASSWORD("ann"), ttlSeconds: 60 });
+  const ok = await w.c.login({ handle: "ann", password: PASSWORD("ann"), ttlSeconds: 60 });
   assert.deepEqual(Object.keys(ok).sort(), ["device", "expires", "ok", "role", "token"]);   /* (T47) R65's device */
   assert.deepEqual([ok.ok, ok.role], [true, "member:ann"]);
   assert.match(ok.token, /^[0-9a-f]{64}$/);
   assert.ok(ok.expires > Date.now() && ok.expires <= Date.now() + 60_000);
   assert.equal(w.row(`SELECT role FROM sessions WHERE token_sha=?`, sha(ok.token)).role, "member:ann");
-  assert.equal((await w.c.login({ role: "admin", password: FOUNDER_PASSWORD })).ok, true);
+  assert.equal((await w.c.login({ handle: FOUNDER_HANDLE, password: FOUNDER_PASSWORD })).ok, true);
   w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
   /* an invited member who never enrolled, with a password set for the role: inactive, refused */
   assert.equal((await w.m.memberAdd({ memberId: "cal", cover: "c", by: "admin" })).ok, true);
@@ -79,14 +79,15 @@ test("R4 login: one refusal for every failing case, same detail, same cost; succ
   let n = 0;
   const src = () => `fp-${n++}`;
   const cases = [
-    { role: "member:nobody", password: "whatever-password" },          // no credential
-    { role: "member:bob", password: PASSWORD("bob") },                 // revoked member, right password
-    { role: "member:cal", password: PASSWORD("cal") },                 // invited, never enrolled, right password
-    { role: "member:ghost", password: PASSWORD("ghost") },             // no member row, right password
-    { role: "member:ann", password: "wrong-password-1" },              // wrong password
-    { role: "admin", password: "wrong-password-1" },                   // the founder, wrong password
-    { role: "never-registered", password: "whatever-password" },
-    { role: "member:ann" },                                            // no password
+    { handle: "nobody", password: "whatever-password" },          // no credential
+    { handle: "bob", password: PASSWORD("bob") },                    // revoked member, right password
+    { handle: "cal", password: PASSWORD("cal") },                    // invited, never enrolled (no handle), right password
+    { handle: "ghost", password: PASSWORD("ghost") },                // no member row, right password
+    { handle: "ann", password: "wrong-password-1" },                 // wrong password
+    { handle: FOUNDER_HANDLE, password: "wrong-password-1" },        // the founder, wrong password
+    { handle: "admin", password: FOUNDER_PASSWORD },                   // (T49, R75) `admin`, the founder's right password
+    { handle: "never-registered", password: "whatever-password" },
+    { handle: "ann" },                                                 // no password
   ];
   const answers = [];
   for (const c of cases) answers.push(await w.c.login({ ...c, source: src() }));
@@ -104,35 +105,35 @@ test("R4 login: one refusal for every failing case, same detail, same cost; succ
   assert.ok(Math.min(...t) > Math.max(...t) / 5, `refusal times differ too much: ${t.map((x) => x.toFixed(1))}`);
   /* a reactivated member signs in again */
   w.m.memberSet({ memberId: "bob", status: "active", by: "admin" });
-  assert.equal((await w.c.login({ role: "member:bob", password: PASSWORD("bob") })).ok, true);
+  assert.equal((await w.c.login({ handle: "bob", password: PASSWORD("bob") })).ok, true);
 });
 
 test("R4 login sweeps expired sessions as it issues one", async () => {
   const w = await world().group("ann");
   w.sql.exec(`INSERT INTO sessions (token_sha, role, expires, created) VALUES (?, 'member:ann', ?, 'x')`, sha("stale"), Date.now() - 1);
-  assert.equal((await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).ok, true);
+  assert.equal((await w.c.login({ handle: "ann", password: PASSWORD("ann") })).ok, true);
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM sessions WHERE token_sha=?`, sha("stale")).n, 0);
 });
 
 test("R5 session resolves rights at each call through membership's sessionRights: founder, administrator, member, revoked, unknown, expired", async () => {
   const w = await world().group("ann");
-  const tok = async (role, password) => (await w.c.login({ role, password })).token;
+  const tok = async (handle, password) => (await w.c.login({ handle, password })).token;
   assert.equal(w.c.session(null), null);
   assert.equal(w.c.session(""), null);
   assert.equal(w.c.session("no-such-token"), null);
-  const fTok = await tok("admin", FOUNDER_PASSWORD);
+  const fTok = await tok(FOUNDER_HANDLE, FOUNDER_PASSWORD);
   const f = w.c.session(fTok);
   assert.deepEqual({ ...f, expires: 0 }, { role: "admin", expires: 0, capabilities: [...Membership.CAPABILITIES],
-    administer: true, member: "admin", handle: null, rootOfTrust: true, device: "shared", locked: false, reauthUntil: null });
+    administer: true, member: "admin", handle: FOUNDER_HANDLE, rootOfTrust: true, device: "shared", locked: false, reauthUntil: null });
   /* (T47) beside membership's R92, R65's device and lock and R66's window */
   const own = ({ device, locked, reauthUntil, ...rest }) => rest;
   assert.deepEqual({ ...own(f), role: undefined, expires: undefined },
     { role: undefined, expires: undefined, ...w.m.sessionRights("admin") }, "exactly membership's R92");
-  const sTok = await tok("member:second", PASSWORD("second"));
+  const sTok = await tok("second", PASSWORD("second"));
   const s = w.c.session(sTok);
   assert.deepEqual([s.capabilities, s.administer, s.member, s.handle, s.rootOfTrust],
     [[...Membership.CAPABILITIES], true, "second", "second", false]);
-  const aTok = await tok("member:ann", PASSWORD("ann"));
+  const aTok = await tok("ann", PASSWORD("ann"));
   assert.deepEqual(w.c.session(aTok).capabilities, ["contribute"]);
   w.m.memberCaps({ memberId: "ann", capabilities: ["contribute", "publish"], by: "admin" });
   assert.deepEqual(w.c.session(aTok).capabilities, ["contribute", "publish"], "a change takes effect at the next call");

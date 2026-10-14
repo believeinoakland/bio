@@ -1,7 +1,7 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R28). T45 adds a project's scope (R21–R23: a counsel matter, a
+ * Requirements: build/requirements/project-roster.md (R1–R30). T45 adds a project's scope (R21–R23: a counsel matter, a
  * member's own project; the guard membership calls before an invitation or a visibility change, its R128) and the
  * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`; T46 (R25)
  * reads their refusals' words by key from `words.json` (`checks.mjs`' `PROJECT_SCOPE_WORDS`); T47 (R26) lists the
@@ -171,14 +171,13 @@ export class ProjectRoster {
   projectParticipants({ projectId, by } = {}) {
     const mine = this.m.participation(projectId, by);
     if (!mine && !this.#adminAtFull(projectId, by)) return noSuchProject(projectId);   /* membership R78 */
-    const handleOf = (id) => this.m.memberFacts(id)?.handle ?? id;
-    /* The founder, a participant once invited (D54) with no roster row, is listed by its handle `admin` (credentials
-       R67), as R27 names it. */
-    return { ok: true, projectId, participants: this.#rows(
-      `SELECT COALESCE(m.handle, p.member_id) AS handle, p.state, p.owner, p.comment, p.created
-       FROM project_participants p LEFT JOIN members m ON m.member_id = p.member_id
-       WHERE p.project_id=? AND (m.member_id IS NOT NULL OR p.member_id = ?)
-       ORDER BY p.owner DESC, COALESCE(m.handle, p.member_id), p.member_id`, projectId, ROOT_ADMIN),
+    /* R29: a name given to a reader is a handle, the founder's the one membership holds for her (null while none). */
+    const handleOf = (id) => id === ROOT_ADMIN ? this.#founderHandle() : (this.m.memberFacts(id)?.handle ?? id);
+    /* The founder, a participant once invited (D54) with no roster row, is listed by `founderHandle()` with
+       `founder: true` (R29), never by her id. */
+    return { ok: true, projectId, participants: this.#roster([projectId]).get(projectId)
+      .map((x) => ({ handle: x.handle, ...(x.founder ? { founder: true } : {}), state: x.state, owner: x.owner,
+                     comment: x.comment, created: x.created })),
       /* R6: every ownership decision, with its deciders and reasons, in the order it was carried. */
       ownership: this.#rows(`SELECT kind, target, deciders, reasons, at FROM project_owner_decisions
                               WHERE project_id=? ORDER BY seq`, projectId).map((d) => ({
@@ -194,6 +193,46 @@ export class ProjectRoster {
       approvals: this.#rows(`SELECT needs, reason, set_by, at FROM project_approval_settings WHERE project_id=?
                               ORDER BY seq`, projectId)
         .map((x) => ({ needs: JSON.parse(x.needs), reason: x.reason, by: handleOf(x.set_by), at: x.at })) };
+  }
+
+  /* R29: the founder's own handle, membership's (its R144); null while she holds none, and when membership offers none. */
+  #founderHandle() {
+    try {
+      const h = typeof this.m.founderHandle === "function" ? this.m.founderHandle() : null;
+      return typeof h === "string" && h !== "" ? h : null;
+    } catch { return null; }
+  }
+
+  /* R29: a member id shown where a handle is read: the founder's held handle (null while none), others as they are. */
+  #nm(id) { return id === ROOT_ADMIN ? this.#founderHandle() : id; }
+
+  /* R29: `{member, handle}` as a reader sees a member; the founder carries `founder: true` and her held handle, `null`
+     while she holds none, never her id. */
+  #person(member, handle) {
+    return member === ROOT_ADMIN ? { member, handle: this.#founderHandle(), founder: true } : { member, handle };
+  }
+
+  /* R1, R28: every participant of each of `ids`, any state, as a Map project -> rows in R1's order (owners first, then
+     by handle, the founder, who has none until she holds one, after the handles; then by id). Each row is
+     `{member, handle, founder?, state, owner, comment, created}`; the founder has no roster row and is the one participant
+     listed without one (D54). Membership's read contract (its R120): `project_participants` joined to `members`. */
+  #roster(ids) {
+    const out = new Map(ids.map((id) => [id, []]));
+    if (!ids.length) return out;
+    const fh = this.#founderHandle();
+    for (const r of this.#rows(
+      `SELECT p.project_id AS project, p.member_id AS member, m.handle AS handle, p.state, p.owner, p.comment, p.created
+         FROM project_participants p LEFT JOIN members m ON m.member_id = p.member_id
+        WHERE p.project_id IN (${ids.map(() => "?").join(",")}) AND (m.member_id IS NOT NULL OR p.member_id = ?)`,
+      ...ids, ROOT_ADMIN))
+      out.get(r.project).push(r.member === ROOT_ADMIN
+        ? { member: r.member, handle: fh, founder: true, state: r.state, owner: r.owner, comment: r.comment, created: r.created }
+        : { member: r.member, handle: r.handle ?? r.member, state: r.state, owner: r.owner, comment: r.comment, created: r.created });
+    const key = (x) => (x.handle === null ? "￿" : x.handle);
+    const less = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+    for (const rows of out.values())
+      rows.sort((a, b) => (b.owner - a.owner) || less(key(a), key(b)) || less(a.member, b.member));
+    return out;
   }
 
   /* ===== R3–R7 — OWNERSHIP (§7.10, §7.13) =====
@@ -240,7 +279,7 @@ export class ProjectRoster {
       const awaiting = owners.filter((o) => !have.includes(o));
       if (awaiting.length)
         return { ok: false, reason: "CONSENSUS_REQUIRED", projectId, handle,
-                 have: have.sort(), awaiting: awaiting.sort(),
+                 have: have.sort().map((x) => this.#nm(x)), awaiting: awaiting.sort().map((x) => this.#nm(x)),
                  detail: "every existing owner must agree to an addition beyond the second" };
     }
     const deciders = this.#ownerVotes(projectId, "add", target.member_id, owners).map((v) => v.voter).sort();
@@ -248,7 +287,8 @@ export class ProjectRoster {
     this.#recordOwnerDecision(projectId, "add", target.member_id, deciders, [], now);
     this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=? AND kind='add' AND target=?`,
       projectId, target.member_id);
-    return { ok: true, projectId, handle, owner: true, owners: this.m.projectOwners(projectId).sort(), deciders };
+    return { ok: true, projectId, handle, owner: true, owners: this.m.projectOwners(projectId).sort().map((x) => this.#nm(x)),
+             deciders: deciders.map((x) => this.#nm(x)) };
   }
 
   /* R5 (§7.13): the ONE participation power an administrator has, and its condition. Only owners manage participation,
@@ -270,8 +310,10 @@ export class ProjectRoster {
        administrator learns it, and before the rescue's own refusals; it names nothing beyond the project's id. */
     const blocked = this.m.rescueRefusal(projectId, by);
     if (blocked && blocked.reason === "NOT_AN_ADMIN") return blocked;
+    const named = (r) => { if (!r || typeof r !== "object") return r;
+      const o = { ...r }; for (const k of ["active", "owners"]) if (Array.isArray(o[k])) o[k] = o[k].map((x) => this.#nm(x)); return o; };
     if (this.projectScope(projectId).scope === "own") return this.#scopeOwn(projectId, "rescue");
-    if (blocked) return blocked;
+    if (blocked) return named(blocked);
     const why = String(reason ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
     const target = this.m.memberByHandle(handle);
@@ -286,8 +328,8 @@ export class ProjectRoster {
        VALUES (?,'rescue',?,?,?,?)`, projectId, target.member_id, by, why, now);
     this.m.participationWrite("rescue", { projectId, memberId: target.member_id, by, comment: why, at: now });   /* R118 */
     this.#recordOwnerDecision(projectId, "rescue", target.member_id, [by], [why], now);
-    return { ok: true, projectId, handle, by, reason: why, owner: true,
-             owners: this.m.projectOwners(projectId).sort(), addedNotReplaced: true,
+    return { ok: true, projectId, handle, by: this.#nm(by), reason: why, owner: true,
+             owners: this.m.projectOwners(projectId).sort().map((x) => this.#nm(x)), addedNotReplaced: true,
              detail: "the inactive owners keep their rows. If one is reactivated they are an owner again "
                    + "alongside this one, and removing them is then the ordinary 7.10 process." };
   }
@@ -319,8 +361,8 @@ export class ProjectRoster {
     const remaining = owners.filter((o) => o !== target.member_id);
     const committed = this.#committedOwners(projectId).filter((o) => o !== target.member_id);
     if (!committed.length)
-      return { ok: false, reason: "LAST_COMMITTED_OWNER", ...math, leaving: remaining.sort(),
-               detail: `removing this owner would leave only owners who have asked to leave (${remaining.join(", ")}), `
+      return { ok: false, reason: "LAST_COMMITTED_OWNER", ...math, leaving: remaining.sort().map((x) => this.#nm(x)),
+               detail: `removing this owner would leave only owners who have asked to leave (${remaining.map((x) => this.#nm(x)).join(", ")}), `
                      + "so nobody would be committed to the project. Add another owner first (7.10), or deactivate "
                      + "the project (7.11). Nothing was written." };
     /* At three and above the target does not vote. At two they must, which is the whole divergence from §4.7. */
@@ -342,7 +384,7 @@ export class ProjectRoster {
     const votes = counted.map((v) => v.voter);
     if (votes.length < math.votesNeeded)
       return { ok: false, reason: "VOTES_SHORT", projectId, handle,
-               have: votes.length, need: math.votesNeeded, ...math, deciders: votes.sort() };
+               have: votes.length, need: math.votesNeeded, ...math, deciders: votes.sort().map((x) => this.#nm(x)) };
 
     /* Carried. They stay a PARTICIPANT: §7.10 says removing ownership leaves them on the project, and removing them
        from it entirely is then §7.7 (membership's `projectRemove`). */
@@ -352,7 +394,45 @@ export class ProjectRoster {
     this.sql.exec(`DELETE FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=?`,
       projectId, target.member_id);
     return { ok: true, projectId, handle, owner: false, stillAParticipant: true,
-             owners: this.m.projectOwners(projectId).sort(), deciders: votes.sort(), reasons };
+             owners: this.m.projectOwners(projectId).sort().map((x) => this.#nm(x)),
+             deciders: votes.sort().map((x) => this.#nm(x)), reasons };
+  }
+
+  /** R30 (T49; N1091; DEC-237 (3)): THE OWNER CHANGES NOT YET CARRIED, to a viewer at FULL of the project: each addition
+   *  or removal that has a counted vote and is still short, `{change, target, proposed_by, proposed_at, agreed,
+   *  awaiting}`, in the order first proposed. `agreed` is the owners whose votes count (R7), `awaiting` the owners whose
+   *  vote would still count and is not in, as R3's `CONSENSUS_REQUIRED` and R4's count them (R4's target does not vote at
+   *  three owners or more); `proposed_by` and `proposed_at` the first counted vote. Members are named by handle, the
+   *  founder by `founderHandle()` (R29). A rescue is carried at once and is never pending. Any other viewer, existence
+   *  only included, gets the absent answer. Writes nothing and never throws. */
+  projectOwnerVotes({ projectId, viewer = null } = {}) {
+    try {
+      const b = this.#bundle(projectId);
+      if (!b || !this.m.inSight(projectId, viewer)) return noSuchProject(projectId);
+      if (b.type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
+      const nameOf = (id) => id === ROOT_ADMIN ? this.#founderHandle() : (this.m.memberFacts(id)?.handle ?? id);
+      const owners = this.m.projectOwners(projectId);
+      const math = Membership.ownerMath(owners.length);
+      const proposals = new Map();
+      for (const v of this.#rows(
+        `SELECT kind, target FROM project_owner_votes WHERE project_id=? AND kind IN ('add','remove')
+          GROUP BY kind, target ORDER BY MIN(created), kind, target`, projectId)) {
+        const stale = v.kind === "add" ? owners.includes(v.target) : !owners.includes(v.target);
+        if (stale) continue;
+        const counted = this.#ownerVotes(projectId, v.kind, v.target, owners)
+          .filter((x) => v.kind === "add" || math.targetMayVote || x.voter !== v.target);
+        if (!counted.length) continue;
+        const voted = counted.map((x) => x.voter);
+        const first = this.#one(
+          `SELECT voter, created FROM project_owner_votes WHERE project_id=? AND kind=? AND target=? AND voter IN (${
+            voted.map(() => "?").join(",")}) ORDER BY created, voter LIMIT 1`, projectId, v.kind, v.target, ...voted);
+        const eligible = v.kind === "add" || math.targetMayVote ? owners : owners.filter((o) => o !== v.target);
+        proposals.set(`${v.kind}\u0000${v.target}`, { change: v.kind, target: nameOf(v.target),
+          proposed_by: nameOf(first.voter), proposed_at: first.created,
+          agreed: [...voted].sort().map(nameOf), awaiting: eligible.filter((o) => !voted.includes(o)).sort().map(nameOf) });
+      }
+      return { ok: true, projectId, changes: [...proposals.values()] };
+    } catch { return noSuchProject(projectId); }
   }
 
   /* The owners committed to the project: every owner who has not asked to leave (R4), read through membership's read
@@ -656,7 +736,7 @@ export class ProjectRoster {
    *  question count: Home takes it from basis-versions' read. `limit` and `truncated` are R9's rule. Writes nothing.
    *
    *  R27 (T47; DEC-201 `projects`): each project's `owner`, the member who opened it (its first author, as the record
-   *  states), `{member, handle}`, the founder's `{member: "admin", handle: "admin"}`, or null when that opener is no
+   *  states), `{member, handle}`, the founder's as R29 names her, or null when that opener is no
    *  longer an active member or names none; nothing else about them.
    *
    *  R28 (T47; N1025; DEC-214 (3)): each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's
@@ -668,7 +748,7 @@ export class ProjectRoster {
     /* R27: the opener joined in the same statement, so the page and its owners cannot disagree: the project's first
        manifest entry's `author` (record-core R37: `manifest`, first by `created`, then `rowid`, the order it recorded
        them), matched to an ACTIVE row of membership's `members` (its R120). The founder has no roster row and is
-       answered as the founder, `admin` by handle (credentials R67; K3074). An opener revoked or not yet active, a
+       answered as the founder, by her handle (R29; K3074). An opener revoked or not yet active, a
        machine's creation (whose author names no member) and a project with no entry join nothing, and answer null. */
     const rows = this.#rows(
       `SELECT b.bundle_id AS id, b.current_state AS state, o.member_id AS owner, o.handle AS owner_handle,
@@ -685,7 +765,7 @@ export class ProjectRoster {
     const { members, activity, lastChange } = this.#projectFacts(page.map((r) => r.id), gate);
     const projects = page.map((r) => ({ id: r.id,
       name: this.#bundle(r.id)?.title ?? null, stage: typeof r.state === "string" && r.state !== "" ? r.state : null,
-      owner: r.founder ? { member: ROOT_ADMIN, handle: ROOT_ADMIN }
+      owner: r.founder ? this.#person(ROOT_ADMIN, null)
         : r.owner ? { member: r.owner, handle: r.owner_handle ?? null } : null,
       members: members.get(r.id) ?? [], activity: activity.get(r.id) ?? Array(ProjectRoster.ACTIVITY_WEEKS).fill(0),
       lastChange: lastChange.get(r.id) ?? null }));
@@ -725,14 +805,8 @@ export class ProjectRoster {
     const members = new Map(), activity = new Map(), lastChange = new Map();
     if (!ids.length) return { members, activity, lastChange };
     const list = `(${ids.map(() => "?").join(",")})`;
-    for (const r of this.#rows(
-      `SELECT p.project_id AS project, p.member_id AS member, COALESCE(m.handle, p.member_id) AS handle
-         FROM project_participants p LEFT JOIN members m ON m.member_id = p.member_id
-        WHERE p.project_id IN ${list} AND (m.member_id IS NOT NULL OR p.member_id = ?)
-        ORDER BY p.project_id, p.owner DESC, COALESCE(m.handle, p.member_id), p.member_id`, ...ids, ROOT_ADMIN)) {
-      if (!members.has(r.project)) members.set(r.project, []);
-      members.get(r.project).push({ member: r.member, handle: r.handle });
-    }
+    for (const [project, rows] of this.#roster(ids))
+      if (rows.length) members.set(project, rows.map((x) => this.#person(x.member, x.handle)));
     const timed = `WITH acts AS (
         SELECT b.bundle_id AS project, x.created, x.rowid AS rid
           FROM manifest x JOIN bundles b ON b.bundle_id = x.bundle_id
@@ -941,7 +1015,7 @@ export class ProjectRoster {
     if (!this.m.isProjectOwner(projectId, by))
       return refusal("PROJECT_REQUEST_ANSWER_NOT_THE_OWNER",
         `a request to join ${String(projectId).slice(0, 80)} is answered by its OWNERS (Membership Architecture `
-        + `v2 §7.14; only owners invite, §7.2), and ${String(by ?? "an unnamed caller").slice(0, 80)} is not one `
+        + `v2 §7.14; only owners invite, §7.2), and ${String(this.#nm(by) ?? "an unnamed caller").slice(0, 80)} is not one `
         + `of them. Administrators see requests and answer none. Nothing was written.`);
     if (!ProjectRoster.JOIN_REQUEST_ANSWERS.includes(want))
       return refusal("PROJECT_REQUEST_UNKNOWN_ANSWER",
@@ -1065,6 +1139,8 @@ export function projectRosterOps(r, url, body, env) {
     projectownerrescue: () => r.projectOwnerRescue({ projectId: q("projectId"), handle: q("handle"), by: q("by"),
       reason: q("reason"), viewer: q("viewer") }),
     projectvisibility: () => r.projectVisibility({ projectId: q("projectId"), viewer: q("viewer") }),
+    /* T49 (R30): a read; `viewer` is the control plane's stamp. */
+    projectownervotes: () => r.projectOwnerVotes({ projectId: q("projectId"), viewer: q("viewer") }),
     /* D-479: `limit` reaches the directory's page (the cap is the caller's to LOWER, not to raise). */
     projectdirectory: () => r.projectDirectory({ viewer: q("viewer"), limit: q("limit") }),
     /* T47 (R26–R28): the projects the stamped viewer sees at FULL, with each one's recorded stage, opener, members and

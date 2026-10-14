@@ -90,7 +90,7 @@ Terms are `case-authoring`'s and `publication`'s. A **statement** is a case docu
 
 - **R18** (T48; N880; Actions D13; amends R8, R10, R17; `action-replies` R11) A source row (R8) may also answer `quotable`, a boolean.
   - A value that is not a boolean makes the row malformed, so R8 reads the source `undetermined`. A row not answering it reads as `true`.
-  - For a row answering `quotable: false`, `openRequestLine` (R10, R17) also answers `quoting: {key: "signing.openrequest.noquote", says}`, filled with `{whom}`. The words are read by key from `words.json` once the design stream gives the key (an ASK to UX-DESIGN). Until then `key` is null and `says` is BOB's plain sentence, "{whom}'s reply asks not to be quoted.", as `case-authoring` R34 kept its sentences until given.
+  - For a row answering `quotable: false`, `openRequestLine` (R10, R17) also answers `quoting: {key: "signing.openrequest.noquote", says}`, `says` read by key from `words.json` through `CASE_INPUTS_WORDS` (R10) and filled with `{whom}`, never a copy (T49; N1076; K3321 (B); the key given by DEC-232). *(not yet met: T49)*
   - The line is shown once, with its row's line. It asks no reason and refuses nothing (a declaration, DEC-13).
   - `case-authoring` R34 carries it unchanged: it spreads `openRequestLine`'s answer into each line, so `case-authoring` needs no job.
   - Controls: a row answering `quotable: true`, or not answering it, carries no `quoting`; a row answering `quotable: "no"` makes the source `undetermined`.

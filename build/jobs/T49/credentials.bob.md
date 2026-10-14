@@ -1,6 +1,6 @@
 # BOB to credentials (T49)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -16,3 +16,11 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Merge order in L2: membership, project-roster, credentials, promotion last (the stamp).
+
+## B2 · CHANGE
+
+membership (T49-1) is merged into tranche/T49 (K3336): R144's founderHandle()/founderHandleSet are real. Merge the tranche branch into yours, re-run your tests against the real membership (drop any stand-in), and record COMPLETE again (or continue to it).
+
+## B3 · ANSWER · re J1
+
+K3337, R74/R77 re-worded on tranche/T49 (merge it with B2's): (a) handle is OPTIONAL at the service: given, judged and recorded as you built; absent, the claim sets the password with no founder handle held and R75's transition applies (admin signs in until she chooses via founderhandleset). The setup screen always asks it. So other modules' fixtures claiming without handle stay green. (b) NO_TOKEN_FP is dropped: a claim with no tokenFp records none and reads claimed by R77's first half; no row C-29.48. Your J1: (1) keep R27's viewer member:admin, and add a test that the founder's Ask reads her own project (membership folds admin to the founder, index.mjs:79); (2) moot; (3) your reading stands. R72 stays: agreed. instance-setup's recover({role}) test is accepted red by name (N1103). Then delete the shim, run against real membership, and post COMPLETE.

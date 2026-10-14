@@ -70,7 +70,7 @@ A fleet member in the group's own Cloudflare account, reached only through the p
 
 ### Uses
 
-- `runtime-limits`: `makeMeter` (the time limits), `sha256hex` (R2, R24, R25's prefixes).
+- `runtime-limits`: `sha256hex` (R2, R24, R25's prefixes).
 - `bundler`: `writeMember`, `verifyFresh` (R10).
 - `test-support`: the fleet member's harness and fixtures.
 
