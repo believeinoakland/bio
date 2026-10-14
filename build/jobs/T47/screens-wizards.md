@@ -2,6 +2,8 @@
 
 **Status** · session_0118dwXjnwwYydM1sWbE5P8u · depth 2 · WORKING · handled B2
 
+
+**Progress** (kept above the entries) · Built at 6d1d24e0b5: `bio-plane/src/screens-wizards/` (`index.mjs`, `library.mjs`, `guide.mjs`, `words.mjs`) and `bio-plane/test/m/screens-wizards/` (`kit.mjs`, `fixtures.mjs`, `standin.mjs`, `library.test.mjs`, `guide.test.mjs`, `words.test.mjs`). 26 of 27 tests pass; the one red is R8's path (Settings › Wizards), which waits on interface-shell R28's `PATHS` entry. The guide is tested over a stand-in for the shell's half of the J2/J3 contract (K3143); next: on interface-shell's merge (CHANGE), merge `tranche/T47` and re-run the guide's walk over the real page, then COMPLETE.
 ## J1 · QUESTION
 
 The GUIDE contract between this module and `interface-shell` (its R31; my R2–R7) is not written anywhere, and INTERFACE-SHELL #1 is building its half now. My best reading, which I am building to; please confirm it or relay it (or interface-shell's own shape) so both halves meet:
