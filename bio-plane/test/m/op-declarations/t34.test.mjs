@@ -10,6 +10,7 @@ import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
 import { credentialsOps } from "../../../src/credentials/index.mjs";
+import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
 import { membershipOps } from "../../../src/membership/index.mjs";
 import { publishScheduleOps } from "../../../src/publish-schedule/index.mjs";
 import { ratificationOps } from "../../../src/ratification/index.mjs";
@@ -201,8 +202,12 @@ test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171; T38, K2300): an act the re
      `owed:passwordresetlink DEC-201`, declared under its own name by R57 (credentials R69) */
   for (const op of OWED_T46) assert.ok(served.includes(op) && !owed.includes(op), `${op} is still owed`);
   const OWED_T47 = ["passwordresetlink"];
-  assert.deepEqual([...new Set(owed)].sort(), [...STILL_OWED, ...OWED_T47].sort());
-  for (const op of [...DECLARED, ...STILL_OWED, ...SERVED_T44, ...OWED_T46, ...OWED_T47]) {
+  /* T48 (R65, R66; PR #34, `4664e8efd4`; DEC-226): the registry marks the update screen's three acts owed (`updatelater`
+     also on the queue); each is read as served once R66 declares it under its own name, with no alias */
+  const OWED_T48 = ["updatelater", "updateskip", "updatestart"];
+  assert.deepEqual([...new Set(owed)].sort(), [...STILL_OWED, ...OWED_T47, ...OWED_T48].sort());
+  for (const op of OWED_T48) assert.ok(both(op) && OP_FAMILIES["instance-setup"].kinds[op] === "admin", `${op}: not an instance-setup admin act`);
+  for (const op of [...DECLARED, ...STILL_OWED, ...SERVED_T44, ...OWED_T46, ...OWED_T47, ...OWED_T48]) {
     assert.ok(Object.hasOwn(OPS, op), `${op} is owed or re-pointed and declared: no spec`);
     assert.ok(!Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op), `${op} is aliased`);
   }
@@ -276,18 +281,24 @@ test("R24, R20 (T41, DEC-188 (8): groupswitchset retired to R41's accountusesset
   }
   for (const op of ["groupkeyset", "groupkeyremove", "groupkeyswitch", "groupkeynoticeseen"]) {
     assert.deepEqual(stamps(op), ["by", "viewer"], op);
-    assert.ok(JSON.stringify(await drive(credentialsOps, op, { query: { by: SENT } })).includes(SENT), op);
+    assert.ok(JSON.stringify(await drive(aiAccountsOps, op, { query: { by: SENT } })).includes(SENT), op);
   }
   for (const op of ["groupkeystate", "groupkeynotice"]) {
     assert.deepEqual(stamps(op), ["viewer"], op);
-    assert.ok(JSON.stringify(await drive(credentialsOps, op, { query: { viewer: SENT } })).includes(SENT), op);
+    assert.ok(JSON.stringify(await drive(aiAccountsOps, op, { query: { viewer: SENT } })).includes(SENT), op);
   }
-  /* groupkeyset's key is a body field: the query's copy does not reach credentials */
-  assert.ok(!JSON.stringify(await drive(credentialsOps, "groupkeyset", { query: { key: SENT } })).includes(SENT));
-  assert.ok(JSON.stringify(await drive(credentialsOps, "groupkeyset", { body: { key: SENT } })).includes(SENT));
+  /* T48 (R68): the group's key ops are ai-accounts' family and map now, `groupkeyset`'s key a body field: the query's copy
+     does not reach it */
+  for (const op of KEY) {
+    assert.ok(Object.hasOwn(OP_FAMILIES["ai-accounts"].kinds, op), `${op}: not in ai-accounts' family`);
+    assert.ok(!Object.hasOwn(OP_FAMILIES.credentials.kinds, op), `${op}: still in credentials' family`);
+  }
+  assert.ok(!JSON.stringify(await drive(aiAccountsOps, "groupkeyset", { query: { key: SENT } })).includes(SENT));
+  assert.ok(JSON.stringify(await drive(aiAccountsOps, "groupkeyset", { body: { key: SENT } })).includes(SENT));
   /* T41 (DEC-188 (8); K2484): the group's switches are set only by R41's accountusesset (`owner` group) */
   assert.ok(inNoTable("groupswitchset"), "groupswitchset is declared");
   assert.ok(!Object.keys(credentialsOps({}, new URL("http://plane/"), {}, {}, {})).includes("groupswitchset"));
+  assert.ok(!Object.keys(aiAccountsOps({}, new URL("http://plane/"), {}, {})).includes("groupswitchset"));
   assert.ok(Object.hasOwn(OPS, "accountusesset"));
   /* R20: the key is reached through R24's acts only — no other op names it (network-notices' public read of the
      group's signing keys, `groupkeyspublic`, is no API key), and ask carries no key field */
@@ -299,7 +310,8 @@ test("R24, R20 (T41, DEC-188 (8): groupswitchset retired to R41's accountusesset
   /* T35 (R27, R30): the member's own disconnection (credentials R43); T37 (R36): and their own sign-in — the two
      subscription ops, each a member's own act, neither a group's or a project's */
   assert.deepEqual(Object.keys(OPS).filter((op) => /subscription/.test(op)).sort(), ["subscriptiondisconnect", "subscriptionsignin"]);
-  assert.equal(OP_FAMILIES.credentials.kinds.subscriptiondisconnect, "own");
+  /* T48 (R68): the disconnection is ai-accounts' with the other account ops; the sign-in stays credentials' */
+  assert.equal(OP_FAMILIES["ai-accounts"].kinds.subscriptiondisconnect, "own");
   assert.equal(OP_FAMILIES.credentials.kinds.subscriptionsignin, "own");
   /* negative control: a retired name added back would be seen */
   assert.ok(!inNoTable("groupkeyswitch"));
@@ -365,8 +377,10 @@ test("R27 (T35; N701, K1869 (3); T37, its T35 and T36 sentences retired): DEC-14
      serves it — R49's actionscope and itemtakeup, R51's escalationstoppursuing (in the scripts wizard-scripts R30
      adopts) and R36's subscriptionsignin */
   const LIBRARY_OWED_T46 = ["actionscope", "escalationstoppursuing", "itemtakeup", "subscriptionsignin"];
-  /* T47 (R54, R60; PR #33's head): the library marks no act owed; the four are carried under their own names */
-  assert.deepEqual(owed.sort(), []);
+  /* T47 (R54, R60; PR #33's head): the library marks no act owed; the four are carried under their own names. T48 (R65;
+     PR #34, `4664e8efd4`): its update wizard marks one, `owed:updatestart K3158`, read as served once R66 declares it */
+  assert.deepEqual(owed.sort(), ["updatestart"]);
+  assert.ok(Object.hasOwn(OPS, "updatestart") && both("updatestart") && !Object.hasOwn(OP_ALIASES, "updatestart"));
   for (const op of LIBRARY_OWED_T46) assert.ok(Object.hasOwn(OPS, op) && both(op) && !Object.hasOwn(OP_ALIASES, op) && acts.has(op), op);
   /* negative control: a declared op is not inNoTable, an undeclared one is */
   assert.ok(!inNoTable("publishat") && inNoTable("expunge"));

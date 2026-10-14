@@ -34,9 +34,10 @@ export const T37_RUNG_ABSENT = {
   subscriptionsignin: { ground: "credential", is: "a member signs in to their own Claude subscription in their own runner; the sign-in lives there, and no login, code or token is held here (credentials R43, agent-worker R66)" },
   /* instance-setup R69 (DEC-157 (1)), as wizardeditorgrant and wizardeditorrevoke */
   translationgrant:   { ground: "credential", is: "an administrator grants a named member the right to translate the interface into one language, or revokes it, a revocation appended (instance-setup R69)" },
-  /* instance-setup R67 (K2201), on R3's rule, as whatchangedpropose: drafts are labelled machine work, append-only, never
-     the group's wording until a member adopts one; `to_english` (an administrator's only) adopts and confirms nothing */
-  translationdraft:   { ground: "undetermined", is: "the assistant drafts missing words of a language as labelled machine work, never the group's wording until a granted member adopts one, or reads one protected word back into English for an administrator, adopting nothing; asks no authored reason and no act takes it back (instance-setup R67)" },
+  /* instance-setup R67 (K2201): drafts are labelled machine work, append-only, never the group's wording until a member
+     adopts one; `to_english` (an administrator's only) adopts and confirms nothing. (R39, T48; N1042) It left
+     `undetermined` for `caller-owned`: a granted speaker's own request, asking no reason. */
+  translationdraft:   { ground: "caller-owned", is: "a granted speaker's own request for labelled machine drafts of missing words of a language, never the group's wording until a member adopts one, or an administrator's own back-translation of one protected word, adopting nothing; asks no reason (instance-setup R67)" },
   /* instance-setup R73 (DEC-157 (5)), on R3's rule */
   translationmark:    { ground: "undetermined", is: "a member marks a shown word's translation \"this translation looks wrong\", with an optional note; asks no reason, and no act takes it back, a mark staying open until the word's next adoption or undo (instance-setup R73)" },
 };

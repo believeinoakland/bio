@@ -300,8 +300,10 @@ test("R51, R5, R7: t46.mjs is frozen data — each share names an owner whose fa
 
 test("R52 (N937; DEC-194, DEC-197; wizard-scripts R29): R21 read against the registry as PR #28 merged it — its function acts are 80, each an op or an alias; the nine new since PR #19 name declared ops by their own names, no alias; knock is no function act; every owed act (itemtakeup, actionscope, filingsecondapprove, subscriptionsignin, projectaikeepaway, infolevelset, escalationstoppursuing) is declared under its own name and no other owed act exists; Your account no longer lists handlechange, and its setpassword and memberlanguageset are declared acts; (R54, R60, T47) re-pinned at PR #33's head: 89 function acts, the seven declared acts, passwordresetlink the one owed (negative control: an undeclared owed act is seen)", () => {
   const fnActs = regActs.filter((a) => a.status === "function");
-  /* T47 (R54, R60): re-pinned at PR #33's head, whose screens carry 89 function acts (67 distinct functions) */
-  assert.equal(fnActs.length, 89);
+  /* T47 (R54, R60): re-pinned at PR #33's head, whose screens carry 89 function acts (67 distinct functions).
+     T48 (R65; N1054): re-pinned at PR #34's merge (`4664e8efd4`), whose screens carry 88 (the Home redrawn by DEC-218
+     drew one of them away); every alias still names a function act of the file */
+  assert.equal(fnActs.length, 88);
   for (const a of fnActs) assert.ok(Object.hasOwn(OPS, a.op), `${a.op}: no spec`);
   for (const al of Object.keys(OP_ALIASES)) assert.ok(fnActs.some((a) => a.op === al), `${al}: an alias of no registry function`);
   const NEW = ["ailimitset", "archivelist", "exploreapprove", "projectaccountremove", "projectaccountswitch",
@@ -316,7 +318,7 @@ test("R52 (N937; DEC-194, DEC-197; wizard-scripts R29): R21 read against the reg
   const owed = owedOf(regActs);
   /* T47 (R54, R60): at PR #33's head the seven are `declared` acts under their own names, and the one owed act is
      R57's passwordresetlink (DEC-201) */
-  assert.deepEqual([...owed].sort(), ["passwordresetlink"]);
+  assert.deepEqual([...owed].sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart"]);   // T48 (R65, R66): DEC-226's three, declared by R66
   for (const op of OWED) assert.ok(regActs.some((a) => a.op === op && a.status === "declared"), `${op} is not a declared act`);
   for (const op of [...OWED, ...owed]) assert.ok(Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op) && SESSION_OPS.member.has(op), op);
   const account = registry.screens.find((s) => s.id === "account");
@@ -330,8 +332,10 @@ test("R52 (N937; DEC-194, DEC-197; wizard-scripts R29): R21 read against the reg
 
 test("R52 (wizard-scripts R30): R27 read against the library as PR #28 merged it — its owed acts are four, actionscope, itemtakeup, escalationstoppursuing and subscriptionsignin, each declared under its own name in both session sets with no alias; (R54, R60, T47) at PR #33's head none owed, the four named by their ops (negative control: an undeclared act is in no table)", () => {
   const owed = [...new Set([...JSON.stringify(library).matchAll(/owed:([a-z]+)/g)].map((m) => m[1]))];
-  /* T47 (R54, R60): at PR #33's head the library marks no act owed; the four are named by their ops */
-  assert.deepEqual(owed.sort(), []);
+  /* T47 (R54, R60): at PR #33's head the library marks no act owed; the four are named by their ops. T48 (R65): at PR
+     #34's merge its update wizard marks one, `updatestart` (DEC-226), declared by R66 */
+  assert.deepEqual(owed.sort(), ["updatestart"]);
+  assert.ok(Object.hasOwn(OPS, "updatestart") && both("updatestart"));
   const named = new Set(library.scripts.flatMap((s) => s.versions.flatMap((v) => v.steps.map((st) => st.act))));
   const FOUR = ["actionscope", "escalationstoppursuing", "itemtakeup", "subscriptionsignin"];
   for (const op of FOUR) assert.ok(named.has(op), `${op}: the library does not name it`);

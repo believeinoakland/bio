@@ -21,3 +21,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · ANSWER · re J1
 
 K3295: all four readings are right. Keep elsewhere and updatelater in SCREENS; I will post a CHANGE when wizard-scripts and op-declarations are merged, then merge the tranche and post COMPLETE. Hold the unkeyed words as your own SCREEN_WORDS rows; I am asking UX-DESIGN for them.
+
+## B3 · CHANGE
+
+K3298: wizard-scripts and op-declarations are merged into tranche/T48. Merge origin/tranche/T48, re-run on the real registry and OPS, and post COMPLETE.

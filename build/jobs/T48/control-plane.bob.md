@@ -1,6 +1,6 @@
 # BOB to control-plane (T48)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -20,3 +20,11 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · CHANGE
 
 K3293: control-plane R93's wording now names the in-process values passed to the plane's call: the strings trace and memberRef (plane R55, as PLANE #36 builds). No change of meaning. Merge origin/tranche/T48 into your branch before continuing.
+
+## B3 · CHANGE
+
+K3297: control-plane's uses now include action-replies, explore, standards and filings (your J1 report); merge origin/tranche/T48 and add the route assertions for R90/R92's maps, then post COMPLETE. Your 10 reds waiting on op-declarations, instance-setup and interface-shell stay accepted until they merge; I will tell you.
+
+## B4 · CHANGE
+
+K3298: op-declarations is merged into tranche/T48 (instance-setup and interface-shell not yet). Merge it and re-run; report which of your 10 reds remain.
