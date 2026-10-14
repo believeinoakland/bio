@@ -6,7 +6,6 @@
  * `clocksics` calendar text for the action, saved as a file by the kit's own control (`cs.save`, interface-shell R47;
  * K3145: `clocksics` answers the text in JSON, not bytes). */
 
-import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
 
 function reads(view) {
@@ -28,7 +27,9 @@ function render(cs, view) {
   const next = (pos !== null && clock[pos]) || clock.find((e) => e.status === "pending" && e.date) || null;
   const out = [cs.title(next ? cs.w(S + "due", { date: cs.date(next.date) }) : cs.w("screen.due-date.name"),
     { thing: { kind: "action", facts: a ? [a.kind || "", (a.counterparty && (a.counterparty.role || a.counterparty.body)) || ""] : [] } })];
-  if (a && a.counterparty) out.push(`<p class="mk-sub">${cs.w(S + "of", { who: (a.counterparty.role || "") + (a.counterparty.body ? ", " + a.counterparty.body : "") })}</p>`);
+  /* whose reply it is, to which kind of request: said only for a kind the words name (the request's own kind, keyed) */
+  if (a && a.counterparty && ["records_request", "request_for_comment"].includes(a.kind))
+    out.push(`<p class="mk-sub">${cs.w(S + "of", { who: (a.counterparty.role || "") + (a.counterparty.body ? ", " + a.counterparty.body : ""), item: cs.w("screen.start-send.kind." + a.kind) })}</p>`);
   /* the confirmed entries: what each is, its basis and when */
   out.push(cs.sec(S + "entries", cs.state("action", view, () => (clock.length
     ? cs.sheet(clock.map((e, i) => (i === pos ? '<div aria-current="true">' : "<div>") + cs.row(cs.due(e.date || "", e.status === "met" ? "met" : e.status === "overdue" ? "overdue" : ""),
@@ -47,7 +48,7 @@ function render(cs, view) {
     const srcOf = (day) => { const c = cal.find((x) => x.day === day || x.date === day); return c ? c.basis || c.source || "" : (t.calendar && t.calendar.status) || ""; };
     const steps = [`<li>${cs.w(S + "step.basis", { basis: p.basis || "" })}</li>`,
       `<li>${t.anchor_day ? cs.w(S + "step.received." + (p.start_from || t.start_from || "receipt"), { date: cs.date(t.anchor_day) }) : cs.mark("gap", "undetermined", { reason: cs.w(S + "noreceipt") })}</li>`,
-      `<li>${cs.w(S + "step.counted", { amount: String(t.amount || ""), units: t.units || "", count: t.count || "" })}</li>`]
+      `<li>${cs.w(S + "step.counted", { amount: String(t.amount || ""), units: t.units || "", date: p.date ? cs.date(p.date) : "" })}</li>`]
       .concat((t.skipped || []).map((s) => `<li>${cs.w(S + "step.skipped", { date: cs.date(s.day), why: s.why || "", source: srcOf(s.day) })}</li>`))
       .concat([`<li>${p.date ? cs.w(S + "step.due", { date: cs.date(p.date), zone: t.zone || "" }) : cs.mark("gap", "undetermined", { reason: p.undetermined && p.undetermined.why ? p.undetermined.why : cs.w(S + "nodate") })}</li>`]);
     const machine = p.label && p.label.machine_work;
@@ -86,39 +87,18 @@ const acts = [
     } },
 ];
 
-export const DUE_WORDS = [
-  ["due", "Due {date}"],
-  ["of", "The reply owed by {who}"],
-  ["entries", "Confirmed due dates"],
-  ["basis", "basis: {basis}"],
-  ["at", "by {time}, {zone}"],
-  ["status.pending", "pending"],
-  ["status.met", "met"],
-  ["status.overdue", "overdue"],
-  ["status.waived", "waived"],
-  ["entry", "The due date to be reminded of"],
-  ["on", "Remind me on"],
-  ["remind.empty", "Choose the due date and the day to be reminded."],
-  ["download", "Download to my calendar"],
-  ["how", "How this was worked out"],
-  ["proposal", "Worked out by {by}"],
-  ["step.basis", "Basis: {basis}"],
-  ["step.received.receipt", "Received by the office: {date}."],
-  ["step.received.sent", "Counted from sending: {date} (receipt not recorded)."],
-  ["step.received.service", "Served: {date}."],
-  ["noreceipt", "the day it was received is not recorded"],
-  ["step.counted", "Counted {amount} {units} ({count} days)."],
-  ["step.skipped", "{date} skipped: {why} (from {source})."],
-  ["step.due", "Falls due {date}, {zone}."],
-  ["nodate", "the date cannot be worked out from what is recorded"],
-  ["why", "Why this date is right, in your words"],
-  ["why.help", "Confirming makes it the due date your queue and reminders use; your reason stays beside it."],
-  ["queue", "Once confirmed it goes into your queue. If no reply comes by then, the queue says so once."],
-].map(([k, en]) => row("screen.due-date." + k, en));
+const DUE_KEYS = [
+  "screen.due-date.due", "screen.due-date.of", "screen.due-date.entries", "screen.due-date.basis", "screen.due-date.at",
+  "screen.due-date.status.pending", "screen.due-date.status.met", "screen.due-date.status.overdue", "screen.due-date.status.waived",
+  "screen.due-date.entry", "screen.due-date.on", "screen.due-date.remind.empty", "screen.due-date.download", "screen.due-date.how",
+  "screen.due-date.proposal", "screen.due-date.step.basis", "screen.due-date.step.received.receipt", "screen.due-date.step.received.sent",
+  "screen.due-date.step.received.service", "screen.due-date.noreceipt", "screen.due-date.step.counted", "screen.due-date.step.skipped",
+  "screen.due-date.step.due", "screen.due-date.nodate", "screen.due-date.why", "screen.due-date.why.help", "screen.due-date.queue",
+];
 
 const words = ["screen.due-date.name", "screen.due-date.purpose",
   ...["clockpropose", "clockadopt", "reminderset"].flatMap((op) => ["act." + op + ".label.due-date", "act." + op + ".does"]),
   "mark.due.means", "mark.origin.machine.name", "mark.origin.machine.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
-  "state.empty", "state.loading", "state.failed", ...DUE_WORDS];
+  "screen.start-send.kind.records_request", "screen.start-send.kind.request_for_comment", "state.empty", "state.loading", "state.failed", ...DUE_KEYS];
 
 export const DUE_DATE_SCREEN = Object.freeze({ id: "due-date", reads, render, acts, words, parts: PARTS });

@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, CALCULATION, SPOT, P, CALC, DRAW, SHA, SHA2 } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, CALCULATION, SPOT, P, CALC, DRAW, SHA, SHA2, word, drew, notDrew, dayOf } from "./fixtures.mjs";
 
 const at = "/app/calculation/" + CALC;
 
@@ -13,9 +13,9 @@ test("R5 reads calculation (the computed fact, its method as written, its inputs
   assert.equal(m.querySelector("h1").textContent, "Reports closed within seven days, FY2025");
   assert.match(m.querySelector(".mk-bignum").textContent, /^812/);
   assert.match(m.textContent, /count\(rows where closed − reported ≤ 7 days\)/);
-  assert.match(m.textContent, /Recomputed: it agrees\./);
-  const inputs = m.querySelectorAll("section").find((s) => s.querySelector("h2").textContent === "Inputs");
-  assert.equal(inputs.querySelector(".cs-grade").textContent, "CaptureB");
+  drew(m, "screen.calculation.status.agrees");
+  const inputs = m.querySelectorAll("section").find((s) => s.querySelector("h2").textContent === word("screen.calculation.inputs"));
+  assert.equal(inputs.querySelector(".cs-grade").textContent, word("mark.scale.capture.name") + "B");
   assert.match(inputs.textContent, /orders/);
 });
 
@@ -23,23 +23,25 @@ test("R5 the spot-check: the draw (the set, its size, the seed and method, that 
   const p = await open(at);
   assert.equal(p.byOp("spotcheck")[0].query.draw, DRAW);
   assert.equal(p.byOp("calculation").at(-1).query.id, "CALC-2026-0002", "the estimate's own calculation");
-  const s = main(p).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === "Spot-check");
-  assert.match(s.textContent, /3 of 812 picked at random · seed 2026-10-05-7f31/);
-  assert.match(s.textContent, /Anyone can repeat it from the seed/);
-  assert.match(s.textContent, /Was the pothole repaired\?/);
-  assert.match(s.textContent, /1 of 3 judged: 1 yes, 1 in tension, 1 not visited/);
-  assert.doesNotMatch(s.textContent, /\b0 (no|could not tell)/, "R22: no count is drawn at zero");
-  assert.match(s.textContent, /81% of those judged · exact 95% range 65% to 92% · between 526 and 747 of all 812/);
-  assert.match(s.textContent, /Item 17.*Yes, seen by mai/s);
+  const s = main(p).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === word("screen.calculation.spot"));
+  drew(s, "screen.calculation.draw.what", { n: "3", size: "812", seed: "2026-10-05-7f31" });
+  drew(s, "screen.calculation.draw.repeat");
+  assert.ok(s.textContent.includes("Was the pothole repaired?"), "the question, as the draw records it");
+  for (const [k, n] of [["yes", 1], ["disagree", 1], ["notvisited", 1]]) drew(s, "screen.calculation.counts." + k, { n: String(n) });
+  for (const k of ["no", "unsure"]) notDrew(s, "screen.calculation.counts." + k, { n: "0" }, "R22: no count is drawn at zero");
+  drew(s, "screen.calculation.range", { share: "81", judged: "37", answer: word("screen.calculation.standing.yes").toLowerCase(), confidence: "95", low: "65", high: "92" });
+  drew(s, "screen.calculation.item", { item: "17" });
+  drew(s, "screen.calculation.visit", { finding: word("screen.calculation.finding.yes"), by: "mai", date: dayOf("2026-10-06") });
   assert.equal(s.querySelectorAll(".cs-grade[data-scale=testimony]").length, 3, "every visit, graded as testimony");
 });
 
 test("R5 a disagreeing item's visits are drawn in tension, never one picked", async () => {
   const p = await open(at);
-  const row = main(p).querySelectorAll(".cs-row").find((r) => /Item 4/.test(r.textContent));
-  assert.match(row.textContent, /In tension/);
-  assert.match(row.textContent, /Yes, seen by mai.*No, seen by dev/s);
-  assert.match(row.textContent, /both are shown, never one picked/);
+  const row = main(p).querySelectorAll(".cs-row").find((r) => r.textContent.includes(word("screen.calculation.item", { item: "4" })));
+  drew(row, "screen.calculation.standing.disagree");
+  drew(row, "screen.calculation.visit", { finding: word("screen.calculation.finding.yes"), by: "mai", date: dayOf("2026-10-06") });
+  drew(row, "screen.calculation.visit", { finding: word("screen.calculation.finding.no"), by: "dev", date: dayOf("2026-10-07") });
+  drew(row, "screen.calculation.tension");
 });
 
 test("R5 the acts: calculationcreate, tabledeclare, recordcheck, calculationaccept, addworkbook, bind, calculationdraw (how many, the seed recorded)", async () => {
@@ -71,8 +73,8 @@ test("R5 the acts: calculationcreate, tabledeclare, recordcheck, calculationacce
 
 test("R14 \"Record what you saw at a report\" sends testify (her own words) and \"Count it for the drawn report\" sends spotcheckvisit tying it to the drawn item with her finding: two acts", async () => {
   const p = await open(at, { plane: { testify: ok({ ok: true, capture_sha: SHA2, axes: {} }), spotcheckvisit: ok({ ok: true, standing: "yes" }) } });
-  assert.equal(button(p, "testify").textContent.startsWith("Record what you saw at a report"), true);
-  assert.equal(button(p, "spotcheckvisit").textContent.startsWith("Count it for the drawn report"), true);
+  assert.equal(button(p, "testify").textContent.startsWith(word("act.testify.label.calculation")), true);
+  assert.equal(button(p, "spotcheckvisit").textContent.startsWith(word("act.spotcheckvisit.label.calculation")), true);
   fill(p, { "calc-words": "The pothole at 60th and Seminary is filled and level.", "calc-observed": "2026-10-06" });
   await press(p, "testify");
   assert.deepEqual(p.byOp("testify")[0].body, { words: "The pothole at 60th and Seminary is filled and level.", observedAt: "2026-10-06" });
@@ -92,19 +94,19 @@ test("R5 R14 spotcheckvisit needs her testimony and a finding (control: none sen
   fill(p, { "calc-item": "9", "calc-finding-1": true });
   await press(p, "spotcheckvisit", { reason: "x" });
   assert.equal(p.byOp("spotcheckvisit")[0].body.finding, "no");
-  assert.match(main(p).textContent, /That report is not in the draw\./);
+  assert.ok(main(p).textContent.includes("That report is not in the draw."), "the refusal by its words");
 });
 
 test("R11 \"How spot-checks work\" is reached from calculation and says, in plain words, what a spot-check does, why the draw is random and recorded, what the result says and does not say", async () => {
   const p = await open(at);
   const link = main(p).querySelector('a[href="/app/help"]');
-  assert.equal(link.textContent, "How spot-checks work");
+  assert.equal(link.textContent, word("screen.calculation.help"));
   await p.click(link);
   await p.settle();
   const m = main(p);
-  assert.equal(m.querySelector("h1").textContent, "Help: How spot-checks work");
-  assert.deepEqual(m.querySelectorAll("h2").map((h) => h.textContent), ["What a spot-check does", "Why the sample is random, and recorded", "What the result says", "What it does not say", "Each visit is evidence"]);
-  assert.match(m.textContent, /Anyone, including the city or a reporter, can repeat the draw/);
+  assert.equal(m.querySelector("h1").textContent, word("screen.help.name"));
+  assert.deepEqual(m.querySelectorAll("h2").map((h) => h.textContent), ["does", "random", "says", "notsays", "evidence"].map((k) => word("screen.help." + k)));
+  for (const k of ["does", "random", "says", "notsays", "evidence"]) drew(m, "screen.help." + k + ".p");
   assert.equal(m.querySelectorAll("button[data-act]").length, 0, "a help page has no act");
   assert.equal(p.byOp("calculation").length >= 1, true);
 });

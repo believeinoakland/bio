@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, ACT } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, ACT, ACTION, word, drew, dayOf } from "./fixtures.mjs";
 
 const at = "/app/due-date/" + ACT;
 
@@ -11,11 +11,14 @@ test("R7 reads the action's clock entry (action) and its standing proposals (clo
   assert.equal(p.byOp("action")[0].query.id, ACT);
   assert.equal(p.byOp("clockproposals")[0].query.action, ACT);
   const m = main(p);
-  assert.equal(m.querySelector("h1").textContent, "Due 14 October 2026");
+  assert.equal(m.querySelector("h1").textContent, word("screen.due-date.due", { date: dayOf("2026-10-14") }));
+  drew(m, "screen.due-date.of", { who: "City Clerk, City Council", item: word("screen.start-send.kind.records_request") });
   const how = m.querySelector(`[data-proposal="pra_10day@member:mai"]`);
   const steps = how.querySelectorAll("li").map((l) => l.textContent);
-  assert.deepEqual(steps, ["Basis: Gov. Code §7922.535(a) (profile basis: the 10-day window)", "Received by the office: 2 October 2026.", "Counted 10 days (calendar days).",
-    "12 October 2026 skipped: Indigenous Peoples' Day (office calendar) (from the group's profile).", "Falls due 14 October 2026, America/Los_Angeles."]);
+  assert.deepEqual(steps, [word("screen.due-date.step.basis", { basis: "Gov. Code §7922.535(a) (profile basis: the 10-day window)" }),
+    word("screen.due-date.step.received.receipt", { date: dayOf("2026-10-02") }), word("screen.due-date.step.counted", { amount: "10", units: "days", date: dayOf("2026-10-14") }),
+    word("screen.due-date.step.skipped", { date: dayOf("2026-10-12"), why: "Indigenous Peoples' Day (office calendar)", source: "the group's profile" }),
+    word("screen.due-date.step.due", { date: dayOf("2026-10-14"), zone: "America/Los_Angeles" })]);
 });
 
 test("R7 clockpropose \"Work it out again\" is a proposal (never the date); clockadopt only on a standing proposal, naming it; reminderset", async () => {
@@ -39,19 +42,19 @@ test("R7 with no standing proposal nothing can be confirmed (control: clockadopt
 test("R7 \"Download to my calendar\" saves clocksics' calendar for the action (cs.save, K3145); with nothing dated it is not offered", async () => {
   const p = await open(at);
   assert.equal(p.byOp("clocksics")[0].query.actions, ACT);
-  const save = main(p).querySelectorAll("button").find((b) => b.textContent === "Download to my calendar");
+  const save = main(p).querySelectorAll("button").find((b) => b.textContent === word("screen.due-date.download"));
   assert.ok(save, "the kit's own save control (interface-shell R47)");
   await p.click(save);
   assert.deepEqual(p.files.map((f) => f.name), ["deadlines.ics"], "the calendar handed to the browser as a file");
   const q = await open(at, { plane: { clocksics: ok({ ok: true, filename: "deadlines.ics", ics: "", events: 0 }) } });
-  assert.equal(main(q).querySelectorAll("button").find((b) => b.textContent === "Download to my calendar"), undefined);
-  assert.doesNotMatch(main(q).textContent, /Download to my calendar/, "R22: nothing to put in a calendar, nothing offered");
+  assert.equal(main(q).querySelectorAll("button").find((b) => b.textContent === word("screen.due-date.download")), undefined);
+  assert.ok(!main(q).textContent.includes(word("screen.due-date.download")), "R22: nothing to put in a calendar, nothing offered");
 });
 
 test("R7 a refused proposal is drawn beside the act (control)", async () => {
   const p = await open(at, { plane: { clockpropose: refusedIn("NO_SUCH_RULE", "No such rule for this action.") } });
   await press(p, "clockpropose");
-  assert.match(main(p).textContent, /No such rule for this action\./);
+  assert.ok(main(p).textContent.includes("No such rule for this action."), "the refusal by its words");
 });
 
 test("R7 the subject `<action>~<entry position>` (screens-action's links, K3149) reads the action and opens at that entry; the action alone still opens (control)", async () => {
@@ -60,11 +63,17 @@ test("R7 the subject `<action>~<entry position>` (screens-action's links, K3149)
   const p = await open(at + "~1", { plane: { action: ok(two), reminderset: ok({ ok: true }) } });
   assert.equal(p.byOp("action")[0].query.id, ACT);
   assert.equal(p.byOp("clockproposals")[0].query.action, ACT);
-  assert.equal(main(p).querySelector("h1").textContent, "Due 14 October 2026");
-  assert.match(main(p).querySelector('[aria-current="true"]').textContent, /The City Clerk's reply/);
+  assert.equal(main(p).querySelector("h1").textContent, word("screen.due-date.due", { date: dayOf("2026-10-14") }));
+  assert.ok(main(p).querySelector('[aria-current="true"]').textContent.includes("The City Clerk's reply"), "the entry the address names");
   fill(p, { "dd-on": "2026-10-12" });
   await press(p, "reminderset");
   assert.deepEqual(p.byOp("reminderset")[0].body, { target: ACT, entry: 1, on: "2026-10-12" });
   const q = await open(at + "~0", { plane: { action: ok(two) } });
-  assert.equal(main(q).querySelector("h1").textContent, "Due 5 October 2026");
+  assert.equal(main(q).querySelector("h1").textContent, word("screen.due-date.due", { date: dayOf("2026-10-05") }));
+});
+
+test("R7 the reply owed is said only for a kind of request the words name (control: another kind draws no such line)", async () => {
+  const p = await open(at, { plane: { action: ok({ ...ACTION, kind: "other" }) } });
+  assert.ok(!main(p).textContent.includes(word("screen.due-date.of", { who: "City Clerk, City Council", item: word("screen.start-send.kind.other") })));
+  assert.equal(main(p).querySelector(".mk-sub"), null);
 });

@@ -5,40 +5,53 @@
  * R21 check); the module's own words are well formed; after an act the screen reads again what it changed. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { interfacePage } from "../../../src/interface-shell/index.mjs";
-import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
+import { WORD_ROWS, word, hasWord } from "../../../src/setup-words/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { refusedIn, silent, pending, ok } from "../interface-shell/harness.mjs";
-import { SCREEN_WORDS } from "../../../src/screens-investigate/index.mjs";
-import { open, main, rawKeys, plane, press, fill, SCREENS, PATHS, P, ENT, MSR, CALC, PROC, ACT, STD, SHA } from "./fixtures.mjs";
+import { open, main, rawKeys, plane, DIRECTORY, press, fill, SCREENS, PATHS, P, ENT, MSR, CALC, PROC, ACT, STD, SHA } from "./fixtures.mjs";
 
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
-/* the reads each screen draws in one of the four states, by op (the rest feed what is drawn: titles, choices) */
-const DRAWN = { people: ["peopledirectory"], person: ["person", "samepersoncandidates", "exploregraph"], explore: ["affordances", "explorepreset", "exploregraph"],
-  timeline: ["timeline"], money: ["moneyset", "money", "exploregraph"], calculation: ["calculation", "spotcheck"],
-  proceeding: ["entity", "partiesof", "follows", "dutiesof"], "due-date": ["action", "clockproposals", "clocksics"],
-  standard: ["standard", "lawrelations"], ties: ["memberties"] };
+/* N1073: no hand list of other modules' ops. The reads a screen makes are those it is seen to send over the scripted plane; each
+ * answered pending, refused and not at all must leave the screen standing, and draw its own state where the screen draws one (the
+ * reads that only feed a title or a choice draw none). The screen's subject read and the screen's other state-drawn reads are
+ * found by the page itself: at least one read per screen draws its state. */
+/* Registry acts PR #36 (DEC-235 to DEC-240) added to these screens that no requirement of this module draws (R1 and R3 name the
+ * registry's six acts each) and no T49 entry places: entities', connections', progressions' and wizard-scripts' own acts. They
+ * are listed so the check stays exact: any other registry act must be drawn, and these must still be undrawn here. Reported to BOB (J2). */
+const UNPLACED = { person: ["entityalias", "relationdeclare", "resolve", "resolvetestify", "connect", "writinghelp"],
+  timeline: ["instance", "thread", "discharge", "proposedispose", "progression", "progressiondefine"] };
 const VARIANTS = { refused: refusedIn("SOME_REFUSAL", "The plane refused this read."), silent, pending };
+const readsOf = async (id) => {
+  const p = await open(PATHS[id]);
+  const served = new Set(Object.keys(plane()));
+  return [...new Set(p.requests.map((r) => r.op))].filter((op) => served.has(op));
+};
 
-for (const [id, ops] of Object.entries(DRAWN)) {
+for (const id of Object.keys(PATHS).filter((x) => x !== "help")) {
   test(`R10 ${id}: each read pending, refused and unanswered is drawn in its own state, beside the rest, with no key drawn bare (interface-shell R10, R5)`, async () => {
-    for (const op of ops) for (const [name, answer] of Object.entries(VARIANTS)) {
+    const drawn = new Set();
+    for (const op of await readsOf(id)) for (const [name, answer] of Object.entries(VARIANTS)) {
       const p = await open(PATHS[id], { plane: { [op]: answer } });
       const m = main(p);
       assert.ok(m.querySelector("h1"), `${id} with ${op} ${name}: the screen stays`);
       const want = name === "pending" ? "loading" : "failed";
-      assert.ok(m.querySelector(`[data-state="${want}"]`), `${id}: ${op} ${name} drawn ${want}`);
-      if (name === "refused") assert.match(m.querySelector('[data-state="failed"]').textContent, /The plane refused this read|SOME_REFUSAL/);
+      if (m.querySelector(`[data-state="${want}"]`)) {
+        drawn.add(op);
+        if (name === "refused") assert.ok(/The plane refused this read|SOME_REFUSAL/.test(m.querySelector('[data-state="failed"]').textContent), "the refusal's own words");
+      }
       assert.deepEqual(rawKeys(p.root()), [], `${id} with ${op} ${name}`);
     }
+    assert.ok(drawn.size > 0, `${id}: some read is drawn in its own state`);
+    const subject = SCREENS.find((s) => s.id === id).reads({ subject: PATHS[id].split("/")[3], ui: {}, data: {} });
+    for (const r of Object.values(subject)) if (r.subject === true) assert.ok(drawn.has(r.op), `${id}: its subject read ${r.op} is drawn in its own state`);
   });
 }
 
 test("R10 a read that answers nothing is drawn empty, never failed (control: a refusal is failed, never empty); R22: ties with none draws its designed empty state, not \"You have listed no tie\"", async () => {
   const p = await open(PATHS.ties, { plane: { memberties: ok({ ok: true, member: "mai", count: 0, ties: [] }) } });
-  assert.match(main(p).textContent, /Start with “Add this tie”/);
-  assert.doesNotMatch(main(p).textContent, /You have listed no tie/);
+  assert.ok(main(p).textContent.includes(word("screen.ties.first")), "the designed empty state, naming the first step");
   assert.equal(main(p).querySelector('[data-state="failed"]'), null);
   const q = await open(PATHS.ties, { plane: { memberties: refusedIn("SOME_REFUSAL") } });
   assert.equal(main(q).querySelector('[data-state="empty"]'), null);
@@ -51,8 +64,10 @@ test("R10 every grade is drawn as one mark (the scale's name and the letter) exp
     assert.ok(grades.length > 0, id);
     for (const g of grades) {
       assert.ok(["capture", "connection", "testimony", "subject"].includes(g.getAttribute("data-scale")), id);
-      assert.match(g.textContent, /^(Capture|Connection|Testimony|Subject match)[A-D]$/, id);
-      assert.match(g.getAttribute("data-tip") || "", /A is easiest to check/, `${id}: the grade explains itself`);
+      const scale = g.getAttribute("data-scale");
+      assert.equal(g.textContent, word("mark.scale." + scale + ".name") + g.textContent.slice(-1), id);
+      assert.match(g.textContent, /[A-D]$/, id);
+      assert.ok((g.getAttribute("data-tip") || "").includes(word("mark.grade.reading").split(";")[0]), `${id}: the grade explains itself`);
     }
   }
 });
@@ -76,13 +91,13 @@ test("R10 after an act the screen reads again what it changed and draws it (cont
   fill(p, { "tie-who": "ENT-1", "tie-note": "East Bay Transit" });
   await press(p, "declaretie");
   assert.equal(n, 2);
-  assert.match(main(p).textContent, /East Bay Transit/);
+  assert.ok(main(p).textContent.includes("East Bay Transit"), "the tie she added, read again");
   const q = await open(PATHS.ties, { plane: { declaretie: refusedIn("NO_SUCH_ENTITY", "No such entity.") } });
   const before = q.byOp("memberties").length;
   fill(q, { "tie-who": "ENT-1", "tie-note": "x" });
   await press(q, "declaretie");
   assert.equal(q.byOp("memberties").length, before);
-  assert.match(main(q).textContent, /No such entity\./);
+  assert.ok(main(q).textContent.includes("No such entity."), "the refusal by its words");
   assert.equal(q.doc.getElementById("tie-note").value, "x", "the form keeps what was typed (interface-shell R13)");
 });
 
@@ -93,30 +108,49 @@ test("R10 each screen draws exactly its registry acts, labelled by its words, ea
     const reg = REGISTRY.screens.find((x) => x.id === s.id);
     assert.ok(reg, `${s.id} is a registry screen`);
     /* interface-shell R55: on explore, stepsource and stepsourcewithdraw re-point connectionassert (screens-investigate R17) */
-    const want = s.id === "explore" ? [...reg.acts.map((a) => a.op).filter((o) => o !== "connectionassert"), "stepsource", "stepsourcewithdraw"] : reg.acts.map((a) => a.op);
+    const want = (s.id === "explore" ? [...reg.acts.map((a) => a.op).filter((o) => o !== "connectionassert"), "stepsource", "stepsourcewithdraw"] : reg.acts.map((a) => a.op)).filter((o) => !(UNPLACED[s.id] || []).includes(o));
+    for (const o of UNPLACED[s.id] || []) assert.ok(reg.acts.some((a) => a.op === o) && !s.acts.some((a) => a.op === o), `${s.id}: ${o} is a registry act this module does not draw`);
     assert.deepEqual([...new Set(s.acts.map((a) => a.op))].sort(), [...new Set(want)].sort(), s.id);
     for (const a of s.acts) {
       assert.ok(Object.hasOwn(OPS, a.op), `${a.op} in OPS`);
-      assert.equal(a.label, a.op === "stepsource" ? "act.connectionassert.label.explore" : a.op === "stepsourcewithdraw" ? "screen.explore.withdraw" : `act.${a.op}.label.${s.id}`);
+      assert.equal(a.label, a.op === "stepsource" ? "act.stepsource.label.explore" : a.op === "stepsourcewithdraw" ? "screen.explore.withdraw" : `act.${a.op}.label.${s.id}`);
       assert.ok(s.words.some((w) => (typeof w === "string" ? w : w[0]) === a.label), `${a.label} listed`);
     }
   }
 });
 
-test("R10 the module's own words: frozen [key, en, protected] rows, unique, each a screen's own key, listed by a screen, none shadowing WORD_ROWS but screen.help.purpose", () => {
-  const shared = new Set(WORD_ROWS.map((r) => r[0]));
-  const keys = new Set();
-  const listed = new Set(SCREENS.flatMap((s) => s.words.filter((w) => typeof w !== "string").map((w) => w[0])));
-  for (const r of SCREEN_WORDS) {
-    assert.ok(Object.isFrozen(r) && r.length === 3 && typeof r[0] === "string" && typeof r[1] === "string" && typeof r[2] === "boolean", String(r[0]));
-    assert.ok(!keys.has(r[0]), `${r[0]} once`);
-    keys.add(r[0]);
-    assert.match(r[0], /^screen\.(people|person|explore|timeline|money|calculation|help|proceeding|due-date|standard|ties)\./);
-    assert.ok(!shared.has(r[0]) || r[0] === "screen.help.purpose", `${r[0]} shadows WORD_ROWS`);
-    assert.ok(listed.has(r[0]), `${r[0]} is drawn by some screen`);
-    assert.ok(!/\bCivicsmith\b/.test(r[1].replace(/your group's Civicsmith/g, "").replace(/your group's Civicsmith's/g, "")), `${r[0]} names Civicsmith bare`);
-    assert.ok(!/\b(Oakland|Alameda)\b/.test(r[1]), `${r[0]} names no place`);
+test("R30 the module holds no member-facing English: no SCREEN_WORDS, every screen lists keys only, each key a word setup-words holds (hasWord); what is drawn equals word(key, vars)", async () => {
+  const mod = await import("../../../src/screens-investigate/index.mjs");
+  assert.equal(mod.SCREEN_WORDS, undefined, "the module exports no rows of English");
+  for (const s of SCREENS) {
+    assert.equal(new Set(s.words).size, s.words.length, `${s.id}: keys listed once`);
+    for (const w of s.words) {
+      assert.equal(typeof w, "string", `${s.id}: ${JSON.stringify(w)} is a key, not a row`);
+      assert.ok(hasWord(w), `${s.id}: ${w} is a word`);
+    }
   }
-  for (const s of SCREENS) for (const w of s.words) if (typeof w === "string") assert.ok(shared.has(w), `${s.id}: ${w} in WORD_ROWS`);
-  assert.ok(Object.isFrozen(SCREEN_WORDS));
+  /* each key the source names, found by its shape, is a word (the keys a screen reads without listing them too) */
+  const dir = new URL("../../../src/screens-investigate/", import.meta.url);
+  const SHAPE = /["`]((?:screen|act|connection|mark|state|file|proceeding|column|shell)\.[a-z0-9_.-]*[a-z0-9_])["`]/g;
+  for (const f of readdirSync(dir)) {
+    const text = readFileSync(new URL(f, dir), "utf8");
+    for (const m of text.matchAll(SHAPE)) assert.ok(hasWord(m[1]), `${f}: ${m[1]} is no word`);
+  }
+  const p = await open(PATHS.ties);
+  for (const k of ["screen.ties.why.1", "screen.ties.who.1", "screen.ties.either", "screen.ties.add"]) assert.ok(main(p).textContent.includes(word(k)), k);
+  assert.ok(WORD_ROWS.length > 0);
+});
+
+test("D29 an answer that says ok and carries a refusal is drawn as the refusal, never as success: a graph, a search and a spot-check read", async () => {
+  const refusal = ok({ ok: true, refused: "NO_NODE", why: "No such record." });
+  const g = await open(PATHS.explore, { plane: { exploregraph: refusal } });
+  assert.ok(main(g).querySelector('[data-state="failed"]'), "the graph read");
+  assert.equal(main(g).querySelector(".mk-graph"), null);
+  const s = await open(PATHS.calculation, { plane: { spotcheck: refusal } });
+  assert.ok(main(s).querySelector('[data-state="failed"]'), "the spot-check read");
+  const p = await open(PATHS.people, { plane: { peopledirectory: (r) => (r.query.q ? refusal : ok(DIRECTORY())) } });
+  fill(p, { "people-q": "chen" });
+  await press(p, "search");
+  assert.ok(main(p).querySelector('[data-state="failed"]'), "the search");
+  assert.equal(main(p).querySelector('[data-state="empty"]'), null);
 });

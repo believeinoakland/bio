@@ -5,7 +5,6 @@
  * standing, the counts) with the estimate and its exact range from the estimate's own calculation. A member records
  * what she saw at a drawn report in two acts: `testify` (her own words) and `spotcheckvisit` (tying it to the item). */
 
-import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
 
 function reads(view) {
@@ -51,15 +50,18 @@ function render(cs, view) {
     if (s.found === false) return "";
     const d = s.draw || {};
     const k = s.counts || {};
+    /* the draw's question is answered yes, no or could not tell: the sentences that name the answer use the keyed "Yes", lower-cased */
+    const yes = cs.w(S + "standing.yes").toLowerCase();
     const range = est && est.state === "ok" && est.value.results && est.value.results.interval ? est.value.results.interval : null;
     return `<dl class="mk-facts"><dt>${cs.w(S + "draw")}</dt><dd>${cs.w(S + "draw.what", { n: String(d.n || 0), size: String(d.set_size || 0), seed: String(d.seed || "") })}<span class="mk-small">${cs.w(S + "draw.repeat")} ${cs.esc(d.method || "")}</span></dd>`
       + (s.question ? `<dt>${cs.w(S + "question")}</dt><dd class="rec">${cs.esc(s.question)}</dd>` : "")
       + (() => {
-        /* R22: no count is drawn at zero: only the findings that were made */
+        /* R22: no count is drawn at zero: only the findings that were made. The design's one sentence for the counts
+           (`counts`) names all three, zeros included, so the parts are drawn by their own words */
         const bits = [["yes", k.yes], ["no", k.no], ["unsure", k.could_not_tell], ["disagree", k.disagree], ["notvisited", k.not_visited]].filter((x) => x[1]).map((x) => cs.w(S + "counts." + x[0], { n: String(x[1]) }));
-        return bits.length ? `<dt>${cs.w(S + "found")}</dt><dd>${cs.w(S + "counts", { judged: String(k.judged || 0), n: String(d.n || 0), list: bits.join(", ") })}</dd>` : "";
+        return bits.length ? `<dt>${cs.w(S + "found")}</dt><dd>${bits.join(", ")}</dd>` : "";
       })()
-      + `<dt>${cs.w(S + "estimate")}</dt><dd>${range ? cs.w(S + "range", { share: String(Math.round((range.successes / Math.max(1, range.sample_size)) * 100)), low: String(Math.round((range.low_share || 0) * 100)), high: String(Math.round((range.high_share || 0) * 100)), confidence: String(Math.round((range.confidence || 0.95) * 100)), lowc: String(range.low), highc: String(range.high), size: String(range.frame_size) })
+      + `<dt>${cs.w(S + "estimate")}</dt><dd>${range ? cs.w(S + "range", { share: String(Math.round((range.successes / Math.max(1, range.sample_size)) * 100)), judged: String(range.sample_size), answer: yes, confidence: String(Math.round((range.confidence || 0.95) * 100)), low: String(Math.round((range.low_share || 0) * 100)), high: String(Math.round((range.high_share || 0) * 100)) })
         : est ? cs.state(est, () => cs.mark("gap", "undetermined", { reason: cs.w(S + "noestimate") })) : cs.mark("gap", "undetermined", { reason: cs.w(S + "noestimate") })}</dd></dl>`
       + cs.sheet((s.items || []).map((it) => cs.row(`<span class="cs-kind" data-standing="${cs.esc(it.standing)}">${cs.w(S + "standing." + (["yes", "no", "disagree", "could_not_tell", "not_visited"].includes(it.standing) ? it.standing : "not_visited"))}</span>`,
         `<b>${cs.w(S + "item", { item: String(it.item) })}</b>` + (it.standing === "disagree" ? ` <span class="mk-small">${cs.w(S + "tension")}</span>` : ""),
@@ -67,7 +69,7 @@ function render(cs, view) {
   });
   const items = spot && spot.state === "ok" ? (spot.value.items || []).map((x) => ({ value: String(x.item), text: cs.w(S + "item", { item: String(x.item) }) })) : [];
   out.push(cs.sec(S + "spot", spotInner
-    + `<p class="mk-small">${cs.w(S + "notsays")} <a href="/app/help" data-nav>${cs.w(S + "help")}</a></p>`
+    + `<p class="mk-small">${cs.w("screen.help.notsays.p")} <a href="/app/help" data-nav>${cs.w(S + "help")}</a></p>`
     + cs.field("calc-set", S + "set", { help: S + "set.help" }) + cs.field("calc-n", S + "n", { value: "40" }) + cs.field("calc-seed", S + "seed", { help: S + "seed.help" })
     + cs.field("calc-dq", S + "dq", { area: true, rec: true })
     + cs.act("calculationdraw", { label: "act.calculationdraw.label.calculation" })
@@ -169,116 +171,39 @@ const acts = [
     done(view) { view.ui.testimony = null; view.ui.later = {}; } },
 ];
 
-export const CALCULATION_WORDS = [
-  ["method", "Method"],
-  ["method.holds", "How the figure was worked out, as written, so anyone can repeat it."],
-  ["status.unchecked", "Not yet recomputed by a second member."],
-  ["status.agrees", "Recomputed: it agrees."],
-  ["status.differs", "Recomputed: it differs from what is stored."],
-  ["status.stale", "An input changed since it was worked out: work it out again."],
-  ["accepted", "accepted by {by} on {date}"],
-  ["inputs", "Inputs"],
-  ["unbound", "not tied to the record"],
-  ["apart", "{n} items were counted apart, never guessed."],
-  ["draw", "The draw"],
-  ["draw.what", "{n} of {size} picked at random · seed {seed}"],
-  ["draw.repeat", "Anyone can repeat it from the seed and get the same items, so no one chose which ones to visit."],
-  ["question", "The question"],
-  ["found", "What members found"],
-  ["counts", "{judged} of {n} judged: {list}"],
-  ["counts.yes", "{n} yes"],
-  ["counts.no", "{n} no"],
-  ["counts.unsure", "{n} could not tell"],
-  ["counts.disagree", "{n} in tension"],
-  ["counts.notvisited", "{n} not visited"],
-  ["estimate", "What it estimates"],
-  ["range", "{share}% of those judged · exact {confidence}% range {low}% to {high}% · between {lowc} and {highc} of all {size}"],
-  ["noestimate", "no estimate is worked out over this draw yet"],
-  ["standing.yes", "Yes"],
-  ["standing.no", "No"],
-  ["standing.disagree", "In tension"],
-  ["standing.could_not_tell", "Could not tell"],
-  ["standing.not_visited", "Not visited"],
-  ["item", "Item {item}"],
-  ["tension", "the visits disagree; both are shown, never one picked"],
-  ["visit", "{finding}, seen by {by} on {date}"],
-  ["account", "their account"],
-  ["finding", "What you found"],
-  ["finding.yes", "Yes"],
-  ["finding.no", "No"],
-  ["finding.could_not_tell", "Could not tell"],
-  ["spot", "Spot-check"],
-  ["spot.help", "A spot-check tests the city's count against the street: members visit a random sample of the counted items and record what they find, and it estimates, with a range, how many of all of them really were so."],
-  ["notsays", "It says nothing certain about any one item no one visited, and nothing about items outside the set drawn from."],
-  ["help", "How spot-checks work"],
-  ["set", "The set to draw from"],
-  ["set.help", "The table's or set's fingerprint."],
-  ["n", "How many to draw"],
-  ["seed", "Seed (optional)"],
-  ["seed.help", "Recorded with the draw, so anyone can repeat it; left empty, a random one is chosen and recorded."],
-  ["dq", "What members check at each drawn item"],
-  ["words", "What you saw at the report, in your own words"],
-  ["words.help", "Recorded as your testimony, under your name, and never changed afterwards."],
-  ["observed", "The day you saw it"],
-  ["testified", "Your account is recorded. Now count it for the drawn report it was about."],
-  ["itempick", "The drawn report"],
-  ["photo", "A photo you captured (optional)"],
-  ["photo.help", "Its fingerprint. Your account counts with or without one."],
-  ["work", "Work it out"],
-  ["q", "The question the figure answers"],
-  ["from", "Period from"],
-  ["to", "Period to"],
-  ["kind", "What to work out"],
-  ["kind.count", "A count"],
-  ["kind.total", "A total"],
-  ["kind.share", "A share"],
-  ["kind.ratio", "A ratio"],
-  ["kind.difference", "A difference"],
-  ["kind.estimate", "An estimate over a draw"],
-  ["input", "Its input"],
-  ["input.help", "A money fact, a calculation, a table's or a draw's fingerprint, or a figure, by its id."],
-  ["content", "The table's source"],
-  ["content.help", "The passage's content id."],
-  ["header", "Its columns, separated by commas"],
-  ["header.help", "Each column's name, in order, as the table heads it."],
-  ["workbook", "Your own spreadsheet"],
-  ["wb", "The spreadsheet"],
-  ["wb.help", "The captured workbook's fingerprint."],
-  ["period", "Its period"],
-  ["range.field", "The cells to tie"],
-  ["range.help", "One block on one sheet, for example Budget!B2:B5."],
-  ["table", "Tied to (a table's fingerprint, or a passage's content id)"],
-  ["trange", "The table's cells (for a table)"],
-  ["outcome", "The second member's check"],
-  ["outcome.agrees", "It agrees"],
-  ["outcome.disagrees", "It disagrees"],
-  ["outcome.could_not_check", "Could not check"],
-  ["note", "What they found, in their words"],
-  ["work.empty", "Give the question, its period and its input."],
-  ["table.empty", "Give the table's source and its columns."],
-  ["draw.empty", "Give the set's fingerprint and how many to draw."],
-  ["wb.empty", "Give the spreadsheet's fingerprint and its period."],
-  ["bind.empty", "Give the spreadsheet, its cells and what they are tied to."],
-  ["words.empty", "Say what you saw, and the day you saw it."],
-  ["visit.empty", "Record your account first, then choose the drawn report and what you found."],
-].map(([k, en]) => row("screen.calculation." + k, en));
+const CALCULATION_KEYS = [
+  "screen.calculation.counts.yes", "screen.calculation.counts.no", "screen.calculation.counts.unsure",
+  "screen.calculation.method", "screen.calculation.method.holds", "screen.calculation.status.unchecked", "screen.calculation.status.agrees",
+  "screen.calculation.status.differs", "screen.calculation.status.stale", "screen.calculation.accepted", "screen.calculation.inputs",
+  "screen.calculation.unbound", "screen.calculation.apart", "screen.calculation.draw", "screen.calculation.draw.what",
+  "screen.calculation.draw.repeat", "screen.calculation.question", "screen.calculation.found",
+  "screen.calculation.counts.disagree",
+  "screen.calculation.counts.notvisited", "screen.calculation.estimate", "screen.calculation.range", "screen.calculation.noestimate",
+  "screen.calculation.standing.yes", "screen.calculation.standing.no", "screen.calculation.standing.disagree",
+  "screen.calculation.standing.could_not_tell", "screen.calculation.standing.not_visited", "screen.calculation.item", "screen.calculation.tension",
+  "screen.calculation.visit", "screen.calculation.account", "screen.calculation.finding", "screen.calculation.finding.yes",
+  "screen.calculation.finding.no", "screen.calculation.finding.could_not_tell", "screen.calculation.spot", "screen.calculation.spot.help",
+  "screen.calculation.help", "screen.calculation.set", "screen.calculation.set.help", "screen.calculation.n",
+  "screen.calculation.seed", "screen.calculation.seed.help", "screen.calculation.dq", "screen.calculation.words", "screen.calculation.words.help",
+  "screen.calculation.observed", "screen.calculation.testified", "screen.calculation.itempick", "screen.calculation.photo",
+  "screen.calculation.photo.help", "screen.calculation.work", "screen.calculation.q", "screen.calculation.from", "screen.calculation.to",
+  "screen.calculation.kind", "screen.calculation.kind.count", "screen.calculation.kind.total", "screen.calculation.kind.share",
+  "screen.calculation.kind.ratio", "screen.calculation.kind.difference", "screen.calculation.kind.estimate", "screen.calculation.input",
+  "screen.calculation.input.help", "screen.calculation.content", "screen.calculation.content.help", "screen.calculation.header",
+  "screen.calculation.header.help", "screen.calculation.workbook", "screen.calculation.wb", "screen.calculation.wb.help",
+  "screen.calculation.period", "screen.calculation.range.field", "screen.calculation.range.help", "screen.calculation.table",
+  "screen.calculation.trange", "screen.calculation.outcome", "screen.calculation.outcome.agrees", "screen.calculation.outcome.disagrees",
+  "screen.calculation.outcome.could_not_check", "screen.calculation.note", "screen.calculation.work.empty", "screen.calculation.table.empty",
+  "screen.calculation.draw.empty", "screen.calculation.wb.empty", "screen.calculation.bind.empty", "screen.calculation.words.empty",
+  "screen.calculation.visit.empty",
+];
 
 /** R11: the help page's sentences, plain words for any calculation a group tests against what members see. */
-export const HELP_WORDS = [
-  ["sub", "Help · for any calculation your group can test against what members see"],
-  ["does", "What a spot-check does"],
-  ["does.p", "A calculation counts what a source records, such as the reports the city marked closed. A spot-check tests whether the record matches what is really there: members visit a random sample of the counted items and record what they find."],
-  ["random", "Why the sample is random, and recorded"],
-  ["random.p", "The sample is drawn from a recorded seed. Anyone, including the city or a reporter, can repeat the draw and get exactly the same items, so no one could have picked the easy or the damning ones."],
-  ["says", "What the result says"],
-  ["says.p", "The share of visited items that matched, and an exact range for the whole set. The range is what the sample can honestly support: the true share for all items is very likely inside it. A larger sample gives a narrower range: about 13 points either way for 40 items, about 9 for 100."],
-  ["notsays", "What it does not say"],
-  ["notsays.p", "Nothing certain about any one item no one visited. Nothing about items outside the set that was drawn from. Items members could not judge are counted apart and named, never guessed; the estimate assumes they are like the rest, and says so."],
-  ["evidence", "Each visit is evidence"],
-  ["evidence.p", "Each visit is recorded as the testimony of the member who made it. A photo, where the member took one, lets others see what was there; the member's account counts with or without one. A finding resting on a spot-check shows the draw, every visit, and the range."],
-  ["back", "Back to the calculation"],
-  ["purpose", "A help page: one of your group's Civicsmith's methods explained in plain words, opened from the screens where it is used."],
-].map(([k, en]) => row("screen.help." + k, en));
+const HELP_KEYS = [
+  "screen.help.sub", "screen.help.does", "screen.help.does.p", "screen.help.random", "screen.help.random.p", "screen.help.says",
+  "screen.help.says.p", "screen.help.notsays", "screen.help.notsays.p", "screen.help.evidence", "screen.help.evidence.p", "screen.help.back",
+  "screen.help.purpose",
+];
 
 function renderHelp(cs) {
   const H = "screen.help.";
@@ -291,7 +216,7 @@ const words = ["screen.calculation.name", "screen.calculation.purpose",
     .flatMap((op) => ["act." + op + ".label.calculation", "act." + op + ".does"]),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading",
   "mark.gap.undetermined.name", "mark.gap.undetermined.means", "mark.gap.unrated.name", "mark.gap.unrated.means",
-  "state.empty", "state.loading", "state.failed", ...CALCULATION_WORDS];
+  "screen.help.notsays.p", "state.empty", "state.loading", "state.failed", ...CALCULATION_KEYS];
 
 export const CALCULATION_SCREEN = Object.freeze({ id: "calculation", ABSENT_CODES: Object.freeze(["NO_ENTITY", "NO_CALC"]), reads, place, render, acts, words, parts: PARTS });
-export const HELP_SCREEN = Object.freeze({ id: "help", reads: () => ({}), render: renderHelp, acts: [], words: ["screen.help.name", ...HELP_WORDS] });
+export const HELP_SCREEN = Object.freeze({ id: "help", reads: () => ({}), render: renderHelp, acts: [], words: ["screen.help.name", ...HELP_KEYS] });

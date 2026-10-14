@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, WALK, ENT, ORG, SHA } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, WALK, GRAPH, ENT, ORG, SHA, word, hasWord, drew, notDrew } from "./fixtures.mjs";
 
 const at = "/app/explore/" + ENT;
 const walked = async (o = {}) => {
@@ -12,12 +12,12 @@ const walked = async (o = {}) => {
   return p;
 };
 
-test("R24 explore's Follow offers the design's five groups, the first three ticked; ticking Money sends exactly the money kinds; control: no checkbox per kind", async () => {
+test("R24 R27 explore's Follow offers the design's six groups, the first three ticked; ticking Money sends exactly the money kinds; ticking Stated in a source sends exactly its kinds; control: Mentioned together sends no step_source kind, no checkbox per kind", async () => {
   const p = await open(at);
   const box = p.doc.getElementById("explore-groups");
   const boxes = box.querySelectorAll("input");
-  assert.deepEqual(boxes.map((b) => b.parentElement.textContent.trim()), ["Position or membership", "Money", "Took part", "Mentioned together", "Same person?"]);
-  assert.deepEqual(boxes.map((b) => b.checked), [true, true, true, false, false]);
+  assert.deepEqual(boxes.map((b) => b.parentElement.textContent.trim()), ["pos", "money", "part", "ment", "same", "step_source"].map((g) => word("connection.kind." + g + ".name")));
+  assert.deepEqual(boxes.map((b) => b.checked), [true, true, true, false, false, false]);
   assert.equal(p.doc.getElementById("explore-kinds"), null, "no raw kind checkbox is drawn");
   assert.equal(p.root().querySelectorAll('input[type="checkbox"]').filter((i) => /explore-kinds/.test(i.getAttribute("name") || "")).length, 0);
   boxes[0].checked = false; boxes[2].checked = false;
@@ -28,7 +28,37 @@ test("R24 explore's Follow offers the design's five groups, the first three tick
   q.doc.getElementById("explore-groups").querySelectorAll("input").forEach((b, i) => { b.checked = i === 3 || i === 4; });
   fill(q, { "explore-at": "2025-06-30" });
   await press(q, "explore");
-  assert.deepEqual(q.byOp("explore")[0].body.kinds, ["mentioned_together", "proxy_for"], "each group sends its kinds by the vocabulary's group");
+  assert.deepEqual(q.byOp("explore")[0].body.kinds, ["mentioned_together", "proxy_for"], "each group sends its kinds by the vocabulary's group; Mentioned together sends no step_source kind");
+  const r = await open(at);
+  r.doc.getElementById("explore-groups").querySelectorAll("input").forEach((b, i) => { b.checked = i === 5; });
+  fill(r, { "explore-at": "2025-06-30" });
+  await press(r, "explore");
+  assert.deepEqual(r.byOp("explore")[0].body.kinds, ["step_source"], "Stated in a source sends exactly its kinds (affordances R60's group)");
+});
+
+test("R27 a step_source step is drawn in its own class (e-step_source), named by connection.kind.step_source.name and explained by its means; control: a mentioned-together step is not", async () => {
+  const g = GRAPH();
+  g.steps[0] = { ...g.steps[0], kind: "step_source", word: "stated in a source", class: "evidentiary", grade: { assertion: "B", ends: ["D", "D"] }, evidence: [{ capture_sha: SHA }] };
+  const p = await open(at, { plane: { exploregraph: ok(g) } });
+  const gr = main(p).querySelector(".mk-graph");
+  assert.equal(gr.querySelectorAll(".gwrap .e-step_source").length, 1, "its own class");
+  assert.equal(gr.querySelectorAll(".gwrap .e-ment").length, 0, "not drawn as mentioned together");
+  assert.ok(gr.querySelector(".mk-glegend").textContent.includes(word("connection.kind.step_source.name")), "the legend names it");
+  assert.ok(gr.querySelector(`.mk-glegend [data-tip="${word("connection.kind.step_source.means")}"]`), "and explains it");
+  for (const k of ["connection.kind.step_source.name", "connection.kind.step_source.means"]) assert.ok(hasWord(k), k);
+  const q = await open(at);
+  assert.equal(main(q).querySelector(".mk-graph").querySelectorAll(".gwrap .e-step_source").length, 0);
+});
+
+test("R29 explore opened with no centre draws its sentence by key and asks the plane for no graph, never \"no centre is named\"; control: with a centre, the graph", async () => {
+  const p = await open("/app/explore");
+  drew(main(p), "screen.explore.nocentre");
+  assert.equal(p.byOp("exploregraph").length, 0, "no graph is read");
+  assert.equal(main(p).querySelector(".mk-graph"), null);
+  assert.ok(hasWord("screen.explore.nocentre"));
+  const q = await open(at);
+  assert.ok(main(q).querySelector(".mk-graph"));
+  notDrew(main(q), "screen.explore.nocentre");
 });
 
 test("R24 a walk with no group ticked sends nothing (control)", async () => {
@@ -44,7 +74,7 @@ test("R2 the day is never \"now\": no day sends nothing (control)", async () => 
   fill(p, { "explore-at": "" });
   await press(p, "explore");
   assert.equal(p.byOp("explore").length, 0);
-  assert.match(main(p).textContent, /Give the day to explore as of/);
+  drew(main(p), "screen.explore.at.empty");
 });
 
 test("R2 each chain drawn hop by hop, each hop a reference and its cited source; the chain's grade its weakest hop's; a declared step a lead, never a finding; no score", async () => {
@@ -56,25 +86,26 @@ test("R2 each chain drawn hop by hop, each hop a reference and its cited source;
   const hops = a.querySelectorAll("[data-hop]");
   assert.equal(hops.length, 2);
   assert.ok(hops[0].querySelector(`a.cs-ref[href="/app/person/${ENT}"]`) || hops[0].querySelector(".cs-card"));
-  assert.match(hops[0].textContent, /held the post \(employee\)/);
+  assert.ok(hops[0].textContent.includes("held the post (employee)"), "the hop's kind, as the vocabulary words it");
   assert.ok(hops[0].querySelector(`[data-tip*="page 2"]`), "the hop's cited passage");
-  assert.match(b.textContent, /a lead, not a finding/);
-  assert.match(b.querySelector("[data-hop]").textContent, /declared, not evidenced/);
-  assert.match(main(p).textContent, /never scored or ranked/);
+  drew(b, "screen.explore.lead");
+  drew(b.querySelector("[data-hop]"), "screen.explore.declared");
+  drew(main(p), "screen.explore.noscore");
   assert.doesNotMatch(main(p).textContent, /most connected|score:/i);
 });
 
 test("R2 a walk stopped at a bound says so, undetermined (control: a complete walk says nothing of it)", async () => {
   const p = await walked({ plane: { explore: ok(WALK({ truncated: true, undetermined: true, why: "the walk reached its limit of 5000 nodes", complete: false })) } });
-  assert.match(main(p).textContent, /the walk reached its limit of 5000 nodes/);
+  assert.ok(main(p).textContent.includes("the walk reached its limit of 5000 nodes"), "the plane's own reason");
   const q = await walked();
-  assert.doesNotMatch(main(q).textContent, /reached its limit|the walk went \d+ steps/);
+  assert.ok(!main(q).textContent.includes("the walk reached its limit of 5000 nodes"));
+  assert.ok(!main(q).textContent.includes(word("screen.explore.stopped", { depth: "8" })));
 });
 
 test("R2 explore's own refusal ({refused, why}) is drawn, never as no chains (control)", async () => {
   const p = await walked({ plane: { explore: ok({ refused: "UNKNOWN_KIND", why: "no such kind of connection" }) } });
-  assert.match(main(p).textContent, /no such kind of connection/);
-  assert.doesNotMatch(main(p).textContent, /No chain was found/);
+  assert.ok(main(p).textContent.includes("no such kind of connection"), "the plane's own words");
+  notDrew(main(p), "screen.explore.nochains");
 });
 
 test("R2 explorepreset by its name; promote opens a question naming the chain", async () => {
@@ -88,8 +119,10 @@ test("R2 explorepreset by its name; promote opens a question naming the chain", 
   await press(p, "promote", { within: a });
   const pr = p.byOp("promote")[0].body;
   assert.equal(pr.bundleId, "INQ-2026-0042-chain");
-  assert.match(pr.files[0].text, /What does this chain of connections show/);
-  assert.match(pr.files[0].text, new RegExp(`${ENT} → line:holds:employee → ${ORG}`));
+  const steps = `${ENT} → line:holds:employee → ${ORG}; ${ORG} → mentioned_together → ENT-2026-0200`;
+  assert.ok(pr.files[0].text.includes(word("file.chain.question", { steps })), "the question, by its key");
+  assert.ok(pr.files[0].text.includes(word("file.recheck.chain")) && pr.files[0].text.includes(word("file.recheck.chain.why")), "the recheck trigger, by its keys");
+  assert.ok(pr.meta.title.startsWith(word("file.chain.title", { steps }).slice(0, 40)));
   assert.equal(p.location.pathname, "/app/question/INQ-2026-0042-chain");
 });
 
@@ -102,14 +135,14 @@ test("R2 exploreverify \"Check this chain\" sends the drawn path as chain (explo
   assert.deepEqual(body.chain.map((h) => h.id), ["lines:holds:1", "co:5"]);
   assert.deepEqual(body.chain[1], { kind: "mentioned_together", from: ORG, to: "ENT-2026-0200", as_of: "2026-10-14", method: "co-mention@1", id: "co:5" });
   assert.deepEqual(body.chain[0], { id: "lines:holds:1", kind: "line:holds:employee", owner: "lines" });
-  assert.match(main(p).querySelector('[data-verified="0"]').textContent, /This chain holds as the record has it now.*A step the record cites, not recomputed.*This step holds/s);
+  for (const k of ["screen.explore.verify.matches", "screen.explore.verify.cited", "screen.explore.verify.hop.holds"]) drew(main(p).querySelector('[data-verified="0"]'), k, { why: "" });
   const t = await walked({ plane: { exploreverify: ok({ ok: true, matches: false, lead: false, hops: [{ id: "co:5", matches: false }] }) } });
   await press(t, "exploreverify", { within: main(t).querySelectorAll("div.mk-msg[data-chain]")[0] });
-  assert.match(main(t).querySelector('[data-verified="0"]').textContent, /does not match what the record holds now/);
-  assert.match(main(t).querySelector('[data-verified="0"]').textContent, /does not match what the record has now/);
+  drew(main(t).querySelector('[data-verified="0"]'), "screen.explore.verify.differs", { why: "" });
+  drew(main(t).querySelector('[data-verified="0"]'), "screen.explore.verify.hop.differs");
   const l = await walked({ plane: { exploreverify: ok({ ok: true, matches: false, lead: true, hops: [] }) } });
   await press(l, "exploreverify", { within: main(l).querySelectorAll("div.mk-msg[data-chain]")[1] });
-  assert.match(main(l).querySelector('[data-verified="1"]').textContent, /It is a lead/);
+  drew(main(l).querySelector('[data-verified="1"]'), "screen.explore.verify.lead");
   assert.ok(b);
 });
 
@@ -129,19 +162,19 @@ test("R17 Attach a source to a declared step sends stepsource with the hop's rel
     stepsource: () => { attached = true; return ok({ ok: true, id: "STEPSOURCE-1", wrote: true }); },
     stepsourcewithdraw: () => { attached = false; return ok({ ok: true, id: "STEPSOURCE-1" }); } } });
   const lead = () => main(p).querySelectorAll("div.mk-msg[data-chain]")[1];
-  assert.match(lead().textContent, /a lead, not a finding/);
+  drew(lead(), "screen.explore.lead");
   assert.equal(button(p, "connectionassert"), null, "connectionassert is not drawn for this act");
   fill(p, { "explore-assert-sha": SHA, "explore-assert-page": "4", "explore-assert-basis": "The minutes name him as the company's agent." });
   await press(p, "stepsource", { within: lead() });
   assert.deepEqual(p.byOp("stepsource")[0].body, { relation: "REL-2026-0002", captureSha: SHA, extent: { kind: "pdf-page", page: 3 }, basis: "The minutes name him as the company's agent." });
   const done = lead();
-  assert.match(done.textContent, /each step cited/, "evidenced, no longer a lead");
-  assert.doesNotMatch(done.textContent, /declared, not evidenced/);
+  drew(done, "screen.explore.evidenced", undefined, "evidenced, no longer a lead");
+  notDrew(done, "screen.explore.declared");
   assert.equal(done.querySelector(".cs-grade").textContent, "ConnectionB", "at the capture's grade");
-  assert.match(done.querySelector("[data-attached]").textContent, /stated in a source, attached by mai, 12 October 2026/);
+  drew(done.querySelector("[data-attached]"), "screen.explore.attached", { by: "mai", date: "12 October 2026" });
   await press(p, "stepsourcewithdraw", { within: done, reason: "wrong page" });
   assert.deepEqual(p.byOp("stepsourcewithdraw")[0].body, { id: "STEPSOURCE-1", reason: "wrong page" });
-  assert.match(lead().textContent, /a lead, not a finding/, "after the withdrawal it is drawn a lead");
+  drew(lead(), "screen.explore.lead", undefined, "after the withdrawal it is drawn a lead");
 });
 
 test("R17 an attachment without its passage or without the member's words sends nothing (control); a refusal is drawn by its words", async () => {
@@ -151,5 +184,5 @@ test("R17 an attachment without its passage or without the member's words sends 
   assert.equal(p.byOp("stepsource").length, 0);
   fill(p, { "explore-assert-sha": SHA, "explore-assert-basis": "The minutes name him." });
   await press(p, "stepsource", { within: lead() });
-  assert.match(main(p).textContent, /That passage cannot be read\./);
+  assert.ok(main(p).textContent.includes("That passage cannot be read."), "the refusal by its words");
 });
