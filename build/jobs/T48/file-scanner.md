@@ -24,3 +24,7 @@
 - `checks/run.mjs`: format 0, architecture 0 failures (0 for my files), channels 0; coverage's 8 failures are other modules' T48 ids, accepted by rule 5 (1).
 
 Size (session_01XEWF35nw9baeasjnzvgSxr): test runs 4, module lines 4756
+
+## J1 · COMPLETE
+
+T48-7 applied: R32 met (words.test.mjs: test, control, the probe's "safe view" words, interface unchanged); the cdr test probe's failure detail re-worded to "safe view"; comments re-worded; bundle rebuilt and fresh. Module tests 58 pass, 0 fail, 10 skip (no ClamAV here, as before); format, architecture, coverage (32/32), ownership 0 failures. Record: build/jobs/T48/file-scanner.md.
