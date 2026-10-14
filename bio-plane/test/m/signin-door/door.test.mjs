@@ -3,7 +3,7 @@
    `AGENT_WORKER` binding recording each request it is sent. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { subscriptionSignin, subscriptionDisconnect, signoutLeaver, leaverOf, tokenRefusedSeen, signinTrace,
+import { subscriptionSignin, subscriptionDisconnect, signoutLeaver, leaverOf, tokenRefusedSeen, signintrace,
          memberRefOf, testInstanceOf, SIGNIN_WORDS, TRACE_HEADER, MEMBER_REF_HEADER } from "../../../src/signin-door/index.mjs";
 
 const ANN = "member:ann";
@@ -314,19 +314,19 @@ test("R4 (credentials R70): an ask or draft answered SIGNIN_TOKEN_REFUSED, at th
 
 /* ================================================================ R5 */
 
-test("R5 (connect §3): `signinTrace` off a test instance answers SIGNINTRACE_NOT_TEST and asks nothing; on one, the store's `signintraceread`; the door keeps its line through `signintracekeep` on a test instance only", async () => {
+test("R5 (connect §3): `signintrace` off a test instance answers SIGNINTRACE_NOT_TEST and asks nothing; on one, the store's `signintraceread`; the door keeps its line through `signintracekeep` on a test instance only", async () => {
   for (const env of [PROD_ENV, {}, { CIVICSMITH_TEST_INSTANCE: "a", INSTANCE_NAME: "b" }, { CIVICSMITH_TEST_INSTANCE: "", INSTANCE_NAME: "" }]) {
     assert.equal(testInstanceOf(env), false, JSON.stringify(env));
     const store = storeOf();
-    const r = await signinTrace({ env, store });
+    const r = await signintrace({ env, store });
     assert.deepEqual([r.status, r.body.ok, r.body.reason], [403, false, "SIGNINTRACE_NOT_TEST"]);
     assert.deepEqual(store.calls, []);
   }
   const lines = [{ event: "signin.door", trace: "t" }];
   const store = storeOf({ signintraceread: { ok: true, max: 200, lines } });
-  const r = await signinTrace({ env: TEST_ENV, store });
+  const r = await signintrace({ env: TEST_ENV, store });
   assert.deepEqual([r.status, r.body.lines], [200, lines]);
-  const silent = await signinTrace({ env: TEST_ENV, store: storeOf({ signintraceread: "silent" }) });
+  const silent = await signintrace({ env: TEST_ENV, store: storeOf({ signintraceread: "silent" }) });
   assert.deepEqual([silent.status, silent.body.reason], [502, "STORE_DID_NOT_ANSWER"]);
   const t = world({ env: TEST_ENV });
   await t.go({ step: "signout" });

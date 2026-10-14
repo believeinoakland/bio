@@ -11,8 +11,9 @@
    and answers its result, which never carries the token; `signintokenrefused?by=<member>` calls
    `subscriptionTokenRefused`.
    R5: `signintracekeep` keeps one line (only `TRACE_FIELDS`, each a short scalar) and `signintraceread` answers the last
-   `SIGNIN_TRACE_MAX` lines, both on a test instance only (`TRACE_NOT_KEPT` elsewhere). The trace is held in the store
-   object's memory, never in a table: bounded, lost when the object is evicted, and holding no token, secret or code. */
+   `SIGNIN_TRACE_MAX` lines, both on a test instance only: elsewhere nothing is kept and no line is read (the refusal
+   `SIGNINTRACE_NOT_TEST` is the door's, its one site, `index.mjs`'s `signintrace`; K231, K3143). The trace is held in
+   the store object's memory, never in a table: bounded, lost when the object is evicted, and holding no token, secret or code. */
 import { SIGNIN_TRACE_MAX, TRACE_FIELDS, testInstanceOf } from "./index.mjs";
 
 /* R5: one trace per store's `credentials` (one per store object), oldest first. */
@@ -39,9 +40,6 @@ export function keptLine(line) {
   return Object.keys(out).length ? out : null;
 }
 
-const notKept = () => ({ ok: false, reason: "SIGNINTRACE_NOT_TEST", detail: "the sign-in trace is kept only on a test "
-  + "instance of Civicsmith, and your group's Civicsmith is not one. Nothing was read or kept." });
-
 export function signinDoorOps(c, url, body, env) {
   const by = () => url.searchParams.get("by");
   const b = isObject(body) ? body : {};
@@ -50,7 +48,7 @@ export function signinDoorOps(c, url, body, env) {
     signintokenhold: () => c.subscriptionTokenHold({ member: by(), token: b.token ?? null, validFor: b.validFor ?? null }),
     signintokenrefused: () => c.subscriptionTokenRefused({ member: by() }),
     signintracekeep: () => {
-      if (!testInstanceOf(env)) return notKept();
+      if (!testInstanceOf(env)) return { ok: true, kept: false };
       const line = keptLine(b.line);
       if (!line) return { ok: true, kept: false };
       const t = traceOf(c);
@@ -58,6 +56,6 @@ export function signinDoorOps(c, url, body, env) {
       if (t.length > SIGNIN_TRACE_MAX) t.splice(0, t.length - SIGNIN_TRACE_MAX);
       return { ok: true, kept: true };
     },
-    signintraceread: () => (testInstanceOf(env) ? { ok: true, max: SIGNIN_TRACE_MAX, lines: traceOf(c).slice() } : notKept()),
+    signintraceread: () => ({ ok: true, max: SIGNIN_TRACE_MAX, lines: testInstanceOf(env) ? traceOf(c).slice() : [] }),
   };
 }

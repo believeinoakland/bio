@@ -260,12 +260,15 @@ export async function tokenRefusedSeen({ member, answer, store }) {
   return true;
 }
 
-/** `op=signintrace` (R5): on a test instance the trace's last lines, as the store's `signintraceread` answers them;
+/** `op=signintrace` (R5; its handler, named as the op): on a test instance the trace's last lines, as the store's `signintraceread` answers them;
  *  elsewhere `SIGNINTRACE_NOT_TEST` and nothing asked. Who reaches the op is admission's (an administrator's session). */
-export async function signinTrace({ env, store }) {
+export async function signintrace({ env, store }) {
+  /* DEC-49 REGION is-signintrace-test-instance
+     C-69.7 (`answer-envelope`'s DISPATCH_CHECKS row, K3143): the one site of the code (K231). */
   if (!testInstanceOf(env))
     return { status: 403, body: { ok: false, reason: "SIGNINTRACE_NOT_TEST", detail: "the sign-in trace is kept only "
       + "on a test instance of Civicsmith, and your group's Civicsmith is not one. Nothing was read." } };
+  /* END DEC-49 REGION is-signintrace-test-instance */
   const out = await ask(store, STORE_ROUTES.traceRead, { method: "GET" });
   if (out.refused || !out.answered) return unreadAnswer("signintrace", out, undefined);
   return { status: 200, body: isObject(out.result) ? out.result : { ok: true, lines: [] } };

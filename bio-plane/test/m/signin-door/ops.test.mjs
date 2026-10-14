@@ -35,7 +35,7 @@ test("R4 (credentials R70): `signintokenhold` hands the body's `token` and `vali
   assert.deepEqual(none.asked, [["subscriptionTokenHold", { member: "member:ann", token: null, validFor: null }]]);
 });
 
-test("R5 (connect §3): on a test instance the trace keeps the last 200 lines, each only the named fields as short scalars (no token, secret or code field), and `signintraceread` answers them oldest first; off a test instance both answer SIGNINTRACE_NOT_TEST and keep nothing", async () => {
+test("R5 (connect §3): on a test instance the trace keeps the last 200 lines, each only the named fields as short scalars (no token, secret or code field), and `signintraceread` answers them oldest first; off a test instance nothing is kept and no line is read (the refusal is the door's alone)", async () => {
   const c = credentials();
   for (let i = 0; i < SIGNIN_TRACE_MAX + 25; i++)
     assert.equal(run(c, "signintracekeep", { line: { event: "signin.door", trace: `t${i}`, ms_total: i, held: false,
@@ -51,7 +51,7 @@ test("R5 (connect §3): on a test instance the trace keeps the last 200 lines, e
   /* another store's trace is its own */
   assert.deepEqual(run(credentials(), "signintraceread", null, TEST_ENV).lines, []);
   const prod = credentials();
-  assert.equal(run(prod, "signintracekeep", { line: { event: "signin.door" } }, { INSTANCE_NAME: "oakland" }).reason, "SIGNINTRACE_NOT_TEST");
-  assert.equal(run(prod, "signintraceread", null, { INSTANCE_NAME: "oakland" }).reason, "SIGNINTRACE_NOT_TEST");
+  assert.deepEqual(run(prod, "signintracekeep", { line: { event: "signin.door" } }, { INSTANCE_NAME: "oakland" }), { ok: true, kept: false });
+  assert.deepEqual(run(c, "signintraceread", null, { INSTANCE_NAME: "oakland" }).lines, [], "no line read off a test instance");
   assert.deepEqual(run(prod, "signintraceread", null, TEST_ENV).lines, [], "nothing was kept off the test instance");
 });
