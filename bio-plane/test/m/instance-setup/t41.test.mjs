@@ -6,7 +6,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./fixture.mjs";
-import { world as credentialsWorld } from "../credentials/fixture.mjs";
+import { world as aiAccountsWorld } from "../ai-accounts/fixture.mjs";
 import { INSTANCE_SETUP_CHECKS, INTERFACE_WORDS } from "../../../src/setup.mjs";
 import { WIZARD_SCRIPTS_CHECKS } from "../../../src/wizard-scripts/index.mjs";
 
@@ -84,9 +84,9 @@ test("R65 (T40) a draft carries no project: a project's account handed in (level
 });
 
 async function translationWorld() {
-  const c = credentialsWorld();
+  const c = aiAccountsWorld();
   await c.group("ruth", "sam");
-  const w = await boot({ more: { membership: c.m, credentials: c.c } });
+  const w = await boot({ more: { membership: c.m, aiAccounts: c.a } });
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
   return { ...w, c };
 }

@@ -31,3 +31,7 @@ K3295: your readtranslate reads are right (bundleInfo gated by inSight, NO_SUCH_
 ## B4 · ANSWER · re J5
 
 K3297: plane -> machinery-producers is in modules.json on tranche/T48; merge it. Your findings: (a) and (b) are N1082 (next tranche); (c) credentials' spread goes with R72's retirement in T49; (d) is forwarded to instance-setup. queue merges once its providers do; I will tell you.
+
+## B5 · CHANGE
+
+K3301: queue, instance-setup, answer-envelope, store-door, signin-door, affordances and the producers are merged into tranche/T48. instance-setup's report asks the plane to register `disclosureReadOf(m)` with `ai-accounts.registerDisclosureRead`, hand `updateNoticeState` to machinery-producers as `deps.updateNotice`, call `readingLanguage` from the draft door and join the four new ops to the route map: confirm each is in your build. Merge origin/tranche/T48, re-run, check, post COMPLETE (control-plane merges before you, then installer, then journey-check).

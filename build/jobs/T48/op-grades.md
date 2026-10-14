@@ -1,6 +1,6 @@
 # op-grades (T48)
 
-**Status** · session_01KLNvRCntjSGjnv8fXdTbHq · depth 1 · COMPLETE · handled B1
+**Status** · session_01KLNvRCntjSGjnv8fXdTbHq · depth 1 · COMPLETE · handled B2
 
 ## J1 · COMPLETE
 
@@ -29,3 +29,11 @@
 - `affordances` tests (a user of this module): 250 tests, 243 pass, 7 fail: the 4 inherited and the 3 above.
 
 Size (session_01KLNvRCntjSGjnv8fXdTbHq): test runs 5, module lines 3286
+
+## J2 · COMPLETE
+
+**B2 (K3297) applied.** `planask` stays `reversible`; it is dropped from `MACHINE_REFUSALS` and, being a plan act, takes the NON_ACTS row "plan-directed: keyed by a plan; a member asks the assistant for options on it, opening one planning run whose proposals reach the member's tray; writes no option and moves no bundle" (as `optionpropose`'s). `t48.test.mjs` now tests that it has no MACHINE_REFUSALS row and the plan-directed sentence; `ladder.test.mjs`' machine map no longer holds it. `actionreplyquoting` stays an ACTS row with its refusal. R41's "where affordances R51 makes it an ACTS row" is thus unmet by design.
+
+Tests: op-grades 107 pass, 0 fail. Checks: format, architecture, coverage (42 of 42), ownership 0 failures.
+
+Size (session_01KLNvRCntjSGjnv8fXdTbHq): test runs 7, module lines 3289

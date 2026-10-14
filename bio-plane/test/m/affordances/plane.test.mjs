@@ -816,7 +816,8 @@ test("R19: the reasoned registry, progression and theme acts, and intent's three
 });
 
 test("R19: together the two drives reach every op RUNGS grades `reasoned`", () => {
-  const driven = ["release", "dispose", "sever", "reinstate", "conclude", "reopen", "inquirydivide", "inquiryground",
+  const driven = ["updateskip" /* instance-setup R88–R90: UPDATE_SKIP_NO_REASON, driven in its own tests (it is never imported here, K3178) */,
+    "stepsource", "stepsourcewithdraw" /* t48-backing.test.mjs */, "release", "dispose", "sever", "reinstate", "conclude", "reopen", "inquirydivide", "inquiryground",
     "actionmove", "versionreject", "versionconsider", "withdrawconclusion", "projectownerremove", "projectownerrescue",
     "adminremove" /* backing.test.mjs, K3152 */, "connectionassert", "filemembershipjudge", "relationdeclare", "aliaswithdraw", "relationwithdraw",
     "discharge", "proposedispose", "themewithdraw", "goalclose", "aspirationdepart", "aspirationretire",
@@ -944,7 +945,7 @@ test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a m
   const AT_SOURCES = ["sourceconsent",
     /* R51: action-replies' and plan-work's ops are composed by the plane at T45-47; their machine answers are driven at
        their owners' interfaces (t45.test.mjs) */
-    "actionreplybearing", "actionbearingpropose", "arosefrom", "itemtakeup",
+    "actionreplybearing", "actionbearingpropose", "actionreplyquoting", "arosefrom", "itemtakeup",
     /* and action-holds' (composed with them), action-records' T45 acts (actions' until T47's split) and action-clocks'
        `clockstate`, routed there too */
     "actionhold", "actionholdrelease", "actionpressure", "holdnoticeprepare", "holdnoticesent", "actionreceipt",

@@ -11,7 +11,7 @@ import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 
 const { ACT_HELP, affordancesAnswer } = A;
 const SCREENS = new URL("../../../../docs/development/ux-substrate/screens/", import.meta.url);
-/* The design's registry as it stands on `tranche/T47` after PR #33's head was merged (`f90b187c7b`; DEC-198–DEC-217; R54, R56), read,
+/* The design's registry as it stands on `main` at PR #34's merge (`4664e8efd4`; DEC-220, DEC-221, DEC-226; R57; before it PR #33's head, `f90b187c7b`, R54, R56), read,
    never copied: `mock-acts.js`, a plain script declaring `const ACT_HELP`, and `words.json`, the word list built from it, which keys
    each text `act.<key>.does`. */
 const DESIGN = new Function(readFileSync(new URL("mock-acts.js", SCREENS), "utf8") + "; return ACT_HELP;")();
@@ -40,10 +40,10 @@ const OWED_DECLARED_IN_T46 = ["infolevelset", "escalationstoppursuing"];
 const OWED_DECLARED_IN_T47 = ["passwordresetlink"];
 const OWED_DECLARED = [...OWED_DECLARED_IN_T36, ...OWED_DECLARED_IN_T37, ...OWED_DECLARED_IN_T38, ...OWED_DECLARED_IN_T41, ...OWED_DECLARED_IN_T42,
   ...OWED_DECLARED_IN_T45, ...OWED_DECLARED_IN_T46, ...OWED_DECLARED_IN_T47];
-/* no owed act stays undeclared, so no `owed_` key is held */
-const OWED_UNDECLARED = [];
-/* The design's `owed_` keys at PR #33's head: each an owed act declared since. */
-const DESIGN_OWED = ["passwordresetlink"];
+/* R57 (DEC-226): the update ops `op-declarations` declares at its R66, later in L11's order; their texts stay under `owed_<op>` until it does */
+const OWED_UNDECLARED = ["updatestart", "updatelater", "updateskip"];
+/* The design's `owed_` keys at PR #34's merge: passwordresetlink, an owed act declared since, and the three update acts not yet declared. */
+const DESIGN_OWED = ["passwordresetlink", ...OWED_UNDECLARED];
 /* R53: the 42 texts PR #28 added (DEC-194 (2): the ops T45 serves; escalation's stop and reopening), each by the op it is held under;
    PR #31 re-keyed the four `owed_` ones to their ops (R54) */
 const NEW_IN_PR28 = ["projectscopeset", "projectapprovalset", "ruledraft", "ruleconfirm", "rulewithdraw", "ruleoffer", "dutyfromresponse",
@@ -88,14 +88,14 @@ const meetsR48 = (table) => {
   try { assert.deepEqual(Object.entries(table), expected()); return true; } catch { return false; }
 };
 
-test("R48 R53 R54 R56: ACT_HELP is a frozen module constant holding all 282 of the design's texts as they stand at PR #33's head "
-   + "(f90b187c7b; DEC-198–DEC-217), verbatim, each under the key R48 reads it as, in the design's order: aliases under their op, the "
+test("R48 R53 R54 R56 R57: ACT_HELP is a frozen module constant holding all 285 of the design's texts as they stand at PR #34's merge "
+   + "(4664e8efd4; DEC-220, DEC-221, DEC-226), verbatim, each under the key R48 reads it as, in the design's order: aliases under their op, the "
    + "owed acts declared since T36 under their op and no owed_ key (R56: passwordresetlink), the texts PR #31 re-keyed and R54's own "
    + "texts under their ops, T47's declared ops under their own names, handlechange as membership's refusal and never the design's text "
    + "of a change; the withdrawn texts, the five retired ops and the texts the design dropped (capture, hostingaccess) nowhere; "
    + "mock-acts.js and words.json give each text alike; a table departing from any of these is seen (K874)", () => {
   assert.ok(Object.isFrozen(ACT_HELP));
-  assert.equal(Object.keys(DESIGN).length, 282);
+  assert.equal(Object.keys(DESIGN).length, 285);
   assert.deepEqual(Object.keys(DESIGN).filter((k) => k.startsWith("owed_")).sort(), DESIGN_OWED.map((op) => `owed_${op}`).sort());
   /* R53: PR #28's 42 texts are each held under their op, as the design now keys them */
   assert.equal(NEW_IN_PR28.length, 42);
@@ -126,16 +126,16 @@ test("R48 R53 R54 R56: ACT_HELP is a frozen module constant holding all 282 of t
   }
   /* the registry's two files agree: each design text is the word list's `act.<key>.does`, and the list holds no other act text */
   for (const [k, text] of Object.entries(DESIGN)) assert.equal(WORDS.get(`act.${k}.does`), text, k);
-  assert.equal([...WORDS.keys()].filter((k) => /^act\..*\.does$/.test(k)).length, 282);
+  assert.equal([...WORDS.keys()].filter((k) => /^act\..*\.does$/.test(k)).length, 285);
   for (const k of [...WITHDRAWN, ...RETIRED]) {
     assert.equal(Object.hasOwn(DESIGN, k), false, `${k} is withdrawn from the design`);
     assert.equal(Object.hasOwn(ACT_HELP, k), false, `${k} is not held`);
     assert.equal(Object.hasOwn(ACT_HELP, `owed_${k}`), false, k);
   }
   assert.ok(meetsR48(ACT_HELP));
-  /* the arithmetic: 282 in the design, every one held, no two under one key */
-  assert.equal(Object.keys(ACT_HELP).length, 282);
-  assert.equal(new Set(expected().map(([k]) => k)).size, 282);
+  /* the arithmetic: 285 in the design, every one held, no two under one key */
+  assert.equal(Object.keys(ACT_HELP).length, 285);
+  assert.equal(new Set(expected().map(([k]) => k)).size, 285);
   for (const t of Object.values(ACT_HELP)) assert.ok(typeof t === "string" && t.trim().length > 0);
   assert.equal(ACT_HELP.clockpropose, DESIGN.clockpropose);
   for (const op of OWED_UNDECLARED) {
@@ -268,4 +268,22 @@ test("R49 at the door: op=affordances with no target answers act_help as ACT_HEL
   const b = await A.affordancesOp(new URL("http://x/?op=affordances&target=inquiry-1"), stub, env);
   assert.equal(b.status, 200);
   assert.equal(Object.hasOwn(b.body.result, "act_help"), false);
+});
+
+test("R57: ACT_HELP holds the design at PR #34's merge in DEC-221's American spelling, no text containing \"labelled\"; the update acts under owed_ keys until declared; peopledirectory held, selftest (no text) not; a table with the old spelling is seen", () => {
+  for (const [k, t] of Object.entries(ACT_HELP)) assert.doesNotMatch(t, /labelled/i, k);
+  assert.match(ACT_HELP.groupdescriptiondraft, /labeled as its draft/);
+  assert.match(ACT_HELP.pagetranscribe, /labeled as the assistant's reading/);
+  for (const op of ["updatestart", "updatelater", "updateskip"]) {
+    assert.equal(ACT_HELP[`owed_${op}`], DESIGN[`owed_${op}`], op);
+    assert.equal(Object.hasOwn(ACT_HELP, op), false, `${op} is not yet declared`);
+  }
+  assert.equal(ACT_HELP.peopledirectory, DESIGN.peopledirectory);
+  assert.equal(Object.hasOwn(DESIGN, "selftest"), false);
+  assert.equal(Object.hasOwn(ACT_HELP, "selftest"), false);
+  assert.equal(Object.keys(ACT_HELP).length, 285);
+  /* controls (K874): the old spelling, an update text dropped, and a stale entry are each seen by the check */
+  assert.equal(meetsR48({ ...ACT_HELP, testify: DESIGN.testify.replace("labeled", "labelled") }), false);
+  assert.equal(meetsR48(Object.fromEntries(Object.entries(ACT_HELP).filter(([k]) => k !== "owed_updateskip"))), false);
+  assert.equal(meetsR48({ ...ACT_HELP, selftest: "Runs the checks." }), false);
 });

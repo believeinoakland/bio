@@ -135,6 +135,32 @@ test("R2 (N229, N330): source-modified and source-removed per document monitorin
   assert.ok(!w.statements.some((q) => /source_reachability|FROM files/.test(q)));
 });
 
+test("R40 (T48): source-modified and source-removed carry title; an untitled document's item has title null and no B- id, a titled one's summary names the title; no id or mechanism in summary or detail", () => {
+  const w = world({ monitoring: { flagged: () => ({ ok: true, limit: 200, truncated: false, items: [
+    { bundleId: "B-UNTITLED", source_status: "modified", since: iso(NOW) },
+    { bundleId: "B-GONE", source_status: "removed", since: iso(NOW) },
+    { bundleId: "B-TITLED", source_status: "modified", since: iso(NOW) },
+    { bundleId: "B-TITLED-GONE", source_status: "removed", since: iso(NOW) }] }) } });
+  w.member("alice");
+  w.bundle("B-UNTITLED", "information", { title: null }); w.bundle("B-GONE", "information", { title: null });
+  w.bundle("B-TITLED", "information", { title: "Water Quality Report" });
+  w.bundle("B-TITLED-GONE", "information", { title: "Zoning Memo" });
+  const m = byId(w.read("alice"));
+  const un = m["FINDING::source-modified::B-UNTITLED"], gone = m["FINDING::source-removed::B-GONE"];
+  assert.equal(un.title, null); assert.equal(gone.title, null);
+  assert.equal(m["FINDING::source-modified::B-TITLED"].title, "Water Quality Report");
+  assert.equal(m["FINDING::source-removed::B-TITLED-GONE"].title, "Zoning Memo");
+  assert.ok(m["FINDING::source-modified::B-TITLED"].summary.includes("Water Quality Report"), "control: a titled summary names the title");
+  assert.ok(m["FINDING::source-removed::B-TITLED-GONE"].summary.includes("Zoning Memo"));
+  for (const it of [un, gone, m["FINDING::source-modified::B-TITLED"], m["FINDING::source-removed::B-TITLED-GONE"]]) {
+    for (const text of [it.summary, it.detail]) {
+      assert.ok(!/B-[A-Z]/.test(text), `no bundle id: ${text}`);
+      assert.ok(!/\b(404|410|HTTP|monitoring)\b/i.test(text), `no status or mechanism: ${text}`);
+    }
+    assert.equal(it.basis.bundle_id, it.subject.id, "basis keeps the facts for the record");
+  }
+});
+
 test("R2, R11 (K2581; D54): a proposal whose only instance lies in a hidden project an administrator neither joined nor was invited to is no item to her; the negative controls, the project discoverable, or a member of it, count it", () => {
   const w = world({ progressions: { proposalsFeed: () => ({ instances: [], dispositions: [], proposals: [
     { key: "p::s", progression_key: "p", progression_label: "P", stage_key: "s", stage_label: "S", required: "always",
