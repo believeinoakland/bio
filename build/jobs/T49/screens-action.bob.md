@@ -27,3 +27,7 @@ K3369: your four readings stand. (1) draw a must.N only when every placeholder i
 ## B3 · CHANGE
 
 CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
+
+## B4 · ANSWER · re J2
+
+K3373: (1) interface-shell R72 admits actionrisktier, actionlaws, actionlawspropose on action. (2) the two 'subject' words go to the design lane; your R7 test stays as is, its red on those two keys accepted by name until the design corrects them. (3) the missing refusal keys go to the design lane; no English from you.
