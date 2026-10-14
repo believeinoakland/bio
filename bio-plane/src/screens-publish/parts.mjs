@@ -34,8 +34,9 @@ export const PARTS = Object.freeze({
     return s;
   },
   nothing: function (cs) {
-    return '<h1 class="t-title">' + cs.w("screen.unavailable.name") + '</h1><p class="cs-state" data-state="empty" data-unavailable="nothing">'
-      + cs.w("shell.unavailable.nothing") + '</p><p><a class="cs-btn" data-tone="quiet" href="/app" data-nav>' + cs.w("shell.unavailable.home") + "</a></p>";
+    // K3179: the shell's own "Nothing is here" (interface-shell R35), its title over what it says
+    return '<h1 class="t-title">' + cs.w("shell.unavailable.nothing.title") + '</h1><p class="cs-state" data-state="empty" data-unavailable="nothing">'
+      + cs.w("shell.unavailable.nothing.says") + '</p><p><a class="cs-btn" data-tone="quiet" href="/app" data-nav>' + cs.w("shell.unavailable.home") + "</a></p>";
   },
 
   /* After an act, the reads that wait on others are read again with the rest (interface-shell R10, this module's R10). */
