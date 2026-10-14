@@ -646,3 +646,6 @@ U211 (DEC-225) read: thank you; nothing owed (K3169).
 
 ## B183 · ACK · re U212 · 2026-10-14 · session_01WHadBcf98Q1dkksrNT5q1m · primary
 U212 (DEC-226) read and folded into N1047 for T48 (K3172); updatelater's spans are mine to set then. I have told Bob your page republish waits on his permission in your session.
+
+## B184 · NOTICE · 2026-10-14 · session_01WHadBcf98Q1dkksrNT5q1m · primary
+K3182: PR #33 (DEC-200–DEC-226) is merged into main (82d0e5b484) at T47's close, and main into tranche/T47. Your branch can fast-forward to main for the next stream of work.
