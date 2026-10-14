@@ -231,6 +231,15 @@ test("R14: the citation facts are the ones the acts refuse on — a live and a s
   assert.ok((await offered(W.IRIS, W.INFO)).includes("sever"));
   assert.ok((await offered(W.IRIS, W.INFO2)).includes("reinstate"));
   assert.ok(!(await offered(W.IRIS, W.INFO)).includes("reinstate"));
+  /* each offered act performed by the caller it was offered to, and taken back, so the scene the later tests read stands */
+  const move = async (op, id, why) => codeOf(await GET(`op=${op}&token=${W.IRIS}&project=${W.PA}`
+    + `&handle=${await W.sel(W.IRIS, [id])}&reason=${E(why)}`));
+  assert.equal(await move("sever", W.INFO, "checked offer"), "ok");
+  assert.equal(await move("reinstate", W.INFO, "restored"), "ok");
+  assert.equal(await move("reinstate", W.INFO2, "checked offer"), "ok");
+  assert.equal(await move("sever", W.INFO2, "no longer relied on"), "ok");
+  assert.deepEqual([(await facts(W.INFO)).cited_by_case, (await facts(W.INFO2)).cited_by_case],
+    [{ confirmed: 1, severed: 0 }, { confirmed: 0, severed: 1 }]);
 });
 
 test("R14: what rests on an inquiry is counted through inquiry's live-leg predicate — the working inquiry resting on it", async () => {
@@ -818,7 +827,7 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     "sourcedisclose", "sourcelink", "sourceconsent",
     /* K727: at action-plans' interface over its fixture, backing.test.mjs */
     "plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose",
-    /* K918: at actions' interface over its fixture, backing.test.mjs */
+    /* K918: at action-holds' interface over its fixture (T45), backing.test.mjs */
     "actionhold",
     /* R30: at filing-templates' and local-facts' interfaces over their fixtures, backing.test.mjs */
     "templateretire", "factconfirm",
@@ -931,7 +940,8 @@ test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a m
     /* R51: action-replies' and plan-work's ops are composed by the plane at T45-47; their machine answers are driven at
        their owners' interfaces (t45.test.mjs) */
     "actionreplybearing", "actionbearingpropose", "arosefrom", "itemtakeup",
-    /* and action-holds' (composed with them), actions' T45 acts and action-clocks' `clockstate`, routed there too */
+    /* and action-holds' (composed with them), action-records' T45 acts (actions' until T47's split) and action-clocks'
+       `clockstate`, routed there too */
     "actionhold", "actionholdrelease", "actionpressure", "holdnoticeprepare", "holdnoticesent", "actionreceipt",
     "actionscope", "actionpromise", "clockstate"];
   const objectActs = ACTS.map((a) => a.id).filter((k) => !ROSTER.includes(k) && !AT_SOURCES.includes(k));
