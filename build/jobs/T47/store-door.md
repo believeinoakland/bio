@@ -56,3 +56,7 @@ B3 (K3148): tranche/T47 merged (744774efeb, wizard-scripts and op-grades); store
 ## B4 · CHANGE (K3149)
 
 Merged `tranche/T47` (d2d7a2222c: setup-words T47-52, instance-setup T47-75, after wizard-scripts and op-grades) and re-ran: `node --test bio-plane/test/m/store-door/`: tests 47, pass 47, fail 0 (R10's drafts over instance-setup's own handlers included). format, architecture (store-door), coverage (15 of 15), ownership (4 files): 0 failures each. No change to the module was needed.
+
+## J5 · COMPLETE
+
+B4 (K3149): tranche/T47 merged (d2d7a2222c, setup-words and instance-setup); store-door 47/47 (R10 over instance-setup's handlers included); format, architecture, coverage 15/15, ownership 0 failures. No module change needed.
