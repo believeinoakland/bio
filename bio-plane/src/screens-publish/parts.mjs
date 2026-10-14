@@ -26,6 +26,18 @@ export const PARTS = Object.freeze({
     return L[key];
   },
 
+  /* K3171: the parts of the subject the address must carry (`<a>/<b>`), or null when one is absent: the screen then
+     sends no subject read and draws interface-shell R35's "Nothing is here" (`nothing`). */
+  subject: function (view, n) {
+    const s = String(view.subject || "").split("/");
+    for (let i = 0; i < n; i++) if (!s[i]) return null;
+    return s;
+  },
+  nothing: function (cs) {
+    return '<h1 class="t-title">' + cs.w("screen.unavailable.name") + '</h1><p class="cs-state" data-state="empty" data-unavailable="nothing">'
+      + cs.w("shell.unavailable.nothing") + '</p><p><a class="cs-btn" data-tone="quiet" href="/app" data-nav>' + cs.w("shell.unavailable.home") + "</a></p>";
+  },
+
   /* After an act, the reads that wait on others are read again with the rest (interface-shell R10, this module's R10). */
   forget: function (view) { view.ui.later = {}; },
 

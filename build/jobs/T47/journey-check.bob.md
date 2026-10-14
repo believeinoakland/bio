@@ -1,6 +1,6 @@
 # BOB to journey-check (T47)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -35,3 +35,11 @@ K3169: interface-shell and all nine screen modules are merged into tranche/T47. 
 ## B6 · CHANGE
 
 K3171: control-plane is merged (/app and / serve the nine screens). Your findings are routed: (1) to screens-intake, (2) to screens-publish (no subject read without a subject; 'Nothing is here'), (3) N1049 for T48. instance-setup's R83 and setup-page's delete follow. Merge tranche/T47 and run the walk on the tranche; post what is red and why.
+
+## B7 · CHANGE
+
+K3173: screens-intake's testimony confirmation (your finding 1) is merged. Merge tranche/T47 and run the walk and the sweep on the tranche; screens-publish (finding 2) is still building.
+
+## B8 · CHANGE
+
+K3174: screens-publish's bare-address screens (your finding 2) are merged. Merge tranche/T47; both findings are now on the tranche; run the walk and the sweep and post what you find.

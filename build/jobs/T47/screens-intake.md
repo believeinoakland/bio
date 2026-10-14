@@ -1,6 +1,6 @@
 # screens-intake (T47)
 
-**Status** · session_01TRpt7rshZQFBNZdR8YRhWi · depth 2 · COMPLETE · handled B7
+**Status** · session_01TRpt7rshZQFBNZdR8YRhWi · depth 2 · COMPLETE · handled B8
 
 ## Work (SCREENS-INTAKE #2)
 
@@ -29,7 +29,8 @@ B7 (K3165): `tranche/T47` merged (2d6895cb50, interface-shell among it). No over
 - Found in other modules: `control-plane` `t46-app.test.mjs` R75 fails on `img-src` ('self', data:, blob:) on `tranche/T47` itself (caac922b0f) as on my branch: the page policy it pins differs from the one now served; not mine, control-plane's job (T47-65) or answer-envelope's. No generated artifact of another module staled by me (the plane bundle and `program.mjs` are rule 5 (4)'s).
 - Tests: `node --test bio-plane/test/m/screens-intake/` → tests 57, pass 57, fail 0. User module `control-plane`: `t46-app.test.mjs` (the only test naming my screens) → 3 pass, 1 fail, the R75 red above, identical on `tranche/T47`.
 - Checks (`civicos-process` @ its main): `node checks/run.mjs /home/user/bio` → format 0 failures; architecture 0 failures; channels 0 failures; coverage 12 failures, none mine (other L11 modules' not-yet-met ids, rule 5 (1)). Per module: `coverage.mjs … screens-intake` 16 of 16 ids named, 0 failures; `architecture.mjs … screens-intake` 0 failures; `ownership.mjs … screens-intake tranche/T47` 12 files, 0 failures; `format.mjs` 0 failures.
-- Size (session_01TRpt7rshZQFBNZdR8YRhWi): test runs 24, module lines 1163
+- B8 (K3171; JOURNEY-CHECK #1 J4 (1)): `tranche/T47` merged (control-plane among it). R3's `doneTestify` read `answer.id || answer.bundleId`, which provenance's `testify` never answers (`{ok, bundle_id, bundle_sha, capture_sha, file, …}`), so "Recorded as your testimony: {id}" was never drawn; it now reads `bundle_id`. The R3 tests' plane stand-ins now answer provenance's shape, and a new test (R3, K3171) checks the sentence names `bundle_id` (control: an answer naming no bundle draws no id). Tests 58 pass, 0 fail; control-plane `t46-app.test.mjs` 5 pass, 0 fail (its R75 red is gone with control-plane's merge); format, architecture, coverage (16 of 16), ownership 0 failures.
+- Size (session_01TRpt7rshZQFBNZdR8YRhWi): test runs 27, module lines 1164
 
 ## J1 · REPORT
 
@@ -49,3 +50,7 @@ T47-59 complete on `job/T47/screens-intake` (tranche/T47 merged at 2d6895cb50; B
 Tests: screens-intake 57 pass, 0 fail, no overlay. Checks: run.mjs format/architecture/channels 0 failures; coverage 16 of 16 for screens-intake (12 product failures, all other modules' not-yet-met ids); ownership 0 failures.
 For you: control-plane `t46-app.test.mjs` R75 fails on `img-src` on `tranche/T47` itself (caac922b0f) and on my branch alike, not mine (control-plane T47-65 or answer-envelope).
 Record's Completion has the bounds I chose (R12: at most 20 earlier knocks read; R14: weekly by default) and the size line.
+
+## J3 · COMPLETE
+
+B8 (K3171) done: doneTestify reads testify's bundle_id (provenance's answer shape); R3's stand-ins answer that shape; new test 'R3 (K3171)' at the interface with a control. tranche/T47 merged (control-plane in): screens-intake 58 pass, 0 fail; control-plane t46-app.test.mjs 5 pass, 0 fail (the R75 img-src red I reported in J2 is gone); format, architecture, coverage 16/16, ownership 0 failures.

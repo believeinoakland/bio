@@ -256,8 +256,25 @@ test("R2 UPLOAD_NO_STATEMENT, EMPTY, TOO_LARGE and MEMBER_SESSION_REQUIRED are e
   assert.match((await press(p, "captureupload")).slot().textContent, /A name over 300 characters\./);
 });
 
+/* provenance testify's answer as it is served (provenance/index.mjs: `{ok, bundle_id, bundle_sha, capture_sha, file, …}`) */
+const TESTIFIED = { ok: true, bundle_id: "INFO-2026-0009-observation", bundle_sha: "e".repeat(64), capture_sha: "f".repeat(64),
+                    file: "observations/observation.md" };
+
+test("R3 (K3171) the recorded testimony is named by the bundle_id provenance's testify answers", async () => {
+  const p = await open("/app/capture/saw", { plane: { testify: ok(TESTIFIED) } });
+  fill(p, { "ci-words": "The pothole is still open.", "ci-where": "6012 Seminary Ave", "ci-when": "2026-10-04T09:10:00Z" });
+  await press(p, "testify");
+  assert.match(text(p), /Recorded as your testimony: INFO-2026-0009-observation\. It waits in Held captures/);
+  assert.doesNotMatch(text(p), new RegExp("f".repeat(16)), "never the capture's digest");
+  /* control: an answer naming no bundle draws no testimony id */
+  const q = await open("/app/capture/saw", { plane: { testify: ok({ ok: true, id: "INFO-2026-0010-x" }) } });
+  fill(q, { "ci-words": "x", "ci-where": "y", "ci-when": "2026-10-04T09:10:00Z" });
+  await press(q, "testify");
+  assert.doesNotMatch(text(q), /INFO-2026-0010-x/);
+});
+
 test("R3 testify sends the member's words with where, and when as observedAt; never a time after now", async () => {
-  const p = await open("/app/capture/saw", { plane: { testify: ok({ ok: true, id: "INFO-2026-0009-observation" }) } });
+  const p = await open("/app/capture/saw", { plane: { testify: ok(TESTIFIED) } });
   fill(p, { "ci-words": "The pothole is still open.", "ci-where": "6012 Seminary Ave", "ci-when": "2026-10-04T09:10:00Z" });
   await press(p, "testify");
   assert.deepEqual(p.byOp("testify")[0].body, { words: "The pothole is still open.\n\nWhere: 6012 Seminary Ave", observedAt: "2026-10-04T09:10:00Z" });
@@ -274,7 +291,7 @@ test("R3 R10 writinghelp under the words only while reachable; its draft filled 
   const off = await open("/app/capture/saw");
   assert.equal(btn(off, "writinghelp"), null);
   const p = await open("/app/capture/saw", { reachable: true, plane: { writinghelp: ok({ ok: true, text: "The pothole is still open, about 60 cm across.",
-    label: { kind: "machine", asked_by: "mai" } }), testify: ok({ ok: true, id: "INFO-2026-0009" }) } });
+    label: { kind: "machine", asked_by: "mai" } }), testify: ok(TESTIFIED) } });
   const h = html(p);
   assert.ok(h.indexOf('data-act="writinghelp"') > h.indexOf('id="ci-words"'), "under the words field");
   assert.ok(h.indexOf('data-act="writinghelp"') < h.indexOf('id="ci-where"'));

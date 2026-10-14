@@ -11,6 +11,7 @@ export const CEREMONY = Object.freeze({
   parts: PARTS,
 
   reads: function (view) {
+    if (!view.parts.subject(view, 2)) return {}; // K3171: no subject in the address, no subject read
     const s = String(view.subject || "").split("/");
     return {
       project: { op: "image", query: { id: s[0] } },
@@ -26,6 +27,7 @@ export const CEREMONY = Object.freeze({
   },
 
   render: function (cs, view) {
+    if (!view.parts.subject(view, 2)) return view.parts.nothing(cs);
     const P = view.parts, ui = view.ui;
     const s = String(view.subject || "").split("/");
     const draft = s[1] || "";

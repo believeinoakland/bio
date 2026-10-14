@@ -10,6 +10,7 @@ export const DOCKET = Object.freeze({
   parts: PARTS,
 
   reads: function (view) {
+    if (!view.parts.subject(view, 2)) return {}; // K3171: no subject in the address, no subject read
     const s = String(view.subject || "").split("/");
     return {
       project: { op: "image", query: { id: s[0] } },
@@ -25,6 +26,7 @@ export const DOCKET = Object.freeze({
   },
 
   render: function (cs, view) {
+    if (!view.parts.subject(view, 2)) return view.parts.nothing(cs);
     const P = view.parts;
     const caseId = String(view.subject || "").split("/")[1] || "";
     const out = [cs.title(null), '<p class="mk-sub">' + cs.w("screen.docket.sub", { case: caseId }) + "</p>"];

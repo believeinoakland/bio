@@ -11,6 +11,7 @@ export const CASE_EDITOR = Object.freeze({
 
   // R1's reads: the project (its title, for the path) and its case drafts; the chosen draft's own reads wait on these.
   reads: function (view) {
+    if (!view.parts.subject(view, 1)) return {}; // K3171: no subject in the address, no subject read
     const project = String(view.subject || "").split("/")[0];
     return {
       project: { op: "image", query: { id: project } },
@@ -26,6 +27,7 @@ export const CASE_EDITOR = Object.freeze({
   },
 
   render: function (cs, view) {
+    if (!view.parts.subject(view, 1)) return view.parts.nothing(cs);
     const P = view.parts;
     const parts = String(view.subject || "").split("/");
     const project = parts[0];
