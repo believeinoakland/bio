@@ -6,7 +6,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Walk, StepFailed, FAIL } from "./walker.mjs";
 import { requireTestInstance, WalkRefused } from "./guard.mjs";
-import { walkInstaller, walkFounder, inviteMember, walkMember, walkWelcome, sweep, credentials, open, fill, act, requireDrawn } from "./journeys.mjs";
+import { walkInstaller, walkFounder, inviteMember, walkMember, walkWelcome, sweep, credentials, open, act, requireDrawn } from "./journeys.mjs";
 import { sweepScreens } from "./screens.mjs";
 
 export const OUT = join(dirname(fileURLToPath(import.meta.url)), "out");
@@ -47,7 +47,7 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld } = 
     await walkMember(walk, mai.page, { base: copy, invite, member: who.member });
     const teo = await device(walk, b, route);
     walk.journey = "journey 3";
-    const second = await inviteMember(walk, founder.page, copy, "Teo, from flat 9");
+    const second = await inviteMember(walk, founder.page, copy, { id: "teo", cover: "Teo, from flat 9" });
     await walkWelcome(walk, teo.page, { base: copy, link: second, member: who.newcomer });
     await sweep(walk, founder.page, copy);
   } catch (e) {
@@ -83,9 +83,8 @@ export async function runLive({ base, env = process.env, out = join(OUT, "live")
         const page = walk.watch(await ctx.newPage());
         await walk.step(page, `${role}: open / and sign in`, async (p) => {
           await open(walk, p, base, "/", "front");
-          await fill(p, "handle", handle);
-          await fill(p, "password", password);
-          await act(p, "login", {}, { confirm: false });
+          await act(p, "login", { fields: { "fs-handle": handle, "fs-pw": password } });
+          await p.waitForFunction(() => location.pathname === "/app" || location.pathname === "/", null, { timeout: 15000 });
           await requireDrawn(walk, p, "home");
         });
         await sweep(walk, page, base, { screens });

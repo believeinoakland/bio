@@ -1,9 +1,9 @@
 /* journey-check R1: the steps of journey 28 (DEC-201 (9), DEC-206 (5); `mock-journeys.js`) and journey 3 (the library's
    "Welcome a new member"), and the sweep of the registry's screens. Each step drives the page as a person does: the
-   screens' own controls (`[data-act]`, interface-shell R13), the installer's own page, and the words on them; no op is
-   called by the walker. Journey 28's first two steps (civicsmith.org, `site`) wait on Bob's DNS act (N1011) and start
-   here at the installer. */
-import { Walk, StepFailed, settle } from "./walker.mjs";
+   screens' own fields and controls (`[data-act]`, interface-shell R13; the shell's confirmation and reason, R11; the
+   wizard guide's own controls, `[data-guide]`), the installer's own page; no op is called by the walker. Journey 28's
+   first two steps (civicsmith.org, `site`) wait on Bob's DNS act (N1011) and start here at the installer. */
+import { StepFailed, settle } from "./walker.mjs";
 import { drawnState, sweepScreens, addressOf } from "./screens.mjs";
 import { FAIL } from "./walker.mjs";
 
@@ -13,31 +13,38 @@ export const GROUP_NAME = "Lakeshore Tenants";
 
 /* ---------- the page's controls ---------- */
 
-/* The visible control of act `op`; throws, naming it, when the screen does not draw it. */
-export async function control(page, op, { timeout = 10000 } = {}) {
-  const c = page.locator(`[data-act="${op}"]:visible`).first();
+const where = (page) => new URL(page.url()).pathname;
+
+/* The visible control of act `op` (in `within`, a selector, when given); throws, naming it, when the screen does not
+   draw it. */
+export async function control(page, op, { within = null, timeout = 10000 } = {}) {
+  const c = (within ? page.locator(within) : page).locator(`[data-act="${op}"]:visible`).first();
   try { await c.waitFor({ state: "visible", timeout }); }
-  catch { throw new Error(`control ${op} is not on ${new URL(page.url()).pathname}`); }
+  catch { throw new Error(`control ${op} is not on ${where(page)}`); }
   return c;
 }
 
-/* Fills the field labelled `label` (its words, as the screen draws them) in the open dialog or the page. */
-export async function fill(page, label, value) {
-  const scope = page.locator('dialog[open], .cs-dialog:not([hidden])').last();
-  const inDialog = (await scope.count()) > 0 && (await scope.isVisible().catch(() => false));
-  const f = (inDialog ? scope : page).getByLabel(label, { exact: false }).first();
-  try { await f.waitFor({ state: "visible", timeout: 8000 }); }
-  catch { throw new Error(`no field "${label}" on ${new URL(page.url()).pathname}`); }
+/* Types `value` into the field with id `id`, as a person does (each keystroke). */
+export async function type(page, id, value) {
+  const f = page.locator(`[id="${id}"]`).first();
+  try { await f.waitFor({ state: "visible", timeout: 10000 }); }
+  catch { throw new Error(`no field ${id} on ${where(page)}`); }
   await f.fill(value);
 }
 
-/* Presses act `op`, fills `fields`, and confirms the dialog the act opens, if it opens one. */
-export async function act(page, op, fields = {}, { confirm = true } = {}) {
-  await (await control(page, op)).click();
-  for (const [label, value] of Object.entries(fields)) await fill(page, label, value);
-  if (!confirm) return;
-  const dlg = page.locator('dialog[open] [data-dialog="confirm"], .cs-dialog:not([hidden]) [data-dialog="confirm"]').first();
-  if (await dlg.count()) await dlg.click();
+/* Presses act `op` after filling `fields` ({id: value}); then answers what the shell asks before it sends (interface-shell
+   R11): its confirmation, or a reason (`reason`). Waits for the answer to arrive. */
+export async function act(page, op, { fields = {}, within = null, reason = "Recorded by the release walk." } = {}) {
+  for (const [id, value] of Object.entries(fields)) await type(page, id, value);
+  await (await control(page, op, { within })).click();
+  const ask = page.locator('[data-shell="confirm"]:visible, [data-shell="reason-send"]:visible').first();
+  try { await ask.waitFor({ state: "visible", timeout: 1500 }); } catch { /* sent at once */ }
+  if (await ask.count()) {
+    if ((await ask.getAttribute("data-shell")) === "reason-send")
+      await page.locator('.cs-reason textarea:visible').first().fill(reason);
+    await ask.click();
+  }
+  await settle(page);
 }
 
 /* Opens `path` on the copy and requires screen `id` drawn. */
@@ -49,6 +56,17 @@ export async function open(walk, page, base, path, id) {
 export async function requireDrawn(walk, page, id) {
   const st = await drawnState(page, id);
   if (!st.drawn) { walk.fail(FAIL.NOT_DRAWN, `${id}: ${st.why}`); throw new Error(`screen ${id} not drawn (${st.why})`); }
+}
+/* Waits for `selector` to be shown; throws with `what` when it is not. */
+async function shown(page, selector, what, timeout = 15000) {
+  try { await page.locator(selector).first().waitFor({ state: "visible", timeout }); }
+  catch { throw new Error(`${what} is not shown on ${where(page)}`); }
+}
+/* Ten recovery codes, shown once (screens-entry's `cs-codes`). */
+async function tenCodes(page) {
+  await shown(page, "pre.cs-codes", "the ten recovery codes");
+  const n = (await page.locator("pre.cs-codes").first().textContent()).trim().split(/\n/).filter(Boolean).length;
+  if (n !== 10) throw new Error(`${n} recovery codes are shown, not ten`);
 }
 
 /* ---------- journey 28, the installer's half (local arm) ---------- */
@@ -94,93 +112,115 @@ export async function walkInstaller(walk, page, installerOrigin) {
 
 /* ---------- journey 28, inside the group's Civicsmith ---------- */
 
+/* The founder: the hand-over, the claim with the one-time password filled in, the ten codes, the group's name, Home in a
+   new group, and an invitation for the first member. */
 export async function walkFounder(walk, page, { base, founder }) {
   await walk.step(page, "hand-over: to the group's address, finishing setup", async (p) => {
     await p.locator("#handover").click();
     await p.waitForURL((u) => u.origin === base && u.pathname === "/app/setup", { timeout: 20000 });
     await settle(p);
     await requireDrawn(walk, p, "setup");
+    if (!(await p.locator("#su-otp").inputValue())) throw new Error("the one-time password is not filled in");
   });
-  await walk.step(page, "setup: claim, the one-time password already filled in", async (p) => {
-    await act(p, "claim", { "password": founder.password }, { confirm: false });
-    await (await control(p, "claim")).click().catch(() => {});
+  await walk.step(page, "setup: claim; she is the group's first administrator", async (p) => {
+    await act(p, "claim", { fields: { "su-pw": founder.password, "su-pw2": founder.password } });
+    await shown(p, '[data-state="claimed"]', "the claim");
   });
-  await walk.step(page, "setup: ten recovery codes, saved", async (p) => {
-    await act(p, "recoverycodesissue");
+  await walk.step(page, "setup: her ten recovery codes, shown once", async (p) => {
+    await tenCodes(p);
   });
-  await walk.step(page, "setup: the group's name, and how members reach the assistant", async (p) => {
-    await act(p, "groupnameset", { "name": GROUP_NAME });
+  await walk.step(page, "setup: the group's name", async (p) => {
+    await act(p, "groupnameset", { fields: { "su-name": GROUP_NAME } });
+    await p.locator("a[href='/app'][data-nav]").last().click();
+    await settle(p);
   });
-  await walk.step(page, "home: a new group's home", async (p) => {
-    await open(walk, p, base, "/app", "home");
+  await walk.step(page, "home: a new group's home, inviting members and saying who it is", async (p) => {
+    await requireDrawn(walk, p, "home");
+    await shown(p, "a[href='/app/members']", "the invitation to invite members");
   });
-  const invite = await inviteMember(walk, page, base, "Mai, from flat 4");
+  const invite = await inviteMember(walk, page, base, { id: "mai", cover: "Mai, from flat 4" });
   return { invite };
 }
 
-/* An administrator makes an invitation link for a new member, with the cover the group knows them by (`memberadd`). */
-export async function inviteMember(walk, page, base, cover) {
+/* An administrator makes an invitation link for a new member, with the short id and the cover the group knows them by
+   (`memberadd`); the link is shown once. */
+export async function inviteMember(walk, page, base, { id, cover }) {
   let link = null;
-  await walk.step(page, `members: an invitation link for ${cover.split(",")[0]}`, async (p) => {
+  await walk.step(page, `members: an invitation link for ${id}`, async (p) => {
     await open(walk, p, base, "/app/members", "members");
-    await act(p, "memberadd", { "cover": cover });
-    const at = p.locator('a[href*="#invite="], [data-invite-link], input[value*="#invite="]').first();
-    await at.waitFor({ timeout: 10000 });
-    link = walk.keepSecret((await at.getAttribute("href")) || (await at.inputValue()));
+    await act(p, "memberadd", { fields: { "mi-id": id, "mi-cover": cover } });
+    await shown(p, '[data-shown="invite"] code', "the invitation link");
+    link = walk.keepSecret((await p.locator('[data-shown="invite"] code').first().textContent()).trim());
+    if (!link.includes("#invite=")) throw new Error("the invitation shown is not a link into the group's address");
   });
   return link;
 }
 
+/* The new member (journey 28's second half): joining, her codes, the welcome, her first settings, a first piece of
+   work, signing out, signing in kept on her own device, the lock and unlock. */
 export async function walkMember(walk, page, { base, invite, member }) {
   await walk.step(page, "join: the invitation link opens the join screen", async (p) => {
     await p.goto(invite);
-    await p.waitForURL((u) => u.pathname.startsWith("/app/join"), { timeout: 15000 });
+    await p.waitForURL((u) => u.pathname === "/app/join", { timeout: 15000 });
+    await settle(p);
     await requireDrawn(walk, p, "join");
   });
-  await walk.step(page, "join: language, handle and password; joined and signed in", async (p) => {
-    const lang = p.locator('[data-act="memberlanguageset"]').first();
-    if (await lang.count()) await lang.click();
-    await act(p, "enroll", { "handle": member.handle, "password": member.password });
+  await walk.step(page, "join: a handle, free, and a password; joined and signed in", async (p) => {
+    await act(p, "handlecheck", { fields: { "jn-handle": member.handle } });
+    await shown(p, '[data-due="met"]', `that ${member.handle} is free`);
+    await act(p, "enroll", { fields: { "jn-pw": member.password, "jn-pw2": member.password } });
+    await shown(p, '[data-state="joined"]', "that she joined");
   });
-  await walk.step(page, "join: the member's ten recovery codes, saved", async (p) => {
-    await act(p, "recoverycodesissue");
+  await walk.step(page, "join: her ten recovery codes, shown once", async (p) => {
+    await tenCodes(p);
+    await p.locator("a[href='/app'][data-nav]").last().click();
+    await settle(p);
   });
-  await walk.step(page, "home: the guided welcome, continued", async (p) => {
-    await open(walk, p, base, "/app", "home");
+  await walk.step(page, "home: the guided welcome she began when she joined, continued", async (p) => {
+    await requireDrawn(walk, p, "home");
+    await shown(p, '[data-guide="start"], [data-guide-state="running"]', "the welcome to continue");
   });
-  await walk.step(page, "account: the member's first settings", async (p) => {
+  await walk.step(page, "account: her first settings, her expertise declared", async (p) => {
     await open(walk, p, base, "/app/account", "account");
-    await act(p, "expertisedeclare", { "field": "Interpreting, Spanish and English" });
+    await act(p, "expertisedeclare", { fields: { "ma-exp": "Interpreting, Spanish and English" } });
+    await shown(p, "text=Interpreting, Spanish and English", "the expertise declared");
   });
   await walk.step(page, "home: what happened? a problem I live with", async (p) => {
     await open(walk, p, base, "/app", "home");
-    await act(p, "startfrom");
+    /* the door for "A problem I live with"; its first offered script starts in the wizard runner */
+    const door = '[data-door]:has-text("problem")';
+    await (await control(p, "startfrom", { within: (await p.locator(door).count()) ? door : null })).click();
+    await settle(p);
   });
-  await walk.step(page, "capture: first testimony, labelled as hers", async (p) => {
-    await open(walk, p, base, "/app/capture", "capture");
-    await act(p, "testify", { "what": "Water through the ceiling of flat 4 since Monday; reported twice." });
+  await walk.step(page, "capture: her first testimony, labelled as hers", async (p) => {
+    await open(walk, p, base, "/app/capture/saw", "capture");
+    const yesterday = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+    await act(p, "testify", { fields: { "ci-words": "Water has come through the ceiling of flat 4 since Monday; reported twice.",
+      "ci-where": "Flat 4, second floor", "ci-when": yesterday } });
+    await shown(p, '[data-tab="saw"] [role="status"]', "the testimony recorded");
   });
-  await walk.step(page, "account: sign out", async (p) => {
+  await walk.step(page, "account: sign out on this device", async (p) => {
     await open(walk, p, base, "/app/account", "account");
     await act(p, "signout");
-    await p.waitForURL((u) => u.pathname === "/" || u.pathname.startsWith("/app"), { timeout: 10000 });
+    await shown(p, '[data-state="signedout"]', "the signed-out state");
   });
   await walk.step(page, "front: sign in, kept signed in on this device", async (p) => {
     await open(walk, p, base, "/", "front");
-    await fill(p, "handle", member.handle);
-    await fill(p, "password", member.password);
-    const keep = p.getByLabel(/keep/i).first();
-    if (await keep.count()) await keep.check();
-    await act(p, "login", {}, { confirm: false });
+    await act(p, "login", { fields: { "fs-handle": member.handle, "fs-pw": member.password } });
+    await p.waitForFunction(() => location.pathname === "/app" || location.pathname === "/", null, { timeout: 15000 });
+    await settle(p);
     await requireDrawn(walk, p, "home");
   });
-  await walk.step(page, "lock: idle on a kept device", async (p) => {
+  await walk.step(page, "lock: idle half an hour on her own device", async (p) => {
     await p.clock.fastForward("31:00");
-    await p.locator('[data-state="locked"], [data-lock], #cs-lock').first().waitFor({ timeout: 10000 });
+    await shown(p, '[data-overlay="lock"], [data-state="locked"]', "the lock");
   });
-  await walk.step(page, "unlock: the password again, back where she was", async (p) => {
-    await fill(p, "password", member.password);
-    await act(p, "unlock", {}, { confirm: false });
+  await walk.step(page, "unlock: her password again, back where she was", async (p) => {
+    const overlay = await p.locator('[data-overlay="lock"]').count();
+    if (overlay) { await type(p, "cs-lock-pw", member.password); await p.locator('[data-shell="unlock"]').click(); }
+    else await act(p, "unlock", { fields: { "fl-lock": member.password } });
+    await settle(p);
+    if (await p.locator('[data-overlay="lock"]:visible, [data-state="locked"]:visible').count()) throw new Error("still locked");
     await requireDrawn(walk, p, "home");
   });
 }
@@ -189,30 +229,40 @@ export async function walkMember(walk, page, { base, invite, member }) {
 
 export async function walkWelcome(walk, page, { base, link, member }) {
   walk.journey = "journey 3";
-  await walk.step(page, "join: choose your language", async (p) => {
+  await walk.step(page, "welcome 1–2: join, the language and a handle and a password", async (p) => {
     await p.goto(link);
-    await p.waitForURL((u) => u.pathname.startsWith("/app/join"), { timeout: 15000 });
+    await p.waitForURL((u) => u.pathname === "/app/join", { timeout: 15000 });
+    await settle(p);
     await requireDrawn(walk, p, "join");
-    await act(p, "memberlanguageset");
+    if (await p.locator("#jn-lang").count()) await p.locator("#jn-lang").selectOption({ index: 0 });
+    await act(p, "enroll", { fields: { "jn-handle": member.handle, "jn-pw": member.password, "jn-pw2": member.password } });
+    await shown(p, '[data-state="joined"]', "that he joined");
+    await p.locator("a[href='/app'][data-nav]").last().click();
+    await settle(p);
   });
-  await walk.step(page, "join: a handle and a password", async (p) => {
-    await act(p, "enroll", { "handle": member.handle, "password": member.password });
+  await walk.step(page, "welcome 3: this is your group's home", async (p) => {
+    await requireDrawn(walk, p, "home");
+    if (!(await p.locator('[data-guide-state="running"]').count())) await p.locator('[data-guide="start"]').first().click();
+    await shown(p, '[data-guide-state="running"]', "the welcome running");
   });
-  for (const [id, label] of [["home", "your group's home"], ["question", "a question's strength, and Undetermined"],
-    ["connect", "optional: connect your own Claude account, skipped"], ["ties", "optional: your own ties, skipped"]]) {
-    await walk.step(page, `welcome: ${label}`, async (p) => {
-      const next = p.locator('[data-wizard="next"], [data-wizard="skip"]').first();
-      await next.waitFor({ timeout: 10000 }).catch(() => { throw new Error(`the welcome draws no way on at ${id}`); });
-      await next.click();
+  for (const [n, id, label] of [[4, "question", "a question's strength, and Undetermined"],
+    [5, "connect", "optional: connect your own Claude account, skipped"], [6, "ties", "optional: your own ties, skipped"],
+    [7, "home", "a first step"]]) {
+    await walk.step(page, `welcome ${n}: ${label}`, async (p) => {
+      await p.locator('[data-guide="next"]').first().click();
       await settle(p);
-      await requireDrawn(walk, p, id === "connect" || id === "ties" ? nextOf(id) : id);
+      /* a side trip the step offers is a choice: skipped, it returns to the welcome */
+      if (await p.locator("[data-guide-trip]").count()) { await p.locator('[data-guide="stop"]').first().click(); await settle(p); }
+      await shown(p, '[data-guide-state="running"]', `the welcome at step ${n}`);
+      if (!(await p.locator(".cs-wizard .step").first().textContent()).includes(`${n}`)) throw new Error(`the welcome is not at step ${n}`);
     });
   }
-  await walk.step(page, "welcome: a first step", async (p) => {
-    await act(p, "startfrom");
+  await walk.step(page, "welcome: finished", async (p) => {
+    await p.locator('[data-guide="next"]').first().click();
+    await settle(p);
+    if (await p.locator('[data-guide-state="running"]').count()) throw new Error("the welcome did not finish");
   });
 }
-const nextOf = (id) => ({ connect: "ties", ties: "home" }[id]);
 
 /* ---------- the sweep: every registry screen, drawn ---------- */
 
@@ -233,4 +283,3 @@ export const credentials = () => ({
   member: { handle: "mai-k", password: "member-" + rand(12) },
   newcomer: { handle: "teo-r", password: "newcomer-" + rand(12) },
 });
-export { Walk };
