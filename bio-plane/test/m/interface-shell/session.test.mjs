@@ -4,7 +4,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok, refused, silent, MEMBER, settle, tabs, STORE_KEY } from "./harness.mjs";
 import { ALL, FRONT, ENTRY } from "./screens.fixture.mjs";
-import { SESSION_STORE_KEY } from "../../../src/interface-shell/index.mjs";
+import { SESSION_STORE_KEY, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
+import { OPS } from "../../../src/op-declarations/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const SENTINEL = "SENTINEL-tok-7f3a";
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "w", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
@@ -36,7 +38,7 @@ test("R3 R32 no live record, or an expired one: /app/<working screen> draws fron
     assert.equal(p.byOp("whoami").length, 0);
     assert.equal(p.location.pathname, "/app/held", "the address stays");
     assert.equal(p.store.get(STORE_KEY + ":return"), "/app/held");
-    assert.equal(stateOf(p), "State: none");
+    assert.equal(stateOf(p), "fx t state none");
   }
 });
 
@@ -66,7 +68,7 @@ test("R32 a 401 answer to any request clears the record and draws front's ended 
     const p = await boot({ screens: SCREENS, path: "/app/held", plane: { [op]: refused("MEMBER_TOKEN_RETIRED", null, 401), heldcaptures: op === "heldcaptures" ? refused("X", null, 401) : HELD } });
     assert.equal(p.local.has(STORE_KEY), false, op);
     assert.equal(screenOf(p), "front", op);
-    assert.equal(stateOf(p), "State: ended", op);
+    assert.equal(stateOf(p), "fx t state ended", op);
     assert.equal(p.store.get(STORE_KEY + ":return"), "/app/held", op);
     for (const v of p.store.values()) assert.ok(!v.includes("tok-1"), "no token in sessionStorage");
   }
@@ -110,7 +112,7 @@ test("R32 every tab sees a sign-in, a lock, a sign-out and an end through the st
   await a.click('[data-shell="signout"]');
   await b.settle();
   assert.equal(screenOf(b), "front");
-  assert.equal(stateOf(b), "State: signedout");
+  assert.equal(stateOf(b), "fx t state signedout");
   /* a sign-in in b reaches a */
   const plane = { login: ok({ token: "tok-2", expires: 0 }) };
   const c = await boot({ screens: SCREENS, tabs: t, session: null, path: "/app/held", plane });
@@ -184,20 +186,20 @@ test("R4 the member's initial opens a menu with Sign out: it sends op=signout, t
     await p.click(menu);
     assert.equal(p.root().querySelector("#cs-menu").hidden, false);
     const so = p.root().querySelector('[data-shell="signout"]');
-    assert.equal(so.textContent, "Sign out");
+    assert.equal(so.textContent, word("shell.signout"));
     await p.click(so);
     assert.equal(p.byOp("signout").length, 1);
     assert.equal(p.byOp("signout")[0].headers.Authorization, "Bearer tok-1");
     assert.equal(p.local.has(STORE_KEY), false);
     assert.equal(screenOf(p), "front");
-    assert.equal(stateOf(p), "State: signedout");
+    assert.equal(stateOf(p), "fx t state signedout");
   }
   /* control: with no front registered, the shell's own page says the state */
   const q = await boot({ screens: ALL });
   await q.click('[data-shell="menu"]');
   await q.click('[data-shell="signout"]');
   assert.equal(q.root().querySelector("#cs-main").getAttribute("data-screen"), null);
-  assert.ok(q.root().querySelector("#cs-main").textContent.includes("You are signed out on this device"));
+  assert.ok(q.root().querySelector("#cs-main").textContent.includes(word("session.signedout")));
 });
 
 test("R24 nothing the shell does records who opened what: no storage holds a read or a screen visited, and no request but the screens' own reads and acts and the frame's", async () => {
@@ -207,7 +209,9 @@ test("R24 nothing the shell does records who opened what: no storage holds a rea
   for (const k of p.local.keys()) assert.match(k, /^(cs-(level|theme|railw|level-asked|first:[\w-]*)|bio-session(:active)?)$/, k);
   for (const [k, v] of p.local) if (k !== STORE_KEY) assert.doesNotMatch(v, /held|document|home|members|\/app/);
   assert.deepEqual([...p.store.keys()], []);
-  const ALLOWED = new Set(["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate", "heldcaptures", "projectdirectory", "image", "bootstrap"]);
+  /* the ops the frame and the fixture screens declare they call: the shell's own list, and each fixture screen's reads (R24) */
+  const ALLOWED = new Set([...SHELL_OPS, ...SCREENS.flatMap((x) => (x.reads ? Object.values(x.reads({ subject: "s", data: {}, ui: {} })).map((r) => r.op) : []))]);
+  for (const op of ALLOWED) assert.ok(Object.hasOwn(OPS, op), op + ": declared by its owner");
   for (const r of p.requests) assert.ok(ALLOWED.has(r.op), r.op);
   await settle();
   assert.ok(ENTRY.length);

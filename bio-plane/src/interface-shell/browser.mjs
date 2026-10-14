@@ -20,6 +20,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   let SHOWN = new Map();
   let wordsRead = false, wordsRetry = false;
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  /* R68 (nothing clipped at 390 px): text with a run of 25 or more unbroken characters (a digest, a long name) is escaped
+     and given a break opportunity every 16 characters (`<wbr>`, which is no character, so a copy of the text is whole) */
+  const soft = (s) => String(s == null ? "" : s).split(/(\s+)/).map((t) => (t.length > 24 ? t.match(/[\s\S]{1,16}/g).map(esc).join("<wbr>") : esc(t))).join("");
   const unesc = (s) => String(s).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
   const textOf = (h) => unesc(String(h == null ? "" : h).replace(/<[^>]*>/g, "")).trim();
   const has = (key) => BASE.has(key);
@@ -200,7 +203,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   }
   /* R39 (N1001): a refusal's trace, drawn as a short reference beside its words and kept nowhere */
   const traceOf = (a) => (a && a.fields && typeof a.fields.trace === "string" && a.fields.trace
-    ? ' <span class="muted">' + w("shell.trace", { trace: a.fields.trace.slice(0, 8) }) + "</span>" : "");
+    ? ' <span class="muted">' + w("refusal.reference", { ref: a.fields.trace.slice(0, 8) }) + "</span>" : "");
   /* R13: `refusal.<code>` (or the screen's own key for the code) when held; else the answer's translation. R61: a refusal
      with its own words is drawn as those words alone; one without is "could not be read" with R39's reference, naming no
      code. Answers `{words, own}`. */
@@ -388,7 +391,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         if (r.state === "empty") return '<p class="cs-state" data-state="empty">' + w(o.empty || "state.empty") + "</p>";
         return typeof inner === "function" ? inner(r.value) : "";
       },
-      /* R11, R12: the act's button, gated, labelled, weighted; "" when the session may not do it */
+      /* R11, R12: the act's button, gated, labeled, weighted; "" when the session may not do it */
       act(op, o = {}) {
         const spec = (inst.spec.acts || []).find((a) => a.op === op);
         if (!spec || !can(op, inst)) return "";
@@ -410,11 +413,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const pips = '<span class="cs-pips" aria-hidden="true">' + [1, 2, 3, 4, 5].map((i) => "<i" + (i <= WEIGHTS.indexOf(shown) + 1 ? ' class="on"' : "") + "></i>").join("") + "</span>";
         const tip = (does ? "<b>" + label + "</b>: " + does : "<b>" + label + "</b>") + (weighed ? '<span class="why">' + w("weight." + shown + ".means") + "</span>" : "")
           + (outward ? '<span class="why">' + w("mark.outward.means") + "</span>" : "");
-        return '<span class="cs-actwrap"><button type="button" class="cs-btn"' + (o.tone ? ' data-tone="' + esc(o.tone) + '"' : "")
+        return '<span class="mk-actwrap"><button type="button" class="cs-btn"' + (o.tone ? ' data-tone="' + esc(o.tone) + '"' : "")
           + ' data-act="' + esc(op) + '" data-ai="' + inst.key + ":" + idx + '"' + data + tipAttr(tip, 2) + ">"
           + (o.icon ? I(o.icon) : "") + (outward ? I("outward") : "") + label
           + (weighed ? '<span class="w"' + (mark ? ' data-mark="' + esc(mark) + '"' : "") + ">" + pips + w("weight." + shown + ".name") + "</span>" : "") + "</button>"
-          + '<span class="cs-slot" data-slot="' + inst.key + ":" + idx + '"></span></span>';
+          + '<span class="mk-slot" data-slot="' + inst.key + ":" + idx + '"></span></span>';
       },
       /* R16: an item the record holds, a link to its screen where one is built, with its card */
       ref(kind, id, label, facts) {
@@ -423,8 +426,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const card = "<b>" + kw("shell.card." + kind) + "</b>" + (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
           .map((f) => '<span class="why">' + esc(f) + "</span>").join("") + (target ? '<span class="more">' + w("shell.card.open") + "</span>" : "");
         return target
-          ? '<a class="cs-ref" href="' + esc(target) + '" data-nav' + tipAttr(card, 1) + ">" + esc(label) + "</a>"
-          : '<span class="cs-card" tabindex="0"' + tipAttr(card, 1) + ">" + esc(label) + "</span>";
+          ? '<a class="cs-ref" href="' + esc(target) + '" data-nav' + tipAttr(card, 1) + ">" + soft(label) + "</a>"
+          : '<span class="cs-card" tabindex="0"' + tipAttr(card, 1) + ">" + soft(label) + "</span>";
       },
       /* level 1: a mark explains itself; its name is the word `mark.<family>.<value>.name` (or `.label`) */
       mark(family, value, fills) {
@@ -432,7 +435,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const base = "mark." + family + (value ? "." + value : "");
         const nameKey = [base + ".name", base + ".label"].find(has);
         const meansKey = [base + ".means", "mark." + family + ".means"].find(has);
-        const extra = fills && fills.reason !== undefined && fills.reason !== null ? "<span>" + esc(fills.reason) + "</span>" : "";
+        const extra = fills && fills.reason !== undefined && fills.reason !== null ? "<span>" + soft(fills.reason) + "</span>" : "";
         const name = nameKey ? (extra ? "<b>" + w(nameKey, fills) + "</b>" : w(nameKey, fills)) : "";
         return '<span class="' + m.cls + '"' + (m.attr && value ? " " + m.attr + '="' + esc(value) + '"' : "") + ' tabindex="0"'
           + tipAttr(meansKey ? w(meansKey, fills) : "", 1) + ">" + (m.icon ? I(m.icon(value)) : "") + name + extra + "</span>";
@@ -446,7 +449,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
           + I(state === "met" ? "accepted" : "clock") + date(iso) + "</span>";
       },
       hint(label) {
-        return '<span class="cs-hint" tabindex="0"' + tipAttr(kw("mark.hint.means"), 1) + ">" + I("hint") + (label ? esc(label) : kw("mark.hint.label")) + "</span>";
+        return '<span class="cs-hint" tabindex="0"' + tipAttr(kw("mark.hint.means"), 1) + ">" + I("hint") + (label ? soft(label) : kw("mark.hint.label")) + "</span>";
       },
       title(label, o = {}) {
         if (o.thing) o = typeof o.thing === "string" ? { kind: o.thing, facts: o.facts } : { kind: o.thing.kind, facts: o.thing.facts };
@@ -499,7 +502,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const key = op + "?" + JSON.stringify(params || {});
         let im = inst.images[key];
         if (!im) { im = inst.images[key] = { url: null, state: "loading" }; loadImage(inst, im, op, params); }
-        return '<img class="cs-image" alt="' + wordOrData(o.alt) + '" data-image="' + im.state + '"' + (im.url ? ' src="' + esc(im.url) + '"' : "") + ">";
+        return '<img class="mk-image" alt="' + wordOrData(o.alt) + '" data-image="' + im.state + '"' + (im.url ? ' src="' + esc(im.url) + '"' : "") + ">";
       },
       /* R49: rectangles drawn over an image by pointer, touch or keyboard, each moved and resized; read by `cs.value(id)`
          as `[{left, top, width, height}]` in the image's pixels */
@@ -511,8 +514,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const pos = (r) => (nat ? "left:" + (100 * r.left / nat.w) + "%;top:" + (100 * r.top / nat.h) + "%;width:" + (100 * r.width / nat.w) + "%;height:" + (100 * r.height / nat.h) + "%"
           : "left:" + r.left + "px;top:" + r.top + "px;width:" + r.width + "px;height:" + r.height + "px");
         const label = o.label ? wordOrData(o.label) : w("shell.areas");
-        return '<div id="' + esc(id) + '" role="group" aria-label="' + label + '"><div class="cs-areas-box" data-shell="areas-box" data-areas="' + esc(id) + '">' + imageHtml
-          + list.map((r, i) => '<button type="button" class="cs-area" data-shell="area" data-areas="' + esc(id) + '" data-i="' + i + '" style="' + pos(r) + '" aria-label="'
+        return '<div id="' + esc(id) + '" role="group" aria-label="' + label + '"><div class="mk-imgareas" data-shell="areas-box" data-areas="' + esc(id) + '">' + imageHtml
+          + list.map((r, i) => '<button type="button" class="mk-imgarea" data-shell="area" data-areas="' + esc(id) + '" data-i="' + i + '" style="' + pos(r) + '" aria-label="'
             + w("shell.areas.one", { n: String(i + 1), left: String(Math.round(r.left)), top: String(Math.round(r.top)), width: String(Math.round(r.width)), height: String(Math.round(r.height)) }) + '"></button>').join("")
           + '</div><p class="mk-note">' + w("shell.areas.help") + '</p><span class="mk-acts"><button type="button" class="cs-btn" data-tone="quiet" data-shell="area-add" data-areas="' + esc(id) + '">' + w("shell.areas.add") + "</button>"
           + (list.length ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="area-clear" data-areas="' + esc(id) + '">' + w("shell.areas.clear") + "</button>" : "") + "</span></div>";
@@ -530,7 +533,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
          its HTML, a reference where the item has a screen) is drawn with the panel's control beside it, never around
          it. With `cells(item)` one short of `cols`, the name is the first column; with as many, `cells(item)[0]` is.
          R62: drawn as the design's table (`mk-table mk-rows`); at the phone width each row is the design's one-line row,
-         the name and its first value on one line and the rest beneath, labelled, with no label for an empty cell and no
+         the name and its first value on one line and the rest beneath, labeled, with no label for an empty cell and no
          column that is empty in every row. */
       rows(t) {
         const id = t.id || "rows";
@@ -570,12 +573,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
             + (picked.includes(key) ? " checked" : "") + ' aria-label="' + w("shell.pick", { name }) + '"></td>' : "";
           let tds;
           if (narrow) {
-            /* the name and its first value on one line; the rest beneath, each labelled unless empty */
+            /* the name and its first value on one line; the rest beneath, each labeled unless empty */
             const rest = cells.map((c, i) => [c, i]).filter(([, i]) => i > 1 && shownCols[i]);
-            tds = '<td><span class="cs-rowname">' + cells[0] + control + (cells.length > 1 && shownCols[1] && !blank(cells[1]) ? '<span class="muted">' + cells[1] + "</span>" : "") + "</span></td>"
+            tds = '<td><span class="mk-rowname">' + cells[0] + control + (cells.length > 1 && shownCols[1] && !blank(cells[1]) ? '<span class="muted">' + cells[1] + "</span>" : "") + "</span></td>"
               + rest.map(([c, i]) => (blank(c) ? "" : '<td data-label="' + w(cols[i] || "state.empty") + '"><span>' + c + "</span></td>")).join("");
           } else {
-            tds = cells.map((c, i) => (i === 0 ? '<td><span class="cs-rowname">' + c + control + "</span></td>" : shownCols[i] ? "<td>" + c + "</td>" : "")).join("");
+            tds = cells.map((c, i) => (i === 0 ? '<td><span class="mk-rowname">' + c + control + "</span></td>" : shownCols[i] ? "<td>" + c + "</td>" : "")).join("");
           }
           return '<tr class="cs-r mk-r"' + (narrow && !t.pick ? ' style="grid-template-columns:minmax(0,1fr)"' : "") + ">" + pick + tds + "</tr>"
             + (acts ? '<tr class="cs-panel mk-detail"' + (isOpen ? "" : " hidden") + '><td colspan="' + width + '"><div class="mk-detailbox"><div class="mk-acts">' + acts + "</div></div></td></tr>" : "");
@@ -786,8 +789,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       return titled("shell.settings.title") + '<div class="cs-sheet">' + rows + "</div>";
     }
     if (k === "more") {
-      return titled("shell.more") + '<div class="cs-sheet">' + ["projects", "people", "settings"].map((p) =>
-        rowOf(placeHref(p), RAIL_ICON[p], w("rail." + p + ".name"), w("rail." + p + ".holds"))).join("") + "</div>";
+      /* R63, R69: the rail's places the tabs do not hold, as the design's more rows: the place's icon and name as its
+         reference (explained by what it holds), and the line it says beneath */
+      return '<div class="mk-h"><h1 class="t-title">' + w("shell.more") + '</h1><p class="mk-sub">' + w("screen.more.sub") + "</p></div>"
+        + '<div class="mk-morerows">' + RAIL.filter((p) => !TABS.includes(p)).map((p) => '<div class="mk-morerow"><a class="cs-ref" href="' + esc(placeHref(p)) + '" data-nav'
+          + tipAttr(w("rail." + p + ".holds"), 1) + ">" + I(RAIL_ICON[p]) + w("rail." + p + ".name") + "</a><p>" + w("rail." + p + ".line") + "</p></div>").join("") + "</div>";
     }
     return titled("rail." + k + ".name") + '<p class="cs-state" data-state="empty">' + w("shell.later", { place: html(w("rail." + k + ".name")) }) + "</p>";
   };
@@ -874,15 +880,15 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R43 (DEC-214 (1)): the mark opens the masthead, before the group's name */
     const mark = '<span class="cs-mark" role="img" aria-label="' + w("shell.mark") + '" tabindex="0"' + tipAttr("<b>" + w("shell.mark") + "</b>: " + w("shell.mark.means"), 1)
       + '><svg viewBox="0 0 60 90" aria-hidden="true"><use href="' + D.icons + '#i-mark"/></svg></span>';
-    return '<header class="cs-mast">' + mark + '<a class="grp" href="/app" data-nav>' + name + "</a>" + '<span class="spacer"></span>'
+    return '<header class="cs-mast">' + mark + '<a class="mk-grp" href="/app" data-nav' + tipAttr("<b>" + (GROUP ? soft(GROUP) : w("shell.group.unnamed")) + "</b>", 1) + ">" + name + "</a>" + '<span class="spacer"></span>'
       + '<a class="mk-mastsearch" href="' + placeHref("find") + '" data-nav aria-label="' + w("shell.search") + '"' + tipAttr(w("shell.search.holds"), 2) + ">" + I("search") + (narrow ? "" : "<span>" + w("shell.search") + "</span>") + "</a>"
-      + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="level" aria-label="' + level + '"' + tipAttr(w("shell.level.holds"), 2) + ">" + I("question") + label(level) + "</button>"
+      + '<button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-shell="level" aria-label="' + level + '"' + tipAttr(w("shell.level.holds"), 2) + ">" + I("question") + label(level) + "</button>"
       + (REACHABLE ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-expanded="' + DOCK + '" aria-label="' + w("shell.assistant") + '"' + tipAttr(w("shell.assistant.holds"), 2) + ">" + I("machine") + label(w("shell.assistant")) + "</button>" : "")
       + (TODO && !narrow ? '<a class="cs-kind mk-hide-phone" data-kind="todo" href="' + placeHref("queue") + '" data-nav' + tipAttr(w("shell.todo.means"), 1) + ">" + I("queue") + w("shell.todo", { n: String(TODO) }) + "</a>" : "")
-      + '<span class="cs-menuwrap"><button type="button" class="mk-avatar" data-shell="menu" aria-haspopup="menu" aria-expanded="' + !!MENU + '" aria-controls="cs-menu"'
+      + '<span class="mk-menuwrap"><button type="button" class="mk-avatar" data-shell="menu" aria-haspopup="menu" aria-expanded="' + !!MENU + '" aria-controls="cs-menu"'
       + ' aria-label="' + (handle ? w("shell.you", { handle }) : w("shell.you.holds")) + '"' + tipAttr(w("shell.you.holds"), 2) + ">"
       + (handle ? '<span aria-hidden="true">' + esc(handle.slice(0, 1).toUpperCase()) + "</span>" : I("subject")) + "</button>"
-      + '<div class="cs-dialog cs-menu" id="cs-menu" role="menu"' + (MENU ? "" : " hidden") + ">" + signout
+      + '<div class="cs-dialog mk-menu" id="cs-menu" role="menu"' + (MENU ? "" : " hidden") + ">" + signout
       + '<div role="group" aria-label="' + w("shell.appearance") + '"><span class="eyebrow">' + w("shell.appearance") + "</span>" + themes + "</div></div></span></header>";
   }
   /* R48: the main frame's root names the registered screen it drew; the shell's own fallbacks name none */
@@ -890,19 +896,22 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   /* R36, R53, R58: the test-instance band, above every frame and spanning it: served in the page while the instance is a
      test one (from first paint, so nothing moves when `bootstrap` answers), drawn by the page when `bootstrap` answers
      `test_instance: true` and it was not served, removed when it answers otherwise; its words follow the member's */
+  /* R67: the design's `.cs-band[data-band="test"]`: the machine icon, `instance.test.band`, then `instance.test.notice` */
+  const testBandHtml = () => I("machine") + "<b>" + w("instance.test.band") + "</b> <span>" + w("instance.test.notice") + "</span>";
   function testBand() {
     const root = doc.getElementById("cs-root");
     let band = doc.getElementById("cs-testband");
-    if (!BOOT_READ && band) { band.innerHTML = w("instance.test.notice"); return; }
+    if (!BOOT_READ && band) { band.innerHTML = testBandHtml(); return; }
     if (!(BOOT && BOOT.test_instance === true)) { if (band && band.parentElement) band.parentElement.removeChild(band); return; }
     if (!band && root && root.parentElement) {
       band = doc.createElement("div");
-      band.setAttribute("class", "cs-testband");
+      band.setAttribute("class", "cs-band");
+      band.setAttribute("data-band", "test");
       band.setAttribute("id", "cs-testband");
       band.setAttribute("role", "note");
       root.parentElement.insertBefore(band, root);
     }
-    if (band) band.innerHTML = w("instance.test.notice");
+    if (band) band.innerHTML = testBandHtml();
   }
   const RAIL = ["home", "queue", "find", "add", "projects", "people", "settings"];
   const TABS = ["home", "queue", "add", "find", "more"];
@@ -938,20 +947,20 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   let REAUTH = null, DIALOG = null, OVERLAY_REFUSAL = "";
   function overlayHtml() {
     const field = (id) => '<span class="cs-field"><label for="' + id + '">' + w("shell.password") + '</label><input id="' + id + '" class="cs-input" type="password" autocomplete="current-password"></span>';
-    const slot = '<span class="cs-slot" data-overlay-refusal>' + OVERLAY_REFUSAL + "</span>";
+    const slot = '<span class="mk-slot" data-overlay-refusal>' + OVERLAY_REFUSAL + "</span>";
     if (LOCKED) {
       const who = S ? S.w || (ME && ME.handle) || "" : "";
-      return '<div class="cs-overlay"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-lock-t" data-overlay="lock"><h2 id="cs-lock-t">' + w("shell.lock.title") + "</h2><p>" + w("session.locked") + "</p>"
+      return '<div class="mk-scrim"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-lock-t" data-overlay="lock"><h2 id="cs-lock-t">' + w("shell.lock.title") + "</h2><p>" + w("session.locked") + "</p>"
         + field("cs-lock-pw") + slot + '<span class="mk-acts"><button type="button" class="cs-btn" data-tone="primary" data-shell="unlock">' + w("shell.lock.unlock") + "</button>"
         + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="lock-other">' + w("shell.lock.other", { handle: who }) + "</button></span></div></div>";
     }
     if (REAUTH) {
-      return '<div class="cs-overlay"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-reauth-t" data-overlay="reauth"><h2 id="cs-reauth-t">' + w("shell.reauth.title") + "</h2><p>" + w("session.reauth") + "</p>"
+      return '<div class="mk-scrim"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-reauth-t" data-overlay="reauth"><h2 id="cs-reauth-t">' + w("shell.reauth.title") + "</h2><p>" + w("session.reauth") + "</p>"
         + field("cs-reauth-pw") + slot + '<span class="mk-acts"><button type="button" class="cs-btn" data-tone="primary" data-shell="reauth">' + w("shell.reauth.send") + "</button>"
         + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="reauth-cancel">' + w("shell.cancel") + "</button></span></div></div>";
     }
     if (DIALOG && DIALOG.kind === "register") {
-      return '<div class="cs-overlay"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-key-t" data-overlay="register"><h2 id="cs-key-t">' + w("shell.signer.passphrase") + "</h2>"
+      return '<div class="mk-scrim"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-key-t" data-overlay="register"><h2 id="cs-key-t">' + w("shell.signer.passphrase") + "</h2>"
         + '<span class="cs-field"><label for="cs-key-pass">' + w("shell.signer.passphrase") + '</label><span class="help" id="cs-key-pass-help">' + w("shell.signer.passphrase.help")
         + '</span><input id="cs-key-pass" class="cs-input" type="password" autocomplete="new-password" aria-describedby="cs-key-pass-help"></span>'
         + '<span class="cs-field"><label for="cs-key-again">' + w("shell.signer.passphrase.again") + '</label><input id="cs-key-again" class="cs-input" type="password" autocomplete="new-password"></span>'
@@ -962,8 +971,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       const load = DIALOG.needKey ? '<fieldset class="cs-field"><legend>' + w("shell.signer.load") + '</legend><span class="cs-field"><label for="cs-key-file">' + w("shell.signer.loadfile")
         + '</label><textarea id="cs-key-file" class="cs-input" spellcheck="false" autocomplete="off"></textarea></span><span class="cs-field"><label for="cs-key-filepass">' + w("shell.signer.loadpass")
         + '</label><input id="cs-key-filepass" class="cs-input" type="password" autocomplete="off"></span></fieldset>' : "";
-      return '<div class="cs-overlay"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-sign-t" data-overlay="sign"><h2 id="cs-sign-t">' + w("shell.signer.exactly") + "</h2><ol>"
-        + DIALOG.list.map((s) => "<li><b>" + esc(s.label) + "</b><pre>" + esc(s.line) + "</pre></li>").join("") + "</ol>" + load + "<p>" + w("signing.ceremony.device") + "</p>"
+      return '<div class="mk-scrim"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-sign-t" data-overlay="sign"><h2 id="cs-sign-t">' + w("shell.signer.exactly") + "</h2><ol>"
+        + DIALOG.list.map((s) => "<li><b>" + soft(s.label) + "</b><code>" + soft(s.line) + "</code></li>").join("") + "</ol>" + load + "<p>" + w("signing.ceremony.device") + "</p>"
         + slot + '<span class="mk-acts"><button type="button" class="cs-btn" data-tone="primary" data-shell="dialog-yes">' + w("shell.signer.sign") + "</button>"
         + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dialog-no">' + w("shell.signer.decline") + "</button></span></div></div>";
     }
@@ -1581,13 +1590,15 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   const onTipOrEl = (n) => !!(n && ((TIP && (n === TIP || (TIP.contains && TIP.contains(n)))) || (tipEl() && (n === tipEl() || (tipEl().contains && tipEl().contains(n))))));
 
   /* ---------- events, bound once by delegation (no inline handler, R2) ---------- */
-  const blocked = (t) => (LOCKED || REAUTH || DIALOG) && !(t.closest && t.closest(".cs-overlay"));
+  const blocked = (t) => (LOCKED || REAUTH || DIALOG) && !(t.closest && t.closest(".mk-scrim"));
   function bind() {
     const root = doc.getElementById("cs-root");
     root.addEventListener("click", (e) => {
       const t = e.target;
       /* R33, R34, R41: under the lock or a dialog over the screen, nothing beneath it answers */
       if (blocked(t)) { e.preventDefault(); return; }
+      /* R68: an explanation opened by a control closes when that control is pressed, whether or not the press redraws */
+      if (TIP && t.closest && t.closest("[data-tip]") === TIP && TIP.matches && TIP.matches("a,button,input,select,textarea,summary")) closeTip();
       /* R51: the guide's own control; a click the browser makes of the Enter or Space just handled is not a second press */
       const gc = guideControl(t);
       if (gc) {
@@ -1630,7 +1641,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       clearTimeout(closeT);
       closeT = setTimeout(closeTip, 500);
     });
-    root.addEventListener("focusin", (e) => { const el = e.target.closest ? e.target.closest("[data-tip]") : null; if (el) openTip(el); });
+    /* R14, R68: an explanation opens at once on keyboard focus; and it closes when the focus moves to anything that is
+       not it, so a card is never left open over the next field */
+    root.addEventListener("focusin", (e) => {
+      const el = e.target.closest ? e.target.closest("[data-tip]") : null;
+      if (el) return openTip(el);
+      if (TIP && !onTipOrEl(e.target)) closeTip();
+    });
     root.addEventListener("focusout", (e) => { if (TIP && e.target.closest && e.target.closest("[data-tip]") === TIP) closeTip(); });
     const t = tipEl();
     if (t) {

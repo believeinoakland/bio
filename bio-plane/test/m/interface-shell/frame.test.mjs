@@ -2,8 +2,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
-import { PATHS, FRAMES } from "../../../src/interface-shell/index.mjs";
+import { WORD_ROWS, word } from "../../../src/setup-words/index.mjs";
+import { PATHS, FRAMES, PLACE_SCREENS } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, refused, silent, pending, httpError, STORE_KEY, tabs } from "./harness.mjs";
 import { ALL, ASSISTANT, FRONT, DOORBELL, PUBLISHED, JOIN, PERSON } from "./screens.fixture.mjs";
 
@@ -24,20 +24,20 @@ async function press(p, op) {
 test("R7 R60 the masthead: the group's name (groupidentity, read once; \"Your group\" when it has no display name, never its slug), search opening Find, the explanation-level control, the To do count from op=queue, the member's initial; no assistant button while not reachable", async () => {
   const p = await boot({ screens: ALL, plane: PLANE });
   const mast = p.root().querySelector(".cs-mast");
-  assert.equal(mast.querySelector(".grp").textContent, "River Town");
+  assert.equal(mast.querySelector(".mk-grp").textContent, "River Town");
   assert.equal(p.byOp("groupidentity").length, 1);
   await p.click('a[href="/app/settings"]');
   assert.equal(p.byOp("groupidentity").length, 1, "read once");
   const m = p.root().querySelector(".cs-mast");
-  assert.equal(m.querySelector('a[href="/app/find"]').textContent, "Search");
+  assert.equal(m.querySelector('a[href="/app/find"]').textContent, word("shell.search"));
   assert.ok(m.querySelector('a[href="/app/find"]').classList.contains("mk-mastsearch"));
   assert.ok(m.querySelector('[data-shell="level"]').textContent.includes(en("level.prompt.name")));
-  assert.equal(m.querySelector('[data-kind="todo"]').textContent, "2 to do");
+  assert.equal(m.querySelector('[data-kind="todo"]').textContent, word("shell.todo", { n: 2 }));
   assert.equal(m.querySelector('[data-shell="menu"] [aria-hidden]').textContent, "M");
   assert.equal(m.querySelector('[data-shell="dock"]'), null);
   /* R60: never the slug: "Your group" when no display name */
   const q = await boot({ screens: ALL, plane: { ...PLANE, groupidentity: ok({ ok: true, group: "river-town", display_name: null }) } });
-  assert.equal(q.root().querySelector(".cs-mast .grp").textContent, "Your group");
+  assert.equal(q.root().querySelector(".cs-mast .mk-grp").textContent, word("shell.group.unnamed"));
   assert.ok(!q.root().innerHTML.includes("river-town"));
 });
 
@@ -48,14 +48,14 @@ test("R7 the band (mark.band.means with mark.path.working.*), the rail's seven p
   assert.equal(band.textContent, en("mark.path.working.name") + " · not public · seen by your group's members", "R57: the band as drawn");
   assert.ok(band.querySelector("[data-tip]").getAttribute("data-tip").startsWith(en("mark.band.means").replace(/'/g, "&#39;")));
   const rail = p.root().querySelectorAll(".cs-rail a");
-  assert.deepEqual(texts(rail), ["home", "queue", "find", "add", "projects", "people", "settings"].map((k) => en("rail." + k + ".name")));
+  assert.deepEqual(texts(rail), Object.keys(PLACE_SCREENS).map((k) => word("rail." + k + ".name")), "the shell's places, in its order");
   rail.forEach((a, i) => assert.ok(a.getAttribute("data-tip").length > 10, i));
   assert.equal(p.root().querySelectorAll("main").length, 1);
   const tabs = p.root().querySelectorAll(".cs-tabs a");
   assert.deepEqual(texts(tabs), [en("rail.home.name"), en("rail.queue.name"), en("rail.add.name"), en("rail.find.name"), en("tab.more.name")]);
   assert.ok(rail[0].hasAttribute("aria-current"));
   const more = await boot({ screens: ALL, path: "/app/more" });
-  assert.deepEqual(texts(more.root().querySelectorAll("#cs-main .cs-row a")), [en("rail.projects.name"), en("rail.people.name"), en("rail.settings.name")]);
+  assert.deepEqual(texts(more.root().querySelectorAll("#cs-main .mk-morerow a")), [word("rail.projects.name"), word("rail.people.name"), word("rail.settings.name")]);
   assert.ok(more.root().querySelectorAll(".cs-tabs a")[4].hasAttribute("aria-current"));
 });
 
@@ -91,19 +91,19 @@ test("R8 every screen opens its main area with its path, from its rail place to 
   const p = await boot({ screens: ALL, path: "/app/document/c1", plane: PLANE });
   const nav = p.root().querySelector("#cs-main").children[0];
   assert.equal(nav.localName, "nav");
-  assert.equal(nav.getAttribute("aria-label"), "Where you are");
+  assert.equal(nav.getAttribute("aria-label"), word("shell.path"));
   const steps = crumbSteps(p.root());
-  assert.deepEqual(texts(steps), ["Projects", "Pothole repairs", "Document"]);
+  assert.deepEqual(texts(steps), [word("rail.projects.name"), "Pothole repairs", word("screen.document.name")]);
   assert.equal(steps[0].getAttribute("href"), "/app/projects");
   assert.equal(steps[1].getAttribute("href"), "/app/project/P1");
   assert.equal(steps[2].localName === "a", false);
   assert.equal(steps[2].getAttribute("aria-current"), "page");
-  assert.equal(steps[2].textContent, "Document");
+  assert.equal(steps[2].textContent, word("screen.document.name"));
   assert.equal(p.root().querySelector("#cs-main").children[1].textContent, "A lease", "the heading below names the thing shown");
   const h = await boot({ screens: ALL, path: "/app/held", plane: PLANE });
-  assert.deepEqual(texts(crumbSteps(h.root())), ["Add", "Held captures"]);
+  assert.deepEqual(texts(crumbSteps(h.root())), [word("rail.add.name"), word("screen.held.name")]);
   const m = await boot({ screens: ALL, path: "/app/members" });
-  assert.deepEqual(texts(crumbSteps(m.root())), ["Settings", "Members"]);
+  assert.deepEqual(texts(crumbSteps(m.root())), [word("rail.settings.name"), word("screen.members.name")]);
 });
 
 const pathAt = (commit) => {
@@ -111,8 +111,7 @@ const pathAt = (commit) => {
   return new Function(/(const PATH = \{[\s\S]*?\n\};)/.exec(src)[1] + "; return PATH;")();
 };
 const PROJECTS = new Set(["The Coliseum lease", "Pothole repairs", "Sewer fund transfers"]);
-const SHELL_EN = new Map((await import("../../../src/interface-shell/index.mjs")).SHELL_WORDS.map((r) => [r[0], r[1]]));
-const step = (s) => (s === "@project" ? "@project" : /^shell\./.test(s) ? SHELL_EN.get(s) : /^screen\./.test(s) ? en(s) : en("rail." + s + ".name"));
+const step = (s) => (s === "@project" ? "@project" : /^(shell|screen)\./.test(s) ? word(s) : word("rail." + s + ".name"));
 const T46 = ["home", "queue", "inbox", "finder", "answers", "capture", "held", "open-file", "find-in", "project", "document", "question", "assistant", "members", "account", "connect", "notes"];
 
 test("R8 each screen's path is mock-shell.js' PATH for its id at 3f40899950, a project's step its title (members: Settings › Members; held: Add › Held captures; document: Projects › <project> › Document)", () => {
@@ -121,9 +120,9 @@ test("R8 each screen's path is mock-shell.js' PATH for its id at 3f40899950, a p
     const mock = id === "answers" ? ["Find", "Ask"] : PATH[id].map((x) => (PROJECTS.has(x) ? "@project" : x));
     assert.deepEqual(PATHS[id].map(step), mock, id);
   }
-  assert.deepEqual(PATHS.members.map(step), ["Settings", "Members"]);
-  assert.deepEqual(PATHS.held.map(step), ["Add", "Held captures"]);
-  assert.deepEqual(PATHS.document.map(step), ["Projects", "@project", "Document"]);
+  assert.deepEqual(PATHS.members.map(step), [word("rail.settings.name"), word("screen.members.name")]);
+  assert.deepEqual(PATHS.held.map(step), [word("rail.add.name"), word("screen.held.name")]);
+  assert.deepEqual(PATHS.document.map(step), [word("rail.projects.name"), "@project", word("screen.document.name")]);
 });
 
 test("R28 every screen of the new screen modules has its path from mock-shell.js' PATH at a0fab7abf0 (plan: Projects › <project> › Action plan; wizards: Settings › Wizards; due-date: Queue › Due date; person: People › Person), and L11's screens from PATH at PR #33's head; the public, published and setup frames have none", async () => {
@@ -131,14 +130,14 @@ test("R28 every screen of the new screen modules has its path from mock-shell.js
   const NEW = ["wizards", "person", "explore", "timeline", "money", "calculation", "proceeding", "due-date", "standard", "ties", "case-editor", "review-copy", "ceremony", "imported", "docket", "plan", "start-send", "request", "action", "matter", "archive", "group-identity", "security", "translations"];
   for (const id of NEW) assert.deepEqual(PATHS[id].map(step), A[id].map((x) => (PROJECTS.has(x) ? "@project" : x)), id);
   for (const id of ["people", "settings", "projects", "group", "places", "recovery"]) assert.deepEqual(PATHS[id].map(step), B[id], id);
-  assert.deepEqual(PATHS.plan.map(step), ["Projects", "@project", "Action plan"]);
-  assert.deepEqual(PATHS.wizards.map(step), ["Settings", "Wizards"]);
-  assert.deepEqual(PATHS["due-date"].map(step), ["Queue", "Due date"]);
-  assert.deepEqual(PATHS.person.map(step), ["People", "Person"]);
+  assert.deepEqual(PATHS.plan.map(step), [word("rail.projects.name"), "@project", word("screen.plan.name")]);
+  assert.deepEqual(PATHS.wizards.map(step), [word("rail.settings.name"), word("screen.wizards.name")]);
+  assert.deepEqual(PATHS["due-date"].map(step), [word("rail.queue.name"), word("shell.step.due-date")]);
+  assert.deepEqual(PATHS.person.map(step), [word("rail.people.name"), word("screen.person.name")]);
   for (const [id, frame] of Object.entries(FRAMES)) if (frame !== "dock") assert.equal(PATHS[id], undefined, id);
   /* drawn: a person's path with its place linked */
   const p = await boot({ screens: [...ALL, PERSON], path: "/app/person/x1", plane: { person: ok({ name: "Dana Ruiz" }) } });
-  assert.deepEqual(texts(crumbSteps(p.root())), ["People", "Person"]);
+  assert.deepEqual(texts(crumbSteps(p.root())), [word("rail.people.name"), word("screen.person.name")]);
 });
 
 test("R9 the router maps /app to home and /app/<screen>[/<subject>] to that screen with that subject, keeps the browser's history (back and forward redraw), and answers an unknown screen or a subject the read does not find with Nothing here, never a blank page", async () => {
@@ -155,7 +154,7 @@ test("R9 the router maps /app to home and /app/<screen>[/<subject>] to that scre
     const q = await boot({ screens: ALL, path, plane });
     const main = q.root().querySelector("#cs-main");
     assert.ok(main.querySelector('[data-state="empty"]'), path);
-    assert.ok(main.textContent.includes("Nothing is here"), path);
+    assert.ok(main.textContent.includes(word("shell.unavailable.nothing.title")), path);
   }
   /* control: a read that failed for another reason is "could not read", not "Nothing here" */
   const f = await boot({ screens: ALL, path: "/app/document/zz", plane: { ...PLANE, image: refused("NOT_ALLOWED", "Not yours.") } });
@@ -242,7 +241,7 @@ test("R35 unavailable: an unknown screen or subject draws Nothing is here; NOT_V
   const states = [["/app/nowhere", {}, "nothing"], ["/app/document/zz", { image: refused("NO_SUCH_CAPTURE") }, "nothing"], ["/app/document/zz", { image: ok(null) }, "nothing"],
     ["/app/document/zz", { image: refused("NOT_VISIBLE", "Not yours.") }, "notyours"], ["/app/document/zz", { image: refused("NOT_A_PARTICIPANT") }, "notyours"],
     ["/app/document/zz", { image: silent }, "unreachable"], ["/app/document/zz", { image: httpError(503) }, "unreachable"]];
-  const SAY = { nothing: "Nothing is here", notyours: "You can't open this", unreachable: "Can't be reached" };
+  const SAY = { nothing: word("shell.unavailable.nothing.title"), notyours: word("shell.unavailable.notyours.title"), unreachable: word("shell.unavailable.unreachable.title") };
   for (const [path, plane, kind] of states) {
     const p = await boot({ screens: ALL, path, plane: { ...PLANE, ...plane } });
     const u = p.root().querySelector("[data-unavailable]");
@@ -252,7 +251,7 @@ test("R35 unavailable: an unknown screen or subject draws Nothing is here; NOT_V
     assert.equal(main.querySelector("h1").textContent, SAY[kind], kind);
     assert.equal(main.querySelector('[aria-current="page"]').textContent, SAY[kind], kind);
     for (const other of Object.keys(SAY).filter((k) => k !== kind)) assert.ok(!main.textContent.toLowerCase().includes(SAY[other].toLowerCase()), kind + " draws none of " + other);
-    assert.ok(!main.textContent.includes("Can't open this"), "control: the screen's name heads no state");
+    assert.ok(!main.textContent.includes(word("screen.unavailable.name")), "control: the screen's name heads no state");
   }
   /* control: a read that failed for another reason is "could not read", not unavailable */
   const f = await boot({ screens: ALL, path: "/app/document/zz", plane: { ...PLANE, image: refused("NOT_ALLOWED", "Not yours.") } });
@@ -357,12 +356,12 @@ test("R36 while bootstrap answers test_instance true every frame shows the test-
     const band = p.doc.getElementById("cs-testband");
     assert.ok(band, path);
     assert.equal(p.root().contains(band), false, path);
-    assert.ok(band.textContent.includes("test Civicsmith"), path);
+    assert.ok(band.getAttribute("data-band") === "test" && band.textContent.includes(word("instance.test.band")), path);
     assert.equal(p.byOp("bootstrap")[0].headers.Authorization, undefined);
   }
   for (const b of [ok({ test_instance: false }), ok({}), silent, refused("NO")]) {
     const q = await boot({ screens: ALL, plane: { bootstrap: b } });
-    assert.equal(q.doc.querySelector(".cs-testband"), null);
+    assert.equal(q.doc.querySelector(".cs-band[data-band=test]"), null);
   }
 });
 
@@ -373,9 +372,9 @@ test("R43 every working screen's masthead opens with the mark (the plumb bob, be
     const mark = mast.children[0];
     assert.ok(mark.classList.contains("cs-mark"), path);
     assert.equal(mark.querySelector("use").getAttribute("href"), "/app/assets/icons.svg#i-mark");
-    assert.equal(mark.nextElementSibling.classList.contains("grp"), true, "before the group's name");
-    assert.equal(mark.getAttribute("aria-label"), "Civicsmith");
-    assert.ok(mark.getAttribute("data-tip").includes("you are in your group's own Civicsmith, and the name beside it says whose".replace(/'/g, "&#39;")));
+    assert.equal(mark.nextElementSibling.classList.contains("mk-grp"), true, "before the group's name");
+    assert.equal(mark.getAttribute("aria-label"), word("shell.mark"));
+    assert.ok(mark.getAttribute("data-tip").includes(word("shell.mark.means").replace(/'/g, "&#39;")));
     assert.equal(mark.getAttribute("data-level"), "1");
   }
   const q = await boot({ screens: [...ALL, DOORBELL], path: "/app/doorbell", session: null });

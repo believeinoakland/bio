@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok, refused, STORE_KEY } from "./harness.mjs";
 import { ALL, FRONT } from "./screens.fixture.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const MIN = 60 * 1000;
 const SCREENS = [...ALL, FRONT];
@@ -21,7 +22,7 @@ test("R33 an own device locks at 30 minutes without the member's input: the lock
   assert.equal(lockOf(p), null, "a key pressed counts as activity");
   await p.clock.tick(1 * MIN + 1);
   assert.ok(lockOf(p));
-  assert.ok(lockOf(p).textContent.includes("Locked after 30 minutes away"));
+  assert.ok(lockOf(p).textContent.includes(word("session.locked")));
   assert.equal(p.doc.getElementById("home-title").value, "Half-typed title", "kept under the lock");
   assert.equal(screenOf(p), "home", "the screen stays beneath");
   assert.equal(p.local.get(STORE_KEY + ":state"), "locked");
@@ -41,7 +42,7 @@ test("R33 a shared device at 15 minutes without the member's input sends signout
   assert.equal(p.byOp("signout")[0].query.background, "1", "the page's own clock is not the member's activity");
   assert.equal(p.local.has(STORE_KEY), false);
   assert.equal(screenOf(p), "front");
-  assert.equal(p.doc.getElementById("state").textContent, "State: ended");
+  assert.equal(p.doc.getElementById("state").textContent, "fx t state ended");
   assert.equal(lockOf(p), null, "a shared device is never locked");
 });
 
@@ -98,7 +99,7 @@ test("R32 R33 a page opened on a locked session draws front locked; front's own 
     unlock: () => { locked = false; return ok({ ok: true }); }, heldcaptures: HELD };
   const p = await boot({ screens: SCREENS, path: "/app/held", plane });
   assert.equal(screenOf(p), "front");
-  assert.equal(p.doc.getElementById("state").textContent, "State: locked");
+  assert.equal(p.doc.getElementById("state").textContent, "fx t state locked");
   assert.equal(p.doc.getElementById("f-handle").value, "mai", "the handle the record names");
   assert.equal(lockOf(p), null, "front draws the lock itself");
   p.doc.getElementById("f-pass").value = "pw";
@@ -117,7 +118,7 @@ test("R34 an act answered REAUTH_DUE opens the password dialog (session.reauth),
   await p.click('button[data-act="promote"]');
   const dlg = p.root().querySelector('[data-overlay="reauth"]');
   assert.ok(dlg);
-  assert.ok(dlg.textContent.includes("For this, enter your password again"));
+  assert.ok(dlg.textContent.includes(word("session.reauth")));
   /* control: a wrong password resends nothing */
   p.doc.getElementById("cs-reauth-pw").value = "nope";
   await p.click('[data-shell="reauth"]');
