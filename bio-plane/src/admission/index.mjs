@@ -356,6 +356,9 @@ export function aiReachesAsMember(spec, op) {
     && !Array.isArray(spec.machineClasses);
 }
 
+/* R26: the reads that answer who a source is (`sources` R1, R9); an agent reaches them only by a declared scope. */
+const WHO_A_SOURCE_IS = Object.freeze(["sourceof", "sourcerung"]);
+
 /* R10 — THE GATE ON EVERY CALL. READS ARE THE FLOOR AND WRITES ARE THE DECLARATION: an agent reaches every non-mutating
    op a member reaches (what it SEES is bounded by the viewer stamped from its principal), and a mutating op must also
    be among its declared writes. The floor is re-evaluated here on every call, with the gate's own code, because a row
@@ -388,6 +391,16 @@ export function aiTaskScope(cred, op, spec, { named = [] } = {}) {
       detail: `no member of this group reaches '${String(op).slice(0, 60)}', so no declared scope reaches it `
       + `either. An agent is confined to what a member could do themselves, which is a property of the `
       + `operation rather than a list kept anywhere.`,
+      op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes, cls: "ai" } } };
+
+  /* R26 (T48; N1045; K3150): a read that answers WHO A SOURCE IS is no part of the floor. A member's reach alone never
+     admits an agent to it; the credential's declared scope must name the op (R13), as a write must. */
+  if (!spec.mutating && WHO_A_SOURCE_IS.includes(op) && !cred.writes.includes(op))
+    return { refusal: { status: 403, body: { ok: false, reason: "AI_BEYOND_TASK_SCOPE", ...aiScopeRow("AI_BEYOND_TASK_SCOPE"),
+      detail: `'${String(op).slice(0, 60)}' answers who a source is, so a member's reach alone does not hand it `
+      + `to an agent: credential '${String(cred.tokenId).slice(0, 60)}' declares the task scope `
+      + `'${cred.taskScope}', which does not name it. Naming it is an authored, dated act by a member on the `
+      + `record (D-199 (2)/(3)), not something the agent holding it can ask for.`,
       op, tokenId: cred.tokenId, taskScope: cred.taskScope, declared: cred.writes, cls: "ai" } } };
 
   if (spec.mutating && !cred.writes.includes(op))
