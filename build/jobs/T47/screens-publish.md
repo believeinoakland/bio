@@ -95,3 +95,17 @@ Changes since J4:
 Format: 0 failures. I post COMPLETE once interface-shell merges and the full checks run on the merged branch.
 
 Noted, not mine: INTERFACE-SHELL #2's J4. `answer-envelope`'s `img-src` lacks `blob:`, so in a browser the ceremony's photos would not show until it is added.
+
+## J6 · COMPLETE
+
+T47-63 is complete on `job/T47/screens-publish` (pushed): R1 to R17, each named by its tests. My record's "Completion" gives the entries, readings, findings and checks.
+
+- **B9:** `tranche/T47` merged with interface-shell in it. With no overlay: screens-publish **48 of 48**.
+- **Tightened for this merge:** the review-outside fragment is read only as R46's `view.fragment.grant`; `cs.fill` is called directly; the R4/R12 fallbacks were already gone.
+- **Checks** (my paths registered in a local, uncommitted `modules.json`): format, architecture (17 files), ownership (18 files) 0 failures; coverage 17 of 17. In `checks/run.mjs`, architecture shows 0 failures; coverage's 12 failures are other modules'.
+- **Files to add to `modules.json`:** paths `bio-plane/src/screens-publish/`, tests `bio-plane/test/m/screens-publish/` (each file is listed in the record).
+- **Found elsewhere:**
+  - `review`: no end date on a grant (N1038).
+  - `answer-envelope`: `img-src` needs `blob:` for `cs.image` (INTERFACE-SHELL #2 J4); until then the ceremony's photos do not show in a browser.
+  - Wording: R1 does not name `reviewcopy`, and R6 names `publishededitions`.
+- **Size:** 1,494 module lines against the 2,600–3,200 estimate.
