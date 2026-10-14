@@ -15,13 +15,14 @@ export const FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", 
   ["sheet-worker", "SHEET_WORKER"], ["agent-runner", "AGENT_RUNNER"], ["file-scanner", "FILE_SCANNER"]];
 
 /* R47 (DEC-109; H17; K1038): WHO REALLY CONTROLS YOUR GROUP'S CIVICSMITH, told to the founder before they choose a
-   password, in DEC-149's words (R63). Held once here, for the claim page (`setup-page`'s slot, which `setup.mjs` fills)
-   and the installer's last screen (installer R34), so the two cannot drift. A short plain block in DEC-109's words; nothing asks for or records an acknowledgement of it. `heading` and
+   password, in DEC-149's words (R63). Held once here (R83: its one holder since the setup page retired), for the setup
+   screen (`screens-entry`, through `setup.mjs`'s re-export) and the installer's last screen (installer R34), so the two
+   cannot drift. A short plain block in DEC-109's words; nothing asks for or records an acknowledgement of it. `heading` and
    `sentences` are the words; `guide` (T35; F10, K1874) is the block's last sentence, naming the guide to replacing the
    one-time password (`setup-page` R27) and where it is found, the same words for the page and the installer.
    `hostingControlBlock(cls, {guideHref})` is the block as HTML, every word escaped, in an element whose class is the
-   page's own; with `guideHref` (the page's) the guide's name is a link to it, and without (the installer's) it is
-   text. */
+   caller's own; with `guideHref` (a screen's address of the guide) the guide's name is a link to it, and without (the
+   installer's) it is text. */
 export const HOSTING_CONTROL = Object.freeze({
   heading: "Before you choose a password: who controls your group's Civicsmith",
   sentences: Object.freeze([
