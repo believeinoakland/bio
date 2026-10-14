@@ -46,3 +46,22 @@ To see what remains after that, I added `signrequest` to `OPS`, and `statementac
 - `cs.signer` (R47): ceremony R13–R15, docket R16, R11's signature check.
 
 Nothing in my own module is failing for a reason of its own. J3 (R49's names, the photo's op, R3's wizard mark) is still open.
+
+## J5 · REPORT
+
+B6–B8 done: `tranche/T47` is merged into my branch at K3157 and pushed. My tests on `tranche/T47` alone: **22 of 48 pass.** Each of the 26 failures needs interface-shell, which is not yet merged: the public and published frames, `view.fragment.grant`, R49's `cs.image`/`cs.areas`/`cs.choice` with `acts`, and `cs.signer`.
+
+Over `tranche/T47` plus `job/T47/interface-shell` (INTERFACE-SHELL #2's J5 head), merged in a scratch worktree and never committed: **48 of 48 pass**, using the shell's real harness. That includes:
+- B7's notes: `bootstrap`, the session record in localStorage, `{t, e, d, w}`;
+- signing through the kit's own signer: a kept non-extractable key in the IndexedDB stand-in, its "What your key signs, exactly" dialog confirmed or declined, and real SSHSIG signatures;
+- the areas drawn on the photo with the pointer;
+- the one switching button.
+
+Changes since J4:
+- R4 and R12 now use R49 alone. The typed fallback is gone, as K3147 said.
+- The photo is read through `openoriginal` `{capture}` (K3150).
+- Nothing is drawn for R3's wizard mark (K3150 (3)).
+
+Format: 0 failures. I post COMPLETE once interface-shell merges and the full checks run on the merged branch.
+
+Noted, not mine: INTERFACE-SHELL #2's J4. `answer-envelope`'s `img-src` lacks `blob:`, so in a browser the ceremony's photos would not show until it is added.
