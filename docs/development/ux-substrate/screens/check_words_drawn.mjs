@@ -33,7 +33,7 @@ const drawn = await p.evaluate(() => {
   for (const r of REG) { add(r.id, undefined, true); add(r.id, undefined, false); }
   for (const j of J) for (const ai of [true, false]) { st.mode = 'journey'; st.id = j.n; st.ai = ai; st.step = 0; for (const x of W.stepsNow()) add(x.s, x.v, ai); }
   const box = document.createElement('main'); document.body.appendChild(box);
-  const SEPCLS = /\b(cs-btn|mk-tag|cs-tag|cs-band|cs-grade|cs-strength|cs-kind|cs-due|cs-origin|cs-gap)\b/;
+  const SEPCLS = /\b(cs-btn|mk-tag|cs-tag|cs-band|cs-grade|cs-strength|cs-kind|cs-due|cs-origin|cs-gap|cs-hint|cs-hunch|cs-changed|cs-tension|cs-risk)\b/;
   const SEPTAG = new Set(['BUTTON', 'SELECT', 'OPTION', 'INPUT', 'TEXTAREA', 'LABEL', 'BR', 'IMG']);
   const res = {};
   for (const { s, v, ai } of pairs.values()) {

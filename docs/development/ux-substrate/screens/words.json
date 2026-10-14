@@ -9,7 +9,7 @@
   "draft": 4,
   "photo": 13,
   "handle": 7,
-  "ai": 100,
+  "ai": 123,
   "date": 14,
   "queue": 68,
   "transcribe": 19,
@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 2825,
+  "screen": 2850,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "tab": 2,
   "act": 732,
   "column": 33,
-  "total": 5552,
+  "total": 5600,
   "protected": 794
  },
  "words": [
@@ -12665,10 +12665,10 @@
   },
   {
    "key": "screen.queue.hint.rate",
-   "en": "Of this check's past hints that members looked into, {rate}% were false alarms.",
+   "en": "Of this check's past hints that members looked into, {rate}% were false alarms ({false} of {looked}), most often {reason}.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-daily's own rows"
+   "note": "adopted from screens-daily's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.queue.hint.rate.none",
@@ -23816,10 +23816,10 @@
   },
   {
    "key": "screen.members.recovery.one",
-   "en": "Your group has one administrator, so it depends on that person and on the hosting account.",
+   "en": "With one administrator, the group depends on {name} and the hosting account.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.members.recovery.many",
@@ -24110,10 +24110,10 @@
   },
   {
    "key": "screen.members.invite.noemail",
-   "en": "Your group's Civicsmith sends no email. Copy the invitation and send it yourself. It works once and expires after seven days.",
+   "en": "Your group's Civicsmith sends no email. Copy the link and send it yourself. It works once and expires after seven days.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.members.invite.shown",
@@ -29401,7 +29401,7 @@
   },
   {
    "key": "screen.home.todo.approve",
-   "en": "Approve {filing}, drafted by {name}",
+   "en": "Approve the {kind} to {office}, drafted by {name}",
    "protected": false,
    "source": "DEC-257"
   },
@@ -29505,6 +29505,203 @@
   {
    "key": "screen.home.since.trail",
    "en": "{name} started the money trail “{trail}”",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.use.ask.means",
+   "en": "questions a member asks the assistant",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "after ai.use.ask.name, in the list of uses an account pays for"
+  },
+  {
+   "key": "ai.use.draft.means",
+   "en": "texts the assistant drafts when a member asks, such as a wizard's step",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "after ai.use.draft.name, in the list of uses an account pays for"
+  },
+  {
+   "key": "ai.use.run.means",
+   "en": "checks, investigations, extractions and plans the assistant works through",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "after ai.use.run.name, in the list of uses an account pays for"
+  },
+  {
+   "key": "ai.use.standing.means",
+   "en": "questions a member leaves for the assistant to answer again as new material arrives",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "after ai.use.standing.name, in the list of uses an account pays for"
+  },
+  {
+   "key": "ai.use.enquire.means",
+   "en": "the assistant's questions to a member who starts a project, and the plans it proposes when asked",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "after ai.use.enquire.name, in the list of uses an account pays for"
+  },
+  {
+   "key": "ai.use.read.means",
+   "en": "the assistant reading documents a member points it to, such as Find in this",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "after ai.use.read.name, in the list of uses an account pays for"
+  },
+  {
+   "key": "ai.use.transcribe.means",
+   "en": "pages of a document that Civicsmith's own reading couldn't make out, read by the assistant when a member asks",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "after ai.use.transcribe.name, in the list of uses an account pays for"
+  },
+  {
+   "key": "ai.use.account.means",
+   "en": "the assistant drafting and checking the account a case gives of what was found",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "after ai.use.account.name, in the list of uses an account pays for"
+  },
+  {
+   "key": "ai.use.suggestions.means",
+   "en": "beside its answers, the assistant suggesting questions and checks nobody asked for",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "after ai.use.suggestions.name, in the list of uses an account pays for"
+  },
+  {
+   "key": "ai.explore.help",
+   "en": "The assistant looking, unasked, for what is worth a look in {scope}.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.explore.no.means",
+   "en": "No: never paid for by this account.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.explore.ask.means",
+   "en": "Ask every day: on a day it finds something, it asks this account's owners once in their queue; if nobody says yes that day, it doesn't explore.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.explore.yes.means",
+   "en": "Yes: it explores within this account's overall limit, and within an exploring limit if its owners set one.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.explore.labeled",
+   "en": "What it finds is labeled machine work, and members decide what becomes evidence.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.limit.permember.help",
+   "en": "Each member's use: the most any one member's acts may use of this account in the period.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.limit.unit.help",
+   "en": "Dollars are Civicsmith's estimate from the tokens used, at Anthropic's published prices; Anthropic's own bill is what counts. Tokens are the text sent and received; calls, each turn of the assistant.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.limit.unit.signin.help",
+   "en": "A subscription doesn't report what a use costs, so its limits are in tokens (the text sent and received) or calls.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.limit.period.help",
+   "en": "By your group's calendar. A month starts again on the 1st.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.limit.within.means",
+   "en": "Part of the overall limit: the use counts toward both, and stops at whichever is reached first",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.limit.ontop.means",
+   "en": "On top of the overall limit: an allowance of its own that doesn't count toward the overall one, so this account may spend up to the overall limit plus each allowance on top",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.limit.none.note",
+   "en": "With no limit, nothing is capped here except Anthropic's own spending limit on the key.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.keepaway.group.help",
+   "en": "Binds every account, the group's, any project's and members' own: for the uses you choose, no assistant reads your group's material, whoever pays.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "ai.keepaway.project.help",
+   "en": "Binds every account, whoever pays: in this project the assistant can't be used for the uses you choose, and elsewhere it never reads this project's material for them.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.members.reset.button",
+   "en": "Make a reset link",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "owed:passwordresetlink's button on a member's row"
+  },
+  {
+   "key": "screen.members.invite.create",
+   "en": "Create the invitation link",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "memberadd's button"
+  },
+  {
+   "key": "screen.members.key.uses.head",
+   "en": "What the group's key pays for",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.members.key.limits.head",
+   "en": "Limits on the group's key",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.members.key.use.head",
+   "en": "Use of the group's key",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.members.ai.changes.head",
+   "en": "Changes to the group's AI settings",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.members.ai.change.limit",
+   "en": "{name} set each member's use of the group's key to at most {amount} a day",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.members.ai.change.held",
+   "en": "{name} held the group's API key and switched it on",
    "protected": false,
    "source": "DEC-257"
   },
@@ -29636,6 +29833,113 @@
    "protected": false,
    "source": "DEC-257",
    "note": "machine work run at another member's request; at your own, screen.answers.machine"
+  },
+  {
+   "key": "screen.queue.sort.bydue",
+   "en": "sort by time due",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.queue.remind.button",
+   "en": "Remind me again on…",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "reminderanswer's button"
+  },
+  {
+   "key": "screen.queue.hint.disclosed",
+   "en": "A council member disclosed income from a firm whose contract they voted on",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "the hint's own words, for the check \"disclosed income against votes\""
+  },
+  {
+   "key": "screen.queue.hint.summary.votes",
+   "en": "matched disclosures to votes",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "how the check \"disclosed income against votes\" found it"
+  },
+  {
+   "key": "screen.queue.hint.matched.income",
+   "en": "{person}'s {filing} lists income from {firm}.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.queue.hint.matched.vote",
+   "en": "On {date} {person} voted for {item}, whose payments go to {firm}.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.queue.hint.method.text",
+   "en": "The check “{check}” compared {inputs} in the documents your group holds, matching {by}.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.queue.hint.shown",
+   "en": "It is shown only because that rate is under {threshold}%.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.queue.hint.stop",
+   "en": "Stop this kind of hint for the project",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "queuemute's button on a hint"
+  },
+  {
+   "key": "screen.queue.standing.found",
+   "en": "Your standing question found {count} new documents: {what}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.queue.standing.read",
+   "en": "Read by the assistant",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.queue.ai.toldowners",
+   "en": "told once to the project's owners",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.queue.ai.nobodynamed",
+   "en": "nobody is named",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.queue.ai.addkey",
+   "en": "Add an API key for the project",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "projectkeyset's button"
+  },
+  {
+   "key": "screen.queue.explore.asked",
+   "en": "asked at most once a day, of the project's owners",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.queue.muted.explore",
+   "en": "Hints worth exploring, in {project}",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.queue.empty",
+   "en": "Nothing is waiting on you.",
+   "protected": false,
+   "source": "DEC-257"
   },
   {
    "key": "screen.setup.claim.button",

@@ -152,11 +152,14 @@ REWRITE7 = {
   'screen.find-in.scope.project': 'Everything in {project} ({count} documents)',
   'screen.home.line.languages': 'languages: {languages}',
   'screen.home.line.ailimit': "This month on the group's key: {used} of the {limit} limit",
+  'screen.members.recovery.one': 'With one administrator, the group depends on {name} and the hosting account.',
+  'screen.members.invite.noemail': "Your group's Civicsmith sends no email. Copy the link and send it yourself. It works once and expires after seven days.",
   'screen.project.questions.empty': 'Start with one question the record could answer, such as “{example}”. Documents, notes and plans gather under it.',
   'screen.project.account.project': "Paid for by the project's own API key",
   'screen.question.opened': 'Opened by {name}, {date} · {project}',
   'screen.question.opened.noproject': 'Opened by {name}, {date}',
   'screen.question.strength.raise': 'What raises it: {raise}',
+  'screen.queue.hint.rate': "Of this check's past hints that members looked into, {rate}% were false alarms ({false} of {looked}), most often {reason}.",
   'screen.setup.lede': 'You are not a member of anything yet. Claim what you just installed with the one-time password and it becomes yours to run; then name your group and choose its places. Seven short parts; you can leave and come back.',
   'screen.setup.own.help': 'At least 12 characters. From now on you sign in with your handle and this, never the one-time password.',
   'screen.entry.codes.what': 'Once you have claimed, you get ten one-time codes. If you ever lose your password, one of them lets you set a new one; Civicsmith sends no email, so they are your way back in. They are shown once: save them with your password, somewhere only you can reach.',
@@ -207,7 +210,7 @@ w7('screen.home.welcome.what', 'The guided start you began when you joined shows
 w7('screen.home.welcome.continue', 'Continue the guided welcome')
 w7('screen.home.todo.vouch', 'Vouch for {count} photos you captured on {place}')
 w7('screen.home.todo.newer', 'Decide on a newer version of {document} you cited')
-w7('screen.home.todo.approve', 'Approve {filing}, drafted by {name}')
+w7('screen.home.todo.approve', 'Approve the {kind} to {office}, drafted by {name}')
 w7('screen.home.todo.approve.button', 'Read and approve it', False, "filingapprove's button")
 w7('screen.home.todo.check', '{name} asked you to check a calculation: {calculation}')
 w7('screen.home.group.noreply', "{office}'s reply to “{action}” was due {date}; no reply recorded")
@@ -225,6 +228,39 @@ w7('screen.home.area.invitation', "{name}'s invitation link is out, unused")
 w7('screen.home.since.captured', '{name} captured {document}')
 w7('screen.home.since.events', '{name} added {count} events to {timeline}')
 w7('screen.home.since.trail', '{name} started the money trail “{trail}”')
+# ai
+w7('ai.use.ask.means', 'questions a member asks the assistant', False, 'after ai.use.ask.name, in the list of uses an account pays for')
+w7('ai.use.draft.means', "texts the assistant drafts when a member asks, such as a wizard's step", False, 'after ai.use.draft.name, in the list of uses an account pays for')
+w7('ai.use.run.means', 'checks, investigations, extractions and plans the assistant works through', False, 'after ai.use.run.name, in the list of uses an account pays for')
+w7('ai.use.standing.means', 'questions a member leaves for the assistant to answer again as new material arrives', False, 'after ai.use.standing.name, in the list of uses an account pays for')
+w7('ai.use.enquire.means', "the assistant's questions to a member who starts a project, and the plans it proposes when asked", False, 'after ai.use.enquire.name, in the list of uses an account pays for')
+w7('ai.use.read.means', 'the assistant reading documents a member points it to, such as Find in this', False, 'after ai.use.read.name, in the list of uses an account pays for')
+w7('ai.use.transcribe.means', "pages of a document that Civicsmith's own reading couldn't make out, read by the assistant when a member asks", False, 'after ai.use.transcribe.name, in the list of uses an account pays for')
+w7('ai.use.account.means', 'the assistant drafting and checking the account a case gives of what was found', False, 'after ai.use.account.name, in the list of uses an account pays for')
+w7('ai.use.suggestions.means', 'beside its answers, the assistant suggesting questions and checks nobody asked for', False, 'after ai.use.suggestions.name, in the list of uses an account pays for')
+w7('ai.explore.help', 'The assistant looking, unasked, for what is worth a look in {scope}.')
+w7('ai.explore.no.means', 'No: never paid for by this account.')
+w7('ai.explore.ask.means', "Ask every day: on a day it finds something, it asks this account's owners once in their queue; if nobody says yes that day, it doesn't explore.")
+w7('ai.explore.yes.means', "Yes: it explores within this account's overall limit, and within an exploring limit if its owners set one.")
+w7('ai.explore.labeled', 'What it finds is labeled machine work, and members decide what becomes evidence.')
+w7('ai.limit.permember.help', "Each member's use: the most any one member's acts may use of this account in the period.")
+w7('ai.limit.unit.help', "Dollars are Civicsmith's estimate from the tokens used, at Anthropic's published prices; Anthropic's own bill is what counts. Tokens are the text sent and received; calls, each turn of the assistant.")
+w7('ai.limit.unit.signin.help', "A subscription doesn't report what a use costs, so its limits are in tokens (the text sent and received) or calls.")
+w7('ai.limit.period.help', "By your group's calendar. A month starts again on the 1st.")
+w7('ai.limit.within.means', 'Part of the overall limit: the use counts toward both, and stops at whichever is reached first')
+w7('ai.limit.ontop.means', "On top of the overall limit: an allowance of its own that doesn't count toward the overall one, so this account may spend up to the overall limit plus each allowance on top")
+w7('ai.limit.none.note', "With no limit, nothing is capped here except Anthropic's own spending limit on the key.")
+w7('ai.keepaway.group.help', "Binds every account, the group's, any project's and members' own: for the uses you choose, no assistant reads your group's material, whoever pays.")
+w7('ai.keepaway.project.help', "Binds every account, whoever pays: in this project the assistant can't be used for the uses you choose, and elsewhere it never reads this project's material for them.")
+# members
+w7('screen.members.reset.button', 'Make a reset link', False, "owed:passwordresetlink's button on a member's row")
+w7('screen.members.invite.create', 'Create the invitation link', False, "memberadd's button")
+w7('screen.members.key.uses.head', "What the group's key pays for")
+w7('screen.members.key.limits.head', "Limits on the group's key")
+w7('screen.members.key.use.head', "Use of the group's key")
+w7('screen.members.ai.changes.head', "Changes to the group's AI settings")
+w7('screen.members.ai.change.limit', "{name} set each member's use of the group's key to at most {amount} a day")
+w7('screen.members.ai.change.held', "{name} held the group's API key and switched it on")
 # project
 w7('screen.project.account.exploring', 'exploring: {frequency}.', False, "after the uses the project's account pays for")
 w7('screen.project.account.open', 'Open AI for this project')
@@ -247,6 +283,24 @@ w7('screen.question.proposal.rests', 'It rests on {count} passages: {passages}.'
 w7('screen.question.proposal.testinstance', 'On a test instance, its work also reads: “{label}”', False, '{label} is ai.label.untested')
 # ai
 w7('ai.machine.request', "Machine work · the assistant, at {who}'s request", False, "machine work run at another member's request; at your own, screen.answers.machine")
+# queue
+w7('screen.queue.sort.bydue', 'sort by time due')
+w7('screen.queue.remind.button', 'Remind me again on…', False, "reminderanswer's button")
+w7('screen.queue.hint.disclosed', 'A council member disclosed income from a firm whose contract they voted on', False, 'the hint\'s own words, for the check "disclosed income against votes"')
+w7('screen.queue.hint.summary.votes', 'matched disclosures to votes', False, 'how the check "disclosed income against votes" found it')
+w7('screen.queue.hint.matched.income', "{person}'s {filing} lists income from {firm}.")
+w7('screen.queue.hint.matched.vote', 'On {date} {person} voted for {item}, whose payments go to {firm}.')
+w7('screen.queue.hint.method.text', 'The check “{check}” compared {inputs} in the documents your group holds, matching {by}.')
+w7('screen.queue.hint.shown', 'It is shown only because that rate is under {threshold}%.')
+w7('screen.queue.hint.stop', 'Stop this kind of hint for the project', False, "queuemute's button on a hint")
+w7('screen.queue.standing.found', 'Your standing question found {count} new documents: {what}')
+w7('screen.queue.standing.read', 'Read by the assistant')
+w7('screen.queue.ai.toldowners', "told once to the project's owners")
+w7('screen.queue.ai.nobodynamed', 'nobody is named')
+w7('screen.queue.ai.addkey', 'Add an API key for the project', False, "projectkeyset's button")
+w7('screen.queue.explore.asked', "asked at most once a day, of the project's owners")
+w7('screen.queue.muted.explore', 'Hints worth exploring, in {project}')
+w7('screen.queue.empty', 'Nothing is waiting on you.')
 # setup
 w7('screen.setup.claim.button', 'Claim it and become its administrator', False, "claim's button")
 w7('screen.setup.logo.add', 'Add your logo (optional)')
