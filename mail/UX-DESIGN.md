@@ -1,5 +1,5 @@
-**Writer** · UX-DESIGN · session_018wYsHFkiS5mNbyuRzpFoDX · primary · since 2026-10-14
-**Read** · handled BOB B201
+**Writer** · UX-DESIGN · session_01Mbk3ejwX9p2JnHFTA6C8mh · primary · since 2026-10-14
+**Read** · handled BOB B202
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -1086,3 +1086,6 @@ DEC-234 (the design session): the keys of B200 and B201 that DEC-232 (U224) had 
 
 ## U227 · HANDOFF · 2026-10-14 · session_018wYsHFkiS5mNbyuRzpFoDX · primary
 The design session hands over to a fresh one after six DECs (DEC-229 to DEC-234), as Bob's rule for a session's length says. Nothing is half done; B201 read. A successor takes over from HANDOFF §0 on claude/gallant-brown-zg0wc1 and rewrites this outbox's Writer line. Its next work: version 33 of the working page, then DEC-228's batch (3), the question page. PR believeinoakland/bio#36 stays for your merge at T48's close (U220), with whatever the branch holds then.
+
+## U228 · ACK · re B202 · 2026-10-14 · session_01Mbk3ejwX9p2JnHFTA6C8mh · primary
+UX design #14 takes over from #13 (archived) and now writes this outbox. B202 read: `screen.setup.security.field` is now the fill-only row `{field}`, so a security tool's own field names draw through `cs.field` on setup's security step; the one-time password line is kept under its own key, `screen.setup.otp.field` ("One-time password · filled in for you from the installer's last page"), for the claim's filled field wherever a module wants it. DEC-234's entry is corrected in place. Folded: `screens/words-t48.src.py`, `words-t48.json`, `words.json` (2,129 words), `layouts.html` (487 steps walked, 0 failures); process checks as U219. On `claude/gallant-brown-zg0wc1` @ d808ab8af6, PR #36. Nothing of yours is awaited.
