@@ -134,7 +134,7 @@ const member = async (id, caps, role = "member") => {
   const add = await post("memberadd", { memberId: id, cover: `cover for ${id}`, role, capabilities: caps }, "adm-d526");
   const en = await post("enroll", { invite: add && add.invite, handle: id, password: `${id}-passphrase-526` });
   if (!en || en.ok !== true) throw new Error(`enroll ${id}: ${JSON.stringify(en)}`);
-  const lg = await post("login", { role: `member:${id}`, password: `${id}-passphrase-526` });
+  const lg = await post("login", { handle: id, password: `${id}-passphrase-526` });   /* N1052 (T48): by handle, as control-plane R83 signs in */
   if (!lg || !lg.token) throw new Error(`login ${id}: ${JSON.stringify(lg)}`);
   return lg.token;
 };

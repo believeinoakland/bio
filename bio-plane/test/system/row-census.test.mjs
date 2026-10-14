@@ -218,13 +218,25 @@
    C-102.33, credentials' C-29.40 and C-29.41, all new) stamped in 1.74.0. T47's layer 1 moved no row. A row a T47 job in
    layers 3–11 adds or changes turns this suite red, accepted by name until T48's layer-2 stamp (plan T47, rule 5 item 2),
    so none is declared. The suite now also fails a missing snapshot and holds the pin's shape (this job). Negative
-   control re-run on the stamp commit: its arms in the suite pass. */
+   control re-run on the stamp commit: its arms in the suite pass.
+   RE-PINNED 2026-10-14 (PROMOTION #46, T48-12, T47's rule 5 item 2): over 1.75.0, the stamp's own lines
+   (`fixtures/row-census-1.75.0.jsonl`, written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in
+   `build/jobs/T48/promotion.md`; 1898 rows, dc157a20…, over `tranche/T48` after its layer 1); the 1.74.0 snapshot (no stamp
+   reads it) renamed to it; T47's layers 3–11 rows (17 new, 41 changed, 1 retired; none declared here, accepted red 2 at
+   T47's close) stamped in 1.75.0. Re-pinned in place as each T48 layer-2 job merges, so T48 names one catalogue. The
+   census leaves `journey-check/journey.mjs` out as a script (N1056), which killed it on import at T47's close; its arm
+   and a control over a scratch tree are in the suite. A row a T48 job in layers 3–11 adds or changes turns this suite red,
+   accepted by name until T49's layer-2 stamp (plan T48, rule 5 item 2), so none is declared. Negative control re-run on
+   the stamp commit: its arms in the suite pass; with N1056's script entry taken out, the suite dies inside the journey
+   with no tally (exit 1). */
 import "../stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
-import { join } from "node:path";
-import { censusRows, censusOf, lineOf } from "./row-census.mjs";
+import { join, dirname } from "node:path";
+import { censusRows, censusOf, lineOf, isScript } from "./row-census.mjs";
 import { ROW_CENSUS, CATALOG_VERSION } from "../../src/gate.mjs";
 const LEGACY_DIR = new URL("../", import.meta.url);   /* moved to test/system/ (K612): its relative reads resolve from bio-plane/test/ */
 
@@ -236,8 +248,8 @@ const FIXTURE = (v) => fileURLToPath(new URL(`./fixtures/row-census-${v}.jsonl`,
    carries the line as the stamp read it (so the stamp's census can be rebuilt); `arrived` names the row by check and
    code (its line is the tree's). */
 const AWAITING_STAMP = [
-  /* RE-ANCHORED 2026-10-12 (PROMOTION #45, T47-10): over 1.74.0, the stamp's own lines (`fixtures/row-census-1.74.0.jsonl`).
-     T46's layers 3–11 rows were never declared (accepted red 2) and are stamped in 1.74.0. None is open (see the header). */
+  /* RE-ANCHORED 2026-10-14 (PROMOTION #46, T48-12): over 1.75.0, the stamp's own lines (`fixtures/row-census-1.75.0.jsonl`).
+     T47's layers 3–11 rows were never declared (accepted red 2) and are stamped in 1.75.0. None is open (see the header). */
 ];
 /* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is
    declared here by name, verified against its record like a row, and listed (R50, K408, K464). Queue's registered step
@@ -247,9 +259,8 @@ const AWAITING_STAMP = [
    retired; no T17 job names a composition change. LEGACY-TESTS #19 (T21, 2026-10-01): intent's registration changed its
    ids after the 1.51.0 stamp (INTENT #9, no row), declared for T22. */
 const COMPOSITIONS_AWAITING = [
-  /* PROMOTION #45 (T47, 2026-10-12): re-anchored at 1.74.0; no T46 L3–L11 or T47 L1–L2 job record names a composition
-     change beyond 1.74.0's note (record-grammar's `success_record`; MODULE_ORDER's new modules register no gate step), and
-     none is open. */
+  /* PROMOTION #46 (T48, 2026-10-14): re-anchored at 1.75.0; no T47 L3–L11 or T48 L1 job record names a composition
+     change, and none is open. */
 ];
 /* The plane's suite shape: every arm printed PASS or FAIL with its reason, the tally last, the exit its verdict. */
 let pass = 0, fail = 0;
@@ -313,6 +324,37 @@ test("R50: the census is a census — its files, its tables read, no file holdin
   assert.deepEqual(tree.scripts.filter((s) => s.checkKey).map((s) => s.file), [],
     "a script left out holds a `check:` key, so leaving it out could move the census");
 });
+
+/* N1056 (K3192, PROMOTION #46, T48): `journey-check`'s `journey.mjs` runs its journey and exits when imported, so a census
+   that imported it never reached its end (T47's close red T). R50 names it among the scripts. The control builds a
+   scratch tree whose `journey.mjs` exits when imported, beside one row table, and runs the census over it to its end. */
+const JOURNEY = "bio-plane/src/journey-check/journey.mjs";
+test("R50 (T48): the census lists journey-check/journey.mjs among the scripts and never imports it", () => {
+  assert.ok(isScript(JOURNEY), "R50's scripts do not name journey-check/journey.mjs");
+  assert.ok(tree.files.includes(JOURNEY), `${JOURNEY} is not among the census's files: the module paths moved`);
+  assert.deepEqual(tree.scripts.filter((s) => s.file === JOURNEY).map((s) => s.file), [JOURNEY]);
+  assert.ok(!tree.rows.some((r) => r.file === JOURNEY) && !tree.unimportable.some((u) => u.file === JOURNEY),
+    `${JOURNEY} was imported`);
+});
+const ctlTree = mkdtempSync(join(tmpdir(), "row-census-journey-"));
+let ctlRun = null;
+try {
+  const put = (f, text) => { mkdirSync(dirname(join(ctlTree, f)), { recursive: true }); writeFileSync(join(ctlTree, f), text); };
+  put("build/modules.json", JSON.stringify({ modules: [{ id: "journey-check", paths: ["bio-plane/src/journey-check/"] },
+                                                       { id: "control", paths: ["bio-plane/src/control/"] }] }));
+  put(JOURNEY, `import { writeFileSync } from "node:fs";\nwriteFileSync(${JSON.stringify(join(ctlTree, "IMPORTED"))}, "");\nprocess.exit(3);\n`);
+  put("bio-plane/src/control/checks.mjs", `export const CONTROL_CHECKS = { CONTROL_ROW: { check: "C-999.3", where: "control", translation: "A control row." } };\n`);
+  execFileSync("git", ["-C", ctlTree, "init", "-q"]);
+  execFileSync("git", ["-C", ctlTree, "add", "-A"]);
+  ctlRun = await censusRows(ctlTree);
+} catch (e) { ctlRun = { error: e }; }
+test("R50 (T48) CONTROL: the census over a tree holding a journey.mjs that exits when imported runs to its end", () => {
+  assert.ok(ctlRun && !ctlRun.error, `the census over the control tree threw: ${ctlRun && ctlRun.error}`);
+  assert.ok(!existsSync(join(ctlTree, "IMPORTED")), "the control's journey.mjs was imported");
+  assert.deepEqual(ctlRun.scripts.map((s) => s.file), [JOURNEY]);
+  assert.deepEqual(ctlRun.rows.map((r) => `${r.check} ${r.code}`), ["C-999.3 CONTROL_ROW"], "the census did not read the tree past the script");
+});
+rmSync(ctlTree, { recursive: true, force: true });
 
 test("R50: one row object in two tables, or one table under two exports, counts once; two row objects with one check count twice", () => {
   /* RETIRED 2026-09-30 (LEGACY-TESTS #12, T14; K408 (4), K458): the assertion that C-96.1 is held twice. The catalogue's
