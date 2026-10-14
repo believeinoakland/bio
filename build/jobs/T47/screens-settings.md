@@ -26,3 +26,7 @@ Started; reading set read whole (my code and tests too). None of my providers (s
 2. **op-grades:** `translationdraft` is `undetermined`, so the shell asks a reason for asking a draft (R11's rule); `groupdescriptiondraft` and `securitymap` have no row. Reported only.
 3. **words.json:** the reset link's words are still under `act.owed_passwordresetlink.*` (DEC-201's owed key); I draw the label by that key. Its `.does` says "Civicsmith sends no email" bare (DEC-149) — the design stream's.
 4. **record-grammar's machine vocabulary** (R15) is copied as a literal into `places`' render (a self-contained function cannot import), so an office added by a member is marked. If the vocabulary changes, mine goes stale; a kit call (`cs.isMachine`) would remove the copy.
+
+## J3 · REPORT
+
+B3 done: tranche/T47 merged (setup-words, instance-setup, wizard-scripts, op-grades). On the branch every test still stops at interface-shell's check, since op-declarations' passwordresetlink spec (R57) is not merged. With only that spec and interface-shell's R27/R39/R46 kit calls stood in, 81 of 83 pass; the 2 left are exactly those two providers (OPS holds passwordresetlink; the row name as reference). Nothing else needed from me until their CHANGEs.
