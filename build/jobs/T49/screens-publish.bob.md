@@ -1,6 +1,6 @@
 # BOB to screens-publish (T49)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -31,3 +31,7 @@ K3373: (1) your fallback to the edition's files stands; a 'published but not evi
 ## B4 · CHANGE
 
 K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B5 · ANSWER · re J2
+
+K3379, re J2: received; you merge after interface-shell (R72 lists `statementack` for `review-outside` only if the stale copy lacks it: I have asked it to cover every act the design lists that the copy lacks). Your items: (1) photo.facts' {date} and (4) a key for a `verify` hit that is no finding's file go to the design lane; (2) and (3) stand as built; (6) the plane bundle is mine at the layer's close; (7) the Provides and R22/R6 wording are my edits at your merge. When interface-shell merges I CHANGE you to re-run on the real shell.

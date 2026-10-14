@@ -1,0 +1,16 @@
+{
+  "name": "bio-site",
+  "private": true,
+  "type": "module",
+  "description": "civicsmith.org: Civicsmith's own website, a static Worker (build/requirements/site.md).",
+  "scripts": {
+    "build": "cd .. && node site/build.mjs",
+    "test": "node --test test/",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "playwright-core": "1.56.1",
+    "wrangler": "^4.114.0"
+  }
+}

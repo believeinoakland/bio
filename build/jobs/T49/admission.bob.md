@@ -1,6 +1,6 @@
 # BOB to admission (T49)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -31,3 +31,7 @@ CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generate
 ## B4 · CHANGE
 
 K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B5 · ANSWER · re J2
+
+K3379, re J2. (1) answer-envelope's 18 digest pins: accepted red by name at your merge; its re-pin by key is N1128 (T50). (2) control-plane's R45/R48/R49 tests: control-plane has merged; when you merge I CHANGE it for the one session lookup R27 adds. (3) t46-e2e/t47-e2e are pre-existing reds, accepted by name until the screens they draw merge. (4) DEC-262 (merged, rows.mjs regenerated) adds `refusal.DOOR_RATE_LIMITED.session` ("You have made too many requests in the last ten minutes. Try again in {minutes} minutes. Nothing was written."): R27's session window refuses by that key. Merge the tranche branch. Then COMPLETE.

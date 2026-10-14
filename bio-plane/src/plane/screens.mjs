@@ -6,62 +6,63 @@
    otherwise the interface's own. Handed to `answers` for its explain read (`wizard-scripts` is registered with its own
    `SCREEN_REGISTRY`, R19; K1871). The calls
    every screen shares (`login`, `whoami`, `groupidentity`) are not listed per screen. A screen absent here is unknown,
-   never guessed; the design stream replaces these entries when its interface ships (K1475). */
+   never guessed; the design stream replaces these entries when its interface ships (K1475).
+   (T49; K3366; R56) A title or purpose the design stream keys is read through `setup-words` `word(key)`, never held as
+   English here: the key is the screen's own (`screen.<key>.name`, `screen.<key>.purpose`). A screen with no key keeps its
+   interface's own words. */
+import { word } from "../setup-words/index.mjs";
+
 const screen = (id, title, acts, purpose) => Object.freeze({ id, title, acts: Object.freeze(acts), purpose });
 
 export const SCREENS = Object.freeze([
-  screen("queue", "The queue",
+  screen("queue", word("screen.queue.name"),
     ["queue", "tasks", "queuemute", "taskresolve", "taskforward", "memberlist", "proposedispose", "allocid", "promote", "affordances"],
-    "Everything the record is asking of somebody, in one list, filed under the case it belongs to."),
+    word("screen.queue.purpose")),
   screen("record", "Your accountability record", ["list", "search"],
     "The whole record as rows: every bundle your group's Civicsmith holds, with its type and its state."),
-  screen("finder", "The evidence finder",
+  screen("finder", word("screen.finder.name"),
     ["search", "searchfields", "meaningrows", "concerns", "entitybyalias", "select", "selection", "selectionrelease", "cite", "affordances"],
-    "One query surface over the record, asking three questions at once and reporting them apart."),
+    word("screen.finder.purpose")),
   screen("subjects", "Subjects",
     ["entitybyalias", "entity", "concerns", "connections", "entitycreate", "entityalias", "relationdeclare", "readingname", "resolve",
      "reading", "resolvetestify", "connect", "affordances"],
-    "What the record knows about a person, office or thing, and its relations; each match's reported defects."),
+    word("screen.people.purpose")),
   screen("progressions", "Progressions",
     ["progression", "progressiondefine", "entitybyalias", "instance", "concerns", "thread", "discharge"],
     "How something should go, with documents threaded through it and gaps shown."),
   screen("themes", "Themes", ["themeread", "themedeclare", "themeplace"],
-    "A member's idea with its test, and the material placed in it."),
-  screen("projects", "Projects", ["list"], "The cases this group is building, as rows."),
-  screen("review", "Review", ["search", "list", "select", "release"], "What has been collected and not yet vouched for."),
-  screen("members", "Members & governance",
+    word("screen.theme.purpose")),
+  screen("projects", "Projects", ["list"], word("screen.projects.purpose")),
+  screen("review", "Review", ["search", "list", "select", "release"], word("screen.held.purpose")),
+  screen("members", word("screen.members.name"),
     ["memberlist", "adminarith", "signerlist", "memberadd", "memberset", "signeradd", "signerset"],
-    "Who holds what in your group's Civicsmith: the roster, each member's capabilities, and the invitations outstanding."),
-  screen("add", "Add something new", ["acquire", "allocid", "promote", "attest", "search", "versionchain", "projection", "affordances"],
-    "Where a document enters the record from outside it: an address is fetched, the bytes are hashed as they arrive, and "
-    + "the address, the instant and the claimed issuer are recorded as three separate claims."),
-  screen("bundle", "The document",
+    word("screen.members.purpose")),
+  screen("add", word("screen.capture.name"), ["acquire", "allocid", "promote", "attest", "search", "versionchain", "projection", "affordances"],
+    word("screen.capture.purpose")),
+  screen("bundle", word("screen.document.name"),
     ["image", "projection", "links", "backlinks", "search", "affordances", "entity", "resolutions", "connections", "connectionchoose",
      "captureprogressions", "acquire", "lease", "promote", "select", "release", "dispose", "attest", "cite", "retire", "sever", "reinstate",
      /* T43 (N862; DEC-190 (1)): the reading, its unread pages and their transcription by the AI */
      "reading", "pagetranscribe", "transcribe"],
-    "One document as the record holds it: the captured bytes, what was extracted from them, what the record made of it, "
-    + "and what cites it."),
-  screen("inquiry", "The question",
+    word("screen.document.purpose")),
+  screen("inquiry", word("screen.question.name"),
     ["image", "projection", "earnedbasis", "backlinks", "affordances", "search", "publishedcase", "versionnotice", "conclude",
      "basisversions", "inquirystrength", "inquiryground", "partitionindependence", "cite"],
-    "A question the record is working on: the legs its basis rests on, how strongly each was established, and what it has "
-    + "concluded if it has concluded anything."),
-  screen("project", "The project",
+    word("screen.question.purpose")),
+  screen("project", word("screen.project.name"),
     ["image", "projection", "projectparticipants", "backlinks", "search", "casedrafts", "projectownerarith", "projectvisibility",
      "projectvisibilityset", "projectownerremove", "projectjoin", "projectleave", "projectinvite", "projectremove", "projectowneradd",
      "projectownerrescue", "projectfork"],
-    "A case's workspace: who is on it, what it holds, how ready its work product is, and what it is waiting on."),
-  screen("action", "The action",
+    word("screen.project.purpose")),
+  screen("action", word("screen.action.name"),
     ["image", "projection", "affordances", "actionmove", "actioncorrespond", "actionlaws", "actionrisktier"],
-    "Something this group has asked of somebody outside it: the counterparty, the clock, the correspondence and what came back."),
+    word("screen.action.purpose")),
   screen("published", "Case files", ["publishedmanifest", "verify"],
     "The cases your group's Civicsmith has published, readable by somebody holding no credential at all."),
-  screen("review-copy", "Review copy", ["reviewcopy", "casedraft", "reviewgrant", "reviewrevoke", "reviewcomment", "statementack"],
-    "A draft case shown to chosen reviewers who read, comment and acknowledge."),
-  screen("published-case", "A published case", ["publishedcase", "publishedmanifest", "verify"],
-    "One published case at one edition, with its account of why it carries no single case-level strength and of what its "
-    + "index does and does not resolve."),
+  screen("review-copy", word("screen.review-copy.name"), ["reviewcopy", "casedraft", "reviewgrant", "reviewrevoke", "reviewcomment", "statementack"],
+    word("screen.review-copy.purpose")),
+  screen("published-case", word("screen.published.name"), ["publishedcase", "publishedmanifest", "verify"],
+    word("screen.published.purpose")),
   screen("basis-versions", "How this question has been read", ["basisversions", "versionhide", "affordances"],
     "The readings of a question's evidence, each one that has been made, side by side."),
   screen("accept-ceremony", "Acting on one reading",
