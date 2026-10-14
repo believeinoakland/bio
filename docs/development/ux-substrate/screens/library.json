@@ -1384,6 +1384,11 @@
     "WIZ-33b5887790b7561b",
     "WIZ-9f2b79390d6940a0"
    ]
+  },
+  {
+   "door": "elsewhere",
+   "scripts": [],
+   "opens": "elsewhere"
   }
  ]
 }

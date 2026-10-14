@@ -26,7 +26,7 @@
      "modules": [
       "installer",
       "instance-setup",
-      "setup-page"
+      "membership"
      ]
     }
    ],
@@ -48,7 +48,7 @@
      "modules": [
       "installer",
       "instance-setup",
-      "setup-page"
+      "membership"
      ]
     }
    ],
@@ -65,16 +65,15 @@
     {
      "op": "login",
      "label": "Sign in",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     },
     {
      "op": "unlock",
      "label": "Unlock",
-     "status": "declared",
-     "onTranche": "origin/tranche/T47",
+     "status": "function",
      "modules": [
       "credentials"
      ]
@@ -104,8 +103,7 @@
     {
      "op": "passwordreset",
      "label": "Set my new password",
-     "status": "declared",
-     "onTranche": "origin/tranche/T47",
+     "status": "function",
      "modules": [
       "credentials"
      ]
@@ -124,9 +122,9 @@
     {
      "op": "recover",
      "label": "Set a new password with a recovery code",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     }
    ],
@@ -138,7 +136,7 @@
    "id": "setup",
    "name": "Become your group's first administrator",
    "frame": "setup",
-   "purpose": "The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.",
+   "purpose": "The founder claims it, choosing their own handle, names the group, reviews offices and seats, offers the assistant and records the hosting account; a founder who claimed before handles were chosen picks one once, at the next sign-in.",
    "acts": [
     {
      "op": "claim",
@@ -147,6 +145,11 @@
      "modules": [
       "credentials"
      ]
+    },
+    {
+     "op": "owed:founderhandleset K3265",
+     "label": "Choose this handle",
+     "status": "owed"
     },
     {
      "op": "groupnameset",
@@ -167,9 +170,9 @@
     {
      "op": "profilesset",
      "label": "Choose places and languages",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -185,8 +188,7 @@
      "label": "Add an office yourself",
      "status": "declared",
      "modules": [
-      "entities",
-      "setup-page"
+      "entities"
      ]
     },
     {
@@ -194,8 +196,7 @@
      "label": "Name a place not yet listed",
      "status": "declared",
      "modules": [
-      "instance-setup",
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -203,24 +204,23 @@
      "label": "Keep the group's material away from AI, with a reason",
      "status": "declared",
      "modules": [
-      "credentials",
-      "setup-page"
+      "credentials"
      ]
     },
     {
      "op": "groupkeyset",
      "label": "Hold the group's API key",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     },
     {
      "op": "groupkeyswitch",
      "label": "Switch the group's key on or off",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     },
     {
@@ -234,17 +234,17 @@
     {
      "op": "courtnoticeset",
      "label": "Choose whether members are told what a court can reach",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "membership"
      ]
     },
     {
      "op": "hostingaccessset",
      "label": "Record who holds the hosting account",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "membership"
      ]
     },
     {
@@ -252,8 +252,7 @@
      "label": "Add a security tool (optional)",
      "status": "declared",
      "modules": [
-      "file-safety",
-      "setup-page"
+      "file-safety"
      ]
     },
     {
@@ -289,8 +288,7 @@
      "label": "Save who your group is, and who sees it",
      "status": "declared",
      "modules": [
-      "instance-setup",
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -298,8 +296,7 @@
      "label": "Ask the assistant to help write it",
      "status": "declared",
      "modules": [
-      "instance-setup",
-      "setup-page"
+      "instance-setup"
      ]
     }
    ],
@@ -318,8 +315,7 @@
      "label": "Read the invitation",
      "status": "declared",
      "modules": [
-      "admission",
-      "setup-page"
+      "admission"
      ]
     },
     {
@@ -327,8 +323,7 @@
      "label": "Choose your language",
      "status": "declared",
      "modules": [
-      "instance-setup",
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -345,8 +340,7 @@
      "label": "Join with a handle and password",
      "status": "declared",
      "modules": [
-      "admission",
-      "setup-page"
+      "admission"
      ]
     },
     {
@@ -354,8 +348,7 @@
      "label": "Join through the group's join link",
      "status": "declared",
      "modules": [
-      "admission",
-      "setup-page"
+      "admission"
      ]
     }
    ],
@@ -530,17 +523,17 @@
     {
      "op": "groupkeyset",
      "label": "Hold the group's API key",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     },
     {
      "op": "groupkeyswitch",
      "label": "Switch the group's key on or off",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "credentials"
      ]
     },
     {
@@ -572,8 +565,7 @@
      "label": "Keep the group's material away from AI, with a reason",
      "status": "declared",
      "modules": [
-      "credentials",
-      "setup-page"
+      "credentials"
      ]
     }
    ],
@@ -601,8 +593,7 @@
      "label": "Add a security tool",
      "status": "declared",
      "modules": [
-      "file-safety",
-      "setup-page"
+      "file-safety"
      ]
     },
     {
@@ -610,8 +601,7 @@
      "label": "Test a security tool",
      "status": "declared",
      "modules": [
-      "file-safety",
-      "setup-page"
+      "file-safety"
      ]
     },
     {
@@ -619,8 +609,7 @@
      "label": "Remove a security tool",
      "status": "declared",
      "modules": [
-      "file-safety",
-      "setup-page"
+      "file-safety"
      ]
     }
    ],
@@ -687,8 +676,7 @@
      "label": "Choose your language",
      "status": "declared",
      "modules": [
-      "instance-setup",
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -792,9 +780,9 @@
     {
      "op": "profilesset",
      "label": "Choose the places whose rules apply",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -802,8 +790,7 @@
      "label": "Save the place you want",
      "status": "declared",
      "modules": [
-      "instance-setup",
-      "setup-page"
+      "instance-setup"
      ]
     },
     {
@@ -819,8 +806,7 @@
      "label": "Add an office yourself",
      "status": "declared",
      "modules": [
-      "entities",
-      "setup-page"
+      "entities"
      ]
     }
    ],
@@ -851,7 +837,7 @@
    "id": "group",
    "name": "Your group",
    "frame": "working",
-   "purpose": "Administrators: the settings chosen at setup, changeable here: name and logo, website, languages, the court notice, the hosting account's holder, the group's bar (DEC-201).",
+   "purpose": "Administrators: the settings chosen at setup, changeable here: name and logo, website, languages, the court notice, the hosting account's holder, the group's bar, what the group has at stake (DEC-201, DEC-231).",
    "acts": [
     {
      "op": "groupnameset",
@@ -873,7 +859,6 @@
      "op": "grouplanguagesset",
      "label": "Save the languages",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "instance-setup"
      ]
@@ -882,7 +867,6 @@
      "op": "grouplogoset",
      "label": "Change the logo",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "instance-setup"
      ]
@@ -890,17 +874,17 @@
     {
      "op": "courtnoticeset",
      "label": "Show the court notice",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "membership"
      ]
     },
     {
      "op": "hostingaccessset",
      "label": "Record who holds the hosting account",
-     "status": "declared",
+     "status": "function",
      "modules": [
-      "setup-page"
+      "membership"
      ]
     },
     {
@@ -909,6 +893,22 @@
      "status": "function",
      "modules": [
       "strength"
+     ]
+    },
+    {
+     "op": "declaredstakeset",
+     "label": "Save the statement",
+     "status": "declared",
+     "modules": [
+      "instance-setup"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],
@@ -1382,7 +1382,7 @@
    "id": "finder",
    "name": "Find",
    "frame": "working",
-   "purpose": "Search what the group holds; hold a set together; see where nobody looked.",
+   "purpose": "Search what the group holds, or browse it by kind and state with no words; hold a set together; see where nobody looked.",
    "acts": [
     {
      "op": "search",
@@ -1433,6 +1433,16 @@
      "modules": [
       "calculations"
      ]
+    },
+    {
+     "op": "owed:watchitem DEC-238",
+     "label": "Watch",
+     "status": "owed"
+    },
+    {
+     "op": "owed:secondlook DEC-238",
+     "label": "Flag for a second look",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -1489,7 +1499,6 @@
      "op": "monitorset",
      "label": "Watch this address",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "monitoring"
      ]
@@ -1665,7 +1674,7 @@
    "id": "document",
    "name": "Document",
    "frame": "working",
-   "purpose": "One captured document: its copy, grade note, passages, versions and what cites it.",
+   "purpose": "One captured document: its copy and grade note, its words by page with citing, its versions set beside each other, the links it carries, the people and organizations it names, and what cites it.",
    "acts": [
     {
      "op": "gradenote",
@@ -1721,7 +1730,6 @@
      "op": "monitorset",
      "label": "Watch for changes",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "monitoring"
      ]
@@ -1758,6 +1766,38 @@
      "status": "declared",
      "modules": [
       "content"
+     ]
+    },
+    {
+     "op": "adoptversion",
+     "label": "Move my citations to this copy",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "keepversion",
+     "label": "Keep citing the version I cited",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "connectionchoose",
+     "label": "Choose the mention that counts",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "explore",
+     "label": "Explore connections",
+     "status": "declared",
+     "modules": [
+      "explore"
      ]
     }
    ],
@@ -1857,7 +1897,7 @@
    "id": "project",
    "name": "Project",
    "frame": "working",
-   "purpose": "A project's home: objective, bar, questions, stage, plans, members.",
+   "purpose": "A project's home: objective, bar, questions, stage, plans, what the group has at stake here, members.",
    "acts": [
     {
      "op": "promote",
@@ -1874,7 +1914,6 @@
      "op": "drawquestion",
      "label": "Draw on a question from elsewhere",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "citation"
      ]
@@ -1891,7 +1930,6 @@
      "op": "projectbarset",
      "label": "Set this project's bar",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "strength"
      ]
@@ -1902,6 +1940,59 @@
      "status": "function",
      "modules": [
       "membership"
+     ]
+    },
+    {
+     "op": "projectvisibilityset",
+     "label": "Change who can find it",
+     "status": "function",
+     "modules": [
+      "membership"
+     ]
+    },
+    {
+     "op": "projectownerremove",
+     "label": "Stand down as owner",
+     "status": "function",
+     "modules": [
+      "project-roster"
+     ]
+    },
+    {
+     "op": "projectowneradd",
+     "label": "Make an owner, or agree to it",
+     "status": "function",
+     "modules": [
+      "project-roster"
+     ]
+    },
+    {
+     "op": "projectremove",
+     "label": "Remove a member",
+     "status": "function",
+     "modules": [
+      "membership"
+     ]
+    },
+    {
+     "op": "projectleave",
+     "label": "Ask to leave this project",
+     "status": "function",
+     "modules": [
+      "membership"
+     ]
+    },
+    {
+     "op": "owed:projectfork DEC-237",
+     "label": "Start a project from this one",
+     "status": "owed"
+    },
+    {
+     "op": "projectownerrescue",
+     "label": "Become the owner of an ownerless project",
+     "status": "function",
+     "modules": [
+      "project-roster"
      ]
     },
     {
@@ -1918,6 +2009,19 @@
      "status": "declared",
      "modules": [
       "action-plans"
+     ]
+    },
+    {
+     "op": "owed:projectstakeset K3230",
+     "label": "Save this project's stake",
+     "status": "owed"
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],
@@ -2002,7 +2106,7 @@
    "id": "question",
    "name": "Question",
    "frame": "working",
-   "purpose": "A question and what supports it or cuts against it; strength against the bar; concluding.",
+   "purpose": "A question and what supports it or cuts against it; what each cited passage carries; strength against the bar; its readings and the one a project stands on; what relies on it; concluding.",
    "acts": [
     {
      "op": "cite",
@@ -2094,6 +2198,55 @@
       "agent-worker",
       "retrieval"
      ]
+    },
+    {
+     "op": "inquiryground",
+     "label": "Say what each passage carries",
+     "status": "declared",
+     "modules": [
+      "inquiry"
+     ]
+    },
+    {
+     "op": "versionaccept",
+     "label": "Accept a reading",
+     "status": "declared",
+     "modules": [
+      "basis-versions"
+     ]
+    },
+    {
+     "op": "versionhide",
+     "label": "Hide a reading",
+     "status": "declared",
+     "modules": [
+      "basis-versions"
+     ]
+    },
+    {
+     "op": "owed:versionconsider DEC-235",
+     "label": "Weigh a reading",
+     "status": "owed"
+    },
+    {
+     "op": "owed:versionreject DEC-235",
+     "label": "Reject a reading",
+     "status": "owed"
+    },
+    {
+     "op": "owed:versionrevert DEC-235",
+     "label": "Undo the decision on a reading",
+     "status": "owed"
+    },
+    {
+     "op": "owed:versioncurrent DEC-235",
+     "label": "Stand on a reading for a project",
+     "status": "owed"
+    },
+    {
+     "op": "owed:readtranslate DEC-240",
+     "label": "Read in my language",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -2224,8 +2377,7 @@
      "label": "Add someone the record follows",
      "status": "declared",
      "modules": [
-      "entities",
-      "setup-page"
+      "entities"
      ]
     }
    ],
@@ -2238,7 +2390,7 @@
    "id": "person",
    "name": "Person",
    "frame": "working",
-   "purpose": "Positions, career, credentials, memberships, interests, statements; same person?",
+   "purpose": "A person or an organization the record follows: positions, career, credentials, memberships, interests, statements; same person?; what the group says about them (other names, declared ties, the documents that may name them) (DEC-233).",
    "acts": [
     {
      "op": "person",
@@ -2294,6 +2446,56 @@
      "status": "declared",
      "modules": [
       "people"
+     ]
+    },
+    {
+     "op": "entityalias",
+     "label": "Add another name",
+     "status": "declared",
+     "modules": [
+      "entities"
+     ]
+    },
+    {
+     "op": "relationdeclare",
+     "label": "Declare a tie",
+     "status": "declared",
+     "modules": [
+      "entities"
+     ]
+    },
+    {
+     "op": "resolve",
+     "label": "Match a document to them",
+     "status": "declared",
+     "modules": [
+      "entities",
+      "queue",
+      "record-core"
+     ]
+    },
+    {
+     "op": "resolvetestify",
+     "label": "Say from what you know that a document names them",
+     "status": "declared",
+     "modules": [
+      "entities"
+     ]
+    },
+    {
+     "op": "connect",
+     "label": "Connect the documents that name them",
+     "status": "declared",
+     "modules": [
+      "connections"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],
@@ -2622,9 +2824,10 @@
      ]
     },
     {
-     "op": "connectionassert",
+     "op": "stepsource",
      "label": "Attach a source to a declared step",
      "status": "declared",
+     "onTranche": "origin/tranche/T48",
      "modules": [
       "connections"
      ]
@@ -2656,8 +2859,7 @@
      "label": "Register the proceeding",
      "status": "declared",
      "modules": [
-      "entities",
-      "setup-page"
+      "entities"
      ]
     },
     {
@@ -2793,12 +2995,12 @@
      ]
     },
     {
-     "op": "optionpropose",
+     "op": "planask",
      "label": "Ask the assistant for options",
      "status": "declared",
+     "onTranche": "origin/tranche/T48",
      "modules": [
-      "action-plans",
-      "agent-worker"
+      "action-plans"
      ]
     },
     {
@@ -2923,6 +3125,19 @@
      "modules": [
       "filings"
      ]
+    },
+    {
+     "op": "owed:actionstake K3230",
+     "label": "Save this action's stake",
+     "status": "owed"
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
     }
    ],
    "journeys": [
@@ -2993,7 +3208,7 @@
    "id": "action",
    "name": "Action",
    "frame": "working",
-   "purpose": "One action: replies, deadlines, pressure, holds.",
+   "purpose": "One action: replies, deadlines, the law it goes under, its risk tier, pressure, holds; a question opened when no reply is recorded.",
    "acts": [
     {
      "op": "actionmove",
@@ -3040,8 +3255,37 @@
      "label": "Make the action confidential, or not",
      "status": "declared",
      "modules": [
+      "action-records"
+     ]
+    },
+    {
+     "op": "actionrisktier",
+     "label": "Revise the risk tier, with a reason",
+     "status": "declared",
+     "modules": [
       "actions"
      ]
+    },
+    {
+     "op": "actionlaws",
+     "label": "Change the law it goes under",
+     "status": "declared",
+     "modules": [
+      "actions"
+     ]
+    },
+    {
+     "op": "actionlawspropose",
+     "label": "Propose another law",
+     "status": "declared",
+     "modules": [
+      "action-records"
+     ]
+    },
+    {
+     "op": "owed:actioninquiry DEC-239",
+     "label": "Open a question from this",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -3127,7 +3371,7 @@
      "label": "Draft \"what changed\"",
      "status": "declared",
      "modules": [
-      "case-authoring"
+      "case-inputs"
      ]
     },
     {
@@ -3136,6 +3380,7 @@
      "status": "declared",
      "modules": [
       "case-authoring",
+      "case-inputs",
       "review"
      ]
     },
@@ -3237,6 +3482,7 @@
      "modules": [
       "case-authoring",
       "case-check",
+      "case-inputs",
       "review"
      ]
     },
@@ -3245,6 +3491,7 @@
      "label": "Sign now and publish at a set time, checked again then",
      "status": "declared",
      "modules": [
+      "case-authoring",
       "publication",
       "publish-schedule",
       "ratification"
@@ -3278,7 +3525,6 @@
      "op": "signrequest",
      "label": "Ask an owner to sign",
      "status": "declared",
-     "onTranche": "origin/tranche/T47",
      "modules": [
       "tasks"
      ]
@@ -3318,6 +3564,16 @@
      "label": "Send your comment",
      "status": "declared",
      "modules": [
+      "review"
+     ]
+    },
+    {
+     "op": "statementack",
+     "label": "Acknowledge what the case does not cover",
+     "status": "declared",
+     "modules": [
+      "case-authoring",
+      "case-inputs",
       "review"
      ]
     }
@@ -3447,7 +3703,6 @@
      "status": "declared",
      "modules": [
       "control-plane",
-      "setup-page",
       "store-door"
      ]
     },

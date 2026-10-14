@@ -133,7 +133,7 @@
  },
  {
   "key": "refusal.HANDLE_FIXED",
-  "en": "Handles don't change in Civicsmith: yours names your work for good, and no one else can ever take it. Nothing was changed.",
+  "en": "Your handle is already chosen, and a handle never changes in Civicsmith: it names your work for good, and no one else can ever take it. Nothing was changed.",
   "protected": false,
   "note": "DEC-197; membership R124 refuses every change"
  },

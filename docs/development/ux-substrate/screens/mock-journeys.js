@@ -45,7 +45,7 @@ const J = [
    { s: 'people', act: 'explore', say: 'Teo opens People. J. Ortega, the council member for District 3, is listed under his projects, named in 9 documents, 2 questions and 1 project. On his row Teo chooses "Explore connections".' },
    { s: 'explore', act: 'explore', say: 'He picks the kinds to follow (money, votes, positions) and an end point: the Coliseum lease.' },
    { s: 'explore', act: 'exploreverify', say: 'Each chain shows every step cited and graded; the weakest step sets its grade.' },
-   { s: 'explore', act: 'connectionassert', say: 'A declared step is a lead, not evidence. He attaches a source to make it evidence.' },
+   { s: 'explore', act: 'stepsource', say: 'A declared step is a lead, not evidence. He attaches a source to make it evidence.' },
    { s: 'explore', act: 'promote', say: 'He opens a question from the chain. No finding rests on a declared or hunch step.' } ] },
  { n: 14, t: 'Following a court case or proceeding', who: 'Members; a lawyer member', wiz: 'Follow a proceeding' },
  { n: 15, t: 'From a question to a published case', who: 'Members, often a newsroom; the project owner', steps: [

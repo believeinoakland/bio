@@ -538,5 +538,2099 @@
   "en": "See the list",
   "protected": false,
   "note": "DEC-227"
+ },
+ {
+  "key": "document.read.title",
+  "en": "Read it",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.help",
+  "en": "The words of this copy, page by page, as Civicsmith read them from the capture; the original file stays exactly as captured. Select any words to cite them in a question, or set this copy beside the version your question cites.",
+  "protected": false,
+  "note": "DEC-229: the section heading's explanation"
+ },
+ {
+  "key": "document.read.tab.page",
+  "en": "By page",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.tab.compare",
+  "en": "Beside the version your question cites",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.page",
+  "en": "Page {n} of {count}",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.prev",
+  "en": "Previous page",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.next",
+  "en": "Next page",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.select",
+  "en": "Select any words to cite them.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.cite",
+  "en": "Cite this",
+  "protected": false,
+  "note": "DEC-229: the button on a selection"
+ },
+ {
+  "key": "document.read.cite.help",
+  "en": "Cites the words you selected in a question, as support or as cutting against it. The citation points at this copy, this page and these words.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.read.original",
+  "en": "Open the original file",
+  "protected": false,
+  "note": "DEC-229: a reference link to the open-file screen"
+ },
+ {
+  "key": "document.read.original.card",
+  "en": "The original file · the {kind} exactly as captured, {size} · opens on your device after Civicsmith's file check",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.compare.cited",
+  "en": "The version your question cites",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.compare.this",
+  "en": "This copy",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.compare.captured",
+  "en": "Captured {date} by {who}",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.compare.same",
+  "en": "{what}, which your question cites, reads the same in both, letter for letter.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.compare.changed",
+  "en": "{what} changed.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.compare.stay",
+  "en": "Your citations stay on the version you cited until you move them.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.title",
+  "en": "Versions",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.help",
+  "en": "Every copy the record holds of this document's address, newest first. A newer copy never replaces an older one: it sits beside it, and your citations stay on the version you cited until you move them.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.captured",
+  "en": "Captured {date} by {who}",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.thiscopy",
+  "en": "this copy",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.cited",
+  "en": "The version your question cites",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.changed",
+  "en": "Changed since the version your question cites",
+  "protected": true,
+  "note": "DEC-229: the changed mark's words"
+ },
+ {
+  "key": "document.versions.changed.tip",
+  "en": "Changed: this copy differs from the version your question cites. Compare them to see where, then move your citations or keep them.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.where",
+  "en": "{changed} reads differently; {same} does not.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.compare",
+  "en": "Compare them",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.versions.same",
+  "en": "Reads the same as the {date} copy, letter for letter.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.links.title",
+  "en": "Links this page carries",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.links.help",
+  "en": "The links this page carries, as the capture recorded them: the source's own pointers, not Civicsmith's.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.links.says",
+  "en": "{n} links on this page; {held} point at documents the group holds. An outward link opens the site as it is today, in a new window, which may differ from what was captured; it takes you outside Civicsmith. The site's own navigation links are left out.",
+  "protected": true,
+  "note": "DEC-229: the one-line warning, D2"
+ },
+ {
+  "key": "document.links.held",
+  "en": "held · captured {date}",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.links.none",
+  "en": "This page carries no links.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.title",
+  "en": "People and organizations it names",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.help",
+  "en": "Everyone the record follows that this copy names, with the mention the record reads as the one that connects them. Say a name is a person the record follows, or choose which mention counts.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.row",
+  "en": "{n} mentions · the mention that counts: page {page}, {chosen}",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.chosen.record",
+  "en": "chosen by the record (strongest grade)",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.chosen.member",
+  "en": "chosen by {who} on {date}: \"{why}\"",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.explore.help",
+  "en": "Starts the connection graph from this document: everyone it names, what it links to, and what cites it.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "document.names.none",
+  "en": "This copy names no one the record follows yet. A name becomes a link when a member says it is a person the record follows.",
+  "protected": false,
+  "note": "DEC-229"
+ },
+ {
+  "key": "screen.setup.handle",
+  "en": "Choose your handle",
+  "protected": false,
+  "note": "DEC-230: the claim step's field label"
+ },
+ {
+  "key": "screen.setup.handle.help",
+  "en": "The record shows your handle on your work and on every case you sign, so choose it with care: it can't be changed, and no one else can ever take it. It needn't be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit.",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "screen.setup.claimed",
+  "en": "Claimed. {group} is yours, and you're signed in as {handle} on this device.",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "signin.handle.help",
+  "en": "The name the group knows you by: chosen when you joined, or when you set the group up.",
+  "protected": false,
+  "note": "DEC-230: the front door's handle field"
+ },
+ {
+  "key": "forgot.handle.help",
+  "en": "The handle you sign in with: the name the group knows you by.",
+  "protected": false,
+  "note": "DEC-230: the recovery page's handle field"
+ },
+ {
+  "key": "refusal.NO_HANDLE",
+  "en": "Choose a handle first: it's the name you'll sign in with. Nothing was changed.",
+  "protected": false,
+  "note": "DEC-230; membership R16, the claim"
+ },
+ {
+  "key": "refusal.BAD_HANDLE",
+  "en": "A handle uses only lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Nothing was changed.",
+  "protected": false,
+  "note": "DEC-230; membership R12"
+ },
+ {
+  "key": "refusal.HANDLE_TAKEN",
+  "en": "That handle is already taken here: choose another. Nothing was changed.",
+  "protected": false,
+  "note": "DEC-230; membership R16, R124"
+ },
+ {
+  "key": "founder.handle.title",
+  "en": "Choose your handle",
+  "protected": false,
+  "note": "DEC-230: the step a founder who claimed before T49 sees after signing in (screens-entry R14)"
+ },
+ {
+  "key": "founder.handle.says",
+  "en": "Until now you've signed in as admin, a name every Civicsmith group's founder shared. Choose the handle you'll sign in with from now on: the record shows it on your work and on every case you sign. You choose it once; it can't be changed.",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "founder.handle.choose",
+  "en": "Choose this handle",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "founder.handle.later",
+  "en": "Later",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "founder.handle.later.help",
+  "en": "Opens Home. You still sign in as admin until you choose, and this step comes back at your next sign-in.",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "founder.handle.done",
+  "en": "From now on you sign in as {handle}; admin no longer works.",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "member.founder.unnamed",
+  "en": "The group's founder",
+  "protected": false,
+  "note": "DEC-230: shown wherever the founder's name would be, until a handle is chosen; never admin"
+ },
+ {
+  "key": "member.founder.unnamed.help",
+  "en": "The person who set up this group's Civicsmith, who hasn't chosen a handle yet. Their work will show it once they do.",
+  "protected": false,
+  "note": "DEC-230"
+ },
+ {
+  "key": "stake.group.title",
+  "en": "What the group has at stake",
+  "protected": false,
+  "note": "DEC-231: Settings › Your group"
+ },
+ {
+  "key": "stake.group.label",
+  "en": "The group's statement",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.group.help",
+  "en": "In your group's own words: what the group itself stands to gain or lose in the matters it works on. It goes beside your group's name on everything it sends or publishes, so readers can weigh its work knowing it. A project or an action can add a stake of its own beside it, never in its place.",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.group.save",
+  "en": "Save the statement",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.set",
+  "en": "Set by {who} on {date}",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.history",
+  "en": "{n} earlier statements",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.project.title",
+  "en": "What the group has at stake here",
+  "protected": false,
+  "note": "DEC-231: the project page"
+ },
+ {
+  "key": "stake.project.group",
+  "en": "The group's own statement, on everything it sends: {stake}",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.project.label",
+  "en": "This project's stake (optional)",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.project.help",
+  "en": "Only what this matter adds to the group's usual stake. It goes beside the group's statement on what this project sends or publishes, never in its place. A member of the project or an administrator can set it; each change is dated and kept. Empty means the group's statement alone.",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.project.save",
+  "en": "Save this project's stake",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.ask.title",
+  "en": "Does the group have a stake in this matter beyond its usual one?",
+  "protected": false,
+  "note": "DEC-231: the question at preparation, when stakeatpreparation answers higher_stakes"
+ },
+ {
+  "key": "stake.ask.help",
+  "en": "Asked when an action carries higher stakes. It never stops you: nothing waits on your answer, and no answer is recorded unless you save a stake.",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.ask.says",
+  "en": "{kind} puts the group's own interest on the record, so readers will ask what it stands to gain. Your group's statement goes with this action already. If this matter touches the group more than usual, such as a member who is a party or a decision that changes your rent, say so here. It goes beside the group's statement on what this action sends. You can approve either way.",
+  "protected": false,
+  "note": "DEC-231: {kind} the action's kind in words, e.g. Taking part as a party"
+ },
+ {
+  "key": "stake.ask.undetermined",
+  "en": "Civicsmith can't tell how much is at stake in this action, so it asks.",
+  "protected": false,
+  "note": "DEC-231: an undetermined tier"
+ },
+ {
+  "key": "stake.action.label",
+  "en": "This action's stake (optional)",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.action.help",
+  "en": "What this one action adds to the group's usual stake and the project's. It goes beside them on what this action sends, never in their place, and is dated and kept. Empty means the project's stake, or the group's alone.",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.action.save",
+  "en": "Save this action's stake",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.sentwith",
+  "en": "Sent with",
+  "protected": false,
+  "note": "DEC-231: the preview beside the stamp"
+ },
+ {
+  "key": "stake.inmatter",
+  "en": "In this matter",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.source.project",
+  "en": "this project's stake, set by {who} on {date}",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.source.action",
+  "en": "this action's own stake, set by {who} on {date}",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.none",
+  "en": "None stated beyond the group's",
+  "protected": false,
+  "note": "DEC-231"
+ },
+ {
+  "key": "stake.unreadable",
+  "en": "Civicsmith can't read this stake right now; it is not left out.",
+  "protected": false,
+  "note": "DEC-231: undetermined, never shown as none"
+ },
+ {
+  "key": "signing.openrequest.noquote",
+  "en": "{whom}'s reply asks not to be quoted, so the case says what it says without quoting its words.",
+  "protected": true,
+  "note": "DEC-232: B188 (1); case-inputs R18, N1076; protected like its siblings (DEC-194)"
+ },
+ {
+  "key": "translate.read",
+  "en": "Read in my language",
+  "protected": false,
+  "note": "DEC-232: B188 (2), N670; the control beside a passage, note, question, finding or notice (readtranslate)"
+ },
+ {
+  "key": "translate.label",
+  "en": "Machine translation · original in {language}",
+  "protected": true,
+  "note": "DEC-232: the label on every translated text"
+ },
+ {
+  "key": "translate.label.help",
+  "en": "Translated by a machine for you to read; it may be wrong. The original is the record: show it to check a word, and quote only the original.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "translate.original",
+  "en": "Show the original",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "translate.back",
+  "en": "Show the translation",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "translate.label.published",
+  "en": "Unofficial machine translation · the signed original is in {language}",
+  "protected": true,
+  "note": "DEC-232: on a published case"
+ },
+ {
+  "key": "translate.published.original",
+  "en": "Read the signed original",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "refusal.LANGUAGE_NOT_SET",
+  "en": "Choose the language you read in, in Settings › Your account, or name one here. Nothing was translated.",
+  "protected": false,
+  "note": "DEC-232: B188 (2); instance-setup R87"
+ },
+ {
+  "key": "refusal.MACHINE_CANNOT_RECORD_QUOTING",
+  "en": "Only a member records what a reply says about being quoted. Nothing was written.",
+  "protected": false,
+  "note": "DEC-232: B188 (3); C-150.8"
+ },
+ {
+  "key": "refusal.QUOTING_NOT_RFC",
+  "en": "Only a reply to a request for comment can ask not to be quoted. Nothing was written.",
+  "protected": false,
+  "note": "DEC-232: C-150.9"
+ },
+ {
+  "key": "refusal.QUOTING_REFUSED",
+  "en": "Say whether the reply may be quoted. If it may not, give the reply's own words that say so, on one line of at most 500 characters. Nothing was written.",
+  "protected": false,
+  "note": "DEC-232: C-150.10"
+ },
+ {
+  "key": "proceeding.dates.title",
+  "en": "Dates",
+  "protected": false,
+  "note": "DEC-232: B188 (3), N882: proceeding's dates section, two lanes (following R30); drawn with DEC-228's small batch"
+ },
+ {
+  "key": "proceeding.dates.help",
+  "en": "The proceeding's own dates beside your group's deadlines on it. A deadline the body set for itself is never in your group's lane. Nothing here says anyone is late.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "proceeding.dates.lane.proceeding",
+  "en": "The proceeding",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "proceeding.dates.lane.group",
+  "en": "Our deadlines on it",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "proceeding.dates.stage",
+  "en": "Now: {stage}",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "proceeding.dates.none",
+  "en": "No dates are recorded yet.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "refusal.NO_FINDINGS",
+  "en": "A determination rests on at least one finding: one your group published, one checked and held for publication, or another group's finding your group has accepted. Name the findings it rests on. Nothing was written.",
+  "protected": false,
+  "note": "DEC-232: B188 (4); conformance R40, C-113.6"
+ },
+ {
+  "key": "elsewhere.hours.day.mon",
+  "en": "Monday",
+  "protected": false,
+  "note": "DEC-232: B188 (5); a pointer's hours (jurisdictions R89)"
+ },
+ {
+  "key": "elsewhere.hours.day.tue",
+  "en": "Tuesday",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.day.wed",
+  "en": "Wednesday",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.day.thu",
+  "en": "Thursday",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.day.fri",
+  "en": "Friday",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.day.sat",
+  "en": "Saturday",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.day.sun",
+  "en": "Sunday",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.span",
+  "en": "{days}, {open} to {close}",
+  "protected": false,
+  "note": "DEC-232: consecutive days with the same hours joined as \"Monday to Friday\"; times in the reader's 12-hour form, e.g. 9 a.m."
+ },
+ {
+  "key": "elsewhere.hours.days",
+  "en": "{first} to {last}",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.closed",
+  "en": "Closed other days",
+  "protected": false,
+  "note": "DEC-232: a day not listed is closed"
+ },
+ {
+  "key": "elsewhere.languages",
+  "en": "Languages: {list}",
+  "protected": false,
+  "note": "DEC-232: language names in the reader's language"
+ },
+ {
+  "key": "places.elsewhere.help",
+  "en": "The places Civicsmith sends a member to when what they need is their own matter, not the group's question. They come with the place's rules; your group neither chooses nor edits them.",
+  "protected": false,
+  "note": "DEC-232: B188 (5); the section help on Places and offices"
+ },
+ {
+  "key": "places.elsewhere.none",
+  "en": "Your place lists no places yet for needs Civicsmith doesn't serve. A member who opens Where else to go is told so, with the reason.",
+  "protected": false,
+  "note": "DEC-232: zero pointers"
+ },
+ {
+  "key": "places.elsewhere.noplace",
+  "en": "Your group has no place chosen, so there is nothing to list. Choose one under Places and languages.",
+  "protected": false,
+  "note": "DEC-232: no place"
+ },
+ {
+  "key": "duty.reason.trigger_undated",
+  "en": "What starts the clock has no date in the record yet, so the due date can't be worked out.",
+  "protected": false,
+  "note": "DEC-232: B189, B193; duties R33"
+ },
+ {
+  "key": "duty.reason.deadline_not_held",
+  "en": "Your group's Civicsmith holds no rule for this deadline yet, so it can't say when it falls due.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "duty.reason.due_not_computed",
+  "en": "The due date couldn't be worked out from what the record holds.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "duty.reason.due_between_days",
+  "en": "The due date depends on a day the record doesn't settle, so it falls on one of two days.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "duty.reason.match_undated",
+  "en": "The event that met the duty has no settled date, so whether it was on time is open.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "duty.reason.order_unsettled",
+  "en": "The dates the record holds aren't precise enough to say whether it was on time.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "refusal.UPDATE_NOT_READY",
+  "en": "That release isn't the one ready to install. Nothing was recorded.",
+  "protected": false,
+  "note": "DEC-232: B190; instance-setup R90"
+ },
+ {
+  "key": "refusal.UPDATE_SKIP_NO_REASON",
+  "en": "Say why your group skips this release, on one line: every administrator will see it. Nothing was recorded.",
+  "protected": false,
+  "note": "DEC-232: B190; instance-setup R90"
+ },
+ {
+  "key": "home.welcome.title",
+  "en": "Welcome, {name}",
+  "protected": false,
+  "note": "DEC-232: B190; Home's blocks (screens-daily R17), in their order"
+ },
+ {
+  "key": "home.ready.title",
+  "en": "Your group's Civicsmith is ready",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "home.needsyou.title",
+  "en": "Needs you",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "home.needsgroup.title",
+  "en": "Needs the group",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "home.areas.title",
+  "en": "Each area at a glance",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "home.projects.title",
+  "en": "Projects",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "home.since.title",
+  "en": "Since you last looked",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "published.download",
+  "en": "Download the complete edition",
+  "protected": false,
+  "note": "DEC-232: B190; screens-publish R19"
+ },
+ {
+  "key": "shell.band.working",
+  "en": "· not public · seen by your group's members",
+  "protected": false,
+  "note": "DEC-232: B194; follows mark.path.working.name in the band"
+ },
+ {
+  "key": "shell.group.unnamed",
+  "en": "Your group",
+  "protected": false,
+  "note": "DEC-232: B194; never the short name in its place"
+ },
+ {
+  "key": "wizard.marks.chip",
+  "en": "{n} wizards start here",
+  "protected": false,
+  "note": "DEC-232: B194; one chip beside the title, none at zero"
+ },
+ {
+  "key": "wizard.marks.chip.one",
+  "en": "1 wizard starts here",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "wizard.mark.recommended",
+  "en": "Recommended for everyone",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "queue.source-modified.one",
+  "en": "A document changed at its source",
+  "protected": false,
+  "note": "DEC-232: B194; queue-producers R40"
+ },
+ {
+  "key": "queue.source-modified.many",
+  "en": "{n} documents changed at their source",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "queue.source-removed.one",
+  "en": "A document is gone from its source",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "queue.source-removed.many",
+  "en": "{n} documents are gone from their source",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "queue.source.detail",
+  "en": "Your group's Civicsmith noticed this when it checked. The copies your group holds are unchanged. Open each one to see what changed; nothing has been decided.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "queue.source.untitled",
+  "en": "A document with no title, captured {date}",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "home.first.name",
+  "en": "Name your group",
+  "protected": false,
+  "note": "DEC-232: B194; leads an administrator's first steps while the group has no name"
+ },
+ {
+  "key": "settings.set.setup",
+  "en": "set at setup",
+  "protected": false,
+  "note": "DEC-232: B194; never a credential's name"
+ },
+ {
+  "key": "entity.says.title",
+  "en": "What the group says about them",
+  "protected": false,
+  "note": "DEC-233: the section on a person's page"
+ },
+ {
+  "key": "entity.says.title.org",
+  "en": "What the group says about it",
+  "protected": false,
+  "note": "DEC-233: on an organization's page"
+ },
+ {
+  "key": "entity.says.help",
+  "en": "What members have said about this person that no single document states: other names they go by, ties a member declared, and which documents name them. Each line shows who said it and when.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.says.help.org",
+  "en": "What members have said about this organization that no single document states: other names it goes by, ties a member declared, and which documents name it. Each line shows who said it and when.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.title",
+  "en": "Other names",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.label",
+  "en": "Another name they go by",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.label.org",
+  "en": "Another name it goes by",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.help",
+  "en": "A name documents use for them: a short form, a former name, a title used as a name. Civicsmith then looks for it in the documents your group holds. Two people can share a name; nothing here decides which one a document means.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.add",
+  "en": "Add the name",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.by",
+  "en": "added by {who} on {date}",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.alias.roster",
+  "en": "the name on the city roster",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.title",
+  "en": "Ties a member declared",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.kind",
+  "en": "Their tie",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.kind.help",
+  "en": "“Member of” a body or group; “stands in for” someone, acting in their name; “overlaps with” another record that may be partly the same. Never more than the tie itself.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.member_of",
+  "en": "Member of",
+  "protected": false,
+  "note": "DEC-233: K1486"
+ },
+ {
+  "key": "entity.relation.proxy_for",
+  "en": "Stands in for",
+  "protected": false,
+  "note": "DEC-233: K1486"
+ },
+ {
+  "key": "entity.relation.overlaps",
+  "en": "Overlaps with",
+  "protected": false,
+  "note": "DEC-233: K1486"
+ },
+ {
+  "key": "entity.relation.with",
+  "en": "With",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.why",
+  "en": "Why you say so",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.cite",
+  "en": "Where it is said",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.cite.help",
+  "en": "The page, document or record that says it, so another member can check. Required.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.declare",
+  "en": "Declare the tie",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.declared",
+  "en": "declared by {who} on {date}, citing {where} · declared, not evidenced",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.relation.none",
+  "en": "None yet. A tie such as “member of” a larger body goes here, with why and where it is said.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.title",
+  "en": "Documents that may name them",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.says",
+  "en": "Found by their names in the documents your group holds. Not yet matched: a document names them once Civicsmith matches an identifier or name, or a member says so from what they know.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.row",
+  "en": "page {page} · by the name {alias}",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.match",
+  "en": "Match it",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.testify",
+  "en": "I know this is them…",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.basis",
+  "en": "How you know",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.naming.basis.help",
+  "en": "Your own knowledge, in your words. It is recorded as your word, grade D: never established on its own, and never lowering a stronger match.",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.connect",
+  "en": "Connect the documents that name them",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "entity.connect.org",
+  "en": "Connect the documents that name it",
+  "protected": false,
+  "note": "DEC-233"
+ },
+ {
+  "key": "installer.update.chosen.nodate",
+  "en": "This update: release {version}, the release chosen in your group's Settings › Updates",
+  "protected": false,
+  "note": "DEC-234: B200 (1); the update address carries no date"
+ },
+ {
+  "key": "screen.review-copy.until.nozone",
+  "en": "Set your group's time zone first: a review link's end date is counted in it. Then share.",
+  "protected": false,
+  "note": "DEC-234: B200 (2), B201; screens-publish R18"
+ },
+ {
+  "key": "shell.card.plan",
+  "en": "The project's action plan: what it means to change, the options for each, and what each option became.",
+  "protected": false,
+  "note": "DEC-234: B200 (4), N1078: the card on a link to each screen"
+ },
+ {
+  "key": "shell.card.timeline",
+  "en": "The project's timeline: what the officials did and what the group did, in two lanes, each event with its source.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "shell.card.money",
+  "en": "The money trail: money proposed, committed and paid, each figure pointing back to where it was printed.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "shell.card.calculation",
+  "en": "A calculation the project relies on: its inputs, each with its source, and how the result was worked out.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "shell.card.case-editor",
+  "en": "The case being prepared: its findings, what it leaves out, the people it names, and the group's statement.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "shell.card.review-copy",
+  "en": "A copy of the draft case shared with a named outside reader, through a link the group can end at any time.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "shell.card.ceremony",
+  "en": "Publishing the case: the last checks, the disclosures, the preview, then the signing.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "shell.card.docket",
+  "en": "The published case's public record of everything that happened to it after publishing: replies, corrections, new editions.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "home.area.investigation",
+  "en": "Investigation",
+  "protected": false,
+  "note": "DEC-234: B201: the four areas on Home"
+ },
+ {
+  "key": "home.area.action",
+  "en": "Action",
+  "protected": false,
+  "note": "DEC-234: B201"
+ },
+ {
+  "key": "home.area.members",
+  "en": "Members",
+  "protected": false,
+  "note": "DEC-234: B201"
+ },
+ {
+  "key": "home.area.administration",
+  "en": "Administration",
+  "protected": false,
+  "note": "DEC-234: B201"
+ },
+ {
+  "key": "home.move.ours",
+  "en": "our move",
+  "protected": false,
+  "note": "DEC-234: B201: an action waiting on the group"
+ },
+ {
+  "key": "home.move.theirs",
+  "en": "their move",
+  "protected": false,
+  "note": "DEC-234: B201: an action waiting on the office or body"
+ },
+ {
+  "key": "screen.forgot.done.last",
+  "en": "That was your last recovery code. Once you're in, get ten new ones in Settings › Recovery codes, so you have a way back in next time.",
+  "protected": false,
+  "note": "DEC-234: B201; screens-entry: never \"you have 0 left\""
+ },
+ {
+  "key": "screen.setup.security.field",
+  "en": "{field}",
+  "protected": false,
+  "note": "DEC-234, corrected on B202: a fill-only row: a security tool's own field names are record data and draw through cs.field on setup's security step"
+ },
+ {
+  "key": "screen.setup.otp.field",
+  "en": "One-time password · filled in for you from the installer's last page",
+  "protected": false,
+  "note": "DEC-234 (B202): the claim's one-time password field, filled from the installer and never typed; kept under its own key once screen.setup.security.field became fill-only"
+ },
+ {
+  "key": "connection.thing.entity",
+  "en": "a person or organization",
+  "protected": false,
+  "note": "DEC-234: B201; screens-investigate"
+ },
+ {
+  "key": "screen.held.empty",
+  "en": "Nothing is held: every capture here has been vouched for or set aside.",
+  "protected": false,
+  "note": "DEC-234: B201; screens-intake: names no first step"
+ },
+ {
+  "key": "question.ask",
+  "en": "If this turned out to be wrong, would your answer still hold?",
+  "protected": true,
+  "note": "DEC-235: DEC-32 clause 2, one per cited passage"
+ },
+ {
+  "key": "question.ask.no",
+  "en": "No, my answer falls",
+  "protected": true,
+  "note": "DEC-235: DEC-32 clause 2"
+ },
+ {
+  "key": "question.ask.yes",
+  "en": "Yes, because of others I cite",
+  "protected": true,
+  "note": "DEC-235: DEC-32 clause 2"
+ },
+ {
+  "key": "question.ask.which",
+  "en": "Which ones would still hold it up?",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.ask.title",
+  "en": "What each passage carries",
+  "protected": false,
+  "note": "DEC-235: the section when a member answers the question per passage"
+ },
+ {
+  "key": "question.ask.help",
+  "en": "One question for each passage you cite. Your answers say which passages your answer can't do without and which ones hold it up together.",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.ask.first.title",
+  "en": "The strength shows once each passage has an answer",
+  "protected": false,
+  "note": "DEC-235: DEC-32 clause 5, the structure before the strength"
+ },
+ {
+  "key": "question.ask.first.says",
+  "en": "Your answers decide how the strength is worked out, so they come first. Until you answer, each passage counts as one your answer can't do without.",
+  "protected": false,
+  "note": "DEC-235: DEC-32 clause 4, the default"
+ },
+ {
+  "key": "question.ask.save",
+  "en": "Save the answers",
+  "protected": false,
+  "note": "DEC-235: inquiryground"
+ },
+ {
+  "key": "question.falls",
+  "en": "If this turned out to be wrong: your answer falls",
+  "protected": false,
+  "note": "DEC-235: under a cited passage"
+ },
+ {
+  "key": "question.holds",
+  "en": "If this turned out to be wrong: your answer still holds, because of {others}",
+  "protected": false,
+  "note": "DEC-235: under a cited passage"
+ },
+ {
+  "key": "question.rests.title",
+  "en": "What your answer rests on",
+  "protected": false,
+  "note": "DEC-235: DEC-32 clause 3, read back"
+ },
+ {
+  "key": "question.rests.any",
+  "en": "Your answer fails if any one of these fails:",
+  "protected": true,
+  "note": "DEC-235: DEC-32 clause 3"
+ },
+ {
+  "key": "question.rests.all",
+  "en": "{passages}: here your answer fails only if all of them fail",
+  "protected": true,
+  "note": "DEC-235: DEC-32 clause 3, a set that holds it up together"
+ },
+ {
+  "key": "question.rests.readback",
+  "en": "Read it back: if it isn't what you meant, change an answer above.",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.rests.set",
+  "en": "Set by {who} before the strength was shown, {date}",
+  "protected": false,
+  "note": "DEC-235: DEC-32 clause 5"
+ },
+ {
+  "key": "question.rests.changed",
+  "en": "Changed by {who} after the strength was shown, {date}: \"{reason}\" · strength before {before}, after {after}",
+  "protected": false,
+  "note": "DEC-235: DEC-32 clause 6; inquiry R27, R28"
+ },
+ {
+  "key": "question.rests.change",
+  "en": "Change what a passage carries…",
+  "protected": false,
+  "note": "DEC-235: inquiryground once the strength shows"
+ },
+ {
+  "key": "question.origin.shared",
+  "en": "Shared origin: {passages} both come from {origin}, so one error there could undo both.",
+  "protected": false,
+  "note": "DEC-235: partitionindependence, strength R11, R12"
+ },
+ {
+  "key": "question.reading.shown",
+  "en": "Reading shown",
+  "protected": false,
+  "note": "DEC-235: V2, the reading the page counts"
+ },
+ {
+  "key": "question.reading.shown.help",
+  "en": "A reading is one complete account of what supports this question. The page shows the passages as the reading you choose counts them.",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.readings.title",
+  "en": "Readings",
+  "protected": false,
+  "note": "DEC-235: V2 to V4"
+ },
+ {
+  "key": "question.readings.help",
+  "en": "A reading is one complete account of what supports this question, named and kept exactly as written. The group can weigh several; each project stands on one accepted reading. Its strength is worked out from that reading alone.",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.reading.accepted",
+  "en": "Accepted by {who}, {date}",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.reading.weighing",
+  "en": "Being weighed: {who}, {date}: \"{reason}\"",
+  "protected": false,
+  "note": "DEC-235: considering"
+ },
+ {
+  "key": "question.reading.suggested",
+  "en": "Suggested by {who}, {date} · not yet weighed",
+  "protected": false,
+  "note": "DEC-235: suggested; the assistant's through origin(machine) only with the assistant on"
+ },
+ {
+  "key": "question.reading.standson",
+  "en": "{project} stands on this one",
+  "protected": true,
+  "note": "DEC-235: versioncurrent, basis-versions R13, R15"
+ },
+ {
+  "key": "question.reading.strength",
+  "en": "its strength",
+  "protected": false,
+  "note": "DEC-235: versionstrength, accepted"
+ },
+ {
+  "key": "question.reading.whatif",
+  "en": "its strength if it were accepted · a what-if",
+  "protected": true,
+  "note": "DEC-235: versionstrength, strength R8 (DEC-40)"
+ },
+ {
+  "key": "question.readings.more",
+  "en": "{rejected} rejected and {hidden} hidden · Show them",
+  "protected": false,
+  "note": "DEC-235: versionhide never deletes (R14)"
+ },
+ {
+  "key": "question.relies.title",
+  "en": "What relies on this",
+  "protected": false,
+  "note": "DEC-235: V5, backlinks"
+ },
+ {
+  "key": "question.relies.help",
+  "en": "Everything you can see that cites this question. When its strength or its conclusion changes, these are what it touches.",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.relies.project",
+  "en": "project · stands on \"{reading}\"",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.relies.cites",
+  "en": "{kind} · cites this question",
+  "protected": false,
+  "note": "DEC-235"
+ },
+ {
+  "key": "question.relies.outofview",
+  "en": "Other work you can't see also relies on this question.",
+  "protected": true,
+  "note": "DEC-235: K960 out_of_view; says nothing of what or how many"
+ },
+ {
+  "key": "screen.members.count",
+  "en": "Active members: {members} · Administrators: {administrators}",
+  "protected": false,
+  "note": "DEC-236: B203; screens-settings R29, counts active members only and says so"
+ },
+ {
+  "key": "screen.connect.way.field",
+  "en": "How do you want to connect the assistant?",
+  "protected": false,
+  "note": "DEC-236: B203; screens-settings R30"
+ },
+ {
+  "key": "screen.connect.way.subscription",
+  "en": "My Claude subscription (Pro or Max)",
+  "protected": false,
+  "note": "DEC-236: B203; preselected"
+ },
+ {
+  "key": "screen.connect.way.apikey",
+  "en": "My own Claude API key",
+  "protected": false,
+  "note": "DEC-236: B203"
+ },
+ {
+  "key": "screen.connect.way.later",
+  "en": "Not now",
+  "protected": false,
+  "note": "DEC-236: B203; draws nothing more"
+ },
+ {
+  "key": "screen.updates.admins",
+  "en": "Only your group's administrators install updates. If something needs updating, ask one of them.",
+  "protected": false,
+  "note": "DEC-236: B203; screens-settings R27, what a member who is not an administrator sees"
+ },
+ {
+  "key": "shell.unread",
+  "en": "This could not be read. Try again in a moment.",
+  "protected": false,
+  "note": "DEC-236: B204 (1); interface-shell R61, a failure with no words of its own"
+ },
+ {
+  "key": "screen.imported.list",
+  "en": "Imported cases",
+  "protected": false,
+  "note": "DEC-236: B204 (2), N1087; Projects' link and the list's title"
+ },
+ {
+  "key": "screen.imported.list.says",
+  "en": "Cases other groups published that your group brought in to check. Each opens read-only, recreated finding by finding.",
+  "protected": false,
+  "note": "DEC-236"
+ },
+ {
+  "key": "screen.imported.list.row",
+  "en": "{group} · Edition {edition} · imported by {who}, {date} · {recreated} of {findings} findings recreated",
+  "protected": false,
+  "note": "DEC-236; case-import R4"
+ },
+ {
+  "key": "screen.imported.list.row.part",
+  "en": "{n} in part",
+  "protected": false,
+  "note": "DEC-236: appended to the row when some findings recreated in part"
+ },
+ {
+  "key": "screen.imported.list.none",
+  "en": "No case imported yet. Choose a case file to import the first.",
+  "protected": false,
+  "note": "DEC-236"
+ },
+ {
+  "key": "screen.imported.list.tip",
+  "en": "Cases other groups published that your group brought in to check, each read-only",
+  "protected": false,
+  "note": "DEC-236: the card on Projects' link"
+ },
+ {
+  "key": "connection.node.unnamed",
+  "en": "Not yet named",
+  "protected": false,
+  "note": "DEC-236: B204 (3), N1086; a node the record holds with no name yet, drawn with its kind's icon"
+ },
+ {
+  "key": "connection.node.unnamed.tip",
+  "en": "The record holds this {kind} but no name for it yet. Open it to see the documents that mention it.",
+  "protected": false,
+  "note": "DEC-236"
+ },
+ {
+  "key": "project.work.title",
+  "en": "This project's work",
+  "protected": false,
+  "note": "DEC-237: screens-inquiry R18, the links"
+ },
+ {
+  "key": "project.work.help",
+  "en": "Everything this project has gathered beyond its questions. Each opens on its own page; a kind the project has none of is not listed.",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "shell.card.proceeding",
+  "en": "A proceeding the project follows: a hearing, a rulemaking or a case before a public body, with its dates and the group's deadlines on it.",
+  "protected": false,
+  "note": "DEC-237: the reference card, beside DEC-234's"
+ },
+ {
+  "key": "shell.card.standard",
+  "en": "A standard the project holds the government to: a rule it set itself, with where it is written and what it requires.",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.visibility.title",
+  "en": "Who can find it",
+  "protected": false,
+  "note": "DEC-237: R2"
+ },
+ {
+  "key": "project.visibility.hidden",
+  "en": "Hidden: only its members know it exists.",
+  "protected": true,
+  "note": "DEC-237: membership R45 `hidden`, the default"
+ },
+ {
+  "key": "project.visibility.discoverable",
+  "en": "Findable: every member of the group sees it in Projects and can ask to join.",
+  "protected": true,
+  "note": "DEC-237: `discoverable`"
+ },
+ {
+  "key": "project.visibility.start.hidden",
+  "en": "Hidden: only the members you invite know it exists",
+  "protected": false,
+  "note": "DEC-237: at Start a project, preselected (promotion R19)"
+ },
+ {
+  "key": "project.visibility.start.discoverable",
+  "en": "Findable: every member of the group sees it in Projects and can ask to join",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.visibility.start.later",
+  "en": "You can change this later, with a reason.",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.visibility.history",
+  "en": "{change} by {who}, {date}: \"{reason}\"",
+  "protected": false,
+  "note": "DEC-237: project-roster R8, each record of the history"
+ },
+ {
+  "key": "project.visibility.started",
+  "en": "started {setting}, {date}",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.start.title",
+  "en": "What it is about",
+  "protected": false,
+  "note": "DEC-237: Start a project"
+ },
+ {
+  "key": "project.start.title.help",
+  "en": "One line the members will recognize, such as \"Rent at the Coliseum lots\". You become its owner.",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.start.go",
+  "en": "Start the project",
+  "protected": false,
+  "note": "DEC-237: promote with a title and visibility"
+ },
+ {
+  "key": "project.member.owner",
+  "en": "owner",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.member.member",
+  "en": "member",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.member.since",
+  "en": "owner since {date}",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.member.joined",
+  "en": "joined {date}",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.owners.pending",
+  "en": "Making {who} an owner · proposed by {by}, {date} · agreed: {agreed} · waiting for: {awaiting}",
+  "protected": false,
+  "note": "DEC-237: CONSENSUS_REQUIRED's have and awaiting (project-roster R3, R7)"
+ },
+ {
+  "key": "project.owners.pending.remove",
+  "en": "{who} standing down as owner · proposed by {by}, {date} · agreed: {agreed} · waiting for: {awaiting}",
+  "protected": false,
+  "note": "DEC-237: R4"
+ },
+ {
+  "key": "project.owners.agree",
+  "en": "Agree: make {who} an owner",
+  "protected": false,
+  "note": "DEC-237: projectowneradd by another owner"
+ },
+ {
+  "key": "project.owners.rule",
+  "en": "With one owner, that owner can add a second. After that, every owner agrees before someone becomes an owner or stops being one, each by making the same change.",
+  "protected": true,
+  "note": "DEC-237: membership R38 ownerMath, in words"
+ },
+ {
+  "key": "project.rescue.title",
+  "en": "Every owner of this project has been gone since {date}",
+  "protected": false,
+  "note": "DEC-237: project-roster R5, an administrator at a hidden project's existence (K2578)"
+ },
+ {
+  "key": "project.rescue.says",
+  "en": "{owners}, and no one else owns it. The project is hidden, so as an administrator you see only that it exists. You can become its owner to keep its work going: you then see it whole, and its members see that you did it and why.",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "project.rescue.go",
+  "en": "Become its owner",
+  "protected": false,
+  "note": "DEC-237: projectownerrescue, reasoned"
+ },
+ {
+  "key": "project.rescue.own",
+  "en": "A project a member kept for themselves alone is never taken over: when they leave the group, it stays as they left it.",
+  "protected": true,
+  "note": "DEC-237: K2782, project-roster R22"
+ },
+ {
+  "key": "case.links.editor",
+  "en": "The case being prepared",
+  "protected": false,
+  "note": "DEC-237: screens-inquiry R18, from the question"
+ },
+ {
+  "key": "case.links.review",
+  "en": "Review copies",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "case.links.ceremony",
+  "en": "Publishing",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "case.links.docket",
+  "en": "The published case's record",
+  "protected": false,
+  "note": "DEC-237"
+ },
+ {
+  "key": "find.query.placeholder",
+  "en": "Words to find, or leave it empty to browse",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.browse.says",
+  "en": "With no words, Find lists everything your group holds, newest first.",
+  "protected": false,
+  "note": "DEC-238: F1"
+ },
+ {
+  "key": "find.browse.new.means",
+  "en": "New since you last looked counts from your last visit to Home; looking here does not move it.",
+  "protected": false,
+  "note": "DEC-238: lookedsince moves the mark (membership R143), so Find reads it without moving it (owed)"
+ },
+ {
+  "key": "find.kind.label",
+  "en": "Show",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.kind.all",
+  "en": "Everything",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.kind.document",
+  "en": "Documents",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.kind.question",
+  "en": "Questions",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.kind.action",
+  "en": "Actions",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.kind.entity",
+  "en": "People and organizations",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.kind.plan",
+  "en": "Plans",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.state.label",
+  "en": "Only",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.state.any",
+  "en": "Anything",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.state.new",
+  "en": "New since you last looked",
+  "protected": true,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.state.secondlook",
+  "en": "Flagged for a second look",
+  "protected": true,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.state.watched",
+  "en": "Watched by you",
+  "protected": true,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.row.kind.document",
+  "en": "Document",
+  "protected": false,
+  "note": "DEC-238: F2, each result names its kind"
+ },
+ {
+  "key": "find.row.kind.passage",
+  "en": "Passage",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.row.kind.person",
+  "en": "Person",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.row.kind.organization",
+  "en": "Organization",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.row.kind.question",
+  "en": "Question",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.row.kind.action",
+  "en": "Action",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.row.kind.plan",
+  "en": "Plan",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.row.new",
+  "en": "new since you last looked",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.row.watched",
+  "en": "watched by you",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.row.secondlook",
+  "en": "flagged for a second look by {who}, {date}: \"{note}\"",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "find.picked",
+  "en": "{n} picked",
+  "protected": false,
+  "note": "DEC-238"
+ },
+ {
+  "key": "risk.title",
+  "en": "Its risk",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "risk.help",
+  "en": "How carefully the group should act on this, from 1 (file freely) to 3 (do not file without counsel). Only a member sets it, with a reason; a filing waits while it is not assessed.",
+  "protected": false,
+  "note": "DEC-239; filings R2"
+ },
+ {
+  "key": "risk.tier",
+  "en": "Tier {tier}",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "risk.tier.1",
+  "en": "file freely",
+  "protected": true,
+  "note": "DEC-239: action-grammar RISK_TIERS, now keyed"
+ },
+ {
+  "key": "risk.tier.2",
+  "en": "file with caution",
+  "protected": true,
+  "note": "DEC-239"
+ },
+ {
+  "key": "risk.tier.3",
+  "en": "do not file without counsel",
+  "protected": true,
+  "note": "DEC-239"
+ },
+ {
+  "key": "risk.tier.undetermined",
+  "en": "not assessed: no member has stated a risk tier for this action",
+  "protected": true,
+  "note": "DEC-239: never defaulted (actions R25)"
+ },
+ {
+  "key": "risk.set",
+  "en": "Set by {who}, {date}: \"{reason}\" · was {prior}",
+  "protected": false,
+  "note": "DEC-239: risk_tier_history"
+ },
+ {
+  "key": "risk.revise",
+  "en": "Revise, with a reason…",
+  "protected": false,
+  "note": "DEC-239: actionrisktier, reasoned"
+ },
+ {
+  "key": "risk.proposed",
+  "en": "Proposed, not set:",
+  "protected": false,
+  "note": "DEC-239: actionriskpropose, shown apart (actions R25)"
+ },
+ {
+  "key": "risk.proposal",
+  "en": "{who} proposes tier {tier} · {words}",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "risk.proposal.not",
+  "en": "not the tier until a member sets it",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "law.title",
+  "en": "The law it goes under",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "law.help",
+  "en": "The law the action is made under: it sets what the office must do and by when. A member chooses it; anyone may propose another.",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "law.stated",
+  "en": "Stated by {who}, {date}",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "law.undetermined",
+  "en": "No member has said which law this goes under yet.",
+  "protected": false,
+  "note": "DEC-239: governing_laws undetermined (actions R25)"
+ },
+ {
+  "key": "law.change",
+  "en": "Change the law…",
+  "protected": false,
+  "note": "DEC-239: actionlaws"
+ },
+ {
+  "key": "law.proposed",
+  "en": "Proposed, not chosen:",
+  "protected": false,
+  "note": "DEC-239: action-records R1"
+ },
+ {
+  "key": "law.proposal.not",
+  "en": "proposed by {who}, {date} · not the law it goes under until a member chooses it",
+  "protected": true,
+  "note": "DEC-239: evidence false"
+ },
+ {
+  "key": "law.propose",
+  "en": "Propose another law…",
+  "protected": false,
+  "note": "DEC-239: actionlawspropose"
+ },
+ {
+  "key": "action.noreply.title",
+  "en": "No reply recorded by {date}",
+  "protected": true,
+  "note": "DEC-239: screens-action R5, never \"overdue\""
+ },
+ {
+  "key": "action.noreply.says",
+  "en": "The date the law gives has passed with no reply on the record. If a reply came, record it below. If none came, that silence may be worth asking about.",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "action.noreply.question",
+  "en": "Open a question from this",
+  "protected": false,
+  "note": "DEC-239: owed:actioninquiry"
+ },
+ {
+  "key": "action.noreply.question.help",
+  "en": "Opens a question with this action carried as its reference. You write the question; the action is where it comes from, not evidence in it.",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "queue.muted.title",
+  "en": "Muted",
+  "protected": false,
+  "note": "DEC-240: queue R14 mute"
+ },
+ {
+  "key": "queue.muted.help",
+  "en": "What you have stopped from reaching your queue. Only you see it. Turning one back on brings new items from then on.",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "queue.muted.kind",
+  "en": "{kind}, in {project}",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "queue.muted.case",
+  "en": "Everything from {project}",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "queue.muted.by",
+  "en": "muted by you, {date}",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "queue.muted.unmute",
+  "en": "Turn back on",
+  "protected": false,
+  "note": "DEC-240: queuemute with unmute (queue R19, R20)"
+ },
+ {
+  "key": "published.check.title",
+  "en": "Check a file you hold",
+  "protected": false,
+  "note": "DEC-240: P1, verify (public-read R1)"
+ },
+ {
+  "key": "published.check.help",
+  "en": "Anyone can check whether a file they were given is one this case rests on, without asking the group.",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "published.check.field",
+  "en": "Its SHA-256",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "published.check.field.help",
+  "en": "The file's fingerprint: a 64-character code your computer can work out from the file. Paste it here; the file itself never leaves your computer.",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "published.check.go",
+  "en": "Check it",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "published.check.yes",
+  "en": "This edition holds it: the evidence for finding {n}, \"{finding}\".",
+  "protected": true,
+  "note": "DEC-240: publishedCase({sha256}) names the finding (public-read R3)"
+ },
+ {
+  "key": "published.check.no",
+  "en": "This edition holds no file with that fingerprint. It may be a different copy, or not part of this case.",
+  "protected": true,
+  "note": "DEC-240"
+ },
+ {
+  "key": "capture.unfinished",
+  "en": "Unfinished: your capture of \"{title}\" waits for {n} of its attachments · started {ago}",
+  "protected": false,
+  "note": "DEC-240: D3; a read of the member's open capture sessions is owed"
+ },
+ {
+  "key": "capture.finish",
+  "en": "Finish it",
+  "protected": false,
+  "note": "DEC-240: acquire with continue (acquisition R12)"
+ },
+ {
+  "key": "capture.finish.help",
+  "en": "Fetches the attachments this capture still lacks, from the same page. The page itself is not fetched again. A capture left unfinished for an hour is closed with what it has.",
+  "protected": false,
+  "note": "DEC-240; capture R22"
+ },
+ {
+  "key": "review.statement.title",
+  "en": "What the case says it does not cover",
+  "protected": false,
+  "note": "DEC-240: C2"
+ },
+ {
+  "key": "review.statement.help",
+  "en": "The group says what its case leaves out, so no reader mistakes the gap for something the case covers. You can acknowledge that you read it.",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "review.statement.note",
+  "en": "Your note",
+  "protected": false,
+  "note": "DEC-240: the reason statementack requires"
+ },
+ {
+  "key": "review.statement.note.help",
+  "en": "Required. Say what you read, for example that the gap is fairly stated. Readers of the published case are told that you acknowledged it.",
+  "protected": false,
+  "note": "DEC-240"
+ },
+ {
+  "key": "review.statement.ack",
+  "en": "Acknowledge it",
+  "protected": false,
+  "note": "DEC-240: statementack, reasoned"
+ },
+ {
+  "key": "instance.test.band",
+  "en": "Test Civicsmith",
+  "protected": false,
+  "note": "DEC-240: N1049, the band's name before instance.test.notice"
  }
 ]

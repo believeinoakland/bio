@@ -1230,12 +1230,6 @@
   "note": "{fact}: the campaign-spending legal fact from the profile; never refusing"
  },
  {
-  "key": "rfc.quoting",
-  "en": "Your reply may be quoted, unless you say otherwise in it.",
-  "protected": true,
-  "note": "carried by every request for comment"
- },
- {
   "key": "pointer.record.supported",
   "en": "Supported by the record: {findings}",
   "protected": false,
@@ -1442,12 +1436,6 @@
  {
   "key": "refusal.SELF_BENEFIT_ASK",
   "en": "A sentence still asks for something for your group or its members. A notice or demand asks the body to correct its own act; rewrite that sentence before approving. Nothing was written.",
-  "protected": true,
-  "note": ""
- },
- {
-  "key": "refusal.RFC_QUOTING_MISSING",
-  "en": "A request for comment says the reply may be quoted unless it says otherwise. Add that sentence before approving. Nothing was written.",
   "protected": true,
   "note": ""
  },

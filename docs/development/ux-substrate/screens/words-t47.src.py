@@ -48,7 +48,7 @@ w('session.locked', 'Locked after 30 minutes away. Enter your password to go on 
 w('session.reauth', 'For this, enter your password again: signing or publishing a case, changing administrators and connecting Claude always ask.', True, 'D3 (K3061)')
 w('session.keep', 'My own: keep me signed in (it locks after 30 minutes away; you sign in again after 12 hours)', False, 'D3 (K3061)')
 w('session.shared', 'Shared or public: sign me out after 15 minutes away', False, 'D3 (K3061)')
-w('signin.founderhint', 'Did you set this group up? Your handle is admin.', False)
+# signin.founderhint withdrawn (DEC-230; K3265, screens-entry R12): no word tells anyone a handle.
 
 # --- Signing inside the ceremony (DEC-207; Bob's D9, K3060; Q4). Protected: words before and around a signed, outward act.
 w('signing.ceremony.who', 'You sign as {signer}, an owner of {project}. The public page will read “Published by {group} · signed by {signer}”. Once public, anyone can read it and check your signature without asking the group; it can be corrected by a new edition, never removed.', True, 'the sign step')

@@ -60,11 +60,12 @@ def main():
     g2 = {}; exec(compile(open(os.path.join(HERE, 'library.src.py')).read(), 'library.src.py', 'exec'), g2)
     byname = {w['name']: w for w in lib}
     doors = []
-    for door, names in g2.get('DOORS', []):
+    for d in g2.get('DOORS', []):
+        door, names = d[0], d[1]
         for n in names:
             if n not in byname: fails.append(f'front door {door!r}: no wizard named {n!r}')
             elif byname[n]['required']: fails.append(f'front door {door!r}: {n!r} is required, so not offered (wizard-scripts R23)')
-        doors.append({'door': door, 'scripts': [byname[n]['id'] for n in names if n in byname]})
+        doors.append({'door': door, 'scripts': [byname[n]['id'] for n in names if n in byname], **({'opens': d[2]} if len(d) > 2 else {})})
     acts_of, kinds = {}, {'declared': 0, 'function': 0, 'owed': 0}
     for s in screens:
         acts_of[s['id']] = {a['op'] for a in s['acts']}
