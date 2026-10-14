@@ -336,6 +336,10 @@ const DECISIONS = [
       ["A published case", "screen.published.name"], ["One published case at one edition", "screen.published.purpose"],
   ].map(([t, k]) => ["plane", "plane/screens.mjs", (k.endsWith(".name") ? "=" : "^") + t, k]),
 ];
+/* DEC-264 (N1125): affordances.mjs's act names and prompts, keyed in words-t49.src.py (AFFORDANCES_NAMES: key -> the module's
+   present text, a whole label or a prompt's start) */
+for (const [key, was] of Object.entries(JSON.parse(fs.readFileSync(path.join(HERE, "words-t49.json"), "utf8")).affordances_names || {}))
+  DECISIONS.push(["affordances", "affordances.mjs", (key.startsWith("act.") ? "=" : "^") + was, key]);
 /* What a module's remaining inline strings are, when no decision or word names them. */
 const DEFAULTS = {
   "op-grades": "grade", "journey-check": "harness", "interface-assets": "generated", "interface-shell": "elementnote",
@@ -406,7 +410,9 @@ for (const m of MODULES) {
       else problems.push(`${m}: keyed row ${r[0]} is not in words.json`);
     }
   }
-  const files = walkDir(dir).filter((f) => /\.(mjs|js|cjs|html)$/.test(f) && !/test/i.test(path.basename(f)));
+  /* DEC-264 (N1125): a module whose main file sits beside its folder (affordances.mjs) reads through that file too */
+  const files = [...walkDir(dir), ...(fs.existsSync(dir + ".mjs") && m === "affordances" ? [dir + ".mjs"] : [])]
+    .filter((f) => /\.(mjs|js|cjs|html)$/.test(f) && !/test/i.test(path.basename(f)));
   for (const f of files) {
     const rel = path.relative(SRC, f).split(path.sep).join("/");
     const src = fs.readFileSync(f, "utf8");

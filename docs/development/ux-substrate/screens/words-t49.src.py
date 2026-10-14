@@ -519,6 +519,89 @@ DEC263_REWORDED = {'screen.setup.claimed.nosignin': "Claimed. Sign in on your gr
 REWRITE7.update(DEC263_REWORDED)   # the founder chooses their handle (DEC-230); no longer 'admin'
 # --- end DEC-263
 
+# --- DEC-264 (BOB's B224 (2), N1125): affordances.mjs, the module's main file beside its folder, was never inventoried. Each
+# act it publishes is named by act.<op>.name, its name wherever it is named outside a screen (the screens keep their own
+# act.<op>.label.<screen>); a per-item act over a selection is act.<op>.name.selected. The names speak the design's words
+# (Vouch, Set aside, readings, Remove a citation) and none uses "ground", "branch", "disjunction", "AND" or "OR" (affordances
+# R5). AFFORDANCES_NAMES maps each key to the module's present text, which words-reads.src.mjs keys to it.
+def w12(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-264' + (': ' + note if note else '')))
+AFFORDANCES_NAMES = {}
+for op, was, name in [
+  ('attest', 'Co-attest this capture', 'Certify when this copy existed'),
+  ('monitor', 'Check this source against what was captured', 'Check this address for a new version now'),
+  ('attesttext', 'Attest that this text matches the page image', 'Vouch that this text matches the page image'),
+  ('release', 'Release (verify)', 'Vouch for this copy'),
+  ('dispose', 'Dispose (defer or dismiss)', 'Set this question aside, or dismiss it'),
+  ('contradictionresolve', 'Resolve this contradiction (conclude with what it turned out to be)', 'Settle this contradiction: say what it turned out to be'),
+  ('publish', 'Publish (author the case)', 'Publish the signed edition'),
+  ('inquirydivide', 'Divide (split this question)', 'Split this question into narrower ones'),
+  ('inquiryground', 'Group what this rests on', 'Say what each passage carries'),
+  ('actionmove', 'Move this action', 'Move the action to its next stage'),
+  ('actioncorrespond', 'Record correspondence', 'Record a reply or letter received'),
+  ('actionlaws', 'State governing laws', 'Choose the laws it goes under'),
+  ('actionrisktier', 'Revise risk tier', 'Revise the risk tier, with a reason'),
+  ('actionhold', 'Place a litigation hold (with a reason)', 'Record a litigation hold, with a reason'),
+  ('actionholdrelease', 'Release a litigation hold (with a reason)', 'End a litigation hold, with a reason'),
+  ('actionpressure', 'Mark a reply as pressure on the group', 'Mark a reply as pressure on the group'),
+  ('holdnoticeprepare', 'Prepare the hold notice for members', 'Prepare the hold notice for members'),
+  ('holdnoticesent', 'Record that the hold notice was sent', 'Record that the hold notice was sent'),
+  ('actionreceipt', 'Record that a sending was received', 'Record that what you sent was received'),
+  ('actionscope', 'Keep this action confidential, or no longer (with a reason)', 'Make the action confidential, or not, with a reason'),
+  ('actionpromise', 'Note a promise the group made', 'Record a promise the group made'),
+  ('actionreplybearing', 'Record what a reply says to each claim', 'Lay out the reply claim by claim'),
+  ('actionbearingpropose', 'Propose what a reply says to each claim', 'Propose a claim-by-claim layout of the reply'),
+  ('actionreplyquoting', 'Record that a reply asks not to be quoted', 'Record that a reply asks not to be quoted'),
+  ('arosefrom', 'Link a matter that arose from this reply', 'Record a matter that arose from this reply'),
+  ('escalationopen', 'Open an escalation of the determination this rests on (with a reason)', 'Open an escalation, with a reason'),
+  ('escalationattach', 'Attach this action to its escalation (with a reason)', 'Attach this action to its escalation, with a reason'),
+  ('escalationstoppursuing', 'Stop pursuing this escalation (with a reason)', 'Stop pursuing this escalation, with a reason'),
+  ('escalationreopen', 'Reopen an escalation the group stopped pursuing (with a reason)', 'Reopen the escalation where it stopped, with a reason'),
+  ('filingprepare', 'Prepare a filing', 'Prepare the filing'),
+  ('communicationprepare', 'Prepare a communication', 'Prepare what is sent'),
+  ('clockadopt', "Put a proposed deadline on this action's clock", 'Confirm the due date'),
+  ('filingapprove', 'Approve a prepared draft', 'Approve the text for sending'),
+  ('filingsent', 'Record that an approved draft was sent', 'Record that the approved text was sent'),
+  ('counselpacket', 'Brief counsel (with a reason)', 'Prepare the packet for counsel, with a reason'),
+  ('clockstate', 'State a deadline and its basis', 'Give a due date and where it comes from'),
+  ('reminderset', 'Set a reminder for a date', 'Remind me on a date'),
+  ('itemtakeup', 'Take this up myself', 'Take this item up yourself'),
+  ('versionaccept', 'Accept a reading of the evidence', 'Accept this reading'),
+  ('versionreject', 'Turn down a reading (with a reason)', 'Reject this reading, with a reason'),
+  ('versionconsider', 'Set a reading aside for now (with a reason)', 'Weigh this reading, with a reason'),
+  ('versionrevert', 'Put a reading back to where nobody had acted on it', 'Undo the decision on this reading, with a reason'),
+  ('versioncurrent', 'Stand this project on a reading', 'Stand the project on this reading, with a reason'),
+  ('withdrawconclusion', "Withdraw this project's conclusion (it stays in the record)", 'Withdraw the conclusion; it stays on the record'),
+  ('versionhide', 'Hide a reading from the display (it stays in the record)', 'Hide this reading; it stays on the record'),
+  ('cite', 'Cite material into a case or a question', 'Cite in a question or a case'),
+  ('sever', 'Sever a citation', 'Remove a citation, with a reason'),
+  ('reinstate', 'Reinstate a severed citation', 'Reinstate a removed citation'),
+  ('projectinvite', 'Invite a member to this project', 'Invite a member to the project'),
+  ('projectjoin', 'Join this project', 'Join this project'),
+  ('projectremove', 'Remove a participant', 'Remove a member from the project, with a reason'),
+  ('projectowneradd', 'Add an owner', 'Make an owner, or agree to it'),
+  ('projectownerremove', 'Remove an owner (with a reason)', 'Remove an owner, with a reason'),
+  ('projectownerrescue', 'Add an owner to a project whose owners are all inactive (with a reason)', 'Become the owner of a project whose owners are gone, with a reason'),
+  ('projectvisibilityset', 'Choose whether this project can be found', 'Change who can find the project'),
+  ('sourceconsent', "Record a source's consent to publish (with its evidence)", "Record a source's consent to publish, with its evidence"),
+  ('proposedispose.selected', 'Defer or dismiss the selected findings', 'Set aside or dismiss the selected findings'),
+  ('taskresolve.selected', 'Resolve the selected obligations', 'Act on the selected items'),
+  ('taskforward.selected', 'Forward the selected obligations', 'Forward the selected items to a member'),
+  ('resolve.selected', "Resolve the selected documents' references", "Match the selected documents' mentions"),
+]:
+    op0, _, sel = op.partition('.')
+    key = f'act.{op0}.name' + ('.selected' if sel else '')
+    w12(key, name, False, "affordances' name for the act" + (' over a selection (per-item)' if sel else ''))
+    AFFORDANCES_NAMES[key] = was
+w12('prompt.inquirydivide', 'Dividing does not remove anything. Every leg this question rests on gets a home on one of the children, including any leg that cuts against you, and this question stays on the record as the divided parent, recording where each leg went. Each child names this parent and every sibling, and when a child is published it names them to its readers. If you mean to drop material rather than re-home it, remove the citation, with a reason, instead.', False, "affordances' DIVIDE_PROMPT (R5), shown before a question is divided")
+AFFORDANCES_NAMES['prompt.inquirydivide'] = 'Dividing does not remove anything.'
+w12('prompt.inquiryground', "Grouping says these reasons are enough on their own to carry your answer. Your answer's strength is then taken from the strongest group rather than from its weakest single reason, so your name and the time go on each group you make and stay there until that group's reasons change. Nothing is hidden: every reason stays visible under the group you put it in, and a published case carries each group and what it reached inside the signed bytes, so a reader can check whether they really were enough on their own. Leaving the reasons ungrouped is always available, and is read as no stronger than the weakest one.", False, "affordances' GROUND_PROMPT (R5; DEC-32 clause 1), shown before reasons are grouped")
+AFFORDANCES_NAMES['prompt.inquiryground'] = 'Grouping says these reasons are enough on their own'
+w12('prompt.attest.fence', "What co-attestation answers: when did these bytes exist? It asks an independent timestamp authority to record that this capture's exact bytes existed no later than a fixed instant. What it does not answer: whether the document is TRUE, whether its source is authoritative, or how close it stands to the fact you are citing it for. A secondhand report that is co-attested is still a secondhand report. What it is worth: it strengthens a Grade {ceiling} capture toward evidentiary weight. It never reaches Grade {unreachable} — that needs a chain-of-custody web archive this surface cannot produce.", True, "affordances' attestFence (R5): DEC-39's wording verbatim, its two grade letters filled from the capture ceiling and the grade above it")
+AFFORDANCES_NAMES['prompt.attest.fence'] = 'What co-attestation answers: when did these bytes exist?'
+w12('refusal.uncatalogued', "Civicsmith has no explanation of this refusal in its words yet, so its code is shown as the act gave it.", False, "affordances' NOT_CATALOGUED: a refusal code with no refusal.<CODE> word")
+AFFORDANCES_NAMES['refusal.uncatalogued'] = 'This refusal is not in the catalogue of refusals'
+# --- end DEC-264
+
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
@@ -526,5 +609,5 @@ REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
 
 REWRITE.update(REWRITE7)   # DEC-257: rows reworded to the words the screens draw
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'words-t49.json')
-open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, rewrite=REWRITE, rewrite_dec={k: 'DEC-263' if k in DEC263_REWORDED else 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
+open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, affordances_names=AFFORDANCES_NAMES, rewrite=REWRITE, rewrite_dec={k: 'DEC-263' if k in DEC263_REWORDED else 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
 print(len(W), 'rows to', out)

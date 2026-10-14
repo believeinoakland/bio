@@ -4136,3 +4136,17 @@ response: **The design session, 2026-10-14.** (1) What a plan addresses is a "ma
 decided: 2026-10-14 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-263), `screens/words-mod-1.src.py`, `screens/words-mod-3.src.py`, `screens/registry.src.py`, `screens/mock-acts.js`, `screens/mock-screens.js`, `screens/words-reads.src.mjs`; `words.json`, `words-reads.json`.
 owed: (BOB) `setup-words`' rows regenerated from these words; screens-action, screens-daily, screens-publish and screens-setup draw the keys named; wizard-scripts' registry (N1122) carries `home`'s `projectjoin` and the label "Add a matter". (design) B224 (2)'s remaining part: affordances' act labels and prompts (N1125), DEC-264.
+
+### DEC-264 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_014NS6iWUEqXFzJpmJtNtp1D; the development process also runs on his primary account since K1428) (BOB's B224 (2), K3375, N1125: affordances' unkeyed words, for T50)
+for: bob-session
+question: The member-facing English in `affordances.mjs` (the module's main file, beside its `affordances/` folder): its act labels (`ACTS`, `CAPTURE_ACTS`, `PER_ITEM_ACTS`), `DIVIDE_PROMPT`, `GROUND_PROMPT`, `attestFence`'s sentence and `NOT_CATALOGUED`; `door.mjs`'s `CATALOGUE_DETAIL`; and `reauth`'s help.
+why it is Bob's: design detail; decided by the design session, reported to Bob as done.
+provisional: DEC-258's inventory walked `affordances/` only, so `affordances.mjs` was never read: 64 strings untriaged.
+alternative: key each label under the screens' `act.<op>.label.<screen>`. Rejected: affordances names an act outside any screen, and a screen's button is worded for its place.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-14.** `words-reads.src.mjs` now walks a module's main file beside its folder (`affordances.mjs`). Each act affordances publishes is named by `act.<op>.name` (60 names; a per-item act over a selection by `act.<op>.name.selected`), in the design's words ("Vouch for this copy", "Set this question aside, or dismiss it", "Remove a citation, with a reason", "Say what each passage carries"), none using "ground", "branch", "disjunction", "AND" or "OR" (affordances R5). The prompts: `prompt.inquirydivide` (the module's text, "sever it" now "remove the citation"), `prompt.inquiryground` (as written, DEC-32), `prompt.attest.fence` (DEC-39's wording verbatim, protected, with `{ceiling}` and `{unreachable}` for the two grade letters), and `refusal.uncatalogued` for `NOT_CATALOGUED`. `CATALOGUE_DETAIL` is the `affordances` op's usage note for a client (`target=<record id>`, field names), never drawn: the inventory reads it as code, beside `facts.mjs`'s note already listed unkeyed. `reauth`'s help is a word already, `act.reauth.does`, since DEC-249: `ACT_HELP`'s op list lacks only the op.
+decided: 2026-10-14 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-264, `AFFORDANCES_NAMES`), `screens/words-reads.src.mjs`; `words.json`, `words-reads.json`.
+owed: (BOB, T50, N1125) affordances reads these keys: each act's label by `act.<op>.name` (`.selected` for `PER_ITEM_ACTS`), the three prompts and `refusal.uncatalogued` through `word`, `attestFence` filling `{ceiling}` and `{unreachable}`; `ACT_HELP_OPS` gains `reauth`. (design) none.
