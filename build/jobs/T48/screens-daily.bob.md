@@ -25,3 +25,7 @@ K3295: all four readings are right. Keep elsewhere and updatelater in SCREENS; I
 ## B3 · CHANGE
 
 K3298: wizard-scripts and op-declarations are merged into tranche/T48. Merge origin/tranche/T48, re-run on the real registry and OPS, and post COMPLETE.
+
+## B4 · CHANGE
+
+K3303: interface-shell is merged into tranche/T48 (R55 re-points, R56 class check, R60 words, R61 reading screen objects' ABSENT_CODES). Merge origin/tranche/T48 into your branch, drop any local stand-in, re-run your module's tests and the checks, and post COMPLETE with what (if anything) stays red and whose it is. Your merge follows in L11's order.
