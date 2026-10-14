@@ -80,3 +80,7 @@ Kept as they are, not flaws: derive R2's `|| k === 2` is the `maxEndsForPairs` f
   - coverage 45 failures, all other modules' not-yet-met ids (rule 5 (1)), none of them connections'.
 
 Size (session_01PrxArXookTYp8gXpFjHkXC): test runs 7, module lines 3145
+
+## J2 · COMPLETE
+
+T48-20 applied with J1's readings (B2): R68 attachStepSource/withdrawStepSource (stepsources.mjs, table step_sources, ops stepsource/stepsourcewithdraw with member and viewer from the stamps), R69 step_source evidentiary kind on the owner's one registration, graded by the cited capture (D when undetermined, grade_says), passing ownerConformance; R36/R67 step_sources keyed to the cited bundle. Test flaws fixed (R67 tautology, R36 purge coverage, placeholder asserts). connections 129/129; whole suite 48 fails, all in other modules and identical at the commit before mine (inherited, rule 5); format, architecture, coverage (69/69), ownership 0 failures; run.mjs coverage 45, none connections'. Record: build/jobs/T48/connections.md.
