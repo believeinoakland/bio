@@ -36,7 +36,7 @@ export const join = {
     // joined: the codes shown once, then Home
     if (ui.joined) {
       return cs.title() + `<p class="cs-row" data-state="joined">${W(ui.joined.signed ? S + "joined" : S + "joined.nosignin", { handle: ui.joined.handle })}</p>`
-        + (ui.codes ? cs.sec("screen.entry.codes.heading", `<p class="mk-note">${W("screen.entry.codes.what")}</p><pre class="cs-codes" aria-label="${W("screen.entry.codes.list")}">${ui.codes.map(E).join("\n")}</pre><div class="mk-acts">${String(cs.save("recovery-codes.txt", ui.codes.join("\n") + "\n", { label: "screen.entry.codes.save" }) || "")}${String(cs.copy(ui.codes.join("\n"), { label: "screen.entry.codes.copy" }) || "")}</div>`)
+        + (ui.codes ? cs.sec("screen.entry.codes.heading", `<p class="mk-note">${W("screen.entry.codes.what")}</p><pre data-codes aria-label="${W("screen.entry.codes.list")}">${ui.codes.map(E).join("\n")}</pre><div class="mk-acts">${String(cs.save("recovery-codes.txt", ui.codes.join("\n") + "\n", { label: "screen.entry.codes.save" }) || "")}${String(cs.copy(ui.codes.join("\n"), { label: "screen.entry.codes.copy" }) || "")}</div>`)
           : ui.joined.signed ? `<p class="cs-row">${W("screen.entry.codes.none")}</p>` : "")
         + `<div class="mk-acts"><a class="cs-btn" data-tone="primary" href="${ui.joined.signed ? "/app" : "/app/front"}" data-nav>${W(ui.joined.signed ? S + "home" : "screen.entry.signin")}</a></div>`;
     }
