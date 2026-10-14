@@ -226,7 +226,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     return { state: "none", handle: null };
   }
   function instance(spec, subject, key, serves) {
-    const inst = { key, spec, subject, serves: serves || null, data: {}, ui: {}, acts: [], binds: [], gen: 0, unavail: null, timers: [], fills: {}, labels: {}, stash: null, retry: null };
+    const inst = { key, spec, subject, serves: serves || null, data: {}, ui: {}, acts: [], binds: [], gen: 0, unavail: null, timers: [], fills: {}, labels: {}, stash: null, retry: null, images: {}, areas: {} };
     inst.view = key === "g"
       /* K3143: the guide's one view for the page's life: `{ui, me, reachable, screen, subject}` */
       ? { ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, get screen() { return ROUTE ? ROUTE.screen : null; },
@@ -323,6 +323,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       },
       set: (name, value) => { inst.ui[name] = value; draw(); },
       value(id) {
+        /* R49: an areas control answers its rectangles in the image's pixels */
+        if (Object.hasOwn(inst.areas, id)) return inst.areas[id].map((r) => ({ left: Math.round(r.left), top: Math.round(r.top), width: Math.round(r.width), height: Math.round(r.height) }));
         const el = doc.getElementById(id);
         if (!el) return null;
         if (el.tagName === "FIELDSET") return Array.from(el.querySelectorAll("input")).filter((i) => i.checked).map((i) => i.value);
@@ -386,7 +388,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const label = w(o.label || spec.label || "act." + op + ".label." + (inst.spec.id || "guide"), o.fills);
         const does = has("act." + op + ".does") ? w("act." + op + ".does") : "";
         const outward = !!(spec.outward || o.outward);
-        if (phone() && (weight === "signed" || weight === "irreversible"))
+        /* R11 (DEC-181), R50: a signed or irreversible act, or one of `op-grades`' larger-screen acts, is held at the phone width */
+        if (phone() && (weight === "signed" || weight === "irreversible" || D.larger.includes(op)))
           return '<div class="cs-reason" data-phone-act="' + esc(op) + '"><b>' + label + "</b>" + (does ? "<p>" + does + "</p>" : "") + "<p>" + w("shell.phone.larger") + "</p></div>";
         const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null }) - 1;
         const data = Object.entries(o.data || {}).map(([k, v]) => " data-" + k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + '="' + esc(v) + '"').join("");
@@ -462,12 +465,43 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       /* R27 (N986): options are words by key, `[value, key, fills]`, or record data, `{value, text}`, the text drawn as
          data, HTML-escaped and never read as a key */
       choice(id, labelKey, options, o = {}) {
+        const valueOf = (x) => (Array.isArray(x) ? x[0] : x && typeof x === "object" ? x.value : x);
+        /* R49 (K3150): `{acts: {<value>: op}}`: the choice drives the act it governs, one button following it */
+        const drives = !!(o.acts && typeof o.acts === "object");
+        const values = (options || []).map(valueOf);
+        const chosen = drives ? (values.includes(inst.ui["choice:" + id]) ? inst.ui["choice:" + id] : values.includes(o.value) ? o.value : values[0]) : o.value;
+        if (drives) inst.ui["choice:" + id] = chosen;
         const opt = (x) => {
           const [v, t] = Array.isArray(x) ? [x[0], w(x[1], x[2])] : x && typeof x === "object" ? [x.value, typeof x.key === "string" ? w(x.key, x.fills) : esc(x.text)] : [x, esc(x)];
-          return '<option value="' + esc(v) + '"' + (o.value === v ? " selected" : "") + ">" + t + "</option>";
+          return '<option value="' + esc(v) + '"' + (chosen === v ? " selected" : "") + ">" + t + "</option>";
         };
-        return '<div class="cs-field"><label for="' + esc(id) + '">' + w(labelKey) + '</label><select id="' + esc(id) + '" class="cs-input">'
+        const field = '<div class="cs-field"><label for="' + esc(id) + '">' + w(labelKey) + '</label><select id="' + esc(id) + '" class="cs-input"' + (drives ? ' data-shell="choice" data-choice="' + esc(id) + '"' : "") + ">"
           + (options || []).map(opt).join("") + "</select></div>";
+        return drives && Object.hasOwn(o.acts, chosen) ? field + cs.act(o.acts[chosen], o.act || {}) : field;
+      },
+      /* R49 (K3147, K3150): an image an op answers, fetched with the session's header and drawn from an object address
+         the page made (never a credential in an address); `alt` a word key or `{text}` */
+      image(op, params, o = {}) {
+        const key = op + "?" + JSON.stringify(params || {});
+        let im = inst.images[key];
+        if (!im) { im = inst.images[key] = { url: null, state: "loading" }; loadImage(inst, im, op, params); }
+        return '<img class="cs-image" alt="' + wordOrData(o.alt) + '" data-image="' + im.state + '"' + (im.url ? ' src="' + esc(im.url) + '"' : "") + ">";
+      },
+      /* R49: rectangles drawn over an image by pointer, touch or keyboard, each moved and resized; read by `cs.value(id)`
+         as `[{left, top, width, height}]` in the image's pixels */
+      areas(imageHtml, o = {}) {
+        const id = String(o.id || "areas");
+        if (!Object.hasOwn(inst.areas, id)) inst.areas[id] = (o.areas || []).map((r) => ({ left: +r.left || 0, top: +r.top || 0, width: +r.width || 0, height: +r.height || 0 }));
+        const list = inst.areas[id];
+        const nat = inst.ui["areas-size:" + id] || null;
+        const pos = (r) => (nat ? "left:" + (100 * r.left / nat.w) + "%;top:" + (100 * r.top / nat.h) + "%;width:" + (100 * r.width / nat.w) + "%;height:" + (100 * r.height / nat.h) + "%"
+          : "left:" + r.left + "px;top:" + r.top + "px;width:" + r.width + "px;height:" + r.height + "px");
+        const label = o.label ? wordOrData(o.label) : w("shell.areas");
+        return '<div class="cs-areas" id="' + esc(id) + '" role="group" aria-label="' + label + '"><div class="cs-areas-box" data-shell="areas-box" data-areas="' + esc(id) + '">' + imageHtml
+          + list.map((r, i) => '<button type="button" class="cs-area" data-shell="area" data-areas="' + esc(id) + '" data-i="' + i + '" style="' + pos(r) + '" aria-label="'
+            + w("shell.areas.one", { n: String(i + 1), left: String(Math.round(r.left)), top: String(Math.round(r.top)), width: String(Math.round(r.width)), height: String(Math.round(r.height)) }) + '"></button>').join("")
+          + '</div><p class="help">' + w("shell.areas.help") + '</p><span class="cs-actrow"><button type="button" class="cs-btn" data-tone="quiet" data-shell="area-add" data-areas="' + esc(id) + '">' + w("shell.areas.add") + "</button>"
+          + (list.length ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="area-clear" data-areas="' + esc(id) + '">' + w("shell.areas.clear") + "</button>" : "") + "</span></div>";
       },
       checks(id, legendKey, options, o = {}) {
         return '<fieldset class="cs-field" id="' + esc(id) + '"><legend>' + w(legendKey) + "</legend>" + options.map(([v, k, on], i) =>
@@ -594,6 +628,35 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       + v.map((x, i) => '<i style="height:' + Math.max(2, Math.round(18 * x / m)) + 'px"' + (i === v.length - 1 ? ' class="now"' : "") + "></i>").join("")
       + (said ? "<b>" + said + "</b>" : "") + "</span>";
   }
+  async function loadImage(inst, im, op, params) {
+    const a = await call(op, { query: params || {}, bytes: true, public: inst.pub });
+    const r = a.kind === "response" ? a.r : null;
+    const type = r && r.headers && r.headers.get ? String(r.headers.get("content-type") || "") : "";
+    if (!r || !r.ok || /json/i.test(type)) { im.state = "failed"; if (live(inst)) draw(); return; }
+    const blob = await r.blob();
+    if (!live(inst)) return;
+    im.url = win.URL.createObjectURL(blob);
+    im.state = "ok";
+    draw();
+  }
+  /* R49: the areas control's own handling: the image's natural size learned once drawn, a rectangle drawn by the
+     pointer, and each moved (arrows), resized (Shift and arrows) or removed (Delete) from the keyboard */
+  function areasOf(id) { return MAIN && Object.hasOwn(MAIN.areas, id) ? MAIN : DOCKI && Object.hasOwn(DOCKI.areas, id) ? DOCKI : null; }
+  function areasSize(inst, id) {
+    const box = doc.getElementById("cs-root").querySelector('[data-shell="areas-box"][data-areas="' + id.replace(/"/g, "") + '"]');
+    const img = box ? box.querySelector("img") : null;
+    const w0 = img ? Number(img.naturalWidth) : 0, h0 = img ? Number(img.naturalHeight) : 0;
+    if (w0 > 0 && h0 > 0) inst.ui["areas-size:" + id] = { w: w0, h: h0 };
+    const nat = inst.ui["areas-size:" + id] || null;
+    const rect = box && box.getBoundingClientRect ? box.getBoundingClientRect() : { left: 0, top: 0, width: 0, height: 0 };
+    return { nat, rect, sx: nat && rect.width ? nat.w / rect.width : 1, sy: nat && rect.height ? nat.h / rect.height : 1 };
+  }
+  const clampArea = (r, nat) => {
+    const W = nat ? nat.w : Infinity, H = nat ? nat.h : Infinity;
+    r.width = Math.max(1, Math.min(r.width, W)); r.height = Math.max(1, Math.min(r.height, H));
+    r.left = Math.max(0, Math.min(r.left, W - r.width)); r.top = Math.max(0, Math.min(r.top, H - r.height));
+    return r;
+  };
   function saveFile(blob, name) {
     const url = win.URL.createObjectURL(blob);
     const link = doc.createElement("a");
@@ -809,7 +872,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   }
   let MENU = false;
   const focusKey = (el) => (!el || !el.getAttribute ? null : el.id ? "#" + el.id
-    : ["data-shell", "data-ai", "data-table", "data-id", "data-col", "data-theme-to"].map((a) => (el.getAttribute(a) !== null ? "[" + a + '="' + el.getAttribute(a) + '"]' : "")).join("") || null);
+    : ["data-shell", "data-ai", "data-table", "data-id", "data-col", "data-theme-to", "data-areas", "data-i"].map((a) => (el.getAttribute(a) !== null ? "[" + a + '="' + el.getAttribute(a) + '"]' : "")).join("") || null);
   function draw() {
     const root = doc.getElementById("cs-root");
     if (!root || !ROUTE) return;
@@ -858,6 +921,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     for (const t of inst.timers) clearTimeout(t);
     inst.timers = [];
     if (inst.retry !== null) { clearTimeout(inst.retry); inst.retry = null; }
+    /* R49: the images' object addresses released with the screen */
+    for (const im of Object.values(inst.images)) if (im.url) { try { win.URL.revokeObjectURL(im.url); } catch { /* released */ } im.url = null; }
     if (typeof inst.spec.closed !== "function") return;
     try { inst.spec.closed(kit(inst), inst.view); } catch { /* a screen's own leave-taking never stops the shell */ }
   }
@@ -1401,7 +1466,14 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       const tipped = t.closest ? t.closest("[data-tip]") : null;
       if (tipped && !tipped.matches("a,button,input,select,textarea")) openTip(tipped);
     });
-    root.addEventListener("change", (e) => { const sh = e.target.closest ? e.target.closest('[data-shell="pick"]') : null; if (sh && !blocked(e.target)) shell(sh, e); });
+    root.addEventListener("change", (e) => {
+      if (blocked(e.target)) return;
+      const sh = e.target.closest ? e.target.closest('[data-shell="pick"]') : null;
+      if (sh) return shell(sh, e);
+      /* R49: a choice that drives its act redraws with the act following it */
+      const ch = e.target.closest ? e.target.closest('[data-shell="choice"]') : null;
+      if (ch) { const inst = [MAIN, DOCKI, GUIDEI].find((i) => i && Object.hasOwn(i.ui, "choice:" + ch.getAttribute("data-choice"))); if (inst) { inst.ui["choice:" + ch.getAttribute("data-choice")] = ch.value; draw(); } }
+    });
     root.addEventListener("pointerover", (e) => {
       const el = e.target.closest ? e.target.closest("[data-tip]") : null;
       if (!el) return;
@@ -1427,6 +1499,35 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       t.addEventListener("pointerout", (e) => { if (!onTipOrEl(e.relatedTarget)) closeT = setTimeout(closeTip, 500); });
     }
     root.addEventListener("pointerdown", (e) => {
+      if (blocked(e.target)) return;
+      /* R49: a rectangle drawn over the image, or one moved, by the pointer or a finger */
+      const box = e.target.closest ? e.target.closest('[data-shell="areas-box"]') : null;
+      if (box) {
+        const id = box.getAttribute("data-areas"), inst = areasOf(id);
+        if (!inst) return;
+        e.preventDefault();
+        const at = areasSize(inst, id), list = inst.areas[id];
+        const px = (m) => ({ x: (m.clientX - at.rect.left) * at.sx, y: (m.clientY - at.rect.top) * at.sy });
+        const p0 = px(e);
+        const hit = e.target.closest('[data-shell="area"]');
+        const r = hit ? list[Number(hit.getAttribute("data-i"))] : { left: p0.x, top: p0.y, width: 0, height: 0 };
+        const from = { left: r.left, top: r.top };
+        if (!hit) list.push(r);
+        const move = (m) => {
+          const p = px(m);
+          if (hit) { r.left = from.left + p.x - p0.x; r.top = from.top + p.y - p0.y; clampArea(r, at.nat); }
+          else { r.left = Math.min(p0.x, p.x); r.top = Math.min(p0.y, p.y); r.width = Math.abs(p.x - p0.x); r.height = Math.abs(p.y - p0.y); }
+        };
+        const up = (m) => {
+          win.removeEventListener("pointermove", move); win.removeEventListener("pointerup", up);
+          if (m && m.clientX !== undefined) move(m);
+          if (!hit && (r.width < 2 || r.height < 2)) list.splice(list.indexOf(r), 1); else clampArea(r, at.nat);
+          activity(); draw();
+        };
+        win.addEventListener("pointermove", move);
+        win.addEventListener("pointerup", up);
+        return;
+      }
       const g = e.target.closest ? e.target.closest('[data-shell="grip"]') : null;
       if (!g) return;
       e.preventDefault();
@@ -1448,6 +1549,21 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       }
       const row = e.target.closest ? e.target.closest('[data-shell="row"]') : null;
       if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); shell(row, e); }
+      /* R49: an area moved by the arrow keys, resized with Shift, removed by Delete */
+      const area = e.target.closest ? e.target.closest('[data-shell="area"]') : null;
+      if (area && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Delete", "Backspace"].includes(e.key)) {
+        e.preventDefault();
+        const id = area.getAttribute("data-areas"), inst = areasOf(id);
+        if (!inst) return;
+        const at = areasSize(inst, id), list = inst.areas[id], i = Number(area.getAttribute("data-i")), r = list[i];
+        if (!r) return;
+        if (e.key === "Delete" || e.key === "Backspace") { list.splice(i, 1); draw(); return; }
+        const step = at.nat ? Math.max(1, Math.round(Math.max(at.nat.w, at.nat.h) / 100)) : 10;
+        const dx = e.key === "ArrowLeft" ? -step : e.key === "ArrowRight" ? step : 0, dy = e.key === "ArrowUp" ? -step : e.key === "ArrowDown" ? step : 0;
+        if (e.shiftKey) { r.width += dx; r.height += dy; } else { r.left += dx; r.top += dy; }
+        clampArea(r, at.nat);
+        draw();
+      }
     });
     /* R33: the member's own input is activity */
     for (const type of ["keydown", "pointerdown", "touchstart", "wheel"]) doc.addEventListener(type, () => { if (!LOCKED) activity(); });
@@ -1501,6 +1617,15 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (b.kind === "copy") { try { const c = win.navigator && win.navigator.clipboard; if (c && c.writeText) c.writeText(b.text); } catch { /* the clipboard refused: nothing copied */ } return; }
       return;
     }
+    if (what === "area-add" || what === "area-clear") {
+      const id = el.getAttribute("data-areas"), ins = areasOf(id);
+      if (!ins) return;
+      const at = areasSize(ins, id);
+      if (what === "area-clear") ins.areas[id].length = 0;
+      else ins.areas[id].push(clampArea(at.nat ? { left: at.nat.w * 0.4, top: at.nat.h * 0.4, width: at.nat.w * 0.2, height: at.nat.h * 0.2 } : { left: 10, top: 10, width: 100, height: 60 }, at.nat));
+      return draw();
+    }
+    if (what === "area" || what === "areas-box") return;
     if (what === "menu") { MENU = !MENU; return draw(); }
     if (what === "signout") return signOut();
     if (what === "theme") { MENU = false; return setTheme(el.getAttribute("data-theme-to")); }
@@ -1606,7 +1731,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (/^#(invite|join)=/.test(h)) win.history.replaceState({}, "", "/app/join" + h);
     else if (/^#boot=/.test(h)) win.history.replaceState({}, "", "/app/setup" + h);
   }
-  /* R46: the fragment read once, then removed from the address before any request */
+  /* R46: the fragment read once (`boot`, `invite`, `join`, `reset`, and `grant` for `review-outside`, K3147), then removed
+     from the address before any request */
   function takeFragment() {
     const h = String(win.location.hash || "");
     if (!h || h === "#") return;
@@ -1615,7 +1741,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       const at = part.indexOf("=");
       if (at < 0) continue;
       const k = part.slice(0, at);
-      if (!["boot", "invite", "join", "reset"].includes(k)) continue;
+      if (!["boot", "invite", "join", "reset", "grant"].includes(k)) continue;
       try { out[k] = decodeURIComponent(part.slice(at + 1)); } catch { out[k] = part.slice(at + 1); }
     }
     FRAGMENT = out;

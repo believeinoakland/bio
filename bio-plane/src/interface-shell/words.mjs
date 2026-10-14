@@ -101,6 +101,12 @@ const rows = [
   ["shell.signer.loadpass", "Its passphrase, if it has one", false],
   ["shell.signer.notkey", "That isn't a signing key file, or the passphrase is wrong, so nothing was loaded.", false],
   ["shell.signer.nokey", "No signing key is in this browser for this sitting.", false],
+  /* R49: the areas drawn over an image */
+  ["shell.areas", "Areas to cover", false],
+  ["shell.areas.one", "Area {n}: from {left}, {top}, {width} by {height} pixels", false],
+  ["shell.areas.help", "Draw a rectangle over the picture with the pointer or a finger, or add one and move it with the arrow keys; Shift with an arrow key resizes it, and Delete removes it.", false],
+  ["shell.areas.add", "Add an area", false],
+  ["shell.areas.clear", "Remove every area", false],
   /* R46, R47: the controls the shell binds for a screen */
   ["shell.save", "Save as a file", false],
   ["shell.copy", "Copy", false],

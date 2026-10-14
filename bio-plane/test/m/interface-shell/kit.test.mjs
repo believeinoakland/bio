@@ -305,3 +305,110 @@ test("R31 (K3143) checkGuide: the guide's ops and acts each an op OPS holds; int
   assert.throws(() => interfacePage(ALL, { guide: { ...GUIDE, render: undefined } }), /guide/);
   assert.ok(interfacePage(ALL, { guide: GUIDE }).includes("wizardsat"));
 });
+
+test("R49 cs.image(op, params, {alt}) fetches the image with the session's Authorization header and draws it from an object address the page made, never a credential in an address; released when the screen closes; control: a refusal draws no image", async () => {
+  const { bytes } = await import("./harness.mjs");
+  const s = { id: "open-file", reads: () => ({}), acts: [], render: (cs) => cs.image("openoriginal", { capture: "ab12" }, { alt: { text: "A photo of the site" } }) };
+  const home = { id: "home", reads: () => ({}), acts: [], render: (cs) => cs.title() };
+  const p = await boot({ screens: [s, home], path: "/app/open-file/ab12", plane: { openoriginal: bytes("PNGDATA", "image/png") } });
+  const img = p.root().querySelector("img.cs-image");
+  assert.equal(img.getAttribute("alt"), "A photo of the site");
+  assert.equal(img.getAttribute("data-image"), "ok");
+  assert.match(img.getAttribute("src"), /^blob:https:\/\/group\.example\//);
+  const req = p.byOp("openoriginal")[0];
+  assert.equal(req.headers.Authorization, "Bearer tok-1");
+  assert.equal(req.query.capture, "ab12");
+  assert.ok(!img.getAttribute("src").includes("tok-1"));
+  assert.equal(p.byOp("openoriginal").length, 1, "fetched once across redraws");
+  await p.click('[data-shell="menu"]');
+  assert.equal(p.byOp("openoriginal").length, 1);
+  await p.click('a[href="/app"]');
+  assert.equal(p.objectUrls[0].released, true, "released when the screen closes");
+  const q = await boot({ screens: [s], path: "/app/open-file/ab12", plane: { openoriginal: refused("NOT_VISIBLE") } });
+  assert.equal(q.root().querySelector("img.cs-image").getAttribute("src"), null);
+  assert.equal(q.root().querySelector("img.cs-image").getAttribute("data-image"), "failed");
+});
+
+test("R49 cs.areas draws rectangles over the image by pointer and by keyboard (added, moved, resized, removed), cs.value(id) answering [{left, top, width, height}] in the image's pixels", async () => {
+  const { bytes } = await import("./harness.mjs");
+  const s = { id: "ceremony", reads: () => ({}), acts: [{ op: "obscuremark", send: (view, el, cs) => ({ body: { areas: cs.value("ph") } }) }],
+    render: (cs) => cs.areas(cs.image("openoriginal", { capture: "p1" }, { alt: { text: "Photo" } }), { id: "ph", areas: [{ left: 10, top: 20, width: 30, height: 40 }], label: { text: "Areas on the photo" } }) + cs.act("obscuremark") };
+  const p = await boot({ screens: [s], path: "/app/ceremony/c1", plane: { openoriginal: bytes("PNG", "image/png") } });
+  const box = () => p.root().querySelector('[data-shell="areas-box"]');
+  /* the image is 1000 by 500 pixels, drawn 500 by 250 on the screen */
+  const size = () => { const img = box().querySelector("img"); img.naturalWidth = 1000; img.naturalHeight = 500; box().getBoundingClientRect = () => ({ left: 100, top: 50, width: 500, height: 250 }); };
+  size();
+  assert.equal(p.root().querySelector(".cs-areas").getAttribute("aria-label"), "Areas on the photo");
+  assert.equal(p.root().querySelectorAll(".cs-area").length, 1);
+  /* drawn with the pointer: from (150, 100) to (250, 150) on the screen is (100, 100) to (300, 200) in the image */
+  p.fire(box(), "pointerdown", { clientX: 150, clientY: 100 });
+  for (const f of p.win.listeners.pointermove || []) f({ clientX: 250, clientY: 150 });
+  for (const f of [...(p.win.listeners.pointerup || [])]) f({ clientX: 250, clientY: 150 });
+  await p.settle();
+  size();
+  assert.equal(p.root().querySelectorAll(".cs-area").length, 2);
+  /* added, moved and resized by the keyboard, and one removed */
+  await p.click('[data-shell="area-add"]');
+  size();
+  const third = () => p.root().querySelector('.cs-area[data-i="2"]');
+  third().focus();
+  p.fire(third(), "keydown", { key: "ArrowRight" }); await p.settle(); size();
+  p.fire(third(), "keydown", { key: "ArrowDown", shiftKey: true }); await p.settle(); size();
+  p.fire(p.root().querySelector('.cs-area[data-i="0"]'), "keydown", { key: "Delete" }); await p.settle(); size();
+  await p.click('button[data-act="obscuremark"]');
+  const go = p.root().querySelector('[data-shell="reason-send"], [data-shell="confirm"]');
+  if (go) { const ta = p.root().querySelector("[data-slot] textarea"); if (ta) ta.value = "r"; await p.click(go); }
+  assert.deepEqual(p.byOp("obscuremark")[0].body.areas, [{ left: 100, top: 100, width: 200, height: 100 }, { left: 410, top: 200, width: 200, height: 110 }]);
+  /* control: nothing drawn, nothing answered but what was given */
+  const q = await boot({ screens: [{ ...s, render: (cs) => cs.areas("", { id: "ph" }) + cs.act("obscuremark") }], path: "/app/ceremony/c1" });
+  await q.click('button[data-act="obscuremark"]');
+  const go2 = q.root().querySelector('[data-shell="reason-send"], [data-shell="confirm"]');
+  if (go2) { const ta = q.root().querySelector("[data-slot] textarea"); if (ta) ta.value = "r"; await q.click(go2); }
+  assert.deepEqual(q.byOp("obscuremark")[0].body.areas, []);
+});
+
+test("R49 cs.choice with {acts: {<value>: op}} drives the act it governs: one button whose label and act follow the choice (control: without acts, no button)", async () => {
+  const s = { id: "ceremony", reads: () => ({}), acts: [{ op: "caseratify" }, { op: "publishat" }],
+    render: (cs, view) => cs.choice("when", "shell.reason", [{ value: "now", text: "Now" }, { value: "at", text: "At a set time" }], { acts: { now: "caseratify", at: "publishat" } })
+      + "<p id=chosen>" + cs.esc(view.ui["choice:when"] || "") + "</p>" + cs.choice("plain", "shell.reason", [{ value: "x", text: "X" }]) };
+  const p = await boot({ screens: [s], path: "/app/ceremony/c1", plane: { whoami: ok({ ...ADMIN, capabilities: ["contribute", "publish"] }) } });
+  const acts = () => p.root().querySelectorAll("button[data-act], [data-phone-act]").map((b) => b.getAttribute("data-act") || b.getAttribute("data-phone-act"));
+  assert.deepEqual(acts(), ["caseratify"]);
+  assert.equal(p.doc.getElementById("chosen").textContent, "now");
+  const sel = p.doc.getElementById("when");
+  sel.value = "at";
+  p.fire(sel, "change");
+  await p.settle();
+  assert.deepEqual(acts(), ["publishat"], "one button, following the choice");
+  assert.equal(p.doc.getElementById("chosen").textContent, "at");
+  assert.equal(p.doc.getElementById("when").value, "at");
+  assert.equal(p.doc.getElementById("plain").getAttribute("data-shell"), null, "control: a plain choice drives nothing");
+});
+
+test("R46 (K3147) view.fragment carries grant for review-outside, read once and removed from the address before any request", async () => {
+  const review = { id: "review-outside", reads: () => ({}), acts: [], render: (cs, view) => "<p id=g>" + cs.esc(view.fragment.grant || "") + "</p>" };
+  const p = await boot({ screens: [review], path: "/app/review", hash: "#grant=GRANT-SECRET-1", session: null });
+  assert.equal(p.doc.getElementById("g").textContent, "GRANT-SECRET-1");
+  assert.equal(p.location.hash, "");
+  for (const r of p.requests) assert.ok(!JSON.stringify(r).includes("GRANT-SECRET-1"));
+});
+
+test("R50 ADMIN_ACTS names the reset link, signerset, the group's settings, places and offices, translators and security tools: none drawn to a member who does not administer; at the phone width op-grades' larger-screen acts (filingsent, filingrecordsent) are held with what they do and where to finish them", async () => {
+  for (const op of ["passwordresetlink", "signerset", "groupnameset", "grouplogoset", "groupdomainset", "grouplanguagesset", "courtnoticeset", "hostingaccessset", "profilesset", "placewanted", "officesseed", "translationgrant", "translationrevert", "securitytooladd", "securitytooltest", "securitytoolremove"]) assert.ok(ADMIN_ACTS.has(op), op);
+  const g = { id: "group", reads: () => ({}), acts: [{ op: "groupnameset" }, { op: "courtnoticeset" }], render: (cs) => cs.act("groupnameset") + cs.act("courtnoticeset") };
+  const m = await boot({ screens: [g], path: "/app/group" });
+  assert.equal(btn(m, "groupnameset"), null);
+  assert.equal(btn(m, "courtnoticeset"), null);
+  const a = await boot({ screens: [g], path: "/app/group", plane: { whoami: ok(ADMIN) } });
+  assert.ok(btn(a, "groupnameset") || a.root().querySelector('[data-phone-act="groupnameset"]'));
+  const r = { id: "request", reads: () => ({}), acts: [{ op: "filingrecordsent" }, { op: "actioncreate" }], render: (cs) => cs.act("filingrecordsent") + cs.act("actioncreate") };
+  const wide = await boot({ screens: [r], path: "/app/request/x", plane: { whoami: ok({ ...ADMIN, capabilities: ["contribute", "publish", "act"] }) } });
+  const phone = await boot({ screens: [r], path: "/app/request/x", phone: true, plane: { whoami: ok({ ...ADMIN, capabilities: ["contribute", "publish", "act"] }) } });
+  if (btn(wide, "filingrecordsent")) {
+    assert.equal(btn(phone, "filingrecordsent"), null);
+    const held = phone.root().querySelector('[data-phone-act="filingrecordsent"]');
+    assert.ok(held.textContent.includes("Finish this on a larger screen"));
+  }
+  /* control: an everyday act is still a phone act */
+  assert.equal(!!btn(phone, "actioncreate"), !!btn(wide, "actioncreate"));
+});

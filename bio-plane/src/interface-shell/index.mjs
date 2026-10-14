@@ -7,7 +7,7 @@
 import { ASSET_FILES } from "../interface-assets/index.mjs";
 import { WORD_ROWS } from "../setup-words/index.mjs";
 import { OPS, NEEDS, SESSION_OPS } from "../op-declarations/index.mjs";
-import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT } from "../op-grades/index.mjs";
+import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT, LARGER_SCREEN_ACTS, OP_ALIASES } from "../op-grades/index.mjs";
 import { SCREEN_REGISTRY } from "../wizard-scripts/index.mjs";
 import { shellProgram } from "./browser.mjs";
 import { SHELL_WORDS, DESIGN_WORDS } from "./words.mjs";
@@ -111,6 +111,11 @@ export const ADMIN_ACTS = Object.freeze(new Set([
   "groupkeyset", "groupkeyremove", "groupkeyswitch", "aikeepaway",
   /* R47: `people`' expunging of a person (its R12) */
   "personexpunge",
+  /* R50: the reset link, a member's key set by an administrator, the group's settings, its places and offices, its
+     translators, its security tools */
+  "passwordresetlink", "signerset", "groupnameset", "grouplogoset", "groupdomainset", "grouplanguagesset", "courtnoticeset",
+  "hostingaccessset", "profilesset", "placewanted", "officesseed", "translationgrant", "translationrevert",
+  "securitytools", "securitytoolcatalogue", "securitytoolevents", "securitytooladd", "securitytooltest", "securitytoolremove",
 ]));
 
 /* The shell's own reads and acts (R3, R4, R7, R17, R20, R33, R34, R36). */
@@ -225,6 +230,8 @@ function dataOf(screens, guide) {
     rungs: pick((op) => (OPS[op] && OPS[op].mutating === false ? "none" : IRREVERSIBLE_WEIGHT.includes(op) ? "irreversible"
       : Object.hasOwn(RUNG_ABSENT, op) ? (RUNG_ABSENT[op] && RUNG_ABSENT[op].ground !== "undetermined" ? "none" : undefined)
         : Object.hasOwn(RUNGS, op) ? RUNGS[op] : undefined)),
+    /* R50: the acts held at the phone width beyond R11's weights: `op-grades`' larger-screen acts (an alias by its op) */
+    larger: [...ops].filter((op) => LARGER_SCREEN_ACTS.includes(Object.hasOwn(OP_ALIASES, op) ? OP_ALIASES[op] : op)),
     paths: PATHS, placeScreens: PLACE_SCREENS, refScreens: REF_SCREENS, frames: FRAMES, settingsScreens: SETTINGS_SCREENS, addresses: ADDRESSES,
     places: [...Object.keys(PLACE_SCREENS), "more"],
     idleLock: IDLE_LOCK_MS, idleEnd: IDLE_END_MS, notYours: NOT_YOURS, retry: RETRY_MS,
@@ -248,6 +255,9 @@ const STYLE = `.cs-crumbs ol{display:flex;flex-wrap:wrap;gap:4px 8px;list-style:
 .cs-overlay>.cs-dialog{max-width:440px;width:100%;display:grid;gap:var(--s-3)}
 .cs-ring{outline:3px solid var(--c-accent);outline-offset:3px;animation:cs-ring 1.2s ease-out 2}.cs-ringlabel{display:block;font-size:var(--t-xs);font-weight:600;color:var(--c-accent)}
 @keyframes cs-ring{from{outline-offset:12px}to{outline-offset:3px}}
+.cs-image{max-width:100%;height:auto;display:block}.cs-areas-box{position:relative;display:inline-block;max-width:100%;touch-action:none;cursor:crosshair}
+.cs-area{position:absolute;border:2px solid var(--c-accent);background:color-mix(in srgb,var(--c-accent) 18%,transparent);padding:0;min-width:8px;min-height:8px}
+.cs-area:focus-visible{outline:3px solid var(--c-ink);outline-offset:2px}
 .cs-spark{display:inline-flex;align-items:flex-end;gap:2px;height:20px;vertical-align:middle}.cs-spark i{display:block;width:5px;background:color-mix(in srgb,var(--c-stage) 40%,var(--c-surface));border-radius:1px 1px 0 0}
 .cs-spark i.now{background:var(--c-stage)}.cs-spark b{margin-left:6px;font:600 var(--t-xs) var(--f-sans);color:var(--c-ink-2);align-self:center}
 .cs-people{display:inline-flex;align-items:center}.cs-people i{width:22px;height:22px;margin-right:-4px;border-radius:50%;background:var(--c-ground-2);border:1.5px solid var(--c-surface);box-shadow:0 0 0 1px var(--c-rule-strong);font:600 11px/20px var(--f-sans);text-align:center;font-style:normal;color:var(--c-ink)}
