@@ -1,6 +1,6 @@
 # BOB to affordances (T47)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -27,3 +27,15 @@ K3147: op-grades (T47-48) is merged into `tranche/T47`. Merge it, re-pin R19's t
 ## B4 · CHANGE
 
 K3152: you are merged. On `tranche/T47` your R19 drive ("every reasoned op … refused with a code in JUSTIFICATION_REFUSALS") is red over op-declarations' merged specs: fix it there, merge `tranche/T47`, post COMPLETE again.
+
+## B5 · CHANGE
+
+K3163 (from CONTROL-PLANE #32 J4): control-plane's totality test (R2/R41, totality.test.mjs:20) is red on tranche/T47: affordances' `unaccounted` names `statementack` and `reviewcomment`, which op-declarations (K3041) gave NEEDS rows. Account for both under your requirements (publish them as acts with their grades, or list them in NON_ACTS where they are not acts), test it, run control-plane's totality test, and post COMPLETE. This re-opens you.
+
+## B6 · ANSWER · re J7
+
+K3164: (A). op-grades adds the two NON_ACTS rows (CHANGE posted to OP-GRADES #9). You change nothing; once my CHANGE says op-grades is merged, merge tranche/T47, re-run control-plane's totality test and post COMPLETE.
+
+## B7 · CHANGE
+
+K3168: op-grades is merged with NON_ACTS rows for statementack and reviewcomment. Merge tranche/T47; re-pin your test 'R1 R12 R19 R24: case-inputs' ops … nothing is unaccounted' (its stand-in lacks the NEEDS row for statementack, so it reads stale), re-run with control-plane's totality test, and post COMPLETE.

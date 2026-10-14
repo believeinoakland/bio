@@ -1,6 +1,7 @@
 /* screens-daily against interface-shell R21's screen contract and R7's common rules, at the module's interface
-   (`SCREENS`, `SCREEN_WORDS`) and on the real served page (interface-shell's harness). The registry and the word list are read from git at 3f40899950 (setup-words R5,
-   wizard-scripts R29), so a later edit of the working copy does not move them. */
+   (`SCREENS`, `SCREEN_WORDS`) and on the real served page (interface-shell's harness). The registry is read from git at
+   6f0d88d8d5, PR #33's head as merged into `tranche/T47` at L11's START (wizard-scripts R35, K3127), so a later edit of the
+   working copy does not move it. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -15,7 +16,7 @@ import { nestedTips, accessibleName, controls } from "../interface-shell/harness
 import { open, main, text, ops, ok, refused, textNodes, wordChecker, MEMBER } from "./page.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
-const COMMIT = "3f40899950";
+const COMMIT = "6f0d88d8d5";
 const atCommit = (path) => {
   try { return JSON.parse(execFileSync("git", ["show", `${COMMIT}:${path}`], { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 24 })); }
   catch { return JSON.parse(readFileSync(join(ROOT, path), "utf8")); }
@@ -23,18 +24,18 @@ const atCommit = (path) => {
 const REGISTRY = atCommit("docs/development/ux-substrate/screens/registry.json").screens;
 const WORD_KEYS = new Set(WORD_ROWS.map((r) => r[0]));
 const byId = Object.fromEntries(SCREENS.map((s) => [s.id, s]));
-// The acts a screen draws: the registry's, with `answers`' "Ask" re-pointed to `ask` (interface-shell R21) and `home`'s
-// `startfrom` not drawn in T46 (R1).
+// The acts a screen draws: exactly the registry's (`startfrom` drawn on Home since T47, R9; `actionmove` on the queue, R13).
 const EXPECTED = {
-  home: ["promote"],
-  queue: ["taskresolve", "taskforward", "proposedispose", "queuesnooze", "queuemute", "adoptversion", "keepversion", "reminderanswer", "promote", "projectkeyset", "exploreapprove"],
+  home: ["startfrom", "promote"],
+  projects: ["promote"],
+  queue: ["taskresolve", "taskforward", "proposedispose", "queuesnooze", "queuemute", "adoptversion", "keepversion", "reminderanswer", "promote", "projectkeyset", "exploreapprove", "actionmove"],
   finder: ["search", "select", "findin", "selectionrelease", "frontier", "calculationcreate"],
   "find-in": ["findin", "standingquestionset", "recordpersonfact", "recorddatedfact", "standarddeclare", "recordfact", "tabledeclare", "cite", "search"],
   answers: ["ask", "ruleanswer", "search", "standingquestionset", "standingquestionend"],
 };
 
-test("R1–R6 (interface-shell R21): SCREENS is the five registry screens home, queue, finder, find-in, answers, each {id, reads, render, acts, words}", () => {
-  assert.deepEqual(SCREENS.map((s) => s.id), ["home", "queue", "finder", "find-in", "answers"]);
+test("R1–R6, R10 (interface-shell R21): SCREENS is the six registry screens home, projects, queue, finder, find-in, answers, each {id, reads, render, acts, words}", () => {
+  assert.deepEqual(SCREENS.map((s) => s.id), ["home", "projects", "queue", "finder", "find-in", "answers"]);
   for (const s of SCREENS) {
     assert.ok(REGISTRY.some((r) => r.id === s.id), `${s.id} is a registry screen`);
     assert.equal(typeof s.reads, "function");
@@ -44,16 +45,16 @@ test("R1–R6 (interface-shell R21): SCREENS is the five registry screens home, 
   }
 });
 
-test("R1–R7 (interface-shell R21): each screen's acts are exactly its registered acts, every op in OPS, with the re-point and R1's startfrom", () => {
+test("R1–R13 (interface-shell R21, R38): each screen's acts are exactly its registered acts, every op in OPS", () => {
   for (const s of SCREENS) {
     const reg = REGISTRY.find((r) => r.id === s.id).acts.map((a) => a.op);
     const mine = s.acts.map((a) => a.op);
     assert.deepEqual([...mine].sort(), [...EXPECTED[s.id]].sort(), s.id);
     for (const op of mine) {
       assert.ok(OPS[op], `${s.id}: ${op} is in OPS`);
-      assert.ok(reg.includes(op) || (s.id === "answers" && op === "ask"), `${s.id}: ${op} is registered or the ask re-point`);
+      assert.ok(reg.includes(op), `${s.id}: ${op} is registered`);
     }
-    for (const op of reg) assert.ok(mine.includes(op) || (s.id === "home" && op === "startfrom"), `${s.id}: registered ${op} is offered`);
+    for (const op of reg) assert.ok(mine.includes(op), `${s.id}: registered ${op} is offered`);
     for (const a of s.acts) {
       assert.equal(typeof a.send, "function", `${s.id}.${a.op} send`);
       if (a.rereads) for (const r of a.rereads) assert.equal(typeof r, "string");
@@ -69,8 +70,8 @@ test("R7 (interface-shell R5): every word a screen lists is a WORD_ROWS key or i
   const SHARED_OWN = ["mark.origin.search.means", "queue.step-cost-shared.detail", "ai.refused.limit.unjudged", "ai.label.untested"];
   for (const r of SCREEN_WORDS) {
     assert.ok(Object.isFrozen(r) && r.length === 3 && typeof r[1] === "string" && typeof r[2] === "boolean", r[0]);
-    assert.ok(/^screen\.(home|queue|finder|find-in|answers)\./.test(r[0]) || SHARED_OWN.includes(r[0]), r[0]);
-    assert.ok(!/Civicsmith(?! ?'s tests)/.test(r[1].replace(/your group's Civicsmith/g, "")), `${r[0]} names the group's Civicsmith in DEC-149's form`);
+    assert.ok(/^screen\.(home|projects|queue|finder|find-in|answers)\./.test(r[0]) || SHARED_OWN.includes(r[0]), r[0]);
+    assert.ok(!/Civicsmith(?! ?'s tests)/.test(r[1].replace(/your group's Civicsmith/gi, "")), `${r[0]} names the group's Civicsmith in DEC-149's form`);
   }
   assert.equal(new Set(SCREEN_WORDS.map((r) => r[0])).size, SCREEN_WORDS.length, "own keys distinct");
   for (const k of SCREEN_WORDS.map((r) => r[0])) if (!SHARED_OWN.includes(k)) assert.ok(!WORD_KEYS.has(k), `${k} does not shadow a WORD_ROWS key`);
@@ -86,12 +87,15 @@ const DATA_PLANE = {
   queue: ok({ items: [{ id: "TSK-1", class: "OBLIGATION", kind: "x", summary: "Vouch for photos", options: [], disposition: { instead: "taskresolve" },
     case: { ancestors: [{ id: "PROJ-1", type: "project", title: "Pothole repairs" }] }, due: "2026-10-20" }], item_count: 1 }),
   search: ok({ total: 1, hits: [{ bundle_id: "PROJ-1", title: "Pothole repairs", current_state: "forming" }] }),
+  projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "Pothole repairs", stage: "forming", members: [{ member: "M-1", handle: "mai" }], activity: [0, 1, 0, 2, 0, 1, 3, 1], lastChange: "2026-10-20T10:00:00Z" }] }),
+  projectquestions: ok({ ok: true, items: [{ inquiry: "INQ-1" }], cursor: null }),
   projectdirectory: ok({ projects: [{ id: "PROJ-9", name: "Library hours" }] }),
+  startfrom: ok({ ok: true, scripts: [{ id: "WIZ-33b5887790b7561b", version: 1, name: "Check a claim" }], doors: [{ door: "problem", scripts: ["WIZ-33b5887790b7561b"] }] }),
 };
-const ROUTES = { home: "/app", queue: "/app/queue", finder: "/app/finder/pothole", "find-in": "/app/find-in/PROJ-1", answers: "/app/answers" };
-const DATA = ["River Town", "Lakeshore Tenants", "Rents.", "Vouch for photos", "Pothole repairs", "Library hours", "PROJ-1", "pothole", "20 October 2026", "mai", "M"];
+const ROUTES = { home: "/app", projects: "/app/projects", queue: "/app/queue", finder: "/app/finder/pothole", "find-in": "/app/find-in/PROJ-1", answers: "/app/answers" };
+const DATA = ["River Town", "Lakeshore Tenants", "Rents.", "Vouch for photos", "Pothole repairs", "Library hours", "PROJ-1", "pothole", "20 October 2026", "mai", "M", "Check a claim"];
 
-test("R1–R7 (interface-shell R21): the shell accepts the five screens and serves them: each route draws its screen under its path", async () => {
+test("R1–R10 (interface-shell R21): the shell accepts the six screens and serves them: each route draws its screen under its path", async () => {
   assert.equal(checkScreens(SCREENS), true);
   assert.match(interfacePage(SCREENS), /<script nonce="__CSP_NONCE__">/);
   for (const [id, path] of Object.entries(ROUTES)) {
@@ -114,8 +118,10 @@ test("R7 (interface-shell R5): every text node each screen draws, with data, emp
   const isWord = wordChecker(DATA);
   const planes = {
     data: DATA_PLANE,
-    empty: { groupidentity: ok({ ok: true, display_name: "Lakeshore Tenants" }), queue: ok({ items: [] }), search: ok({ hits: [] }), projectdirectory: ok({ projects: [] }) },
-    failed: { queue: refused("STORE_DID_NOT_ANSWER", null, 502), search: refused("STORE_DID_NOT_ANSWER", null, 502), projectdirectory: refused("STORE_DID_NOT_ANSWER", null, 502) },
+    empty: { groupidentity: ok({ ok: true, display_name: "Lakeshore Tenants" }), queue: ok({ items: [] }), search: ok({ hits: [] }), projectdirectory: ok({ projects: [] }),
+      projectlist: ok({ ok: true, projects: [] }), startfrom: ok({ ok: true, scripts: [], doors: [] }), whoami: ok({ ...MEMBER, administer: true, capabilities: ["contribute"] }) },
+    failed: { queue: refused("STORE_DID_NOT_ANSWER", null, 502), search: refused("STORE_DID_NOT_ANSWER", null, 502), projectdirectory: refused("STORE_DID_NOT_ANSWER", null, 502),
+      projectlist: refused("STORE_DID_NOT_ANSWER", null, 502), startfrom: refused("STORE_DID_NOT_ANSWER", null, 502) },
   };
   for (const [state, plane] of Object.entries(planes)) for (const [id, path] of Object.entries(ROUTES)) {
     const p = await open(path, plane);
@@ -143,7 +149,7 @@ test("R7 (interface-shell R13): each refusal word an act names is a listed word"
 });
 
 test("R7: after an act the screen re-reads what it changed: an act names only its own screen's reads to re-read, or all of them", () => {
-  const readsOf = { home: ["group", "queue", "projects", "directory"], queue: ["queue"], finder: ["search", "selection", "frontier"], "find-in": ["questions"], answers: ["search"] };
+  const readsOf = { home: ["group", "queue", "projects", "directory", "doors", "matching"], projects: ["projects"], queue: ["queue"], finder: ["search", "selection", "frontier"], "find-in": ["questions"], answers: ["search"] };
   for (const s of SCREENS) for (const a of s.acts) for (const r of a.rereads || []) assert.ok(readsOf[s.id].includes(r), `${s.id}.${a.op} rereads ${r}`);
   // The queue's acts change the queue: each re-reads all (the item resolved or muted leaves the list, R3).
   for (const a of byId.queue.acts) assert.equal(a.rereads, undefined, a.op);

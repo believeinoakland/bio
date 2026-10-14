@@ -5,14 +5,16 @@
    `words`, or one the shell draws itself. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { open, walk, WORDS, SCREENS } from "./kit.mjs";
 import { SHELL_WORDS } from "../../../src/interface-shell/index.mjs";
 import * as F from "./fixtures.mjs";
 
-const { membersTable, membersTableMember, accountTable, connectTable, notesTable, env, refuse } = F;
+const { membersTable, membersTableMember, accountTable, connectTable, notesTable, groupTable, placesTable, recoveryTable, identityTable, securityTable, translationsTable, env, refuse } = F;
 
 const MARKED = [...WORDS.keys()].map((key) => ({ key, text: "\u2060" + key + "\u2062" + WORDS.get(key) + "\u2061", en: WORDS.get(key), fallback: false }));
-const DATA = JSON.stringify(F) + "https://group.example/#invite=0123456789abcdef0123456789abcdef https://group.example/#join=" + "b".repeat(64) + " " + "a".repeat(64);
+// the record's data: everything the fake plane answers, its fixtures' source included (functions' answers among them)
+const DATA = JSON.stringify(F) + readFileSync(new URL("./fixtures.mjs", import.meta.url), "utf8") + "https://group.example/#invite=0123456789abcdef0123456789abcdef https://group.example/#join=" + "b".repeat(64) + " " + "a".repeat(64);
 const strip = (t) => { let s = t, prev; do { prev = s; s = s.replace(/\u2060[^\u2060\u2061]*\u2061/g, " "); } while (s !== prev); return s; };
 const keysIn = (t) => [...t.matchAll(/\u2060([^\u2060\u2061\u2062]+)\u2062/g)].map((m) => m[1]);
 const PUNCT = /^[\s·:,…$\d.()\-–/%›]*$/;
@@ -44,7 +46,18 @@ test("every text drawn by every screen, in every state, is a word or the record'
     ["account", { me: F.MEMBER, table: accountTable(F.MEMBER, { infolevel: refuse("UNKNOWN_OP"), memberlanguage: env({ ok: true, language: null, set_at: null }) }) }],
     ...["group", "own", "subscription", "none", "keptaway"].map((s) => ["connect", { me: F.MEMBER, table: connectTable(F.MEMBER, s) }]),
     ["connect", { me: F.MEMBER, table: connectTable(F.MEMBER, "none", { disclosureof: () => env({ ok: true, version: "D311-1", shown: false }) }) }],
-    ["connect", { me: F.MEMBER, table: connectTable(F.MEMBER, "none", { bootstrap: { ok: true, parts: [{ part: "signin", present: false }] } }) }],
+    ["connect", { me: F.MEMBER, table: connectTable(F.MEMBER, "none", { bootstrap: { ok: true, part_signin: false } }) }],
+    ["connect", { me: F.MEMBER, table: connectTable(F.MEMBER, "none", { bootstrap: { ok: true, part_signin: null }, accountreference: env({ ok: true, held: false, subscription: { connected: false, refused_at: "2026-10-10T00:00:00Z" } }) }) }],
+    ["settings", { me: F.ADMIN, table: {} }],
+    ["settings", { me: F.MEMBER, table: {} }],
+    ["group", { me: F.ADMIN, table: groupTable() }],
+    ["group", { me: F.MEMBER, table: groupTable() }],
+    ["places", { me: F.ADMIN, table: placesTable() }],
+    ["recovery", { me: F.ADMIN, table: recoveryTable() }],
+    ["group-identity", { me: F.ADMIN, table: identityTable(), reachable: true }],
+    ["security", { me: F.ADMIN, table: securityTable() }],
+    ["security", { me: F.MEMBER, table: securityTable() }],
+    ["translations", { me: F.ADMIN, table: translationsTable(), subject: "es", reachable: true }],
     ["notes", { me: F.MEMBER, table: notesTable(F.MEMBER), reachable: true }],
     ["notes", { me: F.MEMBER, table: notesTable(F.MEMBER, { notes: env({ ok: true, notes: [] }) }) }],
   ];
