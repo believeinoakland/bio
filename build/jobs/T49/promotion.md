@@ -9,3 +9,7 @@
 - N1073 done: `write-path.test.mjs` R18's `LATER` list reads the check ids of `VERSION_FROZEN`, `VERSION_LEG_UNRESOLVED` (basis-versions' `BASIS_VERSION_CHECKS`), `SELF_BASIS`, `BASIS_CYCLE` (inquiry-grammar's `INQUIRY_GRAMMAR_CHECKS`) and `SURFACED_BY_REWRITTEN` (inquiry's `INQUIRY_SURFACE_CHECKS`) from their owners' declarations; the row count (35) is unchanged.
 - `node --test bio-plane/test/m/promotion/`: 137 tests, 136 pass, 1 fail: `registry.test.mjs` R39/R45/R46 "every module's steps … in the modules' total order", which fails identically before my change: membership's `MODULE_ORDER` lacks `op-capabilities` and `site` (T49-1, R145); not mine.
 - Not yet done: the stamp (T49-4 (D)). Waiting for BOB's CHANGE after membership, project-roster and credentials merge.
+
+## J1 · REPORT
+
+J1: N1073 done and tests run (promotion suite: 136 of 137 pass; the 1 red, registry.test.mjs module order, is membership T49-1's R145, red before my change). Rule 6 greps clean. The stamp waits for your CHANGE once membership, project-roster and credentials have merged into tranche/T49. I am idle until then.
