@@ -32,13 +32,16 @@
  *                        its author's acts ending it or moving its end (R23–R26).
  *   monitoring           also an address's rows with their end date (its R32), `addressWatchEnd` (R71) and
  *                        `addressWatchers` (R72) (R23–R25).
+ *   actions, actionClocks a proceeding's actions (`actionsFor`, its R30, R65) and the group's own deadlines
+ *                        (`ourDeadlines`, its R18) (R30). The refusals of R29 are `entities`' (`noSuchEntity`,
+ *                        `notAProceeding`, its R36, R53; R31).
  *   now                  the instance clock in milliseconds.
  *   bytes(sha)           a capture's bytes (default: record-core's evidence store). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
 import { captureOf } from "../capture/index.mjs";
-import { entitiesOf } from "../entities/index.mjs";
+import { entitiesOf, noSuchEntity, notAProceeding } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { monitoringOf, MONITOR_VIEWER, MONITOR_CADENCE_MS, frequencyRefusal } from "../monitoring/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
@@ -46,6 +49,8 @@ import { actionPlansOf, noSuchPlan, refusePlanClosed } from "../action-plans/ind
 import { planWorkOf } from "../plan-work/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
 import { answersOf } from "../answers/index.mjs";
+import { actionsOf } from "../actions/index.mjs";
+import { actionClocksOf } from "../action-clocks/index.mjs";
 import { isMachineIdentity, isPublicHttpsLocator } from "../record-grammar/index.mjs";
 import { isCalendarDate, validAt, localDay, dayRange } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
@@ -79,6 +84,10 @@ export const POLICY_GATED_ACCESS = Object.freeze(["paywalled", "reading_room"]);
 /** R21: the most changes one answer gives, and its default. */
 export const POLICY_CHANGES_MAX = 200;
 export const FOLLOW_PURPOSE = "following";
+/** R30: the most items one lane of `proceedingDates` holds (`events` R27's bound), and the most pages of the group's
+ *  actions and deadlines it reads to fill the `group` lane. */
+export const PROCEEDING_LANE_MAX = 500;
+const GROUP_LANE_PAGES = 50;
 /** R23: the four kinds of watch a plan may set running (v0.2 rule 17). */
 export const WATCH_KINDS = Object.freeze(["follow", "address", "duty", "question"]);
 /** R24: the most questions one answer gives, and its default. */
@@ -129,7 +138,9 @@ export function followingOf(host, deps = {}) {
       actionPlans: lazy(deps.actionPlans, () => actionPlansOf(host, { record, membership })),
       planWork: lazy(deps.planWork, () => planWorkOf(host, { record, membership })),
       duties: lazy(deps.duties, () => dutiesOf(host, { record, membership })),
-      answers: lazy(deps.answers, () => answersOf(host, { record, membership })) });
+      answers: lazy(deps.answers, () => answersOf(host, { record, membership })),
+      actions: lazy(deps.actions, () => actionsOf(host, { record, membership })),
+      actionClocks: lazy(deps.actionClocks, () => actionClocksOf(host, { record, membership })) });
     instances.set(storage, f);
     f.migrate();
     f.registered = f.registerWatches();
@@ -141,14 +152,14 @@ export class Following {
   #sql; #declared = false; #listeners = [];
 
   constructor({ storage, record, membership, now, view, bytes, capture, entities, events, standards, monitoring, actionPlans, planWork, duties,
-                answers }) {
+                answers, actions, actionClocks }) {
     this.#sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.now = typeof now === "function" ? now : () => Date.now();
     this.viewOpt = view;
     this.bytesOpt = bytes;
-    this.dep = { capture, entities, events, standards, monitoring, actionPlans, planWork, duties, answers };
+    this.dep = { capture, entities, events, standards, monitoring, actionPlans, planWork, duties, answers, actions, actionClocks };
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -162,6 +173,8 @@ export class Following {
   get planWork() { return this.dep.planWork(); }
   get duties() { return this.dep.duties(); }
   get answers() { return this.dep.answers(); }
+  get actions() { return this.dep.actions(); }
+  get actionClocks() { return this.dep.actionClocks(); }
   get host() { return this.monitoring.sweepHost(); }
 
   /** R17: the tables, and their declaration with their classes, once. */
@@ -349,7 +362,7 @@ export class Following {
   #follow(id) { const n = Number(id); return Number.isSafeInteger(n) ? this.#one(`SELECT * FROM follows WHERE follow_id=?`, n) : null; }
 
   /** R7, R8: a member switching a watch on for a register. */
-  followRegister({ address, render = false, gated = null, cadence = null, home = null, ends = null, author, viewer = null } = {}) {
+  followRegister({ address, render = false, gated = null, cadence = null, home = null, ends = null, proceeding = null, author, viewer = null } = {}) {
     const r = this.#actorRefusal(author, viewer, home);
     if (r) return r;
     if (!said(address) || !isPublicHttpsLocator(address.trim())) return refuse("NO_LOCATOR", "a register is followed at a public https locator");
@@ -358,9 +371,36 @@ export class Following {
     if (g.bad) return refuse("BAD_GATE", g.bad);
     const c = this.#cadence(cadence);
     if (!c) return refuse("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    /* R29: the proceeding followed, after R7's refusals and before R22's */
+    const pr = proceeding == null ? null : this.#proceedingNamed(proceeding, viewer ?? author, "following a register names the proceeding it is followed for");
+    if (pr && pr.refusal) return pr.refusal;
     const e = this.#endsGiven(ends);
     if (e.bad) return refuse("WATCH_END_REFUSED", e.bad);
-    return this.#insert("register", { kind: "register", address: address.trim(), render: render === true }, { home, author, cadence: c, gated: g.gated, ends: e.ends });
+    return this.#insert("register", { kind: "register", address: address.trim(), render: render === true, ...(pr ? { proceeding: pr.id } : {}) },
+                        { home, author, cadence: c, gated: g.gated, ends: e.ends });
+  }
+
+  /* R29, R30, R31: `{id}` for a registered entity of kind `proceeding` that `viewer` may see; else `{refusal}`: absent or
+     unseen alike `NO_SUCH_ENTITY` (`entities.noSuchEntity`), another kind `NOT_A_PROCEEDING` (`entities.notAProceeding`,
+     the one site minting it). `asked` finishes the sentence naming what was asked of it. */
+  #proceedingNamed(value, viewer, asked) {
+    const id = typeof value === "string" ? value.trim() : "";
+    let r = null;
+    if (id && said(viewer) && viewerPredicate(viewer).scope !== "DENY") { try { r = this.entities.readEntity({ entityId: id, viewer }); } catch { r = null; } }
+    const e = r && r.ok && r.found && r.entity ? r.entity : null;
+    if (!e) return { refusal: noSuchEntity(id || null) };
+    if (e.kind !== "proceeding")
+      return { refusal: notAProceeding(`${asked}, an entity of kind proceeding; the entity named is of kind ${e.kind}.`, { entity_id: id, kind: e.kind }) };
+    return { id };
+  }
+
+  /* R29: the newest capture of a register followed for a proceeding handed to `events.followedRegister` (its R38), as
+     the machine's; its answer as given, or its refusal's reason. Never throws. */
+  #handRegister(captureSha, proceeding) {
+    try {
+      const r = this.events.followedRegister({ captureSha, proceeding, by: MACHINE });
+      return r && typeof r === "object" ? r : { ok: false, reason: "NO_ANSWER" };
+    } catch (e) { return { ok: false, reason: String((e && e.message) || e).slice(0, 160) }; }
   }
 
   /** R9: a register's own query for one identifier a member names for a person. */
@@ -706,9 +746,19 @@ export class Following {
     const t = await this.#take(f, s.address, nowMs, { render: s.render === true, title: `Followed register: ${s.address}` });
     const form = f.kind === "register" && !s.render ? { form: "static", note: STATIC_ONLY } : {};
     if (t.failed) return { read: { follow: Number(f.follow_id), kind: f.kind, outcome: "failed", ...form }, failed: [{ follow: Number(f.follow_id), ...t.failed }], outcome: "failed" };
-    const outcome = t.same ? "unchanged" : "captured";
-    return { read: { follow: Number(f.follow_id), kind: f.kind, outcome, capture: t.sha, ...form },
-             captured: t.same ? [] : [{ kind: f.kind, follow: Number(f.follow_id), address: s.address, capture: t.sha, bundle: t.bundle }], outcome };
+    let outcome = t.same ? "unchanged" : "captured";
+    const captured = t.same ? [] : [{ kind: f.kind, follow: Number(f.follow_id), address: s.address, capture: t.sha, bundle: t.bundle }];
+    /* R29: each read of a register followed for a proceeding hands its newest capture to events (an unchanged read too,
+       so an import events refused is asked again); a refusal is a failure of this read and the follow stays due */
+    let handed = {}, failed;
+    if (f.kind === "register" && s.proceeding) {
+      const imp = this.#handRegister(t.sha, s.proceeding);
+      if (imp.ok === false) {
+        outcome = "failed";
+        failed = [{ follow: Number(f.follow_id), address: s.address, reason: imp.reason, by: "events", ...(imp.detail ? { detail: imp.detail } : {}) }];
+      } else handed = { entries_written: Array.isArray(imp.written) ? imp.written.length : 0 };
+    }
+    return { read: { follow: Number(f.follow_id), kind: f.kind, outcome, capture: t.sha, ...handed, ...form }, captured, ...(failed ? { failed } : {}), outcome };
   }
 
   /* R10: a portal's answer as a snapshot, a vintage valid at its capture instant. */
@@ -745,7 +795,11 @@ export class Following {
     if (t.failed) return refuse("NOT_READ", t.failed.reason);
     this.#sql.exec(`UPDATE follows SET last_read=?, last_outcome=? WHERE follow_id=?`, instant(this.now()), t.same ? "unchanged" : "captured", f.follow_id);
     this.#tell(Number(f.follow_id), this.#nextDue(f.follow_id));
-    return { ok: true, follow: Number(f.follow_id), capture: t.sha, unchanged: t.same, reproducible_by_public: false, note: NOT_PUBLIC };
+    /* R29: a refresh is a read too; what events answered is stated beside the capture, never hiding it */
+    const imp = f.kind === "register" && s.proceeding ? this.#handRegister(t.sha, s.proceeding) : null;
+    return { ok: true, follow: Number(f.follow_id), capture: t.sha, unchanged: t.same, reproducible_by_public: false, note: NOT_PUBLIC,
+             ...(imp ? { proceeding: s.proceeding, register_import: imp.ok === false ? { ok: false, reason: imp.reason, ...(imp.detail ? { detail: imp.detail } : {}) }
+                                                                                     : { ok: true, written: Array.isArray(imp.written) ? imp.written.length : 0 } } : {}) };
   }
 
   /* ===================================================================== *
@@ -1261,6 +1315,87 @@ export class Following {
     return f.home == null || this.membership.inSight(f.home, viewer);
   }
 
+  /** R30 (T48; Actions D15, H19): a proceeding's dates in two lanes, never interleaved. `proceeding`: its own events as
+   *  `events.eventsFor` answers them to the viewer (placed ones in order, then those placed nowhere), each with its
+   *  `when` as held, kind, label and the captures it rests on, and today's stage as `events.proceedingStatusAt`
+   *  answers it. `group`: the entries `action-clocks.ourDeadlines` answers (`owed_by: group`, pending) of the actions
+   *  `actions.actionsFor` lists for the proceeding. Each lane holds at most 500 items, with `truncated`. States no
+   *  lateness, no finding; writes nothing. Refused as R29 refuses. */
+  proceedingDates({ proceeding, from = null, to = null, viewer = null } = {}) {
+    const p = this.#proceedingNamed(proceeding, viewer, "a proceeding's dates are read of");
+    if (p.refusal) return p.refusal;
+    const day = (v) => v === null || v === undefined || v === "" ? null : said(v) && isCalendarDate(v.trim()) ? v.trim() : false;
+    const lo = day(from), hi = day(to);
+    if (lo === false || hi === false || (lo && hi && lo > hi))
+      return refuse("BAD_PROCEEDING_DATES", "from and to are calendar days (YYYY-MM-DD), from not after to");
+    const nowMs = this.now();
+    /* the proceeding's lane */
+    let ev;
+    try { ev = this.events.eventsFor({ entity: p.id, from: lo, to: hi, limit: PROCEEDING_LANE_MAX, viewer }); }
+    catch (e) { ev = { ok: false, reason: String((e && e.message) || e).slice(0, 160) }; }
+    if (!ev || ev.ok === false) return ev || { ok: false, reason: "NO_ANSWER" };
+    const all = [...(ev.events || []), ...(ev.placed_nowhere || [])];
+    const items = all.slice(0, PROCEEDING_LANE_MAX).map((e) => this.#laneEvent(e, viewer));
+    const own = { items, limit: PROCEEDING_LANE_MAX, truncated: ev.truncated === true || all.length > PROCEEDING_LANE_MAX };
+    let status;
+    try { status = this.events.proceedingStatusAt({ proceeding: p.id, at: this.#today(nowMs), viewer }); }
+    catch (e) { status = { ok: false, reason: String((e && e.message) || e).slice(0, 160) }; }
+    own.status = status && status.ok !== false ? status : { stage: "undetermined", why: (status && (status.detail || status.reason)) || "no answer" };
+    /* the group's lane */
+    const group = this.#groupLane(p.id, lo, hi, viewer, nowMs);
+    return { ok: true, proceeding: p.id, from: lo, to: hi, lanes: { proceeding: own, group },
+             note: "the proceeding's own dates and the group's own deadlines on it, kept apart; neither is a finding" };
+  }
+  /* R30: one event of the proceeding's lane: as eventsFor lists it, with its label (the place the event states, else
+     its kind) and the captures it rests on. */
+  #laneEvent(e, viewer) {
+    let label = null, captures = [];
+    try {
+      const r = this.events.readEvent({ eventId: e.event_id, viewer });
+      const v = r && r.found ? r.event : null;
+      if (v) {
+        label = said(v.where) ? v.where.trim() : null;
+        captures = [...new Set((v.attestations || []).map((a) => a.capture_sha).filter(said))];
+      }
+    } catch { /* the event's own list entry stands */ }
+    return { event: e.event_id, kind: e.kind, status: e.status ?? null, label: label ?? e.kind, when: e.when ?? null,
+             ...(e.when ? {} : { when_undetermined: true, why: e.why ?? "placed nowhere: no attestation you can see dates this event" }), captures };
+  }
+  /* R30: the group's pending deadlines of the actions belonging to the proceeding. Both reads are paged and bounded; an
+     action of another proceeding adds nothing, a body's entry is never listed by `ourDeadlines`. */
+  #groupLane(proceeding, lo, hi, viewer, nowMs) {
+    const lane = { items: [], limit: PROCEEDING_LANE_MAX, truncated: false };
+    const ids = new Set();
+    try {
+      let after = null;
+      for (let page = 0; page < GROUP_LANE_PAGES; page++) {
+        const r = this.actions.actionsFor({ proceeding, after, limit: 200, viewer });
+        if (!r || r.ok === false || !Array.isArray(r.items)) { lane.unread = (r && r.reason) || "the actions could not be read"; return lane; }
+        for (const a of r.items) ids.add(a.id);
+        if (!r.truncated || !r.cursor) { after = null; break; }
+        after = r.cursor;
+        if (page === GROUP_LANE_PAGES - 1) lane.truncated = true;
+      }
+    } catch { lane.unread = "the actions could not be read"; return lane; }
+    if (!ids.size) return lane;
+    try {
+      let after = null;
+      for (let page = 0; page < GROUP_LANE_PAGES; page++) {
+        const r = this.actionClocks.ourDeadlines({ from: lo, to: hi, after, limit: PROCEEDING_LANE_MAX, viewer, now: nowMs });
+        if (!r || r.ok === false || !Array.isArray(r.items)) { lane.unread = (r && (r.reason || r.detail)) || "the deadlines could not be read"; return lane; }
+        for (const d of r.items) {
+          if (!ids.has(d.action)) continue;
+          if (lane.items.length >= PROCEEDING_LANE_MAX) { lane.truncated = true; return lane; }
+          lane.items.push({ action: d.action, entry: d.ord ?? null, date: d.date, basis: d.basis ?? null, text: d.text ?? null, zone: d.zone ?? null });
+        }
+        if (!r.truncated || !r.cursor) return lane;
+        after = r.cursor;
+      }
+      lane.truncated = true;
+    } catch { lane.unread = "the deadlines could not be read"; }
+    return lane;
+  }
+
   /** R11: between two snapshots of one portal follow, what was added, removed and changed by key. Writes nothing. */
   snapshotDiff({ follow, from, to, viewer = null } = {}) {
     const f = this.#follow(follow);
@@ -1315,6 +1450,7 @@ export class Following {
       const gated = json(f.gated);
       items.push({ follow: p.id, kind: f.kind, subject: s, author: f.kind === "policy" ? null : f.author, home: f.home,
         period: f.kind === "body" ? { from: f.from_day, until: f.until_day } : null, cadence: f.cadence, at: f.at,
+        proceeding: f.kind === "register" && s.proceeding ? s.proceeding : null,
         last_read: f.last_read, last_outcome: f.last_outcome, next_due: p.ended ? null : p.due_at ?? instant(nowMs),
         ...this.#endFields(f),
         ...(gated ? { gated, unscheduled: "read only at its member's own act (R8); the tick fetches nothing" } : {}),
@@ -1349,6 +1485,7 @@ export function followingOps(f, url, body) {
     followportal: act((b) => f.followPortal(b)),
     permeetingbody: act((b) => f.perMeetingBody(b)),
     refreshregister: act((b) => f.refreshRegister(b)),
+    proceedingdates: () => f.proceedingDates({ proceeding: q("proceeding"), from: q("from"), to: q("to"), viewer: q("viewer") }),
     follows: () => f.follows({ viewer: q("viewer"), now: q("now"), ended: q("ended") }),
     snapshots: () => f.snapshots({ follow: q("follow"), at: q("at"), viewer: q("viewer") }),
     snapshotdiff: () => f.snapshotDiff({ follow: q("follow"), from: q("from"), to: q("to"), viewer: q("viewer") }),
