@@ -28,3 +28,15 @@ Also for your channel act / the owners:
 - `queue.source.untitled` now reads "A document with no title, captured {date}": the item carries no capture date; I fill `{date}` from `captured` or the item's `age.since`.
 - No key holds a plural/singular pair for: `screen.queue.more`, `screen.find-in.notread`, `screen.finder.nobody`, `screen.answers.withheld` (each reads "1 …s" at one), nor a Home label for Join (`act.projectjoin.label.home`; I use `act.projectjoin.label.projects` on both).
 - `SCREEN_WORDS` is gone from this module (R34); its requirements' Provides line still names it.
+
+## J3 · REPORT
+
+Found in other modules, and needs from them (my part is built on the fallback named; nothing here blocks COMPLETE):
+
+- **queue / queue-producers (N1123):** `subject.title` is absent on queue items (R28 falls back to `queue.source.untitled` for a task's subject). `queue.source.untitled` now reads "... captured {date}": an item carries no capture date, so I fill `{date}` from `captured` or `age.since`, else leave it empty.
+- **hypotheses / queue-producers (the hint):** the design's `screen.queue.hint.rate` now holds `{rate}`, `{false}`, `{looked}` and `{reason}`; a hint carries `false_alarm_rate` only. I draw the sentence only when the hint carries `false`, `looked` and `reason`; with a rate and no counts nothing is drawn (never the word with its placeholders showing); with no rate, `screen.queue.hint.rate.none`.
+- **retrieval (N1123):** `findIn` answers no document title (scope or item): R26 names a document by the `title` its answer carries, else "This document" and the passage, never a digest. `screen.find-in.scope.project` now holds `{project}` and `{count}`, so a project scope reads as that sentence only after the find has said how many captures it holds (`scope.captures`); before it, the project's title alone (read through `image`).
+- **project-roster (N1118):** until `projectlist` answers `participation`, each project listed is read once through `projectparticipants` (one read per project, on Home and on Projects) to find the member's own row by her handle; a row that answers `participation` is taken at its word and read no further.
+- **design lane:** no singular key for `screen.queue.more`, `screen.find-in.notread`, `screen.finder.nobody`, `screen.answers.withheld` (each reads "1 ...s" at one); no `act.projectjoin.label.home` (I use `.projects` on both); no Home strip reading for "no reply recorded" (R31 draws it in the rows only; the strip counts no item as overdue); no key for the supports/against choice's legend (I use `act.cite.label.find-in`).
+- **interface-shell (K3373):** `RE_POINTS` projects/home `projectjoin` is needed for `SCREENS` to load; the pushed module throws at load against the tranche's shell until R72 merges. I tested with that one line added locally, never committed.
+- **screens-inquiry:** `document.test.mjs` "R15 Watch for changes" fails on the tranche (its drawn sentence differs from the words it asserts); not mine.
