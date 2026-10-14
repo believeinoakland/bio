@@ -20,6 +20,10 @@ import * as MEMBERSHIP from "../membership/checks.mjs";
    C-70.4 and the whole C-95 family), in its place in the module order (directly after membership, before credentials).
    No code is in both files, so no row moves. */
 import * as PROJECT_ROSTER from "../project-roster/checks.mjs";
+/* R17 (T48; N996, K3101; `extraction/credentials-split.md` §2, §7): ai-accounts' rows (`AI_ACCOUNT_CHECKS`: the C-29 rows that
+   moved from credentials' file, each code, number and translation unchanged, `DISCLOSURE_DUE`'s C-29.40 among them), in its
+   place in the module order (directly before credentials). */
+import * as AI_ACCOUNTS from "../ai-accounts/checks.mjs";
 import * as CREDENTIALS from "../credentials/checks.mjs";
 import * as PROMOTION from "../promotion/checks.mjs";
 import * as PROVENANCE from "../provenance/checks.mjs";
@@ -157,13 +161,31 @@ import * as ADMISSION from "../admission/checks.mjs";
 import * as INSTANCE_SETUP from "../setup.mjs";
 import * as OWN from "./checks.mjs";
 
+/* R18 (T48; N1039, K3147; the `court-citations` R11 form): importing this module builds none of its tables. Each exported
+   table is a plain binding to a proxy over an empty target of the right kind; the first operation on it fills the target,
+   freezes it, and every operation after is forwarded to the filled, frozen target, so a read answers value for value as
+   before (entries, `length`, `Array.isArray`, frozenness, a write refused in strict code). */
+function lazyTable(target, fill) {
+  let ready = false;
+  const get = () => { if (!ready) { fill(target); Object.freeze(target); ready = true; } return target; };
+  const forward = (op) => (_t, ...args) => Reflect[op](get(), ...args);
+  return new Proxy(target, {
+    get: (_t, key) => Reflect.get(get(), key),
+    has: forward("has"), ownKeys: forward("ownKeys"), getOwnPropertyDescriptor: forward("getOwnPropertyDescriptor"),
+    getPrototypeOf: forward("getPrototypeOf"), isExtensible: forward("isExtensible"),
+    set: forward("set"), defineProperty: forward("defineProperty"), deleteProperty: forward("deleteProperty"),
+    setPrototypeOf: forward("setPrototypeOf"), preventExtensions: forward("preventExtensions"),
+  });
+}
+
 /* The sources, in the order a code is resolved: `[path under bio-plane/, namespace]`. */
-export const CHECK_FAMILY_FILES = Object.freeze([
+const FILE_LIST = [
   ["src/record-grammar/acts.mjs", RECORD_GRAMMAR_ACTS],
   ["src/textchain.mjs", TEXT_CHAIN],
   ["src/record-core/checks.mjs", RECORD_CORE],
   ["src/membership/checks.mjs", MEMBERSHIP],
   ["src/project-roster/checks.mjs", PROJECT_ROSTER],
+  ["src/ai-accounts/checks.mjs", AI_ACCOUNTS],
   ["src/credentials/checks.mjs", CREDENTIALS],
   ["src/promotion/checks.mjs", PROMOTION],
   ["src/provenance/checks.mjs", PROVENANCE],
@@ -247,13 +269,15 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/setup.mjs", INSTANCE_SETUP],
   ["src/admission/checks.mjs", ADMISSION],
   ["src/answer-envelope/checks.mjs", OWN],
-].map((e) => Object.freeze(e)));
+];
+export const CHECK_FAMILY_FILES = lazyTable([], (t) => { for (const e of FILE_LIST) t.push(Object.freeze(e)); });
 
 const translated = (row) => !!row && typeof row === "object" && typeof row.translation === "string" && row.translation !== "";
 
-function compose() {
+/* Fills `out` (the target of `CHECK_FAMILIES`) from the sources: each code once, in its first-holding family. */
+function compose(out) {
   const first = new Map();   /* code → [family, row], the row that keeps the code */
-  for (const [, source] of CHECK_FAMILY_FILES)
+  for (const [, source] of FILE_LIST)
     for (const family of Object.keys(source).sort()) {
       if (!/_CHECKS$/.test(family)) continue;
       const rows = source[family];
@@ -264,18 +288,17 @@ function compose() {
         if (!held || (!translated(held[1]) && translated(row))) first.set(code, [family, row]);
       }
     }
-  const out = {};
   for (const [code, [family, row]] of first) (out[family] ??= {})[code] = row;
   for (const f of Object.keys(out)) Object.freeze(out[f]);
-  return Object.freeze(out);
 }
 
-export const CHECK_FAMILIES = compose();
+export const CHECK_FAMILIES = lazyTable({}, compose);
 
-/* R2: a code's row, `{check, translation}`, or null when no source holds one with a canned translation. */
-const ROWS = new Map(Object.values(CHECK_FAMILIES).flatMap((rows) => Object.entries(rows))
-  .filter(([, row]) => translated(row)).map(([code, row]) => [code, { check: row.check ?? null, translation: row.translation }]));
+/* R2: a code's row, `{check, translation}`, or null when no source holds one with a canned translation. Read on first use (R18). */
+let ROWS = null;
 export function dec49Row(code) {
+  ROWS ??= new Map(Object.values(CHECK_FAMILIES).flatMap((rows) => Object.entries(rows))
+    .filter(([, row]) => translated(row)).map(([code, row]) => [code, { check: row.check ?? null, translation: row.translation }]));
   const row = ROWS.get(code);
   return row ? { ...row } : null;
 }
