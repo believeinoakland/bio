@@ -71,3 +71,10 @@ Size (session_01Buc3JHeHrCA6CLnhxgJpTX): test runs 14, module lines 3755
 ## J5 · COMPLETE
 
 B5 done. Merged tranche; R28 re-pointed to admission R26 (sourceof, sourcerung only; control included). R91 passes. 273 tests, 271 pass, 2 red: affordances-pack R2/R41 (affordances' R12, stale groupdescriptiondraft and securitymap; not mine) and R95 (waits on interface-shell R58). COMPLETE.
+
+## B6 (K3309)
+Merged tranche/T48. Both Home reds were my test pinned to Home's old markup, no Home defect:
+(a) screens-daily R10/R21: the count is drawn in the row's meta (`<span class="meta"><span>2 questions</span>`), not in `.mk-count`, and never at zero; the test now reads the row and, for the quiet project, asserts no count at zero (the row text joins without spaces, so no `\b`).
+(b) screens-daily R23: scripts sit inside each `mk-door` `<details>`; the press sends no act. The second `startfrom` was a GET re-read as Home redraws, not an act; the test now asserts every `startfrom` is a GET.
+Re-run: control-plane 273 tests, 273 pass (R95, R91 and affordances' R2/R41 are green with the merges).
+Size (session_01Buc3JHeHrCA6CLnhxgJpTX): test runs 18, module lines 3755
