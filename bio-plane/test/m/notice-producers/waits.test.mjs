@@ -5,6 +5,13 @@ import assert from "node:assert/strict";
 import { world, inquiryMd, V } from "../inquiry/fixture.mjs";
 import { producers, reader, ofKind, sentences, snapshot, notHintFailures } from "./fixture.mjs";
 import { WAIT_LOOK, HINT_MARK } from "../../../src/notice-producers/index.mjs";
+import { WORDS } from "../ai-use/fixture.mjs";
+
+/* `words.json`'s sentence of `key`, its placeholders filled (a key the file lacks fails here) */
+const say = (key, fills = {}) => {
+  assert.equal(typeof WORDS[key], "string", `${key} is in words.json`);
+  return WORDS[key].replace(/\{([A-Za-z_]+)\}/g, (m, k) => (k in fills ? fills[k] : m));
+};
 
 const Q = "INQ-2026-0701-q", R = "INQ-2026-0702-r";
 const KIND = "inquiry-recheck-due";
@@ -37,10 +44,19 @@ test("R6: a wait due on the local day is one OBLIGATION inquiry-recheck-due, key
   for (const m of ["bob", null]) assert.deepEqual(ofKind(read(m, { now: "2026-10-11T00:00:00Z" }), KIND), [], String(m));
 });
 
-test("R6: it names what is awaited, from whom and by when (DEC-98), in a to-do's words", () => {
-  const { read } = setup();
+test("R6 R20: it names what is awaited, from whom and by when (DEC-98), in queue.inquiry-recheck-due.summary's and .detail's words: {question} the inquiry's title, {what} the wait's text, {who} its description (its own leading \"from\" left to the sentence), {date} its day by date.daymonth", () => {
+  const { w, read } = setup();
   const it = ofKind(read("alice", { now: "2026-10-11T00:00:00Z" }), KIND)[0];
-  assert.match(it.summary, /records reply \(from the city clerk\), by 2026-10-10/);
+  const title = [...w.st.sql.exec(`SELECT title FROM bundles WHERE bundle_id=?`, Q)][0]?.title;
+  const fills = { question: title ?? Q, what: "records reply", who: "the city clerk", date: say("date.daymonth", { day: "10", month: say("date.month.october") }) };
+  assert.equal(it.summary_key, "queue.inquiry-recheck-due.summary");
+  assert.equal(it.detail_key, "queue.inquiry-recheck-due.detail");
+  assert.deepEqual(it.fills, fills);
+  assert.equal(it.summary, say("queue.inquiry-recheck-due.summary", fills));
+  assert.equal(it.detail, say("queue.inquiry-recheck-due.detail", fills));
+  assert.match(it.detail, /: records reply, from the city clerk, by 10 October\./);
+  assert.doesNotMatch(it.detail, /from from/, "control: the description's own \"from\" is not said twice");
+  assert.ok(!/\{/.test(it.summary + it.detail), "every placeholder filled");
   assert.deepEqual(it.subject.waits.map((x) => [x.index, x.text, x.description]), [[0, "records reply", "from the city clerk"]]);
   for (const s of sentences(it)) assert.doesNotMatch(s, /\bobligation\b/i, s);
   assert.equal(it.options[0].id, WAIT_LOOK.id);
@@ -99,4 +115,20 @@ test("R11: a dated wait's to-do is no hint: it carries no \"Hint · machine work
   const items = ofKind(read("alice", { now: "2026-10-11T00:00:00Z" }), KIND);
   assert.equal(items.length, 1);
   assert.deepEqual(notHintFailures(items[0], HINT_MARK), []);
+});
+
+test("R20 R6: a wait due on a day of last year names its year (date.daymonthyear); several waits on one day are one item naming each; control: a wait with no description names its text as from whom", async () => {
+  const { w } = setup();
+  const { fresh } = await import("./fixture.mjs");
+  const waits = (member) => [{ inquiry: Q, index: 0, text: "records reply", description: "from the city clerk", date: "2025-12-30", set_by: member, state: "due" },
+                             { inquiry: Q, index: 1, text: "the vote count", description: "the council's secretary", date: "2025-12-30", set_by: member, state: "due" },
+                             { inquiry: R, index: 0, text: "agenda out", description: null, date: "2026-10-10", set_by: member, state: "due" }];
+  const n = fresh(w.host, { membership: w.membership, inquiry: { datedWaits: ({ member }) => ({ ok: true, member, zone: "America/Los_Angeles", waits: waits(member) }) } });
+  const got = Object.fromEntries(ofKind(reader(n).read("alice", { now: "2026-10-11T00:00:00Z" }), KIND).map((i) => [i.subject.id, i]));
+  assert.equal(got[Q].fills.date, say("date.daymonthyear", { day: "30", month: say("date.month.december"), year: "2025" }));
+  assert.equal(got[Q].fills.what, "records reply; the vote count");
+  assert.equal(got[Q].fills.who, "the city clerk; the council's secretary");
+  assert.equal(got[Q].detail, say("queue.inquiry-recheck-due.detail", got[Q].fills));
+  assert.equal(got[R].fills.date, "10 October", "control: this year's day names no year");
+  assert.equal(got[R].fills.who, "agenda out");
 });

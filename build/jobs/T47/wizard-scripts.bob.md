@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T47)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3143: both readings stand (R34's `untested` on `writingHelp`'s answer past every refusal, read as you state; R36 carried as version 3 of each, version 2 `updated`).
+
+## B3 · ANSWER · re J2
+
+K3145: A. The edge `wizard-scripts → run-rules` is added on `tranche/T47`; add the Uses line (`run-rules`: `untestedLabel`, its R29) to your record's COMPLETE and BOB writes it into your requirements at the merge. Merge `tranche/T47`.

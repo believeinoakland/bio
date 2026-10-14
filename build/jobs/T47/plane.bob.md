@@ -1,6 +1,6 @@
 # BOB to plane (T47)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -15,3 +15,23 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 3439 KB with your tests (K2700; used public parts 2746 KB across 118 modules, an upper bound), over the 600 KB limit. Read your requirements and code whole and, per mechanics §3, each used module's Purpose and only the services your Uses names; for what remains over the limit (your tests, used parts), give helpers in your session your entry and what follows it (the later L11 jobs in the merge order that use your services), have them read those parts in full and write you a digest citing each section (K2032, §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
 L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, setup-page (its delete), installer, plane, journey-check last. A provider merges before its users; a job using an L11 job's new service merges `tranche/T47` into its branch when BOB announces that merge (a CHANGE); a job that uses no unmerged L11 job merges as soon as it is complete (K1965).
+
+## B2 · CHANGE
+
+K3143: new R49 on `tranche/T47`: spread signin-door's store-internal map `signinDoorOps` beside `credentialsOps` in the store's route map, once signin-door merges (a CHANGE then). Merge `tranche/T47` for the text.
+
+## B3 · ANSWER · re J2
+
+K3147: R43 is met by naming the cause (your J1): its test asserts the measure is taken and printed beside the 500 ms budget as a warning, as bundler R31 does (plane R43's text says so now); the reductions are N1039, actions' spread N1040. J2 (2) stands. op-grades is merged: re-pin `wizards.test.mjs`' irreversible acts (publishat, publishatmove). Merge `tranche/T47`.
+
+## B4 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
+
+## B5 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B6 · CHANGE
+
+K3150 (CONTROL-PLANE #32 J2): (1) `src/plane/store.mjs` spreads `caseAuthoringOps` but not `caseInputsOps`: spread it (before case-authoring's, your R39 entry), so `statementack`, `whatchangedpropose`, `whatchangeddrafts` have store routes; (2) `clockpropose` is served by `controlPlaneOwnerOps` through `of.actionClocks()`: add `actionClocks` to the store's `of`. Test both through the composed plane. Also merged: project-roster, notice-producers. Merge `tranche/T47`.

@@ -37,7 +37,8 @@ test("R23: K2092's five ops — standardinforcethrough, standardinforcethroughwi
 
 /* ---- R24 ----------------------------------------------------------------------------------------------------------- */
 /* the 23 ops of file-safety's ops map (`fileSafetyOps`), its own names */
-const R24_WRITES = { releasescanhold: "reasoned", deepercheck: "undetermined", safecopyrequest: "undetermined",
+/* R35 (T47) amends R24: deepercheck `observational`, as deeperbatch */
+const R24_WRITES = { releasescanhold: "reasoned", deepercheck: "observational", safecopyrequest: "undetermined",
   openoriginal: "observational", openwithwarning: "observational", scanbatch: "observational", deeperbatch: "observational",
   renderbatch: "substrate", securityforward: "substrate", securitytooladd: "credential", securitytoolremove: "credential",
   securitytooltest: "substrate" };
@@ -61,8 +62,8 @@ const R24_REASONS = {
   scanbatch: WAKES, renderbatch: WAKES, deeperbatch: WAKES, securityforward: WAKES,
 };
 
-test("R24: the 23 ops of file-safety — releasescanhold `reasoned` on HOLD_NO_REASON; deepercheck, safecopyrequest "
-   + "`undetermined`; the openings and the scan and deeper batches `observational`; renderbatch, securityforward, "
+test("R24 R35: the 23 ops of file-safety — releasescanhold `reasoned` on HOLD_NO_REASON; deepercheck `observational` "
+   + "(R35), safecopyrequest `undetermined`; the openings and the scan and deeper batches `observational`; renderbatch, securityforward, "
    + "securitytooltest `substrate`; tool add and remove `credential`; the 11 reads `read:` — each with R24's reason, none "
    + "a machine refusal, and only tool add and remove kept off the phone", () => {
   assert.equal(Object.keys(R24_WRITES).length + R24_READS.length, 23);
