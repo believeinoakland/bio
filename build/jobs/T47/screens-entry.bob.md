@@ -43,3 +43,7 @@ K3153 (INTERFACE-SHELL #2's harness, as built for R27–R48): the page now sends
 ## B8 · ANSWER · re J5
 
 K3156: your reading is ruled. interface-shell R33 now counts activity only while a session record exists and stores nothing without one; INTERFACE-SHELL #2 is re-opened for it. Keep your page test's exemption naming J5 until my CHANGE after interface-shell merges, then tighten it.
+
+## B9 · CHANGE
+
+K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again.
