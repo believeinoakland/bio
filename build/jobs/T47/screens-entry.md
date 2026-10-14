@@ -49,3 +49,7 @@ B5 applied: tranche/T47 merged (632e08f98c). Against WORD_ROWS at 6f0d88d8d5 eve
 ## J5 · REPORT
 
 interface-shell (from my page test over its branch head): in the public frame with no session, a click writes `bio-session:active` (R33's activity instant) to localStorage, so walking `tour` stores something, against screens-entry R3 ("nothing is stored") and R33's own purpose (activity of a session). My reading: the shell counts activity only while a session record exists. My page test leaves that one key out, naming this report; I tighten it when the shell changes.
+
+## J6 · COMPLETE
+
+T47-86 built: R1–R11, with B2–B7 applied (K3143–K3145, K3149, K3152, K3153); the record's Completion names the files for modules.json (paths bio-plane/src/screens-entry/, tests bio-plane/test/m/screens-entry/), readings, the deferred language names, and J5. Tests on this branch with tranche/T47 merged: 46 pass, 1 fail (page.test.mjs needs interface-shell's merge); over interface-shell's head overlaid: 52 of 52. Checks with my paths set locally: format, architecture, coverage (11 of 11), ownership 0 failures; checks/run.mjs architecture 0 failures. I re-run on your CHANGE after interface-shell merges.
