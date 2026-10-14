@@ -3,7 +3,11 @@
    with the invitation shown once; joining through the group's website; the group's API key; the AI account panel over
    `owner: "group"`; keeping the group's material away from AI. A member opened by address (`/app/members/<id>`) has
    their expertise read (`expertiselist`) and their row's panel offers its confirmation. Every function is
-   self-contained (interface-shell R21). */
+   self-contained (interface-shell R21).
+   T47: each row's name is the member's reference (R12, `cs.rows`' `name`, interface-shell R27); a row offers "Make a
+   reset link" (`passwordresetlink`, the link shown once with the sentence that no email is sent) and "Withdraw
+   <handle>'s signing key" (`signerset`) for a lost or stolen device; "More for administrators" links `group`, `places`
+   and `recovery` (R23). */
 
 export const members = {
   id: "members",
@@ -19,6 +23,7 @@ export const members = {
     // the owners refuse these to a member who does not administer (instance-setup R66; credentials R60; ai-use R12)
     if (admin) {
       r.recovery = { op: "adminrecoverystep" };
+      r.signers = { op: "signerlist" };
       r.uses = { op: "accountuses", query: { owner: "group" } };
       r.limits = { op: "ailimits", query: { owner: "group" } };
       r.usage = { op: "aiusage", query: { owner: "group" } };
@@ -54,16 +59,17 @@ export const members = {
       let h = `<p>${W(S + "count", { members: active.length, administrators: active.filter((m) => m.role === "admin").length })}</p>`;
       const rec = okv(data.recovery);
       if (admin && rec && rec.met === false)
-        h += `<div class="cs-note" data-note="recovery"><p>${W(rec.administrators === 1 ? S + "recovery.one" : S + "recovery.many", { administrators: rec.administrators })} ${W(rec.codes_held ? S + "recovery.codes" : S + "recovery.nocodes", { remaining: rec.remaining })}</p><p>${rec.administrators < 2 ? `<a href="#members-invite">${W(S + "recovery.add")}</a> ` : ""}${rec.codes_held ? "" : `<a href="/">${W(S + "recovery.issue")}</a>`}</p></div>`;
+        h += `<div class="cs-note" data-note="recovery"><p>${W(rec.administrators === 1 ? S + "recovery.one" : S + "recovery.many", { administrators: rec.administrators })} ${W(rec.codes_held ? S + "recovery.codes" : S + "recovery.nocodes", { remaining: rec.remaining })}</p><p>${rec.administrators < 2 ? `<a href="#members-invite">${W(S + "recovery.add")}</a> ` : ""}${rec.codes_held ? "" : `<a href="/app/recovery" data-nav>${W(S + "recovery.issue")}</a>`}</p></div>`;
       const cols = [S + "col.handle", ...(admin ? [S + "col.cover"] : []), S + "col.role", S + "col.caps", S + "col.status", S + "col.expertise"];
       const expOf = (m) => {
         const ex = okv(data.expertise);
         return view.subject === m.member_id && ex ? ex.expertise || [] : m.expertise || [];
       };
       return h + cs.rows({
-        id: "roster", cols, items: list, key: (m) => m.member_id, name: (m) => m.handle || T(S + "nohandle"),
+        // the member's handle is their reference (R12); one not joined yet has none
+        id: "roster", cols, items: list, key: (m) => m.member_id, name: (m) => (m.handle ? cs.ref("member", m.member_id, m.handle) : E(T(S + "nohandle"))),
         cells: (m) => [
-          E(m.handle || T(S + "nohandle")),
+          m.handle ? cs.ref("member", m.member_id, m.handle) : E(T(S + "nohandle")),
           ...(admin ? [m.cover !== undefined ? E(m.cover) : ""] : []),
           W(m.role === "admin" ? S + "role.admin" : S + "role.member"),
           E((m.capabilities || []).map(capName).join(", ")),
@@ -90,11 +96,23 @@ export const members = {
             if (c) p.push(`<label for="mr-${E(id)}">${W(S + "remove.reason")}</label><textarea id="mr-${E(id)}" class="cs-input rec" maxlength="2000"></textarea>${c}`);
           }
           if (m.invitation === "live") p.push(cs.act("invitewithdraw", { data: { member: id } }));
+          // a reset link for a member who has joined (credentials R69), shown once
+          if (m.handle && m.status === "active" && id !== me.member) {
+            const c = cs.act("passwordresetlink", { data: { member: id } });
+            if (c) p.push(`${ui.reset && ui.reset.member === id ? `<div class="cs-shown" data-shown="reset"><p>${W(S + "reset.shown", { handle: label, expires: D(ui.reset.expires) })}</p><p><code>${E(ui.reset.link)}</code></p><p>${W(S + "reset.noemail")}</p></div>` : ""}${c}`);
+          }
+          // the member's active signing keys, each withdrawn for a lost or stolen device (credentials R10)
+          const sg = okv(data.signers);
+          for (const k of sg && Array.isArray(sg.signers) ? sg.signers.filter((x) => x.member_id === id && x.status === "active") : [])
+            p.push(`<p>${W(S + "signer.held", { key: "…" + String(k.key_b64).slice(-8), date: D(k.added) })}</p>${cs.act("signerset", { label: S + "signer.withdraw", fills: { handle: label }, data: { key: k.key_b64 } })}`);
           for (const e of expOf(m)) if (e.state === "declared" && !e.confirmed) p.push(`<p>${W(S + "expertise.declared", { label: e.label })}</p>${cs.act("expertiseconfirm", { data: { member: id, label: e.label } })}`);
           return p.join("");
         },
       });
     }, { empty: S + "empty" }));
+
+    // more for administrators (R23): the group's other settings
+    if (admin) out.push(cs.sec(S + "more.heading", `<ul class="cs-list" data-list="more">${["group", "places", "recovery"].map((id) => `<li><a class="cs-ref" href="/app/${id}" data-nav>${W("screen." + id + ".name")}</a></li>`).join("")}</ul>`));
 
     // inviting (R2): the short id, the cover and the capabilities ticked; the invitation shown once
     const add = cs.act("memberadd");
@@ -178,6 +196,15 @@ export const members = {
       } },
     { op: "expertiseconfirm", rereads: ["roster", "expertise"],
       send(view, el) { return { body: { memberId: el.dataset.member, label: el.dataset.label } }; } },
+    // the link the member opens to choose a new password (screens-entry's `reset`), shown once
+    { op: "passwordresetlink", rereads: [],
+      send(view, el) { return { body: { member: el.dataset.member } }; },
+      done(view, answer, cs) {
+        const a = answer && answer.result !== undefined ? answer.result : answer;
+        if (a && a.link) cs.set("reset", { member: a.member, expires: a.expiresAt, link: (view.origin || "") + "/app/reset#reset=" + encodeURIComponent(a.link) });
+      } },
+    { op: "signerset", rereads: ["signers"],
+      send(view, el) { return { body: { keyB64: el.dataset.key, status: "revoked" } }; } },
     { op: "invitewithdraw", rereads: ["roster"],
       send(view, el) { return { body: { memberId: el.dataset.member } }; } },
     { op: "websitekeycreate", rereads: [],

@@ -2,9 +2,13 @@
    (`subscriptionsignin` for the owed sign-in, `subscriptiondisconnect` beside `accountreferenceremove`; interface-shell
    R21). It draws exactly one of four situations: the group keeps its material away from AI; the member's own account
    serves them; the group's key serves them; nothing serves yet. Connecting is offered in DEC-156's order (the
-   subscription, only while `op=bootstrap`'s `parts` holds the sign-in, instance-setup R81; then an API key; then
+   subscription, only while the sign-in is installed; then an API key; then
    skipping), once the disclosure of what connecting means is read. A key or code is sent in the request's body only,
-   and never kept, drawn or sent again (R10). Every function is self-contained (interface-shell R21). */
+   and never kept, drawn or sent again (R10). Every function is self-contained (interface-shell R21).
+   T47: the sign-in is offered only while `op=bootstrap`'s flat `part_signin` answers `true` (R13, instance-setup R82);
+   every sign-in refusal is drawn in words, the shell adding its reference (R24, interface-shell R39); the subscription's
+   state is read from the plane (`accountreference`'s `subscription`, credentials R70): since when, until when, refused at
+   Anthropic ("connect again"); a failed state read is said, never drawn as not connected. */
 
 export const connect = {
   id: "connect",
@@ -57,13 +61,17 @@ export const connect = {
       return out.join("");
     }
     const ref = okv(data.reference), sub = okv(data.signin), gk = okv(data.groupkey);
-    const subscribed = !!(sub && sub.connected === true) || !!(ref && ref.subscription && ref.subscription.connected === true);
+    // the subscription's state as the plane holds it (credentials R70): the reference's own read, else the sign-in's
+    const st = ref && ref.subscription ? ref.subscription : sub || {};
+    const subscribed = st.connected === true;
     const keyed = !!(ref && ref.held === true);
     const groupServes = !!(gk && gk.on === true);
     const situation = subscribed || keyed ? "own" : groupServes ? "group" : "none";
 
     if (situation === "own") {
-      out.push(`<div class="cs-situation" data-situation="own"><p>${W(subscribed ? S + "own.subscription" : S + "own.apikey")}</p>${groupServes ? `<p>${W(S + "own.thengroup")}</p>` : ""}</div>`);
+      // a subscription: since when and, when answered, until when (credentials R70)
+      const when = subscribed ? (st.since ? `<p data-state="since">${W(S + "own.since", { date: D(st.since) })}${st.valid_until ? " " + W(S + "own.until", { date: D(st.valid_until) }) : ""}</p>` : "") : "";
+      out.push(`<div class="cs-situation" data-situation="own"><p>${W(subscribed ? S + "own.subscription" : S + "own.apikey")}</p>${when}${groupServes ? `<p>${W(S + "own.thengroup")}</p>` : ""}</div>`);
     } else if (situation === "group") {
       // the member's allowance on the group's key, when a per-member limit is set
       let allowance = "";
@@ -89,16 +97,23 @@ export const connect = {
         if (disc.shown !== true) return outward(`<p>${W(S + "disclosure.own")}</p>${cs.act("disclosureshown", { data: { version: disc.version || "" } })}`) + `<p>${W(S + "disclosure.then")}</p>`;
         let h = "";
         const boot = okv(data.boot);
-        const part = boot && Array.isArray(boot.parts) ? boot.parts.find((p) => p.part === "signin") : null;
-        // 1. the subscription, offered only while the sign-in is present (trial §3.2)
-        if (part && part.present === true) {
-          const start = cs.act("subscriptionsignin", { label: "act.owed_subscriptionsignin.label.connect", data: { step: "start" } });
+        // the sign-in's part, read flat (R13; instance-setup R82): `true` installed, `false` not, `null` not read
+        const part = boot ? boot.part_signin : null;
+        // refused at Anthropic: said once, with the way back (R24)
+        if (st.refused_at && !subscribed) h += `<p class="cs-notice" data-state="refused">${W(S + "signin.again", { date: D(st.refused_at) })}</p>`;
+        // a state read that failed is said, never drawn as not connected (R24)
+        if (data.signin && data.signin.state === "failed" && !ref) h += `<p data-state="signinread">${W(S + "signin.statefailed")}</p>`;
+        // 1. the subscription, offered only while the sign-in is installed (trial §3.2)
+        if (part === true) {
+          let start = cs.act("subscriptionsignin", { data: { step: "start" } });
           const code = cs.act("subscriptionsignin", { label: S + "signin.connect", data: { step: "code" } });
+          // "Open Anthropic's sign-in page" is not pressed again while a start is in flight (R24)
+          if (ui.starting) start = start.replace('<button type="button"', '<button type="button" disabled aria-disabled="true"');
           if (start || code) {
             const open = ui.signinAddress ? `<p data-shown="signin"><a href="${E(ui.signinAddress)}" target="_blank" rel="noopener noreferrer">${W(S + "signin.open")}</a></p>` : "";
-            h += `<h3>${W(S + "signin.heading")}</h3><ol class="cs-list"><li>${W(S + "signin.step1")}</li><li>${W(S + "signin.step2")}</li><li>${W(S + "signin.step3")}</li><li>${W(S + "signin.step4")}</li></ol>${start}${open}<div class="cs-form"><label for="mc-code${ui.gen || 0}">${W(S + "signin.code")}</label><span class="help">${W(S + "signin.help")}</span><input id="mc-code${ui.gen || 0}" type="password" class="cs-input" autocomplete="off">${code}</div>`;
+            h += `<h3>${W(S + "signin.heading")}</h3><ol class="cs-list"><li>${W(S + "signin.step1")}</li><li>${W(S + "signin.step2")}</li><li>${W(S + "signin.step3")}</li><li>${W(S + "signin.step4")}</li></ol>${start}${open}<div class="cs-form"><label for="mc-code${ui.gen || 0}">${W(S + "signin.code")}</label><span class="help">${W(S + "signin.whole")} ${W(S + "signin.help")}</span><input id="mc-code${ui.gen || 0}" type="password" class="cs-input" autocomplete="off">${code}</div>`;
           }
-        } else h += `<p data-state="signin">${W(part && part.present === false ? S + "signin.absent" : S + "signin.unread")}</p>`;
+        } else h += `<p data-state="signin">${part === false ? W("instance.part.signin.absent") : W("instance.part.unknown", { part: T(S + "signin.part") })}</p>`;
         // 2. an API key
         const set = cs.act("accountreferenceset");
         if (set) h += `<h3>${W(S + "apikey.heading")}</h3><div class="cs-form"><label for="mc-key${ui.gen || 0}">${W(S + "apikey.field")}</label><span class="help">${W(S + "apikey.help")}</span><input id="mc-key${ui.gen || 0}" type="password" class="cs-input" autocomplete="off">${set}</div>`;
@@ -125,19 +140,46 @@ export const connect = {
       send() { return { body: {} }; } },
     { op: "disclosureshown", rereads: ["disclosure"], outward: true,
       send(view, el) { const me = view.me || {}; return { body: { member: me.member === "admin" ? "admin" : "member:" + me.member, version: el.dataset.version } }; } },
-    // the owed sign-in, re-pointed to `subscriptionsignin` (DEC-156; control-plane R65): start, then the code
+    // the member's own sign-in (DEC-156; control-plane R65): start, then the code. A start in flight disables its button
+    // until it answers (R24): set before it is sent, cleared by its answer or by any refusal (each drawn in words, R24)
     { op: "subscriptionsignin", rereads: ["signin", "reference", "uses", "limits", "usage", "history"],
       send(view, el, cs) {
-        if (el.dataset.step === "start") return { body: { step: "start" } };
+        if (el.dataset.step === "start") { cs.set("starting", true); return { body: { step: "start" } }; }
         const code = String(cs.value("mc-code" + ((view.ui && view.ui.gen) || 0)) || "").trim();
         return code ? { body: { step: "code", code } } : { refuse: "screen.connect.signin.nocode" };
       },
       // Anthropic's page, offered to open in a new browsing context, with no opener and no referrer (J2 (3))
       // the code's field drawn anew, empty (the shell keeps a field's value by its id; R10)
-      done(view, answer, cs) { const a = answer && answer.result !== undefined ? answer.result : answer; if (a && a.address) cs.set("signinAddress", a.address); else cs.set("gen", ((view.ui && view.ui.gen) || 0) + 1); },
-      // RUNNER_NOT_CONFIGURED and DISCLOSURE_DUE: the translation the door relays (control-plane R65)
-      refusals: { NO_SIGNIN_WAITING: "screen.connect.refused.NO_SIGNIN_WAITING", SIGNIN_REFUSED: "screen.connect.refused.SIGNIN_REFUSED", SIGNIN_UNAVAILABLE: "screen.connect.refused.SIGNIN_UNAVAILABLE",
-        SIGNIN_ADDRESS_UNEXPECTED: "screen.connect.refused.SIGNIN_ADDRESS_UNEXPECTED", AGENT_WORKER_UNBOUND: "screen.connect.refused.AGENT_WORKER_UNBOUND", AI_KEPT_AWAY: "screen.connect.refused.AI_KEPT_AWAY" } },
+      done(view, answer, cs) {
+        const a = answer && answer.result !== undefined ? answer.result : answer;
+        if (view.ui && view.ui.starting) cs.set("starting", false);
+        if (a && a.address) cs.set("signinAddress", a.address); else cs.set("gen", ((view.ui && view.ui.gen) || 0) + 1);
+      },
+      // every code `/signin` can answer (agent-worker R84's `SIGNIN_CODES`) and the door's own (control-plane R65), each in
+      // words: `refusal.<code>` where `words.json` holds it, else this module's meaning; `{detail}` filled where it has one
+      refusals: {
+        NO_SIGNIN_WAITING: (r, cs) => { cs.set("starting", false); return cs.w("refusal.NO_SIGNIN_WAITING", r); },
+        SIGNIN_REFUSED: (r, cs) => { cs.set("starting", false); return cs.w("refusal.SIGNIN_REFUSED", { detail: r.detail || "" }); },
+        SIGNIN_UNAVAILABLE: (r, cs) => { cs.set("starting", false); return cs.w("refusal.SIGNIN_UNAVAILABLE", r); },
+        SIGNIN_ADDRESS_UNEXPECTED: (r, cs) => { cs.set("starting", false); return cs.w("refusal.SIGNIN_ADDRESS_UNEXPECTED", r); },
+        AGENT_WORKER_UNBOUND: (r, cs) => { cs.set("starting", false); return cs.w("refusal.AGENT_WORKER_UNBOUND", r); },
+        DISCLOSURE_DUE: (r, cs) => { cs.set("starting", false); return cs.w("refusal.DISCLOSURE_DUE", r); },
+        AI_KEPT_AWAY: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.AI_KEPT_AWAY", r); },
+        RUNNER_NOT_CONFIGURED: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.RUNNER_NOT_CONFIGURED", r); },
+        RUNNER_NOT_STARTED: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.RUNNER_NOT_STARTED", { detail: r.detail || "" }); },
+        RUNNER_SILENT: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.RUNNER_SILENT", r); },
+        AGENT_WORKER_SILENT: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.AGENT_WORKER_SILENT", r); },
+        ATTEMPT_SUPERSEDED: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.ATTEMPT_SUPERSEDED", r); },
+        NOT_THIS_MEMBER: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.NOT_THIS_MEMBER", r); },
+        BAD_CODE: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.BAD_CODE", r); },
+        BAD_BODY: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.BAD_REQUEST", r); },
+        BAD_MEMBER: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.BAD_REQUEST", r); },
+        BAD_REQUEST: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.BAD_REQUEST", r); },
+        BAD_STEP: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.BAD_REQUEST", r); },
+        SIGNIN_NOT_HELD: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.SIGNIN_NOT_HELD", r); },
+        SIGNIN_TOKEN_REFUSED: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.SIGNIN_TOKEN_REFUSED", r); },
+        SIGNOUT_FAILED: (r, cs) => { cs.set("starting", false); return cs.w("screen.connect.refused.SIGNOUT_FAILED", r); },
+      } },
     { op: "accountreferenceset", rereads: ["reference", "uses", "limits", "usage", "history"], outward: true,
       send(view, el, cs) { const secret = String(cs.value("mc-key" + ((view.ui && view.ui.gen) || 0)) || "").trim(); return secret ? { body: { member: "member:" + (view.me || {}).member, kind: "apikey", secret } } : { refuse: "screen.connect.apikey.nokey" }; },
       done(view, answer, cs) { cs.set("gen", ((view.ui && view.ui.gen) || 0) + 1); } },
