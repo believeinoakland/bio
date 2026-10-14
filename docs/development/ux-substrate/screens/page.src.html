@@ -439,6 +439,7 @@ main:not([data-st]) .mk-frontgrid.st-a, main[data-st="a"] .mk-frontgrid.st-a, ma
 <span class="opts">
  <span class="seg" role="group" aria-label="The assistant"><button type="button" data-ai="1" aria-pressed="true">With the assistant</button><button type="button" data-ai="0" aria-pressed="false">Without</button></span>
  <span class="seg" role="group" aria-label="Explanations" title="Explanations: Alt+Shift+I switches"><button type="button" data-lvl="2" aria-pressed="true">Explain promptly</button><button type="button" data-lvl="1" aria-pressed="false">On a longer pause</button></span>
+ <span class="seg" role="group" aria-label="Which copy"><button type="button" data-test="0" aria-pressed="true">A released copy</button><button type="button" data-test="1" aria-pressed="false">A test copy</button></span>
  <span class="seg" role="group" aria-label="Device"><button type="button" data-dev="desktop" aria-pressed="true">Desktop</button><button type="button" data-dev="phone" aria-pressed="false">Phone</button></span>
  <span class="seg" role="group" aria-label="Theme"><button type="button" data-th="" aria-pressed="true">Auto</button><button type="button" data-th="light" aria-pressed="false">Light</button><button type="button" data-th="dark" aria-pressed="false">Dark</button></span>
  <label for="srcToggle"><input type="checkbox" id="srcToggle"> Sources</label>
@@ -692,7 +693,7 @@ const REG = {{REG}};
     $('vpos').textContent = `Step ${st.step + 1} of ${steps.length}`;
     $('vdots').innerHTML = steps.map((_, i) => `<button type="button" data-step="${i}" aria-current="${i === st.step}" aria-label="Step ${i + 1}">${i + 1}</button>`).join('');
     $('vprev').disabled = st.step === 0; $('vnext').disabled = st.step === steps.length - 1;
-    const c = { ai: st.ai, wizard: x.wizard, dockAssist: x.dock, v: x.v, act: x.act };
+    const c = { ai: st.ai, wizard: x.wizard, dockAssist: x.dock, v: x.v, act: x.act, test: !!st.test };
     const sc = $('vscale'); sc.innerHTML = render(x.s, c); if (window.CS_TIPFIX) window.CS_TIPFIX(sc);
     $('vdev').dataset.device = st.dev;
     fit();
@@ -708,11 +709,12 @@ const REG = {{REG}};
     const rp = e.target.closest('[data-replay]'); if (rp) { replay($('vscale')); return; }
     const o = e.target.closest('[data-open]'); if (o) { const [m, id, ai, v] = o.dataset.open.split(':'); st.mode = m; st.id = id; st.step = 0; st.list = 's'; st.ai = ai === '1'; st.v = v || undefined; syncSeg(); draw(); document.getElementById('walk').scrollIntoView(); return; }
     const a = e.target.closest('[data-ai]'); if (a) { st.ai = a.dataset.ai === '1'; syncSeg(); draw(); return; }
+    const tc = e.target.closest('[data-test]'); if (tc) { st.test = tc.dataset.test === '1'; syncSeg(); draw(); return; }
     const v = e.target.closest('[data-dev]'); if (v) { st.dev = v.dataset.dev; syncSeg(); draw(); return; }
     const h = e.target.closest('[data-th]'); if (h) { if (h.dataset.th) document.documentElement.setAttribute('data-theme', h.dataset.th); else document.documentElement.removeAttribute('data-theme'); document.querySelectorAll('[data-th]').forEach(b => b.setAttribute('aria-pressed', b === h)); try { localStorage.setItem('cs-th', h.dataset.th); } catch (e) {} return; }
   });
   $('vprev').onclick = () => { st.step--; draw(); }; $('vnext').onclick = () => { st.step++; draw(); };
-  function syncSeg() { document.querySelectorAll('[data-ai]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.ai === '1') === st.ai)); document.querySelectorAll('[data-dev]').forEach(b => b.setAttribute('aria-pressed', b.dataset.dev === st.dev)); }
+  function syncSeg() { document.querySelectorAll('[data-ai]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.ai === '1') === st.ai)); document.querySelectorAll('[data-dev]').forEach(b => b.setAttribute('aria-pressed', b.dataset.dev === st.dev)); document.querySelectorAll('[data-test]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.test === '1') === !!st.test)); }
   const t = $('srcToggle'); t.addEventListener('change', () => document.body.classList.toggle('show-src', t.checked));
   try { const th = localStorage.getItem('cs-th'); if (th) { document.documentElement.setAttribute('data-theme', th); document.querySelectorAll('[data-th]').forEach(b => b.setAttribute('aria-pressed', b.dataset.th === th)); } } catch (e) {}
   window.addEventListener('resize', fit);

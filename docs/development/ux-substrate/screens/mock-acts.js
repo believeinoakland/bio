@@ -235,6 +235,7 @@ const ACT_HELP = {
   projectlist: 'Lists the projects you may see.',
   projectinvite: 'Invites a member into this project, so they can see and work on it.',
   projectjoin: 'Joins this project to see and work on it.',
+  reauth: 'Checks your password, then does what you asked, once. Nothing else changes.',
   planopen: 'Opens a plan: what the group could do about what it found, its options and what each would take.',
   sever: 'Removes this citation from the question, with the reason kept. It can be reinstated.',
   reinstate: 'Puts a removed citation back on the question.',

@@ -3598,5 +3598,65 @@
   "en": "Tick each part first: accepting says you stand behind every part this reading rests on, and {part} is not ticked.",
   "protected": false,
   "note": "DEC-248: C-25.33"
+ },
+ {
+  "key": "connect.notnow",
+  "en": "Nothing is connected. Everything in Civicsmith works without the assistant; come back here whenever you want it.",
+  "protected": false,
+  "note": "DEC-249: screens-settings R30, \"Not now\" draws nothing more"
+ },
+ {
+  "key": "setup.skip",
+  "en": "Skip for now",
+  "protected": false,
+  "note": "DEC-249: screens-entry R6, every part"
+ },
+ {
+  "key": "setup.skip_does",
+  "en": "Moves on and leaves this part as it is. Setup shows it as skipped, and you can come back to it here or under Settings at any time.",
+  "protected": false,
+  "note": "DEC-249"
+ },
+ {
+  "key": "setup.admin.invite",
+  "en": "Invite a second administrator",
+  "protected": false,
+  "note": "DEC-249: R6, memberadd with role admin"
+ },
+ {
+  "key": "setup.admin.invite_does",
+  "en": "Makes an invitation with the administrator role, for someone you trust. You pass the link on yourself; Civicsmith sends no email. Members are invited later, from Members.",
+  "protected": false,
+  "note": "DEC-249"
+ },
+ {
+  "key": "session.reauth.head",
+  "en": "Enter your password again",
+  "protected": false,
+  "note": "DEC-249: interface-shell R34, the dialog; its sentence is session.reauth"
+ },
+ {
+  "key": "session.reauth.go",
+  "en": "Go on",
+  "protected": false,
+  "note": "DEC-249: sends reauth, then the act once more"
+ },
+ {
+  "key": "session.reauth.go_does",
+  "en": "Checks your password, then does what you asked, once. Nothing else changes.",
+  "protected": false,
+  "note": "DEC-249"
+ },
+ {
+  "key": "session.reauth.cancel_does",
+  "en": "Closes this and sends nothing; what you wrote stays where it was.",
+  "protected": false,
+  "note": "DEC-249"
+ },
+ {
+  "key": "session.reauth.wrong",
+  "en": "That password isn't right. Nothing was sent; try again.",
+  "protected": false,
+  "note": "DEC-249: a wrong password resends nothing (R34)"
  }
 ]

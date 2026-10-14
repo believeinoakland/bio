@@ -214,6 +214,8 @@ function decorate(html, id, c) {
   return t.innerHTML;
 }
 function render(screenId, c) { return decorate(renderFrame(screenId, c), screenId, c); }
+/* DEC-249: the test-copy band (interface-shell R36, R53, R58), its words instance.test.band and instance.test.notice. */
+const testBand = c => c.test ? `<div class="cs-testband" role="note"><b>Test Civicsmith</b><span>This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.</span></div>` : '';
 function renderFrame(screenId, c) {
   WRITE_ON = !!c.ai;
   const s = SCR[screenId](c);
@@ -225,11 +227,11 @@ function renderFrame(screenId, c) {
   }
   const frame = s.frame || 'working';
   const dock = c.wizard ? wizardGuide(c.wizard) : (s.dock === 'assistant' && c.ai) || (c.dockAssist && c.ai) ? assistantPanel(screenId, c) : '';
-  if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published"><header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>
+  if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published">${testBand(c)}<header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>
     <footer class="cs-pubfoot"><span class="id">${G.slug} · signed by an owner of the project · 7c1e…a90b</span><span class="cs-credit">Made with <svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><b>Civicsmith</b></span></footer></div>`;
-  if (frame === 'setup' || frame === 'public') return `<div class="cs-frame mk-page mk-plain${dock ? ' with-dock' : ''}" data-frame="${frame}"><main class="mk-plainmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}</div>`;
+  if (frame === 'setup' || frame === 'public') return `<div class="cs-frame mk-page mk-plain${dock ? ' with-dock' : ''}" data-frame="${frame}">${testBand(c)}<main class="mk-plainmain"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}</div>`;
   const band = s.band || 'working';
-  return `<div class="cs-frame cs-shell mk-page${dock ? ' with-dock' : ''}${railW() < 120 ? ' rail-icons' : ''}" data-frame="working" style="--rail:${railW()}px">${mast(c, s)}<div class="cs-band" data-band="${band}">${BANDS[band]}</div>
+  return `<div class="cs-frame cs-shell mk-page${dock ? ' with-dock' : ''}${railW() < 120 ? ' rail-icons' : ''}" data-frame="working" style="--rail:${railW()}px">${testBand(c)}${mast(c, s)}<div class="cs-band" data-band="${band}">${BANDS[band]}</div>
    <nav class="cs-rail" aria-label="Sections">${RAIL.map(([k, l, ic, n]) => `<a href="#" onclick="return false" data-level="${railW() < 120 ? 1 : 2}" data-tip="${typeof RAIL_HELP !== 'undefined' ? esc(RAIL_HELP[k] || l) : l}"${s.rail === k ? ' aria-current="page"' : ''}>${I(ic)}${l}${n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}<button type="button" class="cs-grip" role="separator" aria-orientation="vertical" aria-label="Width of the sections list" aria-valuemin="64" aria-valuemax="320" aria-valuenow="${railW()}" title="Drag to resize; arrow keys too; double-click to reset"></button></nav>
    <main class="cs-main"${s.st ? ` data-st="${s.st}"` : ''}>${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}
    <nav class="cs-tabs" aria-label="Sections">${TABS.map(([k, l, ic]) => `<a href="#" onclick="return false"${(s.rail === k || (k === 'more' && ['projects', 'people', 'settings'].includes(s.rail))) ? ' aria-current="page"' : ''}>${I(ic)}${l}</a>`).join('')}</nav></div>`;

@@ -46,7 +46,7 @@
   "statusreport": 1,
   "members": 6,
   "ref": 26,
-  "session": 6,
+  "session": 11,
   "updates": 34,
   "home": 18,
   "installer": 19,
@@ -72,8 +72,8 @@
   "action": 4,
   "review": 5,
   "theme": 32,
-  "connect": 7,
-  "setup": 5,
+  "connect": 8,
+  "setup": 9,
   "projects": 5,
   "progression": 26,
   "dock": 8,
@@ -84,10 +84,10 @@
   "rail": 17,
   "tab": 2,
   "level": 2,
-  "act": 729,
+  "act": 731,
   "column": 33,
-  "total": 2526,
-  "protected": 743
+  "total": 2538,
+  "protected": 744
  },
  "words": [
   {
@@ -8720,6 +8720,76 @@
    "note": "DEC-248: C-25.33"
   },
   {
+   "key": "connect.notnow",
+   "en": "Nothing is connected. Everything in Civicsmith works without the assistant; come back here whenever you want it.",
+   "protected": false,
+   "source": "DEC-249",
+   "note": "DEC-249: screens-settings R30, \"Not now\" draws nothing more"
+  },
+  {
+   "key": "setup.skip",
+   "en": "Skip for now",
+   "protected": false,
+   "source": "DEC-249",
+   "note": "DEC-249: screens-entry R6, every part"
+  },
+  {
+   "key": "setup.skip_does",
+   "en": "Moves on and leaves this part as it is. Setup shows it as skipped, and you can come back to it here or under Settings at any time.",
+   "protected": false,
+   "source": "DEC-249",
+   "note": "DEC-249"
+  },
+  {
+   "key": "setup.admin.invite",
+   "en": "Invite a second administrator",
+   "protected": false,
+   "source": "DEC-249",
+   "note": "DEC-249: R6, memberadd with role admin"
+  },
+  {
+   "key": "setup.admin.invite_does",
+   "en": "Makes an invitation with the administrator role, for someone you trust. You pass the link on yourself; Civicsmith sends no email. Members are invited later, from Members.",
+   "protected": false,
+   "source": "DEC-249",
+   "note": "DEC-249"
+  },
+  {
+   "key": "session.reauth.head",
+   "en": "Enter your password again",
+   "protected": false,
+   "source": "DEC-249",
+   "note": "DEC-249: interface-shell R34, the dialog; its sentence is session.reauth"
+  },
+  {
+   "key": "session.reauth.go",
+   "en": "Go on",
+   "protected": false,
+   "source": "DEC-249",
+   "note": "DEC-249: sends reauth, then the act once more"
+  },
+  {
+   "key": "session.reauth.go_does",
+   "en": "Checks your password, then does what you asked, once. Nothing else changes.",
+   "protected": false,
+   "source": "DEC-249",
+   "note": "DEC-249"
+  },
+  {
+   "key": "session.reauth.cancel_does",
+   "en": "Closes this and sends nothing; what you wrote stays where it was.",
+   "protected": false,
+   "source": "DEC-249",
+   "note": "DEC-249"
+  },
+  {
+   "key": "session.reauth.wrong",
+   "en": "That password isn't right. Nothing was sent; try again.",
+   "protected": false,
+   "source": "DEC-249",
+   "note": "DEC-249: a wrong password resends nothing (R34)"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -10115,6 +10185,12 @@
   {
    "key": "act.subscriptionsignin.label.connect",
    "en": "Open Anthropic's sign-in page",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.reauth.label.connect",
+   "en": "Go on",
    "protected": true,
    "source": "registry.json"
   },
@@ -13439,6 +13515,12 @@
   {
    "key": "act.projectjoin.does",
    "en": "Joins this project to see and work on it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.reauth.does",
+   "en": "Checks your password, then does what you asked, once. Nothing else changes.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

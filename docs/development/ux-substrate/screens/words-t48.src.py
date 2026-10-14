@@ -657,5 +657,17 @@ w('reading.affirm.part', 'I have read {part} and stand behind it', False, 'DEC-2
 w('reading.affirm.accept', 'Accept the reading', False, 'DEC-248')
 w('refusal.VERSION_AFFIRMATION_INCOMPLETE', 'Tick each part first: accepting says you stand behind every part this reading rests on, and {part} is not ticked.', False, 'DEC-248: C-25.33')
 
+# DEC-249: DEC-246's owed, the path's frame and entry: connect's chosen path, setup's skip, a second administrator, the password asked again, the test band
+w('connect.notnow', 'Nothing is connected. Everything in Civicsmith works without the assistant; come back here whenever you want it.', False, 'DEC-249: screens-settings R30, "Not now" draws nothing more')
+w('setup.skip', 'Skip for now', False, 'DEC-249: screens-entry R6, every part')
+w('setup.skip_does', 'Moves on and leaves this part as it is. Setup shows it as skipped, and you can come back to it here or under Settings at any time.', False, 'DEC-249')
+w('setup.admin.invite', 'Invite a second administrator', False, 'DEC-249: R6, memberadd with role admin')
+w('setup.admin.invite_does', 'Makes an invitation with the administrator role, for someone you trust. You pass the link on yourself; Civicsmith sends no email. Members are invited later, from Members.', False, 'DEC-249')
+w('session.reauth.head', 'Enter your password again', False, 'DEC-249: interface-shell R34, the dialog; its sentence is session.reauth')
+w('session.reauth.go', 'Go on', False, 'DEC-249: sends reauth, then the act once more')
+w('session.reauth.go_does', 'Checks your password, then does what you asked, once. Nothing else changes.', False, 'DEC-249')
+w('session.reauth.cancel_does', 'Closes this and sends nothing; what you wrote stays where it was.', False, 'DEC-249')
+w('session.reauth.wrong', "That password isn't right. Nothing was sent; try again.", False, 'DEC-249: a wrong password resends nothing (R34)')
+
 json.dump(W, open(os.path.join(HERE, 'words-t48.json'), 'w'), indent=1, ensure_ascii=False)
 print(f'words-t48.json: {len(W)} entries, {sum(x["protected"] for x in W)} protected')

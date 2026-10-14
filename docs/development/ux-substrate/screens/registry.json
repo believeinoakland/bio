@@ -726,6 +726,14 @@
      ]
     },
     {
+     "op": "reauth",
+     "label": "Go on",
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
+    },
+    {
      "op": "accountreferenceset",
      "label": "Connect with your own API key",
      "status": "function",
