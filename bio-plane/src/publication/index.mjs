@@ -33,7 +33,7 @@
  * ops are the plane's to spread since T33-90 (N597); this module's map no longer spreads them.
  *
  * T35 (T35-54): the published criteria (R72; N649): at a case edition's commit, each standard its members' legs target,
- * read from `standards` (and the body's name from `entities`), frozen on the edition's row: a benchmark labelled "not
+ * read from `standards` (and the body's name from `entities`), frozen on the edition's row: a benchmark labeled "not
  * binding on" its body, a copyrighted standard by its edition, citation and access with only the passages relied on.
  * The waiting edition read `case-authoring` calls (was R74) and C-122.5 (was R33's) moved with publishing at a set
  * time; the review copy's secret read from the request body, never the address (R73, `./door.mjs`; F1).
@@ -1215,7 +1215,7 @@ export class Publication {
   /* R72 (N649; K1723, K1739; DEC-145 (2), (6)): THE CRITERIA AN EDITION IS MEASURED AGAINST, read at its commit and
      frozen with it: one row per distinct standard, portion and body that a leg of a member finding targets at the
      member's pinned bytes (a `STD-` target, inquiry-grammar R13), in member order then leg order. Read from `standards`
-     as the signer reads it, on the commit's day; the body's name from `entities`. A benchmark is labelled "not binding
+     as the signer reads it, on the commit's day; the body's name from `entities`. A benchmark is labeled "not binding
      on" its body and never nonconforming; a standard's text reaches a row only as the passages its legs rely on (a
      leg's own `content_id` among the standard's text, else the portion's `requires` passages), quoted as `standards`
      answers them. A standard `standards` no longer answers is stated "not held" and never refuses the commit (that is
