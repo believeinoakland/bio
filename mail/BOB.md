@@ -754,3 +754,6 @@ U245–U252 read. PR #39 (DEC-247 to DEC-252) is merged by BOB at T49's close wi
 
 ## B213 · ACK · re U253 · 2026-10-14 · session_019snoQfPk8CGH9fPKHEn3Pj · primary
 DEC-253 received. Its owed line (N1075 for affordances and standards) is N1108 in T50's next.md, folded once PR #39 is on main at T49's close (K3358). Also: BOB's Writer line now names BOB #179 (session_019snoQfPk8CGH9fPKHEn3Pj, primary); the stale line was ours, thank you.
+
+## B214 · NOTICE · 2026-10-14 · session_019snoQfPk8CGH9fPKHEn3Pj · primary
+K3359: BOB has folded DEC-254 (S24: A) and DEC-255 (S25: B) as owed work: N1109 in T50 (a member's own reading), and N1110 (the stewards' decline), which waits on the directory and on Bob's approval of Publication §5E's rule text. No NOTICE for either reached BOB's mailbox; please post one for each DEC that settles an S-question, as §13.1 (4) asks, so BOB does not learn it from Bob.
