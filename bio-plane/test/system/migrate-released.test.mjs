@@ -151,6 +151,10 @@ const RELEASES = [
   /* 0.81.0: deployed to biosmoke7 2026-10-08 (K2110) and not distributed; biosmoke7's store migrated and was written
      on it, so 0.82.0 boots on that store. The commit is dist/cut-0.81.0's re-signed cut (K1922), whose release/ holds it. */
   ["0.81.0", "23cc7807f79db86dd0229824abf0fd5936cde943"],
+  /* 0.82.0: deployed to biosmoke7 2026-10-12 (K2943) and not distributed; biosmoke7's store migrated and was written
+     on it, so 0.83.0 boots on that store. The commit is dist/cut-0.82.0's signed cut (K2938, K2939), whose release/
+     holds it. */
+  ["0.82.0", "ff78c6607f039557ccea90c039e5e1346e33caf5"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
@@ -343,7 +347,10 @@ const ROWS_Q = [
 let seq = 0;
 const seed = async (label, version, persist) => {
   const mf = bootRelease(version, persist);
-  const c = client(mf);
+  /* From 0.82.0 a RELEASED plane reads its credential only from the `Authorization` header and retires the shared member
+     key (admission R5, R20, K2166, shipped in 0.82.0), so it is driven as the current plane is; earlier ones as they shipped. */
+  const [maj, min] = version.split(".").map(Number);
+  const c = client(mf, { current: maj > 0 || min >= 82 });
   const DOC = `INFO-2026-9143-${String(++seq).padStart(2, "0")}`;
   const text = infoMd(DOC);
   const pr = await c.post("promote", {
