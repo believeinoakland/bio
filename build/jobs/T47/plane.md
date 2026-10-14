@@ -119,3 +119,15 @@ Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 27, module lines 2130
 - **Checks:** format, architecture, ownership 0 failures; coverage 49 of 49.
 
 Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 30, module lines 2135
+
+## J9 · COMPLETE
+
+**COMPLETE after B13 (K3171),** with control-plane merged; `tranche/T47` merged at 2c44a82f11.
+- **Plane tests:** 233 tests, 233 pass, 0 fail. The `clockpropose` test and R48's page test (the nine screen modules at `/app` and `/`) are green.
+- **Checks:** format, architecture and ownership show 0 failures; coverage 49 of 49.
+- **R43, measured at this merge (printed beside the budget, K3147):**
+  - Run alone: 626, 590, 534, 625, 577 ms; median 590 ms, a warning past 500 ms.
+  - During the full suite: median 762 ms.
+  - The artifact is now 19.5 MB (18.7 MB at J1). Most of the growth is control-plane's merge and the screen modules, so N1039's reductions matter more now.
+
+Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 32, module lines 2135
