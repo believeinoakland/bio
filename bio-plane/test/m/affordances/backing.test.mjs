@@ -466,7 +466,9 @@ const REASONED_CASES = {
     w.doc("INFO-2026-0001-a"); w.finding("INQ-2026-0001-q", [{ target: "INFO-2026-0001-a" }]);
     const P = w.project("Team", "alice", ["INQ-2026-0001-q"]); w.join(P, "bo");
     const pub = w.publish(P, "alice", ["INQ-2026-0001-q"]);
-    return { w, act: (why) => w.ca.acknowledgeStatement({ viewer: caFix.V("bo"), caseId: pub.caseId, edition: 1, reason: why }) }; },
+    /* T47 (N908 §5): the acknowledgement is case-inputs' since the split (K3116), driven on the real case-inputs the fixture
+       builds beside case-authoring (`w.ci`) */
+    return { w, act: (why) => w.ci.acknowledgeStatement({ viewer: caFix.V("bo"), caseId: pub.caseId, edition: 1, reason: why }) }; },
   standarddeclare: () => { const w = stdFix.seeded(); const p = w.passage().contentId;
     return { w, act: (why) => w.s.standardDeclare({ cite: stdFix.BYLAW, kind: "ordinance", issuer: "Port Ellery Selectboard", reason: why,
       text: [p], author: stdFix.V("bob"), viewer: stdFix.V("bob") }) }; },
@@ -538,6 +540,36 @@ test("R19: every op DEC-88 bands `reasoned` and T22's four, called well-formed w
     if (!(ok && (ok.ok === true || ok.started === true))) bad.push(`${op} with its reason: ${JSON.stringify(ok).slice(0, 300)}`);
   }
   assert.deepEqual(bad, []);
+});
+
+/* K3152 (T47): `adminremove` is one of `REAUTH_ACTS` since op-declarations R58, so the plane asks for the password again
+   (credentials R66, admission R25) before it routes the act, and that question is not routed to the store until the
+   plane's L11 job; its reason refusal is driven here at membership's own interface (its R7), as the other owners' are. */
+import { world as memWorld } from "../membership/fixture.mjs";
+test("R19: membership's adminremove, graded `reasoned`, is refused without the administrator's reason with NO_REASON "
+   + "(membership R7), in JUSTIFICATION_REFUSALS, writing nothing, and the vote is accepted with it", async () => {
+  assert.equal(RUNGS.adminremove, "reasoned");
+  /* three administrators (admin, second, third); admin's vote stands, so second's is the one that carries */
+  const scene = async () => {
+    const w = await memWorld().group();
+    assert.equal((await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" })).reason, "CONSENSUS_REQUIRED");
+    const e = await w.m.adminEndorse({ memberId: "third", by: "second" });
+    assert.equal((await w.m.enroll({ invite: e.invite, handle: "third", password: "third-passphrase-x" })).ok, true);
+    assert.equal(w.m.adminRemove({ memberId: "third", by: "admin", reason: "the first vote" }).reason, "VOTES_SHORT");
+    return w;
+  };
+  for (const why of WHYLESS) {
+    const w = await scene();
+    const before = dump(w.sql);
+    const r = w.m.adminRemove({ memberId: "third", by: "second", ...(why === undefined ? {} : { reason: why }) });
+    assert.equal(r.ok, false, JSON.stringify(why));
+    assert.equal(r.reason, "NO_REASON", JSON.stringify(r).slice(0, 200));
+    assert.ok(JUSTIFICATION_REFUSALS.includes(r.reason));
+    assert.equal(dump(w.sql), before, `${JSON.stringify(why)}: refused, but wrote`);
+  }
+  const w = await scene();
+  const ok = w.m.adminRemove({ memberId: "third", by: "second", reason: GIVEN });
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
 });
 
 /* K1025's four (R19): an act op-grades R1 bands `reasoned` whose recorded grounds serve as its reason is backed by those grounds

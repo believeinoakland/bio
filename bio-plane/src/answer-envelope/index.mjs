@@ -10,17 +10,21 @@ import { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHE
 
 /* R6 (was control-plane R51; DEC-122 (3); N528; F17, K1881): the policy every `text/html` response the plane serves
    carries, so a browser loads no script, style, font, image or connection from another origin and sends nothing
-   elsewhere. Both pages are single files with their script and style inline, fetching only `/api` on their own origin.
+   elsewhere. The pages served (since T47 `interface-shell`'s `interfacePage` at `/` and `/app/*`, the setup page no longer
+   served, R16; and the signer page) carry their script and style inline or from their own origin, fetching only `/api`
+   on it. `img-src` also admits `blob:` (K3156; `interface-shell` R49's `cs.image`): an object address the page makes
+   itself from bytes it holds, which names no other origin; no other directive admits it.
    Since T35 a script runs only by the response's own nonce: `script-src` is `'nonce-<n>'` alone (no `'self'`, no host,
    no `'unsafe-inline'`, no `'unsafe-eval'`), the nonce fresh for every response (128 bits from the platform's CSPRNG),
    and every `<script>` element of the page served is given it here, so the pages run as before and a script they did
    not ship does not. Styles stay inline (`style-src` is not F17's). */
-const PAGE_POLICY = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; "
+const PAGE_POLICY = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; "
   + "connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'";
 const pagePolicy = (nonce) => `${PAGE_POLICY}; script-src 'nonce-${nonce}'`;
 
-/* `setup-page` R28's slot (K2038): the literal its template holds in each script element's `nonce` attribute, which
-   every HTML body served gets the response's nonce in place of, wherever it stands. */
+/* `interfacePage`'s slot (`interface-shell` R1, R2; was `setup-page` R28, K2038): the literal the page holds in each
+   script element's `nonce` attribute, which every HTML body served gets the response's nonce in place of, wherever it
+   stands. */
 const NONCE_SLOT = "__CSP_NONCE__";
 
 /* 16 bytes from `crypto.getRandomValues`, in base64 (CSP's nonce grammar). */
@@ -29,7 +33,7 @@ function pageNonce() {
   return btoa(String.fromCharCode(...b));
 }
 
-/* Every `<script …>` start tag of `html` given `nonce="<nonce>"`, replacing any nonce it carried (`setup-page` R28's
+/* Every `<script …>` start tag of `html` given `nonce="<nonce>"`, replacing any nonce it carried (`interface-shell`'s
    `NONCE_SLOT` among them, whatever the slot's spelling). Read as HTML is tokenised: each tag runs to the first `>`
    outside a quoted attribute value, a comment is passed over whole, and the text of a script, style, textarea or title
    element up to its end tag is never read as tags, so a string spelling `<script` inside a script, an attribute or a
@@ -376,7 +380,15 @@ const installationRow = (code) => {
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
+/* R14 (T47; DEC-198 (3), K3030): C-69.6 retired. Until `control-plane` answers through `credentials.disclosureDue` (its
+   R65, T47-65) its door still mints `DISCLOSURE_DUE` through this reader; the code's row is then the one R2 decorates it
+   with (`credentials`' C-29.40, read from the families), never a row of this table. No other code is answered so. */
+const RETIRED_DISPATCH = Object.freeze({ DISCLOSURE_DUE: "C-69.6" });
 const dispatchRow = (code) => {
+  if (Object.hasOwn(RETIRED_DISPATCH, code)) {
+    const held = dec49Row(code);
+    if (held && held.check !== RETIRED_DISPATCH[code]) return { code, check: held.check, translation: held.translation };
+  }
   const row = DISPATCH_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`dispatchRow: ${code} has no DISPATCH_CHECKS row with a canned translation `
@@ -398,4 +410,4 @@ export { PAGE_POLICY, pagePolicy, withPagePolicy, NONCE_SLOT, json, dec49Attach,
          doAnswer, storeRefusal, storeSilent, relayAnswer, STORE_SILENT_REASON, STORE_SILENT_DETAIL,
          planeInternalError, planeInternalAnswer, replayRow, requiredArgumentRow, requiredArgument, installationRow,
          dispatchRow, StoreSilent };
-export { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHECKS, DOOR_WORDS } from "./checks.mjs";
+export { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHECKS } from "./checks.mjs";

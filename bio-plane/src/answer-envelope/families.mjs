@@ -121,6 +121,11 @@ import * as CASE_DISCLOSURES from "../case-disclosures/checks.mjs";
    from actions' C-117 with their raisers), action-replies' C-150 (after action-clocks, before filing-templates) and
    plan-work's C-151 (after action-plans, before monitoring). */
 import * as CASE_ACCOUNT from "../case-account/checks.mjs";
+/* R15 (T47; N908 §5; `case-inputs` R12): case-inputs' rows (`STATEMENT_ACK_CHECKS` C-82.2–C-82.8, `CARRIED_OUTCOME_CHECKS`
+   C-136.3–C-136.8), split from case-authoring's file with their raisers, in its place in the module order (directly after
+   case-account, before case-authoring). No code is in both files, so each reads the row R7 pins (C-136.5 as case-inputs
+   R17 re-words it under DEC-199). `action-records` holds no family of its own (its rows are action-grammar's). */
+import * as CASE_INPUTS from "../case-inputs/checks.mjs";
 import * as CASE_AUTHORING from "../case-authoring/checks.mjs";
 import * as REVIEW from "../review/checks.mjs";
 import * as CASE_CHECK from "../case-check/checks.mjs";
@@ -218,6 +223,7 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/case-import/checks.mjs", CASE_IMPORT],
   ["src/case-disclosures/checks.mjs", CASE_DISCLOSURES],
   ["src/case-account/checks.mjs", CASE_ACCOUNT],
+  ["src/case-inputs/checks.mjs", CASE_INPUTS],
   ["src/case-authoring/checks.mjs", CASE_AUTHORING],
   ["src/review/checks.mjs", REVIEW],
   ["src/case-check/checks.mjs", CASE_CHECK],

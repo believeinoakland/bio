@@ -1,13 +1,15 @@
-/* action-producers — the feed's Action-layer to-dos (requirements: `build/requirements/action-producers.md`, R1–R20).
+/* action-producers — the feed's Action-layer to-dos (requirements: `build/requirements/action-producers.md`, R1–R25).
  * Split from `queue-producers` by copy (K617, K624 (1), K2781 (1); as `machinery-producers` was, K1850): its R15–R21 and
  * R29 are this module's R1–R8, then amended by T45 (recipients by take-up and departure, one item per fact, words by
  * basis, the docket and pressure arms), and R9–R12 new (`member-left-items`, `watch-keep-or-stop`, the doors,
- * `plan-review-due` and `plan-look-again`). Each producer derives, on read and writing nothing, the items an action's
+ * `plan-review-due` and `plan-look-again`); T46 added R21–R23 (the met-or-waived door, a duty no longer watched, the words
+ * by key) and T47 R24 (the two kept details filled) and R25 (`request-unsent`, a request approved and left unsent).
+ * Each producer derives, on read and writing nothing, the items an action's
  * clocks, reminders, holds, checkpoints, escalations, templates, local facts, watches and plan reviews earn for a viewer,
  * routed to the member who takes the thing up or set it, never assigned to anybody, naming each item's subjects and home
  * subjects for `queue-producers` to answer in `feedItems` (its R8) and for `queue` to home, offer, mint and publish.
  *
- *   actionItems   queue-producers' one read of this module (R13): every item R1–R12 derive for a member and viewer, each
+ *   actionItems   queue-producers' one read of this module (R13): every item R1–R12 and R25 derive for a member and viewer, each
  *                 homed through queue's walk and carrying queue's options (both passed in by queue-producers R8), each
  *                 kind's doors first (R11), with `facts` stating each producer's bound and `truncated`, and the
  *                 producers that threw (`failed`). No item carries `disposition` or `catalogue_id`.
@@ -16,7 +18,7 @@
  * table and no check row, and refuses nothing a member does.
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
  *   record, membership, actions, actionHolds, actionClocks, escalation, actionPlans, planWork, filingTemplates,
- *   localFacts, following   the providers (Uses).
+ *   localFacts, following, filings   the providers (Uses).
  *
  * `homesOf(subjectIds)` and `optionsOf(subjectIds)` (queue R7, R12) are held for the length of one synchronous
  * `actionItems` read; `#homesAt` (a case at depth 0) is built over `homesOf`. A door is a plain act `{id, label,
@@ -37,10 +39,11 @@ import { planWorkOf } from "../plan-work/index.mjs";
 import { filingTemplatesOf } from "../filing-templates/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
 import { followingOf } from "../following/index.mjs";
+import { filingsOf } from "../filings/index.mjs";
 import { localDay, dayRange, span, isCalendarDate } from "../civil-time/index.mjs";
 import { dayWords, say } from "./words.mjs";
 
-export { ACTION_WORDS, WORDS_CANON, KEPT } from "./words.mjs";
+export { ACTION_WORDS, WORDS_CANON, KEPT, OWN_WORDS } from "./words.mjs";
 
 /* The walk queue passes in answers this shape; with none passed, an item is ungrouped rather than given a home. */
 const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
@@ -94,6 +97,8 @@ export class ActionProducers {
   get #filingTemplates() { return this.#dep("filingTemplates", () => filingTemplatesOf(this.#host)); }
   get #localFacts() { return this.#dep("localFacts", () => localFactsOf(this.#host)); }
   get #following() { return this.#dep("following", () => followingOf(this.#host)); }
+  /* T47 (R25; K3100): the approved filings not yet recorded sent (filings R53). */
+  get #filings() { return this.#dep("filings", () => filingsOf(this.#host)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -278,6 +283,12 @@ export class ActionProducers {
   static WATCH_ANSWER = Object.freeze({ id: "watchanswer", label: say("door.watchanswer"), weight: "single" });
   static REVIEW_RECORD = Object.freeze({ id: "planreviewrecord", label: say("door.planreviewrecord"), weight: "single" });
   static PLAN_RESUME = Object.freeze({ id: "planresume", label: say("door.planresume"), weight: "single" });
+  /** R25 (DEC-212): the unsent request's doors: the action's screen at its step (`op=action`, actions R47's read, the
+   *  screen opening at the send step; its label is this module's own, words.json holding none), keeping it for later
+   *  (`queuesnooze`, queue's act) and dropping the request with a reason (`actionmove` to `abandoned`, actions' move). */
+  static OPEN_ACTION = Object.freeze({ id: "action", label: say("request-unsent.open"), weight: "single" });
+  static SNOOZE = Object.freeze({ id: "queuesnooze", label: say("act.queuesnooze.label.queue"), weight: "single" });
+  static DROP_REQUEST = Object.freeze({ id: "actionmove", label: say("act.actionmove.label.queue"), weight: "single" });
 
   /** R11: each kind's doors, in order (the producers lead their options with exactly these). */
   static DOORS = Object.freeze({
@@ -291,6 +302,7 @@ export class ActionProducers {
     "watch-keep-or-stop": ["watchanswer"],
     "plan-review-due": ["planreviewrecord"],
     "plan-look-again": ["planreviewrecord", "planresume"],
+    "request-unsent": ["action", "queuesnooze", "actionmove"],
   });
 
   /* ================================================================== R13 · actionItems
@@ -333,6 +345,8 @@ export class ActionProducers {
       run("watch-keep-or-stop", () => this.#obligationsWatchKeepOrStop(me, viewer, at));
       run("plan-review-due", () => this.#obligationsPlanReviewDue(me, viewer, at));
       run("plan-look-again", () => this.#obligationsPlanLookAgain(me, viewer, at));
+      /* R25 (T47; DEC-212): a request a member approved and nobody has recorded sent. */
+      run("request-unsent", () => this.#conditionsRequestUnsent(me, viewer, at));
       return { items, facts };
     } finally {
       this.#homesFn = null;
@@ -491,10 +505,10 @@ export class ActionProducers {
     return "queue.action-clock-overdue.noreply";
   }
 
-  /** R1's detail, one sentence for every basis. `.ours.detail` and `.theirs.detail` are keyed in words.json but keep
-   *  this present text in T46, returned to BOB, so no `detail_key` is answered (R23: `.theirs.detail` says "no reply is
-   *  recorded since", untrue once a reply is recorded while nothing marks the entry met; `.ours.detail` names a
-   *  `{venue}` no fact of the item holds, J1). */
+  /** R1's detail where no key's words are true of the entry: canon's question and the other side's date for every
+   *  entry, and the group's own date where `overdueClocks` answers no office or venue (R24). `.theirs.detail` is keyed in
+   *  words.json but keeps this present text, returned to BOB, so no `detail_key` is answered (R23: it says "no reply is
+   *  recorded since", untrue once a reply is recorded while nothing marks the entry met). */
   static #detailOf(e, dated, steps) {
     return `${e.text ? `"${e.text}"` : "An entry on this action's clock"} was dated ${dated ? e.date : "with no date"}`
       + `${e.basis ? ` (${e.basis})` : ""}, and nothing marks it met or waived. This asks whether anything came; `
@@ -504,6 +518,17 @@ export class ActionProducers {
           + "for the same date, and are told here, once." : "")
       + " It is told once, and it leaves when the entry is marked met or waived or the action is resolved or "
       + "abandoned.";
+  }
+
+  /** R24 (action-clocks R23): the office or venue a group's own date is owed at, as the record states it: an office as
+   *  its role and body ("<role>, <body>"; its role alone with no body), a venue by its name. Null when none is held, or
+   *  what is held names nothing. */
+  static #venueWords(v) {
+    const s = (x) => (typeof x === "string" && x.trim() ? x.trim() : null);
+    if (!v || typeof v !== "object") return null;
+    if (v.kind === "office") return s(v.role) ? (s(v.body) ? `${s(v.role)}, ${s(v.body)}` : s(v.role)) : null;
+    if (v.kind === "venue") return s(v.name);
+    return null;
   }
 
   /** R21: the door stating this entry met or waived: the action's revision (`op=promote`), keyed to the action and the
@@ -560,7 +585,15 @@ export class ActionProducers {
       const key = ActionProducers.#wordsKey(e);
       const today = ActionProducers.#today(now, zone) || (typeof e.local_day === "string" ? e.local_day : null);
       const steps = Array.isArray(e.steps) ? e.steps.filter((s) => typeof s === "string" && s) : [];
-      const summary = say(key, { date: dated ? dayWords(e.date, today) : "its date", what: e.text || "an entry on its clock" });
+      const what = e.text || "an entry on its clock";
+      const summary = say(key, { date: dated ? dayWords(e.date, today) : "its date", what });
+      /* R24: the group's own date names the office or venue it is owed at, by key; with none held (or no date to name),
+         the key's sentence would be untrue, so the present detail stands and no detail_key is answered */
+      const venue = e.owed_by === "group" ? ActionProducers.#venueWords(e.venue) : null;
+      const ours = venue && dated
+        ? { detail: say("queue.action-clock-overdue.ours.detail", { what, venue, date: dayWords(e.date, today) }),
+            detail_key: "queue.action-clock-overdue.ours.detail" }
+        : { detail: ActionProducers.#detailOf(e, dated, steps) };
       out.push({
         id: `CONDITION::action-clock-overdue::${e.action}::${e.ord}`,
         class: "CONDITION",
@@ -571,12 +604,14 @@ export class ActionProducers {
                    text: e.text ?? null, project: e.project ?? null, owed_by: e.owed_by ?? null, steps },
         summary,
         summary_key: key,
-        detail: ActionProducers.#detailOf(e, dated, steps),
+        ...ours,
         basis: { source: "action-clocks.overdueClocks", action: e.action, entry: e.ord, date: e.date ?? null,
                  basis: e.basis ?? null, text: e.text ?? null, status: e.status ?? null, past: e.past ?? null,
                  project: e.project ?? null, created_by: e.created_by ?? null, owed_by: e.owed_by ?? null, steps,
                  recipients_rule: to.rule, zone, words: key,
                  ...(e.noticed_by ? { noticed_by: e.noticed_by, duty_watch_end: alone.end } : {}),
+                 ...(e.owed_by === "group" ? { venue: e.venue && typeof e.venue === "object" ? e.venue : null,
+                                               venue_why: typeof e.venue_why === "string" ? e.venue_why : null } : {}),
                  local_day: typeof e.local_day === "string" ? e.local_day : null,
                  basis_of: e.basis_of && typeof e.basis_of === "object" ? e.basis_of : null,
                  bound: { pages_bound: ActionProducers.QUEUE_ACTION_PAGES, truncated: page.truncated,
@@ -1310,6 +1345,19 @@ export class ActionProducers {
       if (!to.members.includes(me)) continue;
       const day = isCalendarDate(x.day) ? x.day : ActionProducers.#localDayOf(x.due, zone);
       const dueDay = ActionProducers.#dueDay(x.due, zone);
+      /* R24 (plan-work R18): the detail by key, naming the plan's title, the rhythm in words and the day reviews are
+         counted since; where the rhythm is not one occurrence a period, or no such day is answered, the key's sentence
+         would be untrue or empty, so the present detail stands and no detail_key is answered */
+      const rhythm = ActionProducers.#rhythmWords(x.recurrence);
+      const since = x.since && typeof x.since === "object" && isCalendarDate(x.since.day) ? x.since.day : null;
+      const today = ActionProducers.#today(now, zone) || ActionProducers.#today(now, ActionProducers.#knownZone(x.zone));
+      const title = this.#planTitle(x.plan, viewer, now);
+      const keyed = rhythm && since
+        ? { detail: say("queue.plan-review-due.detail", { plan: title ? `"${title}"` : x.plan, rhythm, date: dayWords(since, today) }),
+            detail_key: "queue.plan-review-due.detail" }
+        : { detail: "the rhythm a member set for reviewing this plan has reached a review day, and no review is recorded since. "
+              + "Open the review to see what changed, and record what the members decided. You are reminded only "
+              + "because the group asked for it." };
       out.push({
         id: `OBLIGATION::plan-review-due::${x.plan}::${day}`,
         class: "OBLIGATION",
@@ -1317,15 +1365,14 @@ export class ActionProducers {
         case: this.#homesAt([x.project], viewer),
         due: dueDay,
         subject: { kind: "plan", id: x.plan, project: x.project, day, set_by: x.member ?? null },
-        /* R23: the summary by key; the detail keeps its present text, returned to BOB (J1: plan-work R4's read answers
-           neither the rhythm nor the day it counts since) */
+        /* R23: the summary by key; R24: the detail by key where the item holds the rhythm in words and the day since */
         summary: say("queue.plan-review-due.summary", { plan: x.plan }),
         summary_key: "queue.plan-review-due.summary",
-        detail: "the rhythm a member set for reviewing this plan has reached a review day, and no review is recorded since. "
-              + "Open the review to see what changed, and record what the members decided. You are reminded only "
-              + "because the group asked for it.",
+        ...keyed,
         basis: { source: "plan-work.planReviewsDue", plan: x.plan, project: x.project, set_by: x.member ?? null,
                  due_at: x.due ?? null, day, rhythm_zone: x.zone ?? null, zone, recipients_rule: to.rule,
+                 recurrence: x.recurrence && typeof x.recurrence === "object" ? x.recurrence : null,
+                 since: x.since && typeof x.since === "object" ? x.since : null, title,
                  bound: { limit: r.limit ?? null, truncated: r.truncated === true },
                  detail: "a review come due is plan-work's (its R4): a member-set rhythm reached a day with no review entry "
                        + "since. It goes to the member who set the rhythm while an active member who may see the plan, "
@@ -1335,6 +1382,106 @@ export class ActionProducers {
         assignee_role: null,
         recipients: to.members,
         options: [ActionProducers.REVIEW_RECORD],
+      });
+    }
+    return { items: out, bound };
+  }
+
+  /** R24: a plan's title, as `action-plans.planRead` answers it to this viewer (its R6), memoised per read; null when
+   *  none is answered. */
+  #planTitle(plan, viewer, now) {
+    const k = `title\n${plan}`;
+    if (!this.#memo.reads.has(k)) {
+      let t = null;
+      try { const r = this.#actionPlans.planRead({ id: plan, viewer, nowMs: now }); t = r && r.ok !== false ? r.title ?? null : null; }
+      catch { t = null; }
+      this.#memo.reads.set(k, typeof t === "string" && t.trim() ? t.trim() : null);
+    }
+    return this.#memo.reads.get(k);
+  }
+
+  /** R24: a member-set rhythm (plan-work R18's `recurrence`, civil-time R20's subset) in words for `{rhythm}`: "week",
+   *  "2 weeks", "month", "year". Null where the rule is unreadable or names more than one occurrence a period (several
+   *  BYDAY, BYMONTHDAY or BYSETPOS values), where "every <period>" would be untrue. */
+  static #rhythmWords(rec) {
+    const rule = rec && typeof rec === "object" && typeof rec.rrule === "string" ? rec.rrule.trim().replace(/^RRULE:/i, "") : "";
+    if (!rule) return null;
+    const parts = new Map();
+    for (const kv of rule.split(";")) {
+      const i = kv.indexOf("=");
+      if (i <= 0) return null;
+      parts.set(kv.slice(0, i).trim().toUpperCase(), kv.slice(i + 1).trim());
+    }
+    const unit = { WEEKLY: "week", MONTHLY: "month", YEARLY: "year" }[String(parts.get("FREQ") || "").toUpperCase()];
+    if (!unit) return null;
+    for (const many of ["BYDAY", "BYMONTHDAY", "BYSETPOS"]) if (parts.has(many) && parts.get(many).split(",").length > 1) return null;
+    const raw = parts.has("INTERVAL") ? parts.get("INTERVAL") : "1";
+    if (!/^[1-9]\d{0,3}$/.test(raw)) return null;
+    const n = Number(raw);
+    return n === 1 ? unit : `${n} ${unit}s`;
+  }
+
+  /** `request-unsent` (R25; DEC-212; K1364; filings R53): one CONDITION per filing `filings.approvedUnsent` answers the
+   *  viewer (a draft or communication approved and not recorded sent), keyed `CONDITION::request-unsent::<filing>`, to
+   *  the member who approved it, else the action's creator, each only while an active member who may see the action,
+   *  else its project's active owners (R25 names no further arm). Its subject the action, homed under its project,
+   *  naming what is asked (the action itself: its title, K3122) and the approval's local day. Its doors: the action's
+   *  screen at its step, `queuesnooze`, `actionmove` to `abandoned` with a reason. It is a reminder the group may take or
+   *  leave (K1364 B4): it leaves when the filing is recorded sent (the read no longer answers it) or the action is
+   *  resolved or abandoned. Aged from the approval. */
+  #conditionsRequestUnsent(me, viewer, now) {
+    const bound = { limit: null, truncated: false };
+    if (!me) return { items: [], bound };
+    const r = this.#filings.approvedUnsent({ viewer });
+    if (!r || r.ok === false || !Array.isArray(r.items)) return { items: [], bound };
+    Object.assign(bound, { limit: r.limit ?? null, truncated: r.truncated === true });
+    const visible = this.#bundleRedactor(viewer);
+    const zone = this.#instanceZone();
+    const today = ActionProducers.#today(now, zone);
+    const out = [];
+    for (const x of r.items) {
+      if (!x || typeof x.filing !== "string" || !x.filing || typeof x.action !== "string" || !x.action) continue;
+      if (visible(x.action) === null) continue;        // R14: a filing on an action this viewer may not see is no item
+      const row = this.#one(`SELECT current_state, title FROM bundles WHERE bundle_id=?`, x.action);
+      if (row && ["resolved", "abandoned"].includes(row.current_state)) continue;   // dropped or done: nothing waits
+      const project = typeof x.project === "string" && x.project && visible(x.project) !== null ? x.project : null;
+      const approver = memberIdOf(x.approved_by);
+      const creator = this.#createdBy(x.action);
+      let to;
+      if (approver && this.#active(approver) && this.#sees(approver, x.action)) to = { rule: "approver", members: [approver] };
+      else if (person(creator) && this.#active(creator) && this.#sees(creator, x.action)) to = { rule: "author", members: [memberIdOf(creator)] };
+      else to = { rule: "project_owners", members: [...this.#activeOwners(project)] };
+      if (!to.members.includes(me)) continue;
+      const what = row && typeof row.title === "string" && row.title.trim() ? row.title.trim() : "a request";
+      const approved = ActionProducers.#localDayOf(x.approved_at, zone);
+      out.push({
+        id: `CONDITION::request-unsent::${x.filing}`,
+        class: "CONDITION",
+        kind: "request-unsent",
+        case: this.#actionHomes(x.action, project, viewer),
+        subject: { kind: "action", id: x.action, filing: x.filing, what, approved_by: approver, approved_at: x.approved_at ?? null,
+                   project },
+        /* R25: this module's own words (words.json holds no key for them), returned to BOB */
+        summary: say(approver === me && to.rule === "approver" ? "request-unsent.summary.mine" : "request-unsent.summary", { what }),
+        detail: approved ? say("request-unsent.detail", { date: dayWords(approved, today) }) : say("request-unsent.detail.undated"),
+        screen: { op: "action", id: x.action, step: "send" },
+        basis: { source: "filings.approvedUnsent", filing: x.filing, action: x.action, project, approved_by: approver,
+                 approved_at: x.approved_at ?? null, approved_day: approved, created_by: memberIdOf(creator), zone,
+                 action_state: row ? row.current_state ?? null : null, recipients_rule: to.rule,
+                 bound: { limit: r.limit ?? null, truncated: r.truncated === true },
+                 detail: "an approved draft or communication not recorded sent is filings' fact (its R53), read here and "
+                       + "never stored. It goes to the member who approved it, else the member who created the action, "
+                       + "each while an active member who may see it, else the project's active owners. It leaves when "
+                       + "the sending is recorded, or the action is dropped or resolved; nothing here repeats it." },
+        age: ActionProducers.#instantAge(x.approved_at, now, "no_approval_instant",
+          "the approval carries no instant this producer can read"),
+        assignee: null,
+        assignee_role: null,
+        recipients: to.members,
+        options: [{ ...ActionProducers.OPEN_ACTION, screen: { op: "action", id: x.action, step: "send" } },
+                  ActionProducers.SNOOZE,
+                  { ...ActionProducers.DROP_REQUEST, move: { action: x.action, to: "abandoned", reason: "required" } },
+                  ...this.#optionsOf([x.action])],
       });
     }
     return { items: out, bound };

@@ -165,10 +165,10 @@ export const QUEUE_OBLIGATION_KINDS = {
      by a mute: taken and recorded (op=checktake, op=checkrecord), or left (op=taskresolve closes this member's own). */
   "check-requested":             "a project owner asked for a check, by an expertise you declared or by name, on something "
                               + "you can see; take it (op=checktake), or leave it (DEC-135) — LIVE: tasks R14",
-  /* T41 (R1; N820, K2418, K2484; notice-producers R17): what a member asked for or set herself on a step or a milestone
-     has come. Hers alone, never muted: a step past the date she set leaves when the step is ended (op=stepend, R52), and
-     a reminder she asked for is answered with another reminder or none, and it is told on its day only (steps R12,
-     investigation R3; DEC-94). Their producer is `notice-producers`' (its R17). */
+  /* T41 (R1; N820, K2418, K2484; notice-producers R17): what a member asked for or set themselves on a step or a
+     milestone has come. Theirs alone, never muted: a step past the date they set leaves when the step is ended
+     (op=stepend, R52), and a reminder they asked for is answered with another reminder or none, and it is told on its
+     day only (steps R12, investigation R3; DEC-94). Their producer is `notice-producers`' (its R17). */
   "step-date-due":               "a step you set a date on has passed that date and is not ended; end it (op=stepend) "
                               + "or set a new date — LIVE: notice-producers R17",
   "step-reminder":               "a reminder you asked for on a step's date; answer it with another reminder or none "
@@ -268,15 +268,15 @@ export const QUEUE_FINDING_KINDS = {
                               + "ANOTHER project's work, so it arrived without anybody here authoring it "
                               + "(§7, D-216 — one question beneath several projects) "
                               + "— LIVE: queue-producers #findingsVersionFromAnotherTeam",
-  /* REC-124 / INVESTIGATIVE-SESSION.md §7.1 item 3. FINDING for §7's reason:
-     another team concluding the question you share is a fact about the work,
-     and no member may silence it for the team. */
   /* N172 (reevaluation R14): a newer capture of something a member's reference is pinned to was graded affected or
      undetermined; the member adopts the newer version or keeps the earlier one (reevaluation R15). */
   "newer-capture-affects-reference":
                                 "a newer capture of something your reference is pinned to may change what it says; "
                               + "adopt the newer version or keep the earlier one (reevaluation R14, R15) "
                               + "— LIVE: queue-producers #findingsNewerCapture",
+  /* REC-124 / INVESTIGATIVE-SESSION.md §7.1 item 3. FINDING for §7's reason:
+     another team concluding the question you share is a fact about the work,
+     and no member may silence it for the team. */
   "shared-inquiry-concluded-by-another-project":
                                 "another project drawing on a SHARED question concluded it, adopting "
                               + "the claim of the reading it stands on; nothing this project stands on "

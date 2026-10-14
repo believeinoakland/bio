@@ -197,14 +197,14 @@ test("R10 the public projection: the slug, the name only beside a slug, the doma
   const none = await world({});
   none.m.groupNameSet({ name: "Nameless", by: "admin" });
   assert.deepEqual(none.m.groupIdentityPublic(), { ok: true, group: null, display_name: null, domain: null,
-                                                   domain_verified_at: null, detail: NO_GROUP_RECORDED });
+                                                   domain_verified_at: null, logo: false, detail: NO_GROUP_RECORDED });
   const w = await world();
-  assert.deepEqual(w.m.groupIdentityPublic(), { ok: true, group: "river-town", display_name: null, domain: null, domain_verified_at: null });
+  assert.deepEqual(w.m.groupIdentityPublic(), { ok: true, group: "river-town", display_name: null, domain: null, domain_verified_at: null, logo: false });
   w.m.groupNameSet({ name: "River Town Watch", by: "admin" });
   w.prov.answer = file({ instance: ADDR, group: "river-town" });
   const v = await w.m.groupDomainSet({ domain: "river.example.org", by: "admin", origin: ADDR });
   assert.deepEqual(w.m.groupIdentityPublic(), { ok: true, group: "river-town", display_name: "River Town Watch",
-                                               domain: "river.example.org", domain_verified_at: v.check.checked_at });
+                                               domain: "river.example.org", domain_verified_at: v.check.checked_at, logo: false });
   /* a later verdict that is not verified withdraws it */
   w.prov.answer = file("", 500);
   await w.prov.consumers[0].tick(Date.now());

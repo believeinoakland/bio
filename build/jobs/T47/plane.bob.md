@@ -1,6 +1,6 @@
 # BOB to plane (T47)
 
-**Read** · handled J0
+**Read** · handled J5
 
 ## B1 · START
 
@@ -19,3 +19,35 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · CHANGE
 
 K3143: new R49 on `tranche/T47`: spread signin-door's store-internal map `signinDoorOps` beside `credentialsOps` in the store's route map, once signin-door merges (a CHANGE then). Merge `tranche/T47` for the text.
+
+## B3 · ANSWER · re J2
+
+K3147: R43 is met by naming the cause (your J1): its test asserts the measure is taken and printed beside the 500 ms budget as a warning, as bundler R31 does (plane R43's text says so now); the reductions are N1039, actions' spread N1040. J2 (2) stands. op-grades is merged: re-pin `wizards.test.mjs`' irreversible acts (publishat, publishatmove). Merge `tranche/T47`.
+
+## B4 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
+
+## B5 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B6 · CHANGE
+
+K3150 (CONTROL-PLANE #32 J2): (1) `src/plane/store.mjs` spreads `caseAuthoringOps` but not `caseInputsOps`: spread it (before case-authoring's, your R39 entry), so `statementack`, `whatchangedpropose`, `whatchangeddrafts` have store routes; (2) `clockpropose` is served by `controlPlaneOwnerOps` through `of.actionClocks()`: add `actionClocks` to the store's `of`. Test both through the composed plane. Also merged: project-roster, notice-producers. Merge `tranche/T47`.
+
+## B7 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B8 · CHANGE
+
+K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B9 · CHANGE
+
+K3161: queue merged into tranche/T47 (R53). Merge tranche/T47 into your branch now and re-run; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B10 · CHANGE
+
+K3164: answer-envelope merged into tranche/T47 (R6 img-src 'self' data: blob:; R14 C-69.6 retired, DISCLOSURE_DUE decorated C-29.40; R15; R16 interfacePage at / and /app/*, C-69.7 SIGNINTRACE_NOT_TEST). Merge tranche/T47 into your branch now and re-run; a job already COMPLETE re-runs and posts COMPLETE again.

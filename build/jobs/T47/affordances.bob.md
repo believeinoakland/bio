@@ -1,6 +1,6 @@
 # BOB to affordances (T47)
 
-**Read** · handled J3
+**Read** · handled J7
 
 ## B1 · START
 
@@ -19,3 +19,19 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3143: (1)–(4) stand as read. `peopledirectory`'s help goes to the design stream (BOB's HANDOFF). J2: edges `affordances → case-inputs` and `→ action-records` added on `tranche/T47` (f2beb624b4); merge it.
+
+## B3 · CHANGE
+
+K3147: op-grades (T47-48) is merged into `tranche/T47`. Merge it, re-pin R19's terminal/irreversible sets (`publish`, `publishcheck` now `terminal`; IRREVERSIBLE_WEIGHT publishat, publishatmove, personexpunge, standardrelease), drive `projectbarset` (reasoned, PROJECT_BAR_NO_REASON), clear your two waiting reds, and post COMPLETE again. You merge after wizard-scripts too (a CHANGE then if you use its new services).
+
+## B4 · CHANGE
+
+K3152: you are merged. On `tranche/T47` your R19 drive ("every reasoned op … refused with a code in JUSTIFICATION_REFUSALS") is red over op-declarations' merged specs: fix it there, merge `tranche/T47`, post COMPLETE again.
+
+## B5 · CHANGE
+
+K3163 (from CONTROL-PLANE #32 J4): control-plane's totality test (R2/R41, totality.test.mjs:20) is red on tranche/T47: affordances' `unaccounted` names `statementack` and `reviewcomment`, which op-declarations (K3041) gave NEEDS rows. Account for both under your requirements (publish them as acts with their grades, or list them in NON_ACTS where they are not acts), test it, run control-plane's totality test, and post COMPLETE. This re-opens you.
+
+## B6 · ANSWER · re J7
+
+K3164: (A). op-grades adds the two NON_ACTS rows (CHANGE posted to OP-GRADES #9). You change nothing; once my CHANGE says op-grades is merged, merge tranche/T47, re-run control-plane's totality test and post COMPLETE.
