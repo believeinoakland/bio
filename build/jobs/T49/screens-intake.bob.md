@@ -31,3 +31,7 @@ CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generate
 ## B4 · ANSWER · re J2
 
 K3372: 1(a) and 2(a) as you built: /app/capture/<tab>/<id>; result links /app/find-in/<document>/<question>. screens-inquiry (R38 link) and screens-daily (find-in's second step) are told. act.cite.label.document is right.
+
+## B5 · CHANGE
+
+K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.

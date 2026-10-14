@@ -1,6 +1,6 @@
 # BOB to screens-publish (T49)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -23,3 +23,11 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · CHANGE
 
 CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
+
+## B3 · ANSWER · re J1
+
+K3373: (1) your fallback to the edition's files stands; a 'published but not evidence' key goes to the design lane, published.check.no meanwhile. (2) interface-shell R72 admits statementack on review-outside until the registry re-take (N1122). (3) the Provides line is my edit at your merge; your two key choices stand.
+
+## B4 · CHANGE
+
+K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.

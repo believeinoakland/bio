@@ -135,7 +135,7 @@ if (JSONOUT) fs.writeFileSync(JSONOUT, JSON.stringify(unmatched, null, 1) + '\n'
 console.log('unmatched drawn sentences by screen: ' + ids.map(s => `${s} ${now[s]}` + (base && base[s] !== undefined && base[s] !== now[s] ? ` (baseline ${base[s]})` : '')).join(', '));
 if (LIST) for (const s of ids) if (LIST === 'all' || LIST === s) for (const t of unmatched[s]) console.log(`  ${s}: ${t}`);
 const rose = base ? ids.filter(s => now[s] > (base[s] ?? 0)) : [];
-for (const s of rose) console.log(`FAIL: screen ${s} draws ${now[s]} sentences that are not keyed words, more than its baseline of ${base[s] ?? 0}; key them in words-t49.src.py (or the newest words file), or draw the keyed words`);
+for (const s of rose) console.log(`FAIL: screen ${s} draws ${now[s]} sentences that are not keyed words, more than its baseline of ${base[s] ?? 0}; key them in words-drawn.src.py (or the newest words file), or draw the keyed words`);
 if (WRITE) {
   if (rose.length) { console.log('FAILED: the baseline only falls; key the new sentences first'); process.exit(1); }
   fs.writeFileSync(BASE, JSON.stringify({ _note: 'Written by check_words_drawn.mjs --write-baseline: each screen\'s drawn sentences that are not yet keyed words (K3268). A ratchet: counts may only fall.', total, screens: now }, null, 1) + '\n');
