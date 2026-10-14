@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { relative } from "node:path";
 import { store, deployed, GATE_FLAGS, GATE_SET, GATE_PARTS, disclosed } from "./fixture.mjs";
-import { MODULE_MAPS } from "./maps.mjs";
+import { MODULE_MAPS, ownMaps } from "./maps.mjs";
 import { assistantGateOf, askOp, doorHeaders, READ_PASSAGE_MAX } from "../../../src/plane/ask.mjs";
 import { frontDoorPointer } from "../../../src/plane/wiring.mjs";
 import { transcriberOf } from "../../../src/plane/transcribe.mjs";
@@ -246,21 +246,61 @@ test("R51 (T48; N847): the front door's pointer reads record-core's jurisdiction
 
 /* ===== R52 (T48; N1047; K3189; machinery-producers R12; instance-setup R88, R89) ===== */
 
-test("R52 (T48; N1047; machinery-producers R12): the update notice read is handed to machinery-producers as deps.updateNotice, a function that calls instance-setup's updateNoticeState on the object's own instance at each call: the administrators' queue asks it, and each asking asks it again; control: a non-administrator's queue is not an asking", async () => {
-  const x = await doors();
+/* R52: instance-setup's real `updateNoticeState` (its R89) once its job has merged; until then a stand-in holding the
+   state the test sets, in the shape machinery-producers R12 reads. */
+function noticeRead(x) {
   const setup = instanceSetupOf(x.ctx, x.env);
-  const asked = [];
-  const real = typeof setup.updateNoticeState === "function" ? setup.updateNoticeState.bind(setup) : () => ({ state: "none" });
-  setup.updateNoticeState = (...a) => { asked.push(a); return real(...a); };
-  const queue = async (by) => JSON.parse(await (await x.fetch(`/queue?viewer=${by}&by=${by}`, { method: "POST", body: "{}" })).text());
-  const first = await queue("member:ada");
-  assert.ok(first.answered !== false, JSON.stringify(first).slice(0, 200));
-  const n1 = asked.length;
-  assert.ok(n1 >= 1, "the administrators' queue reads the update notice through the handed function");
-  await queue("member:ada");
-  assert.ok(asked.length > n1, "asked at each call, never once at start");
-  /* the read is on the object's own instance: instance-setup's own answer is what the function relays */
-  assert.deepEqual(asked.at(-1), [], "updateNoticeState() is called with no argument");
+  const t = { state: { running: { version: "1.0.0" }, ready: null, decisions: [] }, asked: [] };
+  const real = typeof setup.updateNoticeState === "function" ? setup.updateNoticeState.bind(setup) : null;
+  setup.updateNoticeState = (...a) => { t.asked.push(a); return real ? real(...a) : t.state; };
+  t.real = real !== null;
+  t.ready = (version = "1.2.0", running = "1.0.0") => {
+    t.state = { running: { version: running }, decisions: [],
+                ready: { version, date: "2026-10-10", found_at: "2026-10-12T00:00:00Z", security: false, decision: null } };
+  };
+  return t;
+}
+
+test("R52 (T48; N1047; machinery-producers R11, R12): the update notice read is handed to machinery-producers as deps.updateNotice, a function that calls instance-setup's updateNoticeState on the object's own instance at each call: the administrators' conditions carry the to-do for a stored ready notice, the state read afresh each time; controls: a member who is no administrator is not an asking, and the item leaves when the running version settles it", async () => {
+  const x = await doors();
+  const t = noticeRead(x);
+  const { machineryProducersOf } = await import("../../../src/machinery-producers/index.mjs");
+  const mp = machineryProducersOf(x.ctx);
+  const has = (r) => r.items.some((i) => i.kind === "update-ready");
+  const none = mp.conditionItems({ member: "ada", viewer: "member:ada", now: Date.parse("2026-10-14T00:00:00Z") });
+  assert.equal(has(none), false, "no ready notice, no item");
+  assert.equal(none.facts, undefined, "the read answered: nothing failed");
+  assert.deepEqual(t.asked.at(-1), [], "updateNoticeState() is called with no argument");
+  if (!t.real) {
+    t.ready();
+    const before = t.asked.length;
+    const ready = mp.conditionItems({ member: "ada", viewer: "member:ada", now: Date.parse("2026-10-14T00:00:00Z") });
+    assert.equal(has(ready), true, "a stored ready notice yields the administrators' to-do");
+    assert.ok(t.asked.length > before, "asked at each call, never once at start");
+    /* control: ann is no administrator: not an asking */
+    const mid = t.asked.length;
+    assert.equal(has(mp.conditionItems({ member: "ann", viewer: "member:ann", now: Date.parse("2026-10-14T00:00:00Z") })), false);
+    assert.equal(t.asked.length, mid, "a member who is no administrator is not an asking");
+    /* control: the running version settles it, read afresh at the next call */
+    t.ready("1.2.0", "1.2.0");
+    assert.equal(has(mp.conditionItems({ member: "ada", viewer: "member:ada", now: Date.parse("2026-10-14T00:00:00Z") })), false);
+  }
+});
+
+test("R52 (T48; N1047): through op=queue the administrators' to-do for a ready release reaches the list, and the read is instance-setup's, asked at each call; control: a member who is no administrator has none", async () => {
+  const x = await doors();
+  const t = noticeRead(x);
+  const queue = async (who) => JSON.parse(await (await x.fetch(`/queue?viewer=member:${who}&member=${who}&by=member:${who}`, { method: "POST", body: "{}" })).text());
+  const kinds = (a) => ((a.result && a.result.items) || []).map((i) => i.kind);
+  assert.equal((await queue("ada")).result.ok, true);
+  assert.deepEqual(t.asked.at(-1), []);
+  if (!t.real) {
+    t.ready();
+    const ada = await queue("ada");
+    assert.equal(ada.result.ok, true, JSON.stringify(ada).slice(0, 300));
+    assert.ok(kinds(ada).includes("update-ready"), "the to-do reaches the administrator's list");
+    assert.equal(kinds(await queue("ann")).includes("update-ready"), false);
+  }
 });
 
 /* ===== R53 (T48; N996; K3101; ai-accounts R32, R23) ===== */
@@ -384,4 +424,33 @@ test("R55 (T48): the Worker's ask arm passes the door's trace and member ref on 
   for (const p of posted) assert.deepEqual([p.headers[TRACE_HEADER], p.headers[MEMBER_REF_HEADER]], [TRACE, REF]);
   const bare = transcriberOf(x.ctx, x.env).transcription({ member: "member:ann", project: null, at: "2026-10-14T10:00:00Z" });
   assert.equal(typeof bare.transcribe, "function", "no trace handed: still a transcription");
+});
+
+/* ===== R5 (T48; K3280, K3282, K3266): the route map re-pinned to T48's ops ===== */
+
+/* Instants and minted ids differ between two objects; everything else must not. */
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+/* the ops T48's owners add to the maps this module spreads: action-replies R10 (`actionreplyquoting`), filings R59
+   (`filingread`), action-holds R16 (`pressurefor`), ai-use R14 (`aiuseovertime`) */
+const T48_OPS = ["actionreplyquoting", "filingread", "pressurefor", "aiuseovertime"];
+
+test("R5 (T48; K3280, K3282, K3266; action-replies R10, filings R59, action-holds R16, ai-use R14): the route map is re-pinned to T48's ops: each is in the map of the module that serves it, in the route map, and answers through control-plane's door what that map answers called directly; control: an op no map serves is in none", async () => {
+  const u = new URL("http://do/");
+  const x = await store(), twin = await store();
+  const keys = Object.keys(x.s.routes(u, null));
+  for (const op of T48_OPS) {
+    const owner = ownMaps(x.ctx, u, null, x.env).find(([, m]) => Object.hasOwn(m, op));
+    assert.ok(owner, `no module's map serves ${op}`);
+    assert.ok(keys.includes(op), `the route map lacks ${op}`);
+    const path = `${op}?viewer=member:nobody&by=member:nobody&author=member:nobody&project=PROJ-2026-none&target=ACT-2026-none&filing=FIL-2026-none&owner=member:nobody`;
+    const res = await x.fetch(`/${path}`, { method: "POST", body: "{}" });
+    const fn = MODULE_MAPS.find(([m]) => m === owner[0])[1];
+    let direct;
+    try { direct = await fn(twin.ctx, new URL(`http://do/${path}`), {}, twin.env)[op](); } catch (e) { direct = { threw: String(e) }; }
+    assert.equal(res.status, 200, `${op} (${owner[0]})`);
+    assert.deepEqual(JSON.parse(mask(await res.text())), JSON.parse(mask(JSON.stringify({ ok: true, result: direct ?? null }))), op);
+  }
+  assert.deepEqual(T48_OPS.map((op) => ownMaps(x.ctx, u, null, x.env).filter(([, m]) => Object.hasOwn(m, op)).length), [1, 1, 1, 1],
+                   "each is served by exactly one module's map");
+  assert.equal(keys.includes("zzprobe48"), false);
 });

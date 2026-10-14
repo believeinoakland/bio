@@ -84,6 +84,7 @@ import { contentOf, contentOps } from "../content/index.mjs";
 import { retrievalOf, retrievalRoutes } from "../retrieval/index.mjs";
 import { queueOf, Queue } from "../queue/index.mjs";
 import { queueProducersOf } from "../queue-producers/index.mjs";
+import { machineryProducersOf } from "../machinery-producers/index.mjs";
 import { actionProducersOf } from "../action-producers/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps } from "../wizard-scripts/index.mjs";
@@ -475,14 +476,16 @@ export class Store extends DurableObject {
        nothing and holds no table. */
     actionProducersOf(ctx, { actions: actionsOf(ctx), actionHolds, actionClocks: actionClocksOf(ctx), escalation: escalationOf(ctx),
       actionPlans: actionPlansOf(ctx), planWork: planWorkOf(ctx), filingTemplates, localFacts, following: followingOf(ctx) });
-    /* R52 (T48; N1047; K3189; machinery-producers R12; instance-setup R88, R89): the update notice read, handed as
-       `deps.updateNotice`: a function calling instance-setup's `updateNoticeState()` on the object's own instance at each
-       call (K31's pattern: instance-setup is built below, so nothing points later), which queue-producers hands on to
-       machinery-producers with the rest of its deps. instance-setup registers its own `update-check` consumer with the
-       scheduler (its R88); this module registers none. */
-    const updateNotice = () => instanceSetupOf(ctx, env).updateNoticeState();
-    const queueProducers = queueProducersOf(ctx, { ...Object.fromEntries(
-      Queue.PRODUCER_DEPS.filter((k) => queueDeps[k] !== undefined).map((k) => [k, queueDeps[k]])), updateNotice });
+    /* R52 (T48; N1047; K3189; machinery-producers R12; instance-setup R88, R89): the update notice read, handed to
+       machinery-producers as `deps.updateNotice`: a function calling instance-setup's `updateNoticeState()` on the
+       object's own instance at each call (K31's pattern: instance-setup is built below, so nothing points later).
+       machinery-producers is built here, with it, before queue-producers' factory (which keeps the first instance per
+       storage, so a bare one is never made first); every other dep it reads defaults to its module's instance on this
+       storage. instance-setup registers its own `update-check` consumer with the scheduler (its R88); this module
+       registers none. */
+    machineryProducersOf(ctx, { updateNotice: () => instanceSetupOf(ctx, env).updateNoticeState() });
+    const queueProducers = queueProducersOf(ctx, Object.fromEntries(
+      Queue.PRODUCER_DEPS.filter((k) => queueDeps[k] !== undefined).map((k) => [k, queueDeps[k]])));
     queueOf(ctx, { ...queueDeps, producers: queueProducers }).migrate();
     tasksOf(ctx, { env }).migrate();
     /* K1951, K2042, K2046: the daemon's drain of capture's `archive-unpack` events, registered with the scheduler after
