@@ -34,3 +34,7 @@ credentials is built and green against a stand-in for membership R144 (151/151; 
 
 1. Membership T49-1 has not merged. Send a CHANGE when it has; I merge `tranche/T49`, delete `r144-shim.mjs`, re-run against the real service and post COMPLETE. Your J1 answers (founder grant viewer, NO_TOKEN_FP order, RECOVERY_REFUSED wording) can come with it.
 2. R72 is not retired: callers exist (named in my record), so every delegate and the spread stay. R72's text needs no change from me; other modules' fallout is also in the record: control-plane's claim relay sends no handle (NO_HANDLE until T49-29), and ~15 other modules' tests claim without a handle or tokenFp.
+
+## J3 · COMPLETE
+
+T49-3 complete on job/T49/credentials (tranche merged, shim deleted). 153/153 tests against real membership; format, architecture, coverage 53/53, ownership 0 failures. K3337 applied: handle optional, NO_TOKEN_FP and C-29.48 dropped, founder-Ask project test added. R72 stays (callers named in the record).
