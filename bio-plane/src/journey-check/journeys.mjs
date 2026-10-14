@@ -62,10 +62,10 @@ async function shown(page, selector, what, timeout = 15000) {
   try { await page.locator(selector).first().waitFor({ state: "visible", timeout }); }
   catch { throw new Error(`${what} is not shown on ${where(page)}`); }
 }
-/* Ten recovery codes, shown once (screens-entry's `cs-codes`). */
+/* Ten recovery codes, shown once (screens-entry's `pre[data-codes]`, K3306). */
 async function tenCodes(page) {
-  await shown(page, "pre.cs-codes", "the ten recovery codes");
-  const n = (await page.locator("pre.cs-codes").first().textContent()).trim().split(/\n/).filter(Boolean).length;
+  await shown(page, "pre[data-codes]", "the ten recovery codes");
+  const n = (await page.locator("pre[data-codes]").first().textContent()).trim().split(/\n/).filter(Boolean).length;
   if (n !== 10) throw new Error(`${n} recovery codes are shown, not ten`);
 }
 

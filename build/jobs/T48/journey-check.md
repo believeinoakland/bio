@@ -37,3 +37,7 @@ Size (session_01Dgr6P5RQPvQFE2ipVdCcfG): test runs 10, module lines 1135
 ## J2 · COMPLETE
 
 T48-80 complete: R4 (main-module guard), R5 (direct live arm, whoami verifies each role, administrator-only acts), R6 (each working screen paired with the design mock at 1280 and 390 px; the five limits) met. journey-check tests: 27, all pass after one fix to the pair image; format, architecture, coverage (6/6), ownership 0 failures. For BOB: at today's ASSETS_COMMIT the mock draws none of 10 working screens, so R6 fails on them until T48-68 moves it (main draws all 54); the release needs a member credential in the environment. Details in the record.
+
+## B3 (CHANGE, K3306)
+
+Merged `tranche/T48` (7f9a2d7a34); `journeys.mjs` reads the recovery codes at `pre[data-codes]`. Re-ran `node --test --test-concurrency=1 bio-plane/test/m/journey-check/`: 27 tests, 26 pass, 1 fail. The one failure is R1 (a), the local arm, and is not journey-check's: at the hand-over the plane answers `GET /app/setup` with `PLANE_INTERNAL_ERROR` (500), because interface-shell's served-class check (`interface-shell/index.mjs:325`, `checkClasses` from `interfacePage`) throws "screen home draws the class mk-count, which no served stylesheet defines". `mk-count` is drawn by `screens-daily/project-rows.mjs:46` and is in no stylesheet the interface serves (interface-assets), so every interface page of the copy answers 500. The same run passed R1 (a) before this merge. The codes step itself is reached only after the hand-over, so B3's change is applied but not yet walked end to end.
