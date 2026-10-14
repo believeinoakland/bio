@@ -56,3 +56,7 @@ COMPLETE (J3). T49-26 applied: R27 (six groups, `.e-step_source`), R28 (proceedi
 ## After CHANGE B3/B4 (real setup-words, DEC-259–DEC-261 words)
 Merged `tranche/T49`; 109 tests pass against the real setup-words. New placeholders met: `screen.money.didnotmove` `{date}` (read as the figure's period start: the data holds no adoption date), `screen.timeline.order.evidence` `{examples}` (the event's keyed kind word). The shell now words known refusal codes itself, so the tie-refusal test uses an unknown code. Both fills are guesses for BOB/the design lane (REPORT J4).
 Size (session_016pXDF9DWaZT1NX5gzoCeit): test runs 44, module lines 2087
+
+## J4 · COMPLETE
+
+COMPLETE (J4) after CHANGE B3/B4: merged tranche/T49, 109 tests pass on the real setup-words; format, architecture, coverage (30/30), ownership 0 failures. Two fills are guesses for you or the design lane: screen.money.didnotmove {date} (no adoption date in the data; I use the figure's period start) and screen.timeline.order.evidence {examples} (the event's keyed kind word).
