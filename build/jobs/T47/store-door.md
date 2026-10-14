@@ -78,3 +78,7 @@ B5 (K3152): tranche/T47 merged (1524778995). Fixed R15 against admission as merg
 ## B6 · CHANGE (K3161)
 
 Merged `tranche/T47` (5c00b0b015: queue, R53) and re-ran: `node --test bio-plane/test/m/store-door/`: tests 47, pass 47, fail 0 (queue's map, dispatched through `controlPlaneRoutes`, included). format, architecture (store-door), coverage (15 of 15), ownership (4 files): 0 failures each. No change to the module was needed.
+
+## J7 · COMPLETE
+
+B6 (K3161): tranche/T47 merged (5c00b0b015, queue); store-door 47/47; format, architecture, coverage 15/15, ownership 0 failures. No module change needed.
