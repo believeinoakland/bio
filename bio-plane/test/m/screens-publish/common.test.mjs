@@ -47,7 +47,8 @@ test("R10 an empty read is drawn empty, never failed: no drafts, no comments, no
     assert.equal(main(p).querySelector('[data-state="failed"]'), null, path);
   }
   const q = await open(`/app/review-copy/${P}`, { plane: { reviewcomments: ok({ comments: [] }) } });
-  assert.match(text(q), /No comments yet/);
+  assert.doesNotMatch(text(q), /Comments/, "R20: a section that holds nothing is not drawn");
+  assert.equal(q.root().querySelector('[data-state="failed"]'), null);
 });
 
 test("R10 after an act the screen reads again what it changed and draws it; nothing is drawn prepared before its answer", async () => {
@@ -56,7 +57,8 @@ test("R10 after an act the screen reads again what it changed and draws it; noth
   assert.match(text(p), /Ana/);
   await press(p, "reviewrevoke", { reason: "done" });
   assert.ok(n > 1, "the copy read again");
-  assert.match(text(p), /Nobody outside the group can read this draft/);
+  assert.doesNotMatch(text(p), /Named readers/, "R20: with nobody named, no section of readers");
+  assert.match(text(p), /Share with a named reader/);
   const q = await open(`/app/ceremony/${P}/${DR}`, { plane: { publish: pending } });
   tick(q, "ce-tie", "yes");
   await press(q, "publish", { reason: "r" });
