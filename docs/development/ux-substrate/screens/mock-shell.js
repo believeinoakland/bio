@@ -23,9 +23,17 @@ function assistantPanel(screen, c) {
   const [q, a] = ASSIST[screen] || ASSIST._;
   return `<aside class="cs-dock" aria-label="The assistant">
    <header>${I('machine')}The assistant<span class="spacer"></span><span class="muted mk-small">$0.42 of your $2.00 today</span><button type="button" class="cs-btn" data-tone="quiet" aria-label="Widen">${I('expand')}</button></header>
-   <div class="body"><p class="mk-small muted">Runs on your own Claude account, or on your group's API key where it offers one; only for you. It finds, reads and checks; it never concludes, signs or sends.</p>
-    <div class="mk-msg me">${esc(q)}</div>${machine('Mai', `<p>${esc(a)}</p>`)}</div>
+   <div class="body"><p class="mk-small muted"><b data-tip="<b>On your own account</b>: your own Claude subscription serves you here, so its use is yours. Where the group's key or a project's account serves you instead, this says “On the group's key” or “On {project}'s account”.">On your own account</b> · It works for you alone. It finds, reads and checks; it never concludes, signs or sends.</p>
+    <div class="mk-msg me">${esc(q)}</div>${machine('Mai', `<p>${esc(a)}</p>`)}${screen === 'assistant' ? dockMore() : ''}</div>
    <footer>${field('mk-ask-' + screen, 'Ask about this screen', '', {})}<div class="mk-acts">${btn('airunopen', 'Work on this', { tone: 'primary' })}${btn('suggest', 'Suggest')}${btn('airunclose', 'Stop')}</div></footer></aside>`;
+}
+/* DEC-248 (BOB's B209 (1); screens-inquiry R13, R17, R33): on the assistant panel, a run working, what a run that can't
+   start says in the panel (each withheld or refused dispatch by its words, never blank), and the serving account's thirty
+   days of bars, drawn only for that account's owner. */
+function dockMore() {
+  return `<p class="mk-small">${I('machine')} A run of yours is working on this.</p>
+   <details class="mk-details"><summary>If a run can't start, the panel says why, here</summary><div style="display:grid;gap:6px">${gapm('refused', '“Work on this” runs only on your own Claude subscription, and here another account serves you. Nothing was sent. To use your own, connect it under Settings, The assistant.')}${gapm('refused', 'The assistant isn\'t installed in your group\'s Civicsmith yet, so this run can\'t start. Nothing was sent. Whoever installed your group\'s Civicsmith can add it; everything else works without it.')}${gapm('refused', 'The run can\'t start: your group\'s Civicsmith didn\'t answer in time while preparing it. Nothing was sent. Try again in a moment.')}${gapm('refused', 'This run has already ended, so it can\'t be set working again. Nothing was sent. Start a new one with Work on this.')}${gapm('refused', 'The run can\'t start, for a reason this panel has no words for yet. Nothing was sent. Tell an administrator, with the reference below.')}<p class="mk-small muted">Reference: 7Q2K-91XD</p></div></details>
+   <details class="mk-details"><summary>Your account's use, last 30 days</summary>${usageBars(4.10, 61, 4)}</details>`;
 }
 const DOOR_WIZ = new Set(['Your first question', 'Get a record', 'Check a claim', 'Follow the money', 'Build a timeline', 'Follow a proceeding', 'Use another group\'s case']);  // the scripts a front door offers (library DOORS): their guide names the way out (DEC-227)
 function wizardGuide(w) {

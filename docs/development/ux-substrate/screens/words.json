@@ -9,9 +9,9 @@
   "draft": 4,
   "photo": 13,
   "handle": 7,
-  "ai": 89,
+  "ai": 99,
   "date": 14,
-  "queue": 66,
+  "queue": 68,
   "transcribe": 19,
   "capture": 8,
   "document": 45,
@@ -22,7 +22,7 @@
   "label": 52,
   "project": 34,
   "grouprule": 1,
-  "refusal": 172,
+  "refusal": 178,
   "signing": 17,
   "case": 15,
   "docket": 2,
@@ -47,8 +47,8 @@
   "members": 6,
   "ref": 26,
   "session": 6,
-  "updates": 32,
-  "home": 16,
+  "updates": 34,
+  "home": 18,
   "installer": 19,
   "wizard": 318,
   "elsewhere": 38,
@@ -72,17 +72,22 @@
   "action": 4,
   "review": 5,
   "theme": 32,
-  "connect": 1,
+  "connect": 7,
   "setup": 5,
-  "projects": 2,
+  "projects": 5,
   "progression": 26,
+  "dock": 8,
+  "count": 6,
+  "translations": 1,
+  "due": 2,
+  "reading": 4,
   "rail": 17,
   "tab": 2,
   "level": 2,
-  "act": 728,
+  "act": 729,
   "column": 33,
-  "total": 2473,
-  "protected": 741
+  "total": 2526,
+  "protected": 743
  },
  "words": [
   {
@@ -8351,6 +8356,370 @@
    "note": "DEC-243: captureprogressions R19 on the document"
   },
   {
+   "key": "dock.withheld.MEMBER_PRINCIPAL_RUN",
+   "en": "“Work on this” runs only on your own Claude subscription, and here another account serves you. Nothing was sent. To use your own, connect it under Settings, The assistant.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: D18; K3347: no API key is suggested"
+  },
+  {
+   "key": "dock.withheld.AGENT_WORKER_UNBOUND",
+   "en": "The assistant isn't installed in your group's Civicsmith yet, so this run can't start. Nothing was sent. Whoever installed your group's Civicsmith can add it; everything else works without it.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: D18"
+  },
+  {
+   "key": "dock.withheld.NAMESPACE_UNDETERMINED",
+   "en": "The run can't start: your group's Civicsmith couldn't tell which of its stores to use. Nothing was sent. This is a fault in Civicsmith, not something you did: tell an administrator, with the reference below.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "dock.withheld.CREDENTIAL_RECORD_SILENT",
+   "en": "The run can't start: your group's Civicsmith didn't answer in time while preparing it. Nothing was sent. Try again in a moment.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "dock.withheld.other",
+   "en": "The run can't start, for a reason this panel has no words for yet. Nothing was sent. Tell an administrator, with the reference below.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: any withheld code without a key; never blank (R33)"
+  },
+  {
+   "key": "refusal.ACCOUNT_MEMBER_NOT_ACTIVE",
+   "en": "The run can't start: your membership isn't active in your group's Civicsmith just now. Nothing was sent. An administrator can tell you why.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: R13"
+  },
+  {
+   "key": "refusal.AI_RUN_NOT_PRINCIPAL",
+   "en": "This run was opened on another member's account, so you can't set it working. Nothing was sent. Start your own with Work on this.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: R6, R13"
+  },
+  {
+   "key": "refusal.AI_RUN_NOT_RUNNING",
+   "en": "This run has already ended, so it can't be set working again. Nothing was sent. Start a new one with Work on this.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: R6"
+  },
+  {
+   "key": "refusal.AI_RUN_BOUND_NO_ALLOWANCE",
+   "en": "The run can't start: it was opened without the room this kind of run needs to fetch and work. Nothing was sent. Try again; if it happens again, tell an administrator, with the reference below.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: D3, R33"
+  },
+  {
+   "key": "dock.run.yours",
+   "en": "A run of yours is working on this.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: drawn only while the last airun read says running (R33)"
+  },
+  {
+   "key": "ai.serves.own",
+   "en": "On your own account",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: the dock's header (R4, R13); DEC-246 question.ai.whose"
+  },
+  {
+   "key": "ai.serves.group",
+   "en": "On the group's key",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "ai.serves.project",
+   "en": "On {project}'s account",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "ai.serves.own_says",
+   "en": "Your own Claude subscription serves you here, so its use is yours.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: the header's explanation"
+  },
+  {
+   "key": "dock.ifnot",
+   "en": "If a run can't start, the panel says why, here",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "dock.use.head",
+   "en": "Your account's use, last 30 days",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: R17, drawn only for the serving account's owner"
+  },
+  {
+   "key": "ai.log.withheld.NO_ACCOUNT",
+   "en": "Stopped before it began: no account served the member who started it. Nothing went to the assistant.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: ai-runs R18, the wake"
+  },
+  {
+   "key": "ai.log.withheld.NOT_THE_INSTANCE_CREDENTIALS_RUN",
+   "en": "Stopped before it began: it was opened under another account than the one it was to run on. Nothing went to the assistant. Tell an administrator, with the reference.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "ai.log.withheld.NO_INSTANCE_AI_CREDENTIAL",
+   "en": "Stopped before it began: your group's Civicsmith has no pass of its own for running the assistant. Nothing went to the assistant. Whoever installed your group's Civicsmith can set it.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "ai.log.withheld.INSTANCE_AI_CREDENTIAL_NOT_ON_RECORD",
+   "en": "Stopped before it began: the pass your group's Civicsmith uses for the assistant isn't on its record. Nothing went to the assistant. Whoever installed your group's Civicsmith can set it again.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "ai.log.withheld.INSTANCE_AI_CREDENTIAL_REVOKED",
+   "en": "Stopped before it began: the pass your group's Civicsmith uses for the assistant was withdrawn. Nothing went to the assistant. Whoever installed your group's Civicsmith can set a new one.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "ai.log.withheld.INSTANCE_AI_CREDENTIAL_NOT_ORGANISATION",
+   "en": "Stopped before it began: the pass your group's Civicsmith holds for the assistant is of the wrong kind. Nothing went to the assistant. Whoever installed your group's Civicsmith can set the right one.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "count.questions.one",
+   "en": "{n} question",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: D30, screens-daily R25; every count has .one and .other"
+  },
+  {
+   "key": "count.questions.other",
+   "en": "{n} questions",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "count.documents.one",
+   "en": "{n} document",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "count.documents.other",
+   "en": "{n} documents",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "count.members.one",
+   "en": "{n} member",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "count.members.other",
+   "en": "{n} members",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "updates.running.release_setup",
+   "en": "Release {version} · installed {date}, when your group's Civicsmith was set up",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: D30, screens-settings R37; for an install with no member behind it (setup, admin before a handle, a token)"
+  },
+  {
+   "key": "updates.earlier.installed_setup",
+   "en": "Release {version} · installed {date}, when your group's Civicsmith was set up",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "refusal.NO_NODE",
+   "en": "Explore needs something to start from. Open a document, a person or a question, and choose Explore connections there.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: D30, screens-investigate R29"
+  },
+  {
+   "key": "connect.change.signin_set",
+   "en": "{who} connected a Claude subscription · {date}",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: D30, R37: {who} is a handle, or “You” for the viewer; never empty"
+  },
+  {
+   "key": "connect.change.removed",
+   "en": "{who} disconnected the account · {date}",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "connect.change.switched",
+   "en": "{who} changed which account serves {member} · {date}",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "connect.change.use_set",
+   "en": "{who} changed what the account pays for · {date}",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "connect.change.limit_set",
+   "en": "{who} set a limit: {limit} · {date}",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "connect.change.limit_removed",
+   "en": "{who} removed a limit: {limit} · {date}",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "translations.none",
+   "en": "Your group uses no language but English yet, so there is nothing to translate. When your group adds a language, its words wait here for members who speak it to translate.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: D30, screens-settings R37"
+  },
+  {
+   "key": "queue.project-invitation.summary",
+   "en": "{who} invited you to join {project}",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: D25; class OBLIGATION, as membership-request"
+  },
+  {
+   "key": "queue.project-invitation.detail",
+   "en": "Join to see the project whole and work on it with its members. The invitation waits here until you join.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "projects.invited.head",
+   "en": "Invited",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: R29"
+  },
+  {
+   "key": "projects.invited.says",
+   "en": "A project you were invited to and have not joined. Join to see it whole and work on it; the invitation also waits in your queue until you do.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "projects.invited.meta",
+   "en": "{who} invited you on {date}",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "due.ours.passed",
+   "en": "Our own date passed {date}",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: fold point 4; never \"overdue\" (DEC-243, R28)"
+  },
+  {
+   "key": "due.ours.passed_says",
+   "en": "A date your group set itself, not one a law or an office set. Passing it binds nobody; it tells you your own plan has slipped.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "home.strip.ours_passed.one",
+   "en": "1 of our own dates passed",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: R28, in place of screen.home.strip.overdue"
+  },
+  {
+   "key": "home.strip.ours_passed.other",
+   "en": "{n} of our own dates passed",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "reading.affirm.head",
+   "en": "Before you accept",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: fold point 5; basis-versions R12"
+  },
+  {
+   "key": "reading.affirm.says",
+   "en": "This reading rests on {n} parts, each enough on its own: your answer stands if any one holds. Accepting says you have read each part and stand behind it, so tick each one.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "reading.affirm.part",
+   "en": "I have read {part} and stand behind it",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: one per part; versionaccept sends every ticked part as affirmed"
+  },
+  {
+   "key": "reading.affirm.accept",
+   "en": "Accept the reading",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248"
+  },
+  {
+   "key": "refusal.VERSION_AFFIRMATION_INCOMPLETE",
+   "en": "Tick each part first: accepting says you stand behind every part this reading rests on, and {part} is not ticked.",
+   "protected": false,
+   "source": "DEC-248",
+   "note": "DEC-248: C-25.33"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -10002,6 +10371,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.projectjoin.label.projects",
+   "en": "Join",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.themeread.label.theme",
    "en": "Read the themes",
    "protected": true,
@@ -10142,6 +10517,12 @@
   {
    "key": "act.actionmove.label.queue",
    "en": "Drop an unsent request, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.projectjoin.label.queue",
+   "en": "Join",
    "protected": true,
    "source": "registry.json"
   },
@@ -10566,7 +10947,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_projectfork.label.project",
+   "key": "act.projectfork.label.project",
    "en": "Start a project from this one",
    "protected": true,
    "source": "registry.json"
@@ -10734,31 +11115,31 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_versionconsider.label.question",
+   "key": "act.versionconsider.label.question",
    "en": "Weigh a reading",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_versionreject.label.question",
+   "key": "act.versionreject.label.question",
    "en": "Reject a reading",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_versionrevert.label.question",
+   "key": "act.versionrevert.label.question",
    "en": "Undo the decision on a reading",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_versioncurrent.label.question",
+   "key": "act.versioncurrent.label.question",
    "en": "Stand on a reading for a project",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_readtranslate.label.question",
+   "key": "act.readtranslate.label.question",
    "en": "Read in my language",
    "protected": true,
    "source": "registry.json"
@@ -12402,12 +12783,6 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_readtranslate.does",
-   "en": "Shows this passage in the language you read, as machine work, with the original one tap away. Nothing is saved, and the original is never replaced.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
    "key": "act.proceedingdates.does",
    "en": "Shows the proceeding's own dates and your group's deadlines on it, as two lanes side by side. It says when things are due; it never says anyone is late.",
    "protected": false,
@@ -12504,7 +12879,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_projectfork.does",
+   "key": "act.projectfork.does",
    "en": "Starts a new project of your own from this one, with you as its only owner and the visibility you choose.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -12564,25 +12939,25 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_versionconsider.does",
+   "key": "act.versionconsider.does",
    "en": "Marks this reading as one the group is weighing, with a reason. It is not yet accepted, so no project can stand on it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_versionreject.does",
+   "key": "act.versionreject.does",
    "en": "Rejects this reading, with a reason. It stays on the record, rejected, and can be weighed again later.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_versionrevert.does",
+   "key": "act.versionrevert.does",
    "en": "Takes back the last decision on this reading, with a reason, so it is weighed again.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_versioncurrent.does",
+   "key": "act.versioncurrent.does",
    "en": "Makes this accepted reading the one the project stands on, with a reason. The question does not change; only the project's choice does, and the earlier choice stays on the record.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
