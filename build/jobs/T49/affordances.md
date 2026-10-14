@@ -26,3 +26,12 @@
 **Tests and checks.** `node --test bio-plane/test/m/affordances/`: 262 tests, 262 pass, 0 fail (before: 259, 1 fail, the R48 design-file red); with setup-words' interface supplied by the local shim. Dependents: op-declarations 192 tests, 176 pass, 16 fail (13 baseline + 3 new R34 partition reds named above); screens-investigate 103 tests, 102 pass (baseline R10 red); control-plane `affordances-pack` 4 pass. `format` 170 modules, 0 failures; `architecture` 32 product files, 361 relative imports, 0 failures; `coverage` (affordances) 46 of 46 live ids named, 0 failures; `ownership` 7 files changed by affordances, 0 failures. `checks/run.mjs`: architecture and format 0 failures; coverage 17 failures, none mine (other modules' new ids).
 
 Size (session_01Sg9Baej6PovaKSxFXZivNf): test runs 9, module lines 2,613
+
+## J1 · REPORT
+
+Findings outside my entries (details in my record, "Completion"):
+1. Member-facing English I hold that the words-reads entry does not cover and words.json has no per-act key for, so I left it (a sentence no key holds is a REPORT, never inline English): the act `label`s of ACTS, CAPTURE_ACTS and PER_ITEM_ACTS; DIVIDE_PROMPT, GROUND_PROMPT and attestFence's sentence (DEC-39); CATALOGUE_DETAIL; NOT_CATALOGUED. The design lane needs to key them or rule them unkeyed.
+2. words-reads.json's affordances entry (405 keys) was generated from the old 285-act ACT_HELP; it lacks the 52 act.<op>.does keys R61 adds (all are in words.json). The design lane should regenerate it.
+3. tranche/T49's mock-acts.js is ahead of f498560a37 (DEC-248/249: six owed_ tags re-keyed, `reauth` added). I held f498560a37 as START names; `reauth` has no text in ACT_HELP.
+4. connection_kinds / vocabulary words now come from the design's label.* keys where it keys one (member_of reads "a member of"; identity claims "claimed the same person"). screens-investigate's groupMap doc still names five groups (its R27).
+5. Merge note (K2704, rule 5 (8)): my merge opens op-declarations' ACT_HELP_ABSENT partition red (its R34, "never both"): 13 ops now have text and are still named. Cleared by T49-17.
