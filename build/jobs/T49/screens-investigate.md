@@ -39,3 +39,12 @@ If you rule otherwise (e.g. the design lane adds structured fields or generic ke
 **Tests and checks.** The committed tree imports `word` and `hasWord` from `setup-words` (R11, R12), which has not merged: until then these tests do not load. I ran them against a local, uncommitted stand-in of those two functions over `words.json` (never committed, reverted): `node --test bio-plane/test/m/screens-investigate/`: 108 tests (one file of 17 with the D29 test), 0 fail. `node checks/format.mjs`: 0 failures. `node checks/architecture.mjs`: 27 product files, 0 failures. `node checks/coverage.mjs`: 30 of 30 live requirement ids named, 0 failures. `node checks/ownership.mjs`: 0 failures. Other modules' tests: none use a service I changed (this module provides screens only); `control-plane/t46-app.test.mjs` imports `SCREENS` only. After setup-words merges, merge `tranche/T49` and re-run this module's tests (CHANGE).
 
 Size (session_016pXDF9DWaZT1NX5gzoCeit): test runs 40, module lines 2086
+
+## J2 · REPORT
+
+REPORT (J2), full text in my record's Completion section. For BOB:
+1. R10's red was the registry: PR #36 added to `person` entityalias, relationdeclare, resolve, resolvetestify, connect, writinghelp and to `timeline` instance, thread, discharge, proposedispose, progression, progressiondefine. No requirement of mine or T49 entry places them (R1 and R3 name six acts each). My R10 test pins them as unplaced (still undrawn; every other registry act must be drawn). Please place them or tell me to draw them.
+2. J1, as built: `counts` is NOT drawn (its sentence prints zero counts, which R22 forbids); the parts are drawn by `counts.yes/no/unsure/disagree/notvisited`. `range` is drawn with `{answer}` = lower-cased "Yes". `notsays` -> `screen.help.notsays.p`. These need the design lane's answer (structured words per draw).
+3. Money's expertise field carried the English default "municipal budget": removed, since no key holds it. A key is owed if the default is wanted.
+4. `affordances` R60 was not merged at my START; R27's group test runs on the fixture.
+5. setup-words has not merged: this module's tests import `word`/`hasWord` and load only after it does (I ran them on a local stand-in: 108 pass).
