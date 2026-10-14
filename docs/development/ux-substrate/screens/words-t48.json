@@ -3832,5 +3832,119 @@
   "en": "Something you can't see cites it too: a project you aren't part of. Its name and what it says stay with its members.",
   "protected": false,
   "note": "DEC-250: out_of_view (DEC-36, K903 (4))"
+ },
+ {
+  "key": "shell.menu.name",
+  "en": "Your menu",
+  "protected": false,
+  "note": "DEC-251: interface-shell R4, under the masthead's initial"
+ },
+ {
+  "key": "shell.menu.says",
+  "en": "Your account, and signing out of this device.",
+  "protected": false,
+  "note": "DEC-251"
+ },
+ {
+  "key": "shell.menu.who",
+  "en": "{name} · signed in as {handle}",
+  "protected": false,
+  "note": "DEC-251"
+ },
+ {
+  "key": "shell.menu.account",
+  "en": "Your account",
+  "protected": false,
+  "note": "DEC-251"
+ },
+ {
+  "key": "shell.menu.signout",
+  "en": "Sign out",
+  "protected": false,
+  "note": "DEC-251: op=signout, then the session record cleared and /"
+ },
+ {
+  "key": "shell.menu.signout_does",
+  "en": "Ends your session on this device and goes to the sign-in page. Nothing you wrote is lost; drafts stay where they were.",
+  "protected": false,
+  "note": "DEC-251"
+ },
+ {
+  "key": "level.keep.ask",
+  "en": "You've used Civicsmith for a month with explanations shown promptly. Keep it that way, or show them only on a longer pause?",
+  "protected": false,
+  "note": "DEC-251: interface-shell R17, asked once after the first month, a note atop Home above everything else; either answer closes it for good"
+ },
+ {
+  "key": "level.keep.prompt",
+  "en": "Keep explaining promptly",
+  "protected": false,
+  "note": "DEC-251: infolevelset prompt"
+ },
+ {
+  "key": "level.keep.pause",
+  "en": "Only on a longer pause",
+  "protected": false,
+  "note": "DEC-251: infolevelset pause"
+ },
+ {
+  "key": "level.keep.later",
+  "en": "You can switch at any time with the Explanations button at the top, or Alt+Shift+I.",
+  "protected": false,
+  "note": "DEC-251"
+ },
+ {
+  "key": "settings.set.system",
+  "en": "set by Civicsmith itself",
+  "protected": false,
+  "note": "DEC-251: screens-settings R33, a value written by a seed or a machine credential after setup; settings.set.setup stays \"set at setup\", now final"
+ },
+ {
+  "key": "court.statement",
+  "en": "Your group's Civicsmith keeps this from the public and the people the group looks into. A court order your group can't defeat could still require it to be shown. Write accordingly.",
+  "protected": true,
+  "note": "DEC-251: screens-settings R7, membership R108's words exactly (DEC-136)"
+ },
+ {
+  "key": "join.cap.says",
+  "en": "On a busy day, the group's join link says this instead",
+  "protected": false,
+  "note": "DEC-251: screens-entry R7; the words are refusal.JOIN_LINK_DAILY_CAP"
+ },
+ {
+  "key": "project.bar.both",
+  "en": "Bar: {source}/{connection}",
+  "protected": false,
+  "note": "DEC-251: screens-inquiry R10, both axes declared"
+ },
+ {
+  "key": "project.bar.source_only",
+  "en": "Bar: {source} for sources; none for connection",
+  "protected": false,
+  "note": "DEC-251: an undeclared axis in words"
+ },
+ {
+  "key": "project.bar.connection_only",
+  "en": "Bar: none for sources; {connection} for connection",
+  "protected": false,
+  "note": "DEC-251"
+ },
+ {
+  "key": "project.bar.none",
+  "en": "No bar set for this project",
+  "protected": false,
+  "note": "DEC-251: absent, never zero"
+ },
+ {
+  "key": "inbox.discard.why",
+  "en": "Why discard it? (asked before anything is discarded)",
+  "protected": false,
+  "note": "DEC-251: screens-intake R7"
+ },
+ {
+  "key": "refusal.RESOLVE_NO_REASON",
+  "en": "Say why first: a knock is discarded only with a reason, and it stays as it was until you give one.",
+  "protected": false,
+  "note": "DEC-251: screens-intake R7"
  }
 ]

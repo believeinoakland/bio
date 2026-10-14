@@ -3954,3 +3954,17 @@ response: **The design session, 2026-10-14, under K3320.** **(1) Project** (scre
 decided: 2026-10-14 · the design session, under K3320 (P17)
 reasoning recorded in: this entry; `screens/mock-screens.js` (`SCR.project`, `SCR.held`, `SCR.capture` states a and c, `SCR.document`), `screens/words-t48.src.py`, `words.json` (2,567 words), `layouts.html`.
 owed: (BOB) screens-inquiry R3, R11, R16 and screens-intake R3, R10, R13, R14, R18 read these keys. (design, next) the off-path items in DEC-246's owed: line: the member menu with Sign out (interface-shell R4), the first month's question (R17), "set at setup" in history (screens-settings R33), the join link's daily cap (screens-entry R7), and settings R7, inquiry R10, R20, intake R7.
+
+### DEC-251 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_014ag6HPu3DiKJMNvMF1c3KN; the development process also runs on his primary account since K1428) (DEC-246's owed: line, the items off K3320's path)
+for: bob-session
+question: Draw the member menu with Sign out, the first month's question about explanations, values set at setup or by the system, the court statement, the join link's daily cap, the project's bar in words, and discarding a knock with its reason.
+why it is Bob's: design detail beneath DEC-136, DEC-162 and the requirements (P17); decided by the design session, reported to Bob as done.
+provisional: the masthead's initial opened nothing; no words for the first month's question; "set at setup" interim; the court statement only in membership R108; the cap's words not drawn; the project's bar always "Bar: B/B"; the inbox's discard sent no reason.
+alternative: none weighed; each follows its requirement.
+recommendation: as below.
+reversal cost: low: mock states and words.
+response: **The design session, 2026-10-14.** **(1) The member menu** (interface-shell R4): the initial opens "Your menu": "{name} · signed in as {handle}", "Your account", "Sign out" (`shell.menu.*`), on every working screen. **(2) The first month** (R17): asked once, as a note atop Home above everything else, `level.keep.ask` with "Keep explaining promptly" and "Only on a longer pause" (`infolevelset`), and `level.keep.later`; either answer closes it for good. **(3) Values not set by a member** (screens-settings R33): "set at setup" (`settings.set.setup`) is final for the founder's bootstrap; a seed or machine credential after setup reads `settings.set.system`, "set by Civicsmith itself". **(4) The court statement** (screens-settings R7): `court.statement`, membership R108's words exactly, protected. **(5) The join link's cap** (screens-entry R7): drawn on `join` state e by `refusal.JOIN_LINK_DAILY_CAP`'s words. **(6) The project's bar** (screens-inquiry R10): `project.bar.both`, `.source_only`, `.connection_only` (an undeclared axis in words), `.none` (absent, never zero). **(7) Discarding a knock** (screens-intake R7): the reason asked first (`inbox.discard.why`) and `refusal.RESOLVE_NO_REASON`. Screens-inquiry R20 is the stylesheet's common line, nothing to draw.
+decided: 2026-10-14 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-shell.js` (`mast`), `screens/page.src.html` (`.mk-usermenu`, `.mk-menu`), `screens/mock-screens.js` (`SCR.join` state e, `SCR.inbox`), `screens/words-t48.src.py`, `words.json` (2,586 words), `layouts.html`.
+owed: (BOB) interface-shell R4, R17; screens-settings R7, R33; screens-entry R7; screens-inquiry R10; screens-intake R7 read these keys. (design) DEC-246's owed: line is drawn whole.

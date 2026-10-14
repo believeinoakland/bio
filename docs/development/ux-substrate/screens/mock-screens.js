@@ -394,7 +394,7 @@ SCR.join = c => { const st = JOIN_ST[c.v] || 'a'; const sel = v => v === st ? ' 
   <div class="mk-mockctl"><label for="mk-hst">In this mockup, show a handle that is</label> <select id="mk-hst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>free</option><option value="b"${sel('b')}>already taken in the group</option><option value="c"${sel('c')}>using characters a handle can't have</option><option value="d"${sel('d')}>(the group's reusable join link)</option><option value="e"${sel('e')}>(a link that no longer works)</option></select></div>
   <div class="mk-setuphead"><span class="grp mk-grp">Lakeshore Tenants</span></div>
   <div class="st st-d">${h1('Join Lakeshore Tenants', 'You came through the group\'s join link. First, the name the group will know you by; then you choose your handle and password.')}${field('mk-jcover', 'The name the group will know you by', 'Mai K., from the Seminary Ave block', { act: 'joinlinkinvite', help: 'Not your handle and not necessarily your legal name: how the group\'s administrators will know who you are. Only they see it.' })}${acts(btn('joinlinkinvite', 'Continue', { tone: 'primary' }))}</div>
-  <div class="st st-e">${h1('This link no longer works', 'It may have been used already, passed its seven days, or been withdrawn, or the group turned its join link off. Ask whoever sent it for a new one.')}</div>
+  <div class="st st-e">${h1('This link no longer works', 'It may have been used already, passed its seven days, or been withdrawn, or the group turned its join link off. Ask whoever sent it for a new one.')}<details class="mk-details"><summary>On a busy day, the group's join link says this instead</summary>${gapm('refused', 'The group\'s join link has let in as many people as it allows today. Try again tomorrow.')}</details></div>
   <div class="st st-a st-b st-c">
   ${h1('You\'re invited to Lakeshore Tenants', 'Rosa invited you to contribute. This link works once and expires on 13 October 2026.')}
   ${choice('mk-lang', 'Your language', ['English', 'Español', 'Tiếng Việt'], 'English', { act: 'memberlanguageset', help: 'Chosen from your device\'s setting. You can change it any time.' })}
@@ -1528,7 +1528,9 @@ SCR.inbox = c => ({ rail: 'queue', title: 'Inbox', crumbs: ['Inbox'], main: `
   ${h1('Inbox', 'Material handed in through your doorbell.')}
   ${sheet(row(I('capture'), '<b>3 PDFs</b> · "These are the inspection sheets they don\'t publish." <span class="meta"><span class="id">KNOCK-2026-10-03-9c1f</span> · same knocker as 12 September</span>', ''))}
   ${ladder('ident', ['Unknown', 'Same knocker', 'Partly known', 'Known to the group', 'Public'], 2)}
-  ${acts(btn('inboxpull', 'Move into the record', { tone: 'primary' }), btn('inboxresolve', 'Discard, with a reason'), btn('sourcelink', 'Record what is known of the source'))}` });
+  ${field('mk-disc', 'Why discard it? (asked before anything is discarded)', '', { reason: true, act: 'inboxresolve' })}
+  ${acts(btn('inboxpull', 'Move into the record', { tone: 'primary' }), btn('inboxresolve', 'Discard, with a reason'), btn('sourcelink', 'Record what is known of the source'))}
+  ${gapm('refused', 'Say why first: a knock is discarded only with a reason, and it stays as it was until you give one.')}` });
 
 SCR.doorbell = c => ({ frame: 'public', title: 'Hand material to Lakeshore Tenants', main: `
   <div class="mk-setuphead"><span class="grp mk-grp">Lakeshore Tenants</span></div>

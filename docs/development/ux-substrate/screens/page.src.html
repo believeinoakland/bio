@@ -421,6 +421,10 @@ main:not([data-st]) .mk-frontgrid.st-a, main[data-st="a"] .mk-frontgrid.st-a, ma
 .mk-ifelse { display: none; } main.mk-else .mk-ifelse { display: block; }
 .mk-ifother { display: none; } main.mk-other .mk-ifother { display: block; } main.mk-other .mk-ifheld { display: none; }
 .foot { margin-top: 48px; padding-top: 14px; border-top: var(--hair); color: var(--c-muted); font-size: var(--t-sm); }
+/* DEC-251 (interface-shell R4): the member's menu under the masthead's initial. */
+.mk-usermenu { position: relative; flex: none; } .mk-usermenu > summary { list-style: none; cursor: pointer; } .mk-usermenu > summary::-webkit-details-marker { display: none; }
+.mk-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 6; display: grid; gap: 2px; min-width: 200px; padding: 6px; background: var(--c-sheet); border: var(--hair); border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,.14); }
+.mk-menu > span { padding: 4px 8px; } .mk-menu a { padding: 6px 8px; color: var(--c-ink); text-decoration: none; border-radius: 4px; } .mk-menu a:hover, .mk-menu a:focus-visible { background: var(--c-accent-tint); }
 </style>
 {{SPRITE}}
 <div class="cs"><div class="doc">
