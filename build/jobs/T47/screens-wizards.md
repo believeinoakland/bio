@@ -16,9 +16,9 @@
 
 **Found in other modules:** reported in J3/J4 and ruled: the guide's own controls need the shell's `data-guide` hook (interface-shell R51, K3156); the shell keeps `cs.keep` keys under `cs-guide:` (fine as is, B7). The wizard-scripts T47 registry's `projectlist` read (project-roster R26) is used for the project choice.
 
-**Tests and checks:** `node --test bio-plane/test/m/screens-wizards/` on this branch (tranche/T47 at B8 merged): 26 of 30; the four reds are R8's path and `page.test.mjs`' three tests, each waiting on interface-shell's merge (R28's `PATHS`, `interfacePage(screens, {guide})`). With INTERFACE-SHELL #2's branch head overlaid in a scratch worktree (never committed): 30 of 30. After interface-shell R51 merges, the page test for Next, Back and Stop is added (B7). Checks with my paths filled in a local `modules.json` (not committed): `format` 0 failures; `architecture` 0 failures; `coverage` 9 of 9; `ownership` 0 failures; `checks/run.mjs` architecture 0 failures (its "owned by no module" for my files clears when BOB adds the paths).
+**Tests and checks:** `node --test bio-plane/test/m/screens-wizards/` on this branch with `tranche/T47` merged at B9 (interface-shell R27–R51 in, no overlay): 32 of 32, including `page.test.mjs`' real-page walk: a screen's wizard mark starts the guide, Next, Back and Stop by `data-guide` (R51), the ring inside the opened row panel, Alt+Shift+W, a recording by op and screen only, Home's welcome and first question, and after `join` the counted start and step 3 with "Not now" keeping the mark. Checks with my paths filled in a local `modules.json` (not committed; BOB adds them): `format`, `architecture`, `ownership` 0 failures; `coverage` 9 of 9; `checks/run.mjs` architecture 0 failures (its "owned by no module" for my files clears when the paths are added).
 
-Size (session_0118dwXjnwwYydM1sWbE5P8u): test runs 22, module lines 849 (source; tests 971)
+Size (session_0118dwXjnwwYydM1sWbE5P8u): test runs 26, module lines 849 (source; tests 1,030)
 ## J1 · QUESTION
 
 The GUIDE contract between this module and `interface-shell` (its R31; my R2–R7) is not written anywhere, and INTERFACE-SHELL #1 is building its half now. My best reading, which I am building to; please confirm it or relay it (or interface-shell's own shape) so both halves meet:
