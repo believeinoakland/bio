@@ -43,3 +43,7 @@ Entries applied: R3 (composition; `compose.mjs`), R71, R72, K3321 (B)'s ten reds
 Tests and checks: `node --test bio-plane/test/m/op-declarations/` 200 pass, 0 fail (after merging `tranche/T49` at B5); `checks/run.mjs`: architecture 0 failures; format's 2 failures are `site` paths (not mine); coverage names no op-declarations id (its 71 of 71 named); ownership 0 failures.
 Words: none drawn. The local untracked op-capabilities copy was removed before the merge.
 Size (session_011hPuqD9y49HjQBBqnz9ub8): test runs 14, module lines 3164
+
+## J2 · COMPLETE
+
+op-declarations (T49-17) is COMPLETE on job/T49/op-declarations: R3, R71, R72, K3321 (B), rule 5 (3) and (8) done; 200 module tests pass; ownership and architecture 0 failures; coverage 71 of 71. Record has the details.
