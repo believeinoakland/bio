@@ -20,3 +20,15 @@ For BOB, outside my module:
 3. `answer-envelope/families.mjs` reads `FILINGS_CHECKS`; C-115.47 now lives in `filing-templates`' table (its R33), so the family listing needs it from there.
 4. `setup-words` carries its own copies of `rfc.quoting` ("Your reply may be quoted, unless you say otherwise in it.") and `refusal.RFC_QUOTING_MISSING`, which differ from the sentence in `filing-templates` R33 (and its NOT_A_PARTNER copy needs checking against DEC-221's spelling). Not mine.
 Checks so far: format 0 failures, architecture 0, coverage 58 of 58 ids, ownership 0.
+
+## Completion
+
+**Read, whole:** requirements/filings.md; my entry (T48-51); layer 9's contract; filings' code (index, checks, outward, schema); filing-templates R33; the tests naming R40/R51/R52 (t45, t46, refusals).
+
+**Entries applied (T48-51):** R57 (R40's check is `filing-templates.rfcQuotingRefusal`, asked at R6; the sentence `RFC_QUOTING_SENTENCE` is its; `KEYED["rfc.quoting"]`, C-115.47's row and its words entry removed here); R58 (Tier 2 answers `offers: ["counsel_packet"]`); R59 (`filingRead`, `op=filingread`); N1053 (`NOT_A_PARTNER` words in DEC-221's spelling, by key). New tests: `t48.test.mjs`; t45, t46 and refusals updated for R57.
+
+**Deferred:** none. **Found in other modules (reported in J1, routed by BOB, K3280):** op-declarations, op-grades, plane declare `filingread`; answer-envelope reads C-115.47 from filing-templates; setup-words keeps its own `rfc.quoting` copies. Accepted reds until those merge: plane/split.test.mjs and op-declarations/t45.test.mjs.
+
+**Tests and checks:** filings + filing-templates suites: 192 tests, 192 pass. format: 0 failures; architecture (filings): 0 failures; coverage (filings): 58 of 58 ids named; ownership: 0 failures. `checks/run.mjs`: coverage failures listed are other modules' (screens-*, setup-words, wizard-scripts).
+
+Size (session_01QBnLDeNuXjJHKeLdZE7tem): test runs 8, module lines 3589
