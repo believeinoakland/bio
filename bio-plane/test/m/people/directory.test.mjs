@@ -59,7 +59,8 @@ test("R37 peopleDirectory answers the people and organisations the record follow
   assert.equal(c.today.posts[0].title, "Director of Public Works");
   assert.deepEqual(c.today.posts[0].office, { entity: director, label: "Director of Public Works" });
   assert.deepEqual(c.today.posts[0].body, { entity: works, label: "Public Works Department" });
-  assert.deepEqual(rowOf(r, works).today, { kind: "institution", sector: "government", note: "a subject the test registers" });
+  assert.deepEqual(rowOf(r, works).today, { kind: "institution", sector: "government", note: "a subject the test registers",
+                                             note_by: ANN, machine: false });
   assert.deepEqual([c.documents, c.questions, c.projects, c.newest_added, c.mine], [3, 1, 1, "2026-02-25T00:00:00.000Z", true]);
   const f = rowOf(r, ferris);
   assert.deepEqual([f.documents, f.questions, f.projects, f.newest_added, f.mine], [0, 0, 0, null, false], "named in nothing yet");
@@ -195,4 +196,26 @@ test("R37 writes nothing, and op=peopledirectory answers what the read answers, 
   assert.deepEqual(viaOp, w.p.peopleDirectory({ q: "chen", show: "people", limit: 5, viewer: ANN }));
   assert.equal(viaOp.rows[0].entity, chen);
   assert.equal(peopleOps(w.p, url(""), null).peopledirectory().ok, false, "no stamped viewer: fails closed");
+});
+
+test("R38 an organisation row answers in today, beside note, note_by (the entity's declared_by as entities holds it) and machine (true exactly when that author is a machine identity): a body setup's seeding declared answers machine: true; control: a body a member registered answers that member's stamp and machine: false; a person row is unchanged", () => {
+  const { w, chen, works } = record();
+  /* instance-setup R50: setup's seeding declares as a machine identity */
+  const seed = w.entities.createEntity({ kind: "body", label: "City Council", note: "seeded at setup", declaredBy: "class:setup" });
+  assert.equal(seed.ok, true, JSON.stringify(seed));
+  const daemon = w.entities.createEntity({ kind: "institution", label: "Port Authority", note: "seeded", declaredBy: "class:daemon" });
+  const r = all(w, { viewer: ANN });
+  assert.deepEqual(rowOf(r, seed.entity_id).today, { kind: "body", sector: w.real.readEntity({ entityId: seed.entity_id }).entity.sector,
+                                                     note: "seeded at setup", note_by: "class:setup", machine: true });
+  assert.deepEqual([rowOf(r, daemon.entity_id).today.note_by, rowOf(r, daemon.entity_id).today.machine], ["class:daemon", true]);
+  /* control: a member's words */
+  assert.deepEqual([rowOf(r, works).today.note_by, rowOf(r, works).today.machine], [ANN, false]);
+  for (const x of r.rows.filter((x) => x.kind !== "person")) {
+    assert.equal(x.today.note_by, w.real.readEntity({ entityId: x.entity }).entity.declared_by, x.entity);
+    assert.equal(typeof x.today.machine, "boolean");
+  }
+  /* a person row is unchanged: its posts only */
+  assert.deepEqual(Object.keys(rowOf(r, chen).today), ["posts"]);
+  /* the outsider reads the same author: the registry is group-wide */
+  assert.deepEqual(rowOf(all(w, { viewer: OUT }), seed.entity_id).today, rowOf(r, seed.entity_id).today);
 });

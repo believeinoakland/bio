@@ -254,3 +254,68 @@ test("R14 peopleOf given no services reaches the real modules on the same host (
   for (const r of [plane.samePersonCandidates({ entityId: p, viewer: ANN }), plane.statementsOf({ entityId: p, viewer: ANN }),
                    plane.interestsOf({ entityId: p, viewer: ANN }), plane.careerOf({ entityId: p, viewer: ANN })]) assert.equal(r.ok, true);
 });
+
+test("R39 personAt answers claims: every unwithdrawn identity claim the viewer may see with an end in the cluster it states, same_as, not_same_as and unsure alike, each {claim_id, a, b, kind, grade, why, by, at} as R1 and R2 answer it, ordered by at then claim_id; withdrawIdentityClaim with a listed id leaves the rest; control: a claim made in a project hidden from the viewer is absent and uncounted", () => {
+  const w = world();
+  const a = w.person("Dana Kim"), b = w.person("Dana Kim"), c = w.person("Dana Kim"), far = w.person("Other Kim");
+  const claim = (x, y, kind, extra = {}) => w.p.claimIdentity({ a: x, b: y, kind, basis: "testimony", note: "said so", by: ANN, ...extra });
+  const same = claim(a, b, "same_as");
+  const unsure = claim(b, c, "unsure", { by: OUT });
+  claim(c, far, "same_as");                         /* c is outside the cluster: unsure joins nothing, so this claim is not on it */
+  const read = (viewer = ANN) => w.p.personAt({ entityId: a, at: "2020-01-01", viewer });
+  const r = read();
+  assert.deepEqual(r.cluster.members, [a, b].sort());
+  assert.deepEqual(r.claims.map((x) => x.claim_id), [same.claim_id, unsure.claim_id], "both, each with its id, in the order made");
+  assert.equal(r.claims_truncated, false);
+  for (const x of r.claims) assert.deepEqual(Object.keys(x).sort(), ["a", "at", "b", "by", "claim_id", "grade", "kind", "why"]);
+  assert.deepEqual(r.claims[0], { claim_id: same.claim_id, a, b, kind: "same_as", grade: same.grade, why: same.why, by: ANN, at: same.at },
+                   "as claimIdentity answered it (R1, R2)");
+  assert.deepEqual([r.claims[1].kind, r.claims[1].by, r.claims[1].grade, r.claims[1].why], ["unsure", OUT, unsure.grade, unsure.why]);
+  /* a member names the claim to withdraw from the page itself */
+  assert.equal(w.p.withdrawIdentityClaim({ claimId: r.claims[0].claim_id, reason: "different people", by: ANN }).ok, true);
+  const after = read();
+  assert.deepEqual(after.cluster.members, [a]);
+  assert.deepEqual(after.claims.map((x) => x.claim_id), [], "the withdrawn claim is gone and b left the cluster");
+  assert.deepEqual(w.p.personAt({ entityId: b, at: "2020-01-01", viewer: ANN }).claims.map((x) => x.claim_id), [unsure.claim_id],
+                   "only the unsure one is left on b");
+  /* an undetermined cluster states its whole component: the not_same_as inside it is listed with the rest */
+  const w2 = world();
+  const [x, y, z] = ["Q X", "Q Y", "Q Z"].map((n) => w2.person(n));
+  const t = (p, q, kind) => w2.p.claimIdentity({ a: p, b: q, kind, basis: "testimony", note: "n", by: ANN });
+  const xy = t(x, y, "same_as"), yz = t(y, z, "same_as"), apart = t(x, z, "not_same_as");
+  const u = w2.p.personAt({ entityId: x, at: "2020-01-01", viewer: ANN });
+  assert.equal(u.cluster.state, "undetermined");
+  assert.deepEqual(u.claims.map((c) => [c.claim_id, c.kind]), [[xy.claim_id, "same_as"], [yz.claim_id, "same_as"], [apart.claim_id, "not_same_as"]]);
+  /* ties in at by claim_id */
+  assert.ok(u.claims.every((c, i, l) => i === 0 || l[i - 1].at < c.at || (l[i - 1].at === c.at && l[i - 1].claim_id < c.claim_id)));
+  /* control: a claim made in a project hidden from the viewer is neither listed nor counted */
+  const w3 = world();
+  const p = w3.person("Eve Fox"), q = w3.person("Eve Fox"), s = w3.person("Eve Fox");
+  const open = w3.p.claimIdentity({ a: p, b: q, kind: "unsure", basis: "testimony", note: "n", by: ANN });
+  const fenced = w3.p.claimIdentity({ a: p, b: s, kind: "same_as", basis: "testimony", note: "n", by: ANN, project: w3.project() });
+  const ann = w3.p.personAt({ entityId: p, at: "2020-01-01", viewer: ANN }), out = w3.p.personAt({ entityId: p, at: "2020-01-01", viewer: OUT });
+  assert.deepEqual(ann.claims.map((c) => c.claim_id), [open.claim_id, fenced.claim_id], "control: the participant sees both");
+  assert.deepEqual(out.claims.map((c) => c.claim_id), [open.claim_id]);
+  assert.equal(out.claims_truncated, false);
+  assert.ok(!JSON.stringify(out).includes(fenced.claim_id), "never named");
+  /* it writes nothing */
+  const census = () => JSON.stringify(["identity_claims", "identity_cluster"].map((tb) => w3.rows(`SELECT * FROM ${tb} ORDER BY 1`)));
+  const before = census();
+  w3.p.personAt({ entityId: p, at: "2020-01-01", viewer: ANN });
+  assert.equal(census(), before);
+});
+
+test("R39 personAt's claims are bounded at 1,000 (R5's bound) with claims_truncated by reading one past; a claim hidden from the viewer is not counted toward it (control: the participant reads one past)", () => {
+  const w = world();
+  const p = w.person("Ivy Lane"), q = w.person("Ivy Lane");
+  const unsure = () => w.p.claimIdentity({ a: p, b: q, kind: "unsure", basis: "testimony", note: "maybe", by: ANN });
+  for (let i = 0; i < 1000; i++) assert.equal(unsure().ok, true);
+  const read = (viewer) => w.p.personAt({ entityId: p, at: "2020-01-01", viewer });
+  const whole = read(ANN);
+  assert.deepEqual([whole.claims.length, whole.claims_truncated], [1000, false], "exactly the bound is whole");
+  w.p.claimIdentity({ a: p, b: q, kind: "unsure", basis: "testimony", note: "hidden", by: ANN, project: w.project() });
+  const out = read(OUT), ann = read(ANN);
+  assert.deepEqual([out.claims.length, out.claims_truncated], [1000, false], "the hidden claim is not counted");
+  assert.deepEqual([ann.claims.length, ann.claims_truncated], [1000, true], "one past the bound is read");
+  assert.deepEqual(ann.claims.map((c) => c.claim_id), whole.claims.map((c) => c.claim_id), "the first 1,000 in their order");
+});
