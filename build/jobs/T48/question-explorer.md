@@ -43,3 +43,7 @@ Citations in the comments now point to `ai-accounts`.
 - `run.mjs`: format 0, architecture 0 (3286 files), channels 0. Coverage shows 37 failures, all in other modules (inherited); none is question-explorer's.
 
 Size (session_01Vne8TPUKPXS1TYhSQirKWK): test runs 6, module lines 1074
+
+## J1 · REPORT
+
+Three things found while applying T48-35, none blocking: (a) my requirements' Uses line cites accountUses (ai-accounts R14, R15); the in-plane read it makes is accountUsesOf, ai-accounts R17 (as ai-use R3 cites); re-point the citation, meaning unchanged. (b) modules.json: credentials can leave question-explorer's uses at merge; no import of it remains in my paths. (c) ai-use and run-productions take no aiAccounts dep; they reach ai-accounts through credentials R72's delegates until their own re-pointing.
