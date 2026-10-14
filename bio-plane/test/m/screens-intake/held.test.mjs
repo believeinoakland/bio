@@ -141,7 +141,7 @@ test("R4 R13 heldsetaside: one reason (the shell's reason field, no writing help
   const p = await open("/app/held", { reachable: true, plane: { heldcaptures: (req) => (req.query.state === "set_aside" ? asideNow : HELD),
     heldsetaside: () => { asideNow = AFTER; return ok({ ok: true, act: "set_aside", ids: ["INFO-2026-0002-budget"], reason: "Wrong year.",
       documents: [{ id: "INFO-2026-0002-budget", waiting: [{ question: "INQ-1", title: "Were the transfers authorised?", asker: "Ana" }] }] }); } } });
-  assert.match(text(p), /Nothing is set aside\./);
+  assert.doesNotMatch(text(p), /Set aside/, "R19: an empty Set aside is not drawn");
   await pick(p, "INFO-2026-0002-budget");
   const r = await press(p, "heldsetaside", { reason: "Wrong year.", sel: ":not([data-id])" });
   assert.equal(r.slot() && r.slot().querySelector('[data-act="writinghelp"]'), null, "no writing help on a reason (K1841)");

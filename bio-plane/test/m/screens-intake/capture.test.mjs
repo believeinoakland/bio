@@ -8,7 +8,11 @@ const ADDRESS = "https://www.example.gov/reports/street-maintenance-2026.pdf";
 const DOC = { capture: { sha256: "a".repeat(64), bytes: 1200, encoding: "binary" }, file: "snapshots/a.pdf", title: null };
 
 test("R1 R16 the address tab draws acquire, capturerequest, and the two watching acts, monitorset and monitor", async () => {
-  const p = await open("/app/capture/address");
+  const p = await open("/app/capture/address", { plane: { acquire: ok({ ok: true, existed: true, document: DOC, bundleId: "INFO-2026-0002-report" }) } });
+  for (const op of ["acquire", "capturerequest"]) assert.ok(btn(p, op), op);
+  assert.ok(!btn(p, "monitorset") && !btn(p, "monitor"), "R18: watching waits for a captured address");
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "acquire");
   for (const op of ["acquire", "capturerequest", "monitorset", "monitor"]) assert.ok(btn(p, op), op);
   assert.match(btn(p, "monitorset").textContent, /Watch this address/);
   assert.match(btn(p, "monitor").textContent, /Check it now/);
@@ -128,21 +132,24 @@ test("R16 \"Check it now\" sends monitor alone, for the same bundle", async () =
 test("R14 an address not captured this visit is watched through the held document for that address; none known, nothing is sent", async () => {
   const held = ok({ ok: true, held: [{ bundle_id: "INFO-2026-0003-other", title: "Other", source: { address: "https://x.example/y" } },
                                      { bundle_id: "INFO-2026-0002-report", title: "The report", source: { address: ADDRESS } }] });
-  const p = await open("/app/capture", { plane: { heldcaptures: held, monitorset: ok({ ok: true }), monitor: ok({ ok: true }) } });
+  const p = await open("/app/capture", { plane: { heldcaptures: held, acquire: ok({ ok: true, existed: true, document: DOC }), monitorset: ok({ ok: true }), monitor: ok({ ok: true }) } });
   fill(p, { "ci-address": ADDRESS });
+  await press(p, "acquire");
   await press(p, "monitorset", { reason: "r" });
   assert.equal(p.byOp("monitorset")[0].body.bundleId, "INFO-2026-0002-report");
   await press(p, "monitor");
   assert.equal(p.byOp("monitor")[0].body.bundleId, "INFO-2026-0002-report");
   /* control: an address no held document names: nothing is sent, and the member is told to capture it first */
-  const q = await open("/app/capture", { plane: { heldcaptures: held } });
+  const q = await open("/app/capture", { plane: { heldcaptures: held, acquire: ok({ ok: true, existed: true, document: DOC }) } });
+  fill(q, { "ci-address": ADDRESS });
+  await press(q, "acquire");
   fill(q, { "ci-address": "https://never.example/z" });
   const r = await press(q, "monitorset", { reason: "r" });
   assert.equal(q.byOp("monitorset").length, 0);
   assert.match(r.slot().textContent, /capture it first, then watch it/);
-  const e = await open("/app/capture");
-  assert.match((await press(e, "monitor")).slot().textContent, /Write the address first/);
-  assert.equal(e.byOp("monitor").length, 0);
+  fill(q, { "ci-address": "" });
+  assert.match((await press(q, "monitor")).slot().textContent, /Write the address first/);
+  assert.equal(q.byOp("monitor").length, 0);
 });
 
 test("R14 NOT_MONITORED, NO_LOCATOR and MONITOR_SET_REFUSED are drawn by the shell's rule (R13): the code's refusal word where held, else the answer's own words", async () => {
