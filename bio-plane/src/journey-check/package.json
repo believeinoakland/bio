@@ -1,0 +1,12 @@
+{
+  "name": "bio-journey-check",
+  "private": true,
+  "type": "module",
+  "description": "The release check: a Playwright walk of journeys 28 and 3 (journey-check R1).",
+  "scripts": {
+    "journey": "node journey.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.56.1"
+  }
+}
