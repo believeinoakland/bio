@@ -54,3 +54,7 @@ B2 applied; merged tranche/T48. 3 tests red, all planask: op-grades t48.mjs stil
 ## J4 · COMPLETE
 
 B3 done: unaccounted() now accepts a caller-owned absence carried as a gated read (control added); totality and affordances-pack tests of control-plane pass, module tests pass (296 incl. control-plane tests). Only open items: the planask ACTS-row mismatch in op-grades (3 tests of mine), and the modules.json edge to ai-accounts.
+
+## J5 · REPORT
+
+Correction to J4: the full run shows no planask failure (op-grades now drops it) and architecture shows 0 failures (the ai-accounts edge is in). Nothing open on my side.
