@@ -142,7 +142,6 @@ test("R10 no key, code or password typed is kept in the browser's storage, put i
 /* R28: the common line. Every element these screens draw uses a class a served stylesheet defines (interface-shell R56),
    and a section, list or reading that holds nothing is not drawn. */
 import { readFileSync } from "node:fs";
-import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { walk } from "./kit.mjs";
 
 const rootOf = new URL("../../../../", import.meta.url);
@@ -150,10 +149,12 @@ const styleOf = (src) => (/<style[^>]*>([\s\S]*?)<\/style>/.exec(src) || [, ""])
 // the served stylesheets: `civicsmith.css`, `shell.css` (the design page's product rules, interface-assets R7; the design's own
 // source until that file is served) and the shell's own `STYLE`
 const served = (() => {
-  const css = (n) => { const f = ASSET_FILES[n]; return f ? Buffer.from(f.body || f).toString("utf8") : ""; };
-  const shell = css("shell.css") || styleOf(readFileSync(new URL("docs/development/ux-substrate/screens/page.src.html", rootOf), "utf8"));
-  const own = /const STYLE = `([\s\S]*?)`;/.exec(readFileSync(new URL("bio-plane/src/interface-shell/index.mjs", rootOf), "utf8"));
-  return new Set([...(css("civicsmith.css") + shell + (own ? own[1] : "")).matchAll(/\.([A-Za-z][\w-]*)/g)].map((m) => m[1]));
+  // the design's two stylesheets as `interface-assets` serves them (R1, R7: byte-identical to these files), and the shell's own `STYLE`
+  const read = (p) => readFileSync(new URL(p, rootOf), "utf8");
+  const css = read("docs/development/ux-substrate/visual-language/civicsmith.css");
+  const shell = styleOf(read("docs/development/ux-substrate/screens/page.src.html"));
+  const own = /const STYLE = `([\s\S]*?)`;/.exec(read("bio-plane/src/interface-shell/index.mjs"));
+  return new Set([...(css + shell + (own ? own[1] : "")).matchAll(/\.([A-Za-z][\w-]*)/g)].map((m) => m[1]));
 })();
 
 const RUNS = [
