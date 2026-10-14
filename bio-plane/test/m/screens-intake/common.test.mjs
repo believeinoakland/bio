@@ -148,7 +148,8 @@ test("R9 no act or read records which member opened which file: every request is
     }
     /* the page's storage holds only the shell's own keys: the session record (interface-shell R32, in local storage) and
        its level, theme and width; nothing of these screens */
-    for (const k of p.store.keys()) assert.equal(k, "bio-session", `session storage key ${k} is the shell's`);
+    assert.deepEqual([...p.store.keys()], [], "session storage holds nothing");
+    assert.ok(p.local.has("bio-session"), "the session record, in local storage");
     for (const k of p.local.keys()) assert.match(k, /^(cs-|bio-session(:active)?$)/, `local storage key ${k} is the shell's`);
   }
 });

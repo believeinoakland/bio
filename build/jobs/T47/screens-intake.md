@@ -6,7 +6,7 @@
 
 Read whole for this job (P20): `build/requirements/screens-intake.md`; my code (`bio-plane/src/screens-intake/`, 848 lines at START) and tests (818 lines); the public parts of `interface-shell`, `setup-words`, `wizard-scripts` and `op-declarations`; the owners' lines my T47 ids name (`capture` R76–R81, R88; `monitoring` R74; `capture-requests` R56; `sources` R1, R6, R9; `acquisition` R41; `provenance` R24–R27, R51, R63; `wizard-scripts` R25, R34; `ratification` R51; `op-declarations` R56); the START's sources for my screens. No flaw found in the T46 code beyond what T47-59 replaces (the draft drawn into a field of a new id; the inbox's typed source ids; the set-aside list kept only for the visit).
 
-Applied (T47-59), not yet committed as complete:
+Applied (T47-59):
 - R10: the writing-help draft filled into `ci-words` by `cs.fill`, labelled `screen.capture.saw.draft` ("Draft · the assistant's, asked by {handle}", the session's handle), with `ai.label.untested` when the answer carries `untested`; the label leaves once `testify` keeps it. Each knock on `inbox` is `cs.ref("knock", …)`, its card the size, date and note.
 - R11: `held` rows draw `capture.grade` as one mark (a determined letter as `cs.grade`; a stated letter "as a member stated it, not measured"; received and authored captures by their basis, no letter); `capture` null draws `state.undetermined`; the thumbnail is a `capture` reference opening `open-file` for `capture.sha256`.
 - R12: a pulled knock's source through `sourceof` (its `capture_sha`), its rung through `sourcerung`, the ladder at that rung (a knock not yet pulled: "Same knocker" with a pseudonym, else "Unknown"); `sourcelink` sends the source read and `to` chosen from the other pulled knocks' sources (the same knocker's first, at most 20 knocks read), no field for a typed id.
@@ -20,7 +20,16 @@ B2 (K3148): `tranche/T47` merged (c9dea8a628; wizard-scripts T47-47, op-grades T
 B3 (K3149): `tranche/T47` merged (2e591e7dc6; setup-words T47-52, instance-setup T47-75): the setup-words stand-in dropped. Two of my own lines followed `WORD_ROWS` at 6f0d88d8d5: the upload act's label key is now `act.captureupload.label.capture` (the registry names `captureupload`; `act.capture.label.capture` is gone), and R14's refusal test now expects the code's `refusal.<code>` word where `WORD_ROWS` holds one (`MONITOR_SET_REFUSED` now does; interface-shell R13's order), else the answer's words. With the op-declarations and interface-shell stand-ins: 57 pass, 0 fail.
 B4 (K3152), B5 (K3153): `tranche/T47` merged (b1f9ec7269, op-declarations among it): on this branch 54 pass, 3 fail, the three R10 tests that need interface-shell's `cs.fill` and the `knock` kind. With `job/T47/interface-shell` merged on top in the scratch checkout and no stand-in left: 57 pass, 0 fail. Tests brought to the shell's harness as built (B5): R9's request list leaves out the shell's `bootstrap`; its storage control admits the session record in local storage (`bio-session`, `bio-session:active`); R10's knock card is checked against `SHELL_WORDS`' `shell.card.knock`, not words of my own.
 B6 (K3157): `tranche/T47` merged (b9032fc3c8): on this branch 54 pass, 3 fail (the same three R10 tests); with `job/T47/interface-shell` at f8251c4926 (its J5 COMPLETE) on top in the scratch checkout: 57 pass, 0 fail.
-Next: on BOB's CHANGE announcing interface-shell merged, merge `tranche/T47`, re-run tests and `node checks/run.mjs`, post COMPLETE.
+B7 (K3165): `tranche/T47` merged (2d6895cb50, interface-shell among it). No overlay left; the scratch checkout is retired. Tightened what I held for this merge: R9's storage control now asks the session record in local storage and session storage empty (interface-shell R32, R33), no longer either form.
+
+## Completion
+
+- Entries applied: T47-59 whole (R10–R16; K3114's control re-stated for ratification R51). Nothing deferred.
+- Bounds chosen (mine, not in a requirement): R12 reads `sourceof` for at most 20 other pulled knocks (the same knocker's first, then the latest), so a long inbox does not fan out a read per knock; R14's frequency offers `MONITOR_FREQ` but `none`, weekly by default.
+- Found in other modules: `control-plane` `t46-app.test.mjs` R75 fails on `img-src` ('self', data:, blob:) on `tranche/T47` itself (caac922b0f) as on my branch: the page policy it pins differs from the one now served; not mine, control-plane's job (T47-65) or answer-envelope's. No generated artifact of another module staled by me (the plane bundle and `program.mjs` are rule 5 (4)'s).
+- Tests: `node --test bio-plane/test/m/screens-intake/` → tests 57, pass 57, fail 0. User module `control-plane`: `t46-app.test.mjs` (the only test naming my screens) → 3 pass, 1 fail, the R75 red above, identical on `tranche/T47`.
+- Checks (`civicos-process` @ its main): `node checks/run.mjs /home/user/bio` → format 0 failures; architecture 0 failures; channels 0 failures; coverage 12 failures, none mine (other L11 modules' not-yet-met ids, rule 5 (1)). Per module: `coverage.mjs … screens-intake` 16 of 16 ids named, 0 failures; `architecture.mjs … screens-intake` 0 failures; `ownership.mjs … screens-intake tranche/T47` 12 files, 0 failures; `format.mjs` 0 failures.
+- Size (session_01TRpt7rshZQFBNZdR8YRhWi): test runs 24, module lines 1163
 
 ## J1 · REPORT
 
