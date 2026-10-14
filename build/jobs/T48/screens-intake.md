@@ -1,3 +1,19 @@
 # screens-intake (T48)
 
 **Status** · session_01AsreeRSDo9rX7WgGKSQiar · depth 2 · WORKING · handled B0
+
+## Completion
+
+**Read, whole:** build/requirements/screens-intake.md; my T48-85 entry; the L11 section of build/layers.md (by grep of the contract); all seven files of bio-plane/src/screens-intake except words.mjs (read by its changed rows); capture.test.mjs (R1/R14/R16), held.test.mjs, archive.test.mjs, open-file.test.mjs, common.test.mjs, page.mjs; of interface-shell, the requirement lines R10, R19, R21, R35, R56, R61 and the kit's field/state/sec; of capture (L3), heldCaptures and its row helpers.
+
+**Entries applied:** R17 (every class defined by a served stylesheet: `cs-tab` → the design's `mk-tabs2` spans, `cs-refusal` → `cs-state` failed, `cs-untested` → `mk-small muted`, the bare file label → `cs.field` type file, `mk-drop` gone; counts at zero not drawn in the archive summary, the held archive line, the archive's facts and the scanners' line, each by interim words marked for UX-DESIGN; a files section of no files not drawn). R18 (tab bar; one act row; Watch and Check, with the frequency, join it only after a capture; no watching section before one). R19 (Set aside drawn only with rows, a waiting question or a failed read, nothing while loading). R20 (bare or non-digest `archive` and `open-file` draw the shell's own "Nothing is here" words with the way back, as screens-publish does; the two "Name a …" words removed).
+
+**R19's stall, traced:** I could not read biosmoke7 (401 without a member session). By code: the walk's unfiltered `heldcaptures` stayed loading while the filtered `set_aside` read (an empty list) answered, so the cost is per row. `Capture.heldCaptures` (capture/index.mjs 1041–1054) per row awaits `#archiveRow` (an `archiveList` on every capture of the row's document, which reads the archive's bytes, then pages of its entries) and `#eligibility` (an awaited reader with no time bound), for up to the limit asked (the screen asked 200). Fixed on my side: both reads now ask 50 rows (the screen already says more are waiting). Not fixed, not mine (capture is L3, closed): the unbounded per-row awaits. Unconfirmed against live data; see the REPORT.
+
+**Deferred:** a screen whose reads are all empty draws its existing empty sentences; R17 says an empty state names the first step, and `screen.held.empty` does not (BOB's text; REPORT). The "a read that never answers is drawn failed at the shell's limit" control belongs to interface-shell R10's limit; here a refused read is drawn failed, and one still pending draws no Set aside.
+
+**Found in other modules:** (1) capture `heldCaptures`, above. (2) `cs-pickc`, drawn by the shell's `cs.rows`, is on R17's list to rename (interface-shell's job); my R17 test exempts it by name. (3) interface-assets R7 (`shell.css`) has not merged: my test reads the design page's rules as its stand-in.
+
+**Tests and checks:** node --test bio-plane/test/m/screens-intake/: 64 pass, 0 fail (new t48.test.mjs: R17 ×2, R18, R19 ×2, R20). format: 0 failures. architecture screens-intake: 14 files, 0 failures. coverage screens-intake: 20 of 20 ids named, 0 failures. ownership vs tranche/T48: 1 file changed... 0 failures. checks/run.mjs over the product: format, architecture, channels 0 failures; coverage failures are other modules' open ids only (none of screens-intake's).
+
+Size (session_01AsreeRSDo9rX7WgGKSQiar): test runs 6, module lines 1190
