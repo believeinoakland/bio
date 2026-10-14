@@ -122,7 +122,7 @@ test("R34: REVIEW_BAD_UNTIL comes after R6's refusals and before the mint, and a
   assert.equal(w.count("review_grants"), 0);
 });
 
-test("R34: the roster states each grant's until and reads live false from it on; a recipient sees only its own grant", () => {
+test("R34: until is answered wherever the grant is: the roster states each grant's until and reads live false from it on, and the recipient's own grant part states its own; a recipient sees only its own grant", () => {
   const w = standard();
   w.publishedCase("CASE-2026-0001", P, 1);
   const d = draft(w, { caseId: "CASE-2026-0001" });
@@ -149,6 +149,8 @@ test("R34: the roster states each grant's until and reads live false from it on;
   w.clock.now = NOW;
   const rc = w.r.copy({ secretSha: SECRET(1), bySecret: true });
   assert.equal(rc.grant.grant_id, timed.grantId);
+  assert.equal(rc.grant.until, HOUR, "R34: the recipient's own grant part states its end date");
+  assert.equal(w.r.copy({ secretSha: SECRET(2), bySecret: true }).grant.until, null, "null where the grant has none");
   assert.equal(JSON.stringify(rc).includes(open.grantId), false);
 });
 

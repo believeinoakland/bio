@@ -651,7 +651,7 @@ export class Review {
     let grantPart;
     if (grant) {
       grantPart = { grant: { grant_id: grant.grant_id, recipient: grant.recipient, issued_by: grant.issued_by,
-                             issued_at: grant.issued_at } };
+                             issued_at: grant.issued_at, until: grant.until ?? null } };
     } else {
       const lapseAt = this.#when();
       const grantRows = this.#rows(`SELECT grant_id, case_id, edition, recipient, secret_sha, issued_by, issued_at,

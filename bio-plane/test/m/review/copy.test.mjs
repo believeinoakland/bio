@@ -36,7 +36,7 @@ test("R11: the answer's parts", () => {
   grant(w, d, 1);
   assert.equal(w.r.copy({ draft: d.draftId, viewer: V("ann") }).grants.length, 1);
   const rc = w.r.copy({ secretSha: SECRET(1), bySecret: true });
-  assert.deepEqual(Object.keys(rc.grant).sort(), ["grant_id", "issued_at", "issued_by", "recipient"]);
+  assert.deepEqual(Object.keys(rc.grant).sort(), ["grant_id", "issued_at", "issued_by", "recipient", "until"]);
   assert.equal("grants" in rc, false);
   /* required_strength: the project's bar as op=publish would freeze it (strength's projectBar), read now */
   assert.deepEqual(c.required_strength, w.strength.projectBar("PROJ-2026-0003-b"));
@@ -174,7 +174,8 @@ test("R14: comments and the grant roster are read under a cap; the recipient see
   /* the recipient sees only its own grant */
   w.r.act({ act: "draft", author: "ann", draft: d.draftId, statement: "S" });
   const rc = w.r.copy({ secretSha: SECRET(3), bySecret: true });
-  assert.deepEqual(rc.grant, { grant_id: gs[2].grantId, recipient: "R3", issued_by: "ann", issued_at: "2026-09-28T03:30:00.000Z" });
+  assert.deepEqual(rc.grant, { grant_id: gs[2].grantId, recipient: "R3", issued_by: "ann", issued_at: "2026-09-28T03:30:00.000Z",
+                          until: null });
   assert.equal(JSON.stringify(rc).includes(gs[0].grantId), false, "no other grant is named");
   assert.equal(rc.comments.length, 4, "comments are the draft's, for both doors");
 });
