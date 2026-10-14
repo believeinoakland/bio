@@ -172,6 +172,11 @@ export async function open(id, { table = {}, session = { state: "none" }, fragme
           : `<input id="${esc(fid)}" class="cs-input" type="${esc(type)}"${type === "password" ? "" : ` value="${esc(opt.value || "")}"`}>`;
         return `<div class="cs-field"><label for="${esc(fid)}">${w(k, opt.fills)}</label>${opt.help ? `<span class="help">${w(opt.help)}</span>` : ""}${input}</div>`;
       },
+      // interface-shell R27 (N986): options by key `[value, key]`, or record data `{value, text}` drawn escaped
+      choice(fid, k, options, opt = {}) {
+        const opt1 = (x) => (Array.isArray(x) ? [x[0], w(x[1], x[2])] : [x.value, esc(x.text)]);
+        return `<div class="cs-field"><label for="${esc(fid)}">${w(k)}</label><select id="${esc(fid)}" class="cs-input">${options.map((x) => { const [v, t] = opt1(x); return `<option value="${esc(v)}"${opt.value === v ? " selected" : ""}>${t}</option>`; }).join("")}</select></div>`;
+      },
       checks(fid, k, options, opt = {}) {
         return `<fieldset class="cs-field" id="${esc(fid)}"><legend>${w(k)}</legend>${options.map(([v, kk, on], i) => `<label><input type="${opt.radio ? "radio" : "checkbox"}" name="${esc(fid)}" id="${esc(fid)}-${i}" value="${esc(v)}"${on ? " checked" : ""}> ${w(kk)}</label>`).join("")}</fieldset>`;
       },

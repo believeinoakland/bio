@@ -26,25 +26,26 @@ export const join = {
     const f = view.fragment || {};
     const ok = (r) => (r && r.state === "ok" ? r.value : null);
     const id = ok(data.identity) || {};
-    const group = id.display_name || id.group || W("screen.entry.group");
+    // the group's name, or "Your group" while none is set; never its slug (R13's rule, here too)
+    const group = typeof id.display_name === "string" && id.display_name.trim() ? id.display_name.trim() : { html: W("screen.entry.group") };
     const invite = ui.invite || (typeof f.invite === "string" && f.invite ? f.invite : "");
     const link = typeof f.join === "string" && f.join ? f.join : "";
-    const member = `<p class="cs-small">${W(S + "member")} <a href="/app/front" data-nav>${W(S + "member.go")}</a></p>`;
+    const member = `<p class="mk-small">${W(S + "member")} <a href="/app/front" data-nav>${W(S + "member.go")}</a></p>`;
     const dead = (code) => `<h1 class="t-title">${W(S + "dead")}</h1><p class="cs-row" data-state="dead">${code === "JOIN_LINK_DAILY_CAP" ? W("refusal.JOIN_LINK_DAILY_CAP") : W(S + "dead.what")}</p>` + member;
 
     // joined: the codes shown once, then Home
     if (ui.joined) {
       return cs.title() + `<p class="cs-row" data-state="joined">${W(ui.joined.signed ? S + "joined" : S + "joined.nosignin", { handle: ui.joined.handle })}</p>`
-        + (ui.codes ? cs.sec("screen.entry.codes.heading", `<p>${W("screen.entry.codes.what")}</p><pre class="cs-codes" aria-label="${W("screen.entry.codes.list")}">${ui.codes.map(E).join("\n")}</pre><div class="cs-actrow">${String(cs.save("recovery-codes.txt", ui.codes.join("\n") + "\n", { label: "screen.entry.codes.save" }) || "")}${String(cs.copy(ui.codes.join("\n"), { label: "screen.entry.codes.copy" }) || "")}</div>`)
+        + (ui.codes ? cs.sec("screen.entry.codes.heading", `<p class="mk-note">${W("screen.entry.codes.what")}</p><pre class="cs-codes" aria-label="${W("screen.entry.codes.list")}">${ui.codes.map(E).join("\n")}</pre><div class="mk-acts">${String(cs.save("recovery-codes.txt", ui.codes.join("\n") + "\n", { label: "screen.entry.codes.save" }) || "")}${String(cs.copy(ui.codes.join("\n"), { label: "screen.entry.codes.copy" }) || "")}</div>`)
           : ui.joined.signed ? `<p class="cs-row">${W("screen.entry.codes.none")}</p>` : "")
-        + `<p><a class="cs-btn" data-tone="primary" href="${ui.joined.signed ? "/app" : "/app/front"}" data-nav>${W(ui.joined.signed ? S + "home" : "screen.entry.signin")}</a></p>`;
+        + `<div class="mk-acts"><a class="cs-btn" data-tone="primary" href="${ui.joined.signed ? "/app" : "/app/front"}" data-nav>${W(ui.joined.signed ? S + "home" : "screen.entry.signin")}</a></div>`;
     }
     if (ui.dead) return dead(ui.dead);
     // the join link: first the name the group will know the person by
     if (!invite && link) {
-      return `<h1 class="t-title">${W(S + "link", { group })}</h1><p class="cs-sub">${W(S + "link.what")}</p>`
+      return `<h1 class="t-title">${W(S + "link", { group })}</h1><p class="mk-sub">${W(S + "link.what")}</p>`
         + cs.field("jn-cover", S + "cover", { help: S + "cover.help", autocomplete: "off" })
-        + `<div class="cs-actrow">${cs.act("joinlinkinvite", { tone: "primary" })}</div>` + member;
+        + `<div class="mk-acts">${cs.act("joinlinkinvite", { tone: "primary" })}</div>` + member;
     }
     if (!invite) return dead(null);
     const look = data.look;
@@ -53,21 +54,22 @@ export const join = {
     return cs.state(look, (v) => {
       const langs = ok(data.languages);
       const tags = langs && Array.isArray(langs.languages) ? langs.languages : Array.isArray(langs) ? langs : [];
+      const own = (t) => { try { const n = new Intl.DisplayNames([t], { type: "language" }).of(t); return n && n !== t ? n.charAt(0).toLocaleUpperCase(t) + n.slice(1) : t; } catch { return t; } };
       const check = ui.check;
       const said = !check ? "" : check.state === "free" ? W("handle.free", { handle: check.handle, group })
         : check.state === "taken" ? W("handle.taken", { handle: check.handle, group, suggestion: check.suggestion || "" })
           : check.state === "not_allowed" ? W("handle.characters") : check.paused ? W("handle.refused.paused", { minutes: String(check.minutes || 1) }) : "";
-      return `<h1 class="t-title">${W(S + "invited", { group })}</h1>` + (v.cover ? `<p class="cs-sub">${W(S + "invited.as", { cover: v.cover })}</p>` : "")
-        + (tags.length ? `<div class="cs-field"><label for="jn-lang">${W(S + "language")}</label><span class="help" id="jn-lang-help">${W(S + "language.help")}</span><select id="jn-lang" class="cs-input" aria-describedby="jn-lang-help">`
-          + tags.map((t) => `<option value="${E(t)}">${E(t)}</option>`).join("") + `</select></div>` : "")
+      return `<h1 class="t-title">${W(S + "invited", { group })}</h1>` + (v.cover ? `<p class="mk-sub">${W(S + "invited.as", { cover: v.cover })}</p>` : "")
+        // the language by the kit's field, each named in its own language, never by its tag (R12)
+        + (tags.length ? cs.choice("jn-lang", S + "language", tags.map((t) => ({ value: t, text: own(t) }))) + `<p class="mk-small">${W(S + "language.help")}</p>` : "")
         + cs.field("jn-handle", S + "handle", { help: S + "handle.help", autocomplete: "username" })
-        + `<p class="cs-small">${W("handle.fixed")}</p>`
-        + `<div class="cs-actrow">${cs.act("handlecheck", { tone: "quiet" })}</div>`
+        + `<p class="mk-small">${W("handle.fixed")}</p>`
+        + `<div class="mk-acts">${cs.act("handlecheck", { tone: "quiet" })}</div>`
         + (said ? `<p class="cs-due" data-due="${check.state === "free" ? "met" : "near"}" role="status">${said}</p>` : "")
         + cs.field("jn-pw", "screen.entry.password", { type: "password", help: "screen.entry.twelve", autocomplete: "new-password" })
         + cs.field("jn-pw2", "screen.entry.again", { type: "password", autocomplete: "new-password" })
-        + `<div class="cs-actrow">${cs.act("enroll", { tone: "primary" })}${cs.act("invitelook", { tone: "quiet" })}</div>`
-        + `<p class="cs-small">${W(S + "codes.after")}</p>` + member;
+        + `<div class="mk-acts">${cs.act("enroll", { tone: "primary" })}${cs.act("invitelook", { tone: "quiet" })}</div>`
+        + `<p class="mk-note">${W(S + "codes.after")}</p>` + member;
     });
   },
 
