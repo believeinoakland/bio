@@ -36,6 +36,18 @@ Size (session_01BpeeBYLA4MHskJuB8Ac3T8): test runs 9, module lines 1050
 
 Size (session_01BpeeBYLA4MHskJuB8Ac3T8): test runs 13, module lines 1056
 
+## Change B4 (K3304)
+
+**Applied:** merged `origin/tranche/T48` (interface-shell's R56 in force). Of INTERFACE-SHELL #4 J1 (1)'s list, every class but one was already mapped in this job (`mk-fronthead`, `mk-flogo`, `mk-sub`, `mk-acts`, `mk-small`, `mk-frontgrid`, `mk-signin`, `mk-note`, `mk-steps`, `mk-list`; `cs-shown` → `cs-row` with `data-shown`). `cs-codes`, which `HOOK_CLASSES` does not list, is gone: the codes' `<pre>` carries its hook as the attribute `data-codes`, no class (no design class fits a list of codes).
+
+**R12's test, no stand-in:** each drawing (every screen in its states, over a full and an empty plane, and after claim, enrol, recover and memberadd) goes through `interface-shell`'s own `checkClasses` (served stylesheets and `HOOK_CLASSES`), and the real `SCREENS` compose through `interfacePage`; control: a drawn `cs-nonesuch` is refused, `mk-door` composes. R13's two grid rules are still read from the design page's `<style>` (the source `shell.css` is made from), since `interface-assets` is not in my uses.
+
+**Found in another module (REPORT J5):** `journey-check` reads the codes as `pre.cs-codes` (`journeys.mjs` 65–68): it must read `pre[data-codes]`. `control-plane`'s t46-app and t46-e2e are red, from `screens-settings`' `cs-list` (R56), not this module.
+
+**Tests and checks:** module tests 61, pass 61, fail 0. `format` 0 failures; `architecture` (screens-entry) 0, run.mjs 0; `coverage` 15 of 15, 0 failures; `ownership` 0; `channels` 0.
+
+Size (session_01BpeeBYLA4MHskJuB8Ac3T8): test runs 16, module lines 1056
+
 ## J1 · QUESTION
 
 Two readings, one word, for BOB's ruling (I carry on with these meanwhile):
