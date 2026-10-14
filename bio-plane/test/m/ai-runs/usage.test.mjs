@@ -305,9 +305,9 @@ test("R52, R19: a run carries the account of the member whose act started it —
   assert.deepEqual([p.claude, p.ref], ["member:bob", "member:bob"]);
 });
 
-test("R52 (K1755): a member with no account of their own is served by the group's API key while it is held and on — the run opens as that member's act (principal_claude the group's key, principal_claude_ref the member), its use counted to the group's account and that member, held by the group account's limits; the key off or removed, AI_NO_ACCOUNT; credentials' other refusals (the key's notice unread) relayed as given; nothing written on any refusal", async () => {
+test("R52 (K1755): a member with no account of their own is served by the group's API key while it is held and on — the run opens as that member's act (principal_claude the group's key, principal_claude_ref the member), its use counted to the group's account and that member, held by the group account's limits; the key off or removed, AI_NO_ACCOUNT; ai-accounts' other refusals (the key's notice unread) relayed as given; nothing written on any refusal", async () => {
   const w = await useWorld();
-  const C = w.credentials;
+  const C = w.aiAccounts;
   const danOpen = (run, over = {}) => w.runs.open(OPEN({ run, contextType: "project", contextId: PROJ, actor: "dan", viewer: "member:dan",
                                                           principalPlane: "member:dan", ...over }));
   /* no key yet: dan has no assistant */
@@ -316,7 +316,7 @@ test("R52 (K1755): a member with no account of their own is served by the group'
   /* held but off (off when first set): still none */
   assert.equal((await C.groupKeySet({ key: "group-key-secret", by: "admin" })).ok, true);
   refused(await danOpen("D0"), "AI_NO_ACCOUNT");
-  /* on, the notice unread: accountFor refuses GROUP_KEY_NOTICE_DUE (credentials R36), relayed with its row */
+  /* on, the notice unread: accountFor refuses GROUP_KEY_NOTICE_DUE (ai-accounts R8), relayed with its row */
   assert.equal(C.groupKeySwitch({ on: true, by: "admin" }).ok, true);
   const due = await danOpen("D0");
   assert.deepEqual([due.started, due.code], [false, "GROUP_KEY_NOTICE_DUE"], JSON.stringify(due).slice(0, 300));
@@ -353,9 +353,9 @@ test("R52 (K1755): a member with no account of their own is served by the group'
   assert.equal(all(w), was);
 });
 
-test("R52 (T41; credentials R56): a run over a project whose own account is held and on is paid by the project (principal_claude project:<id>, principal_claude_ref the member), its use counted to the project's account and that member, its cost answered to the project's owner and not to the member whose act it is; without the project's account the member's own pays", async () => {
+test("R52 (T41; ai-accounts R11): a run over a project whose own account is held and on is paid by the project (principal_claude project:<id>, principal_claude_ref the member), its use counted to the project's account and that member, its cost answered to the project's owner and not to the member whose act it is; without the project's account the member's own pays", async () => {
   const w = await useWorld();
-  const C = w.credentials;
+  const C = w.aiAccounts;
   const bobOpen = (run, over = {}) => w.runs.open(OPEN({ run, contextType: "project", contextId: PROJ, actor: "bob", viewer: "member:bob",
                                                           principalPlane: "member:bob", ...over }));
   /* the control: no project account, bob's own pays */
@@ -365,7 +365,7 @@ test("R52 (T41; credentials R56): a run over a project whose own account is held
   /* ann, the project's owner, holds a key for it and switches it on */
   assert.equal((await C.projectKeySet({ project: PROJ, key: "project-key-secret", by: "member:ann" })).ok, true);
   assert.equal(C.projectAccountSwitch({ project: PROJ, on: true, by: "member:ann" }).ok, true);
-  /* bob's notice unread: credentials' refusal relayed, nothing written */
+  /* bob's notice unread: ai-accounts' refusal relayed, nothing written */
   const before = all(w);
   const due = await bobOpen("P1");
   assert.deepEqual([due.started, due.code], [false, "PROJECT_KEY_NOTICE_DUE"], JSON.stringify(due).slice(0, 300));

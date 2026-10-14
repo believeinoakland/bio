@@ -1,4 +1,4 @@
-/* ai-runs over the real modules it uses — record-core, membership, credentials, promotion, connections, bias, observation-log,
+/* ai-runs over the real modules it uses — record-core, membership, credentials, ai-accounts, promotion, connections, bias, observation-log,
    retrieval and contradiction — over node:sqlite (the engine a Durable Object runs), at the Durable Object's shape:
    `sql.exec` answers a cursor, never an array, and refuses a LIKE or GLOB pattern over 50 bytes (K313, K316). Each world is its own storage, so
    `aiRunsOf` answers a fresh instance. Tests drive the module at its interface; the helpers below set the record up
@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { biasOf, BIAS_SCHEMA } from "../../../src/bias/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
@@ -74,7 +75,7 @@ function cursor(rows) {
 }
 
 export const SEAL = "test-seal-secret-for-ai-runs";
-/** A sentinel sign-in token held for a member (credentials R70: 20 to 2,000 characters). */
+/** A sentinel sign-in token held for a member (ai-accounts R19: 20 to 2,000 characters). */
 export const SIGNIN_TOKEN = (id) => `sk-ant-oat01-sentinel-signin-token-of-${id}`;
 
 /** inquiry's R49 as this module reaches it (K674): a stub at the interface, answering from `migrated` by question id,
@@ -114,6 +115,10 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
   const membership = membershipOf(ctx, { record }); membership.migrate();
   /* credentials (K789): the founder's claim, members' passwords and the AI credentials R18 reads are its (its R1–R15). */
   const credentials = credentialsOf(ctx, { record, membership, sealSecret: SEAL }); credentials.migrate();
+  /* ai-accounts (T48; N996 §5): the accounts an act is served by, their switches and keep-away, which ai-runs reads (its
+     R18, R52, R79); made by credentials' factory with the seal secret (ai-accounts R32), the one instance on this storage.
+     The world sets accounts up through its own acts, never credentials' transitional delegates (credentials R72). */
+  const aiAccounts = aiAccountsOf(ctx);
   const promotion = promotionOf(ctx, { record, membership });
   /* each fact by the module that registers it in the plane, answering as an empty record does */
   for (const [f, m, v] of [["producingGroup", "instance-setup", "test-group"], ["citedBy", "connections", []], ["caseMember", "publication", false]])
@@ -135,7 +140,7 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
                          graded_by: "harness", at: T0 });
   let k = 0;
   const w = {
-    db, sql, ctx, record, membership, credentials, promotion, bias, runs,
+    db, sql, ctx, record, membership, credentials, aiAccounts, promotion, bias, runs,
     row: (q, ...a) => [...sql.exec(q, ...a)][0] ?? null, rows: (q, ...a) => [...sql.exec(q, ...a)],
     count: (t) => [...sql.exec(`SELECT count(*) AS n FROM ${t}`)][0].n,
     /** Every row of this module's tables and of the observation log, for "nothing was written". */
@@ -151,7 +156,7 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
       return id;
     },
     /* Members: the founder claims (viewer `admin`), a second administrator, then members enrolled to active, each
-       connecting their own account by their own act (credentials R22), unless listed in `noAccount`. */
+       connecting their own account by their own act (ai-accounts R1), unless listed in `noAccount`. */
     async group(...members) {
       const opts = members.length && typeof members[members.length - 1] === "object" ? members.pop() : {};
       await credentials.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
@@ -163,17 +168,17 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
       }
       return w;
     },
-    /** A member connects their own account (credentials R22): an API key unless `kind` says otherwise. */
+    /** A member connects their own account (ai-accounts R1): an API key unless `kind` says otherwise. */
     async account(id, kind = "apikey", secret = `secret-of-${id}`) {
-      const r = await credentials.accountReferenceSet({ member: `member:${id}`, kind, secret, by: `member:${id}` });
+      const r = await aiAccounts.accountReferenceSet({ member: `member:${id}`, kind, secret, by: `member:${id}` });
       if (!r.ok) throw new Error(`account ${id}: ${JSON.stringify(r)}`);
       return r;
     },
-    /** (credentials R43, R70; T47) A member's own sign-in, connected and its token held (sealed, `subscriptionTokenHold`). */
+    /** (ai-accounts R18, R19; T47) A member's own sign-in, connected and its token held (sealed, `subscriptionTokenHold`). */
     async signin(id, token = SIGNIN_TOKEN(id)) {
-      const c = credentials.subscriptionConnected({ member: `member:${id}` });
+      const c = aiAccounts.subscriptionConnected({ member: `member:${id}` });
       if (!c.ok) throw new Error(`signin ${id}: ${JSON.stringify(c)}`);
-      const h = await credentials.subscriptionTokenHold({ member: `member:${id}`, token });
+      const h = await aiAccounts.subscriptionTokenHold({ member: `member:${id}`, token });
       if (!h.ok) throw new Error(`signin hold ${id}: ${JSON.stringify(h)}`);
       return token;
     },
