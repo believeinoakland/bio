@@ -22,11 +22,11 @@ const P = await import("../../../src/store-door/pull.mjs");
 const USE = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: null };
 const URL0 = new URL("http://do/");
 
-test("R1 (N13, N364, N379; K566, K723, K757, K784, K1674): the map this module adds holds queue's, tasks', affordances' and sources' own maps whole, made lazily (no instance built until a route runs), the two own-key acts, the tally, the ask's four store-internal routes, R10's two (`aikeptaway`, `subscriptionconnected`), the three drafts and the pull, and nothing else", () => {
+test("R1 (N13, N364, N379; K566, K723, K757, K784, K1674): the map this module adds holds queue's, tasks', affordances' and sources' own maps whole, made lazily (no instance built until a route runs), the two own-key acts, the tally, the ask's four store-internal routes, R10's two (`aikeptaway`, `subscriptionconnected`), R15's `reauthdue`, the three drafts and the pull, and nothing else", () => {
   const mine = D.controlPlaneRoutes(null, URL0, null);
   const own = (ops) => Object.keys(ops(null, URL0, null));
   const want = new Set([...own(queueOps), ...own(tasksOps), ...own(affordancesOps), ...Object.keys(sourcesOps(null, URL0, null)),
-    "signerregister", "signerrevoke", "wizardrefusaltally", "aigrantadmit", "aikeptaway", "subscriptionconnected", "askceiling", "askusage", "askcheck",
+    "signerregister", "signerrevoke", "wizardrefusaltally", "aigrantadmit", "aikeptaway", "subscriptionconnected", "reauthdue", "askceiling", "askusage", "askcheck",
     "groupdescriptiondraft", "writinghelp", "translationdraft", "inboxpullfile"]);
   assert.deepEqual(new Set(Object.keys(mine)), want);
   for (const [op, f] of Object.entries(mine)) assert.equal(typeof f, "function", op);
@@ -302,6 +302,43 @@ test("R10 (K2238; control-plane R65; credentials R35, R43): the store-internal r
   assert.equal(no.json.result.reason, "ACCOUNT_MEMBER_NOT_ACTIVE");
   assert.deepEqual(asked, [{ member: "member:bea" }, { member: "member:nobody" }]);
   assert.deepEqual(r.db.prepare("SELECT member_id FROM subscription_connections").all().map((x) => x.member_id), ["bea"]);
+});
+
+test("R15 (T47; K3143; admission R25, credentials R71 (2)): the store-internal route `reauthdue` answers `{due}` from `credentials.reauthDue({token})`, the token the `x-bio-session` header the door hands on as `session` — `due` credentials' own REAUTH_DUE refusal, as given, for a live session outside its re-ask window (a fresh sign-in, a window lapsed) and `false` inside it; a token naming no session (absent, unknown, signed out) answers `{due: false}`; asking reads the session as no activity and writes nothing (controls: the same session after `reauth` answers `false`; the header's token is read over one in the query)", async () => {
+  const { SESSION_HEADER } = D;
+  const r = await record({ sealSecret: "store-door-test-seal-secret-00006" });
+  const C = credentialsOf(r.ctx);
+  assert.equal((await C.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" })).ok, true);
+  const signed = await C.login({ password: "founder-passphrase-1" });
+  assert.equal(signed.ok, true, JSON.stringify(signed));
+  const T = signed.token;
+  const ask = async (token, path = "reauthdue") => {
+    const a = await r.go(path, "POST", {}, token === null ? {} : { [SESSION_HEADER]: token });
+    assert.deepEqual([a.status, a.json.ok], [200, true], JSON.stringify(a.json).slice(0, 300));
+    return a.json.result;
+  };
+  const sessions = () => r.db.prepare("SELECT token_sha, last_active, reauth_until FROM sessions ORDER BY token_sha").all().map((x) => ({ ...x }));
+  /* a fresh sign-in: outside the window, credentials' own refusal as given */
+  const before = sessions();
+  const due = await ask(T);
+  assert.deepEqual(Object.keys(due), ["due"]);
+  assert.deepEqual(due.due, C.reauthDue({ token: T }));
+  assert.deepEqual([due.due.reason, due.due.code, due.due.check, due.due.translation],
+                   ["REAUTH_DUE", "REAUTH_DUE", ACCOUNT_CHECKS.REAUTH_DUE.check, ACCOUNT_CHECKS.REAUTH_DUE.translation]);
+  assert.deepEqual(sessions(), before, "asking writes nothing, not even the session's activity");
+  /* control: the password given again opens the window, and the same session answers false */
+  assert.equal((await C.reauth({ token: T, password: "founder-passphrase-1" })).ok, true);
+  assert.deepEqual(await ask(T), { due: false });
+  /* the window lapsed: due again */
+  r.db.prepare("UPDATE sessions SET reauth_until = ?").run(Date.now() - 1);
+  assert.equal((await ask(T)).due.reason, "REAUTH_DUE");
+  /* a token naming no session: {due: false}, so the gate's own session read refuses it */
+  for (const t of [null, "", "no-such-token-" + "x".repeat(20)]) assert.deepEqual(await ask(t), { due: false }, String(t));
+  /* the token is the header's, handed over any in the query (R9) */
+  assert.equal((await ask("no-such-token-y", `reauthdue?session=${T}`)).due, false, "the header's token is read over the query's");
+  /* signed out: no session, {due: false} */
+  r.db.prepare("DELETE FROM sessions").run();
+  assert.deepEqual(await ask(T), { due: false });
 });
 
 test("R12: no place is named in this module's behaviour or outward text — every answer the door itself builds (BAD_JSON, unknown op, the internal error, both hold refusals), every reason it lists for a read naming no project, and the filed record and the sentences of the pull (negative control: the pattern finds a place)", async () => {

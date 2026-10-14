@@ -25,3 +25,18 @@ Size (session_01A3oWKBscqhfz9cPoUE7bde): test runs 5, module lines 87
 ## J1 · COMPLETE
 
 T47-55 applied: R14 met (statusreportassist ['plan'] as statusreportdraft; projectquestions and projectlist in PROJECT_NAMING_READS_NOT with reasons). store-door 46/46; format, architecture, coverage (14/14), ownership 0 failures; run.mjs architecture 0. One note on R14's wording in the record ('For BOB'): the door answers C-70.1 only when `plan` is itself a discoverable project's id; a real PLN- id goes through to plan-work's NO_SUCH_PLAN, as for every plan row since K2891. Built and tested as 'held as statusreportdraft is'. Inherited red, not mine: control-plane r45-routes (T47-65). Record: build/jobs/T47/store-door.md on job/T47/store-door.
+
+## Completion of B2 · CHANGE (K3143, R15)
+
+**Merged** `tranche/T47` (3b140b3cd1). **Read whole:** R15 in `build/requirements/store-door.md`; `credentials`' `reauthDue`, `session`, `reauth` and `login` at the source, and its R71; `admission` R25.
+
+**Applied.** R15: `controlPlaneRoutes` gains the store-internal route `reauthdue`. Its token is `q("session")`, the `x-bio-session` header R9 already hands on. A token naming no live session (`credentials.session(token, {background: true})` null: absent, unknown, ended) answers `{due: false}`. Otherwise it answers `{due: credentials.reauthDue({token}) ?? false}`: `due` is credentials' own `REAUTH_DUE` refusal as given, for admission's gate to relay, or `false` while the window is open. A locked session is live but answers due, as credentials R71 (2) says. The session is read with `background: true`, so asking is no activity and writes nothing.
+
+**Reading taken (for BOB).** R15's `{due}` is read as "false, or credentials' REAUTH_DUE row as given", not a bare boolean, so admission R25's gate can relay credentials' refusal (`answer-envelope` relays a row; it mints none). If admission wants a bare `true`, change one line: `!!C.reauthDue(...)`.
+
+**Tests.** One new R15 test in `routes.test.mjs` over a real record: a fresh sign-in is due (the row deep-equal to `reauthDue`'s, C-29.42); after `reauth` it is false (control); a lapsed window is due again; absent, empty, unknown and signed-out tokens answer `{due: false}`; the header's token is read over a query's; the sessions table is unchanged by asking. R1's route-set test names `reauthdue`. Without the route, both tests fail (checked).
+- `node --test bio-plane/test/m/store-door/`: tests 47, pass 47, fail 0.
+- Readers of this map and its tables: control-plane and plane tests that import them (64 tests, 63 pass, the one inherited `r45-routes` red); `credentials` and control-plane tests naming `subscriptionconnected` (56/56). `test/m/plane/` and `test/m/op-declarations/`: 18 failing tests, the identical 18 with and without this change (inherited: registry and declaration re-points owed by their L11 jobs), none mine.
+- `format.mjs`: 0 failures; `architecture.mjs … store-door`: 0 failures; `coverage.mjs … store-door`: 15 of 15; `ownership.mjs` below, after the commit.
+
+Size (session_01A3oWKBscqhfz9cPoUE7bde): test runs 13, module lines 152
