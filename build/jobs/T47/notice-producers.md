@@ -1,6 +1,6 @@
 # notice-producers (T47)
 
-**Status** · session_018t33ASVHNxQAjw3VGqUDNT · depth 2 · RUNNING until 2026-10-14T00:51:54Z (plane tests (test/m/plane, a user of noticeItems)) · handled B2
+**Status** · session_018t33ASVHNxQAjw3VGqUDNT · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
