@@ -54,3 +54,12 @@ Re-run: 273 tests, 269 pass, 4 red:
 - Caused by op-declarations' merge, not by this module (both were green before it): `doorbell.test.mjs` R28 (`sourceof` now refuses the narrow agent: 403 AI_BEYOND_TASK_SCOPE) and `affordances-pack.test.mjs` R2/R41 (`stale: groupdescriptiondraft…` in affordances' unaccounted).
 - Conflict: R90 says `proceedingdates` is refused to non-sessions; op-declarations R64 declares it a read admitting a binding class (as merged). My test follows the merged spec for it.
 Size (session_01Buc3JHeHrCA6CLnhxgJpTX): test runs 12, module lines 3755
+
+## J4 · COMPLETE
+
+B3, B4 done. Route assertions for R90/R92 added (the four uses are in). One door fix found by the merged specs: a body `member` is stripped where the op declares it (stepsource).
+After merging op-declarations: 273 tests, 269 pass, 4 red.
+ - Waiting on merges: R91 (instance-setup's update routes), R95 (interface-shell band).
+ - Opened by op-declarations' merge, in other modules' terms (both green before it): control-plane doorbell.test R28, `sourceof` now refuses the narrow agent (403 AI_BEYOND_TASK_SCOPE); affordances-pack.test R2/R41, affordances' unaccounted lists `groupdescriptiondraft` etc. as stale. Not mine to fix; op-declarations to look.
+ - R90 vs op-declarations R64: R90 says proceedingdates is refused to non-sessions; R64 as merged admits a binding class. My test follows the merged spec. Your call which text changes.
+COMPLETE.
