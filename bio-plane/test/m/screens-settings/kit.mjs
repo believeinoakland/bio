@@ -110,7 +110,8 @@ export async function open(id, { me, table, subject = null, reachable = false, w
   const b = await boot({ screens, plane, path: "/app/" + id + (subject !== null ? "/" + encodeURIComponent(subject) : "") });
   await b.settle(80);
   const main = () => b.doc.getElementById("cs-main");
-  const SHELL = new Set(["whoami", "interfacewords", "groupidentity", "queue", "infolevel"]);
+  // the shell's own reads, `bootstrap` among them (sent once, public, for the test-instance band; interface-shell R36)
+  const SHELL = new Set(["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "bootstrap"]);
   const reqs = () => b.requests.map((r) => { const q = { ...r.query }; delete q.op; return { op: r.op, query: q, body: r.body, headers: r.headers, method: r.method }; });
   const out = { b, s: screen(id) || screens.find((x) => x.id === id), refused: null, cs: { w } };
   out.p = { get requests() { return reqs().filter((r) => !SHELL.has(r.op)); }, get all() { return reqs(); } };
@@ -119,7 +120,7 @@ export async function open(id, { me, table, subject = null, reachable = false, w
   /** Fills the fields (`values`: id → text, or true/false for a box), clicks the act's button whose `data-*` match
    *  `data`, answers the shell's reason when it asks one (`reason`), and settles. Answers the requests the act made and
    *  what the shell drew beside the act. */
-  out.press = async (op, { data = {}, values = {}, reason } = {}) => {
+  out.press = async (op, { data = {}, values = {}, reason, wait = false } = {}) => {
     const doc = b.doc;
     for (const [fid, v] of Object.entries(values)) {
       const el = doc.getElementById(fid);
@@ -136,6 +137,8 @@ export async function open(id, { me, table, subject = null, reachable = false, w
     const before = b.requests.length;
     b.fire(btn, "click");
     await b.settle(80);
+    // an act whose send awaits the browser's own work (the signer's key, WebCrypto) is waited for until it is sent
+    for (let i = 0; i < 200 && wait && !b.requests.slice(before).some((r) => r.op === op); i++) await new Promise((res) => setTimeout(res, 5)).then(() => b.settle(10));
     const ta = doc.getElementById("cs-reason-" + String(ai).replace(":", "-"));
     if (ta && reason !== undefined) { ta.value = reason; b.fire(doc.querySelector(`[data-shell="reason-send"][data-for="${ai}"]`), "click"); await b.settle(80); }
     const sent = b.requests.slice(before).map((r) => { const q = { ...r.query }; delete q.op; return { op: r.op, query: q, body: r.body, headers: r.headers, method: r.method }; });

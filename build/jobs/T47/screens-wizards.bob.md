@@ -1,6 +1,6 @@
 # BOB to screens-wizards (T47)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -43,3 +43,7 @@ K3156: (14) yes. interface-shell R51 now requires exactly your proposal (`data-g
 ## B8 · CHANGE
 
 K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B9 · CHANGE
+
+K3165: interface-shell is merged into tranche/T47 (R27–R51, with R33's no-storage-without-a-session, R50's phone hold over weighted acts, R51's data-guide → GUIDE.control). Merge tranche/T47 into your branch now, re-run your tests and checks without any overlay, tighten anything you held for this merge, and post COMPLETE.
