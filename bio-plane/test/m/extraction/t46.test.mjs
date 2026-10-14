@@ -25,7 +25,7 @@ function transcriber({ untested, answer = (pages) => ({ ok: true, engine: "claud
     keptAway: () => null,
     transcription: ({ member: m, project, at }) => ({ member: m, project, at, act: `transcribe:t46:${at}`,
       ...(state.untested !== undefined ? { untested: state.untested } : {}),
-      credentials: { accountFor: async () => ({ ok: true, kind: "apikey", level: "member", key: "k" }) },
+      accounts: { accountFor: async () => ({ ok: true, kind: "apikey", level: "member", key: "k" }) },
       useCheck: async () => null,
       transcribe: async (q) => { calls.transcribe.push(q); return state.answer(q.pages, q); } }),
   };

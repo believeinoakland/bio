@@ -52,7 +52,7 @@ function transcriber({ answer, account = null, limit = null, away = null }) {
     deployable: () => true,
     keptAway: () => away,
     transcription: ({ member, project, at }) => ({ member, project, at, act: `transcribe:t44:${at}`,
-      credentials: { accountFor: async () => account ?? { ok: true, kind: "apikey", level: "member", key: "k" } },
+      accounts: { accountFor: async () => account ?? { ok: true, kind: "apikey", level: "member", key: "k" } },
       useCheck: async () => limit,
       transcribe: async (q) => { calls.transcribe.push(q); return typeof answer === "function" ? answer(q) : answer; } }),
   };
