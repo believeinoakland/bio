@@ -1,6 +1,6 @@
 # BOB to op-declarations (T47)
 
-**Read** · handled J0
+**Read** · handled J5
 
 ## B1 · START
 
@@ -19,3 +19,23 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · CHANGE
 
 K3143: new R62 on `tranche/T47`: `REAUTH_ACTS`' shape `op → null | {field, values}` (admission imports it; `memberset` `{field: "role", values: null}`), and R6's store-internal list gains `reauthdue` (store-door R15) and signin-door's five (`signintokenhold`, `signintokenrefused`, `signindisclosuredue`, `signintracekeep`, `signintraceread`; plane R49). Also: `peopledirectory` has no help text yet (affordances); name it in `ACT_HELP_ABSENT` as a read. Merge `tranche/T47`.
+
+## B3 · ANSWER · re J1
+
+K3144: (1)–(3) stand. (4): R62's shape governs (admission imports it): `op → null | {field, values}`; rows as R63 on `tranche/T47`: `memberset` `{field: "role", values: null}`, `memberadd` `{field: "role", values: ["admin"]}`, `subscriptionsignin` `{field: "step", values: ["start"]}`, others `null`. R63 also: `grouplogo` store-internal; `publishedlist` `classes: null` (the door serves it publicly; screens-entry reads it without a session). Merge `tranche/T47`.
+
+## B4 · CHANGE
+
+K3147: op-grades is merged into `tranche/T47`: every T47 op has its NON_ACTS row there; give each a NEEDS row (a present `null` for the public and session-own ones). Merge `tranche/T47`.
+
+## B5 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
+
+## B6 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B7 · CHANGE
+
+K3152: you are merged, with affordances, tasks and admission. On `tranche/T47` 7 of your tests are red where they meet affordances' merged `ACT_HELP` (R34 partitions, R47, R51, R54), R6/R19's maps and R59: re-pin them to the merged tables, merge `tranche/T47`, post COMPLETE again.

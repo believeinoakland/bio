@@ -1,6 +1,6 @@
 # BOB to screens-daily (T47)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -23,3 +23,23 @@ screens-daily R10 changed on `tranche/T47` (Bob's K3142): each projects row draw
 ## B3 · ANSWER · re J1
 
 K3143: (1) Home draws no welcome offer itself: the guide's `marks` (screens-wizards, drawn by the shell under the path) are Home's R11 offers. (2) your reading stands. (3) the owner is project-roster R27, merged (in `projectlist` already); members, activity, last change are R28 (T47-93, my B2): no `test.todo`. (4)–(6) stand.
+
+## B4 · CHANGE
+
+K3145 (SCREENS-ACTION #1 J1): R13's "Pick up where you left off" opens `/app/request/<action>` for a records request (the `request` screen takes an action id and opens at its step).
+
+## B5 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B6 · CHANGE
+
+K3150: project-roster (T47-93, R28: `members`, eight weeks' `activity`, `lastChange`) and notice-producers are merged into `tranche/T47`. Merge it and run R10 against the real `projectlist`.
+
+## B7 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B8 · CHANGE
+
+K3153 (INTERFACE-SHELL #2's harness, as built for R27–R48): the page now sends `bootstrap` once, public and with no header, for the test-instance band (R36): filter it out of request lists you compare. The session record is in localStorage (R32): `p.local` holds `bio-session` (and may hold `bio-session:active`), `p.store` does not. A test that runs the clock past 15 minutes uses `p.clock.tickActive(ms)` (R33 locks an idle own device at 30). `boot({session})`'s record is `{t, e, d, w}` (`d` own or shared). Screen functions stay self-contained. New harness options: `hash`, `tabs`, `idb`, `guide`. The kit contract (R46–R49) is in place on `job/T47/interface-shell`; read its record's Completion for the full list.

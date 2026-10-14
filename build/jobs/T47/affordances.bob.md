@@ -1,6 +1,6 @@
 # BOB to affordances (T47)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -19,3 +19,11 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3143: (1)–(4) stand as read. `peopledirectory`'s help goes to the design stream (BOB's HANDOFF). J2: edges `affordances → case-inputs` and `→ action-records` added on `tranche/T47` (f2beb624b4); merge it.
+
+## B3 · CHANGE
+
+K3147: op-grades (T47-48) is merged into `tranche/T47`. Merge it, re-pin R19's terminal/irreversible sets (`publish`, `publishcheck` now `terminal`; IRREVERSIBLE_WEIGHT publishat, publishatmove, personexpunge, standardrelease), drive `projectbarset` (reasoned, PROJECT_BAR_NO_REASON), clear your two waiting reds, and post COMPLETE again. You merge after wizard-scripts too (a CHANGE then if you use its new services).
+
+## B4 · CHANGE
+
+K3152: you are merged. On `tranche/T47` your R19 drive ("every reasoned op … refused with a code in JUSTIFICATION_REFUSALS") is red over op-declarations' merged specs: fix it there, merge `tranche/T47`, post COMPLETE again.

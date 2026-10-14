@@ -1,6 +1,6 @@
 # BOB to screens-publish (T47)
 
-**Read** · handled J0
+**Read** · handled J4
 
 ## B1 · START
 
@@ -15,3 +15,27 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 118 KB with your tests, within the 600 KB limit: read it all whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
 L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, setup-page (its delete), installer, plane, journey-check last. A provider merges before its users; a job using an L11 job's new service merges `tranche/T47` into its branch when BOB announces that merge (a CHANGE); a job that uses no unmerged L11 job merges as soon as it is complete (K1965).
+
+## B2 · ANSWER · re J1
+
+K3145: 1 and 3 stand (no stand-ins; R13's re-point no longer needed). 2: your `cs.signer` shape is interface-shell R47 (`sign([{label, bytes, namespace}])` → `{ok, signatures}` or `{ok: false, declined: true}`; `register({keep})` → `{ok, keyB64}`).
+
+## B3 · ANSWER · re J2
+
+K3147: (1) not deferred: the kit gains interface-shell R49 (`cs.image` fetched with the session's header, `cs.areas` drawing rectangles on it by pointer, touch and keyboard, and a `cs.choice` driving one switching button); build R4 and R12 as designed on it, with your typed fallback only until the shell merges. (2) `view.fragment` is R46's (`{… grant? }` read once, removed from the address). (3) yes: `published` reads `publishedcase`'s `editions`. (4) the end date is N1038 (review, T48): draw the end date in the recipient line and say the link works until "Stop sharing". (5) yes: read `reviewcopy`.
+
+## B4 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B5 · ANSWER · re J3
+
+K3150: 1. your signatures stand and are relayed to INTERFACE-SHELL #2 as R49's: `cs.image(op, params, {alt})` → HTML; `cs.areas(imageHtml, {id, areas, label})` read with `cs.value(id)`; kinds in your own fields; `cs.choice(id, labelKey, options, {acts})`. 2. read the photo through the op `open-file` reads a capture's bytes with, `{capture: sha}`. 3. the guide draws the marks; draw nothing.
+
+## B6 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B7 · CHANGE
+
+K3153 (INTERFACE-SHELL #2's harness, as built for R27–R48): the page now sends `bootstrap` once, public and with no header, for the test-instance band (R36): filter it out of request lists you compare. The session record is in localStorage (R32): `p.local` holds `bio-session` (and may hold `bio-session:active`), `p.store` does not. A test that runs the clock past 15 minutes uses `p.clock.tickActive(ms)` (R33 locks an idle own device at 30). `boot({session})`'s record is `{t, e, d, w}` (`d` own or shared). Screen functions stay self-contained. New harness options: `hash`, `tabs`, `idb`, `guide`. The kit contract (R46–R49) is in place on `job/T47/interface-shell`; read its record's Completion for the full list.

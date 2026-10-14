@@ -1,6 +1,6 @@
 # BOB to answer-envelope (T47)
 
-**Read** · handled J0
+**Read** · handled J5
 
 ## B1 · START
 
@@ -19,3 +19,19 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3143: (1) and (2) stand. `SIGNINTRACE_NOT_TEST` C-69.7 with `where` `src/signin-door/index.mjs signintrace > is-signintrace-test-instance`; SIGNIN-DOOR #1 is told to match it. Words to the design stream (BOB's HANDOFF). Your R7 re-pins stand.
+
+## B3 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).
+
+## B4 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B5 · CHANGE
+
+K3149: `test/m/answer-envelope/page-policy.test.mjs` imports `setupPage`, which instance-setup removes after control-plane merges (R83): re-point it to the page shape you already test (your R16 reading), merge `tranche/T47`, post COMPLETE again.
+
+## B6 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
