@@ -23,3 +23,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · ANSWER · re J1
 
 K3369: your four readings stand. (1) draw a must.N only when every placeholder is answered; the profile's records help is N1121 (T50). (2) exclude owed acts whose op OPS does not hold; writinghelp is not wanted on start-send in T49. (3), (4) as you read them; fixing the bare-array reading is yours.
+
+## B3 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
