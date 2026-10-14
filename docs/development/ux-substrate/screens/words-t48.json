@@ -1,0 +1,542 @@
+[
+ {
+  "key": "updates.title",
+  "en": "Updates",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.says",
+  "en": "Administrators only. Your group's Civicsmith checks once a day whether a new release is out and tells you here. Nothing is installed until an administrator chooses it.",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.running.head",
+  "en": "Running now",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.running.release",
+  "en": "Release {version} · installed {date}, allowed by {who}",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.running.checked",
+  "en": "Last check for a new release: {when}",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.running.checked_note",
+  "en": "once a day; the check sends nothing about your group",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.ready.head",
+  "en": "Ready to install",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.ready.release",
+  "en": "Release {version} · {date}",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.ready.security",
+  "en": "Security fix",
+  "protected": false,
+  "note": "DEC-226: the mark; its explanation is updates.ready.security_says"
+ },
+ {
+  "key": "updates.ready.security_says",
+  "en": "Security fix: this release closes a weakness in Civicsmith itself. Like every release it waits for an administrator's choice; Not now brings it back the next day instead of in two weeks.",
+  "protected": false,
+  "note": "DEC-226; the spans are BOB's to set (N1047)"
+ },
+ {
+  "key": "updates.ready.signed",
+  "en": "signed by Civicsmith · signature checked",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.notes.members",
+  "en": "For members",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.notes.admins",
+  "en": "For administrators",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.notes.must",
+  "en": "What an administrator must do",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.notes.plain",
+  "en": "Release notes are plain text, signed with the release: what you read here is what Civicsmith published, and it can carry no link, picture or script.",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.act.update",
+  "en": "Update",
+  "protected": false,
+  "note": "DEC-226: updatestart"
+ },
+ {
+  "key": "updates.act.update_does",
+  "en": "Opens the installer's update page for your group, set to release {version} and no other. There you allow it in Cloudflare, as at setup; nothing changes until you do.",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.act.later",
+  "en": "Not now",
+  "protected": false,
+  "note": "DEC-226: updatelater"
+ },
+ {
+  "key": "updates.act.later_does",
+  "en": "Puts this release aside for every administrator. It comes back in two weeks, the next day for a security fix, or at once when a newer release replaces it.",
+  "protected": false,
+  "note": "DEC-226; the spans are BOB's to set (N1047)"
+ },
+ {
+  "key": "updates.act.skip",
+  "en": "Skip this version",
+  "protected": false,
+  "note": "DEC-226: updateskip, a reasoned act"
+ },
+ {
+  "key": "updates.act.skip_with_reason",
+  "en": "Skip this version, with this reason",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.skip.why",
+  "en": "Why skip it? (every administrator will see this)",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.skip.says",
+  "en": "Skipping says your group will not install release {version}. The next release is offered as usual. A security fix can be skipped too; your reason stays on the record for every administrator.",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.handoff.head",
+  "en": "Pass it to whoever holds your Cloudflare account",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.handoff.says",
+  "en": "{holder} holds your group's Cloudflare account, so the update runs through them. Copy the link below and pass it on: it opens the installer's update page set to this release.",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.handoff.explain",
+  "en": "The update runs only with Cloudflare's consent, given by the account's holder on Cloudflare's own page. This link opens the installer's update page for your group, set to release {version} and no other; it carries no password and lets nobody in. Civicsmith sends no email: you copy the link and pass it on yourself.",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.handoff.for",
+  "en": "For {holder}, who holds the Cloudflare account · Civicsmith sends no email: copy the link and pass it on yourself.",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.handoff.copy",
+  "en": "Copy the link",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.none",
+  "en": "Nothing to install. Your group's Civicsmith runs the newest release. When a new one is out, it appears here and in every administrator's queue.",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.earlier.head",
+  "en": "Earlier releases",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.earlier.installed",
+  "en": "Release {version} · installed {date}, allowed by {who}",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "updates.earlier.skipped",
+  "en": "Release {version} · skipped {date} by {who}: “{reason}”",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "queue.update.section",
+  "en": "Your group's Civicsmith",
+  "protected": false,
+  "note": "DEC-226: the queue section for to-dos about the running of the group's Civicsmith"
+ },
+ {
+  "key": "queue.update.section_says",
+  "en": "To-dos about the running of your group's Civicsmith itself. Every administrator gets them, and when one administrator acts, the item leaves every queue.",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "queue.update.ready",
+  "en": "An update is ready: release {version}, {date}",
+  "protected": false,
+  "note": "DEC-226: the to-do, one for every administrator"
+ },
+ {
+  "key": "queue.update.see",
+  "en": "See what changes",
+  "protected": false,
+  "note": "DEC-226: leads to Settings › Updates"
+ },
+ {
+  "key": "home.update.ready",
+  "en": "An update to your group's Civicsmith is ready: release {version}{security}",
+  "protected": false,
+  "note": "DEC-226: the home's Needs you; {security} is home.update.security or empty"
+ },
+ {
+  "key": "home.update.security",
+  "en": ", with a security fix",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.running",
+  "en": "Your group's Civicsmith runs release {version}",
+  "protected": false,
+  "note": "DEC-226: installer R52, R54"
+ },
+ {
+  "key": "installer.update.chosen",
+  "en": "This update: release {version}, {date}, the release chosen in your group's Settings › Updates",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.only",
+  "en": "this page installs that release and no other",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.checked",
+  "en": "Signed by Civicsmith; the signature and the release notes checked",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.progress.title",
+  "en": "Updating your group's Civicsmith",
+  "protected": false,
+  "note": "DEC-226: installer R51"
+ },
+ {
+  "key": "installer.update.progress.says",
+  "en": "From release {from} to {to}, in the Cloudflare account “{account}”. A few minutes; leave this page open. Until the last step, your group's Civicsmith keeps running as it was.",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.progress.verified",
+  "en": "Checked the release is Civicsmith's own, signed and unaltered: {to}",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.progress.read",
+  "en": "Read the release running: {from}",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.progress.placing",
+  "en": "Putting release {to} in place…",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.progress.answers",
+  "en": "Checking it answers",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.stopped",
+  "en": "Stopped: Cloudflare refused the upload. Your group's Civicsmith runs release {version} as before; nothing changed. Try again; if it stops again, the stop names the step and what to do.",
+  "protected": false,
+  "note": "DEC-226: installer R17, R51, R52"
+ },
+ {
+  "key": "installer.update.tryagain",
+  "en": "Try again",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.done.title",
+  "en": "Your group's Civicsmith is updated",
+  "protected": false,
+  "note": "DEC-226: installer R54"
+ },
+ {
+  "key": "installer.update.done.says",
+  "en": "It runs release {to}; it ran {from}. Every record, member and setting is as it was.",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.done.answers",
+  "en": "It answers at its address, as release {to}",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.done.kept",
+  "en": "Records, members and settings in place",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.done.note",
+  "en": "The to-do leaves every administrator's queue on its own, and Settings › Updates now shows {to} running. The installer keeps nothing of your group's Civicsmith.",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "installer.update.back",
+  "en": "Back to your group's Civicsmith",
+  "protected": false,
+  "note": "DEC-226"
+ },
+ {
+  "key": "door.front.elsewhere.name",
+  "en": "Help for my own situation",
+  "protected": false,
+  "note": "DEC-227: Home's sixth door, R23's sixth route"
+ },
+ {
+  "key": "door.front.elsewhere.hint",
+  "en": "A notice, a bill, a repair, a deadline that's yours alone: not Civicsmith's work, but it knows where to send you",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "wizard.guide.elsewhere",
+  "en": "For your own situation rather than the government's word: {link}.",
+  "protected": false,
+  "note": "DEC-227: in the guide of every script a door offers; {link} is wizard.guide.elsewhere_link"
+ },
+ {
+  "key": "wizard.guide.elsewhere_link",
+  "en": "where else to go",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.title",
+  "en": "Where else to go",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.says",
+  "en": "Civicsmith is for a group checking whether its government keeps its word. It gives legal information, never legal advice, and it can't act for you in a matter that is yours alone. The places below can; your group's place lists them, each with where that came from.",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.records_nothing",
+  "en": "Opening this page records nothing, and nobody in your group is told.",
+  "protected": false,
+  "note": "DEC-227: R23, leaving the choice is a non-event"
+ },
+ {
+  "key": "elsewhere.kind.legalaid",
+  "en": "Legal help you can afford",
+  "protected": false,
+  "note": "DEC-227: kind legalaid"
+ },
+ {
+  "key": "elsewhere.kind.legalaid_says",
+  "en": "Organizations that give legal advice, which Civicsmith never does, free or at low cost. Listed by your group's place from its rules, not chosen by your group.",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.kind.selfhelp",
+  "en": "The courts' own self-help",
+  "protected": false,
+  "note": "DEC-227: kind selfhelp"
+ },
+ {
+  "key": "elsewhere.kind.selfhelp_says",
+  "en": "The court's own desk for people representing themselves. It explains procedure and forms; it does not take sides.",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.kind.service",
+  "en": "The city's service line",
+  "protected": false,
+  "note": "DEC-227: kind service"
+ },
+ {
+  "key": "elsewhere.kind.service_says",
+  "en": "For getting one thing fixed for yourself. If the same thing keeps not getting fixed, that may be the group's question: go back to Home and start from \"A problem I live with\".",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.kind.agency",
+  "en": "A state agency for your kind of problem",
+  "protected": false,
+  "note": "DEC-227: kind agency"
+ },
+ {
+  "key": "elsewhere.kind.agency_says",
+  "en": "State offices that act on one person's complaint. Which one depends on the kind of problem; each says what it takes.",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.kind.representative",
+  "en": "Your elected representative's office",
+  "protected": false,
+  "note": "DEC-227: kind representative"
+ },
+ {
+  "key": "elsewhere.kind.representative_says",
+  "en": "The office of the person elected for your district. Its staff take up residents' own problems with the city; that is a different thing from the group's question about the member's record.",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.kind.tipline",
+  "en": "A newsroom that takes tips",
+  "protected": false,
+  "note": "DEC-227: kind tipline"
+ },
+ {
+  "key": "elsewhere.kind.tipline_says",
+  "en": "For something that should be reported but is not the group's question. Your group's own published cases reach readers without a newsroom; a tip is for what the group will not take up.",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.reach.phone",
+  "en": "phone",
+  "protected": false,
+  "note": "DEC-227: a contact's how"
+ },
+ {
+  "key": "elsewhere.reach.web",
+  "en": "web",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.reach.email",
+  "en": "email",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.reach.address",
+  "en": "address",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.reach.mail",
+  "en": "mail",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.reach.hours",
+  "en": "hours",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.source",
+  "en": "From {source}, read {date}",
+  "protected": false,
+  "note": "DEC-227: the pointer's basis, shown with every pointer"
+ },
+ {
+  "key": "elsewhere.none.head",
+  "en": "Nothing listed yet",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.none.says",
+  "en": "Your group's place lists nothing here yet. Civicsmith names a place only from its place's rules, with where that came from, and {place} has none for this yet. Your group's administrators can ask for the place in Settings › Places and offices; when an update brings its rules, this page fills in.",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.none.noplace",
+  "en": "Your group follows no place's rules, so Civicsmith has no list to show. An administrator can choose a place in Settings › Places and offices.",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "elsewhere.danger",
+  "en": "If you are in danger now, call your local emergency number.",
+  "protected": false,
+  "note": "DEC-227: names no number; the number is the place's"
+ },
+ {
+  "key": "elsewhere.back",
+  "en": "Back to Home",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "places.elsewhere.head",
+  "en": "Where else to go",
+  "protected": false,
+  "note": "DEC-227: Places and offices, administrators"
+ },
+ {
+  "key": "places.elsewhere.says",
+  "en": "Your place lists {n} places for needs Civicsmith doesn't serve: legal help, the courts' self-help, the city's service line, state agencies, your representative's office, a newsroom tip line. Each comes from the place's rules with where that came from. Members reach them from Home's sixth door and from any wizard a door offers.",
+  "protected": false,
+  "note": "DEC-227"
+ },
+ {
+  "key": "places.elsewhere.open",
+  "en": "See the list",
+  "protected": false,
+  "note": "DEC-227"
+ }
+]

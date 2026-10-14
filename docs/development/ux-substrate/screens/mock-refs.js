@@ -434,6 +434,7 @@ const SCREEN_HELP = {
   'dash-project': 'One project as a dashboard: your next steps here, the project at a glance, its story so far, and its activity.',
   people: 'The people and organizations your group\'s record follows, those named in your projects first, each with how often the record names them. Your own members are under Settings › Members.',
   unavailable: 'What you see when an address leads nowhere, when something isn\'t yours to see, or when your group\'s Civicsmith can\'t be reached.',
+  elsewhere: 'What you see when what you need is not Civicsmith\'s work: the places your group\'s place lists for it, each with what it does, how to reach it and where that came from. Opening it records nothing.',
   'review-outside': 'What someone outside the group sees when asked to review a draft case: the draft and a place to comment.',
   setup: 'The first administrator\'s setup: claim the installation, then name the group, choose its places and languages, and decide how members reach the assistant.',
   'group-identity': 'What kind of group yours is, what it focuses on and why it exists. It shapes how members are welcomed and locks nothing.',

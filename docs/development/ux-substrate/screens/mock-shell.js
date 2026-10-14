@@ -27,6 +27,7 @@ function assistantPanel(screen, c) {
     <div class="mk-msg me">${esc(q)}</div>${machine('Mai', `<p>${esc(a)}</p>`)}</div>
    <footer>${field('mk-ask-' + screen, 'Ask about this screen', '', {})}<div class="mk-acts">${btn('airunopen', 'Work on this', { tone: 'primary' })}${btn('suggest', 'Suggest')}${btn('airunclose', 'Stop')}</div></footer></aside>`;
 }
+const DOOR_WIZ = new Set(['Your first question', 'Get a record', 'Check a claim', 'Follow the money', 'Build a timeline', 'Follow a proceeding', 'Use another group\'s case']);  // the scripts a front door offers (library DOORS): their guide names the way out (DEC-227)
 function wizardGuide(w) {
   return `<aside class="cs-dock" aria-label="Wizard">
    <header>${I('wizard')}Wizard<span class="spacer"></span><button type="button" class="cs-btn" data-tone="quiet">Stop</button></header>
@@ -37,6 +38,7 @@ function wizardGuide(w) {
     ${w.draft ? `<p class="mk-small">${I('machine')} This step places a labeled draft in the field. It becomes yours only when you keep or edit it.</p>` : ''}
     <span class="nav"><button type="button" class="cs-btn" data-tone="quiet">${I('back')}Back</button><button type="button" class="cs-btn">Next${I('next')}</button></span>
     ${w.act ? `<span class="nav"><button type="button" class="cs-btn" data-replay>${I('wizard')}Show me where</button><span class="cs-kbd">Alt+Shift+W</span></span>` : ''}
+    ${DOOR_WIZ.has(w.name) ? `<p class="mk-small muted">For your own situation rather than the government's word: <a href="#" class="cs-ref" data-goto="elsewhere" data-tip="<b>Where else to go</b> · the places your group's place lists for needs Civicsmith doesn't serve, each with where that came from. Opening it records nothing.">where else to go</a>.</p>` : ''}
     <p class="mk-small muted">Stopping is fine: nothing is lost, and nobody is told.</p></div></div></aside>`;
 }
 function mast(c, s) {
@@ -53,7 +55,7 @@ const PATH = {
   site: ['civicsmith.org'], install: ['Civicsmith', 'Create your group'], update: ['Civicsmith', 'Update'], front: ['Lakeshore Tenants'], forgot: ['Lakeshore Tenants', 'Forgot your password'], tour: ['Lakeshore Tenants', 'How we work'], 'help-records': ['Help', 'How a records request works'], reset: ['Lakeshore Tenants', 'Choose a new password'], 'review-outside': ['Lakeshore Tenants', 'Review copy'],
   group: ['Settings', 'Your group'], settings: ['Settings'], projects: ['Projects'], people: ['People'], 'dash-action': ['Action'], 'dash-project': ['The Coliseum lease'], unavailable: ['Can\'t open this'], setup: ['Set up', 'Places and languages'], join: ['Lakeshore Tenants', 'Your invitation'],
   doorbell: ['Lakeshore Tenants', 'Hand material over'], published: ['Lakeshore Tenants', 'Published cases', 'The Coliseum lease'],
-  home: ['Home'], queue: ['Queue'], 'due-date': ['Queue', 'Due date'], inbox: ['Queue', 'Inbox'],
+  home: ['Home'], elsewhere: ['Home', 'Where else to go'], queue: ['Queue'], 'due-date': ['Queue', 'Due date'], inbox: ['Queue', 'Inbox'],
   finder: ['Find'], capture: ['Add'], held: ['Add', 'Held captures'], archive: ['Add', 'Held captures', 'Archive'], 'open-file': ['Projects', 'The Coliseum lease', 'Opening a file'],
   'find-in': ['Projects', 'Pothole repairs', 'Find in this'],
   'group-identity': ['Settings', 'Who your group is'], members: ['Settings', 'Members'], security: ['Settings', 'Security'], places: ['Settings', 'Places and offices'], recovery: ['Settings', 'Recovery codes'], account: ['Settings', 'Your account'],

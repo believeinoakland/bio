@@ -1251,6 +1251,16 @@
    ]
   },
   {
+   "id": "elsewhere",
+   "name": "Where else to go",
+   "frame": "working",
+   "purpose": "What a member sees when what they need is not Civicsmith's work (wizard-scripts R23's 'elsewhere' route, reached from Home's sixth door and from a door-offered wizard's guide): the places the group's place lists for it, by kind, each with what it does, how to reach it, and where that came from; and what shows when the place lists none (K3183, N847, DEC-227).",
+   "acts": [],
+   "journeys": [
+    6
+   ]
+  },
+  {
    "id": "queue",
    "name": "Your queue",
    "frame": "working",
