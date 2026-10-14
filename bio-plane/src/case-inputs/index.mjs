@@ -116,22 +116,36 @@ function openRequestRow(r) {
   const replied = r.replied === undefined || r.replied === null ? null : r.replied;
   if (replied !== null && typeof replied !== "boolean") return null;
   if (replied === false && a !== null) return null;
+  /* R18 (T48; Actions D13): `quotable`, when stated, is a boolean; a row not stating it (undefined) reads as `true`. */
+  if (r.quotable !== undefined && typeof r.quotable !== "boolean") return null;
   return { whom, asked_at: asked, window_closes: r.window_closes === null ? null : r.window_closes.trim(),
            answers: a === null ? null : { answered: a.answered, claims: a.claims },
            /* stated only where the source states it, so a row of a source that does not reads as before */
-           ...(replied === null ? {} : { replied }) };
+           ...(replied === null ? {} : { replied }),
+           /* R18: likewise stated only where the source states it */
+           ...(r.quotable === undefined ? {} : { quotable: r.quotable }) };
 }
+/** R18 (T48-43; N880; Actions D13): the no-quotation line's words until `words.json` holds `signing.openrequest.noquote`
+ *  (asked of UX-DESIGN): BOB's plain sentence, `{whom}` filled from the row. `openRequestLine` answers `key: null` while this
+ *  stands; once the key is given the sentence is read by key through `CASE_INPUTS_WORDS`, and this goes. */
+export const OPEN_REQUEST_NOQUOTE_PLAIN = "{whom}'s reply asks not to be quoted.";
 /** R10, R17: one row's fact line, `{key, says}`, for `case-authoring` R34's sign step: the row's window (`window_closes`,
  *  or `nowindow.` when null) and its reply, laid out (`line`), stated absent (`replied: false`, `noreply`) or not laid
  *  out (`answers` null and `replied` true or absent, `notlaidout`: true whether a reply came or not, so "no reply is
  *  recorded" is never shown for a recorded reply), each filled with the row's `{whom}`, `{asked_at}`,
- *  `{window_closes}`, `{answered}` and `{claims}`. Every row R8 reads well-formed is keyed. */
+ *  `{window_closes}`, `{answered}` and `{claims}`. Every row R8 reads well-formed is keyed. R18: a row answering
+ *  `quotable: false` also answers `quoting: {key, says}`. */
 export function openRequestLine(r) {
+  /* R18: a row answering `quotable: false` also answers `quoting`, shown once with its row's line; it asks no reason and
+     refuses nothing. A row answering `true`, or not answering it, carries none. */
+  const quoting = r.quotable === false
+    ? { quoting: { key: null, says: OPEN_REQUEST_NOQUOTE_PLAIN.replace("{whom}", () => r.whom) } } : {};
   const reply = r.answers ? "line" : r.replied === false ? "noreply" : "notlaidout";
   const key = OPEN_REQUEST_KEYS[r.window_closes ? reply : `nowindow.${reply}`];
   return { key, says: fillWords(key, { whom: r.whom, asked_at: r.asked_at,
                                        ...(r.window_closes ? { window_closes: r.window_closes } : {}),
-                                       ...(r.answers ? { answered: r.answers.answered, claims: r.answers.claims } : {}) }) };
+                                       ...(r.answers ? { answered: r.answers.answered, claims: r.answers.claims } : {}) }),
+           ...quoting };
 }
 /** R17 (DEC-198 (7), DEC-199): the step's one sentence when R8 reads `undetermined`, `signing.openrequest.unread`'s. */
 export const OPEN_REQUESTS_UNREAD_SENTENCE = fillWords(OPEN_REQUEST_KEYS.unread);
