@@ -23,3 +23,7 @@
 - Generated artifacts: none stale (no bundle takes skills since T18 L6, manifest).
 
 Size (session_01KCURAq6vZGsaFCde763fAA): test runs 6, module lines 3183
+
+## J1 · COMPLETE
+
+T48-34 complete on job/T48/skills. R49: the reading_translation layer after action_drafting (authored; clauses from §L, DEC-127 (3), (4), DEC-157 (6), every one found, none authored; task in the module's own words; readtranslate read by id, defined_by plane R50; R9's stated absence without it). The account citation re-pointed to ai-accounts R7 and R20. Uses no unmerged same-layer change (DRAFT_REACH.reading not carried; R49 does not ask for it). skills tests 125/125; format, architecture, coverage (49/49), ownership: 0 failures. Record: build/jobs/T48/skills.md.
