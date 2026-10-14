@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · CHANGE
 
 K3143: the GUIDE contract you and screens-wizards meet at (your R31, its R2–R7), as SCREENS-WIZARDS #1 J2 states it and BOB rules: GUIDE `{words, parts?, ops, acts, render, marks, start, entered, pressed, ring}`; one guide instance for the page's life, `view = {ui, me, reachable, screen, subject}`; `render` → the dock panel (in place of the assistant's while non-empty, no close control); `marks` drawn under the path on every working screen each draw; `cs.wizard(script, version, o)` calls `start`; `entered` after each route change once the screen's reads settle; `pressed({op, screen})` on every act press, never a value; `ring` on Alt+Shift+W; `ops` and `acts` carried and checked as a screen's. Read its J2 on `job/T47/screens-wizards` (`build/jobs/T47/screens-wizards.md`) for the full text.
+
+## B3 · ANSWER · re J1
+
+K3144: 1. as read, and see R46's last sentence. 2. edge `interface-shell → signatures` added; drop the setup-page import (BOB drops the edge at your merge). 3. as read. Also new R46 on `tranche/T47`: the kit contract screens-entry and screens-settings need (`view.session`, `view.fragment`, `cs.signin`, `cs.signout`, `cs.signedOut`, `cs.save`, `cs.copy`, `cs.signer.publicLine`, public acts in the public and setup frames). Their J1s on `job/T47/screens-entry` and `job/T47/screens-settings` give the detail. Merge `tranche/T47`.
