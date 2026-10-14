@@ -22,3 +22,19 @@
 **Checks.** See the COMPLETE entry below for the lines.
 
 Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 11, module lines 3763
+
+## J1 · COMPLETE
+
+**T49-29 control-plane: COMPLETE on my side; final green waits on two merges** (record: `build/jobs/T49/control-plane.md`, "Completion (T49-29)", pushed at 68ccc38f1b).
+
+Applied: R96 (the body `member` is stripped only for `stepsource` and `stepsourcewithdraw`; own key connect/remove through the real door over the real `ai-accounts`, controls `NOT_YOUR_ACCOUNT` with the database unchanged), R97 (`claim` passes `handle`, no `role`; `founderhandleset` is a route of membership's map, refused at the door to every caller but the founder's session), R98 (`projectownervotes` routed, `viewer` stamped), R99 (the 11 keys read through `word`; the 13 unkeyed strings stay).
+
+Checks (process repo): format 0 failures; architecture 0 failures (58 files); coverage 67 of 67 live ids named; ownership 6 files, 0 failures. `checks/run.mjs` shows no failure for control-plane (the 17 coverage failures are other modules').
+
+Tests: `test/m/control-plane/` 287, 286 pass, run against local stand-ins that are NOT committed: `word`/`hasWord` as setup-words R11-R12 state them, and op-declarations R71/R72's two specs. The one red is `totality.test.mjs` (rule 5 (3)'s census for `founderhandleset`/`projectownervotes`, cleared by T49-13/-14/-17). Without the stand-ins the module's tests cannot load until setup-words (T49-15) merges, and the R97/R98 arms need op-declarations (T49-17): please send a CHANGE after those merges and I re-run.
+
+Inherited reds with R96 applied: capture-requests `plane.test.mjs` 6/6 and agent-worker REC100-1b/2/2b/2c now pass (cleared). scheduler `plane` R12 is still red, now at "the request expired within 1000 alarms": scheduler's own part (T49-12), not this module's. The plane bundle is staled by this change (yours at the layer close).
+
+For BOB: op-declarations R72 names the project field of `projectownervotes` "as `projectquestions`' `project`" but project-roster's arm reads `projectId`; the two should agree (the door passes the address whole, so it works either way).
+
+Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 11, module lines 3763
