@@ -1,6 +1,6 @@
 # setup-words (T47)
 
-**Status** · session_01TNymwpyzHCE7zgbShSt1pQ · depth 2 · COMPLETE · handled B1
+**Status** · session_01TNymwpyzHCE7zgbShSt1pQ · depth 2 · COMPLETE · handled B2
 
 
 ## Completion
