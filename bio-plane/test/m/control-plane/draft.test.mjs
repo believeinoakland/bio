@@ -15,17 +15,20 @@ const reply = (o, status = 200) => new Response(JSON.stringify(o), { status });
 /* A world whose store answers the two drafts as their owners do past every refusal (or with `refusal`), and whose objects
    record what their `draft` is asked. */
 function draftWorld(refusal = null, drafted = null, status = 200) {
-  const asked = [];
+  const asked = [], traced = [];
   const w = world({ answer: (c) => (["writinghelp", "groupdescriptiondraft"].includes(c.route)
     ? reply({ ok: true, result: refusal ?? { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE", firsthand: c.route === "writinghelp" && c.body?.op === "observe" } })
     : null) });
   const get = w.env.STORE.get.bind(w.env.STORE);
   w.env.STORE.get = (id) => ({ ...get(id), async draft(args) {
-    asked.push({ ns: id, ...args });
+    /* R93 (T48): the trace and member ref the door hands every draft are kept apart (t48-door.test.mjs pins them) */
+    const { trace, memberRef, ...rest } = args;
+    traced.push({ trace, memberRef });
+    asked.push({ ns: id, ...rest });
     return reply(drafted ?? { ok: true, task: { op: args.op }, draft: { text: "The lift was out.", focus: "Tenants.", purpose: "Tenants." },
                               label: { kind: "machine" }, usage: USE, calls: 2, grant: "GRANT-SECRET", suggestions: false, read: [] }, status);
   } });
-  return { ...w, asked };
+  return { ...w, asked, traced };
 }
 const packHooks = (seen = []) => ({
   publicOp: async () => M.json({ ok: true }), publicInstanceGroup: async () => ({ answered: true, result: {} }),

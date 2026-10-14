@@ -1,3 +1,30 @@
 # control-plane (T48)
 
 **Status** · session_01Buc3JHeHrCA6CLnhxgJpTX · depth 2 · WORKING · handled B1
+
+## Reading (step 2)
+Whole: `build/requirements/control-plane.md`; the plan entries T48-77 (BOB's START B1); `index.mjs` (3,276 lines), `app.mjs`, `draft.mjs`, `owner-ops.mjs`, `archive.mjs`. Of the modules I use, only what my entries touch: `signin-door` (`mintTrace`, `memberRefOf`, R3), `ai-accounts` (`aiAccountsOps`, `disclosureDue`, R23), `ai-runs` (`testInstance`, R78), plane R40, R41, R50, R55 and `agent-worker` R83, R87 (the contract of the plane's calls), `op-declarations` R64–R68 and `interface-shell` R39, R58 (requirements only: their jobs are unmerged). Tests read whole: `harness.mjs`, `door-routes.mjs`, `t46-door.test.mjs` (R57, R77, R80), `draft.test.mjs`, `envelope.test.mjs` (R32 row), `t47-door.test.mjs`; the others run, not read.
+
+## Completion (step 7)
+
+**Entries applied** (T48-77 and its second line):
+- **R93** `index.mjs`: for a member's session reaching `ask`, `airundispatch`, `pagetranscribe`, the six drafts (`writinghelp`, `groupdescriptiondraft`, `translationdraft`, `statusreportassist`, `textcheck`, `readtranslate`), the door mints a fresh `trace` (`signin-door.mintTrace`) and the member ref (`signin-door.memberRefOf(env, by)`), and hands both in process under the names **`trace`** and **`memberRef`**: as properties of the hooks' `gatedOp` ctx (`ask`, `pagetranscribe`), of the ask handed to `stub.draft(…)`, and of the args of `stub.dispatchMemberRun(…)`. The trace is added to the request's JSON answer (`withTrace`, all paths). Nothing of the caller's `trace` is read; neither crosses into any request the door makes of the store.
+- **R90** `draft.mjs`, `index.mjs`: `readtranslate` is a no-owner draft handled with `textcheck` (one block): the plane's draft door is asked `{op, member, session, subject, language}` from the body alone; the plane's answer is relayed (`{ok: true, result: <answer without grant, suggestions, read, usage, calls>}`, its `untested` label included), a refusal or silence as given; usage counted as a draft. `actionreplyquoting`, `proceedingdates` and `followregister`'s `proceeding` need no door code: stamps are declared by `op-declarations`, the routes are the owners' (tests added).
+- **R91, R92, R94**: no door code is needed (the stamps are `op-declarations`' R66–R68; routes are the owners' maps `plane` composes; the 24 account ops are `ai-accounts`' `aiAccountsOps`); tests added. R94's relay of `DISCLOSURE_DUE`: this door holds none (`signin-door` relays it); the `envelope.test.mjs` R32 test (the inherited red, K3218) now drives it with `ai-accounts.disclosureDue`'s own answer and row.
+- **R95** `index.mjs`: `/` and `/app*` pass `options.testInstance` = `AiRuns.prototype.testInstance.call({env})` to `interfacePage`; a throwing read passes `false`.
+
+**Deferred**: none.
+
+**Found in other modules** (reported to BOB): see the REPORT of this date. `signin-door/index.mjs` still says `credentials.disclosureDue` in its comments (its job).
+
+**Tests** (`bio-plane/test/m/control-plane/`): new `t48-door.test.mjs` (16 tests, R90–R95, each with controls); `envelope.test.mjs` R32 re-pointed to ai-accounts' row; `t46-door.test.mjs`, `draft.test.mjs` keep the trace pair apart from the exact-ask assertions; `declarations.test.mjs`, `r53-routes.test.mjs` treat `readtranslate` as a door-answered draft as `textcheck` is; `door-routes.mjs` gains `refuseMachines`.
+Run: `node --test test/m/control-plane/`: **273 tests, 263 pass, 10 fail**. The 10 are all waiting on unmerged same-layer jobs; none is a defect of this module: I verified every one green with local stand-ins (op-declarations T48 shares in `t46.mjs` and a band in `interface-shell`, both reverted and not committed) except those that need `instance-setup`'s routes and `op-declarations`' `stepsource` and `ai-accounts` family:
+- `op-declarations` not merged (specs for `actionreplyquoting`, `proceedingdates`, `readtranslate`, `exploregraph`, …, the `ai-accounts` family): R53 `r53-routes.test.mjs`:70 (inherited, named `exploregraph`, `proceedingdates`), R90 ×3, R92 (`stepsource` undeclared), R94 (`ai-accounts` family), R91.
+- `instance-setup` not merged (`updatenotice`, `updatestart`, `updatelater`, `updateskip` not routes yet): R91 ×2.
+- `interface-shell` not merged (R58, the band): R95's positive test; its controls pass.
+- R93's second test is red only because it drives `readtranslate`, which needs its spec.
+They go green at the merges; I re-run on BOB's `CHANGE`.
+
+**Checks** (from the process repository, over `/home/user/bio`): `format`: 168 modules, 167 requirements files; 0 failures. `architecture control-plane`: 56 product files, 255 relative imports; 0 failures. `ownership control-plane tranche/T48`: 0 failures. `coverage control-plane`: all 63 live ids named once the new test file is committed (it counts tracked files only).
+
+Size (session_01Buc3JHeHrCA6CLnhxgJpTX): test runs 9, module lines 3755

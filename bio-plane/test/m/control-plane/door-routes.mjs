@@ -23,7 +23,7 @@ export function callers(opts = {}) {
 }
 
 /* A session-only op reaches the store's route of its own name, each declared stamp from the session, none the caller's. */
-export async function routesForSessions(ops, bodyOf) {
+export async function routesForSessions(ops, bodyOf, { refuseMachines = () => true } = {}) {
   for (const op of ops) {
     assert.ok(OPS[op], `${op} is declared (op-declarations)`);
     const { w, sessions, machines } = callers({ answer: (c) => (c.route === op ? ok({ ok: true, route: op }) : null) });
@@ -50,8 +50,8 @@ export async function routesForSessions(ops, bodyOf) {
         assert.equal(Object.hasOwn(inner[0].body, "actorIdentity"), false);
       }
     }
-    /* every machine credential is refused before any store request */
-    for (const m of machines) {
+    /* every machine credential is refused before any store request (an op whose row admits a binding class says so) */
+    for (const m of refuseMachines(op) ? machines : []) {
       w.env.calls.length = 0;
       const r = await call(w.env, { op, token: m.token, method: "POST", params: m.params ?? {}, body: bodyOf(op) });
       assert.notEqual(r.status, 200, `${op}/${m.name}: ${r.text.slice(0, 200)}`);

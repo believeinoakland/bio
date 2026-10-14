@@ -25,6 +25,13 @@ export const STATUS_REPORT_ASSIST = "statusreportassist";
 export const STATUS_REPORT_TASK = "statusreportdraft";
 /** (T46; N917; plane R41, agent-worker R76) The draft the door asks with no owner before it: `{text}` from the body. */
 export const TEXT_CHECK = "textcheck";
+/** (T48; N670; plane R50, agent-worker R86) The draft the door asks with no owner before it: `{subject, language?}` from the
+ *  body, translated for the asking member as she may read the subject. Nothing is read through a grant, checked here or
+ *  recorded; the plane's answer, labelled, is the door's. */
+export const READ_TRANSLATE = "readtranslate";
+/** What the plane's draft answer carries for its own use and never for the member: the grant (never answered), the
+ *  switch and the grant's read log, and the conversation's usage and call count (counted to her day by the door). */
+const DRAFT_INTERNAL = Object.freeze(["ok", "grant", "suggestions", "read", "usage", "calls"]);
 /* `instance-setup` R65's and `membership` R109's limits on the two fields of the group's description. */
 const FIELD_MAX = Object.freeze({ focus: 1000, purpose: 4000 });
 
@@ -76,6 +83,8 @@ export function checkedDraft(ask, drafted, status, askedBy) {
   const untested = untestedOf(drafted);
   /* (T46; N917, N920) a text check and a status report read nothing and are checked by no `checkDraft`: the labelled
      draft is answered as the plane's draft door gave it */
+  if (ask.op === READ_TRANSLATE)
+    return { status: 200, body: { ok: true, ...Object.fromEntries(Object.entries(drafted).filter(([k]) => !DRAFT_INTERNAL.includes(k))) } };
   if (ask.op === TEXT_CHECK || ask.op === STATUS_REPORT_TASK)
     return { status: 200, body: { ok: true, ...(ask.op === STATUS_REPORT_TASK ? { plan: ask.plan } : {}),
                                   draft: drafted.draft ?? null, label: drafted.label ?? null, ...untested } };

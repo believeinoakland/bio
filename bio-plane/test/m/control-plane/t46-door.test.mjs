@@ -30,7 +30,7 @@ function withObject(w, methods) {
 /* ================================================================ R57 */
 
 function draftWorld({ owner = null, drafted = null, status = 200 } = {}) {
-  const asked = [];
+  const asked = [], traced = [];
   const w = world({ answer: (c) => {
     if (["writinghelp", "groupdescriptiondraft"].includes(c.route))
       return reply({ ok: true, result: { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" } });
@@ -43,7 +43,10 @@ function draftWorld({ owner = null, drafted = null, status = 200 } = {}) {
     return null;
   } });
   withObject(w, { draft: async (args, id) => {
-    asked.push({ ns: id, ...args });
+    /* R93 (T48): the trace and member ref the door hands every draft are kept apart (t48-door.test.mjs pins them) */
+    const { trace, memberRef, ...rest } = args;
+    traced.push({ trace, memberRef });
+    asked.push({ ns: id, ...rest });
     const base = drafted ?? { ok: true, task: { op: args.op }, label: { kind: "machine" }, usage: USE, calls: 1, grant: null,
       suggestions: false, read: [],
       draft: args.op === "statusreportdraft" ? { text: "Where it stands.", sources: [0, 1] }
@@ -52,7 +55,7 @@ function draftWorld({ owner = null, drafted = null, status = 200 } = {}) {
         : { text: "The lift was out.", focus: "Tenants.", purpose: "Tenants." } };
     return reply(typeof base === "function" ? base(args) : base, status);
   } });
-  return { ...w, asked };
+  return { ...w, asked, traced };
 }
 
 test("R57 (T46; N897 (2); plane R40, agent-worker R79): a draft the plane admitted on the test-instance exception answers its `untested` label in the answer the member receives, for every draft this door routes (writinghelp, groupdescriptiondraft, translationdraft, statusreportassist, textcheck); a draft admitted by the bar carries none (negative control)", async () => {
@@ -175,7 +178,9 @@ function runWorld({ answer } = {}) {
   const w = world({ creds: { [agent]: cred({ tokenId: "agent-ann", principal: "member:ann", writes: ["airundispatch"] }) } });
   const asked = [];
   withObject(w, { dispatchMemberRun: async (args, id) => {
-    asked.push({ ns: id, ...args });
+    /* R93 (T48): the trace and member ref the door hands the dispatch are kept apart (t48-door.test.mjs pins them) */
+    const { trace, memberRef, ...rest } = args;
+    asked.push({ ns: id, ...rest });
     return answer ? answer(args)
       : args.by !== "member:ann" ? { run: args.run, dispatched: false, found: true, status: "running", code: "AI_RUN_NOT_PRINCIPAL",
                                      check: "C-22.12", translation: "not yours", detail: "a run is continued by its principal alone" }

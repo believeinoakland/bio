@@ -38,9 +38,9 @@ test("R2 (op-declarations R6): no spec is without a handler or a store route —
              test instance's trace (none here) */
           || (op === "subscriptionsignin" && r.json?.reason === "AGENT_WORKER_UNBOUND")
           || (op === "signintrace" && r.json?.reason === "SIGNINTRACE_NOT_TEST")
-          /* R57, R77 (T46): `textcheck` and `airundispatch` are this module's own routes to the object's draft door and
-             member-run dispatch (plane's RPC methods; none on the harness's objects) */
-          || (["textcheck", "airundispatch"].includes(op) && r.json?.reason === "AGENT_WORKER_UNBOUND")) {
+          /* R57, R77 (T46), R90 (T48): `textcheck`, `readtranslate` and `airundispatch` are this module's own routes to the
+             object's draft door and member-run dispatch (plane's RPC methods; none on the harness's objects) */
+          || (["textcheck", "readtranslate", "airundispatch"].includes(op) && r.json?.reason === "AGENT_WORKER_UNBOUND")) {
         reached = true; break;
       }
     }
