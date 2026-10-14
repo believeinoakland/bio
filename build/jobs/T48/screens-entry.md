@@ -2,6 +2,32 @@
 
 **Status** · session_01BpeeBYLA4MHskJuB8Ac3T8 · depth 2 · WORKING · handled B1
 
+## Completion (T48-84)
+
+**Read, whole:** `build/requirements/screens-entry.md`; `build/manifest.md`; my two T48 entries in `build/plan/current.md`; `build/layers.md` (layer 11's row and T47's screen-module rows); all of `bio-plane/src/screens-entry/` (`index`, `front`, `tour`, `forgot`, `reset`, `setup`, `join`, `words`); the tests that name a changed requirement (`kit.mjs`, `common.test.mjs` (R9), `front.test.mjs` (R1), `setup.test.mjs` (R6), `page.test.mjs`). Of the modules I use, only the services my entries touch: `interface-shell` R56–R62 and the kit's `title`, `sec`, `field`, `choice`, `checks`, `state`, `act`, `w` (`browser.mjs`), its `STYLE` and `interfacePage`; `interface-assets` R7 (how `shell.css` is made); the design's `page.src.html` `<style>`, `civicsmith.css`' class set, and `mock-screens.js`' `front`, `tour`, `reset`, `forgot`, `setup`, `join` with `mock-kit.js`' helpers.
+
+**Entries applied (T48-84):**
+- **R12** Every class the six screens write is the design's or served: `cs-fronthead`, `cs-flogo`, `cs-frontgrid`, `cs-signin`, `cs-sub`, `cs-small`, `cs-note`, `cs-steps`, `cs-list` → `mk-*`; `cs-actrow` → `mk-acts` (the design's action row); `cs-shown` → `cs-row` with `data-shown`; `cs-codes` kept as a script hook (journey-check reads `pre.cs-codes`; see below). Fields: the join language is `cs.choice` (each language named in its own language by `Intl.DisplayNames`, never its tag); a security tool's own fields are `cs.field` (fill-only row `screen.setup.security.field`); the places picker is the design's `fieldset.mk-checks` with its help as a note. Nothing empty or zero: no "What we have published" section while nothing is published (row `screen.front.published.none` retired), no empty security catalogue, and `forgot`'s last code spent says so without "0 left" (`screen.forgot.done.last`, interim, J1). A failed read is still drawn failed.
+- **R13** `front` draws `mk-fronthead` (the logo, else the name's monogram; the name in the serif title `h1.grp`, or "Your group" while none is set, never the slug) then `mk-frontgrid` with the page left and `mk-signin` right; one column at 760 px comes from `shell.css`' carried phone rule. `join` names the group the same way (it drew the slug too).
+- **R14** The name part stays first after the codes; the steps are the design's `mk-steps`, the first open step `aria-current="step"`, "Name" open while skipped (done marked for readers by an `sr` span).
+- **R15** `setup`'s lede is drawn only while `bootstrap` answers unclaimed and no one here has claimed or is signed in.
+
+**Best readings (J1, pending BOB's answer; none decides what I build next):** the two new rows' words; no monogram while unnamed (initials of "Your group" would be no one's).
+
+**Deferred:** none in this module.
+
+**Found in other modules (for BOB; REPORT J2):**
+- `interface-shell` (R56): its `HOOK_CLASSES` must list `cs-codes` (read by `journey-check`, `journeys.mjs`, as `pre.cs-codes`), or R56's compose check will refuse `setup` and `join`. R12's own test accepts it meanwhile as a named hook.
+- `interface-shell` (R56): `cs-actrow` is still drawn by the kit itself (`cs.areas`, `cs.appearance`, the lock and reauth panels), defined only in `STYLE`; the design's row is `mk-acts`.
+- R13's fold at 1280 px is tested structurally (nothing above the sign-in card but the head; `shell.css`' two-column and 760 px rules); the live measurement belongs with `journey-check` (as `interface-shell` R57's does in its R6).
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/screens-entry/*.test.mjs`: tests 61, pass 61, fail 0 (new `design.test.mjs`: R12 ×4, R13 ×2, R14 ×2, R15; 8 of its 9 fail against the old code).
+- `control-plane` `t46-app.test.mjs`, `t46-e2e.test.mjs` (they compose my `SCREENS`): tests 9, pass 9, fail 0.
+- `format`: 168 modules, 167 requirements files; 0 failures. `architecture` (screens-entry): 0 failures; `run.mjs` architecture: 3306 product files; 0 failures. `coverage` (screens-entry): 15 of 15 live ids; 0 failures (run.mjs: 21 failures, none mine). `ownership` (tranche/T48): 0 failures. `channels`: 0 failures.
+
+Size (session_01BpeeBYLA4MHskJuB8Ac3T8): test runs 9, module lines 1050
+
 ## J1 · QUESTION
 
 Two readings, one word, for BOB's ruling (I carry on with these meanwhile):
