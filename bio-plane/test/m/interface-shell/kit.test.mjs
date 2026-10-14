@@ -171,14 +171,17 @@ test("R31 (K3143) the dock holds one panel: the guide's while it draws one, in p
   assert.equal(r.root().querySelector(".cs-dock"), null);
 });
 
-test("R31 (K3143) the guide's marks are drawn under the path of every working screen; entered is called once the screen's reads settle; pressed hears each act by its op and screen only, never a value", async () => {
+test("R31 R59 (K3143) the guide's marks are drawn in the title row of every working screen, after its heading; entered is called once the screen's reads settle; pressed hears each act by its op and screen only, never a value", async () => {
   let release;
   const slow = new Promise((r) => { release = r; });
   const p = await boot({ screens: ALL, guide: GUIDE, path: "/app/held", plane: { heldcaptures: async () => { await slow; return HELDROWS; } } });
   const main = p.root().querySelector("#cs-main");
   assert.equal(main.children[0].localName, "nav");
-  assert.equal(main.children[1].getAttribute("data-guide-from"), "marks", "directly under the path, held as the guide's (R51)");
-  assert.equal(main.children[1].children[0].id, "marks");
+  const row = main.children[1];
+  assert.ok(row.classList.contains("mk-titlerow"), "R59: the title row, never a block above the path or the heading");
+  assert.equal(row.children[0].localName, "h1");
+  assert.equal(row.children[1].getAttribute("data-guide-from"), "marks", "after the heading, held as the guide's (R51)");
+  assert.equal(row.children[1].children[0].id, "marks");
   assert.equal(p.doc.getElementById("marks").textContent, "held");
   assert.equal(GUIDE_UI(p).entered, undefined, "not before the reads settle");
   release();
@@ -200,7 +203,7 @@ test("R31 cs.ring(op) finds the control the screen drew for op, opens the row pa
   if (q.root().querySelector('[data-shell="reason-send"]')) { q.root().querySelector("[data-slot] textarea").value = "r"; await q.click(q.root().querySelector('[data-shell="reason-send"]')); }
   const ringed = q.root().querySelector('button[data-act="heldrestore"]');
   assert.equal(q.root().querySelector("tr.cs-panel").hidden, false, "its row panel opened");
-  assert.ok(ringed.classList.contains("cs-ring"));
+  assert.ok(ringed.classList.contains("cs-target"), "the design's ring");
   assert.equal(ringed.previousElementSibling.textContent, "Press here when you're ready");
   assert.ok(q.doc.activeElement === ringed, "focused");
   assert.ok(q.doc.scrolledTo && q.doc.scrolledTo.getAttribute("data-act") === "heldrestore", "scrolled into view");
@@ -274,21 +277,22 @@ test("R44 the at-a-glance elements: a reading, activity, people, next steps, the
   assert.equal($("r").querySelector(".k").textContent, "Queue");
   assert.equal($("r").querySelector(".v").textContent, "12");
   assert.equal($("r").querySelector(".d").textContent, "3 more than last week");
-  assert.equal($("r").querySelectorAll(".cs-spark i").length, 8);
-  const bars = $("a").querySelectorAll(".cs-spark i");
+  assert.equal($("r").querySelectorAll(".mk-spark i").length, 8);
+  assert.ok($("r").querySelector(".mk-tile"), "R56: the design's classes");
+  const bars = $("a").querySelectorAll(".mk-spark i");
   assert.equal(bars.length, 8);
   assert.ok(bars[7].classList.contains("now"), "the newest week darker");
   assert.equal($("a").querySelector("b").textContent, "busy");
-  assert.ok($("a").querySelector(".cs-spark").getAttribute("aria-label").includes("0, 1, 0, 2, 3, 1, 4, 6"));
+  assert.ok($("a").querySelector(".mk-spark").getAttribute("aria-label").includes("0, 1, 0, 2, 3, 1, 4, 6"));
   assert.deepEqual($("i").querySelectorAll("i").map((x) => x.textContent), ["M", "R", "D", "A", "+2"], "at most four, then the count");
-  assert.equal($("i").querySelector(".cs-people > span").textContent, "6");
+  assert.equal($("i").querySelector(".mk-people > span").textContent, "6");
   const steps = $("n").querySelectorAll("li");
   assert.equal(steps.length, 2);
   assert.ok(steps[0].querySelector('button[data-act="promote"]'), "each step the act itself");
   assert.equal(steps[1].getAttribute("aria-current"), "step");
   const evs = $("t").querySelectorAll(".ev");
   assert.equal(evs.length, 2, "undated things never placed");
-  assert.ok(evs[0].classList.contains("them") && evs[1].classList.contains("us"));
+  assert.ok(!evs[0].classList.contains("us") && evs[1].classList.contains("us"));
   assert.equal($("t").querySelector("a").getAttribute("href"), "/app/timeline/P1");
   /* control: a strip handed five readings draws four */
   assert.equal($("s").querySelectorAll("a").length, 4);
@@ -339,7 +343,7 @@ test("R49 cs.areas draws rectangles over the image by pointer and by keyboard (a
   /* the image is 1000 by 500 pixels, drawn 500 by 250 on the screen */
   const size = () => { const img = box().querySelector("img"); img.naturalWidth = 1000; img.naturalHeight = 500; box().getBoundingClientRect = () => ({ left: 100, top: 50, width: 500, height: 250 }); };
   size();
-  assert.equal(p.root().querySelector(".cs-areas").getAttribute("aria-label"), "Areas on the photo");
+  assert.equal(p.doc.getElementById("ph").getAttribute("aria-label"), "Areas on the photo");
   assert.equal(p.root().querySelectorAll(".cs-area").length, 1);
   /* drawn with the pointer: from (150, 100) to (250, 150) on the screen is (100, 100) to (300, 200) in the image */
   p.fire(box(), "pointerdown", { clientX: 150, clientY: 100 });
@@ -433,7 +437,7 @@ test("R50 (K3156) at the phone width every weighed act op-grades.phoneOf answers
     const p = await boot({ screens, path, phone: true, session: null });
     assert.ok(btn(p, op), op + " is a phone act");
     assert.equal(p.root().querySelector(`[data-phone-act="${op}"]`), null, op);
-    assert.equal(btn(p, op).querySelector(".w"), null, op + " carries no weight");
+    assert.ok(btn(p, op).querySelector(".w").hasAttribute("data-mark"), op + " carries no weight, only R64's mark");
   }
 });
 

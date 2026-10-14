@@ -14,7 +14,7 @@ function doored({ findExisting, pointer } = {}) {
     findExisting: findExisting ?? ((message, viewer) => { calls.push([message, viewer]); return [
       { kind: "question", id: "QST-1", name: "Who paid for the fence?" }, { kind: "project", id: w.P, name: "budget" },
       { kind: "step", id: "STP-1", name: "How a budget is read" }]; }),
-    pointer: pointer ?? ((viewer) => ({ text: "the profile's pointer", for: viewer })),
+    pointer: pointer ?? ((viewer) => ({ places: ["Test place"], pointers: [{ text: "the profile's pointer", for: viewer }] })),
   };
   const r = w.wz.wizardRegister(registration({ door }));
   assert.equal(r.ok, true);
@@ -32,7 +32,7 @@ test("R23 (T41; D52, D53) startFrom answers one front door for both paths: the g
   assert.deepEqual(r.routes[2], { route: "lead", watch: "optional", becomes: ["project"] });
   assert.deepEqual(r.routes[3], { route: "step", placed: ["group", "project"] });
   assert.deepEqual(r.routes[4], { route: "action" });
-  assert.deepEqual(r.routes[5], { route: "elsewhere", pointer: { text: "the profile's pointer", for: F } }, "the pointer is the registration's, never named here");
+  assert.deepEqual(r.routes[5], { route: "elsewhere", pointer: { places: ["Test place"], pointers: [{ text: "the profile's pointer", for: F }] } }, "the pointer is the registration's, never named here (R37)");
   assert.equal(r.blank, true, "a blank start is always allowed");
   assert.deepEqual(r.matches, [{ kind: "question", id: "QST-1", name: "Who paid for the fence?" }, { kind: "project", id: w.P, name: "budget" },
                                { kind: "step", id: "STP-1", name: "How a budget is read" }]);

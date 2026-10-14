@@ -1,12 +1,12 @@
 /* The assistant and each member's disclosure (R53–R55; DEC-172, K1957, K2093; D311), at the module's interface: the
-   module over the real record-core, over the REAL credentials and membership for whether the group keeps its material
-   away from AI (credentials R51, R52; in credentials' own test world), and its routes through the frame control-plane
+   module over the real record-core, over the REAL ai-accounts and membership for whether the group keeps its material
+   away from AI (ai-accounts R21, R7; in ai-accounts' own test world), and its routes through the frame control-plane
    joins them to. Since T36 the assistant has no switch of its own: `assistantset` and `ASSISTANT_ENABLED` are retired.
    The page's words are setup-page's (its R18, R24). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, frame, providers } from "./fixture.mjs";
-import { world as credentialsWorld } from "../credentials/fixture.mjs";
+import { world as aiAccountsWorld } from "../ai-accounts/fixture.mjs";
 import { ASSISTANT_DISCLOSURE, INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS }
   from "../../../src/setup.mjs";
 import * as S from "../../../src/setup.mjs";
@@ -14,16 +14,16 @@ import * as S from "../../../src/setup.mjs";
 const call = async (m, path, body) => (await frame(m, new Request(`http://do/${path}`,
   body === undefined ? undefined : { method: "POST", body: JSON.stringify(body) }))).json();
 
-/* This module over credentials' and membership's own world, the group claimed by its founder `admin`. */
+/* This module over ai-accounts' and membership's own world, the group claimed by its founder `admin`. */
 async function over({ env = {}, st = null } = {}) {
-  const c = credentialsWorld();
+  const c = aiAccountsWorld();
   await c.claim();
-  const w = await boot({ env, st, more: { membership: c.m, credentials: c.c } });
+  const w = await boot({ env, st, more: { membership: c.m, aiAccounts: c.a } });
   return { ...w, c };
 }
 const REASON = "We hold tenants' medical letters; none of it may leave our own Civicsmith.";
 
-test("R53 assistantState answers {on, set_by, set_at, reason} from credentials' keep-away (its R52): on, with the three null, while the group does not keep its material away; on: false with the setting's who, when and reason in the administrator's words while it does; on again, the three null, once it is turned off; it writes nothing", async () => {
+test("R53 assistantState answers {on, set_by, set_at, reason} from ai-accounts' keep-away (its R21): on, with the three null, while the group does not keep its material away; on: false with the setting's who, when and reason in the administrator's words while it does; on again, the three null, once it is turned off; it writes nothing", async () => {
   const w = await over();
   assert.deepEqual(w.m.assistantState(), { ok: true, on: true, set_by: null, set_at: null, reason: null });
   const before = w.c.snapshot();
@@ -38,11 +38,11 @@ test("R53 assistantState answers {on, set_by, set_at, reason} from credentials' 
   const mark = w.c.snapshot();
   for (let i = 0; i < 3; i += 1) w.m.assistantState();
   assert.equal(w.c.snapshot(), mark);
-  assert.notEqual(before, mark, "the sets themselves were credentials' writes");
+  assert.notEqual(before, mark, "the sets themselves were ai-accounts' writes");
 });
 
-test("R53 (K2093) any keep-away `on` other than false is read as kept away: a state credentials could not read (on: null), any other value, an answer that is no object, or a provider that throws all answer on: false with set_by, set_at and reason null; assistantState never throws", async () => {
-  const st = (keepAway) => ({ ...providers(), credentials: { aiKeepAwayState: keepAway } });
+test("R53 (K2093) any keep-away `on` other than false is read as kept away: a state ai-accounts could not read (on: null), any other value, an answer that is no object, or a provider that throws all answer on: false with set_by, set_at and reason null; assistantState never throws", async () => {
+  const st = (keepAway) => ({ ...providers(), aiAccounts: { aiKeepAwayState: keepAway } });
   for (const [why, keepAway] of [
     ["on: null (not read)", () => ({ on: null, reason: null, set_by: null, set_at: null })],
     ["on: undefined", () => ({ reason: "x", set_by: "admin", set_at: "2026-10-08T00:00:00Z" })],
@@ -56,13 +56,13 @@ test("R53 (K2093) any keep-away `on` other than false is read as kept away: a st
     assert.deepEqual([r.ok, r.on, r.set_by, r.set_at, r.reason], [true, false, null, null, null], why);
     assert.match(r.detail, /could not be read, so it is read as kept away/, why);
   }
-  /* the real setting, unreadable: credentials answers on: null, and this module reads it as kept away */
+  /* the real setting, unreadable: ai-accounts answers on: null, and this module reads it as kept away */
   const w = await over();
   w.c.db.exec(`DROP TABLE ai_keep_away`);
   assert.equal(w.c.c.aiKeepAwayState().on, null);
   assert.deepEqual([w.m.assistantState().on, w.m.assistantState().reason], [false, null]);
-  /* a credentials without the read at all is the same */
-  const bare = await boot({ prov: { ...providers(), credentials: {} } });
+  /* an ai-accounts without the read at all is the same */
+  const bare = await boot({ prov: { ...providers(), aiAccounts: {} } });
   assert.equal(bare.m.assistantState().on, false);
 });
 
@@ -89,7 +89,7 @@ test("R53 (T36) the switch is retired: no assistantSet and no op=assistantset; o
   assert.equal(w.m.assistantState().on, false);
   assert.equal(w.st.db.prepare(`SELECT count(*) n FROM assistant_switch`).get().n, 2, "kept");
   /* a later boot with the binding changed to on reads it no more than the first did */
-  const later = await boot({ st: w.st, env: { ASSISTANT_ENABLED: "on" }, more: { membership: w.c.m, credentials: w.c.c } });
+  const later = await boot({ st: w.st, env: { ASSISTANT_ENABLED: "on" }, more: { membership: w.c.m, aiAccounts: w.c.a } });
   assert.equal("assistant" in later.started, false);
   assert.equal(later.m.assistantState().on, false);
   /* enabling binds nothing: the state names no account and no secret */
@@ -136,7 +136,7 @@ test("R54 disclosureOf answers shown: false for a member with none recorded at t
   assert.equal(route.result.shown, true);
 });
 
-test("R55 (T37; N765, K231) assistantGate answers credentials.aiKeptAway() (its R35) as given: null while the group does not keep its material away; otherwise credentials' one AI_KEPT_AWAY refusal with its row (C-29.31) and keep_away {reason, set_by, set_at} in the administrator's words; the three null, and said so, when the setting could not be read; ASSISTANT_OFF and C-119.5 retired, the number never reused; whoever asks; turning keep-away off ends nothing recorded and starts nothing", async () => {
+test("R55 (T37; N765, K231) assistantGate answers ai-accounts.aiKeptAway() (its R7) as given: null while the group does not keep its material away; otherwise ai-accounts' one AI_KEPT_AWAY refusal with its row and keep_away {reason, set_by, set_at} in the administrator's words; the three null, and said so, when the setting could not be read; ASSISTANT_OFF and C-119.5 retired, the number never reused; whoever asks; turning keep-away off ends nothing recorded and starts nothing", async () => {
   const w = await over();
   assert.equal(w.m.assistantGate(), null);
   assert.equal(w.c.c.aiKeptAway(), null);
@@ -144,7 +144,7 @@ test("R55 (T37; N765, K231) assistantGate answers credentials.aiKeptAway() (its 
   w.c.c.aiKeepAwaySet({ on: true, reason: REASON, by: "admin" });
   const k = w.c.c.aiKeepAwayState();
   const off = w.m.assistantGate();
-  /* as given: equal to what credentials answers, field for field */
+  /* as given: equal to what ai-accounts answers, field for field */
   assert.deepEqual(off, w.c.c.aiKeptAway());
   assert.deepEqual([off.ok, off.reason, off.code, off.check], [false, "AI_KEPT_AWAY", "AI_KEPT_AWAY", "C-29.31"]);
   assert.deepEqual(off.keep_away, { reason: REASON, set_by: k.set_by, set_at: k.set_at });
@@ -160,23 +160,23 @@ test("R55 (T37; N765, K231) assistantGate answers credentials.aiKeptAway() (its 
   w.c.c.aiKeepAwaySet({ on: false, by: "admin" });
   assert.equal(w.m.assistantGate(), null);
   assert.equal(w.m.disclosureOf({ member: "admin" }).shown, true);
-  /* a setting that could not be read: credentials' refusal, the three null, said so */
+  /* a setting that could not be read: ai-accounts' refusal, the three null, said so */
   w.c.db.exec(`DROP TABLE ai_keep_away`);
   const unread = w.m.assistantGate();
   assert.deepEqual([unread.reason, unread.keep_away], ["AI_KEPT_AWAY", { reason: null, set_by: null, set_at: null }]);
   assert.match(unread.detail, /could not be read/);
 });
 
-test("R55 (T37) the one site: a credentials whose aiKeptAway throws is the store's silence (STORE_DID_NOT_ANSWER), never an open gate; this module mints no AI_KEPT_AWAY of its own (no such row is its)", async () => {
-  const w = await boot({ prov: { ...providers(), credentials: { aiKeepAwayState: () => ({ on: false }), aiKeptAway() { throw new Error("no answer"); } } } });
+test("R55 (T37) the one site: an ai-accounts whose aiKeptAway throws is the store's silence (STORE_DID_NOT_ANSWER), never an open gate; this module mints no AI_KEPT_AWAY of its own (no such row is its)", async () => {
+  const w = await boot({ prov: { ...providers(), aiAccounts: { aiKeepAwayState: () => ({ on: false }), aiKeptAway() { throw new Error("no answer"); } } } });
   const r = w.m.assistantGate();
   assert.deepEqual([r.ok, r.reason], [false, "STORE_DID_NOT_ANSWER"]);
-  const bare = await boot({ prov: { ...providers(), credentials: {} } });
+  const bare = await boot({ prov: { ...providers(), aiAccounts: {} } });
   assert.equal(bare.m.assistantGate().reason, "STORE_DID_NOT_ANSWER");
   assert.equal("AI_KEPT_AWAY" in INSTANCE_SETUP_CHECKS, false);
 });
 
-test("R55 (K2157) assistantGate stays exported under its name: null while the group does not keep its material away; otherwise the refusal envelope with ok, reason, code, check, translation, detail and keep_away, as credentials R35 answers it", async () => {
+test("R55 (K2157) assistantGate stays exported under its name: null while the group does not keep its material away; otherwise the refusal envelope with ok, reason, code, check, translation, detail and keep_away, as ai-accounts R7 answers it", async () => {
   const w = await over();
   assert.equal(typeof w.m.assistantGate, "function");
   assert.equal(typeof S.InstanceSetup.prototype.assistantGate, "function");

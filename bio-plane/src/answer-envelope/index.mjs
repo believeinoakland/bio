@@ -383,11 +383,10 @@ const installationRow = (code) => {
 /* R14 (T47; DEC-198 (3), K3030): C-69.6 retired. Until `control-plane` answers through `credentials.disclosureDue` (its
    R65, T47-65) its door still mints `DISCLOSURE_DUE` through this reader; the code's row is then the one R2 decorates it
    with (`credentials`' C-29.40, read from the families), never a row of this table. No other code is answered so. */
-const RETIRED_DISPATCH = Object.freeze({ DISCLOSURE_DUE: "C-69.6" });
 const dispatchRow = (code) => {
-  if (Object.hasOwn(RETIRED_DISPATCH, code)) {
+  if (code === "DISCLOSURE_DUE") {
     const held = dec49Row(code);
-    if (held && held.check !== RETIRED_DISPATCH[code]) return { code, check: held.check, translation: held.translation };
+    if (held && held.check !== "C-69.6") return { code, check: held.check, translation: held.translation };
   }
   const row = DISPATCH_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)

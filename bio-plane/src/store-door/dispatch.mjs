@@ -8,6 +8,7 @@
    class whose `fetch` this is is `plane`'s (its R1, was control-plane's R35, moved at T19), which also spreads
    `controlPlaneRoutes` below into its map (the name kept, so plane's composition is unchanged). */
 import { credentialsOf } from "../credentials/index.mjs";
+import { aiAccountsOf } from "../ai-accounts/index.mjs";
 import { doorbellOf } from "../doorbell/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
@@ -291,9 +292,9 @@ function underGrant(store, grant, asked, op, body, answer) {
    RESOLVED PER ACT BEFORE A DRAFT'S HANDLER. Each draft's handler refuses first by its own words
    (`groupdescriptiondraft`'s NOT_AN_ADMIN, membership's R84, asked here; `translationdraft`'s, asked of instance-setup's
    own check). Then, for the stamped member `by`, in this order: the group's keep-away from drafts, `AI_KEPT_AWAY` as
-   `credentials.aiKeptAway({use: "draft"})` answers it (its R35, the one site; N765: in place of instance-setup's retired
+   `ai-accounts.aiKeptAway({use: "draft"})` answers it (its R7, the one site; N765: in place of instance-setup's retired
    `ASSISTANT_OFF`), so under keep-away no account is read and no draft routed; then the account that serves the member's
-   draft and its limit, as `answers.askAccount({member, kind: "draft"})` answers them (its R30: `credentials.accountFor`
+   draft and its limit, as `answers.askAccount({member, kind: "draft"})` answers them (its R30: `ai-accounts.accountFor`
    with kind `draft`, then `ai-use.useCheck`), its refusal relayed as given (`NO_ACCOUNT`, credentials R35's row, K2577;
    `AI_USE_SWITCHED_OFF`, `AI_LIMIT_REACHED`, its fail-closed `LIMITS_UNREADABLE` or `ACCOUNT_UNREADABLE`, or
    credentials' own, such as a key's notice due). Admitted, the handler receives `{on, account: {kind, level}}`: `on`
@@ -306,7 +307,7 @@ const ACCOUNT_UNREAD = Object.freeze({ ok: false, reason: "ACCOUNT_UNREADABLE",
   detail: "the account that would serve this draft could not be read; nothing was used" });
 async function assistantFor(ctx, by) {
   const member = typeof by === "string" && by ? by : null;
-  const away = credentialsOf(ctx).aiKeptAway({ use: "draft" });
+  const away = aiAccountsOf(ctx).aiKeptAway({ use: "draft" });
   if (away) return { refusal: away };
   const served = await answersOf(ctx).askAccount({ member, kind: "draft" });
   const on = instanceSetupOf(ctx).assistantState().on;
@@ -316,13 +317,13 @@ async function assistantFor(ctx, by) {
 }
 
 /* R11 (K1685; T41: K2400, K2514, K2500): an ask's use, counted by ai-use (its R1's `countAskUsage`) to the account that
-   paid, its `owner` as `credentials.accountFor` answers it for the member's act of that mode (answers' `ownerOf`, ai-use
+   paid, its `owner` as `ai-accounts.accountFor` answers it for the member's act of that mode (answers' `ownerOf`, ai-use
    R1's spelling), "not recorded" when no account answers (ai-use counts it toward no limit). A mode that is neither an
    ask's nor a draft's reads no account, and ai-use refuses it. */
 async function usageOwner(ctx, member, mode) {
   if (mode !== "ask" && mode !== "draft") return null;
   let account = null;
-  try { account = await credentialsOf(ctx).accountFor({ member, act: { kind: mode, member } }); } catch { account = null; }
+  try { account = await aiAccountsOf(ctx).accountFor({ member, act: { kind: mode, member } }); } catch { account = null; }
   return account && account.ok === true ? ownerOf(account, member) : null;
 }
 function adminRefusal(ctx, by) {
@@ -416,11 +417,11 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
     /* R11 (K1674): the Worker's question whether a token is a live ask grant admitting the op (credentials R28),
        store-internal as `wizardrefusaltally`. */
     aigrantadmit: () => credentialsOf(ctx).aiGrantAdmit({ token: b.token, op: b.op, write: b.write }),
-    /* R10 (K2238; control-plane R65): two store-internal routes with no spec (op-declarations R6), each credentials' own
+    /* R10 (K2238; control-plane R65): two store-internal routes with no spec (op-declarations R6), each ai-accounts' own
        answer: the group's keep-away (`{ok: true}` while the group does not keep its material away), and the member's
        subscription fact, the member the stamped `by`. */
-    aikeptaway: () => credentialsOf(ctx).aiKeptAway() ?? { ok: true },
-    subscriptionconnected: () => credentialsOf(ctx).subscriptionConnected({ member: q("by") }),
+    aikeptaway: () => aiAccountsOf(ctx).aiKeptAway() ?? { ok: true },
+    subscriptionconnected: () => aiAccountsOf(ctx).subscriptionConnected({ member: q("by") }),
     /* R15 (T47; K3143; admission R25, credentials R71 (2)): store-internal (op-declarations R6), the admission gate's
        question whether an act asking the password again may run: `due` is `reauthDue`'s own answer, its `REAUTH_DUE`
        refusal for the gate to relay, or null while the window is open (admission R25 reads null as open). The token is

@@ -1328,17 +1328,20 @@ export class QueueProducers {
       const removed = r.source_status === "removed";
       const kind = removed ? "source-removed" : "source-modified";
       const sinceMs = Date.parse(r.since ?? "");
-      const title = this.#record.bundleInfo(id);
-      const name = title && title.title ? title.title : id;
-      out.push({
+      const info = this.#record.bundleInfo(id);
+      const title = info && typeof info.title === "string" && info.title ? info.title : null;
+            out.push({
         id: `FINDING::${kind}::${id}`,
         class: "FINDING",
         kind,
         case: this.#homesOf([id]),
         subject: { kind: "bundle", id },
-        summary: removed ? `the source of ${name} no longer serves it` : `the source of ${name} has changed`,
-        detail: `a monitoring check found the address this document was captured from ${removed
-                ? "answering that it is gone (404 or 410)" : "serving something other than what was captured"}, `
+        title,
+        summary: title
+          ? (removed ? `${title} is gone from its source` : `${title} has changed at its source`)
+          : (removed ? "A document is gone from its source" : "A document has changed at its source"),
+        detail: `Your group's Civicsmith noticed that the address this document was captured from ${removed
+                ? "no longer has it" : "now shows something other than what was captured"}, `
               + "and flagged it for a second look. What the change means is not decided here.",
         basis: { source: "monitoring.flagged", bundle_id: id, source_status: r.source_status ?? null,
                  since: r.since ?? null,

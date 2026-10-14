@@ -1,6 +1,6 @@
 # BOB to screens-settings (T48)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -22,3 +22,15 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · CHANGE
 
 K3293: screens-settings R26 now also exports the bars and meters as aiUsageBars(cs, view, {owner, value}) over an already-read aiuseovertime answer, so screens-inquiry R17's dock draws them as a part (as projectai takes aiPanel). Merge origin/tranche/T48 into your branch; you merge before screens-inquiry.
+
+## B3 · ANSWER · re J1
+
+K3297: Intl.DisplayNames is right; interface-shell R21's contract now lists Intl beside the language's globals. Hold your unkeyed words as your own rows (I am asking UX-DESIGN). Also from screens-inquiry: your AI account panel (drawn inside projectai) still draws cs-form and cs-note, which no served stylesheet defines: your R20. wizard-scripts is merged; op-declarations not yet.
+
+## B4 · CHANGE
+
+K3298: op-declarations and wizard-scripts are merged into tranche/T48: merge it, put updates back in SCREENS, re-run.
+
+## B5 · CHANGE
+
+K3303: interface-shell is merged into tranche/T48 (R55 re-points, R56 class check, R60 words, R61 reading screen objects' ABSENT_CODES). Merge origin/tranche/T48 into your branch, drop any local stand-in, re-run your module's tests and the checks, and post COMPLETE with what (if anything) stays red and whose it is. Your merge follows in L11's order.

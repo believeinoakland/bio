@@ -16,7 +16,6 @@ const rows = [
   ["shell.you.holds", "Your menu: sign out, and how the screens look.", false],
   ["shell.signout", "Sign out", false],
   ["shell.signout.does", "Ends this session on this device and returns to your group's page.", false],
-  ["shell.level", "Explanations: {level}", false],
   ["shell.level.holds", "How quickly explanations open. Promptly, everything opens when you rest on it for half a second; on a longer pause, what screens, sections and acts are waits a second and a half. Keyboard focus and a tap always show everything at once; nothing is ever hidden. Click, or press Alt+Shift+I, to switch.", false],
   ["shell.level.ask", "You have had explanations “{level}” for a month. Keep it that way?", false],
   ["shell.level.keep", "Keep it", false],
@@ -127,5 +126,11 @@ const rows = [
   ["shell.glance.timeline", "Open the timeline", false],
   ["shell.glance.strip", "What can't wait", false],
   ["shell.glance.strip.sum", "{n} can't wait", false],
+  /* T48 (K3254; interim, for UX-DESIGN): R57 the working band's words after its name, where `mark.path.working.means`
+     holds the same sense; R60 the group's name when it has none set (never its slug); R61 a failure without words of
+     its own */
+  ["shell.band.working", "· not public · seen by your group's members", false],
+  ["shell.group.unnamed", "Your group", false],
+  ["shell.unread", "This could not be read.", false],
 ];
 export const SHELL_WORDS = Object.freeze(rows.map((r) => Object.freeze(r)));
