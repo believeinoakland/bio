@@ -1018,5 +1018,389 @@
   "en": "Civicsmith can't read this stake right now; it is not left out.",
   "protected": false,
   "note": "DEC-231: undetermined, never shown as none"
+ },
+ {
+  "key": "signing.openrequest.noquote",
+  "en": "{whom}'s reply asks not to be quoted, so the case says what it says without quoting its words.",
+  "protected": true,
+  "note": "DEC-232: B188 (1); case-inputs R18, N1076; protected like its siblings (DEC-194)"
+ },
+ {
+  "key": "translate.read",
+  "en": "Read in my language",
+  "protected": false,
+  "note": "DEC-232: B188 (2), N670; the control beside a passage, note, question, finding or notice (readtranslate)"
+ },
+ {
+  "key": "translate.label",
+  "en": "Machine translation · original in {language}",
+  "protected": true,
+  "note": "DEC-232: the label on every translated text"
+ },
+ {
+  "key": "translate.label.help",
+  "en": "Translated by a machine for you to read; it may be wrong. The original is the record: show it to check a word, and quote only the original.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "translate.original",
+  "en": "Show the original",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "translate.back",
+  "en": "Show the translation",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "translate.label.published",
+  "en": "Unofficial machine translation · the signed original is in {language}",
+  "protected": true,
+  "note": "DEC-232: on a published case"
+ },
+ {
+  "key": "translate.published.original",
+  "en": "Read the signed original",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "refusal.LANGUAGE_NOT_SET",
+  "en": "Choose the language you read in, in Settings › Your account, or name one here. Nothing was translated.",
+  "protected": false,
+  "note": "DEC-232: B188 (2); instance-setup R87"
+ },
+ {
+  "key": "refusal.MACHINE_CANNOT_RECORD_QUOTING",
+  "en": "Only a member records what a reply says about being quoted. Nothing was written.",
+  "protected": false,
+  "note": "DEC-232: B188 (3); C-150.8"
+ },
+ {
+  "key": "refusal.QUOTING_NOT_RFC",
+  "en": "Only a reply to a request for comment can ask not to be quoted. Nothing was written.",
+  "protected": false,
+  "note": "DEC-232: C-150.9"
+ },
+ {
+  "key": "refusal.QUOTING_REFUSED",
+  "en": "Say whether the reply may be quoted. If it may not, give the reply's own words that say so, on one line of at most 500 characters. Nothing was written.",
+  "protected": false,
+  "note": "DEC-232: C-150.10"
+ },
+ {
+  "key": "proceeding.dates.title",
+  "en": "Dates",
+  "protected": false,
+  "note": "DEC-232: B188 (3), N882: proceeding's dates section, two lanes (following R30); drawn with DEC-228's small batch"
+ },
+ {
+  "key": "proceeding.dates.help",
+  "en": "The proceeding's own dates beside your group's deadlines on it. A deadline the body set for itself is never in your group's lane. Nothing here says anyone is late.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "proceeding.dates.lane.proceeding",
+  "en": "The proceeding",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "proceeding.dates.lane.group",
+  "en": "Our deadlines on it",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "proceeding.dates.stage",
+  "en": "Now: {stage}",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "proceeding.dates.none",
+  "en": "No dates are recorded yet.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "refusal.NO_FINDINGS",
+  "en": "A determination rests on at least one finding: one your group published, one checked and held for publication, or another group's finding your group has accepted. Name the findings it rests on. Nothing was written.",
+  "protected": false,
+  "note": "DEC-232: B188 (4); conformance R40, C-113.6"
+ },
+ {
+  "key": "elsewhere.hours.day.mon",
+  "en": "Monday",
+  "protected": false,
+  "note": "DEC-232: B188 (5); a pointer's hours (jurisdictions R89)"
+ },
+ {
+  "key": "elsewhere.hours.day.tue",
+  "en": "Tuesday",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.day.wed",
+  "en": "Wednesday",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.day.thu",
+  "en": "Thursday",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.day.fri",
+  "en": "Friday",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.day.sat",
+  "en": "Saturday",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.day.sun",
+  "en": "Sunday",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.span",
+  "en": "{days}, {open} to {close}",
+  "protected": false,
+  "note": "DEC-232: consecutive days with the same hours joined as \"Monday to Friday\"; times in the reader's 12-hour form, e.g. 9 a.m."
+ },
+ {
+  "key": "elsewhere.hours.days",
+  "en": "{first} to {last}",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "elsewhere.hours.closed",
+  "en": "Closed other days",
+  "protected": false,
+  "note": "DEC-232: a day not listed is closed"
+ },
+ {
+  "key": "elsewhere.languages",
+  "en": "Languages: {list}",
+  "protected": false,
+  "note": "DEC-232: language names in the reader's language"
+ },
+ {
+  "key": "places.elsewhere.help",
+  "en": "The places Civicsmith sends a member to when what they need is their own matter, not the group's question. They come with the place's rules; your group neither chooses nor edits them.",
+  "protected": false,
+  "note": "DEC-232: B188 (5); the section help on Places and offices"
+ },
+ {
+  "key": "places.elsewhere.none",
+  "en": "Your place lists no places yet for needs Civicsmith doesn't serve. A member who opens Where else to go is told so, with the reason.",
+  "protected": false,
+  "note": "DEC-232: zero pointers"
+ },
+ {
+  "key": "places.elsewhere.noplace",
+  "en": "Your group has no place chosen, so there is nothing to list. Choose one under Places and languages.",
+  "protected": false,
+  "note": "DEC-232: no place"
+ },
+ {
+  "key": "duty.reason.trigger_undated",
+  "en": "What starts the clock has no date in the record yet, so the due date can't be worked out.",
+  "protected": false,
+  "note": "DEC-232: B189, B193; duties R33"
+ },
+ {
+  "key": "duty.reason.deadline_not_held",
+  "en": "Your group's Civicsmith holds no rule for this deadline yet, so it can't say when it falls due.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "duty.reason.due_not_computed",
+  "en": "The due date couldn't be worked out from what the record holds.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "duty.reason.due_between_days",
+  "en": "The due date depends on a day the record doesn't settle, so it falls on one of two days.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "duty.reason.match_undated",
+  "en": "The event that met the duty has no settled date, so whether it was on time is open.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "duty.reason.order_unsettled",
+  "en": "The dates the record holds aren't precise enough to say whether it was on time.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "connection.kind.step_source.name",
+  "en": "Stated in a source",
+  "protected": true,
+  "note": "DEC-232: B189; connections R69, K1469"
+ },
+ {
+  "key": "connection.kind.step_source.means",
+  "en": "a step someone declared that a member has backed with a passage of a held document stating it; graded like that document.",
+  "protected": true,
+  "note": "DEC-232"
+ },
+ {
+  "key": "refusal.UPDATE_NOT_READY",
+  "en": "That release isn't the one ready to install. Nothing was recorded.",
+  "protected": false,
+  "note": "DEC-232: B190; instance-setup R90"
+ },
+ {
+  "key": "refusal.UPDATE_SKIP_NO_REASON",
+  "en": "Say why your group skips this release, on one line: every administrator will see it. Nothing was recorded.",
+  "protected": false,
+  "note": "DEC-232: B190; instance-setup R90"
+ },
+ {
+  "key": "home.welcome.title",
+  "en": "Welcome, {name}",
+  "protected": false,
+  "note": "DEC-232: B190; Home's blocks (screens-daily R17), in their order"
+ },
+ {
+  "key": "home.ready.title",
+  "en": "Your group's Civicsmith is ready",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "home.needsyou.title",
+  "en": "Needs you",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "home.needsgroup.title",
+  "en": "Needs the group",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "home.areas.title",
+  "en": "Each area at a glance",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "home.projects.title",
+  "en": "Projects",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "home.since.title",
+  "en": "Since you last looked",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "published.download",
+  "en": "Download the complete edition",
+  "protected": false,
+  "note": "DEC-232: B190; screens-publish R19"
+ },
+ {
+  "key": "shell.band.working",
+  "en": "· not public · seen by your group's members",
+  "protected": false,
+  "note": "DEC-232: B194; follows mark.path.working.name in the band"
+ },
+ {
+  "key": "shell.group.unnamed",
+  "en": "Your group",
+  "protected": false,
+  "note": "DEC-232: B194; never the short name in its place"
+ },
+ {
+  "key": "wizard.marks.chip",
+  "en": "{n} wizards start here",
+  "protected": false,
+  "note": "DEC-232: B194; one chip beside the title, none at zero"
+ },
+ {
+  "key": "wizard.marks.chip.one",
+  "en": "1 wizard starts here",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "wizard.mark.recommended",
+  "en": "Recommended for everyone",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "queue.source-modified.one",
+  "en": "A document changed at its source",
+  "protected": false,
+  "note": "DEC-232: B194; queue-producers R40"
+ },
+ {
+  "key": "queue.source-modified.many",
+  "en": "{n} documents changed at their source",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "queue.source-removed.one",
+  "en": "A document is gone from its source",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "queue.source-removed.many",
+  "en": "{n} documents are gone from their source",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "queue.source.detail",
+  "en": "Your group's Civicsmith noticed this when it checked. The copies your group holds are unchanged. Open each one to see what changed; nothing has been decided.",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "queue.source.untitled",
+  "en": "A document with no title, captured {date}",
+  "protected": false,
+  "note": "DEC-232"
+ },
+ {
+  "key": "home.first.name",
+  "en": "Name your group",
+  "protected": false,
+  "note": "DEC-232: B194; leads an administrator's first steps while the group has no name"
+ },
+ {
+  "key": "settings.set.setup",
+  "en": "set at setup",
+  "protected": false,
+  "note": "DEC-232: B194; never a credential's name"
  }
 ]

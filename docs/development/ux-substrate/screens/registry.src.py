@@ -117,7 +117,7 @@ screen('help-records', 'Help: How a records request works', 'working', 'What you
 screen('help', 'Help: How spot-checks work', 'working', 'A help page: one method explained in plain words, linked from where it is used (Bob, 7 October).',
   [], [9])
 screen('explore', 'Explore connections', 'working', 'Chains between a start and an end, each step cited and graded (K1469, K1487).',
-  [('explore','Explore'),('explorepreset','Use a preset'),('exploreverify','Check a chain'),('connectionassert','Attach a source to a declared step'),('promote','Open a question from this chain')], [13])
+  [('explore','Explore'),('explorepreset','Use a preset'),('exploreverify','Check a chain'),('stepsource','Attach a source to a declared step'),('promote','Open a question from this chain')], [13])
 screen('proceeding', 'Proceeding', 'working', 'A court case or regulatory proceeding: parties, register, orders and their dates.',
   [('entitycreate','Register the proceeding'),('recordline','Add a party by role'),('followregister','Follow its register'),('declare','Hold an order as obligations'),('courtlink','Link a decision to what it interprets')], [14])
 screen('due-date', 'How this date was worked out', 'working', 'A due date\'s basis and counting; confirm it; download it (K1431, K1444).',
@@ -127,7 +127,7 @@ screen('standard', 'Standard', 'working', 'A requirement the city set itself, he
 
 # --- deciding and acting (bound sketches: the plan page, start and send)
 screen('plan', 'Action plan', 'working', 'The approved plan page: subjects, options, scenarios, what each option became (K608 (4)).',
-  [('plansubjectadd','Add a subject'),('optionadd','Add an option'),('optionpropose','Ask the assistant for options'),('optionadopt','Adopt a suggestion'),('optiondispose','Choose or decline'),
+  [('plansubjectadd','Add a subject'),('optionadd','Add an option'),('planask','Ask the assistant for options'),('optionadopt','Adopt a suggestion'),('optiondispose','Choose or decline'),
    ('scenarioset','Lay out a scenario'),('checkpointrecord','Judge a checkpoint'),('optionstartpreview','Start…'),('planclose','Close the plan'),('itemtakeup','Take an item up yourself')], [22])
 screen('start-send', 'Start and send', 'working', 'The bound start-and-send flow: refusals first, reason in place, approve then record the send (DEC-115).',
   [('optionstartpreview','See what starting does'),('optionstart','Start the action'),('communicationprepare','Prepare what is sent'),('filingprepare','Prepare the filing'),('filingapprove','Approve this text'),('filingrecordsent','I have sent it'),('filingsecondapprove','Give the second approval'),('owed:actionstake K3230','Save this action\'s stake'),('writinghelp','Help me write this')], [7,22])

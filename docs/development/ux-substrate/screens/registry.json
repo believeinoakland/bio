@@ -2662,9 +2662,10 @@
      ]
     },
     {
-     "op": "connectionassert",
+     "op": "stepsource",
      "label": "Attach a source to a declared step",
      "status": "declared",
+     "onTranche": "origin/tranche/T48",
      "modules": [
       "connections"
      ]
@@ -2832,12 +2833,12 @@
      ]
     },
     {
-     "op": "optionpropose",
+     "op": "planask",
      "label": "Ask the assistant for options",
      "status": "declared",
+     "onTranche": "origin/tranche/T48",
      "modules": [
-      "action-plans",
-      "agent-worker"
+      "action-plans"
      ]
     },
     {
