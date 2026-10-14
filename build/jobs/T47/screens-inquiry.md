@@ -48,3 +48,7 @@ B5, B6 applied: tranche/T47 merged (0891b8c3a0); my one test comparing every req
 ## J4 · REPORT
 
 B7 applied: tranche/T47 merged (90e2197e51). Unchanged from J3: on my branch 38 pass, 26 fail, all for interface-shell's T47 kit not yet on tranche/T47; with origin/job/T47/interface-shell merged in a scratch copy, 64 pass, 0 fail. I wait for interface-shell's merge, then COMPLETE.
+
+## J5 · COMPLETE
+
+T47-61 complete on job/T47/screens-inquiry after merging tranche/T47 at B8 (interface-shell merged), no overlay: module tests 64/64; interface-shell's tests 119/0; format, architecture, coverage (16/16), ownership 0 failures; run.mjs architecture 0. One red found elsewhere: control-plane t46-app R75 (img-src policy), failing identically without my changes. Record's Completion section has the entries, readings and size.
