@@ -43,6 +43,8 @@ export const CASE_INPUTS_WORDS = Object.freeze({
     + 'to close; no reply laid out claim by claim is recorded.',
   'signing.openrequest.unread': 'Your group\'s Civicsmith couldn\'t read whether any request for comment on this case is '
     + 'still open, so none is listed here.',
+  'signing.openrequest.noquote': '{whom}\'s reply asks not to be quoted, so the case says what it says without quoting '
+    + 'its words.',
 });
 
 /* R10: a word read by key, with its `{placeholders}` filled from `fill`; a throw for a key the list lacks, because a

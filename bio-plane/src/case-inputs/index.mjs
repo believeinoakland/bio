@@ -125,10 +125,9 @@ function openRequestRow(r) {
            /* R18: likewise stated only where the source states it */
            ...(r.quotable === undefined ? {} : { quotable: r.quotable }) };
 }
-/** R18 (T48-43; N880; Actions D13): the no-quotation line's words until `words.json` holds `signing.openrequest.noquote`
- *  (asked of UX-DESIGN): BOB's plain sentence, `{whom}` filled from the row. `openRequestLine` answers `key: null` while this
- *  stands; once the key is given the sentence is read by key through `CASE_INPUTS_WORDS`, and this goes. */
-export const OPEN_REQUEST_NOQUOTE_PLAIN = "{whom}'s reply asks not to be quoted.";
+/** R18 (T48-43; N880; Actions D13; T49; N1076; K3321 (B); DEC-232): the no-quotation line's key, its sentence read through
+ *  `CASE_INPUTS_WORDS` with `{whom}` filled from the row. */
+export const OPEN_REQUEST_NOQUOTE_KEY = "signing.openrequest.noquote";
 /** R10, R17: one row's fact line, `{key, says}`, for `case-authoring` R34's sign step: the row's window (`window_closes`,
  *  or `nowindow.` when null) and its reply, laid out (`line`), stated absent (`replied: false`, `noreply`) or not laid
  *  out (`answers` null and `replied` true or absent, `notlaidout`: true whether a reply came or not, so "no reply is
@@ -139,7 +138,7 @@ export function openRequestLine(r) {
   /* R18: a row answering `quotable: false` also answers `quoting`, shown once with its row's line; it asks no reason and
      refuses nothing. A row answering `true`, or not answering it, carries none. */
   const quoting = r.quotable === false
-    ? { quoting: { key: null, says: OPEN_REQUEST_NOQUOTE_PLAIN.replace("{whom}", () => r.whom) } } : {};
+    ? { quoting: { key: OPEN_REQUEST_NOQUOTE_KEY, says: fillWords(OPEN_REQUEST_NOQUOTE_KEY, { whom: r.whom }) } } : {};
   const reply = r.answers ? "line" : r.replied === false ? "noreply" : "notlaidout";
   const key = OPEN_REQUEST_KEYS[r.window_closes ? reply : `nowindow.${reply}`];
   return { key, says: fillWords(key, { whom: r.whom, asked_at: r.asked_at,
