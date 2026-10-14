@@ -79,7 +79,8 @@ test("R6 R13 Work on this opens the run under her session and starts its segment
   assert.ok(p.requests.indexOf(dispatch) > p.requests.indexOf(opened));
   /* controls: no request the dock sends mints, revokes or presents an `ai` credential, in a header, body or address */
   for (const op of CREDENTIAL_OPS) assert.equal(p.byOp(op).length, 0, `${op} is never sent`);
-  for (const r of p.requests) {
+  /* the page's one public read (`bootstrap`, interface-shell R36) carries no header at all */
+  for (const r of p.requests.filter((x) => x.op !== "bootstrap")) {
     assert.equal(r.headers.Authorization, SESSION_HEADER, `${r.op} carries her session alone`);
     const said = JSON.stringify(r.body || {}) + r.url;
     assert.ok(!/token|credential|bearer|aik-/i.test(said), `${r.op} carries no credential`);
