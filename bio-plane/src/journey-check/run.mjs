@@ -8,7 +8,9 @@ import http from "node:http";
 import https from "node:https";
 import { Walk, StepFailed, FAIL, settle } from "./walker.mjs";
 import { requireTestInstance, WalkRefused } from "./guard.mjs";
-import { walkInstaller, walkFounder, inviteMember, walkMember, walkWelcome, sweep, credentials, open, act, requireDrawn, drawnActs } from "./journeys.mjs";
+import { walkInstaller, walkFounder, inviteMember, walkMember, walkWelcome, sweep, credentials, open, act, requireDrawn, drawnActs,
+  signInBy } from "./journeys.mjs";
+import { walkAdministrator, walkMemberJourney } from "./investigation.mjs";
 import { sweepScreens } from "./screens.mjs";
 import { designMock, pageLimits, pair, WIDTHS, viewportOf } from "./design.mjs";
 
@@ -61,17 +63,19 @@ async function device(walk, b, route, viewport = { width: 1280, height: 900 }) {
   return { context, page };
 }
 
-/* The local arm (R1 (a)), with no account. `world` starts the world, `launch` the browser. Whatever stops the walk (a
-   step, the guard's refusal, a world or a browser that cannot start), the browser and the world, with their servers and
-   Miniflare instances, are closed before it answers. */
-export async function runLocal({ out = join(OUT, "local"), world: makeWorld, launch = browser } = {}) {
+/* The local arm (R1 (a), R9–R11), with no account. `world` starts the world, `launch` the browser; `model: false` binds
+   the runner with no fake model (R11's control). Journey 28 (its founder claiming by her own handle, R9 step 1), journey
+   3, then the journey to a first conclusion as administrator (R9) and as the member journey 28 joined (R10), then the
+   sweep. Whatever stops the walk (a step, the guard's refusal, a world or a browser that cannot start), the browser and
+   the world, with their servers and Miniflare instances, are closed before it answers. */
+export async function runLocal({ out = join(OUT, "local"), world: makeWorld, launch = browser, model = true } = {}) {
   const { localWorld, INSTALLER_ORIGIN } = await import("./local.mjs");
   const walk = new Walk({ out, arm: "local", ownHosts: [new URL(INSTALLER_ORIGIN).host, "dash.cloudflare.com"] });
   const who = credentials();
   for (const p of [who.founder.password, who.member.password, who.newcomer.password]) walk.keepSecret(p);
   let world = null, b = null;
   try {
-    world = await (makeWorld || localWorld)();
+    world = await (makeWorld || localWorld)({ model });
     b = await launch();
     const route = (ctx) => world.route(ctx, (u) => walk.foreign(u));
     walk.journey = "journey 28";
@@ -88,6 +92,15 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
     walk.journey = "journey 3";
     const second = await inviteMember(walk, founder.page, copy, { id: "teo", cover: "Teo, from flat 9" });
     await walkWelcome(walk, teo.page, { base: copy, link: second, member: who.newcomer });
+    /* each journey that stops has said why; the next is still walked, and the sweep after them */
+    const going = (e) => { if (!(e instanceof StepFailed)) throw e; return null; };
+    const r9 = await walkAdministrator(walk, founder.page, { base: copy, founder: who.founder }).catch(going);
+    walk.journey = "R10 as member";
+    if (!r9) walk.fail(FAIL.STEP, "the member's journey needs the administrator's project, and R9 stopped before it was made");
+    else await (async () => {
+      await signInBy(walk, mai.page, copy, who.member, "she signs in on her own computer");
+      await walkMemberJourney(walk, mai.page, { base: copy, member: who.member, inviter: founder.page, project: r9.project });
+    })().catch(going);
     await sweep(walk, founder.page, copy);
   } catch (e) {
     failed(walk, e);

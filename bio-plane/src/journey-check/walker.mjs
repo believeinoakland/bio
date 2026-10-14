@@ -105,12 +105,15 @@ export class Walk {
     /* R8: every refusal the answer carries, at any depth, whatever its status. One the step expects is excused by its
        code wherever it sits, and excuses the answer's status; each other is one failure, naming where it sits. */
     const refusals = refusalsIn(body);
-    const expected = (code) => expect.some((e) => (e instanceof RegExp ? e.test(code) : e === code));
-    const unexcused = refusals.filter((r) => !expected(r.code));
+    const matches = (e, code) => (e instanceof RegExp ? e.test(code) : e === code);
+    /* an expectation is a code (a string or a pattern), or `{at, code}`: that code where its path matches `at` */
+    const expected = (r) => expect.some((e) => (e && typeof e === "object" && !(e instanceof RegExp)
+      ? e.at.test(r.at) && matches(e.code, r.code) : matches(e, r.code)));
+    const unexcused = refusals.filter((r) => !expected(r));
     for (const r of unexcused)
       this.fail(FAIL.REFUSED, r.at === "" && r.how === "ok: false" ? `${where} answered ok: false (${r.code}, HTTP ${res.status()})`
         : `${where} answered ${r.how} at ${r.at || "its top"} (${r.code}, HTTP ${res.status()})`);
-    const excused = refusals.some((r) => expected(r.code)) || (!refusals.length && expect.includes(res.status()));
+    const excused = refusals.some((r) => expected(r)) || (!refusals.length && expect.includes(res.status()));
     if (!unexcused.length && res.status() >= 400 && !excused) this.fail(FAIL.HTTP, `${where} answered HTTP ${res.status()}`);
     if (req.resourceType() === "document" && url.host === this.copyHost && res.status() < 300) {
       const kind = documentKind(await res.text().catch(() => null));
@@ -126,7 +129,8 @@ export class Walk {
     return this.fail(FAIL.ADDRESS, `${u.host}${u.pathname} is outside the walk`);
   }
 
-  /* One step: `fn(page)` performs it; `expect` names the refusal codes (a string or a pattern) or HTTP statuses it expects. The page is
+  /* One step: `fn(page)` performs it; `expect` names the refusal codes (a string or a pattern, or `{at, code}` for a code
+     only where its path in the answer matches `at`) or HTTP statuses it expects. The page is
      screenshotted when it settles, whether the step held or not; a step that throws stops the journey. */
   async step(page, label, fn, { expect = [] } = {}) {
     this.current = { label, expect };

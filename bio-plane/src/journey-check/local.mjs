@@ -8,7 +8,8 @@
    - `AGENT_WORKER`, agent-worker run from `agent-worker/src/index.mjs` beside it, its `PLANE` the copy and its `RUNNER`
      the stand-in for agent-runner (runner.mjs, with the fake model, fake-model.mjs; K3351): the plane's sign-in reaches
      the runner through it (agent-worker R66), and every model turn of a run, an ask or a draft (agent-worker R35);
-   - a stub city site (city.mjs) answering the copy's own outbound requests to its address, for captures by address.
+   - a stub city site (city.mjs) answering the copy's own outbound requests to its address, for captures by address;
+   - the stand-in for Anthropic's sign-in page (runner.mjs `signinPage`) the connect screen opens, showing a code.
    Each is run from its file, never imported. A browser reaches all of it through `route`: the installer's address, the
    consent page, and the copy's address; anything else is refused and named. */
 import { readFileSync, mkdtempSync, rmSync } from "node:fs";
@@ -18,6 +19,7 @@ import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 import { fakeAccount, AUTHORIZE } from "./account.mjs";
 import { CITY_ORIGIN, cityAnswer } from "./city.mjs";
+import { SIGNIN_PAGE, signinPage } from "./signin.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 export const INSTALLER_ENTRY = join(ROOT, "newgroup", "src", "index.mjs");
@@ -68,6 +70,12 @@ export function planeOptions(bindings, { dir, name, outbound, model = true }) {
   return { opts, skipped };
 }
 
+/* The public services a capture asks to co-attest it (timestamp authorities, the web archive's save), which the local arm
+   does not stand in for: answered 503, as a service that cannot be reached is, so the capture records each attempt as
+   failed; the live arm reaches them. The journey's capture step expects exactly those attempts failed (R9 step 5). */
+export const OUTSIDE = Object.freeze(["http://timestamp.digicert.com/", "http://timestamp.sectigo.com/", "http://rfc3161.ai.moda/",
+  "https://web.archive.org/save/"]);
+
 /* Starts the world; `world.close()` ends it: both Miniflare instances and their storage. `unanswered` lists every
    outbound request nothing in the walk answered. */
 export async function localWorld({ model = true } = {}) {
@@ -78,6 +86,7 @@ export async function localWorld({ model = true } = {}) {
   /* The copy's own outbound requests reach the stub city site and nothing else in the local arm. */
   const planeOutbound = async (req) => {
     if (new URL(req.url).origin === CITY_ORIGIN) return cityAnswer(req);
+    if (OUTSIDE.some((o) => req.url.startsWith(o))) return new Response("not reachable from the local arm", { status: 503 });
     unanswered.push(`copy: ${req.method} ${req.url}`);
     return new Response("no network in the local arm", { status: 599 });
   };
@@ -113,6 +122,7 @@ export async function localWorld({ model = true } = {}) {
     const u = new URL(url);
     if (u.origin === INSTALLER_ORIGIN) return installer.dispatchFetch(url, { ...init, redirect: "manual" });
     if (url.startsWith(AUTHORIZE)) return account.handle(new Request(url, init));
+    if (url.startsWith(SIGNIN_PAGE)) return signinPage();
     const copy = copyBase();
     if (copy && u.origin === copy) return planeFetch(new Request(url, init));
     return null;

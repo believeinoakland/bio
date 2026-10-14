@@ -16,6 +16,8 @@ import { conversation } from "./fake-model.mjs";
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const CODE_RE = /^[^\u0000-\u001f\u007f]{1,2000}$/;
 const memberOk = (m) => typeof m === "string" && m.length > 0 && m.length <= 200;
+/* The sign-in address this stand-in states (the same as signin.mjs's `SIGNIN_ADDRESS`; a Worker module exports only its
+   handler and class, so it is written here again). */
 const SIGNIN_ADDRESS = "https://claude.ai/oauth/authorize?code=true&client_id=journey-check-local-arm";
 const refuse = (code, status, detail) => json({ ok: false, code, detail, trace: crypto.randomUUID(), trace_detail: { ms: 0, cold: false, uptime_s: 0 } }, status);
 

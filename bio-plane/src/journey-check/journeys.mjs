@@ -6,6 +6,7 @@
 import { StepFailed, settle } from "./walker.mjs";
 import { drawnState, sweepScreens, addressOf } from "./screens.mjs";
 import { FAIL } from "./walker.mjs";
+import { requireWord } from "./words.mjs";
 
 const rand = (n) => Buffer.from(crypto.getRandomValues(new Uint8Array(n))).toString("base64url");
 export const SLUG = "lakeshore-tenants";
@@ -59,16 +60,28 @@ export async function type(page, id, value) {
 }
 
 /* Presses act `op` after filling `fields` ({id: value}); then answers what the shell asks before it sends (interface-shell
-   R11): its confirmation, or a reason (`reason`). Waits for the answer to arrive. */
-export async function act(page, op, { fields = {}, within = null, reason = "Recorded by the release walk." } = {}) {
+   R11): its confirmation, or a reason (`reason`); and, when the shell asks her password again before an act that needs
+   a fresh sign-in (`REAUTH_DUE`), gives `password`. Waits for the answer to arrive. `nth` picks among several controls
+   of one act. */
+export async function act(page, op, { fields = {}, within = null, reason = "Recorded by the release walk.", password = null, nth = 0 } = {}) {
   for (const [id, value] of Object.entries(fields)) await type(page, id, value);
-  await (await control(page, op, { within })).click();
-  const ask = page.locator('[data-shell="confirm"]:visible, [data-shell="reason-send"]:visible').first();
-  try { await ask.waitFor({ state: "visible", timeout: 1500 }); } catch { /* sent at once */ }
-  if (await ask.count()) {
-    if ((await ask.getAttribute("data-shell")) === "reason-send")
-      await page.locator('.cs-reason textarea:visible').first().fill(reason);
-    await ask.click();
+  const c = await control(page, op, { within });
+  await (nth ? (within ? page.locator(within) : page).locator(`[data-act="${op}"]:visible`).nth(nth) : c).click();
+  const ask = page.locator('[data-shell="confirm"]:visible, [data-shell="reason-send"]:visible, [data-shell="reauth"]:visible').first();
+  for (let i = 0; i < 3; i += 1) {
+    let h = null;
+    try { h = await ask.elementHandle({ timeout: 1500 }); } catch { break; }
+    const kind = await h.getAttribute("data-shell").catch(() => null);
+    if (!kind) break;
+    if (kind === "reason-send") await page.locator(".cs-reason textarea:visible").first().fill(reason);
+    if (kind === "reauth") {
+      if (!password) throw new Error(`act ${op} asks her password again, and the walk was given none`);
+      await page.locator("#cs-reauth-pw").fill(password);
+    }
+    await h.click().catch(() => {});
+    /* the shell takes its question away once answered; a next one is a new question */
+    await h.waitForElementState("hidden", { timeout: 15000 }).catch(() => {});
+    await settle(page);
   }
   await settle(page);
 }
@@ -139,8 +152,11 @@ export async function walkInstaller(walk, page, installerOrigin) {
 
 /* ---------- journey 28, inside the group's Civicsmith ---------- */
 
-/* The founder: the hand-over, the claim with the one-time password filled in, the ten codes, the group's name, Home in a
-   new group, and an invitation for the first member. */
+/* The founder: the hand-over, the claim with the one-time password filled in and her own handle (R9 step 1), the ten
+   codes, the group's name, Home in a new group, and an invitation for the first member. She claims by her handle where
+   the claim asks it (screens-entry R6), or, where the claim does not, chooses it on setup once claimed
+   (`founderhandleset`, DEC-230); either way she then signs in by it. `founder.handle` null claims with none (R7's
+   handleless founder, DEC-230), as a group claimed before T49 was. */
 export async function walkFounder(walk, page, { base, founder }) {
   await walk.step(page, "hand-over: to the group's address, finishing setup", async (p) => {
     await p.locator("#handover").click();
@@ -149,14 +165,41 @@ export async function walkFounder(walk, page, { base, founder }) {
     await requireDrawn(walk, p, "setup");
     if (!(await p.locator("#su-otp").inputValue())) throw new Error("the one-time password is not filled in");
   });
-  await walk.step(page, "setup: claim; she is the group's first administrator", async (p) => {
-    await act(p, "claim", { fields: { "su-pw": founder.password, "su-pw2": founder.password } });
+  let byHandle = false;
+  await walk.step(page, founder.handle ? "1 · setup: claim with her own handle; she is the group's first administrator"
+    : "setup: claim; she is the group's first administrator", async (p) => {
+    const fields = { "su-pw": founder.password, "su-pw2": founder.password };
+    if (founder.handle && await p.locator("#su-handle").count()) { fields["su-handle"] = founder.handle; byHandle = true; }
+    await act(p, "claim", { fields });
     await shown(p, '[data-state="claimed"]', "the claim");
   });
+  /* a claim that answers no session: she signs in by her handle on her own device (screens-entry R6, R17) */
+  if (byHandle && !(await page.locator("pre[data-codes]").count()) && await page.locator('[data-state="claimed"] ~ * a[href="/app/front"], a[href="/app/front"]').count())
+    await signInBy(walk, page, base, founder, "1 · sign in by her handle");
   await walk.step(page, "setup: her ten recovery codes, shown once", async (p) => {
+    if (where(p) !== "/app/setup") await open(walk, p, base, "/app/setup", "setup");
     await tenCodes(p);
   });
+  if (founder.handle && !byHandle) {
+    /* a handle not chosen fails the walk, and she goes on as she is signed in, so the rest is still walked */
+    let chosen = true;
+    await walk.step(page, "1 · setup: she chooses her own handle", async (p) => {
+      await open(walk, p, base, "/app/setup", "setup");
+      await act(p, "founderhandleset", { fields: { "su-fh": founder.handle }, password: founder.password });
+      await requireWord(p, "founder.handle.done", { vars: { handle: founder.handle }, within: "#cs-main" });
+    }).catch((e) => { if (!(e instanceof StepFailed)) throw e; chosen = false; });
+    if (!chosen) founder.handle = null;
+  }
+  if (founder.handle && !byHandle) {
+    await walk.step(page, "1 · sign out, to sign in by her handle", async (p) => {
+      await open(walk, p, base, "/app/account", "account");
+      await act(p, "signout");
+      await shown(p, '[data-state="signedout"]', "the signed-out state");
+    });
+    await signInBy(walk, page, base, founder, "1 · sign in by her handle");
+  }
   await walk.step(page, "setup: the group's name", async (p) => {
+    if (where(p) !== "/app/setup") await open(walk, p, base, "/app/setup", "setup");
     await act(p, "groupnameset", { fields: { "su-name": GROUP_NAME } });
     await p.locator("a[href='/app'][data-nav]").last().click();
     await settle(p);
@@ -167,6 +210,19 @@ export async function walkFounder(walk, page, { base, founder }) {
   });
   const invite = await inviteMember(walk, page, base, { id: "mai", cover: "Mai, from flat 4" });
   return { invite };
+}
+
+/* Signs `who` in by her handle on the front screen; `whoami` must then answer that handle (R9 step 1). */
+export async function signInBy(walk, page, base, who, label) {
+  await walk.step(page, label, async (p) => {
+    walk.whoami = null;
+    await open(walk, p, base, "/", "front");
+    await act(p, "login", { fields: { "fs-handle": who.handle, "fs-pw": who.password } });
+    await p.waitForFunction(() => !document.querySelector("#fs-pw"), null, { timeout: 15000 });
+    await settle(p);
+    const handle = walk.whoami && (walk.whoami.handle ?? walk.whoami.session?.handle);
+    if (handle !== undefined && handle !== null && handle !== who.handle) throw new Error(`signed in, the plane answers the handle ${handle}, not hers`);
+  });
 }
 
 /* An administrator makes an invitation link for a new member, with the short id and the cover the group knows them by
@@ -323,7 +379,7 @@ export async function sweep(walk, page, base, { screens = sweepScreens(), journe
 export const drawnActs = (page) => page.evaluate(() => [...new Set([...document.querySelectorAll("[data-act]")].map((e) => e.getAttribute("data-act")))].sort());
 
 export const credentials = () => ({
-  founder: { password: "founder-" + rand(12) },
+  founder: { handle: "rosa-l", password: "founder-" + rand(12) },
   member: { handle: "mai-k", password: "member-" + rand(12) },
   newcomer: { handle: "teo-r", password: "newcomer-" + rand(12) },
 });
