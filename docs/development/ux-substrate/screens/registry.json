@@ -39,7 +39,7 @@
    "id": "update",
    "name": "Update your group's Civicsmith",
    "frame": "setup",
-   "purpose": "The hosting account's holder updates the group's Civicsmith to a signed release; records, members and settings are kept (installer R1, DEC-201).",
+   "purpose": "The hosting account's holder updates the group's Civicsmith to the signed release chosen in Settings › Updates and no other: the versions before and after, the steps as they run, a stop that leaves it running as it was, and the finish; records, members and settings are kept (installer R1, R17, R52, R54; DEC-201, DEC-226).",
    "acts": [
     {
      "op": "bootstrap",
@@ -928,6 +928,32 @@
    ]
   },
   {
+   "id": "updates",
+   "name": "Updates",
+   "frame": "working",
+   "purpose": "Administrators: the release the group's Civicsmith runs; the release ready to install (version, date, a security mark when present, the signed release notes in three parts: for members, for administrators, what an administrator must do); the choice Update (the installer's page, set to that release), Not now, or Skip this version with a reason; the hand-off, with a link to copy, for an administrator who does not hold the group's Cloudflare account; the releases installed and skipped (K3158, DEC-226).",
+   "acts": [
+    {
+     "op": "owed:updatestart K3158",
+     "label": "Update",
+     "status": "owed"
+    },
+    {
+     "op": "owed:updatelater K3158",
+     "label": "Not now",
+     "status": "owed"
+    },
+    {
+     "op": "owed:updateskip K3158",
+     "label": "Skip this version, with a reason",
+     "status": "owed"
+    }
+   ],
+   "journeys": [
+    19
+   ]
+  },
+  {
    "id": "ties",
    "name": "Your ties",
    "frame": "working",
@@ -1245,6 +1271,11 @@
      "modules": [
       "tasks"
      ]
+    },
+    {
+     "op": "owed:updatelater K3158",
+     "label": "Not now",
+     "status": "owed"
     },
     {
      "op": "proposedispose",

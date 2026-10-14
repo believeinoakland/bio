@@ -571,6 +571,44 @@
    ]
   },
   {
+   "id": "WIZ-7de505135a9ecd4f",
+   "origin": "civicsmith",
+   "scope": "group",
+   "name": "Update your group's Civicsmith",
+   "start": "updates",
+   "required": false,
+   "journeys": [
+    19
+   ],
+   "note": "",
+   "versions": [
+    {
+     "version": 1,
+     "state": "draft",
+     "steps": [
+      {
+       "screen": "updates",
+       "act": null,
+       "what": "Read what changes: the signed release notes say what members will see, what administrators will see, and anything an administrator must do.",
+       "why": "The notes are signed with the release itself, so what you read is what Civicsmith published."
+      },
+      {
+       "screen": "updates",
+       "act": "owed:updatestart K3158",
+       "what": "Choose Update if you hold your group's Cloudflare account. If not, copy the link and pass it to whoever does. Not now and Skip this version are the other choices.",
+       "why": "Only Cloudflare's consent, given by the account's holder, lets a new release in. Your group's Civicsmith cannot rewrite itself."
+      },
+      {
+       "screen": "update",
+       "act": "bootstrap",
+       "what": "On the installer's page, check the release running and the release chosen, then continue to Cloudflare and allow the update.",
+       "why": "If a step stops, your group's Civicsmith keeps running as it was; the stop says what to do."
+      }
+     ]
+    }
+   ]
+  },
+  {
    "id": "WIZ-74328804ddae3503",
    "origin": "civicsmith",
    "scope": "group",

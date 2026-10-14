@@ -12,7 +12,7 @@ screen('site', 'civicsmith.org', 'setup', 'Civicsmith\'s own website, one site o
   [], [1,28])
 screen('install', 'Create your Civicsmith group', 'setup', 'The founder\'s link and the installer, in order: what Civicsmith is and what is needed, the short name and places, Cloudflare\'s permission, the progress and any stop, the checks and the one-time password, the hand-over to setup (DEC-201).',
   [('bootstrap','Continue to Cloudflare')], [1,28])
-screen('update', 'Update your group\'s Civicsmith', 'setup', 'The hosting account\'s holder updates the group\'s Civicsmith to a signed release; records, members and settings are kept (installer R1, DEC-201).',
+screen('update', 'Update your group\'s Civicsmith', 'setup', 'The hosting account\'s holder updates the group\'s Civicsmith to the signed release chosen in Settings › Updates and no other: the versions before and after, the steps as they run, a stop that leaves it running as it was, and the finish; records, members and settings are kept (installer R1, R17, R52, R54; DEC-201, DEC-226).',
   [('bootstrap','Continue to Cloudflare to update')], [1])
 screen('front', 'Your group\'s page', 'public', 'The group\'s own landing page at its address (Bob\'s D2, K3060): who it is, what it has published, handing it material, how it works; members sign in beside it, with an own device kept signed in (locks after 30 minutes away, signs out after 12 hours) or a shared one (signed out after 15 minutes away) (D3, K3061); refused, paused, signed out, ended and locked (credentials R4, R38; DEC-201, DEC-202).',
   [('login','Sign in'),('unlock','Unlock')], [3,28])
@@ -49,6 +49,7 @@ screen('recovery', 'Recovery codes', 'working', 'Every member\'s own one-time re
 screen('group', 'Your group', 'working', 'Administrators: the settings chosen at setup, changeable here: name and logo, website, languages, the court notice, the hosting account\'s holder, the group\'s bar (DEC-201).',
   [('groupnameset','Save the name'),('groupdomainset','Verify the website'),('grouplanguagesset','Save the languages'),('grouplogoset','Change the logo'),('courtnoticeset','Show the court notice'),('hostingaccessset','Record who holds the hosting account'),('strengthbarset','Set the group\'s bar')], [2])
 screen('settings', 'Settings', 'working', 'Every setting in one list: the member\'s own, then the group\'s for administrators (DEC-201).', [], [2,3])
+screen('updates', 'Updates', 'working', 'Administrators: the release the group\'s Civicsmith runs; the release ready to install (version, date, a security mark when present, the signed release notes in three parts: for members, for administrators, what an administrator must do); the choice Update (the installer\'s page, set to that release), Not now, or Skip this version with a reason; the hand-off, with a link to copy, for an administrator who does not hold the group\'s Cloudflare account; the releases installed and skipped (K3158, DEC-226).', [('owed:updatestart K3158','Update'),('owed:updatelater K3158','Not now'),('owed:updateskip K3158','Skip this version, with a reason')], [19])
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
   [('declaretie','Add a tie'),('withdrawtie','Remove a tie')], [5])
 screen('notes', 'Your notes', 'working', 'A member\'s own notes, seen only by them (DEC-136).',
@@ -66,7 +67,7 @@ screen('dash-project', 'A project\'s dashboard', 'working', 'A project as a dash
   [('release','Vouch for photos'),('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited')], [15])
 screen('unavailable', 'Can\'t open this', 'working', 'An address that leads nowhere, something the member may not see, and the group\'s Civicsmith out of reach (DEC-201).', [], [3])
 screen('queue', 'Your queue', 'working', 'To do, Noticed and Status, grouped by case (DEC-110, DEC-131).',
-  [('taskresolve','Act on an item'),('taskforward','Forward to a member'),('proposedispose','Dismiss with a reason'),('queuesnooze','Snooze to a date'),('queuemute','Mute a kind'),
+  [('taskresolve','Act on an item'),('taskforward','Forward to a member'),('owed:updatelater K3158','Not now'),('proposedispose','Dismiss with a reason'),('queuesnooze','Snooze to a date'),('queuemute','Mute a kind'),
    ('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('reminderanswer','Answer a reminder'),('promote','Open a question from a hint'),('projectkeyset','Add an API key for a project'),('exploreapprove','Let the assistant explore today'),('actionmove','Drop an unsent request, with a reason')], [19,23])
 screen('finder', 'Find', 'working', 'Search what the group holds; hold a set together; see where nobody looked.',
   [('search','Search'),('select','Hold these together'),('findin','Find in these'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('calculationcreate','Count')], [6,7])

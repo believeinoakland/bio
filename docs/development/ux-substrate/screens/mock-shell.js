@@ -58,7 +58,7 @@ const PATH = {
   'find-in': ['Projects', 'Pothole repairs', 'Find in this'],
   'group-identity': ['Settings', 'Who your group is'], members: ['Settings', 'Members'], security: ['Settings', 'Security'], places: ['Settings', 'Places and offices'], recovery: ['Settings', 'Recovery codes'], account: ['Settings', 'Your account'],
   connect: ['Settings', 'The assistant'], ties: ['Settings', 'Your ties'], notes: ['Settings', 'Your notes'],
-  translations: ['Settings', 'Translations'], wizards: ['Settings', 'Wizards'],
+  translations: ['Settings', 'Translations'], wizards: ['Settings', 'Wizards'], updates: ['Settings', 'Updates'],
   person: ['People', 'Person'], explore: ['People', 'Person', 'Explore connections'],
   project: ['Projects', 'Pothole repairs'], document: ['Projects', 'Pothole repairs', 'Document'],
   question: ['Projects', 'Pothole repairs', 'Question'], assistant: ['Projects', 'Pothole repairs', 'Question'],

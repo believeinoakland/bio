@@ -420,7 +420,8 @@ const TITLE_HELP = {
 const SCREEN_HELP = {
   site: 'Civicsmith\'s own website: what it is, a group\'s published work, the groups that chose to be listed, and how to start a group.',
   install: 'Creates your group\'s Civicsmith in a Cloudflare account your group controls: what you need, a permanent short name, Cloudflare\'s permission, then your one-time password.',
-  update: 'Updates your group\'s Civicsmith to a new signed release. Records, members and settings are kept.',
+  update: 'Updates your group\'s Civicsmith to the signed release chosen in Settings › Updates, and no other. Records, members and settings are kept.',
+  updates: 'Administrators only: the release your group\'s Civicsmith runs, the release ready to install and what changes in it, and the choice: Update, Not now or Skip this version.',
   front: 'Your group\'s own page: who it is, what it has published, how to hand it material and how it works, with members\' sign-in beside it.',
   'help-records': 'What the law requires of the office you ask for records, the faster request, and what the city\'s portal shows.',
   tour: 'How your group works, in six short steps, for anyone: no account needed, nothing recorded.',
@@ -490,7 +491,7 @@ const RAIL_HELP = {
   add: 'Add: capture a document, a file, or what you saw yourself.',
   projects: 'Projects: your group\'s investigations, their questions, plans and cases.',
   people: 'People: the people and organizations the record follows. Your own group\'s members are under Settings.',
-  settings: 'Settings: your account, your group\'s members, the assistant, translations and wizards.',
+  settings: 'Settings: your account, your group\'s members, the assistant, translations, wizards and updates.',
 };
 
 // What each table column shows, by screen and heading: the heading's explanation, at the level of names (always on).

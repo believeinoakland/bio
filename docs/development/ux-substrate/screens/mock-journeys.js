@@ -78,7 +78,9 @@ const J = [
    { s: 'queue', act: 'adoptversion', say: 'A document she cited has a newer version; she adopts it or keeps hers.' },
    { s: 'queue', act: 'reminderanswer', say: 'An office\'s due date passed: said once, with "Overdue".' },
    { s: 'queue', act: 'proposedispose', say: 'An item the machine marked worth a look carries "Hint · machine work", with how it was found and out of how many. She dismisses it with a reason.' },
-   { s: 'queue', act: 'queuesnooze', say: 'She snoozes a standing question\'s answer to a local date.' } ] },
+   { s: 'queue', act: 'queuesnooze', say: 'She snoozes a standing question\'s answer to a local date.' },
+   { s: 'queue', act: 'owed:updatelater K3158', say: 'Rosa, an administrator, also sees "An update is ready": the release, its date and a security mark. She opens what changes, or puts it aside with Not now.' },
+   { s: 'updates', act: 'owed:updatestart K3158', v: 'holder', say: 'On Settings › Updates she reads the signed release notes in three parts and chooses Update, which opens the installer\'s page set to that release. An administrator without the Cloudflare account copies the link for whoever holds it instead.' } ] },
  { n: 20, t: 'From a knock to the record', who: 'Someone handing over material; members', steps: [
    { s: 'doorbell', act: 'knock', say: 'Someone with no account hands over three PDFs on the doorbell page, which says exactly what will happen to them.' },
    { s: 'inbox', act: 'inboxpull', say: 'A member reads the inbox and moves the material into the record, or discards it with a reason.' },

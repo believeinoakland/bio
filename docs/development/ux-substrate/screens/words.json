@@ -52,12 +52,12 @@
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "screen": 129,
-  "act": 607,
+  "screen": 131,
+  "act": 614,
   "column": 33,
-  "wizard": 306,
-  "total": 1787,
-  "protected": 648
+  "wizard": 313,
+  "total": 1803,
+  "protected": 652
  },
  "words": [
   {
@@ -4576,7 +4576,7 @@
   },
   {
    "key": "rail.settings.holds",
-   "en": "Settings: your account, your group's members, the assistant, translations and wizards.",
+   "en": "Settings: your account, your group's members, the assistant, translations, wizards and updates.",
    "protected": false,
    "source": "mock-refs.js RAIL_HELP"
   },
@@ -4673,7 +4673,7 @@
   },
   {
    "key": "screen.update.purpose",
-   "en": "Updates your group's Civicsmith to a new signed release. Records, members and settings are kept.",
+   "en": "Updates your group's Civicsmith to the signed release chosen in Settings › Updates, and no other. Records, members and settings are kept.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -4866,6 +4866,18 @@
   {
    "key": "screen.settings.purpose",
    "en": "Every setting in one list: yours first, then the group's.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.updates.name",
+   "en": "Updates",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.updates.purpose",
+   "en": "Administrators only: the release your group's Civicsmith runs, the release ready to install and what changes in it, and the choice: Update, Not now or Skip this version.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -5926,6 +5938,24 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_updatestart.label.updates",
+   "en": "Update",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_updatelater.label.updates",
+   "en": "Not now",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_updateskip.label.updates",
+   "en": "Skip this version, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.declaretie.label.ties",
    "en": "Add a tie",
    "protected": true,
@@ -6090,6 +6120,12 @@
   {
    "key": "act.taskforward.label.queue",
    "en": "Forward to a member",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_updatelater.label.queue",
+   "en": "Not now",
    "protected": true,
    "source": "registry.json"
   },
@@ -7506,6 +7542,24 @@
   {
    "key": "act.hostingaccessset.does",
    "en": "Records who holds the Cloudflare account. Whoever holds it can reach everything, so the group should know who that is.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_updatestart.does",
+   "en": "Opens the installer's update page for your group, set to the release you chose and no other. Nothing changes until whoever holds the group's Cloudflare account allows it there.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_updatelater.does",
+   "en": "Puts this release aside for every administrator. It comes back later, the next day for a security fix, and at once when a newer release replaces it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_updateskip.does",
+   "en": "Says your group will not install this release, with your reason kept on the record for every administrator to see. The next release is offered as usual.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -10092,6 +10146,48 @@
   {
    "key": "wizard.WIZ-8e7e2fac33d069f8.step4.why",
    "en": "Anyone let through can see the group's shared work, so each comes with limits and a daily cap.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.name",
+   "en": "Update your group's Civicsmith",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.step1.what",
+   "en": "Read what changes: the signed release notes say what members will see, what administrators will see, and anything an administrator must do.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.step1.why",
+   "en": "The notes are signed with the release itself, so what you read is what Civicsmith published.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.step2.what",
+   "en": "Choose Update if you hold your group's Cloudflare account. If not, copy the link and pass it to whoever does. Not now and Skip this version are the other choices.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.step2.why",
+   "en": "Only Cloudflare's consent, given by the account's holder, lets a new release in. Your group's Civicsmith cannot rewrite itself.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.step3.what",
+   "en": "On the installer's page, check the release running and the release chosen, then continue to Cloudflare and allow the update.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-7de505135a9ecd4f.step3.why",
+   "en": "If a step stops, your group's Civicsmith keeps running as it was; the stop says what to do.",
    "protected": false,
    "source": "library.json"
   },

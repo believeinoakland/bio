@@ -106,6 +106,12 @@ wiz('Invite a member', 'members', False, [
  ('members', 'websitekeycreate', 'Or let people join through your website: create a website key, or turn on the reusable join link.', 'Anyone let through can see the group\'s shared work, so each comes with limits and a daily cap.'),
 ], [3, 27])
 
+wiz('Update your group\'s Civicsmith', 'updates', False, [
+ ('updates', None, 'Read what changes: the signed release notes say what members will see, what administrators will see, and anything an administrator must do.', 'The notes are signed with the release itself, so what you read is what Civicsmith published.'),
+ ('updates', 'owed:updatestart K3158', 'Choose Update if you hold your group\'s Cloudflare account. If not, copy the link and pass it to whoever does. Not now and Skip this version are the other choices.', 'Only Cloudflare\'s consent, given by the account\'s holder, lets a new release in. Your group\'s Civicsmith cannot rewrite itself.'),
+ ('update', 'bootstrap', 'On the installer\'s page, check the release running and the release chosen, then continue to Cloudflare and allow the update.', 'If a step stops, your group\'s Civicsmith keeps running as it was; the stop says what to do.'),
+], [19])
+
 wiz('Connect your Claude account', 'connect', False, [
  ('connect', None, 'The assistant is optional. If your group offers its API key, you can use it already; your own account, if you connect one, always comes first.', 'Your own account serves only you. Everything works without the assistant.'),
  ('connect', 'disclosureshown', 'Read what connecting means.', 'Your questions, and what is read to answer them, go to Anthropic under your own account.'),
