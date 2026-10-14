@@ -27,3 +27,7 @@ K3369: (1) interface-shell gains R71 with RE_POINTS.setup ["founderhandleset"] (
 ## B3 · ANSWER · re J2
 
 K3369: all three readings stand: (1) founder.handle.done with a 'Go to Home' link, nothing opens by itself; (2) recoverycodesissue offered to the founder only while recoverycodesstate answers held: false; (3) no handle typed is refused locally by refusal.NO_HANDLE's words, nothing sent.
+
+## B4 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
