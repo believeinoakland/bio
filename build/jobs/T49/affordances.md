@@ -35,3 +35,7 @@ Findings outside my entries (details in my record, "Completion"):
 3. tranche/T49's mock-acts.js is ahead of f498560a37 (DEC-248/249: six owed_ tags re-keyed, `reauth` added). I held f498560a37 as START names; `reauth` has no text in ACT_HELP.
 4. connection_kinds / vocabulary words now come from the design's label.* keys where it keys one (member_of reads "a member of"; identity claims "claimed the same person"). screens-investigate's groupMap doc still names five groups (its R27).
 5. Merge note (K2704, rule 5 (8)): my merge opens op-declarations' ACT_HELP_ABSENT partition red (its R34, "never both"): 13 ops now have text and are still named. Cleared by T49-17.
+
+## J2 · COMPLETE
+
+T49-14 done: R60 (step_source its own group), R61 (ACT_HELP regenerated at f498560a37: 337 ops held), R62 (ACT_HELP and the vocabularies read by key through setup-words). Module tests 262/262 (built against setup-words' R11–R12 as written, with a local shim not committed; merge tranche/T49 once setup-words has merged and re-run). format, architecture, coverage (46/46), ownership: 0 failures. My merge opens op-declarations' R34 partition red (named in REPORT J1), cleared by T49-17. Nothing deferred. Details in my record.
