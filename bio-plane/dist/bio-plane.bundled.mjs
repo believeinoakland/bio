@@ -41543,6 +41543,7 @@ __export(inquiry_exports, {
   checkInquiryExtension: () => checkInquiryExtension,
   checkLegExtentGrammar: () => checkLegExtentGrammar,
   deriveInquiryTitle: () => deriveInquiryTitle,
+  dividedCannotRestructure: () => dividedCannotRestructure,
   divisionDisclosureFindings: () => divisionDisclosureFindings,
   inquiryFindings: () => inquiryFindings,
   inquiryLegGrades: () => inquiryLegGrades,
@@ -107208,6 +107209,18 @@ function machinePassageUnchecked(detail, extra = {}) {
     detail: typeof detail === "string" && detail ? detail : "whether the passages this act cites were proposed by an assistant and taken up by the member could not be read, so the act is refused rather than passed on trust. Nothing was written."
   };
 }
+function dividedCannotRestructure(detail, extra = {}) {
+  const x = extra && typeof extra === "object" && !Array.isArray(extra) ? extra : {};
+  return {
+    ...x,
+    ok: false,
+    reason: "DIVIDED_CANNOT_RESTRUCTURE",
+    code: "DIVIDED_CANNOT_RESTRUCTURE",
+    target: typeof x.target === "string" && x.target ? x.target : null,
+    from: "divided",
+    detail: typeof detail === "string" && detail ? detail : "this question was divided and its children carry it on, so its document is closed: nothing in it is revised now. Work on the child that carries the part you mean. Nothing was written."
+  };
+}
 var passageOf2 = (leg2, ord) => {
   const out = { ord, target: typeof leg2.target === "string" ? leg2.target.trim() : leg2.target };
   for (const k of Object.keys(leg2).sort())
@@ -107589,6 +107602,9 @@ var Inquiry = class _Inquiry {
     const basisFm = isInquiry ? docFm : null;
     const basisLegs = basisFm && Array.isArray(basisFm.basis) ? basisFm.basis.filter((l2) => l2 && typeof l2 === "object") : [];
     const replay = !!(pkg && pkg.replay);
+    const held2 = c && c.head;
+    if (held2 && c.base !== null && c.base !== void 0 && !replay && normalizeType(held2.type) === "inquiry" && held2.currentState === "divided")
+      return this.#dividedClosed(bundleId);
     if (basisFm && !replay) {
       const bf = [];
       checkInquiryExtension({
@@ -107727,6 +107743,19 @@ var Inquiry = class _Inquiry {
         });
     }
     return this.#surfacedByCarried(c);
+  }
+  /* R64: the refusal of a revision of a divided question, naming the children its held document records (its
+     `division.into`) as where the work goes on. */
+  #dividedClosed(bundleId) {
+    let into = [];
+    try {
+      const md = this.record.readFile(bundleId, "bundle.md");
+      const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+      into = fm && fm.division && Array.isArray(fm.division.into) ? fm.division.into.filter((x) => typeof x === "string") : [];
+    } catch {
+      into = [];
+    }
+    return dividedCannotRestructure(`${bundleId} was divided${into.length ? ` into ${into.join(", ")}` : ""}, and its children carry the question on, so its document is closed: no revision of it lands, whatever it changes (a leg severed, reinstated or added, a conclusion, a grouping). Work on the child that carries the part you mean. Nothing was written.`, { target: bundleId, ...into.length ? { children: into } : {} });
   }
   /* R11 (T33-45): the new leg kinds' record checks, after the grammar (`inquiry-grammar` R13–R15) judged their shape.
      An occurrence whose duty `duties` does not hold, or does not derive, is NO_SUCH_OCCURRENCE (leg-earning R9).
@@ -109811,13 +109840,7 @@ Apportioned: ${legs.length} leg(s), ${rows5.length} placement(s), ${legs.filter(
         detail: "a published case's composed strength and its per-group breakdown are inside signed, ratified bytes. Re-cutting the structure underneath them would leave this document composing to something the edition on the record contradicts. Reopen it (op=reopen), restructure, and publish what changed as a new edition \u2014 the route DEC-12 built for exactly this."
       };
     if (b.current_state === "divided")
-      return {
-        ok: false,
-        reason: "DIVIDED_CANNOT_RESTRUCTURE",
-        target,
-        from: b.current_state,
-        detail: "this question was declared malformed and carried forward into children that supersede it. Re-deriving its strength now would move a number its children's own disclosure already points at. Restructure the CHILD that carries the half you mean."
-      };
+      return dividedCannotRestructure("this question was declared malformed and carried forward into children that supersede it. Re-deriving its strength now would move a number its children's own disclosure already points at. Restructure the CHILD that carries the half you mean.", { target });
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
       return {
@@ -115271,8 +115294,12 @@ Claim: ${f17.claim}
    *  in the caller's field order with `state` and `hidden` after `relationship` (undefined skipped, null written as
    *  `null`); each ground and leg row in its own order (undefined, null and empty skipped), numbers bare, lists of
    *  numbers inline, text quoted. Whether the composition differs in substance from every held version is the
-   *  caller's check. Refusals: `NO_SUCH_BUNDLE`, `NOT_AN_INQUIRY`, `NO_DOCUMENT`, `UNSPLICEABLE_BASIS`; promote's own
-   *  come back unchanged. */
+   *  caller's check. The documented call is `appendVersion({target, version: {name, description, claim?, relationship,
+   *  derived_from?, kind?, run?, level?, observed_at?, author}, grounds, legs, author, at?, log?})`: `version.author` is
+   *  the version's author as the record holds it, written on the row like every other field (`run-productions` R4 passes
+   *  the machine identity whose run proposed it), and it is the field R49's accept arm reads to tell a machine-authored
+   *  version; the outer `author` is only who promotes. Refusals: `NO_SUCH_BUNDLE`, `NOT_AN_INQUIRY`, `NO_DOCUMENT`,
+   *  `UNSPLICEABLE_BASIS`; promote's own come back unchanged. */
   appendVersion({ target, version, grounds = [], legs = [], author, run: run2, kind: kind2, at: at49, log } = {}) {
     const tgt = String(target ?? "").trim();
     const b = this.#held(tgt);
@@ -152491,8 +152518,8 @@ var AI_RUN_OWN_CHECKS = {
     where: "src/run-rules/test-bar.mjs checkTestBarRecord, called from src/ai-runs/index.mjs testBarRecord",
     translation: "This result on the test investigations was not kept, because it does not say all it must: which part of the assistant was tested, on which set and which version of it, how often it raised a false alarm, whether it passed, who graded it and when. Until such a result is kept, that part stays switched off."
   },
-  /* R26 (T41-21; D2): A READ INSIDE A DOCUMENT KEPT FROM THE ASSISTANT. A material limit that covers reading (`credentials`
-     R57) refuses the read whatever the run's `pages` bound allows: the bound counts pages a run may read, it never
+  /* R26 (T41-21; D2): A READ INSIDE A DOCUMENT KEPT FROM THE ASSISTANT. A material limit that covers reading (`ai-accounts`
+     R22) refuses the read whatever the run's `pages` bound allows: the bound counts pages a run may read, it never
      licenses one. Minted here by `checkPagesRead`; the run's read relays it. The sentence names no limit's reason. */
   AI_RUN_READ_NO_AI: {
     check: "C-22.23",
@@ -152807,7 +152834,7 @@ var AI_RUN_PLAN_CHECKS = {
 var AI_USE_CHECKS = {
   /* R52 (K1502, K1503; K1755): no account serves the member's act — none of their own connected (a subscription token
      or an API key), and the group's API key, which an administrator may hold, not held or switched off. T40 (N812):
-     or the account that would serve has this use switched off, where `AI_USE_SWITCHED_OFF` (`credentials` R56) is not
+     or the account that would serve has this use switched off, where `AI_USE_SWITCHED_OFF` (`ai-accounts` R11) is not
      answered in its place. */
   AI_NO_ACCOUNT: {
     check: "C-109.10",
@@ -152894,7 +152921,7 @@ var RUN_BOUNDS = {
   /* R26 (T41-21; D2): THE READING BOUND, on `mints`' rule. The number of pages of held documents a run may read; a run in
      mode `extract` or `investigate` reading inside a document declares it at the open, and the plane counts it as each
      page is read (PLANE_COUNTED_BOUNDS below), never the caller. A page of a document under a "no AI" material limit
-     (`credentials` R57) is refused inside the run whatever this bound allows (`checkPagesRead`). AFTER `proposals` for
+     (`ai-accounts` R22) is refused inside the run whatever this bound allows (`checkPagesRead`). AFTER `proposals` for
      `mints`' tie-break reason: appending it renames no existing ending. */
   pages: "pages of documents the group holds that the run may read inside \u2014 the run's reading bound",
   lease: "the run stopped heartbeating and its lease lapsed: it died rather than finished"
@@ -153298,7 +153325,8 @@ var DRAFT_KINDS = Object.freeze([
   "textcheck",
   "infractiondraft",
   "bearingdraft",
-  "statusreport"
+  "statusreport",
+  "reading"
 ]);
 var ACTION_DRAFT_KINDS = Object.freeze(["textcheck", "infractiondraft", "bearingdraft"]);
 var DRAFT_REACH = Object.freeze({
@@ -153310,7 +153338,8 @@ var DRAFT_REACH = Object.freeze({
   textcheck: Object.freeze({ scope: "none", means: "nothing of the record: only the prepared text it is asked about, as a translation draft is given only its words" }),
   infractiondraft: Object.freeze({ scope: "matter_record", means: "through the asking member's grant, only the matter's own record the member may see: its plan, actions, correspondence and findings, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" }),
   bearingdraft: Object.freeze({ scope: "action_reply", means: "through the asking member's grant, only the action and the reply it is asked about, with the request's claims, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" }),
-  statusreport: Object.freeze({ scope: "none", means: "nothing of the record: only the items plan-work R8 assembled for the plan's status report, handed in by the door" })
+  statusreport: Object.freeze({ scope: "none", means: "nothing of the record: only the items plan-work R8 assembled for the plan's status report, handed in by the door" }),
+  reading: Object.freeze({ scope: "none", means: "nothing of the record: only the passage of the group's own writing the door hands in, to be put into the asking member's language" })
 });
 var ACTION_DRAFTS = Object.freeze({
   flag: "action_drafts",
@@ -153545,7 +153574,7 @@ function partRefusal(part) {
 var AI_USE_SCHEMA = `
 -- R1 (was ai-runs R48, R49; B8): THE USE COUNTER, one row per paying account ('owner': 'group', 'project:<id>',
 -- 'member:<id>', or 'not recorded' for a row counted before T40), member, local day (civil-time's localDay in the
--- group's zone), kind of use ('use', a credentials USE_KINDS entry) and mode: the sums of each model call's figures
+-- group's zone), kind of use ('use', an ai-accounts USE_KINDS entry) and mode: the sums of each model call's figures
 -- and a count of calls. It holds no question, answer, address or content. Cost is summed in millionths of a dollar so
 -- the sum is exact. A figure not stated adds nothing and is counted in 'tokens_unstated' / 'cost_unstated', never as 0.
 CREATE TABLE IF NOT EXISTS ai_usage (
@@ -153867,8 +153896,8 @@ var AiUse = class _AiUse {
     const r = this.#rows(q10, ...a);
     return r.length ? r[0] : null;
   }
-  #credentials() {
-    return this.#deps.credentials || credentialsOf(this.ctx);
+  #accounts() {
+    return this.#deps.accounts || aiAccountsOf(this.ctx, { record: this.record, membership: this.membership });
   }
   #connections() {
     return this.#deps.connections || connectionsOf(this.ctx);
@@ -154222,9 +154251,14 @@ var AiUse = class _AiUse {
     return new Set(this.#rows(`SELECT DISTINCT scope FROM ai_limits WHERE owner=? AND inclusive=0`, owner).map((r) => r.scope));
   }
   /** The figure of `unit` used by `owner` in the period of `period` holding `day`: over `uses` (null: every use but
-   *  `excluded`), for `member` alone when named. `usd` in whole cents, rounded up so a limit is never reached late. */
-  #used(owner, unit, period, day2, { use = null, member: member2 = null, excluded = null } = {}) {
+   *  `excluded`), for `member` alone when named, and with `through` only the period's days up to it (R14). `usd` in
+   *  whole cents, rounded up so a limit is never reached late. */
+  #used(owner, unit, period, day2, { use = null, member: member2 = null, excluded = null, through = null } = {}) {
     const where = [`owner = ?`, _AiUse.#inPeriod(period)], args = [owner, day2];
+    if (through) {
+      where.push("day <= ?");
+      args.push(through);
+    }
     if (use) {
       where.push("use = ?");
       args.push(use);
@@ -154243,10 +154277,10 @@ var AiUse = class _AiUse {
     if (unit === "calls") return Number(r.c);
     return Math.ceil(Number(r.m) / 1e4);
   }
-  /** The greatest figure any one member used of a per-member limit, naming none (R12). */
-  #mostByAMember(owner, unit, period, day2) {
+  /** The greatest figure any one member used of a per-member limit, naming none (R12, R14). */
+  #mostByAMember(owner, unit, period, day2, through = null) {
     const ids = this.#rows(`SELECT DISTINCT member FROM ai_usage WHERE owner = ? AND ${_AiUse.#inPeriod(period)}`, owner, day2);
-    return ids.reduce((m, r) => Math.max(m, this.#used(owner, unit, period, day2, { member: r.member })), 0);
+    return ids.reduce((m, r) => Math.max(m, this.#used(owner, unit, period, day2, { member: r.member, through })), 0);
   }
   /** The limits held for `owner`, every one or one scope's. */
   #limits(owner, scope = null) {
@@ -154304,9 +154338,9 @@ var AiUse = class _AiUse {
     }
   }
   /* ===== Who acts (R2, R4, R9, R12) ===== */
-  /** R2: the owner's own act: the member (`NOT_YOUR_CEILING`); a project's owner (`credentials`' R54 refusals); an
-   *  active administrator (`NOT_AN_ADMIN`). A project's and the group's refusals are `credentials`' own, relayed from
-   *  its R60 read; when that cannot be read, membership's own refusals (fail closed). Null when `by` may act. */
+  /** R2: the owner's own act: the member (`NOT_YOUR_CEILING`); a project's owner (`ai-accounts`' R10 refusals); an
+   *  active administrator (`NOT_AN_ADMIN`). A project's refusals are `ai-accounts`' own, relayed from its R15 read; when
+   *  that cannot be read, membership's own refusals (fail closed). Null when `by` may act. */
   #ownerBar(p3, by, act2) {
     if (p3.kind === "member") {
       const id = memberIdOf2(by);
@@ -154316,11 +154350,11 @@ var AiUse = class _AiUse {
       return this.#owns(p3, by) && !isMachineIdentity(String(by)) ? null : notAnAdmin(by ?? null, `${act2} the group account's limits and use`);
     return this.#accountsBar(p3, by, act2);
   }
-  /** R12 (`credentials` R60): the account's owners and refusals as `credentials.accountUses` states them. */
+  /** R12, R14 (`ai-accounts` R15): the account's owners and refusals as `ai-accounts.accountUses` states them. */
   #accountsBar(p3, by, act2) {
     let a = null;
     try {
-      a = this.#credentials().accountUses({ owner: p3.owner, viewer: by ?? null });
+      a = this.#accounts().accountUses({ owner: p3.owner, viewer: by ?? null });
     } catch {
       a = null;
     }
@@ -154342,13 +154376,13 @@ var AiUse = class _AiUse {
     }
     return false;
   }
-  /** R3, R6, R9: the owner's `explore` value (`credentials` R55): `no`, `ask` or `yes`, read through
-   *  `credentials.accountUsesOf` (its R62; T42, N831), with no viewer, never through `accountUses` asked as one of the
+  /** R3, R6, R9: the owner's `explore` value (`ai-accounts` R14): `no`, `ask` or `yes`, read through
+   *  `ai-accounts.accountUsesOf` (its R17; T42, N831), with no viewer, never through `accountUses` asked as one of the
    *  account's owners. `held` is read, never `uses` alone: the group's answer carries its defaults with `held: false`
    *  (K2620). `no` when the account is not held, cannot be read, or holds any other value (fail closed). */
   #exploreOf(p3) {
     try {
-      const a = this.#credentials().accountUsesOf({ owner: p3.owner });
+      const a = this.#accounts().accountUsesOf({ owner: p3.owner });
       const v = a && a.ok === true && a.held === true && !a.unreadable && a.uses ? a.uses.explore : "no";
       return ["no", "ask", "yes"].includes(v) ? v : "no";
     } catch {
@@ -154400,7 +154434,7 @@ var AiUse = class _AiUse {
     if (p3.kind === "group") return false;
     let a = null;
     try {
-      a = this.#credentials().accountUses({ owner: p3.owner, viewer: by });
+      a = this.#accounts().accountUses({ owner: p3.owner, viewer: by });
     } catch {
       a = null;
     }
@@ -154604,16 +154638,24 @@ var AiUse = class _AiUse {
   /** R6 `exploreAllowed({owner, question, at})`, for the explorer (B9): `{ok: true, ask: false, label}` when exploring
    *  `question` on `owner`'s account may run now (`label` `{kind: "machine", enabled_by: owner}`, which the explorer
    *  attaches to what it offers); `{ok: true, ask: true}` when the owner's `explore` is `ask` and that local day is not
-   *  approved (R9); else a refusal: `EXPLORE_NOT_ENABLED`, `credentials.aiKeptAway`'s, `EXPLORE_OUT_OF_SCOPE`, R3's
-   *  `AI_LIMIT_REACHED`. Writes nothing; never throws. */
+   *  approved (R9); else a refusal: `EXPLORE_NOT_ENABLED`, `ai-accounts.aiKeptAway`'s, `EXPLORE_OUT_OF_SCOPE`, R3's
+   *  `AI_LIMIT_REACHED`. A keep-away read that throws answers `ai-accounts`' `KEPT_AWAY_UNREADABLE` as given (its R34:
+   *  fail closed, never a copy of the refusal). Writes nothing; never throws. */
   exploreAllowed({ owner = null, question = null, at: at49 = null } = {}) {
     const p3 = parseOwner(owner);
     try {
       if (!p3) return this.#exploreOff({ kind: "group", owner: String(owner) });
       const value = this.#exploreOf(p3);
       if (value === "no") return this.#exploreOff(p3);
-      const c = this.#credentials();
-      const away = c.aiKeptAway({ use: "explore", ...p3.kind === "project" ? { project: p3.id } : {} });
+      const c = this.#accounts();
+      const keptAway2 = (args) => {
+        try {
+          return c.aiKeptAway(args);
+        } catch {
+          return KEPT_AWAY_UNREADABLE;
+        }
+      };
+      const away = keptAway2({ use: "explore", ...p3.kind === "project" ? { project: p3.id } : {} });
       if (away) return away;
       if (!this.#inScope(p3, question)) return this.#outOfScope(p3);
       if (p3.kind === "group") {
@@ -154621,8 +154663,13 @@ var AiUse = class _AiUse {
           const i = this.record.bundleInfo(b);
           return i && normalizeType(i.type) === "project";
         });
-        const kept = new Set(c.projectsKeptAway({ use: "explore" }) || []);
-        if (drawn.length && drawn.every((b) => kept.has(b))) return c.aiKeptAway({ project: drawn[0], use: "explore" });
+        let kept = null;
+        try {
+          kept = new Set(c.projectsKeptAway({ use: "explore" }) || []);
+        } catch {
+          return KEPT_AWAY_UNREADABLE;
+        }
+        if (drawn.length && drawn.every((b) => kept.has(b))) return keptAway2({ project: drawn[0], use: "explore" });
       }
       const limit = this.useCheck({ owner: p3.owner, member: null, use: "explore", at: at49 });
       if (limit) return limit;
@@ -154797,8 +154844,8 @@ var AiUse = class _AiUse {
   /* ===== THE PANEL'S READ (R12; DEC-188) ===== */
   /** R12 `aiLimits({owner, viewer})` (`op=ailimits`): each limit held on one account, with its use in the current period
    *  (R5's sums, naming no member: a per-member limit answers the most any one member used) and the account's history
-   *  of limits (set, changed, removed; who and when), to that account's owners only, as `credentials` R60 states them;
-   *  anyone else is refused as R60 refuses them. Writes nothing. */
+   *  of limits (set, changed, removed; who and when), to that account's owners only, as `ai-accounts` R15 states them;
+   *  anyone else is refused as R15 refuses them. Writes nothing. */
   aiLimits({ owner = null, viewer = null, at: at49 = null } = {}) {
     const p3 = parseOwner(owner);
     if (!p3) return this.#invalid("owner", "limits are read for 'group', 'project:<id>' or 'member:<id>'.");
@@ -154840,6 +154887,63 @@ var AiUse = class _AiUse {
       return { ok: true, owner: p3.owner, limits: null, history: null, unreadable: true };
     }
   }
+  /* ===== USE OVER TIME (R14; DEC-215 (1)) ===== */
+  /** R14: the `n` local days ending with `day` (`YYYY-MM-DD`), oldest first: calendar days, so a zone's clock change
+   *  neither skips nor repeats one. */
+  static #daysEnding(day2, n2) {
+    const end2 = Date.UTC(Number(day2.slice(0, 4)), Number(day2.slice(5, 7)) - 1, Number(day2.slice(8, 10)));
+    return Array.from({ length: n2 }, (_, i) => new Date(end2 - (n2 - 1 - i) * 864e5).toISOString().slice(0, 10));
+  }
+  /** R14 `accountUseOverTime({owner, viewer, at})` (`op=aiuseovertime`): one account's use over time, to its owners
+   *  only (R12's owners and refusals). `days`: the thirty local days ending with the day of `at`, oldest first, each
+   *  `{day, calls, dollars}` from the counter (`dollars` the summed estimated cost), zeros on a day with none.
+   *  `periods`: each limit held on the account, `{scope, unit, period, period_start, used, limit}`, `used` counted as R3
+   *  counts it in the limit's current period up to the day of `at` (an overall limit over the uses that are not
+   *  exclusive; a per-member limit the most any one member used, as R12 answers it), `limit` in its unit (`usd` in
+   *  dollars); with none held, one month entry `{scope: "overall", unit: "usd", …, limit: null}`. Every figure is summed
+   *  over everyone the account serves and names no member (K1450). When the use cannot be read it answers
+   *  `unreadable: true`, never zeros. Writes nothing; never throws. */
+  accountUseOverTime({ owner = null, viewer = null, at: at49 = null } = {}) {
+    const p3 = parseOwner(owner);
+    if (!p3) return this.#invalid("owner", "use over time is read for 'group', 'project:<id>' or 'member:<id>'.");
+    const bar = this.#accountsBar(p3, viewer, "reading an account's use");
+    if (bar) return bar;
+    try {
+      const { day: day2, zone } = this.#dayOf(at49);
+      const span3 = _AiUse.#daysEnding(day2, 30);
+      const byDay = new Map(this.#rows(`SELECT day, SUM(calls) calls, SUM(cost_micro_usd) micro FROM ai_usage
+                                        WHERE owner = ? AND day >= ? AND day <= ? GROUP BY day`, p3.owner, span3[0], day2).map((r) => [r.day, r]));
+      const days = span3.map((d) => {
+        const r = byDay.get(d);
+        return { day: d, calls: r ? Number(r.calls) : 0, dollars: r ? Number(r.micro) / 1e6 : 0 };
+      });
+      const excluded = this.#exclusive(p3.owner);
+      const money = (unit, v) => unit === "usd" ? Number(v) / 100 : Number(v);
+      const held2 = this.#limits(p3.owner);
+      const periods = held2.length ? held2.map((l2) => {
+        const used = l2.scope === "overall" ? this.#used(p3.owner, l2.unit, l2.period, day2, { excluded, through: day2 }) : l2.scope === "per_member" ? this.#mostByAMember(p3.owner, l2.unit, l2.period, day2, day2) : this.#used(p3.owner, l2.unit, l2.period, day2, { use: l2.scope, through: day2 });
+        return {
+          scope: l2.scope,
+          unit: l2.unit,
+          period: l2.period,
+          period_start: _AiUse.#start(l2.period, day2),
+          used: money(l2.unit, used),
+          limit: money(l2.unit, l2.amount)
+        };
+      }) : [{
+        scope: "overall",
+        unit: "usd",
+        period: "month",
+        period_start: _AiUse.#start("month", day2),
+        used: Number(this.#one(`SELECT COALESCE(SUM(cost_micro_usd), 0) m FROM ai_usage WHERE owner = ? AND
+                                      ${_AiUse.#inPeriod("month")} AND day <= ?`, p3.owner, day2, day2).m) / 1e6,
+        limit: null
+      }];
+      return { ok: true, owner: p3.owner, zone, days, periods };
+    } catch {
+      return { ok: true, owner: p3.owner, days: null, periods: null, unreadable: true };
+    }
+  }
 };
 var OF9 = /* @__PURE__ */ new WeakMap();
 function aiUseOf(ctx, deps = {}) {
@@ -154859,7 +154963,8 @@ function aiUseOps(use, url, body) {
     ailimitset: () => use.aiLimitSet({ ...b, by: q10("by") }),
     ailimits: () => use.aiLimits({ owner: q10("owner") ?? b.owner ?? null, viewer: q10("viewer") }),
     aiusage: () => q10("owner") != null ? use.aiUsage({ owner: q10("owner"), viewer: q10("viewer"), month: q10("month") }) : use.aiUsageMine({ viewer: q10("viewer"), day: q10("day"), month: q10("month") }),
-    exploreapprove: () => use.exploreApprove({ ...b, by: q10("by") })
+    exploreapprove: () => use.exploreApprove({ ...b, by: q10("by") }),
+    aiuseovertime: () => use.accountUseOverTime({ owner: q10("owner") ?? b.owner ?? null, viewer: q10("viewer") })
   };
 }
 
@@ -156977,8 +157082,8 @@ var AiRuns = class _AiRuns {
   #openChecks = [];
   // R47: {module, mode, fn}, one per mode and one per module
   #deps;
-  /** `deps` is for in-process wiring only (never the wire or `env`): `inquiry` (R27's `migratedSurfacing`), `steps` and
-   *  `aiUse` (each module's own instance, else its factory on this `ctx`), and, for a module test alone,
+  /** `deps` is for in-process wiring only (never the wire or `env`): `inquiry` (R27's `migratedSurfacing`), `steps`,
+   *  `aiUse` and `aiAccounts` (each module's own instance, else its factory on this `ctx`), and, for a module test alone,
    *  `deployedModes` in place of `run-rules`' `DEPLOYED_MODES` and `testSet` in place of `CIVICSMITH_TEST_SET`. */
   constructor(ctx, env = {}, deps = {}) {
     this.ctx = ctx;
@@ -157693,7 +157798,7 @@ var AiRuns = class _AiRuns {
    *
    *  BOTH PRINCIPALS ARE REQUIRED and neither is ever a token value (§14a,
    *  DEC-27(b), DEC-55.4). The Claude account a run carries is the one
-   *  `credentials.accountFor` answers for the act of the member who started it
+   *  `ai-accounts.accountFor` answers for the act of the member who started it
    *  (R52; K1755: their own, else the group's API key), and the run is that
    *  member's act, recorded as `principal_claude`, `member:<id>`, whichever
    *  account serves it; the plane refuses to open a run that names no member, or
@@ -158073,7 +158178,7 @@ var AiRuns = class _AiRuns {
   /** R74 (D7; K2472; B4 (5), K2490): A MEMBER'S BATCH, one bounded run per step she may see, under one act and one
    *  estimate. `steps` is the list of her steps (at most `OPEN_MANY_MAX`, each named once); `mode`, `bounds`,
    *  `skillVersion`, `label` are each run's, as `open` takes them; `owner` the account the estimate is asked of (default:
-   *  the account `credentials.accountFor` answers for her act). Refused whole, nothing written: no member's act
+   *  the account `ai-accounts.accountFor` answers for her act). Refused whole, nothing written: no member's act
    *  (`run-rules` R18, relayed), or no list of steps (`AI_RUN_NO_CONTEXT`). Otherwise `ai-use.estimate` is asked once for
    *  the batch (its answer, a refusal included, carried as `estimate`), then each step in order: one she cannot see
    *  answers `AI_RUN_STEP_UNKNOWN` for that step alone, a group-placed one `AI_RUN_NO_CONTEXT` (a run sits in an inquiry
@@ -158796,7 +158901,7 @@ var AiRuns = class _AiRuns {
     let suggestions = false;
     if (!outcome) {
       try {
-        const c = credentialsOf(this.ctx);
+        const c = this.#aiAccounts();
         if (ref.level === "group") suggestions = c.groupKeySwitches().suggestions === true;
         else if (ref.level === "member") {
           const u = c.accountUses({ owner: `member:${d.payer}`, viewer: `member:${d.payer}` });
@@ -158854,7 +158959,7 @@ var AiRuns = class _AiRuns {
     }
     return outcome;
   }
-  /** R52 (T41): the account that serves the run's member now, `credentials.accountFor`'s answer as `#accountFor` reads
+  /** R52 (T41): the account that serves the run's member now, `ai-accounts.accountFor`'s answer as `#accountFor` reads
    *  it; it must be the one the run recorded as paying (a run never moves to another), else `NO_ACCOUNT`. */
   async #dispatchAccount(d) {
     const ref = d.payer ? await this.#accountFor(d.payer, "run", d.project) : null;
@@ -159713,7 +159818,7 @@ var AiRuns = class _AiRuns {
    * What each account has spent and may spend is `ai-use`'s (T40-8, K624: this module's R48–R51 moved there whole, the
    * counter and ceilings with their tables): a run asks its `useCheck` before it opens and at each tick, counts each tick's
    * conversations through its `countUsage` under the run's id, and answers its cost from its `actualOf` (one store of the
-   * figures, K2482). Which account pays is `credentials.accountFor`'s. */
+   * figures, K2482). Which account pays is `ai-accounts.accountFor`'s (T48; N996 §5). */
   /** A refusal relayed inside the tick's own shape (`ticked: false` leads, so no `ok` rides beside it). */
   static #shed({ ok: _ok, ...rest }) {
     return rest;
@@ -159726,6 +159831,13 @@ var AiRuns = class _AiRuns {
   /** The `ai-use` module (R52, R76): the injected one, else its factory on this `ctx`. */
   #aiUse() {
     return this.#deps.aiUse || aiUseOf(this.ctx);
+  }
+  /** The `ai-accounts` module (R18, R52, R79; T48, N996 §5): the injected one, else its factory on this `ctx`, which answers
+   *  the one instance `credentials`' factory made at boot with the seal secret (ai-accounts R32). Which account serves an
+   *  act (`accountFor`), whether one is held (`accountReferenceState`, `groupKeyState`) and its switches
+   *  (`accountUses`, `groupKeySwitches`) are read here, never through `credentials`' transitional delegates. */
+  #aiAccounts() {
+    return this.#deps.aiAccounts || aiAccountsOf(this.ctx);
   }
   /** R52 (B5): `ai-use.useCheck` for the paying `owner` and `member`'s use `run` at `ms`: null, or its refusal relayed as
    *  it came. A check that cannot be asked refuses (fail closed, as ai-use R3 fails closed). */
@@ -159796,12 +159908,18 @@ var AiRuns = class _AiRuns {
     return { provider_limit: true, detail: "The Claude account that serves this run has reached the spending limit set on it, so the assistant cannot continue for now. Nothing was lost." };
   }
   /** R52 (K1755): which account serves `member`'s act now, read without unsealing, for the synchronous checks (an ask's
-   *  ceiling check, the wake's decision): `member` when they hold a reference of their own (credentials R23's state, asked
-   *  as that member) or are connected through their subscription (its R43; T38, K2299), else `group` when the group's API key is on and they are an active member (credentials R34's
-   *  state, asked as that member: it answers `{on}` to an active member alone), else null. R35's choice, as its own
-   *  order makes it. */
+   *  ceiling check, the wake's decision): `member` when they hold a reference of their own (ai-accounts R2's state, asked
+   *  as that member) or are connected through their subscription (its R18; T38, K2299), else `group` when the group's API
+   *  key is on and they are an active member (ai-accounts R6's state, asked as that member: it answers `{on}` to an active
+   *  member alone), else null. Its R7's choice, as its own order makes it. */
   #accountServing(member2) {
-    const c = credentialsOf(this.ctx), as = `member:${member2}`;
+    const as = `member:${member2}`;
+    let c;
+    try {
+      c = this.#aiAccounts();
+    } catch {
+      return null;
+    }
     try {
       const s = c.accountReferenceState({ member: as, viewer: as });
       if (s && s.ok === true && s.held === true) return "member";
@@ -159815,14 +159933,14 @@ var AiRuns = class _AiRuns {
       return null;
     }
   }
-  /** R52 (K1503, K1755): the account `credentials.accountFor` (its R35) answers for `member`'s act of `kind` (`run`):
-   *  `{level, kind, key}` when one serves it (R79; T47: a held sign-in's `key` is its token, credentials R70); else `{refusal}`: `NO_ACCOUNT` read as this module's `AI_NO_ACCOUNT`, any
+  /** R52 (K1503, K1755): the account `ai-accounts.accountFor` (its R7, R11) answers for `member`'s act of `kind` (`run`):
+   *  `{level, kind, key}` when one serves it (R79; T47: a held sign-in's `key` is its token, ai-accounts R19); else `{refusal}`: `NO_ACCOUNT` read as this module's `AI_NO_ACCOUNT`, any
    *  other refusal of that service (the group key's notice not yet read, a member not active, the seal) relayed as it
    *  came. The caller keeps the key for the one call it serves, or not at all. */
   async #accountFor(member2, kind2, project = null) {
     let a = null;
     try {
-      a = await credentialsOf(this.ctx).accountFor({
+      a = await this.#aiAccounts().accountFor({
         member: `member:${member2}`,
         act: { kind: kind2, member: `member:${member2}`, ...project ? { project } : {} }
       });
@@ -183403,11 +183521,9 @@ function captureRequestsOps(c, url, body) {
   const b = body && typeof body === "object" ? body : {};
   return {
     capturerequest: () => c.captureRequest(b, { viewer: q10("viewer"), caller: q10("principal") }),
-    capturerequestdrain: () => c.drain({
-      limit: b.limit ?? null,
-      actor: b.actor || "consumer",
-      now: Number.isFinite(b.now) ? b.now : null
-    }),
+    /* R12, R20: the tick's clock is this module's, never a body's (as R6's door reads no `at`): a caller stating one
+       could release every waiting request at once. Only an in-process caller (the scheduler, a test) states `now`. */
+    capturerequestdrain: () => c.drain({ limit: b.limit ?? null, actor: b.actor || "consumer" }),
     capturerequests: () => c.captureRequests({
       run: q10("run"),
       target: q10("target"),
@@ -207244,7 +207360,7 @@ __export(checks_exports63, {
 });
 var at38 = (file, fn, region) => `src/reading-guides/${file} ${fn} > ${region}`;
 var READING_GUIDES_WORDS = Object.freeze({
-  "refusal.GUIDE_KIND_UNKNOWN": "A guide is for one kind of action or document your group's places recognise, and this names another. Nothing was written.",
+  "refusal.GUIDE_KIND_UNKNOWN": "A guide is for one kind of action or document your group's places recognize, and this names another. Nothing was written.",
   "refusal.GUIDE_ITEM_UNSOURCED": "Each route in a procedure guide cites the law, rule or published procedure it rests on, so members can read the source. This one cites nothing. Add its citation. Nothing was written.",
   "guide.procedure.legalinfo": "Legal information, not legal advice"
 });
@@ -207312,7 +207428,7 @@ var READING_GUIDES_CHECKS = Object.freeze({
   GUIDE_NO_GROUP_SLUG: {
     check: "C-144.13",
     where: at38("index.mjs", "slugRefusal", "is-guide-slug"),
-    translation: "An offered guide is labelled with your group's short name, and none is recorded for this group, so nothing can be offered. Whoever runs your group's Civicsmith can set it. Nothing was sent."
+    translation: "An offered guide is labeled with your group's short name, and none is recorded for this group, so nothing can be offered. Whoever runs your group's Civicsmith can set it. Nothing was sent."
   },
   GUIDE_RETIRE_NOT_APPROVER: {
     check: "C-144.14",
@@ -210590,7 +210706,7 @@ var PROCEDURE_GUIDE_LABEL = Object.freeze({
   says: READING_GUIDES_WORDS["guide.procedure.legalinfo"]
 });
 var GUIDE_PROPOSAL_STATES = Object.freeze({
-  machine_proposed: "a machine credential proposed this reading guide. That is machine work, labelled as machine work: it can propose what to look for and it can never write, review or approve a guide. It is not a guide until a member writes one based on it.",
+  machine_proposed: "a machine credential proposed this reading guide. That is machine work, labeled as machine work: it can propose what to look for and it can never write, review or approve a guide. It is not a guide until a member writes one based on it.",
   member_proposed: "a member proposed this reading guide. It is not a guide until a member writes one based on it.",
   unstated: "who proposed this reading guide is not recorded. It is not a guide until a member writes one based on it."
 });
@@ -210772,7 +210888,7 @@ var ReadingGuides = class {
   }
   /* ================================================================ R12: a machine's proposal, apart */
   /** R12, R13: `{kind, items, purpose?, run, by}`, `by` a machine credential and `run` the run that proposed it. Stored
-   *  apart from the guides, labelled; it is no guide. Answers `{ok, proposal, purpose, label}`. */
+   *  apart from the guides, labeled; it is no guide. Answers `{ok, proposal, purpose, label}`. */
   guidePropose(args) {
     const { kind: kind2, items, purpose: p3, run: run2, by } = argsOf2(args);
     if (!str50(by) || !isMachineIdentity(str50(by)))
@@ -210882,7 +210998,7 @@ var ReadingGuides = class {
     this.#channel = { module, fn };
     return { ok: true, module };
   }
-  /** R6: `{guide, by}` by an active member: the group's guide as canonical bytes and their digest, labelled with this
+  /** R6: `{guide, by}` by an active member: the group's guide as canonical bytes and their digest, labeled with this
    *  group's slug, for another group to adopt. Answers `{ok, guide, bytes, digest, group, channel?}`. */
   guideOffer(args) {
     return this.#export(argsOf2(args), GUIDE_OFFER_FORMAT, "offer");
@@ -211182,7 +211298,7 @@ function offerable(row17) {
   return null;
 }
 function slugRefusal() {
-  return refusal33("GUIDE_NO_GROUP_SLUG", "no group slug is recorded, so an offer cannot be labelled. Nothing was sent.");
+  return refusal33("GUIDE_NO_GROUP_SLUG", "no group slug is recorded, so an offer cannot be labeled. Nothing was sent.");
 }
 function readingGuidesOps(s, url, body) {
   const qp = (k) => url.searchParams.get(k);
@@ -218044,20 +218160,16 @@ async function occurrenceStates(self, ids, author, now) {
   }
   return out;
 }
-function keptAway(creds) {
+function keptAway(accounts) {
   let away;
   try {
-    away = creds && typeof creds.aiKeptAway === "function" ? creds.aiKeptAway({ use: STANDING_USE }) : void 0;
+    away = accounts && typeof accounts.aiKeptAway === "function" ? accounts.aiKeptAway({ use: STANDING_USE }) : void 0;
   } catch {
     away = void 0;
   }
   if (away === null) return null;
-  const row17 = away && typeof away === "object" && away.ok === false;
-  return {
-    condition: "kept_away",
-    code: row17 ? away.code || away.reason || null : null,
-    translation: row17 ? away.translation ?? null : null
-  };
+  const r = away && typeof away === "object" && away.ok === false && (away.code || away.reason) ? away : KEPT_AWAY_UNREADABLE;
+  return { condition: "kept_away", code: r.code || r.reason, translation: r.translation ?? null };
 }
 var SWITCH_OF = { own: "member", group: "group", project: "project" };
 function accountHeld(r, level) {
@@ -218078,13 +218190,13 @@ async function heldBack(self, r, at49) {
   const author = r.author;
   if (self.record.getSetting(STANDING_AI_SETTING) !== true) return { held: { condition: "switch_off", switch: "copy" } };
   if (!self.answerer) return { held: { condition: "not_deployed" } };
-  const creds = self.dep("credentials");
-  const away = keptAway(creds);
+  const accounts = self.dep("accounts");
+  const away = keptAway(accounts);
   if (away) return { held: away };
   const act2 = { kind: STANDING_USE, member: author };
   let acct = null;
   try {
-    acct = creds && typeof creds.accountFor === "function" ? await creds.accountFor({ member: author, act: act2 }) : null;
+    acct = accounts && typeof accounts.accountFor === "function" ? await accounts.accountFor({ member: author, act: act2 }) : null;
   } catch {
     acct = null;
   }
@@ -218102,6 +218214,7 @@ async function heldBack(self, r, at49) {
   if (limit === void 0) return { held: { condition: "limit", code: null, translation: null } };
   if (limit && limit.ok === false)
     return { held: { condition: "limit", code: limit.code || limit.reason, translation: limit.translation ?? null } };
+  const creds = self.dep("credentials");
   let g = null;
   try {
     g = await creds.aiGrantMintStanding({ member: author, question: r.question });
@@ -218523,13 +218636,14 @@ var Answers = class {
     return l2.viewer === viewer ? l2 : null;
   }
   /** R2, R30: whether an id names a held bundle the viewer may not see, or one of a project that keeps its material
-   *  away from AI for `use` (`credentials.projectsKeptAway`, its R57: the project's own bundle or one it holds). When
-   *  the limits cannot be read, every project's bundle is dropped (fail closed). */
+   *  away from AI for `use` (`ai-accounts.projectsKeptAway`, its R22: the project's own bundle or one it holds). When
+   *  the limits cannot be read (the read throws, answers no list, or ai-accounts cannot be reached), every project's
+   *  bundle is dropped (fail closed). */
   hidden(viewer, use = "ask") {
-    const creds = this.dep("credentials");
-    let away = [];
+    const accounts = this.dep("accounts");
+    let away = null;
     try {
-      away = creds && typeof creds.projectsKeptAway === "function" ? creds.projectsKeptAway({ use }) : [];
+      away = accounts && typeof accounts.projectsKeptAway === "function" ? accounts.projectsKeptAway({ use }) : null;
     } catch {
       away = null;
     }
@@ -218624,10 +218738,9 @@ var Answers = class {
   /* ===================================================================== *
    * AN ASK'S ACCOUNT (R30; D38, B3)
    * ===================================================================== */
-  /** R30: the account that serves a member's ask (or, K2508, a draft: `kind` `draft`), `credentials.accountFor` asked
-   *  with that kind (`ask` when absent) and the ask's
-   *  `project` (one the member has joined: credentials R56 refuses any other, `PROJECT_ACT_NOT_A_PARTICIPANT`, or as
-   *  absent), then judged by `ai-use.useCheck` for the account chosen, in place of the ceiling. Answers
+  /** R30: the account that serves a member's ask (or, K2508, a draft: `kind` `draft`), `ai-accounts.accountFor` asked
+   *  with that kind (`ask` when absent) and the ask's `project` (one the member has joined: ai-accounts R11 refuses any
+   *  other, `PROJECT_ACT_NOT_A_PARTICIPANT`, or as absent), then judged by `ai-use.useCheck` for the account chosen, in place of the ceiling. Answers
    *  `{ok: true, account, owner}` (`owner` the paying account, as `ai-use` R1 spells it) or the refusal unchanged
    *  (`AI_KEPT_AWAY`, `PROJECT_AI_KEPT_AWAY`, `AI_USE_SWITCHED_OFF`, `NO_ACCOUNT`, `AI_LIMIT_REACHED`, ...). A limit that
    *  cannot be judged, or an account that cannot be read, refuses with no row (`LIMITS_UNREADABLE`,
@@ -218635,7 +218748,7 @@ var Answers = class {
   async askAccount({ member: member2 = null, project = null, at: at49 = null, kind: kind2 = null } = {}) {
     const use = kind2 === null || kind2 === void 0 ? "ask" : kind2;
     if (!ASK_ACCOUNT_KINDS.includes(use)) {
-      const r = ACCOUNT_CHECKS_VIEW.NOT_YOUR_ACCOUNT;
+      const r = AI_ACCOUNT_CHECKS.NOT_YOUR_ACCOUNT;
       return {
         ok: false,
         reason: "NOT_YOUR_ACCOUNT",
@@ -218645,11 +218758,11 @@ var Answers = class {
         detail: `an ask's account is read for an ask or a draft only, not for '${String(use).slice(0, 40)}'. Nothing was used.`
       };
     }
-    const creds = this.dep("credentials");
+    const accounts = this.dep("accounts");
     const act2 = { kind: use, member: member2, ...project !== null && project !== void 0 ? { project } : {} };
     let account2 = null;
     try {
-      account2 = creds && typeof creds.accountFor === "function" ? await creds.accountFor({ member: member2, act: act2 }) : null;
+      account2 = accounts && typeof accounts.accountFor === "function" ? await accounts.accountFor({ member: member2, act: act2 }) : null;
     } catch {
       account2 = null;
     }
@@ -218801,7 +218914,8 @@ function answersOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const useCheck = d.useCheck || ((x) => aiUseOf(host, { record, membership }).useCheck(x));
-    a = new Answers({ ...d, storage: d.storage || storage, record, membership, useCheck });
+    const accounts = d.accounts || (() => aiAccountsOf(host, { record, membership }));
+    a = new Answers({ ...d, storage: d.storage || storage, record, membership, useCheck, accounts });
     instances68.set(storage, a);
     const declared2 = record.declareTable("answers", ANSWERS_TABLES);
     if (!declared2 || declared2.ok === false) throw new Error(`answers' tables could not be declared: ${JSON.stringify(declared2)}`);
@@ -229548,6 +229662,7 @@ __export(skilldoctrine_exports, {
   FILING_TEMPLATE_ACT: () => FILING_TEMPLATE_ACT,
   FILING_TEMPLATE_ACTS: () => FILING_TEMPLATE_ACTS,
   GATE_ADDRESS: () => GATE_ADDRESS,
+  GROUP_LOCAL_WORDS: () => GROUP_LOCAL_WORDS,
   HELD_ADDRESS_ONLY: () => HELD_ADDRESS_ONLY,
   INTAKE_QUESTIONS: () => INTAKE_QUESTIONS,
   INTAKE_SENTENCE: () => INTAKE_SENTENCE,
@@ -229570,6 +229685,7 @@ __export(skilldoctrine_exports, {
   LICENSES_A_CONCLUSION: () => LICENSES_A_CONCLUSION,
   LICENSES_NOTHING: () => LICENSES_NOTHING,
   LOOP_TERMINATION_EVIDENCE: () => LOOP_TERMINATION_EVIDENCE,
+  OFFICIAL_LOCAL_NAMES: () => OFFICIAL_LOCAL_NAMES,
   PERMITTED_AUTO_COMPOSITION: () => PERMITTED_AUTO_COMPOSITION,
   PILOT_SOURCE: () => PILOT_SOURCE,
   PILOT_WIZARD_SECTION: () => PILOT_WIZARD_SECTION,
@@ -229580,6 +229696,9 @@ __export(skilldoctrine_exports, {
   PROHIBITION_SET_IS_STANDING: () => PROHIBITION_SET_IS_STANDING,
   PUBLICATION_SOURCE: () => PUBLICATION_SOURCE,
   READING_CLAUSES: () => READING_CLAUSES,
+  READING_TRANSLATION_ACT: () => READING_TRANSLATION_ACT,
+  READING_TRANSLATION_CLAUSES: () => READING_TRANSLATION_CLAUSES,
+  READING_TRANSLATION_TASK: () => READING_TRANSLATION_TASK,
   RECORD_CONTENT_IS_DATA: () => RECORD_CONTENT_IS_DATA,
   RESEARCH_BOUNDARY_CLAUSES: () => RESEARCH_BOUNDARY_CLAUSES,
   RESEARCH_BOUNDARY_NOTE: () => RESEARCH_BOUNDARY_NOTE,
@@ -229617,6 +229736,7 @@ __export(skilldoctrine_exports, {
   procedureGuideLayer: () => procedureGuideLayer,
   readingGuideLayer: () => readingGuideLayer,
   readingLayer: () => readingLayer,
+  readingTranslationLayer: () => readingTranslationLayer,
   reportsAs: () => reportsAs,
   suggestionsLayer: () => suggestionsLayer,
   wizardAuthoringLayer: () => wizardAuthoringLayer,
@@ -230213,7 +230333,7 @@ var RunProductions = class _RunProductions {
     basisVersions,
     extraction = null,
     steps = null,
-    credentials = null,
+    aiAccounts = null,
     legEarning = null,
     now = null
   }) {
@@ -230229,7 +230349,7 @@ var RunProductions = class _RunProductions {
     this.basisVersions = basisVersions;
     this.extraction = extraction;
     this.steps = steps;
-    this.credentials = credentials;
+    this.aiAccounts = aiAccounts;
     this.legEarning = legEarning;
     this.now = typeof now === "function" ? now : () => Date.now();
   }
@@ -231277,7 +231397,7 @@ Changes: reading '${name3}' proposed as ${kind2}, in state suggested, carrying r
    *  read and spent through ai-runs as `mints` is (R18). A page is charged once per run: one read again costs nothing.
    *  A slice the bound cuts says so and says how far the run read; a run whose bound is spent is refused, saying how
    *  far it read in this document. The text is the record's own (extraction R36's units), asked after the viewer's
-   *  gate. A document under a "no AI" material limit is refused whatever the bound (credentials R57). */
+   *  gate. A document under a "no AI" material limit is refused whatever the bound (ai-accounts R21, R22). */
   readPages({ run: run2, bundleId, from = 0, viewer = null, caller = null, at: at49 = null } = {}) {
     const held2 = this.#productionRun({
       run: run2,
@@ -231299,14 +231419,19 @@ Changes: reading '${name3}' proposed as ${kind2}, in state suggested, carrying r
     const { bundle, sha: sha2 } = doc;
     const limits = [];
     try {
-      const g = this.credentials.aiKeepAwayState();
+      const g = this.aiAccounts.aiKeepAwayState();
       limits.push({ on: g.on, uses: g.uses });
     } catch {
       limits.push({ on: null, uses: null });
     }
     if (bundle.project) {
-      const kept = this.credentials.projectsKeptAway({ use: "read" });
-      if (kept === null) limits.push({ on: null, uses: null });
+      let kept = null;
+      try {
+        kept = this.aiAccounts.projectsKeptAway({ use: "read" });
+      } catch {
+        kept = null;
+      }
+      if (!Array.isArray(kept)) limits.push({ on: null, uses: null });
       else if (kept.includes(bundle.project)) limits.push({ on: true, uses: ["read"] });
     }
     const noAi = checkPagesRead({ limits });
@@ -231792,8 +231917,10 @@ function runProductionsOf(host, deps) {
       citation: d.citation || citationOf(host, { record, membership, content }),
       basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
       extraction: d.extraction || extractionOf(host, { record, membership }),
-      /* T41-24: R24's "no AI" read is this module's (K2482); R21's step is steps' (B4). */
-      credentials: d.credentials || credentialsOf(host, { record, membership }),
+      /* T41-24: R24's "no AI" read is this module's (K2482), its limits ai-accounts' (T48,
+         N996 §5; credentials' factory makes that instance first, with its seal secret, R32);
+         R21's step is steps' (B4). */
+      aiAccounts: d.aiAccounts || aiAccountsOf(host, { record, membership }),
       steps: d.steps || stepsOf(host, { record, membership }),
       legEarning: d.legEarning || legEarningOf(host, { record, membership, content }),
       now: d.now || null
@@ -232746,6 +232873,16 @@ function writingHelpLayer(catalog) {
 }
 var DECISIONS_SOURCE = "docs/development/DECISIONS.md";
 var LANGUAGE_SECTION = "\xA7L";
+var OFFICIAL_LOCAL_NAMES = Object.freeze({
+  text: "local words: official names of offices, laws, programs and places stay as they are, with an explanation in the member's language beside them on first use and on hover; where the place publishes an official translation of a name, it is used with its source, held with the place's researched rules and arriving with releases",
+  source: DECISIONS_SOURCE,
+  section: "DEC-157"
+});
+var GROUP_LOCAL_WORDS = Object.freeze({
+  text: "the group's own local words are its to translate as ordinary words.",
+  source: DECISIONS_SOURCE,
+  section: "DEC-157"
+});
 var INTERFACE_TRANSLATION_CLAUSES = Object.freeze([
   /* (a): only the missing words, each a labelled draft, kept or corrected by a granted member. */
   Object.freeze({
@@ -232776,16 +232913,8 @@ var INTERFACE_TRANSLATION_CLAUSES = Object.freeze([
     section: "DEC-127"
   }),
   /* (c): official local names stay as they are; a published official translation is used with its source. */
-  Object.freeze({
-    text: "local words: official names of offices, laws, programs and places stay as they are, with an explanation in the member's language beside them on first use and on hover; where the place publishes an official translation of a name, it is used with its source, held with the place's researched rules and arriving with releases",
-    source: DECISIONS_SOURCE,
-    section: "DEC-157"
-  }),
-  Object.freeze({
-    text: "the group's own local words are its to translate as ordinary words.",
-    source: DECISIONS_SOURCE,
-    section: "DEC-157"
-  }),
+  OFFICIAL_LOCAL_NAMES,
+  GROUP_LOCAL_WORDS,
   /* (d), (e): a protected word kept unchanged shows once one speaker keeps it; changed or typed, it waits for the
      second check, an administrator's reading of the assistant's translation back into English among them. */
   Object.freeze({
@@ -232893,6 +233022,60 @@ function actionDraftingLayer(catalog) {
         absent_because: `the plane's published catalogue holds no ${STATUS_REPORT_ACT.id} act, the one act through which a member asks the assistant to draft a plan's status report from the items handed to it, so this layer carries no task for work no draft can do.`
       },
       note: "this layer is INSTRUCTION. A draft is answered to the member who asked for it, labelled as machine work, and stored nowhere; it never rewrites the member's text, and what it reads is fenced by the modules that serve it. It becomes the group's only by a member's own acts, which refuse a machine. A run ignoring every word here gets past nothing."
+    }
+  };
+}
+var READING_TRANSLATION_CLAUSES = Object.freeze([
+  Object.freeze({
+    text: `The group's own writing (notes, questions, findings, notices) can be read in a member's language on request: the assistant drafts the translation, labelled "Machine translation \xB7 original in English", with the original one tap away; it never replaces the original.`,
+    source: INTERACTION_SOURCE,
+    section: LANGUAGE_SECTION
+  }),
+  Object.freeze({
+    text: `the assistant drafts the translation, labelled "Machine translation \xB7 original in English", the original one tap away; a translation never replaces the original, and a member's own words stay theirs.`,
+    source: DECISIONS_SOURCE,
+    section: "DEC-127"
+  }),
+  Object.freeze({
+    text: "Signed and published records stay in the language they were signed in.",
+    source: INTERACTION_SOURCE,
+    section: LANGUAGE_SECTION
+  }),
+  Object.freeze({
+    text: "Signed and published records stay in the language they were signed in; a translation of a published case is labelled unofficial and links the signed original (principle 8.5).",
+    source: DECISIONS_SOURCE,
+    section: "DEC-127"
+  }),
+  Object.freeze({
+    text: "official local names stay as they are with an explanation beside them",
+    source: INTERACTION_SOURCE,
+    section: LANGUAGE_SECTION
+  }),
+  OFFICIAL_LOCAL_NAMES,
+  GROUP_LOCAL_WORDS
+]);
+var READING_TRANSLATION_ACT = Object.freeze({ id: "readtranslate", defined_by: "plane R50" });
+var READING_TRANSLATION_TASK = "the assistant translates the passage it is handed into the member's language whole, adding nothing and summarizing nothing, and leaves quotations, figures, dates, ids and citations as they stand. The translation is a labelled machine draft for the member who asked, held nowhere; the original stays as it was written.";
+function readingTranslationLayer(catalog) {
+  const byId = catalogueById(catalog);
+  if (!byId.has(READING_TRANSLATION_ACT.id)) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the wizard scripts layer states its own. */
+    absent_because: `the plane's published catalogue holds no ${READING_TRANSLATION_ACT.id} act, the one act through which a member asks to read the group's own writing in her language, so this layer carries no doctrine for work no draft can do.`
+  };
+  const read3 = actReader(byId, "reading translation", "the reading translation act");
+  return {
+    load_when: "a member asks to read a note, question, finding or notice in her language",
+    sourcing: "authored",
+    body: {
+      clauses: READING_TRANSLATION_CLAUSES,
+      task: READING_TRANSLATION_TASK,
+      /* The mode a draft is answered in, run-rules' (its R21), read and never typed, as writing help's. */
+      mode: DRAFT_MODE.mode,
+      acts: { drafts: [read3(READING_TRANSLATION_ACT)] },
+      note: "this layer is INSTRUCTION, and this pack reads no account, language or passage: which account serves the member, the language she reads in and the passage she asked about are read for each call by the modules that serve it. The translation is answered to her alone, labelled as machine work and stored nowhere, and the original is never changed. A run ignoring every word here gets past nothing."
     }
   };
 }
@@ -269735,6 +269918,10 @@ var SOURCING = {
   /* skilldoctrine.mjs, BIO_Action_v0_2.md §4 rules 1-3, 9, 12, 16, 19, 21 (R45), the status report task (R48) */
   action_drafting_unpublished: "absent",
   /* while op=affordances publishes none of the action draft acts nor the status report act (R45, R48) */
+  reading_translation: "authored",
+  /* skilldoctrine.mjs, Interaction Constructs §L, DEC-127 (3), (4), DEC-157 (6) (R49) */
+  reading_translation_unpublished: "absent",
+  /* while op=affordances publishes no reading translation act (R49) */
   procedure_guide: "guide",
   /* reading-guides procedureGuidesFor's items, passed by the caller, scanned by R16 (R46) */
   procedure_guide_none: "absent",
@@ -269962,6 +270149,10 @@ function disclosedLayers({
        an audience, bearings on a reply) works under, with its acts read from the published catalogue; R48 (T46; N920):
        and the status report task, its act read on its own; a stated absence while the plane publishes none of them. */
     action_drafting: actionDraftingLayer(catalog),
+    /* R49 (T48; N670; DEC-127 (3), (4)). The doctrine a draft translating the group's own writing into a member's
+       language works under, with its act read from the published catalogue; a stated absence while the plane publishes
+       no reading translation act. */
+    reading_translation: readingTranslationLayer(catalog),
     /* R46 (T45; N858). The procedure guides for the kind of action a run or draft concerns, passed by its caller
        (`reading-guides.procedureGuidesFor`, its R13), their items only and scanned by R16, or a stated absence. */
     procedure_guide: procedureGuideLayer(procedureGuides),
@@ -282683,7 +282874,7 @@ var QuestionExplorer = class {
     storage,
     record,
     membership,
-    credentials,
+    aiAccounts,
     connections,
     retrieval,
     inquiry,
@@ -282703,7 +282894,7 @@ var QuestionExplorer = class {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.credentials = credentials;
+    this.aiAccounts = aiAccounts;
     this.connections = connections;
     this.retrieval = retrieval;
     this.inquiry = inquiry;
@@ -282965,20 +283156,19 @@ var QuestionExplorer = class {
     return ["group", ...this.#drawing(w.question).map((p3) => `project:${p3}`), ...w.recipients.map((m) => `member:${m}`)];
   }
   /** R3 (N796, K2425): a member's account served by her sign-in explores only while that account's `explore` use is
-   *  on; whichever of her accounts serves, a switch at `no` is refused here as `ai-use` refuses it. */
+   *  on; whichever of her accounts serves, a switch at `no` is refused here as `ai-use` refuses it. Read through
+   *  `ai-accounts.accountUsesOf` (its R17), the in-plane read for an account this module does not own, never
+   *  `accountUses` as that member; an account that cannot be read is refused (fail closed: no switch reads as on). */
   #switchedOff(owner) {
-    if (!owner.startsWith("member:") || !this.credentials || typeof this.credentials.accountUses !== "function") return null;
-    const u = this.credentials.accountUses({ owner, viewer: owner });
-    if (!u || u.ok === false) return null;
-    if (u.uses && u.uses.explore === "no")
-      return {
-        ok: false,
-        code: "EXPLORE_NOT_ENABLED",
-        reason: "EXPLORE_NOT_ENABLED",
-        owner,
-        signin: !!(u.accounts && u.accounts.signin && u.accounts.signin.held && !(u.accounts.reference && u.accounts.reference.held))
-      };
-    return null;
+    if (!owner.startsWith("member:")) return false;
+    let u;
+    try {
+      u = this.aiAccounts.accountUsesOf({ owner });
+    } catch {
+      return true;
+    }
+    if (!u || u.unreadable === true) return true;
+    return !!(u.uses && u.uses.explore === "no");
   }
   #considered(question, owner, day2) {
     return this.#one(`SELECT outcome, at FROM explore_considered WHERE question=? AND owner=? AND day=?`, question, owner, day2);
@@ -283049,8 +283239,7 @@ var QuestionExplorer = class {
       for (const owner of this.#ownersFor(w)) {
         const prior = this.#considered(w.question, owner, day2);
         if (prior && prior.outcome === "refused") continue;
-        const off = this.#switchedOff(owner);
-        if (off) {
+        if (this.#switchedOff(owner)) {
           this.#consider(w.question, owner, day2, "refused", at49);
           out.refused += 1;
           continue;
@@ -283362,7 +283551,7 @@ var QuestionExplorer = class {
   /* ---------------------------------------------------------------- R13: reading inside documents */
   /** R13: the run reads inside a held document through `run-productions` (its R24 `readPages`): a few pages at a time
    *  within the run's `pages` bound (`run-rules` R26), never a document under a "no AI" material limit on `read`
-   *  (`credentials` R57; run-productions asks `run-rules`' `checkPagesRead`, the one site), and says how far it read.
+   *  (`ai-accounts` R22; run-productions asks `run-rules`' `checkPagesRead`, the one site), and says how far it read.
    *  Asked here first: the document is within the paying account's sight (R3), and no limit keeps it from `explore`.
    *  What it proposes while reading is `run-productions` R21's, under the step this answer names. */
   read({ run: run2, bundleId, from = null, caller = null, at: at49 = null } = {}) {
@@ -283399,9 +283588,9 @@ var QuestionExplorer = class {
       } };
     let k = null;
     try {
-      k = this.credentials.aiKeptAway({ project: str54(b.project), use: EXPLORE_USE });
+      k = this.aiAccounts.aiKeptAway({ project: str54(b.project), use: EXPLORE_USE });
     } catch {
-      k = { code: "AI_KEPT_AWAY" };
+      k = KEPT_AWAY_UNREADABLE;
     }
     if (k) return { refusal: this.#refuse(
       "EXPLORE_READ_KEPT_AWAY",
@@ -283668,7 +283857,7 @@ function questionExplorerOf(host, deps) {
       storage: d.storage || host.storage,
       record,
       membership,
-      credentials: d.credentials || credentialsOf(host, { record, membership }),
+      aiAccounts: d.aiAccounts || aiAccountsOf(host, { record, membership }),
       connections: d.connections || connectionsOf(host),
       retrieval: d.retrieval || retrievalOf(host),
       inquiry: d.inquiry || inquiryOf(host),
