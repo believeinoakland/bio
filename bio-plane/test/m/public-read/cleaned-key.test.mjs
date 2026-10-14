@@ -138,3 +138,22 @@ test("R35 controls: a kind other than the two is written null by the writer and 
   assert.equal(by["INFO-2026-0001-minutes"].obscured, null);
   assert.equal(Object.hasOwn(by["INFO-2026-0001-minutes"], "label_key"), false);
 });
+
+test("R35 (T48; N1021; K3114) a row whose kind was written null keys as a row stating none: the frozen cleaned-copy words key document.cleaned.label whatever the mark, any other label keys by R3's marked rule; a stated kind is not so read", async () => {
+  const rows = [
+    copy("INFO-2026-0080-frozen", AT_MARKER, { kind: "scan", marked: false }),
+    copy("INFO-2026-0081-none", AT_MARKER, { marked: false }),
+    copy("INFO-2026-0082-photo", OBSCURED_LABEL, { kind: "scan", marked: false }),
+    copy("INFO-2026-0083-photo-none", OBSCURED_LABEL, { marked: false }),
+    copy("INFO-2026-0084-markedphoto", REWORDED, { kind: "scan", marked: true }),
+    copy("INFO-2026-0085-statedphoto", AT_MARKER, { kind: "photo", marked: false }),
+  ];
+  const { by } = await keyed(rows);
+  for (const r of rows.slice(0, 5)) assert.equal(by[r.ref].obscured.kind, null, `${r.ref}: written null`);
+  assert.equal(by["INFO-2026-0080-frozen"].label_key, "document.cleaned.label");
+  assert.equal(by["INFO-2026-0080-frozen"].label_key, by["INFO-2026-0081-none"].label_key);
+  assert.equal(by["INFO-2026-0082-photo"].label_key, "photo.published.label");
+  assert.equal(by["INFO-2026-0082-photo"].label_key, by["INFO-2026-0083-photo-none"].label_key);
+  assert.equal(by["INFO-2026-0084-markedphoto"].label_key, "photo.obscured.label");
+  assert.equal(by["INFO-2026-0085-statedphoto"].label_key, "photo.published.label", "control: a stated photo kind is the photo rule even under the frozen words");
+});
