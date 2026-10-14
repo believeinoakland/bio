@@ -5,7 +5,7 @@
    map, so the store's door that composes those maps (plane R5) reaches its handler. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { O, world, call, opCalls, refused, aik, cred, FORGED } from "./harness.mjs";
+import { M, O, world, call, opCalls, refused, aik, cred, FORGED } from "./harness.mjs";
 import { projectRosterOps } from "../../../src/project-roster/index.mjs";
 import { basisVersionsOps } from "../../../src/basis-versions/index.mjs";
 import { citationOps } from "../../../src/citation/index.mjs";
@@ -252,7 +252,7 @@ test("R83 (T47; K3144; admission's `background`, credentials R71 (7)): a request
 
 /* ================================================================ R84 */
 
-test("R84 (T47; DEC-205; instance-setup R84, R86): `GET /app/assets/group-logo` answers the stored logo — the namespace's store-internal `grouplogo` route's bytes — with its type, `no-store` and `nosniff`, reading no credential; `store=scratch` reads scratch's; controls: none set, a type that is not PNG or JPEG, a refusal and a silence are each 404 with no record's body", async () => {
+test("R84 (T47; DEC-205; instance-setup R84, R86; K3149): `GET /app/assets/group-logo` answers the stored logo through instance-setup's `groupLogoAsset` — the namespace's store-internal `grouplogo` route's bytes — with its type, `no-store` and `nosniff`, reading no credential; `store=scratch` reads scratch's; controls: none set is 404 with no body; a type that is not PNG or JPEG, a refusal and a silence are the store's silence, never their bytes", async () => {
   const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
   const logo = (status, type, body) => (c) => (c.route === "grouplogo"
     ? new Response(body, { status, headers: type ? { "content-type": type } : {} }) : null);
@@ -263,17 +263,38 @@ test("R84 (T47; DEC-205; instance-setup R84, R86): `GET /app/assets/group-logo` 
     assert.deepEqual([r.headers.get("content-type"), r.headers.get("cache-control"), r.headers.get("x-content-type-options")],
                      ["image/png", "no-store", "nosniff"]);
     assert.deepEqual(env.calls.map((c) => [c.ns, c.route]), [[params.store ?? "bio", "grouplogo"]], "no credential read");
-    assert.equal(Buffer.from(r.text, "latin1").length > 0, true);
   }
-  const bytes = await (await (await import("./harness.mjs")).M.makeFetch({})(
-    new Request("https://plane.example/app/assets/group-logo"), world({ answer: logo(200, "image/jpeg", PNG) }).env)).arrayBuffer();
+  const bytes = await (await M.makeFetch({})(new Request("https://plane.example/app/assets/group-logo"),
+    world({ answer: logo(200, "image/jpeg", PNG) }).env)).arrayBuffer();
   assert.deepEqual(new Uint8Array(bytes), PNG, "the bytes as stored");
-  for (const [label, answer] of [["none set", logo(404, null, null)], ["not an image", logo(200, "text/html", "<script>")],
+  const none = await call(world({ answer: logo(404, null, null) }).env, { path: "/app/assets/group-logo" });
+  assert.deepEqual([none.status, none.text], [404, ""]);
+  for (const [label, answer] of [["not an image", logo(200, "text/html", "<script>")],
                                  ["a refusal", logo(400, "application/json", JSON.stringify({ ok: false, reason: "X" }))],
                                  ["a silence", () => { throw new Error("down"); }]]) {
     const { env } = world({ answer: (c) => (c.route === "grouplogo" ? answer(c) : null) });
     const r = await call(env, { path: "/app/assets/group-logo" });
-    assert.equal(r.status, 404, label);
-    assert.equal(r.text.includes("script") || r.text.includes("reason"), false, label);
+    refused(r, 502, "STORE_DID_NOT_ANSWER", "C-69.2");
+    assert.equal(r.text.includes("script"), false, label);
+  }
+});
+
+test("R84 (T47; DEC-205; op-declarations R59; instance-setup R84, R85): `grouplogoset` and `grouplanguagesset` reach instance-setup's routes for an administrator's session with `by` the session's member, the body (the logo as JSON base64, `{raw, rawType}`; the languages) as sent, a caller's `by` deleted; `grouplanguages` is a public read relayed credential-free from the namespace named; control: `grouplanguages` named with `store=scratch` reads scratch's", async () => {
+  for (const op of ["grouplogoset", "grouplanguagesset", "grouplanguages"]) assert.ok(OPS[op], `${op} is declared`);
+  assert.equal(OPS.grouplanguages.classes, null, "grouplanguages is public");
+  const { env, S } = world();
+  for (const [op, body] of [["grouplogoset", { raw: "iVBORw0KGgo=", rawType: "image/png" }], ["grouplanguagesset", { languages: ["en", "es"] }]]) {
+    env.calls.length = 0;
+    const r = await call(env, { op, token: S.founder, method: "POST", params: { by: FORGED }, body: { ...body, by: FORGED } });
+    assert.equal(r.status, 200, `${op}: ${r.text.slice(0, 200)}`);
+    const inner = opCalls(env).find((c) => c.route === op);
+    assert.equal(inner.params.by, "admin");
+    assert.deepEqual(inner.body, body);
+  }
+  for (const [params, ns] of [[{}, "bio"], [{ store: "scratch" }, "scratch"]]) {
+    env.calls.length = 0;
+    const r = await call(env, { op: "grouplanguages", params });
+    assert.equal(r.status, 200, r.text.slice(0, 200));
+    assert.deepEqual(env.calls.map((c) => [c.ns, c.route]), [[ns, "grouplanguages"]]);
   }
 });

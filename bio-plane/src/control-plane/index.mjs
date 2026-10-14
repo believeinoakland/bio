@@ -31,7 +31,7 @@ import { draftDue, draftAsk, checkedDraft, untestedOf, TRANSLATION_DRAFT, TRANSL
 import { archiveDocuments, promoteArchive } from "./archive.mjs";
 /* R75 (T46; N897 (1)): the member interface's page and its assets, beside `/`: interface-shell's page over the four screen
    modules' screens, and interface-assets' files. */
-import { appRouteOf, appPage, appAsset, logoAsked, groupLogo } from "./app.mjs";
+import { appRouteOf, appPage, appAsset, logoAsked } from "./app.mjs";
 import { interfacePage } from "../interface-shell/index.mjs";
 import { ASSET_FILES } from "../interface-assets/index.mjs";
 import { SCREENS as SETTINGS_SCREENS } from "../screens-settings/index.mjs";
@@ -44,7 +44,7 @@ import { subscriptionSignin, leaverOf, signoutLeaver } from "./signin.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
-import { instanceGroupOp, groupIdentityOp } from "../setup.mjs";
+import { instanceGroupOp, groupIdentityOp, groupLogoAsset } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
 /* R45 (DEC-111, K1170): a registered public read is served by public-read's door read (its R18). */
 import { publicReadDoorRead } from "../public-read/door.mjs";
@@ -622,7 +622,7 @@ export function makeFetch(hooks = {}) {
       if (appAddress) return json(appAddress.body, appAddress.status);
       /* R84 (T47; DEC-205): the group's logo, read from the namespace addressed (`store=scratch` reads scratch) */
       if (appRoute === "asset" && logoAsked(url))
-        return groupLogo(req, env.STORE.get(env.STORE.idFromName(url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio")));
+        return groupLogoAsset(env, url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio", { json, storeSilent, storeRefusal, doAnswer });
       return appRoute === "page" ? appPage(req, { interfacePage, screens: APP_SCREENS })
         : appAsset(req, url, { assets: ASSET_FILES, version: env.VERSION });
     }
@@ -826,6 +826,9 @@ export function makeFetch(hooks = {}) {
         return relayAnswer(invStub.fetch(new Request(`http://do/${op}`, {
           method: "POST", body: JSON.stringify(body) })), op);
       }
+      /* R84 (T47; DEC-205; instance-setup R85, R86): the languages the group's members use, a public read, answered from
+         the store the caller names as the invitation's two steps are; nothing of the caller crosses. */
+      if (op === "grouplanguages") return relayAnswer(invStub.fetch(new Request("http://do/grouplanguages", { method: "GET" })), op);
       /* R54 (membership R101, R104; admission R17): the group website's and the join page's calls, answered as the
          invitation's two steps are, from the store the caller names (admission R3 lists them among the public ops that
          address `scratch`: each namespace holds its own key and link). Only the body's key (or link), cover and the
