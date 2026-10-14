@@ -14,7 +14,9 @@
 
 **Tests and checks** (on `job/T47/screens-investigate` after B8's merge, no overlay): `node --test bio-plane/test/m/screens-investigate/`: 78 tests, 78 pass, 0 fail. `node --test bio-plane/test/m/interface-shell/`: 119 pass, 0 fail. With this module's `paths` and `tests` set in `modules.json` (locally, not committed: BOB's act): `format` 0 failures; `architecture … screens-investigate` 26 product files, 0 failures; `coverage … screens-investigate` 14 of 14 live ids named, 0 failures; `ownership … screens-investigate tranche/T47` 27 files, 0 failures. `node checks/run.mjs`: this module's only failures are "owned by no module" and its ids unnamed, both from its empty `modules.json` entry.
 
-Size (session_01P6a5EYGfQdk3KLWzPsHMLA): test runs 34, module lines 2273
+**B9 (K3177):** `people` never draws a record's machine note: an organisation's note in setup's form ("…; seeded at setup.") is drawn as "Added at setup from your group's place"; a kind with no note in the screen's words; test and control in `people.test.mjs`. Re-run after merging `tranche/T47`: 79 of 79 pass; format 0 failures for this module (its 2 are setup-page's empty paths), architecture 0, coverage 14 of 14, ownership 0. Found: `peopledirectory`'s `today` carries no sign of who wrote an organisation's note; the screen reads setup's sentence form, so a seeded flag or `declared_by` there (people R37) would be the sturdier signal.
+
+Size (session_01P6a5EYGfQdk3KLWzPsHMLA): test runs 37, module lines 2292
 
 ## J1 · QUESTION
 
@@ -63,4 +65,6 @@ B5-B7 applied: tranche/T47 merged (84f98f8e0f). Against tranche/T47 alone 21 of 
 
 ## J4 · COMPLETE
 
-B8 applied: tranche/T47 merged, no overlay. 78 of 78 of this module's tests pass; interface-shell's 119 pass with these screens. With paths bio-plane/src/screens-investigate/ and tests bio-plane/test/m/screens-investigate/ set in modules.json (please add them): format, architecture, coverage (14 of 14) and ownership 0 failures. Files, readings, what is deferred to other modules and the size line are in the record's Completion section. Size (session_01P6a5EYGfQdk3KLWzPsHMLA): test runs 34, module lines 2273.
+B8 applied: tranche/T47 merged, no overlay. 78 of 78 of this module's tests pass; interface-shell's 119 pass with these screens. With paths bio-plane/src/screens-investigate/ and tests bio-plane/test/m/screens-investigate/ set in modules.json (please add them): format, architecture, coverage (14 of 14) and ownership 0 failures. Files, readings, what is deferred to other modules and the size line are in the record's Completion section. **B9 (K3177):** `people` never draws a record's machine note: an organisation's note in setup's form ("…; seeded at setup.") is drawn as "Added at setup from your group's place"; a kind with no note in the screen's words; test and control in `people.test.mjs`. Re-run after merging `tranche/T47`: 79 of 79 pass; format 0 failures for this module (its 2 are setup-page's empty paths), architecture 0, coverage 14 of 14, ownership 0. Found: `peopledirectory`'s `today` carries no sign of who wrote an organisation's note; the screen reads setup's sentence form, so a seeded flag or `declared_by` there (people R37) would be the sturdier signal.
+
+Size (session_01P6a5EYGfQdk3KLWzPsHMLA): test runs 37, module lines 2292.
