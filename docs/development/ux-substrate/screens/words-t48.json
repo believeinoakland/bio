@@ -2356,5 +2356,149 @@
   "en": "{n} picked",
   "protected": false,
   "note": "DEC-238"
+ },
+ {
+  "key": "risk.title",
+  "en": "Its risk",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "risk.help",
+  "en": "How carefully the group should act on this, from 1 (file freely) to 3 (do not file without counsel). Only a member sets it, with a reason; a filing waits while it is not assessed.",
+  "protected": false,
+  "note": "DEC-239; filings R2"
+ },
+ {
+  "key": "risk.tier",
+  "en": "Tier {tier}",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "risk.tier.1",
+  "en": "file freely",
+  "protected": true,
+  "note": "DEC-239: action-grammar RISK_TIERS, now keyed"
+ },
+ {
+  "key": "risk.tier.2",
+  "en": "file with caution",
+  "protected": true,
+  "note": "DEC-239"
+ },
+ {
+  "key": "risk.tier.3",
+  "en": "do not file without counsel",
+  "protected": true,
+  "note": "DEC-239"
+ },
+ {
+  "key": "risk.tier.undetermined",
+  "en": "not assessed: no member has stated a risk tier for this action",
+  "protected": true,
+  "note": "DEC-239: never defaulted (actions R25)"
+ },
+ {
+  "key": "risk.set",
+  "en": "Set by {who}, {date}: \"{reason}\" · was {prior}",
+  "protected": false,
+  "note": "DEC-239: risk_tier_history"
+ },
+ {
+  "key": "risk.revise",
+  "en": "Revise, with a reason…",
+  "protected": false,
+  "note": "DEC-239: actionrisktier, reasoned"
+ },
+ {
+  "key": "risk.proposed",
+  "en": "Proposed, not set:",
+  "protected": false,
+  "note": "DEC-239: actionriskpropose, shown apart (actions R25)"
+ },
+ {
+  "key": "risk.proposal",
+  "en": "{who} proposes tier {tier} · {words}",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "risk.proposal.not",
+  "en": "not the tier until a member sets it",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "law.title",
+  "en": "The law it goes under",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "law.help",
+  "en": "The law the action is made under: it sets what the office must do and by when. A member chooses it; anyone may propose another.",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "law.stated",
+  "en": "Stated by {who}, {date}",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "law.undetermined",
+  "en": "No member has said which law this goes under yet.",
+  "protected": false,
+  "note": "DEC-239: governing_laws undetermined (actions R25)"
+ },
+ {
+  "key": "law.change",
+  "en": "Change the law…",
+  "protected": false,
+  "note": "DEC-239: actionlaws"
+ },
+ {
+  "key": "law.proposed",
+  "en": "Proposed, not chosen:",
+  "protected": false,
+  "note": "DEC-239: action-records R1"
+ },
+ {
+  "key": "law.proposal.not",
+  "en": "proposed by {who}, {date} · not the law it goes under until a member chooses it",
+  "protected": true,
+  "note": "DEC-239: evidence false"
+ },
+ {
+  "key": "law.propose",
+  "en": "Propose another law…",
+  "protected": false,
+  "note": "DEC-239: actionlawspropose"
+ },
+ {
+  "key": "action.noreply.title",
+  "en": "No reply recorded by {date}",
+  "protected": true,
+  "note": "DEC-239: screens-action R5, never \"overdue\""
+ },
+ {
+  "key": "action.noreply.says",
+  "en": "The date the law gives has passed with no reply on the record. If a reply came, record it below. If none came, that silence may be worth asking about.",
+  "protected": false,
+  "note": "DEC-239"
+ },
+ {
+  "key": "action.noreply.question",
+  "en": "Open a question from this",
+  "protected": false,
+  "note": "DEC-239: owed:actioninquiry"
+ },
+ {
+  "key": "action.noreply.question.help",
+  "en": "Opens a question with this action carried as its reference. You write the question; the action is where it comes from, not evidence in it.",
+  "protected": false,
+  "note": "DEC-239"
  }
 ]

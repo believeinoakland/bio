@@ -3203,7 +3203,7 @@
    "id": "action",
    "name": "Action",
    "frame": "working",
-   "purpose": "One action: replies, deadlines, pressure, holds.",
+   "purpose": "One action: replies, deadlines, the law it goes under, its risk tier, pressure, holds; a question opened when no reply is recorded.",
    "acts": [
     {
      "op": "actionmove",
@@ -3252,6 +3252,35 @@
      "modules": [
       "action-records"
      ]
+    },
+    {
+     "op": "actionrisktier",
+     "label": "Revise the risk tier, with a reason",
+     "status": "declared",
+     "modules": [
+      "actions"
+     ]
+    },
+    {
+     "op": "actionlaws",
+     "label": "Change the law it goes under",
+     "status": "declared",
+     "modules": [
+      "actions"
+     ]
+    },
+    {
+     "op": "actionlawspropose",
+     "label": "Propose another law",
+     "status": "declared",
+     "modules": [
+      "action-records"
+     ]
+    },
+    {
+     "op": "owed:actioninquiry DEC-239",
+     "label": "Open a question from this",
+     "status": "owed"
     }
    ],
    "journeys": [

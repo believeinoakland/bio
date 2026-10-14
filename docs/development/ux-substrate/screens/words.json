@@ -67,13 +67,16 @@
   "settings": 1,
   "entity": 33,
   "find": 26,
+  "risk": 12,
+  "law": 8,
+  "action": 4,
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "act": 685,
+  "act": 692,
   "column": 33,
-  "total": 2268,
-  "protected": 705
+  "total": 2299,
+  "protected": 715
  },
  "words": [
   {
@@ -7257,6 +7260,174 @@
    "note": "DEC-238"
   },
   {
+   "key": "risk.title",
+   "en": "Its risk",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239"
+  },
+  {
+   "key": "risk.help",
+   "en": "How carefully the group should act on this, from 1 (file freely) to 3 (do not file without counsel). Only a member sets it, with a reason; a filing waits while it is not assessed.",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239; filings R2"
+  },
+  {
+   "key": "risk.tier",
+   "en": "Tier {tier}",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239"
+  },
+  {
+   "key": "risk.tier.1",
+   "en": "file freely",
+   "protected": true,
+   "source": "DEC-239",
+   "note": "DEC-239: action-grammar RISK_TIERS, now keyed"
+  },
+  {
+   "key": "risk.tier.2",
+   "en": "file with caution",
+   "protected": true,
+   "source": "DEC-239",
+   "note": "DEC-239"
+  },
+  {
+   "key": "risk.tier.3",
+   "en": "do not file without counsel",
+   "protected": true,
+   "source": "DEC-239",
+   "note": "DEC-239"
+  },
+  {
+   "key": "risk.tier.undetermined",
+   "en": "not assessed: no member has stated a risk tier for this action",
+   "protected": true,
+   "source": "DEC-239",
+   "note": "DEC-239: never defaulted (actions R25)"
+  },
+  {
+   "key": "risk.set",
+   "en": "Set by {who}, {date}: \"{reason}\" · was {prior}",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239: risk_tier_history"
+  },
+  {
+   "key": "risk.revise",
+   "en": "Revise, with a reason…",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239: actionrisktier, reasoned"
+  },
+  {
+   "key": "risk.proposed",
+   "en": "Proposed, not set:",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239: actionriskpropose, shown apart (actions R25)"
+  },
+  {
+   "key": "risk.proposal",
+   "en": "{who} proposes tier {tier} · {words}",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239"
+  },
+  {
+   "key": "risk.proposal.not",
+   "en": "not the tier until a member sets it",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239"
+  },
+  {
+   "key": "law.title",
+   "en": "The law it goes under",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239"
+  },
+  {
+   "key": "law.help",
+   "en": "The law the action is made under: it sets what the office must do and by when. A member chooses it; anyone may propose another.",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239"
+  },
+  {
+   "key": "law.stated",
+   "en": "Stated by {who}, {date}",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239"
+  },
+  {
+   "key": "law.undetermined",
+   "en": "No member has said which law this goes under yet.",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239: governing_laws undetermined (actions R25)"
+  },
+  {
+   "key": "law.change",
+   "en": "Change the law…",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239: actionlaws"
+  },
+  {
+   "key": "law.proposed",
+   "en": "Proposed, not chosen:",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239: action-records R1"
+  },
+  {
+   "key": "law.proposal.not",
+   "en": "proposed by {who}, {date} · not the law it goes under until a member chooses it",
+   "protected": true,
+   "source": "DEC-239",
+   "note": "DEC-239: evidence false"
+  },
+  {
+   "key": "law.propose",
+   "en": "Propose another law…",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239: actionlawspropose"
+  },
+  {
+   "key": "action.noreply.title",
+   "en": "No reply recorded by {date}",
+   "protected": true,
+   "source": "DEC-239",
+   "note": "DEC-239: screens-action R5, never \"overdue\""
+  },
+  {
+   "key": "action.noreply.says",
+   "en": "The date the law gives has passed with no reply on the record. If a reply came, record it below. If none came, that silence may be worth asking about.",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239"
+  },
+  {
+   "key": "action.noreply.question",
+   "en": "Open a question from this",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239: owed:actioninquiry"
+  },
+  {
+   "key": "action.noreply.question.help",
+   "en": "Opens a question with this action carried as its reference. You write the question; the action is where it comes from, not evidence in it.",
+   "protected": false,
+   "source": "DEC-239",
+   "note": "DEC-239"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -10144,6 +10315,30 @@
    "source": "registry.json"
   },
   {
+   "key": "act.actionrisktier.label.action",
+   "en": "Revise the risk tier, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.actionlaws.label.action",
+   "en": "Change the law it goes under",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.actionlawspropose.label.action",
+   "en": "Propose another law",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_actioninquiry.label.action",
+   "en": "Open a question from this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.escalationopen.label.matter",
    "en": "Open an escalation",
    "protected": true,
@@ -11214,6 +11409,24 @@
   {
    "key": "act.owed_secondlook.does",
    "en": "Asks the group to look at what you picked again, with a note saying why. It shows under Flagged for a second look until a member clears the flag.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.actionrisktier.does",
+   "en": "Sets how carefully the group should act on this, from 1 (file freely) to 3 (do not file without counsel), with a reason kept in its history. Only a member sets it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.actionlawspropose.does",
+   "en": "Puts a law beside the one chosen, for a member to weigh. It changes nothing until a member chooses it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_actioninquiry.does",
+   "en": "Opens a question with this action carried as its reference. You write the question; the action is where it comes from, not evidence in it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
