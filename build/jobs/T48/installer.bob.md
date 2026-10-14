@@ -19,3 +19,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · ANSWER · re J1
 
 K3293: (1) and (2) as you read them: draw the chosen line without the date (UX-DESIGN is asked for a dateless key; until then draw the key with no date clause as you propose), and link back by the referrer's origin, none when there is none. Do NOT add the refusal of an older version: R55 does not have it, and a group may need to roll back; what a group may do is Bob's (K1881).
+
+## B3 · CHANGE
+
+K3297: interface-assets is merged; newgroup's committed bundle is stale against it (t47 R53's carried and serving checks). Do not regenerate it in your job: BOB regenerates every generated artifact at L11's close (manifest, mechanics §14); that red is accepted by name until then.

@@ -27,3 +27,7 @@ K3293: your reading is right and is now the requirement's wording: plane R55 and
 ## B3 · ANSWER · re J2
 
 K3295: your readtranslate reads are right (bundleInfo gated by inSight, NO_SUCH_BUNDLE, the bundle's title; hypotheses.notesOf paged, NO_SUCH_NOTE; network-notices.noticesOf, the latest revision). No inquiry read is added.
+
+## B4 · ANSWER · re J5
+
+K3297: plane -> machinery-producers is in modules.json on tranche/T48; merge it. Your findings: (a) and (b) are N1082 (next tranche); (c) credentials' spread goes with R72's retirement in T49; (d) is forwarded to instance-setup. queue merges once its providers do; I will tell you.

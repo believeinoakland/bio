@@ -41,7 +41,7 @@ export const WIZARD_SCRIPTS_CHECKS = Object.freeze({
   WIZARD_STEP_REFUSED: {
     check: "C-131.7", where: at("#stepRefusal", "is-wizard-step"),
     translation: "A step names a screen, the act on it (or none), what the member does and why, each at most 300 "
-      + "characters, and at most one labelled draft: the script's own words, an offered filing template or a "
+      + "characters, and at most one labeled draft: the script's own words, an offered filing template or a "
       + "registered machine draft.",
   },
   NOT_A_DRAFT: {
@@ -113,7 +113,7 @@ export const WIZARD_SCRIPTS_CHECKS = Object.freeze({
   },
   WIZARD_DRAFT_REFUSED: {
     check: "C-131.24", where: at("checkScript", "is-wizard-check"),
-    translation: "A step's draft is the script's own words, a filing template offered here, or a labelled machine draft "
+    translation: "A step's draft is the script's own words, a filing template offered here, or a labeled machine draft "
       + "your group's Civicsmith registers, and this one is none of them.",
   },
   WIZARD_STEP_CONCLUDES: {

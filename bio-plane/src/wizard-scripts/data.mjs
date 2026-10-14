@@ -30,6 +30,12 @@ export const LIBRARY_ADOPTED = Object.freeze([
      plan and step 14 on `hostingaccessset`; the ceremony's steps 9–11 re-worded */
   Object.freeze({ names: Object.freeze(["Set up and claim", "Publication ceremony"]), version: 3,
                   source: "f90b187c7b", approved: Object.freeze({ by: "BOB", at: "2026-10-14", ruling: "K2241" }) }),
+  /* T48 (R38; DEC-220, DEC-221; K3190, K3192 D1): the newest of the two at PR #34's merge (`4664e8efd4`): Set up and claim's
+     step 3 with no act (the self-test runs within install) and Start and send in DEC-221's spelling */
+  Object.freeze({ names: Object.freeze(["Set up and claim"]), version: 4,
+                  source: "4664e8efd4", approved: Object.freeze({ by: "BOB", at: "2026-10-14", ruling: "K2241" }) }),
+  Object.freeze({ names: Object.freeze(["Start and send"]), version: 3,
+                  source: "4664e8efd4", approved: Object.freeze({ by: "BOB", at: "2026-10-14", ruling: "K2241" }) }),
 ]);
 /** R33 (T47; DEC-198 (4); N992): the commit of the library whose `doors` are carried as the front doors (PR #31's merge). */
 export const DOORS_SOURCE = "a0fab7abf0";
@@ -40,6 +46,9 @@ export const LIBRARY_ADDED = Object.freeze([
   Object.freeze({ names: Object.freeze(["Comment for the group", "Demand a correction", "Take an escalation to its next stage",
                                         "Refer it to an oversight body", "Pick up a plan"]),
                   source: "3f40899950", approved: Object.freeze({ by: "BOB", at: "2026-10-12", ruling: "K2241" }) }),
+  /* T48 (R38; DEC-226 (5); K3190): the update wizard, at version 1, from PR #34's merge */
+  Object.freeze({ names: Object.freeze(["Update your group's Civicsmith"]),
+                  source: "4664e8efd4", approved: Object.freeze({ by: "BOB", at: "2026-10-14", ruling: "K2241" }) }),
 ]);
 /** R22: the three required scripts, by name (DEC-148). */
 export const REQUIRED_NAMES = Object.freeze(["Set up and claim", "Welcome a new member", "Publication ceremony"]);
@@ -118,6 +127,13 @@ export function adoptedLibrary(baseFile, baseCommit, newer = [], adopted = LIBRA
   }
   return out;
 }
+
+/** R37 (T48; DEC-227 (1)): the sixth front door, the way out, `{door, scripts: [], opens}`: carried as this frozen data unless
+ *  `library.json`'s `doors` holds a door of that name at the commit the job's START names (then the file's, normalised to
+ *  this form). It names no script and opens the `elsewhere` route; its words are `door.front.elsewhere.*`, read by the
+ *  interface. */
+export const ELSEWHERE = "elsewhere";
+export const ELSEWHERE_FROZEN = Object.freeze({ door: ELSEWHERE, scripts: Object.freeze([]), opens: ELSEWHERE });
 
 /** R33 (T47; DEC-198 (4)): the file's front doors, each `{door, scripts}` in the file's order, `scripts` the script ids
  *  it names in its order, each a script the file holds (a door naming one it does not hold is an error, as a side trip
