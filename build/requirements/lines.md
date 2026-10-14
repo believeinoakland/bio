@@ -47,7 +47,7 @@ Terms.
 - **R12** A holder is a `person` entity, the same entity across every role it has held (K1452); `holderAt` never answers text.
 - **R21** (K1505 (10), K1577) A `holds` line with no stated end is `in` at a date no later than a held `current_through` (a member's, or a source's own "current as of" statement, recorded on the line with its citation and day) and `undetermined` after it; with none held it is `undetermined` after its start (civil-time R22). Recording one is a member's act or a system rule's (R4); a later one supersedes, the earlier kept.
 - **R22** (T42; K2610; record-grammar R29; K231) Every refusal this module answers with the code `NO_BASIS` answers with `record-grammar`'s shared row C-33.40 (`SHARED_ACT_CHECKS`), its check, number and translation, never a bare code, so a member reads the one sentence every module gives for it.
-- **R23** (T48; K231; K3207; amends R13) `partiesOf`'s `NOT_A_PROCEEDING` is `entities.notAProceeding`'s answer (its R53); this module mints no such code. *(not yet met: T48)*
+- **R23** (T48; K231; K3207; amends R13) `partiesOf`'s `NOT_A_PROCEEDING` is `entities.notAProceeding`'s answer (its R53); this module mints no such code.
 
 **partiesOf({proceeding, at?, viewer}), proceedingLinks({proceeding, viewer})** (C1; scope §1 COURTS)
 - **R13** `partiesOf` refuses `NOT_A_PROCEEDING`; it answers the `party_to` lines to the proceeding with their roles (as of `at` when given, by R10's rule). `proceedingLinks` answers the proceeding's `appeal_of`, `consolidated_with`, `remanded_to` and `arises_from` lines in both directions, one hop; a longer walk is `explore`'s.
