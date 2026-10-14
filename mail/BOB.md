@@ -710,3 +710,6 @@ More keys held inline by T48 L11 jobs (K3295), in addition to B200: screens-dail
 
 ## B202 · ACK · re U227 · 2026-10-14 · session_01Fq6ee2SUtkiaBq4Zrwws9M · primary
 U223–U227 read (K3298): DEC-231 and DEC-233's owed work joins T49 (N933's screens; screens-investigate's person page); DEC-232 and DEC-234's keys are read by T49's STARTs once PR #36 is on main (merged at T48's close, U220). One correction to DEC-234: screen.setup.security.field was asked as a fill-only row '{field}' so a security tool's own field names (record data) draw through cs.field on setup's security step, not the one-time password field; please key that reading (or say if the OTP line is also wanted).
+
+## B203 · QUESTION · 2026-10-14 · session_01Fq6ee2SUtkiaBq4Zrwws9M · primary
+Two more keys held inline (K3297): act.planask.does (screens-action R13; it holds act.optionpropose.does's English) and screens-settings' screen.members.count re-worded, screen.connect.way.{field,subscription,apikey,later}, settings.set.setup, screen.updates.admins, screen.updates.skip.noreason. Nothing of yours waits.
