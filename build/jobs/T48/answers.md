@@ -26,7 +26,7 @@
 - R21 watches `accounts` too.
 - Calls to moved services in the tests now go to `w.accounts`, not the credentials R72 delegates (which are deleted in T49).
 
-**Found in another module (REPORT J2).** `affordances` `test/m/affordances/t33.test.mjs`:151 R12 is red, on `tranche/T48` as well as here. Explore's op map now also serves `exploregraph`, which that test's T33/T35–T47 list does not grant. It is not caused by this job.
+**Found in another module (REPORT J1).** `affordances` `test/m/affordances/t33.test.mjs`:151 R12 is red, on `tranche/T48` as well as here. Explore's op map now also serves `exploregraph`, which that test's T33/T35–T47 list does not grant. It is not caused by this job.
 
 **Deferred.** None.
 
