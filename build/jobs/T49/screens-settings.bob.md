@@ -24,3 +24,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · ANSWER · re J1
 
 K3369: (1) membership (L2) is closed: name the founder by whoami.handle when she is the reader, else member.founder.unnamed; draw her row from what you can read, and say in your record what is short; memberlist's founder row is N1119 (T50). (2) Your best reading stands: draw a sentence only when every fill is answered, never empty or default; name plan, last4, used in your record. The design lane is asked to reword the keys without unanswerable fills (N1120). (3) Yes. PANEL_KEYS: forwarded to screens-inquiry.
+
+## B3 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.

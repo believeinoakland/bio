@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T49)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -23,3 +23,15 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · CHANGE
 
 K3369 (SCREENS-SETTINGS #4 J1): screens-settings' words.mjs rows go (SCREEN_WORDS stays exported, empty). projectai.mjs:16 and :160 filter that list for screen.panel.*: read screens-settings' PANEL_KEYS (panel.mjs) and word(key, vars) instead. Build against it now; merge the tranche branch when BOB's CHANGE says screens-settings has merged.
+
+## B3 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
+
+## B4 · CHANGE
+
+K3372 (SCREENS-INTAKE #4 J2): your R38 'Add a document' opens /app/capture/<tab>/<id> (the subject in the path, project or question id), never ?for=.
+
+## B5 · ANSWER · re J2
+
+K3372: both readings stand: J1 the frozen per-mode bounds table derived from run-rules, no zero allowance, tested through checkConsume; J2 the reasons list only where the assistant cannot work, each by key, the serving account always said.

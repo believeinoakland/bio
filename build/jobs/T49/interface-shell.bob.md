@@ -23,3 +23,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · CHANGE
 
 K3369: your requirements gain R71 (merge the tranche branch for it): (1) ADMISSION #12 J1 (3): the startup bootstrap (browser.mjs:1903, sent { public: true }) carries the page's session in Authorization whenever the page holds one, so a signed-in member's page loads count in her session's window (admission R27); (2) SCREENS-ENTRY #3 J1 (1): RE_POINTS gains setup: ["founderhandleset"] (front's pattern), until the registry lists it, so screens-entry's setup composes once op-declarations R71 declares the op. Screens-entry waits on (2): push it early in your job.
+
+## B3 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
