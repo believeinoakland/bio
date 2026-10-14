@@ -31,3 +31,7 @@ K3145: new R47 on `tranche/T47`: `cs.save`, `cs.copy`, `cs.signout` each answer 
 ## B5 · CHANGE
 
 K3146: new R48 on `tranche/T47` (from JOURNEY-CHECK #1): the frame's root carries `data-screen="<id>"` of the registered screen drawn, none on the shell's own fallbacks; test with a control. Merge `tranche/T47`.
+
+## B6 · CHANGE
+
+K3147: new R49 on `tranche/T47`: `cs.image(op, params, {alt})` (fetched with the session's `Authorization`, drawn from a page-made object address), `cs.areas(image, {areas, label})` (rectangles drawn by pointer, touch and keyboard over it, answering pixel rectangles), and `cs.choice` driving the act it governs (one button following the choice). Also R46's `view.fragment` carries `grant` for `review-outside`. Merge `tranche/T47`.
