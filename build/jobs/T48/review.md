@@ -29,3 +29,7 @@ Best reading, applied: R34 puts `until` in the grant's answer and the member doo
 - `op-declarations`: `reviewgrant`'s declared inputs, if it lists any, would need `until`; I found no listing of `recipient` there to extend, so nothing to report as stale.
 
 Size (session_01QUuQMyy4adVnFw1qXKgtGc): test runs 9, module lines 1357
+
+## J2 · COMPLETE
+
+T48-44 applied (R34): grant takes until (REVIEW_BAD_UNTIL, C-87.17), recorded and answered in the grant, the roster and the recipient's own grant part (B3); lapsed grants are dead as revoked. Tests 54/54 in review (new until.test.mjs, 7 tests); format, architecture, coverage (34 of 34) and ownership 0 failures for review. Found in screens-publish: it sends a bare date, refused until its T48-75 entry. Details in the record.
