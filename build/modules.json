@@ -158,7 +158,7 @@
     {"id": "screens-entry", "layer": 11, "paths": ["bio-plane/src/screens-entry/"], "tests": ["bio-plane/test/m/screens-entry/"], "uses": ["interface-shell", "setup-words", "op-declarations", "instance-setup"]},
     {"id": "screens-wizards", "layer": 11, "paths": ["bio-plane/src/screens-wizards/"], "tests": ["bio-plane/test/m/screens-wizards/"], "uses": ["interface-shell", "setup-words", "op-declarations", "wizard-scripts"]},
     {"id": "screens-settings", "layer": 11, "paths": ["bio-plane/src/screens-settings/"], "tests": ["bio-plane/test/m/screens-settings/"], "uses": ["interface-shell", "setup-words", "op-declarations"]},
-    {"id": "screens-intake", "layer": 11, "paths": ["bio-plane/src/screens-intake/"], "tests": ["bio-plane/test/m/screens-intake/"], "uses": ["wizard-scripts", "interface-shell", "setup-words", "op-declarations"]},
+    {"id": "screens-intake", "layer": 11, "paths": ["bio-plane/src/screens-intake/"], "tests": ["bio-plane/test/m/screens-intake/"], "uses": ["interface-assets", "wizard-scripts", "interface-shell", "setup-words", "op-declarations"]},
     {"id": "screens-daily", "layer": 11, "paths": ["bio-plane/src/screens-daily/"], "tests": ["bio-plane/test/m/screens-daily/"], "uses": ["interface-shell", "setup-words", "op-declarations"]},
     {"id": "screens-inquiry", "layer": 11, "paths": ["bio-plane/src/screens-inquiry/"], "tests": ["bio-plane/test/m/screens-inquiry/"], "uses": ["interface-shell", "setup-words", "op-declarations", "screens-settings"]},
     {"id": "screens-investigate", "layer": 11, "paths": ["bio-plane/src/screens-investigate/"], "tests": ["bio-plane/test/m/screens-investigate/"], "uses": ["interface-shell", "setup-words", "op-declarations"]},
