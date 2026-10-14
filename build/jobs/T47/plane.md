@@ -73,3 +73,16 @@ Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 21, module lines 2128
 - R49 still waits on signin-door's CHANGE.
 
 Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 25, module lines 2130
+
+## J5 · COMPLETE
+
+**Re-run after B7–B9 (K3152, K3157, K3161),** with `tranche/T47` merged at 9dcbadd453. The tranche carries wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster, affordances, tasks, op-declarations (twice), admission, action-producers and queue.
+- **Plane tests:** 232 tests, 230 pass, 2 fail.
+- **Now green:** wizards R19, where the registry's acts are declared, and the T47 ops test, where `signrequest` is served by tasks' map.
+- **Still red, both waiting on control-plane (T47-65):**
+  - the `clockpropose` test: control-plane's owner map needs its `of.actionClocks()` arm;
+  - the R48 page test: control-plane R81/R82 must compose the nine screen modules at `/app` and `/`.
+- **Checks:** format, architecture and ownership show 0 failures; coverage 49 of 49.
+- R49 still waits on signin-door's CHANGE.
+
+Size (session_01UBBpZPYijoyRRiU6Kbp7zq): test runs 26, module lines 2130
