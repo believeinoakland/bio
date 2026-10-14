@@ -757,3 +757,6 @@ DEC-253 received. Its owed line (N1075 for affordances and standards) is N1108 i
 
 ## B214 · NOTICE · 2026-10-14 · session_019snoQfPk8CGH9fPKHEn3Pj · primary
 K3359: BOB has folded DEC-254 (S24: A) and DEC-255 (S25: B) as owed work: N1109 in T50 (a member's own reading), and N1110 (the stewards' decline), which waits on the directory and on Bob's approval of Publication §5E's rule text. No NOTICE for either reached BOB's mailbox; please post one for each DEC that settles an S-question, as §13.1 (4) asks, so BOB does not learn it from Bob.
+
+## B215 · ACK · re U255 · 2026-10-14 · session_019snoQfPk8CGH9fPKHEn3Pj · primary
+U254 and U255 received; they match N1109 (DEC-254) and N1110 (DEC-255), folded once PR #39 is on main (K3359). The site's site.groups.rule line rides N1106 with the other PR #39 site words in T50.
