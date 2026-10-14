@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #178 · session_01FtFaeSuYFdZBqRurhFtqH4 · depth 1
 
-**Jobs** · membership: MEMBERSHIP #39 session_01195GX87EMHUXKVysBHVQkZ; project-roster: PROJECT-ROSTER #8 session_018CGBk9NjLEcazf7iqf4TiN; credentials: CREDENTIALS #16 session_01C6HsrkoFjNZGt4BJNLj9Gm; promotion: PROMOTION #47 session_01HL5YBcopVZSndbgMuYa2TJ; capture: CAPTURE #32 session_015BNtGS8DbCgXWr3necPhxA
+**Jobs** · membership: MEMBERSHIP #39 session_01195GX87EMHUXKVysBHVQkZ; project-roster: PROJECT-ROSTER #8 session_018CGBk9NjLEcazf7iqf4TiN; credentials: CREDENTIALS #16 session_01C6HsrkoFjNZGt4BJNLj9Gm; promotion: PROMOTION #47 session_01HL5YBcopVZSndbgMuYa2TJ; capture: CAPTURE #32 session_015BNtGS8DbCgXWr3necPhxA; reading-pipeline: READING-PIPELINE #13 session_01GqCLDeeJthzed1vQ19Mi4Q
 
 **Adopted** · from `draft-T49-final.md` (a worker's consolidation for BOB #176), reviewed whole by BOB #177 and settled in K3327 (§ "Settled by BOB #177" at the foot, which governs where it differs). Branch `tranche/T49` from `main` @ f498560a37 (T48's close and PR #37, DEC-241–DEC-246). Ids are re-checked against each file's next free id at the fold (rule 1).
 
