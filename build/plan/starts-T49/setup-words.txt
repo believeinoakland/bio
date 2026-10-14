@@ -1,0 +1,14 @@
+Depth 2. Your entry: `build/plan/current.md` (T49), layer 11, setup-words: **T49-15 · setup-words**.
+Your requirements: `build/requirements/setup-words.md` (read whole), folded by K3339; the ids marked `*(not yet met: T49)*` are yours to meet (R9).
+BOB's notes for this job:
+setup-words (T49-15): R9: `WORD_ROWS` is `words.json` as it stands on `main` at the commit named at START (`f498560a37`, PR #37's merge, or later), and `WORDS_COMMIT` is that commit (2,473 rows, 741 protected, at `f498560a37`); it carries every key the screens below read. (N1073) `word-list.test.mjs`:130 reads membership's words from membership.
+1. Measure first: the named commit's row and protected counts, and the keys R8 carried that the file dropped. For each dropped key, grep `bio-plane/src` for a reader. `signin.founderhint` is read by screens-entry (`front.mjs`:78, `index.mjs`:31) until T49-21 (fold (b) finding 10). Name each reader's red at this merge.
+2. Inherited reds: coverage on R9 (rule 5 (1)); the plane bundle (5 (5)); legacy-ui (5 (4)). Rule 5 (8): your merge opens screens-entry's `signin.founderhint` red (`front.mjs`:78, `index.mjs`:31); name it at the merge (K2704); it is cleared by T49-21. On Haiku: rule 6's N1068 and the `admin` grep only apply to words this module carries verbatim, so they are a check, not an edit.
+Merge order in L11: fourth, after affordances and before op-declarations; before interface-shell (T49-20) and every screen job, which read your keys.
+Reading set (mechanics §17, K3271): measured 316 KB with all your tests; 300 KB without them, under the 600 KB limit, so read your requirements, entries, layer contract, own code and the used services your entries touch whole.
+Read your own code whole, and the tests that name a requirement your entries change; run your other tests without reading them (plan rule 2, K3271, mechanics §6 step 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Plan rule 6 applies to you: N1075 (read member-facing sentences by key where `words.json` keys them), N1068 ("labeled"), the `admin` grep (N1072), N1073 (your listed hand-lists), and D29 (no `ok: true` carrying a refusal treated as success). As a mechanical job, rule 6's items are a check of your own words, not an edit, unless one is found.
+Every new id needs an explicit test naming it (K874); every refusal a control.
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
