@@ -25,10 +25,12 @@ paste the entire contents of `dist/newgroup.bundled.mjs`. Deploy.
 
 ## 3. Verify the page
 
-Open `https://newgroup.believeinoakland.workers.dev/`. You should see "Set
-up your group's Civicsmith". Press Continue with a made-up name and no sign-in
-will start only if the page shows an error; if the button sends you to
-`dash.cloudflare.com` with a permission screen, the front half works.
+Open `https://newgroup.believeinoakland.workers.dev/`. You should see "Create
+your new Civicsmith group", drawn in Civicsmith's own typefaces (the installer
+serves them itself, under `/app/assets/`). Type a made-up short name, press
+Continue, confirm it in the dialog, then press "Continue to Cloudflare": if it
+sends you to `dash.cloudflare.com` with a permission screen, the front half
+works.
 
 ## 4. The first real run
 
@@ -36,9 +38,10 @@ This answers the one question the sandbox could not: whether the token
 exchange succeeds. While signed in to the new account (the OAuth client is
 private, so only this account's members can authorize it), run a real
 install named `bio-smoke`. Approve the permission screen. The progress page
-should walk through every step and end with an address, a one-time password
-and the probe credential. Open the address, claim it with a real password, and
-confirm the setup page reaches its healthy panel.
+should walk through every step and end with the checks, a one-time password,
+the address, and the probe key folded away. Press "Continue to your group's
+Civicsmith": it opens the address at `/app/setup` with the one-time password
+filled in. Claim it with a real password and confirm setup reaches its end.
 
 If the very first step fails with a handshake error, the suspects in order
 are: the redirect URL on the OAuth client not being character-identical to
