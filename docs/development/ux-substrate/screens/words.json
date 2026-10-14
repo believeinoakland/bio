@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 140,
+  "screen": 141,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -71,7 +71,7 @@
   "level": 2,
   "act": 653,
   "column": 33,
-  "total": 2128,
+  "total": 2129,
   "protected": 674
  },
  "words": [
@@ -6482,10 +6482,17 @@
   },
   {
    "key": "screen.setup.security.field",
+   "en": "{field}",
+   "protected": false,
+   "source": "DEC-234",
+   "note": "DEC-234, corrected on B202: a fill-only row: a security tool's own field names are record data and draw through cs.field on setup's security step"
+  },
+  {
+   "key": "screen.setup.otp.field",
    "en": "One-time password · filled in for you from the installer's last page",
    "protected": false,
    "source": "DEC-234",
-   "note": "DEC-234: B201: read as the claim's one-time password field, filled from the installer and never typed; BOB corrects this reading if it meant another field"
+   "note": "DEC-234 (B202): the claim's one-time password field, filled from the installer and never typed; kept under its own key once screen.setup.security.field became fill-only"
   },
   {
    "key": "connection.thing.entity",
