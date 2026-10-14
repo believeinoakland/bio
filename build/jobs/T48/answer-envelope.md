@@ -24,3 +24,7 @@
 - `checks/format.mjs`: 0 failures. `architecture.mjs … answer-envelope`: 0 failures. `coverage.mjs … answer-envelope`: 18 of 18 live ids named, 0 failures. `ownership.mjs … tranche/T48`: 7 files, 0 failures. `checks/run.mjs`: format 0, architecture 0 (3306 files), channels 0; coverage 21 failures, none answer-envelope's.
 
 Size (session_01KEi8eS4kzaC6cqNJRhHUmP): test runs 9, module lines 910
+
+## J1 · COMPLETE
+
+T48-65 done: R17 (ai-accounts' family directly before credentials', 89 files) and R18 (tables built on first read, lazy frozen proxies) met; C-115.47 already read from filing-templates (pinned by test). Also re-pinned conformance's C-113.6 NO_FINDINGS in the R7 snapshot. Module tests 23/23; format, architecture, coverage (18/18), ownership 0 failures. Known reds not mine: control-plane envelope.test.mjs:507 (C-29.40 from credentials; T48-77), families.test.mjs needs playwright-core installed in journey-check (environment). Details in my record.
