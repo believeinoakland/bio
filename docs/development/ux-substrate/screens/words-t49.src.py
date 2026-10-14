@@ -136,14 +136,14 @@ w6('screen.explore.nocentre', 'Choose where to start: a person, an organization,
 def w7(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-257' + (': ' + note if note else '')))
 REWRITE7 = {
   'screen.capture.file.wherehelp': 'Filled from the photo where it says; correct it if it is wrong.',
-  'screen.connect.group.allowance': 'The group pays, up to {limit} for each member, a limit your administrators set (you have used {used} of it {when}).',
+  'screen.connect.group.allowance': 'The group pays, up to {limit} for each member, a limit your administrators set.',   # DEC-262
   'screen.connect.group.allowance.reached': 'At the limit, the assistant pauses for you until the next {period}; everything else works as usual.',
-  'screen.connect.own.apikey': 'The assistant serves you on your own Claude account (API key ending …{last4}). Only you use it; you pay for it.',
-  'screen.connect.own.subscription': "The assistant serves you on your own Claude subscription ({plan}), signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.",
+  'screen.connect.own.apikey': 'The assistant serves you on your own Claude account, with your own API key. Only you use it; you pay for it.',   # DEC-262: no part of a key is shown
+  'screen.connect.own.subscription': "The assistant serves you on your own Claude subscription, signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.",   # DEC-262
   'screen.connect.none': "The assistant isn't serving you yet. Your group doesn't pay for the assistant; if you want it, connect your own account below, or skip it.",
   'screen.connect.keptaway.ask': "Everything else works: searching, counting and your group's templates take the assistant's place. If you think this should change, ask an administrator.",
   'screen.connect.signin.help': "Your group's Civicsmith never sees your Claude password, and the code is used once and never kept. Your subscription then serves only your own questions, and you can disconnect at any time. Needs a Pro or Max plan, and your group's Civicsmith on Workers Paid.",
-  'screen.connect.grouplimits': "On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member (you have used {used} of it today); suggestions {suggestions}. If they change either, this shows the new setting.",
+  'screen.connect.grouplimits': "On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member. If they change either, this shows the new setting.",   # DEC-262
   'screen.setup.otp.help': "Filled in for you when you continued from the installer's last page, where it was shown once. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to the Cloudflare account can set a new one.",
   'screen.setup.security.scanner': 'Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view.',
   'screen.setup.assistant.own': "Any member may connect their own Claude subscription or API key, which then serves only them, unless you keep your group's material away from AI.",
@@ -160,7 +160,7 @@ REWRITE7 = {
   'screen.find-in.scope.project': 'Everything in {project} ({count} documents)',
   'screen.home.line.languages': 'languages: {languages}',
   'screen.home.line.ailimit': "This month on the group's key: {used} of the {limit} limit",
-  'screen.members.recovery.one': 'With one administrator, the group depends on {name} and the hosting account.',
+  'screen.members.recovery.one': 'With one administrator, the group depends on that one person and the hosting account.',   # DEC-262
   'screen.members.invite.noemail': "Your group's Civicsmith sends no email. Copy the link and send it yourself. It works once and expires after seven days.",
   'screen.project.questions.empty': 'Start with one question the record could answer, such as “{example}”. Documents, notes and plans gather under it.',
   'screen.project.account.project': "Paid for by the project's own API key",
@@ -497,6 +497,16 @@ for k, t in [('nav.home', 'What Civicsmith is'), ('nav.start', 'Start a group'),
              ('notfound', 'There is no such page on civicsmith.org.')]:
     w9('screen.site.' + k, t, False, 'nav.groups is also the groups page heading' if k == 'nav.groups' else ('fills screen.site.uses.ask {example}' if k == 'uses.ask.example' else ("site R6's marked placeholder until the stewards' address is set" if k == 'questions.unset' else '')))
 
+# --- DEC-262 (BOB's B220): a sentence is drawn only when every {placeholder} is answered; the parts whose fills cannot always
+# be answered are their own sentences, each drawn only when answered (the rows above that lost them are reworded, DEC262_REWORDED)
+def w10(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-262' + (': ' + note if note else '')))
+w10('screen.connect.group.allowance.used', 'You have used {used} of it {when}.', False, "after screen.connect.group.allowance; drawn only to an account's owners, when answered")
+w10('screen.connect.grouplimits.used', 'You have used {used} of it today.', False, 'after screen.connect.grouplimits; drawn only when answered')
+w10('screen.connect.grouplimits.suggestions', 'Suggestions: {suggestions}.', False, 'after screen.connect.grouplimits; drawn only when answered')
+w10('refusal.DOOR_RATE_LIMITED.session', 'You have made too many requests in the last ten minutes. Try again in {minutes} minutes.' + NW, False, "a session's own limit, beside the connection's refusal.DOOR_RATE_LIMITED")
+DEC262_REWORDED = ['screen.connect.own.subscription', 'screen.connect.own.apikey', 'screen.connect.group.allowance', 'screen.connect.grouplimits', 'screen.members.recovery.one']
+# --- end DEC-262
+
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
@@ -504,5 +514,5 @@ REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
 
 REWRITE.update(REWRITE7)   # DEC-257: rows reworded to the words the screens draw
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'words-t49.json')
-open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, rewrite=REWRITE, rewrite_dec={k: 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
+open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, rewrite=REWRITE, rewrite_dec={k: 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
 print(len(W), 'rows to', out)

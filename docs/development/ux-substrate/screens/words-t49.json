@@ -2849,6 +2849,30 @@
    "en": "There is no such page on civicsmith.org.",
    "protected": false,
    "note": "DEC-261"
+  },
+  {
+   "key": "screen.connect.group.allowance.used",
+   "en": "You have used {used} of it {when}.",
+   "protected": false,
+   "note": "DEC-262: after screen.connect.group.allowance; drawn only to an account's owners, when answered"
+  },
+  {
+   "key": "screen.connect.grouplimits.used",
+   "en": "You have used {used} of it today.",
+   "protected": false,
+   "note": "DEC-262: after screen.connect.grouplimits; drawn only when answered"
+  },
+  {
+   "key": "screen.connect.grouplimits.suggestions",
+   "en": "Suggestions: {suggestions}.",
+   "protected": false,
+   "note": "DEC-262: after screen.connect.grouplimits; drawn only when answered"
+  },
+  {
+   "key": "refusal.DOOR_RATE_LIMITED.session",
+   "en": "You have made too many requests in the last ten minutes. Try again in {minutes} minutes. Nothing was written.",
+   "protected": false,
+   "note": "DEC-262: a session's own limit, beside the connection's refusal.DOOR_RATE_LIMITED"
   }
  ],
  "retired": [
@@ -2863,14 +2887,14 @@
   "queue.milestone-overdue.summary": "Past its date: {milestone}",
   "queue.temporal-expectation-due.undetermined.summary": "Its date may have passed: {duty}",
   "screen.capture.file.wherehelp": "Filled from the photo where it says; correct it if it is wrong.",
-  "screen.connect.group.allowance": "The group pays, up to {limit} for each member, a limit your administrators set (you have used {used} of it {when}).",
+  "screen.connect.group.allowance": "The group pays, up to {limit} for each member, a limit your administrators set.",
   "screen.connect.group.allowance.reached": "At the limit, the assistant pauses for you until the next {period}; everything else works as usual.",
-  "screen.connect.own.apikey": "The assistant serves you on your own Claude account (API key ending …{last4}). Only you use it; you pay for it.",
-  "screen.connect.own.subscription": "The assistant serves you on your own Claude subscription ({plan}), signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.",
+  "screen.connect.own.apikey": "The assistant serves you on your own Claude account, with your own API key. Only you use it; you pay for it.",
+  "screen.connect.own.subscription": "The assistant serves you on your own Claude subscription, signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.",
   "screen.connect.none": "The assistant isn't serving you yet. Your group doesn't pay for the assistant; if you want it, connect your own account below, or skip it.",
   "screen.connect.keptaway.ask": "Everything else works: searching, counting and your group's templates take the assistant's place. If you think this should change, ask an administrator.",
   "screen.connect.signin.help": "Your group's Civicsmith never sees your Claude password, and the code is used once and never kept. Your subscription then serves only your own questions, and you can disconnect at any time. Needs a Pro or Max plan, and your group's Civicsmith on Workers Paid.",
-  "screen.connect.grouplimits": "On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member (you have used {used} of it today); suggestions {suggestions}. If they change either, this shows the new setting.",
+  "screen.connect.grouplimits": "On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member. If they change either, this shows the new setting.",
   "screen.setup.otp.help": "Filled in for you when you continued from the installer's last page, where it was shown once. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to the Cloudflare account can set a new one.",
   "screen.setup.security.scanner": "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view.",
   "screen.setup.assistant.own": "Any member may connect their own Claude subscription or API key, which then serves only them, unless you keep your group's material away from AI.",
@@ -2887,7 +2911,7 @@
   "screen.find-in.scope.project": "Everything in {project} ({count} documents)",
   "screen.home.line.languages": "languages: {languages}",
   "screen.home.line.ailimit": "This month on the group's key: {used} of the {limit} limit",
-  "screen.members.recovery.one": "With one administrator, the group depends on {name} and the hosting account.",
+  "screen.members.recovery.one": "With one administrator, the group depends on that one person and the hosting account.",
   "screen.members.invite.noemail": "Your group's Civicsmith sends no email. Copy the link and send it yourself. It works once and expires after seven days.",
   "screen.project.questions.empty": "Start with one question the record could answer, such as “{example}”. Documents, notes and plans gather under it.",
   "screen.project.account.project": "Paid for by the project's own API key",
@@ -2908,14 +2932,14 @@
  },
  "rewrite_dec": {
   "screen.capture.file.wherehelp": "DEC-257",
-  "screen.connect.group.allowance": "DEC-257",
+  "screen.connect.group.allowance": "DEC-262",
   "screen.connect.group.allowance.reached": "DEC-257",
-  "screen.connect.own.apikey": "DEC-257",
-  "screen.connect.own.subscription": "DEC-257",
+  "screen.connect.own.apikey": "DEC-262",
+  "screen.connect.own.subscription": "DEC-262",
   "screen.connect.none": "DEC-257",
   "screen.connect.keptaway.ask": "DEC-257",
   "screen.connect.signin.help": "DEC-257",
-  "screen.connect.grouplimits": "DEC-257",
+  "screen.connect.grouplimits": "DEC-262",
   "screen.setup.otp.help": "DEC-257",
   "screen.setup.security.scanner": "DEC-257",
   "screen.setup.assistant.own": "DEC-257",
@@ -2932,7 +2956,7 @@
   "screen.find-in.scope.project": "DEC-257",
   "screen.home.line.languages": "DEC-257",
   "screen.home.line.ailimit": "DEC-257",
-  "screen.members.recovery.one": "DEC-257",
+  "screen.members.recovery.one": "DEC-262",
   "screen.members.invite.noemail": "DEC-257",
   "screen.project.questions.empty": "DEC-257",
   "screen.project.account.project": "DEC-257",

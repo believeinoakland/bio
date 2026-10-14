@@ -16,7 +16,9 @@ import { instanceSetupOf } from "../../../src/setup.mjs";
 import { projectRosterOf, projectRosterOps, PROJECT_ROSTER_TABLES } from "../../../src/project-roster/index.mjs";
 
 const PR = [...PROJECT_ROSTER_TABLES];
-const OPS = ["projectowneradd", "projectownerremove", "projectownerrescue", "projectvisibility", "projectdirectory",
+const OPS = ["projectowneradd", "projectownerremove", "projectownerrescue", "projectvisibility",
+             /* (T49; N1091; project-roster R30; plane R5 (T49)) the owner changes awaiting agreement */
+             "projectownervotes", "projectdirectory",
              /* (T47; N972; project-roster's projects with their stage; plane R45's re-pin) */
              "projectlist",
              "projectparticipants", "projectrequest", "projectrequestwithdraw", "projectrequestanswer", "projectrequests",
