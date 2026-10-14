@@ -39,3 +39,7 @@ K3171: control-plane is merged (/app and / serve the nine screens). Your finding
 ## B7 · CHANGE
 
 K3173: screens-intake's testimony confirmation (your finding 1) is merged. Merge tranche/T47 and run the walk and the sweep on the tranche; screens-publish (finding 2) is still building.
+
+## B8 · CHANGE
+
+K3174: screens-publish's bare-address screens (your finding 2) are merged. Merge tranche/T47; both findings are now on the tranche; run the walk and the sweep and post what you find.
