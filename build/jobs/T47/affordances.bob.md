@@ -35,3 +35,7 @@ K3163 (from CONTROL-PLANE #32 J4): control-plane's totality test (R2/R41, totali
 ## B6 · ANSWER · re J7
 
 K3164: (A). op-grades adds the two NON_ACTS rows (CHANGE posted to OP-GRADES #9). You change nothing; once my CHANGE says op-grades is merged, merge tranche/T47, re-run control-plane's totality test and post COMPLETE.
+
+## B7 · CHANGE
+
+K3168: op-grades is merged with NON_ACTS rows for statementack and reviewcomment. Merge tranche/T47; re-pin your test 'R1 R12 R19 R24: case-inputs' ops … nothing is unaccounted' (its stand-in lacks the NEEDS row for statementack, so it reads stale), re-run with control-plane's totality test, and post COMPLETE.

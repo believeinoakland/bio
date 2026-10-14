@@ -1,4 +1,4 @@
-/* screens-inquiry R3: the document screen, on interface-shell's served page over a scripted plane. */
+/* screens-inquiry R3, R8, R15: the document screen, on interface-shell's served page over a scripted plane. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
@@ -38,7 +38,7 @@ test("R3 the document drawn: title, source, its grade as one mark, passages with
   assert.ok(cites.querySelector(`a.cs-ref[href="/app/question/${Q}"]`) && cites.querySelector(`a.cs-ref[href="/app/project/${P}"]`));
   assert.match(cites.textContent, /in projects you can't see/);
   assert.match(section(p, "People it names").textContent, /L\. Chen, Director of Public Works/);
-  assert.deepEqual([...new Set(actsIn(m))].sort(), ["attest", "cite", "findin", "gradenote", "identityclaim", "monitor", "pagetranscribe", "release", "retire", "transcribe"]);
+  assert.deepEqual([...new Set(actsIn(m))].sort(), ["attest", "cite", "findin", "gradenote", "identityclaim", "monitor", "monitorset", "pagetranscribe", "release", "retire", "transcribe"]);
   assert.deepEqual(rawKeys(p.root()), []);
 });
 
@@ -114,4 +114,30 @@ test("R3 controls: a release, a transcription and a claim with nothing written a
   const noq = await open(at, { plane: { list: ok({ bundles: [] }) } });
   assert.ok(!actsIn(main(noq)).includes("cite"));
   assert.match(main(noq).textContent, /Open a question first/);
+});
+
+test("R15 Watch for changes sends monitorset and Check for a new version now sends monitor: two acts, each alone", async () => {
+  const p = await open(at, { plane: { monitorset: ok({ ok: true, bundleId: D, enabled: true }), monitor: ok({ ok: true }) } });
+  const b = (op) => main(p).querySelector(`button[data-act="${op}"]`);
+  assert.match(b("monitorset").textContent, /Watch for changes/);
+  assert.match(b("monitor").textContent, /Check for a new version now/);
+  await press(p, "monitorset", { reason: "the policy changes yearly" });
+  assert.deepEqual(p.byOp("monitorset").map((r) => [r.body.bundleId, r.body.enabled]), [[D, true]]);
+  assert.equal(p.byOp("monitor").length, 0, "watching checks nothing now");
+  assert.match(main(p).querySelector('[data-outcome="monitorset"]').textContent, /Watching this document's address/);
+  await press(p, "monitor");
+  assert.deepEqual(p.byOp("monitor").map((r) => r.body), [{ bundleId: D }]);
+  assert.equal(p.byOp("monitorset").length, 1, "checking now asks no watching");
+  /* control: a refused watch is drawn beside its act, and nothing else is sent */
+  const r = await open(at, { plane: { monitorset: refusedIn("NO_LOCATOR", "This document has no public address to watch.") } });
+  const slot = await press(r, "monitorset", { reason: "why" });
+  assert.match(slot.textContent, /no public address to watch/);
+  assert.equal(r.byOp("monitor").length, 0);
+});
+
+test("R8 the question a passage is cited in, and an unread page, are choices among record data", async () => {
+  const p = await open(at, { plane: { list: ok({ bundles: [{ bundle_id: Q, title: "screen.document.copy" }] }) } });
+  const opts = (id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
+  assert.deepEqual(opts("document-cite-question"), [[Q, "screen.document.copy"]], "a title is drawn as data, never read as a key");
+  assert.deepEqual(opts("document-unread-page"), [["7", "7"], ["8", "8"], ["9", "9"]]);
 });

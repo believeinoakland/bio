@@ -1,0 +1,90 @@
+/* screens-publish R1 (the case editor) on interface-shell's served page: the project's drafts and the chosen draft's
+ * ladder, scope, what it leaves out with each acknowledgement, the people it names with their reasons, what changed;
+ * each act sent with what its owner takes. */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { open, main, text, ops, press, fill, last, ok, refusedIn, P, DR, C, plane } from "./fixtures.mjs";
+
+const PATH = `/app/case-editor/${P}`;
+
+test("R1 the editor reads the project's drafts, the draft's document, its check and its \"what changed\" drafts", async () => {
+  const p = await open(PATH);
+  assert.equal(last(p, "casedrafts").query.project, P);
+  assert.equal(last(p, "casedocument").query.case, C);
+  assert.equal(last(p, "casedocument").query.edition, "2");
+  assert.equal(last(p, "casecheck").query.case, C);
+  assert.equal(last(p, "whatchangeddrafts").query.case, C);
+  assert.equal(last(p, "reviewcopy").query.draft, DR);
+});
+
+test("R1 the readiness ladder: Draft, Internally checked, Externally compliant, Distributed, each not yet evaluated until checked", async () => {
+  let p = await open(PATH);
+  const rung = (q, k) => main(q).querySelector(`[data-rung="${k}"]`);
+  assert.deepEqual(main(p).querySelectorAll("[data-rung]").map((r) => r.getAttribute("data-rung")), ["draft", "internal", "external", "distributed"]);
+  assert.equal(rung(p, "internal").className, "on", "casecheck held: internally checked");
+  assert.equal(rung(p, "external").className, "on", "the copy's gates passed");
+  assert.match(rung(p, "distributed").textContent, /not yet evaluated/);
+  p = await open(PATH, { plane: { casecheck: ok({ state: "none" }), reviewcopy: ok({ ...(plane().reviewcopy.json.result), gates: "undetermined" }) } });
+  for (const k of ["internal", "external", "distributed"]) assert.match(rung(p, k).textContent, /not yet evaluated/, k);
+});
+
+test("R1 the scope, what it leaves out with each acknowledgement and its reason, the people named with their reason or that it is missing, what changed", async () => {
+  const p = await open(PATH);
+  const t = text(p);
+  const scope = p.doc.getElementById("ce-scope");
+  assert.equal(scope.value || scope.textContent, "Rent adjustments under the Coliseum lease, 2024 to 2026.");
+  assert.match(t, /Whether the rents are fair/);
+  assert.match(t, /Acknowledged by mai.*The fairness question is another project's/);
+  assert.match(t, /OBS-2026-0001 · By name · signed the March 2024 adjustment/);
+  assert.match(t, /OBS-2026-0002.*reason missing/);
+  assert.match(t, /Adds the 2025 rent schedules/);
+  assert.ok(main(p).querySelector('[data-origin="machine"]'), "a machine draft of what changed is labelled machine work");
+});
+
+test("R1 \"Prepare the draft\" sends casedraft with the member's scope and the draft; a scope left empty sends nothing (control)", async () => {
+  const p = await open(PATH);
+  fill(p, { "ce-scope": "" });
+  await press(p, "casedraft", { reason: "edit" });
+  assert.equal(p.byOp("casedraft").length, 0);
+  fill(p, { "ce-scope": "Rents, 2024 to 2026." });
+  await press(p, "casedraft", { reason: "edit" });
+  assert.equal(last(p, "casedraft").body.draft, DR);
+  assert.equal(last(p, "casedraft").body.scope, "Rents, 2024 to 2026.");
+});
+
+test("R1 \"Acknowledge what it leaves out\" carries the acknowledger's own reason; STATEMENT_ACK_NO_REASON is drawn by its words", async () => {
+  const p = await open(PATH);
+  fill(p, { "ce-ackreason": "It belongs to the fairness project." });
+  await press(p, "statementack");
+  assert.equal(last(p, "statementack").query.draft, DR);
+  assert.equal(last(p, "statementack").body.reason, "It belongs to the fairness project.");
+  const q = await open(PATH, { plane: { statementack: refusedIn("STATEMENT_ACK_NO_REASON") } });
+  fill(q, { "ce-ackreason": "x" });
+  const { slot } = await press(q, "statementack");
+  assert.match(slot().textContent, /Give your own reason/);
+});
+
+test("R1 \"Name with the reason\" sends attribute with the case, the observation, the level and the reason", async () => {
+  const p = await open(PATH);
+  fill(p, { "ce-level-1": "cover", "ce-why-1": "They signed the adjustment as the council's agent." });
+  await press(p, "attribute", { nth: 1 });
+  assert.deepEqual({ ...last(p, "attribute").body }, { caseId: C, edition: 2, observation: "OBS-2026-0002", level: "cover", reason: "They signed the adjustment as the council's agent." });
+});
+
+test("R1 \"Draft what changed\" only while the assistant is reachable, its answer labelled, untested drawn; writing help under scope and what changed only", async () => {
+  let p = await open(PATH);
+  assert.ok(!ops(p).includes("whatchangedpropose"), "not reachable: absent");
+  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
+  p = await open(PATH, { plane: { ...reach, whatchangedpropose: ok({ draft: { id: "WCD-2", text: "x", label: { machine: true } }, untested: true }) } });
+  assert.ok(ops(p).includes("whatchangedpropose"));
+  fill(p, { "ce-wc": "Adds the 2025 schedules." });
+  await press(p, "whatchangedpropose", { reason: "draft" });
+  assert.equal(last(p, "whatchangedpropose").query.case, C);
+  assert.equal(last(p, "whatchangedpropose").body.text, "Adds the 2025 schedules.");
+  const helps = main(p).querySelectorAll('button[data-act="writinghelp"]').map((b) => b.getAttribute("data-field"));
+  assert.deepEqual(helps, ["scope", "whatchanged"], "writing help under the scope and what changed fields only, never under a reason");
+  p = await open(PATH, { plane: { writinghelp: ok({ ok: true, text: "Rent adjustments, 2024–2026.", untested: true }) } });
+  await press(p, "writinghelp", { values: { "ce-scope": "rents 2024 2026" } });
+  assert.equal(last(p, "writinghelp").body.field, "scope");
+  assert.match(text(p), /machine work.*Rent adjustments, 2024–2026\..*Not yet tested/);
+});
