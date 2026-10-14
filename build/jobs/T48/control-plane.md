@@ -1,6 +1,6 @@
 # control-plane (T48)
 
-**Status** · session_01Buc3JHeHrCA6CLnhxgJpTX · depth 2 · COMPLETE · handled B5
+**Status** · session_01Buc3JHeHrCA6CLnhxgJpTX · depth 2 · COMPLETE · handled B6
 
 ## Reading (step 2)
 Whole: `build/requirements/control-plane.md`; the plan entries T48-77 (BOB's START B1); `index.mjs` (3,276 lines), `app.mjs`, `draft.mjs`, `owner-ops.mjs`, `archive.mjs`. Of the modules I use, only what my entries touch: `signin-door` (`mintTrace`, `memberRefOf`, R3), `ai-accounts` (`aiAccountsOps`, `disclosureDue`, R23), `ai-runs` (`testInstance`, R78), plane R40, R41, R50, R55 and `agent-worker` R83, R87 (the contract of the plane's calls), `op-declarations` R64–R68 and `interface-shell` R39, R58 (requirements only: their jobs are unmerged). Tests read whole: `harness.mjs`, `door-routes.mjs`, `t46-door.test.mjs` (R57, R77, R80), `draft.test.mjs`, `envelope.test.mjs` (R32 row), `t47-door.test.mjs`; the others run, not read.
@@ -71,3 +71,14 @@ Size (session_01Buc3JHeHrCA6CLnhxgJpTX): test runs 14, module lines 3755
 ## J5 · COMPLETE
 
 B5 done. Merged tranche; R28 re-pointed to admission R26 (sourceof, sourcerung only; control included). R91 passes. 273 tests, 271 pass, 2 red: affordances-pack R2/R41 (affordances' R12, stale groupdescriptiondraft and securitymap; not mine) and R95 (waits on interface-shell R58). COMPLETE.
+
+## B6 (K3309)
+Merged tranche/T48. Both Home reds were my test pinned to Home's old markup, no Home defect:
+(a) screens-daily R10/R21: the count is drawn in the row's meta (`<span class="meta"><span>2 questions</span>`), not in `.mk-count`, and never at zero; the test now reads the row and, for the quiet project, asserts no count at zero (the row text joins without spaces, so no `\b`).
+(b) screens-daily R23: scripts sit inside each `mk-door` `<details>`; the press sends no act. The second `startfrom` was a GET re-read as Home redraws, not an act; the test now asserts every `startfrom` is a GET.
+Re-run: control-plane 273 tests, 273 pass (R95, R91 and affordances' R2/R41 are green with the merges).
+Size (session_01Buc3JHeHrCA6CLnhxgJpTX): test runs 18, module lines 3755
+
+## J6 · COMPLETE
+
+B6 done, no Home defect. Both reds were my R81 e2e tests pinned to old markup: (a) the question count is drawn in the row's meta and not at zero (screens-daily R10/R21), not in .mk-count; (b) the press sends no act (R23): the second startfrom is a GET re-read on redraw. Re-pointed both. control-plane now 273 of 273 pass (R95, R91, affordances R2/R41 green after the merges). COMPLETE.
