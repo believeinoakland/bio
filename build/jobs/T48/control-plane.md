@@ -35,3 +35,7 @@ Not mine to change, found while doing T48-77:
 1. modules.json `uses` for control-plane lacks action-replies, explore, standards and filings, whose maps R90 and R92 route through. The architecture check refuses a test that imports them. I drive those ops through the door only; if you add the four edges I add the maps' route assertions (or plane R5's test covers them).
 2. Plane R55 / agent-worker R87: the door hands the plane `trace` and `memberRef` (names are mine, chosen from agent-model R16) as properties of the hooks' gatedOp ctx for `ask` and `pagetranscribe`, of the ask given to the object's `draft(...)`, and of the args of `dispatchMemberRun(...)`. Plane reads those names. The plane's `readtranslate` answer is relayed whole minus grant, suggestions, read, usage, calls.
 3. signin-door comments still name credentials.disclosureDue (its job).
+
+## J2 · COMPLETE
+
+T48-77 done: R90–R95 applied, no deferral. 273 control-plane tests, 263 pass, 10 red. All 10 wait on unmerged same-layer jobs and are not defects of this module: op-declarations (specs for the new ops and the ai-accounts family; R53 r53-routes:70 is the inherited one), instance-setup (update routes), interface-shell (R58 band). Each was green with local stand-ins that I reverted. On your CHANGE after those merge I re-run. format, architecture (0 failures for my files), ownership, coverage (63 of 63) are clean. Details in my record.
