@@ -169185,7 +169185,8 @@ var CASE_INPUTS_WORDS = Object.freeze({
   "signing.openrequest.nowindow.line": "{whom} was asked for comment on {asked_at}, with no date given for the window to close; the reply answers {answered} of the {claims} claims the request laid out.",
   "signing.openrequest.nowindow.noreply": "{whom} was asked for comment on {asked_at}, with no date given for the window to close; no reply is recorded.",
   "signing.openrequest.nowindow.notlaidout": "{whom} was asked for comment on {asked_at}, with no date given for the window to close; no reply laid out claim by claim is recorded.",
-  "signing.openrequest.unread": "Your group's Civicsmith couldn't read whether any request for comment on this case is still open, so none is listed here."
+  "signing.openrequest.unread": "Your group's Civicsmith couldn't read whether any request for comment on this case is still open, so none is listed here.",
+  "signing.openrequest.noquote": "{whom}'s reply asks not to be quoted, so the case says what it says without quoting its words."
 });
 function fillWords3(key2, fill = {}) {
   const en = CASE_INPUTS_WORDS[key2];
@@ -169468,9 +169469,9 @@ function openRequestRow(r) {
     ...r.quotable === void 0 ? {} : { quotable: r.quotable }
   };
 }
-var OPEN_REQUEST_NOQUOTE_PLAIN = "{whom}'s reply asks not to be quoted.";
+var OPEN_REQUEST_NOQUOTE_KEY = "signing.openrequest.noquote";
 function openRequestLine(r) {
-  const quoting = r.quotable === false ? { quoting: { key: null, says: OPEN_REQUEST_NOQUOTE_PLAIN.replace("{whom}", () => r.whom) } } : {};
+  const quoting = r.quotable === false ? { quoting: { key: OPEN_REQUEST_NOQUOTE_KEY, says: fillWords3(OPEN_REQUEST_NOQUOTE_KEY, { whom: r.whom }) } } : {};
   const reply = r.answers ? "line" : r.replied === false ? "noreply" : "notlaidout";
   const key2 = OPEN_REQUEST_KEYS[r.window_closes ? reply : `nowindow.${reply}`];
   return {
