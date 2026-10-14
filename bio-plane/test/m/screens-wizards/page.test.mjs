@@ -39,14 +39,14 @@ test("R2 R6 in the page: cs.wizard starts the guide in the dock, which opens the
   assert.equal(dock && dock.getAttribute("data-panel"), "guide");
   assert.ok(dock.textContent.includes("Submit your draft") && dock.textContent.includes("An owner approves it"));
   assert.equal(p.location.pathname, "/app/wizards");
-  const rung = p.root().querySelector("#cs-main .cs-ring");
+  const rung = p.root().querySelector("#cs-main .cs-target");
   assert.ok(rung, "the step's act is rung");
   assert.equal(rung.getAttribute("data-act"), "wizardsubmit");
   assert.equal(rung.closest("tr.cs-panel").hidden, false, "its row panel opened");
   // Alt+Shift+W rings again (the guide's `ring`)
   p.fire(p.doc, "keydown", { key: "W", altKey: true, shiftKey: true });
   await p.settle(40);
-  assert.ok(p.root().querySelector("#cs-main .cs-ring"));
+  assert.ok(p.root().querySelector("#cs-main .cs-target"));
   const sent = new Set(p.requests.map((r) => r.op));
   for (const op of ["wizardsubmit", "wizardretire", "wizarddraft", "wizardrevise", "wizardapprove"]) assert.ok(!sent.has(op), `${op} not sent`);
   assert.deepEqual(p.byOp("wizardprogress").map((r) => [r.body.event, r.body.step ?? null]), [["start", null], ["step", 1]]);
@@ -101,12 +101,12 @@ test("R2 R5 R6 in the page: a screen's wizard mark starts the guide; Next, Back 
   await p.settle(120);
   assert.equal(dock() && dock().getAttribute("data-panel"), "guide");
   assert.ok(dock().textContent.includes("Submit your draft"));
-  assert.equal(p.root().querySelector("#cs-main .cs-ring").getAttribute("data-act"), "wizardsubmit");
+  assert.equal(p.root().querySelector("#cs-main .cs-target").getAttribute("data-act"), "wizardsubmit");
   // Next: step 2, its act rung
   await p.click(ctl("next"));
   await p.settle(120);
   assert.ok(dock().textContent.includes("Or withdraw it"));
-  assert.equal(p.root().querySelector("#cs-main .cs-ring").getAttribute("data-act"), "wizardretire");
+  assert.equal(p.root().querySelector("#cs-main .cs-target").getAttribute("data-act"), "wizardretire");
   // Back: step 1 again, not counted again
   await p.click(ctl("back"));
   await p.settle(120);

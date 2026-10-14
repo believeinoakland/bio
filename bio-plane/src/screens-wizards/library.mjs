@@ -96,12 +96,12 @@ export const library = {
           + cs.field(`wz-as-${k}`, S + "edit.addscreen") + cs.field(`wz-aa-${k}`, S + "edit.addact")
           + cs.field(`wz-aw-${k}`, S + "edit.addwhat", { area: true }) + cs.field(`wz-ay-${k}`, S + "edit.addwhy", { area: true }) + `</fieldset>` + save);
       }
-      return cs.sec(S + "steps.head", `<ol class="cs-list">${lines.join("")}</ol>`) + edit;
+      return cs.sec(S + "steps.head", `<ol class="mk-list">${lines.join("")}</ol>`) + edit;
     });
 
     // what changed in a copy's original (`baseupdates`; DEC-158 (4)), with the act that brings it across (R1)
     const changes = (s, v) => updates.filter((u) => u.copy === s.id && (u.copy_version === v.id)).map((u) => {
-      const list = (steps, base) => `<ol class="cs-list">${(steps || []).map((st, i) => {
+      const list = (steps, base) => `<ol class="mk-list">${(steps || []).map((st, i) => {
         const what = (base && u.base && String(u.base).startsWith("WIZ-") && said("wizard." + u.base + ".step" + (i + 1) + ".what")) || E(st.what || "");
         return `<li>${what} <span class="meta">${screenName(st.screen)} · ${actName(st.screen, st.act)}</span></li>`;
       }).join("")}</ol>`;

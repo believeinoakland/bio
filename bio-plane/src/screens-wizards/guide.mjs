@@ -301,7 +301,7 @@ export const guide = {
       const pairs = ui.rec.pairs.map((p, i) => `<li>${W(G + "recording.pair", { i: String(i + 1), screen: { html: P.said(cs, "screen." + p.screen + ".name") || E(p.screen) }, act: { html: P.said(cs, "act." + p.act + ".label." + p.screen) || E(p.act) } })} `
         + btn("unrecord", W(G + "recording.remove", { i: String(i + 1) }), "quiet", ` data-i="${i}"`) + "</li>").join("");
       return `<div class="cs-wizard" data-guide-state="recording"><span class="step">${W(G + "recording")}</span><p>${W(G + "recording.intro")}</p>`
-        + (pairs ? `<ol class="cs-list">${pairs}</ol>` : `<p class="cs-state" data-state="empty">${W(G + "recording.empty")}</p>`)
+        + (pairs ? `<ol class="mk-list">${pairs}</ol>` : `<p class="cs-state" data-state="empty">${W(G + "recording.empty")}</p>`)
         + cs.field("wz-rec-name", G + "recording.name")
         + `<span class="nav">${cs.act("wizarddraft", { label: G + "recording.save" })}${btn("recstop", W(G + "recording.stop"), "quiet")}</span></div>`;
     }
@@ -362,14 +362,14 @@ export const guide = {
     }
     // Home's welcome offer (R7) keeps its own band, which is not a chip
     const offer = screen === "home" && ui.joined && !ui.offerHidden && !kept(ids.welcome)
-      ? `<div class="cs-reason" role="region" data-guide-offer><p>${W(G + "welcome")}</p><span class="cs-actrow">`
+      ? `<div class="cs-reason" role="region" data-guide-offer><p>${W(G + "welcome")}</p><span class="mk-acts">`
         + `<button type="button" class="cs-btn" data-tone="primary" data-guide="start" data-script="${ids.welcome}" data-at="${ids.welcomeAt}">${W(G + "welcome.continue", { name: { html: P.nameOf(cs, view, ids.welcome, "") } })}</button>`
         + `<button type="button" class="cs-btn" data-tone="quiet" data-guide="notnow">${W(G + "notnow")}</button></span></div>`
       : "";
     if (!items.length) return offer;
     const head = items.length === 1 ? W("wizard.marks.chip.one") : W("wizard.marks.chip", { n: String(items.length) });
     const open = ui.marksOpen === true;
-    const list = open ? "<ul class=\"cs-list\">" + items.map((x) => `<li><span>${x.name}</span> <button type="button" class="cs-btn" data-guide="start" data-script="${E(x.id)}"`
+    const list = open ? "<ul class=\"mk-list\">" + items.map((x) => `<li><span>${x.name}</span> <button type="button" class="cs-btn" data-guide="start" data-script="${E(x.id)}"`
       + (x.version ? ` data-version="${E(x.version)}"` : "") + ` data-at="${x.at}">${W(x.cont ? G + "welcome.continue" : G + "mark.start", { name: { html: x.name } })}</button>`
       + (x.required ? ` <span class="meta">${W("wizard.mark.recommended")}</span>` : "")
       + (x.draft ? ` <span class="meta">${W(G + "mark.draft")}</span>` : "")

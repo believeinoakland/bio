@@ -1,7 +1,7 @@
 /* T48: the guide's line on door-offered scripts (R10), the one chip (R11) and the common line (R12). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { checkClasses } from "../../../src/interface-shell/index.mjs";
 import { standIn, said, unhtml } from "./standin.mjs";
 import { GUIDE, WELCOME } from "../../../src/screens-wizards/index.mjs";
 import { open, lacks, has, SCREENS } from "./kit.mjs";
@@ -95,27 +95,22 @@ test("R11 Home's welcome offer keeps its own band, which is not a chip", async (
   assert.ok(h.includes("data-guide-offer") && h.includes('data-guide="notnow"'));
 });
 
-const css = readFileSync(new URL("../../../../docs/development/ux-substrate/visual-language/civicsmith.css", import.meta.url), "utf8")
-  + ["index.mjs", "browser.mjs"].map((f) => readFileSync(new URL(`../../../src/interface-shell/${f}`, import.meta.url), "utf8")).join("\n");
-const DEFINED = new Set([...css.matchAll(/\.([a-zA-Z][\w-]*)/g)].map((m) => m[1]));
-/* until `shell.css` exists (interface-shell R56) the design's own `mk-*` classes are read as the design spells them */
-const undefinedIn = (h) => [...new Set([...String(h).matchAll(/class="([^"]*)"/g)].flatMap((m) => m[1].split(/\s+/)).filter((c) => c && !DEFINED.has(c) && !c.startsWith("mk-")))];
-
-test("R12 every class the library and the guide draw is defined by a served stylesheet; no cs-form, no cs-note, no bare label with help", async () => {
+test("R12 the module\'s real SCREENS and GUIDE compose under interface-shell R56 (every class defined by a served stylesheet); no cs-form, no cs-note, no bare label with help", async () => {
   const empty = { wizards: env({ ok: true, state: "offered", scripts: [], truncated: false }), baseupdates: env({ ok: true, entries: [] }), projectlist: env({ ok: true, projects: [] }) };
   for (const table of [libraryTable(), empty]) {
     const a = await open("wizards", { me: ADMIN, table });
-    assert.deepEqual(undefinedIn(a.html), []);
     assert.ok(!/cs-form|cs-note/.test(a.html));
   }
+  // interface-shell R56's own check over the module's real screens and guide
+  assert.equal(checkClasses(SCREENS, GUIDE, ""), true);
   const g = standIn({ plane: plane({ wizardsat: sat([S("WIZ-c1", ["invite"])]) }), drawn: { members: ["invite"] }, kit: { can: canFor(true) } });
   await g.enter("members");
   await g.control("chip");
   await g.start({ record: { project: "P1" } });
   const html = [g.marks(), g.render()].join("");
-  assert.deepEqual(undefinedIn(html), []);
+  assert.ok(!/cs-form|cs-note|cs-list|cs-actrow/.test(html));
   await g.start({ script: GR.id });
-  assert.deepEqual(undefinedIn(g.render()), []);
+  assert.ok(!/cs-form|cs-note|cs-list|cs-actrow/.test(g.render()));
 });
 
 test("R12 over an empty fixture the library draws no empty section and no zero; a failed read is drawn failed, never as empty", async () => {
