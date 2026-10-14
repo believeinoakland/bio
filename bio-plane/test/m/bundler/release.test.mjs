@@ -15,12 +15,14 @@ import { stripJsonc, parseJsonc } from "../../../scripts/jsonc.mjs";
 import { versionSites, resolveVersion } from "../../../scripts/resolve-version.mjs";
 import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack } from "../../../scripts/derive-bindings.mjs";
 import { planeMember, discoverMembers, buildMember, manifestFrom, verifyStatic } from "../../../scripts/fleet-bundle.mjs";
-import { fleetStatement, NS_FLEET, NS_RELEASE, verifySshsig } from "../../../src/sshsig.mjs";
+import {
+  fleetStatement, NS_FLEET, NS_RELEASE, verifySshsig, NS_RELEASE_NOTICE, releaseNoticeStatement, verifyReleaseNotice,
+} from "../../../src/sshsig.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
 import { renderSignpage } from "../../../scripts/embed-signpage.mjs";
 import {
   makeRepo, addMember, addContainerMember, addScannerMember, buildAll, run, snapshot, readJson, writeJson, rm, hex, planeConfig,
-  VERSION, ACCOUNT, PLANE, DIGEST, CONTAINER_PACKAGES, SCANNER_PACKAGES, DIGEST_A, DIGEST_B, scannerClasses,
+  VERSION, ACCOUNT, PLANE, DIGEST, CONTAINER_PACKAGES, SCANNER_PACKAGES, DIGEST_A, DIGEST_B, scannerClasses, NOTES,
 } from "./repo.mjs";
 
 const refused = (r, code) => {
@@ -639,6 +641,13 @@ function expectedPayload(root, version = VERSION) {
     members, plane: { sha256: hex(p), bytes: p.length, buf: p }, bufs };
 }
 
+/** R32: the notice the release must sign, from the fixture's notes file and the payload, through signatures' statement. */
+function expectedNotice(root, payload, version = VERSION) {
+  const n = readJson(join(root, "release/notes", `${version}.json`));
+  const notice = { version, date: n.date, manifest: hex(Buffer.from(payload, "utf8")), security: n.security, notes: n.notes };
+  return { notice, statement: Buffer.from(releaseNoticeStatement(notice)) };
+}
+
 test("R22: a fresh fleet assembles; the payload is signatures' fleetStatement over the plane and every member; --emit-payload writes it; --dry-run writes nothing else", async () => {
   const root = await makeRepo({ members: { "alpha-worker": { flags: null }, "beta-worker": { assets: { "assets/model.bin": "MODEL-1", "assets/core.wasm": "\0asm" } } } });
   try {
@@ -775,7 +784,9 @@ test("R23: without --sign the fleet signature comes from --fleet-sig and the pla
 
     const fleetSig = signSshsig(seed, payload, NS_FLEET);
     writeFileSync(sigFile, fleetSig);
-    const { r } = attempt({ version: "1.2.2", signer, sig: goodPlane }, ["--fleet-sig", sigFile]);
+    const noticeFile = join(sigFile, "..", "notice.sig");
+    writeFileSync(noticeFile, signSshsig(seed, expectedNotice(root, payload).statement, NS_RELEASE_NOTICE));
+    const { r } = attempt({ version: "1.2.2", signer, sig: goodPlane }, ["--fleet-sig", sigFile, "--notice-sig", noticeFile]);
     assert.equal(r.status, 0, r.stdout + r.stderr);
     const rel = readJson(relPath);
     assert.equal(rel.sig, goodPlane);
@@ -1245,13 +1256,15 @@ test("R30: no command a session runs reads BIO_RELEASE_SEED or writes a signatur
     /* The signatures, made "in the signing environment": here, by the test with a throwaway key. */
     writeFileSync(join(work, "fleet.sig"), signSshsig(seed, payload, NS_FLEET));
     writeFileSync(join(work, "plane.sig"), signSshsig(seed, plane.buf, NS_RELEASE));
+    writeFileSync(join(work, "notice.sig"), signSshsig(seed, expectedNotice(root, payload).statement, NS_RELEASE_NOTICE));
     writeJson(join(work, "osv.json"), {});
     const spy = join(work, "spy.log");
     const session = [
       ["bio-plane/scripts/release-assemble.mjs", "--dry-run"],
       ["bio-plane/scripts/release-assemble.mjs", "--version", VERSION, "--emit-payload", join(work, "p.txt"), "--emit-plane", join(work, "plane.mjs")],
       ["bio-plane/scripts/release-assemble.mjs", "--sign"],
-      ["bio-plane/scripts/release-assemble.mjs", "--version", VERSION, "--fleet-sig", join(work, "fleet.sig"), "--plane-sig", join(work, "plane.sig")],
+      ["bio-plane/scripts/release-assemble.mjs", "--version", VERSION, "--fleet-sig", join(work, "fleet.sig"), "--plane-sig", join(work, "plane.sig"),
+        "--notice-sig", join(work, "notice.sig")],
       ["bio-plane/scripts/bundles.mjs", "--check"],
       ["bio-plane/scripts/bundles.mjs", "--install-dirs"],
       ["--import", join(import.meta.dirname, "osvstub.mjs"), "bio-plane/scripts/release-advisories.mjs"],
@@ -1267,6 +1280,7 @@ test("R30: no command a session runs reads BIO_RELEASE_SEED or writes a signatur
     const rel = readJson(join(root, "release/RELEASE.json"));
     assert.equal(rel.sig, readFileSync(join(work, "plane.sig"), "utf8"));
     assert.equal(rel.fleetSig, readFileSync(join(work, "fleet.sig"), "utf8"));
+    assert.equal(readJson(join(root, "release/NOTICE.json")).sig, readFileSync(join(work, "notice.sig"), "utf8"), "and the notice's (R32)");
   } finally { rm(root); rmSync(work, { recursive: true, force: true }); }
 });
 
@@ -1294,11 +1308,13 @@ test("R30: a release is completed from signatures made elsewhere only when R23's
     const relPath = join(root, "release/RELEASE.json");
     const fsig = join(work, "fleet.sig"), psig = join(work, "plane.sig");
     writeFileSync(fsig, signSshsig(seed, payload, NS_FLEET));
+    const nsig = join(work, "notice.sig");
+    writeFileSync(nsig, signSshsig(seed, expectedNotice(root, payload).statement, NS_RELEASE_NOTICE));
     const attempt = (planeSig, extra = []) => {
       writeJson(relPath, { version: "1.2.2", signer, sig: signSshsig(seed, Buffer.from("an older plane"), NS_RELEASE) });
       writeFileSync(psig, planeSig);
       const before = snapshot(root);
-      const r = assemble(root, ["--version", VERSION, "--fleet-sig", fsig, "--plane-sig", psig, ...extra]);
+      const r = assemble(root, ["--version", VERSION, "--fleet-sig", fsig, "--plane-sig", psig, "--notice-sig", nsig, ...extra]);
       return { r, unchanged: JSON.stringify(snapshot(root)) === JSON.stringify(before) };
     };
     for (const [why, sig] of [["another key", signSshsig(other, plane.buf, NS_RELEASE)], ["another namespace", signSshsig(seed, plane.buf, NS_FLEET)],
@@ -1376,8 +1392,10 @@ test("R30 (T47, N944): with --sign the signer is the seed's own key: a RELEASE.j
     const otherSeed = envelope();
     writeFileSync(join(work, "fleet.sig"), signSshsig(otherSeed, payload, NS_FLEET));
     writeFileSync(join(work, "plane.sig"), signSshsig(otherSeed, plane.buf, NS_RELEASE));
+    writeFileSync(join(work, "notice.sig"), signSshsig(otherSeed, expectedNotice(root, payload).statement, NS_RELEASE_NOTICE));
     writeJson(relPath, { version: "1.2.2", signer: signerPublicLine(otherSeed) });
-    const done = assemble(root, ["--fleet-sig", join(work, "fleet.sig"), "--plane-sig", join(work, "plane.sig")], { BIO_RELEASE_SEED: seed });
+    const done = assemble(root, ["--fleet-sig", join(work, "fleet.sig"), "--plane-sig", join(work, "plane.sig"),
+      "--notice-sig", join(work, "notice.sig")], { BIO_RELEASE_SEED: seed });
     assert.equal(done.status, 0, done.stdout + done.stderr);
     assert.equal(readJson(relPath).signer, signerPublicLine(otherSeed), "RELEASE.json's signer kept");
   } finally { rm(root); rmSync(work, { recursive: true, force: true }); }
@@ -1403,5 +1421,160 @@ test("R30: the commands the signing workflow calls, in order, by their usage lin
     const { payload, plane } = expectedPayload(root);
     const rel = readJson(join(root, "release/RELEASE.json"));
     assert.ok(sshVerify(signer, rel.sig, plane.buf, NS_RELEASE) && sshVerify(signer, rel.fleetSig, Buffer.from(payload), NS_FLEET));
+  } finally { rm(root); }
+});
+
+/* ------------------------------------------------------------------------ R32 */
+
+const NOTICE_KEYS = ["version", "date", "manifest", "security", "notes", "sig", "signer"];
+const notesPath = (root, v = VERSION) => join(root, "release/notes", `${v}.json`);
+
+test("R32: --sign writes release/NOTICE.json beside the assets — version, the notes file's date, security and notes, the payload's SHA-256, the signature and the signer — and signatures' verifyReleaseNotice accepts it", async () => {
+  const root = await makeRepo();
+  const work = mkdtempSync(join(tmpdir(), "bundler-r32-"));
+  try {
+    const seed = envelope(), signer = signerPublicLine(seed);
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
+    const emit = join(work, "notice.txt");
+    const r = assemble(root, ["--sign", "--emit-notice", emit], { BIO_RELEASE_SEED: seed, ...SIGNING });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const { payload } = expectedPayload(root);
+    const { notice, statement } = expectedNotice(root, payload);
+    const out = readJson(join(root, "release/NOTICE.json"));
+    assert.deepEqual(Object.keys(out), NOTICE_KEYS);
+    assert.deepEqual({ ...out, sig: null }, { ...notice, sig: null, signer });
+    assert.deepEqual([out.date, out.security, out.notes], [NOTES.date, NOTES.security, NOTES.notes], "copied from the notes file");
+    assert.equal(out.manifest, hex(Buffer.from(payload, "utf8")), "the SHA-256 of the fleet payload: the whole release it announces");
+    assert.equal(out.signer, readJson(join(root, "release/RELEASE.json")).signer, "the release's signer line");
+    assert.ok(readFileSync(emit).equals(statement), "--emit-notice wrote the statement that was signed");
+    const v = await verifyReleaseNotice({ version: out.version, date: out.date, manifest: out.manifest, security: out.security,
+      notes: out.notes }, out.sig, "1.2.2", [signer]);
+    assert.equal(v.ok, true, JSON.stringify(v));
+    assert.ok(sshVerify(signer, out.sig, statement, NS_RELEASE_NOTICE), "stock ssh-keygen accepts it in bio-release-notice");
+    assert.ok(!sshVerify(signer, out.sig, statement, NS_RELEASE), "and in no other namespace");
+    assert.match(r.stdout, /^verified: stock ssh-keygen accepts the notice's sig over its statement$/m);
+    /* The notes are inside what is signed: one character changed is no longer this signature's notice. */
+    const tampered = { ...notice, notes: { ...notice.notes, must_do: notice.notes.must_do + "." } };
+    assert.equal((await verifyReleaseNotice(tampered, out.sig, "1.2.2", [signer])).ok, false);
+    assert.ok(!(r.stdout + r.stderr).includes(seed.split(".")[2]), "the seed is never printed");
+  } finally { rm(root); rmSync(work, { recursive: true, force: true }); }
+});
+
+test("R32: the date is the notes file's, never the clock's; a notice without --sign is completed from --notice-sig and written with it", async () => {
+  const root = await makeRepo();
+  const work = mkdtempSync(join(tmpdir(), "bundler-r32d-"));
+  try {
+    writeJson(notesPath(root), { ...NOTES, date: "2024-02-29", security: false, notes: { ...NOTES.notes, must_do: "" } });
+    const seed = envelope(), signer = signerPublicLine(seed);
+    const { payload, plane } = expectedPayload(root);
+    const { notice, statement } = expectedNotice(root, payload);
+    const emit = join(work, "n.txt");
+    const dry = assemble(root, ["--dry-run", "--emit-notice", emit]);
+    assert.equal(dry.status, 0, dry.stdout + dry.stderr);
+    assert.ok(readFileSync(emit).equals(statement), "--emit-notice writes the statement, as --emit-payload writes the payload");
+    assert.match(readFileSync(emit, "utf8"), /^date 2024-02-29$/m);
+    assert.match(readFileSync(emit, "utf8"), /^security no$/m);
+    writeFileSync(join(work, "f.sig"), signSshsig(seed, payload, NS_FLEET));
+    writeFileSync(join(work, "p.sig"), signSshsig(seed, plane.buf, NS_RELEASE));
+    writeFileSync(join(work, "n.sig"), signSshsig(seed, statement, NS_RELEASE_NOTICE));
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
+    const r = assemble(root, ["--fleet-sig", join(work, "f.sig"), "--plane-sig", join(work, "p.sig"), "--notice-sig", join(work, "n.sig")]);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const out = readJson(join(root, "release/NOTICE.json"));
+    assert.deepEqual(out, { ...notice, sig: readFileSync(join(work, "n.sig"), "utf8"), signer });
+    assert.equal(out.date, "2024-02-29");
+  } finally { rm(root); rmSync(work, { recursive: true, force: true }); }
+});
+
+test("R32: refuses NO_NOTES and NOTES_UNREADABLE naming the field — on a dry run and a signing run alike — before anything is emitted or written; a notes file with an empty `members` is NOTES_UNREADABLE", async () => {
+  const root = await makeRepo();
+  const work = mkdtempSync(join(tmpdir(), "bundler-r32n-"));
+  try {
+    const seed = envelope();
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer: signerPublicLine(seed) });
+    const cases = [
+      ["NO_NOTES", null, () => rmSync(notesPath(root))],
+      ["NOTES_UNREADABLE", "notes.members", () => writeJson(notesPath(root), { ...NOTES, notes: { ...NOTES.notes, members: "" } })],
+      ["NOTES_UNREADABLE", "notes.administrators", () => writeJson(notesPath(root), { ...NOTES, notes: { ...NOTES.notes, administrators: "" } })],
+      ["NOTES_UNREADABLE", "notes.members", () => writeJson(notesPath(root), { ...NOTES, notes: { ...NOTES.notes, members: "x".repeat(8001) } })],
+      ["NOTES_UNREADABLE", "notes", () => writeJson(notesPath(root), { ...NOTES, notes: { members: "m", administrators: "a" } })],
+      ["NOTES_UNREADABLE", "(the file)", () => writeFileSync(notesPath(root), "{ torn")],
+      ["NOTES_UNREADABLE", "(the file)", () => writeJson(notesPath(root), [NOTES])],
+      ["NOTES_UNREADABLE", "date", () => writeJson(notesPath(root), { ...NOTES, date: "2026-02-30" })],
+      ["NOTES_UNREADABLE", "date", () => { const { date: _d, ...rest } = NOTES; writeJson(notesPath(root), rest); }],
+      ["NOTES_UNREADABLE", "security", () => writeJson(notesPath(root), { ...NOTES, security: "yes" })],
+      ["NOTES_UNREADABLE", "version", () => writeJson(notesPath(root), { ...NOTES, version: "1.2.2" })],
+      ["NOTES_UNREADABLE", "summary", () => writeJson(notesPath(root), { ...NOTES, summary: "not carried" })],
+    ];
+    const good = readFileSync(notesPath(root));
+    for (const [code, field, arrange] of cases) {
+      arrange();
+      for (const [args, env] of [[["--dry-run", "--emit-notice", join(work, "n.txt"), "--emit-payload", join(work, "p.txt")], {}],
+        [["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING }]]) {
+        const before = snapshot(root);
+        const r = assemble(root, args, env);
+        refused(r, code);
+        if (field) assert.ok(r.stderr.includes(`cannot make the release notice: ${field}.`), `${field}:\n${r.stderr}`);
+        else assert.match(r.stderr, /release\/notes\/1\.2\.3\.json is absent/);
+        assert.doesNotMatch(r.stdout, /^signed:/m, "nothing signed");
+        assert.deepEqual(snapshot(root), before, `${code} ${field}: nothing written`);
+        assert.equal(existsSync(join(work, "n.txt")) || existsSync(join(work, "p.txt")), false, "nothing emitted");
+      }
+      writeFileSync(notesPath(root), good);
+    }
+    writeJson(notesPath(root), { ...NOTES, version: VERSION });
+    assert.equal(assemble(root, ["--dry-run"]).status, 0, "a notes file stating the release's own version is accepted");
+  } finally { rm(root); rmSync(work, { recursive: true, force: true }); }
+});
+
+test("R32: without --sign, no --notice-sig is NO_NOTICE_SIG, and a signature over other bytes, in another namespace or by another key is NOTICE_SIG_REJECTED, each writing nothing", async () => {
+  const root = await makeRepo();
+  const work = mkdtempSync(join(tmpdir(), "bundler-r32s-"));
+  try {
+    const seed = envelope(), signer = signerPublicLine(seed), other = envelope();
+    const { payload, plane } = expectedPayload(root);
+    const { notice, statement } = expectedNotice(root, payload);
+    writeFileSync(join(work, "f.sig"), signSshsig(seed, payload, NS_FLEET));
+    writeFileSync(join(work, "p.sig"), signSshsig(seed, plane.buf, NS_RELEASE));
+    const relPath = join(root, "release/RELEASE.json");
+    const nsig = join(work, "n.sig");
+    const complete = (extra) => {
+      writeJson(relPath, { version: "1.2.2", signer });
+      const before = snapshot(root);
+      const r = assemble(root, ["--fleet-sig", join(work, "f.sig"), "--plane-sig", join(work, "p.sig"), ...extra]);
+      return { r, unchanged: JSON.stringify(snapshot(root)) === JSON.stringify(before) };
+    };
+    const none = complete([]);
+    refused(none.r, "NO_NOTICE_SIG");
+    assert.ok(none.unchanged, "NO_NOTICE_SIG: nothing written");
+    const otherNotes = Buffer.from(releaseNoticeStatement({ ...notice, notes: { ...notice.notes, members: notice.notes.members + "!" } }));
+    for (const [why, sig] of [["other bytes", signSshsig(seed, otherNotes, NS_RELEASE_NOTICE)],
+      ["another namespace", signSshsig(seed, statement, NS_RELEASE)], ["another key", signSshsig(other, statement, NS_RELEASE_NOTICE)],
+      ["the fleet signature", signSshsig(seed, payload, NS_FLEET)]]) {
+      writeFileSync(nsig, sig);
+      const { r, unchanged } = complete(["--notice-sig", nsig]);
+      refused(r, "NOTICE_SIG_REJECTED");
+      assert.ok(unchanged, `${why}: nothing written`);
+      assert.equal(existsSync(join(root, "release/NOTICE.json")), false, `${why}: no notice`);
+    }
+    writeFileSync(nsig, signSshsig(seed, statement, NS_RELEASE_NOTICE));
+    const { r } = complete(["--notice-sig", nsig]);
+    assert.equal(r.status, 0, `the control: the right signature completes it\n${r.stdout}${r.stderr}`);
+  } finally { rm(root); rmSync(work, { recursive: true, force: true }); }
+});
+
+test("R32 (amends R22, R30): no session command reads the seed or signs the notice; the dry run proves the notes and names the notice it would carry", async () => {
+  const root = await makeRepo();
+  try {
+    const before = snapshot(root);
+    const dry = assemble(root, ["--dry-run"]);
+    assert.equal(dry.status, 0, dry.stdout + dry.stderr);
+    assert.match(dry.stdout, /^notice: 1\.2\.3 of 2026-10-14, manifest [0-9a-f]{16}…, security yes — from release\/notes\/1\.2\.3\.json$/m);
+    assert.match(dry.stdout, /and its notice from release\/notes\/1\.2\.3\.json\./);
+    assert.deepEqual(snapshot(root), before, "--dry-run writes no notice");
+    assert.equal(existsSync(join(root, "release/NOTICE.json")), false);
+    const refusedSign = assemble(root, ["--sign"], { BIO_RELEASE_SEED: envelope() });
+    refused(refusedSign, "NOT_SIGNING_ENVIRONMENT");
+    assert.match(refusedSign.stderr, /--notice-sig <file>/, "the refusal names how a notice signed elsewhere completes the release");
   } finally { rm(root); }
 });
