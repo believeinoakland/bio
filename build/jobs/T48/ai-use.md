@@ -38,3 +38,7 @@ R14 (`accountUseOverTime`), three points the text leaves open. I am building on 
 Another module's test made stale by R14: plane `test/m/plane/t41.test.mjs`:124 (R31) pins ai-use's ops to four (`ailimitset`, `ailimits`, `aiusage`, `exploreapprove`). R14's `op=aiuseovertime` makes five, so that one test is red on this branch and green on `tranche/T48`. Its list needs `aiuseovertime` (plane's job, or named at my merge, K2704); the op's spec is T48-63's.
 
 Also: notice-producers' tests build on ai-use's test world and read the accounts as `w.c`. The world keeps `c` as the ai-accounts instance, so they stay green (114 pass). `credentials` can be dropped from ai-use's `uses`: no file of the module or its tests imports it.
+
+## J3 · COMPLETE
+
+T48-29 done. Re-pointed to ai-accounts: no file imports credentials any more. R14 `accountUseOverTime` and its op `aiuseovertime` are built on J1's three readings. R6 now fails closed with `KEPT_AWAY_UNREADABLE`. ai-use tests 78/78. Architecture, coverage (14/14), format and ownership checks: 0 failures. run.mjs architecture: 0 failures. One red outside the module: plane `t41.test.mjs`:124 (J2). Details are in the Completion section of `build/jobs/T48/ai-use.md`.
