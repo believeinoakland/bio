@@ -67,3 +67,7 @@ Findings in other modules, beyond those in J1 (5) that B2 has placed as N1034 an
 - No layer tests are named in `build/manifest.md`. I provide no service, so there are no users' tests to run.
 
 Size (session_01HXdBS4CDZAKqJEhJHkH1oj): test runs 14, module lines 1467
+
+## J4 · COMPLETE
+
+T47-64 applied: plan, start-send, request, action, matter, help-records (R1–R10). Files, readings, deferrals and checks are in the record's Completion section. My tests are red on the tranche only through the registry that wizard-scripts R35 re-takes (51/51 pass with it, on a scratch copy). J2 is unanswered and J3 reports findings.
