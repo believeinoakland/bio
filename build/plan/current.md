@@ -32,7 +32,7 @@ It is the only module marked `legacy` in `modules.json`. `setup-page` is not leg
    1. coverage: every id marked *(not yet met: T48)*, until its module's merge;
    2. row census:
       - T47's L3+ rows (59: 37 changed, 21 arrived, 1 departed, C-69.6; K3192), until T48-12;
-      - rows that T48's L3+ jobs add, move or change, until T49's stamp: C-113.6 (N1023); C-32.4 and C-33.6–.9's `where`s (N1024); C-115.47 moved to filing-templates; action-replies' three C-150 rows; instance-setup's `LANGUAGE_NOT_SET` and N1047's rows; duties' reason codes (N1044); inquiry's terminal-revision code if it is distinct (N1012);
+      - rows that T48's L3+ jobs add, move or change, until T49's stamp: C-113.6 (N1023); C-32.4 and C-33.6–.9's `where`s (N1024); C-115.47 moved to filing-templates; action-replies' three C-150 rows; instance-setup's `LANGUAGE_NOT_SET` and N1047's rows; duties' reason codes (N1044); C-87.17 `REVIEW_BAD_UNTIL` (T48-44) and the re-pointed `where`s of C-32.4, C-33.5–.9 (T48-46, -47; K3207);
    3. **module order (N1014, N1055; K3192 group R):** membership `module-order.test.mjs`:13, :151, :218, :325 (R140) and `t9-notice-sight-bounds.test.mjs`:161 (R79), and promotion `m/promotion/registry.test.mjs`:64, until T48-9;
    4. **legacy-ui** (stays, K3190): `statement-ack.test.mjs` (N794), `progression-revision.test.mjs` and `queue-recipients.test.mjs` (N865), and its 8 tests failing at the `{role}` sign-in (N1057), through T48;
    5. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close;
@@ -99,7 +99,10 @@ It is the only module marked `legacy` in `modules.json`. `setup-page` is not leg
 - **T48-24 · explore** · (N1027; DEC-215 (2), K3138; N1030) the connections read two rings out from a centre: each step's kind, word, grade and citation, and where the limit stopped (K1469, K1487); a walk stopped at its depth says so; `exploreverify` works over a chain. The edge `explore → connections` (57 < 66) is added if the walk reads T48-20's rows · text BOB's · after T48-20.
 - **T48-25 · calculations** · (N1033, K3145, K3189) `spotcheckvisit`'s author check (`index.mjs`:1703) compares under membership's one viewer spelling, so `member:admin` matches `admin`; tested with an administrator's session · text BOB's.
 
-**L5 merge order:** events, connections, standards, duties, people, explore, calculations.
+- **T48-82 · entities** · (K231, K3207) R53: `notAProceeding`, the one site minting `NOT_A_PROCEEDING` · text BOB's · provider for events, lines, actions, following.
+- **T48-83 · lines** · (K231, K3207) R23: `partiesOf` answers through `entities.notAProceeding` · text BOB's · after T48-82.
+
+**L5 merge order:** entities, events, lines, connections, standards, duties, people, explore, calculations. events (R52) uses T48-82.
 
 ### L6
 - **T48-26 · inquiry** · (N1012, K3092, K3102) a write refuses any revision of a terminal (`divided`) question's document, through R11's checks, as `ground` does with `DIVIDED_CANNOT_RESTRUCTURE` (one code or a distinct one is BOB's at the fold, K231); tested with a sever through citation · text BOB's.
@@ -132,13 +135,15 @@ It is the only module marked `legacy` in `modules.json`. `setup-page` is not leg
 - **T48-45 · conformance** · (N1023, K3123) C-113.6 `NO_FINDINGS`'s translation re-worded so accepted findings from another group's case count (R32), read by key once the design stream gives one; stamped at T49 · text BOB's.
 - **T48-46 · action-grammar** · (N1024, K3125) R28 lists C-32.4 and C-33.6–.9, their `where`s naming T48-47's one site (K231), the census fixtures following. (N1053) `checks.mjs`' two strings (`MACHINE_CANNOT_SET_PARTNERS`, `PARTNERS_REFUSED`) re-taken in DEC-221's spelling · after T48-47.
 - **T48-47 · action-records** · (N1024) the one site minting C-32.4 and C-33.6–.9 (the machine fence and the correspond-entry checks that `actionReceipt` applies), for actions to call · text BOB's · first in L9 (K3189, doubt 5).
-- **T48-48 · actions** · (N1024) `actionCorrespond` calls T48-47's site; (K3128) its `t45` row-census test reads the census through its interface; (N1035, K3145) `action` answers its project and title, and a read of `actionpressure`'s marks; (N1040, K3147) `actionsOps` stops spreading `actionRecordsOps` · text BOB's · after T48-47.
+- **T48-48 · actions** · (N1024) `actionCorrespond` calls T48-47's site; (K3128) its `t45` row-census test reads the census through its interface; (N1035, K3145) `action` answers its project and title (its pressure marks are action-holds' T48-81, K3207); (K231, K3207) R104: R65's refusal through `entities.notAProceeding`; (N1040, K3147) `actionsOps` stops spreading `actionRecordsOps` · text BOB's · after T48-47.
 - **T48-49 · action-replies** · (N880; Actions D13, H17) R10 `actionreplyquoting` (the next three C-150 rows); R11 an open-request row answers `quotable` · text BOB's.
 - **T48-50 · filing-templates** · (N880; K231, K2953) R33: `RFC_QUOTING_SENTENCE` and `rfcQuotingRefusal`, with C-115.47's row moved here unchanged; `templateApprove` and the profile's templates are refused through it · text BOB's · before T48-51.
 - **T48-51 · filings** · (N1034, K3145) a read answering a prepared draft's text, blanks and fills, so a reload keeps it; (N880) R57: R40 checked through `filing-templates` R33, the sentence and C-115.47's row leaving this module; (N882; Actions D15) R58: `offers: ["counsel_packet"]` at Tier 2; (N1053) `NOT_A_PARTNER`'s words as `words.json` has them · text BOB's · after T48-50.
 - **T48-52 · action-plans** · (N1043, K3149) "Ask the assistant for options" starts a planning run (R30/R31's machine proposal), never a member's own proposal; tested · text BOB's.
 
-**L9 merge order:** action-records first (K3189), then conformance, action-grammar, actions, action-replies, filing-templates, filings, action-plans.
+- **T48-81 · action-holds** · (N1035, K3145, K3207) R16: `op=pressurefor` serves `pressureFor` (moved from T48-48: action-holds is later than actions); (N1024, K231) R17: its three codes answered through action-records R16 · text BOB's · after T48-47.
+
+**L9 merge order:** action-records first (K3189), then conformance, action-grammar, actions, action-holds, action-replies, filing-templates, filings, action-plans.
 
 ### L10
 - **T48-53 · following** · (N882; Actions D15, H19; U5) R29: `followregister` takes `proceeding` and hands each read's capture to `events.followedRegister`; R30: `proceedingdates`, two lanes; `uses` gains `actions`, `action-clocks` and `action-grammar` · text BOB's.
@@ -190,7 +195,7 @@ It is the only module marked `legacy` in `modules.json`. `setup-page` is not leg
 
 **L11 merge order:** wizard-scripts, op-grades, affordances, machinery-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-assets, interface-shell, screens-wizards, screens-settings, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, plane, installer, journey-check last. The registry and words re-takes (T48-55, T48-61) merge before any screen draws `elsewhere` or `updates`. Until T48-78 merges, the screens draw a `null` pointer as `state.failed`, testing against a fake plane (K31's pattern).
 
-**Counts:** L1 7 · L2 5 · L3 4 · L4 2 · L5 7 · L6 12 · L7 0 · L8 7 · L9 8 · L10 2 · L11 26 = **80 jobs**, one per module.
+**Counts:** L1 7 · L2 5 · L3 4 · L4 2 · L5 9 · L6 12 · L7 0 · L8 7 · L9 9 · L10 2 · L11 26 = **83 jobs**, one per module (T48-81–T48-83 added by K3207).
 
 ## New modules: places (K617, K657, K1043, K624)
 

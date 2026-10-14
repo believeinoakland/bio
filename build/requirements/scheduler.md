@@ -1,6 +1,6 @@
 # scheduler — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. Last changed T35 (T35-83: R12, K2029), T36 (T36-29: R24, option B; K2129, K2153) T37 (T37-24: R2, R7, R24 amended; N762; K2153, K2175) and T39 (T39-15: R25 new, R2, R5, R9 amended; N806; K2333); those marked not yet met (T37, T39), every other requirement met. Last changed T41 (T41-49's text: R26 new; N820; K2405, K2417, K2418); marked not yet met (T41).
+**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. Last changed T35 (T35-83: R12, K2029), T36 (T36-29: R24, option B; K2129, K2153) T37 (T37-24: R2, R7, R24 amended; N762; K2153, K2175) and T39 (T39-15: R25 new, R2, R5, R9 amended; N806; K2333); those marked not yet met (T37, T39), every other requirement met. Last changed T41 (T41-49's text: R26 new; N820; K2405, K2417, K2418); marked not yet met (T41). T48 (T48-54): no requirement changes. `m/scheduler/plane.test.mjs` signs in by `{handle}` (N1052, K3192; test only), and `instance-setup`'s daily update check registers through R8 (N1047, K3189); K3195.
 
 **Size (P6).** About 590 lines move (about 180 without comment-only and blank lines). A job reads it with the public parts of the modules whose consumers it runs. Well under 4,000.
 
