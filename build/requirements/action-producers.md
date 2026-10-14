@@ -87,7 +87,7 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
 - **R24** (T47; N968; amends R23; `action-clocks` R23, `plan-work` R18) The two details R23 kept are read by key from `words.json`:
   - R1's group's own date: `queue.action-clock-overdue.ours.detail`, `{venue}` filled from the `venue` `action-clocks.overdueClocks` answers for the entry (its R23): an office as its role and body, a venue by its name, each as the record states it; `{what}` and `{date}` as R23 fills the summary. Where `overdueClocks` answers `venue: null`, the key's sentence would be untrue, so the item keeps this module's present detail and no `detail_key`, and the arm is returned to BOB for the design stream;
   - R12's plan review: `queue.plan-review-due.detail`, `{rhythm}` the recurrence `plan-work.planReviewsDue` answers (its R18) in words, `{date}` its `since.day` (the last review's day, else the day the rhythm was set) by `date.daymonth` or `date.daymonthyear` (the latter when not in the current local year), `{plan}` the plan's title.
-  Each item answers the key beside its text (`detail_key`), as R23's do. Control: an overdue group date owed to an office answers the key's sentence naming the office (control: an entry with no office or venue keeps the present detail); a plan never reviewed names the day its rhythm was set. *(not yet met: T47)*
+  Each item answers the key beside its text (`detail_key`), as R23's do. Control: an overdue group date owed to an office answers the key's sentence naming the office (control: an entry with no office or venue keeps the present detail); a plan never reviewed names the day its rhythm was set.
 
 **The words members see** (copies of `queue-producers` R24, R25, R28, which stay; DEC-107, DEC-110, DEC-114, DEC-131; H15, H19)
 - **R17** (T45; copy of `queue-producers` R24, which stays) Every member-facing sentence this module answers (an item's `summary` and `detail`, and the words of its options) calls an OBLIGATION item a "to do" and a CONDITION item a "status", never an "obligation", a "condition" or a "signal" ("signal" leaves member text; DEC-131); "obligation" names only a public body's duty (DEC-107). The internal codes, kinds and item ids are unchanged.
@@ -96,7 +96,7 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
 
 #### T47's L11 fold (K3100)
 
-- **R25** (DEC-212; K1364; wide path rule 6) CONDITION `request-unsent`: one per filing `filings.approvedUnsent` answers the viewer, keyed `CONDITION::request-unsent::<filing>`, to the member who approved it, else the action's creator, else its project's owners; its subject the action, homed under its project, naming what is asked and the approval date; its doors the action's screen, `queuesnooze` and `actionmove` (`abandoned`, reasoned). Test with a control. *(not yet met: T47)*
+- **R25** (DEC-212; K1364; wide path rule 6) CONDITION `request-unsent`: one per filing `filings.approvedUnsent` answers the viewer, keyed `CONDITION::request-unsent::<filing>`, to the member who approved it, else the action's creator, else its project's owners; its subject the action, homed under its project, naming what is asked and the approval date; its doors the action's screen, `queuesnooze` and `actionmove` (`abandoned`, reasoned). Test with a control.
 
 ## Private
 
