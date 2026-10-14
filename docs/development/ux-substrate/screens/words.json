@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3005,
+  "screen": 3062,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -100,8 +100,8 @@
   "tab": 2,
   "act": 732,
   "column": 33,
-  "total": 5810,
-  "protected": 818
+  "total": 5867,
+  "protected": 830
  },
  "words": [
   {
@@ -14615,10 +14615,10 @@
   },
   {
    "key": "screen.join.invited",
-   "en": "You're invited to join {group}",
+   "en": "You're invited to {group}",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.join.invited.as",
@@ -14685,10 +14685,10 @@
   },
   {
    "key": "screen.join.language.help",
-   "en": "You can change it any time in Settings.",
+   "en": "Chosen from your device's setting. You can change it any time.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.join.handle",
@@ -14699,10 +14699,10 @@
   },
   {
    "key": "screen.join.handle.help",
-   "en": "The record shows your handle on your work. Choose it with care. It needn't be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit.",
+   "en": "The record shows your handle on your work. Choose it with care: it can't be changed after you join, and no one else can ever take it. It needn't be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Choosing a handle: a name people know lends your work credibility and lets reporters reach you, but puts it on public cases; a pen name shields you from pressure, while the administrators still know who you are.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.join.handle.taken",
@@ -14720,10 +14720,10 @@
   },
   {
    "key": "screen.join.codes.after",
-   "en": "When you join, you get ten recovery codes, shown once: save them, they are how you get back in if you forget your password. Then you are signed in and your group's home opens.",
+   "en": "When you join, you get ten recovery codes, shown once: save them, they are how you get back in if you forget your password. Then you are signed in and your group's home opens, with a short guided start you can take or leave.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.join.joined",
@@ -19431,10 +19431,10 @@
   },
   {
    "key": "screen.money.didnotmove",
-   "en": "did not move: a {phase} figure",
+   "en": "did not move: a {phase} figure, adopted {date}",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-investigate's own rows"
+   "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.money.moved.why",
@@ -19557,10 +19557,10 @@
   },
   {
    "key": "screen.money.gap.to",
-   "en": "not stated in the only source holding this figure",
+   "en": "Undetermined: not stated in {source}, the only source holding this figure.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-investigate's own rows"
+   "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.money.gap.moved",
@@ -31498,6 +31498,356 @@
    "protected": false,
    "source": "DEC-259",
    "note": "beside a knock: the same sender handed in material on {date}"
+  },
+  {
+   "key": "screen.install.sub",
+   "en": "Two choices here, then Cloudflare. What your group needs first is on civicsmith.org.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.need.cloudflare",
+   "en": "A Cloudflare account on the Workers Paid plan ($5 a month), with a payment method, belonging to your group rather than to one person.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.need.claude",
+   "en": "No Claude account: the assistant is optional.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.need.link",
+   "en": "What you need, on civicsmith.org",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.short.heading",
+   "en": "Your group's short name",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.names",
+   "en": "Your group has two names. Its name, such as “{example}”, is what people read; you choose it in setup and can change it whenever you like. Its short name, chosen here, is the fixed label in its web addresses and beside every signature, and can never change.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.permanent",
+   "en": "Your short name is in every address of your group's Civicsmith and beside every signature your members make. It can never be changed, by you or anyone, without setting up your group's Civicsmith again.",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "the warning before an irreversible choice"
+  },
+  {
+   "key": "screen.install.places.help",
+   "en": "Each place brings its deadlines, holidays, offices and records laws, each with its source. You can change this later in Settings › Places and offices.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.places.none",
+   "en": "None of these: we enter due dates and offices ourselves",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.cf.title",
+   "en": "Let this installer into your Cloudflare account",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.cf.sub",
+   "en": "Next you go to Cloudflare's own page, sign in there, and allow this installer to set up your group's Civicsmith in your account. Civicsmith never sees your Cloudflare password.",
+   "protected": true,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.cf.asks",
+   "en": "What Cloudflare will ask you to allow",
+   "protected": true,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.cf.programs",
+   "en": "Putting your group's Civicsmith's programs in your account, and its storage for documents and evidence.",
+   "protected": true,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.cf.plan",
+   "en": "Reading which plan your account is on.",
+   "protected": true,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.cf.containers",
+   "en": "Running its containers: the built-in file scanner, the safe view for risky files, and signing in with a Claude subscription. Without them, files are kept and shown but not scanned, and a high-risk file can't be opened.",
+   "protected": true,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.cf.join",
+   "en": "Joining its parts together inside your account.",
+   "protected": true,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.hold.head",
+   "en": "Whoever can sign in to this Cloudflare account controls your group's Civicsmith",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "says who can see and control everything"
+  },
+  {
+   "key": "screen.install.hold.what",
+   "en": "They can read everything and lock everyone out, and no vote of administrators can stop them. Use a group account, and add at least one other trusted person to it. It is also the way back in if every administrator is locked out.",
+   "protected": true,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.progress.title",
+   "en": "Setting up your group's Civicsmith",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.progress.sub",
+   "en": "In the Cloudflare account “{account}”. This takes a few minutes; leave this page open.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.progress.single",
+   "en": "Checked that this account holds no other Civicsmith",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.progress.plan",
+   "en": "Checked the account is on Workers Paid",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.progress.storage",
+   "en": "Made the storage for documents and evidence",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.progress.verified",
+   "en": "Checked the release is Civicsmith's own, signed and unaltered",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.progress.placing",
+   "en": "Putting your group's Civicsmith in place…",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.progress.scanner",
+   "en": "Starting the file scanner and safe view",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.progress.address",
+   "en": "Giving it its address",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.progress.answers",
+   "en": "Checking it answers, and that nothing keeps a log of who opens which file",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.stopped.exists",
+   "en": "Stopped: this account already holds a Civicsmith. One group's Civicsmith per account is supported for now. Nothing was created. Use another account for this group, or open the one already here.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.stopped.others",
+   "en": "Other steps stop the same way and say what to do: the account is on the free plan (switch to Workers Paid in Cloudflare's dashboard, then start again); no payment method; permission not granted on Cloudflare's page; a log in the account that would record who opens which file. A stop before setup has begun creates nothing.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.ready.sub",
+   "en": "It answered its own checks. One step is left: you become its first administrator.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.ready.answers",
+   "en": "It answers at its address",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.ready.scanner",
+   "en": "File scanner and safe view running",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.ready.nolog",
+   "en": "No log records who opens which file",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.ready.note",
+   "en": "These checks ran as part of the installation; the installer keeps nothing of your group's Civicsmith once it hands over.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.otp.head",
+   "en": "Your one-time password: save it now",
+   "protected": true,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.otp.what",
+   "en": "This makes you your group's first administrator, in the next step. It is shown once, here. Save it somewhere safe, such as a password manager, until you have claimed. Continuing below fills it in for you.",
+   "protected": true,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.otp.help",
+   "en": "Works once. When you claim, it is spent and you sign in with a password you choose.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.address.help",
+   "en": "Where you, and later your members, open your group's Civicsmith. Bookmark it.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.probe.summary",
+   "en": "A probe key, for a monitoring service (most groups never need it)",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.probe.help",
+   "en": "Lets a monitoring service check that your group's Civicsmith is running. It reaches only a separate test store, never your group's records. Shown once.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.probe.copy",
+   "en": "Copy the probe key",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.install.continue",
+   "en": "Continue to your group's Civicsmith: become its first administrator",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.join.invited.by",
+   "en": "{name} invited you to contribute. This link works once and expires on {date}.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.join.again.help",
+   "en": "So a typing slip can't lock you out. The two must match before you can continue.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.notes.protects.link",
+   "en": "What this protects, and from whom",
+   "protected": true,
+   "source": "DEC-259",
+   "note": "a link beside \"Only you can see these in your group\" (protected: who can see)"
+  },
+  {
+   "key": "screen.money.sub.flow",
+   "en": "from {from}, mostly to {to}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "under a trail's name: where its figures run"
+  },
+  {
+   "key": "screen.money.graph.heading",
+   "en": "Where the money went, as a graph",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.money.table.how",
+   "en": "Open a figure to act on it; tick several to act on them together.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.money.readby",
+   "en": "Read by {by} from {source}, p. {page}: {as_read}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "{as_read} the words as the source writes them"
+  },
+  {
+   "key": "screen.money.readby.noquote",
+   "en": "Read by {by} from {source}, p. {page}.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.money.moved.event",
+   "en": "When it moved: {event}, recorded as an event with that passage.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.money.budget.about",
+   "en": "A budget figure says what was planned, not what happened. The {phase} figure from {source} sits beside it in this trail: {difference}; the two differ in {dims} and are compared, never merged. A later budget change would be read in as an adjustment naming this figure.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "under a budget figure that has a paid figure beside it"
+  },
+  {
+   "key": "screen.money.moved.as",
+   "en": "posted as {what}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "under the date a figure moved, as the source describes the posting"
+  },
+  {
+   "key": "screen.money.saysneither",
+   "en": "It says neither where the money went nor on what day.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.money.gap.yearonly",
+   "en": "Undetermined: the source gives only the year.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.money.findin.date",
+   "en": "Look for its date in this project",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "findin's button, looking for the day a figure moved"
   },
   {
    "key": "rail.home.name",
