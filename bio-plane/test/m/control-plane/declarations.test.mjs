@@ -34,8 +34,10 @@ test("R2 (op-declarations R6): no spec is without a handler or a store route —
       if (routes.includes(RENAMED[target] ?? target) || publicRead || log.some((l) => l.kind === "public" && l.op === op) || (op === "whoami" && r.json.ok)
           /* R41 (T35): `agentpack` is answered from the untargeted affordances handler (its hook) */
           || (op === "agentpack" && log.some((l) => l.kind === "gated" && l.op === "affordances"))
-          /* R65 (T37): `subscriptionsignin` is this module's own route to the member's runner (no binding here) */
+          /* (T47; K3167) signin-door's: `subscriptionsignin` to the member's runner (no binding here), `signintrace` the
+             test instance's trace (none here) */
           || (op === "subscriptionsignin" && r.json?.reason === "AGENT_WORKER_UNBOUND")
+          || (op === "signintrace" && r.json?.reason === "SIGNINTRACE_NOT_TEST")
           /* R57, R77 (T46): `textcheck` and `airundispatch` are this module's own routes to the object's draft door and
              member-run dispatch (plane's RPC methods; none on the harness's objects) */
           || (["textcheck", "airundispatch"].includes(op) && r.json?.reason === "AGENT_WORKER_UNBOUND")) {

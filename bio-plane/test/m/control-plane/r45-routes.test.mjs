@@ -1,5 +1,5 @@
 /* control-plane R45: the ops T23 adds (N485: K1025, K1051; K1094; DEC-111, K1100; op-declarations R10) — escalation's
-   `escalationreasondraft`, case-authoring's `whatchangedpropose` and `whatchangeddrafts`, link-sweep's `sweeps` (its R9,
+   `escalationreasondraft`, case-inputs' `whatchangedpropose` and `whatchangeddrafts`, link-sweep's `sweeps` (its R9,
    moved from monitoring with N506; T24),
    network-notices' `noticeprepare`, `noticepost`, `notices` and `directorysubmission` — each routed through the door's general path to its
    owner's store route of the same name (R26), with the stamps its owner reads set by the server and none taken from the
@@ -11,7 +11,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O, world, call, opCalls, aik, cred, hex64, member, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
 const { escalationOps } = await import("../../../src/escalation/ops.mjs");
-const { caseAuthoringOps } = await import("../../../src/case-authoring/index.mjs");
+const { caseInputsOps } = await import("../../../src/case-inputs/index.mjs");
 const { monitoringOps } = await import("../../../src/monitoring/index.mjs");
 const { linkSweepOps } = await import("../../../src/link-sweep/index.mjs");
 const { networkNoticesOps, networkNoticesPublicReads } = await import("../../../src/network-notices/index.mjs");
@@ -23,8 +23,8 @@ const U = new URL("http://do/");
 /* The owners' own maps (R26): each op is a route of its owner's map, which the plane spreads into the store's. */
 const OWNER = {
   escalationreasondraft: Object.keys(escalationOps(null, U, null)),
-  whatchangedpropose: Object.keys(caseAuthoringOps(null, U, null)),
-  whatchangeddrafts: Object.keys(caseAuthoringOps(null, U, null)),
+  whatchangedpropose: Object.keys(caseInputsOps(null, U, null)),
+  whatchangeddrafts: Object.keys(caseInputsOps(null, U, null)),
   sweeps: Object.keys(linkSweepOps(null, U, null)),
   noticeprepare: Object.keys(networkNoticesOps(null, U, null)),
   noticepost: Object.keys(networkNoticesOps(null, U, null)),
@@ -54,8 +54,8 @@ function callers() {
 const viewer = (c) => ({ viewer: c.viewer });
 const R45 = {
   escalationreasondraft: viewer,                                                     /* escalation R29 */
-  whatchangedpropose:    (c) => ({ viewer: c.viewer, proposedBy: c.proposer, author: c.proposer }),   /* case-authoring R39 */
-  whatchangeddrafts:     viewer,                                                     /* case-authoring R39 */
+  whatchangedpropose:    (c) => ({ viewer: c.viewer, proposedBy: c.proposer, author: c.proposer }),   /* case-inputs R6, was case-authoring R39 */
+  whatchangeddrafts:     viewer,                                                     /* case-inputs R6, was case-authoring R39 */
   sweeps:                viewer,                                                     /* link-sweep R9 */
   noticeprepare:         (c) => ({ by: c.identity, viewer: c.viewer }),              /* network-notices R1, R2 */
   noticepost:            (c) => ({ by: c.identity, viewer: c.viewer }),              /* network-notices R4, R5 */
@@ -158,7 +158,7 @@ test("R45, R28 (network-notices R1, R24; admission R8–R10): each notice op is 
   }
 });
 
-test("R45, R28 (case-authoring R39): `whatchangedpropose` is open to any credential an `ai` scope admits, and a member's session needs `contribute` — a session without it NOT_CAPABLE, an agent not declaring the write AI_BEYOND_TASK_SCOPE, nothing forwarded; negative control: the agent declaring it and a session holding it reach the route", async () => {
+test("R45, R28 (case-inputs R6, was case-authoring R39): `whatchangedpropose` is open to any credential an `ai` scope admits, and a member's session needs `contribute` — a session without it NOT_CAPABLE, an agent not declaring the write AI_BEYOND_TASK_SCOPE, nothing forwarded; negative control: the agent declaring it and a session holding it reach the route", async () => {
   const bare = hex64(), narrow = aik(), wide = aik();
   const { env, S } = world({ sessions: { [bare]: member("bea", []) },
                              creds: { [narrow]: cred({ tokenId: "agent-narrow", writes: ["cite"] }),
