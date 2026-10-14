@@ -53,3 +53,18 @@ test("R7 a refused proposal is drawn beside the act (control)", async () => {
   await press(p, "clockpropose");
   assert.match(main(p).textContent, /No such rule for this action\./);
 });
+
+test("R7 the subject `<action>~<entry position>` (screens-action's links, K3149) reads the action and opens at that entry; the action alone still opens (control)", async () => {
+  const two = { ...(await import("./fixtures.mjs")).ACTION, clock: [{ text: "a", description: "The acknowledgement", date: "2026-10-05", basis: "x", status: "met" },
+    { text: "b", description: "The City Clerk's reply", date: "2026-10-14", basis: "y", status: "pending" }] };
+  const p = await open(at + "~1", { plane: { action: ok(two), reminderset: ok({ ok: true }) } });
+  assert.equal(p.byOp("action")[0].query.id, ACT);
+  assert.equal(p.byOp("clockproposals")[0].query.action, ACT);
+  assert.equal(main(p).querySelector("h1").textContent, "Due 14 October 2026");
+  assert.match(main(p).querySelector('[aria-current="true"]').textContent, /The City Clerk's reply/);
+  fill(p, { "dd-on": "2026-10-12" });
+  await press(p, "reminderset");
+  assert.deepEqual(p.byOp("reminderset")[0].body, { target: ACT, entry: 1, on: "2026-10-12" });
+  const q = await open(at + "~0", { plane: { action: ok(two) } });
+  assert.equal(main(q).querySelector("h1").textContent, "Due 5 October 2026");
+});

@@ -10,7 +10,7 @@ import { row } from "./row.mjs";
 import { PARTS } from "./parts.mjs";
 
 function reads(view) {
-  const id = String(view.subject || "");
+  const id = String(view.subject || "").split("~")[0];
   return {
     action: { op: "action", query: { id }, subject: true },
     proposals: { op: "clockproposals", query: { action: id } },
@@ -20,20 +20,23 @@ function reads(view) {
 
 function render(cs, view) {
   const S = "screen.due-date.";
-  const id = String(view.subject || "");
+  /* the subject is `<action>~<entry position>` (screens-action's links, K3149), or the action alone */
+  const [id, at] = String(view.subject || "").split("~");
+  const pos = /^\d+$/.test(at || "") ? Number(at) : null;
   const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : null;
   const clock = a && Array.isArray(a.clock) ? a.clock : [];
-  const next = clock.find((e) => e.status === "pending" && e.date) || null;
+  const next = (pos !== null && clock[pos]) || clock.find((e) => e.status === "pending" && e.date) || null;
   const out = [cs.title(next ? cs.w(S + "due", { date: cs.date(next.date) }) : cs.w("screen.due-date.name"),
     { thing: { kind: "action", facts: a ? [a.kind || "", (a.counterparty && (a.counterparty.role || a.counterparty.body)) || ""] : [] } })];
   if (a && a.counterparty) out.push(`<p class="cs-sub">${cs.w(S + "of", { who: (a.counterparty.role || "") + (a.counterparty.body ? ", " + a.counterparty.body : "") })}</p>`);
   /* the confirmed entries: what each is, its basis and when */
   out.push(cs.sec(S + "entries", cs.state("action", view, () => (clock.length
-    ? cs.sheet(clock.map((e, i) => cs.row(cs.due(e.date || "", e.status === "met" ? "met" : e.status === "overdue" ? "overdue" : ""),
+    ? cs.sheet(clock.map((e, i) => (i === pos ? '<div class="cs-current" aria-current="true">' : "<div>") + cs.row(cs.due(e.date || "", e.status === "met" ? "met" : e.status === "overdue" ? "overdue" : ""),
       `<b>${cs.esc(e.description || e.text || "")}</b><span class="meta">${cs.w(S + "basis", { basis: e.basis || "" })}${e.due_at ? " · " + cs.w(S + "at", { time: String(e.due_at).slice(11, 16), zone: e.due_zone || "" }) : ""}</span>`,
-      `<span class="cs-meta">${cs.w(S + "status." + (["pending", "met", "overdue", "waived"].includes(e.status) ? e.status : "pending"))}</span>`)).join(""))
-    : `<p>${cs.w(S + "entries.none")}</p>`))
-    + cs.choice("dd-entry", S + "entry", clock.map((e, i) => ({ value: String(i), text: (e.description || e.text || "") + " · " + (e.date || "") })), {})
+      `<span class="cs-meta">${cs.w(S + "status." + (["pending", "met", "overdue", "waived"].includes(e.status) ? e.status : "pending"))}</span>`) + "</div>").join(""))
+    : `<p>${cs.w(S + "entries.none")}</p>`)
+    /* drawn only once the clock is read, so its first value is the entry the address names, never one kept from before */
+    + cs.choice("dd-entry", S + "entry", clock.map((e, i) => ({ value: String(i), text: (e.description || e.text || "") + " · " + (e.date || "") })), { value: pos !== null ? String(pos) : undefined }))
     + cs.field("dd-on", S + "on", { type: "date" })
     + cs.act("reminderset", { label: "act.reminderset.label.due-date" })
     + `<p>${cs.state(view.data.calendar, (c) => cs.save(c.filename || "deadlines.ics", c.ics, { label: S + "download" }), { empty: S + "download.none" })}</p>`));
@@ -63,7 +66,7 @@ const acts = [
   /* "Work it out again": a proposal, never the date until a member confirms it */
   { op: "clockpropose", label: "act.clockpropose.label.due-date",
     send(view) {
-      const id = String(view.subject || "");
+      const id = String(view.subject || "").split("~")[0];
       const p = view.data.proposals && view.data.proposals.state === "ok" ? (view.data.proposals.value.proposals || [])[0] : null;
       const a = view.data.action && view.data.action.state === "ok" ? view.data.action.value : null;
       return { body: Object.assign({ target: id }, p && p.rule ? { rule: p.rule } : a && a.kind ? { rule: a.kind } : {}) };
@@ -73,13 +76,13 @@ const acts = [
     send(view, el, cs) {
       const proposal = String(el.dataset.proposal || "");
       if (!proposal) return null;
-      return { body: { target: String(view.subject || ""), proposal, why: String(cs.value("dd-why") || "").trim() } };
+      return { body: { target: String(view.subject || "").split("~")[0], proposal, why: String(cs.value("dd-why") || "").trim() } };
     } },
   { op: "reminderset", label: "act.reminderset.label.due-date",
     send(view, el, cs) {
       const entry = Number(cs.value("dd-entry")), on = String(cs.value("dd-on") || "").trim();
       if (!Number.isInteger(entry) || !/^\d{4}-\d{2}-\d{2}$/.test(on)) return { refuse: "screen.due-date.remind.empty" };
-      return { body: { target: String(view.subject || ""), entry, on } };
+      return { body: { target: String(view.subject || "").split("~")[0], entry, on } };
     } },
 ];
 
