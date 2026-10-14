@@ -10,9 +10,9 @@ import { OPS, NEEDS, SESSION_OPS } from "../op-declarations/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT, LARGER_SCREEN_ACTS, OP_ALIASES } from "../op-grades/index.mjs";
 import { SCREEN_REGISTRY } from "../wizard-scripts/index.mjs";
 import { shellProgram } from "./browser.mjs";
-import { SHELL_WORDS, DESIGN_WORDS } from "./words.mjs";
+import { SHELL_WORDS } from "./words.mjs";
 
-export { SHELL_WORDS, DESIGN_WORDS };
+export { SHELL_WORDS };
 
 /* R32 (N999; K3052; replaces setup-page R31): the session record's key in the browser's `localStorage`, this module's:
    `{t, e, d, w}`, `t` the token `login` answered, `e` its expiry in milliseconds (0 when none), `d` the device kind
@@ -180,8 +180,7 @@ export function toSource(v) {
 /* R5: every word the page may draw, `[key, en]`: `WORD_ROWS`, the shell's own and each screen's own rows. A screen's own
    row under a key `WORD_ROWS` holds wins (DEC-149's conformed form, R5). */
 export function wordsOf(screens) {
-  const m = new Map(DESIGN_WORDS.map((r) => [r[0], r[1]]));
-  for (const r of WORD_ROWS) m.set(r[0], r[1]);
+  const m = new Map(WORD_ROWS.map((r) => [r[0], r[1]]));
   for (const [k, en] of SHELL_WORDS) m.set(k, en);
   for (const s of screens) for (const x of s.words || []) if (Array.isArray(x)) m.set(x[0], x[1]);
   return [...m.entries()];

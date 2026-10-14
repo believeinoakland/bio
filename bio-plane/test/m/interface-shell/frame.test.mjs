@@ -107,8 +107,7 @@ const pathAt = (commit) => {
 };
 const PROJECTS = new Set(["The Coliseum lease", "Pothole repairs", "Sewer fund transfers"]);
 const SHELL_EN = new Map((await import("../../../src/interface-shell/index.mjs")).SHELL_WORDS.map((r) => [r[0], r[1]]));
-const DESIGN_EN = new Map((await import("../../../src/interface-shell/index.mjs")).DESIGN_WORDS.map((r) => [r[0], r[1]]));
-const step = (s) => (s === "@project" ? "@project" : /^shell\./.test(s) ? SHELL_EN.get(s) : /^screen\./.test(s) ? en(s) ?? DESIGN_EN.get(s) : en("rail." + s + ".name"));
+const step = (s) => (s === "@project" ? "@project" : /^shell\./.test(s) ? SHELL_EN.get(s) : /^screen\./.test(s) ? en(s) : en("rail." + s + ".name"));
 const T46 = ["home", "queue", "inbox", "finder", "answers", "capture", "held", "open-file", "find-in", "project", "document", "question", "assistant", "members", "account", "connect", "notes"];
 
 test("R8 each screen's path is mock-shell.js' PATH for its id at 3f40899950, a project's step its title (members: Settings › Members; held: Add › Held captures; document: Projects › <project> › Document)", () => {

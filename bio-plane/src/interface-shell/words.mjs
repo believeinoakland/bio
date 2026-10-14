@@ -122,26 +122,3 @@ const rows = [
   ["shell.glance.strip.sum", "{n} can't wait", false],
 ];
 export const SHELL_WORDS = Object.freeze(rows.map((r) => Object.freeze(r)));
-
-/* R5: words the design stream gives (`docs/development/ux-substrate/screens/words.json` at PR #33's head, f90b187c7b)
-   that the shell draws by their own keys before `setup-words`' `WORD_ROWS` carries them (its R7). Each is drawn from
-   `WORD_ROWS` once that holds the key; until then from this row, the same English. */
-const design = [
-  ["session.signedout", "You are signed out on this device. Your work is saved in your group's Civicsmith, not here.", false],
-  ["session.ended", "You were signed out after a while away, so nobody else at this device can use your sign-in. Sign in again to go back to the page you were on.", false],
-  ["session.locked", "Locked after 30 minutes away. Enter your password to go on where you were; nothing was lost.", false],
-  ["session.reauth", "For this, enter your password again: signing or publishing a case, changing administrators and connecting Claude always ask.", true],
-  ["signing.ceremony.device", "Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key never leaves this device, and Civicsmith never sees it.", true],
-  ["signing.ceremony.declined", "Your device didn't confirm, so nothing was signed or published. Everything is as it was; sign again when you are ready.", true],
-  ["signing.ceremony.keepkey", "Keep this key on this device, so you can sign here again without loading it. Leave this unticked on a computer others use: you then load your key file each time you sign.", true],
-  ["instance.test.notice", "This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.", true],
-  ["screen.unavailable.name", "Can't open this", false],
-  ["screen.unavailable.purpose", "What you see when an address leads nowhere, when something isn't yours to see, or when your group's Civicsmith can't be reached.", false],
-  ["screen.people.name", "People", false],
-  ["screen.settings.name", "Settings", false],
-  ["screen.projects.name", "Projects", false],
-  ["screen.group.name", "Your group", false],
-  ["screen.places.name", "Places and offices", false],
-  ["screen.recovery.name", "Recovery codes", false],
-];
-export const DESIGN_WORDS = Object.freeze(design.map((r) => Object.freeze(r)));
