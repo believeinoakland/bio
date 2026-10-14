@@ -5,7 +5,7 @@
    (R26 `candidatePair`, R27 `candidateIndependence`), citation (R5 `retiredNotCitable`), basis-versions (R5
    `basisVersionsOf`, R9 `basisVersions`, R28 `appendVersion`, R40 `onCandidates`), connections (R22 `citesInto`),
    and content's own two providers (extraction's readings, provenance's `capturesOf`), extraction's units (its R36),
-   leg-earning's `earned` (its R1, the capture ceiling R21 reads), steps (its R9 `recordProduct`, with a stand-in of the observation log it registers with) and credentials (its R57 material limits) are the real modules, reached through
+   leg-earning's `earned` (its R1, the capture ceiling R21 reads), steps (its R9 `recordProduct`, with a stand-in of the observation log it registers with) and ai-accounts (its R21, R22 material limits; T48, was credentials') are the real modules, reached through
    their factories. Every stand-in records the calls
    made to it. Bundles and their files are written as record-core's read contract holds them (its R37), and the tables
    later modules own that this module reads under their read contracts (inquiry R40, basis-versions R38) are created
@@ -17,7 +17,7 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
-import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
 import { captureBound } from "../../../src/textchain.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
@@ -155,9 +155,10 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, 
   };
   const content = contentOf(host, { record, membership, provenance: prov, extraction, now: () => clock.now });
   content.migrate();
-  /* credentials, the real module over its own tables (its R57 `aiKeptAway`, read by R24). */
-  const credentials = credentialsOf(host, { record, membership });
-  credentials.migrate();
+  /* ai-accounts, the real module over its own tables (its R21 `aiKeepAwayState` and R22 `projectsKeptAway`, read by
+     R24; T48, N996 §5). */
+  const aiAccounts = aiAccountsOf(host, { record, membership });
+  aiAccounts.migrate();
 
   const calls = [];
   const note = (name, a) => { calls.push({ name, a }); };
@@ -319,7 +320,7 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, 
 
   const w = {
     st, host, record, membership, prov, registered, content, p, clock, ex, calls, runs, bounds, aiRuns, strength,
-    citation, retired, connections, cites, basisVersions, candidateSources, machinePassageSlots, ceilings, steps, credentials, routes, legEarning,
+    citation, retired, connections, cites, basisVersions, candidateSources, machinePassageSlots, ceilings, steps, aiAccounts, routes, legEarning,
     versions: {}, authors: {}, ats: {}, legsOf: {}, groundsOf: {},
     row: (qq, ...a) => [...st.sql.exec(qq, ...a)][0] ?? null,
     rows: (qq, ...a) => [...st.sql.exec(qq, ...a)],

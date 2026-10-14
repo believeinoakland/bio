@@ -30,7 +30,7 @@ import { runPrincipalGate, checkPagesRead, RUN_BOUNDS } from "../run-rules/index
 import { stepsOf } from "../steps/index.mjs";
 import { legEarningOf } from "../leg-earning/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
-import { credentialsOf } from "../credentials/index.mjs";
+import { aiAccountsOf } from "../ai-accounts/index.mjs";
 import { EXTRACT_RUN_MODE, proposalChain, checkProposedRef, proposedReadingGrade, mintRatio } from "../extractrun.mjs";
 import { readingSource, readingSourceJson, readingSourceFromColumns, describeChain } from "../textchain.mjs";
 import { parseFrontmatter, normalizeType, OBJECT_TYPES, canonicalJson, isMachineIdentity, MACHINE_CLASS_PREFIX,
@@ -143,7 +143,7 @@ export function substanceOf(composition) {
 
 export class RunProductions {
   constructor({ storage, record, membership, content, connections, aiRuns, strength, citation, basisVersions,
-                extraction = null, steps = null, credentials = null, legEarning = null, now = null }) {
+                extraction = null, steps = null, aiAccounts = null, legEarning = null, now = null }) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -155,11 +155,11 @@ export class RunProductions {
     this.citation = citation;
     this.basisVersions = basisVersions;
     /* T41-24: extraction's store half for a capture's text units (its R36) and the references its readers found (its
-       R58); credentials' material limits (its R57); steps' `recordProduct` (its R9); leg-earning's earned capture
-       ceiling (its R1; K2496). */
+       R58); ai-accounts' material limits (its R21, R22; T48, was credentials' R57); steps' `recordProduct` (its R9);
+       leg-earning's earned capture ceiling (its R1; K2496). */
     this.extraction = extraction;
     this.steps = steps;
-    this.credentials = credentials;
+    this.aiAccounts = aiAccounts;
     this.legEarning = legEarning;
     this.now = typeof now === "function" ? now : () => Date.now();
   }
@@ -1042,7 +1042,7 @@ export class RunProductions {
    *  read and spent through ai-runs as `mints` is (R18). A page is charged once per run: one read again costs nothing.
    *  A slice the bound cuts says so and says how far the run read; a run whose bound is spent is refused, saying how
    *  far it read in this document. The text is the record's own (extraction R36's units), asked after the viewer's
-   *  gate. A document under a "no AI" material limit is refused whatever the bound (credentials R57). */
+   *  gate. A document under a "no AI" material limit is refused whatever the bound (ai-accounts R21, R22). */
   readPages({ run, bundleId, from = 0, viewer = null, caller = null, at = null } = {}) {
     const held = this.#productionRun({ run, viewer, caller, act: "reading a document under a run",
                                       note: "a reading names a run its caller holds. Nothing was read" });
@@ -1058,16 +1058,17 @@ export class RunProductions {
     if (doc.refusal) return doc.refusal;
     const { bundle, sha } = doc;
     /* "NO AI" IS ASKED BEFORE THE BOUND, so a document kept from the AI is refused however much the run may read. The
-       refusal is credentials', relayed whole. */
+       refusal is run-rules', relayed whole. */
     /* THE JUDGEMENT IS run-rules' (`checkPagesRead`, R26; B3): the material limits held for this document, the group's
-       and its project's (credentials R57), each read here; one that cannot be read is held as on, so the read fails
-       closed. */
+       (ai-accounts R21 `aiKeepAwayState`) and its project's (its R22 `projectsKeptAway`), each read here; one that
+       cannot be read, or a read that throws, is held as on, so the read fails closed. */
     const limits = [];
-    try { const g = this.credentials.aiKeepAwayState(); limits.push({ on: g.on, uses: g.uses }); }
+    try { const g = this.aiAccounts.aiKeepAwayState(); limits.push({ on: g.on, uses: g.uses }); }
     catch { limits.push({ on: null, uses: null }); }
     if (bundle.project) {
-      const kept = this.credentials.projectsKeptAway({ use: "read" });
-      if (kept === null) limits.push({ on: null, uses: null });
+      let kept = null;
+      try { kept = this.aiAccounts.projectsKeptAway({ use: "read" }); } catch { kept = null; }
+      if (!Array.isArray(kept)) limits.push({ on: null, uses: null });
       else if (kept.includes(bundle.project)) limits.push({ on: true, uses: ["read"] });
     }
     const noAi = checkPagesRead({ limits });
@@ -1417,8 +1418,10 @@ export function runProductionsOf(host, deps) {
                              citation: d.citation || citationOf(host, { record, membership, content }),
                              basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
                              extraction: d.extraction || extractionOf(host, { record, membership }),
-                             /* T41-24: R24's "no AI" read is this module's (K2482); R21's step is steps' (B4). */
-                             credentials: d.credentials || credentialsOf(host, { record, membership }),
+                             /* T41-24: R24's "no AI" read is this module's (K2482), its limits ai-accounts' (T48,
+                                N996 §5; credentials' factory makes that instance first, with its seal secret, R32);
+                                R21's step is steps' (B4). */
+                             aiAccounts: d.aiAccounts || aiAccountsOf(host, { record, membership }),
                              steps: d.steps || stepsOf(host, { record, membership }),
                              legEarning: d.legEarning || legEarningOf(host, { record, membership, content }),
                              now: d.now || null });
