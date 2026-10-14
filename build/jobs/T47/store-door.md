@@ -44,3 +44,7 @@ Size (session_01A3oWKBscqhfz9cPoUE7bde): test runs 13, module lines 152
 ## J2 · COMPLETE
 
 B2 (K3143) applied: R15 met. `reauthdue` answers {due: false} for a token naming no live session; else {due: credentials.reauthDue({token}) ?? false}, so due is credentials' REAUTH_DUE row as given (for admission R25 to relay) or false inside the window; the session read is background (no activity, nothing written). Reading taken: due is 'false or the row', not a bare boolean; one line to change if admission wants true. store-door 47/47; format, architecture, coverage (15/15), ownership 0 failures. Inherited reds unchanged by this (identical 18 in plane/op-declarations, control-plane r45-routes). Record updated on job/T47/store-door.
+
+## B3 · CHANGE (K3148)
+
+Merged `tranche/T47` (744774efeb: wizard-scripts T47-47, op-grades T47-48) and re-ran: `node --test bio-plane/test/m/store-door/`: tests 47, pass 47, fail 0. format, architecture (store-door), coverage (15 of 15), ownership (4 files): 0 failures each. No change to the module was needed.
