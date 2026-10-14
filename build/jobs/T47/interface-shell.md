@@ -18,6 +18,23 @@
 
 Size (session_01Mqqp1PVr9KzRUa1bjw1eZa): test runs 40, module lines 2,198 (source; tests 3,010)
 
+## Completion (INTERFACE-SHELL #3, B14)
+
+Re-opened by B14 (K3177; JOURNEY-CHECK #1 J6 (b), (c)). `tranche/T47` merged; the requirements changed only by losing their "not yet met" marks.
+
+**Entries applied:**
+- **(b) R35:** the shell draws one state's words only. Each state now has its own heading ("Nothing is here", "You can't open this", "Can't be reached"). The path's last step names the state too, and the shell's sentence under it is new: `shell.unavailable.<state>.title` and `.says`. "Can't open this" (`screen.unavailable.name`) heads no state now. The old sentence keys `shell.unavailable.nothing`, `.notyours` and `.unreachable` keep their English unchanged, because `screens-publish` draws them.
+- **(c) R7, R4:** the masthead's initial and its "You: {handle}" come from `whoami`'s handle. When that is empty (a founder's session can answer `handle: null`), they come from the handle the member signed in with, and failing that from the member's id. They are never empty.
+
+**Found in another module (REPORT J7):** the bare-address `published` that JOURNEY-CHECK saw is drawn by `screens-publish` itself (`parts.mjs`' `nothing`), not by the shell. It heads `screen.unavailable.name` ("Can't open this") over `shell.unavailable.nothing` ("Nothing is here: …"), so (b) stands on that screen until `screens-publish` draws `shell.unavailable.nothing.title` over `shell.unavailable.nothing.says`. Its tests match /Nothing is here/, which still holds after that change. Separately, `format` fails twice on `build/modules.json`, whose `setup-page` paths and tests name directories no longer in the product.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/interface-shell/`: 120 pass, 0 fail. R35's test now checks each state's heading and path step, with a control that no other state's words and no "Can't open this" are drawn. The new test is R7 R4 (K3177 (c)). Both fail against the shell before the change.
+- Every screen module, all nine: 0 failures (action 53, daily 64, entry 52, inquiry 64, intake 58, investigate 78, publish 53, settings 83, wizards 32 pass). control-plane `t46-app` and `t46-e2e`: 9 of 9.
+- Checks: `architecture`, `coverage` (49 of 49) and `ownership` have 0 failures. `format` has 2 failures, both the `modules.json` entries above and neither mine.
+
+Size (session_01GsfjK9xaCHwtptoRYK8boR): test runs 20, module lines 2,251 (source; tests 3,127)
+
 ## Completion (INTERFACE-SHELL #3)
 
 Restarted on B12 (K3156) and B13 (K3157). **Read whole:** `build/requirements/interface-shell.md` as merged at B12 (R33, R50 changed; R51 new); `index.mjs` and `browser.mjs`; `dom.mjs`, `harness.mjs`, `idle.test.mjs`; the R50/R31 tests of `kit.test.mjs` and R11's of `acts.test.mjs`; `op-grades`' `phoneOf` and `LARGER_SCREEN_ACTS`. `tranche/T47` merged into the branch at B12–B13 (action-producers, op-declarations again).
