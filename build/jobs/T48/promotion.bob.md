@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 853 KB with your tests (K2700), over the 600 KB limit. Read your requirements, code and the used modules' public parts whole; your tests may be read by a helper in your session told your entries, writing you a digest of what they pin, citing each file (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Merge order in L2: ai-accounts first (K624), then record-core, membership, credentials (after ai-accounts), promotion last (the stamp).
+
+## B2 · CHANGE
+
+ai-accounts, record-core, membership and credentials are merged into tranche/T48 (K3213, K3215, K3216, K3218). Merge tranche/T48 into your branch, take their rows into 1.75.0 (ai-accounts' moved C-29 rows with their new wheres, C-29.31 at #keptAway; N1018's sentence; membership's and credentials' changes), run the census, and post COMPLETE. modules.json's tests entry for the 1.75.0 fixture is changed by BOB at your merge (K3214).
