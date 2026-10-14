@@ -1,6 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R142; T47's R142 (K3078: the viewer's own handles taken, C-56.6 read
+ * Requirements: build/requirements/membership.md (R4–R143; T48's R143 `lookedSince`, the Home mark (N1036, K3189), R44's
+ * sight strings (N1019) and R83 order (`ai-accounts`, `signin-door`, `journey-check`; `setup-page` gone; N1014, N1055); T47's R142 (K3078: the viewer's own handles taken, C-56.6 read
  * by key, the census of project acts), R141, the handle `admin` reserved for the founder
  * (K3076); T47-82's R140, `screens-entry` after `interface-shell` in
  * R83's order (K3064, K3069); T47's R133, the frozen `*_CHECKS` tables (K3037); T47's R83 order (`case-inputs`, `action-records`,
@@ -35,7 +36,7 @@
  * SQL joins record-core's `bundles` only on the stated read contract, `bundle_id` and `object_type`
  * (record-core R37); every other bundle fact (a project's title) is asked of `core.bundleInfo` (R34).
  */
-import { MACHINE_CLASS_PREFIX, sha256HexSync } from "../record-grammar/index.mjs";
+import { MACHINE_CLASS_PREFIX, MACHINE_STAMP_PREFIXES, sha256HexSync } from "../record-grammar/index.mjs";
 import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLES,
          MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_DECLARED_TABLES } from "./schema.mjs";
 export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES, MEMBERSHIP_DECLARED_TABLES } from "./schema.mjs";
@@ -270,14 +271,16 @@ export function notTheOwner(by, projectId, extra = null) {
    `action-records` after `action-grammar` in layer 9, `screens-wizards` after `interface-shell`, and
    `screens-investigate`, `screens-publish`, `screens-action` after `screens-inquiry` and before `control-plane`, in
    layer 11. T47-82 (R140; K3064, K3069): `screens-entry` directly after `interface-shell`, before `screens-wizards`, in
-   layer 11. */
+   layer 11. T48-9 (K657, K3100, K3190, K3196; N1014, N1055): `ai-accounts` after `project-roster` and before `credentials`
+   in layer 2, `signin-door` after `store-door` in layer 11 and `journey-check` last; `setup-page` gone, as its row left the
+   file; `legacy-ui` kept. */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
           "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
           "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain", "site-profiles", "docprofile",
           "doctypes", "legistar-reader", "roster-reader", "court-doctypes", "budget-doctypes", "image-codecs",
           "pdf-pixels", "image-cover", "doc-clean", "pdf-worker", "ocr-worker", "sheet-worker", "file-scanner",
-  /* 2 */ "record-core", "membership", "project-roster", "credentials", "promotion",
+  /* 2 */ "record-core", "membership", "project-roster", "ai-accounts", "credentials", "promotion",
   /* 3 */ "host-governor", "provenance", "attestation", "provenance-routes", "capture-sources", "acquisition",
           "capture", "doorbell", "file-safety", "sources",
   /* 4 */ "calibration", "reading-pipeline", "extraction", "content",
@@ -297,10 +300,11 @@ export const MODULE_ORDER = Object.freeze([
   /* 10 */ "monitoring", "following", "link-sweep", "scheduler",
   /* 11 */ "wizard-scripts", "op-grades", "affordances", "tasks", "machinery-producers", "action-producers",
            "queue-producers",
-           "notice-producers", "queue", "setup-page", "setup-words", "instance-setup", "op-declarations", "admission",
-           "answer-envelope", "store-door", "interface-assets", "interface-shell", "screens-entry", "screens-wizards",
+           "notice-producers", "queue", "setup-words", "instance-setup", "op-declarations", "admission",
+           "answer-envelope", "store-door", "signin-door", "interface-assets", "interface-shell", "screens-entry", "screens-wizards",
            "screens-settings", "screens-intake", "screens-daily", "screens-inquiry", "screens-investigate",
            "screens-publish", "screens-action", "control-plane", "plane", "legacy-ui", "installer", "stewards",
+           "journey-check",
 ]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -2841,6 +2845,30 @@ export class Membership {
       const history = this.#rows(`SELECT choice, set_by AS by, at FROM court_notice ORDER BY seq`);
       return { choice: history.length ? history[history.length - 1].choice : null, history };
     } catch { return { choice: null, history: [] }; }
+  }
+
+  /* ---- R143 (T48; N1036; DEC-218, K3146, K3189): when a member last looked at Home ---- */
+
+  /** R143: `{since}`, the instant `by`'s previous look was recorded (null when none was), recording this call's instant as
+   *  the new mark in the same act. Only an active member (`ann` or `member:ann`) or the founder (`admin`, once the
+   *  instance is claimed, R94) has a mark; any other `by` records nothing and answers `{since: null}`. Answers only the
+   *  caller's own mark; never throws. */
+  lookedSince(args = {}) {
+    try {
+      const by = isObj(args) ? args.by : null;
+      const raw = typeof by === "string" ? by.trim() : "";
+      if (!raw || MACHINE_STAMP_PREFIXES.some((p) => raw.toLowerCase().startsWith(p))) return { since: null };
+      const id = raw.startsWith("member:") ? raw.slice(7) : raw;
+      if (!id) return { since: null };
+      const founder = id === Membership.ROOT_ADMIN;
+      if (founder ? !this.#claimed()
+          : this.#one(`SELECT status FROM members WHERE member_id=?`, id)?.status !== "active") return { since: null };
+      const prev = this.#one(`SELECT at FROM home_looks WHERE member_id=?`, id);
+      const now = new Date().toISOString();
+      this.sql.exec(`INSERT INTO home_looks (member_id, at) VALUES (?,?) ON CONFLICT(member_id) DO UPDATE SET at=excluded.at`,
+        id, now);
+      return { since: prev ? prev.at : null };
+    } catch { return { since: null }; }
   }
 
   /* ---- R109, R110 (DEC-132): the group's optional self-description ---- */

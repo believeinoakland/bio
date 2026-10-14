@@ -53,14 +53,17 @@ const SINCE_T33 = [["sheet-worker", "file-scanner", "record-core"], ["doorbell",
                    ["observation-log", "law-relations", "standards"], ["wizard-scripts", "op-grades", "affordances"],
                    ["admission", "answer-envelope", "store-door"],
                    /* T46-4 (K2914): `interface-assets` now follows `store-door` (T46_PINS below). */
-                   ["answer-envelope", "store-door", "interface-assets"],
+                   /* T48-9 (N1014, K3100): `signin-door` now follows `store-door` (T48_PINS below). */
+                   ["answer-envelope", "store-door", "signin-door"],
                    /* T37-44 (K1185, K2171): `image-cover` after `pdf-pixels` in layer 1 (`doc-clean` after it since T39). */
                    ["pdf-pixels", "image-cover", "doc-clean"],
                    /* T38-4 (N783; K657, K1185, K2270): `project-roster` directly after `membership` in layer 2. */
-                   ["membership", "project-roster", "credentials"],
+                   /* T48-9 (K657): `ai-accounts` now follows `project-roster` (T48_PINS below). */
+                   ["membership", "project-roster", "ai-accounts"],
                    /* T39-M (N806, N807; K657, K2333, K2343): `doc-clean` directly after `image-cover` in layer 1,
                       `setup-words` directly before `instance-setup` in layer 11. */
-                   ["image-cover", "doc-clean", "pdf-worker"], ["setup-page", "setup-words", "instance-setup"],
+                   ["image-cover", "doc-clean", "pdf-worker"], /* T48-9: `setup-page` gone, so `queue` precedes it */
+                   ["queue", "setup-words", "instance-setup"],
                    /* T40-M (N812 B10; K657, K2373, K2389): `ai-use` directly after `run-rules` in layer 6. */
                    ["run-rules", "ai-use", "ai-runs"],
                    /* T41-3 (N820, N823; K657, K2431): the five modules T41's opening adds, each between the two
@@ -80,6 +83,8 @@ const SINCE_T33 = [["sheet-worker", "file-scanner", "record-core"], ["doorbell",
 /* T45-2 (K2799, B2): `stewards`, Bob's new module, last in layer 11 and in the file, directly after `installer`: its one
    neighbour pins it, and nothing follows it. */
 const LAST = ["installer", "stewards"];
+/* T48-9 (N1014, N1055; K3100): `journey-check` last, directly after `stewards`, which is pinned between `installer` and it. */
+const T48_LAST = ["installer", "stewards", "journey-check"];
 /* Listed in the file before its job builds it (K1043's form: empty `paths`), tolerated by name until that merge
    (T33-19a's rule). The T33, T36 and T38 modules so tolerated have all merged (T38's `file-safety` and
    `project-roster` among them), so none is tolerated any longer; T39-M (K2343): `setup-words`, until its L11 job;
@@ -100,7 +105,7 @@ const T46_NEW = ["interface-assets", "interface-shell", "screens-settings", "scr
 /* T47-7: layer 11's run from store-door to control-plane as T47's opening leaves it, T46's six and T47's four screens
    interleaved; each module's place in it is pinned by both its neighbours. T47-82 (R140): `screens-entry` directly after
    `interface-shell`, before `screens-wizards`. */
-const RUN_11 = ["store-door", "interface-assets", "interface-shell", "screens-entry", "screens-wizards", "screens-settings",
+const RUN_11 = ["store-door", "signin-door", "interface-assets", "interface-shell", "screens-entry", "screens-wizards", "screens-settings",
                 "screens-intake", "screens-daily", "screens-inquiry", "screens-investigate", "screens-publish",
                 "screens-action", "control-plane"];
 const pinsIn = (run, ids) => ids.map((id) => { const i = run.indexOf(id); return [run[i - 1], id, run[i + 1]]; });
@@ -113,8 +118,14 @@ const T47_PINS = [["case-account", "case-inputs", "case-authoring"], ["action-gr
 const T47_LAYERS = [8, 9, 11, 11, 11, 11];
 /* T47-82 (R140; K3064, K3069): `screens-entry`, added out of layer, pinned by both its neighbours. */
 const R140_PIN = ["interface-shell", "screens-entry", "screens-wizards"];
-/* The names tolerated as not yet built, each only while the file gives it no paths: T47's six and `screens-entry`. */
-const NOT_YET_BUILT = [...T47_NEW, "screens-entry"];
+/* T48-9 (K657, K3100; N1014): the three modules T48's opening adds, each `[before, id, after]` in the file's places
+   (`journey-check` last, so nothing follows it). */
+const T48_NEW = ["ai-accounts", "signin-door", "journey-check"];
+const T48_PINS = [["project-roster", "ai-accounts", "credentials"], ["store-door", "signin-door", "interface-assets"],
+                  ["stewards", "journey-check", undefined]];
+/* The names tolerated as not yet built, each only while the file gives it no paths. T48-9: T47's six and `screens-entry`
+   have merged and are held to their paths; `ai-accounts` alone, until its job (T48-10) merges. */
+const NOT_YET_BUILT = ["ai-accounts"];
 
 test("R83 T36-6 T37-44 T38-4 T39-M T40-M T41-3 T42-3 T45-2 MODULE_ORDER holds the modules added since T33 in the file's places: file-scanner, file-safety, law-relations, op-grades, answer-envelope, store-door, image-cover, project-roster, doc-clean, setup-words, ai-use, steps, reading-guides, question-explorer, investigation, publish-schedule, doorbell, case-account, case-check, action-holds, action-replies, plan-work, action-producers", async () => {
   const modules = await modulesJson();
@@ -148,7 +159,7 @@ test("R83 T33-19a MODULE_ORDER holds plan T33's order: the new modules in their 
   for (const id of T33_NEW) assert.ok(MODULE_ORDER.includes(id), `${id} is held in its place`);
 });
 
-test("R83 T33-19a T39-M T40-M T41-3 T42-3 T45-2 T46-4 T47-7 R140 every module MODULE_ORDER holds is built, its paths on disk; a module listed before its job merges (case-inputs, action-records, screens-entry, screens-wizards, screens-investigate, screens-publish, screens-action) is named as not yet built, by name, and fails nothing", async (t) => {
+test("R83 T33-19a T39-M T40-M T41-3 T42-3 T45-2 T46-4 T47-7 R140 every module MODULE_ORDER holds is built, its paths on disk; a module listed before its job merges (T48-9: ai-accounts) is named as not yet built, by name, and fails nothing", async (t) => {
   const modules = await modulesJson();
   const notYet = [];
   for (const m of modules) {
@@ -229,14 +240,15 @@ test("R83 T45-2 T46-4 negative control: a list without case-check, action-holds,
     assert.notDeepEqual(pin(moved, id), [before, id, after], `the pin refuses ${id} out of its place`);
     assert.deepEqual(pin(MODULE_ORDER, id), [before, id, after], `${id} in its place in the real list`);
   }
-  /* stewards: last, directly after installer; a list ending at installer, or holding stewards before it, is not the file's */
-  assert.deepEqual(MODULE_ORDER.slice(-2), LAST, "installer → stewards, last");
-  assert.deepEqual(ids.slice(-2), LAST, "the file ends installer → stewards");
+  /* stewards: directly after installer (T48-9: and before journey-check, the last); a list without it, or holding it
+     before installer, is not the file's */
+  assert.deepEqual(MODULE_ORDER.slice(-3, -1), LAST, "installer → stewards");
+  assert.deepEqual(ids.slice(-3, -1), LAST, "the file holds installer → stewards");
   assert.notDeepEqual(MODULE_ORDER.filter((x) => x !== "stewards"), ids, "a list without stewards is not the file's");
   const early = MODULE_ORDER.filter((x) => x !== "stewards");
   early.splice(early.indexOf("installer"), 0, "stewards");
   assert.notDeepEqual(early, ids, "stewards before installer is not the file's order");
-  assert.notDeepEqual(early.slice(-2), LAST, "the pin refuses it");
+  assert.notDeepEqual(early.slice(-3, -1), LAST, "the pin refuses it");
   /* N936: merged, each held to its filled paths, on disk, and none tolerated as not yet built */
   for (const id of T45_NEW) {
     const paths = modules.find((m) => m.id === id).paths;
@@ -299,17 +311,14 @@ test("R83 T47-7 MODULE_ORDER holds case-inputs, action-records, screens-wizards,
     assert.notDeepEqual(moved, ids, `${id} before ${before} is not the file's order`);
     assert.notDeepEqual(pin(moved, id), [before, id, after], `the pin refuses ${id} out of its place`);
   }
-  /* The tolerance, by name and only while unbuilt: the file's modules without paths are all T47's six, and each of the
-     six is either still without paths or held to the paths its merge gave it, on disk. */
+  /* T48-9 (re-pinned): the six have merged, each held to its filled paths on disk and none tolerated as not yet built. */
   const unbuilt = modules.filter((m) => !m.paths.length).map((m) => m.id);
-  /* T47-82 (R140): `screens-entry` is tolerated beside the six, on the same rule (its own test below). */
-  assert.deepEqual(unbuilt.filter((id) => !NOT_YET_BUILT.includes(id)), [],
-    "no module outside T47's six and screens-entry is without paths");
-  assert.deepEqual([...NOT_YET_BUILT].sort(), [...T47_NEW, "screens-entry"].sort(),
-    "the names tolerated are exactly T47's six and screens-entry");
+  assert.deepEqual(unbuilt.filter((id) => !NOT_YET_BUILT.includes(id)), [], "every module without paths is a tolerated name");
   for (const id of T47_NEW) {
     const paths = modules.find((m) => m.id === id).paths;
+    assert.ok(paths.length, `${id}: its paths are filled`);
     for (const p of paths) assert.ok(existsSync(new URL(`../../../../${p}`, import.meta.url)), `${id}: ${p} is on disk`);
+    assert.ok(!NOT_YET_BUILT.includes(id), `${id} is not tolerated as not yet built`);
   }
   /* the negative arm of the tolerance: a module outside the six without paths would be refused by the rule above */
   const forged = modules.map((m) => (m.id === "screens-inquiry" ? { ...m, paths: [] } : m));
@@ -344,10 +353,10 @@ test("R140 T47-82 MODULE_ORDER equals modules.json's order with screens-entry di
     assert.notDeepEqual(moved, ids, `screens-entry ${offset ? "after" : "before"} ${anchor} is not the file's order`);
     assert.notDeepEqual(pin(moved, "screens-entry"), R140_PIN, "the pin refuses it");
   }
-  /* the tolerance: by name, and only while the file gives it no paths; from its merge on, held to them on disk */
-  assert.ok(NOT_YET_BUILT.includes("screens-entry"), "screens-entry is a tolerated name");
-  if (entry.paths.length)
-    for (const p of entry.paths) assert.ok(existsSync(new URL(`../../../../${p}`, import.meta.url)), `screens-entry: ${p} is on disk`);
+  /* the tolerance: by name, and only while the file gave it no paths; T48-9: it has merged, held to them on disk */
+  assert.ok(entry.paths.length, "screens-entry: its paths are filled");
+  assert.ok(!NOT_YET_BUILT.includes("screens-entry"), "screens-entry is no longer a tolerated name");
+  for (const p of entry.paths) assert.ok(existsSync(new URL(`../../../../${p}`, import.meta.url)), `screens-entry: ${p} is on disk`);
   const unbuilt = modules.filter((m) => !m.paths.length).map((m) => m.id);
   assert.deepEqual(unbuilt.filter((id) => !NOT_YET_BUILT.includes(id)), [], "every module without paths is a tolerated name");
   for (const id of NOT_YET_BUILT) {
@@ -358,9 +367,56 @@ test("R140 T47-82 MODULE_ORDER equals modules.json's order with screens-entry di
   const forged = modules.map((m) => (m.id === "interface-shell" ? { ...m, paths: [] } : m));
   assert.deepEqual(forged.filter((m) => !m.paths.length).map((m) => m.id).filter((id) => !NOT_YET_BUILT.includes(id)),
     ["interface-shell"], "interface-shell without paths is not tolerated");
-  /* setup-page and legacy-ui stay in the list while the file names them (T48 drops them) */
+  /* setup-page and legacy-ui are in the list exactly while the file names them (T48-9: setup-page gone, legacy-ui kept) */
+  assert.ok(!MODULE_ORDER.includes("setup-page") && MODULE_ORDER.includes("legacy-ui"), "setup-page gone, legacy-ui kept");
   for (const id of ["setup-page", "legacy-ui"])
     assert.equal(MODULE_ORDER.includes(id), ids.includes(id), `${id} is in the list exactly while the file names it`);
+});
+
+/* T48-9 (K657, K3100, K3190, K3196; N1014, N1055; K874's control): the three modules T48's opening adds, each in its
+   layer between the neighbours the file places it between (`journey-check` last); `setup-page` gone, `legacy-ui` kept;
+   `ai-accounts` tolerated by name only while the file gives it no paths, the other two built and held to their paths;
+   the tolerated names exactly those still without paths. Control: a list without `journey-check` (the negative control
+   runs to the last module) or without either other one, or holding one out of its place, fails. */
+test("R83 T48-9 MODULE_ORDER equals modules.json's order with ai-accounts between project-roster and credentials, signin-door after store-door, journey-check last, setup-page gone and legacy-ui kept; ai-accounts tolerated while pathless; control: a list without journey-check, or holding one of the three out of its place, fails", async () => {
+  const modules = await modulesJson();
+  const ids = modules.map((m) => m.id);
+  const layerOf = new Map(modules.map((m) => [m.id, m.layer]));
+  const pin = (list, id) => { const i = list.indexOf(id); return [list[i - 1], id, list[i + 1]]; };
+  assert.deepEqual([...MODULE_ORDER], ids, "the list is the file's order");
+  assert.deepEqual(T48_NEW.map((id) => layerOf.get(id)), [2, 11, 11], "each in its layer");
+  for (const [before, id, after] of T48_PINS) {
+    assert.deepEqual(pin(MODULE_ORDER, id), [before, id, after], `${before} → ${id} → ${after} in the list`);
+    assert.deepEqual(pin(ids, id), [before, id, after], `${before} → ${id} → ${after} in the file`);
+    assert.notDeepEqual(MODULE_ORDER.filter((x) => x !== id), ids, `a list without ${id} is not the file's`);
+    const moved = MODULE_ORDER.filter((x) => x !== id);
+    moved.splice(moved.indexOf(before), 0, id);
+    assert.notDeepEqual(moved, ids, `${id} before ${before} is not the file's order`);
+    assert.notDeepEqual(pin(moved, id), [before, id, after], `the pin refuses ${id} out of its place`);
+  }
+  assert.deepEqual(MODULE_ORDER.slice(-3), T48_LAST, "installer → stewards → journey-check, last");
+  /* control: the list stopping before journey-check, the last module, fails */
+  assert.notDeepEqual(MODULE_ORDER.slice(0, -1), ids, "a list without journey-check is not the file's");
+  assert.ok(!MODULE_ORDER.includes("setup-page") && !ids.includes("setup-page"), "setup-page gone from both");
+  assert.ok(MODULE_ORDER.includes("legacy-ui") && ids.includes("legacy-ui"), "legacy-ui kept in both");
+  assert.notDeepEqual([...MODULE_ORDER, "setup-page"], ids, "a list still holding setup-page is not the file's");
+  /* the tolerance: exactly the modules still without paths, each a tolerated name; the built two held to their paths */
+  const unbuilt = modules.filter((m) => !m.paths.length).map((m) => m.id);
+  assert.deepEqual(unbuilt.filter((id) => !NOT_YET_BUILT.includes(id)), [], "every module without paths is tolerated");
+  assert.deepEqual(NOT_YET_BUILT, ["ai-accounts"], "ai-accounts alone is tolerated by name");
+  for (const id of NOT_YET_BUILT) {
+    const m = modules.find((x) => x.id === id);
+    for (const p of m.paths) assert.ok(existsSync(new URL(`../../../../${p}`, import.meta.url)), `${id}: ${p} is on disk`);
+  }
+  for (const id of ["signin-door", "journey-check"]) {
+    const paths = modules.find((m) => m.id === id).paths;
+    assert.ok(paths.length, `${id}: its paths are filled`);
+    for (const p of paths) assert.ok(existsSync(new URL(`../../../../${p}`, import.meta.url)), `${id}: ${p} is on disk`);
+  }
+  /* control of the tolerance: a built module that lost its paths is not tolerated */
+  const forged = modules.map((m) => (m.id === "signin-door" ? { ...m, paths: [] } : m));
+  assert.deepEqual(forged.filter((m) => !m.paths.length).map((m) => m.id).filter((id) => !NOT_YET_BUILT.includes(id)),
+    ["signin-door"], "signin-door without paths is not tolerated");
 });
 
 test("R83 MODULE_ORDER is frozen: no write changes it", () => {
