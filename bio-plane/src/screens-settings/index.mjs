@@ -82,4 +82,4 @@ const freeze = (s) => Object.freeze({
   parts: PARTS,
 });
 
-export const SCREENS = Object.freeze([settings, members, account, connect, notes, group, identity, places, recovery, security, translations /* TEMP-UPDATES */].map(freeze));
+export const SCREENS = Object.freeze([settings, members, account, connect, notes, group, identity, places, recovery, security, translations, updates].map(freeze));
