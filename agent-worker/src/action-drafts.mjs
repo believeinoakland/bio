@@ -213,7 +213,7 @@ const TASK_WORDS = {
  *  so the four drafts and R59's are one mechanism. */
 export async function actionDraft(body, task, env, deps, shared) {
   const { refusal, json, accountOf, cascadeToken, converse, segmentMeter, DEFAULT_MAX_SEGMENT_BYTES } = deps;
-  const { packFor, grantReader, readTool, draftEnding, ASK_DECLARED, labelled = {} } = shared;
+  const { packFor, grantReader, readTool, draftEnding, ASK_DECLARED, labelled = {}, traced = {} } = shared;
   const acct = await accountOf(body);
   if (acct.refusal) return acct.refusal;
   const { account } = acct;
@@ -286,7 +286,7 @@ export async function actionDraft(body, task, env, deps, shared) {
   const read = grantReader({ env, grant, meter, deps });
   const conv = await converse({
     reference, runner: env.RUNNER ?? null, mode: "draft", meter, system, messages, tools, finalTool: "draft",
-    maxTurns: ASK_DECLARED.turns, onTool: read,
+    maxTurns: ASK_DECLARED.turns, onTool: read, ...traced,
   });
   const spent = { usage: conv.usage ?? null, calls: conv.calls === undefined ? null : conv.calls };
   if (conv.answer !== undefined) {

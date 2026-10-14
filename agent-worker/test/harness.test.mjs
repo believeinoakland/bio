@@ -1705,7 +1705,13 @@ export default {
       const add = await real("memberadd", env.ADMIN, { memberId: id, cover: "c-" + id, role: "admin",
                                                        capabilities: ["contribute", "publish"] });
       await real("enroll", null, { invite: add.invite, handle: id, password: id + "-passphrase-1" });
-      globalThis.__session = (await real("login", null, { role: "member:" + id, password: id + "-passphrase-1" })).token;
+      globalThis.__session = (await real("login", null, { handle: id, password: id + "-passphrase-1" })).token;
+      /* credentials R66 (T47): connecting Claude asks for the password again within five minutes, or REAUTH_DUE. */
+      await real("reauth", globalThis.__session, { password: id + "-passphrase-1" });
+      /* instance-setup R44, credentials R64 (T47): the disclosure shown to her, by her, before she connects, or
+         DISCLOSURE_DUE (C-29.40); its version is the one her own read (op=disclosureof) answers. */
+      const shown = await real("disclosureof", globalThis.__session);
+      await real("disclosureshown", globalThis.__session, { member: "member:" + id, version: shown && shown.version });
       globalThis.__connected = await real("accountreferenceset", globalThis.__session, ${JSON.stringify(CONNECT)});
     }
     const T = globalThis.__session;
@@ -1752,7 +1758,7 @@ export default {
     /* Read as Ruth, signed in with her own password (the front enrolled her): the shared member token is retired
        (C-38.11), and a credential travels in the Authorization header only (C-38.10). */
     const login = await (await w.fetch("http://real/api/?op=login", { method: "POST",
-      body: JSON.stringify({ role: "member:" + RUTH_ID, password: RUTH_ID + "-passphrase-1" }) })).json();
+      body: JSON.stringify({ handle: RUTH_ID, password: RUTH_ID + "-passphrase-1" }) })).json();
     const session = (login && typeof login === "object" && "result" in login ? login.result : login)?.token;
     const j = await (await w.fetch(`http://real/api/?op=airunlog&run=${base.run_id}&limit=500`,
       { headers: { authorization: `Bearer ${session}` } })).json();

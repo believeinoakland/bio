@@ -94,7 +94,7 @@ const realPost = async (op, token, body) => { const j = await (await real.dispat
   return j && typeof j === "object" && "result" in j ? j.result : j; };
 const invited = await realPost("memberadd", "adm-req", { memberId: "rosa", cover: "c-rosa", role: "member", capabilities: ["contribute"] });
 await realPost("enroll", null, { invite: invited.invite, handle: "rosa", password: "rosa-passphrase-1" });
-const MEM_SESSION = (await realPost("login", null, { role: "member:rosa", password: "rosa-passphrase-1" })).token;
+const MEM_SESSION = (await realPost("login", null, { handle: "rosa", password: "rosa-passphrase-1" })).token;
 const PUBLISHED = (await (await real.dispatchFetch("http://x/api/?op=agentpack",
   { headers: { authorization: `Bearer ${MEM_SESSION}` } })).json());
 const PUBLISHED_ANSWER = PUBLISHED && typeof PUBLISHED === "object" && "result" in PUBLISHED ? PUBLISHED.result : PUBLISHED;

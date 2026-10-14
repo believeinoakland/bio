@@ -66,6 +66,16 @@ const ATTEMPT_MAX = 200;
 
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 
+/** R87 (T48; N1015) — the door's two headers on `/ask`, `/run`, `/draft` and `/transcribe`, read in R83's shapes for
+ *  `agent-model` (`converse({…, trace, memberRef})`, its R16): each present only when the door sent it in its shape,
+ *  else absent. Unlike `/signin`, nothing is minted and nothing is refused for want of one. */
+export function doorTrace(req) {
+  const t = req.headers.get(TRACE_HEADER);
+  const r = req.headers.get(MEMBER_REF_HEADER);
+  return { ...(typeof t === "string" && TRACE_SHAPE.test(t) ? { trace: t } : {}),
+           ...(typeof r === "string" && MEMBER_REF_SHAPE.test(r) ? { memberRef: r } : {}) };
+}
+
 /** R83 (`agent-runner` R29's scrub): text with every copy of the code, every URL query and anything token-shaped
  *  (`sk-ant-…`, a JWT, any run of 32 or more `[A-Za-z0-9._-]`) removed. */
 export function scrub(text, code) {
@@ -99,10 +109,9 @@ const WORDS = {
 export async function handleSignin(req, env, deps) {
   const { refusal, json, now = () => Date.now(), log = (line) => console.log(line), mint = () => crypto.randomUUID() } = deps;
   /* R83: the door's two headers, read once; the trace minted when none usable arrived. */
-  const sentTrace = req.headers.get(TRACE_HEADER);
-  const trace = typeof sentTrace === "string" && TRACE_SHAPE.test(sentTrace) ? sentTrace : mint();
-  const sentRef = req.headers.get(MEMBER_REF_HEADER);
-  const memberRef = typeof sentRef === "string" && MEMBER_REF_SHAPE.test(sentRef) ? sentRef : null;
+  const sent = doorTrace(req);
+  const trace = sent.trace ?? mint();
+  const memberRef = sent.memberRef ?? null;
 
   /* R83: exactly one line per request, of these fields only: never the code, address, token, body or another header. */
   const line = { event: "signin.worker", trace, step: null, member_ref: memberRef, outcome: null,
