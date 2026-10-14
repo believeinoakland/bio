@@ -480,12 +480,14 @@ test("R17 (Design Requirement 12): a machine never requests, takes or records a 
 });
 
 test("R17: each refusal R3 and R13–R15 add carries its row in this module's own family, C-138, its region where it is answered", () => {
-  const codes = Object.keys(CHECK_REQUEST_CHECKS);
+  const all = Object.keys(CHECK_REQUEST_CHECKS);
+  /* the family's first fifteen are R3's and R13–R15's; R19's two follow (its own test, sign.test.mjs) */
+  const codes = all.slice(0, 15);
   assert.deepEqual(codes, ["MACHINE_CANNOT_CHECK", "NO_SUCH_CHECK_TARGET", "CHECK_NOT_AN_OWNER", "CHECK_ADDRESS_ONE",
     "CHECK_MEMBER_REFUSED", "CHECK_NOTE_TOO_LONG", "NO_SUCH_CHECK_REQUEST", "CHECK_ALREADY_TAKEN", "CHECK_NOT_YOURS",
     "CHECK_VERDICT_UNKNOWN", "CHECK_NO_REASON", "CHECK_REASON_TOO_LONG", "CHECK_ALREADY_RECORDED", "CHECK_NOT_FORWARDED",
     "CHECK_CLOSES_BY_RECORD"]);
-  assert.deepEqual(codes.map((c) => CHECK_REQUEST_CHECKS[c].check), codes.map((_, i) => `C-138.${i + 1}`));
+  assert.deepEqual(all.map((c) => CHECK_REQUEST_CHECKS[c].check), all.map((_, i) => `C-138.${i + 1}`), "numbered in order, no gap");
   const src = readFileSync(new URL("../../../src/tasks/index.mjs", import.meta.url), "utf8");
   for (const [code, r] of Object.entries(CHECK_REQUEST_CHECKS)) {
     assert.ok(Object.isFrozen(r) && r.translation.length > 20, code);
