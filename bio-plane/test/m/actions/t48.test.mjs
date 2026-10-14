@@ -65,3 +65,33 @@ test("R104 R65's refusal of an entity not of kind proceeding is entities.notAPro
   assert.equal(w.record.head(A), null, "nothing was written");
   assert.equal(w.promote(A, md([`proceeding: ${P2}`])).ok, true, "control: an entity of kind proceeding lands");
 });
+
+test("R101 actionCorrespond answers C-32.4, C-33.6, C-33.7, C-33.8 and C-33.9 each as its row, whose where names action-records' one site, with this act's target and detail; BAD_DIRECTION stays its own, its row's where naming actions; a well-formed entry lands", async () => {
+  const { censusRows } = await import("../../system/row-census.mjs");
+  const byCheck = Object.fromEntries((await censusRows(new URL("../../../../", import.meta.url).pathname)).rows.map((r) => [r.check, r]));
+  const { sha } = await import("./fixture.mjs");
+  const w = world();
+  w.action(A);
+  const c = (o) => w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-02", account: "asked", viewer: M, author: M, ...o });
+  const registered = sha("registered bytes");
+  const cases = [
+    ["MACHINE_CANNOT_CORRESPOND", "C-32.4", c({ author: "class:daemon" }), "correspondFence"],
+    ["BAD_DATE", "C-33.6", c({ at: "2026-02-31" }), "correspondEntryRefusal"],
+    ["CAPTURE_AND_TESTIMONY", "C-33.7", c({ artifactSha: registered }), "correspondEntryRefusal"],
+    ["NEITHER_CAPTURE_NOR_TESTIMONY", "C-33.8", c({ account: "" }), "correspondEntryRefusal"],
+    ["UNREGISTERED_ARTIFACT", "C-33.9", c({ account: "", artifactSha: registered }), "unregisteredArtifact"],
+  ];
+  for (const [code, check, r, fn] of cases) {
+    assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, code, code, check], code);
+    assert.equal(r.translation, byCheck[check].translation, `${code}: its row's translation`);
+    assert.ok(byCheck[check].where.startsWith(`src/action-records/index.mjs ${fn} >`), `${code}: where names action-records' site`);
+    assert.equal(typeof r.detail, "string", `${code}: the act's own detail`);
+    if (code !== "MACHINE_CANNOT_CORRESPOND") assert.equal(r.target, A, `${code}: target`);
+  }
+  assert.equal(cases[1][2].at, "2026-02-31");
+  assert.equal(cases[4][2].artifact_sha, registered);
+  const dir = c({ direction: "sideways" });
+  assert.deepEqual([dir.reason, dir.legal.includes("sent")], ["BAD_DIRECTION", true]);
+  assert.equal(byCheck["C-33.5"].where, "src/actions/index.mjs actionCorrespond > is-correspond-direction");
+  assert.equal(c({}).ok, true, "control: a well-formed entry lands");
+});

@@ -1623,43 +1623,24 @@ export class Actions {
                      speaker = "", officeStatus = null, foundElsewhere = null,
                      pressure = null, viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
-    /* DEC-49 REGION is-machine-correspond — REC-64/C-32.4. The fence alone. */
-    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
-      return { ok: false, reason: "MACHINE_CANNOT_CORRESPOND",
-               detail: "a correspondence entry is a named member's statement that this exchange happened — "
-                     + "and on the testimony arm it IS the evidence. A machine credential may capture bytes "
-                     + "and may not testify to an exchange. Sign in as a member." };
-    /* END DEC-49 REGION is-machine-correspond */
+    /* R101 (T48; N1024, K231): C-32.4 is `action-records.correspondFence`'s, the one site, its `detail` this act's own. */
+    const fence = this.records.correspondFence(who, { detail: CORRESPOND_DETAIL.MACHINE_CANNOT_CORRESPOND });
+    if (fence) return fence;
     if (!target)
       return { ok: false, reason: "NO_TARGET", detail: "one entry at a time: pass target=<action id>" };
-    /* DEC-49 REGION is-correspond-entry — REC-64/C-33.5-8. The four conditions
-       on the ENTRY's own shape. The target guard above and the hash checks below
-       refuse with codes minted at several other sites, so they are outside this
-       span: a `where` claims ONE span, and a code enforced in eight places
-       cannot honestly name one of them as the site. */
+    /* DEC-49 REGION is-correspond-direction — C-33.5 stays this act's own, its region drawn around the direction alone. */
     if (!CORRESPONDENCE_DIRECTIONS.includes(direction))
       return { ok: false, reason: "BAD_DIRECTION", legal: CORRESPONDENCE_DIRECTIONS, direction,
                detail: `direction is one of ${CORRESPONDENCE_DIRECTIONS.join(", ")}. A reply that never came `
                      + "is recorded as no_response with the date it was due, not omitted (DEC-13)." };
+    /* END DEC-49 REGION is-correspond-direction */
     const day = String(at ?? "").trim();
-    /* R15 (civil-time R6): a YYYY-MM-DD naming a real calendar day; 2026-02-31 is no day. */
-    if (!isCalendarDate(day))
-      return { ok: false, reason: "BAD_DATE", at: day,
-               detail: "every entry in this ledger is dated YYYY-MM-DD, a day the calendar has, including a "
-                     + "non-response, which is dated by when the reply was due" };
     const sha = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
     const acct = String(account ?? "").trim();
-    if (sha && acct)
-      return { ok: false, reason: "CAPTURE_AND_TESTIMONY", target,
-               detail: "an entry carries the captured bytes OR a named account, never both: what comes back "
-                     + "is CAPTURED, not summarised (DEC-13). A paraphrase beside the bytes is what a reader "
-                     + "would quote instead of the thing the group can defend." };
-    if (!sha && !acct)
-      return { ok: false, reason: "NEITHER_CAPTURE_NOR_TESTIMONY", target,
-               detail: "an entry carries either an artifact_sha that resolves in the register or an account "
-                     + "with an author. Neither is an entry that asserts an exchange and offers no way to "
-                     + "check that it happened." };
-    /* END DEC-49 REGION is-correspond-entry */
+    /* R101: C-33.6, C-33.7 and C-33.8 are `action-records.correspondEntryRefusal`'s, a date only (R15). */
+    const entryRefusal = this.records.correspondEntryRefusal({ at: day, artifactSha: sha, account: acct },
+      { target, detail: CORRESPOND_DETAIL });
+    if (entryRefusal) return entryRefusal;
     if (sha && !/^[0-9a-f]{64}$/.test(sha))
       return { ok: false, reason: "BAD_SHA", detail: "artifact_sha is a sha256 hash (64 hex characters)" };
     if (sha && direction === "no_response")
@@ -1739,12 +1720,9 @@ export class Actions {
     /* Resolved here as well as at promote, so the member is told which half of
        the capture-or-testify choice failed rather than being handed a write
        refusal after the lease was taken. */
-    /* DEC-49 REGION is-correspond-artifact — REC-64/C-33.9. */
-    if (sha && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
-      return { ok: false, reason: "UNREGISTERED_ARTIFACT", target, artifact_sha: sha,
-               detail: "this hash names no capture in this store. Capture the artifact first (op=capture), or "
-                     + "record a named account instead — those are the two honest ways to hold an exchange." };
-    /* END DEC-49 REGION is-correspond-artifact */
+    /* R101: C-33.9 is `action-records.unregisteredArtifact`'s. */
+    const unregistered = this.records.unregisteredArtifact(sha, { target, detail: CORRESPOND_DETAIL.UNREGISTERED_ARTIFACT });
+    if (unregistered) return unregistered;
 
     /* THE COURTESY LOCK, under the acting member. */
     const lease = this.record.acquireLease(target, who, CORRESPOND_LEASE_MS);
@@ -3217,6 +3195,23 @@ export function actionsOwns(t) {
   const name = typeof t === "string" ? t : t && t.name;
   return ACTIONS_TABLES.includes(name);
 }
+
+/* R101: this act's own sentences for the five conditions `action-records` R16 answers, kept as `actionCorrespond` worded them. */
+const CORRESPOND_DETAIL = Object.freeze({
+  MACHINE_CANNOT_CORRESPOND: "a correspondence entry is a named member's statement that this exchange happened — "
+    + "and on the testimony arm it IS the evidence. A machine credential may capture bytes "
+    + "and may not testify to an exchange. Sign in as a member.",
+  BAD_DATE: "every entry in this ledger is dated YYYY-MM-DD, a day the calendar has, including a "
+    + "non-response, which is dated by when the reply was due",
+  CAPTURE_AND_TESTIMONY: "an entry carries the captured bytes OR a named account, never both: what comes back "
+    + "is CAPTURED, not summarised (DEC-13). A paraphrase beside the bytes is what a reader "
+    + "would quote instead of the thing the group can defend.",
+  NEITHER_CAPTURE_NOR_TESTIMONY: "an entry carries either an artifact_sha that resolves in the register or an account "
+    + "with an author. Neither is an entry that asserts an exchange and offers no way "
+    + "to check that it happened.",
+  UNREGISTERED_ARTIFACT: "this hash names no capture in this store. Capture the artifact first (op=capture), or "
+    + "record a named account instead — those are the two honest ways to hold an exchange.",
+});
 
 /** The module's ops (K3), as entries of the plane's one route map (plane R5: `routes` spreads them in, and
  *  control-plane's `dispatch` answers every store request over it). `viewer`, `author` and `proposer` are the control
