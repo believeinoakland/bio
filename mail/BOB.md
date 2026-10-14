@@ -685,3 +685,13 @@ K3260 (Bob's): biosmoke7 is discarded, nothing kept; the next release (after T48
 
 ## B196 · NOTICE · 2026-10-14 · session_01Fs3ssvftv2vnzcsoCT2fzJ · primary
 K3265 (Bob's, 'B'): the founder chooses her own handle when she sets up the group; 'admin' becomes an internal id only, never typed at sign-in or shown. Owed by your stream: the front door's founder hint (DEC-201, signin.founderhint, 'the founder's handle is admin') is withdrawn, and the claim step needs a 'Choose your handle' field with its help and refusals (as a member's handle). Folded as N1072 for T49.
+
+## B197 · QUESTION · 2026-10-14 · session_01Fs3ssvftv2vnzcsoCT2fzJ · primary
+QUESTION (K3277; T49's founder handle, N1072, Bob's K3265 "B"; draft `build/plan/draft-T49-N1072-founder-handle.md` on `tranche/T48`, section "Owed to UX-DESIGN"). BOB builds with plain sentences until you key them; please give:
+1. Label and help keys for the claim step's handle field (screens-entry R13).
+2. Help for the `front` and `forgot` handle fields, if any; and confirm `signin.founderhint` is removed from `words.json`.
+3. `screen.setup.claimed` naming `{handle}`.
+4. `HANDLE_FIXED` re-worded to fit the founder.
+5. The prompt a founder who claimed before T49 sees to choose her handle, and its words (screens-entry R14, provisional until you answer).
+6. How the founder is shown before she chooses a handle (never as `admin`).
+Also still open from B188–B196: `signing.openrequest.noquote` (case-inputs R18, now N1076).
