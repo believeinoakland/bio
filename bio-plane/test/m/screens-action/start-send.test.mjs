@@ -109,3 +109,13 @@ test("R3: 'I have sent it · record the sending' is outward and records the day,
   assert.match(text(p), /Recorded as sent on 10 October 2026 · reference R-12/);
   assert.deepEqual(ops(p), []);
 });
+
+test("R3 (op-grades R18; interface-shell R50): at the phone width, 'I have sent it' is read, not done: what it does is drawn and nothing is sent", async () => {
+  const drafts = [draft({ approval: { approved_by: "member:mai", at: "x", sha: "s" } })];
+  const p = await open(STEP2, { ...DATA_PLANE, filingsfor: ok(FILINGS(drafts)), filingrecordsent: ok({}) }, { phone: true });
+  assert.equal(button(p, "filingrecordsent"), null, "no button to press");
+  assert.match(text(p), /Records that you sent it, when and how. Your group's Civicsmith never sends for you/);
+  assert.equal(p.byOp("filingrecordsent").length, 0);
+  const wide = await open(STEP2, { ...DATA_PLANE, filingsfor: ok(FILINGS(drafts)) });
+  assert.ok(button(wide, "filingrecordsent"), "control: drawn as an act on a wider screen");
+});

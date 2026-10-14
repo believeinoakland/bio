@@ -9,13 +9,17 @@ import { draftsOf, stepOf, sendSteps, PREPARE, APPROVE, RECORD_SENT } from "./se
 export const request = Object.freeze({
   id: "request",
 
+  // R8 (interface-shell): the path's project step, from the `project:` line of the action's own document (the
+  // `action` read names no project) and the project's title from `list`.
   place: function (view) {
+    const d = view.data.doc;
+    const m = d && d.state === "ok" && d.value && typeof d.value.text === "string" ? /^project:\s*"?([^"\s]+)"?\s*$/m.exec(d.value.text) : null;
+    const id = m ? m[1] : /^ACTN-/.test(String(view.subject || "")) ? null : String(view.subject || "");
+    if (!id) return {};
     const l = view.data.projects;
     const rows = l && l.state === "ok" && l.value && Array.isArray(l.value.bundles) ? l.value.bundles : [];
-    const s = String(view.subject || "");
-    if (/^ACTN-/.test(s)) return {};
-    const hit = rows.find(function (b) { return b.bundle_id === s; });
-    return hit ? { project: { id: s, title: hit.title || s } } : {};
+    const hit = rows.find(function (b) { return b.bundle_id === id; });
+    return hit ? { project: { id: id, title: hit.title || id } } : {};
   },
 
   reads: function (view) {
@@ -25,6 +29,7 @@ export const request = Object.freeze({
       r.action = { op: "action", query: { id: s }, subject: true };
       r.filings = { op: "filingsfor", query: { action: s }, empty: function () { return false; } };
       r.profiles = { op: "profiles", empty: function () { return false; } };
+      r.doc = { op: "file", query: { id: s, path: "bundle.md" }, empty: function () { return false; } };
     }
     return r;
   },

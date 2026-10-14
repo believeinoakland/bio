@@ -9,11 +9,26 @@ import { draftsOf, stepOf } from "./send-steps.mjs";
 export const action = Object.freeze({
   id: "action",
 
+  // R8 (interface-shell): the path's project step, from the `project:` line of the action's own document (the
+  // `action` read names no project) and the project's title from `list`.
+  place: function (view) {
+    const d = view.data.doc;
+    const m = d && d.state === "ok" && d.value && typeof d.value.text === "string" ? /^project:\s*"?([^"\s]+)"?\s*$/m.exec(d.value.text) : null;
+    const id = m ? m[1] : /^ACTN-/.test(String(view.subject || "")) ? null : String(view.subject || "");
+    if (!id) return {};
+    const l = view.data.projects;
+    const rows = l && l.state === "ok" && l.value && Array.isArray(l.value.bundles) ? l.value.bundles : [];
+    const hit = rows.find(function (b) { return b.bundle_id === id; });
+    return hit ? { project: { id: id, title: hit.title || id } } : {};
+  },
+
   reads: function (view) {
     return {
       action: { op: "action", query: { id: view.subject }, subject: true },
       filings: { op: "filingsfor", query: { action: view.subject }, empty: function () { return false; } },
       hold: { op: "actionholdpreview", query: { target: view.subject }, empty: function () { return false; } },
+      doc: { op: "file", query: { id: view.subject, path: "bundle.md" }, empty: function () { return false; } },
+      projects: { op: "list", query: { type: "project", limit: "500" } },
     };
   },
 

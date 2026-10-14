@@ -138,3 +138,13 @@ test("R7: after an act the screen re-reads what it changed: an act names only it
     for (const a of s.acts) for (const r of a.rereads || []) assert.ok(names.has(r), `${s.id}.${a.op} rereads ${r}`);
   }
 });
+
+test("R1–R6 (interface-shell R8): every working screen is drawn under its path, its project's step named by the project's title as read", async () => {
+  const want = { plan: "Projects › Pothole repairs › Action plan", "start-send": "Projects › Pothole repairs › Action plan › Start and send",
+    request: "Projects › Pothole repairs › Request records", action: "Projects › Pothole repairs › Action", matter: "Projects › Pothole repairs › Matter" };
+  for (const [id, path] of Object.entries(want)) {
+    const p = await open(ROUTES[id], DATA_PLANE);
+    const steps = main(p).querySelectorAll("nav.cs-crumbs li").map((li) => li.textContent.trim());
+    assert.equal(steps.join(" › "), path, id);
+  }
+});

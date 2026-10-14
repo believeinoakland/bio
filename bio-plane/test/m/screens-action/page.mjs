@@ -135,6 +135,7 @@ export const ESCALATION = { id: ESC, project: PROJECT, determination: DET, state
 export const DATA_PLANE = {
   plan: ok(PLAN), planproposals: ok(PROPOSALS), list: ok(PROJECTS), optionstartpreview: ok(PREVIEW),
   action: ok(ACTION), filingsfor: ok(FILINGS([])), actionholdpreview: ok({ target: ACTION_ID, ord: null, hold: null, restarts: [] }),
+  file: ok({ text: `---\nid: ${ACTION_ID}\nobject_type: action\nproject: ${PROJECT}\n---\n`, sha256: "x" }),
   profiles: ok(PROFILES), determination: ok(DETERMINATION), consequencesof: ok(CONSEQUENCES), escalationstatus: ok(STATUS_OPEN), escalation: ok(ESCALATION),
 };
 export const ROUTES = {
