@@ -424,7 +424,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const screen = D.refScreens[kind];
         const target = screen && screenOf(screen) && id !== undefined && id !== null && id !== "" ? hrefOf(screen, id) : null;
         const card = "<b>" + kw("shell.card." + kind) + "</b>" + (facts || []).filter((f) => f !== null && f !== undefined && f !== "")
-          .map((f) => '<span class="why">' + esc(f) + "</span>").join("") + (target ? '<span class="more">' + w("shell.card.open") + "</span>" : "");
+          .map((f) => '<span class="why">' + soft(f) + "</span>").join("") + (target ? '<span class="more">' + w("shell.card.open") + "</span>" : "");
         return target
           ? '<a class="cs-ref" href="' + esc(target) + '" data-nav' + tipAttr(card, 1) + ">" + soft(label) + "</a>"
           : '<span class="cs-card" tabindex="0"' + tipAttr(card, 1) + ">" + soft(label) + "</span>";
@@ -454,7 +454,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       title(label, o = {}) {
         if (o.thing) o = typeof o.thing === "string" ? { kind: o.thing, facts: o.facts } : { kind: o.thing.kind, facts: o.thing.facts };
         const purpose = kw("screen." + inst.spec.id + ".purpose");
-        const t = label === undefined || label === null ? kw("screen." + inst.spec.id + ".name") : esc(label);
+        const t = label === undefined || label === null ? kw("screen." + inst.spec.id + ".name") : soft(label);
         const tip = o.kind
           ? "<b>" + kw("shell.card." + o.kind) + "</b>" + (o.facts || []).map((f) => '<span class="why">' + esc(f) + "</span>").join("") + (purpose ? '<span class="more">' + purpose + "</span>" : "")
           : purpose;
@@ -740,7 +740,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       let proj = null;
       try { proj = inst && inst.spec.place ? (inst.spec.place(inst.view) || {}).project : null; } catch { proj = null; }
       p.forEach((step, i) => {
-        if (step === "@project") { if (proj && proj.title) steps.push({ label: esc(proj.title), href: route.screen === "project" ? null : hrefOf("project", proj.id) }); }
+        if (step === "@project") { if (proj && proj.title) steps.push({ label: soft(proj.title), href: route.screen === "project" ? null : hrefOf("project", proj.id) }); }
         else if (i === 0 && D.places.includes(step)) steps.push({ label: w("rail." + step + ".name"), href: placeHref(step) });
         else steps.push({ label: w(step) });
       });
