@@ -2,22 +2,12 @@
  * open-file, on the real served page. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { checkClasses } from "../../../src/interface-shell/index.mjs";
+import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { open, html, text, main, btn, fill, press, ok, refused } from "./page.mjs";
 import { pending } from "../interface-shell/harness.mjs";
 
 const SHA = "a".repeat(64);
-const ROOT = new URL("../../../../", import.meta.url);
-/* the served stylesheets: civicsmith.css, shell.css (the design page's product rules, interface-assets R7) and the shell's own STYLE */
-const SERVED = ["docs/development/ux-substrate/visual-language/civicsmith.css", "docs/development/ux-substrate/screens/page.src.html",
-                "bio-plane/src/interface-shell/browser.mjs", "bio-plane/src/interface-shell/index.mjs"]
-  .map((f) => readFileSync(new URL(f, ROOT), "utf8")).join("\n");
-const defined = (c) => new RegExp(`\\.${c.replace(/[-]/g, "\\-")}(?![\\w-])`).test(SERVED);
-const classesOf = (h) => [...new Set([...h.matchAll(/\sclass="([^"]*)"/g)].flatMap((m) => m[1].split(/\s+/).filter(Boolean)))];
-/* classes a script reads, never styles (interface-shell's HOOK_CLASSES), and the kit's own */
-const HOOKS = new Set(["rec", "t-title"]);
-/* drawn by the shell's own kit (`cs.rows`), renamed to the design's spelling by interface-shell's job (R17's list), not this module's */
-const KIT = new Set(["cs-pickc"]);
 
 const FULL = {
   heldcaptures: (req) => ok({ ok: true, held: [{ bundle_id: "INFO-1", title: "T", project: "P", age_days: 1, eligible: true, capture: { sha256: SHA, grade: { grade: "B", determined: true } },
@@ -38,12 +28,15 @@ const EMPTY = { heldcaptures: ok({ ok: true, held: [] }), verdictnotes: ok({ ok:
 const PATHS = ["/app/capture/address", "/app/capture/file", "/app/capture/saw", "/app/held", `/app/archive/${SHA}`, `/app/open-file/${SHA}`,
                "/app/inbox", "/app/inbox/K-1", "/app/archive", "/app/open-file"];
 
-test("R17 every class these screens draw is one a served stylesheet defines; no cs-form, no bare label with help; every field is cs.field", async () => {
+test("R17 the module's real SCREENS compose under interface-shell R56", () => {
+  assert.equal(checkClasses(SCREENS, null, ""), true);
+});
+
+test("R17 no cs-form, no bare label with help; every field is cs.field", async () => {
   for (const path of PATHS) for (const me of [undefined, { administer: true }]) {
     const p = await open(path, { plane: FULL, reachable: true, ...(me ? { me: { ...(await import("./page.mjs")).MEMBER, ...me } } : {}) });
     if (path.startsWith("/app/capture/address")) { fill(p, { "ci-address": "https://x.example/a" }); await press(p, "acquire"); }
     const h = html(p);
-    for (const c of classesOf(h)) assert.ok(HOOKS.has(c) || KIT.has(c) || defined(c), `${path}: class ${c} is defined by no served stylesheet`);
     assert.doesNotMatch(h, /class="[^"]*\bcs-form\b/, path);
     assert.doesNotMatch(h, /<label(?![^>]*\bfor=)(?![^>]*>\s*<input)/, `${path}: a bare label`);
     assert.doesNotMatch(h, /<label[^>]*>[^<]*<\/label><span class="help"(?! id=)/, path);

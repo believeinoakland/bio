@@ -25,3 +25,7 @@ Found outside my module: (1) capture heldCaptures (L3, capture/index.mjs 1041-10
 ## J2 · COMPLETE
 
 T48-85 done: R17-R20 met, 64 tests pass, format/architecture/coverage/ownership 0 failures for screens-intake. Record: build/jobs/T48/screens-intake.md.
+
+## CHANGE B2 (K3303: interface-shell merged)
+
+Merged origin/tranche/T48. Dropped my stand-ins: the R17 test now composes the real `SCREENS` under `checkClasses` (interface-shell R56) and no longer reads the design page as a stand-in; the `cs-pickc` exemption is gone. The real check found one class I had missed, `tw` (the safe view's table wrapper, defined by no served stylesheet); the wrapper is removed (`mk-table` stays). Two held tests now expect interface-shell R61: a refusal with its own words is drawn as those words alone, never wrapped in "Could not read this". Result: 65 tests pass, 0 fail; format, architecture (15 files), coverage (20 of 20) and ownership 0 failures. Nothing of mine stays red. Open as before: the capture `heldCaptures` per-row cost (J1, BOB's to route) and `screen.held.empty` naming no first step (BOB's text).

@@ -32,7 +32,10 @@ test("R4 the screen reads heldcaptures; a list with no row is drawn in the scree
   assert.match(text(e), /No captures are waiting/);
   /* control: a read that failed is drawn as failed, never as empty */
   const f = await open("/app/held", { plane: { heldcaptures: refused("STORE_SILENT", "The record did not answer.") } });
-  assert.match(text(f), /Could not read this/);
+  /* interface-shell R61: a refusal with its own words is drawn as those words alone */
+  assert.match(text(f), /The record did not answer\./);
+  assert.ok(main(f).querySelector('[data-state="failed"]'));
+  assert.doesNotMatch(text(f), /Could not read this/);
   assert.doesNotMatch(text(f), /No captures are waiting/);
 });
 
@@ -175,7 +178,10 @@ test("R13 the Set aside list: heldcaptures with state set_aside, each row naming
   const f = await open("/app/held", { plane: { heldcaptures: (req) => (req.query.state === "set_aside" ? refused("STORE_SILENT", "The record did not answer.") : HELD) } });
   assert.equal(btn(f, "heldrestore"), null);
   assert.doesNotMatch(text(f), /Nothing is set aside/);
-  assert.match(text(f), /Could not read this/);
+  /* interface-shell R61: a refusal with its own words is drawn as those words alone */
+  assert.match(text(f), /The record did not answer\./);
+  assert.ok(main(f).querySelector('[data-state="failed"]'));
+  assert.doesNotMatch(text(f), /Could not read this/);
 });
 
 test("R11 each row's grade is one mark from capture.grade, never a received or authored capture drawn as measured; its thumbnail opens open-file", async () => {

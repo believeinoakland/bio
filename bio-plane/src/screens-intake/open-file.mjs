@@ -32,9 +32,9 @@ function renderOpenFile(cs, view) {
   const safeDrawn = (s) => {
     if (!s) return "";
     if (s.kind === "data") return (Array.isArray(s.sheets) ? s.sheets : []).map((sh) => `<h3>${cs.w("screen.open-file.safe.sheet", { name: sh.name || "" })}</h3>`
-      + `<div class="tw"><table class="mk-table"><thead><tr><th scope="col">${cs.w("screen.open-file.safe.cell")}</th><th scope="col">${cs.w("screen.open-file.safe.value")}</th></tr></thead><tbody>`
+      + `<table class="mk-table"><thead><tr><th scope="col">${cs.w("screen.open-file.safe.cell")}</th><th scope="col">${cs.w("screen.open-file.safe.value")}</th></tr></thead><tbody>`
       + (Array.isArray(sh.cells) ? sh.cells : []).map((c) => `<tr><td>${cs.esc(c.ref ?? "")}</td><td>${cs.esc(c.value ?? "")}</td></tr>`).join("")
-      + "</tbody></table></div>").join("");
+      + "</tbody></table>").join("");
     return said("screen.open-file.safe.ready")
       + (Number.isFinite(s.pages) ? said(s.truncated ? "screen.open-file.safe.truncated" : "screen.open-file.safe.pages", { pages: s.pages, total: s.source_pages ?? s.pages }) : "");
   };
