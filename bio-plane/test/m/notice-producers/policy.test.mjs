@@ -94,7 +94,7 @@ test("R13 R20: its summary and detail are queue.policy-changed-noticed.summary a
     assert.equal(it.detail, say("queue.policy-changed-noticed.detail", it.fills));
     assert.equal(it.summary, `Changed without notice: the policy ${P1}`);
   }
-  /* negative control: a capture in another local year names its year (date.daymonthyear) */
+  /* read in the next local year, the same capture's day names its year (date.daymonthyear); control above: this year's names none */
   const later = (await setup()).items("alice", Date.parse("2027-01-05T12:00:00Z"));
   assert.ok(later.length > 0, "a change still inside the window");
   for (const it of later) assert.match(it.fills.date, /^\d{1,2} [A-Z][a-z]+ 2026$/, it.fills.date);

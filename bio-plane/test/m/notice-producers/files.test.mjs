@@ -319,3 +319,14 @@ test("R14 (T37, N771, K2155): it leaves when its recipient disposes of it (the s
     assert.equal(ofKind(r, KIND).length, n, `held ${held}`);
   }
 });
+
+test("R14 R20: {date} is the note's local day in the profile's zone, never the UTC day, and names its year when not in the current local year (date.daymonthyear); control: this year's names none", async () => {
+  const { w } = await files();
+  const asked = [];
+  const notes = [{ at: "2026-01-01T02:00:00Z" }, { at: "2025-12-31T12:00:00Z" }];
+  const read = (zone, now) => ofKind(reader(fresh(w.host, { membership: w.membership, fileSafety: standIn(w, notes, asked), provenance: w.prov,
+    view: () => ({ time_zone: { value: zone } }) })).read("m1", { now }), KIND).map((i) => i.fills.date);
+  const now = Date.parse("2026-02-01T12:00:00Z");
+  assert.deepEqual(read("America/Halifax", now), ["31 December 2025", "31 December 2025"], "2 a.m. UTC on 1 January is 31 December in Halifax");
+  assert.deepEqual(read("UTC", now), ["1 January", "31 December 2025"], "control: in UTC, the 1st, this year, no year named");
+});
