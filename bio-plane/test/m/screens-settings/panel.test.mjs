@@ -138,3 +138,24 @@ test("R26 control: a member who does not administer reads no group use over time
   assert.ok(!a.p.requests.some((r) => r.op === "aiuseovertime"));
   assert.equal(bars(a), undefined);
 });
+
+test("R26 (K3293) aiUsageBars is a part of the module: it draws the bars and a meter per limit over an aiuseovertime answer already read, whether handed the answer or the screen's read of it", async () => {
+  const members = SCREENS.find((s) => s.id === "members");
+  assert.equal(typeof members.parts.aiUsageBars, "function");
+  assert.equal(members.parts.aiUsageBars, SCREENS.find((s) => s.id === "connect").parts.aiUsageBars, "one function for every screen that draws it");
+  // a screen's functions are self-contained in the page: the answer is written into the host's source
+  const hosted = (value) => ({ ...members, reads: () => ({}), render: new Function("cs", "view", `return cs.title() + view.parts.aiUsageBars(cs, view, { owner: "group", value: ${JSON.stringify(value)} });`) });
+  for (const value of [OVER("group"), { state: "ok", value: OVER("group") }]) {
+    const a = await open("members", { me: ADMIN, table: membersTable(), screens: SCREENS.map((s) => (s.id === "members" ? hosted(value) : s)) });
+    assert.equal(all(bars(a), (e) => e.tag === "i").length, 30);
+    assert.equal(meters(a).length, 2);
+    assert.equal(a.p.requests.filter((r) => r.op === "aiuseovertime").length, 0, "it reads nothing itself");
+  }
+  // control: an answer that is unreadable, refused or failed to read is drawn failed, never as zeros
+  for (const value of [OVER("group", { unreadable: true, days: [] }), { state: "failed" }, { state: "ok", value: { ok: false, reason: "UNREADABLE" } }]) {
+    const a = await open("members", { me: ADMIN, table: membersTable(), screens: SCREENS.map((s) => (s.id === "members" ? hosted(value) : s)) });
+    assert.equal(bars(a), undefined);
+    assert.equal(meters(a).length, 0);
+    assert.ok(all(a.tree, (e) => e.attrs["data-state"] === "failed").length >= 1);
+  }
+});

@@ -53,37 +53,9 @@ export function aiPanel(cs, view, o) {
     return h;
   }));
 
-  // this month's use, summed, naming no member; and, over thirty days, bars and a meter against each limit (R26)
-  const overTime = (r) => {
-    if (!r) return "";
-    const v = r.state === "ok" && r.value ? r.value : null;
-    // an answer that cannot be read, or a refusal, is drawn as failed, never as zeros (R26)
-    if (!v || v.unreadable === true || !Array.isArray(v.days)) return r.state === "loading" ? cs.state(r, () => "") : cs.state({ state: "failed", refusal: r.refusal }, () => "");
-    const days = v.days;
-    let h = "";
-    if (days.length) {
-      const peak = days.reduce((m, x) => Math.max(m, Number(x.dollars) || 0), 0.01);
-      const sum = days.reduce((t, x) => t + (Number(x.dollars) || 0), 0), calls = days.reduce((t, x) => t + (Number(x.calls) || 0), 0);
-      const top = days.reduce((a, x) => ((Number(x.dollars) || 0) > (Number(a.dollars) || 0) ? x : a), days[0]);
-      const last = days.length - 1;
-      h += `<div class="mk-bars"><span class="k" tabindex="0" data-level="2" data-tip="${W("ai.usage.bars.means")}">${W("ai.usage.bars")}</span><div class="run">${days.map((x, i) => {
-        const tip = W("ai.usage.day", { day: D(x.day), calls: Number(x.calls || 0).toLocaleString("en"), dollars: dollars(x.dollars) }) + (i === last ? " · " + W("ai.usage.today") : "");
-        return `<i${i === last ? ' class="now"' : ""} style="height:${Math.max(2, Math.round(44 * (Number(x.dollars) || 0) / peak))}px" tabindex="0" aria-label="${tip}" data-level="2" data-tip="${tip}"></i>`;
-      }).join("")}</div><div class="ax"><span>${E(D(days[0].day))}</span><span>${E(D(days[last].day))}, ${W("ai.usage.today")}</span></div><span class="mk-small">${W("ai.usage.summary", { dollars: dollars(sum), calls: calls.toLocaleString("en"), day: D(top.day), daydollars: dollars(top.dollars) })}</span></div>`;
-    }
-    for (const l of Array.isArray(v.periods) ? v.periods : []) {
-      const label = scopeName(l.scope || "overall") + " · " + unitName(l.unit) + " · " + T(S + "period." + l.period);
-      const show = (x) => (l.unit === "usd" ? dollars(x) : Number(x || 0).toLocaleString("en") + " " + unitName(l.unit));
-      if (l.limit === null || l.limit === undefined) {
-        h += `<div class="mk-meter" data-level="2" data-tip="${W("ai.usage.nolimit")}"><div class="l"><span>${E(label)}: <b>${E(show(l.used))}</b> · ${W("ai.usage.nolimit")}</span></div><div class="track" aria-hidden="true"></div></div>`;
-        continue;
-      }
-      const pct = Math.min(100, Math.round(100 * (Number(l.used) || 0) / (Number(l.limit) || 1))), near = pct >= 80;
-      const says = W("ai.usage.meter", { label, used: show(l.used), limit: show(l.limit) });
-      h += `<div class="mk-meter"${near ? ' data-near="1"' : ""} data-level="2" data-tip="${W("ai.usage.meter.means")}"><div class="l"><span>${says}</span><span class="pct">${pct}%${near ? " · " + W("ai.usage.meter.near") : ""}</span></div><div class="track" role="img" aria-label="${says}"><i style="width:${pct}%"></i><b style="left:80%"></b></div></div>`;
-    }
-    return h;
-  };
+  // this month's use, summed, naming no member; and, over thirty days, bars and a meter against each limit (R26), the part
+  // `aiUsageBars` draws over the answer read
+  const overTime = (r) => (view.parts && view.parts.aiUsageBars ? view.parts.aiUsageBars(cs, view, { owner: o.owner, value: r }) : "");
   section(S + "usage.heading", cs.state(data.usage, (v) => {
     const U = v.uses || [];
     if (!U.length) return "";
@@ -104,6 +76,49 @@ export function aiPanel(cs, view, o) {
     return items.length === 0 ? "" : `<ul class="cs-list">${items.map((i) => `<li>${i.html} · ${cs.date(i.at, { year: true })}</li>`).join("")}</ul>`;
   }));
   return out.join("");
+}
+
+/** R26 (K3293): the thirty days of bars and a meter against each limit, over an `aiuseovertime` answer already read: `value` is
+ *  that answer, or the screen's read of it (`view.data.<name>`, `{state, value, refusal}`). Summed over everyone the account
+ *  serves, naming no member; a day with no use is a zero bar; an answer that is `unreadable`, refused or not read is drawn
+ *  failed, never as zeros. The panel (`aiPanel`) and `screens-inquiry`'s `projectai` draw it as a part. */
+export function aiUsageBars(cs, view, o) {
+  const W = cs.w, E = cs.esc, S = "screen.panel.";
+  const T = (k, f) => String(W(k, f)).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
+  const scopeName = (s) => T(s === "overall" ? S + "scope.overall" : s === "per_member" ? S + "scope.per_member" : "ai.use." + s + ".name");
+  const unitName = (u) => T(S + "unit." + u);
+  const dollars = (d) => "$" + Number(d || 0).toFixed(2);
+  const D = (iso) => String(cs.date(iso, { year: true })).replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
+  const r0 = o && o.value;
+  if (!r0) return "";
+  const r = typeof r0 === "object" && ["loading", "failed", "ok", "empty"].indexOf(r0.state) >= 0 ? r0 : { state: "ok", value: r0 };
+  const v = r.state === "ok" && r.value && r.value.ok !== false ? r.value : null;
+  // an answer that cannot be read, or a refusal, is drawn as failed, never as zeros
+  if (!v || v.unreadable === true || !Array.isArray(v.days)) return r.state === "loading" ? cs.state(r, () => "") : cs.state({ state: "failed", refusal: r.refusal }, () => "");
+  const days = v.days;
+  let h = "";
+  if (days.length) {
+    const peak = days.reduce((m, x) => Math.max(m, Number(x.dollars) || 0), 0.01);
+    const sum = days.reduce((t, x) => t + (Number(x.dollars) || 0), 0), calls = days.reduce((t, x) => t + (Number(x.calls) || 0), 0);
+    const top = days.reduce((a, x) => ((Number(x.dollars) || 0) > (Number(a.dollars) || 0) ? x : a), days[0]);
+    const last = days.length - 1;
+    h += `<div class="mk-bars"><span class="k" tabindex="0" data-level="2" data-tip="${W("ai.usage.bars.means")}">${W("ai.usage.bars")}</span><div class="run">${days.map((x, i) => {
+      const tip = W("ai.usage.day", { day: D(x.day), calls: Number(x.calls || 0).toLocaleString("en"), dollars: dollars(x.dollars) }) + (i === last ? " · " + W("ai.usage.today") : "");
+      return `<i${i === last ? ' class="now"' : ""} style="height:${Math.max(2, Math.round(44 * (Number(x.dollars) || 0) / peak))}px" tabindex="0" aria-label="${tip}" data-level="2" data-tip="${tip}"></i>`;
+    }).join("")}</div><div class="ax"><span>${E(D(days[0].day))}</span><span>${E(D(days[last].day))}, ${W("ai.usage.today")}</span></div><span class="mk-small">${W("ai.usage.summary", { dollars: dollars(sum), calls: calls.toLocaleString("en"), day: D(top.day), daydollars: dollars(top.dollars) })}</span></div>`;
+  }
+  for (const l of Array.isArray(v.periods) ? v.periods : []) {
+    const label = scopeName(l.scope || "overall") + " · " + unitName(l.unit) + " · " + T(S + "period." + l.period);
+    const show = (x) => (l.unit === "usd" ? dollars(x) : Number(x || 0).toLocaleString("en") + " " + unitName(l.unit));
+    if (l.limit === null || l.limit === undefined) {
+      h += `<div class="mk-meter" data-level="2" data-tip="${W("ai.usage.nolimit")}"><div class="l"><span>${E(label)}: <b>${E(show(l.used))}</b> · ${W("ai.usage.nolimit")}</span></div><div class="track" aria-hidden="true"></div></div>`;
+      continue;
+    }
+    const pct = Math.min(100, Math.round(100 * (Number(l.used) || 0) / (Number(l.limit) || 1))), near = pct >= 80;
+    const says = W("ai.usage.meter", { label, used: show(l.used), limit: show(l.limit) });
+    h += `<div class="mk-meter"${near ? ' data-near="1"' : ""} data-level="2" data-tip="${W("ai.usage.meter.means")}"><div class="l"><span>${says}</span><span class="pct">${pct}%${near ? " · " + W("ai.usage.meter.near") : ""}</span></div><div class="track" role="img" aria-label="${says}"><i style="width:${pct}%"></i><b style="left:80%"></b></div></div>`;
+  }
+  return h;
 }
 
 /** The request one of the panel's acts sends, from the pressed control's data and the form's fields; `{refuse}` (a word

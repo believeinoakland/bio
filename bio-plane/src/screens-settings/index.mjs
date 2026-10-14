@@ -22,7 +22,7 @@ import { identity } from "./identity.mjs";
 import { security } from "./security.mjs";
 import { translations } from "./translations.mjs";
 import { updates } from "./updates.mjs";
-import { aiPanel, aiPanelSend } from "./panel.mjs";
+import { aiPanel, aiPanelSend, aiUsageBars } from "./panel.mjs";
 import { SCREEN_WORDS } from "./words.mjs";
 
 export { SCREEN_WORDS };
@@ -74,7 +74,7 @@ const WORDS = {
     ...LABELS("translations", ["translationdraft", "translationadopt", "translationgrant", "translationconfirm", "translationrevert"])],
 };
 
-const PARTS = Object.freeze({ aiPanel, aiPanelSend });
+const PARTS = Object.freeze({ aiPanel, aiPanelSend, aiUsageBars });
 const freeze = (s) => Object.freeze({
   ...s,
   acts: Object.freeze(s.acts.map((a) => Object.freeze({ ...a }))),
