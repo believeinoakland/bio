@@ -39,3 +39,7 @@ Two readings, one word, for BOB's ruling (I carry on with these meanwhile):
 ## J2 · REPORT
 
 For interface-shell (its R56), two things my job found: (1) its HOOK_CLASSES must list `cs-codes`, the recovery codes' <pre> on setup and join, read by journey-check (`journeys.mjs`: `pre.cs-codes`); without it R56's compose check refuses setup and join. (2) The kit itself still draws `cs-actrow` (cs.areas, cs.appearance, the lock and reauth panels), defined only in STYLE; the design's row is `mk-acts`, which my screens now use. Also: R13's fold at 1280 px is tested structurally here; the live measurement fits journey-check, beside interface-shell R57's in its R6.
+
+## J3 · COMPLETE
+
+T48-84 applied: R12 (design classes, kit fields, nothing empty or zero), R13 (two columns, the name never the slug, join too), R14 (name first, aria-current step), R15 (lede follows the claimed state). Module tests 61/61; control-plane t46-app and t46-e2e 9/9; format, architecture, coverage (15/15), ownership, channels 0 failures for screens-entry. J1's two words are interim pending your answer; J2 reports two items for interface-shell. Record: build/jobs/T48/screens-entry.md on job/T48/screens-entry.
