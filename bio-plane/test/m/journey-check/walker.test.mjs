@@ -6,7 +6,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
-import { Walk, FAIL, INTERFACE_MARK, SETUP_PAGE_TITLE, documentKind } from "../../../src/journey-check/walker.mjs";
+import { Walk, FAIL, INTERFACE_MARK, SETUP_PAGE_TITLE, documentKind, refusalsIn } from "../../../src/journey-check/walker.mjs";
 import { drawnState, sweepScreens, registryScreens, EXCEPTED, INSTALLER_SCREENS } from "../../../src/journey-check/screens.mjs";
 import { browser } from "../../../src/journey-check/run.mjs";
 import { ABSENCE } from "../../../src/journey-check/journeys.mjs";
@@ -21,10 +21,20 @@ const WORLD = {
   "/app/throws": page(`<main id="cs-main"><script>null.f()</script></main>`),
   "/app/foreign": page(`<main id="cs-main"><img src="https://elsewhere.example/x.png"></main>`),
   "/app/legacy": page(`<main id="cs-main"><img src="https://civicos.grp.workers.dev/app.html"></main>`),
+  /* R8: the walk's D1, D3 and D5, each a refusal carried inside an HTTP 200 */
+  "/app/d1": page(`<main id="cs-main"><script>fetch("/api/?op=accountconnect")</script></main>`),
+  "/app/d3": page(`<main id="cs-main"><script>fetch("/api/?op=airunopen")</script></main>`),
+  "/app/d5": page(`<main id="cs-main"><script>fetch("/api/?op=planask")</script></main>`),
   "/": `<!doctype html><html><head><title>${SETUP_PAGE_TITLE}</title></head><body>setup</body></html>`,
   "/other": `<!doctype html><html><head><title>x</title></head><body>an old page</body></html>`,
 };
-const API = { queue: { ok: true, items: [] }, enroll: { ok: false, code: "HANDLE_TAKEN" } };
+const API = { queue: { ok: true, items: [] }, enroll: { ok: false, code: "HANDLE_TAKEN" },
+  /* D1: the own key refused, inside a 200 */
+  accountconnect: { ok: true, result: { ok: false, code: "NOT_YOUR_ACCOUNT", check: "C-29.14" } },
+  /* D3: the dock's run not started, said as `started: false` */
+  airunopen: { ok: true, result: { started: false, code: "AI_RUN_BOUND_NO_ALLOWANCE", check: "C-22.16" } },
+  /* D5: planning help refused, deeper in the answer */
+  planask: { ok: true, result: { plan: { help: { ok: false, reason: "AI_RUN_NOT_PROJECT_MEMBER" } } } } };
 
 let B, dir;
 before(async () => { B = await browser(); dir = mkdtempSync(join(tmpdir(), "jc-walker-")); });
@@ -68,6 +78,29 @@ test("R2: an `ok: false` the step does not expect fails the walk; control: the s
   /* a pattern names a family of codes; control: one that does not match still fails */
   assert.deepEqual((await walked("/app/refused", { expect: [/^HANDLE_/] })).failures, []);
   assert.deepEqual(kinds(await walked("/app/refused", { expect: [ABSENCE] })), [FAIL.REFUSED]);
+});
+
+test("R8 (D29): a refusal carried inside an HTTP 200 fails the step: fixtures of D1's, D3's and D5's answers each fail; control: the step that expects that refusal passes", async () => {
+  for (const [path, code, how] of [["/app/d1", "NOT_YOUR_ACCOUNT", "ok: false at result"], ["/app/d3", "AI_RUN_BOUND_NO_ALLOWANCE", "started: false at result"],
+    ["/app/d5", "AI_RUN_NOT_PROJECT_MEMBER", "ok: false at result.plan.help"]]) {
+    const w = await walked(path);
+    assert.deepEqual(kinds(w), [FAIL.REFUSED], path);
+    assert.ok(w.failures[0].detail.includes(`${how} (${code}, HTTP 200)`), w.failures[0].detail);
+    assert.equal(w.steps[0].ok, false);
+    /* control: the expected refusal is excused by its code wherever it sits */
+    assert.deepEqual((await walked(path, { expect: [code] })).failures, [], path);
+  }
+});
+
+test("R8: every sign of a refusal, at any depth: ok, started, dispatched or found false, and a non-empty withheld; control: an answer that holds none, and an empty withheld, carry none", () => {
+  const codes = (b) => refusalsIn(b).map((r) => `${r.at}=${r.code}`);
+  assert.deepEqual(codes({ ok: false, code: "A" }), ["=A"]);
+  assert.deepEqual(codes({ ok: true, result: { dispatched: false } }), ["result=dispatched: false"]);
+  assert.deepEqual(codes({ ok: true, result: { items: [{ found: false, reason: "GONE" }] } }), ["result.items[0]=GONE"]);
+  assert.deepEqual(codes({ ok: true, result: { withheld: ["text"] } }), ["result=withheld"]);
+  assert.deepEqual(codes({ ok: true, result: { started: true, found: true, withheld: [], items: [{ ok: true }] } }), []);
+  /* one object, one refusal, under its first sign */
+  assert.deepEqual(codes({ ok: false, started: false, code: "B" }), ["=B"]);
 });
 
 test("R2: any 4xx or 5xx fails the walk; control: a status the step expects does not", async () => {

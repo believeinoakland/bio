@@ -1,8 +1,9 @@
 /* journey-check R2: one walk of a browser through journeys, a step at a time. Each step is screenshotted into the output
-   directory; the walk fails on any `ok: false` the step does not expect, any 4xx or 5xx, any page whose script throws, any
-   old page (the setup page, legacy-ui) or other address outside the walk reached, and any registry screen not drawn. A
-   step whose own control is missing fails with what it looked for. Nothing secret is written: a step's label and a
-   failure's detail never carry a password, a code or a token (`redact`). */
+   directory; the walk fails on any refusal the step does not expect, at any depth of an answer whatever its status
+   (R8), any 4xx or 5xx, any page whose script throws, any old page (the setup page, legacy-ui) or other address outside
+   the walk reached, and any registry screen not drawn. A step whose own control is missing fails with what it looked
+   for. Nothing secret is written: a step's label and a failure's detail never carry a password, a code or a token
+   (`redact`). */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -29,6 +30,33 @@ export function documentKind(html) {
   const t = /<title>([^<]*)<\/title>/i.exec(html);
   if (t && t[1].trim() === SETUP_PAGE_TITLE) return "setup-page";
   return "other";
+}
+
+/* R8 (D29): the refusals an answer carries, anywhere in it: `[{code, how, at}]`, `at` the path to the object that
+   carries it ("" at the top). A refusal is an object holding `ok: false`, `started: false`, `dispatched: false` or
+   `found: false`, or a non-empty `withheld`; its code is its own `code` or `reason`, else what it says. Each object
+   counts once, under its first sign. */
+export const REFUSAL_FLAGS = Object.freeze(["ok", "started", "dispatched", "found"]);
+export function refusalsIn(body) {
+  const out = [];
+  const seen = new Set();
+  const visit = (v, at, depth) => {
+    if (!v || typeof v !== "object" || depth > 64 || seen.has(v)) return;
+    seen.add(v);
+    if (Array.isArray(v)) { v.forEach((x, i) => visit(x, `${at}[${i}]`, depth + 1)); return; }
+    const flag = REFUSAL_FLAGS.find((k) => v[k] === false);
+    const w = v.withheld;
+    const withheld = w === true || (Array.isArray(w) && w.length > 0) || (w && typeof w === "object" && !Array.isArray(w) && Object.keys(w).length > 0)
+      || (typeof w === "string" && w.length > 0);
+    if (flag || withheld) {
+      const how = flag ? `${flag}: false` : "withheld";
+      const own = [v.code, v.reason].find((c) => typeof c === "string" && c);
+      out.push({ code: own || how, how, at });
+    }
+    for (const [k, x] of Object.entries(v)) visit(x, at ? `${at}.${k}` : k, depth + 1);
+  };
+  visit(body, "", 0);
+  return out;
 }
 
 export class Walk {
@@ -74,11 +102,16 @@ export class Walk {
     const type = res.headers()["content-type"] || "";
     if (/json/.test(type)) { try { body = JSON.parse(await res.text()); } catch { body = null; } }
     if (url.searchParams.get("op") === "whoami" && body && body.ok === true && body.result && body.result.session) this.whoami = body.result;
-    const code = body && body.ok === false ? (body.code || body.reason || "ok:false") : null;
-    /* A refusal the step expects excuses its own status; one it does not is one failure, naming both. */
-    const excused = expect.some((e) => (e instanceof RegExp ? code !== null && e.test(code) : e === (code ?? res.status())));
-    if (code && !excused) this.fail(FAIL.REFUSED, `${where} answered ok: false (${code}, HTTP ${res.status()})`);
-    else if (res.status() >= 400 && !excused) this.fail(FAIL.HTTP, `${where} answered HTTP ${res.status()}`);
+    /* R8: every refusal the answer carries, at any depth, whatever its status. One the step expects is excused by its
+       code wherever it sits, and excuses the answer's status; each other is one failure, naming where it sits. */
+    const refusals = refusalsIn(body);
+    const expected = (code) => expect.some((e) => (e instanceof RegExp ? e.test(code) : e === code));
+    const unexcused = refusals.filter((r) => !expected(r.code));
+    for (const r of unexcused)
+      this.fail(FAIL.REFUSED, r.at === "" && r.how === "ok: false" ? `${where} answered ok: false (${r.code}, HTTP ${res.status()})`
+        : `${where} answered ${r.how} at ${r.at || "its top"} (${r.code}, HTTP ${res.status()})`);
+    const excused = refusals.some((r) => expected(r.code)) || (!refusals.length && expect.includes(res.status()));
+    if (!unexcused.length && res.status() >= 400 && !excused) this.fail(FAIL.HTTP, `${where} answered HTTP ${res.status()}`);
     if (req.resourceType() === "document" && url.host === this.copyHost && res.status() < 300) {
       const kind = documentKind(await res.text().catch(() => null));
       if (kind === "setup-page") this.fail(FAIL.OLD_PAGE, `${url.pathname} is the setup page`);

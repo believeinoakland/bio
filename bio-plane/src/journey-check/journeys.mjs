@@ -15,18 +15,44 @@ export const GROUP_NAME = "Lakeshore Tenants";
 
 const where = (page) => new URL(page.url()).pathname;
 
-/* The visible control of act `op` (in `within`, a selector, when given); throws, naming it, when the screen does not
-   draw it. */
-export async function control(page, op, { within = null, timeout = 10000 } = {}) {
-  const c = (within ? page.locator(within) : page).locator(`[data-act="${op}"]:visible`).first();
-  try { await c.waitFor({ state: "visible", timeout }); }
-  catch { throw new Error(`control ${op} is not on ${where(page)}`); }
-  return c;
+/* Opens each closed disclosure (`<details>`) that holds `locator`'s first element, outermost first, by clicking its
+   summary as a person does. */
+export async function reveal(locator) {
+  const n = await locator.first().evaluate((e) => {
+    let k = 0;
+    for (let d = e.closest("details"); d; d = d.parentElement && d.parentElement.closest("details")) if (!d.open) k += 1;
+    return k;
+  }).catch(() => 0);
+  for (let i = 0; i < n; i += 1) {
+    const summary = await locator.first().evaluateHandle((e) => {
+      const closed = [];
+      for (let d = e.closest("details"); d; d = d.parentElement && d.parentElement.closest("details")) if (!d.open) closed.push(d);
+      const outer = closed[closed.length - 1];
+      return outer && outer.querySelector(":scope > summary");
+    });
+    const el = summary.asElement();
+    if (!el) break;
+    await el.click();
+  }
 }
 
-/* Types `value` into the field with id `id`, as a person does (each keystroke). */
+/* The visible control of act `op` (in `within`, a selector, when given), opening the disclosure that holds it; throws,
+   naming it, when the screen does not draw it. */
+export async function control(page, op, { within = null, timeout = 10000 } = {}) {
+  const scope = within ? page.locator(within) : page;
+  const shown = scope.locator(`[data-act="${op}"]:visible`).first();
+  try { await shown.waitFor({ state: "visible", timeout: Math.min(timeout, 2000) }); return shown; } catch { /* closed, or not drawn */ }
+  const any = scope.locator(`[data-act="${op}"]`);
+  if (await any.count()) await reveal(any);
+  try { await shown.waitFor({ state: "visible", timeout }); }
+  catch { throw new Error(`control ${op} is not on ${where(page)}`); }
+  return shown;
+}
+
+/* Types `value` into the field with id `id`, as a person does, opening the disclosure that holds it. */
 export async function type(page, id, value) {
   const f = page.locator(`[id="${id}"]`).first();
+  if (await f.count()) await reveal(f);
   try { await f.waitFor({ state: "visible", timeout: 10000 }); }
   catch { throw new Error(`no field ${id} on ${where(page)}`); }
   await f.fill(value);
@@ -92,8 +118,9 @@ export async function walkInstaller(walk, page, installerOrigin) {
     await p.waitForURL(/dash\.cloudflare\.com\/oauth2\/auth/, { timeout: 15000 });
   });
   await walk.step(page, "install: Cloudflare's permission, allowed", async (p) => {
-    await p.locator("#allow").click();
-    await p.waitForURL(/\/callback\?/, { timeout: 15000 });
+    /* the callback answers when the install has run, which can take longer than a click waits */
+    await p.locator("#allow").click({ noWaitAfter: true });
+    await p.waitForURL(/\/callback\?/, { timeout: 180000 });
   });
   await walk.step(page, "install: each step finishes, the checks pass", async (p) => {
     await p.locator("#done:not([hidden]), #fail:not([hidden])").first().waitFor({ timeout: 120000 });
