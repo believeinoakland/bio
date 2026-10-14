@@ -36,3 +36,14 @@ Consequence for others: affordances (`rung_correction_path`, `rung_consequences`
 - `checks/run.mjs` over the product: architecture 3354 files, 0 failures; coverage names 17 other modules' unmet ids (not mine); op-grades is not among them.
 
 Size (session_01GyPizYCx5oYUAC7EgbB2ao): test runs 12, module lines 3311
+
+## J2 · COMPLETE
+
+op-grades T49-13 is complete on job/T49/op-grades. Details are in my record's "Completion record".
+
+- R42: the two reds are cleared. MARKS gains 16 acts from the moved registry, `acquire` now comes from the kit, and the kit is read at `fa3c8b7e8e`.
+- R43: `founderhandleset` is caller-owned (36 → 37 caller-owned; `undetermined` stays 110), `projectownervotes` is a read; both have explicit tests with controls.
+- R44: the entries hold keys as you confirmed in B2; the 11 keys equal my `reads` list.
+- Checks: format, architecture, coverage and ownership are all 0 failures. Module tests: 114, 113 pass.
+- The one red is `words.test.mjs`, which imports `word` and `hasWord` from setup-words; neither exists on the tranche yet. I ran it against a temporary local shim of R11–R12 (3 of 3 pass) and removed the shim. Send CHANGE after setup-words merges, and I will merge the tranche and re-run.
+- Others affected: affordances fails at import until it publishes the keys; screens-investigate `person.test.mjs`:95 holds the old expunge sentence; the dist bundles are stale (rule 5 (5)).
