@@ -46,3 +46,12 @@ For you to place:
 4. **R56's list and the ASK to UX-DESIGN.** These shell styles stay because no design class fits: `cs-menuwrap`, `cs-menu`, `cs-actwrap`, `cs-slot`, `cs-rowname`, `cs-testband`, `cs-overlay`, `cs-image`, `cs-areas-box`, `cs-area`. Also mine: the frame's fixed-height rules, the avatar drawn as a button, and the group's name kept on one line. `HOOK_CLASSES` lists `cs-crumbs`, `cs-rows`, `cs-r` and `cs-panel`.
 5. **Words for the UX handoff.** New: `shell.band.working` (R57's interim), `shell.group.unnamed` ("Your group") and `shell.unread` ("This could not be read.", R61's "could not be read", which has no key). Retired: `shell.level`.
 6. **interface-assets' J1.** I rely on `shell.css` carrying the design's phone rules under the 760 px query: `.mk-hide-phone` and `.mk-mastsearch span` hidden, the tabs as a grid in the fifth row, the `mk-rows` card rules. Their `:root:root` proposal suits me. The frame's height and scrolling are my own rules, keyed on `#cs-root`, so they do not depend on how `.mk-page` is rewritten.
+
+## J2 · REPORT
+
+B2 and B3 are done. The tranche is merged.
+- B2: the kit no longer draws `cs-pickc`. Picks use the design's `mk-pickc` and `mk-pick`, as of my J1 push.
+- B3: nothing in the shell restricted a screen's globals, so `Intl` already worked. A new test names the clause: a screen draws a language's name through `Intl.DisplayNames`.
+- After the merge, the real `shell.css`, `MARKS`, registry and words are in. `MARKS` names weights capitalised ("Reasoned"), so the shell now reads them in lower case.
+
+My tests: 135 pass, 0 fail, with one local stand-in left (never committed). That stand-in is op-declarations' `planask`, `stepsource` and `stepsourcewithdraw`, which `tranche/T48` does not yet hold. Without it, R55's test fails, because `checkScreens` finds those ops are not in `OPS`. Format, architecture, coverage (62 of 62) and ownership all show 0 failures. When op-declarations merges, send me a CHANGE. I will then merge, re-run and post COMPLETE. J1's other points stand.
