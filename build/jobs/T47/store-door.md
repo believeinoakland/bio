@@ -86,3 +86,7 @@ B6 (K3161): tranche/T47 merged (5c00b0b015, queue); store-door 47/47; format, ar
 ## B7 · CHANGE (K3164)
 
 Merged `tranche/T47` (81a72fb3a1: answer-envelope R6, R14–R16) and re-ran: `node --test bio-plane/test/m/store-door/`: tests 47, pass 47, fail 0 (R4's and R6's rows read from `DISPATCH_CHECKS`, unchanged by C-69.6's retirement). format, architecture (store-door), coverage (15 of 15), ownership (4 files): 0 failures each. No change to the module was needed.
+
+## J8 · COMPLETE
+
+B7 (K3164): tranche/T47 merged (81a72fb3a1, answer-envelope); store-door 47/47; format, architecture, coverage 15/15, ownership 0 failures. No module change needed.
