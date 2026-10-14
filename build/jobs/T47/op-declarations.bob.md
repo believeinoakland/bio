@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · CHANGE
 
 K3143: new R62 on `tranche/T47`: `REAUTH_ACTS`' shape `op → null | {field, values}` (admission imports it; `memberset` `{field: "role", values: null}`), and R6's store-internal list gains `reauthdue` (store-door R15) and signin-door's five (`signintokenhold`, `signintokenrefused`, `signindisclosuredue`, `signintracekeep`, `signintraceread`; plane R49). Also: `peopledirectory` has no help text yet (affordances); name it in `ACT_HELP_ABSENT` as a read. Merge `tranche/T47`.
+
+## B3 · ANSWER · re J1
+
+K3144: (1)–(3) stand. (4): R62's shape governs (admission imports it): `op → null | {field, values}`; rows as R63 on `tranche/T47`: `memberset` `{field: "role", values: null}`, `memberadd` `{field: "role", values: ["admin"]}`, `subscriptionsignin` `{field: "step", values: ["start"]}`, others `null`. R63 also: `grouplogo` store-internal; `publishedlist` `classes: null` (the door serves it publicly; screens-entry reads it without a session). Merge `tranche/T47`.
