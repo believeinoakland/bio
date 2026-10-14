@@ -63,3 +63,7 @@ Merged `tranche/T48` with screens-intake's fix. No change to journey-check's cod
 **Tests and checks:** `node --test --test-concurrency=1 bio-plane/test/m/journey-check/`: 27 tests, 27 pass, 0 fail. `node checks/run.mjs /home/user/bio`: format 0, architecture 0, coverage 5393 of 5393 (0 failures); `coverage.mjs … journey-check` 6 of 6; `ownership.mjs … journey-check tranche/T48`: 10 files, 0 failures.
 
 Size (session_01Dgr6P5RQPvQFE2ipVdCcfG): test runs 15, module lines 1140
+
+## J5 · COMPLETE
+
+B5 done: merged tranche/T48; R1 (a) walks end to end (92 steps, 0 failures, B3's codes step included). journey-check tests 27/27; format, architecture, coverage (5393/5393 product-wide; 6/6 mine), ownership 0 failures. R4, R5, R6 met as in J2; the ASSETS_COMMIT and member-credential notes for the release stand. Ready to merge last in L11.
