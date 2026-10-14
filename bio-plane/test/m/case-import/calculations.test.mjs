@@ -173,7 +173,7 @@ test("R21 the source's stated results are held only as its statement: the import
   assert.deepEqual(Object.fromEntries(Object.entries(w2.snapshot()).filter(([t]) => !t.startsWith("case_import") && t !== "sqlite_sequence")), before2);
 });
 
-test("R4 R21 importedCase answers each calculation the edition carries with its result as recreated here, beside the source's value labelled as the source's", async () => {
+test("R4 R21 importedCase answers each calculation the edition carries with its result as recreated here, beside the source's value labeled as the source's", async () => {
   const w = seeded();
   const s = stated();
   const forged = { ...s.output, value: "1.00" };

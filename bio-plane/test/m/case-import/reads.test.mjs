@@ -58,7 +58,7 @@ test("R4 importedCase answers the latest edition by default, each finding with i
   assert.equal(first.wrote, false);
 });
 
-test("R4 R11 the source's bar is stated as the case states it, labelled as the source's and never as this group's", async () => {
+test("R4 R11 the source's bar is stated as the case states it, labeled as the source's and never as this group's", async () => {
   const w = seeded();
   const a = (await imp(w, caseFile({ bar: { capture: "A", connection: "B" } })));
   const e = w.ci.importedCase({ import: a.import, viewer: V("alice") }).edition;
@@ -239,7 +239,7 @@ test("R23 each finding is answered under this group's own lens: its statements i
   assert.notEqual(by[F2].own_lens.bar_met, false);
   /* F3: no application, re-weighed to its recorded pair */
   assert.deepEqual([by[F3].own_lens.determined, by[F3].own_lens.pair, by[F3].own_lens.changed_by], [true, by[F3].pair, []]);
-  /* the edition: the two lenses side by side, labelled, with the limit the checker states */
+  /* the edition: the two lenses side by side, labeled, with the limit the checker states */
   assert.deepEqual(e.source_lens, { whose: "source", label: SOURCE_LENS, group: SOURCE, statements_sha: LENS });
   assert.equal(e.own_lens.label, OWN_LENS);
   assert.equal(e.own_lens.scope, "instance");

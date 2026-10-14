@@ -191,6 +191,40 @@ test("R16 `withdrawals` answers R7's records in withdrawal order, paged by curso
   assert.equal(page(null, 5).cursor, null);
 });
 
+test("R16 (T48) the reads that take a viewer answer null to one who is not an active member; withdrawals and moves take only {after, limit}, name no viewer and are answered as the plane", async () => {
+  const w = seeded();
+  const a = (await imp(w));
+  const ref = importedFindingRef(a.import, F1);
+  flag(w, a, { finding: F1 });
+  w.ci.acceptImported({ import: a.import, edition: 1, findings: [F1], checked: "c", reason: "r", by: V("alice"), viewer: V("alice") });
+  w.ci.withdrawAcceptance({ import: a.import, edition: 1, reason: "w", by: V("alice"), viewer: V("alice") });
+  const since = "2026-09-01T00:00:00Z";
+  const reads = (viewer) => ({
+    finding: w.acceptedWork.acceptedFinding({ ref, edition: 1, viewer }),
+    openFlags: w.acceptedWork.openFlagsOn({ ref, edition: 1, viewer }),
+    flagHistory: w.acceptedWork.flagHistoryOn({ ref, edition: 1, since, viewer }),
+  });
+  /* controls: an active member is answered each of the three */
+  const member = reads(V("bob"));
+  assert.equal(member.finding.finding, F1);
+  assert.equal(member.openFlags.flags.length, 1);
+  assert.equal(member.flagHistory.flags.length, 1);
+  /* a viewer who is not an active member (a non-member, a machine, an empty identity) is answered null by each */
+  for (const v of [V("carol"), V("dave"), "class:ai", ""])
+    assert.deepEqual(reads(v), { finding: null, openFlags: null, flagHistory: null }, JSON.stringify(v));
+  /* the other two take no viewer: a viewer handed on is never read, and the answer is the plane's, the same for each */
+  const plane = { withdrawals: w.acceptedWork.acceptanceWithdrawals({ after: null, limit: null }),
+                  moves: w.acceptedWork.publisherMoves({ after: null, limit: null }) };
+  assert.equal(plane.withdrawals.withdrawals.length, 1);
+  assert.deepEqual(plane.moves, { moves: [], cursor: null });
+  for (const viewer of [V("carol"), V("bob"), "class:ai", null]) {
+    assert.deepEqual(w.acceptedWork.acceptanceWithdrawals({ after: null, limit: null, viewer }), plane.withdrawals);
+    assert.deepEqual(w.acceptedWork.publisherMoves({ after: null, limit: null, viewer }), plane.moves);
+    assert.deepEqual(w.ci.withdrawals({ after: null, limit: null, viewer }), plane.withdrawals);
+    assert.deepEqual(w.ci.moves({ after: null, limit: null, viewer }), plane.moves);
+  }
+});
+
 test("R16 before the module starts, accepted-work answers absent; once it starts, every read answers", async () => {
   const w = world();
   const ref = importedFindingRef("a".repeat(64), F1);
