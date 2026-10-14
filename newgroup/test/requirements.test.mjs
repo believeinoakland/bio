@@ -13,14 +13,16 @@ import worker, * as installer from "../src/index.mjs";
 import { CFG, planeLimits } from "../src/index.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "../../bio-plane/src/setup-fleet.mjs";
 import { setupPage } from "../../bio-plane/src/setup.mjs";
-import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE, PAGE_CSS, ASSISTANT_OFFER, DESCRIPTION, WHO, SECURITY_TOOLS, LEFT_OUT } from "../src/ui.mjs";
+import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE, PAGE_CSS, ASSISTANT_OFFER, DESCRIPTION, WHO, SECURITY_TOOLS, LEFT_OUT,
+  BEFORE_CLOUDFLARE_CONTROL, ALLOWED, STYLESHEET, ASSET_PREFIX, UPDATE_KEEPS } from "../src/ui.mjs";
+import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
 import { leftOutNotice, partsLeftOut } from "../src/images.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE, RELEASE_CONTAINERS } from "../src/release.mjs";
 import { resolveVersion, checkSignedAsset, embedRelease, releaseContainers } from "../scripts/embed-release.mjs";
 import vm from "node:vm";
 import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
 import * as jurisdictions from "../../jurisdictions/index.mjs";
-import { TOK, ORIGIN, req, begin, callback, cookieOf, cookieValue, b64url, script, realFetch, jres, run, release,
+import { pageWorld, TOK, ORIGIN, req, begin, callback, cookieOf, cookieValue, b64url, script, realFetch, jres, run, release,
   SIGNER, STRANGER, armWith, disarm, restoreSigners, sha, bump, CAPABLE_SRC, PRE116_SRC, MEMBER_SRC, bindingOf,
   parsePage, LIMITS, LIMITS_STATEMENT, UNSTATED_SRC, BUILTIN_LIMITS, DEFAULT_VERSION, DESCRIPTOR, IMAGE, RUNNER,
   SCANNER, SCANNER_CLASSES, SCANNER_WORKER, SCAN_IMAGE, RENDER_IMAGE, VPC_ID, signer } from "./fixture.mjs";
@@ -52,7 +54,8 @@ test("R1 GET / serves the install page and GET /update the update page; any othe
   assert.ok(hb.includes('mode:"install"') && !hb.includes('mode:"update"'), "the install page begins an install");
   assert.ok(ub.includes('mode:"update"') && !ub.includes('mode:"install"'), "the update page begins an update");
   for (const [path, init] of [["/nothing", {}], ["/update/x", {}], ["/begin", {}], ["/callback", { method: "POST" }],
-                              ["/", { method: "POST" }], ["/favicon.ico", {}]]) {
+                              ["/", { method: "POST" }], ["/favicon.ico", {}], ["/app/assets/nothing", {}], ["/app/assets/", {}],
+                              ["/app/assets/civicsmith.css", { method: "POST" }], ["/app/assets/fonts", {}]]) {
     const r = await req(path, init);
     const b = seen(await r.text());
     assert.equal(r.status, 404, path);
@@ -487,14 +490,15 @@ test("R16 the final panel shows the address, the one-time password and the probe
   assert.equal(count(w.raw, s.ADMIN_TOKEN), 1);
   assert.equal(count(w.raw, s.PROBE_TOKEN), 1);
   assert.equal(s.MEMBER_TOKEN, undefined, "no member credential exists");
-  /* The panel's credentials, by their labels: exactly the address, the one-time password and the probe credential. */
-  assert.deepEqual([...w.page.done.matchAll(/<span class="k">([^<]*)<\/span>/g)].map((m) => m[1]), ["Your address", "One-time password", "Probe credential"]);
+  /* The panel's credentials, by their labels: exactly the one-time password, the address and the probe key (R51's order). */
+  assert.deepEqual([...w.page.done.matchAll(/<span class="k">([^<]*)<\/span>/g)].map((m) => m[1]), ["One-time password", "Your address", "Probe key"]);
   assert.ok(!/out-member|[Mm]ember credential<\/span>/.test(w.page.done), "no member credential row");
   for (const hidden of [s.DAEMON_TOKEN, s.ACCOUNT_SEAL_SECRET, s.INSTANCE_AI_TOKEN, TOK]) assert.equal(w.raw.includes(hidden), false);
   assert.equal(typeof s.ACCOUNT_SEAL_SECRET, "string", "the seal secret was bound (K1541)");
   assert.match(w.page.done, /id="out-url">https:\/\/panel\.grp\.workers\.dev</);
   assert.match(w.page.done, /id="out-boot">/);
-  assert.match(w.page.done, /<button id="handover" data-url="https:\/\/panel\.grp\.workers\.dev\/">/);
+  /* R51 (T47): the hand-over is to the setup screen, the one-time password in its fragment, read from the panel at the click. */
+  assert.match(w.page.done, /<button id="handover" class="cs-btn" data-tone="primary" data-url="https:\/\/panel\.grp\.workers\.dev\/app\/setup">/);
   assert.ok(w.raw.includes(`location.href=h.dataset.url+"#boot="+encodeURIComponent(document.getElementById("out-boot").textContent)`));
 });
 
@@ -519,7 +523,7 @@ test("R34 the wizard's last screen shows, before the hand-over to your group's C
     const at = done.indexOf(block), hand = done.indexOf('<button id="handover"');
     assert.ok(at > 0 && hand > at, "the block, whole, before the hand-over");
     /* R40: the hand-over names what it hands over to as "your group's Civicsmith". */
-    assert.ok(done.includes(`>Go to your group&#39;s Civicsmith and finish setup</button>`), "the hand-over's words");
+    assert.ok(done.includes(`>Continue to your group&#39;s Civicsmith: become its first administrator</button>`), "the hand-over's words");
     assert.equal(done.split(block).length - 1, 1, "shown once");
     for (const s of [HOSTING_CONTROL.heading, ...S]) assert.ok(done.slice(0, hand).includes(escd(s)), s);
     /* The reassurance-only paragraph it replaces is gone. */
@@ -527,7 +531,7 @@ test("R34 the wizard's last screen shows, before the hand-over to your group's C
     /* No acknowledgement: no control but the copy buttons and the hand-over, nothing gating it, nothing sent. */
     assert.deepEqual([...done.matchAll(/<(input|select|textarea)\b/g)].length, 0, "no input of any kind");
     assert.deepEqual([...done.matchAll(/<button\b[^>]*>/g)].map((m) => m[0]).filter((b) => !/class="copy"/.test(b)),
-      [`<button id="handover" data-url="${done.match(/data-url="([^"]*)"/)[1]}">`], "the hand-over is the only other control, never disabled");
+      [`<button id="handover" class="cs-btn" data-tone="primary" data-url="${done.match(/data-url="([^"]*)"/)[1]}">`], "the hand-over is the only other control, never disabled");
   }
   assert.ok(!w0(ends).raw.includes("acknowledg"), "nothing on the page asks for an acknowledgement");
   /* The very words instance-setup's claim page shows (R47), from the same export, with R47's one difference (T35; F10,
@@ -769,7 +773,7 @@ test("R22 every page names Civicsmith and the installing group, by its chosen na
     assert.match(page, /your group/i, `${where} speaks to the group`);
     assert.ok(page.includes("This installer is run by the publisher of Civicsmith releases."), `${where} says the publisher runs it`);
   }
-  assert.match(before["/"], /<title>Set up your group's Civicsmith<\/title>/);
+  assert.match(before["/"], /<title>Create your Civicsmith group<\/title>/);
   assert.match(before["/update"], /<title>Update your group's Civicsmith<\/title>/);
   assert.match(before.invitation, /<title>Start your group's own Civicsmith<\/title>/);
   assert.ok(before.invitation.includes('href="https://newgroup.believeinoakland.workers.dev/"'), "the address stays where it runs");
@@ -780,7 +784,7 @@ test("R22 every page names Civicsmith and the installing group, by its chosen na
   const named = seen(await run({ slug: "river-keepers" }));
   const upd = seen(await run({ slug: "river-keepers", mode: "update", pre: { "river-keepers": planeBase("river-keepers", "0.70.0") } }));
   for (const w of [named, upd]) {
-    assert.match(w.raw, /Civicsmith &middot; installer/);
+    assert.match(w.raw, /<span class="ng-word">Civicsmith<\/span> <span class="eyebrow">installer<\/span>/);
     assert.match(w.raw, /For the group <b class="mono" id="group">river-keepers<\/b>/);
     assert.ok(w.raw.includes(PUBLISHER));
   }
@@ -1131,7 +1135,7 @@ test("R23 (T46) when the release this installer carries names, for a container m
     const named = partsLeftOut(RELEASE_CONTAINERS).map((p) => p.member);
     for (const m of named) {
       const at = page.indexOf(`id="left-out-${m}"`);
-      assert.ok(at > 0 && at < page.indexOf('<button id="go">'), `${where}: ${m}, before the install begins`);
+      assert.ok(at > 0 && at < page.indexOf('<button id="go"'), `${where}: ${m}, before the install begins`);
     }
     if (!named.length) assert.equal(page.includes('id="left-out"'), false, where);
   }
@@ -1691,11 +1695,12 @@ test("R35 every page the installer serves, and the invitation page, names no res
   const pages = [await text("/"), await text("/update"), await text("/elsewhere"), ...RAW, ...PAGES, INVITATION];
   assert.ok(RAW.length > 40, "the pages this suite rendered");
   for (const page of pages) assert.deepEqual(loadsIn(page).filter(elsewhere), [], page.slice(0, 160));
-  /* Typefaces are the device's: no page declares a face to fetch, and the invitation page's stacks are the Worker's own. */
+  /* Typefaces are the device's or carried beside the page: no page declares a face of its own; the installer's pages take
+     interface-assets' faces from the stylesheet the installer serves itself (R53's test), and the invitation page's
+     stacks are the device's own. */
   for (const page of pages) assert.equal(/@font-face/i.test(page), false, page.slice(0, 160));
-  const stacks = (css) => [...css.matchAll(/--(display|body|mono):([^;]+);/g)].map((m) => [m[1], m[2]]);
-  assert.deepEqual(stacks(INVITATION).filter(([k]) => k !== "display"), stacks(PAGE_CSS));
-  assert.ok(/(--display:|font-family:)Georgia,serif/.test(INVITATION) && PAGE_CSS.includes("font-family:Georgia,serif"));
+  assert.ok(/(--display:|font-family:)Georgia,serif/.test(INVITATION) && /--body:system-ui/.test(INVITATION));
+  assert.equal(/@font-face|font-family:\s*["']?(Civicsmith|Source)/i.test(PAGE_CSS), false, "the installer's layout names no face of its own");
   /* A link the reader follows stays: the hosting provider's sign-up, and the installer's own address. */
   assert.ok(INVITATION.includes('<a href="https://dash.cloudflare.com/sign-up"'));
   assert.ok(INVITATION.includes('href="https://newgroup.believeinoakland.workers.dev/"'));
@@ -1789,14 +1794,15 @@ test("R40 every member- or founder-facing string the installer serves (the insta
   /* Each changed string by name: the pages' titles, the last screen's hand-over, R32's sentence, R14's address step, the
      refusal pages, the assistant's words, and the limits' refusal. */
   const home = await text("/"), upd = await text("/update");
-  for (const [page, want] of [[home, "<title>Set up your group's Civicsmith</title>"], [home, "<h2>Name your group's Civicsmith</h2>"],
+  for (const [page, want] of [[home, "<title>Create your Civicsmith group</title>"], [home, "<h2>Your group's short name</h2>"],
+      [home, "<h1>Let this installer into your Cloudflare account</h1>"], [home, `<h2>${BEFORE_CLOUDFLARE_CONTROL}</h2>`],
       [upd, "<title>Update your group's Civicsmith</title>"], [upd, "The name your group's Civicsmith was installed under"],
       [INVITATION, "<title>Start your group's own Civicsmith</title>"], [INVITATION, ">Set up my group's Civicsmith</a>"],
       [await text("/elsewhere"), "Setting up your group&#39;s Civicsmith."]])
     assert.ok(page.includes(want), want);
   assert.match(ASSISTANT_OFFER.replace(/\s+/g, " "), /made in your group's Civicsmith when it is set up/);
   const done = seen(await run({ slug: "r40-words" }));
-  assert.ok(done.page.done.includes(">Go to your group&#39;s Civicsmith and finish setup</button>"));
+  assert.ok(done.page.done.includes(">Continue to your group&#39;s Civicsmith: become its first administrator</button>"));
   assert.match(done.page.done, /<b>Your group's Civicsmith is running\.<\/b>/);
   assert.match(done.raw, /<title>Setting up your group&#39;s Civicsmith<\/title>/);
   assert.equal(done.page.events.find((e) => e.k === "step" && e.id === "fleet").label, "Installing the capability workers beside your group's Civicsmith");
@@ -1818,44 +1824,13 @@ test("R40 every member- or founder-facing string the installer serves (the insta
 
 /* ------------------------------------------------------------------------------------------------ the short name and the description */
 
-/* R41: a page's own script, run as a browser runs it, against a stand-in for the few elements it touches: each element
-   with an id, and each checkbox and radio by name. `fetch` and `location` are recorded; a click runs its listeners. */
-function pageWorld(page) {
-  const els = new Map(), inputs = [];
-  const make = (tag, attrs) => {
-    const el = { tag, attrs, value: "", checked: false, disabled: false, textContent: "", dataset: {}, open: false, on: {},
-      selectionStart: 0, addEventListener(k, f) { (this.on[k] ||= []).push(f); }, focus() {}, setSelectionRange() {},
-      showModal() { this.open = true; }, close() { this.open = false; },
-      async click() { if (this.disabled) return; for (const f of this.on.click || []) await f({ target: this }); } };
-    return el;
-  };
-  for (const [, tag, attrs] of page.matchAll(/<([a-z]+)\b([^>]*)>/g)) {
-    const id = attrs.match(/\bid="([^"]+)"/)?.[1], name = attrs.match(/\bname="([^"]+)"/)?.[1];
-    const el = make(tag, attrs);
-    if (id) els.set(id, el);
-    if (tag === "input" && name) inputs.push(Object.assign(el, { name, value: attrs.match(/\bvalue="([^"]*)"/)?.[1] ?? "" }));
-  }
-  const document = {
-    querySelector: (q) => q.startsWith("#") ? els.get(q.slice(1)) ?? null
-      : inputs.find((i) => q === `input[name="${i.name}"]:checked` && i.checked) ?? null,
-    querySelectorAll: (q) => inputs.filter((i) => q === `input[name="${i.name}"]`),
-    getElementById: (id) => els.get(id) ?? null,
-  };
-  const sent = [], location = { href: null };
-  const fetch = async (url, init) => { sent.push({ url, body: JSON.parse(init.body) });
-    return { json: async () => ({ ok: true, authorize: "https://dash.cloudflare.com/oauth2/auth?x=1" }) }; };
-  const [js] = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
-  new Function("document", "fetch", "location", js)(document, fetch, location);
-  return { el: (id) => els.get(id), sent, location };
-}
-
 test("R41 the install page's act that chooses the short name shows the Irreversible weight (its word beside its mark); before /begin is sent in install mode a full dialog states the choice is permanent and names the short name typed; only the confirming act sends /begin, closing sends nothing; the update page shows neither", async () => {
   const home = await text("/"), upd = await text("/update");
-  const PIPS = /<span class="pips" aria-hidden="true">(?:<i class="on"><\/i>){5}<\/span>Irreversible<\/span>/;
+  const PIPS = /<span class="cs-pips" aria-hidden="true">(?:<i class="on"><\/i>){5}<\/span>Irreversible<\/span>/;
   /* The weight: five pips, the word beside them, on the button that chooses the short name and on the dialog's confirming act. */
-  const go = home.match(/<button id="go">([\s\S]*?)<\/button>/)[1];
+  const go = home.match(/<button id="go" class="cs-btn" data-tone="primary">([\s\S]*?)<\/button>/)[1];
   assert.match(go, PIPS, "the act choosing the short name carries the Irreversible weight");
-  const yes = home.match(/<button type="button" id="confirm-yes">([\s\S]*?)<\/button>/)[1];
+  const yes = home.match(/<button type="button" class="cs-btn" data-tone="primary" id="confirm-yes">([\s\S]*?)<\/button>/)[1];
   assert.match(yes, PIPS, "and so does the act that confirms it");
   /* The dialog's words: the short name becomes the address and the worker's name and stands beside every signature; it
      can never be changed but by installing a new Civicsmith and starting again. */
@@ -1878,10 +1853,22 @@ test("R41 the install page's act that chooses the short name shows the Irreversi
   assert.deepEqual([w.sent, w.el("confirm").open, w.location.href], [[], false, null], "closing it sends nothing");
   await w.el("go").click();
   w.el("slug").value = "something-else";
+  /* (T47, with R50) the confirming act draws "Before Cloudflare" and sends nothing; nothing sends /begin before it, and
+     there "Continue to Cloudflare" sends it, with the name the dialog named. */
+  await w.el("cloudflare").click();
+  assert.deepEqual(w.sent, [], "nothing sends /begin before the dialog's confirming act");
   await w.el("confirm-yes").click();
-  assert.equal(w.sent.length, 1, "only the confirming act sends /begin");
+  assert.deepEqual([w.sent, w.el("confirm").open, w.el("stage-choose").hidden, w.el("stage-before").hidden], [[], false, true, false],
+    "the confirming act closes the dialog and draws Before Cloudflare, sending nothing");
+  assert.equal(w.el("chosen-name").textContent, "river-keepers", "Before Cloudflare names the short name confirmed");
+  await w.el("back").click();
+  assert.deepEqual([w.sent, w.el("stage-choose").hidden, w.el("stage-before").hidden], [[], false, true], "Back sends nothing");
+  w.el("slug").value = "River Keepers!";
+  await w.el("go").click(); await w.el("confirm-yes").click();
+  w.el("slug").value = "something-else";
+  await w.el("cloudflare").click();
+  assert.equal(w.sent.length, 1, "Continue to Cloudflare, after the confirming act, sends /begin once");
   assert.deepEqual([w.sent[0].url, w.sent[0].body.slug, w.sent[0].body.mode], ["/begin", "river-keepers", "install"], "the name the dialog named");
-  assert.equal(w.el("confirm").open, false);
   assert.equal(w.location.href, "https://dash.cloudflare.com/oauth2/auth?x=1");
   /* A name too short opens nothing. */
   const short = pageWorld(home);
@@ -1889,7 +1876,7 @@ test("R41 the install page's act that chooses the short name shows the Irreversi
   await short.el("go").click();
   assert.deepEqual([short.sent, short.el("confirm").open], [[], false]);
   /* The update chooses no short name: no weight, no dialog, /begin sent at once. */
-  assert.ok(!upd.includes("Irreversible") && !upd.includes('class="pips"') && !upd.includes("<dialog"), "the update page shows neither");
+  assert.ok(!upd.includes("Irreversible") && !upd.includes('pips"') && !upd.includes("<dialog"), "the update page shows neither");
   const u = pageWorld(upd);
   u.el("slug").value = "river-keepers";
   await u.el("go").click();
