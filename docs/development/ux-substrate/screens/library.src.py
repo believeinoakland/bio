@@ -1,6 +1,6 @@
 # The Civicsmith wizard library (design phase step 5, DEC-139; DEC-121 (9): written by the UX stream, approved by Bob).
 # Each script follows wizard-scripts R1 and R2: a step is {screen, act, what, why, draft?}; `what` and `why` are 1-300
-# characters; a draft is {text}, {template} or {machine: op}, always shown labelled; no step presses, signs or sends.
+# characters; a draft is {text}, {template} or {machine: op}, always shown labeled; no step presses, signs or sends.
 # `act` names the control the step points at (null: the step explains the screen). Side trips (`via`) start another
 # wizard and return to the step left. Places, laws and venues never appear here (K1): they come from the group's profile
 # and its own templates (`{template: "@…"}` names the kind of template the group's library offers).
@@ -19,7 +19,7 @@ def wiz(name, start, required, steps, journeys, note=''):
 wiz('Set up and claim', 'install', True, [
  ('install', None, 'Check you have what is needed: a Cloudflare account on the Workers Paid plan ($5 a month, with a payment method) and about twenty minutes.', 'Civicsmith uses parts of Cloudflare that only the paid plan includes. No Claude account is needed to set up.'),
  ('install', 'bootstrap', 'Choose your group\'s short name, then install. It is not the group\'s name: you choose that next, and can change it.', 'The short name is the fixed label in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing.'),
- ('install', 'selftest', 'Let your group\'s Civicsmith test itself. Allow it to run the assistant\'s container if you are asked.', 'The test proves it works before anyone relies on it.'),
+ ('install', None, 'Your group\'s Civicsmith tests itself as part of installing; the finished panel shows what passed. Allow it to run the assistant\'s container if you are asked.', 'The test proves it works before anyone relies on it. The installer keeps nothing once it hands over, so the checks are run then, not later.'),
  ('install', None, 'Save the one-time password somewhere safe, such as a password manager, then continue.', 'It is shown once, and it is how you become the first administrator. Continuing fills it in; if it is lost before you claim, whoever can sign in to the Cloudflare account can set a new one.'),
  ('setup', 'claim', 'Claim with the one-time password, then choose your own password. It is already filled in if you continued from the installer; otherwise type the one you saved.', 'Only the person holding the one-time password can become the first administrator. Once you claim, it is spent.'),
  ('setup', 'groupnameset', 'Name the group as people should read it, and add its logo if it has one.', 'The group\'s name heads everything it publishes and can change at any time; the short name you chose at install stays fixed in addresses and signatures.'),
@@ -105,6 +105,12 @@ wiz('Invite a member', 'members', False, [
  ('members', None, 'Send the link yourself. It works once and expires after seven days.', 'Civicsmith sends no email, so the link reaches them only through you.'),
  ('members', 'websitekeycreate', 'Or let people join through your website: create a website key, or turn on the reusable join link.', 'Anyone let through can see the group\'s shared work, so each comes with limits and a daily cap.'),
 ], [3, 27])
+
+wiz('Update your group\'s Civicsmith', 'updates', False, [
+ ('updates', None, 'Read what changes: the signed release notes say what members will see, what administrators will see, and anything an administrator must do.', 'The notes are signed with the release itself, so what you read is what Civicsmith published.'),
+ ('updates', 'owed:updatestart K3158', 'Choose Update if you hold your group\'s Cloudflare account. If not, copy the link and pass it to whoever does. Not now and Skip this version are the other choices.', 'Only Cloudflare\'s consent, given by the account\'s holder, lets a new release in. Your group\'s Civicsmith cannot rewrite itself.'),
+ ('update', 'bootstrap', 'On the installer\'s page, check the release running and the release chosen, then continue to Cloudflare and allow the update.', 'If a step stops, your group\'s Civicsmith keeps running as it was; the stop says what to do.'),
+], [19])
 
 wiz('Connect your Claude account', 'connect', False, [
  ('connect', None, 'The assistant is optional. If your group offers its API key, you can use it already; your own account, if you connect one, always comes first.', 'Your own account serves only you. Everything works without the assistant.'),
@@ -218,7 +224,7 @@ wiz('Start and send', 'plan', False, [
  ('plan', 'optiondispose', 'Choose the option, and say when to be reminded.', 'Choosing records why this option, now.'),
  ('start-send', 'optionstartpreview', 'See what starting does, and anything that would stop it.', 'Refusals are shown before anything runs.'),
  ('start-send', 'optionstart', 'Start the action, addressed to the office by role.', 'The office\'s holder that day is shown, so you know who will read it.'),
- ('start-send', 'communicationprepare', 'Prepare what is sent: start from your group\'s template for this kind of action if it has one, or write it yourself. A template or draft is labelled until you make it yours.', 'The words that leave the group are always a member\'s.'),
+ ('start-send', 'communicationprepare', 'Prepare what is sent: start from your group\'s template for this kind of action if it has one, or write it yourself. A template or draft is labeled until you make it yours.', 'The words that leave the group are always a member\'s.'),
  ('start-send', 'filingapprove', 'Approve the text.', 'Approving is kept apart from sending, so you can stop between them.'),
  ('start-send', 'filingrecordsent', 'Send it, then record that you sent it.', 'This tells the office what your group is looking at, and starts the clock.'),
  ('due-date', 'reminderset', 'The due date and next checkpoint go into your queue. A next step can wait on the reply.', 'If no reply comes, the next step is ready without anyone remembering.'),

@@ -24,6 +24,12 @@
   "note": "C-140.43; a safe view is installed but its queue could not be read"
  },
  {
+  "key": "refusal.SIGNINTRACE_NOT_TEST",
+  "en": "This group's Civicsmith keeps a trace of sign-ins only while it runs as a test instance, and this one does not. Nothing was read or changed.",
+  "protected": false,
+  "note": "C-69.7; BOB's B174 (3)"
+ },
+ {
   "key": "refusal.SETTING_INVALID",
   "en": "That isn't a value this setting takes. Choose one of the setting's own values. Nothing was changed.",
   "protected": false,
@@ -55,7 +61,7 @@
  },
  {
   "key": "refusal.SIGN_IN_PAUSED",
-  "en": "Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn't a judgement on you. Try again at {time}.",
+  "en": "Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn't a judgment on you. Try again at {time}.",
   "protected": false,
   "note": "credentials R38; {time} the local time the pause ends"
  },
@@ -171,7 +177,7 @@
   "key": "signing.ceremony.declined",
   "en": "Your device didn't confirm, so nothing was signed or published. Everything is as it was; sign again when you are ready.",
   "protected": true,
-  "note": "device cancelled or failed"
+  "note": "device canceled or failed"
  },
  {
   "key": "signing.ceremony.signedat",

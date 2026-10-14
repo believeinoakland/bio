@@ -39,10 +39,10 @@ w('refusal.HANDLE_FIXED', 'Handles don\'t change in Civicsmith: yours names your
 
 # --- The status report's assistant (plan-work R8's arm, statusreportassist)
 w('refusal.ASSISTANT_DRAFT_UNAVAILABLE', 'The assistant can\'t draft this report for you right now. The plan\'s items are listed below: write the report from them, as you would without the assistant.', False, 'answers carrying R8\'s items')
-w('statusreport.assist.label', 'A first draft by the assistant, from the plan\'s items. Each line cites what it rests on; edit it, then save it as yours.', True, 'machine work, labelled until saved (statusReportSave\'s from)')
+w('statusreport.assist.label', 'A first draft by the assistant, from the plan\'s items. Each line cites what it rests on; edit it, then save it as yours.', True, 'machine work, labeled until saved (statusReportSave\'s from)')
 
 # --- A run on a member's own sign-in (N919, K2892; the dock's "Work on this", control-plane's door)
-w('ai.run.ownsignin', 'This run works on your own Claude sign-in, for you alone. What it produces is labelled machine work and changes nothing until a member acts on it.', True, 'shown before "Work on this" starts on a member\'s own sign-in')
+w('ai.run.ownsignin', 'This run works on your own Claude sign-in, for you alone. What it produces is labeled machine work and changes nothing until a member acts on it.', True, 'shown before "Work on this" starts on a member\'s own sign-in')
 w('refusal.MEMBER_RUN_MODE_NOT_ADMITTED', 'A run on your own Claude sign-in can check or plan, and this one asks for more.' + NS + ' A project\'s or the group\'s account can run it, where one serves you.', False, 'ai-runs R18 (K2920): any mode other than check or plan on a member\'s own sign-in')
 
 # --- Joining through the group's website (members; N654: membership's read of the key's and link's settings and history)
@@ -91,7 +91,7 @@ for k, t in [
     ('action.reply', 'Its reply decides the next step of {plan}.'),
     ('due.reply', 'If no reply is recorded by then, your queue says so once.'),
     ('queue.project', 'Waiting on you here: {items}.'),
-    ('machine', 'What the assistant does with it is labelled machine work; only a member\'s act changes the record.'),
+    ('machine', 'What the assistant does with it is labeled machine work; only a member\'s act changes the record.'),
     ('inbox.doorbell', 'Everything here came through it, so the sender may be anyone.'),
     ('version.newer', 'A newer version exists: decide whether it changes what {case} says.'),
     ('person.unfollowed', 'Named here, but not a person your group follows yet.')]:

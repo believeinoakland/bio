@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check Civicsmith's colour tokens against WCAG 2.2 AA (DEC-99, DEC-138).
+"""Check Civicsmith's color tokens against WCAG 2.2 AA (DEC-99, DEC-138).
 
 Reads palette.json beside this file; prints every pair with its ratio and exits 1 if any text
 pair is below 4.5:1 or any graphic pair below 3:1, in either theme. Also checks that
