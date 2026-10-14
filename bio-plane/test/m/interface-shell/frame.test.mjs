@@ -12,6 +12,8 @@ const HELDA = ok({ items: [{ id: "h1", title: "Minutes", at: "2026-10-01" }] });
 const PLANE = { image: IMAGE, heldcaptures: HELDA, projectdirectory: ok({ projects: [] }) };
 const en = (k) => (WORD_ROWS.find((r) => r[0] === k) || [])[1];
 const texts = (els) => els.map((e) => e.textContent.trim());
+/* R8 (R56: the design's `mk-crumbs`): the path's steps, each earlier one a link, the screen's own name last */
+const crumbSteps = (root) => { const nav = root.querySelector(".cs-crumbs"); return nav ? nav.children.filter((e) => e.localName !== "i") : []; };
 /* an act pressed through whatever friction its weight asks (R11) */
 async function press(p, op) {
   await p.click(`button[data-act="${op}"]`);
@@ -19,7 +21,7 @@ async function press(p, op) {
   if (go) { const ta = p.root().querySelector('[data-slot] textarea'); if (ta) ta.value = "because"; await p.click(go); }
 }
 
-test("R7 the masthead: the group's name (groupidentity, read once), search opening Find, the explanation-level control, the To do count from op=queue, the member's initial; no assistant button while not reachable", async () => {
+test("R7 R60 the masthead: the group's name (groupidentity, read once; \"Your group\" when it has no display name, never its slug), search opening Find, the explanation-level control, the To do count from op=queue, the member's initial; no assistant button while not reachable", async () => {
   const p = await boot({ screens: ALL, plane: PLANE });
   const mast = p.root().querySelector(".cs-mast");
   assert.equal(mast.querySelector(".grp").textContent, "River Town");
@@ -28,20 +30,22 @@ test("R7 the masthead: the group's name (groupidentity, read once), search openi
   assert.equal(p.byOp("groupidentity").length, 1, "read once");
   const m = p.root().querySelector(".cs-mast");
   assert.equal(m.querySelector('a[href="/app/find"]').textContent, "Search");
+  assert.ok(m.querySelector('a[href="/app/find"]').classList.contains("mk-mastsearch"));
   assert.ok(m.querySelector('[data-shell="level"]').textContent.includes(en("level.prompt.name")));
   assert.equal(m.querySelector('[data-kind="todo"]').textContent, "2 to do");
   assert.equal(m.querySelector('[data-shell="menu"] [aria-hidden]').textContent, "M");
   assert.equal(m.querySelector('[data-shell="dock"]'), null);
-  /* the slug when no display name */
+  /* R60: never the slug: "Your group" when no display name */
   const q = await boot({ screens: ALL, plane: { ...PLANE, groupidentity: ok({ ok: true, group: "river-town", display_name: null }) } });
-  assert.equal(q.root().querySelector(".cs-mast .grp").textContent, "river-town");
+  assert.equal(q.root().querySelector(".cs-mast .grp").textContent, "Your group");
+  assert.ok(!q.root().innerHTML.includes("river-town"));
 });
 
 test("R7 the band (mark.band.means with mark.path.working.*), the rail's seven places in order with rail.<k>.name and guidance rail.<k>.holds, one column of work, and at the phone width the five tabs Home, Queue, Add, Find, More", async () => {
   const p = await boot({ screens: ALL, plane: PLANE });
   const band = p.root().querySelector(".cs-band");
   assert.equal(band.getAttribute("data-band"), "working");
-  assert.equal(band.textContent, en("mark.path.working.name"));
+  assert.equal(band.textContent, en("mark.path.working.name") + " · not public · seen by your group's members", "R57: the band as drawn");
   assert.ok(band.querySelector("[data-tip]").getAttribute("data-tip").startsWith(en("mark.band.means").replace(/'/g, "&#39;")));
   const rail = p.root().querySelectorAll(".cs-rail a");
   assert.deepEqual(texts(rail), ["home", "queue", "find", "add", "projects", "people", "settings"].map((k) => en("rail." + k + ".name")));
@@ -51,7 +55,7 @@ test("R7 the band (mark.band.means with mark.path.working.*), the rail's seven p
   assert.deepEqual(texts(tabs), [en("rail.home.name"), en("rail.queue.name"), en("rail.add.name"), en("rail.find.name"), en("tab.more.name")]);
   assert.ok(rail[0].hasAttribute("aria-current"));
   const more = await boot({ screens: ALL, path: "/app/more" });
-  assert.deepEqual(texts(more.root().querySelectorAll("#cs-main .cs-list a")), [en("rail.projects.name"), en("rail.people.name"), en("rail.settings.name")]);
+  assert.deepEqual(texts(more.root().querySelectorAll("#cs-main .cs-row a")), [en("rail.projects.name"), en("rail.people.name"), en("rail.settings.name")]);
   assert.ok(more.root().querySelectorAll(".cs-tabs a")[4].hasAttribute("aria-current"));
 });
 
@@ -80,7 +84,7 @@ test("R37 the People place opens people and the Settings place opens settings on
   }
   const r = await boot({ screens: ALL, path: "/app/settings" });
   assert.equal(r.root().querySelectorAll('a[href="/"]').length, 0);
-  assert.deepEqual(texts(r.root().querySelectorAll("#cs-main .cs-list a")), ["Members"], "the settings screens registered");
+  assert.deepEqual(texts(r.root().querySelectorAll("#cs-main .cs-row a")), ["Members"], "the settings screens registered");
 });
 
 test("R8 every screen opens its main area with its path, from its rail place to its own name (last, the current page), each earlier step a link, the project's step its title as read", async () => {
@@ -88,17 +92,18 @@ test("R8 every screen opens its main area with its path, from its rail place to 
   const nav = p.root().querySelector("#cs-main").children[0];
   assert.equal(nav.localName, "nav");
   assert.equal(nav.getAttribute("aria-label"), "Where you are");
-  const steps = nav.querySelectorAll("li");
+  const steps = crumbSteps(p.root());
   assert.deepEqual(texts(steps), ["Projects", "Pothole repairs", "Document"]);
-  assert.equal(steps[0].querySelector("a").getAttribute("href"), "/app/projects");
-  assert.equal(steps[1].querySelector("a").getAttribute("href"), "/app/project/P1");
-  assert.equal(steps[2].querySelector("a"), null);
-  assert.equal(steps[2].querySelector("[aria-current=page]").textContent, "Document");
+  assert.equal(steps[0].getAttribute("href"), "/app/projects");
+  assert.equal(steps[1].getAttribute("href"), "/app/project/P1");
+  assert.equal(steps[2].localName === "a", false);
+  assert.equal(steps[2].getAttribute("aria-current"), "page");
+  assert.equal(steps[2].textContent, "Document");
   assert.equal(p.root().querySelector("#cs-main").children[1].textContent, "A lease", "the heading below names the thing shown");
   const h = await boot({ screens: ALL, path: "/app/held", plane: PLANE });
-  assert.deepEqual(texts(h.root().querySelectorAll(".cs-crumbs li")), ["Add", "Held captures"]);
+  assert.deepEqual(texts(crumbSteps(h.root())), ["Add", "Held captures"]);
   const m = await boot({ screens: ALL, path: "/app/members" });
-  assert.deepEqual(texts(m.root().querySelectorAll(".cs-crumbs li")), ["Settings", "Members"]);
+  assert.deepEqual(texts(crumbSteps(m.root())), ["Settings", "Members"]);
 });
 
 const pathAt = (commit) => {
@@ -133,7 +138,7 @@ test("R28 every screen of the new screen modules has its path from mock-shell.js
   for (const [id, frame] of Object.entries(FRAMES)) if (frame !== "dock") assert.equal(PATHS[id], undefined, id);
   /* drawn: a person's path with its place linked */
   const p = await boot({ screens: [...ALL, PERSON], path: "/app/person/x1", plane: { person: ok({ name: "Dana Ruiz" }) } });
-  assert.deepEqual(texts(p.root().querySelectorAll(".cs-crumbs li")), ["People", "Person"]);
+  assert.deepEqual(texts(crumbSteps(p.root())), ["People", "Person"]);
 });
 
 test("R9 the router maps /app to home and /app/<screen>[/<subject>] to that screen with that subject, keeps the browser's history (back and forward redraw), and answers an unknown screen or a subject the read does not find with Nothing here, never a blank page", async () => {
@@ -348,14 +353,16 @@ test("R36 while bootstrap answers test_instance true every frame shows the test-
     const opts = { screens, path, plane: { bootstrap: ok({ test_instance: true }) } };
     if (session === null) opts.session = null;
     const p = await boot(opts);
-    const band = p.root().querySelector(".cs-testband");
+    /* R53: above the frame, never inside its columns */
+    const band = p.doc.getElementById("cs-testband");
     assert.ok(band, path);
+    assert.equal(p.root().contains(band), false, path);
     assert.ok(band.textContent.includes("test Civicsmith"), path);
     assert.equal(p.byOp("bootstrap")[0].headers.Authorization, undefined);
   }
   for (const b of [ok({ test_instance: false }), ok({}), silent, refused("NO")]) {
     const q = await boot({ screens: ALL, plane: { bootstrap: b } });
-    assert.equal(q.root().querySelector(".cs-testband"), null);
+    assert.equal(q.doc.querySelector(".cs-testband"), null);
   }
 });
 
@@ -413,13 +420,17 @@ test("R30 R32 a public screen asks no session record: the record is not read whi
   assert.equal(front.root().querySelector("#cs-main").getAttribute("data-screen"), "held");
 });
 
-test("R7 R4 (K3177 (c)) the member's initial is drawn from the signed-in member's handle, never empty: a founder's whoami answering no handle draws the handle signed in with; control: whoami's handle wins", async () => {
+test("R7 R4 R60 (K3177 (c)) the member's avatar is drawn from the signed-in member's handle: a founder's whoami answering no handle draws the handle signed in with; with none at all, the avatar's icon, never the member's record id; control: whoami's handle wins", async () => {
   const you = (p) => p.root().querySelector('[data-shell="menu"]');
   const founder = await boot({ screens: ALL, session: { t: "tok-f", e: 0, d: "own", w: "admin" }, plane: { whoami: ok({ tokenClass: "admin", session: true, member: "m-1", handle: null, administer: true, rootOfTrust: true, capabilities: ["contribute"] }) } });
-  assert.equal(you(founder).querySelector('[aria-hidden="true"]').textContent, "A");
-  assert.equal(you(founder).querySelector(".sr").textContent, "You: admin");
-  const bare = await boot({ screens: ALL, session: { t: "tok-f", e: 0, d: "own", w: "" }, plane: { whoami: ok({ tokenClass: "admin", session: true, member: "rosa", handle: null, administer: true, capabilities: [] }) } });
-  assert.equal(you(bare).querySelector('[aria-hidden="true"]').textContent, "R", "never empty: the member's id at the last");
+  assert.equal(you(founder).querySelector('span[aria-hidden="true"]').textContent, "A");
+  assert.equal(you(founder).getAttribute("aria-label"), "You: admin");
+  assert.ok(you(founder).classList.contains("mk-avatar"));
+  const bare = await boot({ screens: ALL, session: { t: "tok-f", e: 0, d: "own", w: "" }, plane: { whoami: ok({ tokenClass: "admin", session: true, member: "m-7f3a", handle: null, administer: true, capabilities: [] }) } });
+  assert.equal(you(bare).querySelector("span"), null);
+  assert.ok(you(bare).querySelector("svg"), "the avatar's icon");
+  assert.ok(you(bare).getAttribute("aria-label").length > 0);
+  assert.ok(!bare.root().innerHTML.includes("m-7f3a"), "R60: no record id drawn");
   const member = await boot({ screens: ALL, session: { t: "tok-1", e: 0, d: "own", w: "other" } });
   assert.equal(you(member).querySelector('[aria-hidden="true"]').textContent, "M");
 });
