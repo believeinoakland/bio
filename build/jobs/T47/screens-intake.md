@@ -42,3 +42,10 @@ T47-59 leans on four L11 providers not yet merged into `tranche/T47` (each still
 4. `interface-shell` (R27, R28/R38): `cs.fill`; the `knock` reference kind; `archive`'s path (Add › Held captures › Archive); `capture`'s re-point retired.
 My reading: I build to their requirements now and prove my screens in a scratch checkout carrying stand-ins for those four (never committed). My suite on the real page stays red on my branch until they merge. On your CHANGE announcing those merges I merge `tranche/T47`, run my tests and the checks, and post COMPLETE. Dependent reads (`sourceof` then `sourcerung`; the earlier knocks' `sourceof`) follow `screens-inquiry`'s merged pattern: `cs.call` from render, memoised in `ui`.
 Reading R16 over R14: "Watch this address" sends `monitorset` alone and "Check it now" sends `monitor` alone (R16 amends R14's "then `monitor`").
+
+## J2 · COMPLETE
+
+T47-59 complete on `job/T47/screens-intake` (tranche/T47 merged at 2d6895cb50; B2–B7 handled). R10–R16 met; K3114's control re-stated for ratification R51; nothing deferred.
+Tests: screens-intake 57 pass, 0 fail, no overlay. Checks: run.mjs format/architecture/channels 0 failures; coverage 16 of 16 for screens-intake (12 product failures, all other modules' not-yet-met ids); ownership 0 failures.
+For you: control-plane `t46-app.test.mjs` R75 fails on `img-src` on `tranche/T47` itself (caac922b0f) and on my branch alike, not mine (control-plane T47-65 or answer-envelope).
+Record's Completion has the bounds I chose (R12: at most 20 earlier knocks read; R14: weekly by default) and the size line.
