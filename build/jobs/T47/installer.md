@@ -93,3 +93,14 @@ Size (session_01WbAX8BnhgQzuvLSYMgkYAv): test runs 18, module lines 2878
 J3's REPORT items stand, except item 1, which this change settles.
 
 Size (session_01WbAX8BnhgQzuvLSYMgkYAv): test runs 20, module lines 2878
+
+## J5 · COMPLETE
+
+**B5 (K3152) processed.** `tranche/T47` merged; my branch fast-forwards to `36aba01d29`. Installer is already in the tranche, so nothing of mine differs from it.
+
+Against the merged modules:
+- `embed: 23 passed, 0 failed`; `wizard: 209 passed, 0 failed`; `requirements` + `t47`: `ℹ pass 58, ℹ fail 0, ℹ todo 4`.
+- `newgroup-bundle-fresh`: `pass 1, fail 0`. The rebuilt bundle is unchanged.
+- `format`: `0 failures`; `architecture` (installer): `19 product files, 45 relative imports; 0 failures`; `coverage`: `54 of 54; 0 failures`; `ownership`: `0 files changed; 0 failures`.
+
+Size (session_01WbAX8BnhgQzuvLSYMgkYAv): test runs 21, module lines 2878
