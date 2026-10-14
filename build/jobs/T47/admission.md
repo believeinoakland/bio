@@ -21,6 +21,10 @@
 
 Size (session_01AvZMhLufz25XDGgpfUXgYQ): test runs 9, module lines 1505
 
+**B3 (CHANGE, K3152)** · tranche/T47 merged (op-declarations' `REAUTH_ACTS` live). R12's and R19's reds were my harness's: its default sessions had never given the password again, so `adminendorse` and `groupkeyset` from a session were now rightly answered `REAUTH_DUE` before the fence and admission those tests check. The harness's default sessions now carry an open re-ask window; `t47.test.mjs` drives the window shut with its own sessions. No product code changed; no other module's cause. admission 48/48; format, architecture (admission), coverage (25/25), ownership 0 failures; `run.mjs` architecture 0.
+
+Size (session_01AvZMhLufz25XDGgpfUXgYQ, after B3): test runs 12, module lines 1505
+
 ## J1 · QUESTION
 
 Three readings for R24/R25. I am building on each reading now; only (1) needs another module to change.
