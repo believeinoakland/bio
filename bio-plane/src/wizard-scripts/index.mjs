@@ -23,6 +23,8 @@
  *   filingTemplates  `offeredVersion` (its R25), for a `{template}` draft (R2, R12).
  *   credentials      `aiKeptAway` (its R35; T37, N765, K231): whether the group keeps its material away from AI, read
  *                    at each writing-help call (R24, R27), the one reading of keep-away; reached on first need.
+ *   aiRuns           layer 6 (T47; R34; N984): `partAdmitted` and `testInstance` (its R78), read at each writing-help
+ *                    call for the test-instance label; reached on first need.
  *   now              the instance clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
  *
  * No place, law, venue or wording of a script is named here (R20). */
@@ -31,6 +33,8 @@ import { recordOf, stampInstant, mintExhausted } from "../record-core/index.mjs"
 import { membershipOf, viewerPredicate, notAnAdmin } from "../membership/index.mjs";
 import { filingTemplatesOf } from "../filing-templates/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
+import { aiRunsOf } from "../ai-runs/index.mjs";
+import { untestedLabel } from "../run-rules/test-bar.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { proposalLabel } from "../record-grammar/labels.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
@@ -46,7 +50,7 @@ export { WIZARD_SCRIPTS_CHECKS } from "./checks.mjs";
 export { WIZARD_SCRIPTS_SCHEMA, WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES } from "./schema.mjs";
 export { CIVICSMITH_LIBRARY, CIVICSMITH_LIBRARY_SOURCE, CIVICSMITH_LIBRARY_ADOPTED_SOURCES } from "./civicsmith-library.mjs";
 export { SCREEN_REGISTRY, SCREEN_REGISTRY_SOURCE } from "./screen-registry.mjs";
-export { FRONT_DOORS } from "./front-doors.mjs";
+export { FRONT_DOORS, FRONT_DOORS_SOURCE } from "./front-doors.mjs";
 export { START_ROUTES, MATCH_KINDS, MATCHES_MAX, PARTS_MAX, matchesOf, proposeStart, checkStartProposal } from "./start.mjs";
 export { checkDraft, writingHelpAt, helpRefusedActs, isReasonField, factsOf, sentencesOf, FIRSTHAND_ACTS, HELP_NAMED_REFUSED, HELP_SET_TIME_REFUSED,
          WRITING_HELP_NAMED, TOLD_MAX, KEPT_AWAY } from "./writing-help.mjs";
@@ -95,6 +99,9 @@ const truthy = (v) => v === true || v === "true" || v === "1" || v === 1;
 const OFFERED = Object.freeze(["approved"]);
 /** R24, R27 (K2592; `credentials` R57): the use a writing-help draft is, as the keep-away is asked of it. */
 export const KEEP_AWAY_USE = "draft";
+/** R34 (T47; N984; `run-rules` R29, `plane` R40's `DRAFT_KIND_OF`): the AI part a writing-help draft is, whose admission
+ *  carries the test-instance label. */
+export const WRITING_HELP_PART = "draft:own_words";
 /* R4: how a revision that took a copy's base's newer version records it in `wiz_revisions.adopted` (a proposal id never
    starts so). */
 const BASE_ADOPTION = "base:";
@@ -353,12 +360,13 @@ export function requiredFailures({ screens = [], ops = null, machineRefused = []
 /* ================================================================ the module */
 
 export class WizardScripts {
-  constructor({ storage, record, membership, filingTemplates = null, credentials = null, now = null, env = null } = {}) {
+  constructor({ storage, record, membership, filingTemplates = null, credentials = null, aiRuns = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.templates = filingTemplates;
     this.credentials = credentials;   /* the module, or a function reaching it on first need */
+    this.aiRuns = aiRuns;             /* R34: likewise */
     this.now = typeof now === "function" ? now : null;
     this.env = env && typeof env === "object" ? env : {};
     this.reg = null;
@@ -388,6 +396,25 @@ export class WizardScripts {
       const c = this.credentials;
       return c && typeof c.aiKeptAway === "function" ? c.aiKeptAway({ use: KEEP_AWAY_USE }) : undefined;
     } catch { return undefined; }
+  }
+
+  /* R34 (T47; N984; `ai-runs` R78, `run-rules` R29): the test-instance label of a writing-help draft, read at the call:
+     the label `ai-runs.partAdmitted(WRITING_HELP_PART)` answers, as given and never composed here, when the part is
+     admitted on the exception; null when the bar admits it, when it is not admitted, or off a test instance. A read
+     that throws answers `run-rules`' label whenever `ai-runs.testInstance()` answers true (on a test instance an output
+     is never left unmarked); an ai-runs that cannot be reached answers null. Writes nothing; never throws. */
+  #untested() {
+    let ai = null;
+    try {
+      if (typeof this.aiRuns === "function") this.aiRuns = this.aiRuns();
+      ai = this.aiRuns;
+    } catch { return null; }
+    try {
+      const said = ai.partAdmitted(WRITING_HELP_PART);
+      return said && said.admitted === true && isObj(said.untested) ? said.untested : null;
+    } catch {
+      try { return ai && ai.testInstance() === true ? untestedLabel(WRITING_HELP_PART) : null; } catch { return null; }
+    }
   }
 
   /* ================================================================ who acts (R18, R19) */
@@ -1443,7 +1470,10 @@ export class WizardScripts {
    *  order: R24's codes (a keep-away as `credentials` answers it, its R35's row and `keep_away`, K231; a door's
    *  `AI_NO_ACCOUNT` as given, at R24 item 1's place); `WRITING_HELP_NOTHING_TOLD`; the door's other refusal as given,
    *  before any model turn, never re-minted here; past them, while the assistant's model turn does not exist (N686;
-   *  K1837), `ASSISTANT_DRAFT_UNAVAILABLE`, the field unchanged. Writes nothing. */
+   *  K1837), `ASSISTANT_DRAFT_UNAVAILABLE`, the field unchanged, the answer the door turns into the draft (control-plane
+   *  R57). (T47; R34) That answer carries `untested`, the test-instance label as `ai-runs` answers it for the part
+   *  `draft:own_words` (`#untested`), when the part is admitted on the exception, and nothing otherwise; no refusal
+   *  carries it. Writes nothing. */
   writingHelp(args = {}) {
     const { op = null, field = null, told = null, draftHeld = false, assistant = null } = isObj(args) ? args : {};
     const away = this.#keptAway();
@@ -1464,8 +1494,9 @@ export class WizardScripts {
     /* END DEC-49 REGION is-writing-help-request */
     if (door) return { ...door, ...asked };
     /* DEC-49 REGION is-writing-help-request */
+    const untested = this.#untested();
     return refuse("ASSISTANT_DRAFT_UNAVAILABLE", "the assistant's draft is not served yet: nothing was drafted and the field is unchanged",
-                  { firsthand: FIRSTHAND_ACTS.includes(String(op).trim()) });
+                  { firsthand: FIRSTHAND_ACTS.includes(String(op).trim()), ...(untested ? { untested } : {}) });
     /* END DEC-49 REGION is-writing-help-request */
   }
 
@@ -1619,7 +1650,9 @@ export function wizardScriptsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const filingTemplates = d.filingTemplates || filingTemplatesOf(host, { record, membership });
     const credentials = d.credentials || (() => credentialsOf(host, { record, membership }));   /* R24: on first need */
-    w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, credentials, env: d.env ?? host.env ?? null });
+    const env = d.env ?? host.env ?? null;
+    const aiRuns = d.aiRuns || (() => aiRunsOf(host, env));   /* R34: on first need */
+    w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, credentials, aiRuns, env });
     instances.set(host, w);
     w.migrate();
     record.declareTable("wizard-scripts", WIZARD_SCRIPTS_TABLE_CLASSES.map((t) => ({ ...t })));
