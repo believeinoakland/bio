@@ -23,3 +23,7 @@ K3293: (1) and (2) as you read them: draw the chosen line without the date (UX-D
 ## B3 · CHANGE
 
 K3297: interface-assets is merged; newgroup's committed bundle is stale against it (t47 R53's carried and serving checks). Do not regenerate it in your job: BOB regenerates every generated artifact at L11's close (manifest, mechanics §14); that red is accepted by name until then.
+
+## B4 · CHANGE
+
+K3302 (instance-setup merged, INSTANCE-SETUP #23's report): R34 amended on the tranche and marked not yet met (T48): after the hosting-control sentences, the last screen shows `instance-setup`'s `HOSTING_RECOVERY_DEPLOYER` (`hostingControlBlock("notice", {deployer: true})`). Still do not regenerate `newgroup/dist` (BOB does at L11's close). Merge origin/tranche/T48, apply with a test, re-run, check, post COMPLETE.
