@@ -7,7 +7,7 @@ import { standard, WORDS } from "./fixture.mjs";
 import { ESTIMATE_SAMPLE, aiUseOps } from "../../../src/ai-use/index.mjs";
 
 const AT = "2026-10-09T12:00:00Z";
-const explore = (w, owner, on, by) => w.c.accountUsesSet({ owner, switch: "explore", on, by });
+const explore = (w, owner, on, by) => w.a.accountUsesSet({ owner, switch: "explore", on, by });
 
 /* A world with a question INQ-1 drawn on by P, INQ-2 drawn on by no project, and a document that is no question. */
 async function exploring() {
@@ -55,16 +55,16 @@ test("R6 R3's AI_LIMIT_REACHED, by its overall limit and by its explore limit; u
   assert.equal(w.u.exploreAllowed({ owner: "group", question: "INQ-1", at: AT }).scope, "overall");
 });
 
-test("R6 credentials.aiKeptAway({use: explore}) refuses: the group's keep-away on explore, and a project's own on explore for the project's account; one not covering explore does not (control)", async () => {
+test("R6 ai-accounts.aiKeptAway({use: explore}) refuses: the group's keep-away on explore, and a project's own on explore for the project's account; one not covering explore does not (control)", async () => {
   const w = await exploring();
   explore(w, "group", "yes", "admin");
   explore(w, "project:P", "yes", "ann");
-  assert.equal(w.c.aiKeepAwaySet({ on: true, uses: ["ask"], reason: "not ask", by: "admin" }).ok, true);
+  assert.equal(w.a.aiKeepAwaySet({ on: true, uses: ["ask"], reason: "not ask", by: "admin" }).ok, true);
   assert.equal(w.u.exploreAllowed({ owner: "group", question: "INQ-1", at: AT }).ok, true, "a keep-away on ask alone");
-  w.c.aiKeepAwaySet({ on: true, uses: ["explore"], reason: "no exploring", by: "admin" });
+  w.a.aiKeepAwaySet({ on: true, uses: ["explore"], reason: "no exploring", by: "admin" });
   assert.equal(w.u.exploreAllowed({ owner: "group", question: "INQ-1", at: AT }).code, "AI_KEPT_AWAY");
-  w.c.aiKeepAwaySet({ on: false, by: "admin" });
-  w.c.projectAiKeepAwaySet({ project: "P", on: true, uses: ["explore"], reason: "ours", by: "ann" });
+  w.a.aiKeepAwaySet({ on: false, by: "admin" });
+  w.a.projectAiKeepAwaySet({ project: "P", on: true, uses: ["explore"], reason: "ours", by: "ann" });
   assert.equal(w.u.exploreAllowed({ owner: "project:P", question: "INQ-1", at: AT }).code, "PROJECT_AI_KEPT_AWAY");
 });
 
@@ -84,7 +84,7 @@ test("R6 the question outside the owner's scope is refused EXPLORE_OUT_OF_SCOPE:
 test("R6 for the group, a question every project it is drawn on keeps from explore (projectsKeptAway) is refused; drawn on by one that does not, it passes (control)", async () => {
   const w = await exploring();
   explore(w, "group", "yes", "admin");
-  w.c.projectAiKeepAwaySet({ project: "P", on: true, uses: ["explore"], reason: "ours", by: "ann" });
+  w.a.projectAiKeepAwaySet({ project: "P", on: true, uses: ["explore"], reason: "ours", by: "ann" });
   assert.equal(w.u.exploreAllowed({ owner: "group", question: "INQ-1", at: AT }).code, "PROJECT_AI_KEPT_AWAY");
   w.project("Q", "bob");
   w.cite("Q", "INQ-1");

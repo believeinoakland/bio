@@ -122,14 +122,14 @@ test("R12 aiLimits answers each limit of one account (scope, use, unit, period, 
   assert.doesNotMatch(JSON.stringify(r.limits), /bob/);
 });
 
-test("R12 anyone but the account's owners is refused as credentials R60 refuses them, writing nothing", async () => {
+test("R12 anyone but the account's owners is refused as ai-accounts R15 refuses them, writing nothing", async () => {
   const w = await standard();
   w.u.aiLimitSet({ owner: "member:ann", scope: "ask", unit: "calls", period: "day", amount: 1, by: "ann" });
   const before = w.snapshot();
   for (const [owner, viewer] of [["member:ann", "bob"], ["member:ann", "admin"], ["project:P", "bob"], ["project:P", "cy"],
                                  ["group", "ann"], ["group", null], ["group", "machine:agent"]]) {
     const r = w.u.aiLimits({ owner, viewer });
-    const own = w.c.accountUses({ owner, viewer });
+    const own = w.a.accountUses({ owner, viewer });
     assert.equal(r.ok, false, `${owner} ${viewer}`);
     assert.deepEqual([r.code, r.check], [own.code, own.check], `${owner} ${viewer}`);
   }
@@ -177,7 +177,7 @@ test("R13 (K2514) every refusal's sentence reaches its caller whole, no placehol
   const w = await standard();
   const owners = [["group", "admin", "bob", "group"], ["project:P", "ann", "bob", "project"], ["member:ann", "ann", "ann", "own"]];
   for (const [owner, by, member] of owners)
-    assert.equal(w.c.accountUsesSet({ owner, switch: "explore", on: "yes", by }).ok, true, owner);
+    assert.equal(w.a.accountUsesSet({ owner, switch: "explore", on: "yes", by }).ok, true, owner);
   let seen = 0;
   /* the month's {when} read from ai.when.month with the next month's date.month.* (T44, DEC-192 (4): "on 1 {month}") */
   const onThe1st = (month) => WORDS["ai.when.month"].replace("{month}", WORDS[`date.month.${month}`]);

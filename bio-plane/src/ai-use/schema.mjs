@@ -6,7 +6,7 @@
 export const AI_USE_SCHEMA = `
 -- R1 (was ai-runs R48, R49; B8): THE USE COUNTER, one row per paying account ('owner': 'group', 'project:<id>',
 -- 'member:<id>', or 'not recorded' for a row counted before T40), member, local day (civil-time's localDay in the
--- group's zone), kind of use ('use', a credentials USE_KINDS entry) and mode: the sums of each model call's figures
+-- group's zone), kind of use ('use', an ai-accounts USE_KINDS entry) and mode: the sums of each model call's figures
 -- and a count of calls. It holds no question, answer, address or content. Cost is summed in millionths of a dollar so
 -- the sum is exact. A figure not stated adds nothing and is counted in 'tokens_unstated' / 'cost_unstated', never as 0.
 CREATE TABLE IF NOT EXISTS ai_usage (
