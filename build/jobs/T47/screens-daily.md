@@ -19,11 +19,11 @@
 
 **Found in other modules:** none outstanding (J1 (2)'s "no member count for a session" answered by K3143 (2)).
 
-**Tests:** `node --test bio-plane/test/m/screens-daily/` on this branch (tranche/T47 at B9 merged): 56 pass, 8 fail, all eight waiting on interface-shell's merge (`cs.wizard` and the `guide` option, `cs.initials`, `cs.activity`, `tickActive`). With `job/T47/interface-shell` merged into a scratch worktree (never committed): 64 of 64. No layer tests are named for layer 11.
+**Tests:** `node --test bio-plane/test/m/screens-daily/` on this branch with `tranche/T47` merged at B10 (interface-shell in), no overlay: 64 pass, 0 fail. (Before B10: 56 pass, 8 waiting on the kit; 64 of 64 with `job/T47/interface-shell` merged in a scratch worktree, since removed.) No layer tests are named for layer 11.
 
-**Checks:** `format` 0 failures; `architecture` (screens-daily) 0 failures; `coverage` 13 of 13; `ownership` 0 failures; `checks/run.mjs`: format, architecture, channels 0 failures, coverage's 14 failures all other modules' ids.
+**Checks:** `format` 0 failures; `architecture` (screens-daily) 0 failures; `coverage` 13 of 13; `ownership` 0 failures; `checks/run.mjs` at B10: format, architecture, channels 0 failures; coverage's 12 failures all other modules' ids.
 
-Size (session_0162xmsCFHXbjgNsPJ9QiCQ2): test runs 18, module lines 1,417
+Size (session_0162xmsCFHXbjgNsPJ9QiCQ2): test runs 20, module lines 1,417
 
 ## J1 · QUESTION
 
