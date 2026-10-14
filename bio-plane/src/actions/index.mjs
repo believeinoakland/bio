@@ -51,7 +51,7 @@ import { conformanceOf, determinationSuperseded, determinationVoided } from "../
 import { consequencesModule } from "../consequences/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
-import { entitiesOf, noSuchEntity, ORGANISATION_KINDS } from "../entities/index.mjs";
+import { entitiesOf, noSuchEntity, notAProceeding, ORGANISATION_KINDS } from "../entities/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
@@ -74,7 +74,7 @@ import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, acti
          premiseOverrideOf, overrideGroundFindings, copiedFindings, partnersFindings, pressTermsFindings,
          entryFieldFindings, actionFieldFindings, stageInLaw } from "../action-grammar/index.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
-import { actionRecordsOf, actionRecordsOps, ActionRecords } from "../action-records/index.mjs";
+import { actionRecordsOf } from "../action-records/index.mjs";
 
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
 
@@ -917,7 +917,7 @@ export class Actions {
   /* R64 (K1446), R65 (C1): the records-request law's held standard (`law_standard`) and the `proceeding`, each set or
      changed only by a member and naming a record the author may see: a standard through `standards.standardRead`
      (`NO_SUCH_STANDARD`, minted by `standards.noSuchStandard`), a proceeding through the registry (`NO_SUCH_ENTITY`,
-     minted by `entities.noSuchEntity`; another kind `NOT_A_PROCEEDING`). Asked only when the value moved. */
+     minted by `entities.noSuchEntity`; another kind through `entities.notAProceeding`, R104). Asked only when the value moved. */
   #heldLinks(heldFm, nextFm, who, viewer) {
     const val = (fm, k) => (fm && typeof fm[k] === "string" && fm[k].trim() ? fm[k].trim() : fm && fm[k] !== undefined && fm[k] !== null && fm[k] !== "" ? fm[k] : null);
     const lawStd = val(nextFm, "law_standard");
@@ -955,11 +955,10 @@ export class Actions {
     const pid = typeof id === "string" ? id.trim() : "";
     const kind = pid ? this.#entityKind(pid) : null;
     if (!kind) return noSuchEntity(pid || null, { end: "proceeding" });
-    /* DEC-49 REGION is-proceeding-kind */
+    /* R104 (T48; K231, K3207): `entities.notAProceeding` is the one site minting `NOT_A_PROCEEDING`. */
     if (kind !== "proceeding")
-      return refuse("NOT_A_PROCEEDING", `proceeding names an entity of kind ${kind}; an action belongs to an entity of `
+      return notAProceeding(`proceeding names an entity of kind ${kind}; an action belongs to an entity of `
         + "kind proceeding. Nothing was written.", { entity_id: pid, kind });
-    /* END DEC-49 REGION is-proceeding-kind */
     return null;
   }
 
@@ -2838,7 +2837,11 @@ export class Actions {
     const fm = this.#heldFm(id) || {};
     const d = this.derived({ bundle_id: id }, now, viewer);
     /* R29 (K248): R25's keys, and the document's own values its users read (filings, escalation). */
-    return { ok: true, id, current_state: b.current_state, ...d,
+    /* R102 (T48; N1035, K3145): the action's project (`record-core` R34, null when none) and title (the document's, as held). */
+    let project = null;
+    try { project = this.record.bundleInfo(id)?.project ?? null; } catch { project = null; }
+    return { ok: true, id, current_state: b.current_state, ...d, project,
+             title: typeof fm.title === "string" ? fm.title : null,
              counterparty: fm.counterparty ?? null, clock: Array.isArray(fm.clock) ? fm.clock : [],
              legs: d.basis.map((l) => ({ target: l.target_id, kind: l.kind, note: l.note ?? null, at: l.at ?? null,
                                          target_type: l.target_type, extent_capture: l.extent_capture })),
@@ -3222,10 +3225,7 @@ export function actionsOps(a, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
   return {
-    /* T47 (N961): the six acts moved to `action-records` (its R1–R6) keep their ops, spread here from its map (its R15)
-       until the plane spreads that map itself (its L11 job); the same arms, so a second spread changes nothing. An owner
-       handed with no `action-records` instance of its own (a stand-in in a test of the map) is handed the arms itself. */
-    ...actionRecordsOps(a.records instanceof ActionRecords ? a.records : a, url, body),
+    /* R103 (T48; N1040, K3147): this module's own arms only; the plane spreads `actionRecordsOps` (its R45) beside them. */
     actionmove: () => a.actionMove({ target: q("target"), to: q("to"), reason: q("reason"), resolution: q("resolution"),
                                      viewer: q("viewer"), author: q("author") }),
     actionlaws: () => a.actionLaws({ target: q("target") || b.target, laws: b.laws, viewer: q("viewer"), author: q("author") }),

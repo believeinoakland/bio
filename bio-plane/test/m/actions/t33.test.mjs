@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
 import { noSuchStandard } from "../../../src/standards/index.mjs";
+import { notAProceeding } from "../../../src/entities/index.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
@@ -224,12 +225,14 @@ test("R65 an action may state its proceeding: set and changed by a member, an en
   const absent = w.promote(A, md(A, ["proceeding: ENT-2026-0404"]));
   assert.deepEqual([absent.reason, absent.end], ["NO_SUCH_ENTITY", "proceeding"]);
   assert.deepEqual([w.promote(A, md(A, [`proceeding: ${office}`])).reason], ["NOT_A_PROCEEDING"]);
-  /* each refusal carries its row (C-117.27, C-117.28), minted at the region its `where` names */
-  for (const [r, code, check, region] of [[w.promote(A, md(A, [`proceeding: ${P}`]), { author: MACHINE }), "MACHINE_CANNOT_SET_PROCEEDING", "C-117.27", "#heldLinks > is-machine-set-proceeding"],
-                                          [w.promote(A, md(A, [`proceeding: ${office}`])), "NOT_A_PROCEEDING", "C-117.28", "#proceedingRefusal > is-proceeding-kind"]]) {
-    assert.deepEqual([r.reason, r.code, r.check, r.translation], [code, code, check, grammar.ACTION_CATALOGUE_CHECKS[code].translation]);
-    assert.equal(grammar.ACTION_CATALOGUE_CHECKS[code].where, `src/actions/index.mjs ${region}`);
-  }
+  /* the machine refusal carries its row (C-117.27), minted at the region its `where` names */
+  const m = w.promote(A, md(A, [`proceeding: ${P}`]), { author: MACHINE });
+  assert.deepEqual([m.reason, m.code, m.check, m.translation], ["MACHINE_CANNOT_SET_PROCEEDING", "MACHINE_CANNOT_SET_PROCEEDING", "C-117.27",
+    grammar.ACTION_CATALOGUE_CHECKS.MACHINE_CANNOT_SET_PROCEEDING.translation]);
+  assert.equal(grammar.ACTION_CATALOGUE_CHECKS.MACHINE_CANNOT_SET_PROCEEDING.where, "src/actions/index.mjs #heldLinks > is-machine-set-proceeding");
+  /* R104 (T48): a non-proceeding answers through `entities.notAProceeding`, its one site and row (t48.test.mjs) */
+  const np = w.promote(A, md(A, [`proceeding: ${office}`]));
+  assert.deepEqual([np.reason, np.code, np.check], ["NOT_A_PROCEEDING", "NOT_A_PROCEEDING", notAProceeding().check]);
   assert.equal(w.record.head(A), null);
   assert.equal(w.promote(A, md(A, [`proceeding: ${P}`])).ok, true);
   w.action(B);
