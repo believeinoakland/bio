@@ -16,7 +16,8 @@
  * the law's stated consequence, one the group meets in its own defence), a start by a third party's act, a law whose
  * stages omit one (no fee waiver), who may request, response statuses for one kind, a defending legal organisation, one
  * legal fact per trigger, a procedure guide with routes after outcomes, a kind with two templates, a recognition kind,
- * venue facts, and phrasings. */
+ * venue facts, and phrasings. T48's (R91): pointers of each of the six kinds, two of one kind, one with hours and languages,
+ * and every means of contact. */
 const R = String.raw;
 
 /* R40: a template's whole attribution, as filing-templates reads a profile template (its R15); every blank in
@@ -500,6 +501,26 @@ export default {
       { date: "2026-01-01", name: "New Year's Day" }, { date: "2026-03-17", name: "Harbour Day" },
       { date: "2026-12-25", name: "Christmas Day" }],
       status: "researched", basis: "TEST" },
+  ],
+  /* R91: the places outside Civicsmith a member is sent to, every kind, two legal-aid societies, and every `how`. */
+  pointers: [
+    { kind: "legalaid", name: "Marlow Commons Legal Society (test)", does: "Free advice and representation on housing, benefits and debt for people on a low income in Marlow County.",
+      contacts: [{ how: "web", value: "https://legal.marlow-county.example/help" }, { how: "phone", value: "+1 555 0100" }],
+      hours: { weekly: ["mon", "wed", "fri"].map((day) => ({ day, open: "10:00", close: "15:00" })), status: "researched", basis: "TEST" },
+      languages: ["en-GB", "pl", "cy"], source: "https://legal.marlow-county.example/about", status: "researched", basis: "TEST" },
+    { kind: "legalaid", name: "Harbourside Tenants' Advice Centre (test)", does: "Advice for tenants of Port Ellery facing eviction or disrepair.",
+      contacts: [{ how: "email", value: "advice@tenants.port-ellery.example" }], source: "https://tenants.port-ellery.example/", status: "researched", basis: "TEST" },
+    { kind: "selfhelp", name: "Marlow County Court Help Desk (test)", does: "Helps people without a solicitor fill in the court's own forms.",
+      contacts: [{ how: "address", value: "1 Assize Row, Marlow" }], source: "https://court.marlow-county.example/help-desk", status: "researched", basis: "TEST" },
+    { kind: "service", name: "Port Ellery Town Services Line (test)", does: "Takes reports of potholes, broken lamps and missed bin collections in Port Ellery.",
+      contacts: [{ how: "phone", value: "+1 555 0311" }, { how: "web", value: "https://www.port-ellery.example/report" }],
+      source: "https://www.port-ellery.example/report", status: "researched", basis: "TEST" },
+    { kind: "agency", name: "Marlow County Ombudsman (test)", does: "Investigates one person's complaint about a county service.",
+      contacts: [{ how: "mail", value: "Ombudsman, County Hall, Marlow" }], source: "Test Stat. § 14.2", status: "researched", basis: "TEST" },
+    { kind: "representative", name: "Harbour Ward Selectperson's office (test)", does: "The Selectboard member elected for the Harbour Ward, who takes up a resident's problem with the town.",
+      contacts: [{ how: "email", value: "harbour.ward@port-ellery.example" }], source: "https://minutes.port-ellery.example/selectboard", status: "researched", basis: "TEST" },
+    { kind: "tipline", name: "The Ellery Gazette newsdesk (test)", does: "A local newspaper that takes tips from readers about the town.",
+      contacts: [{ how: "web", value: "https://gazette.port-ellery.example/tips" }], source: "https://gazette.port-ellery.example/tips", status: "researched", basis: "TEST" },
   ],
   /* R73: official names, never translated as ordinary words (DEC-157 (6)). */
   local_names: [
