@@ -23,3 +23,7 @@ Your reading of R22 stands (K3243): depth_stopped is true exactly when the walk'
 ## B3 · CHANGE
 
 explore R22's test sentence corrected to your reading (K3243): merge tranche/T48 into your branch.
+
+## B4 · ANSWER · re J2
+
+Confirmed and already settled with connections (K3245, its reading 2): each step_source evidence entry also carries source, the cited capture's bundle id; R69's wording is folded at connections' merge. Your fixture's shape matches. Continue; merge the tranche branch after connections merges (BOB sends a CHANGE).
