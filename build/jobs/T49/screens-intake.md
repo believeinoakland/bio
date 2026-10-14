@@ -73,3 +73,9 @@ Findings outside my module (none blocks COMPLETE; each is for the module or lane
 - `node checks/run.mjs`: architecture 3357 product files, 0 failures; coverage fails for 14 other modules (their own T49 ids, in progress); none for screens-intake.
 
 Size (session_01DfJcVnWmWXDs839tKJcnve): test runs 16, module lines 1112
+
+## J5 · COMPLETE
+
+B5 processed: merged tranche/T49 (DEC-259–261 words). I draw none of the keys whose placeholders changed (archive.summary is still not read, J3 item 1; held.waiting's `{asker}`/`{capture}` is what I fill). Two tests followed the new words, no module code changed: a code that now has a `refusal.*` word (REQUIRED_ARGUMENT_MISSING) is drawn by it, so the shell-rule control uses a code with none; the shell's "nothing is here" sentence differs between its own row and `words.json` until the shell drops its rows, so that test checks the element, not the sentence. Tests 80 pass; coverage 26 of 26, ownership 0 failures.
+
+Size (session_01DfJcVnWmWXDs839tKJcnve): test runs 18, module lines 1112
