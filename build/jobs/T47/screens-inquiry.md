@@ -1,6 +1,6 @@
 # screens-inquiry (T47)
 
-**Status** · session_01Pqz6Hjb3TWCpmKMBKFfVce · depth 2 · WAITING ON BOB (J1) · handled B0
+**Status** · session_01Pqz6Hjb3TWCpmKMBKFfVce · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · QUESTION
 
