@@ -176,7 +176,7 @@ Terms. A **rung** is one of `RUNG_LADDER`. A **ground** is one of `RUNG_ABSENCE_
 
 #### T47's L11 fold (K3100)
 
-- **R37** (R32's pattern) Graded, each tested by name: `unlock`, `reauth` (credential ground, `RUNG_ABSENT`); `passwordresetlink` (`reasoned`); `passwordresetlook` (read), `passwordreset` (credential ground); `grouplogoset`, `grouplanguagesset` (`reversible`); `signrequest` (`reversible`); `signintrace`, `grouplanguages` (reads). `publish` is re-graded from its owner's R34, R76 as it now stands (it prepares; `caseratify` signs; doubt 9). *(not yet met: T47)*
+- **R37** (R32's pattern) Graded, each tested by name: `unlock`, `reauth` (credential ground, `RUNG_ABSENT`); `passwordresetlink` (credential ground, `RUNG_ABSENT`, as `recover`: credentials R69 asks no reason; K3144); `passwordresetlook` (read), `passwordreset` (credential ground); `grouplogoset`, `grouplanguagesset` (`reversible`); `signrequest` (`reversible`); `signintrace`, `grouplanguages` (reads). `publish` is re-graded from its owner's R34, R76 as it now stands (it prepares; `caseratify` signs; doubt 9). *(not yet met: T47)*
 
 ## Private
 
