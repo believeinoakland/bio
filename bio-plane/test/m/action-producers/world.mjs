@@ -111,7 +111,6 @@ export function world(fakes = {}) {
 }
 
 /** Every provider the producers reach, answering nothing until a test says otherwise. */
-/** Every provider the producers reach, answering nothing until a test says otherwise. */
 export function defaultFakes() {
   const none = () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null });
   return {
@@ -130,6 +129,8 @@ export function defaultFakes() {
     filingTemplates: { reviewsRequested: none },
     localFacts: { factsDue: () => ({ ok: true, due: [], unknown: [], absent: [] }) },
     following: { watchQuestions: () => ({ ok: true, questions: [], cursor: null }) },
+    /* filings R53 (T47; R25): the approved drafts and communications not yet recorded sent */
+    filings: { approvedUnsent: () => ({ ok: true, items: [], truncated: false }) },
   };
 }
 
