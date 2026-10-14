@@ -6,7 +6,7 @@ import { M, O, world, call, opCalls, sha, hex64, aik, cred, refused, FORGED, QUE
 import * as REVIEW_CHECKS from "../../../src/review/checks.mjs";
 import * as CP_CHECKS from "../../../src/answer-envelope/checks.mjs";
 import * as ADMISSION_CHECKS from "../../../src/admission/checks.mjs";
-import * as CREDENTIALS_CHECKS from "../../../src/credentials/checks.mjs";
+import { AiAccounts, AI_ACCOUNT_CHECKS } from "../../../src/ai-accounts/index.mjs";
 import { aiScopeDeclaration, aiConfinementDeclaration } from "../../../src/admission/index.mjs";
 const D = await import("../../../src/store-door/dispatch.mjs");
 
@@ -431,10 +431,13 @@ test("R30: no credential, session token, secret or stack appears in any answer �
 });
 
 test("R32, R39, R46: each check the door answers carries its C-number on the wire — its own C-69.1–.5, C-69.7 (signin-door's `signintrace`, T47), C-68.2–.4, C-66.6 and R39's C-61.1, and admission's C-38, C-78, C-29.6–.10, C-32.17 and C-64.4 from the gates it calls", async () => {
-  /* (T47; signin-door R2) the store answers signin-door's disclosure question as credentials' `disclosureDue` does for a
-     member with none recorded: the code, which the envelope decorates with credentials' row */
+  /* (T48; R94; ai-accounts R23) the store answers signin-door's disclosure question as `ai-accounts.disclosureDue` does for a
+     member with none recorded: its one refusal, row and all, relayed as given */
+  const accounts = new AiAccounts({ sql: null });
+  accounts.registerDisclosureRead("instance-setup", () => ({ shown: false }));
+  const due = accounts.disclosureDue({ member: "ann" });
   const w = world({ answer: (c) => (c.route === "casedrafts" ? new Response("x")
-    : c.route === "signindisclosuredue" ? new Response(JSON.stringify({ ok: true, result: { ok: false, reason: "DISCLOSURE_DUE" } })) : null) });
+    : c.route === "signindisclosuredue" ? new Response(JSON.stringify({ ok: true, result: due })) : null) });
   const { env, S, A } = w;
   const got = {};
   const note = (r) => { if (r.json?.ok === false && r.json.code) { got[r.json.code] = r.json.check; assert.ok(r.json.translation, r.json.code);
@@ -463,7 +466,7 @@ test("R32, R39, R46: each check the door answers carries its C-number on the wir
   await d({ op: "groupnameset", token: env.ADMIN_TOKEN });                      /* C-64.4 */
   await d({ op: "claim", body: { bootstrapToken: "x" } });                      /* C-68.4 */
   await d({ op: "signintrace", token: S.founder });                             /* C-69.7 (signin-door R5; not a test instance) */
-  await d({ op: "subscriptionsignin", token: S.ann, body: { step: "start" } }); /* C-29.40 (signin-door R2, was R78; K3164: C-69.6 retired, credentials' row) no disclosure recorded */
+  await d({ op: "subscriptionsignin", token: S.ann, body: { step: "start" } }); /* C-29.40 (signin-door R2, was R78; K3164: C-69.6 retired; R94: ai-accounts' row) no disclosure recorded */
   const unset = world({ omit: ["ADMIN_TOKEN"] });
   note(await call(unset.env, { op: "claim", method: "POST", body: {} }));       /* C-68.2 */
   const { PUBLISHED_TOKEN_HASHES } = await import("../../../src/tokens.mjs");
@@ -502,8 +505,8 @@ test("R32, R39, R46: each check the door answers carries its C-number on the wir
   };
   const own = rowsOf(CP_CHECKS), admission = rowsOf(ADMISSION_CHECKS);
   for (const code of Object.keys(own)) assert.equal(admission[code], undefined, `${code} is held by both`);
-  /* (T47; K3164; credentials R64) DISCLOSURE_DUE's row is credentials' C-29.40, which the door relays */
-  const disclosure = Object.values(CREDENTIALS_CHECKS).find((t) => t && typeof t === "object" && t.DISCLOSURE_DUE?.check)?.DISCLOSURE_DUE;
+  /* (T48; R94; K3164; ai-accounts R23) DISCLOSURE_DUE's row is ai-accounts' C-29.40, which the door relays as `disclosureDue` gives it */
+  const disclosure = AI_ACCOUNT_CHECKS.DISCLOSURE_DUE;
   assert.equal(disclosure?.check, "C-29.40");
   const both = { ...own, ...admission, DISCLOSURE_DUE: disclosure };
   assert.deepEqual(Object.fromEntries(Object.entries(got).filter(([c]) => c in own)),

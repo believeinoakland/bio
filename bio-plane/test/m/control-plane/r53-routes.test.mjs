@@ -94,9 +94,10 @@ test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller 
     /* (T47; K3167; signin-door R1–R5) `subscriptionsignin`, `subscriptiondisconnect` and `signintrace` are answered by
        signin-door, which sends what it names (the member the door stamps as `by`); driven in `t37-door.test.mjs` */
     if (["subscriptionsignin", "subscriptiondisconnect", "signintrace"].includes(op)) continue;
-    /* R57, R77 (T46): `textcheck` and `airundispatch` reach the object's draft door and member-run dispatch, not a store
-       route; their `by` (as `member`, and as `by` and `viewer`) is driven in `t46-door.test.mjs` */
-    if (op === "textcheck" || op === "airundispatch") continue;
+    /* R57, R77 (T46), R90 (T48): `textcheck`, `readtranslate` and `airundispatch` reach the object's draft door and member-run
+       dispatch, not a store route; their `by` (as `member`, and as `by` and `viewer`) is driven in `t46-door.test.mjs` and
+       `t48-door.test.mjs` */
+    if (op === "textcheck" || op === "readtranslate" || op === "airundispatch") continue;
     for (const [params, body] of [[c.params, {}], [{ ...c.params, ...forgedQ }, { by: FORGED, note: "kept" }]]) {
       w.env.calls.length = 0;
       const r = await call(w.env, { op, token: c.token, params, method: OPS[op]?.mutating ? "POST" : "GET",
