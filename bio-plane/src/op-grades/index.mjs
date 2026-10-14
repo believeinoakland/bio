@@ -919,8 +919,8 @@ export const MACHINE_REFUSALS = {
   /* R33 (T46; K2998; affordances R52): adopting a clock proposal is an ACTS row on an action, refused a machine by
      action-clocks' own code; its absence (`undetermined`) stands and it left NON_ACTS. */
   clockadopt:             "MACHINE_CANNOT_ADOPT_CLOCK",
-  /* R38, R41 (T48; affordances R58, R51): the quoting record and the planning ask are ACTS rows on an action, each refused a
-     machine by its owner's own code (action-replies R10, action-plans R51); neither has a NON_ACTS row. */
+  /* R38 (T48; affordances R58): the quoting record is an ACTS row on an action, refused a machine by its owner's own code
+     (action-replies R10), with no NON_ACTS row. `planask` is none (R41, K3297): a plan act, a NON_ACTS row. */
   ...T48_MACHINE_REFUSALS,
 };
 
