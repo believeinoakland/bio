@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T47)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 120 KB with your tests, within the 600 KB limit: read it all whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). When you change a provided service, run the tests of the modules that use it (P11).
 L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, setup-page (its delete), installer, plane, journey-check last. A provider merges before its users; a job using an L11 job's new service merges `tranche/T47` into its branch when BOB announces that merge (a CHANGE); a job that uses no unmerged L11 job merges as soon as it is complete (K1965).
+
+## B2 · ANSWER · re J1
+
+K3145: A1, A2 are interface-shell R47 (`REF_SCREENS` `person`, `proceeding`, `standard`; `personexpunge` in `ADMIN_ACTS`). A3: save `clocksics`' `ics` text with `cs.save(filename, ics, {label})` (R46/R47). B4–B10 stand as read. C11 forwarded to screens-inquiry, C12 to tasks, B6 (`clockpropose` unrouted) to control-plane. B5, B7–B9, C13 are in `next.md` (N1029–N1033).
