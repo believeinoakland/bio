@@ -9,7 +9,7 @@ import https from "node:https";
 import { Walk, StepFailed, FAIL, settle } from "./walker.mjs";
 import { requireTestInstance, WalkRefused } from "./guard.mjs";
 import { walkInstaller, walkFounder, inviteMember, walkMember, walkWelcome, sweep, credentials, open, act, requireDrawn, drawnActs,
-  signInBy, sweepAsFounder } from "./journeys.mjs";
+  signInBy, sweepAsFounder, walkSite } from "./journeys.mjs";
 import { walkAdministrator, walkMemberJourney, journey29Live } from "./investigation.mjs";
 import { sweepScreens } from "./screens.mjs";
 import { designMock, pageLimits, pair, WIDTHS, viewportOf, journeyPairs } from "./design.mjs";
@@ -71,8 +71,8 @@ async function device(walk, b, route, viewport = { width: 1280, height: 900 }) {
    the world, with their servers and Miniflare instances, are closed before it answers. */
 export const PARTS = Object.freeze(["journey 3", "R10", "sweep", "R13"]);
 export async function runLocal({ out = join(OUT, "local"), world: makeWorld, launch = browser, model = true, parts = PARTS } = {}) {
-  const { localWorld, INSTALLER_ORIGIN } = await import("./local.mjs");
-  const walk = new Walk({ out, arm: "local", ownHosts: [new URL(INSTALLER_ORIGIN).host, "dash.cloudflare.com"] });
+  const { localWorld, INSTALLER_ORIGIN, SITE_ORIGIN } = await import("./local.mjs");
+  const walk = new Walk({ out, arm: "local", ownHosts: [new URL(INSTALLER_ORIGIN).host, "dash.cloudflare.com", new URL(SITE_ORIGIN).host] });
   const who = credentials();
   for (const p of [who.founder.password, who.member.password, who.newcomer.password]) walk.keepSecret(p);
   let world = null, b = null;
@@ -82,6 +82,7 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
     const route = (ctx) => world.route(ctx, (u) => walk.foreign(u));
     walk.journey = "journey 28";
     const founder = await device(walk, b, route);
+    await walkSite(walk, founder.page, SITE_ORIGIN, INSTALLER_ORIGIN);
     const { copy } = await walkInstaller(walk, founder.page, INSTALLER_ORIGIN);
     walk.copyHost = new URL(copy).host;
     /* R3: before the hand-over writes anything, the copy must be a test instance. */

@@ -67,6 +67,8 @@ test("R1 (a): the local arm, with no account: the installer over its fake accoun
   const { r, shots } = await local();
   assert.equal(r.ok, true, r.report);
   assert.equal(shots.length, r.walk.steps.length);
+  assert.deepEqual(stepsOf(r, "journey 28").slice(0, 3).map((s) => s.label), ["civicsmith.org: what Civicsmith is",
+    "civicsmith.org: start a group, and create it", "install: the installer's first page"], "journey 28 starts at civicsmith.org");
   for (const j of ["journey 28", "journey 3", "R9 as administrator", "R10 as member", "R7 as the founder, her handle held"]) assert.ok(stepsOf(r, j).length, j);
 });
 
@@ -185,12 +187,12 @@ test("R1 (a): every way the local arm can stop closes its world, browser and ser
   assert.equal(noWorld.ended, true, noWorld.err);
   assert.ok(lastJson(noWorld.out).failures.some((f) => /the world cannot start \(forced\)/.test(f.detail)));
 
-  /* a walker step that throws: the world refuses every request of the browser, so the installer's first page fails;
+  /* a walker step that throws: the world refuses every request of the browser, so civicsmith.org's first page fails;
      the browser, its pages and the world all close */
   const stepThrows = await ends(forced(`world: async () => { const w = await localWorld();
     return { ...w, route: (ctx, onForeign) => ctx.route("**/*", (r) => { onForeign(r.request().url()); return r.abort("blockedbyclient"); }) }; }`), DEADLINE);
   assert.equal(stepThrows.ended, true, "the arm left handles open after a step threw: " + stepThrows.err);
   const c = lastJson(stepThrows.out);
   assert.equal(c.ok, false);
-  assert.ok(c.failures.some((f) => f.kind === FAIL.STEP && f.step === "install: the installer's first page"), JSON.stringify(c.failures));
+  assert.ok(c.failures.some((f) => f.kind === FAIL.STEP && f.step === "civicsmith.org: what Civicsmith is"), JSON.stringify(c.failures));
 });

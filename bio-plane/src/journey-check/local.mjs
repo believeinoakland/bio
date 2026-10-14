@@ -1,4 +1,4 @@
-/* journey-check R1 (a), R11: the local arm's world, with no account. The installer Worker (`newgroup/src/index.mjs`) runs
+/* journey-check R1 (a), R11: the local arm's world, with no account. civicsmith.org (`site`) and the installer Worker (`newgroup/src/index.mjs`) runs
    under Miniflare with every outbound request answered by the fake Cloudflare account (account.mjs). When the installer
    uploads the group's plane, the copy is started under Miniflare from the tranche's own plane
    (`bio-plane/src/plane/index.mjs`), with exactly the bindings the upload gave it (secrets, names, its store, its
@@ -30,6 +30,10 @@ export const RUNNER_ENTRY = join(dirname(fileURLToPath(import.meta.url)), "runne
 export const AGENT_WORKER = "agent-worker";
 export const AGENT_RUNNER = "agent-runner";
 export const INSTALLER_ORIGIN = "https://newgroup.believeinoakland.workers.dev";
+/* civicsmith.org (`site`, N1011): run from its own file, its "Create your group" pointing at the installer, as its
+   deployer sets `INSTALLER_ADDRESS` (site R4). */
+export const SITE_ENTRY = join(ROOT, "site", "src", "index.mjs");
+export const SITE_ORIGIN = "https://civicsmith.org";
 
 const BASE = { modules: true, modulesRoot: "/", compatibilityDate: "2026-07-01",
   modulesRules: [{ type: "ESModule", include: ["**/*.mjs", "**/*.js"] }, { type: "Text", include: ["**/*.txt"] }] };
@@ -103,8 +107,9 @@ export async function localWorld({ model = true } = {}) {
   });
   /* The installer's module exports constants beside its handler; workerd takes every export as an entry point, so it
      is run through an entry, held in memory beside it, that exports its handler alone. */
-  let installer = null;
+  let installer = null, site = null;
   const close = async () => {
+    if (site) await site.dispose().catch(() => {});
     if (installer) await installer.dispose().catch(() => {});
     if (plane) await plane.dispose().catch(() => {});
     rmSync(dir, { recursive: true, force: true });
@@ -115,12 +120,18 @@ export async function localWorld({ model = true } = {}) {
       script: `import worker from ${JSON.stringify(INSTALLER_ENTRY)};\nexport default worker;\n`,
       outboundService: async (req) => account.handle(req) });
     await installer.ready;
+    /* site's module exports its helpers beside its handler, so it too is run through an entry exporting the handler */
+    site = new Miniflare({ ...BASE, scriptPath: join(dirname(SITE_ENTRY), "journey-entry.mjs"),
+      script: `import site from ${JSON.stringify(SITE_ENTRY)};\nexport default site;\n`,
+      bindings: { INSTALLER_ADDRESS: INSTALLER_ORIGIN + "/" } });
+    await site.ready;
   } catch (e) { await close(); throw e; }
 
   /* What a request to `url` reaches: the installer, the consent page, the copy, or nothing. */
   async function answer(url, init) {
     const u = new URL(url);
     if (u.origin === INSTALLER_ORIGIN) return installer.dispatchFetch(url, { ...init, redirect: "manual" });
+    if (u.origin === SITE_ORIGIN) return site.dispatchFetch(url, { ...init, redirect: "manual" });
     if (url.startsWith(AUTHORIZE)) return account.handle(new Request(url, init));
     if (url.startsWith(SIGNIN_PAGE)) return signinPage();
     const copy = copyBase();

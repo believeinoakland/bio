@@ -2,11 +2,11 @@
    "Welcome a new member"), and the sweep of the registry's screens. Each step drives the page as a person does: the
    screens' own fields and controls (`[data-act]`, interface-shell R13; the shell's confirmation and reason, R11; the
    wizard guide's own controls, `[data-guide]`), the installer's own page; no op is called by the walker. Journey 28's
-   first two steps (civicsmith.org, `site`) wait on Bob's DNS act (N1011) and start here at the installer. */
+   first two steps are civicsmith.org's (`site`), served by the local arm at its address (`walkSite`). */
 import { StepFailed, settle } from "./walker.mjs";
 import { drawnState, sweepScreens, addressOf, adminAsName, ADMIN_WORDS } from "./screens.mjs";
 import { FAIL } from "./walker.mjs";
-import { requireWord, wordPattern } from "./words.mjs";
+import { requireWord, wordPattern, byWord } from "./words.mjs";
 
 const rand = (n) => Buffer.from(crypto.getRandomValues(new Uint8Array(n))).toString("base64url");
 export const SLUG = "lakeshore-tenants";
@@ -110,13 +110,36 @@ async function tenCodes(page) {
 
 /* ---------- journey 28, the installer's half (local arm) ---------- */
 
+/* Journey 28's first two steps (DEC-201 (9), DEC-206 (5)): civicsmith.org, what Civicsmith is; "Start a group", what a
+   group needs; its "Create your group" opens the installer. Each control is found by its word (R14). */
+export async function walkSite(walk, page, siteOrigin, installerOrigin) {
+  await walk.step(page, "civicsmith.org: what Civicsmith is", async (p) => {
+    await p.goto(siteOrigin + "/");
+    await settle(p);
+    await shownWord(p, "screen.site.start");
+  });
+  await walk.step(page, "civicsmith.org: start a group, and create it", async (p) => {
+    await byWord(p, "screen.site.start").click();
+    await p.waitForURL((u) => u.pathname === "/start", { timeout: 15000 });
+    await settle(p);
+    await byWord(p, "screen.site.create").click();
+    await p.waitForURL((u) => u.origin === installerOrigin, { timeout: 15000 });
+    await settle(p);
+  });
+}
+async function shownWord(page, key) {
+  try { await byWord(page, key).waitFor({ state: "visible", timeout: 10000 }); }
+  catch { throw new Error(`no link or control "${key}" on ${page.url()}`); }
+}
+
 /* From the installer's first page to its last: the short name, Cloudflare's consent, the progress, the checks. Answers
-   the copy's address and the one-time password (kept secret by the walk). */
+   the copy's address and the one-time password (kept secret by the walk). A walk that came from civicsmith.org is on the
+   installer's first page already. */
 export async function walkInstaller(walk, page, installerOrigin) {
   let copy = null, boot = null;
   walk.mask.push("#out-boot", "#out-probe", '[href*="#invite="]', "[data-invite-link]", '[data-secret]');
   await walk.step(page, "install: the installer's first page", async (p) => {
-    await p.goto(installerOrigin + "/");
+    if (new URL(p.url()).origin !== installerOrigin) await p.goto(installerOrigin + "/");
     await p.locator("#slug").fill(SLUG);
     const profile = p.locator('input[name="profile"]').first();
     if (await profile.count()) await profile.check();
