@@ -39,12 +39,12 @@ test("R7 with no standing proposal nothing can be confirmed (control: clockadopt
 test("R7 \"Download to my calendar\" saves clocksics' calendar for the action (cs.save, K3145); with nothing dated it is not offered", async () => {
   const p = await open(at);
   assert.equal(p.byOp("clocksics")[0].query.actions, ACT);
-  const save = main(p).querySelector('[data-shell="save"]');
-  assert.ok(save);
-  assert.equal(save.textContent, "Download to my calendar");
-  assert.equal(save.getAttribute("data-name"), "deadlines.ics");
+  const save = main(p).querySelectorAll("button").find((b) => b.textContent === "Download to my calendar");
+  assert.ok(save, "the kit's own save control (interface-shell R47)");
+  await p.click(save);
+  assert.deepEqual(p.files.map((f) => f.name), ["deadlines.ics"], "the calendar handed to the browser as a file");
   const q = await open(at, { plane: { clocksics: ok({ ok: true, filename: "deadlines.ics", ics: "", events: 0 }) } });
-  assert.equal(main(q).querySelector('[data-shell="save"]'), null);
+  assert.equal(main(q).querySelectorAll("button").find((b) => b.textContent === "Download to my calendar"), undefined);
   assert.match(main(q).textContent, /No confirmed due date to put in a calendar yet/);
 });
 

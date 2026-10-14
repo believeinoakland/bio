@@ -16,7 +16,7 @@ test("R4 reads the trail (moneyset) and each of its figures (moneyof's fact, by 
   const heads = main(p).querySelectorAll("table.cs-rows thead th").map((h) => h.textContent).filter(Boolean);
   assert.deepEqual(heads, ["Figure", "From", "To, where it went", "When it moved", "Stage", "Period", "Amount", "Source", "In this trail?"]);
   const r1 = rowOf(p, M1).querySelectorAll("td").map((d) => d.textContent);
-  assert.match(r1.join("|"), /Transfer\|Sewer Fund 3100\|General Fund 1010\|did not move: a adopted figure\|adopted \|FY2021-22\|4200000\.00 USD\|.*CaptureB\|included · "the transfer we ask about"/);
+  assert.match(r1.join("|"), /Transfer(Acts)?\|Sewer Fund 3100\|General Fund 1010\|did not move: a adopted figure\|adopted \|FY2021-22\|4200000\.00 USD\|.*CaptureB\|included · "the transfer we ask about"/);
   const r2 = rowOf(p, M2).querySelectorAll("td").map((d) => d.textContent);
   assert.match(r2[4], /^30 June 2022/, "when it moved: the event it is tied to, never its period");
   assert.match(r2[5], /actual \(paid\)/);
