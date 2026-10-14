@@ -186,7 +186,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   const phone = () => !!(mq && mq.matches);
 
   /* ---------- the frame's reads ---------- */
-  let GROUP = null, TODO = null, REACHABLE = false, DOCK = false, ASK_LEVEL = false, BOOT = null;
+  let GROUP = null, TODO = null, REACHABLE = false, DOCK = false, ASK_LEVEL = false, BOOT = null, BOOT_READ = false;
   const screenOf = (id) => SCREENS.find((s) => s.id === id) || null;
 
   /* ---------- screen instances: reads, states, acts ---------- */
@@ -200,23 +200,25 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   }
   /* R39 (N1001): a refusal's trace, drawn as a short reference beside its words and kept nowhere */
   const traceOf = (a) => (a && a.fields && typeof a.fields.trace === "string" && a.fields.trace
-    ? ' <span class="cs-trace">' + w("shell.trace", { trace: a.fields.trace.slice(0, 8) }) + "</span>" : "");
-  /* R13: `refusal.<code>` (or the screen's own key for the code) when held; else the answer's translation; else
-     `state.failed` with the code (a read's state already says it, so a read is handed the code alone) */
-  function refusalWords(a, own, bare, inst) {
+    ? ' <span class="muted">' + w("shell.trace", { trace: a.fields.trace.slice(0, 8) }) + "</span>" : "");
+  /* R13: `refusal.<code>` (or the screen's own key for the code) when held; else the answer's translation. R61: a refusal
+     with its own words is drawn as those words alone; one without is "could not be read" with R39's reference, naming no
+     code. Answers `{words, own}`. */
+  function refusalOf(a, own, inst) {
     /* R21 (K3002): a screen's own word for the code, or its own function `(refusal, cs)` → HTML */
     if (own && typeof own[a.code] === "function") {
-      try { return String(own[a.code]({ code: a.code, translation: a.translation, ...(a.fields || {}) }, inst ? kit(inst) : null)) + traceOf(a); } catch { /* falls to the words below */ }
+      try { return { words: String(own[a.code]({ code: a.code, translation: a.translation, ...(a.fields || {}) }, inst ? kit(inst) : null)) + traceOf(a), own: true }; } catch { /* falls to the words below */ }
     }
     const key = own && typeof own[a.code] === "string" ? own[a.code] : "refusal." + a.code;
-    if (has(key)) return w(key, a.fields || {}) + traceOf(a);
-    if (a.translation) return esc(a.translation) + traceOf(a);
-    return (bare ? esc(a.code) : w("state.failed", { reason: a.code })) + traceOf(a);
+    if (has(key)) return { words: w(key, a.fields || {}) + traceOf(a), own: true };
+    if (a.translation) return { words: esc(a.translation) + traceOf(a), own: true };
+    return { words: w("shell.unread") + traceOf(a), own: false };
   }
+  const refusalWords = (a, own, inst) => refusalOf(a, own, inst).words;
   function outcome(spec, a) {
     if (a.kind === "ok") return emptyOf(spec, a.value) ? { state: "empty", value: a.value, refusal: null } : { state: "ok", value: a.value, refusal: null };
-    if (a.kind === "refused") return { state: "failed", value: null, refusal: { code: a.code, words: refusalWords(a, spec && spec.refusals, true, null) } };
-    return { state: "failed", value: null, refusal: { code: null, words: w("shell.noanswer") } };
+    if (a.kind === "refused") { const r = refusalOf(a, spec && spec.refusals, null); return { state: "failed", value: null, refusal: { code: a.code, words: r.words, own: r.own } }; }
+    return { state: "failed", value: null, refusal: { code: null, words: w("shell.unread"), own: false } };
   }
   /* R46: the session as a screen sees it: `none`, `signedout`, `ended`, `locked` or `live`, with the handle */
   function sessionView() {
@@ -238,12 +240,17 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     Object.defineProperty(inst, "pub", { get: () => key !== "g" && (sessionless(spec.id) || !S) });
     return inst;
   }
-  const NOT_FOUND = /^NO_SUCH_|_NOT_FOUND$|^NOT_FOUND$/;
+  /* R61: the absence codes, and those a screen lists as its own (`absent`) */
+  const ABSENCE = new RegExp(D.absence);
+  const absent = (inst, code) => ABSENCE.test(code) || (Array.isArray(inst.spec.absent) && inst.spec.absent.includes(code));
+  /* R61: a screen whose reads name a subject (`subject: true`), opened with none */
+  const subjectless = (inst, specs) => (inst.subject === null || inst.subject === undefined || inst.subject === "") && Object.values(specs).some((x) => x && x.subject);
   const live = (inst) => inst === MAIN || inst === DOCKI || inst === GUIDEI;
   async function readAll(inst, names, background) {
     let specs = {};
     try { specs = inst.spec.reads ? inst.spec.reads(inst.view) || {} : {}; } catch { specs = {}; }
     const gen = ++inst.gen;
+    if (inst.key === "m" && subjectless(inst, specs)) { inst.unavail = "nothing"; return draw(); }
     const todo = Object.entries(specs).filter(([n]) => !names || names.includes(n));
     for (const [n] of todo) if (!inst.data[n] || !names) inst.data[n] = { state: "loading", value: null, refusal: null };
     if (!names && !background) inst.unavail = null;
@@ -257,7 +264,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const was = inst.unavail;
         if (unreachable(a)) inst.unavail = "unreachable";
         else if (a.kind === "refused" && D.notYours.includes(a.code)) inst.unavail = "notyours";
-        else if (inst.data[n].state === "empty" || (a.kind === "refused" && NOT_FOUND.test(a.code))) inst.unavail = "nothing";
+        else if (inst.data[n].state === "empty" || (a.kind === "refused" && absent(inst, a.code))) inst.unavail = "nothing";
         else inst.unavail = null;
         if (inst.unavail === "unreachable") retryLater(inst);
         if (was === "unreachable" && !inst.unavail && inst.stash) { inst.pending = inst.stash; inst.stash = null; }
@@ -376,7 +383,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         if (typeof r === "string") r = inst.data[r];
         o = o || {};
         if (!r || r.state === "loading") return '<p class="cs-state" data-state="loading" role="status"><span class="bar" aria-hidden="true"></span>' + w("state.loading") + "</p>";
-        if (r.state === "failed") return '<p class="cs-state" data-state="failed" role="alert">' + w("state.failed", { reason: html(r.refusal ? r.refusal.words : w("shell.noanswer")) }) + "</p>";
+        /* R61: a refusal's own words alone; without words, "could not be read", naming no code */
+        if (r.state === "failed") return '<p class="cs-state" data-state="failed" role="alert">' + (r.refusal && r.refusal.words ? r.refusal.words : w("shell.unread")) + "</p>";
         if (r.state === "empty") return '<p class="cs-state" data-state="empty">' + w(o.empty || "state.empty") + "</p>";
         return typeof inner === "function" ? inner(r.value) : "";
       },
@@ -394,14 +402,18 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
           return '<div class="cs-reason" data-phone-act="' + esc(op) + '"><b>' + label + "</b>" + (does ? "<p>" + does + "</p>" : "") + "<p>" + w("shell.phone.larger") + "</p></div>";
         const idx = inst.acts.push({ op, spec, data: o.data || {}, table: inst.holding || o.table || null }) - 1;
         const data = Object.entries(o.data || {}).map(([k, v]) => " data-" + k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()) + '="' + esc(v) + '"').join("");
-        const weighed = weight !== "none";
-        const pips = '<span class="cs-pips" aria-hidden="true">' + [1, 2, 3, 4, 5].map((i) => "<i" + (i <= WEIGHTS.indexOf(weight) + 1 ? ' class="on"' : "") + "></i>").join("") + "</span>";
-        const tip = (does ? "<b>" + label + "</b>: " + does : "<b>" + label + "</b>") + (weighed ? '<span class="why">' + w("weight." + weight + ".means") + "</span>" : "")
+        /* R64 (`op-grades` R42): an act drawn with no weight carries the design kit's mark, as a mark and its explanation
+           only; its friction stays R11's (it runs on press) */
+        const mark = weight === "none" && WEIGHTS.includes(D.marks[op]) ? D.marks[op] : null;
+        const shown = mark || weight;
+        const weighed = shown !== "none";
+        const pips = '<span class="cs-pips" aria-hidden="true">' + [1, 2, 3, 4, 5].map((i) => "<i" + (i <= WEIGHTS.indexOf(shown) + 1 ? ' class="on"' : "") + "></i>").join("") + "</span>";
+        const tip = (does ? "<b>" + label + "</b>: " + does : "<b>" + label + "</b>") + (weighed ? '<span class="why">' + w("weight." + shown + ".means") + "</span>" : "")
           + (outward ? '<span class="why">' + w("mark.outward.means") + "</span>" : "");
         return '<span class="cs-actwrap"><button type="button" class="cs-btn"' + (o.tone ? ' data-tone="' + esc(o.tone) + '"' : "")
           + ' data-act="' + esc(op) + '" data-ai="' + inst.key + ":" + idx + '"' + data + tipAttr(tip, 2) + ">"
           + (o.icon ? I(o.icon) : "") + (outward ? I("outward") : "") + label
-          + (weighed ? '<span class="w">' + pips + w("weight." + weight + ".name") + "</span>" : "") + "</button>"
+          + (weighed ? '<span class="w"' + (mark ? ' data-mark="' + esc(mark) + '"' : "") + ">" + pips + w("weight." + shown + ".name") + "</span>" : "") + "</button>"
           + '<span class="cs-slot" data-slot="' + inst.key + ":" + idx + '"></span></span>';
       },
       /* R16: an item the record holds, a link to its screen where one is built, with its card */
@@ -451,7 +463,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       },
       sheet: (inner) => '<div class="cs-sheet">' + inner + "</div>",
       row: (a, b, c = "", meta = "") => '<div class="cs-row">' + a + "<span>" + b + "</span>" + c + (meta ? '<span class="meta">' + meta + "</span>" : "") + "</div>",
-      /* R22: every field has its label */
+      /* R22: every field has its label. R62: the label bold with its help beneath, tied by `aria-describedby`, each its
+         own block of the field's grid, so the two never run together */
       field(id, labelKey, o = {}) {
         const cls = "cs-input" + (o.rec ? " rec" : "") + (o.draft ? " cs-draft" : "");
         const attrs = (o.type ? ' type="' + esc(o.type) + '"' : o.area ? "" : ' type="text"') + (o.max ? ' maxlength="' + esc(o.max) + '"' : "")
@@ -498,10 +511,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         const pos = (r) => (nat ? "left:" + (100 * r.left / nat.w) + "%;top:" + (100 * r.top / nat.h) + "%;width:" + (100 * r.width / nat.w) + "%;height:" + (100 * r.height / nat.h) + "%"
           : "left:" + r.left + "px;top:" + r.top + "px;width:" + r.width + "px;height:" + r.height + "px");
         const label = o.label ? wordOrData(o.label) : w("shell.areas");
-        return '<div class="cs-areas" id="' + esc(id) + '" role="group" aria-label="' + label + '"><div class="cs-areas-box" data-shell="areas-box" data-areas="' + esc(id) + '">' + imageHtml
+        return '<div id="' + esc(id) + '" role="group" aria-label="' + label + '"><div class="cs-areas-box" data-shell="areas-box" data-areas="' + esc(id) + '">' + imageHtml
           + list.map((r, i) => '<button type="button" class="cs-area" data-shell="area" data-areas="' + esc(id) + '" data-i="' + i + '" style="' + pos(r) + '" aria-label="'
             + w("shell.areas.one", { n: String(i + 1), left: String(Math.round(r.left)), top: String(Math.round(r.top)), width: String(Math.round(r.width)), height: String(Math.round(r.height)) }) + '"></button>').join("")
-          + '</div><p class="help">' + w("shell.areas.help") + '</p><span class="cs-actrow"><button type="button" class="cs-btn" data-tone="quiet" data-shell="area-add" data-areas="' + esc(id) + '">' + w("shell.areas.add") + "</button>"
+          + '</div><p class="mk-note">' + w("shell.areas.help") + '</p><span class="mk-acts"><button type="button" class="cs-btn" data-tone="quiet" data-shell="area-add" data-areas="' + esc(id) + '">' + w("shell.areas.add") + "</button>"
           + (list.length ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="area-clear" data-areas="' + esc(id) + '">' + w("shell.areas.clear") + "</button>" : "") + "</span></div>";
       },
       checks(id, legendKey, options, o = {}) {
@@ -510,12 +523,15 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       },
       /* R27 (N985): R18's control, drawn by the kit, so no screen draws the shell's own buttons */
       appearance() {
-        return '<div class="cs-actrow" role="group" aria-label="' + w("shell.appearance") + '">' + ["device", "light", "dark"].map((t) =>
+        return '<div class="mk-acts" role="group" aria-label="' + w("shell.appearance") + '">' + ["device", "light", "dark"].map((t) =>
           '<button type="button" class="cs-btn" data-tone="quiet" aria-pressed="' + (THEME === t) + '" data-shell="theme" data-theme-to="' + t + '">' + w("shell.appearance." + t) + "</button>").join("") + "</div>";
       },
       /* R19: rows, each row's acts in a panel beneath it; picks bring the hold strip. R27: the row's name (`name(item)`,
          its HTML, a reference where the item has a screen) is drawn with the panel's control beside it, never around
-         it. With `cells(item)` one short of `cols`, the name is the first column; with as many, `cells(item)[0]` is. */
+         it. With `cells(item)` one short of `cols`, the name is the first column; with as many, `cells(item)[0]` is.
+         R62: drawn as the design's table (`mk-table mk-rows`); at the phone width each row is the design's one-line row,
+         the name and its first value on one line and the rest beneath, labelled, with no label for an empty cell and no
+         column that is empty in every row. */
       rows(t) {
         const id = t.id || "rows";
         const open = inst.ui["open:" + id] || (inst.ui["open:" + id] = []);
@@ -526,68 +542,84 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
           items.sort((a, b) => { const x = t.sortKey(a, sort.col), y = t.sortKey(b, sort.col); return (x < y ? -1 : x > y ? 1 : 0) * (sort.dir === "desc" ? -1 : 1); });
         }
         const cols = t.cols || [];
-        const head = "<thead><tr>" + (t.pick ? '<th class="cs-pickc"></th>' : "") + cols.map((c, i) => {
-          const s = sort && sort.col === i ? (sort.dir === "desc" ? "descending" : "ascending") : "none";
-          return '<th aria-sort="' + s + '">' + (typeof t.sortKey === "function"
-            ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="sort" data-table="' + esc(id) + '" data-col="' + i + '" aria-label="' + w("shell.sort", { column: html(w(c)) }) + '"' + tipAttr(w("shell.sort.holds"), 2) + ">" + w(c) + "</button>" : w(c)) + "</th>";
-        }).join("") + "</tr></thead>";
-        const body = items.map((it) => {
-          const key = String(t.key(it));
-          let cells = t.cells(it);
+        const narrow = phone();
+        const blank = (c) => textOf(c) === "" && !/<(img|svg|input|button|select|textarea)\b/i.test(String(c == null ? "" : c));
+        const drawn = items.map((it) => {
+          let cells = t.cells(it).map((c) => String(c == null ? "" : c));
           const nameHtml = t.name ? String(t.name(it)) : null;
           if (nameHtml !== null && cells.length === cols.length - 1) cells = [nameHtml].concat(cells);
+          return { it, cells, nameHtml };
+        });
+        /* R62: at the phone width a column empty in every row is not drawn */
+        const shownCols = cols.map((c, i) => i === 0 || !narrow || drawn.some((d) => !blank(d.cells[i])));
+        const head = "<thead><tr>" + (t.pick ? '<th class="mk-pickc"></th>' : "") + cols.map((c, i) => {
+          if (!shownCols[i]) return "";
+          const s = sort && sort.col === i ? (sort.dir === "desc" ? "descending" : "ascending") : "none";
+          return '<th aria-sort="' + s + '">' + (typeof t.sortKey === "function"
+            ? '<button type="button" class="mk-sort" data-shell="sort" data-table="' + esc(id) + '" data-col="' + i + '" aria-label="' + w("shell.sort", { column: html(w(c)) }) + '"' + tipAttr(w("shell.sort.holds"), 2) + ">" + w(c) + "</button>" : w(c)) + "</th>";
+        }).join("") + "</tr></thead>";
+        const width = (t.pick ? 1 : 0) + shownCols.filter(Boolean).length;
+        const body = drawn.map(({ it, cells, nameHtml }) => {
+          const key = String(t.key(it));
           const name = nameHtml !== null ? textOf(nameHtml) : textOf(cells[0]) || key;
           const isOpen = open.includes(key);
           const acts = t.acts ? t.acts(it) : "";
-          const control = acts ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="row" data-table="' + esc(id) + '" data-id="' + esc(key) + '" aria-expanded="' + isOpen
+          const control = acts ? '<button type="button" class="mk-open" data-shell="row" data-table="' + esc(id) + '" data-id="' + esc(key) + '" aria-expanded="' + isOpen
             + '" aria-label="' + w("shell.row.open", { name }) + '"' + tipAttr(w("shell.row.open.holds"), 2) + ">" + w("shell.row.acts") + "</button>" : "";
-          return '<tr class="cs-r">' + (t.pick ? '<td><input type="checkbox" id="pick-' + esc(id) + "-" + esc(key) + '" data-shell="pick" data-table="' + esc(id) + '" data-id="' + esc(key) + '"'
-              + (picked.includes(key) ? " checked" : "") + ' aria-label="' + w("shell.pick", { name }) + '"></td>' : "")
-            + cells.map((c, i) => i === 0
-              ? '<td data-label="' + w(cols[0] || "state.empty") + '"><span class="cs-rowname">' + c + control + "</span></td>"
-              : '<td data-label="' + w(cols[i] || "state.empty") + '">' + c + "</td>").join("") + "</tr>"
-            + (acts ? '<tr class="cs-panel"' + (isOpen ? "" : " hidden") + '><td colspan="' + (cols.length + (t.pick ? 1 : 0)) + '"><div class="cs-actrow">' + acts + "</div></td></tr>" : "");
+          const pick = t.pick ? '<td><input type="checkbox" class="mk-pick" id="pick-' + esc(id) + "-" + esc(key) + '" data-shell="pick" data-table="' + esc(id) + '" data-id="' + esc(key) + '"'
+            + (picked.includes(key) ? " checked" : "") + ' aria-label="' + w("shell.pick", { name }) + '"></td>' : "";
+          let tds;
+          if (narrow) {
+            /* the name and its first value on one line; the rest beneath, each labelled unless empty */
+            const rest = cells.map((c, i) => [c, i]).filter(([, i]) => i > 1 && shownCols[i]);
+            tds = '<td><span class="cs-rowname">' + cells[0] + control + (cells.length > 1 && shownCols[1] && !blank(cells[1]) ? '<span class="muted">' + cells[1] + "</span>" : "") + "</span></td>"
+              + rest.map(([c, i]) => (blank(c) ? "" : '<td data-label="' + w(cols[i] || "state.empty") + '"><span>' + c + "</span></td>")).join("");
+          } else {
+            tds = cells.map((c, i) => (i === 0 ? '<td><span class="cs-rowname">' + c + control + "</span></td>" : shownCols[i] ? "<td>" + c + "</td>" : "")).join("");
+          }
+          return '<tr class="cs-r mk-r"' + (narrow && !t.pick ? ' style="grid-template-columns:minmax(0,1fr)"' : "") + ">" + pick + tds + "</tr>"
+            + (acts ? '<tr class="cs-panel mk-detail"' + (isOpen ? "" : " hidden") + '><td colspan="' + width + '"><div class="mk-detailbox"><div class="mk-acts">' + acts + "</div></div></td></tr>" : "");
         }).join("");
         const keep = picked.filter((k) => items.some((it) => String(t.key(it)) === k));
         inst.ui["pick:" + id] = keep;
         const hold = t.pick && keep.length
-          ? '<div class="cs-hold" role="region" aria-label="' + w("shell.picked", { n: String(keep.length) }) + '"><span class="n">' + w("shell.picked", { n: String(keep.length) }) + '</span><span class="acts">'
+          ? '<div class="cs-hold mk-rowhold" role="region" aria-label="' + w("shell.picked", { n: String(keep.length) }) + '"><span class="n">' + w("shell.picked", { n: String(keep.length) }) + '</span><span class="acts">'
             + (t.hold ? (inst.holding = id, (() => { try { return t.hold(keep); } finally { inst.holding = null; } })()) : "") + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="unpick" data-table="' + esc(id) + '">' + w("shell.unpick") + "</button></span></div>"
           : "";
-        return '<table class="cs-rows">' + head + "<tbody>" + body + "</tbody></table>" + hold;
+        return '<table class="cs-rows mk-table mk-rows">' + head + "<tbody>" + body + "</tbody></table>" + hold;
       },
       /* R44 (DEC-214 (2)): the at-a-glance elements, each drawn once, as the visual language draws them */
       reading(o = {}) {
-        return '<div class="cs-tile"><span class="k">' + wordOrData(o.label) + '</span><b class="v">' + esc(o.value) + "</b>"
+        return '<div class="mk-tile"><span class="k">' + wordOrData(o.label) + '</span><b class="v">' + esc(o.value) + "</b>"
           + (o.change ? '<span class="d">' + wordOrData(o.change) + "</span>" : "") + (Array.isArray(o.bars) ? spark(o.bars, null) : "") + "</div>";
       },
       activity: (weeks, word) => spark(weeks, word || null),
       initials(names) {
         const list = (names || []).map((n) => String(n));
-        return '<span class="cs-people" role="img" aria-label="' + w("shell.glance.people", { n: String(list.length), names: list.join(", ") }) + '">'
+        return '<span class="mk-people" role="img" aria-label="' + w("shell.glance.people", { n: String(list.length), names: list.join(", ") }) + '">'
           + list.slice(0, 4).map((n) => "<i>" + esc(n.slice(0, 1).toUpperCase()) + "</i>").join("")
           + (list.length > 4 ? '<i class="more">' + w("shell.glance.more", { n: String(list.length - 4) }) + "</i>" : "") + "<span>" + esc(list.length) + "</span></span>";
       },
       path(steps) {
-        return '<ol class="cs-next">' + (steps || []).map((s) => "<li" + (s.now ? ' aria-current="step"' : "") + "><span>" + wordOrData(s.text) + "</span>" + (s.act || "") + "</li>").join("") + "</ol>";
+        return '<ol class="mk-next">' + (steps || []).map((s) => "<li" + (s.now ? ' aria-current="step"' : "") + "><span>" + wordOrData(s.text) + "</span>" + (s.act || "") + "</li>").join("") + "</ol>";
       },
       storyline(events, o = {}) {
         const dated = (events || []).filter((e) => e && e.date && date(e.date));
         const ev = (e) => {
           const t = "<b>" + date(e.date) + "</b>" + wordOrData(e.text);
-          return '<div class="ev ' + (e.us ? "us" : "them") + '" role="listitem"><span class="t">' + (e.us ? "" : t) + '</span><i></i><span class="t">' + (e.us ? t : "") + "</span></div>";
+          return '<div class="ev' + (e.us ? " us" : "") + '" role="listitem"><span class="t">' + (e.us ? "" : t) + '</span><i></i><span class="t">' + (e.us ? t : "") + "</span></div>";
         };
-        return '<div class="cs-tl" role="list">' + dated.map(ev).join("") + "</div>"
+        return '<div class="mk-tl" role="list">' + dated.map(ev).join("") + "</div>"
           + (o.open ? '<a class="cs-btn" data-tone="quiet" href="' + esc(hrefOf(o.open.screen, o.open.subject)) + '" data-nav>' + w("shell.glance.timeline") + "</a>" : "");
       },
       strip(readings) {
         const four = (readings || []).slice(0, 4);
         if (phone()) {
           const n = four.reduce((a, r) => a + (Number(r.n) || 0), 0);
-          return '<div class="cs-strip" role="region" aria-label="' + w("shell.glance.strip") + '"><a class="cs-ref" href="' + esc(placeHref("queue")) + '" data-nav><b>' + esc(n) + "</b> "
+          return '<div class="mk-strip" role="region" aria-label="' + w("shell.glance.strip") + '"><a class="cs-ref" href="' + esc(placeHref("queue")) + '" data-nav><b>' + esc(n) + "</b> "
             + w("shell.glance.strip.sum", { n: "" }).trim() + "</a></div>";
         }
-        return '<div class="cs-strip" role="region" aria-label="' + w("shell.glance.strip") + '">' + four.map((r) =>
+        return '<div class="mk-strip" role="region" aria-label="' + w("shell.glance.strip") + '">' + four.map((r) =>
           '<a class="cs-ref" href="' + esc(hrefOf(r.screen || "queue", r.subject)) + '" data-nav><b>' + esc(r.n) + "</b> " + wordOrData(r.label) + "</a>").join("") + "</div>";
       },
     };
@@ -625,7 +657,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const v = (vals || []).map((x) => Math.max(0, Number(x) || 0));
     const m = Math.max(1, ...v);
     const said = word ? w(word) : "";
-    return '<span class="cs-spark" role="img" aria-label="' + w("shell.glance.weeks", { word: html(said), weeks: v.join(", ") }) + '">'
+    return '<span class="mk-spark" role="img" aria-label="' + w("shell.glance.weeks", { word: html(said), weeks: v.join(", ") }) + '">'
       + v.map((x, i) => '<i style="height:' + Math.max(2, Math.round(18 * x / m)) + 'px"' + (i === v.length - 1 ? ' class="now"' : "") + "></i>").join("")
       + (said ? "<b>" + said + "</b>" : "") + "</span>";
   }
@@ -694,7 +726,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     return target === "home" ? "/app" : target ? hrefOf(target) : "/app/" + k;
   }
   function pathNav(route, inst, kind) {
-    if (kind) return crumbs([{ label: w(unavailKey(kind) + ".title") }]);
+    /* R61: an absent subject keeps the way back to its place */
+    if (kind) {
+      const place = placeOf(route.screen);
+      return crumbs((kind === "nothing" && place && place !== "more" ? [{ label: w("rail." + place + ".name"), href: placeHref(place) }] : []).concat([{ label: w(unavailKey(kind) + ".title") }]));
+    }
     const steps = [];
     const p = D.paths[route.screen] || null;
     if (p) {
@@ -710,11 +746,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     else steps.push({ label: inst && has("screen." + route.screen + ".name") ? w("screen." + route.screen + ".name") : w("screen.unavailable.name") });
     return crumbs(steps);
   }
+  /* R8, R56: the path as the design draws it (`mk-crumbs`): each earlier step a link, "›" between, the screen's own name
+     last, the current page */
   function crumbs(steps) {
     if (steps.length) steps[steps.length - 1].href = null;
-    return '<nav class="cs-crumbs" aria-label="' + w("shell.path") + '"><ol>' + steps.map((s, i) => "<li>" + (i === steps.length - 1
-      ? '<span aria-current="page">' + s.label + "</span>"
-      : '<a href="' + esc(s.href) + '" data-nav>' + s.label + "</a>") + "</li>").join("") + "</ol></nav>";
+    return '<nav class="cs-crumbs mk-crumbs" aria-label="' + w("shell.path") + '">' + steps.map((s, i) => (i === steps.length - 1
+      ? '<b aria-current="page">' + s.label + "</b>"
+      : (s.href ? '<a href="' + esc(s.href) + '" data-nav>' + s.label + "</a>" : "<span>" + s.label + "</span>"))).join(' <i aria-hidden="true">›</i> ') + "</nav>";
   }
 
   /* ---------- drawing ---------- */
@@ -722,50 +760,86 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   /* K3177 (b): one state's words, its heading and its sentence, never another state's ("Can't open this" heads none
      but `notyours`) */
   const unavailKey = (kind) => (kind === "notyours" ? "shell.unavailable.notyours" : kind === "unreachable" ? "shell.unavailable.unreachable" : "shell.unavailable.nothing");
-  function unavailableHtml(kind) {
+  function unavailableHtml(kind, route) {
     const key = unavailKey(kind);
+    /* R61: "Nothing is here" leads back to the screen's place (Home when it has none) */
+    const place = route ? placeOf(route.screen) : null;
+    const back = place && place !== "home" && place !== "more"
+      ? '<a class="cs-btn" data-tone="quiet" href="' + esc(placeHref(place)) + '" data-nav>' + I("back") + w("rail." + place + ".name") + "</a>"
+      : '<a class="cs-btn" data-tone="quiet" href="/app" data-nav>' + w("shell.unavailable.home") + "</a>";
     return '<h1 class="t-title" tabindex="0"' + tipAttr(kw("screen.unavailable.purpose"), 2) + ">" + w(key + ".title") + "</h1>"
       + '<p class="cs-state" data-state="' + (kind === "unreachable" ? "failed" : "empty") + '" data-unavailable="' + esc(kind) + '"' + (kind === "unreachable" ? ' role="alert"' : "") + ">" + w(key + ".says") + "</p>"
-      + (kind === "unreachable" ? "" : '<p><a class="cs-btn" data-tone="quiet" href="/app" data-nav>' + w("shell.unavailable.home") + "</a></p>");
+      + (kind === "unreachable" ? "" : "<p>" + back + "</p>");
   }
   const shellPage = (route) => {
     const k = route.screen;
     const titled = (key) => '<h1 class="t-title">' + w(key) + "</h1>";
+    /* R63: a list of places or screens drawn as the design draws rail rows: the icon, the name as its reference, and
+       what it holds beneath */
+    const rowOf = (href, icon, name, holds) => '<div class="cs-row">' + I(icon) + '<span><a class="cs-ref" href="' + esc(href) + '" data-nav>' + name + "</a></span>"
+      + (holds ? '<span class="meta">' + holds + "</span>" : "") + "</div>";
     if (k === "settings") {
-      /* R37: until `settings` is registered, the settings screens registered, and no link to `/` */
-      const links = D.settingsScreens.filter(screenOf).map((s) =>
-        '<li><a href="' + hrefOf(s) + '" data-nav' + tipAttr(kw("screen." + s + ".purpose"), 2) + ">" + w("screen." + s + ".name") + "</a></li>").join("");
-      return titled("shell.settings.title") + '<ul class="cs-list">' + links + "</ul>";
+      /* R37: until `settings` is registered, the settings screens registered, and no link to `/`; R54: `updates` only for
+         a member who administers */
+      const rows = D.settingsScreens.filter(screenOf).filter((s) => !D.adminScreens.includes(s) || (ME && ME.administer === true))
+        .map((s) => rowOf(hrefOf(s), "settings", w("screen." + s + ".name"), kw("screen." + s + ".purpose"))).join("");
+      return titled("shell.settings.title") + '<div class="cs-sheet">' + rows + "</div>";
     }
     if (k === "more") {
-      return titled("shell.more") + '<ul class="cs-list">' + ["projects", "people", "settings"].map((p) =>
-        '<li><a href="' + placeHref(p) + '" data-nav' + tipAttr(w("rail." + p + ".holds"), 2) + ">" + w("rail." + p + ".name") + "</a></li>").join("") + "</ul>";
+      return titled("shell.more") + '<div class="cs-sheet">' + ["projects", "people", "settings"].map((p) =>
+        rowOf(placeHref(p), RAIL_ICON[p], w("rail." + p + ".name"), w("rail." + p + ".holds"))).join("") + "</div>";
     }
     return titled("rail." + k + ".name") + '<p class="cs-state" data-state="empty">' + w("shell.later", { place: html(w("rail." + k + ".name")) }) + "</p>";
   };
   function renderOf(inst) {
     if (inst.key !== "g") { inst.acts = []; inst.binds = []; }
-    try { return inst.spec.render(kit(inst), inst.view); } catch { return inst.key === "g" ? "" : '<p class="cs-state" data-state="failed" role="alert">' + w("state.failed", { reason: html(w("shell.noanswer")) }) + "</p>"; }
+    try { return inst.spec.render(kit(inst), inst.view); } catch { return inst.key === "g" ? "" : '<p class="cs-state" data-state="failed" role="alert">' + w("shell.unread") + "</p>"; }
   }
-  /* K3143: the guide's marks, under the path of every working screen, on each draw; R51: held in one element that says
-     they are the guide's, so its `data-guide` controls are known from a screen's */
+  /* K3143: the guide's marks, on each draw of a working screen; R51: held in one element that says they are the guide's,
+     so its `data-guide` controls are known from a screen's; R59: placed in the screen's title row, after its heading
+     (`placeMarks`) */
   function marksHtml() {
     if (!GUIDEI || typeof GUIDE.marks !== "function") return "";
     let h = "";
     try { h = String(GUIDE.marks(kit(GUIDEI), GUIDEI.view) || ""); } catch { h = ""; }
-    return h ? '<div class="cs-guidemarks" data-guide-from="marks">' + h + "</div>" : "";
+    return h;
+  }
+  /* R59: the marks inside the title row (the design's `mk-titlerow`), after the heading: the heading's own row when the
+     screen drew one, else a row made around the first heading; never a block above the path or the heading. With no
+     heading they follow the path. A screen with no marks keeps its title row unchanged. */
+  function placeMarks(root, h) {
+    const main = root.querySelector("#cs-main");
+    if (!h || !main) return;
+    const chip = doc.createElement("span");
+    chip.setAttribute("data-guide-from", "marks");
+    chip.innerHTML = h;
+    const h1 = main.querySelector("h1");
+    if (!h1 || !h1.parentElement) {
+      const path = main.querySelector("nav.cs-crumbs");
+      if (path && path.parentElement) path.parentElement.insertBefore(chip, path.nextElementSibling);
+      else main.insertBefore(chip, main.children[0] || null);
+      return;
+    }
+    let row = h1.parentElement.classList && h1.parentElement.classList.contains("mk-titlerow") ? h1.parentElement : null;
+    if (!row) {
+      row = doc.createElement("div");
+      row.setAttribute("class", "mk-titlerow");
+      h1.parentElement.insertBefore(row, h1);
+      row.appendChild(h1);
+    }
+    row.insertBefore(chip, h1.nextElementSibling);
   }
   function mainHtml(route) {
     if (UNREACHED) return unavailableHtml("unreachable");
     if (!MAIN && !ENTRY_PAGE && !ME) return '<p class="cs-state" data-state="loading" role="status"><span class="bar" aria-hidden="true"></span>' + w("state.loading") + "</p>";
     if (ENTRY_PAGE) return entryPage();
     if (!MAIN) {
-      if (D.places.includes(route.screen)) return pathNav(route, null) + marksHtml() + shellPage(route);
-      return pathNav(route, null, "nothing") + unavailableHtml("nothing");
+      if (D.places.includes(route.screen)) return pathNav(route, null) + shellPage(route);
+      return pathNav(route, null, "nothing") + unavailableHtml("nothing", route);
     }
-    if (MAIN.unavail) return pathNav(route, MAIN, MAIN.unavail) + unavailableHtml(MAIN.unavail);
+    if (MAIN.unavail) return pathNav(route, MAIN, MAIN.unavail) + unavailableHtml(MAIN.unavail, route);
     const body = renderOf(MAIN);
-    return (frameOf(MAIN.spec.id) === "working" ? pathNav(route, MAIN) + marksHtml() : "") + body;
+    return (frameOf(MAIN.spec.id) === "working" ? pathNav(route, MAIN) : "") + body;
   }
   /* R32: with no `front` registered, the state the session ended in, drawn by the shell */
   let ENTRY_PAGE = false;
@@ -783,32 +857,53 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       + (guide ? "" : '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-label="' + w("shell.assistant.close") + '">' + I("close") + "</button>") + "</header>"
       + '<div class="body">' + body + "</div></aside>";
   }
-  /* K3177 (c): the signed-in member's handle, never empty: `whoami`'s, else the one signed in with, else the member's id
-     (a founder's session may answer no handle) */
-  const handleOf = () => String((ME && ME.handle) || (S && S.w) || (ME && ME.member) || "");
+  /* K3177 (c): the signed-in member's handle: `whoami`'s, else the one signed in with. R60: never the member's record id */
+  const handleOf = () => String((ME && ME.handle) || (S && S.w) || "");
+  /* R7, R57, R60: the masthead, the design's at both widths: the mark and the group's name; search; the explanation level
+     by its own name; the assistant while reachable; the To do count, never at zero; the member's avatar opening the
+     menu. At the phone width it shows icons only, each label kept as the control's accessible name. */
   function mastHtml() {
-    const name = GROUP ? esc(GROUP) : "";
+    const narrow = phone();
+    /* R60: the group's display name, else "Your group", never its slug */
+    const name = GROUP ? esc(GROUP) : w("shell.group.unnamed");
     const level = w(LEVEL === "pause" ? "level.pause.name" : "level.prompt.name");
-    const initial = esc(handleOf().slice(0, 1).toUpperCase());
+    const handle = handleOf();
+    const label = (text) => (narrow ? "" : '<span class="mk-hide-phone">' + text + "</span>");
     const signout = can("signout") ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="signout" role="menuitem"' + tipAttr(w("shell.signout.does"), 2) + ">" + w("shell.signout") + "</button>" : "";
     const themes = ["device", "light", "dark"].map((t) => '<button type="button" class="cs-btn" data-tone="quiet" role="menuitemradio" aria-checked="' + (THEME === t) + '" data-shell="theme" data-theme-to="' + t + '">' + w("shell.appearance." + t) + "</button>").join("");
     /* R43 (DEC-214 (1)): the mark opens the masthead, before the group's name */
     const mark = '<span class="cs-mark" role="img" aria-label="' + w("shell.mark") + '" tabindex="0"' + tipAttr("<b>" + w("shell.mark") + "</b>: " + w("shell.mark.means"), 1)
       + '><svg viewBox="0 0 60 90" aria-hidden="true"><use href="' + D.icons + '#i-mark"/></svg></span>';
-    return '<header class="cs-mast">' + mark + (name ? '<a class="grp" href="/app" data-nav>' + name + "</a>" : "") + '<span class="spacer"></span>'
-      + '<a class="cs-btn" data-tone="quiet" href="' + placeHref("find") + '" data-nav' + tipAttr(w("shell.search.holds"), 2) + ">" + I("search") + w("shell.search") + "</a>"
-      + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="level"' + tipAttr(w("shell.level.holds"), 2) + ">" + I("question") + w("shell.level", { level: html(level) }) + "</button>"
-      + (REACHABLE ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-expanded="' + DOCK + '"' + tipAttr(w("shell.assistant.holds"), 2) + ">" + I("machine") + w("shell.assistant") + "</button>" : "")
-      + (TODO !== null ? '<a class="cs-kind" data-kind="todo" href="' + placeHref("queue") + '" data-nav' + tipAttr(w("shell.todo.means"), 1) + ">" + I("queue") + w("shell.todo", { n: String(TODO) }) + "</a>" : "")
-      + '<span class="cs-menuwrap"><button type="button" class="cs-btn" data-shell="menu" aria-haspopup="menu" aria-expanded="' + !!MENU + '" aria-controls="cs-menu"'
-      + tipAttr(w("shell.you.holds"), 2) + '><span aria-hidden="true">' + initial + '</span><span class="sr">' + w("shell.you", { handle: handleOf() }) + "</span></button>"
+    return '<header class="cs-mast">' + mark + '<a class="grp" href="/app" data-nav>' + name + "</a>" + '<span class="spacer"></span>'
+      + '<a class="mk-mastsearch" href="' + placeHref("find") + '" data-nav aria-label="' + w("shell.search") + '"' + tipAttr(w("shell.search.holds"), 2) + ">" + I("search") + (narrow ? "" : "<span>" + w("shell.search") + "</span>") + "</a>"
+      + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="level" aria-label="' + level + '"' + tipAttr(w("shell.level.holds"), 2) + ">" + I("question") + label(level) + "</button>"
+      + (REACHABLE ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-expanded="' + DOCK + '" aria-label="' + w("shell.assistant") + '"' + tipAttr(w("shell.assistant.holds"), 2) + ">" + I("machine") + label(w("shell.assistant")) + "</button>" : "")
+      + (TODO && !narrow ? '<a class="cs-kind mk-hide-phone" data-kind="todo" href="' + placeHref("queue") + '" data-nav' + tipAttr(w("shell.todo.means"), 1) + ">" + I("queue") + w("shell.todo", { n: String(TODO) }) + "</a>" : "")
+      + '<span class="cs-menuwrap"><button type="button" class="mk-avatar" data-shell="menu" aria-haspopup="menu" aria-expanded="' + !!MENU + '" aria-controls="cs-menu"'
+      + ' aria-label="' + (handle ? w("shell.you", { handle }) : w("shell.you.holds")) + '"' + tipAttr(w("shell.you.holds"), 2) + ">"
+      + (handle ? '<span aria-hidden="true">' + esc(handle.slice(0, 1).toUpperCase()) + "</span>" : I("subject")) + "</button>"
       + '<div class="cs-dialog cs-menu" id="cs-menu" role="menu"' + (MENU ? "" : " hidden") + ">" + signout
       + '<div role="group" aria-label="' + w("shell.appearance") + '"><span class="eyebrow">' + w("shell.appearance") + "</span>" + themes + "</div></div></span></header>";
   }
   /* R48: the main frame's root names the registered screen it drew; the shell's own fallbacks name none */
   const screenAttr = () => (MAIN && !MAIN.unavail && !UNREACHED && !ENTRY_PAGE ? ' data-screen="' + esc(MAIN.spec.id) + '"' : "");
-  /* R36: the test-instance band, on every frame, while `bootstrap` answers `test_instance: true` */
-  const bandHtml = () => (BOOT && BOOT.test_instance === true ? '<div class="cs-testband" role="note">' + w("instance.test.notice") + "</div>" : "");
+  /* R36, R53, R58: the test-instance band, above every frame and spanning it: served in the page while the instance is a
+     test one (from first paint, so nothing moves when `bootstrap` answers), drawn by the page when `bootstrap` answers
+     `test_instance: true` and it was not served, removed when it answers otherwise; its words follow the member's */
+  function testBand() {
+    const root = doc.getElementById("cs-root");
+    let band = doc.getElementById("cs-testband");
+    if (!BOOT_READ && band) { band.innerHTML = w("instance.test.notice"); return; }
+    if (!(BOOT && BOOT.test_instance === true)) { if (band && band.parentElement) band.parentElement.removeChild(band); return; }
+    if (!band && root && root.parentElement) {
+      band = doc.createElement("div");
+      band.setAttribute("class", "cs-testband");
+      band.setAttribute("id", "cs-testband");
+      band.setAttribute("role", "note");
+      root.parentElement.insertBefore(band, root);
+    }
+    if (band) band.innerHTML = w("instance.test.notice");
+  }
   const RAIL = ["home", "queue", "find", "add", "projects", "people", "settings"];
   const TABS = ["home", "queue", "add", "find", "more"];
   const RAIL_ICON = { home: "home", queue: "queue", find: "search", add: "add", projects: "project", people: "subject", settings: "settings", more: "settings" };
@@ -818,7 +913,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const frame = ENTRY_PAGE ? "public" : MAIN ? frameOf(shown) : "working";
     if (frame !== "working") {
       /* R30, R45: the public, published and setup frames: no rail, tabs, dock or member menu */
-      return '<div class="cs-frame" data-frame="' + esc(frame) + '" id="cs-frame">' + bandHtml() + '<main class="cs-main" id="cs-main"' + screenAttr() + ">" + mainHtml(route) + "</main></div>";
+      return '<div class="cs-frame" data-frame="' + esc(frame) + '" id="cs-frame"><main class="cs-main" id="cs-main"' + screenAttr() + ">" + mainHtml(route) + "</main></div>";
     }
     const place = placeOf(route.screen);
     const rail = RAIL.map((k) => '<a href="' + placeHref(k) + '" data-nav' + (place === k ? ' aria-current="page"' : "") + tipAttr(w("rail." + k + ".holds"), RAILW < 120 ? 1 : 2) + ">"
@@ -829,12 +924,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       + tipAttr(k === "more" ? w("tab.more.holds") : w("rail." + k + ".holds"), 2) + ">" + I(RAIL_ICON[k]) + w(k === "more" ? "tab.more.name" : "rail." + k + ".name") + "</a>").join("");
     const main = mainHtml(route);
     const dock = dockHtml();
-    const band = '<div class="cs-band" data-band="working"><span tabindex="0"' + tipAttr(w("mark.band.means") + '<span class="why">' + w("mark.path.working.means") + "</span>", 1) + "><b>" + w("mark.path.working.name") + "</b></span></div>";
-    const ask = ASK_LEVEL ? '<div class="cs-reason" role="region"><p>' + w("shell.level.ask", { level: html(w(LEVEL === "pause" ? "level.pause.name" : "level.prompt.name")) }) + "</p><div>"
+    /* R57: the band as drawn: "Working" and who sees it */
+    const band = '<div class="cs-band" data-band="working"><span tabindex="0"' + tipAttr(w("mark.band.means") + '<span class="why">' + w("mark.path.working.means") + "</span>", 1) + "><b>" + w("mark.path.working.name") + "</b> " + w("shell.band.working") + "</span></div>";
+    const ask = ASK_LEVEL ? '<div class="cs-reason" role="region"><p>' + w("shell.level.ask", { level: html(w(LEVEL === "pause" ? "level.pause.name" : "level.prompt.name")) }) + '</p><div class="mk-acts">'
       + '<button type="button" class="cs-btn" data-shell="level-keep">' + w("shell.level.keep") + "</button>"
       + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="level-switch">' + w("shell.level.switch", { level: html(w(LEVEL === "pause" ? "level.prompt.name" : "level.pause.name")) }) + "</button></div></div>" : "";
     return '<div class="cs-frame cs-shell' + (dock ? " with-dock" : "") + (RAILW < 120 ? " rail-icons" : "") + '" data-frame="working" id="cs-frame" style="--rail:' + RAILW + 'px">'
-      + bandHtml() + mastHtml() + band + '<nav class="cs-rail" aria-label="' + w("shell.sections") + '">' + rail + "</nav>"
+      + mastHtml() + band + '<nav class="cs-rail" aria-label="' + w("shell.sections") + '">' + rail + "</nav>"
       + '<main class="cs-main" id="cs-main"' + screenAttr() + ">" + ask + main + "</main>" + dock
       + '<nav class="cs-tabs" aria-label="' + w("shell.sections") + '">' + tabs + "</nav></div>";
   }
@@ -846,12 +942,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (LOCKED) {
       const who = S ? S.w || (ME && ME.handle) || "" : "";
       return '<div class="cs-overlay"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-lock-t" data-overlay="lock"><h2 id="cs-lock-t">' + w("shell.lock.title") + "</h2><p>" + w("session.locked") + "</p>"
-        + field("cs-lock-pw") + slot + '<span class="cs-actrow"><button type="button" class="cs-btn" data-tone="primary" data-shell="unlock">' + w("shell.lock.unlock") + "</button>"
+        + field("cs-lock-pw") + slot + '<span class="mk-acts"><button type="button" class="cs-btn" data-tone="primary" data-shell="unlock">' + w("shell.lock.unlock") + "</button>"
         + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="lock-other">' + w("shell.lock.other", { handle: who }) + "</button></span></div></div>";
     }
     if (REAUTH) {
       return '<div class="cs-overlay"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-reauth-t" data-overlay="reauth"><h2 id="cs-reauth-t">' + w("shell.reauth.title") + "</h2><p>" + w("session.reauth") + "</p>"
-        + field("cs-reauth-pw") + slot + '<span class="cs-actrow"><button type="button" class="cs-btn" data-tone="primary" data-shell="reauth">' + w("shell.reauth.send") + "</button>"
+        + field("cs-reauth-pw") + slot + '<span class="mk-acts"><button type="button" class="cs-btn" data-tone="primary" data-shell="reauth">' + w("shell.reauth.send") + "</button>"
         + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="reauth-cancel">' + w("shell.cancel") + "</button></span></div></div>";
     }
     if (DIALOG && DIALOG.kind === "register") {
@@ -859,7 +955,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         + '<span class="cs-field"><label for="cs-key-pass">' + w("shell.signer.passphrase") + '</label><span class="help" id="cs-key-pass-help">' + w("shell.signer.passphrase.help")
         + '</span><input id="cs-key-pass" class="cs-input" type="password" autocomplete="new-password" aria-describedby="cs-key-pass-help"></span>'
         + '<span class="cs-field"><label for="cs-key-again">' + w("shell.signer.passphrase.again") + '</label><input id="cs-key-again" class="cs-input" type="password" autocomplete="new-password"></span>'
-        + slot + '<span class="cs-actrow"><button type="button" class="cs-btn" data-tone="primary" data-shell="dialog-yes">' + w("shell.signer.makefile") + "</button>"
+        + slot + '<span class="mk-acts"><button type="button" class="cs-btn" data-tone="primary" data-shell="dialog-yes">' + w("shell.signer.makefile") + "</button>"
         + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dialog-no">' + w("shell.cancel") + "</button></span></div></div>";
     }
     if (DIALOG && DIALOG.kind === "sign") {
@@ -868,7 +964,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         + '</label><input id="cs-key-filepass" class="cs-input" type="password" autocomplete="off"></span></fieldset>' : "";
       return '<div class="cs-overlay"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-sign-t" data-overlay="sign"><h2 id="cs-sign-t">' + w("shell.signer.exactly") + "</h2><ol>"
         + DIALOG.list.map((s) => "<li><b>" + esc(s.label) + "</b><pre>" + esc(s.line) + "</pre></li>").join("") + "</ol>" + load + "<p>" + w("signing.ceremony.device") + "</p>"
-        + slot + '<span class="cs-actrow"><button type="button" class="cs-btn" data-tone="primary" data-shell="dialog-yes">' + w("shell.signer.sign") + "</button>"
+        + slot + '<span class="mk-acts"><button type="button" class="cs-btn" data-tone="primary" data-shell="dialog-yes">' + w("shell.signer.sign") + "</button>"
         + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dialog-no">' + w("shell.signer.decline") + "</button></span></div></div>";
     }
     return "";
@@ -897,6 +993,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (MAIN && MAIN.unavail === "unreachable" && Object.keys(values).length) MAIN.stash = Object.assign({}, MAIN.stash || {}, values);
     const fk = focusKey(doc.activeElement);
     root.innerHTML = frameHtml(ROUTE) + overlayHtml();
+    /* R59: the guide's marks in the title row of a working screen that is drawn */
+    if (!UNREACHED && !ENTRY_PAGE && (MAIN ? !MAIN.unavail && frameOf(MAIN.spec.id) === "working" : D.places.includes(ROUTE.screen))) placeMarks(root, marksHtml());
     absorb(root);
     const restore = (id, v) => {
       const el = doc.getElementById(id);
@@ -920,6 +1018,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       }
     }
     ringDraw(root);
+    testBand();
     if (fk) { let el = null; try { el = root.querySelector(fk); } catch { el = null; } if (el && el.focus) el.focus(); }
     if (GROUP) doc.title = GROUP;
   }
@@ -1111,7 +1210,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       return;
     }
     if (!S) return;
-    OVERLAY_REFUSAL = refusalHtml(a.kind === "refused" ? refusalWords(a, null, false, null) : w("state.failed", { reason: html(w("shell.noanswer")) }));
+    OVERLAY_REFUSAL = refusalHtml(a.kind === "refused" ? refusalWords(a, null, null) : w("shell.noanswer"));
     draw();
   }
   /* R34: the password asked again; answers whether `reauth` opened its window */
@@ -1139,7 +1238,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (field) field.value = "";
     if (a.kind === "ok") { REAUTH = null; OVERLAY_REFUSAL = ""; draw(); return r.resolve(true); }
     if (!S || LOCKED) { REAUTH = null; return r.resolve(false); }
-    OVERLAY_REFUSAL = refusalHtml(a.kind === "refused" ? refusalWords(a, null, false, null) : w("state.failed", { reason: html(w("shell.noanswer")) }));
+    OVERLAY_REFUSAL = refusalHtml(a.kind === "refused" ? refusalWords(a, null, null) : w("shell.noanswer"));
     draw();
   }
 
@@ -1201,9 +1300,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const main = root.querySelector("#cs-main");
     const el = main ? main.querySelector('[data-act="' + RING.op.replace(/"/g, "") + '"]') : null;
     if (!el) return;
-    el.classList.add("cs-ring");
+    /* the design's ring (`cs-target`) and its label */
+    el.classList.add("cs-target");
     const label = doc.createElement("span");
-    label.setAttribute("class", "cs-ringlabel");
+    label.setAttribute("class", "cs-target-label mk-ringlabel");
     label.setAttribute("id", "cs-ringlabel");
     label.innerHTML = w(RING.label || (el.tagName === "BUTTON" ? "shell.ring.ready" : "shell.ring.here"));
     if (el.parentElement) el.parentElement.insertBefore(label, el);
@@ -1400,7 +1500,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (weight === "reasoned") {
       const rid = "cs-reason-" + ai.replace(":", "-");
       return besideAct(ai, '<span class="cs-reason" role="group"><span class="cs-field"><label for="' + rid + '">' + w("shell.reason") + '</label><span class="help" id="' + rid + '-help">'
-        + w("shell.reason.help") + '</span><textarea id="' + rid + '" class="cs-input" aria-describedby="' + rid + '-help"></textarea></span><span class="cs-actrow">'
+        + w("shell.reason.help") + '</span><textarea id="' + rid + '" class="cs-input" aria-describedby="' + rid + '-help"></textarea></span><span class="mk-acts">'
         + '<button type="button" class="cs-btn" data-shell="reason-send" data-for="' + esc(ai) + '">' + w("shell.reason.send") + "</button>"
         + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="cancel" data-for="' + esc(ai) + '">' + w("shell.cancel") + '</button></span><span data-reason-refusal="' + esc(ai) + '"></span></span>');
     }
@@ -1408,7 +1508,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const fields = (d.spec.dialog || []).map((f, j) => '<span class="cs-field"><label for="cs-dlg-' + ai.replace(":", "-") + "-" + j + '">' + w(f.label) + '</label><textarea class="cs-input" id="cs-dlg-' + ai.replace(":", "-") + "-" + j + '"></textarea></span>').join("");
     const does = has("act." + d.op + ".does") ? "<p>" + w("act." + d.op + ".does") + "</p>" : "";
     besideAct(ai, '<span class="cs-dialog" role="dialog" aria-label="' + esc(label) + '"><span class="ends">' + does + "</span><p>"
-      + w(weight === "signed" ? "shell.dialog.signed" : "shell.dialog.signs", { handle: ME ? ME.handle || "" : "" }) + "</p>" + fields + '<span class="cs-actrow">'
+      + w(weight === "signed" ? "shell.dialog.signed" : "shell.dialog.signs", { handle: ME ? ME.handle || "" : "" }) + "</p>" + fields + '<span class="mk-acts">'
       + '<button type="button" class="cs-btn" data-tone="primary" data-shell="confirm" data-for="' + esc(ai) + '">' + w("shell.confirm") + "</button>"
       + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="cancel" data-for="' + esc(ai) + '">' + w("shell.cancel") + "</button></span></span>");
   }
@@ -1438,7 +1538,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     }
     if (a.kind !== "ok") {
       if (a.kind === "silent" && !S && !inst.pub) return;
-      const words = a.kind === "refused" ? refusalWords(a, d.spec.refusals, false, inst) : w("state.failed", { reason: html(w("shell.noanswer")) });
+      const words = a.kind === "refused" ? refusalWords(a, d.spec.refusals, inst) : w("shell.noanswer");
       return besideAct(ai, refusalHtml(words));
     }
     if (d.op === "unlock" && inst === MAIN && frameOf(MAIN.spec.id) !== "working") { for (const el of doc.getElementById("cs-root").querySelectorAll('input[type="password"]')) el.value = ""; return unlocked(); }
@@ -1734,7 +1834,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R33: the queue count is the shell's own read, not the member's activity */
     const [g, q, lv] = await Promise.all([call("groupidentity"), call("queue", { query: { limit: 500 }, background: true }), call("infolevel")]);
     if (!ME) return;
-    if (g.kind === "ok" && g.value) GROUP = g.value.display_name || g.value.group || null;
+    /* R60: the display name only; the slug is never drawn as the group's name */
+    if (g.kind === "ok" && g.value) GROUP = typeof g.value.display_name === "string" && g.value.display_name.trim() ? g.value.display_name : null;
     if (q.kind === "ok" && q.value && Array.isArray(q.value.items)) TODO = q.value.items.filter((x) => x && x.class === "OBLIGATION").length;
     if (lv.kind === "ok" && lv.value && (lv.value.level === "prompt" || lv.value.level === "pause")) {
       LEVEL_INFO = lv.value;
@@ -1799,7 +1900,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R32: the record read when a screen first needs it (never for a public or published one, R30); `/` with a live
        record opens Home */
     /* R36: the test-instance band, read once without a session */
-    call("bootstrap", { public: true }).then((b) => { BOOT = b.kind === "ok" && b.value && typeof b.value === "object" ? b.value : null; if (BOOT && BOOT.test_instance === true) draw(); });
+    call("bootstrap", { public: true }).then((b) => { if (b.kind === "ok" && b.value && typeof b.value === "object") { BOOT = b.value; BOOT_READ = true; testBand(); } });
     await route();
   }
   return { start, state: () => ({ ME, ROUTE, LEVEL, THEME, RAILW, REACHABLE, DOCK, TODO, GROUP, MAIN, DOCKI, LOCKED, S: !!S }), absorb, date, w };

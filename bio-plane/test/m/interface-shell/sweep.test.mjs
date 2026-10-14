@@ -39,7 +39,7 @@ const CASES = [
   ["front, ended", '[data-screen="front"]', (phone) => boot({ phone, screens: [...ALL, FRONT], path: "/app/held", plane: { heldcaptures: refused("X", null, 401) } })],
   ["front, locked", '[data-screen="front"]', (phone) => boot({ phone, screens: [...ALL, FRONT], path: "/app/held", plane: { whoami: refused("SESSION_LOCKED", null, 403) } })],
   ["front, signed out", '[data-screen="front"]', async (phone) => { const p = await boot({ phone, screens: [...ALL, FRONT] }); await p.click('[data-shell="menu"]'); await p.click('[data-shell="signout"]'); return p; }],
-  ["doorbell", '.cs-testband', (phone) => boot({ phone, screens: [...ALL, DOORBELL], path: "/app/doorbell", session: null, plane: { bootstrap: ok({ test_instance: true }) } })],
+  ["doorbell", '[data-screen="doorbell"]', (phone) => boot({ phone, screens: [...ALL, DOORBELL], path: "/app/doorbell", session: null, plane: { bootstrap: ok({ test_instance: true }) } })],
   ["published", '[data-screen="published"]', (phone) => boot({ phone, screens: [...ALL, PUBLISHED], path: "/app/published/c1", session: null, plane: { publishedcase: ok({ title: "The case" }) } })],
   ["join", '[data-frame="setup"]', (phone) => boot({ phone, screens: [...ALL, JOIN], path: "/app/join", session: null })],
   ["the lock", '[data-overlay="lock"]', async (phone) => { const p = await boot({ phone, screens: ALL, plane: { projectdirectory: ok({ projects: [] }) } }); await p.clock.tick(30 * 60 * 1000 + 1); return p; }],
