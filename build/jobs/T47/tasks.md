@@ -30,7 +30,7 @@
 - B3 (K3145, SCREENS-INVESTIGATE #1 J1 C12): confirmed at my interface. The control plane stamps a session's `by` as `member:<id>` (admission's `resolveSession`: the founder's bare `admin`, a machine's `class:<cls>`), and `checkRequest`, `checkTake`, `checkRecord` built `member:${by}`, so every member's act through the door was answered `NO_SUCH_CHECK_TARGET`/`NO_SUCH_CHECK_REQUEST`. My new `signRequest` had the same flaw. Fixed in all four: the `member:` prefix is folded once at the interface (`memberOfStamp`), a bare id (in process) taken as it is; what is recorded is the folded member id, as before. New tests through `tasksOps` with the door's stamp forms (`check.test` R13–R16/R10, `sign.test` R19/R10), each with controls (`class:daemon`, `member:`, `member:member:<id>`, the founder's `admin`); both fail without the fix and pass with it.
 - Tests after: tasks 115/115. Users: queue, op-declarations, answer-envelope, store-door as before; control-plane adds test 242 (R2, R41: affordances' unaccounted names `signrequest`), which fails identically on `tranche/T47`'s tip without this branch: affordances' merged help lists `signrequest` before op-declarations declares it (inherited; cleared when T47-53 merges). Checks: format, architecture (10 files), coverage (19/19), ownership 0 failures.
 
-Size (session_01SKZYsnCuyBHeuco2JFUfEY): test runs 19, module lines 1630
+Size (session_01SKZYsnCuyBHeuco2JFUfEY): test runs 19, module lines 1632
 
 ## J1 · QUESTION
 
