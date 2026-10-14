@@ -227,8 +227,9 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
     n++;
     assert.ok(Object.hasOwn(OPS, op), `${op} has no spec`);
     assert.deepEqual(plain(OPS[op]), want[k][0], op);
-    /* K2038: the credit page and `recover`, public, carry a present null row (op-grades' NON_ACTS, its R22) */
-    if (["credit", "recover"].includes(op)) assert.ok(Object.hasOwn(NEEDS, op) && NEEDS[op] === null, op);
+    /* K2038: the credit page and `recover`, public, carry a present null row (op-grades' NON_ACTS, its R22); T47 (R57;
+       K3147) the reset link's use, as `recover` */
+    if (["credit", "recover", "passwordreset"].includes(op)) assert.ok(Object.hasOwn(NEEDS, op) && NEEDS[op] === null, op);
     else if (want[k][1] === undefined) assert.ok(!Object.hasOwn(NEEDS, op), `${op} has a NEEDS row`);
     else {
       assert.ok(Object.hasOwn(NEEDS, op), `${op} has no NEEDS row`);

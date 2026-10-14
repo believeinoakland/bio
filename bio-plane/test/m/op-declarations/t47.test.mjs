@@ -152,7 +152,7 @@ test("R56 (N980): sourceof and sourcerung are in SESSION_OPS.member and SESSION_
 
 /* ---------- R57 ---------- */
 
-test("R57 (K3084; credentials R65, R66, R69, R71): unlock and reauth a session's own, mutating, NEEDS null, stamped session, source and country, in both sets; passwordresetlink an administrator's act, by stamped, NEEDS null; passwordresetlook and passwordreset public (in no session set), stamped source and country, no NEEDS row — each in credentials' family and served by its map, the password and the link read from the body only (negative control: signout's stamps carry no source, and a query password does not reach)", async () => {
+test("R57 (K3084; credentials R65, R66, R69, R71): unlock and reauth a session's own, mutating, NEEDS null, stamped session, source and country, in both sets; passwordresetlink an administrator's act, by stamped, NEEDS null; passwordresetlook and passwordreset public (in no session set), stamped source and country, a present null NEEDS row (K3147) — each in credentials' family and served by its map, the password and the link read from the body only (negative control: signout's stamps carry no source, and a query password does not reach)", async () => {
   for (const op of ["unlock", "reauth", "passwordresetlink", "passwordresetlook", "passwordreset"]) {
     shared(op);
     assert.deepEqual(familyOf(op), ["credentials"], op);
@@ -175,7 +175,8 @@ test("R57 (K3084; credentials R65, R66, R69, R71): unlock and reauth a session's
   assert.deepEqual(plain(OPS.passwordreset), { classes: null, mutating: true });
   for (const op of ["passwordresetlook", "passwordreset"]) {
     assert.ok(neither(op), op);
-    assert.ok(!Object.hasOwn(NEEDS, op), op);
+    /* K3147: a present null, as recover's, since op-grades names each in NON_ACTS */
+    assert.ok(Object.hasOwn(NEEDS, op) && NEEDS[op] === null, op);
     assert.deepEqual(stamps(op), ["country", "source"], op);
     assert.ok(await reaches(credentialsOps, op, { body: { link: SENT } }), op);
     assert.ok(!(await reaches(credentialsOps, op, { query: { link: SENT } })), op);
@@ -213,7 +214,7 @@ test("R58, R62, R63 (K3061 D3, K3143, K3144; credentials R66): REAUTH_ACTS is fr
 
 /* ---------- R59 ---------- */
 
-test("R59 (DEC-205, DEC-207 (8), N1001): grouplogoset and grouplanguagesset administrators' acts in instance-setup's family, by stamped, NEEDS null; grouplanguages a public read, in no session set; signrequest a member's act in tasks' family, by and viewer stamped, contribute, machineClasses []; signintrace a session's read in signin-door's family, viewer stamped; R34: each member op is named in ACT_HELP_ABSENT or explained, never both (negative control: a drifted spec is seen)", () => {
+test("R59 (DEC-205, DEC-207 (8), N1001): grouplogoset and grouplanguagesset administrators' acts in instance-setup's family, by stamped, NEEDS null; grouplanguages a public read, in no session set, a present null NEEDS row (K3147); signrequest a member's act in tasks' family, by and viewer stamped, contribute, machineClasses []; signintrace a session's read in signin-door's family, viewer stamped; R34: each member op is named in ACT_HELP_ABSENT or explained, never both (negative control: a drifted spec is seen)", () => {
   for (const op of ["grouplogoset", "grouplanguagesset", "grouplanguages", "signrequest", "signintrace"]) shared(op);
   for (const op of ["grouplogoset", "grouplanguagesset"]) {
     assert.deepEqual(plain(OPS[op]), { classes: SESSION, machineClasses: [], mutating: true }, op);
@@ -223,7 +224,7 @@ test("R59 (DEC-205, DEC-207 (8), N1001): grouplogoset and grouplanguagesset admi
     assert.ok(both(op), op);
   }
   assert.deepEqual(plain(OPS.grouplanguages), { classes: null, mutating: false });
-  assert.ok(neither("grouplanguages") && !Object.hasOwn(NEEDS, "grouplanguages"));
+  assert.ok(neither("grouplanguages") && Object.hasOwn(NEEDS, "grouplanguages") && NEEDS.grouplanguages === null);
   assert.deepEqual(familyOf("grouplanguages"), ["instance-setup"]);
   assert.deepEqual(plain(OPS.signrequest), { classes: SESSION, machineClasses: [], mutating: true });
   assert.equal(NEEDS.signrequest, "contribute");

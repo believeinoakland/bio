@@ -3306,6 +3306,10 @@ const NEEDS = Object.freeze(aliasRows({
      this table does not carry as stale (its R12), K516's precedent. */
   credit:                null,
   recover:               null,
+  /* T47 (R57; K3147): the reset link's use, public, takes NO WORKING CAPABILITY and is PRESENT, null, as `recover` is,
+     because op-grades names it in NON_ACTS (its R37); the link's look and the group's languages are `publicread`s, whose
+     kind gives the row. */
+  passwordreset:         null,
   /* T36 (R32): the scheduler's four wakes over the files take NO WORKING CAPABILITY — none is a session's act — and are
      PRESENT, null, as `moneydetectorsrun`'s, because op-grades grades each (its R24) and affordances' totality reads a
      graded key this table lacks as stale (its R12), K516's precedent. */
