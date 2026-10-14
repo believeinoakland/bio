@@ -52,3 +52,7 @@ Size (session_01PwGaGNvnbTEtbYSeV4VfBz): test runs 18, module lines 2,069
 ## J5 · COMPLETE
 
 B6 re-run: tranche/T47 merged (action-producers, op-declarations again). On this branch: ℹ pass 66 · ℹ fail 17, every failure interface-shell's unmerged kit (R27, R39, R46), as J4. With origin/job/T47/interface-shell merged into a scratch worktree: ℹ pass 83 · ℹ fail 0, twice, after one test fix (R8's pending check now presses as a member does, answering the shell's reason, so the reason field is not taken for a change). Checks: format, architecture, coverage 24/24, ownership: 0 failures. Size (session_01PwGaGNvnbTEtbYSeV4VfBz): test runs 22, module lines 2,069
+
+## J6 · COMPLETE
+
+B7: tranche/T47 merged with interface-shell; no overlay, no stand-in. `node --test test/m/screens-settings/*.test.mjs` on this branch: ℹ pass 83 · ℹ fail 0 (run twice). Nothing was held for this merge beyond the stand-ins, now gone; the tests drive the shell's own kit (cs.appearance, cs.fill, cs.later, cs.signer.publicLine with the keep box, cs.signedOut, the row name as reference, the refusal's reference). Checks: format 0 failures; architecture 30 product files, 0 failures; coverage 24 of 24 live ids, 0 failures; ownership 0 failures. checks/run.mjs over the product: architecture 0 failures; coverage's 12 failures are other modules', none of mine. Entries applied and findings as J4. Size (session_01PwGaGNvnbTEtbYSeV4VfBz): test runs 24, module lines 2,069
