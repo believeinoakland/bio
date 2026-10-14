@@ -139,9 +139,9 @@ async function memberWorld(aw, { account = "signin", mode = "check", principal =
   if (account === "signin") await w.signin("ann");
   if (account === "apikey") await w.account("ann");
   if (account === "group") {
-    assert.equal((await w.credentials.groupKeySet({ key: "group-key-secret", by: "admin" })).ok, true);
-    assert.equal(w.credentials.groupKeySwitch({ on: true, by: "admin" }).ok, true);
-    assert.equal(w.credentials.groupKeyNoticeSeen({ member: "member:ann", by: "member:ann" }).ok, true);
+    assert.equal((await w.aiAccounts.groupKeySet({ key: "group-key-secret", by: "admin" })).ok, true);
+    assert.equal(w.aiAccounts.groupKeySwitch({ on: true, by: "admin" }).ok, true);
+    assert.equal(w.aiAccounts.groupKeyNoticeSeen({ member: "member:ann", by: "member:ann" }).ok, true);
   }
   await w.account("bob");
   let stamp = "member:ann";
@@ -235,10 +235,10 @@ test("R18 (T47) controls: a `credential` in the request changes nothing and is n
   }
   assert.equal(aw.calls.length, 3);
   assert.ok(aw.calls.every((c) => SHAPE.test(c.body.credential) && c.body.credential !== TOKEN_M));
-  /* the group's keep-away (credentials R35, R52): the mint's refusal, unchanged, nothing sent, nothing written */
+  /* the group's keep-away (ai-accounts R7, R20): the mint's refusal, unchanged, nothing sent, nothing written */
   const kAw = agentWorker();
   const k = await memberWorld(kAw);
-  const set = k.w.credentials.aiKeepAwaySet({ on: true, reason: "The group's material stays away from every assistant for now.", by: "admin" });
+  const set = k.w.aiAccounts.aiKeepAwaySet({ on: true, reason: "The group's material stays away from every assistant for now.", by: "admin" });
   assert.equal(set.ok, true, JSON.stringify(set));
   const before = k.w.dump();
   const credsBefore = runCreds(k.w).length;
