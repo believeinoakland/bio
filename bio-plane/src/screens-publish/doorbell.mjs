@@ -14,17 +14,17 @@ export const DOORBELL = Object.freeze({
     const g = view.data.group && view.data.group.state === "ok" ? view.data.group.value : null;
     const group = g ? g.display_name || g.group || "" : "";
     const out = [];
-    out.push('<div class="mk-setuphead"><span class="grp">' + cs.esc(group) + "</span></div>");
+    out.push('<div class="mk-setuphead"><span class="mk-grp">' + cs.esc(group) + "</span></div>");
     out.push(cs.title(group ? cs.w("screen.doorbell.heading", { group: group }) : null));
     out.push('<p class="mk-sub">' + cs.w("screen.doorbell.sub") + "</p>");
-    out.push('<ul class="cs-list" data-what-happens>' + ["only", "reads", "phrase", "court"].map(function (k) { return "<li>" + cs.w("screen.doorbell.happens." + k) + "</li>"; }).join("") + "</ul>");
+    out.push('<ul class="mk-list" data-what-happens>' + ["only", "reads", "phrase", "court"].map(function (k) { return "<li>" + cs.w("screen.doorbell.happens." + k) + "</li>"; }).join("") + "</ul>");
     if (view.ui.received) {
-      out.push('<p class="cs-note" role="status" data-received>' + cs.w("screen.doorbell.received", { at: { html: cs.date(view.ui.received.at) } }) + "</p>");
+      out.push('<p class="mk-note" role="status" data-received>' + cs.w("screen.doorbell.received", { at: { html: cs.date(view.ui.received.at) } }) + "</p>");
     }
     out.push(cs.field("db-file", "screen.doorbell.file.label", { type: "file", help: "screen.doorbell.file.help" })
       + cs.field("db-note", "screen.doorbell.note.label", { area: true })
       + cs.field("db-secret", "screen.doorbell.secret.label", { type: "password", autocomplete: "off", help: "screen.doorbell.secret.help" })
-      + '<div class="cs-actrow">' + cs.act("knock", { tone: "primary" }) + "</div>");
+      + '<div class="mk-acts">' + cs.act("knock", { tone: "primary" }) + "</div>");
     return out.join("");
   },
 

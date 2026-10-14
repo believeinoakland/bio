@@ -76,22 +76,26 @@ export const CEREMONY = Object.freeze({
       const blockers = (v.first ? [v.first] : []).concat(Array.isArray(v.blockers) ? v.blockers : []);
       return (pinned.length ? cs.sheet(pinned.map(function (f) { return cs.row("", cs.ref("question", f.target, f.target, []), ""); }).join("")) : "")
         + '<p data-ready="' + (v.ready ? "yes" : "no") + '">' + cs.w(v.ready ? "screen.ceremony.ready" : "screen.ceremony.notready") + "</p>"
-        + (blockers.length ? '<ul class="cs-list" data-blockers>' + blockers.map(function (b) { return '<li role="alert">' + P.refusalText(cs, b) + "</li>"; }).join("") + "</ul>" : "");
-    }) + '<div class="cs-actrow">' + cs.act("publishpreflight") + "</div>"));
+        + (blockers.length ? '<ul class="mk-list" data-blockers>' + blockers.map(function (b) { return '<li role="alert">' + P.refusalText(cs, b) + "</li>"; }).join("") + "</ul>" : "");
+    }) + '<div class="mk-acts">' + cs.act("publishpreflight") + "</div>"));
 
-    // R3: what will be disclosed with the case; "See everything that will be disclosed".
-    out.push(cs.sec("screen.ceremony.disclosed", cs.state(ten, function (v) {
+    // R3: what will be disclosed with the case; "See everything that will be disclosed". Not drawn when nothing is to be
+    // disclosed, and no count is drawn at zero (R20).
+    out.push(P.sec(cs, "screen.ceremony.disclosed", cs.state(ten, function (v) {
       const all = ui.allTensions || null;
       const list = all && Array.isArray(all.candidates) ? all.candidates : Array.isArray(v.candidates) ? v.candidates.slice(0, 5) : [];
-      return '<p>' + cs.w("screen.ceremony.disclosed.count", { n: String(typeof v.count === "number" ? v.count : list.length) }) + "</p>"
+      const n = typeof v.count === "number" ? v.count : list.length;
+      if (!n && !list.length) return "";
+      return '<p>' + cs.w("screen.ceremony.disclosed.count", { n: String(n) }) + "</p>"
         + (list.length ? cs.sheet(list.map(function (t) {
           return cs.row("", '<span class="rec">' + cs.esc(t.says || t.summary || t.description || t.candidate || "") + "</span>", "");
-        }).join("")) : "") + '<p class="muted">' + cs.w("screen.ceremony.timeline.frozen") + "</p>";
-    }) + '<div class="cs-actrow">' + cs.act("publishtensions") + "</div>"));
+        }).join("")) : "") + '<p class="muted">' + cs.w("screen.ceremony.timeline.frozen") + "</p>"
+        + '<div class="mk-acts">' + cs.act("publishtensions") + "</div>";
+    })));
 
     // R4: the Photos step.
-    out.push(cs.sec("screen.ceremony.photos", '<p>' + cs.w("screen.ceremony.photos.copy") + "</p><p>" + cs.w("screen.ceremony.photos.gate") + "</p>"
-      + (photos.length ? photos.map(function (ph, i) {
+    out.push(P.sec(cs, "screen.ceremony.photos", !photos.length ? "" : '<p>' + cs.w("screen.ceremony.photos.copy") + "</p><p>" + cs.w("screen.ceremony.photos.gate") + "</p>"
+      + (photos.map(function (ph, i) {
         const sha = ph.sha || ph.capture || "";
         const marks = P.later(cs, view, "marks:" + sha, "photomarks", { query: { capture: sha } });
         const facts = cs.w("screen.ceremony.photo.facts", { by: ph.taken_by || "", relied: String((ph.relied_on_by || []).length) });
@@ -116,14 +120,14 @@ export const CEREMONY = Object.freeze({
           + cs.choice("ce-kind-" + i, "screen.ceremony.area.kind", [["person", "screen.ceremony.area.person"], ["plate", "screen.ceremony.area.plate"], ["staff", "screen.ceremony.area.staff"]])
 
           + cs.field("ce-staff-" + i, "screen.ceremony.area.reason", { area: true, help: "screen.ceremony.area.reason.help" }) + "</fieldset>"
-          + '<div class="cs-actrow">' + cs.act("obscuremark", { data: { capture: sha, index: String(i) } })
+          + '<div class="mk-acts">' + cs.act("obscuremark", { data: { capture: sha, index: String(i) } })
           + cs.act("obscuremark", { label: "screen.ceremony.photo.nothing", data: { capture: sha, index: String(i), nothing: "1" } }) + "</div></div>";
-      }).join("") : cs.state(pre, function () { return '<p class="muted">' + cs.w("screen.ceremony.photos.none") + "</p>"; }))));
+      }).join(""))));
 
     // R5: the Ties step: the member's own confirmation of no undeclared tie, sent with `publish` as `tieAttested`.
     out.push(cs.sec("screen.ceremony.ties", cs.checks("ce-tie", "screen.ceremony.ties.legend", [["yes", "screen.ceremony.ties.confirm", false]])
-      + '<div class="cs-actrow">' + cs.act("publish", { tone: "primary" }) + "</div><p class=\"muted\">" + cs.w("screen.ceremony.ties.part") + "</p>"
-      + (prepared ? '<p class="cs-note" role="status">' + cs.w("screen.ceremony.prepared", { edition: String(prepared.edition) }) + "</p>" : "")));
+      + '<div class="mk-acts">' + cs.act("publish", { tone: "primary" }) + "</div><p class=\"muted\">" + cs.w("screen.ceremony.ties.part") + "</p>"
+      + (prepared ? '<p class="mk-note" role="status">' + cs.w("screen.ceremony.prepared", { edition: String(prepared.edition) }) + "</p>" : "")));
 
     // R12–R15: the Sign step, offered only once `publish` has answered (R5's control); at the phone width it says where
     // signing finishes (R15; DEC-181), the kit drawing a signed act there as what it does, never sent.
@@ -131,7 +135,7 @@ export const CEREMONY = Object.freeze({
     if ((prepared || phone) && !published && !waiting && !(ui.signed && ui.signed.at)) {
       const doc = prepared && !phone ? P.later(cs, view, "document", "casedocument", { query: { case: prepared.caseId, edition: String(prepared.edition) } }) : null;
       const zone = signStep && signStep.publish_at && (signStep.publish_at.zone || signStep.publish_at.time_zone) || "";
-      let sign = '<p class="ends">' + cs.w("signing.ceremony.who", { signer: (view.me && view.me.handle) || "", project: projectTitle, group: groupName }) + "</p>";
+      let sign = '<p class="mk-explain">' + cs.w("signing.ceremony.who", { signer: (view.me && view.me.handle) || "", project: projectTitle, group: groupName }) + "</p>";
       if (phone) sign += '<p role="status" data-phone>' + cs.w("signing.ceremony.phone", { project: projectTitle }) + "</p>";
       else {
         sign += '<fieldset class="cs-field"><legend>' + cs.w("screen.ceremony.when") + "</legend>"
@@ -139,21 +143,21 @@ export const CEREMONY = Object.freeze({
           + cs.field("ce-date", "screen.ceremony.when.date", { type: "date" }) + cs.field("ce-time", "screen.ceremony.when.time", { type: "time" }) + "</fieldset>"
           + cs.state(doc, function (d) {
             const list = P.sitting(d, prepared) || [];
-            return '<details data-statements><summary>' + cs.w("screen.ceremony.signs.exactly") + "</summary><ul class=\"cs-list\">"
+            return '<details data-statements><summary>' + cs.w("screen.ceremony.signs.exactly") + "</summary><ul class=\"mk-list\">"
               + list.map(function (x) {
                 return '<li data-statement="' + x.kind + '"><span class="id">' + cs.esc(x.text.trim()) + "</span> · " + cs.w("screen.ceremony.signs." + x.kind, { id: x.id }) + "</li>";
               }).join("") + "</ul></details><p>" + cs.w("screen.ceremony.signs.count", { n: String(list.length) }) + "</p>";
           })
           // R12 (K3147, K3150): one button that follows the choice of when (interface-shell R49's `cs.choice` with `acts`).
-          + '<div class="cs-actrow">' + cs.choice("ce-when", "screen.ceremony.when", [["now", "screen.ceremony.when.now"], ["at", "screen.ceremony.when.at"]],
+          + '<div class="mk-acts">' + cs.choice("ce-when", "screen.ceremony.when", [["now", "screen.ceremony.when.now"], ["at", "screen.ceremony.when.at"]],
             { acts: { now: "caseratify", at: "publishat" }, act: { tone: "primary", icon: "signed" } }) + "</div>"
           + '<p class="muted">' + cs.w("screen.ceremony.device.next") + "</p>";
       }
       if (ui.nokey) sign += '<div class="cs-dialog" data-nokey><p>' + cs.w("signing.ceremony.nokey") + "</p>"
         + cs.checks("ce-keep", "screen.ceremony.keep.legend", [["keep", "signing.ceremony.keepkey", false]])
-        + '<div class="cs-actrow">' + cs.act("signerregisterown", { tone: "primary" }) + "</div>" + P.said(view, "register") + "</div>";
+        + '<div class="mk-acts">' + cs.act("signerregisterown", { tone: "primary" }) + "</div>" + P.said(view, "register") + "</div>";
       if (ui.notowner) sign += '<div class="cs-dialog" data-notowner><p>' + cs.w("signing.ceremony.notowner", { project: projectTitle, owners: ui.notowner.owners || "" }) + "</p>"
-        + '<div class="cs-actrow">' + cs.act("signrequest") + "</div>" + P.said(view, "signrequest") + "</div>";
+        + '<div class="mk-acts">' + cs.act("signrequest") + "</div>" + P.said(view, "signrequest") + "</div>";
       out.push(cs.sec("screen.ceremony.sign", sign + P.said(view, "sign")));
     }
 
@@ -164,7 +168,7 @@ export const CEREMONY = Object.freeze({
       out.push(cs.sec("screen.ceremony.signed", '<p role="status" data-signed="at">' + cs.w("signing.ceremony.signedat", {
         edition: String(w.edition || (prepared && prepared.edition) || ""), date: { html: at.date ? cs.date(at.date) : "" }, time: at.time || "", zone: at.zone || "" }) + "</p>"
         + cs.field("ce-move-date", "screen.ceremony.when.date", { type: "date" }) + cs.field("ce-move-time", "screen.ceremony.when.time", { type: "time" })
-        + '<div class="cs-actrow">' + cs.act("publishatmove", { data: { case: String(w.case || caseId || ""), edition: String(w.edition || (prepared && prepared.edition) || "") } })
+        + '<div class="mk-acts">' + cs.act("publishatmove", { data: { case: String(w.case || caseId || ""), edition: String(w.edition || (prepared && prepared.edition) || "") } })
         + cs.act("publishatcancel", { data: { case: String(w.case || caseId || ""), edition: String(w.edition || (prepared && prepared.edition) || "") } }) + "</div>"));
     } else if (published) {
       out.push(cs.sec("screen.ceremony.signed", '<p role="status" data-signed="now">' + cs.w("signing.ceremony.signednow", { edition: String(published.edition || "") }) + "</p>"

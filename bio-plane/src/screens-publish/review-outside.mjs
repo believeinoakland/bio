@@ -26,17 +26,20 @@ export const REVIEW_OUTSIDE = Object.freeze({
     out.push(cs.title(c.identity ? cs.w("screen.review-outside.heading", { case: c.identity, edition: String(c.edition || "") }) : null, { thing: "case" }));
     if (!copy) { out.push(cs.state("copy", function () { return ""; })); return out.join(""); }
     const g = copy.grant || {};
-    const until = g.until || g.expires_at || g.expires || null;
-    out.push('<p class="mk-sub">' + cs.w(until ? "screen.review-outside.until" : "screen.review-outside.untilstopped", { until: { html: until ? cs.date(until) : "" } }) + "</p>");
-    out.push('<p class="cs-note">' + cs.w("screen.review-outside.comments.go") + "</p>");
+    const until = typeof g.until === "string" && g.until ? g.until : null; // R18: the recipient's own grant part
+    // R18 (K3295): the instant's date and time with UTC named, until `review` carries the group's zone.
+    const at = until ? new Date(until) : null;
+    out.push('<p class="mk-sub">' + cs.w(until ? "screen.review-outside.until" : "screen.review-outside.untilstopped",
+      { date: { html: until ? cs.date(until) : "" }, time: at && !isNaN(at.getTime()) ? at.toISOString().slice(11, 16) : "" }) + "</p>");
+    out.push('<p class="mk-note">' + cs.w("screen.review-outside.comments.go") + "</p>");
     const a = copy.authored || {};
-    out.push(cs.sec("screen.review-outside.draft", (a.scope ? '<p class="rec">' + cs.esc(a.scope) + "</p>" : "")
+    out.push(P.sec(cs, "screen.review-outside.draft", (a.scope ? '<p class="rec">' + cs.esc(a.scope) + "</p>" : "")
       + (a.statement ? '<p class="rec">' + cs.esc(a.statement) + "</p>" : "")
       + (Array.isArray(copy.findings) && copy.findings.length ? cs.sheet(copy.findings.map(function (f) {
         return cs.row("", '<span class="rec">' + cs.esc(f.text || f.detail || f.target || "") + "</span>", "");
       }).join("")) : "")));
     out.push(cs.sec("screen.review-outside.comment", cs.field("ro-comment", "screen.review-outside.comment.label", { area: true, help: "screen.review-outside.comment.help" })
-      + '<div class="cs-actrow">' + cs.act("reviewcomment", { tone: "primary" }) + "</div>" + P.said(view, "reviewcomment")));
+      + '<div class="mk-acts">' + cs.act("reviewcomment", { tone: "primary" }) + "</div>" + P.said(view, "reviewcomment")));
     return out.join("");
   },
 

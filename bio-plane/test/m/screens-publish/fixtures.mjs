@@ -6,7 +6,7 @@ import { webcrypto } from "node:crypto";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-publish/index.mjs";
 import { boot, ok, refused, refusedIn, silent, pending, textNodes, settle, bytes, MEMBER } from "../interface-shell/harness.mjs";
 
-export { SCREENS, SCREEN_WORDS, ok, refused, refusedIn, silent, pending, settle };
+export { SCREENS, SCREEN_WORDS, ok, refused, refusedIn, silent, pending, settle, bytes };
 
 export const P = "PROJ-2026-0012";
 export const DR = "RVD-2026-0001";
@@ -17,6 +17,8 @@ export const E1 = "c41a" + "2".repeat(56) + "0f57";
 export const PHOTO = "ab12" + "3".repeat(56) + "ef90";
 export const DIGEST = "d".repeat(64);
 export const GRANT_SECRET = "SENTINEL-GRANT-9f2cb7e1";
+/** The end of 20 October 2099 in Los Angeles (PDT, UTC-7), the group's zone in `PREFLIGHT`. */
+export const GRANT_UNTIL = "2099-10-21T06:59:59Z";
 
 const projectMd = ["---", `id: ${P}`, "object_type: project", "title: \"The Coliseum lease\"", "---", ""].join("\n");
 
@@ -29,7 +31,7 @@ export const COPY = (o = {}) => ({ kind: "review-copy", reader: "member", draft:
   statement_acknowledgements: { acknowledgements: [{ by: "mai", reason: "The fairness question is another project's.", at: "2026-10-05T10:00:00Z" }] },
   observations: [{ observation: "OBS-2026-0001", chosen: { level: "name" }, stated: "signed the March 2024 adjustment" },
     { observation: "OBS-2026-0002", chosen: null, stated: null }],
-  grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law · 2026-10-20", until: "2026-10-20" }],
+  grants: [{ grant_id: "GRT-1", recipient: "Prof. N. Iyer · housing law", until: GRANT_UNTIL }],
   ...o });
 
 export const PREFLIGHT = (o = {}) => ({ wrote: false, ready: false,
@@ -71,6 +73,7 @@ export function plane(o = {}) {
       method: { timeline: [{ what: "Council approves amendment 1", at: "2024-01-12" }] },
       people: [{ shown: "The City Administrator", reason: "signed the March 2024 adjustment" }],
       captures: [{ title: "Council minutes, 12 January 2024", sha256: E1 }] }),
+    publishedbytes: bytes("%PDF-1.7", "application/pdf"),
     verify: ok({ published: true, sha256: SHA, matches: [{ bundle_id: C, path: "manifest", kind: "manifest", published: true }] }),
     importedcases: ok({ imports: [{ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "Port lease revenue" }], count: 1, wrote: false }),
     importedcase: ok({ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "Port lease revenue",

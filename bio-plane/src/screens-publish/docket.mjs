@@ -14,8 +14,8 @@ export const DOCKET = Object.freeze({
     const s = String(view.subject || "").split("/");
     return {
       project: { op: "image", query: { id: s[0] } },
-      docket: { op: "docket", query: { case: s[1] || "" }, subject: true,
-        empty: function (v) { return !v || !Array.isArray(v.entries) || v.entries.length === 0; } },
+      // The case is the subject; a case with no entry yet is not an unknown subject, so the read carries no `empty`.
+      docket: { op: "docket", query: { case: s[1] || "" }, subject: true },
     };
   },
 
@@ -30,28 +30,31 @@ export const DOCKET = Object.freeze({
     const P = view.parts;
     const caseId = String(view.subject || "").split("/")[1] || "";
     const out = [cs.title(null), '<p class="mk-sub">' + cs.w("screen.docket.sub", { case: caseId }) + "</p>"];
-    out.push(cs.sec("screen.docket.entries", cs.state("docket", function (v) {
+    // R20: with no entry, the screen's one empty state, which names the first step, is drawn without a section.
+    const dk = view.data.docket && view.data.docket.state === "ok" ? view.data.docket.value : null;
+    const none = !!dk && (!Array.isArray(dk.entries) || dk.entries.length === 0);
+    out.push(none ? '<p class="cs-state" data-state="empty">' + cs.w("screen.docket.none") + "</p>" : cs.sec("screen.docket.entries", cs.state("docket", function (v) {
       return cs.sheet(v.entries.map(function (e) {
         const posted = e.shelf !== "record" || e.state === "posted" || e.published_at;
         const said = e.summary || e.reason || e.kind || "";
         let prep = "";
         if (!posted && e.proposed && e.proposed !== "record" && e.state !== "taken-back") {
           const pr = P.later(cs, view, "prepare:" + e.entry, "docketprepare", { query: { case: caseId, entry: String(e.entry), kind: e.kind } });
-          prep = cs.state(pr, function (x) { return x.warning ? '<p class="cs-note">' + cs.esc(x.warning) + "</p>" : ""; })
+          prep = cs.state(pr, function (x) { return x.warning ? '<p class="mk-note">' + cs.esc(x.warning) + "</p>" : ""; })
             + cs.act("docketpost", { data: { entry: String(e.entry), kind: String(e.kind || "") } });
         }
         return cs.row("", "<b>" + cs.w("screen.docket.kind." + (["edition", "correction", "withdrawal", "court-order", "response", "statement", "reaction", "outcome"].includes(e.kind) ? e.kind : "other")) + "</b> · "
           + '<span class="rec">' + cs.esc(said) + "</span>",
           '<span class="meta">' + cs.w(posted ? "screen.docket.posted" : "screen.docket.drafted") + (e.filed_at || e.published_at ? " · " + cs.date(e.published_at || e.filed_at) : "") + "</span>", prep);
       }).join(""));
-    }, { empty: "screen.docket.none" })));
+    })));
     out.push(cs.sec("screen.docket.file", cs.choice("dk-kind", "screen.docket.kind.label", [["response", "screen.docket.kind.response"], ["statement", "screen.docket.kind.statement"],
       ["reaction", "screen.docket.kind.reaction"], ["outcome", "screen.docket.kind.outcome"]])
       + cs.field("dk-from", "screen.docket.from.label", { rec: true, help: "screen.docket.from.help" })
       + cs.field("dk-summary", "screen.docket.summary.label", { area: true, rec: true })
       + cs.choice("dk-proposed", "screen.docket.proposed.label", [["record", "screen.docket.proposed.record"], ["public", "screen.docket.proposed.public"], ["both", "screen.docket.proposed.both"]])
       + cs.field("dk-reason", "screen.docket.reason.label", { area: true, help: "screen.docket.reason.help" })
-      + '<div class="cs-actrow">' + cs.act("docketfile") + "</div>"));
+      + '<div class="mk-acts">' + cs.act("docketfile") + "</div>"));
     out.push('<p class="muted">' + cs.w("screen.docket.order") + "</p>" + P.said(view, "docketpost"));
     return out.join("");
   },
