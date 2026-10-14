@@ -9,7 +9,7 @@
   "draft": 4,
   "photo": 13,
   "handle": 7,
-  "ai": 99,
+  "ai": 100,
   "date": 14,
   "queue": 68,
   "transcribe": 19,
@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 2725,
+  "screen": 2743,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "tab": 2,
   "act": 732,
   "column": 33,
-  "total": 5451,
+  "total": 5470,
   "protected": 792
  },
  "words": [
@@ -12105,10 +12105,10 @@
   },
   {
    "key": "screen.home.strip.group",
-   "en": "need the group",
+   "en": "Needs the group",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-daily's own rows"
+   "note": "adopted from screens-daily's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.home.needsyou",
@@ -14030,10 +14030,10 @@
   },
   {
    "key": "screen.setup.otp.help",
-   "en": "Filled in for you when you continued from the installer's last page, where it was shown once. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to the hosting account can set a new one.",
+   "en": "Filled in for you when you continued from the installer's last page, where it was shown once. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to the Cloudflare account can set a new one.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.setup.own",
@@ -14142,10 +14142,10 @@
   },
   {
    "key": "screen.setup.places.now",
-   "en": "The places whose rules apply now",
+   "en": "The places whose rules apply",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.setup.places.none",
@@ -14254,10 +14254,10 @@
   },
   {
    "key": "screen.setup.assistant.own",
-   "en": "Any member may connect their own Claude subscription or API key, which then serves only them, at their own cost, unless you keep your group's material away from AI.",
+   "en": "Any member may connect their own Claude subscription or API key, which then serves only them, unless you keep your group's material away from AI.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.setup.assistant.paid",
@@ -14541,10 +14541,10 @@
   },
   {
    "key": "screen.setup.security.scanner",
-   "en": "Civicsmith scans every file it captures with its own file scanner and opens risky ones in a safe view.",
+   "en": "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.setup.security.keep",
@@ -14947,10 +14947,10 @@
   },
   {
    "key": "screen.project.questions.empty",
-   "en": "No questions yet. Open the first one: it is what the group will answer with the record.",
+   "en": "Start with one question the record could answer, such as “{example}”. Documents, notes and plans gather under it.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-inquiry's own rows"
+   "note": "adopted from screens-inquiry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.project.questions.notdrawn",
@@ -15038,10 +15038,10 @@
   },
   {
    "key": "screen.project.account.project",
-   "en": "The project's own account pays for the assistant here.",
+   "en": "Paid for by the project's own API key",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-inquiry's own rows"
+   "note": "adopted from screens-inquiry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.project.account.member",
@@ -15150,17 +15150,17 @@
   },
   {
    "key": "screen.question.opened",
-   "en": "Opened {date} · {project}",
+   "en": "Opened by {name}, {date} · {project}",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-inquiry's own rows"
+   "note": "adopted from screens-inquiry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.question.opened.noproject",
-   "en": "Opened {date}",
+   "en": "Opened by {name}, {date}",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-inquiry's own rows"
+   "note": "adopted from screens-inquiry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.question.strength.head",
@@ -15185,10 +15185,10 @@
   },
   {
    "key": "screen.question.strength.raise",
-   "en": "What would raise it: {raise}",
+   "en": "What raises it: {raise}",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-inquiry's own rows"
+   "note": "adopted from screens-inquiry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.question.strength.against",
@@ -16032,10 +16032,10 @@
   },
   {
    "key": "screen.projectai.keepaway.head",
-   "en": "Keeping the project's material away from AI",
+   "en": "Keeping this project's material away from AI",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-inquiry's own rows"
+   "note": "adopted from screens-inquiry's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.projectai.keepaway.on",
@@ -16305,10 +16305,10 @@
   },
   {
    "key": "screen.capture.file.choosehelp",
-   "en": "On a phone, the camera opens.",
+   "en": "on a phone, the camera opens",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-intake's own rows"
+   "note": "adopted from screens-intake's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.capture.file.how",
@@ -19707,10 +19707,10 @@
   },
   {
    "key": "screen.money.tension",
-   "en": "Each column is read from the figure's own source, as it writes it, never guessed; when it moved comes from the event the figure is tied to, never its accounting period. Adding evidence never changes a figure: it is a new fact or event beside it, with its own source. Where two sources disagree, both stay, shown in tension, and the table never picks one.",
+   "en": "Each column is read from the figure's own source, as it writes it, never guessed; when it moved comes from the event the figure is tied to, never its accounting period. Adding evidence never changes a figure: it is a new fact or event beside it, with its own source. New evidence may agree or disagree; where two sources disagree, both stay, shown in tension, and the table never picks one.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-investigate's own rows"
+   "note": "adopted from screens-investigate's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.money.cap.head",
@@ -20995,10 +20995,10 @@
   },
   {
    "key": "screen.help.random.p",
-   "en": "The sample is drawn from a recorded seed. Anyone, including the city or a reporter, can repeat the draw and get exactly the same items, so no one could have picked the easy or the damning ones.",
+   "en": "Civicsmith draws the sample from a recorded seed. Anyone, including the city or a reporter, can repeat the draw and get exactly the same items, so no one could have picked the easy or the damning ones.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-investigate's own rows"
+   "note": "adopted from screens-investigate's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.help.says",
@@ -21380,10 +21380,10 @@
   },
   {
    "key": "screen.proceeding.register",
-   "en": "Register a proceeding",
+   "en": "Register the proceeding",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-investigate's own rows"
+   "note": "adopted from screens-investigate's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.proceeding.forum",
@@ -22178,10 +22178,10 @@
   },
   {
    "key": "screen.ties.either",
-   "en": "Either way the tie is disclosed to readers of the case. Inside the group, only you ({handle}) and the administrators see this list.",
+   "en": "Either way the tie is disclosed to readers of the case. Inside the group, only you and the administrators see this list.",
    "protected": true,
    "source": "DEC-252",
-   "note": "adopted from screens-investigate's own rows"
+   "note": "adopted from screens-investigate's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.ties.add.empty",
@@ -23354,10 +23354,10 @@
   },
   {
    "key": "screen.imported.none",
-   "en": "No case imported yet. Choose a case file below to import the first.",
+   "en": "No case imported yet. Choose a case file to import the first.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-publish's own rows"
+   "note": "adopted from screens-publish's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.imported.import",
@@ -25209,10 +25209,10 @@
   },
   {
    "key": "screen.connect.apikey.help",
-   "en": "Made in your web browser at console.anthropic.com: sign in, add a payment method, then API keys › Create key, and paste it here. Anthropic bills you for each use. Your group's Civicsmith keeps it sealed, never shows or exports it, and uses it only for your questions.",
+   "en": "In your web browser: go to console.anthropic.com, sign in, add a payment method, then API keys › Create key, and paste it here. Anthropic bills you for each use. Your group's Civicsmith keeps it sealed, never shows or exports it, and uses it only for your questions.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
   },
   {
    "key": "screen.connect.apikey.nokey",
@@ -29176,6 +29176,135 @@
    "protected": false,
    "source": "DEC-256",
    "note": "screens-investigate R29: explore opened with no centre"
+  },
+  {
+   "key": "screen.project.account.exploring",
+   "en": "exploring: {frequency}.",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "after the uses the project's account pays for"
+  },
+  {
+   "key": "screen.project.account.open",
+   "en": "Open AI for this project",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.project.question.unrated",
+   "en": "rests on nothing yet",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "beside an unrated question"
+  },
+  {
+   "key": "screen.project.visibility.made",
+   "en": "Made findable by {name}, {date}: “{reason}”",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.project.opened",
+   "en": "Opened by {name} on {date}.",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.project.rescue.opened",
+   "en": "Hidden project · opened by {name}, {date}",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "what an administrator sees of a hidden project whose owners are all gone"
+  },
+  {
+   "key": "screen.project.rescue.why.help",
+   "en": "Its members see this beside your name.",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "under the reason for projectownerrescue"
+  },
+  {
+   "key": "screen.question.strength.raise.connection",
+   "en": "a link the source itself makes, or a shared identifier.",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "what raises a short connection grade, after screen.question.strength.raise"
+  },
+  {
+   "key": "screen.question.gap.undetermined",
+   "en": "Undetermined, because {reason}",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "beside the strength; {reason} is the record's own"
+  },
+  {
+   "key": "screen.question.waits.restore",
+   "en": "Restore it, with a reason",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "heldrestore's button where the question waits on a set-aside document"
+  },
+  {
+   "key": "screen.question.reading.standfor",
+   "en": "Stand on this one for {project}…",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "versioncurrent's button on a reading"
+  },
+  {
+   "key": "screen.question.affirm.head",
+   "en": "Accepting a reading that rests on parts each enough on its own",
+   "protected": false,
+   "source": "DEC-257"
+  },
+  {
+   "key": "screen.question.theme.passages",
+   "en": "{count} of this question's passages",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "beside a theme its passages are in"
+  },
+  {
+   "key": "screen.question.relies.cites",
+   "en": "cites this one as a passage",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "beside a question that relies on this one"
+  },
+  {
+   "key": "screen.question.conclude.adopts",
+   "en": "A conclusion adopts one reading as the group's answer, in that reading's own words; it rests on the passages the reading stands on.",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "under question.conclude.reading"
+  },
+  {
+   "key": "screen.question.airun.reading",
+   "en": "Reading the {count} documents the group holds on {subject} for passages that bear on this question",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "the assistant's run, while it works"
+  },
+  {
+   "key": "screen.question.proposal.rests",
+   "en": "It rests on {count} passages: {passages}.",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "under the assistant's proposed reading"
+  },
+  {
+   "key": "screen.question.proposal.testinstance",
+   "en": "On a test instance, its work also reads: “{label}”",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "{label} is ai.label.untested"
+  },
+  {
+   "key": "ai.machine.request",
+   "en": "Machine work · the assistant, at {who}'s request",
+   "protected": false,
+   "source": "DEC-257",
+   "note": "machine work run at another member's request; at your own, screen.answers.machine"
   },
   {
    "key": "rail.home.name",

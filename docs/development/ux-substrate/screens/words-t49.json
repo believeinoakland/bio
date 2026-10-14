@@ -1139,6 +1139,120 @@
    "en": "Choose where to start: a person, an organization, a document or a payment. Its connections are then drawn here, each step cited and graded.",
    "protected": false,
    "note": "DEC-256: screens-investigate R29: explore opened with no centre"
+  },
+  {
+   "key": "screen.project.account.exploring",
+   "en": "exploring: {frequency}.",
+   "protected": false,
+   "note": "DEC-257: after the uses the project's account pays for"
+  },
+  {
+   "key": "screen.project.account.open",
+   "en": "Open AI for this project",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.project.question.unrated",
+   "en": "rests on nothing yet",
+   "protected": false,
+   "note": "DEC-257: beside an unrated question"
+  },
+  {
+   "key": "screen.project.visibility.made",
+   "en": "Made findable by {name}, {date}: “{reason}”",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.project.opened",
+   "en": "Opened by {name} on {date}.",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.project.rescue.opened",
+   "en": "Hidden project · opened by {name}, {date}",
+   "protected": false,
+   "note": "DEC-257: what an administrator sees of a hidden project whose owners are all gone"
+  },
+  {
+   "key": "screen.project.rescue.why.help",
+   "en": "Its members see this beside your name.",
+   "protected": false,
+   "note": "DEC-257: under the reason for projectownerrescue"
+  },
+  {
+   "key": "screen.question.strength.raise.connection",
+   "en": "a link the source itself makes, or a shared identifier.",
+   "protected": false,
+   "note": "DEC-257: what raises a short connection grade, after screen.question.strength.raise"
+  },
+  {
+   "key": "screen.question.gap.undetermined",
+   "en": "Undetermined, because {reason}",
+   "protected": false,
+   "note": "DEC-257: beside the strength; {reason} is the record's own"
+  },
+  {
+   "key": "screen.question.waits.restore",
+   "en": "Restore it, with a reason",
+   "protected": false,
+   "note": "DEC-257: heldrestore's button where the question waits on a set-aside document"
+  },
+  {
+   "key": "screen.question.reading.standfor",
+   "en": "Stand on this one for {project}…",
+   "protected": false,
+   "note": "DEC-257: versioncurrent's button on a reading"
+  },
+  {
+   "key": "screen.question.affirm.head",
+   "en": "Accepting a reading that rests on parts each enough on its own",
+   "protected": false,
+   "note": "DEC-257"
+  },
+  {
+   "key": "screen.question.theme.passages",
+   "en": "{count} of this question's passages",
+   "protected": false,
+   "note": "DEC-257: beside a theme its passages are in"
+  },
+  {
+   "key": "screen.question.relies.cites",
+   "en": "cites this one as a passage",
+   "protected": false,
+   "note": "DEC-257: beside a question that relies on this one"
+  },
+  {
+   "key": "screen.question.conclude.adopts",
+   "en": "A conclusion adopts one reading as the group's answer, in that reading's own words; it rests on the passages the reading stands on.",
+   "protected": false,
+   "note": "DEC-257: under question.conclude.reading"
+  },
+  {
+   "key": "screen.question.airun.reading",
+   "en": "Reading the {count} documents the group holds on {subject} for passages that bear on this question",
+   "protected": false,
+   "note": "DEC-257: the assistant's run, while it works"
+  },
+  {
+   "key": "screen.question.proposal.rests",
+   "en": "It rests on {count} passages: {passages}.",
+   "protected": false,
+   "note": "DEC-257: under the assistant's proposed reading"
+  },
+  {
+   "key": "screen.question.proposal.testinstance",
+   "en": "On a test instance, its work also reads: “{label}”",
+   "protected": false,
+   "note": "DEC-257: {label} is ai.label.untested"
+  },
+  {
+   "key": "ai.machine.request",
+   "en": "Machine work · the assistant, at {who}'s request",
+   "protected": false,
+   "note": "DEC-257: machine work run at another member's request; at your own, screen.answers.machine"
   }
  ],
  "retired": [
@@ -1151,6 +1265,44 @@
  ],
  "rewrite": {
   "queue.milestone-overdue.summary": "Past its date: {milestone}",
-  "queue.temporal-expectation-due.undetermined.summary": "Its date may have passed: {duty}"
+  "queue.temporal-expectation-due.undetermined.summary": "Its date may have passed: {duty}",
+  "screen.setup.otp.help": "Filled in for you when you continued from the installer's last page, where it was shown once. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to the Cloudflare account can set a new one.",
+  "screen.setup.security.scanner": "Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view.",
+  "screen.setup.assistant.own": "Any member may connect their own Claude subscription or API key, which then serves only them, unless you keep your group's material away from AI.",
+  "screen.setup.places.now": "The places whose rules apply",
+  "screen.ties.either": "Either way the tie is disclosed to readers of the case. Inside the group, only you and the administrators see this list.",
+  "screen.money.tension": "Each column is read from the figure's own source, as it writes it, never guessed; when it moved comes from the event the figure is tied to, never its accounting period. Adding evidence never changes a figure: it is a new fact or event beside it, with its own source. New evidence may agree or disagree; where two sources disagree, both stay, shown in tension, and the table never picks one.",
+  "screen.help.random.p": "Civicsmith draws the sample from a recorded seed. Anyone, including the city or a reporter, can repeat the draw and get exactly the same items, so no one could have picked the easy or the damning ones.",
+  "screen.imported.none": "No case imported yet. Choose a case file to import the first.",
+  "screen.projectai.keepaway.head": "Keeping this project's material away from AI",
+  "screen.proceeding.register": "Register the proceeding",
+  "screen.connect.apikey.help": "In your web browser: go to console.anthropic.com, sign in, add a payment method, then API keys › Create key, and paste it here. Anthropic bills you for each use. Your group's Civicsmith keeps it sealed, never shows or exports it, and uses it only for your questions.",
+  "screen.capture.file.choosehelp": "on a phone, the camera opens",
+  "screen.home.strip.group": "Needs the group",
+  "screen.project.questions.empty": "Start with one question the record could answer, such as “{example}”. Documents, notes and plans gather under it.",
+  "screen.project.account.project": "Paid for by the project's own API key",
+  "screen.question.opened": "Opened by {name}, {date} · {project}",
+  "screen.question.opened.noproject": "Opened by {name}, {date}",
+  "screen.question.strength.raise": "What raises it: {raise}"
+ },
+ "rewrite_dec": {
+  "screen.setup.otp.help": "DEC-257",
+  "screen.setup.security.scanner": "DEC-257",
+  "screen.setup.assistant.own": "DEC-257",
+  "screen.setup.places.now": "DEC-257",
+  "screen.ties.either": "DEC-257",
+  "screen.money.tension": "DEC-257",
+  "screen.help.random.p": "DEC-257",
+  "screen.imported.none": "DEC-257",
+  "screen.projectai.keepaway.head": "DEC-257",
+  "screen.proceeding.register": "DEC-257",
+  "screen.connect.apikey.help": "DEC-257",
+  "screen.capture.file.choosehelp": "DEC-257",
+  "screen.home.strip.group": "DEC-257",
+  "screen.project.questions.empty": "DEC-257",
+  "screen.project.account.project": "DEC-257",
+  "screen.question.opened": "DEC-257",
+  "screen.question.opened.noproject": "DEC-257",
+  "screen.question.strength.raise": "DEC-257"
  }
 }

@@ -37,7 +37,7 @@ const T49 = JSON.parse(R('words-t49.json'));
 const retiredSeen = new Set(), rewriteSeen = new Set();
 const add = (key, en, prot, source, note) => {
   if (T49.retired.includes(key)) { retiredSeen.add(key); return; }   // DEC-256: withdrawn by the requirements
-  if (key in T49.rewrite) { rewriteSeen.add(key); en = T49.rewrite[key]; note = (note ? note + '; ' : '') + 'DEC-256: reworded'; }
+  if (key in T49.rewrite) { rewriteSeen.add(key); en = T49.rewrite[key]; note = (note ? note + '; ' : '') + ((T49.rewrite_dec || {})[key] || 'DEC-256') + ': reworded'; }
   if (seen.has(key)) fail('duplicate key ' + key);
   if (!en || !String(en).trim()) fail('empty text for ' + key);
   seen.add(key);

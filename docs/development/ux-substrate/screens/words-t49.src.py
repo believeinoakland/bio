@@ -129,12 +129,62 @@ w6('setup.member.home', 'Go to Home', False, 'screens-entry R19')
 w6('setup.member.home.tip', "Your group's home: what needs you, and what changed since you last looked.", False, 'screens-entry R19')
 w6('screen.explore.nocentre', 'Choose where to start: a person, an organization, a document or a payment. Its connections are then drawn here, each step cited and graded.', False, 'screens-investigate R29: explore opened with no centre')
 
+# --- DEC-257: the drawn screens reconciled with the words (K3268): every sentence a member reads on a screen is a keyed word,
+# word for word (check_words_drawn.mjs). Where an adopted row (DEC-252) and the drawing differed, the drawing governs and the
+# row is reworded (REWRITE7); where a design row differed, the row governs and the drawing was changed. A sentence that
+# carries sample data is keyed as a template, the drawing an instance of it.
+def w7(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-257' + (': ' + note if note else '')))
+REWRITE7 = {
+  'screen.setup.otp.help': "Filled in for you when you continued from the installer's last page, where it was shown once. Opening this page another way? Type the password you saved there. Lost it? Whoever can sign in to the Cloudflare account can set a new one.",
+  'screen.setup.security.scanner': 'Civicsmith scans every file it captures with its own scanner and opens risky ones in a safe view.',
+  'screen.setup.assistant.own': "Any member may connect their own Claude subscription or API key, which then serves only them, unless you keep your group's material away from AI.",
+  'screen.setup.places.now': 'The places whose rules apply',
+  'screen.ties.either': 'Either way the tie is disclosed to readers of the case. Inside the group, only you and the administrators see this list.',
+  'screen.money.tension': "Each column is read from the figure's own source, as it writes it, never guessed; when it moved comes from the event the figure is tied to, never its accounting period. Adding evidence never changes a figure: it is a new fact or event beside it, with its own source. New evidence may agree or disagree; where two sources disagree, both stay, shown in tension, and the table never picks one.",
+  'screen.help.random.p': 'Civicsmith draws the sample from a recorded seed. Anyone, including the city or a reporter, can repeat the draw and get exactly the same items, so no one could have picked the easy or the damning ones.',
+  'screen.imported.none': 'No case imported yet. Choose a case file to import the first.',
+  'screen.projectai.keepaway.head': "Keeping this project's material away from AI",
+  'screen.proceeding.register': 'Register the proceeding',
+  'screen.connect.apikey.help': "In your web browser: go to console.anthropic.com, sign in, add a payment method, then API keys › Create key, and paste it here. Anthropic bills you for each use. Your group's Civicsmith keeps it sealed, never shows or exports it, and uses it only for your questions.",
+  'screen.capture.file.choosehelp': 'on a phone, the camera opens',
+  'screen.home.strip.group': 'Needs the group',
+  'screen.project.questions.empty': 'Start with one question the record could answer, such as “{example}”. Documents, notes and plans gather under it.',
+  'screen.project.account.project': "Paid for by the project's own API key",
+  'screen.question.opened': 'Opened by {name}, {date} · {project}',
+  'screen.question.opened.noproject': 'Opened by {name}, {date}',
+  'screen.question.strength.raise': 'What raises it: {raise}',
+}
+# project
+w7('screen.project.account.exploring', 'exploring: {frequency}.', False, "after the uses the project's account pays for")
+w7('screen.project.account.open', 'Open AI for this project')
+w7('screen.project.question.unrated', 'rests on nothing yet', False, 'beside an unrated question')
+w7('screen.project.visibility.made', 'Made findable by {name}, {date}: “{reason}”')
+w7('screen.project.opened', 'Opened by {name} on {date}.')
+w7('screen.project.rescue.opened', 'Hidden project · opened by {name}, {date}', False, 'what an administrator sees of a hidden project whose owners are all gone')
+w7('screen.project.rescue.why.help', 'Its members see this beside your name.', False, 'under the reason for projectownerrescue')
+# question
+w7('screen.question.strength.raise.connection', 'a link the source itself makes, or a shared identifier.', False, 'what raises a short connection grade, after screen.question.strength.raise')
+w7('screen.question.gap.undetermined', 'Undetermined, because {reason}', False, "beside the strength; {reason} is the record's own")
+w7('screen.question.waits.restore', 'Restore it, with a reason', False, "heldrestore's button where the question waits on a set-aside document")
+w7('screen.question.reading.standfor', 'Stand on this one for {project}…', False, "versioncurrent's button on a reading")
+w7('screen.question.affirm.head', 'Accepting a reading that rests on parts each enough on its own')
+w7('screen.question.theme.passages', "{count} of this question's passages", False, 'beside a theme its passages are in')
+w7('screen.question.relies.cites', 'cites this one as a passage', False, 'beside a question that relies on this one')
+w7('screen.question.conclude.adopts', "A conclusion adopts one reading as the group's answer, in that reading's own words; it rests on the passages the reading stands on.", False, 'under question.conclude.reading')
+w7('screen.question.airun.reading', 'Reading the {count} documents the group holds on {subject} for passages that bear on this question', False, "the assistant's run, while it works")
+w7('screen.question.proposal.rests', 'It rests on {count} passages: {passages}.', False, "under the assistant's proposed reading")
+w7('screen.question.proposal.testinstance', 'On a test instance, its work also reads: “{label}”', False, '{label} is ai.label.untested')
+# ai
+w7('ai.machine.request', "Machine work · the assistant, at {who}'s request", False, "machine work run at another member's request; at your own, screen.answers.machine")
+# --- end DEC-257
+
 # Rows the requirements withdraw (DEC-256): build_words.mjs drops them, failing if one is no longer there to drop
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
            'queue.temporal-expectation-due.undetermined.summary': 'Its date may have passed: {duty}'}
 
+REWRITE.update(REWRITE7)   # DEC-257: rows reworded to the words the screens draw
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'words-t49.json')
-open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, rewrite=REWRITE), indent=1, ensure_ascii=False) + '\n')
+open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, rewrite=REWRITE, rewrite_dec={k: 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
 print(len(W), 'rows to', out)
