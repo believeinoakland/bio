@@ -51,12 +51,15 @@ import { checkConnectionPairCovers, checkConnectionMentionUnchosen } from "./pai
 import { Themes } from "./themes.mjs";
 import { registerOwner } from "../connection-grammar/index.mjs";
 import { MENTIONED_KINDS, MENTIONED_OWNER, mentionedNeighbours } from "./mentioned.mjs";
+import { StepSources, STEP_SOURCE_KINDS } from "./stepsources.mjs";
 
 export { CONNECTIONS_SCHEMA, CONNECTIONS_TABLES, CONNECTIONS_TABLE_NAMES } from "./schema.mjs";
 export { checkConnectionPairCovers, checkConnectionMentionUnchosen } from "./pair.mjs";
 export { THEME_READ_LIMIT_DEFAULT, THEME_READ_LIMIT_MAX, THEME_WITHDRAW_CHECKS } from "./themes.mjs";
 export { MENTIONED_KIND, MENTIONED_KINDS, MENTIONED_OWNER, MENTIONED_DECLARES, CO_MENTION_HUB, WARN_BAND, mentionedMethod }
   from "./mentioned.mjs";
+export { STEP_SOURCE_KIND, STEP_SOURCE_KINDS, STEP_SOURCE_DECLARES, STEP_SOURCE_BASIS_MAX, STEP_SOURCE_ID_PREFIX }
+  from "./stepsources.mjs";
 /* R35, R46: C-49, C-74 and C-81 and the leg check are this module's own (`./checks.mjs`; C-74 T18, the rest copied
    T19), its public face for `inquiry-grammar` and `action-grammar` (`themeLegFindings`). */
 export { CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, THEME_CHECKS, THEME_ID_RE, THEME_REF_RE, THEME_LEG_KEYS,
@@ -130,6 +133,7 @@ export class Connections {
     this.env = env || {};
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     this.themes = new Themes(this);
+    this.stepSources = new StepSources(this);
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -1323,8 +1327,13 @@ export class Connections {
   /* ================================================================ the connection owner (R62–R65): ./mentioned.mjs */
 
   /** R63–R65: the documents connected to `node` by R1's derived connections, in `connection-grammar`'s shape, as the
-   *  kind `mentioned_together`. Reads; never derives. */
+   *  kind `mentioned_together`. Reads; never derives. R69: for an entity node, the sources attached to the declared
+   *  steps it is an end of, as the kind `step_source` (`./stepsources.mjs`). A node is an entity or a document, never
+   *  both, so the read is the one its node names. */
   neighbours(args) {
+    const node = args && typeof args === "object" ? args.node : null;
+    if (typeof node === "string" && node && this.entities && typeof this.entities.has === "function" && this.entities.has(node))
+      return this.stepSources.neighbours(args);
     return mentionedNeighbours(this, args, { positionOf: (r, side) =>
       readingSourceFromColumns(r[`${side}_pos_kind`], r[`${side}_pos`], r[`${side}_pos_ref`]) });
   }
@@ -1351,6 +1360,11 @@ export class Connections {
   proposeForTheme(a) { return this.themes.propose(a); }
   withdrawFromTheme(a) { return this.themes.withdraw(a); }
   readThemes(a) { return this.themes.read(a); }
+
+  /* ================================================================ sources of declared steps (R68, R69): ./stepsources.mjs */
+
+  attachStepSource(a) { return this.stepSources.attach(a); }
+  withdrawStepSource(a) { return this.stepSources.withdraw(a); }
 }
 
 /** R13 as the earned-basis registry states an axis: a reaching grade is the value a portion leg may state
@@ -1434,8 +1448,10 @@ export function registeredNeighbours(args) {
   return k.neighbours(rest);
 }
 
-/** R62: registered once, at load, into the plane's default registry (`connection-grammar` R5). */
-export const MENTIONED_REGISTRATION = registerOwner({ owner: MENTIONED_OWNER, kinds: MENTIONED_KINDS.map((x) => ({ ...x })),
+/** R62, R69: registered once, at load, into the plane's default registry (`connection-grammar` R5): the owner's two
+ *  kinds, `mentioned_together` and `step_source`, with the one read that answers each by its node. */
+export const CONNECTIONS_KINDS = Object.freeze([...MENTIONED_KINDS, ...STEP_SOURCE_KINDS]);
+export const MENTIONED_REGISTRATION = registerOwner({ owner: MENTIONED_OWNER, kinds: CONNECTIONS_KINDS.map((x) => ({ ...x })),
                                                       neighbours: registeredNeighbours });
 
 /** The one connections instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on the
@@ -1529,6 +1545,12 @@ export function connectionsOps(k, url, body, env) {
     themewithdraw: () => k.withdrawFromTheme({ theme: (b && b.theme) || q("theme"), target: (b && b.target) || q("target"),
                                                reason: b ? b.reason : null, actor: q("actor"), viewer: q("viewer"),
                                                administer: q("administer") }),
+    /* R68 (control-plane R92, op-declarations R67): `member` and `viewer` are the session's stamps, never the body's. */
+    stepsource: () => k.attachStepSource({ relation: b ? b.relation : null, captureSha: b ? b.captureSha : null,
+                                           extent: b ? b.extent : null, basis: b ? b.basis : null,
+                                           member: q("member"), viewer: q("viewer") }),
+    stepsourcewithdraw: () => k.withdrawStepSource({ id: b ? b.id : null, reason: b ? b.reason : null,
+                                                     member: q("member"), viewer: q("viewer") }),
     themeread: () => k.readThemes({ id: q("id"), q: q("q"), limit: q("limit"), viewer: q("viewer"),
                                     administer: q("administer") }),
   };

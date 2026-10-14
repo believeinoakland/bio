@@ -36,7 +36,7 @@ test("R1: NO_ENTITY for an empty id; one connection per unordered pair, graded t
   }
   const row = w.row(`SELECT pair_rule FROM connections LIMIT 1`);
   assert.equal(row.pair_rule, PAIR_RULE);
-  assert.ok(caps.length === 3);
+  assert.equal(caps.length, 3);
 });
 
 test("R1 (N285): a request naming no entity id (absent, not a string, or empty) is answered by entities.noEntity (its R37), with this act's sentence, writing nothing and telling no listener", () => {
@@ -248,7 +248,7 @@ test("R18: wake is null when nothing is marked, else now plus the delay (a bindi
   assert.equal(d.k.wake(0), 60000, "default delay 60 s");
 });
 
-test("R36: purge clears connections and choices keyed to either end, refs and placements by bundle; the dirty set and themes whole-store only", () => {
+test("R36: purge clears connections and choices keyed to either end, refs and placements by bundle; the dirty set and themes whole-store only; the whole-store purge clears every table, step_sources (T48) included", () => {
   const w = world();
   const { ids } = three(w);
   w.k.derive({ entityId: E });
@@ -263,8 +263,20 @@ test("R36: purge clears connections and choices keyed to either end, refs and pl
   assert.equal(w.count("refs"), 1, "refs keyed by the CITING bundle: ids[1]'s edge stays");
   assert.equal(w.count("connection_dirty"), 1, "the dirty set is whole-store only");
   assert.equal(w.count("themes"), 1);
+  /* (T48) A member's assertion and a source attached to a declared step, so the whole-store purge has rows to clear. */
+  assert.equal(w.k.assert({ a: ids[1], b: ids[2], basis: "b", member: "alice", viewer: V("alice") }).wrote, true);
+  w.entity("ENT-2026-0901"); w.entity("ENT-2026-0902");
+  const rel = w.entities.declareRelation({ fromEntity: "ENT-2026-0901", toEntity: "ENT-2026-0902", relation: "member_of",
+                                           justification: "j", citation: "c" }).relation_id;
+  const cap = w.rows(`SELECT capture_sha FROM register WHERE bundle_id=?`, ids[1])[0].capture_sha;
+  assert.equal(w.k.attachStepSource({ relation: rel, captureSha: cap, extent: { kind: "document" }, basis: "b",
+                                      member: "alice", viewer: V("alice") }).wrote, true);
+  for (const t2 of ["connections", "refs", "asserted_connections", "step_sources", "connection_derivations"])
+    assert.ok(w.count(t2) > 0, `${t2} holds a row before the whole-store purge`);
   w.record.purge({});
-  for (const t2 of ["connections", "refs", "connection_dirty", "themes", "theme_placements", "connection_pair_choices", "asserted_connections"])
+  for (const t2 of ["connections", "refs", "connection_dirty", "connection_derivations", "themes", "theme_placements",
+                    "theme_placement_acts", "connection_pair_choices", "asserted_connections", "asserted_connection_judgements",
+                    "file_membership_pending", "step_sources"])
     assert.equal(w.count(t2), 0, t2);
 });
 
