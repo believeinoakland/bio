@@ -132,9 +132,14 @@ export const plan = Object.freeze({
         ? view.data.projects.value.bundles : [];
       const projectHit = projects.find(function (b) { return b.bundle_id === p.project; });
       const projectRef = projectHit && projectHit.title ? cs.ref("project", p.project, projectHit.title, [projectHit.title]) : "";
+      // the plan's opening: when, by whom, and the reason its opening states (the history's `open` entry); drawn only with all three
+      const openEntry = (Array.isArray(p.history) ? p.history : []).find(function (h) { return h && h.kind === "open"; });
+      const openWhy = openEntry && typeof openEntry.reason === "string" ? openEntry.reason.trim() : "";
+      const opened = p.opened_at && p.opened_by && openWhy
+        ? cs.w("screen.plan.opened", { date: { html: cs.date(p.opened_at) }, name: String(p.opened_by).replace(/^member:/, ""), why: openWhy }) : "";
       const head = cs.title(p.title || p.id)
         + '<p class="mk-sub">' + cs.w("screen.plan.state." + (["open", "paused", "closed"].includes(p.state) ? p.state : "open"))
-        + (p.opened_at ? " · " + cs.w("screen.plan.opened", { date: { html: cs.date(p.opened_at) } }) : "") + (projectRef ? " · " + projectRef : "") + "</p>"
+        + (opened ? " · " + opened : "") + (projectRef ? " · " + projectRef : "") + "</p>"
         + (p.closed ? '<p class="mk-sub">' + cs.w("screen.plan.closedwhy", { reason: p.closed.reason || "" }) + "</p>" : "");
 
       // R1: the checks strip states each check (its own sentence, as the plan read answers it).

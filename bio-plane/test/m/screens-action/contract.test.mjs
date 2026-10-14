@@ -133,6 +133,16 @@ test("R7 (interface-shell R5, R10): every text node each screen draws, with data
   }
 });
 
+test("R19: no screen draws a placeholder: every {name} of a word it reads is filled, in every state the fixtures reach", async () => {
+  const fail = refused("STORE_DID_NOT_ANSWER", null, 502);
+  const reach = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
+  const planes = [DATA_PLANE, { ...DATA_PLANE, ...reach }, Object.fromEntries(Object.keys(DATA_PLANE).map((k) => [k, fail]))];
+  for (const plane of planes) for (const path of [...Object.values(ROUTES), `/app/start-send/${ACTION_ID}`, `/app/request/${PROJECT}`, `/app/matter/${DET}`]) {
+    const p = await open(path, plane);
+    assert.doesNotMatch(text(p), /\{\w+\}/, `${path} draws a placeholder`);
+  }
+});
+
 test("R7 (interface-shell R10): a failed read is drawn as failed, never as empty, on every screen", async () => {
   const fail = refused("STORE_DID_NOT_ANSWER", null, 502);
   for (const [id, path] of Object.entries(ROUTES)) {

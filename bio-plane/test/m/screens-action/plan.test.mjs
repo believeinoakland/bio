@@ -4,7 +4,7 @@
    its key through `setup-words` (R19): no test here holds a sentence's English. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, last, ok, button, fill, refusedIn, beside, W, PAGE, hasWord, DATA_PLANE, ROUTES, PLAN, PLAN_ID, PROPOSALS, ESC, DET, PROJECT,
+import { open, main, text, ops, press, last, ok, button, fill, refusedIn, beside, W, D, PAGE, hasWord, DATA_PLANE, ROUTES, PLAN, PLAN_ID, PROPOSALS, ESC, DET, PROJECT,
   QUESTION, QUESTION_TITLE, PROJECT_QUESTIONS, DETERMINATIONS } from "./page.mjs";
 
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
@@ -31,6 +31,15 @@ test("R1: reads the plan: its matters (with support and escalation stage), optio
   assert.ok(text(p).includes("Records first"));
   assert.ok(main(p).querySelector('a[href^="/app/action/ACTN-"]'), "a started option links its action");
   said(p, "screen.plan.actionstate.awaiting_response");
+});
+
+test("R1, R19: the plan's opening is drawn with its date, who opened it and the reason its opening states; without a reason nothing of it is drawn, and no placeholder ever is", async () => {
+  const withWhy = { ...PLAN, history: [{ kind: "open", author: "member:dev", at: "2026-10-03T10:00:00Z", reason: "the logs came back empty" }] };
+  const p = await open(ROUTES.plan, { ...DATA_PLANE, plan: ok(withWhy) });
+  said(p, "screen.plan.opened", { date: D("2026-10-03"), name: "dev", why: "the logs came back empty" });
+  const bare = await open(ROUTES.plan, DATA_PLANE);
+  assert.ok(!text(bare).includes(W("screen.plan.opened", { date: "x", name: "x", why: "x" }).slice(0, 6)), "no opening line without its reason");
+  for (const q of [p, bare]) assert.doesNotMatch(text(q), /\{\w+\}/);
 });
 
 test("R1: the assistant's suggestions are read and drawn only while it is reachable, labelled machine work not yet in the plan; control: unreachable reads none and draws no ask", async () => {
@@ -105,7 +114,9 @@ test("R1: scenarioset lays out a scenario of chosen options; checkpointrecord ju
     phases: [{ id: "p1", name: "Go public", options: ["opt-1"], starts: "plan_start", checkpoint: { after_days: 7 } }] });
   const b = await press(p, "checkpointrecord", { values: { "plan-judge-1-p1": "met", "plan-judgenote-1-p1": "logs arrived" }, reason: "x" });
   assert.deepEqual({ ...last(p, "checkpointrecord").body, reason: undefined }, { plan: PLAN_ID, scenario: 1, phase: "p1", judged: "met", note: "logs arrived", reason: undefined });
-  assert.ok(beside(p, b).includes("Not due yet"), "the owner's own sentence where the design holds no word for the code");
+  assert.ok(hasWord("refusal.CHECKPOINT_NOT_DUE"));
+  assert.ok(beside(p, b).includes(W("refusal.CHECKPOINT_NOT_DUE")), "the design's word for the code, not the owner's sentence");
+  assert.ok(!beside(p, b).includes("Not due yet"));
 });
 
 test("R1 (v0.2 rule 18): 'Take this up' routes the item's to-dos to the member, nobody assigned; the screen then says she took it up", async () => {
@@ -191,12 +202,16 @@ test("R13: existed: true draws the run already asked; a refusal is drawn beside 
   const p = await open(ROUTES.plan, asking({ status: "running" }, { ask: ok({ ok: true, plan: PLAN_ID, run: RUN, started: false, existed: true }) }));
   await press(p, "planask", { reason: "ask" });
   said(p, "screen.plan.ask.already");
-  for (const [code, words] of [["PLAN_CLOSED", "The plan is closed."], ["AI_RUN_MODE_NOT_DEPLOYED", "Planning runs are not deployed."]]) {
-    const q = await open(ROUTES.plan, asking({ status: "running" }, { ask: refusedIn(code, words) }));
+  for (const code of ["PLAN_CLOSED", "AI_RUN_MODE_NOT_DEPLOYED"]) {
+    assert.ok(hasWord(`refusal.${code}`), code);
+    const q = await open(ROUTES.plan, asking({ status: "running" }, { ask: refusedIn(code, "the owner's own sentence") }));
     const b = await press(q, "planask", { reason: "ask" });
-    assert.ok(beside(q, b).includes(words), code);
+    assert.ok(beside(q, b).includes(W(`refusal.${code}`)), `${code}: by its words`);
     unsaid(q, "screen.plan.ask.running");
   }
+  // a code the design holds no word for is drawn by the owner's own sentence
+  const odd = await open(ROUTES.plan, asking({ status: "running" }, { ask: refusedIn("CODE_NO_ONE_HAS_A_WORD_FOR", "Planning is not possible today.") }));
+  assert.ok(beside(odd, await press(odd, "planask", { reason: "ask" })).includes("Planning is not possible today."));
   // a code the design holds a word for is drawn by that word, not by the owner's sentence
   assert.ok(hasWord("refusal.AI_RUN_NOT_PRINCIPAL"));
   const k = await open(ROUTES.plan, asking({ status: "running" }, { ask: refusedIn("AI_RUN_NOT_PRINCIPAL", "the owner's own sentence") }));
@@ -216,10 +231,11 @@ test("R13: a closed plan offers no ask; the ask is drawn only while the assistan
 
 test("R18 (D5, D29): an answer of ok: true that carries started: false (no run already asked), dispatched: false or withheld is drawn as its refusal, never as a run looking for options", async () => {
   const carried = [
-    ["started: false", { ok: true, plan: PLAN_ID, run: RUN, started: false, code: "AI_RUN_MODE_NOT_DEPLOYED", translation: "Planning runs are not deployed." }, "Planning runs are not deployed."],
-    ["dispatched: false", { ok: true, plan: PLAN_ID, run: RUN, started: true, dispatched: false, code: "AI_NO_ACCOUNT", translation: "No account pays for this run." }, "No account pays for this run."],
+    ["started: false", { ok: true, plan: PLAN_ID, run: RUN, started: false, code: "AI_RUN_MODE_NOT_DEPLOYED", translation: "Planning runs are not deployed." }, W("refusal.AI_RUN_MODE_NOT_DEPLOYED")],
+    ["started: false, a code with no design word", { ok: true, plan: PLAN_ID, run: RUN, started: false, code: "CODE_NO_ONE_HAS_A_WORD_FOR", translation: "Planning runs are not deployed." }, "Planning runs are not deployed."],
+    ["dispatched: false", { ok: true, plan: PLAN_ID, run: RUN, started: true, dispatched: false, code: "AI_NO_ACCOUNT", translation: "No account pays for this run." }, W("refusal.AI_NO_ACCOUNT")],
     ["withheld", { ok: true, plan: PLAN_ID, run: RUN, started: true, withheld: "AGENT_WORKER_UNBOUND", translation: "The worker is not bound." }, W("refusal.AGENT_WORKER_UNBOUND")],
-    ["withheld, a code with no design word", { ok: true, plan: PLAN_ID, run: RUN, started: true, withheld: "NO_ACCOUNT", translation: "No account pays for this run." }, "No account pays for this run."],
+    ["withheld, a code with no design word", { ok: true, plan: PLAN_ID, run: RUN, started: true, withheld: "CODE_NO_ONE_HAS_A_WORD_FOR", translation: "No account pays for this run." }, "No account pays for this run."],
     ["a code with a design word", { ok: true, plan: PLAN_ID, run: RUN, started: false, code: "AI_RUN_NOT_PRINCIPAL", translation: "the owner's own sentence" }, W("refusal.AI_RUN_NOT_PRINCIPAL")],
     ["no words at all", { ok: true, plan: PLAN_ID, run: RUN, started: false }, PAGE("shell.unread")],
   ];

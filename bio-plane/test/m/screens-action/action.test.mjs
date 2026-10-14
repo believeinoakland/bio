@@ -169,9 +169,14 @@ test("R16: 'Change the law…' sends actionlaws with the law chosen from those t
 });
 
 test("R16: refusals are drawn by their words, beside the act", async () => {
-  const p = await open(ROUTES.action, { ...DATA_PLANE, actionlaws: refusedIn("BAD_CITATION", "That citation is not in a shape that can be kept.") });
+  assert.ok(hasWord("refusal.BAD_CITATION"));
+  const p = await open(ROUTES.action, { ...DATA_PLANE, actionlaws: refusedIn("BAD_CITATION", "the owner's own sentence") });
   const b = await press(p, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "city" } });
-  assert.ok(beside(p, b).includes("That citation is not in a shape that can be kept."), "the owner's sentence where the design holds no word for the code");
+  assert.ok(beside(p, b).includes(W("refusal.BAD_CITATION")), "by its word");
+  assert.ok(!beside(p, b).includes("the owner's own sentence"));
+  // a code the design holds no word for is drawn by the owner's own sentence
+  const q = await open(ROUTES.action, { ...DATA_PLANE, actionlaws: refusedIn("CODE_NO_ONE_HAS_A_WORD_FOR", "That law cannot be kept.") });
+  assert.ok(beside(q, await press(q, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "city" } })).includes("That law cannot be kept."));
 });
 
 /* ---------- R17 (T49; N1093; DEC-239 (2); actions R23–R25; action-records R2): its risk ---------- */

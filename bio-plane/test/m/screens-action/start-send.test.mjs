@@ -45,7 +45,7 @@ test("R2: 'Start the action' runs only on the member's confirm, then opens Step 
   assert.equal(p.location.pathname, `/app/start-send/${ACTION_ID}`);
   const q = await open(STEP1, { ...DATA_PLANE, optionstart: refusedIn("OPTION_NOT_CHOSEN", "This option is not chosen.") });
   const c = await press(q, "optionstart", { reason: "x" });
-  assert.ok(beside(q, c).includes("This option is not chosen"), "the owner's own sentence where the design holds no word for the code");
+  assert.ok(beside(q, c).includes(W("refusal.OPTION_NOT_CHOSEN")), "by the design's word for the code");
   assert.equal(q.location.pathname, STEP1);
 });
 

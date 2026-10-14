@@ -46,7 +46,8 @@ test("R4, R8: 'Prepare the text' sends communicationprepare with the period, the
   let drafts = [];
   const p = await open(AT, { ...DATA_PLANE, filingsfor: () => ok(FILINGS(drafts)),
     communicationprepare: () => { drafts = [draft()]; return ok({ id: FILING, text: "We request the logs.", blanks: [] }); }, filingapprove: ok({}) });
-  said(p, "screen.request.describe");
+  // the sentence about describing the records names the law's citation, which the record does not give: not drawn, never drawn short
+  assert.doesNotMatch(text(p), /\{\w+\}/, "no placeholder is drawn");
   await press(p, "communicationprepare", { values: { "req-from": "2025-07-01", "req-to": "2026-06-30", "req-form": "spreadsheet", "req-cost": "$25",
     "send-text-0": "We request the inspection logs." }, reason: "ready" });
   assert.deepEqual(last(p, "communicationprepare").body.fills, { period: "2025-07-01 – 2026-06-30", form: "spreadsheet", cost_limit: "$25" });
@@ -60,6 +61,10 @@ test("R8: the outward warning names that the portal shows the text to anyone; 'I
     ? ok({ ok: false, reason: "SENT_REFERENCE_MALFORMED" }) : ok({})) });
   said(p, "screen.request.outward");
   said(p, "screen.request.howsend");
+  // the portal's address and button and the department are the place's data the record does not give: those two steps are not drawn
+  said(p, "screen.request.howsend.3");
+  said(p, "screen.request.howsend.4");
+  assert.doesNotMatch(text(p), /\{\w+\}/, "no placeholder is drawn");
   said(p, "screen.request.reference");
   await press(p, "filingrecordsent", { values: { "send-at": "2026-10-10", "send-account": "on the portal", "send-reference": "26-11902" }, reason: "sent" });
   assert.equal(last(p, "filingrecordsent").body.reference, "26-11902");
