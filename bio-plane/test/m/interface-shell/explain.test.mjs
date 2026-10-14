@@ -170,3 +170,14 @@ test("R18 appearance is Follow my device, Light or Dark, kept on the device; pri
   assert.equal(q.doc.documentElement.getAttribute("data-theme"), "light");
   for (const r of [...p.requests, ...q.requests]) assert.doesNotMatch(JSON.stringify(r), /theme/);
 });
+
+test("R14 (K3302 (4)) a section's explanation is its word escaped once: data-tip holds the word as HTML, and the opened explanation reads the word exactly (an apostrophe, an ampersand and a bracket among it)", async () => {
+  const { boot: b } = await import("./harness.mjs");
+  const s = { id: "home", words: [["screen.home.t.x", "X", false], ["screen.home.t.x.holds", "Don't wait & see <now>", false]], reads: () => ({}), acts: [], render: (cs) => cs.sec("screen.home.t.x", "<p>y</p>") };
+  const p = await b({ screens: [s] });
+  const h2 = p.root().querySelector("section > h2");
+  assert.equal(h2.getAttribute("data-tip"), "Don&#39;t wait &amp; see &lt;now&gt;", "the attribute holds the word's HTML, once");
+  h2.focus();
+  await p.settle();
+  assert.equal(p.doc.getElementById("cs-tip").textContent, "Don't wait & see <now>", "the explanation drawn reads the word exactly");
+});

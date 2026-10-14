@@ -14,7 +14,7 @@ const isRead = (op) => NON_ACTS[op].startsWith("read: ") && /writes nothing$/.te
 
 /* ---- R27 ----------------------------------------------------------------------------------------------------------- */
 const R27_WRITES = { obscuremark: "reversible", setpassword: "caller-owned", subscriptionsignin: "credential",
-  translationgrant: "credential", translationdraft: "undetermined", translationmark: "undetermined",
+  translationgrant: "credential", translationdraft: "caller-owned", translationmark: "undetermined",
   translationadopt: "reversible", translationconfirm: "reversible", translationrevert: "reversible" };
 const R27_READS = ["photomarks", "translations", "interfacewords"];
 const WORD = "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's "
@@ -33,7 +33,7 @@ const R27_REASONS = {
   translationadopt: WORD, translationconfirm: WORD, translationrevert: WORD, translationmark: WORD,
 };
 
-test("R27 (T38: R28): T37's ops — translationdraft and translationmark `undetermined`, setpassword `caller-owned`, "
+test("R27 (T38: R28; T48: R39): T37's ops — translationmark `undetermined`, translationdraft and setpassword `caller-owned`, "
    + "subscriptionsignin and translationgrant `credential`, translationadopt, translationconfirm and translationrevert "
    + "`reversible`, and obscuremark `reversible` since T38 (R28 moved it from RUNG_ABSENT), its reason naming the "
    + "reasoned withdrawal — each with R27's reason; the reads photomarks, translations and interfacewords `read:` and ungraded; "
@@ -42,7 +42,7 @@ test("R27 (T38: R28): T37's ops — translationdraft and translationmark `undete
   assert.deepEqual(got, R27_WRITES);
   /* each beside the op R27 names as its precedent */
   for (const [op, like] of [["setpassword", "signout"], ["subscriptionsignin", "subscriptiondisconnect"],
-    ["translationgrant", "wizardeditorgrant"], ["translationdraft", "whatchangedpropose"]])
+    ["translationgrant", "wizardeditorgrant"], ["translationdraft", "memberlanguageset"]])
     assert.equal(gradeOf(op), gradeOf(like), `${op} as ${like}`);
   for (const [op, e] of Object.entries(T37_RUNG_ABSENT)) assert.ok(typeof e.is === "string" && e.is.length > 40, op);
   assert.deepEqual(Object.keys(R27_REASONS).sort(), Object.keys(R27_WRITES).sort());

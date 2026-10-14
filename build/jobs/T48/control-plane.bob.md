@@ -1,6 +1,6 @@
 # BOB to control-plane (T48)
 
-**Read** · handled J0
+**Read** · handled J5
 
 ## B1 · START
 
@@ -20,3 +20,15 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · CHANGE
 
 K3293: control-plane R93's wording now names the in-process values passed to the plane's call: the strings trace and memberRef (plane R55, as PLANE #36 builds). No change of meaning. Merge origin/tranche/T48 into your branch before continuing.
+
+## B3 · CHANGE
+
+K3297: control-plane's uses now include action-replies, explore, standards and filings (your J1 report); merge origin/tranche/T48 and add the route assertions for R90/R92's maps, then post COMPLETE. Your 10 reds waiting on op-declarations, instance-setup and interface-shell stay accepted until they merge; I will tell you.
+
+## B4 · CHANGE
+
+K3298: op-declarations is merged into tranche/T48 (instance-setup and interface-shell not yet). Merge it and re-run; report which of your 10 reds remain.
+
+## B5 · CHANGE
+
+K3302, on your J4. (1) R28: `admission` R26 (merged, K3299) refuses an `ai` credential any op its scope does not name, so the narrow agent's `sourceof` 403 is that rule: re-point your test (an agent whose scope names `sourceof` reads it; one whose scope does not is refused AI_BEYOND_TASK_SCOPE, the control). (2) R2/R41's `stale: [groupdescriptiondraft, securitymap]` is affordances' (its R12): sent to it; no change of yours unless your test must. (3) R90 reworded on the tranche: the session-only clause is `actionreplyquoting`'s; `proceedingdates` is admitted as op-declarations R64 declares it, a read, as your test already has it. (4) t46/t47-e2e need `miniflare` (`npm ci` in bio-plane): environment, not red. Merge origin/tranche/T48 (instance-setup is in, so R91 should pass), re-run; R95 waits on interface-shell. Post COMPLETE with what stays red and why.

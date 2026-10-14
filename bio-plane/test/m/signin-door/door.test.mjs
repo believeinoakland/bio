@@ -80,7 +80,7 @@ test("R1: `start`, `code` and `signout` reach agent-worker's POST /signin as `{m
   assert.deepEqual(w.store.of("subscriptionconnected"), []);
 });
 
-test("R1 (credentials R43): a `code` answer carrying `connected: true` for that member and no token is recorded through `subscriptionconnected` with `by` the member, and only then; `connected: false`, another member's, and a `start` record nothing", async () => {
+test("R1 (ai-accounts R18): a `code` answer carrying `connected: true` for that member and no token is recorded through `subscriptionconnected` with `by` the member, and only then; `connected: false`, another member's, and a `start` record nothing", async () => {
   const w = world({ reply: (b) => json(200, { ok: true, connected: true, member: b.member }) });
   await w.go({ step: "code", code: "c" });
   assert.deepEqual(w.store.of("subscriptionconnected").map((c) => c.params), [{ by: ANN }]);
@@ -94,7 +94,7 @@ test("R1 (credentials R43): a `code` answer carrying `connected: true` for that 
   assert.deepEqual(s.store.of("subscriptionconnected"), []);
 });
 
-test("R1 (credentials R35; K2200 (9)): while the group keeps its material away, `start` and `code` are refused 403 with credentials' AI_KEPT_AWAY as it answers it, nothing sent; `signout` is always sent; a store that refuses or does not answer the question sends nothing (control: keep-away off, `start` is sent)", async () => {
+test("R1 (ai-accounts R7; K2200 (9)): while the group keeps its material away, `start` and `code` are refused 403 with ai-accounts' AI_KEPT_AWAY as it answers it, nothing sent; `signout` is always sent; a store that refuses or does not answer the question sends nothing (control: keep-away off, `start` is sent)", async () => {
   for (const step of ["start", "code"]) {
     const w = world({ routes: { aikeptaway: keptAway } });
     const r = await w.go({ step, code: "c" });
@@ -137,7 +137,7 @@ test("R1: with no `AGENT_WORKER` binding the door answers 503 AGENT_WORKER_UNBOU
   assert.equal(kept.body.translation, "theirs");
 });
 
-test("R1 (credentials R16, R43): `leaverOf` names the member a successful `subscriptiondisconnect` (the caller), `memberset` to revoked and a carried `adminremove` leave; `signoutLeaver` sends `step: \"signout\"` for that member and a runner that cannot be reached throws nothing; acts that did not succeed or did not revoke name nobody", async () => {
+test("R1 (ai-accounts R18, R27): `leaverOf` names the member a successful `subscriptiondisconnect` (the caller), `memberset` to revoked and a carried `adminremove` leave; `signoutLeaver` sends `step: \"signout\"` for that member and a runner that cannot be reached throws nothing; acts that did not succeed or did not revoke name nobody", async () => {
   assert.equal(leaverOf("subscriptiondisconnect", {}, { ok: true, disconnected: true }, ANN), ANN);
   assert.equal(leaverOf("memberset", { memberId: "bea", status: "revoked" }, { ok: true, memberId: "bea" }, "admin"), "member:bea");
   assert.equal(leaverOf("adminremove", { memberId: "bea" }, { ok: true, memberId: "bea", removed: true }, "admin"), "member:bea");
@@ -159,7 +159,7 @@ test("R1 (credentials R16, R43): `leaverOf` names the member a successful `subsc
 
 /* ================================================================ R2 */
 
-test("R2 (credentials R64; K231): `start` is refused DISCLOSURE_DUE as `credentials.disclosureDue` answers it, relayed as given with C-29.40's check and translation, after the keep-away question and before anything is sent; the door adds no row or sentence of its own; with the disclosure recorded the `start` is sent; `code` and `signout` never ask it", async () => {
+test("R2 (ai-accounts R23; K231): `start` is refused DISCLOSURE_DUE as `ai-accounts.disclosureDue` answers it, relayed as given with C-29.40's check and translation, after the keep-away question and before anything is sent; the door adds no row or sentence of its own; with the disclosure recorded the `start` is sent; `code` and `signout` never ask it", async () => {
   const w = world({ routes: { signindisclosuredue: disclosureDue } });
   const r = await w.go({ step: "start" });
   assert.equal(r.status, 409);
@@ -223,7 +223,7 @@ test("R3 (N1001; agent-worker R83): each request gets a fresh `trace`, sent with
 
 /* ================================================================ R4 */
 
-test("R4 (K3060 D10; credentials R70; agent-worker R81): on `code` the door sends `hold: true`; an answer carrying `token` is handed to `subscriptionTokenHold` (the store's `signintokenhold`, `by` the member, `{token, validFor}` in the body) and its result read; `token` and `valid_for` are removed and the answer says `held: true`; a sentinel token is in no answer, log line or request but the hold", async () => {
+test("R4 (K3060 D10; ai-accounts R19; agent-worker R81): on `code` the door sends `hold: true`; an answer carrying `token` is handed to `subscriptionTokenHold` (the store's `signintokenhold`, `by` the member, `{token, validFor}` in the body) and its result read; `token` and `valid_for` are removed and the answer says `held: true`; a sentinel token is in no answer, log line or request but the hold", async () => {
   const TOKEN = "sentinel-token-R4-abcdefghijklmnopqrstuvwxyz";
   const w = world({ env: TEST_ENV, routes: { signintokenhold: { ok: true, since: "2026-10-14T00:00:00Z" } },
                     reply: (b) => json(200, { ok: true, connected: true, member: b.member, token: TOKEN, valid_for: "1 year" }) });
@@ -266,7 +266,7 @@ test("R4 (K3060 D10; credentials R70; agent-worker R81): on `code` the door send
   assert.equal("attempt" in ctl.aw.sent[1].body, false);
 });
 
-test("R4 (credentials R23, R70): `state` is answered from `accountReferenceState`'s `subscription` (the store's `accountreference`, member and viewer the stamp), nothing sent to the runner; a read that fails is answered as a failure, never as not connected", async () => {
+test("R4 (ai-accounts R19, R23): `state` is answered from `accountReferenceState`'s `subscription` (the store's `accountreference`, member and viewer the stamp), nothing sent to the runner; a read that fails is answered as a failure, never as not connected", async () => {
   const w = world();
   const r = await w.go({ step: "state" });
   assert.deepEqual(w.aw.sent, []);
@@ -280,7 +280,7 @@ test("R4 (credentials R23, R70): `state` is answered from `accountReferenceState
   assert.deepEqual([refused.status, refused.body.reason, "connected" in refused.body], [403, "NOT_YOUR_ACCOUNT", false]);
 });
 
-test("R4 (credentials R43, R70): `subscriptionDisconnect` reaches the store's `subscriptiondisconnect` (credentials drops the token there) with `by` the stamp, then sends `signout` for that member; a runner that cannot be reached changes nothing of the answer; a refused disconnect sends nothing", async () => {
+test("R4 (ai-accounts R18, R19): `subscriptionDisconnect` reaches the store's `subscriptiondisconnect` (ai-accounts drops the token there) with `by` the stamp, then sends `signout` for that member; a runner that cannot be reached changes nothing of the answer; a refused disconnect sends nothing", async () => {
   for (const throws of [false, true]) {
     const store = storeOf({ subscriptiondisconnect: { ok: true, disconnected: true } });
     const aw = agentWorker(() => { if (throws) throw new Error("down"); return json(200, { ok: true }); });
@@ -296,7 +296,7 @@ test("R4 (credentials R43, R70): `subscriptionDisconnect` reaches the store's `s
   assert.deepEqual(aw.sent, [], "control: refused, nothing sent");
 });
 
-test("R4 (credentials R70): an ask or draft answered SIGNIN_TOKEN_REFUSED, at the top level or in `result`, calls `subscriptionTokenRefused` for that member (the store's `signintokenrefused`); any other answer calls nothing", async () => {
+test("R4 (ai-accounts R19): an ask or draft answered SIGNIN_TOKEN_REFUSED, at the top level or in `result`, calls `subscriptionTokenRefused` for that member (the store's `signintokenrefused`); any other answer calls nothing", async () => {
   for (const answer of [{ ok: false, reason: "SIGNIN_TOKEN_REFUSED" }, { ok: false, code: "SIGNIN_TOKEN_REFUSED" },
                         { ok: true, result: { ok: false, reason: "SIGNIN_TOKEN_REFUSED" } }]) {
     const store = storeOf({ signintokenrefused: { ok: true, dropped: true } });
