@@ -7,9 +7,9 @@ import { world, V, MACHINE, STRANGER, WORDS, WHY } from "./fixture.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { FILINGS_CHECKS, Filings } from "../../../src/filings/index.mjs";
 import { noSuchAction } from "../../../src/actions/index.mjs";
-import { FILING_TEMPLATE_CHECKS } from "../../../src/filing-templates/index.mjs";
+import { FILING_TEMPLATE_CHECKS, rfcQuotingRefusal } from "../../../src/filing-templates/index.mjs";
 
-test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 R34 R36 R38 R40 R42 R43 R44 R54 R55 each refusal of this module carries its code, its C-115 row and translation; one actions answered passes through as it came", async () => {
+test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 R34 R36 R38 R40 R42 R43 R44 R54 R55 R57 each refusal of this module carries its code, its C-115 row and translation; one actions answered passes through as it came", async () => {
   const x = world();
   const A = x.action();
   const T3 = x.action({ kind: "commitment_claim" });
@@ -114,7 +114,10 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 R34 R36 R38 R40 R42 R43 R44 R5
   x.inquiry(Q, { legs: [{ target: "INFO-2026-0001-minutes" }] });
   const rfc = g.communicationPrepare({ action: x.action({ kind: "request_for_comment", legs: [{ target: Q, kind: "advances" }] }), text: "Please comment.",
                                        purpose: "comment", preparer: V("bo"), viewer: V("bo") });
-  expect(await g.filingApprove({ filing: rfc.id, text: "Please comment.", author: V("bo"), viewer: V("bo") }), "RFC_QUOTING_MISSING");
+  /* R57: C-115.47 is filing-templates' row, answered as its provider gives it (not one of this family's) */
+  assert.deepEqual(await g.filingApprove({ filing: rfc.id, text: "Please comment.", author: V("bo"), viewer: V("bo") }),
+                   rfcQuotingRefusal("Please comment.", { filing: rfc.id }));
+  assert.equal("RFC_QUOTING_MISSING" in FILINGS_CHECKS, false);
   const joint = gp("Our joint letter.");
   await g.filingApprove({ filing: joint.id, author: V("bo"), viewer: V("bo") });
   const js = (o) => g.jointSignatory({ filing: joint.id, organisation: "Harbour Watch", body_sha: "0".repeat(64), account: "signed", author: V("bo"), viewer: V("bo"), ...o });

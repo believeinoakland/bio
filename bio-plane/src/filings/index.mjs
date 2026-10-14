@@ -12,7 +12,9 @@
  * first (R24); exhibits show their grades beside the venue's standard (R25); deadlines state the calendar's
  * confirmation (R30), read by `action-clocks.factReader` (its R12; N474). Candidate theories are proposals, stored
  * apart and labelled (R14). The evidence package's available-actions block is registered with `public-read` (R15)
- * and answered on its own for `escalation` (R21). The AI prepares; a member approves, files and records it.
+ * and answered on its own for `escalation` (R21). The AI prepares; a member approves, files and records it. (T48) A Tier 2
+ * filing offers a counsel packet beside its advisory (R58); `filingRead` answers a prepared draft as it was stored, so a
+ * reload loses nothing (R59); R40's quoting check is `filing-templates`' (R57, its R33).
  *
  * A NEW MODULE (T8, layer 9): nothing moved into it and it writes no legacy file. Its tables are `./schema.mjs`; a
  * deadline's date is `./dates.mjs`, counted by `action-clocks`' rule. Its R26 library moved to `filing-templates` (T21,
@@ -73,8 +75,8 @@ import { actionsOf, noSuchAction } from "../actions/index.mjs";
 import { actionClocksOf, factReader } from "../action-clocks/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
 import { eventsOf } from "../events/index.mjs";
-import { filingTemplatesOf, FILING_BLANKS, FILING_TEXT_MAX, blanksOf, blankUnknownRefusal, withRow as templatesRow }
-  from "../filing-templates/index.mjs";
+import { filingTemplatesOf, FILING_BLANKS, FILING_TEXT_MAX, blanksOf, blankUnknownRefusal, withRow as templatesRow,
+         RFC_QUOTING_SENTENCE, rfcQuotingRefusal } from "../filing-templates/index.mjs";
 import { docketOf } from "../docket/index.mjs";
 import { caseCheckOf } from "../case-check/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
@@ -178,6 +180,8 @@ export const TIER_WORDS = Object.freeze({
     + "group names.",
   undetermined: "The risk tier is undetermined: neither the profile nor a member has stated it.",
 });
+/** R58: what a Tier 2 filing offers beside its advisory: a counsel packet (R8), offered and never required. */
+export const COUNSEL_OFFER = Object.freeze(["counsel_packet"]);
 const CLOSED = Object.freeze(["resolved", "abandoned"]);
 const MACHINE_READER = `${MACHINE_CLASS_PREFIX}admin`;
 const DRAFT_SAYS = "a draft prepared from the record: nobody has approved or sent it, and nothing is filed until a "
@@ -202,7 +206,7 @@ const withRow = (r) => (r && typeof r.then === "function" ? r.then(withRowNow) :
 const SERVICES = Object.freeze(["filingPrepare", "filingApprove", "filingRecordSent", "counselPacket", "counselPacketRead",
                                 "counselPacketExport", "filingsFor", "theoryPropose", "availableActions",
                                 "communicationPrepare", "templateSave", "jointSignatory", "filingSecondApprove",
-                                "holdNoticePrepare", "templatesForAction", "approvedUnsent"]);
+                                "holdNoticePrepare", "templatesForAction", "approvedUnsent", "filingRead"]);
 
 export class Filings {
   #deps;
@@ -757,9 +761,10 @@ export class Filings {
     const values = this.#values(a, det, hidden, entry, viewer, when);
     const filled = this.#fill(own ? text : used.text, values, mf.fills);
     const { blanks, unfilled } = filled;
-    /* R40: a request for comment carries the sentence that the reply may be quoted unless it says otherwise */
+    /* R40, R57: a request for comment carries the sentence that the reply may be quoted unless it says otherwise,
+       `filing-templates`' (its R33) */
     const rfc = Filings.#isRfc(a, mk.marks, null);
-    const content = rfc && !filled.text.includes(KEYED["rfc.quoting"]) ? `${filled.text}\n\n${KEYED["rfc.quoting"]}` : filled.text;
+    const content = rfc && !filled.text.includes(RFC_QUOTING_SENTENCE) ? `${filled.text}\n\n${RFC_QUOTING_SENTENCE}` : filled.text;
     /* R46: a press action's review copy carries its embargo and release times on its face */
     const review = Filings.#reviewCopy(a);
     let body = review ? `${review.text}\n\n${content}` : content;
@@ -805,7 +810,7 @@ export class Filings {
         id, a.id, a.kind, gov.tier, json(gov), body, json(blanks), json(unfilled), advisory, json(venue), who, when, json(basis),
         json(exhibits), json(standard), disclosure, json(tpl), json({ ...outward, notices }), json(marks));
       return { ok: true, id, action: a.id, tier: gov.tier, governing: gov, text: body, blanks, unfilled,
-               ...(gov.tier === 2 ? { advisory } : {}), venue, template: tpl,
+               ...(gov.tier === 2 ? { advisory, offers: COUNSEL_OFFER } : {}), venue, template: tpl,
                ...(used ? { template_version: { name: used.name, state: used.state, profiles: used.profiles,
                                                   ...(used.default ? { default: true } : {}),
                                                   ...(used.updated_by ? { updated_by: used.updated_by,
@@ -880,7 +885,7 @@ export class Filings {
     /* R37, R38: assembled from the record without AI, each part naming its source */
     const parts = assembled ? this.#assembled(why, a, det, hidden, v, facts, mk.marks, viewer, when) : null;
     let content = parts ? parts.map((x) => x.text).join("\n") : words;
-    if (rfc && !content.includes(KEYED["rfc.quoting"])) content = `${content}\n\n${KEYED["rfc.quoting"]}`;
+    if (rfc && !content.includes(RFC_QUOTING_SENTENCE)) content = `${content}\n\n${RFC_QUOTING_SENTENCE}`;
     const review = Filings.#reviewCopy(a);
     let body = review ? `${review.text}\n\n${content}` : content;
     if (disclosure) body = `${disclosure}\n\n${body}`;
@@ -1183,7 +1188,7 @@ export class Filings {
 
   /* R34, R38, R40, R43: the approval's refusals over the check of the approved text, in order after R6's own:
      `ASSERTION_RESOLUTION_REFUSED`, `ASSERTION_UNRESOLVED` (R43), `CONTRADICTED_HELD` unless released (R34),
-     `SELF_BENEFIT_ASK` (R38), `RFC_QUOTING_MISSING` (R40). Answers `{refusal}` or `{released, resolutions, breach}`. */
+     `SELF_BENEFIT_ASK` (R38), `RFC_QUOTING_MISSING` (R40, R57: `filing-templates`'). Answers `{refusal}` or `{released, resolutions, breach}`. */
   #outwardRefusal(o, { filing, release, resolutions, rfc, body }) {
     const sentences = o.sentences;
     const pointed = Filings.#assertionPointed(o);
@@ -1229,11 +1234,9 @@ export class Filings {
                           sentences: [...new Set(own.map((p) => p.index))].map((i) => ({ index: i, text: sentences[i] })),
                           detail: "rewrite each sentence that asks for the benefit of the group or its members; there is no override" } };
     /* END DEC-49 REGION is-self-benefit-ask */
-    /* DEC-49 REGION is-rfc-quoting-missing */
-    if (rfc && !String(body ?? "").includes(KEYED["rfc.quoting"]))
-      return { refusal: { ok: false, reason: "RFC_QUOTING_MISSING", filing, sentence: KEYED["rfc.quoting"], key: "rfc.quoting",
-                          detail: "a request for comment carries the sentence that the reply may be quoted unless it says otherwise" } };
-    /* END DEC-49 REGION is-rfc-quoting-missing */
+    /* R57: the check is `filing-templates`' one (its R33), asked on the approved text and answered with its row */
+    const unquoted = rfc ? rfcQuotingRefusal(String(body ?? ""), { filing }) : null;
+    if (unquoted) return { refusal: unquoted };
     return { released, resolutions: recorded, breach };
   }
 
@@ -1445,6 +1448,48 @@ export class Filings {
              ...(checked.no_list ? { no_list: checked.no_list } : {}),
              says: "approved by the member named: the text is theirs. Your group's Civicsmith transmits nothing; a member files it "
                  + "by the venue's own means and records that it was sent" };
+  }
+
+  /* ---------------------------------------------------------------- R59: filingRead */
+
+  /** R59 (T48; N1034, K3145): one prepared draft or communication as it was stored, so a reload between preparing and
+   *  approving loses nothing: its text, blanks with their sources, unfilled blanks with why, the member's own fills
+   *  (R55, each labelled the member's), template (R29), advisory and offers (R4, R58), notices, label (R5) and action,
+   *  beside its approval (R6), second approval (R42) and sending (R7) when recorded. Nothing is filled again from the
+   *  record and nothing is written; a draft that is absent, or whose action or basis the viewer may not see (R13, R27),
+   *  is `NO_SUCH_FILING`, one answer. */
+  filingRead({ filing = null, viewer = null } = {}) {
+    const d = this.#draft(filing, viewer);
+    if (!d) return this.#noFiling(filing);
+    const comm = d.form === "communication";
+    const marks = parse(d.marks) || {};
+    const { notices = [], ...checked } = parse(d.outward) || {};
+    const blanks = comm ? (Array.isArray(marks.blanks) ? marks.blanks : []) : (parse(d.blanks) || []);
+    const own = (b) => isObj(b) && isObj(b.label) && b.label.kind === "member_fill";
+    const ap = this.#one(`SELECT approved_by, at, sha, text FROM filing_approvals WHERE filing_id=?`, d.filing_id);
+    const second = this.#one(`SELECT approved_by, at FROM filing_second_approvals WHERE filing_id=?`, d.filing_id);
+    const sent = this.#one(`SELECT ord, sent_on, recorded_by, recorded_at, review_copy, reference FROM filing_sendings WHERE filing_id=?`, d.filing_id);
+    const review = isObj(marks.review_copy) ? marks.review_copy : null;
+    return {
+      ok: true, id: d.filing_id, filing: d.filing_id, action: d.action_id, form: d.form,
+      ...(comm ? { purpose: d.purpose } : { tier: d.tier, venue: parse(d.venue) }),
+      text: d.text, blanks, unfilled: comm ? [] : (parse(d.unfilled) || []), fills: blanks.filter(own),
+      template: comm ? null : parse(d.template),
+      ...(!comm && d.tier === 2 ? { advisory: d.advisory ?? null, offers: COUNSEL_OFFER } : {}),
+      disclosure: d.disclosure ?? null, notices,
+      outward: checked,
+      marks: { voice: marks.voice ?? null, audience: marks.audience ?? null, language: marks.language ?? null,
+               own_doing: Array.isArray(marks.own_doing) ? marks.own_doing : [], names_pending: marks.names_pending === true },
+      ...(review ? { review_copy: review } : {}),
+      ...Filings.#voiceSays(marks.voice ?? null),
+      label: proposalLabel(d.preparer, comm ? "communication" : "filing_draft"), prepared_by: d.preparer, at: d.prepared_at,
+      approval: ap ? { approved_by: ap.approved_by, at: ap.at, sha: ap.sha, text: ap.text } : null,
+      second_approval: second ? { approved_by: second.approved_by, at: second.at, given: Filings.#secondGiven(second.approved_by, second.at) } : null,
+      sending: sent ? { ord: sent.ord, sent_on: sent.sent_on, recorded_by: sent.recorded_by, at: sent.recorded_at, reference: sent.reference ?? null,
+                        ...(sent.review_copy ? { review_copy: parse(sent.review_copy) } : {}) } : null,
+      evidence: false,
+      ...(ap ? {} : { says: DRAFT_SAYS }),
+    };
   }
 
   /* ---------------------------------------------------------------- R7: filingRecordSent */
@@ -2848,6 +2893,7 @@ export function filingsOps(f, url, body) {
     counselpacketexport: () => f.counselPacketExport({ id: b.id ?? q("id"), version: b.version ?? q("version"),
                                                        author: q("author"), viewer: q("viewer") }),
     filingsfor: () => f.filingsFor({ action: q("action"), viewer: q("viewer") }),
+    filingread: () => f.filingRead({ filing: b.filing ?? q("filing"), viewer: q("viewer") }),
     theorypropose: () => f.theoryPropose({ packet: b.packet ?? null, action: b.action ?? null, theory: b.theory, remedy: b.remedy,
                                            standards: b.standards, why: b.why, proposer: q("author"), viewer: q("viewer") }),
     availableactions: () => f.availableActions({ determination: q("determination"), viewer: q("viewer") }),

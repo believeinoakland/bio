@@ -10,6 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, F, DOC, CASE, PROFILE, WHY, sha, actionsWith, templatesOver } from "./fixture.mjs";
 import { KEYED, FILINGS_CHECKS, sentencesOf, groupLine, counselMarking } from "../../../src/filings/index.mjs";
+import { RFC_QUOTING_SENTENCE, rfcQuotingRefusal } from "../../../src/filing-templates/index.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 
@@ -167,11 +168,11 @@ test("R37 documenting an infraction: assembled from the record with AI off (the 
   for (const n of ["the act", "the standard", "a point", "evidence", "still uncertain"]) assert.ok(names.includes(n), n);
   for (const p of m.parts) assert.ok(p.source || p.part === "still uncertain" || p.undetermined, JSON.stringify(p));
   assert.match(m.text, /The act: the adoption recorded as EVT-.*by Selectboard, Port Ellery Selectboard/);
-  assert.equal(m.text.includes(KEYED["rfc.quoting"]), false, "members: no request for comment");
+  assert.equal(m.text.includes(RFC_QUOTING_SENTENCE), false, "members: no request for comment");
   const vp = doc({ audience: "violating_party" });
-  assert.ok(vp.text.includes(KEYED["rfc.quoting"]));
+  assert.ok(vp.text.includes(RFC_QUOTING_SENTENCE));
   assert.match(vp.text, /We invite your review and response by 2026-04-01 \(P\.E\.B\.L\. § 4\)/);
-  assert.equal((await approve(f, vp.id, { text: vp.text.replace(KEYED["rfc.quoting"], "") })).reason, "RFC_QUOTING_MISSING");
+  assert.equal((await approve(f, vp.id, { text: vp.text.replace(RFC_QUOTING_SENTENCE, "") })).reason, "RFC_QUOTING_MISSING");
   /* the assistant's draft: a labelled proposal, approved per version */
   const ai = doc({ audience: "oversight", text: "The office let the works order without a vote.", preparer: MACHINE, viewer: MACHINE });
   assert.deepEqual([ai.ok, ai.label.machine_work], [true, true]);
@@ -222,11 +223,12 @@ test("R40 a draft or communication for a request for comment carries the sentenc
   x.inquiry(Q, { legs: [{ target: DOC }] });
   const R = x.action({ kind: "request_for_comment", legs: [{ target: Q, kind: "advances" }] });
   const d = comm(f, R, { text: "Please comment on the works order." });
-  assert.ok(d.text.endsWith(KEYED["rfc.quoting"]));
+  assert.ok(d.text.endsWith(RFC_QUOTING_SENTENCE));
   const r = await approve(f, d.id, { text: "Please comment on the works order." });
-  assert.deepEqual([r.reason, r.check, r.key], ["RFC_QUOTING_MISSING", "C-115.47", "rfc.quoting"]);
+  assert.deepEqual(r, rfcQuotingRefusal("Please comment on the works order.", { filing: d.id }), "R57: the provider's refusal, as it gives it");
+  assert.deepEqual([r.reason, r.check], ["RFC_QUOTING_MISSING", "C-115.47"]);
   assert.equal((await approve(f, d.id)).ok, true, "control: with it");
-  assert.equal(comm(f, x.action(), { text: "A letter." }).text.includes(KEYED["rfc.quoting"]), false, "another kind carries none");
+  assert.equal(comm(f, x.action(), { text: "A letter." }).text.includes(RFC_QUOTING_SENTENCE), false, "another kind carries none");
 });
 
 test("R41 templatesForAction answers the offered file versions for the action's kind at governing tier 1 or 2, latest first; it takes an action, never a kind alone (NO_SUCH_ACTION); a Tier 3 action is offered none", async () => {
