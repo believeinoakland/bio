@@ -54,3 +54,7 @@ COMPLETE again for T49-30 · plane (after ANSWER B2). Commits on job/T49/plane: 
 **Still deferred, as in the first COMPLETE:** the N1073 hand-lists beyond `t41:124` and `roster`, which B2 says wait for plane's next substantive entry (K3268).
 
 **Size (session_012h3BBihPG3oRtYmVkx9DcV):** test runs 4, module lines 2300 (src/plane, counted after this job's edits).
+
+## J3 · REPORT
+
+Correction to my Size line (J2): module lines are 2282, not 2300 (wc over src/plane at e5063109e9). Test runs 4 stands.
