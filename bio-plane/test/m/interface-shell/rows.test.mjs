@@ -49,7 +49,7 @@ test("R19 ticking rows brings the hold strip with its count, the acts that apply
   assert.equal(p.doc.getElementById("pick-held-h1").checked, false);
 });
 
-test("R19 sorting keeps each open panel with its row; at the phone width each row reads as a card with every value labelled", async () => {
+test("R19 R62 sorting keeps each open panel with its row; at the phone width each row reads as the design's one-line row, its first value beside its name and the rest labelled", async () => {
   const p = await boot({ screens: ALL, path: "/app/held", plane: PLANE });
   await p.click(rowsOf(p)[1].querySelector('[data-shell="row"]'));
   const sort = p.root().querySelectorAll('[data-shell="sort"]')[0];
@@ -68,8 +68,10 @@ test("R19 sorting keeps each open panel with its row; at the phone width each ro
   assert.equal(rowsOf(p).indexOf(b2), 0, "ascending now");
   assert.equal(b2.nextElementSibling.hidden, false);
   const q = await boot({ screens: ALL, path: "/app/held", plane: PLANE, phone: true });
-  for (const r of rowsOf(q)) for (const td of r.querySelectorAll("td").slice(2)) assert.ok(td.getAttribute("data-label"), td.outerHTML);
-  assert.match(interfacePage(ALL), /@media \(max-width:760px\)\{\.cs-rows thead\{display:none\}/);
+  for (const r of rowsOf(q)) {
+    assert.ok(r.querySelector(".cs-rowname").textContent.includes("1 October") || r.querySelector(".cs-rowname").textContent.includes("2 October"), "the first value on the name's line");
+    for (const td of r.querySelectorAll("td").slice(2)) assert.ok(td.getAttribute("data-label"), td.outerHTML);
+  }
 });
 
 test("R22 every control of every screen has an accessible name, every field a label, every icon is beside a word, colour is never the only signal, and motion stops under reduced motion", async () => {

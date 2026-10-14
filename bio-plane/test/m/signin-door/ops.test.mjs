@@ -15,7 +15,7 @@ function credentials(answers = {}) {
 const at = (path) => new URL(`http://do/${path}`);
 const run = (c, path, body, env = {}) => signinDoorOps(c, at(path), body, env)[at(path).pathname.slice(1)]();
 
-test("R2 (credentials R64): `signindisclosuredue` asks `disclosureDue` for the stamped member, `by` from the query and never the body, and answers its refusal as given, or `{ok: true}` when it answers null", async () => {
+test("R2 (ai-accounts R23): `signindisclosuredue` asks `disclosureDue` for the stamped member, `by` from the query and never the body, and answers its refusal as given, or `{ok: true}` when it answers null", async () => {
   const due = { ok: false, reason: "DISCLOSURE_DUE", check: "C-29.40" };
   const c = credentials({ disclosureDue: due });
   assert.deepEqual(run(c, "signindisclosuredue?by=member%3Aann", { member: "member:forged" }), due);
@@ -23,7 +23,7 @@ test("R2 (credentials R64): `signindisclosuredue` asks `disclosureDue` for the s
   assert.deepEqual(run(credentials(), "signindisclosuredue?by=member%3Aann", {}), { ok: true }, "control: shown");
 });
 
-test("R4 (credentials R70): `signintokenhold` hands the body's `token` and `validFor` to `subscriptionTokenHold` for the stamped member and answers its result; `signintokenrefused` calls `subscriptionTokenRefused` for the stamped member", async () => {
+test("R4 (ai-accounts R19): `signintokenhold` hands the body's `token` and `validFor` to `subscriptionTokenHold` for the stamped member and answers its result; `signintokenrefused` calls `subscriptionTokenRefused` for the stamped member", async () => {
   const c = credentials({ subscriptionTokenHold: { ok: true, since: "s" }, subscriptionTokenRefused: { ok: true, dropped: true } });
   assert.deepEqual(await run(c, "signintokenhold?by=member%3Aann", { token: "tok", validFor: "1 year", member: "member:forged" }),
                    { ok: true, since: "s" });

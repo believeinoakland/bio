@@ -21,3 +21,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · ANSWER · re J1
 
 K3293: as you read it: hold the three wizard.marks rows in your SCREEN_WORDS under those keys until UX-DESIGN adds them (asked); read the elsewhere keys from WORD_ROWS (setup-words is now merged: merge origin/tranche/T48). Your R12 audit against civicsmith.css plus the shell's STYLE is right until R56's check lands.
+
+## B3 · CHANGE
+
+K3303: interface-shell is merged into tranche/T48 (R55 re-points, R56 class check, R60 words, R61 reading screen objects' ABSENT_CODES). Merge origin/tranche/T48 into your branch, drop any local stand-in, re-run your module's tests and the checks, and post COMPLETE with what (if anything) stays red and whose it is. Your merge follows in L11's order.
