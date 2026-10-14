@@ -8,6 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
+import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
 import { hypothesesOps } from "../../../src/hypotheses/index.mjs";
 import { retrievalRoutes } from "../../../src/retrieval/index.mjs";
@@ -82,7 +83,7 @@ const R30 = {
   agentpack:          { spec: { classes: MP, mutating: false }, needs: undefined, stamps: ["viewer"], family: null, map: null },
   /* the seventh of credentials' T35 routes (red 23): a member's own subscription disconnected (credentials R43) */
   subscriptiondisconnect: { spec: { classes: SESSION, machineClasses: [], mutating: true }, needs: null,
-                            stamps: ["by", "viewer"], family: "credentials", map: credentialsOps },
+                            stamps: ["by", "viewer"], family: "ai-accounts", map: aiAccountsOps },
 };
 const PUBLIC = Object.keys(R30).filter((op) => R30[op].spec.classes === null);
 
@@ -220,7 +221,9 @@ test("R6 (T35; N703, K2038): credentials' securitycount, the in-plane write of i
 test("R27, R30 (T37: R27's T35 sentence retired, R36): subscriptionsignin is declared under its own name in credentials' family, and no alias names it; the member's own subscription disconnect is credentials' own act (machineClasses [], by stamped)", () => {
   assert.ok(!inNoTable("subscriptionsignin") && OP_FAMILIES.credentials.kinds.subscriptionsignin === "own");
   assert.ok(!Object.hasOwn(OP_ALIASES, "subscriptionsignin") && !Object.values(OP_ALIASES).includes("subscriptionsignin"));
-  assert.equal(OP_FAMILIES.credentials.kinds.subscriptiondisconnect, "own");
+  /* T48 (R68): the disconnection is ai-accounts' with the other account ops */
+  assert.equal(OP_FAMILIES["ai-accounts"].kinds.subscriptiondisconnect, "own");
+  assert.ok(!Object.hasOwn(OP_FAMILIES.credentials.kinds, "subscriptiondisconnect"));
   assert.ok(!inNoTable("subscriptiondisconnect"));
 });
 

@@ -26,7 +26,7 @@ The interface's word list as frozen data: each word the screens show, with its k
 
 #### T48 (T48-61)
 
-- **R8** (T48; N847, N1047; DEC-221, DEC-226, DEC-227; K3190, K3192 D1; amends R7) `WORD_ROWS` is `words.json` as it stands on `main` at PR #34's merge, and `WORDS_COMMIT` is `"4664e8efd4"`: 1,895 rows, 652 of them protected, by R1's rule. This carries DEC-226's and DEC-227's words (`updates.*`, `queue.update.*`, `home.update.*`, `installer.update.*`, `elsewhere.*`, `door.front.elsewhere.*`, `wizard.guide.elsewhere*`, `places.elsewhere.*`) and replaces every row R7 carried in DEC-221's earlier spelling. The counts as read at that commit bind (R1's rule). Test: equal word by word; control: no row's `en` holds "labelled". *(not yet met: T48)*
+- **R8** (T48; N847, N1047; DEC-221, DEC-226, DEC-227; K3190, K3192 D1; amends R7) `WORD_ROWS` is `words.json` as it stands on `main` at PR #34's merge, and `WORDS_COMMIT` is `"4664e8efd4"`: 1,895 rows, 652 of them protected, by R1's rule. This carries DEC-226's and DEC-227's words (`updates.*`, `queue.update.*`, `home.update.*`, `installer.update.*`, `elsewhere.*`, `door.front.elsewhere.*`, `wizard.guide.elsewhere*`, `places.elsewhere.*`) and replaces every row R7 carried in DEC-221's earlier spelling. The counts as read at that commit bind (R1's rule). Test: equal word by word; control: no row's `en` holds "labelled".
 
 ## Private
 
