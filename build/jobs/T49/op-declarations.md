@@ -1,6 +1,6 @@
 # op-declarations (T49)
 
-**Status** · session_011hPuqD9y49HjQBBqnz9ub8 · depth 2 · WORKING · handled B1
+**Status** · session_011hPuqD9y49HjQBBqnz9ub8 · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## Work notes (OP-DECLARATIONS #24, 2026-10-14)
 
