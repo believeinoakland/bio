@@ -15,12 +15,12 @@
   "transcribe": 19,
   "capture": 11,
   "document": 49,
-  "question": 70,
+  "question": 74,
   "connection": 32,
   "guide": 7,
   "prepared": 2,
   "label": 192,
-  "project": 45,
+  "project": 47,
   "grouprule": 1,
   "refusal": 194,
   "signing": 17,
@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 2720,
+  "screen": 2725,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -73,7 +73,7 @@
   "review": 5,
   "theme": 32,
   "connect": 8,
-  "setup": 9,
+  "setup": 13,
   "projects": 5,
   "progression": 26,
   "dock": 8,
@@ -91,12 +91,13 @@
   "request-unsent": 5,
   "standard": 15,
   "site": 1,
+  "projectai": 1,
   "rail": 17,
   "tab": 2,
-  "act": 731,
+  "act": 732,
   "column": 33,
-  "total": 5434,
-  "protected": 791
+  "total": 5451,
+  "protected": 792
  },
  "words": [
   {
@@ -29065,6 +29066,118 @@
    "note": "replaces question.empty.conclude's sentence after S24"
   },
   {
+   "key": "question.adddoc",
+   "en": "Add a document",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-inquiry R38: on the question, opening Add with the question as its subject"
+  },
+  {
+   "key": "question.adddoc.tip",
+   "en": "Opens Add, set to this question: what you capture is held for you to vouch for, then ready to cite here.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-inquiry R38"
+  },
+  {
+   "key": "project.adddoc",
+   "en": "Add a document",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-inquiry R38: on the project, opening Add with the project as its subject"
+  },
+  {
+   "key": "project.adddoc.tip",
+   "en": "Opens Add, set to {project}: what you capture is held for you to vouch for, then filed in it.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-inquiry R38"
+  },
+  {
+   "key": "question.plan.link",
+   "en": "Its plan: {plan}",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-inquiry R36: after planopen, the plan's name, a reference opening it"
+  },
+  {
+   "key": "question.plan.link.tip",
+   "en": "The action plan opened from this question: what the group means to do about it, and what each option became.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-inquiry R36"
+  },
+  {
+   "key": "projectai.notjoined",
+   "en": "You haven't joined {project}. Its members see here who pays for the assistant's work in it, for which uses and up to what limits. Join the project to see it.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-inquiry R37: beside \"Join\" (projectjoin) where she may join"
+  },
+  {
+   "key": "screen.findin.cite.supports",
+   "en": "Supports",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-daily R24: beside each \"Cite in the question\", under screen.document.cite.role; none preselected"
+  },
+  {
+   "key": "screen.findin.cite.against",
+   "en": "Cuts against",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-daily R24: as above"
+  },
+  {
+   "key": "screen.findin.cite.norole",
+   "en": "Choose first whether this passage supports the question or cuts against it. Nothing was cited.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-daily R24: refused in place until a role is chosen"
+  },
+  {
+   "key": "screen.findin.cite.norole.summary",
+   "en": "Citing before choosing",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-daily R24: where the refusal is shown"
+  },
+  {
+   "key": "setup.member.heading",
+   "en": "Your group is set up",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-entry R19: setup opened by a member, or an administrator who is not the founder"
+  },
+  {
+   "key": "setup.member.sub",
+   "en": "Your group's Civicsmith is already set up, so there is nothing to do here. Your group's work is on Home.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-entry R19"
+  },
+  {
+   "key": "setup.member.home",
+   "en": "Go to Home",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-entry R19"
+  },
+  {
+   "key": "setup.member.home.tip",
+   "en": "Your group's home: what needs you, and what changed since you last looked.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-entry R19"
+  },
+  {
+   "key": "screen.explore.nocentre",
+   "en": "Choose where to start: a person, an organization, a document or a payment. Its connections are then drawn here, each step cited and graded.",
+   "protected": false,
+   "source": "DEC-256",
+   "note": "screens-investigate R29: explore opened with no centre"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -31382,6 +31495,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.projectjoin.label.projectai",
+   "en": "Join",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.cite.label.question",
    "en": "Cite a passage",
    "protected": true,
@@ -31455,7 +31574,7 @@
   },
   {
    "key": "act.versionaccept.label.question",
-   "en": "Accept a reading",
+   "en": "Accept this reading",
    "protected": true,
    "source": "registry.json"
   },

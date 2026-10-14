@@ -111,6 +111,24 @@ for code, t in [
 ]: w6(f'refusal.{code}', t, False, "T49's requirement draws it by its words")
 w6('question.empty.conclude.own', 'Nothing to conclude on yet: a conclusion adopts a reading, the assistant\'s accepted or one you write yourself, and a reading stands on cited passages.', False, "replaces question.empty.conclude's sentence after S24")
 
+# --- DEC-256: T49's requirements drawn on the screens (each note names its requirement)
+w6('question.adddoc', 'Add a document', False, "screens-inquiry R38: on the question, opening Add with the question as its subject")
+w6('question.adddoc.tip', 'Opens Add, set to this question: what you capture is held for you to vouch for, then ready to cite here.', False, 'screens-inquiry R38')
+w6('project.adddoc', 'Add a document', False, "screens-inquiry R38: on the project, opening Add with the project as its subject")
+w6('project.adddoc.tip', 'Opens Add, set to {project}: what you capture is held for you to vouch for, then filed in it.', False, 'screens-inquiry R38')
+w6('question.plan.link', 'Its plan: {plan}', False, "screens-inquiry R36: after planopen, the plan's name, a reference opening it")
+w6('question.plan.link.tip', 'The action plan opened from this question: what the group means to do about it, and what each option became.', False, 'screens-inquiry R36')
+w6('projectai.notjoined', "You haven't joined {project}. Its members see here who pays for the assistant's work in it, for which uses and up to what limits. Join the project to see it.", False, 'screens-inquiry R37: beside "Join" (projectjoin) where she may join')
+w6('screen.findin.cite.supports', 'Supports', False, 'screens-daily R24: beside each "Cite in the question", under screen.document.cite.role; none preselected')
+w6('screen.findin.cite.against', 'Cuts against', False, 'screens-daily R24: as above')
+w6('screen.findin.cite.norole', 'Choose first whether this passage supports the question or cuts against it. Nothing was cited.', False, 'screens-daily R24: refused in place until a role is chosen')
+w6('screen.findin.cite.norole.summary', 'Citing before choosing', False, 'screens-daily R24: where the refusal is shown')
+w6('setup.member.heading', 'Your group is set up', False, 'screens-entry R19: setup opened by a member, or an administrator who is not the founder')
+w6('setup.member.sub', "Your group's Civicsmith is already set up, so there is nothing to do here. Your group's work is on Home.", False, 'screens-entry R19')
+w6('setup.member.home', 'Go to Home', False, 'screens-entry R19')
+w6('setup.member.home.tip', "Your group's home: what needs you, and what changed since you last looked.", False, 'screens-entry R19')
+w6('screen.explore.nocentre', 'Choose where to start: a person, an organization, a document or a payment. Its connections are then drawn here, each step cited and graded.', False, 'screens-investigate R29: explore opened with no centre')
+
 # Rows the requirements withdraw (DEC-256): build_words.mjs drops them, failing if one is no longer there to drop
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)

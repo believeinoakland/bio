@@ -1043,6 +1043,102 @@
    "en": "Nothing to conclude on yet: a conclusion adopts a reading, the assistant's accepted or one you write yourself, and a reading stands on cited passages.",
    "protected": false,
    "note": "DEC-256: replaces question.empty.conclude's sentence after S24"
+  },
+  {
+   "key": "question.adddoc",
+   "en": "Add a document",
+   "protected": false,
+   "note": "DEC-256: screens-inquiry R38: on the question, opening Add with the question as its subject"
+  },
+  {
+   "key": "question.adddoc.tip",
+   "en": "Opens Add, set to this question: what you capture is held for you to vouch for, then ready to cite here.",
+   "protected": false,
+   "note": "DEC-256: screens-inquiry R38"
+  },
+  {
+   "key": "project.adddoc",
+   "en": "Add a document",
+   "protected": false,
+   "note": "DEC-256: screens-inquiry R38: on the project, opening Add with the project as its subject"
+  },
+  {
+   "key": "project.adddoc.tip",
+   "en": "Opens Add, set to {project}: what you capture is held for you to vouch for, then filed in it.",
+   "protected": false,
+   "note": "DEC-256: screens-inquiry R38"
+  },
+  {
+   "key": "question.plan.link",
+   "en": "Its plan: {plan}",
+   "protected": false,
+   "note": "DEC-256: screens-inquiry R36: after planopen, the plan's name, a reference opening it"
+  },
+  {
+   "key": "question.plan.link.tip",
+   "en": "The action plan opened from this question: what the group means to do about it, and what each option became.",
+   "protected": false,
+   "note": "DEC-256: screens-inquiry R36"
+  },
+  {
+   "key": "projectai.notjoined",
+   "en": "You haven't joined {project}. Its members see here who pays for the assistant's work in it, for which uses and up to what limits. Join the project to see it.",
+   "protected": false,
+   "note": "DEC-256: screens-inquiry R37: beside \"Join\" (projectjoin) where she may join"
+  },
+  {
+   "key": "screen.findin.cite.supports",
+   "en": "Supports",
+   "protected": false,
+   "note": "DEC-256: screens-daily R24: beside each \"Cite in the question\", under screen.document.cite.role; none preselected"
+  },
+  {
+   "key": "screen.findin.cite.against",
+   "en": "Cuts against",
+   "protected": false,
+   "note": "DEC-256: screens-daily R24: as above"
+  },
+  {
+   "key": "screen.findin.cite.norole",
+   "en": "Choose first whether this passage supports the question or cuts against it. Nothing was cited.",
+   "protected": false,
+   "note": "DEC-256: screens-daily R24: refused in place until a role is chosen"
+  },
+  {
+   "key": "screen.findin.cite.norole.summary",
+   "en": "Citing before choosing",
+   "protected": false,
+   "note": "DEC-256: screens-daily R24: where the refusal is shown"
+  },
+  {
+   "key": "setup.member.heading",
+   "en": "Your group is set up",
+   "protected": false,
+   "note": "DEC-256: screens-entry R19: setup opened by a member, or an administrator who is not the founder"
+  },
+  {
+   "key": "setup.member.sub",
+   "en": "Your group's Civicsmith is already set up, so there is nothing to do here. Your group's work is on Home.",
+   "protected": false,
+   "note": "DEC-256: screens-entry R19"
+  },
+  {
+   "key": "setup.member.home",
+   "en": "Go to Home",
+   "protected": false,
+   "note": "DEC-256: screens-entry R19"
+  },
+  {
+   "key": "setup.member.home.tip",
+   "en": "Your group's home: what needs you, and what changed since you last looked.",
+   "protected": false,
+   "note": "DEC-256: screens-entry R19"
+  },
+  {
+   "key": "screen.explore.nocentre",
+   "en": "Choose where to start: a person, an organization, a document or a payment. Its connections are then drawn here, each step cited and graded.",
+   "protected": false,
+   "note": "DEC-256: screens-investigate R29: explore opened with no centre"
   }
  ],
  "retired": [

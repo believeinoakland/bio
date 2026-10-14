@@ -28,7 +28,7 @@ const J = [
    { s: 'action', act: null, say: 'Mai opens her request and sees "Response due 14 October".' },
    { s: 'due-date', act: 'clockpropose', say: 'She opens "How was this worked out?": the law, the receipt date, the days counted, the holiday skipped.' },
    { s: 'due-date', act: 'clockadopt', say: 'She confirms it in one act. If the law left the day uncertain, both dates would show as "Undetermined, because…".' },
-   { s: 'queue', act: null, say: 'Later the queue shows it met, met late or overdue: facts, never legal advice.' } ] },
+   { s: 'queue', act: null, say: 'Later the queue shows it met, met late or no reply recorded: facts, never legal advice.' } ] },
  { n: 9, t: 'Checking a claim about the city\'s performance', who: 'Members; often an analyst or accountant', wiz: 'Check a claim' },
  { n: 10, t: 'Following a person', who: 'Any member; often an investigator or reporter', steps: [
    { s: 'document', act: 'identityclaim', say: 'Dev meets a name in the repair policy: L. Chen, Director of Public Works.' },
@@ -76,7 +76,7 @@ const J = [
  { n: 19, t: 'The daily queue', who: 'Every member', steps: [
    { s: 'queue', act: null, say: 'Mai opens her queue: To do, Noticed and Status, grouped by case. The one-line explanation shows once.' },
    { s: 'queue', act: 'adoptversion', say: 'A document she cited has a newer version; she adopts it or keeps hers.' },
-   { s: 'queue', act: 'reminderanswer', say: 'An office\'s due date passed: said once, with "Overdue".' },
+   { s: 'queue', act: 'reminderanswer', say: 'An office\'s due date passed: said once, as "no reply recorded".' },
    { s: 'queue', act: 'proposedispose', say: 'An item the machine marked worth a look carries "Hint · machine work", with how it was found and out of how many. She dismisses it with a reason.' },
    { s: 'queue', act: 'queuesnooze', say: 'She snoozes a standing question\'s answer to a local date.' },
    { s: 'queue', act: 'owed:updatelater K3158', say: 'Rosa, an administrator, also sees "An update is ready": the release, its date and a security mark. She opens what changes, or puts it aside with Not now.' },
@@ -96,7 +96,7 @@ const J = [
    { s: 'plan', act: 'optiondispose', say: 'He chooses the records request and declines the complaint, each with a reason.' },
    { s: 'plan', act: 'scenarioset', say: 'He lays out a scenario with a checkpoint a member will judge.' },
    { s: 'start-send', act: 'optionstart', say: 'He starts the option. The start-and-send wizard can walk it (see Wizards).' },
-   { s: 'action', act: 'actioncorrespond', say: 'Replies and due dates show as met, met late or overdue.' },
+   { s: 'action', act: 'actioncorrespond', say: 'Replies and due dates show as met, met late or no reply recorded.' },
    { s: 'matter', act: 'declinetoescalate', say: 'For a determined breach he advances, or declines saying why not now.' },
    { s: 'plan', act: 'planclose', say: 'He records the outcome and closes the plan.' } ] },
  { n: 23, t: 'A source changes after publishing', who: 'Members; readers', steps: [

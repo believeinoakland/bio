@@ -2252,6 +2252,14 @@
      "label": "Keep the project's material away from AI, with a reason",
      "status": "declared",
      "servedBy": "op-declarations R41 (BOB's B172: declared and served, T47)"
+    },
+    {
+     "op": "projectjoin",
+     "label": "Join",
+     "status": "function",
+     "modules": [
+      "membership"
+     ]
     }
    ],
    "journeys": []
@@ -2363,7 +2371,7 @@
     },
     {
      "op": "versionaccept",
-     "label": "Accept a reading",
+     "label": "Accept this reading",
      "status": "declared",
      "modules": [
       "basis-versions"
