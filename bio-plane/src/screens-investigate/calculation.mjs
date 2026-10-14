@@ -50,18 +50,16 @@ function render(cs, view) {
     if (s.found === false) return "";
     const d = s.draw || {};
     const k = s.counts || {};
-    /* the draw's question is answered yes, no or could not tell: the sentences that name the answer use the keyed "Yes", lower-cased */
-    const yes = cs.w(S + "standing.yes").toLowerCase();
     const range = est && est.state === "ok" && est.value.results && est.value.results.interval ? est.value.results.interval : null;
     return `<dl class="mk-facts"><dt>${cs.w(S + "draw")}</dt><dd>${cs.w(S + "draw.what", { n: String(d.n || 0), size: String(d.set_size || 0), seed: String(d.seed || "") })}<span class="mk-small">${cs.w(S + "draw.repeat")} ${cs.esc(d.method || "")}</span></dd>`
       + (s.question ? `<dt>${cs.w(S + "question")}</dt><dd class="rec">${cs.esc(s.question)}</dd>` : "")
       + (() => {
-        /* R22: no count is drawn at zero: only the findings that were made. The design's one sentence for the counts
-           (`counts`) names all three, zeros included, so the parts are drawn by their own words */
-        const bits = [["yes", k.yes], ["no", k.no], ["unsure", k.could_not_tell], ["disagree", k.disagree], ["notvisited", k.not_visited]].filter((x) => x[1]).map((x) => cs.w(S + "counts." + x[0], { n: String(x[1]) }));
-        return bits.length ? `<dt>${cs.w(S + "found")}</dt><dd>${bits.join(", ")}</dd>` : "";
+        /* the design's one sentence for the counts (DEC-262); tension and not visited are counted beside it. Drawn once a finding was made */
+        if (!(k.yes || k.no || k.could_not_tell || k.disagree)) return "";
+        const apart = [["disagree", k.disagree], ["notvisited", k.not_visited]].filter((x) => x[1]).map((x) => cs.w(S + "counts." + x[0], { n: String(x[1]) }));
+        return `<dt>${cs.w(S + "found")}</dt><dd>${cs.w(S + "counts", { visited: String(Math.max(0, (d.n || 0) - (k.not_visited || 0))), n: String(d.n || 0), yes: String(k.yes || 0), no: String(k.no || 0), unsure: String(k.could_not_tell || 0) })}${apart.length ? " · " + apart.join(", ") : ""}</dd>`;
       })()
-      + `<dt>${cs.w(S + "estimate")}</dt><dd>${range ? cs.w(S + "range", { share: String(Math.round((range.successes / Math.max(1, range.sample_size)) * 100)), judged: String(range.sample_size), answer: yes, confidence: String(Math.round((range.confidence || 0.95) * 100)), low: String(Math.round((range.low_share || 0) * 100)), high: String(Math.round((range.high_share || 0) * 100)) })
+      + `<dt>${cs.w(S + "estimate")}</dt><dd>${range ? cs.w(S + "range", { share: String(Math.round((range.successes / Math.max(1, range.sample_size)) * 100)), judged: String(range.sample_size), confidence: String(Math.round((range.confidence || 0.95) * 100)), low: String(Math.round((range.low_share || 0) * 100)), high: String(Math.round((range.high_share || 0) * 100)) })
         : est ? cs.state(est, () => cs.mark("gap", "undetermined", { reason: cs.w(S + "noestimate") })) : cs.mark("gap", "undetermined", { reason: cs.w(S + "noestimate") })}</dd></dl>`
       + cs.sheet((s.items || []).map((it) => cs.row(`<span class="cs-kind" data-standing="${cs.esc(it.standing)}">${cs.w(S + "standing." + (["yes", "no", "disagree", "could_not_tell", "not_visited"].includes(it.standing) ? it.standing : "not_visited"))}</span>`,
         `<b>${cs.w(S + "item", { item: String(it.item) })}</b>` + (it.standing === "disagree" ? ` <span class="mk-small">${cs.w(S + "tension")}</span>` : ""),
@@ -172,7 +170,7 @@ const acts = [
 ];
 
 const CALCULATION_KEYS = [
-  "screen.calculation.counts.yes", "screen.calculation.counts.no", "screen.calculation.counts.unsure",
+  "screen.calculation.counts",
   "screen.calculation.method", "screen.calculation.method.holds", "screen.calculation.status.unchecked", "screen.calculation.status.agrees",
   "screen.calculation.status.differs", "screen.calculation.status.stale", "screen.calculation.accepted", "screen.calculation.inputs",
   "screen.calculation.unbound", "screen.calculation.apart", "screen.calculation.draw", "screen.calculation.draw.what",

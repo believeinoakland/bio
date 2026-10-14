@@ -12,11 +12,11 @@ test("R7 reads the action's clock entry (action) and its standing proposals (clo
   assert.equal(p.byOp("clockproposals")[0].query.action, ACT);
   const m = main(p);
   assert.equal(m.querySelector("h1").textContent, word("screen.due-date.due", { date: dayOf("2026-10-14") }));
-  drew(m, "screen.due-date.of", { who: "City Clerk, City Council", item: word("screen.start-send.kind.records_request") });
+  drew(m, "screen.due-date.of", { who: "City Clerk, City Council" });
   const how = m.querySelector(`[data-proposal="pra_10day@member:mai"]`);
   const steps = how.querySelectorAll("li").map((l) => l.textContent);
   assert.deepEqual(steps, [word("screen.due-date.step.basis", { basis: "Gov. Code §7922.535(a) (profile basis: the 10-day window)" }),
-    word("screen.due-date.step.received.receipt", { date: dayOf("2026-10-02") }), word("screen.due-date.step.counted", { amount: "10", units: "days", date: dayOf("2026-10-14") }),
+    word("screen.due-date.step.received.receipt", { date: dayOf("2026-10-02") }), word("screen.due-date.step.counted", { amount: "10", units: "days" }),
     word("screen.due-date.step.skipped", { date: dayOf("2026-10-12"), why: "Indigenous Peoples' Day (office calendar)", source: "the group's profile" }),
     word("screen.due-date.step.due", { date: dayOf("2026-10-14"), zone: "America/Los_Angeles" })]);
 });
@@ -70,10 +70,4 @@ test("R7 the subject `<action>~<entry position>` (screens-action's links, K3149)
   assert.deepEqual(p.byOp("reminderset")[0].body, { target: ACT, entry: 1, on: "2026-10-12" });
   const q = await open(at + "~0", { plane: { action: ok(two) } });
   assert.equal(main(q).querySelector("h1").textContent, word("screen.due-date.due", { date: dayOf("2026-10-05") }));
-});
-
-test("R7 the reply owed is said only for a kind of request the words name (control: another kind draws no such line)", async () => {
-  const p = await open(at, { plane: { action: ok({ ...ACTION, kind: "other" }) } });
-  assert.ok(!main(p).textContent.includes(word("screen.due-date.of", { who: "City Clerk, City Council", item: word("screen.start-send.kind.other") })));
-  assert.equal(main(p).querySelector(".mk-sub"), null);
 });

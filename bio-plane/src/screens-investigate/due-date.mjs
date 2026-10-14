@@ -27,9 +27,7 @@ function render(cs, view) {
   const next = (pos !== null && clock[pos]) || clock.find((e) => e.status === "pending" && e.date) || null;
   const out = [cs.title(next ? cs.w(S + "due", { date: cs.date(next.date) }) : cs.w("screen.due-date.name"),
     { thing: { kind: "action", facts: a ? [a.kind || "", (a.counterparty && (a.counterparty.role || a.counterparty.body)) || ""] : [] } })];
-  /* whose reply it is, to which kind of request: said only for a kind the words name (the request's own kind, keyed) */
-  if (a && a.counterparty && ["records_request", "request_for_comment"].includes(a.kind))
-    out.push(`<p class="mk-sub">${cs.w(S + "of", { who: (a.counterparty.role || "") + (a.counterparty.body ? ", " + a.counterparty.body : ""), item: cs.w("screen.start-send.kind." + a.kind) })}</p>`);
+  if (a && a.counterparty) out.push(`<p class="mk-sub">${cs.w(S + "of", { who: (a.counterparty.role || "") + (a.counterparty.body ? ", " + a.counterparty.body : "") })}</p>`);
   /* the confirmed entries: what each is, its basis and when */
   out.push(cs.sec(S + "entries", cs.state("action", view, () => (clock.length
     ? cs.sheet(clock.map((e, i) => (i === pos ? '<div aria-current="true">' : "<div>") + cs.row(cs.due(e.date || "", e.status === "met" ? "met" : e.status === "overdue" ? "overdue" : ""),
@@ -48,7 +46,7 @@ function render(cs, view) {
     const srcOf = (day) => { const c = cal.find((x) => x.day === day || x.date === day); return c ? c.basis || c.source || "" : (t.calendar && t.calendar.status) || ""; };
     const steps = [`<li>${cs.w(S + "step.basis", { basis: p.basis || "" })}</li>`,
       `<li>${t.anchor_day ? cs.w(S + "step.received." + (p.start_from || t.start_from || "receipt"), { date: cs.date(t.anchor_day) }) : cs.mark("gap", "undetermined", { reason: cs.w(S + "noreceipt") })}</li>`,
-      `<li>${cs.w(S + "step.counted", { amount: String(t.amount || ""), units: t.units || "", date: p.date ? cs.date(p.date) : "" })}</li>`]
+      `<li>${cs.w(S + "step.counted", { amount: String(t.amount || ""), units: t.units || "" })}</li>`]
       .concat((t.skipped || []).map((s) => `<li>${cs.w(S + "step.skipped", { date: cs.date(s.day), why: s.why || "", source: srcOf(s.day) })}</li>`))
       .concat([`<li>${p.date ? cs.w(S + "step.due", { date: cs.date(p.date), zone: t.zone || "" }) : cs.mark("gap", "undetermined", { reason: p.undetermined && p.undetermined.why ? p.undetermined.why : cs.w(S + "nodate") })}</li>`]);
     const machine = p.label && p.label.machine_work;
@@ -99,6 +97,6 @@ const DUE_KEYS = [
 const words = ["screen.due-date.name", "screen.due-date.purpose",
   ...["clockpropose", "clockadopt", "reminderset"].flatMap((op) => ["act." + op + ".label.due-date", "act." + op + ".does"]),
   "mark.due.means", "mark.origin.machine.name", "mark.origin.machine.means", "mark.gap.undetermined.name", "mark.gap.undetermined.means",
-  "screen.start-send.kind.records_request", "screen.start-send.kind.request_for_comment", "state.empty", "state.loading", "state.failed", ...DUE_KEYS];
+  "state.empty", "state.loading", "state.failed", ...DUE_KEYS];
 
 export const DUE_DATE_SCREEN = Object.freeze({ id: "due-date", reads, render, acts, words, parts: PARTS });

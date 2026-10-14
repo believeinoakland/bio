@@ -27,9 +27,9 @@ test("R5 the spot-check: the draw (the set, its size, the seed and method, that 
   drew(s, "screen.calculation.draw.what", { n: "3", size: "812", seed: "2026-10-05-7f31" });
   drew(s, "screen.calculation.draw.repeat");
   assert.ok(s.textContent.includes("Was the pothole repaired?"), "the question, as the draw records it");
-  for (const [k, n] of [["yes", 1], ["disagree", 1], ["notvisited", 1]]) drew(s, "screen.calculation.counts." + k, { n: String(n) });
-  for (const k of ["no", "unsure"]) notDrew(s, "screen.calculation.counts." + k, { n: "0" }, "R22: no count is drawn at zero");
-  drew(s, "screen.calculation.range", { share: "81", judged: "37", answer: word("screen.calculation.standing.yes").toLowerCase(), confidence: "95", low: "65", high: "92" });
+  drew(s, "screen.calculation.counts", { visited: "2", n: "3", yes: "1", no: "0", unsure: "0" });
+  for (const k of ["disagree", "notvisited"]) drew(s, "screen.calculation.counts." + k, { n: "1" });
+  drew(s, "screen.calculation.range", { share: "81", judged: "37", confidence: "95", low: "65", high: "92" });
   drew(s, "screen.calculation.item", { item: "17" });
   drew(s, "screen.calculation.visit", { finding: word("screen.calculation.finding.yes"), by: "mai", date: dayOf("2026-10-06") });
   assert.equal(s.querySelectorAll(".cs-grade[data-scale=testimony]").length, 3, "every visit, graded as testimony");

@@ -64,3 +64,6 @@ COMPLETE (J4) after CHANGE B3/B4: merged tranche/T49, 109 tests pass on the real
 ## J5 · COMPLETE
 
 COMPLETE (J5) after B5: merged the latest tranche/T49; 109 tests pass; nothing else changed since J4.
+
+## After CHANGE B6 (DEC-262)
+Merged; `counts` is drawn again (its three counts, zero included, as the design's sentence has them; tension and not visited beside it), `range`, `due-date.of` and `step.counted` filled with exactly their placeholders (no `{answer}`, `{item}`, `{date}`); the kind-gated `of` line is gone, `of` is drawn whenever the action has a counterparty. 108 tests pass. Size (session_016pXDF9DWaZT1NX5gzoCeit): test runs 47, module lines 2077
