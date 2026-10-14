@@ -57,6 +57,8 @@ export const SCREEN_WORDS = Object.freeze([
   row("screen.projects.stage.closed", "Closed"),
   row("screen.projects.stage.means", "Where the project stands: forming, investigating, matured or closed."),
   row("screen.projects.stage.none", "no stage is recorded for it"),
+  row("screen.projects.owner", "Owner: {handle}"),
+  row("screen.projects.owner.none", "No active owner"),
   row("screen.projects.lastchange", "Last change {date}"),
   row("screen.projects.lastchange.none", "No change in the last eight weeks"),
   row("screen.projects.truncated", "Your group has more projects than are shown here."),

@@ -80,7 +80,7 @@ test("R8: each project's question count is read from projectquestions, paged to 
   const reads = p.byOp("projectquestions").map((r) => `${r.query.project}:${r.query.after || ""}`);
   assert.deepEqual(reads.sort(), ["PROJ-1:", "PROJ-1:INQ-2", "PROJ-2:", "PROJ-3:"], "PROJ-1 paged on past its first page's cursor");
   assert.match(text(p), /The Coliseum lease3 questions/);
-  assert.match(text(p), /Pothole repairs1 question\b/);
+  assert.match(text(p), /Pothole repairs1 questionForming/);
   assert.match(text(p), /Odd0 questions/);
   // Redraws (each count landing redraws the screen) read no count again: four reads for three projects, one paged on.
 });
@@ -110,7 +110,7 @@ test("R8: a count is loading until its pages are read, and a failed read is draw
 test("R8: a project whose stage is null is drawn undetermined; a list answered truncated says more projects exist", async () => {
   const p = await open("/app", { ...PLANE, projectlist: ok({ ok: true, truncated: true, projects: [{ id: "PROJ-5", name: "Unstaged", stage: null }] }) });
   await settle();
-  assert.match(text(p), /UnstagedUndetermined, because no stage is recorded for it/);
+  assert.match(text(p), /Unstaged0 questionsUndetermined, because no stage is recorded for it/);
   assert.equal(main(p).querySelectorAll(".cs-ladder [aria-current]").length, 0);
   assert.match(text(p), /Your group has more projects than are shown here\./);
   assert.doesNotMatch(text(await open("/app", PLANE)), /more projects than are shown/, "control: not truncated, not said");
@@ -239,7 +239,7 @@ test("R9: beside the doors, the matching work (the member's words searched) and 
   assert.equal(last(p, "search").query.q, "potholes on Seminary");
   const m = main(p).querySelector('[data-front="matching"]');
   assert.match(text(p, m), /^Already in your group: Pothole repairs, Work orders FY2025$/);
-  assert.equal(p.doc.getElementById("home-words").value, "potholes on Seminary");
+  assert.equal(p.doc.getElementById("home-words").value, " potholes on Seminary ", "the field keeps what the member typed");
 });
 
 test("R11: with no project, a group's founder sees the new-group state: nothing is here yet, invite members, say who the group is", async () => {
@@ -248,6 +248,8 @@ test("R11: with no project, a group's founder sees the new-group state: nothing 
   assert.match(text(p), /Your group's Civicsmith is readyNothing is here yet\. Most groups start by inviting a few members and opening one project about a problem they already know\./);
   assert.equal(main(p).querySelector('a[href="/app/members"]').textContent, "Invite your first members");
   assert.equal(main(p).querySelector('a[href="/app/group-identity"]').textContent, "Say who your group is");
+  // The welcome offer (screens-wizards R7) is the guide's marks, drawn by the shell; Home draws none itself (K3143).
+  assert.doesNotMatch(text(p), /Welcome a new member|Your first question/);
   // Controls: a group with a project, a member who is not its founder, and a failed read draw no new-group state.
   assert.doesNotMatch(text(await open("/app", { ...empty, projectlist: PLANE.projectlist })), /Nothing is here yet/);
   assert.doesNotMatch(text(await open("/app", { ...empty, whoami: ok({ ...MEMBER, capabilities: ["contribute"] }) })), /Nothing is here yet/);

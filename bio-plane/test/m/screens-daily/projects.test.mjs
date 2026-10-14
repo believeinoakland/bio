@@ -6,10 +6,10 @@ import assert from "node:assert/strict";
 import { open, ok, refused, text, ops, button, press, beside, last, main, settle, MEMBER } from "./page.mjs";
 
 const LIST = ok({ ok: true, count: 2, limit: 200, truncated: false, projects: [
-  { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating",
+  { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", owner: { member: "M-1", handle: "dev" },
     members: [{ member: "M-1", handle: "dev" }, { member: "M-2", handle: "rosa" }, { member: "M-3", handle: "teo" }],
     activity: [3, 5, 4, 6, 8, 7, 9, 11], lastChange: "2026-10-12T15:00:00Z" },
-  { id: "PROJ-2", name: "Sewer fund transfers", stage: "closed", members: [{ member: "M-4", handle: "ana" }],
+  { id: "PROJ-2", name: "Sewer fund transfers", stage: "closed", owner: null, members: [{ member: "M-4", handle: "ana" }],
     activity: [0, 0, 0, 0, 0, 0, 0, 0], lastChange: null },
 ] });
 const QUESTIONS = (req) => ok({ ok: true, project: req.query.project, items: req.query.project === "PROJ-1" ? [{ inquiry: "INQ-1" }, { inquiry: "INQ-2" }] : [], cursor: null });
@@ -49,8 +49,8 @@ test("R10 (DEC-214 (3); project-roster R28): each row draws its members (cs.init
   const p = await open("/app/projects", PLANE);
   await settle();
   const [a, b] = rows(p);
-  assert.deepEqual(p.initials, [["dev", "rosa", "teo"], ["ana"]], "the members' handles, through the kit");
-  assert.deepEqual(p.activity, [[3, 5, 4, 6, 8, 7, 9, 11], [0, 0, 0, 0, 0, 0, 0, 0]], "eight weeks, oldest first, through the kit");
+  assert.deepEqual(p.initials.slice(-2), [["dev", "rosa", "teo"], ["ana"]], "the members' handles, through the kit");
+  assert.deepEqual(p.activity.slice(-2), [[3, 5, 4, 6, 8, 7, 9, 11], [0, 0, 0, 0, 0, 0, 0, 0]], "eight weeks, oldest first, through the kit");
   assert.match(text(p, a), /Last change 12 October 2026/);
   assert.match(text(p, b), /No change in the last eight weeks/);
   // Control: a row answering none of the three draws none of them, and says nothing of them.
@@ -58,6 +58,17 @@ test("R10 (DEC-214 (3); project-roster R28): each row draws its members (cs.init
   await settle();
   assert.deepEqual([bare.initials || [], bare.activity || []], [[], []]);
   assert.doesNotMatch(text(bare), /Last change|No change/);
+});
+
+test("R10 (DEC-201 (8); project-roster R27): each row draws its owner by handle, a reference to the member; an owner no longer active is said", async () => {
+  const p = await open("/app/projects", PLANE);
+  const [a, b] = rows(p);
+  assert.match(text(p, a), /Owner: dev/);
+  assert.ok(a.querySelectorAll(".cs-card, a.cs-ref").some((e) => e.textContent === "dev"));
+  assert.match(text(p, b), /No active owner/);
+  // Control: a row answering no owner says nothing of one.
+  const bare = await open("/app/projects", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-9", name: "Bare", stage: "forming" }] }) });
+  assert.doesNotMatch(text(bare, rows(bare)[0]), /Owner|owner/);
 });
 
 test("R10: a list answered truncated says more projects exist; none says so in its own words; a failed read is drawn failed", async () => {
