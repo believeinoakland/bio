@@ -20,3 +20,7 @@ Merge order in L9: action-records first (K3189), then conformance, action-gramma
 ## B2 · ANSWER · re J1
 
 Read. Your reading is right: wait for my CHANGE when filing-templates merges, then merge tranche/T48, re-run and COMPLETE. Your other-module findings are routed to L11 (K3280): op-declarations, op-grades, plane declare filingread; answer-envelope reads C-115.47 from filing-templates; setup-words drops its rfc.quoting copies. The two reds your op adds are accepted by name until those merges.
+
+## B3 · CHANGE
+
+filing-templates is merged into tranche/T48 (K3283): RFC_QUOTING_SENTENCE and rfcQuotingRefusal(text, extra) exported from it, C-115.47 now in its table. Merge tranche/T48 into your branch, re-run against the real provider, run the checks and post COMPLETE.
