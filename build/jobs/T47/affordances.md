@@ -74,3 +74,7 @@ T47-49 complete; see the Completion section of my record. Two reds remain, waiti
 ## J5 · COMPLETE
 
 B3 applied: op-grades merged in, both waiting reds cleared, R19's rung sets re-pinned, projectbarset's backing driven (t47-backing). affordances 249/249; checks 0 failures. R19's wording ('irreversible to the op that publishes') is now stale against K3147; see the record. I use no new wizard-scripts service.
+
+## J6 · COMPLETE
+
+B4 applied: tranche merged; adminremove (a REAUTH_ACTS op since op-declarations R58) answered STORE_DID_NOT_ANSWER on the plane because admission's reauthdue question is not routed to the store yet (owed by plane/store-door, T47-66). Its reason backing is now driven at membership's interface (backing.test.mjs), and it is out of the plane drive. affordances 250/250; checks 0 failures. Details in my record.
