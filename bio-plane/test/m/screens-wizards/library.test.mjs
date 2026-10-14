@@ -114,7 +114,9 @@ test("R1 \"See its steps\" reads wizardread; the author's draft is reworded, reo
   await a.press("wizards", { data: { open: V.draft } });
   const k = V.draft.replace(/[^A-Za-z0-9_-]/g, "_");
   // a recorded step with no words yet says what was recorded
-  has(a, "screen.wizards.steps.recorded", { screen: "request", act: said("screen.wizards.steps.noact") });
+  // (the screen named by its word where the page carries it, else by its id)
+  const recorded = ["request", said("screen.request.name")].map((screen) => said("screen.wizards.steps.recorded", { screen, act: said("screen.wizards.steps.noact") }));
+  assert.ok(recorded.some((x) => a.text.includes(x)), "the recorded step says what was recorded");
   const { sent, asked } = await a.press("wizardrevise", { data: { mode: "edit", version: V.draft }, reason: "clearer",
     values: { [`wz-w-${k}-0`]: "Search the record", [`wz-p-${k}-0`]: "2", [`wz-p-${k}-1`]: "1", [`wz-x-${k}-2`]: true } });
   assert.equal(asked, true, "an undetermined act asks a reason (interface-shell R11)");
