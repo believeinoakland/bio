@@ -46,3 +46,7 @@ B2 applied: `tranche/T47` merged; R10's rows draw members, activity and last cha
 ## J3 · COMPLETE
 
 T47-60 built: R8–R13 with B2–B9 (K3142–K3157) applied; record "Completion" on job/T47/screens-daily gives entries, readings, tests and checks. Tests: on this branch 56 pass, 8 fail, all eight waiting on interface-shell's merge (cs.wizard with the guide option, cs.initials, cs.activity, tickActive); with job/T47/interface-shell merged in a scratch worktree, 64 of 64. Checks: format, architecture, ownership 0 failures; coverage 13 of 13. J2 is answered by interface-shell's kit as built (cs.initials(names), cs.activity(weeks, word)); I re-run and post COMPLETE again on the CHANGE that merges it.
+
+## J4 · COMPLETE
+
+B10 applied: tranche/T47 merged with interface-shell in. Tests without any overlay: screens-daily 64 of 64. Checks: format, architecture, ownership 0 failures; coverage 13 of 13; checks/run.mjs format, architecture, channels 0 failures (coverage's 12 failures all other modules'). Nothing was held for this merge beyond the kit calls, now the kit's own. Record "Completion" updated.
