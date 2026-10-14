@@ -17,7 +17,7 @@
 - `review-outside` (R17): published frame, `view.fragment.grant` (R46), the secret only in `reviewcopy`'s and `reviewcomment`'s bodies, the end date or "until the group stops sharing", "Send your comment".
 - R10, R11: four read states everywhere (including the reads that wait on another, `parts.later`), re-reads after every act, nothing drawn prepared or signed before its answer; no secret in storage, an address or a later request.
 
-**B10 (K3171; JOURNEY-CHECK #1 J4 (2)):** `case-editor`, `review-copy`, `ceremony`, `published` (and `docket`, by the same rule) opened with no subject in the address send no subject read and draw interface-shell R35's "Nothing is here" (`parts.subject`, `parts.nothing`, the shell's own words), one test per screen with its control.
+**B10 (K3171; JOURNEY-CHECK #1 J4 (2)):** `case-editor`, `review-copy`, `ceremony`, `published` (and `docket`, by the same rule) opened with no subject in the address send no subject read and draw interface-shell R35's "Nothing is here" (`parts.subject`, `parts.nothing`, the shell's own words), one test per screen with its control. **B11 (K3179):** drawn as `shell.unavailable.nothing.title` over `shell.unavailable.nothing.says` alone, not under `screen.unavailable.name`; tested with that control.
 
 **Readings (all answered):** J1 → K3145 (B2), J2 → K3147 (B3), J3 → K3150 (B5). Size: 1,494 module lines against an estimate of 2,600–3,200; the shell's kit carries more of the drawing than the estimate assumed.
 
@@ -30,9 +30,9 @@
 
 **Files (for `modules.json`):** paths `bio-plane/src/screens-publish/` (`index.mjs`, `parts.mjs`, `words.mjs`, `case-editor.mjs`, `review-copy.mjs`, `ceremony.mjs`, `published.mjs`, `imported.mjs`, `docket.mjs`, `doorbell.mjs`, `review-outside.mjs`); tests `bio-plane/test/m/screens-publish/` (`fixtures.mjs`, `common.test.mjs`, `case-editor.test.mjs`, `review.test.mjs`, `ceremony.test.mjs`, `public.test.mjs`).
 
-**Tests and checks** (on `job/T47/screens-publish` after merging `tranche/T47` at B10, no overlay): `node --test bio-plane/test/m/screens-publish/` 53 pass, 0 fail. With my paths in `modules.json`: `format` 0 failures; `architecture` (screens-publish) 17 product files, 0 failures; `coverage` 17 of 17; `ownership` 0 failures; `checks/run.mjs`: architecture 0 failures, format 0, channels 0; coverage's 2 failures are other modules' (none mine).
+**Tests and checks** (on `job/T47/screens-publish` after merging `tranche/T47` at B11, no overlay): `node --test bio-plane/test/m/screens-publish/` 53 pass, 0 fail. With my paths in `modules.json`: `format` 0 failures; `architecture` (screens-publish) 17 product files, 0 failures; `coverage` 17 of 17; `ownership` 0 failures; `checks/run.mjs`: architecture 0 failures, format 0, channels 0; coverage's 2 failures are other modules' (none mine).
 
-Size (session_01H1xqnxGLp6rmKJGKxAwv2Z): test runs 25, module lines 1,516
+Size (session_01H1xqnxGLp6rmKJGKxAwv2Z): test runs 26, module lines 1,516
 
 ## J1 · QUESTION
 
