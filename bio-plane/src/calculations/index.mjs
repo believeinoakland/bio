@@ -34,7 +34,7 @@ import { checkRecipe, evaluate as evaluateRecipe, resultKey, METHOD, parseFigure
 import { validAt, fiscalPeriod, isCalendarDate, localDay } from "../civil-time/index.mjs";
 import { recognise } from "../idspaces.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf, listenerRefusal, notAnAdmin, MODULE_ORDER } from "../membership/index.mjs";
+import { membershipOf, listenerRefusal, notAnAdmin, MODULE_ORDER, viewerPredicate, Membership } from "../membership/index.mjs";
 import { contentOf, canonicalExtent } from "../content/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { combine as combineProfiles, SPACES } from "../../../jurisdictions/index.mjs";
@@ -105,12 +105,17 @@ const weaker = (a, b) => (GRADES.indexOf(a) >= GRADES.indexOf(b) ? a : b);
 const isGrade = (g) => GRADES.includes(g);
 const randomSeed = () => [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, "0")).join("");
 
-/** The member a stamp names: `member:<id>` → `<id>`, bare `admin` → `admin`; a machine or anything else → null. */
+/** The member a stamp names, under membership's one spelling of a viewer (its R43; R41): `member:<id>` names `<id>`,
+ *  and the founder's viewer, spelled bare `admin` or `member:admin`, names the founder whichever spelling it carries
+ *  (`viewerPredicate` answers member null for the bare spelling, so the founder's arm is read here too); a machine
+ *  identity, or a stamp R43 refuses, names no member: null. */
 export function memberOf(stamp) {
-  if (stamp === "admin") return "admin";
-  const m = /^member:([A-Za-z0-9._:-]{1,128})$/.exec(typeof stamp === "string" ? stamp : "");
-  return m ? m[1] : null;
+  const p = viewerPredicate(stamp);
+  if (p.member) return p.member;
+  return stamp === Membership.ROOT_ADMIN ? Membership.ROOT_ADMIN : null;
 }
+/** R41: whether two stamps name the one same member (a machine, or no member, matches nothing). */
+const sameMember = (a, b) => { const m = memberOf(a); return m !== null && m === memberOf(b); };
 const isMachine = (by) => typeof by === "string" && isMachineIdentity(by);
 const stamped = (by) => typeof by === "string" && by.trim() !== "";
 
@@ -1674,7 +1679,7 @@ export class Calculations {
   /** R18: a recorded draw, reproduced from its set, seed and method: `{reproduced, sample}`. */
   reproduceDraw({ draw: key = null, viewer = null } = {}) {
     const d = typeof key === "string" ? this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, key) : null;
-    if (!d || !this.#sees(d.project, viewer)) return { ok: true, found: false };
+    if (!d || !stamped(viewer) || !this.#seesDrawn(d, viewer)) return { ok: true, found: false };
     return { ok: true, found: true, draw: d.draw_key, ...this.#reproduce(d) };
   }
 
@@ -1700,7 +1705,9 @@ export class Calculations {
     const t = capture ? this.#one(`SELECT capture_sha, bundle_id, authored, author, observed_at FROM register WHERE capture_sha=?`, capture) : null;
     if (!t || Number(t.authored) !== 1 || !this.#sees(t.bundle_id, by))
       return no("NOT_TESTIMONY", "the testimony is the capture of a firsthand observation recorded through testify, one you may see; this is not one. Nothing was written.");
-    if (t.author !== by) return no("NOT_YOUR_TESTIMONY", "a visit rests on the visitor's own observation; this testimony was recorded by another member. Nothing was written.");
+    /* R41: the testimony's author and the visitor compared as the one member each names (membership R43), so the
+       founder's `member:admin` testimony is hers when `by` is bare `admin`, and the other way round */
+    if (!sameMember(t.author, by)) return no("NOT_YOUR_TESTIMONY", "a visit rests on the visitor's own observation; this testimony was recorded by another member. Nothing was written.");
     if (!VISIT_FINDINGS.includes(finding))
       return no("BAD_FINDING", `a visit's finding is one of ${VISIT_FINDINGS.join(", ")}, against the draw's question. Nothing was written.`);
     const list = exhibits === null || exhibits === undefined ? [] : exhibits;

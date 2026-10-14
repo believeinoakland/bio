@@ -304,3 +304,55 @@ test("R40 no result, label or sentence of a spot-check, a visit or an estimate o
   const text = JSON.stringify(out, (k, v) => (k === "reason" || k === "code" ? undefined : v));
   assert.doesNotMatch(text, /\bbreach|\bviolat|\bnon-?conforming|not met|\bdiverted\b|\bmisused\b|\bscore\b|\bsuspicious\b|Noticed/i);
 });
+
+test("R41 NOT_YOUR_TESTIMONY compares the testimony's author and the visitor as the one member each names (membership R43): the founder's member:admin testimony is hers when by is bare admin, and the other way round; another member's is still refused, writing nothing", async () => {
+  const { w, d, testify } = await spot();
+  const words = (n) => ({ words: `At the site I looked at the bench myself (founder ${n}).`, observedAt: "2026-10-02", title: `founder visit ${n}` });
+  /* the founder's session: testimony recorded as member:admin, the visit stamped bare admin */
+  const spelled = w.prov.testify({ ...words(1), author: "member:admin" });
+  assert.equal(spelled.ok, true, JSON.stringify(spelled).slice(0, 300));
+  const v1 = w.c.recordVisit({ draw: d.draw, item: d.sample[0], testimony: spelled.capture_sha, finding: "yes", by: "admin" });
+  assert.equal(v1.ok, true, JSON.stringify(v1).slice(0, 300));
+  assert.equal(v1.visitor, "admin");
+  /* and the other way round: testimony recorded bare admin, the visit stamped member:admin */
+  const bare = w.prov.testify({ ...words(2), author: "admin" });
+  assert.equal(bare.ok, true, JSON.stringify(bare).slice(0, 300));
+  const v2 = w.c.recordVisit({ draw: d.draw, item: d.sample[1], testimony: bare.capture_sha, finding: "no", by: "member:admin" });
+  assert.equal(v2.ok, true, JSON.stringify(v2).slice(0, 300));
+  /* an administrator's (alice, seeded an administrator) own testimony is hers too */
+  const alices = testify("alice");
+  assert.equal(w.c.recordVisit({ draw: d.draw, item: d.sample[2], testimony: alices.capture_sha, finding: "yes", by: V("alice") }).ok, true);
+  assert.equal(w.count("calc_visits"), 3);
+  /* controls, each refused NOT_YOUR_TESTIMONY and writing nothing: another member's testimony; the founder's by another
+     member, and another member's by the founder under either spelling */
+  const anas = testify("ana");
+  for (const [testimony, by] of [[anas.capture_sha, V("ben")], [spelled.capture_sha, V("ben")], [bare.capture_sha, V("alice")],
+    [anas.capture_sha, "admin"], [anas.capture_sha, "member:admin"]]) {
+    const r = w.c.recordVisit({ draw: d.draw, item: d.sample[3], testimony, finding: "yes", by });
+    assert.equal(code(r), "NOT_YOUR_TESTIMONY", `${testimony.slice(0, 8)} by ${by}`);
+  }
+  assert.equal(w.count("calc_visits"), 3, "no refused visit was written");
+  /* a machine names no member: refused before the author is read, never matched */
+  assert.equal(code(w.c.recordVisit({ draw: d.draw, item: d.sample[3], testimony: anas.capture_sha, finding: "yes", by: MACHINE })), "MEMBER_ACT_ONLY");
+  /* through the op: the stamp from the url, the founder's bare spelling */
+  const url = new URL("https://x/?op=spotcheckvisit&viewer=admin");
+  const viaOps = await calculationsOps(w.c, url, { draw: d.draw, item: d.sample[4], testimony: w.prov.testify({ ...words(3), author: "member:admin" }).capture_sha, finding: "could_not_tell" }).spotcheckvisit();
+  assert.equal(viaOps.ok, true, JSON.stringify(viaOps).slice(0, 300));
+  assert.equal(w.count("calc_visits"), 4);
+});
+
+test("R18 R10 a recorded draw is reproduced only for a viewer who may see the set it was drawn from: a draw over a table in a project the viewer is not in answers {found: false}, as an absent one; control: its own drawer reproduces it", async () => {
+  const w = seeded();
+  const P = w.project("Closed", "alice");
+  const hiddenT = await w.table(CLOSED_CSV, FIELDS, { by: V("alice") }, { project: P });
+  const d = w.c.draw({ set: hiddenT.sha, n: 2, seed: "h", by: V("alice") });
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  const absent = w.c.reproduceDraw({ draw: "0".repeat(64), viewer: V("carol") });
+  assert.deepEqual(absent, { ok: true, found: false });
+  assert.deepEqual(w.c.reproduceDraw({ draw: d.draw, viewer: V("carol") }), absent, "the drawn sample of a set carol may not see is not answered");
+  assert.deepEqual(w.c.reproduceDraw({ draw: d.draw, viewer: null }), absent, "no viewer, nothing answered");
+  const mine = w.c.reproduceDraw({ draw: d.draw, viewer: V("alice") });
+  assert.equal(mine.found, true);
+  assert.equal(mine.reproduced, true);
+  assert.deepEqual(mine.sample, d.sample);
+});
