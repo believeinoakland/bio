@@ -48659,14 +48659,15 @@ async function tier4Extend(transcription, { sha: sha2, storeName, i2text, chain:
     out.aiNote = "no page was left that Civicsmith's own text recognition could not read, so the AI was not asked to transcribe";
     return out;
   }
-  const { member: member2 = null, project = null, credentials = null, useCheck = null, transcribe = null } = transcription;
+  const { member: member2 = null, project = null, accounts = null, credentials = null, useCheck = null, transcribe = null } = transcription;
   if (!(typeof member2 === "string" && member2))
     return not("the AI transcribes only at a member's own act, and none was named");
-  if (!(credentials && typeof credentials.accountFor === "function"))
+  const payer = accounts != null ? accounts : credentials;
+  if (!(payer && typeof payer.accountFor === "function"))
     return not("the account that would pay for it could not be checked");
   let account2;
   try {
-    account2 = await credentials.accountFor({ member: member2, act: {
+    account2 = await payer.accountFor({ member: member2, act: {
       kind: TRANSCRIBE_USE,
       member: member2,
       ...project != null ? { project } : {}
