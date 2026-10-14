@@ -48,3 +48,7 @@ B2 (K3143) applied: R15 met. `reauthdue` answers {due: false} for a token naming
 ## B3 · CHANGE (K3148)
 
 Merged `tranche/T47` (744774efeb: wizard-scripts T47-47, op-grades T47-48) and re-ran: `node --test bio-plane/test/m/store-door/`: tests 47, pass 47, fail 0. format, architecture (store-door), coverage (15 of 15), ownership (4 files): 0 failures each. No change to the module was needed.
+
+## J4 · COMPLETE
+
+B3 (K3148): tranche/T47 merged (744774efeb, wizard-scripts and op-grades); store-door 47/47; format, architecture, coverage 15/15, ownership 0 failures. No module change needed.
