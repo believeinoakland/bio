@@ -73,6 +73,13 @@ const rows = [
   ["shell.unavailable.nothing", "Nothing is here: this address leads nowhere in your group's Civicsmith.", false],
   ["shell.unavailable.notyours", "You can't open this: it isn't yours to see.", false],
   ["shell.unavailable.unreachable", "Your group's Civicsmith can't be reached just now. It is tried again every 30 seconds, and what you typed is kept.", false],
+  /* K3177 (b): each state as the shell draws it, its heading and its sentence, one state's words only */
+  ["shell.unavailable.nothing.title", "Nothing is here", false],
+  ["shell.unavailable.nothing.says", "This address leads nowhere in your group's Civicsmith.", false],
+  ["shell.unavailable.notyours.title", "You can't open this", false],
+  ["shell.unavailable.notyours.says", "It isn't yours to see.", false],
+  ["shell.unavailable.unreachable.title", "Can't be reached", false],
+  ["shell.unavailable.unreachable.says", "Your group's Civicsmith can't be reached just now. It is tried again every 30 seconds, and what you typed is kept.", false],
   ["shell.unavailable.home", "Go to Home", false],
   /* R33, R34 (K3061 D3): the lock and the password asked again */
   ["shell.lock.title", "Locked", false],

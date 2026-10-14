@@ -237,13 +237,17 @@ test("R35 unavailable: an unknown screen or subject draws Nothing is here; NOT_V
   const states = [["/app/nowhere", {}, "nothing"], ["/app/document/zz", { image: refused("NO_SUCH_CAPTURE") }, "nothing"], ["/app/document/zz", { image: ok(null) }, "nothing"],
     ["/app/document/zz", { image: refused("NOT_VISIBLE", "Not yours.") }, "notyours"], ["/app/document/zz", { image: refused("NOT_A_PARTICIPANT") }, "notyours"],
     ["/app/document/zz", { image: silent }, "unreachable"], ["/app/document/zz", { image: httpError(503) }, "unreachable"]];
-  const SAY = { nothing: "Nothing is here", notyours: "You can't open this", unreachable: "can't be reached" };
+  const SAY = { nothing: "Nothing is here", notyours: "You can't open this", unreachable: "Can't be reached" };
   for (const [path, plane, kind] of states) {
     const p = await boot({ screens: ALL, path, plane: { ...PLANE, ...plane } });
     const u = p.root().querySelector("[data-unavailable]");
     assert.equal(u && u.getAttribute("data-unavailable"), kind, path + " " + JSON.stringify(plane));
-    assert.ok(p.root().querySelector("#cs-main").textContent.includes(SAY[kind]), kind);
-    assert.equal(p.root().querySelector("#cs-main h1").textContent, "Can't open this");
+    /* K3177 (b): one state's words: its heading and its path step, never another state's */
+    const main = p.root().querySelector("#cs-main");
+    assert.equal(main.querySelector("h1").textContent, SAY[kind], kind);
+    assert.equal(main.querySelector('[aria-current="page"]').textContent, SAY[kind], kind);
+    for (const other of Object.keys(SAY).filter((k) => k !== kind)) assert.ok(!main.textContent.toLowerCase().includes(SAY[other].toLowerCase()), kind + " draws none of " + other);
+    assert.ok(!main.textContent.includes("Can't open this"), "control: the screen's name heads no state");
   }
   /* control: a read that failed for another reason is "could not read", not unavailable */
   const f = await boot({ screens: ALL, path: "/app/document/zz", plane: { ...PLANE, image: refused("NOT_ALLOWED", "Not yours.") } });
@@ -407,4 +411,15 @@ test("R30 R32 a public screen asks no session record: the record is not read whi
   assert.equal(joining.location.pathname, "/app/join");
   assert.equal(joining.root().querySelector("#cs-main").getAttribute("data-screen"), "join");
   assert.equal(front.root().querySelector("#cs-main").getAttribute("data-screen"), "held");
+});
+
+test("R7 R4 (K3177 (c)) the member's initial is drawn from the signed-in member's handle, never empty: a founder's whoami answering no handle draws the handle signed in with; control: whoami's handle wins", async () => {
+  const you = (p) => p.root().querySelector('[data-shell="menu"]');
+  const founder = await boot({ screens: ALL, session: { t: "tok-f", e: 0, d: "own", w: "admin" }, plane: { whoami: ok({ tokenClass: "admin", session: true, member: "m-1", handle: null, administer: true, rootOfTrust: true, capabilities: ["contribute"] }) } });
+  assert.equal(you(founder).querySelector('[aria-hidden="true"]').textContent, "A");
+  assert.equal(you(founder).querySelector(".sr").textContent, "You: admin");
+  const bare = await boot({ screens: ALL, session: { t: "tok-f", e: 0, d: "own", w: "" }, plane: { whoami: ok({ tokenClass: "admin", session: true, member: "rosa", handle: null, administer: true, capabilities: [] }) } });
+  assert.equal(you(bare).querySelector('[aria-hidden="true"]').textContent, "R", "never empty: the member's id at the last");
+  const member = await boot({ screens: ALL, session: { t: "tok-1", e: 0, d: "own", w: "other" } });
+  assert.equal(you(member).querySelector('[aria-hidden="true"]').textContent, "M");
 });
