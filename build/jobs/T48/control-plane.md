@@ -28,3 +28,10 @@ They go green at the merges; I re-run on BOB's `CHANGE`.
 **Checks** (from the process repository, over `/home/user/bio`): `format`: 168 modules, 167 requirements files; 0 failures. `architecture control-plane`: 56 product files, 255 relative imports; 0 failures. `ownership control-plane tranche/T48`: 0 failures. `coverage control-plane`: all 63 live ids named once the new test file is committed (it counts tracked files only).
 
 Size (session_01Buc3JHeHrCA6CLnhxgJpTX): test runs 9, module lines 3755
+
+## J1 · REPORT
+
+Not mine to change, found while doing T48-77:
+1. modules.json `uses` for control-plane lacks action-replies, explore, standards and filings, whose maps R90 and R92 route through. The architecture check refuses a test that imports them. I drive those ops through the door only; if you add the four edges I add the maps' route assertions (or plane R5's test covers them).
+2. Plane R55 / agent-worker R87: the door hands the plane `trace` and `memberRef` (names are mine, chosen from agent-model R16) as properties of the hooks' gatedOp ctx for `ask` and `pagetranscribe`, of the ask given to the object's `draft(...)`, and of the args of `dispatchMemberRun(...)`. Plane reads those names. The plane's `readtranslate` answer is relayed whole minus grant, suggestions, read, usage, calls.
+3. signin-door comments still name credentials.disclosureDue (its job).
