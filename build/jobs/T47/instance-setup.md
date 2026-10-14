@@ -33,6 +33,8 @@ Size (session_01RtPw7v4BWuC6SZ3yKqdReZ): test runs 16, module lines 3,831
 
 **After B3 (K3148; CHANGE: wizard-scripts T47-47 and op-grades T47-48 merged).** `tranche/T47` merged (3109927b7e); `node --test bio-plane/test/m/instance-setup/`: tests 165, pass 164, fail 0, todo 1 (R83, K3144). Checks: format, architecture, coverage (68/68), ownership: 0 failures each.
 
+**After B4 (K3171; CHANGE: control-plane merged, R82 serves `interfacePage` at `/`).** `tranche/T47` merged (ecb6b55c00). R83 applied: `setupPage` removed with the import of `setup-page`, so this module no longer uses `setup-page` (the `modules.json` edge can go); `HOSTING_CONTROL` kept. R83's test is live (page.test.mjs). `node --test bio-plane/test/m/instance-setup/`: tests 164, pass 164, fail 0, todo 0. Former importers: `test/m/control-plane/` 257/0, `test/m/answer-envelope/` 36/0, `newgroup/test/requirements.test.mjs` 53/0. Checks: format, architecture, coverage (68/68), ownership: 0 failures each. Deferred: none.
+
 ## J1 · QUESTION
 
 R83 (remove `setupPage`, `SETUP_HTML`, `groupLine`'s page use) and the L11 merge order (instance-setup before control-plane T47-65).
