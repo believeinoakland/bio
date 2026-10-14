@@ -69,3 +69,9 @@ Size (session_01W8zKiP2U6MWJEErzftUsXV): test runs 40, module lines 2310
 ## J3 · COMPLETE
 
 COMPLETE (CHANGE B2–B5): R71 (bootstrap under the page's session; RE_POINTS.setup founderhandleset) and R72 (the re-points) are pushed, tranche merged, real setup-words and interface-assets: 149 tests pass, coverage 70 of 70, architecture and ownership 0 failures. Screens-entry and the four R72 screen jobs can merge the tranche branch once you merge this. Notes: founderhandleset composes only once op-declarations declares it; the screen 'theme' is not in the stale SCREEN_REGISTRY, so its entries wait for N1122; format fails only on site's empty paths.
+
+## CHANGE B6 (J4)
+
+Merged `tranche/T49` (op-declarations, control-plane, plane, site; DEC-262 words). `connect: ["reauth"]` was already in `RE_POINTS` (R72). Module tests 149 pass, 0 fail; coverage 70 of 70; architecture and ownership 0 failures.
+
+Size (session_01W8zKiP2U6MWJEErzftUsXV): test runs 41, module lines 2310
