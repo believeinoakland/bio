@@ -29,3 +29,18 @@ Also `modules.json`: interface-shell, instance-setup and control-plane still lis
 ## J2 · REPORT
 
 B2 done: merged tranche/T47 (29c4591555); my tests 87/87 pass. Still waiting on your CHANGE after interface-shell, screens-entry, instance-setup's retiring setupPage (R86) and control-plane (T47-65) to delete.
+
+**B3 (CHANGE, K3176): the delete, and completion.**
+- Merged `tranche/T47` (a54734bd94). Before deleting, no product file outside my paths imported `setup-page`: `git grep "setup-page/"` outside `build/` and `docs/` finds only generated bundles (below). `setup.mjs`, `interface-shell` and `control-plane` import cleanly after the delete.
+- **Entry applied (T47-74):** retired as a page; every file under my paths deleted, nothing left under them. Deleted: `bio-plane/src/setup-page/index.mjs`; `bio-plane/test/m/setup-page/` `claim.test.mjs`, `fixture.mjs`, `guide.test.mjs`, `handover.test.mjs`, `intake.test.mjs`, `keys.test.mjs`, `loads.test.mjs`, `nonce.test.mjs`, `page.test.mjs`, `security.test.mjs`, `session.test.mjs`, `settings.test.mjs`, `words.test.mjs`, `worker-page.test.mjs` (15 files).
+- **Deferred:** nothing. The flaws listed above went with the delete.
+- **Found in other modules (reported J1):** generated artifacts still carrying the deleted code, stale until their owners rebuild (mechanics §14): `bio-plane/dist/bio-plane.bundled.mjs`, `bio-plane/dist/bio-plane.bundle.json`, `release/bio-plane.bundled.mjs` (plane); `newgroup/src/release.mjs`, `newgroup/dist/newgroup.bundled.mjs` (installer).
+- **Tests:** none remain to run (no live id). The last run before the delete, at B2: `node --test test/m/setup-page/`: tests 87, pass 87, fail 0.
+- **Checks** (process repository):
+  - `format`: 168 modules, 167 requirements files; 2 failures. Both are my emptied `paths` and `tests` rows in `modules.json`, as B3 expected (BOB drops the row at T48's opening).
+  - `architecture setup-page`: 0 product files; 0 failures.
+  - `coverage setup-page`: 0 of 0 live ids; 0 failures.
+  - `ownership setup-page tranche/T47`: 16 files changed; 0 failures.
+  - `run.mjs` (whole product): architecture 3,240 files, 0 failures; coverage 5,195 of 5,198 live ids named, 1 failure (journey-check R1–R3, not built, merges last; not mine); channels 0 failures; format as above.
+
+Size (session_01VvQEKrSFUtxdAB7G8fe5Mv): test runs 1, module lines 0
