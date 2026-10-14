@@ -56,3 +56,7 @@ REPORT items in the record: (1) store-door must stream `grouplogoset`'s body (ST
 ## J3 · COMPLETE
 
 B3 (K3148) applied: tranche/T47 merged (wizard-scripts T47-47, op-grades T47-48); instance-setup 165 tests, 164 pass, 0 fail, 1 todo (R83, K3144); format, architecture, coverage 68/68, ownership 0 failures. J2's REPORT items stand.
+
+## J4 · COMPLETE
+
+B4 (K3171) applied: tranche/T47 merged; R83 done — setupPage removed with every use of setup-page (the modules.json edge instance-setup → setup-page can be dropped, so setup-page may delete its code); HOSTING_CONTROL kept; R83's test live. instance-setup 164/164 (0 fail, 0 todo); control-plane 257/0, answer-envelope 36/0, newgroup requirements 53/0. Checks: format, architecture, coverage 68/68, ownership 0 failures.
