@@ -22,6 +22,13 @@ class Node {
   set textContent(v) { this.childNodes.forEach((c) => (c.parentNode = null)); this.childNodes = []; if (v !== "") this.append(new Text(this.ownerDocument, String(v))); }
   append(...ns) { for (const n of ns) { if (n.parentNode) n.parentNode.removeChild(n); n.parentNode = this; this.childNodes.push(n); } }
   appendChild(n) { this.append(n); return n; }
+  insertBefore(n, ref) {
+    if (!ref) return this.appendChild(n);
+    if (n.parentNode) n.parentNode.removeChild(n);
+    n.parentNode = this;
+    this.childNodes.splice(this.childNodes.indexOf(ref), 0, n);
+    return n;
+  }
   removeChild(n) { this.childNodes = this.childNodes.filter((c) => c !== n); n.parentNode = null; return n; }
   get children() { return this.childNodes.filter((c) => c.nodeType === 1); }
   get nextElementSibling() { const s = this.parentNode ? this.parentNode.children : []; return s[s.indexOf(this) + 1] || null; }
@@ -109,6 +116,7 @@ export class Element extends Node {
   click() { this.dispatchEvent(new Event("click")); }
   getBoundingClientRect() { return { left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 }; }
   scrollTo() {}
+  scrollIntoView() { this.ownerDocument.scrolledTo = this; }
 }
 function makeStyle() { const s = {}; Object.defineProperty(s, "setProperty", { value: (k, v) => { s[k] = v; } }); return s; }
 
