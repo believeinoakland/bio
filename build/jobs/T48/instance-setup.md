@@ -48,3 +48,7 @@ R88/R90 name two address constants as BOB's at START, and the START gives neithe
 ## J2 · COMPLETE
 
 T48-62 applied: N996's re-points to ai-accounts, R87, R88, R89, R90, R91 and K3240's forgot words. instance-setup tests 194 pass, 0 fail (30 new in t48.test.mjs); machinery-producers 29, screens-entry 52, newgroup 60 pass. format, architecture, coverage and ownership: 0 failures for this module. updateNoticeState carries ready.decision and decisions with version, as machinery-producers reads them (B2). The record lists what other modules must do: screens-entry's forgot should draw FORGOT_HELP; installer should add HOSTING_RECOVERY_DEPLOYER; plane registrations; the stale plane bundle. P6 watch: the module is now 4,320 lines. The requirement text changes I need from you are in the record.
+
+## J3 · COMPLETE
+
+B3 processed: the gate already read ai-accounts (assistantGate asks aiAccounts.aiKeptAway, assistantState aiKeepAwayState; credentials only for recoveryCodesState). Merged tranche/T48 again; instance-setup tests 194 pass, 0 fail; architecture, coverage, ownership and format 0 failures. COMPLETE stands.
