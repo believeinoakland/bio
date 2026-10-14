@@ -9,6 +9,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { REPORTERS, VARIANTS, COURTS, SOURCES, reporterFor, courtsNamed } from "../index.mjs";
+import { spawnSync } from "node:child_process";
 import { buildCourtCitations, verifyFresh, DATA_FILE } from "../build.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -45,7 +46,8 @@ async function buildMini(opts) {
   const m = miniPackages(opts);
   const out = join(m.dir, "data.mjs");
   const b = buildCourtCitations({ reportersDir: m.r, courtsDir: m.c, out, pins: m.pins });
-  const mod = b.ok ? await import(pathToFileURL(out).href) : null;
+  // The generated module holds the data as one JSON text (R11); a test reads it parsed, as index.mjs does.
+  const mod = b.ok ? JSON.parse((await import(pathToFileURL(out).href)).DATA) : null;
   return { ...m, b, mod };
 }
 const ONE_REPORTER = { "X.": [{ name: "X Reports", cite_type: "state", editions: { "X.": { start: null, end: null } }, variations: {}, mlz_jurisdiction: [] }] };
@@ -307,4 +309,90 @@ test("R10: a recognised reporter or court is a spelling recognised, never a cita
   const got = courtsNamed("Supreme Court of the United States");
   assert.ok(got.every((id) => typeof id === "string"));
   assert.deepEqual([...reporterFor("F.3d")].map((x) => Object.keys(x)), [["reporter", "edition"]]);
+});
+
+/* R11: a fresh process imports the module, timing its evaluation as bundler R31 times a global scope (a fresh import),
+ * with JSON.parse counted, then reads each export; the parse count shows when the data was built. */
+function measured(reads) {
+  const script = `
+    const parse = JSON.parse; let parses = 0;
+    JSON.parse = function (...a) { parses++; return parse.apply(this, a); };
+    const t0 = performance.now();
+    const m = await import(${JSON.stringify(pathToFileURL(join(ROOT, "index.mjs")).href)});
+    const importMs = performance.now() - t0, atImport = parses;
+    const t1 = performance.now();
+    const first = (${reads})(m);
+    const firstMs = performance.now() - t1, afterFirst = parses;
+    const again = (${reads})(m);
+    for (const k of ["REPORTERS", "COURTS", "SOURCES", "VARIANTS"]) Object.keys(m[k]);
+    m.reporterFor("F.3d"); m.courtsNamed("Supreme Court of the United States");
+    JSON.parse = parse;
+    process.stdout.write(JSON.stringify({ importMs, firstMs, atImport, afterFirst, afterAll: parses, first, again }));`;
+  const r = spawnSync(process.execPath, ["--input-type=module", "-e", script], { encoding: "utf8" });
+  assert.equal(r.status, 0, r.stderr);
+  return JSON.parse(r.stdout);
+}
+
+test("R11: evaluating the module builds none of the data; it is parsed once, on the first read of any export", () => {
+  const firsts = {
+    REPORTERS: "(m) => m.REPORTERS.length", VARIANTS: "(m) => Object.keys(m.VARIANTS).length", COURTS: "(m) => m.COURTS[0].id",
+    SOURCES: "(m) => m.SOURCES.map((s) => s.version)", reporterFor: "(m) => m.reporterFor(\"F.3d\")",
+    courtsNamed: "(m) => m.courtsNamed(\"Supreme Court of the United States\")",
+  };
+  for (const [name, read] of Object.entries(firsts)) {
+    const r = measured(read);
+    assert.equal(r.atImport, 0, `${name}: nothing is parsed when the module is evaluated`);
+    assert.equal(r.afterFirst, 1, `${name}: its first read parses the data, once`);
+    assert.equal(r.afterAll, 1, `${name}: no read after the first parses again, of any export`);
+    assert.deepEqual(r.again, r.first, name);
+    assert.ok(r.importMs < 500, `${name}: the import's global scope took ${r.importMs} ms, past bundler R31's 500 ms`);
+    console.log(`R11 ${name}: import ${r.importMs.toFixed(1)} ms, first read ${r.firstMs.toFixed(1)} ms`);
+  }
+  // The data module itself holds one string and nothing built: its only export is the JSON text.
+  const text = readFileSync(DATA_FILE, "utf8");
+  assert.deepEqual([...text.matchAll(/^export /gm)].length, 1);
+  assert.match(text, /^export const DATA = "/m);
+});
+
+test("R11: each export's first and later reads equal the committed data, read by the same names and shapes", async () => {
+  const committed = JSON.parse((await import(pathToFileURL(DATA_FILE).href)).DATA);
+  const m = await import(`../index.mjs?r11=${Math.random()}`);
+  for (const k of ["SOURCES", "REPORTERS", "COURTS"]) {
+    for (const read of [1, 2]) {
+      assert.ok(Array.isArray(m[k]), `${k} read ${read}`);
+      assert.equal(m[k].length, committed[k].length, `${k} read ${read}`);
+      assert.deepEqual(JSON.parse(JSON.stringify(m[k])), committed[k], `${k} read ${read}`);
+      m[k].forEach((x, i) => assert.deepEqual(x, committed[k][i], `${k}[${i}] read ${read}`));
+      assert.ok(isDeepFrozen(m[k]), k);
+    }
+    assert.equal(m[k][0], m[k][0], `${k}: a later read answers the same object`);
+  }
+  for (const k of ["SOURCES", "REPORTERS", "COURTS", "VARIANTS"]) assert.equal(m[k], m[k], k);
+  assert.deepEqual(Object.keys(m).sort(), ["COURTS", "REPORTERS", "SOURCES", "VARIANTS", "courtsNamed", "reporterFor"]);
+  // VARIANTS is R1's index of the committed REPORTERS, and equals the statically imported one entry for entry.
+  assert.equal(Object.getPrototypeOf(m.VARIANTS), null);
+  assert.deepEqual(Object.keys(m.VARIANTS), Object.keys(VARIANTS));
+  for (const [s, l] of Object.entries(VARIANTS)) assert.deepEqual([...m.VARIANTS[s]].map((x) => ({ ...x })), [...l].map((x) => ({ ...x })), s);
+  assert.equal(m.VARIANTS["F.3d"], m.VARIANTS["F.3d"]);
+  // Frozen as the data was: no write lands, and each refusal throws in strict code, as on a frozen array or object.
+  assert.throws(() => { m.REPORTERS.push({}); }, TypeError);
+  assert.throws(() => { m.COURTS[0] = null; }, TypeError);
+  assert.throws(() => { m.VARIANTS["New."] = []; }, TypeError);
+  assert.throws(() => { delete m.SOURCES[0]; }, TypeError);
+  assert.throws(() => Object.defineProperty(m.REPORTERS, "x", { value: 1 }), TypeError);
+  assert.equal(m.REPORTERS.length, committed.REPORTERS.length);
+});
+
+test("R11 (R6): verifyFresh covers the data in its new form: one JSON text that parses to the build's data", async () => {
+  const b = buildCourtCitations({ write: false });
+  assert.equal(b.text, readFileSync(DATA_FILE, "utf8"));
+  assert.equal(verifyFresh().fresh, true);
+  const dir = mkdtempSync(join(tmpdir(), "court-citations-r11-")), f = join(dir, "data.mjs");
+  try {
+    // Control: the same data held as built objects (the form before R11) is not fresh.
+    const d = JSON.parse((await import(pathToFileURL(DATA_FILE).href)).DATA);
+    assert.deepEqual(Object.keys(d), ["SOURCES", "REPORTERS", "COURTS"]);
+    writeFileSync(f, b.text.replace(/^export const DATA = [^]*$/m, () => Object.keys(d).map((k) => `export const ${k} = ${JSON.stringify(d[k])};\n`).join("")));
+    assert.equal(verifyFresh({ file: f }).fresh, false);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });

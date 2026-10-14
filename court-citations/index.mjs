@@ -1,25 +1,43 @@
 /* court-citations: Free Law Project's reporters-db and courts-db as versioned data (build/requirements/court-citations.md).
- * The data is the generated `court-data.mjs` (build.mjs); this file adds the variant index and two lookups. Pure: no
- * store, no network, no clock (R8). A reporter recognised is a spelling recognised, never a citation verified (R10). */
-import { REPORTERS, COURTS, SOURCES } from "./court-data.mjs";
+ * The data is the generated `court-data.mjs` (build.mjs), one JSON text; this file reads it on first use and adds the
+ * variant index and two lookups. Pure: no store, no network, no clock (R8). A reporter recognised is a spelling
+ * recognised, never a citation verified (R10). */
+import { DATA } from "./court-data.mjs";
 
-export { REPORTERS, COURTS, SOURCES };
+/* R11: evaluating this module builds none of the data. Each export is a plain binding to a proxy over an empty target
+ * of the right kind; the first operation on any of them parses the JSON text once, fills every target with its data
+ * and freezes it, and every operation after is forwarded to the filled target, so each reads exactly as the frozen
+ * data would (its entries, length, prototype, frozenness; `Array.isArray` holds of the arrays). */
+const TARGETS = { SOURCES: [], REPORTERS: [], COURTS: [], VARIANTS: Object.create(null) };
+let loaded = false;
+const freeze = (o) => { if (o && typeof o === "object" && !Object.isFrozen(o)) { for (const v of Object.values(o)) freeze(v); Object.freeze(o); } return o; };
+function load() {
+  if (loaded) return;
+  loaded = true;
+  const d = JSON.parse(DATA);
+  for (const k of ["SOURCES", "REPORTERS", "COURTS"]) { for (const x of d[k]) TARGETS[k].push(freeze(x)); Object.freeze(TARGETS[k]); }
+  variantIndex(TARGETS.REPORTERS, TARGETS.VARIANTS);
+}
+const TRAPS = ["get", "set", "has", "ownKeys", "getOwnPropertyDescriptor", "defineProperty", "deleteProperty", "getPrototypeOf",
+  "setPrototypeOf", "isExtensible", "preventExtensions"];
+const lazy = (target) => new Proxy(target, Object.fromEntries(TRAPS.map((t) => [t, (_, ...a) => { load(); return Reflect[t](target, ...a); }])));
+
+export const SOURCES = lazy(TARGETS.SOURCES), REPORTERS = lazy(TARGETS.REPORTERS), COURTS = lazy(TARGETS.COURTS);
 
 /* R1: every variant and every standard abbreviation → each {reporter, edition} it stands for, in REPORTERS order. */
-function variantIndex() {
-  const v = Object.create(null);
+function variantIndex(reporters, v) {
   const add = (spelling, reporter, edition) => {
     const list = (v[spelling] ??= []);
     if (!list.some((x) => x.reporter === reporter && x.edition === edition)) list.push({ reporter, edition });
   };
-  for (const r of REPORTERS) {
+  for (const r of reporters) {
     for (const e of r.editions) add(e.key, r.key, e.key);
     for (const [spelling, edition] of Object.entries(r.variations)) add(spelling, r.key, edition);
   }
   for (const list of Object.values(v)) { for (const x of list) Object.freeze(x); Object.freeze(list); }
   return Object.freeze(v);
 }
-export const VARIANTS = variantIndex();
+export const VARIANTS = lazy(TARGETS.VARIANTS);
 
 /* R7: white space and periods folded away, the only differences between many of the package's variants. */
 const fold = (s) => s.replace(/[\s.]+/gu, "");
