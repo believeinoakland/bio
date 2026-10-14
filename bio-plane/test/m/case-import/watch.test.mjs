@@ -255,7 +255,7 @@ test("R18 a signature in another namespace, or over other bytes, is refused at t
   assert.equal(seen(w, a).at(-1).failed, "signature");
 });
 
-test("R18 an entry signed by a key no held manifest lists is verified and labelled key_listed: false, never refused for it", async () => {
+test("R18 an entry signed by a key no held manifest lists is verified and labeled key_listed: false, never refused for it", async () => {
   const { w, a } = await watched();
   const e = entry(1, null, { kind: "withdrawal", edition: "all", reason: "the group stands behind none of it" }, { key: NEWER });
   const r = await read(w, a, answer([e]));
