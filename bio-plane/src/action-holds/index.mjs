@@ -1025,5 +1025,8 @@ export function actionHoldsOps(h, url, body) {
     /* R12: pressure that arrived outside any action. */
     pressurerecord: () => h.pressureRecord({ project: pick("project"), pressure: pressure(), artifactSha: pick("artifact_sha"),
       account: pick("account"), at: pick("at"), viewer: q("viewer"), author: q("author") }),
+    /* R16 (T48; N1035; K3145): the pressure marks and records, read as an op; exactly R12's read, `viewer` the plane's stamp. */
+    pressurefor: () => h.pressureFor({ project: q("project") || null, action: q("action") || null, after: q("after") || null,
+      limit: q("limit") || null, viewer: q("viewer") }),
   };
 }
