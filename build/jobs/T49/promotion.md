@@ -40,3 +40,7 @@ T49-4 is done on job/T49/promotion, with tranche/T49 merged in after B2 (members
 - ownership: 1 failure, the renamed fixture (modules.json, above).
 
 Size (session_01HL5YBcopVZSndbgMuYa2TJ): test runs 9, module lines 3948
+
+## J3 · COMPLETE
+
+T49-4 done on job/T49/promotion: stamp 1.76.0, ROW_CENSUS 1907 rows e2035581..., 10 arrived / 23 changed / 1 retired (membership C-96.54 and L2's C-96 wording rows included; credentials added none). N1073 done (write-path R18 reads later rows from the tree). Promotion suite + d526 138/138, row-census 10/10. For you: modules.json promotion tests -> row-census-1.76.0.jsonl (format, architecture and ownership show that one failure until then). Stale: plane bundle and case-checker program.mjs (1.75.0), regenerate at layer close. Details in build/jobs/T49/promotion.md J2.
