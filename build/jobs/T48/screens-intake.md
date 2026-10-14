@@ -37,3 +37,7 @@ B2 done: tranche/T48 merged, stand-ins dropped, R17 now composes the real SCREEN
 ## CHANGE B3 (K3312: the Add tab bodies were hidden)
 
 Merged origin/tranche/T48. `capture.mjs` wrapped each tab body in the design's `st`, which the served `shell.css` carries as `.st { display: none; }` (the mock's state switch), so all three tabs were invisible. The body now carries no class (`<div data-tab=…>`). New test (R18): each Add tab's body is drawn with its fields and none of its classes, or its ancestors', is one a served stylesheet hides; control: the same check finds `st` hidden. I had missed it because my class check asked only whether a class is defined, never what its rule does. 66 tests pass; format, architecture, coverage (20 of 20) and ownership 0 failures.
+
+## J4 · COMPLETE
+
+B3 done: the tab bodies no longer carry the design's st (hidden by shell.css); new R18 test that each Add tab body is visible under the served stylesheets, with a control showing st is hidden. 66 tests pass; format, architecture, coverage (20 of 20), ownership 0 failures; nothing of mine red.
