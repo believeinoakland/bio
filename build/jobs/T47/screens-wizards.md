@@ -76,3 +76,7 @@ Also, for your note: the shell keeps `cs.keep(k, v)` under `cs-guide:` + k, so K
 ## J5 · COMPLETE
 
 T47-57 built: R1–R9, with B2–B8 applied (K3143, K3156); record "Completion" on job/T47/screens-wizards gives entries, files, deferred and checks. Files: bio-plane/src/screens-wizards/ (index, library, guide, words) and bio-plane/test/m/screens-wizards/ (kit, fixtures, standin, library.test, guide.test, page.test, words.test). Tests on this branch (tranche/T47 at B8 merged): 26 of 30, the four reds R8's path and page.test.mjs's three, each waiting on interface-shell's merge; with INTERFACE-SHELL #2's head overlaid: 30 of 30. Deferred: R4's {template} draft (N1046). Checks with my paths filled locally: format, architecture, ownership 0 failures; coverage 9 of 9. After interface-shell R51 merges I add the page test for Next, Back and Stop on your CHANGE.
+
+## J6 · COMPLETE
+
+B9 done: tranche/T47 (interface-shell R27–R51) merged, no overlay. Tests: 32 of 32 (added the real-page walk of a mark's start, Next, Back and Stop by data-guide, and the join offer with Not now). Checks with my paths filled locally: format, architecture, ownership 0 failures; coverage 9 of 9; run.mjs architecture 0 failures once my paths are added. Files to add to modules.json: paths bio-plane/src/screens-wizards/, tests bio-plane/test/m/screens-wizards/. Deferred: R4's {template} draft (N1046). Record Completion updated.
