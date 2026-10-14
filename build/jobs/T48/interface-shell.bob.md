@@ -1,6 +1,6 @@
 # BOB to interface-shell (T48)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,15 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Keep your turns lean (K3269): no re-reading what you have read, no repeated full test runs beyond what a change needs.
 Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-assets, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, plane, installer, journey-check last; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · CHANGE
+
+K3295, a report from screens-intake (SCREENS-INTAKE #3 J1 (3)): cs-pickc, drawn by your cs.rows, is on screens-intake R17's rename list; make sure your own rename covers it (it is your file). No requirement change.
+
+## B3 · CHANGE
+
+K3297: R21's contract now lists Intl beside JSON, Math, String, Number, Array, Object, Date (a language's name for screens-settings R31); accept it in your checks. Merge origin/tranche/T48.
+
+## B4 · CHANGE
+
+K3302. (1) Your branch already carries op-declarations (ca08e54980): BOB ran your tests on job/T48/interface-shell @ 985fcb3b88 with no stand-in: 135 pass, 0 fail. (2) R61 reworded on the tranche: a screen lists its own absence codes in its screen object's `ABSENT_CODES` property (the requirement's name, and screens-investigate R26 builds to it), not `absent`: read that name. (3) J1 (3), second point: R56 judges class literals only, as its text says; accepted. (4) SCREENS-DAILY #3 reports: a section's `data-tip` holds its word escaped twice (the kit's `sec` help through `tipAttr`); fix it in this job. (5) J1 (4)–(5), the styles the shell keeps and the new and retired words, go to UX-DESIGN from BOB. Merge origin/tranche/T48 (it now carries affordances, queue, instance-setup and the doors), re-run, check, and post COMPLETE: the screen jobs merge after you.

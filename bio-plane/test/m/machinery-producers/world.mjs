@@ -27,7 +27,7 @@ function cursor(rows) {
   return it;
 }
 
-export function world(fakes = {}) {
+export function world({ updateNotice, ...fakes } = {}) {
   const db = new DatabaseSync(":memory:");
   const statements = [];
   let sp = 0;
@@ -50,7 +50,8 @@ export function world(fakes = {}) {
   membership.migrate();
   const F = defaultFakes();
   for (const [k, v] of Object.entries(fakes)) F[k] = { ...F[k], ...v };
-  const p = machineryProducersOf(host, { record, membership, ...F });
+  /* R12: the plane hands the notice read in `deps.updateNotice`; none is handed unless a test gives one. */
+  const p = machineryProducersOf(host, { record, membership, ...F, ...(updateNotice ? { updateNotice } : {}) });
 
   /* The caller's R7 walk: every inquiry and project upward by basis legs and cites, through the viewer's gate. */
   const homesOf = (viewer) => (subjects) => {

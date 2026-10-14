@@ -110,7 +110,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 #### T48 (T48-86)
 
 **The design walk folded** (T48; WALK-084 #2; K3250, K3254)
-- **R40** (T48; K3250, K3254; walk C6, C8; `screens-daily` R22) A `source-modified` or `source-removed` item: *(not yet met: T48)*
+- **R40** (T48; K3250, K3254; walk C6, C8; `screens-daily` R22) A `source-modified` or `source-removed` item:
   - carries `title`: the document's title, or `null` when it has none;
   - has a `summary` and `detail` that name no bundle id, HTTP status or mechanism ("a monitoring check", "404 or 410"). `basis` keeps those facts for the record.
 
