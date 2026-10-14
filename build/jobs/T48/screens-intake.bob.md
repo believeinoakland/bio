@@ -20,3 +20,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · CHANGE
 
 K3303: interface-shell is merged into tranche/T48 (R55 re-points, R56 class check, R60 words, R61 reading screen objects' ABSENT_CODES). Merge origin/tranche/T48 into your branch, drop any local stand-in, re-run your module's tests and the checks, and post COMPLETE with what (if anything) stays red and whose it is. Your merge follows in L11's order.
+
+## B3 · CHANGE
+
+K3312, a defect found by JOURNEY-CHECK #3 (J4) walking the composed page: /app/capture/saw draws no tab body. `capture.mjs:73` wraps each Add tab body in `<div class="st" data-tab=…>`, and the served `shell.css` (interface-assets) carries the design mock's state switch `.st { display: none; }` (shown only under `main[data-st] .st-a…g`), so all three Add tabs are invisible. A design class must mean what the design means: draw the tab bodies under a class that does not collide (a design tab class or the kit's, else a hook class the shell lists), and add a test that each Add tab body is visible under the served stylesheets (not hidden by any rule they carry), with a control. Merge origin/tranche/T48, fix, re-run, check, post COMPLETE.
