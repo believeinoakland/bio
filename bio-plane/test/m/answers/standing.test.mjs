@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { answersWorld, answer, V } from "./fixture.mjs";
 import { ANSWERS_CHECKS, STANDING_LABEL, STANDING_TICK_MAX, nextDueDay } from "../../../src/answers/index.mjs";
+import { KEPT_AWAY_UNREADABLE } from "../../../src/ai-accounts/index.mjs";
 
 const BOB = V("bob"), CAROL = V("carol"), ALICE = V("alice");
 const set = (w, over = {}) => w.a.standingQuestionSet({ author: BOB, question: "Anything new on the budget?", query: "title:budget",
@@ -149,10 +150,10 @@ test("R19 R30 the AI half answers new finds only when the copy's switch, keep-aw
   }).ok, true);
   assert.equal(w.a.registerStandingAnswerer("other", async () => ({})).reason, "LISTENER_DECLARED");
   assert.deepEqual(await step(), { condition: "no_account" }, "no reference of bob's own and no group key");
-  await w.credentials.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-test", by: BOB });
+  await w.accounts.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-test", by: BOB });
   /* his account's standing use is off (credentials R55's default): the account chosen is the one used (R56) */
   assert.deepEqual(await step(), { condition: "switch_off", switch: "member" });
-  assert.equal(w.credentials.accountUsesSet({ owner: "member:bob", switch: "standing", on: true, by: BOB }).ok, true);
+  assert.equal(w.accounts.accountUsesSet({ owner: "member:bob", switch: "standing", on: true, by: BOB }).ok, true);
   /* R30: the paying account's limits, ai-use.useCheck, in place of the ceiling */
   const reached = w.reach("member:bob", "standing");
   assert.deepEqual(await step(), { condition: "limit", code: "AI_LIMIT_REACHED", translation: reached.translation });
@@ -180,14 +181,14 @@ test("R19 R30 the AI half answers new finds only when the copy's switch, keep-aw
   /* the group's API key serves a member with no reference of their own, while it is held and on (K1755) */
   w.carolQ = set(w, { author: CAROL }).id;
   await w.a.standingTick(w.clock.now);
-  assert.equal((await w.credentials.groupKeySet({ key: "sk-group", by: ALICE })).ok, true);
+  assert.equal((await w.accounts.groupKeySet({ key: "sk-group", by: ALICE })).ok, true);
   assert.deepEqual(await step(CAROL), { condition: "no_account" }, "held but off");
-  assert.equal((await w.credentials.groupKeySwitch({ on: true, by: ALICE })).ok, true);
+  assert.equal((await w.accounts.groupKeySwitch({ on: true, by: ALICE })).ok, true);
   assert.deepEqual(await step(CAROL), { condition: "switch_off", switch: "group" }, "the group key's own standing use");
-  assert.equal(w.credentials.accountUsesSet({ owner: "group", switch: "standing", on: true, by: ALICE }).ok, true);
+  assert.equal(w.accounts.accountUsesSet({ owner: "group", switch: "standing", on: true, by: ALICE }).ok, true);
   const due = await step(CAROL);
   assert.equal(due.condition, "no_account"); assert.equal(due.code, "GROUP_KEY_NOTICE_DUE"); assert.ok(due.translation);
-  assert.equal((await w.credentials.groupKeyNoticeSeen({ member: "carol", by: CAROL })).ok, true);
+  assert.equal((await w.accounts.groupKeyNoticeSeen({ member: "carol", by: CAROL })).ok, true);
   assert.equal(await step(CAROL), null);
   assert.equal(calls.at(-1).author, CAROL); assert.equal(calls.at(-1).held.member, "carol");
   assert.deepEqual([w.limit.asked.at(-1).owner, w.limit.asked.at(-1).member], ["group", "carol"], "the group's limits judge the group key");
@@ -196,10 +197,10 @@ test("R19 R30 the AI half answers new finds only when the copy's switch, keep-aw
 test("R30 a standing question's AI half asks accountFor with kind standing and no project, and keep-away for the standing use", async () => {
   const w = answersWorld();
   const seen = [];
-  const real = w.credentials;
-  w.a.deps.credentials = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function"
+  const real = w.accounts;
+  w.a.deps.accounts = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function"
     ? (...a) => { seen.push([String(k), a[0]]); return v.apply(t, a); } : v; } });
-  w.a.resolved.delete("credentials");
+  w.a.resolved.delete("accounts");
   assert.equal(w.a.standingAiSwitch({ on: true, by: ALICE }).ok, true);
   w.a.registerStandingAnswerer("agent-worker", async () => answer());
   const q = set(w);
@@ -222,12 +223,17 @@ test("R30 a standing question's AI half asks accountFor with kind standing and n
   assert.equal((await w.a.standingTick(w.clock.now)).ran.find((x) => x.id === q.id).held_back.condition, "kept_away");
 });
 
-test("R19 keep-away (credentials R35's aiKeptAway, read after the copy's switch and before any account): kept_away with the refusal's code and translation only; no account read, no grant minted, no limit asked, no model called; the finds still told once; an unreadable setting the same; keep-away off answers as before", async () => {
+test("R19 keep-away (ai-accounts R7's aiKeptAway, never credentials', read after the copy's switch and before any account): kept_away with the refusal's code and translation only; no account read, no grant minted, no limit asked, no model called; the finds still told once; an unreadable setting the same; keep-away off answers as before", async () => {
   const w = answersWorld();
   const calls = [], touched = [];
-  const real = w.credentials;
-  w.a.deps.credentials = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function" ? (...a) => { touched.push(String(k)); return v.apply(t, a); } : v; } });
-  w.a.resolved.delete("credentials");
+  const real = w.credentials, accts = w.accounts;
+  /* (T48-36) keep-away and the account are read from ai-accounts, the standing grant from credentials: each read named
+     by the dep it went to */
+  const watchDeps = () => { for (const n of ["accounts", "credentials"]) {
+    w.a.deps[n] = new Proxy(w[n], { get: (t, k) => { const v = t[k]; return typeof v === "function" ? (...a) => { touched.push(`${n}.${String(k)}`); return v.apply(t, a); } : v; } });
+    w.a.resolved.delete(n);
+  } };
+  watchDeps();
   const q = set(w);
   await w.a.standingTick(w.clock.now);
   let n = 0;
@@ -243,20 +249,20 @@ test("R19 keep-away (credentials R35's aiKeptAway, read after the copy's switch 
   /* every other condition would let it run: the copy's switch, the answerer, bob's own reference and its standing use */
   assert.equal(w.a.standingAiSwitch({ on: true, by: ALICE }).ok, true);
   w.a.registerStandingAnswerer("agent-worker", async (x) => { calls.push(x); return answer(); });
-  await real.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-test", by: BOB });
-  assert.equal(real.accountUsesSet({ owner: "member:bob", switch: "standing", on: true, by: BOB }).ok, true);
+  await accts.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-test", by: BOB });
+  assert.equal(accts.accountUsesSet({ owner: "member:bob", switch: "standing", on: true, by: BOB }).ok, true);
   /* the copy's switch is read first: off, keep-away is not read at all */
-  assert.equal((await real.aiKeepAwaySet({ on: true, reason: "We are reviewing what the assistant may read.", by: ALICE })).ok, true);
+  assert.equal((await accts.aiKeepAwaySet({ on: true, reason: "We are reviewing what the assistant may read.", by: ALICE })).ok, true);
   w.record.setSetting("answers_standing_ai", false, "admin");
   assert.deepEqual(await step(), { condition: "switch_off", switch: "copy" });
-  assert.deepEqual(touched, [], "nothing of credentials is read while the copy's switch is off");
+  assert.deepEqual(touched, [], "nothing of ai-accounts or credentials is read while the copy's switch is off");
   w.record.setSetting("answers_standing_ai", true, "admin");
-  const refusal = real.aiKeptAway();
+  const refusal = accts.aiKeptAway();
   assert.equal(refusal.code, "AI_KEPT_AWAY");
   const kept = { condition: "kept_away", code: "AI_KEPT_AWAY", translation: refusal.translation };
   const held = await step();
   assert.deepEqual(held, kept, "the refusal's code and translation only: not its reason, who or when");
-  assert.deepEqual(touched, ["aiKeptAway"], "no account is read and no grant asked for");
+  assert.deepEqual(touched, ["accounts.aiKeptAway"], "no account is read and no grant asked for");
   assert.equal(grants(), 0); assert.equal(calls.length, 0); assert.equal(w.limit.asked.length, 0);
   /* the run's new finds reach the author once, as R26's do: answer null */
   const entries = w.a.standingAnswersFor({ member: BOB }).entries;
@@ -265,22 +271,23 @@ test("R19 keep-away (credentials R35's aiKeptAway, read after the copy's switch 
   assert.equal(e.label, STANDING_LABEL);
   assert.deepEqual(w.a.standingAnswersFor({ member: BOB, after: e.run }).entries, [], "told once");
   /* keep-away off: the run is answered as before */
-  assert.equal((await real.aiKeepAwaySet({ on: false, by: ALICE })).ok, true);
+  assert.equal((await accts.aiKeepAwaySet({ on: false, by: ALICE })).ok, true);
   assert.equal(await step(), null);
   assert.equal(calls.length, 1); assert.equal(grants(), 1);
-  assert.deepEqual(touched.slice(0, 2), ["aiKeptAway", "accountFor"], "keep-away read before any account");
+  assert.deepEqual(touched.slice(0, 3), ["accounts.aiKeptAway", "accounts.accountFor", "credentials.aiGrantMintStanding"],
+                   "keep-away read before any account, both from ai-accounts; the grant credentials'");
   /* a setting that cannot be read is credentials' refusal itself (fail closed, K2093): the same condition */
   w.host.storage.sql.exec(`ALTER TABLE ai_keep_away RENAME TO ai_keep_away_gone`);
-  const unread = real.aiKeptAway();
+  const unread = accts.aiKeptAway();
   assert.equal(unread.code, "AI_KEPT_AWAY");
   assert.deepEqual(await step(), { condition: "kept_away", code: "AI_KEPT_AWAY", translation: unread.translation });
-  assert.deepEqual(touched, ["aiKeptAway"]);
+  assert.deepEqual(touched, ["accounts.aiKeptAway"]);
   assert.equal(calls.length, 1, "no model called"); assert.equal(grants(), 1, "no grant minted");
   w.host.storage.sql.exec(`ALTER TABLE ai_keep_away_gone RENAME TO ai_keep_away`);
   assert.equal(await step(), null);
 });
 
-test("R19 keep-away is never reported as no_account, nor an account's refusal as kept_away: keep-away turned on between the read and accountFor or R32 is kept_away; accountFor's own refusals stay no_account; a use switched off is switch_off naming the account; a credentials that cannot answer keep-away is kept away, fail closed", async () => {
+test("R19 keep-away is never reported as no_account, nor an account's refusal as kept_away: keep-away turned on between the read and accountFor or R32 is kept_away; accountFor's own refusals stay no_account; a use switched off is switch_off naming the account; an ai-accounts that cannot answer keep-away is kept away, fail closed, with KEPT_AWAY_UNREADABLE's row (ai-accounts R34)", async () => {
   const w = answersWorld();
   const q = set(w);
   await w.a.standingTick(w.clock.now);
@@ -289,7 +296,9 @@ test("R19 keep-away is never reported as no_account, nor an account's refusal as
   w.a.registerStandingAnswerer("agent-worker", async (x) => { calls.push(x); return answer(); });
   const ROW = { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", translation: "Your group keeps its material away." };
   let n = 0;
-  const step = async (creds) => {
+  /* (T48-36) `accts` stands for ai-accounts (keep-away, the account), `creds` for credentials (the standing grant) */
+  const step = async (accts, creds = w.credentials) => {
+    w.a.deps.accounts = accts; w.a.resolved.delete("accounts");
     w.a.deps.credentials = creds; w.a.resolved.delete("credentials");
     w.document(`budget ${++n}`, { title: `Budget ${n}` });
     w.at(new Date(Date.parse("2026-10-07T15:00:00.000Z") + (n - 1) * 86400000).toISOString());
@@ -297,26 +306,39 @@ test("R19 keep-away is never reported as no_account, nor an account's refusal as
   };
   const kept = { condition: "kept_away", code: "AI_KEPT_AWAY", translation: ROW.translation };
   assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => ROW }), kept, "accountFor's AI_KEPT_AWAY");
-  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => ({ ok: true, level: "member", key: "k" }),
-                                aiGrantMintStanding: async () => ROW }), kept, "R32's AI_KEPT_AWAY");
+  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => ({ ok: true, level: "member", key: "k" }) },
+                              { aiGrantMintStanding: async () => ROW }), kept, "R32's AI_KEPT_AWAY");
   assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => ({ ok: false, code: "NO_ACCOUNT" }) }),
                    { condition: "no_account" }, "keep-away off: no account is no_account");
   const off = (whose) => ({ ok: false, code: "AI_USE_SWITCHED_OFF", whose, use: "standing", translation: "Off." });
   for (const [whose, sw] of [["own", "member"], ["group", "group"]])
     assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => off(whose) }),
-                     { condition: "switch_off", switch: sw }, `credentials R56 for the ${whose} account`);
-  for (const creds of [null, { accountFor: async () => ({ ok: true }) }, { aiKeptAway: () => { throw new Error("down"); } },
-                       { aiKeptAway: () => undefined }])
-    assert.deepEqual(await step(creds), { condition: "kept_away", code: null, translation: null }, "fail closed, no row to carry");
+                     { condition: "switch_off", switch: sw }, `ai-accounts R11 for the ${whose} account`);
+  /* (ai-accounts R34) unreachable, throwing, or answering neither null nor a refusal with its code: kept away, carrying
+     KEPT_AWAY_UNREADABLE's row as given, never a code minted here nor a blank one */
+  const unread = { condition: "kept_away", code: KEPT_AWAY_UNREADABLE.code, translation: KEPT_AWAY_UNREADABLE.translation };
+  assert.equal(unread.code, "AI_KEPT_AWAY"); assert.equal(typeof unread.translation, "string");
+  for (const accts of [null, { accountFor: async () => ({ ok: true }) }, { aiKeptAway: () => { throw new Error("down"); } },
+                       { aiKeptAway: () => undefined }, { aiKeptAway: () => ({ ok: false }) }, { aiKeptAway: () => "no" }])
+    assert.deepEqual(await step(accts), unread, "fail closed, with the unreadable refusal's row");
+  /* (T48-36) keep-away and the account are never read from credentials: a credentials holding both, its keep-away on,
+     with ai-accounts saying neither, is not read for them */
+  assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => ({ ok: false, code: "NO_ACCOUNT" }) },
+                              { aiKeptAway: () => ROW, accountFor: async () => ROW }), { condition: "no_account" });
   assert.equal(calls.length, 0);
 });
 
-test("R19 the sign-in arm (N796, Bob K2425; credentials R32, R55, R70): an author served by their own held Claude sign-in with its standing use off is held back {switch_off, member}, never no_account or kept_away, no grant, no model; with it on, the grant is minted for the sign-in and the AI half runs as for the author's reference, its limits read as for any account", async () => {
+test("R19 the sign-in arm (N796, Bob K2425; credentials R32; ai-accounts R7, R14, R19): an author served by their own held Claude sign-in with its standing use off is held back {switch_off, member}, never no_account or kept_away, no grant, no model; with it on, the grant is minted for the sign-in and the AI half runs as for the author's reference, its limits read as for any account", async () => {
   const w = answersWorld();
   const calls = [], touched = [];
-  const real = w.credentials;
-  w.a.deps.credentials = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function" ? (...a) => { touched.push(String(k)); return v.apply(t, a); } : v; } });
-  w.a.resolved.delete("credentials");
+  const real = w.credentials, accts = w.accounts;
+  /* (T48-36) keep-away and the account are read from ai-accounts, the standing grant from credentials: each read named
+     by the dep it went to */
+  const watchDeps = () => { for (const n of ["accounts", "credentials"]) {
+    w.a.deps[n] = new Proxy(w[n], { get: (t, k) => { const v = t[k]; return typeof v === "function" ? (...a) => { touched.push(`${n}.${String(k)}`); return v.apply(t, a); } : v; } });
+    w.a.resolved.delete(n);
+  } };
+  watchDeps();
   assert.equal(w.a.standingAiSwitch({ on: true, by: ALICE }).ok, true);
   w.a.registerStandingAnswerer("agent-worker", async (x) => {
     calls.push({ ...x, held: await real.aiGrantHeld({ token: x.grant }) });
@@ -326,11 +348,11 @@ test("R19 the sign-in arm (N796, Bob K2425; credentials R32, R55, R70): an autho
   });
   /* carol holds no reference of her own and the group no key: her sign-in is what serves her (credentials R35, R43),
      and only while its token is held (credentials R70, T47): the connected fact alone serves no one */
-  assert.equal((await real.subscriptionConnected({ member: "carol" })).ok, true);
-  assert.equal((await real.accountFor({ member: "carol", act: { kind: "standing", member: CAROL } })).code, "NO_ACCOUNT",
+  assert.equal((await accts.subscriptionConnected({ member: "carol" })).ok, true);
+  assert.equal((await accts.accountFor({ member: "carol", act: { kind: "standing", member: CAROL } })).code, "NO_ACCOUNT",
                "a sign-in with no token held is not connected");
   const TOKEN = "sk-ant-oat01-sentinel-carol-0123456789";
-  assert.equal((await real.subscriptionTokenHold({ member: "carol", token: TOKEN })).ok, true);
+  assert.equal((await accts.subscriptionTokenHold({ member: "carol", token: TOKEN })).ok, true);
   const q = set(w, { author: CAROL });
   await w.a.standingTick(w.clock.now);
   let n = 0;
@@ -346,28 +368,29 @@ test("R19 the sign-in arm (N796, Bob K2425; credentials R32, R55, R70): an autho
   const held = { condition: "switch_off", switch: "member" };
   /* off, its default: held back, the account chosen being the one used (credentials R56) */
   assert.deepEqual(await step(), held);
-  assert.deepEqual(touched, ["aiKeptAway", "accountFor"], "keep-away, then the account; no grant asked for");
+  assert.deepEqual(touched, ["accounts.aiKeptAway", "accounts.accountFor"], "keep-away, then the account; no grant asked for");
   assert.equal(w.limit.asked.length, 0); assert.equal(calls.length, 0, "no model called"); assert.equal(grants(), 0, "no grant minted");
   /* and where the account answers the sign-in but R32 refuses its standing switch: the same hold */
-  const signin = { ...real, aiKeptAway: () => null, accountFor: async () => ({ ok: true, kind: "signin", level: "member", member: "carol" }),
-                   aiGrantMintStanding: async () => ({ ok: false, code: "STANDING_SWITCH_OFF", translation: "Off." }) };
-  w.a.deps.credentials = signin; w.a.resolved.delete("credentials");
+  w.a.deps.accounts = { aiKeptAway: () => null, accountFor: async () => ({ ok: true, kind: "signin", level: "member", member: "carol" }),
+                        projectsKeptAway: () => [] };
+  w.a.deps.credentials = { aiGrantMintStanding: async () => ({ ok: false, code: "STANDING_SWITCH_OFF", translation: "Off." }) };
+  w.a.resolved.delete("accounts"); w.a.resolved.delete("credentials");
   assert.deepEqual(await step(), held, "R32's STANDING_SWITCH_OFF");
   assert.equal(calls.length, 0);
-  w.a.deps.credentials = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function" ? (...a) => { touched.push(String(k)); return v.apply(t, a); } : v; } });
-  w.a.resolved.delete("credentials");
+  watchDeps();
   const entries = w.a.standingAnswersFor({ member: CAROL }).entries;
   assert.equal(entries.length, 2);
   for (const e of entries) { assert.equal(e.answer, null); assert.equal(e.finds.ids.length, 1); assert.deepEqual(e.held_back, held); }
   assert.doesNotMatch(JSON.stringify(w.rows(`SELECT * FROM standing_runs`)), /signin|no_account|kept_away/);
   /* on, by her own act: the grant is minted for her sign-in and the model stub is called once */
-  assert.equal(real.accountUsesSet({ owner: "member:carol", switch: "standing", on: true, by: CAROL }).ok, true);
+  assert.equal(accts.accountUsesSet({ owner: "member:carol", switch: "standing", on: true, by: CAROL }).ok, true);
   const reached = w.reach("member:carol", "standing");
   assert.deepEqual(await step(), { condition: "limit", code: "AI_LIMIT_REACHED", translation: reached.translation }, "its limits read as for any account");
   assert.equal(w.limit.asked.at(-1).owner, "member:carol");
   w.unreach("member:carol", "standing");
   assert.equal(await step(), null);
-  assert.deepEqual(touched.filter((k) => k !== "aiGrantHeld"), ["aiKeptAway", "accountFor", "aiGrantMintStanding", "projectsKeptAway"]);
+  assert.deepEqual(touched, ["accounts.aiKeptAway", "accounts.accountFor", "credentials.aiGrantMintStanding",
+                             "accounts.projectsKeptAway"], "the grant alone from credentials; the answerer's read scrubbed through ai-accounts");
   assert.equal(calls.length, 1); assert.equal(grants(), 1);
   assert.equal(calls[0].held.ok, true); assert.equal(calls[0].held.member, "carol");
   const last = w.a.standingAnswersFor({ member: CAROL }).entries.at(-1);
@@ -406,7 +429,7 @@ test("R21 a standing question reads only the asking scope's reads: no capture re
   const w = answersWorld();
   const touched = [];
   const watch = (name, o) => new Proxy(o, { get: (t, k) => { const v = t[k]; if (typeof v === "function") return (...a) => { touched.push(`${name}.${String(k)}`); return v.apply(t, a); }; return v; } });
-  for (const n of ["standards", "content", "events", "entities", "lines", "people", "duties", "calculations", "retrieval", "credentials"])
+  for (const n of ["standards", "content", "events", "entities", "lines", "people", "duties", "calculations", "retrieval", "credentials", "accounts"])
     w.a.deps[n] = watch(n, w.a.deps[n]);
   w.a.resolved.clear();
   w.document("budget one", { title: "Budget one" });
@@ -426,7 +449,7 @@ test("R26 a standing question runs for a member no account serves as for any mem
   const calls = [];
   assert.equal(w.a.standingAiSwitch({ on: true, by: ALICE }).ok, true);
   w.a.registerStandingAnswerer("agent-worker", async (x) => { calls.push(x); return answer(); });
-  const acct = await w.credentials.accountFor({ member: "carol", act: { kind: "standing", member: CAROL } });
+  const acct = await w.accounts.accountFor({ member: "carol", act: { kind: "standing", member: CAROL } });
   assert.equal(acct.code, "NO_ACCOUNT", "carol has no reference and the group holds no key");
   w.document("budget one", { title: "Budget one" });
   const q = set(w, { author: CAROL });

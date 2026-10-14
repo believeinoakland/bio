@@ -1,13 +1,15 @@
 /* answers over the modules it uses: calculations' test world (the real record-core, membership, promotion, content,
    retrieval, entities, events, standards, money, duties, lines, people and calculations on a real SQLite database at the
-   plane's storage shape), with the real credentials beside them, and answers built over them as the composition root
-   would. The paying account's limits are the real `ai-use.useCheck` (its R3; R30), watched so a test sees what was
+   plane's storage shape), with the real credentials and ai-accounts beside them (credentials' factory creates
+   ai-accounts' one instance with the seal secret, as the composition root does), and answers built over them as the
+   composition root would: its `accounts` dep ai-accounts (T48-36), its `credentials` dep only for the standing grant. The paying account's limits are the real `ai-use.useCheck` (its R3; R30), watched so a test sees what was
    asked of it; `reach(owner, use)` brings an account to a one-call monthly limit as a use would, and `unreach` removes it.
    The standing answerer is a provider the test controls, at the interface its requirements state (J1 (5)).
    Every test drives `answers` at its interface. */
 import { seeded, V, NOW, PROFILE, saved, R } from "../calculations/fixture.mjs";
 import { linesOf } from "../../../src/lines/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { answersOf } from "../../../src/answers/index.mjs";
 import { aiUseOf } from "../../../src/ai-use/index.mjs";
 
@@ -20,6 +22,8 @@ export function answersWorld({ rules = true, deps: more = {}, ...opts } = {}) {
   w.lines = linesOf(w.host, { record: w.record });
   w.credentials = credentialsOf(w.host, { record: w.record, membership: w.membership, sealSecret: SEAL });
   w.credentials.migrate();
+  w.accounts = aiAccountsOf(w.host);
+  if (w.accounts !== w.credentials.accounts) throw new Error("fixture: ai-accounts is not the one instance on this host");
   w.aiUse = aiUseOf(w.host, { record: w.record, membership: w.membership, credentials: w.credentials });
   w.limit = { asked: [] };
   w.useCheck = (a) => { w.limit.asked.push(a); return w.aiUse.useCheck(a); };
@@ -36,7 +40,7 @@ export function answersWorld({ rules = true, deps: more = {}, ...opts } = {}) {
   w.unreach = (owner, use) => w.aiUse.aiLimitSet({ owner, scope: use, unit: "calls", period: "month", amount: null, by: who(owner) });
   w.deps = { record: w.record, membership: w.membership, standards: w.standards, content: w.content, events: w.events,
     entities: w.entities, lines: w.lines, people: w.people, duties: w.duties, calculations: w.c, retrieval: w.retrieval,
-    credentials: w.credentials, now: () => w.clock.now,
+    accounts: w.accounts, credentials: w.credentials, now: () => w.clock.now,
     useCheck: (a) => w.useCheck(a), ...more };
   w.a = answersOf(w.host, w.deps);
   /* the plane makes every module's tables at boot; here retrieval's zone (its R69) meets local-facts on its first read,

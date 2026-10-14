@@ -71,9 +71,12 @@ test("R34 refusals in order, each writing nothing: a machine or empty author MAC
 test("R34 the author changes the end: {ok, id, ends, was}; an equal end answers unchanged and writes nothing; each earlier end stays readable on the question, with who and when, to its author alone; no model, no account", () => {
   const w = answersWorld();
   const touched = [];
-  const real = w.credentials;
-  w.a.deps.credentials = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function" ? (...a) => { touched.push(String(k)); return v.apply(t, a); } : v; } });
-  w.a.resolved.delete("credentials");
+  /* (T48-36) both: ai-accounts for keep-away and the account, credentials for the standing grant */
+  for (const n of ["accounts", "credentials"]) {
+    const real = w[n];
+    w.a.deps[n] = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function" ? (...a) => { touched.push(`${n}.${String(k)}`); return v.apply(t, a); } : v; } });
+    w.a.resolved.delete(n);
+  }
   /* carol: no reference of her own, and the group holds no key (R26) */
   const q = set(w, { author: CAROL });
   assert.deepEqual(w.a.standingQuestionRead({ id: q.id, viewer: CAROL }).question.ends_changes, [], "never changed");

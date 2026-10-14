@@ -1,23 +1,23 @@
-/* Accounts and limits (R30; D38, B3; N812, K2373), at the interface, over the real credentials: an ask's account,
+/* Accounts and limits (R30; D38, B3; N812, K2373), at the interface, over the real ai-accounts (T48-36): an ask's account,
    asked of `accountFor` with kind `ask` and its project, judged by the paying account's limits (`ai-use.useCheck`, its
    R3, the test's provider, handed in as the composition root hands it); and R2 widened: every read under a grant drops
-   the rows of the projects `credentials.projectsKeptAway` names for the grant's use. Each arm with its negative
+   the rows of the projects `ai-accounts.projectsKeptAway` names for the grant's use. Each arm with its negative
    control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { answersWorld, answer, V } from "./fixture.mjs";
 import { GRANT_USES, ASK_ACCOUNT_KINDS, RULE_USES, ownerOf, answersOps } from "../../../src/answers/index.mjs";
-import { ACCOUNT_CHECKS } from "../../../src/credentials/index.mjs";
+import { AI_ACCOUNT_CHECKS } from "../../../src/ai-accounts/index.mjs";
 
 const BOB = V("bob"), CAROL = V("carol"), ALICE = V("alice");
 
 test("R30 an ask calls accountFor with kind ask and its project, and is judged by useCheck for the account chosen in place of the ceiling: {ok, account, owner}, or the refusal unchanged; writes nothing", async () => {
   const w = answersWorld();
   const seen = [];
-  const real = w.credentials;
-  w.a.deps.credentials = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function"
+  const real = w.accounts;
+  w.a.deps.accounts = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function"
     ? (...a) => { if (k === "accountFor") seen.push(a[0]); return v.apply(t, a); } : v; } });
-  w.a.resolved.delete("credentials");
+  w.a.resolved.delete("accounts");
   /* no account serves bob yet: NO_ACCOUNT, no limit asked */
   assert.equal((await w.a.askAccount({ member: BOB })).code, "NO_ACCOUNT");
   assert.equal(w.limit.asked.length, 0, "no limit asked for an ask no account serves");
@@ -34,7 +34,7 @@ test("R30 an ask calls accountFor with kind ask and its project, and is judged b
   assert.deepEqual(await w.a.askAccount({ member: BOB }), reached);
   w.unreach("member:bob", "ask");
   assert.equal((await w.a.askAccount({ member: BOB })).ok, true, "under its limit again");
-  /* the account chosen is the one used: its ask use off is credentials R56's refusal, never the next account */
+  /* the account chosen is the one used: its ask use off is ai-accounts R11's refusal, never the next account */
   assert.equal(real.accountUsesSet({ owner: "member:bob", switch: "ask", on: false, by: BOB }).ok, true);
   assert.equal((await w.a.askAccount({ member: BOB })).code, "AI_USE_SWITCHED_OFF");
   assert.equal(real.accountUsesSet({ owner: "member:bob", switch: "ask", on: true, by: BOB }).ok, true);
@@ -55,7 +55,7 @@ test("R30 an ask calls accountFor with kind ask and its project, and is judged b
   assert.equal(p.owner, `project:${P}`); assert.equal(p.account.level, "project");
   assert.deepEqual(seen.at(-1), { member: CAROL, act: { kind: "ask", member: CAROL, project: P } });
   assert.equal(w.limit.asked.at(-1).owner, `project:${P}`);
-  /* a project the member has not joined, or cannot see, is credentials' refusal: no limit asked */
+  /* a project the member has not joined, or cannot see, is ai-accounts' refusal (its R11): no limit asked */
   const n = w.limit.asked.length;
   const out = await w.a.askAccount({ member: BOB, project: P });
   assert.equal(out.ok, false); assert.match(out.code ?? out.reason, /^(NO_SUCH_PROJECT|PROJECT_ACT_NOT_A_PARTICIPANT)$/);
@@ -68,7 +68,7 @@ test("R30 an ask calls accountFor with kind ask and its project, and is judged b
   assert.equal(ownerOf({ level: "member", kind: "signin", member: "bob" }, BOB), "member:bob");
 });
 
-test("R30 R2 widened: every read under a grant also drops the rows of projects kept away from AI for the grant's use (credentials.projectsKeptAway), before the read log records them, and a count counts none; another use's limit drops nothing; unreadable limits drop every project's rows", async () => {
+test("R30 R2 widened: every read under a grant also drops the rows of projects kept away from AI for the grant's use (ai-accounts.projectsKeptAway), before the read log records them, and a count counts none; another use's limit drops nothing; unreadable limits, or ai-accounts unreachable, drop every project's rows", async () => {
   const w = answersWorld();
   const P = w.project("Carol's work", "carol");
   const inP = w.document("carol's budget", { title: "Budget draft", project: P });
@@ -77,7 +77,7 @@ test("R30 R2 widened: every read under a grant also drops the rows of projects k
     answer: { ok: true, count: 3, hits: [{ bundle_id: open.bundleId }, { bundle_id: inP.bundleId }, { bundle_id: P }] } });
   /* no limit: carol, a participant, sees her project's rows (the negative control) */
   assert.deepEqual(read("g0").hits.map((h) => h.bundle_id), [open.bundleId, inP.bundleId, P]);
-  assert.equal((await w.credentials.projectAiKeepAwaySet({ project: P, on: true, uses: ["ask"], reason: "Private for now.", by: CAROL })).ok, true);
+  assert.equal((await w.accounts.projectAiKeepAwaySet({ project: P, on: true, uses: ["ask"], reason: "Private for now.", by: CAROL })).ok, true);
   const asked = read("g1");
   assert.deepEqual(asked.hits, [{ bundle_id: open.bundleId }], "the project and its rows dropped for an ask");
   assert.equal(asked.count, 1, "a count counts none of them");
@@ -94,14 +94,24 @@ test("R30 R2 widened: every read under a grant also drops the rows of projects k
   assert.deepEqual(rule.value, { items: [{ id: open.bundleId }], count: 1 });
   assert.deepEqual((await w.a.ruleAnswer({ service: "projectfacts", viewer: CAROL, grant: "g2" })).value.count, 2, "a draft's grant keeps it");
   /* limits that cannot be read: every project's rows dropped, fail closed */
-  const real = w.credentials;
-  w.a.deps.credentials = { projectsKeptAway: () => null, aiKeptAway: () => null };
-  w.a.resolved.delete("credentials");
+  const real = w.accounts;
+  w.a.deps.accounts = { projectsKeptAway: () => null };
+  w.a.resolved.delete("accounts");
   assert.deepEqual(read("g4", "standing").hits, [{ bundle_id: open.bundleId }]);
-  w.a.deps.credentials = { projectsKeptAway: () => { throw new Error("down"); } };
-  w.a.resolved.delete("credentials");
+  w.a.deps.accounts = { projectsKeptAway: () => { throw new Error("down"); } };
+  w.a.resolved.delete("accounts");
   assert.deepEqual(read("g5", "draft").hits, [{ bundle_id: open.bundleId }]);
-  w.a.deps.credentials = real; w.a.resolved.delete("credentials");
+  /* (T48-36) ai-accounts that cannot be reached is not a reading of "none kept away": fail closed too */
+  for (const [i, gone] of [() => null, () => { throw new Error("down"); }, {}].entries()) {
+    w.a.deps.accounts = gone; w.a.resolved.delete("accounts");
+    assert.deepEqual(read(`g5-${i}`, "draft").hits, [{ bundle_id: open.bundleId }]);
+  }
+  /* (T48-36) the limits are ai-accounts', never credentials': credentials gone, the real limits still read */
+  w.a.deps.accounts = real; w.a.resolved.delete("accounts");
+  w.a.deps.credentials = null; w.a.resolved.delete("credentials");
+  assert.equal(read("g5c", "draft").hits.length, 3, "an ask-only limit; credentials unreachable changes nothing");
+  assert.deepEqual(read("g5d").hits, [{ bundle_id: open.bundleId }]);
+  w.a.deps.credentials = w.credentials; w.a.resolved.delete("credentials");
   /* R14 still: the reads write nothing */
   const before = w.snapshot();
   read("g6");
@@ -112,9 +122,9 @@ test("R30 R19 a standing run's grant reads under its own use: a project kept awa
   const w = answersWorld();
   const P = w.project("Carol's work", "carol");
   assert.equal(w.a.standingAiSwitch({ on: true, by: ALICE }).ok, true);
-  await w.credentials.accountReferenceSet({ member: "carol", kind: "apikey", secret: "sk-c", by: CAROL });
-  assert.equal(w.credentials.accountUsesSet({ owner: "member:carol", switch: "standing", on: true, by: CAROL }).ok, true);
-  assert.equal((await w.credentials.projectAiKeepAwaySet({ project: P, on: true, uses: ["standing"], reason: "Private.", by: CAROL })).ok, true);
+  await w.accounts.accountReferenceSet({ member: "carol", kind: "apikey", secret: "sk-c", by: CAROL });
+  assert.equal(w.accounts.accountUsesSet({ owner: "member:carol", switch: "standing", on: true, by: CAROL }).ok, true);
+  assert.equal((await w.accounts.projectAiKeepAwaySet({ project: P, on: true, uses: ["standing"], reason: "Private.", by: CAROL })).ok, true);
   const got = [];
   w.a.registerStandingAnswerer("agent-worker", async (x) => {
     got.push(w.a.logRead({ grant: x.grant, viewer: x.author, op: "search", args: {},
@@ -135,7 +145,7 @@ test("R30 R19 a standing run's grant reads under its own use: a project kept awa
 
 test("R30 with no useCheck handed in, answers judges by ai-use's useCheck on its own host (the negative control: an account under its limits is served)", async () => {
   const w = answersWorld({ deps: { useCheck: undefined } });
-  await w.credentials.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-bob", by: BOB });
+  await w.accounts.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-bob", by: BOB });
   assert.equal((await w.a.askAccount({ member: BOB })).ok, true);
   const reached = w.reach("member:bob", "ask");
   const r = await w.a.askAccount({ member: BOB });
@@ -144,13 +154,13 @@ test("R30 with no useCheck handed in, answers judges by ai-use's useCheck on its
   assert.equal(w.limit.asked.length, 0, "the fixture's watched provider was not the one asked");
 });
 
-test("R30 (K2508) askAccount takes kind: ask when absent, or draft, the account and its limit judged for that kind; any other kind refused NOT_YOUR_ACCOUNT as credentials R24 refuses it, before any account is read", async () => {
+test("R30 (K2508) askAccount takes kind: ask when absent, or draft, the account and its limit judged for that kind; any other kind refused NOT_YOUR_ACCOUNT as ai-accounts R3 refuses it, with ai-accounts' row (T48-36), before any account is read", async () => {
   const w = answersWorld();
   const seen = [];
-  const real = w.credentials;
-  w.a.deps.credentials = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function"
+  const real = w.accounts;
+  w.a.deps.accounts = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function"
     ? (...a) => { if (k === "accountFor") seen.push(a[0]); return v.apply(t, a); } : v; } });
-  w.a.resolved.delete("credentials");
+  w.a.resolved.delete("accounts");
   await real.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-bob", by: BOB });
   const d = await w.a.askAccount({ member: BOB, kind: "draft" });
   assert.equal(d.ok, true, JSON.stringify(d)); assert.equal(d.owner, "member:bob");
@@ -168,12 +178,12 @@ test("R30 (K2508) askAccount takes kind: ask when absent, or draft, the account 
   assert.deepEqual(await w.a.askAccount({ member: BOB, kind: "draft" }), reached);
   assert.equal((await w.a.askAccount({ member: BOB, kind: "ask" })).ok, true, "the ask's own limit is not the draft's");
   w.unreach("member:bob", "draft");
-  /* any other kind: refused as credentials R24 refuses it, no account read and no limit asked */
+  /* any other kind: refused as ai-accounts R3 refuses it, with its row, no account read and no limit asked */
   const n = seen.length, m = w.limit.asked.length;
   for (const kind of ["run", "standing", "explore", "transcribe", "", "ASK", 7]) {
     const r = await w.a.askAccount({ member: BOB, kind });
     assert.equal(r.code, "NOT_YOUR_ACCOUNT", String(kind));
-    assert.equal(r.check, ACCOUNT_CHECKS.NOT_YOUR_ACCOUNT.check); assert.equal(r.translation, ACCOUNT_CHECKS.NOT_YOUR_ACCOUNT.translation);
+    assert.equal(r.check, AI_ACCOUNT_CHECKS.NOT_YOUR_ACCOUNT.check); assert.equal(r.translation, AI_ACCOUNT_CHECKS.NOT_YOUR_ACCOUNT.translation);
   }
   assert.equal(seen.length, n); assert.equal(w.limit.asked.length, m);
   assert.deepEqual(ASK_ACCOUNT_KINDS, ["ask", "draft"]);
@@ -183,7 +193,7 @@ test("R35 ruleAnswer and op=rule take use (ask or draft, ask when absent) and op
   const w = answersWorld();
   const P = w.project("Carol's work", "carol");
   const open = w.document("budget minutes", { title: "Budget minutes" });
-  assert.equal((await w.credentials.projectAiKeepAwaySet({ project: P, on: true, uses: ["draft"], reason: "No drafts.", by: CAROL })).ok, true);
+  assert.equal((await w.accounts.projectAiKeepAwaySet({ project: P, on: true, uses: ["draft"], reason: "No drafts.", by: CAROL })).ok, true);
   assert.deepEqual(RULE_USES, ["ask", "draft"]);
   const url = (q) => new URL(`https://plane.test/?${new URLSearchParams({ viewer: CAROL, service: "profiles", ...q })}`);
   const rule = (q, body = {}) => answersOps(w.a, url(q), { args: { section: "time_zone" }, ...body }).rule();

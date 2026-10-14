@@ -14,10 +14,12 @@
  *                        governing zone (its R69), so a question is checked and run on one day boundary (N584).
  *   query                query-language's `savedForm` (its R30).
  *   relations, zone      each a function: the relations and the zone, used only where `retrieval` gives none.
- *   credentials          whether the group keeps its material away from AI (its R35, `aiKeptAway`, the one site of
- *                        `AI_KEPT_AWAY`, K231), the account that serves an act (its R56, `accountFor`), the standing
- *                        question's grant (its R32, `aiGrantMintStanding`), for R19, and the projects kept away from a
- *                        use (its R57, `projectsKeptAway`), for R30's widening of R2.
+ *   accounts             `ai-accounts` (T48-36; N996 §5): whether the group keeps its material away from AI (its R7,
+ *                        `aiKeptAway`, the one site of `AI_KEPT_AWAY`, K231), the account that serves an act (its R7,
+ *                        R11, `accountFor`), for R19, R26 and R30, and the projects kept away from a use (its R22,
+ *                        `projectsKeptAway`), for R30's widening of R2; `aiAccountsOf` on the same host unless a test or
+ *                        the composition root passes its own.
+ *   credentials          the standing question's grant (its R32, `aiGrantMintStanding`), for R19; nothing else.
  *   useCheck             `({owner, member, use, at})` → null or `AI_LIMIT_REACHED`: the paying account's limits, in
  *                        place of the ceiling (R30), read for every account, a sign-in's included; `ai-use.useCheck`
  *                        (its R3) on the same host unless a test or the composition root passes its own.
@@ -30,7 +32,8 @@ import { sha256HexSync } from "../record-grammar/index.mjs";
 import { localDay, dayRange } from "../civil-time/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, listenerRefusal, notAnAdmin } from "../membership/index.mjs";
-import { AI_GRANT_TTL_SECONDS, ACCOUNT_CHECKS } from "../credentials/index.mjs";
+import { AI_GRANT_TTL_SECONDS } from "../credentials/index.mjs";
+import { aiAccountsOf, AI_ACCOUNT_CHECKS } from "../ai-accounts/index.mjs";
 import { savedForm } from "../query.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
@@ -60,7 +63,8 @@ export const RULE_SERVICES_SETTING = "answers_rule_services";
 export const ASK_MODES = Object.freeze(["ask", "standing"]);
 /** R30 (K2508): the kinds `askAccount` judges an account for: an ask, and a draft (store-door R10, plane R33). */
 export const ASK_ACCOUNT_KINDS = Object.freeze(["ask", "draft"]);
-/** R30: the uses a grant reads under (credentials' `USE_KINDS` that mint an ask's or a standing question's grant). */
+/** R30: the uses a grant reads under (ai-accounts' `USE_KINDS`, its R14, that mint an ask's or a standing question's
+ *  grant). */
 export const GRANT_USES = Object.freeze(["ask", "draft", "standing"]);
 /** R35 (K3089): the uses `ruleAnswer` and `op=rule` open a grant's read log with. */
 export const RULE_USES = Object.freeze(["ask", "draft"]);
@@ -166,12 +170,14 @@ export class Answers {
   }
 
   /** R2, R30: whether an id names a held bundle the viewer may not see, or one of a project that keeps its material
-   *  away from AI for `use` (`credentials.projectsKeptAway`, its R57: the project's own bundle or one it holds). When
-   *  the limits cannot be read, every project's bundle is dropped (fail closed). */
+   *  away from AI for `use` (`ai-accounts.projectsKeptAway`, its R22: the project's own bundle or one it holds). When
+   *  the limits cannot be read (the read throws, answers no list, or ai-accounts cannot be reached), every project's
+   *  bundle is dropped (fail closed). */
   hidden(viewer, use = "ask") {
-    const creds = this.dep("credentials");
-    let away = [];
-    try { away = creds && typeof creds.projectsKeptAway === "function" ? creds.projectsKeptAway({ use }) : []; } catch { away = null; }
+    const accounts = this.dep("accounts");
+    let away = null;
+    try { away = accounts && typeof accounts.projectsKeptAway === "function" ? accounts.projectsKeptAway({ use }) : null; }
+    catch { away = null; }
     const kept = Array.isArray(away) ? new Set(away) : null;
     return (id) => {
       const info = typeof this.record.bundleInfo === "function" ? this.record.bundleInfo(id) : null;
@@ -249,27 +255,26 @@ export class Answers {
    * AN ASK'S ACCOUNT (R30; D38, B3)
    * ===================================================================== */
 
-  /** R30: the account that serves a member's ask (or, K2508, a draft: `kind` `draft`), `credentials.accountFor` asked
-   *  with that kind (`ask` when absent) and the ask's
-   *  `project` (one the member has joined: credentials R56 refuses any other, `PROJECT_ACT_NOT_A_PARTICIPANT`, or as
-   *  absent), then judged by `ai-use.useCheck` for the account chosen, in place of the ceiling. Answers
+  /** R30: the account that serves a member's ask (or, K2508, a draft: `kind` `draft`), `ai-accounts.accountFor` asked
+   *  with that kind (`ask` when absent) and the ask's `project` (one the member has joined: ai-accounts R11 refuses any
+   *  other, `PROJECT_ACT_NOT_A_PARTICIPANT`, or as absent), then judged by `ai-use.useCheck` for the account chosen, in place of the ceiling. Answers
    *  `{ok: true, account, owner}` (`owner` the paying account, as `ai-use` R1 spells it) or the refusal unchanged
    *  (`AI_KEPT_AWAY`, `PROJECT_AI_KEPT_AWAY`, `AI_USE_SWITCHED_OFF`, `NO_ACCOUNT`, `AI_LIMIT_REACHED`, ...). A limit that
    *  cannot be judged, or an account that cannot be read, refuses with no row (`LIMITS_UNREADABLE`,
    *  `ACCOUNT_UNREADABLE`: the deployment's fault, fail closed). Writes nothing; never throws. */
   async askAccount({ member = null, project = null, at = null, kind = null } = {}) {
-    /* (K2508) `kind`: `ask` when absent, or `draft` for a draft; any other is refused as credentials R24 refuses an act
-       not the member's own (`NOT_YOUR_ACCOUNT`, its row), before any account is read */
+    /* (K2508) `kind`: `ask` when absent, or `draft` for a draft; any other is refused as ai-accounts R3 refuses an act
+       not the member's own (`NOT_YOUR_ACCOUNT`, its row, ai-accounts R33), before any account is read */
     const use = kind === null || kind === undefined ? "ask" : kind;
     if (!ASK_ACCOUNT_KINDS.includes(use)) {
-      const r = ACCOUNT_CHECKS.NOT_YOUR_ACCOUNT;
+      const r = AI_ACCOUNT_CHECKS.NOT_YOUR_ACCOUNT;
       return { ok: false, reason: "NOT_YOUR_ACCOUNT", code: "NOT_YOUR_ACCOUNT", check: r.check, translation: r.translation,
                detail: `an ask's account is read for an ask or a draft only, not for '${String(use).slice(0, 40)}'. Nothing was used.` };
     }
-    const creds = this.dep("credentials");
+    const accounts = this.dep("accounts");
     const act = { kind: use, member, ...(project !== null && project !== undefined ? { project } : {}) };
     let account = null;
-    try { account = creds && typeof creds.accountFor === "function" ? await creds.accountFor({ member, act }) : null; }
+    try { account = accounts && typeof accounts.accountFor === "function" ? await accounts.accountFor({ member, act }) : null; }
     catch { account = null; }
     if (!account || account.ok !== true)
       return account && account.ok === false ? account
@@ -389,7 +394,10 @@ export function answersOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const useCheck = d.useCheck || ((x) => aiUseOf(host, { record, membership }).useCheck(x));
-    a = new Answers({ ...d, storage: d.storage || storage, record, membership, useCheck });
+    /* T48-36: ai-accounts' one instance on this host, reached lazily (credentials' factory creates it first, with the
+       seal secret, at the composition root) */
+    const accounts = d.accounts || (() => aiAccountsOf(host, { record, membership }));
+    a = new Answers({ ...d, storage: d.storage || storage, record, membership, useCheck, accounts });
     instances.set(storage, a);
     const declared = record.declareTable("answers", ANSWERS_TABLES);
     if (!declared || declared.ok === false) throw new Error(`answers' tables could not be declared: ${JSON.stringify(declared)}`);
