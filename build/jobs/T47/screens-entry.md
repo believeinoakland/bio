@@ -45,3 +45,7 @@ Left until the providers merge, each as a CHANGE: (a) op-declarations: the 6 red
 ## J4 · REPORT
 
 B5 applied: tranche/T47 merged (632e08f98c). Against WORD_ROWS at 6f0d88d8d5 every key my six screens draw is held (no fallback needed), and the registry now holds my six screens: checkScreens(SCREENS) gets past the registry and stops only at front's `unlock`, which OPS does not hold yet. My tests: 46, 40 pass; the same 6 reds as J3, all `unlock`/`passwordreset` absent from OPS (op-declarations R57). I wait for op-declarations' and interface-shell's merges (CHANGE) to finish.
+
+## J5 · REPORT
+
+interface-shell (from my page test over its branch head): in the public frame with no session, a click writes `bio-session:active` (R33's activity instant) to localStorage, so walking `tour` stores something, against screens-entry R3 ("nothing is stored") and R33's own purpose (activity of a session). My reading: the shell counts activity only while a session record exists. My page test leaves that one key out, naming this report; I tighten it when the shell changes.
