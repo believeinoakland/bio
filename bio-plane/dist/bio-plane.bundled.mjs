@@ -49040,6 +49040,65 @@ function textUnitsFor(i2text) {
   }
   return { textUnits, textUnitsOverBound, textUnitsSkipped };
 }
+var HTML_ENTITIES = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+  copy: "\xA9",
+  reg: "\xAE",
+  trade: "\u2122",
+  mdash: "\u2014",
+  ndash: "\u2013",
+  hellip: "\u2026",
+  lsquo: "\u2018",
+  rsquo: "\u2019",
+  ldquo: "\u201C",
+  rdquo: "\u201D",
+  bull: "\u2022",
+  middot: "\xB7",
+  sect: "\xA7",
+  para: "\xB6",
+  deg: "\xB0",
+  times: "\xD7",
+  laquo: "\xAB",
+  raquo: "\xBB",
+  eacute: "\xE9",
+  egrave: "\xE8",
+  aacute: "\xE1",
+  iacute: "\xED",
+  oacute: "\xF3",
+  uacute: "\xFA",
+  ntilde: "\xF1",
+  uuml: "\xFC",
+  ouml: "\xF6",
+  auml: "\xE4",
+  ccedil: "\xE7"
+};
+var decodeReferences = (s) => s.replace(
+  /&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6})|([A-Za-z][A-Za-z0-9]{1,8}));/g,
+  (whole2, dec3, hex11, name3) => {
+    if (name3) return Object.prototype.hasOwnProperty.call(HTML_ENTITIES, name3) ? HTML_ENTITIES[name3] : whole2;
+    const cp = dec3 !== void 0 ? Number(dec3) : parseInt(hex11, 16);
+    if (!(cp > 0 && cp <= 1114111) || cp >= 55296 && cp <= 57343) return whole2;
+    const ch = String.fromCodePoint(cp);
+    return /^\s$/.test(ch) ? " " : ch;
+  }
+);
+var BLOCK_TAG = "address|article|aside|blockquote|body|caption|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form|h[1-6]|header|hr|html|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul";
+function visibleTextOfHtml(html) {
+  const dropped = html.replace(/<!--[\s\S]*?(?:-->|$)/g, " ").replace(/<(script|style|template|head)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ").replace(/<!\[CDATA\[[\s\S]*?(?:\]\]>|$)/g, " ").replace(/<![^>]*>|<\?[^>]*>/g, " ").replace(/\s+/g, " ");
+  const bare5 = dropped.replace(new RegExp(`</?(?:${BLOCK_TAG})\\b(?:"[^"]*"|'[^']*'|[^'">])*>`, "gi"), "\n\n").replace(/<br\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi, "\n").replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, "");
+  return decodeReferences(bare5);
+}
+function textUnitsOfText(text7, { html = false } = {}) {
+  if (typeof text7 !== "string" || !text7) return { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null };
+  const visible = html ? visibleTextOfHtml(text7) : text7;
+  const paragraphs = visible.split(/\r?\n[ \t\f\v ]*(?:\r?\n[ \t\f\v ]*)+/).map((p3) => (html ? p3.replace(/[ \t\f\v \r\n]+/g, " ") : p3).trim()).filter((p3) => p3.length).map((p3, para) => ({ para, text: p3 }));
+  return textUnitsFor({ paragraphs });
+}
 var readEntities = (list6) => (Array.isArray(list6) ? list6 : []).map((e2) => ({
   key: e2 && e2.key != null ? String(e2.key) : null,
   kind: e2 && e2.kind != null ? e2.kind : null,
@@ -49302,6 +49361,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   if (!wireable && textRead) {
     classifiedText = text7;
     member2 = "plane";
+    ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsOfText(text7, { html: fmt === "html" }));
     if (typeof docType.type.parse === "function") {
       try {
         const parsed = docType.type.parse({ ...profCtx, handler: stackId.handler, at: retrieved, ...vw }) || {};
