@@ -6,9 +6,13 @@
 
 **Adopted** · from `draft-T49-final.md` (a worker's consolidation for BOB #176), reviewed whole by BOB #177 and settled in K3327 (§ "Settled by BOB #177" at the foot, which governs where it differs). Branch `tranche/T49` from `main` @ f498560a37 (T48's close and PR #37, DEC-241–DEC-246). Ids are re-checked against each file's next free id at the fold (rule 1).
 
+**Meter** · 71% (Bob, 2026-10-14, during L4; K3347).
+
 **Aim (Bob, K3320; scope K3324).** A release Bob can install, sign in to, whose screens are usable, in which he creates a project, connects an assistant and works a real investigation, as administrator and as member. It is proven by journey-check's extended walk (T49-32, the tranche's acceptance test) and then by BOB's live walk of biosmoke8 (K3296, K3052). Work off that journey joins only a module that already has a journey job (K3324 (5)). An entry that would need a job of its own waits for T50. Its hard reason is "Bob's priority (K3320) under the meter (K3323, K2341)", because the meter read 68% at T48's close and the 80% pause would stop the release.
 
 **Sources** · `rulings.md` K3320, K3321, K3324 (read whole); `rulings-active.md` whole; `draft-T49-walk.md` (D1–D32); `draft-T49-plan.md` (its "Settled by BOB #174" and "Added by BOB #174" stand except where K3324 overrides them: N933 and T49-6 reevaluation leave); `draft-T49-fold-dec235-240.md` with its "Settled by BOB #176"; `draft-T49-additions.md`; `draft-T49-N1073-hand-lists.md`; `next.md` (N751…N1098); `archive/T48.md` (Legacy census, Rules, Outcome); PROCESS-DESIGN P4, P6, P8, P10, P19; MECHANICS §3, §5.2, §12.2; `modules.json` (order, layers, uses, paths). Each defect's owner was checked against `modules.json` paths and the cited file:line on `tranche/T48`. Sizes count own code in `paths`, without tests, `dist` or generated files (K617, K2513).
+
+**API keys withdrawn (Bob, K3347, 2026-10-14):** "Do NOT add API support unless and until we get subscription support fully running and debugged. And make a note NOT TO ASK AGAIN. PERIOD!" So: T49-8's R80, T49-9's R88 and T49-22's R36 are withdrawn (retired ids); journey-check R9 step 4, R10, R11 and R12 connect by the member's own Claude subscription; the release's live walk proves the subscription sign-in end to end (doubt 14 is no longer optional: N780's images must be pullable before "ready"). Wherever an entry below says "API key" for the journey, read "subscription". The withdrawn work is N1105 (`next.md`).
 
 ## Legacy census (§5.2 (2))
 

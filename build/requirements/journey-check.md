@@ -34,7 +34,7 @@ The release check: a Playwright walk of journeys 28 and 3 with screenshots, fail
   1. claim with her own handle, and sign in by it;
   2. start a project with a title, and open it;
   3. open a question in it (its first question, `screens-inquiry` R43);
-  4. connect an assistant by API key on `connect`;
+  4. connect an assistant by her own Claude subscription on `connect` (the sign-in, K3347);
   5. capture by address into the question (from its "Add a document"), and capture by upload into the question;
   6. see both held, and vouch for one;
   7. open the document, see its words, and Find-in a passage;
@@ -45,14 +45,15 @@ The release check: a Playwright walk of journeys 28 and 3 with screenshots, fail
   12. accept a reading, stand on it for the project, and conclude.
 
   Each step asserts what the design says the screen then shows, and the walk fails on any refused or missing step (R8). *(not yet met: T49)*
-- **R10** (T49; K3320, K3324 (2), (3); `ai-runs` R80) **The same journey as a member** invited to the group and joined to the project. She is on her own API key, with her own run dispatched on that key, and with `projectai`, plan help (`planask`) and Ask walked as hers. *(not yet met: T49)*
-- **R11** (T49; K3324 (2); amends R1 (a)) The local arm binds three things:
+- **R10** (T49; K3320, K3324 (2); K3347; `ai-runs` R18's T46 clause) **The same journey as a member** invited to the group and joined to the project. She connects her own Claude subscription, her own run is dispatched on that sign-in, and `projectai`, plan help (`planask`) and Ask are walked as hers. *(not yet met: T49)*
+- **R11** (T49; K3324 (2); amends R1 (a)) The local arm binds four things:
   - the plane's `AGENT_WORKER` to `agent-worker`, run under Miniflare with a fake model that answers the answers contract and the run modes' tools. The fake is served by this module at `agent-worker`'s model address, so `uses` stays empty;
   - a stub city site for captures by address;
+  - a stub of `agent-runner`'s sign-in, served by this module at the address the plane's sign-in part calls, answering a subscription sign-in as `agent-runner`'s contract states, so step 4 and R10's connection walk the screens' own controls (K3347);
   - the test-instance mark, set as its deployer, as `local.mjs`:42 does.
 
   This replaces the walk worker's scratch harness. Its seam for the fake model is confirmed at START (doubt 11). Test: the local arm walks R9. Control: with no fake model bound, step 9 fails by name. *(not yet met: T49)*
-- **R12** (T49; K3296; amends R1 (b), R5) The live arm walks R9 and R10 on a named test instance, with an API key read from the environment and never printed. It must pass before BOB's own live walk (K3296). Test: a missing key fails before any act. Control: the key in no output. *(not yet met: T49)*
+- **R12** (T49; K3296; K3347; amends R1 (b), R5) The live arm walks R9 and R10 on a named test instance through its real subscription sign-in (`agent-runner`). The sign-in's own code is entered by the person signing in; the arm reads nothing secret from its output and prints none. It must pass before BOB's own live walk (K3296). Test: with no sign-in completed, step 4 fails by name before any later act. Control: no token or code in any output. *(not yet met: T49)*
 - **R13** (T49; N1099, N1100; DEC-241, DEC-245; amends R6) R6's comparison covers two things:
   - design journey 29 ("From installing to a first conclusion", DEC-245), step by step;
   - `/app/more` at 390 px, against `more` (DEC-241).
