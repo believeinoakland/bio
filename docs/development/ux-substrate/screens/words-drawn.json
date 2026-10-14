@@ -479,6 +479,66 @@
    "en": "Bar: {bar}, set by {name} on {date}",
    "protected": false,
    "note": "DEC-259"
+  },
+  {
+   "key": "screen.group-identity.other.help",
+   "en": "For example “a tenants' union”, “a students' newspaper”, “a retired auditors' circle”. It helps Civicsmith offer what fits first; it locks nothing.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.group-identity.ask.what",
+   "en": "It asks you a few questions about your group, then drafts the focus and the reasons in these fields, each marked “Draft · the assistant's, asked by {handle}”. Nothing is saved until you edit it and keep it; once kept, the words are your group's.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.held.setaside.why",
+   "en": "Why set it aside?",
+   "protected": false,
+   "note": "DEC-259: the reason field for heldsetaside"
+  },
+  {
+   "key": "screen.help-records.title",
+   "en": "How a records request works",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.help-records.sub",
+   "en": "Help · for a request under the {law}, to an office in {place}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.help-records.faster.in",
+   "en": "The faster request in {place}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.help-records.faster.what",
+   "en": "{place}'s {ordinance} adds the {request}: the office answers within {window}, and the ordinance sets the later limits when it needs more time ({cite}). It suits a small set of records you can describe exactly.",
+   "protected": false,
+   "note": "DEC-259: the place's faster request, from its rules"
+  },
+  {
+   "key": "screen.help-records.portal.where",
+   "en": "{place} takes requests through its public records portal ({portal}).",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.imported.band",
+   "en": "Another group's case: {group} · Edition {edition} · read-only · {recreated} of {findings} findings recreated",
+   "protected": false,
+   "note": "DEC-259: the band across an imported case"
+  },
+  {
+   "key": "screen.inbox.same.date",
+   "en": "same knocker as {date}",
+   "protected": false,
+   "note": "DEC-259: beside a knock: the same sender handed in material on {date}"
   }
  ],
  "rewrite": {
@@ -497,6 +557,23 @@
   "screen.docket.sub": "The case's public record of corrections, withdrawals and orders.",
   "screen.due-date.of": "{who}'s reply to your {item}",
   "screen.due-date.step.counted": "Counted {amount} {units}: to {date}.",
-  "screen.group.court.field": "Tell members what a court can reach"
+  "screen.group.court.field": "Tell members what a court can reach",
+  "screen.group-identity.other.field": "Describe your kind of group, in a few words",
+  "screen.group-identity.focus.field": "What you focus on",
+  "screen.group-identity.purpose.field": "Why the group exists, in your own words",
+  "screen.group-identity.visibility.choice.public": "Also our public page and the network directory",
+  "screen.held.archive.filed": "{count} files held beside it",
+  "screen.held.ineligible": "Not eligible for a batch: {reason}",
+  "screen.held.waiting": "{asker}'s question is waiting for {capture}. Your reason is kept on the record and shown to {asker} on the question.",
+  "screen.help-records.must.1": "Answer within {days} days whether it holds records it can release, why or why not, and when they will be ready ({cite}).",
+  "screen.help-records.must.2": "Take longer only by written notice, saying why and when, for reasons the law lists ({reasons}); never more than {extra} extra days ({cite}).",
+  "screen.help-records.must.3": "Help you focus the request: identify the records that fit it, say where they are kept, and suggest ways past practical obstacles ({cite}).",
+  "screen.help-records.must.4": "Release the rest of a record that is partly exempt ({cite}), and refuse only in writing, naming who decided ({cite2}).",
+  "screen.help-records.must.5": "Give electronic records electronically, in a format it keeps them in, when you ask ({cite}).",
+  "screen.help-records.must.6": "Charge only the direct cost of copying ({cite}); for electronic records, of producing the copy, unless it must compile, extract or program data ({cite2}). You may photograph records you inspect, with your own equipment, at no charge ({cite3}).",
+  "screen.help-records.must.7": "Never ask why you want them: access can't be limited because of the purpose of a request ({cite}).",
+  "screen.help-records.portal.2": "Each request's page shows its full text to anyone, with its dates, the department and the city's contact. Write the request so you are content for anyone to read it.",
+  "screen.help-records.portal.3": "Contact details are optional. Without them you get no updates, and you can collect the records only if the department posts them publicly or you contact it yourself.",
+  "screen.help-records.does": "What Civicsmith does with it"
  }
 }

@@ -168,6 +168,10 @@ REWRITE.update({
   'screen.help-records.portal.3': 'Contact details are optional. Without them you get no updates, and you can collect the records only if the department posts them publicly or you contact it yourself.',
   'screen.help-records.does': 'What Civicsmith does with it',
 })
+# imported
+w('screen.imported.band', "Another group's case: {group} · Edition {edition} · read-only · {recreated} of {findings} findings recreated", False, 'the band across an imported case')
+# inbox
+w('screen.inbox.same.date', 'same knocker as {date}', False, 'beside a knock: the same sender handed in material on {date}')
 # --- end DEC-259
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

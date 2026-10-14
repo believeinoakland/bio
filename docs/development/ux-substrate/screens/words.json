@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 2995,
+  "screen": 3005,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -100,7 +100,7 @@
   "tab": 2,
   "act": 732,
   "column": 33,
-  "total": 5800,
+  "total": 5810,
   "protected": 818
  },
  "words": [
@@ -11822,52 +11822,52 @@
   },
   {
    "key": "screen.help-records.must.1",
-   "en": "Answer within the law's window whether it holds records it can release, why or why not, and when they will be ready.",
+   "en": "Answer within {days} days whether it holds records it can release, why or why not, and when they will be ready ({cite}).",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-action's own rows"
+   "note": "adopted from screens-action's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.help-records.must.2",
-   "en": "Take longer only by written notice, saying why and when, for the reasons the law lists.",
+   "en": "Take longer only by written notice, saying why and when, for reasons the law lists ({reasons}); never more than {extra} extra days ({cite}).",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-action's own rows"
+   "note": "adopted from screens-action's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.help-records.must.3",
-   "en": "Help you focus the request: identify the records that fit it and say where they are kept.",
+   "en": "Help you focus the request: identify the records that fit it, say where they are kept, and suggest ways past practical obstacles ({cite}).",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-action's own rows"
+   "note": "adopted from screens-action's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.help-records.must.4",
-   "en": "Release the rest of a record that is partly exempt, and refuse only in writing, naming who decided.",
+   "en": "Release the rest of a record that is partly exempt ({cite}), and refuse only in writing, naming who decided ({cite2}).",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-action's own rows"
+   "note": "adopted from screens-action's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.help-records.must.5",
-   "en": "Give electronic records electronically, in a format it keeps them in, when you ask.",
+   "en": "Give electronic records electronically, in a format it keeps them in, when you ask ({cite}).",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-action's own rows"
+   "note": "adopted from screens-action's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.help-records.must.6",
-   "en": "Charge only the direct cost of copying.",
+   "en": "Charge only the direct cost of copying ({cite}); for electronic records, of producing the copy, unless it must compile, extract or program data ({cite2}). You may photograph records you inspect, with your own equipment, at no charge ({cite3}).",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-action's own rows"
+   "note": "adopted from screens-action's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.help-records.must.7",
-   "en": "Never ask why you want them.",
+   "en": "Never ask why you want them: access can't be limited because of the purpose of a request ({cite}).",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-action's own rows"
+   "note": "adopted from screens-action's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.help-records.faster",
@@ -11906,24 +11906,24 @@
   },
   {
    "key": "screen.help-records.portal.2",
-   "en": "Each request's page shows its full text to anyone, with its dates and the department. Write the request so you are content for anyone to read it.",
+   "en": "Each request's page shows its full text to anyone, with its dates, the department and the city's contact. Write the request so you are content for anyone to read it.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-action's own rows"
+   "note": "adopted from screens-action's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.help-records.portal.3",
-   "en": "Contact details are optional. Without them you get no updates, and you collect the records only if they are posted publicly or you contact the office yourself.",
+   "en": "Contact details are optional. Without them you get no updates, and you can collect the records only if the department posts them publicly or you contact it yourself.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-action's own rows"
+   "note": "adopted from screens-action's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.help-records.does",
-   "en": "What your group's Civicsmith does with it",
+   "en": "What Civicsmith does with it",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-action's own rows"
+   "note": "adopted from screens-action's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.help-records.does.text",
@@ -16631,10 +16631,10 @@
   },
   {
    "key": "screen.held.ineligible",
-   "en": "Not eligible for a batch:",
+   "en": "Not eligible for a batch: {reason}",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-intake's own rows"
+   "note": "adopted from screens-intake's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.held.ineligible.alone",
@@ -16673,10 +16673,10 @@
   },
   {
    "key": "screen.held.archive.filed",
-   "en": "{count} files filed and held beside it",
+   "en": "{count} files held beside it",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-intake's own rows"
+   "note": "adopted from screens-intake's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.held.archive.notfiled",
@@ -16841,10 +16841,10 @@
   },
   {
    "key": "screen.held.waiting",
-   "en": "{asker}'s question “{title}” was waiting for it; your reason is shown there.",
+   "en": "{asker}'s question is waiting for {capture}. Your reason is kept on the record and shown to {asker} on the question.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-intake's own rows"
+   "note": "adopted from screens-intake's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.held.none",
@@ -25983,24 +25983,24 @@
   },
   {
    "key": "screen.group-identity.other.field",
-   "en": "If something else, what",
+   "en": "Describe your kind of group, in a few words",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.group-identity.focus.field",
-   "en": "What it focuses on",
+   "en": "What you focus on",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.group-identity.purpose.field",
-   "en": "Why it exists",
+   "en": "Why the group exists, in your own words",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.group-identity.visibility.members",
@@ -26032,10 +26032,10 @@
   },
   {
    "key": "screen.group-identity.visibility.choice.public",
-   "en": "Also the public",
+   "en": "Also our public page and the network directory",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows"
+   "note": "adopted from screens-settings's own rows; DEC-259: reworded"
   },
   {
    "key": "screen.group-identity.edit.heading",
@@ -31434,6 +31434,70 @@
    "en": "Bar: {bar}, set by {name} on {date}",
    "protected": false,
    "source": "DEC-259"
+  },
+  {
+   "key": "screen.group-identity.other.help",
+   "en": "For example “a tenants' union”, “a students' newspaper”, “a retired auditors' circle”. It helps Civicsmith offer what fits first; it locks nothing.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.group-identity.ask.what",
+   "en": "It asks you a few questions about your group, then drafts the focus and the reasons in these fields, each marked “Draft · the assistant's, asked by {handle}”. Nothing is saved until you edit it and keep it; once kept, the words are your group's.",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.held.setaside.why",
+   "en": "Why set it aside?",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "the reason field for heldsetaside"
+  },
+  {
+   "key": "screen.help-records.title",
+   "en": "How a records request works",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.help-records.sub",
+   "en": "Help · for a request under the {law}, to an office in {place}",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.help-records.faster.in",
+   "en": "The faster request in {place}",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.help-records.faster.what",
+   "en": "{place}'s {ordinance} adds the {request}: the office answers within {window}, and the ordinance sets the later limits when it needs more time ({cite}). It suits a small set of records you can describe exactly.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "the place's faster request, from its rules"
+  },
+  {
+   "key": "screen.help-records.portal.where",
+   "en": "{place} takes requests through its public records portal ({portal}).",
+   "protected": false,
+   "source": "DEC-259"
+  },
+  {
+   "key": "screen.imported.band",
+   "en": "Another group's case: {group} · Edition {edition} · read-only · {recreated} of {findings} findings recreated",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "the band across an imported case"
+  },
+  {
+   "key": "screen.inbox.same.date",
+   "en": "same knocker as {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "beside a knock: the same sender handed in material on {date}"
   },
   {
    "key": "rail.home.name",

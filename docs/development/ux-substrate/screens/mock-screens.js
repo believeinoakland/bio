@@ -1513,7 +1513,7 @@ SCR.imported = c => { const st = ({ list: 'b', none: 'c' })[c.v] || 'a'; const s
   <div class="mk-mockctl"><label for="mk-impst">In this mockup, show</label> <select id="mk-impst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>one imported case</option><option value="b"${sel('b')}>the list of imported cases</option><option value="c"${sel('c')}>the list, before any import</option></select></div>
   <div class="st st-b">
   ${h1('Imported cases', 'Cases other groups published that your group brought in to check. Each opens read-only, recreated finding by finding.')}
-  ${sheet(row(I('case'), ref('Port lease revenue', 'imported', '<b>Port lease revenue</b> · West Oakland Neighbors · Edition 2'), '', 'West Oakland Neighbors · Edition 2 · imported by Dev, 1 October · 1 of 3 findings recreated, 1 in part') + row(I('case'), ref('School bus contracts', 'imported', '<b>School bus contracts</b> · Fruitvale Parents · Edition 1'), '', 'Fruitvale Parents · Edition 1 · imported by Ana, 22 September · 4 of 4 findings recreated'))}
+  ${sheet(row(I('case'), ref('Port lease revenue', 'imported', '<b>Port lease revenue</b> · West Oakland Neighbors · Edition 2'), '', 'West Oakland Neighbors · Edition 2 · imported by Dev, 1 October · 1 of 3 findings recreated · 1 in part') + row(I('case'), ref('School bus contracts', 'imported', '<b>School bus contracts</b> · Fruitvale Parents · Edition 1'), '', 'Fruitvale Parents · Edition 1 · imported by Ana, 22 September · 4 of 4 findings recreated'))}
   ${acts(btn('caseimport', 'Import a case', { tone: 'primary' }))}
   </div>
   <div class="st st-c">
