@@ -23,3 +23,7 @@
 **Deferred.** None.
 
 Size (session_01Hz97U1FS7Ei861sY2S4h4N): test runs 5, module lines 3825
+
+## J1 · REPORT
+
+Found in other modules (details in my record, 'Found in other modules'): (1) citation's sever-inquiry relay test uses a stub step; with R64 the real answer to a sever of a divided question also carries target, from: "divided" and children, relayed with project/handle/drift (citation #edgeTransition :357); its job confirms the relay. (2) basis-versions (#moveVersionState, appendVersion via #repromote, narrow), run-productions (:534) and reevaluation adoptVersion (:2860) have no state guard of their own and are now refused DIVIDED_CANNOT_RESTRUCTURE on a divided question, relaying it; no test of theirs writes one; their requirements may want to name the refusal. (3) The plane bundle and program.mjs are staled by this change (rule 5.5).
