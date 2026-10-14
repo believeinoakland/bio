@@ -270,8 +270,8 @@ export const AI_RUN_OWN_CHECKS = {
       + 'of the assistant was tested, on which set and which version of it, how often it raised a false alarm, whether '
       + 'it passed, who graded it and when. Until such a result is kept, that part stays switched off.',
   },
-  /* R26 (T41-21; D2): A READ INSIDE A DOCUMENT KEPT FROM THE ASSISTANT. A material limit that covers reading (`credentials`
-     R57) refuses the read whatever the run's `pages` bound allows: the bound counts pages a run may read, it never
+  /* R26 (T41-21; D2): A READ INSIDE A DOCUMENT KEPT FROM THE ASSISTANT. A material limit that covers reading (`ai-accounts`
+     R22) refuses the read whatever the run's `pages` bound allows: the bound counts pages a run may read, it never
      licenses one. Minted here by `checkPagesRead`; the run's read relays it. The sentence names no limit's reason. */
   AI_RUN_READ_NO_AI: {
     check: 'C-22.23',
@@ -721,7 +721,7 @@ export const AI_RUN_PLAN_CHECKS = {
 export const AI_USE_CHECKS = {
   /* R52 (K1502, K1503; K1755): no account serves the member's act — none of their own connected (a subscription token
      or an API key), and the group's API key, which an administrator may hold, not held or switched off. T40 (N812):
-     or the account that would serve has this use switched off, where `AI_USE_SWITCHED_OFF` (`credentials` R56) is not
+     or the account that would serve has this use switched off, where `AI_USE_SWITCHED_OFF` (`ai-accounts` R11) is not
      answered in its place. */
   AI_NO_ACCOUNT: {
     check: 'C-109.10',
