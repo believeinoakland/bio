@@ -97,7 +97,7 @@ test("R22 R3: every op op-declarations R30 declares is graded — coarchiveset `
   for (const op of ["noterevise", "notedelete"]) assert.equal(NON_ACTS[op], NON_ACTS.notewrite, op);
   for (const op of R22_READS) {
     assert.ok(NON_ACTS[op].startsWith("read: ") && NON_ACTS[op].length > 20, op);
-    assert.equal(gradeOf(op), null, op);
+    assert.equal(gradeOf(op), op === "securitymap" ? "caller-owned" : null, op); /* R39 (T48) gave securitymap its row */
   }
   assert.match(NON_ACTS.findin, /records nothing/);
   assert.equal(NON_ACTS.credit, "read: public, no credential");
