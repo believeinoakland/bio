@@ -42,7 +42,6 @@ const LINK_TARGET_MAX = 4096;
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
-const dayOf = (when = Date.now()) => new Date(when).toISOString().slice(0, 10);
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const shaOf = (v) => (typeof v === "string" && HEX64.test(v.toLowerCase()) ? v.toLowerCase() : null);
 const json = (v) => { try { return v == null ? null : JSON.parse(v); } catch { return null; } };
@@ -503,7 +502,8 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
   const out = { documents: [], already_held: [], not_filed: [], nested: [] };
   const rowsByIndex = new Map(listing.entries.map((e) => [e.index, e]));
   const waitingRows = inst.entryRows(sha).filter((r) => r.state === "waiting");
-  const day = dayOf();
+  /* R40 (N998): the day the cuts count towards is the day of the instant they record, from the one clock read above */
+  const day = at.slice(0, 10);
   const call = { entries: 0, bytes: 0 };
   let stoppedOn = null, stoppedForCall = false;
   const ctx = { st, inst, ev, sha, h, at, mode, by, cls, member, out, source,

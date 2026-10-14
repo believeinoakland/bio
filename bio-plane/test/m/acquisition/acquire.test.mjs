@@ -2,7 +2,7 @@
    args)`, over a scripted network, an evidence bucket, and the store handed in (fixture.mjs). Carried from capture's
    tests of the moved Rs (capture R1–R7, R9–R14, R16–R20, R33–R36, R41, R42, R60–R62), each renamed to this module's id.
    Each test names the requirement ids it checks in its title. */
-import { test } from "node:test";
+import { test, mock } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, lookup, network, sha, HTML, page, text, wayback, WB, eligible, rendererEnv } from "./fixture.mjs";
 import { RENDER_DEFAULTS, renderLocaleFor } from "../../../src/render.mjs";
@@ -52,22 +52,28 @@ test("R2 R27: the fetched address must be a public locator, and no caller-suppli
     assert.deepEqual([r.status, r.body.reason], [400, "BAD_LOCATOR"], String(bad));
     assert.equal(r.net.seen.length, 0);
   }
-  const r = await run(w, { "https://a.example/x": text("bytes") },
-    { locator: "https://a.example/x", provenance_chain: [{ who: "me" }], grade: "A", capture: { grade: "A" }, retrieval_locator: "https://evil/",
-      receipt: {}, document: { file: "x" }, retrieved: "1999-01-01T00:00:00Z", transport: {} });
+  /* N998: a capture reads the wall clock many times (retrieved, and each attestation attempt's own instant), so two
+     captures compared under a running clock differ wherever a read crosses a second. The clock is pinned to one instant
+     for both captures (Date only; timers stay real), and the comparison below is then exact, with nothing normalised. */
+  mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-03-04T05:06:07.500Z") });
+  let r, plain;
+  try {
+    r = await run(w, { "https://a.example/x": text("bytes") },
+      { locator: "https://a.example/x", provenance_chain: [{ who: "me" }], grade: "A", capture: { grade: "A" }, retrieval_locator: "https://evil/",
+        receipt: {}, document: { file: "x" }, retrieved: "1999-01-01T00:00:00Z", transport: {} });
+    plain = await run(world(), { "https://a.example/x": text("bytes") }, { locator: "https://a.example/x" });
+  } finally { mock.timers.reset(); }
   assert.equal(r.status, 200);
   const d = r.body.document;
   assert.equal(d.provenance_chain.length, 1);
   assert.match(d.provenance_chain[0].who, /^instance inst/);
   assert.equal(d.capture.grade, EARNED_CAPTURE_CEILING);
-  assert.notEqual(d.retrieved, "1999-01-01T00:00:00Z");
+  assert.equal(d.retrieved, "2026-03-04T05:06:07Z", "the instance's own clock, never the caller's");
   assert.equal(d.capture.transport.requested, "https://a.example/x");
   assert.equal(w.prov.receipts[0].retrievalLocator, "https://a.example/x");
   assert.ok(!JSON.stringify(r.body).includes("evil"), "the caller's retrieval locator is nowhere");
-  /* over-strictness: the same capture with no supplied facts answers the same document, byte for byte but the clock */
-  const plain = await run(world(), { "https://a.example/x": text("bytes") }, { locator: "https://a.example/x" });
-  const norm = (doc) => JSON.stringify(doc).replaceAll(doc.retrieved, "T");
-  assert.equal(norm(d), norm(plain.body.document));
+  /* over-strictness: the same capture with no supplied facts answers the same document, byte for byte */
+  assert.equal(JSON.stringify(d), JSON.stringify(plain.body.document));
   /* the archive arm: a caller's locator is never the retrieval locator */
   const arch = await run(w, {}, { via: "archive.org", locator: "https://web.archive.org/web/1id_/https://a.example/x" }, { cls: "admin" });
   assert.equal(arch.body.reason, "BAD_ADDRESS");
@@ -425,11 +431,15 @@ test("R13: one receipt per filed capture under the document address (the resolve
   assert.equal(w.prov.receipts.at(-1).address, "https://s.example/p");
   /* a failed receipt write does not fail the capture, and the capture is the same */
   const failing = world({ prov: { recordReceipt() { throw new Error("down"); }, registerHolds: () => ({}) } });
-  const f = await run(failing, { "https://a.example/x": text("b") }, { locator: "https://a.example/x" });
-  const plain = await run(world({ prov: { recordReceipt() {}, registerHolds: () => ({}) } }), { "https://a.example/x": text("b") }, { locator: "https://a.example/x" });
+  /* N998: the clock pinned for both captures (as in R2's), so the comparison is exact, with nothing normalised */
+  mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-03-04T05:06:07.500Z") });
+  let f, plain;
+  try {
+    f = await run(failing, { "https://a.example/x": text("b") }, { locator: "https://a.example/x" });
+    plain = await run(world({ prov: { recordReceipt() {}, registerHolds: () => ({}) } }), { "https://a.example/x": text("b") }, { locator: "https://a.example/x" });
+  } finally { mock.timers.reset(); }
   assert.equal(f.status, 200);
-  const norm = (doc) => JSON.stringify(doc).replaceAll(doc.retrieved, "T");
-  assert.equal(norm(f.body.document), norm(plain.body.document), "over-strictness: the capture unchanged");
+  assert.equal(JSON.stringify(f.body.document), JSON.stringify(plain.body.document), "over-strictness: the capture unchanged");
 });
 
 test("R14 R16 R31: transport, the chain, the capture block, the origin and the file", async () => {
