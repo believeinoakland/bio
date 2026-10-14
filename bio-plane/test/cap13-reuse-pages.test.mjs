@@ -106,7 +106,7 @@ const signIn = async () => {
   if (!add || !add.invite) throw new Error(`memberadd: ${JSON.stringify(add)}`);
   const en = await post("op=enroll", { invite: add.invite, handle: "m1", password: "m1-passphrase-c13" });
   if (!en || !en.ok) throw new Error(`enroll: ${JSON.stringify(en)}`);
-  const lg = await post("op=login", { role: "member:m1", password: "m1-passphrase-c13" });
+  const lg = await post("op=login", { handle: "m1", password: "m1-passphrase-c13" });
   if (!lg || !lg.token) throw new Error(`login: ${JSON.stringify(lg)}`);
   return { authorization: `Bearer ${lg.token}` };
 };

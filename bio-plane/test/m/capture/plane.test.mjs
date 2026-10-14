@@ -53,7 +53,7 @@ const signedIn = async () => {
   if (!invite) throw new Error(`memberadd: ${JSON.stringify(add)}`);
   const en = unwrap((await send("op=enroll", { method: "POST", body: JSON.stringify({ invite, handle: "m1", password: "m1-passphrase-capture" }) })).body);
   if (!en || !en.ok) throw new Error(`enroll: ${JSON.stringify(en)}`);
-  const lg = unwrap((await send("op=login", { method: "POST", body: JSON.stringify({ role: "member:m1", password: "m1-passphrase-capture" }) })).body);
+  const lg = unwrap((await send("op=login", { method: "POST", body: JSON.stringify({ handle: "m1", password: "m1-passphrase-capture" }) })).body);
   if (!lg || !lg.token) throw new Error(`login: ${JSON.stringify(lg)}`);
   return (session = lg.token);
 };
