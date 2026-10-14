@@ -1695,7 +1695,12 @@ export function unaccounted(opTable) {
   const unpublished = [...all].filter((op) => !published.has(op) && !has(NON_ACTS, op));
   const unranked = [...mutating].filter((op) => !has(RUNGS, op) && !has(RUNG_ABSENT, op));
   const stale = [...new Set([
-    ...[...Object.keys(RUNGS), ...Object.keys(RUNG_ABSENT)].filter((op) => !mutating.has(op)),
+    ...Object.keys(RUNGS).filter((op) => !mutating.has(op)),
+    /* T48 (`op-grades` R39; K3301): an op held `caller-owned` without a rung (a member's own request or own read, such as
+       `groupdescriptiondraft` and `securitymap`) is accounted for carried as mutating or, being drawn with no weight, as a gated
+       read the door declares `ownread`; any other absence ground still wants the mutating row. */
+    ...Object.keys(RUNG_ABSENT).filter((op) => !mutating.has(op)
+      && !(RUNG_ABSENT[op]?.ground === "caller-owned" && all.has(op))),
     ...Object.keys(NON_ACTS).filter((op) => !all.has(op)),
   ])];
   return { unpublished: unpublished.sort(), unranked: unranked.sort(), stale: stale.sort() };

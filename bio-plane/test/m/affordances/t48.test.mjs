@@ -155,3 +155,20 @@ test("R12 R24 R58: T48's ops — each owner's map holds them; each write decorat
   const left = A.unaccounted([...table, { op: "planunnamed", mutating: true, gated: true }]);
   assert.deepEqual([left.unpublished, left.unranked], [["planunnamed"], ["planunnamed"]]);
 });
+
+test("R12 R39: an op op-grades holds `caller-owned` without a rung is accounted for carried as a gated read as well as as a write "
+   + "(groupdescriptiondraft, securitymap); carried by no row it reads stale; any other absence ground, and any ranked op, still "
+   + "wants the mutating row (controls)", () => {
+  for (const op of ["groupdescriptiondraft", "securitymap"]) {
+    assert.equal(RUNG_ABSENT[op].ground, "caller-owned", op);
+    assert.equal(A.unaccounted([{ op, mutating: false, gated: true }]).stale.includes(op), false, `${op} as a read`);
+    assert.equal(A.unaccounted([{ op, mutating: true, gated: true }]).stale.includes(op), false, `${op} as a write`);
+    assert.equal(A.unaccounted([]).stale.includes(op), true, `${op} carried by no row`);
+    assert.equal(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), true, `${op} carried as an ungated read`);
+  }
+  /* controls: a ranked op, and an op in another ground, carried only as a read, stay stale */
+  const ranked = Object.keys(RUNGS)[0];
+  assert.equal(A.unaccounted([{ op: ranked, mutating: false, gated: true }]).stale.includes(ranked), true);
+  const other = Object.keys(RUNG_ABSENT).find((op) => RUNG_ABSENT[op].ground !== "caller-owned");
+  assert.equal(A.unaccounted([{ op: other, mutating: false, gated: true }]).stale.includes(other), true, other);
+});
