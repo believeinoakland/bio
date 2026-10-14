@@ -366,7 +366,10 @@ function everyKind() {
     localFacts: { factsDue: () => ({ ok: true, unknown: [], absent: [], due: [{ path: "profile:p/hours/clerk", fact: {}, status: "unconfirmed",
       due: true, why: "w", latest: null, due_from: "2026-08-01" }] }) },
     following: { watchQuestions: () => ({ ok: true, cursor: null, questions: [{ link: 1, plan: "PLN-1", matters: [], watch: { kind: "follow", id: "F", ends: null },
-      due_at: iso(NOW), cause: "closed", relied_on: false, offered: ["keep", "stop"], recipients: ["alice"] }] }) } });
+      due_at: iso(NOW), cause: "closed", relied_on: false, offered: ["keep", "stop"], recipients: ["alice"] }] }) },
+    /* R25 (T47): a request alice approved and nobody recorded sent */
+    filings: { approvedUnsent: () => ({ ok: true, truncated: false, items: [
+      { filing: "FIL-1", action: "ACT-1", project: "PRJ-1", approved_by: "alice", approved_at: iso(NOW - DAY) }] }) } });
   w.fakes.actionClocks.remindersDue = () => page([{ action: "ACT-1", ord: 1, date: day(NOW + 3 * DAY), basis: "b", text: "t", on: day(NOW), set_by: "alice", project: "PRJ-1" }]);
   w.fakes.actionClocks.calendarFactsRead = () => ({ ok: true, actions_limit: 500, truncated: false,
     paths: [{ path: "profile:p/hours/clerk", actions: [{ action: "ACT-1", project: "PRJ-1", created_by: "alice" }] }] });
@@ -378,7 +381,7 @@ function everyKind() {
 }
 const KINDS = ["action-clock-overdue", "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder", "litigation-hold",
   "litigation-hold-released", "template-review-requested", "local-fact-due", "member-left-items", "watch-keep-or-stop",
-  "plan-review-due", "plan-look-again"];
+  "plan-review-due", "plan-look-again", "request-unsent"];
 
 test("R11: each Action-layer kind's options lead with its doors, in order, before queue's acts; a kind outside R11 (R8's finding) has none of them; nothing offers to mark it resolved", () => {
   const r = everyKind().read("alice");
@@ -406,7 +409,7 @@ test("R11: each Action-layer kind's options lead with its doors, in order, befor
   for (const it of r.items) assert.ok(!it.options.some((o) => /resolve/.test(o.id)), `${it.id}: never "mark resolved"`);
 });
 
-test("R13: actionItems answers every kind R1–R12 derive, with facts stating each producer's bound; no item carries disposition or catalogue_id; a provider that throws is named in facts.failed and the rest stand; it writes nothing", () => {
+test("R13, R25: actionItems answers every kind R1–R12 and R25 derive, with facts stating each producer's bound; no item carries disposition or catalogue_id; a provider that throws is named in facts.failed and the rest stand; it writes nothing", () => {
   const w = everyKind();
   const before = w.statements.length;
   const r = w.read("alice");
@@ -446,14 +449,13 @@ test("R14: no answer names a bundle the viewer may not see, and no count reveals
   assert.ok(/PLN-H/.test(JSON.stringify(w.read("hank"))), "control: its owner is told");
 });
 
-test("R15: a CONDITION earns an item only where a member's act can change it: the one CONDITION kind offers the acts that answer it", () => {
+test("R15, R25: a CONDITION earns an item only where a member's act can change it: each CONDITION kind offers the acts that answer it", () => {
   const r = everyKind().read("alice");
   const conds = r.items.filter((i) => i.class === "CONDITION");
-  assert.ok(conds.length > 0);
-  for (const it of conds) {
-    assert.equal(it.kind, "action-clock-overdue", it.id);
-    assert.ok(it.options.some((o) => o.id === "actioncorrespond"), `${it.id}: recording a reply changes it`);
-  }
+  /* recording a reply or stating the entry met changes R1's; sending it or dropping it (actionmove) changes R25's */
+  const ANSWERS = { "action-clock-overdue": "actioncorrespond", "request-unsent": "actionmove" };
+  assert.deepEqual([...new Set(conds.map((i) => i.kind))].sort(), Object.keys(ANSWERS).sort(), "the two CONDITION kinds");
+  for (const it of conds) assert.ok(it.options.some((o) => o.id === ANSWERS[it.kind]), `${it.id}: ${ANSWERS[it.kind]} changes it`);
 });
 
 test("R16: no place is named in this module's behaviour or outward text", () => {
