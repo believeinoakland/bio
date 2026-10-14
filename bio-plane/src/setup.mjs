@@ -1,11 +1,14 @@
 /* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R85).
  *
- * THE PAGE AT THE ROOT is gone (R83; N1002): `/` answers the interface, so this module composes and serves no page and
- * exports none (`setupPage`, `groupLine` and `SETUP_HTML` removed, with the use of `setup-page`). What stays is R47's one
- * holder of the words on who controls the group's Civicsmith, `HOSTING_CONTROL` (in `setup-fleet.mjs`, re-exported
- * here), which `screens-entry` and the installer read.
+ * THE PAGE AT THE ROOT is going (R83; N1002): `/` answers the interface, so this module composes no page of its own;
+ * `SETUP_HTML` and `groupLine` are gone, and `setupPage` stays exported, retiring, only until `control-plane` drops its
+ * import (R86; K3144, T47-65), then goes with the use of `setup-page`. What stays is R47's one holder of the words on
+ * who controls the group's Civicsmith, `HOSTING_CONTROL` (in `setup-fleet.mjs`, re-exported here), which
+ * `screens-entry` and the installer read.
  */
 
+/* RETIRING (R86; K3144): setup-page's template, read only for the retiring `setupPage` below until T47-65. */
+import { PAGE_HTML, HOSTING_SLOT, GROUP_LINE_UNREAD, groupLine, ROTATION_GUIDE_HREF } from "./setup-page/index.mjs";
 /* The Civicsmith agent's one composer is acquisition's (its R24), read there and never copied. */
 import { civicsmithUserAgent } from "./acquisition/index.mjs";
 /* R64 (N700): a language tag is read by jurisdictions' `isLocale` (its R37), never by a reading of this module's own. */
@@ -46,6 +49,15 @@ import { AiRuns } from "./ai-runs/index.mjs";
 /* R47, R83: the words on who controls the group's Civicsmith, held once in the leaf the installer imports, re-exported for
    the screens that show them (`screens-entry`). */
 export { HOSTING_CONTROL, hostingControlBlock };
+
+/* RETIRING (R86; K3144): `control-plane` still serves the setup page at `/` until its T47-65 answers the interface there
+   (its R82), so `setupPage` stays exported, composed as before, only until then; it is removed (R83) on BOB's CHANGE
+   after that merge. Nothing else here serves or composes a page. */
+const RETIRING_SETUP_HTML = PAGE_HTML.replace(HOSTING_SLOT, () => hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF }));
+/** RETIRING (R86): the setup page as `control-plane`'s `/` route serves it until T47-65; removed on BOB's CHANGE. */
+export function setupPage(read) {
+  return RETIRING_SETUP_HTML.replace(GROUP_LINE_UNREAD, () => groupLine(read));
+}
 
 /* ============================================================================================================
  * THE INSTANCE: WHAT A GROUP'S CIVICSMITH IS AND WHOSE IT IS (instance-setup R1–R42). The module's own store-side and
@@ -848,23 +860,55 @@ async function sha256OfBytes(bytes) {
   const d = await crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
-/* R84: a logo as sent, read: `{raw, data, type, bytes}` (`data` the canonical base64), or `{why}`. The base64 is read
-   strictly and its length bounded before it is decoded; the type is the magic bytes' alone. */
+/* R84, R86: a logo as sent, read: `{raw, type, bytes}` or `{why}`. `raw` is the file's bytes (a Uint8Array, an
+   ArrayBuffer, or the request's own stream, read only up to the bound), or, where the bytes reach the store inside JSON,
+   their base64; `rawType` is the type the sender declared, which must agree with the magic bytes when given. The type is
+   the magic bytes' alone. */
 const BASE64_RE = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
-function readLogo(image) {
-  if (typeof image !== "string") return { why: "the logo is sent as the picture's bytes in base64, and none was sent" };
-  const m = /^data:([^;,]*);base64,/i.exec(image);
-  const b64 = (m ? image.slice(m[0].length) : image).replace(/\s+/g, "");
-  if (!b64) return { why: "the logo sent is empty" };
-  if (b64.length > Math.ceil(GROUP_LOGO_MAX_BYTES / 3) * 4) return { why: `the logo is over ${GROUP_LOGO_MAX_BYTES} bytes` };
-  if (!BASE64_RE.test(b64)) return { why: "the logo is not base64" };
-  let raw;
-  try { raw = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)); } catch { return { why: "the logo is not base64" }; }
-  if (raw.length > GROUP_LOGO_MAX_BYTES) return { why: `the logo is ${raw.length} bytes, over ${GROUP_LOGO_MAX_BYTES}` };
-  const kind = GROUP_LOGO_TYPES.find((t) => raw.length > t.magic.length && t.magic.every((b, i) => raw[i] === b));
-  if (!kind) return { why: "the logo is neither a PNG nor a JPEG picture" };
-  return { raw, data: b64, type: kind.type, bytes: raw.length };
+async function bytesOfLogo(raw) {
+  if (raw instanceof Uint8Array) return raw;
+  if (raw instanceof ArrayBuffer) return new Uint8Array(raw);
+  if (ArrayBuffer.isView(raw)) return new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength);
+  if (raw && typeof raw.getReader === "function") {
+    const reader = raw.getReader();
+    const parts = [];
+    let held = 0;
+    try {
+      while (held <= GROUP_LOGO_MAX_BYTES) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = value instanceof Uint8Array ? value : new Uint8Array(value);
+        parts.push(chunk);
+        held += chunk.length;
+      }
+    } finally { try { await reader.cancel(); } catch { /* already closed */ } }
+    const all = new Uint8Array(held);
+    let at = 0;
+    for (const p of parts) { all.set(p, at); at += p.length; }
+    return all;
+  }
+  if (typeof raw === "string") {
+    const b64 = raw.replace(/\s+/g, "");
+    if (b64.length > Math.ceil((GROUP_LOGO_MAX_BYTES + 1) / 3) * 4 + 4) return new Uint8Array(GROUP_LOGO_MAX_BYTES + 1);
+    if (!BASE64_RE.test(b64)) return null;
+    try { return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)); } catch { return null; }
+  }
+  return null;
 }
+async function readLogo(raw, rawType) {
+  if (raw === undefined) return { why: "the logo is sent as the file's bytes, and none was sent" };
+  const bytes = await bytesOfLogo(raw);
+  if (!bytes) return { why: "the logo sent is not a file's bytes" };
+  if (!bytes.length) return { why: "the logo sent is empty" };
+  if (bytes.length > GROUP_LOGO_MAX_BYTES) return { why: `the logo is over ${GROUP_LOGO_MAX_BYTES} bytes` };
+  const kind = GROUP_LOGO_TYPES.find((t) => bytes.length > t.magic.length && t.magic.every((b, i) => bytes[i] === b));
+  if (!kind) return { why: "the logo is neither a PNG nor a JPEG picture" };
+  const said = typeof rawType === "string" ? rawType.split(";")[0].trim().toLowerCase() : rawType == null ? "" : null;
+  if (said === null || (said && said !== kind.type))
+    return { why: `the logo is a ${kind.type === "image/png" ? "PNG" : "JPEG"} picture sent as ${String(rawType).slice(0, 40)}` };
+  return { raw: bytes, type: kind.type, bytes: bytes.length };
+}
+const base64Of = (bytes) => { let t = ""; for (let i = 0; i < bytes.length; i += 0x8000) t += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(t); };
 
 /* R54 (D311): the assistant's disclosure. Its words are the design stream's (NOTICE to UX-DESIGN) and are shown by the
    surface; this module holds the version a shown disclosure is recorded against, and the meaning the words carry. A new
@@ -1419,21 +1463,21 @@ export class InstanceSetup {
     return r && typeof r.data === "string" && r.data ? r : null;
   }
 
-  /** R84, op=grouplogoset: an administrator sets the group's logo, `image` the picture's bytes in base64 (a `data:` URL
-   *  of base64 is read the same way), or clears it with `image: null`. `by` is the control plane's stamp (R29).
-   *  Refusals, each writing nothing: `NOT_AN_ADMIN` (a machine included); `LOGO_REFUSED` for anything that is not a PNG
-   *  or a JPEG of at most `GROUP_LOGO_MAX_BYTES`. */
-  async groupLogoSet({ image = undefined, by = null } = {}) {
+  /** R84, R86, op=grouplogoset: an administrator sets the group's logo, `raw` the file's bytes as the request body and
+   *  `rawType` its declared type, or clears it with `raw: null`. `by` is the control plane's stamp (R29). Refusals, each
+   *  writing nothing: `NOT_AN_ADMIN` (a machine included); `LOGO_REFUSED` for anything that is not a PNG or a JPEG of at
+   *  most `GROUP_LOGO_MAX_BYTES`, or whose declared type is not what its magic bytes say. */
+  async groupLogoSet({ raw = undefined, rawType = null, by = null } = {}) {
     const who = typeof by === "string" ? by.trim() : "";
     if (!who || isMachineIdentity(who) || !this.#isAdmin(who))
       return notAnAdmin(by ?? null, "setting your group's logo");
     let logo = null;
-    if (image !== null) {
-      const read = readLogo(image);
+    if (raw !== null) {
+      const read = await readLogo(raw, rawType);
       /* DEC-49 REGION is-group-logo */
       if (read.why) return refusal("LOGO_REFUSED", `${read.why}. Nothing was changed.`);
       /* END DEC-49 REGION is-group-logo */
-      logo = { ...read, sha256: await sha256OfBytes(read.raw) };
+      logo = { ...read, data: base64Of(read.raw), sha256: await sha256OfBytes(read.raw) };
     }
     const at = this.#iso();
     this.#sql.exec(`INSERT INTO group_logos (data, type, bytes, sha256, set_by, set_at) VALUES (?, ?, ?, ?, ?, ?)`,
@@ -1444,11 +1488,20 @@ export class InstanceSetup {
                         : "no logo from now on: your group's name stands alone." };
   }
 
-  /** R84, the logo read control-plane serves in public (its R84): `{ok: true, logo: {type, bytes, sha256, data, set_at}}`
-   *  with the picture in base64, or `logo: null` when none is set. Writes nothing. */
+  /** R84, in-process: `{ok: true, logo: {type, bytes, sha256, data, set_at}}` with the picture in base64, or `logo: null`
+   *  when none is set. Writes nothing. */
   groupLogo() {
     const r = this.#logoCurrent();
     return { ok: true, logo: r ? { type: r.type, bytes: r.bytes, sha256: r.sha256, data: r.data, set_at: r.set_at } : null };
+  }
+
+  /** R86, the store-internal route `grouplogo` (no spec): the logo's bytes with their `content-type`, `no-store` and
+   *  `nosniff`, or 404 with no body when none is set; `control-plane` R84 serves it at `/app/assets/group-logo`. */
+  groupLogoResponse() {
+    const r = this.#logoCurrent();
+    if (!r) return new Response(null, { status: 404, headers: { "cache-control": "no-store" } });
+    return new Response(Uint8Array.from(atob(r.data), (c) => c.charCodeAt(0)), { status: 200,
+      headers: { "content-type": r.type, "cache-control": "no-store", "x-content-type-options": "nosniff" } });
   }
 
   /* =====================================================================
@@ -1480,14 +1533,14 @@ export class InstanceSetup {
                + "join. The places whose rules apply are not changed." };
   }
 
-  /** R85, op=grouplanguages (public): `{ok: true, languages, source}`, the list an administrator set (`source: "group"`),
-   *  or, while none is set, the active profiles' languages in their order, each once (`source: "profiles"`, `[]` when no
-   *  profile states one, said so). Writes nothing; never throws. */
+  /** R85, R86, op=grouplanguages (public): `{ok: true, languages: [tags]}`, the list an administrator set, or, while none
+   *  is set, the active profiles' languages in their order, each once (`[]` when no profile states one). Writes nothing;
+   *  never throws. */
   groupLanguages() {
     try {
       const held = this.#record().getSetting(GROUP_LANGUAGES_SETTING);
       if (Array.isArray(held) && held.length && held.every((t) => typeof t === "string"))
-        return { ok: true, languages: [...held], source: "group" };
+        return { ok: true, languages: [...held] };
       const out = [];
       for (const { p } of this.#activeProfiles()) {
         const l = p && p.locale;
@@ -1497,8 +1550,7 @@ export class InstanceSetup {
           if (!out.includes(tag)) out.push(tag);
         }
       }
-      return { ok: true, languages: out, source: "profiles",
-               ...(out.length ? {} : { detail: "no languages are set for your group, and no active profile states one" }) };
+      return { ok: true, languages: out };
     } catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
                detail: `the languages could not be read (${String(e && e.message || e).slice(0, 160)}).` };
@@ -3183,8 +3235,13 @@ export function instanceSetupOps(m, url, body) {
     infolevel: () => m.infoLevel({ viewer: q("viewer") }),
     adminrecoverystep: () => m.adminRecoveryStep({ viewer: q("viewer") }),
     /* R84, R85 (T47; DEC-205): the group's logo and languages; `grouplogo` is the read control-plane serves. */
-    grouplogoset: () => m.groupLogoSet({ ...(body || {}), by: q("by") }),
-    grouplogo: () => m.groupLogo(),
+    /* R86: the logo's bytes are the request's body (a stream or bytes as the door hands them on, with `rawType` its
+       content-type stamped in the query), or a JSON `{raw, rawType}` (`raw` base64, or null to clear). */
+    grouplogoset: () => (body && typeof body === "object" && !ArrayBuffer.isView(body) && !(body instanceof ArrayBuffer)
+      && typeof body.getReader !== "function"
+      ? m.groupLogoSet({ raw: body.raw, rawType: body.rawType ?? null, by: q("by") })
+      : m.groupLogoSet({ raw: body ?? undefined, rawType: q("rawType"), by: q("by") })),
+    grouplogo: () => m.groupLogoResponse(),
     grouplanguagesset: () => m.groupLanguagesSet({ ...(body || {}), by: q("by") }),
     grouplanguages: () => m.groupLanguages(),
     /* R77 (T45): the administrators' act setting the group's declared stake. */
@@ -3255,21 +3312,18 @@ export async function groupIdentityOp(env, storeName, { viewer = null, cls = nul
   return json({ ok: true, result: out.result, store: storeName, ...(viewer ? { tokenClass: cls } : {}) }, 200);
 }
 
-/** R84 (DEC-205 (2); control-plane R84): the group's logo as served in public at `/app/assets/group-logo`: its bytes with
- *  the type its magic bytes named, `no-store` and `nosniff`; 404 with no body when none is set; a store that does not
- *  answer is a silence (R43). */
+/** R84, R86 (control-plane R84): the group's logo as served in public at `/app/assets/group-logo`, the store-internal
+ *  route `grouplogo`'s bytes and headers relayed as given; 404 with no body when none is set; any other answer, or none,
+ *  is a silence (R43). */
 export async function groupLogoAsset(env, storeName, io) {
-  const { doAnswer } = io;
-  let out;
-  try { out = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/grouplogo")); }
-  catch { out = { answered: false }; }
-  if (!out.answered) return notAnswered(out, "grouplogo", io);
-  const logo = out.result && out.result.logo;
-  if (!logo || typeof logo.data !== "string" || !GROUP_LOGO_TYPES.some((t) => t.type === logo.type))
-    return new Response(null, { status: 404, headers: { "cache-control": "no-store" } });
-  const raw = Uint8Array.from(atob(logo.data), (c) => c.charCodeAt(0));
-  return new Response(raw, { status: 200, headers: { "content-type": logo.type, "cache-control": "no-store",
-                                                     "x-content-type-options": "nosniff" } });
+  let res = null;
+  try { res = await env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/grouplogo"); } catch { res = null; }
+  const type = res ? String(res.headers.get("content-type") || "").split(";")[0].trim() : "";
+  if (res && res.status === 200 && GROUP_LOGO_TYPES.some((t) => t.type === type))
+    return new Response(res.body, { status: 200, headers: { "content-type": type, "cache-control": "no-store",
+                                                            "x-content-type-options": "nosniff" } });
+  if (res && res.status === 404) return new Response(null, { status: 404, headers: { "cache-control": "no-store" } });
+  return io.storeSilent("grouplogo");
 }
 
 /** R17, op=bootstrap: this isolate's `version`, `bootstrapConfigured` (a live ADMIN_TOKEN), membership's
