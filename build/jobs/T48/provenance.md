@@ -32,3 +32,7 @@
 - `node checks/run.mjs`: format 0, architecture 0 (product-wide), channels 0. Coverage shows 46 failures, none of them provenance's: other modules' ids under rule 5 (1).
 
 Size (session_01PqqkBRacNLFApQsCjtWdyA): test runs 9, module lines 2868
+
+## J1 · COMPLETE
+
+T48-14 applied: register.registered is the first registration's instant, last_registered the latest (schema column, backfilled at boot from registered); a gone home starts both anew. mk6 signs in by {handle} and re-authenticates before signing (REAUTH_DUE), 10/0. provenance 135/135; format, architecture, coverage, ownership 0 failures; users' reds identical with my change reverted. Record: Completion.
