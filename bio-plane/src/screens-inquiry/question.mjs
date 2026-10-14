@@ -3,7 +3,11 @@
  * Self-contained functions (interface-shell R21 (1)): each refers only to its parameters, `cs` and the language's own
  * globals. The question is the inquiry `view.subject`. Its strength is two grades and a phrase against the bar, never one
  * score (DEC-82, DEC-160); the bar is the project's, read once the inquiry names its project (`strengthbarof`), else the
- * group's. Supports and Cuts against are the current basis version's legs by their role (`supports`, `cuts_against`). */
+ * group's. Supports and Cuts against are the current basis version's legs by their role (`supports`, `cuts_against`).
+ * A leg is live or severed as the inquiry's own `references[]` entry naming its target says (`citation` R15): `sever` is
+ * drawn on each live leg (`confirmed` or `proposed`) and `reinstate` on each severed one, each with the member's reason,
+ * the question its citing object and a selection of the leg's target (R12); a severed leg stays in its section, drawn
+ * severed with its reason. */
 
 import { OWN, ownRows } from "./words.mjs";
 
@@ -39,16 +43,25 @@ function render(cs, view) {
   const id = String(view.subject || "");
   const ui = view.ui;
   const d = view.data || {};
+  /* the front matter: top-level scalars, and the `references` list as {target, rel, status, note} */
   const front = (text) => {
-    const out = {};
+    const out = { refs: [] };
     if (typeof text !== "string") return out;
     const head = text.replace(/^---\s*\n/, "").split(/\n---\s*(\n|$)/)[0];
+    let inRefs = false, cur = null;
+    const val = (v) => { v = v.trim(); try { if (v.startsWith("\"")) v = JSON.parse(v); } catch { /* raw */ } return v; };
     for (const line of head.split("\n")) {
+      if (/^references:\s*$/.test(line)) { inRefs = true; continue; }
+      if (inRefs && /^\s+-\s*/.test(line)) { cur = {}; out.refs.push(cur); }
+      if (inRefs && /^\s+/.test(line) && cur) {
+        const r = /^\s+(?:-\s*)?(\w+):\s*(.*)$/.exec(line);
+        if (r) cur[r[1]] = val(r[2]);
+        continue;
+      }
+      inRefs = false;
       const m = /^(\w+):\s*(.*)$/.exec(line);
       if (!m) continue;
-      let v = m[2].trim();
-      try { if (v.startsWith("\"")) v = JSON.parse(v); } catch { /* raw */ }
-      out[m[1]] = v;
+      out[m[1]] = val(m[2]);
     }
     const q = /\n## Question\s*\n+([\s\S]*?)(\n## |$)/.exec(text);
     out.question = q ? q[1].trim() : "";
@@ -136,7 +149,13 @@ function render(cs, view) {
     }).join("");
   })));
 
-  /* the current basis version's legs, by role */
+  /* the current basis version's legs, by role; each live or severed by the inquiry's own reference to its target */
+  const refOf = (target) => (doc ? doc.refs.find((r) => String(r.target || "") === target) : null);
+  const whyOf = (note) => {
+    /* citation R4's note: "<earlier> | Severed <ISO time>: <reason>" */
+    const m = /(?:^|\|\s*)Severed (\S+): ([^|]*)$/.exec(String(note || "").trim());
+    return m ? m[2].trim() : "";
+  };
   const cur = (b) => {
     const vs = Array.isArray(b.versions) ? b.versions : [];
     const name = b.current && typeof b.current === "object" ? b.current.name : b.current;
@@ -151,13 +170,17 @@ function render(cs, view) {
       const scale = l.scale || (role === "cuts_against" && l.testimony ? "testimony" : "capture");
       const target = String(l.target || l.target_id || "");
       const facts = [l.target_title || target, l.extent_page ? cs.w("screen.document.passage.where", { page: l.extent_page }) : ""].filter(Boolean);
-      const severed = l.status === "severed" || l.severed === true;
+      const ref = refOf(target);
+      const status = ref ? String(ref.status || "") : (l.status === "severed" || l.severed === true ? "severed" : "");
+      const severed = status === "severed";
+      const why = severed ? whyOf(ref && ref.note) : "";
+      const live = status === "confirmed" || status === "proposed";
       return cs.row(g ? cs.grade(scale, g) : cs.mark("gap", "unrated"),
         (l.words ? `<span class="cs-rec">“${cs.esc(l.words)}”</span>` : "")
         + `<span class="cs-meta">${cs.ref("document", target, l.target_title || target, facts)}`
-        + (severed ? ` · ${cs.w("screen.question.leg.severed")}` : "") + "</span>",
-        /* not drawn in T46: `sever` and `reinstate`, which act only on a project's `cites` edges (K3003; N977) */
-        "");
+        + (severed ? ` · <span data-leg="severed">${why ? cs.w("screen.question.leg.severed.why", { why }) : cs.w("screen.question.leg.severed")}</span>` : "") + "</span>",
+        live ? cs.act("sever", { label: "act.sever.label.question", data: { target } })
+          : severed ? cs.act("reinstate", { label: "act.reinstate.label.question", data: { target } }) : "");
     }).join(""));
   };
   out.push(cs.sec("screen.question.supports.head", cs.state("basis", view, (b) => legRows(b, "supports"))
@@ -204,8 +227,8 @@ function render(cs, view) {
   return out.join("");
 }
 
-/** R2's acts (nine in T46: `sever` and `reinstate` are not drawn, K3003), each answering `{query, body}` for the shell
- *  to send, or opening another screen and sending nothing (`findin`'s scope and `search` live on `screens-daily`'s screens). */
+/** R2's acts, each answering `{query, body}` for the shell to send, or opening another screen and sending nothing
+ *  (`findin`'s scope and `search` live on `screens-daily`'s screens). */
 const acts = [
   { op: "cite", label: "act.cite.label.question",
     /* the passage is chosen where passages are: a document's (its per-passage cite names this question), or Find in over
@@ -276,6 +299,16 @@ const acts = [
       if (!label || !note) return { refuse: "screen.question.check.empty" };
       return { body: { target: String(view.subject || ""), label, note } };
     } },
+  /* R12: the leg's target selected first (`citation` takes a selection handle), then the act on the question as its
+     citing object; the member's reason is the shell's (their weight's, interface-shell R11), carried in the query where
+     `citation` reads it (`raw`) */
+  ...["sever", "reinstate"].map((op) => ({ op, label: "act." + op + ".label.question", rereads: ["inquiry", "basis", "strength"],
+    async send(view, el, cs) {
+      const s = await cs.call("select", { body: { ids: [String(el.dataset.target || "")] } }).then((a) => a, () => null);
+      const sr = s && s.result !== undefined ? s.result : s;
+      if (!s || s.ok === false || !sr || sr.ok === false || !sr.handle) return { refuse: "screen.question.leg.unselectable" };
+      return { query: { project: String(view.subject || ""), handle: String(sr.handle) }, raw: "" };
+    } })),
   { op: "heldrestore", label: "act.heldrestore.label.question",
     send(view, el) { return { body: { ids: [el.dataset.doc || ""] } }; } },
   { op: "search", label: "act.search.label.question",
@@ -285,7 +318,7 @@ const acts = [
 /** The keys the question screen may draw. */
 const words = [
   "screen.question.name", "screen.question.purpose",
-  ...["cite", "narrow", "conclude", "withdrawconclusion", "hypothesishold", "planopen", "checkrequest", "heldrestore", "search"]
+  ...["cite", "sever", "reinstate", "narrow", "conclude", "withdrawconclusion", "hypothesishold", "planopen", "checkrequest", "heldrestore", "search"]
     .flatMap((op) => ["act." + op + ".label.question", "act." + op + ".does"]),
   "mark.scale.capture.name", "mark.scale.capture.means", "mark.scale.connection.name", "mark.scale.connection.means",
   "mark.scale.testimony.name", "mark.scale.testimony.means", "mark.grade.reading", "mark.strength.means", "mark.hunch.means",

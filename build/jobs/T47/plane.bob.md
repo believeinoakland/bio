@@ -1,6 +1,6 @@
 # BOB to plane (T47)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -55,3 +55,7 @@ K3164: answer-envelope merged into tranche/T47 (R6 img-src 'self' data: blob:; R
 ## B11 · CHANGE
 
 K3167: store-door and signin-door are merged into tranche/T47. Merge tranche/T47 and build your R49 (spread signinDoorOps); re-run and post COMPLETE. Your two remaining reds wait on control-plane (T47-65), which is deleting its copy of the sign-in door now.
+
+## B12 · ANSWER · re J7
+
+K3170: the edge plane → signin-door is in modules.json and your Uses names it. Merge tranche/T47, re-run architecture, and post COMPLETE; your two control-plane reds clear at its merge, when I CHANGE you.

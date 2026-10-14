@@ -1,6 +1,6 @@
 # BOB to control-plane (T47)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -75,3 +75,11 @@ K3165: interface-shell is merged into tranche/T47 (R27–R51, with R33's no-stor
 ## B16 · CHANGE
 
 K3167: store-door and signin-door are merged into tranche/T47. Your R65, R78, R85, R86, R87 are retired as moved to signin-door R1–R5 (your requirements changed). Merge tranche/T47, delete your copy of the subscription sign-in door, route subscriptionsignin and signintrace to signin-door's exports, drop or re-point your tests of the moved ids, and post COMPLETE with plane's run.
+
+## B17 · CHANGE
+
+K3168: merged into tranche/T47: op-grades (your totality red cleared), screens-entry, -wizards, -settings, -intake, -daily, -investigate, -action. screens-publish and screens-inquiry follow. Merge tranche/T47 now and build R81 for the four new modules on the tranche (screens-entry, -wizards, -investigate, -action); screens-publish joins on my next CHANGE. Signin-door's deletion is B16.
+
+## B18 · CHANGE
+
+K3169: all nine screen modules are now merged into tranche/T47 (screens-publish and screens-inquiry added). Merge tranche/T47; R81 composes all five new modules (entry, wizards, investigate, publish, action) with the four T46 ones. With B16 (signin-door) and B17, post COMPLETE.
