@@ -482,6 +482,8 @@ w('review.statement.note', 'Your note', False, 'DEC-240: the reason statementack
 w('review.statement.note.help', 'Required. Say what you read, for example that the gap is fairly stated. Readers of the published case are told that you acknowledged it.', False, 'DEC-240')
 w('review.statement.ack', 'Acknowledge it', False, 'DEC-240: statementack, reasoned')
 w('instance.test.band', 'Test Civicsmith', False, 'DEC-240: N1049, the band\'s name before instance.test.notice')
+# DEC-241: the phone's More page (R63); the line beneath each place is rail.<k>.line, derived in build_words.mjs
+w('screen.more.sub', 'The places the tabs below do not hold.', False, 'DEC-241: the More page\'s heading line')
 
 json.dump(W, open(os.path.join(HERE, 'words-t48.json'), 'w'), indent=1, ensure_ascii=False)
 print(f'words-t48.json: {len(W)} entries, {sum(x["protected"] for x in W)} protected')

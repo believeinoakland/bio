@@ -2632,5 +2632,11 @@
   "en": "Test Civicsmith",
   "protected": false,
   "note": "DEC-240: N1049, the band's name before instance.test.notice"
+ },
+ {
+  "key": "screen.more.sub",
+  "en": "The places the tabs below do not hold.",
+  "protected": false,
+  "note": "DEC-241: the More page's heading line"
  }
 ]

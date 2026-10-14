@@ -928,6 +928,16 @@
    ]
   },
   {
+   "id": "more",
+   "name": "More",
+   "frame": "working",
+   "purpose": "The phone's More tab: the rail's places the tabs do not hold (Projects, People, Settings), each a row with its icon and name and a line saying what it holds; never a bare list. On a desktop the rail shows them (DEC-241; R63, K3250).",
+   "acts": [],
+   "journeys": [
+    2
+   ]
+  },
+  {
    "id": "updates",
    "name": "Updates",
    "frame": "working",

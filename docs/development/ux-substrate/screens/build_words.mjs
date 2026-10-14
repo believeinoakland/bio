@@ -277,6 +277,8 @@ for (const x of JSON.parse(R('words-t48.json'))) add(x.key, x.en, x.protected, (
 
 // 5. The frame: rail, phone tabs, explanation levels
 for (const [k, name] of W.RAIL) { add(`rail.${k}.name`, name, false, 'mock-shell.js RAIL'); if (W.RAIL_HELP[k]) add(`rail.${k}.holds`, W.RAIL_HELP[k], false, 'mock-refs.js RAIL_HELP'); }
+// DEC-241: the line beneath a place's name on the phone's More page: its rail.<k>.holds after the name, capitalized.
+for (const [k] of W.RAIL) if (W.RAIL_HELP[k] && !W.TABS.some(([t]) => t === k)) { const s = W.RAIL_HELP[k].replace(/^[^:]+:\s*/, ''); add(`rail.${k}.line`, s[0].toUpperCase() + s.slice(1), false, 'DEC-241: the More page, derived from rail.<k>.holds'); }
 for (const [k, name] of W.TABS) if (!W.RAIL.some(r => r[0] === k)) add(`tab.${k}.name`, name, false, 'mock-shell.js TABS');
 add('tab.more.holds', must(shell, 'mock-shell.js', 'projects, people and settings.'), false, 'mock-shell.js decorate');
 add('level.prompt.name', 'Explain promptly', false, 'DEC-175');

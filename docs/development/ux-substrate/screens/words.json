@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 153,
+  "screen": 156,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -71,12 +71,12 @@
   "law": 8,
   "action": 4,
   "review": 5,
-  "rail": 14,
+  "rail": 17,
   "tab": 2,
   "level": 2,
   "act": 695,
   "column": 33,
-  "total": 2324,
+  "total": 2330,
   "protected": 719
  },
  "words": [
@@ -7583,6 +7583,13 @@
    "note": "DEC-240: N1049, the band's name before instance.test.notice"
   },
   {
+   "key": "screen.more.sub",
+   "en": "The places the tabs below do not hold.",
+   "protected": false,
+   "source": "DEC-241",
+   "note": "DEC-241: the More page's heading line"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -7665,6 +7672,24 @@
    "en": "Settings: your account, your group's members, the assistant, translations, wizards and updates.",
    "protected": false,
    "source": "mock-refs.js RAIL_HELP"
+  },
+  {
+   "key": "rail.projects.line",
+   "en": "Your group's investigations, their questions, plans and cases.",
+   "protected": false,
+   "source": "DEC-241: the More page, derived from rail.<k>.holds"
+  },
+  {
+   "key": "rail.people.line",
+   "en": "The people and organizations the record follows. Your own group's members are under Settings.",
+   "protected": false,
+   "source": "DEC-241: the More page, derived from rail.<k>.holds"
+  },
+  {
+   "key": "rail.settings.line",
+   "en": "Your account, your group's members, the assistant, translations, wizards and updates.",
+   "protected": false,
+   "source": "DEC-241: the More page, derived from rail.<k>.holds"
   },
   {
    "key": "tab.more.name",
@@ -7952,6 +7977,18 @@
   {
    "key": "screen.settings.purpose",
    "en": "Every setting in one list: yours first, then the group's.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.more.name",
+   "en": "More",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.more.purpose",
+   "en": "The places the tabs below do not hold: projects, people and settings.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
