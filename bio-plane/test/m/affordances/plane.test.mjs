@@ -79,12 +79,13 @@ const offered = async (tok, target) => ((await GET(`op=affordances&token=${tok}&
 const W = {};
 before(async () => {
   must("claim", await POST("op=claim", { bootstrapToken: ADM, password: "founder-passphrase-aff" }));
-  W.FOUNDER = (await POST("op=login", { password: "founder-passphrase-aff" })).token;
+  /* control-plane R83 (T47; credentials R65): a sign-in names the handle, never a role; the founder's handle is `admin` */
+  W.FOUNDER = (await POST("op=login", { handle: "admin", password: "founder-passphrase-aff", device: "own" })).token;
   const enrol = async (memberId, role) => {
     const add = await POST(`op=memberadd&token=${ADM}`, { memberId, cover: `cover for ${memberId}`, role,
       capabilities: ["contribute", "publish", "create_projects"] });
     must(`enroll ${memberId}`, await POST("op=enroll", { invite: add && add.invite, handle: memberId, password: `${memberId}-pass-aff` }));
-    const lg = await POST("op=login", { role: `member:${memberId}`, password: `${memberId}-pass-aff` });
+    const lg = await POST("op=login", { handle: memberId, password: `${memberId}-pass-aff`, device: "own" });
     if (!lg || !lg.token) throw new Error(`login ${memberId}: ${JSON.stringify(lg)}`);
     return lg.token;
   };
