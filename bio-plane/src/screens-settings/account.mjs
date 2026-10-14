@@ -67,7 +67,8 @@ export const account = {
       let h = mine.length === 0 ? `<p>${W(S + "key.none")}</p>` : `<ul class="cs-list">${mine.map((s) => `<li>${W(S + "key.held", { key: "…" + String(s.key_b64).slice(-8), date: D(s.added) })} ${cs.act("signerrevokeown", { data: { key: s.key_b64 } })}</li>`).join("")}</ul>`;
       // made in this browser by the kit's signer; only its public line is sent (R22)
       const reg = cs.act("signerregisterown");
-      if (reg) h += `<p class="help">${W(S + "key.help")}</p>${reg}`;
+      // kept on this device only when the member ticks it (interface-shell R40); else a key file is made
+      if (reg) h += `<div class="cs-form"><p class="help">${W(S + "key.help")}</p><input type="checkbox" id="ma-keep"><label for="ma-keep">${W("signing.ceremony.keepkey")}</label>${reg}</div>`;
       return h;
     })));
 
@@ -102,7 +103,7 @@ export const account = {
     // <label>` sent as credentials R9 takes it; a member who declines sends nothing
     { op: "signerregisterown", rereads: ["signers"],
       async send(view, el, cs) {
-        const line = await cs.signer.publicLine();
+        const line = await cs.signer.publicLine({ keep: cs.value("ma-keep") === true });
         const parts = String(line || "").trim().split(/\s+/);
         if (parts[0] !== "ssh-ed25519" || !/^AAAA[A-Za-z0-9+/=]+$/.test(parts[1] || "")) return { refuse: "screen.account.key.declined" };
         const comment = parts.slice(2).join(" ");

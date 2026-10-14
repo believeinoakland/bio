@@ -9,11 +9,14 @@ const btn = (n, op, pred = () => true) => acts(n).filter((b) => b.attrs["data-ac
 
 test("R1 the reads: the roster, the group's key and the keep-away for every member; the recovery step and the group's account (owner group) for an administrator; a member's expertise when opened", async () => {
   const a = await open("members", { me: ADMIN, table: membersTable(), subject: "ana" });
-  const reads = a.p.requests.map((r) => [r.op, r.query]).slice(0, 10);
+  // the screen's own reads, from its first (the frame's own reads, interface-shell R20, come before it)
+  const all0 = a.p.requests.map((r) => [r.op, r.query]);
+  const reads = all0.slice(all0.findIndex((r) => r[0] === "memberlist")).slice(0, 10);
   assert.deepEqual(reads, [["memberlist", {}], ["groupkeystate", {}], ["aikeepawaystate", {}], ["expertiselist", { memberId: "ana" }],
     ["adminrecoverystep", {}], ["signerlist", {}], ["accountuses", { owner: "group" }], ["ailimits", { owner: "group" }], ["aiusage", { owner: "group" }], ["accounthistory", { owner: "group" }]]);
   const m = await open("members", { me: MEMBER, table: membersTableMember() });
-  assert.deepEqual(m.p.requests.map((r) => r.op).slice(0, 3), ["memberlist", "groupkeystate", "aikeepawaystate"]);
+  const mo = m.p.requests.map((r) => r.op);
+  assert.deepEqual(mo.slice(mo.indexOf("memberlist"), mo.indexOf("memberlist") + 3), ["memberlist", "groupkeystate", "aikeepawaystate"]);
   for (const op of ["adminrecoverystep", "signerlist", "accountuses", "ailimits", "aiusage", "accounthistory", "expertiselist"]) assert.ok(!m.p.requests.some((r) => r.op === op), `nothing the owners refuse a member is read (${op})`);
 });
 

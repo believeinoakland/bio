@@ -9,7 +9,7 @@ const situations = (o) => all(o.tree, (e) => e.attrs["data-situation"]).map((e) 
 
 test("R4 the reads: assistantstate, aikeepawaystate, groupkeystate, groupkeynotice, disclosureof, accountreference, subscriptionsignin {step: state}, and the member's own account (owner member:<me>)", async () => {
   const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER) });
-  const reads = a.p.requests.map((r) => [r.op, r.query, r.body]);
+  const reads = a.p.all.map((r) => [r.op, r.query, r.body]);
   for (const want of [["assistantstate", {}, undefined], ["aikeepawaystate", {}, undefined], ["groupkeystate", {}, undefined], ["groupkeynotice", {}, undefined],
     ["disclosureof", { member: "member:dev" }, undefined], ["accountreference", {}, undefined], ["subscriptionsignin", {}, { step: "state" }], ["bootstrap", {}, undefined],
     ["accountuses", { owner: "member:dev" }, undefined], ["ailimits", { owner: "member:dev" }, undefined], ["aiusage", { owner: "member:dev" }, undefined], ["accounthistory", { owner: "member:dev" }, undefined]])

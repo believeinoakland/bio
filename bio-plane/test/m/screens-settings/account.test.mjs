@@ -121,12 +121,16 @@ test("R21 Sign out on this device (signout) and Sign out everywhere (signoutever
   assert.ok(no.refused, "drawn beside the act");
 });
 
-test("R22 Register your signing key: made by the kit's signer (cs.signer.publicLine), its public line sent with signerregisterown; no pasted line is asked; declined sends nothing", async () => {
+test("R22 Register your signing key: made by the kit's signer in this browser (cs.signer.publicLine), its public line sent with signerregisterown; no pasted line is asked; declined sends nothing", async () => {
   const a = await open("account", { me: MEMBER, table: accountTable(MEMBER) });
   assert.ok(!all(a.tree, (e) => e.tag === "input" && e.attrs.id === "ma-pub").length, "no field for a pasted line");
+  has(a, "signing.ceremony.keepkey");
+  const r = await a.press("signerregisterown", { values: { "ma-keep": true }, wait: true });
+  const body = r.sent.find((x) => x.op === "signerregisterown").body;
+  assert.ok(/^AAAAC3NzaC1lZDI1NTE5AAAAI[A-Za-z0-9+/=]+$/.test(body.keyB64), "an Ed25519 public key made here");
+  assert.equal(a.b.idb.size >= 1, true, "kept on this device, as ticked");
+  assert.ok(!JSON.stringify(r.sent).includes("PRIVATE"), "nothing but the public line");
+  // declined: nothing is sent
   const spec = a.s.acts.find((x) => x.op === "signerregisterown");
-  const line = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINew000000000000000000000000000000000000003 dev laptop";
-  assert.deepEqual(await spec.send({}, {}, { signer: { publicLine: async () => line } }), { body: { keyB64: "AAAAC3NzaC1lZDI1NTE5AAAAINew000000000000000000000000000000000000003", comment: "dev laptop" } });
-  assert.deepEqual(await spec.send({}, {}, { signer: { publicLine: async () => "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINew0" } }), { body: { keyB64: "AAAAC3NzaC1lZDI1NTE5AAAAINew0" } });
-  assert.deepEqual(await spec.send({}, {}, { signer: { publicLine: async () => null } }), { refuse: "screen.account.key.declined" }, "declined: nothing sent");
+  assert.deepEqual(await spec.send({}, {}, { value: () => false, signer: { publicLine: async () => null } }), { refuse: "screen.account.key.declined" });
 });

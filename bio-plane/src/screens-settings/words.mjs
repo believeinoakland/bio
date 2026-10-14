@@ -186,7 +186,7 @@ const ROWS = [
   ["screen.account.key.heading", "Your signing key", false],
   ["screen.account.key.none", "You have no signing key registered.", false],
   ["screen.account.key.held", "Key ending {key}, registered {date}", false],
-  ["screen.account.key.help", "Your signing key is made on this device, in your browser: the private part never leaves it, and only the public line is registered. Your browser asks whether to keep it here or to save it as a key file.", false],
+  ["screen.account.key.help", "Your signing key is made on this device, in your browser: the private part never leaves it, and only the public line is registered. Kept on this device if you tick it; otherwise your browser saves it as a key file, protected by a passphrase you choose.", false],
   ["screen.account.key.declined", "No key was made, so nothing was registered.", false],
   ["screen.account.signout.heading", "Signing out", false],
   ["screen.account.elsewhere.heading", "Elsewhere in your settings", false],

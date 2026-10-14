@@ -8,7 +8,8 @@ const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].so
 
 test("R6 reads the member's own notes; states who can see them (protected words); each note's acts in its panel", async () => {
   const a = await open("notes", { me: MEMBER, table: notesTable(MEMBER) });
-  assert.deepEqual(a.p.requests.map((r) => r.op).slice(0, 2), ["notes", "courtnotice"]);
+  const no = a.p.requests.map((r) => r.op);
+  assert.deepEqual(no.slice(no.indexOf("notes"), no.indexOf("notes") + 2), ["notes", "courtnotice"], "the screen's own reads, after the frame's");
   has(a, "screen.notes.private");
   assert.equal(said("screen.notes.private"), "Only you can see these in your group.");
   for (const r of ["screen.notes.private", "screen.notes.protects", "screen.notes.court", "screen.notes.draft.label"])
