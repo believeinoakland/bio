@@ -1,12 +1,12 @@
 # bundler — requirements
 
-**Status** · In force: a helper module, its requirements BOB's (K20); the release tooling joined at T19's fold (K648, K653). Last changed T36 (T36-2: R25, R27, R28 amended, a container member's classes and non-npm packages; R30 new, assembling apart from signing; K1936, K2063, K2077); every requirement met (BUNDLER #10, K2080). Last changed T47 (T47-4: R30 amended, `--sign` takes the signer from the seed in use or refuses naming both keys, N944; K2937); met (K3032).
+**Status** · In force: a helper module, its requirements BOB's (K20); the release tooling joined at T19's fold (K648, K653). Last changed T36 (T36-2: R25, R27, R28 amended, a container member's classes and non-npm packages; R30 new, assembling apart from signing; K1936, K2063, K2077); every requirement met (BUNDLER #10, K2080). Last changed T47 (T47-4: R30 amended, `--sign` takes the signer from the seed in use or refuses naming both keys, N944; K2937); met (K3032). Last changed T48 (T48-4: R32 new, the signed release notice beside the assets; N1047; K3158, K3195); marked not yet met (T48).
 
 ## Public
 
 ### Purpose
 
-Builds each member of the fleet (the plane and the workers) into one bundled artifact with a manifest of hashes, and verifies that a committed artifact is exactly what its source builds, so a stale artifact fails instead of shipping. It also holds the release tooling run from an operator's machine: one version across the fleet, a signed release assembled over the whole fleet, and a deploy of a signed artifact believed only from the bytes read back.
+Builds each member of the fleet (the plane and the workers) into one bundled artifact with a manifest of hashes, and verifies that a committed artifact is exactly what its source builds, so a stale artifact fails instead of shipping. It also holds the release tooling run from an operator's machine: one version across the fleet, a signed release assembled over the whole fleet with its signed release notice, and a deploy of a signed artifact believed only from the bytes read back.
 
 ### Provides
 
@@ -82,11 +82,14 @@ Builds each member of the fleet (the plane and the workers) into one bundled art
 - **R30** A release is assembled apart from its signing. Sessions assemble and never sign: assembly (R22) runs every check and writes what is to be signed (the plane asset and the fleet payload) without the release seed, and no command a session runs reads `BIO_RELEASE_SEED` or writes a signature. Signing runs only in the repository's GitHub Actions environment that holds the seed as its secret and waits for Bob, its required reviewer: one approval signs one release, the plane asset in `bio-release` and the fleet payload in `bio-release-fleet` (R23), and the release is completed from those signatures only when R23's checks accept them. The module names, each by its usage line, the commands the workflow calls, in order; the workflow (`release-sign.yml`) is BOB's, not this module's. (T47; N944, K2937) With `--sign`, the release's `signer` is the public key of the seed in use, derived from it: R23's checks verify both signatures against that key and `RELEASE.json` is written with its line. When the current `RELEASE.json` names a `signer` with a different key, the run refuses `[SIGNER_DISAGREES]`, naming both keys and nothing secret, before signing or writing anything, so a key rotation is the act that edits `signer` (Distribution §10) and never a signing run refused as `[PLANE_SIG_DOES_NOT_COVER_ASSET]`.
 - **R31** (N840, K2547) `fleetbundles` also checks, for every fleet member, its built artifact's uncompressed size against a budget, warning past 32 MiB and failing past 48 MiB (Cloudflare's limit is 64 MiB per Worker), and measures the time to evaluate its global scope (a fresh import in the test process), warning past 500 ms (the platform allows 1 s); each member's size and time are printed, so BOB reports them at each layer close.
 
+**The release notice** (T48-4; N1047; K3158; `build/plan/draft-updates.md` §1)
+- **R32** (T48; N1047; amends R22, R23, R30) The release assembly also writes, beside the assets, `release/NOTICE.json`: `{version, date, manifest, security, notes, sig, signer}`, the notice each group's Civicsmith checks for (`instance-setup`, T48-62). `version` is the release's (R12); `manifest` the SHA-256 of the fleet payload (R22), so the notice names the whole release it announces; `date`, `security` and `notes` (`{members, administrators, must_do}`: what changed for members, what changed for administrators, and what an administrator must do, in members' words) are read from the committed `release/notes/<version>.json`, `{date, security, notes}`; `sig` is the armored signature over `signatures.releaseNoticeStatement` of the first five fields (its R47) in `signatures`' `NS_RELEASE_NOTICE` (its R46), so the notes are inside what is signed; `signer` the release's `signer` line (R23, R30). Refusals, before anything is written: `[NO_NOTES]` when the notes file is absent; `[NOTES_UNREADABLE]` naming the field when it does not parse or `releaseNoticeStatement` refuses it (`version` disagreeing with the release's included). `--emit-notice F` writes the statement to be signed, as `--emit-payload` does (R22). With `--sign` the notice is signed in the same run as the plane and the payload (R23); otherwise its signature comes from `--notice-sig F` (`[NO_NOTICE_SIG]` when absent). `[NOTICE_SIG_REJECTED]` unless the signature verifies over the statement's exact bytes in `NS_RELEASE_NOTICE` for the release's `signer`. Sessions assemble and never sign the notice, as R30 says. Publishing the notice at the project's fixed public address, and the workflow step that signs and publishes it, are the workflow's (BOB's, `not_product`), not this module's. Test, against R23's fixture repository with a throwaway key: a notice is written whose signature `signatures.verifyReleaseNotice` accepts; controls: a notes file with an empty `members` is `[NOTES_UNREADABLE]`, and a signature over other bytes is `[NOTICE_SIG_REJECTED]`, each writing nothing. *(not yet met: T48)*
+
 ## Private
 
 ### Uses
 
-- `signatures.fleetStatement`, `signatures.NS_FLEET` (R22: the payload the installer verifies with the same function); `signatures.signSshsig` (R23).
+- `signatures.fleetStatement`, `signatures.NS_FLEET` (R22: the payload the installer verifies with the same function); `signatures.signSshsig` (R23); `signatures.releaseNoticeStatement`, `signatures.NS_RELEASE_NOTICE` (R32; T48).
 
 ### Invariants
 
@@ -96,6 +99,7 @@ Builds each member of the fleet (the plane and the workers) into one bundled art
 
 - `docs/architecture/BIO_Distribution_v0_1.md`: an installable fleet is one bundled, hashed, signed artifact per member.
 - `build/layers.md`, "Helper modules".
+- Bob's K3158 and `build/plan/draft-updates.md` §1: each release publishes, beside its assets, a notice signed by the release key with its notes inside what is signed (R32).
 - `docs/architecture/BIO_Distribution_v0_1.md` §3 (the release): the release states the third-party code it ships, the container image's packages under its signature (R27), and the advisories known against it (R28, R29); `plan/draft-T35-security-review.md` F20, F21 (threat T, a forged release or fleet member; K1881).
 
 ### Suggestions

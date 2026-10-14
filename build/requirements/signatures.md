@@ -1,19 +1,19 @@
 # signatures — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20); the release signer joined at T19's fold (K648, K653). Last changed T36 (T36-1: R43, R44 new, the passphrase at Generate and the recovery key; K1936); every requirement met (SIGNATURES #11, K2079).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20); the release signer joined at T19's fold (K648, K653). Last changed T36 (T36-1: R43, R44 new, the passphrase at Generate and the recovery key; K1936); every requirement met (SIGNATURES #11, K2079). Last changed T48 (T48-3: R45–R48 new, the release keys in one place, the release notice's namespace, statement and verify; R1 amended (six namespaces); N1047; K3158, K3189, K3195); marked not yet met (T48).
 
 ## Public
 
 ### Purpose
 
-Builds and verifies the signed and timestamped statements the plane and the installer exchange: OpenSSH detached signatures (SSHSIG) over a release, a fleet manifest, a bundle ratification or a case ratification; an RFC 3161 timestamp request and response, and the public-archive locator an opt-in co-archive returns; and the self-contained page a human signer uses to produce those signatures offline; the in-interface signer (`interface-shell` R40, R41) is, beside the page, a maker of R1's statements, unchanged in format. It holds no record, no stored private key and no clock, and makes no network call itself — every network call is the caller's. Its one signing service (the release signer) runs on an operator's machine with a seed the caller passes, and never ships in the plane or the installer.
+Builds and verifies the signed and timestamped statements the plane and the installer exchange: OpenSSH detached signatures (SSHSIG) over a release, a release notice, a fleet manifest, a bundle ratification or a case ratification; an RFC 3161 timestamp request and response, and the public-archive locator an opt-in co-archive returns; and the self-contained page a human signer uses to produce those signatures offline; the in-interface signer (`interface-shell` R40, R41) is, beside the page, a maker of R1's statements, unchanged in format. It holds no record, no stored private key and no clock, and makes no network call itself — every network call is the caller's. Its one signing service (the release signer) runs on an operator's machine with a seed the caller passes, and never ships in the plane or the installer.
 
 ### Provides
 
 **Signatures (`sshsig.mjs`)**
 
 `NS_RELEASE`, `NS_RATIFY`, `NS_FLEET`, `NS_NOTICE`, `NS_DOCKET` → strings (`"bio-release"`, `"bio-ratify"`, `"bio-release-fleet"`, `"bio-working-on"`, `"bio-docket"`).
-- **R1** Five distinct compiled constants: `NS_RELEASE`, `NS_RATIFY`, `NS_FLEET`, `NS_NOTICE` and `NS_DOCKET`. No two are equal, so a signature that verifies in one namespace never verifies in another. (Amended at T23's opening from "Three": DEC-111, K1019, K1031; from "Four" by N520: DEC-116.)
+- **R1** Five distinct compiled constants: `NS_RELEASE`, `NS_RATIFY`, `NS_FLEET`, `NS_NOTICE` and `NS_DOCKET`. No two are equal, so a signature that verifies in one namespace never verifies in another. (Amended at T23's opening from "Three": DEC-111, K1019, K1031; from "Four" by N520: DEC-116.) (T48; N1047) Six: `NS_RELEASE_NOTICE` joins them (R46), distinct from every other. *(not yet met: T48)*
 - **R37** `NS_NOTICE` is `"bio-working-on"`, a compiled constant distinct from every other namespace (R1's rule). The offline signer page and the browser signer sign in it (DEC-111, K1019, K1031).
 - **R39** `NS_DOCKET` is `"bio-docket"`, a compiled constant distinct from every other namespace (R1's rule). The offline signer page and the browser signer sign in it. (DEC-116 item 6; N520)
 
@@ -94,15 +94,29 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 - **R35** `signerPublicLine` returns `ssh-ed25519 <base64 wire public key> <comment>`, the line an allowed-signers list or `RELEASE.json`'s `signer` carries for the envelope's key; `keyFromSeed` gives the Ed25519 private key of a 32-byte seed and `publicFromKey` its 32 raw public bytes.
 - **R36** Never prints, writes or returns the seed or the private key; the only outputs are the signature and the public line.
 
+**Release keys and the release notice** (T48-3; N1047; K3158; `build/plan/draft-updates.md` §1–2)
+
+`RELEASE_KEYS → string[]`
+- **R45** (T48; N1047; K3158) A frozen list, the one place the keys that sign a Civicsmith release are held: the public lines (R35's form, `ssh-ed25519 <base64> <comment>`) of the release key and the recovery key, exactly the two lines the installer's `ARMED_SIGNERS` holds at T48's opening (`installer` R43). A release, a fleet statement and a release notice are each verified against this list: the installer's `ARMED_SIGNERS` and every plane module that verifies one read it from here and hold no copy. Adding or removing a key is a requirement change made in this module alone. Test: each line normalises as R2 reads an allowed key, the two keys differ, and the list is frozen. *(not yet met: T48)*
+
+`NS_RELEASE_NOTICE → string`
+- **R46** (T48; N1047; amends R1) `NS_RELEASE_NOTICE` is `"bio-release-notice"`, a compiled constant distinct from every other namespace (R1's rule), so a signature over a release, a fleet statement or anything else never verifies as a release notice, nor a notice's as any of them. *(not yet met: T48)*
+
+`releaseNoticeStatement({version, date, manifest, security, notes}) → Uint8Array`
+- **R47** (T48; N1047; draft-updates §1) Returns the exact bytes a release notice is signed over: `` `bio-release-notice/1\nversion ${version}\ndate ${date}\nmanifest ${manifest}\nsecurity ${security ? "yes" : "no"}\nnotes ${canonicalJson(notes)}\n` `` (UTF-8; `canonicalJson` is `record-grammar`'s, its R12), so the notes are inside what is signed. `version` is `<n>.<n>.<n>` (each part digits, no leading zero but `0`); `date` a `YYYY-MM-DD` that exists; `manifest` the release manifest's SHA-256, 64 lowercase hex; `security` a boolean; `notes` exactly `{members, administrators, must_do}`, each a string of at most `RELEASE_NOTES_MAX` (8,000) characters, `members` and `administrators` non-empty and `must_do` possibly empty. Anything else throws `Error` reading `REFUSED [NOTICE_FIELD]: <field>` before any byte is built. Same inputs always give byte-identical output; changing any field, a character of the notes included, changes the bytes. *(not yet met: T48)*
+
+`verifyReleaseNotice(notice, armored, running, allowedKeys = RELEASE_KEYS) → Promise<{ok:true, notice} | {ok:false, reason, ...}>`
+- **R48** (T48; N1047; draft-updates §2) `notice` is `{version, date, manifest, security, notes}` as published beside a release; `running` the version the caller runs, R47's form. `ok:true` only when the notice is well formed (R47), `armored` verifies by R2 in `NS_RELEASE_NOTICE` over `releaseNoticeStatement(notice)` against `allowedKeys`, and `notice.version` is higher than `running`, compared part by part as numbers. `notice` in the answer is a frozen copy holding only R47's fields. Otherwise `ok:false` with `reason`: `MALFORMED` (with `field`) for a notice R47 refuses or a `running` not of its form; R3's `NAMESPACE`, `UNKNOWN_KEY`, `BAD_SIGNATURE` or `CRYPTO_UNAVAILABLE`, as `verifySshsig` names them; `NOT_NEWER` (with `version` and `running`) for a correctly signed notice of the running version or an older one, so neither a downgrade nor the replay of an old notice is accepted. The signature is judged before the version. Never throws. Test: a notice signed with a throwaway key in `allowedKeys` is accepted; controls: the same notice with one character of its notes changed is `BAD_SIGNATURE`; an older version correctly signed is `NOT_NEWER`; the same bytes signed in `NS_RELEASE` are `NAMESPACE`; a key outside `allowedKeys` is `UNKNOWN_KEY`. *(not yet met: T48)*
+
 ### Errors
 
-Stated per service above. `verifySshsig`, `parseTimestampResponse` and `archiveLocatorFrom` never throw and always name a `reason` for a "no". `fleetStatement` throws (never partially renders) on an unstated compat date, flags list or part type; every other service throws only on malformed input it cannot make sense of (`verifySshsig`'s inner parse failures are caught and returned as `MALFORMED`, never thrown).
+Stated per service above. `verifySshsig`, `verifyReleaseNotice`, `parseTimestampResponse` and `archiveLocatorFrom` never throw and always name a `reason` for a "no". `fleetStatement` throws (never partially renders) on an unstated compat date, flags list or part type; every other service throws only on malformed input it cannot make sense of (`verifySshsig`'s inner parse failures are caught and returned as `MALFORMED`, never thrown).
 
 ## Private
 
 ### Uses
 
-- `record-grammar`: the id grammar (`ID_TABLE`, `idPattern`; its R46, R47) for R38, R40 and R42 (T33-7; a new edge, P4 holding: `record-grammar` is first in layer 1).
+- `record-grammar`: the id grammar (`ID_TABLE`, `idPattern`; its R46, R47) for R38, R40 and R42 (T33-7; a new edge, P4 holding: `record-grammar` is first in layer 1); `canonicalJson` (its R12) for R47 (T48).
 
 Otherwise every export is built from Web platform primitives (`crypto.subtle`, `atob`/`btoa`, `TextEncoder`/`TextDecoder`) and literal data. The release signer (R33–R36) alone uses Node's `node:crypto`, which is why it never ships in the plane or the installer.
 
@@ -119,9 +133,11 @@ Otherwise every export is built from Web platform primitives (`crypto.subtle`, `
 - `BIO_Intake_Doctrine_v1_1.md` §3 — trusted timestamps as the co-attestation a group cannot fabricate for itself, and the public archive as the opt-in second kind of co-attestation.
 - `BIO_Publication_v0_1.md` §5D ("Who acts, and signing": the manager signs a public docket entry with their registered key; R39, R40; DEC-116).
 - `build/layers.md`, "No jurisdiction in the product" (R27).
+- Bob's K3158 and `build/plan/draft-updates.md` §1–2: a signed release notice whose notes are inside what is signed, verified against the keys the running version carries, with no downgrade or replay (R45–R48).
 
 ### Suggestions
 
 - **Checks.** Check C-18.8 (the gate's release-signature check, `bio-checks.mjs` "Release-signature primitives") still holds a second, hand-written SSHSIG/Ed25519 verifier. K10 (entry N8) replaces it with a call to `verifySshsig`: the Apps Script runtime that justified it is decommissioned. This module takes on no check-derived invariant.
 - **For callers.** `verifySshsig`'s `allowedKeys` and SSHSIG's own embedded key together are the only source of truth for who signed; a caller must supply the actual `ARMED_SIGNERS`/registry list, never a caller-asserted one. `fleetStatement`'s per-member `services` and `parts` fields are signed as the caller supplies them (R10); nothing in this module checks them against reality — that a member's declared parts match what was actually uploaded is the caller's obligation.
+- **Release notices (T48).** `instance-setup`'s daily check (T48-62) calls `verifyReleaseNotice` with no `allowedKeys`, so `RELEASE_KEYS` decides; the installer re-points `ARMED_SIGNERS` to `RELEASE_KEYS` in its own job (T48-79), and `bundler` writes the notice through R47 (T48-4). Text-only rendering and the notes' cap on display are the caller's; R47's cap bounds what is signed. A key rotation (Distribution §10) edits R45's list.
 - **The release signer (BOB-5).** The job moves `tools/sign-sshsig.mjs` beside `sshsig.mjs` (a script directory, not `src/`, so no bundle reaches it), re-points the assembler's import (bundler's file, `uses`), and re-points `sshsig.mjs`:229's note naming `tools/release-assemble.mjs`. R33's test signs with a throwaway seed and verifies with `verifySshsig` and, where present, stock `ssh-keygen`.

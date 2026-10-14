@@ -1,6 +1,6 @@
 # ooxml — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T35 (T35-8: R3, R10, R11 amended; R27–R33 new; K1844, K1852, K1881, K1888, K1903); every requirement met (K1927).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T35 (T35-8: R3, R10, R11 amended; R27–R33 new; K1844, K1852, K1881, K1888, K1903); every requirement met (K1927). Last changed T48 (T48-6: R34 new, derived tables built on first use; N1039; K3147, K3195); marked not yet met (T48).
 
 ## Public
 
@@ -97,6 +97,9 @@ One dependency-free CONTAINER reader shared by every OOXML and OpenDocument form
   - A directory that exists and holds no matching member is a real `images:[]`, never `null`.
   - Never throws.
 
+**Start-up cost** (T48-6; N1039; K3147: the plane's global scope over its 500 ms budget)
+- **R34** (T48; N1039; K3147) Evaluating the module computes none of its derived tables (the CRC-32 table among them, and any table built by a loop or a spread at import): each is built on its first use and reused after. Every exported name keeps its value and shape, the frozen ones frozen, and every service's answer is unchanged (R1–R33). Test: the module's import is measured as `bundler` R31 measures a global scope; `crc32` answers the known vectors on its first and later calls, and `CONTAINER_FLAVOURS`, `IMAGE_MIME_BY_EXT`, `VBA_AUTORUN_NAMES` and `VBA_SUSPICIOUS_KEYWORDS` equal their T47 values. *(not yet met: T48)*
+
 ## Private
 
 ### Uses
@@ -128,4 +131,5 @@ None in the product. Layer 1, first module of the office-format stack. Its tests
 - `listArchive` and `streamMember` are the design of `build/plan/draft-zip-architecture.md` ("A validated listing", "A streaming cut", "Grade rules for members", "Safety limits"); its oracles are Info-ZIP `unzip -t` and Python's `zipfile` over `test-support`'s fixtures. A range source lets a 256 MiB archive held in 8 MiB parts be listed and cut without holding it whole; `streamMember` should hold no more than one read window and one inflate chunk at a time.
 - The unpack act (`acquisition`, T35-21) keeps `ARCHIVE_DEPTH_MAX` and the two tree limits, counted from the outermost archive, and maps R28's verdicts to its refusals by the same names (`MEMBER_CORRUPT` comes from R29). It reads `done` before it treats any byte from `chunks` as filed.
 - R32's tables should be taken from olevba's own (oletools, `olevba.py`: `AUTOEXEC_KEYWORDS`, `SUSPICIOUS_KEYWORDS`), with the version recorded in a comment; olevba over the same fixtures is R32's oracle. A project whose source was replaced but whose p-code was kept ("VBA stomping") reads as its source says, since p-code is not read; olevba flags that case separately.
+- **T48 (N1039).** The CRC-32 table (`CRC_TABLE`, built by an immediately invoked loop) and the SHA-256 round constants are the obvious first-use candidates; the exported constant tables are literals and may stay as they are where R34's measurement shows they cost nothing.
 - R31 bounds what an office reader can be made to inflate; the text bound (R6–R8) still governs text extraction within it.
