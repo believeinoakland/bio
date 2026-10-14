@@ -2,6 +2,33 @@
 
 **Status** · session_01Pqz6Hjb3TWCpmKMBKFfVce · depth 2 · WAITING ON BOB (J4) · handled B7
 
+## Completion (T47-61)
+
+**Reading.** Read whole: `build/requirements/screens-inquiry.md`; the public parts of `interface-shell`, `setup-words`, `op-declarations`, `screens-settings`; layer 11's contract (`build/layers.md`); the module's code and tests, all of them (P20); my entry in `build/plan/current.md`; `draft-T47-interface.md`, `draft-T47-L11-fold.md` §B; the registry entries of my five screens and the words they draw at PR #33's head; the owners' requirements of the ops called anew (`basis-versions` R41, R50; `strength` R14, R40; `citation` R4, R14, R15; `monitoring` R74; `ai-runs` R18, R19, R22; `credentials` R54, R57–R63; `control-plane` R77).
+
+**Entries applied.**
+- R8 (N986): every choice among record data (the plan's question, a question to draw on, the bar's letters, the question a passage is cited in, an unread page) is `cs.choice` over `{value, text}`; the dock re-reads a run it started every 10 s by `cs.later` while it runs, and draws one that ended by itself ended.
+- R9 (N974): the project's questions from `projectquestions`, paged to the end by its cursor (a failed page drawn failed, never as the end), each a reference to `question` with its strength.
+- R10 (N976): the project's own bar from `strengthbarof` (letters, an undeclared axis in words, none as absent); "Set this project's bar" sends `projectbarset` (both axes, either, neither) with her reason, to a joined member; `strengthbarset` never drawn.
+- R11 (N975): "Open a question" promotes then sends `drawquestion` and opens the question; a refused draw is said beside the act with a link to the open question. B2 (K3145): the file's words sent as `text`.
+- R12 (N977): `sever` on each live leg and `reinstate` on each severed one, by the inquiry's own `references[]` status, after selecting the leg's target, the question as citing object, with her reason; a severed leg stays in its section with its reason.
+- R13 (N955): the dock mints, holds and sends no credential: `airunopen` and `airundispatch {run}` under her session; a reloaded dock finds her running run by `airuns` and continues it by the same act; `closed` removed (B3, K3147: closing stops nothing).
+- R14 (N721): new screen `projectai` (`projectai.mjs`), its eight acts by owners, the panel reused from `screens-settings` R9 by import (`parts`), the link from the project.
+- R15: `document` sends `monitorset` (Watch for changes) and `monitor` (Check now), two acts.
+- R16: "Draw on a question from elsewhere" (`drawquestion` over the questions she may see, as data, with her note; `alreadyCited` said) and `projectbarset` by its registry label.
+- Words: rows now held by `WORD_ROWS` at PR #33's head (`ai.label.untested`, `ai.refused.keptaway`, `ai.refused.noaccount`, `ai.refused.limit.unjudged`, `ai.refused.modenotdeployed` replaced by `ai.refused.notdeployed`) are drawn from it; `act.pagetranscribe.does` kept (interface-shell R5's named row).
+
+**Deferred.** None.
+
+**Found in another module.** `control-plane`'s `t46-app.test.mjs` R75 fails (`img-src: 'self',data:,blob:` expected in the page policy); it fails identically with `tranche/T47`'s own `screens-inquiry`, so not this job's. `checks/run.mjs` coverage fails for other modules still in flight (control-plane, plane, screens-*, journey-check); none for this module.
+
+**Tests and checks** (on `job/T47/screens-inquiry` after merging `tranche/T47` at B8, no overlay):
+- `node --test bio-plane/test/m/screens-inquiry/`: tests 64, pass 64, fail 0.
+- Users (P11): `interface-shell` tests pass 119, fail 0; `control-plane/t46-app.test.mjs` pass 3, fail 1 (above, not this module's).
+- `checks/format.mjs`: 0 failures; `architecture.mjs` (screens-inquiry): 0 failures; `coverage.mjs` (screens-inquiry): 16 of 16 live ids named, 0 failures; `ownership.mjs`: 0 failures; `checks/run.mjs`: architecture 0 failures, format 0, channels 0, coverage failing only for other modules.
+
+Size (session_01Pqz6Hjb3TWCpmKMBKFfVce): test runs 14, module lines 1682
+
 ## J1 · QUESTION
 
 One reading to confirm, and where the job stands.
