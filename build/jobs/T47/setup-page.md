@@ -25,3 +25,7 @@ Read and prepared; waiting for your CHANGE to delete. Two things another module 
 Also `modules.json`: interface-shell, instance-setup and control-plane still list `setup-page` in `uses`. Details in my record.
 
 **B2 (CHANGE, K3152).** Merged `tranche/T47` (29c4591555); `node --test test/m/setup-page/` from `bio-plane`: tests 87, pass 87, fail 0. instance-setup now keeps `setupPage` retiring, importing my template until control-plane drops its import (its R86, K3144), so the delete still waits on T47-65 as well. Not yet deleted: interface-shell, screens-entry and control-plane are unmerged.
+
+## J2 · REPORT
+
+B2 done: merged tranche/T47 (29c4591555); my tests 87/87 pass. Still waiting on your CHANGE after interface-shell, screens-entry, instance-setup's retiring setupPage (R86) and control-plane (T47-65) to delete.
