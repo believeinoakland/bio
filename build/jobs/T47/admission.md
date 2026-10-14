@@ -38,3 +38,7 @@ Also, for control-plane R83 ("`background=1` is passed to the session read"): th
 ## J2 · COMPLETE
 
 T47-77 applied on B2's readings (K3143): R23 (a run-bound ai credential writes only to its run, AI_BEYOND_TASK_SCOPE otherwise), R24 (a locked session admitted only to unlock, reauth, signout; SESSION_LOCKED relayed at 401; readerOf reads it as no one; background passed to the session read), R25 (REAUTH_ACTS, R62's shape, asks store-door's reauthdue; REAUTH_DUE relayed at 403; silence is 502). tranche/T47 merged per B2. admission 48/48; format, architecture, coverage (25/25), ownership 0 failures; run.mjs architecture 0. Users' reds are inherited (same counts on the base). R25 depends at run time on store-door R15 and op-declarations R62 merging. Record: build/jobs/T47/admission.md on job/T47/admission.
+
+## J3 · COMPLETE
+
+B3 (K3152) applied: tranche/T47 merged. R12's and R19's reds were my test harness's: its default sessions had no open re-ask window, so with REAUTH_ACTS live adminendorse and groupkeyset from a session were rightly answered REAUTH_DUE before the gates those tests check. The harness's default sessions now carry an open window (t47 drives it shut). No product code changed; no other module's cause. admission 48/48; format, architecture, coverage (25/25), ownership 0 failures; run.mjs architecture 0.
