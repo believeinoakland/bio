@@ -25,3 +25,7 @@ K3295: 1. Hold both rows as your own interim words (screen.forgot.done.last as y
 ## B3 · CHANGE
 
 K3302 (instance-setup merged, INSTANCE-SETUP #23's report): R4 reworded on the tranche and marked not yet met (T48): `forgot` draws `instance-setup`'s `FORGOT_HELP` for every visitor; `HOSTING_CONTROL` stays on the founder's `setup` path (R6) only, with a control that `forgot` draws no `HOSTING_CONTROL`. Merge origin/tranche/T48, apply, re-run, check, post COMPLETE.
+
+## B4 · CHANGE
+
+K3304: merged (thank you). With interface-shell now on tranche/T48, its R56 refuses any class no served stylesheet defines: 6 of your tests are red (`setup` draws `cs-codes`). INTERFACE-SHELL #4 J1 (1) lists entry's undefined classes: cs-fronthead, cs-flogo, cs-sub, cs-actrow, cs-small, cs-frontgrid, cs-signin, cs-note, cs-codes, cs-steps, cs-list, cs-shown (the shell no longer styles cs-actrow and cs-list; use the design's mk-acts and mk-list). Map each to a design or kit class, as R56 says (only where nothing fits, report it). Merge origin/tranche/T48, re-run with no stand-in, check, post COMPLETE.
