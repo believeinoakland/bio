@@ -101,9 +101,10 @@ export const registration = (x = {}) => ({ screens: SCREENS, ops: OPS, machineRe
 /** `templates`: `"reviewed"` (the default: the test profile's template attributed, so filing-templates offers it as
  *  "Records request", or with `recordsRequest: null` under its kind's label) or `"unreviewed"` (not offered, R15);
  *  `jurisdictions`, a profile reader (`get`) in place of either. */
-export function world({ register = true, reg = {}, templates = "reviewed", recordsRequest = RECORDS_REQUEST_NAME, jurisdictions = null } = {}) {
+export function world({ register = true, reg = {}, templates = "reviewed", recordsRequest = RECORDS_REQUEST_NAME, jurisdictions = null, env = undefined } = {}) {
   const st = storage();
-  const host = { storage: st };
+  /* `env`, the Worker environment, when a test gives one: `ai-runs` reads whether this is a test instance from it (R34) */
+  const host = env === undefined ? { storage: st } : { storage: st, env };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
   const clock = { now: NOW };

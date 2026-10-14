@@ -15,7 +15,7 @@
  * NON_ACTS row here, and eight of them are in `MACHINE_REFUSALS` (`./index.mjs`) with their owners' codes; every other op
  * here is a non-act, refused a machine by its owner's own code where it is. By R18 `phone` follows the rung. No consequence
  * statement is added (R32: which acts take one is the UX stream's to propose); `publishcheck`, graded as `publish`
- * (case-check's Uses; K2839), carries the Irreversible weight by R21's rule. (T46; K2881) The five ops `op-declarations`
+ * (case-check's Uses; K2839), is `terminal` with it since R37 (T47) and carries no Irreversible weight. (T46; K2881) The five ops `op-declarations`
  * declared under R49 after this module's T45 merge (`grouprules`, `advocacycheck`, `advocacychecks`, `infractiondraft`,
  * `bearingdraft`) are graded here by the same rule; none is an act of `affordances` or a machine refusal (`case-account`
  * refuses a machine itself, `MACHINE_CANNOT_CHECK_ADVOCACY`). */
@@ -28,8 +28,9 @@ const WATCH = (s) => `watch-directed: ${s}; moves no bundle`;
 
 /* ---- the rungs (`affordances` R19's backing beside each) ---- */
 export const T45_RUNGS = {
-  /* case-check R1 (K2839): the same `publishCase` write as `publish`, refused MACHINE_CANNOT_PUBLISH, and graded as it */
-  publishcheck:        "irreversible", // case-check R1 · graded as publish (its Uses; K2839)
+  /* case-check R1 (K2839): the same `publishCase` write as `publish`, refused MACHINE_CANNOT_PUBLISH, and graded as it;
+     (R37, T47) `terminal` with it, a preparation held unsigned that publishes nothing until a member signs */
+  publishcheck:        "terminal",     // case-check R1 · graded as publish (its Uses; K2839; R37)
   /* filings R42: a second approval stands, recorded at most once (ALREADY_APPROVED), as filingapprove (DEC-88) */
   filingsecondapprove: "terminal",     // filings R42 · ALREADY_APPROVED: approved a second time at most once
   /* reasoned: each owner refuses the act without the member's authored reason, in its own word for it */

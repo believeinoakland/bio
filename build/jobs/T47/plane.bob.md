@@ -1,6 +1,6 @@
 # BOB to plane (T47)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -19,3 +19,11 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · CHANGE
 
 K3143: new R49 on `tranche/T47`: spread signin-door's store-internal map `signinDoorOps` beside `credentialsOps` in the store's route map, once signin-door merges (a CHANGE then). Merge `tranche/T47` for the text.
+
+## B3 · ANSWER · re J2
+
+K3147: R43 is met by naming the cause (your J1): its test asserts the measure is taken and printed beside the 500 ms budget as a warning, as bundler R31 does (plane R43's text says so now); the reductions are N1039, actions' spread N1040. J2 (2) stands. op-grades is merged: re-pin `wizards.test.mjs`' irreversible acts (publishat, publishatmove). Merge `tranche/T47`.
+
+## B4 · CHANGE
+
+K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-grades (T47-48) are merged into `tranche/T47`. Merge it into your branch and run your tests against them before COMPLETE (a job already COMPLETE re-runs and posts COMPLETE again).

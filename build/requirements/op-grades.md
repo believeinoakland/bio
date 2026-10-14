@@ -163,7 +163,7 @@ Terms. A **rung** is one of `RUNG_LADDER`. A **ground** is one of `RUNG_ABSENCE_
 - **R35** (T47; N987; K3014; amends R2, R3, R24) Two ops leave the `undetermined` ground, so `interface-shell` R11 no longer draws them as reasoned (DEC-87) and asks no reason their owners do not take:
   - `deepercheck` is held in `RUNG_ABSENT` under the ground `observational`, as `deeperbatch` (R24): its one write is a verdict note naming no member, corrected forward by checking again (`file-safety` R3, R10, R13), and it asks no reason; its `NON_ACTS` sentence is unchanged;
   - `inboxpull` leaves `RUNG_ABSENT` and `RUNGS` assigns it `reversible`: it asks no reason, and the document it files waits held at `collected`, where a published act (`heldsetaside`, `capture` R79) takes it out of what the group relies on; the knock stays pulled (`doorbell` R13) and its `NON_ACTS` sentence is unchanged.
-  R3's tally of `undetermined` ops falls by these two and its tests are re-pinned to the new count. By R18 both carry `phone: true`. Neither is in `MACHINE_REFUSALS`. Controls: `RUNG_ABSENT.deepercheck.ground` is `observational` and `RUNGS.inboxpull` is `reversible`; `safecopyrequest` stays `undetermined`. *(not yet met: T47)*
+  R3's tally of `undetermined` ops falls by these two and its tests are re-pinned to the new count. By R18 both carry `phone: true`. Neither is in `MACHINE_REFUSALS`. Controls: `RUNG_ABSENT.deepercheck.ground` is `observational` and `RUNGS.inboxpull` is `reversible`; `safecopyrequest` stays `undetermined`.
 - **R36** (T47; R32's pattern; N972, N974, N975, N976, N977, N969, N955) Every op T47's owners add is graded by R5 and R3, `affordances` R12's totality holding over them, each grade read from its owner's requirements and each tested by name with a negative control (K874):
   - `projectlist` (`project-roster` R26) and `projectquestions` (`basis-versions` R50): reads, `NON_ACTS` "read: …";
   - `drawquestion` (`citation` R14): `RUNGS` assigns `reversible`, as `cite`: it asks no reason (its `note` is a note's shape, refused `BAD_NOTE`, not a reason), and a published act (`sever`, `citation` R4) takes the edge back; `NON_ACTS` "project-directed: keyed by a project and one question; draws the question into the project as a confirmed `cites` edge and promotes the project; moves the project's bundle";
@@ -172,11 +172,11 @@ Terms. A **rung** is one of `RUNG_LADDER`. A **ground** is one of `RUNG_ABSENCE_
   - `sever` and `reinstate` keep their rung (`reasoned`, R1); their `NON_ACTS` sentences name a question's own legs beside a project's `cites` (`citation` R15);
   - `capturerequest` keeps its ground (`substrate`); its `RUNG_ABSENT` and `NON_ACTS` sentences name a member's own request for later beside a run's (`capture-requests` R56). `heldcaptures`' `state` (`capture` R88) changes no grade;
   - N955 adds no op: `credentials`' `aiRunCredentialMint` is in-plane and the door's op stays `airundispatch` (R33).
-  None is in `MACHINE_REFUSALS`, which holds only `ACTS` (R5, `affordances` R20); each owner refuses a machine by its own code. By R18 every one carries `phone: true`. No vocabulary or prompt is added, and `IRREVERSIBLE_WEIGHT` gains no op. *(not yet met: T47)*
+  None is in `MACHINE_REFUSALS`, which holds only `ACTS` (R5, `affordances` R20); each owner refuses a machine by its own code. By R18 every one carries `phone: true`. No vocabulary or prompt is added, and `IRREVERSIBLE_WEIGHT` gains no op.
 
 #### T47's L11 fold (K3100)
 
-- **R37** (R32's pattern) Graded, each tested by name: `unlock`, `reauth` (credential ground, `RUNG_ABSENT`); `passwordresetlink` (credential ground, `RUNG_ABSENT`, as `recover`: credentials R69 asks no reason; K3144); `passwordresetlook` (read), `passwordreset` (credential ground); `grouplogoset`, `grouplanguagesset` (`reversible`); `signrequest` (`reversible`); `signintrace`, `grouplanguages` (reads). `publish` is re-graded from its owner's R34, R76 as it now stands (it prepares; `caseratify` signs; doubt 9). *(not yet met: T47)*
+- **R37** (R32's pattern) Graded, each tested by name: `unlock`, `reauth` (credential ground, `RUNG_ABSENT`); `passwordresetlink` (credential ground, `RUNG_ABSENT`, as `recover`: credentials R69 asks no reason; K3144); `passwordresetlook` (read), `passwordreset` (credential ground); `grouplogoset`, `grouplanguagesset` (`reversible`); `signrequest` (`reversible`); `signintrace`, `grouplanguages` (reads). `publish` is re-graded from its owner's R34, R76 as it now stands (it prepares; `caseratify` signs; doubt 9).
 
 ## Private
 
