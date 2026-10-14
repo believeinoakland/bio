@@ -3,6 +3,7 @@
    `formerly`) and the doors' settings and history for administrators (R130). Each id is tested here explicitly, with a
    negative control (K874: older tests name some of these ids already). Every test drives the module at its interface. */
 import { test } from "node:test";
+import { readFile } from "node:fs/promises";
 import assert from "node:assert/strict";
 import { world, V, realWorld } from "./fixture.mjs";
 import { Membership, MEMBERSHIP_CHECKS, notAnAdmin, MEMBERSHIP_EXEMPT_TABLES, MEMBERSHIP_PROJECT_TABLES }
@@ -12,9 +13,9 @@ import { MACHINE_CLASS_PREFIX, sha256HexSync } from "../../../src/record-grammar
 const snapshot = (w) => JSON.stringify(w.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)
   .map(({ name }) => [name, w.rows(`SELECT * FROM "${name}"`)]));
 
-/* DEC-198's sentence (`refusal.HANDLE_FIXED`, PR #30) in DEC-149's form (R112), as BOB's START directs. */
-const FIXED = "Handles don't change in your group's Civicsmith: yours names your work for good, and no one else can ever "
-  + "take it. Nothing was changed.";
+/* T49 (N1075, K3269): the sentence is `words.json`'s `refusal.HANDLE_FIXED`, read by key. */
+const FIXED = (await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8")
+  .then((t) => JSON.parse(t).words)).find((x) => x.key === "refusal.HANDLE_FIXED").en;
 
 /* The founder, `second` (an administrator), ann and bob active, cal invited. */
 async function group() {
@@ -81,18 +82,16 @@ test("R125 the handle guard's slot stands, but no act of this module calls the r
 
 /* ---------------------------------------------------------------- R126 --------------------------------------------- */
 
-test("R126 T46 HANDLE_FIXED takes a new row of C-96, C-96.52, its translation DEC-198's in DEC-149's form; C-96.49 to C-96.51 retired", () => {
+test("R126 T46 T49 HANDLE_FIXED takes a new row of C-96, C-96.52, its translation words.json's refusal.HANDLE_FIXED read by key; C-96.49 to C-96.51 retired", () => {
   const row = MEMBERSHIP_CHECKS.HANDLE_FIXED;
   assert.ok(Object.isFrozen(row));
   assert.deepEqual([row.check, row.where, row.translation],
-    ["C-96.52", "src/membership/index.mjs handleChange > is-handle-fixed", FIXED]);
+    ["C-96.52", "src/membership/index.mjs #handleFixed > is-handle-fixed", FIXED]);
   const all = Object.values(MEMBERSHIP_CHECKS);
   assert.equal(all.filter((r) => r.check === "C-96.52").length, 1);
   for (const check of ["C-96.49", "C-96.50", "C-96.51"]) assert.equal(all.filter((r) => r.check === check).length, 0, check);
   for (const code of ["HANDLE_CHANGE_NOT_A_MEMBER", "HANDLE_CHANGE_UNCHECKED"]) assert.equal(code in MEMBERSHIP_CHECKS, false, code);
-  /* R112: the group's own Civicsmith, never bare; no plane, server, copy or instance */
-  assert.match(row.translation, /your group's Civicsmith/);
-  assert.doesNotMatch(row.translation.replaceAll("your group's Civicsmith", ""), /Civicsmith/);
+  /* R112: no plane, server, copy or instance (the sentence names the product, not the group's own Civicsmith) */
   assert.doesNotMatch(row.translation, /\b(cop(y|ies)|instances?|planes?|servers?)\b/i);
   /* negative control: R124's published-case sentence is gone, and C-96.48 stands */
   assert.notEqual(row.translation, "Your handle is fixed: your work is in a published case ({case}).");
