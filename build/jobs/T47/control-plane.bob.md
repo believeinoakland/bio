@@ -71,3 +71,7 @@ K3164: answer-envelope merged into tranche/T47 (R6 img-src 'self' data: blob:; R
 ## B15 · CHANGE
 
 K3165: interface-shell is merged into tranche/T47 (R27–R51, with R33's no-storage-without-a-session, R50's phone hold over weighted acts, R51's data-guide → GUIDE.control). Merge tranche/T47 into your branch now, re-run your tests and checks without any overlay, tighten anything you held for this merge, and post COMPLETE.
+
+## B16 · CHANGE
+
+K3167: store-door and signin-door are merged into tranche/T47. Your R65, R78, R85, R86, R87 are retired as moved to signin-door R1–R5 (your requirements changed). Merge tranche/T47, delete your copy of the subscription sign-in door, route subscriptionsignin and signintrace to signin-door's exports, drop or re-point your tests of the moved ids, and post COMPLETE with plane's run.
