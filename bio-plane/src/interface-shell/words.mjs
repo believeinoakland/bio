@@ -15,7 +15,7 @@ const rows = [
   ["shell.you", "You: {handle}", false],
   ["shell.you.holds", "Your menu: sign out, and how the screens look.", false],
   ["shell.signout", "Sign out", false],
-  ["shell.signout.does", "Ends this session on this device and returns to your group's sign-in.", false],
+  ["shell.signout.does", "Ends this session on this device and returns to your group's page.", false],
   ["shell.level", "Explanations: {level}", false],
   ["shell.level.holds", "How quickly explanations open. Promptly, everything opens when you rest on it for half a second; on a longer pause, what screens, sections and acts are waits a second and a half. Keyboard focus and a tap always show everything at once; nothing is ever hidden. Click, or press Alt+Shift+I, to switch.", false],
   ["shell.level.ask", "You have had explanations “{level}” for a month. Keep it that way?", false],
@@ -29,8 +29,6 @@ const rows = [
   ["shell.later", "{place} comes later: its screens are not built yet in your group's Civicsmith.", false],
   ["shell.more", "More", false],
   ["shell.settings.title", "Settings", false],
-  ["shell.groupsettings", "Group settings", false],
-  ["shell.groupsettings.holds", "Group settings: who your group is, its places and offices, security tools, translations and recovery codes, on your group's Civicsmith's settings page until these screens are redrawn.", false],
   ["shell.width", "Width of the sections list", false],
   ["shell.width.holds", "Drag to make the sections list wider or narrower, or use the arrow keys; Home resets it. Kept on this device only.", false],
   ["shell.reason", "Your reason", false],
@@ -48,6 +46,7 @@ const rows = [
   ["shell.unpick", "Unpick all", false],
   ["shell.row.open", "Acts for {name}", false],
   ["shell.row.open.holds", "Opens this row's acts beneath it. Press again to close them.", false],
+  ["shell.row.acts", "Acts", false],
   ["shell.sort", "Sort by {column}", false],
   ["shell.sort.holds", "Sorts the rows by this column; press again to reverse. Sorting changes only your view, never the record.", false],
   ["shell.card.open", "Click to open it.", false],
@@ -57,6 +56,80 @@ const rows = [
   ["shell.card.project", "A project", false],
   ["shell.card.member", "A member of your group", false],
   ["shell.card.capture", "A capture", false],
-  ["shell.notfound", "Nothing here: there is no such screen in your group's Civicsmith.", false],
+  /* T47 (R27, R29, R37): a knock handed in at the doorbell, and a person or organisation the record follows */
+  ["shell.card.knock", "Material handed to your group at its doorbell", false],
+  ["shell.card.person", "A person or organisation your group's record follows", false],
+  /* R28 (mock-shell.js' PATH at a0fab7abf0): path steps that are not a screen's own name */
+  ["shell.step.due-date", "Due date", false],
+  ["shell.step.ceremony", "Publish", false],
+  ["shell.step.imported", "Imported", false],
+  /* R43 (DEC-214 (1)): the mark, in the design stream's own words (mock-shell.js) */
+  ["shell.mark", "Civicsmith", false],
+  ["shell.mark.means", "The plumb bob is Civicsmith's mark. Wherever you see it, you are in your group's own Civicsmith, and the name beside it says whose.", false],
+  /* R35 (DEC-201 (8)): unavailable */
+  ["shell.unavailable.nothing", "Nothing is here: this address leads nowhere in your group's Civicsmith.", false],
+  ["shell.unavailable.notyours", "You can't open this: it isn't yours to see.", false],
+  ["shell.unavailable.unreachable", "Your group's Civicsmith can't be reached just now. It is tried again every 30 seconds, and what you typed is kept.", false],
+  ["shell.unavailable.home", "Go to Home", false],
+  /* R33, R34 (K3061 D3): the lock and the password asked again */
+  ["shell.lock.title", "Locked", false],
+  ["shell.password", "Your password", false],
+  ["shell.lock.unlock", "Unlock", false],
+  ["shell.lock.other", "Not {handle}? Sign in as someone else", false],
+  ["shell.reauth.title", "Your password again", false],
+  ["shell.reauth.send", "Go on", false],
+  /* R39 (N1001): a refusal's trace */
+  ["shell.trace", "Reference: {trace}", false],
+  /* R31 (DEC-139 (4)): the dock's wizard guide and the ring */
+  ["shell.guide", "Wizard", false],
+  ["shell.ring.ready", "Press here when you're ready", false],
+  ["shell.ring.here", "Here", false],
+  /* R40–R42 (DEC-207, DEC-208, DEC-210): the signer */
+  ["shell.signer.exactly", "What your key signs, exactly", false],
+  ["shell.signer.sign", "Sign with my key", false],
+  ["shell.signer.decline", "Don't sign", false],
+  ["shell.signer.passphrase", "A passphrase for your key file", false],
+  ["shell.signer.passphrase.help", "Your key file is locked with it. Keep it somewhere other than the file; nobody can recover it.", false],
+  ["shell.signer.passphrase.again", "The same passphrase again", false],
+  ["shell.signer.passphrase.differ", "The two passphrases differ, so no key was made. Type the same one twice.", false],
+  ["shell.signer.load", "Use a key file you already have", false],
+  ["shell.signer.loadfile", "Your key file", false],
+  ["shell.signer.loadpass", "Its passphrase, if it has one", false],
+  ["shell.signer.notkey", "That isn't a signing key file, or the passphrase is wrong, so nothing was loaded.", false],
+  ["shell.signer.nokey", "No signing key is in this browser for this sitting.", false],
+  /* R44 (DEC-214 (2)): the at-a-glance elements */
+  ["shell.glance.weeks", "{word}: {weeks} acts a week over the last eight weeks", false],
+  ["shell.glance.busy", "busy", false],
+  ["shell.glance.steady", "steady", false],
+  ["shell.glance.quiet", "quiet", false],
+  ["shell.glance.people", "{n} members: {names}", false],
+  ["shell.glance.more", "+{n}", false],
+  ["shell.glance.now", "Now", false],
+  ["shell.glance.timeline", "Open the timeline", false],
+  ["shell.glance.strip", "What can't wait", false],
+  ["shell.glance.strip.sum", "{n} can't wait", false],
 ];
 export const SHELL_WORDS = Object.freeze(rows.map((r) => Object.freeze(r)));
+
+/* R5: words the design stream gives (`docs/development/ux-substrate/screens/words.json` at PR #33's head, f90b187c7b)
+   that the shell draws by their own keys before `setup-words`' `WORD_ROWS` carries them (its R7). Each is drawn from
+   `WORD_ROWS` once that holds the key; until then from this row, the same English. */
+const design = [
+  ["session.signedout", "You are signed out on this device. Your work is saved in your group's Civicsmith, not here.", false],
+  ["session.ended", "You were signed out after a while away, so nobody else at this device can use your sign-in. Sign in again to go back to the page you were on.", false],
+  ["session.locked", "Locked after 30 minutes away. Enter your password to go on where you were; nothing was lost.", false],
+  ["session.reauth", "For this, enter your password again: signing or publishing a case, changing administrators and connecting Claude always ask.", true],
+  ["signing.ceremony.device", "Your device is asking you to confirm with your signing key: its own window asks for your passphrase, fingerprint or device PIN. The key never leaves this device, and Civicsmith never sees it.", true],
+  ["signing.ceremony.declined", "Your device didn't confirm, so nothing was signed or published. Everything is as it was; sign again when you are ready.", true],
+  ["signing.ceremony.keepkey", "Keep this key on this device, so you can sign here again without loading it. Leave this unticked on a computer others use: you then load your key file each time you sign.", true],
+  ["instance.test.notice", "This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.", true],
+  ["screen.unavailable.name", "Can't open this", false],
+  ["screen.unavailable.purpose", "What you see when an address leads nowhere, when something isn't yours to see, or when your group's Civicsmith can't be reached.", false],
+  ["screen.people.name", "People", false],
+  ["screen.settings.name", "Settings", false],
+  ["screen.projects.name", "Projects", false],
+  ["screen.group.name", "Your group", false],
+  ["screen.places.name", "Places and offices", false],
+  ["screen.recovery.name", "Recovery codes", false],
+];
+export const DESIGN_WORDS = Object.freeze(design.map((r) => Object.freeze(r)));

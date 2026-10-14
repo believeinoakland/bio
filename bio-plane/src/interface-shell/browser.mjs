@@ -1,22 +1,27 @@
-/* interface-shell: the browser program (R3–R20, R22, R24, R26). `shellProgram(D, SCREENS, win)` is serialized whole
+/* interface-shell: the browser program (R3–R22, R24, R26–R45). `shellProgram(D, SCREENS, win, GUIDE)` is serialized whole
    into the page's one script by `interfacePage` (draft-T46-interface §1.3): it refers only to its parameters and to the
    language's own globals, so the same function runs in node over the tests' document stand-in. `D` is the page's frozen
-   data (words, the act gate's tables, the grades, the paths), `SCREENS` the registered screens (R21), `win` the window.
-   It reads no table and writes nothing of the record: every read and act is an op the plane serves, under the session
-   the setup page handed over (R3); it keeps no log of reads or of screens visited (R24). */
-export function shellProgram(D, SCREENS, win) {
+   data (words, the act gate's tables, the grades, the paths, the frames), `SCREENS` the registered screens (R21), `win`
+   the window and `GUIDE` the dock's wizard guide (R31) or null. It reads no table and writes nothing of the record: every
+   read and act is an op the plane serves, under the session record this module keeps (R32); it keeps no log of reads or
+   of screens visited (R24). */
+export function shellProgram(D, SCREENS, win, GUIDE) {
   "use strict";
   const doc = win.document;
-  const local = {
-    get(k) { try { return win.localStorage.getItem(k); } catch { return null; } },
-    set(k, v) { try { win.localStorage.setItem(k, v); } catch { /* R26, R18: a storage that cannot be written keeps the default */ } },
-  };
+  const store = (name) => ({
+    get(k) { try { return win[name].getItem(k); } catch { return null; } },
+    set(k, v) { try { win[name].setItem(k, v); } catch { /* R26, R18: a storage that cannot be written keeps the default */ } },
+    del(k) { try { win[name].removeItem(k); } catch { /* nothing kept to remove */ } },
+  });
+  const local = store("localStorage"), tab = store("sessionStorage");
 
   /* ---------- words (R5, R6) ---------- */
   const BASE = new Map(D.words);
   let SHOWN = new Map();
   let wordsRead = false, wordsRetry = false;
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const unesc = (s) => String(s).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
+  const textOf = (h) => unesc(String(h == null ? "" : h).replace(/<[^>]*>/g, "")).trim();
   const has = (key) => BASE.has(key);
   const text = (key) => (SHOWN.has(key) ? SHOWN.get(key) : BASE.has(key) ? BASE.get(key) : key);
   /* `w(key, fills)`: the word, HTML-escaped, each `{name}` filled with its value escaped; a value `{html}` is a fragment
@@ -43,39 +48,70 @@ export function shellProgram(D, SCREENS, win) {
     return o.year === false ? w("date.daymonth", { day: String(d), month }) : w("date.daymonthyear", { day: String(d), month, year: String(y) });
   }
 
-  /* ---------- the session (R3, R4) ---------- */
-  let S = null, ME = null, GONE = false;
-  function readSession() {
+  /* ---------- frames (R30, R45) ---------- */
+  const frameOf = (id) => D.frames[id] || "working";
+  const sessionless = (id) => frameOf(id) === "public" || frameOf(id) === "published";
+
+  /* ---------- the session record (R32) ---------- */
+  /* Beside the record, never holding the token: why it last changed, for the other tabs (`locked`, `ended`,
+     `signedout`); the last instant of the member's own activity, shared by the tabs (R33); and, in this tab's
+     sessionStorage, the path to return to. */
+  const STATE_KEY = D.storeKey + ":state", ACTIVE_KEY = D.storeKey + ":active", RETURN_KEY = D.storeKey + ":return";
+  let S = null, ME = null, LOCKED = false, ENTRY = { state: null, handle: null }, STARTED = false;
+  function readRecord() {
     try {
-      const s = JSON.parse(win.sessionStorage.getItem(D.storeKey) || "null");
-      if (s && typeof s.t === "string" && s.t && (!s.e || s.e > Date.now())) return s;
+      const s = JSON.parse(local.get(D.storeKey) || "null");
+      if (s && typeof s.t === "string" && s.t && (!s.e || s.e > Date.now())) return { t: s.t, e: Number(s.e) || 0, d: s.d === "own" ? "own" : "shared", w: typeof s.w === "string" ? s.w : "" };
     } catch { /* an unreadable record is none */ }
     return null;
   }
-  function gone() {
-    if (GONE) return;
-    GONE = true;
-    try { win.sessionStorage.removeItem(D.storeKey); } catch { /* nothing kept to remove */ }
-    win.location.assign("/");
+  function writeRecord(r) { local.set(D.storeKey, JSON.stringify({ t: r.t, e: r.e || 0, d: r.d, w: r.w || "" })); local.del(STATE_KEY); }
+  function clearRecord(why) { local.del(D.storeKey); if (why) local.set(STATE_KEY, why); else local.del(STATE_KEY); }
+  const working = () => ROUTE && frameOf(ROUTE.screen) === "working" && !ROUTE.root;
+  /* R32: the path to return to, the address alone (never a query, a fragment or the token) */
+  function keepReturn() { if (working()) tab.set(RETURN_KEY, win.location.pathname); }
+  function takeReturn() { const r = tab.get(RETURN_KEY); tab.del(RETURN_KEY); return r && /^\/app(\/|$)/.test(r) ? r : "/app"; }
+  /* The session is over (R3, R32, R33): the record cleared, the other tabs told why, and `front` drawn in that state. */
+  function over(why) {
+    if (!S) return;
+    keepReturn();
+    const handle = S.w || (ME && ME.handle) || null;
+    S = null; ME = null; LOCKED = false; REAUTH = null; stopIdle();
+    clearRecord(why);
+    ENTRY = { state: why, handle };
+    route();
   }
 
-  /* The op client: the token only in the Authorization header (R3); a 401 to any request signs the page out. Answers
-     `{kind: "ok", value}`, `{kind: "refused", code, translation, fields}` (R13) or `{kind: "silent"}` (no answer). */
+  /* The op client: the token only in the Authorization header (R3); a 401 to any request ends the session (R32); the
+     plane's `SESSION_LOCKED` locks the page (R33). A request with no session, or for a screen drawn without one,
+     carries no Authorization header and is sent only for a public op (R30, R45). Answers `{kind: "ok", value}`,
+     `{kind: "refused", code, translation, fields, server}` (R13) or `{kind: "silent"}` (no answer). */
   async function call(op, req = {}) {
-    if (GONE) return { kind: "silent" };
+    const own = typeof req.bearer === "string" && req.bearer !== "";
+    const pub = !own && (!S || !!req.public);
+    if (pub && !D.publicOps.includes(op)) return { kind: "refused", code: "NOT_SIGNED_IN", translation: null, fields: {} };
     const qs = new URLSearchParams();
     qs.set("op", op);
     for (const [k, v] of Object.entries(req.query || {})) if (v !== undefined && v !== null) qs.set(k, String(v));
-    const own = typeof req.bearer === "string" && req.bearer !== "";
-    const init = { headers: { Authorization: "Bearer " + (own ? req.bearer : S.t) } };
+    /* R33: a read the shell makes on its own timers is marked background, so the plane counts it as no activity */
+    if (req.background) qs.set("background", "1");
+    const init = { headers: {} };
+    if (!pub) init.headers.Authorization = "Bearer " + (own ? req.bearer : S.t);
     if (req.raw !== undefined) { init.method = "POST"; init.body = req.raw; if (req.rawType) init.headers["content-type"] = req.rawType; }
     else if (req.body !== undefined) { init.method = "POST"; init.body = JSON.stringify(req.body); init.headers["content-type"] = "application/json"; }
+    const held = S;
     let r;
     try { r = await win.fetch("/api/?" + qs.toString(), init); } catch { return { kind: "silent" }; }
-    if (r.status === 401 && !own) { gone(); return { kind: "silent" }; }
+    if (r.status === 401 && !own && !pub) { if (S && S === held) over("ended"); return { kind: "silent" }; }
     if (req.bytes) return { kind: "response", r };
     let j = null;
     const type = r.headers && typeof r.headers.get === "function" ? String(r.headers.get("content-type") || "") : "";
+    const server = r.status >= 500;
+    const refusedOf = (o) => {
+      const a = { kind: "refused", code: String((o && (o.code || o.reason)) || r.status), translation: o && typeof o.translation === "string" ? o.translation : null, fields: o || {}, server };
+      if (a.code === "SESSION_LOCKED" && !own && !pub && !req.noLock && S === held) lock(false);
+      return a;
+    };
     if (/ndjson/i.test(type)) {
       /* R21 (K3011): a streamed answer (application/x-ndjson, `agent-worker` R54) is its list of parsed events, the
          answer the last; a line that does not parse is no answer */
@@ -83,26 +119,27 @@ export function shellProgram(D, SCREENS, win) {
       try { events = String(await r.text()).split("\n").filter((l) => l.trim()).map((l) => JSON.parse(l)); } catch { events = null; }
       if (!events || !events.length) return { kind: "silent" };
       const last = events[events.length - 1];
-      if (!r.ok || (last && typeof last === "object" && last.ok === false))
-        return { kind: "refused", code: String((last && (last.code || last.reason)) || r.status), translation: last && typeof last.translation === "string" ? last.translation : null, fields: last || {} };
+      if (!r.ok || (last && typeof last === "object" && last.ok === false)) return refusedOf(last && typeof last === "object" ? last : null);
       return { kind: "ok", value: events, json: events };
     }
     try { j = await r.json(); } catch { j = null; }
-    const refused = (o) => ({ kind: "refused", code: String(o.code || o.reason || r.status), translation: typeof o.translation === "string" ? o.translation : null, fields: o });
-    if (j && typeof j === "object" && j.ok === false) return refused(j);
+    if (j && typeof j === "object" && j.ok === false) return refusedOf(j);
     const value = j && typeof j === "object" && "result" in j ? j.result : j;
-    if (value && typeof value === "object" && value.ok === false) return refused(value);
-    if (!r.ok) return j && typeof j === "object" ? refused(j) : { kind: "refused", code: String(r.status), translation: null, fields: {} };
+    if (value && typeof value === "object" && value.ok === false) return refusedOf(value);
+    if (!r.ok) return j && typeof j === "object" ? refusedOf(j) : { kind: "refused", code: String(r.status), translation: null, fields: {}, server };
     if (j === null) return { kind: "silent" };
     return { kind: "ok", value, json: j };
   }
+  const unreachable = (a) => a.kind === "silent" || (a.kind === "refused" && a.server);
 
-  /* ---------- the act gate (R12) and the weights (R11) ---------- */
+  /* ---------- the act gate (R12, R30, R45) and the weights (R11) ---------- */
   const ADMIN = new Set(D.adminActs);
   const SESSION = { member: new Set(D.sessionOps.member), admin: new Set(D.sessionOps.admin) };
-  function can(op) {
-    if (!ME) return false;
+  function can(op, inst) {
     if (!(op in D.ops)) return false;
+    /* R30, R45: a screen drawn without a session offers only the public ops */
+    if (inst && inst.pub) return D.publicOps.includes(op);
+    if (!ME) return false;
     const need = D.needs[op];
     const caps = Array.isArray(ME.capabilities) ? ME.capabilities : [];
     if (need !== undefined && need !== null && !caps.includes(need)) return false;
@@ -142,11 +179,11 @@ export function shellProgram(D, SCREENS, win) {
   const phone = () => !!(mq && mq.matches);
 
   /* ---------- the frame's reads ---------- */
-  let GROUP = null, TODO = null, REACHABLE = false, DOCK = false, ASK_LEVEL = false;
+  let GROUP = null, TODO = null, REACHABLE = false, DOCK = false, ASK_LEVEL = false, BOOT = null;
   const screenOf = (id) => SCREENS.find((s) => s.id === id) || null;
 
   /* ---------- screen instances: reads, states, acts ---------- */
-  let MAIN = null, DOCKI = null, ROUTE = null;
+  let MAIN = null, DOCKI = null, GUIDEI = null, ROUTE = null, WIZ = null, RING = null, UNREACHED = false;
   function emptyOf(spec, v) {
     if (spec && typeof spec.empty === "function") return !!spec.empty(v);
     if (v === null || v === undefined) return true;
@@ -154,17 +191,20 @@ export function shellProgram(D, SCREENS, win) {
     if (typeof v === "object") for (const k of ["items", "results", "list", "rows", "words"]) if (Array.isArray(v[k])) return v[k].length === 0;
     return false;
   }
+  /* R39 (N1001): a refusal's trace, drawn as a short reference beside its words and kept nowhere */
+  const traceOf = (a) => (a && a.fields && typeof a.fields.trace === "string" && a.fields.trace
+    ? ' <span class="cs-trace">' + w("shell.trace", { trace: a.fields.trace.slice(0, 8) }) + "</span>" : "");
   /* R13: `refusal.<code>` (or the screen's own key for the code) when held; else the answer's translation; else
      `state.failed` with the code (a read's state already says it, so a read is handed the code alone) */
   function refusalWords(a, own, bare, inst) {
     /* R21 (K3002): a screen's own word for the code, or its own function `(refusal, cs)` → HTML */
     if (own && typeof own[a.code] === "function") {
-      try { return String(own[a.code]({ code: a.code, translation: a.translation, ...(a.fields || {}) }, inst ? kit(inst) : null)); } catch { /* falls to the words below */ }
+      try { return String(own[a.code]({ code: a.code, translation: a.translation, ...(a.fields || {}) }, inst ? kit(inst) : null)) + traceOf(a); } catch { /* falls to the words below */ }
     }
     const key = own && typeof own[a.code] === "string" ? own[a.code] : "refusal." + a.code;
-    if (has(key)) return w(key, a.fields || {});
-    if (a.translation) return esc(a.translation);
-    return bare ? esc(a.code) : w("state.failed", { reason: a.code });
+    if (has(key)) return w(key, a.fields || {}) + traceOf(a);
+    if (a.translation) return esc(a.translation) + traceOf(a);
+    return (bare ? esc(a.code) : w("state.failed", { reason: a.code })) + traceOf(a);
   }
   function outcome(spec, a) {
     if (a.kind === "ok") return emptyOf(spec, a.value) ? { state: "empty", value: a.value, refusal: null } : { state: "ok", value: a.value, refusal: null };
@@ -172,27 +212,46 @@ export function shellProgram(D, SCREENS, win) {
     return { state: "failed", value: null, refusal: { code: null, words: w("shell.noanswer") } };
   }
   function instance(spec, subject, key, serves) {
-    const inst = { key, spec, subject, serves: serves || null, data: {}, ui: {}, acts: [], gen: 0, notFound: false };
-    inst.view = { subject, data: inst.data, ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, serves: inst.serves,
+    const inst = { key, spec, subject, serves: serves || null, data: {}, ui: {}, acts: [], gen: 0, unavail: null, timers: [], fills: {}, stash: null, retry: null };
+    inst.view = { subject, data: inst.data, ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; },
+      get serves() { return key === "g" ? (ROUTE ? { screen: ROUTE.screen, subject: ROUTE.subject } : null) : inst.serves; },
+      get entry() { return { state: ENTRY.state, handle: ENTRY.handle }; }, get wizard() { return WIZ ? { script: WIZ.script, version: WIZ.version, recording: !!WIZ.recording } : null; },
       parts: spec.parts || {}, origin: win.location.origin };
+    /* R30, R45: a screen of the public or published frame is drawn without a session, whatever the record holds */
+    Object.defineProperty(inst, "pub", { get: () => sessionless(spec.id) || !S });
     return inst;
   }
   const NOT_FOUND = /^NO_SUCH_|_NOT_FOUND$|^NOT_FOUND$/;
-  async function readAll(inst, names) {
+  const live = (inst) => inst === MAIN || inst === DOCKI || inst === GUIDEI;
+  async function readAll(inst, names, background) {
     let specs = {};
     try { specs = inst.spec.reads ? inst.spec.reads(inst.view) || {} : {}; } catch { specs = {}; }
     const gen = ++inst.gen;
     const todo = Object.entries(specs).filter(([n]) => !names || names.includes(n));
     for (const [n] of todo) if (!inst.data[n] || !names) inst.data[n] = { state: "loading", value: null, refusal: null };
+    if (!names && !background) inst.unavail = null;
     draw();
     await Promise.all(todo.map(async ([n, spec]) => {
-      const a = await call(spec.op, { query: spec.query, body: spec.body });
+      const a = await call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background });
       if (gen !== inst.gen && !names) return;
       inst.data[n] = outcome(spec, a);
-      /* R9: a subject the read does not find is the screen's "Nothing here" */
-      if (spec.subject && (inst.data[n].state === "empty" || (a.kind === "refused" && NOT_FOUND.test(a.code)))) inst.notFound = true;
+      /* R9, R35: the subject's read decides whether the screen can be drawn at all */
+      if (spec.subject) {
+        const was = inst.unavail;
+        if (unreachable(a)) inst.unavail = "unreachable";
+        else if (a.kind === "refused" && D.notYours.includes(a.code)) inst.unavail = "notyours";
+        else if (inst.data[n].state === "empty" || (a.kind === "refused" && NOT_FOUND.test(a.code))) inst.unavail = "nothing";
+        else inst.unavail = null;
+        if (inst.unavail === "unreachable") retryLater(inst);
+        if (was === "unreachable" && !inst.unavail && inst.stash) { inst.pending = inst.stash; inst.stash = null; }
+      }
       draw();
     }));
+  }
+  /* R35: an unreachable screen is tried again every 30 seconds, in the background, while it is the one shown */
+  function retryLater(inst) {
+    if (inst.retry !== null) return;
+    inst.retry = setTimeout(() => { inst.retry = null; if (live(inst)) readAll(inst, null, true); }, D.retry);
   }
 
   /* ---------- the kit `cs` (draft §2.2 Suggestions; the screen contract, R21) ---------- */
@@ -210,12 +269,13 @@ export function shellProgram(D, SCREENS, win) {
     tag: { cls: "cs-kind", attr: null, icon: null },
     scale: { cls: "cs-grade", attr: "data-scale", icon: (v) => v },
   };
-  function kit(inst) {
+  const wordOrData = (o) => (o && typeof o === "object" ? (typeof o.key === "string" ? w(o.key, o.fills) : esc(o.text)) : typeof o === "string" ? w(o) : "");
+  function kit(inst, bg) {
     const cs = {
       w, esc, date,
       get me() { return ME; },
       get reachable() { return REACHABLE; },
-      can: (op) => can(op),
+      can: (op) => can(op, inst),
       level: () => LEVEL,
       setLevel: (v) => setLevel(v),
       theme: () => THEME,
@@ -227,27 +287,21 @@ export function shellProgram(D, SCREENS, win) {
         const buf = await win.crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(t)));
         return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
       },
-      /* R21 (K2998): one op, its parsed answer (null when none came); `bearer` replaces the session for this request only */
+      /* R21 (K2998): one op, its parsed answer (null when none came); `bearer` replaces the session for this request only;
+         R33: a call made from `cs.later` is background */
       async call(op, o = {}) {
-        const a = await call(op, { query: o.query, body: o.body, raw: o.raw, rawType: o.rawType, bearer: o.bearer });
+        const a = await call(op, { query: o.query, body: o.body, raw: o.raw, rawType: o.rawType, bearer: o.bearer, public: inst.pub, background: !!(bg || o.background) });
         return a.kind === "ok" ? a.json : a.kind === "refused" ? a.fields : null;
       },
       /* R21 (K2999): a byte answer handed to the browser as a file, its object address released once the download starts */
       async download(op, o = {}) {
-        const a = await call(op, { query: o.query, body: o.body, bytes: true });
+        const a = await call(op, { query: o.query, body: o.body, bytes: true, public: inst.pub });
         if (a.kind !== "response") return { ok: false, answer: null };
         const r = a.r;
         const type = r.headers && r.headers.get ? r.headers.get("content-type") || "" : "";
         if (!r.ok || /json/i.test(type)) { let j = null; try { j = await r.json(); } catch { j = null; } return { ok: false, answer: j }; }
         const blob = await r.blob();
-        const url = win.URL.createObjectURL(blob);
-        const link = doc.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", o.name || "");
-        doc.body.appendChild(link);
-        link.click();
-        doc.body.removeChild(link);
-        win.URL.revokeObjectURL(url);
+        saveFile(blob, o.name || "");
         return { ok: true, answer: { type, size: blob.size } };
       },
       set: (name, value) => { inst.ui[name] = value; draw(); },
@@ -257,6 +311,23 @@ export function shellProgram(D, SCREENS, win) {
         if (el.tagName === "FIELDSET") return Array.from(el.querySelectorAll("input")).filter((i) => i.checked).map((i) => i.value);
         if (el.type === "checkbox" || el.type === "radio") return !!el.checked;
         return el.value;
+      },
+      /* R27 (K3014): a field the screen drew set to `value` over what was typed there, kept by later redraws */
+      fill(id, value) {
+        const el = doc.getElementById(id);
+        if (el && !(el.type === "file")) { if (el.type === "checkbox" || el.type === "radio") el.checked = !!value; else el.value = String(value == null ? "" : value); }
+        else inst.fills[id] = value;
+      },
+      /* R27 (K3013): `fn(cs, view)` once after `ms` on the page's clock, cancelled when the member leaves the screen or
+         the page; the calls it makes are background (R33) */
+      later(ms, fn) {
+        const t = setTimeout(() => {
+          inst.timers = inst.timers.filter((x) => x !== t);
+          if (!live(inst) || typeof fn !== "function") return;
+          try { fn(kit(inst, true), inst.view); } catch { /* a screen's own timer never stops the shell */ }
+        }, Math.max(0, Number(ms) || 0));
+        inst.timers.push(t);
+        return t;
       },
       file(id) { const el = doc.getElementById(id); return el && el.files && el.files[0] ? el.files[0] : null; },
       /* R10: a read in one of four states; `inner(value)` draws its data */
@@ -272,9 +343,9 @@ export function shellProgram(D, SCREENS, win) {
       /* R11, R12: the act's button, gated, labelled, weighted; "" when the session may not do it */
       act(op, o = {}) {
         const spec = (inst.spec.acts || []).find((a) => a.op === op);
-        if (!spec || !can(op)) return "";
+        if (!spec || !can(op, inst)) return "";
         const weight = weightOf(op);
-        const label = w(o.label || spec.label || "act." + op + ".label." + inst.spec.id, o.fills);
+        const label = w(o.label || spec.label || "act." + op + ".label." + (inst.spec.id || "guide"), o.fills);
         const does = has("act." + op + ".does") ? w("act." + op + ".does") : "";
         const outward = !!(spec.outward || o.outward);
         if (phone() && (weight === "signed" || weight === "irreversible"))
@@ -350,15 +421,28 @@ export function shellProgram(D, SCREENS, win) {
           + (o.help ? '<span class="help" id="' + esc(id) + '-help">' + w(o.help) + "</span>" : "") + input
           + (o.draft ? '<span class="cs-draftlabel">' + I("machine") + w(o.draft, o.draftFills) + "</span>" : "") + "</div>";
       },
+      /* R27 (N986): options are words by key, `[value, key, fills]`, or record data, `{value, text}`, the text drawn as
+         data, HTML-escaped and never read as a key */
       choice(id, labelKey, options, o = {}) {
+        const opt = (x) => {
+          const [v, t] = Array.isArray(x) ? [x[0], w(x[1], x[2])] : x && typeof x === "object" ? [x.value, typeof x.key === "string" ? w(x.key, x.fills) : esc(x.text)] : [x, esc(x)];
+          return '<option value="' + esc(v) + '"' + (o.value === v ? " selected" : "") + ">" + t + "</option>";
+        };
         return '<div class="cs-field"><label for="' + esc(id) + '">' + w(labelKey) + '</label><select id="' + esc(id) + '" class="cs-input">'
-          + options.map(([v, k, fills]) => '<option value="' + esc(v) + '"' + (o.value === v ? " selected" : "") + ">" + w(k, fills) + "</option>").join("") + "</select></div>";
+          + (options || []).map(opt).join("") + "</select></div>";
       },
       checks(id, legendKey, options, o = {}) {
         return '<fieldset class="cs-field" id="' + esc(id) + '"><legend>' + w(legendKey) + "</legend>" + options.map(([v, k, on], i) =>
           '<label><input type="' + (o.radio ? "radio" : "checkbox") + '" name="' + esc(id) + '" id="' + esc(id) + "-" + i + '" value="' + esc(v) + '"' + (on ? " checked" : "") + "> " + w(k) + "</label>").join("") + "</fieldset>";
       },
-      /* R19: rows, each row's acts in a panel beneath it; picks bring the hold strip */
+      /* R27 (N985): R18's control, drawn by the kit, so no screen draws the shell's own buttons */
+      appearance() {
+        return '<div class="cs-actrow" role="group" aria-label="' + w("shell.appearance") + '">' + ["device", "light", "dark"].map((t) =>
+          '<button type="button" class="cs-btn" data-tone="quiet" aria-pressed="' + (THEME === t) + '" data-shell="theme" data-theme-to="' + t + '">' + w("shell.appearance." + t) + "</button>").join("") + "</div>";
+      },
+      /* R19: rows, each row's acts in a panel beneath it; picks bring the hold strip. R27: the row's name (`name(item)`,
+         its HTML, a reference where the item has a screen) is drawn with the panel's control beside it, never around
+         it. With `cells(item)` one short of `cols`, the name is the first column; with as many, `cells(item)[0]` is. */
       rows(t) {
         const id = t.id || "rows";
         const open = inst.ui["open:" + id] || (inst.ui["open:" + id] = []);
@@ -376,14 +460,18 @@ export function shellProgram(D, SCREENS, win) {
         }).join("") + "</tr></thead>";
         const body = items.map((it) => {
           const key = String(t.key(it));
-          const name = t.name ? t.name(it) : key;
+          let cells = t.cells(it);
+          const nameHtml = t.name ? String(t.name(it)) : null;
+          if (nameHtml !== null && cells.length === cols.length - 1) cells = [nameHtml].concat(cells);
+          const name = nameHtml !== null ? textOf(nameHtml) : textOf(cells[0]) || key;
           const isOpen = open.includes(key);
-          const cells = t.cells(it);
           const acts = t.acts ? t.acts(it) : "";
+          const control = acts ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="row" data-table="' + esc(id) + '" data-id="' + esc(key) + '" aria-expanded="' + isOpen
+            + '" aria-label="' + w("shell.row.open", { name }) + '"' + tipAttr(w("shell.row.open.holds"), 2) + ">" + w("shell.row.acts") + "</button>" : "";
           return '<tr class="cs-r">' + (t.pick ? '<td><input type="checkbox" id="pick-' + esc(id) + "-" + esc(key) + '" data-shell="pick" data-table="' + esc(id) + '" data-id="' + esc(key) + '"'
               + (picked.includes(key) ? " checked" : "") + ' aria-label="' + w("shell.pick", { name }) + '"></td>' : "")
-            + cells.map((c, i) => i === 0 && acts
-              ? '<td><button type="button" class="cs-btn" data-tone="quiet" data-shell="row" data-table="' + esc(id) + '" data-id="' + esc(key) + '" aria-expanded="' + isOpen + '" aria-label="' + w("shell.row.open", { name }) + '">' + c + "</button></td>"
+            + cells.map((c, i) => i === 0
+              ? '<td data-label="' + w(cols[0] || "state.empty") + '"><span class="cs-rowname">' + c + control + "</span></td>"
               : '<td data-label="' + w(cols[i] || "state.empty") + '">' + c + "</td>").join("") + "</tr>"
             + (acts ? '<tr class="cs-panel"' + (isOpen ? "" : " hidden") + '><td colspan="' + (cols.length + (t.pick ? 1 : 0)) + '"><div class="cs-actrow">' + acts + "</div></td></tr>" : "");
         }).join("");
@@ -395,41 +483,113 @@ export function shellProgram(D, SCREENS, win) {
           : "";
         return '<table class="cs-rows">' + head + "<tbody>" + body + "</tbody></table>" + hold;
       },
+      /* R44 (DEC-214 (2)): the at-a-glance elements, each drawn once, as the visual language draws them */
+      reading(o = {}) {
+        return '<div class="cs-tile"><span class="k">' + wordOrData(o.label) + '</span><b class="v">' + esc(o.value) + "</b>"
+          + (o.change ? '<span class="d">' + wordOrData(o.change) + "</span>" : "") + (Array.isArray(o.bars) ? spark(o.bars, null) : "") + "</div>";
+      },
+      activity: (weeks, word) => spark(weeks, word || null),
+      initials(names) {
+        const list = (names || []).map((n) => String(n));
+        return '<span class="cs-people" role="img" aria-label="' + w("shell.glance.people", { n: String(list.length), names: list.join(", ") }) + '">'
+          + list.slice(0, 4).map((n) => "<i>" + esc(n.slice(0, 1).toUpperCase()) + "</i>").join("")
+          + (list.length > 4 ? '<i class="more">' + w("shell.glance.more", { n: String(list.length - 4) }) + "</i>" : "") + "<span>" + esc(list.length) + "</span></span>";
+      },
+      path(steps) {
+        return '<ol class="cs-next">' + (steps || []).map((s) => "<li" + (s.now ? ' aria-current="step"' : "") + "><span>" + wordOrData(s.text) + "</span>" + (s.act || "") + "</li>").join("") + "</ol>";
+      },
+      storyline(events, o = {}) {
+        const dated = (events || []).filter((e) => e && e.date && date(e.date));
+        const ev = (e) => {
+          const t = "<b>" + date(e.date) + "</b>" + wordOrData(e.text);
+          return '<div class="ev ' + (e.us ? "us" : "them") + '" role="listitem"><span class="t">' + (e.us ? "" : t) + '</span><i></i><span class="t">' + (e.us ? t : "") + "</span></div>";
+        };
+        return '<div class="cs-tl" role="list">' + dated.map(ev).join("") + "</div>"
+          + (o.open ? '<a class="cs-btn" data-tone="quiet" href="' + esc(hrefOf(o.open.screen, o.open.subject)) + '" data-nav>' + w("shell.glance.timeline") + "</a>" : "");
+      },
+      strip(readings) {
+        const four = (readings || []).slice(0, 4);
+        if (phone()) {
+          const n = four.reduce((a, r) => a + (Number(r.n) || 0), 0);
+          return '<div class="cs-strip" role="region" aria-label="' + w("shell.glance.strip") + '"><a class="cs-ref" href="' + esc(placeHref("queue")) + '" data-nav><b>' + esc(n) + "</b> "
+            + w("shell.glance.strip.sum", { n: "" }).trim() + "</a></div>";
+        }
+        return '<div class="cs-strip" role="region" aria-label="' + w("shell.glance.strip") + '">' + four.map((r) =>
+          '<a class="cs-ref" href="' + esc(hrefOf(r.screen || "queue", r.subject)) + '" data-nav><b>' + esc(r.n) + "</b> " + wordOrData(r.label) + "</a>").join("") + "</div>";
+      },
     };
+    /* R32 (screens-entry R2, R6, R7): the session handed over by a screen of the public or setup frame */
+    cs.signedIn = (answer, o = {}) => signedIn(answer, o);
+    cs.unlocked = () => unlocked();
+    cs.signOut = () => signOut();
+    /* R34: the password asked again, for a screen that sends its act by `cs.call` */
+    cs.reauth = () => reauthAsk();
+    /* R31: the dock's wizard guide, the ring, and (to the guide) its recording and its end */
+    cs.wizard = (script, version) => startWizard(script, version);
+    cs.ring = (op, label) => ring(op, label);
+    if (inst.key === "g") {
+      cs.recording = (on) => { if (WIZ) WIZ.recording = !!on; };
+      cs.wizardEnd = () => endWizard();
+    }
+    /* R40–R42: the signer */
+    cs.signer = SIGNER;
     return cs;
   }
+  /* R44: eight weeks of bars in the stage hue, the newest darker, with the word they say */
+  function spark(vals, word) {
+    const v = (vals || []).map((x) => Math.max(0, Number(x) || 0));
+    const m = Math.max(1, ...v);
+    const said = word ? w(word) : "";
+    return '<span class="cs-spark" role="img" aria-label="' + w("shell.glance.weeks", { word: html(said), weeks: v.join(", ") }) + '">'
+      + v.map((x, i) => '<i style="height:' + Math.max(2, Math.round(18 * x / m)) + 'px"' + (i === v.length - 1 ? ' class="now"' : "") + "></i>").join("")
+      + (said ? "<b>" + said + "</b>" : "") + "</span>";
+  }
+  function saveFile(blob, name) {
+    const url = win.URL.createObjectURL(blob);
+    const link = doc.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", name || "");
+    doc.body.appendChild(link);
+    link.click();
+    doc.body.removeChild(link);
+    win.URL.revokeObjectURL(url);
+  }
 
-  /* ---------- routes (R9) and paths (R8) ---------- */
+  /* ---------- routes (R9, R32, R36) and paths (R8) ---------- */
   function hrefOf(screen, subject) {
     if (screen === "home") return "/app";
     return "/app/" + encodeURIComponent(screen) + (subject !== undefined && subject !== null && subject !== "" ? "/" + encodeURIComponent(subject) : "");
   }
   function parse(pathname) {
-    const rest = String(pathname || "").replace(/^\/app\/?/, "");
+    const p = String(pathname || "");
+    /* R32: `/` opens Home with a live record and `front` without one */
+    if (!/^\/app(\/|$)/.test(p)) return { screen: S ? "home" : "front", subject: null, root: true };
+    const rest = p.replace(/^\/app\/?/, "");
     const [s, ...sub] = rest.split("/").filter((x) => x !== "");
     let subject = sub.length ? sub.join("/") : null;
     try { subject = subject === null ? null : decodeURIComponent(subject); } catch { /* kept as written */ }
-    return { screen: s ? s : "home", subject };
+    return { screen: s ? s : "home", subject, root: false };
   }
-  const placeOf = (id) => (D.paths[id] ? D.paths[id][0] : ["settings", "people", "more"].includes(id) ? id : null);
+  const placeOf = (id) => (D.paths[id] && D.places.includes(D.paths[id][0]) ? D.paths[id][0] : ["settings", "people", "more", "projects"].includes(id) ? id : null);
+  /* R7, R37: a place opens the first of its screens registered, else the shell's own page for it */
   function placeHref(k) {
-    const target = D.placeScreens[k];
-    return target === "home" ? "/app" : screenOf(target) ? hrefOf(target) : "/app/" + k;
+    const target = (D.placeScreens[k] || []).find(screenOf);
+    return target === "home" ? "/app" : target ? hrefOf(target) : "/app/" + k;
   }
   function pathNav(route, inst) {
     const steps = [];
-    const p = D.paths[route.screen];
+    const p = D.paths[route.screen] || (inst && inst.unavail ? D.paths.unavailable : null);
     if (p) {
-      steps.push({ label: w("rail." + p[0] + ".name"), href: placeHref(p[0]) });
       let proj = null;
       try { proj = inst && inst.spec.place ? (inst.spec.place(inst.view) || {}).project : null; } catch { proj = null; }
-      for (const step of p.slice(1)) {
+      p.forEach((step, i) => {
         if (step === "@project") { if (proj && proj.title) steps.push({ label: esc(proj.title), href: route.screen === "project" ? null : hrefOf("project", proj.id) }); }
+        else if (i === 0 && D.places.includes(step)) steps.push({ label: w("rail." + step + ".name"), href: placeHref(step) });
         else steps.push({ label: w(step) });
-      }
+      });
       if (route.screen === "project" && !(proj && proj.title)) steps.push({ label: w("screen.project.name") });
     } else if (D.places.includes(route.screen)) steps.push({ label: w(route.screen === "more" ? "shell.more" : "rail." + route.screen + ".name") });
-    else steps.push({ label: w("state.empty") });
+    else steps.push({ label: inst && has("screen." + route.screen + ".name") ? w("screen." + route.screen + ".name") : w("screen.unavailable.name") });
     if (steps.length) steps[steps.length - 1].href = null;
     return '<nav class="cs-crumbs" aria-label="' + w("shell.path") + '"><ol>' + steps.map((s, i) => "<li>" + (i === steps.length - 1
       ? '<span aria-current="page">' + s.label + "</span>"
@@ -437,13 +597,21 @@ export function shellProgram(D, SCREENS, win) {
   }
 
   /* ---------- drawing ---------- */
+  /* R35 (DEC-201 (8)): unavailable, in its three states */
+  function unavailableHtml(kind) {
+    const key = kind === "notyours" ? "shell.unavailable.notyours" : kind === "unreachable" ? "shell.unavailable.unreachable" : "shell.unavailable.nothing";
+    return '<h1 class="t-title" tabindex="0"' + tipAttr(kw("screen.unavailable.purpose"), 2) + ">" + w("screen.unavailable.name") + "</h1>"
+      + '<p class="cs-state" data-state="' + (kind === "unreachable" ? "failed" : "empty") + '" data-unavailable="' + esc(kind) + '"' + (kind === "unreachable" ? ' role="alert"' : "") + ">" + w(key) + "</p>"
+      + (kind === "unreachable" ? "" : '<p><a class="cs-btn" data-tone="quiet" href="/app" data-nav>' + w("shell.unavailable.home") + "</a></p>");
+  }
   const shellPage = (route) => {
     const k = route.screen;
     const titled = (key) => '<h1 class="t-title">' + w(key) + "</h1>";
     if (k === "settings") {
-      const links = ["members", "account", "connect", "notes"].filter(screenOf).map((s) =>
+      /* R37: until `settings` is registered, the settings screens registered, and no link to `/` */
+      const links = D.settingsScreens.filter(screenOf).map((s) =>
         '<li><a href="' + hrefOf(s) + '" data-nav' + tipAttr(kw("screen." + s + ".purpose"), 2) + ">" + w("screen." + s + ".name") + "</a></li>").join("");
-      return titled("shell.settings.title") + "<ul class=\"cs-list\">" + links + '<li><a href="/"' + tipAttr(w("shell.groupsettings.holds"), 2) + ">" + w("shell.groupsettings") + "</a></li></ul>";
+      return titled("shell.settings.title") + '<ul class="cs-list">' + links + "</ul>";
     }
     if (k === "more") {
       return titled("shell.more") + '<ul class="cs-list">' + ["projects", "people", "settings"].map((p) =>
@@ -451,25 +619,35 @@ export function shellProgram(D, SCREENS, win) {
     }
     return titled("rail." + k + ".name") + '<p class="cs-state" data-state="empty">' + w("shell.later", { place: html(w("rail." + k + ".name")) }) + "</p>";
   };
+  function renderOf(inst) {
+    inst.acts = [];
+    try { return inst.spec.render(kit(inst), inst.view); } catch { return '<p class="cs-state" data-state="failed" role="alert">' + w("state.failed", { reason: html(w("shell.noanswer")) }) + "</p>"; }
+  }
   function mainHtml(route) {
-    if (!ME) return '<p class="cs-state" data-state="loading" role="status"><span class="bar" aria-hidden="true"></span>' + w("state.loading") + "</p>";
+    if (UNREACHED) return unavailableHtml("unreachable");
+    if (!MAIN && !ENTRY_PAGE && !ME) return '<p class="cs-state" data-state="loading" role="status"><span class="bar" aria-hidden="true"></span>' + w("state.loading") + "</p>";
+    if (ENTRY_PAGE) return entryPage();
     if (!MAIN) {
       if (D.places.includes(route.screen)) return pathNav(route, null) + shellPage(route);
-      return pathNav(route, null) + '<p class="cs-state" data-state="empty">' + w("state.empty") + "</p>";
+      return pathNav(route, null) + unavailableHtml("nothing");
     }
-    MAIN.acts = [];
-    if (MAIN.notFound) return pathNav(route, MAIN) + '<p class="cs-state" data-state="empty">' + w("state.empty") + "</p>";
-    let body;
-    try { body = MAIN.spec.render(kit(MAIN), MAIN.view); } catch { body = '<p class="cs-state" data-state="failed" role="alert">' + w("state.failed", { reason: html(w("shell.noanswer")) }) + "</p>"; }
-    return pathNav(route, MAIN) + body;
+    if (MAIN.unavail) return pathNav(route, MAIN) + unavailableHtml(MAIN.unavail);
+    const body = renderOf(MAIN);
+    return (frameOf(MAIN.spec.id) === "working" ? pathNav(route, MAIN) : "") + body;
   }
+  /* R32: with no `front` registered, the state the session ended in, drawn by the shell */
+  let ENTRY_PAGE = false;
+  const entryPage = () => '<h1 class="t-title">' + w("screen.unavailable.name") + "</h1>"
+    + (ENTRY.state ? '<p class="cs-state" data-state="empty">' + w("session." + ENTRY.state) + "</p>" : '<p class="cs-state" data-state="empty">' + w("shell.unavailable.notyours") + "</p>");
   function dockHtml() {
-    if (!(REACHABLE && DOCK && DOCKI)) return "";
-    DOCKI.acts = [];
-    let body = "";
-    try { body = DOCKI.spec.render(kit(DOCKI), DOCKI.view); } catch { body = ""; }
-    return '<aside class="cs-dock" aria-label="' + w("shell.assistant") + '"><header>' + I("machine") + w("shell.assistant") + '<span class="spacer"></span>'
-      + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-label="' + w("shell.assistant.close") + '">' + I("close") + "</button></header>"
+    /* R31: one panel at a time, the guide while a wizard runs, else the assistant's */
+    const guide = !!(WIZ && GUIDEI);
+    const inst = guide ? GUIDEI : REACHABLE && DOCK && DOCKI ? DOCKI : null;
+    if (!inst || !(guide || DOCK)) return "";
+    const body = renderOf(inst);
+    const name = guide ? "shell.guide" : "shell.assistant";
+    return '<aside class="cs-dock" aria-label="' + w(name) + '" data-panel="' + (guide ? "guide" : "assistant") + '"><header>' + I(guide ? "wizard" : "machine") + w(name) + '<span class="spacer"></span>'
+      + (guide ? "" : '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-label="' + w("shell.assistant.close") + '">' + I("close") + "</button>") + "</header>"
       + '<div class="body">' + body + "</div></aside>";
   }
   function mastHtml() {
@@ -478,7 +656,10 @@ export function shellProgram(D, SCREENS, win) {
     const initial = ME && ME.handle ? esc(String(ME.handle).slice(0, 1).toUpperCase()) : "";
     const signout = can("signout") ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="signout" role="menuitem"' + tipAttr(w("shell.signout.does"), 2) + ">" + w("shell.signout") + "</button>" : "";
     const themes = ["device", "light", "dark"].map((t) => '<button type="button" class="cs-btn" data-tone="quiet" role="menuitemradio" aria-checked="' + (THEME === t) + '" data-shell="theme" data-theme-to="' + t + '">' + w("shell.appearance." + t) + "</button>").join("");
-    return '<header class="cs-mast">' + (name ? '<a class="grp" href="/app" data-nav>' + name + "</a>" : "") + '<span class="spacer"></span>'
+    /* R43 (DEC-214 (1)): the mark opens the masthead, before the group's name */
+    const mark = '<span class="cs-mark" role="img" aria-label="' + w("shell.mark") + '" tabindex="0"' + tipAttr("<b>" + w("shell.mark") + "</b>: " + w("shell.mark.means"), 1)
+      + '><svg viewBox="0 0 60 90" aria-hidden="true"><use href="' + D.icons + '#i-mark"/></svg></span>';
+    return '<header class="cs-mast">' + mark + (name ? '<a class="grp" href="/app" data-nav>' + name + "</a>" : "") + '<span class="spacer"></span>'
       + '<a class="cs-btn" data-tone="quiet" href="' + placeHref("find") + '" data-nav' + tipAttr(w("shell.search.holds"), 2) + ">" + I("search") + w("shell.search") + "</a>"
       + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="level"' + tipAttr(w("shell.level.holds"), 2) + ">" + I("question") + w("shell.level", { level: html(level) }) + "</button>"
       + (REACHABLE ? '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-expanded="' + DOCK + '"' + tipAttr(w("shell.assistant.holds"), 2) + ">" + I("machine") + w("shell.assistant") + "</button>" : "")
@@ -488,10 +669,18 @@ export function shellProgram(D, SCREENS, win) {
       + '<div class="cs-dialog cs-menu" id="cs-menu" role="menu"' + (MENU ? "" : " hidden") + ">" + signout
       + '<div role="group" aria-label="' + w("shell.appearance") + '"><span class="eyebrow">' + w("shell.appearance") + "</span>" + themes + "</div></div></span></header>";
   }
+  /* R36: the test-instance band, on every frame, while `bootstrap` answers `test_instance: true` */
+  const bandHtml = () => (BOOT && BOOT.test_instance === true ? '<div class="cs-testband" role="note">' + w("instance.test.notice") + "</div>" : "");
   const RAIL = ["home", "queue", "find", "add", "projects", "people", "settings"];
   const TABS = ["home", "queue", "add", "find", "more"];
   const RAIL_ICON = { home: "home", queue: "queue", find: "search", add: "add", projects: "project", people: "subject", settings: "settings", more: "settings" };
   function frameHtml(route) {
+    const shown = MAIN ? MAIN.spec.id : route.screen;
+    const frame = ENTRY_PAGE ? "public" : MAIN ? frameOf(shown) : "working";
+    if (frame !== "working") {
+      /* R30, R45: the public, published and setup frames: no rail, tabs, dock or member menu */
+      return '<div class="cs-frame" data-frame="' + esc(frame) + '" id="cs-frame">' + bandHtml() + '<main class="cs-main" id="cs-main">' + mainHtml(route) + "</main></div>";
+    }
     const place = placeOf(route.screen);
     const rail = RAIL.map((k) => '<a href="' + placeHref(k) + '" data-nav' + (place === k ? ' aria-current="page"' : "") + tipAttr(w("rail." + k + ".holds"), RAILW < 120 ? 1 : 2) + ">"
       + I(RAIL_ICON[k]) + w("rail." + k + ".name") + "</a>").join("")
@@ -499,15 +688,40 @@ export function shellProgram(D, SCREENS, win) {
     const tabs = TABS.map((k) => '<a href="' + (k === "more" ? "/app/more" : placeHref(k)) + '" data-nav'
       + ((place === k || (k === "more" && ["projects", "people", "settings", "more"].includes(place))) ? ' aria-current="page"' : "")
       + tipAttr(k === "more" ? w("tab.more.holds") : w("rail." + k + ".holds"), 2) + ">" + I(RAIL_ICON[k]) + w(k === "more" ? "tab.more.name" : "rail." + k + ".name") + "</a>").join("");
+    const main = mainHtml(route);
     const dock = dockHtml();
     const band = '<div class="cs-band" data-band="working"><span tabindex="0"' + tipAttr(w("mark.band.means") + '<span class="why">' + w("mark.path.working.means") + "</span>", 1) + "><b>" + w("mark.path.working.name") + "</b></span></div>";
     const ask = ASK_LEVEL ? '<div class="cs-reason" role="region"><p>' + w("shell.level.ask", { level: html(w(LEVEL === "pause" ? "level.pause.name" : "level.prompt.name")) }) + "</p><div>"
       + '<button type="button" class="cs-btn" data-shell="level-keep">' + w("shell.level.keep") + "</button>"
       + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="level-switch">' + w("shell.level.switch", { level: html(w(LEVEL === "pause" ? "level.prompt.name" : "level.pause.name")) }) + "</button></div></div>" : "";
     return '<div class="cs-frame cs-shell' + (dock ? " with-dock" : "") + (RAILW < 120 ? " rail-icons" : "") + '" data-frame="working" id="cs-frame" style="--rail:' + RAILW + 'px">'
-      + mastHtml() + band + '<nav class="cs-rail" aria-label="' + w("shell.sections") + '">' + rail + "</nav>"
-      + '<main class="cs-main" id="cs-main">' + ask + mainHtml(route) + "</main>" + dock
+      + bandHtml() + mastHtml() + band + '<nav class="cs-rail" aria-label="' + w("shell.sections") + '">' + rail + "</nav>"
+      + '<main class="cs-main" id="cs-main">' + ask + main + "</main>" + dock
       + '<nav class="cs-tabs" aria-label="' + w("shell.sections") + '">' + tabs + "</nav></div>";
+  }
+  /* R33, R34: the lock over the screen, and the password asked again; R41: what the key signs, exactly */
+  let REAUTH = null, SIGNING = null, OVERLAY_REFUSAL = "";
+  function overlayHtml() {
+    const field = (id) => '<span class="cs-field"><label for="' + id + '">' + w("shell.password") + '</label><input id="' + id + '" class="cs-input" type="password" autocomplete="current-password"></span>';
+    const slot = '<span class="cs-slot" data-overlay-refusal>' + OVERLAY_REFUSAL + "</span>";
+    if (LOCKED) {
+      const who = S ? S.w || (ME && ME.handle) || "" : "";
+      return '<div class="cs-overlay"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-lock-t" data-overlay="lock"><h2 id="cs-lock-t">' + w("shell.lock.title") + "</h2><p>" + w("session.locked") + "</p>"
+        + field("cs-lock-pw") + slot + '<span class="cs-actrow"><button type="button" class="cs-btn" data-tone="primary" data-shell="unlock">' + w("shell.lock.unlock") + "</button>"
+        + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="lock-other">' + w("shell.lock.other", { handle: who }) + "</button></span></div></div>";
+    }
+    if (REAUTH) {
+      return '<div class="cs-overlay"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-reauth-t" data-overlay="reauth"><h2 id="cs-reauth-t">' + w("shell.reauth.title") + "</h2><p>" + w("session.reauth") + "</p>"
+        + field("cs-reauth-pw") + slot + '<span class="cs-actrow"><button type="button" class="cs-btn" data-tone="primary" data-shell="reauth">' + w("shell.reauth.send") + "</button>"
+        + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="reauth-cancel">' + w("shell.cancel") + "</button></span></div></div>";
+    }
+    if (SIGNING) {
+      return '<div class="cs-overlay"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-sign-t" data-overlay="sign"><h2 id="cs-sign-t">' + w("shell.signer.exactly") + "</h2><ol>"
+        + SIGNING.list.map((s) => "<li><b>" + esc(s.label) + "</b><pre>" + esc(s.line) + "</pre></li>").join("") + "</ol><p>" + w("signing.ceremony.device") + "</p>"
+        + '<span class="cs-actrow"><button type="button" class="cs-btn" data-tone="primary" data-shell="sign-yes">' + w("shell.signer.sign") + "</button>"
+        + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="sign-no">' + w("shell.signer.decline") + "</button></span></div></div>";
+    }
+    return "";
   }
   /* R15 (DEC-177 (1)): no explaining element inside another: an explaining element absorbs those inside it, said after
      its own, so whatever a screen draws, one element carries one explanation. */
@@ -524,20 +738,29 @@ export function shellProgram(D, SCREENS, win) {
   const focusKey = (el) => (!el || !el.getAttribute ? null : el.id ? "#" + el.id
     : ["data-shell", "data-ai", "data-table", "data-id", "data-col", "data-theme-to"].map((a) => (el.getAttribute(a) !== null ? "[" + a + '="' + el.getAttribute(a) + '"]' : "")).join("") || null);
   function draw() {
-    if (GONE) return;
     const root = doc.getElementById("cs-root");
     if (!root || !ROUTE) return;
     closeTip();
     const values = {};
     for (const el of root.querySelectorAll("input, textarea, select")) if (el.id && el.type !== "file") values[el.id] = el.type === "checkbox" || el.type === "radio" ? { checked: el.checked } : { value: el.value };
+    /* R35: what was typed is kept while the screen cannot be reached, and comes back with it */
+    if (MAIN && MAIN.unavail === "unreachable" && Object.keys(values).length) MAIN.stash = Object.assign({}, MAIN.stash || {}, values);
     const fk = focusKey(doc.activeElement);
-    root.innerHTML = frameHtml(ROUTE);
+    root.innerHTML = frameHtml(ROUTE) + overlayHtml();
     absorb(root);
-    for (const [id, v] of Object.entries(values)) {
+    const restore = (id, v) => {
       const el = doc.getElementById(id);
-      if (!el || el.getAttribute("data-shell") === "pick") continue;
+      if (!el || el.getAttribute("data-shell") === "pick") return;
       if ("checked" in v) el.checked = v.checked; else el.value = v.value;
+    };
+    for (const [id, v] of Object.entries(values)) restore(id, v);
+    for (const inst of [MAIN, DOCKI, GUIDEI]) {
+      if (!inst) continue;
+      if (inst.pending) { for (const [id, v] of Object.entries(inst.pending)) restore(id, v); inst.pending = null; }
+      /* R27: a field filled before it was drawn takes its value once it is */
+      for (const [id, v] of Object.entries(inst.fills)) { const el = doc.getElementById(id); if (el) { if (el.type === "checkbox" || el.type === "radio") el.checked = !!v; else el.value = String(v == null ? "" : v); delete inst.fills[id]; } }
     }
+    ringDraw(root);
     if (fk) { let el = null; try { el = root.querySelector(fk); } catch { el = null; } if (el && el.focus) el.focus(); }
     if (GROUP) doc.title = GROUP;
   }
@@ -547,28 +770,405 @@ export function shellProgram(D, SCREENS, win) {
     if (replace) win.history.replaceState({}, "", href); else win.history.pushState({}, "", href);
     route();
   }
-  /* R21 (K2998): a screen's `closed(cs, view)` when the member leaves it or the page */
+  /* R21 (K2998): a screen's `closed(cs, view)` when the member leaves it or the page; R27: its timers cancelled */
   function closing(inst) {
-    if (!inst || typeof inst.spec.closed !== "function") return;
+    if (!inst) return;
+    for (const t of inst.timers) clearTimeout(t);
+    inst.timers = [];
+    if (inst.retry !== null) { clearTimeout(inst.retry); inst.retry = null; }
+    if (typeof inst.spec.closed !== "function") return;
     try { inst.spec.closed(kit(inst), inst.view); } catch { /* a screen's own leave-taking never stops the shell */ }
   }
-  function route() {
+  let ROUTING = 0;
+  async function route() {
+    const n = ++ROUTING;
     closing(MAIN);
     closing(DOCKI);
+    MAIN = null; DOCKI = null; ENTRY_PAGE = false; RING = null;
     ROUTE = parse(win.location.pathname);
     MENU = false;
-    if (!wordsRead && wordsRetry && ME) { wordsRetry = false; loadWords(); }
-    const spec = screenOf(ROUTE.screen);
-    MAIN = spec && spec.id !== "assistant" ? instance(spec, ROUTE.subject, "m") : null;
-    DOCKI = REACHABLE && screenOf("assistant") ? instance(screenOf("assistant"), ROUTE.subject, "d", { screen: ROUTE.screen, subject: ROUTE.subject }) : null;
+    const id = ROUTE.screen;
+    /* R30: a screen of the public or published frame, drawn without a session, whatever the record holds */
+    if (sessionless(id)) return show(id);
+    if (!S) {
+      /* R45: a screen of the setup frame asks no session before one exists */
+      if (frameOf(id) === "setup") return show(id);
+      /* R32: no live record: `front`, keeping the path to return to */
+      keepReturn();
+      return showFront();
+    }
+    if (!ME) {
+      draw();
+      const got = await whoami();
+      if (n !== ROUTING) return;
+      /* R45: a screen of the setup frame stays, whatever the record turns out to hold */
+      if (frameOf(id) === "setup" && got !== "ok") { UNREACHED = false; LOCKED = false; return show(id); }
+      if (got === "unreachable") return draw();
+      if (got === "locked") {
+        /* R32, R33: a page opened on a locked session draws `front` locked (the shell's own lock without `front`) */
+        keepReturn();
+        if (screenOf("front")) { ENTRY = { state: "locked", handle: S.w || null }; return showFront(); }
+        return lock(false);
+      }
+      if (got === "none") { keepReturn(); ENTRY = { state: null, handle: null }; return showFront(); }
+    }
+    if (!wordsRead && wordsRetry) { wordsRetry = false; loadWords(); }
+    show(id);
+  }
+  function show(id, subject) {
+    const spec = screenOf(id);
+    MAIN = spec && spec.id !== "assistant" ? instance(spec, subject !== undefined ? subject : ROUTE.subject, "m") : null;
+    DOCKI = !MAIN || frameOf(MAIN.spec.id) === "working" ? (REACHABLE && screenOf("assistant") ? instance(screenOf("assistant"), ROUTE.subject, "d", { screen: ROUTE.screen, subject: ROUTE.subject }) : null) : null;
     draw();
-    if (MAIN && ME) readAll(MAIN);
+    if (MAIN && (MAIN.pub || ME)) readAll(MAIN);
     if (DOCKI && DOCK && ME) readAll(DOCKI);
     if (doc.getElementById("cs-main") && doc.getElementById("cs-main").scrollTo) doc.getElementById("cs-main").scrollTo(0, 0);
   }
+  function showFront() {
+    if (screenOf("front")) return show("front", null);
+    ENTRY_PAGE = true;
+    draw();
+  }
 
-  /* ---------- acts: friction (R11), sending, refusals beside the act (R13) ---------- */
-  const instOf = (k) => (k === "m" ? MAIN : k === "d" ? DOCKI : null);
+  /* ---------- the session's start, hand-over and end (R3, R32, R33) ---------- */
+  /* `whoami` for the record held: "ok", a member session; "locked", the plane's lock; "none", no member session (the
+     record cleared); "unreachable", no answer or a 5xx (tried again every 30 seconds, R35) */
+  async function whoami(background) {
+    const who = await call("whoami", { background, noLock: true });
+    if (!S) return "none";
+    if (who.kind === "ok" && who.value && who.value.session && who.value.member) {
+      UNREACHED = false;
+      ME = who.value;
+      await loadWords();
+      wordsRetry = !wordsRead;
+      armIdle();
+      Promise.all([loadFrame(), loadReach()]);
+      return "ok";
+    }
+    if (unreachable(who)) {
+      UNREACHED = true;
+      setTimeout(async () => { if (S && UNREACHED && (await whoami(true)) !== "unreachable") { UNREACHED = false; route(); } }, D.retry);
+      return "unreachable";
+    }
+    if (who.kind === "refused" && who.code === "SESSION_LOCKED") return "locked";
+    S = null; ME = null; clearRecord(null);
+    return "none";
+  }
+  /* R32 (screens-entry R2, R6, R7): a screen hands over the session `login` answered: the record written for every tab,
+     then the page kept to return to, else Home; `stay` keeps the screen (a setup or join that goes on) */
+  async function signedIn(answer, o = {}) {
+    const a = answer && typeof answer === "object" && answer.result && typeof answer.result === "object" ? answer.result : answer;
+    if (!(a && typeof a.token === "string" && a.token)) return false;
+    const e = typeof a.expires === "number" ? a.expires : Date.parse(a.expires) || 0;
+    S = { t: a.token, e, d: o.device === "own" ? "own" : "shared", w: typeof o.handle === "string" ? o.handle : "" };
+    writeRecord(S);
+    ME = null; LOCKED = false; ENTRY = { state: null, handle: null };
+    activity();
+    if (o.stay) { const got = await whoami(); draw(); return got === "ok"; }
+    win.history.replaceState({}, "", takeReturn());
+    await route();
+    return !!ME;
+  }
+  /* R33: `front`'s locked state unlocked by its own act: back to the page kept, as it was */
+  async function unlocked() {
+    LOCKED = false; local.del(STATE_KEY); ENTRY = { state: null, handle: null };
+    activity();
+    ME = null;
+    win.history.replaceState({}, "", takeReturn());
+    await route();
+  }
+  /* R4: sign out, whatever the answer: the record cleared for every tab, `front` drawn signed out */
+  async function signOut() {
+    if (S) { try { await call("signout", { body: {} }); } catch { /* whatever the answer */ } }
+    if (S) over("signedout");
+    else { ENTRY = { state: "signedout", handle: null }; route(); }
+  }
+  /* R33 (K3061 D3): the member's own input and acts are activity; the page's clock locks an own device at 30 minutes
+     idle and signs a shared one out at 15, the plane's answer governing over it */
+  let LAST = Date.now(), SHARED_AT = 0, idleT = null;
+  function activity() {
+    LAST = Date.now();
+    if (LAST - SHARED_AT >= 10000 || SHARED_AT > LAST) { SHARED_AT = LAST; local.set(ACTIVE_KEY, String(LAST)); }
+  }
+  const lastActive = () => Math.max(LAST, Number(local.get(ACTIVE_KEY)) || 0);
+  function stopIdle() { if (idleT !== null) clearTimeout(idleT); idleT = null; }
+  function armIdle() {
+    stopIdle();
+    if (!S || LOCKED) return;
+    const limit = S.d === "own" ? D.idleLock : D.idleEnd;
+    idleT = setTimeout(idleCheck, Math.max(0, lastActive() + limit - Date.now()));
+  }
+  async function idleCheck() {
+    idleT = null;
+    if (!S || LOCKED) return;
+    const limit = S.d === "own" ? D.idleLock : D.idleEnd;
+    if (Date.now() - lastActive() < limit) return armIdle();
+    if (S.d === "own") return lock(false);
+    try { await call("signout", { body: {}, background: true }); } catch { /* the page's clock ends it whatever the answer */ }
+    over("ended");
+  }
+  function lock(elsewhere) {
+    if (!S || LOCKED) return;
+    LOCKED = true; OVERLAY_REFUSAL = ""; stopIdle();
+    if (!elsewhere) local.set(STATE_KEY, "locked");
+    closeTip();
+    draw();
+    const pw = doc.getElementById("cs-lock-pw");
+    if (pw && pw.focus) pw.focus();
+  }
+  async function unlockNow() {
+    const pw = doc.getElementById("cs-lock-pw");
+    const password = pw ? String(pw.value || "") : "";
+    if (!password) return;
+    const a = await call("unlock", { body: { password } });
+    const field = doc.getElementById("cs-lock-pw");
+    if (field) field.value = "";
+    if (a.kind === "ok") {
+      LOCKED = false; OVERLAY_REFUSAL = ""; local.del(STATE_KEY);
+      activity();
+      if (!ME) return route();
+      armIdle(); draw();
+      return;
+    }
+    if (!S) return;
+    OVERLAY_REFUSAL = refusalHtml(a.kind === "refused" ? refusalWords(a, null, false, null) : w("state.failed", { reason: html(w("shell.noanswer")) }));
+    draw();
+  }
+  /* R34: the password asked again; answers whether `reauth` opened its window */
+  function reauthAsk() {
+    if (!S) return Promise.resolve(false);
+    if (REAUTH) return REAUTH.promise;
+    let resolve;
+    const promise = new Promise((r) => { resolve = r; });
+    REAUTH = { promise, resolve };
+    OVERLAY_REFUSAL = "";
+    draw();
+    const pw = doc.getElementById("cs-reauth-pw");
+    if (pw && pw.focus) pw.focus();
+    return promise;
+  }
+  async function reauthNow(go) {
+    const r = REAUTH;
+    if (!r) return;
+    if (!go) { REAUTH = null; OVERLAY_REFUSAL = ""; draw(); return r.resolve(false); }
+    const pw = doc.getElementById("cs-reauth-pw");
+    const password = pw ? String(pw.value || "") : "";
+    if (!password) return;
+    const a = await call("reauth", { body: { password } });
+    const field = doc.getElementById("cs-reauth-pw");
+    if (field) field.value = "";
+    if (a.kind === "ok") { REAUTH = null; OVERLAY_REFUSAL = ""; draw(); return r.resolve(true); }
+    if (!S || LOCKED) { REAUTH = null; return r.resolve(false); }
+    OVERLAY_REFUSAL = refusalHtml(a.kind === "refused" ? refusalWords(a, null, false, null) : w("state.failed", { reason: html(w("shell.noanswer")) }));
+    draw();
+  }
+
+  /* ---------- the dock's wizard guide and the ring (R31) ---------- */
+  let DOCK_BEFORE = false;
+  function startWizard(script, version) {
+    if (!GUIDE || !script) return false;
+    if (GUIDEI) closing(GUIDEI);
+    if (!WIZ) DOCK_BEFORE = DOCK;
+    WIZ = { script: String(script), version: version === undefined ? null : version, recording: false };
+    GUIDEI = instance(GUIDE, null, "g", null);
+    draw();
+    readAll(GUIDEI);
+    return true;
+  }
+  function endWizard() {
+    if (GUIDEI) closing(GUIDEI);
+    GUIDEI = null; WIZ = null; DOCK = DOCK_BEFORE && REACHABLE;
+    draw();
+  }
+  /* `cs.ring(op, label)`: the control the current screen drew for `op` rung, its row panel opened, scrolled to and
+     focused; answers whether there was one. The shell never presses it. */
+  function ring(op, label) {
+    if (!MAIN) return false;
+    const main = () => doc.getElementById("cs-main");
+    const find = () => (main() ? main().querySelector('[data-act="' + String(op).replace(/"/g, "") + '"]') : null);
+    let el = find();
+    if (!el) return false;
+    const panel = el.closest ? el.closest("tr.cs-panel") : null;
+    if (panel && panel.hidden) {
+      const row = panel.previousElementSibling;
+      const ctl = row ? row.querySelector('[data-shell="row"]') : null;
+      if (ctl) {
+        const table = ctl.getAttribute("data-table"), id = ctl.getAttribute("data-id");
+        const open = MAIN.ui["open:" + table] || (MAIN.ui["open:" + table] = []);
+        if (!open.includes(id)) open.push(id);
+      }
+    }
+    RING = { op: String(op), label: typeof label === "string" && label ? label : null };
+    draw();
+    el = find();
+    if (!el) return false;
+    if (el.scrollIntoView) { try { el.scrollIntoView({ block: "center", behavior: "auto" }); } catch { /* best effort */ } }
+    if (el.focus) el.focus();
+    return true;
+  }
+  function ringDraw(root) {
+    if (!RING || !MAIN) return;
+    const main = root.querySelector("#cs-main");
+    const el = main ? main.querySelector('[data-act="' + RING.op.replace(/"/g, "") + '"]') : null;
+    if (!el) return;
+    el.classList.add("cs-ring");
+    const label = doc.createElement("span");
+    label.setAttribute("class", "cs-ringlabel");
+    label.setAttribute("id", "cs-ringlabel");
+    label.innerHTML = w(RING.label || (el.tagName === "BUTTON" ? "shell.ring.ready" : "shell.ring.here"));
+    if (el.parentElement) el.parentElement.insertBefore(label, el);
+  }
+
+  /* ---------- the signer (R40–R42; DEC-207, DEC-208, DEC-210; K3079 (a), K3080) ---------- */
+  /* The member's Ed25519 key, made in this browser and never sent: kept, by the member's choice, as a non-extractable key
+     in this origin's IndexedDB; otherwise given out once as a key file (`signatures` R43's `BIOKEY1.`, made here) and held
+     in page memory for this sitting only. A key file already held is loaded for the sitting only. Signatures are
+     SSHSIG (version 1, `ssh-ed25519`, `sha512`), the exact form `ssh-keygen -Y sign` makes. */
+  const enc = new TextEncoder();
+  const u8 = (...a) => { let n = 0; for (const p of a) n += p.length; const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };
+  const b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return win.btoa(s); };
+  const unb64 = (s) => Uint8Array.from(win.atob(String(s).replace(/\s+/g, "")), (c) => c.charCodeAt(0));
+  const u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);
+  const sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };
+  const wirePub = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));
+  const LABEL = "bio-ratify";
+  const PKCS8_HEAD = new Uint8Array([0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20]);
+  const KDF_ITER = 600000;
+  let SITTING = null;
+  const subtle = () => win.crypto.subtle;
+  const lineOf = (raw32, comment) => { const keyB64 = b64(wirePub(raw32)); return { line: "ssh-ed25519 " + keyB64 + " " + comment, keyB64, comment }; };
+  function idb(mode, fn) {
+    return new Promise((resolve) => {
+      let req;
+      try { req = win.indexedDB.open("civicsmith-signer", 1); } catch { return resolve(null); }
+      req.onupgradeneeded = () => { try { req.result.createObjectStore("keys"); } catch { /* already made */ } };
+      req.onerror = () => resolve(null);
+      req.onsuccess = () => {
+        try {
+          const tx = req.result.transaction("keys", mode);
+          const r = fn(tx.objectStore("keys"));
+          r.onsuccess = () => resolve(r.result === undefined ? null : r.result);
+          r.onerror = () => resolve(null);
+        } catch { resolve(null); }
+      };
+    });
+  }
+  const kept = () => idb("readonly", (st) => st.get("own"));
+  async function seedKeys(seed) {
+    const pkcs8 = u8(PKCS8_HEAD, seed);
+    const priv = await subtle().importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);
+    const jwk = await subtle().exportKey("jwk", await subtle().importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));
+    return { priv, raw32: unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/")) };
+  }
+  async function wrapSeed(seed, pass) {
+    const salt = win.crypto.getRandomValues(new Uint8Array(16));
+    const iv = win.crypto.getRandomValues(new Uint8Array(12));
+    const base = await subtle().importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
+    const key = await subtle().deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
+    const ct = new Uint8Array(await subtle().encrypt({ name: "AES-GCM", iv }, key, seed));
+    return ["BIOKEY1", LABEL, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");
+  }
+  async function unwrapKey(s, pass) {
+    s = String(s || "").trim();
+    if (s.startsWith("BIOKEY-RAW1.")) { const [, , seed] = s.split("."); const b = unb64(seed); if (b.length !== 32) throw new Error("not a key"); return b; }
+    if (!s.startsWith("BIOKEY1.") || !pass) throw new Error("not a key");
+    const [, , salt, iv, ct, iter] = s.split(".");
+    if (!/^[1-9][0-9]{0,6}$/.test(iter || "")) throw new Error("not a key");
+    const base = await subtle().importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);
+    const key = await subtle().deriveKey({ name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    const seed = new Uint8Array(await subtle().decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));
+    if (seed.length !== 32) throw new Error("not a key");
+    return seed;
+  }
+  async function sshsig(priv, raw32, namespace, message) {
+    const h = new Uint8Array(await subtle().digest("SHA-512", message));
+    const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));
+    const sig = new Uint8Array(await subtle().sign("Ed25519", priv, signed));
+    const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePub(raw32)), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));
+    return "-----BEGIN SSH SIGNATURE-----\n" + b64(blob).replace(/(.{70})/g, "$1\n") + "\n-----END SSH SIGNATURE-----\n";
+  }
+  const bytesOf = (b) => (b instanceof Uint8Array ? b : b instanceof ArrayBuffer ? new Uint8Array(b) : enc.encode(String(b == null ? "" : b)));
+  const clear = (...ids) => { for (const id of ids) { const el = doc.getElementById(id); if (el) el.value = ""; } };
+  const SIGNER = {
+    /* the key this browser holds: kept on the device, or loaded for this sitting */
+    async held() {
+      if (SITTING) return { held: true, kept: false, ...lineOf(SITTING.raw32, LABEL) };
+      const k = await kept();
+      return k && k.raw32 ? { held: true, kept: true, ...lineOf(new Uint8Array(k.raw32), LABEL) } : { held: false };
+    },
+    /* R40: the fields that make a key: keep it on this device (`signing.ceremony.keepkey`, unticked by default), else the
+       key file's passphrase, twice */
+    fields(id) {
+      return '<div class="cs-field"><label><input type="checkbox" id="' + esc(id) + '-keep"> ' + w("signing.ceremony.keepkey") + "</label></div>"
+        + '<div class="cs-field"><label for="' + esc(id) + '-pass">' + w("shell.signer.passphrase") + '</label><span class="help" id="' + esc(id) + '-pass-help">' + w("shell.signer.passphrase.help")
+        + '</span><input id="' + esc(id) + '-pass" class="cs-input" type="password" autocomplete="new-password" aria-describedby="' + esc(id) + '-pass-help"></div>'
+        + '<div class="cs-field"><label for="' + esc(id) + '-again">' + w("shell.signer.passphrase.again") + '</label><input id="' + esc(id) + '-again" class="cs-input" type="password" autocomplete="new-password"></div>';
+    },
+    /* R40: "Use a key file you already have": the file's text and its passphrase */
+    loadFields(id) {
+      return '<fieldset class="cs-field"><legend>' + w("shell.signer.load") + '</legend><span class="cs-field"><label for="' + esc(id) + '-file">' + w("shell.signer.loadfile")
+        + '</label><textarea id="' + esc(id) + '-file" class="cs-input" spellcheck="false" autocomplete="off"></textarea></span>'
+        + '<span class="cs-field"><label for="' + esc(id) + '-filepass">' + w("shell.signer.loadpass") + '</label><input id="' + esc(id) + '-filepass" class="cs-input" type="password" autocomplete="off"></span></fieldset>';
+    },
+    /* R40: make the key from the fields `fields(id)` drew; answers its public line for `signerregisterown`, or
+       `{ok: false, refuse}`. Kept: a non-extractable key in IndexedDB. Not kept: a key file handed to the browser. */
+    async make(id) {
+      const keep = !!(doc.getElementById(id + "-keep") || {}).checked;
+      const pass = String((doc.getElementById(id + "-pass") || {}).value || ""), again = String((doc.getElementById(id + "-again") || {}).value || "");
+      clear(id + "-pass", id + "-again");
+      if (keep) {
+        const pair = await subtle().generateKey({ name: "Ed25519" }, false, ["sign", "verify"]);
+        const raw32 = new Uint8Array(await subtle().exportKey("raw", pair.publicKey));
+        const ok = await idb("readwrite", (st) => st.put({ priv: pair.privateKey, raw32: raw32.buffer.slice(0), label: LABEL }, "own"));
+        if (ok === null && !(await kept())) return { ok: false, refuse: "shell.signer.nokey" };
+        SITTING = null;
+        return { ok: true, kept: true, ...lineOf(raw32, LABEL) };
+      }
+      if (!pass || pass !== again) return { ok: false, refuse: "shell.signer.passphrase.differ" };
+      const seed = win.crypto.getRandomValues(new Uint8Array(32));
+      const { priv, raw32 } = await seedKeys(seed);
+      const file = await wrapSeed(seed, pass);
+      seed.fill(0);
+      saveFile(new Blob([file + "\n"], { type: "text/plain" }), "bio-signing-key.txt");
+      SITTING = { priv, raw32 };
+      return { ok: true, kept: false, ...lineOf(raw32, LABEL) };
+    },
+    /* R40: a key file already held, for this sitting only */
+    async load(id) {
+      const textEl = doc.getElementById(id + "-file"), passEl = doc.getElementById(id + "-filepass");
+      const t = textEl ? String(textEl.value || "") : "", pass = passEl ? String(passEl.value || "") : "";
+      clear(id + "-file", id + "-filepass");
+      try {
+        const seed = await unwrapKey(t, pass);
+        const { priv, raw32 } = await seedKeys(seed);
+        seed.fill(0);
+        SITTING = { priv, raw32 };
+        return { ok: true, ...lineOf(raw32, LABEL) };
+      } catch { return { ok: false, refuse: "shell.signer.notkey" }; }
+    },
+    /* the kept key removed from this device (its revocation is the screen's act) */
+    async forget() { SITTING = null; await idb("readwrite", (st) => st.delete("own")); return true; },
+    /* R41: one confirmation for the whole list; one SSHSIG per statement, or a declined answer signing nothing */
+    async sign(statements) {
+      const list = (Array.isArray(statements) ? statements : []).map((s) => ({ label: String(s && s.label || ""), bytes: bytesOf(s && s.bytes), namespace: String(s && s.namespace || "") }));
+      let key = SITTING;
+      if (!key) { const k = await kept(); key = k && k.priv ? { priv: k.priv, raw32: new Uint8Array(k.raw32) } : null; }
+      if (!key) return { ok: false, nokey: true, words: w("shell.signer.nokey") };
+      if (!list.length || list.some((s) => !s.namespace)) return { ok: false, declined: true, words: w("signing.ceremony.declined") };
+      const yes = await new Promise((resolve) => {
+        SIGNING = { resolve, list: list.map((s) => ({ label: s.label, line: new TextDecoder().decode(s.bytes) })) };
+        draw();
+      });
+      if (!yes) return { ok: false, declined: true, words: w("signing.ceremony.declined") };
+      const signatures = [];
+      for (const s of list) signatures.push(await sshsig(key.priv, key.raw32, s.namespace, s.bytes));
+      return { ok: true, signatures, ...lineOf(key.raw32, LABEL) };
+    },
+  };
+  function signAnswer(yes) { const s = SIGNING; SIGNING = null; draw(); if (s) s.resolve(!!yes); }
+
+  /* ---------- acts: friction (R11), sending, refusals beside the act (R13), the password asked again (R34) ---------- */
+  const instOf = (k) => (k === "m" ? MAIN : k === "d" ? DOCKI : k === "g" ? GUIDEI : null);
   function slotOf(ai) { return doc.getElementById("cs-root").querySelector('[data-slot="' + ai + '"]'); }
   function besideAct(ai, inner) { const s = slotOf(ai); if (s) s.innerHTML = inner; }
   const refusalHtml = (words) => '<span class="cs-gap" data-gap="refused" role="alert">' + I("refused") + "<span>" + words + "</span></span>";
@@ -578,6 +1178,12 @@ export function shellProgram(D, SCREENS, win) {
     const inst = instOf(k);
     const d = inst && inst.acts[Number(i)];
     if (!d) return;
+    activity();
+    if (RING && RING.op === d.op) RING = null;
+    /* R31: while the guide records, it hears each act pressed, by its op and screen only */
+    if (WIZ && WIZ.recording && GUIDEI && inst === MAIN && GUIDE && typeof GUIDE.heard === "function") {
+      try { GUIDE.heard(kit(GUIDEI), GUIDEI.view, { op: d.op, screen: MAIN.spec.id }); } catch { /* the guide's own hearing never stops the act */ }
+    }
     const weight = weightOf(d.op);
     if (weight === "reversible" || weight === "none") return run(inst, d, btn, ai, {});
     /* R11 (DEC-88): an act whose own field carries the member's authored words sends them as its reason, asking none */
@@ -593,7 +1199,7 @@ export function shellProgram(D, SCREENS, win) {
     const fields = (d.spec.dialog || []).map((f, j) => '<span class="cs-field"><label for="cs-dlg-' + ai.replace(":", "-") + "-" + j + '">' + w(f.label) + '</label><textarea class="cs-input" id="cs-dlg-' + ai.replace(":", "-") + "-" + j + '"></textarea></span>').join("");
     const does = has("act." + d.op + ".does") ? "<p>" + w("act." + d.op + ".does") + "</p>" : "";
     besideAct(ai, '<span class="cs-dialog" role="dialog" aria-label="' + esc(label) + '"><span class="ends">' + does + "</span><p>"
-      + w(weight === "signed" ? "shell.dialog.signed" : "shell.dialog.signs", { handle: ME.handle || "" }) + "</p>" + fields + '<span class="cs-actrow">'
+      + w(weight === "signed" ? "shell.dialog.signed" : "shell.dialog.signs", { handle: ME ? ME.handle || "" : "" }) + "</p>" + fields + '<span class="cs-actrow">'
       + '<button type="button" class="cs-btn" data-tone="primary" data-shell="confirm" data-for="' + esc(ai) + '">' + w("shell.confirm") + "</button>"
       + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="cancel" data-for="' + esc(ai) + '">' + w("shell.cancel") + "</button></span></span>");
   }
@@ -614,8 +1220,15 @@ export function shellProgram(D, SCREENS, win) {
       else req.body = Object.assign({}, req.body || {}, { [d.spec.reasonField || "reason"]: extra.reason });
     }
     besideAct(ai, "");
-    const a = await call(d.op, req);
+    req.public = inst.pub;
+    let a = await call(d.op, req);
+    /* R34: an act answered `REAUTH_DUE` asks the password again and, on `reauth`'s success, is sent once more */
+    if (a.kind === "refused" && a.code === "REAUTH_DUE" && S) {
+      if (!(await reauthAsk())) return;
+      a = await call(d.op, req);
+    }
     if (a.kind !== "ok") {
+      if (a.kind === "silent" && !S && !inst.pub) return;
       const words = a.kind === "refused" ? refusalWords(a, d.spec.refusals, false, inst) : w("state.failed", { reason: html(w("shell.noanswer")) });
       return besideAct(ai, refusalHtml(words));
     }
@@ -626,7 +1239,7 @@ export function shellProgram(D, SCREENS, win) {
     /* R21 (K3009): a `done` that answers a promise is awaited before the re-reads, so a follow-up act does not race them */
     try { after = d.spec.done ? await d.spec.done(inst.view, a.value, kit(inst)) : null; } catch { after = null; }
     if (after && after.stay) return draw();
-    if (inst === MAIN || inst === DOCKI) readAll(inst, d.spec.rereads || null);
+    if (live(inst)) readAll(inst, d.spec.rereads || null);
   }
 
   /* ---------- explanations (R14) ---------- */
@@ -658,12 +1271,15 @@ export function shellProgram(D, SCREENS, win) {
   const onTipOrEl = (n) => !!(n && ((TIP && (n === TIP || (TIP.contains && TIP.contains(n)))) || (tipEl() && (n === tipEl() || (tipEl().contains && tipEl().contains(n))))));
 
   /* ---------- events, bound once by delegation (no inline handler, R2) ---------- */
+  const blocked = (t) => (LOCKED || REAUTH || SIGNING) && !(t.closest && t.closest(".cs-overlay"));
   function bind() {
     const root = doc.getElementById("cs-root");
     root.addEventListener("click", (e) => {
       const t = e.target;
+      /* R33, R34, R41: under the lock or a dialog over the screen, nothing beneath it answers */
+      if (blocked(t)) { e.preventDefault(); return; }
       const nav = t.closest ? t.closest("a[data-nav]") : null;
-      if (nav && !(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey)) { e.preventDefault(); return navigate(nav.getAttribute("href")); }
+      if (nav && !(e.ctrlKey || e.metaKey || e.shiftKey || e.altKey)) { e.preventDefault(); activity(); return navigate(nav.getAttribute("href")); }
       const act = t.closest ? t.closest("button[data-act]") : null;
       if (act) return press(act);
       const sh = t.closest ? t.closest("[data-shell]") : null;
@@ -671,7 +1287,7 @@ export function shellProgram(D, SCREENS, win) {
       const tipped = t.closest ? t.closest("[data-tip]") : null;
       if (tipped && !tipped.matches("a,button,input,select,textarea")) openTip(tipped);
     });
-    root.addEventListener("change", (e) => { const sh = e.target.closest ? e.target.closest('[data-shell="pick"]') : null; if (sh) shell(sh, e); });
+    root.addEventListener("change", (e) => { const sh = e.target.closest ? e.target.closest('[data-shell="pick"]') : null; if (sh && !blocked(e.target)) shell(sh, e); });
     root.addEventListener("pointerover", (e) => {
       const el = e.target.closest ? e.target.closest("[data-tip]") : null;
       if (!el) return;
@@ -708,6 +1324,7 @@ export function shellProgram(D, SCREENS, win) {
       win.addEventListener("pointerup", up);
     });
     root.addEventListener("keydown", (e) => {
+      if (blocked(e.target)) return;
       const g = e.target.closest ? e.target.closest('[data-shell="grip"]') : null;
       if (g && ["ArrowLeft", "ArrowRight", "Home"].includes(e.key)) {
         e.preventDefault();
@@ -718,12 +1335,30 @@ export function shellProgram(D, SCREENS, win) {
       const row = e.target.closest ? e.target.closest('[data-shell="row"]') : null;
       if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); shell(row, e); }
     });
+    /* R33: the member's own input is activity */
+    for (const type of ["keydown", "pointerdown", "touchstart", "wheel"]) doc.addEventListener(type, () => { if (!LOCKED) activity(); });
     doc.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") { closeTip(); if (MENU) { MENU = false; draw(); } }
+      if (e.key === "Escape") { closeTip(); if (MENU) { MENU = false; draw(); } if (REAUTH) reauthNow(false); if (SIGNING) signAnswer(false); }
+      if (LOCKED || REAUTH || SIGNING) return;
       if (e.altKey && e.shiftKey && (e.key === "I" || e.key === "i" || e.code === "KeyI")) { e.preventDefault(); setLevel(LEVEL === "prompt" ? "pause" : "prompt"); }
+      /* R31: Alt+Shift+W asks the running guide to ring its step again */
+      if (e.altKey && e.shiftKey && (e.key === "W" || e.key === "w" || e.code === "KeyW") && WIZ && GUIDEI && GUIDE && typeof GUIDE.again === "function") {
+        e.preventDefault();
+        try { GUIDE.again(kit(GUIDEI), GUIDEI.view); } catch { /* the guide's own ring never stops the shell */ }
+      }
     });
     win.addEventListener("popstate", () => route());
-    win.addEventListener("pagehide", () => { closing(MAIN); closing(DOCKI); });
+    win.addEventListener("pagehide", () => { closing(MAIN); closing(DOCKI); closing(GUIDEI); SITTING = null; });
+    /* R32: every tab sees a sign-in, a lock, a sign-out or an end through the storage event */
+    win.addEventListener("storage", (e) => {
+      if (!e || (e.key !== D.storeKey && e.key !== STATE_KEY && e.key !== null)) return;
+      const rec = readRecord();
+      const why = local.get(STATE_KEY);
+      if (S && !rec) return over(why === "ended" ? "ended" : "signedout");
+      if (rec && (!S || rec.t !== S.t)) { S = rec; ME = null; LOCKED = false; ENTRY = { state: null, handle: null }; if (!working()) win.history.replaceState({}, "", takeReturn()); route(); return; }
+      if (S && rec && why === "locked" && !LOCKED) return lock(true);
+      if (S && LOCKED && why !== "locked") { LOCKED = false; OVERLAY_REFUSAL = ""; activity(); armIdle(); draw(); }
+    });
     if (mq && mq.addEventListener) mq.addEventListener("change", () => draw());
     win.addEventListener("beforeprint", () => doc.documentElement.setAttribute("data-theme", "light"));
     win.addEventListener("afterprint", () => applyTheme());
@@ -732,6 +1367,13 @@ export function shellProgram(D, SCREENS, win) {
     const what = el.getAttribute("data-shell");
     const inst = MAIN;
     const table = el.getAttribute("data-table"), id = el.getAttribute("data-id");
+    activity();
+    if (what === "unlock") return unlockNow();
+    if (what === "lock-other") return signOut();
+    if (what === "reauth") return reauthNow(true);
+    if (what === "reauth-cancel") return reauthNow(false);
+    if (what === "sign-yes") return signAnswer(true);
+    if (what === "sign-no") return signAnswer(false);
     if (what === "menu") { MENU = !MENU; return draw(); }
     if (what === "signout") return signOut();
     if (what === "theme") { MENU = false; return setTheme(el.getAttribute("data-theme-to")); }
@@ -783,11 +1425,6 @@ export function shellProgram(D, SCREENS, win) {
       return draw();
     }
   }
-  /* R4: sign out, whatever the answer */
-  async function signOut() {
-    try { await call("signout", { body: {} }); } catch { /* whatever the answer */ }
-    gone();
-  }
 
   /* ---------- start ---------- */
   async function loadWords() {
@@ -801,7 +1438,9 @@ export function shellProgram(D, SCREENS, win) {
     draw();
   }
   async function loadFrame() {
-    const [g, q, lv] = await Promise.all([call("groupidentity"), call("queue", { query: { limit: 500 } }), call("infolevel")]);
+    /* R33: the queue count is the shell's own read, not the member's activity */
+    const [g, q, lv] = await Promise.all([call("groupidentity"), call("queue", { query: { limit: 500 }, background: true }), call("infolevel")]);
+    if (!ME) return;
     if (g.kind === "ok" && g.value) GROUP = g.value.display_name || g.value.group || null;
     if (q.kind === "ok" && q.value && Array.isArray(q.value.items)) TODO = q.value.items.filter((x) => x && x.class === "OBLIGATION").length;
     if (lv.kind === "ok" && lv.value && (lv.value.level === "prompt" || lv.value.level === "pause")) {
@@ -819,6 +1458,7 @@ export function shellProgram(D, SCREENS, win) {
   }
   async function loadReach() {
     const [st, ref, sub, gk] = await Promise.all([call("assistantstate"), call("accountreference"), call("subscriptionsignin", { body: { step: "state" } }), call("groupkeystate")]);
+    if (!ME) return;
     const on = st.kind === "ok" && st.value && st.value.on === true;
     const own = ref.kind === "ok" && ref.value && ref.value.held === true;
     const signed = sub.kind === "ok" && sub.value && sub.value.connected === true;
@@ -826,27 +1466,32 @@ export function shellProgram(D, SCREENS, win) {
     const was = REACHABLE;
     REACHABLE = !!(on && (own || signed || group));
     if (REACHABLE !== was) {
-      DOCKI = REACHABLE && screenOf("assistant") && ROUTE ? instance(screenOf("assistant"), ROUTE.subject, "d", { screen: ROUTE.screen, subject: ROUTE.subject }) : null;
+      DOCKI = REACHABLE && screenOf("assistant") && ROUTE && (!MAIN || frameOf(MAIN.spec.id) === "working") ? instance(screenOf("assistant"), ROUTE.subject, "d", { screen: ROUTE.screen, subject: ROUTE.subject }) : null;
       if (!REACHABLE) DOCK = false;
       draw();
       if (MAIN) readAll(MAIN);
     }
   }
-  async function start() {
-    applyTheme();
-    S = readSession();
-    if (!S) return gone();
-    ROUTE = parse(win.location.pathname);
-    bind();
-    draw();
-    const who = await call("whoami");
-    if (GONE) return;
-    if (who.kind !== "ok" || !who.value || !who.value.session || !who.value.member) return gone();
-    ME = who.value;
-    await loadWords();
-    route();
-    wordsRetry = !wordsRead;
-    await Promise.all([loadFrame(), loadReach()]);
+  /* R36: old addresses forwarded, the fragment carried and nothing else */
+  function forward() {
+    const p = String(win.location.pathname || "/"), h = String(win.location.hash || "");
+    if (/^\/app(\/|$)/.test(p)) return;
+    if (/^#(invite|join)=/.test(h)) win.history.replaceState({}, "", "/app/join" + h);
+    else if (/^#boot=/.test(h)) win.history.replaceState({}, "", "/app/setup" + h);
   }
-  return { start, state: () => ({ ME, ROUTE, LEVEL, THEME, RAILW, REACHABLE, DOCK, TODO, GROUP, MAIN, DOCKI }), absorb, date, w };
+  async function start() {
+    if (STARTED) return;
+    STARTED = true;
+    applyTheme();
+    bind();
+    forward();
+    S = readRecord();
+    if (S && local.get(STATE_KEY) === "locked") LOCKED = false;
+    /* R32: `/` with a live record opens Home */
+    if (S && !/^\/app(\/|$)/.test(String(win.location.pathname || "/"))) win.history.replaceState({}, "", "/app");
+    /* R36: the test-instance band, read once without a session */
+    call("bootstrap", { public: true }).then((b) => { BOOT = b.kind === "ok" && b.value && typeof b.value === "object" ? b.value : null; if (BOOT && BOOT.test_instance === true) draw(); });
+    await route();
+  }
+  return { start, state: () => ({ ME, ROUTE, LEVEL, THEME, RAILW, REACHABLE, DOCK, TODO, GROUP, MAIN, DOCKI, LOCKED, S: !!S }), absorb, date, w };
 }
