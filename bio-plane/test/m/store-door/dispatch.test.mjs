@@ -1,4 +1,4 @@
-/* store-door: the record store's door (R1, R2, R3, R6, R9, R11, R13). Driven through `dispatch(req, store)` with a route map
+/* store-door: the record store's door (R1, R2, R3, R6, R9, R11, R13, R14). Driven through `dispatch(req, store)` with a route map
    and a membership that record what reached them, and over a real record (`record.mjs`) where an owner's answer is read.
    Moved from control-plane's `dispatch.test.mjs`, `envelope.test.mjs` (the store's half of R25), `r48-routes.test.mjs`
    (R47's classification), `r53-routes.test.mjs` and `t34-routes.test.mjs` (R53's store half) at the split (K1974). The
@@ -185,6 +185,82 @@ test("R2 (T45-50; K2891; op-declarations R49): T45's reads whose parameters carr
       assert.equal(s.log.some((e) => e.kind === "membership"), false, `${op}.${p}: membership asked`);
     }
   }
+});
+
+test("R14 (T47; N970; amends R2; basis-versions R50; project-roster R26): `statusreportassist` is among the reads naming a project with its parameter `plan`, held exactly as `statusreportdraft` is, so a discoverable project the caller sees only at EXISTENCE, named in `plan` (query or body), is answered C-70.1 by `membership.existenceAct` before the route, alike for both; `projectquestions` is among the reads naming none, with the reason that a project not seen at FULL is answered an empty page, never refused, so no existence answer is run and the route answers its empty page; `projectlist` names no project (controls: `statusreportdraft` answers alike; a project seen whole is admitted to the route; a hidden one is never asked; over a real record, a read naming a project, `basisversions`, answers C-70.1 for the same project and caller)", async () => {
+  const P = "PROJ-seen", F = "PROJ-full", H = "PROJ-hidden";
+  /* the rows: statusreportassist's is statusreportdraft's */
+  assert.deepEqual(PROJECT_NAMING_READS.statusreportassist, ["plan"]);
+  assert.deepEqual(PROJECT_NAMING_READS.statusreportassist, PROJECT_NAMING_READS.statusreportdraft);
+  for (const op of ["statusreportassist", "statusreportdraft"])
+    assert.equal(Object.hasOwn(PROJECT_NAMING_READS_NOT, op), false, `${op} in both tables`);
+  /* at the door: C-70.1 first, the route not run, the same answer for both reads */
+  for (const where of ["query", "body"]) {
+    const answered = {};
+    for (const op of ["statusreportassist", "statusreportdraft"]) {
+      const s = fakeStore({ discoverable: [P, F], existence: [P] });
+      const init = where === "body" ? { method: "POST", body: JSON.stringify({ plan: P }) } : undefined;
+      const r = await go(s, `${op}?viewer=member:ann${where === "query" ? `&plan=${P}` : ""}`, init);
+      assert.deepEqual([r.status, r.json.ok, r.json.result.reason, r.json.result.project], [200, true, "PROJECT_SEEN_NOT_A_PARTICIPANT", P], `${op} ${where}`);
+      assert.equal(s.log.some((e) => e.kind === "route"), false, `${op} ${where}: the route ran`);
+      assert.deepEqual(s.log.filter((e) => e.kind === "existence").map((e) => [e.id, e.viewer]), [[P, "member:ann"]]);
+      answered[op] = r.json;
+      /* controls: seen whole, asked then routed; hidden, routed and never asked */
+      for (const [id, asked] of [[F, true], [H, false]]) {
+        const t = fakeStore({ discoverable: [P, F], existence: [P] });
+        const tinit = where === "body" ? { method: "POST", body: JSON.stringify({ plan: id }) } : undefined;
+        const r2 = await go(t, `${op}?viewer=member:ann${where === "query" ? `&plan=${id}` : ""}`, tinit);
+        assert.deepEqual(r2.json.result, { answered: op }, `${op}.plan=${id} ${where}`);
+        assert.equal(t.log.some((e) => e.kind === "existence"), asked, `${op}.plan=${id} ${where}`);
+      }
+    }
+    assert.deepEqual(answered.statusreportassist, answered.statusreportdraft, `${where}: answered alike`);
+  }
+  /* projectquestions: listed as naming none, with its reason; projectlist names none */
+  assert.equal(Object.hasOwn(PROJECT_NAMING_READS, "projectquestions"), false);
+  assert.match(PROJECT_NAMING_READS_NOT.projectquestions, /`project`/);
+  assert.match(PROJECT_NAMING_READS_NOT.projectquestions, /FULL/);
+  assert.match(PROJECT_NAMING_READS_NOT.projectquestions, /empty page/);
+  assert.match(PROJECT_NAMING_READS_NOT.projectquestions, /never refused/);
+  assert.equal(Object.hasOwn(PROJECT_NAMING_READS, "projectlist"), false);
+  assert.equal(typeof PROJECT_NAMING_READS_NOT.projectlist, "string");
+  for (const [op, q] of [["projectquestions", `project=${P}`], ["projectlist", `limit=5&project=${P}`]]) {
+    const s = fakeStore({ discoverable: [P], existence: [P] });
+    const r = await go(s, `${op}?viewer=member:ann&${q}`, { method: "POST", body: JSON.stringify({ project: P }) });
+    assert.deepEqual([r.status, r.json.result], [200, { answered: op }], op);
+    assert.equal(s.log.some((e) => e.kind === "membership"), false, `${op}: membership asked`);
+  }
+  /* over a real record: a discoverable project vera sees only at EXISTENCE */
+  const x = await record({ step: true });
+  const { instanceSetupOf } = await import("../../../src/setup.mjs");
+  const { membershipOf } = await import("../../../src/membership/index.mjs");
+  const { basisVersionsOf, basisVersionsOps } = await import("../../../src/basis-versions/index.mjs");
+  instanceSetupOf(x.ctx).instanceGroupSeed({ slug: "test-group", author: "admin" });
+  for (const m of ["alice", "vera"])
+    x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+                            VALUES (?, ?, ?, 'member', 'active', '["contribute"]', 't', 't')`, m, `Cover ${m}`, `h_${m}`);
+  const md = ["---", "object_type: project", "schema: project@1", `title: "Seen from outside"`, "current_state: forming",
+    "prior_state: null", `created: "2026-10-01T00:00:00Z"`, `last_updated: "2026-10-01T00:00:00Z"`,
+    `objective: "Find out."`, "references: []", "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n");
+  const made = x.promotion.promote({ base: null, snapKey: "k1", author: "member:alice", ownerMemberId: "alice",
+    files: [{ path: "bundle.md", text: md }], meta: { object_type: "project" } });
+  assert.equal(made.ok, true, JSON.stringify(made));
+  const RP = made.bundleId, M = membershipOf(x.ctx);
+  assert.equal(M.projectVisibilitySet({ projectId: RP, setting: "discoverable", by: "alice", viewer: "member:alice" }).ok, true);
+  const own = M.existenceAct(RP, "member:vera");
+  assert.equal(own && own.check, "C-70.1", "vera sees the project only at EXISTENCE");
+  const routed = [];
+  const real = { membership: () => membershipOf(x.ctx),
+    routes: (url, body) => ({ ...basisVersionsOps(basisVersionsOf(x.ctx), url, body),
+      statusreportassist: () => { routed.push("statusreportassist"); return { ok: true }; },
+      statusreportdraft: () => { routed.push("statusreportdraft"); return { ok: true }; } }) };
+  const pq = await go(real, `projectquestions?viewer=member:vera&project=${RP}`);
+  assert.deepEqual([pq.status, pq.json], [200, { ok: true, result: { ok: true, project: RP, items: [], cursor: null } }], "its empty page");
+  for (const op of ["statusreportassist", "statusreportdraft"])
+    assert.deepEqual((await go(real, `${op}?viewer=member:vera&plan=${RP}`)).json, { ok: true, result: own }, op);
+  assert.deepEqual(routed, [], "no status-report route ran");
+  /* control: a read naming a project answers C-70.1 for the same project and caller */
+  assert.deepEqual((await go(real, `basisversions?viewer=member:vera&project=${RP}`)).json, { ok: true, result: own });
 });
 
 test("R3 (DEC-113, DEC-36; actions R58): `projectholds` is among the reads naming no project, with the reason that a project not seen at FULL is answered `held: null`, so its existence answer is not run; `actionholdrelease`, `actionholdpreview` and `projectholds` pass R1's frame to the map they are routed through, with the request's own parameters and body and nothing of the door's added (negative control: a read naming a project is still asked)", async () => {
