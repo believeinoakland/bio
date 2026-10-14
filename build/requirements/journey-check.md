@@ -1,6 +1,6 @@
 # journey-check — requirements
 
-**Status** · New in T47 (T47-88; N999, N1004; K3052, K3053, K3054, K3059; folded K3100): a helper module carrying no product capability (K1043), registered in layer 11 last (after `stewards`) with empty `paths` and `tests`, listed under "Helper modules" in `build/layers.md`. Drafted in `build/plan/draft-T47-L11-fold.md` §B, worded here by BOB (P5). Not yet met (T47).
+**Status** · New in T47 (T47-88; N999, N1004; K3052, K3053, K3054, K3059; folded K3100): a helper module carrying no product capability (K1043), registered in layer 11 last (after `stewards`) with empty `paths` and `tests`, listed under "Helper modules" in `build/layers.md`. Drafted in `build/plan/draft-T47-L11-fold.md` §B, worded here by BOB (P5). Not yet met (T47). Last changed T48 (T48-80: R4 new, the journey runs only when executed directly; N1056; K3192; K3195); marked not yet met (T48).
 
 ## Public
 
@@ -12,6 +12,8 @@ The release check: a Playwright walk of journeys 28 and 3 with screenshots, fail
 
 - **R1** (N1004; K3052, K3053) A Playwright (Chromium) walk, run by `npm run journey` from its directory, in two arms: (a) local, with no account: the installer Worker over the installer's fake Cloudflare account, the hand-over into a plane under Miniflare, then journey 28 (claim, codes, setup, invite, join, codes, a member's first settings, Home, first testimony, sign out, sign in kept, lock, unlock) and journey 3; (b) live, against a named test instance, signing in as the administrator and as a member with credentials read from the environment, never printed, opening `/` and every working screen of the registry.
 - **R2** Each step is screenshotted into its output directory (generated, never committed); the walk fails on any `ok: false` not expected by the step, any 4xx/5xx, any page whose script throws, any setup-page or legacy-ui address reached, and any registry screen not drawn, except `site` (N1011, not built in T47) and the treatments DEC-214 (4) names (`dash-home`, `dash-action`, `dash-project`) (K3137).
+
+- **R4** (T48; N1056; K3192 group T) `journey.mjs` runs its journey only when executed directly (a main-module guard: its own file is the process's entry), never on import: importing it starts no walk, opens no browser or server and does not exit the process. Test: importing the module in a test process leaves the process running and starts nothing; control: running it directly starts the walk. *(not yet met: T48)*
 
 ## Private
 
@@ -25,7 +27,7 @@ The release check: a Playwright walk of journeys 28 and 3 with screenshots, fail
 
 ### Satisfies
 
-- N999, N1004 (journeys 28 and 3 walked before a release); K3052, K3053, K3054, K3059.
+- N999, N1004 (journeys 28 and 3 walked before a release); K3052, K3053, K3054, K3059. (T48) N1056, K3192 (R4).
 
 ### Suggestions
 

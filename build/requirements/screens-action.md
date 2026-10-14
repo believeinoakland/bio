@@ -1,6 +1,6 @@
 # screens-action — requirements
 
-**Status** · New in T47 (T47-64; K657, K1043, K569, K3027 doubt 2): a module built fresh, layer 11 after `screens-publish`, last of the screen modules, before `control-plane` (N897 (1): the v0.2 constructs the design stream has drawn, `plan`, `start-send`, `request`, `action`, `matter`; `BIO_Action_v0_2.md` rules 1–3, 6, 15, 18–21; K608, K2780; DEC-89, DEC-113, DEC-115, DEC-194). Drafted in `build/plan/draft-T47-interface.md` §2.4, worded here by BOB (P5). No ids move. Not yet met (T47).
+**Status** · New in T47 (T47-64; K657, K1043, K569, K3027 doubt 2): a module built fresh, layer 11 after `screens-publish`, last of the screen modules, before `control-plane` (N897 (1): the v0.2 constructs the design stream has drawn, `plan`, `start-send`, `request`, `action`, `matter`; `BIO_Action_v0_2.md` rules 1–3, 6, 15, 18–21; K608, K2780; DEC-89, DEC-113, DEC-115, DEC-194). Drafted in `build/plan/draft-T47-interface.md` §2.4, worded here by BOB (P5). No ids move. Not yet met (T47). Last changed T48 (T48-76: R11 new, amending R3, the prepared draft re-read on reload, N1034, `filings` R59; R12 new, amending R5, the action's project, title and pressure marks, N1035, `actions` R102, `action-holds` R16; R13 new, amending R1, "Ask the assistant for options" as a planning run, N1043, `action-plans` R51; K3145, K3149, K3195, K3207); marked not yet met (T48).
 
 **Size (P6).** Estimated 2,400–3,000 lines with comments, its own keyed sentences included, measured at its START (M-T47-1, K617).
 
@@ -39,6 +39,12 @@ The Action layer's working screens: a project's action plan, starting an option 
 - **R9** (DEC-209 (5)) **help-records**, from `request`: what the office must do, the profile's faster request where held (`profiles`' `view`), what the portal shows, what Civicsmith does with the due date; its sources listed.
 - **R10** (DEC-212) An action opened from the unsent-request item opens at its step (approved, not sent: the send step).
 
+#### T48 (T48-76)
+
+- **R11** (T48; N1034; K3145; `filings` R59; amends R3) On `start-send` and `request`, a draft prepared and not yet approved is read again on load through `filingread` (the filing the action holds), so a reload between preparing and approving draws the same text, blanks with their sources, unfilled blanks with why, the member's fills (labelled hers), the advisory and the offers; nothing is prepared again by reading. `NO_SUCH_FILING` is drawn as "Nothing is here" (`interface-shell` R35). Test: prepare, reload, and the same text and fills are drawn; control: no `filingprepare` or `communicationprepare` is sent on load. *(not yet met: T48)*
+- **R12** (T48; N1035; K3145; `actions` R102; `action-holds` R16; amends R5) `action` heads the screen with the action's `title` and its project as a reference (`place`, `interface-shell` R8's project step), each as `action` answers them (a null drawn absent, never as "untitled"); and draws the pressure marks from `pressurefor` (the action's marks and pressure records, each with where it arrived), paged by `after`. Test: an action in a project draws its title and the project step; control: a mark on another action is not drawn. *(not yet met: T48)*
+- **R13** (T48; N1043; K3149, K3207; `action-plans` R51; `interface-shell` R55; amends R1) On `plan`, "Ask the assistant for options" (the registry's label `act.optionpropose.label.plan` and help `act.optionpropose.does`) sends `planask` with the plan, only while the assistant is reachable (`interface-shell` R20); its answer's run is drawn running (re-read by `cs.later`, as `screens-inquiry` R8), and the run's proposals reach the tray (`planproposals`, labelled machine work). `existed: true` draws the run already asked. `optionpropose` is not drawn for this act. Refusals by their words (`AI_*`, `PLAN_CLOSED`). Test: the act sends `planask` and the tray is re-read when the run ends; control: no `optionpropose` is sent. *(not yet met: T48)*
+
 ## Private
 
 ### Uses
@@ -47,6 +53,7 @@ The Action layer's working screens: a project's action plan, starting an option 
 - `setup-words`: `WORD_ROWS` keys (the Action layer's words, DEC-194).
 - `wizard-scripts`: `SCREEN_REGISTRY` (its R13, R31), in tests only.
 - Through the plane: `action-plans` (`plan`, `planproposals`, the plan acts, `optionstartpreview`, `optionstart`), `plan-work` (`itemtakeup`), `filings` (`communicationprepare`, `filingprepare`, `filingapprove`, `filingsecondapprove`, `filingsent`), `actions` (`action`, `actioncreate`, `actionlaws`, `actionmove`, `actioncorrespond`, `addresseesuggest`), `action-records` (`actionscope`), `action-holds` (`actionhold`, `actionpressure`), `action-clocks` (`reminderset`), `conformance` (`determination`), `consequences` (`consequencesof`), `escalation` (the escalation acts and reads).
+- (T48) Through the plane: `filings` (`filingread`, its R59; R11), `actions` (`action`'s `project` and `title`, its R102; R12), `action-holds` (`pressurefor`, its R16; R12), `action-plans` (`planask`, its R51; R13).
 - Tests only: `op-declarations` (`OPS`).
 
 ### Invariants
