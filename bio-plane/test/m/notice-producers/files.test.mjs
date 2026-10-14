@@ -8,6 +8,13 @@ import { world, pdf, sha } from "../file-safety/fixture.mjs";
 import { findingKind } from "../../../src/file-safety/index.mjs";
 import { fresh, reader, ofKind, sentences, texts, notHintFailures, JUDGMENT } from "./fixture.mjs";
 import { HINT_MARK, NOTICE_KINDS, SCAN_FINDINGS_MAX, SCAN_FINDINGS_DAYS, TOOL_EVENTS_MAX } from "../../../src/notice-producers/index.mjs";
+import { WORDS } from "../ai-use/fixture.mjs";
+
+/* `words.json`'s sentence of `key`, its placeholders filled (a key the file lacks fails here) */
+const say = (key, fills = {}) => {
+  assert.equal(typeof WORDS[key], "string", `${key} is in words.json`);
+  return WORDS[key].replace(/\{([A-Za-z_]+)\}/g, (m, k) => (k in fills ? fills[k] : m));
+};
 
 const FOUND = "found", OFF = "security-tool-off", KIND = "scan-found";
 const DAY = 86_400_000, WINDOW = SCAN_FINDINGS_DAYS * DAY;
@@ -66,20 +73,33 @@ test("R14 R7: a finding on a capture the viewer may not see is no item and is no
   assert.ok(!texts(theirs).some((t) => t.includes(bad) || t.includes("INFO-P") || t.includes("PROJ-1")));
 });
 
-test("R14: its detail states the file is held: the finding names with engine, tool and date in findingKind's words, the safe view open, the release rule; it names no member and is no hint", async () => {
+test("R14 R20: its summary and detail are queue.scan-found.summary and .detail: {document} the file's name, {engine} the engine, {names} the finding names, {meanings} each in findingKind's words, {date} the note's local day by date.daymonth; the file held, the safe view open, the release rule; it names no member and is no hint", async () => {
   const { w, items } = await files();
   const two = await w.capture(pdf(false, "two"));
   await w.fs.scanBatch({});
+  w.home(two, "INFO-T");                                      /* held in a document titled "t" (the fixture's title) */
   const it = items("m1").find((i) => i.subject.capture === two);
-  const day = new Date(w.clock.now).toISOString().slice(0, 10);
-  assert.match(it.detail, /^This file is held: /);
-  assert.ok(it.detail.includes(`on ${day} clamav, the tool clamav found ${NAMES.bad}, ${NAMES.other} in it.`), it.detail);
-  for (const n of [NAMES.bad, NAMES.other]) assert.ok(it.detail.includes(`${n}: ${findingKind(n).words}`), n);
+  const d = new Date(w.clock.now);
+  const months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+  const fills = { document: "t", engine: "clamav",
+                  names: `${NAMES.bad}, ${NAMES.other}`,
+                  meanings: [NAMES.bad, NAMES.other].map((n) => `${n}: ${findingKind(n).words.replace(/\.$/, "")}`).join("; "),
+                  date: say("date.daymonth", { day: String(d.getUTCDate()), month: say(`date.month.${months[d.getUTCMonth()]}`) }) };
+  assert.equal(it.summary_key, "queue.scan-found.summary");
+  assert.equal(it.detail_key, "queue.scan-found.detail");
+  assert.deepEqual(it.fills, fills);
+  assert.equal(it.summary, say("queue.scan-found.summary", fills));
+  assert.equal(it.detail, say("queue.scan-found.detail", fills));
+  assert.ok(!/\{/.test(it.summary + it.detail), "every placeholder filled");
+  assert.doesNotMatch(it.detail, /\.\./, "no meaning's own full stop doubled");
   assert.ok(it.detail.includes("Civicsmith has no plain description of this name"), "a name no row explains says so");
-  assert.match(it.detail, /Its safe view stays open\./);
-  assert.match(it.detail, /The original opens again only when two members each release the hold with a reason, or when a second, different engine's clean check releases a hold the built-in scanner alone placed; the machine never can\./);
+  assert.match(it.detail, /its safe view stays open, and the original opens again only when two members each release the hold with a reason, or when a second, different scanner finds it clean\. The machine never can\.$/);
   assert.deepEqual(it.basis.findings.map((k) => [k.name, k.threat_kind]), [[NAMES.bad, "Downloader"], [NAMES.other, "Unheard"]]);
-  for (const s of [...sentences(it), ...texts(it.basis)]) for (const m of ["m1", "m2", "boss", "member:"]) assert.ok(!s.includes(m), `${m} in ${s}`);
+  /* control: one name is its words alone, not named before them */
+  const one = items("m1").find((i) => i.subject.capture !== two);
+  assert.equal(one.fills.meanings, findingKind(NAMES.bad).words.replace(/\.$/, ""));
+  assert.equal(one.fills.document, one.subject.capture, "control: a file held in no document is named by its capture");
+  for (const s of [...sentences(it), ...texts(it.basis), ...texts(it.fills)]) for (const m of ["m1", "m2", "boss", "member:"]) assert.ok(!s.includes(m), `${m} in ${s}`);
   assert.deepEqual(notHintFailures(it, HINT_MARK), []);
   assert.equal("label" in it, false, "a scanner's verdict, not the machine's noticing");
   for (const s of sentences(it)) assert.doesNotMatch(s, JUDGMENT, s);
@@ -198,12 +218,17 @@ test("R15: one FINDING security-tool-off per event that switched a tool off, key
   assert.deepEqual(items("boss"), [], "an administrator no longer active");
 });
 
-test("R15: its detail names the tool, that it was switched off for not confirming its private mode, and that it stays off until an administrator tests it again; no file and no member", async () => {
-  const { w, id, file, items } = await tools();
+test("R15 R20: its summary and detail are queue.security-tool-off.summary and .detail, {tool} the tool named: that it was switched off for not confirming its private mode, and that it stays off until an administrator tests it again; no file and no member", async () => {
+  const { id, file, items } = await tools();
   const [it] = items("boss");
-  const day = new Date(w.clock.now).toISOString().slice(0, 10);
-  assert.equal(it.detail, `The security tool metadefender-core (${id}) was switched off on ${day} because it did not confirm the private mode its handling requires. It stays off until an administrator tests it again.`);
-  for (const t of [...sentences(it), ...texts(it.subject), ...texts(it.basis)]) {
+  const fills = { tool: `metadefender-core (${id})` };
+  assert.equal(it.summary_key, "queue.security-tool-off.summary");
+  assert.equal(it.detail_key, "queue.security-tool-off.detail");
+  assert.deepEqual(it.fills, fills);
+  assert.equal(it.summary, say("queue.security-tool-off.summary", fills));
+  assert.equal(it.detail, say("queue.security-tool-off.detail", fills));
+  assert.equal(it.detail, `metadefender-core (${id}) was switched off because it didn't confirm the private mode its handling requires. It stays off until an administrator tests it again.`);
+  for (const t of [...sentences(it), ...texts(it.subject), ...texts(it.basis), ...texts(it.fills)]) {
     assert.ok(!t.includes(file.slice(0, 12)), `a file in ${t}`);
     for (const m of ["m1", "m2", "boss", "member:"]) assert.ok(!t.includes(m), `${m} in ${t}`);
   }
@@ -293,4 +318,15 @@ test("R14 (T37, N771, K2155): it leaves when its recipient disposes of it (the s
       fileSafety: standIn(w, [{ at: new Date(now - DAY).toISOString(), held }], []) })).read("m1", { now });
     assert.equal(ofKind(r, KIND).length, n, `held ${held}`);
   }
+});
+
+test("R14 R20: {date} is the note's local day in the profile's zone, never the UTC day, and names its year when not in the current local year (date.daymonthyear); control: this year's names none", async () => {
+  const { w } = await files();
+  const asked = [];
+  const notes = [{ at: "2026-01-01T02:00:00Z" }, { at: "2025-12-31T12:00:00Z" }];
+  const read = (zone, now) => ofKind(reader(fresh(w.host, { membership: w.membership, fileSafety: standIn(w, notes, asked), provenance: w.prov,
+    view: () => ({ time_zone: { value: zone } }) })).read("m1", { now }), KIND).map((i) => i.fills.date);
+  const now = Date.parse("2026-02-01T12:00:00Z");
+  assert.deepEqual(read("America/Halifax", now), ["31 December 2025", "31 December 2025"], "2 a.m. UTC on 1 January is 31 December in Halifax");
+  assert.deepEqual(read("UTC", now), ["1 January", "31 December 2025"], "control: in UTC, the 1st, this year, no year named");
 });

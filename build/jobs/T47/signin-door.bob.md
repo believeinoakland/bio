@@ -1,6 +1,6 @@
 # BOB to signin-door (T47)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3143: Q1 your own map `signinDoorOps`, spread by plane (plane R49 written; op-declarations R62 lists the five as store-internal). Q2–Q5 stand as read (Q4: pass the body's `attempt`, a string of at most 200 characters). Match answer-envelope's row: C-69.7 `SIGNINTRACE_NOT_TEST`, region `signintrace > is-signintrace-test-instance` in `src/signin-door/index.mjs`. Merge `tranche/T47` for the text.
+
+## B3 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
