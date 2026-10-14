@@ -1,4 +1,4 @@
-# The words T48 owes the design stream (DEC-226, BOB's B179: the update screens; DEC-227, BOB's B185: the 'elsewhere' pointer; DEC-229, the document page, DEC-228 (1); DEC-230, the founder's handle, B196, B197; DEC-231, a stake per matter, B191; DEC-232, the words of B188 to B194; DEC-233, what the group says about a person or an organization).
+# The words T48 owes the design stream (DEC-226, BOB's B179: the update screens; DEC-227, BOB's B185: the 'elsewhere' pointer; DEC-229, the document page, DEC-228 (1); DEC-230, the founder's handle, B196, B197; DEC-231, a stake per matter, B191; DEC-232, the words of B188 to B194; DEC-233, what the group says about a person or an organization; DEC-234, B200 and B201).
 # Each entry: (key, English, protected, note). Placeholders in {braces} are filled by the screen. No place, law or venue
 # appears here: a pointer's name, what it does and how to reach it come from the group's place profile (jurisdictions).
 # Run: python3 docs/development/ux-substrate/screens/words-t48.src.py, then node build_words.mjs (it reads words-t48.json).
@@ -287,6 +287,28 @@ w('entity.naming.basis', 'How you know', False, 'DEC-233')
 w('entity.naming.basis.help', 'Your own knowledge, in your words. It is recorded as your word, grade D: never established on its own, and never lowering a stronger match.', False, 'DEC-233')
 w('entity.connect', 'Connect the documents that name them', False, 'DEC-233')
 w('entity.connect.org', 'Connect the documents that name it', False, 'DEC-233')
+
+# DEC-234: the further keys of B200 and B201 (K3293, K3295), those DEC-232 had not already keyed
+w('installer.update.chosen.nodate', 'This update: release {version}, the release chosen in your group\'s Settings › Updates', False, 'DEC-234: B200 (1); the update address carries no date')
+w('screen.review-copy.until.nozone', 'Set your group\'s time zone first: a review link\'s end date is counted in it. Then share.', False, 'DEC-234: B200 (2), B201; screens-publish R18')
+w('shell.card.plan', 'The project\'s action plan: what it means to change, the options for each, and what each option became.', False, 'DEC-234: B200 (4), N1078: the card on a link to each screen')
+w('shell.card.timeline', 'The project\'s timeline: what the officials did and what the group did, in two lanes, each event with its source.', False, 'DEC-234: B200 (4)')
+w('shell.card.money', 'The money trail: money proposed, committed and paid, each figure pointing back to where it was printed.', False, 'DEC-234: B200 (4)')
+w('shell.card.calculation', 'A calculation the project relies on: its inputs, each with its source, and how the result was worked out.', False, 'DEC-234: B200 (4)')
+w('shell.card.case-editor', 'The case being prepared: its findings, what it leaves out, the people it names, and the group\'s statement.', False, 'DEC-234: B200 (4)')
+w('shell.card.review-copy', 'A copy of the draft case shared with a named outside reader, through a link the group can end at any time.', False, 'DEC-234: B200 (4)')
+w('shell.card.ceremony', 'Publishing the case: the last checks, the disclosures, the preview, then the signing.', False, 'DEC-234: B200 (4)')
+w('shell.card.docket', 'The published case\'s public record of everything that happened to it after publishing: replies, corrections, new editions.', False, 'DEC-234: B200 (4)')
+w('home.area.investigation', 'Investigation', False, 'DEC-234: B201: the four areas on Home')
+w('home.area.action', 'Action', False, 'DEC-234: B201')
+w('home.area.members', 'Members', False, 'DEC-234: B201')
+w('home.area.administration', 'Administration', False, 'DEC-234: B201')
+w('home.move.ours', 'our move', False, 'DEC-234: B201: an action waiting on the group')
+w('home.move.theirs', 'their move', False, 'DEC-234: B201: an action waiting on the office or body')
+w('screen.forgot.done.last', 'That was your last recovery code. Once you\'re in, get ten new ones in Settings › Recovery codes, so you have a way back in next time.', False, 'DEC-234: B201; screens-entry: never "you have 0 left"')
+w('screen.setup.security.field', 'One-time password · filled in for you from the installer\'s last page', False, 'DEC-234: B201: read as the claim\'s one-time password field, filled from the installer and never typed; BOB corrects this reading if it meant another field')
+w('connection.thing.entity', 'a person or organization', False, 'DEC-234: B201; screens-investigate')
+w('screen.held.empty', 'Nothing is held: every capture here has been vouched for or set aside.', False, 'DEC-234: B201; screens-intake: names no first step')
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 keys = [x['key'] for x in W]

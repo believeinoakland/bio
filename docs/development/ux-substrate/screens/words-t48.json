@@ -1600,5 +1600,125 @@
   "en": "Connect the documents that name it",
   "protected": false,
   "note": "DEC-233"
+ },
+ {
+  "key": "installer.update.chosen.nodate",
+  "en": "This update: release {version}, the release chosen in your group's Settings › Updates",
+  "protected": false,
+  "note": "DEC-234: B200 (1); the update address carries no date"
+ },
+ {
+  "key": "screen.review-copy.until.nozone",
+  "en": "Set your group's time zone first: a review link's end date is counted in it. Then share.",
+  "protected": false,
+  "note": "DEC-234: B200 (2), B201; screens-publish R18"
+ },
+ {
+  "key": "shell.card.plan",
+  "en": "The project's action plan: what it means to change, the options for each, and what each option became.",
+  "protected": false,
+  "note": "DEC-234: B200 (4), N1078: the card on a link to each screen"
+ },
+ {
+  "key": "shell.card.timeline",
+  "en": "The project's timeline: what the officials did and what the group did, in two lanes, each event with its source.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "shell.card.money",
+  "en": "The money trail: money proposed, committed and paid, each figure pointing back to where it was printed.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "shell.card.calculation",
+  "en": "A calculation the project relies on: its inputs, each with its source, and how the result was worked out.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "shell.card.case-editor",
+  "en": "The case being prepared: its findings, what it leaves out, the people it names, and the group's statement.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "shell.card.review-copy",
+  "en": "A copy of the draft case shared with a named outside reader, through a link the group can end at any time.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "shell.card.ceremony",
+  "en": "Publishing the case: the last checks, the disclosures, the preview, then the signing.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "shell.card.docket",
+  "en": "The published case's public record of everything that happened to it after publishing: replies, corrections, new editions.",
+  "protected": false,
+  "note": "DEC-234: B200 (4)"
+ },
+ {
+  "key": "home.area.investigation",
+  "en": "Investigation",
+  "protected": false,
+  "note": "DEC-234: B201: the four areas on Home"
+ },
+ {
+  "key": "home.area.action",
+  "en": "Action",
+  "protected": false,
+  "note": "DEC-234: B201"
+ },
+ {
+  "key": "home.area.members",
+  "en": "Members",
+  "protected": false,
+  "note": "DEC-234: B201"
+ },
+ {
+  "key": "home.area.administration",
+  "en": "Administration",
+  "protected": false,
+  "note": "DEC-234: B201"
+ },
+ {
+  "key": "home.move.ours",
+  "en": "our move",
+  "protected": false,
+  "note": "DEC-234: B201: an action waiting on the group"
+ },
+ {
+  "key": "home.move.theirs",
+  "en": "their move",
+  "protected": false,
+  "note": "DEC-234: B201: an action waiting on the office or body"
+ },
+ {
+  "key": "screen.forgot.done.last",
+  "en": "That was your last recovery code. Once you're in, get ten new ones in Settings › Recovery codes, so you have a way back in next time.",
+  "protected": false,
+  "note": "DEC-234: B201; screens-entry: never \"you have 0 left\""
+ },
+ {
+  "key": "screen.setup.security.field",
+  "en": "One-time password · filled in for you from the installer's last page",
+  "protected": false,
+  "note": "DEC-234: B201: read as the claim's one-time password field, filled from the installer and never typed; BOB corrects this reading if it meant another field"
+ },
+ {
+  "key": "connection.thing.entity",
+  "en": "a person or organization",
+  "protected": false,
+  "note": "DEC-234: B201; screens-investigate"
+ },
+ {
+  "key": "screen.held.empty",
+  "en": "Nothing is held: every capture here has been vouched for or set aside.",
+  "protected": false,
+  "note": "DEC-234: B201; screens-intake: names no first step"
  }
 ]

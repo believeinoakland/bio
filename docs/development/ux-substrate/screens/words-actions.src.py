@@ -208,7 +208,7 @@ w('refusal.AROSE_FROM_LINKED', 'That link is already recorded.' + NW)
 w('packet.privileged', 'Privileged and confidential: prepared for counsel', True)
 w('packet.privileged.warning', 'This packet belongs to a counsel matter. Sharing it outside the group may end its privilege. Share it only with your lawyer.', True)
 w('filings.election.notice', 'This names a pending measure or candidate. {fact} ({citation})', True, '{fact}: the campaign-spending legal fact from the profile; never refusing')
-w('rfc.quoting', 'Your reply may be quoted, unless you say otherwise in it.', True, 'carried by every request for comment')
+# 'rfc.quoting' withdrawn here (DEC-234; B200 (5)): filing-templates R33 owns it
 w('pointer.record.supported', 'Supported by the record: {findings}', False)
 w('pointer.record.unsupported', 'The record doesn\'t support this sentence. You may still send it.', False)
 w('pointer.record.contradicted', 'The record contradicts this sentence. It is held until you rewrite it, or release it with a reason.', True)
@@ -239,7 +239,7 @@ w('refusal.TEMPLATE_NOT_REVIEWED', 'This template isn\'t offered yet: it lacks {
 w('refusal.TEMPLATE_COURT_PETITION', 'Civicsmith offers no templates for filing with a court. Talk to a lawyer.', True)
 w('refusal.CONTRADICTED_HELD', 'The record contradicts a sentence in this text. Rewrite it, or release it with a reason, before approving.' + NW, True)
 w('refusal.SELF_BENEFIT_ASK', 'A sentence still asks for something for your group or its members. A notice or demand asks the body to correct its own act; rewrite that sentence before approving.' + NW, True)
-w('refusal.RFC_QUOTING_MISSING', 'A request for comment says the reply may be quoted unless it says otherwise. Add that sentence before approving.' + NW, True)
+# 'refusal.RFC_QUOTING_MISSING' withdrawn here (DEC-234; B200 (5)): filing-templates R33 owns it
 w('refusal.ASSERTION_UNRESOLVED', 'A sentence that reads as saying the body broke a rule is still open. Rewrite it, confirm the act only asks, or treat the act as a breach claim.' + NW, True)
 w('refusal.ASSERTION_RESOLUTION_REFUSED', 'Each answer names one sentence that was pointed out, once; "it only asks" needs your own words, and a breach claim takes none.' + NW)
 w('refusal.NOT_A_PARTNER', 'That organization isn\'t one of this action\'s partners. Add it as a partner first.' + NW)

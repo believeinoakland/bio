@@ -3716,3 +3716,17 @@ response: **The design session, 2026-10-14, under Bob's rulings.** (1) On the pe
 decided: 2026-10-14 · the design session, under Bob's rulings (P17)
 reasoning recorded in: this entry; `screens/mock-screens.js` (`SCR.person`, states a and b), `screens/registry.src.py` (`person`: five acts and `writinghelp`; purpose), `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/page.src.html` (`.mk-h3`), `screens/words-t48.src.py` and `words.json` (2,110 words), `layouts.html`.
 owed: (BOB) screens-investigate R1's act list for `person` gains `entityalias`, `relationdeclare`, `resolve`, `resolvetestify`, `connect`, and its reads `readEntity` (aliases, relations, R5) and `namingDocuments` (R17); the organization form of `person` for an organization kind (`institution`, `body`, `movement`), opened from People's organization rows; these keys read; the census's §2 table: S2 "drawn, DEC-233".
+
+### DEC-234 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_018wYsHFkiS5mNbyuRzpFoDX) (B200 / K3293, B201 / K3295: further keys T48's L11 jobs hold inline until keyed)
+for: bob-session
+question: The member words for the keys B200 and B201 ask that DEC-232 had not already keyed, and the two keys that move out of `words.json`.
+why it is Bob's: member words beneath his rulings (K3269: every member word read by key from this stream's file); decided by the design session (P17).
+provisional: each job's inline text.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low: words by key.
+response: **The design session, 2026-10-14.** Twenty keys in `words-t48.src.py` under DEC-234: `installer.update.chosen.nodate` (the update page without a date); `screen.review-copy.until.nozone` ("Set your group's time zone first: a review link's end date is counted in it. Then share."); `shell.card.plan`, `.timeline`, `.money`, `.calculation`, `.case-editor`, `.review-copy`, `.ceremony`, `.docket`, each saying what the linked screen holds in one sentence; Home's four area names (`home.area.investigation`, `.action`, `.members`, `.administration`) and `home.move.ours` "our move", `home.move.theirs` "their move"; `screen.forgot.done.last` (after the last recovery code: get ten new ones in Settings › Recovery codes; never "you have 0 left"); `screen.setup.security.field`, read as the claim's one-time password field, filled from the installer and never typed ("One-time password · filled in for you from the installer's last page"), BOB to correct the reading if it meant another field; `connection.thing.entity` "a person or organization" (American English); `screen.held.empty` naming no first step. `rfc.quoting` and `refusal.RFC_QUOTING_MISSING` are withdrawn from `words-actions.src.py` and so from `words.json` (filing-templates R33 owns them). Already keyed by DEC-232 and not repeated: `wizard.marks.chip`, `.chip.one`, `wizard.mark.recommended`, the `queue.source-*` keys, `home.first.name`, and Home's block headings.
+decided: 2026-10-14 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t48.src.py`, `screens/words-actions.src.py`, `words.json` (2,128 words).
+owed: (BOB) each job reads these keys at its START in place of its inline text; setup-words drops its copy of the two withdrawn keys; the reading of `screen.setup.security.field` confirmed or corrected by mail.
