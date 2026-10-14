@@ -15,6 +15,7 @@ import { FAIL } from "../../../src/journey-check/walker.mjs";
 
 const DIR = join(import.meta.dirname, "..", "..", "..", "src", "journey-check");
 
+/* that `--live <address>` selects the live arm is run, not read, in entry.test.mjs (R4's control) */
 test("R1: `npm run journey` runs the walk from its directory, on Playwright (Chromium) pinned exactly, with its lock", () => {
   const pkg = JSON.parse(readFileSync(join(DIR, "package.json"), "utf8"));
   assert.equal(pkg.scripts.journey, "node journey.mjs");
@@ -22,7 +23,6 @@ test("R1: `npm run journey` runs the walk from its directory, on Playwright (Chr
   assert.match(v, /^\d+\.\d+\.\d+$/, "an exact version");
   const lock = JSON.parse(readFileSync(join(DIR, "package-lock.json"), "utf8"));
   assert.equal(lock.packages["node_modules/playwright-core"].version, v);
-  assert.match(readFileSync(join(DIR, "journey.mjs"), "utf8"), /runLive\(\{ base: args\[at \+ 1\] \}\)/, "`--live <address>` selects the live arm");
 });
 
 test("R1 (a): the fake Cloudflare account grants a token only for the PKCE verifier its consent was asked with, keeps bindings by type across uploads, and names every call it does not answer", async () => {

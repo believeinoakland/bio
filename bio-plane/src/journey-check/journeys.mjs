@@ -274,17 +274,22 @@ export async function walkWelcome(walk, page, { base, link, member }) {
    "You can't open this" are its designed absence, expected; any other refusal fails the sweep. */
 export const ABSENCE = /^(?:NOT_FOUND|NO_SUCH_[A-Z_]+|[A-Z_]+_NOT_FOUND|NOT_VISIBLE|NOT_A_PARTICIPANT)$/;
 
-export async function sweep(walk, page, base, { screens = sweepScreens() } = {}) {
-  walk.journey = "screens";
+/* `each(page, screen, drawn)`, when given, is done on each screen within its step, once it is opened and judged. */
+export async function sweep(walk, page, base, { screens = sweepScreens(), journey = "screens", each = null } = {}) {
+  walk.journey = journey;
   for (const s of screens) {
     await walk.step(page, `screen ${s.id}`, async (p) => {
       await p.goto(new URL(addressOf(s.id), base).href);
       await settle(p);
       const st = await drawnState(p, s.id);
       if (!st.drawn) walk.fail(FAIL.NOT_DRAWN, `${s.id}: ${st.why}`);
+      if (each) await each(p, s, st.drawn);
     }, { expect: [ABSENCE] }).catch((e) => { if (!(e instanceof StepFailed)) throw e; });
   }
 }
+
+/* The acts the page draws, by op (interface-shell R13's `data-act`; an act a member may not do is absent from the page). */
+export const drawnActs = (page) => page.evaluate(() => [...new Set([...document.querySelectorAll("[data-act]")].map((e) => e.getAttribute("data-act")))].sort());
 
 export const credentials = () => ({
   founder: { password: "founder-" + rand(12) },
