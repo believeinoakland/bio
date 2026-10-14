@@ -61,14 +61,9 @@ async function doors({ gate = { flags: READ_FLAGS, testSet: GATE_SET }, parts = 
            createHash("sha256").update(SESSION).digest("hex"), Date.now() + 3600e3);
   await disclosed(x.ctx);
   assert.equal((await aiAccountsOf(x.ctx).accountReferenceSet({ member: "member:ann", kind: "apikey", secret: SECRET, by: "member:ann" })).ok, true);
-  /* instance-setup R87's `readingLanguage` (in-process): the real service once instance-setup's job has merged, else a
-     stand-in with its contract: the language asked, if a locale; else the member's own (here `language`); else
-     LANGUAGE_NOT_SET */
+  /* instance-setup R87's `readingLanguage`: the member's own language is the one set by her own act */
   const setup = instanceSetupOf(x.ctx, x.env);
-  if (typeof setup.readingLanguage !== "function") {
-    setup.readingLanguage = ({ language: asked = null } = {}) => asked ? (/^[a-z]{2}(-[A-Za-z0-9]+)*$/.test(asked) ? { ok: true, language: asked }
-      : { ok: false, reason: "LANGUAGE_MALFORMED" }) : language ? { ok: true, language } : { ok: false, reason: "LANGUAGE_NOT_SET" };
-  }
+  if (language) assert.equal(setup.memberLanguageSet({ language, by: "member:ann" }).ok, true);
   const draft = async (a) => { const r = await x.s.draft({ member: "ann", session: SESSION, pack: { layers: [] }, ...a }); return { status: r.status, body: await r.json() }; };
   return { ...x, posts, draft, member };
 }
@@ -246,61 +241,50 @@ test("R51 (T48; N847): the front door's pointer reads record-core's jurisdiction
 
 /* ===== R52 (T48; N1047; K3189; machinery-producers R12; instance-setup R88, R89) ===== */
 
-/* R52: instance-setup's real `updateNoticeState` (its R89) once its job has merged; until then a stand-in holding the
-   state the test sets, in the shape machinery-producers R12 reads. */
+/* R52: instance-setup's real `updateNoticeState` (its R89), observed (the call is relayed unchanged). A stored ready
+   notice is a verified release notice row (`release_notices`, its R88), newer than the running version. */
 function noticeRead(x) {
   const setup = instanceSetupOf(x.ctx, x.env);
-  const t = { state: { running: { version: "1.0.0" }, ready: null, decisions: [] }, asked: [] };
-  const real = typeof setup.updateNoticeState === "function" ? setup.updateNoticeState.bind(setup) : null;
-  setup.updateNoticeState = (...a) => { t.asked.push(a); return real ? real(...a) : t.state; };
-  t.real = real !== null;
-  t.ready = (version = "1.2.0", running = "1.0.0") => {
-    t.state = { running: { version: running }, decisions: [],
-                ready: { version, date: "2026-10-10", found_at: "2026-10-12T00:00:00Z", security: false, decision: null } };
-  };
+  const t = { asked: [] };
+  const real = setup.updateNoticeState.bind(setup);
+  setup.updateNoticeState = (...a) => { t.asked.push(a); return real(...a); };
+  t.store = (version = "99.0.0") => x.ctx.storage.sql.exec(
+    `INSERT INTO release_notices (version, date, manifest, security, notes, sig, found_at) VALUES (?, '2026-10-10', '{}', 0, '{}', 'sig', '2026-10-12T00:00:00Z')`, version);
   return t;
 }
 
-test("R52 (T48; N1047; machinery-producers R11, R12): the update notice read is handed to machinery-producers as deps.updateNotice, a function that calls instance-setup's updateNoticeState on the object's own instance at each call: the administrators' conditions carry the to-do for a stored ready notice, the state read afresh each time; controls: a member who is no administrator is not an asking, and the item leaves when the running version settles it", async () => {
-  const x = await doors();
+test("R52 (T48; N1047; machinery-producers R11, R12): the update notice read is handed to machinery-producers as deps.updateNotice, a function that calls instance-setup's updateNoticeState on the object's own instance at each call: the administrators' conditions carry the to-do for a stored ready notice, the state read afresh each time; controls: a member who is no administrator is not an asking, and a notice no newer than the running version yields none", async () => {
+  const x = await doors({ env: { VERSION: "1.0.0" } });
   const t = noticeRead(x);
   const { machineryProducersOf } = await import("../../../src/machinery-producers/index.mjs");
   const mp = machineryProducersOf(x.ctx);
+  const at = Date.parse("2026-10-14T00:00:00Z");
   const has = (r) => r.items.some((i) => i.kind === "update-ready");
-  const none = mp.conditionItems({ member: "ada", viewer: "member:ada", now: Date.parse("2026-10-14T00:00:00Z") });
+  const none = mp.conditionItems({ member: "ada", viewer: "member:ada", now: at });
   assert.equal(has(none), false, "no ready notice, no item");
   assert.equal(none.facts, undefined, "the read answered: nothing failed");
   assert.deepEqual(t.asked.at(-1), [], "updateNoticeState() is called with no argument");
-  if (!t.real) {
-    t.ready();
-    const before = t.asked.length;
-    const ready = mp.conditionItems({ member: "ada", viewer: "member:ada", now: Date.parse("2026-10-14T00:00:00Z") });
-    assert.equal(has(ready), true, "a stored ready notice yields the administrators' to-do");
-    assert.ok(t.asked.length > before, "asked at each call, never once at start");
-    /* control: ann is no administrator: not an asking */
-    const mid = t.asked.length;
-    assert.equal(has(mp.conditionItems({ member: "ann", viewer: "member:ann", now: Date.parse("2026-10-14T00:00:00Z") })), false);
-    assert.equal(t.asked.length, mid, "a member who is no administrator is not an asking");
-    /* control: the running version settles it, read afresh at the next call */
-    t.ready("1.2.0", "1.2.0");
-    assert.equal(has(mp.conditionItems({ member: "ada", viewer: "member:ada", now: Date.parse("2026-10-14T00:00:00Z") })), false);
-  }
+  t.store("0.9.0");
+  assert.equal(has(mp.conditionItems({ member: "ada", viewer: "member:ada", now: at })), false, "no newer than the running version");
+  const before = t.asked.length;
+  t.store("99.0.0");
+  assert.equal(has(mp.conditionItems({ member: "ada", viewer: "member:ada", now: at })), true, "a stored ready notice yields the to-do");
+  assert.ok(t.asked.length > before, "asked at each call, never once at start");
+  const mid = t.asked.length;
+  assert.equal(has(mp.conditionItems({ member: "ann", viewer: "member:ann", now: at })), false);
+  assert.equal(t.asked.length, mid, "a member who is no administrator is not an asking");
 });
 
-test("R52 (T48; N1047): through op=queue the administrators' to-do for a ready release reaches the list, and the read is instance-setup's, asked at each call; control: a member who is no administrator has none", async () => {
+test("R52 (T48; N1047): through op=queue the administrators' to-do for a ready release reaches the list; control: a member who is no administrator has none", async () => {
   const x = await doors();
   const t = noticeRead(x);
   const queue = async (who) => JSON.parse(await (await x.fetch(`/queue?viewer=member:${who}&member=${who}&by=member:${who}`, { method: "POST", body: "{}" })).text());
   const kinds = (a) => ((a.result && a.result.items) || []).map((i) => i.kind);
-  assert.equal((await queue("ada")).result.ok, true);
-  assert.deepEqual(t.asked.at(-1), []);
-  if (!t.real) {
-    t.ready();
-    const ada = await queue("ada");
-    assert.equal(ada.result.ok, true, JSON.stringify(ada).slice(0, 300));
-    assert.ok(kinds(ada).includes("update-ready"), "the to-do reaches the administrator's list");
-    assert.equal(kinds(await queue("ann")).includes("update-ready"), false);
-  }
+  t.store("99.0.0");
+  const ada = await queue("ada");
+  assert.equal(ada.result.ok, true, JSON.stringify(ada).slice(0, 300));
+  assert.ok(kinds(ada).includes("update-ready"), "the to-do reaches the administrator's list");
+  assert.equal(kinds(await queue("ann")).includes("update-ready"), false);
 });
 
 /* ===== R53 (T48; N996; K3101; ai-accounts R32, R23) ===== */
@@ -432,7 +416,7 @@ test("R55 (T48): the Worker's ask arm passes the door's trace and member ref on 
 const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
 /* the ops T48's owners add to the maps this module spreads: action-replies R10 (`actionreplyquoting`), filings R59
    (`filingread`), action-holds R16 (`pressurefor`), ai-use R14 (`aiuseovertime`) */
-const T48_OPS = ["actionreplyquoting", "filingread", "pressurefor", "aiuseovertime"];
+const T48_OPS = ["actionreplyquoting", "filingread", "pressurefor", "aiuseovertime", "updatenotice", "updatestart", "updatelater", "updateskip"];
 
 test("R5 (T48; K3280, K3282, K3266; action-replies R10, filings R59, action-holds R16, ai-use R14): the route map is re-pinned to T48's ops: each is in the map of the module that serves it, in the route map, and answers through control-plane's door what that map answers called directly; control: an op no map serves is in none", async () => {
   const u = new URL("http://do/");
@@ -450,7 +434,7 @@ test("R5 (T48; K3280, K3282, K3266; action-replies R10, filings R59, action-hold
     assert.equal(res.status, 200, `${op} (${owner[0]})`);
     assert.deepEqual(JSON.parse(mask(await res.text())), JSON.parse(mask(JSON.stringify({ ok: true, result: direct ?? null }))), op);
   }
-  assert.deepEqual(T48_OPS.map((op) => ownMaps(x.ctx, u, null, x.env).filter(([, m]) => Object.hasOwn(m, op)).length), [1, 1, 1, 1],
+  assert.deepEqual(T48_OPS.map((op) => ownMaps(x.ctx, u, null, x.env).filter(([, m]) => Object.hasOwn(m, op)).length), [1, 1, 1, 1, 1, 1, 1, 1],
                    "each is served by exactly one module's map");
   assert.equal(keys.includes("zzprobe48"), false);
 });

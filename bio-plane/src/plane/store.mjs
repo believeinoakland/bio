@@ -88,7 +88,7 @@ import { machineryProducersOf } from "../machinery-producers/index.mjs";
 import { actionProducersOf } from "../action-producers/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps } from "../wizard-scripts/index.mjs";
-import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
+import { instanceSetupOf, instanceSetupOps, disclosureReadOf, DISCLOSURE_READER } from "../setup.mjs";
 import { dispatch, controlPlaneRoutes } from "../store-door/dispatch.mjs";   /* K1907, K2041: the store's door */
 import { promotionStep } from "../store-door/step.mjs";
 import { registerOwnersCounts, registerStats } from "./stats.mjs";
@@ -499,7 +499,7 @@ export class Store extends DurableObject {
        and cannot reach it), so `disclosureDue` is asked in the assembled plane: `accountreferenceset` and a sign-in's
        `start` are refused DISCLOSURE_DUE while no disclosure is recorded for the member. */
     /* R53 (T48; ai-accounts R23): the registration is ai-accounts', not credentials' delegate */
-    aiAccountsOf(ctx).registerDisclosureRead("instance-setup", (q) => instanceSetup.disclosureOf(q));
+    aiAccountsOf(ctx).registerDisclosureRead(DISCLOSURE_READER, disclosureReadOf(instanceSetup));   /* instance-setup R54 */
     ctx.blockConcurrencyWhile(async () => {
       const started = await instanceSetup.start();
       /* F16 (K2038; capture R73, capture-sources R65): the group's own hosts, once the store is migrated and started so
