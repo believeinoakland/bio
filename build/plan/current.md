@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #178 · session_01FtFaeSuYFdZBqRurhFtqH4 · depth 1
 
-**Jobs** · membership: MEMBERSHIP #39 session_01195GX87EMHUXKVysBHVQkZ; project-roster: PROJECT-ROSTER #8 session_018CGBk9NjLEcazf7iqf4TiN; credentials: CREDENTIALS #16 session_01C6HsrkoFjNZGt4BJNLj9Gm; promotion: PROMOTION #47 session_01HL5YBcopVZSndbgMuYa2TJ; capture: CAPTURE #32 session_015BNtGS8DbCgXWr3necPhxA; reading-pipeline: READING-PIPELINE #13 session_01GqCLDeeJthzed1vQ19Mi4Q; duties: DUTIES #7 session_019tEq7UTq8AyLVmuzhLiapk
+**Jobs** · membership: MEMBERSHIP #39 session_01195GX87EMHUXKVysBHVQkZ; project-roster: PROJECT-ROSTER #8 session_018CGBk9NjLEcazf7iqf4TiN; credentials: CREDENTIALS #16 session_01C6HsrkoFjNZGt4BJNLj9Gm; promotion: PROMOTION #47 session_01HL5YBcopVZSndbgMuYa2TJ; capture: CAPTURE #32 session_015BNtGS8DbCgXWr3necPhxA; reading-pipeline: READING-PIPELINE #13 session_01GqCLDeeJthzed1vQ19Mi4Q; duties: DUTIES #7 session_019tEq7UTq8AyLVmuzhLiapk; ai-runs: AI-RUNS #22 session_01BWtpcB4nYGzr7xN3cV6hsz; agent-worker: AGENT-WORKER #23 session_01G85qgibprP8ncwoNcKSciB
 
 **Adopted** · from `draft-T49-final.md` (a worker's consolidation for BOB #176), reviewed whole by BOB #177 and settled in K3327 (§ "Settled by BOB #177" at the foot, which governs where it differs). Branch `tranche/T49` from `main` @ f498560a37 (T48's close and PR #37, DEC-241–DEC-246). Ids are re-checked against each file's next free id at the fold (rule 1).
 
@@ -45,7 +45,7 @@ legacy-ui is the only module marked `legacy` in `modules.json`.
    5. The plane bundle and `program.mjs`, staled by any merge, until they are regenerated at each layer's close (K1540).
    6. test-support R2 run as root under a 0700 directory: not owed, environment only (K3192 E).
    7. **K3321's reds, each until the entry named:**
-      - (A) the account defect N1095: capture-requests `plane.test.mjs` (6) and agent-worker `harness.test.mjs` REC100-1b/2/2b, until T49-29 (control-plane, L11). They stay red through L6's agent-worker job, which does not touch them. scheduler `plane` R12 is red until T49-12 (its own part, N1096) and T49-29 (the refusal);
+      - (A) the account defect N1095: capture-requests `plane.test.mjs` (6) and agent-worker `harness.test.mjs` REC100-0/1b/2/2b/2c (K3351), until T49-29 (control-plane, L11). They stay red through L6's agent-worker job, which does not touch them. scheduler `plane` R12 is red until T49-12 (its own part, N1096) and T49-29 (the refusal);
       - (B) the design files moved by PR #36:
         - op-declarations (10), until T49-17;
         - op-grades R42 (2), until T49-13;
