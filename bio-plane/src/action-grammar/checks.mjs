@@ -27,7 +27,7 @@
  * Since T34 layer 9 (T34-87; DEC-149, K1811): a member reads "your group's Civicsmith" where three sentences said "this
  * instance" or "the plane" (`requestLifecycleOf`'s `says`, C-2.10's kind finding, C-101.1's translation, awaiting T35's stamp).
  * Since T33 layer 9 (K1657): C-117.26–.28, the rows of `actions`' `NO_SUBJECT` (its R62), `MACHINE_CANNOT_SET_PROCEEDING` and
- * `NOT_A_PROCEEDING` (its R65), awaiting promotion's stamp; and C-11.1's past date is read on the office's local day
+ * `NOT_A_PROCEEDING` (its R65; C-117.28 retired at T48, K3243: `entities`' C-91.9 is the one site), awaiting promotion's stamp; and C-11.1's past date is read on the office's local day
  * (R7, K1444 (iii)) through `civil-time`.
  * Since T27 layer 9: C-117.23–.25 (`actions` R52, R56, R58; DEC-113, N518; awaiting T28's stamp).
  * Since T20 layer 9: C-117.20–.22 (`actions` R52, K899 (7); stamped by 1.51.0), and a member reads "record" where the
@@ -1857,12 +1857,6 @@ export const ACTION_CATALOGUE_CHECKS = {
     translation: 'Which proceeding an action belongs to is a member\'s statement, and somebody answers for it. The '
       + 'credential that asked here is an automated one, so it cannot set, change or remove it. Nothing was written. '
       + 'Sign in to state it yourself.',
-  },
-  NOT_A_PROCEEDING: {
-    check: 'C-117.28',
-    where: 'src/actions/index.mjs #proceedingRefusal > is-proceeding-kind',
-    translation: 'An action belongs to a proceeding, such as a case before a court or a board, and the entity named is '
-      + 'of another kind. Nothing was written. Name the proceeding itself.',
   },
   /* R13 (T41; H30 (1), K2505): what a records request seeks. Minted here, by `seeksFindings` alone; `actions` refuses its
      write with it (its R70). New in T41 layer 9; awaiting T42's stamp. */

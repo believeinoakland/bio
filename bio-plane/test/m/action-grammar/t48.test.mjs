@@ -75,7 +75,7 @@ test("R29: golden.json follows: its recorded wheres for the five rows and C-33.5
   assert.equal(wasOf("MACHINE_CANNOT_SET_LAWS").where, `${ACTIONS_FILE} actionLaws > is-machine-set-laws`);
 });
 
-test("R29 (the census arm): every one of the six rows' where names a region that exists in the file it names, and no other file in actions or action-records mints the five codes; negative control: a code read from a file that does not hold it is caught", () => {
+test("R29 (the census arm): every one of the six rows' where names a region that exists in the file it names, and actions reaches the three sites through action-records; negative control: a code read from a file that does not hold it is caught", () => {
   const ROOT = new URL("../../../", import.meta.url);
   const text = (file) => (existsSync(new URL(file, ROOT)) ? readFileSync(new URL(file, ROOT), "utf8") : "");
   const hasRegion = (src, region) => new RegExp(`DEC-49 REGION ${region}(?![a-z0-9-])`).test(src) && new RegExp(`END DEC-49 REGION ${region}(?![a-z0-9-])`).test(src);
@@ -93,7 +93,11 @@ test("R29 (the census arm): every one of the six rows' where names a region that
   const records = text(RECORDS_FILE), actions = text(ACTIONS_FILE);
   for (const code of Object.keys(MOVED)) {
     assert.ok(mints(records, code), `${code} is minted at action-records`);
-    assert.ok(!mints(actions, code), `${code} is still minted in actions`);
+  }
+  /* actions reaches the three sites through action-records and holds no site of its own for the five */
+  for (const site of ["correspondFence", "correspondEntryRefusal", "unregisteredArtifact"]) {
+    assert.ok(new RegExp(`\\b${site}\\s*\\(`).test(records), `${site} is defined at action-records`);
+    assert.ok(new RegExp(`records\\.${site}\\(`).test(actions), `actions calls ${site}`);
   }
   assert.ok(mints(actions, "BAD_DIRECTION"), "BAD_DIRECTION is actions'");
   assert.ok(!mints(records, "BAD_DIRECTION"), "BAD_DIRECTION is not action-records'");
@@ -109,4 +113,11 @@ test("R29 (N1053; DEC-221): ACTION_GRAMMAR_WORDS' two frozen copies, refusal.MAC
   assert.equal(AG.ACTION_CATALOGUE_CHECKS.MACHINE_CANNOT_SET_PARTNERS.translation, AG.ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_SET_PARTNERS"]);
   assert.equal(AG.ACTION_CATALOGUE_CHECKS.PARTNERS_REFUSED.translation, AG.ACTION_GRAMMAR_WORDS["refusal.PARTNERS_REFUSED"]);
   for (const [key, text] of Object.entries(AG.ACTION_GRAMMAR_WORDS)) assert.doesNotMatch(text, /organis|labelled/i, key);
+});
+
+test("R29 (T48-46; K3243): C-117.28 NOT_A_PROCEEDING is retired here, its number never reused: no table of this module holds the code or the check, and C-117.26 and C-117.27 remain; control: C-117.29 SEEKS_REFUSED still follows them", () => {
+  assert.ok(!allRows().some((r) => r.code === "NOT_A_PROCEEDING" || r.row.check === "C-117.28"));
+  assert.equal(rowOf("NO_SUBJECT").row.check, "C-117.26");
+  assert.equal(rowOf("MACHINE_CANNOT_SET_PROCEEDING").row.check, "C-117.27");
+  assert.equal(rowOf("SEEKS_REFUSED").row.check, "C-117.29");
 });

@@ -24,3 +24,11 @@ Size (session_01CNDXq4JnEj1g1Bx9AzFdVT): test runs 6, module lines 4
 ## J1 · COMPLETE
 
 T48-46 applied: R29 wheres (C-32.4, C-33.6-.9 to action-records; C-33.5 to actions' is-correspond-direction), golden.json, t48.test.mjs, DEC-221 spelling of the two strings (cleared 4 inherited reds). 77 pass; 2 fail = the two census arms (R28, R29), red only because T48-47's regions (correspondFence, correspondEntryRefusal, unregisteredArtifact) and actions R101's is-correspond-direction are not yet on tranche/T48. Send CHANGE when action-records is merged; I will merge and re-run. format/architecture/coverage/ownership 0 failures; checks/run.mjs to run after the merge. Rows awaiting stamp listed in my record. C-117.28: no such row in this module. Needs from actions: R101 must create the is-correspond-direction region.
+
+## Completion after B2–B4 (merged tranche/T48)
+
+- Merged `tranche/T48` (action-records K3278, actions K3281). B3 applied: row C-117.28 `NOT_A_PROCEEDING` removed from `checks.mjs` (entities' C-91.9, R53, is the one site; the two-file window is accepted by name, rule 5 (2)); `grammar.test.mjs`'s R9 tests updated (row list, "by hand" census without .28); `t48.test.mjs` pins the retirement and, for R29, that action-records defines the three sites and actions calls them through `records`.
+- **Rows, each `awaiting stamp` (T49):** C-32.4 `MACHINE_CANNOT_CORRESPOND`, C-33.6 `BAD_DATE`, C-33.7 `CAPTURE_AND_TESTIMONY`, C-33.8 `NEITHER_CAPTURE_NOR_TESTIMONY`, C-33.9 `UNREGISTERED_ARTIFACT`, C-33.5 `BAD_DIRECTION` (wheres changed); C-117.28 `NOT_A_PROCEEDING` (departed here; entities' C-91.9 holds it).
+- Tests: `node --test bio-plane/test/m/action-grammar/` 80 pass, 0 fail (both census arms now green). `checks/run.mjs` over the product: format 0 failures, architecture 0 failures, ownership 0 failures; coverage reports 26 failures, none in action-grammar (29 of 29 named), all in other modules.
+
+Size (session_01CNDXq4JnEj1g1Bx9AzFdVT): test runs 9, module lines 4
