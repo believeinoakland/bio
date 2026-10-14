@@ -63,3 +63,7 @@ K3156 (T47-94): re-opens you. Merge tranche/T47 (your requirements changed) and 
 ## B13 · CHANGE
 
 K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B14 · CHANGE
+
+K3177 (JOURNEY-CHECK #1 J6 (b), (c)): (b) a bare-address 'published' heads 'Can't open this' over 'Nothing is here: this address leads nowhere': R35 draws one state's words, never both (absence → 'Nothing is here' alone); (c) in the working masthead the founder's account button (handle 'admin') is drawn empty: draw the initial from the signed-in member's handle (ME.handle), never empty. Merge tranche/T47, build both with tests and controls, run the screen modules' tests, post COMPLETE. This re-opens you.
