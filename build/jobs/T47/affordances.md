@@ -2,6 +2,46 @@
 
 **Status** · session_01UKhMnGPjg8Y3PBnYKh2w1U · depth 2 · RUNNING until 2026-10-14T00:46:44Z (users' tests (tasks, queue, op-declarations, store-door, control-plane, plane)) · handled B2
 
+## Completion
+
+**Read, whole:** `build/requirements/affordances.md`; `build/manifest.md`; my entry T47-49 and the plan's rules at the opening (rule 5's reds); rulings K3062, K3100, K3102–K3104, K3112, K3116, K3128, K3141; the split maps' affordances rows (`case-authoring-split-2.md` §5, `actions-split.md` §5); my code whole (`affordances.mjs`, `affordances/facts.mjs`, `door.mjs`, `words.mjs`, `act-help.mjs`, P20); my tests `catalogue`, `t36`, `t45`, `t45-backing` whole and the parts of `plane`, `backing`, `derive`, `t33` I changed. The reading set is over the limit (2486 KB), so per BOB's START a helper read every other test file of mine whole, and `plane`, `backing`, `derive` and `t45-backing` again, and wrote me a digest citing line ranges (K2032). Used modules' public parts I read only for the services I call: citation R4, R5, R14, R15; connections R22; leg-earning R4, R5; membership R43, R80, R85; op-grades R36, R37; op-declarations' T47 status line.
+
+**Entries applied:** T47-49 (N992; K3062, K3102, K3104), on BOB's answers K3143 (J1) and my readings in J3:
+- R54, R56: `ACT_HELP` regenerated from `mock-acts.js` on `tranche/T47` after PR #33's head (282 entries, R48's reading). `owed_passwordresetlink` is held under `passwordresetlink`. T47's declared ops are held under their own names: `unlock`, `passwordreset`, `grouplogoset`, `grouplanguagesset`, `signrequest`, `projectlist`, `projectquestions`, `drawquestion`, `projectbarset`, `monitorset`. R54's own texts are held (`captureupload`, `ask`, `subscriptiondisconnect`, `clockproposals`, `joindoors`, `statusreportassist`, `airundispatch`). `capture` and `hostingaccess` are no longer held. `handlechange` stays membership's refusal. No `owed_` key is held. This clears rule 5 (7a)'s two DEC-198/199 reds.
+- R55: a new fact `legs_in {live, severed}`, on information targets only, asked through `inquiry.restsOnLive`. It counts the distinct questions the viewer may see. A frozen leg is never live, and a severed leg's question is counted only when no case pins it (`case-tensions.caseRelation`). On an information target, `sever` is also offered on a live leg and `reinstate` on a severed one (not on a retired target). On every other type, and in R13's existence facts, the fact is null-valued.
+- K3102: plane `R14 R9 R18` sever-on-inquiry test restated for citation R15. A question's own leg on a question is accepted (sever and reinstate) but not offered (R9, R55 as written; J3 (1)).
+- N908 §5: the catalogue tests read case-inputs' namespace, op map and checks (a new test: its three ops, `STATEMENT_ACK_NO_REASON`, R12's totality with `statementack` ungated), T23's test re-pointed, and R19's owners table re-pointed. backing drives `statementack` on case-inputs (`w.ci`).
+- N961 §5: `catalogue`, `t45` and `t45-backing` drive `actionreceipt`, `actionscope` and `actionpromise` on action-records (`actionRecordsOf(host)`, `actionRecordsOps`).
+- K3104: `peopledirectory` added to people's closed op map in `t33`. It has no help text, which is the design stream's (K3143).
+- Flaws fixed in my tests (P8, from the digest): plane's "each act is accepted there" now drives sever and reinstate on INFO and INFO2 and restores the scene; two stale comments re-pointed (action-holds, action-records).
+
+**Reds cleared:** rule 5 (7a)'s two; K3102's; K3116's R1, R12, R24, R14/R9/R18 and R19 ×2; K3128's three. Two remain, both waiting on op-grades (T47-48, which merges before me):
+- `t33` R12 `peopledirectory` (K3112) waits for it to be named in `NON_ACTS`.
+- `t36` R48/R53 "every key graded or named" waits on op-grades R36/R37 grading the 11 T47 ops above.
+I will re-run both once op-grades has merged and `tranche/T47` is merged in.
+
+**Deferred:** none of mine. The digest found weak tests outside this entry's scope, left as they are in this job: t33/t35/t36/t41-backing drive one reasonless value and do not check that nothing is written; plane R19's two loops name no exact code; converts:139 accepts any failure.
+
+**Found in another module / for later jobs:**
+- op-declarations (T47-53): four of its tests go red on my merge, from R34's partition, which its R34/R54 already require it to move:
+  - `statusreportassist`, `joindoors`, `clockproposals` and `airundispatch` are now explained, so they leave `ACT_HELP_ABSENT`.
+  - `captureupload` is explained.
+  - `capture` (a member op) is now neither explained nor named; it needs an `ACT_HELP_ABSENT` ground.
+  - `hostingaccess` (ungated) is no longer explained.
+  - Its tests: `t41` R34, `t42` R47/R34, `t46` R51/R34, and the R34 partition test.
+- Design stream (BOB's HANDOFF): `peopledirectory` has no text; `hostingaccess` lost its text.
+- Generated artifacts: the plane bundle is staled by this merge (rule 5 (4)).
+
+**Tests and checks run:**
+- affordances `node --test test/m/affordances/`: tests 247, pass 245, fail 2 (the two waiting on op-grades, above). The plane suite on its own: 31/31.
+- Users (P11), each compared with `tranche/T47`:
+  - tasks 106/0, queue 142/0, store-door 45/0, conclude-project 1/0.
+  - control-plane 235/7 and plane 218/5: the same reds as the tranche, none new.
+  - op-declarations 140/16: the tranche has 12; the 4 new ones are those above.
+- `checks/format.mjs`: 0 failures. `architecture.mjs . affordances`: 0 failures. `coverage.mjs . affordances`: 40 of 40; 0 failures. `ownership.mjs . affordances tranche/T47`: 0 failures. `run.mjs`: architecture 0 failures; coverage 25 failures, none affordances' (other L11 modules, rule 5 (1)); channels 0.
+
+Size (session_01UKhMnGPjg8Y3PBnYKh2w1U): test runs 22, module lines 2729
+
 ## J1 · QUESTION
 
 R56 and K3104, my readings (I carry on with them; the answer decides only the ACT_HELP keys):
