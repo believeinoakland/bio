@@ -1,7 +1,10 @@
 /* screens-settings R3 (and R8, R10): Settings › Your account, the registry's 6 acts. The handle drawn fixed in DEC-197's
    words, with no act that changes it; the member's language; appearance and the explanation level (interface-shell R18,
    R17); the password, typed twice alike before it is sent; expertise; the member's own signing key (its public half, as
-   the signing page gives it); links to `connect` and `notes`. Every function is self-contained (interface-shell R21). */
+   the signing page gives it); links to `connect` and `notes`. Every function is self-contained (interface-shell R21).
+   T47: appearance is the kit's own control (`cs.appearance()`, R12); "Sign out on this device" and "Sign out everywhere"
+   (`signout`, `signouteverywhere`), each then drawing `front`'s signed-out state (R21); the signing key is made in the
+   browser by the kit's signer (`cs.signer`, interface-shell R40) and its public line sent, nothing pasted (R22). */
 
 export const account = {
   id: "account",
@@ -34,12 +37,11 @@ export const account = {
       if (set) h += `<div class="cs-form"><label for="ma-lang">${W(S + "language.field")}</label><span class="help">${W(S + "language.help")}</span><input id="ma-lang" type="text" class="cs-input" value="${E(v.language || "")}" autocomplete="off">${set}</div>`;
       return h;
     });
-    // appearance is kept on the device (interface-shell R18): the shell's own control, `data-shell="theme"`
-    const ap = cs.theme();
-    lang += `<div class="cs-form" role="group" aria-labelledby="ma-theme"><p id="ma-theme">${W(S + "appearance.field")}</p>${["device", "light", "dark"].map((v) => `<button type="button" class="cs-btn" data-tone="quiet" data-shell="theme" data-theme-to="${v}" aria-pressed="${v === ap}">${W(S + "appearance." + v)}</button>`).join("")}</div>`;
+    // appearance is kept on the device (interface-shell R18): the kit's own control (R12; interface-shell R27)
+    lang += cs.appearance();
     // the explanation level is the shell's (R17): its value, and its act through the shell's own setting
     const lv = cs.level() === "pause" ? "pause" : "prompt";
-    lang += `<div class="cs-form"><label for="ma-level">${W(S + "level.field")}</label><select id="ma-level" class="cs-input">${["prompt", "pause"].map((v) => `<option value="${v}"${v === lv ? " selected" : ""}>${W("level." + v + ".name")}</option>`).join("")}</select>${cs.act("infolevelset", { label: "act.owed_infolevelset.label.account" })}</div>`;
+    lang += `<div class="cs-form"><label for="ma-level">${W(S + "level.field")}</label><select id="ma-level" class="cs-input">${["prompt", "pause"].map((v) => `<option value="${v}"${v === lv ? " selected" : ""}>${W("level." + v + ".name")}</option>`).join("")}</select>${cs.act("infolevelset")}</div>`;
     out.push(cs.sec(S + "language.heading", lang));
 
     // what the member knows
@@ -63,10 +65,16 @@ export const account = {
     out.push(cs.sec(S + "key.heading", cs.state(data.signers, (v) => {
       const mine = (v.signers || []).filter((s) => s.member_id === me.member && s.status === "active");
       let h = mine.length === 0 ? `<p>${W(S + "key.none")}</p>` : `<ul class="cs-list">${mine.map((s) => `<li>${W(S + "key.held", { key: "…" + String(s.key_b64).slice(-8), date: D(s.added) })} ${cs.act("signerrevokeown", { data: { key: s.key_b64 } })}</li>`).join("")}</ul>`;
+      // made in this browser by the kit's signer; only its public line is sent (R22)
       const reg = cs.act("signerregisterown");
-      if (reg) h += `<div class="cs-form"><label for="ma-pub">${W(S + "key.field")}</label><span class="help">${W(S + "key.help")}</span><input id="ma-pub" type="text" class="cs-input" autocomplete="off">${reg}</div>`;
+      // kept on this device only when the member ticks it (interface-shell R40); else a key file is made
+      if (reg) h += `<div class="cs-form"><p class="help">${W(S + "key.help")}</p><input type="checkbox" id="ma-keep"><label for="ma-keep">${W("signing.ceremony.keepkey")}</label>${reg}</div>`;
       return h;
     })));
+
+    // signing out: on this device, or everywhere (R21)
+    const out1 = cs.act("signout"), out2 = cs.act("signouteverywhere");
+    if (out1 || out2) out.push(cs.sec(S + "signout.heading", out1 + out2));
 
     // elsewhere in the member's settings
     out.push(cs.sec(S + "elsewhere.heading", `<p><a href="/app/connect">${W("screen.connect.name")}</a></p><p><a href="/app/notes">${W("screen.notes.name")}</a></p>`));
@@ -91,16 +99,24 @@ export const account = {
         return { body: { current: String(cs.value("ma-cur" + g) || ""), password: String(password) } };
       },
       done(view, answer, cs) { cs.set("pwGen", ((view.ui && view.ui.pwGen) || 0) + 1); cs.set("passwordChanged", true); } },
+    // the key made on this device by the kit's signer (interface-shell R40), its public line `ssh-ed25519 <base64>
+    // <label>` sent as credentials R9 takes it; a member who declines sends nothing
     { op: "signerregisterown", rereads: ["signers"],
-      send(view, el, cs) {
-        // the line the signing page gives, `ssh-ed25519 <base64> <label>`, or the base64 alone (credentials R9)
-        const parts = String(cs.value("ma-pub") || "").trim().split(/\s+/);
-        const b64 = parts[0] === "ssh-ed25519" ? parts[1] : parts[0];
-        if (!b64 || !/^AAAA[A-Za-z0-9+/=]+$/.test(b64)) return { refuse: "screen.account.key.bad" };
-        const comment = (parts[0] === "ssh-ed25519" ? parts.slice(2) : parts.slice(1)).join(" ");
-        return { body: comment ? { keyB64: b64, comment } : { keyB64: b64 } };
+      async send(view, el, cs) {
+        const line = await cs.signer.publicLine({ keep: cs.value("ma-keep") === true });
+        const parts = String(line || "").trim().split(/\s+/);
+        if (parts[0] !== "ssh-ed25519" || !/^AAAA[A-Za-z0-9+/=]+$/.test(parts[1] || "")) return { refuse: "screen.account.key.declined" };
+        const comment = parts.slice(2).join(" ");
+        return { body: comment ? { keyB64: parts[1], comment } : { keyB64: parts[1] } };
       } },
     { op: "signerrevokeown", rereads: ["signers"],
       send(view, el) { return { body: { keyB64: el.dataset.key } }; } },
+    // then the shell draws `front`'s signed-out state, as the masthead's "Sign out" does (interface-shell R4, R32)
+    { op: "signout", rereads: [],
+      send() { return { body: {} }; },
+      done(view, answer, cs) { cs.signedOut(); return { stay: true }; } },
+    { op: "signouteverywhere", rereads: [],
+      send() { return { body: {} }; },
+      done(view, answer, cs) { cs.signedOut(); return { stay: true }; } },
   ],
 };
