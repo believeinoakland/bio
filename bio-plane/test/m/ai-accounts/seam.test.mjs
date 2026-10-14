@@ -28,6 +28,10 @@ test("R29 R28 (credentials R18's and R30's shares): every group and member table
   assert.deepEqual(count(), before, "a whole-store purge clears none of them");
   assert.equal(w.rc.purge({ bundleId: "second" }).ok, true);
   assert.deepEqual(count(), before);
+  /* still held and still in force at the interface */
+  assert.equal(w.a.accountReferenceState({ member: "second", viewer: "second" }).held, true);
+  assert.equal(w.a.aiKeepAwayState().on, true);
+  assert.equal(w.a.aiKeepAwaySet({ on: false, by: "second" }).ok, true);
   assert.equal((await w.a.accountFor({ member: "second", act: { kind: "ask", member: "second" } })).key, "sk-test", "still served");
 });
 
