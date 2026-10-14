@@ -61,3 +61,7 @@
   - coverage 6 failures, all in other modules and all not yet met (rule 5 (1)): bundler R32, court-citations R11, file-scanner R32, jurisdictions R89–R92, ooxml R34, record-grammar R63.
 
 Size (session_01QxoxoGkmDqhce5MjuwSXWv): test runs 12, module lines 1604
+
+## J1 · COMPLETE
+
+T48-3 applied: R45 RELEASE_KEYS (the two ARMED_SIGNERS lines, frozen), R46 NS_RELEASE_NOTICE, R47 releaseNoticeStatement (+RELEASE_NOTES_MAX), R48 verifyReleaseNotice (signature before version; NOT_NEWER for replay/downgrade; default RELEASE_KEYS); R1 six namespaces. New release-notice.test.mjs (22 tests). signatures 109/109; users bundler, attestation, doorbell green; membership/promotion module-order reds rule 5 (3); capture R21/R27/R73 {role} sign-in rule 5 (7) S, red with my change reverted too. format, architecture, coverage (48/48), ownership: 0 failures. Stale artifact not in rule 5: newgroup/dist/newgroup.bundled.mjs (installer's) bundles sshsig.mjs, newgroup-bundle-fresh fails 1 (passes reverted), for regeneration at layer close; plane bundle and program.mjs stale (rule 5 (5)). Readings of R47/R48 field names in the record. Bundler (T48-4) may start once merged. Record: build/jobs/T48/signatures.md.
