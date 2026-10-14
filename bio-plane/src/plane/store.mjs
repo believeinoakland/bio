@@ -12,6 +12,9 @@ import { actionRepliesOf, actionRepliesOps } from "../action-replies/index.mjs";
 import { planWorkOf, planWorkOps } from "../plan-work/index.mjs";
 import { caseCheckOf, caseCheckOps } from "../case-check/index.mjs";
 import { localFactsOf, localFactsOps } from "../local-facts/index.mjs";
+import { caseInputsOf, caseInputsOps } from "../case-inputs/index.mjs";
+import { signinDoorOps } from "../signin-door/ops.mjs";
+import { actionRecordsOf, actionRecordsOps } from "../action-records/index.mjs";
 import { filingTemplatesOf, filingTemplatesOps } from "../filing-templates/index.mjs";
 import { standardsOf, standardsOps } from "../standards/index.mjs";
 import { conformanceOf, conformanceOps } from "../conformance/index.mjs";
@@ -478,6 +481,11 @@ export class Store extends DurableObject {
     /* R1: instance-setup started once per object (its `start` is idempotent on one storage), built here first, with the
        queue's producers (K1868 (2)). */
     const instanceSetup = instanceSetupOf(ctx, env, { queueProducers });
+    /* R44 (T47; N981; K3030; credentials R64, instance-setup R54): instance-setup's disclosure read registered with
+       credentials once, on this object's own instances, on instance-setup's behalf (credentials is earlier in the order
+       and cannot reach it), so `disclosureDue` is asked in the assembled plane: `accountreferenceset` and a sign-in's
+       `start` are refused DISCLOSURE_DUE while no disclosure is recorded for the member. */
+    credentialsOf(ctx).registerDisclosureRead("instance-setup", (q) => instanceSetup.disclosureOf(q));
     ctx.blockConcurrencyWhile(async () => {
       const started = await instanceSetup.start();
       /* F16 (K2038; capture R73, capture-sources R65): the group's own hosts, once the store is migrated and started so
@@ -598,10 +606,16 @@ export class Store extends DurableObject {
      RPC by control-plane's door (no route: R5). */
   async draft(args) { return draftOnObject(this.ctx, this.env, args || {}, { read: (op, params) => this.#read(op, params) }); }
 
-  /* R40 (T46; K2999; control-plane R77): a member's own run's segment dispatched by ai-runs in the object addressed
-     (`dispatchMemberRun`, its R18), reached over the object's RPC by control-plane's door; the presented credential is an
-     argument of this in-process call only, never a query, body or fetch. */
-  async dispatchMemberRun(args) { return aiRunsOf(this.ctx, this.env).dispatchMemberRun(args || {}); }
+  /* R40 (T46; K2999; control-plane R77), R46 (T47; N955; ai-runs R18, credentials R63): a member's own run's segment
+     dispatched by ai-runs in the object addressed (`dispatchMemberRun`, its R18), reached over the object's RPC by
+     control-plane's door. It takes no credential: only `run`, `by`, `viewer` and `at` are passed, so a `credential` in
+     `args` is neither read nor handed on; the segment's credential is minted here, in the plane, by ai-runs. */
+  async dispatchMemberRun(args) {
+    const a = args && typeof args === "object" ? args : {};
+    const asked = {};
+    for (const k of ["run", "by", "viewer", "at"]) if (a[k] !== undefined) asked[k] = a[k];
+    return aiRunsOf(this.ctx, this.env).dispatchMemberRun(asked);
+  }
   /* R40 (T46; K2999; control-plane R20): public-read's group fields of this object (the door asks the `bio` object's). */
   async groupFields() { return publicReadOf(this.ctx).groupFields(); }
 
@@ -665,12 +679,24 @@ export class Store extends DurableObject {
      control-plane's, in this order; this module holds no route of its own. */
   routes(url, body, grant = null) {
     const ctx = this.ctx, env = this.env;
+    /* (T47; K3089; answers R35, R30; R33) a read under a grant: the use its read log opens with is the plane's, `draft`
+       for a grant this object's draft path minted, else `ask`, stamped on the in-process address (answers' `rule` reads
+       it from the query), never a caller's own. Only `op=rule` reads it so (`filing-templates`' `templates` has a `use`
+       of its own, left as given). */
+    if (url && url.searchParams && url.pathname.replace(/^\/+/, "") === "rule") {
+      url.searchParams.delete("use");
+      if (typeof grant === "string" && grant !== "") url.searchParams.set("use", draftUse(ctx, grant) || "ask");
+    }
     return {
       ...membershipOps(membershipOf(ctx), url, body, env),
       /* N783 (K2270): project-roster's ops (`projectowner*`, `projectvisibility`, `projectdirectory`,
          `projectparticipants`, `projectrequest*`), split from membership, directly after its map. */
       ...projectRosterOps(projectRosterOf(ctx), url, body, env),
       ...credentialsOps(credentialsOf(ctx), url, body, env),
+      /* R49 (T47; K3143; signin-door R2, R4, R5): the sign-in door's store-internal routes (`signintokenhold`,
+         `signintokenrefused`, `signindisclosuredue`, `signintracekeep`, `signintraceread`), beside credentials' map, over
+         the plane's one credentials instance; none has an op spec, so none is served to a caller. */
+      ...signinDoorOps(credentialsOf(ctx), url, body, env),
       /* K2042 (acquisition R43; CONTROL-PLANE #24 J3): the group's co-archive setting, acquisition's one instance per
          host, at acquisition's place before capture's map; `by` is the door's stamp. */
       coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : undefined, by: url.searchParams.get("by") }),
@@ -709,6 +735,9 @@ export class Store extends DurableObject {
       ...basisVersionsOps(basisVersionsOf(ctx), url, body),
       ...strengthOps(strengthOf(ctx), url, body),
       ...reevaluationOps(reevaluationOf(ctx), url, body),
+      /* R45 (T47; N908; case-inputs R16): case-inputs' ops (`whatchangedpropose`, `whatchangeddrafts`, `statementack`),
+         moved from case-authoring's map, directly before it, over the one instance case-authoring's factory creates. */
+      ...caseInputsOps(caseInputsOf(ctx), url, body),
       ...caseAuthoringOps(caseAuthoringOf(ctx), url, body),
       /* R39 (T46; N935; case-account R15): case-account's own ops map (`advocacycheck`, `advocacychecks`, its R13), over
          the plane's one instance (R38); the plane names no entry of it (R9). */
@@ -754,6 +783,9 @@ export class Store extends DurableObject {
       ...aiRunsOps(aiRunsOf(ctx, env), url, body),
       ...answersOps(answersOf(ctx), url, body),   /* R21 (K1609) */
       ...retrievalRoutes(retrievalOf(ctx), url, body),
+      /* R45 (T47; N961; action-records R15): action-records' acts, moved from actions' map, directly before it, over the
+         one instance actions' factory creates. */
+      ...actionRecordsOps(actionRecordsOf(ctx), url, body),
       ...actionsOps(actionsOf(ctx), url, body),
       /* R39 (T45): action-holds' ops (`actionpressure`, `actionhold`, `actionholdrelease`, `actionholdpreview`,
          `projectholds`, `holdnoticesent`, `pressurerecord`), directly after actions', over the one instance R39 builds. */
@@ -790,7 +822,9 @@ export class Store extends DurableObject {
       ...controlPlaneOwnerOps({ aiUse: () => aiUseOf(ctx), aiRuns: () => aiRunsOf(ctx, env), caseAccount: () => caseAccountOf(ctx),
                                 review: () => reviewOf(ctx), legEarning: () => legEarningOf(ctx), capture: () => captureOf(ctx),
                                 steps: () => stepsOf(ctx), investigation: () => investigationOf(ctx),
-                                questionExplorer: () => questionExplorerOf(ctx) }, url, body),
+                                questionExplorer: () => questionExplorerOf(ctx),
+                                /* (T47; K3150; control-plane R71) `clockpropose`, served through action-clocks' one instance */
+                                actionClocks: () => actionClocksOf(ctx) }, url, body),
       /* store-door's map (its R1); the grant its door read from the header is handed on (its R11, K2041) */
       ...controlPlaneRoutes(ctx, url, body, grant),
     };

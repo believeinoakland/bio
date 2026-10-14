@@ -1,6 +1,6 @@
 /* plane R25–R29 (T36-49) and the boot's two T36 shares: the archive unpack's drain paged past capture's cursor (R25);
    `file-safety` composed at its place after `capture`, migrated, declared to purge, started, handed the scanner binding,
-   the evidence bucket and the object's namespace, its four batch consumers handed to `scheduler` and its ops routed
+   the evidence bucket and the object's namespace, its batch consumers (five since T36-49) handed to `scheduler` and its ops routed
    (R26); the `FILE_SCANNER` binding (R27, its config test in `worker.test.mjs`); the copy's own hosts read from
    `OWN_HOSTS` (R28); capture handed the binding and the reputation reader (R29); and `citation` made at boot (K2141).
    Driven on the Durable Object class over the fixture's storage, with stand-ins for the scanner member and the network. */

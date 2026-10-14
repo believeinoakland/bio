@@ -83,3 +83,13 @@ export async function store({ db, env: extra, before = null } = {}) {
   const fetch = async (path, init) => s.fetch(new Request("http://do" + path, init));
   return { s, ctx: st.ctx, db: st.db, env, routes, call, fetch };
 }
+
+/** R44 (T47; credentials R64): the assistant's disclosure recorded as shown to `member`, by that member, as the
+ *  assembled plane asks before it sets her API-key reference (`accountreferenceset` is refused DISCLOSURE_DUE until
+ *  then). */
+export async function disclosed(ctx, member = "member:ann") {
+  const { instanceSetupOf, ASSISTANT_DISCLOSURE } = await import("../../../src/setup.mjs");
+  const r = instanceSetupOf(ctx).disclosureShown({ member, version: ASSISTANT_DISCLOSURE.version, by: member });
+  if (!r || r.ok !== true) throw new Error(`the disclosure was not recorded: ${JSON.stringify(r)}`);
+  return r;
+}

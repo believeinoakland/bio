@@ -17,6 +17,8 @@ import { projectRosterOf, projectRosterOps, PROJECT_ROSTER_TABLES } from "../../
 
 const PR = [...PROJECT_ROSTER_TABLES];
 const OPS = ["projectowneradd", "projectownerremove", "projectownerrescue", "projectvisibility", "projectdirectory",
+             /* (T47; N972; project-roster's projects with their stage; plane R45's re-pin) */
+             "projectlist",
              "projectparticipants", "projectrequest", "projectrequestwithdraw", "projectrequestanswer", "projectrequests",
              /* (T45; K2797, plan rule 4 (9)) project-roster R21, R24: a project's scope and its second-approval setting */
              "projectscopeset", "projectapprovalset"];
@@ -90,7 +92,7 @@ test("R2 (T38-26; project-roster R15, R16): construction starts project-roster, 
   assert.equal(projectRosterOf(x.ctx), projectRosterOf(x.ctx), "one instance per storage");
 });
 
-test("R5, R9 (T38-26; N783): project-roster's whole ops map is routed directly after membership's, each op answering through the route map what its one instance answers", async () => {
+test("R5, R9, R45 (T38-26; N783; T47 N972): project-roster's whole ops map is routed directly after membership's, each op answering through the route map what its one instance answers", async () => {
   const x = await world(), u = new URL("http://do/");
   const names = MODULE_MAPS.map(([mod]) => mod);
   assert.equal(names.indexOf("project-roster"), names.indexOf("membership") + 1, "directly after membership's map");
@@ -106,6 +108,8 @@ test("R5, R9 (T38-26; N783): project-roster's whole ops map is routed directly a
   await same(`/projectparticipants?projectId=${x.P}&by=alice`, r.projectParticipants({ projectId: x.P, by: "alice" }));
   await same(`/projectvisibility?projectId=${x.P}&viewer=member:alice`, r.projectVisibility({ projectId: x.P, viewer: "member:alice" }));
   await same(`/projectdirectory?viewer=member:bob`, r.projectDirectory({ viewer: "member:bob" }));
+  /* R45 (T47): project-roster's new read, through the route map */
+  await same(`/projectlist?viewer=member:alice`, r.projectList({ viewer: "member:alice", limit: null }));
   await same(`/projectrequests?by=bob&viewer=member:bob`, r.projectRequests({ by: "bob", viewer: "member:bob" }));
   const parts = await x.call(`/projectparticipants?projectId=${x.P}&by=alice`);
   assert.equal(parts.ok, true, JSON.stringify(parts));
