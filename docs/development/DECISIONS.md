@@ -3547,3 +3547,17 @@ response: Bob's comment, folded. (1) The opening now names what a government's o
 decided: 2026-10-14 · Bob (his comment), drawn by the design session
 reasoning recorded in: this entry; `screens/mock-screens.js` (SITE_LINE1, SITE_LINE2), `screens/mock-shell.js` (the credit and wordmark cards), the swept sources, `screens/words.json`, `layouts.html`.
 owed: (BOB) the swept words reach the jobs by key at the next merge of this branch into the tranche (affordances' `ACT_HELP` and setup-words' counts are re-taken then, K3143); nothing else.
+
+### DEC-222 · answered
+raised: 2026-10-14 · the UX design session with Bob on his secondary account (session_01DyYKz1UJZVqVzz1E8F4Cyk) (BOB #168's B177, K3148: the help page's purpose names a place; and B178, K3149: the escalation screen's stage names differ from the code's)
+for: bob-session
+question: (1) How the records-request help page's purpose is worded in the registry. (2) Which names and order the escalation ladder's stages carry.
+why it is Bob's: (1) wording beneath wizard-scripts R20 and interface-shell R23 (the interface names no place in outward text), decided as design detail (P17); (2) Bob's Design Requirement 7 as he amended it on 26 September names the seven stages; the screen must follow it.
+provisional: the purpose named the California Public Records Act and Oakland's faster request; the ladder named stages 4 to 7 "Public, Formal, Political, Legal".
+alternative: keep the design's four names and ask Bob to amend the requirement.
+recommendation: as below.
+reversal cost: low: words.
+response: **Answered to BOB, 2026-10-14 (U208).** (1) The purpose now reads "What your state's public records law requires of the office, your city's faster request where it has one, what the city's portal shows, and what Civicsmith does with a request; the place's own facts come from the group's places." The page's body keeps Oakland's facts as sample data drawn from the places, as DEC-209 drew it. (2) The code is right and the design was wrong: Design Requirement 7 names the seven stages Discovery and Documentation, Notification, Clock Starts, Response Evaluation, Escalation to Legal Tools, Sustained Attention, Political Accountability, in that order; the escalation screen's ladder now reads "1 Documentation, 2 Notification, 3 Clock starts, 4 Response evaluation, 5 Legal tools, 6 Sustained attention, 7 Political accountability". The names "Public, Formal, Political, Legal" came from no ruling and are withdrawn.
+decided: 2026-10-14 · the design session, under Bob's rulings (P17)
+reasoning recorded in: this entry; `screens/registry.src.py` (`help-records`), `screens/mock-screens.js` (the escalation ladder), `screens/words.json`, `layouts.html`.
+owed: (BOB) nothing: the stage names on the screen follow escalation's own terms.

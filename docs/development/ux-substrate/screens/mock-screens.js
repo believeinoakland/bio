@@ -1176,7 +1176,7 @@ SCR.action = c => ({ rail: 'projects', title: 'Action', crumbs: ['Pothole repair
 
 SCR.matter = c => ({ rail: 'projects', title: 'Matter', crumbs: ['The Coliseum lease', 'Matter'], main: `
   ${h1('<span class="rec">The 2024 rent adjustment, made without a council vote</span>', 'noncompliant · established · against lease §7.2')}
-  ${ladder('stage', ['1 Documentation', '2 Notification', '3 Clock starts', '4 Public', '5 Formal', '6 Political', '7 Legal'], 2)}
+  ${ladder('stage', ['1 Documentation', '2 Notification', '3 Clock starts', '4 Response evaluation', '5 Legal tools', '6 Sustained attention', '7 Political accountability'], 2)}
   ${sec('Consequences', sheet(row(I('money'), '$38,000 in rent above the schedule, 2024–2026', '<span class="muted">from the rent schedules · ' + grade('capture', 'B') + '</span>')))}
   ${acts(btn('escalationadvance', 'Advance to stage 3'), btn('declinetoescalate', 'Decline to escalate, with a reason'), btn('escalationopen', 'Open an escalation'), btn('escalationend', 'End'), btn('escalationstoppursuing', 'Stop pursuing…'), btn('escalationreopen', 'Reopen where it stopped'))}` });
 
