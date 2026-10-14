@@ -21,3 +21,7 @@ Size (session_01AsreeRSDo9rX7WgGKSQiar): test runs 6, module lines 1190
 ## J1 · REPORT
 
 Found outside my module: (1) capture heldCaptures (L3, capture/index.mjs 1041-1054) awaits per row, with no time bound, #archiveRow (an archiveList on every capture of the row's document) and #eligibility; the unfiltered heldcaptures the walk saw stall is per-row cost (the empty set_aside read answered). I could not read biosmoke7 (401), so it is unconfirmed; I cut the screen's page from 200 to 50 rows. A CHANGE to capture to bound or batch that work is yours to decide. (2) screen.held.empty does not name a first step, which R17's single empty state asks; the wording is BOB's. (3) cs-pickc, drawn by the shell's cs.rows, is on R17's rename list (interface-shell's job).
+
+## J2 · COMPLETE
+
+T48-85 done: R17-R20 met, 64 tests pass, format/architecture/coverage/ownership 0 failures for screens-intake. Record: build/jobs/T48/screens-intake.md.
