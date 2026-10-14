@@ -104,7 +104,8 @@ const enrol = async (memberId, handle, cover, capabilities, role = "member") => 
   const add = await POST(`op=memberadd&token=${ADM}`, { memberId, cover, role, capabilities });
   const en = await POST("op=enroll", { invite: add && add.invite, handle, password: `${memberId}-passphrase-6` });
   if (!en || !en.ok) throw new Error(`enroll ${memberId}: ${JSON.stringify(en)} (memberadd: ${JSON.stringify(add)})`);
-  const lg = await POST("op=login", { role: `member:${memberId}`, password: `${memberId}-passphrase-6` });
+  /* Sign-in is by handle (credentials R67; DEC-201): `role` is no longer read (N1052). */
+  const lg = await POST("op=login", { handle, password: `${memberId}-passphrase-6` });
   if (!lg || !lg.token) throw new Error(`login ${memberId}: ${JSON.stringify(lg)}`);
   return lg.token;
 };
@@ -218,6 +219,10 @@ const at = pub && pub.caseDocument ? await POST(`op=attribute&token=${OBSERVER}`
   reason: "The group stands behind this observation for this edition." }) : null;
 const D = pub && pub.caseDocument
   ? { ...pub.caseDocument, doc_sha: at && at.case_document && at.case_document.doc_sha || pub.caseDocument.doc_sha } : null;
+/* Signing a case is refused outside the re-authentication window (credentials R66, R71 (2); REAUTH_DUE): the publisher
+   gives her password again, as the ceremony asks, just before she signs (N1052, T48). */
+const ra = await POST(`op=reauth&token=${IRIS}`, { password: "iris-passphrase-6" });
+if (!ra || ra.ok === false) throw new Error(`reauth iris: ${JSON.stringify(ra)}`);
 const cr = D ? await POST(`op=caseratify&token=${IRIS}`, { caseId: D.case_id, edition: D.edition, expectedSha: D.doc_sha,
   sig: signBytes(`bio-ratify-case ${D.case_id} ${D.edition} ${D.doc_sha}\n`) }) : null;
 /* The ceremony's own order (D-431): the case document, then its finding, then the observation as that case's evidence. */
