@@ -59,6 +59,9 @@ const rows = [
   /* T47 (R27, R29, R37): a knock handed in at the doorbell, and a person or organisation the record follows */
   ["shell.card.knock", "Material handed to your group at its doorbell", false],
   ["shell.card.person", "A person or organisation your group's record follows", false],
+  /* R47: a proceeding and a standard */
+  ["shell.card.proceeding", "A proceeding your group follows", false],
+  ["shell.card.standard", "A standard a question tests against", false],
   /* R28 (mock-shell.js' PATH at a0fab7abf0): path steps that are not a screen's own name */
   ["shell.step.due-date", "Due date", false],
   ["shell.step.ceremony", "Publish", false],
@@ -87,6 +90,7 @@ const rows = [
   /* R40–R42 (DEC-207, DEC-208, DEC-210): the signer */
   ["shell.signer.exactly", "What your key signs, exactly", false],
   ["shell.signer.sign", "Sign with my key", false],
+  ["shell.signer.makefile", "Make my key file", false],
   ["shell.signer.decline", "Don't sign", false],
   ["shell.signer.passphrase", "A passphrase for your key file", false],
   ["shell.signer.passphrase.help", "Your key file is locked with it. Keep it somewhere other than the file; nobody can recover it.", false],
@@ -97,6 +101,9 @@ const rows = [
   ["shell.signer.loadpass", "Its passphrase, if it has one", false],
   ["shell.signer.notkey", "That isn't a signing key file, or the passphrase is wrong, so nothing was loaded.", false],
   ["shell.signer.nokey", "No signing key is in this browser for this sitting.", false],
+  /* R46, R47: the controls the shell binds for a screen */
+  ["shell.save", "Save as a file", false],
+  ["shell.copy", "Copy", false],
   /* R44 (DEC-214 (2)): the at-a-glance elements */
   ["shell.glance.weeks", "{word}: {weeks} acts a week over the last eight weeks", false],
   ["shell.glance.busy", "busy", false],

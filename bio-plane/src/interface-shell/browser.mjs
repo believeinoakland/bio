@@ -58,6 +58,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
      sessionStorage, the path to return to. */
   const STATE_KEY = D.storeKey + ":state", ACTIVE_KEY = D.storeKey + ":active", RETURN_KEY = D.storeKey + ":return";
   let S = null, ME = null, LOCKED = false, ENTRY = { state: null, handle: null }, STARTED = false;
+  /* R46: the fragment, read once on load and removed from the address before any request; page memory only */
+  let FRAGMENT = {};
   function readRecord() {
     try {
       const s = JSON.parse(local.get(D.storeKey) || "null");
@@ -66,7 +68,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     return null;
   }
   function writeRecord(r) { local.set(D.storeKey, JSON.stringify({ t: r.t, e: r.e || 0, d: r.d, w: r.w || "" })); local.del(STATE_KEY); }
-  function clearRecord(why) { local.del(D.storeKey); if (why) local.set(STATE_KEY, why); else local.del(STATE_KEY); }
+  function clearRecord(why) { if (why) local.set(STATE_KEY, why); else local.del(STATE_KEY); local.del(D.storeKey); }
   const working = () => ROUTE && frameOf(ROUTE.screen) === "working" && !ROUTE.root;
   /* R32: the path to return to, the address alone (never a query, a fragment or the token) */
   function keepReturn() { if (working()) tab.set(RETURN_KEY, win.location.pathname); }
@@ -88,7 +90,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
      `{kind: "refused", code, translation, fields, server}` (R13) or `{kind: "silent"}` (no answer). */
   async function call(op, req = {}) {
     const own = typeof req.bearer === "string" && req.bearer !== "";
-    const pub = !own && (!S || !!req.public);
+    /* R46: `unlock` is sent under the locked session's token, from whichever frame */
+    const pub = !own && (!S || (!!req.public && op !== "unlock"));
     if (pub && !D.publicOps.includes(op)) return { kind: "refused", code: "NOT_SIGNED_IN", translation: null, fields: {} };
     const qs = new URLSearchParams();
     qs.set("op", op);
@@ -138,7 +141,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   function can(op, inst) {
     if (!(op in D.ops)) return false;
     /* R30, R45: a screen drawn without a session offers only the public ops */
-    if (inst && inst.pub) return D.publicOps.includes(op);
+    if (inst && inst.pub) return D.publicOps.includes(op) || (op === "unlock" && !!S);
     if (!ME) return false;
     const need = D.needs[op];
     const caps = Array.isArray(ME.capabilities) ? ME.capabilities : [];
@@ -183,7 +186,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   const screenOf = (id) => SCREENS.find((s) => s.id === id) || null;
 
   /* ---------- screen instances: reads, states, acts ---------- */
-  let MAIN = null, DOCKI = null, GUIDEI = null, ROUTE = null, WIZ = null, RING = null, UNREACHED = false;
+  let MAIN = null, DOCKI = null, GUIDEI = null, ROUTE = null, RING = null, UNREACHED = false;
   function emptyOf(spec, v) {
     if (spec && typeof spec.empty === "function") return !!spec.empty(v);
     if (v === null || v === undefined) return true;
@@ -211,14 +214,24 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (a.kind === "refused") return { state: "failed", value: null, refusal: { code: a.code, words: refusalWords(a, spec && spec.refusals, true, null) } };
     return { state: "failed", value: null, refusal: { code: null, words: w("shell.noanswer") } };
   }
+  /* R46: the session as a screen sees it: `none`, `signedout`, `ended`, `locked` or `live`, with the handle */
+  function sessionView() {
+    if (S && !LOCKED && ENTRY.state !== "locked") return { state: "live", handle: S.w || (ME && ME.handle) || null };
+    if (ENTRY.state) return { state: ENTRY.state, handle: ENTRY.handle };
+    if (S && LOCKED) return { state: "locked", handle: S.w || null };
+    return { state: "none", handle: null };
+  }
   function instance(spec, subject, key, serves) {
-    const inst = { key, spec, subject, serves: serves || null, data: {}, ui: {}, acts: [], gen: 0, unavail: null, timers: [], fills: {}, stash: null, retry: null };
-    inst.view = { subject, data: inst.data, ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; },
-      get serves() { return key === "g" ? (ROUTE ? { screen: ROUTE.screen, subject: ROUTE.subject } : null) : inst.serves; },
-      get entry() { return { state: ENTRY.state, handle: ENTRY.handle }; }, get wizard() { return WIZ ? { script: WIZ.script, version: WIZ.version, recording: !!WIZ.recording } : null; },
-      parts: spec.parts || {}, origin: win.location.origin };
+    const inst = { key, spec, subject, serves: serves || null, data: {}, ui: {}, acts: [], binds: [], gen: 0, unavail: null, timers: [], fills: {}, labels: {}, stash: null, retry: null };
+    inst.view = key === "g"
+      /* K3143: the guide's one view for the page's life: `{ui, me, reachable, screen, subject}` */
+      ? { ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, get screen() { return ROUTE ? ROUTE.screen : null; },
+        get subject() { return ROUTE ? ROUTE.subject : null; }, parts: spec.parts || {}, origin: win.location.origin }
+      : { subject, data: inst.data, ui: inst.ui, get me() { return ME; }, get reachable() { return REACHABLE; }, serves: inst.serves,
+        get session() { return sessionView(); }, get fragment() { return Object.assign({}, FRAGMENT); },
+        parts: spec.parts || {}, origin: win.location.origin };
     /* R30, R45: a screen of the public or published frame is drawn without a session, whatever the record holds */
-    Object.defineProperty(inst, "pub", { get: () => sessionless(spec.id) || !S });
+    Object.defineProperty(inst, "pub", { get: () => key !== "g" && (sessionless(spec.id) || !S) });
     return inst;
   }
   const NOT_FOUND = /^NO_SUCH_|_NOT_FOUND$|^NOT_FOUND$/;
@@ -313,11 +326,32 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         return el.value;
       },
       /* R27 (K3014): a field the screen drew set to `value` over what was typed there, kept by later redraws */
-      fill(id, value) {
+      fill(id, value, o = {}) {
         const el = doc.getElementById(id);
-        if (el && !(el.type === "file")) { if (el.type === "checkbox" || el.type === "radio") el.checked = !!value; else el.value = String(value == null ? "" : value); }
-        else inst.fills[id] = value;
+        const owner = inst.key === "g" ? MAIN || inst : inst;
+        /* K3143: a draft's label, drawn beside the field as `field`'s draft label is */
+        if (o && o.label) owner.labels[id] = o.label; else delete owner.labels[id];
+        if (el && !(el.type === "file")) { if (el.type === "checkbox" || el.type === "radio") el.checked = !!value; else el.value = String(value == null ? "" : value); draw(); }
+        else owner.fills[id] = value;
       },
+      /* K3143: the text field the control for `op` sends: the nearest textarea, else text input, before the control
+         inside its enclosing section or row panel; null when none */
+      fieldOf(op) {
+        const main = doc.getElementById("cs-main");
+        const ctl = main ? main.querySelector('[data-act="' + String(op).replace(/"/g, "") + '"]') : null;
+        if (!ctl) return null;
+        const scope = ctl.closest("tr.cs-panel") || ctl.closest("section") || main;
+        let best = null;
+        for (const el of scope.querySelectorAll("textarea, input")) {
+          if (el.localName === "input" && el.type !== "text") continue;
+          if (!el.id) continue;
+          if (precedes(el, ctl)) best = el.localName === "textarea" || !best || best.localName !== "textarea" ? el : best;
+        }
+        return best ? best.id : null;
+      },
+      /* K3143: the device's own note under `cs-guide:`, wrapped as R26's (an unreadable storage answers null) */
+      kept: (k) => local.get("cs-guide:" + String(k)),
+      keep: (k, v) => { if (v === null || v === undefined) local.del("cs-guide:" + String(k)); else local.set("cs-guide:" + String(k), String(v)); },
       /* R27 (K3013): `fn(cs, view)` once after `ms` on the page's clock, cancelled when the member leaves the screen or
          the page; the calls it makes are background (R33) */
       later(ms, fn) {
@@ -518,22 +552,34 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
           '<a class="cs-ref" href="' + esc(hrefOf(r.screen || "queue", r.subject)) + '" data-nav><b>' + esc(r.n) + "</b> " + wordOrData(r.label) + "</a>").join("") + "</div>";
       },
     };
-    /* R32 (screens-entry R2, R6, R7): the session handed over by a screen of the public or setup frame */
-    cs.signedIn = (answer, o = {}) => signedIn(answer, o);
-    cs.unlocked = () => unlocked();
-    cs.signOut = () => signOut();
+    /* R46 (screens-entry R2, R6, R7): the session handed over by a screen, and its end */
+    cs.signin = (answer, o = {}) => signedIn(answer, o);
+    cs.signedOut = () => signedOut();
+    /* R46, R47: controls the shell binds: R4's sign-out, a file made in the page, the clipboard */
+    const bound = (kind, o, extra) => {
+      const i = inst.binds.push(Object.assign({ kind }, extra)) - 1;
+      const key = o && o.label ? o.label : { signout: "shell.signout", save: "shell.save", copy: "shell.copy" }[kind];
+      return '<button type="button" class="cs-btn" data-tone="quiet" data-shell="bind" data-bi="' + inst.key + ":" + i + '">' + (kind === "save" ? I("add") : "") + w(key, o && o.fills) + "</button>";
+    };
+    cs.signout = (o = {}) => bound("signout", o, {});
+    cs.save = (name, content, o = {}) => bound("save", o, { name: String(name || ""), text: String(content == null ? "" : content) });
+    cs.copy = (content, o = {}) => bound("copy", o, { text: String(content == null ? "" : content) });
     /* R34: the password asked again, for a screen that sends its act by `cs.call` */
     cs.reauth = () => reauthAsk();
-    /* R31: the dock's wizard guide, the ring, and (to the guide) its recording and its end */
-    cs.wizard = (script, version) => startWizard(script, version);
+    /* R31, K3143: the dock's wizard guide started, and the ring */
+    cs.wizard = (script, version, o = {}) => startWizard(script, version, o);
     cs.ring = (op, label) => ring(op, label);
-    if (inst.key === "g") {
-      cs.recording = (on) => { if (WIZ) WIZ.recording = !!on; };
-      cs.wizardEnd = () => endWizard();
-    }
-    /* R40–R42: the signer */
+    /* R40–R42, R47: the signer */
     cs.signer = SIGNER;
     return cs;
+  }
+  /* whether `a` comes before `b` in the document's order */
+  function precedes(a, b) {
+    if (typeof a.compareDocumentPosition === "function") return !!(a.compareDocumentPosition(b) & 4);
+    const order = [];
+    const walk = (n) => { for (const c of n.children || []) { order.push(c); walk(c); } };
+    walk(doc.getElementById("cs-root"));
+    return order.indexOf(a) < order.indexOf(b);
   }
   /* R44: eight weeks of bars in the stage hue, the newest darker, with the word they say */
   function spark(vals, word) {
@@ -558,6 +604,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   /* ---------- routes (R9, R32, R36) and paths (R8) ---------- */
   function hrefOf(screen, subject) {
     if (screen === "home") return "/app";
+    const at = Object.keys(D.addresses).find((k) => D.addresses[k] === screen);
+    if (at) screen = at;
     return "/app/" + encodeURIComponent(screen) + (subject !== undefined && subject !== null && subject !== "" ? "/" + encodeURIComponent(subject) : "");
   }
   function parse(pathname) {
@@ -568,7 +616,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const [s, ...sub] = rest.split("/").filter((x) => x !== "");
     let subject = sub.length ? sub.join("/") : null;
     try { subject = subject === null ? null : decodeURIComponent(subject); } catch { /* kept as written */ }
-    return { screen: s ? s : "home", subject, root: false };
+    const screen = s ? (Object.hasOwn(D.addresses, s) ? D.addresses[s] : s) : "home";
+    return { screen, subject, root: false };
   }
   const placeOf = (id) => (D.paths[id] && D.places.includes(D.paths[id][0]) ? D.paths[id][0] : ["settings", "people", "more", "projects"].includes(id) ? id : null);
   /* R7, R37: a place opens the first of its screens registered, else the shell's own page for it */
@@ -620,31 +669,37 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     return titled("rail." + k + ".name") + '<p class="cs-state" data-state="empty">' + w("shell.later", { place: html(w("rail." + k + ".name")) }) + "</p>";
   };
   function renderOf(inst) {
-    inst.acts = [];
-    try { return inst.spec.render(kit(inst), inst.view); } catch { return '<p class="cs-state" data-state="failed" role="alert">' + w("state.failed", { reason: html(w("shell.noanswer")) }) + "</p>"; }
+    if (inst.key !== "g") { inst.acts = []; inst.binds = []; }
+    try { return inst.spec.render(kit(inst), inst.view); } catch { return inst.key === "g" ? "" : '<p class="cs-state" data-state="failed" role="alert">' + w("state.failed", { reason: html(w("shell.noanswer")) }) + "</p>"; }
+  }
+  /* K3143: the guide's marks, under the path of every working screen, on each draw */
+  function marksHtml() {
+    if (!GUIDEI || typeof GUIDE.marks !== "function") return "";
+    try { return String(GUIDE.marks(kit(GUIDEI), GUIDEI.view) || ""); } catch { return ""; }
   }
   function mainHtml(route) {
     if (UNREACHED) return unavailableHtml("unreachable");
     if (!MAIN && !ENTRY_PAGE && !ME) return '<p class="cs-state" data-state="loading" role="status"><span class="bar" aria-hidden="true"></span>' + w("state.loading") + "</p>";
     if (ENTRY_PAGE) return entryPage();
     if (!MAIN) {
-      if (D.places.includes(route.screen)) return pathNav(route, null) + shellPage(route);
+      if (D.places.includes(route.screen)) return pathNav(route, null) + marksHtml() + shellPage(route);
       return pathNav(route, null) + unavailableHtml("nothing");
     }
     if (MAIN.unavail) return pathNav(route, MAIN) + unavailableHtml(MAIN.unavail);
     const body = renderOf(MAIN);
-    return (frameOf(MAIN.spec.id) === "working" ? pathNav(route, MAIN) : "") + body;
+    return (frameOf(MAIN.spec.id) === "working" ? pathNav(route, MAIN) + marksHtml() : "") + body;
   }
   /* R32: with no `front` registered, the state the session ended in, drawn by the shell */
   let ENTRY_PAGE = false;
   const entryPage = () => '<h1 class="t-title">' + w("screen.unavailable.name") + "</h1>"
     + (ENTRY.state ? '<p class="cs-state" data-state="empty">' + w("session." + ENTRY.state) + "</p>" : '<p class="cs-state" data-state="empty">' + w("shell.unavailable.notyours") + "</p>");
   function dockHtml() {
-    /* R31: one panel at a time, the guide while a wizard runs, else the assistant's */
-    const guide = !!(WIZ && GUIDEI);
+    /* R31, K3143: one panel at a time: the guide's while it draws one (a wizard runs), else the assistant's */
+    const guideBody = GUIDEI ? renderOf(GUIDEI) : "";
+    const guide = !!guideBody;
     const inst = guide ? GUIDEI : REACHABLE && DOCK && DOCKI ? DOCKI : null;
-    if (!inst || !(guide || DOCK)) return "";
-    const body = renderOf(inst);
+    if (!inst) return "";
+    const body = guide ? guideBody : renderOf(inst);
     const name = guide ? "shell.guide" : "shell.assistant";
     return '<aside class="cs-dock" aria-label="' + w(name) + '" data-panel="' + (guide ? "guide" : "assistant") + '"><header>' + I(guide ? "wizard" : "machine") + w(name) + '<span class="spacer"></span>'
       + (guide ? "" : '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dock" aria-label="' + w("shell.assistant.close") + '">' + I("close") + "</button>") + "</header>"
@@ -669,17 +724,20 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       + '<div class="cs-dialog cs-menu" id="cs-menu" role="menu"' + (MENU ? "" : " hidden") + ">" + signout
       + '<div role="group" aria-label="' + w("shell.appearance") + '"><span class="eyebrow">' + w("shell.appearance") + "</span>" + themes + "</div></div></span></header>";
   }
+  /* R48: the main frame's root names the registered screen it drew; the shell's own fallbacks name none */
+  const screenAttr = () => (MAIN && !MAIN.unavail && !UNREACHED && !ENTRY_PAGE ? ' data-screen="' + esc(MAIN.spec.id) + '"' : "");
   /* R36: the test-instance band, on every frame, while `bootstrap` answers `test_instance: true` */
   const bandHtml = () => (BOOT && BOOT.test_instance === true ? '<div class="cs-testband" role="note">' + w("instance.test.notice") + "</div>" : "");
   const RAIL = ["home", "queue", "find", "add", "projects", "people", "settings"];
   const TABS = ["home", "queue", "add", "find", "more"];
   const RAIL_ICON = { home: "home", queue: "queue", find: "search", add: "add", projects: "project", people: "subject", settings: "settings", more: "settings" };
   function frameHtml(route) {
+    if (GUIDEI) { GUIDEI.acts = []; GUIDEI.binds = []; }
     const shown = MAIN ? MAIN.spec.id : route.screen;
     const frame = ENTRY_PAGE ? "public" : MAIN ? frameOf(shown) : "working";
     if (frame !== "working") {
       /* R30, R45: the public, published and setup frames: no rail, tabs, dock or member menu */
-      return '<div class="cs-frame" data-frame="' + esc(frame) + '" id="cs-frame">' + bandHtml() + '<main class="cs-main" id="cs-main">' + mainHtml(route) + "</main></div>";
+      return '<div class="cs-frame" data-frame="' + esc(frame) + '" id="cs-frame">' + bandHtml() + '<main class="cs-main" id="cs-main"' + screenAttr() + ">" + mainHtml(route) + "</main></div>";
     }
     const place = placeOf(route.screen);
     const rail = RAIL.map((k) => '<a href="' + placeHref(k) + '" data-nav' + (place === k ? ' aria-current="page"' : "") + tipAttr(w("rail." + k + ".holds"), RAILW < 120 ? 1 : 2) + ">"
@@ -696,11 +754,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="level-switch">' + w("shell.level.switch", { level: html(w(LEVEL === "pause" ? "level.prompt.name" : "level.pause.name")) }) + "</button></div></div>" : "";
     return '<div class="cs-frame cs-shell' + (dock ? " with-dock" : "") + (RAILW < 120 ? " rail-icons" : "") + '" data-frame="working" id="cs-frame" style="--rail:' + RAILW + 'px">'
       + bandHtml() + mastHtml() + band + '<nav class="cs-rail" aria-label="' + w("shell.sections") + '">' + rail + "</nav>"
-      + '<main class="cs-main" id="cs-main">' + ask + main + "</main>" + dock
+      + '<main class="cs-main" id="cs-main"' + screenAttr() + ">" + ask + main + "</main>" + dock
       + '<nav class="cs-tabs" aria-label="' + w("shell.sections") + '">' + tabs + "</nav></div>";
   }
   /* R33, R34: the lock over the screen, and the password asked again; R41: what the key signs, exactly */
-  let REAUTH = null, SIGNING = null, OVERLAY_REFUSAL = "";
+  let REAUTH = null, DIALOG = null, OVERLAY_REFUSAL = "";
   function overlayHtml() {
     const field = (id) => '<span class="cs-field"><label for="' + id + '">' + w("shell.password") + '</label><input id="' + id + '" class="cs-input" type="password" autocomplete="current-password"></span>';
     const slot = '<span class="cs-slot" data-overlay-refusal>' + OVERLAY_REFUSAL + "</span>";
@@ -715,11 +773,22 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         + field("cs-reauth-pw") + slot + '<span class="cs-actrow"><button type="button" class="cs-btn" data-tone="primary" data-shell="reauth">' + w("shell.reauth.send") + "</button>"
         + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="reauth-cancel">' + w("shell.cancel") + "</button></span></div></div>";
     }
-    if (SIGNING) {
+    if (DIALOG && DIALOG.kind === "register") {
+      return '<div class="cs-overlay"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-key-t" data-overlay="register"><h2 id="cs-key-t">' + w("shell.signer.passphrase") + "</h2>"
+        + '<span class="cs-field"><label for="cs-key-pass">' + w("shell.signer.passphrase") + '</label><span class="help" id="cs-key-pass-help">' + w("shell.signer.passphrase.help")
+        + '</span><input id="cs-key-pass" class="cs-input" type="password" autocomplete="new-password" aria-describedby="cs-key-pass-help"></span>'
+        + '<span class="cs-field"><label for="cs-key-again">' + w("shell.signer.passphrase.again") + '</label><input id="cs-key-again" class="cs-input" type="password" autocomplete="new-password"></span>'
+        + slot + '<span class="cs-actrow"><button type="button" class="cs-btn" data-tone="primary" data-shell="dialog-yes">' + w("shell.signer.makefile") + "</button>"
+        + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dialog-no">' + w("shell.cancel") + "</button></span></div></div>";
+    }
+    if (DIALOG && DIALOG.kind === "sign") {
+      const load = DIALOG.needKey ? '<fieldset class="cs-field"><legend>' + w("shell.signer.load") + '</legend><span class="cs-field"><label for="cs-key-file">' + w("shell.signer.loadfile")
+        + '</label><textarea id="cs-key-file" class="cs-input" spellcheck="false" autocomplete="off"></textarea></span><span class="cs-field"><label for="cs-key-filepass">' + w("shell.signer.loadpass")
+        + '</label><input id="cs-key-filepass" class="cs-input" type="password" autocomplete="off"></span></fieldset>' : "";
       return '<div class="cs-overlay"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-sign-t" data-overlay="sign"><h2 id="cs-sign-t">' + w("shell.signer.exactly") + "</h2><ol>"
-        + SIGNING.list.map((s) => "<li><b>" + esc(s.label) + "</b><pre>" + esc(s.line) + "</pre></li>").join("") + "</ol><p>" + w("signing.ceremony.device") + "</p>"
-        + '<span class="cs-actrow"><button type="button" class="cs-btn" data-tone="primary" data-shell="sign-yes">' + w("shell.signer.sign") + "</button>"
-        + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="sign-no">' + w("shell.signer.decline") + "</button></span></div></div>";
+        + DIALOG.list.map((s) => "<li><b>" + esc(s.label) + "</b><pre>" + esc(s.line) + "</pre></li>").join("") + "</ol>" + load + "<p>" + w("signing.ceremony.device") + "</p>"
+        + slot + '<span class="cs-actrow"><button type="button" class="cs-btn" data-tone="primary" data-shell="dialog-yes">' + w("shell.signer.sign") + "</button>"
+        + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dialog-no">' + w("shell.signer.decline") + "</button></span></div></div>";
     }
     return "";
   }
@@ -759,6 +828,15 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (inst.pending) { for (const [id, v] of Object.entries(inst.pending)) restore(id, v); inst.pending = null; }
       /* R27: a field filled before it was drawn takes its value once it is */
       for (const [id, v] of Object.entries(inst.fills)) { const el = doc.getElementById(id); if (el) { if (el.type === "checkbox" || el.type === "radio") el.checked = !!v; else el.value = String(v == null ? "" : v); delete inst.fills[id]; } }
+      /* K3143: a filled draft's label beside its field */
+      for (const [id, l] of Object.entries(inst.labels)) {
+        const el = doc.getElementById(id);
+        if (!el || !el.parentElement) continue;
+        const span = doc.createElement("span");
+        span.setAttribute("class", "cs-draftlabel");
+        span.innerHTML = I("machine") + wordOrData(l);
+        el.parentElement.insertBefore(span, el.nextElementSibling);
+      }
     }
     ringDraw(root);
     if (fk) { let el = null; try { el = root.querySelector(fk); } catch { el = null; } if (el && el.focus) el.focus(); }
@@ -797,6 +875,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       keepReturn();
       return showFront();
     }
+    const signedAlready = !!ME;
     if (!ME) {
       draw();
       const got = await whoami();
@@ -812,7 +891,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       }
       if (got === "none") { keepReturn(); ENTRY = { state: null, handle: null }; return showFront(); }
     }
-    if (!wordsRead && wordsRetry) { wordsRetry = false; loadWords(); }
+    /* R5's Suggestions: a failed `interfacewords` read is tried once more, on the next screen change */
+    if (signedAlready && !wordsRead && wordsRetry) { wordsRetry = false; loadWords(); }
     show(id);
   }
   function show(id, subject) {
@@ -820,14 +900,18 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     MAIN = spec && spec.id !== "assistant" ? instance(spec, subject !== undefined ? subject : ROUTE.subject, "m") : null;
     DOCKI = !MAIN || frameOf(MAIN.spec.id) === "working" ? (REACHABLE && screenOf("assistant") ? instance(screenOf("assistant"), ROUTE.subject, "d", { screen: ROUTE.screen, subject: ROUTE.subject }) : null) : null;
     draw();
-    if (MAIN && (MAIN.pub || ME)) readAll(MAIN);
+    const n = ROUTING;
+    const reads = MAIN && (MAIN.pub || ME) ? readAll(MAIN) : Promise.resolve();
     if (DOCKI && DOCK && ME) readAll(DOCKI);
     if (doc.getElementById("cs-main") && doc.getElementById("cs-main").scrollTo) doc.getElementById("cs-main").scrollTo(0, 0);
+    /* K3143: the guide told the screen it is on, once the screen's reads have settled */
+    reads.then(() => { if (n === ROUTING && ROUTE) guideCall("entered", { screen: ROUTE.screen, subject: ROUTE.subject }); });
   }
   function showFront() {
     if (screenOf("front")) return show("front", null);
     ENTRY_PAGE = true;
     draw();
+    if (ROUTE) guideCall("entered", { screen: ROUTE.screen, subject: ROUTE.subject });
   }
 
   /* ---------- the session's start, hand-over and end (R3, R32, R33) ---------- */
@@ -869,7 +953,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     await route();
     return !!ME;
   }
-  /* R33: `front`'s locked state unlocked by its own act: back to the page kept, as it was */
+  /* R46: a screen that sent `signout` (or `signouteverywhere`) itself: the record cleared, `front` signed out */
+  function signedOut() {
+    if (S) over("signedout");
+    else { ENTRY = { state: "signedout", handle: null }; route(); }
+  }
+  /* R33, R46: `front`'s locked state unlocked by its own `unlock` act: back to the page kept, as it was */
   async function unlocked() {
     LOCKED = false; local.del(STATE_KEY); ENTRY = { state: null, handle: null };
     activity();
@@ -964,21 +1053,16 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   }
 
   /* ---------- the dock's wizard guide and the ring (R31) ---------- */
-  let DOCK_BEFORE = false;
-  function startWizard(script, version) {
-    if (!GUIDE || !script) return false;
-    if (GUIDEI) closing(GUIDEI);
-    if (!WIZ) DOCK_BEFORE = DOCK;
-    WIZ = { script: String(script), version: version === undefined ? null : version, recording: false };
-    GUIDEI = instance(GUIDE, null, "g", null);
+  /* K3143: `cs.wizard(script, version, o)` hands the start to the guide; it draws itself in the dock while it runs */
+  function startWizard(script, version, o) {
+    if (!GUIDEI || typeof GUIDE.start !== "function") return false;
+    try { GUIDE.start(kit(GUIDEI), GUIDEI.view, Object.assign({}, o || {}, { script, version: version === undefined ? null : version })); } catch { return false; }
     draw();
-    readAll(GUIDEI);
     return true;
   }
-  function endWizard() {
-    if (GUIDEI) closing(GUIDEI);
-    GUIDEI = null; WIZ = null; DOCK = DOCK_BEFORE && REACHABLE;
-    draw();
+  function guideCall(name, arg) {
+    if (!GUIDEI || typeof GUIDE[name] !== "function") return;
+    try { GUIDE[name](kit(GUIDEI), GUIDEI.view, arg); } catch { /* the guide's own work never stops the shell */ }
   }
   /* `cs.ring(op, label)`: the control the current screen drew for `op` rung, its row panel opened, scrolled to and
      focused; answers whether there was one. The shell never presses it. */
@@ -1089,42 +1173,27 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   }
   const bytesOf = (b) => (b instanceof Uint8Array ? b : b instanceof ArrayBuffer ? new Uint8Array(b) : enc.encode(String(b == null ? "" : b)));
   const clear = (...ids) => { for (const id of ids) { const el = doc.getElementById(id); if (el) el.value = ""; } };
-  const SIGNER = {
-    /* the key this browser holds: kept on the device, or loaded for this sitting */
-    async held() {
-      if (SITTING) return { held: true, kept: false, ...lineOf(SITTING.raw32, LABEL) };
-      const k = await kept();
-      return k && k.raw32 ? { held: true, kept: true, ...lineOf(new Uint8Array(k.raw32), LABEL) } : { held: false };
-    },
-    /* R40: the fields that make a key: keep it on this device (`signing.ceremony.keepkey`, unticked by default), else the
-       key file's passphrase, twice */
-    fields(id) {
-      return '<div class="cs-field"><label><input type="checkbox" id="' + esc(id) + '-keep"> ' + w("signing.ceremony.keepkey") + "</label></div>"
-        + '<div class="cs-field"><label for="' + esc(id) + '-pass">' + w("shell.signer.passphrase") + '</label><span class="help" id="' + esc(id) + '-pass-help">' + w("shell.signer.passphrase.help")
-        + '</span><input id="' + esc(id) + '-pass" class="cs-input" type="password" autocomplete="new-password" aria-describedby="' + esc(id) + '-pass-help"></div>'
-        + '<div class="cs-field"><label for="' + esc(id) + '-again">' + w("shell.signer.passphrase.again") + '</label><input id="' + esc(id) + '-again" class="cs-input" type="password" autocomplete="new-password"></div>';
-    },
-    /* R40: "Use a key file you already have": the file's text and its passphrase */
-    loadFields(id) {
-      return '<fieldset class="cs-field"><legend>' + w("shell.signer.load") + '</legend><span class="cs-field"><label for="' + esc(id) + '-file">' + w("shell.signer.loadfile")
-        + '</label><textarea id="' + esc(id) + '-file" class="cs-input" spellcheck="false" autocomplete="off"></textarea></span>'
-        + '<span class="cs-field"><label for="' + esc(id) + '-filepass">' + w("shell.signer.loadpass") + '</label><input id="' + esc(id) + '-filepass" class="cs-input" type="password" autocomplete="off"></span></fieldset>';
-    },
-    /* R40: make the key from the fields `fields(id)` drew; answers its public line for `signerregisterown`, or
-       `{ok: false, refuse}`. Kept: a non-extractable key in IndexedDB. Not kept: a key file handed to the browser. */
-    async make(id) {
-      const keep = !!(doc.getElementById(id + "-keep") || {}).checked;
-      const pass = String((doc.getElementById(id + "-pass") || {}).value || ""), again = String((doc.getElementById(id + "-again") || {}).value || "");
-      clear(id + "-pass", id + "-again");
-      if (keep) {
-        const pair = await subtle().generateKey({ name: "Ed25519" }, false, ["sign", "verify"]);
-        const raw32 = new Uint8Array(await subtle().exportKey("raw", pair.publicKey));
-        const ok = await idb("readwrite", (st) => st.put({ priv: pair.privateKey, raw32: raw32.buffer.slice(0), label: LABEL }, "own"));
-        if (ok === null && !(await kept())) return { ok: false, refuse: "shell.signer.nokey" };
-        SITTING = null;
-        return { ok: true, kept: true, ...lineOf(raw32, LABEL) };
-      }
-      if (!pass || pass !== again) return { ok: false, refuse: "shell.signer.passphrase.differ" };
+  const valueOf = (id) => { const el = doc.getElementById(id); return el ? String(el.value || "") : ""; };
+  async function heldKey() {
+    if (SITTING) return SITTING;
+    const k = await kept();
+    return k && k.priv && k.raw32 ? { priv: k.priv, raw32: new Uint8Array(k.raw32) } : null;
+  }
+  /* R40, R47: the key made in the browser; kept on the device only when `keep`, else handed out once as a key file in
+     `BIOKEY1.` form under a passphrase the member types twice in the kit's own dialog. Answers `{ok, keyB64}` or
+     `{ok: false, declined: true}` when the member stops. */
+  async function register(o = {}) {
+    if (o.keep) {
+      const pair = await subtle().generateKey({ name: "Ed25519" }, false, ["sign", "verify"]);
+      const raw32 = new Uint8Array(await subtle().exportKey("raw", pair.publicKey));
+      await idb("readwrite", (st) => st.put({ priv: pair.privateKey, raw32: raw32.buffer.slice(0), label: LABEL }, "own"));
+      if (!(await kept())) return { ok: false, declined: true };
+      SITTING = null;
+      return { ok: true, kept: true, ...lineOf(raw32, LABEL) };
+    }
+    for (;;) {
+      const pass = await new Promise((resolve) => { DIALOG = { kind: "register", resolve }; OVERLAY_REFUSAL = ""; draw(); });
+      if (pass === null) return { ok: false, declined: true };
       const seed = win.crypto.getRandomValues(new Uint8Array(32));
       const { priv, raw32 } = await seedKeys(seed);
       const file = await wrapSeed(seed, pass);
@@ -1132,40 +1201,76 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       saveFile(new Blob([file + "\n"], { type: "text/plain" }), "bio-signing-key.txt");
       SITTING = { priv, raw32 };
       return { ok: true, kept: false, ...lineOf(raw32, LABEL) };
+    }
+  }
+  const SIGNER = {
+    /* the key this browser holds: kept on the device, or loaded for this sitting */
+    async held() {
+      const key = await heldKey();
+      return key ? { held: true, kept: !SITTING, ...lineOf(key.raw32, LABEL) } : { held: false };
     },
-    /* R40: a key file already held, for this sitting only */
-    async load(id) {
-      const textEl = doc.getElementById(id + "-file"), passEl = doc.getElementById(id + "-filepass");
-      const t = textEl ? String(textEl.value || "") : "", pass = passEl ? String(passEl.value || "") : "";
-      clear(id + "-file", id + "-filepass");
-      try {
-        const seed = await unwrapKey(t, pass);
-        const { priv, raw32 } = await seedKeys(seed);
-        seed.fill(0);
-        SITTING = { priv, raw32 };
-        return { ok: true, ...lineOf(raw32, LABEL) };
-      } catch { return { ok: false, refuse: "shell.signer.notkey" }; }
+    register: (o) => register(o),
+    /* R46: the signer's `ssh-ed25519` public line, the key made (and kept or filed as `keep` says) when none is held;
+       null when the member stops */
+    async publicLine(o = {}) {
+      const key = await heldKey();
+      if (key) return lineOf(key.raw32, LABEL).line;
+      const r = await register(o);
+      return r.ok ? r.line : null;
     },
     /* the kept key removed from this device (its revocation is the screen's act) */
     async forget() { SITTING = null; await idb("readwrite", (st) => st.delete("own")); return true; },
-    /* R41: one confirmation for the whole list; one SSHSIG per statement, or a declined answer signing nothing */
+    /* R41, R47: "What your key signs, exactly", one confirmation for the whole list; one SSHSIG per statement in list
+       order, or `{ok: false, declined: true}` signing nothing. With no key held, the dialog offers "Use a key file you
+       already have", loaded for this sitting only. */
     async sign(statements) {
-      const list = (Array.isArray(statements) ? statements : []).map((s) => ({ label: String(s && s.label || ""), bytes: bytesOf(s && s.bytes), namespace: String(s && s.namespace || "") }));
-      let key = SITTING;
-      if (!key) { const k = await kept(); key = k && k.priv ? { priv: k.priv, raw32: new Uint8Array(k.raw32) } : null; }
-      if (!key) return { ok: false, nokey: true, words: w("shell.signer.nokey") };
-      if (!list.length || list.some((s) => !s.namespace)) return { ok: false, declined: true, words: w("signing.ceremony.declined") };
-      const yes = await new Promise((resolve) => {
-        SIGNING = { resolve, list: list.map((s) => ({ label: s.label, line: new TextDecoder().decode(s.bytes) })) };
-        draw();
-      });
-      if (!yes) return { ok: false, declined: true, words: w("signing.ceremony.declined") };
+      const list = (Array.isArray(statements) ? statements : []).map((s) => ({ label: String((s && s.label) || ""), bytes: bytesOf(s && s.bytes), namespace: String((s && s.namespace) || "") }));
+      if (!list.length || list.some((s) => !s.namespace)) return { ok: false, declined: true };
+      let key = await heldKey();
+      const shown = list.map((s) => ({ label: s.label, line: new TextDecoder().decode(s.bytes) }));
+      let refusal = "";
+      for (;;) {
+        const yes = await new Promise((resolve) => { DIALOG = { kind: "sign", resolve, list: shown, needKey: !key }; OVERLAY_REFUSAL = refusal; draw(); });
+        if (!yes) return { ok: false, declined: true };
+        if (!key) {
+          try {
+            const seed = await unwrapKey(yes.file, yes.pass);
+            key = await seedKeys(seed);
+            seed.fill(0);
+            SITTING = key;
+          } catch { key = null; }
+          if (!key) { refusal = refusalHtml(w("shell.signer.notkey")); continue; }
+        }
+        break;
+      }
       const signatures = [];
       for (const s of list) signatures.push(await sshsig(key.priv, key.raw32, s.namespace, s.bytes));
       return { ok: true, signatures, ...lineOf(key.raw32, LABEL) };
     },
   };
-  function signAnswer(yes) { const s = SIGNING; SIGNING = null; draw(); if (s) s.resolve(!!yes); }
+  /* the kit's own signing dialogs answered: the register dialog's passphrase (twice alike), the sign dialog's yes (with
+     a key file and its passphrase when no key is held), or no */
+  function dialogAnswer(yes) {
+    const d = DIALOG;
+    if (!d) return;
+    if (!yes) { DIALOG = null; OVERLAY_REFUSAL = ""; draw(); return d.resolve && d.resolve(d.kind === "register" ? null : false); }
+    if (d.kind === "register") {
+      const pass = valueOf("cs-key-pass"), again = valueOf("cs-key-again");
+      clear("cs-key-pass", "cs-key-again");
+      if (!pass || pass !== again) { OVERLAY_REFUSAL = refusalHtml(w("shell.signer.passphrase.differ")); return draw(); }
+      DIALOG = null; OVERLAY_REFUSAL = ""; draw();
+      return d.resolve(pass);
+    }
+    if (d.needKey) {
+      const file = valueOf("cs-key-file"), pass = valueOf("cs-key-filepass");
+      clear("cs-key-file", "cs-key-filepass");
+      if (!file.trim()) { OVERLAY_REFUSAL = refusalHtml(w("shell.signer.nokey")); return draw(); }
+      DIALOG = null; OVERLAY_REFUSAL = ""; draw();
+      return d.resolve({ file, pass });
+    }
+    DIALOG = null; OVERLAY_REFUSAL = ""; draw();
+    return d.resolve(true);
+  }
 
   /* ---------- acts: friction (R11), sending, refusals beside the act (R13), the password asked again (R34) ---------- */
   const instOf = (k) => (k === "m" ? MAIN : k === "d" ? DOCKI : k === "g" ? GUIDEI : null);
@@ -1180,10 +1285,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (!d) return;
     activity();
     if (RING && RING.op === d.op) RING = null;
-    /* R31: while the guide records, it hears each act pressed, by its op and screen only */
-    if (WIZ && WIZ.recording && GUIDEI && inst === MAIN && GUIDE && typeof GUIDE.heard === "function") {
-      try { GUIDE.heard(kit(GUIDEI), GUIDEI.view, { op: d.op, screen: MAIN.spec.id }); } catch { /* the guide's own hearing never stops the act */ }
-    }
+    /* R31, K3143: the guide hears each act pressed on the screen, by its op and screen only, never a value */
+    if (inst === MAIN) guideCall("pressed", { op: d.op, screen: MAIN.spec.id });
     const weight = weightOf(d.op);
     if (weight === "reversible" || weight === "none") return run(inst, d, btn, ai, {});
     /* R11 (DEC-88): an act whose own field carries the member's authored words sends them as its reason, asking none */
@@ -1232,6 +1335,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       const words = a.kind === "refused" ? refusalWords(a, d.spec.refusals, false, inst) : w("state.failed", { reason: html(w("shell.noanswer")) });
       return besideAct(ai, refusalHtml(words));
     }
+    if (d.op === "unlock" && inst === MAIN && frameOf(MAIN.spec.id) !== "working") { for (const el of doc.getElementById("cs-root").querySelectorAll('input[type="password"]')) el.value = ""; return unlocked(); }
     let after = null;
     /* R21 (K3009): no secret survives a successful act: every password field its screen drew is cleared, so no redraw
        restores one */
@@ -1271,7 +1375,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   const onTipOrEl = (n) => !!(n && ((TIP && (n === TIP || (TIP.contains && TIP.contains(n)))) || (tipEl() && (n === tipEl() || (tipEl().contains && tipEl().contains(n))))));
 
   /* ---------- events, bound once by delegation (no inline handler, R2) ---------- */
-  const blocked = (t) => (LOCKED || REAUTH || SIGNING) && !(t.closest && t.closest(".cs-overlay"));
+  const blocked = (t) => (LOCKED || REAUTH || DIALOG) && !(t.closest && t.closest(".cs-overlay"));
   function bind() {
     const root = doc.getElementById("cs-root");
     root.addEventListener("click", (e) => {
@@ -1338,14 +1442,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R33: the member's own input is activity */
     for (const type of ["keydown", "pointerdown", "touchstart", "wheel"]) doc.addEventListener(type, () => { if (!LOCKED) activity(); });
     doc.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") { closeTip(); if (MENU) { MENU = false; draw(); } if (REAUTH) reauthNow(false); if (SIGNING) signAnswer(false); }
-      if (LOCKED || REAUTH || SIGNING) return;
+      if (e.key === "Escape") { closeTip(); if (MENU) { MENU = false; draw(); } if (REAUTH) reauthNow(false); if (DIALOG) dialogAnswer(false); }
+      if (LOCKED || REAUTH || DIALOG) return;
       if (e.altKey && e.shiftKey && (e.key === "I" || e.key === "i" || e.code === "KeyI")) { e.preventDefault(); setLevel(LEVEL === "prompt" ? "pause" : "prompt"); }
       /* R31: Alt+Shift+W asks the running guide to ring its step again */
-      if (e.altKey && e.shiftKey && (e.key === "W" || e.key === "w" || e.code === "KeyW") && WIZ && GUIDEI && GUIDE && typeof GUIDE.again === "function") {
-        e.preventDefault();
-        try { GUIDE.again(kit(GUIDEI), GUIDEI.view); } catch { /* the guide's own ring never stops the shell */ }
-      }
+      if (e.altKey && e.shiftKey && (e.key === "W" || e.key === "w" || e.code === "KeyW") && GUIDEI) { e.preventDefault(); guideCall("ring"); }
     });
     win.addEventListener("popstate", () => route());
     win.addEventListener("pagehide", () => { closing(MAIN); closing(DOCKI); closing(GUIDEI); SITTING = null; });
@@ -1372,8 +1473,18 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (what === "lock-other") return signOut();
     if (what === "reauth") return reauthNow(true);
     if (what === "reauth-cancel") return reauthNow(false);
-    if (what === "sign-yes") return signAnswer(true);
-    if (what === "sign-no") return signAnswer(false);
+    if (what === "dialog-yes") return dialogAnswer(true);
+    if (what === "dialog-no") return dialogAnswer(false);
+    if (what === "bind") {
+      const [k, i] = String(el.getAttribute("data-bi") || "").split(":");
+      const ins = instOf(k);
+      const b = ins && ins.binds[Number(i)];
+      if (!b) return;
+      if (b.kind === "signout") return signOut();
+      if (b.kind === "save") return saveFile(new Blob([b.text], { type: "text/plain" }), b.name);
+      if (b.kind === "copy") { try { const c = win.navigator && win.navigator.clipboard; if (c && c.writeText) c.writeText(b.text); } catch { /* the clipboard refused: nothing copied */ } return; }
+      return;
+    }
     if (what === "menu") { MENU = !MENU; return draw(); }
     if (what === "signout") return signOut();
     if (what === "theme") { MENU = false; return setTheme(el.getAttribute("data-theme-to")); }
@@ -1479,12 +1590,29 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (/^#(invite|join)=/.test(h)) win.history.replaceState({}, "", "/app/join" + h);
     else if (/^#boot=/.test(h)) win.history.replaceState({}, "", "/app/setup" + h);
   }
+  /* R46: the fragment read once, then removed from the address before any request */
+  function takeFragment() {
+    const h = String(win.location.hash || "");
+    if (!h || h === "#") return;
+    const out = {};
+    for (const part of h.slice(1).split("&")) {
+      const at = part.indexOf("=");
+      if (at < 0) continue;
+      const k = part.slice(0, at);
+      if (!["boot", "invite", "join", "reset"].includes(k)) continue;
+      try { out[k] = decodeURIComponent(part.slice(at + 1)); } catch { out[k] = part.slice(at + 1); }
+    }
+    FRAGMENT = out;
+    win.history.replaceState({}, "", win.location.pathname);
+  }
   async function start() {
     if (STARTED) return;
     STARTED = true;
     applyTheme();
     bind();
     forward();
+    takeFragment();
+    if (GUIDE) GUIDEI = instance(GUIDE, null, "g", null);
     S = readRecord();
     if (S && local.get(STATE_KEY) === "locked") LOCKED = false;
     /* R32: `/` with a live record opens Home */

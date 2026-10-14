@@ -75,10 +75,10 @@ export const PLACE_SCREENS = Object.freeze({
 export const SETTINGS_SCREENS = Object.freeze(["members", "account", "connect", "notes", "ties", "group-identity", "security",
   "translations", "wizards", "group", "places", "recovery"]);
 
-/* R16: the screen an item of each kind opens (R27: a knock opens `inbox` at that knock; R29, R37: a person or
-   organisation the record follows opens `person`). */
+/* R16: the screen an item of each kind opens (R27: a knock opens `inbox` at that knock; R47: a person or organisation
+   the record follows opens `person`, a proceeding `proceeding`, a standard `standard`). */
 export const REF_SCREENS = Object.freeze({ document: "document", passage: "document", question: "question", project: "project",
-  member: "members", capture: "open-file", knock: "inbox", person: "person" });
+  member: "members", capture: "open-file", knock: "inbox", person: "person", proceeding: "proceeding", standard: "standard" });
 
 /* R30, R45: the frames of `registry.json` other than `working` that the shell draws: `public` and `published` without a
    session, `setup` with or without one; the dock's panel is `dock`. A screen not named here is drawn in the working
@@ -90,6 +90,9 @@ export const FRAMES = Object.freeze({
   assistant: "dock",
 });
 const sessionless = (id) => FRAMES[id] === "public" || FRAMES[id] === "published";
+
+/* R9 (K3137): addresses whose first part is not the screen's id: `/app/review` is `review-outside` (`screens-publish` R17). */
+export const ADDRESSES = Object.freeze({ review: "review-outside" });
 
 /* R21, R38: the ops a screen may name beyond its registry acts: `infolevelset` on any screen, and the re-points, each
    until the registry lists it: `ratify` on `ceremony` (`screens-publish` R13), `unlock` on `front` (`screens-entry` R2). */
@@ -106,6 +109,8 @@ export const ADMIN_ACTS = Object.freeze(new Set([
   "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset", "joinlinkreplace", "joinlinkoff",
   "courtnoticeset", "groupdescriptionset", "joindoors", "projectownerrescue",
   "groupkeyset", "groupkeyremove", "groupkeyswitch", "aikeepaway",
+  /* R47: `people`' expunging of a person (its R12) */
+  "personexpunge",
 ]));
 
 /* The shell's own reads and acts (R3, R4, R7, R17, R20, R33, R34, R36). */
@@ -131,22 +136,24 @@ export function checkScreens(screens) {
       const op = a && a.op;
       if (typeof op !== "string" || !Object.hasOwn(OPS, op)) throw new Error(`interface-shell: screen ${id}'s act names ${String(op)}, which OPS does not hold`);
       if (!allowed.has(op)) throw new Error(`interface-shell: screen ${id}'s act ${op} is not the registry's for it, nor a named re-point`);
-      /* R30: a screen drawn without a session calls only public ops */
-      if (sessionless(id) && OPS[op].classes !== null) throw new Error(`interface-shell: screen ${id} is drawn without a session, and its act ${op} is not a public op`);
+      /* R30: a screen drawn without a session calls only public ops (R46: `unlock`, under the locked session's token) */
+      if (sessionless(id) && OPS[op].classes !== null && !(RE_POINTS[id] || []).includes(op)) throw new Error(`interface-shell: screen ${id} is drawn without a session, and its act ${op} is not a public op`);
     }
     if (s.words !== undefined && !Array.isArray(s.words)) throw new Error(`interface-shell: screen ${id}'s words is not a list`);
   }
   return true;
 }
 
-/* R31: the dock's wizard guide (`screens-wizards`' `GUIDE`): a panel with a screen's parts but no registry id, each act an
-   op `OPS` holds. Throws, naming the guide, for one that is not. */
+/* R31, K3143: the dock's wizard guide (`screens-wizards`' `GUIDE`), `{words, parts?, ops, acts, render, marks, start,
+   entered, pressed, ring}`: no registry id; `ops` (the ops it reads by `cs.call`) and its acts' ops each an op `OPS`
+   holds, carried with their gate rows as a screen's. Throws, naming the guide, for one that is not. */
 export function checkGuide(guide) {
   if (guide === undefined || guide === null) return true;
   if (typeof guide !== "object" || typeof guide.render !== "function") throw new Error("interface-shell: the guide has no render");
-  if (guide.reads !== undefined && typeof guide.reads !== "function") throw new Error("interface-shell: the guide's reads is not a function");
+  for (const f of ["marks", "start", "entered", "pressed", "ring"]) if (guide[f] !== undefined && typeof guide[f] !== "function") throw new Error(`interface-shell: the guide's ${f} is not a function`);
   if (!Array.isArray(guide.acts)) throw new Error("interface-shell: the guide has no acts list");
-  for (const a of guide.acts) if (!(a && typeof a.op === "string" && Object.hasOwn(OPS, a.op))) throw new Error(`interface-shell: the guide's act names ${String(a && a.op)}, which OPS does not hold`);
+  if (guide.ops !== undefined && !Array.isArray(guide.ops)) throw new Error("interface-shell: the guide's ops is not a list");
+  for (const op of [...(guide.ops || []), ...guide.acts.map((a) => a && a.op)]) if (!(typeof op === "string" && Object.hasOwn(OPS, op))) throw new Error(`interface-shell: the guide names ${String(op)}, which OPS does not hold`);
   if (guide.words !== undefined && !Array.isArray(guide.words)) throw new Error("interface-shell: the guide's words is not a list");
   return true;
 }
@@ -200,13 +207,14 @@ function dataOf(screens, guide) {
   const all = guide ? screens.concat([guide]) : screens;
   const ops = new Set(SHELL_OPS);
   for (const s of all) for (const a of s.acts) ops.add(a.op);
+  if (guide) for (const op of guide.ops || []) ops.add(op);
   const pick = (f) => Object.fromEntries([...ops].filter((op) => Object.hasOwn(OPS, op)).map((op) => [op, f(op)]).filter(([, v]) => v !== undefined));
   return {
     storeKey: SESSION_STORE_KEY, phoneWidth: PHONE_WIDTH, icons: ICONS,
     words: pageWords(all, ops),
     ops: pick(() => true),
-    /* R30, R45: the public ops (`classes: null`), the only ones a page with no session calls */
-    publicOps: [...ops].filter((op) => Object.hasOwn(OPS, op) && OPS[op].classes === null),
+    /* R30, R45: the public ops (`classes: null`), the only ones a page with no session calls, by an act or by `cs.call` */
+    publicOps: Object.keys(OPS).filter((op) => OPS[op].classes === null),
     needs: pick((op) => (Object.hasOwn(NEEDS, op) ? NEEDS[op] : undefined)),
     sessionOps: { member: [...ops].filter((op) => SESSION_OPS.member.has(op)), admin: [...ops].filter((op) => SESSION_OPS.admin.has(op)) },
     adminActs: [...ops].filter((op) => ADMIN_ACTS.has(op)),
@@ -217,7 +225,7 @@ function dataOf(screens, guide) {
     rungs: pick((op) => (OPS[op] && OPS[op].mutating === false ? "none" : IRREVERSIBLE_WEIGHT.includes(op) ? "irreversible"
       : Object.hasOwn(RUNG_ABSENT, op) ? (RUNG_ABSENT[op] && RUNG_ABSENT[op].ground !== "undetermined" ? "none" : undefined)
         : Object.hasOwn(RUNGS, op) ? RUNGS[op] : undefined)),
-    paths: PATHS, placeScreens: PLACE_SCREENS, refScreens: REF_SCREENS, frames: FRAMES, settingsScreens: SETTINGS_SCREENS,
+    paths: PATHS, placeScreens: PLACE_SCREENS, refScreens: REF_SCREENS, frames: FRAMES, settingsScreens: SETTINGS_SCREENS, addresses: ADDRESSES,
     places: [...Object.keys(PLACE_SCREENS), "more"],
     idleLock: IDLE_LOCK_MS, idleEnd: IDLE_END_MS, notYours: NOT_YOURS, retry: RETRY_MS,
   };
