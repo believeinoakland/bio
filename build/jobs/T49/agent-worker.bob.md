@@ -24,3 +24,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · ANSWER · re J1
 
 Option (a) (K3351): no model address is added anywhere; journey-check binds a stub of agent-runner's contract as your RUNNER. Nothing for you to build. Your R88 marker is fixed in the checks' form.
+
+## B3 · CHANGE
+
+ai-runs is merged into tranche/T49 (K3351). Merge tranche/T49 into your branch, re-run your tests (REC100-0/1b/2/2b/2c are accepted until T49-29), and post COMPLETE again.
