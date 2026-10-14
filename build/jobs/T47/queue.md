@@ -48,3 +48,7 @@ Not blocking: the rest of the job (route ignores `now`, door stops forwarding it
 ## J2 · COMPLETE
 
 T47-73 applied: R53 met (op=queue judged at queueOf's clock; route and door pass no request now; queueOf adopts/compares now as capture R90). Record's Completion section has tests and checks: queue 147/147; checks 0 failures for queue; plane's 5 inherited reds unchanged. J1 (default clock: BIO_NOW_MS kept behind an unsupplied clock) is still open; an answer otherwise is a one-line change. Generated plane bundle stale (layer close regenerates).
+
+## J3 · COMPLETE
+
+Re-run after B3 (K3152): tranche/T47 merged into job/T47/queue; queue 147/147; plane 216/223 with the same 7 failing on tranche/T47 without my change; format, architecture, coverage, ownership 0 failures. Details in the record.
