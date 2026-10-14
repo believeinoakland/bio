@@ -1,7 +1,8 @@
 /* screens-entry R4 (and R8–R11): `forgot`, "Forgot your password", in the public frame. Three ways back in: one of the
    member's recovery codes (`recover`, the handle, the code and the new password in the body only, the password typed
-   twice alike), an administrator's reset link, and, when no administrator can get in, the hosting account's way
-   (`HOSTING_CONTROL`, instance-setup R47, whose words state the steps). Every refusal of a code is one sentence.
+   twice alike), an administrator's reset link, and, when no administrator can get in, the hosting account's way in
+   members' words (`FORGOT_HELP`, instance-setup R47), drawn for every visitor; the founder's `HOSTING_CONTROL` block
+   is setup's only (R6). Every refusal of a code is one sentence.
    Self-contained (interface-shell R21). */
 
 export const forgot = {
@@ -24,10 +25,10 @@ export const forgot = {
         + `<div class="mk-acts">${cs.act("recover", { tone: "primary" })}</div>`));
     }
     out.push(cs.sec(S + "admin", `<p class="mk-note">${W(S + "admin.what")}</p>`));
-    // the hosting account's way (R4): HOSTING_CONTROL's words, which state the steps, carried by key
-    const hosting = [];
-    for (let i = 1; i < 20; i++) { const k = "screen.hosting.s" + i; const t = W(k); if (t === k) break; hosting.push(`<p>${t}</p>`); }
-    out.push(cs.sec(S + "hosting", `<p class="mk-note">${W(S + "hosting.what")}</p><div class="mk-note" id="hosting-control"><p><b>${W("screen.hosting.heading")}</b></p>${hosting.join("")}<p>${W("screen.hosting.guide")}</p></div>`));
+    // the hosting account's way (R4): FORGOT_HELP's words, carried by key, for every visitor; never HOSTING_CONTROL
+    const help = [];
+    for (let i = 1; i < 20; i++) { const k = S + "help.s" + i; const t = W(k); if (t === k) break; help.push(`<p class="mk-note">${t}</p>`); }
+    out.push(cs.sec(S + "help.heading", help.join("")));
     return out.join("");
   },
 
