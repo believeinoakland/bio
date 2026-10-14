@@ -626,7 +626,7 @@ test("R21: every label, prompt, ground and vocabulary op=affordances hands a sur
     if (a.rung_absence !== null) assert.ok(Object.hasOwn(r.vocabularies.rung_absence_grounds, a.rung_absence));
   }
   assert.deepEqual(r.vocabularies.rung_absence_grounds, VOCABULARIES.rung_absence_grounds);
-  assert.equal(r.vocabularies.rung_correction_path, VOCABULARIES.rung_correction_path);
+  assert.equal(r.vocabularies.rung_correction_key, VOCABULARIES.rung_correction_key);
 });
 
 /* ============================================================ R18: the roster agreement */
