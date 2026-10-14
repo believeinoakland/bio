@@ -81,3 +81,9 @@ B3: merged `tranche/T47` (wizard-scripts, setup-words, instance-setup, op-grades
 ## J5 · COMPLETE · re B3
 
 B3 merged at 2840e58403: 51 pass, 0 fail. B4's rulings match what is built, so the code is unchanged. My files still need entering in modules.json (listed in the record's Completion section).
+
+## Completion of B5, B6, B7 (CHANGE, K3152, K3153, K3157)
+
+- Merged `tranche/T47` (through action-producers and op-declarations, K3157): 51 pass, 0 fail.
+- B6: I ran my tests on a scratch copy of the branch with `job/T47/interface-shell` (@ f8251c4926) merged on top: 51 pass, 0 fail. One test was adjusted so it works with both kits. R1's sort test now reads each row's name without the panel control that the new kit draws beside it (R27). No code changed.
+- My tests compare requests by op only, so the new `bootstrap` request needs no filter.

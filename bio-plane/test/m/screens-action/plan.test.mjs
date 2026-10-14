@@ -5,7 +5,12 @@ import assert from "node:assert/strict";
 import { open, main, text, ops, press, last, ok, button, fill, refusedIn, beside, DATA_PLANE, ROUTES, PLAN, PLAN_ID, ESC, DET } from "./page.mjs";
 
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
-const rowsOrder = (p) => main(p).querySelectorAll("table.cs-rows tbody tr.cs-r").map((tr) => tr.querySelectorAll("td")[1].textContent.trim());
+// each row's name, without the row's own panel control the kit may draw beside it (interface-shell R27)
+const rowsOrder = (p) => main(p).querySelectorAll("table.cs-rows tbody tr.cs-r").map((tr) => {
+  const td = tr.querySelectorAll("td")[1];
+  const bare = td.querySelectorAll("button").reduce((t, b) => t.replace(b.textContent, ""), td.textContent).trim();
+  return bare || td.textContent.trim(); // the T46 kit draws the name inside the panel's control
+});
 
 test("R1: reads the plan: its matters (with support and escalation stage), options, scenarios, what each started option became, and the checks strip", async () => {
   const p = await open(ROUTES.plan, DATA_PLANE);
