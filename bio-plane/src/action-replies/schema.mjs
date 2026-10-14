@@ -1,4 +1,4 @@
-/* action-replies' tables (requirements: `build/requirements/action-replies.md`, R1, R2, R4; K23). Each is keyed by the
+/* action-replies' tables (requirements: `build/requirements/action-replies.md`, R1, R2, R4, R10; K23). Each is keyed by the
  * action's `bundle_id`, append-only but for a proposer's restatement of its own proposal (R1), and declared to
  * record-core's purge at creation. */
 
@@ -41,10 +41,23 @@ CREATE TABLE IF NOT EXISTS action_arose_from (
 CREATE INDEX IF NOT EXISTS action_arose_from_entry ON action_arose_from(bundle_id, ord);
 CREATE INDEX IF NOT EXISTS action_arose_from_project ON action_arose_from(project);
 CREATE INDEX IF NOT EXISTS action_arose_from_plan ON action_arose_from(plan, matter);
+
+-- R10: A MEMBER'S RECORD THAT A REPLY ASKS NOT TO BE QUOTED, or its withdrawal. Appended,
+-- never edited; the latest per received entry stands.
+CREATE TABLE IF NOT EXISTS action_reply_quoting (
+  seq         INTEGER PRIMARY KEY,
+  bundle_id   TEXT NOT NULL,   -- the request for comment
+  ord         INTEGER NOT NULL,-- the received entry's position
+  quotable    INTEGER NOT NULL, -- 0 the reply says it may not be quoted, 1 that record is withdrawn
+  words       TEXT,            -- the reply's own words that say so (null with quotable 1)
+  recorded_by TEXT NOT NULL,
+  recorded_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS action_reply_quoting_entry ON action_reply_quoting(bundle_id, ord, seq);
 `;
 
 /** The tables, each keyed to the action by `bundle_id` (R4; record-core R21). */
-export const ACTION_REPLIES_TABLES = Object.freeze(["action_reply_bearings", "action_bearing_proposals", "action_arose_from"]);
+export const ACTION_REPLIES_TABLES = Object.freeze(["action_reply_bearings", "action_bearing_proposals", "action_arose_from", "action_reply_quoting"]);
 
 /** Creates the tables; idempotent. */
 export function migrateActionReplies(sql) {

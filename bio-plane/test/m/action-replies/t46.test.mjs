@@ -163,7 +163,7 @@ test("R7 the six rows take their translations from words.json's refusal.<CODE>, 
                     ACTION_REPLY_CHECKS.AROSE_FROM_REFUSED.translation],
     ["C-150.7", AT("#arising", "is-arising-shape"), "What arose from the response is named as a project, or as a plan with one "
       + "of its matters, each by its id. This request named neither in that form, so nothing was linked."]);
-  assert.equal(Object.keys(ACTION_REPLY_CHECKS).length, 7);
+  assert.equal(Object.keys(ACTION_REPLY_CHECKS).length, 10, "these seven, and T48's C-150.8 to .10 (R10; quoting.test.mjs)");
 });
 
 test("R7 each act answers the re-worded row's words beside its control, BEARING_REFUSED at its one site here", () => {
