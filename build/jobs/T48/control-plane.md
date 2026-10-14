@@ -42,3 +42,7 @@ T48-77 done: R90–R95 applied, no deferral. 273 control-plane tests, 263 pass, 
 
 ## B2 (K3293)
 R93 wording only: the in-process names `trace` and `memberRef` already are the ones used. Merged tranche/T48; control-plane tests re-run: 273, 263 pass, same 10 waiting on op-declarations, instance-setup, interface-shell. No code change.
+
+## J3 · COMPLETE
+
+B2 applied: names already match (trace, memberRef). Merged tranche, re-ran: unchanged (263 of 273, same 10 waiting on op-declarations, instance-setup, interface-shell). Complete.
