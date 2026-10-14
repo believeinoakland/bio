@@ -30620,7 +30620,12 @@ CREATE TABLE IF NOT EXISTS register (
   path        TEXT NOT NULL,
   encoding    TEXT NOT NULL,
   bytes       INTEGER NOT NULL,
+  -- R1, R48 (T48; N1009, K3065): the instant the capture was FIRST registered, this module's clock, never moved by
+  -- a re-registration under the same bundle, so a reader asking which capture was first registered reads it here.
   registered  TEXT NOT NULL,
+  -- The instant of the LATEST register write, this module's clock; equal to registered after the first. NULL only
+  -- for an instant: a row written before the column existed is given its registered at migration, below.
+  last_registered TEXT,
   -- MK-1 / D-184 / IC-134 (MEMBER-KNOWLEDGE-DESIGN.md section 2). 1 when these
   -- bytes are a MEMBER'S OWN WORDS authored through op=testify, never a capture
   -- of something published. ONLY the testimony path writes 1, and promote's
@@ -30719,7 +30724,8 @@ var REGISTER_ADDITIVE = [
   ["register", "author", "TEXT"],
   ["register", "observed_at", "TEXT"],
   ["captured_locators", "reputation", "TEXT"],
-  ["captured_locators", "uploads", "TEXT"]
+  ["captured_locators", "uploads", "TEXT"],
+  ["register", "last_registered", "TEXT"]
 ];
 function migrateProvenance(sql) {
   const cols = (t2) => [...sql.exec(`PRAGMA table_info(${t2})`)].map((r) => r.name);
@@ -30735,6 +30741,10 @@ function migrateProvenance(sql) {
     if (t2) sql.exec(t2);
   }
   respellReceiptInstants(sql);
+  backfillLastRegistered(sql);
+}
+function backfillLastRegistered(sql) {
+  sql.exec(`UPDATE register SET last_registered = registered WHERE last_registered IS NULL`);
 }
 var WHOLE_SECOND = "strftime('%Y-%m-%dT%H:%M:%SZ', ?)";
 function respellReceiptInstants(sql) {
@@ -31698,21 +31708,25 @@ var Provenance = class {
       }
     };
   }
-  /* R1: the register write, after `commit`, in the same transaction. `registered` is this module's clock; the
-     authored columns are written from the testimony path's own key and never from the entry a caller sent. */
+  /* R1: the register write, after `commit`, in the same transaction. `registered` is this module's clock at the
+     capture's FIRST registration and `last_registered` its clock at this write; the authored columns are written from
+     the testimony path's own key and never from the entry a caller sent. */
   #project(c) {
-    const { pkg, bundleId, register: register3 } = c;
+    const { pkg, bundleId, register: register3, head } = c;
     const testimony = pkg && pkg[TESTIMONY_PATH] ? pkg[TESTIMONY_PATH] : null;
     const at49 = this.#now();
+    const revising = head ? 1 : 0;
     for (const r of Array.isArray(register3) ? register3 : []) {
       if (!r || typeof r.sha256 !== "string") continue;
       const own12 = !!(testimony && testimony.captureSha === r.sha256);
       this.#sql.exec(
-        `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,authored,author,observed_at)
-         VALUES (?,?,?,?,?,?,?,?,?)
+        `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,last_registered,authored,author,observed_at)
+         VALUES (?,?,?,?,?,?,?,?,?,?)
          ON CONFLICT(capture_sha) DO UPDATE SET
+           registered=CASE WHEN register.bundle_id = excluded.bundle_id AND ? = 1
+                           THEN register.registered ELSE excluded.registered END,
            bundle_id=excluded.bundle_id, path=excluded.path, encoding=excluded.encoding,
-           bytes=excluded.bytes, registered=excluded.registered,
+           bytes=excluded.bytes, last_registered=excluded.last_registered,
            authored=MAX(register.authored, excluded.authored),
            author=COALESCE(excluded.author, register.author),
            observed_at=COALESCE(excluded.observed_at, register.observed_at)`,
@@ -31722,9 +31736,11 @@ var Provenance = class {
         r.encoding ?? "utf8",
         r.bytes,
         at49,
+        at49,
         own12 ? 1 : 0,
         own12 ? testimony.author : null,
-        own12 ? testimony.observedAt : null
+        own12 ? testimony.observedAt : null,
+        revising
       );
     }
     return null;
@@ -33595,7 +33611,6 @@ var LIST_MAX = 1e3;
 var LINK_TARGET_MAX = 4096;
 var HEX644 = /^[0-9a-f]{64}$/;
 var stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
-var dayOf = (when = Date.now()) => new Date(when).toISOString().slice(0, 10);
 var hex4 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var shaOf = (v) => typeof v === "string" && HEX644.test(v.toLowerCase()) ? v.toLowerCase() : null;
 var json = (v) => {
@@ -34093,7 +34108,7 @@ async function unpack(store, { archiveSha = null, by = null, cls: cls3 = null, m
   const out = { documents: [], already_held: [], not_filed: [], nested: [] };
   const rowsByIndex = new Map(listing.entries.map((e2) => [e2.index, e2]));
   const waitingRows = inst.entryRows(sha2).filter((r) => r.state === "waiting");
-  const day2 = dayOf();
+  const day2 = at49.slice(0, 10);
   const call = { entries: 0, bytes: 0 };
   let stoppedOn = null, stoppedForCall = false;
   const ctx = {
@@ -77142,7 +77157,7 @@ var CONTEXT_SECTIONS = [
   "time_zone"
 ];
 var GroupRules = class {
-  constructor({ sql, record, combine: combine2, validate: validate2, profileIds, sourceRefusal, instant: instant5, dayOf: dayOf11 }) {
+  constructor({ sql, record, combine: combine2, validate: validate2, profileIds, sourceRefusal, instant: instant5, dayOf: dayOf10 }) {
     this.sql = sql;
     this.record = record;
     this.combine = combine2;
@@ -77150,7 +77165,7 @@ var GroupRules = class {
     this.profileIds = profileIds;
     this.sourceRefusal = sourceRefusal;
     this.instant = instant5;
-    this.dayOf = dayOf11;
+    this.dayOf = dayOf10;
   }
   #rows(qs, ...a) {
     return [...this.sql.exec(qs, ...a)];
@@ -99820,7 +99835,7 @@ var PATTERNS = Object.freeze([
 var plain3 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var list3 = (v, ...keys) => Array.isArray(v) ? v : plain3(v) ? keys.map((k) => v[k]).find(Array.isArray) || [] : [];
 var found2 = (r) => !!r && r.ok !== false && r.found !== false;
-var dayOf2 = (v) => {
+var dayOf = (v) => {
   const s = typeof v === "string" ? v : plain3(v) ? typeof v.value === "string" ? v.value : plain3(v.date) ? v.date.value : plain3(v.due) ? v.due.value : typeof v.start === "string" ? v.start : null : null;
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}/.test(s) ? s : null;
 };
@@ -99901,9 +99916,9 @@ var EVALUATORS = {
       } catch {
         occ = null;
       }
-      const due2 = occ ? dayOf2(occ.due) : null;
+      const due2 = occ ? dayOf(occ.due) : null;
       const metBy = occ ? list3(occ.evidence, "events")[0] || occ.matched || null : null;
-      const met = metBy ? dayOf2(metBy.when ?? metBy) : null;
+      const met = metBy ? dayOf(metBy.when ?? metBy) : null;
       late.push({ u, due: due2, met, event: metBy && (metBy.event_id ?? metBy.eventId ?? null) });
     }
     const t2 = { fields: [{ name: "due", type: "date" }, { name: "met", type: "date" }], rows: late.map((x) => ({ due: x.due ?? "", met: x.met ?? "" })) };
@@ -99941,7 +99956,7 @@ var EVALUATORS = {
           full = null;
         }
         if (!found2(full)) continue;
-        const start = dayOf2((full.event || full).when);
+        const start = dayOf((full.event || full).when);
         const rels = list3((full.event || full).relations, "in", "relations").filter((r) => plain3(r) && r.kind === "within");
         for (const rel of rels) {
           const pid = rel.from === id ? rel.to : rel.from;
@@ -99953,7 +99968,7 @@ var EVALUATORS = {
           }
           const p3 = found2(pe) ? pe.event || pe : null;
           if (!p3 || p3.kind !== "publication") continue;
-          units.push({ body, meeting: id, posting: pid, start, posted: dayOf2(p3.when), startDt: (full.event || full).when, postedDt: p3.when });
+          units.push({ body, meeting: id, posting: pid, start, posted: dayOf(p3.when), startDt: (full.event || full).when, postedDt: p3.when });
           if (units.length >= UNITS_MAX) break;
         }
       }
@@ -141545,7 +141560,7 @@ var int2 = (v) => {
 };
 var yes = (v) => v === true || v === "true" || v === "1" || v === 1;
 var isSha = (v) => typeof v === "string" && /^[0-9a-f]{64}$/.test(v);
-var dayOf3 = (iso8) => String(iso8).slice(0, 10);
+var dayOf2 = (iso8) => String(iso8).slice(0, 10);
 var td = new TextDecoder();
 var b643 = (bytes2) => {
   let s = "";
@@ -141891,8 +141906,8 @@ var Docket = class {
     if (kind2 === "outcome") {
       const o = parse4(outcome);
       const on = o && typeof o === "object" ? calendarDay(o.on) : null;
-      if (!o || typeof o !== "object" || !OUTCOME_KINDS2.includes(o.kind) || !on || on > dayOf3(at49))
-        return { refusal: refuse13("DOCKET_OUTCOME_UNREADABLE", `an outcome states {kind, on}: kind ${OUTCOME_KINDS2.join(" or ")}, on a calendar date no later than the filing's day (${dayOf3(at49)})`, { kind: o && typeof o.kind === "string" ? o.kind : null }) };
+      if (!o || typeof o !== "object" || !OUTCOME_KINDS2.includes(o.kind) || !on || on > dayOf2(at49))
+        return { refusal: refuse13("DOCKET_OUTCOME_UNREADABLE", `an outcome states {kind, on}: kind ${OUTCOME_KINDS2.join(" or ")}, on a calendar date no later than the filing's day (${dayOf2(at49)})`, { kind: o && typeof o.kind === "string" ? o.kind : null }) };
       if (!oneParagraph(summary2, SUMMARY_MAX))
         return { refusal: refuse13("DOCKET_NO_SUMMARY", `an outcome carries the member's summary, one paragraph of 1 to ${SUMMARY_MAX} characters`) };
       outcomeRow2 = { kind: o.kind, on };
@@ -142245,7 +142260,7 @@ var Docket = class {
     const x = kr.out;
     const prior = this.#one(`SELECT seq, digest FROM docket_entries WHERE case_id=? ORDER BY seq DESC LIMIT 1`, c.case);
     const seq = prior ? Number(prior.seq) + 1 : 1;
-    const date = dayOf3(this.#stamp(nowMs));
+    const date = dayOf2(this.#stamp(nowMs));
     const json24 = {
       format: ENTRY_FORMAT,
       group: slug2,
@@ -142258,7 +142273,7 @@ var Docket = class {
       date
     };
     if (placing) {
-      json24.received = dayOf3(rec.filed_at);
+      json24.received = dayOf2(rec.filed_at);
       json24.from = this.#fromName(c.case, recFields.from);
       if (kind2 === "receipt") json24.reason = `${RECEIPT_REASON}: ${reason2.trim()}`;
       else json24.capture = { sha256: rec.capture_sha, origin: recFields.capture.origin, archived: recFields.capture.archived };
@@ -190398,8 +190413,8 @@ function startOf(starts, ledger, receipts) {
   }
   return { day: ledger[firstSent].at.slice(0, 10), from: "sent" };
 }
-var dayOf4 = (dt2) => dt2 && typeof dt2.value === "string" ? dt2.value.slice(0, 10) : null;
-var earliestDay = (due2) => due2 && Array.isArray(due2.candidates) ? dayOf4(due2.candidates[0]) : dayOf4(due2);
+var dayOf3 = (dt2) => dt2 && typeof dt2.value === "string" ? dt2.value.slice(0, 10) : null;
+var earliestDay = (due2) => due2 && Array.isArray(due2.candidates) ? dayOf3(due2.candidates[0]) : dayOf3(due2);
 function whyOf(r) {
   const w = textOf5(r && (r.why || r.refused)) || "the count is undetermined";
   return w.replace(/the office calendar/g, "the profile's holiday calendar");
@@ -190442,7 +190457,7 @@ function computeDeadline(d, fm, view, { factOf = null, receipts = null } = {}) {
       start,
       ...said11,
       due: r.due,
-      ...Array.isArray(r.due && r.due.candidates) ? { candidates: r.due.candidates.map(dayOf4) } : {},
+      ...Array.isArray(r.due && r.due.candidates) ? { candidates: r.due.candidates.map(dayOf3) } : {},
       ...r.extension ? { extension: r.extension } : {},
       trace: isObj44(r.trace) ? { ...r.trace, ...said11 } : r.trace,
       ...calendar2
@@ -200721,7 +200736,7 @@ var instantMs2 = (v) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(v) ? Date.parse(`${v}T00:00:00Z`) : Date.parse(v);
 };
 var iso = (ms5) => stampInstant("second", ms5);
-var dayOf5 = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : Number.isFinite(v) ? new Date(v).toISOString().slice(0, 10) : null;
+var dayOf4 = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : Number.isFinite(v) ? new Date(v).toISOString().slice(0, 10) : null;
 var quoted4 = (v) => `"${String(v).trim().replace(/\s*\n\s*/g, " ")}"`;
 var DRAFTED_BY = "system";
 function overdueSince(text7, date, nowMs, place8) {
@@ -201157,7 +201172,7 @@ var Escalation = class _Escalation {
           item3.election = { state: "undetermined", says: "the active profiles do not say whether this office is elected" };
         if (a.purpose === "oversight_request" || a.purpose === "audit_request") {
           const target = isObj46(visible.counterparty) ? str47(visible.counterparty.entity_id) || null : null;
-          const l2 = this.#oversightLines(target, actor, dayOf5(a.at), viewer);
+          const l2 = this.#oversightLines(target, actor, dayOf4(a.at), viewer);
           const doubt = l2.state === "none" && l2.undetermined.length ? { undetermined: l2.undetermined } : {};
           if (l2.state === "held")
             item3.oversight = { state: "held", lines: l2.lines, says: "this office holds a line by which it oversees the actor's office on the attachment's day; the line governs over the profile" };
@@ -201363,7 +201378,7 @@ var Escalation = class _Escalation {
     if (e2.state === STOPPED)
       answer2.stopped = { since: e2.stateSince, stage: e2.stage, says: "stopped pursuing: the group decided to stop pursuing this escalation. It proposes nothing, it is not ended and it is not a success; a member may reopen it at this stage" };
     if (e2.state === "ended") answer2.ended = { at: e2.stateSince, says: "ended: compliance was restored and the consequences addressed" };
-    if (e2.stage === 7) answer2.targets = this.#targets(actor, dayOf5(at49), viewer);
+    if (e2.stage === 7) answer2.targets = this.#targets(actor, dayOf4(at49), viewer);
     if (e2.stage === 5) {
       const av = this.filings.availableActions({ determination: e2.determination, viewer });
       answer2.available = av && av.ok !== false ? av : { state: "undetermined", says: "the actions available against the determination's offices could not be read" };
@@ -201722,7 +201737,7 @@ var Escalation = class _Escalation {
     const a = typeof action2 === "string" && action2 ? this.actions.actionRead({ id: action2, viewer }) : null;
     if (!a || a.ok === false) return noSuchAction(action2);
     const at49 = Number.isFinite(nowMs) ? nowMs : instantMs2(this.now());
-    const day2 = dayOf5(at49);
+    const day2 = dayOf4(at49);
     if (e2.stage !== 7)
       return {
         ok: true,
@@ -203284,7 +203299,7 @@ function checkPhases(phases2, { chosen, subjects }) {
   return { phases: out };
 }
 var ms2 = (iso8) => typeof iso8 === "string" ? Date.parse(iso8) : NaN;
-var dayOf6 = (msv) => new Date(msv).toISOString().slice(0, 10);
+var dayOf5 = (msv) => new Date(msv).toISOString().slice(0, 10);
 var iso2 = (msv) => new Date(msv).toISOString().replace(/\.\d{3}Z$/, "Z");
 function phaseTimes(phases2, { setAt, judged, track, duty = () => null }) {
   const byId = new Map(phases2.map((p3) => [p3.id, p3]));
@@ -204684,7 +204699,7 @@ var ActionPlans = class {
       const held2 = this.duties.readDuty({ dutyId: duty, viewer: dutyViewer(viewer) });
       if (!ok(held2) || held2.found !== true) return noSuchDuty(duty, { index: i });
       if (occurrence === void 0) continue;
-      const r = this.duties.occurrencesOf({ dutyId: duty, asOf, to: dayOf6(msOf(asOf) + 731 * DAY_MS6), viewer: dutyViewer(viewer) });
+      const r = this.duties.occurrencesOf({ dutyId: duty, asOf, to: dayOf5(msOf(asOf) + 731 * DAY_MS6), viewer: dutyViewer(viewer) });
       if (!ok(r)) return r.code === "NO_SUCH_DUTY" ? noSuchDuty(duty, { index: i }) : r;
       const keys = new Set((r.occurrences || []).map((x) => x.key));
       for (const t2 of (this.duties.transitionsOf({ dutyId: duty, viewer: dutyViewer(viewer) }) || {}).transitions || []) keys.add(t2.occurrence_key);
@@ -206157,7 +206172,7 @@ function ordOf5(v) {
   if (typeof v === "string" && /^\d{1,6}$/.test(v.trim())) return Number(v.trim());
   return null;
 }
-var dayOf7 = (v) => {
+var dayOf6 = (v) => {
   const s = typeof v === "string" ? v.slice(0, 10) : "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
   const d = /* @__PURE__ */ new Date(`${s}T00:00:00Z`);
@@ -206508,11 +206523,11 @@ var ActionReplies = class _ActionReplies {
   #openRow(a) {
     const ledger = (Array.isArray(a.correspondence) ? a.correspondence : []).filter((e2) => e2 && typeof e2 === "object");
     const sent = ledger.filter((e2) => e2.direction === "sent").sort((p3, q10) => p3.ord - q10.ord)[0];
-    const asked = sent ? dayOf7(sent.at) : null;
+    const asked = sent ? dayOf6(sent.at) : null;
     if (!asked) return null;
     const cp = a.counterparty && typeof a.counterparty === "object" ? a.counterparty : {};
     const whom = counterpartyName(cp) || (cp.state === "audience" && typeof cp.description === "string" && cp.description.trim() ? cp.description.trim() : null) || "an addressee not yet named";
-    const win = (Array.isArray(a.clock) ? a.clock : []).find((c) => c && typeof c === "object" && c.status !== "waived" && dayOf7(c.date));
+    const win = (Array.isArray(a.clock) ? a.clock : []).find((c) => c && typeof c === "object" && c.status !== "waived" && dayOf6(c.date));
     const received = ledger.filter((e2) => e2.direction === "received").map((e2) => e2.ord);
     let answers2 = null;
     if (received.length) {
@@ -206523,7 +206538,7 @@ var ActionReplies = class _ActionReplies {
       if (Array.isArray(claims) && claims.length)
         answers2 = { answered: claims.filter((c) => c && c.bearing !== NOT_ADDRESSED).length, claims: claims.length };
     }
-    return { whom, asked_at: asked, window_closes: win ? dayOf7(win.date) : null, answers: answers2, replied: received.length > 0 };
+    return { whom, asked_at: asked, window_closes: win ? dayOf6(win.date) : null, answers: answers2, replied: received.length > 0 };
   }
 };
 for (const m of ["actionReplyBearing", "actionBearingPropose", "bearingsOf", "aroseFromLink", "aroseFrom", "arisenFrom"]) {
@@ -210769,7 +210784,7 @@ var sightOf = (v) => v === null || v === void 0 ? PLANE2 : v;
 var OFFER_KINDS2 = Object.freeze(["document_infraction", "chance_to_fix"]);
 var msOf2 = (v) => typeof v !== "string" || !v ? NaN : /^\d{4}-\d{2}-\d{2}$/.test(v) ? Date.parse(`${v}T00:00:00Z`) : Date.parse(v);
 var iso5 = (ms5) => stampInstant("second", ms5);
-var dayOf8 = (ms5) => new Date(ms5).toISOString().slice(0, 10);
+var dayOf7 = (ms5) => new Date(ms5).toISOString().slice(0, 10);
 var ok2 = (r) => !!r && r.ok !== false;
 var unjson3 = (s, d = null) => {
   try {
@@ -211076,7 +211091,7 @@ var PlanWork = class {
         dtstart: recurrence.dtstart,
         zone,
         from: recurrence.dtstart,
-        to: dayOf8(msOf2(recurrence.dtstart) + 400 * DAY_MS7)
+        to: dayOf7(msOf2(recurrence.dtstart) + 400 * DAY_MS7)
       }) : null;
       if (!r || !Array.isArray(r.instances) || !r.instances.length)
         return refusal34("REVIEW_RHYTHM_REFUSED", !zone ? "no time zone was given and none is held for this place. Nothing was written." : `a rhythm is {rrule, dtstart: YYYY-MM-DD, zone?} in the recurrence subset (weekly, monthly or yearly)${r && r.reason ? `: ${r.reason}` : ""}. Nothing was written.`);
@@ -211124,8 +211139,8 @@ var PlanWork = class {
       if (!rec) continue;
       const p3 = this.#plan(r.plan_id, null, now);
       if (!p3 || p3.state === "closed") continue;
-      const from = dayOf8(Math.max(msOf2(r.at), now - 400 * DAY_MS7));
-      const x = safeExpand({ rrule: rec.rrule, dtstart: rec.dtstart, zone: rec.zone, from, to: dayOf8(now + DAY_MS7) });
+      const from = dayOf7(Math.max(msOf2(r.at), now - 400 * DAY_MS7));
+      const x = safeExpand({ rrule: rec.rrule, dtstart: rec.dtstart, zone: rec.zone, from, to: dayOf7(now + DAY_MS7) });
       const due2 = (x && Array.isArray(x.instances) ? x.instances : []).filter((i) => msOf2(i.instant) <= now && msOf2(i.instant) >= msOf2(r.at) - DAY_MS7).at(-1);
       if (!due2) continue;
       const last = this.#lastReview(p3.id);
@@ -241639,7 +241654,7 @@ function readBodyName(name3, ctx) {
 }
 var given5 = (v) => v === void 0 ? null : v;
 var DAY4 = /^(\d{4}-\d{2}-\d{2})(?:T00:00:00(?:\.0+)?)?$/;
-function dayOf9(v) {
+function dayOf8(v) {
   if (typeof v !== "string") return given5(v);
   const m = DAY4.exec(v.trim());
   return m ? m[1] : v;
@@ -241683,7 +241698,7 @@ var READERS = {
     };
   },
   officerecords(o, ctx, at49) {
-    const end2 = o.OfficeRecordEndDate == null || o.OfficeRecordEndDate === "" ? null : dayOf9(o.OfficeRecordEndDate);
+    const end2 = o.OfficeRecordEndDate == null || o.OfficeRecordEndDate === "" ? null : dayOf8(o.OfficeRecordEndDate);
     const day2 = typeof at49 === "string" && /^\d{4}-\d{2}-\d{2}/.test(at49) ? at49.slice(0, 10) : null;
     const planned = end2 === null ? false : day2 === null || !/^\d{4}-\d{2}-\d{2}$/.test(end2) ? null : end2 > day2;
     return {
@@ -241694,7 +241709,7 @@ var READERS = {
         PersonId: given5(o.OfficeRecordPersonId),
         BodyId: given5(o.OfficeRecordBodyId),
         role: given5(o.OfficeRecordMemberType),
-        start: dayOf9(given5(o.OfficeRecordStartDate)),
+        start: dayOf8(given5(o.OfficeRecordStartDate)),
         end: end2
       },
       extra: {
@@ -241769,10 +241784,10 @@ var READERS = {
         MatterFile: given5(o.MatterFile),
         type: given5(o.MatterTypeName),
         status: given5(o.MatterStatusName),
-        intro_date: dayOf9(given5(o.MatterIntroDate)),
-        passed_date: dayOf9(given5(o.MatterPassedDate)),
+        intro_date: dayOf8(given5(o.MatterIntroDate)),
+        passed_date: dayOf8(given5(o.MatterPassedDate)),
         enactment_number: given5(o.MatterEnactmentNumber),
-        enactment_date: dayOf9(given5(o.MatterEnactmentDate))
+        enactment_date: dayOf8(given5(o.MatterEnactmentDate))
       }
     };
   }
@@ -284372,7 +284387,7 @@ var bare3 = (m) => {
 var isMachine7 = (m) => typeof m === "string" && (m.startsWith(MACHINE_AUTHOR_PREFIX) || m.startsWith(MACHINE_CLASS_PREFIX));
 var instantOf3 = (ms5) => new Date(ms5).toISOString().replace(/\.\d{3}Z$/, "Z");
 var INSTANT4 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
-var dayOf10 = (v) => {
+var dayOf9 = (v) => {
   const d = typeof v === "string" ? v.slice(0, 10) : "";
   return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
 };
@@ -284880,7 +284895,7 @@ var NoticeProducers = class _NoticeProducers {
   static #toldBefore(item3, ends) {
     const due2 = item3 && item3.subject ? item3.subject.due : null;
     const first = due2 && Array.isArray(due2.candidates) ? due2.candidates[0] : due2;
-    const day2 = first && typeof first === "object" ? dayOf10(first.value) : null;
+    const day2 = first && typeof first === "object" ? dayOf9(first.value) : null;
     const zone = first && typeof first === "object" && filled18(first.zone) ? first.zone : null;
     if (!day2 || !zone) return false;
     try {
@@ -284928,8 +284943,8 @@ var NoticeProducers = class _NoticeProducers {
     if (!state) return null;
     const body = due2 && Array.isArray(due2.candidates) ? due2.candidates[due2.candidates.length - 1] : due2;
     const first = due2 && Array.isArray(due2.candidates) ? due2.candidates[0] : due2;
-    const dueDay2 = body && typeof body === "object" ? dayOf10(body.value) : dayOf10(body);
-    const firstDay = first && typeof first === "object" ? dayOf10(first.value) : dayOf10(first);
+    const dueDay2 = body && typeof body === "object" ? dayOf9(body.value) : dayOf9(body);
+    const firstDay = first && typeof first === "object" ? dayOf9(first.value) : dayOf9(first);
     const sinceDay = state === "overdue" ? dueDay2 : firstDay;
     const sinceZone = state === "overdue" ? body && typeof body === "object" ? body.zone : null : first && typeof first === "object" ? first.zone : null;
     const today2 = _NoticeProducers.#localDay(now, this.#zone() ?? (filled18(sinceZone) ? sinceZone : null));
@@ -284997,7 +285012,7 @@ var NoticeProducers = class _NoticeProducers {
     if (!r || r.ok === false || !Array.isArray(r.waits)) return { items: [], facts: {} };
     const byKey = /* @__PURE__ */ new Map();
     for (const w of r.waits) {
-      if (!w || w.state !== "due" || !filled18(w.inquiry) || !dayOf10(w.date) || bare3(w.set_by) !== me) continue;
+      if (!w || w.state !== "due" || !filled18(w.inquiry) || !dayOf9(w.date) || bare3(w.set_by) !== me) continue;
       const id = `OBLIGATION::inquiry-recheck-due::${w.inquiry}::${w.date}`;
       if (!byKey.has(id)) byKey.set(id, []);
       byKey.get(id).push(w);
@@ -285598,7 +285613,7 @@ var NoticeProducers = class _NoticeProducers {
    *  the local day it was reached; null when neither is read. */
   static #periodEnd(period, start, day2) {
     if (period === "day") return untilWords("day");
-    const from = dayOf10(start) ?? dayOf10(day2);
+    const from = dayOf9(start) ?? dayOf9(day2);
     const m = from ? Number(from.slice(5, 7)) : NaN;
     return Number.isInteger(m) && m >= 1 && m <= 12 ? untilWords(period, m % 12 + 1) : null;
   }
@@ -285675,9 +285690,9 @@ var NoticeProducers = class _NoticeProducers {
       const reminder = e2.kind === "reminder";
       return this.#r17Item(me, viewer, now, "OBLIGATION", reminder ? "step-reminder" : "step-date-due", e2.key, {
         homes: [],
-        due: dayOf10(e2.date),
-        day: dayOf10(e2.date),
-        fills: { step: filled18(e2.work) ? e2.work : this.#workOf(e2.step, viewer), date: dayInSentence(dayOf10(e2.date), today2) },
+        due: dayOf9(e2.date),
+        day: dayOf9(e2.date),
+        fills: { step: filled18(e2.work) ? e2.work : this.#workOf(e2.step, viewer), date: dayInSentence(dayOf9(e2.date), today2) },
         subject: { kind: "step", id: e2.step, work: e2.work ?? null, date: e2.date ?? null },
         basis: {
           source: "steps.stepsDue",
@@ -285747,9 +285762,9 @@ var NoticeProducers = class _NoticeProducers {
       const reminder = e2.kind === "reminder";
       return this.#r17Item(me, viewer, now, reminder ? "OBLIGATION" : "FINDING", reminder ? "milestone-reminder" : "milestone-overdue", e2.key, {
         homes: filled18(e2.project) ? [e2.project] : [],
-        due: dayOf10(e2.date),
-        day: dayOf10(e2.date),
-        fills: { milestone: filled18(e2.name) ? e2.name : String(e2.milestone ?? ""), date: dayInSentence(dayOf10(e2.date), today2) },
+        due: dayOf9(e2.date),
+        day: dayOf9(e2.date),
+        fills: { milestone: filled18(e2.name) ? e2.name : String(e2.milestone ?? ""), date: dayInSentence(dayOf9(e2.date), today2) },
         subject: { kind: "milestone", id: e2.milestone ?? null, project: e2.project ?? null, name: e2.name ?? null, date: e2.date ?? null },
         basis: {
           source: "investigation.milestonesOverdue",
@@ -285901,7 +285916,7 @@ var NoticeProducers = class _NoticeProducers {
   /** R13, R14, R15: the local day of an instant in `zone`, as `following` reads it; its own first ten characters when it
    *  is no instant civil-time reads, else "an earlier date". */
   static #localDate(at49, zone) {
-    return _NoticeProducers.#localDay(at49, zone) ?? dayOf10(at49) ?? "an earlier date";
+    return _NoticeProducers.#localDay(at49, zone) ?? dayOf9(at49) ?? "an earlier date";
   }
 };
 var OF16 = /* @__PURE__ */ new WeakMap();
