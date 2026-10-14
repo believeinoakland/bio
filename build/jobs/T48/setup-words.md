@@ -1,6 +1,6 @@
 # setup-words (T48)
 
-**Status** · session_01WvshQ6CPE3B9m9XqQMCTYo · depth 2 · WORKING · handled B1
+**Status** · session_01WvshQ6CPE3B9m9XqQMCTYo · depth 2 · COMPLETE · handled B1
 
 **Read, whole:** `build/requirements/setup-words.md`; my entries T48-61 (three) in `build/plan/current.md` and B1; the layer-11 row of `build/layers.md`; the T47 record and its generator; my test; my module's header (its data rows are generated and were replaced whole; checked word by word by the test). Uses: none. No flaw found in the module or its test.
 **Entry applied:** T48-61 first line (N847, N1047; DEC-221, DEC-226, DEC-227; R8). `bio-plane/src/setup-words/index.mjs` regenerated with the T47 generator (header now naming R1–R3, R5–R8 and this record; the generator is unchanged otherwise, recorded in `build/jobs/T47/setup-words.md`) over `git show 4664e8efd4:docs/development/ux-substrate/screens/words.json` (PR #34's merge): `WORDS_COMMIT` `"4664e8efd4"`, **1,895 rows, 652 protected**; no row's `en` holds "labelled".
