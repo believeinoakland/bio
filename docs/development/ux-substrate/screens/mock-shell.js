@@ -51,7 +51,7 @@ function mast(c, s) {
 // names the thing shown (a question's words, a person's name); the path names the screen.
 const PATH = {
   site: ['civicsmith.org'], install: ['Civicsmith', 'Create your group'], update: ['Civicsmith', 'Update'], front: ['Lakeshore Tenants'], forgot: ['Lakeshore Tenants', 'Forgot your password'], tour: ['Lakeshore Tenants', 'How we work'], 'help-records': ['Help', 'How a records request works'], reset: ['Lakeshore Tenants', 'Choose a new password'], 'review-outside': ['Lakeshore Tenants', 'Review copy'],
-  group: ['Settings', 'Your group'], settings: ['Settings'], projects: ['Projects'], people: ['People'], 'dash-home': ['Home'], 'dash-action': ['Action'], 'dash-project': ['The Coliseum lease'], unavailable: ['Can\'t open this'], setup: ['Set up', 'Places and languages'], join: ['Lakeshore Tenants', 'Your invitation'],
+  group: ['Settings', 'Your group'], settings: ['Settings'], projects: ['Projects'], people: ['People'], 'dash-action': ['Action'], 'dash-project': ['The Coliseum lease'], unavailable: ['Can\'t open this'], setup: ['Set up', 'Places and languages'], join: ['Lakeshore Tenants', 'Your invitation'],
   doorbell: ['Lakeshore Tenants', 'Hand material over'], published: ['Lakeshore Tenants', 'Published cases', 'The Coliseum lease'],
   home: ['Home'], queue: ['Queue'], 'due-date': ['Queue', 'Due date'], inbox: ['Queue', 'Inbox'],
   finder: ['Find'], capture: ['Add'], held: ['Add', 'Held captures'], archive: ['Add', 'Held captures', 'Archive'], 'open-file': ['Projects', 'The Coliseum lease', 'Opening a file'],

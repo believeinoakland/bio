@@ -429,7 +429,6 @@ const SCREEN_HELP = {
   group: 'Administrators only: your group\'s name, website, languages, court notice, hosting account and bar.',
   settings: 'Every setting in one list: yours first, then the group\'s.',
   projects: 'Every project you can see: its stage, who works on it, how busy it is, and when it last changed.',
-  'dash-home': 'Home drawn three ways for your choice (S20): what needs you first, a card per area, or an area under a strip.',
   'dash-action': 'The Action area as a dashboard: clocks and whose move it is first, then what needs you, then every action.',
   'dash-project': 'One project as a dashboard: your next steps here, the project at a glance, its story so far, and its activity.',
   people: 'The people and organisations your group\'s record follows, those named in your projects first, each with how often the record names them. Your own members are under Settings › Members.',
@@ -438,7 +437,7 @@ const SCREEN_HELP = {
   setup: 'The first administrator\'s setup: claim the installation, then name the group, choose its places and languages, and decide how members reach the assistant.',
   'group-identity': 'What kind of group yours is, what it focuses on and why it exists. It shapes how members are welcomed and locks nothing.',
   join: 'Your invitation to join a group. Choose your language, the name the group will know you by, and a password.',
-  home: 'Your group\'s home: what it is working on and what is waiting on you. Start here each day.',
+  home: 'Your group\'s home, the nerve centre: what needs you, what needs the group, every area at a glance, the projects and what changed since you last looked. Start here each day.',
   members: 'Everyone in your group and what each may do. Administrators invite members, set what they may do, and see who holds the hosting account.',
   places: 'Administrators only: the places whose rules your group\'s Civicsmith follows (deadlines, holidays, offices, records laws), and the offices and seats your group deals with.',
   recovery: 'Your own recovery codes, which let you set a new password if you lose yours. Each works once.',
@@ -485,7 +484,7 @@ const SCREEN_HELP = {
   doorbell: 'Hand material to the group. You need no account; the page says what will happen to what you send.',
 };
 const RAIL_HELP = {
-  home: 'Home: what your group is working on and what is waiting on you.',
+  home: 'Home: what needs you, what needs the group, and every area at a glance.',
   queue: 'Queue: everything waiting on you, in one list.',
   find: 'Find: search what your group holds, or look outside for something new.',
   add: 'Add: capture a document, a file, or what you saw yourself.',

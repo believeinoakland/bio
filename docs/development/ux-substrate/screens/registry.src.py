@@ -30,8 +30,8 @@ screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpo
   [('groupdescriptionset','Save who your group is, and who sees it'),('groupdescriptiondraft','Ask the assistant to help write it')], [2])
 screen('join', 'Your invitation', 'setup', 'The invitation link opens here: language, handle, password.',
   [('invitelook','Read the invitation'),('memberlanguageset','Choose your language'),('handlecheck','See whether a handle is free'),('enroll','Join with a handle and password'),('joinlinkinvite','Join through the group\'s join link')], [3,28])
-screen('home', 'Your group\'s home', 'working', 'What the group is working on, what waits on you, and "What happened?", the door to a first step.',
-  [('promote','Start a project'),('startfrom','Start from…')], [3,6])
+screen('home', 'Your group\'s home', 'working', 'The group\'s nerve centre (Bob\'s S20, DEC-218: one home for everyone, arrangement C): the strip, what needs you, what needs the group, each area at a glance, the projects, what changed since you last looked, and "What happened?", the door to a first step; a new member\'s first visit and a new group\'s empty home as states.',
+  [('release','Vouch for photos'),('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('filingapprove','Approve the text'),('taskresolve','Act on an item'),('promote','Start a project'),('startfrom','Start from…')], [3,6])
 screen('members', 'Members', 'working', 'The roster: invitations, capabilities, expertise, administrators, joining through the website.',
   [('memberadd','Invite a member'),('owed:passwordresetlink DEC-201','Make a reset link for a member'),('signerset','Withdraw a member\'s signing key'),('membercaps','Change what a member may do'),('memberset','Change a member\'s status'),('adminendorse','Endorse an administrator'),
    ('adminremove','Remove an administrator'),('expertiseconfirm','Confirm declared expertise'),('invitewithdraw','Withdraw an unused invitation'),('websitekeycreate','Create a website key'),('joinlinkenable','Turn on the reusable join link'),
@@ -60,8 +60,6 @@ screen('wizards', 'Wizards', 'working', 'The group\'s wizard library: offered, d
 
 # --- daily work
 screen('projects', 'Projects', 'working', 'Every project the member may see, with its owner, questions and stage (projectlist; DEC-201).', [('promote','Start a project')], [6])
-screen('dash-home', 'Home as a dashboard (three arrangements)', 'working', 'Treatments for S20 (Bob\'s direction of 11 October, K2803; DEC-214; his direction of 13 October, DEC-216: a complete home, the rail on every dashboard): one complete home in three orders: C, what needs you first, then each area at a glance; A, each area first with what needs you inside it; B, the instrument panel, ten readings in fixed places under a collapsed rail. Needs the group, the projects table, what changed since you last looked.',
-  [('release','Vouch for photos'),('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('filingapprove','Approve the text'),('taskresolve','Act on an item'),('promote','Open a question'),('startfrom','Start from…')], [])
 screen('dash-action', 'The Action dashboard', 'working', 'An area dashboard in three tiers (DEC-214): status (clocks running, our move, their move, replies to read), what needs you, then every action with whose move it is and its clock as a sentence.',
   [('filingapprove','Approve the text'),('reminderanswer','Answer a reminder'),('taskresolve','Start the next step'),('actioncreate','Start an action')], [22])
 screen('dash-project', 'A project\'s dashboard', 'working', 'A project as a dashboard (DEC-214): the next steps for the member here, in order, each the act itself; the project at a glance; the story so far as a timeline in brief; who works on it and how busy it is.',

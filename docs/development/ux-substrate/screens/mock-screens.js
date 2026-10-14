@@ -185,10 +185,10 @@ SCR.projects = c => ({ rail: 'projects', title: 'Projects', crumbs: ['Projects']
    dashboards page). Three arrangements of Home, then two area dashboards: the three tiers (status, what needs you,
    everything else), whose move it is on every action item, and the five-second and three-step tests. */
 /* DEC-216 (Bob's direction, 13 October, evening): the home is a nerve centre, complete in itself, never only doors to the
-   areas; and every dashboard keeps the rail of every other screen, collapsed to icons where the room is wanted. Three
-   arrangements of the same complete home, drawn as states to compare for S20: C, what needs you first, then each area at a
-   glance; A, the areas first, each block complete with what needs you inside it; B, the instrument panel, every reading in a
-   fixed place, then the lists, under a collapsed rail. */
+   areas; every dashboard keeps the rail of every other screen, collapsed to icons where the room is wanted. DEC-218 (Bob's
+   S20, 14 October): one home for everyone, arrangement C: what needs you first, then what needs the group, each area at a
+   glance, the projects, what changed since you last looked, and the door "What happened?". The areas-first and
+   instrument-panel arrangements are set aside; a member's choice among arrangements is held in reserve. */
 const AREA_TIPS = {
   Investigation: '<b>Investigation</b> · its dashboard: documents to check, questions and how strong their answers are, what came in since you last looked, the people the record follows',
   Action: '<b>Action</b> · its dashboard: every clock that is running, whose move it is, replies that came in, letters waiting for a second approval',
@@ -200,24 +200,22 @@ const AREA_GO = { Investigation: 'project', Action: 'dash-action', Publication: 
 const rd = (n, label) => `<span class="mk-rd"><b>${n}</b>${esc(label)}</span>`;
 // an area at a glance: its name opens its dashboard; what needs you there; two to four readings; a line or two of state; and, in arrangement A, the items themselves
 const ablock = (title, needs, readings, lines, inner) => `<div class="mk-ablock"><div class="h">${ref(`<b>${esc(title)}</b>`, AREA_GO[title], AREA_TIPS[title])}<span class="need${needs ? '' : ' quiet'}">${needs || 'nothing needs you here'}</span></div><div class="rd">${readings.join('')}</div>${lines.length ? `<ul class="mk-list mk-small">${lines.map(l => `<li>${l}</li>`).join('')}</ul>` : ''}${inner || ''}</div>`;
-const abitem = (text, d, b) => `<div class="mk-abitem">${kindm('todo')}<span class="t">${text}</span>${d}<span class="acts">${b}</span></div>`;
-const AREA_ROWS = {
-  Investigation: abitem('Vouch for 3 photos you captured on Seminary Avenue', due('', 'Today'), btn('release', 'Vouch for them')) +
-    abitem('Decide on a newer version of the 2024 lease amendment you cited', due('near', 'Due Friday'), btn('adoptversion', 'Adopt the newer version') + btn('keepversion', 'Keep the version you cited')) +
-    abitem('Ana asked you to check a calculation', due('', 'Due 16 October'), btn('taskresolve', 'Open the check')),
-  Action: abitem('Approve the follow-up letter to the City Administrator, drafted by Rosa', due('near', 'Before Friday'), btn('filingapprove', 'Read and approve it')),
-};
-const AREA_BLOCKS = withRows => `<div class="mk-ablocks">${[
-  ablock('Investigation', '3 to do', [rd(142, ' documents'), rd(6, ' questions open'), rd(10, ' people followed')], ['2 questions meet the bar · 1 new this week', '7 things came in since you last looked: Dev captured the rent schedules yesterday'], withRows ? AREA_ROWS.Investigation : ''),
-  ablock('Action', '1 to approve', [rd(3, ' clocks running'), rd(1, ' our move'), rd(2, ' their move')], ['Our move: the follow-up letter, due Friday', 'Their move: the City Administrator\'s reply, overdue since 9 October; the City Clerk\'s reply, due 14 October'], withRows ? AREA_ROWS.Action : ''),
+const AREA_BLOCKS = () => `<div class="mk-ablocks">${[
+  ablock('Investigation', '3 to do', [rd(142, ' documents'), rd(6, ' questions open'), rd(10, ' people followed')], ['2 questions meet the bar · 1 new this week', '7 things came in since you last looked: Dev captured the rent schedules yesterday']),
+  ablock('Action', '1 to approve', [rd(3, ' clocks running'), rd(1, ' our move'), rd(2, ' their move')], ['Our move: the follow-up letter, due Friday', 'Their move: the City Administrator\'s reply, overdue since 9 October; the City Clerk\'s reply, due 14 October']),
   ablock('Publication', '', [rd(1, ' case'), rd(2, ' editions'), rd(0, ' waiting to sign')], ['Edition 2 of the Coliseum case published 18 September', 'A draft is shared for review until 20 October; no comment to answer']),
   ablock('Members', '', [rd(6, ' members'), rd(1, ' administrator'), rd(1, ' invited')], ['Expertise on hand: Ana, CPA (confirmed); Teo, reporter (declared)', 'Mai K.\'s invitation link is out, unused']),
   ablock('Administration', '', [rd('0.83.0', ' this release'), rd('usual', ' security level')], ['Places: Oakland, California · languages: English, Español'], meter('This month on the group\'s key', 31.40, 60).replace('class="mk-meter"', 'class="mk-meter small"')),
 ].join('')}</div>`;
+// a new group's home: every block written in its empty state, each naming the first step that fills it (DEC-218)
+const AREA_BLOCKS_EMPTY = () => `<div class="mk-ablocks">${[
+  ablock('Investigation', '', [rd(0, ' documents'), rd(0, ' questions'), rd(0, ' people followed')], ['Nothing yet. A question opens from “What happened?” below, or from a document you capture under Add.']),
+  ablock('Action', '', [rd(0, ' clocks running')], ['Nothing yet. An action starts from a project\'s plan, once a question has something to act on.']),
+  ablock('Publication', '', [rd(0, ' cases')], ['Nothing yet. A case grows from questions whose answers meet your group\'s bar.']),
+  ablock('Members', '', [rd(1, ' member'), rd(1, ' administrator')], ['Only you so far. Invite your first members from Members; each gets a link you send yourself.']),
+  ablock('Administration', '', [rd('0.83.0', ' this release'), rd('usual', ' security level')], ['The assistant is not set up: hold the group\'s key on Members, or members connect their own accounts.']),
+].join('')}</div>`;
 const RECENT = sheet(row(I('capture'), 'Dev captured the rent schedules for 2024', '<span class="muted">yesterday</span>') + row(I('timeline'), 'Teo added two events to the Coliseum lease timeline', '<span class="muted">Monday</span>') + row(I('money'), 'Ana started the money trail “Sewer fund transfers, FY2022”', '<span class="muted">3 weeks ago</span>'));
-// B, the instrument panel: the same ten readings in the same places every day; a reading at zero still shows
-const CLUSTER = `<div class="mk-cluster">${tiles(tile('Needs you', '4', '1 due today', null), tile('Our move', '1', 'due Friday', null), tile('Their move', '2', '1 overdue', null), tile('To check', '4', 'oldest waiting 6 days', null), tile('Replies to read', '1', 'came in 18 September', null), tile('Documents', '142', '+9 this month', [6, 4, 9, 7, 5, 8, 6, 9]), tile('Questions', '6', '2 meet the bar', [0, 1, 0, 0, 1, 0, 0, 1]), tile('Cases', '1', 'Edition 2 published', null), tile('Members', '6', '1 invited', null), tile('The assistant', '52%', 'of this month\'s limit', null))}</div>`;
-const DASH_ST = { c: 'a', a: 'b', b: 'c' };
 const STRIP = strip([[1, 'due Friday · our move', 'queue', '<b>Decide on the newer lease amendment</b> · due Friday · the group\'s own window<span class=more>Opens your queue at it.</span>'], [1, 'reply overdue · their move', 'action', '<b>Demand to rescind</b> · the City Administrator\'s reply was due 9 October; none recorded<span class=more>Opens the action.</span>'], [2, 'to check', 'queue', '<b>Two checks asked of you</b>: a calculation Ana asked you to check, and 3 photos to vouch for<span class=more>Opens your queue at them.</span>'], [1, 'hint to look at', 'queue', '<b>A hint</b>: a council member\'s disclosed income from a firm whose contract they voted on · machine work, a lead never a finding<span class=more>Opens your queue at it.</span>']]);
 const RECORD = tiles(tile('Documents', '142', '+9 this month', [6, 4, 9, 7, 5, 8, 6, 9]), tile('Questions', '6', '2 meet the bar · 1 new', [0, 1, 0, 0, 1, 0, 0, 1]), tile('Cases', '1', 'published · 2 editions', null), tile('People followed', '10', '2 added this month', [1, 0, 0, 1, 0, 0, 1, 1]));
 const NEEDS_YOU = sheet(
@@ -229,31 +227,6 @@ const NEEDS_GROUP = sheet(
   row(kindm('status'), `The city's reply to “Demand to rescind” was due 9 October; no reply recorded · <b>their move</b><span class="meta">${ref('Open the action', 'action', '<b>Demand to rescind</b> · a letter the group sent the City Administrator on 19 September · reply overdue')}</span>`, due('overdue', 'Overdue')) +
   row(kindm('noticed'), `Two documents give different dates for the rent adjustment · nobody has judged it<span class="meta">${ref('Open both', 'document', '<b>Two documents in tension</b> · the lease amendment and the rent notice')}</span>`, '') +
   row(kindm('status'), `The City Clerk's reply to your records request is due 14 October · <b>their move</b><span class="meta">${ref('The request', 'request', '<b>Records request</b> · inspection logs for pothole reports closed in FY2025 · sent 2 October')}</span>`, due('near', 'Due tomorrow')));
-SCR['dash-home'] = c => { const st = DASH_ST[c.v] || 'a'; const sel = v => v === st ? ' selected' : ''; return { rail: 'home', title: 'Home', crumbs: ['Home'], st, main: `
-  <div class="mk-mockctl"><label for="mk-dst">In this mockup, show</label> <select id="mk-dst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>C · what needs you first, then each area at a glance</option><option value="b"${sel('b')}>A · each area first, complete, with what needs you inside it</option><option value="c"${sel('c')}>B · the instrument panel: every reading in a fixed place, the rail collapsed</option></select></div>
-  ${STRIP}
-  ${h1('Lakeshore Tenants', 'Rents and leases on city land, and the streets we live on.')}
-  <div class="st st-a">
-   ${sec('Needs you', NEEDS_YOU, { help: 'What is yours to do, soonest first, each with its act. Signing, sending and publishing still go through their full dialog, never one press here.' })}
-   ${sec('Needs the group', NEEDS_GROUP, { help: 'What waits on someone, or on an office: whose move it is, and when it is due.' })}
-   ${sec('Each area at a glance', AREA_BLOCKS(false), { help: 'Every area\'s state, here, so nothing is found only by going there: what needs you in it, its readings, and a line of what changed. The name opens the area\'s dashboard.' })}
-   ${sec('Projects', projTable())}
-   ${sec('Since you last looked', RECENT, { help: 'What members did since you were last here, newest first.' })}
-   ${acts(btn('startfrom', 'Start from…'), btn('promote', 'Start a project'))}</div>
-  <div class="st st-b">
-   ${sec('Each area, with what needs you in it', AREA_BLOCKS(true), { help: 'The areas first, in fixed places, each complete: what needs you in it with its act, its readings, and a line of what changed. The name opens the area\'s dashboard.' })}
-   ${sec('Needs the group', NEEDS_GROUP, { help: 'What waits on someone, or on an office: whose move it is, and when it is due.' })}
-   ${sec('Projects', projTable())}
-   ${sec('Since you last looked', RECENT, { help: 'What members did since you were last here, newest first.' })}
-   ${acts(btn('startfrom', 'Start from…'), btn('promote', 'Start a project'))}</div>
-  <div class="st st-c">
-   ${sec('The panel', CLUSTER, { help: 'Ten readings in the same places every day, like a car\'s instruments: a reading that is zero still shows, so the eye learns where to look. Each opens its list. The rail is collapsed to icons to give the panel room; it is the same rail as everywhere, and the member can widen it.' })}
-   ${sec('Needs you', NEEDS_YOU, { help: 'What is yours to do, soonest first, each with its act.' })}
-   ${sec('Needs the group', NEEDS_GROUP, { help: 'What waits on someone, or on an office: whose move it is, and when it is due.' })}
-   ${sec('Projects', projTable())}
-   ${sec('Since you last looked', RECENT, { help: 'What members did since you were last here, newest first.' })}
-   ${acts(btn('startfrom', 'Start from…'), btn('promote', 'Start a project'))}</div>` }; };
-
 SCR['dash-action'] = c => ({ rail: 'queue', title: 'Action', crumbs: ['Action'], main: `
   ${STRIP}
   ${h1('Action', 'Every clock that is running, whose move it is, replies that came in, and what waits for a second approval.')}
@@ -363,18 +336,23 @@ SCR.join = c => { const st = JOIN_ST[c.v] || 'a'; const sel = v => v === st ? ' 
 const HOME_ST = { busy: 'a', firstvisit: 'b', newgroup: 'c' };
 SCR.home = c => { const st = HOME_ST[c.v] || 'a'; const sel = v => v === st ? ' selected' : ''; return { rail: 'home', title: 'Home', st, main: `
   <div class="mk-mockctl"><label for="mk-hmst">In this mockup, show Home</label> <select id="mk-hmst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>for a member of a busy group</option><option value="b"${sel('b')}>on a new member's first visit</option><option value="c"${sel('c')}>for the founder of a new group</option></select></div>
+  <div class="st st-a st-b">${STRIP}</div>
   ${h1('Lakeshore Tenants', 'Rents and leases on city land, and the streets we live on.')}
   <div class="st st-b">${sec('Welcome, Mai', `${row(I('wizard'), 'The guided start you began when you joined shows you around in about ten minutes more: how the group judges evidence, your settings, and a first step. Stop it at any point and pick it up later here.', '')}${acts(ref(I('wizard') + 'Continue the guided welcome', 'question', '<b>The guided welcome</b> · the wizard “Welcome a new member”, which you began when you joined, step by step through the real screens'), link('Not now'))}`)}</div>
-  <div class="st st-c">${sec('Your group\'s Civicsmith is ready', `${row(I('accepted'), 'Nothing is here yet. Most groups start by inviting a few members and opening one project about a problem they already know.', '')}<div class="mk-links">${ref(I('subject') + 'Invite your first members', 'members', '<b>Members</b> · make an invitation link and send it yourself')}${ref(I('group') + 'Say who your group is', 'group-identity', '<b>Who your group is</b> · its kind, focus and purpose; it shapes how members are welcomed')}</div>`)}</div>
+  <div class="st st-c">${sec('Your group\'s Civicsmith is ready', `${row(I('accepted'), 'Nothing is here yet. Most groups start by inviting a few members and opening one project about a problem they already know; “What happened?” below is the door to the first one.', '')}<div class="mk-links">${ref(I('subject') + 'Invite your first members', 'members', '<b>Members</b> · make an invitation link and send it yourself')}${ref(I('group') + 'Say who your group is', 'group-identity', '<b>Who your group is</b> · its kind, focus and purpose; it shapes how members are welcomed')}</div>`)}</div>
+  <div class="st st-a st-b">
+   ${sec('Needs you', NEEDS_YOU, { help: 'What is yours to do, soonest first, each with its act. Signing, sending and publishing still go through their full dialog, never one press here.' })}
+   ${sec('Needs the group', NEEDS_GROUP, { help: 'What waits on someone, or on an office: whose move it is, and when it is due.' })}
+   ${sec('Each area at a glance', AREA_BLOCKS(), { help: 'Every area\'s state, here, so nothing is found only by going there: what needs you in it, its readings, and a line of what changed. The name opens the area\'s dashboard.' })}
+   ${sec('Projects', projTable())}
+   ${sec('Since you last looked', RECENT, { help: 'What members did since you were last here, newest first.' })}</div>
+  <div class="st st-c">
+   ${sec('Needs you', sheet(row(kindm('status'), 'Nothing yet. When a reply arrives, a member asks you to check something, or a clock nears its date, it shows here first.', '')), { help: 'What is yours to do, soonest first, each with its act, once there is any.' })}
+   ${sec('Each area at a glance', AREA_BLOCKS_EMPTY(), { help: 'Every area\'s state, here, from the first day: each block says what fills it. The name opens the area\'s dashboard.' })}
+   ${sec('Projects', note('No projects yet. A project is one problem the group wants to get to the bottom of; “Start a project” below opens the first.'))}</div>
   <div class="mk-welcome" data-act="startfrom"><h2 class="mk-h2">What happened?</h2>
    <div class="mk-doors">${[['A problem I live with', 'Potholes, dumping, a bill, a service'], ['A person', 'An official, a name in the news'], ['A payment or contract', 'A budget line, a lease, a change order'], ['Something I read', 'A code, a court case, a story, minutes'], ['A tip or documents', 'Something someone handed you']].map(([a, b]) => `<button type="button" class="mk-door"><b>${a}</b><span>${b}</span></button>`).join('')}</div>
-   ${acts(btn('startfrom', 'Start from…'), btn('promote', 'Start a project', { help: 'Starts a project: one problem the group wants to get to the bottom of, with you as its owner. Questions, documents and plans gather under it.' }))}</div>
-  <div class="st st-a st-b">${sec('Waiting on you', sheet(row(kindm('todo'), 'Vouch for 3 photos you captured on Seminary Avenue', due('', 'Today')) + row(kindm('status'), 'The City Clerk\'s reply to your records request is due 14 October', due('near', 'Due in 2 days'))) + `<a class="mk-more" href="#" onclick="return false">Your queue (4)</a>`)}
-  ${sec('What the group is working on', sheet(
-    row(I('project'), '<b>The Coliseum lease</b><span class="meta">3 questions · 1 plan · investigating</span>', ladder('stage', ['Forming', 'Investigating', 'Matured', 'Closed'], 2)) +
-    row(I('project'), '<b>Pothole repairs</b><span class="meta">2 questions · forming</span>', ladder('stage', ['Forming', 'Investigating', 'Matured', 'Closed'], 1)) +
-    row(I('project'), '<b>Sewer fund transfers</b><span class="meta">1 question · investigating</span>', ladder('stage', ['Forming', 'Investigating', 'Matured', 'Closed'], 2))))}</div>
-  <div class="st st-c">${sec('What the group is working on', note('No projects yet. A project is one problem the group wants to get to the bottom of; “Start a project” above opens the first.'))}</div>` }; };
+   ${acts(btn('startfrom', 'Start from…'), btn('promote', 'Start a project', { help: 'Starts a project: one problem the group wants to get to the bottom of, with you as its owner. Questions, documents and plans gather under it.' }))}</div>` }; };
 
 /* DEC-188 (N812; Bob's K2350, K2352, K2353): one AI account's settings, drawn the same for the group's key, a project's
    account and a member's own. The account that serves an act is the one used: at its limit, or with that use off, the

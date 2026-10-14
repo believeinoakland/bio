@@ -377,8 +377,49 @@
    "id": "home",
    "name": "Your group's home",
    "frame": "working",
-   "purpose": "What the group is working on, what waits on you, and \"What happened?\", the door to a first step.",
+   "purpose": "The group's nerve centre (Bob's S20, DEC-218: one home for everyone, arrangement C): the strip, what needs you, what needs the group, each area at a glance, the projects, what changed since you last looked, and \"What happened?\", the door to a first step; a new member's first visit and a new group's empty home as states.",
    "acts": [
+    {
+     "op": "release",
+     "label": "Vouch for photos",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "ratification"
+     ]
+    },
+    {
+     "op": "adoptversion",
+     "label": "Adopt the newer version",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "keepversion",
+     "label": "Keep the version you cited",
+     "status": "function",
+     "modules": [
+      "reevaluation"
+     ]
+    },
+    {
+     "op": "filingapprove",
+     "label": "Approve the text",
+     "status": "function",
+     "modules": [
+      "filings"
+     ]
+    },
+    {
+     "op": "taskresolve",
+     "label": "Act on an item",
+     "status": "declared",
+     "modules": [
+      "tasks"
+     ]
+    },
     {
      "op": "promote",
      "label": "Start a project",
@@ -1102,75 +1143,6 @@
    "journeys": [
     6
    ]
-  },
-  {
-   "id": "dash-home",
-   "name": "Home as a dashboard (three arrangements)",
-   "frame": "working",
-   "purpose": "Treatments for S20 (Bob's direction of 11 October, K2803; DEC-214; his direction of 13 October, DEC-216: a complete home, the rail on every dashboard): one complete home in three orders: C, what needs you first, then each area at a glance; A, each area first with what needs you inside it; B, the instrument panel, ten readings in fixed places under a collapsed rail. Needs the group, the projects table, what changed since you last looked.",
-   "acts": [
-    {
-     "op": "release",
-     "label": "Vouch for photos",
-     "status": "declared",
-     "modules": [
-      "capture",
-      "ratification"
-     ]
-    },
-    {
-     "op": "adoptversion",
-     "label": "Adopt the newer version",
-     "status": "function",
-     "modules": [
-      "reevaluation"
-     ]
-    },
-    {
-     "op": "keepversion",
-     "label": "Keep the version you cited",
-     "status": "function",
-     "modules": [
-      "reevaluation"
-     ]
-    },
-    {
-     "op": "filingapprove",
-     "label": "Approve the text",
-     "status": "function",
-     "modules": [
-      "filings"
-     ]
-    },
-    {
-     "op": "taskresolve",
-     "label": "Act on an item",
-     "status": "declared",
-     "modules": [
-      "tasks"
-     ]
-    },
-    {
-     "op": "promote",
-     "label": "Open a question",
-     "status": "declared",
-     "modules": [
-      "action-producers",
-      "basis-versions",
-      "control-plane",
-      "promotion"
-     ]
-    },
-    {
-     "op": "startfrom",
-     "label": "Start from…",
-     "status": "function",
-     "modules": [
-      "wizard-scripts"
-     ]
-    }
-   ],
-   "journeys": []
   },
   {
    "id": "dash-action",

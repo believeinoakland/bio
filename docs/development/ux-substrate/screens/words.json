@@ -52,12 +52,12 @@
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "screen": 131,
-  "act": 610,
+  "screen": 129,
+  "act": 608,
   "column": 33,
   "wizard": 306,
-  "total": 1788,
-  "protected": 651
+  "total": 1784,
+  "protected": 649
  },
  "words": [
   {
@@ -4477,7 +4477,7 @@
   },
   {
    "key": "rail.home.holds",
-   "en": "Home: what your group is working on and what is waiting on you.",
+   "en": "Home: what needs you, what needs the group, and every area at a glance.",
    "protected": false,
    "source": "mock-refs.js RAIL_HELP"
   },
@@ -4742,7 +4742,7 @@
   },
   {
    "key": "screen.home.purpose",
-   "en": "Your group's home: what it is working on and what is waiting on you. Start here each day.",
+   "en": "Your group's home, the nerve centre: what needs you, what needs the group, every area at a glance, the projects and what changed since you last looked. Start here each day.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -4899,18 +4899,6 @@
   {
    "key": "screen.projects.purpose",
    "en": "Every project you can see: its stage, who works on it, how busy it is, and when it last changed.",
-   "protected": false,
-   "source": "mock-refs.js SCREEN_HELP"
-  },
-  {
-   "key": "screen.dash-home.name",
-   "en": "Home as a dashboard (three arrangements)",
-   "protected": false,
-   "source": "registry.json"
-  },
-  {
-   "key": "screen.dash-home.purpose",
-   "en": "Home drawn three ways for your choice (S20): what needs you first, a card per area, or an area under a strip.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -5581,6 +5569,36 @@
    "source": "registry.json"
   },
   {
+   "key": "act.release.label.home",
+   "en": "Vouch for photos",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.adoptversion.label.home",
+   "en": "Adopt the newer version",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.keepversion.label.home",
+   "en": "Keep the version you cited",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.filingapprove.label.home",
+   "en": "Approve the text",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.taskresolve.label.home",
+   "en": "Act on an item",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.promote.label.home",
    "en": "Start a project",
    "protected": true,
@@ -5997,48 +6015,6 @@
   {
    "key": "act.promote.label.projects",
    "en": "Start a project",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.release.label.dash-home",
-   "en": "Vouch for photos",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.adoptversion.label.dash-home",
-   "en": "Adopt the newer version",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.keepversion.label.dash-home",
-   "en": "Keep the version you cited",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.filingapprove.label.dash-home",
-   "en": "Approve the text",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.taskresolve.label.dash-home",
-   "en": "Act on an item",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.promote.label.dash-home",
-   "en": "Open a question",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.startfrom.label.dash-home",
-   "en": "Start from…",
    "protected": true,
    "source": "registry.json"
   },
