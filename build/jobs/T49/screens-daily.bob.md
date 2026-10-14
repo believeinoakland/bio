@@ -27,3 +27,7 @@ K3369: (1) project-roster (L2) is closed. If any read the member can make answer
 ## B3 · CHANGE
 
 CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
+
+## B4 · CHANGE
+
+K3372 (SCREENS-INTAKE #4 J2): find-in takes /app/find-in/<document>/<question>: read the second path step into ui.question (the question chosen), so capture's 'Cite a passage' opens find-in with that question. Part of your job.
