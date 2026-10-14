@@ -125,34 +125,9 @@ CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
 CREATE INDEX IF NOT EXISTS ai_credentials_run ON ai_credentials(run);
 CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);
 
--- R22-R25 (T33-20; K1502): each member's own Claude account reference, one row per member, held only by that
--- member's own act. THE SECRET IS STORED ONLY SEALED (R23): 'sealed' is AES-256-GCM ciphertext under a key derived
--- (HKDF-SHA-256) from the Worker's seal secret with the member id as salt, so the key is never stored beside the row
--- and no other member's act reaches it; 'iv' is its nonce. No digest of the secret is kept. 'suggestions' and
--- 'standing' are the member's own switches (R25), off by default; removing the row turns both off. 'member_id' is a
--- member's id and nothing else: the group's key is its own table (R33). Never exported (R30).
-CREATE TABLE IF NOT EXISTS account_references (
-  member_id   TEXT PRIMARY KEY,
-  kind        TEXT NOT NULL,
-  sealed      TEXT NOT NULL,
-  iv          TEXT NOT NULL,
-  set_at      TEXT NOT NULL,
-  suggestions INTEGER NOT NULL DEFAULT 0,
-  standing    INTEGER NOT NULL DEFAULT 0,
-  -- R55 (T40): the reference's switch for each other kind of use (on by default; explore 'no', 'ask' or 'yes')
-  use_ask     INTEGER NOT NULL DEFAULT 1,
-  use_draft   INTEGER NOT NULL DEFAULT 1,
-  use_run     INTEGER NOT NULL DEFAULT 1,
-  explore     TEXT NOT NULL DEFAULT 'no',
-  -- R55 (T41; D2, D19, D21, D56): the four kinds T41 adds, on by default as ask, draft and run
-  use_enquire    INTEGER NOT NULL DEFAULT 1,
-  use_read       INTEGER NOT NULL DEFAULT 1,
-  use_transcribe INTEGER NOT NULL DEFAULT 1,
-  use_account    INTEGER NOT NULL DEFAULT 1
-);
-
--- R29 (K1449): the group's own key for one keyed outside service, set by an administrator, sealed as above (salt
--- 'group:<service>'), off by default and off while no key is held. Never exported (R30).
+-- R29 (K1449): the group's own key for one keyed outside service, set by an administrator, stored only sealed
+-- (AES-256-GCM under a key derived from the Worker's seal secret, salt 'group:<service>'; through ai-accounts' R24
+-- since T48, byte-identical), off by default and off while no key is held. Never exported (R30).
 -- (T36; K1946 T1) 'service' is 'courtlistener' or 'security:<tool_id>', each outside security tool's credentials
 -- (file-safety R28). 'form' is 'key' for one key, or 'fields' for a set of named fields held as one value (sealed as
 -- its JSON, under the kind 'fields'); a row written before the column has NULL, read as 'key' (the only form there
@@ -172,7 +147,7 @@ CREATE TABLE IF NOT EXISTS keyed_services (
 -- no read log. Never exported (R30).
 -- R32 (N580; K1481, K1609): a standing question's grant is held here too, 'kind' 'standing' and 'session' empty: the
 -- scheduler acts with no session, so it ends at its time, or at once when its member is revoked (R16) or removes
--- their reference (R22). An ask's grant is 'kind' 'ask'; a row written before the column existed has NULL, read as
+-- their reference (ai-accounts R1, told through R73). An ask's grant is 'kind' 'ask'; a row written before the column existed has NULL, read as
 -- an ask's (the only kind there was), never back-filled.
 CREATE TABLE IF NOT EXISTS ai_grants (
   grant_sha TEXT PRIMARY KEY,
@@ -182,51 +157,6 @@ CREATE TABLE IF NOT EXISTS ai_grants (
   kind      TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_grants_member ON ai_grants(member_id);
-
--- R33, R34, R37 (K1755, K1757): the group's one Anthropic API key, one row (id=1), set, switched and removed only by
--- an active administrator. Sealed as a reference is (R23), under the copy rather than a member: 'sealed' is AES-256-GCM
--- ciphertext under a key derived from the Worker's seal secret with 'group-key:anthropic' as salt; no digest is kept.
--- 'is_on' is off when the key is first set and off by default; 'suggestions' and 'standing' are the group key's own
--- switches (R37), off by default, both turned off when the key is removed. 'set_by' and 'set_at' name the act that set
--- the key held now. Never exported (R30, R34).
-CREATE TABLE IF NOT EXISTS group_key (
-  id          INTEGER PRIMARY KEY CHECK (id = 1),
-  sealed      TEXT,
-  iv          TEXT,
-  is_on       INTEGER NOT NULL DEFAULT 0,
-  set_by      TEXT,
-  set_at      TEXT,
-  suggestions INTEGER NOT NULL DEFAULT 0,
-  standing    INTEGER NOT NULL DEFAULT 0,
-  -- R55 (T40): the group key's switch for each other kind of use (on by default; explore 'no', 'ask' or 'yes'); all
-  -- off once the key is removed (R37)
-  use_ask     INTEGER NOT NULL DEFAULT 1,
-  use_draft   INTEGER NOT NULL DEFAULT 1,
-  use_run     INTEGER NOT NULL DEFAULT 1,
-  explore     TEXT NOT NULL DEFAULT 'no',
-  -- R55 (T41; D2, D19, D21, D56): the four kinds T41 adds, on by default as ask, draft and run
-  use_enquire    INTEGER NOT NULL DEFAULT 1,
-  use_read       INTEGER NOT NULL DEFAULT 1,
-  use_transcribe INTEGER NOT NULL DEFAULT 1,
-  use_account    INTEGER NOT NULL DEFAULT 1
-);
-
--- R33: each act on the group key, recorded with its administrator and instant, never the key: 'act' is 'set',
--- 'remove', 'switch' (detail 'on' or 'off') or 'switch:<name>' (R37; detail 'on' or 'off'). Never exported.
-CREATE TABLE IF NOT EXISTS group_key_acts (
-  seq    INTEGER PRIMARY KEY AUTOINCREMENT,
-  act    TEXT NOT NULL,
-  detail TEXT,
-  actor  TEXT NOT NULL,
-  at     TEXT NOT NULL
-);
-
--- R36: the members who have read the group key's notice, each by their own act, with its instant. Seen by its member
--- alone; never exported.
-CREATE TABLE IF NOT EXISTS group_key_notices (
-  member_id TEXT PRIMARY KEY,
-  seen_at   TEXT NOT NULL
-);
 
 -- R38 (F3; K1881): the sign-in window. Refused sign-ins, claims and recoveries, counted per source and per role in
 -- 10-minute windows ('win' the window's number since the epoch), the current window and the one before it kept for
@@ -292,47 +222,6 @@ CREATE TABLE IF NOT EXISTS recoveries (
   at   TEXT NOT NULL
 );
 
--- R51, R52 (DEC-172; K1957): the group's setting that keeps its material away from every assistant. Each set is
--- appended, never replacing an earlier one: 'is_on', the administrator's 'reason' in their own words (NULL when none
--- was given), who set it ('set_by', the administrator's id) and when. The latest row is the setting; with none it is
--- off. Read by every active member (R52); never a secret, so exported to administrators only, as 'bootstrap' is.
-CREATE TABLE IF NOT EXISTS ai_keep_away (
-  seq    INTEGER PRIMARY KEY AUTOINCREMENT,
-  is_on  INTEGER NOT NULL,
-  reason TEXT,
-  set_by TEXT NOT NULL,
-  set_at TEXT NOT NULL,
-  -- R57 (T40): the JSON list of USE_KINDS the limit covers; NULL for every use
-  uses   TEXT
-);
-
--- R43 (DEC-156; K1819): that a member is connected through their own Claude subscription, and since when. Seen by its
--- member alone. (T47; R70, K3060 D10, K3061 D10, replacing K1819's "never holds a token") 'sealed' and 'iv' hold the
--- sign-in's token, sealed as a reference is (R23) under 'member:<id>', kind 'signin'; no digest is kept. A row with no
--- token (every connection made before T47) answers not connected. 'valid_until' is the instant the binary stated the
--- token lasts to, NULL when it stated none; 'refused_at' the instant Anthropic refused it (the token then dropped).
-CREATE TABLE IF NOT EXISTS subscription_connections (
-  member_id TEXT PRIMARY KEY,
-  since     TEXT NOT NULL,
-  -- R55 (T40; N812): the sign-in's own switch for each kind of use, as an account's (use_ask, use_draft, use_run on and
-  -- standing, suggestions off by default; explore 'no', 'ask' or 'yes'). Cleared with the row.
-  use_ask     INTEGER NOT NULL DEFAULT 1,
-  use_draft   INTEGER NOT NULL DEFAULT 1,
-  use_run     INTEGER NOT NULL DEFAULT 1,
-  standing    INTEGER NOT NULL DEFAULT 0,
-  suggestions INTEGER NOT NULL DEFAULT 0,
-  explore     TEXT NOT NULL DEFAULT 'no',
-  -- R55 (T41; D2, D19, D21, D56): the four kinds T41 adds, on by default as ask, draft and run
-  use_enquire    INTEGER NOT NULL DEFAULT 1,
-  use_read       INTEGER NOT NULL DEFAULT 1,
-  use_transcribe INTEGER NOT NULL DEFAULT 1,
-  use_account    INTEGER NOT NULL DEFAULT 1,
-  sealed         TEXT,
-  iv             TEXT,
-  valid_until    TEXT,
-  refused_at     TEXT
-);
-
 -- R69 (T47; K3060 D4): an administrator's one-time password reset link for a member. Only the link's SHA-256 is kept,
 -- never the link: who it is for, who made it and when, when it expires (7 days), and when it was spent (a reset) or
 -- ended (a newer link, or the member's revocation). At most one is live per member. Never exported.
@@ -347,90 +236,6 @@ CREATE TABLE IF NOT EXISTS password_reset_links (
 );
 CREATE INDEX IF NOT EXISTS password_reset_links_member ON password_reset_links(member_id);
 
--- R54 (T40; N812, D34, K2353): a project's one AI account, set by one of its owners: an Anthropic API key ('apikey',
--- sealed as the group key is, under 'project:<id>'; no digest) or the acting owner's own sign-in ('signin', holding
--- only 'member_id', no secret), serving only while that member is the project's only participant. Off when first
--- set ('is_on'); R55's switches as an account's. 'set_by' and 'set_at' name the act that set it. Never exported, and
--- deleted with its project (R30: cleared by a purge of the project, keyed by 'project_id'); a sign-in account is
--- cleared when its member's sign-in is (R43, R16).
-CREATE TABLE IF NOT EXISTS project_accounts (
-  project_id  TEXT PRIMARY KEY,
-  kind        TEXT NOT NULL,
-  sealed      TEXT,
-  iv          TEXT,
-  member_id   TEXT,
-  is_on       INTEGER NOT NULL DEFAULT 0,
-  set_by      TEXT NOT NULL,
-  set_at      TEXT NOT NULL,
-  use_ask     INTEGER NOT NULL DEFAULT 1,
-  use_draft   INTEGER NOT NULL DEFAULT 1,
-  use_run     INTEGER NOT NULL DEFAULT 1,
-  standing    INTEGER NOT NULL DEFAULT 0,
-  suggestions INTEGER NOT NULL DEFAULT 0,
-  explore     TEXT NOT NULL DEFAULT 'no',
-  -- R55 (T41; D2, D19, D21, D56): the four kinds T41 adds, on by default as ask, draft and run
-  use_enquire    INTEGER NOT NULL DEFAULT 1,
-  use_read       INTEGER NOT NULL DEFAULT 1,
-  use_transcribe INTEGER NOT NULL DEFAULT 1,
-  use_account    INTEGER NOT NULL DEFAULT 1
-);
-CREATE INDEX IF NOT EXISTS project_accounts_member ON project_accounts(member_id);
-
--- R54: each act on a project's account, with its owner and instant, never the key: 'act' is 'setkey', 'setsignin',
--- 'remove', 'switch' (detail 'on' or 'off') or 'uses:<switch>' (R55; detail its value). Deleted with its project.
-CREATE TABLE IF NOT EXISTS project_account_acts (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  project_id TEXT NOT NULL,
-  act        TEXT NOT NULL,
-  detail     TEXT,
-  actor      TEXT NOT NULL,
-  at         TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS project_account_acts_project ON project_account_acts(project_id, seq);
-
--- R58 (D311, K1478 (i)): the members who have read a project key's notice, each by their own act, per project.
--- Deleted with its project.
-CREATE TABLE IF NOT EXISTS project_key_notices (
-  member_id  TEXT NOT NULL,
-  project_id TEXT NOT NULL,
-  seen_at    TEXT NOT NULL,
-  PRIMARY KEY (member_id, project_id)
-);
-
--- R57 (D38 C; B3): a project's material limits, appended as R51's are, the latest the setting: 'uses' the JSON list
--- of USE_KINDS it covers, NULL for all. Deleted with its project.
-CREATE TABLE IF NOT EXISTS project_keep_away (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  project_id TEXT NOT NULL,
-  is_on      INTEGER NOT NULL,
-  uses       TEXT,
-  reason     TEXT,
-  set_by     TEXT NOT NULL,
-  set_at     TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS project_keep_away_project ON project_keep_away(project_id, seq);
-
--- R61 (T41; DEC-188 (1)): every change to an account's settings, in the order made, with who made it and when, never
--- the key or a digest of it. 'owner' is spelled as R55's ('group', 'project:<id>', 'member:<id>'); 'project_id' the
--- project's id for a project's account, else NULL, so a project's rows are deleted with it and no other's are (R30).
--- 'change' is 'key_set' (a key or a reference set or replaced), 'signin_set' (a sign-in made the account, or connected,
--- R43), 'switched' (the account on or off), 'removed' (a key, reference or sign-in removed or disconnected), 'use_set'
--- (one R55 switch) or 'limit_set' (a material limit, R51, R57); 'detail' is a JSON object of what it set. 'origin'
--- names the earlier record a row was carried from (R33's 'group_key_acts', R54's 'project_account_acts', R51's
--- 'ai_keep_away' and R57's 'project_keep_away', each '<table>:<seq>'), or the record written beside it in the same act,
--- so a record is never carried twice; NULL for a change recorded here alone. Never exported.
-CREATE TABLE IF NOT EXISTS account_changes (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  owner      TEXT NOT NULL,
-  project_id TEXT,
-  at         TEXT NOT NULL,
-  by         TEXT,
-  change     TEXT NOT NULL,
-  detail     TEXT,
-  origin     TEXT UNIQUE
-);
-CREATE INDEX IF NOT EXISTS account_changes_owner ON account_changes(owner, seq);
-CREATE INDEX IF NOT EXISTS account_changes_project ON account_changes(project_id);
 `;
 
 /* Columns a store written before they existed gains at boot: additive and nullable, never back-filled (D-85). */
@@ -449,94 +254,29 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
   ["sessions", "device", "TEXT"],
   ["sessions", "last_active", "INTEGER"],
   ["sessions", "reauth_until", "INTEGER"],
-  /* R70 (T47): a sign-in's held token, sealed, and what is known of its life */
-  ["subscription_connections", "sealed", "TEXT"],
-  ["subscription_connections", "iv", "TEXT"],
-  ["subscription_connections", "valid_until", "TEXT"],
-  ["subscription_connections", "refused_at", "TEXT"],
-  /* R55 (T40; N812): every account's switch for each kind of use. The defaults keep today's behaviour (ask, draft and
-     run on; explore 'no'); `standing` and `suggestions` keep their stored values (R25, R37). */
-  ["account_references", "use_ask", "INTEGER NOT NULL DEFAULT 1"],
-  ["account_references", "use_draft", "INTEGER NOT NULL DEFAULT 1"],
-  ["account_references", "use_run", "INTEGER NOT NULL DEFAULT 1"],
-  ["account_references", "explore", "TEXT NOT NULL DEFAULT 'no'"],
-  ["group_key", "use_ask", "INTEGER NOT NULL DEFAULT 1"],
-  ["group_key", "use_draft", "INTEGER NOT NULL DEFAULT 1"],
-  ["group_key", "use_run", "INTEGER NOT NULL DEFAULT 1"],
-  ["group_key", "explore", "TEXT NOT NULL DEFAULT 'no'"],
-  ["subscription_connections", "use_ask", "INTEGER NOT NULL DEFAULT 1"],
-  ["subscription_connections", "use_draft", "INTEGER NOT NULL DEFAULT 1"],
-  ["subscription_connections", "use_run", "INTEGER NOT NULL DEFAULT 1"],
-  ["subscription_connections", "standing", "INTEGER NOT NULL DEFAULT 0"],
-  ["subscription_connections", "suggestions", "INTEGER NOT NULL DEFAULT 0"],
-  ["subscription_connections", "explore", "TEXT NOT NULL DEFAULT 'no'"],
-  /* R57: the uses a group's material limit covers (JSON), NULL for every use, as a limit set before T40 */
-  ["ai_keep_away", "uses", "TEXT"],
-  /* R55 (T41; D2, D19, D21, D56): the four kinds T41 adds, on by default, so an account held before T41 reads them at
-     their defaults (R55) */
-  ["account_references", "use_enquire", "INTEGER NOT NULL DEFAULT 1"],
-  ["account_references", "use_read", "INTEGER NOT NULL DEFAULT 1"],
-  ["account_references", "use_transcribe", "INTEGER NOT NULL DEFAULT 1"],
-  ["account_references", "use_account", "INTEGER NOT NULL DEFAULT 1"],
-  ["group_key", "use_enquire", "INTEGER NOT NULL DEFAULT 1"],
-  ["group_key", "use_read", "INTEGER NOT NULL DEFAULT 1"],
-  ["group_key", "use_transcribe", "INTEGER NOT NULL DEFAULT 1"],
-  ["group_key", "use_account", "INTEGER NOT NULL DEFAULT 1"],
-  ["subscription_connections", "use_enquire", "INTEGER NOT NULL DEFAULT 1"],
-  ["subscription_connections", "use_read", "INTEGER NOT NULL DEFAULT 1"],
-  ["subscription_connections", "use_transcribe", "INTEGER NOT NULL DEFAULT 1"],
-  ["subscription_connections", "use_account", "INTEGER NOT NULL DEFAULT 1"],
-  ["project_accounts", "use_enquire", "INTEGER NOT NULL DEFAULT 1"],
-  ["project_accounts", "use_read", "INTEGER NOT NULL DEFAULT 1"],
-  ["project_accounts", "use_transcribe", "INTEGER NOT NULL DEFAULT 1"],
-  ["project_accounts", "use_account", "INTEGER NOT NULL DEFAULT 1"],
 ];
 
-/* R18: every table this module owns, declared exempt from purge (identity and credentials outlive a reset corpus). */
+/* R18: every table this module owns, declared exempt from purge (identity and credentials outlive a reset corpus).
+   (T48; K3101) Its own fourteen; the AI accounts' are `ai-accounts`' (its R29). */
 export const CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap", "signers", "ai_credentials",
-  "account_references", "keyed_services", "ai_grants", "group_key", "group_key_acts", "group_key_notices",
-  "signin_window", "security_counts", "security_pending", "security_key", "recovery_codes", "recoveries",
-  "subscription_connections", "ai_keep_away", "password_reset_links"];
+  "keyed_services", "ai_grants", "signin_window", "security_counts", "security_pending", "security_key",
+  "recovery_codes", "recoveries", "password_reset_links"];
 
 /* R30 (plan T33, Rules (6)): each table's classes for record-core's `declareTable` (its R21), declared explicitly.
-   Every table is purge-exempt (R18) and never expunged. Account references, keyed-service keys, password hashes,
-   sessions, AI credentials, ask grants, the group key with its acts and its notices are never exported; account
-   references and a member's notice are seen by their owner alone. Signer keys are public halves the group already
-   publishes (`groupkeyspublic`), so they export; the bootstrap row is an administrator's fact. The group key's
-   tables are `sight: "group"`: record-core's R21 offers no administrator sight, and no read answers the key whatever
-   its sight; `groupKeyState` answers its state to administrators alone (R34; K1760). T35's tables (R30) are declared
-   the same way, never exported: the sign-in window, the tally with its waiting places and its key, and the recovery
-   codes and recoveries are the group's (the tally's reading is administrators' alone, R45's own); a member's connected
-   subscription is its owner's. (T36) The keep-away setting (R51, R52) is the group's, read by every member, and
-   exported to administrators only. */
+   Every table is purge-exempt (R18) and never expunged. Keyed-service keys, password hashes, sessions, AI credentials
+   and ask grants are never exported. Signer keys are public halves the group already publishes (`groupkeyspublic`), so
+   they export; the bootstrap row is an administrator's fact. T35's tables (R30) are declared the same way, never
+   exported: the sign-in window, the tally with its waiting places and its key, and the recovery codes and recoveries
+   are the group's (the tally's reading is administrators' alone, R45's own). (T48; K3101) Its own fourteen tables
+   only: the AI accounts' eleven (account references, the group key's three, the material limits' two, connected
+   subscriptions, a project's account's three and the change history) are declared by `ai-accounts` (its R28). */
 const CLASSES = { purge: "exempt", expunge: "none", derive: "stored", version_chain: false };
 export const CREDENTIALS_TABLES = Object.freeze([
   ["credentials", "never", "group"], ["sessions", "never", "group"], ["bootstrap", "admin-only", "group"],
-  ["signers", "yes", "group"], ["ai_credentials", "never", "group"], ["account_references", "never", "owner"],
-  ["keyed_services", "never", "group"], ["ai_grants", "never", "group"], ["group_key", "never", "group"],
-  ["group_key_acts", "never", "group"], ["group_key_notices", "never", "owner"],
-  ["signin_window", "never", "group"], ["security_counts", "never", "group"], ["security_pending", "never", "group"],
-  ["security_key", "never", "group"], ["recovery_codes", "never", "group"], ["recoveries", "never", "group"],
-  ["subscription_connections", "never", "owner"], ["ai_keep_away", "admin-only", "group"],
+  ["signers", "yes", "group"], ["ai_credentials", "never", "group"], ["keyed_services", "never", "group"],
+  ["ai_grants", "never", "group"], ["signin_window", "never", "group"], ["security_counts", "never", "group"],
+  ["security_pending", "never", "group"], ["security_key", "never", "group"], ["recovery_codes", "never", "group"],
+  ["recoveries", "never", "group"],
   /* R69 (T47): the reset links, as the recovery codes are */
   ["password_reset_links", "never", "group"],
 ].map(([name, exp, sight]) => Object.freeze({ name, ...CLASSES, export: exp, sight })));
-
-/* R30, R61 (T41): the change history of every account, one table keyed by `owner` (the requirements' T41
-   suggestion): exempt from purge for the group's and members' accounts, a project's rows deleted with their project
-   (`purge: "clear"` keyed by `project_id`, and the whole-store purge clearing only rows that name a project, `whole`).
-   Never exported; read only through R61's service, to the account's owners. */
-export const CREDENTIALS_HISTORY_TABLE = Object.freeze({ name: "account_changes", keys: Object.freeze(["project_id"]),
-  whole: "project_id IS NOT NULL", purge: "clear", expunge: "none", derive: "stored", version_chain: false,
-  export: "never", sight: "group" });
-
-/* R30 (T40; N812): the tables of a project's account, its notices and its material limits, declared the same way
-   except that each is deleted with its project: `purge: "clear"` keyed to the project's bundle by `project_id` (record-
-   core R46), so a purge of the project, or the whole-store purge that removes every project, deletes them and nothing
-   else does (K2404's reading (3)). Never exported, read only through R54's and R57's services; the material limits
-   exported to administrators only, as R51's. */
-export const CREDENTIALS_PROJECT_TABLES = Object.freeze([
-  ["project_accounts", "never"], ["project_account_acts", "never"], ["project_key_notices", "never"],
-  ["project_keep_away", "admin-only"],
-].map(([name, exp]) => Object.freeze({ name, keys: Object.freeze(["project_id"]), ...CLASSES, purge: "clear", export: exp,
-  sight: "group" })));
