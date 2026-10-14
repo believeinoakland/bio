@@ -130,3 +130,12 @@ Draft 41 + 25 new = **66**:
 3. **N1036's reads.** Its per-area reads have not been mapped to providers. "Members' acts since the viewer last looked" and the release, security level and group key's use readings may each need a provider line: membership T48-5, instance-setup T48-33, ai-accounts T48-3. `queue` (L11) may need a job for "the queue's items by kind and whose move". Settle each at screens-daily's START census. Each line that is missing joins its provider's T48 job, or becomes a hard-reason row.
 4. **N1041's home.** The function moves to ai-accounts in T48-3, so the fix goes there. This means a copy job also carries a change. Alternative: credentials' T48-7 fixes it before the copy is taken, which would break the copy-first order. Keep it in T48-3.
 5. **Side note.** N1025 is marked applied in T47 (T47-93, K3150), so the draft's T48-6 (project-roster) drops unless T47's Outcome leaves T47-93 open. In that case L2 would be 5 and the total 65.
+
+## Settled by BOB #170 (K3189), 2026-10-14
+
+1. **N1047's home.** `instance-setup` (T48-33) holds the daily update check as a `scheduler` consumer (SCHEDULER.md's registry; 133 < 145), verifies the notice with T48-42's keys, stores the notice and the administrator's decision, and provides the notice read and the decision act. `machinery-producers` (not queue-producers) derives the administrator's to-do on read from that notice read, passed in by the plane's composition and never imported (no edge points later); `queue` R1 classes the new kind (a queue entry in L11). T48-58 moves to `machinery-producers`; T48-40's N1047 half moves to T48-33, the plane keeping only the spread and the wiring.
+2. **N1033** stays in `calculations` (:1703), calling membership's one viewer spelling.
+3. **N1036's reads:** each provider's START re-tests its line (membership T48-5, instance-setup T48-33, ai-accounts T48-3); a line found missing after its provider's layer has started is a hard-reason row for T49.
+4. **N1041** stays in T48-3.
+5. **T48-6 drops:** N1025 was applied by T47-93 (merged, K3150); T48-38 reads project-roster R27 as merged.
+6. **draft-T48-plan.md's doubts 1–7** are settled as each recommends; doubt 8 (legacy-ui's census) is run at T47's close (K3189).
