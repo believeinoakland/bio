@@ -25,3 +25,7 @@ action-records is merged into tranche/T48 (K3278): merge tranche/T48 into your b
 ## B3 · CHANGE
 
 C-117.28 NOT_A_PROCEEDING is in your module: bio-plane/src/action-grammar/checks.mjs:1862 (its where names actions #proceedingRefusal > is-proceeding-kind, which no longer exists). T48-46's also line retires it (K3243): remove the row; entities' C-91.9 (R53) is the one site. Do this with B2's merge.
+
+## B4 · CHANGE
+
+actions is merged into tranche/T48 (K3281), with its is-correspond-direction region for C-33.5 and the site calls. Merge tranche/T48 into your branch now (with B2 and B3: remove C-117.28), re-run your census arms, and post COMPLETE. actions' two tests that read your rows' wheres are red on the tranche until you merge.
