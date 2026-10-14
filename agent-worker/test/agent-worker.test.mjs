@@ -619,7 +619,7 @@ console.log("\n--- 8 · D-276: the meaning ARM, driven against the REAL plane in
     return j && typeof j === "object" && "result" in j ? j.result : j; };
   const invited = await post("memberadd", "adm-d276", { memberId: "dana", cover: "c-dana", role: "member", capabilities: ["contribute"] });
   await post("enroll", null, { invite: invited.invite, handle: "dana", password: "dana-passphrase-1" });
-  const session = (await post("login", null, { role: "member:dana", password: "dana-passphrase-1" })).token;
+  const session = (await post("login", null, { handle: "dana", password: "dana-passphrase-1" })).token;
   const askArm = async (spelling) => (await (await plane.dispatchFetch(
     `http://x/api/?op=meaningrows&limit=1&rows=${encodeURIComponent(spelling)}`,
     { headers: { authorization: `Bearer ${session}` } })).json());
