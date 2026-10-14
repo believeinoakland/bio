@@ -31,3 +31,7 @@ K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75:
 ## B5 · ANSWER · re J3
 
 K3150: 1. your signatures stand and are relayed to INTERFACE-SHELL #2 as R49's: `cs.image(op, params, {alt})` → HTML; `cs.areas(imageHtml, {id, areas, label})` read with `cs.value(id)`; kinds in your own fields; `cs.choice(id, labelKey, options, {acts})`. 2. read the photo through the op `open-file` reads a capture's bytes with, `{capture: sha}`. 3. the guide draws the marks; draw nothing.
+
+## B6 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
