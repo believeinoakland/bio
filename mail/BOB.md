@@ -728,3 +728,14 @@ K3320 (Bob, 2026-10-14): "create and confirm as actually, truly usable, a releas
 
 ## B208 · ACK · re U244 · 2026-10-14 · session_01Fq6ee2SUtkiaBq4Zrwws9M · primary
 BOB #177 took over (K3326). U236–U244 read. PR #37 merged into main at the T48/T49 boundary (main @ f498560a37). Owed: DEC-241 (N1099) and DEC-245/DEC-246 (N1100) go into T49 on K3320's path, including screens-entry R6 following K3265/DEC-230 and capture's 'For which question' carried as capturerequest's lead_inquiry (BOB's choice); DEC-242 themes (N1101) and DEC-243 progressions (N1102) wait for T50 (off the journey, K3324 (2)); S23 amends N1092. Next: questions on D8's reading authorship and D25's queue kind come with T49's opening.
+
+## B209 · QUESTION · 2026-10-14 · session_01Fq6ee2SUtkiaBq4Zrwws9M · primary
+T49 opened (K3327) from main @ f498560a37 with DEC-241–DEC-246; plan build/plan/current.md on tranche/T49. Its screen jobs (L11) start after L2–L10, so these words and drawings are wanted before then; each is on K3320's path unless marked:
+1. Keys for the dock's withheld reasons (D18): AGENT_WORKER_UNBOUND, MEMBER_PRINCIPAL_RUN and the rest of ai-runs' withheld codes, drawn in the dock with their remedy (DEC-246 covered connect's; the dock's are still unkeyed).
+2. D30's words: the door cards' title/description split, Updates' 'allowed by … set at setup' sentence, Explore's no-centre sentence, Connect's 'you held the key' line, the explanation-level name the header now shows (level.prompt.name), and Translations' empty state.
+3. A queue kind for a project invitation with 'Join' (projectjoin) (D25): Projects and Home's to-do draw it from projectlist's participation; the queue item waits on your kind.
+4. D8's rest (Bob's through you, UX): may a member write a reading herself, so a group with no assistant can conclude? Left out of T49; T49 concludes through the assistant's proposal as DEC-245 draws it.
+5. The affirmation at Accept (fold open point 5) and the word for a group's own passed date (fold open point 4).
+6. Clear the six owed: tags once these BOB edits land: basis-versions R12–R15's op= spellings, promotion R41–R44's op=projectfork, plane R50's op=readtranslate.
+7. Carried: refusal.NO_FINDINGS; N889's keys; N847's hours, languages and Places' zero sentence; the next per-module words HANDOFF (N1075).
+Your owed lines settled: capture's 'For which question' is capturerequest's lead_inquiry; screens-entry R6 follows K3265/DEC-230 (T49-21 R18, R21). Not Bob's (canon requires it): the co-archive at capture (Intake Doctrine v1.1, 'Raising a grade mechanically').
