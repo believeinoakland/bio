@@ -91464,12 +91464,12 @@ var DUTIES_WORDS = Object.freeze({
   "refusal.DUTY_SOURCE_NOT_HELD": "This promise rests on a commitment that is still only proposed as a standard. Adopt that commitment first; the obligation then names it. Nothing was written."
 });
 var DUTIES_REASON_WORDS = Object.freeze({
-  "duty.reason.trigger_undated": "What starts the clock has no date in the record.",
-  "duty.reason.deadline_not_held": "Your group's Civicsmith holds no rule for this deadline yet.",
-  "duty.reason.due_not_computed": "The due date could not be worked out.",
-  "duty.reason.due_between_days": "The due date depends on a day the record does not settle.",
-  "duty.reason.match_undated": "The event that met it has no settled date.",
-  "duty.reason.order_unsettled": "The dates held are not precise enough to say whether it was on time."
+  "duty.reason.trigger_undated": "What starts the clock has no date in the record yet, so the due date can't be worked out.",
+  "duty.reason.deadline_not_held": "Your group's Civicsmith holds no rule for this deadline yet, so it can't say when it falls due.",
+  "duty.reason.due_not_computed": "The due date couldn't be worked out from what the record holds.",
+  "duty.reason.due_between_days": "The due date depends on a day the record doesn't settle, so it falls on one of two days.",
+  "duty.reason.match_undated": "The event that met the duty has no settled date, so whether it was on time is open.",
+  "duty.reason.order_unsettled": "The dates the record holds aren't precise enough to say whether it was on time."
 });
 function reasonWords(code) {
   const says = DUTIES_REASON_WORDS[`duty.reason.${code}`];
