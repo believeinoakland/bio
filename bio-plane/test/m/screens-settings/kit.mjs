@@ -111,7 +111,8 @@ export async function open(id, { me, table, subject = null, reachable = false, w
   const b = await boot({ screens, plane, path: "/app/" + id + (subject !== null ? "/" + encodeURIComponent(subject) : "") });
   await b.settle(80);
   const main = () => b.doc.getElementById("cs-main");
-  // the shell's own reads, `bootstrap` among them (sent once, public, for the test-instance band; interface-shell R36)
+  // the shell's own reads, `bootstrap` among them (sent once, public, for the test-instance band; interface-shell R36). The shell exports
+  // no list of its frame's reads (SHELL_OPS holds its acts and the reads screens share), so these stay listed: deferred, N1073
   const SHELL = new Set(["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "bootstrap"]);
   const reqs = () => b.requests.map((r) => { const q = { ...r.query }; delete q.op; return { op: r.op, query: q, body: r.body, headers: r.headers, method: r.method }; });
   const out = { b, s: screen(id) || screens.find((x) => x.id === id), refused: null, cs: { w } };
@@ -187,3 +188,10 @@ export function panelOf(tree, key) {
 /** Whether the main area says a word, filled (its text, as the member reads it). */
 export const has = (o, key, fills) => { if (!o.text.includes(said(key, fills))) throw new Error(`not drawn: ${key} "${said(key, fills)}"`); };
 export const lacks = (o, key, fills) => { if (o.text.includes(said(key, fills))) throw new Error(`drawn: ${key}`); };
+
+/** The ops the design's registry lists for a screen (an owed act by the op it owes): the owner's declaration of a screen's acts (N1073). */
+import { readFileSync } from "node:fs";
+export const registryOps = (id) => {
+  const reg = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8")).screens.find((x) => x.id === id);
+  return reg.acts.map((a) => (/^owed:/.test(a.op) ? a.op.slice(5).split(" ")[0] : a.op)).sort();
+};

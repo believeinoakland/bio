@@ -2,11 +2,12 @@
    owner's arguments; a member is drawn none. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, day, has, open, said } from "./kit.mjs";
+import { acts, all, day, has, open, said, SCREENS } from "./kit.mjs";
 import { ADMIN, MEMBER, env, groupTable } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
-const ALL = ["courtnoticeset", "groupdomainset", "grouplanguagesset", "grouplogoset", "groupnameset", "hostingaccessset", "strengthbarset"];
+// the acts the screen draws: its own declaration (contract.test holds it to the registry's)
+const ALL = SCREENS.find((s) => s.id === "group").acts.map((a) => a.op).sort();
 
 test("R18 group: what the group chose is drawn to every member; the acts only to an administrator (control: a member is drawn none)", async () => {
   const a = await open("group", { me: ADMIN, table: groupTable() });

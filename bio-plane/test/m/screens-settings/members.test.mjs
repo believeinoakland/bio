@@ -2,7 +2,7 @@
    shell and a fake plane answering each op in its owner's shape; what it reads, what it draws, and what each act sends. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, ancestor, day, has, lacks, open, panelOf, rowOf, said, textOf, texts } from "./kit.mjs";
+import { acts, all, ancestor, day, has, lacks, open, panelOf, rowOf, said, textOf, texts, SCREENS } from "./kit.mjs";
 import { ADMIN, MEMBER, READER, ROSTER, membersTable, membersTableMember, refuse, env } from "./fixtures.mjs";
 
 const btn = (n, op, pred = () => true) => acts(n).filter((b) => b.attrs["data-act"] === op && pred(b));
@@ -17,7 +17,11 @@ test("R1 the reads: the roster, the group's key and the keep-away for every memb
   const m = await open("members", { me: MEMBER, table: membersTableMember() });
   const mo = m.p.requests.map((r) => r.op);
   assert.deepEqual(mo.slice(mo.indexOf("memberlist"), mo.indexOf("memberlist") + 3), ["memberlist", "groupkeystate", "aikeepawaystate"]);
-  for (const op of ["adminrecoverystep", "signerlist", "accountuses", "ailimits", "aiusage", "accounthistory", "expertiselist"]) assert.ok(!m.p.requests.some((r) => r.op === op), `nothing the owners refuse a member is read (${op})`);
+  // what the owners refuse a member: the reads the screen asks of an administrator beyond those it asks of a member (N1073)
+  const members = SCREENS.find((s) => s.id === "members");
+  const adminOnly = Object.values(members.reads({ me: ADMIN, subject: "ana" })).map((r) => r.op).filter((op) => !Object.values(members.reads({ me: MEMBER })).some((r) => r.op === op));
+  assert.ok(adminOnly.includes("adminrecoverystep") && adminOnly.includes("aiusage"), "the administrators' reads");
+  for (const op of adminOnly) assert.ok(!m.p.requests.some((r) => r.op === op), `nothing the owners refuse a member is read (${op})`);
 });
 
 test("R1 the roster: each member's handle, cover (to an administrator), role, capabilities and status; no \"formerly\" (DEC-197)", async () => {
