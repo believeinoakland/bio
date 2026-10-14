@@ -4,7 +4,7 @@
    transaction keeps nothing, so it is the reference: each node computed alone. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, MEMBER, OUTSIDER, ZONE } from "./fixture.mjs";
+import { world, metered, MEMBER, OUTSIDER, ZONE } from "./fixture.mjs";
 import { BOUNDS, hubBoundOf } from "../../../src/connection-grammar/index.mjs";
 
 const doc = { kind: "document" };
@@ -32,19 +32,33 @@ function voters(n) {
 const ask = (w, node, extra = {}) => w.ev.neighbours({ node, at: AT, viewer: MEMBER, scope: null, ...extra });
 const alone = (w, fn) => { let out; w.record.transact(() => { out = fn(); return { ok: true }; }); return out; };
 
-test("R35 a hub's vote events read in pages (T37-11): at the 4,000-vote shape a member's four pages and then each of its 4,000 votes, asked one node at a time, are answered well within the walk's time budget, each answer equal to the one the node asked alone gets", (t) => {
+/* N1063 (K3228): the walk's cost is bounded as the work it does in the store (statements run, rows read), which no
+   machine load changes, rather than by a clock, which failed under 8-way concurrency; the time is a diagnostic only.
+   Asked alone, a vote node costs 20 statements; answered from its page's batch, about 3. The bounds below hold the
+   batched walk to its measured work with a sixth of headroom, so a walk that fell back to node-by-node reads fails. */
+const PER_VOTE_STATEMENTS = 6, PER_VOTE_ROWS = 20;
+
+test("R35 a hub's vote events read in pages (T37-11): at the 4,000-vote shape a member's four pages and then each of its 4,000 votes, asked one node at a time, are answered from the pages within a bounded work per vote, a fraction of each node asked alone, each answer equal to the one the node asked alone gets", (t) => {
   const { w, voter, votes } = voters(hubBoundOf("event_voted"));
   const t0 = performance.now();
   const pages = [];
-  let page = 0;
-  do { const r = ask(w, voter, { page }); assert.equal(r.hub, undefined); pages.push(r); page = r.next; } while (page !== undefined);
-  const tPages = performance.now() - t0;
-  const answers = votes.map((v) => ask(w, v));
-  const spent = performance.now() - t0;
-  t.diagnostic(`4,000 votes: four pages ${tPages.toFixed(0)} ms; pages and 4,000 vote nodes ${spent.toFixed(0)} ms of the ${BOUNDS.time_budget_ms} ms budget`);
+  const walk = metered(w, () => {
+    let page = 0;
+    do { const r = ask(w, voter, { page }); assert.equal(r.hub, undefined); pages.push(r); page = r.next; } while (page !== undefined);
+    return votes.map((v) => ask(w, v));
+  });
+  const answers = walk.value;
+  t.diagnostic(`4,000 votes: pages and 4,000 vote nodes ${(performance.now() - t0).toFixed(0)} ms (the budget is ${BOUNDS.time_budget_ms} ms); `
+    + `${walk.statements} statements, ${walk.rows} rows`);
   assert.equal(pages.length, 4);
   assert.deepEqual(pages.flatMap((p) => p.items).map((i) => i.to), votes, "the pages joined are every vote, in order");
-  assert.ok(spent < BOUNDS.time_budget_ms / 4, `pages and votes took ${spent.toFixed(0)} ms; a quarter of the budget is ${BOUNDS.time_budget_ms / 4} ms`);
+  assert.ok(walk.statements <= PER_VOTE_STATEMENTS * votes.length, `the walk ran ${walk.statements} statements; at most ${PER_VOTE_STATEMENTS} a vote`);
+  assert.ok(walk.rows <= PER_VOTE_ROWS * votes.length, `the walk read ${walk.rows} rows; at most ${PER_VOTE_ROWS} a vote`);
+  /* each vote answered from its page costs a fraction of the same node asked alone (computed inside a transaction) */
+  const sample = votes.slice(0, 100);
+  const one = metered(w, () => alone(w, () => sample.map((v) => ask(w, v))));
+  assert.ok(walk.statements / votes.length <= one.statements / sample.length / 3,
+    `a vote cost ${(walk.statements / votes.length).toFixed(1)} statements in the walk, ${(one.statements / sample.length).toFixed(1)} alone`);
   /* the reference: inside a transaction nothing is kept, so every node is computed alone */
   const ref = alone(w, () => ({ pages: [0, 1000, 2000, 3000].map((p) => ask(w, voter, { page: p })), votes: votes.map((v) => ask(w, v)) }));
   assert.deepEqual(pages, ref.pages);

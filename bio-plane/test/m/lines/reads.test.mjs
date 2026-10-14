@@ -1,9 +1,10 @@
 /* lines at its interface: withdrawal (R8), readLine and linesOf (R9), structureAt (R10), holderAt (R11, R12),
-   partiesOf and proceedingLinks (R13). */
+   partiesOf and proceedingLinks (R13), their refusal of a non-proceeding through entities (R23). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, ANN, MACHINE } from "./fixture.mjs";
-import { STRUCTURE_KINDS } from "../../../src/lines/index.mjs";
+import { STRUCTURE_KINDS, linesOps } from "../../../src/lines/index.mjs";
+import { notAProceeding } from "../../../src/entities/index.mjs";
 
 const T = { statement: "The clerk told me at the counter" };
 
@@ -181,4 +182,28 @@ test("R13 partiesOf refuses NOT_A_PROCEEDING and answers the party_to lines with
   assert.deepEqual(links.map((l) => [l.line.line_id, l.kind, l.direction]).sort(),
                    [[a, "appeal_of", "in"], [cw, "consolidated_with", "out"], [ar, "arises_from", "out"]].sort());
   assert.ok(!links.some((l) => l.line.line_id === rm), "one hop: c2→c3 is not c1's");
+});
+
+test("R23 partiesOf's NOT_A_PROCEEDING is entities.notAProceeding's answer, code, row and sentence alike, for every kind that is not a proceeding, at both reads and through the ops map; control: a proceeding is not refused, and an absent or unknown id keeps its own refusal", () => {
+  const w = world();
+  const c = w.ent("proceeding", "Case one");
+  const others = ["person", "office", "body", "institution"].map((k) => w.ent(k, `A ${k}`));
+  const ops = (q) => linesOps(w.l, new URL(`https://plane.example/?${q}&viewer=${encodeURIComponent(ANN)}`), undefined);
+  for (const e of others) {
+    for (const [label, r] of [["partiesOf", w.l.partiesOf({ proceeding: e, viewer: ANN })],
+                              ["partiesOf at a date", w.l.partiesOf({ proceeding: e, at: "2022-01-01", viewer: ANN })],
+                              ["proceedingLinks", w.l.proceedingLinks({ proceeding: e, viewer: ANN })],
+                              ["partiesof op", ops(`proceeding=${e}`).partiesof()],
+                              ["proceedinglinks op", ops(`proceeding=${e}`).proceedinglinks()]]) {
+      assert.equal(r.reason, "NOT_A_PROCEEDING", label);
+      assert.deepEqual(r, notAProceeding(r.detail), `${label}: the answer is entities' own, its site's detail apart`);
+      assert.ok(typeof r.detail === "string" && r.detail.trim(), `${label}: the detail is named`);
+    }
+  }
+  /* control */
+  assert.equal(w.l.partiesOf({ proceeding: c, viewer: ANN }).ok, true);
+  assert.equal(w.l.proceedingLinks({ proceeding: c, viewer: ANN }).ok, true);
+  assert.equal(w.l.partiesOf({ viewer: ANN }).reason, "NO_ENTITY");
+  assert.equal(w.l.partiesOf({ proceeding: "ENT-2026-7777", viewer: ANN }).reason, "NO_SUCH_ENTITY");
+  assert.notDeepEqual(w.l.partiesOf({ proceeding: "ENT-2026-7777", viewer: ANN }), notAProceeding("ENT-2026-7777"));
 });

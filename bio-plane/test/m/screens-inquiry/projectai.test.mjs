@@ -101,7 +101,7 @@ test("R14 switch, remove, the notice, the panel's two acts and keep-away send wh
   await press(p, "accountusesset");
   assert.equal(p.byOp("accountusesset")[0].body.owner, OWNER);
   fill(p, { "aio-amount": "5" });
-  await press(p, "ailimitset", { within: section(p, "Limits on this account").querySelector(".cs-form") });
+  await press(p, "ailimitset", { within: p.doc.getElementById("aio-amount").parentElement.parentElement /* the panel's set-a-limit form (screens-settings R20 draws it as a plain block, not .cs-form) */ });
   assert.deepEqual([p.byOp("ailimitset")[0].body.owner, p.byOp("ailimitset")[0].body.amount], [OWNER, 5]);
   /* keep-away: what it does said first, on only with a reason */
   assert.match(section(p, "Keeping the project's material away from AI").textContent, /Keeps this project's material away from AI/);

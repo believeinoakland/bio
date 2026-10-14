@@ -283,7 +283,8 @@ test("R131 join_doors is declared through record-core's declareTable with export
   const names = mine.map((d) => d.name);
   assert.deepEqual(new Set(names), new Set([...MEMBERSHIP_PROJECT_TABLES, ...MEMBERSHIP_EXEMPT_TABLES]));
   assert.equal(names.length, new Set(names).size);
-  for (const d of mine.filter((x) => x.name !== "join_doors")) assert.equal(d.export, "admin-only", d.name);
+  /* R143 (T48): home_looks, the members' Home marks, is declared apart too, export never (its own test, t48) */
+  for (const d of mine.filter((x) => !["join_doors", "home_looks"].includes(x.name))) assert.equal(d.export, "admin-only", d.name);
   const r = w.m.joinDoors({ by: "admin" });
   assert.deepEqual([r.ok, r.websiteKey.live, r.websiteKey.current.id, r.joinLink.live, r.joinLink.history.length],
     [true, true, k.keyId, true, 1]);
@@ -300,5 +301,5 @@ test("R131 R115 a host whose record-core offers no declareTable (a test's stand-
   /* negative control: with declareTable offered, join_doors leaves the default form for its own declaration */
   const w = world();
   assert.equal(w.declared[0].opts.exempt.includes("join_doors"), false);
-  assert.deepEqual(w.tablesDeclared[0].entries.map((e) => [e.name, e.export]), [["join_doors", "never"]]);
+  assert.deepEqual(w.tablesDeclared[0].entries.map((e) => [e.name, e.export]), [["join_doors", "never"], ["home_looks", "never"]]);
 });

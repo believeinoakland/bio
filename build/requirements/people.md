@@ -1,6 +1,6 @@
 # people — requirements
 
-**Status** · In force: a new product module, reviewed (K1505; T33-36; banner cleared K1592); its meaning the canon ladders' and Bob's rulings (K1443, K1452, K1453, K1455, K1465, K1471, K1473, K1483–K1493, K1504). Last changed T36 (T36-17: R36 new, who recorded from a passage; K1941, K2063, K2092); R36 marked not yet met (T36), every other requirement met (K1970).
+**Status** · In force: a new product module, reviewed (K1505; T33-36; banner cleared K1592); its meaning the canon ladders' and Bob's rulings (K1443, K1452, K1453, K1455, K1465, K1471, K1473, K1483–K1493, K1504). Last changed T48 (T48-23: R38 new, amending R37, an organisation row's note says who wrote it, `note_by` and `machine`, N1050, K3177, K3178, per `draft-T48-fold-n847.md`; R39 new, amending R13 and R14, `personAt` answers the identity claims on the cluster with their ids, N1032, K3145; K3195); marked not yet met (T48). Before that T47 (T47: R37 new, the People directory; DEC-203, K3104). Last changed T36 (T36-17: R36 new, who recorded from a passage; K1941, K2063, K2092); R36 marked not yet met (T36), every other requirement met (K1970).
 
 **Size (P6).** New. Expected 1,800–2,300 lines (constructs-2 §4.1), under the 4,000 mark. M-P5 (the person read at 50,000 lines) and M-P6 (false merges) run inside the job.
 
@@ -72,11 +72,19 @@ Terms. A **person** is an `entities` entity of kind `person`. A **viewer** is th
 
 - **R37** (T47; DEC-203 (1)–(4); K3061 D8; Bob, K3104) `peopleDirectory({q, show, office, namedIn, since, cursor, limit, viewer})` (`op=peopledirectory`), a member's read, answers the people and organisations the record follows (entities of the person and organisation kinds; the group's members are never rows): `q` matches a name, a name they are also known by, or an office held; `show` is `people`, `organisations` or both; `office` keeps those holding an office in one body; `namedIn` is `any`, `mine` (a project the viewer works on) or one project; `since` (30, 90 or 365 days) keeps those named in something added in that time. Each row is `{entity, kind, name, today, documents, questions, projects, newest_added, mine}`: `today` the role and office held now (an organisation: what it is), the three counts the distinct captures, questions and projects naming it through `entities`' resolutions, counting only what the viewer may see, `newest_added` the instant the newest of those was added, `mine` true when it is named in a project the viewer works on. Rows are ordered `mine` first, then `newest_added` newest first, then by entity id; the answer carries `following` and `in_your_projects` (totals over the filter), and pages by `cursor`, at most `limit` (1–200, default 50) rows, with `truncated`. It writes nothing; a malformed argument is refused naming it; a project the viewer may not see counts as nothing and is never named. Tests: each filter; the order; the counts against a fixture with a project hidden from the viewer (control: its mentions not counted); paging to the end without a skip or repeat.
 
+- **R38** (T48; N1050; K3177, K3178; amends R37) A row of an organisation kind answers, in `today`, beside `note`:
+  - `note_by`, the entity's `declared_by` as `entities` holds it (its Terms);
+  - `machine`, `true` exactly when that author is a machine identity (`record-grammar.isMachineIdentity`; setup's seeding declares as one, `instance-setup` R50).
+  A screen can then tell setup's seeding from a member's words without reading the note's text. A person row is unchanged. Test: a seeded office answers `machine: true`; control: an office a member registered answers her stamp and `machine: false`.
+
+**The identity claims on a person's page** (T48; N1032; K3145)
+- **R39** (T48; N1032; K3145; amends R13, R14) `personAt` (`op=person`) answers, with the cluster it states (R13), `claims`: every identity claim not withdrawn (R4) the viewer may see (R31) that has an end in the cluster, `same_as`, `not_same_as` and `unsure` alike, each `{claim_id, a, b, kind, grade, why, by, at}` as R1 and R2 answer it, ordered by `at` then `claim_id`, at most 1,000 (R5's bound) with `claims_truncated` by reading one past. So a member names the claim she withdraws (`withdrawIdentityClaim`'s `claimId`) from the page itself. A claim made inside a project the viewer may not see is neither listed nor counted. It writes nothing. Test: a person joined to another by a `same_as` claim, with an `unsure` claim beside it, answers both claims with their ids, and `withdrawIdentityClaim` with the `same_as` id leaves only the `unsure` one; control: a claim made in a project hidden from the viewer is absent and uncounted.
+
 ## Private
 
 ### Uses
 
-- `record-grammar`: `ID_TABLE` and `idPattern` (`IDC-`, `PFA-`, `MTI-`, `CHK-`), `isHypothesisId`, the grade vocabulary.
+- `record-grammar`: `ID_TABLE` and `idPattern` (`IDC-`, `PFA-`, `MTI-`, `CHK-`), `isHypothesisId`, the grade vocabulary. Since T48, `isMachineIdentity` (R38; an existing edge).
 - `jurisdictions`: the active profiles' lawful-demand kinds (R12; K1493).
 - `civil-time`: `validAt`, the validity value, three-valued comparison (R2, R9, R14, R16).
 - `connection-grammar`: the shape, `registerOwner`, `ownerConformance` (R26).
@@ -84,7 +92,7 @@ Terms. A **person** is an `entities` entity of kind `person`. A **viewer** is th
 - `membership`: `viewerPredicate`, `inSight`, `listenerRefusal`, `MODULE_ORDER`, `notAnAdmin`.
 - `provenance`, `content`: the citation and the capture's visibility (R9, R10, R25). Since T36, `content`'s `extentRelation`, `canonicalExtent` (R36).
 - `sources`: the source's existence (R21).
-- `entities`: `has`, `readEntity` (kind, aliases, scheme identifiers), `noSuchEntity`, `noEntity`.
+- `entities`: `has`, `readEntity` (kind, aliases, scheme identifiers), `noSuchEntity`, `noEntity`. Since T48, an organisation's `declared_by` (R38).
 - `events`: `statementsOf`, `eventsFor`, `sequence` (R16). Since T36, R49's shape for R36 (an existing edge).
 - `lines`: `linesOf` (`holds`, `educated_at`, `credentialed_by`, `owns_interest_in`, `related_to`, `associate_of`), `structureAt` (R14, R15, R18, R22).
 - `money`: `moneyOf` (R15, R22).

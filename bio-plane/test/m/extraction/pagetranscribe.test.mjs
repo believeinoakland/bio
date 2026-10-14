@@ -36,7 +36,7 @@ function transcriber({ set = ONE_MATTER, records = [PASSED], away = () => null, 
     transcription({ member: m, project, at }) {
       calls.transcription.push({ member: m, project, at });
       return { member: m, project, at, act: `transcribe:abc:${at}`,
-        credentials: { accountFor: async (q) => { calls.accountFor.push(q); return account ?? { ok: true, kind: "apikey", level: "member", key: SENTINEL }; } },
+        accounts: { accountFor: async (q) => { calls.accountFor.push(q); return account ?? { ok: true, kind: "apikey", level: "member", key: SENTINEL }; } },
         useCheck: async (q) => { calls.useCheck.push(q); return limit; },
         transcribe: async (q) => { calls.transcribe.push(q); return answer(q.pages, q); } };
     },
@@ -195,7 +195,7 @@ test("R71 R72 R34 R19 R23 R24 R44 (the whole chain, the bar held on a one-matter
                    [true, true, [1], "claude-test", "2026-01", 3, 1, WORD("transcribe.label")]);
   assert.match(x.act, /^transcribe:abc:/);
   assert.match(x.note, /transcribed by the AI \(claude-test 2026-01\) at a member's request/);
-  assert.match(x.note, /page 3 the AI did not transcribe|did not transcribe/);
+  assert.match(x.note, /page 3 the AI did not transcribe, and it stays unread/);
   assert.ok(x.units && x.units.written === 2, "pages 0 and 1 indexed");
   assert.equal(typeof x.chain, "string");
   /* the asks: tier 4 was asked for the two picture pages, for the acting member */

@@ -132,9 +132,9 @@ test("R46 (T45 exception), R77: a re-examination run is started only at a member
   assert.equal(w.row(`SELECT principal_claude_ref FROM ai_runs WHERE run = 'X1'`).principal_claude_ref, "member:bob");
 });
 
-test("R77, R52: a re-examination run is paid as the recording member's act with the run's project — the project's own account where it holds one and it is on, else the member's; within the paying account's limits (ai-use) and the keep-away settings (credentials), each refusal relayed as it came with nothing written", async () => {
+test("R77, R52: a re-examination run is paid as the recording member's act with the run's project — the project's own account where it holds one and it is on, else the member's; within the paying account's limits (ai-use) and the keep-away settings (ai-accounts), each refusal relayed as it came with nothing written", async () => {
   const w = await planWorld();
-  const C = w.credentials;
+  const C = w.aiAccounts;
   /* control: no project account, the recording member's own pays, and the act is that member's */
   assert.equal((await reexam(w, { run: "X0", response: "COR-0" })).started, true);
   assert.deepEqual({ ...w.row(`SELECT principal_claude, principal_claude_ref FROM ai_runs WHERE run = 'X0'`) },
@@ -146,7 +146,7 @@ test("R77, R52: a re-examination run is paid as the recording member's act with 
   assert.equal((await reexam(w, { run: "X1", response: "COR-1" })).started, true);
   assert.deepEqual({ ...w.row(`SELECT principal_claude, principal_claude_ref FROM ai_runs WHERE run = 'X1'`) },
                    { principal_claude: `project:${PROJ}`, principal_claude_ref: "member:bob" });
-  /* the project keeps its material away from the assistant: refused as credentials answers it, nothing written */
+  /* the project keeps its material away from the assistant: refused as ai-accounts answers it, nothing written */
   assert.equal(C.projectAiKeepAwaySet({ project: PROJ, on: true, reason: "a source's papers", by: "member:ann" }).ok, true);
   const before = w.dump();
   const kept = await reexam(w, { run: "X2", response: "COR-2" });

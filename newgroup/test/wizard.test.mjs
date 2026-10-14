@@ -186,7 +186,10 @@ function script(rules) {
 
 const req = (path, init) => worker.fetch(new Request("https://newgroup.believeinoakland.workers.dev" + path, init));
 
+/* R55 (T48): an update is of the release chosen, so each update arm names one: by default the release `NEWER()` serves. */
+let UPDATE_OF = null;
 async function begin(slug, mode = "install", extra = {}) {
+  if (mode === "update" && extra.version === undefined) extra = { ...extra, version: UPDATE_OF ?? CUR_VER };
   const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug, mode, ...extra }) });
   const j = await r.json();
   const cookie = (r.headers.get("set-cookie") || "").split(";")[0];
@@ -244,7 +247,7 @@ console.log("\n--- front page and begin ---");
   t("the front page is hard-wired to install", homeBody.includes('mode:"install"'), true);
   t("it points elsewhere for updates", homeBody.includes('href="/update"'), true);
 
-  const up = await req("/update");
+  const up = await req("/update?version=" + CUR_VER);
   const upBody = await up.text();
   t("GET /update is the update page", upBody.includes("Update your group's Civicsmith"), true);
   t("the update page is hard-wired to update", upBody.includes('mode:"update"'), true);
@@ -708,7 +711,7 @@ console.log("\n--- update: keeps everything, carries no migration ---");
      update DELETES a working instance's binding. */
   t("keep_bindings does not inherit service bindings", meta.keep_bindings.includes("service"), false);
   t("the page says passwords and record are untouched", body.includes("exactly as they were"), true);
-  t("the update says which release it used and why", body.includes("newer than the built-in"), true);
+  t("the update says which release it used and why", body.includes("Checked the release is Civicsmith's own, signed and unaltered"), true);
   t("no token in output", body.includes(TOK), false);
   globalThis.fetch = realFetch;
 }
@@ -732,7 +735,7 @@ console.log("\n--- update: storage unavailable never blocks an update ---");
   const meta = await metadataOf(calls.find((c) => c.method === "PUT"));
   t("existing buckets kept, none invented", meta.keep_bindings.includes("r2_bucket")
     && meta.bindings.filter((b) => b.type === "r2_bucket").length === 0, true);
-  t("the update still lands", body.includes("Updated from 0.1.0 to"), true);
+  t("the update still lands", body.includes("it ran 0.1.0."), true);
   globalThis.fetch = realFetch;
 }
 
@@ -1104,7 +1107,7 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     { m: (u) => u.includes("cross-town.cx.workers.dev/api/?op=bootstrap"), f: midUpdateBuilt("0.70.0", CUR_VER) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
-  t("CROSSING (0.70.0 -> this release): the update lands as an update", body.includes(`Updated from 0.70.0 to ${CUR_VER}`), true);
+  t("CROSSING (0.70.0 -> this release): the update lands as an update", body.includes(`It runs release ${CUR_VER}; it ran 0.70.0.`), true);
   t("and it TELLS the one act left to the operator, saying why from the version it read",
     [body.includes("One thing this update does not do for you"), body.includes("Your group&#39;s Civicsmith ran 0.70.0 before this update")],
     [true, true]);
@@ -1140,7 +1143,7 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
     { m: (u) => u.includes("past-town.pt.workers.dev/api/?op=bootstrap"), f: midUpdate(RELEASE_VERSION, FLEET_VER) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
-  t(`PAST THE LINE (${RELEASE_VERSION} -> ${FLEET_VER}): the update lands`, body.includes(`Updated from ${RELEASE_VERSION} to ${FLEET_VER}`), true);
+  t(`PAST THE LINE (${RELEASE_VERSION} -> ${FLEET_VER}): the update lands`, body.includes(`It runs release ${FLEET_VER}; it ran ${RELEASE_VERSION}.`), true);
   t("and tells NOTHING about the producing group: the update that crossed the line told it, or the copy recorded it at first boot",
     [body.includes("One thing this update does not do for you"), body.includes("op=instancegroupseed")], [false, false]);
   t("and never seeds, nor asks op=instancegroup", groupCalls(calls), []);
@@ -1165,7 +1168,7 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
         : jres({ ok: true, version: CUR_VER, storeVersion: CUR_VER, memberVersions: {} }) },
   ]);
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
-  t("VERSION BEFORE UNKNOWN: the update lands", body.includes(`Updated to ${CUR_VER}`), true);
+  t("VERSION BEFORE UNKNOWN: the update lands", body.includes(`It runs release ${CUR_VER}; it ran (not read).`), true);
   t("and the telling is CONDITIONAL, saying the installer could not read what ran before — undetermined, stated",
     [body.includes("could not read which version your group&#39;s Civicsmith ran"), body.includes("op=instancegroupseed")], [true, true]);
   t("and never seeds, nor asks op=instancegroup", groupCalls(calls), []);
@@ -1231,7 +1234,7 @@ async function d116Update(slug, after) {
   const r = await d116Update("all-town", { storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
   t("ARMED: the capable release was the one installed, with its member", [r.memberPut, r.askedMembers], [true, true]);
-  t("ALL ON THE RELEASE: the update is reported done", r.body.includes(`Updated from 0.1.0 to ${FLEET_VER}`), true);
+  t("ALL ON THE RELEASE: the update is reported done", r.body.includes(`It runs release ${FLEET_VER}; it ran 0.1.0.`), true);
   t("and says what was confirmed — every part, not only the address",
     r.body.includes(`Every part of your group's Civicsmith answers ${FLEET_VER}`), true);
   t("and names no lag", r.body.includes("not yet confirmed"), false);
@@ -1447,7 +1450,7 @@ const oldMember = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
   t("UPDATE of a copy installed WITHOUT members: it gains a binding to each, by name", r.targets, RIGHT);
   t("UPDATE (no members before): every member reads SERVING through the plane", states(r.members), ALL_SERVING);
   t("UPDATE (no members before): reported done, every part confirmed",
-    [r.body.includes(`Updated from 0.1.0 to ${FLEET_VER}`), r.refused], [true, []]);
+    [r.body.includes(`It runs release ${FLEET_VER}; it ran 0.1.0.`), r.refused], [true, []]);
 }
 {
   /* The population D-297's installer left: members uploaded, plane bound to none of them. */
@@ -1537,7 +1540,7 @@ console.log("\n--- DIST-9: the organisation ai credential is carried when suppli
   t("DIST-9 (update): the page says none was sent and that the installer never creates one",
     u0.body.includes("No organisation AI credential was given, so none was sent"), true);
 
-  const upPage = await (await req("/update")).text();
+  const upPage = await (await req("/update?version=" + CUR_VER)).text();
   const homePage = await (await req("/")).text();
   t("DIST-9: the UPDATE page offers the optional credential box, as a password field",
     /<input id="ai" type="password"/.test(upPage), true);

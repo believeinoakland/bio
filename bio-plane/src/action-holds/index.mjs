@@ -36,7 +36,7 @@ import { docketOf } from "../docket/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
 import { doorbellOf } from "../doorbell/index.mjs";
 import { ratificationOf } from "../ratification/index.mjs";
-import { isCalendarDate } from "../civil-time/index.mjs";
+import { actionRecordsOf, correspondEntryRefusal } from "../action-records/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, BUNDLE_ID_RE } from "../record-grammar/index.mjs";
 import { ACTION_ACT_CHECKS, ACTION_CATALOGUE_CHECKS } from "../action-grammar/index.mjs";
 import { ACTION_HOLDS_CHECKS } from "./checks.mjs";
@@ -797,21 +797,18 @@ export class ActionHolds {
   #heldAs({ artifactSha, account, medium }) {
     const sha = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
     const acct = String(account ?? "").trim();
-    if (sha && acct)
-      return { refusal: { ok: false, reason: "CAPTURE_AND_TESTIMONY", detail: "it is held as the captured bytes OR a named "
-        + "account, never both. Nothing was written." } };
-    if (!sha && !acct)
-      return { refusal: { ok: false, reason: "NEITHER_CAPTURE_NOR_TESTIMONY", detail: "it is held as an artifact_sha that "
-        + "resolves in the register or as an account by its author. Nothing was written." } };
     if (sha && !/^[0-9a-f]{64}$/.test(sha))
       return { refusal: { ok: false, reason: "BAD_SHA", detail: "artifact_sha is a sha256 hash (64 hex characters)" } };
     for (const [name, v] of [["account", acct], ["medium", String(medium ?? "").trim()]])
       if (v.length > NOTE_MAX || /["\\\r\n]/.test(v))
         return { refusal: { ok: false, reason: `BAD_${name.toUpperCase()}`, detail: `${name} is at most ${NOTE_MAX} `
           + "characters and cannot contain a quote, a backslash, or a newline" } };
-    if (sha && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
-      return { refusal: { ok: false, reason: "UNREGISTERED_ARTIFACT", artifact_sha: sha, detail: "this hash names no "
-        + "capture in this store. Capture it first (op=capture), or record a named account instead." } };
+    /* R17 (T48; N1024): the register judgment is `action-records` R16's one site. */
+    if (sha) {
+      const records = actionRecordsOf(this.#deps.host, { storage: { sql: this.sql }, record: this.record, membership: this.membership });
+      const unregistered = records.unregisteredArtifact(sha);
+      if (unregistered) return { refusal: unregistered };
+    }
     return { sha: sha || null, account: acct || null };
   }
 
@@ -835,9 +832,9 @@ export class ActionHolds {
     const latest = this.#one(`SELECT hold FROM action_holds WHERE bundle_id=? AND ord=? ORDER BY seq DESC LIMIT 1`, pl.bundle, pl.ord);
     if (!latest || latest.hold !== "in_place") return holdNotInPlace(where);
     const day = String(at ?? "").trim();
-    if (!isCalendarDate(day))
-      return withRow({ ok: false, reason: "BAD_DATE", at: day, detail: "the day the notice was sent is a YYYY-MM-DD the "
-        + "calendar has. Nothing was written." });
+    /* R17: BAD_DATE, CAPTURE_AND_TESTIMONY and NEITHER_CAPTURE_NOR_TESTIMONY, in that order, through `action-records` R16. */
+    const entry = correspondEntryRefusal({ at: day, artifactSha, account }, where);
+    if (entry) return entry;
     const held = this.#heldAs({ artifactSha, account, medium });
     if (held.refusal) return withRow({ ...held.refusal, ...where });
     const med = String(medium ?? "").trim() || null;
@@ -869,9 +866,8 @@ export class ActionHolds {
     const p = str(String(project ?? ""));
     if (!PROJECT_ID_RE.test(p) || !this.#seesFull(p, viewer)) return noSuchProject(p || null);
     const day = String(at ?? "").trim();
-    if (!isCalendarDate(day))
-      return withRow({ ok: false, reason: "BAD_DATE", at: day, detail: "the day the pressure arrived is a YYYY-MM-DD the "
-        + "calendar has. Nothing was written." });
+    const entry = correspondEntryRefusal({ at: day, artifactSha, account }, { project: p });
+    if (entry) return entry;
     const held = this.#heldAs({ artifactSha, account, medium: null });
     if (held.refusal) return withRow({ ...held.refusal, project: p });
     const recorded = stampInstant("second", this.#nowMs());
@@ -1025,5 +1021,8 @@ export function actionHoldsOps(h, url, body) {
     /* R12: pressure that arrived outside any action. */
     pressurerecord: () => h.pressureRecord({ project: pick("project"), pressure: pressure(), artifactSha: pick("artifact_sha"),
       account: pick("account"), at: pick("at"), viewer: q("viewer"), author: q("author") }),
+    /* R16 (T48; N1035; K3145): the pressure marks and records, read as an op; exactly R12's read, `viewer` the plane's stamp. */
+    pressurefor: () => h.pressureFor({ project: q("project") || null, action: q("action") || null, after: q("after") || null,
+      limit: q("limit") || null, viewer: q("viewer") }),
   };
 }

@@ -28,18 +28,18 @@ function render(cs, view) {
   const next = (pos !== null && clock[pos]) || clock.find((e) => e.status === "pending" && e.date) || null;
   const out = [cs.title(next ? cs.w(S + "due", { date: cs.date(next.date) }) : cs.w("screen.due-date.name"),
     { thing: { kind: "action", facts: a ? [a.kind || "", (a.counterparty && (a.counterparty.role || a.counterparty.body)) || ""] : [] } })];
-  if (a && a.counterparty) out.push(`<p class="cs-sub">${cs.w(S + "of", { who: (a.counterparty.role || "") + (a.counterparty.body ? ", " + a.counterparty.body : "") })}</p>`);
+  if (a && a.counterparty) out.push(`<p class="mk-sub">${cs.w(S + "of", { who: (a.counterparty.role || "") + (a.counterparty.body ? ", " + a.counterparty.body : "") })}</p>`);
   /* the confirmed entries: what each is, its basis and when */
   out.push(cs.sec(S + "entries", cs.state("action", view, () => (clock.length
-    ? cs.sheet(clock.map((e, i) => (i === pos ? '<div class="cs-current" aria-current="true">' : "<div>") + cs.row(cs.due(e.date || "", e.status === "met" ? "met" : e.status === "overdue" ? "overdue" : ""),
+    ? cs.sheet(clock.map((e, i) => (i === pos ? '<div aria-current="true">' : "<div>") + cs.row(cs.due(e.date || "", e.status === "met" ? "met" : e.status === "overdue" ? "overdue" : ""),
       `<b>${cs.esc(e.description || e.text || "")}</b><span class="meta">${cs.w(S + "basis", { basis: e.basis || "" })}${e.due_at ? " · " + cs.w(S + "at", { time: String(e.due_at).slice(11, 16), zone: e.due_zone || "" }) : ""}</span>`,
-      `<span class="cs-meta">${cs.w(S + "status." + (["pending", "met", "overdue", "waived"].includes(e.status) ? e.status : "pending"))}</span>`) + "</div>").join(""))
-    : `<p>${cs.w(S + "entries.none")}</p>`)
+      `<span class="mk-small">${cs.w(S + "status." + (["pending", "met", "overdue", "waived"].includes(e.status) ? e.status : "pending"))}</span>`) + "</div>").join(""))
+    : "")
     /* drawn only once the clock is read, so its first value is the entry the address names, never one kept from before */
     + cs.choice("dd-entry", S + "entry", clock.map((e, i) => ({ value: String(i), text: (e.description || e.text || "") + " · " + (e.date || "") })), { value: pos !== null ? String(pos) : undefined }))
     + cs.field("dd-on", S + "on", { type: "date" })
     + cs.act("reminderset", { label: "act.reminderset.label.due-date" })
-    + `<p>${cs.state(view.data.calendar, (c) => cs.save(c.filename || "deadlines.ics", c.ics, { label: S + "download" }), { empty: S + "download.none" })}</p>`));
+    + `<p>${clock.length ? cs.state(view.data.calendar, (c) => cs.save(c.filename || "deadlines.ics", c.ics, { label: S + "download" })) : ""}</p>`));
   /* how it was worked out: each standing proposal's trace */
   const trace = (p) => {
     const t = p.trace || {};
@@ -51,14 +51,14 @@ function render(cs, view) {
       .concat((t.skipped || []).map((s) => `<li>${cs.w(S + "step.skipped", { date: cs.date(s.day), why: s.why || "", source: srcOf(s.day) })}</li>`))
       .concat([`<li>${p.date ? cs.w(S + "step.due", { date: cs.date(p.date), zone: t.zone || "" }) : cs.mark("gap", "undetermined", { reason: p.undetermined && p.undetermined.why ? p.undetermined.why : cs.w(S + "nodate") })}</li>`]);
     const machine = p.label && p.label.machine_work;
-    return `<div class="cs-proposal" data-proposal="${cs.esc(p.key)}">${machine ? cs.mark("origin", "machine") : ""} <b>${cs.w(S + "proposal", { by: String(p.proposed_by || "").replace(/^(member|class):/, "") })}</b>`
+    return `<div class="mk-msg" data-proposal="${cs.esc(p.key)}">${machine ? cs.mark("origin", "machine") : ""} <b>${cs.w(S + "proposal", { by: String(p.proposed_by || "").replace(/^(member|class):/, "") })}</b>`
       + `<ol class="mk-list">${steps.join("")}</ol>`
       + cs.act("clockadopt", { label: "act.clockadopt.label.due-date", tone: "primary", data: { proposal: p.key } }) + "</div>";
   };
   out.push(cs.sec(S + "how", cs.state("proposals", view, (v) => ((v.proposals || []).length
-    ? cs.field("dd-why", S + "why", { help: S + "why.help" }) + v.proposals.map(trace).join("") : `<p>${cs.w(S + "how.none")}</p>`))
+    ? cs.field("dd-why", S + "why", { help: S + "why.help" }) + v.proposals.map(trace).join("") : ""))
     + cs.act("clockpropose", { label: "act.clockpropose.label.due-date" })));
-  out.push(`<p class="cs-note">${cs.w(S + "queue")}</p>`);
+  out.push(`<p class="mk-note">${cs.w(S + "queue")}</p>`);
   return out.join("");
 }
 
@@ -90,7 +90,6 @@ export const DUE_WORDS = [
   ["due", "Due {date}"],
   ["of", "The reply owed by {who}"],
   ["entries", "Confirmed due dates"],
-  ["entries.none", "No due date is confirmed for this action yet."],
   ["basis", "basis: {basis}"],
   ["at", "by {time}, {zone}"],
   ["status.pending", "pending"],
@@ -101,9 +100,7 @@ export const DUE_WORDS = [
   ["on", "Remind me on"],
   ["remind.empty", "Choose the due date and the day to be reminded."],
   ["download", "Download to my calendar"],
-  ["download.none", "No confirmed due date to put in a calendar yet."],
   ["how", "How this was worked out"],
-  ["how.none", "No proposal stands for this action. Work it out again to see how the date is counted."],
   ["proposal", "Worked out by {by}"],
   ["step.basis", "Basis: {basis}"],
   ["step.received.receipt", "Received by the office: {date}."],

@@ -55,7 +55,7 @@ export function storage(db = new DatabaseSync(":memory:")) {
 export const GATE_SET = Object.freeze({ id: "plane-t45-set", version: 1, matters: Object.freeze([{ id: "m1" }]) });
 export const GATE_FLAGS = Object.freeze({ ask: true, draft: true, action_drafts: true });
 export const GATE_PARTS = Object.freeze(["ask", "draft:own_words", "draft:translation", "draft:textcheck", "draft:infractiondraft",
-                                         "draft:bearingdraft", "draft:statusreport"]);
+                                         "draft:bearingdraft", "draft:statusreport", "draft:reading"]);
 export async function deployed(ctx, parts = GATE_PARTS) {
   const { aiRunsOf } = await import("../../../src/ai-runs/index.mjs");
   for (const part of parts) {

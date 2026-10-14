@@ -2,14 +2,29 @@
    serves, run over the shell's document stand-in with a scripted plane, so every screen is drawn by the shell's own kit
    and every act runs through its friction, gate, refusals and re-reads. The fixtures are each op's answer as its owner
    documents it (action-plans, filings, actions, action-holds, conformance, consequences, escalation, instance-setup). */
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { SCREENS } from "../../../src/screens-action/index.mjs";
-import { wordsOf } from "../../../src/interface-shell/index.mjs";
+import { wordsOf, interfacePage } from "../../../src/interface-shell/index.mjs";
 import { boot, ok, refused, refusedIn, settle, textNodes, MEMBER } from "../interface-shell/harness.mjs";
 
 export { SCREENS, ok, refused, refusedIn, settle, textNodes, MEMBER };
+/* R14: the classes a served stylesheet defines: the visual language's `civicsmith.css`, the design page's product rules (what
+   interface-assets R7 serves as `shell.css`) and the shell's own `<style>` in the page. */
+const DOCS = join(dirname(fileURLToPath(import.meta.url)), "../../../../docs/development/ux-substrate");
+export function servedClasses() {
+  const css = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{[^{}]*\}/g, "{}").replace(/"[^"]*"/g, '""');
+  const page = readFileSync(join(DOCS, "screens/page.src.html"), "utf8");
+  const parts = [readFileSync(join(DOCS, "visual-language/civicsmith.css"), "utf8"), ...[...page.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]),
+    ...[...interfacePage(SCREENS).matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1])];
+  return new Set(parts.flatMap((t) => [...css(t).matchAll(/\.([A-Za-z_][\w-]*)/g)].map((m) => m[1])));
+}
 export const screen = (id) => SCREENS.find((s) => s.id === id);
 
 export const open = (path, plane = {}, o = {}) => boot({ screens: SCREENS, plane, path, ...o });
+/** The path's steps, as the kit draws them (a link or span per earlier step, the current page last). */
+export const crumbs = (p) => main(p).querySelector("nav.cs-crumbs").children.filter((e) => e.localName !== "i").map((e) => e.textContent.trim());
 export const main = (p) => p.doc.getElementById("cs-main");
 export const text = (p, el = main(p)) => (el ? el.textContent : "").replace(/\s+/g, " ").trim();
 export const acts = (p) => main(p).querySelectorAll("button[data-act]").map((b) => [b.getAttribute("data-act"), b.dataset]);
@@ -97,6 +112,7 @@ export const PREVIEW = { plan: PLAN_ID, option: "opt-1", preview: true, would_st
 
 export const ACTION = Object.freeze({
   id: ACTION_ID, current_state: "awaiting_response", kind: "records_request", plan: PLAN_ID, option: "opt-3", confidential: false,
+  project: PROJECT, title: "Inspection logs, 2025",
   addressee: { role: "City Clerk", body: "Office of the City Clerk", entity_id: "ENT-1", filled: true, holder_on_date: { holder: "Asha Rao", on: "2026-10-14" } },
   correspondence: [
     { ord: 1, direction: "sent", at: "2026-10-02", medium: "web form", party: "Office of the City Clerk", author: "member:mai" },
@@ -107,6 +123,14 @@ export const ACTION = Object.freeze({
     { text: "Extension ends", description: "x", date: "2099-10-26", basis: "fourteen more days", status: "pending" }],
   reply_owed: { owed: true, history: [] }, governing_laws: [{ level: "state", citation: "Gov. Code § 7922.535" }],
 });
+/** `pressurefor` as action-holds R16 answers it: the action's marks, each with where it arrived. */
+export const PRESSURE = { ok: true, items: [{ arrived: { action: ACTION_ID, ord: 2 }, project: PROJECT, kind: "legal", note: "a letter from the city's counsel", by: "member:mai", at: "2026-10-04T09:00:00Z" }],
+  limit: 500, truncated: false, cursor: null };
+/** `filingread` as filings R59 answers a prepared communication, as it was stored. */
+export const READ = (o = {}) => ({ ok: true, id: FILING, filing: FILING, action: ACTION_ID, form: "communication", purpose: "request",
+  text: "We request the logs for 2025.", blanks: [{ name: "period", value: "2025", source: "fills:member:mai", label: { kind: "member_fill", by: "member:mai", machine_work: false, says: "x" } },
+    { name: "office", value: "City Clerk", source: ACTION_ID }], unfilled: [{ name: "cost_limit", why: "the record holds no value for this blank: the member fills it in" }],
+  fills: [], template: null, disclosure: { machine: false }, notices: [], label: "x", at: "2026-10-09T10:00:00Z", approval: null, second_approval: null, sending: null, ...o });
 export const draft = (o = {}) => ({ filing: FILING, form: "communication", purpose: "request", label: "x", at: "2026-10-09T10:00:00Z",
   approval: null, second_approval: null, second_needed: false, signatories: [], voice: "group", sending: null, ...o });
 export const FILINGS = (drafts = []) => ({ action: ACTION_ID, drafts, drafts_truncated: false, packets: [], packets_truncated: false });
@@ -135,7 +159,7 @@ export const ESCALATION = { id: ESC, project: PROJECT, determination: DET, state
 export const DATA_PLANE = {
   plan: ok(PLAN), planproposals: ok(PROPOSALS), list: ok(PROJECTS), optionstartpreview: ok(PREVIEW),
   action: ok(ACTION), filingsfor: ok(FILINGS([])), actionholdpreview: ok({ target: ACTION_ID, ord: null, hold: null, restarts: [] }),
-  file: ok({ text: `---\nid: ${ACTION_ID}\nobject_type: action\nproject: ${PROJECT}\n---\n`, sha256: "x" }),
+  pressurefor: ok(PRESSURE),
   profiles: ok(PROFILES), determination: ok(DETERMINATION), consequencesof: ok(CONSEQUENCES), escalationstatus: ok(STATUS_OPEN), escalation: ok(ESCALATION),
 };
 export const ROUTES = {

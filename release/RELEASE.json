@@ -1,16 +1,16 @@
 {
-  "version": "0.82.0",
-  "sha256": "e3f69fad78a30c4af2ad929cbf3a4fc431f00ae82be63b71f2541f6e4b26cadf",
-  "bytes": 16853103,
+  "version": "0.84.0",
+  "sha256": "ff30ebb1c671acb8f6ed13d67d0b961f1064c307761c7312e5738d6ae3c0caa5",
+  "bytes": 19351881,
   "asset": "bio-plane.bundled.mjs",
-  "sig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgKIDolGbnasTdqBkAqpv/gBMDfh\nzyMSndh5/QpnIJ7XwAAAALYmlvLXJlbGVhc2UAAAAAAAAABnNoYTUxMgAAAFMAAAALc3No\nLWVkMjU1MTkAAABAJckzLPKhHJpGWwAkzHTTfQ4PDIPrMnx0JgGhcgjzLE464pufNYTWYS\ndhj9nV28AcBAMr5VagTKpXiPHx1MI/CA==\n-----END SSH SIGNATURE-----\n",
+  "sig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgKIDolGbnasTdqBkAqpv/gBMDfh\nzyMSndh5/QpnIJ7XwAAAALYmlvLXJlbGVhc2UAAAAAAAAABnNoYTUxMgAAAFMAAAALc3No\nLWVkMjU1MTkAAABANjyTgHd56kzHr7vtvpZG6G3XPnHXmIy1G6hYDqMEfqNPzb/sVw350Z\nUmyYILv/2HMdaowcdd1pz05JjUS2kKBQ==\n-----END SSH SIGNATURE-----\n",
   "signer": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICiA6JRm52rE3agZAKqb/4ATA34c8jEp3Yef0KZyCe18 bio-release",
   "fleet": [
     {
       "member": "agent-runner",
       "asset": "agent-runner.bundled.mjs",
-      "sha256": "a6a799696b4d2cb5fcc8630d7e05b8184e436450c483751c9600fba83b551378",
-      "bytes": 60818,
+      "sha256": "14d2df8d18eaad4578a3b685428ec3fe5222cd1cb9f6a44ae9c46340d21fe4b1",
+      "bytes": 65644,
       "compat": {
         "date": "2026-07-01",
         "flags": [
@@ -22,7 +22,7 @@
         {
           "path": "container.json",
           "type": "Container",
-          "sha256": "d08c2d29f24aea79e04979bab1a02d452fca4f445be92f91f048aa4478d16196",
+          "sha256": "d08e96a1d746c319dcd4b9792516dce3e8ef24240247a4d8056d26efc8fc4c7f",
           "bytes": 7982
         }
       ]
@@ -30,8 +30,8 @@
     {
       "member": "agent-worker",
       "asset": "agent-worker.bundled.mjs",
-      "sha256": "253400fa9a2c93856897a246ae99c60ee36744c635e0531500c59f9585252ed1",
-      "bytes": 289100,
+      "sha256": "6ccc930db26dbfe812cf2533bf69e97537065e7df0ac4423607477a5250a99c2",
+      "bytes": 304971,
       "compat": {
         "date": "2026-07-01",
         "flags": [
@@ -157,5 +157,5 @@
       ]
     }
   ],
-  "fleetSig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgKIDolGbnasTdqBkAqpv/gBMDfh\nzyMSndh5/QpnIJ7XwAAAARYmlvLXJlbGVhc2UtZmxlZXQAAAAAAAAABnNoYTUxMgAAAFMA\nAAALc3NoLWVkMjU1MTkAAABAYXtUSSzF2bSdlTQsnNz3+tuoBuYjo90IYSZLUr8TyDfnNX\nUy2OqtLcFw2cYxNoPuTK5OPKH2uK7EsAhvSfqMAw==\n-----END SSH SIGNATURE-----\n"
+  "fleetSig": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgKIDolGbnasTdqBkAqpv/gBMDfh\nzyMSndh5/QpnIJ7XwAAAARYmlvLXJlbGVhc2UtZmxlZXQAAAAAAAAABnNoYTUxMgAAAFMA\nAAALc3NoLWVkMjU1MTkAAABAIyqnOtm2iSuVu5OKdF4aozotQ/OmmvPRI7SXGKeg79yZLN\n3iXUmBHqjtm3SWULTUyLI8KZpLcWrjNusemxRdAw==\n-----END SSH SIGNATURE-----\n"
 }

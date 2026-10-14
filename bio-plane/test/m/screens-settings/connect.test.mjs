@@ -58,7 +58,7 @@ test("R5 the two notices, each outward, before the first question: groupkeynotic
   for (const op of ["groupkeynoticeseen", "disclosureshown"]) {
     const b = acts(g.tree).find((x) => x.attrs["data-act"] === op);
     assert.ok(b, op);
-    const n = ancestor(b, (e) => e.attrs.class === "cs-notice");
+    const n = ancestor(b, (e) => e.attrs.class === "mk-msg");
     assert.ok(n && textOf(n).includes(said("mark.outward.means")), `${op} carries mark.outward.means`);
     assert.equal(g.s.acts.find((x) => x.op === op).outward, true);
   }
@@ -70,23 +70,57 @@ test("R5 the two notices, each outward, before the first question: groupkeynotic
   assert.ok(!ops(seen).includes("groupkeynoticeseen"), "once seen, not again");
 });
 
-test("R4, R5, R13 connecting, in DEC-156's order: the subscription (only while bootstrap's part_signin answers true), then an API key, then skip", async () => {
+test("R4, R5, R13 connecting, in DEC-156's order: the subscription (only while bootstrap's part_signin answers true), then an API key, then not now", async () => {
   const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
+  // one choice first, the subscription preselected, then the other two in order (R30)
+  const way = all(a.tree, (e) => e.attrs.id === "mc-way")[0];
+  assert.deepEqual(all(way, (e) => e.tag === "option").map((o) => o.attrs.value), ["subscription", "apikey", "later"]);
+  assert.equal(all(way, (e) => e.tag === "option" && "selected" in e.attrs)[0].attrs.value, "subscription");
   const order = acts(a.tree).map((b) => b.attrs["data-act"] + (b.attrs["data-step"] ? ":" + b.attrs["data-step"] : ""));
-  assert.deepEqual(order, ["subscriptionsignin:start", "subscriptionsignin:code", "accountreferenceset"]);
-  const t = textOf(a.tree);
-  assert.ok(t.indexOf(said("screen.connect.signin.heading")) < t.indexOf(said("screen.connect.apikey.heading")) && t.indexOf(said("screen.connect.apikey.heading")) < t.indexOf(said("screen.connect.skip")));
+  assert.deepEqual(order, ["subscriptionsignin:start", "subscriptionsignin:code"]);
   // (R13) the flat `part_signin` (instance-setup R82): `false` not installed, `null` could not be read; the API key either way
   for (const [part, key, fills] of [[false, "instance.part.signin.absent", {}], [null, "instance.part.unknown", { part: said("screen.connect.signin.part") }]]) {
     const o = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { bootstrap: { ok: true, part_signin: part, part_scanner: false, part_safe_view: false } }) });
     assert.ok(!ops(o).includes("subscriptionsignin"), `R13: no sign-in while part_signin is ${part}`);
     has(o, key, fills);
-    assert.ok(ops(o).includes("accountreferenceset"));
+    await o.choose("mc-way", "apikey");
+    assert.ok(ops(o).includes("accountreferenceset"), "the API key either way");
   }
   // control: the T46 nested `parts` is no longer read
   const old = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { bootstrap: { ok: true, service: "bio-plane", parts: [{ part: "signin", present: true }] } }) });
   assert.ok(!ops(old).includes("subscriptionsignin"), "R13: parts' signin offers nothing");
   has(old, "instance.part.unknown", { part: said("screen.connect.signin.part") });
+});
+
+test("R30 while nothing serves the member, one choice is asked first (My Claude subscription, An API key, Not now), the subscription preselected, and only the chosen path's steps are drawn", async () => {
+  const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
+  const fieldIds = (o) => all(o.tree, (e) => e.tag === "input" && e.attrs.type === "password").map((e) => e.attrs.id);
+  // the subscription path draws no key field (control)
+  assert.deepEqual(fieldIds(a), ["mc-code0"]);
+  has(a, "screen.connect.signin.heading");
+  lacks(a, "screen.connect.apikey.heading");
+  assert.deepEqual(all(all(a.tree, (e) => e.attrs.id === "mc-way")[0], (e) => e.tag === "option").map((o) => textOf(o)), ["screen.connect.way.subscription", "screen.connect.way.apikey", "screen.connect.way.later"].map((k) => said(k)));
+  // choosing An API key draws only its field
+  await a.choose("mc-way", "apikey");
+  assert.deepEqual(fieldIds(a), ["mc-key0"]);
+  has(a, "screen.connect.apikey.heading");
+  lacks(a, "screen.connect.signin.heading");
+  assert.deepEqual(ops(a), ["accountreferenceset"]);
+  // Not now draws nothing more
+  await a.choose("mc-way", "later");
+  assert.deepEqual(fieldIds(a), []);
+  assert.deepEqual(ops(a), []);
+  lacks(a, "screen.connect.apikey.heading");
+  lacks(a, "screen.connect.signin.heading");
+  // back to the subscription
+  await a.choose("mc-way", "subscription");
+  assert.deepEqual(ops(a), ["subscriptionsignin"]);
+  // control: with the disclosure not yet read, no choice is asked
+  const d = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { disclosureof: (q) => env({ ok: true, member: q.member, version: "D311-1", shown: false, shown_at: null }) }) });
+  assert.equal(all(d.tree, (e) => e.attrs.id === "mc-way").length, 0);
+  // control: a member the assistant already serves on their own account is asked nothing
+  const own = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });
+  assert.equal(all(own.tree, (e) => e.attrs.id === "mc-way").length, 0);
 });
 
 test("R5 the subscription sign-in: start, the address offered in a new browsing context (noopener noreferrer), then the code in the body only; connected draws the member's own account", async () => {
@@ -171,6 +205,7 @@ test("R24 the state as the plane holds it: connected since when and until when; 
 
 test("R5 an API key: accountreferenceset with the key in the body only (and the member it is for), never drawn again", async () => {
   const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
+  await a.choose("mc-way", "apikey");
   const KEY = "sk-ant-api03-SENTINEL-OWN";
   const r = await a.press("accountreferenceset", { values: { "mc-key0": KEY } });
   assert.deepEqual([r.sent[0].query, r.sent[0].body], [{}, { member: "member:dev", kind: "apikey", secret: KEY }]);

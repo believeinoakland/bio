@@ -1,6 +1,6 @@
 # filings — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102); R8–R12 are Bob's ruling K13; the layer-9 maps' review folded (K171); filing templates and local facts as Bob ruled them (K921, K922, K924: R26 retired to `filing-templates`). Last changed T35 (T35-64: R8; K1739, K1742); every requirement met (K2023). Last changed T46 (T46-37: R50 new, amending R13, `filingsFor` answers `second_needed` per draft, N930; R51 new, eight T45 rows read by key from `words.json`, `SECOND_APPROVAL_NEEDED` kept and returned to BOB, `action-holds`' two hold rows relayed; R52 new, the keyed sentences read by key, `phrasing.no_list`, `rfc.quoting` and `filings.secondapproval.waiting` kept and returned to BOB; DEC-194, N913; K231, K2890, K2953); marked not yet met (T46).
+**Status** · In force: approved by Bob 2026-09-26 (K102); R8–R12 are Bob's ruling K13; the layer-9 maps' review folded (K171); filing templates and local facts as Bob ruled them (K921, K922, K924: R26 retired to `filing-templates`). Last changed T35 (T35-64: R8; K1739, K1742); every requirement met (K2023). Last changed T46 (T46-37: R50 new, amending R13, `filingsFor` answers `second_needed` per draft, N930; R51 new, eight T45 rows read by key from `words.json`, `SECOND_APPROVAL_NEEDED` kept and returned to BOB, `action-holds`' two hold rows relayed; R52 new, the keyed sentences read by key, `phrasing.no_list`, `rfc.quoting` and `filings.secondapproval.waiting` kept and returned to BOB; DEC-194, N913; K231, K2890, K2953); marked not yet met (T46). Last changed T48 (T48-51: R57 new, amending R40, R51 and R52, R40's check asked through `filing-templates` R33, the sentence and C-115.47's row leaving this module, N880, Actions D13, K2953; R58 new, a Tier 2 filing answers `offers: ["counsel_packet"]`, N882, Actions D15, K2748; R59 new, `filingRead`, a prepared draft's text, blanks and fills re-read, N1034, K3145; C-115.48 `NOT_A_PARTNER`'s frozen copy of `words.json`'s sentence re-taken in DEC-221's spelling, test only, no requirement names the old wording, N1053, K3192; K3190, K3195); marked not yet met (T48).
 
 **Size (P6).** New. Estimated 900–1,300 lines of code with its tables; one session reads it with the public parts of its uses.
 
@@ -95,6 +95,23 @@ Rows (T45), C-115's next numbers at the job's stamp, translations BOB's drafts a
 - **R55** (DEC-209 (3)) `filingPrepare` and `communicationPrepare` take `fills: {<blank>: text}`, the member's own values for blanks the template names, each filled and labelled the member's (R3); a blank the template does not name is refused `FILL_UNKNOWN_BLANK`.
 - **R56** (T47; K231, K3124; `filing-templates` R32) A member's own words naming a blank outside `FILING_BLANKS` are refused through `filing-templates.blankUnknownRefusal`, answered as it gives it; this module never spells C-125.4. Test: the refusal is the provider's, row and blank equal; control: words of known blanks pass.
 
+#### T48 (T48-51; N880, N882, N1034)
+
+- **R57** (T48; N880; Actions D13, H17; amends R40, R51, R52; `filing-templates` R33) R40's check is `filing-templates.rfcQuotingRefusal`, asked at R6 on the approved text of every text R40 and R37 name.
+  - The sentence that preparation adds is `filing-templates`' `RFC_QUOTING_SENTENCE`.
+  - This module no longer holds the sentence or C-115.47's row: both are `filing-templates`' (its R33). R51's C-115.47 clause and R52's `rfc.quoting` clause now read "held by `filing-templates`".
+  - The refusal's code, number, translation and place among R6's refusals are unchanged.
+  - Control: an approved text holding the sentence passes; one without it is refused with the provider's row, equal field for field.
+- **R58** (T48; N882; Actions D9, D15, H13, H19; v0.2 rule 13; K2748) A filing prepared at governing tier 2 (R1, R2) also answers `offers: ["counsel_packet"]`, beside `advisory` (R4).
+  - The offer is R8's packet: offered, never required, and no act refuses for it.
+  - A Tier 1 filing answers no `offers`.
+  - No answer of this module says whether the group should take an action, becoming a party included.
+  - Control: a Tier 1 draft answers no `offers`.
+- **R59** (T48; N1034; K3145; amends R5, R23; `screens-action` R3) `filingRead({filing, viewer})` (`op=filingread`; a read) answers one prepared draft or communication as it was stored, so a reload between preparing and approving loses nothing: its `text`, `blanks` (each filled blank with its source), `unfilled` (each with why), the member's `fills` (R55, each labelled the member's), `template` (R29), `advisory` (R4), `offers` (R58), `notices`, `label` (R5) and the action, beside its approval (R6) and sending (R7) when recorded.
+  - Nothing is re-filled from the record at the read: it answers the stored draft, never a new preparation.
+  - An absent draft, or one the viewer may not see by R13's and R27's rule, answers `NO_SUCH_FILING`, alike. It writes nothing.
+  - Controls: a draft prepared with fills answers the same text, blanks and fills as `filingPrepare` answered; a draft drawing on a determination in a project the viewer may not see answers `NO_SUCH_FILING`.
+
 ## Private
 
 ### Uses
@@ -113,7 +130,7 @@ Rows (T45), C-115's next numbers at the job's stamp, translations BOB's drafts a
 - (T45; K2848) `case-checker` (L8): `checkAccount` (its R24), R34's per-sentence judgment, called by this module itself (case-account's check is offered to no other module, its R13); new edge, BOB's.
 - `actions`: `actionRead`, `actionCorrespond`; `noSuchAction` (its R43), through which R1's, R8's and R13's `NO_SUCH_ACTION` is answered, in place of C-115.2 (N217, K275).
 - `action-clocks`: `clockPropose` (its R2; R7, R9), moved from `actions` R32 by K617's split; `factReader` (its R12; R30), in place of this module's own copy (K998, N474).
-- `filing-templates` (K921, K922): `FILING_BLANKS`, `FILING_TEXT_MAX`, `blanksOf` (its R19; R3, R28), `offeredVersion` (its R25; R28, R31), `templateDraft` (its R3; R32), `templateRead` (its R14; R13, R29), `templatesFor` (its R14; R28's `TEMPLATE_NOT_NAMED` list), `TEMPLATE_USES`.
+- `filing-templates` (K921, K922): `FILING_BLANKS`, `FILING_TEXT_MAX`, `blanksOf` (its R19; R3, R28), (T48) `RFC_QUOTING_SENTENCE` and `rfcQuotingRefusal` (its R33; R57), `offeredVersion` (its R25; R28, R31), `templateDraft` (its R3; R32), `templateRead` (its R14; R13, R29), `templatesFor` (its R14; R28's `TEMPLATE_NOT_NAMED` list), `TEMPLATE_USES`.
 - `local-facts` (K921): `factStatus`, `factPath` (its R2, R6; R30).
 - `consequences`: `consequencesOf` (R9).
 - `events` (T33-75): `timeline` (its R28–R30; R33).

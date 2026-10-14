@@ -4044,7 +4044,7 @@ async function providerTest(deps, body) {
     }
     if (kind === "cdr") {
       const out = await c.adapter.cdr(ctx, inMemory(macroDocument()));
-      return out.bytes.length && (out.removed || []).length ? answer(true, `removed: ${out.removed.join(", ")}`) : answer(false, out.bytes.length ? "the rebuilt file reported nothing removed" : "no rebuilt file");
+      return out.bytes.length && (out.removed || []).length ? answer(true, `removed: ${out.removed.join(", ")}`) : answer(false, out.bytes.length ? "the safe view reported nothing removed" : "no safe view");
     }
     if (kind === "url_reputation") {
       const look = () => c.adapter.reputation(ctx, c.d.test_probe.address);

@@ -11,9 +11,9 @@
  *  `en` verbatim, read by key (as membership's `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are), its
  *  `{placeholders}` as `words.json` names them, filled from the record. The design stream's words: re-worded there, then
  *  re-taken here by key. Kept in T46, each returned to BOB until its sentence and the requirement agree (R52):
- *  `phrasing.no_list` (R43: `words.json`'s names "Civicsmith" bare, DEC-149 "your group's Civicsmith"), `rfc.quoting`
- *  (R40: its refusal looks for the sentence in the approved text, so new words would refuse every request for comment
- *  prepared before them); `filings.secondapproval.waiting` (R42) is not taken. `filings.review_copy.*` (R46), which
+ *  `phrasing.no_list` (R43: `words.json`'s names "Civicsmith" bare, DEC-149 "your group's Civicsmith");
+ *  `filings.secondapproval.waiting` (R42) is not taken. `rfc.quoting` (R40) is `filing-templates`' since T48 (R57: its
+ *  `RFC_QUOTING_SENTENCE`, its R33). `filings.review_copy.*` (R46), which
  *  `words.json` does not hold, keep theirs. */
 export const KEYED = Object.freeze({
   /* R35 */
@@ -44,7 +44,6 @@ export const KEYED = Object.freeze({
   /* R42 */
   "filings.secondapproval.given": "Second approval given by {member} on {date}.",
   /* kept in T46 (R52) */
-  "rfc.quoting": "Your reply may be quoted unless it says otherwise.",
   "phrasing.no_list": "Nothing could be pointed out: no phrasing list is held for this language.",
   "filings.review_copy.no_embargo": "No embargo is stated for this copy.",
   "filings.review_copy.terms": "Review copy. Embargoed until {embargo}; for release at {release}.",

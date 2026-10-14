@@ -1,5 +1,5 @@
 // Every catalogued adapter against its vendor's stub (R17): the outside scan (R5), private mode per call (R22), the
-// sandbox (R23), the safe copy (R24), reputation (R25, R26), forwarding (R27), the test probe (R28), the transports
+// sandbox (R23), the rebuilt safe view (R24), reputation (R25, R26), forwarding (R27), the test probe (R28), the transports
 // (R30) and engine families (R31); and across all of them, egress (R12) and the credentials (R13).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -186,7 +186,7 @@ test('R23 a sandbox: submitted, running, then one verdict per engine (found, sus
   }
 });
 
-test('R24 a safe copy: the rebuilt file with its digest, origin, type, what was removed and the tool; CDR_UNSUPPORTED_TYPE; nothing stored', async () => {
+test('R24 a safe view by a rebuilding tool: the rebuilt file with its digest, origin, type, what was removed and the tool; CDR_UNSUPPORTED_TYPE; nothing stored', async () => {
   for (const id of CDR) {
     const w = world();
     const t = putCapture(w.bucket, DOCM);

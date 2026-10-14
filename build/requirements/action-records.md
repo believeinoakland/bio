@@ -1,6 +1,6 @@
 # action-records — requirements
 
-**Status** · Drafted 2026-10-12 on `tranche/T47` (the opening's act, plan rule 3; K3027). Split from `actions` by copy (K617, K624, K531, K2982; N961; T47-37), for size (4,005 lines after T46-32), meaning unchanged. Each id names its `actions` source, which retires the moved ids as "moved to action-records R<n>" (T47-38). The extraction map is `build/extraction/actions-split.md`, its §4 table adopted (K2982; its line numbers re-taken on `tranche/T47` after T46-32's merge). Every requirement is not yet met (T47).
+**Status** · Drafted 2026-10-12 on `tranche/T47` (the opening's act, plan rule 3; K3027). Split from `actions` by copy (K617, K624, K531, K2982; N961; T47-37), for size (4,005 lines after T46-32), meaning unchanged. Each id names its `actions` source, which retires the moved ids as "moved to action-records R<n>" (T47-38). The extraction map is `build/extraction/actions-split.md`, its §4 table adopted (K2982; its line numbers re-taken on `tranche/T47` after T46-32's merge). Every requirement is not yet met (T47). Last changed T48 (T48-47: R16 new, amending R4, the one site minting C-32.4 and C-33.6–C-33.9, which `actions`' `actionCorrespond` calls; N1024; K231, K3125, K3189, K3195); marked not yet met (T48).
 
 | old (`actions`) | new | |
 |---|---|---|
@@ -47,6 +47,17 @@ Terms are `actions`'. An **action** is a bundle whose type normalises to `action
 - **R9** (was `actions` R64, its "a standard the viewer may see" clause; K1446) `standardSeen(id, viewer)` answers null when `id` is a `STD-` id the viewer may read (`standards.standardRead`), else `standards.noSuchStandard`'s one answer (`NO_SUCH_STANDARD`), absent and invisible alike; a read that throws is not seen. It writes nothing. R1 asks it, and `actions` asks it for a law's or a records law's `standard` (its R64).
 - **R10** (was `actions` R70, its judgment; T41; H30 (1); K2505) `seeksRefusal(fm)` judges `fm.seeks` with `action-grammar.seeksFindings` (its R13), each distinct progression an item names read once through `progressions.readProgression` (its declared stage keys; a progression not held, or one that cannot be read, is read as not held, fail closed, and the refusal then carries `cause: "PROGRESSIONS_UNREADABLE"`), and answers null or the grammar's own refusal (C-117.29 `SEEKS_REFUSED`) with every finding. It writes nothing. R3 asks it, and `actions`' write fence (its R70) asks it.
 
+#### The correspondence entry's one site (T48-47; N1024; K231, K3125)
+
+- **R16** (T48; N1024; K231, K3125; amends R4; `actions` R101; `action-grammar` R29) This module holds the one site of five codes, each minted nowhere else in `actions` or here, and each refusal carrying its row (`withRow`, `action-grammar`'s R9):
+  - `correspondFence(author, extra?)` answers null for a member's stamp, and C-32.4 `MACHINE_CANNOT_CORRESPOND` for an empty or machine one (`isMachineIdentity`). Pure.
+  - `correspondEntryRefusal({at, artifactSha, account, dateTime?}, extra?)` answers, first found, C-33.6 `BAD_DATE` (`at` not a real calendar date, `YYYY-MM-DD`; with `dateTime: true`, also accepted as `YYYY-MM-DDTHH:MM` on a real date), C-33.7 `CAPTURE_AND_TESTIMONY` (both a capture hash and an account), C-33.8 `NEITHER_CAPTURE_NOR_TESTIMONY` (neither), else null. Pure.
+  - `unregisteredArtifact(sha, extra?)` answers null when the register holds `sha` (the `register` read contract, as R4 reads it), and C-33.9 `UNREGISTERED_ARTIFACT` naming `artifact_sha` otherwise. It writes nothing.
+  - `extra` adds the caller's own fields (`target`, `at`, and its own `detail`, the sentence for its act) and never replaces `reason`, `code`, `check` or `translation`.
+  - R4's `actionReceipt` answers these five conditions through them (`dateTime: true`), in R4's order, its answers unchanged field for field; `actions.actionCorrespond` calls them (its R101).
+  - Each function's region in `src/action-records/index.mjs` is its row's `where` (`action-grammar` R29).
+  - Controls: a machine author answers C-32.4 through `correspondFence`; `2026-02-30` answers `BAD_DATE`, and `2026-02-28T09:30` does so only without `dateTime`; both a hash and an account answer `CAPTURE_AND_TESTIMONY`; an unregistered hash answers `UNREGISTERED_ARTIFACT`; a well-formed entry answers null from each.
+
 #### Its ops map; its instance
 
 - **R15** (new; K61; the map's §1; `case-account` R12's form) `actionRecordsOf(host, deps)` answers the one instance for a host: every caller for the same host gets the same instance, its `deps` (`record`, `membership`, `progressions`, `standards`, `now`) reached lazily on the host unless given. At its creation it creates its six tables with the DDL `actions` created them by (`CREATE TABLE IF NOT EXISTS`, `action_law_proposals`' `standard` column added where absent), so a running store's rows are kept with no data move, and declares them (R11); a refused declaration is thrown at creation and no instance is kept. `actions`' factory creates it at its own creation, so its tables exist and are declared at every boot. `actionRecordsOps(r, url, body)` publishes this module's ops map, one route arm per act, reading each argument as `actions`' map read it (the target from the query, else the body; the stamps from the query): `actionlawspropose` (R1), `actionriskpropose` (R2), `actionseekspropose` (R3), `actionreceipt` (R4), `actionscope` (R5), `actionpromise` (R6), each answering exactly what its act answers, a catalogue-backed refusal with its row (`withRow`). The op names, their declarations, grades, help and `proposer` stamps are unchanged; the plane spreads the map (`plane`'s L11 job).
@@ -64,7 +75,7 @@ Terms are `actions`'. An **action** is a bundle whose type normalises to `action
 - `civil-time`: `isCalendarDate` (R4).
 - `provenance`: the `register` read contract (its R48; R4's `UNREGISTERED_ARTIFACT`), read as `actions` reads it.
 - `test-support`: the tests' fixtures.
-- Its users: `actions` creates it and calls R1–R10's reads and judgments (its R18, R23, R25, R64, R66, R70); `action-grammar`'s rows name its regions (their `where`s, T47-36); `plane` spreads R15's map; `affordances`, `escalation` and `action-clocks` tests drive its acts (the map's §5).
+- Its users: `actions` creates it and calls R1–R10's reads and judgments (its R18, R23, R25, R64, R66, R70), and (T48) R16's site (its R101); `action-grammar`'s rows name its regions (their `where`s, T47-36); `plane` spreads R15's map; `affordances`, `escalation` and `action-clocks` tests drive its acts (the map's §5).
 
 ### Invariants
 
@@ -77,7 +88,7 @@ Terms are `actions`'. An **action** is a bundle whose type normalises to `action
 
 - `BIO_State_Rules_Consistency_v1_5.md` §4.4 (the Action object); `BIO_Action_v0_1.md` §2's rulings (the governing laws D-149, REC-195; the risk tier D-182, REC-214): R1, R2, R7, R8.
 - `BIO_Action_v0_2.md` (K2780; T45, N893) §4 rules 6 (receipt as a fact) and 15 (confidential scope; promises seen by every participant), §6 `confidential`; Actions D4; S1 §C 9: R4–R6.
-- DEC-24 and DEC-49 (a machine proposes, a member acts; one code, one site): R1–R3, R7–R10, R12. H30 (1), K2505, K2561 (what a request seeks): R3, R10.
+- DEC-24 and DEC-49 (a machine proposes, a member acts; one code, one site): R1–R3, R7–R10, R12; R16 (K231; N1024). H30 (1), K2505, K2561 (what a request seeks): R3, R10.
 - N961 (`actions`' split for size, K617; the map adopted, K2982): R11, R15.
 
 ### Suggestions

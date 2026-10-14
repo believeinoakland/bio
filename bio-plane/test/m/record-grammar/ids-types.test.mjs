@@ -1,5 +1,5 @@
 /* record-grammar at its interface: the id grammar and the type vocabulary (R1–R5), T33's one id table (R46–R48),
-   T41's step and guide ids (R51, R53), and T46's success record id (R59). */
+   T41's step and guide ids (R51, R53), T46's success record id (R59), and T48's carried outcome prefix (R63). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, OBJECT_TYPES, LEGACY_TYPE_ALIASES, normalizeType, ID_TABLE,
@@ -119,7 +119,8 @@ test("R5 normalizeType: an own alias key to its target, anything else unchanged,
 });
 
 /* ID_TABLE as T33 holds it (R46): the census of every prefix minted or validated at T33's opening, with T33's new objects
-   and the reserved prefixes. Pinned whole. */
+   and the reserved prefixes, and each row added since. Pinned whole; T48 (R63) re-pinned it: WCD's owner case-inputs, OUTC
+   last. */
 const TABLE = [
   ["INFO", "capture"], ["PROB", "inquiry"], ["FOCUS", "inquiry"], ["INQ", "inquiry"], ["PROJ", "promotion"],
   ["ACTN", "actions"], ["BIAS", "bias"], ["STD", "standards"], ["CONF", "conformance"], ["CONS", "consequences"],
@@ -127,7 +128,7 @@ const TABLE = [
   ["ENT", "entities"], ["REL", "entities"], ["STDP", "standards"], ["ACT", "conformance"], ["CMP", "conformance"],
   ["FIL", "filings"], ["CPK", "filings"], ["THY", "filings"], ["GATH", "monitoring"], ["THEME", "connections"],
   ["LEAD", "observation-log"], ["TASK", "tasks"],
-  ["CASE", "case-authoring"], ["WCD", "case-authoring"], ["DRAFT", "review"], ["RVG", "review"], ["SRC", "sources"],
+  ["CASE", "case-authoring"], ["WCD", "case-inputs"], ["DRAFT", "review"], ["RVG", "review"], ["SRC", "sources"],
   ["NOTE", "network-notices"], ["DKT", "docket"], ["TPL", "filing-templates"], ["TPP", "filing-templates"],
   ["TRG", "filing-templates"], ["WIZ", "wizard-scripts"], ["WZP", "wizard-scripts"], ["WEG", "wizard-scripts"],
   ["EVT", "events", "opaque"], ["LIN", "lines", "opaque"], ["MNY", "money", "opaque"], ["PFA", "people", "opaque"],
@@ -135,13 +136,13 @@ const TABLE = [
   ["MTI", "people"], ["CHK", "people"], ["MSR", "money"], ["HYP", "hypotheses"], ["DUT", "duties"],
   ["CALC", "calculations", "opaque", "sequential"], ["STQ", "answers"],
   ["STP", "steps", "opaque"], ["GUD", "reading-guides", "opaque"], ["ACD", "case-account", "opaque", "sequential"],
-  ["SUC", "consequences"],
+  ["SUC", "consequences"], ["OUTC", "case-inputs"],
 ].map(([prefix, owner, form = "sequential", legacy]) => (legacy ? { prefix, owner, form, legacy } : { prefix, owner, form }));
 const SEQUENTIAL = TABLE.filter((e) => e.form === "sequential").map((e) => e.prefix);
 const OPAQUE = TABLE.filter((e) => e.form === "opaque").map((e) => e.prefix);
 const TAIL = "a1b2c3d4e5f6g7h8";
 
-test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twice, holding exactly T33's census with T34's CALC opaque and its legacy sequential form, T41's STP and GUD, T42's ACD, and T46's SUC", () => {
+test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twice, holding exactly T33's census with T34's CALC opaque and its legacy sequential form, T41's STP and GUD, T42's ACD, T46's SUC, and T48's OUTC", () => {
   assert.ok(Object.isFrozen(ID_TABLE));
   for (const e of ID_TABLE) {
     assert.ok(Object.isFrozen(e), e.prefix);
@@ -158,7 +159,7 @@ test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twic
      sequential, with STQ answers'. */
   for (const p of PREFIXES) assert.equal(ID_TABLE.find((e) => e.prefix === p).form, "sequential", p);
   assert.deepEqual(OPAQUE, ["EVT", "LIN", "MNY", "PFA", "IDC", "CALC", "STP", "GUD", "ACD"]);
-  for (const p of ["MTI", "CHK", "MSR", "HYP", "DUT", "STQ", "ENT", "SUC"]) assert.ok(SEQUENTIAL.includes(p), p);
+  for (const p of ["MTI", "CHK", "MSR", "HYP", "DUT", "STQ", "ENT", "SUC", "OUTC"]) assert.ok(SEQUENTIAL.includes(p), p);
   assert.deepEqual({ ...ID_TABLE.find((e) => e.prefix === "CALC") },
     { prefix: "CALC", owner: "calculations", form: "opaque", legacy: "sequential" });
 });
@@ -306,10 +307,11 @@ test("R55 ID_TABLE gains ACD (owner case-account, form opaque, legacy sequential
 /* T46 (R59; N911, K2845): the success record's prefix, `consequences`', sequential, every `SUC-<year>-<4 digits>` id it has
    minted in its own rows since T45 still valid; with its type, its one-state machine and its own test, and the negative
    controls (K874): a counter too short, an opaque tail, a slug, another prefix, every non-string. */
-test("R59 ID_TABLE gains SUC (owner consequences, form sequential), last; OBJECT_TYPES maps it to success_record; STATES holds success_record: legal recorded, no edge; it is no bundle prefix and has no headings", () => {
+test("R59 ID_TABLE gains SUC (owner consequences, form sequential), after ACD; OBJECT_TYPES maps it to success_record; STATES holds success_record: legal recorded, no edge; it is no bundle prefix and has no headings", () => {
   assert.deepEqual({ ...ID_TABLE.find((e) => e.prefix === "SUC") }, { prefix: "SUC", owner: "consequences", form: "sequential" });
   assert.equal(ID_TABLE.filter((e) => e.prefix === "SUC").length, 1);
-  assert.equal(ID_TABLE.at(-1).prefix, "SUC", "after T42's ACD");
+  const at = ID_TABLE.findIndex((e) => e.prefix === "SUC");
+  assert.equal(ID_TABLE[at - 1].prefix, "ACD", "after T42's ACD");
   assert.equal(OBJECT_TYPES.SUC, "success_record");
   assert.deepEqual(STATES.success_record, { legal: ["recorded"], edges: { recorded: [] } });
   /* A row object promoted with history: a type and a machine, and nothing a bundle has (R3, R59). */
@@ -336,4 +338,49 @@ test("R59 isSuccessRecordId is true exactly for a string matching idPattern('SUC
   for (const v of [undefined, null, 0, 20260001, NaN, true, {}, [], ["SUC-2026-0001"], Symbol("SUC-2026-0001"), 10n,
     () => "SUC-2026-0001", { toString() { throw new Error("x"); } }, new String("SUC-2026-0001"), Object.create(null)])
     assert.equal(isSuccessRecordId(v), false, String(typeof v));
+});
+
+/* T48 (R63; N1017, K3112): a carried outcome's prefix, `case-inputs`', sequential, every `OUTC-<year>-<4 digits>` id it has
+   minted since T47 (record-core's mintOpaqueId: four random digits, an empty tail) still valid; and WCD's owner moved to
+   case-inputs, the module that has minted it since T47. Its negative controls (K874): another prefix's id, a counter too
+   short, an opaque tail, a slug, every non-string; WCD's old owner gone; no other row changed. */
+test("R63 ID_TABLE gains OUTC (owner case-inputs, form sequential), last: idPattern('OUTC') matches an id of the form case-inputs mints and refuses a control of another prefix; WCD's owner is case-inputs; OUTC is no bundle prefix and has no type, headings or machine", () => {
+  assert.deepEqual({ ...ID_TABLE.find((e) => e.prefix === "OUTC") }, { prefix: "OUTC", owner: "case-inputs", form: "sequential" });
+  assert.equal(ID_TABLE.filter((e) => e.prefix === "OUTC").length, 1);
+  assert.equal(ID_TABLE.at(-1).prefix, "OUTC", "after T46's SUC");
+  /* The form case-inputs mints: record-core's mintOpaqueId(prefix, year, "", ...), `<prefix>-<year>-DDDD`, four random
+     digits from 0000 to 9999 (record-core R6); the 10,000th and later accepted too (R46). */
+  const re = idPattern("OUTC");
+  const minted = (year, n) => `OUTC-${year}-${String(n).padStart(4, "0")}`;
+  for (const n of [0, 1, 417, 5000, 9999]) assert.ok(re.test(minted("2026", n)), minted("2026", n));
+  for (const ok of ["OUTC-2047-0001", "OUTC-2026-10000", "OUTC-1999-123456"]) assert.ok(re.test(ok), ok);
+  /* Negative controls: the same core under another prefix, its near spellings, and every other form. */
+  for (const bad of ["WCD-2026-0417", "CASE-2026-0417", "SUC-2026-0417", "OUT-2026-0417", "OUTCX-2026-0417", "XOUTC-2026-0417",
+    "outc-2026-0417", "OUTC-2026-041", `OUTC-2026-${TAIL}`, "OUTC-2026-0417-a", "OUTC-26-0417", " OUTC-2026-0417",
+    "OUTC-2026-0417\n", "OUTC-2026-", "OUTC"]) assert.ok(!re.test(bad), bad);
+  for (const { prefix } of ID_TABLE) if (prefix !== "OUTC") assert.ok(!re.test(`${prefix}-2026-0417`), prefix);
+  /* A row of its owner's table, never a document (R1, R3): no bundle id, no annotation, no type, no heading set, no machine. */
+  assert.ok(!PREFIXES.includes("OUTC") && !BUNDLE_ID_RE.test("OUTC-2026-0417-a") && !ANN_ID_RE.test(`OUTC-2026-0417-a${ANN}`));
+  assert.ok(!Object.hasOwn(OBJECT_TYPES, "OUTC"));
+  assert.ok(!Object.values(OBJECT_TYPES).some((t) => /outcome/.test(t)) && !Object.keys(HEADINGS).some((t) => /outcome/.test(t))
+    && !Object.keys(STATES).some((t) => /outcome/.test(t)));
+});
+
+test("R63 WCD's row names case-inputs as owner in place of case-authoring; its form and place unchanged; no other row changes", () => {
+  assert.deepEqual({ ...ID_TABLE.find((e) => e.prefix === "WCD") }, { prefix: "WCD", owner: "case-inputs", form: "sequential" });
+  assert.equal(ID_TABLE.filter((e) => e.prefix === "WCD").length, 1);
+  /* Negative control: the old owner no longer holds it, and still holds CASE. */
+  assert.notEqual(ID_TABLE.find((e) => e.prefix === "WCD").owner, "case-authoring");
+  assert.equal(ID_TABLE.find((e) => e.prefix === "CASE").owner, "case-authoring");
+  /* Its place: beside CASE among the prefixes record-core draws at random. */
+  const at = ID_TABLE.findIndex((e) => e.prefix === "WCD");
+  assert.deepEqual(ID_TABLE.slice(at - 1, at + 2).map((e) => e.prefix), ["CASE", "WCD", "DRAFT"]);
+  /* Every WCD id case-inputs has minted stays valid. */
+  for (const ok of ["WCD-2026-0000", "WCD-2026-0417", "WCD-2026-9999"]) assert.ok(idPattern("WCD").test(ok), ok);
+  /* No other row changes: the table as T47 held it is the table now, less OUTC, with WCD's old owner. */
+  const T47 = TABLE.filter((e) => e.prefix !== "OUTC").map((e) => (e.prefix === "WCD" ? { ...e, owner: "case-authoring" } : e));
+  assert.equal(T47.length, ID_TABLE.length - 1);
+  const was = ID_TABLE.filter((e) => e.prefix !== "OUTC").map((e) => ({ ...e }));
+  const changed = was.filter((e, i) => JSON.stringify(e) !== JSON.stringify(T47[i])).map((e) => e.prefix);
+  assert.deepEqual(changed, ["WCD"]);
 });

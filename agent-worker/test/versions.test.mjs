@@ -221,7 +221,7 @@ const signIn = async (op, token, body) => rP(await (await real.fetch(`http://rea
 const added = await signIn("memberadd", ADM, { memberId: MEMBER_ID, cover: "c-" + MEMBER_ID, role: "admin",
                                               capabilities: ["contribute", "publish"] });
 await signIn("enroll", null, { invite: added.invite, handle: MEMBER_ID, password: MEMBER_ID + "-passphrase-1" });
-const MEM = (await signIn("login", null, { role: "member:" + MEMBER_ID, password: MEMBER_ID + "-passphrase-1" })).token;
+const MEM = (await signIn("login", null, { handle: MEMBER_ID, password: MEMBER_ID + "-passphrase-1" })).token;
 if (typeof MEM !== "string" || !MEM) throw new Error("the fixture's member could not sign in");
 await (await mf.getWorker("plane-front")).fetch("http://front/__front/session", { method: "POST", body: MEM });
 const post = async (op, body) => rP(await (await real.fetch(

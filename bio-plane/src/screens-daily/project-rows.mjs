@@ -2,7 +2,7 @@
    and by the Projects screen. A screen part (interface-shell R21, K3002): self-contained, handed to each screen as
    `view.parts.projectRows` and called from its `render`. Each row is the project as `projectlist` answers it (project-roster
    R26: `{id, name, stage}`), a reference opening `project`, with its question count and its stage on the ladder Forming,
-   Investigating, Matured, Closed. A project's count is read from `projectquestions` (basis-versions R50), paged to its end
+   Investigating, Matured, Closed. A project's count (never drawn at zero, R21) is read from `projectquestions` (basis-versions R50), paged to its end
    (a page may hold fewer than its limit while more follow, so only a null cursor ends it); while its pages are read the
    count says it is loading, and a failed read says so, never "no questions". Counts are kept in the screen's page memory
    (`view.ui.counts`), so a redraw reads none again. With `glance` (the Projects screen, R10; DEC-201 (8), DEC-214 (3)) each
@@ -43,7 +43,9 @@ export function projectRows(cs, view, w, glance) {
     if (!c) { count(id); return cs.state({ state: "loading" }, null); }
     if (c.state === "loading") return cs.state({ state: "loading" }, null);
     if (c.state === "failed") return cs.state({ state: "failed", refusal: null }, null);
-    return '<span class="mk-count">' + (c.n === 1 ? cs.w(w + ".questions.one") : cs.w(w + ".questions.many", { n: String(c.n) })) + "</span>";
+    // R21 (DEC-219 (3)): no count at zero.
+    if (!c.n) return "";
+    return "<span>" + (c.n === 1 ? cs.w(w + ".questions.one") : cs.w(w + ".questions.many", { n: String(c.n) })) + "</span>";
   };
   const ladder = function (state) {
     if (state === null || state === undefined || state === "") {
@@ -62,11 +64,11 @@ export function projectRows(cs, view, w, glance) {
     // An owner answered with no handle is drawn by its member id; `null` is an opener no longer active (R27).
     const who = p.owner && (p.owner.handle || p.owner.member) ? String(p.owner.handle || p.owner.member) : "";
     const owner = !("owner" in p) ? ""
-      : '<span class="mk-owner">' + (who ? cs.w(w + ".owner", { handle: "" }) + cs.ref("member", who, who, []) : cs.w(w + ".owner.none")) + "</span>";
+      : '<span class="muted">' + (who ? cs.w(w + ".owner", { handle: "" }) + cs.ref("member", who, who, []) : cs.w(w + ".owner.none")) + "</span>";
     const members = Array.isArray(p.members) ? p.members.map(function (m) { return String(m && (m.handle || m.member) || ""); }).filter(Boolean) : null;
     const activity = Array.isArray(p.activity) && p.activity.length === 8 ? p.activity.map(function (n) { return Number(n) || 0; }) : null;
     const last = "lastChange" in p
-      ? '<span class="mk-last">' + (p.lastChange ? cs.w(w + ".lastchange", { date: cs.date(String(p.lastChange)) }) : cs.w(w + ".lastchange.none")) + "</span>"
+      ? '<span class="muted">' + (p.lastChange ? cs.w(w + ".lastchange", { date: cs.date(String(p.lastChange)) }) : cs.w(w + ".lastchange.none")) + "</span>"
       : "";
     // The word the bars say (the kit's `shell.glance.*`): busy when the last four weeks hold half as many acts again as the
     // four before, quiet when they hold under half as many (or none), steady otherwise.
@@ -82,7 +84,7 @@ export function projectRows(cs, view, w, glance) {
     const projects = list && Array.isArray(list.projects) ? list.projects : [];
     return cs.sheet(projects.map(function (p) {
       const id = String(p.id);
-      return cs.row("", cs.ref("project", id, p.name || id, []) + '<span class="meta">' + countOf(id) + "</span>", ladder(p.stage), glanceOf(p));
+      return cs.row("", cs.ref("project", id, p.name || id, []) + (function () { const c = countOf(id); return c ? '<span class="meta">' + c + "</span>" : ""; })(), ladder(p.stage), glanceOf(p));
     }).join("")) + (list && list.truncated ? '<p class="mk-note">' + cs.w(w + ".truncated") + "</p>" : "");
   };
 }

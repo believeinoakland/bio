@@ -138,7 +138,7 @@ test("R4 a machine never records a layout; every read answers an invisible actio
   assert.deepEqual([hidden.reason, absent.reason], ["NO_SUCH_BUNDLE", "NO_SUCH_BUNDLE"]);
   const declared = w.record.declaredTables().filter((d) => d.module === "action-replies");
   assert.deepEqual(declared.map((d) => [d.name, d.purge]).sort(),
-    [["action_arose_from", "clear"], ["action_bearing_proposals", "clear"], ["action_reply_bearings", "clear"]]);
+    [["action_arose_from", "clear"], ["action_bearing_proposals", "clear"], ["action_reply_bearings", "clear"], ["action_reply_quoting", "clear"]]);
   w.record.purge({ bundleId: RFC });
   assert.deepEqual(w.counts().slice(0, 3), [0, 0, 0], "the action's purge clears its layouts and proposals");
 });

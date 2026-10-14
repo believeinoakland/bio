@@ -16,8 +16,10 @@ function archiveReads(view) {
  * refused whole as its refusal, nothing in it filed. Every name as the archive states it, drawn as data. */
 function renderArchive(cs, view) {
   const sha = typeof view.subject === "string" ? view.subject.toLowerCase() : "";
+  /* R20: opened bare or at no digest, the shell's own "Nothing is here" (interface-shell R35, R61) with the way back */
+  if (!/^[0-9a-f]{64}$/.test(sha)) return `<h1 class="t-title">${cs.w("shell.unavailable.nothing.title")}</h1><p class="cs-state" data-state="empty" data-unavailable="nothing">${cs.w("shell.unavailable.nothing.says")}</p>`
+    + `<p><a class="cs-btn" data-tone="quiet" href="/app" data-nav>${cs.w("shell.unavailable.home")}</a></p>`;
   const head = `<div class="mk-h">${cs.title()}</div>`;
-  if (!/^[0-9a-f]{64}$/.test(sha)) return head + `<p class="mk-note">${cs.w("screen.archive.noarchive")}</p>`;
   const U = view.ui || {};
   const said = (k, f) => `<p class="mk-note" role="status">${cs.w(k, f)}</p>`;
   const size = (n) => !Number.isFinite(n) ? "" : n >= 1048576 ? `${(n / 1048576).toFixed(1)} MB` : n >= 1024 ? `${Math.round(n / 1024)} KB` : `${n} B`;
@@ -30,8 +32,8 @@ function renderArchive(cs, view) {
     const grade = g && g.grade ? cs.grade("capture", g.grade)
       : `<span class="meta">${cs.w("state.undetermined", { reason: cs.w("screen.archive.ungraded") })}</span>`;
     const note = U.note !== undefined ? U.note : view.data.note && view.data.note.state === "ok" ? view.data.note.value && view.data.note.value.note : null;
-    let out = `<div class="row">${grade}${cs.act("gradenote")}<span class="id">${cs.w("screen.archive.facts",
-      { short: sha.slice(0, 4) + "…" + sha.slice(-4), entries: a.entries ?? entries.length, size: size(a.bytes) })}</span></div>`
+    let out = `<div class="row">${grade}${cs.act("gradenote")}<span class="id">${[cs.w("screen.archive.facts", { short: sha.slice(0, 4) + "…" + sha.slice(-4) }),
+      ...((a.entries ?? entries.length) > 0 ? [cs.w("screen.archive.facts.entries", { entries: a.entries ?? entries.length })] : []), size(a.bytes)].filter(Boolean).join(" · ")}</span></div>`
       + (U.showNote && note ? `<p class="mk-small">${cs.esc(note)}</p>` : U.showNote ? said("screen.archive.nonote") : "");
     if (a.refused) {
       const why = a.refused.translation || a.refused.code || "";
@@ -39,11 +41,14 @@ function renderArchive(cs, view) {
         + said("screen.archive.refused.none")
         + (U.listed ? cs.sec("screen.archive.lists", list(entries)) : `<div class="mk-acts">${cs.act("archivelist", { label: "screen.archive.see" })}</div>`);
     }
-    out += said(a.opened === false ? "screen.archive.notopened" : "screen.archive.summary",
-      { filed: sum.filed ?? 0, held: sum.already_held ?? 0, notfiled: sum.not_filed ?? 0, folders: sum.folders ?? 0, waiting: sum.waiting ?? 0 })
+    /* R17: each count of the summary is drawn only above zero; an archive that opened with none draws no summary line */
+    const sumParts = (m) => [["filed", m.filed], ["held", m.already_held], ["notfiled", m.not_filed], ["folders", m.folders]]
+      .filter(([, n]) => n > 0).map(([k, n]) => cs.w(`screen.archive.sum.${k}`, { count: n })).join(", ");
+    out += (a.opened === false ? said("screen.archive.notopened", { waiting: sum.waiting ?? 0 })
+        : sumParts(sum) ? said("screen.archive.summary", { parts: sumParts(sum) }) : "")
       + (g && g.grade ? `<p class="mk-small">${cs.w("screen.archive.gradeabout", { grade: g.grade })}</p>` : "");
-    return out + cs.sec("screen.archive.files", list(entries)
-      + `<p class="mk-small muted">${cs.w("screen.archive.names")}</p>`)
+    return out + (entries.length ? cs.sec("screen.archive.files", list(entries)
+      + `<p class="mk-small muted">${cs.w("screen.archive.names")}</p>`) : "")
       + (U.only && U.only.state ? said("screen.archive.onlynotfiled") : "")
       + (v.truncated ? `<p class="mk-small">${cs.w("screen.archive.more", { count: entries.length })}</p>` : "");
   }, { empty: "screen.archive.empty" });

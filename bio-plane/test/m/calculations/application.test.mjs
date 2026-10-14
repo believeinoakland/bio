@@ -130,7 +130,6 @@ test("R32 a frozen uses table is an input like any table: its grade each row's g
   assert.deepEqual([g.inputs[0].grade, g.capture.grade], ["C", "C"], "the weakest governing attestation");
   w.uses.hide(e1, V("carol"));
   w.st.sql.exec(`UPDATE members SET role='member' WHERE member_id='carol'`);
-  w.c.joined = w.c.joined; /* no-op: sight is read at each call */
   assert.equal((await w.c.readTable({ sha: f.sha, viewer: V("carol") })).found, false);
   assert.equal((await w.c.read({ calcId: c.calc_id, viewer: V("carol") })).found, false, "withheld whole");
   assert.deepEqual(w.c.gradeFactsOf({ calcId: c.calc_id, viewer: V("carol") }), { found: false });

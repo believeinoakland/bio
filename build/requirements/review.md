@@ -1,6 +1,6 @@
 # review — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), its place in layer 8 after `case-authoring` by K102; C-87.12 retired (K408). Last changed T35 (T35-60: Uses only, no requirement; K1643) and T37 (T37-22: R29 new, Terms; N761; K2129, K2175); R29 not yet met (T37), every other requirement met. Last changed T41 (T41-44's text: R9 amended (D54 B: §3.5); R30–R33 new (D60, D61); N820, N822; K2405, K2417, K2418); marked not yet met (T41). Last changed T47 (T47-33: R15, R26 and R28 re-pointed, the acknowledgement list, its act and the drafts' bound read from `case-inputs` (its R1, R2, R3), the split of `case-authoring`, N908, K2982; meaning unchanged); marked not yet met (T47).
+**Status** · In force: approved by Bob 2026-09-26 (K102), its place in layer 8 after `case-authoring` by K102; C-87.12 retired (K408). Last changed T35 (T35-60: Uses only, no requirement; K1643) and T37 (T37-22: R29 new, Terms; N761; K2129, K2175); R29 not yet met (T37), every other requirement met. Last changed T41 (T41-44's text: R9 amended (D54 B: §3.5); R30–R33 new (D60, D61); N820, N822; K2405, K2417, K2418); marked not yet met (T41). Last changed T47 (T47-33: R15, R26 and R28 re-pointed, the acknowledgement list, its act and the drafts' bound read from `case-inputs` (its R1, R2, R3), the split of `case-authoring`, N908, K2982; meaning unchanged); marked not yet met (T47). Last changed T48 (T48-44: R34 new, amending R6, R8 and R14, a grant's end date `until`, at which it lapses, with C-87.17 `REVIEW_BAD_UNTIL`; N1038; DEC-100; K3147, K3195); marked not yet met (T48).
 
 **Size (P6).** About 1,040 lines move (about 580 without comment-only lines): `store.mjs` 845, `bio-checks.mjs` 126, `schema.mjs` 70. With the statement acknowledgements (store.mjs 11048–11805, C-82; about 830 more), which this draft places with `publication` (map §5.2), it would be about 1,870. Under 4,000 either way.
 
@@ -28,6 +28,13 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 
 **revoke** (`act: "revoke"`, with `grant`)
 - **R7** No grant named is `REVIEW_NO_GRANT` (C-87.10); a grant not held or a caller not its project's owner, C-87.3. A grant already revoked answers `existed: true` with the first revocation, unchanged; otherwise the revoker and instant are recorded.
+
+- **R34** (T48; N1038; DEC-100; K3147; amends R6, R8, R14; `screens-publish` R2) `grant` also takes `until`, the reader's end date: an instant in `record-core`'s stamp form (the screen sends the end of the day the member chose); `until` is answered wherever the grant is (R14's roster and the recipient's own grant part in the copy).
+  - After R6's refusals, an `until` that is present and not such an instant, or not later than the act's own instant, is `REVIEW_BAD_UNTIL` (C-87.17, a new row of this module's family; BOB's draft translation, re-wordable by the design stream: "Choose an end date after today for this reader's link. Nothing was shared."), and nothing is written.
+  - The grant records `until` (null when absent: live until revoked, as before T48) and answers it.
+  - From `until` on, the grant is dead exactly as a revoked one (R8): `liveGrant` and `grantAdmitsCaseEdition` answer as for a revoked grant, and R10's doors give the dead answer, byte-identical. Nothing is written when it lapses.
+  - R14's roster states each grant's `until`, and `live` reads false from it on. `revoke` (R7) of a lapsed grant still records the revocation.
+  - Controls: a grant with `until` an hour ahead admits now and gives the dead answer after it (a host clock moved past); a grant without `until` stays live; `until` in the past, or `"tomorrow"`, is refused `REVIEW_BAD_UNTIL` with nothing written.
 
 **The grant and the sight: liveGrant(secretSha), grantAdmitsCaseEdition(secretSha, caseId, edition), draftForMember(draftId, viewer), seesProjectDrafts(projectId, viewer), draftIdentity(draft)** The one place each is judged; `publication`'s case document and acknowledgements call them.
 - **R8** A grant is live only while it exists with that fingerprint, is not revoked, its draft exists, and the draft still stands at the case identity the grant was bound to; a grant whose edition was published and signed is dead exactly as a revoked one. A malformed fingerprint is never live.
@@ -83,7 +90,7 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 - **R20** Nothing here writes the published projection, the published bucket, a case document or a signature; a review copy never leaves the instance.
 - **R21** No secret's value is received or stored; only its fingerprint.
 - **R22** Every authorship field is the control plane's stamp, never a body's.
-- **R23** Each check moves here as an invariant with its test (K6): C-87.1–C-87.11 (C-87.12 retired, N322), C-87.13–C-87.16 (R30, R31; K2544), C-32.16.
+- **R23** Each check moves here as an invariant with its test (K6): C-87.1–C-87.11 (C-87.12 retired, N322), C-87.13–C-87.16 (R30, R31; K2544), C-32.16; (T48) C-87.17 `REVIEW_BAD_UNTIL` (R34; N1038), numbered at its stamp.
 - **R24** `case_drafts`, `review_grants`, `review_comments`, `approval_rules` and `case_approvals` (R30, R31; K2544) are declared to record-core's purge as whole-store tables (K23).
 - **R25** No place is named in this module's behaviour or outward text.
 
@@ -94,6 +101,7 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 - `docs/architecture/BIO_Membership_Architecture_v2.md` §4 (administrators direct nothing), §7 (sight).
 - `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §3 rules 4 and 10.
 - F1's rule for digests (K1874; N761, K2129, K2175): R29.
+- DEC-100 and `screens-publish` R2 (a named reader's link has an end date; N1038, K3147): R34.
 
 ### Suggestions
 

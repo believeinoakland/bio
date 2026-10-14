@@ -33,7 +33,7 @@ async function noFetch(fn) {
 
 test("R23: the module exports read and every piece the re-read composes, and the two constants with their values", () => {
   for (const name of ["read", "tier2Escalate", "decodeView", "pageBoxesFrom", "needsTier3", "tier3Extend", "tier3SeedFrom",
-                      "layerChainFor", "readingFromWire", "textCountsOf", "textUnitsFor", "bytesOf",
+                      "layerChainFor", "readingFromWire", "textCountsOf", "textUnitsFor", "emittedFieldsOf", "bytesOf",
                       "readingProvenance", "compareProvenance", "tier4Pages", "tier4Extend"])
     assert.equal(typeof rp[name], "function", name);
   assert.equal(CAPTURE_TEXT_UNIT_CAP, 128 * 1024, "R15's per-unit cap");

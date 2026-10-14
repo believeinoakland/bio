@@ -17,6 +17,7 @@
  * `airunlog` entries and `suggest` answers carry none, J4 (7)). Self-contained functions (interface-shell R21 (1)). */
 
 import { ownRows } from "./words.mjs";
+import * as settingsPanel from "../screens-settings/panel.mjs";
 
 /** R4: who serves this member (interface-shell R20's three reads), her use today, and the pack the run names. */
 function reads(view) {
@@ -57,7 +58,7 @@ function render(cs, view) {
   };
   const ok = (k) => d[k] && d[k].state === "ok" && d[k].value;
   const out = [];
-  out.push(`<p class="cs-sub">${cs.w("screen.assistant.says")}</p>`);
+  out.push(`<p class="mk-sub">${cs.w("screen.assistant.says")}</p>`);
 
   /* whose account serves her here (ai.account.*): a project's own account in a project that holds one switched on,
      else her own (a key or her Claude sign-in), else the group's key */
@@ -76,8 +77,31 @@ function render(cs, view) {
   const account = proj && proj.state === "ok" && proj.value.serving === "project" ? "ai.account.project.inline"
     : ownHeld ? "ai.account.own.inline" : groupOn ? "ai.account.group.inline" : "";
   out.push(`<p>${account ? cs.w("screen.assistant.serves") + " " + cs.w(account) : cs.w("screen.assistant.serves.unknown")}</p>`);
-  if (ok("usage") && d.usage.value.today && d.usage.value.today.used !== undefined && d.usage.value.today.limit !== undefined)
-    out.push(`<p class="cs-meta">${cs.w("screen.assistant.use", { used: String(d.usage.value.today.used), limit: String(d.usage.value.today.limit) })}</p>`);
+  /* no count is drawn at zero (R20) */
+  if (ok("usage") && d.usage.value.today && /[1-9]/.test(String(d.usage.value.today.used)) && d.usage.value.today.limit !== undefined)
+    out.push(`<p class="mk-small">${cs.w("screen.assistant.use", { used: String(d.usage.value.today.used), limit: String(d.usage.value.today.limit) })}</p>`);
+
+  /* R17: the serving account's thirty days and meters (`screens-settings` R26's render, handed in as `view.parts`), only
+     where she is one of that account's owners: her own account; a project's she owns (the read refuses anyone else,
+     `ai-use` R12, and a refusal draws nothing, saying nothing of the account's use); the group's key to an
+     administrator. An unreadable answer, or a read that fails, is drawn failed, never as zeros. */
+  {
+    const me = view.me && view.me.member;
+    const owner = account === "ai.account.project.inline" && context ? "project:" + context.id
+      : account === "ai.account.own.inline" && me ? "member:" + me
+      : account === "ai.account.group.inline" && view.me && view.me.administer === true ? "group" : "";
+    const bars = view.parts && view.parts.aiUsageBars;
+    if (owner && typeof bars === "function") {
+      const over = later("useover", "aiuseovertime", { owner });
+      const refusedAsNonOwner = over.state === "failed" && over.refusal && over.refusal.code;
+      if (over.state === "loading") out.push(cs.state({ state: "loading" }, () => ""));
+      else if (over.state === "failed" && !refusedAsNonOwner) out.push(cs.state({ state: "failed", refusal: null }, () => ""));
+      else if (over.state === "ok") {
+        if (over.value && over.value.unreadable === true) out.push(cs.state({ state: "failed", refusal: null }, () => ""));
+        else if (over.value && Array.isArray(over.value.days)) out.push(bars(cs, view, { owner, value: over.value }));
+      }
+    }
+  }
 
   /* R13: a run of hers still running on this context, found again after a reload (her principal `member:<id>`, or
      `member:<id>/<tokenId>` for one opened before T47) */
@@ -95,7 +119,7 @@ function render(cs, view) {
 
   /* the run */
   const run = ui.run || found;
-  const said = ui.said ? `<p class="cs-refusal" role="alert" data-refusal="${cs.esc(ui.said.op || "")}">${ui.said.html}</p>` : "";
+  const said = ui.said ? `<p class="mk-msg" role="alert" data-refusal="${cs.esc(ui.said.op || "")}">${ui.said.html}</p>` : "";
   let runPart = "";
   let status = null;
   if (!run) {
@@ -117,7 +141,7 @@ function render(cs, view) {
       ui.polling = true;
       cs.later(10000, (k, v) => { v.ui.polling = false; k.set("seq", (v.ui.seq || 0) + 1); });
     }
-    const label = untested ? `<span class="cs-label" data-label="untested">${cs.w("ai.label.untested")}</span>` : "";
+    const label = untested ? `<span class="cs-draftlabel" data-label="untested">${cs.w("ai.label.untested")}</span>` : "";
     const productions = [];
     if (log.state === "ok" && Array.isArray(log.value.entries))
       for (const e of log.value.entries) {
@@ -125,11 +149,11 @@ function render(cs, view) {
         if (what) productions.push(String(what));
       }
     for (const s of Array.isArray(ui.suggestions) ? ui.suggestions : []) productions.push(String(s));
-    runPart += cs.sec("screen.assistant.productions.head", productions.length
-      ? productions.map((p) => `<div class="cs-machine" data-origin="machine">${cs.mark("origin", "machine")}${label}`
-          + `<p class="cs-rec">${cs.w("screen.assistant.production", { what: p })}</p>`
-          + `<p class="cs-meta">${cs.w("screen.assistant.notevidence")}</p></div>`).join("")
-      : `<p>${cs.w("screen.assistant.productions.empty")}</p>`);
+    /* a section that holds nothing is not drawn (R20) */
+    if (productions.length) runPart += cs.sec("screen.assistant.productions.head",
+      productions.map((p) => `<div class="cs-machinework" data-origin="machine">${cs.mark("origin", "machine")}${label}`
+          + `<p class="rec">${cs.w("screen.assistant.production", { what: p })}</p>`
+          + `<p class="mk-small">${cs.w("screen.assistant.notevidence")}</p></div>`).join(""));
   }
   out.push(cs.sec("screen.assistant.run.head", runPart + said));
 
@@ -138,8 +162,8 @@ function render(cs, view) {
   const pack = ok("pack") && ((d.pack.value.pack && (d.pack.value.pack.version || d.pack.value.pack.skillVersion)) || d.pack.value.version);
   const running = !!run && status === "running";
   const started = running && ui.run && ui.run.dispatched;
-  if (!context) out.push(`<p class="cs-meta">${cs.w("screen.assistant.run.nocontext")}</p>`);
-  else if (d.pack && d.pack.state !== "loading" && !pack) out.push(`<p class="cs-meta">${cs.w("screen.assistant.run.notready")}</p>`);
+  if (!context) out.push(`<p class="mk-small">${cs.w("screen.assistant.run.nocontext")}</p>`);
+  else if (d.pack && d.pack.state !== "loading" && !pack) out.push(`<p class="mk-small">${cs.w("screen.assistant.run.notready")}</p>`);
   if (context && pack && member && !started)
     out.push(cs.act("airunopen", { label: "act.airunopen.label.assistant",
       data: { ctxType: context.type, ctxId: context.id, pack: String(pack), run: running ? run.id : "" }, tone: "primary" }));
@@ -256,4 +280,5 @@ const words = [
 ];
 
 /** The assistant dock (interface-shell R20, R21). */
-export const ASSISTANT_SCREEN = Object.freeze({ id: "assistant", reads, render, acts, words });
+export const ASSISTANT_SCREEN = Object.freeze({ id: "assistant", reads, render, acts, words,
+  parts: Object.freeze(settingsPanel.aiUsageBars ? { aiUsageBars: settingsPanel.aiUsageBars } : {}) });

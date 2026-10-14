@@ -21,7 +21,7 @@
 const at = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
 
 /* R51 (T46; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) the rows
-   C-115.45–.49, .51–.53 translate by, each `en` verbatim, read by key (`refusal.<CODE>`), as membership's `HANDLE_WORDS`
+   C-115.45, .46, .48, .49, .51–.53 translate by (T48, R57: C-115.47 is `filing-templates`'; N1053: .48 in DEC-221's spelling), each `en` verbatim, read by key (`refusal.<CODE>`), as membership's `HANDLE_WORDS`
    and extraction's `TRANSCRIBE_WORDS` are. The design stream's words: re-worded there, then re-taken here by key; a row
    never holds a copy of its sentence. Not taken in T46 (R51): `refusal.SECOND_APPROVAL_NEEDED` ("Any other member of the
    project can give it", while `filingSecondApprove`, R42, admits any member other than the approver who may see the
@@ -32,9 +32,7 @@ export const FILINGS_WORDS = Object.freeze({
     + "before approving. Nothing was written.",
   "refusal.SELF_BENEFIT_ASK": "A sentence still asks for something for your group or its members. A notice or demand asks "
     + "the body to correct its own act; rewrite that sentence before approving. Nothing was written.",
-  "refusal.RFC_QUOTING_MISSING": "A request for comment says the reply may be quoted unless it says otherwise. Add that "
-    + "sentence before approving. Nothing was written.",
-  "refusal.NOT_A_PARTNER": "That organisation isn't one of this action's partners. Add it as a partner first. Nothing was "
+  "refusal.NOT_A_PARTNER": "That organization isn't one of this action's partners. Add it as a partner first. Nothing was "
     + "written.",
   "refusal.JOINT_FINGERPRINT_MISMATCH": "The partner's copy isn't the same text your group approved. They sign the same "
     + "words, or none. Nothing was written.",
@@ -204,10 +202,8 @@ export const FILINGS_CHECKS = Object.freeze({
     check: "C-115.46", where: at("#outwardRefusal", "is-self-benefit-ask"),
     translation: word("SELF_BENEFIT_ASK"),
   },
-  RFC_QUOTING_MISSING: {
-    check: "C-115.47", where: at("#outwardRefusal", "is-rfc-quoting-missing"),
-    translation: word("RFC_QUOTING_MISSING"),
-  },
+  /* C-115.47 `RFC_QUOTING_MISSING` is `filing-templates`' row since T48 (R57; its R33): refused at R6 through its
+     `rfcQuotingRefusal`, answered as it gives it. */
   NOT_A_PARTNER: {
     check: "C-115.48", where: at("jointSignatory", "is-joint-signatory"),
     translation: word("NOT_A_PARTNER"),

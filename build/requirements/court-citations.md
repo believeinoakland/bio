@@ -1,6 +1,6 @@
 # court-citations — requirements
 
-**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-8, entered on GO, K1506). Every requirement met (COURT-CITATIONS #1, K1518).
+**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-8, entered on GO, K1506). Every requirement met (COURT-CITATIONS #1, K1518). Last changed T48 (T48-5: R11 new, the data held as data and read on first use, amending R1–R3, R6, R7; N1039; K3147, K3195); marked not yet met (T48).
 
 **Size (P6).** About 300–500 lines of code and tests, plus the generated data file (about 3.6 MB of source JSON, translated). The generated file is not counted against P6 (§14).
 
@@ -25,6 +25,9 @@ Free Law Project's reporters-db and courts-db as versioned data: every reporter 
 **reporterFor(spelling), courtsNamed(text)**
 - **R7** `reporterFor` answers `VARIANTS`' entries for a spelling exactly as written, then after folding white space and the periods the package's variants differ by only, or `null`. `courtsNamed` answers the ids of every court one of whose patterns matches `text`, in `COURTS` order, or `[]`. Neither throws, for any input.
 
+**Start-up cost** (T48-5; N1039; K3147: the plane's global scope over its 500 ms budget)
+- **R11** (T48; N1039; K3147; amends R1–R3, R6, R7) Evaluating the module, and so any bundle that imports it, builds none of R1–R3's data: the data is held as data (a JSON text, or a part the bundle carries beside its code), parsed and frozen once, on the first read of any of `REPORTERS`, `VARIANTS`, `COURTS`, `SOURCES`, `reporterFor` or `courtsNamed`, and reused after. Every answer of R1–R3 and R7 is unchanged, value for value, read by the same names, so `id-spaces` (its R27) reads it as before; R6's freshness check covers the data in its new form. Test: the module's import is measured as `bundler` R31 measures a global scope, beside the time of its first read, and each export's first and later reads equal the committed data; control: a second read parses nothing again.
+
 ## Private
 
 ### Uses
@@ -46,6 +49,7 @@ None. The build reads the two packages' files from a local directory; nothing at
 
 - **For `id-spaces`** (T33-9): R27 there names "1,167 reporters, 2,102 variants", the README's older figures; the pinned version gives more (R3). The recogniser should read the counts from `SOURCES`, not hold them.
 - **Placement against the layers rule.** `build/layers.md` says only `jurisdictions`' profile data names a place, while the plan keeps this data out of `jurisdictions` (P6; K1504). R9 reads it as a third party's place-neutral dataset of every court. BOB may want one sentence in `layers.md` that says so.
+- **T48 (N1039).** Today `court-data.mjs` builds the frozen arrays at import and `index.mjs` builds `VARIANTS` at import; both are what R11 removes from the global scope. A JSON string parsed on first read, or a part the plane's upload carries (as `case-checker`'s program is, T48-41), are the two forms K3147 names. If the names cannot stay plain bindings and be read lazily, the job says so at START and BOB places `id-spaces`' re-point (it has no T48 entry), rather than changing the names here.
 - The packages' wheels are fetched once, outside the run, at the pinned versions, and their hashes are checked against R3's `files`. A version bump is a job: it changes `SOURCES` and the counts, and reruns R5.
 - reporters-db also carries `laws.json` and `journals.json` (statute and journal citations). They are out of T33's entry and are not carried.
 - Python constructs to expect: `(?P<name>…)`, `(?P=name)` back-references, inline flags such as `(?i)`, and possessive or atomic forms. JavaScript's `v` flag covers most of them. Whatever it does not cover goes to `untranslated`.

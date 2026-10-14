@@ -312,9 +312,10 @@ export async function providerTest(deps, body) {
       }
     }
     if (kind === 'cdr') {
+      // R32: what a rebuilding tool gives is, in members' words, a safe view.
       const out = await c.adapter.cdr(ctx, inMemory(macroDocument()));
       return out.bytes.length && (out.removed || []).length ? answer(true, `removed: ${out.removed.join(', ')}`)
-        : answer(false, out.bytes.length ? 'the rebuilt file reported nothing removed' : 'no rebuilt file');
+        : answer(false, out.bytes.length ? 'the safe view reported nothing removed' : 'no safe view');
     }
     if (kind === 'url_reputation') {
       // A tool with a local list fetches it first when it holds none, or none fresh (R26).

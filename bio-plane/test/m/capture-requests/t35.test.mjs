@@ -94,8 +94,10 @@ test("R49 sight: an address held only by a capture filed in a bundle the viewer 
   assert.equal(askUnheld(w, { address: "https://loose.example.org/a.pdf" }).ok, true);
   /* an unrecognised viewer holds nothing */
   w.hold("https://loose.example.org/b.pdf");
-  const nobody = askUnheld(w, { address: "https://loose.example.org/b.pdf" }, { viewer: "nobody" });
-  assert.equal(nobody.ok, false);
+  /* (R1 answers first for a viewer who cannot see the run, so the run here is one every recognised stamp sees and the
+     viewer is unrecognised only to membership: R49's own refusal, not R1's) */
+  const nobody = askUnheld(w, { address: "https://loose.example.org/b.pdf" }, { viewer: "class:nobody" });
+  refusedBy(nobody, "CAPTURE_REQUEST_ADDRESS_NOT_HELD");
 });
 
 test("R49 the bound: an address over 2,048 characters is refused CAPTURE_REQUEST_ADDRESS_TOO_LONG, naming the bound and the length, never cut, even when held; one of exactly 2,048 is judged as any other", () => {

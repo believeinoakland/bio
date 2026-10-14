@@ -73,6 +73,9 @@ export const FOLLOWING_CHECKS = Object.freeze({
   WATCH_RELIED_ON: row(25, "watchAnswer", "is-answer-relied",
     "Something else still relies on this watch, so it is shown but not offered for keeping or stopping here. Nothing "
     + "was written."),
+  BAD_PROCEEDING_DATES: row(26, "proceedingDates", "is-proceeding-dates",
+    "A proceeding's dates are read between two calendar days, written year-month-day, the first not after the second. "
+    + "Nothing was read."),
 });
 
 /** A refusal answer naming one of this module's rows (DEC-49): `{ok: false, reason, code, check, translation, detail,

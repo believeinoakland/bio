@@ -413,7 +413,8 @@ export const STATES = {
   /* T46-1 (R59; N911, K2845): `consequences`' success record (its R17, `SUC-`, `success_record` in `OBJECT_TYPES`). It is
      RECORDED once and never moves, as a standard, a determination and a consequence part are: a correction is a successor
      (`successRevise`). Promoted with history like a finding (consequences R14's pattern), so it has this machine; it is not
-     a bundle prefix (R1), so `HEADINGS` and `checkBundle`'s schemas gain nothing. */
+     a bundle prefix (R1), so `HEADINGS` gains nothing. Since T47 (R62; N958) `checkBundle` admits its document under
+     `success_record@1` and judges its state by this machine (bundle.mjs). */
   success_record: {
     legal: ['recorded'],
     edges: { recorded: [] }

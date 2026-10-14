@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { standard, WORDS } from "./fixture.mjs";
 import * as aiUse from "../../../src/ai-use/index.mjs";
 import * as aiUseChecks from "../../../src/ai-use/checks.mjs";
-import { USE_KINDS } from "../../../src/credentials/index.mjs";
+import { USE_KINDS } from "../../../src/ai-accounts/index.mjs";
 
 const { AI_USE_CHECKS, AI_USE_WORDS, fillWords } = aiUse;
 const AT = "2026-10-09T12:00:00Z";
@@ -15,7 +15,7 @@ const MONTHS = ["january", "february", "march", "april", "may", "june", "july", 
   "december"];
 const differences = (held, file) => Object.entries(held).filter(([k, en]) => typeof file[k] !== "string" || file[k] !== en)
   .map(([k]) => k);
-const explore = (w, owner, on, by) => w.c.accountUsesSet({ owner, switch: "explore", on, by });
+const explore = (w, owner, on, by) => w.a.accountUsesSet({ owner, switch: "explore", on, by });
 
 /* ===== R13: AI_USE_WORDS equals words.json, the T44 keys included ===== */
 

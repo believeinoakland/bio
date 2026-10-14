@@ -163,8 +163,9 @@ test("R16, R21, R14: ask's, draft's and plan's flags are true (each its own revi
 });
 
 test("R27 (T46): DRAFT_KINDS gains statusreport after the action drafts — reach none (only the items plan-work R8 assembled, handed in by the door), draftMayRead false whatever the rest, deployed under draft's own flag with action_drafts playing no part, its test-bar part draft:statusreport, started only at the asking member's act (R18); not an action draft, a mode or a flag", () => {
-  assert.equal(DRAFT_KINDS.at(-1), "statusreport");
-  assert.deepEqual([...DRAFT_KINDS].slice(-4, -1), [...ACTION_DRAFT_KINDS]);
+  /* directly after the action drafts (R33's T48 `reading` follows it; t48.test.mjs) */
+  const at = DRAFT_KINDS.indexOf("statusreport");
+  assert.deepEqual([...DRAFT_KINDS].slice(at - 3, at), [...ACTION_DRAFT_KINDS]);
   assert.equal(ACTION_DRAFT_KINDS.includes("statusreport"), false);
   assert.equal(DRAFT_MODE.kinds.includes("statusreport"), true);
   /* its reach */

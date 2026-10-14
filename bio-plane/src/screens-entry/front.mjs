@@ -22,18 +22,24 @@ export const front = {
     const data = view.data || {};
     const ok = (r) => (r && r.state === "ok" ? r.value : null);
     const id = ok(data.identity) || {};
-    const group = id.display_name || id.group || "";
+    // R13: the group's name, or "Your group" while none is set; never its slug
+    const named = typeof id.display_name === "string" && id.display_name.trim() ? id.display_name.trim() : "";
+    const group = named || { html: W("screen.entry.group") };
     const session = view.session || {};
     const out = [];
 
-    // the masthead (R1): the group's name and its logo when set (instance-setup R84), served on this origin
-    out.push(`<header class="cs-fronthead">${id.logo === true ? `<img class="cs-flogo" src="/app/assets/group-logo" alt="${W("screen.entry.logo", { group })}">` : ""}<div>`
-      + (group ? cs.title(group) : cs.title())
+    // the masthead (R1, R13): the logo when set (instance-setup R84), served on this origin, else the name's monogram;
+    // the name in the design's serif title
+    const initials = named.split(/\s+/).filter((x) => /^[\p{L}\p{N}]/u.test(x)).slice(0, 2).map((x) => [...x][0].toUpperCase()).join("");
+    const mark = id.logo === true ? `<img class="mk-flogo" src="/app/assets/group-logo" alt="${W("screen.entry.logo", { group })}">`
+      : initials ? `<div class="mk-flogo" aria-hidden="true">${E(initials)}</div>` : "";
+    out.push(`<header class="mk-fronthead">${mark}<div>`
+      + `<h1 class="grp" tabindex="0">${named ? E(named) : group.html}</h1>`
       // a part the group keeps from the public is not drawn (DEC-132): the public answer holds only what is public, and
       // a purpose kept from the public (`description: null`) draws nothing
       + (data.description && data.description.state === "empty" ? "" : cs.state(data.description, (v) => {
         const d = v.description || {};
-        return (d.focus ? `<p class="cs-sub">${E(d.focus)}</p>` : "") + (d.purpose ? `<p class="cs-sub">${E(d.purpose)}</p>` : "");
+        return (d.focus ? `<p class="mk-sub">${E(d.focus)}</p>` : "") + (d.purpose ? `<p class="mk-sub">${E(d.purpose)}</p>` : "");
       })) + "</div></header>");
 
     // the lock (R2): a session record locked on this device draws the lock, and nothing else asks for a password
@@ -41,13 +47,14 @@ export const front = {
       const handle = session.handle || "";
       out.push(cs.sec("screen.front.welcomeback", `<p class="cs-row" data-state="locked">${W("session.locked")}</p>`
         + cs.field("fl-lock", "screen.entry.password", { type: "password", autocomplete: "current-password" })
-        + `<div class="cs-actrow">${cs.act("unlock", { tone: "primary" })}</div><p>${W(S + "notyou", { handle })} ${String(cs.signout({ label: S + "other" }) || "")}</p>`,
+        + `<div class="mk-acts">${cs.act("unlock", { tone: "primary" })}</div><p>${W(S + "notyou", { handle })} ${String(cs.signout({ label: S + "other" }) || "")}</p>`,
       { fills: { handle } }));
-      out.push(`<p class="cs-small">${W("screen.entry.uses", { group: group || W("screen.entry.group") })}</p>`);
+      out.push(`<p class="mk-small">${W("screen.entry.uses", { group })}</p>`);
       return out.join("");
     }
 
-    const pub = cs.sec(S + "published", cs.state(data.published, (v) => {
+    // R12: nothing published draws no section (a failed read is still drawn as failed)
+    const pub = data.published && data.published.state === "empty" ? "" : cs.sec(S + "published", cs.state(data.published, (v) => {
       const bundles = Array.isArray(v.bundles) ? v.bundles : [];
       const cases = (v.cases || []).filter((c) => c && c.withheld !== true);
       // each case edition's title, edition, signing date and signer as answered; the title and signer of its first
@@ -60,9 +67,9 @@ export const front = {
         const meta = W(signer ? S + "edition" : S + "edition.nosigner", { edition: String(c.edition), date: { html: cs.date(when) }, signer });
         return `<div class="cs-row"><a href="/app/published/${encodeURIComponent(c.case_id)}" data-nav>${title ? E(title) : W(S + "untitled")}</a><span class="meta">${meta}</span></div>`;
       }).join("") + "</div>";
-    }, { empty: S + "published.none" }));
-    const door = cs.sec(S + "doorbell", `<p>${W(S + "doorbell.what")}</p><p><a class="cs-btn" href="/app/doorbell" data-nav>${W(S + "doorbell.go")}</a></p>`);
-    const how = cs.sec(S + "how", `<p>${W(S + "how.what")}</p><p><a class="cs-btn" href="/app/tour" data-nav>${W(S + "how.go")}</a></p>`);
+    }));
+    const door = cs.sec(S + "doorbell", `<p class="mk-note">${W(S + "doorbell.what")}</p><div class="mk-acts"><a class="cs-btn" href="/app/doorbell" data-nav>${W(S + "doorbell.go")}</a></div>`);
+    const how = cs.sec(S + "how", `<p class="mk-note">${W(S + "how.what")}</p><div class="mk-acts"><a class="cs-btn" href="/app/tour" data-nav>${W(S + "how.go")}</a></div>`);
 
     // the sign-in panel (R2): the states the record left, the handle, the password and the device
     const said = session.state === "signedout" ? `<p class="cs-row" data-state="signedout">${W("session.signedout")}</p>`
@@ -71,11 +78,13 @@ export const front = {
       + cs.field("fs-handle", S + "handle", { help: "signin.founderhint", autocomplete: "username", value: session.handle || "" })
       + cs.field("fs-pw", "screen.entry.password", { type: "password", autocomplete: "current-password" })
       + cs.checks("fs-device", S + "device", [["own", "session.keep", true], ["shared", "session.shared", false]], { radio: true })
-      + `<div class="cs-actrow">${cs.act("login", { tone: "primary" })}<a href="/app/forgot" data-nav>${W(S + "forgot")}</a></div>`
-      + `<p class="cs-small">${W(S + "notmember")}</p>`);
+      + `<div class="mk-acts">${cs.act("login", { tone: "primary" })}<a href="/app/forgot" data-nav>${W(S + "forgot")}</a></div>`
+      + `<p class="mk-small">${W(S + "notmember")}</p>`);
 
-    out.push(`<div class="cs-frontgrid"><div>${pub}${door}${how}</div><div class="cs-signin">${panel}</div></div>`);
-    out.push(`<p class="cs-small">${W("screen.entry.uses", { group: group || W("screen.entry.group") })}</p>`);
+    // R13: the design's two columns at desktop widths, the sign-in card on the right (one column at the phone width,
+    // `shell.css`' 760 px rule)
+    out.push(`<div class="mk-frontgrid"><div>${pub}${door}${how}</div><div class="mk-signin">${panel}</div></div>`);
+    out.push(`<p class="mk-small">${W("screen.entry.uses", { group })}</p>`);
     return out.join("");
   },
 

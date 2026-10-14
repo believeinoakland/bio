@@ -4,17 +4,17 @@
    and recording the sending with the portal's number. The subject is the project (a new request) or the action (one
    already started), and an action opens at the step it has reached (R10: approved and not sent opens at the send).
    Every function here is self-contained (interface-shell R21 (1)). */
-import { draftsOf, stepOf, sendSteps, PREPARE, APPROVE, RECORD_SENT } from "./send-steps.mjs";
+import { draftsOf, stepOf, sendSteps, draftOf, readFiling, PREPARE, APPROVE, RECORD_SENT } from "./send-steps.mjs";
 
 export const request = Object.freeze({
   id: "request",
 
-  // R8 (interface-shell): the path's project step, from the `project:` line of the action's own document (the
-  // `action` read names no project) and the project's title from `list`.
+  // R8 (interface-shell): the path's project step: the subject itself for a new request, else the project the `action` read
+  // answers (actions R102), and the project's title from `list`.
   place: function (view) {
-    const d = view.data.doc;
-    const m = d && d.state === "ok" && d.value && typeof d.value.text === "string" ? /^project:\s*"?([^"\s]+)"?\s*$/m.exec(d.value.text) : null;
-    const id = m ? m[1] : /^ACTN-/.test(String(view.subject || "")) ? null : String(view.subject || "");
+    const d = view.data.action;
+    const own = d && d.state === "ok" && d.value && typeof d.value.project === "string" ? d.value.project : "";
+    const id = own || (/^ACTN-/.test(String(view.subject || "")) ? null : String(view.subject || ""));
     if (!id) return {};
     const l = view.data.projects;
     const rows = l && l.state === "ok" && l.value && Array.isArray(l.value.bundles) ? l.value.bundles : [];
@@ -29,13 +29,12 @@ export const request = Object.freeze({
       r.action = { op: "action", query: { id: s }, subject: true };
       r.filings = { op: "filingsfor", query: { action: s }, empty: function () { return false; } };
       r.profiles = { op: "profiles", empty: function () { return false; } };
-      r.doc = { op: "file", query: { id: s, path: "bundle.md" }, empty: function () { return false; } };
     }
     return r;
   },
 
   parts: {
-    draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps,
+    draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling,
     isRequest: function () { return true; },
     // R4: the laws the profile names for a records request, each with its window (`profiles`' `view.deadlines`).
     laws: function (profiles) {
@@ -54,12 +53,11 @@ export const request = Object.freeze({
       // A new request: the office, then what is wanted; starting it opens the request's own address (its step).
       const offices = Array.isArray(view.ui.offices) ? view.ui.offices : null;
       const pick = offices && offices.length
-        ? '<div class="cs-field"><label for="req-office">' + cs.w("screen.request.office") + '</label><select id="req-office" class="cs-input">'
-          + offices.map(function (o, i) {
-            const a = o.addressee || {};
-            return '<option value="' + i + '">' + cs.esc([a.role, a.body].filter(Boolean).join(", ")) + "</option>";
-          }).join("") + "</select><span class=\"help\">" + cs.w("screen.request.office.help") + "</span></div>"
-        : offices ? '<p class="cs-state" data-state="empty">' + cs.w("screen.request.nooffice") + "</p>" : "";
+        ? cs.choice("req-office", "screen.request.office", offices.map(function (o, i) {
+          const a = o.addressee || {};
+          return { value: String(i), text: [a.role, a.body].filter(Boolean).join(", ") };
+        })) + '<p class="mk-note">' + cs.w("screen.request.office.help") + "</p>"
+        : offices ? '<p class="mk-note" role="status">' + cs.w("screen.request.nooffice") + "</p>" : "";
       return head + cs.sec("screen.request.step.office", pick + '<div class="mk-acts">' + cs.act("addresseesuggest", {}) + "</div>")
         + cs.sec("screen.request.step.what", cs.field("req-what", "screen.request.what", { help: "screen.request.what.help" })
           + '<div class="mk-acts">' + cs.act("actioncreate", { tone: "primary" }) + "</div>")
@@ -72,15 +70,16 @@ export const request = Object.freeze({
       const laws = Array.isArray(a.governing_laws) ? a.governing_laws : [];
       const pr = view.data.profiles;
       const offered = P.laws(pr && pr.state === "ok" ? pr.value : null);
+      const picker = offered.length
+        ? cs.choice("req-law", "screen.request.law", offered.map(function (d, i) {
+          return { value: String(i), key: "screen.request.law.option", fills: { citation: d.citation,
+            window: { html: cs.w("screen.request.window." + (d.count === "business" ? "business" : "calendar"), { n: String(d.amount) }) } } };
+        }))
+          + cs.choice("req-level", "screen.request.level", ["state", "city", "county", "federal"].map(function (k) { return [k, "screen.request.level." + k]; }))
+          + '<div class="mk-acts">' + cs.act("actionlaws", {}) + "</div>" : "";
       const lawSec = cs.sec("screen.request.step.law", (laws.length
         ? cs.sheet(laws.map(function (l) { return cs.row("", cs.esc(l.citation || ""), "", ""); }).join("")) : "")
-        + (offered.length ? '<div class="cs-field"><label for="req-law">' + cs.w("screen.request.law") + '</label><select id="req-law" class="cs-input">'
-          + offered.map(function (d, i) {
-            return '<option value="' + i + '">' + cs.esc(d.citation) + " · " + cs.w("screen.request.window." + (d.count === "business" ? "business" : "calendar"), { n: String(d.amount) }) + "</option>";
-          }).join("") + "</select></div>"
-          + cs.choice("req-level", "screen.request.level", ["state", "city", "county", "federal"].map(function (k) { return [k, "screen.request.level." + k]; }))
-          + '<div class="mk-acts">' + cs.act("actionlaws", {}) + "</div>"
-          : cs.state("profiles", function () { return '<p class="cs-state" data-state="empty">' + cs.w("screen.request.nolaws") + "</p>"; }))
+        + (pr && pr.state === "ok" ? picker : cs.state("profiles"))
         + '<p class="mk-note">' + help + "</p>");
       const send = cs.sec("screen.request.step.text", cs.state("filings", function (f) { return P.sendSteps(cs, view, f, { request: true }); }));
       return sub + lawSec + send;

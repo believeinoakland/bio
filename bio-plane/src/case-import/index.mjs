@@ -23,7 +23,7 @@
  *
  * A member may watch an import (R17): `monitoring` then reads the publisher's public docket for that case daily and hands
  * each read to `recordDocketRead` (R18), which verifies each new entry (its digest and form, its signature against the
- * key it embeds, labelled `key_listed` when a held manifest lists that key, and its chain) and records it verified or
+ * key it embeds, labeled `key_listed` when a held manifest lists that key, and its chain) and records it verified or
  * refused. A verified new edition or withdrawal is a publisher move: `reevaluation` is told of it (its R33) and reads the
  * moves through `accepted-work` (R16's `moves`). Every other entry reaches only the watch's setter (R20). The reads say
  * what was seen and when a docket could not be read, never that nothing changed (R19).
@@ -796,7 +796,7 @@ export class CaseImport {
   }
 
   /** R4: one import's editions, and the latest (or the one named) in full: each finding's role, result, what is missing
-   *  or differs and its recomputed pair; the source's bar labelled as the source's; each finding against this group's
+   *  or differs and its recomputed pair; the source's bar labeled as the source's; each finding against this group's
    *  own bar; its origin mark facts; and the checker's statement. A viewer who is not an active member, an import not
    *  held and an edition not held are answered alike. Writes nothing. */
   importedCase({ import: importId = null, edition = null, viewer = null } = {}) {

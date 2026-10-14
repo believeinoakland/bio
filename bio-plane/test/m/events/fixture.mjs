@@ -75,6 +75,16 @@ export function testView({ legistar = false, votes = null } = {}) {
   return view;
 }
 
+/** The work a call does in the store, as statements run and rows read (N1063): a measure of cost that, unlike a clock,
+ *  does not change with the machine's load, so a bound on it proves the same at any load. */
+export function metered(w, fn) {
+  const sql = w.st.sql, exec = sql.exec;
+  let statements = 0, rows = 0;
+  sql.exec = (...a) => { statements++; const c = exec.apply(sql, a); const all = c.toArray(); rows += all.length; return cursorOf(all); };
+  try { const value = fn(); return { value, statements, rows }; } finally { sql.exec = exec; }
+}
+const cursorOf = (rows) => cursor(rows);
+
 let clock = 0;
 /** A fresh record with the modules above and events over it. */
 export function world({ view = testView(), now = null, profiles = true } = {}) {

@@ -190,7 +190,7 @@ test("R70 (T47) the seeks judgment is action-records.seeksRefusal (its R10), ask
   assert.equal(w.promote(C, md(C, rr(seeksLines(ok)))).ok, true);
 });
 
-test("R25 the read lists the proposals of what a request seeks that action-records holds (its R3), beside seeks as a member stated it; its op is still served through actions' map", () => {
+test("R25 the read lists the proposals of what a request seeks that action-records holds (its R3), beside seeks as a member stated it; its op is served by action-records' map (R103)", async () => {
   const w = world({ deps: { progressions: progressionsStandIn() } });
   const stated = [{ progression: "budget", entity: E2, stage: "adopted" }];
   assert.equal(w.promote(A, md(A, rr(seeksLines(stated)))).ok, true);
@@ -199,7 +199,7 @@ test("R25 the read lists the proposals of what a request seeks that action-recor
   /* the op (action-records R15) reaches the same act through actions' map until the plane spreads action-records' own */
   const two = [{ progression: "meeting", entity: E1, stage: "notice" }];
   w.clock.ms += 60000;
-  const b = actions.actionsOps(w.a, new URL(`https://x/?target=${A}&viewer=${BOB}&proposer=${BOB}`), { seeks: JSON.stringify(two) })
+  const b = (await import("../../../src/action-records/index.mjs")).actionRecordsOps(w.a.records, new URL(`https://x/?target=${A}&viewer=${BOB}&proposer=${BOB}`), { seeks: JSON.stringify(two) })
     .actionseekspropose();
   assert.deepEqual([b.ok, b.proposal.state, b.proposal.seeks], [true, "member_proposed", two]);
   const read = w.a.actionRead({ id: A, viewer: ALICE });

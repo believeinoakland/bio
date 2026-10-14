@@ -1,10 +1,12 @@
 /* people (layer 5; T33-36, K1452, K1455, K1483–K1493): the people the record is about, held fully and never judged.
-   `build/requirements/people.md` R1–R37. Identity claims that LINK two person records and never merge them, with the
+   `build/requirements/people.md` R1–R39. Identity claims that LINK two person records and never merge them, with the
    derived identity cluster (R1–R8); dated person facts and their lawful removal (R9–R12); the reads that gather a
    person's positions, career, credentials, interests, statements and acts from their owning modules (R13–R17);
    staffing as of a date (R18–R19); members' own ties (R20); the protected link from a source to a person (R21) and its
-   internal sight read (R34); the People directory (R37); who recorded what from a passage, in events R49's shape (R36); the machine's interest checks, held in the hypothesis layer and shown only past their gate
-   (R22–R25), with their arming notice (R35); the connection owner of the identity kinds (R26) and the ops map (R27).
+   internal sight read (R34); the People directory (R37), its organisation rows naming who wrote the note (R38); the
+   identity claims on a person's page, by id (R39); who recorded what from a passage, in events R49's shape (R36); the
+   machine's interest checks, held in the hypothesis layer and shown only past their gate (R22–R25), with their arming
+   notice (R35); the connection owner of the identity kinds (R26) and the ops map (R27).
    CORRECTED FORWARD (R4, R11; N617): every act is stamped (`by`, never null: `NO_BY`), and nothing is edited in place: a
    replaced source link or gate is kept beside the one that replaced it.
    ONE HOME PER FACT (R30): posts, memberships, credentials, interests and ties are `lines`'; statements and acts are
@@ -973,12 +975,32 @@ export class People {
     const n = bounded(names), f = bounded(facts.held), p = bounded(postsAt.held, READ_LIST_MAX, posts.truncated);
     const d = bounded(duties, READ_LIST_MAX, dutiesTruncated);
     const u = bounded([...facts.undetermined, ...postsAt.undetermined, ...dutiesUnsettled]);
-    return { ok: true, found: true, entity_id: entityId, at, cluster,
+    const claims = this.#claimsOn(cluster.members, viewer);
+    return { ok: true, found: true, entity_id: entityId, at, cluster, claims: claims.items, claims_truncated: claims.truncated,
              names: n.items, facts: f.items, posts: p.items, duties: d.items, undetermined: u.items,
              truncated: { names: n.truncated, facts: f.truncated, posts: p.truncated, duties: d.truncated, undetermined: u.truncated },
              limit: READ_LIST_MAX,
              detail: "each item is cited, dated and graded, and names the cluster member it is held on; an item whose validity does "
-               + "not settle the date is listed as undetermined, never as current" };
+               + "not settle the date is listed as undetermined, never as current; each identity claim on the cluster is listed "
+               + "with its id, so it can be withdrawn by it" };
+  }
+
+  /* R39 (N1032, K3145): every unwithdrawn identity claim the viewer may see (R31) with an end among `members` (the
+     cluster the read states, R13), same_as, not_same_as and unsure alike, in R1's and R2's words, ordered by `at` then
+     `claim_id`, at most R5's 1,000, `truncated` by reading one past. A claim inside a project the viewer may not see is
+     skipped before it is counted. Writes nothing. */
+  #claimsOn(members, viewer) {
+    const ids = JSON.stringify(members);
+    const items = [];
+    let truncated = false;
+    for (const c of this.#sql.exec(`SELECT claim_id, a, b, kind, grade, why, project, by_actor, at FROM identity_claims
+                                    WHERE withdrawn_at IS NULL AND (a IN (SELECT value FROM json_each(?)) OR b IN (SELECT value FROM json_each(?)))
+                                    ORDER BY at, claim_id`, ids, ids)) {
+      if (!this.#seesProject(c.project, viewer)) continue;
+      if (items.length >= CLUSTER_CLAIMS_MAX) { truncated = true; break; }
+      items.push({ claim_id: c.claim_id, a: c.a, b: c.b, kind: c.kind, grade: c.grade, why: c.why, by: c.by_actor, at: c.at });
+    }
+    return { items, truncated };
   }
 
   /** R13, R15: every holds line of the cluster, in and out of government, in validity order. */
@@ -1234,7 +1256,13 @@ export class People {
     const name = ent.label ?? null;
     const words = [name, ...(Array.isArray(ent.aliases) ? ent.aliases.filter((a) => !a.withdrawn).map((a) => a.alias) : [])]
       .filter(filled).map((s) => s.trim().replace(/\s+/g, " ").toLowerCase());
-    if (e.kind !== "person") return { name, words, posts: [], today: { kind: e.kind, sector: ent.sector ?? null, note: ent.note ?? null } };
+    /* R38 (N1050): beside the note, who wrote it (entities' declared_by) and whether that author is a machine identity,
+       so a screen tells setup's seeding from a member's words without reading the note's text */
+    if (e.kind !== "person") {
+      const noteBy = filled(ent.declared_by) ? ent.declared_by : null;
+      return { name, words, posts: [], today: { kind: e.kind, sector: ent.sector ?? null, note: ent.note ?? null, note_by: noteBy,
+                                                machine: isMachineIdentity(noteBy) === true } };
+    }
     const label = (id) => { const x = filled(id) ? this.#entity(id) : null; return x ? { entity: id, label: x.label ?? null } : null; };
     const heldOn = (l) => !l.withdrawn && People.#judge(l.valid, today, People.#through(l)) === "in";
     const posts = [];

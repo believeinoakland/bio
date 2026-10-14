@@ -1,7 +1,8 @@
 /* screens-entry R3, R4, R5: `tour`, `forgot` and `reset`, at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, has, lacks, said, date, all, actOps, links, SCREENS } from "./kit.mjs";
+import { open, has, lacks, said, date, all, actOps, links, squash, SCREENS } from "./kit.mjs";
+import { HOSTING_CONTROL, FORGOT_HELP } from "../../../src/setup-fleet.mjs";
 
 // ---- tour (R3) ----
 
@@ -68,10 +69,18 @@ test("R4 refusal: RECOVERY_REFUSED drawn as its one sentence, the code cleared a
   lacks(o, "screen.forgot.done", { remaining: "7" });
 });
 
-test("R4 the other two ways: ask an administrator for a reset link; if no administrator can get in, the hosting account's way in HOSTING_CONTROL's words", async () => {
-  const o = await open("forgot");
-  has(o, "screen.forgot.admin"); has(o, "screen.forgot.admin.what"); has(o, "screen.forgot.hosting"); has(o, "screen.forgot.hosting.what");
-  for (const k of ["screen.hosting.heading", "screen.hosting.s1", "screen.hosting.s2", "screen.hosting.s3", "screen.hosting.s4", "screen.hosting.s5", "screen.hosting.guide"]) has(o, k);
+test("R4 the other two ways: ask an administrator for a reset link; if no administrator can get in, instance-setup's FORGOT_HELP for every visitor; control: forgot draws no HOSTING_CONTROL", async () => {
+  for (const session of [{ state: "none" }, { state: "ended", handle: "mai" }]) {
+    const o = await open("forgot", { session });
+    has(o, "screen.forgot.admin"); has(o, "screen.forgot.admin.what");
+    for (const t of [FORGOT_HELP.heading, ...FORGOT_HELP.sentences]) assert.ok(o.text.includes(squash(t)), t);
+    // the founder's block is setup's only (R6): none of its heading, sentences or guide is drawn here
+    for (const t of [HOSTING_CONTROL.heading, ...HOSTING_CONTROL.sentences, HOSTING_CONTROL.guide.sentence]) assert.ok(!o.text.includes(squash(t)), "forgot draws HOSTING_CONTROL: " + t);
+    assert.equal(all(o.tree, (e) => e.attrs.id === "hosting-control").length, 0);
+  }
+  // control: setup's claim still draws it
+  const s = await open("setup", { fragment: { boot: "otp" }, table: { bootstrap: { ok: true, result: { ok: true, claimed: false, bootstrapConfigured: true } } } });
+  assert.ok(s.text.includes(squash(HOSTING_CONTROL.heading)));
 });
 
 // ---- reset (R5) ----

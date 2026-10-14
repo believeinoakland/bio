@@ -18,7 +18,7 @@ import { ownRows } from "./words.mjs";
 function reads(view) {
   const id = String(view.subject || "");
   return {
-    project: { op: "image", query: { id }, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
+    project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
     stage: { op: "projectstage", query: { project: id } },
     participants: { op: "projectparticipants", query: { projectId: id } },
     bar: { op: "strengthbarof", query: { project: id } },
@@ -46,6 +46,7 @@ function place(view) {
  *  (absent when the session may not do it, interface-shell R12). */
 function render(cs, view) {
   const id = String(view.subject || "");
+  if (!id) return "";
   const ui = view.ui;
   /* the document's front matter: top-level scalars */
   const front = (text) => {
@@ -93,7 +94,7 @@ function render(cs, view) {
   const out = [];
   out.push(cs.title(title, { thing: "project" }));
   if (doc && doc.objective && doc.objective !== title)
-    out.push(`<p class="cs-sub"><span class="cs-label">${cs.w("screen.project.objective")}</span> ${cs.esc(doc.objective)}</p>`);
+    out.push(`<p class="mk-sub"><span class="mk-small">${cs.w("screen.project.objective")}</span> ${cs.esc(doc.objective)}</p>`);
 
   if (notJoined) {
     const owners = (() => {
@@ -114,6 +115,12 @@ function render(cs, view) {
     && d.participants.value.participants.some((x) => x && x.handle === me && x.state === "joined");
 
   /* the stage (project-stage R2) */
+  /* a count is drawn only above zero (R20): the line holds the counts there are, and is absent when there are none */
+  const counts = (q) => {
+    const parts = [["read", q.read], ["legs", q.with_legs], ["concluded", q.concluded]].filter(([, n]) => Number(n) > 0)
+      .map(([k, n]) => cs.w("screen.project.stage." + k, { count: String(n) }));
+    return parts.length ? `<p class="mk-small">${parts.join(" · ")}</p>` : "";
+  };
   out.push(cs.sec("screen.project.stage.head", cs.state("stage", view, (s) => {
     const k = ["forming", "investigating", "matured", "closed"].includes(s.stage) ? s.stage : "undetermined";
     const steps = ["forming", "investigating", "matured", "closed"].map((x) =>
@@ -121,7 +128,7 @@ function render(cs, view) {
     const q = s.questions || {};
     return `<div class="cs-ladder" data-ladder="stage">${steps}</div>`
       + (k === "undetermined" ? cs.mark("gap", "undetermined", { reason: s.detail || "" }) : "")
-      + `<p class="cs-meta">${cs.w("screen.project.stage.counts", { read: q.read || 0, with_legs: q.with_legs || 0, concluded: q.concluded || 0 })}</p>`;
+      + counts(q);
   })));
 
   /* R10: the project's own bar as `strengthbarof` answers it for the project: a declared axis by its letter, an
@@ -138,7 +145,7 @@ function render(cs, view) {
     return said + (barAct
       ? cs.choice("project-bar-capture", "mark.scale.capture.name", letters(), { value: declared && bar.capture ? bar.capture : "" })
         + cs.choice("project-bar-connection", "mark.scale.connection.name", letters(), { value: declared && bar.connection ? bar.connection : "" })
-        + `<p class="cs-meta">${cs.w("screen.project.bar.help")}</p>` + barAct
+        + `<p class="mk-small">${cs.w("screen.project.bar.help")}</p>` + barAct
       : "");
   })));
 
@@ -177,9 +184,9 @@ function render(cs, view) {
   const fieldQ = cs.field("project-question", "screen.project.question.label", { area: true, rec: true, help: "screen.project.question.help" });
   out.push(cs.sec("screen.project.questions.head", qInner + fieldQ
     + cs.act("promote", { label: "act.promote.label.project", data: { project: id }, tone: "primary" })
-    + (ui.promoteRefusal ? `<p class="cs-refusal" role="alert" data-refusal="promote">${ui.promoteRefusal.translation
+    + (ui.promoteRefusal ? `<p class="mk-msg" role="alert" data-refusal="promote">${ui.promoteRefusal.translation
         ? cs.esc(ui.promoteRefusal.translation) : cs.w("state.failed", { reason: ui.promoteRefusal.code || "" })}</p>` : "")
-    + (nd ? `<p class="cs-refusal" role="alert" data-refusal="drawquestion">${cs.w("screen.project.questions.notdrawn",
+    + (nd ? `<p class="mk-msg" role="alert" data-refusal="drawquestion">${cs.w("screen.project.questions.notdrawn",
         { reason: nd.translation || nd.code || "" })} ${cs.ref("question", nd.id, nd.title || nd.id, [nd.title || nd.id])}</p>` : "")
     + cs.act("findin", { label: "act.findin.label.project", data: { project: id } })));
 
@@ -191,19 +198,26 @@ function render(cs, view) {
     const drawInner = cs.state("others", view, (v) => {
       const opts = (Array.isArray(v.bundles) ? v.bundles : []).filter((b) => b && b.bundle_id && !drawn.has(b.bundle_id))
         .map((b) => ({ value: String(b.bundle_id), text: String(b.title || b.bundle_id) }));
-      if (!opts.length) return `<p>${cs.w("screen.project.draw.none")}</p>`;
+      if (!opts.length) return "";
       return cs.choice("project-draw-question", "screen.project.draw.choose", opts, { value: opts[0].value })
         + cs.field("project-draw-note", "screen.project.draw.note", { rec: true, help: "screen.project.draw.help" }) + drawAct
-        + (ui.drawSaid ? `<p class="cs-note" role="status" data-said="drawquestion">${cs.w(ui.drawSaid)}</p>` : "");
-    }, { empty: "screen.project.draw.none" });
-    out.push(cs.sec("screen.project.draw.head", drawInner));
+        + (ui.drawSaid ? `<p class="mk-note" role="status" data-said="drawquestion">${cs.w(ui.drawSaid)}</p>` : "");
+    });
+    /* a section that holds nothing is not drawn (R20): no other question to draw on, and no read pending or failed */
+    if (drawInner) out.push(cs.sec("screen.project.draw.head", drawInner));
   }
 
   /* plans: opened here; the plan screen is screens-action's, so the screen says the plan was opened and lists it */
   const plans = Array.isArray(ui.plans) ? ui.plans : [];
+  /* R18: a plan opened here links its screen (the kit's reference link, `plan` the screen's own kind) where the shell
+     lists that kind and registers the screen; otherwise its title is drawn plain. Opening one sends nothing. */
+  const planRef = (p) => {
+    const h = p.id ? String(cs.ref("plan", p.id, p.title || p.id, [p.title || p.id])) : "";
+    return /^<a /.test(h) ? h : `<span class="rec">${cs.esc(p.title)}</span>`;
+  };
   const choices = items.map((x) => ({ value: String(x.inquiry), text: String(x.title || x.inquiry) }));
   out.push(cs.sec("screen.project.plan.head",
-    (plans.length ? cs.sheet(plans.map((p) => cs.row("", `<span class="cs-rec">${cs.esc(p.title)}</span>`, `<span class="cs-meta">${cs.esc(p.id)}</span>`)).join("")) : "")
+    (plans.length ? cs.sheet(plans.map((p) => cs.row("", planRef(p), `<span class="mk-small">${cs.esc(p.id)}</span>`)).join("")) : "")
     + cs.field("project-plan", "screen.project.plan.label", {})
     + cs.choice("project-plan-about", "screen.project.plan.about", choices, {})
     + cs.act("planopen", { label: "act.planopen.label.project", data: { project: id } })));
@@ -213,7 +227,7 @@ function render(cs, view) {
     const say = a.on === false && a.held ? "screen.project.account.off"
       : a.serving === "project" || (a.on && a.held) ? "screen.project.account.project" : "screen.project.account.member";
     return `<p>${cs.w(say)}</p>`;
-  }) + `<p class="cs-meta">${cs.w("screen.project.account.where")} <a class="cs-btn" data-tone="quiet" href="/app/projectai/${cs.esc(id)}" data-nav>${cs.w("screen.projectai.name")}</a></p>`));
+  }) + `<p class="mk-small">${cs.w("screen.project.account.where")} <a class="cs-btn" data-tone="quiet" href="/app/projectai/${cs.esc(id)}" data-nav>${cs.w("screen.projectai.name")}</a></p>`));
 
   /* members: participants by handle, owners marked; invite and join */
   out.push(cs.sec("screen.project.members.head", cs.state("participants", view, (p) => {
@@ -222,8 +236,8 @@ function render(cs, view) {
     const names = list.length
       ? `<p>${list.map((x) => (x.owner ? cs.w("screen.project.members.owner", { handle: x.handle })
           : x.state === "invited" ? cs.w("screen.project.members.invited", { handle: x.handle }) : cs.esc(x.handle))).join(", ")}</p>`
-      : `<p>${cs.w("screen.project.members.empty")}</p>`;
-    return names + `<p class="cs-meta">${cs.w("screen.project.members.who")}</p>`
+      : "";
+    return names + `<p class="mk-small">${cs.w("screen.project.members.who")}</p>`
       + cs.field("project-invite", "screen.project.invite.label", {})
       + cs.act("projectinvite", { label: "act.projectinvite.label.project", data: { project: id } })
       + (mine && mine.state === "invited" ? cs.act("projectjoin", { label: "act.projectjoin.label.project", data: { project: id } }) : "");

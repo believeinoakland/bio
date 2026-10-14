@@ -10,7 +10,9 @@
  * latest by default; a retired template offers none. A machine proposes wording and comments, labelled, and nothing
  * else (R22). The profile's templates are read here as approved versions, read-only (R15), and since T45 offered only
  * when attributed as v0.2 rule 11 asks, each by its own name (R26), never a court petition (R28). It also publishes the
- * closed set of blanks every template and filing uses (R19, `./blanks.mjs`).
+ * closed set of blanks every template and filing uses (R19, `./blanks.mjs`). T48 (R33): it holds the quoting sentence a
+ * request for comment carries and its one check, `rfcQuotingRefusal`, which approving a file version and offering a
+ * profile template of that kind both answer through.
  *
  * A NEW MODULE (T21, layer 9; K921). Copied from `filings` (K624 (1)): `FILING_BLANKS` and `FILING_TEXT_MAX`
  * (`./blanks.mjs`), `templateSave`'s checks (name, kind, text, tier, name taken) into R1 and R2's judges, `templatesFor`'s
@@ -37,7 +39,7 @@ import * as jurisdictionsModule from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { proposalLabel } from "../record-grammar/labels.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
-import { RISK_TIERS } from "../action-grammar/index.mjs";
+import { RISK_TIERS, PRODUCT_KINDS } from "../action-grammar/index.mjs";
 import { FILING_BLANKS, FILING_TEXT_MAX, blanksOf } from "./blanks.mjs";
 import { FILING_TEMPLATE_CHECKS, rowOf } from "./checks.mjs";
 import { FILING_TEMPLATES_TABLES, FILING_TEMPLATES_MINT_SEED, migrateFilingTemplates } from "./schema.mjs";
@@ -124,6 +126,24 @@ export function blankUnknownRefusal(text, extra = null, why = "") {
   return refuse("TEMPLATE_BLANK_UNKNOWN", `{{${unknown}}} is not a blank filings fill${typeof why === "string" ? why : ""}`,
                 { ...(extra && typeof extra === "object" ? extra : {}), blank: unknown });
   /* END DEC-49 REGION is-template-blank */
+}
+
+/** R33 (T48; N880; Actions D13, H17; v0.2 rule 8): the sentence every request for comment carries, moved here from
+ *  `filings` (its `KEYED["rfc.quoting"]`) unchanged. It is not read from `words.json`: a new wording would refuse every
+ *  request already prepared (K2953; `filings` R52). */
+export const RFC_QUOTING_SENTENCE = "Your reply may be quoted unless it says otherwise.";
+/* R33: the product kind whose file templates must hold it (`action-grammar`'s PRODUCT_KINDS, its R2). */
+const RFC_KIND = PRODUCT_KINDS.find((k) => k === "request_for_comment");
+
+/** R33 (K231: one code, one site): THE ONE ANSWER of C-115.47 `RFC_QUOTING_MISSING`, a provided service (`filings` R57
+ *  asks it). The refusal with its row, `extra`'s fields merged, when `text` does not hold RFC_QUOTING_SENTENCE; null
+ *  when it does. Pure: writes nothing and never throws. */
+export function rfcQuotingRefusal(text, extra = null) {
+  if (typeof text === "string" && text.includes(RFC_QUOTING_SENTENCE)) return null;
+  /* DEC-49 REGION is-rfc-quoting-missing */
+  return refuse("RFC_QUOTING_MISSING", "a request for comment carries the sentence that the reply may be quoted unless it says otherwise",
+                { ...(extra && typeof extra === "object" ? extra : {}), sentence: RFC_QUOTING_SENTENCE, key: "rfc.quoting" });
+  /* END DEC-49 REGION is-rfc-quoting-missing */
 }
 
 /** R26: a template's handle: its name case-folded, each run of characters other than ASCII letters and digits one `-`,
@@ -322,6 +342,8 @@ export class FilingTemplates {
       return refuse("TEMPLATE_NOT_REVIEWED", `the profile's template is not offered: its attribution lacks ${lacks.join(", ")}`,
                     { template: t.id, lacks });
     /* END DEC-49 REGION is-profile-offered */
+    /* R33: a file template of the request-for-comment kind lacking the quoting sentence is not offered either */
+    if (t.use === "file" && t.kind === RFC_KIND) return rfcQuotingRefusal(t.profileTemplate.text, { template: t.id });
     return null;
   }
 
@@ -976,6 +998,9 @@ export class FilingTemplates {
           + `or the approver's reason for going without one (1 to ${APPROVAL_REASON_MAX} characters)`,
         { version: versionId(t.id, n), tier, needs, reviews: FilingTemplates.#summary(standing, sha) });
     /* END DEC-49 REGION is-template-approve */
+    /* R33: after the reviews, a file version of the request-for-comment kind must hold the quoting sentence */
+    const quoting = t.use === "file" && t.kind === RFC_KIND ? rfcQuotingRefusal(this.#latestRevision(t.id, n).text, { version: versionId(t.id, n) }) : null;
+    if (quoting) return quoting;
     const at = this.#when();
     const prev = this.#latestApproved(t, events);
     return this.record.transact(() => {

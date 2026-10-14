@@ -7,30 +7,31 @@ function captureReads() {
   return {};
 }
 
-/* R1–R3: the page. `view.subject` the tab; `view.ui` what the acts left (outcomes, a draft); `view.reachable` whether the
+/* R1–R3: the page. The tab body carries no class: the design's `st` is its mock's state switch (hidden unless a `main`
+ * carries `data-st`), which the served `shell.css` carries and which would hide every tab. `view.subject` the tab; `view.ui` what the acts left (outcomes, a draft); `view.reachable` whether the
  * assistant is reachable for this member (interface-shell R20). */
 function renderCapture(cs, view) {
   const tab = ["address", "file", "saw"].includes(view.subject) ? view.subject : "address";
   const U = view.ui || {};
   const said = (k, f) => `<p class="mk-note" role="status">${cs.w(k, f)}</p>`;
   const tabs = [["address", "screen.capture.tab.address"], ["file", "screen.capture.tab.file"], ["saw", "screen.capture.tab.saw"]]
-    .map(([k, w]) => `<a role="tab" class="cs-tab" href="/app/capture/${k}" data-nav${k === tab ? ' aria-selected="true" aria-current="page"' : ""}>${cs.w(w)}</a>`).join("");
+    .map(([k, w]) => `<span role="tab"${k === tab ? ' aria-selected="true"' : ""}><a href="/app/capture/${k}" data-nav${k === tab ? ' aria-current="page"' : ""}>${cs.w(w)}</a></span>`).join("");
   let body = "";
   if (tab === "address") {
     const got = U.captured;
     const freqs = ["daily", "weekly", "monthly", "hourly", "per_meeting"];
+    /* R18: one act row; watching and checking join it once the address has a document, with the frequency chosen beside
+       them, and no watching section is drawn before anything is captured. R14, R16: two acts, each on that document. */
+    const watch = !!got && (cs.can("monitorset") || cs.can("monitor"));
     body = cs.field("ci-address", "screen.capture.address.label", { help: "screen.capture.address.help", value: U.address || "" })
-      + `<div class="mk-acts">${cs.act("acquire", { tone: "primary" })}${cs.act("capturerequest")}</div>`
-      /* R14, R16 (DEC-200 (2)): watching and checking are two acts, each on the document the address was captured into */
-      + (cs.can("monitorset") || cs.can("monitor") ? cs.sec("screen.capture.address.watch",
-        `<p class="mk-small">${cs.w("screen.capture.address.watchabout")}</p>`
-        + (cs.can("monitorset") ? cs.choice("ci-freq", "screen.capture.address.freq", freqs.map((f) => [f, `screen.capture.address.freq.${f}`]), { value: U.frequency || "weekly" }) : "")
-        + `<div class="mk-acts">${cs.act("monitorset")}${cs.act("monitor")}</div>`) : "")
+      + (watch && cs.can("monitorset") ? `<p class="mk-small">${cs.w("screen.capture.address.watchabout")}</p>`
+        + cs.choice("ci-freq", "screen.capture.address.freq", freqs.map((f) => [f, `screen.capture.address.freq.${f}`]), { value: U.frequency || "weekly" }) : "")
+      + `<div class="mk-acts">${cs.act("acquire", { tone: "primary" })}${cs.act("capturerequest")}${watch ? `${cs.act("monitorset")}${cs.act("monitor")}` : ""}</div>`
       + (got ? (got.archive
         ? said("screen.capture.address.archive", { filed: got.filed })
           + (got.notPromoted ? said("screen.capture.address.notpromoted", { count: got.notPromoted }) : "")
         : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: got.title })) : "")
-      + (U.promoteRefused ? `<p class="cs-refusal" role="alert">${cs.esc(U.promoteRefused)}</p>` : "")
+      + (U.promoteRefused ? `<p class="cs-state" data-state="failed" role="alert">${cs.esc(U.promoteRefused)}</p>` : "")
       + (U.requested ? said(U.requested.drains === false ? "screen.capture.address.requested.waits" : "screen.capture.address.requested",
         { address: U.requested.address }) : "")
       + (U.watching ? said("screen.capture.address.watching", { title: U.watching.title, frequency: cs.w(`screen.capture.address.freq.${U.watching.frequency}`) }) : "")
@@ -39,9 +40,8 @@ function renderCapture(cs, view) {
   } else if (tab === "file") {
     const how = [["made", "screen.capture.file.how.made"], ["handed", "screen.capture.file.how.handed"],
                  ["sent", "screen.capture.file.how.sent"], ["downloaded", "screen.capture.file.how.downloaded"]];
-    body = `<div class="cs-field mk-drop"><label for="ci-file">${cs.w("screen.capture.file.choose")}</label>`
-      + `<span class="help" id="ci-file-help">${cs.w("screen.capture.file.choosehelp")}</span>`
-      + `<input id="ci-file" type="file" accept="image/*,video/*,audio/*,application/pdf,text/*,.csv,.doc,.docx,.xls,.xlsx,.odt,.ods,.zip" capture="environment" aria-describedby="ci-file-help"></div>`
+    body = cs.field("ci-file", "screen.capture.file.choose", { type: "file", help: "screen.capture.file.choosehelp", capture: "environment",
+        accept: "image/*,video/*,audio/*,application/pdf,text/*,.csv,.doc,.docx,.xls,.xlsx,.odt,.ods,.zip" })
       + `<p class="mk-small muted">${cs.w("photo.reminder")}</p>`
       + `<fieldset class="mk-checks"><legend>${cs.w("screen.capture.file.how")}</legend>`
       + how.map(([k, w]) => `<label><input type="radio" id="ci-how-${k}" name="ci-how" value="${k}"> ${cs.w(w)}</label>`).join("")
@@ -59,7 +59,7 @@ function renderCapture(cs, view) {
     body = `<p class="mk-note">${cs.w("screen.capture.saw.note")}</p>`
       + cs.field("ci-words", "screen.capture.saw.words", { area: true, rec: true, value: U.words || "",
         ...(draft ? { draft: "screen.capture.saw.draft", draftFills: { handle: draft.handle } } : {}) })
-      + (draft && draft.untested ? `<p class="cs-untested" data-label="untested">${cs.w("ai.label.untested")}</p>` : "")
+      + (draft && draft.untested ? `<p class="mk-small muted" data-label="untested">${cs.w("ai.label.untested")}</p>` : "")
       + (view.reachable ? `<div class="mk-acts">${cs.act("writinghelp", { label: "act.writinghelp.label.capture" })}</div>`
         + `<p class="mk-small muted">${cs.w("screen.capture.help.only")}</p>` : "")
       + cs.field("ci-where", "screen.capture.saw.where", { value: U.where || "" })
@@ -71,7 +71,7 @@ function renderCapture(cs, view) {
   }
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.capture.sub")}</p></div>`
     + `<nav class="mk-tabs2" role="tablist" aria-label="${cs.w("screen.capture.tabs")}">${tabs}</nav>`
-    + `<div class="st" data-tab="${tab}">${body}</div>`;
+    + `<div data-tab="${tab}">${body}</div>`;
 }
 
 /* R1: `acquire` with the address. Its five refusals each in its own sentence (`refusals`), any other by shell R13. */

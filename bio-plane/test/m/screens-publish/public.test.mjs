@@ -3,7 +3,7 @@
  * recreation and acts, the docket's entries, filing and posting signed with the member's key. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, fill, last, ok, refused, refusedIn, keptKey, answerSign, choose, P, C, SHA, DIGEST } from "./fixtures.mjs";
+import { open, main, text, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, P, C, SHA, E1, DIGEST } from "./fixtures.mjs";
 
 const carries = (body, want) => { for (const [k, v] of Object.entries(want)) assert.deepEqual(body[k], v, k); };
 const R = "because";
@@ -31,11 +31,95 @@ test("R6 \"Check the signature\" (verify, the manifest's sha) and \"Read the cas
   assert.equal(last(p, "verify").headers.Authorization, undefined);
   assert.match(text(p), /The signature checks/);
   const n = p.byOp("publishedcase").length;
-  await press(p, "publishedcase");
+  await press(p, "publishedcase", { nth: 1 }); // the first is the evidence row's "Open the document" (R19)
   assert.ok(p.byOp("publishedcase").length > n);
   const q = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { verify: ok({ published: false, sha256: SHA, matches: [] }) } });
   await press(q, "verify");
   assert.match(text(q), /does not check/);
+});
+
+const publishedWith = (captures, o = {}) => ({ publishedcase: ok({ ...plane().publishedcase.json.result, captures }), ...o });
+const opens = (p) => main(p).querySelectorAll('button[data-act="publishedcase"]').filter((b) => /Open the document/.test(b.textContent));
+
+test("R19 each evidence row with a full SHA-256 opens its bytes through publishedbytes by that hash, as a public op with no Authorization header", async () => {
+  const p = await open(`/app/published/${C}`, { boot: PUBLIC });
+  assert.equal(opens(p).length, 1);
+  await p.click(opens(p)[0]);
+  await p.settle();
+  const q = last(p, "publishedbytes");
+  assert.ok(q, "publishedbytes asked");
+  assert.equal(q.query.sha256, E1);
+  assert.equal(q.headers.Authorization, undefined, "no credential");
+  assert.equal(p.files.length, 1, "the bytes are handed to the browser as a file");
+  assert.equal(p.byOp("whoami").length, 0);
+  for (const r of p.requests) assert.equal(r.headers.Authorization, undefined, `${r.op} carries no credential`);
+});
+
+test("R19 a row with no sha, or one that is not the full hash, draws no link (control); an upper-case hash opens by its lower-case form", async () => {
+  const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: publishedWith([
+    { title: "Council minutes", sha256: E1 }, { title: "Unhashed memo" }, { title: "Short hash", sha256: E1.slice(0, 12) }, { title: "Mixed", sha256: E1.toUpperCase().replace(/^C/, "c") }]) });
+  assert.equal(opens(p).length, 2, "only the two rows with a full hash");
+  assert.match(text(p), /Unhashed memo/);
+  assert.match(text(p), /Short hash/);
+  await p.click(opens(p)[1]);
+  await p.settle();
+  assert.equal(last(p, "publishedbytes").query.sha256, E1.toLowerCase());
+  const none = await open(`/app/published/${C}`, { boot: PUBLIC, plane: publishedWith([{ title: "Unhashed memo" }]) });
+  assert.equal(opens(none).length, 0);
+  assert.equal(none.byOp("publishedbytes").length, 0);
+});
+
+test("R19 a refused piece of evidence says why and saves nothing (control)", async () => {
+  const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedbytes: refused("NO_PUBLISHED_PART", "No published part answers to that hash.") } });
+  await p.click(opens(p)[0]);
+  await p.settle();
+  assert.equal(p.files.length, 0);
+  assert.match(text(p), /No published part answers to that hash\./);
+});
+
+const download = (p) => main(p).querySelectorAll('button[data-act="publishedcase"]').find((x) => /Download the complete edition/.test(x.textContent));
+
+test("R19 \"Download the complete edition\" fetches the edition's file through publishedbytes by the manifest's hash as a zip, with no credential, and hands it over as a file", async () => {
+  const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedbytes: bytes("PK-ZIP", "application/zip") } });
+  assert.ok(download(p), "offered");
+  await p.click(download(p));
+  await p.settle();
+  const q = last(p, "publishedbytes");
+  assert.equal(q.query.sha256, SHA, "the manifest's hash");
+  assert.equal(q.query.format, "zip");
+  assert.equal(q.headers.Authorization, undefined);
+  assert.equal(p.files.length, 1);
+  assert.match(p.files[0].name, /\.zip$/);
+  assert.match(text(p), /complete edition is downloaded/);
+  const other = await open(`/app/published/${C}/1`, { boot: PUBLIC, plane: { publishedbytes: bytes("PK-ZIP", "application/zip") } });
+  await other.click(download(other));
+  await other.settle();
+  assert.match(other.files[0].name, /-edition-1\.zip$/, "named for the edition the address names");
+});
+
+test("R19 a refused download says why and saves nothing; an edition with no manifest hash offers no download (controls)", async () => {
+  const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedbytes: refused("PART_MISSING", "A part of the case file is missing.") } });
+  await p.click(download(p));
+  await p.settle();
+  assert.equal(p.files.length, 0);
+  assert.match(text(p), /A part of the case file is missing\./);
+  const q = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: ok({ ...plane().publishedcase.json.result, manifest_sha: "" }) } });
+  assert.equal(download(q), undefined);
+  const silent = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedbytes: ok(null) } });
+  await silent.click(download(silent));
+  await silent.settle();
+  assert.match(text(silent), /could not be downloaded/);
+});
+
+test("R21 published opened with no id offers the group's public page, never \"Go to Home\"", async () => {
+  const p = await open("/app/published", { boot: PUBLIC });
+  assert.equal(p.byOp("publishedcase").length, 0);
+  const home = main(p).querySelectorAll("a").map((a) => ({ href: a.getAttribute("href"), t: a.textContent }));
+  assert.ok(home.some((a) => a.href === "/" && /public page/.test(a.t)), "the public page is offered");
+  assert.ok(!/Go to Home/.test(text(p)), "no Go to Home");
+  assert.ok(!home.some((a) => a.href === "/app"), "no way into the working frame");
+  const q = await open(`/app/published/${C}`, { boot: PUBLIC });
+  assert.ok(q.byOp("publishedcase").length > 0, "control: with an id it reads");
 });
 
 test("R7 another group's case: each finding recreated, in part or not, read-only, with the four acts", async () => {

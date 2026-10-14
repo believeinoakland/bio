@@ -14,8 +14,9 @@ export const CASE_EDITOR = Object.freeze({
     if (!view.parts.subject(view, 1)) return {}; // K3171: no subject in the address, no subject read
     const project = String(view.subject || "").split("/")[0];
     return {
-      project: { op: "image", query: { id: project } },
-      drafts: { op: "casedrafts", query: { project: project }, subject: true,
+      // The project is the subject (a project with no draft yet is not an unknown subject: R20's one empty state is drawn).
+      project: { op: "image", query: { id: project }, subject: true },
+      drafts: { op: "casedrafts", query: { project: project },
         empty: function (v) { return !v || !Array.isArray(v.drafts) || v.drafts.length === 0; } },
     };
   },
@@ -40,8 +41,9 @@ export const CASE_EDITOR = Object.freeze({
     const edition = caseOf && caseOf.edition !== undefined && caseOf.edition !== null ? String(caseOf.edition) : "";
     out.push(cs.title(caseOf && caseOf.identity ? caseOf.identity + (edition ? " · " + edition : "") : null, { thing: "case" }));
 
-    // Every draft of the project, each opening its own editor; the chosen one marked.
-    out.push(cs.sec("screen.case-editor.drafts", cs.state("drafts", function (v) {
+    // Every draft of the project, each opening its own editor; the chosen one marked. With none, the screen's one empty
+    // state, which names the first step (R20).
+    out.push(d && d.state === "empty" ? cs.state("drafts", function () { return ""; }, { empty: "screen.case-editor.nodrafts" }) : cs.sec("screen.case-editor.drafts", cs.state("drafts", function (v) {
       return cs.sheet(v.drafts.map(function (x) {
         const c = x.case || {};
         const name = c.identity ? c.identity : x.draft_id;
@@ -50,14 +52,14 @@ export const CASE_EDITOR = Object.freeze({
         return cs.row("", link, c.edition ? '<span class="meta">' + cs.w("screen.case-editor.edition", { n: String(c.edition) }) + "</span>" : "",
           cs.w("screen.case-editor.preparedby", { who: x.updated_by || x.created_by || "" }));
       }).join(""));
-    }, { empty: "screen.case-editor.nodrafts" })));
+    })));
 
     // A new draft, or this one changed: its scope and what it says (`casedraft`, R1), with writing help under the scope.
     const copy = chosen ? P.later(cs, view, "copy", "reviewcopy", { query: { draft: chosen.draft_id } }) : null;
     const authored = copy && copy.state === "ok" && copy.value.authored ? copy.value.authored : {};
     out.push(cs.sec("screen.case-editor.scope", cs.field("ce-scope", "screen.case-editor.scope.label", { area: true, rec: true, value: authored.scope || "", help: "screen.case-editor.scope.help" })
       + cs.field("ce-statement", "screen.case-editor.statement.label", { area: true, rec: true, value: authored.statement || "" })
-      + '<div class="cs-actrow">' + cs.act("writinghelp", { data: { field: "scope" } }) + cs.act("casedraft", { tone: "primary" }) + "</div>"
+      + '<div class="mk-acts">' + cs.act("writinghelp", { data: { field: "scope" } }) + cs.act("casedraft", { tone: "primary" }) + "</div>"
       + P.said(view, "help-scope") + P.said(view, "casedraft")));
     if (!chosen) return out.join("");
 
@@ -79,25 +81,27 @@ export const CASE_EDITOR = Object.freeze({
         + (said ? ' <span class="meta">' + said + "</span>" : "") + "</li>";
     }).join("") + "</ol>" + (check ? cs.state(check, function () { return ""; }) : "")));
 
-    // What it leaves out, with each acknowledgement and its acknowledger's own reason (R1; case-inputs R1).
-    out.push(cs.sec("screen.case-editor.leavesout", copy ? cs.state(copy, function (v) {
+    // What it leaves out, with each acknowledgement and its acknowledger's own reason (R1; case-inputs R1); not drawn when
+    // it names nothing it leaves out and nobody has acknowledged (R20).
+    out.push(P.sec(cs, "screen.case-editor.leavesout", copy ? cs.state(copy, function (v) {
       const ex = Array.isArray(v.authored && v.authored.excluded) ? v.authored.excluded : v.authored && v.authored.excluded ? [v.authored.excluded] : [];
       const acks = v.statement_acknowledgements && Array.isArray(v.statement_acknowledgements.acknowledgements) ? v.statement_acknowledgements.acknowledgements : [];
+      if (!ex.length && !acks.length) return "";
       return (ex.length ? cs.sheet(ex.map(function (e) {
         return cs.row("", '<span class="rec">' + cs.esc(typeof e === "string" ? e : e.description || e.target || "") + "</span>",
           typeof e === "object" && e.reason ? '<span class="meta">' + cs.esc(e.reason) + "</span>" : "");
-      }).join("")) : '<p class="muted">' + cs.w("screen.case-editor.leavesout.none") + "</p>")
+      }).join("")) : "")
         + (acks.length ? cs.sheet(acks.map(function (a) {
           return cs.row("", cs.w("screen.case-editor.ack.by", { who: a.by || a.recipient || "" }), '<span class="rec">' + cs.esc(a.reason || "") + "</span>", a.at ? cs.date(a.at) : "");
-        }).join("")) : '<p class="muted">' + cs.w("screen.case-editor.ack.none") + "</p>")
+        }).join("")) : "")
         + cs.field("ce-ackreason", "screen.case-editor.ack.reason", { area: true, help: "screen.case-editor.ack.reason.help" })
-        + '<div class="cs-actrow">' + cs.act("statementack") + "</div>";
+        + '<div class="mk-acts">' + cs.act("statementack") + "</div>";
     }) : ""));
 
     // The people it names, each with its reason or that the reason is missing (R1; `attribute`).
-    out.push(cs.sec("screen.case-editor.people", copy ? cs.state(copy, function (v) {
+    out.push(P.sec(cs, "screen.case-editor.people", copy ? cs.state(copy, function (v) {
       const obs = Array.isArray(v.observations) ? v.observations : [];
-      if (!obs.length) return '<p class="muted">' + cs.w("screen.case-editor.people.none") + "</p>";
+      if (!obs.length) return "";
       return cs.sheet(obs.map(function (o, i) {
         const why = o.stated ? '<span class="rec">' + cs.esc(typeof o.stated === "string" ? o.stated : o.stated.reason || "") + "</span>"
           : '<span class="muted">' + cs.w("screen.case-editor.people.noreason") + "</span>";
@@ -114,15 +118,15 @@ export const CASE_EDITOR = Object.freeze({
       const changed = P.later(cs, view, "changed", "whatchangeddrafts", { query: { case: caseOf.case_id } },
         function (v) { return !v || !Array.isArray(v.drafts) || v.drafts.length === 0; });
       out.push(cs.sec("screen.case-editor.changed", cs.field("ce-wc", "screen.case-editor.changed.label", { area: true, rec: true, help: "screen.case-editor.changed.help" })
-        + '<div class="cs-actrow">' + cs.act("writinghelp", { data: { field: "whatchanged" } }) + (view.reachable ? cs.act("whatchangedpropose") : "") + "</div>"
+        + '<div class="mk-acts">' + cs.act("writinghelp", { data: { field: "whatchanged" } }) + (view.reachable ? cs.act("whatchangedpropose") : "") + "</div>"
         + P.said(view, "help-whatchanged") + P.said(view, "whatchangedpropose")
-        + cs.state(changed, function (v) {
+        + P.listed(cs, changed, function (v) {
           return cs.sheet(v.drafts.map(function (x) {
             const machine = x.label && (x.label.machine || x.label.kind === "machine" || x.label.by === "machine");
             return cs.row(machine ? cs.mark("origin", "machine") : "", '<span class="rec">' + cs.esc(x.text) + "</span>"
-              + (x.untested ? '<span class="cs-note">' + cs.w("ai.label.untested") + "</span>" : ""), "", x.at ? cs.date(x.at) : "");
+              + (x.untested ? '<span class="mk-note">' + cs.w("ai.label.untested") + "</span>" : ""), "", x.at ? cs.date(x.at) : "");
           }).join(""));
-        }, { empty: "screen.case-editor.changed.none" })));
+        })));
     }
     if (doc) out.push(cs.state(doc, function () { return ""; }));
     return out.join("");

@@ -24,7 +24,8 @@ test("R6: the consequences: who or what, the measure and how it is known; an und
   assert.doesNotMatch(t, /The repair program[^U]*\b0\b/);
   assert.match(t, /Undetermined is never read as zero. People are counted as a class/);
   const q = await open(AT, { ...DATA_PLANE, consequencesof: ok({ ...CONSEQUENCES, parts: [] }) });
-  assert.match(text(q), /Not yet addressed/);
+  // R14: no consequence at all: the section is not drawn, nor its note about zero
+  assert.doesNotMatch(text(q), /Consequences|Not yet addressed|never read as zero/);
 });
 
 test("R6: the escalation: the seven stages, the proposed next stage and its trigger, what ends it, the actions attached; its acts by its state", async () => {

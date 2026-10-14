@@ -1505,7 +1505,7 @@ var fleet_member_default = {
   },
   image: {
     repository: "ghcr.io/believeinoakland/agent-runner",
-    digest: "sha256:e56253c57212ea7585ee00aea01d1287682fee44c8203f00372be07dc53f2228",
+    digest: "sha256:d7c81712ef95683068451476597ca22844937d6c9bccc756d713f5943c64ee00",
     platform: "linux/amd64",
     port: 8080,
     schedulingPolicy: "default"

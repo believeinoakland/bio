@@ -1,26 +1,26 @@
-/* ai-use — what each AI account has spent and may spend (requirements: `build/requirements/ai-use.md`, R1–R13). A new
+/* ai-use — what each AI account has spent and may spend (requirements: `build/requirements/ai-use.md`, R1–R14). A new
  * module of layer 6, directly before `ai-runs` (K657, K1043; N812, K2373). Built by copy (K624): the counter, the use
  * figures' checks and the reads come from `ai-runs/index.mjs`:2588–2932 (its R48–R51), re-keyed by the paying account
  * (`owner`) and the kind of use (B8); `ai-runs`' own job deletes its copy and re-points after this module merges. The
  * member ceilings of that block are replaced by the account limits (R2, B4), judged per account (R3, D38, D39, B5); the
  * reads, the told-once reach (R5), the exploring gate and its daily ask (R6, R9; A5, K2350), the cost before and after
- * (R10, R11; D12) and each account's limits panel (R12; DEC-188) are new.
+ * (R10, R11; D12), each account's limits panel (R12; DEC-188) and its use over thirty days (R14; DEC-215 (1)) are new.
  *
- * It holds no credential and never chooses which account pays (`credentials`' R56): a caller names the `owner` its
+ * It holds no credential and never chooses which account pays (`ai-accounts`' R11): a caller names the `owner` its
  * `accountFor` answered. Every use is still the act of the member who made it (K1755): it is counted to that account and
  * to that member. Nobody reads another member's spending; a cost is answered only to the paying account's owners
  * (K1450 as D12 retires it for them).
  *
  * SHAPE (K61). `aiUseOf(ctx, deps)` answers the one instance for a Durable Object's storage, over `ctx.storage.sql`,
- * reaching record-core, membership, credentials and connections by their factories on the same `ctx`; a test may pass
- * its own as `deps` (`record`, `membership`, `credentials`, `connections`, and `zone`, the group's zone or a function
+ * reaching record-core, membership, ai-accounts and connections by their factories on the same `ctx`; a test may pass
+ * its own as `deps` (`record`, `membership`, `accounts`, `connections`, and `zone`, the group's zone or a function
  * answering it) on the first call. Its first construction migrates and declares its tables (R7). No service throws.
  */
 import { isMachineIdentity, normalizeType } from "../record-grammar/index.mjs";
 import { localDay } from "../civil-time/index.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, notAnAdmin, notTheOwner } from "../membership/index.mjs";
-import { credentialsOf, USE_KINDS } from "../credentials/index.mjs";
+import { aiAccountsOf, KEPT_AWAY_UNREADABLE, USE_KINDS } from "../ai-accounts/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { AI_RUNS_CHECKS } from "../run-rules/index.mjs";
@@ -60,7 +60,7 @@ function memberIdOf(x) {
   return /^[A-Za-z0-9._-]{1,128}$/.test(id) ? id : null;
 }
 
-/** R1, R2 (`credentials` R54–R56): an owner's spelling, `group`, `project:<id>` or `member:<id>`, parsed; null for any
+/** R1, R2 (`ai-accounts` R10, R11, R14): an owner's spelling, `group`, `project:<id>` or `member:<id>`, parsed; null for any
  *  other. */
 export function parseOwner(owner) {
   if (owner === "group") return { kind: "group", owner: "group" };
@@ -85,7 +85,7 @@ export class AiUse {
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
-  #credentials() { return this.#deps.credentials || credentialsOf(this.ctx); }
+  #accounts() { return this.#deps.accounts || aiAccountsOf(this.ctx, { record: this.record, membership: this.membership }); }
   #connections() { return this.#deps.connections || connectionsOf(this.ctx); }
   /** Every write this module makes outside a caller's transaction goes through record-core's `transact` (its R32). */
   #transact(fn) { return typeof this.record.transact === "function" ? this.record.transact(fn) : fn(); }
@@ -395,9 +395,11 @@ export class AiUse {
   }
 
   /** The figure of `unit` used by `owner` in the period of `period` holding `day`: over `uses` (null: every use but
-   *  `excluded`), for `member` alone when named. `usd` in whole cents, rounded up so a limit is never reached late. */
-  #used(owner, unit, period, day, { use = null, member = null, excluded = null } = {}) {
+   *  `excluded`), for `member` alone when named, and with `through` only the period's days up to it (R14). `usd` in
+   *  whole cents, rounded up so a limit is never reached late. */
+  #used(owner, unit, period, day, { use = null, member = null, excluded = null, through = null } = {}) {
     const where = [`owner = ?`, AiUse.#inPeriod(period)], args = [owner, day];
+    if (through) { where.push("day <= ?"); args.push(through); }
     if (use) { where.push("use = ?"); args.push(use); }
     if (member) { where.push("member = ?"); args.push(member); }
     if (!use && excluded && excluded.size) { where.push(`use NOT IN (${[...excluded].map(() => "?").join(",")})`); args.push(...excluded); }
@@ -408,10 +410,10 @@ export class AiUse {
     return Math.ceil(Number(r.m) / 1e4);
   }
 
-  /** The greatest figure any one member used of a per-member limit, naming none (R12). */
-  #mostByAMember(owner, unit, period, day) {
+  /** The greatest figure any one member used of a per-member limit, naming none (R12, R14). */
+  #mostByAMember(owner, unit, period, day, through = null) {
     const ids = this.#rows(`SELECT DISTINCT member FROM ai_usage WHERE owner = ? AND ${AiUse.#inPeriod(period)}`, owner, day);
-    return ids.reduce((m, r) => Math.max(m, this.#used(owner, unit, period, day, { member: r.member })), 0);
+    return ids.reduce((m, r) => Math.max(m, this.#used(owner, unit, period, day, { member: r.member, through })), 0);
   }
 
   /** The limits held for `owner`, every one or one scope's. */
@@ -461,9 +463,9 @@ export class AiUse {
 
   /* ===== Who acts (R2, R4, R9, R12) ===== */
 
-  /** R2: the owner's own act: the member (`NOT_YOUR_CEILING`); a project's owner (`credentials`' R54 refusals); an
-   *  active administrator (`NOT_AN_ADMIN`). A project's and the group's refusals are `credentials`' own, relayed from
-   *  its R60 read; when that cannot be read, membership's own refusals (fail closed). Null when `by` may act. */
+  /** R2: the owner's own act: the member (`NOT_YOUR_CEILING`); a project's owner (`ai-accounts`' R10 refusals); an
+   *  active administrator (`NOT_AN_ADMIN`). A project's refusals are `ai-accounts`' own, relayed from its R15 read; when
+   *  that cannot be read, membership's own refusals (fail closed). Null when `by` may act. */
   #ownerBar(p, by, act) {
     if (p.kind === "member") {
       const id = memberIdOf(by);
@@ -476,10 +478,10 @@ export class AiUse {
     return this.#accountsBar(p, by, act);
   }
 
-  /** R12 (`credentials` R60): the account's owners and refusals as `credentials.accountUses` states them. */
+  /** R12, R14 (`ai-accounts` R15): the account's owners and refusals as `ai-accounts.accountUses` states them. */
   #accountsBar(p, by, act) {
     let a = null;
-    try { a = this.#credentials().accountUses({ owner: p.owner, viewer: by ?? null }); } catch { a = null; }
+    try { a = this.#accounts().accountUses({ owner: p.owner, viewer: by ?? null }); } catch { a = null; }
     if (a && a.ok === false) return a;
     if (a && a.ok === true && !a.unreadable) return null;
     return this.#owns(p, by) ? null
@@ -499,13 +501,13 @@ export class AiUse {
     return false;
   }
 
-  /** R3, R6, R9: the owner's `explore` value (`credentials` R55): `no`, `ask` or `yes`, read through
-   *  `credentials.accountUsesOf` (its R62; T42, N831), with no viewer, never through `accountUses` asked as one of the
+  /** R3, R6, R9: the owner's `explore` value (`ai-accounts` R14): `no`, `ask` or `yes`, read through
+   *  `ai-accounts.accountUsesOf` (its R17; T42, N831), with no viewer, never through `accountUses` asked as one of the
    *  account's owners. `held` is read, never `uses` alone: the group's answer carries its defaults with `held: false`
    *  (K2620). `no` when the account is not held, cannot be read, or holds any other value (fail closed). */
   #exploreOf(p) {
     try {
-      const a = this.#credentials().accountUsesOf({ owner: p.owner });
+      const a = this.#accounts().accountUsesOf({ owner: p.owner });
       const v = a && a.ok === true && a.held === true && !a.unreadable && a.uses ? a.uses.explore : "no";
       return ["no", "ask", "yes"].includes(v) ? v : "no";
     } catch { return "no"; }
@@ -536,7 +538,7 @@ export class AiUse {
   #isSignin(p, by) {
     if (p.kind === "group") return false;
     let a = null;
-    try { a = this.#credentials().accountUses({ owner: p.owner, viewer: by }); } catch { a = null; }
+    try { a = this.#accounts().accountUses({ owner: p.owner, viewer: by }); } catch { a = null; }
     if (!a || a.ok !== true) return false;
     if (p.kind === "project") return a.kind === "signin";
     return !!(a.accounts && a.accounts.signin && a.accounts.signin.held && !(a.accounts.reference && a.accounts.reference.held));
@@ -706,23 +708,26 @@ export class AiUse {
   /** R6 `exploreAllowed({owner, question, at})`, for the explorer (B9): `{ok: true, ask: false, label}` when exploring
    *  `question` on `owner`'s account may run now (`label` `{kind: "machine", enabled_by: owner}`, which the explorer
    *  attaches to what it offers); `{ok: true, ask: true}` when the owner's `explore` is `ask` and that local day is not
-   *  approved (R9); else a refusal: `EXPLORE_NOT_ENABLED`, `credentials.aiKeptAway`'s, `EXPLORE_OUT_OF_SCOPE`, R3's
-   *  `AI_LIMIT_REACHED`. Writes nothing; never throws. */
+   *  approved (R9); else a refusal: `EXPLORE_NOT_ENABLED`, `ai-accounts.aiKeptAway`'s, `EXPLORE_OUT_OF_SCOPE`, R3's
+   *  `AI_LIMIT_REACHED`. A keep-away read that throws answers `ai-accounts`' `KEPT_AWAY_UNREADABLE` as given (its R34:
+   *  fail closed, never a copy of the refusal). Writes nothing; never throws. */
   exploreAllowed({ owner = null, question = null, at = null } = {}) {
     const p = parseOwner(owner);
     try {
       if (!p) return this.#exploreOff({ kind: "group", owner: String(owner) });
       const value = this.#exploreOf(p);
       if (value === "no") return this.#exploreOff(p);
-      const c = this.#credentials();
-      const away = c.aiKeptAway({ use: "explore", ...(p.kind === "project" ? { project: p.id } : {}) });
+      const c = this.#accounts();
+      const keptAway = (args) => { try { return c.aiKeptAway(args); } catch { return KEPT_AWAY_UNREADABLE; } };
+      const away = keptAway({ use: "explore", ...(p.kind === "project" ? { project: p.id } : {}) });
       if (away) return away;
       if (!this.#inScope(p, question)) return this.#outOfScope(p);
       if (p.kind === "group") {
         const drawn = this.#connections().citesInto(question).confirmed
           .filter((b) => { const i = this.record.bundleInfo(b); return i && normalizeType(i.type) === "project"; });
-        const kept = new Set(c.projectsKeptAway({ use: "explore" }) || []);
-        if (drawn.length && drawn.every((b) => kept.has(b))) return c.aiKeptAway({ project: drawn[0], use: "explore" });
+        let kept = null;
+        try { kept = new Set(c.projectsKeptAway({ use: "explore" }) || []); } catch { return KEPT_AWAY_UNREADABLE; }
+        if (drawn.length && drawn.every((b) => kept.has(b))) return keptAway({ project: drawn[0], use: "explore" });
       }
       const limit = this.useCheck({ owner: p.owner, member: null, use: "explore", at });
       if (limit) return limit;
@@ -861,8 +866,8 @@ export class AiUse {
 
   /** R12 `aiLimits({owner, viewer})` (`op=ailimits`): each limit held on one account, with its use in the current period
    *  (R5's sums, naming no member: a per-member limit answers the most any one member used) and the account's history
-   *  of limits (set, changed, removed; who and when), to that account's owners only, as `credentials` R60 states them;
-   *  anyone else is refused as R60 refuses them. Writes nothing. */
+   *  of limits (set, changed, removed; who and when), to that account's owners only, as `ai-accounts` R15 states them;
+   *  anyone else is refused as R15 refuses them. Writes nothing. */
   aiLimits({ owner = null, viewer = null, at = null } = {}) {
     const p = parseOwner(owner);
     if (!p) return this.#invalid("owner", "limits are read for 'group', 'project:<id>' or 'member:<id>'.");
@@ -889,6 +894,57 @@ export class AiUse {
       return { ok: true, owner: p.owner, limits: null, history: null, unreadable: true };
     }
   }
+
+  /* ===== USE OVER TIME (R14; DEC-215 (1)) ===== */
+
+  /** R14: the `n` local days ending with `day` (`YYYY-MM-DD`), oldest first: calendar days, so a zone's clock change
+   *  neither skips nor repeats one. */
+  static #daysEnding(day, n) {
+    const end = Date.UTC(Number(day.slice(0, 4)), Number(day.slice(5, 7)) - 1, Number(day.slice(8, 10)));
+    return Array.from({ length: n }, (_, i) => new Date(end - (n - 1 - i) * 864e5).toISOString().slice(0, 10));
+  }
+
+  /** R14 `accountUseOverTime({owner, viewer, at})` (`op=aiuseovertime`): one account's use over time, to its owners
+   *  only (R12's owners and refusals). `days`: the thirty local days ending with the day of `at`, oldest first, each
+   *  `{day, calls, dollars}` from the counter (`dollars` the summed estimated cost), zeros on a day with none.
+   *  `periods`: each limit held on the account, `{scope, unit, period, period_start, used, limit}`, `used` counted as R3
+   *  counts it in the limit's current period up to the day of `at` (an overall limit over the uses that are not
+   *  exclusive; a per-member limit the most any one member used, as R12 answers it), `limit` in its unit (`usd` in
+   *  dollars); with none held, one month entry `{scope: "overall", unit: "usd", …, limit: null}`. Every figure is summed
+   *  over everyone the account serves and names no member (K1450). When the use cannot be read it answers
+   *  `unreadable: true`, never zeros. Writes nothing; never throws. */
+  accountUseOverTime({ owner = null, viewer = null, at = null } = {}) {
+    const p = parseOwner(owner);
+    if (!p) return this.#invalid("owner", "use over time is read for 'group', 'project:<id>' or 'member:<id>'.");
+    const bar = this.#accountsBar(p, viewer, "reading an account's use");
+    if (bar) return bar;
+    try {
+      const { day, zone } = this.#dayOf(at);
+      const span = AiUse.#daysEnding(day, 30);
+      const byDay = new Map(this.#rows(`SELECT day, SUM(calls) calls, SUM(cost_micro_usd) micro FROM ai_usage
+                                        WHERE owner = ? AND day >= ? AND day <= ? GROUP BY day`, p.owner, span[0], day)
+        .map((r) => [r.day, r]));
+      const days = span.map((d) => {
+        const r = byDay.get(d);
+        return { day: d, calls: r ? Number(r.calls) : 0, dollars: r ? Number(r.micro) / 1e6 : 0 };
+      });
+      const excluded = this.#exclusive(p.owner);
+      const money = (unit, v) => (unit === "usd" ? Number(v) / 100 : Number(v));
+      const held = this.#limits(p.owner);
+      const periods = held.length ? held.map((l) => {
+        const used = l.scope === "overall" ? this.#used(p.owner, l.unit, l.period, day, { excluded, through: day })
+          : l.scope === "per_member" ? this.#mostByAMember(p.owner, l.unit, l.period, day, day)
+          : this.#used(p.owner, l.unit, l.period, day, { use: l.scope, through: day });
+        return { scope: l.scope, unit: l.unit, period: l.period, period_start: AiUse.#start(l.period, day),
+                 used: money(l.unit, used), limit: money(l.unit, l.amount) };
+      }) : [{ scope: "overall", unit: "usd", period: "month", period_start: AiUse.#start("month", day),
+              used: Number(this.#one(`SELECT COALESCE(SUM(cost_micro_usd), 0) m FROM ai_usage WHERE owner = ? AND
+                                      ${AiUse.#inPeriod("month")} AND day <= ?`, p.owner, day, day).m) / 1e6, limit: null }];
+      return { ok: true, owner: p.owner, zone, days, periods };
+    } catch {
+      return { ok: true, owner: p.owner, days: null, periods: null, unreadable: true };
+    }
+  }
 }
 
 /* K61: the one AiUse of a Durable Object's storage, made, migrated and declared on first use. `deps` (a test's own
@@ -906,7 +962,7 @@ export function aiUseOf(ctx, deps = {}) {
 }
 
 /** The ops this module answers (`op-declarations` R41): `ailimitset`, `ailimits`, `aiusage` (with `owner` an account's
- *  month, R4; without, the viewer's own) and `exploreapprove`. Every identity (`by`, `viewer`) is the control plane's
+ *  month, R4; without, the viewer's own), `exploreapprove` and `aiuseovertime` (R14). Every identity (`by`, `viewer`) is the control plane's
  *  stamp, read from the QUERY after the body is spread, so a caller's own copy never wins (D-136). */
 export function aiUseOps(use, url, body) {
   const q = (k) => url.searchParams.get(k);
@@ -918,5 +974,6 @@ export function aiUseOps(use, url, body) {
       ? use.aiUsage({ owner: q("owner"), viewer: q("viewer"), month: q("month") })
       : use.aiUsageMine({ viewer: q("viewer"), day: q("day"), month: q("month") })),
     exploreapprove: () => use.exploreApprove({ ...b, by: q("by") }),
+    aiuseovertime: () => use.accountUseOverTime({ owner: q("owner") ?? b.owner ?? null, viewer: q("viewer") }),
   };
 }

@@ -25,29 +25,31 @@ export const IMPORTED = Object.freeze({
       out.push('<p class="mk-sub">' + cs.mark("origin", "elsewhere") + " " + cs.w("screen.imported.from", { group: String(c.group && (c.group.name || c.group.slug) || c.group || ""),
         edition: String(ed.edition || ""), by: ed.imported_by || "", at: { html: ed.imported_at ? cs.date(ed.imported_at) : "" } }) + "</p>");
       const findings = Array.isArray(ed.findings) ? ed.findings : [];
-      out.push(cs.sec("screen.imported.findings", findings.length ? cs.sheet(findings.map(function (f) {
+      out.push(P.sec(cs, "screen.imported.findings", findings.length ? cs.sheet(findings.map(function (f) {
         const r = f.result === "recreated" || f.result === "yes" ? "yes" : f.result === "partial" || f.result === "part" || f.result === "in_part" ? "part" : "no";
         const own = f.origin && f.origin.acceptance ? cs.mark("origin", "accepted") : f.origin && Array.isArray(f.origin.flags) && f.origin.flags.length ? cs.mark("origin", "flagged") : "";
         return cs.row("", '<span class="rec">' + cs.esc(f.title || f.finding || "") + "</span>",
           '<span class="cs-recreate" data-r="' + r + '">' + cs.w("screen.imported.result." + r) + "</span>", own);
-      }).join("")) : '<p class="muted">' + cs.w("screen.imported.nofindings") + "</p>"));
+      }).join("")) : ""));
       out.push(cs.sec("screen.imported.accept", cs.field("im-checked", "screen.imported.checked.label", { area: true })
         + cs.field("im-reason", "screen.imported.reason.label", { area: true })
-        + '<div class="cs-actrow">' + cs.act("importaccept", { tone: "primary" }) + "</div>"));
-      out.push(cs.sec("screen.imported.flag", cs.field("im-issue", "screen.imported.issue.label", { area: true }) + '<div class="cs-actrow">' + cs.act("importflag") + "</div>"));
+        + '<div class="mk-acts">' + cs.act("importaccept", { tone: "primary" }) + "</div>"));
+      out.push(cs.sec("screen.imported.flag", cs.field("im-issue", "screen.imported.issue.label", { area: true }) + '<div class="mk-acts">' + cs.act("importflag") + "</div>"));
       out.push(cs.sec("screen.imported.watch", cs.field("im-publisher", "screen.imported.publisher.label", { type: "url", help: "screen.imported.publisher.help" })
-        + '<div class="cs-actrow">' + cs.act("importwatch") + "</div>"));
+        + '<div class="mk-acts">' + cs.act("importwatch") + "</div>"));
     } else if (view.subject) out.push(cs.state("chosen", function () { return ""; }));
 
     // The cases imported, each opening its own page.
-    out.push(cs.sec("screen.imported.list", cs.state("cases", function (v) {
+    // R20: with nothing imported, the screen's one empty state, which names the first step, is drawn without a section.
+    const listed = view.data.cases && view.data.cases.state === "empty";
+    out.push(listed ? cs.state("cases", function () { return ""; }, { empty: "screen.imported.none" }) : cs.sec("screen.imported.list", cs.state("cases", function (v) {
       return cs.sheet(v.imports.map(function (x) {
         return cs.row(cs.mark("origin", "elsewhere"), '<a href="/app/imported/' + encodeURIComponent(x.import) + '" data-nav>'
           + cs.esc((x.case && (x.case.title || x.case.id)) || x.case || x.import) + "</a>", '<span class="meta">' + cs.esc(String(x.group && (x.group.name || x.group.slug) || x.group || "")) + "</span>");
       }).join(""));
-    }, { empty: "screen.imported.none" })));
+    })));
     out.push(cs.sec("screen.imported.import", cs.field("im-file", "screen.imported.file.label", { type: "file", help: "screen.imported.file.help" })
-      + '<div class="cs-actrow">' + cs.act("caseimport") + "</div>" + P.said(view, "caseimport")));
+      + '<div class="mk-acts">' + cs.act("caseimport") + "</div>" + P.said(view, "caseimport")));
     return out.join("");
   },
 

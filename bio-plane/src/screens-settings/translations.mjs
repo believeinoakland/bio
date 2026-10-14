@@ -15,7 +15,7 @@ export const translations = {
   id: "translations",
 
   reads(view) {
-    const r = { languages: { op: "grouplanguages" } };
+    const r = { languages: { op: "grouplanguages" }, mine: { op: "memberlanguage" } };
     if (view.subject) {
       r.words = { op: "translations", query: { language: String(view.subject) } };
       r.shown = { op: "interfacewords", query: { language: String(view.subject) } };
@@ -30,30 +30,38 @@ export const translations = {
     const ui = view.ui || {};
     const data = view.data || {};
     const lang = view.subject ? String(view.subject) : null;
+    // a language by its name in the member's language, never as a tag (R31)
+    const mineLang = data.mine && data.mine.state === "ok" && data.mine.value ? data.mine.value.language || null : null;
+    const nameOf = (tag) => {
+      try { const n = new Intl.DisplayNames([mineLang || "en"], { type: "language" }).of(String(tag)); return n ? n.charAt(0).toUpperCase() + n.slice(1) : String(tag); } catch (e) { return String(tag); }
+    };
     const out = [cs.title()];
 
-    // the group's languages, each opening its words
-    out.push(cs.sec(S + "languages.heading", cs.state(data.languages, (v) => {
-      const L = Array.isArray(v.languages) ? v.languages.filter((t) => t !== "en") : [];
-      return L.length ? `<ul class="cs-list" data-list="languages">${L.map((t) => `<li><a href="/app/translations/${E(encodeURIComponent(t))}" data-nav${t === lang ? ' aria-current="page"' : ""}>${E(t)}</a></li>`).join("")}</ul>` : `<p>${W(S + "languages.none")}</p>`;
-    })));
-    if (!lang) { out.push(`<p>${W(S + "choose")}</p>`); return out.join(""); }
+    // the group's languages, each opening its words; the group's source English is not a language to translate into (R31)
+    const langs = cs.state(data.languages, (v) => {
+      const L = Array.isArray(v.languages) ? v.languages.filter((t) => String(t).split("-")[0].toLowerCase() !== "en") : [];
+      return L.length ? `<ul class="mk-list" data-list="languages">${L.map((t) => `<li><a href="/app/translations/${E(encodeURIComponent(t))}" data-nav${t === lang ? ' aria-current="page"' : ""}>${E(nameOf(t))}</a></li>`).join("")}</ul>` : "";
+    });
+    if (langs) out.push(cs.sec(S + "languages.heading", langs));
+    if (!lang) { if (langs) out.push(`<p>${W(S + "choose")}</p>`); return out.join(""); }
+
+    // a member who is not granted reads the refusal's own words alone
+    if (data.words && data.words.state === "failed") { out.push(cs.state(data.words, () => "")); return out.join(""); }
 
     // a grant for the language: an administrator's act
     const grant = admin ? cs.act("translationgrant", { data: { revoke: "" } }) : "";
-    if (grant) out.push(cs.sec(S + "grant.heading", `<div class="cs-form"><label for="tr-member">${W(S + "grant.member", { language: lang })}</label><input id="tr-member" type="text" class="cs-input" autocomplete="off"><input type="checkbox" id="tr-revoke"><label for="tr-revoke">${W(S + "grant.revoke")}</label>${grant}</div>`));
+    if (grant) out.push(cs.sec(S + "grant.heading", `${cs.field("tr-member", S + "grant.member", { fills: { language: nameOf(lang) }, autocomplete: "off" })}<input type="checkbox" id="tr-revoke"><label for="tr-revoke">${W(S + "grant.revoke")}</label>${grant}`));
 
-    // the words, each a row with its acts in its panel
+    // the words, each a row with its acts in its panel; a row shows its English and its meaning, never its key
     out.push(cs.sec(S + "words.heading", cs.state(data.words, (v) => {
       const words = Array.isArray(v.words) ? v.words : [];
       const c = v.counts || {};
       const read = ui.readings || {};
-      let h = `<p data-state="counts">${W(S + "counts", { shown: Number(c.shown || 0), awaiting: Number(c.awaiting || 0), missing: Number(c.missing || 0) })}</p>`;
+      let h = Number(c.shown || 0) + Number(c.awaiting || 0) + Number(c.missing || 0) > 0 ? `<p data-state="counts">${W(S + "counts", { shown: Number(c.shown || 0), awaiting: Number(c.awaiting || 0), missing: Number(c.missing || 0) })}</p>` : "";
       h += cs.rows({
-        id: "words", pick: !!view.reachable, cols: [S + "col.key", S + "col.en", S + "col.state", S + "col.text"], items: words, key: (x) => x.key, name: (x) => E(x.key),
+        id: "words", pick: !!view.reachable, cols: [S + "col.en", S + "col.state", S + "col.text"], items: words, key: (x) => x.key, name: (x) => E(x.en),
         cells: (x) => [
-          `<code>${E(x.key)}</code>`,
-          `${E(x.en)}${x.note ? `<span class="help">${E(x.note)}</span>` : ""}${x.means ? `<span class="help">${E(x.means)}</span>` : ""}${x.protected ? " · " + W(S + "protected") : ""}`,
+          `${E(x.en)}${x.note ? `<span class="mk-small">${E(x.note)}</span>` : ""}${x.means ? `<span class="mk-small">${E(x.means)}</span>` : ""}${x.protected ? " · " + W(S + "protected") : ""}`,
           W(S + "state." + (["missing", "shown", "awaiting"].indexOf(x.state) >= 0 ? x.state : "missing")) + (x.english_changed ? " · " + W(S + "changed") : ""),
           x.text ? `<span class="rec">${E(x.text)}</span> · ${W(S + "adopted", { by: x.adopted_by_name || x.adopted_by || "" })} ${cs.date(x.adopted_at, { year: true })}` : "",
         ],
@@ -63,11 +71,11 @@ export const translations = {
           const drafts = Array.isArray(x.drafts) ? x.drafts : [];
           const p = [];
           // the stored drafts, labelled machine work, each one to keep as drafted or corrected
-          if (drafts.length) p.push(`<fieldset><legend>${W(S + "drafts")}</legend>${drafts.map((d, i) => `<input type="radio" id="${fid}-d${i}" name="${fid}-d" data-draft="${E(d.id)}"><label for="${fid}-d${i}"><span class="cs-tag-machine">${W(S + "draft.label", { handle: d.asked_by_name || String(d.asked_by || "").replace(/^member:/, "") })}</span> <span class="rec">${E(d.text)}</span></label>`).join("")}</fieldset>`);
+          if (drafts.length) p.push(`<fieldset><legend>${W(S + "drafts")}</legend>${drafts.map((d, i) => `<input type="radio" id="${fid}-d${i}" name="${fid}-d" data-draft="${E(d.id)}"><label for="${fid}-d${i}"><span class="mk-tag">${W(S + "draft.label", { handle: d.asked_by_name || String(d.asked_by || "").replace(/^member:/, "") })}</span> <span class="rec">${E(d.text)}</span></label>`).join("")}</fieldset>`);
           const adopt = cs.act("translationadopt", { data: { key: k } });
-          if (adopt) p.push(`<label for="${fid}">${W(S + "text.field")}</label><span class="help">${W(drafts.length ? S + "text.help.draft" : S + "text.help")}</span><input id="${fid}" type="text" class="cs-input rec" maxlength="2000" autocomplete="off" value="${E(x.text || "")}">${adopt}`);
+          if (adopt) p.push(`${cs.field(fid, S + "text.field", { help: drafts.length ? S + "text.help.draft" : S + "text.help", rec: true, max: 2000, value: x.text || "", autocomplete: "off" })}${adopt}`);
           if (x.state === "awaiting" && x.protected) {
-            if (read[k]) p.push(`<p data-shown="reading"><span class="cs-tag-machine">${W(S + "reading.label", { handle: read[k].askedBy })}</span> <span class="rec">${E(read[k].english)}</span></p>`);
+            if (read[k]) p.push(`<p data-shown="reading"><span class="mk-tag">${W(S + "reading.label", { handle: read[k].askedBy })}</span> <span class="rec">${E(read[k].english)}</span></p>`);
             if (admin && view.reachable && !read[k]) p.push(cs.act("translationdraft", { label: S + "reading.ask", data: { key: k, direction: "to_english" } }));
             p.push(cs.act("translationconfirm", { data: { key: k } }));
           }

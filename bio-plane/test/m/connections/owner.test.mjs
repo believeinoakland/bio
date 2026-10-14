@@ -33,10 +33,12 @@ function star(w) {
 const ask = (w, args) => w.k.neighbours({ kinds: [MENTIONED_KIND], at: "2026-10-01", scope: null, ...args });
 const ids = (r) => r.items.map((i) => i.id).sort();
 
-test("R62: registered once at load through connection-grammar.registerOwner, owner connections, the derived kind mentioned_together, its members' word and its neighbours read", () => {
+test("R62, R69: registered once at load through connection-grammar.registerOwner, owner connections, the derived kind mentioned_together and (R69) the evidentiary kind step_source, each with its members' word, and its neighbours read", () => {
   assert.deepEqual(MENTIONED_REGISTRATION, { ok: true, owner: "connections" });
   const held = defaultRegistry.owners().find((o) => o.owner === MENTIONED_OWNER);
-  assert.deepEqual(held, { owner: "connections", kinds: [{ kind: "mentioned_together", word: "mentioned together", class: "derived" }] });
+  assert.deepEqual(held, { owner: "connections", kinds: [{ kind: "mentioned_together", word: "mentioned together", class: "derived" },
+                                                         { kind: "step_source", word: "stated in a source", class: "evidentiary" }] });
+  assert.deepEqual(defaultRegistry.kindOf("step_source"), { owner: "connections", word: "stated in a source", class: "evidentiary" });
   assert.deepEqual(defaultRegistry.kindOf(MENTIONED_KIND), { owner: "connections", word: "mentioned together", class: "derived" });
   assert.equal(defaultRegistry.registerOwner({ owner: "connections", kinds: [...MENTIONED_KINDS], neighbours: registeredNeighbours }).refused,
                "OWNER_DUPLICATE", "once");
@@ -267,19 +269,24 @@ test("R66: THEME_ID_RE and THEME_REF_RE are built from record-grammar's idPatter
   }
 });
 
-test("R67: every table declared explicitly through record-core.declareTable, every table derive stored; connections, connection_pair_choices, refs and theme_placements with their bundles' sight, themes and connection_dirty group-wide; R36's purge kept", () => {
+test("R67: every table declared explicitly through record-core.declareTable, every table derive stored; connections, connection_pair_choices, refs and theme_placements with their bundles' sight, themes and connection_dirty group-wide; (T48) step_sources with its cited bundle's sight; R36's purge kept", () => {
   const w = world();
   const mine = w.record.declaredTables().filter((d) => d.module === "connections");
+  /* Every table the module holds, named here (not read back from the module's own constant), each in one sight list. */
+  const bundleSight = ["connections", "connection_pair_choices", "refs", "theme_placements", "theme_placement_acts",
+                       "asserted_connections", "asserted_connection_judgements", "file_membership_pending", "step_sources"];
+  const groupSight = ["themes", "connection_dirty", "connection_derivations"];
+  assert.deepEqual(mine.map((d) => d.name).sort(), [...bundleSight, ...groupSight].sort());
   assert.deepEqual(mine.map((d) => d.name), CONNECTIONS_TABLES.map((t) => t.name));
+  const held = w.rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name);
+  for (const t of [...bundleSight, ...groupSight]) assert.ok(held.includes(t), `${t} is created`);
   const sight = Object.fromEntries(mine.map((d) => [d.name, d.sight]));
-  for (const t of ["connections", "connection_pair_choices", "refs", "theme_placements"]) assert.equal(sight[t], "bundle", t);
-  for (const t of ["themes", "connection_dirty", "connection_derivations"]) assert.equal(sight[t], "group", t);
+  for (const t of bundleSight) assert.equal(sight[t], "bundle", t);
+  for (const t of groupSight) assert.equal(sight[t], "group", t);
   for (const d of mine) {
     assert.equal(d.derive, "stored", d.name);
     assert.deepEqual([d.purge, d.expunge, d.export, d.version_chain], ["clear", "none", "admin-only", false], d.name);
   }
-  for (const t of ["theme_placement_acts", "asserted_connections", "asserted_connection_judgements", "file_membership_pending"])
-    assert.equal(sight[t], "bundle", `${t}: the default form's sight for a table keyed to a bundle`);
   /* R36: connection_derivations, like the dirty set, is cleared whole-store only. */
   w.entity(E);
   const [a] = w.doc(A, ["a"]), [b] = w.doc(B, ["b"]);

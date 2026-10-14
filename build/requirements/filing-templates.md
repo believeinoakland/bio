@@ -1,6 +1,6 @@
 # filing-templates — requirements
 
-**Status** · In force: approved by Bob 2026-10-01 (K921: the design, its ten answers and the module), Bob's second answers governing where they differ (K924); K922 (1) moved `FILING_BLANKS` and `FILING_TEXT_MAX` here from `filings`. Last changed T35 (T35-63: R26, C-115.45, C-115.46; K1869); every other requirement met (FILING-TEMPLATES #5, K2021). Last changed T37 (T37-23: Terms amended, R27 new; N761; K2129, K2175); R27 met (K2233). Last changed T46 (T46-36: R29 new, C-125.33 `TEMPLATE_NOT_REVIEWED` read by key from `words.json`, C-125.34 `TEMPLATE_COURT_PETITION` kept and returned to BOB; DEC-194, N913; K2953); marked not yet met (T46). Last changed T47 (T47-41: R30 new, amending R2, R15, R23, C-125.4 `TEMPLATE_BLANK_UNKNOWN` minted at one site, N957, K231); marked not yet met (T47).
+**Status** · In force: approved by Bob 2026-10-01 (K921: the design, its ten answers and the module), Bob's second answers governing where they differ (K924); K922 (1) moved `FILING_BLANKS` and `FILING_TEXT_MAX` here from `filings`. Last changed T35 (T35-63: R26, C-115.45, C-115.46; K1869); every other requirement met (FILING-TEMPLATES #5, K2021). Last changed T37 (T37-23: Terms amended, R27 new; N761; K2129, K2175); R27 met (K2233). Last changed T46 (T46-36: R29 new, C-125.33 `TEMPLATE_NOT_REVIEWED` read by key from `words.json`, C-125.34 `TEMPLATE_COURT_PETITION` kept and returned to BOB; DEC-194, N913; K2953); marked not yet met (T46). Last changed T47 (T47-41: R30 new, amending R2, R15, R23, C-125.4 `TEMPLATE_BLANK_UNKNOWN` minted at one site, N957, K231); marked not yet met (T47). Last changed T48 (T48-50: R33 new, amending R10, R15 and R23, `RFC_QUOTING_SENTENCE` and `rfcQuotingRefusal`, C-115.47 `RFC_QUOTING_MISSING` moved here from `filings` unchanged, `templateApprove` and the profile's templates refused through it; N880; Actions D13, H17; K231, K922 (1), K2953, K3190, K3195); marked not yet met (T48).
 
 **Size (P6).** New. Estimated 1,100–1,500 lines with its tables (templates, versions with revisions, proposals, reviews, grants, comments, approvals and endings), plus about 150 moved from `filings`. Well under the mark.
 
@@ -67,6 +67,15 @@ Terms. A **template** is R1's record; a **version** R2's. A version's **state** 
 - **R31** (T47; DEC-209 (3); K3120; amends R19) `FILING_BLANKS` gains four member-filled blanks, each with its sentence: `records` (the records asked for, in the member's words), `period` (the period the records cover), `form` (the form the records are wanted in), `cost_limit` (the most the group will pay for copies before being told). They are filled by `filings` R55's `fills`, never by the record; every earlier blank and its sentence is unchanged, and `blanksOf` reads the four as it reads the others. Test: a text naming each answers it in order; control: a name outside the set still answers `TEMPLATE_BLANK_UNKNOWN`.
 - **R32** (T47; K231, K3124; amends R30) The one site is provided: `blankUnknownRefusal(text, extra)` answers C-125.4 `TEMPLATE_BLANK_UNKNOWN` with its row (check, translation, the first blank outside `FILING_BLANKS` named), extra fields merged, or null when every blank `text` names is in `FILING_BLANKS`. R2's check and R15's read answer through it, and `filings` calls it for a member's own words (its R56), so no other module spells the code. Test: a text with an unknown blank answers the refusal naming it; control: a text of known blanks answers null.
 
+- **R33** (T48; N880; Actions D13, H17; v0.2 rule 8; K231, K922 (1), K2953; amends R10, R15, R23; `filings` R57) **The quoting sentence and its one check.**
+  - This module holds `RFC_QUOTING_SENTENCE`, moved here from `filings` unchanged: "Your reply may be quoted unless it says otherwise." (`filings`' `KEYED["rfc.quoting"]` before T48).
+  - It is not read from `words.json`: K2953 and `filings` R52 keep `words.json`'s re-wording returned to the design stream, because a new wording would refuse every request already prepared.
+  - `rfcQuotingRefusal(text, extra)` answers C-115.47 `RFC_QUOTING_MISSING` with its row, `extra` fields merged, when `text` does not hold the sentence; otherwise null. Pure.
+  - The row moves here from `filings` with its code, number and translation unchanged; the translation is read by key from `refusal.RFC_QUOTING_MISSING` (`filings` R51). Its `where` names this one function (R23's table), as R32 does for C-125.4.
+  - `templateApprove` (R10) refuses through it, after `REVIEWS_INSUFFICIENT`, a version whose `use` is `file`, whose kind is `request_for_comment` (`action-grammar`'s `PRODUCT_KINDS`) and whose text lacks the sentence. Nothing is written.
+  - A profile template of that kind and use that lacks the sentence is not offered and reads the same code (R15's form).
+  - Controls: the same version with the sentence is approved; a `brief` template, and a template of another kind, is never asked.
+
 Rows (R26; N702), their translations BOB's drafts: C-115.45 `TEMPLATE_REF_REFUSED`, "Name one template, by its id or as @ and its name. Nothing was drafted."; C-115.46 `TEMPLATE_NAME_AMBIGUOUS`, "Two templates you can see go by that name here, so neither was chosen. Pick the template by its id. Nothing was drafted." Both join R23's table and await promotion's stamp.
 
 **The vocabularies**
@@ -80,7 +89,7 @@ Rows (R26; N702), their translations BOB's drafts: C-115.45 `TEMPLATE_REF_REFUSE
 - `record-grammar`: `isMachineIdentity`, `proposalLabel` (the subject `template`, its R42), `sha256HexSync`.
 - `record-core`: `allocId` or `mintOpaqueId`, `transact`, `stampInstant`, `getSetting` (the active profiles), `declarePurge`.
 - `membership`: `viewerPredicate`, `isJoinedParticipant` (R54), `isProjectOwner` (R65), `isAdministrator` (R64), declared expertise (`memberFacts`, R68; `expertiseList`, R24), `positionalMember` (R76), `inSight` (R80) (K2233).
-- `action-grammar`: `RISK_TIERS` (its R1), the tiers R1 and R10 compare.
+- `action-grammar`: `RISK_TIERS` (its R1), the tiers R1 and R10 compare; (T48) `PRODUCT_KINDS` (its R2), the kind R33 asks.
 
 ### Invariants
 
@@ -97,6 +106,7 @@ Rows (R26; N702), their translations BOB's drafts: C-115.45 `TEMPLATE_REF_REFUSE
 - `BIO_Action_v0_2.md` §4 rule 11, §8 (K2780; T45, N893): Tier 1 templates offered only with a named writer, sources and a professional review (R15), each by its own handle (R26), no court petitions (R28); the template machinery built, `@records-request` withheld until a writer and review exist (K2781 (6)); Actions D8.
 - `BIO_Design_Requirements_v2.md` §8 as amended 2026-09-26 (Tier 1 and 2 templates; Tier 3 to counsel) and §12 (tools are advisory).
 - `BIO_Functional_Architecture_v3.md` Layer 3, Function 3 (templates pre-populated).
+- `BIO_Action_v0_2.md` §4 rule 8, "the rule stated in every request-for-comment text" (Actions D13, H17; K2744; T48, N880): R33.
 - K1869 (3) and N702 (the library's `{template}` drafts carried by name, `wizard-scripts` J2): R26.
 - F1's rule for digests (K1874; N761, K2129, K2175): R27.
 - Bob's direction K903 (6) and his answers K921 and K924 (`build/plan/draft-filing-templates.md` §4, §5); `build/layers.md`, layer 9, and "No jurisdiction in the product".

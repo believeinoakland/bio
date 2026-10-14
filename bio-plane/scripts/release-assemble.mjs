@@ -113,19 +113,23 @@
  *   4. node bio-plane/scripts/release-assemble.mjs --version <V> --sign
  *        in the environment holding BIO_RELEASE_SEED: re-runs every check on this commit, takes the release's
  *        signer from the seed's own key (refusing SIGNER_DISAGREES when RELEASE.json names another), signs the plane
- *        asset (bio-release) and the payload (bio-release-fleet), refuses unless stock ssh-keygen accepts both for
- *        that signer, and only then writes `release/`
+ *        asset (bio-release), the payload (bio-release-fleet) and the release notice (bio-release-notice, R32),
+ *        refuses unless stock ssh-keygen accepts all three for that signer, and only then writes `release/`, the
+ *        notice `release/NOTICE.json` beside the assets
  *   5. node bio-plane/scripts/release-advisories.mjs --out <file>
  *        R29's report over what the release ships, for the operator (it refuses nothing)
  *
  * Signatures made elsewhere complete a release the same way, without the seed:
- *   node bio-plane/scripts/release-assemble.mjs --version <V> --fleet-sig <file> --plane-sig <file>
+ *   node bio-plane/scripts/release-assemble.mjs --version <V> --fleet-sig <file> --plane-sig <file> --notice-sig <file>
  *
- * usage (bundler R22, R23, R30; moved from the old process's `tools/` in T19), from the repository root:
+ * Every run reads the release's notes from `release/notes/<V>.json`, `{date, security, notes: {members,
+ * administrators, must_do}}`, and refuses NO_NOTES or NOTES_UNREADABLE before anything is written (R32).
+ *
+ * usage (bundler R22, R23, R30, R32; moved from the old process's `tools/` in T19), from the repository root:
  *   node bio-plane/scripts/release-assemble.mjs --dry-run
- *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --emit-payload <file> [--emit-plane <file>]
+ *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --emit-payload <file> [--emit-plane <file>] [--emit-notice <file>]
  *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --sign          (GitHub Actions only, R30)
- *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --fleet-sig <file> [--plane-sig <file>]
+ *   node bio-plane/scripts/release-assemble.mjs --version 0.57.0 --fleet-sig <file> [--plane-sig <file>] --notice-sig <file>
  */
 import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -139,7 +143,7 @@ import {
 /* The statement and its namespace come from the module the INSTALLER also
    imports. Neither side builds the bytes it signs or verifies — see the comment
    on `fleetStatement`. This file defined its own copy for exactly one commit. */
-import { NS_FLEET, fleetStatement } from "../src/sshsig.mjs";
+import { NS_FLEET, fleetStatement, NS_RELEASE_NOTICE, releaseNoticeStatement } from "../src/sshsig.mjs";
 import { parseJsonc } from "./jsonc.mjs";
 import { resolveVersion } from "./resolve-version.mjs";
 import { signSshsig, signerPublicLine } from "./sign-sshsig.mjs";   /* signatures' release signer (its R33, R35) */
@@ -150,9 +154,11 @@ const DRY = argv.includes("--dry-run");
 const SIGN = argv.includes("--sign");
 const EMIT = flag("--emit-payload");
 const EMIT_PLANE = flag("--emit-plane");
+const EMIT_NOTICE = flag("--emit-notice");
 
 const RELEASE_DIR = join(REPO_ROOT, "release");
 const RELEASE_JSON = join(RELEASE_DIR, "RELEASE.json");
+const NOTICE_JSON = join(RELEASE_DIR, "NOTICE.json");
 
 const die = (code, msg, detail) => {
   console.error(`REFUSED [${code}]: ${msg}`);
@@ -166,7 +172,7 @@ if (SIGN && process.env.GITHUB_ACTIONS !== "true")
   die("NOT_SIGNING_ENVIRONMENT", "--sign runs only in the repository's GitHub Actions signing environment (bundler R30).",
     "Sessions assemble and never sign. Assemble with --dry-run or --emit-payload; the release-sign workflow signs,\n"
     + "on Bob's approval, with the seed it alone holds. Signatures made there complete a release with\n"
-    + "--fleet-sig <file> --plane-sig <file>. BIO_RELEASE_SEED was not read.");
+    + "--fleet-sig <file> --plane-sig <file> --notice-sig <file>. BIO_RELEASE_SEED was not read.");
 
 /* ---------------------------------------------------------------- the assets */
 
@@ -468,7 +474,44 @@ console.log("\n──── the payload fleetSig covers ────");
 process.stdout.write(payload);
 console.log("─────────────────────────────────────");
 
-const existing = existsSync(RELEASE_JSON) ? JSON.parse(readFileSync(RELEASE_JSON, "utf8")) : {};
+/* ---- THE RELEASE NOTICE (bundler R32; T48-4, N1047, K3158) ------------------
+   Each release publishes, beside its assets, a notice each group's Civicsmith checks for: the version, its date, the
+   SHA-256 of the fleet payload (so the notice names the whole release it announces), a security mark, and notes in
+   members' words. The notes are INSIDE what is signed: the statement is signatures' `releaseNoticeStatement` (its
+   R47) over all five fields, signed in `bio-release-notice` (its R46), a namespace no other signature verifies in.
+   The date, the mark and the notes are COPIED from the committed `release/notes/<version>.json`, never the clock and
+   never a default: a release with no notes, or notes the statement refuses, is refused here, before anything is
+   emitted or written, on every run (the dry run included, so the workflow's dry run proves them before it signs). */
+const notesRel = `release/notes/${version}.json`;
+const notesPath = join(RELEASE_DIR, "notes", `${version}.json`);
+if (!existsSync(notesPath))
+  die("NO_NOTES", `there are no release notes for ${version}: ${notesRel} is absent.`,
+    "Every release carries a signed notice with its notes in members' words. Commit the notes file, then assemble again:\n"
+    + `  ${notesRel}  { "date": "YYYY-MM-DD", "security": false,\n`
+    + '    "notes": { "members": "…", "administrators": "…", "must_do": "" } }');
+const NOTES_KEYS = ["date", "security", "notes", "version"];
+const notesUnreadable = (field, why) => die("NOTES_UNREADABLE", `${notesRel} cannot make the release notice: ${field}.`, why);
+let notesFile;
+try { notesFile = JSON.parse(readFileSync(notesPath, "utf8")); }
+catch (e) { notesUnreadable("(the file)", `  it does not parse as JSON: ${e.message}`); }
+if (!notesFile || typeof notesFile !== "object" || Array.isArray(notesFile))
+  notesUnreadable("(the file)", "  it is not a JSON object { date, security, notes }.");
+for (const k of Object.keys(notesFile))
+  if (!NOTES_KEYS.includes(k)) notesUnreadable(k, `  the notes file states \`${k}\`, which the notice does not carry; a field is copied, never ignored.`);
+if (notesFile.version !== undefined && notesFile.version !== version)
+  notesUnreadable("version", `  the notes file is for ${JSON.stringify(notesFile.version)}, and this release is ${version}.`);
+const notice = { version, date: notesFile.date, manifest: sha256(Buffer.from(payload, "utf8")),
+  security: notesFile.security, notes: notesFile.notes };
+let noticeStatement;
+try { noticeStatement = Buffer.from(releaseNoticeStatement(notice)); }
+catch (e) {
+  const field = /REFUSED \[NOTICE_FIELD\]: (.+)$/.exec(String(e.message))?.[1] ?? String(e.message);
+  notesUnreadable(field, "  signatures' releaseNoticeStatement refuses it: date YYYY-MM-DD, security true or false, notes exactly\n"
+    + "  { members, administrators, must_do }, each text of at most 8,000 characters, members and administrators non-empty.");
+}
+console.log(`notice: ${version} of ${notice.date}, manifest ${notice.manifest.slice(0, 16)}…, security ${notice.security ? "yes" : "no"} — from ${notesRel}`);
+
+const existing =existsSync(RELEASE_JSON) ? JSON.parse(readFileSync(RELEASE_JSON, "utf8")) : {};
 
 /* ---- THE SIGNER IS THE SEED'S OWN KEY (bundler R30, T47; N944, K2937) ------
    0.82.0's first signing run signed with Bob's new key and then refused itself as PLANE_SIG_DOES_NOT_COVER_ASSET:
@@ -506,10 +549,12 @@ if (SIGN) {
 if (EMIT) { writeFileSync(EMIT, payload); console.log(`payload written to ${EMIT}`); }
 /* R30: the other thing to be signed, the plane asset the payload names, byte for byte. */
 if (EMIT_PLANE) { copyFileSync(planeEntry.from, EMIT_PLANE); console.log(`plane asset written to ${EMIT_PLANE}`); }
+/* R32: the third thing to be signed, the notice's statement, byte for byte. */
+if (EMIT_NOTICE) { writeFileSync(EMIT_NOTICE, noticeStatement); console.log(`notice statement written to ${EMIT_NOTICE}`); }
 
 if (DRY) {
   console.log(`\n--dry-run: nothing written. A release cut now would carry ${entries.length} assets `
-    + `at ${version}, all proved fresh against this tree.`);
+    + `at ${version}, all proved fresh against this tree, and its notice from ${notesRel}.`);
   process.exit(0);
 }
 
@@ -555,12 +600,15 @@ function verifyWith(signer, sig, bytes, ns) {
 let fleetSig = flag("--fleet-sig") ? readFileSync(flag("--fleet-sig"), "utf8") : null;
 /* R30: a plane signature made in the signing environment arrives as a file; otherwise RELEASE.json's (R23). */
 let planeSig = flag("--plane-sig") ? readFileSync(flag("--plane-sig"), "utf8") : (existing.sig ?? null);
+/* R32: the notice's signature, made in the signing environment, arrives as a file; with --sign it is made below. */
+let noticeSig = flag("--notice-sig") ? readFileSync(flag("--notice-sig"), "utf8") : null;
 const planeBytes = readFileSync(planeEntry.from);
 
 if (SIGN) {
   fleetSig = signWith(payload, NS_FLEET);
   planeSig = signWith(planeBytes, NS_RELEASE);
-  console.log("signed: the plane asset and the fleet payload, with the release key");
+  noticeSig = signWith(noticeStatement, NS_RELEASE_NOTICE);
+  console.log("signed: the plane asset, the fleet payload and the release notice, with the release key");
 }
 
 /* ---- REFUSAL 5: THE PLANE SIGNATURE MUST COVER THE PLANE BEING RELEASED ----
@@ -598,6 +646,18 @@ if (!fleetSig) die("NO_FLEET_SIG", "no fleet signature supplied.",
   console.log("verified: stock ssh-keygen accepts fleetSig over this payload");
 }
 
+/* R32: the notice's signature, checked by the same stock verifier, over the statement's exact bytes, in its own
+   namespace, for the release's signer: a signature over other notes, another release or in another namespace is
+   refused, and nothing is written. */
+if (!noticeSig) die("NO_NOTICE_SIG", "no release notice signature supplied.",
+  "Pass --notice-sig <file> (made in the signing environment over --emit-notice's statement, R30, R32).");
+{
+  const v = verifyWith(signer, noticeSig, noticeStatement, NS_RELEASE_NOTICE);
+  if (!v.ok) die("NOTICE_SIG_REJECTED", "stock ssh-keygen did NOT accept the release notice signature.",
+    `  namespace ${NS_RELEASE_NOTICE}, statement from ${notesRel}\n  verifier says: ${v.reason}`);
+  console.log("verified: stock ssh-keygen accepts the notice's sig over its statement");
+}
+
 /* ---- write the release ---------------------------------------------------- */
 
 mkdirSync(RELEASE_DIR, { recursive: true });
@@ -633,5 +693,9 @@ const out = {
   fleetSig,
 };
 writeFileSync(RELEASE_JSON, JSON.stringify(out, null, 2) + "\n");
+/* R32: the notice beside the assets, the five signed fields as signed, its signature and the release's signer. */
+writeFileSync(NOTICE_JSON, JSON.stringify({ version: notice.version, date: notice.date, manifest: notice.manifest,
+  security: notice.security, notes: notice.notes, sig: noticeSig, signer }, null, 2) + "\n");
 console.log(`\nwrote release/RELEASE.json — ${version}, plane + ${fleetEntries.length} member(s)`);
-console.log("both signatures were verified with stock ssh-keygen before this file was written.");
+console.log("wrote release/NOTICE.json — the release notice, its notes inside what is signed");
+console.log("all three signatures were verified with stock ssh-keygen before these files were written.");

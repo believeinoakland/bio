@@ -2,21 +2,21 @@
    fixture, the default registry's read with and without a host (K1563 (1)), and the hub bound. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, MEMBER, OUTSIDER, ZONE } from "./fixture.mjs";
+import { world, metered, MEMBER, OUTSIDER, ZONE } from "./fixture.mjs";
 import { ownerConformance, owners, kindOf, neighbours as registryRead, BOUNDS, hubBoundOf } from "../../../src/connection-grammar/index.mjs";
 
 const doc = { kind: "document" };
 const AT = { value: "2026-03-10", precision: "day", zone: ZONE };
 
-test("R35 registered once as owner events with took part (one per role), concerns, within and the five event links; neighbours answers in connection-grammar's shape with evidence and both grade axes, valid at the event's time, and passes ownerConformance", () => {
+test("R35 R51 registered once as owner events with took part (one per role), concerns, within and the six event links (precedes among them); neighbours answers in connection-grammar's shape with evidence and both grade axes, valid at the event's time, and passes ownerConformance", () => {
   const w = world();
   const mine = owners().find((o) => o.owner === "events");
   assert.ok(mine, "registered in the default registry");
   const kinds = mine.kinds.map((k) => k.kind);
   for (const role of ["actor", "organizer", "mover", "seconder", "voted", "present", "speaker", "sender", "recipient", "copied",
                       "signatory", "decider", "author", "implementer", "party", "subject"]) assert.ok(kinds.includes(`event_${role}`), role);
-  for (const k of ["concerns", "within", "authorises", "answers", "amends", "reverses", "stated_cause"]) assert.ok(kinds.includes(`event_${k}`), k);
-  assert.equal(kinds.length, 23);
+  for (const k of ["concerns", "within", "authorises", "answers", "amends", "reverses", "stated_cause", "precedes"]) assert.ok(kinds.includes(`event_${k}`), k);
+  assert.equal(kinds.length, 24);
   assert.equal(kindOf("event_mover").owner, "events");
   assert.ok(mine.kinds.every((k) => k.class === "evidentiary" && k.word));
 
@@ -116,7 +116,7 @@ test("R35 a hub is judged per kind with connection-grammar's hubBoundOf (T36-14,
   assert.deepEqual([only.hub, only.items.length], [undefined, 1]);
 });
 
-test("R35 a page costs its slice (T36-14, K2119): a member with 4,000 event_voted connections, the vote kind's own bound, is answered in four pages of the fan-out, together well within connection-grammar's time budget; one more vote makes the member a hub", () => {
+test("R35 a page costs its slice (T36-14, K2119): a member with 4,000 event_voted connections, the vote kind's own bound, is answered in four pages of the fan-out, within a bounded work per vote (N1063: statements and rows, not a clock); a kind not asked reads nothing of the vote set; one more vote makes the member a hub", (t) => {
   const w = world();
   const voter = w.entity("Vic Voter");
   const s = w.capture("term");
@@ -128,22 +128,26 @@ test("R35 a page costs its slice (T36-14, K2119): a member with 4,000 event_vote
   for (let i = 0; i < N; i++) vote();
   const t0 = Date.now(), ids = [];
   let page = 0, pages = 0;
-  do {
-    const r = w.ev.neighbours({ node: voter, kinds: ["event_voted"], at: AT, viewer: MEMBER, scope: null, page });
-    assert.equal(r.hub, undefined);
-    assert.ok(r.items.length <= BOUNDS.fanout);
-    ids.push(...r.items.map((i) => i.id));
-    pages++;
-    page = r.next;
-  } while (page !== undefined);
-  const spent = Date.now() - t0;
+  /* N1063: four pages cost about 2 statements and 7 rows a vote, measured; bounded with headroom, at any load */
+  const read = metered(w, () => {
+    do {
+      const r = w.ev.neighbours({ node: voter, kinds: ["event_voted"], at: AT, viewer: MEMBER, scope: null, page });
+      assert.equal(r.hub, undefined);
+      assert.ok(r.items.length <= BOUNDS.fanout);
+      ids.push(...r.items.map((i) => i.id));
+      pages++;
+      page = r.next;
+    } while (page !== undefined);
+  });
+  t.diagnostic(`four pages: ${Date.now() - t0} ms (the walk's budget is ${BOUNDS.time_budget_ms} ms); ${read.statements} statements, ${read.rows} rows`);
   assert.equal(pages, N / BOUNDS.fanout);
   assert.equal(new Set(ids).size, N, "the pages joined are the whole set");
-  assert.ok(spent < BOUNDS.time_budget_ms / 2, `four pages took ${spent} ms; the walk's whole budget is ${BOUNDS.time_budget_ms} ms`);
-  /* a kind not asked costs nothing of the vote set */
-  const t1 = Date.now();
-  assert.deepEqual(w.ev.neighbours({ node: voter, kinds: ["event_present"], at: AT, viewer: MEMBER, scope: null }).items, []);
-  assert.ok(Date.now() - t1 < 200, "a kind not asked is filtered in the store");
+  assert.ok(read.statements <= 3 * N, `four pages ran ${read.statements} statements; at most 3 a vote`);
+  assert.ok(read.rows <= 9 * N, `four pages read ${read.rows} rows; at most 9 a vote`);
+  /* a kind not asked costs nothing of the vote set: filtered in the store, it reads no vote row */
+  const none = metered(w, () => w.ev.neighbours({ node: voter, kinds: ["event_present"], at: AT, viewer: MEMBER, scope: null }));
+  assert.deepEqual(none.value.items, []);
+  assert.ok(none.statements <= 5 && none.rows <= 5, `a kind not asked ran ${none.statements} statements and read ${none.rows} rows`);
   vote();
   assert.equal(w.ev.neighbours({ node: voter, at: AT, viewer: MEMBER, scope: null }).hub.set_size, N + 1);
 });

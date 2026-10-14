@@ -1,5 +1,5 @@
 /* capture: the op handlers at the module's interface (ops.mjs): op=capture (R21), op=links (R27, R29, with the
-   control plane's viewer stamp) and op=acquire's forward (R42, K72 (8), N103). The control plane's
+   control plane's viewer stamp) and op=acquire's forward (R73, acquisition R8, K72 (8), N103). The control plane's
    envelope helpers are stand-ins; the Durable Object stub answers through the module's own routes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";

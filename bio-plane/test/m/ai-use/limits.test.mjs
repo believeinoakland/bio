@@ -59,7 +59,7 @@ test("R2 scope is overall, a USE_KINDS entry, or per_member for a group or proje
   assert.equal(w.row(`SELECT amount FROM ai_limits WHERE unit='usd'`).amount, 125, "usd held to the cent");
 });
 
-test("R2 who may set it is the owner's own act: the member alone (NOT_YOUR_CEILING), a project's owner (credentials' R54 refusals), an active administrator (NOT_AN_ADMIN); each refusal writes nothing", async () => {
+test("R2 who may set it is the owner's own act: the member alone (NOT_YOUR_CEILING), a project's owner (ai-accounts' R10 refusals), an active administrator (NOT_AN_ADMIN); each refusal writes nothing", async () => {
   const w = await standard();
   const before = w.snapshot();
   const notYours = AI_RUNS_CHECKS.NOT_YOUR_CEILING;
@@ -69,9 +69,9 @@ test("R2 who may set it is the owner's own act: the member alone (NOT_YOUR_CEILI
   }
   for (const by of ["bob", "admin", "cy", null]) {
     const r = set(w, "project:P", "ask", "calls", "day", 5, by);
-    const own = w.c.accountUses({ owner: "project:P", viewer: by });
+    const own = w.a.accountUses({ owner: "project:P", viewer: by });
     assert.equal(r.ok, false, String(by));
-    assert.deepEqual([r.code, r.check], [own.code, own.check], `${by}: credentials' own refusal, relayed`);
+    assert.deepEqual([r.code, r.check], [own.code, own.check], `${by}: ai-accounts' own refusal, relayed`);
     assert.ok(["PROJECT_ACT_NOT_THE_OWNER", "PROJECT_SEEN_NOT_A_PARTICIPANT", "NO_SUCH_PROJECT"].includes(r.code), r.code);
   }
   assert.equal(set(w, "project:P", "ask", "calls", "day", 5, "bob").code, "PROJECT_ACT_NOT_THE_OWNER", "a joined participant is not an owner");
@@ -86,10 +86,10 @@ test("R2 who may set it is the owner's own act: the member alone (NOT_YOUR_CEILI
 
 test("R2 usd on a sign-in is refused LIMIT_UNIT_UNAVAILABLE (a member's sign-in, a project's sign-in account), writing nothing; on an API key it is set, and tokens or calls on a sign-in are set", async () => {
   const w = await standard();
-  /* T47 (K3084; credentials R70): a sign-in serves cy only while its token is held, the fact alone answering not connected */
-  assert.equal((await w.c.subscriptionTokenHold({ member: "cy", token: "sk-ant-oat01-held-signin-token-of-cy" })).ok, true);
+  /* T47 (K3084; ai-accounts R19): a sign-in serves cy only while its token is held, the fact alone answering not connected */
+  assert.equal((await w.a.subscriptionTokenHold({ member: "cy", token: "sk-ant-oat01-held-signin-token-of-cy" })).ok, true);
   w.project("S", "cy");
-  assert.equal(w.c.projectSigninSet({ project: "S", by: "cy" }).ok, true);
+  assert.equal(w.a.projectSigninSet({ project: "S", by: "cy" }).ok, true);
   const before = w.snapshot();
   for (const owner of ["member:cy", "project:S"]) {
     const r = set(w, owner, "overall", "usd", "month", 10, "cy");
@@ -201,12 +201,12 @@ test("R3 for explore: EXPLORE_NOT_ENABLED when the owner's explore is no; at yes
   const r = check(w, "group", null, "explore");
   assert.deepEqual([r.code, r.check, r.whose], ["EXPLORE_NOT_ENABLED", "C-143.4", "group"]);
   assert.equal(r.translation, WORDS["ai.refused.explorenotenabled"].replace("{whose}", WORDS["ai.whose.group"]));
-  w.c.accountUsesSet({ owner: "group", switch: "explore", on: "yes", by: "admin" });
+  w.a.accountUsesSet({ owner: "group", switch: "explore", on: "yes", by: "admin" });
   set(w, "group", "overall", "calls", "day", 2, "admin");
   assert.equal(check(w, "group", null, "explore"), null, "under the overall limit it passes");
   w.count("group", "bob", "ask", { calls: 2 });
   assert.equal(check(w, "group", null, "explore").scope, "overall");
-  w.c.accountUsesSet({ owner: "group", switch: "explore", on: "ask", by: "admin" });
+  w.a.accountUsesSet({ owner: "group", switch: "explore", on: "ask", by: "admin" });
   assert.equal(check(w, "group", null, "explore").code, "AI_LIMIT_REACHED", "at ask, R3 judges the limits only");
   set(w, "group", "overall", "calls", "day", null, "admin");
   assert.equal(check(w, "group", null, "explore"), null);

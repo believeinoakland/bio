@@ -2,7 +2,7 @@
  * (T6-6's entry; the map is `build/extraction/ai-runs.md`). The vocabulary and pure rules, the deployment order and the
  * rows are `run-rules`' since the split (K617, K649 (1)); this file is the mechanism: the one exit, open, tick,
  * close, the reaper and the wake, the reads, and the services later modules produce under a run through (R28, R29).
- * The account a run carries (R52) is the one `credentials.accountFor` answers for the act of the member who started it
+ * The account a run carries (R52) is the one `ai-accounts.accountFor` answers for the act of the member who started it
  * (their own, a project's, or the group's API key; K1755), the act and its use still that member's; refused by name when
  * no account serves them. What that account has spent and may spend is `ai-use`'s (T40-8, K624: the counter, the
  * ceilings and the reads this module held as R48–R51 moved there): a run asks its `useCheck` and counts each tick's use
@@ -13,7 +13,10 @@
  * reaper (`reap`) takes that exit for a run that was killed and called nothing.
  *
  * Reached as `aiRunsOf(ctx, env)` (K61), one instance per Durable Object storage; it reaches record-core,
- * membership, credentials, connections, bias and observation-log through their factories on the same `ctx`. */
+ * membership, credentials, ai-accounts, connections, bias and observation-log through their factories on the same `ctx`. Which
+ * account serves an act, and its switches, are read from `ai-accounts` (T48; N996 §5); `credentials` is reached only for the
+ * run's own credentials (`aiRunCredentialMint`, `aiRunCredentialsEnd`, R14, R18) and the `ai` credential's row
+ * (`aiCredentialLook`, R18). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
@@ -26,6 +29,7 @@ import { CONDITION_KINDS } from "../observation-log/vocabulary.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { normalizeType, OBJECT_TYPES, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
+import { aiAccountsOf } from "../ai-accounts/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { sha256hex, instanceAiCredential } from "../tokens.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
@@ -115,8 +119,8 @@ export class AiRuns {
   #runListeners = [];     // R43: {module, fn, seq}, in the modules' total order
   #openChecks = [];       // R47: {module, mode, fn}, one per mode and one per module
   #deps;
-  /** `deps` is for in-process wiring only (never the wire or `env`): `inquiry` (R27's `migratedSurfacing`), `steps` and
-   *  `aiUse` (each module's own instance, else its factory on this `ctx`), and, for a module test alone,
+  /** `deps` is for in-process wiring only (never the wire or `env`): `inquiry` (R27's `migratedSurfacing`), `steps`,
+   *  `aiUse` and `aiAccounts` (each module's own instance, else its factory on this `ctx`), and, for a module test alone,
    *  `deployedModes` in place of `run-rules`' `DEPLOYED_MODES` and `testSet` in place of `CIVICSMITH_TEST_SET`. */
   constructor(ctx, env = {}, deps = {}) {
     this.ctx = ctx;
@@ -851,7 +855,7 @@ export class AiRuns {
    *
    *  BOTH PRINCIPALS ARE REQUIRED and neither is ever a token value (§14a,
    *  DEC-27(b), DEC-55.4). The Claude account a run carries is the one
-   *  `credentials.accountFor` answers for the act of the member who started it
+   *  `ai-accounts.accountFor` answers for the act of the member who started it
    *  (R52; K1755: their own, else the group's API key), and the run is that
    *  member's act, recorded as `principal_claude`, `member:<id>`, whichever
    *  account serves it; the plane refuses to open a run that names no member, or
@@ -1150,12 +1154,12 @@ export class AiRuns {
       bundles: (Array.isArray(lensNow.bundles) ? lensNow.bundles : [])
         .map((b) => ({ bundle_id: b.bundle_id, revision: b.revision ?? null })),
       at: now });
-    /* R52 (K1503, K1755): THE ACCOUNT THE RUN CARRIES, asked of `credentials.accountFor` for the act of the member who
+    /* R52 (K1503, K1755): THE ACCOUNT THE RUN CARRIES, asked of `ai-accounts.accountFor` for the act of the member who
        started it, here, before the id's existence is asked, so the check below and the insert stay one synchronous step
        with no await between them. Its answer is applied in R52's place further down (after the re-run refusals), and
        the unsealed key is dropped at once: only whether an account serves the member, and which, is kept. */
     const accountMember = AiRuns.#accountMember({ actor, principalPlane, principalClaude });
-    /* (T41; credentials R56) a run over a project names it, so the project's own account serves first when it is held */
+    /* (T41; ai-accounts R11) a run over a project names it, so the project's own account serves first when it is held */
     const account = accountMember ? await this.#accountFor(accountMember, "run",
       String(contextType) === "project" ? String(contextId) : null) : null;
     /* REC-76 — the second of the two codeless refusals the widened classifier
@@ -1207,7 +1211,7 @@ export class AiRuns {
                      + "else would be measured against a different lens entirely" });
     }
 
-    /* R52 (K1502, K1503, K1755): THE ACCOUNT THE RUN CARRIES, the one `credentials.accountFor` answered above for the act
+    /* R52 (K1502, K1503, K1755): THE ACCOUNT THE RUN CARRIES, the one `ai-accounts.accountFor` answered above for the act
        of the member who started it (their own reference, else their own sign-in (T38; K2299), else the group's API key
        while held and on); with none,
        refused by name. Then R50: that member's use today against the ceiling in force, the copy's included, whichever
@@ -1337,7 +1341,7 @@ export class AiRuns {
   /** R74 (D7; K2472; B4 (5), K2490): A MEMBER'S BATCH, one bounded run per step she may see, under one act and one
    *  estimate. `steps` is the list of her steps (at most `OPEN_MANY_MAX`, each named once); `mode`, `bounds`,
    *  `skillVersion`, `label` are each run's, as `open` takes them; `owner` the account the estimate is asked of (default:
-   *  the account `credentials.accountFor` answers for her act). Refused whole, nothing written: no member's act
+   *  the account `ai-accounts.accountFor` answers for her act). Refused whole, nothing written: no member's act
    *  (`run-rules` R18, relayed), or no list of steps (`AI_RUN_NO_CONTEXT`). Otherwise `ai-use.estimate` is asked once for
    *  the batch (its answer, a refusal included, carried as `estimate`), then each step in order: one she cannot see
    *  answers `AI_RUN_STEP_UNKNOWN` for that step alone, a group-placed one `AI_RUN_NO_CONTEXT` (a run sits in an inquiry
@@ -2036,7 +2040,7 @@ export class AiRuns {
     /* R52 (K1503, K1755): the run continues only on the account that serves the act of the member who started it (their
        own, their own sign-in (T38; K2299), or the group's key); with none, it is withheld by name and waits, and the binding is not called. */
     const payer = AiRuns.#memberOfRun(run);
-    /* (T41) a run a project's account pays for is judged by that account at the dispatch itself (credentials R56) */
+    /* (T41) a run a project's account pays for is judged by that account at the dispatch itself (ai-accounts R11) */
     const projectPaid = typeof (run && run.principal_claude) === "string" && run.principal_claude.startsWith("project:");
     if (resumer && resumer.ready && principal === resumer.stamp && !(payer && (projectPaid || this.#accountServing(payer))))
       return { dispatch: false, withheld: "NO_ACCOUNT",
@@ -2064,11 +2068,11 @@ export class AiRuns {
   /** THE CALL. Bounded, and every way it can fail is a stated outcome carrying no secret. A dispatch that did not
    *  complete appends ONE entry saying so, because the wake entry above it said the run was handed over. */
   async #aiRunDispatch(d, resumer, iso) {
-    /* R52, K1514, K1601, K1755 (agent-worker R6, R10): the body carries `account`, the account `credentials.accountFor`
-       answers for the act of the run's member (its R35), `{kind, level, secret, member, suggestions}`: `level` `member`
+    /* R52, K1514, K1601, K1755 (agent-worker R6, R10): the body carries `account`, the account `ai-accounts.accountFor`
+       answers for the act of the run's member (its R7, R11), `{kind, level, secret, member, suggestions}`: `level` `member`
        for their own reference or (T38; K2299) their own sign-in, `signin`, never re-labelled an API key (K1553), `group`
-       for the group's API key, whose use is still that member's act; `secret` is R35's `key`, named as agent-worker R6
-       reads it: (R79; T47, K3060 D10, K3068) a held sign-in's token carried as an API key's, never logged, stored or
+       for the group's API key, whose use is still that member's act; `secret` is its R7's `key`, named as agent-worker R6
+       reads it: (R79; T47, K3060 D10, K3068; ai-accounts R19) a held sign-in's token carried as an API key's, never logged, stored or
        answered (the T38 "no secret" sentence retired);
        `member` is the run's account member, `member:<id>`, so agent-worker can check it against the run (its R10). Used
        for this one call and kept nowhere here. The instance Claude account it carried before is retired (K1502). */
@@ -2079,13 +2083,13 @@ export class AiRuns {
       outcome = { state: "REFUSED", status: null,
                   reason: String((ref && ref.refusal && (ref.refusal.code || ref.refusal.reason)) || "NO_ACCOUNT").slice(0, 80) };
     /* K1615 (agent-worker R56): and the switch that governs the serving account. */
-    /* (T41; credentials R55, R37) every account now holds its `suggestions` switch, set by `accountUsesSet`: a member's
-       reference or sign-in (whichever serves, read through `accountUses` as that member, R60), and the group key
-       (`groupKeySwitches()`, an in-plane read). Anything but an explicit on is off. */
+    /* (T41; ai-accounts R14, R9) every account now holds its `suggestions` switch, set by `accountUsesSet`: a member's
+       reference or sign-in (whichever serves, read through `accountUses` as that member, its R15), and the group key
+       (`groupKeySwitches()`, an in-plane read, its R9). Anything but an explicit on is off. */
     let suggestions = false;
     if (!outcome) {
       try {
-        const c = credentialsOf(this.ctx);
+        const c = this.#aiAccounts();
         if (ref.level === "group") suggestions = c.groupKeySwitches().suggestions === true;
         else if (ref.level === "member") {
           const u = c.accountUses({ owner: `member:${d.payer}`, viewer: `member:${d.payer}` });
@@ -2141,7 +2145,7 @@ export class AiRuns {
     return outcome;
   }
 
-  /** R52 (T41): the account that serves the run's member now, `credentials.accountFor`'s answer as `#accountFor` reads
+  /** R52 (T41): the account that serves the run's member now, `ai-accounts.accountFor`'s answer as `#accountFor` reads
    *  it; it must be the one the run recorded as paying (a run never moves to another), else `NO_ACCOUNT`. */
   async #dispatchAccount(d) {
     const ref = d.payer ? await this.#accountFor(d.payer, "run", d.project) : null;
@@ -2207,7 +2211,7 @@ export class AiRuns {
     /* (T46; Bob's, K2892) on her own sign-in alone: any other account that would serve her (her API-key reference, the
        group's key, a project's account) is withheld, nothing sent, nothing written. */
     d.ref = await this.#dispatchAccount(d);
-    /* the group's keep-away (credentials R35, R52) answers no account at all: relayed unchanged, as the mint would
+    /* the group's keep-away (ai-accounts R7, R20) answers no account at all: relayed unchanged, as the mint would
        refuse it (credentials R63), rather than read as another account */
     if (d.ref && d.ref.refusal && d.ref.refusal.code === "AI_KEPT_AWAY") {
       const { ok: _ok, ...kept } = d.ref.refusal;
@@ -3072,7 +3076,7 @@ export class AiRuns {
    * What each account has spent and may spend is `ai-use`'s (T40-8, K624: this module's R48–R51 moved there whole, the
    * counter and ceilings with their tables): a run asks its `useCheck` before it opens and at each tick, counts each tick's
    * conversations through its `countUsage` under the run's id, and answers its cost from its `actualOf` (one store of the
-   * figures, K2482). Which account pays is `credentials.accountFor`'s. */
+   * figures, K2482). Which account pays is `ai-accounts.accountFor`'s (T48; N996 §5). */
 
   /** A refusal relayed inside the tick's own shape (`ticked: false` leads, so no `ok` rides beside it). */
   static #shed({ ok: _ok, ...rest }) { return rest; }
@@ -3085,6 +3089,12 @@ export class AiRuns {
 
   /** The `ai-use` module (R52, R76): the injected one, else its factory on this `ctx`. */
   #aiUse() { return this.#deps.aiUse || aiUseOf(this.ctx); }
+
+  /** The `ai-accounts` module (R18, R52, R79; T48, N996 §5): the injected one, else its factory on this `ctx`, which answers
+   *  the one instance `credentials`' factory made at boot with the seal secret (ai-accounts R32). Which account serves an
+   *  act (`accountFor`), whether one is held (`accountReferenceState`, `groupKeyState`) and its switches
+   *  (`accountUses`, `groupKeySwitches`) are read here, never through `credentials`' transitional delegates. */
+  #aiAccounts() { return this.#deps.aiAccounts || aiAccountsOf(this.ctx); }
 
   /** R52 (B5): `ai-use.useCheck` for the paying `owner` and `member`'s use `run` at `ms`: null, or its refusal relayed as
    *  it came. A check that cannot be asked refuses (fail closed, as ai-use R3 fails closed). */
@@ -3144,16 +3154,18 @@ export class AiRuns {
   }
 
   /** R52 (K1755): which account serves `member`'s act now, read without unsealing, for the synchronous checks (an ask's
-   *  ceiling check, the wake's decision): `member` when they hold a reference of their own (credentials R23's state, asked
-   *  as that member) or are connected through their subscription (its R43; T38, K2299), else `group` when the group's API key is on and they are an active member (credentials R34's
-   *  state, asked as that member: it answers `{on}` to an active member alone), else null. R35's choice, as its own
-   *  order makes it. */
+   *  ceiling check, the wake's decision): `member` when they hold a reference of their own (ai-accounts R2's state, asked
+   *  as that member) or are connected through their subscription (its R18; T38, K2299), else `group` when the group's API
+   *  key is on and they are an active member (ai-accounts R6's state, asked as that member: it answers `{on}` to an active
+   *  member alone), else null. Its R7's choice, as its own order makes it. */
   #accountServing(member) {
-    const c = credentialsOf(this.ctx), as = `member:${member}`;
+    const as = `member:${member}`;
+    let c;
+    try { c = this.#aiAccounts(); } catch { return null; }
     try {
       const s = c.accountReferenceState({ member: as, viewer: as });
       if (s && s.ok === true && s.held === true) return "member";
-      /* (T38; K2299) else their own sign-in, when connected through their subscription (credentials R43, R35) */
+      /* (T38; K2299) else their own sign-in, when connected through their subscription (ai-accounts R18, R7) */
       if (s && s.ok === true && s.subscription && s.subscription.connected === true) return "member";
     } catch { /* read as none of their own */ }
     try {
@@ -3162,22 +3174,22 @@ export class AiRuns {
     } catch { return null; }
   }
 
-  /** R52 (K1503, K1755): the account `credentials.accountFor` (its R35) answers for `member`'s act of `kind` (`run`):
-   *  `{level, kind, key}` when one serves it (R79; T47: a held sign-in's `key` is its token, credentials R70); else `{refusal}`: `NO_ACCOUNT` read as this module's `AI_NO_ACCOUNT`, any
+  /** R52 (K1503, K1755): the account `ai-accounts.accountFor` (its R7, R11) answers for `member`'s act of `kind` (`run`):
+   *  `{level, kind, key}` when one serves it (R79; T47: a held sign-in's `key` is its token, ai-accounts R19); else `{refusal}`: `NO_ACCOUNT` read as this module's `AI_NO_ACCOUNT`, any
    *  other refusal of that service (the group key's notice not yet read, a member not active, the seal) relayed as it
    *  came. The caller keeps the key for the one call it serves, or not at all. */
   async #accountFor(member, kind, project = null) {
     let a = null;
     try {
-      a = await credentialsOf(this.ctx).accountFor({ member: `member:${member}`,
+      a = await this.#aiAccounts().accountFor({ member: `member:${member}`,
         act: { kind, member: `member:${member}`, ...(project ? { project } : {}) } });
     } catch { a = null; }
     /* R52 (T41): the owner that pays, as ai-use R1 spells it */
     const owner = (lvl, proj) => (lvl === "group" ? "group" : lvl === "project" ? `project:${proj}` : `member:${member}`);
     if (a && a.ok === true && typeof a.key === "string" && (a.level === "member" || a.level === "group" || a.level === "project"))
       return { level: a.level, kind: a.kind, key: a.key, owner: owner(a.level, a.project) };
-    /* (T38; K2299) the member's own sign-in (credentials R35, R43), or (T41; credentials R54, R56) a project's, its sole
-       owner's, answered with no key: carried with no `secret`. (T47; R79, credentials R70) A held sign-in answers its
+    /* (T38; K2299) the member's own sign-in (ai-accounts R7, R18), or (T41; ai-accounts R10, R11) a project's, its sole
+       owner's, answered with no key: carried with no `secret`. (T47; R79, ai-accounts R19) A held sign-in answers its
        token as `key` and is read by the arm above, its `kind` kept `signin`. */
     if (a && a.ok === true && a.kind === "signin" && (a.level === "member" || a.level === "project"))
       return { level: a.level, kind: "signin", key: null, owner: owner(a.level, a.project) };

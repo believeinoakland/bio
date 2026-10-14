@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { world, V } from "./fixture.mjs";
-import { OPEN_REQUEST_KEYS, openRequestLine, OPEN_REQUESTS_UNREAD_SENTENCE } from "../../../src/case-inputs/index.mjs";
+import { OPEN_REQUEST_KEYS, openRequestLine, OPEN_REQUESTS_UNREAD_SENTENCE, OPEN_REQUEST_NOQUOTE_PLAIN } from "../../../src/case-inputs/index.mjs";
 
 const WORDS = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json",
   import.meta.url), "utf8")).words;
@@ -158,4 +158,50 @@ test("R17: when R8 reads undetermined the step's one sentence is signing.openreq
   const { w: ok } = setup();
   ok.ci.registerOpenRequests("action-replies", { openRequestsOn: () => ROWS });
   assert.ok(!JSON.stringify(lines(ok)).includes(OPEN_REQUESTS_UNREAD_SENTENCE));
+});
+
+test("R18: a row answering quotable: false also answers quoting, {key: null, says: \"{whom}'s reply asks not to be quoted.\"} (the key signing.openrequest.noquote is not yet in words.json), shown once beside its row's line for each shape of row; the row's own line is unchanged, and nothing is refused or written", () => {
+  const { w } = setup();
+  assert.equal(WORDS.some((x) => x.key === "signing.openrequest.noquote"), false,
+    "the key is not yet given: when it is, this test and the module read it by key");
+  assert.equal(OPEN_REQUEST_NOQUOTE_PLAIN, "{whom}'s reply asks not to be quoted.");
+  const rows = [
+    { ...ROWS[0], quotable: false },
+    { ...ROWS[1], quotable: false },
+    { ...ROWS[2], quotable: false },
+    { whom: CLERK, asked_at: "2026-09-05", window_closes: "2026-09-30", answers: null, replied: true, quotable: false }];
+  w.ci.registerOpenRequests("action-replies", { openRequestsOn: () => rows });
+  const before = w.snapshot();
+  const read = w.ci.openRequestsOn({ case: "CASE-X", members: [], viewer: V("alice") });
+  assert.equal(read.ok, true);
+  assert.deepEqual(read.rows.map((r) => r.quotable), [false, false, false, false], "the row keeps what it stated");
+  const o = lines(w);
+  for (const [i, l] of o.entries()) {
+    const plain = openRequestLine({ ...rows[i], quotable: undefined });
+    assert.deepEqual([l.key, l.says], [plain.key, plain.says], "the row's own line is unchanged");
+    assert.deepEqual(l.quoting, { key: null, says: `${rows[i].whom}'s reply asks not to be quoted.` });
+    assert.deepEqual(Object.keys(l.quoting), ["key", "says"], "one line, shown once");
+    assert.ok(!/\{[a-z_]+\}/.test(l.quoting.says), "filled");
+  }
+  /* a whom holding a $ pattern is filled as written */
+  assert.equal(openRequestLine({ ...rows[0], whom: "the $& Office" }).quoting.says, "the $& Office's reply asks not to be quoted.");
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+});
+
+test("R18: a row answering quotable: true, or not answering it, carries no quoting and reads as quotable; a quotable that is not a boolean makes the row malformed, so R8 reads the source undetermined", () => {
+  const { w } = setup();
+  let answer = [{ ...ROWS[0], quotable: true }, ROWS[1], { ...ROWS[2], quotable: true }];
+  w.ci.registerOpenRequests("action-replies", { openRequestsOn: () => answer });
+  const o = lines(w);
+  assert.equal(o.length, 3);
+  for (const l of o) assert.equal("quoting" in l, false, JSON.stringify(l));
+  assert.deepEqual(w.ci.openRequestsOn({ case: "CASE-X", members: [], viewer: null }).rows.map((r) => r.quotable),
+    [true, undefined, true], "stated only where the source states it");
+  assert.equal("quoting" in openRequestLine(ROWS[0]), false);
+  /* controls: each non-boolean value is malformed */
+  for (const bad of ["no", "false", 0, 1, null, [], {}]) {
+    answer = [ROWS[0], { ...ROWS[1], quotable: bad }];
+    const r = w.ci.openRequestsOn({ case: "CASE-X", members: [], viewer: V("alice") });
+    assert.deepEqual([r.ok, r.undetermined], [false, true], JSON.stringify(bad));
+  }
 });

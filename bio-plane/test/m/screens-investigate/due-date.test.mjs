@@ -45,7 +45,7 @@ test("R7 \"Download to my calendar\" saves clocksics' calendar for the action (c
   assert.deepEqual(p.files.map((f) => f.name), ["deadlines.ics"], "the calendar handed to the browser as a file");
   const q = await open(at, { plane: { clocksics: ok({ ok: true, filename: "deadlines.ics", ics: "", events: 0 }) } });
   assert.equal(main(q).querySelectorAll("button").find((b) => b.textContent === "Download to my calendar"), undefined);
-  assert.match(main(q).textContent, /No confirmed due date to put in a calendar yet/);
+  assert.doesNotMatch(main(q).textContent, /Download to my calendar/, "R22: nothing to put in a calendar, nothing offered");
 });
 
 test("R7 a refused proposal is drawn beside the act (control)", async () => {

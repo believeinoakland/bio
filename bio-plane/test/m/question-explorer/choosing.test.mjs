@@ -110,14 +110,14 @@ test("R3: the run opens through ai-runs in the investigate run path, origin expl
   assert.equal(w3.count("explore_runs"), 0);
 });
 
-test("R3: a principal served by a sign-in explores only while that sign-in account's explore use is on; off (its default) it is refused as any account whose explore use is off (credentials R55 and ai-use R6, the real modules; the sign-in held, credentials R70)", async () => {
+test("R3: a principal served by a sign-in explores only while that sign-in account's explore use is on; off (its default) it is refused as any account whose explore use is off (ai-accounts R14 and ai-use R6, the real modules; the sign-in held, ai-accounts R19)", async () => {
   const w = await world().standard();
-  /* A project whose account is its sole member's own sign-in (credentials R43, R54), its token held (credentials R70:
+  /* A project whose account is its sole member's own sign-in (ai-accounts R18, R10), its token held (ai-accounts R19:
      a sign-in with no token held answers not connected). */
   w.project(PROJ, ["alice"], { owners: ["alice"] });
   w.draw(Q, PROJ);
-  assert.equal((await w.credentials.subscriptionTokenHold({ member: "alice", token: "sign-in-token-of-alice-0123456789" })).ok, true);
-  assert.equal(w.credentials.projectSigninSet({ project: PROJ, by: "alice" }).ok, true);
+  assert.equal((await w.aiAccounts.subscriptionTokenHold({ member: "alice", token: "sign-in-token-of-alice-0123456789" })).ok, true);
+  assert.equal(w.aiAccounts.projectSigninSet({ project: PROJ, by: "alice" }).ok, true);
   /* Off: the sign-in account's switch at its default, no. */
   const off = w.p.exploreTick(w.clock.now);
   assert.equal(off.opened.length, 0);
@@ -125,7 +125,7 @@ test("R3: a principal served by a sign-in explores only while that sign-in accou
   assert.ok(w.calledAs("exploreAllowed").some((a) => a.owner === `project:${PROJ}`), "ai-use asked, and refused");
   /* On: set by the account's owner's own act. */
   w.clock.now = "2026-10-11T09:00:00Z";
-  assert.equal(w.credentials.accountUsesSet({ owner: `project:${PROJ}`, switch: "explore", on: "yes", by: "member:alice" }).ok, true);
+  assert.equal(w.aiAccounts.accountUsesSet({ owner: `project:${PROJ}`, switch: "explore", on: "yes", by: "member:alice" }).ok, true);
   const on = w.p.exploreTick(w.clock.now);
   assert.deepEqual(on.opened.map((o) => o.owner), [`project:${PROJ}`]);
   assert.equal(w.calledAs("open")[0].principalClaude, `project:${PROJ}`);
@@ -142,4 +142,30 @@ test("R12: each Ask item and each run carries ai-use R10's estimate before", asy
                                                  viewer: "member:dana", at: w.clock.now }, "read as the account's owner");
   assert.equal(w.p.runCost({ run: o.run, viewer: "member:dana" }).estimate, "not known yet");
   assert.equal(w.p.runCost({ run: o.run, viewer: "member:alice" }), null, "negative control: not the account's owner");
+});
+
+test("R3: a member's account's explore switch is read through ai-accounts' in-plane accountUsesOf (its R17), never accountUses as that member; an account that cannot be read is refused before ai-use is asked (fail closed)", async () => {
+  /* A stand-in over the real ai-accounts that records each read and, while `unreadable`, answers R17's fail-closed form. */
+  const asked = [];
+  const stand = { real: null, unreadable: false,
+    accountUsesOf(a) { asked.push(["accountUsesOf", a]); return stand.unreadable ? { ok: true, owner: a.owner, held: null, uses: null, unreadable: true } : stand.real.accountUsesOf(a); },
+    accountUses(a) { asked.push(["accountUses", a]); return stand.real.accountUses(a); },
+    aiKeptAway(a) { return stand.real.aiKeptAway(a); } };
+  const w = world({ aiAccounts: stand });
+  stand.real = w.aiAccounts;
+  await w.standard();
+  /* Alice holds her own key (ai-accounts R1), its explore switch at yes by her own act. */
+  assert.equal((await w.aiAccounts.accountReferenceSet({ member: "alice", kind: "apikey", secret: "sk-ant-alice", by: "member:alice" })).ok, true);
+  await w.setExplore("member:alice", "yes");
+  stand.unreadable = true;
+  const t = w.p.exploreTick(w.clock.now);
+  assert.deepEqual(asked, [["accountUsesOf", { owner: "member:alice" }]], "the in-plane read, with no viewer");
+  assert.equal(w.calledAs("exploreAllowed").some((a) => a.owner === "member:alice"), false, "refused here, ai-use not asked");
+  assert.equal(t.refused, 2, "the group (its switch at no, by ai-use) and her unreadable account");
+  /* Negative control: read, at yes, she is passed to ai-use to decide (ai-use R6). */
+  w.clock.now = "2026-10-11T09:00:00Z";
+  stand.unreadable = false;
+  w.p.exploreTick(w.clock.now);
+  assert.equal(w.calledAs("exploreAllowed").some((a) => a.owner === "member:alice"), true);
+  assert.equal(asked.some(([k]) => k === "accountUses"), false, "never asked as an owner it is not");
 });

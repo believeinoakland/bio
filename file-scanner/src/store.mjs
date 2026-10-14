@@ -1,5 +1,5 @@
 /* The group's bucket, as this member uses it: targets read as copies (R1, R2), from `captures/` or, for a target
- * with `area: "derived"`, from `derived/` (a safe view or safe copy file-safety stored, N753), and the only writes it makes, under
+ * with `area: "derived"`, from `derived/` (a safe view file-safety stored, rendered or rebuilt, N753), and the only writes it makes, under
  * `clamav/` (R6) and `reputation/` (R26) (R11). Every write and delete in the module goes through `writeObject` and
  * `deleteObject`; a test reads every storage call in the sources and finds no other. */
 import { createHash } from 'node:crypto';

@@ -1,0 +1,38 @@
+# BOB to control-plane (T48)
+
+**Read** · handled J6
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T48), layer 11, control-plane:
+- **T48-77 · control-plane** · (N996 §5) T47-65's `DISCLOSURE_DUE` relay re-pointed to `ai-accounts` R23. (N1015) mints the request's `trace` and member ref (R85's form) and passes them to the plane's ask, run, draft and transcribe calls. (N880, N882, N670) R90 routes `actionreplyquoting` and `proceedingdates`, and sends `readtranslate` to the draft door. (N1047) the update read and acts are routed through instance-setup's map, as R66 does. (N1026, K3206) `aiuseovertime` routed as `ailimits` is · text BOB's.
+- **T48-77 · control-plane** also (K3254; walk C2 (a)): R95: `/app` composed with `testInstance` · text BOB's.
+Your requirements: `build/requirements/control-plane.md` (read whole); every line marked `*(not yet met: T48)*` is yours to meet (R90, R91, R92, R93, R94, R95).
+BOB's notes for this job:
+Reading (K3271, mechanics §6 step 2, which replaces plan rule 2): read in full your requirements, your entries, your layer's contract in `build/layers.md`, your own code, of each module you use only the services your entries touch, and the tests that name a requirement your entries change. Your other tests are run, not read. No digest helpers. Say in your record what you read; deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); a clause added to an id other tests already name needs its own test that says so; every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+Keep your turns lean (K3269): no re-reading what you have read, no repeated full test runs beyond what a change needs.
+Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers, queue-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, signin-door, interface-assets, interface-shell, screens-entry, screens-wizards, screens-settings, screens-intake, screens-daily, screens-inquiry, screens-investigate, screens-publish, screens-action, control-plane, plane, installer, journey-check last; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · CHANGE
+
+K3293: control-plane R93's wording now names the in-process values passed to the plane's call: the strings trace and memberRef (plane R55, as PLANE #36 builds). No change of meaning. Merge origin/tranche/T48 into your branch before continuing.
+
+## B3 · CHANGE
+
+K3297: control-plane's uses now include action-replies, explore, standards and filings (your J1 report); merge origin/tranche/T48 and add the route assertions for R90/R92's maps, then post COMPLETE. Your 10 reds waiting on op-declarations, instance-setup and interface-shell stay accepted until they merge; I will tell you.
+
+## B4 · CHANGE
+
+K3298: op-declarations is merged into tranche/T48 (instance-setup and interface-shell not yet). Merge it and re-run; report which of your 10 reds remain.
+
+## B5 · CHANGE
+
+K3302, on your J4. (1) R28: `admission` R26 (merged, K3299) refuses an `ai` credential any op its scope does not name, so the narrow agent's `sourceof` 403 is that rule: re-point your test (an agent whose scope names `sourceof` reads it; one whose scope does not is refused AI_BEYOND_TASK_SCOPE, the control). (2) R2/R41's `stale: [groupdescriptiondraft, securitymap]` is affordances' (its R12): sent to it; no change of yours unless your test must. (3) R90 reworded on the tranche: the session-only clause is `actionreplyquoting`'s; `proceedingdates` is admitted as op-declarations R64 declares it, a read, as your test already has it. (4) t46/t47-e2e need `miniflare` (`npm ci` in bio-plane): environment, not red. Merge origin/tranche/T48 (instance-setup is in, so R91 should pass), re-run; R95 waits on interface-shell. Post COMPLETE with what stays red and why.
+
+## B6 · CHANGE
+
+K3309: merged into tranche/T48 after every screen module (screens-daily's new Home among them). On the tranche 271 pass, 2 red, both R81 end to end over Home: (a) "Home draws the group's projects…": no /\b2 questions\b/ on the busy project's row (actual ''); (b) "a wizard started from one of Home's front doors": "the script button sends no act of its own", 2 acts where 1 is expected (screens-daily R14/R23 now draws each door as an `mk-door` `<details>` opening its scripts in place). Merge origin/tranche/T48 and decide each: a test pinned to Home's old markup is yours to re-point; a real Home defect (a project row with no question count, a door button sending an act) is REPORTed in screens-daily's requirement terms (R10, R14, R17, R23). Post COMPLETE with the result.

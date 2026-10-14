@@ -1,6 +1,6 @@
 # queue-producers — requirements
 
-**Status** · In force: split from `queue` (N363; Bob's K507, seams K531), its moved requirements' meaning unchanged; split again for size (K617, K1850): R3, R22, R26 and R27 retired as moved to `machinery-producers`, R11–R13, R24 and R36 copied there. Last fold T34 (T34-54, T34-82, T34-92: R6, R15, R18, R24 amended; R37–R39 new; K1536, K1784, K1818); every requirement met (QUEUE-PRODUCERS #13, K1871).
+**Status** · In force: split from `queue` (N363; Bob's K507, seams K531), its moved requirements' meaning unchanged; split again for size (K617, K1850): R3, R22, R26 and R27 retired as moved to `machinery-producers`, R11–R13, R24 and R36 copied there. Last fold T34 (T34-54, T34-82, T34-92: R6, R15, R18, R24 amended; R37–R39 new; K1536, K1784, K1818); every requirement met (QUEUE-PRODUCERS #13, K1871). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R40 new, source items carry `title` and name no id or mechanism); marked not yet met (T48).
 
 **Size (P6).** About 1,800 lines of today's queue code move here (`queue/index.mjs` :586–2100, :2328–2431, :3590–3643; `proposals.mjs` whole), with about 410 lines of tests (`producers.test.mjs`, `proposals.test.mjs`). Well under one reading.
 
@@ -106,6 +106,16 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 - **R39** (`wizard-scripts` R26; DEC-158 (4); K1818) FINDING `wizard-base-updated`: one per entry and recipient `wizard-scripts.baseUpdates` answers (its R26: a copied wizard whose base has a newer approved version, to the copy's wizard editors as it names them), keyed `FINDING::wizard-base-updated::<copy>::<base version>::<member>`, to that recipient and to nobody else; its subject the copy, naming the copy's name, its base's name and the base's new version, and offering to see what changed (`wizardRead` of both versions) and to bring it across (`wizard-scripts` R4's `adopt: {base}`, the member's own act). It is raised once and never repeated (DEC-69, DEC-70: told once), and leaves when its recipient disposes of it.
 
 **Settled readings (K1397):** the `brokenScripts` and `submittedFor` entry shapes and the factory name stand as K1397 states them; they bind this module's tests.
+
+#### T48 (T48-86)
+
+**The design walk folded** (T48; WALK-084 #2; K3250, K3254)
+- **R40** (T48; K3250, K3254; walk C6, C8; `screens-daily` R22) A `source-modified` or `source-removed` item:
+  - carries `title`: the document's title, or `null` when it has none;
+  - has a `summary` and `detail` that name no bundle id, HTTP status or mechanism ("a monitoring check", "404 or 410"). `basis` keeps those facts for the record.
+
+  Test: an untitled document's item carries `title: null`, and its summary has no `B-` id. Control: a titled one's summary names the title.
+
 ## Private
 
 ### Uses

@@ -12,6 +12,7 @@ import { registerCourtTypes } from "../../../court-doctypes/index.mjs";
 import { registerBudgetTypes } from "../../../budget-doctypes/index.mjs";
 import { factReader } from "../action-clocks/index.mjs";
 import { MACHINE_VIEWER } from "../lines/index.mjs";
+import { combine, get as profileOf } from "../../../jurisdictions/index.mjs";
 
 /** R22 (T33-12; docprofile R36; K617, K1513): the content types registered into docprofile's registry, in this order
  *  and once each: doctypes' seven, Legistar's, the roster and org-chart readers, the court registers, the budget
@@ -233,5 +234,26 @@ export function frontDoorFinder({ steps, retrieval, limit = 20 }) {
         if (Object.hasOwn(FRONT_DOOR_KINDS, h.object_type)) out.push({ kind: FRONT_DOOR_KINDS[h.object_type], id: h.bundle_id, name: h.title });
     } catch { /* none from the record's search */ }
     return out;
+  };
+}
+
+/** R51 (T48; N847; K2591; DEC-227 (3), (4); `wizard-scripts` R23, R37; `jurisdictions` R89, R90) the front door's pointer,
+ *  `door.pointer(viewer)`, registered with `wizard-scripts` beside the finder: the places outside Civicsmith a member is
+ *  sent to, as profile data. `setting(name)` is `record-core`'s setting read, asked at EACH call, never once at start, so a
+ *  profile set later is seen. With no active profile (the setting unset or empty) it answers `{places: [], pointers: []}`;
+ *  with active profiles, `{places: [each active profile's name], pointers: view.pointers || []}`, `jurisdictions.combine`
+ *  over the ids in order; a `combine` answering `ok: false`, or anything that throws, answers `null`. It names no place
+ *  itself (R9), and the viewer is not read (the view is the instance's, not a member's). */
+export function frontDoorPointer({ setting }) {
+  return () => {
+    try {
+      const ids = setting("jurisdiction_profiles");
+      if (!Array.isArray(ids) || ids.length === 0) return { places: [], pointers: [] };
+      const combined = combine(ids);
+      if (!combined || combined.ok !== true || !combined.view) return null;
+      const places = ids.map((id) => { const p = profileOf(id); return p && typeof p.name === "string" ? p.name : null; })
+        .filter((n) => n !== null);
+      return { places, pointers: Array.isArray(combined.view.pointers) ? combined.view.pointers : [] };
+    } catch { return null; }
   };
 }
