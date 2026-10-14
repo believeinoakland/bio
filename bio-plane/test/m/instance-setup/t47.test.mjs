@@ -1,5 +1,5 @@
 /* T47 (T47-75): the group's logo (R84), the languages its members use (R85), and the disclosure read the composition
-   root registers with credentials (R54's T47 clause), at the module's interface. R82 and R83 are tested in t46.test.mjs
+   root registers with ai-accounts (R54's T47 clause, re-pointed in T48, N996), at the module's interface. R82 and R83 are tested in t46.test.mjs
    and page.test.mjs beside the requirements they amend. Every refusal has a control (K874). */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -8,7 +8,7 @@ import { InstanceSetup, INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, INSTANCE_S
          GROUP_LANGUAGES_SETTING, GROUP_LANGUAGES_MAX, ASSISTANT_DISCLOSURE, DISCLOSURE_READER, disclosureReadOf,
          groupLogoAsset } from "../../../src/setup.mjs";
 import { list as heldProfiles, get as heldProfile } from "../../../../jurisdictions/index.mjs";
-import { world as credentialsWorld } from "../credentials/fixture.mjs";
+import { world as aiAccountsWorld } from "../ai-accounts/fixture.mjs";
 
 const call = async (m, path, body) => (await frame(m, new Request(`http://do/${path}`,
   body === undefined ? undefined : { method: "POST", body: JSON.stringify(body) }))).json();
@@ -159,26 +159,26 @@ test("R85 refusals, each writing nothing: a member or a machine NOT_AN_ADMIN; no
   assert.equal((await call(w.m, "grouplanguagesset?by=member:ruth", { languages: ["en"], by: "admin" })).result.code, "NOT_AN_ADMIN");
 });
 
-/* ---- R54 (T47): the disclosure read registered with credentials ---- */
+/* ---- R54 (T47; T48, N996): the disclosure read registered with ai-accounts ---- */
 
-test("R54 (T47) disclosureReadOf(m) is the one read credentials asks: registered by the composition root with the real credentials (R64), a member with no disclosure recorded is refused DISCLOSURE_DUE at accountreferenceset, and her key is held once disclosureShown records it; this module registers nothing with credentials itself", async () => {
-  const c = await credentialsWorld().group("ann");
-  const m = new InstanceSetup(c.ctx, {}, { record: c.core, membership: c.m, credentials: c.c });
+test("R54 (T47; T48, N996) disclosureReadOf(m) is the one read ai-accounts asks: registered by the composition root with the real ai-accounts (its R23), a member with no disclosure recorded is refused DISCLOSURE_DUE at accountreferenceset, and her key is held once disclosureShown records it; this module registers nothing with ai-accounts itself", async () => {
+  const c = await aiAccountsWorld().group("ann");
+  const m = new InstanceSetup(c.ctx, {}, { record: c.core, membership: c.m, aiAccounts: c.a });
   m.migrate();
   assert.equal(DISCLOSURE_READER, "instance-setup");
-  assert.equal(c.c.disclosureDue({ member: "ann" }), null, "nothing registered: this module registered nothing itself");
-  assert.deepEqual(c.c.registerDisclosureRead(DISCLOSURE_READER, disclosureReadOf(m)), { ok: true, module: "instance-setup" });
-  const set = () => c.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ant-T47-IS", by: "ann" });
+  assert.equal(c.a.disclosureDue({ member: "ann" }), null, "nothing registered: this module registered nothing itself");
+  assert.deepEqual(c.a.registerDisclosureRead(DISCLOSURE_READER, disclosureReadOf(m)), { ok: true, module: "instance-setup" });
+  const set = () => c.a.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ant-T47-IS", by: "ann" });
   const due = await set();
   assert.deepEqual([due.ok, due.code], [false, "DISCLOSURE_DUE"]);
-  assert.equal(c.c.accountReferenceState({ member: "ann", viewer: "member:ann" }).held, false);
+  assert.equal(c.a.accountReferenceState({ member: "ann", viewer: "member:ann" }).held, false);
   /* control: once shown at the current version, the key is held */
   assert.equal(m.disclosureShown({ member: "ann", version: ASSISTANT_DISCLOSURE.version, by: "ann" }).ok, true);
   assert.equal(disclosureReadOf(m)({ member: "ann" }).shown, true);
   const ok = await set();
   assert.deepEqual([ok.ok, ok.kind], [true, "apikey"]);
   /* an earlier version shown is not the current one */
-  const n = new InstanceSetup((await credentialsWorld().group("bea")).ctx, {}, {});
+  const n = new InstanceSetup((await aiAccountsWorld().group("bea")).ctx, {}, {});
   n.migrate();
   n.disclosureShown({ member: "bea", version: "D311-0", by: "bea" });
   assert.equal(disclosureReadOf(n)({ member: "bea" }).shown, false);

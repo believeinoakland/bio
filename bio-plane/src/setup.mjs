@@ -1,4 +1,4 @@
-/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R85).
+/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R91).
  *
  * THE PAGE AT THE ROOT is gone (R83, R86; N1002, K3171): `/` answers the interface, so this module composes and serves no
  * page and exports none (`setupPage`, `groupLine` and `SETUP_HTML` removed, with every use of `setup-page`). What stays
@@ -13,6 +13,13 @@ import { list as heldProfiles, get as heldProfile, combine as combineProfiles, i
 import { recordOf, stampInstant } from "./record-core/index.mjs";
 import { membershipOf, notAnAdmin, noSuchMember } from "./membership/index.mjs";
 import { credentialsOf } from "./credentials/index.mjs";
+/* N996 §5 (T48; ai-accounts R7, R21): whether the group keeps its material away from AI, and the disclosure read's
+   registration, are `ai-accounts`', read there and never copied; `credentials` stays for `recoveryCodesState` (R66). */
+import { aiAccountsOf } from "./ai-accounts/index.mjs";
+/* R88 (T48; signatures R45, R48): the release notice is verified with the one list of release keys. */
+import { verifyReleaseNotice, RELEASE_KEYS } from "./sshsig.mjs";
+/* R90 (T48): the start of the next local day, for a security release set aside. */
+import { localDay, bounds as dayBounds } from "./civil-time/index.mjs";
 import { promotionOf } from "./promotion/index.mjs";
 import { governorOf } from "./host-governor/index.mjs";
 import { schedulerOf } from "./scheduler/index.mjs";
@@ -401,6 +408,24 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
     translation: 'A logo is a PNG or JPEG picture of at most 200 KB, or nothing to remove it. What was sent is not one. '
       + 'Nothing was changed.',
   },
+  /* R87 (T48; N670; DEC-127 (3)): the language a passage is read in, when the member has set none and names none; the
+     next free C-64 numbers, BOB's draft words (an ASK to UX-DESIGN), awaiting T49's stamp (plan rule 5 (2)). */
+  LANGUAGE_NOT_SET: {
+    check: 'C-64.31',
+    where: 'src/setup.mjs readingLanguage > is-reading-language',
+    translation: 'Choose the language you read in, in Your account, or name one. Nothing was translated.',
+  },
+  /* R90 (T48; N1047; DEC-226): the update acts, BOB's drafts, re-wordable by the design stream, awaiting T49's stamp. */
+  UPDATE_NOT_READY: {
+    check: 'C-64.32',
+    where: 'src/setup.mjs #updateReady > is-update-ready',
+    translation: 'That release is not the one ready to install. Nothing was recorded.',
+  },
+  UPDATE_SKIP_NO_REASON: {
+    check: 'C-64.33',
+    where: 'src/setup.mjs updateSkip > is-update-skip',
+    translation: 'Say why your group skips this release: every administrator will see it. Nothing was recorded.',
+  },
   /* R77 (T45; N892 (d); Actions D28d; v0.2 rule 21): the group's declared stake, the next free C-64 number, awaiting
      T46's stamp. */
   STAKE_MALFORMED: {
@@ -465,6 +490,25 @@ export const GROUP_LOGO_TYPES = Object.freeze([
 export const GROUP_LANGUAGES_SETTING = "group_languages";
 export const GROUP_LANGUAGES_MAX = 20;
 
+/* R88 (T48; N1047; DEC-226 (2)): the one public address of Civicsmith's release notice (the file `bundler` R32 writes
+   beside a release's assets, in the release directory the installer reads its releases from), and the daily check's bounds.
+   The address names no group, member or setting, and is fetched whole by the check, never with anything added to it. */
+export const RELEASE_NOTICE_ADDRESS = "https://raw.githubusercontent.com/believeinoakland/bio/main/release/NOTICE.json";
+export const RELEASE_NOTICE_MAX_BYTES = 65536;
+/* The check sends this and an `accept` header, and nothing else: no cookie, no `Authorization`, and not the user agent
+   `acquisition` composes, which names the group (R88). */
+export const UPDATE_CHECK_USER_AGENT = "Civicsmith-update-check/1";
+export const UPDATE_CHECK_EVERY_MS = 86_400_000;
+/* R90 (T48): the installer's update page; `updatestart` answers it with `?version=<version>` and nothing else. A release
+   set aside by "Not now" returns after this many days, or at the start of the next local day for a security release. */
+export const INSTALLER_UPDATE_ADDRESS = "https://newgroup.believeinoakland.workers.dev/update";
+export const UPDATE_LATER_DAYS = 14;
+/* R89: the earlier releases an answer lists, at most. */
+export const UPDATE_EARLIER_MAX = 50;
+/* R90: a skip's reason, in characters. */
+export const UPDATE_SKIP_REASON_MAX = 1000;
+export const UPDATE_DECISION_KINDS = Object.freeze(["start", "later", "skip"]);
+
 /* ============================================================================================================
  * THE TABLES (K4, `build/layers.md` ruling 3: each module owns its tables), created by `migrate` at start. Every one
  * is declared to record-core exempt from purge, in both forms (R28, R41): the instance's identity and its
@@ -481,7 +525,10 @@ export const INSTANCE_SETUP_TABLES = Object.freeze(["instance_group", "group_ide
   /* R77, R11 (T45): who set the declared stake and when, each act appended beside record-core's setting. */
   "declared_stake_history",
   /* R84 (T47): the group's logo, each set or clear appended. */
-  "group_logos"]);
+  "group_logos",
+  /* R88–R91 (T48; N1047): the daily update check's slot, the release notices it stored, each check, the releases that
+     ran, and each administrator's decision, append-only. */
+  "update_check_slot", "release_notices", "update_checks", "running_releases", "update_decisions"]);
 /* Each table's classes, declared explicitly through record-core's `declareTable` (its R21; plan T33, Rules (6)). Every
    one is exempt from purge (R28, R41); none is a cache of anything; the append-only ones keep every version (R26, R53,
    R54). A member's disclosure record is theirs and the group's, never exported (it names who connected an account). */
@@ -516,6 +563,12 @@ const TABLE_CLASSES = Object.freeze({
   declared_stake_history: { export: "admin-only", version_chain: true },
   /* R84: the group's settings' class, exempt from purge; the logo is public once set, who set it the administrators'. */
   group_logos: { export: "admin-only", version_chain: true },
+  /* R91: the group's own running, exempt from purge as R28's are; the slot is a random value never exported. */
+  update_check_slot: { export: "never", version_chain: false },
+  release_notices: { export: "admin-only", version_chain: true },
+  update_checks: { export: "admin-only", version_chain: true },
+  running_releases: { export: "admin-only", version_chain: true },
+  update_decisions: { export: "admin-only", version_chain: true },
 });
 /* R50–R52: the seeding ledgers name entities and lines of the registry (`entities`, `lines`), which a whole-store purge
    clears, so a whole-store purge clears them with it and a later seeding starts afresh; a bundle's purge touches none. */
@@ -810,6 +863,51 @@ CREATE TABLE IF NOT EXISTS group_logos (
   set_by  TEXT NOT NULL,
   set_at  TEXT NOT NULL
 );
+-- R88 (T48; N1047): the minute of the day (UTC, 0 to 1439) the daily check runs at, drawn at random once and kept, never
+-- computed from the slug or anything sent. One row, written once and never updated.
+CREATE TABLE IF NOT EXISTS update_check_slot (
+  id        INTEGER PRIMARY KEY CHECK (id = 1),
+  minute    INTEGER NOT NULL CHECK (minute BETWEEN 0 AND 1439),
+  drawn_at  TEXT NOT NULL
+);
+-- R88, R91: each release notice the check verified and stored, exactly as signed (notes as the JSON text signed, never
+-- interpreted). Append-only.
+CREATE TABLE IF NOT EXISTS release_notices (
+  seq       INTEGER PRIMARY KEY AUTOINCREMENT,
+  version   TEXT NOT NULL,
+  date      TEXT NOT NULL,
+  manifest  TEXT NOT NULL,
+  security  INTEGER NOT NULL CHECK (security IN (0, 1)),
+  notes     TEXT NOT NULL,
+  sig       TEXT NOT NULL,
+  found_at  TEXT NOT NULL
+);
+-- R88: one row for every run of the check: its instant and its outcome ('found', 'none', or the refusal).
+CREATE TABLE IF NOT EXISTS update_checks (
+  seq      INTEGER PRIMARY KEY AUTOINCREMENT,
+  at       TEXT NOT NULL,
+  outcome  TEXT NOT NULL,
+  version  TEXT,
+  detail   TEXT
+);
+-- R88: each release that ran, with the instant it was first seen running.
+CREATE TABLE IF NOT EXISTS running_releases (
+  seq            INTEGER PRIMARY KEY AUTOINCREMENT,
+  version        TEXT NOT NULL,
+  first_seen_at  TEXT NOT NULL
+);
+-- R90: an administrator's decision on a release, with who and when (the name by value beside the id, R75's form);
+-- until_at is set for 'later'; reason is set for 'skip'. Never changed, never deleted: a later decision is another row.
+CREATE TABLE IF NOT EXISTS update_decisions (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  version    TEXT NOT NULL,
+  kind       TEXT NOT NULL CHECK (kind IN ('start','later','skip')),
+  by_member  TEXT NOT NULL,
+  by_name    TEXT,
+  at         TEXT NOT NULL,
+  until_at   TEXT,
+  reason     TEXT
+);
 -- R54 (D311): each time the assistant's disclosure was shown to a member before they connected their own account: who,
 -- the disclosure's version, who recorded it and when. Append-only.
 CREATE TABLE IF NOT EXISTS assistant_disclosures (
@@ -1004,6 +1102,45 @@ async function boundedText(res, max) {
   return new TextDecoder().decode(all);
 }
 
+/* R88: at most `max` bytes of a response body, read as bytes: `{bytes, over}`, `over` true when the body held more than
+   `max` (one more byte is read to know, and the rest never is). */
+async function boundedBytes(res, max) {
+  const body = res && res.body;
+  let all;
+  if (!body || typeof body.getReader !== "function") {
+    all = new Uint8Array(await res.arrayBuffer().catch(() => new ArrayBuffer(0)));
+  } else {
+    const reader = body.getReader();
+    const parts = [];
+    let held = 0;
+    try {
+      while (held <= max) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = value instanceof Uint8Array ? value : new Uint8Array(value);
+        parts.push(chunk);
+        held += chunk.length;
+      }
+    } catch { /* what was read stands */ }
+    try { await reader.cancel(); } catch { /* already closed */ }
+    all = new Uint8Array(held);
+    let at = 0;
+    for (const p of parts) { all.set(p, at); at += p.length; }
+  }
+  return { bytes: all.subarray(0, max), over: all.length > max };
+}
+
+/* R88–R90: two versions of the form `<n>.<n>.<n>` compared part by part as numbers: -1, 0 or 1 (a part that is not a
+   number counts as 0; `signatures` R47 holds the form, so a stored version is always one). */
+function cmpVersion(a, b) {
+  const x = String(a).split(".").map((n) => Number(n) || 0), y = String(b).split(".").map((n) => Number(n) || 0);
+  for (let i = 0; i < Math.max(x.length, y.length, 3); i += 1) {
+    const d = (x[i] || 0) - (y[i] || 0);
+    if (d) return d < 0 ? -1 : 1;
+  }
+  return 0;
+}
+
 /* =====================================================================
  * THE MODULE ON ONE DURABLE OBJECT'S STORAGE (K61): `instanceSetupOf(ctx, env, deps)`.
  * `deps` lets a test hand its own record-core, membership, promotion, governor, scheduler, capture, `fetch` and
@@ -1022,6 +1159,8 @@ export class InstanceSetup {
   #record() { return this.#deps.record ?? recordOf(this.#ctx); }
   #membership() { return this.#deps.membership ?? membershipOf(this.#ctx); }
   #credentials() { return this.#deps.credentials ?? credentialsOf(this.#ctx, { record: this.#record(), membership: this.#membership() }); }
+  /* N996 §5 (T48): the keep-away reads and the account reference's disclosure order are `ai-accounts`'. */
+  #aiAccounts() { return this.#deps.aiAccounts ?? aiAccountsOf(this.#ctx, { record: this.#record(), membership: this.#membership() }); }
   #promotion() { return this.#deps.promotion ?? promotionOf(this.#ctx); }
   #governor() { return this.#deps.governor ?? governorOf(this.#ctx); }
   #scheduler() { return this.#deps.scheduler ?? schedulerOf(this.#ctx, this.#env); }
@@ -1068,7 +1207,7 @@ export class InstanceSetup {
   }
 
   /** At start, once: the tables; the purge exemptions (R28, R41); the fact `producingGroup` (R1); the scheduler
-   *  consumer `group-domain-recheck` (R9, scheduler R8); capture's compute listener (R42); at the first boot, R2 and R13;
+   *  consumers `group-domain-recheck` (R9) and `update-check` (R88), scheduler R8; the release now running (R88); capture's compute listener (R42); at the first boot, R2 and R13;
    *  and last the scheduler's own `start` (its R11), so the reconcile sees this consumer and starts no probe. */
   async start({ firstBoot } = {}) {
     if (this.#started) return { ok: true, started: false, detail: "this module had already started on this storage" };
@@ -1079,6 +1218,13 @@ export class InstanceSetup {
     out.fact = this.#promotion().registerFact("producingGroup", "instance-setup", () => this.producingGroup());
     out.consumer = this.#scheduler().register("instance-setup", { name: "group-domain-recheck", key: "groupdomain",
       due: () => this.groupDomainWake(), wake: () => this.groupDomainWake(), tick: () => this.groupDomainTick() });
+    /* R88 (T48): the daily update check, one consumer, due at the group's own minute of the day (scheduler R8). */
+    out.updateCheck = this.#scheduler().register("instance-setup", { name: "update-check", key: "updatecheck",
+      due: () => this.updateCheckWake(), wake: () => this.updateCheckWake(), tick: () => this.updateCheckTick() });
+    try { out.slot = { minute: this.#checkMinute() }; }   /* the group's minute of the day is drawn at its first start and kept */
+    catch (e) { out.slot = { drawn: false, detail: `the minute of the day could not be drawn: ${String(e && e.message || e).slice(0, 200)}` }; }
+    try { out.running = this.#recordRunning(); }
+    catch (e) { out.running = { recorded: false, detail: `the running release could not be recorded: ${String(e && e.message || e).slice(0, 200)}` }; }
     out.compute = this.#capture().on("compute", "instance-setup",
       (m) => this.recordRuntimeObservation({ metric: m && m.metric, ms: m && m.value, detail: m && m.detail,
                                             unit: unitOfMetric(m && m.metric) }));
@@ -2090,16 +2236,16 @@ export class InstanceSetup {
    * away (K2093). Your group's Civicsmith holds no Claude credential: each member who wants the assistant connects their
    * own account (credentials R22), and whether an account then serves an act is `credentials` R35's. While it is off,
    * every ask and every run is refused by name through `assistantGate`, which answers credentials' `AI_KEPT_AWAY`
-   * (its R35, the one site; T37, N765, K231) as given, carrying the administrator's reason; it ends nothing recorded.
+   * (ai-accounts R7, the one site; T37, N765, K231; moved there in T48, N996) as given, carrying the administrator's reason; it ends nothing recorded.
    * ===================================================================== */
 
-  /** R53: `{ok, on, set_by, set_at, reason}` from `credentials.aiKeepAwayState()` (its R52): `on: false` exactly while
+  /** R53: `{ok, on, set_by, set_at, reason}` from `ai-accounts.aiKeepAwayState()` (its R21; T48, N996): `on: false` exactly while
    *  the group keeps its material away from AI, with that setting's who, when and reason; a keep-away `on` other than
    *  `false` (not read, K2093) is `on: false` with the three null; otherwise `on: true` and the three null. Writes
    *  nothing and never throws. */
   assistantState() {
     let k = null;
-    try { k = this.#credentials().aiKeepAwayState(); } catch { k = null; }
+    try { k = this.#aiAccounts().aiKeepAwayState(); } catch { k = null; }
     if (k && k.on === false) return { ok: true, on: true, set_by: null, set_at: null, reason: null };
     if (k && k.on === true)
       return { ok: true, on: false, set_by: k.set_by ?? null, set_at: k.set_at ?? null, reason: k.reason ?? null };
@@ -2108,13 +2254,13 @@ export class InstanceSetup {
                + "as kept away and the assistant is off" };
   }
 
-  /** R55 (T37; N765, K231, K2201): `credentials.aiKeptAway()` (its R35) as given: null while the group does not keep its
+  /** R55 (T37; N765, K231, K2201; T48, N996): `ai-accounts.aiKeptAway()` (its R7) as given: null while the group does not keep its
    *  material away, otherwise that service's one `AI_KEPT_AWAY` refusal with its row and `keep_away: {reason, set_by,
    *  set_at}` (null, and said so, when the setting could not be read). This module holds no copy of the condition and
    *  no row of its own for it. A provider that throws, which credentials R35 says it never does, is the store's
    *  silence (R43), never an open gate. Writes nothing. */
   assistantGate() {
-    try { return this.#credentials().aiKeptAway(); }
+    try { return this.#aiAccounts().aiKeptAway(); }
     catch (e) {
       return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
                detail: `whether your group keeps its material away from every assistant did not answer (${String(e && e.message || e)
@@ -2145,9 +2291,9 @@ export class InstanceSetup {
   /** R54: whether the disclosure at the current version (or `version`) was recorded as shown to `member`. A member with
    *  none recorded is `shown: false`, never assumed. (T46; N897 (3)) It answers alike before a reference is set and
    *  before a sign-in to her own Claude subscription starts (credentials R43): it reads only what `disclosureShown`
-   *  recorded, never whether an account is connected. (T47; N981; K3030) The disclosure-first order is held by
-   *  `credentials` (its R64), which asks this read through the registration the composition root makes
-   *  (`disclosureReadOf`), so its R22 and `control-plane` R65 refuse `DISCLOSURE_DUE` while it answers `shown: false`.
+   *  recorded, never whether an account is connected. (T47; N981; K3030; T48, N996) The disclosure-first order is held by
+   *  `ai-accounts` (its R23), which asks this read through the registration the composition root makes
+   *  (`disclosureReadOf`), so its R1 and `control-plane` R65 refuse `DISCLOSURE_DUE` while it answers `shown: false`.
    *  Writes nothing and never throws. */
   disclosureOf({ member = null, version = ASSISTANT_DISCLOSURE.version } = {}) {
     const m = typeof member === "string" ? member.trim() : "";
@@ -3040,6 +3186,335 @@ export class InstanceSetup {
   }
 
   /* =====================================================================
+   * THE LANGUAGE A MEMBER READS IN (R87; T48; N670; DEC-127 (1), (3)). The plane's draft door asks which language a
+   * passage is read in: the one named, else the member's own (R64), else it says none is set. Writes nothing.
+   * ===================================================================== */
+
+  /** R87, in-process: `{ok: true, language, source}`, `language` the tag named when `jurisdictions.isLocale` accepts it
+   *  (`source: "named"`; else `LANGUAGE_MALFORMED`, R64's rule), without one the member's own language (`source:
+   *  "member"`), and with none set `LANGUAGE_NOT_SET`. Tags are answered in their canonical form. Writes nothing; never
+   *  throws. */
+  readingLanguage({ member = null, language = undefined } = {}) {
+    try {
+      if (language !== undefined && language !== null && language !== "") {
+        const named = this.#translationLanguage(language);
+        if (named.refused) return named.refused;
+        return { ok: true, language: named.tag, source: "named" };
+      }
+      const own = this.memberLanguage({ viewer: member }).language;
+      const tag = typeof own === "string" && isLocale(own) ? canonicalTag(own) : null;
+      /* DEC-49 REGION is-reading-language */
+      if (!tag)
+        return refusal("LANGUAGE_NOT_SET", `${typeof member === "string" && member.trim() ? "this member has" : "the request names no member and"} `
+          + "no language chosen for the screens, and the request names none. Nothing was translated.");
+      /* END DEC-49 REGION is-reading-language */
+      return { ok: true, language: tag, source: "member" };
+    } catch (e) {
+      return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
+               detail: `the language could not be read (${String(e && e.message || e).slice(0, 160)}). Nothing was translated.` };
+    }
+  }
+
+  /* =====================================================================
+   * UPDATES OF THE GROUP'S CIVICSMITH (R88–R91; T48; N1047; K3158, Bob's; DEC-226; K3189; `build/plan/draft-updates.md`).
+   * Once a day, at a minute fixed once for the group from a random value it keeps, the group's Civicsmith asks for the
+   * release notice at the one fixed public address, a plain GET that sends nothing about the group (R88). It stores a
+   * notice only when `signatures` verifies it against the release keys, in its own namespace, as newer than the running
+   * release (a downgrade and a replay are refused). Administrators read the notice (R89) and choose (R90): update,
+   * not now, or skip with a reason. Nothing here installs anything and this module holds no credential that could
+   * deploy code: the installer installs, with Cloudflare's consent (R91). Every table is append-only.
+   * ===================================================================== */
+
+  /* The version this isolate runs: R17's `VERSION`, `0.0.0` when unset. */
+  #runningVersion() { return String(this.#env.VERSION || "0.0.0"); }
+
+  /* R88: the group's minute of the day (UTC, 0 to 1439), drawn once at random and kept; never computed from the slug or
+     anything sent. Uniform: a draw past the last whole multiple of 1440 is drawn again. */
+  #checkMinute() {
+    const held = this.#one(`SELECT minute FROM update_check_slot WHERE id = 1`);
+    if (held) return held.minute;
+    let minute = null;
+    if (typeof this.#deps.drawMinute === "function") {
+      const d = Number(this.#deps.drawMinute());
+      minute = Number.isInteger(d) && d >= 0 && d < 1440 ? d : null;
+    }
+    const buf = new Uint32Array(1);
+    const limit = Math.floor(2 ** 32 / 1440) * 1440;
+    while (minute === null) { crypto.getRandomValues(buf); if (buf[0] < limit) minute = buf[0] % 1440; }
+    this.#sql.exec(`INSERT INTO update_check_slot (id, minute, drawn_at) VALUES (1, ?, ?) ON CONFLICT(id) DO NOTHING`,
+                   minute, this.#iso());
+    return this.#one(`SELECT minute FROM update_check_slot WHERE id = 1`).minute;
+  }
+
+  /** R88, the scheduler consumer's `due` and `wake`: the instant of the group's next daily check, the first of its
+   *  minute of the day after the latest check (after the draw, before any check). Never null. */
+  updateCheckWake() {
+    const minute = this.#checkMinute();
+    const last = this.#one(`SELECT at FROM update_checks ORDER BY seq DESC LIMIT 1`);
+    const drawn = this.#one(`SELECT drawn_at FROM update_check_slot WHERE id = 1`);
+    const from = Date.parse(last ? last.at : drawn.drawn_at);
+    let t = Math.floor(from / UPDATE_CHECK_EVERY_MS) * UPDATE_CHECK_EVERY_MS + minute * 60_000;
+    if (t <= from) t += UPDATE_CHECK_EVERY_MS;
+    return t;
+  }
+
+  /** R88, the consumer's `tick`: one check, answered under the consumer's key. A failed or tampered fetch stores no
+   *  notice and raises no item; the next day's run tries again. */
+  async updateCheckTick() { return { updatecheck: await this.#runUpdateCheck() }; }
+
+  async #runUpdateCheck() {
+    const at = this.#iso();
+    let got;
+    try { got = await this.#askNotice(); }
+    catch (e) { got = { outcome: "unreachable", detail: `the check did not complete (${String(e && e.message || e).slice(0, 160)})` }; }
+    this.#sql.exec(`INSERT INTO update_checks (at, outcome, version, detail) VALUES (?, ?, ?, ?)`,
+                   at, got.outcome, got.version ?? null, got.detail ? String(got.detail).slice(0, 300) : null);
+    return { at, outcome: got.outcome, ...(got.version ? { version: got.version } : {}), ...(got.detail ? { detail: got.detail } : {}) };
+  }
+
+  /* R88: ask for the notice and judge it: `{outcome, version?, detail?}`. The request is a GET of the fixed address with
+     an `accept` and a fixed `user-agent` and nothing else, no redirect followed, at most 64 KiB read; the notice is
+     stored only when `signatures.verifyReleaseNotice` says `ok` (R48) and it is newer than any notice already held. */
+  async #askNotice() {
+    const running = this.#runningVersion();
+    const host = new URL(RELEASE_NOTICE_ADDRESS).host;
+    let g;
+    try { g = this.#governor().governorAdmit({ host }); }
+    catch (e) { g = { admitted: false, reason: `the governor did not answer (${String(e && e.message || e).slice(0, 120)})` }; }
+    if (!g || !g.admitted)
+      return { outcome: "unreachable", detail: `the per-host governor held ${host} (${g && g.reason}); nothing was asked` };
+    if (g.wait_ms) await this.#sleep(g.wait_ms);
+    let res = null;
+    try {
+      res = await this.#fetch(RELEASE_NOTICE_ADDRESS, { method: "GET", redirect: "manual",
+        headers: { accept: "application/json", "user-agent": UPDATE_CHECK_USER_AGENT } });
+    } catch { res = null; }
+    if (!res) return { outcome: "unreachable", detail: "the release notice could not be fetched" };
+    const status = res.status;
+    try { this.#governor().governorReport({ host, status }); } catch { /* an unrecorded outcome is not a verdict */ }
+    if (!(status >= 200 && status < 300))
+      return { outcome: "unreachable", detail: status >= 300 && status < 400
+        ? `the address redirected (HTTP ${status}); no redirect is followed` : `the address answered HTTP ${status}` };
+    const read = await boundedBytes(res, RELEASE_NOTICE_MAX_BYTES);
+    if (read.over) return { outcome: "MALFORMED", detail: `the notice is over ${RELEASE_NOTICE_MAX_BYTES} bytes` };
+    let f = null;
+    try { f = JSON.parse(new TextDecoder().decode(read.bytes)); } catch { f = null; }
+    if (!f || typeof f !== "object" || Array.isArray(f)) return { outcome: "MALFORMED", detail: "the notice is not a JSON object" };
+    if (typeof f.sig !== "string" || !f.sig) return { outcome: "MALFORMED", detail: "the notice carries no signature" };
+    const v = await verifyReleaseNotice({ version: f.version, date: f.date, manifest: f.manifest, security: f.security, notes: f.notes },
+                                        f.sig, running, this.#deps.releaseKeys ?? RELEASE_KEYS);
+    if (!v.ok) {
+      /* the release the feed names is the one running: nothing newer, which is the steady state; an older one is a replay */
+      if (v.reason === "NOT_NEWER" && v.version === v.running)
+        return { outcome: "none", version: v.version, detail: "the newest release published is the one running" };
+      return { outcome: String(v.reason), ...(typeof v.version === "string" ? { version: v.version } : {}),
+               detail: v.reason === "MALFORMED" ? `not a well-formed notice (${String(v.field ?? "notice").slice(0, 40)})`
+                 : v.reason === "NOT_NEWER" ? `an older release than the ${v.running} that runs` : String(v.detail ?? v.reason).slice(0, 160) };
+    }
+    const n = v.notice;
+    const held = this.#noticeRows()[0] ?? null;
+    if (held) {
+      const c = cmpVersion(n.version, held.version);
+      if (c === 0) return { outcome: "none", version: n.version, detail: "this release is held already" };
+      if (c < 0) return { outcome: "NOT_NEWER", version: n.version, detail: `an older release than the ${held.version} held` };
+    }
+    this.#sql.exec(`INSERT INTO release_notices (version, date, manifest, security, notes, sig, found_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                   n.version, n.date, n.manifest, n.security ? 1 : 0, JSON.stringify(n.notes), f.sig, this.#iso());
+    return { outcome: "found", version: n.version };
+  }
+
+  /* R88: at each start, when the version running differs from the last recorded, the release now running is recorded
+     with the instant it was first seen. */
+  #recordRunning() {
+    const version = this.#runningVersion();
+    const last = this.#one(`SELECT version FROM running_releases ORDER BY seq DESC LIMIT 1`);
+    if (last && last.version === version) return { recorded: false, version };
+    const at = this.#iso();
+    this.#sql.exec(`INSERT INTO running_releases (version, first_seen_at) VALUES (?, ?)`, version, at);
+    return { recorded: true, version, first_seen_at: at };
+  }
+
+  /* The notices held, newest release first. */
+  #noticeRows() {
+    return this.#rows(`SELECT seq, version, date, manifest, security, notes, found_at FROM release_notices ORDER BY seq`)
+      .sort((a, b) => cmpVersion(b.version, a.version) || b.seq - a.seq);
+  }
+  #noticeOut(r) {
+    return { version: r.version, date: r.date, security: r.security === 1, notes: JSON.parse(r.notes), signed: true, found_at: r.found_at };
+  }
+  /* A release's decisions, oldest first. */
+  #decisionsOf(version) {
+    return this.#rows(`SELECT kind, by_member, by_name, at, until_at, reason FROM update_decisions WHERE version = ? ORDER BY seq`, version)
+      .map((d) => ({ kind: d.kind, by: d.by_member, by_name: d.by_name ?? d.by_member, at: d.at,
+                     until: d.until_at ?? null, reason: d.reason ?? null }));
+  }
+  /* The newest release held, when it is newer than the running one and not skipped: the one ready to install (R89). A
+     skip is final; a release an administrator has chosen to start stays ready until it is the one running. */
+  #readyNotice() {
+    const newest = this.#noticeRows()[0] ?? null;
+    if (!newest || cmpVersion(newest.version, this.#runningVersion()) <= 0) return null;
+    return this.#decisionsOf(newest.version).some((d) => d.kind === "skip") ? null : newest;
+  }
+  /* R89: the version running, when it was first seen, and the administrator whose `updatestart` chose it. */
+  #runningOut() {
+    const version = this.#runningVersion();
+    const seen = this.#one(`SELECT first_seen_at FROM running_releases WHERE version = ? ORDER BY seq DESC LIMIT 1`, version);
+    const by = this.#one(`SELECT by_member, by_name FROM update_decisions WHERE version = ? AND kind = 'start' ORDER BY seq DESC LIMIT 1`, version);
+    return { version, installed_at: seen ? seen.first_seen_at : null, allowed_by: by ? by.by_name ?? by.by_member : null };
+  }
+  #updateSilence(what, e) {
+    return { ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
+             detail: `${what} could not be read (${String(e && e.message || e).slice(0, 160)}), so it is not known.` };
+  }
+
+  /** R89, op=updatenotice: to an administrator only (`NOT_AN_ADMIN`, a machine included), what Settings › Updates draws:
+   *  `running`, `last_check`, `ready` (with `decision`, the latest on it, or null), `earlier` (newest first, at most 50),
+   *  `holder` (who holds the hosting account, as `membership.hostingAccess` records it) and `viewer_holds`. A store that
+   *  does not answer is the store's silence (R43). Writes nothing; never throws. */
+  updateNotice({ viewer = null } = {}) {
+    const who = typeof viewer === "string" ? viewer.trim() : "";
+    if (!who || isMachineIdentity(who) || !this.#isAdmin(who))
+      return notAnAdmin(viewer ?? null, "reading the updates of your group's Civicsmith");
+    try {
+      const running = this.#runningOut();
+      const last = this.#one(`SELECT at, outcome FROM update_checks ORDER BY seq DESC LIMIT 1`);
+      const readyRow = this.#readyNotice();
+      let ready = null;
+      if (readyRow) {
+        const ds = this.#decisionsOf(readyRow.version);
+        ready = { ...this.#noticeOut(readyRow), decision: ds.length ? ds[ds.length - 1] : null };
+      }
+      const newest = this.#noticeRows();
+      const rest = newest.filter((r) => !readyRow || r.version !== readyRow.version);
+      const earlier = rest.slice(0, UPDATE_EARLIER_MAX).map((r) => {
+        const ds = this.#decisionsOf(r.version);
+        const base = { version: r.version, date: r.date, security: r.security === 1 };
+        const skip = ds.find((d) => d.kind === "skip");
+        if (skip) return { ...base, skipped_at: skip.at, skipped_by: skip.by_name, reason: skip.reason };
+        if (cmpVersion(r.version, running.version) <= 0) {
+          const seen = this.#one(`SELECT first_seen_at FROM running_releases WHERE version = ? ORDER BY seq DESC LIMIT 1`, r.version);
+          const start = [...ds].reverse().find((d) => d.kind === "start");
+          return { ...base, installed_at: seen ? seen.first_seen_at : null, allowed_by: start ? start.by_name : null };
+        }
+        return { ...base, replaced_by: newest[0].version };
+      });
+      let holder = null, viewerHolds = null;
+      try {
+        const h = this.#membership().hostingAccess({ limit: 1 });
+        if (h && h.ok === true) {
+          holder = h.recorded && h.current ? { holders: h.current.holders, note: h.current.note ?? null,
+                                               recorded_by: h.current.recorded_by, at: h.current.at } : null;
+          viewerHolds = holder ? this.#namesMember(holder.holders, who) : false;
+        }
+      } catch { holder = null; viewerHolds = null; }
+      return { ok: true, running, last_check: last ? { at: last.at, outcome: last.outcome } : null, ready, earlier,
+               earlier_limit: UPDATE_EARLIER_MAX, earlier_truncated: rest.length > UPDATE_EARLIER_MAX, holder, viewer_holds: viewerHolds };
+    } catch (e) { return this.#updateSilence("the updates of your group's Civicsmith", e); }
+  }
+
+  /* R89: whether the text a group recorded as who holds the hosting account names `id`, by the member's id or handle as a
+     whole word (the record is free text, so this is the one exact reading it allows). */
+  #namesMember(text, id) {
+    const words = new Set(String(text ?? "").toLowerCase().split(/[^\p{L}\p{N}_:.-]+/u).filter(Boolean));
+    return [id, this.#nameOf(id)].some((x) => typeof x === "string" && x && words.has(x.toLowerCase()));
+  }
+
+  /** R89, in-process, for `machinery-producers` R12 through the plane's composition: `{ok, running, ready, decisions}`
+   *  for the newest release ready to install, naming no viewer (`ready: null` and `decisions: []` when none). A store
+   *  that does not answer is the store's silence (R43). Writes nothing; never throws. */
+  updateNoticeState() {
+    try {
+      const readyRow = this.#readyNotice();
+      return { ok: true, running: this.#runningOut(), ready: readyRow ? this.#noticeOut(readyRow) : null,
+               decisions: readyRow ? this.#decisionsOf(readyRow.version) : [] };
+    } catch (e) { return this.#updateSilence("the updates of your group's Civicsmith", e); }
+  }
+
+  /* R90: an update act is an administrator's (`by` the control plane's stamp, R29): `{who}`, or `NOT_AN_ADMIN` first, a
+     machine included. */
+  #updateActor(by, what) {
+    const who = typeof by === "string" ? by.trim() : "";
+    if (!who || isMachineIdentity(who) || !this.#isAdmin(who)) return { refused: notAnAdmin(by ?? null, what) };
+    return { who };
+  }
+  /* R90: the release an act names must be the one ready to install (R89), else `UPDATE_NOT_READY`. */
+  #updateReady(version) {
+    const v = typeof version === "string" ? version.trim() : "";
+    const ready = this.#readyNotice();
+    /* DEC-49 REGION is-update-ready */
+    if (!ready || !v || ready.version !== v)
+      return { refused: refusal("UPDATE_NOT_READY", `${v ? `'${v.slice(0, 40)}'` : "the request names no version, and a release is decided by its version;"} `
+        + `${ready ? `the release ready to install is ${ready.version}` : "no release is ready to install"}. Nothing was recorded.`,
+        { version: v || null }) };
+    /* END DEC-49 REGION is-update-ready */
+    return { ready };
+  }
+  #decide(version, kind, who, { until = null, reason = null } = {}) {
+    const at = this.#iso();
+    this.#sql.exec(`INSERT INTO update_decisions (version, kind, by_member, by_name, at, until_at, reason) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                   version, kind, who, this.#nameOf(who), at, until, reason);
+    return at;
+  }
+
+  /** R90, op=updatestart: an administrator chooses to update to the release ready, and gets the installer's update page
+   *  set to that release and no other. Nothing is installed by this act, which carries no credential, slug or member. */
+  updateStart({ version = null, by = null } = {}) {
+    const a = this.#updateActor(by, "choosing to update your group's Civicsmith");
+    if (a.refused) return a.refused;
+    const r = this.#updateReady(version);
+    if (r.refused) return r.refused;
+    const at = this.#decide(r.ready.version, "start", a.who);
+    return { ok: true, version: r.ready.version, kind: "start", by: a.who, at,
+             address: `${INSTALLER_UPDATE_ADDRESS}?version=${encodeURIComponent(r.ready.version)}`,
+             note: "nothing is installed by this: whoever holds your group's hosting account installs it, through Cloudflare's own consent." };
+  }
+
+  /** R90, op=updatelater: an administrator sets the release ready aside: for 14 days, or, for a security release, until
+   *  the start of the next local day (`civil-time`, the profile's zone, else UTC). A newer release replaces it at once. */
+  updateLater({ version = null, by = null } = {}) {
+    const a = this.#updateActor(by, "setting aside an update of your group's Civicsmith");
+    if (a.refused) return a.refused;
+    const r = this.#updateReady(version);
+    if (r.refused) return r.refused;
+    const now = this.#now();
+    let until, zone = null;
+    if (r.ready.security === 1) ({ until, zone } = this.#nextLocalDay(now));
+    else until = new Date(now + UPDATE_LATER_DAYS * 86_400_000).toISOString();
+    const at = this.#decide(r.ready.version, "later", a.who, { until });
+    return { ok: true, version: r.ready.version, kind: "later", by: a.who, at, until, ...(zone ? { zone } : {}) };
+  }
+  /* R90: the start of the next local day after `nowMs` in the first active profile's zone, UTC when none states one. */
+  #nextLocalDay(nowMs) {
+    const iso = `${new Date(nowMs).toISOString().slice(0, 19)}Z`;
+    const zones = [...this.#activeProfiles().map(({ p }) => zoneOf(p)).filter(Boolean), "UTC"];
+    for (const zone of zones) {
+      const day = localDay(iso, zone);
+      if (typeof day !== "string") continue;
+      const next = new Date(Date.parse(`${day}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+      const b = dayBounds({ value: next, precision: "day", zone });
+      if (b && typeof b.earliest === "string") return { until: b.earliest, zone };
+    }
+    return { until: new Date(nowMs + 86_400_000).toISOString(), zone: "UTC" };
+  }
+
+  /** R90, op=updateskip: an administrator skips the release ready, with a reason (1 to 1,000 characters on one line):
+   *  recorded with who and when and never erased; the release is never ready again, and the next one is offered. */
+  updateSkip({ version = null, reason = null, by = null } = {}) {
+    const a = this.#updateActor(by, "skipping an update of your group's Civicsmith");
+    if (a.refused) return a.refused;
+    const r = this.#updateReady(version);
+    if (r.refused) return r.refused;
+    const why = typeof reason === "string" ? reason.trim() : "";
+    /* DEC-49 REGION is-update-skip */
+    if (!why || [...why].length > UPDATE_SKIP_REASON_MAX || !oneLine(why))
+      return refusal("UPDATE_SKIP_NO_REASON", `${typeof reason !== "string" || !why ? "no reason was given" : `a reason of ${[...why].length} characters${oneLine(why) ? "" : " over more than one line"} is not`} `
+        + `one line of 1 to ${UPDATE_SKIP_REASON_MAX} characters, and a release is skipped with one. Nothing was recorded.`, { version: r.ready.version });
+    /* END DEC-49 REGION is-update-skip */
+    const at = this.#decide(r.ready.version, "skip", a.who, { reason: why });
+    return { ok: true, version: r.ready.version, kind: "skip", by: a.who, at, reason: why };
+  }
+
+  /* =====================================================================
    * THE INSTANCE'S OWN LIMITS (K98; R33–R40). What runs here COST, measured, and where the CPU ceiling lies, found
    * by walking into it. They are measurements of the runtime, not of the corpus (R41).
    * ===================================================================== */
@@ -3178,11 +3653,11 @@ export function instanceSetupOf(ctx, env = null, deps = {}) {
   return m;
 }
 
-/** R54 (T47; N981; K3030; `credentials` R64): the one read `credentials` asks before a member's own account is
- *  connected, `disclosureOf({member})` of this module's instance on the storage. This module registers nothing with
- *  `credentials` itself: the composition root registers it, `credentials.registerDisclosureRead(DISCLOSURE_READER,
- *  disclosureReadOf(m))` (`plane`'s T47-66), and `credentials` R22 and `control-plane` R65 then refuse `DISCLOSURE_DUE`
- *  through `credentials.disclosureDue` while it answers `shown: false`. */
+/** R54 (T47; N981; K3030; T48, N996; `ai-accounts` R23): the one read `ai-accounts` asks before a member's own account
+ *  is connected, `disclosureOf({member})` of this module's instance on the storage. This module registers nothing with
+ *  `ai-accounts` itself: the composition root registers it, `ai-accounts.registerDisclosureRead(DISCLOSURE_READER,
+ *  disclosureReadOf(m))` (`plane`'s T48-78), and `ai-accounts` R1 and `control-plane` R65 then refuse `DISCLOSURE_DUE`
+ *  through `ai-accounts.disclosureDue` while it answers `shown: false`. */
 export const DISCLOSURE_READER = "instance-setup";
 export function disclosureReadOf(m) {
   return ({ member = null } = {}) => m.disclosureOf({ member });
@@ -3244,6 +3719,11 @@ export function instanceSetupOps(m, url, body) {
     translationmark: () => m.translationMark({ ...(body || {}), by: q("by") }),
     translations: () => m.translations({ language: q("language") ?? (body || {}).language, viewer: q("viewer") }),
     interfacewords: () => m.interfaceWords({ language: q("language") ?? (body || {}).language, viewer: q("viewer") }),
+    /* R89, R90 (T48; N1047): the update notice and the administrators' three choices; `by` and `viewer` are the stamps. */
+    updatenotice: () => m.updateNotice({ viewer: q("viewer") }),
+    updatestart: () => m.updateStart({ ...(body || {}), by: q("by") }),
+    updatelater: () => m.updateLater({ ...(body || {}), by: q("by") }),
+    updateskip: () => m.updateSkip({ ...(body || {}), by: q("by") }),
   };
 }
 
