@@ -1,6 +1,6 @@
 # interface-assets — requirements
 
-**Status** · New in T46 (T46-53; K657, K1043): a module built fresh, layer 11 directly after `store-door`, first of the six interface modules (N897 (1), Bob's K2816; DEC-138; N559). No ids move; nothing is extracted from a legacy module (`legacy-ui` stays as it is, K633). Not yet met (T46). Last changed T48 (T48-68: R5 new, amending R1, `ASSETS_COMMIT` on `main` at PR #34's merge, no help cursor and the three kind tokens, N1048, N1028, DEC-224, DEC-215 (3); R6 new, the faces carried as upload parts, N1039; K3147, K3166, K3195); marked not yet met (T48).
+**Status** · New in T46 (T46-53; K657, K1043): a module built fresh, layer 11 directly after `store-door`, first of the six interface modules (N897 (1), Bob's K2816; DEC-138; N559). No ids move; nothing is extracted from a legacy module (`legacy-ui` stays as it is, K633). Not yet met (T46). Last changed T48 (T48-68: R5 new, amending R1, `ASSETS_COMMIT` on `main` at PR #34's merge, no help cursor and the three kind tokens, N1048, N1028, DEC-224, DEC-215 (3); R6 new, the faces carried as upload parts, N1039; K3147, K3166, K3195); marked not yet met (T48). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R7 new, amending R1 and R5, `shell.css` generated from the design page's product rules); marked not yet met (T48).
 
 **Size (P6).** About 120 lines of generated data, about 1.1 MB (the 15 faces as base64; plan T46, M-T46-1), no code.
 
@@ -18,6 +18,14 @@ The visual language every member screen uses (DEC-138), as frozen data copied fr
 - **R3** `ASSET_FILES` and each of its entries are frozen: no write changes the map, an entry or a field.
 - **R5** (T48; N1048, N1028; DEC-224, DEC-215 (3); K3166; amends R1) `ASSETS_COMMIT` is `4664e8efd4` (`main` at PR #34's merge, whose visual language is PR #33's, `371af128a6`), or the later `main` commit named at the job's START if the visual language changed after. `ASSET_FILES` is read there by R1's rule. By it `civicsmith.css` holds no `cursor: help` anywhere; its `.cs-card` rule carries no `cursor` (DEC-224: the cursor changes only over a control); and it holds `--c-kind-money`, `--c-kind-part` and `--c-kind-mention`, light and dark. Test: R1's byte equality; a scan finds no `cursor: help` and no `cursor` in `.cs-card`; control: `.cs-btn` keeps `cursor: pointer`. *(not yet met: T48)*
 - **R6** (T48; N1039; K3147; `plane` R43, R54; `bundler` R31) The faces (`fonts/<f>`, the bulk of `ASSET_FILES`) are not evaluated as module code at the plane's start: `ASSET_FILES` holds each face so that the bundle carries its bytes as an upload part (a data module the Worker loads as bytes) or builds it on first read, never as a base64 string literal parsed in the global scope. Every name and every body answered is byte-identical to R1's. Test: R1's equality holds; a fresh import evaluates no face until one is read. *(not yet met: T48)*
+
+**The design walk folded** (T48; WALK-084 #2; K3250, K3254)
+- **R7** (T48; K3250, K3254 (2); walk C1; amends R1's "no other name", R5) `ASSET_FILES` also holds `shell.css`, of type `text/css`. It holds every product rule of the design's page stylesheet: the `<style>` of `docs/development/ux-substrate/screens/page.src.html` at `ASSETS_COMMIT` (`interface-shell` R56 enforces the emitted side, K3254 (2)). `generate.mjs` writes it beside `civicsmith.css`; it is never copied or edited by hand and is regenerated whenever the visual language is. *(not yet met: T48)*
+  - **Which rules are carried.** A rule is carried when every one of its selectors names an `mk-` or `cs-` class, and none names a mock-only class or one of the page's own. The mock-only classes are `mk-device`'s frame, `mk-scaler`, `mk-mockctl`, `mk-osprompt` and the viewer's controls. The page's own are `anat`, `asfig`, `viewer` and `vlist`.
+  - **How selectors are rewritten.** `.mk-page` becomes `.cs-frame`. A rule under `.mk-device[data-device="phone"]` is carried inside `@media (max-width: 760px)` with that prefix removed.
+  - **Other rules.** R2 holds for the new file.
+
+  Test: the file equals the generator's transform of the source, read from git at `ASSETS_COMMIT`. It holds `.mk-door`, `.mk-acts`, `.mk-frontgrid` and `.mk-avatar`, and `.cs-tabs` inside the 760 px query. Control: no selector names `mk-device`, `mk-scaler` or `.anat`, and no rule lacks a `cs-` or `mk-` class.
 
 ## Private
 

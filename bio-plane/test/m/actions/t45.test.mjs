@@ -245,7 +245,7 @@ test("R94 a sent entry may state its speaker, a member, stated by a member; seve
 
 /* ================================================================ receipt, responses and outcomes: R80–R83, R85, R86, R95 */
 
-test("R25 the read answers the receipts action-records records (its R4, was R80), oldest first (K2845), and the entry is never rewritten; its op is still served through actions' map", () => {
+test("R25 the read answers the receipts action-records records (its R4, was R80), oldest first (K2845), and the entry is never rewritten; its op is served by action-records' map (R103)", async () => {
   const w = world();
   const s = w.doc("INFO-2026-0001-d");
   w.action(A);
@@ -262,7 +262,7 @@ test("R25 the read answers the receipts action-records records (its R4, was R80)
   assert.deepEqual(read.receipts, w.a.records.receiptsOf(A), "read through action-records, unchanged");
   assert.deepEqual(read.receipts.map((x) => [x.ord, x.seq, x.kind]), [[0, 1, "receipt"], [0, 2, "service"]]);
   assert.equal(w.text(A), text, "the entry is never rewritten");
-  const op = actions.actionsOps(w.a, new URL(`https://x/?target=${A}&ord=0&at=2026-09-05&how=post&account=x&viewer=${M}&author=${M}`), null).actionreceipt();
+  const op = (await import("../../../src/action-records/index.mjs")).actionRecordsOps(w.a.records, new URL(`https://x/?target=${A}&ord=0&at=2026-09-05&how=post&account=x&viewer=${M}&author=${M}`), null).actionreceipt();
   assert.equal(op.ok, true);
   assert.equal(w.a.actionRead({ id: A, viewer: M }).receipts.length, 3);
 });
@@ -559,9 +559,17 @@ test("R8 R74 R77 R78 R79 R82 R85 R86 (T45) each code this module mints has its r
      reported at this job's COMPLETE, so they are not this module's to hold. Those that moved to action-records at T47
      (receipt, scope, promise) are named by action-grammar R28 under its file, so they leave this filter by their `where`. */
   const MOVED = new Set(["PRESSURE_MARKED", "PRESSURE_NO_ENTRY", "MACHINE_CANNOT_SET_HOLD", "HOLD_REFUSED", "HOLD_NO_LEGAL_MARK",
-    "HOLD_RELEASE_IS_ITS_OWN_ACT", "HOLD_PROJECTS_REFUSED", "HOLD_ALREADY_RELEASED"]);
-  const rows = Object.entries(grammar.ACTION_CATALOGUE_CHECKS)
-    .filter(([code, r]) => r.where.startsWith("src/actions/index.mjs ") && !MOVED.has(code));
+    "HOLD_RELEASE_IS_ITS_OWN_ACT", "HOLD_PROJECTS_REFUSED", "HOLD_ALREADY_RELEASED",
+    /* `NOT_A_PROCEEDING` is `entities`' one site since T48 (R104; its R53); action-grammar's C-117.28 row is reported */
+    "NOT_A_PROCEEDING"]);
+  /* K3128 (T48): the rows are read through the census (`test/system/row-census.mjs`, promotion R50), as every module's are,
+     not through a table this test names; the regions are then looked up in the file each row's `where` names. */
+  const { censusRows } = await import("../../system/row-census.mjs");
+  const root = new URL("../../../../", import.meta.url).pathname;
+  const rows = (await censusRows(root)).rows
+    .filter((r) => typeof r.where === "string" && r.where.startsWith("src/actions/index.mjs ") && !MOVED.has(r.code))
+    .map((r) => [r.code, r]);
+  assert.ok(rows.length > 0, "the census holds rows naming this module");
   for (const [code, r] of rows) {
     const [fn, region] = r.where.slice("src/actions/index.mjs ".length).split(" > ");
     assert.ok(src.includes(`DEC-49 REGION ${region} `) || src.includes(`DEC-49 REGION ${region}\n`) || src.includes(`DEC-49 REGION ${region} */`), `${code}: ${region}`);

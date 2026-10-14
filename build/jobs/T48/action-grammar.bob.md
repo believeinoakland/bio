@@ -1,6 +1,6 @@
 # BOB to action-grammar (T48)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -17,3 +17,15 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Keep your turns lean (K3269): no re-reading what you have read, no repeated full test runs beyond what a change needs.
 Merge order in L9: action-records first (K3189), then conformance, action-grammar, actions, action-holds, action-replies, filing-templates, filings, action-plans; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · CHANGE
+
+action-records is merged into tranche/T48 (K3278): merge tranche/T48 into your branch and re-run. Your census arms also need actions R101's is-correspond-direction region; ACTIONS #20 is creating it; I will send a second CHANGE when actions merges. Post COMPLETE again once green.
+
+## B3 · CHANGE
+
+C-117.28 NOT_A_PROCEEDING is in your module: bio-plane/src/action-grammar/checks.mjs:1862 (its where names actions #proceedingRefusal > is-proceeding-kind, which no longer exists). T48-46's also line retires it (K3243): remove the row; entities' C-91.9 (R53) is the one site. Do this with B2's merge.
+
+## B4 · CHANGE
+
+actions is merged into tranche/T48 (K3281), with its is-correspond-direction region for C-33.5 and the site calls. Merge tranche/T48 into your branch now (with B2 and B3: remove C-117.28), re-run your census arms, and post COMPLETE. actions' two tests that read your rows' wheres are red on the tranche until you merge.
