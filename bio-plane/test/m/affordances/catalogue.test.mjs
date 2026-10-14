@@ -306,13 +306,15 @@ test("R1 R12: NON_ACTS names no act, and a reason begins `capture-directed:` exa
 });
 
 test("R19: `terminal` is given only while STATES.information.edges.retired is empty — retire among it — and "
-   + "`irreversible` only to publish, the two that set when a signed case edition publishes, publishat and "
-   + "publishatmove, and case-check's publishcheck (K2839)", () => {
+   + "`irreversible` only to the two that set when a signed case edition publishes, publishat and publishatmove (K3147: "
+   + "publish now prepares and case-check's publishcheck is graded as it, both `terminal`); IRREVERSIBLE_WEIGHT is "
+   + "op-grades' four", () => {
   /* N891: the closed set of `terminal` ops is op-grades' content, pinned in its tests */
   assert.deepEqual(STATES.information.edges.retired, []);
   assert.equal(RUNGS.retire, "terminal");
-  assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible").sort(),
-    ["publish", "publishat", "publishatmove", "publishcheck" /* K2839: case-check's, graded as publish */]);
+  for (const op of ["publish", "publishcheck"]) assert.equal(RUNGS[op], "terminal", op);
+  assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible").sort(), ["publishat", "publishatmove"]);
+  assert.deepEqual([...G.IRREVERSIBLE_WEIGHT].sort(), ["personexpunge", "publishat", "publishatmove", "standardrelease"]);
 });
 
 test("R19: the justification family holds the codes the reasoned ops refuse with", () => {

@@ -24,6 +24,7 @@ import { T38_RUNGS } from "../../../src/op-grades/t38.mjs";
 import { T41_RUNGS } from "../../../src/op-grades/t41.mjs";
 import { T45_RUNGS } from "../../../src/op-grades/t45.mjs";
 import { T46_RUNGS } from "../../../src/op-grades/t46.mjs";
+import { T47_RUNGS } from "../../../src/op-grades/t47.mjs";
 import { OP_ALIASES } from "../../../src/op-grades/t34.mjs";
 /* R39's vocabularies, by name. */
 const R39_KEYS = ["event_kinds", "dated_fact_kinds", "event_statuses", "participant_roles", "event_relation_kinds",
@@ -858,7 +859,9 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     /* op-grades R32 (T45): T45's eleven, each at its owner's interface over its fixture, t45-backing.test.mjs */
     ...Object.keys(T45_RUNGS).filter((op) => T45_RUNGS[op] === "reasoned"),
     /* op-grades R33 (T46): escalation's stop and reopening, at escalation's interface over its fixture, t46-backing.test.mjs */
-    ...Object.keys(T46_RUNGS).filter((op) => T46_RUNGS[op] === "reasoned")];
+    ...Object.keys(T46_RUNGS).filter((op) => T46_RUNGS[op] === "reasoned"),
+    /* op-grades R36 (T47; K3147): strength's projectbarset, at strength's interface, t47-backing.test.mjs */
+    ...Object.keys(T47_RUNGS).filter((op) => T47_RUNGS[op] === "reasoned")];
   /* R45: an alias is its op's handler (op-declarations R21, control-plane R55), so its op's drive is its backing */
   driven.push(...Object.keys(OP_ALIASES).filter((a) => driven.includes(OP_ALIASES[a])));
   /* R45: tasks' checkrecord (CHECK_NO_REASON, tasks R15): tasks is later in the order (P4), so this module's tests cannot
