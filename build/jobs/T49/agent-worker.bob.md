@@ -1,0 +1,22 @@
+# BOB to agent-worker (T49)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T49), layer 6, agent-worker: **T49-9 · agent-worker**.
+Your requirements: `build/requirements/agent-worker.md` (read whole), folded by K3331; the ids marked `*(not yet met: T49)*` are yours to meet (R89; R88 retired, K3347).
+BOB's notes for this job:
+agent-worker (T49-9): R88 is WITHDRAWN (Bob, K3347: no API-key support until subscription support is fully running and debugged); your entry is R89 (the `answer` tool's `input_schema` reads `answers.ANSWER_FIELDS` and `ANSWER_LABEL`, never a hand-list; amends R54); (N1073) the four hand-lists `harness:128`, `plan:293`, `requirements:1369`, `t36:94` read `ai-runs`', `capture`'s and `action-plans`' declarations.
+1. M-T49-7 is dropped with R88: build nothing for a member's API-key run.
+2. Check doubt 11: whether the model address is configurable, so journey-check (T49-32) can serve its own fake model over HTTP at agent-worker's model address. If it is not, post a QUESTION proposing a one-line requirement; BOB adds it to this job.
+3. Confirm that importing `ANSWER_FIELDS` from `answers`' public entry does not pull the plane's store code into the Worker bundle. If it would, import `answers/check.mjs`'s export (named in `answers`' Provides by rule 7).
+4. Inherited reds: `harness.test.mjs` REC100-1b/2/2b (rule 5 (7) (A)), untouched until T49-29; coverage on R89 (5 (1)).
+Merge order in L6: ai-runs first, then you. When BOB's CHANGE says ai-runs is merged, merge tranche/T49 into your branch and re-run your tests before COMPLETE.
+Reading set (mechanics §17, K3271): measured 2661 KB with all your tests, 1693 KB without them (the used public parts are an upper bound), over the 600 KB limit. Read your requirements, entries, layer contract and own code whole; for the used modules' services your entries touch, if they exceed what you can read, give helpers in your session your entry and what follows it, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Read your own code whole, and the tests that name a requirement your entries change; run your other tests without reading them (plan rule 2, K3271, mechanics §6 step 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Plan rule 6 applies to you: N1075 (read member-facing sentences by key where `words.json` keys them), N1068 ("labeled"), the `admin` grep (N1072), N1073 (your listed hand-lists), and D29 (no `ok: true` carrying a refusal treated as success).
+Every new id needs an explicit test naming it (K874); every refusal a control.
+Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
