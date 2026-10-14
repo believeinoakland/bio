@@ -49,7 +49,7 @@ function renderCapture(cs, view) {
       + `<p class="mk-small muted">${cs.w("screen.capture.file.downloaded")} <a href="/app/capture/address" data-nav>${cs.w("screen.capture.file.toaddress")}</a></p>`
       + cs.field("ci-where", "screen.capture.file.where", { help: "screen.capture.file.wherehelp", value: U.where || "" })
       + cs.field("ci-what", "screen.capture.file.what", { area: true, rec: true, value: U.what || "" })
-      + `<div class="mk-acts">${cs.act("captureupload", { tone: "primary", label: "act.capture.label.capture" })}</div>`
+      + `<div class="mk-acts">${cs.act("captureupload", { tone: "primary", label: "act.captureupload.label.capture" })}</div>`
       + (U.uploaded ? said(U.uploaded.existed ? "screen.capture.file.existed" : "screen.capture.file.done", { name: U.uploaded.name }) : "")
       + `<p class="mk-note">${cs.w("screen.capture.file.note")}</p>`;
   } else {
@@ -261,7 +261,7 @@ export const CAPTURE_SCREEN = Object.freeze({
     Object.freeze({ op: "capturerequest", label: "act.capturerequest.label.capture", send: sendCaptureRequest, done: doneCaptureRequest, rereads: [] }),
     Object.freeze({ op: "monitorset", label: "act.monitorset.label.capture", send: sendMonitorSet, done: doneMonitorSet, rereads: [] }),
     Object.freeze({ op: "monitor", label: "act.monitor.label.capture", send: sendMonitor, done: doneMonitor, rereads: [] }),
-    Object.freeze({ op: "captureupload", label: "act.capture.label.capture", send: sendUpload, done: doneUpload, rereads: [], reasonField: "statement",
+    Object.freeze({ op: "captureupload", label: "act.captureupload.label.capture", send: sendUpload, done: doneUpload, rereads: [], reasonField: "statement",
                     refusals: Object.freeze({ UPLOAD_NO_STATEMENT: "screen.capture.refusal.UPLOAD_NO_STATEMENT", EMPTY: "screen.capture.refusal.upload.EMPTY",
                                               TOO_LARGE: "screen.capture.refusal.upload.TOO_LARGE",
                                               MEMBER_SESSION_REQUIRED: "screen.capture.refusal.MEMBER_SESSION_REQUIRED" }) }),

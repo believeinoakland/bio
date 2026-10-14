@@ -145,13 +145,16 @@ test("R14 an address not captured this visit is watched through the held documen
   assert.equal(e.byOp("monitor").length, 0);
 });
 
-test("R14 NOT_MONITORED, NO_LOCATOR and MONITOR_SET_REFUSED are drawn by the shell's rule (R13), the answer's own words", async () => {
+test("R14 NOT_MONITORED, NO_LOCATOR and MONITOR_SET_REFUSED are drawn by the shell's rule (R13): the code's refusal word where held, else the answer's own words", async () => {
+  const { WORD_ROWS } = await import("../../../src/setup-words/index.mjs");
   for (const [op, code] of [["monitor", "NOT_MONITORED"], ["monitorset", "NO_LOCATOR"], ["monitorset", "MONITOR_SET_REFUSED"]]) {
-    const p = await open("/app/capture", { plane: { ...CAPTURED, [op]: refused(code, `Words for ${code}.`) } });
+    const p = await open("/app/capture", { plane: { ...CAPTURED, [op]: refused(code, `Words for ${code}.`, 400, { field: "frequency" }) } });
     fill(p, { "ci-address": ADDRESS });
     await press(p, "acquire");
     const r = await press(p, op, { reason: "r" });
-    assert.match(r.slot().textContent, new RegExp(`Words for ${code}\\.`), code);
+    const held = WORD_ROWS.find((w) => w[0] === `refusal.${code}`);
+    const expected = held ? held[1].split("{")[0].trim() : `Words for ${code}.`;
+    assert.ok(r.slot().textContent.includes(expected), `${code}: ${r.slot().textContent}`);
     assert.doesNotMatch(text(p), /Watching street|Checked street/, code);
   }
 });

@@ -17,7 +17,8 @@ Applied (T47-59), not yet committed as complete:
 
 Tests: in a scratch checkout carrying stand-ins for the four unmerged providers (J1), `node --test test/m/screens-intake/`: 57 pass, 0 fail. On this branch as it stands: 1 pass, 56 fail, every one from `interfacePage` refusing `capture` until `OPS` holds `monitorset` (expected; J1). Checks on the working tree: format 0 failures; architecture 0 failures; coverage 16 of 16 ids named, 0 failures; ownership 0 failures.
 B2 (K3148): `tranche/T47` merged (c9dea8a628; wizard-scripts T47-47, op-grades T47-48): the registry now lists `monitorset` on `capture`, so the wizard-scripts stand-in is dropped; with the other three stand-ins, 57 pass, 0 fail. On this branch still red until `op-declarations` declares `monitorset`.
-Next: on BOB's CHANGE announcing op-declarations, setup-words and interface-shell merged, merge `tranche/T47`, re-run tests and `node checks/run.mjs`, post COMPLETE.
+B3 (K3149): `tranche/T47` merged (2e591e7dc6; setup-words T47-52, instance-setup T47-75): the setup-words stand-in dropped. Two of my own lines followed `WORD_ROWS` at 6f0d88d8d5: the upload act's label key is now `act.captureupload.label.capture` (the registry names `captureupload`; `act.capture.label.capture` is gone), and R14's refusal test now expects the code's `refusal.<code>` word where `WORD_ROWS` holds one (`MONITOR_SET_REFUSED` now does; interface-shell R13's order), else the answer's words. With the op-declarations and interface-shell stand-ins: 57 pass, 0 fail.
+Next: on BOB's CHANGE announcing op-declarations and interface-shell merged, merge `tranche/T47`, re-run tests and `node checks/run.mjs`, post COMPLETE.
 
 ## J1 · REPORT
 

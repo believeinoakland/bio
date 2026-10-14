@@ -25,7 +25,7 @@ export { SCREEN_WORDS };
 const SHARED_WORDS = Object.freeze({
   capture: ["photo.reminder", "ai.label.untested",
             "act.acquire.label.capture", "act.capturerequest.label.capture", "act.monitorset.label.capture", "act.monitor.label.capture",
-            "act.capture.label.capture", "act.testify.label.capture", "act.writinghelp.label.capture"],
+            "act.captureupload.label.capture", "act.testify.label.capture", "act.writinghelp.label.capture"],
   held: ["mark.gap.refused.name", "mark.gap.refused.means", "mark.gap.withheld.name", "mark.gap.withheld.means",
          "mark.gap.undetermined.name", "mark.gap.undetermined.means", "state.undetermined",
          "act.heldcaptures.label.held", "act.release.label.held", "act.heldsetaside.label.held", "act.heldrestore.label.held"],
