@@ -239,4 +239,5 @@ DOORS = [
  ('money', ['Follow the money', 'Get a record']),
  ('read', ['Check a claim', 'Follow a proceeding', 'Use another group\'s case']),
  ('tip', ['Check a claim', 'Build a timeline']),
+ ('elsewhere', [], 'elsewhere'),  # DEC-227 (1), DEC-232: the sixth door opens the screen Where else to go (wizard-scripts R37)
 ]

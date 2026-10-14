@@ -156,12 +156,6 @@
   "note": "D3 (K3061)"
  },
  {
-  "key": "signin.founderhint",
-  "en": "Did you set this group up? Your handle is admin.",
-  "protected": false,
-  "note": ""
- },
- {
   "key": "signing.ceremony.who",
   "en": "You sign as {signer}, an owner of {project}. The public page will read “Published by {group} · signed by {signer}”. Once public, anyone can read it and check your signature without asking the group; it can be corrected by a new edition, never removed.",
   "protected": true,

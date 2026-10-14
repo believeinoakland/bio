@@ -457,7 +457,7 @@ const SCREEN_HELP = {
   archive: 'One captured archive and every file in it: which are filed and held for review beside it, which were already held, and which were not filed and why.',
   held: 'Captures waiting for a member to vouch for them before they enter the record. Release them, or set them aside with a reason.',
   'find-in': 'Look through a document, the documents you are holding together, or a project for people, money, dates, requirements or a word. Each result shows its passage; you record what matters with the usual act.',
-  document: 'One document as captured: its grade, its passages, its versions and what cites it. Cite a passage from here.',
+  document: 'One document as captured: its words by page, its copy\'s grade, its versions beside each other, the links it carries, the people and organizations it names, and what cites it. Cite from here.',
   project: 'A project: its questions, their strength against the project\'s bar, its members and its stage. Open a question or a plan from here.',
   question: 'One question: what supports it and what cuts against it, its strength against the bar, and what would change the answer.',
   answers: 'Ask in plain words, with the assistant, or find and count without it. Answers come only from what your group holds, and show where they looked.',
