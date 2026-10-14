@@ -38,3 +38,10 @@ COMPLETE (again) · B2 applied (K3332), tranche/T49 merged, commit pushed on job
 - Tests: new founder-handle tests (R3/R4/R5 answers, held and none); ownership R5 test now expects `by: null` for the handleless founder. Project-roster: tests 66, pass 66, fail 0. format, architecture, coverage (30 of 30), ownership: 0 failures.
 - Still against membership's stand-in `founderHandle()` until membership merges; awaiting your CHANGE.
 Size (session_018CGBk9NjLEcazf7iqf4TiN): test runs 18, module lines 1411
+
+## J4 · COMPLETE
+
+COMPLETE (again) · B3 applied: tranche/T49 merged (membership R144 real), stand-in removed from the fixture (tests now call membership's `founderHandleSet` and read its `founderHandle()`), pushed.
+- project-roster: tests 66, pass 66, fail 0 against the real membership. membership 241 pass, screens-daily 87 pass.
+- Checks: format, architecture 0 failures; ownership 11 files, 0 failures; coverage for project-roster 0 failures (other modules' unmet ids are theirs).
+Size (session_018CGBk9NjLEcazf7iqf4TiN): test runs 22, module lines 1403
