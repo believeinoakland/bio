@@ -2,6 +2,22 @@
 
 **Status** · session_01TRpt7rshZQFBNZdR8YRhWi · depth 2 · WORKING · handled B0
 
+## Work (SCREENS-INTAKE #2)
+
+Read whole for this job (P20): `build/requirements/screens-intake.md`; my code (`bio-plane/src/screens-intake/`, 848 lines at START) and tests (818 lines); the public parts of `interface-shell`, `setup-words`, `wizard-scripts` and `op-declarations`; the owners' lines my T47 ids name (`capture` R76–R81, R88; `monitoring` R74; `capture-requests` R56; `sources` R1, R6, R9; `acquisition` R41; `provenance` R24–R27, R51, R63; `wizard-scripts` R25, R34; `ratification` R51; `op-declarations` R56); the START's sources for my screens. No flaw found in the T46 code beyond what T47-59 replaces (the draft drawn into a field of a new id; the inbox's typed source ids; the set-aside list kept only for the visit).
+
+Applied (T47-59), not yet committed as complete:
+- R10: the writing-help draft filled into `ci-words` by `cs.fill`, labelled `screen.capture.saw.draft` ("Draft · the assistant's, asked by {handle}", the session's handle), with `ai.label.untested` when the answer carries `untested`; the label leaves once `testify` keeps it. Each knock on `inbox` is `cs.ref("knock", …)`, its card the size, date and note.
+- R11: `held` rows draw `capture.grade` as one mark (a determined letter as `cs.grade`; a stated letter "as a member stated it, not measured"; received and authored captures by their basis, no letter); `capture` null draws `state.undetermined`; the thumbnail is a `capture` reference opening `open-file` for `capture.sha256`.
+- R12: a pulled knock's source through `sourceof` (its `capture_sha`), its rung through `sourcerung`, the ladder at that rung (a knock not yet pulled: "Same knocker" with a pseudonym, else "Unknown"); `sourcelink` sends the source read and `to` chosen from the other pulled knocks' sources (the same knocker's first, at most 20 knocks read), no field for a typed id.
+- R13: `held` reads `heldcaptures` twice, held and `state: "set_aside"`; the "Set aside" list names who, why and when, with `heldrestore` in each row's panel and in its hold strip.
+- R14, R16: "Watch this address" sends `monitorset` (`enabled: true`, the frequency chosen among `MONITOR_FREQ` but `none`, default weekly) alone; "Check it now" sends `monitor` alone; both on this visit's capture of the address, else the held document whose source is that address (`heldcaptures`), else refused beside the act, nothing sent. "Ask for this later" says when the request waits (`drains: false`).
+- R15: new screen `archive` (`archive.mjs`) at `/app/archive/<sha>`: `archivelist` and `gradenote`; filed entries (with a `bundle`) as picked rows; already held, folders, links, not filed and waiting entries listed with their state; the hold strip's `archivelist` (only those not filed), `heldsetaside`, `release` (held's `sendRelease`); an archive refused whole as its refusal with "See what it lists".
+- K3114: `held.test.mjs`' stand-in control re-stated for ratification R51 (body, else query; both ways; neither refused).
+
+Tests: in a scratch checkout carrying stand-ins for the four unmerged providers (J1), `node --test test/m/screens-intake/`: 57 pass, 0 fail. On this branch as it stands: 1 pass, 56 fail, every one from `interfacePage` refusing `capture` until `OPS` holds `monitorset` (expected; J1). Checks on the working tree: format 0 failures; architecture 0 failures; coverage 16 of 16 ids named, 0 failures; ownership 0 failures.
+Next: on BOB's CHANGE announcing op-declarations, wizard-scripts, setup-words and interface-shell merged, merge `tranche/T47`, re-run tests and `node checks/run.mjs`, post COMPLETE.
+
 ## J1 · REPORT
 
 Read whole: my requirements, my code and tests (1,666 lines), the public parts of my Uses, the START's sources (registry, mock-acts, mock-screens' capture/held/archive/inbox, words.json rows I draw, the interface draft, fold §B, way-in rows naming me, connect §3). Baseline on my branch: 42 pass, 0 fail.

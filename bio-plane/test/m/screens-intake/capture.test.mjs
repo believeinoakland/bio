@@ -7,22 +7,15 @@ import { open, html, text, main, btn, fill, press, ok, refused, rawKeys } from "
 const ADDRESS = "https://www.example.gov/reports/street-maintenance-2026.pdf";
 const DOC = { capture: { sha256: "a".repeat(64), bytes: 1200, encoding: "binary" }, file: "snapshots/a.pdf", title: null };
 
-test("R1 the address tab draws acquire and capturerequest, and monitor only once a capture landed in a bundle", async () => {
-  const p = await open("/app/capture/address", { plane: { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0001" }),
-    promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }) } });
-  assert.ok(btn(p, "acquire"));
-  assert.ok(btn(p, "capturerequest"));
-  assert.equal(btn(p, "monitor"), null);
+test("R1 R16 the address tab draws acquire, capturerequest, and the two watching acts, monitorset and monitor", async () => {
+  const p = await open("/app/capture/address");
+  for (const op of ["acquire", "capturerequest", "monitorset", "monitor"]) assert.ok(btn(p, op), op);
+  assert.match(btn(p, "monitorset").textContent, /Watch this address/);
+  assert.match(btn(p, "monitor").textContent, /Check it now/);
+  /* the frequency is a word of MONITOR_FREQ (monitoring R14), "none" never offered for watching */
+  const opts = p.doc.getElementById("ci-freq").querySelectorAll("option").map((o) => o.getAttribute("value"));
+  assert.deepEqual(opts.sort(), ["daily", "hourly", "monthly", "per_meeting", "weekly"]);
   assert.deepEqual(rawKeys(p), []);
-  fill(p, { "ci-address": ADDRESS });
-  await press(p, "acquire");
-  assert.ok(btn(p, "monitor", '[data-bundle="INFO-2026-0001-street-maintenance-2026-pdf"]'));
-  /* control: bytes the record already held name no new bundle, so watching is not offered */
-  const q = await open("/app/capture", { plane: { acquire: ok({ ok: true, existed: true, document: DOC }) } });
-  fill(q, { "ci-address": ADDRESS });
-  await press(q, "acquire");
-  assert.match(text(q), /already held exactly these bytes/);
-  assert.equal(btn(q, "monitor"), null);
 });
 
 test("R1 acquire sends the address as the locator, and nothing while the address is empty", async () => {
@@ -98,24 +91,87 @@ test("R1 (N747) an answer without promoted is promoted by the screen as an infor
   assert.doesNotMatch(text(q), /It waits in Held captures/);
 });
 
-test("R1 capturerequest sends the address; monitor sends the captured bundle", async () => {
-  const p = await open("/app/capture", { plane: { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0001" }),
-    promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }) } });
+const CAPTURED = { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0001" }),
+                   promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }) };
+const BUNDLE = "INFO-2026-0001-street-maintenance-2026-pdf";
+
+test("R16 \"Watch this address\" sends monitorset alone, enabled with the frequency chosen, for the bundle the address was captured into", async () => {
+  const p = await open("/app/capture", { plane: { ...CAPTURED, monitorset: ok({ ok: true, bundleId: BUNDLE, enabled: true, frequency: "daily" }) } });
   fill(p, { "ci-address": ADDRESS });
-  await press(p, "capturerequest");
-  assert.deepEqual(p.byOp("capturerequest")[0].body, { address: ADDRESS });
-  assert.match(text(p), /Asked for later/);
   await press(p, "acquire");
-  await press(p, "monitor");
-  assert.deepEqual(p.byOp("monitor")[0].body, { bundleId: "INFO-2026-0001-street-maintenance-2026-pdf" });
-  assert.match(text(p), /Watching street-maintenance-2026\.pdf for changes/);
-  /* its refusals by the shell (N969: NOT_MONITORED on a bundle the screen writes) */
-  const q = await open("/app/capture", { plane: { acquire: ok({ ok: true, document: DOC }), allocid: ok({ ok: true, id: "INFO-2026-0001" }),
-    promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }), monitor: refused("NOT_MONITORED", "This document is not set to be watched.") } });
+  fill(p, { "ci-freq": "daily" });
+  await press(p, "monitorset", { reason: "To see when it changes." });
+  /* its friction is op-grades' (an ungraded op is reasoned, interface-shell R11): a reason the shell asks rides beside */
+  const { reason, ...sent } = p.byOp("monitorset")[0].body;
+  assert.deepEqual(sent, { bundleId: BUNDLE, enabled: true, frequency: "daily" });
+  assert.equal(p.byOp("monitorset").length, 1);
+  assert.equal(p.byOp("monitor").length, 0, "watching sends no check");
+  assert.match(text(p), /Watching street-maintenance-2026\.pdf for changes, Every day\./);
+  /* the frequency left as drawn is weekly */
+  const q = await open("/app/capture", { plane: { ...CAPTURED, monitorset: ok({ ok: true }) } });
   fill(q, { "ci-address": ADDRESS });
   await press(q, "acquire");
-  const r = await press(q, "monitor");
-  assert.match(r.slot().textContent, /not set to be watched/);
+  await press(q, "monitorset", { reason: "r" });
+  assert.equal(q.byOp("monitorset")[0].body.frequency, "weekly");
+});
+
+test("R16 \"Check it now\" sends monitor alone, for the same bundle", async () => {
+  const p = await open("/app/capture", { plane: { ...CAPTURED, monitor: ok({ ok: true }) } });
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "acquire");
+  await press(p, "monitor");
+  assert.deepEqual(p.byOp("monitor").map((r) => r.body), [{ bundleId: BUNDLE }]);
+  assert.equal(p.byOp("monitorset").length, 0, "checking sets no watching");
+  assert.match(text(p), /Checked street-maintenance-2026\.pdf just now/);
+});
+
+test("R14 an address not captured this visit is watched through the held document for that address; none known, nothing is sent", async () => {
+  const held = ok({ ok: true, held: [{ bundle_id: "INFO-2026-0003-other", title: "Other", source: { address: "https://x.example/y" } },
+                                     { bundle_id: "INFO-2026-0002-report", title: "The report", source: { address: ADDRESS } }] });
+  const p = await open("/app/capture", { plane: { heldcaptures: held, monitorset: ok({ ok: true }), monitor: ok({ ok: true }) } });
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "monitorset", { reason: "r" });
+  assert.equal(p.byOp("monitorset")[0].body.bundleId, "INFO-2026-0002-report");
+  await press(p, "monitor");
+  assert.equal(p.byOp("monitor")[0].body.bundleId, "INFO-2026-0002-report");
+  /* control: an address no held document names: nothing is sent, and the member is told to capture it first */
+  const q = await open("/app/capture", { plane: { heldcaptures: held } });
+  fill(q, { "ci-address": "https://never.example/z" });
+  const r = await press(q, "monitorset", { reason: "r" });
+  assert.equal(q.byOp("monitorset").length, 0);
+  assert.match(r.slot().textContent, /capture it first, then watch it/);
+  const e = await open("/app/capture");
+  assert.match((await press(e, "monitor")).slot().textContent, /Write the address first/);
+  assert.equal(e.byOp("monitor").length, 0);
+});
+
+test("R14 NOT_MONITORED, NO_LOCATOR and MONITOR_SET_REFUSED are drawn by the shell's rule (R13), the answer's own words", async () => {
+  for (const [op, code] of [["monitor", "NOT_MONITORED"], ["monitorset", "NO_LOCATOR"], ["monitorset", "MONITOR_SET_REFUSED"]]) {
+    const p = await open("/app/capture", { plane: { ...CAPTURED, [op]: refused(code, `Words for ${code}.`) } });
+    fill(p, { "ci-address": ADDRESS });
+    await press(p, "acquire");
+    const r = await press(p, op, { reason: "r" });
+    assert.match(r.slot().textContent, new RegExp(`Words for ${code}\\.`), code);
+    assert.doesNotMatch(text(p), /Watching street|Checked street/, code);
+  }
+});
+
+test("R14 \"Ask for this later\" sends capturerequest with the address and no run, and says when the request waits (drains: false)", async () => {
+  const p = await open("/app/capture", { plane: { capturerequest: ok({ ok: true, id: "CR-1", drains: false }) } });
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "capturerequest");
+  assert.deepEqual(p.byOp("capturerequest")[0].body, { address: ADDRESS }, "no run named");
+  assert.match(text(p), /waits until your group's Civicsmith captures on its own, unattended/);
+  /* control: a request that drains is asked for later, with no waiting sentence */
+  const q = await open("/app/capture", { plane: { capturerequest: ok({ ok: true, id: "CR-2", drains: true }) } });
+  fill(q, { "ci-address": ADDRESS });
+  await press(q, "capturerequest");
+  assert.match(text(q), /Asked for later: https/);
+  assert.doesNotMatch(text(q), /unattended/);
+  /* nothing is sent with no address */
+  const e = await open("/app/capture");
+  await press(e, "capturerequest");
+  assert.equal(e.byOp("capturerequest").length, 0);
 });
 
 test("R2 the file tab: accept and capture attributes, four choices none preselected, the downloaded offer, the photo reminder", async () => {
@@ -211,32 +267,36 @@ test("R3 testify sends the member's words with where, and when as observedAt; ne
   assert.equal(q.byOp("testify").length, 0);
 });
 
-test("R3 writinghelp is drawn under the words only while the assistant is reachable, told only what the member typed", async () => {
+test("R3 R10 writinghelp under the words only while reachable; its draft filled into the words field itself, labelled, kept only by testify", async () => {
   const off = await open("/app/capture/saw");
   assert.equal(btn(off, "writinghelp"), null);
-  const p = await open("/app/capture/saw", { reachable: true, plane: { writinghelp: ok({ ok: true, text: "The pothole is still open, about 60 cm across." }) } });
+  const p = await open("/app/capture/saw", { reachable: true, plane: { writinghelp: ok({ ok: true, text: "The pothole is still open, about 60 cm across.",
+    label: { kind: "machine", asked_by: "mai" } }), testify: ok({ ok: true, id: "INFO-2026-0009" }) } });
   const h = html(p);
   assert.ok(h.indexOf('data-act="writinghelp"') > h.indexOf('id="ci-words"'), "under the words field");
   assert.ok(h.indexOf('data-act="writinghelp"') < h.indexOf('id="ci-where"'));
+  assert.doesNotMatch(text(p), /Draft ·/, "no label before a draft");
   fill(p, { "ci-words": "pothole still open 60cm" });
   await press(p, "writinghelp");
   assert.deepEqual(p.byOp("writinghelp")[0].body, { op: "testify", field: "words", told: "pothole still open 60cm" });
-  assert.equal(p.doc.getElementById("ci-words"), null, "the draft is drawn into a new field");
-  assert.equal(main(p).querySelector("textarea.rec").textContent, "The pothole is still open, about 60 cm across.");
-  assert.match(text(p), /Draft by the assistant, at your request/);
-  /* the member's own act then sends the draft as edited */
-  const id = main(p).querySelector("textarea.rec").id;
-  fill(p, { [id]: "The pothole is still open.", "ci-where": "Seminary Ave", "ci-when": "2026-10-04T09:10:00Z" });
+  /* R10: the same field, filled (cs.fill); no field of a new id */
+  assert.equal(p.doc.getElementById("ci-words").value, "The pothole is still open, about 60 cm across.");
+  assert.equal(main(p).querySelectorAll("textarea.rec").length, 1);
+  assert.match(text(p), /Draft · the assistant's, asked by mai/);
+  assert.equal(p.byOp("testify").length, 0, "nothing is kept by the draft itself");
+  /* the member's own act keeps the draft as edited */
+  fill(p, { "ci-words": "The pothole is still open.", "ci-where": "Seminary Ave", "ci-when": "2026-10-04T09:10:00Z" });
   await press(p, "testify");
   assert.match(p.byOp("testify")[0].body.words, /^The pothole is still open\./);
+  assert.doesNotMatch(text(p), /Draft ·/, "the label leaves once the member's own act kept it");
   /* control: nothing typed, nothing asked */
   const q = await open("/app/capture/saw", { reachable: true });
   await press(q, "writinghelp");
   assert.equal(q.byOp("writinghelp").length, 0);
 });
 
-test("R3 (K2816 (2)) a writing-help draft carries the test-instance label exactly when its answer carries untested", async () => {
-  for (const [answer, labelled] of [[{ ok: true, text: "X.", untested: true }, true], [{ ok: true, text: "X.", label: "untested" }, true], [{ ok: true, text: "X." }, false]]) {
+test("R3 R10 (K2816 (2); wizard-scripts R34) a writing-help draft carries the test-instance label exactly when its answer carries untested", async () => {
+  for (const [answer, labelled] of [[{ ok: true, text: "X.", untested: true }, true], [{ ok: true, text: "X.", untested: "untested", label: { kind: "machine", asked_by: "mai" } }, true], [{ ok: true, text: "X." }, false]]) {
     const p = await open("/app/capture/saw", { reachable: true, plane: { writinghelp: ok(answer) } });
     fill(p, { "ci-words": "x" });
     await press(p, "writinghelp");
