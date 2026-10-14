@@ -728,7 +728,7 @@ export function makeFetch(hooks = {}) {
       /* R28, R58 (admission R21; F4): the public ops' window first, before the op reads or writes anything; then who is
          calling, as admission knows them (a keyed fingerprint and a country, never the address), the stamps `claim`,
          `login` and `recover` take (credentials R1, R4, R47) and capture's knock its `country` (its R85). */
-      const windowed = await doorWindowGate({ req, env, op, spec, doAnswer });
+      const windowed = await doorWindowGate({ req, env, op, spec, doAnswer, credential, background });
       if (windowed.refusal) return refused(windowed.refusal);
       /* (T38; K2326) the window's answer carries the source; when the window was not read, `sourceOf` is asked again
          only where it needs no store (the fingerprint key bound), so a store fault is never asked a second time and the

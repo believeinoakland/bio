@@ -38,3 +38,7 @@ Inherited reds with R96 applied: capture-requests `plane.test.mjs` 6/6 and agent
 For BOB: op-declarations R72 names the project field of `projectownervotes` "as `projectquestions`' `project`" but project-roster's arm reads `projectId`; the two should agree (the door passes the address whole, so it works either way).
 
 Size (session_01QMJqW2szJbMpxeJUYG9Lo1): test runs 11, module lines 3763
+
+## Completion (CHANGE B2, B3)
+- **B2 (K3369):** `doorWindowGate({ req, env, op, spec, doAnswer, credential, background })` at the public ops' window (`index.mjs`:731). Admission's job has not merged, so its current signature ignores the two new arguments; admission R27 counts them once it merges.
+- **B3:** `tranche/T49` merged (setup-words, op-capabilities, interface-assets). Against the real `word`/`hasWord` and the op-declarations stand-in only: `test/m/control-plane/` 287 tests, 283 pass. Red: `totality.test.mjs` (rule 5 (3), as before) and three e2e tests, `t46-e2e` `home` and `capture`, `t47-e2e` wizard front door. All three fail identically on `tranche/T49` without my change (screens not yet merged, rule 5 (7) (B)); not caused here.
