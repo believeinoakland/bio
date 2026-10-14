@@ -27,6 +27,18 @@ function standIns(m) {
   return creds;
 }
 
+/* The founder's own handle (membership R144, T49). Sets it through membership's `founderHandleSet` where membership has
+   merged it; until then a stand-in `founderHandle()` (held or null) is put on the membership instance, so this module's
+   reads of R144 run unchanged. */
+function founderHandleOf(m) {
+  if (typeof m.founderHandle === "function") {
+    return { set: (handle) => m.founderHandleSet({ handle, by: "admin" }), stub: false };
+  }
+  let held = null;
+  m.founderHandle = () => held;
+  return { set: (handle) => { held = handle; return { ok: true, handle }; }, stub: true };
+}
+
 export function world() {
   const db = new DatabaseSync(":memory:");
   db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT, project TEXT,
@@ -55,11 +67,14 @@ export function world() {
   const m = membershipOf(ctx, { record: core });
   m.migrate();
   const creds = standIns(m);
+  const founder = founderHandleOf(m);
   const r = projectRosterOf(ctx, { record: core, membership: m, clock });
   if (projectRosterOf(ctx) !== r) throw new Error("projectRosterOf answers one instance per storage");
   r.migrate();
   const w = {
     db, sql, core, m, r, declared, creds, ctx, settings, time,
+    /* The founder chooses her handle (membership R144): `founderHandleSet` as the founder's own act. */
+    founderHandle: (handle) => founder.set(handle),
     bundle(id, type = "information", title = `title of ${id}`, project = null, state = null) {
       db.prepare(`INSERT INTO bundles (bundle_id, object_type, title, project, current_state) VALUES (?,?,?,?,?)`)
         .run(id, type, title, project, state);
@@ -127,10 +142,11 @@ export async function realWorld() {
   const m = membershipOf(ctx);
   m.migrate();
   const creds = standIns(m);
+  const founder = founderHandleOf(m);
   const time = { now: null };
   const r = projectRosterOf(ctx, { clock: () => time.now ?? Date.now() });
   r.migrate();
-  const w = { db, sql, rc, m, r, creds, time,
+  const w = { db, sql, rc, m, r, creds, time, founderHandle: (handle) => founder.set(handle),
     async claim() { creds.claimed = true; },
     async enrol(id, role = "member") {
       const a = await m.memberAdd({ memberId: id, cover: `cover of ${id}`, role, by: "admin" });

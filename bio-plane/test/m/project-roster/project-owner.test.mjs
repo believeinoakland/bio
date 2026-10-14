@@ -1,6 +1,6 @@
 /* R27 (T47; K3064, K3069; DEC-201 `projects`): `projectlist` answers each listed project's `owner`, the member who opened
    it (its first author, as the project's own record states: record-core R37's `manifest`, first entry), as
-   `{member, handle}` (the founder's `{member: "admin", handle: "admin"}`, K3074), or null when that opener is no
+   `{member, handle}` (the founder's as R29 names her, `{member: "admin", handle, founder: true}`, K3074), or null when that opener is no
    longer an active member or names no member; nothing else about the owner. At the
    interface: membership's acts set up members and participation, manifest entries are the record's, and the list is
    read through `projectList` and its op. */
@@ -59,7 +59,7 @@ test("R27 two projects opened by two members each answer their opener, {member, 
     if (p.owner) assert.deepEqual(Object.keys(p.owner).sort(), ["handle", "member"], p.id);
 });
 
-test("R27 an opener no longer an active member answers null (revoked), and again when active; a machine's, an unknown author's and an unrecorded opening answer null; the founder's answers {member: admin, handle: admin} (K3074)", async () => {
+test("R27 an opener no longer an active member answers null (revoked), and again when active; a machine's, an unknown author's and an unrecorded opening answer null; the founder's answers as R29 names her (K3074)", async () => {
   const w = await ownerWorld();
   w.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='bob'`);
   assert.deepEqual(owners(w.r.projectList({ viewer: M })), {
@@ -78,8 +78,9 @@ test("R27 an opener no longer an active member answers null (revoked), and again
   w.project("PROJ-0");
   const o = owners(w.r.projectList({ viewer: M }));
   for (const id of ["PROJ-N", "PROJ-K", "PROJ-G", "PROJ-H", "PROJ-0"]) assert.equal(o[id], null, id);
-  /* the founder has no roster row and is answered as the founder, by the handle `admin` (credentials R67) */
-  assert.deepEqual(o["PROJ-F"], { member: "admin", handle: "admin" }, "the founder's");
+  /* the founder has no roster row and is answered as the founder, R29's form: `founder: true`, her handle null while
+     she holds none (the handle held is held by `founder-handle.test.mjs`) */
+  assert.deepEqual(o["PROJ-F"], { member: "admin", handle: null, founder: true }, "the founder's");
   /* the founder only as the FIRST author: a founder's later entry opens nothing */
   w.entry("PROJ-A", "admin");
   assert.deepEqual(owners(w.r.projectList({ viewer: M }))["PROJ-A"], { member: "ann", handle: "ann" });
@@ -125,9 +126,10 @@ test("R27 over the real record-core: the opener is the author of the project's f
   for (const id of ["PROJ-A", "PROJ-B", "PROJ-F", "PROJ-K"]) m.reindexProjectSight(id);
   m.projectClaimOwner({ projectId: "PROJ-A", memberId: "ann" });
   m.projectClaimOwner({ projectId: "PROJ-B", memberId: "bob" });
+  w.founderHandle("foundress");
   assert.deepEqual(owners(r.projectList({ viewer: `${MACHINE_CLASS_PREFIX}admin` })), {
     "PROJ-A": { member: "ann", handle: "ann" }, "PROJ-B": { member: "bob", handle: "bob" },
-    "PROJ-F": { member: "admin", handle: "admin" }, "PROJ-K": null });
+    "PROJ-F": { member: "admin", handle: "foundress", founder: true }, "PROJ-K": null });
   w.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='ann'`);
   assert.equal(owners(r.projectList({ viewer: `${MACHINE_CLASS_PREFIX}admin` }))["PROJ-A"], null, "revoked");
   assert.deepEqual(r.projectList({ viewer: V("bob") }).projects.map((p) => p.id), ["PROJ-B"], "control: A and K unseen");

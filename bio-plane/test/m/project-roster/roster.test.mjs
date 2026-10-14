@@ -34,11 +34,20 @@ test("R1 projectParticipants: a participant (any state), or an administrator at 
   w.r.projectOwnerAdd({ projectId: "PROJ-P", handle: "bob", by: "ann", viewer: V("ann") });
   assert.deepEqual(w.r.projectParticipants({ projectId: "PROJ-P", by: "cal" }).participants.map((x) => x.handle),
     ["ann", "bob", "cal"]);
-  /* T47 (P8): the founder invited is a participant with no roster row, listed by its handle `admin` (as R27, R28) */
+  /* R29: the founder invited is a participant with no roster row, listed by her handle with `founder: true` (null while
+     she holds none), never by the id `admin` */
   w.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated)
                 VALUES ('PROJ-P','admin','invited',0,'t','t')`);
-  assert.deepEqual(w.r.projectParticipants({ projectId: "PROJ-P", by: "cal" }).participants.map((x) => [x.handle, x.state]),
-    [["ann", "joined"], ["bob", "joined"], ["admin", "invited"], ["cal", "invited"]]);
+  const listed = () => w.r.projectParticipants({ projectId: "PROJ-P", by: "cal" }).participants;
+  assert.deepEqual(listed().map((x) => [x.handle, x.state]),
+    [["ann", "joined"], ["bob", "joined"], ["cal", "invited"], [null, "invited"]], "none held: handle null, after the handles");
+  assert.deepEqual(listed().find((x) => x.founder), { handle: null, founder: true, state: "invited", owner: 0, comment: null,
+    created: "t" });
+  assert.deepEqual(listed().filter((x) => "founder" in x).length, 1, "no member carries founder");
+  assert.doesNotMatch(JSON.stringify(w.r.projectParticipants({ projectId: "PROJ-P", by: "cal" })), /"admin"/, "no `admin` at any depth");
+  w.founderHandle("foundress");
+  assert.deepEqual(listed().map((x) => [x.handle, x.state, x.founder ?? false]),
+    [["ann", "joined", false], ["bob", "joined", false], ["cal", "invited", false], ["foundress", "invited", true]]);
   assert.equal(w.r.projectParticipants({ projectId: "PROJ-P", by: "admin" }).ok, true, "the founder reads it as a participant");
   w.sql.exec(`DELETE FROM project_participants WHERE project_id='PROJ-P' AND member_id='admin'`);
   /* anyone else: the absent answer, byte for byte as an id naming nothing (membership R78) */
