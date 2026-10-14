@@ -1,6 +1,6 @@
 # journey-check (T48)
 
-**Status** · session_01Dgr6P5RQPvQFE2ipVdCcfG · depth 2 · RUNNING until 2026-10-14T16:54:37Z (node --test bio-plane/test/m/journey-check/) · handled B4
+**Status** · session_01Dgr6P5RQPvQFE2ipVdCcfG · depth 2 · WAITING ON BOB (J4) · handled B4
 
 ## J1 · QUESTION
 
