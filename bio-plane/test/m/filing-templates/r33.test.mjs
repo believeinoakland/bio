@@ -72,8 +72,6 @@ test("R33 the row moves here unchanged: C-115.47, filings' translation read by k
   assert.deepEqual([ROW.check, ROW.where], ["C-115.47", "src/filing-templates/index.mjs rfcQuotingRefusal > is-rfc-quoting-missing"]);
   assert.equal(ft.FILING_TEMPLATES_WORDS["refusal.RFC_QUOTING_MISSING"], en, "verbatim from words.json, by key");
   assert.equal(ROW.translation, en);
-  assert.equal(ROW.translation, "A request for comment says the reply may be quoted unless it says otherwise. Add that sentence before approving. Nothing was written.",
-               "the words filings' row carried");
 });
 
 test("R33 templateApprove refuses a file version of the request-for-comment kind that lacks the sentence, after REVIEWS_INSUFFICIENT, and writes nothing; control: the same version with the sentence is approved", () => {

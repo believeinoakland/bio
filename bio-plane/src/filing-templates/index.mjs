@@ -208,7 +208,7 @@ export class FilingTemplates {
     const code = act === "review" ? "MACHINE_CANNOT_REVIEW_TEMPLATE"
       : act === "approve" ? "MACHINE_CANNOT_APPROVE_TEMPLATE" : "MACHINE_CANNOT_DRAFT_TEMPLATE";
     return refuse(code, str(who)
-      ? `'${String(who).trim().slice(0, 60)}' is a machine identity: a machine proposes wording and comments, labelled, and nothing else`
+      ? `'${String(who).trim().slice(0, 60)}' is a machine identity: a machine proposes wording and comments, labeled, and nothing else`
       : "no member is named as the one acting: this call carries nobody");
     /* END DEC-49 REGION is-template-member */
   }
