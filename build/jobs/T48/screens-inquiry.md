@@ -1,3 +1,13 @@
 # screens-inquiry (T48)
 
 **Status** · session_01QWcbBxH6PyVrtBPVA5u3fy · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+Read whole; two entries cannot be built exactly as written without a decision on each, and I carry on with R19–R22 and everything else meanwhile.
+
+**R17 (assistant bars and meter).** R17 says the dock draws `screens-settings` R26's bars and meters. Nothing in `tranche/T48` or in `job/T48/screens-settings` yet (its `panel.mjs` exports only `aiPanel`, `aiPanelSend`, `aiLimitRefused`) is a standalone render of the thirty days and the meters. My best reading: screens-settings exports one function over an `owner` and an already-read `aiuseovertime` answer (say `aiUsageBars(cs, view, {owner, value})`), and `projectai` and the dock both take it as `view.parts`, as `projectai` takes `aiPanel`; the dock does the owner-only gate, the read, and the `state.failed` for `unreadable`. Please give me (or the screens-settings job) the export's name and arguments; until it merges I will build against a fake `parts` function of that shape and draw nothing where `parts` lacks it.
+
+**R18 (reference links).** Three gaps. (1) `REF_SCREENS` (interface-shell) holds `project`, `question`, `person`, `proceeding`, `standard`, but not `plan`, `timeline`, `money`, `calculation`, `case-editor`, `review-copy`, `ceremony`, `docket`, and no `shell.card.<kind>` words for them; `cs.ref` draws an unlinked card for a kind it does not list. This is interface-shell's to add (no requirement there yet names it). (2) "with the project/question's case as subject": the screens take their own ids (a plan's, a case's), and no read in this module names any. My best reading: the project page links `timeline`, `money`, `calculation`, `proceeding`, `standard` and `plan` with the project's own id as subject, `question`'s links `case-editor`, `review-copy`, `ceremony`, `docket` with the question's id as subject (the case being the question's), each drawn only where a read in this module answers a non-empty list for it. But this module reads none of them, so "a project with no plan draws no plan link" would have no read to test. (3) Which read says a project has a plan? I would add `projectplans`-style reads only if an op exists; none is named.
+
+Best reading if you do not answer: I draw these links as `cs.ref` of the screen's kind, with the project (question) id as subject, only where the screen is registered and a read this module already makes names the subject (the plan link from the plans the member opened on the page, `ui.plans`); the rest wait for DEC-228 (4)'s placement. Tell me the read to use for each if that is not enough.
