@@ -1,31 +1,29 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #170 (`session_017ePgfoaM3MPJN7L57DySNv`, secondary account, depth 1), 2026-10-14 ~11:00 UTC, at about 55% context, right after T48's L2 closed (K3220), no step half done. Read `build/rulings-active.md` whole first; K3188–K3220 are this session's rulings (grep them in `build/rulings.md`).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #171 (`session_01Fs3ssvftv2vnzcsoCT2fzJ`, secondary account, depth 1), 2026-10-14 ~13:45 UTC, at about 52% context, right after T48's L6 started (K3253) and the L11 design fold was reviewed (K3254); no step half done. Read `build/rulings-active.md` whole first (§4 gained the direct-reach rule, K3248); K3222–K3254 are this session's rulings.
 
 ## Where things stand
 
-- **T47 closed** (PR #35, `main` @ 73269639e8, K3194); PR #34 (DEC-227, DEC-228, T48's words) merged (`main` @ 4664e8efd4). T47 was reported to Bob.
-- **T48 open** on `tranche/T48` (K3195): 83 jobs (`build/plan/current.md`; T48-81–83 added by K3207). **Every layer's requirement text is folded** (L1 K3197, L2 K3198, L3–L5 K3203, L6 K3206, L8–L10 K3207, L11 K3214, with K3211's `lookedsince`). **L1 and L2 closed** (K3209, K3220): all merged, artifacts regenerated and verified, sessions archived, rows in `metrics/T48.csv`. No job session is live.
-- **legacy-ui stays** (K3190, DEC-228): the design stream draws its 21 gaps from DEC-229; U216/U217 answered the census.
-- **Release 0.84.0** cut on `dist/cut-0.84.0` @ 0f31ff9d73 (K3217; report `build/plan/draft-release-0.84.0.md`; it merged the never-merged 0.83.0 cut). **Signing run 38550200586 waits on Bob's approval** in GitHub's `release` environment.
-- **Channel:** UX-DESIGN read through U217; BOB's B188 (opening asks), B189 (duty reasons), B190 (L11 words) not yet read by it. The lanes' HANDOFFs unchanged (investigation H43, actions H31).
+- **T48 open** on `tranche/T48`. **L1–L5 closed** (L3 K3233, L4 K3241, L5 K3252). **L6 running** (K3253): twelve jobs, sessions in the plan's Jobs line; merge order in `starts-T48/*.txt`. L8–L11 not started; their STARTs are written per layer as before (script pattern: `starts-T48/` texts, `build/plan/reading-sets.py`, next session numbers from rulings/archives).
+- **Release 0.84.0** is live on biosmoke7 (K3237; all members SERVING through the plane, K3238) but **not ready**: Bob found Home "a mess" (K3248). WALK-084 #2 compared 60 live screens with the design mock (`build/plan/draft-T48-live-vs-design.md`, screenshots `build/plan/walk-084/`; K3250). Root cause C1: the design page's CSS never ships. The fix is **K3254's fold** (`build/plan/draft-T48-L11-design-fold.md`, reviewed, its open points settled), to be applied before L11's START (plan, "BOB's acts"). Rule 5 (8)'s acceptance of 0.84.0 is withdrawn; the next release follows L11 and journey-check R5/R6.
+- **Debugging the live instance is BOB's, never Bob's** (Bob, K3248). Reach `*.believeinoakland.workers.dev` directly (`curl --noproxy '*'`, Chromium `--no-proxy-server`, node undici with the system CA): the agent proxy replaces `Authorization`. `JOURNEY_ADMIN_HANDLE`/`PASSWORD` (Bob's `sparky`) are in the environment for new sessions (this session saw only the handle). No member credential yet: BOB creates a test member itself once an administrator session works.
+- **WALK-084 #3** (`session_01SaFvJbwTk3vfU6vDvHk1VB`) is investigating, read-only, why `sparky` is a member on biosmoke7 while Bob believes it is an administrator, and why Members' counts disagree with its rows. Read its final message, archive it, write its row (role `walk`), and act: a product defect becomes an L11 entry; a missing role is one act an administrator takes (tell Bob the one act only if no session can take it).
+- **Channel:** UX-DESIGN read through U217; BOB's B188–B194 unread by it (B191 N933, B192 the C1 notice, B193 duty reason keys, B194 the fold's words and two questions). Lanes unchanged (investigation H43, actions H31).
+- Bob's rulings this session: K3229 (meter 48%), K3230 (N933: B, a stake per matter; requirements drafted for T49, K3231), K3236 (0.84.0 deploy approved), K3248 (debug without him).
 
 ## What comes next, in order
 
-1. **Take over** (§5.1): archive BOB #170, write its BOB-final row in `build/metrics/T48.csv`; delete its backstop and `WATCH #170` (`trig_0146X5B6uVUazfZTbzLVaH8B`, into ROOT #6) and arm your own.
-2. **Start L3** (§5.3): host-governor, provenance, acquisition, capture (T48-13…16; merge order in the plan). Write STARTs as `starts-T48/` does (reading sets by `build/plan/reading-sets.py`; next session numbers from the archives). Then L4…L11, folding nothing more unless a job's question changes a requirement. At each layer close regenerate per the manifest (K1540's order; `npm ci` in agent-runner `--ignore-scripts` and sheet-worker after a container restart).
-3. **Release 0.84.0, after Bob approves run 38550200586:** the seven `ssh-keygen -Y verify` controls; step 8 rebuilds the installer embedding the signed release and **commits `newgroup/src/release.mjs` with the bundle** (it clears installer's three embed reds); merge `dist/cut-0.84.0` into `tranche/T48` (K2273, K3217); then each deploy to `biosmoke7` is Bob's approval in session (K1715, K1716): walk him through each; rollback targets in the report. Before telling Bob it is ready, sign in as administrator and as member and look at every screen (K3052).
-4. Alongside (P18): `next.md` N1059 (file-scanner's split map), N1060 (a refused sign-in and run credentials), N1058. Owed by BOB between tranches: N1047's workflow step (a cut commits `release/notes/<V>.json`, signs and publishes the notice), N898.
+1. **Take over** (§5.1): archive BOB #171, write its BOB-final row in `metrics/T48.csv`; delete its backstop and `WATCH #171` (`trig_01NcjMbYAVh2f51zQHkavDe4`, into ROOT #6); arm your own.
+2. **Watch L6** (§5.4); merge each job in order; close L6 (regenerate per the manifest; agent-worker's bundle changes). Then L8, L9, L10.
+3. **Before L11's START:** apply K3254's fold (requirements text, T48-85/86 and the "also" lines), with WALK-084 #3's findings; measure L11's reading sets.
+4. Alongside (P18): `next.md` N1058; N1060's and N933's T49 entries are written.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
 - T48's close merges `tranche/T48` into `main` by PR with the GitHub merge tool, method merge (§5.7 (3); CLAUDE.md standing direction; standing list `mcp__github__merge_pull_request`); no refusal recorded.
-- Deploys to `biosmoke7` are Bob's approval in session each time (K1715; never on the standing list).
+- Deploys to biosmoke7 are Bob's approval in session each time (K1715; never on the standing list). The next deploy follows L11.
 
 ## Open with Bob
 
-- **Approve signing run 38550200586** (github.com/believeinoakland/bio/actions/runs/38550200586 → Review deployments → tick `release` → Approve and deploy).
-- **His weekly meter reading** (the session shows a seven-day `allowed_warning`; K2341's 80% pause stands).
-- **How a translation reaches Civicsmith** (N670's R88): A an address he names (recommended), B a receiving service, C not yet.
-- **The terms a group's offered translation ships under** (legal exposure, K3190): (a) the same terms as Civicsmith's own words, naming Civicsmith's licence (recommended), (b) a contributor agreement per group, (c) later.
-- **civicsmith.org's DNS and email** (K3060 D14); **the records-request template's reviewer** (N858); **N933** through the actions lane.
+- **Translations** (N670's R88 and K3190's terms): Bob asked how publications are found; BOB's answer proposed **D (publish in the group's public index; Civicsmith's library and other groups pull; a pre-filled submission to the library by the member's hand) and (a) (the same terms as Civicsmith's own words)**. Waiting for "Translation: D, (a)" or another choice.
+- **civicsmith.org's DNS and email** (K3060 D14); **the records-request template's reviewer** (N858).
