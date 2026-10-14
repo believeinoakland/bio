@@ -54,3 +54,7 @@ B3: tranche/T47 merged (wizard-scripts, op-grades); re-ran. Module 35/35. Checks
 **B4, B5 (CHANGE, K3149): re-run after merging `tranche/T47` (setup-words T47-52, instance-setup T47-75).** B5 was already met by R16's re-pointing: no file of this module imports `setupPage` or `setup-page`. The only `src/setup.mjs` import is instance-setup's refusal entries (`INSTANCE_SETUP_CHECKS`, R7). `node --test bio-plane/test/m/answer-envelope/`: 35 pass, 0 fail. Users, `tranche/T47` alone → with this job: `store-door` 45/0 → 45/0; `plane` 216/7 → 216/7; `control-plane` 234/8 → 232/10 (the two C-69.6 pins, J2). Checks: format 0, architecture 0, coverage 16 of 16 (0), ownership 0. `run.mjs`: architecture 0 (3131 files), channels 0, coverage 20 failures, all other modules' unmerged T47 ids.
 
 Size (session_013osHE4dWKZtRLQMyZZYfNj): test runs 19, module lines 887
+
+## J5 · COMPLETE
+
+B4, B5: tranche/T47 merged (setup-words, instance-setup); re-ran. B5 was already met: page-policy.test.mjs dropped the setupPage import with R16 and drives interfacePage's shape; no file of this module imports setupPage. Module 35/35. Checks 0 failures; run.mjs architecture 0. Users, tranche alone → with this job: store-door 45/0 → 45/0; plane 216/7 → 216/7; control-plane 234/8 → 232/10 (J2's two C-69.6 pins).
