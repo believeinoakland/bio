@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { Walk, FAIL, INTERFACE_MARK, SETUP_PAGE_TITLE, documentKind } from "../../../src/journey-check/walker.mjs";
-import { drawnState, sweepScreens, registryScreens, EXCEPTED } from "../../../src/journey-check/screens.mjs";
+import { drawnState, sweepScreens, registryScreens, EXCEPTED, INSTALLER_SCREENS } from "../../../src/journey-check/screens.mjs";
 import { browser } from "../../../src/journey-check/run.mjs";
 import { ABSENCE } from "../../../src/journey-check/journeys.mjs";
 
@@ -28,7 +28,7 @@ const API = { queue: { ok: true, items: [] }, enroll: { ok: false, code: "HANDLE
 
 let B, dir;
 before(async () => { B = await browser(); dir = mkdtempSync(join(tmpdir(), "jc-walker-")); });
-after(async () => { await B.close(); rmSync(dir, { recursive: true, force: true }); });
+after(async () => { await B?.close(); rmSync(dir, { recursive: true, force: true }); });
 
 async function walked(path, { expect = [] } = {}) {
   const walk = new Walk({ out: join(dir, String(Math.random()).slice(2)), arm: "local" });
@@ -149,7 +149,10 @@ test("R2 (K3137): the sweep opens every registry screen but `site` and the `dash
   const all = registryScreens().map((s) => s.id);
   const swept = sweepScreens().map((s) => s.id);
   assert.deepEqual(EXCEPTED, ["site", "dash-home", "dash-action", "dash-project"]);
-  assert.deepEqual(all.filter((id) => !swept.includes(id)).sort(), ["dash-action", "dash-home", "dash-project", "install", "site", "update"]);
+  /* exactly those the registry lists of the excepted and the installer's (DEC-218 retired `dash-home` from it) */
+  const held = [...EXCEPTED, ...INSTALLER_SCREENS].filter((id) => all.includes(id)).sort();
+  assert.deepEqual(all.filter((id) => !swept.includes(id)).sort(), held);
+  for (const id of ["site", "install", "update"]) assert.ok(held.includes(id), id);
   for (const id of ["front", "setup", "join", "home", "members", "account", "capture", "doorbell", "published"]) assert.ok(swept.includes(id), id);
 });
 
