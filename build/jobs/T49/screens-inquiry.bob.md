@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T49)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -39,3 +39,11 @@ K3372: both readings stand: J1 the frozen per-mode bounds table derived from run
 ## B6 · ANSWER · re J3
 
 K3373: interface-shell R72 admits every act the design's registry lists that the stale generated registry lacks; the re-take is N1122 (T50). Keep your local loader for tests until interface-shell merges, then merge the tranche and drop it.
+
+## B7 · CHANGE
+
+K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B8 · ANSWER · re J4
+
+K3375: your fallbacks stand (draw only what is answered; no grade mark rather than Unrated); the missing reads are N1124 (T50).
