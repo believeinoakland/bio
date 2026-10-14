@@ -77,16 +77,16 @@ test("R31: affordances R12's totality holds over a stand-in of op-declarations R
 });
 
 /* ---- R1, R30: T42's re-points (wording only; N826, N839; K2656) ----------------------------------------------------- */
-test("R1 (N826): inboxresolve stays `reasoned`, backed by RESOLVE_NO_REASON, its sentence citing doorbell R3 and R13 and "
-   + "no retired capture id; inboxpull's statement cites doorbell R13", () => {
+test("R1 R35 (N826): inboxresolve stays `reasoned`, backed by RESOLVE_NO_REASON, its sentence citing doorbell R3 and R13 "
+   + "and no retired capture id; inboxpull, `reversible` since R35, its sentence citing op=inboxpull's door", () => {
   assert.equal(RUNGS.inboxresolve, "reasoned");
   assert.ok(JUSTIFICATION_REFUSALS.includes("RESOLVE_NO_REASON"));
   assert.match(NON_ACTS.inboxresolve, /\(doorbell R3, RESOLVE_NO_REASON\)/);
   assert.match(NON_ACTS.inboxresolve, /\(doorbell R3, R13\)$/);
-  assert.match(RUNG_ABSENT.inboxpull.is, /\(doorbell R13\)$/);
-  assert.equal(gradeOf("inboxpull"), "undetermined");
+  assert.equal(gradeOf("inboxpull"), "reversible");
+  assert.ok(!Object.hasOwn(RUNG_ABSENT, "inboxpull"));
   /* negative control: neither names capture's retired R32 or R65 */
-  for (const s of [NON_ACTS.inboxresolve, RUNG_ABSENT.inboxpull.is]) assert.doesNotMatch(s, /capture R(32|65)/);
+  for (const s of [NON_ACTS.inboxresolve, NON_ACTS.inboxpull]) assert.doesNotMatch(s, /capture R(32|65)/);
 });
 
 test("R30 (N839): accountpropose stays `undetermined`, its statement naming case-account R1, R2 and never case-authoring",
