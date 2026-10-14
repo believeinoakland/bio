@@ -252,12 +252,13 @@ test("R2, R7 (N520, N522, N526, N533; K1310, K1331): the list reads accepted-wor
     assert.deepEqual(M.dec49Row(code), { check, translation: DK[code].translation }, code);
 });
 
-test("R2, R7 (N529; K1331, K1333; T38: N788, K2310; T39: N806, K2333; T41: K2428, K2538) .20–.29: the list reads case-disclosures' C-120 (`CASE_DISCLOSURE_CHECKS`) in its module's place (after case-import, directly before case-account since T45, which directly precedes case-authoring), every one of its rows (C-120.1–C-120.8, C-120.10–C-120.22; .14–.16 since T33, K1638; .17, .18 since T37, K2227; C-120.19 `PHOTO_UNCHECKED` since T38; C-120.20–.22, a member document's copy, since T39; C-120.23–.29, the account's sentences, since T41, K2538) decorates with its own check and words, C-120.17 `PHOTO_NOT_COVERABLE` and C-120.19 `PHOTO_UNCHECKED` with `words.json`'s `photo.refused.format` and `photo.refused.unchecked` verbatim, C-120.21 `DOCUMENT_COPY_PENDING` and C-120.22 `DOCUMENT_NOT_CLEANABLE` with case-disclosures' `DOCUMENT_WORDS` `document.refused.pending` and `document.refused.clean` verbatim (BOB's drafts until `words.json` holds the keys), case-authoring's file no longer holds them, and C-120.9 is held by no code (negative control: the list without case-disclosures' file misses its family)", async () => {
+test("R2, R7 (N529; K1331, K1333; T38: N788, K2310; T39: N806, K2333; T41: K2428, K2538) .20–.29: the list reads case-disclosures' C-120 (`CASE_DISCLOSURE_CHECKS`) in its module's place (after case-import, directly before case-account since T45, which directly precedes case-inputs and then case-authoring since T47), every one of its rows (C-120.1–C-120.8, C-120.10–C-120.22; .14–.16 since T33, K1638; .17, .18 since T37, K2227; C-120.19 `PHOTO_UNCHECKED` since T38; C-120.20–.22, a member document's copy, since T39; C-120.23–.29, the account's sentences, since T41, K2538) decorates with its own check and words, C-120.17 `PHOTO_NOT_COVERABLE` and C-120.19 `PHOTO_UNCHECKED` with `words.json`'s `photo.refused.format` and `photo.refused.unchecked` verbatim, C-120.21 `DOCUMENT_COPY_PENDING` and C-120.22 `DOCUMENT_NOT_CLEANABLE` with case-disclosures' `DOCUMENT_WORDS` `document.refused.pending` and `document.refused.clean` verbatim (BOB's drafts until `words.json` holds the keys), case-authoring's file no longer holds them, and C-120.9 is held by no code (negative control: the list without case-disclosures' file misses its family)", async () => {
   const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
   const path = "src/case-disclosures/checks.mjs";
   assert.ok(paths.indexOf("src/case-import/checks.mjs") < paths.indexOf(path), paths.join(", "));
   assert.equal(paths.indexOf(path) + 1, paths.indexOf("src/case-account/checks.mjs"), paths.join(", "));
-  assert.equal(paths.indexOf(path) + 2, paths.indexOf("src/case-authoring/checks.mjs"), paths.join(", "));
+  /* since T47 (R15) case-inputs' file stands between case-account's and case-authoring's */
+  assert.equal(paths.indexOf(path) + 3, paths.indexOf("src/case-authoring/checks.mjs"), paths.join(", "));
   const table = (await import(`../../../${path}`)).CASE_DISCLOSURE_CHECKS;
   assert.deepEqual(Object.values(table).map((r) => r.check).sort((a, b) => Number(a.split(".")[1]) - Number(b.split(".")[1])),
     ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7", "C-120.8", "C-120.10", "C-120.11", "C-120.12", "C-120.13",
@@ -616,14 +617,14 @@ test("R12, R7, R2 (T43; N851, K2609, K2697): CHECK_FAMILY_FILES lists doorbell's
    after it]`, each its module's place in `build/modules.json`. action-producers' C-152 joins when its file exists (BOB's
    CHANGE). */
 const T45_FAMILIES = [
-  ["src/case-account/checks.mjs", "CASE_ACCOUNT_CHECKS", "C-153.", "case-account", "src/case-disclosures/checks.mjs", "src/case-authoring/checks.mjs"],
+  ["src/case-account/checks.mjs", "CASE_ACCOUNT_CHECKS", "C-153.", "case-account", "src/case-disclosures/checks.mjs", "src/case-inputs/checks.mjs"],
   ["src/case-check/checks.mjs", "CASE_CHECK_CHECKS", "C-148.", "case-check", "src/review/checks.mjs", "src/conformance/checks.mjs"],
   ["src/action-holds/checks.mjs", "ACTION_HOLDS_CHECKS", "C-149.", "action-holds", "src/action-grammar/checks.mjs", "src/action-clocks/checks.mjs"],
   ["src/action-replies/checks.mjs", "ACTION_REPLY_CHECKS", "C-150.", "action-replies", "src/action-clocks/checks.mjs", "src/filing-templates/checks.mjs"],
   ["src/plan-work/checks.mjs", "PLAN_WORK_CHECKS", "C-151.", "plan-work", "src/action-plans/checks.mjs", "src/monitoring/checks.mjs"],
 ];
 
-test("R7, R2 (T45-49; K2834, K2845, K2859): CHECK_FAMILY_FILES lists T45's new families at their `modules.json` places — case-account's C-153 directly after case-disclosures' and before case-authoring's, case-check's C-148 after review's and before conformance's, action-holds' C-149 after action-grammar's (actions holding no file) and before action-clocks', action-replies' C-150 after action-clocks' and before filing-templates', plan-work's C-151 after action-plans' and before monitoring's — so CHECK_FAMILIES is total again; every one of their codes decorates with its own family's row unless an earlier family holds the code, no later family holds a code one of them decorates, the moved PRESSURE_MARKED and PRESSURE_NO_ENTRY read C-149.6 and C-149.7, and no code decorated without them moves (negative control: the list without any one of the five files misses its family, and the totality test fails)", async () => {
+test("R7, R2 (T45-49; K2834, K2845, K2859): CHECK_FAMILY_FILES lists T45's new families at their `modules.json` places — case-account's C-153 directly after case-disclosures' and before case-inputs' (since T47, R15; case-authoring's after it), case-check's C-148 after review's and before conformance's, action-holds' C-149 after action-grammar's (actions holding no file) and before action-clocks', action-replies' C-150 after action-clocks' and before filing-templates', plan-work's C-151 after action-plans' and before monitoring's — so CHECK_FAMILIES is total again; every one of their codes decorates with its own family's row unless an earlier family holds the code, no later family holds a code one of them decorates, the moved PRESSURE_MARKED and PRESSURE_NO_ENTRY read C-149.6 and C-149.7, and no code decorated without them moves (negative control: the list without any one of the five files misses its family, and the totality test fails)", async () => {
   const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
   const at = (p) => paths.indexOf(p);
   const order = MODULES.map((m) => m.id);
@@ -683,4 +684,58 @@ test("R7, R2 (T45-49; K2834, K2845, K2859): CHECK_FAMILY_FILES lists T45's new f
     }
   /* negative control: the totality test fails with any one of them left out */
   for (const [p] of T45_FAMILIES) assert.notDeepEqual(await unreached(M.CHECK_FAMILY_FILES.filter(([q]) => q !== p)), []);
+});
+
+/* R15's rows (N908 §5; case-inputs R12): `[family, check prefix]`; C-82.2–C-82.8 pinned by R7's snapshot. */
+const CASE_INPUTS_FAMILIES = [["STATEMENT_ACK_CHECKS", /^C-82\.[2-8]$/], ["CARRIED_OUTCOME_CHECKS", /^C-136\.[3-8]$/]];
+
+test("R15, R7, R2 (T47; N908 §5; case-inputs R12, R17): CHECK_FAMILY_FILES reads case-inputs' file (`STATEMENT_ACK_CHECKS` C-82.2–C-82.8, `CARRIED_OUTCOME_CHECKS` C-136.3–C-136.8) directly before case-authoring's (after case-account's), its place in `build/modules.json`, so the catalogue is total again; every one of its codes is held by its family alone and decorates with its own check and translation, the pinned C-82 rows reading R7's pins; action-records holds no family and has no entry; control: every code R7 pins other than C-136.5 (pinned by none) decorates as before (negative control: the list without case-inputs' file misses its two families and leaves its codes bare)", async () => {
+  const { createHash } = await import("node:crypto");
+  const SNAP = JSON.parse(readFileSync(new URL("./rows-before-r43.json", import.meta.url), "utf8"));
+  const digest = (x) => createHash("sha256").update(x).digest("hex").slice(0, 16);
+  const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
+  const path = "src/case-inputs/checks.mjs";
+  /* its place: directly between case-account's and case-authoring's, as case-inputs stands between them in modules.json */
+  assert.equal(paths.indexOf("src/case-account/checks.mjs") + 1, paths.indexOf(path), paths.join(", "));
+  assert.equal(paths.indexOf(path) + 1, paths.indexOf("src/case-authoring/checks.mjs"), paths.join(", "));
+  const order = MODULES.map((m) => m.id);
+  assert.ok(order.indexOf("case-account") < order.indexOf("case-inputs") && order.indexOf("case-inputs") < order.indexOf("case-authoring"), order.join(", "));
+  assert.ok(MODULES.find((m) => m.id === "answer-envelope").uses.includes("case-inputs"), "answer-envelope uses case-inputs");
+  /* action-records holds no family of its own (action-records R14) */
+  assert.equal(paths.some((p) => p.startsWith("src/action-records/")), false);
+  /* the catalogue is total with it, and reads the module's own file */
+  assert.deepEqual(await unreached(M.CHECK_FAMILY_FILES), []);
+  const CI = M.CHECK_FAMILY_FILES[paths.indexOf(path)][1];
+  assert.equal(CI, await import(`../../../${path}`));
+  const holders = (files, code) => files.flatMap(([p, ns]) => Object.entries(ns).filter(([k, v]) => isFamily(k, v) && Object.hasOwn(v, code))
+    .map(([k]) => `${p} ${k}`));
+  const codes = new Set();
+  assert.deepEqual(Object.entries(CI).filter(([k, v]) => isFamily(k, v)).map(([k]) => k).sort(), CASE_INPUTS_FAMILIES.map(([f]) => f).sort());
+  for (const [fam, prefix] of CASE_INPUTS_FAMILIES) {
+    const table = CI[fam];
+    assert.ok(Object.keys(table).length >= 6, fam);
+    for (const [code, row] of Object.entries(table)) {
+      codes.add(code);
+      assert.match(row.check, prefix, `${fam}.${code}`);
+      assert.ok(typeof row.translation === "string" && row.translation, code);
+      assert.deepEqual(holders(M.CHECK_FAMILY_FILES, code), [`${path} ${fam}`], code);
+      assert.equal(M.CHECK_FAMILIES[fam][code], row, `${fam}.${code} by identity`);
+      assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
+      assert.deepEqual(M.dec49Attach({ ok: false, reason: code }), { ok: false, reason: code, code, check: row.check, translation: row.translation }, code);
+      if (SNAP.rows[code]) assert.deepEqual([row.check, digest(row.translation)], SNAP.rows[code], `${code} reads R7's pin`);
+    }
+  }
+  /* the C-82 rows are pinned, every one of them */
+  for (const code of Object.keys(CI.STATEMENT_ACK_CHECKS)) if (CI.STATEMENT_ACK_CHECKS[code].check !== "C-82.8") assert.ok(SNAP.rows[code], `${code} pinned`);
+  assert.equal(Object.values(SNAP.rows).some(([c]) => /^C-136\./.test(c)), false, "no C-136 row is pinned");
+  /* control: every other pinned code decorates exactly as pinned */
+  for (const [code, pin] of Object.entries(SNAP.rows)) if (!codes.has(code)) {
+    const got = M.dec49Row(code);
+    assert.deepEqual(got ? [got.check, digest(got.translation)] : null, pin, code);
+  }
+  /* negative control: without the file its two families are unreached and its codes bare */
+  const without = M.CHECK_FAMILY_FILES.filter(([p]) => p !== path);
+  const missing = (await unreached(without)).filter((m) => m.startsWith(`bio-plane/${path} `)).sort();
+  assert.deepEqual(missing, CASE_INPUTS_FAMILIES.map(([f]) => `bio-plane/${path} ${f}`).sort());
+  for (const code of codes) assert.deepEqual(holders(without, code), [], code);
 });
