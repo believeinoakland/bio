@@ -70,3 +70,7 @@ Merged `tranche/T47` (1524778995: wizard-scripts, op-grades, setup-words, instan
 **Runs.** `node --test bio-plane/test/m/store-door/`: tests 47, pass 47, fail 0. `test/m/admission/`: 46 pass, 2 fail (R12 `adminendorse`, R19 `groupkeyset`), the same 2 with and without this change. Admission's tests stub the store (`harness.mjs`), so they are not about store-door; reported. format, architecture (store-door), coverage (15 of 15), ownership: 0 failures.
 
 Size (session_01A3oWKBscqhfz9cPoUE7bde): test runs 21, module lines 153
+
+## J6 · COMPLETE
+
+B5 (K3152): tranche/T47 merged (1524778995). Fixed R15 against admission as merged: admission R25 reads due null as the window open and anything but null or the REAUTH_DUE row as a silence (refusal); my B2 answered false inside the window, which would have refused every re-ask act. Now due is reauthDue's own answer (null or the row); {due: false} only for a token naming no session, as R15 says. My B2 'reading taken' is withdrawn. store-door 47/47; format, architecture, coverage 15/15, ownership 0 failures. Admission's own tests: 2 fail (R12 adminendorse, R19 groupkeyset), identical with and without store-door's change, as they stub the store; for admission's owner.
