@@ -46,3 +46,7 @@ T47-54 done: R14 (C-69.6 retired; DISCLOSURE_DUE decorates with C-29.40), R15 (c
 **B3 (CHANGE, K3148): re-run after merging `tranche/T47` (wizard-scripts T47-47, op-grades T47-48).** None of this module's files changed. `node --test bio-plane/test/m/answer-envelope/`: 35 pass, 0 fail. Users, `tranche/T47` alone → with this job: `store-door` 45/0 → 45/0; `plane` 217/6 → 217/6 (its sixth red came with the merge, not from this job); `control-plane` 234/8 → 232/10 (the same two C-69.6 pins, J2). Checks: format 0, architecture 0, coverage 16 of 16 (0), ownership 0. `run.mjs`: architecture 0 (3129 files), channels 0, coverage 23 failures, all other modules' unmerged T47 ids.
 
 Size (session_013osHE4dWKZtRLQMyZZYfNj): test runs 14, module lines 887
+
+## J4 · COMPLETE
+
+B3: tranche/T47 merged (wizard-scripts, op-grades); re-ran. Module 35/35. Checks: format, architecture, coverage and ownership 0 failures; run.mjs architecture 0. Users, tranche alone → with this job: store-door 45/0 → 45/0; plane 217/6 → 217/6 (the sixth red came with the merge); control-plane 234/8 → 232/10 (the two C-69.6 pins of J2). Record updated.
