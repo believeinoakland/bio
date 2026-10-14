@@ -10,10 +10,15 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import * as P from "../../../src/promotion/index.mjs";
-/* The later rows are read from their owners' declarations (N1073; this module cannot import them in its source, P4, a test can). */
-import { BASIS_VERSION_CHECKS } from "../../../src/basis-versions/checks.mjs";
-import { INQUIRY_GRAMMAR_CHECKS } from "../../../src/inquiry-grammar/checks.mjs";
-import { INQUIRY_SURFACE_CHECKS } from "../../../src/inquiry/checks.mjs";
+/* The later rows are read from the tree by promotion's own census reader (R50, `row-census.mjs`: every module's tables read
+   from the files, not by import, since this module cannot import a later one, P4; N1073), never hand-listed here. */
+import { censusRows } from "../../system/row-census.mjs";
+const CENSUS = (await censusRows(fileURLToPath(new URL("../../../..", import.meta.url)))).rows;
+const checkOf = (code, owner) => {
+  const ids = [...new Set(CENSUS.filter((r) => r.code === code && r.where && r.where.includes(`src/${owner}/`)).map((r) => r.check))];
+  assert.equal(ids.length, 1, `${code} is held by exactly one row of src/${owner}/: ${ids.join(", ") || "none"}`);
+  return ids[0];
+};
 
 const SRC = (f) => fileURLToPath(new URL("../../../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -192,11 +197,11 @@ test("R18: every refusal sited at the promote write is enforced there — each r
   /* The rows later modules hold and enforce at this write through the steps they register (R39), stated here: this
      module cannot import a later one's table (P4), and the catalogue that held them left at T19's close (K785). The version
      grammar's document findings (C-25, C-27.15) are relayed whole (RELAYED, below). */
-  const LATER = [["SELF_BASIS", INQUIRY_GRAMMAR_CHECKS.SELF_BASIS.check, "inquiry"],
-                 ["BASIS_CYCLE", INQUIRY_GRAMMAR_CHECKS.BASIS_CYCLE.check, "inquiry"],
-                 ["VERSION_FROZEN", BASIS_VERSION_CHECKS.VERSION_FROZEN.check, "basis-versions"],
-                 ["VERSION_LEG_UNRESOLVED", BASIS_VERSION_CHECKS.VERSION_LEG_UNRESOLVED.check, "basis-versions"],
-                 ["SURFACED_BY_REWRITTEN", INQUIRY_SURFACE_CHECKS.SURFACED_BY_REWRITTEN.check, "inquiry"]];
+  const LATER = [["SELF_BASIS", checkOf("SELF_BASIS", "inquiry"), "inquiry"],
+                 ["BASIS_CYCLE", checkOf("BASIS_CYCLE", "inquiry"), "inquiry"],
+                 ["VERSION_FROZEN", checkOf("VERSION_FROZEN", "basis-versions"), "basis-versions"],
+                 ["VERSION_LEG_UNRESOLVED", checkOf("VERSION_LEG_UNRESOLVED", "basis-versions"), "basis-versions"],
+                 ["SURFACED_BY_REWRITTEN", checkOf("SURFACED_BY_REWRITTEN", "inquiry"), "inquiry"]];
   for (const [code, check, family] of LATER) rows.push({ family, code, check, where: "" });
   assert.equal(rows.length, 35, `the rows sited at the promote write: ${rows.length}`);
   /* A code is probed once, should two of these tables ever hold it (C-26.12 and C-64.1 were held twice in T19). */
