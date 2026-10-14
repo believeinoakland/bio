@@ -26,3 +26,19 @@ Survey of the ops my screens read and act through (their owners' handlers on tra
 13. For an administrator's session, testify's author is `member:admin` and calculations' `by` is `admin`, so `spotcheckvisit` answers `NOT_YOUR_TESTIMONY`.
 
 **D. Waiting on L11 providers** (no question): `SCREEN_REGISTRY` with `people`, `person`'s `explore`, `calculation`'s `spotcheckvisit` (wizard-scripts R35); `peopledirectory` in `OPS` (op-declarations R61); the kit of interface-shell R27; `WORD_ROWS` at PR #33's head (setup-words R7). I build to their requirements and merge `tranche/T47` on your CHANGE.
+
+## J2 · REPORT
+
+Built and pushed on `job/T47/screens-investigate` (B2 applied: `clocksics` saved with `cs.save`). Eleven screens: `people`, `person`, `explore`, `timeline`, `money`, `calculation`, `help`, `proceeding`, `due-date`, `standard`, `ties`; 2,270 module lines, 77 tests naming R1–R14.
+
+**Files** (for `modules.json`): paths `bio-plane/src/screens-investigate/` (index, words, row, parts, people, person, explore, timeline, money, calculation, proceeding, due-date, standard, ties `.mjs`); tests `bio-plane/test/m/screens-investigate/` (fixtures, common, people, person, explore, timeline, money, calculation, proceeding, due-date, standard, ties). With those set locally: format 0, architecture 0, coverage 14 of 14, ownership 0 failures.
+
+**Not COMPLETE yet: 10 of 77 red, each waiting on an unmerged L11 provider, none on my code** (verified with a local, uncommitted stand-in of the two kit items):
+- setup-words R7 (`WORD_ROWS` at PR #33's head): `screen.people.*`, `act.*.label.people`, `act.explore.label.person`, `act.spotcheckvisit.label.calculation`, the new `act.testify.label.calculation`.
+- interface-shell R27 (`cs.choice` over `{value, text}`; without it every screen with a record-data choice fails to draw), R28 (`PATHS` for my screens: the path's project step), R47 (`REF_SCREENS` `person`; `personexpunge` in `ADMIN_ACTS`; `cs.save`).
+- op-declarations R61 (`peopledirectory` in `OPS`) for the live plane only (my tests answer it from a fixture).
+I merge `tranche/T47` and re-run on your CHANGE announcing those merges, then post COMPLETE.
+
+**Readings taken (no question):** the acts' labels are the registry's keys (`act.<op>.label.<screen>`, interface-shell R11) where R1–R7 quote other words ("Work it out again" is drawn as "Work out the due date"; "Check this chain" as "Check a chain"); the screen's own words carry R1–R7's phrases elsewhere ("Remove it for good, with this reason" in the consequence statement). Reasoned acts with the member's own words name them as `reasonField` (DEC-88: `identityclaim` note, `entitycreate` note, `declaretie` note, `connectionassert` basis, `testify` words, `createset` label, `clockadopt` why, `recordcheck` note); the others take the shell's reason, sent as `reason` (owners that refuse an unknown field would refuse it: none found among these). `screen.help.purpose` is held in my `SCREEN_WORDS` in DEC-149's form (`WORD_ROWS`' English names Civicsmith bare), interface-shell R5's rule.
+
+**Found (report):** the test of R1's consequence statement compares with op-grades R21's words copied into the test, because `op-grades` is not a declared use; declaring it (tests only) would let the test read `CONSEQUENCE_STATEMENTS` itself.
