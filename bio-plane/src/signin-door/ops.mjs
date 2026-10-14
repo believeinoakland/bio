@@ -1,11 +1,11 @@
 /* signin-door: THE STORE'S HALF OF THE SIGN-IN DOOR (R2, R4, R5). Store-internal routes with no op spec
    (`op-declarations` R6), reached only by the door's own requests from the Worker (`index.mjs`), never by a caller: each
-   asks `credentials` in process for what is in-plane there (its R64 `disclosureDue`, R70 `subscriptionTokenHold` and
-   `subscriptionTokenRefused`), or keeps and reads R5's bounded trace. The plane spreads `signinDoorOps` into the store's
+   asks `ai-accounts` in process (through `credentials`' delegates, its R72) for what is in-plane there (its R23
+   `disclosureDue`, R19 `subscriptionTokenHold` and `subscriptionTokenRefused`), or keeps and reads R5's bounded trace. The plane spreads `signinDoorOps` into the store's
    one route map (the `credentialsOps` pattern); `c` is the store's `credentials` (`credentialsOf(ctx)`), `url` carries
    the door's stamp `by` in its query, read after the body, `body` the parsed body, `env` the store's environment.
 
-   R2: `signindisclosuredue?by=<member>` answers `credentials.disclosureDue({member})`'s refusal as given, or
+   R2: `signindisclosuredue?by=<member>` answers `ai-accounts.disclosureDue({member})`'s refusal as given, or
    `{ok: true}` when it answers null (the `aikeptaway` form, `store-door` R10).
    R4: `signintokenhold?by=<member>` hands `{token, validFor}` from the body to `subscriptionTokenHold` for that member
    and answers its result, which never carries the token; `signintokenrefused?by=<member>` calls
