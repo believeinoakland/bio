@@ -40,3 +40,7 @@ Size (session_018odTxsr93zd9rhZFcRLGLi): test runs 5, module lines 1160
 ## J1 · REPORT
 
 Found outside my module (DEC-221, American English in every member word): record-grammar's PROPOSAL_STATES and labels.mjs still say "labelled as machine work" in member-facing proposal labels, as do sentences in action-records, actions, action-clocks, case-checker, skilldoctrine.mjs and setup-words' copies; the requirement texts (record-grammar R42, R49, R50, R54, R60, R61; reading-guides R2, R6, R12) also spell it "labelled". Mine now reads "labeled" (P8). Also: bio-plane/dist and release bundles carry reading-guides' source and are stale until the layer-close regeneration.
+
+## J2 · COMPLETE
+
+T48-33 applied: READING_GUIDES_WORDS' GUIDE_KIND_UNKNOWN re-taken as words.json holds it ("recognize"), clearing the 2 reds; under P8 C-144.13's translation, its detail and R12's machine_proposed label re-spelled "labeled" (row census: C-144.4 and C-144.13). Tests 58/58; users 371/12, identical with and without the change (op-declarations and answer-envelope, inherited); format, architecture, coverage (14/14), ownership 0 failures; run.mjs architecture 0. Record: build/jobs/T48/reading-guides.md on job/T48/reading-guides.
