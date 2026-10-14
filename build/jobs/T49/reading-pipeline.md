@@ -34,7 +34,7 @@
 - `node checks/format.mjs`: 170 modules, 169 requirements files; 0 failures.
 - `node checks/architecture.mjs reading-pipeline`: 28 product files, 92 relative imports; 0 failures.
 - `node checks/coverage.mjs reading-pipeline`: 32 of 32 live requirement ids named by a test; 0 failures.
-- `node checks/ownership.mjs reading-pipeline tranche/T49`: 3 files changed by reading-pipeline (now); 0 failures.
+- `node checks/ownership.mjs reading-pipeline tranche/T49`: 4 files changed by reading-pipeline (3 module files and this record); 0 failures.
 - `node checks/run.mjs`: format 0, architecture 0, channels 0; coverage 19 failures, none this module's (above).
 
 Size (session_01GqCLDeeJthzed1vQ19Mi4Q): test runs 9, module lines 1724
