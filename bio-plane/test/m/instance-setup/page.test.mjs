@@ -5,20 +5,15 @@ import assert from "node:assert/strict";
 import * as S from "../../../src/setup.mjs";
 import { HOSTING_CONTROL, hostingControlBlock } from "../../../src/setup-fleet.mjs";
 
-/* R83's test, held as a todo while `setupPage` is retiring (R86; K3144): it goes live on BOB's CHANGE after T47-65. */
-test.todo("R83 no export names the page: setupPage, SETUP_HTML and groupLine are gone, and no export is page HTML (todo until T47-65 drops control-plane's import, R86, K3144)", () => {
+test("R83 R86 no export names the page: setupPage, SETUP_HTML and groupLine are gone, and no export is page HTML; HOSTING_CONTROL stays R47's one holder, re-exported as the leaf holds it (control: the block itself still renders)", () => {
   for (const name of ["setupPage", "SETUP_HTML", "groupLine", "PAGE_HTML", "pageOf"]) assert.equal(name in S, false, name);
-  for (const [name] of Object.entries(S)) assert.doesNotMatch(name, /page/i, `${name} names a page`);
-});
-
-test("R86 R83 setupPage stays exported, retiring, only until T47-65, and is the only export naming the page: SETUP_HTML and groupLine are gone; HOSTING_CONTROL stays R47's one holder, re-exported as the leaf holds it (control: the retiring page still carries R47's block)", () => {
-  for (const name of ["SETUP_HTML", "groupLine", "PAGE_HTML", "pageOf"]) assert.equal(name in S, false, name);
-  assert.deepEqual(Object.keys(S).filter((n) => /page/i.test(n)), ["setupPage"]);
-  for (const [name, v] of Object.entries(S)) if (typeof v === "string") assert.doesNotMatch(v, /<html|<!doctype/i, `${name} is page HTML`);
+  for (const [name, v] of Object.entries(S)) {
+    assert.doesNotMatch(name, /page/i, `${name} names a page`);
+    if (typeof v === "string") assert.doesNotMatch(v, /<html|<!doctype/i, `${name} is page HTML`);
+  }
   assert.equal(S.HOSTING_CONTROL, HOSTING_CONTROL);
   assert.equal(S.hostingControlBlock, hostingControlBlock);
-  const page = S.setupPage({ answered: true, result: { ok: true, group: "river-town" } });
-  assert.equal(page.split('id="hosting-control"').length - 1, 1, "the retiring page carries the block once");
+  assert.match(S.hostingControlBlock("notice"), /^<div class="notice" id="hosting-control">/);
 });
 
 /* R47's conditions over one page's bytes, as a list of what fails (empty when it holds), so the negative controls below
