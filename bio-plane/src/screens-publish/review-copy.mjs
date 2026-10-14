@@ -9,6 +9,7 @@ export const REVIEW_COPY = Object.freeze({
   parts: PARTS,
 
   reads: function (view) {
+    if (!view.parts.subject(view, 1)) return {}; // K3171: no subject in the address, no subject read
     const project = String(view.subject || "").split("/")[0];
     return {
       project: { op: "image", query: { id: project } },
@@ -24,6 +25,7 @@ export const REVIEW_COPY = Object.freeze({
   },
 
   render: function (cs, view) {
+    if (!view.parts.subject(view, 1)) return view.parts.nothing(cs);
     const P = view.parts;
     const want = String(view.subject || "").split("/")[1];
     const d = view.data.drafts;

@@ -113,3 +113,25 @@ test("R10 the module's own words: frozen [key, en, protected] rows, unique, each
   for (const s of SCREENS) for (const w of s.words) if (typeof w === "string") assert.ok(shared.has(w), `${s.id}: ${w} in WORD_ROWS`);
   assert.ok(Object.isFrozen(SCREEN_WORDS));
 });
+
+/* K3171 (JOURNEY-CHECK #1 J4 (2)): a screen whose subject is absent from its address sends no subject read and draws
+   interface-shell R35's "Nothing is here"; one test per screen, each with its control. */
+const BARE = {
+  "case-editor": ["/app/case-editor", {}, ["casedrafts", "image"], `/app/case-editor/${P}`, "casedrafts"],
+  "review-copy": ["/app/review-copy", {}, ["casedrafts", "image"], `/app/review-copy/${P}`, "casedrafts"],
+  ceremony: [`/app/ceremony/${P}`, {}, ["reviewcopy", "image"], `/app/ceremony/${P}/${DR}`, "reviewcopy"],
+  published: ["/app/published", { session: null }, ["publishedcase"], `/app/published/${C}`, "publishedcase"],
+  docket: [`/app/docket/${P}`, {}, ["docket", "image"], `/app/docket/${P}/${C}`, "docket"],
+};
+for (const [id, [path, boot, never, full, read]] of Object.entries(BARE)) {
+  test(`R10 (K3171) ${id} opened with no subject in its address sends no subject read and draws "Nothing is here" (control: with it, it reads)`, async () => {
+    const p = await open(path, { boot });
+    for (const op of never) assert.equal(p.byOp(op).length, 0, `${path}: no ${op}`);
+    assert.ok(main(p).querySelector('[data-unavailable="nothing"]'), `${path}: Nothing is here`);
+    assert.match(text(p), /Nothing is here/);
+    assert.deepEqual(rawKeys(p.root()), []);
+    const q = await open(full, { boot });
+    assert.ok(q.byOp(read).length > 0, `${full} reads ${read}`);
+    assert.equal(main(q).querySelector('[data-unavailable="nothing"]'), null);
+  });
+}
