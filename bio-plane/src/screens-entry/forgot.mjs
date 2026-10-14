@@ -12,21 +12,22 @@ export const forgot = {
   render(cs, view) {
     const W = cs.w, S = "screen.forgot.";
     const ui = view.ui || {};
-    const out = [cs.title(), `<p class="cs-sub">${W(S + "lede")}</p>`];
+    const out = [cs.title(), `<p class="mk-sub">${W(S + "lede")}</p>`];
     if (ui.done) {
-      out.push(`<p class="cs-row" data-state="done">${W(S + "done", { remaining: String(ui.done.remaining) })}</p><p><a class="cs-btn" data-tone="primary" href="/app/front" data-nav>${W("screen.entry.signin")}</a></p>`);
+      // R12: no count at zero: the last code spent has its own sentence
+      out.push(`<p class="cs-row" data-state="done">${ui.done.remaining > 0 ? W(S + "done", { remaining: String(ui.done.remaining) }) : W(S + "done.last")}</p><div class="mk-acts"><a class="cs-btn" data-tone="primary" href="/app/front" data-nav>${W("screen.entry.signin")}</a></div>`);
     } else {
       out.push(cs.sec(S + "codes", cs.field("fg-handle", "screen.front.handle", { help: S + "handle.help", autocomplete: "username" })
         + cs.field("fg-code", S + "code", { help: S + "code.help", autocomplete: "off" })
         + cs.field("fg-pw", "screen.entry.newpassword", { type: "password", help: "screen.entry.twelve", autocomplete: "new-password" })
         + cs.field("fg-pw2", "screen.entry.again", { type: "password", autocomplete: "new-password" })
-        + `<div class="cs-actrow">${cs.act("recover", { tone: "primary" })}</div>`));
+        + `<div class="mk-acts">${cs.act("recover", { tone: "primary" })}</div>`));
     }
-    out.push(cs.sec(S + "admin", `<p>${W(S + "admin.what")}</p>`));
+    out.push(cs.sec(S + "admin", `<p class="mk-note">${W(S + "admin.what")}</p>`));
     // the hosting account's way (R4): HOSTING_CONTROL's words, which state the steps, carried by key
     const hosting = [];
     for (let i = 1; i < 20; i++) { const k = "screen.hosting.s" + i; const t = W(k); if (t === k) break; hosting.push(`<p>${t}</p>`); }
-    out.push(cs.sec(S + "hosting", `<p>${W(S + "hosting.what")}</p><div class="cs-note" id="hosting-control"><p><b>${W("screen.hosting.heading")}</b></p>${hosting.join("")}<p>${W("screen.hosting.guide")}</p></div>`));
+    out.push(cs.sec(S + "hosting", `<p class="mk-note">${W(S + "hosting.what")}</p><div class="mk-note" id="hosting-control"><p><b>${W("screen.hosting.heading")}</b></p>${hosting.join("")}<p>${W("screen.hosting.guide")}</p></div>`));
     return out.join("");
   },
 

@@ -68,7 +68,8 @@ test("R1 each read in its four states: loading, empty, could not read (refused, 
     }
   }
   const empty = await open("front", { table: { ...TABLE, publishedlist: { ok: true, result: { bundles: [], cases: [] } } } });
-  has(empty, "screen.front.published.none");
+  // R12: nothing published draws no section
+  lacks(empty, "screen.front.published"); lacks(empty, "state.empty");
   assert.equal(all(empty.tree, (e) => e.attrs["data-state"] === "failed").length, 0, "an empty read is never drawn as failed");
 });
 
