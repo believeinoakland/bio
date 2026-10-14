@@ -46,3 +46,11 @@ R93 wording only: the in-process names `trace` and `memberRef` already are the o
 ## J3 · COMPLETE
 
 B2 applied: names already match (trace, memberRef). Merged tranche, re-ran: unchanged (263 of 273, same 10 waiting on op-declarations, instance-setup, interface-shell). Complete.
+
+## B3, B4 (K3297, K3298)
+Merged tranche/T48 (action-replies, explore, standards, filings now uses; op-declarations merged). Route assertions for R90/R92 added. One door fix: a body `member` is now stripped where the op declares `member` (R92 `stepsource`: never the body's).
+Re-run: 273 tests, 269 pass, 4 red:
+- R91 (instance-setup's update routes absent) and R95 (interface-shell band absent): waiting on those merges.
+- Caused by op-declarations' merge, not by this module (both were green before it): `doorbell.test.mjs` R28 (`sourceof` now refuses the narrow agent: 403 AI_BEYOND_TASK_SCOPE) and `affordances-pack.test.mjs` R2/R41 (`stale: groupdescriptiondraft…` in affordances' unaccounted).
+- Conflict: R90 says `proceedingdates` is refused to non-sessions; op-declarations R64 declares it a read admitting a binding class (as merged). My test follows the merged spec for it.
+Size (session_01Buc3JHeHrCA6CLnhxgJpTX): test runs 12, module lines 3755

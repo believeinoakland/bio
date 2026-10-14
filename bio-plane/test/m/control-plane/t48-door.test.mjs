@@ -11,6 +11,10 @@ import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, refused, aik, cred, FORGED } from "./harness.mjs";
 import { routesForSessions, callers, ok } from "./door-routes.mjs";
 import { memberRefOf } from "../../../src/signin-door/index.mjs";
+import { actionRepliesOps } from "../../../src/action-replies/index.mjs";
+import { exploreOps } from "../../../src/explore/ops.mjs";
+import { standardsOps } from "../../../src/standards/index.mjs";
+import { filingsOps } from "../../../src/filings/index.mjs";
 import { followingOps } from "../../../src/following/index.mjs";
 import { actionHoldsOps } from "../../../src/action-holds/index.mjs";
 import { actionPlansOps } from "../../../src/action-plans/index.mjs";
@@ -42,10 +46,14 @@ function withObject(w, methods) {
 /* ================================================================ R90 */
 
 test("R90 (T48; N880, N882; op-declarations R64; `action-replies` R10, `following` R29, R30): `actionreplyquoting` and `proceedingdates` (a route of `following`'s map) are each declared for a member's session only; each reaches its route for the founder's and a member's session with its declared stamps set from the session and none taken from the caller, its request fields as sent; every machine credential, an `ai` credential among them, is refused with nothing forwarded (control)", async () => {
+  assert.ok(routesOf(actionRepliesOps).includes("actionreplyquoting"), "a route of action-replies' map");
   assert.ok(routesOf(followingOps).includes("proceedingdates"), "a route of following's map");
-  for (const op of ["actionreplyquoting", "proceedingdates"]) assert.deepEqual(OPS[op]?.machineClasses, [], `${op}: a session only`);
+  /* `actionreplyquoting` is a session's act; `proceedingdates` is, in op-declarations R64's spec, a read a binding class may reach
+     (REPORT to BOB: R90 says session only), so the machine control is asked of the act alone */
+  assert.deepEqual(OPS.actionreplyquoting?.machineClasses, [], "actionreplyquoting: a session only");
   await routesForSessions(["actionreplyquoting", "proceedingdates"],
-    (op) => (op === "actionreplyquoting" ? { target: "ACT-1", ord: 2, quotable: true, words: "the lift" } : {}));
+    (op) => (op === "actionreplyquoting" ? { target: "ACT-1", ord: 2, quotable: true, words: "the lift" } : {}),
+    { refuseMachines: (op) => op === "actionreplyquoting" });
 });
 
 test("R90 (T48; `following` R29): `followregister` passes `proceeding` from the body, and a stamp the caller sends in the address or the body is deleted", async () => {
@@ -135,7 +143,7 @@ test("R91 (T48; `updatestart`'s address): the answered `address` is relayed as g
 /* ================================================================ R92 */
 
 test("R92 (T48; N1026, N1027, N1029, N1030, N1034, N1035, N1038, N1043; K3203, K3206, K3207, K3211; op-declarations R67): `aiuseovertime` (through `aiUseOps`), `exploregraph`, `standardproposals`, `filingread`, `pressurefor`, `planask`, `lookedsince`, `stepsource` and `stepsourcewithdraw` each reach its route with the stamps it declares from the session and none from the caller, its request fields as sent", async () => {
-  const OWNERS = { aiuseovertime: aiUseOps, pressurefor: actionHoldsOps, planask: actionPlansOps, stepsource: connectionsOps,
+  const OWNERS = { aiuseovertime: aiUseOps, exploregraph: exploreOps, standardproposals: standardsOps, filingread: filingsOps, pressurefor: actionHoldsOps, planask: actionPlansOps, stepsource: connectionsOps,
                    stepsourcewithdraw: connectionsOps, lookedsince: membershipOps };
   for (const [op, owner] of Object.entries(OWNERS)) assert.ok(routesOf(owner, {}).includes(op), `${op} is a route of its owner's map`);
   /* the reads' rows say whether a binding class reaches them (op-declarations R67 gives `aiuseovertime` and the acts a
@@ -169,6 +177,7 @@ test("R92 (T48; N1026, N1027, N1029, N1030, N1034, N1035, N1038, N1043; K3203, K
 });
 
 test("R92 (T48; `explore` R23, `review` R34): `exploreverify` passes `chain` from the body and `reviewgrant` passes `until` from the body, each beside the stamps the door sets; a caller's stamp in either is deleted", async () => {
+  assert.ok(routesOf(exploreOps, {}).includes("exploreverify"));
   assert.ok(routesOf(reviewOps, {}).includes("reviewgrant"));
   const w = world({ answer: (c) => (["exploreverify", "reviewgrant"].includes(c.route) ? ok({ ok: true }) : null) });
   const chain = [{ from: "A", to: "B" }, { from: "B", to: "C" }];

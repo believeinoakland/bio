@@ -2474,7 +2474,7 @@ export function makeFetch(hooks = {}) {
            from the caller's body: the session is the token the request presented, in the internal header alone */
         const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? []),
                        ...(ACT_CLOCK_OPS.includes(op) ? ["at"] : []),
-                       ...declared.filter((k) => k === "by" || k === "viewer" || k === "session")];
+                       ...declared.filter((k) => k === "by" || k === "viewer" || k === "session" || k === "member")];   /* R92 (T48): `stepsource`'s member is the session's, never the body's */
         if (b0 && typeof b0 === "object" && !Array.isArray(b0) && strip.some((k) => k in b0)) {
           for (const k of strip) delete b0[k];
           passBody = JSON.stringify(b0);
