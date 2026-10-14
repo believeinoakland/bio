@@ -1,0 +1,932 @@
+[
+ {
+  "key": "label.linekinds.part_of",
+  "en": "part of",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.post_in",
+  "en": "a post in",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.holds",
+  "en": "holds",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.reports_to",
+  "en": "reports to",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.oversees",
+  "en": "oversees",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.appoints",
+  "en": "appoints",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.seat_on",
+  "en": "a seat on",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.funds",
+  "en": "funds",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.contracts_with",
+  "en": "has a contract with",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.acts_for",
+  "en": "acts for",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.responsible_for",
+  "en": "responsible for",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.custodian_of",
+  "en": "keeps the records of",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.successor_of",
+  "en": "successor of",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.belongs_to",
+  "en": "a member of",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.educated_at",
+  "en": "studied at",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.credentialed_by",
+  "en": "holds a credential from",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.owns_interest_in",
+  "en": "has an interest in",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.related_to",
+  "en": "related to",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.associate_of",
+  "en": "an associate of",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.party_to",
+  "en": "a party to",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.appeal_of",
+  "en": "an appeal of",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.consolidated_with",
+  "en": "consolidated with",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.remanded_to",
+  "en": "remanded to",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linekinds.arises_from",
+  "en": "arises from",
+  "protected": false,
+  "note": "DEC-253: a line between two entities, read between their names"
+ },
+ {
+  "key": "label.linecapacities.employee",
+  "en": "employee",
+  "protected": false,
+  "note": "DEC-253: the capacity in which a post is held"
+ },
+ {
+  "key": "label.linecapacities.elected",
+  "en": "elected",
+  "protected": false,
+  "note": "DEC-253: the capacity in which a post is held"
+ },
+ {
+  "key": "label.linecapacities.appointed",
+  "en": "appointed",
+  "protected": false,
+  "note": "DEC-253: the capacity in which a post is held"
+ },
+ {
+  "key": "label.linecapacities.acting",
+  "en": "acting",
+  "protected": false,
+  "note": "DEC-253: the capacity in which a post is held"
+ },
+ {
+  "key": "label.linecapacities.interim",
+  "en": "interim",
+  "protected": false,
+  "note": "DEC-253: the capacity in which a post is held"
+ },
+ {
+  "key": "label.linecapacities.ex_officio",
+  "en": "ex officio",
+  "protected": false,
+  "note": "DEC-253: the capacity in which a post is held"
+ },
+ {
+  "key": "label.linecapacities.board_member",
+  "en": "board member",
+  "protected": false,
+  "note": "DEC-253: the capacity in which a post is held"
+ },
+ {
+  "key": "label.linecapacities.officer_or_director",
+  "en": "officer or director",
+  "protected": false,
+  "note": "DEC-253: the capacity in which a post is held"
+ },
+ {
+  "key": "label.linecapacities.partner",
+  "en": "partner",
+  "protected": false,
+  "note": "DEC-253: the capacity in which a post is held"
+ },
+ {
+  "key": "label.linecapacities.military_service",
+  "en": "military service",
+  "protected": false,
+  "note": "DEC-253: the capacity in which a post is held"
+ },
+ {
+  "key": "label.linecapacities.volunteer",
+  "en": "volunteer",
+  "protected": false,
+  "note": "DEC-253: the capacity in which a post is held"
+ },
+ {
+  "key": "label.linecapacities.contractor",
+  "en": "contractor",
+  "protected": false,
+  "note": "DEC-253: the capacity in which a post is held"
+ },
+ {
+  "key": "label.linecapacities.other",
+  "en": "other",
+  "protected": false,
+  "note": "DEC-253: the capacity in which a post is held"
+ },
+ {
+  "key": "label.lineroles.reports_to.administrative",
+  "en": "administrative",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.reports_to.functional",
+  "en": "functional",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.reports_to.budgetary",
+  "en": "budgetary",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.contracts_with.buyer",
+  "en": "buyer",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.contracts_with.procuringEntity",
+  "en": "purchasing agency",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.contracts_with.supplier",
+  "en": "supplier",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.contracts_with.tenderer",
+  "en": "bidder",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.contracts_with.funder",
+  "en": "funder",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.contracts_with.enquirer",
+  "en": "inquirer",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.contracts_with.payer",
+  "en": "payer",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.contracts_with.payee",
+  "en": "payee",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.contracts_with.reviewBody",
+  "en": "bid protest reviewer",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.contracts_with.interestedParty",
+  "en": "interested party",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.plaintiff",
+  "en": "plaintiff",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.defendant",
+  "en": "defendant",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.petitioner",
+  "en": "petitioner",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.respondent",
+  "en": "respondent",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.appellant",
+  "en": "appellant",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.appellee",
+  "en": "appellee",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.cross_complainant",
+  "en": "cross-complainant",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.cross_defendant",
+  "en": "cross-defendant",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.intervenor",
+  "en": "intervenor",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.real_party_in_interest",
+  "en": "real party in interest",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.amicus",
+  "en": "friend of the court (amicus)",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.applicant",
+  "en": "applicant",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.protestant",
+  "en": "protestant",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.complainant",
+  "en": "complainant",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.interested_party",
+  "en": "interested party",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.lineroles.party_to.other",
+  "en": "other",
+  "protected": false,
+  "note": "DEC-253: an entity's role on a line, by the line's kind; American usage (bidder, inquirer), a court's and a commission's own terms kept"
+ },
+ {
+  "key": "label.moneykinds.revenue",
+  "en": "revenue",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneykinds.expenditure",
+  "en": "expenditure",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneykinds.transfer",
+  "en": "transfer",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneykinds.allocation",
+  "en": "allocation",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneykinds.payment",
+  "en": "payment",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneykinds.contribution",
+  "en": "contribution",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneykinds.gift",
+  "en": "gift",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneykinds.income",
+  "en": "income",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneykinds.behested",
+  "en": "behested payment",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneykinds.settlement",
+  "en": "settlement",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneykinds.debt",
+  "en": "debt",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneykinds.balance",
+  "en": "balance",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneykinds.fee_charged",
+  "en": "fee",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneykinds.other",
+  "en": "other",
+  "protected": false,
+  "note": "DEC-253: what a sum of money is; a behested payment is California's term"
+ },
+ {
+  "key": "label.moneyphases.proposed",
+  "en": "proposed",
+  "protected": false,
+  "note": "DEC-253: a budget figure's phase"
+ },
+ {
+  "key": "label.moneyphases.adopted",
+  "en": "adopted",
+  "protected": false,
+  "note": "DEC-253: a budget figure's phase"
+ },
+ {
+  "key": "label.moneyphases.adjusted",
+  "en": "amended",
+  "protected": false,
+  "note": "DEC-253: a budget figure's phase"
+ },
+ {
+  "key": "label.moneyphases.actual",
+  "en": "actual",
+  "protected": false,
+  "note": "DEC-253: a budget figure's phase"
+ },
+ {
+  "key": "label.moneystages.encumbered",
+  "en": "committed",
+  "protected": false,
+  "note": "DEC-253: where a sum stands"
+ },
+ {
+  "key": "label.moneystages.incurred",
+  "en": "spent",
+  "protected": false,
+  "note": "DEC-253: where a sum stands"
+ },
+ {
+  "key": "label.moneystages.paid",
+  "en": "paid",
+  "protected": false,
+  "note": "DEC-253: where a sum stands"
+ },
+ {
+  "key": "label.moneystages.assessed",
+  "en": "billed",
+  "protected": false,
+  "note": "DEC-253: where a sum stands"
+ },
+ {
+  "key": "label.moneystages.collected",
+  "en": "collected",
+  "protected": false,
+  "note": "DEC-253: where a sum stands"
+ },
+ {
+  "key": "label.moneybases.budgetary",
+  "en": "budgetary basis",
+  "protected": false,
+  "note": "DEC-253: the accounting basis a figure is reported on"
+ },
+ {
+  "key": "label.moneybases.cash",
+  "en": "cash basis",
+  "protected": false,
+  "note": "DEC-253: the accounting basis a figure is reported on"
+ },
+ {
+  "key": "label.moneybases.modified_accrual",
+  "en": "modified accrual basis",
+  "protected": false,
+  "note": "DEC-253: the accounting basis a figure is reported on"
+ },
+ {
+  "key": "label.moneybases.accrual",
+  "en": "accrual basis",
+  "protected": false,
+  "note": "DEC-253: the accounting basis a figure is reported on"
+ },
+ {
+  "key": "label.moneybases.undetermined",
+  "en": "basis not stated",
+  "protected": false,
+  "note": "DEC-253: the accounting basis a figure is reported on"
+ },
+ {
+  "key": "label.moneyprecisions.exact",
+  "en": "exact",
+  "protected": false,
+  "note": "DEC-253: how precise a figure is"
+ },
+ {
+  "key": "label.moneyprecisions.rounded",
+  "en": "rounded",
+  "protected": false,
+  "note": "DEC-253: how precise a figure is"
+ },
+ {
+  "key": "label.moneyprecisions.approximate",
+  "en": "approximate",
+  "protected": false,
+  "note": "DEC-253: how precise a figure is"
+ },
+ {
+  "key": "label.moneyprecisions.range",
+  "en": "a range",
+  "protected": false,
+  "note": "DEC-253: how precise a figure is"
+ },
+ {
+  "key": "label.identityclaimkinds.same_as",
+  "en": "claimed the same person",
+  "protected": false,
+  "note": "DEC-253: a member's claim about two records of people; the design's words govern the owner's \"same person?\" (a claim, not a question)"
+ },
+ {
+  "key": "label.identityclaimkinds.not_same_as",
+  "en": "claimed not the same person",
+  "protected": false,
+  "note": "DEC-253: a member's claim about two records of people; the design's words govern the owner's \"same person?\" (a claim, not a question)"
+ },
+ {
+  "key": "label.identityclaimkinds.unsure",
+  "en": "unsure whether the same person",
+  "protected": false,
+  "note": "DEC-253: a member's claim about two records of people; the design's words govern the owner's \"same person?\" (a claim, not a question)"
+ },
+ {
+  "key": "label.connectionkinds.proxy_for",
+  "en": "proxy for",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.member_of",
+  "en": "a member of",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.overlaps",
+  "en": "overlaps",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.money_flow",
+  "en": "money",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.law_amends",
+  "en": "amends",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.law_repeals",
+  "en": "repeals",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.law_renumbers",
+  "en": "renumbers",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.law_recodifies",
+  "en": "recodifies",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.law_refers_to",
+  "en": "refers to",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.law_defines",
+  "en": "defines a term of",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.law_excepts",
+  "en": "makes an exception to",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.law_implements",
+  "en": "implements",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.law_incorporates",
+  "en": "incorporates",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.court_interprets",
+  "en": "interprets",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.court_applies",
+  "en": "applies",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.court_holds_invalid",
+  "en": "holds invalid",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.court_requires",
+  "en": "requires",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.in_force_at_event",
+  "en": "was in force on the date of",
+  "protected": false,
+  "note": "DEC-253: a connection's own kinds; member_of reads \"a member of\" as the line's belongs_to does"
+ },
+ {
+  "key": "label.connectionkinds.holds",
+  "en": "held the post ({capacity})",
+  "protected": false,
+  "note": "DEC-253: {capacity} is label.linecapacities.<capacity>"
+ },
+ {
+  "key": "label.standardforce.requires",
+  "en": "Requires",
+  "protected": false,
+  "note": "DEC-253: a provision's force, beside its own words"
+ },
+ {
+  "key": "label.standardforce.recommends",
+  "en": "Recommends",
+  "protected": false,
+  "note": "DEC-253: a provision's force, beside its own words"
+ },
+ {
+  "key": "label.standardforce.allows",
+  "en": "Allows",
+  "protected": false,
+  "note": "DEC-253: a provision's force, beside its own words"
+ },
+ {
+  "key": "label.standardforce.mandatory",
+  "en": "Required",
+  "protected": false,
+  "note": "DEC-253: a provision's force, beside its own words"
+ },
+ {
+  "key": "label.standardforce.discretionary",
+  "en": "At the discretion of {holder}",
+  "protected": false,
+  "note": "DEC-253: a policy's discretionary provision"
+ },
+ {
+  "key": "standard.discretion.holder.none",
+  "en": "an office not named",
+  "protected": false,
+  "note": "DEC-253: {holder} when the record names none"
+ },
+ {
+  "key": "label.standardcriteria.stated",
+  "en": "criteria stated",
+  "protected": false,
+  "note": "DEC-253: beside a discretionary force"
+ },
+ {
+  "key": "label.standardcriteria.none",
+  "en": "no criteria stated",
+  "protected": false,
+  "note": "DEC-253: beside a discretionary force"
+ },
+ {
+  "key": "label.standardaccess.free",
+  "en": "Free to read",
+  "protected": false,
+  "note": "DEC-253: how a standard's text can be read; none when not stated"
+ },
+ {
+  "key": "label.standardaccess.reading_room",
+  "en": "Reading room only",
+  "protected": false,
+  "note": "DEC-253: how a standard's text can be read; none when not stated"
+ },
+ {
+  "key": "label.standardaccess.paywalled",
+  "en": "Behind a paywall",
+  "protected": false,
+  "note": "DEC-253: how a standard's text can be read; none when not stated"
+ },
+ {
+  "key": "label.standardheld.cited",
+  "en": "Cited, not seen",
+  "protected": false,
+  "note": "DEC-253: a standard held without its text"
+ },
+ {
+  "key": "label.standardheld.absent",
+  "en": "Looked for, not found",
+  "protected": false,
+  "note": "DEC-253: a standard held without its text"
+ },
+ {
+  "key": "standard.held.cited.by",
+  "en": "Cited by {source}",
+  "protected": false,
+  "note": "DEC-253: beside \"Cited, not seen\""
+ },
+ {
+  "key": "standard.held.absent.searched",
+  "en": "Looked for in {where}",
+  "protected": false,
+  "note": "DEC-253: beside \"Looked for, not found\""
+ },
+ {
+  "key": "label.standardcopy.official",
+  "en": "Official copy",
+  "protected": false,
+  "note": "DEC-253: the copy a member declares a capture to be"
+ },
+ {
+  "key": "label.standardcopy.codifier",
+  "en": "A code publisher's copy",
+  "protected": false,
+  "note": "DEC-253: the copy a member declares a capture to be"
+ },
+ {
+  "key": "label.standardcopy.in_force",
+  "en": "The copy in force",
+  "protected": false,
+  "note": "DEC-253: the copy a member declares a capture to be"
+ },
+ {
+  "key": "label.standardcopy.draft",
+  "en": "Draft",
+  "protected": false,
+  "note": "DEC-253: the copy a member declares a capture to be"
+ },
+ {
+  "key": "label.standardcopy.superseded",
+  "en": "Superseded",
+  "protected": false,
+  "note": "DEC-253: the copy a member declares a capture to be"
+ },
+ {
+  "key": "label.standardcopy.production",
+  "en": "Produced in response to a request",
+  "protected": false,
+  "note": "DEC-253: the copy a member declares a capture to be"
+ },
+ {
+  "key": "label.standardcopy.vendor_model",
+  "en": "A vendor's model policy",
+  "protected": false,
+  "note": "DEC-253: the copy a member declares a capture to be"
+ },
+ {
+  "key": "label.standardcopy.undetermined",
+  "en": "Kind of copy not known",
+  "protected": false,
+  "note": "DEC-253: the copy a member declares a capture to be"
+ },
+ {
+  "key": "standard.binding.binds",
+  "en": "Standard · binds {body}",
+  "protected": false,
+  "note": "DEC-253"
+ },
+ {
+  "key": "standard.binding.benchmark",
+  "en": "Benchmark · not binding on {body}",
+  "protected": false,
+  "note": "DEC-253"
+ },
+ {
+  "key": "standard.binding.unknown",
+  "en": "Whether this binds {body} is not recorded",
+  "protected": false,
+  "note": "DEC-253"
+ },
+ {
+  "key": "standard.binding.body.none",
+  "en": "the body",
+  "protected": false,
+  "note": "DEC-253: {body} when the record names none"
+ },
+ {
+  "key": "standard.policy.owner",
+  "en": "{issuer} policy",
+  "protected": false,
+  "note": "DEC-253: a policy always with its owner"
+ },
+ {
+  "key": "standard.notpublic",
+  "en": "Not public",
+  "protected": true,
+  "note": "DEC-253: never \"confidential\""
+ },
+ {
+  "key": "standard.notpublic.releaseby",
+  "en": "Only {who} can release it",
+  "protected": false,
+  "note": "DEC-253: beside \"Not public\""
+ },
+ {
+  "key": "standard.text.withheld",
+  "en": "This standard's words can be read only by the group's members, inside the group.",
+  "protected": false,
+  "note": "DEC-253: in place of a reading-room or paywalled text, for a reader outside the group"
+ },
+ {
+  "key": "standard.note",
+  "en": "A standard as the record holds it: what it is and where it comes from, never whether it is a good one. Each passage says whether a newer capture of its document still holds it; nothing is moved.",
+  "protected": false,
+  "note": "DEC-253"
+ },
+ {
+  "key": "standard.inforce.known",
+  "en": "Known to be in force through {through}, from {source}, recorded by {author}",
+  "protected": false,
+  "note": "DEC-253: standards' T36 owed words"
+ },
+ {
+  "key": "standard.source.capture",
+  "en": "capture {capture}, {extent}",
+  "protected": false,
+  "note": "DEC-253: {capture} is the first twelve characters of its fingerprint"
+ },
+ {
+  "key": "standard.source.capture.whole",
+  "en": "capture {capture}",
+  "protected": false,
+  "note": "DEC-253: when no extent is named"
+ }
+]

@@ -276,6 +276,8 @@ for (const x of JSON.parse(R('words-t47.json'))) add(x.key, x.en, x.protected, '
 for (const x of JSON.parse(R('words-t48.json'))) add(x.key, x.en, x.protected, (x.note && (x.note.match(/^DEC-\d+/) || [])[0]) || 'DEC-227', x.note || undefined);
 // 4k. The modules' own keyed rows, adopted under their own keys (DEC-252; BOB's N1075): written by words-modules.src.py
 for (const x of JSON.parse(R('words-modules.json')).adopted) add(x.key, x.en, x.protected, 'DEC-252', 'adopted from ' + x.module + "'s own rows");
+// 4l. T49's owed words (DEC-253): affordances' vocabularies and standards' sentences, written in words-t49.src.py
+for (const x of JSON.parse(R('words-t49.json'))) add(x.key, x.en, x.protected, 'DEC-253', x.note.replace(/^DEC-253(: )?/, '') || undefined);
 
 // 5. The frame: rail, phone tabs, explanation levels
 for (const [k, name] of W.RAIL) { add(`rail.${k}.name`, name, false, 'mock-shell.js RAIL'); if (W.RAIL_HELP[k]) add(`rail.${k}.holds`, W.RAIL_HELP[k], false, 'mock-refs.js RAIL_HELP'); }
