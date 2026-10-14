@@ -23,6 +23,7 @@ import { isMachineIdentity, sha256HexSync, canonicalJson } from "../record-gramm
 import { refusal } from "./checks.mjs";
 import { checkAnswer } from "./check.mjs";
 import { ReadLog } from "./readlog.mjs";
+import { KEPT_AWAY_UNREADABLE } from "../ai-accounts/index.mjs";
 
 /** R15: the cadences. */
 export const CADENCES = Object.freeze(["daily", "weekly", "monthly"]);
@@ -301,23 +302,23 @@ async function occurrenceStates(self, ids, author, now) {
   return out;
 }
 
-/* R19 (T37; N765, K231, K2200): keep-away as credentials' one site answers it (its R35, `aiKeptAway`, asked for the
- * `standing` use, its R57): null while the group does not keep its material away from standing questions; otherwise
+/* R19 (T37; N765, K231, K2200): keep-away as ai-accounts' one site answers it (its R7, `aiKeptAway`, asked for the
+ * `standing` use, its R22): null while the group does not keep its material away from standing questions; otherwise
  * its `AI_KEPT_AWAY` refusal, which is also its answer when the setting cannot be read (fail closed, K2093). Only the
- * refusal's code and translation are carried. A credentials that cannot be reached, or cannot answer, is not a reading
- * of null: kept away, fail closed, with no row to carry. */
-function keptAway(creds) {
+ * refusal's code and translation are carried. An ai-accounts that cannot be reached, whose read throws, or that
+ * answers neither null nor a refusal, is not a reading of null: kept away, fail closed, carrying
+ * `KEPT_AWAY_UNREADABLE`'s row as given (ai-accounts R34), never a code minted here (K231). */
+function keptAway(accounts) {
   let away;
-  try { away = creds && typeof creds.aiKeptAway === "function" ? creds.aiKeptAway({ use: STANDING_USE }) : undefined; }
+  try { away = accounts && typeof accounts.aiKeptAway === "function" ? accounts.aiKeptAway({ use: STANDING_USE }) : undefined; }
   catch { away = undefined; }
   if (away === null) return null;
-  const row = away && typeof away === "object" && away.ok === false;
-  return { condition: "kept_away", code: row ? away.code || away.reason || null : null,
-           translation: row ? away.translation ?? null : null };
+  const r = away && typeof away === "object" && away.ok === false && (away.code || away.reason) ? away : KEPT_AWAY_UNREADABLE;
+  return { condition: "kept_away", code: r.code || r.reason, translation: r.translation ?? null };
 }
 
 /* R19, R30: an account's refusal read as the condition that held the AI half back. Keep-away is never reported as
- * `no_account`, nor an account's refusal as `kept_away`; an account whose `standing` use is off (credentials R56's
+ * `no_account`, nor an account's refusal as `kept_away`; an account whose `standing` use is off (ai-accounts R11's
  * `AI_USE_SWITCHED_OFF`, naming whose, or R32's `STANDING_SWITCH_OFF`) is `switch_off` naming that account. */
 const SWITCH_OF = { own: "member", group: "group", project: "project" };
 function accountHeld(r, level) {
@@ -330,7 +331,7 @@ function accountHeld(r, level) {
   return { condition: "no_account", code, translation };
 }
 
-/** R19, R30: the paying owner of an account `credentials.accountFor` answered, spelled as `ai-use` R1's. */
+/** R19, R30: the paying owner of an account `ai-accounts.accountFor` answered, spelled as `ai-use` R1's. */
 export function ownerOf(account, member) {
   if (account && account.level === "project" && account.project) return `project:${account.project}`;
   if (account && account.level === "group") return "group";
@@ -338,9 +339,9 @@ export function ownerOf(account, member) {
 }
 
 /* R19, R26, R30: what holds the AI half back, or null with the grant it reads under when every condition holds. In
- * order: the copy's switch (K1481; Rule 7), the answerer's deployment, keep-away (credentials R35's `aiKeptAway`, read
+ * order: the copy's switch (K1481; Rule 7), the answerer's deployment, keep-away (ai-accounts R7's `aiKeptAway`, read
  * before any account: while it holds no account is read and no grant minted, DEC-172), the account serving the
- * author's act of kind `standing` (credentials R56, no `project`, K2348: their own reference, else their own Claude
+ * author's act of kind `standing` (ai-accounts R7, R11, no `project`, K2348: their own reference, else their own Claude
  * sign-in, else the group's key while held and on; none is R26's `no_account`; the one chosen with its `standing` use
  * off is `switch_off` naming it, never the next account), the paying account's limits (`ai-use.useCheck`, its R3, in
  * place of the ceiling: `AI_LIMIT_REACHED` is `limit`), and last the grant credentials mints for the author (its R32).
@@ -350,17 +351,17 @@ async function heldBack(self, r, at) {
   const author = r.author;
   if (self.record.getSetting(STANDING_AI_SETTING) !== true) return { held: { condition: "switch_off", switch: "copy" } };
   if (!self.answerer) return { held: { condition: "not_deployed" } };
-  const creds = self.dep("credentials");
-  const away = keptAway(creds);
+  const accounts = self.dep("accounts");
+  const away = keptAway(accounts);
   if (away) return { held: away };
   const act = { kind: STANDING_USE, member: author };
   let acct = null;
-  try { acct = creds && typeof creds.accountFor === "function" ? await creds.accountFor({ member: author, act }) : null; }
+  try { acct = accounts && typeof accounts.accountFor === "function" ? await accounts.accountFor({ member: author, act }) : null; }
   catch { acct = null; }
   if (!acct || acct.ok !== true) return { held: accountHeld(acct, null) };
   const level = acct.level === "group" ? "group" : acct.level === "project" ? "project" : "member";
   const owner = ownerOf(acct, author);
-  acct = null;   /* the account's key is used by no caller here (credentials R35; agent-model R8) */
+  acct = null;   /* the account's key is used by no caller here (ai-accounts R3, R7; agent-model R8) */
   const check = self.dep("useCheck");
   let limit;
   try { limit = typeof check === "function" ? await check({ owner, member: memberOf(author), use: STANDING_USE, at }) : undefined; }
@@ -369,6 +370,8 @@ async function heldBack(self, r, at) {
   if (limit === undefined) return { held: { condition: "limit", code: null, translation: null } };
   if (limit && limit.ok === false)
     return { held: { condition: "limit", code: limit.code || limit.reason, translation: limit.translation ?? null } };
+  /* the grant stays credentials' (its R32), the only read of credentials here */
+  const creds = self.dep("credentials");
   let g = null;
   try { g = await creds.aiGrantMintStanding({ member: author, question: r.question }); } catch { g = null; }
   if (!g || g.ok !== true || typeof g.token !== "string") {
@@ -488,7 +491,7 @@ async function runOne(self, r, now) {
     const hb = await heldBack(self, r, now);
     held = hb.held;
     if (!held) {
-      /* R19: the answerer reads under the grant credentials minted (R32), each read logged here (R1, R2) */
+      /* R19: the answerer reads under the grant credentials minted (its R32), each read logged here (R1, R2) */
       const log = new ReadLog({ grant: hb.grant, viewer: r.author, at: now, use: STANDING_USE });
       self.holdLog(log);
       try {
