@@ -22,17 +22,17 @@ export const DUTIES_WORDS = Object.freeze({
 });
 
 /* T48 (R33; N1044, K3150): an undetermined occurrence's member-facing reason, `duty.reason.<code>` for each code of
-   `OCCURRENCE_REASONS`, read by key (`reasonWords`), as the words above are. `words.json` holds none of these keys at
-   T48's opening, so each is this module's interim word, in DEC-149's form, until the design stream gives it; then the
-   file's `en` replaces it here, verbatim, under the same key. No sentence names an ISO date, a zone id, or a ruling or
-   requirement number. Words, not rows: a reason is no refusal and has no check. */
+   `OCCURRENCE_REASONS`, read by key (`reasonWords`), as the words above are. `words.json` held none of these keys at
+   T48's opening, so each was this module's interim word, in DEC-149's form; DEC-232 gave the file's `en` (T49: each
+   replaces the interim word here, verbatim, under the same key). No sentence names an ISO date, a zone id, or a ruling
+   or requirement number. Words, not rows: a reason is no refusal and has no check. */
 export const DUTIES_REASON_WORDS = Object.freeze({
-  "duty.reason.trigger_undated": "What starts the clock has no date in the record.",
-  "duty.reason.deadline_not_held": "Your group's Civicsmith holds no rule for this deadline yet.",
-  "duty.reason.due_not_computed": "The due date could not be worked out.",
-  "duty.reason.due_between_days": "The due date depends on a day the record does not settle.",
-  "duty.reason.match_undated": "The event that met it has no settled date.",
-  "duty.reason.order_unsettled": "The dates held are not precise enough to say whether it was on time.",
+  "duty.reason.trigger_undated": "What starts the clock has no date in the record yet, so the due date can't be worked out.",
+  "duty.reason.deadline_not_held": "Your group's Civicsmith holds no rule for this deadline yet, so it can't say when it falls due.",
+  "duty.reason.due_not_computed": "The due date couldn't be worked out from what the record holds.",
+  "duty.reason.due_between_days": "The due date depends on a day the record doesn't settle, so it falls on one of two days.",
+  "duty.reason.match_undated": "The event that met the duty has no settled date, so whether it was on time is open.",
+  "duty.reason.order_unsettled": "The dates the record holds aren't precise enough to say whether it was on time.",
 });
 
 /** R33: an undetermined occurrence's reason, `{code, says}`, its words read by key; a throw for a code with no words
