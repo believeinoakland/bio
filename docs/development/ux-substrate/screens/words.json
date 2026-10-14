@@ -72,13 +72,14 @@
   "action": 4,
   "review": 5,
   "theme": 32,
+  "progression": 26,
   "rail": 17,
   "tab": 2,
   "level": 2,
-  "act": 710,
+  "act": 724,
   "column": 33,
-  "total": 2379,
-  "protected": 729
+  "total": 2419,
+  "protected": 737
  },
  "words": [
   {
@@ -7815,6 +7816,188 @@
    "note": "DEC-242: Find's filter, R44"
   },
   {
+   "key": "progression.finding.never",
+   "en": "A finding reports what the record holds and never decides: it says which step has no document, never that anyone is late.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: R25; DEC-239's sweep: no \"overdue\""
+  },
+  {
+   "key": "progression.follows",
+   "en": "Progressions it follows",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: instance list on the timeline"
+  },
+  {
+   "key": "progression.followed",
+   "en": "Followed through “{progression}”, version {n}.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: instance header"
+  },
+  {
+   "key": "progression.steps",
+   "en": "Its steps",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: instance R9"
+  },
+  {
+   "key": "progression.threadedby",
+   "en": "its own date {date} · threaded by {who}, {when}",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: thread R6, R37"
+  },
+  {
+   "key": "progression.req.always",
+   "en": "required",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: stage required=always"
+  },
+  {
+   "key": "progression.req.usually",
+   "en": "usually present",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: required=usually"
+  },
+  {
+   "key": "progression.req.sometimes",
+   "en": "sometimes present",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: required=sometimes"
+  },
+  {
+   "key": "progression.req.unless",
+   "en": "required unless a lawful exception applies",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: required=unless_exception"
+  },
+  {
+   "key": "progression.req.never",
+   "en": "never expected",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: required=never"
+  },
+  {
+   "key": "progression.nodoc",
+   "en": "No document threaded.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: a stage with no placement"
+  },
+  {
+   "key": "progression.expects",
+   "en": "The progression expects one within {interval} of step {n}, by {date}.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: overdue_successor with a determined deadline, R16"
+  },
+  {
+   "key": "progression.expects.undetermined",
+   "en": "The progression expects one within {interval} of step {n}; step {n}'s document has no date of its own, so only the capture date bounds it.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: overdue undetermined, R16, R37"
+  },
+  {
+   "key": "progression.thread",
+   "en": "Thread a document…",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: thread"
+  },
+  {
+   "key": "progression.thread.here",
+   "en": "Thread it to a step…",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: thread from a document"
+  },
+  {
+   "key": "progression.discharge",
+   "en": "Record a lawful skip…",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: discharge R14"
+  },
+  {
+   "key": "progression.setaside",
+   "en": "Set this finding aside…",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: proposedispose R20 to R22"
+  },
+  {
+   "key": "progression.chain",
+   "en": "How sure the chain is",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: instance grade R9"
+  },
+  {
+   "key": "progression.chain.undetermined",
+   "en": "Not determined: fewer than two steps have a document. A chain is as sure as its weakest step.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: grade_determined false"
+  },
+  {
+   "key": "progression.findings",
+   "en": "Findings",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: instance findings R10 to R16"
+  },
+  {
+   "key": "progression.basis",
+   "en": "Its basis",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: progression basis R1"
+  },
+  {
+   "key": "progression.revise",
+   "en": "Revise the steps…",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: progressiondefine revision, citation required"
+  },
+  {
+   "key": "progression.define",
+   "en": "Define a progression",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: progressiondefine"
+  },
+  {
+   "key": "progression.define.go",
+   "en": "Declare the progression",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: progressiondefine"
+  },
+  {
+   "key": "progression.basis.help",
+   "en": "The rule or standard the steps come from, with its citation. Required.",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: NO_BASIS"
+  },
+  {
+   "key": "progression.threadedto",
+   "en": "Steps it is threaded to",
+   "protected": false,
+   "source": "DEC-243",
+   "note": "DEC-243: captureprogressions R19 on the document"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -9892,6 +10075,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.captureprogressions.label.document",
+   "en": "Read the steps it is threaded to",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.thread.label.document",
+   "en": "Thread it to a step",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.findin.label.find-in",
    "en": "Find in this",
    "protected": true,
@@ -10386,6 +10581,42 @@
   {
    "key": "act.findin.label.timeline",
    "en": "Look for dates in this project",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.instance.label.timeline",
+   "en": "Read a matter's steps",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.thread.label.timeline",
+   "en": "Thread a document to a step",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.discharge.label.timeline",
+   "en": "Record a lawful skip, with reason and citation",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.proposedispose.label.timeline",
+   "en": "Set a finding aside",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.progression.label.timeline",
+   "en": "Read a progression",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.progressiondefine.label.timeline",
+   "en": "Declare or revise a progression",
    "protected": true,
    "source": "registry.json"
   },
@@ -12498,6 +12729,42 @@
   {
    "key": "act.hypothesishold.does",
    "en": "Keeps a hunch beside the question, labeled as yours. A hunch is never evidence and never moves an answer.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.instance.does",
+   "en": "Shows one matter followed through a progression: each step in order with the documents threaded to it, how sure the chain is, and any finding.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.progression.does",
+   "en": "Shows a progression: its steps, what each needs before it, how soon, whether it is required, its basis, and every version.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.progressiondefine.does",
+   "en": "Declares a progression, or a new version of one: its steps and their basis. A revision needs a citation; the old version stays.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.thread.does",
+   "en": "Places a document the group holds on a step of a matter it concerns, with the document's own date. Each threading is a new version, so nothing is overwritten.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.discharge.does",
+   "en": "Records why a required step was lawfully skipped: the document that shows it, your reason and the citation. The finding then reads as a lawful skip.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.captureprogressions.does",
+   "en": "Shows every step of every matter this document is threaded to, with any finding there.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

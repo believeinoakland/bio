@@ -111,7 +111,7 @@ screen('people', 'People', 'working', 'A directory of the people and organizatio
   [('search','Search people and organizations'),('explore','Explore connections'),('entitycreate','Add someone the record follows')], [10,13])
 screen('person', 'Person', 'working', 'A person or an organization the record follows: positions, career, credentials, memberships, interests, statements; same person?; what the group says about them (other names, declared ties, the documents that may name them) (DEC-233).',
   [('person','Open the person'),('explore','Explore connections'),('recordpersonfact','Add a fact from a document'),('identityclaim','Say another record is this person'),('withdrawidentityclaim','Withdraw a same-person claim'),('followregister','Follow a register'),('personexpunge','Remove a fact where the law requires'),('entityalias','Add another name'),('relationdeclare','Declare a tie'),('resolve','Match a document to them'),('resolvetestify','Say from what you know that a document names them'),('connect','Connect the documents that name them'),('writinghelp','Help me write this')], [10])
-screen('timeline', 'Timeline', 'working', 'What they did and what we did, in two lanes (K1462, K1494).',
+screen('timeline', 'Timeline', 'working', 'What they did and what we did, in two lanes (K1462, K1494); the matters the project follows through a progression, one matter\'s steps with its documents and findings (state b), and a progression\'s steps and basis (state c) (DEC-243; progressions R1 to R43).',
   [('createevent','Record an event'),('addparticipant','Add who took part'),('relate','Link events'),('recorddatedfact','Record a dated fact'),('hypothesishold','Keep a suspected cause as a hunch'),('findin','Look for dates in this project')], [11])
 screen('money', 'Money trail', 'working', 'Money facts with stage and period; a trail; reconciling sources (K1457, K1468).',
   [('recordfact','Read a figure into a money fact'),('createset','Start a money trail'),('include','Include with a reason'),('exclude','Leave out with a reason'),('reconcile','Compare two sources'),('committedagainstpaid','Committed against paid'),('authoritychain','What authorized it'),
@@ -171,3 +171,11 @@ _THEME_ACTS = {'document': [('themeplace','Place it in a theme'),('themepropose'
 for _s in S:
     for _op, _l in _THEME_ACTS.get(_s['id'], []):
         _s['acts'].append(dict(op=_op, label=_l))
+
+# DEC-243 (S3): progressions on the timeline and the document (progressions R1 to R43).
+_PROG_ACTS = {'timeline': [('instance','Read a matter\'s steps'),('thread','Thread a document to a step'),('discharge','Record a lawful skip, with reason and citation'),('proposedispose','Set a finding aside'),('progression','Read a progression'),('progressiondefine','Declare or revise a progression')],
+  'document': [('captureprogressions','Read the steps it is threaded to'),('thread','Thread it to a step')]}
+for _s in S:
+    _have = {a['op'] for a in _s['acts']}
+    for _op, _l in _PROG_ACTS.get(_s['id'], []):
+        if _op not in _have: _s['acts'].append(dict(op=_op, label=_l))

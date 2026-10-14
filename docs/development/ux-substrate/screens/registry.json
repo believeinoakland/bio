@@ -1892,6 +1892,22 @@
      "modules": [
       "connections"
      ]
+    },
+    {
+     "op": "captureprogressions",
+     "label": "Read the steps it is threaded to",
+     "status": "declared",
+     "modules": [
+      "progressions"
+     ]
+    },
+    {
+     "op": "thread",
+     "label": "Thread it to a step",
+     "status": "declared",
+     "modules": [
+      "progressions"
+     ]
     }
    ],
    "journeys": [
@@ -2608,7 +2624,7 @@
    "id": "timeline",
    "name": "Timeline",
    "frame": "working",
-   "purpose": "What they did and what we did, in two lanes (K1462, K1494).",
+   "purpose": "What they did and what we did, in two lanes (K1462, K1494); the matters the project follows through a progression, one matter's steps with its documents and findings (state b), and a progression's steps and basis (state c) (DEC-243; progressions R1 to R43).",
    "acts": [
     {
      "op": "createevent",
@@ -2656,6 +2672,56 @@
      "status": "declared",
      "modules": [
       "retrieval"
+     ]
+    },
+    {
+     "op": "instance",
+     "label": "Read a matter's steps",
+     "status": "declared",
+     "modules": [
+      "progressions"
+     ]
+    },
+    {
+     "op": "thread",
+     "label": "Thread a document to a step",
+     "status": "declared",
+     "modules": [
+      "progressions"
+     ]
+    },
+    {
+     "op": "discharge",
+     "label": "Record a lawful skip, with reason and citation",
+     "status": "declared",
+     "modules": [
+      "progressions"
+     ]
+    },
+    {
+     "op": "proposedispose",
+     "label": "Set a finding aside",
+     "status": "declared",
+     "modules": [
+      "inquiry",
+      "progressions",
+      "queue"
+     ]
+    },
+    {
+     "op": "progression",
+     "label": "Read a progression",
+     "status": "declared",
+     "modules": [
+      "progressions"
+     ]
+    },
+    {
+     "op": "progressiondefine",
+     "label": "Declare or revise a progression",
+     "status": "declared",
+     "modules": [
+      "progressions"
      ]
     }
    ],

@@ -2830,5 +2830,161 @@
   "en": "With a theme chosen, Find lists what was placed in it, then its hunches apart.",
   "protected": false,
   "note": "DEC-242: Find's filter, R44"
+ },
+ {
+  "key": "progression.finding.never",
+  "en": "A finding reports what the record holds and never decides: it says which step has no document, never that anyone is late.",
+  "protected": false,
+  "note": "DEC-243: R25; DEC-239's sweep: no \"overdue\""
+ },
+ {
+  "key": "progression.follows",
+  "en": "Progressions it follows",
+  "protected": false,
+  "note": "DEC-243: instance list on the timeline"
+ },
+ {
+  "key": "progression.followed",
+  "en": "Followed through “{progression}”, version {n}.",
+  "protected": false,
+  "note": "DEC-243: instance header"
+ },
+ {
+  "key": "progression.steps",
+  "en": "Its steps",
+  "protected": false,
+  "note": "DEC-243: instance R9"
+ },
+ {
+  "key": "progression.threadedby",
+  "en": "its own date {date} · threaded by {who}, {when}",
+  "protected": false,
+  "note": "DEC-243: thread R6, R37"
+ },
+ {
+  "key": "progression.req.always",
+  "en": "required",
+  "protected": false,
+  "note": "DEC-243: stage required=always"
+ },
+ {
+  "key": "progression.req.usually",
+  "en": "usually present",
+  "protected": false,
+  "note": "DEC-243: required=usually"
+ },
+ {
+  "key": "progression.req.sometimes",
+  "en": "sometimes present",
+  "protected": false,
+  "note": "DEC-243: required=sometimes"
+ },
+ {
+  "key": "progression.req.unless",
+  "en": "required unless a lawful exception applies",
+  "protected": false,
+  "note": "DEC-243: required=unless_exception"
+ },
+ {
+  "key": "progression.req.never",
+  "en": "never expected",
+  "protected": false,
+  "note": "DEC-243: required=never"
+ },
+ {
+  "key": "progression.nodoc",
+  "en": "No document threaded.",
+  "protected": false,
+  "note": "DEC-243: a stage with no placement"
+ },
+ {
+  "key": "progression.expects",
+  "en": "The progression expects one within {interval} of step {n}, by {date}.",
+  "protected": false,
+  "note": "DEC-243: overdue_successor with a determined deadline, R16"
+ },
+ {
+  "key": "progression.expects.undetermined",
+  "en": "The progression expects one within {interval} of step {n}; step {n}'s document has no date of its own, so only the capture date bounds it.",
+  "protected": false,
+  "note": "DEC-243: overdue undetermined, R16, R37"
+ },
+ {
+  "key": "progression.thread",
+  "en": "Thread a document…",
+  "protected": false,
+  "note": "DEC-243: thread"
+ },
+ {
+  "key": "progression.thread.here",
+  "en": "Thread it to a step…",
+  "protected": false,
+  "note": "DEC-243: thread from a document"
+ },
+ {
+  "key": "progression.discharge",
+  "en": "Record a lawful skip…",
+  "protected": false,
+  "note": "DEC-243: discharge R14"
+ },
+ {
+  "key": "progression.setaside",
+  "en": "Set this finding aside…",
+  "protected": false,
+  "note": "DEC-243: proposedispose R20 to R22"
+ },
+ {
+  "key": "progression.chain",
+  "en": "How sure the chain is",
+  "protected": false,
+  "note": "DEC-243: instance grade R9"
+ },
+ {
+  "key": "progression.chain.undetermined",
+  "en": "Not determined: fewer than two steps have a document. A chain is as sure as its weakest step.",
+  "protected": false,
+  "note": "DEC-243: grade_determined false"
+ },
+ {
+  "key": "progression.findings",
+  "en": "Findings",
+  "protected": false,
+  "note": "DEC-243: instance findings R10 to R16"
+ },
+ {
+  "key": "progression.basis",
+  "en": "Its basis",
+  "protected": false,
+  "note": "DEC-243: progression basis R1"
+ },
+ {
+  "key": "progression.revise",
+  "en": "Revise the steps…",
+  "protected": false,
+  "note": "DEC-243: progressiondefine revision, citation required"
+ },
+ {
+  "key": "progression.define",
+  "en": "Define a progression",
+  "protected": false,
+  "note": "DEC-243: progressiondefine"
+ },
+ {
+  "key": "progression.define.go",
+  "en": "Declare the progression",
+  "protected": false,
+  "note": "DEC-243: progressiondefine"
+ },
+ {
+  "key": "progression.basis.help",
+  "en": "The rule or standard the steps come from, with its citation. Required.",
+  "protected": false,
+  "note": "DEC-243: NO_BASIS"
+ },
+ {
+  "key": "progression.threadedto",
+  "en": "Steps it is threaded to",
+  "protected": false,
+  "note": "DEC-243: captureprogressions R19 on the document"
  }
 ]
