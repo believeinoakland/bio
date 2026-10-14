@@ -91,7 +91,7 @@ test("R29 the founder's own place in the order: after the handles while she hold
   assert.ok(r1b.includes("alpha"));
 });
 
-test("R29 control: a project the founder is not in names her nowhere; the reads write nothing; a founder id with no membership offering founderHandle answers null, never admin", async () => {
+test("R29 control: a project the founder is not in names her nowhere; the reads write nothing; a membership whose founderHandle throws answers null, never admin", async () => {
   const w = await founderWorld();
   w.founderHandle("foundress");
   w.owned("PROJ-Q", "bob");   // the founder is not in it
@@ -102,8 +102,6 @@ test("R29 control: a project the founder is not in names her nowhere; the reads 
   /* membership offering no founderHandle (a membership before R144), or one that throws: null, never the id */
   const w2 = await founderWorld();
   w2.m.founderHandle = () => { throw new Error("no"); };
-  assert.equal(readP(w2).participants.find((x) => x.founder).handle, null);
-  delete w2.m.founderHandle;
   assert.equal(readP(w2).participants.find((x) => x.founder).handle, null);
   noAdminAsAName(readP(w2));
 });

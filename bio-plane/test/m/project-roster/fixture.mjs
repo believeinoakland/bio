@@ -27,16 +27,10 @@ function standIns(m) {
   return creds;
 }
 
-/* The founder's own handle (membership R144, T49). Sets it through membership's `founderHandleSet` where membership has
-   merged it; until then a stand-in `founderHandle()` (held or null) is put on the membership instance, so this module's
-   reads of R144 run unchanged. */
+/* The founder's own handle (membership R144, T49): chosen once, by the founder's own act, `founderHandleSet`. */
 function founderHandleOf(m) {
-  if (typeof m.founderHandle === "function") {
-    return { set: (handle) => m.founderHandleSet({ handle, by: "admin" }), stub: false };
-  }
-  let held = null;
-  m.founderHandle = () => held;
-  return { set: (handle) => { held = handle; return { ok: true, handle }; }, stub: true };
+  return { set: (handle) => { const a = m.founderHandleSet({ handle, by: "admin" });
+    if (!a.ok) throw new Error(`founderHandleSet refused: ${a.reason}`); return a; } };
 }
 
 export function world() {
