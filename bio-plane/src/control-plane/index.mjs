@@ -1,4 +1,4 @@
-/* control-plane: THE INSTANCE'S DOOR (R1–R68). The Worker's HTTP entry — routing and the stamps (the answer's envelope
+/* control-plane: THE INSTANCE'S DOOR (R1–R89). The Worker's HTTP entry — routing and the stamps (the answer's envelope
    and decoration are `answer-envelope`'s, the store's door `store-door`'s, since the split, K1907, K1974) — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
@@ -39,8 +39,10 @@ import { SCREENS as INTAKE_SCREENS } from "../screens-intake/index.mjs";
 import { SCREENS as DAILY_SCREENS } from "../screens-daily/index.mjs";
 import { SCREENS as INQUIRY_SCREENS } from "../screens-inquiry/index.mjs";
 const APP_SCREENS = Object.freeze([...SETTINGS_SCREENS, ...INTAKE_SCREENS, ...DAILY_SCREENS, ...INQUIRY_SCREENS]);
-/* R65 (T37): a member's own Claude sign-in, relayed to their own runner, and its sign-out when they leave. */
-import { subscriptionSignin, leaverOf, signoutLeaver } from "./signin.mjs";
+/* (T47; K3167) a member's own Claude sign-in, its disconnection, the revocation's sign-out, a refused held token and the
+   test instance's trace are signin-door's (its R1–R5, were this module's R65, R78, R85–R87): the door routes to them. */
+import { subscriptionSignin, subscriptionDisconnect, leaverOf, signoutLeaver, tokenRefusedSeen, signintrace }
+  from "../signin-door/index.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
@@ -2038,27 +2040,24 @@ export function makeFetch(hooks = {}) {
         : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ warned }) })), op,
         { store: storeName, tokenClass: cls });
     }
-    /* R65 (T37; N708, DEC-156; agent-worker R66): a member's own Claude sign-in goes to their own runner, `member` the
-       door's `by` stamp and `step` and `code` the body's (`signin.mjs`); only a member's session reaches the op (its
-       spec). Nothing of it reaches the record but the fact `credentials` R43 keeps. */
+    /* R2 (T47; K3167; signin-door R1–R5): the subscription sign-in door is signin-door's. The door hands it the member
+       its session names (`by`, never a value the caller sends), the request's parsed body and an ask of the store
+       addressed; who reaches each op (a member's own session; `signintrace` an administrator's) is admission's, above.
+       Each answer is signin-door's `{status, body}`, sent as JSON (answer-envelope decorates a refusal with its row). */
+    const stored = (path, init) => doAnswer(stub.fetch(new Request(`http://do/${path}`, init)));
     if (op === "subscriptionsignin") {
-      const stored = (path, init) => doAnswer(stub.fetch(new Request(`http://do/${path}`, init)));
-      /* (T46; N897 (3); instance-setup R54) `start` waits on the disclosure: asked of the store's `disclosureof` for the
-         member the door stamps (the form `disclosureshown` records), fail closed as the keep-away question is. */
-      const disclosureDue = async () => {
-        const seen = await stored(`disclosureof?member=${encodeURIComponent(stampOf.by)}`, { method: "POST", body: "{}" });
-        if (seen.refused || !seen.answered) return { unread: seen };
-        if (seen.result && seen.result.ok === true && seen.result.shown === true) return null;
-        /* DEC-49 REGION is-disclosure-due
-           C-69.6 (answer-envelope's row): a sign-in started before the member was shown what connecting means. */
-        return { status: 409, body: { ok: false, reason: "DISCLOSURE_DUE", ...dispatchRow("DISCLOSURE_DUE"),
-          detail: "you have not yet been shown what connecting your own Claude account means, so the sign-in was not "
-                + "started and nothing was sent. Read it, then start again." } };
-        /* END DEC-49 REGION is-disclosure-due */
-      };
-      const signed = await subscriptionSignin({ env, member: stampOf.by, asked: reqBody, store: stored, disclosureDue });
-      if (signed.unread) return signed.unread.refused ? storeRefusal(signed.unread) : storeSilent(op, signed.unread.correlation);
+      const signed = await subscriptionSignin({ env, member: stampOf.by, asked: reqBody, store: stored });
       return json(signed.body, signed.status);
+    }
+    if (op === "signintrace") {
+      const traced = await signintrace({ env, store: stored });
+      return json(traced.body, traced.status);
+    }
+    if (op === "subscriptiondisconnect") {
+      const out = await subscriptionDisconnect({ env, member: stampOf.by, store: stored });
+      if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
+      if (!out.answered) return storeSilent(op, out.correlation);
+      return json({ ...out.reply.body, store: storeName, tokenClass: cls }, out.reply.status);
     }
     /* R57 (T46; N917; plane R40, R41; agent-worker R76): `textcheck` has no owner before the draft: the door asks the
        plane's draft door with the body's `text` alone (no told, grant or firsthand, no `checkDraft`), which gates it and
@@ -2076,6 +2075,8 @@ export function makeFetch(hooks = {}) {
       let drafted = null;
       try { drafted = await res.json(); } catch { drafted = null; }
       if (!drafted || typeof drafted !== "object") return storeSilent(op);
+      /* signin-door R4: a held sign-in Anthropic refused is dropped */
+      await tokenRefusedSeen({ member: stampOf.by, answer: drafted, store: stored });
       if (drafted.ok === true)
         await doAnswer(stub.fetch(new Request(`http://do/askusage?viewer=${encodeURIComponent(sessViewer)}`, { method: "POST",
           headers: { "content-type": "application/json" },
@@ -2118,6 +2119,13 @@ export function makeFetch(hooks = {}) {
       let body;
       try { body = await res.clone().json(); } catch { return res; }
       return tieToStep({ body, status: res.status }, captureStep ?? url.searchParams.get("step"));
+    }
+    /* signin-door R4: an ask answered SIGNIN_TOKEN_REFUSED (plane's ask arm) drops the member's held sign-in; the answer
+       is unchanged */
+    if (armed && op === "ask" && viaSession) {
+      let asked = null;
+      try { asked = await armed.clone().json(); } catch { asked = null; }
+      await tokenRefusedSeen({ member: stampOf.by, answer: asked, store: stored });
     }
     if (armed) return armed;
     /* The forward's answer, read once through `doAnswer`: the store's refusal at its status, a silence a silence. */
@@ -3173,8 +3181,8 @@ export function makeFetch(hooks = {}) {
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
     if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
-    /* R65 (credentials R16, R43): a member who disconnects their subscription, or is revoked, is signed out of their own
-       runner, after the act and whatever the runner answers; the act's answer is unchanged. */
+    /* (signin-door R1, R4; credentials R16): a member who is revoked is signed out of their own runner, after the act
+       and whatever the runner answers; the act's answer is unchanged. */
     const leaver = leaverOf(op, reqBody, body.result, stampOf.by);
     if (leaver) await signoutLeaver(env, leaver);
     /* R58 (K2042 (2)): what an `op=unpack` filed is promoted, one act each, and named in the answer */
@@ -3201,6 +3209,8 @@ export function makeFetch(hooks = {}) {
       let drafted = null;
       try { drafted = await res.json(); } catch { drafted = null; }
       if (!drafted || typeof drafted !== "object") return storeSilent(op);
+      /* signin-door R4: a held sign-in Anthropic refused is dropped */
+      await tokenRefusedSeen({ member: stampOf.by, answer: drafted, store: stored });
       /* ai-runs R48: whatever the check answers, a conversation that reached the model is counted to the member's day */
       if (drafted.ok === true)
         await doAnswer(stub.fetch(new Request(`http://do/askusage?viewer=${encodeURIComponent(sessViewer)}`, { method: "POST",

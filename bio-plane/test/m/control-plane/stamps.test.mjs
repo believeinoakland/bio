@@ -6,7 +6,10 @@ import { M, O, world, call, opCalls, sha, hex64, aik, cred, member, founder, ref
          QUERY_STAMPS, BODY_STAMPS, FORGED } from "./harness.mjs";
 
 const { OPS, NEEDS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS } = O;
-const GATED = Object.keys(OPS).filter((k) => OPS[k].classes !== null && k !== "whoami");
+/* (T47; K3167) the ops whose handler is signin-door's (its R1–R5): it sends the store and the runner only what it names,
+   the member the door stamps; their routing is driven in `t37-door.test.mjs` */
+const SIGNIN_DOOR_OPS = Object.freeze(["subscriptionsignin", "subscriptiondisconnect", "signintrace"]);
+const GATED = Object.keys(OPS).filter((k) => OPS[k].classes !== null && k !== "whoami" && !SIGNIN_DOOR_OPS.includes(k));
 const ORIGIN = "https://plane.example";
 
 /* Every kind of caller, with what R17 says the server stamps for it. */

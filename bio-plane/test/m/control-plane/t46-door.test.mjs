@@ -1,4 +1,4 @@
-/* control-plane T46 (T46-59): R65's disclosure before a sign-in's `start` and the runner's absence in member words; R57's
+/* control-plane T46 (T46-59): R57's
    status report (`statusreportassist`), its text check (`textcheck`) and the `untested` label every draft passes; R20's group
    fields in the review copy's in-band quartet; R77's member-run door (`airundispatch`); R54's `joindoors`; R76's
    explanation level (`infolevelset`, `infolevel`). Driven through `makeFetch(hooks)` over the harness's store, which records
@@ -9,7 +9,6 @@ import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, refused, aik, cred, FORGED } from "./harness.mjs";
 import { ok, callers, routesForSessions } from "./door-routes.mjs";
 import { DRAFT_OPS, draftDue, draftAsk, untestedOf } from "../../../src/control-plane/draft.mjs";
-import { SIGNIN_WORDS } from "../../../src/control-plane/signin.mjs";
 const { inbandQuartet } = await import("../../../src/inband.mjs");
 
 const { OPS, OP_STAMPS } = O;
@@ -27,82 +26,6 @@ function withObject(w, methods) {
   w.env.STORE.get = (id) => ({ ...get(id), ...Object.fromEntries(Object.entries(methods).map(([k, f]) => [k, (args) => f(args, id)])) });
   return w;
 }
-
-/* ================================================================ R65 */
-
-function agentWorker(answer) {
-  const sent = [];
-  return { sent, fetch: async (url, init) => {
-    const body = JSON.parse(init.body);
-    sent.push({ path: new URL(String(url)).pathname, body });
-    return answer(body);
-  } };
-}
-const signinRunner = (body) => reply(body.step === "start" ? { ok: true, address: "https://claude.ai/oauth/x" }
-  : { ok: true, connected: body.step === "code" || body.step === "state", member: body.member });
-function disclosureWorld({ shown = false, away = false, silent = false, runner = signinRunner } = {}) {
-  const asked = [];
-  const c = callers({ answer: (q) => {
-    if (q.route === "aikeptaway") return ok(away ? { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", detail: "kept away" } : { ok: true });
-    if (q.route === "disclosureof") { asked.push(q.params.member); return silent ? new Response("not json") : ok({ ok: true, member: q.params.member, shown }); }
-    if (q.route === "subscriptionconnected") return ok({ ok: true, connected: true });
-    return null;
-  } });
-  const aw = agentWorker(runner);
-  c.w.env.AGENT_WORKER = aw;
-  return { ...c, aw, asked };
-}
-
-test("R65 (T46; N897 (3); instance-setup R54; C-29.40, C-69.6 retired, K3164): `start` is refused DISCLOSURE_DUE while `disclosureOf` answers `shown: false` for the member the door stamps, nothing sent to the runner; `state`, `signout` and `code` are never refused for it and never ask it; once shown, the same `start` is sent (negative control); a store that does not answer the question sends nothing; the keep-away refusal comes first", async () => {
-  const due = disclosureWorld({ shown: false });
-  for (const s of due.sessions) {
-    due.aw.sent.length = 0;
-    const r = await call(due.w.env, { op: "subscriptionsignin", token: s.token, method: "POST", body: { step: "start", member: FORGED } });
-    refused(r, 409, "DISCLOSURE_DUE", "C-29.40");
-    assert.equal(r.json.translation, M.DOOR_WORDS?.["refusal.DISCLOSURE_DUE"] ?? r.json.translation);
-    assert.match(r.json.translation, /Read what connecting means first/);
-    assert.deepEqual(due.aw.sent, [], `${s.name}: nothing sent`);
-    assert.equal(due.asked.at(-1), s.by, `${s.name}: asked for the member the door stamps, never the caller's`);
-  }
-  for (const step of ["state", "signout", "code"]) {
-    due.aw.sent.length = 0; due.asked.length = 0;
-    const r = await call(due.w.env, { op: "subscriptionsignin", token: due.w.S.ann, method: "POST", body: { step, code: "C" } });
-    assert.equal(r.status, 200, `${step}: ${r.text.slice(0, 200)}`);
-    assert.deepEqual([due.aw.sent.length, due.asked.length], [1, 0], `${step}: sent, the disclosure not asked`);
-  }
-  /* negative control: after `disclosureshown`, the same start is sent */
-  const shown = disclosureWorld({ shown: true });
-  const r = await call(shown.w.env, { op: "subscriptionsignin", token: shown.w.S.ann, method: "POST", body: { step: "start" } });
-  assert.deepEqual([r.status, r.json.address, shown.aw.sent.map((x) => x.body)], [200, "https://claude.ai/oauth/x",
-    [{ member: "member:ann", step: "start" }]]);
-  /* fail closed */
-  const silent = disclosureWorld({ silent: true });
-  const s = await call(silent.w.env, { op: "subscriptionsignin", token: silent.w.S.ann, method: "POST", body: { step: "start" } });
-  refused(s, 502, "STORE_DID_NOT_ANSWER", "C-69.2");
-  assert.deepEqual(silent.aw.sent, []);
-  /* keep-away first: a group keeping its material away answers AI_KEPT_AWAY, and the disclosure is not asked */
-  const away = disclosureWorld({ away: true });
-  const a = await call(away.w.env, { op: "subscriptionsignin", token: away.w.S.ann, method: "POST", body: { step: "start" } });
-  assert.deepEqual([a.status, a.json.reason, away.asked, away.aw.sent], [403, "AI_KEPT_AWAY", [], []]);
-});
-
-test("R65 (T46; N897 (4)): agent-worker's RUNNER_NOT_CONFIGURED (503) is relayed with its code and status unchanged, carrying the translation read by key `ai.refused.signinabsent`; any other refusal of the runner is relayed with no translation of the door's (negative control)", async () => {
-  const absent = { ok: false, reason: "RUNNER_NOT_CONFIGURED", code: "RUNNER_NOT_CONFIGURED", worker: "agent-worker",
-                   detail: "no runner is bound" };
-  const x = disclosureWorld({ shown: true, runner: () => reply(absent, 503) });
-  for (const step of ["start", "state", "code", "signout"]) {
-    const r = await call(x.w.env, { op: "subscriptionsignin", token: x.w.S.ann, method: "POST", body: { step, code: "C" } });
-    assert.deepEqual([r.status, r.json.ok, r.json.reason, r.json.code, r.json.detail, r.json.worker],
-                     [503, false, "RUNNER_NOT_CONFIGURED", "RUNNER_NOT_CONFIGURED", "no runner is bound", "agent-worker"], step);
-    assert.equal(r.json.translation, SIGNIN_WORDS["ai.refused.signinabsent"], step);
-    assert.equal(r.json.translation, "Signing in with Claude is not installed in your group's Civicsmith yet. Whoever installed "
-      + "your group's Civicsmith can add it.");
-  }
-  const other = disclosureWorld({ shown: true, runner: () => reply({ ok: false, reason: "SIGNIN_REFUSED", code: "SIGNIN_REFUSED", detail: "no" }, 409) });
-  const r = await call(other.w.env, { op: "subscriptionsignin", token: other.w.S.ann, method: "POST", body: { step: "state" } });
-  assert.deepEqual([r.status, r.json.reason], [409, "SIGNIN_REFUSED"]);
-  assert.notEqual(r.json.translation, SIGNIN_WORDS["ai.refused.signinabsent"]);
-});
 
 /* ================================================================ R57 */
 

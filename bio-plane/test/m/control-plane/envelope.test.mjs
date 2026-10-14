@@ -430,8 +430,11 @@ test("R30: no credential, session token, secret or stack appears in any answer �
   assert.equal(later.text.includes(minted), false);
 });
 
-test("R32, R39, R46: each check the door answers carries its C-number on the wire — its own C-69.1–.6, C-68.2–.4, C-66.6 and R39's C-61.1, and admission's C-38, C-78, C-29.6–.10, C-32.17 and C-64.4 from the gates it calls", async () => {
-  const w = world({ answer: (c) => (c.route === "casedrafts" ? new Response("x") : null) });
+test("R32, R39, R46: each check the door answers carries its C-number on the wire — its own C-69.1–.5, C-69.7 (signin-door's `signintrace`, T47), C-68.2–.4, C-66.6 and R39's C-61.1, and admission's C-38, C-78, C-29.6–.10, C-32.17 and C-64.4 from the gates it calls", async () => {
+  /* (T47; signin-door R2) the store answers signin-door's disclosure question as credentials' `disclosureDue` does for a
+     member with none recorded: the code, which the envelope decorates with credentials' row */
+  const w = world({ answer: (c) => (c.route === "casedrafts" ? new Response("x")
+    : c.route === "signindisclosuredue" ? new Response(JSON.stringify({ ok: true, result: { ok: false, reason: "DISCLOSURE_DUE" } })) : null) });
   const { env, S, A } = w;
   const got = {};
   const note = (r) => { if (r.json?.ok === false && r.json.code) { got[r.json.code] = r.json.check; assert.ok(r.json.translation, r.json.code);
@@ -459,7 +462,8 @@ test("R32, R39, R46: each check the door answers carries its C-number on the wir
   await d({ op: "adminendorse", token: env.ADMIN_TOKEN });                      /* C-32.17 */
   await d({ op: "groupnameset", token: env.ADMIN_TOKEN });                      /* C-64.4 */
   await d({ op: "claim", body: { bootstrapToken: "x" } });                      /* C-68.4 */
-  await d({ op: "subscriptionsignin", token: S.ann, body: { step: "start" } }); /* C-29.40 (R65, R78; K3164: C-69.6 retired, credentials' row) no disclosure recorded */
+  await d({ op: "signintrace", token: S.founder });                             /* C-69.7 (signin-door R5; not a test instance) */
+  await d({ op: "subscriptionsignin", token: S.ann, body: { step: "start" } }); /* C-29.40 (signin-door R2, was R78; K3164: C-69.6 retired, credentials' row) no disclosure recorded */
   const unset = world({ omit: ["ADMIN_TOKEN"] });
   note(await call(unset.env, { op: "claim", method: "POST", body: {} }));       /* C-68.2 */
   const { PUBLISHED_TOKEN_HASHES } = await import("../../../src/tokens.mjs");
@@ -480,7 +484,7 @@ test("R32, R39, R46: each check the door answers carries its C-number on the wir
     NOT_AUTHENTICATED: "C-38.1", CLASS_FORBIDDEN: "C-38.2", MACHINE_CREDENTIAL_REQUIRED: "C-38.3", ROOT_OF_TRUST_REQUIRED: "C-38.4",
     NOT_CAPABLE: "C-38.5", SCOPE_REFUSED: "C-38.6", SESSION_ROLE_CANNOT_REACH_OP: "C-38.7",
     UNKNOWN_OP: "C-69.1", STORE_DID_NOT_ANSWER: "C-69.2", PLANE_INTERNAL_ERROR: "C-69.3", STORE_INTERNAL_ERROR: "C-69.4",
-    PURGE_HOLD_IN_PLACE: "C-69.5", DISCLOSURE_DUE: "C-29.40",
+    PURGE_HOLD_IN_PLACE: "C-69.5", DISCLOSURE_DUE: "C-29.40", SIGNINTRACE_NOT_TEST: "C-69.7",
     NAMESPACE_UNKNOWN: "C-78.1", NAMESPACE_PINNED: "C-78.2", NAMESPACE_CONFINED: "C-78.3",
     AI_BEYOND_TASK_SCOPE: "C-29.6", AI_CREDENTIAL_REVOKED: "C-29.7", AI_SCOPE_UNKNOWN_OP: "C-29.8",
     AI_SCOPE_BEYOND_MEMBER_REACH: "C-29.9", AI_CONFINEMENT_NOT_SCRATCH: "C-29.10",
@@ -510,8 +514,9 @@ test("R32, R39, R46: each check the door answers carries its C-number on the wir
     assert.equal(sentences[code], both[code].translation, code);
   }
   for (const [code, row] of Object.entries(own))
-    /* answer-envelope R8: each row's `where` names the file whose code raises it (the door's, the envelope's or the store's door) */
-    assert.match(row.where, /^src\/(control-plane\/index|answer-envelope\/index|store-door\/dispatch)\.mjs \S+ > is-[a-z-]+$/, code);
+    /* answer-envelope R8: each row's `where` names the file whose code raises it (the door's, the envelope's, the store's
+       door, or, since T47, signin-door's for C-69.7) */
+    assert.match(row.where, /^src\/(control-plane\/index|answer-envelope\/index|store-door\/dispatch|signin-door\/index)\.mjs \S+ > is-[a-z-]+$/, code);
 });
 
 test("R33: no place is named in this module's answers", async () => {
