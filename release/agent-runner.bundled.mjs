@@ -1495,17 +1495,17 @@ var fleet_member_default = {
   entry: "src/entry.mjs",
   testDir: "test",
   surface: {
-    "GET /version": 'R5: 200 {ok: true, name: "agent-runner", version}',
+    "GET /version": 'R5: 200 {ok: true, name: "agent-runner", version, capabilities}',
     "GET /conversation (WebSocket upgrade)": "R1-R4: one conversation request, its relays and its answer",
-    "POST /signin": "R17: {member} -> 200 {ok: true, address}, the sign-in address the binary states",
-    "POST /signin/code": "R18: {member, code} -> 200 {ok: true, connected: true, member}, or 409 SIGNIN_REFUSED",
-    "POST /signin/state": "R19: {member} -> 200 {ok: true, connected, member}",
-    "POST /signout": "R20: {member} -> 200 {ok: true, connected: false, member}",
+    "POST /signin": "R17, R27, R31: {member} -> 200 {ok: true, address, attempt}, the sign-in address the binary's setup-token states",
+    "POST /signin/code": "R18, R27, R31: {member, code, attempt} -> 200 {ok: true, connected: true, member, attempt, token, valid_for}, or 409 SIGNIN_REFUSED",
+    "POST /signin/state": "R19, R27: {member} -> 200 {ok: true, connected: false, waiting, member}",
+    "POST /signout": "R20, R27: {member} -> 200 {ok: true, connected: false, member}",
     "anything else": 'R6: 404 {ok: false, code: "UNKNOWN"}'
   },
   image: {
     repository: "ghcr.io/believeinoakland/agent-runner",
-    digest: "sha256:e56253c57212ea7585ee00aea01d1287682fee44c8203f00372be07dc53f2228",
+    digest: "sha256:d7c81712ef95683068451476597ca22844937d6c9bccc756d713f5943c64ee00",
     platform: "linux/amd64",
     port: 8080,
     schedulingPolicy: "default"
@@ -1545,23 +1545,147 @@ var fleet_member_default = {
     source: "https://code.claude.com/docs/en/legal-and-compliance",
     who_agrees: null
   },
-  note: "The fleet-member marker of a container member (R7, R14). `entry` is the image's Node entry; `bundle` is the Worker hosting its class (`src/worker.mjs`, R12), built by `npm run build` and guarded as every member's bundle is. `class_name`, `max_instances` and `bind` (the binding through which its caller reaches it) are copied by bundler into the release's `container.json` part (bundler R25). `image.digest` is written by the release when it publishes the image (T33-D1), with the same digest in `wrangler.jsonc`'s `containers[0].image`; an install names the image only as `repository@digest` (src/manifest.mjs imageReference, R7). `egress` is the container's allow-list, applied by the Worker's class when it starts the container (R10, R13). `egress` names the model API and the host Claude Code's own sign-in, its renewal and its logout reach from the container (platform.claude.com, K2211). `terms` records AT-14's condition for whoever deploys this member, as `build/terms/anthropic.md` AT-14 quotes it (read 2026-10-06); `who_agrees` stays null while U-7 (d) is open, and nothing here reads the terms as allowing the member's sign-in (DEC-156; U-7 (a)-(d) open)."
+  note: "The fleet-member marker of a container member (R7, R14). `entry` is the image's Node entry; `bundle` is the Worker hosting its class (`src/worker.mjs`, R12), built by `npm run build` and guarded as every member's bundle is. `class_name`, `max_instances` and `bind` (the binding through which its caller reaches it) are copied by bundler into the release's `container.json` part (bundler R25). `image.digest` is written by the release when it publishes the image (T33-D1), with the same digest in `wrangler.jsonc`'s `containers[0].image`; an install names the image only as `repository@digest` (src/manifest.mjs imageReference, R7). `egress` is the container's allow-list, applied by the Worker's class when it starts the container (R10, R13). `egress` names the model API and the host Claude Code's own sign-in reaches from the container to mint its token (platform.claude.com, K2211). `terms` records AT-14's condition for whoever deploys this member, as `build/terms/anthropic.md` AT-14 quotes it (read 2026-10-06); Bob settled U-2 and U-7 (K3061); `who_agrees` stays null until the release names who agrees."
 };
+
+// src/waits.mjs
+var CODE_WAIT_MS = 10 * 6e4;
+var OUTCOME_WAIT_MS = 6e4;
+var SIGNIN_HOLD_MS = CODE_WAIT_MS + OUTCOME_WAIT_MS + 3e4;
+var WAITING_HEADER = "x-signin-waiting";
+var TRACE_HEADER = "x-civicsmith-trace";
 
 // src/worker.mjs
 var UNKNOWN = JSON.stringify({ ok: false, code: "UNKNOWN" });
+var HOLD_KEY = "signin_hold_until";
+var LIBRARY_DETAIL_MAX = 120;
+var STARTED_WORDS = "Your group's Civicsmith could not start its Claude connection just now. Wait a minute, then try again.";
+var log = (line) => console.log(JSON.stringify(line));
+var instanceRef = (id) => String(id ?? "").replace(/[^0-9a-f]/gi, "").slice(0, 12).toLowerCase();
+var pathTemplate = (url) => {
+  let p;
+  try {
+    p = new URL(url).pathname;
+  } catch {
+    return null;
+  }
+  return p.split("/").map((seg) => seg.length > 24 ? ":id" : seg).join("/");
+};
+var libraryWords = (text) => String(text ?? "").replace(/(\b[a-z][a-z0-9+.-]*:\/\/[^\s?#]*)[?#]\S*/gi, "$1").replace(/sk-ant-\S*/g, "[redacted]").replace(/eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*/g, "[redacted]").replace(/[A-Za-z0-9._-]{32,}/g, "[redacted]").replace(/\s+/g, " ").trim().slice(0, LIBRARY_DETAIL_MAX);
+var traceOf = (request) => {
+  const v = request.headers.get(TRACE_HEADER);
+  return v && /^[A-Za-z0-9._:-]{1,128}$/.test(v) ? v : crypto.randomUUID();
+};
+function egressHandler(host) {
+  return async (request, env, ctx) => {
+    const t0 = Date.now();
+    const line = {
+      event: "runner.egress",
+      instance_ref: instanceRef(ctx && ctx.containerId),
+      host,
+      method: request.method,
+      path_template: pathTemplate(request.url)
+    };
+    try {
+      const res = await fetch(request);
+      log({ ...line, status: res.status, ms: Date.now() - t0 });
+      return res;
+    } catch (e) {
+      log({ ...line, status: null, ms: Date.now() - t0 });
+      throw e;
+    }
+  };
+}
 var AgentRunner = class extends Container {
   defaultPort = fleet_member_default.image.port;
-  // A conversation's instance (agent-model opens one per conversation) sleeps soon after its connection ends (R9). A
-  // member's own instance sleeps too, and its disk, the stored sign-in on it included, is fresh after: the loss shows
-  // as R19's `connected: false` and R2's `NOT_SIGNED_IN` (K2200).
+  // A conversation's instance sleeps soon after its connection ends (R9); a sign-in holds it awake to its outcome (R25).
   sleepAfter = "2m";
   enableInternet = false;
   allowedHosts = [...fleet_member_default.egress];
   interceptHttps = true;
-  // Every request goes to the image's one port; a caller cannot pick another.
+  static {
+    this.outboundByHost = Object.fromEntries(fleet_member_default.egress.map((h) => [h, egressHandler(h)]));
+  }
+  static HOLD_KEY = HOLD_KEY;
+  get instanceRef() {
+    return instanceRef(this.ctx.id);
+  }
+  async held() {
+    const until = await this.ctx.storage.get(HOLD_KEY);
+    return typeof until === "number" && Date.now() < until;
+  }
+  async lifecycle(what, extra = {}) {
+    let hold = false;
+    try {
+      hold = await this.held();
+    } catch {
+    }
+    log({ event: "runner.lifecycle", instance_ref: this.instanceRef, what, ...extra, signin_hold: hold });
+  }
+  // Every request goes to the image's one port; a caller cannot pick another. R26: an answer that is not the image's
+  // JSON (the library's own text) is answered JSON 503 RUNNER_NOT_STARTED. R25: a sign-in's answers set and clear the
+  // hold, read from their path, status and the waiting header alone, never a body.
   async fetch(request) {
-    return this.containerFetch(request, this.defaultPort);
+    let res;
+    try {
+      res = await this.containerFetch(request, this.defaultPort);
+    } catch (e) {
+      res = new Response(`Failed to reach the container: ${e && e.message ? e.message : e}`, { status: 500 });
+    }
+    if (res.status !== 101 && !/^application\/json\b/i.test(res.headers.get("content-type") || "")) {
+      const said = libraryWords(await res.text().catch(() => ""));
+      res = new Response(JSON.stringify({
+        ok: false,
+        code: "RUNNER_NOT_STARTED",
+        status: res.status,
+        detail: STARTED_WORDS,
+        library_detail: said,
+        trace: traceOf(request)
+      }), { status: 503, headers: { "content-type": "application/json" } });
+    }
+    if (request.method === "POST") await this.holdAfter(new URL(request.url).pathname, res);
+    return res;
+  }
+  async holdAfter(path, res) {
+    const waiting = res.headers.get(WAITING_HEADER) === "1";
+    if (path === "/signin") {
+      if (res.status === 200) await this.ctx.storage.put(HOLD_KEY, Date.now() + SIGNIN_HOLD_MS);
+      else await this.ctx.storage.delete(HOLD_KEY);
+    } else if (path === "/signin/code") {
+      if (res.status === 200 || res.status === 409 && !waiting) await this.ctx.storage.delete(HOLD_KEY);
+    } else if (path === "/signout") {
+      await this.ctx.storage.delete(HOLD_KEY);
+    }
+  }
+  // R25: the sleep timer never ends a waiting sign-in. While the hold is in force the timeout is renewed and nothing
+  // stops; past its deadline it is cleared and `sleepAfter` governs as before.
+  async onActivityExpired() {
+    if (await this.held()) {
+      await this.lifecycle("held_awake");
+      this.renewActivityTimeout();
+      return;
+    }
+    await this.ctx.storage.delete(HOLD_KEY);
+    await this.lifecycle("activity_expired");
+    return super.onActivityExpired();
+  }
+  // R30: the lifecycle, one line each.
+  async startAndWaitForPorts(...args) {
+    this.startedAt = Date.now();
+    await this.lifecycle("start");
+    return super.startAndWaitForPorts(...args);
+  }
+  async onStart() {
+    await this.lifecycle("started", this.startedAt ? { ms: Date.now() - this.startedAt } : {});
+    return super.onStart();
+  }
+  async onStop(params) {
+    await this.lifecycle("stop");
+    return super.onStop(params);
+  }
+  async onError(error) {
+    await this.lifecycle("error", { error_head: libraryWords(error && error.message ? error.message : error) });
+    throw error;
   }
 };
 var worker_default = {
