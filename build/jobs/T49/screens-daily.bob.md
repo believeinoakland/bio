@@ -31,3 +31,7 @@ CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generate
 ## B4 · CHANGE
 
 K3372 (SCREENS-INTAKE #4 J2): find-in takes /app/find-in/<document>/<question>: read the second path step into ui.question (the question chosen), so capture's 'Cite a passage' opens find-in with that question. Part of your job.
+
+## B5 · ANSWER · re J2
+
+K3373: interface-shell R72 adds RE_POINTS projects [projectjoin] and home [projectjoin] (with every other stale-registry act); keep your build. queue's subject.title and findIn's title are N1123 (T50): your fallbacks stand. The plural pairs and a Home label for Join go to the design lane; use act.projectjoin.label.projects meanwhile. The SCREEN_WORDS Provides line is my edit at your merge.
