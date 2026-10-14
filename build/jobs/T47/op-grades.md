@@ -48,3 +48,11 @@ Other modules: REPORT J2 (affordances ×2, control-plane totality, plane wizards
 Tests and checks: op-grades 94/94 pass. Users against an unmodified tranche/T47 run: affordances 233/12 (was 10), control-plane 234/8 (was 7), plane 217/6 (was 5), op-declarations 144/12 (unchanged), membership, interface-shell, screens-daily, screens-settings, screens-inquiry, wizard-scripts unchanged. format 0 failures; architecture 0 failures (24 product files); coverage 37 of 37 live ids, 0 failures; ownership 14 files, 0 failures; checks/run.mjs: my files 0 failures (its coverage failures are the unbuilt L11 screens' and others', none op-grades').
 
 Size (session_01JUGvXiy9wCt6uvuqTS5HEj): test runs 7, module lines 3028
+
+## J4 · COMPLETE
+
+B3 (K3164) done: tranche/T47 merged first (da7fd0092b); `NON_ACTS` gains `statementack` ("case-directed: keyed by a case edition; a member acknowledges what the case does not cover") and `reviewcomment` ("review-directed: keyed by a review copy; a reader's comment for the case's owner") in t47.mjs, grades unchanged (reasoned, reversible); tested by name with a control (t47.test.mjs, R5 R1 K3164).
+
+Tests: op-grades 95/95. control-plane `totality.test.mjs` now green (its R2/R41 red cleared). affordances: one test turns red from these rows, 'R1 R12 R19 R24: case-inputs' ops … with the control plane's rows nothing is unaccounted', whose stand-in carries no NEEDS row for statementack, so it reads `stale: ['statementack']` (green without my change); affordances' own re-pin, the re-run K3164 names. format, architecture, coverage 37/37, ownership (3 files) 0 failures.
+
+Size (session_01JUGvXiy9wCt6uvuqTS5HEj): test runs 3, module lines 3033
