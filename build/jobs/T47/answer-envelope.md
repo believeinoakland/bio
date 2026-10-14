@@ -66,3 +66,15 @@ Size (session_013osHE4dWKZtRLQMyZZYfNj): test runs 24, module lines 887
 ## J6 · COMPLETE
 
 B6: tranche/T47 merged; re-ran. Module 35/35. Checks 0 failures; run.mjs architecture 0. Users, tranche alone → with this job: store-door 45/0 → 45/0; plane 216/7 → 216/7; control-plane 222/20 → 220/22. Comparing failing test names, the only two added are J2's C-69.6 pins; the other 20 fail on the tranche alone.
+
+**B7 (CHANGE, K3156, T47-94): R6's `img-src` admits `blob:`.** `PAGE_POLICY`'s `img-src` is `'self' data: blob:`; no other directive admits `blob:`. Test: a new page-policy test, "R6 (K3156; interface-shell R49)", checks every served page's `img-src` is exactly those three, `blob:` is in no other directive and no other origin appears. Its negative controls show the judge refuses `blob:` in `connect-src`, `default-src` or `script-src`, and a host or wildcard in `img-src`. The judge admits `blob:` for images only.
+
+**B8, B9 (CHANGE, K3157, K3161): re-run after merging `tranche/T47` (adds action-producers, op-declarations again, queue).** `node --test bio-plane/test/m/answer-envelope/`: 36 pass, 0 fail. Users, `tranche/T47` alone → with this job, by failing test names (timings stripped):
+- `store-door`: 0 → 0.
+- `plane`: 7 → 7, none added.
+- `interface-shell`: 0 → 0.
+- `control-plane`: 20 → 26. Added: J2's two C-69.6 pins, and four tests whose own policy judges reject `blob:` in `img-src`, which amended R6 now requires (`page-policy.test.mjs` R51 ×3 at :16; `t46-app.test.mjs` R75 at :22). This is a REPORT for T47-65 (J7).
+
+Checks: format 0, architecture 0, coverage 16 of 16 (0), ownership 0. `run.mjs`: architecture 0 (3139 files), channels 0, coverage 14 failures, all other modules' unmerged T47 ids.
+
+Size (session_013osHE4dWKZtRLQMyZZYfNj): test runs 31, module lines 888
