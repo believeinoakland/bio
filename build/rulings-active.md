@@ -60,6 +60,7 @@
 
 ## 4. Operational lessons
 
+- Reach a live instance directly, never through the session's agent proxy: it injects credentials on `*.believeinoakland.workers.dev` and so replaces a session's `Authorization`, signing every walk out (WALK-084 #1). Use `curl --noproxy '*'`, Chromium `--no-proxy-server`, or `NO_PROXY` for the host. A live walk signs in with `JOURNEY_ADMIN_*`/`JOURNEY_MEMBER_*` from the environment, never printed. BOB debugs the running instance itself; Bob is never the tester (Bob, K3248). (K3246, K3248)
 - A push answered "Internal Server Error" is retried at once with `git -c http.version=HTTP/1.1 push`. (K1977)
 - Merge job branches with merge commits, never a rebase that flattens them. A job branch that re-applied tranche commits under new hashes is merged only after checking it differs from the tranche state only in its own paths and record, keeping the tranche's version elsewhere. A job claiming the tranche was rewritten is checked: BOB's pushes are fast-forwards. (K1991, K1976, K1952)
 - Ownership check: run it before a merge only while the job holds the tranche's tip, else against `git merge-base` or the merge's own diff; after an early merge, confirm multiple-merge-base artifacts with `git merge-tree`; a multi-line statement shortened by removal reads as added and is accepted as a removal. (K255, K1295, K684, K140, K189)

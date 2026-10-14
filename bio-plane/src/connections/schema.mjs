@@ -3,7 +3,7 @@
  * `connection_pair_choices`, `connection_dirty`, `themes`, `theme_placements`, with the comments that record why each
  * is shaped as it is; and the tables this job added for R31, R32, R43 and R49 (`theme_placement_acts`,
  * `asserted_connections`, `asserted_connection_judgements`, `file_membership_pending`); and T33's
- * `connection_derivations` (R64). `migrateConnections` brings a
+ * `connection_derivations` (R64); and T48's `step_sources` (R68). `migrateConnections` brings a
  * store created under an earlier shape to this one (the pair columns FW-17, REC-120 and D-454 added, moved here from
  * the store's additive list). */
 
@@ -334,6 +334,33 @@ CREATE TABLE IF NOT EXISTS file_membership_pending (
 );
 CREATE INDEX IF NOT EXISTS file_membership_pending_item ON file_membership_pending(item_norm);
 CREATE INDEX IF NOT EXISTS file_membership_pending_file ON file_membership_pending(file_norm);
+
+-- R68, R69, R36 (T48-20; N1030, K3145): A SOURCE ATTACHED TO A DECLARED STEP. A member backs an entities declared
+-- relation (REL-, ungraded, entities R26) with a passage of a held capture that states it. The relation is never
+-- changed: this row is its own evidenced fact, graded at read time no higher than the cited capture. The relation's
+-- ends are copied at the act (a relation is withdrawn, never rewritten), so a walk from either entity finds it; a
+-- withdrawn relation's sources are not answered. bundle_id is the CITED CAPTURE's bundle: the row takes its sight
+-- (R33) and goes with it in a per-bundle purge (R36). extent is content's canonicalExtent, the key of "the same
+-- (relation, capture, extent)". Withdrawn, never deleted: the withdrawal's who, when and why are kept on the row.
+CREATE TABLE IF NOT EXISTS step_sources (
+  source_id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  relation_id      TEXT NOT NULL,
+  from_entity      TEXT NOT NULL,
+  to_entity        TEXT NOT NULL,
+  capture_sha      TEXT NOT NULL,
+  bundle_id        TEXT NOT NULL,
+  extent           TEXT NOT NULL,
+  basis            TEXT NOT NULL,
+  member           TEXT NOT NULL,   -- the control plane's stamp of the member who attached it
+  at               TEXT NOT NULL,
+  withdrawn_by     TEXT,            -- NULL = standing
+  withdrawn_at     TEXT,
+  withdrawn_reason TEXT
+);
+CREATE INDEX IF NOT EXISTS step_sources_from ON step_sources(from_entity);
+CREATE INDEX IF NOT EXISTS step_sources_to ON step_sources(to_entity);
+CREATE INDEX IF NOT EXISTS step_sources_bundle ON step_sources(bundle_id);
+CREATE INDEX IF NOT EXISTS step_sources_key ON step_sources(relation_id, capture_sha, extent);
 `;
 
 /** R36 (K23), R67 (T33-29; plan T33 Rules (6)): every table, declared explicitly through `record-core.declareTable`
@@ -357,6 +384,7 @@ export const CONNECTIONS_TABLES = Object.freeze([
   entry("asserted_connections", "bundle", ["a_bundle_id", "b_bundle_id"]),
   entry("asserted_connection_judgements", "bundle", ["a_bundle_id", "b_bundle_id"]),
   entry("file_membership_pending", "bundle", ["agenda_bundle"]),
+  entry("step_sources", "bundle"),
 ]);
 
 /** The names of the tables above, read by `connectionsOwns` (`./index.mjs`); the legacy store's purge list and census

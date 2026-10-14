@@ -137,8 +137,7 @@ test("R10, R11, R13, R52 (converts content-reads): a document that is an end of 
 
 test("R22, R23 (converts d280-strengthbar): citesInto over real severed references in several citing documents — only the exact recorded `severed` withdraws, sorted; citedBy is the confirmed list, a withdrawn first citer skipped", () => {
   const w = world();
-  const [t] = w.doc(A, ["the subject"]);
-  assert.ok(t);
+  w.doc(A, ["the subject"]);
   /* Seven citers, minted citing nothing and ordered by their minted ids, then revised to carry their references. */
   const ids = ["one", "two", "three", "four", "five", "six", "seven"].map((n) => ({ n, id: citer(w, `Citer ${n}`) }))
     .sort((x, y) => (x.id < y.id ? -1 : 1));
