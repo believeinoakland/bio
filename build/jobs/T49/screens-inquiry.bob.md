@@ -31,3 +31,7 @@ CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generate
 ## B4 · CHANGE
 
 K3372 (SCREENS-INTAKE #4 J2): your R38 'Add a document' opens /app/capture/<tab>/<id> (the subject in the path, project or question id), never ?for=.
+
+## B5 · ANSWER · re J2
+
+K3372: both readings stand: J1 the frozen per-mode bounds table derived from run-rules, no zero allowance, tested through checkConsume; J2 the reasons list only where the assistant cannot work, each by key, the serving account always said.
