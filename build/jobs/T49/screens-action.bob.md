@@ -1,6 +1,6 @@
 # BOB to screens-action (T49)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -35,3 +35,7 @@ K3373: (1) interface-shell R72 admits actionrisktier, actionlaws, actionlawsprop
 ## B5 · CHANGE
 
 K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B6 · ANSWER · re J3
+
+K3379, re J3: received; you merge after interface-shell, and I CHANGE you to re-run on the real shell then. The words no record fills (help-records.must.2–.7, request.howsend.*, request.describe's {cite}) wait for N1121 (T50; DEC-262 keeps them for the jurisdiction provider); `screen.plan.opened`'s {why} goes to the design lane; the two "subject" words stay accepted red (K3373). The `escalation` edge you did not take is right: no `uses` edge is added for a test.
