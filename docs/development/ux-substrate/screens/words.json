@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3196,
+  "screen": 3212,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -207,7 +207,7 @@
   "tab": 2,
   "act": 732,
   "column": 33,
-  "total": 11807,
+  "total": 11823,
   "protected": 862
  },
  "words": [
@@ -29073,7 +29073,7 @@
   },
   {
    "key": "site.groups.rule",
-   "en": "The people who make Civicsmith decline or remove a listing only under the listing rule below, never for a group's views or for whom it holds to account. A group is always told why.",
+   "en": "The people who make Civicsmith decline or remove a listing only under a published listing rule, never for a group's views or for whom it holds to account. A group is always told why.",
    "protected": true,
    "source": "DEC-255",
    "note": "under Groups at work"
@@ -31017,6 +31017,105 @@
    "protected": false,
    "source": "DEC-258",
    "note": "screens-investigate: a dated fact's method"
+  },
+  {
+   "key": "screen.site.nav.home",
+   "en": "What Civicsmith is",
+   "protected": false,
+   "source": "DEC-261"
+  },
+  {
+   "key": "screen.site.nav.start",
+   "en": "Start a group",
+   "protected": false,
+   "source": "DEC-261"
+  },
+  {
+   "key": "screen.site.nav.groups",
+   "en": "Groups at work",
+   "protected": false,
+   "source": "DEC-261",
+   "note": "nav.groups is also the groups page heading"
+  },
+  {
+   "key": "screen.site.onecase.head",
+   "en": "One group's work",
+   "protected": false,
+   "source": "DEC-261"
+  },
+  {
+   "key": "screen.site.questions.head",
+   "en": "Questions",
+   "protected": false,
+   "source": "DEC-261"
+  },
+  {
+   "key": "screen.site.need.head",
+   "en": "What you need",
+   "protected": false,
+   "source": "DEC-261"
+  },
+  {
+   "key": "screen.site.costs.head",
+   "en": "What it costs",
+   "protected": false,
+   "source": "DEC-261"
+  },
+  {
+   "key": "screen.site.create",
+   "en": "Create your group",
+   "protected": false,
+   "source": "DEC-261"
+  },
+  {
+   "key": "screen.site.groups.visit",
+   "en": "Visit",
+   "protected": false,
+   "source": "DEC-261"
+  },
+  {
+   "key": "screen.site.uses.ask.example",
+   "en": "Did the city collect the rent its lease requires?",
+   "protected": false,
+   "source": "DEC-261",
+   "note": "fills screen.site.uses.ask {example}"
+  },
+  {
+   "key": "screen.site.questions.unset",
+   "en": "The address to write to is published here before the site opens.",
+   "protected": false,
+   "source": "DEC-261",
+   "note": "site R6's marked placeholder until the stewards' address is set"
+  },
+  {
+   "key": "screen.site.onecase.title",
+   "en": "{case}, Edition {edition}",
+   "protected": false,
+   "source": "DEC-261"
+  },
+  {
+   "key": "screen.site.onecase.meta",
+   "en": "{group}, {place} · signed by {signer} · {date}",
+   "protected": false,
+   "source": "DEC-261"
+  },
+  {
+   "key": "screen.site.groups.cases.many",
+   "en": "{cases} published cases, in {editions} editions, the latest {date}",
+   "protected": false,
+   "source": "DEC-261"
+  },
+  {
+   "key": "screen.site.groups.case.many",
+   "en": "{cases} published cases",
+   "protected": false,
+   "source": "DEC-261"
+  },
+  {
+   "key": "screen.site.notfound",
+   "en": "There is no such page on civicsmith.org.",
+   "protected": false,
+   "source": "DEC-261"
   },
   {
    "key": "screen.account.explain.help",

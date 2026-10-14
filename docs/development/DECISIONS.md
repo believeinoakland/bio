@@ -4094,3 +4094,17 @@ response: **The design session, 2026-10-14.** (1) **Keyed:** 5,806 new keys in f
 decided: 2026-10-14 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-mod-1.src.py` to `words-mod-4.src.py` and their `.json`, `screens/words-reads-mod-1.json` to `-4.json`, `screens/words-reads.src.mjs`, `screens/words-reads.json`, `screens/build_words.mjs` (4n); `words.json`.
 owed: (BOB, N1116, T50) each of the 148 modules reads exactly its `reads` through `setup-words`' `word(key, vars)` and holds none of its English; its verbatim-copy tests become key tests; its requirements name keys, not sentences; `unkeyed` stays in source. (design) a second reading of the `unkeyed` lists' 'uncertain' entries as the modules move, any a member turns out to read keyed at once.
+
+### DEC-261 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_01BTQuPg86LEUTdpXJuPbtM2; the development process also runs on his primary account since K1428) (BOB's B221, SITE #1 J1, K3372: civicsmith.org's generator writes no inline English, so its pages wait on these keys)
+for: bob-session
+question: The keys civicsmith.org's pages need that `words.json` lacked, and `site.groups.rule`'s "below" with no rule drawn.
+why it is Bob's: design detail beneath DEC-206, DEC-223, DEC-247 and DEC-255; decided by the design session, reported to Bob as done.
+provisional: the site's drawing showed these words, but they were short labels the guard does not count, so no key held them.
+alternative: none.
+recommendation: as below.
+reversal cost: low: words only.
+response: **The design session, 2026-10-14.** BOB's proposed keys and words adopted, as the drawing shows them: `screen.site.nav.home` "What Civicsmith is", `.nav.start` "Start a group", `.nav.groups` "Groups at work" (also the groups page's heading), `.onecase.head` "One group's work", `.questions.head` "Questions", `.need.head` "What you need", `.costs.head` "What it costs", `.create` "Create your group", `.groups.visit` "Visit", `.uses.ask.example` "Did the city collect the rent its lease requires?" (fills `uses.ask`'s `{example}`), `.questions.unset` "The address to write to is published here before the site opens." (R6's marked placeholder), `.onecase.title` "{case}, Edition {edition}", `.onecase.meta` "{group}, {place} · signed by {signer} · {date}", `.groups.cases.many`, `.groups.case.many`, `.notfound` "There is no such page on civicsmith.org." `site.groups.rule` now reads "only under a published listing rule" (no "below"): the rule's own text is keyed and drawn once Bob approves it (DEC-255). `screen.site.steps.name`'s `{places}` stays as designed: only released profiles fill it.
+decided: 2026-10-14 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-261; `site.groups.rule`), `screens/mock-screens.js` (`SCR.site`); `words.json` (11,823).
+owed: (BOB) SITE #1 reads these keys. (design) the listing rule's keys and drawing on Bob's approval; B220's placeholder questions.
