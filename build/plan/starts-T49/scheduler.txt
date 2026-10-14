@@ -1,5 +1,5 @@
 Depth 2. Your entry: `build/plan/current.md` (T49), layer 10, scheduler: **T49-12 · scheduler**.
-Your requirements: `build/requirements/scheduler.md` (read whole), folded by K3331 (none, or R12 re-scoped through BOB).
+Your requirements: `build/requirements/scheduler.md` (read whole); unchanged unless R12 is re-scoped through BOB.
 BOB's notes for this job:
 scheduler (T49-12): (N1096, K3321 (A)) `plane` R12 ("a run waiting on a request that reaches expired is woken … exactly once") still fails at `pr.ok` about 108 s past N1095's refusal. Diagnose it, fix your own part, or propose R12's re-scope to BOB in a QUESTION (P9; the text is BOB's at CHANGE).
 1. Measure first: run `plane` R12's test in a scratch copy that has N1095's one-line fix at `control-plane/index.mjs`:2477 (strip `member` only for `stepsource` and `stepsourcewithdraw`). Name the step at which `pr.ok` fails and the time to failure. Never commit the scratch fix: control-plane is T49-29's.
