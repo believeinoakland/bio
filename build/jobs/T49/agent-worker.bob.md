@@ -20,3 +20,7 @@ Every new id needs an explicit test naming it (K874); every refusal a control.
 Inherited reds: the plan's rule 5 as it stands at your START; none is yours unless named here or in your entry.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+Option (a) (K3351): no model address is added anywhere; journey-check binds a stub of agent-runner's contract as your RUNNER. Nothing for you to build. Your R88 marker is fixed in the checks' form.
