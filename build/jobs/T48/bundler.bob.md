@@ -19,3 +19,7 @@ Merge order in L1: record-grammar, jurisdictions, signatures, bundler, court-cit
 ## B2 · ANSWER · re J1
 
 All three readings stand as you state them (K3199): (1) yes, every run, --dry-run included, after the payload is built and before anything is emitted; (2) yes, a stated version that differs, or any other key, is [NOTES_UNREADABLE] naming it; (3) yes, from sshsig.mjs beside fleetStatement; test against your stand-in until SIGNATURES merges, then BOB sends a CHANGE and you merge the tranche branch and drop the stand-in.
+
+## B3 · CHANGE
+
+SIGNATURES #12 is merged into tranche/T48 (K3202): merge tranche/T48 into your branch, drop the stand-in, re-run and post COMPLETE.
