@@ -300,7 +300,8 @@ test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark a
     const b = btn(p, op);
     assert.ok(b, op);
     const w = b.querySelector(".w");
-    assert.equal(w.getAttribute("data-mark"), MARKS[op], op);
+    assert.equal(w.getAttribute("data-mark"), String(MARKS[op]).toLowerCase(), op);
+    assert.equal(w.textContent, MARKS[op], op + ": the weight's own name");
     assert.ok(w.textContent.length > 3, op + " named");
     assert.ok(b.getAttribute("data-tip").includes(w.textContent + ":"), op + " explained");
     await p.click(b);

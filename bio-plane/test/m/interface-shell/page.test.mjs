@@ -150,3 +150,10 @@ test("R5 the shell's own words: frozen [key, en, protected] rows, keys shell.<pa
   }
 });
 
+
+test("R21 (K3297) a screen's functions may use Intl beside JSON, Math, String, Number, Array, Object and Date: composed and drawn, a language's name read through it", async () => {
+  const s = { id: "account", reads: () => ({}), acts: [], render: (cs) => "<p id=lang>" + cs.esc(new Intl.DisplayNames(["en"], { type: "language" }).of("es")) + "</p>" };
+  assert.ok(interfacePage([s]).length > 1000);
+  const p = await boot({ screens: [s], path: "/app/account" });
+  assert.equal(p.doc.getElementById("lang").textContent, "Spanish");
+});

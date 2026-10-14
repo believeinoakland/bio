@@ -244,7 +244,7 @@ function dataOf(screens, guide) {
     adminActs: [...ops].filter((op) => ADMIN_ACTS.has(op)),
     rungs: pick(rungOf),
     /* R64 (`op-grades` R42): the design kit's mark for an act R11 draws with no weight, a mark and its explanation only */
-    marks: pick((op) => (rungOf(op) === "none" && Object.hasOwn(MARKS, op) ? MARKS[op] : undefined)),
+    marks: pick((op) => (rungOf(op) === "none" && Object.hasOwn(MARKS, op) ? String(MARKS[op]).toLowerCase() : undefined)),
     /* R50 (K3156): the acts held at the phone width: every act carrying a weight that `op-grades.phoneOf` answers false
        for (its terminal, attested and irreversible rungs, `IRREVERSIBLE_WEIGHT`, its larger-screen acts through
        `OP_ALIASES`); never one run on press (a read, or an op `RUNG_ABSENT` grounds otherwise than `undetermined`: the
