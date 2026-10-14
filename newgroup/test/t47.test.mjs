@@ -14,6 +14,7 @@ import { pageWorld, req, run, begin, callback, script, realFetch, release, armWi
 
 const text = async (path) => (await req(path)).text();
 const NEXT = bump(RELEASE_VERSION);
+const UPDATE_PATH = "/update?version=" + NEXT;
 const escd = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 /* The markup between an element's opening tag (found by its id) and the matching close of that tag. */
 function section(page, id) {
@@ -182,10 +183,10 @@ test("R51 the progress page draws one plain line per step as it starts and ends;
 /* -------------------------------------------------------------------------------------------- R52 the update page */
 
 test("R52 GET /update draws the version before and after and \"Continue to Cloudflare to update\"; a stop says your group's Civicsmith keeps running as it was", async () => {
-  const upd = await text("/update");
+  const upd = await text(UPDATE_PATH);
   const versions = section(upd, "versions");
   assert.match(words(section(versions, "version-before")), /Your group's Civicsmith: the release it runs now is read once Cloudflare lets this installer find it/);
-  assert.ok(section(versions, "version-after").includes(`release <b class="id">${RELEASE_VERSION}</b>, signed by Civicsmith`));
+  assert.ok(section(versions, "version-after").includes(`release ${NEXT}, the release chosen in your group&#39;s Settings › Updates`));
   assert.match(upd, /<button id="go" class="cs-btn" data-tone="primary">Continue to Cloudflare to update<\/button>/);
   assert.ok(upd.includes(UPDATE_KEEPS));
   assert.equal(UPDATE_KEEPS, "If a step stops, your group's Civicsmith keeps running as it was.");
@@ -196,11 +197,11 @@ test("R52 GET /update draws the version before and after and \"Continue to Cloud
   armWith(SIGNER.line);
   const w = await run({ slug: "upd-ver", mode: "update", pre: { "upd-ver": planeBase("upd-ver", "0.70.0") }, rel: await release({ version: NEXT }) });
   restoreSigners();
-  assert.equal(w.page.label("up"), `Updating the software from 0.70.0 to ${NEXT}`);
+  assert.equal(w.page.label("up"), `Putting release ${NEXT} in place…`);
   const v = section(w.page.done, "versions");
   assert.match(words(v), /Before Your group's Civicsmith ran release 0\.70\.0\./);
   assert.match(words(v), new RegExp(`After This update: release ${NEXT.replace(/\./g, "\\.")}, signed by Civicsmith\\.`));
-  assert.match(w.page.done, /<b>Updated from 0\.70\.0 to/);
+  assert.match(w.page.done, /it ran 0\.70\.0\./);
   /* Control: a version before that could not be read is said so, never guessed. */
   const blind = await run({ slug: "upd-blind", mode: "update", pre: { "upd-blind": planeBase("upd-blind", "0.70.0") }, subdomain: null });
   assert.match(words(section(blind.page.done, "versions")), /The release your group's Civicsmith ran before could not be read\./);
@@ -210,6 +211,12 @@ test("R52 GET /update draws the version before and after and \"Continue to Cloud
     const pre = opts.refuseUpdate ? { [slug]: planeBase(slug, "0.70.0") } : {};
     const s = await run({ slug, mode: "update", pre, ...opts });
     assert.ok(s.page.failed, JSON.stringify(opts));
+    if (opts.refuseUpdate) {
+      /* R55's stop: what stopped it, that it runs as before, and what to do (installer.update.stopped). */
+      assert.match(s.page.failed.p, /runs release 0\.70\.0 as before; nothing changed\.$/);
+      assert.match(s.page.failed.d, /^Try again; /);
+      continue;
+    }
     assert.ok(s.page.failed.p.endsWith(UPDATE_KEEPS), `${JSON.stringify(opts)}: ${s.page.failed.p}`);
     assert.match(s.page.failed.d, /^To continue: /);
   }
@@ -225,7 +232,7 @@ test("R53 the pages use interface-assets' stylesheet and faces, carried in the i
   restoreSigners();
   const { cookie } = await begin("styled");
   const denied = await callback("error=access_denied", cookie);
-  const pages = { "/": await text("/"), "/update": await text("/update"), "404": await text("/nowhere"), progress: streamed.raw, refusal: denied.raw };
+  const pages = { "/": await text("/"), "/update": await text(UPDATE_PATH), "404": await text("/nowhere"), progress: streamed.raw, refusal: denied.raw };
   const sheet = ASSET_FILES["civicsmith.css"].body;
   const defined = new Set([...sheet.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]));
   const classes = new Set([...sheet.matchAll(/\.(cs-[a-z0-9-]+)/g)].map((m) => m[1]));
@@ -298,14 +305,14 @@ test("R54 R1's 404 excepts GET /app/assets/<name> for exactly ASSET_FILES' names
   await w.el("cloudflare").click();
   assert.deepEqual(w.sent.map((s) => s.body.slug), ["amended"]);
   /* GET /update draws the release it installs and says the version before is read later; the progress line and the last screen draw both. */
-  const upd = await text("/update");
-  assert.ok(section(upd, "version-after").includes(RELEASE_VERSION));
+  const upd = await text(UPDATE_PATH);
+  assert.ok(section(upd, "version-after").includes(NEXT));
   assert.doesNotMatch(section(upd, "version-before"), /\d+\.\d+\.\d+/, "no version before is claimed before it is read");
   const planeBase = (slug, v) => [{ type: "durable_object_namespace", name: "STORE", class_name: "Store" },
     { type: "plain_text", name: "VERSION", text: v }, { type: "secret_text", name: "ADMIN_TOKEN", text: "admin-kept" },
     { type: "secret_text", name: "PROBE_TOKEN", text: "probe-kept" }, { type: "service", name: "SELF", service: slug }];
   const u = await run({ slug: "amend-up", mode: "update", pre: { "amend-up": planeBase("amend-up", "0.70.0") } });
-  assert.match(u.page.label("up"), /^Updating the software from 0\.70\.0 to /);
+  assert.match(u.page.label("up"), /^Putting release .* in place/);
   assert.ok(section(u.page.done, "versions").includes("0.70.0"));
   /* No "Run the checks again" on the finished panel, nor anywhere on the progress page. */
   const i = await run({ slug: "amend-in" });

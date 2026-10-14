@@ -1,4 +1,4 @@
-/* Ask (registry screen `answers`, Find › Ask; screens-daily R6, R7). While the assistant is reachable for the member
+/* Ask (registry screen `answers`, Find › Ask; screens-daily R6, R7, R21). While the assistant is reachable for the member
    (interface-shell R20, `view.reachable`), "Ask" sends the question through `op=ask` (agent-worker R54: its answer's
    summary and sentences with their support, the holdings each rests on, the looks, labelled machine work) and "Search
    instead" opens Find. While it is not, the screen is "Find and count": search, and `ruleanswer` "Show how this was
@@ -64,7 +64,7 @@ export const answers = Object.freeze({
         const withheld = Array.isArray(ui.withheld) && ui.withheld.length
           ? '<p class="mk-note">' + cs.w("screen.answers.withheld", { n: String(ui.withheld.length) }) + "</p>" : "";
         const asRead = a.question_as_read ? '<p class="mk-small">' + cs.w("screen.answers.asread", { question: String(a.question_as_read) }) + "</p>" : "";
-        const untested = ui.untested ? '<p class="cs-untested" data-tip="' + cs.w("ai.label.untested") + '">' + cs.w("ai.label.untested") + "</p>" : "";
+        const untested = ui.untested ? '<p class="mk-tag" data-untested="true">' + cs.w("ai.label.untested") + "</p>" : "";
         drawn = '<div class="cs-machinework">' + asRead + summary + sentences + where + looked + withheld
           + '<p class="mk-note">' + cs.w("screen.answers.legal") + "</p>" + untested
           + '<span class="by">' + cs.w("screen.answers.machine") + "</span></div>";

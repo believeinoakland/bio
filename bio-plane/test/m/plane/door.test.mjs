@@ -51,6 +51,11 @@ const started = (outs) => outs.filter((x) => x && typeof x === "object" && "star
 /* The instance-setup routes (K1690), each driven with a request that exercises it; the stamps are the ones the Worker
    door sets (R17). Order matters: the writes run before the reads that show them. */
 const DRIVES = [
+  /* T48 (instance-setup R89, R90): the update reads and acts, answered to administrators only (a refusal is an answer) */
+  ["updatenotice?viewer=member:nobody", "GET"],
+  ["updatestart?by=member:nobody", "POST", { version: "9.9.9" }],
+  ["updatelater?by=member:nobody", "POST", { version: "9.9.9" }],
+  ["updateskip?by=member:nobody", "POST", { version: "9.9.9", reason: "not now" }],
   ["instancegroup", "GET"],
   ["instancegrouppublic", "GET"],
   ["instancegroupseed?author=token:admin", "POST", { slug: "grp-rivertown" }],
@@ -131,9 +136,9 @@ test("R1: the class whose fetch is control-plane's door: at construction it star
   assert.equal(started(await settle(other))[0].started, true);
 });
 
-test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's forty routes (T45: `declaredstakeset`, K2896; T46: `infolevelset`, `infolevel`, K3004; T47: `grouplogoset`, `grouplogo`, `grouplanguagesset`, `grouplanguages`, R48) are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
+test("R1, R5 (K1690, K1870, K2162, K2249): instance-setup's forty-four routes (T48: `updatenotice`, `updatestart`, `updatelater`, `updateskip`, R89, R90; T45: `declaredstakeset`, K2896; T46: `infolevelset`, `infolevel`, K3004; T47: `grouplogoset`, `grouplogo`, `grouplanguagesset`, `grouplanguages`, R48) are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
   const ops = Object.keys(S.instanceSetupOps(null, new URL("http://do/"), null));
-  assert.equal(ops.length, 40);
+  assert.equal(ops.length, 44);
   assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops].sort(), "every route is driven");
   const now = object(), before = object();
   const store = new Store(now.ctx, now.env);

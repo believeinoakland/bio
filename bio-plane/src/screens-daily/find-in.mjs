@@ -1,4 +1,4 @@
-/* Find in this (registry screen `find-in`; screens-daily R5, R7; DEC-164, N698, K1468). One control over a document, the
+/* Find in this (registry screen `find-in`; screens-daily R5, R7, R21; DEC-164, N698, K1468). One control over a document, the
    documents held together, or a project: the member ticks what to find, with an optional name or term and question;
    `findin` answers results by kind, each with its words as written, its passage and "Found by search"; each result offers
    only the recording act of its kind, and finding itself records nothing. The scope is the route's subject: a project's
@@ -43,15 +43,21 @@ export const findIn = Object.freeze({
       const f = "fr-" + ki + "-" + ii;
       const button = cs.act(op, { label: "act." + op + ".label.find-in", data: { k: String(ki), i: String(ii), f: f } });
       if (!button || !FIELDS[op]) return button;
-      return '<details class="mk-actd"><summary>' + cs.w("act." + op + ".label.find-in") + "</summary>"
+      return '<details class="mk-details"><summary>' + cs.w("act." + op + ".label.find-in") + "</summary>"
         + FIELDS[op].map(function (x) { return cs.field(f + "-" + x[0], x[1], {}); }).join("") + button + "</details>";
     };
     const head = cs.title(undefined, {}) + '<p class="mk-sub">' + cs.w("screen.find-in.sub") + "</p>";
-    if (!form) return head + '<p class="mk-note"><b>' + cs.w("state.empty") + "</b> " + cs.w("screen.find-in.scope.none") + "</p>";
+    // R21 (interface-shell R61): opened with no scope, "Nothing is here", with the way back.
+    if (!form) {
+      return '<h1 class="t-title" tabindex="0">' + cs.w("shell.unavailable.nothing.title") + "</h1>"
+        + '<p class="cs-state" data-state="empty">' + cs.w("screen.find-in.scope.none") + "</p>"
+        + '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" href="/app" data-nav>' + cs.w("shell.unavailable.home") + "</a></p>";
+    }
 
-    const scope = '<div class="cs-field"><span class="label">' + cs.w("screen.find-in.lookin") + '</span><span class="help">'
-      + cs.w("screen.find-in.lookin.help") + "</span><p>" + cs.w("screen.find-in.scope." + form)
-      + "</p>" + (form === "held" ? "" : "<p>" + (form === "project" ? cs.ref("project", s, s, []) : cs.ref("document", s, s, [])) + "</p>") + "</div>";
+    // "Look in": the scope, set by where it was opened (not a field: nothing is typed here).
+    const scope = '<div><p class="mk-note"><b>' + cs.w("screen.find-in.lookin") + "</b> " + cs.w("screen.find-in.scope." + form)
+      + (form === "held" ? "" : " " + (form === "project" ? cs.ref("project", s, s, []) : cs.ref("document", s, s, []))) + "</p>"
+      + '<p class="mk-small muted">' + cs.w("screen.find-in.lookin.help") + "</p></div>";
     const ticked = ui.kinds && typeof ui.kinds === "object" ? ui.kinds : { people: true, money: true, dates: true, requirements: true };
     const what = '<fieldset class="mk-checks"><legend>' + cs.w("screen.find-in.what") + "</legend>"
       + KINDS.map(function (k) {
@@ -60,13 +66,10 @@ export const findIn = Object.freeze({
     const term = cs.field("findin-term", "screen.find-in.term", { value: ui.term || "", help: "screen.find-in.term.help" });
     const qs = view.data.questions && view.data.questions.state === "ok" && view.data.questions.value && Array.isArray(view.data.questions.value.hits)
       ? view.data.questions.value.hits : [];
-    const question = '<div class="cs-field"><label for="findin-question">' + cs.w("screen.find-in.question") + '</label><span class="help">'
-      + cs.w("screen.find-in.question.help") + '</span><select id="findin-question" class="cs-input"><option value="">'
-      + cs.w("screen.find-in.question.none") + "</option>"
-      + qs.map(function (h) {
-        const id = String(h.bundle_id);
-        return '<option value="' + cs.esc(id) + '"' + (ui.question === id ? " selected" : "") + ">" + cs.esc(h.title || id) + "</option>";
-      }).join("") + "</select></div>";
+    // The kit's labelled choice (R21: no hand-made field), its help beneath.
+    const question = cs.choice("findin-question", "screen.find-in.question",
+      [["", "screen.find-in.question.none"]].concat(qs.map(function (h) { return { value: String(h.bundle_id), text: String(h.title || h.bundle_id) }; })),
+      { value: ui.question || "" }) + '<p class="mk-small muted">' + cs.w("screen.find-in.question.help") + "</p>";
     const acts = '<div class="mk-acts">' + cs.act("findin", { label: "act.findin.label.find-in", tone: "primary" })
       + cs.act("standingquestionset", { label: "act.standingquestionset.label.find-in" }) + "</div>"
       + (ui.keeping ? '<p class="mk-note">' + cs.w("screen.find-in.keeping") + "</p>" : "");
@@ -75,9 +78,11 @@ export const findIn = Object.freeze({
     const results = !found ? "" : (Array.isArray(found.kinds) ? found.kinds : []).map(function (k, ki) {
       const items = Array.isArray(k.items) ? k.items : [];
       const n = typeof k.count === "number" ? k.count : items.length;
+      // R21: no count at zero: a kind with none is named alone, and says "Nothing here" (R5).
+      const kindName = cs.w("screen.find-in.kind." + (KINDS.indexOf(k.kind) >= 0 ? k.kind : "term"));
       const title = k.kind === "term"
-        ? cs.w("screen.find-in.termsection", { term: found.term || "", n: String(n) })
-        : cs.w("screen.find-in.section", { kind: cs.w("screen.find-in.kind." + (KINDS.indexOf(k.kind) >= 0 ? k.kind : "term")), n: String(n) });
+        ? (n ? cs.w("screen.find-in.termsection", { term: found.term || "", n: String(n) }) : cs.w("screen.find-in.quote", { words: found.term || "" }))
+        : (n ? cs.w("screen.find-in.section", { kind: { html: kindName }, n: String(n) }) : kindName);
       const notRead = Array.isArray(k.not_read) && k.not_read.length
         ? '<p class="mk-note">' + cs.w("screen.find-in.notread", { n: String(k.not_read.length) }) + "</p>" : "";
       const body = !items.length

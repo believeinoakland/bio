@@ -204,7 +204,9 @@ const DRAFTS = Object.freeze({ writinghelp: { told: "t", act: "conclude", field:
   translationdraft: { direction: "to_language", language: "es", words: [] }, textcheck: { text: "We demand the council act." },
   infractiondraft: { matter: { actions: ["ACTN-2026-0009-none"] }, audience: "members" },
   bearingdraft: { action: "ACTN-2026-0009-none", reply: 1 },
-  statusreportdraft: { plan: "PLN-2026-0009-none", items: [{ kind: "action", says: "sent" }] } });
+  statusreportdraft: { plan: "PLN-2026-0009-none", items: [{ kind: "action", says: "sent" }] },
+  /* R50 (T48): the reading of a passage, its gate before the subject is read */
+  readtranslate: { subject: { kind: "note", id: 1 } } });
 
 test("R40 (K2853; run-rules R16, R19, R30; T46): the ask door refuses AI_RUN_MODE_NOT_DEPLOYED (403, run-rules' C-109.1 row, mode `ask`) while `ask`'s flag is off, and AI_PART_NOT_DEPLOYED (run-rules' partRefusal, 403) while its flag is on and ai-runs' partAdmitted does not admit it, before the keep-away read, any account read or grant, nothing posted; deployed and admitted, it is asked", async () => {
   for (const [label, w, check] of [

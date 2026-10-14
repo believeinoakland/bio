@@ -47,7 +47,7 @@ export async function publicOp({ req, url, env, op, stub, fp, presentedAi, crede
 
 /* The admitted ops whose handler is a module's door; undefined for control-plane's generic forward. */
 export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights,
-                                sessCaps, aiCred, storeName, stub, grantMember }) {
+                                sessCaps, aiCred, storeName, stub, grantMember, trace = null, memberRef = null }) {
   const store = () => env.STORE.get(env.STORE.idFromName(storeName));
   /* The stamps, from the authenticated caller: a session's member, viewer and identity; an `ai` credential's principal
      as its viewer and identity, and `class:ai/<tokenId>` as its author (control-plane R17, as its generic forward stamps
@@ -61,9 +61,12 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
   const by = viaSession ? sessMember : cls === "ai" ? `${MACHINE_CLASS_PREFIX}ai/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
 
   /* B2 (K1674): the ask, a member's own act, carried to agent-worker with the grant and the member's account. */
-  if (op === "ask") return askOp({ req, url, env, viaSession, sessMember, grantMember });
+  /* R55 (T48; N1015; K3103; control-plane R93): the door's `trace` and member ref, minted per request by the door and handed
+     here in process, reach the ask's call to agent-worker as headers (`ask.mjs`' `doorHeaders`); none is taken from the
+     caller, and none is read here. */
+  if (op === "ask") return askOp({ req, url, env, viaSession, sessMember, grantMember, trace, memberRef });
   /* R41 (T45; K2824, K2881): the assistant's infraction and reply-bearing drafts, a member's own act on the `bio` object */
-  if (ACTION_DRAFT_OPS.includes(op)) return actionDraftOp({ req, url, env, op, viaSession, sessMember, sessViewer });
+  if (ACTION_DRAFT_OPS.includes(op)) return actionDraftOp({ req, url, env, op, viaSession, sessMember, sessViewer, trace, memberRef });
   if (op === "affordances")
     return affordancesOp(url, store(), { json, doAnswer, storeSilent, storeRefusal, gate: ACT_GATE, viewer, identity, author,
       by, storeName, cls });
@@ -87,7 +90,7 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
   /* R36 (K2635, K2656; control-plane R74): a member's transcription of a stored scan's unread pages, extraction's exported
      handler, beside `pdfstructure`'s arm, with the same stamps. */
   if (op === "pagetranscribe") return pageTranscribeOp(url, env, store(), { json, storeSilent, storeRefusal, doAnswer,
-    storageAbsent, requiredArgument, cls, session: viaSession, caps: sessCaps, viewer, author, storeName });
+    storageAbsent, requiredArgument, cls, session: viaSession, caps: sessCaps, viewer, author, storeName, trace, memberRef });
   if (op === "attest") return attestOp(req, env, store(), { json, doAnswer, storageAbsent, captureKey, storeName, cls });
   if (op === "monitor") return monitorOp(req, store(), { json, storeSilent, storeRefusal, requiredArgument, doAnswer,
     viaSession, sessViewer, storeName, cls });

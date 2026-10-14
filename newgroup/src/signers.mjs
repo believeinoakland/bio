@@ -16,8 +16,11 @@
  * R43 (T36; N712, K1936 Q4 step 1; Distribution §10): this list holds exactly two lines, the fresh release key and the
  * offline recovery key, each generated on the signer page with a passphrase, and never the development key the page
  * minted without one. Both were made at Bob's signer-page sitting of 2026-10-12 (K2922, K2930), replacing the
- * development key in this one change on the 0.82.0 cut, which is signed with the fresh key and embedded here. */
-export const ARMED_SIGNERS = [
-  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICiA6JRm52rE3agZAKqb/4ATA34c8jEp3Yef0KZyCe18 bio-release",
-  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdvnsYToN22fqksnV1gLYWEJJmQA6vMyXnThPJMm7yJ bio-release-recovery",
-];
+ * development key in this one change on the 0.82.0 cut, which is signed with the fresh key and embedded here.
+ *
+ * R43 (T48; N1047, K3158; `signatures` R45): the two lines are no longer written here. `signatures` holds the one list
+ * (`RELEASE_KEYS`), and this array is read from it when the module loads, so the installer and every plane module that
+ * verifies a release trust exactly the same keys and a rotation is one edit, there. The array stays an array of its own so
+ * that a test can arm another key for one act; the shipped contents are `RELEASE_KEYS`'. */
+import { RELEASE_KEYS } from "../../bio-plane/src/sshsig.mjs";
+export const ARMED_SIGNERS = [...RELEASE_KEYS];

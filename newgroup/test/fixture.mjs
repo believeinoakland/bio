@@ -48,7 +48,7 @@ export function script(rules) {
    are run here against recorders, so a label is read exactly as the page's script receives it. */
 export function parsePage(raw) {
   const events = [];
-  let failed = null, done = null;
+  let failed = null, done = null, says = null;
   const scripts = [...raw.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
   const rec = {
     step: (id, label) => events.push({ k: "step", id, label }),
@@ -57,6 +57,8 @@ export function parsePage(raw) {
     /* R51 (T47): a stop names the step in progress, its fourth argument. */
     fail: (h, p, d, s) => { failed = { h, p, d, s }; },
     done: (html) => { done = html; },
+    /* R55: the progress page's one line saying from which release to which, and where. */
+    says: (t) => { says = t; },
   };
   for (const s of scripts.slice(1)) new Function(...Object.keys(rec), s)(...Object.values(rec));
   const status = (id) => { let st = null; for (const e of events) if (e.id === id) st = e.k; return st; };
@@ -64,8 +66,8 @@ export function parsePage(raw) {
   const steps = [...new Set(events.filter((e) => e.k === "step").map((e) => e.id))];
   /* All the page's words: the shell, every label, the refusal and the panel. */
   const words = [raw.replace(/<script>[\s\S]*?<\/script>/g, ""), ...events.map((e) => e.label || ""),
-    failed ? `${failed.h} ${failed.p} ${failed.d}` : "", done || ""].join("\n");
-  return { raw, events, steps, status, label, failed, done, words };
+    failed ? `${failed.h} ${failed.p} ${failed.d}` : "", says || "", done || ""].join("\n");
+  return { raw, events, steps, status, label, failed, done, words, says };
 }
 
 export async function callback(qs, cookie) {
@@ -208,7 +210,9 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   refuseSecretDelete = false,
   /* T36: `vpc` the Workers VPC service the operator names (R45), `refuseVpc` an upload naming one refused; `logpush` the
      account's Logpush jobs, or "refused" (R46); `refuseSchedules` a schedule refused (R44). */
-  vpc, refuseVpc = false, logpush = [], refuseSchedules = false } = {}) {
+  vpc, refuseVpc = false, logpush = [], refuseSchedules = false,
+  /* R55 (T48): the release an update is of; by default the one the world serves (the built-in, when the repository does not answer). */
+  version } = {}) {
   const signersBefore = [...ARMED_SIGNERS];
   if (rel === undefined) { rel = await release({ version: DEFAULT_VERSION, fleet: false }); armWith(SIGNER.line); }
   const realTimeout = globalThis.setTimeout;
@@ -392,6 +396,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   const calls = script(rules);
   let ck = givenCookie, st = givenState;
   if (!ck) ({ cookie: ck, state: st } = await begin(slug, mode, { ...(ai === undefined ? {} : { instanceAi: ai }),
+    ...(mode === "update" ? { version: version ?? (rel ? rel.version : RELEASE_VERSION) } : {}),
     ...(vpc === undefined ? {} : { securityVpc: vpc }) }));
   let out;
   try { out = await callback(`code=GOODCODE&state=${st}`, ck); }

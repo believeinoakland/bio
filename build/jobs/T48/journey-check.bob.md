@@ -1,6 +1,6 @@
 # BOB to journey-check (T48)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -25,3 +25,7 @@ K3295: all four readings are right; build on them.
 ## B3 · CHANGE
 
 K3306 (SCREENS-ENTRY #2 J5): screens-entry now draws the recovery codes as `<pre data-codes>` (interface-shell R56 left no class for them), merged into tranche/T48. Your `journeys.mjs` (lines 65-68) reads `pre.cs-codes`: read `pre[data-codes]`. Merge origin/tranche/T48, re-run, check, post COMPLETE. You merge last in L11.
+
+## B4 · ANSWER · re J3
+
+Answer to J3: screens-daily is merged into tranche/T48 since 7f9a2d7a34 (K3307), and `mk-count` is gone from it; control-plane's page test composes on the tranche. Plane and installer are merged too (K3310). Merge origin/tranche/T48 again, re-run R1 (a) with B3's codes step, check, post COMPLETE. You merge last.

@@ -1,4 +1,4 @@
-/* Find (registry screen `finder`; screens-daily R4, R7, R12). Search with the member's words; each result with its grade and
+/* Find (registry screen `finder`; screens-daily R4, R7, R12, R21). Search with the member's words; each result with its grade and
    where it matched; hold picked results together (retrieval's selection, a handle that lives while it is used), let the
    set go, open "Find in these" over it, see where nobody looked, and count over the held set. The words searched are the
    route's subject (`/app/finder/<words>`) or the member's last search on this page; the held set's handle is kept in the
@@ -66,6 +66,8 @@ export const finder = Object.freeze({
 
     const nobody = (ui.frontier && view.data.frontier ? cs.state("frontier", function (f) {
       const n = typeof f.never_looked_count === "number" ? f.never_looked_count : (f.never_looked || []).length;
+      // R21: no count at zero.
+      if (!n) return '<p class="mk-note">' + cs.w("screen.finder.nobody.none") + "</p>";
       return '<p class="mk-note">' + cs.mark("gap", "nobody") + " " + cs.w("screen.finder.nobody", { n: String(n) }) + "</p>"
         + '<ul class="mk-list">' + (f.never_looked || []).slice(0, 20).map(function (x) {
           const t = x && typeof x === "object" ? (x.title || x.referent || x.authority || x.detail || "") : String(x);
@@ -74,9 +76,10 @@ export const finder = Object.freeze({
     }, { empty: "screen.finder.nobody.none" }) : "")
       + '<span class="mk-acts">' + cs.act("frontier", { label: "act.frontier.label.finder" }) + "</span>";
 
-    // The hold strip (interface-shell R19's): how many documents are held together and until when, from `selection`.
+    // The hold strip (interface-shell R19's): how many documents are held together and until when, from `selection`;
+    // drawn only with results to pick or a set held (R21: no empty hold tray).
     const sel = view.data.selection;
-    const strip = '<div class="cs-hold mk-hold">'
+    const strip = !hitsOf().length && !ui.handle ? "" : '<div class="cs-hold mk-hold">'
       + (ui.handle && sel ? cs.state("selection", function (v) {
         const n = typeof v.n === "number" ? v.n : (v.members || []).length;
         return '<span class="n">' + (n === 1 ? cs.w("screen.finder.held.one") : cs.w("screen.finder.held.many", { n: String(n) })) + "</span>"
@@ -85,7 +88,7 @@ export const finder = Object.freeze({
             const t = v.expires ? new Date(v.expires) : null;
             if (!t || isNaN(t.getTime())) return "";
             const hm = String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0");
-            return '<span class="sep"> · </span><span class="drift">' + cs.w("screen.finder.until", { time: hm }) + "</span>";
+            return ' · <span class="drift">' + cs.w("screen.finder.until", { time: hm }) + "</span>";
           })();
       }) : "")
       + '<span class="acts">' + (hitsOf().length ? cs.act("select", { label: "act.select.label.finder" }) : "")
@@ -93,7 +96,7 @@ export const finder = Object.freeze({
         + (function () {
           // "Count" asks what is counted and over which period, in place, with the act (read by its `send`).
           const button = cs.act("calculationcreate", { label: "act.calculationcreate.label.finder", data: { handle: String(ui.handle), f: "fc" } });
-          return button ? '<details class="mk-actd"><summary>' + cs.w("act.calculationcreate.label.finder") + "</summary>"
+          return button ? '<details class="mk-details"><summary>' + cs.w("act.calculationcreate.label.finder") + "</summary>"
             + cs.field("fc-question", "screen.finder.count.question", {}) + cs.field("fc-from", "screen.finder.count.from", {})
             + cs.field("fc-to", "screen.finder.count.to", {}) + button + "</details>" : "";
         })()

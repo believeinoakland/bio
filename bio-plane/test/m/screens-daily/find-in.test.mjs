@@ -37,9 +37,12 @@ test("R5: the scope is set by where it was opened (a document, the held set, a p
   const proj = await open("/app/find-in/PROJ-1", PLANE);
   assert.ok(main(proj).querySelectorAll(".cs-card, a.cs-ref").some((e) => e.textContent === "PROJ-1"));
   assert.match(text(proj, main(proj).querySelector("nav.cs-crumbs")), /Projects.*PROJ-1.*Find in this/, "the path's project step (interface-shell R8)");
+  // R21 (interface-shell R61): opened with no scope, "Nothing is here", with the way back, and nothing else of the screen.
   const none = await open("/app/find-in", PLANE);
-  assert.match(text(none), /Nothing here Open Find in this from a document/);
+  assert.match(text(none), /Nothing is here.*Open Find in this from a document.*Go to Home/);
+  assert.ok(main(none).querySelector('a[href="/app"]'));
   assert.deepEqual(ops(none), []);
+  assert.ok(!main(none).querySelector("fieldset, select, input"));
 });
 
 test("R5: the member ticks what to find, with an optional term and question; findin is sent over the scope, and records nothing", async () => {
@@ -67,7 +70,7 @@ test("R5: the member ticks what to find, with an optional term and question; fin
 test("R5: results by kind, each with its words as written, its passage and Found by search; a kind with none says \"Nothing here\"", async () => {
   const p = await shown();
   const heads = sections(p).map((s) => s.querySelector("h2").textContent);
-  assert.deepEqual(heads, ["People and offices your group follows · 1", "Money figures · 0", "Dates and deadlines · 2", "Requirements: what someone shall or must do · 1", "Events in minutes and agendas · 0", "“closed” · 37"]);
+  assert.deepEqual(heads, ["People and offices your group follows · 1", "Money figures", "Dates and deadlines · 2", "Requirements: what someone shall or must do · 1", "Events in minutes and agendas", "“closed” · 37"]);
   assert.match(text(p, sections(p)[0]), /“The Director shall repair”passage 3/);
   assert.match(text(p, sections(p)[5]), /“closed”passage 5/);
   assert.equal(main(p).querySelectorAll('.cs-row > .cs-origin[data-origin="search"]').length, 5);
@@ -89,7 +92,7 @@ test("R5: each result offers only the recording act of its kind; one already rec
   await press(more, "findin", { reason: R });
   assert.deepEqual(acts(more).filter(([, d]) => d.k !== undefined).map(([op]) => op), ["recordfact", "standarddeclare", "recorddatedfact"]);
   for (const [op] of acts(more).filter(([, d]) => d.k !== undefined))
-    assert.ok(button(more, op).closest("details.mk-actd"), `${op}'s fields are drawn in place with it`);
+    assert.ok(button(more, op).closest("details.mk-details"), `${op}'s fields are drawn in place with it`);
 });
 
 test("R5: each recording act sends its owner's body from the result's passage and the member's fields, the chosen question kept beside it", async () => {
