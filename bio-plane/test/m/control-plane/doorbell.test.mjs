@@ -71,12 +71,16 @@ const admits = (spec, c) => (c.session ? spec.classes.includes(c.session && c.na
 /* Every name a stamp could carry, so a stamp the op does not declare is seen to be absent. */
 const STAMP_NAMES = [...new Set([...QUERY_STAMPS, "proposedBy", "principal", "owner", "member", "mintedBy", "proposer"])];
 
-test("R2 (N364; op-declarations R6): each new op has its spec — the table K558 names — and is forwarded to the store's route (the pull to its own), in the namespace the caller lands in, the caller's own parameters and body whole", async () => {
+test("R2 (N364; op-declarations R6, R56): each new op has its spec — the table K558 names — and is forwarded to the store's route (the pull to its own), in the namespace the caller lands in, the caller's own parameters and body whole", async () => {
   assert.equal(Object.keys(ROUTES).length, 18);
   for (const [op, [spec, needs]] of Object.entries(ROUTES)) {
     assert.deepEqual(OPS[op], spec, op);
     assert.deepEqual([Object.hasOwn(NEEDS, op), NEEDS[op]], [true, needs], `${op}: its NEEDS row`);
-    assert.equal(SESSION_OPS.member.has(op) && SESSION_OPS.admin.has(op), spec.mutating, `${op}: both session sets exactly when it writes`);
+    /* (T47; op-declarations R56; K3150) `sourceof` and `sourcerung`, reads, are in both session sets too, so a member's
+       session reads a pulled knock's source and its rung */
+    const inSessions = spec.mutating || ["sourceof", "sourcerung"].includes(op);
+    assert.equal(SESSION_OPS.member.has(op) && SESSION_OPS.admin.has(op), inSessions,
+                 `${op}: both session sets exactly when it writes, or is one of op-declarations R56's two reads`);
   }
   /* the no-account consent: public, mutating, no capability row, as `knock` */
   assert.deepEqual([OPS.knockerconsent, Object.hasOwn(NEEDS, "knockerconsent")], [{ classes: null, mutating: true }, false]);
