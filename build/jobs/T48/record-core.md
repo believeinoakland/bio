@@ -26,3 +26,7 @@
 - `checks/run.mjs`: format 0, architecture 0 (3260 files), channels 0. Coverage has 28 failures, all in other modules' T48 ids (rule 5 (1)) and none in record-core.
 
 Size (session_01SKNK7kRvAXffeKRZrSeanL): test runs 7, module lines 2379
+
+## J1 · COMPLETE
+
+T48-8 done and pushed. R62: mintExhausted names WCD (a draft of a new edition's statement of what changed) and OUTC (a carried outcome), each with its own sentence. CASE's sentence and every other prefix's are unchanged. Tested in t48.test.mjs. N1052: stats-disclosure signs in by {handle, password}, 31 pass and 0 fail (K3192 red cleared). Results: record-core 181/181, mintExhausted's users 142/142. format, architecture, coverage (84/84) and ownership show 0 failures. run.mjs shows no record-core failure. Nothing deferred. The plane bundle and program.mjs are staled (rule 5 (5)).
