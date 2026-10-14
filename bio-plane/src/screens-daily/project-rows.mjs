@@ -5,11 +5,13 @@
    Investigating, Matured, Closed. A project's count is read from `projectquestions` (basis-versions R50), paged to its end
    (a page may hold fewer than its limit while more follow, so only a null cursor ends it); while its pages are read the
    count says it is loading, and a failed read says so, never "no questions". Counts are kept in the screen's page memory
-   (`view.ui.counts`), so a redraw reads none again. Members, activity and last change are drawn once `projectlist`
-   answers them (N1025, T48): until then nothing is said of them. `w` is the screen's own word prefix (`screen.home`,
+   (`view.ui.counts`), so a redraw reads none again. With `glance` (the Projects screen, R10; DEC-214 (3)) each row also
+   draws its members (`cs.initials`), its activity over eight weeks (`cs.activity`) and its last change, as `projectlist`
+   answers them (project-roster R28: `members` `[{member, handle}]`, `activity` eight integers oldest first, `lastChange`
+   an instant or null); a row answering none of them draws none. `w` is the screen's own word prefix (`screen.home`,
    `screen.projects`). */
 
-export function projectRows(cs, view, w) {
+export function projectRows(cs, view, w, glance) {
   const STAGES = ["forming", "investigating", "matured", "closed"];
   const ui = view.ui;
   if (!ui.counts || typeof ui.counts !== "object") ui.counts = {};
@@ -52,11 +54,21 @@ export function projectRows(cs, view, w) {
           + cs.w(w + ".stage." + s) + "</span>";
       }).join("") + "</div>";
   };
+  // R10: who works on it, how busy it has been, when it last changed.
+  const glanceOf = function (p) {
+    if (!glance) return "";
+    const members = Array.isArray(p.members) ? p.members.map(function (m) { return String(m && (m.handle || m.member) || ""); }).filter(Boolean) : null;
+    const activity = Array.isArray(p.activity) && p.activity.length === 8 ? p.activity.map(function (n) { return Number(n) || 0; }) : null;
+    const last = "lastChange" in p
+      ? '<span class="mk-last">' + (p.lastChange ? cs.w(w + ".lastchange", { date: cs.date(String(p.lastChange)) }) : cs.w(w + ".lastchange.none")) + "</span>"
+      : "";
+    return (members ? cs.initials(members) : "") + (activity ? cs.activity(activity) : "") + last;
+  };
   return function (list) {
     const projects = list && Array.isArray(list.projects) ? list.projects : [];
     return cs.sheet(projects.map(function (p) {
       const id = String(p.id);
-      return cs.row("", cs.ref("project", id, p.name || id, []) + '<span class="meta">' + countOf(id) + "</span>", ladder(p.stage), "");
+      return cs.row("", cs.ref("project", id, p.name || id, []) + '<span class="meta">' + countOf(id) + "</span>", ladder(p.stage), glanceOf(p));
     }).join("")) + (list && list.truncated ? '<p class="mk-note">' + cs.w(w + ".truncated") + "</p>" : "");
   };
 }

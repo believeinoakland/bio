@@ -1,8 +1,7 @@
 /* Projects (registry screen `projects`; screens-daily R10, R7; DEC-201 (8), DEC-214 (3)). Every project the member sees, as
-   `projectlist` answers it (project-roster R26), each a reference opening `project` with its question count
-   (`projectquestions`, paged) and its stage on the ladder, `truncated` said; and "Start a project". A project's owner,
-   members (`cs.initials`), activity over eight weeks (`cs.activity`) and last change are drawn once `projectlist` answers
-   them (project-roster, N1025, T48); until then nothing is said of them. Every function is self-contained
+   `projectlist` answers it (project-roster R26, R28), each a reference opening `project` with its question count
+   (`projectquestions`, paged), its stage on the ladder, its members (`cs.initials`), its activity over eight weeks
+   (`cs.activity`) and its last change, `truncated` said; and "Start a project". Every function is self-contained
    (interface-shell R21 (1)). */
 import { projectRows } from "./project-rows.mjs";
 
@@ -20,7 +19,7 @@ export const projects = Object.freeze({
   },
 
   render: function (cs, view) {
-    const rows = view.parts.projectRows(cs, view, "screen.projects");
+    const rows = view.parts.projectRows(cs, view, "screen.projects", true);
     return cs.title(undefined, {}) + '<p class="mk-sub">' + cs.w("screen.projects.sub") + "</p>"
       + cs.state("projects", rows, { empty: "screen.projects.none" })
       + '<div class="mk-welcome">' + cs.field("projects-title", "screen.projects.title", { rec: true, help: "screen.projects.title.help" })
