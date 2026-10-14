@@ -25,3 +25,7 @@ K3293: R17: screens-settings now exports aiUsageBars(cs, view, {owner, value}) (
 ## B3 · CHANGE
 
 K3303: interface-shell is merged into tranche/T48 (R55 re-points, R56 class check, R60 words, R61 reading screen objects' ABSENT_CODES). Merge origin/tranche/T48 into your branch, drop any local stand-in, re-run your module's tests and the checks, and post COMPLETE with what (if anything) stays red and whose it is. Your merge follows in L11's order.
+
+## B4 · CHANGE
+
+K3305: merged into tranche/T48, after screens-settings (its real AI account panel is now in). On the tranche one of your 77 tests is red: projectai.test.mjs:89 "R14 switch, remove, the notice, the panel's two acts and keep-away send what their owners take": a panel act sends [project, null] where the test expects [project, 5]. Merge origin/tranche/T48, find whose it is (your test's expectation against screens-settings R20's panel as merged, or your code), fix it if yours, or REPORT it in screens-settings' terms; post COMPLETE.
