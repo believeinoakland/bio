@@ -1,6 +1,6 @@
 # host-governor — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (a product module, P17; K67), with later folds reviewed. Last changed T47 (T47-68: R28 new, `op=governorstate` evaluated at the server's instant, a query `now` ignored; N983, K3027); marked not yet met (T47). Before that T23 (Satisfies wording, N493); every other requirement met (last merged T35, K1950).
+**Status** · In force: approved by Bob 2026-09-26 (a product module, P17; K67), with later folds reviewed. T48 (T48-13: `m/host-governor/ops.test.mjs`' shared `before` signs in by `{handle}`, N1052, K3192, K3195; test only, no requirement changed). Last changed T47 (T47-68: R28 new, `op=governorstate` evaluated at the server's instant, a query `now` ignored; N983, K3027); marked not yet met (T47). Before that T23 (Satisfies wording, N493); every other requirement met (last merged T35, K1950).
 
 ## Public
 

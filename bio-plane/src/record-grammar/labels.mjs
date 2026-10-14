@@ -72,8 +72,7 @@ export function lawProposalState(proposedBy) {
  * R27, R30; N568, T34), a draft translation of an interface word (N669, T37), a draft of a case's account and a
  * check of a member's account (case-authoring R64; N838, T42), a layout of how a reply bears on an action's claims
  * (action-replies R1; N912, T46) and a draft of a status report on a plan (plan-work R14; N956, T47) are each machine
- * work or a member's
- * suggestion, never the thing itself, and each is labelled by `lawProposalState`'s three states. ONE CLOSED
+ * work or a member's suggestion, never the thing itself, and each is labelled by `lawProposalState`'s three states. ONE CLOSED
  * TABLE, keyed by what was proposed: `governing_laws` is REC-195's table above, the same object, so its words
  * cannot drift from it; each other subject says, in each state, what the proposal is not. A subject the table does
  * not hold is a caller's defect and throws, rather than answering a sentence written for something else. */

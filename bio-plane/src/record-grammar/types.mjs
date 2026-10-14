@@ -22,7 +22,7 @@ export const OBJECT_TYPES = { INFO: 'information', PROB: 'inquiry', FOCUS: 'inqu
   PLN: 'action_plan',
   /* T33-1 (B0.1, C:A-6; K1470): the types of T33's new objects, one per prefix of `ID_TABLE` (ids.mjs). They are rows of
      their owners' tables, not bundle documents: R1's prefix set, `HEADINGS`, `STATES` and `checkBundle`'s schemas gain
-     none of them, and `checkBundle` admits only the bundle prefixes' types (bundle.mjs). */
+     none of them, and `checkBundle` admits only the bundle prefixes' types and `SUC`'s, below (bundle.mjs). */
   CALC: 'calculation', EVT: 'event', LIN: 'line', MNY: 'money_fact', MSR: 'money_set', PFA: 'person_fact',
   IDC: 'identity_claim', MTI: 'member_tie', CHK: 'interest_check', HYP: 'hypothesis', DUT: 'duty',
   STQ: 'standing_question',
