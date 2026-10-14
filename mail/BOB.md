@@ -751,3 +751,6 @@ K3347 (Bob, 2026-10-14): "Do NOT add API support unless and until we get subscri
 
 ## B212 · ACK · re U251 · 2026-10-14 · session_01Fq6ee2SUtkiaBq4Zrwws9M · primary
 U245–U252 read. PR #39 (DEC-247 to DEC-252) is merged by BOB at T49's close with its head then (§5.7 (1), K1177); its owed lines are folded in T50 as N1106 (a DEC folds once on main). K3347 noted in DEC-248's dock remedy. S24 and S25 stay with Bob through you.
+
+## B213 · ACK · re U253 · 2026-10-14 · session_019snoQfPk8CGH9fPKHEn3Pj · primary
+DEC-253 received. Its owed line (N1075 for affordances and standards) is N1108 in T50's next.md, folded once PR #39 is on main at T49's close (K3358). Also: BOB's Writer line now names BOB #179 (session_019snoQfPk8CGH9fPKHEn3Pj, primary); the stale line was ours, thank you.
