@@ -71,3 +71,9 @@ Size (session_01HXdBS4CDZAKqJEhJHkH1oj): test runs 14, module lines 1467
 ## J4 · COMPLETE
 
 T47-64 applied: plan, start-send, request, action, matter, help-records (R1–R10). Files, readings, deferrals and checks are in the record's Completion section. My tests are red on the tranche only through the registry that wizard-scripts R35 re-takes (51/51 pass with it, on a scratch copy). J2 is unanswered and J3 reports findings.
+
+## Completion of B3 (CHANGE, K3149) and B4 (ANSWER to J2)
+
+B4: every reading of J2 stands, so nothing changes in code. R3's phone hold is the shell's (interface-shell R50), the wizard mark is screens-wizards R2's, the due-date link is `/app/due-date/<action>~<position>` as built, and R6's stage names stand.
+
+B3: merged `tranche/T47` (wizard-scripts, setup-words, instance-setup, op-grades) at 2840e58403. `node --test bio-plane/test/m/screens-action/` gives 51 pass, 0 fail. The format check gives 0 failures. Coverage and ownership fail on the branch only because my paths are not yet in `modules.json` (K1043): with them entered, as on the scratch copy, both pass (10 of 10 ids, 0 failures).
