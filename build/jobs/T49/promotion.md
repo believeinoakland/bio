@@ -14,7 +14,7 @@
 
 J1: N1073 done and tests run (promotion suite: 136 of 137 pass; the 1 red, registry.test.mjs module order, is membership T49-1's R145, red before my change). Rule 6 greps clean. The stamp waits for your CHANGE once membership, project-roster and credentials have merged into tranche/T49. I am idle until then.
 
-## J2 · COMPLETE
+## Completion record (J3 below carries the mailed COMPLETE)
 
 T49-4 is done on job/T49/promotion, with tranche/T49 merged in after B2 (membership, project-roster and credentials merged).
 
