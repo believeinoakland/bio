@@ -228,7 +228,7 @@ test("R4 R7 the run's productions drawn as machine work, never evidence, each ca
   const sug = p.byOp("suggest")[0];
   assert.equal(sug.headers.Authorization, SESSION_HEADER);
   assert.deepEqual(sug.body, { target: Q, kind: "sharpen-question", run: p.byOp("airunopen")[0].body.run, name: "Cite the column", description: "Cite the category column" });
-  const items = panel(p).querySelectorAll(".cs-machine");
+  const items = panel(p).querySelectorAll(".cs-machinework");
   assert.equal(items.length, 2, "the log's production and the suggestion");
   for (const it of items) {
     assert.ok(it.querySelector('.cs-origin[data-origin="machine"]'));

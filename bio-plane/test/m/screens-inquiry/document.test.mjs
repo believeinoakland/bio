@@ -5,6 +5,8 @@ import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, fill, press, rawKeys, plane, READING, P, Q, D, SHA } from "./fixtures.mjs";
 
 const at = "/app/document/" + D;
+const DOCUMENT_MD_NO_HASH = ["---", `id: ${D}`, "object_type: information", "title: \"Policy\"", "source:", "  locator: https://example.org/ai-4-12.pdf",
+  "  retrieved: 2026-10-02T09:00:00Z", "---", "", "## Summary", ""].join("\n");
 const section = (p, head) => main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === head);
 /* the assistant reachable for this member (interface-shell R20) */
 const REACH = { assistantstate: ok({ on: true }), accountreference: ok({ held: true }) };
@@ -24,10 +26,11 @@ test("R3 the document drawn: title, source, its grade as one mark, passages with
   const m = main(p);
   assert.equal(m.querySelector("h1").textContent, "Pothole repair policy, Administrative Instruction 4.12");
   assert.match(m.textContent, /Captured 2 October 2026 · https:\/\/example\.org\/ai-4-12\.pdf/);
-  const g = m.querySelector(".cs-facts .cs-grade");
+  const g = m.querySelector(".mk-facts .cs-grade");
   assert.deepEqual([g.getAttribute("data-scale"), g.textContent.slice(-1)], ["capture", "B"]);
   assert.match(m.textContent, /3b9f…c210/);
-  assert.equal(m.querySelector(`a[href="/app/open-file/${D}"]`).textContent, "Open the original", "the original opens through open-file");
+  assert.equal(m.querySelector(`a[href="/app/open-file/${SHA}"]`).textContent, "Open the original", "R22: the original opens through open-file by its digest");
+  assert.ok(!m.querySelector(`a[href="/app/open-file/${D}"]`), "R22: never by the bundle id");
   const passages = m.querySelectorAll("blockquote");
   assert.equal(passages.length, 2);
   assert.match(passages[0].textContent, /within seven calendar days of the report\.”Page 2/);
@@ -54,7 +57,7 @@ test("R3 pagetranscribe only while the assistant is reachable (DEC-190); transcr
 test("R3 an unchanged version chain marks nothing changed; the grade note answers \"Why B?\"", async () => {
   const p = await open(at, { plane: { versionchain: ok({ ok: true, versions: [{ capture_sha: SHA }] }) } });
   assert.ok(!main(p).querySelector("[data-changed]"));
-  assert.match(main(p).textContent, /Only this version is held/);
+  assert.ok(!section(p, "Its versions"), "R20: a chain of one version draws no versions section");
   await press(p, "gradenote", { reason: "to see why" });
   assert.equal(p.byOp("gradenote").at(-1).query.capture, SHA);
   assert.match(section(p, "Why B?").textContent, /a signed copy would raise it to A/);
@@ -140,4 +143,11 @@ test("R8 the question a passage is cited in, and an unread page, are choices amo
   const opts = (id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
   assert.deepEqual(opts("document-cite-question"), [[Q, "screen.document.copy"]], "a title is drawn as data, never read as a key");
   assert.deepEqual(opts("document-unread-page"), [["7", "7"], ["8", "8"], ["9", "9"]]);
+});
+
+test("R22 control: a document with no capture digest draws no \"Open the original\" link, and no other opens by its bundle id", async () => {
+  const noDigest = DOCUMENT_MD_NO_HASH;
+  const p = await open(at, { plane: { image: (r) => ok(r.query.id === D ? { "bundle.md": noDigest } : null) } });
+  assert.equal(main(p).querySelectorAll('a[href^="/app/open-file/"]').length, 0);
+  assert.doesNotMatch(main(p).textContent, /Open the original/);
 });
