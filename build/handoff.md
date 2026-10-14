@@ -1,26 +1,31 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #169 (`session_01WHadBcf98Q1dkksrNT5q1m`, secondary account, depth 1), 2026-10-14 ~07:15 UTC, at about 62% context, during T47's close with no step half done. Read `build/rulings-active.md` whole first; K3156–K3187 are this session's rulings (grep them in `build/rulings.md`).
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #170 (`session_017ePgfoaM3MPJN7L57DySNv`, secondary account, depth 1), 2026-10-14 ~11:00 UTC, at about 55% context, right after T48's L2 closed (K3220), no step half done. Read `build/rulings-active.md` whole first; K3188–K3220 are this session's rulings (grep them in `build/rulings.md`).
 
 ## Where things stand
 
-- **T47: every entry merged; L11 closed** (K3180; sessions archived and rows written, K3181, K3185's JOURNEY-CHECK #2 row too). Artifacts regenerated and verified at L11's close (plane bundle; fleetbundles, newgroup-fresh 0 fail). `run.mjs`: architecture, coverage (5198/5198), channels 0; format 2 = setup-page's emptied `paths`/`tests`, accepted by name until its row is dropped at T48's opening (K3177).
-- **§5.7 step 1 done** (K3182): PR #33 merged into `main` (82d0e5b484), `main` merged into tranche/T47.
-- **The regression** (K2704 on GitHub, since a container restart kills local runs): run 38522006895 on tranche/T47 @ 23d7bcc6e3, started 06:24, limit 120 min. The previous run hung on journey-check's open handles (K3184): fixed (CI installs journey-check's lock and Chromium; journey-check disposes on every path, K3185). **Next:** read its result (`actions_list` / `get_job_logs`); its module-tests summary is in the job log. Reds accepted by name: membership's 6 (N1014), the setup-page format pair; compare every other red against `build/plan/draft-T47-outcome.md` ("Accepted reds") and route or fix before the PR.
-- **Draft outcome:** `build/plan/draft-T47-outcome.md` (all 94 entries merged; parts deferred: N1046, N1015, N1039; usage 3.26 B tokens over 100 rows, recount with the later rows).
+- **T47 closed** (PR #35, `main` @ 73269639e8, K3194); PR #34 (DEC-227, DEC-228, T48's words) merged (`main` @ 4664e8efd4). T47 was reported to Bob.
+- **T48 open** on `tranche/T48` (K3195): 83 jobs (`build/plan/current.md`; T48-81–83 added by K3207). **Every layer's requirement text is folded** (L1 K3197, L2 K3198, L3–L5 K3203, L6 K3206, L8–L10 K3207, L11 K3214, with K3211's `lookedsince`). **L1 and L2 closed** (K3209, K3220): all merged, artifacts regenerated and verified, sessions archived, rows in `metrics/T48.csv`. No job session is live.
+- **legacy-ui stays** (K3190, DEC-228): the design stream draws its 21 gaps from DEC-229; U216/U217 answered the census.
+- **Release 0.84.0** cut on `dist/cut-0.84.0` @ 0f31ff9d73 (K3217; report `build/plan/draft-release-0.84.0.md`; it merged the never-merged 0.83.0 cut). **Signing run 38550200586 waits on Bob's approval** in GitHub's `release` environment.
+- **Channel:** UX-DESIGN read through U217; BOB's B188 (opening asks), B189 (duty reasons), B190 (L11 words) not yet read by it. The lanes' HANDOFFs unchanged (investigation H43, actions H31).
 
 ## What comes next, in order
 
-1. **Take over** (§5.1), archive BOB #169, write its BOB-final row in `build/metrics/T47.csv`.
-2. **T47's close, §5.7 steps 2–6:** archive the plan as `archive/T47.md` with the outcome (from the draft) and usage, Status `CLOSING`; PR `tranche/T47` → `main` merged with the GitHub merge tool, method merge (§5.7 (3); CLAUDE.md standing direction; standing list `mcp__github__merge_pull_request`); delete the backstop and `WATCH`; ask Bob's meter and report T47 to him in plain words (elapsed since T47 opened, work finished, deferred, left, cost).
-3. **Then PR #34** (UX-DESIGN's U215 MERGE: DEC-227 and the T48 word file, `docs/development/` only) into `main` at the boundary, before T48 is cut (K3186). Mark it ready first (precedent K3023, K3182).
-4. **Release 0.84.0** from T47 (0.83.0 was T46's): Bob wants to install, set up, add a member and investigate (K3183's thread). Before telling Bob it is ready: sign in as administrator and as member and look at every screen (K3052). Each deploy (plane to `biosmoke7`, the installer) is Bob's approval in session (K1715). The installer's OAuth client scopes are registered (K3159). civicsmith.org is not yet live (Bob's DNS and email); point Bob at `newgroup.believeinoakland.workers.dev`.
-5. **Open T48 at once** (§5.2) from `build/plan/draft-T48-plan.md` + `draft-T48-fold.md` (N1026–N1047 folded by a worker, unreviewed; job count ~65) + N1048–N1051, N847 (DEC-227), and `draft-T48-reqs-n880-n882-n670.md` (worker draft, unreviewed; re-read in whole the modules it read in part: skills, agent-worker, instance-setup, plane). Settle the fold's open points (N1047's check in scheduler or plane; N1033's owner; N1036's providers; T48-6 vs T47-93). `updatelater`'s spans are BOB's (DEC-226: two weeks; next day for a security fix). The opening act (rule 3) drops setup-page's row.
+1. **Take over** (§5.1): archive BOB #170, write its BOB-final row in `build/metrics/T48.csv`; delete its backstop and `WATCH #170` (`trig_0146X5B6uVUazfZTbzLVaH8B`, into ROOT #6) and arm your own.
+2. **Start L3** (§5.3): host-governor, provenance, acquisition, capture (T48-13…16; merge order in the plan). Write STARTs as `starts-T48/` does (reading sets by `build/plan/reading-sets.py`; next session numbers from the archives). Then L4…L11, folding nothing more unless a job's question changes a requirement. At each layer close regenerate per the manifest (K1540's order; `npm ci` in agent-runner `--ignore-scripts` and sheet-worker after a container restart).
+3. **Release 0.84.0, after Bob approves run 38550200586:** the seven `ssh-keygen -Y verify` controls; step 8 rebuilds the installer embedding the signed release and **commits `newgroup/src/release.mjs` with the bundle** (it clears installer's three embed reds); merge `dist/cut-0.84.0` into `tranche/T48` (K2273, K3217); then each deploy to `biosmoke7` is Bob's approval in session (K1715, K1716): walk him through each; rollback targets in the report. Before telling Bob it is ready, sign in as administrator and as member and look at every screen (K3052).
+4. Alongside (P18): `next.md` N1059 (file-scanner's split map), N1060 (a refused sign-in and run credentials), N1058. Owed by BOB between tranches: N1047's workflow step (a cut commits `release/notes/<V>.json`, signs and publishes the notice), N898.
+
+## Acts on main or sessions (reviewed acts, §5.8)
+
+- T48's close merges `tranche/T48` into `main` by PR with the GitHub merge tool, method merge (§5.7 (3); CLAUDE.md standing direction; standing list `mcp__github__merge_pull_request`); no refusal recorded.
+- Deploys to `biosmoke7` are Bob's approval in session each time (K1715; never on the standing list).
 
 ## Open with Bob
 
-- **How a translation reaches Civicsmith** (N670's offering half): A an address he names (recommended; the stewards review and ship accepted ones in a release), B a receiving service, C not yet. Reading in one's language joins T48 either way.
-- **civicsmith.org's DNS and email** (he said "this week", K3060 D14): gives the site (N1011), the stewards' address (K2799) and, with A, the translations address. Offer to walk him through it.
-- **The reviewer for the records-request template** (N858, K3081).
-- **N933** (a stake per matter): he was given a prompt to paste into ACTIONS-DESIGN (primary account); read its `HANDOFF.md` on `design/actions` for the answer.
-- **Timers:** backstop `trig_014CJxp525X6StYKnL8w4yaC` (07:40, into this session) and `WATCH #169` `trig_01PEUygzNQAmrujMMiZRHxrM` (into ROOT #6, 08:20): delete both at takeover and arm your own.
+- **Approve signing run 38550200586** (github.com/believeinoakland/bio/actions/runs/38550200586 → Review deployments → tick `release` → Approve and deploy).
+- **His weekly meter reading** (the session shows a seven-day `allowed_warning`; K2341's 80% pause stands).
+- **How a translation reaches Civicsmith** (N670's R88): A an address he names (recommended), B a receiving service, C not yet.
+- **The terms a group's offered translation ships under** (legal exposure, K3190): (a) the same terms as Civicsmith's own words, naming Civicsmith's licence (recommended), (b) a contributor agreement per group, (c) later.
+- **civicsmith.org's DNS and email** (K3060 D14); **the records-request template's reviewer** (N858); **N933** through the actions lane.

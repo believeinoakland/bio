@@ -38,6 +38,7 @@
 - Between tranches, commit build state to the closed tranche branch only; `main` moves only by §5.7 (3) and §5.7 (1)'s design merge, never as a side effect of another push. (K1703, K1701, K1887)
 - Every deploy to `biosmoke7` (fleet, plane, installer) is refused as "Production Deploy" and approved by Bob in session each time; never on the standing list. The release's `ssh-keygen -Y verify` signature controls likewise. (K1715, K1716, K1717, K1915, K1905, K1910)
 - Release 0.81.0 is cut and signed on `dist/cut-0.81.0`, not deployed: Bob, "Hold until T35 is complete"; `biosmoke7` stays on 0.80.0 until T35's release deploys the whole fleet with the container. (K1922, K1915)
+- A signed release cut is merged into the open tranche branch at once (K2273), so the next cut and `main` carry it: 0.83.0's was missed and merged only by 0.84.0's cut (K3217).
 - Tag pushes are refused by the session's git proxy (HTTP 403, not GitHub): never retry; cite a branch at a commit. Branch `study/constructs` (@ `892fca16c4`) is never deleted or rewritten. Release cuts live on `dist/cut-<version>` branches, untagged. (K1433, K1436, K1709)
 - A job's session may be refused reading its own module's files by name ("Credential Materialization" for credentials): Bob approves in that job's session; not listed. (K1748, K1758)
 - A session showing auto mode's "no verdict" fault is replaced, not approved in. (K273)
