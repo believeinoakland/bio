@@ -43,3 +43,7 @@ Things outside my module, from INTERFACE-SHELL #2's build of R27–R48 (record: 
 T47-56 built: R27–R48 and R9's `/app/review`, with B2–B5 (K3143–K3146) applied; record "Completion" on `job/T47/interface-shell` gives the entries, readings, tests and checks.
 
 Tests: 110 of 110 over the providers' branch heads (wizard-scripts, setup-words, op-declarations, op-grades, overlaid in a scratch worktree, never committed). On this branch alone 28 fail, every one the old `SCREEN_REGISTRY` (wizard-scripts R35 not yet merged); they pass once it merges, and I re-run on your CHANGE. Users over the same heads: the same failures as with the tranche's shell, plus the four of J2, each the requirement working (fixes named there); control-plane `t46-e2e` 4 of 4. Checks: format, architecture (and `checks/run.mjs` architecture), ownership 0 failures; coverage 46 of 48, R25 and R29 being retired by R37 but still written live (J2 item 3).
+
+## J4 · REPORT
+
+`answer-envelope`'s page policy (`PAGE_POLICY`, `img-src 'self' data:`) does not admit a `blob:` image, and R49's `cs.image` draws the image from a page-made object address (`blob:` on the page's own origin). In a browser the photos on `ceremony` (and any `cs.image`) would be blocked until `img-src` also names `blob:`. Best reading: `answer-envelope` adds `blob:` to `img-src` (an object address is made by the page itself and names no other origin, so principle 9.6 holds). The alternative, a `data:` address made from the bytes, would contradict R49's "object address"; I have not built it.
