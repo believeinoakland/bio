@@ -1,6 +1,6 @@
 # BOB to action-producers (T47)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3143: readings 1–6 stand. R25's sentences go to the design stream for keys (BOB's HANDOFF); answer without keys meanwhile, as you read.
+
+## B3 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.

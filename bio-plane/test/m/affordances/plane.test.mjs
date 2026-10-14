@@ -24,6 +24,7 @@ import { T38_RUNGS } from "../../../src/op-grades/t38.mjs";
 import { T41_RUNGS } from "../../../src/op-grades/t41.mjs";
 import { T45_RUNGS } from "../../../src/op-grades/t45.mjs";
 import { T46_RUNGS } from "../../../src/op-grades/t46.mjs";
+import { T47_RUNGS } from "../../../src/op-grades/t47.mjs";
 import { OP_ALIASES } from "../../../src/op-grades/t34.mjs";
 /* R39's vocabularies, by name. */
 const R39_KEYS = ["event_kinds", "dated_fact_kinds", "event_statuses", "participant_roles", "event_relation_kinds",
@@ -179,7 +180,8 @@ const FACT_KEYS = ["ok", "target", "object_type", "declared_type", "current_stat
   "concluded_for_project", "edition_warranted_for_project", "basis_legs", "contradiction_inquiry",
   "contradiction_sides_seen" /* N365 */, "rested_on",
   "basis_version_states", "basis_versions", "cites_in", "cites_out", "cited_by_case",
-  "action" /* R51: an action's own facts, null on any other type */].sort();
+  "action" /* R51: an action's own facts, null on any other type */,
+  "legs_in" /* R55: the questions holding a leg on an information target, by status */].sort();
 /* R51: an action's facts, with their sub-keys */
 const ACTION_KEYS = ["clock", "closed", "drafts", "entries", "escalation", "holds_in_place", "preparable",
   "request_for_comment"];
@@ -191,6 +193,8 @@ test("R14 R51 R52: the answer carries exactly R14's facts, with their sub-keys, 
     assert.deepEqual(Object.keys(f.cites_in).sort(), ["confirmed", "severed"]);
     assert.deepEqual(Object.keys(f.cites_out).sort(), ["confirmed", "severed", "severed_reinstatable"]);
     assert.deepEqual(Object.keys(f.cited_by_case).sort(), ["confirmed", "severed"]);
+    assert.deepEqual(Object.keys(f.legs_in).sort(), ["live", "severed"]);
+    if (id !== W.INFO) assert.deepEqual(f.legs_in, { live: null, severed: null }, `R55: ${id} is no information`);
     assert.equal(f.target, id);
     if (id === W.ACTN) {
       assert.deepEqual(Object.keys(f.action).sort(), ACTION_KEYS);
@@ -228,6 +232,15 @@ test("R14: the citation facts are the ones the acts refuse on — a live and a s
   assert.ok((await offered(W.IRIS, W.INFO)).includes("sever"));
   assert.ok((await offered(W.IRIS, W.INFO2)).includes("reinstate"));
   assert.ok(!(await offered(W.IRIS, W.INFO)).includes("reinstate"));
+  /* each offered act performed by the caller it was offered to, and taken back, so the scene the later tests read stands */
+  const move = async (op, id, why) => codeOf(await GET(`op=${op}&token=${W.IRIS}&project=${W.PA}`
+    + `&handle=${await W.sel(W.IRIS, [id])}&reason=${E(why)}`));
+  assert.equal(await move("sever", W.INFO, "checked offer"), "ok");
+  assert.equal(await move("reinstate", W.INFO, "restored"), "ok");
+  assert.equal(await move("reinstate", W.INFO2, "checked offer"), "ok");
+  assert.equal(await move("sever", W.INFO2, "no longer relied on"), "ok");
+  assert.deepEqual([(await facts(W.INFO)).cited_by_case, (await facts(W.INFO2)).cited_by_case],
+    [{ confirmed: 1, severed: 0 }, { confirmed: 0, severed: 1 }]);
 });
 
 test("R14: what rests on an inquiry is counted through inquiry's live-leg predicate — the working inquiry resting on it", async () => {
@@ -405,9 +418,14 @@ test("R13 R14 R16 R18 (D54): an administrator neither invited nor joined to a hi
 });
 
 /* citeproject-inquiry's share (T18 convert): sever and reinstate on a QUESTION, offered on the case citations the
-   facts count (`cited_by_case`), never on a citation by another question, and each offer agreeing with the act. */
-test("R14 R9 R18: on an inquiry target, sever and reinstate track the case citations counted in cited_by_case — a "
-   + "question cited only by another question is offered neither, and every offer and withholding agrees with the act", async () => {
+   facts count (`cited_by_case`), never on a citation by another question, and each offer agreeing with the act.
+   Re-stated for citation R15 (T47; K3102, CITATION #12 J2 (2)): a question's own leg on another question is now severed
+   and reinstated by the act with that question as its citing object; R9 keeps the inquiry target's offer to the case
+   citations, and R55 offers the leg acts on an information target, so here the leg act is accepted and not offered — a
+   withholding R18 allows (it forbids offering what is refused), never an offer the act refuses. */
+test("R14 R9 R18 R55: on an inquiry target, sever and reinstate track the case citations counted in cited_by_case — a "
+   + "question cited only by another question's leg is offered neither, the leg's own sever and reinstate are accepted "
+   + "(citation R15), and every offer agrees with the act", async () => {
   const QX = "INQ-2026-9402-shared", QY = "INQ-2026-9403-citer";
   await W.promote(QX, W.inquiryMd(QX, W.INFO, false), "inquiry", "open");
   await W.promote(QY, W.inquiryMd(QY, QX, false), "inquiry", "open");   // a question resting on QX writes `rel: cites`
@@ -418,9 +436,13 @@ test("R14 R9 R18: on an inquiry target, sever and reinstate track the case citat
   };
   const act = async (op, project, reason) => codeOf(await GET(`op=${op}&token=${W.IRIS}&project=${E(project)}`
     + `&handle=${await W.sel(W.IRIS, [QX])}${reason ? `&reason=${E(reason)}` : "&note=basis"}`));
-  /* cited by a question alone: neither offered, and sever through that citer is refused (not a project) */
+  /* cited by a question alone: neither offered (no case cites it, R9); the question's own leg is severed and reinstated
+     through that citer (citation R15), and neither move offers an act the act would then refuse */
   assert.deepEqual(await at(), [{ confirmed: 1, severed: 0 }, { confirmed: 0, severed: 0 }, false, false]);
-  assert.notEqual(await act("sever", QY, "not a case"), "ok");
+  assert.equal(await act("sever", QY, "a leg of its own"), "ok");
+  assert.deepEqual(await at(), [{ confirmed: 0, severed: 1 }, { confirmed: 0, severed: 0 }, false, false]);
+  assert.equal(await act("reinstate", QY, "relied on again"), "ok");
+  assert.deepEqual(await at(), [{ confirmed: 1, severed: 0 }, { confirmed: 0, severed: 0 }, false, false]);
   /* two cases take it up: sever offered, reinstate not */
   assert.equal(await act("cite", W.PA), "ok");
   assert.equal(await act("cite", W.PB), "ok");
@@ -436,6 +458,58 @@ test("R14 R9 R18: on an inquiry target, sever and reinstate track the case citat
   assert.deepEqual((await at()).slice(1), [{ confirmed: 0, severed: 2 }, false, true]);
   assert.notEqual(await act("sever", W.PA, "again"), "ok");
   assert.equal(await act("reinstate", W.PB, "back"), "ok");
+});
+
+/* R55 (T47; N977; citation R15): on an INFORMATION target, a question's own leg on it is severed and reinstated by
+   `sever` and `reinstate` with the question as citing object, so each is offered where a question the viewer may see
+   holds a leg on it, live for `sever` and severed for `reinstate` (`legs_in`, R14), and every offer agrees with the act.
+   A question that belongs to project PB (`project:`, membership R43) is seen by iris, who joined PB, and not by nell. */
+test("R55 R14 R16 R18: on an information target, sever is offered where a visible question holds a live leg on it and "
+   + "reinstate where one holds a severed leg, each accepted from that caller; a question the viewer may not see offers "
+   + "neither and is not counted; the facts are counts, naming no question", async () => {
+  const D = "INFO-2026-9403-memo", DH = "INFO-2026-9404-note";
+  const QL = "INQ-2026-9404-open", QH = "INQ-2026-9405-held", QH2 = "INQ-2026-9406-held";
+  const inPB = (md) => md.replace("group: aff-plane", `group: aff-plane\nproject: ${W.PB}`);
+  await W.promote(D, W.infoMd(D), "information", "collected", W.reg(D));
+  await W.promote(DH, W.infoMd(DH), "information", "collected", W.reg(DH));
+  await W.promote(QL, W.inquiryMd(QL, D, false), "inquiry", "open");
+  await W.promote(QH, inPB(W.inquiryMd(QH, D, false)), "inquiry", "open");
+  await W.promote(QH2, inPB(W.inquiryMd(QH2, DH, false)), "inquiry", "open");
+  const who = { iris: [W.IRIS, "member:iris"], nell: [W.NELL, "member:nell"] };
+  const at = async (target, m) => {
+    const [tok, viewer] = who[m];
+    const f = await facts(target, { viewer, identity: viewer, by: m });
+    const acts = await offered(tok, target);
+    return [f.legs_in, f.cited_by_case, acts.includes("sever"), acts.includes("reinstate")];
+  };
+  const act = async (m, op, q, target, reason) => codeOf(await GET(`op=${op}&token=${who[m][0]}&project=${E(q)}`
+    + `&handle=${await W.sel(who[m][0], [target])}&reason=${E(reason)}`));
+  /* the instrument: nell sees QL and not the questions that belong to PB */
+  assert.equal((await facts(QL, { viewer: "member:nell" })).ok, true);
+  assert.equal((await facts(QH, { viewer: "member:nell" })).reason, "NO_SUCH_BUNDLE");
+  assert.equal((await facts(QH, { viewer: "member:iris" })).ok, true);
+  /* two live legs, no case citation: sever offered to iris (both counted) and to nell (QL alone), reinstate to neither */
+  assert.deepEqual(await at(D, "iris"), [{ live: 2, severed: 0 }, { confirmed: 0, severed: 0 }, true, false]);
+  assert.deepEqual(await at(D, "nell"), [{ live: 1, severed: 0 }, { confirmed: 0, severed: 0 }, true, false]);
+  /* R16: counts only; no question is named */
+  const named = JSON.stringify({ ...(await facts(D, { viewer: "member:iris", identity: "member:iris", by: "iris" })), target: null });
+  for (const q of [QL, QH]) assert.ok(!named.includes(q), q);
+  /* nell severs QL's leg, as offered: accepted */
+  assert.equal(await act("nell", "sever", QL, D, "no longer relied on"), "ok");
+  /* control: with the leg severed, nell is offered reinstate and not sever, and a further sever is refused */
+  assert.deepEqual(await at(D, "nell"), [{ live: 0, severed: 1 }, { confirmed: 0, severed: 0 }, false, true]);
+  assert.notEqual(await act("nell", "sever", QL, D, "again"), "ok");
+  /* iris still sees QH's live leg: both offered */
+  assert.deepEqual(await at(D, "iris"), [{ live: 1, severed: 1 }, { confirmed: 0, severed: 0 }, true, true]);
+  assert.equal(await act("nell", "reinstate", QL, D, "relied on again"), "ok");
+  assert.deepEqual(await at(D, "nell"), [{ live: 1, severed: 0 }, { confirmed: 0, severed: 0 }, true, false]);
+  /* control: a leg only a question nell may not see holds offers her neither and is not counted; iris is offered sever */
+  assert.deepEqual(await at(DH, "nell"), [{ live: 0, severed: 0 }, { confirmed: 0, severed: 0 }, false, false]);
+  assert.deepEqual(await at(DH, "iris"), [{ live: 1, severed: 0 }, { confirmed: 0, severed: 0 }, true, false]);
+  assert.notEqual(await act("nell", "sever", QH2, DH, "unseen"), "ok");
+  assert.equal(await act("iris", "sever", QH2, DH, "no longer relied on"), "ok");
+  assert.deepEqual(await at(DH, "iris"), [{ live: 0, severed: 1 }, { confirmed: 0, severed: 0 }, false, true]);
+  assert.deepEqual(await at(DH, "nell"), [{ live: 0, severed: 0 }, { confirmed: 0, severed: 0 }, false, false]);
 });
 
 /* ============================================================ R17, R21: op=affordances */
@@ -698,7 +772,8 @@ test("R19: every `reasoned` op this fixture can reach, called well-formed but wi
     withdrawconclusion: () => GET(`op=withdrawconclusion&token=${W.IRIS}&target=${E(INQ)}&project=${W.PA}`),
     projectownerremove: () => POST(`op=projectownerremove&token=${W.IRIS}&projectId=${W.PC}&handle=pam`),
     projectownerrescue: () => POST(`op=projectownerrescue&token=${W.RUTH}&projectId=${W.PR}&handle=ruth`),
-    adminremove: () => POST(`op=adminremove&token=${W.FOUNDER}`, { memberId: "ruth" }),
+    /* adminremove (K3152): a password-again act since op-declarations R58, whose gate the plane does not yet route to its
+       store; its reason refusal is driven at membership's interface in backing.test.mjs */
     connectionassert: () => POST(`op=connectionassert&token=${W.IRIS}`, { a: W.INFO, b: W.INFO2 }),
     filemembershipjudge: () => POST(`op=filemembershipjudge&token=${W.IRIS}`, { id: 1, verdict: "confirm" }),
   };
@@ -742,7 +817,7 @@ test("R19: the reasoned registry, progression and theme acts, and intent's three
 test("R19: together the two drives reach every op RUNGS grades `reasoned`", () => {
   const driven = ["release", "dispose", "sever", "reinstate", "conclude", "reopen", "inquirydivide", "inquiryground",
     "actionmove", "versionreject", "versionconsider", "withdrawconclusion", "projectownerremove", "projectownerrescue",
-    "adminremove", "connectionassert", "filemembershipjudge", "relationdeclare", "aliaswithdraw", "relationwithdraw",
+    "adminremove" /* backing.test.mjs, K3152 */, "connectionassert", "filemembershipjudge", "relationdeclare", "aliaswithdraw", "relationwithdraw",
     "discharge", "proposedispose", "themewithdraw", "goalclose", "aspirationdepart", "aspirationretire",
     "biasdebtresolve", "actionrisktier", "reevaluationrecord", "narrow", "triage" /* narrow, triage: backing.test.mjs */,
     /* layer 9's six (K264), at their own modules' interfaces: backing.test.mjs */
@@ -754,7 +829,7 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     "sourcedisclose", "sourcelink", "sourceconsent",
     /* K727: at action-plans' interface over its fixture, backing.test.mjs */
     "plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose",
-    /* K918: at actions' interface over its fixture, backing.test.mjs */
+    /* K918: at action-holds' interface over its fixture (T45), backing.test.mjs */
     "actionhold",
     /* R30: at filing-templates' and local-facts' interfaces over their fixtures, backing.test.mjs */
     "templateretire", "factconfirm",
@@ -785,7 +860,9 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     /* op-grades R32 (T45): T45's eleven, each at its owner's interface over its fixture, t45-backing.test.mjs */
     ...Object.keys(T45_RUNGS).filter((op) => T45_RUNGS[op] === "reasoned"),
     /* op-grades R33 (T46): escalation's stop and reopening, at escalation's interface over its fixture, t46-backing.test.mjs */
-    ...Object.keys(T46_RUNGS).filter((op) => T46_RUNGS[op] === "reasoned")];
+    ...Object.keys(T46_RUNGS).filter((op) => T46_RUNGS[op] === "reasoned"),
+    /* op-grades R36 (T47; K3147): strength's projectbarset, at strength's interface, t47-backing.test.mjs */
+    ...Object.keys(T47_RUNGS).filter((op) => T47_RUNGS[op] === "reasoned")];
   /* R45: an alias is its op's handler (op-declarations R21, control-plane R55), so its op's drive is its backing */
   driven.push(...Object.keys(OP_ALIASES).filter((a) => driven.includes(OP_ALIASES[a])));
   /* R45: tasks' checkrecord (CHECK_NO_REASON, tasks R15): tasks is later in the order (P4), so this module's tests cannot
@@ -867,7 +944,8 @@ test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a m
     /* R51: action-replies' and plan-work's ops are composed by the plane at T45-47; their machine answers are driven at
        their owners' interfaces (t45.test.mjs) */
     "actionreplybearing", "actionbearingpropose", "arosefrom", "itemtakeup",
-    /* and action-holds' (composed with them), actions' T45 acts and action-clocks' `clockstate`, routed there too */
+    /* and action-holds' (composed with them), action-records' T45 acts (actions' until T47's split) and action-clocks'
+       `clockstate`, routed there too */
     "actionhold", "actionholdrelease", "actionpressure", "holdnoticeprepare", "holdnoticesent", "actionreceipt",
     "actionscope", "actionpromise", "clockstate"];
   const objectActs = ACTS.map((a) => a.id).filter((k) => !ROSTER.includes(k) && !AT_SOURCES.includes(k));
