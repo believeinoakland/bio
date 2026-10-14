@@ -16,6 +16,7 @@ import { T45_SHARES, T45_FAMILIES } from "./t45.mjs";
 import { T46_SHARES } from "./t46.mjs";
 import { T47_SHARES, T47_FAMILIES, REAUTH_ACTS } from "./t47.mjs";
 import { T48_SHARES, T48_FAMILIES } from "./t48.mjs";
+import { T49_SHARES } from "./t49.mjs";
 
 /* R69 (T48; N1039, K3147, K3200): EVALUATING THIS MODULE BUILDS NO TABLE. Every table and list below is frozen data
    (R5), built by `build()` on the first read of any export and reused after, so importing the module adds nothing to the
@@ -183,6 +184,10 @@ const OP_KINDS = Object.freeze({
      by her own `ai` credential (admitted by its scope, R2: so `member` in `classes` and no `machineClasses`, which would
      hand an agent nothing), no probe, no working capability; the owner dispatches it for that member only. */
   memberrun:   Object.freeze({ spec: { classes: SESSION_KINDS, mutating: true }, needs: null }),
+  /* T49 (R71; N1072): the founder's own act, reached by the founder's password session alone — `SESSION_OPS.admin` and
+     no other set (`SESSION_OPS.member` holds an enrolled member, an administrator among them, D-136), no bearer, no
+     working capability (`founderhandleset`). */
+  founder:     Object.freeze({ spec: { classes: ["admin"], machineClasses: [], mutating: true }, needs: null, founderOnly: true }),
 });
 const QUERY = (key) => Object.freeze({ key, at: "query" });
 const BODY = (key) => Object.freeze({ key, at: "body" });
@@ -195,8 +200,8 @@ const BODY = (key) => Object.freeze({ key, at: "body" });
    R67) its share of T48's (`t48.mjs`: `T48_SHARES`, and the families `T48_FAMILIES` gives an owner). */
 const withShare = (d, t) => (t ? { ...d, actor: d.actor ?? t.actor ?? null, proposer: d.proposer ?? t.proposer ?? null,
   extra: { ...(d.extra ?? {}), ...(t.extra ?? {}) }, ops: { ...d.ops, ...t.ops } } : d);
-const family = (d) => familyOf(withShare(withShare(withShare(withShare(d, T45_SHARES[d.owner]), T46_SHARES[d.owner]),
-  T47_SHARES[d.owner]), T48_SHARES[d.owner]));
+const family = (d) => familyOf(withShare(withShare(withShare(withShare(withShare(d, T45_SHARES[d.owner]), T46_SHARES[d.owner]),
+  T47_SHARES[d.owner]), T48_SHARES[d.owner]), T49_SHARES[d.owner]));
 const familyOf = ({ owner, cite, actor = null, proposer = null, extra = {}, ops }) => {
   const of = (pred) => frozenList(Object.keys(ops).filter((op) => pred(ops[op])));
   for (const [op, k] of Object.entries(ops)) if (!Object.hasOwn(OP_KINDS, k)) throw new TypeError(`op-declarations: ${op}: no kind ${k}`);
@@ -586,9 +591,12 @@ const OP_FAMILIES = Object.freeze({
   ...Object.fromEntries(T48_FAMILIES.map((d) => [d.owner, family(d)])),
 });
 const FAMILY_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds)));
-/* T34: a public kind's op is in no session set (every caller reaches it); every other family op is in both. */
+/* T34: a public kind's op is in no session set (every caller reaches it); every other family op is in both. T49 (R71): but
+   a founder-only kind's, which is in the founder's set alone. */
 const FAMILY_SESSION_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds)
-  .filter((op) => !OP_KINDS[f.kinds[op]].public)));
+  .filter((op) => !OP_KINDS[f.kinds[op]].public && !OP_KINDS[f.kinds[op]].founderOnly)));
+const FAMILY_FOUNDER_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds)
+  .filter((op) => OP_KINDS[f.kinds[op]].founderOnly)));
 const FAMILY_SPECS = Object.fromEntries(Object.values(OP_FAMILIES).flatMap((f) => Object.entries(f.kinds).map(([op, k]) => {
   const s = OP_KINDS[k].spec;
   return [op, { classes: s.classes ? [...s.classes] : null, ...(s.machineClasses ? { machineClasses: [...s.machineClasses] } : {}),
@@ -2407,6 +2415,8 @@ const SESSION_OPS = Object.freeze({
                    "profilesset",
                    "aicredentialmint", "aicredentialrevoke",
                    ...FAMILY_SESSION_OPS,
+                   /* T49 (R71): the founder's own acts, in this set alone. */
+                   ...FAMILY_FOUNDER_OPS,
                    "casedraft", "reviewgrant", "reviewrevoke"])),
 });
 
@@ -3497,11 +3507,11 @@ const ACT_HELP_ABSENT = Object.freeze({
       "line", "linesof", "matterpromiseduties", "matters", "meaningrows", "memberlanguage", "memberties",
       "milestones", "money", "moneyamountchecks", "moneycheckparams", "moneydetectors", "moneyjunction",
       "moneynoticed", "moneyof", "moneyset", "moneysummable", "narrowcandidates", "notes", "noticeprepare",
-      "notices", "originalstate", "overridesof", "partiesof", "patterns", "peopledirectory", "personcredentials",
+      "notices", "originalstate", "overridesof", "partiesof", "patterns", "personcredentials",
       "personinterests", "personstatements", "photomarks", "placewantedstate", "plancomments", "planreviewopen",
       "planreviews", "plantimeline", "powersof", "poweruses", "prepitems", "pressurefor", "proceedingdates",
       "proceedinglinks", "proceedingstatus", "progression", "projectaccountstate", "projectaikeepawaystate",
-      "projectholds", "projectkeynotice", "projectsshownon", "projectstanding", "proposals", "publishschedule",
+      "projectholds", "projectkeynotice", "projectownervotes", "projectsshownon", "projectstanding", "proposals", "publishschedule",
       "questionfollowstate", "questionwaits", "quietstate", "reading", "readingname", "readingref",
       "recordsrequests", "recordsteps", "recoverycodesstate", "relation", "reportdraft", "reports", "resolutions",
       "reviewcomments", "safecopy", "samepersoncandidates", "scanfindings", "scanstatus", "searchfields",
@@ -3537,7 +3547,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "escalationevaluate", "escalationresume", "escalationsuspend", "eventattest", "eventgovern", "eventimport",
       "eventmerge", "eventrelationwithdraw", "eventsplit", "exportrender", "extractpropose", "factconfirm",
       "filemembershipjudge", "filemembershipstore", "findaccept", "findmute", "followbody", "followpersonquery",
-      "followportal", "goalclose", "goaldeclare", "goallink", "grouptestset", "guideadopt", "guidedraft",
+      "followportal", "founderhandleset", "goalclose", "goaldeclare", "goallink", "grouptestset", "guideadopt", "guidedraft",
       "guideoffer", "guidepropose", "guideproposetocivicsmith", "guideretire", "guidereview", "holdnoticeprepare",
       "hypothesisrevise", "hypothesissetaside", "hypothesistakeup", "hypothesiswithdraw", "importacceptwithdraw",
       "importflagclear", "importunwatch", "inquirydivide", "inquiryground", "interestcheckdefine",

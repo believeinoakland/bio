@@ -70,8 +70,9 @@ test("R3: SESSION_OPS is {member, admin}, two sets of op names each with a spec;
     for (const op of set) assert.ok(OPS[op].classes === null || OPS[op].classes.includes(kind === "admin" ? "admin" : "member"),
       `${kind}: ${op}'s classes do not admit a ${kind} session`);
   }
-  /* The founder's set holds every member act and adds only the founder's own. */
-  assert.deepEqual([...SESSION_OPS.admin].filter((op) => !SESSION_OPS.member.has(op)).sort(), ["governorconfig"]);
+  /* The founder's set holds every member act and adds only the founder's own (T49, R71: `founderhandleset`, the
+     founder's choice of their handle, beside `governorconfig`). */
+  assert.deepEqual([...SESSION_OPS.admin].filter((op) => !SESSION_OPS.member.has(op)).sort(), ["founderhandleset", "governorconfig"]);
   assert.deepEqual([...SESSION_OPS.member].filter((op) => !SESSION_OPS.admin.has(op)).sort(), []);
   for (const [op, need] of Object.entries(NEEDS)) {
     assert.ok(Object.hasOwn(OPS, op), `${op} has no spec`);
