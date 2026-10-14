@@ -2415,9 +2415,11 @@ export function makeFetch(hooks = {}) {
            R44) a grant's digest and the secret door's mark are the door's alone too, so no caller supplies either */
         /* R29, R67 (T38): an op whose `by` or `viewer` the door stamps in the address (`OP_STAMPS`) takes neither from
            the caller's body either, so its owner's map never holds a caller's statement of who is acting */
+        /* (T47; R83, R59) and an op whose `session` the door carries (`signout`'s, `unlock`'s, `reauth`'s) takes none
+           from the caller's body: the session is the token the request presented, in the internal header alone */
         const strip = [...BODY_STAMPS, "token", "secretSha", "bySecret", ...(BODY_DROPPED[op] ?? []),
                        ...(ACT_CLOCK_OPS.includes(op) ? ["at"] : []),
-                       ...declared.filter((k) => k === "by" || k === "viewer")];
+                       ...declared.filter((k) => k === "by" || k === "viewer" || k === "session")];
         if (b0 && typeof b0 === "object" && !Array.isArray(b0) && strip.some((k) => k in b0)) {
           for (const k of strip) delete b0[k];
           passBody = JSON.stringify(b0);

@@ -77,10 +77,11 @@ test("R2 (N364; op-declarations R6, R56): each new op has its spec — the table
     assert.deepEqual(OPS[op], spec, op);
     assert.deepEqual([Object.hasOwn(NEEDS, op), NEEDS[op]], [true, needs], `${op}: its NEEDS row`);
     /* (T47; op-declarations R56; K3150) `sourceof` and `sourcerung`, reads, are in both session sets too, so a member's
-       session reads a pulled knock's source and its rung */
-    const inSessions = spec.mutating || ["sourceof", "sourcerung"].includes(op);
+       session reads a pulled knock's source and its rung; (K3041) so are publish's screen reads */
+    const inSessions = spec.mutating || ["sourceof", "sourcerung", "statementack", "reviewcomment", "publishpreflight",
+                                         "publishtensions"].includes(op);
     assert.equal(SESSION_OPS.member.has(op) && SESSION_OPS.admin.has(op), inSessions,
-                 `${op}: both session sets exactly when it writes, or is one of op-declarations R56's two reads`);
+                 `${op}: both session sets exactly when it writes, or is one of the reads T47 adds to them`);
   }
   /* the no-account consent: public, mutating, no capability row, as `knock` */
   assert.deepEqual([OPS.knockerconsent, Object.hasOwn(NEEDS, "knockerconsent")], [{ classes: null, mutating: true }, false]);

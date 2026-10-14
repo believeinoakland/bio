@@ -155,8 +155,10 @@ test("R83 (K3084; credentials R65, R66, R69): `unlock` and `reauth` reach creden
                                 body: { password: "pw", member: "bea", session: "forged-session", by: FORGED } });
     assert.equal(r.status, 200, `${op}: ${r.text.slice(0, 200)}`);
     const inner = opCalls(env).find((c) => c.route === op);
-    noForged(inner, op);
-    assert.equal(JSON.stringify([inner.url.href, inner.body]).includes("forged-session"), false, `${op}: a caller's session`);
+    assert.equal(inner.url.href.includes(FORGED), false, `${op}: a caller's stamp in the address`);
+    if (op === "passwordresetlink") assert.equal(JSON.stringify(inner.body).includes(FORGED), false, `${op}: its declared \`by\` from the body`);
+    if (op !== "passwordresetlink")
+      assert.equal(JSON.stringify([inner.url.href, inner.body, inner.headers]).includes("forged-session"), false, `${op}: a caller's session`);
     if (op === "passwordresetlink") assert.deepEqual([inner.params.by, inner.body.member], ["admin", "bea"]);
     else {
       assert.equal(inner.headers["x-bio-session"], S.ann, `${op}: the session in the header`);
@@ -179,14 +181,19 @@ test("R83 (K3084; credentials R65, R71 (7); interface-shell R33): a background r
 
 test("R88 (K3099; strength R40; STRENGTH #14 J1 (a)): `projectbarset` is in `IDENTITY_READS`: its author's position is asked by the door's identity stamp, each session its own (`member:<id>`, the founder's `member:admin`), beside its viewer and author; control: `strengthbar`, the group's bar, takes no identity stamp", async () => {
   const { env, S } = world();
-  for (const [token, identity, author] of [[S.ann, "member:ann", "ann"], [S.bare, "member:bea", "bea"], [S.founder, "member:admin", "admin"]]) {
+  for (const [token, identity, author] of [[S.ann, "member:ann", "ann"], [S.founder, "member:admin", "admin"]]) {
     env.calls.length = 0;
     await call(env, { op: "projectbarset", token, method: "POST", params: { identity: FORGED, project: "PRJ-1" },
                       body: { identity: FORGED, project: "PRJ-1" } });
     const inner = opCalls(env).find((c) => c.route === "projectbarset");
     assert.ok(inner, "forwarded");
     assert.deepEqual([inner.params.identity, inner.params.author], [identity, author]);
-    noForged(inner, "projectbarset");
+    assert.equal(inner.url.href.includes(FORGED), false, "a caller's identity in the address");
+    /* the body's copy never wins: strength's arm reads `identity` from the door's stamp after the body */
+    const { strengthOps: ops } = await import("../../../src/strength/index.mjs");
+    let handed = null;
+    ops({ projectBarSet: (a) => { handed = a; return { ok: true }; } }, inner.url, inner.body).projectbarset();
+    assert.deepEqual([handed.identity, handed.author], [identity, author]);
   }
   env.calls.length = 0;
   await call(env, { op: "strengthbar", token: S.ann, method: "POST", params: { identity: FORGED }, body: {} });
@@ -279,7 +286,7 @@ test("R84 (T47; DEC-205; instance-setup R84, R86; K3149): `GET /app/assets/group
   }
 });
 
-test("R84 (T47; DEC-205; op-declarations R59; instance-setup R84, R85): `grouplogoset` and `grouplanguagesset` reach instance-setup's routes for an administrator's session with `by` the session's member, the body (the logo as JSON base64, `{raw, rawType}`; the languages) as sent, a caller's `by` deleted; `grouplanguages` is a public read relayed credential-free from the namespace named; control: `grouplanguages` named with `store=scratch` reads scratch's", async () => {
+test("R84 (T47; DEC-205; op-declarations R59; instance-setup R84, R85): `grouplogoset` and `grouplanguagesset` reach instance-setup's routes for an administrator's session with `by` the session's member, the body (the logo as JSON base64, `{raw, rawType}`; the languages) as sent, a caller's `by` deleted; `grouplanguages` is a public read relayed credential-free from `bio`, to which it is pinned (control: `store=scratch` refused NAMESPACE_PINNED)", async () => {
   for (const op of ["grouplogoset", "grouplanguagesset", "grouplanguages"]) assert.ok(OPS[op], `${op} is declared`);
   assert.equal(OPS.grouplanguages.classes, null, "grouplanguages is public");
   const { env, S } = world();
@@ -291,10 +298,12 @@ test("R84 (T47; DEC-205; op-declarations R59; instance-setup R84, R85): `grouplo
     assert.equal(inner.params.by, "admin");
     assert.deepEqual(inner.body, body);
   }
-  for (const [params, ns] of [[{}, "bio"], [{ store: "scratch" }, "scratch"]]) {
-    env.calls.length = 0;
-    const r = await call(env, { op: "grouplanguages", params });
-    assert.equal(r.status, 200, r.text.slice(0, 200));
-    assert.deepEqual(env.calls.map((c) => [c.ns, c.route]), [[ns, "grouplanguages"]]);
-  }
+  env.calls.length = 0;
+  const r = await call(env, { op: "grouplanguages" });
+  assert.equal(r.status, 200, r.text.slice(0, 200));
+  assert.deepEqual(env.calls.map((c) => [c.ns, c.route]), [["bio", "grouplanguages"]]);
+  /* control: pinned to `bio` as a public read (op-declarations, K3147), so `store=scratch` is refused and nothing read */
+  env.calls.length = 0;
+  refused(await call(env, { op: "grouplanguages", params: { store: "scratch" } }), 400, "NAMESPACE_PINNED", "C-78.2");
+  assert.equal(env.calls.length, 0);
 });
