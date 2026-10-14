@@ -45,18 +45,28 @@ test("R10: each project's question count from projectquestions, paged to its end
   assert.equal(main(failed).querySelectorAll('.cs-row [data-state="failed"]').length, 2, "a failed count is drawn failed, never as none");
 });
 
-test("R10 (DEC-214 (3); project-roster R28): each row draws its members (cs.initials), its activity over eight weeks (cs.activity) and its last change", async () => {
-  const p = await open("/app/projects", PLANE);
+test("R10 (DEC-214 (3); project-roster R28): each row draws its members (cs.initials), its activity over eight weeks (cs.activity) with the word the bars say, and its last change", async () => {
+  const p = await open("/app/projects", { ...PLANE, projectlist: ok({ ok: true, projects: [
+    ...LIST.json.result.projects,
+    { id: "PROJ-3", name: "Pothole repairs", stage: "forming", members: [], activity: [2, 1, 3, 2, 2, 3, 2, 3], lastChange: "2026-10-12T15:00:00Z" },
+  ] }) });
   await settle();
-  const [a, b] = rows(p);
-  assert.deepEqual(p.initials.slice(-2), [["dev", "rosa", "teo"], ["ana"]], "the members' handles, through the kit");
-  assert.deepEqual(p.activity.slice(-2), [[3, 5, 4, 6, 8, 7, 9, 11], [0, 0, 0, 0, 0, 0, 0, 0]], "eight weeks, oldest first, through the kit");
+  const [a, b, c] = rows(p);
+  assert.equal(a.querySelector(".cs-people").getAttribute("aria-label"), "3 members: dev, rosa, teo");
+  assert.deepEqual(a.querySelector(".cs-people").querySelectorAll("i").map((i) => i.textContent), ["D", "R", "T"]);
+  assert.equal(b.querySelector(".cs-people").getAttribute("aria-label"), "1 members: ana");
+  // Eight bars, oldest first, the newest marked; the word: busy (more lately), quiet (none lately), steady (about the same).
+  assert.equal(a.querySelector(".cs-spark").querySelectorAll("i").length, 8);
+  assert.equal(a.querySelector(".cs-spark").getAttribute("aria-label"), "busy: 3, 5, 4, 6, 8, 7, 9, 11 acts a week over the last eight weeks");
+  assert.equal(a.querySelector(".cs-spark i.now").getAttribute("style"), "height:18px");
+  assert.equal(b.querySelector(".cs-spark b").textContent, "quiet");
+  assert.equal(c.querySelector(".cs-spark b").textContent, "steady");
   assert.match(text(p, a), /Last change 12 October 2026/);
   assert.match(text(p, b), /No change in the last eight weeks/);
   // Control: a row answering none of the three draws none of them, and says nothing of them.
   const bare = await open("/app/projects", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-9", name: "Bare", stage: "forming" }] }) });
   await settle();
-  assert.deepEqual([bare.initials || [], bare.activity || []], [[], []]);
+  assert.equal(main(bare).querySelector(".cs-people, .cs-spark"), null);
   assert.doesNotMatch(text(bare), /Last change|No change/);
 });
 

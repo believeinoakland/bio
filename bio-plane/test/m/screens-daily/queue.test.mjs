@@ -88,7 +88,7 @@ test("R2: due dates drawn with mark.due (overdue, near, later), and a hint with 
 test("R2: due dates are judged on the page's clock (cs.now(), K3002)", async () => {
   const p = await open("/app/queue", { queue: ok({ items: [{ ...ITEMS[0], due: day(1) }] }) });
   assert.equal(main(p).querySelector(".cs-due").getAttribute("data-due"), "near");
-  await p.clock.tick(3 * 86400000);
+  await p.clock.tickActive(3 * 86400000); // an own device idle 30 minutes locks (interface-shell R33): the member keeps acting
   await p.click(main(p).querySelector('a[href="/app/queue/due"]'));
   assert.equal(main(p).querySelector(".cs-due").getAttribute("data-due"), "overdue");
 });

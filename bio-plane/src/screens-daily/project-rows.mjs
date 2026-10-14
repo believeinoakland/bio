@@ -7,7 +7,8 @@
    count says it is loading, and a failed read says so, never "no questions". Counts are kept in the screen's page memory
    (`view.ui.counts`), so a redraw reads none again. With `glance` (the Projects screen, R10; DEC-201 (8), DEC-214 (3)) each
    row also draws its owner (project-roster R27: `{member, handle}`, or `null` when its opener is no longer an active
-   member), its members (`cs.initials`), its activity over eight weeks (`cs.activity`) and its last change, as `projectlist`
+   member), its members (`cs.initials(handles)`), its activity over eight weeks (`cs.activity(weeks, word)`, the word
+   chosen here) and its last change, as `projectlist`
    answers them (project-roster R28: `members` `[{member, handle}]`, `activity` eight integers oldest first, `lastChange`
    an instant or null); a row answering none of them draws none. `w` is the screen's own word prefix (`screen.home`,
    `screen.projects`). */
@@ -67,7 +68,15 @@ export function projectRows(cs, view, w, glance) {
     const last = "lastChange" in p
       ? '<span class="mk-last">' + (p.lastChange ? cs.w(w + ".lastchange", { date: cs.date(String(p.lastChange)) }) : cs.w(w + ".lastchange.none")) + "</span>"
       : "";
-    return owner + (members ? cs.initials(members) : "") + (activity ? cs.activity(activity) : "") + last;
+    // The word the bars say (the kit's `shell.glance.*`): busy when the last four weeks hold half as many acts again as the
+    // four before, quiet when they hold under half as many (or none), steady otherwise.
+    const said = function (v) {
+      const older = v[0] + v[1] + v[2] + v[3];
+      const newer = v[4] + v[5] + v[6] + v[7];
+      if (newer === 0 || newer * 2 < older) return "shell.glance.quiet";
+      return newer * 2 >= older * 3 ? "shell.glance.busy" : "shell.glance.steady";
+    };
+    return owner + (members ? cs.initials(members) : "") + (activity ? cs.activity(activity, said(activity)) : "") + last;
   };
   return function (list) {
     const projects = list && Array.isArray(list.projects) ? list.projects : [];

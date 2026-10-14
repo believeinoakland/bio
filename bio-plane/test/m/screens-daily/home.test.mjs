@@ -216,14 +216,20 @@ test("R9: with no doors the section is not drawn; startfrom is a drawn act once 
   assert.ok(ops(p).includes("startfrom"));
 });
 
-test("R9: a door's script starts in the wizard runner (cs.wizard) and sends nothing", async () => {
-  const p = await open("/app", { ...PLANE, startfrom: DOORS });
-  const before = p.byOp("startfrom").length;
-  const b = main(p).querySelector('[data-door="money"] button[data-act="startfrom"]');
-  await p.click(b);
+// A guide standing in for screens-wizards' runner (interface-shell R31): it draws in the dock which script it was started on.
+const GUIDE = {
+  words: [],
+  render(cs, view) { return view.ui.running ? '<p id="started">' + cs.esc(view.ui.running + "@" + view.ui.version) + "</p>" : ""; },
+  start(cs, view, o) { view.ui.running = o.script; view.ui.version = o.version; },
+};
+
+test("R9: a door's script starts in the wizard runner (cs.wizard) at its version, and sends nothing", async () => {
+  const p = await open("/app", { ...PLANE, startfrom: DOORS }, { guide: GUIDE });
+  const before = p.requests.filter((r) => r.query.op !== "bootstrap").length;
+  await p.click(main(p).querySelector('[data-door="money"] button[data-act="startfrom"]'));
   await settle();
-  assert.equal(p.byOp("startfrom").length, before, "starting a script sends no op");
-  assert.deepEqual(p.wizards, [["WIZ-cb0ad18a17a04233", 2]], "the runner was asked to start that script at its version");
+  assert.equal(p.doc.getElementById("started").textContent, "WIZ-cb0ad18a17a04233@2", "the runner holds that script at that version");
+  assert.equal(p.requests.filter((r) => r.query.op !== "bootstrap").length, before, "starting a script sends no op");
 });
 
 test("R9: beside the doors, the matching work (the member's words searched) and the blank start", async () => {
