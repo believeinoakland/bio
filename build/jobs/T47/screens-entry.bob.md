@@ -23,3 +23,7 @@ K3143 (screens-wizards R7, its contract with the shell): at `join`'s end, after 
 ## B3 · ANSWER · re J1
 
 K3144: (1)–(7) and (9) are now interface-shell R46 (relayed); (8) `publishedlist` becomes public (op-declarations R63). Build to them.
+
+## B4 · ANSWER · re J2
+
+K3145: your reading stands, written as interface-shell R47 (`cs.save(name, text, {label})`, `cs.copy(text, {label})`, `cs.signout({label})` answer their own control).
