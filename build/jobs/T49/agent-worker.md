@@ -46,3 +46,7 @@ agent-worker T49-9 complete on `job/T49/agent-worker` (see "Completion record" i
 - Merge `tranche/T49` once `ai-runs` is merged, and I will re-run my tests.
 
 **After B3 (ai-runs merged).** Merged `tranche/T49` into my branch (clean); bundle rebuilt, byte-identical. All agent-worker suites re-run: the only failures are REC100-0/1b/2/2b/2c (accepted until T49-29). `checks/run.mjs`: format, architecture and ownership show 0 failures for my files; coverage for agent-worker is clean now that R88 is marked in the checks' form. J1 answered by B2 (option (a)); nothing built.
+
+## J3 · COMPLETE
+
+agent-worker T49-9 complete again after B3: tranche/T49 merged, tests re-run (only REC100-0/1b/2/2b/2c red, accepted), checks clean for my files. Pushed.
