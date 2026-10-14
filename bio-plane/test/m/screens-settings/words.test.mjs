@@ -52,7 +52,7 @@ test("every text drawn by every screen, in every state, is a word or the record'
     ["connect", { me: F.MEMBER, table: connectTable(F.MEMBER, "none", { bootstrap: { ok: true, part_signin: null }, accountreference: env({ ok: true, held: false, subscription: { connected: false, refused_at: "2026-10-10T00:00:00Z" } }) }) }],
     ["settings", { me: F.ADMIN, table: {} }],
     ["settings", { me: F.MEMBER, table: {} }],
-    ["group", { me: F.ADMIN, table: groupTable() }],
+    ["group", { me: F.ADMIN, table: groupTable(), reachable: true }],
     ["group", { me: F.MEMBER, table: groupTable() }],
     ["places", { me: F.ADMIN, table: placesTable() }],
     ["recovery", { me: F.ADMIN, table: recoveryTable() }],

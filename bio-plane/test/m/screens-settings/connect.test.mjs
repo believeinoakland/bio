@@ -25,11 +25,12 @@ test("R4 exactly one of four situations: the group's key serves (with the member
   assert.ok(all(g.tree, (e) => e.tag === "a" && e.attrs.href === "#connect-own").length === 1, "Need more? a scroll to the section, not a route");
   const own = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });
   assert.deepEqual(situations(own), ["own"]);
+  has(own, "screen.connect.own.apikey");
   has(own, "screen.connect.own.since", { date: day("2026-10-06") });
   assert.ok(!/sk-ant/.test(own.html), "what it is, never its key");
   const sub = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "subscription") });
   assert.deepEqual(situations(sub), ["own"]);
-  has(sub, "screen.connect.own.since", { date: day("2026-10-04") });
+  has(sub, "screen.connect.own.subscription", { date: day("2026-10-04") });
   const none = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
   assert.deepEqual(situations(none), ["none"]);
   const kept = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "keptaway") });
@@ -76,7 +77,7 @@ test("R4, R5, R13 connecting, in DEC-156's order: the subscription (only while b
   assert.deepEqual(all(way, (e) => e.tag === "option").map((o) => o.attrs.value), ["subscription", "apikey", "later"]);
   assert.equal(all(way, (e) => e.tag === "option" && "selected" in e.attrs)[0].attrs.value, "subscription");
   const order = acts(a.tree).map((b) => b.attrs["data-act"] + (b.attrs["data-step"] ? ":" + b.attrs["data-step"] : ""));
-  assert.deepEqual(order, ["subscriptionsignin:start", "subscriptionsignin:code"], "the sign-in's two steps");
+  assert.deepEqual(order, ["subscriptionsignin:start", "subscriptionsignin:code", "reauth"], "the password given beforehand comes last (the registry's reauth)");
   // (R13) the flat `part_signin` (instance-setup R82): `false` not installed, `null` could not be read; the API key either way
   for (const [part, key, fills] of [[false, "instance.part.signin.absent", {}], [null, "instance.part.unknown", { part: said("screen.connect.signin.part") }]]) {
     const o = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { bootstrap: { ok: true, part_signin: part, part_scanner: false, part_safe_view: false } }) });
@@ -95,7 +96,7 @@ test("R30 while nothing serves the member, one choice is asked first (My Claude 
   const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
   const fieldIds = (o) => all(o.tree, (e) => e.tag === "input" && e.attrs.type === "password").map((e) => e.attrs.id);
   // the subscription path draws no key field (control)
-  assert.deepEqual(fieldIds(a), ["mc-code0"]);
+  assert.deepEqual(fieldIds(a), ["mc-code0", "mc-reauth"]);
   has(a, "screen.connect.signin.heading");
   lacks(a, "screen.connect.apikey.heading");
   assert.deepEqual(all(all(a.tree, (e) => e.attrs.id === "mc-way")[0], (e) => e.tag === "option").map((o) => textOf(o)), ["screen.connect.way.subscription", "screen.connect.way.apikey", "screen.connect.way.later"].map((k) => said(k)));
@@ -114,7 +115,7 @@ test("R30 while nothing serves the member, one choice is asked first (My Claude 
   lacks(a, "screen.connect.signin.heading");
   // back to the subscription
   await a.choose("mc-way", "subscription");
-  assert.deepEqual(ops(a), ["subscriptionsignin"]);
+  assert.deepEqual(ops(a), ["reauth", "subscriptionsignin"]);
   // control: with the disclosure not yet read, no choice is asked
   const d = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { disclosureof: (q) => env({ ok: true, member: q.member, version: "D311-1", shown: false, shown_at: null }) }) });
   assert.equal(all(d.tree, (e) => e.attrs.id === "mc-way").length, 0);
@@ -138,7 +139,7 @@ test("R5 the subscription sign-in: start, the address offered in a new browsing 
   const c = await a.press("subscriptionsignin", { data: { step: "code" }, values: { "mc-code0": CODE } });
   assert.deepEqual([c.sent[0].query, c.sent[0].body], [{}, { step: "code", code: CODE }]);
   assert.deepEqual(situations(a), ["own"]);
-  has(a, "screen.connect.own.since", { date: day("2026-10-12") });
+  has(a, "screen.connect.own.subscription", { date: day("2026-10-12") });
   assert.ok(!a.html.includes(CODE));
   assert.equal(a.p.all.filter((r) => JSON.stringify(r).includes(CODE)).length, 1, "sent once, never again");
 });
@@ -190,7 +191,7 @@ test("R24 Open Anthropic's sign-in page is disabled while a start is in flight, 
 
 test("R24 the state as the plane holds it: connected since when and until when; a failed state read is said, never not connected; refused at Anthropic draws connect again once; the code field says to copy the whole code", async () => {
   const sub = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "subscription") });
-  has(sub, "screen.connect.own.since", { date: day("2026-10-04") });
+  has(sub, "screen.connect.own.subscription", { date: day("2026-10-04") });
   has(sub, "screen.connect.own.until", { date: day("2026-11-04") });
   const failed = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none", { subscriptionsignin: () => "none", accountreference: "none" }) });
   has(failed, "screen.connect.signin.statefailed");
@@ -234,8 +235,8 @@ test("R5 disconnect: a subscription by subscriptiondisconnect, an API key by acc
 test("R5 the group's key serving a member: no settings of the group's account are offered, and no account panel", async () => {
   const g = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "group") });
   assert.ok(!ops(g).includes("ailimitset") && !ops(g).includes("accountusesset"));
-  // (R37) its sentence is drawn when every fill is read, which this fixture's answer does not give: no heading over nothing
-  lacks(g, "screen.connect.grouplimits.heading");
+  // (R37, DEC-262) the per-member limit is read: its sentence is drawn, without what was used or the suggestions, which are not answered
+  has(g, "screen.connect.grouplimits", { limit: said("screen.panel.amount", { amount: "$5.00", unit: said("screen.panel.unit.usd"), period: said("screen.panel.period.day") }) });
 });
 
 /* R37 (T49; D30 m): every sentence `connect` draws is read by key with every fill filled from its read; none is drawn with an
@@ -246,41 +247,40 @@ const GROUP_PAYER = (limit) => ({ owner: "group", whose: "group", uses: [{ use: 
 const groupUsage = (limit) => (q) => (q.owner ? env({ ok: true, owner: q.owner, month: "2026-10", uses: [] }) : env({ ok: true, member: "member:dev", month: "2026-10", zone: "UTC", payers: [GROUP_PAYER(limit)] }));
 const amountSaid = (amount, unit, period) => said("screen.panel.amount", { amount, unit: said(unit), period: said(period) });
 
-test("R37 the group's key: the allowance and the limits are drawn with their fills when the answers carry them, never with an empty one", async () => {
+test("R37 the group's key: the allowance and the limits are drawn with their fills; what was used and the suggestions only when answered, never with an empty one", async () => {
+  const limit = amountSaid("$5.00", "screen.panel.unit.usd", "screen.panel.period.day");
   const plain = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "group") });
   assert.ok(!placeholder(plain), "no unfilled fill, no undefined");
+  has(plain, "screen.connect.group.allowance", { limit });
+  assert.ok(!/You have used/.test(plain.text) && !/Suggestions:/.test(plain.text), "nothing used or suggested is said while it is not answered");
   const full = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "group", { aiusage: groupUsage({ used: 0.8 }), groupkeystate: env({ ok: true, on: true, suggestions: false }) }) });
-  const limit = amountSaid("$5.00", "screen.panel.unit.usd", "screen.panel.period.day");
-  has(full, "screen.connect.group.allowance", { limit, used: "$0.80", when: said("ai.usage.today") });
-  has(full, "screen.connect.grouplimits", { limit, used: "$0.80", suggestions: said("screen.panel.off") });
+  has(full, "screen.connect.group.allowance", { limit });
+  has(full, "screen.connect.group.allowance.used", { used: "$0.80", when: said("ai.usage.today") });
+  has(full, "screen.connect.grouplimits", { limit });
+  has(full, "screen.connect.grouplimits.used", { used: "$0.80" });
+  has(full, "screen.connect.grouplimits.suggestions", { suggestions: said("screen.panel.off") });
   assert.ok(!placeholder(full));
   // at the limit, by its period alone
   const reached = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "group", { aiusage: groupUsage({ reached: true }) }) });
   has(reached, "screen.connect.group.allowance.reached", { period: said("screen.panel.period.day") });
-  lacks(reached, "screen.connect.grouplimits.heading");
-  // control: a limit read without what was used draws no allowance sentence
-  lacks(plain, "screen.connect.group.allowance.reached", { period: said("screen.panel.period.day") });
-  assert.ok(!plain.text.includes(said("screen.connect.group.allowance.reached", { period: said("screen.panel.period.day") })));
+  assert.ok(!reached.text.includes(said("screen.connect.group.allowance", { limit })), "at the limit only that is said");
 });
 
-test("R37 the member's own account: the plan and the day, or the key's last four characters, when the plane answers them; else since when; the changes name the member by handle, never \"you\"", async () => {
+test("R37 the member's own account: the day it was signed in, else nothing invented; the changes name the member by handle, never \"you\"", async () => {
   const subs = (extra) => connectTable(MEMBER, "subscription", { accountreference: env({ ok: true, held: false, kind: null, set_at: null, subscription: { connected: true, since: "2026-10-04T00:00:00Z", held: true, valid_until: "2026-11-04T00:00:00Z", ...extra } }) });
-  const withPlan = await open("connect", { me: MEMBER, table: subs({ plan: "Max" }) });
-  has(withPlan, "screen.connect.own.subscription", { plan: "Max", date: day("2026-10-04") });
-  lacks(withPlan, "screen.connect.own.since", { date: day("2026-10-04") });
-  has(withPlan, "screen.connect.own.until", { date: day("2026-11-04") });
-  const noPlan = await open("connect", { me: MEMBER, table: subs({}) });
-  has(noPlan, "screen.connect.own.since", { date: day("2026-10-04") });
-  assert.ok(!placeholder(noPlan) && !placeholder(withPlan));
-  const key = connectTable(MEMBER, "own");
-  const withLast = await open("connect", { me: MEMBER, table: { ...key, accountreference: env({ ok: true, held: true, kind: "apikey", set_at: "2026-10-06T09:00:00Z", last4: "4f2a", suggestions: false, standing: false, uses: null, subscription: { connected: false, since: null, held: false } }) } });
-  has(withLast, "screen.connect.own.apikey", { last4: "4f2a" });
-  const noLast = await open("connect", { me: MEMBER, table: key });
-  assert.ok(!placeholder(noLast));
+  const sub = await open("connect", { me: MEMBER, table: subs({}) });
+  has(sub, "screen.connect.own.subscription", { date: day("2026-10-04") });
+  has(sub, "screen.connect.own.until", { date: day("2026-11-04") });
+  assert.ok(!placeholder(sub));
+  // control: a subscription with no day it began draws no sentence with a blank date
+  const noSince = await open("connect", { me: MEMBER, table: subs({ since: null }) });
+  assert.ok(!placeholder(noSince));
+  const key = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });
+  has(key, "screen.connect.own.apikey");
+  assert.ok(!placeholder(key));
   // the history names the member by their handle: "dev held the key", not "you held the key"
-  has(noLast, "screen.panel.change.key_set", { who: MEMBER.handle });
-  assert.ok(!noLast.text.includes(said("screen.connect.you") + " " + said("screen.panel.change.key_set", { who: "" }).trim()), "no lowercase you");
-  assert.ok(!/\byou held\b/i.test(noLast.text));
+  has(key, "screen.panel.change.key_set", { who: MEMBER.handle });
+  assert.ok(!/\byou held\b/i.test(key.text));
 });
 
 test("R38 beside the code: the sign-in's refusals by their keys under connect.ifnot, each with its reference (refusal.reference); the typed code is never drawn", async () => {
@@ -306,8 +306,12 @@ test("R38 beside the code: the sign-in's refusals by their keys under connect.if
   assert.ok(!placeholder(nd) && nd.refused.text.startsWith(said("refusal.SIGNIN_REFUSED", { detail: "SIGNIN_REFUSED" })));
 });
 
-test("R30 R36 (K3347) connect gains no pointer to the group key and no API-key preselection; the subscription stays preselected", async () => {
+test("R30 R36 (K3347) connect gains no pointer to the group key and no API-key preselection; the subscription stays preselected; reauth sends the password, none sends nothing", async () => {
   const a = await open("connect", { me: ADMIN, table: connectTable(ADMIN, "none") });
   assert.equal(all(all(a.tree, (e) => e.attrs.id === "mc-way")[0], (e) => e.tag === "option" && "selected" in e.attrs)[0].attrs.value, "subscription");
   assert.ok(!a.html.includes("/app/members"), "no pointer to Members' group key");
+  assert.deepEqual((await a.press("reauth", { values: { "mc-reauth": "" } })).sent, [], "no password, nothing sent");
+  const r = await a.press("reauth", { values: { "mc-reauth": "correct horse battery" } });
+  assert.deepEqual([r.sent[0].op, r.sent[0].body], ["reauth", { password: "correct horse battery" }]);
+  assert.ok(!a.html.includes("correct horse battery"), "the password is never drawn again");
 });

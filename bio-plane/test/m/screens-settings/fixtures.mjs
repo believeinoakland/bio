@@ -190,10 +190,12 @@ export function notesTable(me, over = {}) {
 /** group, read by `me` (instance-setup R10, R11, R84, R85; membership R107; strength's bar). */
 export function groupTable(over = {}) {
   return {
-    groupidentity: env({ group: "eastoak", display_name: "East Oakland Watch", domain: "eastoak.example", domain_verified_at: "2026-10-03T00:00:00Z", logo: false,
+    groupidentity: env({ group: "eastoak", declared_stake: { stake: "Several of our members rent from landlords the city regulates.", set_by: "member:rosa", set_at: "2026-10-04T00:00:00Z" }, declared_stake_history: [{ stake: null, set_by: "member:rosa", set_at: "2026-10-01T00:00:00Z" }, { stake: "Several of our members rent from landlords the city regulates.", set_by: "member:rosa", set_at: "2026-10-04T00:00:00Z" }], display_name: "East Oakland Watch", domain: "eastoak.example", domain_verified_at: "2026-10-03T00:00:00Z", logo: false,
       display_name_recorded: "East Oakland Watch", display_name_history: [], domain_claim: { domain: "eastoak.example", set_at: "2026-10-02T00:00:00Z", set_by: "rosa", latest: { domain: "eastoak.example", verdict: "verified", checked_at: "2026-10-03T00:00:00Z" } }, domain_history: [], domain_checks: [] }),
     grouplanguages: env({ ok: true, languages: ["en", "es"] }),
     memberlanguage: env({ ok: true, language: null }),
+    declaredstakeset: (q, b) => env({ ok: true, stake: b.stake, set_by: "member:rosa", set_at: "2026-10-12T00:00:00Z" }),
+    writinghelp: () => env({ ok: true, text: "The group's members rent in East Oakland.", label: { kind: "machine", asked_by: "member:rosa" }, withheld: [], note: "" }),
     courtnotice: env({ choice: "tell", history: [] }),
     hostingaccess: env({ ok: true, recorded: true, current: { holders: "Rosa and Lu", note: "the shared vault", recorded_by: "rosa", at: "2026-10-04T00:00:00Z" }, history: [], limit: 50, truncated: false }),
     strengthbarof: env({ ok: true, group: "eastoak", bar: { group_id: "eastoak", capture: "B", connection: "C", author: "rosa", at: "2026-10-05T00:00:00Z", reason: "Most of our sources are records." }, seeds_new_projects: true }),

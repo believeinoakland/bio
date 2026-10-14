@@ -77,9 +77,7 @@ export const members = {
       const counted = founderIs === null ? null : rosterAdmins + (founderIs ? 1 : 0);
       let h = counted === null ? cs.state({ state: "failed" }, () => "") : `<p>${W(S + "count", { members: active.length + (founderIs ? 1 : 0), administrators: counted })}</p>`;
       if (admin && rec && rec.met === false) {
-        // with one administrator, the group depends on that person: named by handle, the founder as she is named (R35)
-        const sole = founderIs && rosterAdmins === 0 ? founderName() : !founderIs && rosterAdmins === 1 ? active.find((m) => m.role === "admin").handle || "" : "";
-        const lead = rec.administrators === 1 ? (sole ? W(S + "recovery.one", { name: sole }) : "") : W(S + "recovery.many", { administrators: rec.administrators });
+        const lead = rec.administrators === 1 ? W(S + "recovery.one") : W(S + "recovery.many", { administrators: rec.administrators });
         h += `<div class="mk-msg" data-note="recovery"><p>${lead}${lead ? " " : ""}${W(rec.codes_held ? S + "recovery.codes" : S + "recovery.nocodes", { remaining: rec.remaining })}</p><p>${rec.administrators < 2 ? `<a href="#members-invite">${W(S + "recovery.add")}</a> ` : ""}${rec.codes_held ? "" : `<a href="/app/recovery" data-nav>${W(S + "recovery.issue")}</a>`}</p></div>`;
       }
       const cols = [S + "col.handle", ...(admin ? [S + "col.cover"] : []), S + "col.role", S + "col.caps", S + "col.status", S + "col.expertise"];

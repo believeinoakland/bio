@@ -12,8 +12,7 @@ export const recovery = {
   reads(view) {
     const r = { codes: { op: "recoverycodesstate" } };
     // the owner refuses the step to a member who does not administer (instance-setup R66)
-    // the one-administrator note names that administrator (members.recovery.one, R35): the roster and whether the founder has claimed
-    if (view.me && view.me.administer === true) { r.step = { op: "adminrecoverystep" }; r.roster = { op: "memberlist" }; r.boot = { op: "bootstrap" }; }
+    if (view.me && view.me.administer === true) r.step = { op: "adminrecoverystep" };
     return r;
   },
 
@@ -28,16 +27,7 @@ export const recovery = {
     // the one-administrator step, while not met (instance-setup R66)
     const st = data.step && data.step.state === "ok" ? data.step.value : null;
     if (st && st.met === false) {
-      // the sole administrator by name: the founder as she is named (her handle, else `member.founder.unnamed`, never `admin`), else the roster's one (R35)
-      const me = view.me || {};
-      const rows = data.roster && data.roster.state === "ok" && data.roster.value && Array.isArray(data.roster.value.members) ? data.roster.value.members : [];
-      const boot = data.boot && data.boot.state === "ok" ? data.boot.value : null;
-      const frow = rows.find((m) => m.member_id === "admin" || m.founder === true) || null;
-      const fh = (frow && frow.handle) || (me.member === "admin" && me.handle ? me.handle : null);
-      const others = rows.filter((m) => m.member_id !== "admin" && m.founder !== true && m.status === "active" && m.role === "admin");
-      const founderIs = boot && typeof boot.claimed === "boolean" ? boot.claimed || !!frow : !!frow;
-      const sole = founderIs ? fh || T("member.founder.unnamed") : (others[0] || {}).handle || "";
-      const lead = st.administrators === 1 ? (sole ? W("screen.members.recovery.one", { name: sole }) : "") : W("screen.members.recovery.many", { administrators: st.administrators });
+      const lead = st.administrators === 1 ? W("screen.members.recovery.one") : W("screen.members.recovery.many", { administrators: st.administrators });
       out.push(`<div class="mk-msg" data-note="step">${lead ? `<p>${lead}</p>` : ""}${st.administrators < 2 ? `<p><a href="/app/members#members-invite" data-nav>${W("screen.members.recovery.add")}</a></p>` : ""}</div>`);
     }
 
