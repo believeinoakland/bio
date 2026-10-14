@@ -43,3 +43,7 @@ K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-gr
 ## B8 · CHANGE
 
 K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B9 · CHANGE
+
+K3149: new R50: `ADMIN_ACTS` completed (passwordresetlink, signerset, the group settings, profilesset, placewanted, officesseed, translationgrant/revert, securitytool*), and R11's phone hold covers every act `op-grades.phoneOf` answers false for. op-grades, wizard-scripts, setup-words and instance-setup are merged. Merge `tranche/T47`.
