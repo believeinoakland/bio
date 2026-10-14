@@ -21,3 +21,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · ANSWER · re J1
 
 K3295: all four readings are right; build on them.
+
+## B3 · CHANGE
+
+K3306 (SCREENS-ENTRY #2 J5): screens-entry now draws the recovery codes as `<pre data-codes>` (interface-shell R56 left no class for them), merged into tranche/T48. Your `journeys.mjs` (lines 65-68) reads `pre.cs-codes`: read `pre[data-codes]`. Merge origin/tranche/T48, re-run, check, post COMPLETE. You merge last in L11.
