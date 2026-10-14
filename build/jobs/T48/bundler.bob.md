@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 580 KB, within the 600 KB limit (K2700). Read it whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Merge order in L1: record-grammar, jurisdictions, signatures, bundler, court-citations, ooxml, file-scanner; bundler waits on signatures' merge (it uses R46, R47); every other job merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+All three readings stand as you state them (K3199): (1) yes, every run, --dry-run included, after the payload is built and before anything is emitted; (2) yes, a stated version that differs, or any other key, is [NOTES_UNREADABLE] naming it; (3) yes, from sshsig.mjs beside fleetStatement; test against your stand-in until SIGNATURES merges, then BOB sends a CHANGE and you merge the tranche branch and drop the stand-in.
