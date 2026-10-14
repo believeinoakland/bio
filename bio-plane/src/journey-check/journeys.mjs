@@ -158,7 +158,7 @@ export async function inviteMember(walk, page, base, { id, cover }) {
 
 /* The new member (journey 28's second half): joining, her codes, the welcome, her first settings, a first piece of
    work, signing out, signing in kept on her own device, the lock and unlock. */
-export async function walkMember(walk, page, { base, invite, member }) {
+export async function walkMember(walk, page, { base, invite, member, phone }) {
   await walk.step(page, "join: the invitation link opens the join screen", async (p) => {
     await p.goto(invite);
     await p.waitForURL((u) => u.pathname === "/app/join", { timeout: 15000 });
@@ -204,23 +204,25 @@ export async function walkMember(walk, page, { base, invite, member }) {
     await act(p, "signout");
     await shown(p, '[data-state="signedout"]', "the signed-out state");
   });
-  await walk.step(page, "front: sign in, kept signed in on this device", async (p) => {
+  /* Next morning, on her own phone (another device): the group's address, signed in and kept signed in there. */
+  await walk.step(phone, "front: on her phone, sign in, kept signed in", async (p) => {
     await open(walk, p, base, "/", "front");
     await act(p, "login", { fields: { "fs-handle": member.handle, "fs-pw": member.password } });
-    await p.waitForFunction(() => location.pathname === "/app" || location.pathname === "/", null, { timeout: 15000 });
+    await p.waitForFunction(() => !document.querySelector("#fs-pw"), null, { timeout: 15000 });
     await settle(p);
     await requireDrawn(walk, p, "home");
   });
-  await walk.step(page, "lock: idle half an hour on her own device", async (p) => {
+  await walk.step(phone, "lock: idle half an hour on her own device", async (p) => {
     await p.clock.fastForward("31:00");
     await shown(p, '[data-overlay="lock"], [data-state="locked"]', "the lock");
   });
-  await walk.step(page, "unlock: her password again, back where she was", async (p) => {
+  await walk.step(phone, "unlock: her password again, back where she was", async (p) => {
     const overlay = await p.locator('[data-overlay="lock"]').count();
     if (overlay) { await type(p, "cs-lock-pw", member.password); await p.locator('[data-shell="unlock"]').click(); }
     else await act(p, "unlock", { fields: { "fl-lock": member.password } });
+    try { await p.waitForFunction(() => !document.querySelector('[data-overlay="lock"], [data-state="locked"]'), null, { timeout: 10000 }); }
+    catch { throw new Error("still locked after her password"); }
     await settle(p);
-    if (await p.locator('[data-overlay="lock"]:visible, [data-state="locked"]:visible').count()) throw new Error("still locked");
     await requireDrawn(walk, p, "home");
   });
 }
@@ -251,10 +253,12 @@ export async function walkWelcome(walk, page, { base, link, member }) {
     await walk.step(page, `welcome ${n}: ${label}`, async (p) => {
       await p.locator('[data-guide="next"]').first().click();
       await settle(p);
-      /* a side trip the step offers is a choice: skipped, it returns to the welcome */
+      /* a side trip the step offers is a choice: skipped (Stop), it returns to the welcome at the same step */
+      try { await p.locator("[data-guide-trip]").first().waitFor({ state: "visible", timeout: 3000 }); } catch { /* no trip */ }
       if (await p.locator("[data-guide-trip]").count()) { await p.locator('[data-guide="stop"]').first().click(); await settle(p); }
-      await shown(p, '[data-guide-state="running"]', `the welcome at step ${n}`);
-      if (!(await p.locator(".cs-wizard .step").first().textContent()).includes(`${n}`)) throw new Error(`the welcome is not at step ${n}`);
+      const at = new RegExp(`step ${n} of 7`, "i");
+      try { await p.locator(".cs-wizard .step").filter({ hasText: at }).first().waitFor({ state: "visible", timeout: 8000 }); }
+      catch { throw new Error(`the welcome is not at step ${n} of 7: ${(await p.locator(".cs-wizard .step").first().textContent().catch(() => "none")) || "none"}`); }
     });
   }
   await walk.step(page, "welcome: finished", async (p) => {
@@ -266,6 +270,10 @@ export async function walkWelcome(walk, page, { base, link, member }) {
 
 /* ---------- the sweep: every registry screen, drawn ---------- */
 
+/* A screen opened at its bare address has no subject: the answers interface-shell R35 draws as "Nothing is here" or
+   "You can't open this" are its designed absence, expected; any other refusal fails the sweep. */
+export const ABSENCE = /^(?:NOT_FOUND|NO_SUCH_[A-Z_]+|[A-Z_]+_NOT_FOUND|NOT_VISIBLE|NOT_A_PARTICIPANT)$/;
+
 export async function sweep(walk, page, base, { screens = sweepScreens() } = {}) {
   walk.journey = "screens";
   for (const s of screens) {
@@ -274,7 +282,7 @@ export async function sweep(walk, page, base, { screens = sweepScreens() } = {})
       await settle(p);
       const st = await drawnState(p, s.id);
       if (!st.drawn) walk.fail(FAIL.NOT_DRAWN, `${s.id}: ${st.why}`);
-    }).catch((e) => { if (!(e instanceof StepFailed)) throw e; });
+    }, { expect: [ABSENCE] }).catch((e) => { if (!(e instanceof StepFailed)) throw e; });
   }
 }
 

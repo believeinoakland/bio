@@ -9,6 +9,7 @@ import { execFileSync } from "node:child_process";
 import { Walk, FAIL, INTERFACE_MARK, SETUP_PAGE_TITLE, documentKind } from "../../../src/journey-check/walker.mjs";
 import { drawnState, sweepScreens, registryScreens, EXCEPTED } from "../../../src/journey-check/screens.mjs";
 import { browser } from "../../../src/journey-check/run.mjs";
+import { ABSENCE } from "../../../src/journey-check/journeys.mjs";
 
 const COPY = "https://grp.test.workers.dev";
 const page = (body, title = "Civicsmith") => `<!doctype html><html><head><title>${title}</title><link rel="stylesheet" href="${INTERFACE_MARK}"></head><body>${body}</body></html>`;
@@ -64,6 +65,9 @@ test("R2: an `ok: false` the step does not expect fails the walk; control: the s
   assert.deepEqual(kinds(w), [FAIL.REFUSED]);
   assert.match(w.failures[0].detail, /op=enroll answered ok: false \(HANDLE_TAKEN, HTTP 409\)/);
   assert.deepEqual((await walked("/app/refused", { expect: ["HANDLE_TAKEN"] })).failures, []);
+  /* a pattern names a family of codes; control: one that does not match still fails */
+  assert.deepEqual((await walked("/app/refused", { expect: [/^HANDLE_/] })).failures, []);
+  assert.deepEqual(kinds(await walked("/app/refused", { expect: [ABSENCE] })), [FAIL.REFUSED]);
 });
 
 test("R2: any 4xx or 5xx fails the walk; control: a status the step expects does not", async () => {
@@ -147,4 +151,9 @@ test("R2 (K3137): the sweep opens every registry screen but `site` and the `dash
   assert.deepEqual(EXCEPTED, ["site", "dash-home", "dash-action", "dash-project"]);
   assert.deepEqual(all.filter((id) => !swept.includes(id)).sort(), ["dash-action", "dash-home", "dash-project", "install", "site", "update"]);
   for (const id of ["front", "setup", "join", "home", "members", "account", "capture", "doorbell", "published"]) assert.ok(swept.includes(id), id);
+});
+
+test("R2 (interface-shell R35): the sweep expects only the absence answers the shell draws as \"Nothing is here\" or \"You can't open this\"", () => {
+  for (const c of ["NOT_FOUND", "NO_SUCH_CASE", "PROJECT_NOT_FOUND", "NOT_VISIBLE", "NOT_A_PARTICIPANT"]) assert.ok(ABSENCE.test(c), c);
+  for (const c of ["NO_REVIEW_COPY", "REQUIRED_ARGUMENT_MISSING", "SESSION_LOCKED", "NOT_FOUNDED"]) assert.equal(ABSENCE.test(c), false, c);
 });

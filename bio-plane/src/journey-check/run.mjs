@@ -18,8 +18,8 @@ export async function browser() {
 
 /* A browser context (one person's device) whose pages the walk watches. `route(context)` sends its requests where the
    arm says; the clock is installed so the lock can be reached without waiting (interface-shell R33). */
-async function device(walk, b, route) {
-  const context = await b.newContext({ viewport: { width: 1280, height: 900 } });
+async function device(walk, b, route, viewport = { width: 1280, height: 900 }) {
+  const context = await b.newContext({ viewport });
   await route(context);
   const page = walk.watch(await context.newPage());
   await page.clock.install();
@@ -44,7 +44,8 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld } = 
     await requireTestInstance(copy, (req) => world.fetchCopy(req));
     const { invite } = await walkFounder(walk, founder.page, { base: copy, founder: who.founder });
     const mai = await device(walk, b, route);
-    await walkMember(walk, mai.page, { base: copy, invite, member: who.member });
+    const phone = await device(walk, b, route, { width: 390, height: 844 });
+    await walkMember(walk, mai.page, { base: copy, invite, member: who.member, phone: phone.page });
     const teo = await device(walk, b, route);
     walk.journey = "journey 3";
     const second = await inviteMember(walk, founder.page, copy, { id: "teo", cover: "Teo, from flat 9" });

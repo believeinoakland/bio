@@ -52,6 +52,8 @@ export class Walk {
   watch(page) {
     page.on("pageerror", (e) => this.fail(FAIL.SCRIPT, `${this.redact(page.url())}: ${e.message}`));
     page.on("response", (res) => this.pending.push(this.#onResponse(res).catch(() => {})));
+    /* JOURNEY_DEBUG=1 prints each request's method, address and status, never a body or a header */
+    if (process.env.JOURNEY_DEBUG) page.on("response", (res) => process.stderr.write(this.redact(`${res.status()} ${res.request().method()} ${res.url().replace(/#.*$/, "")}`) + "\n"));
     return page;
   }
 
@@ -65,7 +67,7 @@ export class Walk {
     if (/json/.test(type)) { try { body = JSON.parse(await res.text()); } catch { body = null; } }
     const code = body && body.ok === false ? (body.code || body.reason || "ok:false") : null;
     /* A refusal the step expects excuses its own status; one it does not is one failure, naming both. */
-    const excused = code ? expect.includes(code) : expect.includes(res.status());
+    const excused = expect.some((e) => (e instanceof RegExp ? code !== null && e.test(code) : e === (code ?? res.status())));
     if (code && !excused) this.fail(FAIL.REFUSED, `${where} answered ok: false (${code}, HTTP ${res.status()})`);
     else if (res.status() >= 400 && !excused) this.fail(FAIL.HTTP, `${where} answered HTTP ${res.status()}`);
     if (req.resourceType() === "document" && url.host === this.copyHost && res.status() < 300) {
@@ -82,7 +84,7 @@ export class Walk {
     return this.fail(FAIL.ADDRESS, `${u.host}${u.pathname} is outside the walk`);
   }
 
-  /* One step: `fn(page)` performs it; `expect` names the refusal codes or HTTP statuses it expects. The page is
+  /* One step: `fn(page)` performs it; `expect` names the refusal codes (a string or a pattern) or HTTP statuses it expects. The page is
      screenshotted when it settles, whether the step held or not; a step that throws stops the journey. */
   async step(page, label, fn, { expect = [] } = {}) {
     this.current = { label, expect };
