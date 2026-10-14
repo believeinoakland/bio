@@ -12,6 +12,7 @@
 **Users' tests** (`instance-setup`, `interface-shell` and the screens modules with tests): instance-setup 157 pass 0 fail; interface-shell 63/0; screens-settings 47/4 (0 fail with the T46 list); screens-intake 40/2 (0 before); screens-daily 44/1 (0 before); screens-inquiry 44/2 (1 before: its R5 "each screen draws exactly its registry acts", inherited). The new reds are those modules' own code meeting the new list, theirs to adapt in their L11 jobs (they merge after this one): see J2.
 **Checks** (process repo): format 0 failures; architecture 0 failures; coverage 7 of 7, 0 failures; ownership 0 failures; `run.mjs` over the product: format 0, architecture 0 (none in my files), channels 0, coverage 24 failures product-wide, none in setup-words.
 **Found elsewhere (REPORT J2):** the users' reds above; the requirements file's R7 counts (J1); R6 and R7 remain marked *(not yet met: T47)*, now met. Generated artifact made stale: the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, `.bundle.json`, not_product) takes this module as an input.
+**After B2 (K3143):** J1's reading confirmed; `tranche/T47` merged for R7's corrected text (1,788 / 651 at 6f0d88d8d5). Nothing in the module changed; setup-words 7 pass 0 fail; format, architecture, coverage 7/7, ownership 0 failures.
 **Deferred:** none.
 **Final `uses`:** none (`[]`).
 
