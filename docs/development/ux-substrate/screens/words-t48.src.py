@@ -1,4 +1,4 @@
-# The words T48 owes the design stream (DEC-226, BOB's B179: the update screens; DEC-227, BOB's B185: the 'elsewhere' pointer; DEC-229, the document page, DEC-228 (1); DEC-230, the founder's handle, B196, B197).
+# The words T48 owes the design stream (DEC-226, BOB's B179: the update screens; DEC-227, BOB's B185: the 'elsewhere' pointer; DEC-229, the document page, DEC-228 (1); DEC-230, the founder's handle, B196, B197; DEC-231, a stake per matter, B191).
 # Each entry: (key, English, protected, note). Placeholders in {braces} are filled by the screen. No place, law or venue
 # appears here: a pointer's name, what it does and how to reach it come from the group's place profile (jurisdictions).
 # Run: python3 docs/development/ux-substrate/screens/words-t48.src.py, then node build_words.mjs (it reads words-t48.json).
@@ -160,6 +160,32 @@ w('founder.handle.later.help', 'Opens Home. You still sign in as admin until you
 w('founder.handle.done', 'From now on you sign in as {handle}; admin no longer works.', False, 'DEC-230')
 w('member.founder.unnamed', 'The group\'s founder', False, 'DEC-230: shown wherever the founder\'s name would be, until a handle is chosen; never admin')
 w('member.founder.unnamed.help', 'The person who set up this group\'s Civicsmith, who hasn\'t chosen a handle yet. Their work will show it once they do.', False, 'DEC-230')
+
+# DEC-231: a stake per matter (K3230, N933, B191; instance-setup R77): the group's statement, the project's, the action's, the question
+w('stake.group.title', 'What the group has at stake', False, 'DEC-231: Settings › Your group')
+w('stake.group.label', 'The group\'s statement', False, 'DEC-231')
+w('stake.group.help', 'In your group\'s own words: what the group itself stands to gain or lose in the matters it works on. It goes beside your group\'s name on everything it sends or publishes, so readers can weigh its work knowing it. A project or an action can add a stake of its own beside it, never in its place.', False, 'DEC-231')
+w('stake.group.save', 'Save the statement', False, 'DEC-231')
+w('stake.set', 'Set by {who} on {date}', False, 'DEC-231')
+w('stake.history', '{n} earlier statements', False, 'DEC-231')
+w('stake.project.title', 'What the group has at stake here', False, 'DEC-231: the project page')
+w('stake.project.group', 'The group\'s own statement, on everything it sends: {stake}', False, 'DEC-231')
+w('stake.project.label', 'This project\'s stake (optional)', False, 'DEC-231')
+w('stake.project.help', 'Only what this matter adds to the group\'s usual stake. It goes beside the group\'s statement on what this project sends or publishes, never in its place. A member of the project or an administrator can set it; each change is dated and kept. Empty means the group\'s statement alone.', False, 'DEC-231')
+w('stake.project.save', 'Save this project\'s stake', False, 'DEC-231')
+w('stake.ask.title', 'Does the group have a stake in this matter beyond its usual one?', False, 'DEC-231: the question at preparation, when stakeatpreparation answers higher_stakes')
+w('stake.ask.help', 'Asked when an action carries higher stakes. It never stops you: nothing waits on your answer, and no answer is recorded unless you save a stake.', False, 'DEC-231')
+w('stake.ask.says', '{kind} puts the group\'s own interest on the record, so readers will ask what it stands to gain. Your group\'s statement goes with this action already. If this matter touches the group more than usual, such as a member who is a party or a decision that changes your rent, say so here. It goes beside the group\'s statement on what this action sends. You can approve either way.', False, 'DEC-231: {kind} the action\'s kind in words, e.g. Taking part as a party')
+w('stake.ask.undetermined', 'Civicsmith can\'t tell how much is at stake in this action, so it asks.', False, 'DEC-231: an undetermined tier')
+w('stake.action.label', 'This action\'s stake (optional)', False, 'DEC-231')
+w('stake.action.help', 'What this one action adds to the group\'s usual stake and the project\'s. It goes beside them on what this action sends, never in their place, and is dated and kept. Empty means the project\'s stake, or the group\'s alone.', False, 'DEC-231')
+w('stake.action.save', 'Save this action\'s stake', False, 'DEC-231')
+w('stake.sentwith', 'Sent with', False, 'DEC-231: the preview beside the stamp')
+w('stake.inmatter', 'In this matter', False, 'DEC-231')
+w('stake.source.project', 'this project\'s stake, set by {who} on {date}', False, 'DEC-231')
+w('stake.source.action', 'this action\'s own stake, set by {who} on {date}', False, 'DEC-231')
+w('stake.none', 'None stated beyond the group\'s', False, 'DEC-231')
+w('stake.unreadable', 'Civicsmith can\'t read this stake right now; it is not left out.', False, 'DEC-231: undetermined, never shown as none')
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 keys = [x['key'] for x in W]

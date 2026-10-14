@@ -113,6 +113,8 @@ const ACT_HELP = {
   deepercheck: 'Runs every check on this file: read whole, the built-in scanner again, and your group\'s outside tools. A clean result opens the original to everyone for 24 hours.',
   releasescanhold: 'Gives your reason to release a file a scanner flagged. A second member\'s reason releases it; the machine never can.',
   cite: 'Cites this passage in a question, as support or as cutting against it. A citation always points at the original document.',
+  owed_projectstakeset: 'Records what the group has at stake in this project beyond its usual stake. It goes beside the group\'s statement on what this project sends or publishes, dated and attributed; clearing it leaves the group\'s statement alone.',
+  owed_actionstake: 'Records what the group has at stake in this one action beyond its usual stake and the project\'s. It goes beside them on what the action sends, dated and attributed; clearing it falls back to the project\'s stake.',
   owed_founderhandleset: 'Sets the handle you sign in with from now on, once: the name the record shows on your work. Until you choose, you sign in as admin.',
   connectionchoose: 'Picks which mention of them on this page the record reads as the one that connects them: where they are named on the point that matters. Until a member chooses, Civicsmith takes the strongest-graded mention. Your choice is dated and attributed; a later choice replaces it.',
   retire: 'Stops using this copy in new work, with a reason. Questions that cite it are told.',

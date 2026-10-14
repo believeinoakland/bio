@@ -837,7 +837,7 @@
    "id": "group",
    "name": "Your group",
    "frame": "working",
-   "purpose": "Administrators: the settings chosen at setup, changeable here: name and logo, website, languages, the court notice, the hosting account's holder, the group's bar (DEC-201).",
+   "purpose": "Administrators: the settings chosen at setup, changeable here: name and logo, website, languages, the court notice, the hosting account's holder, the group's bar, what the group has at stake (DEC-201, DEC-231).",
    "acts": [
     {
      "op": "groupnameset",
@@ -893,6 +893,22 @@
      "status": "function",
      "modules": [
       "strength"
+     ]
+    },
+    {
+     "op": "declaredstakeset",
+     "label": "Save the statement",
+     "status": "declared",
+     "modules": [
+      "instance-setup"
+     ]
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],
@@ -1871,7 +1887,7 @@
    "id": "project",
    "name": "Project",
    "frame": "working",
-   "purpose": "A project's home: objective, bar, questions, stage, plans, members.",
+   "purpose": "A project's home: objective, bar, questions, stage, plans, what the group has at stake here, members.",
    "acts": [
     {
      "op": "promote",
@@ -1930,6 +1946,19 @@
      "status": "declared",
      "modules": [
       "action-plans"
+     ]
+    },
+    {
+     "op": "owed:projectstakeset K3230",
+     "label": "Save this project's stake",
+     "status": "owed"
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],
@@ -2932,6 +2961,19 @@
      "status": "declared",
      "modules": [
       "filings"
+     ]
+    },
+    {
+     "op": "owed:actionstake K3230",
+     "label": "Save this action's stake",
+     "status": "owed"
+    },
+    {
+     "op": "writinghelp",
+     "label": "Help me write this",
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
      ]
     }
    ],

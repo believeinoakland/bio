@@ -59,13 +59,14 @@
   "forgot": 1,
   "founder": 6,
   "member": 2,
+  "stake": 24,
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "act": 621,
+  "act": 629,
   "column": 33,
-  "total": 1957,
-  "protected": 659
+  "total": 1989,
+  "protected": 665
  },
  "words": [
   {
@@ -5521,6 +5522,174 @@
    "note": "DEC-230"
   },
   {
+   "key": "stake.group.title",
+   "en": "What the group has at stake",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231: Settings › Your group"
+  },
+  {
+   "key": "stake.group.label",
+   "en": "The group's statement",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.group.help",
+   "en": "In your group's own words: what the group itself stands to gain or lose in the matters it works on. It goes beside your group's name on everything it sends or publishes, so readers can weigh its work knowing it. A project or an action can add a stake of its own beside it, never in its place.",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.group.save",
+   "en": "Save the statement",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.set",
+   "en": "Set by {who} on {date}",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.history",
+   "en": "{n} earlier statements",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.project.title",
+   "en": "What the group has at stake here",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231: the project page"
+  },
+  {
+   "key": "stake.project.group",
+   "en": "The group's own statement, on everything it sends: {stake}",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.project.label",
+   "en": "This project's stake (optional)",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.project.help",
+   "en": "Only what this matter adds to the group's usual stake. It goes beside the group's statement on what this project sends or publishes, never in its place. A member of the project or an administrator can set it; each change is dated and kept. Empty means the group's statement alone.",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.project.save",
+   "en": "Save this project's stake",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.ask.title",
+   "en": "Does the group have a stake in this matter beyond its usual one?",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231: the question at preparation, when stakeatpreparation answers higher_stakes"
+  },
+  {
+   "key": "stake.ask.help",
+   "en": "Asked when an action carries higher stakes. It never stops you: nothing waits on your answer, and no answer is recorded unless you save a stake.",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.ask.says",
+   "en": "{kind} puts the group's own interest on the record, so readers will ask what it stands to gain. Your group's statement goes with this action already. If this matter touches the group more than usual, such as a member who is a party or a decision that changes your rent, say so here. It goes beside the group's statement on what this action sends. You can approve either way.",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231: {kind} the action's kind in words, e.g. Taking part as a party"
+  },
+  {
+   "key": "stake.ask.undetermined",
+   "en": "Civicsmith can't tell how much is at stake in this action, so it asks.",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231: an undetermined tier"
+  },
+  {
+   "key": "stake.action.label",
+   "en": "This action's stake (optional)",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.action.help",
+   "en": "What this one action adds to the group's usual stake and the project's. It goes beside them on what this action sends, never in their place, and is dated and kept. Empty means the project's stake, or the group's alone.",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.action.save",
+   "en": "Save this action's stake",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.sentwith",
+   "en": "Sent with",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231: the preview beside the stamp"
+  },
+  {
+   "key": "stake.inmatter",
+   "en": "In this matter",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.source.project",
+   "en": "this project's stake, set by {who} on {date}",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.source.action",
+   "en": "this action's own stake, set by {who} on {date}",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.none",
+   "en": "None stated beyond the group's",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231"
+  },
+  {
+   "key": "stake.unreadable",
+   "en": "Civicsmith can't read this stake right now; it is not left out.",
+   "protected": false,
+   "source": "DEC-231",
+   "note": "DEC-231: undetermined, never shown as none"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -6980,6 +7149,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.declaredstakeset.label.group",
+   "en": "Save the statement",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.group",
+   "en": "Help me write this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.owed_updatestart.label.updates",
    "en": "Update",
    "protected": true,
@@ -7574,6 +7755,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_projectstakeset.label.project",
+   "en": "Save this project's stake",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.project",
+   "en": "Help me write this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.projectkeyset.label.projectai",
    "en": "Hold the project's API key",
    "protected": true,
@@ -8164,6 +8357,18 @@
   {
    "key": "act.filingsecondapprove.label.start-send",
    "en": "Give the second approval",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_actionstake.label.start-send",
+   "en": "Save this action's stake",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.writinghelp.label.start-send",
+   "en": "Help me write this",
    "protected": true,
    "source": "registry.json"
   },
@@ -9130,6 +9335,18 @@
   {
    "key": "act.cite.does",
    "en": "Cites this passage in a question, as support or as cutting against it. A citation always points at the original document.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_projectstakeset.does",
+   "en": "Records what the group has at stake in this project beyond its usual stake. It goes beside the group's statement on what this project sends or publishes, dated and attributed; clearing it leaves the group's statement alone.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_actionstake.does",
+   "en": "Records what the group has at stake in this one action beyond its usual stake and the project's. It goes beside them on what the action sends, dated and attributed; clearing it falls back to the project's stake.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
