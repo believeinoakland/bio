@@ -10,3 +10,7 @@
 - **Ran:** `node --test bio-plane/test/m/scheduler/`: 129 pass, 0 fail, 0 skipped. `checks/run.mjs`: format 0 failures; architecture 0 failures; coverage has no failure for scheduler (the 23 failing modules are not mine); ownership: 1 file changed by scheduler, 0 failures.
 
 Size (session_018FNXLVRCc8F5GW3WK111dG): test runs 4, module lines 0
+
+## J1 · COMPLETE
+
+T48-54 done: m/scheduler/plane.test.mjs signs in by {handle} (4 reds met); R12's test also shows the disclosure and re-asks the password before connecting an account, as capture-requests' plane test does. Scheduler tests 129/129; format, architecture, ownership 0 failures; no coverage failure for scheduler. No module change, nothing deferred, nothing found elsewhere.
