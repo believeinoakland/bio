@@ -1,6 +1,6 @@
 # affordances (T48)
 
-**Status** · session_013rWFiEswSPebSrrG2bB1Kf · depth 2 · COMPLETE · handled B2
+**Status** · session_013rWFiEswSPebSrrG2bB1Kf · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
