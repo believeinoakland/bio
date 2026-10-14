@@ -53,3 +53,7 @@ interface-shell (from my page test over its branch head): in the public frame wi
 ## J6 · COMPLETE
 
 T47-86 built: R1–R11, with B2–B7 applied (K3143–K3145, K3149, K3152, K3153); the record's Completion names the files for modules.json (paths bio-plane/src/screens-entry/, tests bio-plane/test/m/screens-entry/), readings, the deferred language names, and J5. Tests on this branch with tranche/T47 merged: 46 pass, 1 fail (page.test.mjs needs interface-shell's merge); over interface-shell's head overlaid: 52 of 52. Checks with my paths set locally: format, architecture, coverage (11 of 11), ownership 0 failures; checks/run.mjs architecture 0 failures. I re-run on your CHANGE after interface-shell merges.
+
+## J7 · COMPLETE
+
+B8 noted (J5's exemption kept until your CHANGE after interface-shell merges). B9 applied: tranche/T47 merged (d25f2d1ac7). Tests on this branch: 46 pass, 1 fail, the same as J6 (page.test.mjs needs interface-shell's merge); nothing of mine changed. Format 0 failures; the record's Completion stands.
