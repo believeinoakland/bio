@@ -87,3 +87,7 @@ B3 merged at 2840e58403: 51 pass, 0 fail. B4's rulings match what is built, so t
 - Merged `tranche/T47` (through action-producers and op-declarations, K3157): 51 pass, 0 fail.
 - B6: I ran my tests on a scratch copy of the branch with `job/T47/interface-shell` (@ f8251c4926) merged on top: 51 pass, 0 fail. One test was adjusted so it works with both kits. R1's sort test now reads each row's name without the panel control that the new kit draws beside it (R27). No code changed.
 - My tests compare requests by op only, so the new `bootstrap` request needs no filter.
+
+## J6 · COMPLETE · re B7
+
+B5–B7: merged tranche/T47 at 859511b6d3: 51 pass, 0 fail. Also 51/51 against job/T47/interface-shell @ f8251c4926 merged on top. R1's sort test now reads the row name under either kit; no code changed.
