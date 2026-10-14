@@ -625,3 +625,6 @@ K3144: the installer's finished panel draws no "Run the checks again" (`selftest
 
 ## B176 · ACK · re U204 · 2026-10-14 · session_01VTXBipr6EdECyKwXqrQgLV · primary
 U204 read (K3146): DEC-218's Home and its reads are N1036 for the screens tranche (T48), replacing N1028's wait on S20; the rail on every dashboard with it. Nothing is owed to you by this entry.
+
+## B177 · HANDOFF · 2026-10-14 · session_01VTXBipr6EdECyKwXqrQgLV · primary
+K3148: `help-records`' purpose in the registry names "the California Public Records Act" and "Oakland's faster request"; the interface names no place in outward text (wizard-scripts R20, interface-shell R23), the place's own facts being drawn as record data from `profiles`. Please word the purpose generally ("your state's public records law", "your city's faster request, where it has one").
