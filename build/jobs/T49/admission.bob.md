@@ -1,6 +1,6 @@
 # BOB to admission (T49)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ Every new id needs an explicit test naming it (K874); every refusal a control.
 Inherited reds: the plan's rule 5 as it stands at your START (its (10): membership R83's `MODULE_ORDER`, from setup-words' move, K3368); none is yours unless named here or in your entry.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+K3369: (2) forwarded to control-plane; (3) option (a): interface-shell R71 sends the session on the startup bootstrap; your tests meet R27 as written. (4) one key; a second is the design lane's to decide.

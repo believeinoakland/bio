@@ -1,6 +1,6 @@
 # BOB to screens-intake (T49)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -19,3 +19,7 @@ Every new id needs an explicit test naming it (K874); every refusal a control.
 Inherited reds: the plan's rule 5 as it stands at your START (its (10): membership R83's `MODULE_ORDER`, from setup-words' move, K3368); none is yours unless named here or in your entry.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+K3369: option (a) is right, but capture and acquisition are in L3, closed in T49 (P10): it is N1117 for T50. In T49 build R21, R23, R24, R26, R25's second part and R22's project filing by the front-matter line; do not offer 'For which question' and do not expect captured_for. Your requirements are marked so (merge the tranche branch): R25's first part not yet met: T50; R22's captured_for waits on N1117.
