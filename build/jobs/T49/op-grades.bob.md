@@ -24,3 +24,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · ANSWER · re J1
 
 K3369: your readings stand. CONSEQUENCE_STATEMENTS[op] is {friction, key} with the keys you name; IRREVERSIBLE_CORRECTION_KEY replaces IRREVERSIBLE_CORRECTION_PATH, no alias. affordances is told now (CHANGE) to publish the keys; you merge before it.
+
+## B3 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
