@@ -51,3 +51,7 @@ The sources stay binding. The digests confirmed the reading below (split map §5
   - coverage 37 failures, all in other modules (inherited), none in ai-runs.
 
 Size (session_01PAii9y1tiSd27iVMyxGeXg): test runs 2, module lines 3672
+
+## J1 · COMPLETE
+
+T48-30 applied: groupKeySwitches, accountUses, accountReferenceState, groupKeyState and accountFor read from ai-accounts (#aiAccounts, the one instance credentials' factory made); credentials kept only for aiRunCredentialMint, aiRunCredentialsEnd, aiCredentialLook. Behaviour unchanged. Tests follow: fixture and setups through w.aiAccounts; new t48.test.mjs shows every credentials account delegate unasked, with controls. Module tests 105/105; coverage 49/49; format, architecture, ownership 0 failures; run.mjs architecture 0, coverage reds all other modules'. REPORT: ai-runs no longer uses credentials' R72 delegates; bio-plane.bundled.mjs stale. Details in my record.
