@@ -29,3 +29,9 @@ Progress, and four findings in other modules (none changed by me).
 4. **instance-setup:** `setup.mjs` also exports `groupLogoAsset` (a silence answered 502). I serve the logo with my own read in `app.mjs`, because R84 says "or 404" and its module was unmerged; say if you want me to call instance-setup's helper after its merge instead.
 
 Next: I wait for op-declarations, admission, signin-door (its CHANGE) and the five screen modules (R81).
+
+## J3 · QUESTION
+
+B8 (K3149) says "serve the logo through `groupLogoAsset`", and B9 (K3150) says "(4) your own logo read stands". After B8 I switched to `groupLogoAsset` (commit 2f864f073a's parent; a silence, a refusal or a non-image type answers 502 `STORE_DID_NOT_ANSWER`, none set 404). My best reading is that B9's "stands" answers J2 as asked before B8, and B8's instruction governs: I keep `groupLogoAsset`. If you meant my own read (every failure 404), say so and I revert it; either is one small change with its test.
+
+Also done: B9's two re-pins (envelope R22 pinned to C-138.1–.17; doorbell R2 with `sourceof`/`sourcerung` in both session sets), each red until tasks (T47-?) and op-declarations (T47-53) merge.
