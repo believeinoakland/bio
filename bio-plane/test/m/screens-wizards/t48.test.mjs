@@ -24,7 +24,7 @@ test("R10 every step of a script a door names carries the guide's `elsewhere` li
   assert.equal(g.requests.filter((r) => r.op === "startfrom").length, 1, "read once when the run starts");
   for (let i = 0; i < GR.steps.length; i++) {
     assert.ok(g.text().includes(said("guide.step", { i: String(i + 1), n: "2" })));
-    assert.ok(g.text().includes(elsewhere()), `step ${i + 1}`);
+    assert.ok(g.text().replace(/\s+([.,])/g, "$1").includes(elsewhere()), `step ${i + 1}`);
     if (i + 1 < GR.steps.length) await g.control("next");
   }
   assert.equal(g.requests.filter((r) => r.op === "startfrom").length, 1);
