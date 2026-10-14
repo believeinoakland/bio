@@ -60,3 +60,7 @@ I merge `tranche/T47` and re-run on your CHANGE announcing those merges, then po
 ## J3 · REPORT
 
 B5-B7 applied: tranche/T47 merged (84f98f8e0f). Against tranche/T47 alone 21 of 78 pass: the rest need interface-shell's kit (R27's cs.choice over record data, R28 PATHS, R47 REF_SCREENS person, ADMIN_ACTS personexpunge, cs.save). Against tranche/T47 with origin/job/T47/interface-shell merged in a scratch worktree (not pushed): 78 of 78 pass (two tests adjusted to the built kit: cs.save's bound control, the row's own panel control). I post COMPLETE once your CHANGE announces interface-shell's merge, after re-running everything and node checks/run.mjs.
+
+## J4 · COMPLETE
+
+B8 applied: tranche/T47 merged, no overlay. 78 of 78 of this module's tests pass; interface-shell's 119 pass with these screens. With paths bio-plane/src/screens-investigate/ and tests bio-plane/test/m/screens-investigate/ set in modules.json (please add them): format, architecture, coverage (14 of 14) and ownership 0 failures. Files, readings, what is deferred to other modules and the size line are in the record's Completion section. Size (session_01P6a5EYGfQdk3KLWzPsHMLA): test runs 34, module lines 2273.
