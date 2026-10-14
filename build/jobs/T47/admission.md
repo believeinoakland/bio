@@ -1,3 +1,13 @@
 # admission (T47)
 
 **Status** · session_01AvZMhLufz25XDGgpfUXgYQ · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+Three readings for R24/R25. I am building on each reading now; only (1) needs another module to change.
+
+1. **How the gate reaches `reauthDue` (R25).** `credentials.reauthDue({token})` is a method of the store's credentials instance with no route. Admission runs in the Worker and reaches credentials only through the store (as it does for `session` and `aicredentiallook`, R6). My best reading: admission asks a store-internal route `reauthdue` with the session token in `x-bio-session`, the way it asks `session`. store-door already hands that header on as `session` and `t`. Credentials' map would answer `reauthdue: () => ({ due: c.reauthDue({ token: url.searchParams.get("session") }) })`, and op-declarations R6 would list it as store-internal. A store that does not answer is a silence (R6's 502), never an admission. That route is credentials' code and op-declarations' list, not mine, so I am reporting it. Until it exists, every act REAUTH_ACTS names will be answered 502 or refused. Alternative: the door passes admission a `reauthDue` function; it still needs the same route.
+2. **The shape of `REAUTH_ACTS` (op-declarations R58, not yet on any branch).** My best reading: a frozen object `op → null` (every call asks the password again) or `op → { field, values }` (the body's `field`, falling back to the query's, being one of `values`; `values: null` meaning the field present at all). Admission cannot know a member's present role, so "memberset (a role to or from admin)" is read as `memberset` with `role` present at all (`{ field: "role", values: null }`). That set is wider than the requirement's but never narrower. I read the table through `import { REAUTH_ACTS }` and write the matcher in admission. Please confirm the shape with OP-DECLARATIONS #22, or tell me theirs.
+3. **Statuses and order.** credentials' rows carry no status. I answer `SESSION_LOCKED` at 401 (the session authenticates nobody for the act) and `REAUTH_DUE` at 403, each body relayed exactly as credentials gives it. The lock is judged right after the session resolves, before `export`'s refusal and the session gate. Re-ask is judged after the capability (R11), so it is the last refusal before the landing. R24 also covers reads, as credentials R71 (1) says. `readerOf` (R16) treats a locked session as no one (`""`).
+
+Also, for control-plane R83 ("`background=1` is passed to the session read"): the session read is admission's lookup. `admit` and `readerOf` take an optional `background: true`, and the lookup then sends `session?background=1`. The flag is not a credential. Control-plane would pass it.
