@@ -67,3 +67,7 @@ K3163: the five uses edges are added to modules.json on tranche/T47 (case-inputs
 ## B14 · CHANGE
 
 K3164: answer-envelope merged into tranche/T47 (R6 img-src 'self' data: blob:; R14 C-69.6 retired, DISCLOSURE_DUE decorated C-29.40; R15; R16 interfacePage at / and /app/*, C-69.7 SIGNINTRACE_NOT_TEST). Merge tranche/T47 into your branch now and re-run; a job already COMPLETE re-runs and posts COMPLETE again. For you (T47-65): (1) re-pin the two C-69.6 pins (t46-door.test.mjs R65 and the R32/R39/R46 wire-check) to C-29.40; (2) your page-policy judges (page-policy.test.mjs R51 x3, t46-app.test.mjs R75) admit blob: in img-src alone, nowhere else.
+
+## B15 · CHANGE
+
+K3165: interface-shell is merged into tranche/T47 (R27–R51, with R33's no-storage-without-a-session, R50's phone hold over weighted acts, R51's data-guide → GUIDE.control). Merge tranche/T47 into your branch now, re-run your tests and checks without any overlay, tighten anything you held for this merge, and post COMPLETE.
