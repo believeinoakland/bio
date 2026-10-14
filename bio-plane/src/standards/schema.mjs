@@ -178,6 +178,10 @@ const T35_COLUMNS = Object.freeze([
   ["question", "TEXT"],
 ]);
 
+/** R56 (T48; N1029): the project a proposal is made for, added to a `standard_proposals` table created before it and
+ *  never filled: a proposal held before T48 names none. Never inferred from its text's bundles. */
+const T48_PROPOSAL_COLUMNS = Object.freeze([["project", "TEXT"]]);
+
 /* R14 (plan T33, Rules (6)): every table declared explicitly through `record-core.declareTable`, append-only
    (`version_chain: true`), group-wide (`sight: "group"`: a standard is instance-wide, R5), the other classes as
    `declarePurge`'s default form gives them. A single-bundle purge clears the rows keyed to that standard's bundle, the
@@ -202,7 +206,7 @@ export const STANDARDS_TABLES = Object.freeze([
 ].map((t) => Object.freeze({ ...t, ...CLASSES })));
 
 /** Creates the tables where absent, and adds R1's `reason` column (DEC-88), R18–R19's columns and T35's (R33–R42, R47)
- *  to a `standards` table created before them, never filling them: a standard recorded before they were asked for
+ *  to a `standards` table created before them, and R56's `project` to a `standard_proposals` table created before it, never filling them: a standard recorded before they were asked for
  *  carries none. Idempotent. */
 export function migrateStandards(sql) {
   const bare = STANDARDS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -211,6 +215,11 @@ export function migrateStandards(sql) {
   if (!cols.includes("reason")) sql.exec(`ALTER TABLE standards ADD COLUMN reason TEXT`);
   for (const [c, type] of [...T33_COLUMNS, ...T35_COLUMNS])
     if (!cols.includes(c)) sql.exec(`ALTER TABLE standards ADD COLUMN ${c} ${type}`);
+  const pcols = [...sql.exec(`PRAGMA table_info(standard_proposals)`)].map((c) => c.name);
+  for (const [c, type] of T48_PROPOSAL_COLUMNS)
+    if (!pcols.includes(c)) sql.exec(`ALTER TABLE standard_proposals ADD COLUMN ${c} ${type}`);
+  /* R57: a project's proposals, newest first */
+  sql.exec(`CREATE INDEX IF NOT EXISTS standard_proposals_project ON standard_proposals(project, proposed_at, proposal_id)`);
   /* R33: the family filter */
   sql.exec(`CREATE INDEX IF NOT EXISTS standards_family ON standards(family_key, standard_id)`);
   /* R32: the reads by instrument key and portion, and by a portion's content id */
