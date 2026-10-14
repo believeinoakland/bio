@@ -52,3 +52,7 @@ These are left for a later entities job. This one is a one-requirement provider 
 - `checks/run.mjs`: format 0, architecture 0 (product-wide), channels 0. Coverage shows 45 failures, none of them entities': other modules' T48 ids under rule 5 (1).
 
 Size (session_012L9wEk9N3XmRcXHwxLBwXH): test runs 12, module lines 2053
+
+## J2 · COMPLETE
+
+T48-82 applied: R53 notAProceeding(detail?, extra?), the one site of NOT_A_PROCEEDING, row C-91.9 in ENTITY_CHECKS with BOB's interim sentence (B2). entities 99/99 (t48.test.mjs, four R53 tests); users events, lines, actions, following, connections, progressions, intent 568/0, identical reverted; format, architecture, coverage (53/53), ownership 0 failures; run.mjs architecture 0. Row census: C-91.9 arrived, awaiting T49's stamp (rule 5 (2)). Ready to merge: events and lines wait on it. Record: Completion.
