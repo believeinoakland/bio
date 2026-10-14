@@ -22,7 +22,7 @@ export const WELCOME_AT = 3;
 
 /* The ops the guide reads and counts through `cs.call` (J2 (1)): the marks, a script's steps, the tally, and each op a
    `{machine: <op>}` draft names (wizard-scripts R13's `machineDrafts`, as `plane`'s `MACHINE_DRAFTS` registers them). */
-export const GUIDE_OPS = Object.freeze(["wizardsat", "wizardread", "wizardprogress", "wizarddraft",
+export const GUIDE_OPS = Object.freeze(["wizardsat", "wizardread", "startfrom", "wizardprogress", "wizarddraft",
   "writinghelp", "whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft"]);
 
 export const PARTS = {
@@ -161,6 +161,7 @@ export const PARTS = {
     const i = Math.min(Math.max(1, Number(at) || 1), run.steps.length) - 1;
     ui.run = run;
     if (counted) run.reached[i] = true; else P.count(cs, view, run, "start");
+    P.doors(cs, view, run);
     return P.arrive(cs, view, i, true);
   },
 
@@ -178,6 +179,16 @@ export const PARTS = {
       }
     }
     cs.set("joined", true);
+  },
+
+  /* R10: `startfrom` once when a run starts: the ids of the scripts any door names; a read that fails leaves none */
+  async doors(cs, view, run) {
+    const ui = view.ui;
+    const a = await cs.call("startfrom", {});
+    const r = a && a.ok !== false ? (a.result !== undefined ? a.result : a) : null;
+    const ids = new Set();
+    if (r && Array.isArray(r.doors)) for (const d of r.doors) if (d && Array.isArray(d.scripts)) for (const id of d.scripts) ids.add(typeof id === "object" && id ? id.id : id);
+    if (ui.run === run || (ui.run && ui.run.parent === run)) { run.doorScript = ids.has(run.id); cs.set("run", ui.run); }
   },
 
   /* R2: the scripts that start on `screen` (`wizardsat`), the member's own drafts among them */
@@ -241,6 +252,7 @@ export const guide = {
     const ui = view.ui, P = view.parts;
     const r = route || {};
     ui.subjects = ui.subjects || {};
+    if (ui.marks && ui.marks.screen !== r.screen) ui.marksOpen = false;
     if (r.screen) ui.subjects[r.screen] = r.subject === undefined ? null : r.subject;
     P.marksFor(cs, view, r.screen);
     const run = ui.run;
@@ -266,6 +278,8 @@ export const guide = {
     if (what === "next" && run && !run.loading) return run.i + 1 < run.steps.length ? P.arrive(cs, view, run.i + 1, true) : P.finish(cs, view);
     if (what === "back" && run && !run.loading && run.i > 0) return P.arrive(cs, view, run.i - 1, false);
     if (what === "stop") return P.stop(cs, view);
+    if (what === "elsewhere") return cs.go("elsewhere", null);
+    if (what === "chip") { ui.marksOpen = !ui.marksOpen; return cs.set("marksOpen", ui.marksOpen); }
     if (what === "where" && run && !run.loading) return P.ringStep(cs, view);
     if (what === "draftit") return P.machine(cs, view);
     if (what === "start") return P.begin(cs, view, data.script, data.version || null, Number(data.at) || 1,
@@ -282,7 +296,7 @@ export const guide = {
     const W = cs.w, E = cs.esc, G = "screen.guide.", P = view.parts;
     const ui = view.ui || {}, run = ui.run;
     const btn = (what, label, tone, extra) => `<button type="button" class="cs-btn"${tone ? ` data-tone="${tone}"` : ""} data-guide="${what}"${extra || ""}>${label}</button>`;
-    const stopLine = `<p class="cs-note">${W("guide.stopping")}</p>`;
+    const stopLine = `<p class="mk-note">${W("guide.stopping")}</p>`;
     if (ui.rec) {
       const pairs = ui.rec.pairs.map((p, i) => `<li>${W(G + "recording.pair", { i: String(i + 1), screen: { html: P.said(cs, "screen." + p.screen + ".name") || E(p.screen) }, act: { html: P.said(cs, "act." + p.act + ".label." + p.screen) || E(p.act) } })} `
         + btn("unrecord", W(G + "recording.remove", { i: String(i + 1) }), "quiet", ` data-i="${i}"`) + "</li>").join("");
@@ -300,18 +314,19 @@ export const guide = {
       const out = [`<div class="cs-wizard" data-guide-state="running">`,
         `<span class="step">${P.nameOf(cs, view, run.id, run.name)} · ${W("guide.step", { i: String(i + 1), n: String(n) })}</span>`,
         `<span class="what">${words.what}</span>`, words.why ? `<span class="why">${words.why}</span>` : ""];
-      if (run.parent) out.push(`<p class="cs-note" data-guide-trip>${W("guide.sidetrip", { wizard: { html: P.nameOf(cs, view, run.id, run.name) } })}</p>`);
-      if (d) out.push(`<p class="cs-note">${W("guide.draft")}</p>`);
-      if (ui.absent && step.act) out.push(`<p class="cs-note" data-guide-absent role="status">${W(G + "absent")}</p>`);
+      if (run.doorScript) out.push(`<p class="mk-note" data-guide-elsewhere>${W("wizard.guide.elsewhere", { link: { html: `<button type="button" class="cs-ref" data-guide="elsewhere" data-level="2" data-tip="${E("<b>" + W("screen.elsewhere.name") + "</b><span class=\"more\">" + W("screen.elsewhere.purpose") + "</span>")}">${W("wizard.guide.elsewhere_link")}</button>` } })}</p>`);
+      if (run.parent) out.push(`<p class="mk-note" data-guide-trip>${W("guide.sidetrip", { wizard: { html: P.nameOf(cs, view, run.id, run.name) } })}</p>`);
+      if (d) out.push(`<p class="mk-note">${W("guide.draft")}</p>`);
+      if (ui.absent && step.act) out.push(`<p class="mk-note" data-guide-absent role="status">${W(G + "absent")}</p>`);
       if (d && typeof d.machine === "string" && view.reachable && step.act && !(draft && draft.text !== undefined))
         out.push(`<span class="nav">${btn("draftit", W(G + "draftit"), "", "")}</span>`);
       if (draft && draft.asking) out.push(`<p class="cs-state" data-state="loading" role="status">${W(G + "draft.asking")}</p>`);
       if (draft && draft.refused !== undefined) out.push(`<p class="cs-gap" data-gap="refused" role="alert">${W(G + "draft.refused", { reason: draft.refused || "" })}</p>`);
-      if (draft && draft.template) out.push(`<p class="cs-note">${W(G + "draft.template")} · ${W(G + "draft.template.held")}</p>`);
+      if (draft && draft.template) out.push(`<p class="mk-note">${W(G + "draft.template")} · ${W(G + "draft.template.held")}</p>`);
       if (draft && draft.text !== undefined) {
         out.push(`<p class="cs-draftlabel" data-guide-draft>${draft.label}</p>`);
-        if (draft.untested) out.push(`<p class="cs-label-untested">${W("ai.label.untested")}</p>`);
-        out.push(draft.placed ? `<p class="cs-note">${W(G + "draft.placed")}</p>` : `<p class="cs-note">${W(G + "draft.nofield")}</p><blockquote class="cs-draft">${E(draft.text)}</blockquote>`);
+        if (draft.untested) out.push(`<p class="mk-note">${W("ai.label.untested")}</p>`);
+        out.push(draft.placed ? `<p class="mk-note">${W(G + "draft.placed")}</p>` : `<p class="mk-note">${W(G + "draft.nofield")}</p><blockquote class="cs-draft">${E(draft.text)}</blockquote>`);
       }
       out.push(`<span class="nav">${i > 0 ? btn("back", W(G + "back"), "quiet") : ""}${btn("next", W(i + 1 < n ? G + "next" : G + "finish"))}</span>`);
       if (step.act) out.push(`<span class="nav">${btn("where", W("guide.showwhere"), "quiet", ` aria-keyshortcuts="Alt+Shift+W"`)}<span class="cs-kbd">${W(G + "key")}</span></span>`);
@@ -334,29 +349,32 @@ export const guide = {
     const screen = view.screen;
     const listed = ui.marks && ui.marks.screen === screen ? ui.marks.scripts : [];
     const kept = (id) => typeof cs.kept === "function" && cs.kept("bio-wizard-finished:" + (me.member || "") + ":" + id) === "1";
+    // R11: a script is counted only if every act its steps name is one the shell's gate would draw for this viewer
+    const walkable = (s) => !Array.isArray(s.steps) || s.steps.every((st) => !st || !st.act || typeof cs.can !== "function" || cs.can(st.act));
     const items = [];
     if (screen === "home") {
       if (!kept(ids.welcome)) items.push({ id: ids.welcome, at: ids.welcomeAt, name: P.nameOf(cs, view, ids.welcome, ""), required: true, cont: true });
       if (!kept(ids.first)) items.push({ id: ids.first, at: 1, name: P.nameOf(cs, view, ids.first, "") });
     }
     for (const s of listed) {
-      if (!s || items.some((x) => x.id === s.id)) continue;
-      items.push({ id: s.id, version: s.version, at: 1, name: P.nameOf(cs, view, s.id, s.name), finished: s.finished, draft: s.draft === true });
+      if (!s || items.some((x) => x.id === s.id) || !walkable(s)) continue;
+      items.push({ id: s.id, version: s.version, at: 1, name: P.nameOf(cs, view, s.id, s.name), finished: s.finished, draft: s.draft === true, required: s.required === true });
     }
-    if (!items.length) return "";
-    const head = items.length === 1 ? W(G + "marks.one") : W(G + "marks", { n: String(items.length) });
+    // Home's welcome offer (R7) keeps its own band, which is not a chip
     const offer = screen === "home" && ui.joined && !ui.offerHidden && !kept(ids.welcome)
       ? `<div class="cs-reason" role="region" data-guide-offer><p>${W(G + "welcome")}</p><span class="cs-actrow">`
         + `<button type="button" class="cs-btn" data-tone="primary" data-guide="start" data-script="${ids.welcome}" data-at="${ids.welcomeAt}">${W(G + "welcome.continue", { name: { html: P.nameOf(cs, view, ids.welcome, "") } })}</button>`
         + `<button type="button" class="cs-btn" data-tone="quiet" data-guide="notnow">${W(G + "notnow")}</button></span></div>`
       : "";
-    const marks = items.map((x) => `<li><button type="button" class="cs-btn cs-wizmark" data-guide="start" data-script="${E(x.id)}"`
-      + (x.version ? ` data-version="${E(x.version)}"` : "") + ` data-at="${x.at}">`
-      + W(x.cont ? G + "welcome.continue" : G + "mark.start", { name: { html: x.name } }) + "</button>"
-      + (x.required ? ` <span class="meta">${W(G + "mark.required")}</span>` : "")
+    if (!items.length) return offer;
+    const head = items.length === 1 ? W("wizard.marks.chip.one") : W("wizard.marks.chip", { n: String(items.length) });
+    const open = ui.marksOpen === true;
+    const list = open ? "<ul class=\"cs-list\">" + items.map((x) => `<li><span>${x.name}</span> <button type="button" class="cs-btn" data-guide="start" data-script="${E(x.id)}"`
+      + (x.version ? ` data-version="${E(x.version)}"` : "") + ` data-at="${x.at}">${W(x.cont ? G + "welcome.continue" : G + "mark.start", { name: { html: x.name } })}</button>`
+      + (x.required ? ` <span class="meta">${W("wizard.mark.recommended")}</span>` : "")
       + (x.draft ? ` <span class="meta">${W(G + "mark.draft")}</span>` : "")
-      + (typeof x.finished === "number" && !x.draft ? ` <span class="meta">${W(G + "mark.finished", { n: String(x.finished) })}</span>` : "") + "</li>").join("");
-    return `<div class="cs-wizmarks" data-guide-marks>${offer}<span tabindex="0" data-level="2" data-tip="${E(W(G + "marks.means"))}"><b>${head}</b></span><ul class="cs-list">${marks}</ul></div>`;
+      + (typeof x.finished === "number" && x.finished > 0 && !x.draft ? ` <span class="meta">${W(G + "mark.finished", { n: String(x.finished) })}</span>` : "") + "</li>").join("") + "</ul>" : "";
+    return `${offer}<div data-guide-marks><button type="button" class="cs-wizmark" data-guide="chip" aria-expanded="${open}" data-level="2" data-tip="${E(W(G + "marks.means"))}">${head}</button>${list}</div>`;
   },
 
   acts: [

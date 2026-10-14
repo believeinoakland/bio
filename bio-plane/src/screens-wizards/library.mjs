@@ -53,14 +53,14 @@ export const library = {
     const projects = data.projects && data.projects.state === "ok" ? (data.projects.value.projects || []) : [];
     // the project a recording or a copy is made in: the projects the member sees (`projectlist`), as record data
     const projectField = (id) => projects.length
-      ? `<div class="cs-field"><label for="${id}">${W(S + "project.field")}</label><select id="${id}" class="cs-input">${projects.map((p) => `<option value="${E(p.id)}">${E(p.name || p.id)}</option>`).join("")}</select></div>`
+      ? cs.choice(id, S + "project.field", projects.map((p) => ({ value: p.id, text: p.name || p.id })))
       : "";
     const updates = data.updates && data.updates.state === "ok" ? (data.updates.value.entries || []) : [];
     const out = [cs.title(), `<p>${W("screen.wizards.purpose")}</p>`];
 
     // which wizards are listed: offered by default, or a state the member chooses (`wizards`)
     const see = cs.act("wizards", { label: S + "act.seeall", data: { see: "1" } });
-    if (see) out.push(`<div class="cs-form">${cs.choice("wz-state", S + "state.field", STATES.map((k) => [k, S + "state." + k]), { value: state })}${see}</div>`);
+    if (see) out.push(`<div class="mk-acts">${cs.choice("wz-state", S + "state.field", STATES.map((k) => [k, S + "state." + k]), { value: state })}${see}</div>`);
 
     // a recording, made on the real screens in the dock's guide (R3)
     const record = cs.act("wizarddraft", { data: { mode: "record" } });
@@ -123,17 +123,17 @@ export const library = {
       const live = !s.retired && v.state === "approved";
       if (live) {
         const copy = cs.act("wizarddraft", { label: S + "act.copy", data: { mode: "copy", version: v.id, name: s.name || "" } });
-        if (copy) p.push(`<div class="cs-form"><p>${W(S + "copy.note")}</p>${projectField("wz-cp-" + k)}${cs.field("wz-cn-" + k, S + "name.field", { value: s.name || "" })}${copy}</div>`);
+        if (copy) p.push(`<div class="mk-acts"><p>${W(S + "copy.note")}</p>${projectField("wz-cp-" + k)}${cs.field("wz-cn-" + k, S + "name.field", { value: s.name || "" })}${copy}</div>`);
       }
-      if (s.origin === "civicsmith") { p.push(`<p class="cs-note">${W(S + "civicsmith.only")}</p>`); return p.join(""); }
+      if (s.origin === "civicsmith") { p.push(`<p class="mk-note">${W(S + "civicsmith.only")}</p>`); return p.join(""); }
       if (v.state === "draft") p.push(cs.act("wizardsubmit", { data: { version: v.id } }));
       if (v.state === "submitted") p.push(cs.act("wizardapprove", { data: { version: v.id } }));
       if (live && !s.widened && s.scope && typeof s.scope === "object") p.push(cs.act("wizardapprove", { label: S + "act.widen", data: { version: v.id, widen: "1" } }));
       const withdraw = v.state === "draft" || v.state === "submitted"
         ? cs.act("wizardretire", { label: S + "act.withdraw", data: { script: s.id, version: v.id, field: "wz-r-" + k } }) : "";
-      if (withdraw) p.push(`<div class="cs-form">${reason("wz-r-" + k)}${withdraw}</div>`);
+      if (withdraw) p.push(`<div class="mk-acts">${reason("wz-r-" + k)}${withdraw}</div>`);
       const retire = live ? cs.act("wizardretire", { label: S + "act.retire", data: { script: s.id, field: "wz-rr-" + k } }) : "";
-      if (retire) p.push(`<div class="cs-form">${reason("wz-rr-" + k)}${retire}</div>`);
+      if (retire) p.push(`<div class="mk-acts">${reason("wz-rr-" + k)}${retire}</div>`);
       p.push(...changes(s, v));
       return p.join("");
     };
@@ -150,8 +150,8 @@ export const library = {
             const k = idOf(p.id);
             const from = cs.act("wizarddraft", { label: S + "act.fromproposal", data: { mode: "from", from: p.id, field: "wz-pn-" + k } });
             const adopt = drafts.length ? cs.act("wizardrevise", { label: S + "act.adopt", data: { mode: "adopt", adopt: p.id, field: "wz-pd-" + k } }) : "";
-            return (from ? `<div class="cs-form">${cs.field("wz-pn-" + k, S + "name.field")}${from}</div>` : "")
-              + (adopt ? `<div class="cs-form"><div class="cs-field"><label for="wz-pd-${k}">${W(S + "draftfor.field")}</label><select id="wz-pd-${k}" class="cs-input">${drafts.map((d) => `<option value="${E(d.id)}">${E(d.name)} · ${E(d.id)}</option>`).join("")}</select></div>${adopt}</div>` : "");
+            return (from ? `<div class="mk-acts">${cs.field("wz-pn-" + k, S + "name.field")}${from}</div>` : "")
+              + (adopt ? `<div class="mk-acts">${cs.choice(`wz-pd-${k}`, S + "draftfor.field", drafts.map((d) => ({ value: d.id, text: d.name + " · " + d.id })))}${adopt}</div>` : "");
           },
         });
       }
@@ -172,7 +172,7 @@ export const library = {
             W(s.origin === "civicsmith" ? S + "whose.civicsmith" : s.widened ? S + "whose.widened" : S + "whose.group"),
             base,
             x.approved && x.approved.by ? E(x.approved.by.name || x.approved.by.id || "") : W(S + "notapproved"),
-            W(S + "finished", { n: String((x.use && x.use.finish) || 0) }),
+            (x.use && x.use.finish > 0) ? W(S + "finished", { n: String(x.use.finish) }) : "",
           ];
         },
         acts: (it) => panel(it.s, it.v),
