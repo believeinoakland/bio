@@ -59,6 +59,12 @@ export const HANDLE_WORDS = Object.freeze({
 export const REFUSAL_WORDS = Object.freeze({
   'refusal.PROJECT_GUARD_UNCHECKED': 'Your group\'s Civicsmith couldn\'t check whether this project\'s own rules allow that, '
     + 'so nothing was changed. Try again in a moment.',
+  /* T49 (N1075, K3269): the rows `words.json` already keys are read by key, their inline copies dropped. */
+  'refusal.HANDLE_FIXED': 'Your handle is already chosen, and a handle never changes in Civicsmith: it names your work for '
+    + 'good, and no one else can ever take it. Nothing was changed.',
+  'refusal.NO_SUCH_JOIN_LINK': 'This join link doesn\'t work: it may have been replaced or turned off. Ask the group for its '
+    + 'current link.',
+  'refusal.JOIN_LINK_DAILY_CAP': 'The group\'s join link has let in as many people as it allows today. Try again tomorrow.',
 });
 
 export const MEMBERSHIP_CHECKS = frozenRows({
@@ -186,14 +192,12 @@ export const MEMBERSHIP_CHECKS = frozenRows({
   /* R104: the join page's call with a link never made, replaced, switched off or malformed: one answer for each. */
   NO_SUCH_JOIN_LINK: Object.freeze({
     check: 'C-96.32', where: at("joinLinkInvite", "is-join-link-known"),
-    translation: 'This join link does not work: it may have been replaced or switched off by the group. Ask the '
-      + 'group for its current link. Nothing was written.',
+    translation: REFUSAL_WORDS['refusal.NO_SUCH_JOIN_LINK'],
   }),
   /* R104: the link's daily cap reached. */
   JOIN_LINK_DAILY_CAP: Object.freeze({
     check: 'C-96.33', where: at("joinLinkInvite", "is-join-link-daily-cap"),
-    translation: 'This join link has let in as many people today as the group allows in a day. Nothing was '
-      + 'written. Try again tomorrow.',
+    translation: REFUSAL_WORDS['refusal.JOIN_LINK_DAILY_CAP'],
   }),
   /* R107 (DEC-136 (1)): tell our members, or don't. */
   COURT_NOTICE_UNKNOWN_CHOICE: Object.freeze({
@@ -243,13 +247,18 @@ export const MEMBERSHIP_CHECKS = frozenRows({
   }),
   /* ===== T46 (T46-4; N934; DEC-196, DEC-197; K2903; R129, R126): a handle is chosen at joining and never changed, so
      `op=handlechange` refuses every call. The code keeps its name; its one condition is now R129's, on a new row, the
-     next free number of C-96 (C-96.51 the last held at the job's START). The translation is DEC-198's sentence
-     (`words.json`'s `refusal.HANDLE_FIXED`, PR #30) in DEC-149's form, "your group's Civicsmith" (R112), held here until
-     that key reaches `main` and is read by key (BOB's START, K2917). ===== */
+     next free number of C-96 (C-96.51 the last held at the job's START). The translation is `words.json`'s
+     `refusal.HANDLE_FIXED`, read by key since T49 (N1075, K3269). R144's founder-handle act answers through the same row. ===== */
   HANDLE_FIXED: Object.freeze({
-    check: 'C-96.52', where: at("handleChange", "is-handle-fixed"),
-    translation: 'Handles don\'t change in your group\'s Civicsmith: yours names your work for good, and no one else can '
-      + 'ever take it. Nothing was changed.',
+    check: 'C-96.52', where: at("#handleFixed", "is-handle-fixed"),
+    translation: REFUSAL_WORDS['refusal.HANDLE_FIXED'],
+  }),
+  /* ===== T49 (T49-1; N1072; Bob's K3265; R144): only the founder sets the founder's handle. The next free number of C-96
+     (C-96.53 is credentials' RECOVERY_CODES_NOT_A_MEMBER). BOB's draft, re-wordable by the UX stream. ===== */
+  FOUNDER_HANDLE_NOT_FOUNDER: Object.freeze({
+    check: 'C-96.54', where: at("founderHandleSet", "is-founder-handle-founder"),
+    translation: 'Only the founder of this group chooses the founder\'s handle, and the account asking is not the '
+      + 'founder\'s. Nothing was changed.',
   }),
   /* ===== T45 (T45-2; N893, Actions D4; R128): the project-act guard could not answer (a throw, a promise or an answer
      it does not give), so the invitation or the visibility setting fails closed. The next free number of C-56, a
