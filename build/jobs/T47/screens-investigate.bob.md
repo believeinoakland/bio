@@ -19,3 +19,11 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · ANSWER · re J1
 
 K3145: A1, A2 are interface-shell R47 (`REF_SCREENS` `person`, `proceeding`, `standard`; `personexpunge` in `ADMIN_ACTS`). A3: save `clocksics`' `ics` text with `cs.save(filename, ics, {label})` (R46/R47). B4–B10 stand as read. C11 forwarded to screens-inquiry, C12 to tasks, B6 (`clockpropose` unrouted) to control-plane. B5, B7–B9, C13 are in `next.md` (N1029–N1033).
+
+## B3 · CHANGE
+
+K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B4 · CHANGE
+
+K3149: `due-date`'s subject is `<action>~<entry position>` (screens-action links `/app/due-date/<action>~<position>`); accept that form.
