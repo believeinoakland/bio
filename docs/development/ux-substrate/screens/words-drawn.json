@@ -881,6 +881,810 @@
    "en": "Look for its date in this project",
    "protected": false,
    "note": "DEC-259: findin's button, looking for the day a figure moved"
+  },
+  {
+   "key": "screen.open-file.risk.low.short",
+   "en": "Fetched by your group's Civicsmith; nothing in it acts on its own.",
+   "protected": false,
+   "note": "DEC-259: beside the Low risk mark"
+  },
+  {
+   "key": "screen.open-file.risk.high.short",
+   "en": "Handed in, not fetched by your group's Civicsmith; {why}.",
+   "protected": false,
+   "note": "DEC-259: beside the High risk mark; {why} such as \"it contains a macro\""
+  },
+  {
+   "key": "screen.open-file.handedin",
+   "en": "Handed in at the doorbell, {date}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.open-file.deeper.notasked",
+   "en": "not asked for yet",
+   "protected": false,
+   "note": "DEC-259: the state of a deeper check"
+  },
+  {
+   "key": "screen.open-file.warn.why",
+   "en": "Why it is high risk: it was handed in, not fetched by your group's Civicsmith, and {why}. No scanner has found anything in it; the built-in scanner checked it on {date}.",
+   "protected": true,
+   "note": "DEC-259: the warning before opening a high-risk original"
+  },
+  {
+   "key": "screen.open-file.warn.accept",
+   "en": "Open the original, accepting this",
+   "protected": true,
+   "note": "DEC-259: openwithwarning's button inside the warning"
+  },
+  {
+   "key": "screen.open-file.found.by",
+   "en": "The built-in scanner found {finding} on {date}, and so did {tool} in the deeper check.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.open-file.found.resembles",
+   "en": "Scanners report what a file resembles; sometimes a safe file is flagged, which is what a release is for.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.open-file.found.sent",
+   "en": "sent once to the members who can see it",
+   "protected": true,
+   "note": "DEC-259: who is told of a finding (protected: who can see)"
+  },
+  {
+   "key": "screen.open-file.held.about.outside",
+   "en": "While it is held, its original cannot be opened, not even with a warning. An outside scanner found it too, so it is released only when two members each give a reason. (Had only the built-in scanner found it, a second, different scanner finding it clean would release it.) A release covers this finding only.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.open-file.whole",
+   "en": "The file read whole",
+   "protected": false,
+   "note": "DEC-259: the structure check of a deeper check"
+  },
+  {
+   "key": "screen.open-file.flagged",
+   "en": "Flagged: {what}",
+   "protected": false,
+   "note": "DEC-259: what the structure check flagged, such as \"an external link\""
+  },
+  {
+   "key": "screen.open-file.release.waiting",
+   "en": "{name} gave a reason on {date}; a second member's releases it. The machine never can.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.people.counts.three",
+   "en": "named in {documents}, {questions} and {projects}",
+   "protected": false,
+   "note": "DEC-259: each a count with its noun, such as \"14 documents\""
+  },
+  {
+   "key": "screen.people.counts.docsonly",
+   "en": "named in {documents}, in no question or project yet",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.person.testify.basis",
+   "en": "How you know (for “I know this is them”)",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.person.same.because",
+   "en": "claimed the same person, grade {grade}, because {basis}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.person.expunge.title",
+   "en": "Remove \"{fact}\" from {name}'s page",
+   "protected": true,
+   "note": "DEC-259: the correction dialog (protected: irreversible)"
+  },
+  {
+   "key": "screen.person.expunge.button",
+   "en": "Remove it for good, with this reason",
+   "protected": true,
+   "note": "DEC-259: personexpunge's button inside the dialog"
+  },
+  {
+   "key": "screen.person.expunge.phone",
+   "en": "On a phone this can be read but not done: like signing and publishing, it finishes on a larger screen, where the whole consequence is in view.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.person.naming.it",
+   "en": "Documents that may name it",
+   "protected": false,
+   "note": "DEC-259: entity.naming.title for an organization"
+  },
+  {
+   "key": "screen.person.testify.it",
+   "en": "I know this is it…",
+   "protected": false,
+   "note": "DEC-259: entity.naming.testify for an organization"
+  },
+  {
+   "key": "screen.places.sub",
+   "en": "Administrators only. The places whose rules your group's Civicsmith follows, and the offices your group deals with.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.places.profiles.help",
+   "en": "Each place brings its deadlines, holidays, offices and records laws, each with its source. Changing places changes how dates and offices read from then on; what your group already recorded stays as it was.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.places.offices.note",
+   "en": "Offices come from your places' rules, each marked with where it came from. After you change places, fill them in again; offices your group added itself stay.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.plan.check.hostile",
+   "en": "Scenario {scenario}: no branch answers a hostile response (refusal, obstruction, retaliation) to {item}.",
+   "protected": false,
+   "note": "DEC-259: a plan check's finding"
+  },
+  {
+   "key": "screen.plan.subject.from",
+   "en": "from the inquiry \"{title}\" ({status}, {date})",
+   "protected": false,
+   "note": "DEC-259: where a plan's subject comes from; {status} such as suspected"
+  },
+  {
+   "key": "screen.plan.phase.checkpoint",
+   "en": "{item} → checkpoint: \"{checkpoint}\" (judged by a member)",
+   "protected": false,
+   "note": "DEC-259: a scenario's phase"
+  },
+  {
+   "key": "screen.plan.item.untaken",
+   "en": "nobody has taken it up",
+   "protected": false,
+   "note": "DEC-259: a started item no member has taken up"
+  },
+  {
+   "key": "screen.proceeding.now",
+   "en": "Now: awaiting the {event}",
+   "protected": false,
+   "note": "DEC-259: where the proceeding stands, such as awaiting the hearing"
+  },
+  {
+   "key": "screen.published.howtoread.link",
+   "en": "How to read a case",
+   "protected": false,
+   "note": "DEC-259: a link after the explanation of the two strengths"
+  },
+  {
+   "key": "screen.published.named",
+   "en": "{name}, by title: {reason} (finding {n}).",
+   "protected": true,
+   "note": "DEC-259: a person the case names by title, with the reason (protected: published)"
+  },
+  {
+   "key": "screen.projectai.sub",
+   "en": "Optional. Who pays for the assistant's work in {project}, for which uses, and up to what limits.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.state.key",
+   "en": "{project} has its own Anthropic API key (ending …{last4}) · {state} · set by {name}, {date}. Members' acts in this project are paid for by it, and the project is billed by Anthropic.",
+   "protected": false,
+   "note": "DEC-259: {state} on or off"
+  },
+  {
+   "key": "screen.projectai.state.signin",
+   "en": "Your own Claude sign-in serves {project} while you are its only member · {state} · set by you, {date}. It is your own use of your own subscription.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.state.member",
+   "en": "{project} pays for the assistant's work here with its own API key, {state}. Its owners set what it pays for and its limits; they see how much it is used in total, never what you ask or who asked.",
+   "protected": true,
+   "note": "DEC-259: what a member who is not an owner sees (protected: who sees what)"
+  },
+  {
+   "key": "screen.projectai.paidby.key",
+   "en": "An Anthropic API key for this project",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.paidby.signin",
+   "en": "My own Claude sign-in, while I am the project's only member",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.paidby.none",
+   "en": "No project account: members' own accounts, then the group's key, serve",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.key.help",
+   "en": "Made at console.anthropic.com by whoever pays for the project. Sealed in your group's Civicsmith, never shown again or exported, and used only for acts in this project. It starts switched off. Each member is told once, before the first act it pays for, that their questions go to Anthropic under the project's account.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.owners.alone",
+   "en": "Any one owner sets these alone. Every change is recorded with who and when, and every owner sees it below.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.uses.heading",
+   "en": "What it pays for",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.limit.ontop",
+   "en": "on top of it",
+   "protected": false,
+   "note": "DEC-259: a limit on one use that is on top of the overall limit"
+  },
+  {
+   "key": "screen.projectai.meter.month",
+   "en": "This month on the project's account: {used} of the {limit} limit",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.meter.explore",
+   "en": "Exploring this month, on top of it: {used} of the {limit} limit",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.limits.signin",
+   "en": "Limits on your sign-in here",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.keepaway.member",
+   "en": "Off. If an owner turns it on, you see their reason here, and the assistant stops for the uses they chose, whoever pays.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.keepaway.which",
+   "en": "Keep this project's material away from AI",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.keepaway.button",
+   "en": "Keep this project's material away",
+   "protected": false,
+   "note": "DEC-259: projectaikeepaway's button"
+  },
+  {
+   "key": "screen.projectai.changes.head",
+   "en": "Changes, seen by every owner",
+   "protected": true,
+   "note": "DEC-259: says who sees the changes"
+  },
+  {
+   "key": "screen.projectai.change.ontop",
+   "en": "{name} set a limit of {limit} a month on {use}, on top of the overall limit",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.change.explore",
+   "en": "{name} set exploring to {setting}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.projectai.change.held",
+   "en": "{name} held the project's API key and switched it on",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.recovery.sub",
+   "en": "If you lose your password, one of these codes lets you set a new one. Each works once. Every member has their own.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.recovery.lost.heading",
+   "en": "If you lose your codes too",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.recovery.lost.what",
+   "en": "An administrator can make you a one-time reset link instead. For administrators: if every administrator loses both password and codes, only whoever holds the hosting account can let one back in, so a second administrator is worth having.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.reset.dead.sub",
+   "en": "A reset link works once, for seven days",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.review-copy.band",
+   "en": "{n} people outside the group can read this until {date}",
+   "protected": true,
+   "note": "DEC-259: the band across a draft shared for review (protected: who can see)"
+  },
+  {
+   "key": "screen.review-copy.sub",
+   "en": "A named reader gets a view that you can stop at any time.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.review-copy.link.line",
+   "en": "For {who} · works until {until}, or until you stop sharing · Civicsmith sends no email: copy the link and send it yourself.",
+   "protected": true,
+   "note": "DEC-259: under the reader's link"
+  },
+  {
+   "key": "screen.review-outside.sub",
+   "en": "Before publishing, the group asks you to read this draft of its case and comment. It is not public: only people with this link can read it, until {date}.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.review-outside.readall",
+   "en": "Read the whole draft",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.request.law.help",
+   "en": "From your group's places. The faster request suits a small, clearly described set of records.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.sub",
+   "en": "How hard your group's Civicsmith is being tried, against its usual. Only administrators see this.",
+   "protected": true,
+   "note": "DEC-259: says who can see it"
+  },
+  {
+   "key": "screen.security.summary.signin",
+   "en": "Someone tried hard to sign in on {when}. Every attempt was refused.",
+   "protected": false,
+   "note": "DEC-259: the period summarized, when sign-ins were refused far above the usual"
+  },
+  {
+   "key": "screen.security.summary.detail",
+   "en": "Refused sign-ins were about {times} times the usual between {from} and {to}, with requests coming too fast turned away at the same time. It was high from {highfrom} to {highto}, when administrators were told once. No new key, credential or administrator was made in the period.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.heat.heading",
+   "en": "By kind and by hour",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.heat.usual",
+   "en": "at or below the usual",
+   "protected": false,
+   "note": "DEC-259: the key under the hours"
+  },
+  {
+   "key": "screen.security.heat.upto",
+   "en": "up to {n} times the usual",
+   "protected": false,
+   "note": "DEC-259: the key under the hours"
+  },
+  {
+   "key": "screen.security.heat.note",
+   "en": "Each square is one hour. Hover, focus or tap one for its count and the usual. “Usual” is your group's own median for the same hour over the four weeks before.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.totals.heading",
+   "en": "Totals for the period",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.totals.note",
+   "en": "Counts only. Nothing here says who tried, and nothing your group holds is shown.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.where.what",
+   "en": "Refused sign-ins and keys, and requests turned away or blocked, by the country Cloudflare reports for them.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.where.note",
+   "en": "A country is not proof of who is behind an attempt: anyone can borrow an address in another country. No address is ever kept or shown, and a member's own sign-ins are never placed: a mistyped password followed by the member signing in is counted without a country.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.told.heading",
+   "en": "When you are told",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.notice.signin",
+   "en": "sign-in refusals far above the usual and still going on, all refused so far",
+   "protected": false,
+   "note": "DEC-259: the administrators' notice when the level is high"
+  },
+  {
+   "key": "screen.security.notice.sent",
+   "en": "sent to administrators once, at {time}, when the level became high · not sent again while it lasted",
+   "protected": true,
+   "note": "DEC-259: who was told (protected)"
+  },
+  {
+   "key": "screen.security.told.note",
+   "en": "Administrators are told only when the level is high, never as a routine count. The notice opens this screen at that period.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.tools.about",
+   "en": "Built in: a file scanner (ClamAV, which looks for viruses and other harmful code, with signatures fetched daily) and the safe view. Add your organization's own tools of any kind: file scanners, tools that make safe copies of files, sandboxes, address checks, a place to send security counts.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.runs.own",
+   "en": "runs in your group's own account",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.runs.deeper",
+   "en": "runs when a member asks for a deeper check",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.tool.sendsbytes",
+   "en": "sends the file's bytes, never its name",
+   "protected": true,
+   "note": "DEC-259: a tool's handling: what leaves the group"
+  },
+  {
+   "key": "screen.security.tool.deletes",
+   "en": "deletes the file when the scan ends",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.tool.results",
+   "en": "results kept up to {days} days",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.tool.addresscheck",
+   "en": "address check before a capture",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.tool.hosting",
+   "en": "your hosting company already carries your traffic, so no one new learns an address",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.adding",
+   "en": "Adding: {tool}, {kind}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.adding.sends",
+   "en": "The file's bytes. Never its name, who captured it or your group's address.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.adding.recipient",
+   "en": "{vendor}, in the region you choose; it uses no one else.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.adding.keeps",
+   "en": "Clean files up to {days} days. Files it judges malicious: kept by {vendor} in {region}, indefinitely, for its own research.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.adding.when",
+   "en": "When it runs: only when a member asks for a deeper check. A tool on your organization's own servers may also check every file as it arrives.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.adding.before",
+   "en": "Before you turn it on",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.adding.understand",
+   "en": "I understand that files {vendor} judges malicious are kept by {vendor} in {region} indefinitely",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.adding.test",
+   "en": "Test it with a harmless test file",
+   "protected": false,
+   "note": "DEC-259: securitytooltest's button while adding a tool"
+  },
+  {
+   "key": "screen.security.adding.private",
+   "en": "A service that shares by default is offered only with its private mode, which Civicsmith turns on and checks on every call; if it can't confirm private mode, nothing is sent.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.notoffered",
+   "en": "Not offered, because they share what is sent to them: VirusTotal uploads, Jotti, Hybrid Analysis, and the public modes of ANY.RUN, Joe Sandbox and urlscan.io. A tool whose vendor does not say whether it shares what it is sent is not offered until it does. An address check never sends the full address to anyone new: only checks that send a scrambled fragment, or Cloudflare's own. A site known to be bad: the document is still captured, as high risk, opens only in the safe view, and the check's answer is noted on it.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.logsink",
+   "en": "Sending security counts elsewhere (a log service your organization uses) sends counts only, never who opened which file.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.cando.heading",
+   "en": "What you can do",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.security.cando",
+   "en": "A member who fears their password is weak can change it in Your account. An administrator can turn off the reusable join link or the group's key in Members. Whoever holds the hosting account can tighten Cloudflare's own settings there.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.settings.sub",
+   "en": "Your own settings first; then the group's, which only administrators change.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.start-send.clock.law",
+   "en": "{days} days, from the law your profile names",
+   "protected": false,
+   "note": "DEC-259: an action's clock, from the group profile"
+  },
+  {
+   "key": "screen.start-send.secondapproval",
+   "en": "If this project needs a second approval before sending, the text shows: “Waiting for a second member's approval. Any member of this project other than {approver} can give it.”",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.theme.declaredby",
+   "en": "declared by {who}, {date}",
+   "protected": false,
+   "note": "DEC-259: theme.declared within a theme's line"
+  },
+  {
+   "key": "screen.theme.placed.confirmed",
+   "en": "Placed by {who}, {date}; confirmed a hunch the assistant proposed: “{note}”",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.ties.sub",
+   "en": "Your work and family connections that could matter to a case, so your group can be open about them.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.ties.summary",
+   "en": "Why you are asked, and who sees it · so readers can trust a case · only you and the administrators see this list",
+   "protected": true,
+   "note": "DEC-259: says who sees the list"
+  },
+  {
+   "key": "screen.ties.who.change",
+   "en": "You can change or remove a tie at any time. A case already published keeps what it said.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.ties.row.says",
+   "en": "a case would say: “{says}”",
+   "protected": true,
+   "note": "DEC-259: how a case would disclose the tie"
+  },
+  {
+   "key": "screen.ties.row.named",
+   "en": "a case would name me",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.timeline.order.undetermined",
+   "en": "Undetermined order: {events}, because both are dated only by {precision}.",
+   "protected": false,
+   "note": "DEC-259: {precision} month or year"
+  },
+  {
+   "key": "screen.timeline.step.none.optional",
+   "en": "None threaded; not every request has one.",
+   "protected": false,
+   "note": "DEC-259: a step that is only sometimes present"
+  },
+  {
+   "key": "screen.timeline.finding.missing",
+   "en": "Step {n}, {step}: no document within {window} (by {date}).",
+   "protected": false,
+   "note": "DEC-259: a finding on a followed matter; it never says anyone is late"
+  },
+  {
+   "key": "screen.timeline.progression.sub",
+   "en": "How the group expects {what} to go. Version {n}, declared by {name}, {date}.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.timeline.step.within",
+   "en": "within {days} days of step {n}",
+   "protected": false,
+   "note": "DEC-259: a step's window"
+  },
+  {
+   "key": "screen.timeline.req.unless",
+   "en": "Required: Unless a lawful exception applies",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.timeline.progression.prior",
+   "en": "Version {n}, {date}, had no {step} step.",
+   "protected": false,
+   "note": "DEC-259: how the earlier version differed"
+  },
+  {
+   "key": "screen.timeline.progression.name.help",
+   "en": "The kind of happening it follows, such as “{example}”.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.timeline.progression.steps.note",
+   "en": "Then add its steps, each with what comes before it, how soon, whether it is required, and how many documents it holds.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.translations.who",
+   "en": "Who may translate {language}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.translations.grantedby",
+   "en": "granted by {name}, {date}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.translations.changedby",
+   "en": "changed from the assistant's draft by {name}",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.translations.secondcheck",
+   "en": "needs a second check",
+   "protected": false,
+   "note": "DEC-259: a protected word changed from its draft"
+  },
+  {
+   "key": "screen.translations.localname",
+   "en": "name kept; explanation translated",
+   "protected": false,
+   "note": "DEC-259: where a local name came from"
+  },
+  {
+   "key": "screen.translations.draft.missing",
+   "en": "Ask the assistant to draft the {n} missing",
+   "protected": false,
+   "note": "DEC-259: translationdraft's button"
+  },
+  {
+   "key": "screen.translations.drafts.note",
+   "en": "A speaker checks the assistant's drafts for errors. A protected word kept as the assistant drafted it shows once kept. Changed from the draft, it shows only after a second granted speaker confirms it, or an administrator confirms it after reading the assistant's translation of it back into English; until then members see the English.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.translations.typed.note",
+   "en": "Type each word; a member who knows the language keeps it. A protected word shows only after a second granted speaker confirms it; until then members see the English.",
+   "protected": true,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.translations.marked.note",
+   "en": "Any member can mark a word with “this translation looks wrong”; it is listed here for the granted members and the administrators. Every word records who adopted it, when and what it replaced.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.translations.localnames.note",
+   "en": "Names of offices, laws, programs and places stay as they are, with an explanation in the member's language beside them. Where the place publishes an official translation, it comes with the place's rules and shows its source. What goes to an office goes in the office's language, with a labeled translation beside it for the member.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.unavailable.unreachable.note",
+   "en": "It tries again by itself every 30 seconds. If it stays out of reach for long, tell whoever holds your group's Cloudflare account.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.update.sub",
+   "en": "For whoever holds your group's Cloudflare account. An update keeps every record, member and setting; it changes only Civicsmith's own programs.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.update.note",
+   "en": "You go to Cloudflare's page to allow it, as when it was set up. If a step stops, your group's Civicsmith keeps running as it was.",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.wizards.originalchanged",
+   "en": "Civicsmith's original changed since: see what changed",
+   "protected": false,
+   "note": "DEC-259"
+  },
+  {
+   "key": "screen.tour.what.says",
+   "en": "{group} looks into {focus}. We check what the city says against its own records, and publish what the records show.",
+   "protected": false,
+   "note": "DEC-259: the walk-through's first step; {focus} the group's own words"
+  },
+  {
+   "key": "screen.timeline.threaded.owndate",
+   "en": "{document}, its own date {date}",
+   "protected": false,
+   "note": "DEC-259: a document threaded to a step, with the date it bears"
   }
  ],
  "rewrite": {
@@ -922,6 +1726,44 @@
   "screen.join.handle.help": "The record shows your handle on your work. Choose it with care: it can't be changed after you join, and no one else can ever take it. It needn't be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. Choosing a handle: a name people know lends your work credibility and lets reporters reach you, but puts it on public cases; a pen name shields you from pressure, while the administrators still know who you are.",
   "screen.join.codes.after": "When you join, you get ten recovery codes, shown once: save them, they are how you get back in if you forget your password. Then you are signed in and your group's home opens, with a short guided start you can take or leave.",
   "screen.money.didnotmove": "did not move: a {phase} figure, adopted {date}",
-  "screen.money.gap.to": "Undetermined: not stated in {source}, the only source holding this figure."
+  "screen.money.gap.to": "Undetermined: not stated in {source}, the only source holding this figure.",
+  "screen.people.notmembers": "The people and organizations your group's record follows: officials, staff, companies and public bodies. Your own group's members are not listed here; they are under Settings › Members.",
+  "screen.people.today.seeded": "added at setup from your group's place",
+  "screen.person.facts": "Career, credentials, memberships, interests",
+  "screen.person.expunge.statement": "This removes the recorded value for good. It cannot be undone, by you or anyone: the value is gone from this page, from every question that cited it, and from every export. A marker stays where it was: \"Removed where the law requires, {date}, by {member}\". Published cases are not changed; a court order for those is complied with on the docket.",
+  "screen.places.wanted.field": "A place you want that isn't listed (optional)",
+  "screen.places.wanted.help": "Kept in your group's Civicsmith and never sent anywhere. When an update brings its rules and offices, administrators are told once in their queue and can choose it above.",
+  "screen.plan.opened": "opened {date} by {name}, when {why}",
+  "screen.proceeding.login.note": "The court's register needs a login, so new filings come only by a member's own capture.",
+  "screen.published.meets": "meets this project's bar (capture {capture}, connection {connection})",
+  "screen.projectai.account.suspended": "Your sign-in no longer serves {project}. A second member joined, and a sign-in serves a project only while it has one member. Members' acts here now use their own accounts, or the group's key. Add an API key to give the project its own account again; if the project returns to just you, your sign-in serves it again.",
+  "screen.projectai.notice.head": "Before your first question here",
+  "screen.projectai.key.field": "The project's API key",
+  "screen.recovery.held": "You hold recovery codes: {remaining} of {total} unused, issued {date}.",
+  "screen.recovery.shown": "Save these now: they are shown only this once. Keep them somewhere only you can reach, apart from your password. Civicsmith keeps only a fingerprint of each, so it can never show them again.",
+  "screen.reset.keeps": "Your handle and everything you did stay as they are, and every other sign-in of yours ends. {name} can't see the password you choose. Your recovery codes still work; if you have lost them too, get ten new ones in Settings › Recovery codes once you are in.",
+  "screen.reset.dead.what": "It was used already, it expired, or an administrator withdrew it. Ask an administrator for a new one, in person or however your group talks. Nothing was changed.",
+  "screen.review-copy.heading": "Share Edition {edition} for review",
+  "screen.review-copy.reads.until": "can read until {until}",
+  "screen.review-outside.heading": "A review copy from {group}",
+  "screen.review-outside.draft": "The case: {case}, Edition {edition} (draft)",
+  "screen.request.describe": "Describe the records, not why you want them. The law doesn't let the office limit access because of why you ask ({cite}), and the city's portal shows this text to anyone.",
+  "screen.request.howsend.1": "Open the city's public records portal ({portal}) and choose “{button}”.",
+  "screen.request.howsend.2": "Paste the approved text as the request description, and choose the department: {department}.",
+  "screen.request.howsend.3": "Contact details are optional. Without them the request still goes in, but the city can't send you updates or ask you to clarify, and you can't sign in to collect the records. Give the address your group uses for its requests; staff see what you give.",
+  "screen.security.kind.signin": "Refused sign-ins",
+  "screen.security.kind.credential": "Refused keys and links",
+  "screen.security.kind.rate": "Requests over the limit",
+  "screen.security.kind.handover": "Refused hand-overs",
+  "screen.standard.notyet": "Not a standard until a member adopts it.",
+  "screen.ties.says.name.choice": "Naming me by my handle: “{handle}, who worked on this case, is {tie}.”",
+  "screen.ties.says.group.choice": "Without naming me: “A member of the group who worked on this case is {tie}.”",
+  "screen.timeline.order.evidence": "More evidence could order them: a passage that gives either one its day ({examples}), or a source that says which came first. Until a source orders them, both are kept as they are, never guessed into order; when one does, the timeline names it, and a source that disagrees is shown beside it, in tension.",
+  "shell.unavailable.nothing.says": "This address doesn't lead to anything in your group's Civicsmith. It may have been typed wrong, or the link is old.",
+  "shell.unavailable.notyours.says": "It exists, or it may not: either way it isn't something you can see. A hidden project shows only to its own members; ask its owner if you think you should be in it.",
+  "shell.unavailable.unreachable.title": "Your group's Civicsmith can't be reached",
+  "shell.unavailable.unreachable.says": "Your device is offline, or your group's Civicsmith isn't answering. Nothing you did is lost: what you saved is kept there, and what you were typing is still on this page.",
+  "screen.wizards.basedon": "based on Civicsmith's “{name}”",
+  "screen.wizards.copy.note": "A copy becomes your group's own wizard: a draft until approved, like any wizard your group writes. The original stays as it is and is still offered; a required wizard stays required. The copy shows what it is based on, and when Civicsmith's original changes, your wizard editors are told and can bring the change across."
  }
 }
