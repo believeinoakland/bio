@@ -1266,7 +1266,7 @@ export const ACTION_FENCE_CHECKS = {
   },
   MACHINE_CANNOT_CORRESPOND: {
     check: 'C-32.4',
-    where: 'src/actions/index.mjs actionCorrespond > is-machine-correspond',
+    where: 'src/action-records/index.mjs correspondFence > is-machine-correspond',
     translation: 'Recording that an exchange happened is testimony: on this path the entry itself '
       + 'is the evidence, so somebody has to be standing behind it. The credential that asked here '
       + 'is an automated one — it can capture bytes, and it cannot swear that a conversation took '
@@ -1304,35 +1304,35 @@ export const ACTION_ACT_CHECKS = {
   },
   BAD_DIRECTION: {
     check: 'C-33.5',
-    where: 'src/actions/index.mjs actionCorrespond > is-correspond-entry',
+    where: 'src/actions/index.mjs actionCorrespond > is-correspond-direction',
     translation: 'Every entry in this ledger says which way the exchange went, and this one names '
       + 'something the record does not use. A reply that never came is recorded as a non-response '
       + 'with the date it was due, rather than left out.',
   },
   BAD_DATE: {
     check: 'C-33.6',
-    where: 'src/actions/index.mjs actionCorrespond > is-correspond-entry',
+    where: 'src/action-records/index.mjs correspondEntryRefusal > is-correspond-entry',
     translation: 'Every entry here carries a calendar date written as four digits, two digits and '
       + 'two digits. A non-response is dated too — by when the reply was due — because an undated '
       + 'exchange cannot be placed against anything else in the record.',
   },
   CAPTURE_AND_TESTIMONY: {
     check: 'C-33.7',
-    where: 'src/actions/index.mjs actionCorrespond > is-correspond-entry',
+    where: 'src/action-records/index.mjs correspondEntryRefusal > is-correspond-entry',
     translation: 'An entry holds either the captured material or a named person who can speak to '
       + 'the exchange, and never both. A summary sitting beside the real thing is what a reader '
       + 'would quote instead of the thing the group can actually defend.',
   },
   NEITHER_CAPTURE_NOR_TESTIMONY: {
     check: 'C-33.8',
-    where: 'src/actions/index.mjs actionCorrespond > is-correspond-entry',
+    where: 'src/action-records/index.mjs correspondEntryRefusal > is-correspond-entry',
     translation: 'This entry offers neither captured material nor a named person behind it, so '
       + 'there is no way for anyone to check that the exchange happened. An assertion with nothing '
       + 'to check it against is the one thing this ledger will not hold.',
   },
   UNREGISTERED_ARTIFACT: {
     check: 'C-33.9',
-    where: 'src/actions/index.mjs actionCorrespond > is-correspond-artifact',
+    where: 'src/action-records/index.mjs unregisteredArtifact > is-correspond-artifact',
     translation: 'The material named here is not held in this store, so the entry would point at '
       + 'something nobody can open. Capture it first, or record a named person who can speak to '
       + 'the exchange instead — those are the two honest ways to hold one.',
@@ -1646,9 +1646,9 @@ export const ACTION_GRAMMAR_WORDS = Object.freeze({
   "refusal.OVERRIDE_NO_GROUND": "Acting before a determination needs one of two grounds: a legal deadline would pass "
     + "first, or the act would be done and couldn't be undone. Or make a one-finding case first. Nothing was written.",
   "refusal.COPIED_IS_ADDRESSEE": "The office the action is addressed to can't also be copied. Nothing was written.",
-  "refusal.MACHINE_CANNOT_SET_PARTNERS": "Only a member names the organisations acting with your group. Nothing was "
+  "refusal.MACHINE_CANNOT_SET_PARTNERS": "Only a member names the organizations acting with your group. Nothing was "
     + "written.",
-  "refusal.PARTNERS_REFUSED": "Each partner is a named organisation, listed once. Nothing was written.",
+  "refusal.PARTNERS_REFUSED": "Each partner is a named organization, listed once. Nothing was written.",
   "refusal.MACHINE_CANNOT_SET_PRESS_TERMS": "Only a member sets the terms of talking to the press. Nothing was written.",
   "refusal.PRESS_TERMS_NOT_PRESS": "Press terms apply only to an action with the press. Nothing was written.",
   "refusal.PRESS_TERMS_REFUSED": "Press terms are on the record, on background or off the record, with any embargo as a "
