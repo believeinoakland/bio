@@ -2,8 +2,9 @@
    that registers them, at the interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, realWorld, PASSWORD, SIGNIN_TOKEN } from "./fixture.mjs";
-import { credentialsOf, CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES, CREDENTIALS_PROJECT_TABLES, CREDENTIALS_HISTORY_TABLE } from "../../../src/credentials/index.mjs";
+import { world, realWorld, PASSWORD } from "./fixture.mjs";
+import { credentialsOf, CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "../../../src/credentials/index.mjs";
+import { AI_ACCOUNTS_TABLES, AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE } from "../../../src/ai-accounts/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 
 const sessionsOf = (w, id) => w.rows(`SELECT token_sha FROM sessions WHERE role=?`, `member:${id}`).length;
@@ -102,11 +103,11 @@ test("R18 R30 every credentials table is declared exempt from purge, and a whole
   await w.m.enroll({ invite: a.invite, handle: "second", password: PASSWORD("second") });
   await w.c.setPassword({ role: "member:second", password: PASSWORD("second") });
   /* T35's tables: recovery codes and a recovery (R46, R47), a refused sign-in's window, tally, waiting place and key
-     (R38, R44), a connected subscription (R43) */
+     (R38, R44); (T48) the AI accounts' tables are ai-accounts' (its R28, R29), and a reference is set only so the
+     grant is minted */
   const codes = w.c.recoveryCodesIssue({ by: "second" }).codes;
   assert.equal((await w.c.recover({ role: "member:second", code: codes[0], password: "recovered-passphrase", source: "fp-a" })).ok, true);
   assert.equal((await w.c.login({ role: "member:nobody", password: "wrong-passphrase", source: "fp-b", country: "US" })).ok, false);
-  assert.equal((await w.c.subscriptionTokenHold({ member: "second", token: SIGNIN_TOKEN("second") })).ok, true);   /* T47: R70 */
   const sess = (await w.c.login({ role: "member:second", password: "recovered-passphrase" })).token;
   assert.equal(typeof sess, "string");
   w.c.signerAdd({ keyB64: "AAAAsecond", memberId: "second", by: "admin" });
@@ -114,16 +115,12 @@ test("R18 R30 every credentials table is declared exempt from purge, and a whole
   assert.equal((await w.c.accountReferenceSet({ member: "second", kind: "apikey", secret: "sk-test", by: "second" })).ok, true);
   assert.equal((await w.c.keyedServiceSet({ service: "courtlistener", key: "cl-key", by: "second" })).ok, true);
   assert.equal((await w.c.aiGrantMint({ member: "second", by: "second", session: sess })).ok, true);
-  assert.equal((await w.c.groupKeySet({ key: "sk-group", by: "second" })).ok, true);
-  assert.equal(w.c.groupKeyNoticeSeen({ member: "second", by: "second" }).ok, true);
-  assert.equal(w.c.aiKeepAwaySet({ on: true, reason: "a review", by: "second" }).ok, true);   /* T36: R51's table */
   assert.equal(w.c.passwordResetLinkMake({ member: "second", by: "admin" }).ok, true);   /* T47: R69's table */
   const count = () => Object.fromEntries(CREDENTIALS_EXEMPT_TABLES.map((t) => [t, w.row(`SELECT COUNT(*) AS n FROM ${t}`).n]));
   const before = count();
   assert.deepEqual(before, { credentials: 2, sessions: 1, bootstrap: 1, signers: 1, ai_credentials: 1,
-    account_references: 1, keyed_services: 1, ai_grants: 1, group_key: 1, group_key_acts: 1, group_key_notices: 1,
-    signin_window: 2, security_counts: 1, security_pending: 1, security_key: 1, recovery_codes: 10, recoveries: 1,
-    subscription_connections: 1, ai_keep_away: 1, password_reset_links: 1 });
+    keyed_services: 1, ai_grants: 1, signin_window: 2, security_counts: 1, security_pending: 1, security_key: 1,
+    recovery_codes: 10, recoveries: 1, password_reset_links: 1 });
   assert.equal(w.rc.purge({}).ok, true);
   assert.deepEqual(count(), before, "a whole-store purge clears none of them");
   assert.equal(w.rc.purge({ bundleId: "second" }).ok, true);
@@ -131,24 +128,22 @@ test("R18 R30 every credentials table is declared exempt from purge, and a whole
   assert.equal((await w.c.login({ role: "member:second", password: "recovered-passphrase" })).ok, true);
 });
 
-test("R18 R30 R34 the declaration: every table declared once by credentials through declareTable, with its classes; any refusal is thrown", () => {
+test("R18 R30 the declaration: (T48) its own fourteen tables declared once by credentials through declareTable, with their classes; the eleven AI-account tables declared by ai-accounts alone, never by this module; any refusal is thrown", () => {
   const w = world();
   const mine = [...w.core.declared.entries()].filter(([, d]) => d.module === "credentials");
-  assert.deepEqual(mine.map(([n]) => n).sort(), [...CREDENTIALS_EXEMPT_TABLES, ...CREDENTIALS_PROJECT_TABLES.map((t) => t.name),
-    CREDENTIALS_HISTORY_TABLE.name].sort(),
-    "every table this module owns, and only those");
+  assert.deepEqual(mine.map(([n]) => n).sort(), [...CREDENTIALS_EXEMPT_TABLES].sort(), "every table this module owns, and only those");
+  assert.deepEqual(CREDENTIALS_EXEMPT_TABLES.slice().sort(), ["ai_credentials", "ai_grants", "bootstrap", "credentials", "keyed_services",
+    "password_reset_links", "recoveries", "recovery_codes", "security_counts", "security_key", "security_pending", "sessions",
+    "signers", "signin_window"], "R30's fourteen");
+  const theirs = [...AI_ACCOUNTS_TABLES, ...AI_ACCOUNTS_PROJECT_TABLES, AI_ACCOUNTS_HISTORY_TABLE].map((t) => t.name);
+  assert.equal(theirs.length, 11);
+  for (const t of theirs) assert.equal(w.core.declared.get(t)?.module, "ai-accounts", `${t} is declared, once, by ai-accounts`);
   const cls = Object.fromEntries(mine.map(([n, d]) => [n, d.classes]));
   for (const t of CREDENTIALS_EXEMPT_TABLES)
     assert.deepEqual([cls[t].purge, cls[t].expunge, cls[t].derive, cls[t].version_chain], ["exempt", "none", "stored", false], t);
-  /* R30: account references, keyed-service keys, password hashes, sessions and AI credentials (and the ask grants) never
-     exported; account references seen by their owner alone */
-  for (const t of ["account_references", "keyed_services", "credentials", "sessions", "ai_credentials", "ai_grants",
-                   "group_key", "group_key_acts", "group_key_notices"])
+  /* R30: keyed-service keys, password hashes, sessions, AI credentials and the ask grants never exported */
+  for (const t of ["keyed_services", "credentials", "sessions", "ai_credentials", "ai_grants"])
     assert.equal(cls[t].export, "never", t);
-  assert.equal(cls.account_references.sight, "owner");
-  /* R34: the group key never exported; record-core's R21 offers no administrator sight, so its tables are the group's
-     and the key is answered by no read (K1760) */
-  assert.deepEqual([cls.group_key.export, cls.group_key.sight], ["never", "group"]);
   assert.deepEqual(CREDENTIALS_TABLES.map((t) => t.name), CREDENTIALS_EXEMPT_TABLES);
   /* once */
   assert.equal(w.c.declareTables(), false, "once");

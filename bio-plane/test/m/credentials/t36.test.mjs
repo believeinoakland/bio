@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, PASSWORD, SEAL } from "./fixture.mjs";
-import { ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS, SECURITY_KINDS, KEEP_AWAY_REASON, SECURITY_SERVICE_PREFIX,
+import { ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS, SIGN_IN_CHECKS, SECURITY_KINDS, SECURITY_SERVICE_PREFIX,
          credentialsOf } from "../../../src/credentials/index.mjs";
 import { notAnAdmin } from "../../../src/membership/index.mjs";
 
@@ -108,71 +108,6 @@ test("R29 a set with no key removes the service's key and the service is off: fo
 
 /* ===== R51, R52: keeping the group's material away from AI ===== */
 
-test("R51 aiKeepAwaySet: an active administrator only (NOT_AN_ADMIN through membership, a machine refused the same); on: true without a reason of 1 to 2,000 characters, or a reason not a string or over 2,000, AI_KEEP_AWAY_NO_REASON (C-29.32, re-coded in T37); each refusal writing nothing", async () => {
-  const w = await world().group("ann", "dee");
-  w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
-  assert.deepEqual({ ...KEEP_AWAY_REASON }, { min: 1, max: 2000 });
-  const before = w.snapshot();
-  for (const by of ["ann", "dee", "nobody", "class:admin", "class:ai", "token:ai", null, ""])
-    for (const on of [true, false])
-      assert.deepEqual(w.c.aiKeepAwaySet({ on, reason: "r", by }),
-        notAnAdmin(by ?? null, "keeping the group's material away from every assistant"), `${String(by)} ${on}`);
-  /* the second administrator is refused once no longer active */
-  w.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='second'`);
-  assert.equal(w.c.aiKeepAwaySet({ on: true, reason: "r", by: "second" }).reason, "NOT_AN_ADMIN");
-  w.sql.exec(`UPDATE members SET status='active' WHERE member_id='second'`);
-  for (const reason of [undefined, null, "", "   ", "\n", "x".repeat(2001), "é".repeat(2001), 7, ["r"], { r: 1 }]) {
-    const r = w.c.aiKeepAwaySet({ on: true, reason, by: "admin" });
-    assert.deepEqual(shape(r), row(ACCOUNT_CHECKS, "AI_KEEP_AWAY_NO_REASON"), JSON.stringify(reason)?.slice(0, 30));
-    assert.match(r.detail, /Nothing was changed\.$/);
-  }
-  /* a reason given with off is held to the same bounds */
-  for (const reason of ["x".repeat(2001), 7])
-    assert.deepEqual(shape(w.c.aiKeepAwaySet({ on: false, reason, by: "admin" })), row(ACCOUNT_CHECKS, "AI_KEEP_AWAY_NO_REASON"));
-  assert.equal(w.snapshot(), before, "no refusal writes");
-  /* exactly 1 and exactly 2,000 characters (2,000 two-byte characters too) are reasons */
-  for (const reason of ["x", "x".repeat(2000), "é".repeat(2000)]) assert.equal(w.c.aiKeepAwaySet({ on: true, reason, by: "admin" }).ok, true);
-});
-
-test("R51 R52 each set is appended with its on, reason, who and when, never replacing an earlier one, and answers the state; aiKeepAwayState answers the latest set, the reason in the administrator's words, null when none; off with nulls before any set; it writes nothing and never throws", async () => {
-  const w = await world().group("ann");
-  const none = { on: false, reason: null, set_by: null, set_at: null, uses: ["ask", "draft", "run", "standing", "explore", "enquire", "read", "transcribe", "account"] };
-  assert.deepEqual(w.c.aiKeepAwayState(), none, "off by default");
-  const words = "  We are under a confidentiality order until the hearing; \"no AI\" until 1 March.  ";
-  const on = w.c.aiKeepAwaySet({ on: true, reason: words, by: "member:second" });
-  assert.deepEqual(Object.keys(on).sort(), ["ok", "on", "reason", "set_at", "set_by", "uses"]);
-  assert.deepEqual({ ...on, set_at: null, uses: null }, { ok: true, on: true, reason: words, set_by: "second", set_at: null, uses: null }, "in the administrator's words as set");
-  assert.match(on.set_at, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
-  const before = w.snapshot();
-  assert.deepEqual(w.c.aiKeepAwayState(), { on: true, reason: words, set_by: "second", set_at: on.set_at, uses: none.uses });
-  assert.equal(w.snapshot(), before, "the state writes nothing");
-  const off = w.c.aiKeepAwaySet({ on: false, by: "admin" });
-  assert.deepEqual({ ...off, set_at: null }, { ok: true, on: false, reason: null, set_by: "admin", set_at: null, uses: none.uses }, "null when none was given");
-  assert.equal(w.c.aiKeepAwaySet({ on: "yes", reason: "only `true` is on", by: "admin" }).on, false);
-  const again = w.c.aiKeepAwaySet({ on: true, reason: "second reason", by: "admin" });
-  assert.deepEqual(w.c.aiKeepAwayState(), { on: true, reason: "second reason", set_by: "admin", set_at: again.set_at, uses: none.uses });
-  /* appended: every set kept, in order */
-  assert.deepEqual(w.rows(`SELECT is_on, reason, set_by FROM ai_keep_away ORDER BY seq`).map((r) => [r.is_on, r.reason, r.set_by]),
-    [[1, words, "second"], [0, null, "admin"], [0, "only `true` is on", "admin"], [1, "second reason", "admin"]]);
-  for (const r of w.rows(`SELECT set_at FROM ai_keep_away`)) assert.match(r.set_at, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
-  const d = w.core.declared.get("ai_keep_away").classes;
-  assert.deepEqual([d.purge, d.sight], ["exempt", "group"]);
-  /* never throws: a setting it cannot read is not known (on: null), never off */
-  w.sql.exec(`DROP TABLE ai_keep_away`);
-  assert.deepEqual(w.c.aiKeepAwayState(), { on: null, reason: null, set_by: null, set_at: null, uses: null });
-  const broken = Object.create(Object.getPrototypeOf(w.c));
-  assert.deepEqual(w.c.aiKeepAwayState.call(broken), { on: null, reason: null, set_by: null, set_at: null, uses: null });
-});
-
-test("R51 R52 the routes: aikeepaway takes `by` from the query over the body; aikeepawaystate answers the state, whoever the plane admits (every active member, by its spec)", async () => {
-  const w = await world().group("ann");
-  assert.equal(w.ops("by=ann", { on: true, reason: "r", by: "admin" }).aikeepaway().reason, "NOT_AN_ADMIN", "the stamp wins");
-  const set = w.ops("by=second", { on: true, reason: "a reason", by: "ann" }).aikeepaway();
-  assert.deepEqual([set.ok, set.on, set.reason, set.set_by], [true, true, "a reason", "second"]);
-  assert.deepEqual(w.ops("viewer=ann").aikeepawaystate(), w.c.aiKeepAwayState());
-  assert.deepEqual(w.ops().aikeepawaystate().on, true);
-});
-
 /* ===== R35 with R27 and R32: keep-away refuses every account; otherwise a member's own is always served ===== */
 
 async function servedWorld() {
@@ -244,29 +179,6 @@ test("R35 R52 the refusal carries the reason R52 answers, in the administrator's
     assert.equal(r.keep_away.reason, words);
     assert.equal(r.keep_away.reason, w.c.aiKeepAwayState().reason);
   }
-});
-
-test("R35 otherwise a member's own reference is always answered when held, whatever the group key's state (absent, held and off, on, its notice unread, removed): K1757's \"the group's key only\" retired", async () => {
-  const w = await world().group("ann", "bob");
-  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ANN-own", by: "ann" });
-  const own = { ok: true, kind: "apikey", level: "member", key: "sk-ANN-own" };
-  const served = async (label) => assert.deepEqual(await w.c.accountFor({ member: "ann", act: ask("ann") }), own, label);
-  await served("no group key");
-  await w.c.groupKeySet({ key: "sk-GROUP", by: "admin" });
-  await served("the group key held and off");
-  w.c.groupKeySwitch({ on: true, by: "admin" });
-  await served("the group key on, ann's notice unread");
-  w.c.groupKeyNoticeSeen({ member: "ann", by: "ann" });
-  await served("the group key on, notice read");
-  w.c.aiKeepAwaySet({ on: false, reason: "never on", by: "admin" });
-  await served("keep-away set off");
-  w.c.groupKeyRemove({ by: "admin" });
-  await served("the group key removed");
-  /* bob's own key likewise, the group key gone; and with none he is served by nothing */
-  assert.equal((await w.c.accountFor({ member: "bob", act: { kind: "run", member: "bob" } })).reason, "NO_ACCOUNT");
-  await w.c.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-BOB-own", by: "bob" });
-  assert.deepEqual(await w.c.accountFor({ member: "bob", act: { kind: "run", member: "bob" } }),
-    { ok: true, kind: "apikey", level: "member", key: "sk-BOB-own" });
 });
 
 /* ===== R49: the counts for a period ===== */
