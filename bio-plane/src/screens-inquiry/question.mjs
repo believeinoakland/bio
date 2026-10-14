@@ -120,9 +120,12 @@ function render(cs, view) {
   const concluded = !!(b && b.conclusion && b.conclusion_stance !== "withdrawn");
   const member = view.me && view.me.member;
   const runs = view.reachable && member ? later("runs", "airuns", { contextType: "inquiry", contextId: id, limit: "50" }, String(ui.seq || 0)) : null;
+  /* a run of hers at work on it: running, and dispatched (by this page, or ticked since by the worker): a run opened and
+     withheld is never drawn at work (R33's rule; D29) */
   const myRun = runs && runs.state === "ok" && Array.isArray(runs.value.runs)
     ? runs.value.runs.find((s) => s && s.status === "running" && s.principal && typeof s.principal.plane === "string"
-      && (s.principal.plane === "member:" + member || s.principal.plane.startsWith("member:" + member + "/"))) : null;
+      && (s.principal.plane === "member:" + member || s.principal.plane.startsWith("member:" + member + "/"))
+      && (ui.dispatched === s.id || Number(s.ticks) > 1)) : null;
   const pack = view.reachable ? later("pack", "agentpack", {}) : null;
   const packName = pack && pack.state === "ok" && pack.value && ((pack.value.pack && (pack.value.pack.version || pack.value.pack.skillVersion)) || pack.value.version);
   const askAct = view.reachable && packName && member
@@ -602,7 +605,18 @@ const acts = [
           else cs.set("said", { html: `<p class="mk-msg" role="alert" data-refusal="airunopen">${r.translation ? cs.esc(r.translation) : cs.w("state.failed", { reason: code })}</p>` });
           return;
         }
-        return cs.call("airundispatch", { body: { run } }).then(() => cs.set("seq", (view.ui.seq || 0) + 1));
+        /* D29: a dispatch answered `dispatched: false`, withheld or refused is said by its words, never taken as at work */
+        return cs.call("airundispatch", { body: { run } }).then((x) => {
+          const xr = res(x) || {};
+          if (!x || x.ok === false || xr.ok === false || xr.dispatched === false || xr.withheld || xr.found === false) {
+            const c = String(xr.code || xr.reason || xr.withheld || "");
+            const key = xr.withheld && (view.parts.withheld || []).includes(c) ? "dock.withheld." + c : (view.parts.refusals || {})[c];
+            cs.set("said", { html: `<p class="mk-msg" role="alert" data-refusal="airundispatch">${key ? cs.w(key) : xr.translation ? cs.esc(xr.translation) : cs.w("dock.withheld.other")}</p>` });
+            return;
+          }
+          cs.set("dispatched", run);
+          cs.set("seq", (view.ui.seq || 0) + 1);
+        });
       }, () => cs.set("said", { html: `<p class="mk-msg" role="alert">${cs.w("state.failed", { reason: "" })}</p>` }));
       return null;
     } },
@@ -649,7 +663,8 @@ const words = Object.freeze([
   "question.ai.other", "question.ai.whose", "question.concluded.heading", "question.concluded.by", "question.concluded.falsifier",
   "question.conclude.reading", "question.conclude.falsifier", "question.conclude.falsifier.help", "question.conclude.nofalsifier",
   "question.conclude.commentary", "question.conclude.commentary.help", "question.plan.link", "question.plan.link.tip",
-  "refusal.VERSION_AFFIRMATION_INCOMPLETE",
+  "refusal.VERSION_AFFIRMATION_INCOMPLETE", "dock.withheld.other", "dock.withheld.MEMBER_PRINCIPAL_RUN", "dock.withheld.AGENT_WORKER_UNBOUND",
+  "dock.withheld.NAMESPACE_UNDETERMINED", "dock.withheld.CREDENTIAL_RECORD_SILENT",
 ]);
 
 /** The question screen (interface-shell R21), with the module's shared readers and the dock's bounds as its parts. */

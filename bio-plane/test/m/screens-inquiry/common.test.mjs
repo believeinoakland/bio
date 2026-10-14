@@ -13,11 +13,16 @@ import { open, main, rawKeys, plane, word, inquiryMd, INQUIRY_REFS, LEGS, SCREEN
 
 const REGISTRY = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
 const PATHS = { project: "/app/project/" + P, question: "/app/question/" + Q, document: "/app/document/" + D, projectai: "/app/projectai/" + P };
-/* the reads each screen draws in one of the four states, by op (the rest feed what is drawn: titles, choices) */
-const DRAWN = { project: ["projectstage", "strengthbarof", "projectquestions", "list", "projectaccountstate", "projectparticipants", "projectvisibility"],
-                question: ["inquirystrength", "questionwaits", "hypotheses"],
-                document: ["backlinks", "reading", "versionchain"],
-                projectai: ["projectaccountstate", "projectaikeepawaystate", "accountuses", "ailimits", "aiusage", "accounthistory"] };
+/* the reads each screen draws in one of the four states, by the screen's own read names (N1073: the ops are read from its
+   declaration, never hand-listed); the rest feed what is drawn (titles, choices); the document's reading and versions are
+   the reads it makes once its digest and address are read */
+const DRAWN_READS = { project: ["stage", "bar", "questions", "others", "account", "participants", "visibility"], question: ["strength", "waits", "hunches"],
+  document: ["backlinks"], projectai: ["state", "keepaway", "uses", "limits", "usage", "history"] };
+const LATER = { document: ["reading", "versionchain"] };
+const DRAWN = Object.fromEntries(Object.entries(DRAWN_READS).map(([id, names]) => {
+  const reads = SCREENS.find((s) => s.id === id).reads({ subject: "X-1" });
+  return [id, names.map((n) => reads[n].op).concat(LATER[id] || [])];
+}));
 /* the question with its partition held (state a), so its strength is drawn */
 const GROUPED = { [Q]: { "bundle.md": inquiryMd(P, INQUIRY_REFS, { legs: LEGS.map((l) => (l.target === D ? { ...l, ground: "part 1" } : l)),
   grounds: [{ ground: "part 1", asserted_by: "member:dev", at: "2026-10-05T09:00:00Z" }] }) } };
@@ -29,17 +34,12 @@ const AI = { projectparticipants: ok({ ok: true, projectId: P, participants: [{ 
   aiusage: ok({ ok: true, uses: [] }), accounthistory: ok({ ok: true, changes: [] }) };
 const base = (id) => (id === "projectai" ? AI : {});
 const VARIANTS = { refused: refusedIn("SOME_REFUSAL", "The plane refused this read."), silent, pending };
-/* the acts each screen's requirements name (R1–R4, R10–R16, R25, R28–R33, R37, R41) */
-const NAMED = {
-  project: ["promote", "drawquestion", "findin", "projectbarset", "projectinvite", "projectjoin", "planopen", "projectvisibilityset", "projectownerremove",
-    "projectowneradd", "projectremove", "projectleave", "projectfork", "projectownerrescue"],
-  question: ["cite", "sever", "reinstate", "narrow", "conclude", "withdrawconclusion", "hypothesishold", "planopen", "checkrequest", "heldrestore", "search",
-    "inquiryground", "versionaccept", "versionhide", "versionconsider", "versionreject", "versionrevert", "versioncurrent", "readtranslate", "airunopen", "airunclose"],
-  document: ["gradenote", "release", "cite", "retire", "attest", "identityclaim", "monitorset", "monitor", "findin", "pagetranscribe", "transcribe",
-    "adoptversion", "keepversion", "connectionchoose", "explore"],
-  assistant: ["airunopen", "suggest", "airunclose"],
-  projectai: ["projectkeyset", "projectsigninset", "projectaccountswitch", "projectaccountremove", "projectkeynoticeseen", "accountusesset", "ailimitset", "projectaikeepaway", "projectjoin"],
-};
+/* the registry acts this module's requirements do not name (reported to BOB, J3): every other act the registry lists for
+   its screens is drawn (N1073: the acts are read from the registry, the owner's declaration, never hand-listed) */
+const NOT_NAMED = { project: ["writinghelp", "owed:projectstakeset K3230"], question: ["themeplace"],
+  document: ["themeplace", "themepropose", "themewithdraw", "captureprogressions", "thread"] };
+const NAMED = Object.fromEntries(REGISTRY.screens.filter((s) => SCREENS.some((x) => x.id === s.id))
+  .map((s) => [s.id, s.acts.map((a) => a.op).filter((op) => !(NOT_NAMED[s.id] || []).includes(op))]));
 
 for (const [id, path] of Object.entries(PATHS)) {
   test(`R5 ${id}: each read pending, refused and unanswered is drawn in its own state, beside the rest, with no key drawn bare (interface-shell R5, R10)`, async () => {

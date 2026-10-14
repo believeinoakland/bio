@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, lead, word,
-  P, Q, D } from "./fixtures.mjs";
+  SCREENS, P, Q, D } from "./fixtures.mjs";
 
 const at = "/app/question/" + Q;
 /* the inquiry with its partition held (state a): the policy a part of its own */
@@ -138,7 +138,10 @@ test("R25 readings: three drawn with their states, one a what-if, stands on the 
     { name: "The audit alone", description: "Only the audit.", state: "suggested", author: "member:mai", moved: null, at: "2026-10-08T09:00:00Z", grounds: [], legs: [] },
     { name: "Old", state: "rejected", author: "member:mai", moved: { by: "mai", at: "2026-10-02T09:00:00Z", reason: "wrong year" }, grounds: [], legs: [] }];
   const answer = (r) => ok({ ok: true, inquiry: Q, versions, ...(r.query.project ? { current: { project: P, version: "Seven-day standard" } } : {}) });
-  const acts = Object.fromEntries(["versionaccept", "versionconsider", "versionreject", "versionrevert", "versioncurrent", "versionhide"].map((op) => [op, ok({ ok: true })]));
+  /* N1073: the reading acts as the screen declares them, never hand-listed */
+  const VERSION_ACTS = SCREENS.find((s) => s.id === "question").acts.map((a) => a.op).filter((op) => /^version/.test(op));
+  assert.equal(VERSION_ACTS.length, 6);
+  const acts = Object.fromEntries(VERSION_ACTS.map((op) => [op, ok({ ok: true })]));
   const p = await open(at, { ...A, plane: { basisversions: answer, ...acts } });
   const s = section(p, "question.readings.title");
   const row = (name) => section(p, "question.readings.title").querySelector(`[data-reading="${name}"]`);
@@ -160,8 +163,8 @@ test("R25 readings: three drawn with their states, one a what-if, stands on the 
   await press(p, "versionreject", { within: row("Two counts"), reason: "not enough on its own" });
   await press(p, "versionrevert", { within: row("Seven-day standard") });
   await press(p, "versionhide", { within: row("The audit alone") });
-  assert.deepEqual(["versionaccept", "versionconsider", "versionreject", "versionrevert", "versionhide"].map((op) => [op, p.byOp(op)[0].body.version, p.byOp(op)[0].body.target]),
-    [["versionaccept", "Two counts", Q], ["versionconsider", "The audit alone", Q], ["versionreject", "Two counts", Q], ["versionrevert", "Seven-day standard", Q], ["versionhide", "The audit alone", Q]]);
+  const sent = { versionaccept: "Two counts", versionconsider: "The audit alone", versionreject: "Two counts", versionrevert: "Seven-day standard", versionhide: "The audit alone" };
+  for (const [op, version] of Object.entries(sent)) assert.deepEqual([p.byOp(op)[0].body.version, p.byOp(op)[0].body.target], [version, Q], op);
   assert.equal(p.byOp("versionreject")[0].body.reason, "not enough on its own");
   /* Stand on: offered only on an accepted reading, not the CURRENT, to a joined member */
   const v2 = versions.map((v) => (v.name === "Two counts" ? { ...v, state: "accepted" } : v));
@@ -251,12 +254,23 @@ test("R41 state c, new and empty: nothing cited yet, the three ways in; the capt
 });
 
 test("R41 state d: a run of hers at work, the run's words and Stop the run", async () => {
-  const run = { id: "RUN-" + "c".repeat(16), status: "running", principal: { plane: "member:mai" } };
+  const run = { id: "RUN-" + "c".repeat(16), status: "running", ticks: 3, principal: { plane: "member:mai" } };
   const p = await open(at, reach({ ...A, reach: { airuns: ok({ ok: true, runs: [run] }) }, plane: { airunclose: ok({ ok: true }) } }));
   const s = section(p, "question.run.heading");
   assert.ok(says(s, "question.run.leave"));
   await press(p, "airunclose", { within: s });
   assert.deepEqual(p.byOp("airunclose")[0].body, { run: run.id, bound: "cancelled" });
+});
+
+test("R41 controls (D29): a run opened and withheld is never drawn at work; the withholding is said by its words", async () => {
+  const empty = inquiryMd(P, [], { legs: [] });
+  let runs = [];
+  const p = await open(at, reach({ images: { [Q]: { "bundle.md": empty } }, reach: { airuns: () => ok({ ok: true, runs }) }, plane: {
+    airunopen: (r) => { runs = [{ id: r.body.run, status: "running", ticks: 1, principal: { plane: "member:mai" } }]; return ok({ run: r.body.run, started: true, status: "running" }); },
+    airundispatch: ok({ run: "x", found: true, dispatched: false, status: "running", withheld: "AGENT_WORKER_UNBOUND" }) } }));
+  await press(p, "airunopen");
+  assert.equal(section(p, "question.run.heading"), undefined, "never drawn at work");
+  assert.ok(says(main(p).querySelector('[data-refusal="airundispatch"]'), "dock.withheld.AGENT_WORKER_UNBOUND"));
 });
 
 test("R41 state e: the assistant's proposal, machine work, accepted or declined with a reason", async () => {
@@ -366,7 +380,7 @@ test("R2 cite chooses its passage in Find in over the question's project; Find a
 });
 
 test("R2 controls: a hunch, a check and a narrowing with nothing written are refused by their words; a refused act keeps the form", async () => {
-  const p = await open(at, { ...A, plane: { hypothesishold: refusedIn("HYPOTHESIS_NO_STATEMENT", "Write the hunch.") } });
+  const p = await open(at, { ...A, plane: { hypothesishold: refusedIn("SOME_REFUSAL", "Write the hunch.") } });
   assert.ok(says(await press(p, "hypothesishold"), "screen.question.hunch.empty"));
   assert.ok(says(await press(p, "checkrequest"), "screen.question.check.empty"));
   assert.ok(says(await press(p, "narrow"), "screen.question.narrow.empty"));

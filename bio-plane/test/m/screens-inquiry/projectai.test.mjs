@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn, MEMBER } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, word, P } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, word, SCREENS, P } from "./fixtures.mjs";
 
 const at = "/app/projectai/" + P;
 const OWNER = "project:" + P;
@@ -35,7 +35,10 @@ test("R14 reads: the project's account, its notice and keep-away, her sign-in, a
   assert.equal(q("projectaikeepawaystate").project, P);
   assert.equal(q("projectparticipants").projectId, P);
   assert.deepEqual(p.byOp("subscriptionsignin")[0].body, { step: "state" });
-  for (const op of ["accountuses", "ailimits", "aiusage", "accounthistory"]) assert.equal(q(op).owner, OWNER, op);
+  /* N1073: the panel's reads as the screen itself declares them (its reads naming an owner), never a hand-list */
+  const panelOps = Object.values(SCREENS.find((s) => s.id === "projectai").reads({ subject: P })).filter((r) => r.query && r.query.owner).map((r) => r.op);
+  assert.ok(panelOps.length >= 4);
+  for (const op of panelOps) assert.equal(q(op).owner, OWNER, op);
   assert.ok(p.root().querySelector(".cs-crumbs").textContent.includes("Pothole repairs") && says(p.root().querySelector(".cs-crumbs"), "screen.projectai.name"));
 });
 
@@ -49,8 +52,8 @@ test("R14 drawn to an owner: what pays, the panel over the project's account (sc
   assert.ok(m.querySelectorAll("section").length >= 4, "the panel's sections, drawn by screens-settings");
   assert.ok(m.textContent.includes("$1.20"));
   assert.ok(says(m.querySelector('[data-keepaway="off"]'), "screen.projectai.keepaway.off"));
-  assert.deepEqual([...new Set(actsIn(m))].sort(), ["accountusesset", "ailimitset", "projectaccountremove", "projectaccountswitch",
-    "projectaikeepaway", "projectkeynoticeseen", "projectkeyset", "projectsigninset"]);
+  /* every act of the screen's own declaration but Join (R37), drawn to an owner */
+  assert.deepEqual([...new Set(actsIn(m))].sort(), SCREENS.find((s) => s.id === "projectai").acts.map((a) => a.op).filter((op) => op !== "projectjoin").sort());
   assert.deepEqual(rawKeys(p.root()), []);
 });
 
