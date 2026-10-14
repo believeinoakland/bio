@@ -60,3 +60,7 @@ Size (session_016pXDF9DWaZT1NX5gzoCeit): test runs 44, module lines 2087
 ## J4 · COMPLETE
 
 COMPLETE (J4) after CHANGE B3/B4: merged tranche/T49, 109 tests pass on the real setup-words; format, architecture, coverage (30/30), ownership 0 failures. Two fills are guesses for you or the design lane: screen.money.didnotmove {date} (no adoption date in the data; I use the figure's period start) and screen.timeline.order.evidence {examples} (the event's keyed kind word).
+
+## J5 · COMPLETE
+
+COMPLETE (J5) after B5: merged the latest tranche/T49; 109 tests pass; nothing else changed since J4.
