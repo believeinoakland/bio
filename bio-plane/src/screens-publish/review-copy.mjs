@@ -55,13 +55,13 @@ export const REVIEW_COPY = Object.freeze({
         return cs.row("", "<b>" + cs.esc(g.recipient || "") + "</b>", '<span class="meta" data-grant-until="' + (ended ? "ended" : until ? "until" : "open") + '">' + says + "</span>",
           cs.act("reviewrevoke", { data: { grant: id } }));
       }).join(""));
-    })));
+    })) + P.said(view, "reviewrevoke"));
 
     // Sharing with a named reader: a name, a role and an end date; the secret shown once as the reader's link (R2).
     out.push(cs.sec("screen.review-copy.share", cs.field("rc-name", "screen.review-copy.name.label", { rec: true })
       + cs.field("rc-role", "screen.review-copy.role.label", { rec: true, help: "screen.review-copy.role.help" })
       + cs.field("rc-until", "screen.review-copy.until.label", { type: "date", help: "screen.review-copy.until.help" })
-      + '<div class="mk-acts">' + cs.act("reviewgrant", { tone: "primary" }) + "</div>"
+      + '<div class="mk-acts">' + cs.act("reviewgrant", { tone: "primary" }) + "</div>" + P.said(view, "reviewgrant")
       + (view.ui.link ? '<div class="cs-sheet" data-reader-link><span class="id">' + cs.esc(view.ui.link.href) + "</span><p>"
         + cs.w("screen.review-copy.link.for", { who: view.ui.link.who }) + " <b>" + cs.w("screen.review-copy.noemail") + "</b></p><p class=\"muted\">"
         + cs.w("screen.review-copy.link.once") + "</p></div>" : "")));
@@ -77,7 +77,7 @@ export const REVIEW_COPY = Object.freeze({
             + (x.at ? " · " + cs.date(x.at) : "") + "</span>",
             x.reviewer_kind === "recipient" ? cs.field("rc-reply-" + i, "screen.review-copy.reply.label", { area: true }) + cs.act("reviewcomment", { data: { index: String(i) } }) : "");
         }).join(""));
-      })));
+      }) + P.said(view, "reviewcomment")));
     }
     return out.join("");
   },
@@ -108,6 +108,7 @@ export const REVIEW_COPY = Object.freeze({
         return { body: { draft: view.ui.draft.draft_id, recipient: name + " · " + role, until: until } };
       },
       done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "reviewgrant", answer)) return; // D29: a refusal inside a success shows no link
         const r = view.parts.value(answer) || {};
         view.ui.link = r.secret ? { href: view.origin + "/app/review#grant=" + r.secret, who: view.ui.pendingWho || r.recipient || "" } : null;
         view.ui.pendingWho = null;
@@ -118,7 +119,7 @@ export const REVIEW_COPY = Object.freeze({
       // R2: "Stop sharing" one reader.
       op: "reviewrevoke", label: "act.reviewrevoke.label.review-copy",
       send: function (view, el) { return el.dataset.grant ? { body: { grant: el.dataset.grant } } : null; },
-      done: function (view) { view.parts.forget(view); },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "reviewrevoke", answer)) view.parts.forget(view); }, // D29
     },
     {
       // R2: "Reply" to a reader's comment.
@@ -128,7 +129,7 @@ export const REVIEW_COPY = Object.freeze({
         if (!text) return { refuse: "screen.review-copy.reply.needed" };
         return view.ui.draft ? { query: { draft: view.ui.draft.draft_id }, body: { text: text } } : null;
       },
-      done: function (view) { view.parts.forget(view); },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "reviewcomment", answer)) view.parts.forget(view); }, // D29
     },
   ],
 });

@@ -98,9 +98,13 @@ export const CEREMONY = Object.freeze({
       + (photos.map(function (ph, i) {
         const sha = ph.sha || ph.capture || "";
         const marks = P.later(cs, view, "marks:" + sha, "photomarks", { query: { capture: sha } });
-        const facts = cs.w("screen.ceremony.photo.facts", { by: ph.taken_by || "", relied: String((ph.relied_on_by || []).length) });
+        // The sentence of facts needs the day the photo was taken, which the Photos step answers only when it carries one
+        // (`taken_at`); with none, no sentence is drawn, never one with a gap in it.
+        const when = ph.taken_at || ph.taken || "";
+        const facts = when ? cs.w("screen.ceremony.photo.facts", { by: ph.taken_by || "", date: { html: cs.date(when) },
+          findings: (ph.relied_on_by || []).map(function (r) { return r && (r.target || r.member) || ""; }).filter(Boolean).join(", ") }) : "";
         return '<div class="cs-sheet" data-photo="' + cs.esc(sha) + '"><p><b>' + cs.w("screen.ceremony.photo.name", { n: String(i + 1) }) + "</b> "
-          + '<span class="id">' + cs.esc(String(sha).slice(0, 12)) + "</span> · " + facts + "</p>"
+          + '<span class="id">' + cs.esc(String(sha).slice(0, 12)) + "</span>" + (facts ? " · " + facts : "") + "</p>"
           + (ph.refused || ph.words === "photo.refused.format" ? '<p role="alert">' + cs.w("screen.ceremony.photo.format") + "</p>" : "")
           + cs.state(marks, function (m) {
             return '<p data-photo-state="' + cs.esc(m.state || "") + '">' + cs.w("screen.ceremony.photo.state." + (m.state === "marked" ? "marked" : m.state === "nothing_to_obscure" ? "nothing" : "unchecked")) + "</p>"
@@ -122,12 +126,12 @@ export const CEREMONY = Object.freeze({
           + cs.field("ce-staff-" + i, "screen.ceremony.area.reason", { area: true, help: "screen.ceremony.area.reason.help" }) + "</fieldset>"
           + '<div class="mk-acts">' + cs.act("obscuremark", { data: { capture: sha, index: String(i) } })
           + cs.act("obscuremark", { label: "screen.ceremony.photo.nothing", data: { capture: sha, index: String(i), nothing: "1" } }) + "</div></div>";
-      }).join(""))));
+      }).join("") + P.said(view, "obscure"))));
 
     // R5: the Ties step: the member's own confirmation of no undeclared tie, sent with `publish` as `tieAttested`.
     out.push(cs.sec("screen.ceremony.ties", cs.checks("ce-tie", "screen.ceremony.ties.legend", [["yes", "screen.ceremony.ties.confirm", false]])
       + '<div class="mk-acts">' + cs.act("publish", { tone: "primary" }) + "</div><p class=\"muted\">" + cs.w("screen.ceremony.ties.part") + "</p>"
-      + (prepared ? '<p class="mk-note" role="status">' + cs.w("screen.ceremony.prepared", { edition: String(prepared.edition) }) + "</p>" : "")));
+      + P.said(view, "publish") + (prepared ? '<p class="mk-note" role="status">' + cs.w("screen.ceremony.prepared", { edition: String(prepared.edition) }) + "</p>" : "")));
 
     // R12–R15: the Sign step, offered only once `publish` has answered (R5's control); at the phone width it says where
     // signing finishes (R15; DEC-181), the kit drawing a signed act there as what it does, never sent.
@@ -145,8 +149,10 @@ export const CEREMONY = Object.freeze({
             const list = P.sitting(d, prepared) || [];
             return '<details data-statements><summary>' + cs.w("screen.ceremony.signs.exactly") + "</summary><ul class=\"mk-list\">"
               + list.map(function (x) {
-                return '<li data-statement="' + x.kind + '"><span class="id">' + cs.esc(x.text.trim()) + "</span> · " + cs.w("screen.ceremony.signs." + x.kind, { id: x.id }) + "</li>";
-              }).join("") + "</ul></details><p>" + cs.w("screen.ceremony.signs.count", { n: String(list.length) }) + "</p>";
+                return '<li data-statement="' + x.kind + '"><span class="id">' + cs.esc(x.text.trim()) + "</span> · " + cs.w("screen.ceremony.signs." + x.kind, { id: x.id, edition: String(x.edition === undefined ? "" : x.edition), case: x.id }) + "</li>";
+              }).join("") + "</ul></details><p>" + cs.w("screen.ceremony.signs.count", { n: String(list.length),
+                findings: String(list.filter(function (x) { return x.kind === "finding"; }).length),
+                evidence: String(list.filter(function (x) { return x.kind === "evidence"; }).length) }) + "</p>";
           })
           // R12 (K3147, K3150): one button that follows the choice of when (interface-shell R49's `cs.choice` with `acts`).
           + '<div class="mk-acts">' + cs.choice("ce-when", "screen.ceremony.when", [["now", "screen.ceremony.when.now"], ["at", "screen.ceremony.when.at"]],
@@ -169,7 +175,8 @@ export const CEREMONY = Object.freeze({
         edition: String(w.edition || (prepared && prepared.edition) || ""), date: { html: at.date ? cs.date(at.date) : "" }, time: at.time || "", zone: at.zone || "" }) + "</p>"
         + cs.field("ce-move-date", "screen.ceremony.when.date", { type: "date" }) + cs.field("ce-move-time", "screen.ceremony.when.time", { type: "time" })
         + '<div class="mk-acts">' + cs.act("publishatmove", { data: { case: String(w.case || caseId || ""), edition: String(w.edition || (prepared && prepared.edition) || "") } })
-        + cs.act("publishatcancel", { data: { case: String(w.case || caseId || ""), edition: String(w.edition || (prepared && prepared.edition) || "") } }) + "</div>"));
+        + cs.act("publishatcancel", { data: { case: String(w.case || caseId || ""), edition: String(w.edition || (prepared && prepared.edition) || "") } }) + "</div>"
+        + P.said(view, "moved")));
     } else if (published) {
       out.push(cs.sec("screen.ceremony.signed", '<p role="status" data-signed="now">' + cs.w("signing.ceremony.signednow", { edition: String(published.edition || "") }) + "</p>"
         + '<a href="/app/published/' + encodeURIComponent(String(published.case || caseId || "")) + '" data-nav>' + cs.w("screen.ceremony.publicpage") + "</a>"));
@@ -186,7 +193,7 @@ export const CEREMONY = Object.freeze({
         const copy = view.data.copy && view.data.copy.state === "ok" ? view.data.copy.value : null;
         return copy ? { body: view.parts.caseArgs(copy, String(view.subject || "").split("/")[1] || "") } : null;
       },
-      done: function (view) { view.parts.forget(view); },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "publishpreflight", answer)) view.parts.forget(view); }, // D29
     },
     {
       // R3: "See everything that will be disclosed".
@@ -197,7 +204,11 @@ export const CEREMONY = Object.freeze({
         const a = view.parts.caseArgs(copy, "");
         return { body: { project: a.project, targets: a.targets } };
       },
-      done: function (view, answer) { view.ui.allTensions = view.parts.value(answer); return { stay: true }; },
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "publishtensions", answer)) return { stay: true }; // D29
+        view.ui.allTensions = view.parts.value(answer);
+        return { stay: true };
+      },
     },
     {
       // R4: the areas the member marks on a photo (a person not part of a finding, a number plate, city staff at work
@@ -218,7 +229,7 @@ export const CEREMONY = Object.freeze({
         return { query: { capture: el.dataset.capture }, body: { areas: list.map(function (r) {
           return named([Math.round(r.left), Math.round(r.top), Math.round(r.left + r.width), Math.round(r.top + r.height)]); }) } };
       },
-      done: function (view) { view.parts.forget(view); },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "obscure", answer)) view.parts.forget(view); }, // D29
     },
     {
       // R4: a mark withdrawn with a reason, never erased.
@@ -226,7 +237,7 @@ export const CEREMONY = Object.freeze({
       send: function (view, el, cs) {
         return { query: { capture: el.dataset.capture }, body: { mark: Number(el.dataset.mark), reason: String(cs.value(el.dataset.field) || "").trim() } };
       },
-      done: function (view) { view.parts.forget(view); },
+      done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "obscure", answer)) view.parts.forget(view); }, // D29
     },
     {
       // R5: the Ties step's confirmation prepares the edition for signing: `publish` with `tieAttested: true`.
@@ -239,7 +250,8 @@ export const CEREMONY = Object.freeze({
         const s = String(view.subject || "").split("/");
         return { body: Object.assign(view.parts.caseArgs(copy, s[1] || ""), { tieAttested: true }) };
       },
-      done: function (view, answer) {
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "publish", answer)) return; // D29: nothing is prepared on a refusal
         const r = view.parts.value(answer) || {};
         view.ui.prepared = { caseId: r.caseId, edition: r.edition, docSha: r.caseDocument ? r.caseDocument.doc_sha : null,
           findings: (Array.isArray(r.findings) ? r.findings : r.target ? [{ target: r.target, bundleSha: r.bundleSha }] : [])
@@ -272,7 +284,8 @@ export const CEREMONY = Object.freeze({
         return { body: { caseId: pr.caseId, edition: Number(pr.edition), expectedSha: doc.doc_sha, sig: signed.signatures[0],
           members: list.slice(1).map(function (x, i) { return { id: x.id, sha: x.sha, signature: signed.signatures[i + 1] }; }) } };
       },
-      done: function (view, answer) {
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "sign", answer)) return; // D29: nothing is drawn signed on a refusal
         const r = view.parts.value(answer) || {};
         view.ui.signed = { now: true, case: r.caseId, edition: r.edition, sitting: Array.isArray(r.sitting) ? r.sitting : [] };
         view.parts.forget(view);
@@ -304,7 +317,8 @@ export const CEREMONY = Object.freeze({
         return { body: { caseId: pr.caseId, edition: Number(pr.edition), expectedSha: doc.doc_sha, sig: signed.signatures[0], at: at,
           members: list.slice(1).map(function (x, i) { return { id: x.id, sha: x.sha, signature: signed.signatures[i + 1] }; }) } };
       },
-      done: function (view, answer) {
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "sign", answer)) return; // D29
         const r = view.parts.value(answer) || {};
         view.ui.signed = { at: r.at || {}, case: r.case, edition: r.edition };
         view.parts.forget(view);
@@ -320,13 +334,20 @@ export const CEREMONY = Object.freeze({
         if (!k || k.ok !== true || typeof k.keyB64 !== "string") return { refuse: "signing.ceremony.declined" };
         return { body: { keyB64: k.keyB64 } };
       },
-      done: function (view, answer, cs) { view.ui.nokey = false; view.parts.say(cs, view, "sign", cs.w("screen.ceremony.registered")); },
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "sign", answer)) return; // D29
+        view.ui.nokey = false;
+        view.parts.say(cs, view, "sign", cs.w("screen.ceremony.registered"));
+      },
     },
     {
       // R15: a member who is not an owner asks the owners to sign (tasks R19).
       op: "signrequest", label: "act.signrequest.label.ceremony",
       send: function (view) { const pr = view.ui.prepared; return pr ? { body: { case: pr.caseId, edition: Number(pr.edition) } } : null; },
-      done: function (view, answer, cs) { view.parts.say(cs, view, "signrequest", cs.w("screen.ceremony.asked")); return { stay: true }; },
+      done: function (view, answer, cs) {
+        if (!view.parts.refused(cs, view, "signrequest", answer)) view.parts.say(cs, view, "signrequest", cs.w("screen.ceremony.asked")); // D29
+        return { stay: true };
+      },
     },
     {
       // R14: "Move the time".
@@ -336,13 +357,22 @@ export const CEREMONY = Object.freeze({
         if (!at) return { refuse: "screen.ceremony.when.needed" };
         return { body: { case: el.dataset.case, edition: Number(el.dataset.edition), at: at } };
       },
-      done: function (view) { view.ui.signed = null; view.parts.forget(view); },
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "moved", answer)) return; // D29
+        view.ui.signed = null;
+        view.parts.forget(view);
+      },
     },
     {
       // R14: "Cancel publishing".
       op: "publishatcancel", label: "act.publishatcancel.label.ceremony",
       send: function (view, el) { return { body: { case: el.dataset.case, edition: Number(el.dataset.edition) } }; },
-      done: function (view) { view.ui.signed = null; view.ui.prepared = null; view.parts.forget(view); },
+      done: function (view, answer, cs) {
+        if (view.parts.refused(cs, view, "moved", answer)) return; // D29
+        view.ui.signed = null;
+        view.ui.prepared = null;
+        view.parts.forget(view);
+      },
     },
   ],
 });

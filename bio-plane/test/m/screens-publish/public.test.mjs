@@ -3,7 +3,7 @@
  * recreation and acts, the docket's entries, filing and posting signed with the member's key. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, P, C, SHA, E1, DIGEST } from "./fixtures.mjs";
+import { open, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";
 
 const carries = (body, want) => { for (const [k, v] of Object.entries(want)) assert.deepEqual(body[k], v, k); };
 const R = "because";
@@ -15,10 +15,14 @@ test("R6 the published case at /app/published/<case>, in the public frame with n
   for (const r of p.requests) assert.equal(r.headers.Authorization, undefined, `${r.op} carries no credential`);
   assert.equal(last(p, "publishedcase").query.id, C);
   const t = text(p);
-  assert.match(t, /Edition 2 · signed 18 November 2026 · published 19 November 2026 · Edition 1/);
-  assert.match(t, /This case is the work of River Town\..*two strengths/);
-  assert.match(t, /The 2024 adjustments were made without the council vote the lease requires\..*CaptureB.*ConnectionC.*meets this project's bar/);
-  assert.match(t, /Council approves amendment 1.*12 January 2024/);
+  assert.ok(drew(p, "screen.published.dated", { edition: "2", signed: day("2026-11-18"), published: day("2026-11-19") }));
+  assert.ok(drew(p, "screen.published.edition", { n: "1" }), "the other edition");
+  assert.ok(drew(p, "screen.published.whose", { group: "River Town" }));
+  assert.ok(drew(p, "screen.published.howtoread"));
+  assert.ok(t.includes("The 2024 adjustments were made without the council vote the lease requires."));
+  assert.ok(t.includes(word("mark.scale.capture.name") + "B") && t.includes(word("mark.scale.connection.name") + "C"), "two strengths");
+  assert.ok(drew(p, "screen.published.meets"), "meets the project's bar");
+  assert.ok(t.includes("Council approves amendment 1") && t.includes(day("2024-01-12")));
   assert.match(t, /The City Administrator.*signed the March 2024 adjustment/);
   assert.match(t, /Council minutes, 12 January 2024/);
   assert.ok(main(p).querySelector(`a[href="/app/published/${encodeURIComponent(C + "/1")}"]`), "the other edition links its page");
@@ -29,17 +33,17 @@ test("R6 \"Check the signature\" (verify, the manifest's sha) and \"Read the cas
   await press(p, "verify");
   assert.equal(last(p, "verify").query.sha256, SHA);
   assert.equal(last(p, "verify").headers.Authorization, undefined);
-  assert.match(text(p), /The signature checks/);
+  assert.ok(drew(p, "screen.published.verify.ok"));
   const n = p.byOp("publishedcase").length;
   await press(p, "publishedcase", { nth: 1 }); // the first is the evidence row's "Open the document" (R19)
   assert.ok(p.byOp("publishedcase").length > n);
   const q = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { verify: ok({ published: false, sha256: SHA, matches: [] }) } });
   await press(q, "verify");
-  assert.match(text(q), /does not check/);
+  assert.ok(drew(q, "screen.published.verify.no"));
 });
 
 const publishedWith = (captures, o = {}) => ({ publishedcase: ok({ ...plane().publishedcase.json.result, captures }), ...o });
-const opens = (p) => main(p).querySelectorAll('button[data-act="publishedcase"]').filter((b) => /Open the document/.test(b.textContent));
+const opens = (p) => main(p).querySelectorAll('button[data-act="publishedcase"]').filter((b) => b.textContent.includes(word("screen.published.evidence.open")));
 
 test("R19 each evidence row with a full SHA-256 opens its bytes through publishedbytes by that hash, as a public op with no Authorization header", async () => {
   const p = await open(`/app/published/${C}`, { boot: PUBLIC });
@@ -77,7 +81,7 @@ test("R19 a refused piece of evidence says why and saves nothing (control)", asy
   assert.match(text(p), /No published part answers to that hash\./);
 });
 
-const download = (p) => main(p).querySelectorAll('button[data-act="publishedcase"]').find((x) => /Download the complete edition/.test(x.textContent));
+const download = (p) => main(p).querySelectorAll('button[data-act="publishedcase"]').find((x) => x.textContent.includes(word("screen.published.download")));
 
 test("R19 \"Download the complete edition\" fetches the edition's file through publishedbytes by the manifest's hash as a zip, with no credential, and hands it over as a file", async () => {
   const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedbytes: bytes("PK-ZIP", "application/zip") } });
@@ -90,7 +94,7 @@ test("R19 \"Download the complete edition\" fetches the edition's file through p
   assert.equal(q.headers.Authorization, undefined);
   assert.equal(p.files.length, 1);
   assert.match(p.files[0].name, /\.zip$/);
-  assert.match(text(p), /complete edition is downloaded/);
+  assert.ok(drew(p, "screen.published.download.done"));
   const other = await open(`/app/published/${C}/1`, { boot: PUBLIC, plane: { publishedbytes: bytes("PK-ZIP", "application/zip") } });
   await other.click(download(other));
   await other.settle();
@@ -108,15 +112,15 @@ test("R19 a refused download says why and saves nothing; an edition with no mani
   const silent = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedbytes: ok(null) } });
   await silent.click(download(silent));
   await silent.settle();
-  assert.match(text(silent), /could not be downloaded/);
+  assert.ok(drew(silent, "screen.published.download.failed"));
 });
 
 test("R21 published opened with no id offers the group's public page, never \"Go to Home\"", async () => {
   const p = await open("/app/published", { boot: PUBLIC });
   assert.equal(p.byOp("publishedcase").length, 0);
   const home = main(p).querySelectorAll("a").map((a) => ({ href: a.getAttribute("href"), t: a.textContent }));
-  assert.ok(home.some((a) => a.href === "/" && /public page/.test(a.t)), "the public page is offered");
-  assert.ok(!/Go to Home/.test(text(p)), "no Go to Home");
+  assert.ok(home.some((a) => a.href === "/" && a.t.includes(word("screen.published.grouppage"))), "the public page is offered");
+  assert.ok(!drew(p, "shell.unavailable.home"), "no Go to Home");
   assert.ok(!home.some((a) => a.href === "/app"), "no way into the working frame");
   const q = await open(`/app/published/${C}`, { boot: PUBLIC });
   assert.ok(q.byOp("publishedcase").length > 0, "control: with an id it reads");
@@ -127,7 +131,7 @@ test("R7 another group's case: each finding recreated, in part or not, read-only
   assert.equal(last(p, "importedcase").query.import, "IMP-2026-0001");
   const r = main(p).querySelectorAll("[data-r]").map((x) => x.getAttribute("data-r"));
   assert.deepEqual(r, ["yes", "part", "no"]);
-  assert.match(text(p), /Recreated.*Recreated in part.*Did not recreate/);
+  for (const k of ["yes", "part", "no"]) assert.ok(drew(p, `screen.imported.result.${k}`), k);
   assert.deepEqual(ops(p).sort(), ["caseimport", "importaccept", "importflag", "importwatch"]);
   await press(p, "importaccept", { values: { "im-checked": "Each document's hash against theirs.", "im-reason": "It recreated whole." } });
   carries(last(p, "importaccept").body, { import: "IMP-2026-0001", edition: 2, findings: ["FND-W-1"], checked: "Each document's hash against theirs.", reason: "It recreated whole." });
@@ -152,8 +156,8 @@ test("R8 the docket's entries, each drafted or posted; \"File a docket entry\" w
   const p = await open(`/app/docket/${P}/${C}`);
   assert.equal(last(p, "docket").query.case, C);
   const t = text(p);
-  assert.match(t, /Edition · Edition 2 published, superseding Edition 1.*posted/);
-  assert.match(t, /Court order · Order of 20 November: seal exhibit 4.*drafted, not yet posted/);
+  assert.ok(t.includes(`${word("screen.docket.kind.edition")} · Edition 2 published, superseding Edition 1`) && drew(p, "screen.docket.posted"));
+  assert.ok(t.includes(`${word("screen.docket.kind.court-order")} · Order of 20 November: seal exhibit 4`) && drew(p, "screen.docket.drafted"));
   assert.equal(last(p, "docketprepare").query.entry, "2", "the draft entry is prepared for its post");
   await press(p, "docketfile", { values: { "dk-kind": "response", "dk-from": "Port of Oakland", "dk-summary": "The Port disputes finding 1.", "dk-proposed": "public", "dk-reason": "It answers a published finding." } });
   carries(last(p, "docketfile").body, { case: C, kind: "response", from: { kind: "other", name: "Port of Oakland" }, summary: "The Port disputes finding 1.", proposed: "public", reason: "It answers a published finding." });
@@ -193,8 +197,8 @@ test("R9 the doorbell at /app/doorbell with no session: headed by the group's pu
   assert.equal(p.byOp("whoami").length, 0);
   assert.ok(p.byOp("groupidentity").length > 0);
   const t = text(p);
-  assert.match(t, /Hand material to River Town/);
-  assert.match(t, /go only to this group's own Civicsmith.*A member reads them and decides.*secret phrase.*without anyone knowing who you are.*beyond a court's reach/);
+  assert.ok(drew(p, "screen.doorbell.heading", { group: "River Town" }));
+  for (const k of ["only", "reads", "phrase", "court"]) assert.ok(drew(p, `screen.doorbell.happens.${k}`), k);
   assert.ok(p.doc.getElementById("db-file") && p.doc.getElementById("db-note") && p.doc.getElementById("db-secret"));
 });
 
@@ -217,12 +221,96 @@ test("R9 the knock's refusals are drawn by their words; nothing chosen sends not
   const p = await open("/app/doorbell", { boot: PUBLIC });
   const { slot } = await press(p, "knock");
   assert.equal(p.byOp("knock").length, 0);
-  assert.match(slot().textContent, /Choose a file/);
-  for (const [code, words] of [["KNOCK_EMPTY", /Choose a file/], ["KNOCK_PAYLOAD_TOO_LARGE", /too large/], ["KNOCK_ENVELOPE_TOO_LARGE", /too large/], ["RATE_IP", /Too many/]]) {
+  assert.ok(slot().textContent.includes(word("screen.doorbell.refused.empty")));
+  for (const [code, words] of [["KNOCK_EMPTY", "empty"], ["KNOCK_PAYLOAD_TOO_LARGE", "large"], ["KNOCK_ENVELOPE_TOO_LARGE", "large"], ["RATE_IP", "rate"]]) {
     const q = await open("/app/doorbell", { boot: PUBLIC, plane: { knock: refused(code, null, 413) } });
     choose(q, "db-file", new Uint8Array([1]));
     const r = await press(q, "knock");
-    assert.match(r.slot().textContent, words, code);
+    assert.ok(r.slot().textContent.includes(word(`screen.doorbell.refused.${words}`)), code);
     assert.equal(q.doc.getElementById("db-note").value, "", code);
   }
+});
+
+/* R22 (N1094; DEC-240 (P1); public-read R1, R3): "Check a file you hold". The plane answers by hash as public-read does:
+   `verify` says whether a hash is published; `publishedcase` read by a finding's pinned hash names its case and finding, and
+   answers a file's hash (evidence) `NOT_PUBLISHED`, so the edition's own parts name the finding for a file. */
+const FIND = "FND-2026-0031";
+const EDITION = () => plane().publishedcase.json.result;
+const checkButton = (p) => main(p).querySelectorAll('button[data-act="verify"]').find((b) => b.getAttribute("data-check") === "1");
+const checkIt = (p, typed) => press(p, "verify", { nth: 1, values: { "pb-sha": typed } });
+const published = (pins, o = {}) => ({
+  verify: (req) => ok(pins.includes(req.query.sha256) ? { published: true, sha256: req.query.sha256, matches: [{ bundle_id: FIND, path: "bundle.md", kind: "bundle", published: "2026-11-19T14:00:00Z" }] }
+    : { published: false, sha256: req.query.sha256, matches: [] }),
+  publishedcase: (req) => !req.query.sha256 ? ok(EDITION())
+    : req.query.sha256 === B1 ? ok({ ...EDITION(), asked: FIND, findings: [{ ...EDITION().findings[0], version_sha: B1 }] }) : refused("NOT_PUBLISHED", "Nothing published answers to that.", 404),
+  ...o });
+const FINDING_SAYS = "The 2024 adjustments were made without the council vote the lease requires.";
+
+test("R22 \"Check a file you hold\": a field for the SHA-256 and \"Check it\" on the published page, drawn with no session", async () => {
+  const p = await open(`/app/published/${C}`, { boot: PUBLIC });
+  const head = main(p).querySelectorAll("h2").find((h) => h.textContent === word("published.check.title"));
+  assert.ok(head, "the section's title");
+  assert.ok(tipOf(head).includes(word("published.check.help")), "explained by published.check.help");
+  assert.ok(drew(p, "published.check.field") && drew(p, "published.check.field.help"));
+  assert.ok(p.doc.getElementById("pb-sha"), "the field");
+  assert.ok(checkButton(p) && checkButton(p).textContent.includes(word("published.check.go")), "Check it");
+  assert.equal(p.byOp("whoami").length, 0, "no account");
+});
+
+test("R22 a pinned hash (a finding's, and a file the finding rests on) draws the finding it belongs to; the hash is case-folded and nothing but the hash is sent, with no Authorization header", async () => {
+  for (const [typed, shown] of [[E1.toUpperCase(), E1], [B1, B1]]) {
+    const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: published([E1, B1]) });
+    const n = p.requests.length;
+    await checkIt(p, `  ${typed}  `);
+    const sent = p.requests.slice(n);
+    assert.ok(sent.some((r) => r.op === "verify"), "verify asked");
+    for (const r of sent) {
+      assert.equal(r.headers.Authorization, undefined, `${r.op}: no credential`);
+      assert.deepEqual(Object.keys(r.query).sort(), ["op", "sha256"], `${r.op}: nothing but the hash`);
+      assert.equal(r.query.sha256, shown, `${r.op}: the lower-case hash`);
+      assert.equal(r.body, undefined, `${r.op}: no body, so no file`);
+    }
+    assert.ok(drew(p, "published.check.yes", { n: "1", finding: FINDING_SAYS }), "the evidence for finding 1, named");
+    assert.ok(!drew(p, "published.check.no"));
+  }
+});
+
+test("R22 an unknown hash draws \"no match\", and a hash published in another edition of the case is no match in this one (controls)", async () => {
+  const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: published([E1, B1]) });
+  const n = p.requests.length;
+  await checkIt(p, "0".repeat(64));
+  assert.ok(drew(p, "published.check.no") && !drew(p, "published.check.yes", { n: "1", finding: FINDING_SAYS }));
+  assert.deepEqual(p.requests.slice(n).map((r) => r.op), ["verify"], "an unknown hash is not looked up further");
+  const other = "5".repeat(64);
+  const q = await open(`/app/published/${C}`, { boot: PUBLIC, plane: published([other], {
+    publishedcase: (req) => ok(req.query.sha256 ? { ...EDITION(), edition: 1, asked: FIND, findings: [{ ...EDITION().findings[0], version_sha: other }] } : EDITION()) }) });
+  await checkIt(q, other);
+  assert.ok(drew(q, "published.check.no"), "published in Edition 1, not in the Edition 2 on the page");
+  assert.ok(!drew(q, "published.check.yes", { n: "1", finding: FINDING_SAYS }));
+});
+
+test("R22 a hash that is not 64 hexadecimal characters sends nothing and says what the field takes (control)", async () => {
+  const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: published([E1]) });
+  const n = p.requests.length;
+  for (const bad of ["", "abc", E1.slice(1), E1 + "0", "g".repeat(64)]) {
+    await checkIt(p, bad);
+    assert.equal(p.requests.length, n, `${JSON.stringify(bad)}: nothing sent`);
+  }
+  assert.ok(drew(p, "published.check.field.help"));
+  assert.ok(!drew(p, "published.check.yes", { n: "1", finding: FINDING_SAYS }) && !drew(p, "published.check.no"));
+});
+
+test("R22 \"Check the signature\" still checks the manifest, and the page keeps the file out of reach: the field takes a fingerprint only", async () => {
+  const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: published([SHA]) });
+  await press(p, "verify");
+  assert.equal(last(p, "verify").query.sha256, SHA);
+  assert.ok(drew(p, "screen.published.verify.ok"));
+  assert.notEqual(p.doc.getElementById("pb-sha").type, "file", "R22: no file is read or sent");
+});
+
+test("R22 a verify answered ok that carries a refusal is no match found (D29)", async () => {
+  const p = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { verify: ok({ started: false, code: "VERIFY_NOT_RUN", translation: "The check did not run." }) } });
+  await checkIt(p, E1);
+  assert.ok(text(p).includes("The check did not run."), "the refusal in the plane's words");
+  assert.ok(!drew(p, "published.check.yes", { n: "1", finding: FINDING_SAYS }) && !drew(p, "published.check.no"));
 });

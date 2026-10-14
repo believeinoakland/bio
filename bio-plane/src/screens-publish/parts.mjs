@@ -78,6 +78,24 @@ export const PARTS = Object.freeze({
     cs.set("said", s);
   },
 
+  /* D29 (K3324 (2)): an answer of `ok: true` that carries a refusal is not success. The refusal it carries (`ok: false`,
+     `started: false`, `dispatched: false` or a `withheld` that holds something), else null. */
+  carried: function (answer) {
+    const r = answer && typeof answer === "object" && answer.result !== undefined ? answer.result : answer;
+    if (!r || typeof r !== "object" || Array.isArray(r)) return null;
+    const held = r.withheld !== undefined && r.withheld !== null && r.withheld !== false && r.withheld !== 0 && r.withheld !== "";
+    return r.ok === false || r.started === false || r.dispatched === false || held ? r : null;
+  },
+  /* D29: draws the refusal a success-shaped answer carries as the act's refusal beside `key`, in the plane's own words, and
+     says it did (true); false when the answer carries none, the act having succeeded. */
+  refused: function (cs, view, key, answer) {
+    const f = view.parts.carried(answer);
+    if (!f) { if (view.ui.said) delete view.ui.said[key]; return false; } // an earlier refusal beside this act is not left standing
+    const words = view.parts.refusalText(cs, f);
+    view.parts.say(cs, view, key, words || cs.w("state.failed", { reason: String(f.code || f.reason || "") }), false);
+    return true;
+  },
+
   /* A date and time the member typed, `YYYY-MM-DD` and `HH:MM`, as `publishat` and `publishatmove` take them; null when
      either is malformed. */
   at: function (date, time) {
@@ -149,7 +167,7 @@ export const PARTS = Object.freeze({
      signed document cites (`citations`' `{target, version}`), each once and none a finding already. */
   sitting: function (doc, prepared) {
     if (!doc || !doc.sign || typeof doc.sign.statement !== "string") return null;
-    const list = [{ kind: "case", id: doc.case_id, sha: doc.doc_sha, text: doc.sign.statement, namespace: doc.sign.namespace || "bio-ratify" }];
+    const list = [{ kind: "case", id: doc.case_id, edition: doc.edition, sha: doc.doc_sha, text: doc.sign.statement, namespace: doc.sign.namespace || "bio-ratify" }];
     const seen = {};
     const findings = prepared && Array.isArray(prepared.findings) ? prepared.findings : [];
     findings.forEach(function (f) {
