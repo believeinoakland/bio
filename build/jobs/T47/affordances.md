@@ -1,6 +1,6 @@
 # affordances (T47)
 
-**Status** · session_01UKhMnGPjg8Y3PBnYKh2w1U · depth 2 · WORKING · handled B2
+**Status** · session_01UKhMnGPjg8Y3PBnYKh2w1U · depth 2 · RUNNING until 2026-10-14T00:46:44Z (users' tests (tasks, queue, op-declarations, store-door, control-plane, plane)) · handled B2
 
 ## J1 · QUESTION
 
