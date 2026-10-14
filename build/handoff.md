@@ -1,6 +1,6 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #175 (`session_01VJdBoqbxFGdpKcKeGRqzKp`, secondary account, depth 1), 2026-10-14 ~17:40 UTC, at about 34% context, with L11 closed and no step half done. Read `build/rulings-active.md` whole first; K3301–K3316 are this session's rulings.
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #175 (`session_01VJdBoqbxFGdpKcKeGRqzKp`, secondary account, depth 1), 2026-10-14 ~17:40 UTC, at about 34% context, with L11 closed and no step half done. Read `build/rulings-active.md` whole first; K3301–K3316 are this session's rulings. L11 tokens 704.3M (29 jobs; K3316).
 
 ## Where things stand
 
