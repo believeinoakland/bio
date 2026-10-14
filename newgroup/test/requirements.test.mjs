@@ -512,7 +512,7 @@ test("R34 the wizard's last screen shows, before the hand-over to your group's C
       [1, /group account.*not anyone's personal login/], [2, /at least one other trusted person/],
       [3, /someone other than the group's administrators hold it/], [4, /same account is the way back in if the password you choose is lost/]])
     assert.match(S[i], says, `point ${i + 1}`);
-  const block = hostingControlBlock("notice");
+  const block = hostingControlBlock("notice", { deployer: true });
   armWith(SIGNER.line);
   /* Every ending of the install that hands over: running, lagging, asleep. */
   const ends = [seen(await run({ slug: "last-ok", rel: await release({ version: NEXT }) })),
@@ -538,7 +538,7 @@ test("R34 the wizard's last screen shows, before the hand-over to your group's C
   /* The very words instance-setup holds once (R47, R83: its one holder since the setup page retired; K3149), with R47's
      one difference (T35; F10, K1874; K2084): a screen links the guide by its name, and the installer's screen states the
      same sentence as text, with no link. The linked form differs from the installer's by the link alone. */
-  const linked = hostingControlBlock("notice", { guideHref: "/app/guide" });
+  const linked = hostingControlBlock("notice", { guideHref: "/app/guide", deployer: true });
   assert.ok(linked.includes('<a href="/app/guide">Replace the one-time password</a>'), "a screen links the guide by its name");
   assert.equal(linked.replace(/<a href="\/app\/guide">([^<]*)<\/a>/, "$1"), block, "the same block, the guide linked");
   assert.ok(!/<a\b/.test(block) && block.includes(escd(HOSTING_CONTROL.guide.sentence)), "the installer's screen states the guide as text");

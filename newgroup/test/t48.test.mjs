@@ -267,3 +267,14 @@ test("R43 (T48) the installer's ARMED_SIGNERS are `signatures`' RELEASE_KEYS, th
   restoreSigners();
   assert.deepEqual([...ARMED_SIGNERS], [...RELEASE_KEYS]);
 });
+
+test("R34 (T48) the last screen shows instance-setup's HOSTING_RECOVERY_DEPLOYER after the block's sentences, by hostingControlBlock(\"notice\", {deployer: true}); control: the sentences alone do not carry it", async () => {
+  const { hostingControlBlock, HOSTING_RECOVERY_DEPLOYER } = await import("../../bio-plane/src/setup-fleet.mjs");
+  const w = await run({ slug: "r34-deployer" });
+  const block = hostingControlBlock("notice", { deployer: true });
+  assert.ok(w.page.done.includes(block), "the panel carries the block as instance-setup draws it");
+  assert.ok(block.includes(plain(HOSTING_RECOVERY_DEPLOYER).slice(0, 40)) || block.includes("To open the way back in"));
+  const sentences = hostingControlBlock("notice");
+  assert.ok(!sentences.includes("To open the way back in") && block.length > sentences.length);
+  assert.ok(w.page.done.indexOf(sentences.replace(/<\/div>$/, "")) < w.page.done.indexOf("To open the way back in"), "after the sentences");
+});

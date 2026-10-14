@@ -1763,7 +1763,7 @@ account.</p>
 store, never your group&#39;s records. Shown once: this page is the only time.</p></details>
 ${securityToolsNote(vpc)}
 ${/* R34 (DEC-109, K1038): before the hand-over to where the founder chooses a password, who really controls your group's
-   Civicsmith, in instance-setup's words; nothing asks for or records an acknowledgement of it. */ hostingControlBlock("notice")}
+   Civicsmith, in instance-setup's words; nothing asks for or records an acknowledgement of it. */ hostingControlBlock("notice", { deployer: true })}
 <div class="ng-acts"><button id="handover" class="cs-btn" data-tone="primary" data-url="${esc(base)}${HANDOVER_PATH}">Continue to your group&#39;s Civicsmith: become its first administrator</button></div>`;
 }
 
