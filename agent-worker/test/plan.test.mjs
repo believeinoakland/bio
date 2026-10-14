@@ -14,7 +14,6 @@ import "../../bio-plane/test/sandbox.mjs";
 import { MODES, PLAN_FLOW, CONTROL_FLOW, OPTION_KEYS, PLAN_BUDGET_BOUNDS, nextPlanStep, planStopBecause, applyPlanJudgement, planDedup, earlierPlans, whyWithUndetermined, flowFor, resumeFrom, publishableState } from "../../agent-harness/src/harness.mjs";
 import { PLANE_OPS } from "../src/ops.mjs";
 import worker from "../src/index.mjs";
-import { ACTION_PLANS_READS, ACTION_PLANS_WRITES } from "./owners.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -291,10 +290,10 @@ section("R52 · compose, dedup, submit: optionPropose's fields only, strongest f
 section("R53 · PLANE_OPS gains exactly mode plan's ops; plan is deployed by its own reviewed act (T46)");
 {
   t("R53: PLANE_OPS gains exactly plan, plans, the R51 reads (non-mutating) and optionpropose (the one new write)",
-    [...ACTION_PLANS_READS, "determination", "standard", "consequencesof", "availableactions", "publishededitions", "profiles",
-     ...ACTION_PLANS_WRITES].map((op) => [op, PLANE_OPS[op]?.mutating]),
-    [...ACTION_PLANS_READS.map((op) => [op, false]), ["determination", false], ["standard", false], ["consequencesof", false],
-     ["availableactions", false], ["publishededitions", false], ["profiles", false], ...ACTION_PLANS_WRITES.map((op) => [op, true])]);
+    ["plan", "plans", "determination", "standard", "consequencesof", "availableactions", "publishededitions", "profiles", "optionpropose"]
+      .map((op) => [op, PLANE_OPS[op]?.mutating]),
+    [["plan", false], ["plans", false], ["determination", false], ["standard", false], ["consequencesof", false],
+     ["availableactions", false], ["publishededitions", false], ["profiles", false], ["optionpropose", true]]);
   t("R53 (T46): MODES gains plan, and plan is deployed (Bob's K2892; run-rules R14)", [Object.keys(MODES).includes("plan"), MODES.plan.deployed], [true, true]);
   const r = await run({}, [{ candidates: [A] }]);
   t("R53 (T46): a plan-mode run walks past gate-mode, reads its plan and proposes",
