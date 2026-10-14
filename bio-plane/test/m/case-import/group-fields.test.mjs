@@ -14,7 +14,7 @@ const withFields = (w, gf, file = caseFile(), who = "alice") =>
   w.ci.importCaseFile({ parts: file.parts, by: V(who), viewer: V(who), groupFields: gf });
 const editionOf = (w, a, edition) => w.ci.importedCase({ import: a.import, edition, viewer: V("bob") }).edition;
 
-test("R4 an import given the source's group_fields records them with the edition and importedCase answers them with read_at, labelled as the source's", async () => {
+test("R4 an import given the source's group_fields records them with the edition and importedCase answers them with read_at, labeled as the source's", async () => {
   const w = seeded();
   const a = await withFields(w, FIELDS);
   assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
