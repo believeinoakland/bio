@@ -194378,7 +194378,7 @@ var FilingTemplates = class _FilingTemplates {
   #machine(act2, who3) {
     if (str45(who3) && !isMachineIdentity(who3)) return null;
     const code = act2 === "review" ? "MACHINE_CANNOT_REVIEW_TEMPLATE" : act2 === "approve" ? "MACHINE_CANNOT_APPROVE_TEMPLATE" : "MACHINE_CANNOT_DRAFT_TEMPLATE";
-    return refuse21(code, str45(who3) ? `'${String(who3).trim().slice(0, 60)}' is a machine identity: a machine proposes wording and comments, labelled, and nothing else` : "no member is named as the one acting: this call carries nobody");
+    return refuse21(code, str45(who3) ? `'${String(who3).trim().slice(0, 60)}' is a machine identity: a machine proposes wording and comments, labeled, and nothing else` : "no member is named as the one acting: this call carries nobody");
   }
   /* ================================================================ the one-condition answers */
   /* R3, R24, R25: absent and invisible are one answer. */
