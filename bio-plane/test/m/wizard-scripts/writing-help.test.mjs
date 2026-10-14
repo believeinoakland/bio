@@ -58,38 +58,38 @@ test("R24 writingHelpAt, in order: AI_KEPT_AWAY while the group keeps its materi
   assert.deepEqual(w.snapshot(), before);
 });
 
-/* Keep-away set as an administrator sets it (credentials R51), read by credentials' one site (its R35's aiKeptAway). */
-const keepAway = (w, on) => assert.equal(w.credentials.aiKeepAwaySet({ on, reason: on ? "We hold residents' records" : null, by: V("erin") }).ok, true);
+/* Keep-away set as an administrator sets it (ai-accounts R4's `aiKeepAwaySet`), read by ai-accounts' one site (its R7's aiKeptAway). */
+const keepAway = (w, on) => assert.equal(w.accounts.aiKeepAwaySet({ on, reason: on ? "We hold residents' records" : null, by: V("erin") }).ok, true);
 
-test("R24 (T37; N765, K231) item 1 answers AI_KEPT_AWAY while credentials.aiKeptAway() answers its refusal, read at each call, before AI_NO_ACCOUNT and every other refusal; a setting that cannot be read and a credentials that cannot be reached are kept away (fail closed); assistant.on is never read", () => {
+test("R24 (T37; N765, K231) item 1 answers AI_KEPT_AWAY while ai-accounts.aiKeptAway() answers its refusal, read at each call, before AI_NO_ACCOUNT and every other refusal; a setting that cannot be read and an ai-accounts that cannot be reached are kept away (fail closed); assistant.on is never read", () => {
   const w = helped();
   const at = (x) => w.wz.writingHelpAt({ op: "notewrite", field: "text", assistant: ON, ...x });
-  assert.equal(w.credentials.aiKeptAway(), null);
+  assert.equal(w.accounts.aiKeptAway(), null);
   assert.deepEqual(at({}), { offered: true }, "negative control: off");
   keepAway(w, true);
-  assert.equal(w.credentials.aiKeptAway().code, "AI_KEPT_AWAY", "credentials' own answer");
+  assert.equal(w.accounts.aiKeptAway().code, "AI_KEPT_AWAY", "ai-accounts' own answer");
   for (const x of [{}, { assistant: { on: true } }, { assistant: null }, { op: "publish" }, { field: "reason" }, { draftHeld: true }, { assistant: { on: false, account: "A" } }])
     assert.deepEqual(at(x), { offered: false, code: "AI_KEPT_AWAY" }, `first, before every other refusal: ${JSON.stringify(x)}`);
   keepAway(w, false);
   assert.deepEqual(at({}), { offered: true }, "read at the call: turned off, offered again with no change here");
   assert.deepEqual(at({ assistant: { on: true } }), { offered: false, code: "AI_NO_ACCOUNT" });
-  /* the setting cannot be read: credentials answers its refusal, saying so, and help is not offered */
+  /* the setting cannot be read: ai-accounts answers its refusal, saying so, and help is not offered */
   const u = helped();
   u.st.db.exec("DROP TABLE ai_keep_away");
-  assert.equal(u.credentials.aiKeptAway().code, "AI_KEPT_AWAY");
+  assert.equal(u.accounts.aiKeptAway().code, "AI_KEPT_AWAY");
   assert.deepEqual(u.wz.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: false, code: "AI_KEPT_AWAY" });
-  /* credentials cannot be reached, or throws: kept away, never offered */
-  for (const credentials of [null, {}, { aiKeptAway() { throw new Error("down"); } }, () => { throw new Error("unreachable"); }]) {
-    const x = new wz.WizardScripts({ storage: w.st, record: w.record, membership: w.membership, filingTemplates: w.filingTemplates, credentials });
+  /* ai-accounts cannot be reached, or throws: kept away, never offered */
+  for (const accounts of [null, {}, { aiKeptAway() { throw new Error("down"); } }, () => { throw new Error("unreachable"); }]) {
+    const x = new wz.WizardScripts({ storage: w.st, record: w.record, membership: w.membership, filingTemplates: w.filingTemplates, accounts });
     x.wizardRegister(registration());
-    assert.deepEqual(x.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: false, code: "AI_KEPT_AWAY" }, String(credentials));
+    assert.deepEqual(x.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: false, code: "AI_KEPT_AWAY" }, String(accounts));
     assert.deepEqual([x.writingHelp({ op: "notewrite", field: "text", told: "t", assistant: ON }).code], ["AI_KEPT_AWAY"]);
   }
   /* pure: an away not given is no reading; null is off */
   assert.deepEqual(wz.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: false, code: "AI_KEPT_AWAY" });
   assert.deepEqual(wz.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }, undefined, null), { offered: true });
   assert.equal(wz.KEPT_AWAY, "AI_KEPT_AWAY");
-  /* the factory, given no credentials, reaches credentials' one instance on its own host's storage, on first need */
+  /* the factory, given no accounts, reaches ai-accounts' one instance on its own host's storage, on first need */
   const y = wz.wizardScriptsOf({ storage: w.st }, { record: w.record, membership: w.membership, filingTemplates: w.filingTemplates });
   y.wizardRegister(registration());
   assert.deepEqual(y.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: true });
@@ -97,18 +97,18 @@ test("R24 (T37; N765, K231) item 1 answers AI_KEPT_AWAY while credentials.aiKept
   assert.deepEqual(y.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: false, code: "AI_KEPT_AWAY" });
 });
 
-test("R27 (T37; N765, K231) writingHelp answers a keep-away as credentials answers it, its row C-29.31 and keep_away {reason, set_by, set_at}, before AI_NO_ACCOUNT, the other refusals and WRITING_HELP_NOTHING_TOLD, writing nothing", () => {
+test("R27 (T37; N765, K231) writingHelp answers a keep-away as ai-accounts answers it, its row C-29.31 and keep_away {reason, set_by, set_at}, before AI_NO_ACCOUNT, the other refusals and WRITING_HELP_NOTHING_TOLD, writing nothing", () => {
   const w = helped();
   keepAway(w, true);
   const before = w.snapshot();
-  const want = w.credentials.aiKeptAway();
+  const want = w.accounts.aiKeptAway();
   for (const x of [{}, { told: "" }, { op: "publish" }, { assistant: { on: true } }]) {
     const r = w.wz.writingHelp({ op: "notewrite", field: "text", told: "The gate was locked.", assistant: ON, by: F, viewer: F, ...x });
     assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "AI_KEPT_AWAY", "AI_KEPT_AWAY", want.check, want.translation], JSON.stringify(x));
     assert.deepEqual(r.keep_away, want.keep_away);
-    assert.equal(r.keep_away.reason, "We hold residents' records", "the administrator's reason, as credentials holds it");
+    assert.equal(r.keep_away.reason, "We hold residents' records", "the administrator's reason, as ai-accounts holds it");
   }
-  assert.equal(want.check, "C-29.31", "credentials' row: the one site");
+  assert.equal(want.check, "C-29.31", "ai-accounts' row: the one site");
   assert.ok(!("AI_KEPT_AWAY" in wz.WIZARD_SCRIPTS_CHECKS), "never re-minted here");
   assert.deepEqual(w.snapshot(), before, "writes nothing");
 });
@@ -202,13 +202,13 @@ test("R20 T34's rows: WIZARD_VIA_REFUSED and the eight writing-help rows are C-1
   assert.deepEqual(want.map((c) => row(c).check), want.map((_, i) => `C-131.${33 + i}`));
   assert.equal(row("ASSISTANT_DRAFT_UNAVAILABLE").translation, "The assistant cannot draft this yet. Write it in your own words; nothing was changed.");
   assert.equal(row("WRITING_HELP_REASON_FIELD").translation, "The assistant never words your reason for an act: your reasons are yours alone. Nothing was changed.");
-  assert.equal(row("WIZARD_DRAFT_REFUSED").translation, "A step's draft is the script's own words, a filing template offered here, or a labelled machine draft "
+  assert.equal(row("WIZARD_DRAFT_REFUSED").translation, "A step's draft is the script's own words, a filing template offered here, or a labeled machine draft "
     + "your group's Civicsmith registers, and this one is none of them.");
   for (const [code, r] of Object.entries(wz.WIZARD_SCRIPTS_CHECKS))
     for (const word of [/this instance/i, /the instance/i, /this copy/i, /this plane/i, /the plane/i, /\bserver\b/i]) assert.ok(!word.test(r.translation), `${code}: ${word}`);
 });
 
-test("R27 (T41; N812, K2373) the door's refusals of the account and its limit, ai-use R3's AI_LIMIT_REACHED and credentials' AI_USE_SWITCHED_OFF (and a fail-closed one), are answered as given, after R24's codes and WRITING_HELP_NOTHING_TOLD and before any model turn; a door's AI_NO_ACCOUNT at R24 item 1's place; the retired ceiling codes are named nowhere", () => {
+test("R27 (T41; N812, K2373) the door's refusals of the account and its limit, ai-use R3's AI_LIMIT_REACHED and ai-accounts' AI_USE_SWITCHED_OFF (and a fail-closed one), are answered as given, after R24's codes and WRITING_HELP_NOTHING_TOLD and before any model turn; a door's AI_NO_ACCOUNT at R24 item 1's place; the retired ceiling codes are named nowhere", () => {
   const w = helped();
   const before = w.snapshot();
   const limit = { ok: false, reason: "AI_LIMIT_REACHED", code: "AI_LIMIT_REACHED", check: "C-143.3", translation: "Your limit is reached.",
@@ -243,17 +243,17 @@ test("R27 (T41; N812, K2373) the door's refusals of the account and its limit, a
   for (const retired of ["AI_USE_CEILING_REACHED", "AI_USE_COPY_CEILING_REACHED"]) assert.ok(!(retired in wz.WIZARD_SCRIPTS_CHECKS), retired);
 });
 
-test("R27 (T41; K2592; credentials R57) writingHelp's own keep-away asks credentials.aiKeptAway({use: \"draft\"}): a keep-away covering only ask does not refuse a draft the door admits; one covering draft (or every use) still refuses AI_KEPT_AWAY; R24's offer reads the same", () => {
+test("R27 (T41; K2592; ai-accounts R7) writingHelp's own keep-away asks ai-accounts.aiKeptAway({use: \"draft\"}): a keep-away covering only ask does not refuse a draft the door admits; one covering draft (or every use) still refuses AI_KEPT_AWAY; R24's offer reads the same", () => {
   const w = helped();
   const ask = (x = {}) => w.wz.writingHelp({ op: "notewrite", field: "text", told: "The gate was locked.", assistant: ON, by: F, viewer: F, ...x });
-  const set = (on, uses) => assert.equal(w.credentials.aiKeepAwaySet({ on, uses, reason: on ? "We hold residents' records" : null, by: V("erin") }).ok, true);
+  const set = (on, uses) => assert.equal(w.accounts.aiKeepAwaySet({ on, uses, reason: on ? "We hold residents' records" : null, by: V("erin") }).ok, true);
   set(true, ["ask"]);
-  assert.ok(w.credentials.aiKeptAway({ use: "ask" }), "control: the group keeps its material away from ask");
+  assert.ok(w.accounts.aiKeptAway({ use: "ask" }), "control: the group keeps its material away from ask");
   refused(ask(), "ASSISTANT_DRAFT_UNAVAILABLE", "a keep-away covering only ask: the draft passes to the model turn's place");
   assert.deepEqual(w.wz.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: true });
   for (const uses of [["draft"], ["ask", "draft"], null]) {
     set(true, uses);
-    const want = w.credentials.aiKeptAway({ use: "draft" });
+    const want = w.accounts.aiKeptAway({ use: "draft" });
     const r = ask();
     assert.deepEqual([r.code, r.check, r.keep_away], ["AI_KEPT_AWAY", want.check, want.keep_away], `negative control: covering ${JSON.stringify(uses)}`);
     assert.deepEqual(w.wz.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: false, code: "AI_KEPT_AWAY" });
@@ -261,7 +261,7 @@ test("R27 (T41; K2592; credentials R57) writingHelp's own keep-away asks credent
   /* the question asked is exactly {use: "draft"} */
   const asked = [];
   const x = new wz.WizardScripts({ storage: w.st, record: w.record, membership: w.membership, filingTemplates: w.filingTemplates,
-                                   credentials: { aiKeptAway: (a) => { asked.push(a); return null; } } });
+                                   accounts: { aiKeptAway: (a) => { asked.push(a); return null; } } });
   x.migrate();
   x.wizardRegister(registration());
   refused(x.writingHelp({ op: "notewrite", field: "text", told: "t", assistant: ON }), "ASSISTANT_DRAFT_UNAVAILABLE");

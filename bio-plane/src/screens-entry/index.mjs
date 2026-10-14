@@ -14,7 +14,7 @@ import { forgot } from "./forgot.mjs";
 import { reset } from "./reset.mjs";
 import { setup } from "./setup.mjs";
 import { join } from "./join.mjs";
-import { SCREEN_WORDS, HOSTING_KEYS } from "./words.mjs";
+import { SCREEN_WORDS, HOSTING_KEYS, HELP_KEYS } from "./words.mjs";
 
 export { SCREEN_WORDS };
 
@@ -31,7 +31,7 @@ const WORDS = {
     "screen.entry.password", "signin.founderhint", "session.keep", "session.shared", "session.signedout", "session.ended", "session.locked",
     "refusal.SIGN_IN_REFUSED", "refusal.SIGN_IN_PAUSED", ...LABELS("front", ["login", "unlock"])],
   tour: ["screen.tour.name", "screen.tour.purpose", ...own("screen.tour.")],
-  forgot: [...STATES, "screen.forgot.name", "screen.forgot.purpose", ...own("screen.forgot."), ...HOSTING_KEYS, ...PASSWORDS, "screen.front.handle", "screen.entry.signin",
+  forgot: [...STATES, "screen.forgot.name", "screen.forgot.purpose", ...own("screen.forgot."), ...HELP_KEYS, ...PASSWORDS, "screen.front.handle", "screen.entry.signin",
     "refusal.RECOVERY_REFUSED", "refusal.PASSWORD_TOO_SHORT", "refusal.SIGN_IN_PAUSED", ...LABELS("forgot", ["recover"])],
   reset: [...STATES, "screen.reset.name", "screen.reset.purpose", ...own("screen.reset."), ...PASSWORDS, "screen.entry.signin", "screen.entry.backtofront",
     "refusal.PASSWORD_TOO_SHORT", ...LABELS("reset", ["passwordreset"])],

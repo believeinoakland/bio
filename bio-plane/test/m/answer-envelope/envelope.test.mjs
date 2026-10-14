@@ -294,18 +294,18 @@ test("R8, R16: this module's table holds exactly the rows of the checks the door
     detail: "op=capture needs 'sha256' in the shape <64 lowercase hex>, and this request carried none the operation could use. Nothing was changed." });
 });
 
-test("R14 (T47; DEC-198 (3), N992, N981; K3030): DISPATCH_CHECKS holds no row for DISCLOSURE_DUE and no family holds C-69.6 (its number never reused); the module-local DOOR_WORDS is gone; the code's one row is credentials' C-29.40, whose translation is words.json's refusal.DISCLOSURE_DUE, read by key; a DISCLOSURE_DUE the door answers at a sign-in's start, minted through dispatchRow as control-plane's door mints it until its R65 (T47-65), leaves decorated with C-29.40's check and translation (control: every other code dispatchRow does not hold still throws; negative control: the T46 row's number and words are seen nowhere)", async () => {
+test("R14 (T47; DEC-198 (3), N992, N981; K3030): DISPATCH_CHECKS holds no row for DISCLOSURE_DUE and no family holds C-69.6 (its number never reused); the module-local DOOR_WORDS is gone; the code's one row is C-29.40, held since T48 by ai-accounts (R17) and read from its family, whose translation is words.json's refusal.DISCLOSURE_DUE, read by key; a DISCLOSURE_DUE the door answers at a sign-in's start, minted through dispatchRow as control-plane's door mints it until its R65 (T47-65), leaves decorated with C-29.40's check and translation (control: every other code dispatchRow does not hold still throws; negative control: the T46 row's number and words are seen nowhere)", async () => {
   const OWN = await import("../../../src/answer-envelope/checks.mjs");
   for (const [fam, table] of Object.entries(OWN)) if (isFamily(fam, table)) assert.equal(Object.hasOwn(table, "DISCLOSURE_DUE"), false, fam);
   assert.equal("DOOR_WORDS" in OWN, false);
   assert.equal("DOOR_WORDS" in M, false);
   const all = Object.values(M.CHECK_FAMILIES).flatMap((f) => Object.entries(f));
   assert.equal(all.some(([, r]) => r.check === "C-69.6"), false, "C-69.6 is held by no code");
-  /* the one row: credentials' C-29.40, read from its family, earlier in the order */
-  const CR = await import("../../../src/credentials/checks.mjs");
+  /* the one row: C-29.40, ai-accounts' since T48 (R17), read from its family, earlier in the order */
+  const CR = await import("../../../src/ai-accounts/checks.mjs");
   const holders = M.CHECK_FAMILY_FILES.flatMap(([p, ns]) => Object.entries(ns).filter(([k, v]) => isFamily(k, v) && Object.hasOwn(v, "DISCLOSURE_DUE")).map(([k, v]) => [p, k, v.DISCLOSURE_DUE]));
   assert.equal(holders.length, 1);
-  assert.equal(holders[0][0], "src/credentials/checks.mjs");
+  assert.equal(holders[0][0], "src/ai-accounts/checks.mjs");
   const row = holders[0][2];
   assert.equal(row.check, "C-29.40");
   assert.equal(Object.values(CR).some((v) => isFamily("X_CHECKS", v) && v.DISCLOSURE_DUE === row), true);

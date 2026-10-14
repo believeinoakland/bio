@@ -4,10 +4,10 @@
    `front`, `tour`, `forgot`, `reset`, `setup`, `join`) with every group's name, person and place taken out (R10), and
    conformed to DEC-149 ("your group's Civicsmith"), DEC-188 (5) (no sentence says administrators see spending by
    member), DEC-197 (a handle is fixed at joining) and DEC-200 (5) ("file scanner", "safe view").
-   `HOSTING_CONTROL` (instance-setup R47) is carried as rows under `screen.hosting.*`, made from its one holder when this
-   module loads, so the screens draw its words by key (R4, R6). `handle.fixed` is held here under its `WORD_ROWS` key,
+   `HOSTING_CONTROL` (instance-setup R47) is carried as rows under `screen.hosting.*` for setup (R6), and `FORGOT_HELP`
+   as `screen.forgot.help.*` for forgot (R4), each made from its one holder when this module loads and drawn by key. `handle.fixed` is held here under its `WORD_ROWS` key,
    true on every arm under DEC-197 (interface-shell R5 names it). */
-import { HOSTING_CONTROL } from "../setup-fleet.mjs";
+import { HOSTING_CONTROL, FORGOT_HELP } from "../setup-fleet.mjs";
 
 const rows = [
   // ---- held under a WORD_ROWS key (interface-shell R5) ----
@@ -34,7 +34,6 @@ const rows = [
 
   // ---- front (R1, R2) ----
   ["screen.front.published", "What we have published", false],
-  ["screen.front.published.none", "Nothing published yet.", false],
   ["screen.front.edition", "Edition {edition} · {date} · signed by {signer}", false],
   ["screen.front.edition.nosigner", "Edition {edition} · {date}", false],
   ["screen.front.untitled", "A published case", false],
@@ -84,10 +83,10 @@ const rows = [
   ["screen.forgot.code.help", "One of the ten codes you saved when you joined, or got later in Settings › Recovery codes. Each works once.", false],
   ["screen.forgot.incomplete", "Type your handle and one of your codes first. Nothing was sent.", false],
   ["screen.forgot.done", "Your new password is set. That recovery code is spent; you have {remaining} left. Every other sign-in of yours has ended. Sign in with your new password.", false],
+  // interim words held here, for UX-DESIGN to key (K3295): the last code spent, so no count at zero is drawn (R12)
+  ["screen.forgot.done.last", "Your new password is set. That was your last recovery code: once you are signed in, get new ones in Settings › Recovery codes. Every other sign-in of yours has ended. Sign in with your new password.", false],
   ["screen.forgot.admin", "No codes to hand? Ask an administrator for a reset link", false],
   ["screen.forgot.admin.what", "An administrator can make you a reset link, like an invitation: it works once, for seven days, and lets you choose a new password. Ask an administrator in person or however your group talks. No administrator can see your password, and you keep your handle and everything you did.", false],
-  ["screen.forgot.hosting", "If no administrator can get in", false],
-  ["screen.forgot.hosting.what", "Whoever holds your group's hosting account can set a new one-time password, and an administrator can claim your group's Civicsmith again from it. That is the way back in when every administrator has lost both their password and their codes.", false],
 
   // ---- reset (R5) ----
   ["screen.reset.for", "For {handle} · it works once, until {date}", false],
@@ -189,8 +188,8 @@ const rows = [
   ["screen.setup.security", "Your organization's security tools (optional)", false],
   ["screen.setup.security.what", "If your organization already uses a file scanner, a tool that makes safe copies of files, or a log service, you can add it now, or later in Settings › Security.", false],
   ["screen.setup.security.scanner", "Civicsmith scans every file it captures with its own file scanner and opens risky ones in a safe view.", false],
-  ["screen.setup.security.tool", "The tool", false],
-  ["screen.setup.security.pick", "Choose a tool…", false],
+  // interim, for UX-DESIGN to key (K3295): a security tool's own field, named by its catalogue entry (R12: the kit's field)
+  ["screen.setup.security.field", "{field}", false],
   ["screen.setup.security.keep", "I have read how this tool handles our files, and agree", false],
   ["screen.setup.security.missing", "Fill in {field} first: the tool needs it. Nothing was sent.", false],
   ["screen.setup.security.nopick", "Choose a tool first. Nothing was sent.", false],
@@ -233,4 +232,11 @@ const hosting = [
 ];
 export const HOSTING_KEYS = Object.freeze(hosting.map((r) => r[0]));
 
-export const SCREEN_WORDS = Object.freeze([...rows, ...hosting].map((r) => Object.freeze(r)));
+/* R4: instance-setup's `FORGOT_HELP`, what `forgot` tells every visitor of the hosting account's way, carried by key. */
+const help = [
+  ["screen.forgot.help.heading", FORGOT_HELP.heading, false],
+  ...FORGOT_HELP.sentences.map((s, i) => [`screen.forgot.help.s${i + 1}`, s, false]),
+];
+export const HELP_KEYS = Object.freeze(help.map((r) => r[0]));
+
+export const SCREEN_WORDS = Object.freeze([...rows, ...hosting, ...help].map((r) => Object.freeze(r)));

@@ -1,6 +1,6 @@
 # BOB to instance-setup (T48)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -20,3 +20,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · ANSWER · re J1
 
 K3293: both constants as you read them (RELEASE_NOTICE_ADDRESS = https://raw.githubusercontent.com/believeinoakland/bio/main/release/NOTICE.json; INSTALLER_UPDATE_ADDRESS = https://newgroup.believeinoakland.workers.dev/update). Note: machinery-producers (merged) reads updateNoticeState()'s decisions as a list of {version, kind: start|later|skip, at, until?}, the latest by at on the ready version deciding, with ready.decision; make your R89/R90 answer that shape or tell me where it differs.
+
+## B3 · CHANGE
+
+K3297, from PLANE #36: your assistantGate still asks credentials.aiKeptAway (a delegate); read it from ai-accounts as the split map's re-point says, in this job. Merge origin/tranche/T48 (wizard-scripts, op-grades, interface-assets merged).

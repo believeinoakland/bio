@@ -88,7 +88,9 @@ test("R1 R12: groupdescriptiondraft and writinghelp are no act; with the control
    + "them and baseupdates nothing is unaccounted, and carried as mutating each would read unranked", () => {
   for (const op of ["groupdescriptiondraft", "writinghelp"]) assert.ok(!published(op), op);
   const OPS = ["groupdescriptiondraft", "writinghelp", "baseupdates"];
-  const table = OPS.map((op) => ({ op, mutating: false, gated: true }));
+  /* T48 (op-grades R39): `groupdescriptiondraft` is given a `RUNG_ABSENT` row (`caller-owned`), so it is carried as mutating, as
+     every op with a rung or an absence is; the other two stay gated reads */
+  const table = OPS.map((op) => ({ op, mutating: op === "groupdescriptiondraft", gated: true }));
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => OPS.includes(op)), []);

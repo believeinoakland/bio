@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { boot, frame } from "./fixture.mjs";
 import { world as credentialsWorld } from "../credentials/fixture.mjs";
+import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
 import { list as jList, get as jGet, combine as jCombine } from "../../../../jurisdictions/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/index.mjs";
 import { noSuchMember } from "../../../src/membership/index.mjs";
@@ -37,7 +38,7 @@ async function world({ local = null } = {}) {
     if (local && r.ok) r.view.local_names = [...(r.view.local_names || []), ...local];
     return r;
   } };
-  const w = await boot({ now: () => (t += 1000), more: { membership: c.m, credentials: c.c, jurisdictions } });
+  const w = await boot({ now: () => (t += 1000), more: { membership: c.m, credentials: c.c, aiAccounts: aiAccountsOf(c.ctx), jurisdictions } });
   w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "admin");
   return { ...w, c };
 }
@@ -152,8 +153,8 @@ test("R67 translationdraft to_language: refusals in order (TRANSLATION_DIRECTION
   const two = w.m.translationDraft({ language: "es", direction: "to_language", keys: [other.key, PLACEHOLDER.key], by: "second" });
   assert.deepEqual(two.words.map((x) => x.key), [other.key, PLACEHOLDER.key]);
   assert.equal(two.words[0].protected, true);
-  /* the gate: under keep-away, credentials' refusal, after the module's own */
-  w.c.c.aiKeepAwaySet({ on: true, reason: "Our material stays here, every word of it.", by: "admin" });
+  /* the gate: under keep-away, ai-accounts' refusal, after the module's own */
+  aiAccountsOf(w.c.ctx).aiKeepAwaySet({ on: true, reason: "Our material stays here, every word of it.", by: "admin" });
   assert.equal(w.m.translationDraft({ language: "es", direction: "to_language", by: "sam" }).reason, "TRANSLATION_NOT_GRANTED");
   const kept = w.m.translationDraft({ language: "es", direction: "to_language", by: "ruth" });
   assert.deepEqual([kept.reason, kept.keep_away.reason], ["AI_KEPT_AWAY", "Our material stays here, every word of it."]);
@@ -177,7 +178,7 @@ test("R67 (K2238) translationDraftRefusal answers null or R67's first refusal, t
     assert.equal(r.reason, w.m.translationDraft(args).reason, JSON.stringify(args));
   }
   assert.equal(w.m.translationDraftRefusal({ language: "es", direction: "to_language", by: "ruth" }), null);
-  w.c.c.aiKeepAwaySet({ on: true, reason: "Our material stays here, every word of it.", by: "admin" });
+  aiAccountsOf(w.c.ctx).aiKeepAwaySet({ on: true, reason: "Our material stays here, every word of it.", by: "admin" });
   assert.equal(w.m.translationDraftRefusal({ language: "es", direction: "to_language", by: "ruth" }), null, "no gate read here");
   assert.equal(counts(w), before);
 });

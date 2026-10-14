@@ -22,7 +22,7 @@ export const FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", 
    one-time password (`setup-page` R27) and where it is found, the same words for the page and the installer.
    `hostingControlBlock(cls, {guideHref})` is the block as HTML, every word escaped, in an element whose class is the
    caller's own; with `guideHref` (a screen's address of the guide) the guide's name is a link to it, and without (the
-   installer's) it is text. */
+   installer's) it is text; with `deployer: true` (the installer's last screen, K3240) the deployer's steps follow. */
 export const HOSTING_CONTROL = Object.freeze({
   heading: "Before you choose a password: who controls your group's Civicsmith",
   sentences: Object.freeze([
@@ -32,8 +32,8 @@ export const HOSTING_CONTROL = Object.freeze({
     "Use a group account for it, not anyone's personal login.",
     "Add at least one other trusted person to that account.",
     "Where possible, let someone other than the group's administrators hold it.",
-    "The same account is the way back in if the password you choose is lost: sign in to it, replace the ADMIN_TOKEN "
-      + "value in this worker's settings, and your group's Civicsmith can be claimed again.",
+    "The same account is the way back in if the password you choose is lost: whoever holds it can open the way for "
+      + "your group's Civicsmith to be claimed again.",
   ]),
   guide: Object.freeze({
     sentence: "If the one-time password may have been seen, replace it: follow the guide \u201cReplace the one-time "
@@ -41,13 +41,31 @@ export const HOSTING_CONTROL = Object.freeze({
     name: "Replace the one-time password",
   }),
 });
+/* R47 (T48; K3240): the deployer's steps for that way back in, in the developer's own words, kept apart from the block so
+   no member reads them: they belong to the installer's last screen and DEPLOY.md, whose texts add them after the block.
+   The block itself says it in a founder's words (its last sentence above). */
+export const HOSTING_RECOVERY_DEPLOYER = "To open the way back in: sign in to the hosting account, replace the ADMIN_TOKEN "
+  + "value in this worker's settings, and your group's Civicsmith can be claimed again.";
+
+/* R47 (T48; K3240): what a member who cannot sign in is told on `forgot`, in members' words (DEC-149): who can help,
+   and no more. Wording is BOB's draft, owed to UX-DESIGN to re-word. The founder-only block above ("who controls your
+   group's Civicsmith") is for the founder's path and is not drawn here. */
+export const FORGOT_HELP = Object.freeze({
+  heading: "If you cannot sign in",
+  sentences: Object.freeze([
+    "Your group's administrators can help you: ask one of them for a reset link.",
+    "If none of them can sign in either, whoever holds your group's hosting account can open the way back in for them.",
+  ]),
+});
+
 const escBlock = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-export function hostingControlBlock(cls = "notice", { guideHref = null } = {}) {
+export function hostingControlBlock(cls = "notice", { guideHref = null, deployer = false } = {}) {
   const { sentence, name } = HOSTING_CONTROL.guide;
   const guide = typeof guideHref === "string" && guideHref
     ? sentence.split(name).map(escBlock).join(`<a href="${escBlock(guideHref)}">${escBlock(name)}</a>`)
     : escBlock(sentence);
   return `<div class="${escBlock(cls)}" id="hosting-control"><p><b>${escBlock(HOSTING_CONTROL.heading)}</b></p>`
     + HOSTING_CONTROL.sentences.map((s) => `<p>${escBlock(s)}</p>`).join("")
+    + (deployer === true ? `<p>${escBlock(HOSTING_RECOVERY_DEPLOYER)}</p>` : "")
     + `<p style="margin:0">${guide}</p></div>`;
 }

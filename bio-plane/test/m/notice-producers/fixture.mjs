@@ -17,15 +17,16 @@ export const NONE = Object.freeze({
   answers: { standingAnswersFor: () => ({ ok: true, entries: [], cursor: null }) },
   inquiry: { datedWaits: ({ member }) => ({ ok: true, member, waits: [] }) },
   credentials: { securityLevel: () => ({ level: "Ordinary", levelAt: null }),
-                 securityMap: () => ({ ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN" }),
-                 projectAccountsSuspended: () => [] },
+                 securityMap: () => ({ ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN" }) },
+  /* R16 (T48; N996 §5): the suspended sign-ins are ai-accounts' (its R13), no longer credentials' */
+  aiAccounts: { projectAccountsSuspended: () => [] },
   following: { policyChanges: () => ({ ok: true, changes: [], cursor: null }), dutyWatchEndAt: () => null },
   standards: { standardRead: ({ id }) => ({ ok: false, reason: "NO_SUCH_STANDARD", id }) },
   fileSafety: { scanFindings: ({ after }) => ({ ok: true, findings: [], cursor: after ?? null, truncated: false }),
                 securityToolEvents: ({ after }) => ({ ok: true, events: [], cursor: after ?? null, truncated: false }),
                 securityTools: () => ({ ok: true, tools: [] }) },
   provenance: { homeOf: () => null },
-  /* R16 (ai-use R5, R9; credentials R59), R17 (steps, question-explorer, investigation, review), T41 */
+  /* R16 (ai-use R5, R9; ai-accounts R13), R17 (steps, question-explorer, investigation, review), T41 */
   aiUse: { exploreAsksPending: () => ({ ok: true, asks: [] }), limitsReached: () => ({ ok: true, reached: [] }) },
   steps: { laterFound: () => ({ ok: true, found: [] }), stepsDue: () => ({ ok: true, due: [] }),
            costShares: () => ({ ok: true, shares: [] }), costMessages: () => ({ ok: true, messages: [] }) },

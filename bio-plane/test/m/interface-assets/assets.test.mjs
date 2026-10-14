@@ -1,5 +1,6 @@
-/* interface-assets at its interface (R1–R4; DEC-138; N897 (1); N559): `ASSET_FILES` read against the design stream's
-   docs/development/ux-substrate/visual-language/ at ASSETS_COMMIT, read from git so the working copy never moves it.
+/* interface-assets at its interface (R1–R7; DEC-138; N897 (1); N559; N1039; K3254): `ASSET_FILES` read against the
+   design stream's docs/development/ux-substrate/visual-language/ and screens/page.src.html at ASSETS_COMMIT, read from
+   git so the working copy never moves it.
    Each check is a function returning its failures, so a negative control shows it refusing a wrong map. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -10,10 +11,13 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import * as assets from "../../../src/interface-assets/index.mjs";
 import { ASSET_FILES, ASSETS_COMMIT } from "../../../src/interface-assets/index.mjs";
+import { shellCss } from "../../../src/interface-assets/generate.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const MODULE = join(ROOT, "bio-plane/src/interface-assets/index.mjs");
 const DIR = "docs/development/ux-substrate/visual-language";
+const PAGE = "docs/development/ux-substrate/screens/page.src.html";
+const COMMIT = "4664e8efd4"; // R5: main at PR #34's merge (PR #33's visual language); START named no later commit
 const git = (args) => execFileSync("git", args, { cwd: ROOT, maxBuffer: 1 << 26 });
 const atCommit = (path) => git(["show", `${ASSETS_COMMIT}:${DIR}/${path}`]);
 const bytesOf = (e) => (e.encoding === "base64" ? Buffer.from(e.body, "base64") : Buffer.from(e.body, "utf8"));
@@ -26,6 +30,7 @@ function expected() {
   const rewritten = faceCss.split('url("fonts/').join('url("/app/assets/fonts/');
   const want = new Map([
     ["civicsmith.css", { type: "text/css", bytes: Buffer.concat([atCommit("civicsmith.css"), Buffer.from(rewritten, "utf8")]) }],
+    ["shell.css", { type: "text/css", bytes: Buffer.from(shellCss(git(["show", `${ASSETS_COMMIT}:${PAGE}`]).toString("utf8")), "utf8") }],
     ["icons.svg", { type: "image/svg+xml", bytes: atCommit("icons.svg") }],
   ]);
   for (const f of faces) want.set(f, { type: "font/woff2", base64: true, bytes: atCommit(f) });
@@ -37,7 +42,7 @@ function expected() {
 function r1Failures(files, commit) {
   const out = [];
   const { want } = expected();
-  if (commit !== "3f40899950") out.push(`ASSETS_COMMIT ${commit}, not 3f40899950`);
+  if (commit !== COMMIT) out.push(`ASSETS_COMMIT ${commit}, not ${COMMIT}`);
   const names = Object.keys(files);
   for (const n of names) if (!want.has(n)) out.push(`${n}: not a name R1 gives`);
   for (const [n, w] of want) {
@@ -134,10 +139,10 @@ function r4Failures(loaded) {
   return out;
 }
 
-test("R1: ASSETS_COMMIT is 3f40899950 and ASSET_FILES holds exactly R1's 20 files, each equal byte for byte to git at the commit", () => {
+test("R1, R5: ASSETS_COMMIT is 4664e8efd4 and ASSET_FILES holds exactly R1's 20 files and R7's shell.css, each equal byte for byte to git at the commit", () => {
   const { faces } = expected();
   assert.equal(faces.length, 15);
-  assert.equal(Object.keys(ASSET_FILES).length, 20);
+  assert.equal(Object.keys(ASSET_FILES).length, 21);
   assert.deepEqual(r1Failures(ASSET_FILES, ASSETS_COMMIT), []);
   // The stylesheet's stated rewriting: every face named at /app/assets/fonts/, no relative fonts/ url left.
   const css = ASSET_FILES["civicsmith.css"].body;
@@ -148,6 +153,7 @@ test("R1: ASSETS_COMMIT is 3f40899950 and ASSET_FILES holds exactly R1's 20 file
 test("R1 control: a wrong commit, a changed byte, a lost face, an extra name, a wrong type or a missing encoding is refused", () => {
   const copy = () => Object.fromEntries(Object.entries(ASSET_FILES).map(([n, e]) => [n, { ...e }]));
   assert.ok(r1Failures(ASSET_FILES, "8e5f57fad0").length > 0);
+  assert.ok(r1Failures(ASSET_FILES, "3f40899950").length > 0, "R5: T45's commit no longer holds");
   let c = copy(); c["icons.svg"].body = c["icons.svg"].body.replace("svg", "SVG"); assert.ok(r1Failures(c, ASSETS_COMMIT).length > 0);
   c = copy(); c["civicsmith.css"].body = c["civicsmith.css"].body.split("/app/assets/fonts/").join("fonts/"); assert.ok(r1Failures(c, ASSETS_COMMIT).length > 0);
   c = copy(); const face = Object.keys(c).find((n) => n.endsWith(".woff2"));
@@ -159,7 +165,8 @@ test("R1 control: a wrong commit, a changed byte, a lost face, an extra name, a 
   c = copy(); c["fonts/OFL-source-sans-3.txt"].encoding = "base64"; assert.ok(r1Failures(c, ASSETS_COMMIT).length > 0);
 });
 
-test("R2: no file of ASSET_FILES names a resource outside /app/assets/ on the page's own origin", () => {
+test("R2, R7: no file of ASSET_FILES, shell.css among them, names a resource outside /app/assets/ on the page's own origin", () => {
+  assert.ok("shell.css" in ASSET_FILES);
   assert.deepEqual(r2Failures(ASSET_FILES), []);
   // The scan sees the stylesheet's 15 face urls, so it is not reading nothing.
   assert.equal([...ASSET_FILES["civicsmith.css"].body.matchAll(REFS[0])].length, 15);
@@ -212,4 +219,163 @@ test("R4 control: a module that imports, reads a file, reads the clock or draws 
       assert.ok(r4Failures(loadWatched(join(dir, f))).length > 0, f);
     }
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+/* R5: the stylesheet's rules, comments removed, as {media, sel, body}; a rule inside an @media block carries its query. */
+function rules(css) {
+  const text = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  const out = [];
+  let media = null, depth = 0, i = 0, start = 0;
+  while (i < text.length) {
+    const c = text[i];
+    if (c === "{") {
+      const pre = text.slice(start, i).trim();
+      if (pre.startsWith("@")) { media = pre; depth++; start = i + 1; i++; continue; }
+      const end = text.indexOf("}", i);
+      out.push({ media: depth ? media : null, sel: pre, body: text.slice(i + 1, end) });
+      i = end + 1; start = i; continue;
+    }
+    if (c === "}") { depth--; if (!depth) media = null; start = i + 1; }
+    i++;
+  }
+  return out;
+}
+const sels = (r) => r.sel.split(",").map((s) => s.trim());
+const KINDS = ["--c-kind-money", "--c-kind-part", "--c-kind-mention"];
+function r5Failures(css) {
+  const out = [];
+  if (/cursor\s*:\s*help/i.test(css)) out.push("cursor: help");
+  const all = rules(css);
+  for (const r of all) if (sels(r).some((s) => /^\.cs-card(?![\w-])\S*$/.test(s)) && /(^|[;\s])cursor\s*:/.test(r.body)) out.push(`${r.sel}: a cursor`);
+  for (const k of KINDS) {
+    const at = all.filter((r) => new RegExp(`${k}\\s*:`).test(r.body));
+    if (!at.some((r) => !r.media)) out.push(`${k}: not in light`);
+    if (!at.some((r) => /prefers-color-scheme:\s*dark/.test(r.media ?? "") || /data-theme="dark"/.test(r.sel))) out.push(`${k}: not in dark`);
+  }
+  return out;
+}
+
+test("R5: civicsmith.css at 4664e8efd4 holds no cursor: help, no cursor in .cs-card, and the three kind tokens light and dark", () => {
+  assert.equal(ASSETS_COMMIT, COMMIT);
+  const css = ASSET_FILES["civicsmith.css"].body;
+  assert.deepEqual(r5Failures(css), []);
+  // Control: the cursor stays over a control, so the scan reads real rules.
+  assert.ok(rules(css).some((r) => sels(r).includes(".cs-btn") && /cursor\s*:\s*pointer/.test(r.body)), ".cs-btn keeps cursor: pointer");
+  assert.ok(rules(css).some((r) => sels(r).includes(".cs-card")), "the scan finds .cs-card");
+});
+
+test("R5 control: a help cursor, a cursor on .cs-card or a missing light or dark kind token is refused", () => {
+  const css = ASSET_FILES["civicsmith.css"].body;
+  assert.ok(r5Failures(css + "\n.cs-mark { cursor: help; }").length > 0);
+  assert.ok(r5Failures(css + "\n.cs-card { cursor: pointer; }").length > 0);
+  assert.ok(r5Failures(css + "\n.cs-card:hover { cursor: default }").length > 0);
+  assert.ok(r5Failures(css.split("--c-kind-part").join("--c-kind-x")).length > 0);
+  const lightOnly = rules(css).filter((r) => !r.media && !/data-theme="dark"/.test(r.sel)).map((r) => `${r.sel} {${r.body}}`).join("\n");
+  assert.ok(r5Failures(lightOnly).some((f) => f.endsWith("not in dark")));
+});
+
+/* R6: a fresh process imports the module, measuring its heap and time (bundler R31's fresh import), then reads every
+   face; a face's text is built only on its read. */
+function faceHeap(path) {
+  const script = `
+    gc(); const h0 = process.memoryUsage().heapUsed; const t0 = performance.now();
+    const m = await import(${JSON.stringify(pathToFileURL(path).href)});
+    const importMs = performance.now() - t0; gc(); const h1 = process.memoryUsage().heapUsed;
+    const faces = Object.entries(m.ASSET_FILES).filter(([n]) => n.endsWith(".woff2"));
+    let chars = 0; for (const [, e] of faces) chars += e.body.length;
+    gc(); const h2 = process.memoryUsage().heapUsed;
+    process.stdout.write(JSON.stringify({ importMs, atImport: h1 - h0, onRead: h2 - h1, chars, faces: faces.length }));`;
+  const r = spawnSync(process.execPath, ["--expose-gc", "--input-type=module", "-e", script], { encoding: "utf8", maxBuffer: 1 << 26 });
+  assert.equal(r.status, 0, r.stderr);
+  return JSON.parse(r.stdout);
+}
+
+test("R6: a fresh import evaluates no face; each face's base64 is built on its first read, byte-identical to R1's", () => {
+  const m = faceHeap(MODULE);
+  console.log(`interface-assets R6: import ${m.importMs.toFixed(1)} ms (bundler R31 budget 500 ms), heap at import ${(m.atImport / 1024) | 0} KB, on reading the faces ${(m.onRead / 1024) | 0} KB of ${(m.chars / 1024) | 0} KB base64`);
+  assert.equal(m.faces, 15);
+  assert.ok(m.atImport < m.chars / 2, `the import holds ${m.atImport} bytes, not under half the faces' ${m.chars}`);
+  assert.ok(m.onRead > m.chars * 0.75, `reading the faces built ${m.onRead} bytes of their ${m.chars}`);
+  // Every read answers the same text, equal to R1's bytes (R1's test checks each against git).
+  for (const [n, e] of Object.entries(ASSET_FILES)) if (n.endsWith(".woff2")) assert.equal(e.body, ASSET_FILES[n].body);
+  assert.deepEqual(r1Failures(ASSET_FILES, ASSETS_COMMIT), []);
+});
+
+test("R6 control: a module holding its faces as base64 literals in the global scope is refused", () => {
+  const dir = mkdtempSync(join(tmpdir(), "interface-assets-r6-"));
+  try {
+    const eager = join(dir, "eager.mjs");
+    const faces = Object.entries(ASSET_FILES).filter(([n]) => n.endsWith(".woff2"))
+      .map(([n, e]) => `  ${JSON.stringify(n)}: Object.freeze({ type: "font/woff2", encoding: "base64", body: ${JSON.stringify(e.body)} }),`);
+    writeFileSync(eager, `export const ASSETS_COMMIT = "x";\nexport const ASSET_FILES = Object.freeze({\n${faces.join("\n")}\n});\n`);
+    const m = faceHeap(eager);
+    assert.ok(!(m.atImport < m.chars / 2), `an eager module held only ${m.atImport} bytes at import`);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+/* R7: shell.css is the generator's transform of the page's <style> at ASSETS_COMMIT. */
+const PHONE_QUERY = "@media (max-width: 760px)";
+const PHONE_WEIGHT = ":root:root "; // K3295: the design's phone prefix keeps its weight
+/* K3295: the unprefixed product classes R7 carries by name: .e, .e-*, .gchip, .cell, .st (with its .st-a…), .row. */
+const PRODUCT = /\.(e|e-[\w-]+|gchip|cell|st|st-[a-z]|row)(?![\w-])/;
+function r7Failures(css) {
+  const out = [];
+  for (const r of rules(css)) for (const s of sels(r)) {
+    if (/\.(mk-device|mk-scaler|mk-mockctl|mk-osprompt|anat|asfig|viewer|vlist|mk-page)(?![\w-])/.test(s)) out.push(`${s}: names a mock-only or page class`);
+    if (!/\.(mk|cs)-[\w-]/.test(s) && !PRODUCT.test(s)) out.push(`${s}: names no cs- or mk- class nor one R7 lists`);
+    if (r.media === PHONE_QUERY && !s.startsWith(PHONE_WEIGHT)) out.push(`${s}: a phone rule without the prefix's weight`);
+  }
+  return out;
+}
+
+test("R7: shell.css equals the generator's transform of page.src.html's <style> at ASSETS_COMMIT, with the product rules and the phone rules under the 760 px query", () => {
+  const e = ASSET_FILES["shell.css"];
+  assert.equal(e.type, "text/css");
+  assert.equal(e.body, shellCss(git(["show", `${ASSETS_COMMIT}:${PAGE}`]).toString("utf8")));
+  const all = rules(e.body);
+  for (const c of [".mk-door", ".mk-acts", ".mk-frontgrid", ".mk-avatar"])
+    assert.ok(all.some((r) => !r.media && sels(r).includes(c)), `${c} carried`);
+  assert.ok(all.some((r) => r.media === PHONE_QUERY && sels(r).includes(PHONE_WEIGHT + ".cs-tabs")), ".cs-tabs inside the 760 px query, weighted");
+  // K3295: the named product classes the carried components draw, each carried.
+  for (const c of [".e", ".e-pos", ".e-part", ".e-money", ".e-money-in", ".e-ment", ".e-lead", ".e-same", ".gchip rect", ".gchip.subject text", ".cell", ".cell h4", ".cell ul", ".st", ".cs-frame .row"])
+    assert.ok(all.some((r) => !r.media && sels(r).includes(c)), `${c} carried`);
+  assert.ok(all.some((r) => !r.media && sels(r).includes("main[data-st=\"b\"] .st-b")), ".st's states carried");
+  // The weight keeps the design's cascade: the phone tab bar beats the frame's desktop hiding of it.
+  assert.ok(all.some((r) => !r.media && sels(r).includes(".cs-frame .cs-tabs")));
+  assert.ok(all.some((r) => sels(r).some((s) => s.startsWith(".cs-frame"))), ".mk-page carried as .cs-frame");
+  assert.deepEqual(r7Failures(e.body), []);
+});
+
+test("R7 control: the transform drops mock-only, page and unlisted unprefixed rules, weights the phone prefix as :root:root and rewrites .mk-page; the scan refuses a stray rule", () => {
+  const src = `<style>\n{{FACES}}\n{{CSS}}\n/* a comment { } */
+.doc { margin: 0; }
+.mk-door { cursor: pointer; } .mk-door b { font-size: 1px; }
+.mk-device { padding: 10px; } .mk-scaler { transform: none; } .mk-mockctl, .mk-acts { gap: 1px; }
+.asfig .mk-device { padding: 6px; } .anat .mk-x { gap: 0; } .vlist .cs-x { gap: 0; }
+.mk-page .cs-tabs { display: none; } .mk-page.cs-shell { display: grid; }
+.mk-tl::before { content: ", ;"; }
+@media (max-width: 900px) { .viewer { gap: 0; } }
+@media (max-width: 560px) { .mk-facts { grid-template-columns: 1fr; } .anat { gap: 0; } }
+.mk-device[data-device="phone"] .cs-tabs { display: grid; }
+.mk-device[data-device="phone"] .mk-page.cs-shell { grid-template-rows: auto; }
+.mk-device[data-device="phone"] { border-radius: 28px; }
+</style>`;
+  const out = shellCss(src);
+  const all = rules(out);
+  const at = (media) => all.filter((r) => r.media === media).map((r) => `${r.sel} {${r.body.trim() ? ` ${r.body.trim()} ` : ""}}`);
+  assert.deepEqual(at(null), [".mk-door { cursor: pointer; }", ".mk-door b { font-size: 1px; }", ".cs-frame .cs-tabs { display: none; }",
+    ".cs-frame.cs-shell { display: grid; }", '.mk-tl::before { content: ", ;"; }']);
+  assert.deepEqual(at("@media (max-width: 560px)"), [".mk-facts { grid-template-columns: 1fr; }"]);
+  assert.deepEqual(at(PHONE_QUERY), [":root:root .cs-tabs { display: grid; }", ":root:root .cs-frame.cs-shell { grid-template-rows: auto; }"]);
+  // K3295: a listed product class is carried, an unlisted unprefixed one is not.
+  assert.equal(rules(shellCss("<style>.e-money { stroke: red; } .cell h4 { margin: 0; } .seg { gap: 0; } .cellar { gap: 0; }</style>")).map((r) => r.sel).join("|"), ".e-money|.cell h4");
+  assert.deepEqual(r7Failures(out), []);
+  // A brace or comma inside a string never splits a rule or a selector list.
+  assert.equal(shellCss('<style>.mk-q::after { content: "} {"; } .mk-q[title="a, b"] { gap: 0; }</style>').split("\n").slice(2).join("\n"),
+    '.mk-q::after { content: "} {"; }\n.mk-q[title="a, b"] { gap: 0; }\n');
+  assert.ok(r7Failures(".mk-device .mk-x { gap: 0; }").length > 0);
+  assert.ok(r7Failures(".mk-scaler { gap: 0; }").length > 0);
+  assert.ok(r7Failures(".anat .mk-x { gap: 0; }").length > 0);
+  assert.ok(r7Failures(".seg { gap: 0; }").length > 0);
+  assert.ok(r7Failures(`${PHONE_QUERY} { .cs-tabs { display: grid; } }`).length > 0, "a phone rule that lost its weight");
 });

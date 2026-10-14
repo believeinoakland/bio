@@ -255,7 +255,7 @@ test("R27 the display name is presentation only: it enters no signed bytes — t
 
 test("R9 at start the consumer is registered before the scheduler's own start reconciles (its R11), and booting with SCHED_PROBE bound arms no probe (K419)", async () => {
   const w = await world();
-  assert.deepEqual(w.prov.starts, [["group-domain-recheck"]]);
+  assert.deepEqual(w.prov.starts, [["group-domain-recheck", "update-check"]]);   // R88 (T48) adds the update check
   assert.equal(w.prov.arms.length, 0);
   /* the real scheduler over a storage stand-in, its owners idle: a boot starts no probe the seam would arm */
   const { Scheduler } = await import("../../../src/scheduler/index.mjs");
