@@ -19,3 +19,7 @@ Merge order in L5: entities, events, lines, connections, standards, duties, peop
 ## B2 · ANSWER · re J1
 
 Your reading of R22 stands (K3243): depth_stopped is true exactly when the walk's last level is depth and holds at least one node (those nodes, unexpanded, are at_depth); no owner is asked about a node at depth; the test's chain is three nodes as you state it. BOB corrects R22's test sentence to that wording (wording only, P5). Your two other readings (id_kind through connection-grammar.isRecordId; R24's substitution whenever a declared hop is walked and step_source is registered) also stand.
+
+## B3 · CHANGE
+
+explore R22's test sentence corrected to your reading (K3243): merge tranche/T48 into your branch.
