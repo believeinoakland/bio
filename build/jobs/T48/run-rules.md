@@ -24,3 +24,7 @@
 - `checks/run.mjs` over the product: format 0 and architecture 0 failures (3287 files). Coverage has 36 failures, none of them run-rules'; they are other modules' ids not yet met. Channels 0.
 
 Size (session_01VyeBhHhjeYG5M8LRhqnqL7): test runs 15, module lines 2544
+
+## J1 · COMPLETE
+
+Complete (commits 9003c3ae30, 15b3a6e254). R33: DRAFT_KINDS gains reading after statusreport; DRAFT_REACH.reading is none, so draftMayRead is false for it; draftKindDeployed follows draft's flag alone, action_drafts playing no part; TEST_BAR_PARTS gains draft:reading. New t48.test.mjs names R33, seven tests with controls; t45 and t46 follow the new last kind, nothing weakened. Flaw fixed (P8): four comments still cited credentials R56, R57, which N996 re-pointed to ai-accounts R11, R22. run-rules 67/0. format, architecture, coverage 33/33 and ownership are clean; run.mjs shows no run-rules failure and architecture 0. REPORT: agent-worker's generated bundle is staled by this change (requirements.test.mjs R45, STALE BUNDLE, run-rules being an input); it is regenerated at L6's close or by AGENT-WORKER's job, and I did not touch it. These users are green: ai-use, ai-runs, run-productions, skills, question-explorer, case-disclosures and agent-harness. capture-requests (6) and agent-worker (4 files) fail exactly as on the unchanged head, where the fixture member cannot sign in, so these are inherited reds. Details in my record.
