@@ -944,7 +944,7 @@ test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a m
   const AT_SOURCES = ["sourceconsent",
     /* R51: action-replies' and plan-work's ops are composed by the plane at T45-47; their machine answers are driven at
        their owners' interfaces (t45.test.mjs) */
-    "actionreplybearing", "actionbearingpropose", "arosefrom", "itemtakeup",
+    "actionreplybearing", "actionbearingpropose", "actionreplyquoting", "arosefrom", "itemtakeup",
     /* and action-holds' (composed with them), action-records' T45 acts (actions' until T47's split) and action-clocks'
        `clockstate`, routed there too */
     "actionhold", "actionholdrelease", "actionpressure", "holdnoticeprepare", "holdnoticesent", "actionreceipt",

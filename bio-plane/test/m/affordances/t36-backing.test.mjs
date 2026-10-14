@@ -69,13 +69,13 @@ test("R19: file-safety's releasescanhold, graded `reasoned` (op-grades R24), is 
   backed("releasescanhold", "HOLD_NO_REASON", release({ reason: " " }), release({ reason: "read it; a false match" }));
 });
 
-/* ---- credentials (R51) ---- */
-import * as crFix from "../credentials/fixture.mjs";
+/* ---- ai-accounts (R20; was credentials R51: the account ops moved with the split, N996) ---- */
+import * as aaFix from "../ai-accounts/fixture.mjs";
 
-test("R19: credentials' aikeepaway, graded `reasoned` (op-grades R25), is refused when turned on without its reason with "
-   + "AI_KEEP_AWAY_NO_REASON (credentials R51), in JUSTIFICATION_REFUSALS (op-grades, T37-26), and accepted with it", async () => {
-  const w = await crFix.world().group("ann");
-  const set = (x) => w.c.aiKeepAwaySet({ on: true, by: "admin", ...x });
+test("R19: ai-accounts' aikeepaway, graded `reasoned` (op-grades R25), is refused when turned on without its reason with "
+   + "AI_KEEP_AWAY_NO_REASON (ai-accounts R20), in JUSTIFICATION_REFUSALS (op-grades, T37-26), and accepted with it", async () => {
+  const w = await aaFix.world().group("ann");
+  const set = (x) => w.a.aiKeepAwaySet({ on: true, by: "admin", ...x });
   backed("aikeepaway", "AI_KEEP_AWAY_NO_REASON", set({ reason: "" }), set({ reason: "We hold a source's material under a promise." }));
 });
 
