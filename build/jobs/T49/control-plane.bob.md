@@ -20,3 +20,7 @@ Every new id needs an explicit test naming it (K874); every refusal a control.
 Inherited reds: the plan's rule 5 as it stands at your START (its (10): membership R83's `MODULE_ORDER`, from setup-words' move, K3368); none is yours unless named here or in your entry.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+K3369 (ADMISSION #12 J1 (2)): at control-plane/index.mjs:723 call doorWindowGate({ req, env, op, spec, doAnswer, credential, background }) — both names are in scope in makeFetch (credential at the queryGate call, background at :611), so a body-borne session is counted in its session's window (admission R27). Not blocking; part of your job.
