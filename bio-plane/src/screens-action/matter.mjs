@@ -61,22 +61,24 @@ export const matter = Object.freeze({
 
       // R6: the determination: each standard, what it requires and what the act did, its outcome, either way alike.
       const standards = Array.isArray(d.standards) ? d.standards : [];
-      const detSec = cs.sec("screen.matter.determination", (standards.length ? cs.sheet(standards.map(function (s) {
+      const detSec = !standards.length ? (d.live === false ? '<p class="mk-note">' + cs.w("screen.matter.notlive") + "</p>" : "") : cs.sec("screen.matter.determination", cs.sheet(standards.map(function (s) {
         const rows = Array.isArray(s.rows) ? s.rows : [];
         return cs.row("<b>" + cs.esc(s.standard || "") + "</b>", rows.map(function (r) {
           return cs.w("screen.matter.requires", { requires: r.requires || "" }) + " · " + cs.w("screen.matter.did", { did: r.did || "" });
         }).join("<br>"), cs.w("screen.matter.outcome." + P.outcome(s.outcome)), "");
-      }).join("")) : '<p class="cs-state" data-state="empty">' + cs.w("screen.matter.nostandards") + "</p>")
+      }).join(""))
         + '<p class="mk-note">' + cs.w("screen.matter.samecare") + "</p>"
         + (d.live === false ? '<p class="mk-note">' + cs.w("screen.matter.notlive") + "</p>" : ""));
 
       // R6: the consequences: who or what, the measure and how it is known.
-      const cons = cs.sec("screen.matter.consequences", cs.state("consequences", function (c) {
+      const cn = view.data.consequences;
+      const cons = cn && cn.state === "empty" ? "" : cs.sec("screen.matter.consequences", cs.state("consequences", function (c) {
         return cs.sheet(c.parts.map(function (p) {
           return cs.row(P.affected(cs, p), P.measure(cs, p), '<span class="meta">' + cs.w("screen.matter.known." + (["computed", "assessed"].includes(p.state) ? p.state : "undetermined"))
             + (p.label ? " · " + cs.esc(p.label) : "") + "</span>", "");
-        }).join(""));
-      }, { empty: "screen.matter.noconsequences" }) + '<p class="mk-note">' + cs.w("screen.matter.neverzero") + "</p>");
+        }).join(""))
+          + '<p class="mk-note">' + cs.w("screen.matter.neverzero") + "</p>";
+      }));
 
       // R6: the escalation.
       const st = view.data.status;
@@ -105,13 +107,14 @@ export const matter = Object.freeze({
           const actions = Array.isArray(x.actions) && x.actions.length ? cs.sheet(x.actions.map(function (a) {
             return cs.row("", '<a class="cs-ref" href="/app/action/' + encodeURIComponent(a.action) + '" data-nav>' + cs.esc(a.action) + "</a>",
               '<span class="meta">' + cs.w("screen.matter.atstage", { stage: { html: cs.w("screen.matter.stage." + (Number(a.stage) || 1)) } }) + "</span>", "");
-          }).join("")) : '<p class="cs-state" data-state="empty">' + cs.w("screen.matter.noactions") + "</p>";
+          }).join("")) : "";
           const avail = x.available ? '<p class="mk-note">' + cs.w("screen.matter.available") + "</p>" + cs.sheet((Array.isArray(x.available) ? x.available : [x.available]).map(function (t) {
             return cs.row("", cs.esc(typeof t === "object" ? t.label || t.kind || t.venue || "" : String(t)), "", "");
           }).join("")) : "";
           return '<p class="mk-sub">' + cs.w("screen.matter.escstate." + (["open", "suspended", "stopped_pursuing", "ended"].includes(x.state) ? x.state : "open")) + "</p>"
             + ladder + proposed + '<div class="mk-acts">' + acts + "</div>"
-            + "<h3>" + cs.w("screen.matter.endswhen") + "</h3>" + exit + "<h3>" + cs.w("screen.matter.actions") + "</h3>" + actions + avail;
+            + (exit ? "<h3>" + cs.w("screen.matter.endswhen") + "</h3>" + exit : "")
+            + (actions ? "<h3>" + cs.w("screen.matter.actions") + "</h3>" + actions : "") + avail;
         });
       } else {
         escSec = cs.state("status", function () {

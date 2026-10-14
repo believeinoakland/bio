@@ -2,7 +2,7 @@
    and nothing run before the member's confirm; Step 2, prepare, approve, the second approval, and record the sending. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, last, ok, refusedIn, button, beside, fill, DATA_PLANE, PREVIEW, PLAN_ID, ACTION_ID, FILING, FILINGS, draft } from "./page.mjs";
+import { open, main, text, ops, press, last, ok, refused, refusedIn, button, beside, fill, DATA_PLANE, PREVIEW, PLAN_ID, ACTION_ID, FILING, FILINGS, READ, draft } from "./page.mjs";
 
 const STEP1 = `/app/start-send/${PLAN_ID}~opt-1`;
 const STEP2 = `/app/start-send/${ACTION_ID}`;
@@ -24,7 +24,7 @@ test("R2 (v0.2 rules 1–3): a refusal starting would meet is drawn first; the m
   const first = main(p).querySelector(".cs-gap");
   assert.ok(first && /Would be refused/.test(first.textContent) && /A breach claim rests on an established matter/.test(first.textContent));
   assert.ok(main(p).innerHTML.indexOf("cs-gap") < main(p).innerHTML.indexOf("mk-dl"), "the refusal comes first");
-  await press(p, "optionstartpreview", { values: { "start-breach": true, "start-override": "the logs are public already" } });
+  await press(p, "optionstartpreview", { values: { "start-breach-0": true, "start-override": "the logs are public already" } });
   assert.deepEqual(last(p, "optionstartpreview").body, { plan: PLAN_ID, option: "opt-1", kind: "records_request", breach: true, premise_override: { reason: "the logs are public already" } });
   assert.equal(main(p).querySelector(".cs-gap"), null, "resolved");
   assert.match(text(p), /proceeding anyway, with the reason stated/);
@@ -49,7 +49,8 @@ test("R3: Step 2 prepares what is sent (her own words, labelled; each filled bla
   let drafts = [];
   const p = await open(STEP2, { ...DATA_PLANE, filingsfor: () => ok(FILINGS(drafts)),
     communicationprepare: () => { drafts = [draft()]; return ok({ id: FILING, action: ACTION_ID, form: "communication", text: "We request the logs for {{period}}.",
-      blanks: [{ name: "period", value: "2025", source: "member", label: "your own" }], disclosure: { machine: false } }); } });
+      blanks: [{ name: "period", value: "2025", source: "fills:member:mai", label: { kind: "member_fill", by: "member:mai" } },
+        { name: "office", value: "City Clerk", source: ACTION_ID }], disclosure: { machine: false } }); } });
   assert.deepEqual(ops(p), ["communicationprepare", "filingprepare"]);
   assert.match(text(p), /Your group's Civicsmith sends nothing: you send it by the office's own means/);
   const b = await press(p, "communicationprepare", { reason: "ready" });
@@ -59,7 +60,8 @@ test("R3: Step 2 prepares what is sent (her own words, labelled; each filled bla
   assert.deepEqual({ ...last(p, "communicationprepare").body, reason: undefined }, { action: ACTION_ID, purpose: "request", text: "We request the inspection logs.", reason: undefined });
   assert.equal(p.doc.getElementById("send-text-1").value, "We request the logs for {{period}}.");
   assert.match(text(p), /Your own words/);
-  assert.match(text(p), /period: 2025 \(from your own\)/);
+  assert.match(text(p), /period: 2025 \(written by whoever prepared it, not read from the record\)/, "a member's fill is labelled hers, not given a source");
+  assert.match(text(p), new RegExp(`office: City Clerk \\(from ${ACTION_ID}\\)`), "a filled blank names its source");
   assert.deepEqual(ops(p), ["filingapprove"]);
 });
 
@@ -72,8 +74,8 @@ test("R3: filingprepare prepares the filing from the group's template when no te
 
 test("R3: 'Approve this text' is terminal: its dialog says approving fixes it and it sends only on confirm, with the edited text", async () => {
   let drafts = [draft()];
-  const p = await open(STEP2, { ...DATA_PLANE, filingsfor: () => ok(FILINGS(drafts)), filingapprove: () => { drafts = [draft({ approval: { approved_by: "member:mai", at: "x", sha: "s" } })]; return ok({ filing: FILING }); } });
-  assert.match(text(p), /A text was prepared/);
+  const p = await open(STEP2, { ...DATA_PLANE, filingread: ok(READ()), filingsfor: () => ok(FILINGS(drafts)), filingapprove: () => { drafts = [draft({ approval: { approved_by: "member:mai", at: "x", sha: "s" } })]; return ok({ filing: FILING }); } });
+  assert.equal(p.doc.getElementById("send-text-1").value, "We request the logs for 2025.", "R11: the text it was prepared with");
   const b = button(p, "filingapprove");
   await p.click(b);
   assert.equal(p.byOp("filingapprove").length, 0);
@@ -118,4 +120,48 @@ test("R3 (op-grades R18; interface-shell R50): at the phone width, 'I have sent 
   assert.equal(p.byOp("filingrecordsent").length, 0);
   const wide = await open(STEP2, { ...DATA_PLANE, filingsfor: ok(FILINGS(drafts)) });
   assert.ok(button(wide, "filingrecordsent"), "control: drawn as an act on a wider screen");
+});
+
+/* ---------- R11 (T48; N1034; K3145; filings R59): a prepared draft is read again on load ---------- */
+
+test("R11: prepare, reload, and the same text, blanks with their sources, unfilled blanks with why, the member's fills, the advisory and the offers are drawn; nothing is prepared again by reading", async () => {
+  let drafts = [];
+  const prepared = READ({ advisory: "A demand is a Tier 2 act: a lawyer's view helps.", offers: ["counsel_packet"] });
+  const first = await open(STEP2, { ...DATA_PLANE, filingsfor: () => ok(FILINGS(drafts)),
+    communicationprepare: () => { drafts = [draft()]; return ok(prepared); } });
+  await press(first, "communicationprepare", { values: { "send-text-0": "We request the logs for {{period}}." }, reason: "ready" });
+  const shown = (p) => ({ text: p.doc.getElementById("send-text-1").value, page: text(p) });
+  const before = shown(first);
+  // the reload: a new page over the same record, the draft now held and approved by no one
+  const again = await open(STEP2, { ...DATA_PLANE, filingsfor: () => ok(FILINGS(drafts)), filingread: ok(prepared),
+    communicationprepare: ok(prepared), filingprepare: ok(prepared) });
+  const after = shown(again);
+  assert.equal(again.byOp("filingread").length, 1, "read once");
+  assert.equal(again.byOp("filingread")[0].query.filing, FILING);
+  assert.equal(after.text, before.text);
+  assert.equal(after.text, "We request the logs for 2025.");
+  for (const s of ["period: 2025 (written by whoever prepared it, not read from the record)", `office: City Clerk (from ${ACTION_ID})`,
+    "Still to fill: cost_limit", "cost_limit: the record holds no value for this blank: the member fills it in", "Read first: A demand is a Tier 2 act: a lawyer's view helps.",
+    "A packet for a lawyer to read can be prepared beside this text.", "Your own words"]) assert.ok(after.page.includes(s), s);
+  assert.deepEqual(ops(again), ["filingapprove"]);
+  assert.equal(again.byOp("communicationprepare").length + again.byOp("filingprepare").length, 0, "control: reading prepares nothing");
+});
+
+test("R11: NO_SUCH_FILING is drawn as 'Nothing is here'; a read that failed is drawn as failed; either way nothing is offered to approve", async () => {
+  const held = ok(FILINGS([draft()]));
+  const gone = await open(STEP2, { ...DATA_PLANE, filingsfor: held, filingread: refused("NO_SUCH_FILING", "No such draft.", 404) });
+  assert.match(text(gone), /Nothing is here/);
+  assert.ok(!ops(gone).includes("filingapprove"));
+  const failed = await open(STEP2, { ...DATA_PLANE, filingsfor: held, filingread: refused("STORE_DID_NOT_ANSWER", null, 502) });
+  assert.ok(main(failed).querySelector('[data-state="failed"]'));
+  assert.ok(!ops(failed).includes("filingapprove"));
+  const fine = await open(STEP2, { ...DATA_PLANE, filingsfor: held, filingread: ok(READ()) });
+  assert.ok(ops(fine).includes("filingapprove"), "control: a draft that reads is offered for approval");
+});
+
+test("R11: a draft already approved is not read again; control: a page with no draft reads none", async () => {
+  const approved = await open(STEP2, { ...DATA_PLANE, filingsfor: ok(FILINGS([draft({ approval: { approved_by: "member:mai", at: "x", sha: "s" } })])), filingread: ok(READ()) });
+  assert.equal(approved.byOp("filingread").length, 0);
+  const none = await open(STEP2, { ...DATA_PLANE, filingread: ok(READ()) });
+  assert.equal(none.byOp("filingread").length, 0);
 });

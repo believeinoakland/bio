@@ -1,7 +1,7 @@
 /* screens-action R5, R10 (and R7 on `action`): one action, its replies, due dates, pressure, holds and scope. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, last, ok, beside, DATA_PLANE, ROUTES, ACTION, ACTION_ID, FILINGS, draft } from "./page.mjs";
+import { open, main, text, ops, press, last, ok, beside, DATA_PLANE, ROUTES, ACTION, ACTION_ID, FILINGS, PRESSURE, PROJECT, draft } from "./page.mjs";
 
 test("R5: reads the action: what it is, to whom (by role, with who holds it today), when and by whom it was sent, its replies; 'Waiting on <office>'s reply' while one is owed", async () => {
   const p = await open(ROUTES.action, DATA_PLANE);
@@ -70,4 +70,40 @@ test("R10 (DEC-212): an action holding an approved, unsent text offers 'Pick up 
   assert.equal(a.getAttribute("href"), `/app/request/${ACTION_ID}`);
   const q = await open(ROUTES.action, DATA_PLANE);
   assert.doesNotMatch(text(q), /Pick up where you left off/);
+});
+
+/* ---------- R12 (T48; N1035; K3145; actions R102; action-holds R16) ---------- */
+
+test("R12: the action heads the screen with its title and its project as a reference, each as `action` answers them; control: a null is drawn absent, never as 'untitled'", async () => {
+  const p = await open(ROUTES.action, DATA_PLANE);
+  assert.equal(main(p).querySelector("h1").textContent, "Inspection logs, 2025");
+  assert.equal(main(p).querySelectorAll("nav.cs-crumbs li").map((li) => li.textContent.trim()).join(" › "), "Projects › Pothole repairs › Action");
+  assert.equal(p.byOp("file").length, 0, "the project comes from the action's own answer, not from its document");
+  const bare = await open(ROUTES.action, { ...DATA_PLANE, action: ok({ ...ACTION, title: null, project: null }) });
+  assert.equal(main(bare).querySelector("h1").textContent, "Action", "no title: the screen's own name");
+  assert.doesNotMatch(text(bare), /untitled/i);
+  assert.equal(main(bare).querySelectorAll("nav.cs-crumbs li").map((li) => li.textContent.trim()).join(" › "), "Projects › Action", "no project: no project step");
+});
+
+test("R12: the pressure marks from pressurefor are drawn with where each arrived; control: a mark on another action is not drawn", async () => {
+  const p = await open(ROUTES.action, DATA_PLANE);
+  assert.equal(p.byOp("pressurefor")[0].query.action, ACTION_ID);
+  for (const s of ["Pressure on this action", "legal · a letter from the city's counsel", "arrived with reply 2", "marked by mai", "4 October 2026"]) assert.ok(text(p).includes(s), s);
+  const other = { arrived: { action: "ACTN-2026-ffffffffffffffff", ord: 1 }, project: PROJECT, kind: "retaliation", note: "a threat on the other action", by: "member:dev", at: "2026-10-05T09:00:00Z" };
+  const q = await open(ROUTES.action, { ...DATA_PLANE, pressurefor: ok({ ...PRESSURE, items: [...PRESSURE.items, other] }) });
+  assert.doesNotMatch(text(q), /a threat on the other action/);
+  const none = await open(ROUTES.action, { ...DATA_PLANE, pressurefor: ok({ ...PRESSURE, items: [] }) });
+  assert.doesNotMatch(text(none), /Pressure on this action/, "no mark: the section is not drawn");
+  const failed = await open(ROUTES.action, { ...DATA_PLANE, pressurefor: { status: 502, text: "boom" } });
+  assert.ok(main(failed).querySelector('[data-state="failed"]'), "a failed read is drawn as failed");
+});
+
+test("R12: the marks are paged by `after`: the next page is read from the cursor until none follows", async () => {
+  const mark = (ord, note) => ({ arrived: { action: ACTION_ID, ord }, project: PROJECT, kind: "other", note, by: "member:mai", at: "2026-10-04T09:00:00Z" });
+  const pages = { undefined: { ...PRESSURE, items: [mark(2, "first page")], truncated: true, cursor: `${ACTION_ID}#2` },
+    [`${ACTION_ID}#2`]: { ...PRESSURE, items: [mark(3, "second page")], truncated: true, cursor: `${ACTION_ID}#3` },
+    [`${ACTION_ID}#3`]: { ...PRESSURE, items: [mark(4, "third page")], truncated: false, cursor: null } };
+  const p = await open(ROUTES.action, { ...DATA_PLANE, pressurefor: (r) => ok(pages[r.query.after]) });
+  for (const s of ["first page", "second page", "third page"]) assert.ok(text(p).includes(s), s);
+  assert.deepEqual(p.byOp("pressurefor").map((r) => r.query.after), [undefined, `${ACTION_ID}#2`, `${ACTION_ID}#3`]);
 });

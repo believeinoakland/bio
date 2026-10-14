@@ -1,3 +1,29 @@
 # screens-action (T48)
 
 **Status** · session_01Y4r4SkWUhFeH2s4ocMcMLc · depth 2 · WORKING · handled B1
+
+## Completion
+
+**Read** (whole): `build/requirements/screens-action.md`; `build/plan/current.md` T48-76 (both lines); B1 START; the module's nine source files; the tests naming a requirement I changed (`action`, `contract`, `help-records`, `matter`, `plan`, `request`, `start-send` tests and `page.mjs`); `interface-shell` R5, R8, R10, R19–R21, R35, R55, R56 and the kit's `act`, `state`, `field`, `choice`, `checks`, `later`, `call` (`browser.mjs`); `filings` `filingRead` and `#fill`, `action-plans` `planAsk`, `action-holds` `pressureFor` (the answers I draw); `screens-inquiry`'s `assistant.mjs` (the `cs.later` pattern, R8). Not read: `build/layers.md` (the screen contract is `interface-shell` R21; nothing in the layer's contract changed), generated artifacts, `words.mjs` beyond the rows I touched.
+
+**Entries applied (T48-76)**
+- **R11** (`filingread`): a draft prepared and not approved is read again on load, once per filing, by `readFiling` (page memory, as `screens-inquiry` R8); it draws the text, blanks with their sources, unfilled blanks with why, the member's fills labelled hers, the advisory and the offers (`counsel_packet`); nothing is prepared by reading. `NO_SUCH_FILING` draws "Nothing is here" (`shell.unavailable.nothing`); a failed read draws failed and offers no approval.
+- **R12** (`action` R102, `pressurefor`): the action heads the screen with its `title` (a null draws the screen's own name, never "untitled"); the path's project step comes from the `project` the `action` read answers (the `file` read of `bundle.md` and its regex are gone, here and in `request`); the pressure marks draw as "Pressure on this action" with where each arrived, paged by `after` until no cursor follows (at most 20 pages); a mark naming another action is not drawn.
+- **R13** (`planask`): "Ask the assistant for options" is `planask` (label `act.optionpropose.label.plan`), reachable only; the run draws running and is re-read by `cs.later` every 10 seconds (stops when ended or after 60 polls); when it ends the tray (`planproposals`) is read again; `existed: true` draws the run already asked. `optionpropose` and its four fields are no longer drawn.
+- **R14** (the common line): `mk-form` wrappers gone (the kit's fields stand alone); `mk-done` became `mk-note`; `mk-grid` removed; the bare `<label>`/`<select>` fields (office, law, matter, start-kind's breach tick) are `cs.choice`/`cs.checks`; every empty sentence inside a section is gone and an empty section is not drawn (plan, action, matter, help-records, request); a closed, empty plan draws its one empty state (`screen.plan.empty`); the pressure section and the "Checks" count are drawn only when held.
+
+**Found and fixed in my own module (P8):** a member's fill arrives with `label` an object (`member_fill`), and the blank list drew it as "[object Object]"; it now draws a word saying the preparer wrote it, not read from the record, and a filled blank names its `source` string. The pickup/`prepared` sentence that stood in for a draft nobody could read is gone (the draft is read).
+
+**Decisions of mine, for BOB to overrule (reported once, not asked):**
+- The "one designed empty state" (R14) is drawn only where a screen can have nothing: a closed plan with nothing in it. Every other screen of this module always holds an act or a form, so no section is empty and none draws a sentence for it. A request that asked for offices and found none still says so (feedback to her act, not an empty section).
+- `act.planask.does` is not a `words.json` key (the file has `act.optionpropose.does`); I hold an own row with the same English until `words.json` keys it (REPORT to BOB).
+- The scenario form's option check boxes carry the options' own summaries (record data) and `cs.checks` takes word keys only, so that one group stays a hand-drawn `fieldset.cs-field`. It uses only defined classes. A data-labelled `cs.checks` (as `cs.choice` has) would let it use the kit: an `interface-shell` improvement.
+- `cs.rows` draws `cs-pickc` internally (R14's list renames it `mk-pickc`); that is `interface-shell`'s job's change, and my class test exempts it by name.
+
+**Deferred:** none.
+
+**Depends on unmerged same-layer work (merge order puts both before me):** `op-declarations` (T48-63: `planask`, `filingread`, `pressurefor` in `OPS` and the session sets) and `interface-shell` (R55: `planask` a re-point on `plan`). Until both are on `tranche/T48`, `interfacePage(SCREENS)` throws "act names planask, which OPS does not hold" and every page test of this module fails at `checkScreens`. I ran the module's tests in a scratch worktree with those two edits stood in (a three-line change to each file, never committed): 68 pass, 0 fail. After they merge, `tranche/T48` merged into this branch and a re-run should show the same; send CHANGE when they are in. R14's class test reads the design page's product rules from `docs/` as the stand-in for `shell.css` (`interface-assets` R7, not yet merged).
+
+**Tests and checks:** `node --test bio-plane/test/m/screens-action/` in the scratch worktree 68 pass, 0 fail (53 before this job). format 0 failures; architecture 0 failures (17 files); coverage 14 of 14 live ids named, 0 failures.
+
+Size (session_01Y4r4SkWUhFeH2s4ocMcMLc): test runs 14, module lines 1659

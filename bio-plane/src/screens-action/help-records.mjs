@@ -15,10 +15,15 @@ export const helpRecords = Object.freeze({
     const must = cs.sec("screen.help-records.must", '<ul class="mk-list">' + [1, 2, 3, 4, 5, 6, 7].map(function (n) {
       return "<li>" + cs.w("screen.help-records.must." + n) + "</li>";
     }).join("") + "</ul>");
-    const faster = cs.sec("screen.help-records.faster", cs.state("profiles", function (p) {
+    // R14: a section that holds nothing is not drawn: no law the profile names, no "faster" and no "sources".
+    const held = function (p) {
       const v = p && p.view ? p.view : {};
-      const ds = (Array.isArray(v.deadlines) ? v.deadlines : []).filter(function (d) { return d && d.applies_to === "records_request" && d.citation; });
-      if (!ds.length) return '<p class="cs-state" data-state="empty">' + cs.w("screen.help-records.nolaws") + "</p>";
+      return (Array.isArray(v.deadlines) ? v.deadlines : []).filter(function (d) { return d && d.applies_to === "records_request" && d.citation; });
+    };
+    const pr = view.data.profiles;
+    const none = pr && pr.state === "ok" && !held(pr.value).length;
+    const faster = none ? "" : cs.sec("screen.help-records.faster", cs.state("profiles", function (p) {
+      const ds = held(p);
       const days = function (d) { return (Number(d.amount) || 0) * (d.count === "business" ? 1.4 : 1); };
       const fastest = ds.slice().sort(function (a, b) { return days(a) - days(b); })[0];
       return cs.sheet(ds.map(function (d) {
@@ -30,12 +35,9 @@ export const helpRecords = Object.freeze({
       return "<li>" + cs.w("screen.help-records.portal." + n) + "</li>";
     }).join("") + "</ul>");
     const does = cs.sec("screen.help-records.does", '<p class="mk-note">' + cs.w("screen.help-records.does.text") + "</p>");
-    const sources = cs.sec("screen.help-records.sources", cs.state("profiles", function (p) {
-      const v = p && p.view ? p.view : {};
-      const cites = (Array.isArray(v.deadlines) ? v.deadlines : []).filter(function (d) { return d && d.applies_to === "records_request" && d.citation; })
-        .flatMap(function (d) { return [d.citation].concat(d.extension && d.extension.citation ? [d.extension.citation] : []); });
-      return cites.length ? '<p class="src">' + cs.esc(cites.filter(function (c, i) { return cites.indexOf(c) === i; }).join("; ")) + "</p>"
-        : '<p class="cs-state" data-state="empty">' + cs.w("screen.help-records.nolaws") + "</p>";
+    const sources = none ? "" : cs.sec("screen.help-records.sources", cs.state("profiles", function (p) {
+      const cites = held(p).flatMap(function (d) { return [d.citation].concat(d.extension && d.extension.citation ? [d.extension.citation] : []); });
+      return '<p class="src">' + cs.esc(cites.filter(function (c, i) { return cites.indexOf(c) === i; }).join("; ")) + "</p>";
     }));
     return cs.title(null) + must + faster + portal + does + sources;
   },
