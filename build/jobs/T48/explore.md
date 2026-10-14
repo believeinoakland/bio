@@ -37,3 +37,13 @@ Suggested fix, in R69's text and connections' job: each evidence entry also name
 - `checks/format.mjs`: 0 failures; `architecture.mjs bio explore`: 0 failures; `coverage.mjs bio explore`: 24 of 24 live ids named, 0 failures; `ownership.mjs bio explore tranche/T48`: 10 files, 0 failures; `checks/run.mjs bio`: format 0, architecture 0, coverage 45 failures (other modules' not-yet-met ids, rule 5 (1); none explore's), channels 0.
 
 Size (session_014rGkXcRSMxdpN4dTqo3FKh): test runs 12, module lines 1012
+
+## J4 · COMPLETE
+
+B5 processed: `tranche/T48` (with connections, K3249) merged into `job/T48/explore`. New `test/m/explore/real-connections.test.mjs` runs R24 over the real `entities` declared `member_of` and the real `connections` `step_source` registration through the default registry with the caller's host: before a source the relation is a lead; after `attachStepSource` the walk (all of both owners' kinds, and the declared kind alone) and the graph's read (R21) take the `step_source` hop with `backs` the relation id and no lead; after `withdrawStepSource` the relation is a lead again. No source change was needed: connections' evidence carries `source`, as my fixture assumed.
+
+Re-run after the merge: `node --test test/m/explore/` tests 48, pass 48, fail 0; `test/m/hypotheses/` pass 51, fail 0; the two reds my `exploregraph` opens stay as J3 named them (`affordances` t33.test.mjs:151 R12, `control-plane` r53-routes.test.mjs:70 R53, until L11 declares the op). Checks: format 0 failures; architecture (explore) 0; coverage (explore) 24 of 24, 0 failures; ownership 11 files, 0 failures; `checks/run.mjs`: format 0, architecture 0, coverage 43 (other modules' not-yet-met ids, rule 5 (1); none explore's), channels 0.
+
+Everything else in J3 stands.
+
+Size (session_014rGkXcRSMxdpN4dTqo3FKh): test runs 15, module lines 1012
