@@ -984,8 +984,8 @@ async function discriminateOdf(bytes, container, rows, signals) {
 }
 
 /* ------------------------------------------------------------------ *
- * The uniform _rels walker — one relationship grammar for all three
- * formats (and ODF's part-map, when built, parameterises around it)
+ * The uniform _rels walker — one relationship grammar for all three OPC
+ * formats (ODF carries no `_rels/*.rels`; its manifest is its part list)
  * ------------------------------------------------------------------ */
 
 /** The conventional .rels part for a part name (OPC): the package root's is
@@ -1881,11 +1881,12 @@ function readCfb(b) {
   if (!dirChain || !dirChain.length) return null;
   const dirBytes = gather(dirChain, sector, ss, dirChain.length * ss);
   const entries = [];
+  const utf16 = new TextDecoder("utf-16le");
   for (let at = 0; at + 128 <= dirBytes.length; at += 128) {
     const e = dirBytes.subarray(at, at + 128);
     const nameLen = u16(e, 0x40);
     const name = nameLen >= 2 && nameLen <= 64 && nameLen % 2 === 0
-      ? new TextDecoder("utf-16le").decode(e.subarray(0, nameLen - 2)) : "";
+      ? utf16.decode(e.subarray(0, nameLen - 2)) : "";
     const high = u32(e, 0x7c);
     entries.push({
       name, type: e[0x42], left: u32(e, 0x44), right: u32(e, 0x48), child: u32(e, 0x4c),
