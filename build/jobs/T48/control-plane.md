@@ -1,6 +1,6 @@
 # control-plane (T48)
 
-**Status** · session_01Buc3JHeHrCA6CLnhxgJpTX · depth 2 · COMPLETE · handled B5
+**Status** · session_01Buc3JHeHrCA6CLnhxgJpTX · depth 2 · COMPLETE · handled B6
 
 ## Reading (step 2)
 Whole: `build/requirements/control-plane.md`; the plan entries T48-77 (BOB's START B1); `index.mjs` (3,276 lines), `app.mjs`, `draft.mjs`, `owner-ops.mjs`, `archive.mjs`. Of the modules I use, only what my entries touch: `signin-door` (`mintTrace`, `memberRefOf`, R3), `ai-accounts` (`aiAccountsOps`, `disclosureDue`, R23), `ai-runs` (`testInstance`, R78), plane R40, R41, R50, R55 and `agent-worker` R83, R87 (the contract of the plane's calls), `op-declarations` R64–R68 and `interface-shell` R39, R58 (requirements only: their jobs are unmerged). Tests read whole: `harness.mjs`, `door-routes.mjs`, `t46-door.test.mjs` (R57, R77, R80), `draft.test.mjs`, `envelope.test.mjs` (R32 row), `t47-door.test.mjs`; the others run, not read.
