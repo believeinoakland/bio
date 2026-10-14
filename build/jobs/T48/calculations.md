@@ -27,3 +27,7 @@
 - `checks/run.mjs` over the product: architecture 3277 product files, 0 failures; format 0 failures; channels 0 failures; coverage 45 failures, all in other modules (none in calculations).
 
 Size (session_012CZbwA3WkToxkTZ5ddZfrq): test runs 9, module lines 3399
+
+## J1 · COMPLETE
+
+T48-25 applied: R41 met (NOT_YOUR_TESTIMONY compares the one member each stamp names under membership R43; founder's admin/member:admin both read as the founder). Also fixed in this module: a visit stores the testimony's author as its visitor (R38); reproduceDraw withheld from a viewer who may not see the set (R18/R10). Tests 57/57; format, architecture, coverage (41/41), ownership 0 failures; run.mjs architecture 0 failures. Note: Membership.ROOT_ADMIN is read but not in membership's Provides (wording gap). Record on job/T48/calculations.
