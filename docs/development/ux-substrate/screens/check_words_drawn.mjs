@@ -1,12 +1,14 @@
 // Every sentence a member reads on a screen is a keyed word, word for word (K3268). Render every screen of ../layouts.html
 // in a browser (plain, and in each variant a journey or wizard step draws it in, with and without the assistant), take the
-// text each screen draws, and match it against words.json: exactly, or by a key's {placeholder} template. Counted are the
-// drawn sentences of four words or more; a segment joined by " · " or " › " is split into its parts first, and is accepted
-// when each part is. Not counted: the mockup's own controls (.mk-mockctl), words people wrote (.rec: a question, a passage,
-// a reading, as the visual language marks them, and any sentence wholly in quotation marks), the mockup's sample records
-// marked .mk-data (a reading's name, a document's title: an instance, never a fixed word; unstyled), and parts that are
-// only sample data (numbers, dates and names). A template's placeholder in quotation marks ("{reason}") holds words people wrote. Prints each screen's unmatched count and FAILS if any screen's count exceeds its baseline in
-// words-drawn-baseline.json (a ratchet: counts may only fall; a screen with no baseline has a baseline of 0).
+// text each screen draws, and match it against words.json: exactly, or as an instance of a key's {placeholder} template
+// (its placeholders may hold at most 70% of the sentence, less any keyed word or words people wrote they hold). Counted are
+// the drawn sentences of four words or more: each is matched whole and, failing that, part by part where " · " or " › "
+// joins it. Not counted: the mockup's own controls (.mk-mockctl); words people wrote (.rec, as the visual language marks a
+// question, a passage or a reading; a field's typed value; a sentence wholly in quotation marks; a template's placeholder in
+// quotation marks, "{reason}"); the mockup's sample records marked .mk-data (a reading's name, a document's title: an
+// instance, never a fixed word; unstyled); and parts that are only sample data (numbers, dates and names).
+// Prints each screen's unmatched count and FAILS if any screen's count exceeds its baseline in words-drawn-baseline.json
+// (a ratchet: counts may only fall; a screen with no baseline has a baseline of 0). Run it after check_walk.mjs.
 // Usage: node check_words_drawn.mjs                    check against the baseline (run after check_walk.mjs)
 //        node check_words_drawn.mjs --write-baseline   write the current counts as the baseline (refused if any rose)
 //        node check_words_drawn.mjs --list <screen>    also print that screen's unmatched sentences ("all" for every screen)
