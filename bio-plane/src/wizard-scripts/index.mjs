@@ -21,8 +21,9 @@
  *                    `isAdministrator` (R64), `projectOwners` (R65), `activeAdmins` (R86), `inSight` (R80); and
  *                    `viewerPredicate` (R43), `notAnAdmin` (R84).
  *   filingTemplates  `offeredVersion` (its R25), for a `{template}` draft (R2, R12).
- *   credentials      `aiKeptAway` (its R35; T37, N765, K231): whether the group keeps its material away from AI, read
- *                    at each writing-help call (R24, R27), the one reading of keep-away; reached on first need.
+ *   accounts         `ai-accounts`' `aiKeptAway` (its R7; T37, N765, K231; T48, N996): whether the group keeps its material
+ *                    away from AI, read at each writing-help call (R24, R27), the one reading of keep-away; reached on
+ *                    first need.
  *   aiRuns           layer 6 (T47; R34; N984): `partAdmitted` and `testInstance` (its R78), read at each writing-help
  *                    call for the test-instance label; reached on first need.
  *   now              the instance clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
@@ -32,7 +33,7 @@
 import { recordOf, stampInstant, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, notAnAdmin } from "../membership/index.mjs";
 import { filingTemplatesOf } from "../filing-templates/index.mjs";
-import { credentialsOf } from "../credentials/index.mjs";
+import { aiAccountsOf, KEPT_AWAY_UNREADABLE } from "../ai-accounts/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { untestedLabel } from "../run-rules/test-bar.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
@@ -42,7 +43,7 @@ import { WIZARD_SCRIPTS_CHECKS, rowOf } from "./checks.mjs";
 import { WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES, WIZARD_SCRIPTS_MINT_SEED, migrateWizardScripts } from "./schema.mjs";
 import { CIVICSMITH_LIBRARY } from "./civicsmith-library.mjs";
 import { SCREEN_REGISTRY } from "./screen-registry.mjs";
-import { FRONT_DOORS } from "./front-doors.mjs";
+import { FRONT_DOORS, ELSEWHERE_DOOR } from "./front-doors.mjs";
 import { START_ROUTES, matchesOf, proposeStart } from "./start.mjs";
 import { helpRefusedActs, writingHelpAt, FIRSTHAND_ACTS, TOLD_MAX, WRITING_HELP_NAMED, KEPT_AWAY } from "./writing-help.mjs";
 
@@ -50,7 +51,7 @@ export { WIZARD_SCRIPTS_CHECKS } from "./checks.mjs";
 export { WIZARD_SCRIPTS_SCHEMA, WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES } from "./schema.mjs";
 export { CIVICSMITH_LIBRARY, CIVICSMITH_LIBRARY_SOURCE, CIVICSMITH_LIBRARY_ADOPTED_SOURCES } from "./civicsmith-library.mjs";
 export { SCREEN_REGISTRY, SCREEN_REGISTRY_SOURCE } from "./screen-registry.mjs";
-export { FRONT_DOORS, FRONT_DOORS_SOURCE } from "./front-doors.mjs";
+export { FRONT_DOORS, FRONT_DOORS_SOURCE, ELSEWHERE_DOOR } from "./front-doors.mjs";
 export { START_ROUTES, MATCH_KINDS, MATCHES_MAX, PARTS_MAX, matchesOf, proposeStart, checkStartProposal } from "./start.mjs";
 export { checkDraft, writingHelpAt, helpRefusedActs, isReasonField, factsOf, sentencesOf, FIRSTHAND_ACTS, HELP_NAMED_REFUSED, HELP_SET_TIME_REFUSED,
          WRITING_HELP_NAMED, TOLD_MAX, KEPT_AWAY } from "./writing-help.mjs";
@@ -97,7 +98,7 @@ const textUpTo = (v, max, min = 1) => typeof v === "string" && v.trim().length >
 const clamp = (v, dflt, max) => { const n = Math.floor(Number(v)); return v !== null && v !== undefined && v !== "" && Number.isFinite(n) ? Math.min(Math.max(n, 1), max) : dflt; };
 const truthy = (v) => v === true || v === "true" || v === "1" || v === 1;
 const OFFERED = Object.freeze(["approved"]);
-/** R24, R27 (K2592; `credentials` R57): the use a writing-help draft is, as the keep-away is asked of it. */
+/** R24, R27 (K2592; `ai-accounts` R7): the use a writing-help draft is, as the keep-away is asked of it. */
 export const KEEP_AWAY_USE = "draft";
 /** R34 (T47; N984; `run-rules` R29, `plane` R40's `DRAFT_KIND_OF`): the AI part a writing-help draft is, whose admission
  *  carries the test-instance label. */
@@ -357,15 +358,24 @@ export function requiredFailures({ screens = [], ops = null, machineRefused = []
   return out;
 }
 
+/* R37 (T48; DEC-227 (4)): the pointer of the `elsewhere` route as the registered provider answers it: `{places, pointers}`,
+   `places` the active places' names (`[]` when the group follows none) and `pointers` objects passed through as given;
+   any other answer (a string included) is null. */
+function pointerOf(v) {
+  if (!isObj(v) || !Array.isArray(v.places) || !Array.isArray(v.pointers)) return null;
+  if (!v.places.every((x) => typeof x === "string") || !v.pointers.every(isObj)) return null;
+  return { places: [...v.places], pointers: [...v.pointers] };
+}
+
 /* ================================================================ the module */
 
 export class WizardScripts {
-  constructor({ storage, record, membership, filingTemplates = null, credentials = null, aiRuns = null, now = null, env = null } = {}) {
+  constructor({ storage, record, membership, filingTemplates = null, accounts = null, aiRuns = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.templates = filingTemplates;
-    this.credentials = credentials;   /* the module, or a function reaching it on first need */
+    this.accounts = accounts;         /* ai-accounts, or a function reaching it on first need */
     this.aiRuns = aiRuns;             /* R34: likewise */
     this.now = typeof now === "function" ? now : null;
     this.env = env && typeof env === "object" ? env : {};
@@ -387,15 +397,16 @@ export class WizardScripts {
   /* R15, R16: the day, and nothing finer. */
   #day() { return this.#when().slice(0, 10); }
   #registration() { return this.reg || normaliseRegistration({}); }
-  /* R24 item 1 (T37; N765, K231): `credentials.aiKeptAway({use: "draft"})` (its R35, R57) as it answers now: null, or
-     its AI_KEPT_AWAY refusal; a keep-away covering only other uses (`ask`) does not refuse a draft (R27; K2592). A credentials that cannot be reached or answers by throwing is no reading of null: undefined, which R24
-     reads as kept away (fail closed, K2093). */
+  /* R24 item 1 (T37; N765, K231; T48, N996): `ai-accounts.aiKeptAway({use: "draft"})` (its R7) as it answers now: null, or
+     its AI_KEPT_AWAY refusal; a keep-away covering only other uses (`ask`) does not refuse a draft (R27; K2592). An
+     ai-accounts that cannot be reached or answers by throwing is no reading of null: it answers `KEPT_AWAY_UNREADABLE`,
+     that one site's own unreadable form, which R24 reads as kept away (fail closed, K2093). */
   #keptAway() {
     try {
-      if (typeof this.credentials === "function") this.credentials = this.credentials();
-      const c = this.credentials;
-      return c && typeof c.aiKeptAway === "function" ? c.aiKeptAway({ use: KEEP_AWAY_USE }) : undefined;
-    } catch { return undefined; }
+      if (typeof this.accounts === "function") this.accounts = this.accounts();
+      const c = this.accounts;
+      return c && typeof c.aiKeptAway === "function" ? c.aiKeptAway({ use: KEEP_AWAY_USE }) : KEPT_AWAY_UNREADABLE;
+    } catch { return KEPT_AWAY_UNREADABLE; }
   }
 
   /* R34 (T47; N984; `ai-runs` R78, `run-rules` R29): the test-instance label of a writing-help draft, read at the call:
@@ -1215,6 +1226,14 @@ export class WizardScripts {
     if (this.#isAdmin(memberId)) return true;
     return s.origin === "group" && this.#isOwner(s.project, memberId);
   }
+  /* R39: whether the member wrote a draft of the script, and whether version `n` is hers (a draft's author is a joined
+     participant of the project, R3, not always an owner): her own drafts are hers to list whoever owns the project. */
+  #draftBy(s, n, memberId) {
+    return !!memberId && s.origin === "group" && !!this.#one(`SELECT 1 AS x FROM wiz_versions WHERE script_id=? AND version=? AND author=?`, s.id, n, memberId);
+  }
+  #hasDraftBy(s, memberId) {
+    return !!memberId && s.origin === "group" && !!this.#one(`SELECT 1 AS x FROM wiz_versions WHERE script_id=? AND author=?`, s.id, memberId);
+  }
   #listed(view, s) {
     return { id: view.id, version: view.version, state: view.state, start: startOf(view.steps), author: view.author,
              contributors: view.contributors, approved: view.approved, created_at: view.created_at,
@@ -1222,9 +1241,11 @@ export class WizardScripts {
              broken: view.broken, use: this.#useOf(view.id), ...(s.retired ? { retired: s.retired } : {}) };
   }
 
-  /** R10 (`op=wizards`): the scripts the viewer may see and owns the project of (every one, to an administrator), newest
-   *  first, at most 200, with `truncated`. By default every offered version; `state` lists instead drafts, submitted,
-   *  withdrawn, retired or broken versions, or open proposals (`proposed`). Writes nothing. */
+  /** R10 (`op=wizards`): newest first, at most 200, with `truncated`. By default every offered version of every script
+   *  the viewer may see, to every member (R39: the Civicsmith library and each approved group script she may run, with
+   *  its name, whose, `based_on` and finished count); `state` lists instead drafts, submitted, withdrawn, retired or
+   *  broken versions, or open proposals (`proposed`), to the scripts' project owners and the administrators (a member's
+   *  own drafts also to her). Writes nothing. */
   wizards({ state = null, viewer = null } = {}) {
     const st = str(state);
     /* DEC-49 REGION is-wizards-state */
@@ -1241,10 +1262,12 @@ export class WizardScripts {
                  steps: parse(p.steps) || [], sha: p.sha, why: p.why, at: p.at, label: WizardScripts.#label(p.proposer) })),
                says: "proposed steps: none is offered, and none is a script's until a member drafts from or adopts them" };
     }
+    /* R39 (T48; walk row 17): what is offered is listed to every member who may see it; each other state, as R10 says */
+    const offered = !st || st === "offered";
     const scripts = [
       ...this.#registration().library.map((e) => this.#libraryScript(e.id)),
       ...this.#rows(`SELECT script_id FROM wiz_scripts`).map((r) => this.#groupScript(r.script_id)),
-    ].filter((s) => this.#canSee(s, viewer) && this.#listsTo(s, me))
+    ].filter((s) => this.#canSee(s, viewer) && (offered || this.#listsTo(s, me) || (st === "draft" && this.#hasDraftBy(s, me))))
       .sort((a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : a.id < b.id ? 1 : -1));
     const out = [];
     for (const s of scripts) {
@@ -1252,10 +1275,10 @@ export class WizardScripts {
       const numbers = s.origin === "civicsmith" ? s.entry.versions.map((v) => v.version) : this.#numbers(s.id);
       const stateOf = (n) => (s.origin === "civicsmith" ? WizardScripts.#libState(s, n) : this.#stateOf(events, n));
       let pick;
-      if (!st || st === "offered") { const n = this.#offeredNumber(s, events, viewer); pick = n === null ? [] : [n]; }
+      if (offered) { const n = this.#offeredNumber(s, events, viewer); pick = n === null ? [] : [n]; }
       else if (st === "retired") pick = s.retired ? numbers : [];
       else if (st === "broken") pick = s.origin === "group" ? numbers.filter((n) => this.#isBroken(s.id, n)) : [];
-      else pick = s.retired ? [] : numbers.filter((n) => stateOf(n) === st);
+      else pick = s.retired ? [] : numbers.filter((n) => stateOf(n) === st && (st !== "draft" || this.#listsTo(s, me) || this.#draftBy(s, n, me)));
       if (!pick.length) continue;
       out.push(this.#head(s, viewer, { versions: pick.slice().reverse().map((n) => this.#listed(this.#versionView(s, n, events), s)) }));
     }
@@ -1348,9 +1371,9 @@ export class WizardScripts {
   /** R23 (`op=startfrom`; DEC-129 (7), (2); D52, D53): the first steps a member may take from the group's home, one
    *  front door for both paths: `scripts`, the offered scripts this viewer may start (R11) of the Civicsmith library
    *  that are not required, and of the group's own, each `{id, version, name, start}` (the guided starts); `doors`, the
-   *  design stream's front doors naming offered scripts only (a door with none left out; `[]` until given); `routes`,
-   *  the six places a first message leads to by the member's choice (`START_ROUTES`, "not Civicsmith's" carrying the
-   *  registered pointer for this viewer, or null); `blank: true` (a blank start is always allowed); `matches`, the
+   *  design stream's front doors naming offered scripts only (a door with none left out) and, last and for every viewer,
+   *  the sixth, `elsewhere` (R37); `routes`, the six places a first message leads to by the member's choice
+   *  (`START_ROUTES`, "not Civicsmith's" carrying the registered pointer for this viewer, `{places, pointers}`, or null); `blank: true` (a blank start is always allowed); `matches`, the
    *  existing work the registered finder answers for `message` as this viewer may see it (`[]` with no message or no
    *  finder); and, when the assistant's reading `parts` of the message is given, `proposal`, R28's. Needs no AI
    *  credential and no key; starts nothing, records no use, writes nothing. */
@@ -1362,9 +1385,11 @@ export class WizardScripts {
     const ids = new Set(offered.map((x) => x.s.id));
     const doors = FRONT_DOORS.map((d) => ({ door: d.door, scripts: (Array.isArray(d.scripts) ? d.scripts : []).filter((id) => ids.has(id)) }))
       .filter((d) => d.scripts.length);
+    /* R37: the sixth door, the way out, is answered to every viewer after the five, whatever is offered */
+    doors.push({ door: ELSEWHERE_DOOR.door, scripts: [], opens: ELSEWHERE_DOOR.opens });
     const door = this.door || {};
-    const pointer = door.pointer ? this.#call(() => door.pointer(viewer)) ?? null : null;
-    const routes = START_ROUTES.map((r) => (r.route === "elsewhere" ? { ...r, pointer: isObj(pointer) || typeof pointer === "string" ? pointer : null } : r));
+    const pointer = door.pointer ? pointerOf(this.#call(() => door.pointer(viewer))) : null;
+    const routes = START_ROUTES.map((r) => (r.route === "elsewhere" ? { ...r, pointer } : r));
     const asked = typeof message === "string" && message.trim() ? message.trim().slice(0, 4000) : null;
     const matches = asked && door.findExisting && viewerPredicate(viewer).scope !== "DENY"
       ? matchesOf(this.#call(() => door.findExisting(asked, viewer), [])) : [];
@@ -1446,7 +1471,7 @@ export class WizardScripts {
   /* ================================================================ R24, R27: writing help */
 
   /** R24 (in-process): whether the assistant may help word `field` of `op` for this viewer, `{offered: true}` or
-   *  `{offered: false, code}`: first `AI_KEPT_AWAY` while `credentials.aiKeptAway()` answers its refusal (read here, at
+   *  `{offered: false, code}`: first `AI_KEPT_AWAY` while `ai-accounts.aiKeptAway()` answers its refusal (read here, at
    *  the call; T37, N765), then `AI_NO_ACCOUNT` where `assistant.account` names none, then the registration's refused
    *  and irreversible acts. Writes nothing; never throws. */
   writingHelpAt(args = {}) {
@@ -1470,7 +1495,7 @@ export class WizardScripts {
    *  K1863 (7)). `assistant` is the door's resolution whole (`store-door` R10; `answers.askAccount`): `{on, account:
    *  {kind, level}, refusal?}`, never the key, `refusal` the account's or its limit's answer when the door has one
    *  (`AI_NO_ACCOUNT`, `AI_USE_SWITCHED_OFF`, `ai-use` R3's `AI_LIMIT_REACHED`, or a fail-closed one). Refusals, in R27's
-   *  order: R24's codes (a keep-away as `credentials` answers it, its R35's row and `keep_away`, K231; a door's
+   *  order: R24's codes (a keep-away as `ai-accounts` answers it, its R7's row and `keep_away`, K231; a door's
    *  `AI_NO_ACCOUNT` as given, at R24 item 1's place); `WRITING_HELP_NOTHING_TOLD`; the door's other refusal as given,
    *  before any model turn, never re-minted here; past them, while the assistant's model turn does not exist (N686;
    *  K1837), `ASSISTANT_DRAFT_UNAVAILABLE`, the field unchanged, the answer the door turns into the draft (control-plane
@@ -1652,10 +1677,10 @@ export function wizardScriptsOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const filingTemplates = d.filingTemplates || filingTemplatesOf(host, { record, membership });
-    const credentials = d.credentials || (() => credentialsOf(host, { record, membership }));   /* R24: on first need */
+    const accounts = d.accounts || (() => aiAccountsOf(host, { record, membership }));   /* R24: on first need */
     const env = d.env ?? host.env ?? null;
     const aiRuns = d.aiRuns || (() => aiRunsOf(host, env));   /* R34: on first need */
-    w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, credentials, aiRuns, env });
+    w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, accounts, aiRuns, env });
     instances.set(host, w);
     w.migrate();
     record.declareTable("wizard-scripts", WIZARD_SCRIPTS_TABLE_CLASSES.map((t) => ({ ...t })));
