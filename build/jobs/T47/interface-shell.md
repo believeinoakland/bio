@@ -47,3 +47,11 @@ Tests: 110 of 110 over the providers' branch heads (wizard-scripts, setup-words,
 ## J4 · REPORT
 
 `answer-envelope`'s page policy (`PAGE_POLICY`, `img-src 'self' data:`) does not admit a `blob:` image, and R49's `cs.image` draws the image from a page-made object address (`blob:` on the page's own origin). In a browser the photos on `ceremony` (and any `cs.image`) would be blocked until `img-src` also names `blob:`. Best reading: `answer-envelope` adds `blob:` to `img-src` (an object address is made by the page itself and names no other origin, so principle 9.6 holds). The alternative, a `data:` address made from the bytes, would contradict R49's "object address"; I have not built it.
+
+## J5 · COMPLETE
+
+Re-opened by B6–B11 and complete again: R49, R50 and R46's `grant` built (K3147, K3149, K3150), `tranche/T47` merged at B11, the `DESIGN_WORDS` fallback dropped (`WORD_ROWS` now holds those words, the same English). Record "Completion" updated.
+
+Tests on the branch itself, no overlay: interface-shell 115 of 115. Users: the same failures as with the tranche's own shell, plus J2's four. Checks: format, architecture, ownership 0 failures; coverage 48 of 48.
+
+One reading for you to confirm or correct: R50's phone hold is `op-grades`' `LARGER_SCREEN_ACTS` through `OP_ALIASES` (today exactly `filingsent` and `filingrecordsent`, as R50 says), not every op `phoneOf` answers false for (83, among them `knock`, `enroll`, `recover` and every terminal act). One finding: J4 (`answer-envelope`'s `img-src` needs `blob:` for R49's images).
