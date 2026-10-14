@@ -34,6 +34,8 @@ jobs:
             [ -f "$pkg/package-lock.json" ] || continue
             (cd "$pkg" && npm ci --no-audit --no-fund --loglevel=error)
           done
+          # journey-check's walk drives Chromium through playwright-core (K3146, K3184): its own lock, and the browser.
+          (cd bio-plane/src/journey-check && npm ci --no-audit --no-fund --loglevel=error && npx playwright-core install --with-deps chromium)
       - name: test every package
         run: |
           set -uo pipefail
