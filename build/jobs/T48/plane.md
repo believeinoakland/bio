@@ -65,3 +65,7 @@ Build state and one edge I need (BOB's file, modules.json):
 **Tests and checks:** `node --test test/m/plane/*.test.mjs`: 246 tests, 246 pass at the last full run after the final fixes (door.test's forty-four routes re-pinned; t41, t42, t45, t46 re-pointed to `ai-accounts`); `test/system/migrate-released.test.mjs`: 1 pass. `checks/run.mjs`: architecture 0 failures; coverage for `plane` 55 of 55; format 0 failures; the 12 coverage failures listed are other modules' (not yet merged). ownership: see below.
 
 Size (session_01QDjs42zsRWgcyCJLgGDJKm): test runs 9, module lines 2282
+
+## J6 · COMPLETE
+
+All entries applied; plane tests 246/246, architecture, coverage (plane 55/55), format and ownership pass. Merge control-plane's R93 hand-over and re-run if it changes the argument names. Record: build/jobs/T48/plane.md. Findings: J5.
