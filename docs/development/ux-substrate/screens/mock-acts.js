@@ -291,7 +291,7 @@ const ACT_HELP = {
   reminderset: 'Reminds you on a date you choose. Only you see it.',
   standardadopt: 'Adopts a proposed standard as one the group holds the city to.',
   lawrelate: 'Relates the standard to the law it comes from, citing the passage.',
-  plansubjectadd: 'Adds a subject to the plan: someone or something the group wants to act on.',
+  plansubjectadd: 'Adds a matter to the plan: one problem the group wants to act on, with your reason.',
   optionadd: 'Adds an option: one thing the group could do, with what it would take.',
   optionpropose: 'Asks the assistant for options. They wait in the tray, labeled, until a member adopts one.',
   optionadopt: 'Adopts a suggested option into the plan as the group\'s own.',

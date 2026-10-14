@@ -246,13 +246,8 @@ const WHY = {
 };
 const dev = (k) => ({ why: WHY[k] });
 const DECISIONS = [
-  // op-grades: the correction path beside the Irreversible rung, and the two statements the design already words
-  ["op-grades", "op-grades/index.mjs", "^Publishing cannot be undone: what it published never stops answering", "screen.ceremony.permanent"],
-  ["op-grades", "op-grades/t35.mjs", "^This removes the value for good", "screen.person.expunge.statement"],
-  ["op-grades", "op-grades/t35.mjs", "^\". Published cases change only through the docket", "screen.person.expunge.statement"],
-  ["op-grades", "op-grades/t36.mjs", "^This file is high risk, for the reasons shown beside this", "screen.open-file.warn.ends"],
-  // affordances: ACT_HELP's drifted copy reads the design's act.queuemute.does; a client's usage hint
-  ["affordances", "affordances/act-help.mjs", "^Stops this kind of item reaching you", "act.queuemute.does"],
+  // op-grades' four statements and affordances' drifted act.queuemute.does now read their keys in the source (OP-GRADES #11,
+  // AFFORDANCES #34, merged K3375): DEC-263 drops their decisions, the keys being read as literals; a client's usage hint
   ["affordances", "affordances/facts.mjs", "^affordances are asked of an object", dev("apiuse")],
   ["op-declarations", "op-declarations/index.mjs", "^A read a screen draws from", dev("ground")],
   ["op-declarations", "op-declarations/index.mjs", "^A step another act takes", dev("ground")],

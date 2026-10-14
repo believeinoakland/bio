@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3215,
+  "screen": 3219,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -62,7 +62,7 @@
   "translate": 8,
   "proceeding": 6,
   "duty": 6,
-  "published": 8,
+  "published": 9,
   "shell": 127,
   "settings": 2,
   "entity": 33,
@@ -205,10 +205,10 @@
   "tokens": 1,
   "rail": 17,
   "tab": 2,
-  "act": 732,
+  "act": 733,
   "column": 33,
-  "total": 11827,
-  "protected": 862
+  "total": 11833,
+  "protected": 863
  },
  "words": [
   {
@@ -14176,10 +14176,10 @@
   },
   {
    "key": "screen.setup.claimed.nosignin",
-   "en": "Claimed. Sign in on your group's page with the handle admin and the password you just chose.",
+   "en": "Claimed. Sign in on your group's page with your handle, {handle}, and the password you just chose.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-entry's own rows"
+   "note": "adopted from screens-entry's own rows; DEC-263: reworded"
   },
   {
    "key": "screen.setup.unarmed",
@@ -31146,6 +31146,41 @@
    "note": "a session's own limit, beside the connection's refusal.DOOR_RATE_LIMITED"
   },
   {
+   "key": "screen.queue.more.one",
+   "en": "One more item is not shown here; act on these first.",
+   "protected": false,
+   "source": "DEC-263",
+   "note": "screen.queue.more when {n} is 1"
+  },
+  {
+   "key": "screen.find-in.notread.one",
+   "en": "One document could not be read for this, so “nothing” is not said for it.",
+   "protected": false,
+   "source": "DEC-263",
+   "note": "screen.find-in.notread when {n} is 1"
+  },
+  {
+   "key": "screen.finder.nobody.one",
+   "en": "Nobody has looked yet at one place your group holds.",
+   "protected": false,
+   "source": "DEC-263",
+   "note": "screen.finder.nobody when {n} is 1"
+  },
+  {
+   "key": "screen.answers.withheld.one",
+   "en": "One sentence was held back because it could not be checked against what your group holds.",
+   "protected": false,
+   "source": "DEC-263",
+   "note": "screen.answers.withheld when {n} is 1"
+  },
+  {
+   "key": "published.check.elsewhere",
+   "en": "The group published a file with this fingerprint, but no finding in this edition rests on it: it belongs to another edition or case of theirs, or was published beside the findings.",
+   "protected": false,
+   "source": "DEC-263",
+   "note": "screens-publish R22: verify answers published, with no evidence row of this edition's findings"
+  },
+  {
    "key": "screen.account.explain.help",
    "en": "Promptly: every explanation opens when you rest on something for half a second. On a longer pause: marks and names still do; what screens, sections, the rail and acts are waits a second and a half, so less opens while you move. Nothing is ever hidden, and keyboard focus or a tap shows everything at once. New members start with promptly; after a month Civicsmith asks once whether to keep it. Alt+Shift+I or the masthead switches it at any time.",
    "protected": false,
@@ -36823,10 +36858,10 @@
   },
   {
    "key": "refusal.TEMPLATE_BLANK_UNKNOWN",
-   "en": "The words name a blank that no filing fills. Use only the blanks filings fill, written {{name}}.",
+   "en": "The words name a blank that no filing fills. Use only the blanks a filing fills, each written as its name inside two pairs of curly brackets.",
    "protected": false,
    "source": "DEC-260",
-   "note": "filing-templates, refusal by its code"
+   "note": "filing-templates, refusal by its code; reworded without literal braces, DEC-263 (B223)"
   },
   {
    "key": "refusal.TEMPLATE_SCOPE_REFUSED",
@@ -58576,10 +58611,10 @@
   },
   {
    "key": "case-checker.departure.lens_given_published",
-   "en": "the lens given is not as_published, removed, or a reader's own {statements, applications}, so the case is answered as published",
+   "en": "the lens given is not one a case is read through (as published, as removed, or with a reader's own statements and applications), so the case is answered as published",
    "protected": false,
    "source": "DEC-260",
-   "note": "case-checker, departure"
+   "note": "case-checker, departure; reworded without braces, DEC-263 (B223)"
   },
   {
    "key": "case-checker.why.statement_among_lens",
@@ -59276,10 +59311,10 @@
   },
   {
    "key": "wizard-scripts.why.step",
-   "en": "a step is {screen, act, what, why, draft?, via?}",
+   "en": "a step names its screen, its act, what it does and why, and may name a draft and the way it is reached",
    "protected": false,
    "source": "DEC-260",
-   "note": "wizard-scripts, why"
+   "note": "wizard-scripts, why; reworded without braces, DEC-263 (B223)"
   },
   {
    "key": "wizard-scripts.why.step_carries_screen",
@@ -60228,10 +60263,10 @@
   },
   {
    "key": "money.push.canonical_table_row",
-   "en": "a canonical table row read through a binding a member adopted (source {table, row, binding})",
+   "en": "a canonical table row read through a binding a member adopted (its source names the table, the row and the binding)",
    "protected": false,
    "source": "DEC-260",
-   "note": "money, lacks.push()#0"
+   "note": "money, lacks.push()#0; reworded without braces, DEC-263 (B223)"
   },
   {
    "key": "money.push.party_named_registered",
@@ -72716,6 +72751,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.projectjoin.label.home",
+   "en": "Join",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.memberadd.label.members",
    "en": "Invite a member",
    "protected": true,
@@ -74415,7 +74456,7 @@
   },
   {
    "key": "act.plansubjectadd.label.plan",
-   "en": "Add a subject",
+   "en": "Add a matter",
    "protected": true,
    "source": "registry.json"
   },
@@ -76581,7 +76622,7 @@
   },
   {
    "key": "act.plansubjectadd.does",
-   "en": "Adds a subject to the plan: someone or something the group wants to act on.",
+   "en": "Adds a matter to the plan: one problem the group wants to act on, with your reason.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

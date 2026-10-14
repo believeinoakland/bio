@@ -507,6 +507,18 @@ w10('refusal.DOOR_RATE_LIMITED.session', 'You have made too many requests in the
 DEC262_REWORDED = ['screen.connect.own.subscription', 'screen.connect.own.apikey', 'screen.connect.group.allowance', 'screen.connect.grouplimits', 'screen.members.recovery.one']
 # --- end DEC-262
 
+# --- DEC-263 (BOB's B222, B223, B224 (1)): L11's further words. A count drawn at one reads its own .one row (setup-words
+# has no plural rule: the screen picks the key); the base key stays the many case.
+def w11(key, en, prot=False, note=''): W.append(dict(key=key, en=en, protected=prot, note='DEC-263' + (': ' + note if note else '')))
+w11('screen.queue.more.one', 'One more item is not shown here; act on these first.', False, 'screen.queue.more when {n} is 1')
+w11('screen.find-in.notread.one', 'One document could not be read for this, so “nothing” is not said for it.', False, 'screen.find-in.notread when {n} is 1')
+w11('screen.finder.nobody.one', 'Nobody has looked yet at one place your group holds.', False, 'screen.finder.nobody when {n} is 1')
+w11('screen.answers.withheld.one', 'One sentence was held back because it could not be checked against what your group holds.', False, 'screen.answers.withheld when {n} is 1')
+w11('published.check.elsewhere', 'The group published a file with this fingerprint, but no finding in this edition rests on it: it belongs to another edition or case of theirs, or was published beside the findings.', False, "screens-publish R22: verify answers published, with no evidence row of this edition's findings")
+DEC263_REWORDED = {'screen.setup.claimed.nosignin': "Claimed. Sign in on your group's page with your handle, {handle}, and the password you just chose."}
+REWRITE7.update(DEC263_REWORDED)   # the founder chooses their handle (DEC-230); no longer 'admin'
+# --- end DEC-263
+
 RETIRED = ['screen.forgot.handle.help', 'screen.home.strip.overdue', 'screen.queue.due.overdue', 'screen.setup.taken', 'screen.updates.skip.noreason', 'question.empty.conclude']
 # Rows whose words change (DEC-256): never "overdue" on Home or in the queue (screens-daily R31)
 REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
@@ -514,5 +526,5 @@ REWRITE = {'queue.milestone-overdue.summary': 'Past its date: {milestone}',
 
 REWRITE.update(REWRITE7)   # DEC-257: rows reworded to the words the screens draw
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'words-t49.json')
-open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, rewrite=REWRITE, rewrite_dec={k: 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
+open(out, 'w').write(json.dumps(dict(rows=W, retired=RETIRED, rewrite=REWRITE, rewrite_dec={k: 'DEC-263' if k in DEC263_REWORDED else 'DEC-262' if k in DEC262_REWORDED else 'DEC-257' for k in REWRITE7}), indent=1, ensure_ascii=False) + '\n')
 print(len(W), 'rows to', out)
