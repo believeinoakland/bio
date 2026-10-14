@@ -35,9 +35,15 @@ The instance's composition root. It builds every module on one Durable Object's 
 - **R48** (N1002; DEC-201; amends R5) The composed page's screens are the nine modules' (`screens-entry` among them), and the route map's tests are re-pinned to the ops of `op-declarations` R57–R59 and R61 (`peopledirectory`, K3137) and `tasks` R19.
 - **R49** (T47; K3143; `signin-door` R2, R4, R5) The store's route map spreads `signin-door`'s store-internal map (`signinDoorOps`: `signintokenhold`, `signintokenrefused`, `signindisclosuredue`, `signintracekeep`, `signintraceread`) beside `credentialsOps`; none is served to a caller.
 
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R56** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 35 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. The 34 strings that list marks `unkeyed` (none read by a member, each with its reason) stay in source. `refusal.AGENT_WORKER_UNBOUND`'s design words speak of signing in, so this module reads `ai.refused.notdeployed` for that refusal until the design rewords it (U260). Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English. *(not yet met: T49)*
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - `store-door`: `dispatch`, `controlPlaneRoutes` and the promotion step it exports (its R1, R5; K2043); `control-plane`: `makeFetch` and the door's hooks (R1, R5, R6).
 - (T41; N812, N823; K2438) `ai-use` (R31); `publish-schedule`: its instance and ops map (R32); `ratification`'s factory, which creates it (its R43).

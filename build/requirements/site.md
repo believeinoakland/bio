@@ -28,9 +28,15 @@ Civicsmith's own website, civicsmith.org, kept by its stewards: what Civicsmith 
 
   Both are generated, never edited by hand, and a later design is a re-generation. Test: each page against the design's drawing of its state at `SITE_COMMIT`, at 1280 and 390 px, pair by pair (`journey-check` R6's method). Control: no page is wider than the viewport at 390 px.
 
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R12** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the keys its requirements name, each held in `words.json` (it had no source when DEC-258 listed the reads). A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English. *(not yet met: T49)*
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - `interface-assets` (K3334): its served faces, icons and visual-language stylesheet (`ASSET_FILES`, its R1, R7, R8), for R8 and R9's look, so the site carries no second copy of the faces. Its tests read the design's files at `SITE_COMMIT` from git (`SCR.site`, R9's pages), as `interface-assets`' do.
 

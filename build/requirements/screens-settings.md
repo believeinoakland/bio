@@ -98,9 +98,15 @@ The settings a member and an administrator use day to day: the roster and the gr
   Test: each over a fixture. Control: a filled `who` draws the member's handle. *(not yet met: T49)*
 - **R38** (T49; N1100; DEC-246; `interface-shell` R69; amends R5, R24) Beside the code field, under `connect.ifnot`, `connect` draws the sign-in's refusals by their keys. These are `refusal.NO_SIGNIN_WAITING`, `refusal.SIGNIN_REFUSED` (with `{detail}`), `refusal.SIGNIN_UNAVAILABLE`, `refusal.SIGNIN_ADDRESS_UNEXPECTED`, `refusal.AGENT_WORKER_UNBOUND` and `instance.part.signin.absent`, each with its reference (`refusal.reference`, `interface-shell` R69). The `SCREEN_WORDS` rows R5 held for these codes go. R30's four words are R34's keys (finding 6). Test: each refusal over a fixture draws its key's words and reference. Control: the typed code is never drawn. *(not yet met: T49)*
 
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R39** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 551 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. It no longer draws the rows DEC-256 retired: `screen.updates.skip.noreason`. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English. *(not yet met: T49)*
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - `interface-shell`: the kit `cs` and the screen contract (its R21), the act gate and refusals (its R11–R13, R19, R20).
 - `setup-words`: `WORD_ROWS` keys.

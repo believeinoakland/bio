@@ -194,9 +194,15 @@ Each op below is routed through its owner's own map (R26's pattern) with the sta
 - **R98** (T49; N1091; DEC-237 (3); `op-declarations` R72; `project-roster` R30; the fold's R98, reduced to the op T49 places) `projectownervotes` is routed through `project-roster`'s map, refused to any caller not arriving by a member's session, with `viewer` stamped from the session (R17) and never taken from the caller (R29); the project is passed from the query. It holds no arm's behaviour: the answer, the absent one included, is `project-roster`'s, relayed as given. *(not yet met: T49)*
   - Test: an owner's session reads a change waiting on agreement. Controls: a `viewer` the caller sends in the query or body is deleted; an `ai` credential is refused.
 
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R99** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 11 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. The 13 strings that list marks `unkeyed` (none read by a member, each with its reason) stay in source. `refusal.AGENT_WORKER_UNBOUND`'s design words speak of signing in, so this module reads `ai.refused.notdeployed` for that refusal until the design rewords it (U260). Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English. *(not yet met: T49)*
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - T33-89: `events`, `lines`, `money`, `money-checks`, `duties`, `people`, `explore`, `hypotheses`, `calculations`, `answers`, `following`: their ops maps (R53), spread as the plane composes them.
 - `op-declarations` (K624): `OPS`, `SESSION_OPS`, `NEEDS`, the act lists (R2, R17, R26, R29), `decorateAct` and `ACT_GATE` (for `op=affordances`; `ops.mjs`, the re-export for `legacy-index`'s `op=affordances` and `op=queue` arms, deleted at T19's layer 11).

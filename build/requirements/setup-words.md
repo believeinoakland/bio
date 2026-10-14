@@ -30,7 +30,7 @@ The interface's word list as frozen data: each word the screens show, with its k
 
 #### T49 (T49-15)
 
-- **R9** (T49; DEC-229 to DEC-241, DEC-245, DEC-246; N1072, DEC-230; amends R8) `WORD_ROWS` is `words.json` as it stands on `main` at the commit named at START (`f498560a37`, PR #37's merge, or a later `main` commit), and `WORDS_COMMIT` is that commit: 2,473 rows, 741 of them protected at `f498560a37`, by R1's rule. The counts as read at the named commit bind. This carries every key the T49 screen requirements name. It no longer carries `signin.founderhint` (DEC-230 withdrew it). Test: equal word by word. Control: no row's key is `signin.founderhint`, and no row's `en` holds "labelled". Retired (K3366): replaced by R10 before its job ran.
+- **R9** (T49; DEC-229 to DEC-241, DEC-245, DEC-246; N1072, DEC-230; amends R8) `WORD_ROWS` is `words.json` as it stands on `main` at the commit named at START (`f498560a37`, PR #37's merge, or a later `main` commit), and `WORDS_COMMIT` is that commit: 2,473 rows, 741 of them protected at `f498560a37`, by R1's rule. The counts as read at the named commit bind. This carries every key the T49 screen requirements name. It no longer carries `signin.founderhint` (DEC-230 withdrew it). Test: equal word by word. Control: no row's key is `signin.founderhint`, and no row's `en` holds "labelled". *(retired: K3366, replaced by R10 before its job ran)*
 
 #### T49: the words move out of the source (K3365, K3366; DEC-257, U257)
 

@@ -74,9 +74,15 @@ From a case's draft to its public page, and what comes in from outside: preparin
   A match in this edition reads `published.check.yes`, with `{n}` and `{finding}` from `publishedcase` read by that `sha256`. No match reads `published.check.no`. No file is read or sent: the page takes the fingerprint only. R19's "the Verify any hash panel is not drawn" is retired. Test: a pinned evidence hash draws the finding. Control: an unknown hash draws `.no`, and no request carries anything but the hash. *(not yet met: T49)*
 - **R23** (T49; N1094; DEC-240 (C2); `case-inputs` R1, R5; `review` R15, R28; amends R17) On `review-outside`, "What the case says it does not cover" (`review.statement.title`, explained by `review.statement.help`) draws the group's statement from `reviewcopy`. Beneath it are "Your note" (`review.statement.note`, help `.note.help`, required) and "Acknowledge it" (`review.statement.ack`). That act sends `statementack` with the draft, the note as `reason`, and the grant's secret through the grant door as `reviewcomment` sends it, never in an address. `STATEMENT_ACK_NO_REASON` and the dead answer are drawn by their words, and the note is kept. A copy whose statement is absent draws no section. Test: the acknowledgement sends the note and the secret in the body only. Control: an empty note is refused, and nothing is sent. *(not yet met: T49)*
 
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R24** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 286 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English. *(not yet met: T49)*
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - `interface-shell`: the kit `cs` and the screen contract (its R21), the public frame (its R30).
 - `setup-words`: `WORD_ROWS` keys.

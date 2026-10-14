@@ -60,9 +60,15 @@ The release check: a Playwright walk of journeys 28 and 3 with screenshots, fail
 
   Every step of R9 and R10 is screenshotted (R2), and R6's design pairs are taken for each screen of the journey. Test: the pairs are made for each of journey 29's steps. Control: a missing pair fails. *(not yet met: T49)*
 
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R14** (T49; K3366; `setup-words` R11; amends every requirement here that asserts drawn words) A step that asserts what a screen draws names the word's key and compares the drawn text with `setup-words` `word(key, vars)`, never a hand-copied sentence; its own harness text (DEC-258 lists 75 strings, none drawn to a member) stays in source. Test: a step asserting a keyed word passes on the screen's text and fails on a fixture drawing other words. *(not yet met: T49)*
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - None imported (`modules.json` `uses` empty). It drives the installer Worker, the plane and a named test instance from outside, over HTTP, as a browser does.
 

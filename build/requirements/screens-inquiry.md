@@ -173,9 +173,15 @@ The investigation's working screens: a project's home, one question with what su
 - **R42** (T49; N1100; DEC-246; amends R4, R7) The dock, and the question's state f, list under "Other reasons the assistant can't work here", each by key: switched off, kept away, no account, not installed, and whose account serves the member (R4's `ai.account.*`). On a test instance the proposal names `ai.label.untested` (R7). The dock says which account serves the member. Test: each reason over a fixture. Control: a reachable assistant draws none. *(not yet met: T49)*
 - **R43** (T49; N1100; DEC-245; amends R11; moved here from `screens-daily` R33, finding 4) `project` with no question (state b) draws "Your first question" (`project.firstquestion`, help `project.firstquestion.help`) before "Open a question". The act sends `promote` and then `drawquestion` (R11) with the member's words as the question's title, and opens the new question. Test: a new project's first question is opened and listed. Control: a project with questions draws no state b. *(not yet met: T49)*
 
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R44** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 273 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. The 2 strings that list marks `unkeyed` (none read by a member, each with its reason) stay in source. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English. *(not yet met: T49)*
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - `interface-shell`: the kit `cs` and the screen contract (its R21), the dock (its R20).
 - `setup-words`: `WORD_ROWS` keys.

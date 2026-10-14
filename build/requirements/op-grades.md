@@ -214,9 +214,15 @@ Terms. A **rung** is one of `RUNG_LADDER`. A **ground** is one of `RUNG_ABSENCE_
   - Neither is in `MACHINE_REFUSALS` (`membership` refuses any `by` but the founder's, `FOUNDER_HANDLE_NOT_FOUNDER`). By R18 `founderhandleset` carries `phone: true`. No vocabulary or prompt is added. `IRREVERSIBLE_WEIGHT` and `CONSEQUENCE_STATEMENTS` gain none. R3's tally of `undetermined` ops is unchanged. *(not yet met: T49)*
   - Controls: `RUNG_ABSENT.founderhandleset.ground` is `caller-owned`, and `founderhandleset` is not in `RUNGS`. `projectownervotes` has no rung.
 
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R44** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 11 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. The 801 strings that list marks `unkeyed` (none read by a member, each with its reason) stay in source. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English. *(not yet met: T49)*
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - None. Every table here is pure data and this module imports nothing (`t33.mjs` and `t34.mjs` say "imports nothing"; every imported name in the moved ranges is in a comment). Its `modules.json` `uses` is empty.
 - The owners whose ops are graded (each named in its R) are read for their requirements, not imported. Backing (`affordances` R19), the machine set (`affordances` R20) and the totality (`affordances` R12) are checked in `affordances`, which uses this module, with the owners it already uses.

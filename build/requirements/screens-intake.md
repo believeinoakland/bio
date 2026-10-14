@@ -74,9 +74,15 @@ Bringing material in and deciding what enters the record: capturing from an addr
 
   Test: a capture from a question answers `captured_for` with that question. Each refusal draws its key's words. Controls: no subject, no request; an empty address draws `capture.fieldneeded`. *(not yet met: T49)*
 
+#### T49: words by key (K3366, K3368; DEC-257, DEC-258)
+
+- **R26** (T49; K3366; DEC-257, DEC-258; `setup-words` R11–R13; amends every requirement here that quotes a member-facing sentence) **Words by key.** This module holds no member-facing English: every sentence it draws or answers is read through `setup-words` `word(key, vars)`, and the module holds only keys. Its keys are the `reads` list for it in `docs/development/ux-substrate/screens/words-reads.json` (DEC-258; 255 keys at `fa3c8b7e8e`), with any key a requirement here names. A sentence an earlier requirement here quotes means the key whose English it is: the quotation identifies the key and binds no wording, so a word changed in `words.json` changes no requirement and no code here. Test: each key it reads is asserted with `setup-words` `hasWord`; over fixtures, what it draws for a sample of its keys equals `word(key, vars)`; no test holds a sentence's English. *(not yet met: T49)*
+
 ## Private
 
 ### Uses
+
+- `setup-words.word`, `setup-words.hasWord` (K3366, K3368): every member-facing sentence, by key.
 
 - `interface-shell`: the kit `cs` and the screen contract (its R21).
 - `setup-words`: `WORD_ROWS` keys.
