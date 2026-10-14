@@ -42,3 +42,7 @@ Size (session_015ApP9xtN4HPUemxYssrhFs): test runs 12, module lines 4320
 ## J1 · QUESTION
 
 R88/R90 name two address constants as BOB's at START, and the START gives neither. My best reading, which I build on unless you answer otherwise: RELEASE_NOTICE_ADDRESS = https://raw.githubusercontent.com/believeinoakland/bio/main/release/NOTICE.json (the same release directory the installer's RELEASE_LATEST already reads, where bundler R32 writes NOTICE.json); INSTALLER_UPDATE_ADDRESS = https://newgroup.believeinoakland.workers.dev/update (the installer's own host; updatestart answers it with ?version=<version>). Both are plain constants of this module, easy to change. Also: this job merged origin/tranche/T48 (signatures is in, verifyReleaseNotice present).
+
+## J2 · COMPLETE
+
+T48-62 applied: N996's re-points to ai-accounts, R87, R88, R89, R90, R91 and K3240's forgot words. instance-setup tests 194 pass, 0 fail (30 new in t48.test.mjs); machinery-producers 29, screens-entry 52, newgroup 60 pass. format, architecture, coverage and ownership: 0 failures for this module. updateNoticeState carries ready.decision and decisions with version, as machinery-producers reads them (B2). The record lists what other modules must do: screens-entry's forgot should draw FORGOT_HELP; installer should add HOSTING_RECOVERY_DEPLOYER; plane registrations; the stale plane bundle. P6 watch: the module is now 4,320 lines. The requirement text changes I need from you are in the record.
