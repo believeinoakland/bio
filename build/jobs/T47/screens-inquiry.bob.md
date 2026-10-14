@@ -19,3 +19,7 @@ L11 merge order: wizard-scripts, op-grades, affordances, tasks, action-producers
 ## B2 · CHANGE
 
 K3145 (SCREENS-INVESTIGATE #1 J1 C11): "Open a question" sends `files[].content`, but promotion reads `files[].text` (`PROMOTED_FILE_CONTENT_UNSTATED`); send `text`, with a test that the promotion lands.
+
+## B3 · ANSWER · re J1
+
+K3147: your reading stands: closing the dock or leaving the page stops nothing; the run ends by itself, by "Stop the run", or by its bounds. BOB's CHANGEs follow the merges you need.
