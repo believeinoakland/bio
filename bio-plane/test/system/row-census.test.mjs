@@ -223,7 +223,8 @@
    (`fixtures/row-census-1.75.0.jsonl`, written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in
    `build/jobs/T48/promotion.md`; 1898 rows, dc157a20…, over `tranche/T48` after its layer 1); the 1.74.0 snapshot (no stamp
    reads it) renamed to it; T47's layers 3–11 rows (17 new, 41 changed, 1 retired; none declared here, accepted red 2 at
-   T47's close) stamped in 1.75.0. Re-pinned in place as each T48 layer-2 job merges, so T48 names one catalogue. The
+   T47's close) stamped in 1.75.0. Re-pinned in place after T48's layer 2 merged (ai-accounts, record-core, membership,
+   credentials; K3213–K3218): 1898 rows, c57e3cf8…, ai-accounts' 21 moved C-29 `where`s, so T48 names one catalogue. The
    census leaves `journey-check/journey.mjs` out as a script (N1056), which killed it on import at T47's close; its arm
    and a control over a scratch tree are in the suite. A row a T48 job in layers 3–11 adds or changes turns this suite red,
    accepted by name until T49's layer-2 stamp (plan T48, rule 5 item 2), so none is declared. Negative control re-run on

@@ -1099,6 +1099,14 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    THE CENSUS'S SCRIPTS (R50, N1056): `bio-plane/src/journey-check/journey.mjs` runs its journey and exits when imported,
    so the census reads it as text only, beside the fleet members' `scripts/`; it holds no `check:` key, so the figures
    are unmoved by it.
+   T48 LAYER 2, re-pinned in place after ai-accounts, record-core, membership and credentials merged (K3213, K3215,
+   K3216, K3218): THE FAMILY THAT ARRIVED is `ai-accounts`' `AI_ACCOUNT_CHECKS` (the credentials split by copy, T48-10,
+   K3101), into which credentials' C-29 rows moved, credentials' copies deleted (T48-11), so each is held once, as
+   before. CHANGED (21), `where` only, code, number and translation unmoved, each naming `src/ai-accounts/`: C-29.13–.15,
+   .17, .19–.22, .27, .29, .31 (`#keptAway > is-kept-away`), .32, .34–.40, .44, .45. No row arrived or departed. Record-core's
+   N1018 sentence for `WCD` and `OUTC` is `mintExhausted`'s detail, not C-59.6's line, so no row moved; membership's T48
+   job moved no row (its `MODULE_ORDER` gains `ai-accounts`, `signin-door` and `journey-check`, none of which registers a
+   gate step, so no gate's order moves).
    ROW_CENSUS (R50) re-pinned to this tree: 1898 rows. Rows a T48 job in layers 3–11 adds or changes are T49's stamp
    (plan T48, rule 5 item 2). */
 export const CATALOG_VERSION = "1.75.0";
@@ -1194,7 +1202,7 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
 export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1898,
-  digest: "dc157a20c5e1df11579fab7b49a65d8ba24f957241ed9771f9d9b556e5607e29" });
+  digest: "c57e3cf866aa8b4982482de07a5c5d1a6d49409d00ecafd948fce4d8779195df" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
