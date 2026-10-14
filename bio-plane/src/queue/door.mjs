@@ -24,8 +24,9 @@ export const QUEUE_DOOR_OPS = Object.freeze(["queue"]);
  *    - `viewer` decides which case names the answer may contain. D-15 has exactly one compilation point; the store
  *      fails closed, so a missing stamp yields an ungrouped feed rather than an unfiltered one.
  *  A machine credential has no member behind it, so it is stamped `member` empty and receives the whole live set —
- *  the operator view the token exists for, and the same carve-out D-15 makes for a machine viewer. `now`, `limit` and
- *  `sort` (R49) are the only arguments taken from the caller.
+ *  the operator view the token exists for, and the same carve-out D-15 makes for a machine viewer. `limit` and `sort`
+ *  (R49) are the only arguments taken from the caller: R53 (N983) judges the feed at the server's instant, since an
+ *  item's presence and its options may gate an act, so a `now` the caller sends is not passed on.
  *
  *  REC-52: a store silence is `storeSilent`, never `NO_QUEUE` or an empty feed — the plane inventing a word the store
  *  never said. A store refusal (`ok` not true) is passed through with status 400 (R17). One store call: the
@@ -35,7 +36,7 @@ export async function queueFeedOp(url, store, { json, doAnswer, storeRefusal, st
   const inner = new URL("http://do/queue");
   inner.searchParams.set("viewer", viewer);
   inner.searchParams.set("member", member);
-  for (const k of ["now", "limit", "sort"]) {
+  for (const k of ["limit", "sort"]) {
     const v = url.searchParams.get(k);
     if (v !== null) inner.searchParams.set(k, v);
   }
