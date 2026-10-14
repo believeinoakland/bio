@@ -1,8 +1,8 @@
-/* screens-inquiry R2: the question screen, on interface-shell's served page over a scripted plane. */
+/* screens-inquiry R2, R12: the question screen, on interface-shell's served page over a scripted plane. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, fill, press, rawKeys, BASIS, P, Q, D } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, BASIS, P, Q, D } from "./fixtures.mjs";
 
 const at = "/app/question/" + Q;
 const section = (p, head) => main(p).querySelectorAll("section").find((s) => s.querySelector("h2").textContent === head);
@@ -51,11 +51,10 @@ test("R2 sections Supports, Cuts against, Hunches, Concluding; what it waits on,
   const sup = section(p, "Supports"), cut = section(p, "Cuts against");
   assert.match(sup.textContent, /within seven calendar days of the report/);
   assert.ok(sup.querySelector(`a.cs-ref[href="/app/document/${D}"]`));
-  assert.match(sup.textContent, /Work orders · Removed from the question/);
+  assert.match(sup.textContent, /Work orders · Removed from the question: “the wrong year's orders”/);
   assert.equal(cut.querySelector(".cs-grade").getAttribute("data-scale"), "testimony");
   assert.match(cut.textContent, /still open, about 60 cm across/);
   assert.ok(!cut.querySelector(`a[href="/app/document/${D}"]`));
-  assert.ok(!actsIn(main(p)).some((op) => op === "sever" || op === "reinstate"), "K3003: a question's legs are not severed from this screen in T46");
   const waits = section(p, "What it waits on");
   assert.match(waits.textContent, /Waiting: 2024 budget PDF was set aside by ben: “wrong year”/);
   assert.match(waits.textContent, /Set aside by ben, 6 October · each act stays on the record/);
@@ -63,7 +62,7 @@ test("R2 sections Supports, Cuts against, Hunches, Concluding; what it waits on,
   assert.match(hunches.textContent, /Hunch · dev's.*Crews close reports when they inspect\./s);
   assert.match(hunches.querySelector("h2").getAttribute("data-tip"), /never evidence/i);
   assert.match(section(p, "Concluding").textContent, /Not concluded\./);
-  assert.deepEqual([...new Set(actsIn(main(p)))].sort(), ["checkrequest", "cite", "conclude", "heldrestore", "hypothesishold", "narrow", "planopen", "search"]);
+  assert.deepEqual([...new Set(actsIn(main(p)))].sort(), ["checkrequest", "cite", "conclude", "heldrestore", "hypothesishold", "narrow", "planopen", "reinstate", "search", "sever"]);
 });
 
 test("R2 a concluded question shows its conclusion and offers its withdrawal, never a second conclusion", async () => {
@@ -145,4 +144,43 @@ test("R2 controls: a hunch, a check and a narrowing with nothing written are ref
   const slot = await press(p, "hypothesishold");
   assert.match(slot.textContent, /Write the hunch\./);
   assert.equal(p.doc.getElementById("question-hunch").value, "x");
+});
+
+test("R12 sever is drawn on each live leg (confirmed or proposed) and reinstate on each severed one; a severed leg stays in its section with its reason", async () => {
+  const p = await open(at);
+  const sup = section(p, "Supports"), cut = section(p, "Cuts against");
+  const rowOf = (sec, target) => sec.querySelectorAll(".cs-row").find((r) => r.querySelector(`a.cs-ref[href="/app/document/${target}"]`));
+  assert.deepEqual(actsIn(rowOf(sup, D)), ["sever"], "a confirmed leg");
+  assert.deepEqual(actsIn(rowOf(sup, "INFO-2026-0005")), ["reinstate"], "a severed leg, still under Supports");
+  assert.match(rowOf(sup, "INFO-2026-0005").querySelector('[data-leg="severed"]').textContent, /Removed from the question: “the wrong year's orders”/);
+  assert.deepEqual(actsIn(rowOf(cut, "INFO-2026-0006")), ["sever"], "a proposed leg");
+  assert.match(button(p, "sever").textContent, /Remove a citation/);
+  assert.match(button(p, "reinstate").textContent, /Reinstate/);
+  /* control: a leg the inquiry holds no reference to is offered neither */
+  const bare = await open(at, { images: { [Q]: { "bundle.md": inquiryMd(P, INQUIRY_REFS.filter(([t]) => t !== D)) } } });
+  assert.deepEqual(actsIn(section(bare, "Supports").querySelectorAll(".cs-row").find((r) => r.querySelector(`a.cs-ref[href="/app/document/${D}"]`))), []);
+});
+
+test("R12 sever and reinstate select the leg's target, then act on the question as the citing object, with her reason", async () => {
+  const p = await open(at, { plane: { select: (r) => ok({ ok: true, handle: "SEL-" + r.body.ids[0], items: r.body.ids }),
+    sever: ok({ ok: true, severed: [D] }), reinstate: ok({ ok: true, reinstated: ["INFO-2026-0005"] }) } });
+  await press(p, "sever", { reason: "it is the 2023 policy", within: section(p, "Supports") });
+  await press(p, "reinstate", { reason: "the orders were right after all" });
+  assert.deepEqual(p.byOp("select").map((r) => r.body), [{ ids: [D] }, { ids: ["INFO-2026-0005"] }]);
+  const sv = p.byOp("sever")[0].query, rn = p.byOp("reinstate")[0].query;
+  assert.deepEqual([sv.project, sv.handle, sv.reason], [Q, "SEL-" + D, "it is the 2023 policy"]);
+  assert.deepEqual([rn.project, rn.handle, rn.reason], [Q, "SEL-INFO-2026-0005", "the orders were right after all"]);
+  assert.ok(p.byOp("basisversions").length >= 3 && p.byOp("inquirystrength").length >= 3, "the legs and strength read again after each");
+  /* controls: no reason, nothing sent; a selection refused sends no act and says so beside it; a refused act keeps the screen */
+  const n = await open(at);
+  await press(n, "sever", { reason: "", within: section(n, "Supports") });
+  assert.equal(n.byOp("select").length + n.byOp("sever").length, 0);
+  const s = await open(at, { plane: { select: refusedIn("SCOPE_TOO_LARGE") } });
+  const slot = await press(s, "sever", { reason: "why", within: section(s, "Supports") });
+  assert.match(slot.textContent, /could not be picked out just now/);
+  assert.equal(s.byOp("sever").length, 0);
+  const r = await open(at, { plane: { select: ok({ ok: true, handle: "SEL-1" }), sever: refusedIn("NOT_CITED", "That citation is not live, so it can't be removed.") } });
+  const said = await press(r, "sever", { reason: "why", within: section(r, "Supports") });
+  assert.match(said.textContent, /not live, so it can't be removed/);
+  assert.ok(main(r).querySelector("h1"));
 });
