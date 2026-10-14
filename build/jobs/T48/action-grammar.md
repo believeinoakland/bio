@@ -20,3 +20,7 @@
 **Tests and checks:** `node --test bio-plane/test/m/action-grammar/` 77 pass, 2 fail (the two census arms above). format 0 failures; architecture 0 failures (14 files); coverage 29 of 29 live ids named, 0 failures; ownership 0 failures. `checks/run.mjs` not yet run (to be run at the re-run after the merge).
 
 Size (session_01CNDXq4JnEj1g1Bx9AzFdVT): test runs 6, module lines 4
+
+## J1 · COMPLETE
+
+T48-46 applied: R29 wheres (C-32.4, C-33.6-.9 to action-records; C-33.5 to actions' is-correspond-direction), golden.json, t48.test.mjs, DEC-221 spelling of the two strings (cleared 4 inherited reds). 77 pass; 2 fail = the two census arms (R28, R29), red only because T48-47's regions (correspondFence, correspondEntryRefusal, unregisteredArtifact) and actions R101's is-correspond-direction are not yet on tranche/T48. Send CHANGE when action-records is merged; I will merge and re-run. format/architecture/coverage/ownership 0 failures; checks/run.mjs to run after the merge. Rows awaiting stamp listed in my record. C-117.28: no such row in this module. Needs from actions: R101 must create the is-correspond-direction region.
