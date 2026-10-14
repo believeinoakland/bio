@@ -61,3 +61,16 @@ Re-run after B3 (K3152): `tranche/T47` merged into `job/T47/signin-door` at `9d5
 - With the committed empty entry, `architecture` and `ownership` each count my 4 files as unowned (4 failures), and coverage reads 0 of 5. Both clear once BOB adds paths `bio-plane/src/signin-door/` and tests `bio-plane/test/m/signin-door/`.
 
 Size (session_01DHEqiW9nuJMTjMzmoo7o7T): test runs 4, module lines 336
+
+## J4 · COMPLETE
+
+Re-run after B4 (K3164): I merged `tranche/T47` into `job/T47/signin-door` at `1a30e74fa0`. The merge had no conflict and needed no code change. The files, interface and findings are as in J2.
+
+- C-69.7 in `answer-envelope`'s `DISPATCH_CHECKS` names `src/signin-door/index.mjs signintrace > is-signintrace-test-instance`, which matches my region and function.
+- `node --test bio-plane/test/m/signin-door/`: tests 15, pass 15, fail 0. `answer-envelope`'s own tests (it is a module I use): pass 36, fail 0.
+- `format`: 0 failures.
+- With my paths filled into a local, uncommitted `modules.json` (the committed entry is still empty):
+  - architecture 4 files, 0 failures; coverage 5 of 5 ids, 0 failures; ownership 5 files, 0 failures.
+  - `run.mjs`: architecture 3143 files, 0 failures; coverage 13 failures, all in other modules.
+
+Size (session_01DHEqiW9nuJMTjMzmoo7o7T): test runs 6, module lines 336
