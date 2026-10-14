@@ -2,7 +2,7 @@
    (R1, R4), internal reads (R8, R9) and the reader's viewer passed to a trigger source (R16). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, fictionalView, E, BOB, CAROL, MACHINE } from "./fixture.mjs";
+import { world, fictionalView, E, BOB, CAROL, MACHINE, ZONE } from "./fixture.mjs";
 import { DUTIES_CHECKS, OCCURRENCE_KEY_RE, noSuchDuty, INTERNAL, Duties } from "../../../src/duties/index.mjs";
 import { list as profiles, combine } from "../../../../jurisdictions/index.mjs";
 
@@ -74,7 +74,7 @@ test("R8, R9 an internal read (INTERNAL, the scheduler's consumer) reads the sou
     ? (args) => { if (args && "viewer" in args) asked.push([k, args.viewer]); return o[k](args); } : o[k]) });
   let sw = null;   /* the world's own services, wrapped on first use */
   sw = world({ deps: { standards: () => spy(sw.standards), events: () => spy(sw.ev) } });
-  sw.event({ value: { value: "2026-02-02", precision: "day", zone: "America/Halifax" }, concerns: [E.clerk] });
+  sw.event({ value: { value: "2026-02-02", precision: "day", zone: ZONE }, concerns: [E.clerk] });
   const b = sw.declare({ trigger: { kind: "event", event_kind: "communication", entity: E.clerk } });
   asked.length = 0;
   sw.duties.occurrencesOf({ dutyId: b.duty_id, asOf: AS_OF, viewer: INTERNAL });
@@ -103,7 +103,7 @@ test("R16 a registered source is read with its reader's viewer (the member's own
   assert.equal(calls.at(-1), DAEMON);
   /* a match against an occurrence of the source (the act's own derivation) reads it too */
   const key = w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: AS_OF, viewer: BOB }).occurrences[0].key;
-  const ev = w.event({ value: { value: "2026-02-05", precision: "day", zone: "America/Halifax" }, concerns: [E.group] });
+  const ev = w.event({ value: { value: "2026-02-05", precision: "day", zone: ZONE }, concerns: [E.group] });
   assert.equal(w.duties.matchEvent({ dutyId: a.duty_id, occurrenceKey: key, eventId: ev, reason: "the reply", by: BOB }).ok, true);
   /* the measured-evidence listener is told the reader too */
   const seen = [];
