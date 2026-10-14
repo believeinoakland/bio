@@ -26,3 +26,7 @@
 - `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage for `following` 31 of 31 live ids named; (other modules' coverage failures are not mine). `node checks/ownership.mjs /home/user/bio following tranche/T48`: 6 files changed, 0 failures.
 
 Size (session_01QH7GDMqWRepVCj3VBS4ktb): test runs 9, module lines 1986
+
+## J1 · COMPLETE
+
+T48-53 complete: R29, R30, R31 met; following's tests pass (87, one file-level playwright-core import failure inherited from journey-check's walk); format, architecture, coverage (31/31), ownership 0 failures. For BOB: proceedingdates needs its op spec and grade (op-declarations, op-grades, store-door); new row C-137.26 BAD_PROCEEDING_DATES (census, accepted red 5 (2)); action-grammar edge in following's uses is now unused. Details in the record.
