@@ -23,3 +23,7 @@ Run `node checks/run.mjs` from the process repository over the product before CO
 ## B2 · CHANGE
 
 CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
+
+## B3 · ANSWER · re J1
+
+K3373: (1) your fallback to the edition's files stands; a 'published but not evidence' key goes to the design lane, published.check.no meanwhile. (2) interface-shell R72 admits statementack on review-outside until the registry re-take (N1122). (3) the Provides line is my edit at your merge; your two key choices stand.
