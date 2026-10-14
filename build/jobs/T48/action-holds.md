@@ -11,3 +11,7 @@
 **R17 not yet applied.** `action-records` R16's functions (`correspondEntryRefusal`, `unregisteredArtifact`) are not in `tranche/T48` and not yet on `job/T48/action-records`; I wait for BOB's CHANGE saying action-records is merged, then merge `tranche/T48`, route `#heldAs` and the BAD_DATE check of `holdNoticeSent` and `pressureRecord` through them, and test R17.
 
 **Found in another module.** `op-declarations` and `op-grades` have no spec for `pressurefor` (op-declarations R19's census now fails on it: the one red added by this job; 11 others fail without my change and are inherited); `affordances` / `setup-words` may want its help line.
+
+## J1 · REPORT
+
+R16 done (op=pressurefor, test pressurefor-op.test.mjs, module tests 38 pass). R17 waits: action-records R16's functions are not yet in tranche/T48; send a CHANGE when action-records is merged and I will route the three codes through them. Found in other modules: op-declarations and op-grades need a spec for pressurefor (op-declarations R19's census fails on it, the one red my change adds; 11 other reds in op-declarations/op-grades/plane are inherited); affordances/setup-words may want a help line.
