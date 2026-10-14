@@ -109,6 +109,9 @@ export function walkFacts(p, fn) {
     if (k.venue) each(k.venue.facts, `action_kinds[${i}].venue.facts`);
   });
   for (const s of ["legal_facts", "procedure_guides", "phrasings"]) each(p[s], s);
+  /* T48 (R89): the pointers, and a pointer's hours */
+  each(p.pointers, "pointers");
+  (p.pointers || []).forEach((x, i) => { if (x.hours) fn(x.hours, `pointers[${i}].hours`); });
 }
 /** The object at a walkFacts path. */
 walkFacts.at = (p, path) => path.split(/\.|\[|\]\.?/).filter(Boolean)

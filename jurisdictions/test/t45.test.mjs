@@ -442,7 +442,8 @@ test("R87 the fields later modules read: a kind's shape, a deadline's defends, a
   const rl = kindAt(t, "recognition_letter");
   assert.ok(breakT((p) => { p.action_kinds[0].shape = "recognition"; }).ok);
   for (const bad of ["thanks", "", null]) assert.ok(hasError(breakT((p) => { p.action_kinds[rl].shape = bad; }), "KIND_INVALID", `action_kinds[${rl}].shape`), String(bad));
-  const s = against((b) => { delete b.action_kinds[rl].shape; b.action_kinds[rl].shape = "recognition"; });
+  /* one value per kind (R15): a profile silent on the shape does not disagree, and the giver's shape is kept */
+  const s = against((b) => { delete b.action_kinds[rl].shape; });
   assert.deepEqual(s.conflicts.filter((c) => /shape/.test(c.at)), []);
   assert.equal(s.view.action_kinds.find((k) => k.kind === "recognition_letter").shape, "recognition");
   /* (c) defends: true, the group's own defence */
