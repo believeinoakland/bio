@@ -30,3 +30,21 @@ Started; reading set read whole (my code and tests too). None of my providers (s
 ## J3 · REPORT
 
 B3 done: tranche/T47 merged (setup-words, instance-setup, wizard-scripts, op-grades). On the branch every test still stops at interface-shell's check, since op-declarations' passwordresetlink spec (R57) is not merged. With only that spec and interface-shell's R27/R39/R46 kit calls stood in, 81 of 83 pass; the 2 left are exactly those two providers (OPS holds passwordresetlink; the row name as reference). Nothing else needed from me until their CHANGEs.
+
+## J4 · COMPLETE
+
+**Completion (T47-58).**
+
+**Entries applied:** R11 (`untested` beside the draft label, notes and group-identity); R12 (members' names as references through `cs.rows`' `name`; `cs.appearance()`); R13 (`part_signin`); R14 `group-identity`; R15 `security`; R16 `translations`; R17 `settings`; R18 `group`; R19 `places`; R20 `recovery`; R21 the sign-outs then `cs.signedOut()`; R22 the key made by `cs.signer.publicLine({keep})` (the keep box `signing.ceremony.keepkey`); R23 the reset link, signing-key withdrawal, "More for administrators"; R24 every `SIGNIN_CODES` and door code in words, the shell's reference beside it, state from `accountreference`'s `subscription`, since/until, "connect again", whole-code help, start disabled in flight. K3144's readings (J1) all built as answered. "Places and offices, recovery codes stay on the setup page" is gone: the members' recovery link opens `/app/recovery`, no screen links `/`.
+
+**Read whole** (P20): my code and tests, before changing them. Flaws fixed on the way: the recovery note linked `/` (the setup page); `act.owed_*` keys and `ai.label.untested` own row retired for `WORD_ROWS`' (setup-words R7); the account's own theme buttons replaced by the kit's.
+
+**Deferred:** none of mine. `places` copies `record-grammar`'s machine vocabulary as a literal (a self-contained function cannot import; J2 (4)).
+
+**In other modules** (J2): interface-shell's `ADMIN_ACTS` lacks the settings acts (I gate them on `administer` myself); op-grades: `translationdraft` undetermined (a reason asked for a draft), `groupdescriptiondraft` and `securitymap` ungraded; words.json keys the reset link under `act.owed_passwordresetlink.*` and its `.does` names Civicsmith bare.
+
+**Tests:** `node --test test/m/screens-settings/*.test.mjs` on this branch (tranche/T47 merged through B5): `ℹ pass 66 · ℹ fail 17` — every failure is interface-shell's kit (R27, R39, R46: `cs.appearance`, `cs.later`, `cs.fill`, `cs.signer`, `cs.signedOut`, the row name, the reference), not yet merged. With `origin/job/T47/interface-shell` merged into a scratch worktree of this branch, unchanged otherwise: `ℹ pass 83 · ℹ fail 0` (run twice). Merge order puts interface-shell before me, so on its CHANGE I merge and re-run here.
+
+**Checks:** `format: 168 modules, 167 requirements files; 0 failures` · `architecture: 30 product files, 51 relative imports; 0 failures` · `coverage: 1 modules, 24 of 24 live requirement ids named by a test; 0 failures` · `ownership: 29 files changed by screens-settings between tranche/T47 and HEAD; 0 failures`. `checks/run.mjs` over the product: architecture 0 failures; coverage's 16 failures are other modules' T47 ids (interface-shell, the screen modules, plane, queue, journey-check, signin-door), none of mine.
+
+Size (session_01PwGaGNvnbTEtbYSeV4VfBz): test runs 18, module lines 2,069
