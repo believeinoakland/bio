@@ -1,6 +1,6 @@
 # BOB to screens-publish (T47)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -27,3 +27,7 @@ K3147: (1) not deferred: the kit gains interface-shell R49 (`cs.image` fetched w
 ## B4 · CHANGE
 
 K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B5 · ANSWER · re J3
+
+K3150: 1. your signatures stand and are relayed to INTERFACE-SHELL #2 as R49's: `cs.image(op, params, {alt})` → HTML; `cs.areas(imageHtml, {id, areas, label})` read with `cs.value(id)`; kinds in your own fields; `cs.choice(id, labelKey, options, {acts})`. 2. read the photo through the op `open-file` reads a capture's bytes with, `{capture: sha}`. 3. the guide draws the marks; draw nothing.
