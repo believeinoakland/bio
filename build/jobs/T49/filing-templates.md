@@ -26,3 +26,19 @@
 - `checks/run.mjs` is not run: it is required before COMPLETE, and this job is BLOCKED.
 
 Size (session_01DLu9hNhnNY3UX3zTHQrEQY): test runs 3, module lines 1919
+
+## J1 · BLOCKED
+
+BLOCKED. Cause: needs Bob.
+
+The job's changes are in (N1068 "labeled" at index.mjs:211; the literal copy removed from r33.test.mjs; the admin grep clean; commit d7c70fd531, record pushed as ad6967243c). Format, architecture, coverage and ownership pass. Three tests stay red, all on one cause: `words.json` holds no `rfc.quoting` and no `refusal.RFC_QUOTING_MISSING`. Commit 0fd6562c1e (DEC-234, the design session, 2026-10-14) removed both; main and tranche/T49 agree. The tests are r33.test.mjs:49, r33.test.mjs:69 and t46-words.test.mjs:36. Test-only changes cannot clear them without weakening R29 or R33.
+
+Decision for Bob (policy/requirements, P17):
+(1) RECOMMENDED: the design stream restores the two keys to words.json, with their wording as filing-templates holds them (checks.mjs lines 31-32), unless the design session says the removal was deliberate. Then the three tests pass with no change to this module.
+(2) Or amend R29 and R33 to allow this module to hold the RFC row's translation as a copy. Then the tests are re-pointed at that copy; a CHANGE job would do it.
+
+Either way, `setup-words` line 516 still carries the two rows, and T49-15 re-takes its WORD_ROWS from main, which lacks them.
+
+Plain steps for Bob: tell the design session (its next session) that words.json lost `refusal.RFC_QUOTING_MISSING` and `rfc.quoting` in 0fd6562c1e and that R33 needs them back; or rule (2) here. Then ring me back, and I will re-run the tests and COMPLETE.
+
+Also disclosed: I did not read the module's index.mjs, schema.mjs and blanks.mjs whole (step 2); the record says so.
