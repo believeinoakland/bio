@@ -21,3 +21,7 @@
 - `node checks/format.mjs`: 168 modules, 167 requirements files; 0 failures. `architecture.mjs … store-door`: 10 product files; 0 failures. `coverage.mjs … store-door`: 14 of 14 live ids named by a test; 0 failures. `ownership.mjs … store-door tranche/T47`: 3 files; 0 failures. `checks/run.mjs`: architecture 0 failures; coverage's 25 failures are other L11 modules' new ids, none store-door's.
 
 Size (session_01A3oWKBscqhfz9cPoUE7bde): test runs 5, module lines 87
+
+## J1 · COMPLETE
+
+T47-55 applied: R14 met (statusreportassist ['plan'] as statusreportdraft; projectquestions and projectlist in PROJECT_NAMING_READS_NOT with reasons). store-door 46/46; format, architecture, coverage (14/14), ownership 0 failures; run.mjs architecture 0. One note on R14's wording in the record ('For BOB'): the door answers C-70.1 only when `plan` is itself a discoverable project's id; a real PLN- id goes through to plan-work's NO_SUCH_PLAN, as for every plan row since K2891. Built and tested as 'held as statusreportdraft is'. Inherited red, not mine: control-plane r45-routes (T47-65). Record: build/jobs/T47/store-door.md on job/T47/store-door.
