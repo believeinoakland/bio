@@ -1,6 +1,6 @@
 # BOB to screens-daily (T49)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -19,3 +19,23 @@ Every new id needs an explicit test naming it (K874); every refusal a control.
 Inherited reds: the plan's rule 5 as it stands at your START (its (10): membership R83's `MODULE_ORDER`, from setup-words' move, K3368); none is yours unless named here or in your entry.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
+
+## B2 · ANSWER · re J1
+
+K3369: (1) project-roster (L2) is closed. If any read the member can make answers her invited state (project-roster R1's participants for a project she can see, or membership's participation through an op), use it and meet R29; if none does, report R29 not met and build nothing on a guess: N1118 adds participation to projectlist in T50. (2) Your reading stands: {project: <question>, question: <question>, found, role}. (3) Yes, title: beside objective:.
+
+## B3 · CHANGE
+
+CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generated list; WORDS_COMMIT 8a54848a9e) and interface-assets are merged into tranche/T49. Merge the tranche branch into yours now and re-run your tests against the real setup-words.
+
+## B4 · CHANGE
+
+K3372 (SCREENS-INTAKE #4 J2): find-in takes /app/find-in/<document>/<question>: read the second path step into ui.question (the question chosen), so capture's 'Cite a passage' opens find-in with that question. Part of your job.
+
+## B5 · ANSWER · re J2
+
+K3373: interface-shell R72 adds RE_POINTS projects [projectjoin] and home [projectjoin] (with every other stale-registry act); keep your build. queue's subject.title and findIn's title are N1123 (T50): your fallbacks stand. The plural pairs and a Home label for Join go to the design lane; use act.projectjoin.label.projects meanwhile. The SCREEN_WORDS Provides line is my edit at your merge.
+
+## B6 · CHANGE
+
+K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
