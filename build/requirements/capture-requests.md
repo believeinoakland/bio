@@ -1,6 +1,6 @@
 # capture-requests — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed; the capture requests left `capture` for this module (K58). Last changed T41 (T41-25: R55 new, a request carrying a step, as `draft-T41-investigation.md` §3.6; N820, K2405, K2418), not yet met; every other requirement met (K1993). Last changed T47 (T47-21: R56 new, amending R1, R6, R8, R10, R23, R38 and R49's scope, a member's own request with no running run, "Ask for this later"; N969, K2996, K3027 doubt 6), not yet met.
+**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed; the capture requests left `capture` for this module (K58). Last changed T41 (T41-25: R55 new, a request carrying a step, as `draft-T41-investigation.md` §3.6; N820, K2405, K2418), not yet met; every other requirement met (K1993). Last changed T47 (T47-21: R56 new, amending R1, R6, R8, R10, R23, R38 and R49's scope, a member's own request with no running run, "Ask for this later"; N969, K2996, K3027 doubt 6), not yet met. T48 (T48-32: `m/capture-requests/plane.test.mjs` signs in by `{handle}`, as `control-plane` R83 passes it, clearing its 6 reds; N1052; K3192, K3195): test only, no requirement changed.
 
 **Size (P6).** About 1,050 lines as the code stands (902 in store.mjs, of which about 450 are not comments; 280 of checks; 100 of ops and arm), well under 4,000. A job reads it with the public parts of `capture`, `ai-runs`, `inquiry`, `observation-log`, `membership`, `record-core` and `host-governor`.
 

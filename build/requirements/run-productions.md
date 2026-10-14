@@ -1,6 +1,6 @@
 # run-productions — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), split from `ai-runs`' draft (N54, K82); `SUGGEST_KINDS` and C-27.15 are `basis-versions`' (K82 (4)). Last changed T41 (T41-24: R21–R24 new, reading inside a document, the member's acceptance, the bearing note, a reading's pages, as `draft-T41-investigation.md` §3.6; K2405, K2418), not yet met; every other requirement met. Last changed T42 (T42-18: R25 new, the read registered with `inquiry` R62 and `basis-versions` R49; N834; K2496, K2608), not yet met.
+**Status** · In force: approved by Bob 2026-09-26 (K102), split from `ai-runs`' draft (N54, K82); `SUGGEST_KINDS` and C-27.15 are `basis-versions`' (K82 (4)). Last changed T41 (T41-24: R21–R24 new, reading inside a document, the member's acceptance, the bearing note, a reading's pages, as `draft-T41-investigation.md` §3.6; K2405, K2418), not yet met; every other requirement met. Last changed T42 (T42-18: R25 new, the read registered with `inquiry` R62 and `basis-versions` R49; N834; K2496, K2608), not yet met. Last changed T48 (T48-31: `aiKeepAwayState` and `projectsKeptAway` read from `ai-accounts`, `credentials` dropped from its uses, the `reading` test following; N996 §5; K3195): its Uses only, no requirement's meaning changed, so none is marked.
 
 **Size (P6).** About 1,780 lines (about 800 without comment-only and blank lines): `store.mjs` 1,464, `bio-checks.mjs` 204, `schema.mjs` 108. Well under 4,000. A job reads it whole with the public parts of `ai-runs`, `basis-versions`, `strength`, `content` and `extraction`.
 
@@ -46,7 +46,7 @@ Terms. A **run** and its **bounds** are `ai-runs`'; `ai-runs.runFor` answers a r
 
 ### Uses
 
-- (T41; RUN-PRODUCTIONS #8 J2, K2496) `extraction`: `unitsOf`, the `readings`/`reading_refs` read contract (R21, R23); `text-chain`: `captureBound`; `leg-earning`: the capture's earned ceiling (R21); `record-grammar`: `idPattern`, `isStepId`, `sha256HexSync`, `acceptanceRecord` (R22); `membership`: `projectAuthority` (R22); `credentials`: `aiKeptAway` (R24); `steps`: `recordProduct` (R21). R17 holds six tables.
+- (T41; RUN-PRODUCTIONS #8 J2, K2496) `extraction`: `unitsOf`, the `readings`/`reading_refs` read contract (R21, R23); `text-chain`: `captureBound`; `leg-earning`: the capture's earned ceiling (R21); `record-grammar`: `idPattern`, `isStepId`, `sha256HexSync`, `acceptanceRecord` (R22); `membership`: `projectAuthority` (R22); `ai-accounts` (T48; N996, split map §5; was `credentials`, which this module no longer uses): `aiKeepAwayState` (its R21) and `projectsKeptAway` (its R22), the material limits a reading keeps to (R21, R24); `steps`: `recordProduct` (R21). R17 holds six tables.
 - `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `text-chain`: `readingSource`, `readingSourceJson`, `readingSourceFromColumns`, `describeChain`.
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge`, `bundles` and `files` by its read contract.

@@ -1,6 +1,6 @@
 # reading-guides — requirements
 
-**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.4 (N820; D8, D24, D65). Every requirement not yet met (T41). Last changed T46 (T46-15: R14 new, `GUIDE_KIND_UNKNOWN` and `GUIDE_ITEM_UNSOURCED` read by key from `words.json`, and the procedure guide's label read by `guide.procedure.legalinfo`; DEC-194, N913); marked not yet met (T46).
+**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.4 (N820; D8, D24, D65). Every requirement not yet met (T41). Last changed T46 (T46-15: R14 new, `GUIDE_KIND_UNKNOWN` and `GUIDE_ITEM_UNSOURCED` read by key from `words.json`, and the procedure guide's label read by `guide.procedure.legalinfo`; DEC-194, N913); marked not yet met (T46). T48 (T48-33: `checks.mjs`' frozen copy of the design's wording (`READING_GUIDES_WORDS`) re-taken in DEC-221's American spelling, clearing its 2 reds; R14 already requires the words read by key from `words.json`, so its text stands; N1053; DEC-221; K3192, K3195): no requirement changed.
 
 **Size (P6).** About 900 lines.
 
