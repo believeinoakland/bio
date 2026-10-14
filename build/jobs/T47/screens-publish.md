@@ -30,7 +30,7 @@
 
 **Files (for `modules.json`):** paths `bio-plane/src/screens-publish/` (`index.mjs`, `parts.mjs`, `words.mjs`, `case-editor.mjs`, `review-copy.mjs`, `ceremony.mjs`, `published.mjs`, `imported.mjs`, `docket.mjs`, `doorbell.mjs`, `review-outside.mjs`); tests `bio-plane/test/m/screens-publish/` (`fixtures.mjs`, `common.test.mjs`, `case-editor.test.mjs`, `review.test.mjs`, `ceremony.test.mjs`, `public.test.mjs`).
 
-**Tests and checks** (on `job/T47/screens-publish` after merging `tranche/T47` at B11, no overlay): `node --test bio-plane/test/m/screens-publish/` 53 pass, 0 fail. With my paths in `modules.json`: `format` 0 failures; `architecture` (screens-publish) 17 product files, 0 failures; `coverage` 17 of 17; `ownership` 0 failures; `checks/run.mjs`: architecture 0 failures, format 0, channels 0; coverage's 2 failures are other modules' (none mine).
+**Tests and checks** (on `job/T47/screens-publish` after merging `tranche/T47` at B11, no overlay): `node --test bio-plane/test/m/screens-publish/` 53 pass, 0 fail. With my paths in `modules.json`: `format` 0 failures of mine (at B11, 2 in `modules.json`'s `setup-page` paths, deleted; BOB's); `architecture` (screens-publish) 17 product files, 0 failures; `coverage` 17 of 17; `ownership` 0 failures; `checks/run.mjs`: architecture 0 failures, format 0, channels 0; coverage's 2 failures are other modules' (none mine).
 
 Size (session_01H1xqnxGLp6rmKJGKxAwv2Z): test runs 26, module lines 1,516
 
