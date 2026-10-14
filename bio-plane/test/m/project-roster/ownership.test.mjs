@@ -119,8 +119,8 @@ test("R5 projectOwnerRescue: an administrator adds an owner only when every owne
   assert.equal(resc("PROJ-P", "zed", "second").reason, "NO_SUCH_HANDLE");
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
   assert.equal(resc("PROJ-P", "dee", "second").reason, "NOT_ACTIVE");
-  const ok = resc("PROJ-P", "bob", "admin");
-  assert.deepEqual([ok.ok, ok.by, ok.reason, ok.owner, ok.owners, ok.addedNotReplaced], [true, "admin", "stranded", true,
+  const ok = resc("PROJ-P", "bob", "admin");   // R29: the founder, holding no handle, answers `by: null`
+  assert.deepEqual([ok.ok, ok.by, ok.reason, ok.owner, ok.owners, ok.addedNotReplaced], [true, null, "stranded", true,
     ["ann", "bob"], true]);
   assert.deepEqual(w.m.participation("PROJ-P", "ann"), { state: "joined", owner: true }, "the inactive owner keeps the row");
   assert.deepEqual(w.m.participation("PROJ-P", "bob"), { state: "joined", owner: true }, "a joined owner");
