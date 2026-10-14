@@ -1,6 +1,6 @@
 # screens-intake — requirements
 
-**Status** · New in T46 (T46-56; K657, K1043): a module built fresh, layer 11 after `screens-settings` (N897 (1), Bob's K2816; DEC-97, DEC-153, DEC-168; N821's upload surface; N714's screen side; N747). Drafted in `build/plan/draft-T46-interface.md` §2.4, worded here by BOB (P5). No ids move. Not yet met (T46). Last changed T47 (T47-59: R10 new, the writing-help draft filled into its field and a knock's card, N987; R11 new, a held row's grade and thumbnail, N979; R12 new, the knock's source read with no typed ids, N980; R13 new, the set-aside list, N969; R14 new, watching from Add through `monitorset` and "Ask for this later" as a member's own request, N969; R15 new, the `archive` screen, N688's screen part); marked not yet met (T47).
+**Status** · New in T46 (T46-56; K657, K1043): a module built fresh, layer 11 after `screens-settings` (N897 (1), Bob's K2816; DEC-97, DEC-153, DEC-168; N821's upload surface; N714's screen side; N747). Drafted in `build/plan/draft-T46-interface.md` §2.4, worded here by BOB (P5). No ids move. Not yet met (T46). Last changed T47 (T47-59: R10 new, the writing-help draft filled into its field and a knock's card, N987; R11 new, a held row's grade and thumbnail, N979; R12 new, the knock's source read with no typed ids, N980; R13 new, the set-aside list, N969; R14 new, watching from Add through `monitorset` and "Ask for this later" as a member's own request, N969; R15 new, the `archive` screen, N688's screen part); marked not yet met (T47). Last changed T48 (K3254, the L11 design fold of WALK-084 #2, K3250: R17 new, the common line; R18 new, the tab bar and act row; R19 new, no empty Set aside, the `heldcaptures` stall traced; R20 new, bare `archive` and `open-file`); marked not yet met (T48).
 
 **Size (P6).** Estimated 2,000–2,600 lines with comments, its own keyed sentences included, measured at its START (M-T46-1, K617).
 
@@ -43,6 +43,20 @@ Bringing material in and deciding what enters the record: capturing from an addr
 #### T47's L11 fold (K3100)
 
 - **R16** (DEC-200 (2); amends R1, R14) On "From an address", "Watch this address" sends `monitorset` (`enabled: true`, the frequency chosen) and "Check it now" sends `monitor`, two acts. Test: each act alone.
+
+#### T48 (T48-85)
+
+**The design walk folded** (T48; WALK-084 #2; K3250, K3254)
+- **R17** (T48; K3250, K3254 (1), (5); walk C1, C4, C5; DEC-219 (3); K3052; amends R8) The common line, on `capture`, `held`, `archive`, `open-file` and `inbox`: every element these screens draw uses a class that a served stylesheet defines (`interface-shell` R56). *(not yet met: T48)*
+  - Where the design draws the element, the screen uses the design's own class: an `mk-*` class as `shell.css` carries it, and a `cs-*` class the design spells `mk-*` (`cs-frontgrid`, `cs-signin`, `cs-fronthead`, `cs-flogo`, `cs-facts`, `cs-note`, `cs-sub`, `cs-small`, `cs-steps`, `cs-passage`, `cs-strengthbox`, `cs-gapblock`, `cs-pickc`, `cs-areas`, `cs-table`) is renamed to the design's spelling. A class the design does not draw is mapped to the kit's or a design class; only where none fits does `interface-shell` carry its style (its R56), with an ASK to UX-DESIGN to draw it (K3254 (1)).
+  - Every labelled field is drawn with `cs.field`. No screen draws `cs-form` or a bare `<label>` with `.help`.
+  - A section, tray, list, block or reading that holds nothing is not drawn. No count, reading or "finished by" is drawn at zero. A screen with nothing at all to show draws its one designed empty state, which names the first step. (DEC-219 (3) applied to every screen is BOB's reading of K3052, K3254 (5); the designed screen-level empty states are kept.)
+  - A read that failed is still drawn as failed (`interface-shell` R10).
+
+  Test: the module's real `SCREENS` compose under `interface-shell` R56, and each screen drawn over an empty fixture shows no empty section and no zero. Control: a failed read is drawn `state.failed`.
+- **R18** (T48; K3250, K3254; walk row 12; amends R1, R14, R16) `capture`'s three tabs are the design's underlined tab bar (`mk-tabs2`), and its acts are one act row (`mk-acts`). "Watch this address" and "Check it now" join that row once the address has a document. No "Watching for changes" section is drawn before anything is captured. Test: before a capture, no watch section. Control: after one, the two acts are in the act row. *(not yet met: T48)*
+- **R19** (T48; K3250, K3254; walk row 14; amends R4, R13) `held` draws "Set aside" only when it holds something, and every read leaves "still loading" by answering or failing (`interface-shell` R10). The unfiltered `heldcaptures` read that stalled on `biosmoke7` is traced at START to its cause and fixed where the cause lies. Test: an empty set-aside list is not drawn. Control: a read that never answers is drawn failed at the shell's limit. *(not yet met: T48)*
+- **R20** (T48; K3250, K3254; walk row 20; amends R5, R15) `archive` and `open-file` opened bare or not found draw `interface-shell` R61's "Nothing is here" with the way back, and never "Name an archive to open" or "Name a file to open". Test: each screen bare. *(not yet met: T48)*
 
 ## Private
 
