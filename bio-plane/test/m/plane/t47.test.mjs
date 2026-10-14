@@ -17,6 +17,7 @@ import { caseInputsOf, caseInputsOps } from "../../../src/case-inputs/index.mjs"
 import { caseAuthoringOf, caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
 import { actionRecordsOf, actionRecordsOps } from "../../../src/action-records/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
+import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
 import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
 import { answersOf } from "../../../src/answers/index.mjs";
 import { draftOnObject } from "../../../src/plane/ask.mjs";
@@ -236,4 +237,21 @@ test("R48 (T47; N1002; DEC-201; control-plane R81, R82): the page the plane's Wo
   /* negative control: a render no module offers is not in the page */
   const probe = function render() { return "zz-probe-screen-t47"; };
   assert.equal(pages["/app"].includes(String(probe)), false);
+});
+
+/* ===== R45 (T47; K3150; control-plane R71): the owner map's action-clocks getter ===== */
+
+test("R45, R35 (T47; K3150; control-plane R71): `clockpropose`, served by control-plane's owner map, reaches the plane's one action-clocks instance through its `actionClocks` getter and answers through the door what that instance answers called directly; control: the instance is the plane's own (a spy on it is reached)", async () => {
+  const x = await store(), twin = await store();
+  const keys = Object.keys(x.s.routes(new URL("http://do/"), null));
+  assert.ok(keys.includes("clockpropose"), "the route map lacks clockpropose");
+  const path = "clockpropose?target=ACTN-2026-0009-none&rule=R-none&proposer=member:nobody&viewer=member:nobody";
+  const via = JSON.parse(mask(await (await x.fetch(`/${path}`, { method: "POST", body: "{}" })).text()));
+  const twinAnswer = await twin.s.routes(new URL(`http://do/${path}`), {}).clockpropose();
+  assert.deepEqual(via, JSON.parse(mask(JSON.stringify({ ok: true, result: twinAnswer ?? null }))));
+  const ac = actionClocksOf(x.ctx), was = ac.clockPropose.bind(ac);
+  let hit = 0;
+  ac.clockPropose = (q) => { hit++; return was(q); };
+  try { await x.fetch(`/${path}`, { method: "POST", body: "{}" }); } finally { ac.clockPropose = was; }
+  assert.equal(hit, 1, "the plane's action-clocks instance answered");
 });

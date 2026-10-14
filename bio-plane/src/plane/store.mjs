@@ -817,7 +817,9 @@ export class Store extends DurableObject {
       ...controlPlaneOwnerOps({ aiUse: () => aiUseOf(ctx), aiRuns: () => aiRunsOf(ctx, env), caseAccount: () => caseAccountOf(ctx),
                                 review: () => reviewOf(ctx), legEarning: () => legEarningOf(ctx), capture: () => captureOf(ctx),
                                 steps: () => stepsOf(ctx), investigation: () => investigationOf(ctx),
-                                questionExplorer: () => questionExplorerOf(ctx) }, url, body),
+                                questionExplorer: () => questionExplorerOf(ctx),
+                                /* (T47; K3150; control-plane R71) `clockpropose`, served through action-clocks' one instance */
+                                actionClocks: () => actionClocksOf(ctx) }, url, body),
       /* store-door's map (its R1); the grant its door read from the header is handed on (its R11, K2041) */
       ...controlPlaneRoutes(ctx, url, body, grant),
     };
