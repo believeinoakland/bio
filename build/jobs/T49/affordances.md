@@ -39,3 +39,11 @@ Findings outside my entries (details in my record, "Completion"):
 ## J2 · COMPLETE
 
 T49-14 done: R60 (step_source its own group), R61 (ACT_HELP regenerated at f498560a37: 337 ops held), R62 (ACT_HELP and the vocabularies read by key through setup-words). Module tests 262/262 (built against setup-words' R11–R12 as written, with a local shim not committed; merge tranche/T49 once setup-words has merged and re-run). format, architecture, coverage (46/46), ownership: 0 failures. My merge opens op-declarations' R34 partition red (named in REPORT J1), cleared by T49-17. Nothing deferred. Details in my record.
+
+## Completion, after B2 and B3
+
+**B2 (K3369).** `affordances.mjs` imports op-grades' `IRREVERSIBLE_CORRECTION_KEY` and publishes it as `vocabularies.rung_correction_key` (my choice: the old `rung_correction_path` field is gone, since its text is no longer a path string; a reader draws it with `word(key)`). `rung_consequences` is still `CONSEQUENCE_STATEMENTS` by reference, so it carries `{friction, key}` whatever op-grades holds. `door.mjs`'s `CATALOGUE_DETAIL` names the new field. Catalogue and plane tests re-pointed. op-grades has not merged yet: I ran the module against the real setup-words (B3) with a one-line, uncommitted, reverted export of the key; the first run against the real op-grades happens at its merge, when `rung_correction_key` must be defined (an undefined import fails the load).
+
+**B3.** Tranche merged in; real setup-words. `node --test bio-plane/test/m/affordances/`: 262 tests, 262 pass. format 0 failures; architecture 0 failures; coverage 46 of 46.
+
+Size (session_01Sg9Baej6PovaKSxFXZivNf): test runs 10, module lines 2,614

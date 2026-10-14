@@ -134,7 +134,7 @@ export { ACT_HELP, ACT_HELP_KEYS } from "./affordances/act-help.mjs";
    weight, `RUNGS`, `RUNG_ABSENT`, `MACHINE_REFUSALS`, `NON_ACTS` and `phoneOf`. Read here by reference and never copied
    (R4, R11, R12, R19, R20, R36): `VOCABULARIES` publishes the same objects, `deriveActs` reads `MACHINE_REFUSALS`,
    `decorate` reads `RUNGS`, `RUNG_ABSENT` and `phoneOf`, and `unaccounted` (R12) checks the totality over them. */
-import { RUNG_LADDER, IRREVERSIBLE_CORRECTION_PATH, RUNG_ABSENCE_GROUNDS, CONSEQUENCE_STATEMENTS, LARGER_SCREEN_ACTS,
+import { RUNG_LADDER, IRREVERSIBLE_CORRECTION_KEY, RUNG_ABSENCE_GROUNDS, CONSEQUENCE_STATEMENTS, LARGER_SCREEN_ACTS,
          IRREVERSIBLE_WEIGHT, RUNGS, RUNG_ABSENT, MACHINE_REFUSALS, NON_ACTS, phoneOf, OP_ALIASES } from "./op-grades/index.mjs";
 /* R39 (T33-85): the new closed vocabularies with the members' words, read at the call from the composed owners. */
 import { composedVocabularies } from "./affordances/words.mjs";
@@ -503,10 +503,11 @@ export const VOCABULARIES = {
      correction path rides with it because "irreversible" alone is the half of
      DEC-19 that overclaims: a member told an act cannot be undone, and not told
      that correction moves forward, has been misled by the surface.
-     Defined once in `op-grades`' `RUNG_LADDER` / `IRREVERSIBLE_CORRECTION_PATH` (its R1), published here by
+     Defined once in `op-grades`' `RUNG_LADDER` / `IRREVERSIBLE_CORRECTION_KEY` (its R1), published here by
      reference (K1974). */
   rung_ladder: RUNG_LADDER,
-  rung_correction_path: IRREVERSIBLE_CORRECTION_PATH,
+  /* K3369: the correction path is a word key (`op-grades` R1), published as `rung_correction_key`; a reader draws it with `word(key)`. */
+  rung_correction_key: IRREVERSIBLE_CORRECTION_KEY,
   rung_absence_grounds: RUNG_ABSENCE_GROUNDS,
   /* `op-grades` R4, R21 (DEC-88 (4), DEC-142): the judgement calls' friction and consequence statement, by act id. */
   rung_consequences: CONSEQUENCE_STATEMENTS,
@@ -918,7 +919,7 @@ export const ACTS = [
      CARRIES IT (DEC-19 as amended, Bob 2026-08-03: *"Publishing IS an
      irreversible act! It's (one of?) the only irreversible acts."*). The
      correction path travels with it and is published as
-     `vocabularies.rung_correction_path`, never instead of the rung: a further
+     `vocabularies.rung_correction_key`, never instead of the rung: a further
      edition is a separate document and every published edition stands, a
      withdrawal is another attested act and both stand, and a finding can be
      rescinded to an inquiry by removing its claim. Nothing is erased.
