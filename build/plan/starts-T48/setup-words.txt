@@ -1,5 +1,6 @@
 Depth 2. Your entries: `build/plan/current.md` (T48), layer 11, setup-words:
 - **T48-61 · setup-words** · (N847, N1047; DEC-221, DEC-226, DEC-227) R8: `WORD_ROWS` re-taken at PR #34's merge (1,895 rows, 652 protected), which also replaces the ~50 stale DEC-221 copies (K3192 D1) · generated.
+- **T48-61 · setup-words** also (K3280, L9 reports): drop its copies of `rfc.quoting` and `refusal.RFC_QUOTING_MISSING` (filing-templates R33 owns the sentence) and check its `NOT_A_PARTNER` copy against DEC-221.
 - **T48-61 · setup-words** also (K3278, ACTION-PLANS #12 J1): declare action-plans' `op=planask` (R51, a member act; author and viewer stamps) as this module declares every op.
 Your requirements: `build/requirements/setup-words.md` (read whole); every line marked `*(not yet met: T48)*` is yours to meet (R8).
 BOB's notes for this job:

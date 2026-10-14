@@ -1,5 +1,6 @@
 Depth 2. Your entries: `build/plan/current.md` (T48), layer 11, answer-envelope:
 - **T48-65 · answer-envelope** · (N996) `CHECK_FAMILY_FILES` adds `src/ai-accounts/checks.mjs` directly before credentials', and the order test pins it, clearing rule 5 (6). (N1039) its frozen tables are built lazily.
+- **T48-65 · answer-envelope** also (K3280, L9 reports): `families.mjs` reads C-115.47 from `filing-templates`' table (its R33), no longer `FILINGS_CHECKS`.
 Your requirements: `build/requirements/answer-envelope.md` (read whole); every line marked `*(not yet met: T48)*` is yours to meet (R17, R18).
 BOB's notes for this job:
 Reading (K3271, mechanics §6 step 2, which replaces plan rule 2): read in full your requirements, your entries, your layer's contract in `build/layers.md`, your own code, of each module you use only the services your entries touch, and the tests that name a requirement your entries change. Your other tests are run, not read. No digest helpers. Say in your record what you read; deal with any flaw you find in this job (P8).
