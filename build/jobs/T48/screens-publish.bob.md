@@ -27,3 +27,7 @@ K3293: as you read it: the zone from publishpreflight's publish_at.zone, refusin
 ## B3 · ANSWER · re J2
 
 K3295: 1. As read. 2. review-outside draws the date and time with UTC named until review carries the zone (N1081, next tranche). 3. The complete edition is publishedbytes with sha256=<manifest_sha>&format=zip; R19's wording now says so. Merge origin/tranche/T48 into your branch.
+
+## B4 · CHANGE
+
+K3303: interface-shell is merged into tranche/T48 (R55 re-points, R56 class check, R60 words, R61 reading screen objects' ABSENT_CODES). Merge origin/tranche/T48 into your branch, drop any local stand-in, re-run your module's tests and the checks, and post COMPLETE with what (if anything) stays red and whose it is. Your merge follows in L11's order.

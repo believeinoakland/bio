@@ -21,3 +21,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · ANSWER · re J1
 
 K3295: 1. Hold both rows as your own interim words (screen.forgot.done.last as you drafted; screen.setup.security.field '{field}'), marked for UX-DESIGN, which I am asking for the key. 2. The monogram and R14 as you read them.
+
+## B3 · CHANGE
+
+K3302 (instance-setup merged, INSTANCE-SETUP #23's report): R4 reworded on the tranche and marked not yet met (T48): `forgot` draws `instance-setup`'s `FORGOT_HELP` for every visitor; `HOSTING_CONTROL` stays on the founder's `setup` path (R6) only, with a control that `forgot` draws no `HOSTING_CONTROL`. Merge origin/tranche/T48, apply, re-run, check, post COMPLETE.

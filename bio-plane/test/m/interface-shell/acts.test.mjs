@@ -24,10 +24,10 @@ test("R11 each act is a button labelled act.<op>.label.<screen>, carrying its we
     assert.ok(b.getAttribute("data-tip").includes(name + ":"), op);
   }
   assert.ok(btn(p, "cite").textContent.startsWith("Cite a passage"));
+  /* R64 amends: promote, RUNG_ABSENT under substrate, carries no weight of its own, only the design kit's mark */
   const h = await boot({ screens: ALL, plane: PLANE });
-  assert.equal(btn(h, "promote").querySelector(".w"), null, "promote is RUNG_ABSENT under substrate: no weight mark");
-  assert.equal(btn(h, "promote").querySelectorAll(".cs-pips").length, 0);
-  assert.equal(btn(h, "promote").textContent, "Start a project");
+  assert.equal(btn(h, "promote").querySelector(".w").getAttribute("data-mark"), "reasoned");
+  assert.ok(btn(h, "promote").textContent.startsWith("Start a project"));
 });
 
 test("R11 (K3002) an op in RUNG_ABSENT under `undetermined`, or one neither table names, is drawn and frictioned as reasoned; under substrate, credential, caller-owned or observational it carries no weight mark and runs on press", async () => {
@@ -42,12 +42,14 @@ test("R11 (K3002) an op in RUNG_ABSENT under `undetermined`, or one neither tabl
   assert.ok(p.root().querySelector('[data-slot="m:0"] textarea'));
   const o = { id: "open-file", reads: () => ({}), acts: [{ op: "openoriginal" }], render: (cs) => cs.act("openoriginal") };
   const q = await boot({ screens: [o], path: "/app/open-file/ab" });
-  assert.equal(btn(q, "openoriginal").querySelector(".w"), null);
-  assert.ok(!btn(q, "openoriginal").getAttribute("data-tip").includes("Reasoned"));
+  /* R64: its mark only (the design kit's), never a weight: it runs on press */
+  assert.equal(btn(q, "openoriginal").querySelector(".w").getAttribute("data-mark"), "reversible");
   await q.click(btn(q, "openoriginal"));
   assert.equal(q.byOp("openoriginal").length, 1, "runs on press");
   const a = await boot({ screens: ALL, path: "/app/members", plane: { whoami: ok(ADMIN) } });
-  assert.equal(btn(a, "memberadd").querySelector(".w"), null);
+  assert.ok(btn(a, "memberadd").querySelector(".w").hasAttribute("data-mark"));
+  await a.click(btn(a, "memberadd"));
+  assert.equal(a.byOp("memberadd").length, 1, "memberadd runs on press, its mark Reasoned or not");
 });
 
 test("R11 (DEC-88) a reasoned act whose screen names a reasonField sends the member's own words in that field as its reason and asks no second one; with that field empty it sends nothing and says so", async () => {
@@ -152,8 +154,8 @@ test("R12 before whoami answers, no act is drawn; an act the screen does not lis
   assert.equal(btn(q, "promote"), null);
 });
 
-test("R13 a refusal of each kind (ok: false at the top level, in result, an HTTP error, no answer) is drawn beside the act it answers, never in place of the screen; a form keeps what the member typed; nothing else changes", async () => {
-  const kinds = [[refused("NO_SUCH_THING_ZZ", "The thing is gone."), "The thing is gone."], [refusedIn("ZZ_IN", "Inside words."), "Inside words."], [httpError(500), "Could not read this, because 500"], [silent, "did not answer"]];
+test("R13 R61 a refusal of each kind (ok: false at the top level, in result, an HTTP error, no answer) is drawn beside the act it answers, never in place of the screen, an HTTP error without words naming no code; a form keeps what the member typed; nothing else changes", async () => {
+  const kinds = [[refused("NO_SUCH_THING_ZZ", "The thing is gone."), "The thing is gone."], [refusedIn("ZZ_IN", "Inside words."), "Inside words."], [httpError(500), "This could not be read."], [silent, "did not answer"]];
   const code = "PROJECT_SCOPE_UNKNOWN";
   for (const [answer, words] of kinds) {
     const p = await boot({ screens: ALL, plane: { promote: answer, projectdirectory: ok({ projects: [] }) } });
@@ -336,7 +338,7 @@ test("R11 (K3011) a read (an op OPS declares not mutating) carries no weight mar
   const s = { id: "finder", reads: () => ({}), acts: [{ op: "search" }, { op: "findin" }, { op: "frontier" }, { op: "select" }], render: (cs) => cs.act("search") + cs.act("findin") + cs.act("frontier") + cs.act("select") };
   const p = await boot({ screens: [s], path: "/app/finder" });
   for (const op of ["search", "findin"]) {
-    assert.equal(btn(p, op).querySelector(".w"), null, op);
+    assert.equal(btn(p, op).querySelector(".w").getAttribute("data-mark"), "reversible", op + ": R64's mark, no weight");
     await p.click(btn(p, op));
     assert.equal(p.byOp(op).length, 1, op + " runs on press");
   }

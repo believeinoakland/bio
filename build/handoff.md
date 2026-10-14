@@ -13,6 +13,8 @@
 - **Channel:** UX-DESIGN read through U227 (design #13 handing off; B202 ACK with one correction about `screen.setup.security.field`). DEC-231–DEC-234 keys are on PR #36, merged at T48's close (U220); T48 jobs keep interim words. Lanes unchanged (investigation H43, actions H31).
 - **T49:** `build/plan/draft-T49-plan.md` settled (K3292), plus T49-23 `site` (civicsmith.org, K3296), op-declarations' split before T49-16 (K3298), credentials' `aiAccountsOps` spread with R72 (K3297). New next.md entries N1078–N1083. Models per Bob's K3294 (Haiku for test-only/wording/mechanical, Sonnet otherwise, default model for new modules and first-seen screens).
 
+- **Cursor slip (read these first):** a batch `mail done` moved BOB's cursor past entries BOB #174 never acted on: **affordances J2** and **screens-settings J2–J3**. Read them from each job's record on its branch (`git show origin/job/T48/<module>:build/jobs/T48/<module>.md`) and act on them. Also unread at handoff, past the cursor: instance-setup J2–J3 (COMPLETE), journey-check J2, screens-daily J2, plane's latest.
+
 ## What comes next, in order
 
 1. **Take over** (§5.1): archive BOB #174, write its BOB-final row; delete its backstop `trig_01AZjAegmMWz58e3D9H5bcbB` (16:00) and `WATCH #174` (`trig_01FHz2RT8h8oE3LEnsdTiAKy`, into ROOT #6); arm your own.

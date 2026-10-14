@@ -1,5 +1,5 @@
 /* R16 (B7; K2353, K2376, K2488; DEC-188 (6), (7)): the AI accounts' items, over the real `ai-use` (its R5
-   `limitsReached`, R9 `exploreAsksPending`) and the real `credentials` (its R59 `projectAccountsSuspended`) and
+   `limitsReached`, R9 `exploreAsksPending`) and the real `ai-accounts` (its R13 `projectAccountsSuspended`; T48, N996 §5) and
    `membership`, on ai-use's own test world: ann owns P (bob joined) and her own key; cy's project S runs on cy's
    sign-in; second is an administrator. Each item's sentence and every fill are read by key from the design stream's
    `words.json` (DEC-189 (5), (6); N856), the expected words built here from that file, never from this module; every
@@ -27,7 +27,7 @@ async function setup() {
   /* (T47; K3084) credentials R70: a sign-in serves only while its token is held, sealed under its member */
   assert.equal((await w.c.subscriptionTokenHold({ member: "cy", token: `sk-ant-oat01-${"c".repeat(40)}` })).ok, true);
   assert.equal(w.c.projectSigninSet({ project: "S", by: "cy" }).ok, true);
-  const n = fresh(w.ctx, { membership: w.m, aiUse: w.u, credentials: w.c, view: UTC });
+  const n = fresh(w.ctx, { membership: w.m, aiUse: w.u, aiAccounts: w.a, view: UTC });
   const { read } = reader(n);
   const items = (member, kind, at = AT) => ofKind(read(member, { now: at }), kind);
   return { w, n, read, items };
@@ -125,7 +125,7 @@ test("R16 a limit's {date} is the profile's local day reached_at falls on, never
   const at = "2026-10-10T02:00:00Z";                        /* 9 October, 19:00, in Los Angeles */
   const entry = (x) => ({ key: "ai-limit:group:ask:calls:day:2026-10-09", owner: "group", scope: "ask", unit: "calls", period: "day",
     period_start: "2026-10-09", reached_at: at, ...x });
-  const run = (reached, view = () => ({ time_zone: { value: "America/Los_Angeles" } })) => ofKind(reader(fresh(w.ctx, { membership: w.m, credentials: w.c, view,
+  const run = (reached, view = () => ({ time_zone: { value: "America/Los_Angeles" } })) => ofKind(reader(fresh(w.ctx, { membership: w.m, aiAccounts: w.a, view,
     aiUse: { exploreAsksPending: () => ({ ok: true, asks: [] }), limitsReached: () => ({ ok: true, reached }) } })).read("second", { now: AT }), "ai-limit-reached");
   assert.match(run([entry()])[0].detail, / on 9 October\./, "the local day in the profile's zone");
   assert.match(run([entry()], UTC)[0].detail, / on 10 October\./, "negative control: in UTC it is the 10th");
@@ -169,7 +169,7 @@ test("R16 one Ask item per entry of ai-use.exploreAsksPending, keyed by its own 
   w.u.exploreApprove({ owner: "project:P", day: "2026-10-09", by: "ann", at: AT });
   assert.deepEqual(items("ann", "explore-ask"), [], "approved: no longer asked");
   /* the group's and a member's own account (ai-use's entries, as it answers them) */
-  const asks = (owner) => ofKind(reader(fresh(w.ctx, { membership: w.m, credentials: w.c, view: UTC, aiUse: { limitsReached: () => ({ ok: true, reached: [] }),
+  const asks = (owner) => ofKind(reader(fresh(w.ctx, { membership: w.m, aiAccounts: w.a, view: UTC, aiUse: { limitsReached: () => ({ ok: true, reached: [] }),
     exploreAsksPending: () => ({ ok: true, asks: [{ key: `explore-ask:${owner}:2026-10-09`, owner, day: "2026-10-09", what: ["Q?"], asked_at: AT }] }) } }))
     .read("ann", { now: AT }), "explore-ask")[0];
   assert.equal(asks("group").detail, say("ai.queue.exploreask", { scope: say("ai.scope.group"), what: "Q?", account: say("ai.account.group.inline") }));
@@ -177,11 +177,11 @@ test("R16 one Ask item per entry of ai-use.exploreAsksPending, keyed by its own 
   assert.deepEqual(namesNoMember(asks("member:ann")), [], "a member's own account names no member");
 });
 
-test("R16 one Noticed project-account-suspended item per entry of credentials.projectAccountsSuspended, keyed by its own key, in ai.queue.suspended's words naming the project and no member; to the project's owner alone, and none while the sign-in serves", async () => {
+test("R16 one Noticed project-account-suspended item per entry of ai-accounts.projectAccountsSuspended (T48: R16 reads it there, never from credentials), keyed by its own key, in ai.queue.suspended's words naming the project and no member; to the project's owner alone, and none while the sign-in serves", async () => {
   const { w, items } = await setup();
   assert.deepEqual(items("cy", "project-account-suspended"), [], "negative control: serving, nothing");
   assert.equal(w.join("S", "cy", "bob").ok, true);
-  const [s] = w.c.projectAccountsSuspended({ viewer: "cy" });
+  const [s] = w.a.projectAccountsSuspended({ viewer: "cy" });
   const [it] = items("cy", "project-account-suspended");
   assert.equal(it.id, `FINDING::project-account-suspended::${s.key}`);
   assert.equal(it.class, "FINDING");
@@ -192,15 +192,21 @@ test("R16 one Noticed project-account-suspended item per entry of credentials.pr
   assert.deepEqual(namesNoMember(it), []);
   assert.ok(!texts(it).includes("bob") && !texts(it.basis).some((t) => t === "cy"), "no member anywhere in the item");
   for (const m of ["bob", "ann", "second"]) assert.deepEqual(items(m, "project-account-suspended"), [], m);
+  /* T48 (N996 §5) control: a credentials answering a suspension of its own adds no item, nor does it remove ai-accounts' */
+  const viaCredentials = reader(fresh(w.ctx, { membership: w.m, aiUse: w.u, aiAccounts: w.a, view: UTC,
+    credentials: { securityLevel: () => ({ level: "Ordinary" }), projectAccountsSuspended: () => [{ project: "S", member: "cy", since: "2026-01-01T00:00:00Z", key: "S|cy|stale" }] } }))
+    .read("cy", { now: AT });
+  assert.deepEqual(ofKind(viaCredentials, "project-account-suspended").map((i) => i.id), [it.id], "only ai-accounts' entry is read");
 });
 
 test("R16 R1 a read that does not answer is its provider's failure, named in facts.failed, never read as no item; the bound and truncated stated", async () => {
   const { w } = await setup();
-  const run = (deps) => reader(fresh(w.ctx, { membership: w.m, aiUse: w.u, credentials: w.c, view: UTC, ...deps })).read("ann", { now: AT });
+  const run = (deps) => reader(fresh(w.ctx, { membership: w.m, aiUse: w.u, aiAccounts: w.a, view: UTC, ...deps })).read("ann", { now: AT });
   const boom = () => { throw new Error("down"); };
   for (const [deps, name] of [[{ aiUse: { exploreAsksPending: () => ({ ok: true, asks: [], unreadable: true }), limitsReached: () => ({ ok: true, reached: [] }) } }, "ai-use"],
                               [{ aiUse: { exploreAsksPending: () => ({ ok: true, asks: [] }), limitsReached: boom } }, "ai-use"],
-                              [{ credentials: { ...w.c, projectAccountsSuspended: () => null, securityLevel: () => ({ level: "Ordinary" }) } }, "credentials"]])
+                              [{ aiAccounts: { projectAccountsSuspended: () => null } }, "ai-accounts"],
+                              [{ aiAccounts: { projectAccountsSuspended: () => { throw new Error("down"); } } }, "ai-accounts"]])
     assert.deepEqual(run(deps).facts.failed, [name], name);
   const many = Array.from({ length: ACCOUNT_ITEMS_MAX + 1 }, (_, i) => ({ key: `ai-limit:member:ann:ask:calls:day:k${i}`, owner: "member:ann",
     scope: "ask", unit: "calls", period: "day", period_start: "2026-10-09", reached_at: AT }));
@@ -221,7 +227,7 @@ test("R16 (T44) {date}: reached_at on 7 October local reads \"7 October\" (date.
   const { w } = await setup();
   const LA = () => ({ time_zone: { value: "America/Los_Angeles" } });
   const entry = (x) => ({ key: "ai-limit:group:ask:calls:day:k", owner: "group", scope: "ask", unit: "calls", period: "day", ...x });
-  const run = (reached, now, view = LA) => ofKind(reader(fresh(w.ctx, { membership: w.m, credentials: w.c, view,
+  const run = (reached, now, view = LA) => ofKind(reader(fresh(w.ctx, { membership: w.m, aiAccounts: w.a, view,
     aiUse: { exploreAsksPending: () => ({ ok: true, asks: [] }), limitsReached: () => ({ ok: true, reached }) } })).read("second", { now }), "ai-limit-reached")[0];
   const fills = (date, when = say("ai.until.day")) => ({ account: say("ai.account.group"), period: say("ai.period.day"), use: say("ai.use.ask.inline"), date, when });
   const oct = say("date.month.october");

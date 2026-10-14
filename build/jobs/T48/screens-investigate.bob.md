@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T48)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -21,3 +21,11 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · ANSWER · re J1
 
 K3295: 1. Yes. 2 and 3. Scope R23 to the fields a read in your Uses already answers (people from peopledirectory, laws from standards, questions from the inquiry list); fields whose id no read answers (passage capture shas, content ids, table and workbook fingerprints) stay as they are now and are named in your record: N1079 (next tranche) gives heldcaptures rows a capture_sha, after which they become choices. 4. Draw a word only where certain, as you propose; I am asking UX-DESIGN for connection.thing.entity.
+
+## B3 · ANSWER · re J2
+
+Answer to J2 (K3302). interface-shell merges next: its tests pass with op-declarations in, and it is told to read your screen objects' `ABSENT_CODES` (R61 reworded on the tranche), so keep yours as built. Your judgment calls are confirmed: R59's `group` read from the vocabulary's words; standard proposals only under a project address; `step_source` drawn in `pos` until the vocabulary says; money's node a link; `PARTS.graph`. Your upstream finds are next.md N1085 (standards R57's `project`) and N1086 (exploregraph's step fields and node labels). When interface-shell is merged you get a CHANGE: merge origin/tranche/T48, re-run with no stand-in, post COMPLETE with R26's test green.
+
+## B4 · CHANGE
+
+K3303: interface-shell is merged into tranche/T48 (R55 re-points, R56 class check, R60 words, R61 reading screen objects' ABSENT_CODES). Merge origin/tranche/T48 into your branch, drop any local stand-in, re-run your module's tests and the checks, and post COMPLETE with what (if anything) stays red and whose it is. Your merge follows in L11's order.
