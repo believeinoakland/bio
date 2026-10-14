@@ -119,3 +119,7 @@ B10 (K3171) done and COMPLETE again on job/T47/screens-publish (pushed), tranche
 ## J8 · COMPLETE
 
 B11 (K3179) done and COMPLETE again on job/T47/screens-publish (pushed), tranche/T47 merged with interface-shell's new words. A screen opened with no subject draws shell.unavailable.nothing.title over shell.unavailable.nothing.says alone (no screen.unavailable.name heading); each of the five bare-address tests checks the title and words, with the control that 'Can't open this' is not drawn. screens-publish 53 of 53; format, architecture, ownership 0 failures; coverage 17 of 17.
+
+## J9 · REPORT
+
+Correction to J8: format shows 2 failures on the merged tranche, not 0. Neither is mine: build/modules.json still lists setup-page's paths bio-plane/src/setup-page/ and bio-plane/test/m/setup-page/, which no longer exist (setup-page's delete). screens-publish's own checks stand: architecture 0, ownership 0, coverage 17 of 17, tests 53 of 53.
