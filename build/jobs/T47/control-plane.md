@@ -35,3 +35,15 @@ Next: I wait for op-declarations, admission, signin-door (its CHANGE) and the fi
 B8 (K3149) says "serve the logo through `groupLogoAsset`", and B9 (K3150) says "(4) your own logo read stands". After B8 I switched to `groupLogoAsset` (commit 2f864f073a's parent; a silence, a refusal or a non-image type answers 502 `STORE_DID_NOT_ANSWER`, none set 404). My best reading is that B9's "stands" answers J2 as asked before B8, and B8's instruction governs: I keep `groupLogoAsset`. If you meant my own read (every failure 404), say so and I revert it; either is one small change with its test.
 
 Also done: B9's two re-pins (envelope R22 pinned to C-138.1–.17; doorbell R2 with `sourceof`/`sourcerung` in both session sets), each red until tasks (T47-?) and op-declarations (T47-53) merge.
+
+## J4 · REPORT
+
+B10–B12 done: `tranche/T47` merged (op-declarations, admission, tasks, action-producers in), the 20 reds K3157 names fixed. Branch at 2e044be1b2's parent (pushed).
+
+**Module tests:** 256, 255 pass, 1 red. What fixed the reds: my harness's store now answers admission's `reauthdue` (`{due: null}`, the window open; a test that wants it shut answers it itself), and `opCalls` leaves that read out; the T47 tests re-pinned to op-declarations' specs (`grouplanguages` a public read pinned to `bio`; K3041's four publish reads in both session sets in doorbell R2). One flaw fixed in the door: a body's `session` is now stripped for an op whose `session` the door carries (`signout`, `unlock`, `reauth`), as its `by` and `viewer` already were (R29, R59).
+
+**The one red is not this module's:** totality R2/R41 (`totality.test.mjs`:20): affordances' `unaccounted` names `statementack` and `reviewcomment` unpublished. op-declarations (K3041) gave the publish screen's four ops `NEEDS` rows, and affordances neither publishes those two nor lists them in `NON_ACTS`. Fix belongs to affordances (or op-declarations); nothing in the door changes it.
+
+**Checks:** format 0 failures; ownership 0 failures (17 files). Architecture 8 failures, all `modules.json` edges my tests need (my requirements' Uses names each, T47 entry): control-plane → `case-inputs` (tests only: statementack, digest-channel, r45-routes, N908 §5), `project-roster`, `citation`, `strength`, `people` (t47-door's owner-map checks for R79, R88, R89). Please add the five edges. Coverage: R78 and R87 named by no test: both move to signin-door (T47-91); I expect your CHANGE at its merge to retire them here when I delete my copy.
+
+**Still open:** signin-door's CHANGE (delete my copy, route to it); R81 (the five new screen modules); plane's tests against my branch are running now (P11), result in my COMPLETE.
