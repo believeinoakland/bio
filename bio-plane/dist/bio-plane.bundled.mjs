@@ -59850,6 +59850,10 @@ var SORT_DIRS = Object.freeze(["asc", "desc"]);
 var HELD_SORTS = Object.freeze(["age", "source", "project"]);
 var HELD_STATES = Object.freeze(["held", "set_aside"]);
 var HELD_FILES_IN_ROW = 50;
+var HELD_PAGE_WAIT_MS = 5e3;
+var HELD_PAGE_LANES = 8;
+var TOO_LATE = Symbol("the page's wait ran out");
+var RAN_OUT = /* @__PURE__ */ new WeakSet();
 var REGISTER_FIRST = `SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY julianday(registered), registered, capture_sha LIMIT 1`;
 var instances9 = /* @__PURE__ */ new WeakMap();
 var supplied = /* @__PURE__ */ new WeakMap();
@@ -60803,7 +60807,11 @@ var Capture = class _Capture {
    *  that row carries `archive` (`acquisition.archiveList`'s summary) and `files`, its held files the viewer may see
    *  passing the same filters, in index order, at most `HELD_FILES_IN_ROW` with `files_total` and `files_truncated`. A
    *  file whose archive is not a row is a row of its own, with `archive: {sha256}`. `limit` counts rows, never files:
-   *  the page is read in windows and a file shown beside its archive is skipped, so a page holds `limit` rows. */
+   *  the page is read in windows and a file shown beside its archive is skipped, so a page holds `limit` rows.
+   *
+   *  R91 (T49; N1080): the examination of each document the page shows and the archive grouping of each row are asked
+   *  together, once each, under one wait of `HELD_PAGE_WAIT_MS`; an answer not given in time reads undetermined
+   *  (`#pageAnswers`). Nothing else in the answer changes. */
   async heldCaptures({
     member: member2 = null,
     project = null,
@@ -60866,11 +60874,12 @@ var Capture = class _Capture {
     }
     const page2 = kept.slice(0, cap), truncated6 = kept.length > cap, last = page2[page2.length - 1];
     const at49 = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : Date.now();
+    const answers2 = await this.#pageAnswers(page2, { viewer, rowOf: rowOf18 });
     const rows5 = [];
     for (const r of page2) {
       const since = Date.parse(r.since);
       const asked = this.#questionsOf(r.bundle_id, viewer);
-      const grouped = await this.#archiveRow(r.bundle_id, { viewer, rowOf: rowOf18 });
+      const { eligibility, grouped } = answers2.get(r.bundle_id);
       rows5.push({
         bundle_id: r.bundle_id,
         title: r.title ?? null,
@@ -60878,7 +60887,7 @@ var Capture = class _Capture {
         source: r.src_address ? { address: r.src_address, via: r.src_via, retrieved: r.src_retrieved } : null,
         collected_since: r.since,
         age_days: Number.isFinite(since) ? Math.max(0, Math.floor((at49 - since) / 864e5)) : null,
-        ...await this.#eligibility(r.bundle_id),
+        ...eligibility,
         ...asked.questions ? { captured_for: _Capture.#shown(asked.questions) } : { captured_for: null, captured_for_basis: asked.basis },
         ...grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {}),
         capture: this.#captureOfDocument(r.bundle_id),
@@ -60956,20 +60965,102 @@ var Capture = class _Capture {
     }
     return out;
   }
-  /* R77 (DEC-167 (8)): an archive's row additions, when the row's document holds an archive `acquisition.archiveList`
-     answers for the viewer (one it opened, or one whose listing reads entries): `archive`, its summary, and `files`, the held files beside it (filed, or already held and
-     found in it) whose documents are rows of this list for the viewer, in index order, at most `HELD_FILES_IN_ROW`, each
-     `{document, sha256, index, name, grade, eligible}` (the grade the archive's), with `files_total` and
-     `files_truncated`. Null for a document that holds no archive. The entries are read through `archiveList`, a page of
-     at most 1000 at a time, never by this module's own SQL over acquisition's tables. */
-  async #archiveRow(bundleId, { viewer, rowOf: rowOf18 }) {
-    let shas = [];
+  /* R91: a page's one wait. `within(p)` answers what `p` answers, or `TOO_LATE` when the wait ran out first; `over()` says
+     whether it has (also by the clock, for an examination that blocks the thread so no timer could fire); `stop()`
+     clears the timer. */
+  static #pageWait(ms5) {
+    const began = performance.now();
+    let timer, ran = false;
+    const late = new Promise((resolve) => {
+      timer = setTimeout(() => {
+        ran = true;
+        resolve(TOO_LATE);
+      }, ms5);
+    });
+    return { over: () => ran || performance.now() - began >= ms5, within: (p3) => Promise.race([p3, late]), stop: () => clearTimeout(timer) };
+  }
+  /* R77: the digests the register files under a document, in digest order. */
+  #capturesOf(bundleId) {
     try {
-      shas = this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY capture_sha`, bundleId).map((r) => r.capture_sha);
+      return this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY capture_sha`, bundleId).map((r) => r.capture_sha);
     } catch {
-      shas = [];
+      return [];
     }
+  }
+  /* R91 (T49; N1080): for the documents of one page, R78's examination and the archive grouping (R77, DEC-167 (8)), each
+     asked at most once for each document the page shows (a row, or a file beside an archive), all under the page's one
+     wait (`HELD_PAGE_WAIT_MS`): the examinations all at once, the archive groupings `HELD_PAGE_LANES` rows at a time.
+     Nothing is asked once the wait has run out. An answer
+     not given in time is undetermined: a row's or a file's `eligible: null` with its basis; a row whose grouping did not
+     answer carries `archive: {sha256, grouping: null}` and `files: null` with `files_basis`, its files neither dropped
+     without being named nor counted as listed. A thread-blocking examination cannot be interrupted: the wait then ends
+     after the one in progress. Answers a map of the page's rows to `{eligibility, grouped}` (`grouped` null for a document
+     that holds no archive). */
+  async #pageAnswers(page2, { viewer, rowOf: rowOf18 }) {
+    const answers2 = /* @__PURE__ */ new Map();
+    if (!page2.length) return answers2;
+    const wait = _Capture.#pageWait(HELD_PAGE_WAIT_MS);
+    const examined = /* @__PURE__ */ new Map();
+    const examine = (bundleId) => {
+      if (!examined.has(bundleId)) examined.set(bundleId, this.#eligibility(bundleId, wait));
+      return examined.get(bundleId);
+    };
+    const answer2 = async (r) => {
+      const shas = this.#capturesOf(r.bundle_id);
+      const progress = { sha: shas[0] ?? null };
+      const [eligibility, group2] = await Promise.all([
+        examine(r.bundle_id),
+        shas.length === 0 ? null : wait.over() ? TOO_LATE : (() => {
+          const g = this.#archiveGroup(shas, r.bundle_id, { viewer, rowOf: rowOf18, progress, wait });
+          g.catch(() => {
+          });
+          return wait.within(g);
+        })()
+      ]);
+      if (group2 === TOO_LATE)
+        return { eligibility, grouped: {
+          archive: { sha256: progress.sha, grouping: null },
+          files: null,
+          files_basis: "the archive grouping of this document did not answer in time, so the files beside it, if it is an archive, are undetermined"
+        } };
+      if (!group2) return { eligibility, grouped: null };
+      const shown3 = await Promise.all(group2.files.slice(0, HELD_FILES_IN_ROW).map(async (f17) => {
+        const e2 = await examine(f17.document);
+        return { ...f17, grade: group2.grade, eligible: e2.eligible, ...RAN_OUT.has(e2) ? { eligibility_basis: e2.eligibility_basis } : {} };
+      }));
+      return { eligibility, grouped: {
+        archive: group2.archive,
+        files: shown3,
+        files_total: group2.files.length,
+        files_truncated: group2.files.length > HELD_FILES_IN_ROW
+      } };
+    };
+    try {
+      for (const r of page2) examine(r.bundle_id);
+      let next = 0;
+      const lane = async () => {
+        while (next < page2.length) {
+          const r = page2[next++];
+          answers2.set(r.bundle_id, await answer2(r));
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(HELD_PAGE_LANES, page2.length) }, lane));
+    } finally {
+      wait.stop();
+    }
+    return answers2;
+  }
+  /* R77 (DEC-167 (8)): an archive's row additions, when one of the row's document's captures (`shas`) is an archive
+     `acquisition.archiveList` answers for the viewer (one it opened, or one whose listing reads entries): `archive`, its
+     summary, `grade` its grade, and `files`, the held files beside it (filed, or already held and found in it) whose
+     documents are rows of this list for the viewer, in index order, each once, `{document, sha256, index, name}`; the
+     caller shows at most `HELD_FILES_IN_ROW`, each with its grade and R78's eligibility. Null for a document that holds
+     no archive, `TOO_LATE` when the page's wait ran out before it was done. `progress.sha` names the capture being asked. The entries are read through `archiveList`, a page of at
+     most 1000 at a time, never by this module's own SQL over acquisition's tables. */
+  async #archiveGroup(shas, bundleId, { viewer, rowOf: rowOf18, progress, wait }) {
     for (const sha2 of shas) {
+      if (wait.over()) return TOO_LATE;
+      progress.sha = sha2;
       let first;
       try {
         first = await this.archiveList({ archiveSha: sha2, viewer, limit: 1 });
@@ -60981,6 +61072,7 @@ var Capture = class _Capture {
       for (const state of ["filed", "already_held"]) {
         let after2 = null;
         for (; ; ) {
+          if (wait.over()) return TOO_LATE;
           let page2;
           try {
             page2 = await this.archiveList({ archiveSha: sha2, viewer, state, limit: READ_LIMIT.max, after: after2 });
@@ -61001,9 +61093,6 @@ var Capture = class _Capture {
       }
       files.sort((a, b) => a.index - b.index || (a.document < b.document ? -1 : a.document > b.document ? 1 : 0));
       const seen = /* @__PURE__ */ new Set(), unique = files.filter((f17) => seen.has(f17.document) ? false : (seen.add(f17.document), true));
-      const shown3 = [];
-      for (const f17 of unique.slice(0, HELD_FILES_IN_ROW))
-        shown3.push({ ...f17, grade: first.archive.grade ?? null, eligible: (await this.#eligibility(f17.document)).eligible });
       const sum = first.summary || {};
       return {
         archive: {
@@ -61014,23 +61103,35 @@ var Capture = class _Capture {
           not_filed: sum.not_filed ?? null,
           waiting: sum.waiting ?? null
         },
-        files: shown3,
-        files_total: unique.length,
-        files_truncated: unique.length > HELD_FILES_IN_ROW
+        grade: first.archive.grade ?? null,
+        files: unique
       };
     }
     return null;
   }
-  /* R78: one document's batch eligibility, by the registered examination (`ratification` R34): `eligible: true`, or
-     false with the class it fails first and that class's reason; with none registered, or one that fails or answers
-     neither, `eligible: null`, stated undetermined. */
-  async #eligibility(bundleId) {
+  /* R78, R91: one document's batch eligibility, by the registered examination (`ratification` R34): `eligible: true`, or
+     false with the class it fails first and that class's reason; with none registered, or one that fails, answers
+     neither, or does not answer within the page's wait (`wait`), `eligible: null`, stated undetermined with a basis
+     saying which. Once the wait has run out the examination is not asked. */
+  async #eligibility(bundleId, wait) {
     const reader = this.#readers.get("batch-examination");
     const undetermined3 = (basis) => ({ eligible: null, eligibility_basis: basis });
     if (!reader) return undetermined3("no batch-release examination is registered, so eligibility is undetermined");
+    const tooLate = () => {
+      const a = undetermined3(`${reader.module}'s examination did not answer in time, so eligibility is undetermined`);
+      RAN_OUT.add(a);
+      return a;
+    };
+    if (wait.over()) return tooLate();
     let v;
     try {
-      v = await reader.fn(bundleId);
+      const asked = reader.fn(bundleId);
+      if (asked && typeof asked.then === "function") {
+        Promise.resolve(asked).catch(() => {
+        });
+        v = await wait.within(asked);
+        if (v === TOO_LATE) return tooLate();
+      } else v = asked;
     } catch {
       v = null;
     }
