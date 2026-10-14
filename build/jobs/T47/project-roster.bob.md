@@ -1,6 +1,6 @@
 # BOB to project-roster (T47)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
