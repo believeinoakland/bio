@@ -183,7 +183,8 @@ test("R64, R34: actionreplyquoting and readtranslate are explained in affordance
 
 test("R65, R21 (N847, N1054; DEC-226, DEC-227; wizard-scripts R38): R21 read against the registry at PR #34's merge — every function act is an op or an alias and the alias table names only function acts of the file, the Where else to go screen lists no act so no spec or alias is added for it, and the update screen's three owed acts (updatestart, updatelater, updateskip; updatelater also on the queue) are each declared under their own names with no alias (negative control: an undeclared function is seen)", () => {
   const fns = regActs.filter((a) => a.status === "function");
-  assert.equal(fns.length, 88);
+  /* T49 (K3321 (B); R21): re-pinned at PR #36's merge, whose screens (DEC-235–DEC-240) carry 119 function acts (85 distinct) */
+  assert.equal(fns.length, 119);
   for (const a of fns) assert.ok(Object.hasOwn(OPS, a.op), `${a.op}: a function act with no spec`);
   /* the alias table equals the file's function acts: each alias is a function act of the file; every other function act is
      an op declared under its own name */
@@ -194,7 +195,13 @@ test("R65, R21 (N847, N1054; DEC-226, DEC-227; wizard-scripts R38): R21 read aga
   assert.deepEqual(Object.keys(OPS).filter((op) => /^elsewhere/.test(op)), []);
   assert.deepEqual(Object.keys(OP_ALIASES).filter((al) => /^elsewhere/.test(al)), []);
   const owed = regActs.filter((a) => a.status === "owed");
-  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart"]);
+  /* T49 (K3321 (B); PR #36's registry): `owed:founderhandleset K3265` is declared by R71 (membership's founder-only op, the
+     founder's set alone); the five owed acts T49 leaves out (N933, DEC-238, DEC-239) have no op yet. */
+  const OWED_T49 = ["founderhandleset"];
+  const LEFT_OUT = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem"];
+  assert.deepEqual(owedOf(regActs).sort(), ["passwordresetlink", "updatelater", "updateskip", "updatestart", ...OWED_T49, ...LEFT_OUT].sort());
+  for (const op of LEFT_OUT) assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(OP_ALIASES, op), `${op}: left out and declared`);
+  for (const op of OWED_T49) assert.ok(Object.hasOwn(OPS, op) && SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
   assert.deepEqual(owed.filter((a) => /^owed:updatelater /.test(a.op)).map((a) => a.screen).sort(), ["queue", "updates"]);
   for (const op of ["updatestart", "updatelater", "updateskip"]) {
     assert.ok(Object.hasOwn(OPS, op) && both(op) && !Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op), op);

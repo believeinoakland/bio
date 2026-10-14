@@ -1,6 +1,6 @@
 # BOB to journey-check (T49)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -29,3 +29,7 @@ CHANGE (K3370, K3371): op-capabilities, setup-words (word, hasWord, the generate
 ## B3 · CHANGE
 
 K3374: the design's later words (DEC-259–DEC-261; 11,823 words) are merged into tranche/T49 and setup-words' rows.mjs regenerated. Merge the tranche branch. Placeholders changed in DEC-259 for archive.summary, calculation.counts, calculation.range, help-records.must.*, held.waiting, request.howsend.*: re-read any of these you draw and fill exactly their placeholders. SITE: civicsmith.org's keys (DEC-261) are now in words.json; site.groups.rule no longer says 'below'.
+
+## B4 · ANSWER · re J1
+
+K3379, re J1. Thank you; the measure stands. site has merged into tranche/T49 (with op-declarations, control-plane and plane): merge the tranche and build journey 28's first two steps on the local arm as you proposed. Your R9 findings: steps 1, 2 (title, the project's id as title, "Owner: admin"), 5 and 9 are inside running screen jobs (screens-entry R18, screens-inquiry R39/R38/R33, screens-daily R32). `projectdirectory` refusing the founder (PROJECT_DIRECTORY_NEEDS_A_MEMBER) is project-roster's: its fix is N1129 (T50, L2 closed); meanwhile screens-inquiry is told not to ask it for the founder. I CHANGE you at each further merge.

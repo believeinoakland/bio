@@ -22,7 +22,7 @@
   "label": 192,
   "project": 47,
   "grouprule": 1,
-  "refusal": 1931,
+  "refusal": 1932,
   "signing": 17,
   "case": 15,
   "docket": 7,
@@ -53,7 +53,7 @@
   "wizard": 318,
   "elsewhere": 38,
   "places": 6,
-  "screen": 3212,
+  "screen": 3215,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -207,7 +207,7 @@
   "tab": 2,
   "act": 732,
   "column": 33,
-  "total": 11823,
+  "total": 11827,
   "protected": 862
  },
  "words": [
@@ -20546,7 +20546,7 @@
   },
   {
    "key": "screen.calculation.counts",
-   "en": "{visited} of {n} visited: {yes} {answer}, {no} not {answer}, {unsure} could not tell",
+   "en": "{visited} of {n} visited: {yes} yes, {no} no, {unsure} could not tell",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
@@ -20595,7 +20595,7 @@
   },
   {
    "key": "screen.calculation.range",
-   "en": "{share}% of the {judged} that could be judged were {answer} · exact {confidence}% range {low}% to {high}%",
+   "en": "{share}% of the {judged} that could be judged were yes · exact {confidence}% range {low}% to {high}%",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
@@ -21589,7 +21589,7 @@
   },
   {
    "key": "screen.due-date.of",
-   "en": "{who}'s reply to your {item}",
+   "en": "{who}'s reply",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
@@ -21722,7 +21722,7 @@
   },
   {
    "key": "screen.due-date.step.counted",
-   "en": "Counted {amount} {units}: to {date}.",
+   "en": "Counted {amount} {units}.",
    "protected": false,
    "source": "DEC-252",
    "note": "adopted from screens-investigate's own rows; DEC-259: reworded"
@@ -23927,10 +23927,10 @@
   },
   {
    "key": "screen.members.recovery.one",
-   "en": "With one administrator, the group depends on {name} and the hosting account.",
+   "en": "With one administrator, the group depends on that one person and the hosting account.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
+   "note": "adopted from screens-settings's own rows; DEC-262: reworded"
   },
   {
    "key": "screen.members.recovery.many",
@@ -25103,17 +25103,17 @@
   },
   {
    "key": "screen.connect.own.subscription",
-   "en": "The assistant serves you on your own Claude subscription ({plan}), signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.",
+   "en": "The assistant serves you on your own Claude subscription, signed in on Anthropic's page on {date}. Only you use it; your plan's own allowance applies.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
+   "note": "adopted from screens-settings's own rows; DEC-262: reworded"
   },
   {
    "key": "screen.connect.own.apikey",
-   "en": "The assistant serves you on your own Claude account (API key ending …{last4}). Only you use it; you pay for it.",
+   "en": "The assistant serves you on your own Claude account, with your own API key. Only you use it; you pay for it.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
+   "note": "adopted from screens-settings's own rows; DEC-262: reworded"
   },
   {
    "key": "screen.connect.own.thengroup",
@@ -25131,10 +25131,10 @@
   },
   {
    "key": "screen.connect.group.allowance",
-   "en": "The group pays, up to {limit} for each member, a limit your administrators set (you have used {used} of it {when}).",
+   "en": "The group pays, up to {limit} for each member, a limit your administrators set.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
+   "note": "adopted from screens-settings's own rows; DEC-262: reworded"
   },
   {
    "key": "screen.connect.group.allowance.reached",
@@ -25348,10 +25348,10 @@
   },
   {
    "key": "screen.connect.grouplimits",
-   "en": "On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member (you have used {used} of it today); suggestions {suggestions}. If they change either, this shows the new setting.",
+   "en": "On the group's key, your administrators set what it pays for and its limits. Today: at most {limit} for each member. If they change either, this shows the new setting.",
    "protected": false,
    "source": "DEC-252",
-   "note": "adopted from screens-settings's own rows; DEC-257: reworded"
+   "note": "adopted from screens-settings's own rows; DEC-262: reworded"
   },
   {
    "key": "screen.connect.disconnect.heading",
@@ -31116,6 +31116,34 @@
    "en": "There is no such page on civicsmith.org.",
    "protected": false,
    "source": "DEC-261"
+  },
+  {
+   "key": "screen.connect.group.allowance.used",
+   "en": "You have used {used} of it {when}.",
+   "protected": false,
+   "source": "DEC-262",
+   "note": "after screen.connect.group.allowance; drawn only to an account's owners, when answered"
+  },
+  {
+   "key": "screen.connect.grouplimits.used",
+   "en": "You have used {used} of it today.",
+   "protected": false,
+   "source": "DEC-262",
+   "note": "after screen.connect.grouplimits; drawn only when answered"
+  },
+  {
+   "key": "screen.connect.grouplimits.suggestions",
+   "en": "Suggestions: {suggestions}.",
+   "protected": false,
+   "source": "DEC-262",
+   "note": "after screen.connect.grouplimits; drawn only when answered"
+  },
+  {
+   "key": "refusal.DOOR_RATE_LIMITED.session",
+   "en": "You have made too many requests in the last ten minutes. Try again in {minutes} minutes. Nothing was written.",
+   "protected": false,
+   "source": "DEC-262",
+   "note": "a session's own limit, beside the connection's refusal.DOOR_RATE_LIMITED"
   },
   {
    "key": "screen.account.explain.help",
