@@ -1,6 +1,6 @@
 # BOB to answer-envelope (T47)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -31,3 +31,7 @@ K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75:
 ## B5 · CHANGE
 
 K3149: `test/m/answer-envelope/page-policy.test.mjs` imports `setupPage`, which instance-setup removes after control-plane merges (R83): re-point it to the page shape you already test (your R16 reading), merge `tranche/T47`, post COMPLETE again.
+
+## B6 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.

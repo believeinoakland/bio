@@ -572,7 +572,7 @@ test("R7: the moved checks carry their ids and words: C-19.1 and its C-19.2, C-3
 test("R8, R17: tasks and the check tables are declared to the whole-store purge only: a bundle's purge leaves them, the whole-store purge clears them", () => {
   const w = box();
   assert.deepEqual([TASKS_TABLES, tasksOwns("tasks"), tasksOwns({ name: "tasks" }), tasksOwns("queue_state")],
-    [["tasks", "check_requests", "check_todos", "check_takes", "check_records"], true, true, false]);
+    [["tasks", "check_requests", "check_todos", "check_takes", "check_records", "sign_requests", "sign_todos"], true, true, false]);
   for (const t of TASKS_TABLES) assert.equal(tasksOwns(t), true, t);
   w.bundle(DOC);
   w.task("TASK-2026-0001-a", DOC);
@@ -583,6 +583,8 @@ test("R8, R17: tasks and the check tables are declared to the whole-store purge 
   w.run(`INSERT INTO check_todos (request, member, task, at) VALUES ('chkreq-x', 'olga', 'TASK-2026-0001-a', ?)`, iso(NOW));
   w.run(`INSERT INTO check_takes (request, taker, handle, at) VALUES ('chkreq-x', 'olga', 'olga', ?)`, iso(NOW));
   w.run(`INSERT INTO check_records (check_id, request, target, checker, verdict, at) VALUES ('chk-x', 'chkreq-x', ?, 'olga', 'check', ?)`, DOC, iso(NOW));
+  w.run(`INSERT INTO sign_requests (request, case_id, edition, project, by, at, asked) VALUES ('signreq-x', 'CASE-x', 1, ?, 'olga', ?, 1)`, DOC, iso(NOW));
+  w.run(`INSERT INTO sign_todos (request, member, task, at) VALUES ('signreq-x', 'olga', 'TASK-2026-0001-a', ?)`, iso(NOW));
   assert.equal(w.record.purge({ bundleId: DOC }).scope, DOC);
   for (const t of TASKS_TABLES) assert.equal(w.all(`SELECT count(*) c FROM ${t}`)[0].c, 1, `a bundle's purge leaves ${t}`);
   const all = w.record.purge({});
@@ -671,7 +673,7 @@ test("R10: the viewer comes only from the control plane's stamp in the URL, neve
   const body = { viewer: "class:admin", actor: "alice", id: "TASK-1", to: "bob", limit: 3 };
   const ops = tasksOps(t, url, body);
   assert.deepEqual(Object.keys(ops).sort(), ["checkrecord", "checkrequest", "checkrequests", "checksof", "checktake",
-                                             "taskdrain", "taskforward", "taskresolve", "tasks"]);
+                                             "signrequest", "taskdrain", "taskforward", "taskresolve", "tasks"]);
   ops.tasks(); ops.taskdrain(); ops.taskforward(); ops.taskresolve();
   assert.deepEqual(seen, [
     ["taskList", { assignee: "alice", status: "open", refersTo: "D", limit: "5", viewer: "member:alice" }],
@@ -683,15 +685,19 @@ test("R10: the viewer comes only from the control plane's stamp in the URL, neve
                   request: "chkreq-a", verdict: "concern", reason: "r" };
   const cops = tasksOps(t, curl, cbody);
   cops.checkrequest(); cops.checktake(); cops.checkrecord(); cops.checkrequests(); cops.checksof();
+  /* R19: likewise `signrequest`'s `by` and `viewer`; the case and edition from the body */
+  tasksOps(t, curl, { ...cbody, case: "CASE-a", edition: 2 }).signrequest();
   assert.deepEqual(seen, [
     ["checkRequest", { target: "INFO-1", label: "CPA", member: null, note: "n", by: "olga", viewer: "member:olga" }],
     ["checkTake", { request: "chkreq-a", by: "olga" }],
     ["checkRecord", { request: "chkreq-a", verdict: "concern", reason: "r", by: "olga" }],
     ["checkRequests", { viewer: "member:olga", after: "chkreq-a", limit: "7" }],
-    ["checksOf", { target: "INFO-1", viewer: "member:olga" }]]);
+    ["checksOf", { target: "INFO-1", viewer: "member:olga" }],
+    ["signRequest", { case: "CASE-a", edition: 2, by: "olga", viewer: "member:olga" }]]);
   seen.length = 0;
   const unstamped = tasksOps(t, new URL("http://do/x"), cbody);
   unstamped.checkrequest(); unstamped.checktake(); unstamped.checkrecord(); unstamped.checkrequests(); unstamped.checksof();
+  unstamped.signrequest();
   for (const [, a] of seen) { assert.equal(a.by ?? null, null); assert.equal(a.viewer ?? null, null); }
   const bare = tasksOps(t, new URL("http://do/x"), { viewer: "class:admin" });
   seen.length = 0; bare.tasks();

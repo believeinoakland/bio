@@ -16,6 +16,9 @@ import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
 import { actionRepliesOf } from "../../../src/action-replies/index.mjs";
 import { planWorkOf } from "../../../src/plan-work/index.mjs";
+/* T47 (N961 §5): the receipt, scope and promise are action-records' acts since the actions split (K3128), driven on the
+   action-records instance of the fixture's host (the one `actions` creates at its own creation). */
+import { actionRecordsOf } from "../../../src/action-records/index.mjs";
 
 const A = "ACTN-2026-0001-a";
 const ALICE = V("alice");
@@ -53,7 +56,7 @@ test("R51 R14: an action's facts are asked through the reads its acts' refusals 
 });
 
 test("R51 R18: each act the facts offer on an action is accepted from that caller, well-formed, and each withheld is "
-   + "refused by its own state refusal — pressure, hold, release, the hold notice, receipt, scope and promise", () => {
+   + "refused by its own state refusal — pressure, hold, release, the hold notice, and action-records' receipt, scope and promise", () => {
   const { w, offered } = holdsScene();
   /* before any mark or hold: pressure offered, release and the notice withheld */
   let acts = offered();
@@ -69,11 +72,11 @@ test("R51 R18: each act the facts offer on an action is accepted from that calle
   /* each offered act, performed */
   assert.equal(w.h.actionPressure({ target: A, ord: 1, pressure: { kind: "legal", note: "a threat" }, viewer: ALICE, author: ALICE }).ok, true);
   assert.equal(w.h.actionHold({ target: A, ord: 1, hold: "in_place", reason: "preserving", viewer: ALICE, author: ALICE }).ok, true);
-  const rc = w.a.actionReceipt({ target: A, ord: 0, at: "2026-09-02", how: "by email", account: "they wrote back", viewer: ALICE, author: ALICE });
+  const rc = actionRecordsOf(w.host).actionReceipt({ target: A, ord: 0, at: "2026-09-02", how: "by email", account: "they wrote back", viewer: ALICE, author: ALICE });
   assert.equal(rc.ok, true, JSON.stringify(rc).slice(0, 300));
-  const sc = w.a.actionScope({ target: A, confidential: true, reason: "the office must not learn of it", viewer: ALICE, author: ALICE });
+  const sc = actionRecordsOf(w.host).actionScope({ target: A, confidential: true, reason: "the office must not learn of it", viewer: ALICE, author: ALICE });
   assert.equal(sc.ok, true, JSON.stringify(sc).slice(0, 300));
-  const pr = w.a.actionPromise({ target: A, kind: "embargo", text: "held until the vote", viewer: ALICE, author: ALICE });
+  const pr = actionRecordsOf(w.host).actionPromise({ target: A, kind: "embargo", text: "held until the vote", viewer: ALICE, author: ALICE });
   assert.equal(pr.ok, true, JSON.stringify(pr).slice(0, 300));
   /* now marked and held: pressure withheld (and refused), the release and the notice offered (and accepted) */
   acts = offered();
@@ -98,9 +101,9 @@ test("R51 R10 R20: a machine is offered none of the acts in MACHINE_REFUSALS, an
     actionholdrelease: () => w.h.actionHoldRelease({ target: A, ord: 1, reason: "r", viewer: ALICE, author: MACHINE }),
     actionpressure: () => w.h.actionPressure({ target: A, ord: 1, pressure: { kind: "legal", note: "n" }, viewer: ALICE, author: MACHINE }),
     holdnoticesent: () => w.h.holdNoticeSent({ place: { target: A, ord: 1 }, at: "2026-09-05", account: "a", viewer: ALICE, author: MACHINE }),
-    actionreceipt: () => w.a.actionReceipt({ target: A, ord: 0, at: "2026-09-02", how: "h", account: "a", viewer: ALICE, author: MACHINE }),
-    actionscope: () => w.a.actionScope({ target: A, confidential: true, reason: "r", viewer: ALICE, author: MACHINE }),
-    actionpromise: () => w.a.actionPromise({ target: A, kind: "embargo", text: "t", viewer: ALICE, author: MACHINE }),
+    actionreceipt: () => actionRecordsOf(w.host).actionReceipt({ target: A, ord: 0, at: "2026-09-02", how: "h", account: "a", viewer: ALICE, author: MACHINE }),
+    actionscope: () => actionRecordsOf(w.host).actionScope({ target: A, confidential: true, reason: "r", viewer: ALICE, author: MACHINE }),
+    actionpromise: () => actionRecordsOf(w.host).actionPromise({ target: A, kind: "embargo", text: "t", viewer: ALICE, author: MACHINE }),
     /* the owners the plane composes at T45-47, each on the same host */
     clockstate: () => actionClocksOf(w.host, { record: w.record, membership: w.membership })
       .clockState({ target: A, text: "t", date: "2026-10-01", basis_kind: "window", viewer: ALICE, author: MACHINE }),
