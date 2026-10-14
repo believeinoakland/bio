@@ -16,3 +16,7 @@ Inherited reds: the plan's rule 5 as it stands at your START; none is yours unle
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Merge order in L2: membership, project-roster, credentials, promotion last (the stamp).
+
+## B2 · ANSWER · re J1
+
+Your reading of the string positions stands. R29 now also reaches R3's, R4's and R5's answers (have, awaiting, deciders, owners, by, and the owners a refusal names): a handle field names the founder by her held handle or null, never admin; founder: true only on {member, handle} objects. R23's by is a member id other modules read: it keeps admin. R29's text says so (K3332, on tranche/T49): merge the tranche branch, apply it, and record COMPLETE again. Membership's merge follows as a CHANGE.
