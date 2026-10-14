@@ -27,3 +27,7 @@ K3144: 1. pass `background: true` to admission's `admit`/`readerOf` when the que
 ## B4 · CHANGE
 
 K3145 (SCREENS-INVESTIGATE #1 J1 B6): `clockpropose` is in `OPS` but no route serves it (`unknown op`); route it to its owner (action-clocks) with T47's ops (R79), tested.
+
+## B5 · CHANGE
+
+K3147: op-grades is merged; your `totality.test.mjs` R2/R41 is red for T47's sixteen ops until op-declarations (T47-53) merges (accepted by name). Merge `tranche/T47` when convenient.
