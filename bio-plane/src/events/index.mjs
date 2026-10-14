@@ -70,12 +70,15 @@ export const STATUSES = Object.freeze(["EventScheduled", "EventCancelled", "Even
 /* K1465. There is no payer or payee role: a payer or payee lives on the money fact. */
 export const ROLES = Object.freeze(["actor", "organizer", "mover", "seconder", "voted", "present", "speaker", "sender",
   "recipient", "copied", "signatory", "decider", "author", "implementer", "party", "subject"]);
-export const RELATION_KINDS = Object.freeze(["authorises", "answers", "amends", "reverses", "stated_cause", "within"]);
+/* T48 (R51): `precedes` records which came first when no date settles it, cited and read by `sequence`. */
+export const RELATION_KINDS = Object.freeze(["authorises", "answers", "amends", "reverses", "stated_cause", "within", "precedes"]);
 
 /* R27, R29: the read bound, as entities' name lookup and the query language's. */
 export const LIMIT_DEFAULT = 100;
 export const LIMIT_MAX = 500;
 export const REASON_MAX = 2000;
+/* R50 (T48): at most this many participants are answered on one timeline item, with their total. */
+export const ITEM_PARTICIPANTS_MAX = 50;
 /* R35 (T37-11): at most this many owner answers and waiting batch entries are kept between reads (a hub's votes, their pages and the batches waiting, with room). */
 const KEPT_MAX = 20000;
 const clamp = (limit) => Math.max(1, Math.min(Math.trunc(Number(limit)) || LIMIT_DEFAULT, LIMIT_MAX));
@@ -928,11 +931,20 @@ export class Events {
       if (machine) return refuse("CAUSE_NOT_MACHINE", "a stated cause is held only from a named source by a member; the machine never writes one");
       if (isObj(attestation) && attestation.testimony !== undefined)
         return refuse("CAUSE_NEEDS_SOURCE", "a cause is held only as a named source's claim; a member's own hypothesis is not held here (K1467)");
+    } else if (kind === "precedes") {
+      if (machine || !said(by)) return refuse("MEMBER_ACT_ONLY", "only a member records which of two events came first; the machine infers no order (R41)");
     } else if (machine && kind !== "within")
       return refuse("RELATION_NOT_MACHINE", "the machine writes no relation but within (R41)");
     const x = this.#attestationFrom(attestation, by);
     if (!x.ok) return x;
     if (kind === "within" && this.#withinLoops(f, t)) return refuse("WITHIN_CYCLE", "that within would make an event lie within itself");
+    /* R51: an order is cited only where the two events' dates leave it undetermined (R31) at the act */
+    if (kind === "precedes") {
+      const d = this.#datedOrder(f, t);
+      if (d.answer !== "undetermined")
+        return refuse("ORDER_ALREADY_DATED", `the two events' dates already answer which came first: ${f} ${d.answer} ${t}; `
+          + "a cited order is held only for a pair no date settles", { answer: d.answer });
+    }
     const prior = this.#one(`SELECT r.relation_id FROM event_relations r JOIN event_attestations a ON a.attestation_id = r.attestation_id
                               WHERE r.from_event=? AND r.to_event=? AND r.kind=? AND r.withdrawn_at IS NULL AND a.form=?
                                 AND a.dated_fact_id IS ? AND a.capture_sha IS ? AND a.extent IS ? AND a.source_row IS ? AND a.statement IS ?`,
@@ -1009,25 +1021,31 @@ export class Events {
              date: a.value != null ? { value: a.value, precision: a.precision, zone: a.zone } : null,
              grade: a.grade, by: hidden ? null : a.by_actor, at: a.at };
   }
-  /* R12: the participant's entity resolution in the attesting capture, the strongest, beside the attestation's grade. */
-  #resolutionGrade(entityId, a) {
+  /* R12: the participant's entity resolution in the attesting capture, the strongest, beside the attestation's grade.
+     `memo`, when given, keeps each capture's resolutions for the rest of one read (R50: a timeline's many participants). */
+  #resolutionGrade(entityId, a, memo = null) {
     if (!a || !a.capture_sha) return null;
     try {
-      const r = this.#ents.resolutionsFor({ captureSha: a.capture_sha, limit: 5000, viewer: "class:admin" });
+      let list = memo ? memo.get(a.capture_sha) : undefined;
+      if (list === undefined) {
+        const r = this.#ents.resolutionsFor({ captureSha: a.capture_sha, limit: 5000, viewer: "class:admin" });
+        list = (r && r.resolutions) || [];
+        if (memo) memo.set(a.capture_sha, list);
+      }
       let best = null;
-      for (const x of (r && r.resolutions) || [])
+      for (const x of list)
         if (x.entity_id === entityId && (!best || (gradeRank[x.grade] || 0) > (gradeRank[best] || 0))) best = x.grade;
       return best;
     } catch { return null; }
   }
-  #participantView(p, viewer, attById) {
+  #participantView(p, viewer, attById, memo = null) {
     const a = attById.get(Number(p.attestation_id)) || this.#one(`SELECT * FROM event_attestations WHERE attestation_id=?`, p.attestation_id);
     const checked = p.role === "voted" && this.#voteValues() !== null;
     return { participant_id: Number(p.participant_id), entity_id: p.entity_id, role: p.role,
              ...(p.role === "voted" ? { vote_value: p.vote_value, vote_value_checked: checked,
                  ...(checked ? {} : { vote_value_why: "no active jurisdiction profile names vote values, so the value is kept as the record writes it" }) } : {}),
              attestation_id: Number(p.attestation_id),
-             grades: { attestation: a ? a.grade : null, resolution: this.#resolutionGrade(p.entity_id, a) },
+             grades: { attestation: a ? a.grade : null, resolution: this.#resolutionGrade(p.entity_id, a, memo) },
              by: p.by_actor, at: p.at,
              superseded: p.superseded_by != null
                ? { by_row: Number(p.superseded_by), by: p.superseded_actor, at: p.superseded_at, reason: p.superseded_why } : null };
@@ -1077,18 +1095,16 @@ export class Events {
     return { ok: true, found: true, ...(id !== eventId.trim() ? { alias_of: id, asked: eventId.trim() } : {}), event: v };
   }
 
-  /* The live events an entity takes part in (with its roles) or which concern it, each with its when, in sight. */
+  /* The live events an entity takes part in (with its roles) or which concern it, each with its when, in sight. Each
+     role is kept with the attestation it rests on, so a role is answered only through an attestation in sight (R40). */
   #eventsOfEntity(entity, viewer, { kinds = null, roles = null } = {}) {
     const byEvent = new Map();
+    const entry = (id) => { if (!byEvent.has(id)) byEvent.set(id, { parts: [], concerns: false }); return byEvent.get(id); };
     for (const p of this.#rows(`SELECT event_id, role, attestation_id FROM event_participants WHERE entity_id=? AND superseded_by IS NULL`, entity)) {
       if (roles && !roles.includes(p.role)) continue;
-      if (!byEvent.has(p.event_id)) byEvent.set(p.event_id, { roles: new Set(), atts: new Set(), concerns: false });
-      byEvent.get(p.event_id).roles.add(p.role); byEvent.get(p.event_id).atts.add(Number(p.attestation_id));
+      entry(p.event_id).parts.push([p.role, Number(p.attestation_id)]);
     }
-    if (!roles) for (const c of this.#rows(`SELECT event_id FROM event_concerns WHERE end_id=?`, entity)) {
-      if (!byEvent.has(c.event_id)) byEvent.set(c.event_id, { roles: new Set(), atts: new Set(), concerns: false });
-      byEvent.get(c.event_id).concerns = true;
-    }
+    if (!roles) for (const c of this.#rows(`SELECT event_id FROM event_concerns WHERE end_id=?`, entity)) entry(c.event_id).concerns = true;
     return this.#itemsFor(byEvent, viewer, kinds);
   }
   #itemsFor(byEvent, viewer, kinds) {
@@ -1099,8 +1115,8 @@ export class Events {
       const atts = this.#visibleAttestations(id, viewer);
       if (!atts.length) continue;
       const seen = new Set(atts.map((a) => Number(a.attestation_id)));
-      const roles = [...x.roles].filter(() => [...x.atts].some((a) => seen.has(a)));
-      if (!roles.length && !x.concerns && x.roles.size) continue;
+      const roles = [...new Set(x.parts.filter(([, a]) => seen.has(a)).map(([role]) => role))];
+      if (!roles.length && !x.concerns && x.parts.length) continue;
       const w = this.#whenRead(id);
       const when = w.when === "undetermined" || (w.governing != null && !seen.has(Number(w.governing))) ? null : w.when;
       const item = { event_id: id, kind: ev.kind, status: ev.status, when, ...(w.when === "undetermined" ? { why: "cache stale" } : {}),
@@ -1165,7 +1181,9 @@ export class Events {
       const r = this.#range(all.filter((i) => i.when), from, to);
       if (r.bad) return refuse("BAD_DATE", r.bad);
       const b = this.#bounded([...r.items, ...all.filter((i) => !i.when)], limit);
-      answer.world = { label: "what they did", items: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
+      const drawn = this.#drawn([...b.items, ...b.placed_nowhere].map((i) => i.event_id), viewer);
+      const draw = (i) => ({ ...i, ...drawn.get(i.event_id)(i) });
+      answer.world = { label: "what they did", items: b.items.map(draw), placed_nowhere: b.placed_nowhere.map(draw), limit: b.limit, truncated: b.truncated };
     }
     if (want.includes("ours")) {
       const cap = clamp(limit);
@@ -1190,27 +1208,81 @@ export class Events {
     }
     return answer;
   }
+  /* R50: what the timeline screen draws for each world item without reading each event: its participants as R26
+     answers them (superseded rows left out, at most ITEM_PARTICIPANTS_MAX, with the total), and the grade of its
+     governing attestation, or null with why for an item placed nowhere. Only what the viewer may see is answered or
+     counted (R40). Answers, for each event id, a function of its item (whose `when` says whether it is placed). */
+  #drawn(eventIds, viewer) {
+    const gov = this.#governingMany(eventIds), memo = new Map(), out = new Map();
+    for (const id of eventIds) {
+      const atts = this.#visibleAttestations(id, viewer);
+      const attById = new Map(atts.map((a) => [Number(a.attestation_id), a]));
+      const live = this.#rows(`SELECT * FROM event_participants WHERE event_id=? AND superseded_by IS NULL ORDER BY participant_id`, id)
+        .filter((p) => attById.has(Number(p.attestation_id)));
+      const participants = live.slice(0, ITEM_PARTICIPANTS_MAX).map((p) => this.#participantView(p, viewer, attById, memo));
+      const g = gov.get(id);
+      out.set(id, (item) => {
+        const placed = !!item.when && g && attById.has(Number(g.attestation_id));
+        return { participants, participants_total: live.length, participants_truncated: live.length > ITEM_PARTICIPANTS_MAX,
+                 grade: placed ? g.grade ?? null : null,
+                 ...(placed ? {} : { grade_why: item.why === "cache stale"
+                   ? "its time could not be read (cache stale), so no governing attestation is answered"
+                   : "placed nowhere: no attestation you can see dates this event, so none governs its time" }) };
+      });
+    }
+    return out;
+  }
+
   /* An event of the set, with the events within it and those that concern it. */
   #eventsAround(eventId, viewer) {
     const id = this.#resolve(eventId);
     if (!id) return [];
-    const byEvent = new Map([[id, { roles: new Set(), atts: new Set(), concerns: false }]]);
+    const byEvent = new Map([[id, { parts: [], concerns: false }]]);
     for (const r of this.#rows(`SELECT from_event FROM event_relations WHERE to_event=? AND kind='within' AND withdrawn_at IS NULL`, id))
-      byEvent.set(r.from_event, { roles: new Set(), atts: new Set(), concerns: false });
+      byEvent.set(r.from_event, { parts: [], concerns: false });
     for (const c of this.#rows(`SELECT event_id FROM event_concerns WHERE end_id=?`, id))
-      byEvent.set(c.event_id, { roles: new Set(), atts: new Set(), concerns: true });
+      byEvent.set(c.event_id, { parts: [], concerns: true });
     return this.#itemsFor(byEvent, viewer, null);
   }
 
-  /** R31: before, after or undetermined with why; computed on each read, never stored. */
+  /* R31: the order two events' whens give, `{answer, why?, stale?}`, from their dates alone. */
+  #datedOrder(ia, ib) {
+    const wa = this.#whenRead(ia), wb = this.#whenRead(ib);
+    if (wa.when === "undetermined" || wb.when === "undetermined") return { answer: "undetermined", why: "cache stale", stale: true };
+    const s = sequenceOf(wa.when, wb.when);
+    return typeof s === "string" ? { answer: s } : { answer: "undetermined", why: s.why };
+  }
+  /* R51: the standing `precedes` relations joining `ia` and `ib` directly that `viewer` may see, oldest first, each with
+     the order it states (`before`: `ia` came first) and its two grades. Never a chain. */
+  #citedOrders(ia, ib, viewer) {
+    const sees = this.#seer(viewer);
+    return this.#rows(`SELECT r.*, a.bundle_id FROM event_relations r JOIN event_attestations a ON a.attestation_id = r.attestation_id
+                       WHERE r.kind='precedes' AND r.withdrawn_at IS NULL AND ((r.from_event=? AND r.to_event=?) OR (r.from_event=? AND r.to_event=?))
+                       ORDER BY r.relation_id`, ia, ib, ib, ia)
+      .filter((r) => sees(r.bundle_id))
+      .map((r) => ({ relation_id: Number(r.relation_id), from: r.from_event, to: r.to_event,
+                     answer: r.from_event === ia ? "before" : "after", grade: this.#relationView(r, viewer).grade }));
+  }
+
+  /** R31, R51: before, after or undetermined with why; computed on each read, never stored. Where the dates leave the
+   *  order undetermined, a standing cited `precedes` relation between the two answers it, `basis: "cited"`; where the
+   *  dates settle it, they govern and each such relation is answered beside, agreeing or not. */
   sequence({ a, b, viewer = "class:admin" } = {}) {
     const ia = this.#resolve(a), ib = this.#resolve(b);
     if (!ia || !ib) return noSuchEvent(!ia ? a ?? null : b ?? null);
-    const wa = this.#whenRead(ia), wb = this.#whenRead(ib);
-    if (wa.when === "undetermined" || wb.when === "undetermined") return { ok: true, a: ia, b: ib, answer: "undetermined", why: "cache stale" };
-    const s = sequenceOf(wa.when, wb.when);
-    return typeof s === "string" ? { ok: true, a: ia, b: ib, answer: s }
-      : { ok: true, a: ia, b: ib, answer: "undetermined", why: s.why };
+    const d = this.#datedOrder(ia, ib), base = { ok: true, a: ia, b: ib };
+    if (d.stale) return { ...base, answer: "undetermined", why: d.why };
+    const cited = this.#citedOrders(ia, ib, viewer);
+    if (d.answer !== "undetermined")
+      return { ...base, answer: d.answer, basis: "dates",
+               ...(cited.length ? { cited: cited.map(({ answer, ...c }) => ({ ...c, agrees: answer === d.answer })) } : {}) };
+    if (!cited.length) return { ...base, answer: "undetermined", why: d.why };
+    const ids = cited.map((c) => c.relation_id);
+    if (new Set(cited.map((c) => c.answer)).size > 1)
+      return { ...base, answer: "undetermined", why: "the cited orders disagree", relation_ids: ids, dates_why: d.why };
+    const c = cited[0];
+    return { ...base, answer: c.answer, basis: "cited", relation_id: c.relation_id, grade: c.grade, relation_ids: ids,
+             dates_why: d.why, says: "the cited relation states which came first; the dates held do not settle it" };
   }
 
   /** R32: who a communication, issuance or meeting was sent to, copied to, or who was present: never who knew or saw. */
