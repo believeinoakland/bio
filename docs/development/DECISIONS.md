@@ -4066,3 +4066,17 @@ response: **The design session, 2026-10-14.** (1) **Keyed:** 56 new keys (admiss
 decided: 2026-10-14 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-t49.src.py` (DEC-258), `screens/words-reads.src.mjs`, `screens/words-reads.json`; `words.json`.
 owed: (BOB, K3366) each L11 module reads exactly its `reads` through `word(key, vars)`, holds none of its English, and its `renamed` keys take the design's; its requirements name keys, not sentences; `unkeyed` stays in source. (design) `refusal.AGENT_WORKER_UNBOUND`'s words (they speak of signing in; the module reads `ai.refused.notdeployed` meanwhile); a group's own draft note distinct from `draft.machine.label`; the other 147 modules (DEC-260).
+
+### DEC-259 · answered
+raised: 2026-10-14 · the UX design session with Bob on his primary account (session_01BTQuPg86LEUTdpXJuPbtM2; the development process also runs on his primary account since K1428) (DEC-257's owed: line; Bob, 14 October: "Move all the strings.")
+for: bob-session
+question: The drawn sentences on the 58 screens off T49's path that no keyed word matched.
+why it is Bob's: design detail beneath K3268 and K3365; decided by the design session, reported to Bob as done.
+provisional: 688 drawn sentences on 58 screens matched no keyed word.
+alternative: none: the guard's baseline may only fall.
+recommendation: as below.
+reversal cost: low: words and drawings only.
+response: **The design session, 2026-10-14.** Every screen draws only keyed words: 688 to 0 on the 58 screens, 0 on all 69; `screens/words-drawn-baseline.json` is all zeros, so any new unkeyed sentence fails the build. 281 new keys (`screen.<id>.<slug>`, templates where a sentence carries sample data) and 77 reworded (mostly modules' old rows, DEC-252, where the drawing governs), in `screens/words-drawn.src.py`. Drawings: about 100 sample records marked `.mk-data`; about 25 buttons take their act's label; about 15 sentences take a design key's wording (the shorter key governing, its detail dropped); three pronouns and one internal code corrected.
+decided: 2026-10-14 · the design session (P17)
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `words-drawn.json`, `build_words.mjs` (4m), `check_words_drawn.mjs`, `words-drawn-baseline.json`, `mock-screens.js`, `mock-shell.js`; `words.json`.
+owed: (BOB, N1116, T50) the screen modules read these keys; rewordings that change placeholders (`archive.summary`, `calculation.counts`, `calculation.range`, `help-records.must.*` with `{cite}`, `held.waiting`, `request.howsend.*`) supply the new ones. (design) the ceremony screen's sentence on saving a signing key as a file, which contradicts "never leaves" this device: settle which is true.
