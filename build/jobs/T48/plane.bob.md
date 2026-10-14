@@ -23,3 +23,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, machinery-producers,
 ## B2 · ANSWER · re J1
 
 K3293: your reading is right and is now the requirement's wording: plane R55 and control-plane R93 name the in-process strings trace and memberRef (gatedOp's hook parameters for ask, the ask and draft RPC args, transcription's argument, dispatchMemberRun's args). Merge origin/tranche/T48 into your branch. instance-setup's R50/R52 services: build against stand-ins as you say and re-run once it merges; I will tell you.
+
+## B3 · ANSWER · re J2
+
+K3295: your readtranslate reads are right (bundleInfo gated by inSight, NO_SUCH_BUNDLE, the bundle's title; hypotheses.notesOf paged, NO_SUCH_NOTE; network-notices.noticesOf, the latest revision). No inquiry read is added.
