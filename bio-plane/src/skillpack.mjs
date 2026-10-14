@@ -156,7 +156,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./run-rules/index.mjs";
    two suites, and the pack composes them. */
 import { judgementLayers, actionPlanningLayer, filingDraftingLayer, editionStatementLayer, wizardAuthoringLayer,
          legalLookupLayer, askLayer, suggestionsLayer, writingHelpLayer, interfaceTranslationLayer,
-         actionDraftingLayer, procedureGuideLayer,
+         actionDraftingLayer, readingTranslationLayer, procedureGuideLayer,
          readingGuideLayer, enquireLayer, exploreLayer, readingLayer, caseAccountLayer, accountCheckLayer,
          RESEARCH_BOUNDARY_CLAUSES, RESEARCH_BOUNDARY_NOTE, SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
 export { SKILL_CHECKS, SKILL_CHECK_KEYS };
@@ -266,6 +266,8 @@ export const SOURCING = {
   interface_translation_unpublished: "absent", /* while op=affordances publishes no translation draft act (R39) */
   action_drafting: "authored",  /* skilldoctrine.mjs, BIO_Action_v0_2.md §4 rules 1-3, 9, 12, 16, 19, 21 (R45), the status report task (R48) */
   action_drafting_unpublished: "absent", /* while op=affordances publishes none of the action draft acts nor the status report act (R45, R48) */
+  reading_translation: "authored", /* skilldoctrine.mjs, Interaction Constructs §L, DEC-127 (3), (4), DEC-157 (6) (R49) */
+  reading_translation_unpublished: "absent", /* while op=affordances publishes no reading translation act (R49) */
   procedure_guide: "guide",     /* reading-guides procedureGuidesFor's items, passed by the caller, scanned by R16 (R46) */
   procedure_guide_none: "absent", /* while the caller passes no procedure guide (R46) */
   research_boundary: "authored", /* skilldoctrine.mjs, ladders §9.4 and Roles §3 rules 11, 12, resident (R2, R37, R38) */
@@ -552,6 +554,10 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScri
        an audience, bearings on a reply) works under, with its acts read from the published catalogue; R48 (T46; N920):
        and the status report task, its act read on its own; a stated absence while the plane publishes none of them. */
     action_drafting: actionDraftingLayer(catalog),
+    /* R49 (T48; N670; DEC-127 (3), (4)). The doctrine a draft translating the group's own writing into a member's
+       language works under, with its act read from the published catalogue; a stated absence while the plane publishes
+       no reading translation act. */
+    reading_translation: readingTranslationLayer(catalog),
     /* R46 (T45; N858). The procedure guides for the kind of action a run or draft concerns, passed by its caller
        (`reading-guides.procedureGuidesFor`, its R13), their items only and scanned by R16, or a stated absence. */
     procedure_guide: procedureGuideLayer(procedureGuides),

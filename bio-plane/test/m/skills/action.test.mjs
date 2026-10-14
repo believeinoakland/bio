@@ -261,7 +261,9 @@ test("R46 the procedure_guide layer: with no guide passed, a stated absence in R
   const bare = renderPack(published());
   assert.deepEqual(bare.disclosed.procedure_guide, procedureGuideLayer(null));
   const keys = Object.keys(bare.disclosed);
-  assert.equal(keys.indexOf("procedure_guide"), keys.indexOf("action_drafting") + 1, "after action_drafting");
+  /* After action_drafting and, since T48, reading_translation (R49), which follows it. */
+  assert.equal(keys.indexOf("procedure_guide"), keys.indexOf("reading_translation") + 1, "after reading_translation");
+  assert.ok(keys.indexOf("action_drafting") < keys.indexOf("procedure_guide"), "after action_drafting");
   const pack = renderPack(published(), { procedure_guides: answer() });
   const layer = pack.disclosed.procedure_guide;
   assert.equal(layer.sourcing, "guide");
