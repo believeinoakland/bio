@@ -772,7 +772,8 @@ test("R19: every `reasoned` op this fixture can reach, called well-formed but wi
     withdrawconclusion: () => GET(`op=withdrawconclusion&token=${W.IRIS}&target=${E(INQ)}&project=${W.PA}`),
     projectownerremove: () => POST(`op=projectownerremove&token=${W.IRIS}&projectId=${W.PC}&handle=pam`),
     projectownerrescue: () => POST(`op=projectownerrescue&token=${W.RUTH}&projectId=${W.PR}&handle=ruth`),
-    adminremove: () => POST(`op=adminremove&token=${W.FOUNDER}`, { memberId: "ruth" }),
+    /* adminremove (K3152): a password-again act since op-declarations R58, whose gate the plane does not yet route to its
+       store; its reason refusal is driven at membership's interface in backing.test.mjs */
     connectionassert: () => POST(`op=connectionassert&token=${W.IRIS}`, { a: W.INFO, b: W.INFO2 }),
     filemembershipjudge: () => POST(`op=filemembershipjudge&token=${W.IRIS}`, { id: 1, verdict: "confirm" }),
   };
@@ -816,7 +817,7 @@ test("R19: the reasoned registry, progression and theme acts, and intent's three
 test("R19: together the two drives reach every op RUNGS grades `reasoned`", () => {
   const driven = ["release", "dispose", "sever", "reinstate", "conclude", "reopen", "inquirydivide", "inquiryground",
     "actionmove", "versionreject", "versionconsider", "withdrawconclusion", "projectownerremove", "projectownerrescue",
-    "adminremove", "connectionassert", "filemembershipjudge", "relationdeclare", "aliaswithdraw", "relationwithdraw",
+    "adminremove" /* backing.test.mjs, K3152 */, "connectionassert", "filemembershipjudge", "relationdeclare", "aliaswithdraw", "relationwithdraw",
     "discharge", "proposedispose", "themewithdraw", "goalclose", "aspirationdepart", "aspirationretire",
     "biasdebtresolve", "actionrisktier", "reevaluationrecord", "narrow", "triage" /* narrow, triage: backing.test.mjs */,
     /* layer 9's six (K264), at their own modules' interfaces: backing.test.mjs */
