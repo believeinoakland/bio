@@ -26,4 +26,4 @@
 - `checks/ownership.mjs bio calculations tranche/T48`: 0 failures.
 - `checks/run.mjs` over the product: architecture 3277 product files, 0 failures; format 0 failures; channels 0 failures; coverage 45 failures, all in other modules (none in calculations).
 
-Size (session_012CZbwA3WkToxkTZ5ddZfrq): test runs 9, module lines 3398
+Size (session_012CZbwA3WkToxkTZ5ddZfrq): test runs 9, module lines 3399
