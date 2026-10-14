@@ -1,6 +1,6 @@
 # BOB to plane (T47)
 
-**Read** · handled J5
+**Read** · handled J8
 
 ## B1 · START
 
@@ -51,3 +51,15 @@ K3161: queue merged into tranche/T47 (R53). Merge tranche/T47 into your branch n
 ## B10 · CHANGE
 
 K3164: answer-envelope merged into tranche/T47 (R6 img-src 'self' data: blob:; R14 C-69.6 retired, DISCLOSURE_DUE decorated C-29.40; R15; R16 interfacePage at / and /app/*, C-69.7 SIGNINTRACE_NOT_TEST). Merge tranche/T47 into your branch now and re-run; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B11 · CHANGE
+
+K3167: store-door and signin-door are merged into tranche/T47. Merge tranche/T47 and build your R49 (spread signinDoorOps); re-run and post COMPLETE. Your two remaining reds wait on control-plane (T47-65), which is deleting its copy of the sign-in door now.
+
+## B12 · ANSWER · re J7
+
+K3170: the edge plane → signin-door is in modules.json and your Uses names it. Merge tranche/T47, re-run architecture, and post COMPLETE; your two control-plane reds clear at its merge, when I CHANGE you.
+
+## B13 · CHANGE
+
+K3171: control-plane is merged into tranche/T47 (R81/R82, the signin-door routing, of.actionClocks for clockpropose). Merge tranche/T47; your two control-plane reds should clear; post COMPLETE.

@@ -17,7 +17,7 @@ function recorder(answers = {}) {
 /* Each getter of `of` answers one shared recorder, and each asking is logged by the getter's name in `asked`, so a test
    sees which owner an op reached. `caseAuthoring` is offered too, so a route through it would be seen (R71, K2656). */
 const GETTERS = ["aiUse", "aiRuns", "caseAccount", "caseAuthoring", "review", "legEarning", "capture", "steps",
-                 "investigation", "questionExplorer"];
+                 "investigation", "questionExplorer", "actionClocks"];
 function owners(answers) {
   const r = recorder(answers);
   const asked = [];
@@ -174,4 +174,13 @@ test("R71 (steps R9): the store-internal `capturestepproduct` ties a landed capt
   const unseen = serve("capturestepproduct", { query: { viewer: "member:bea", by: "member:bea" }, body: { step: "STP-1", capture: sha },
                                                answers: { step: () => ({ ok: false, reason: "NO_SUCH_STEP" }) } });
   assert.deepEqual([unseen.out.reason, unseen.log.map((l) => l.method)], ["NO_SUCH_STEP", ["step"]]);
+});
+
+test("R79 (T47; K3145; action-clocks R2): `clockpropose` calls action-clocks' `clockPropose` by name, through `of.actionClocks()`, with the body's or the address's `target` and `rule`, `proposer` and `viewer` the door's stamps, never the body's (negative control: a forged body proposer and viewer lose; no other owner is asked)", () => {
+  for (const [query, body] of [[{ target: "ACT-1", rule: "r-30" }, {}], [{}, { target: "ACT-1", rule: "r-30" }]]) {
+    const { log, asked } = serve("clockpropose", { query: { ...query, proposer: "ann", viewer: "member:ann" },
+                                                   body: { ...body, proposer: FORGED, viewer: FORGED } });
+    assert.deepEqual(asked, ["actionClocks"]);
+    assert.deepEqual(log, [{ method: "clockPropose", args: { target: "ACT-1", rule: "r-30", proposer: "ann", viewer: "member:ann" } }]);
+  }
 });

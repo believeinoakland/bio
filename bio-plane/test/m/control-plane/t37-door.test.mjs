@@ -1,5 +1,5 @@
-/* control-plane T37 (T37-33): R57's third draft (`translationdraft`), R65 (a member's own Claude sign-in relayed to their
-   own runner), R66 (instance-setup's translation ops), R67 (case-carriage's photo marks) and R68 (`setpassword`). Driven
+/* control-plane T37 (T37-33): R57's third draft (`translationdraft`), the sign-in door's routing (R2, to signin-door since T47; was
+   R65), R66 (instance-setup's translation ops), R67 (case-carriage's photo marks) and R68 (`setpassword`). Driven
    through `makeFetch(hooks)` over the harness's store, which records every request the plane makes, with a stand-in
    `AGENT_WORKER` binding that records each request it is sent and a stand-in object `draft` (plane's `draftOnObject`). */
 import { test } from "node:test";
@@ -87,133 +87,66 @@ test("R68 (N776; DEC-182 (4); op-declarations R39; credentials R3): `setpassword
   }
 });
 
-/* ---------------------------------------------------------------- R65 */
+/* ------------------------------------------------- R2: the sign-in door is signin-door's (T47; K3167) */
 
-const keptAway = { ok: false, reason: "AI_KEPT_AWAY", code: "AI_KEPT_AWAY", detail: "kept away", keep_away: { reason: "a case", set_by: "admin", set_at: "2026-10-01" } };
-/* (T46; R65) `disclosed` is what instance-setup's `disclosureof` answers for the member asked (T46's own tests are in
-   `t46-door.test.mjs`): shown, unless a test says otherwise. */
-function signinWorld({ away = false, reply, disclosed = true } = {}) {
-  const c = callers({ answer: (q) => (q.route === "aikeptaway" ? ok(away ? keptAway : { ok: true })
-                                      : q.route === "disclosureof" ? ok({ ok: true, member: q.params.member ?? null, shown: disclosed })
-                                      : q.route === "subscriptionconnected" ? ok({ ok: true, connected: true }) : null) });
+/* signin-door R1–R5 (were this module's R65, R78, R85–R87) are tested in that module; here the door's half: each op
+   reaches signin-door's handler with the member the session names, the request's body and the store addressed, and its
+   answer is signin-door's. The store answers signin-door's store-internal routes as its `ops.mjs` would. */
+function signinWorld({ reply, testInstance = false } = {}) {
+  const c = callers({ answer: (q) => (q.route === "aikeptaway" ? ok({ ok: true })
+                                      : q.route === "signindisclosuredue" ? ok({ ok: true, due: null })
+                                      : q.route === "accountreference" ? ok({ ok: true, subscription: { connected: true, since: "2026-10-01", held: true } })
+                                      : q.route === "subscriptiondisconnect" ? ok({ ok: true, disconnected: true })
+                                      : q.route === "signintraceread" ? ok({ ok: true, lines: [{ event: "signin.door" }] })
+                                      : q.route === "memberset" ? ok({ ok: true, memberId: "bea", status: "revoked" }) : null) });
   const aw = agentWorker(reply ?? ((path, body) => runner(200, body.step === "start" ? { ok: true, address: "https://claude.ai/oauth/x" }
-    : { ok: true, connected: body.step === "code" || body.step === "state", member: body.member })));
+    : { ok: true, member: body.member })));
   c.w.env.AGENT_WORKER = aw;
+  if (testInstance) { c.w.env.INSTANCE_NAME = "test-town"; c.w.env.CIVICSMITH_TEST_INSTANCE = "test-town"; }
   return { ...c, aw };
 }
 
-test("R65 (N708; DEC-156; agent-worker R66, R67; credentials R43): `subscriptionsignin` sends `{member, step, code?}` to agent-worker's `POST /signin`, `member` the session's `by` and never the caller's, `step` and `code` the body's; the runner's answer is relayed as given, status and body; the code is in that one request's body and in no address, header, store request or answer; a `code` or `state` answer with `connected: true` for that member, and only that, is recorded through credentials' `subscriptionConnected` (the store's internal `subscriptionconnected`, `by` the member)", async () => {
-  const CODE = "sentinel-anthropic-code-R65";
-  const { w, sessions, aw } = signinWorld();
-  for (const s of sessions) for (const step of ["start", "code", "state", "signout"]) {
-    w.env.calls.length = 0; aw.sent.length = 0;
-    const r = await call(w.env, { op: "subscriptionsignin", token: s.token, method: "POST",
-                                  params: { member: FORGED }, body: { step, code: CODE, member: FORGED, by: FORGED } });
-    assert.equal(r.status, 200, `${s.name}/${step}: ${r.text.slice(0, 200)}`);
-    assert.equal(aw.sent.length, 1, step);
-    assert.equal(aw.sent[0].path, "/signin");
-    assert.deepEqual(aw.sent[0].body, { member: s.by, step, ...(step === "code" ? { code: CODE } : {}) }, `${s.name}/${step}`);
-    const expected = step === "start" ? { ok: true, address: "https://claude.ai/oauth/x" }
-      : { ok: true, connected: step === "code" || step === "state", member: s.by };
-    for (const [k, v] of Object.entries(expected)) assert.deepEqual(r.json[k], v, `${step}: relayed ${k}`);
-    const recorded = opCalls(w.env).filter((c) => c.route === "subscriptionconnected");
-    assert.equal(recorded.length, step === "code" || step === "state" ? 1 : 0, `${s.name}/${step}: recorded only after connected: true`);
-    if (recorded.length) assert.deepEqual([recorded[0].params, recorded[0].body], [{ by: s.by }, {}]);
-    assert.equal(opCalls(w.env).filter((c) => c.route === "aikeptaway").length, step === "start" || step === "code" ? 1 : 0, step);
-    assert.equal(r.text.includes(CODE), false, "the code is in no answer");
-    for (const c of [...w.env.calls, ...w.env.windowCalls, ...w.env.countCalls])
-      assert.equal(JSON.stringify([c.url.href, c.headers, c.body]).includes(CODE), false, `${step}: the code in no store request`);
-    assert.equal(aw.sent[0].url.includes(CODE), false);
-  }
-  /* `connected: false`, or `connected: true` naming another member, records nothing */
-  for (const answer of [{ ok: true, connected: false, member: "member:ann" }, { ok: true, connected: true, member: "member:bea" }]) {
-    const x = signinWorld({ reply: () => runner(200, answer) });
-    await call(x.w.env, { op: "subscriptionsignin", token: x.w.S.ann, method: "POST", body: { step: "state" } });
-    assert.deepEqual(opCalls(x.w.env).filter((c) => c.route === "subscriptionconnected"), [], JSON.stringify(answer));
-  }
-  /* the runner's refusal, at its status and in its words */
-  const refusing = signinWorld({ reply: () => runner(409, { ok: false, reason: "NOT_THIS_MEMBER", detail: "another member's sign-in" }) });
-  const r = await call(refusing.w.env, { op: "subscriptionsignin", token: refusing.w.S.ann, method: "POST", body: { step: "code", code: CODE } });
-  assert.deepEqual([r.status, r.json.reason, r.json.detail], [409, "NOT_THIS_MEMBER", "another member's sign-in"]);
-  assert.deepEqual(opCalls(refusing.w.env).filter((c) => c.route === "subscriptionconnected"), []);
-});
-
-test("R65 (credentials R35; K2200 (9)): while the group keeps its material away, `start` and `code` are refused with credentials' `AI_KEPT_AWAY` as it answers it, nothing sent to the runner; `state` and `signout` are always sent; a store that does not answer the keep-away question sends nothing (negative control: with keep-away off, `start` is sent)", async () => {
-  const { w, aw } = signinWorld({ away: true });
-  for (const step of ["start", "code"]) {
-    aw.sent.length = 0;
-    const r = await call(w.env, { op: "subscriptionsignin", token: w.S.ann, method: "POST", body: { step, code: "c" } });
-    assert.equal(r.status, 403, step);
-    assert.deepEqual([r.json.ok, r.json.reason, r.json.keep_away.reason], [false, "AI_KEPT_AWAY", "a case"], step);
-    assert.deepEqual(aw.sent, [], `${step}: nothing sent`);
-  }
-  for (const step of ["state", "signout"]) {
-    aw.sent.length = 0;
-    const r = await call(w.env, { op: "subscriptionsignin", token: w.S.ann, method: "POST", body: { step } });
-    assert.equal(r.status, 200, step);
-    assert.equal(aw.sent.length, 1, `${step}: always sent`);
-  }
-  const silent = callers({ answer: (q) => (q.route === "aikeptaway" ? new Response("not json") : null) });
-  silent.w.env.AGENT_WORKER = agentWorker();
-  const r = await call(silent.w.env, { op: "subscriptionsignin", token: silent.w.S.ann, method: "POST", body: { step: "start" } });
-  assert.equal(r.status, 502);
-  assert.equal(r.json.reason, "STORE_DID_NOT_ANSWER");
-  assert.deepEqual(silent.w.env.AGENT_WORKER.sent, []);
-  const open = signinWorld({ away: false });
-  assert.equal((await call(open.w.env, { op: "subscriptionsignin", token: open.w.S.ann, method: "POST", body: { step: "start" } })).status, 200);
-  assert.equal(open.aw.sent.length, 1);
-});
-
-test("R65: with no `AGENT_WORKER` binding the door answers 503 AGENT_WORKER_UNBOUND; a runner that throws or answers no JSON, 502 AGENT_WORKER_SILENT; every machine credential is refused before the runner or any store is asked", async () => {
-  const { w, machines } = signinWorld();
-  delete w.env.AGENT_WORKER;
-  const r = await call(w.env, { op: "subscriptionsignin", token: w.S.ann, method: "POST", body: { step: "state" } });
-  assert.deepEqual([r.status, r.json.reason], [503, "AGENT_WORKER_UNBOUND"]);
-  for (const reply of [() => { throw new Error("down"); }, () => new Response("<html>")]) {
-    const x = signinWorld({ reply });
-    const s = await call(x.w.env, { op: "subscriptionsignin", token: x.w.S.ann, method: "POST", body: { step: "state" } });
-    assert.deepEqual([s.status, s.json.reason], [502, "AGENT_WORKER_SILENT"]);
-  }
+test("R2, R17, R29 (T47; K3167; signin-door R1–R3): `subscriptionsignin` is answered by signin-door with the member the session names (`by`), never one the caller sends, the body's `step`: its store-internal questions asked of the store addressed with that member, the runner sent that member with signin-door's trace header, the answer signin-door's (carrying `trace`)", async () => {
   const x = signinWorld();
-  for (const m of machines) {
-    x.w.env.calls.length = 0; x.aw.sent.length = 0;
-    const s = await call(x.w.env, { op: "subscriptionsignin", token: m.token, method: "POST", params: m.params ?? {}, body: { step: "state" } });
-    assert.equal(s.json.ok, false, m.name);
-    assert.deepEqual([x.aw.sent, opCalls(x.w.env).filter((c) => c.route === "aikeptaway")], [[], []], m.name);
-  }
+  const r = await call(x.w.env, { op: "subscriptionsignin", token: x.w.S.ann, method: "POST", params: { by: FORGED, member: FORGED },
+                                  body: { step: "start", member: FORGED, by: FORGED } });
+  assert.equal(r.status, 200, r.text.slice(0, 300));
+  assert.equal(typeof r.json.trace, "string");
+  const asked = opCalls(x.w.env).filter((c) => ["aikeptaway", "signindisclosuredue"].includes(c.route));
+  assert.deepEqual(asked.map((c) => c.route), ["aikeptaway", "signindisclosuredue"]);
+  assert.equal(asked[1].params.by, "member:ann");
+  assert.equal(x.aw.sent.length, 1);
+  assert.deepEqual([x.aw.sent[0].path, x.aw.sent[0].body.member, x.aw.sent[0].body.step], ["/signin", "member:ann", "start"]);
+  assert.equal(x.aw.sent[0].headers["x-civicsmith-trace"], r.json.trace);
+  assert.equal(JSON.stringify([opCalls(x.w.env), x.aw.sent]).includes(FORGED), false, "nothing of the caller's statement of who");
+  /* control: `state` is answered from credentials' read, nothing sent to the runner */
+  const s = await call(x.w.env, { op: "subscriptionsignin", token: x.w.S.ann, method: "POST", body: { step: "state" } });
+  assert.deepEqual([s.status, s.json.connected, s.json.held, x.aw.sent.length], [200, true, true, 1]);
 });
 
-test("R65 (credentials R16, R43): the member's own `subscriptiondisconnect` and their revocation (`memberset` to `revoked`, a carried `adminremove`) send `step: \"signout\"` for that member after the act; a runner that cannot be reached changes neither act's answer; an act that did not succeed, or did not revoke, sends nothing", async () => {
-  const answers = { subscriptiondisconnect: { ok: true, disconnected: true }, memberset: { ok: true, memberId: "bea", status: "revoked" },
-                    adminremove: { ok: true, memberId: "bea", removed: true } };
-  for (const throws of [false, true]) {
-    const { w } = callers({ answer: (c) => (answers[c.route] ? ok(answers[c.route]) : null) });
-    const aw = agentWorker(() => { if (throws) throw new Error("down"); return runner(200, { ok: true, connected: false }); });
-    w.env.AGENT_WORKER = aw;
-    const drives = [
-      [{ op: "subscriptiondisconnect", token: w.S.ann, method: "POST", body: {} }, "member:ann"],
-      [{ op: "memberset", token: w.S.founder, method: "POST", body: { memberId: "bea", status: "revoked" } }, "member:bea"],
-      [{ op: "adminremove", token: w.S.founder, method: "POST", body: { memberId: "bea", reason: "r" } }, "member:bea"],
-    ];
-    for (const [drive, who] of drives) {
-      aw.sent.length = 0;
-      const r = await call(w.env, drive);
-      assert.equal(r.status, 200, `${drive.op}: ${r.text.slice(0, 200)}`);
-      assert.deepEqual(r.json.result, answers[drive.op], `${drive.op}: the act's answer unchanged`);
-      assert.equal(aw.sent.length, 1, drive.op);
-      assert.deepEqual([aw.sent[0].path, aw.sent[0].body], ["/signin", { member: who, step: "signout" }], drive.op);
-    }
-  }
-  /* negative controls: a reactivation, a removal not carried, and a refused disconnect send nothing */
-  const none = { subscriptiondisconnect: { ok: false, reason: "NOT_YOUR_ACCOUNT" }, memberset: { ok: true, memberId: "bea", status: "active" },
-                 adminremove: { ok: false, reason: "VOTES_SHORT", memberId: "bea" } };
-  const { w } = callers({ answer: (c) => (none[c.route] ? ok(none[c.route]) : null) });
-  const aw = agentWorker();
-  w.env.AGENT_WORKER = aw;
-  await call(w.env, { op: "subscriptiondisconnect", token: w.S.ann, method: "POST", body: {} });
-  await call(w.env, { op: "memberset", token: w.S.founder, method: "POST", body: { memberId: "bea", status: "active" } });
-  await call(w.env, { op: "adminremove", token: w.S.founder, method: "POST", body: { memberId: "bea" } });
-  assert.deepEqual(aw.sent, []);
+test("R2 (T47; K3167; signin-door R1, R4): `subscriptiondisconnect` reaches credentials' act through signin-door with `by` the session's member, then `signout` is sent for that member; a member's revocation (`memberset` to `revoked`) signs that member out through signin-door, the act's answer unchanged (control: an act that is not a leaving sends nothing)", async () => {
+  const x = signinWorld();
+  const d = await call(x.w.env, { op: "subscriptiondisconnect", token: x.w.S.ann, method: "POST", params: { by: FORGED }, body: { by: FORGED } });
+  assert.equal(d.status, 200, d.text.slice(0, 300));
+  assert.equal(d.json.result?.disconnected, true, "the store's answer, relayed as the forward relays one");
+  assert.equal(opCalls(x.w.env).find((c) => c.route === "subscriptiondisconnect").params.by, "member:ann");
+  assert.deepEqual(x.aw.sent.map((s) => [s.body.member, s.body.step]), [["member:ann", "signout"]]);
+  const m = await call(x.w.env, { op: "memberset", token: x.w.S.founder, method: "POST", body: { memberId: "bea", status: "revoked" } });
+  assert.equal(m.status, 200, m.text.slice(0, 300));
+  assert.deepEqual(x.aw.sent.at(-1).body, { member: "member:bea", step: "signout" });
+  const n = x.aw.sent.length;
+  await call(x.w.env, { op: "memberset", token: x.w.S.founder, method: "POST", body: { memberId: "bea", status: "active" } });
+  assert.equal(x.aw.sent.length, n, "no sign-out for an act that is not a leaving");
+});
+
+test("R2, R32 (T47; K3167; signin-door R5; answer-envelope C-69.7): `signintrace` is signin-door's: elsewhere than a test instance SIGNINTRACE_NOT_TEST (C-69.7) and nothing read; on a test instance the trace the store keeps", async () => {
+  const x = signinWorld();
+  const r = await call(x.w.env, { op: "signintrace", token: x.w.S.founder });
+  assert.deepEqual([r.status, r.json.reason, r.json.check], [403, "SIGNINTRACE_NOT_TEST", "C-69.7"]);
+  assert.equal(opCalls(x.w.env).some((c) => c.route === "signintraceread"), false);
+  const t = signinWorld({ testInstance: true });
+  const tr = await call(t.w.env, { op: "signintrace", token: t.w.S.founder });
+  assert.deepEqual([tr.status, tr.json.lines?.length], [200, 1]);
 });
 
 /* ---------------------------------------------------------------- R57's third draft */

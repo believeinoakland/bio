@@ -91,9 +91,9 @@ test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller 
   for (const [op, keys] of Object.entries(OP_STAMPS)) for (const c of list) {
     /* R41 (T35): `agentpack` is answered from the untargeted affordances handler (a hook), which stamps its own reads */
     if (op === "agentpack") continue;
-    /* R65 (T37): `subscriptionsignin` reaches the member's runner, not a store route; its `by` (sent as `member`) is
-       driven in `t37-door.test.mjs` */
-    if (op === "subscriptionsignin") continue;
+    /* (T47; K3167; signin-door R1–R5) `subscriptionsignin`, `subscriptiondisconnect` and `signintrace` are answered by
+       signin-door, which sends what it names (the member the door stamps as `by`); driven in `t37-door.test.mjs` */
+    if (["subscriptionsignin", "subscriptiondisconnect", "signintrace"].includes(op)) continue;
     /* R57, R77 (T46): `textcheck` and `airundispatch` reach the object's draft door and member-run dispatch, not a store
        route; their `by` (as `member`, and as `by` and `viewer`) is driven in `t46-door.test.mjs` */
     if (op === "textcheck" || op === "airundispatch") continue;

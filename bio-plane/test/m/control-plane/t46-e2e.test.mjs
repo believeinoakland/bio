@@ -1,7 +1,7 @@
 /* control-plane R75 (T46; N897 (1); `draft-T46-interface.md` §4 (3)): THE END-TO-END SUITE. Over Miniflare and the real plane
    (`src/plane/index.mjs`, the Worker the product deploys): `GET /app` and `/app/assets/*` served with the page policy and
-   its nonce; a member signed in through the real setup page's login (setup-page's own script, run by its fixture, its
-   requests answered by the plane); then the real served `/app` page booted on interface-shell's document stand-in with
+   its nonce; (T47; R82, R83) `GET /` answering that same page, and the founder signed in through the plane's real
+   `login` by handle, password and device; then the real served `/app` page booted on interface-shell's document stand-in with
    that session, every request it makes answered by the same plane: `home`, `capture` with an upload, `held` and
    `release`, each read back through the real ops. */
 import "../../sandbox.mjs";
@@ -10,8 +10,6 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
-import { pageOver } from "../setup-page/fixture.mjs";
-import { SESSION_STORE_KEY } from "../../../src/setup-page/index.mjs";
 import { boot } from "../interface-shell/harness.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
@@ -84,24 +82,31 @@ test("R75 end to end (Miniflare, the real plane): `GET /app` and `/app/<path>` s
   await none.arrayBuffer();
 });
 
-test("R75 end to end: a member signs in through the real setup page's login, its session kept where the interface reads it (setup-page R31)", async () => {
+test("R75, R82, R83 end to end (T47): `GET /` answers the interface's page (the page `/app` answers), and the founder signs in through the real plane's `login` by the handle `admin`, the password and the device, no role sent; the session it answers is the one the interface keeps", async () => {
   /* the instance claimed, as an installer leaves it */
   const claimed = await mf.dispatchFetch(`${ORIGIN}/api/?op=claim`, { method: "POST", body: JSON.stringify({ bootstrapToken: ADM, password: PASSWORD }) });
   assert.equal(claimed.status, 200, await claimed.clone().text());
   await claimed.arrayBuffer();
-  const html = await (await mf.dispatchFetch(`${ORIGIN}/`)).text();
-  const p = pageOver({ html, fetch: (url, init) => toPlane(url, init) });
-  for (let i = 0; i < 200 && !p.el("#s-login").classList.contains("on"); i++) await new Promise((r) => setTimeout(r, 5));
-  assert.ok(p.el("#s-login").classList.contains("on"), "the claimed copy offers the sign-in");
-  p.el("#lwho").value = "";
-  p.el("#lpw").value = PASSWORD;
-  await p.el("#do-login").fire();
-  for (let i = 0; i < 200 && !p.sandbox.sessionStorage.getItem(SESSION_STORE_KEY); i++) await new Promise((r) => setTimeout(r, 5));
-  const kept = JSON.parse(p.sandbox.sessionStorage.getItem(SESSION_STORE_KEY) || "null");
-  assert.ok(kept && typeof kept.t === "string" && kept.t.length > 20, JSON.stringify(kept));
-  session = kept;
-  const who = await (await toPlane("/api/?op=whoami", { headers: { authorization: `Bearer ${kept.t}` } })).json();
+  const strip = (html) => html.replace(/ nonce="[^"]*"/g, "");
+  const root = await mf.dispatchFetch(`${ORIGIN}/`);
+  assert.equal(root.status, 200);
+  assert.equal(root.headers.get("cache-control"), "no-store");
+  assert.equal(strip(await root.text()), strip(await (await mf.dispatchFetch(`${ORIGIN}/app`)).text()), "/ is the interface");
+  const signed = await (await toPlane("/api/?op=login", { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ handle: "admin", password: PASSWORD, device: "own" }) })).json();
+  assert.equal(signed.ok, true, JSON.stringify(signed));
+  const r = signed.result;
+  assert.ok(r && r.ok === true && typeof r.token === "string" && r.token.length > 20, JSON.stringify(r));
+  assert.equal(r.device, "own");
+  /* the session record the interface keeps (interface-shell R32): `{t, e, d}` */
+  session = { t: r.token, e: r.expires, d: r.device };
+  const who = await (await toPlane("/api/?op=whoami", { headers: { authorization: `Bearer ${r.token}` } })).json();
   assert.deepEqual([who.ok, who.result.session], [true, true]);
+  /* control: a wrong password is refused, and no session is answered */
+  const wrong = await (await toPlane("/api/?op=login", { method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ handle: "admin", password: "not the password", device: "own" }) })).json();
+  assert.equal(wrong.result?.ok ?? wrong.ok, false);
+  assert.equal(Object.hasOwn(wrong.result ?? wrong, "token"), false, "no session answered");
 });
 
 /* The real served page, booted with the session, at `path`, every request answered by the plane. */

@@ -1,9 +1,10 @@
-/* The member's queue (registry screen `queue`; screens-daily R2, R3, R7; DEC-110, DEC-131). Everything waiting on the
+/* The member's queue (registry screen `queue`; screens-daily R2, R3, R7, R12, R13; DEC-110, DEC-131, DEC-201 (13), DEC-212). Everything waiting on the
    member, drawn by kind (To do, Noticed, Status) and grouped by case, in the sort they chose; each item's acts are its own
    decorated options and the door its disposition names (queue R12, R17, R46), drawn when the op is one of the screen's
    registered acts, and any other option as "Open". The sort is the route's subject (`/app/queue/due`), so a chosen sort
-   survives a reload and the browser's history (interface-shell R9). Every function is self-contained (interface-shell
-   R21 (1)). */
+   survives a reload and the browser's history (interface-shell R9). With nothing waiting it says the member is up to date
+   (R12). The unsent-request item (`action-producers` R25) draws its own three acts (R13). Every function is
+   self-contained (interface-shell R21 (1)). */
 
 export const queue = Object.freeze({
   id: "queue",
@@ -23,7 +24,8 @@ export const queue = Object.freeze({
   render: function (cs, view) {
     const SORTS = ["added", "due", "case", "kind"];
     const CLASS_KIND = { OBLIGATION: "todo", FINDING: "noticed", CONDITION: "status" };
-    // The registry's eleven acts (R3), under the names options and dispositions carry (OP_ALIASES' targets included).
+    // The registry's twelve acts (R3, R13), under the names options and dispositions carry (OP_ALIASES' targets included);
+    // `actionmove` is drawn only on the unsent-request item, by R13's own rule below.
     const REGISTERED = {
       taskresolve: "taskresolve", taskforward: "taskforward", proposedispose: "proposedispose", queuesnooze: "queuesnooze",
       queuemute: "queuemute", adoptversion: "adoptversion", versionadopt: "adoptversion", keepversion: "keepversion",
@@ -36,7 +38,7 @@ export const queue = Object.freeze({
       "action-clock-overdue.theirs", "member-left-items", "watch-keep-or-stop", "plan-review-due", "plan-look-again",
       "litigation-hold.docket"];
     // The screens T46 builds, by the kind of subject an item names (R3's "Open").
-    const OPENS = { project: "project", inquiry: "question", question: "question", bundle: "document", information: "document", capture: "document", document: "document" };
+    const OPENS = { project: "project", inquiry: "question", question: "question", bundle: "document", information: "document", capture: "document", document: "document", action: "action" };
     const sort = SORTS.indexOf(String(view.subject || "")) >= 0 ? String(view.subject) : "case";
     // The fields an act needs from the member, drawn in place in a disclosure with the act (interface-shell R11's dialog is
     // a terminal or signed act's; these are not), each read by the act's `send` through `cs.value`.
@@ -118,6 +120,19 @@ export const queue = Object.freeze({
         : "";
       return drawn + open;
     };
+    // R13 (DEC-212; `action-producers` R25): the unsent request: "Pick up where you left off" opens the records request at
+    // its step (the `request` screen takes the action's id; K3145),
+    // "Keep it for later" snoozes its case (`queue` R21), "Drop the request, with a reason" moves the action to `abandoned`.
+    const unsentActs = function (it, cas) {
+      const id = it.subject && it.subject.id ? String(it.subject.id) : "";
+      const pick = id ? '<a class="cs-btn" data-tone="quiet" data-nav href="/app/request/' + encodeURIComponent(id) + '">' + cs.w("screen.queue.unsent.pickup") + "</a>" : "";
+      const f = "qa-" + (seq++);
+      const snoozeBtn = cas ? cs.act("queuesnooze", { label: "screen.queue.unsent.keep", data: { project: String(cas.id), f: f } }) : "";
+      const snooze = snoozeBtn ? '<details class="mk-actd"><summary>' + cs.w("screen.queue.unsent.keep") + "</summary>"
+        + cs.field(f + "-until", "screen.queue.snooze.until", {}) + snoozeBtn + "</details>" : "";
+      const drop = id ? cs.act("actionmove", { label: "screen.queue.unsent.drop", data: { item: it.id, action: id } }) : "";
+      return pick + snooze + drop;
+    };
     const itemRow = function (it) {
       const cas = caseOf(it);
       const k = keyOf(it);
@@ -126,7 +141,7 @@ export const queue = Object.freeze({
       const detail = k ? cs.w("queue." + k + ".detail", fills) : (it.detail ? cs.esc(it.detail) : "");
       return cs.row(cs.mark("kind", CLASS_KIND[it.class] || "status"),
         summary + (detail ? '<span class="meta">' + detail + "</span>" : "") + hintOf(it)
-          + '<span class="mk-acts">' + actsOf(it, cas) + "</span>",
+          + '<span class="mk-acts">' + (it.kind === "request-unsent" ? unsentActs(it, cas) : actsOf(it, cas)) + "</span>",
         it.due ? dueOf(it.due) : "", "");
     };
 
@@ -169,9 +184,12 @@ export const queue = Object.freeze({
         const snooze = g.c ? '<span class="mk-acts">' + actOf("queuesnooze", { project: String(g.c.id) }) + "</span>" : "";
         return '<section class="cs-section mk-sec"><h2>' + title + "</h2>" + snooze + cs.sheet(g.items.map(itemRow).join("")) + "</section>";
       }).join("") + (q.truncated ? '<p class="mk-note">' + cs.w("screen.queue.more", { n: String(Math.max(0, n - items.length)) }) + "</p>" : "");
-    }, { empty: "screen.queue.empty" });
+    }, { empty: "screen.queue.uptodate" });
 
-    return cs.title(undefined, {}) + note + sorts + body;
+    // R12 (DEC-201 (13)): with nothing waiting, the member is up to date, one step from Home.
+    const q = view.data.queue;
+    const home = q && q.state === "empty" ? '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app">' + cs.w("screen.queue.gohome") + "</a></p>" : "";
+    return cs.title(undefined, {}) + note + sorts + body + home;
   },
 
   // R3: each act's body from the item it was drawn on (`el.dataset`, the data `cs.act` was handed).
@@ -239,6 +257,9 @@ export const queue = Object.freeze({
         const project = owner.indexOf("project:") === 0 ? owner.slice(8) : el.dataset.project;
         return key && project ? { body: { project: project, key: key } } : { refuse: "screen.queue.fieldfirst" };
       } },
+    // R13: the unsent request dropped, with the member's reason (the shell asks it: `actionmove` is reasoned).
+    { op: "actionmove", label: "act.actionmove.label.queue",
+      send: function (view, el) { return el.dataset.action ? { body: { target: el.dataset.action, to: "abandoned" } } : null; } },
     { op: "exploreapprove", label: "act.exploreapprove.label.queue",
       send: function (view, el) { return { body: { owner: el.dataset.owner, day: el.dataset.day } }; } },
   ],

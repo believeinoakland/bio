@@ -809,15 +809,15 @@ test("R1 R12 R19 R24: case-inputs' ops — its op map holds exactly whatchangedp
     assert.equal((d.rung === null) !== (d.rung_absence === null), true, `R24: ${op}`);
   }
   assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => [...WRITES, ...READS].includes(a.id)));
-  /* the control plane's rows (op-declarations): both writes mutating; `statementack` has no NEEDS row in op-declarations'
-     table, so it is ungated and named in no NON_ACTS row; the read is gated */
-  const table = [{ op: "statementack", mutating: true, gated: false }, { op: "whatchangedpropose", mutating: true, gated: true },
+  /* the control plane's rows (op-declarations): both writes mutating, every op gated — `statementack` has a NEEDS row since
+     K3041, and op-grades names it in NON_ACTS (K3164) */
+  const table = [...WRITES.map((op) => ({ op, mutating: true, gated: true })),
     ...READS.map((op) => ({ op, mutating: false, gated: true }))];
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => [...WRITES, ...READS].includes(op)), []);
-  /* carried gated, statementack would read unpublished */
-  assert.deepEqual(A.unaccounted([{ op: "statementack", mutating: true, gated: true }]).unpublished, ["statementack"]);
+  /* negative control: carried ungated, statementack's NON_ACTS row reads stale */
+  assert.ok(A.unaccounted([{ op: "statementack", mutating: true, gated: false }]).stale.includes("statementack"));
   const out = A.unaccounted([...table, { op: "inputsunnamed", mutating: true, gated: true }]);
   assert.deepEqual([out.unpublished, out.unranked], [["inputsunnamed"], ["inputsunnamed"]]);
 });
