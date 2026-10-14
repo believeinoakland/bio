@@ -1,6 +1,6 @@
 # membership (T49)
 
-**Status** · session_01195GX87EMHUXKVysBHVQkZ · depth 2 · WORKING · handled B1
+**Status** · session_01195GX87EMHUXKVysBHVQkZ · depth 2 · COMPLETE · handled B1
 
 ## Completion (T49-1)
 
