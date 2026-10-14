@@ -135,7 +135,24 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
   /* ai-runs' stand-in. */
   const runs = new Map();
   const reg = { checks: [], listeners: [] };
+  /* R51: `open`, as ai-runs' answers it for a planning run: the registered check applied, a refusal in the open's own shape
+     (`{run, started: false, ...}`), else the run recorded, the listeners told, `{run, started: true}`. `ctl.opens` keeps each
+     call's arguments; `ctl.refuse` makes the next opens refuse with that code (a mode not deployed). */
+  const ctl = { opens: [], refuse: null };
   const aiRuns = {
+    open: async (a) => {
+      ctl.opens.push(structuredClone(a));
+      if (ctl.refuse) return { run: a.run, started: false, code: ctl.refuse, check: "C-stub", translation: "stub", detail: null };
+      const check = reg.checks.find((c) => c.mode === a.mode);
+      const said = a.mode === "plan" && check
+        ? check.fn({ contextType: a.contextType, contextId: a.contextId, plan: a.plan, actor: a.actor, viewer: a.viewer }) : null;
+      if (said) return { run: a.run, started: false, ...said };
+      runs.set(a.run, { run: a.run, status: "running", mode: a.mode, context_type: a.contextType, context_id: a.contextId,
+        principal_plane: a.principalPlane, plan: a.plan, skill: a.skillVersion,
+        bounds: Object.fromEntries((a.bounds || []).map((b) => [b.bound, { allowed: b.allowed, consumed: 0 }])) });
+      for (const l of reg.listeners) await l.fn({ run: a.run, contextType: a.contextType, contextId: a.contextId });
+      return { run: a.run, started: true, status: "running" };
+    },
     registerOpenCheck: (module, mode, fn) => { reg.checks.push({ module, mode, fn }); return { ok: true }; },
     onRunOpened: (module, fn) => { reg.listeners.push({ module, fn }); return { ok: true }; },
     runFor: (run, viewer) => { const r = runs.get(run); return r && (viewer !== V("outsider")) ? { run: r.run, status: r.status, mode: r.mode,
@@ -180,7 +197,7 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
   };
   const w = {
     st, host, record, membership, promotion, ap, actions, clocks, clock, stand, determinations, cite, legEarning, bars, standardsHeld,
-    escalations, runs, reg,
+    escalations, runs, reg, ctl,
     /** R35: withhold `id` from `viewer` (a member's stamp), as a narrower sight rule would. */
     hide(viewer, id) { hidden.add(`${viewer}|${id}`); },
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],

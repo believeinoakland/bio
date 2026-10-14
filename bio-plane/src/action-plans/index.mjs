@@ -8,7 +8,8 @@
  * (R20, R44, R45). Since T46 a pause is the document's own state, `paused`, written with its Plan Log entry in one act
  * (R46 (a); record-grammar's `action_plan` states), and the look-again day is read on the place's local day (R46 (b)).
  * Since T47 the date checks are judged on that local day too (R48), and a closed plan's read names its closing instant
- * `closed.at` (R50).
+ * `closed.at` (R50). Since T48 a member's "Ask the assistant for options" is `planAsk` (R51): it opens the plan's planning
+ * run and records no option or proposal of the member's own.
  *
  * A new module (T18, layer 9, last): nothing moves from the legacy modules. Escalation's record-object pattern is the
  * model (its index.mjs and doc.mjs).
@@ -49,7 +50,8 @@
  *   filings        `availableActions` (shown beside legal options).
  *   duties         `occurrencesOf`, `transitionsOf`, `readDuty` (R38: a phase started by a duty occurrence's state); its
  *                  `noSuchDuty` (its R25; R38, N601).
- *   aiRuns         `registerOpenCheck`, `onRunOpened`, `runFor`, `read`, `boundOf`, `consumeBound` (R30–R32).
+ *   aiRuns         `registerOpenCheck`, `onRunOpened`, `runFor`, `read`, `boundOf`, `consumeBound` (R30–R32); `open` in mode
+ *                  `plan` (its R46; R51).
  *   now            the instance clock, an ISO string (default: the wall clock, to the second). */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
@@ -111,6 +113,10 @@ const PAUSED_SAYS = "the plan is paused: what it set running continues (its acti
 const PREVIEW = Symbol("action-plans start preview");
 const PREVIEW_SAYS = "a preview of starting this option: what the action would be, the matters it would rest on and the "
   + "reminders it would set. Nothing was written: no action, no id, no reminder.";
+/* R51: the skill version and bounds a member's planning run is opened under (a planning run: no search, ai-runs R46). */
+const ASK_SKILL = "planning@1";
+const ASK_BOUNDS = Object.freeze([Object.freeze({ bound: "proposals", allowed: 20 }),
+                                  Object.freeze({ bound: "wallclock", allowed: 600000 })]);
 const DAY_MS = 86400000;
 const ACT = Symbol("action-plans act");
 /* R35: marks a liveness whose successor was withheld; never answered. */
@@ -127,6 +133,9 @@ const ok = (r) => r && r.ok !== false;
 export class ActionPlans {
   /* R44: the one reader of a plan's closing summary, `{module, fn}`. */
   #closeHolder = null;
+  /* R51: the planning runs being opened by a member's ask right now, by plan, each a promise of its run id (or null), so
+     two asks at once open one run. */
+  #asking = new Map();
 
   constructor(deps) {
     this.record = deps.record;
@@ -2027,6 +2036,51 @@ export class ActionPlans {
              ...(see.withheld ? { out_of_view: true } : {}) };
   }
 
+  /** R51: a member asks the assistant for options on one plan. It opens the plan's planning run (`ai-runs.open`, mode
+   *  `plan`, its R46; the run's proposals reach the tray, R31, R34), over the plan's project, the member its actor, as
+   *  `plan-work` opens its re-examination run. While a planning run of this plan is running it opens none and answers
+   *  that run (`existed: true`). It records no option, proposal or disposition: a member's own proposal is
+   *  `optionPropose` (R11). A refusal of `ai-runs.open` is passed through unchanged. */
+  async planAsk(args = {}) {
+    const { plan, author, viewer } = args;
+    const m = this.#member(author);
+    if (m) return m;
+    const p = this.#plan(plan, viewer);
+    if (!p) return noSuchPlan(plan);
+    if (p.state === "closed") return refusePlanClosed(p.id);
+    let held = this.#runningRun(p.id);
+    if (!held && this.#asking.has(p.id)) {
+      const run = await this.#asking.get(p.id);
+      if (run) held = run;
+    }
+    if (held) {
+      const fence = this.membership.projectAuthority(p.project, author, "joined", "planAsk");
+      if (fence) return fence;
+      return { ok: true, plan: p.id, run: held, started: false, existed: true };
+    }
+    const ai = this.aiRuns;
+    const who = str(author);
+    const run = `RUN-${hex8()}${hex8()}`;
+    const opening = ai.open({ run, contextType: "project", contextId: p.project, mode: "plan", plan: p.id,
+      label: "asking the assistant for options on a plan", principalPlane: who, principalClaude: who, skillVersion: ASK_SKILL,
+      bounds: ASK_BOUNDS.map((b) => ({ ...b })), actor: who, viewer: who });
+    this.#asking.set(p.id, Promise.resolve(opening).then((r) => (r && r.started === true && r.ok !== false ? run : null), () => null));
+    let r;
+    try { r = await opening; }
+    finally { this.#asking.delete(p.id); }
+    if (!r || r.started !== true || r.ok === false) return r;
+    return { ok: true, plan: p.id, run: r.run ?? run, started: true };
+  }
+  /* R51: a planning run of the plan that is running now (recorded at its open, R32), or null. */
+  #runningRun(planId) {
+    for (const r of this.#rows(`SELECT run FROM plan_runs WHERE plan_id=? ORDER BY opened_at DESC, run DESC`, planId)) {
+      let live = null;
+      try { live = this.aiRuns.runFor(r.run, null); } catch (e) { if (e instanceof ProviderAbsent) throw e; }
+      if (live && live.status === "running") return r.run;
+    }
+    return null;
+  }
+
   /** R30 (fills ai-runs R47): a planning run is opened over an open plan of its project, by a member who has joined it. */
   planRunCheck({ contextType, contextId, plan, actor, viewer } = {}) {
     const p = this.#plan(plan, viewer);
@@ -2309,9 +2363,9 @@ for (const name of ["planOpen", "planSubjectAdd", "planSubjectRemove", "planRead
     catch (e) { if (e instanceof ProviderAbsent) return refuseProviderUnavailable(e.provider); throw e; }
   } });
 }
-{
-  const f = ActionPlans.prototype.optionPropose;
-  Object.defineProperty(ActionPlans.prototype, "optionPropose", { configurable: true, writable: true, value: async function (...a) {
+for (const name of ["optionPropose", "planAsk"]) {
+  const f = ActionPlans.prototype[name];
+  Object.defineProperty(ActionPlans.prototype, name, { configurable: true, writable: true, value: async function (...a) {
     try { return await f.apply(this, a); }
     catch (e) { if (e instanceof ProviderAbsent) return refuseProviderUnavailable(e.provider); throw e; }
   } });
@@ -2396,5 +2450,6 @@ export function actionPlansOps(m, url, body) {
     scenariorestore: () => m.scenarioRestore(stamped({ plan: pick("plan"), scenario: pick("scenario"), reason: pick("reason") })),
     planpause: () => m.planPause(stamped({ id: pick("id") ?? pick("plan"), reason: pick("reason"), look_again: pick("look_again") })),
     planresume: () => m.planResume(stamped({ id: pick("id") ?? pick("plan"), reason: pick("reason") })),
+    planask: () => m.planAsk(stamped({ plan: pick("plan") })),
   };
 }
