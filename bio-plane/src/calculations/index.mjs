@@ -1724,7 +1724,8 @@ export class Calculations {
     this.record.transact(() => {
       seq = this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM calc_visits WHERE draw_key=?`, d.draw_key).n + 1;
       this.sql.exec(`INSERT INTO calc_visits (draw_key, seq, project, item, testimony, finding, exhibits_json, visitor, observed_at, recorded_at)
-                     VALUES (?,?,?,?,?,?,?,?,?,?)`, d.draw_key, seq, d.project ?? null, item, t.capture_sha, finding, json(cited), by, t.observed_at ?? null, at);
+                     VALUES (?,?,?,?,?,?,?,?,?,?)`, d.draw_key, seq, d.project ?? null, item, t.capture_sha, finding, json(cited), t.author, t.observed_at ?? null, at);
+      /* R38: the visitor kept as provenance records the testimony's author (R41: the one member `by` names) */
       /* R40: an estimate over this draw computed before the visit becomes stale; its stored results never change */
       this.#stale(d.draw_key, "visit_recorded");
       return { ok: true };

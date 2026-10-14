@@ -263,8 +263,8 @@ test("R40 with no item judged the estimate is refused NOTHING_JUDGED, writing no
   w.c.onInputChanged("reevaluation", (x) => told.push(x));
   const n0 = w.count("calculations");
   assert.equal(code(await w.c.create({ question: Q, period: PERIOD, kind: "estimate", inputs: [{ name: "v", draw: d.draw }], by: V("bob") })), "NOTHING_JUDGED", "no visit at all");
-  visit(d.sample[0], "bob", "could_not_tell");
-  visit(d.sample[1], "bob", "yes"); visit(d.sample[1], "carol", "no");
+  for (const [item, member, finding] of [[d.sample[0], "bob", "could_not_tell"], [d.sample[1], "bob", "yes"], [d.sample[1], "carol", "no"]])
+    assert.equal(visit(item, member, finding).ok, true, `${member}'s visit is recorded`);
   const none = await w.c.create({ question: Q, period: PERIOD, kind: "estimate", inputs: [{ name: "v", draw: d.draw }], by: V("bob") });
   assert.equal(code(none), "NOTHING_JUDGED", "only could_not_tell and a disagreement");
   assert.match(none.detail, /Nothing was written/);
@@ -313,12 +313,13 @@ test("R41 NOT_YOUR_TESTIMONY compares the testimony's author and the visitor as 
   assert.equal(spelled.ok, true, JSON.stringify(spelled).slice(0, 300));
   const v1 = w.c.recordVisit({ draw: d.draw, item: d.sample[0], testimony: spelled.capture_sha, finding: "yes", by: "admin" });
   assert.equal(v1.ok, true, JSON.stringify(v1).slice(0, 300));
-  assert.equal(v1.visitor, "admin");
+  assert.equal(v1.visitor, "member:admin", "R38: the visitor kept as provenance records the testimony's author");
   /* and the other way round: testimony recorded bare admin, the visit stamped member:admin */
   const bare = w.prov.testify({ ...words(2), author: "admin" });
   assert.equal(bare.ok, true, JSON.stringify(bare).slice(0, 300));
   const v2 = w.c.recordVisit({ draw: d.draw, item: d.sample[1], testimony: bare.capture_sha, finding: "no", by: "member:admin" });
   assert.equal(v2.ok, true, JSON.stringify(v2).slice(0, 300));
+  assert.equal(v2.visitor, "admin");
   /* an administrator's (alice, seeded an administrator) own testimony is hers too */
   const alices = testify("alice");
   assert.equal(w.c.recordVisit({ draw: d.draw, item: d.sample[2], testimony: alices.capture_sha, finding: "yes", by: V("alice") }).ok, true);
