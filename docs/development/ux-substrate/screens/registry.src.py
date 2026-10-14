@@ -179,3 +179,10 @@ for _s in S:
     _have = {a['op'] for a in _s['acts']}
     for _op, _l in _PROG_ACTS.get(_s['id'], []):
         if _op not in _have: _s['acts'].append(dict(op=_op, label=_l))
+
+# DEC-244: the queue holds the to-dos Home shows (vouching for photos, approving a letter).
+for _s in S:
+    if _s['id'] == 'queue':
+        _have = {a['op'] for a in _s['acts']}
+        for _op, _l in [('release','Vouch for a capture'),('filingapprove','Approve a letter')]:
+            if _op not in _have: _s['acts'].append(dict(op=_op, label=_l))

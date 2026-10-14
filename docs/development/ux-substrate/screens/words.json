@@ -76,10 +76,10 @@
   "rail": 17,
   "tab": 2,
   "level": 2,
-  "act": 724,
+  "act": 726,
   "column": 33,
-  "total": 2419,
-  "protected": 737
+  "total": 2421,
+  "protected": 739
  },
  "words": [
   {
@@ -9789,6 +9789,18 @@
   {
    "key": "act.actionmove.label.queue",
    "en": "Drop an unsent request, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.release.label.queue",
+   "en": "Vouch for a capture",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.filingapprove.label.queue",
+   "en": "Approve a letter",
    "protected": true,
    "source": "registry.json"
   },

@@ -99,7 +99,7 @@ const SCREEN_REFS = {
   ],
   "queue": [
     ["The Coliseum lease","project","<b>The Coliseum lease</b> · project · owner: Dev · 3 items for you here","Waiting on you: a decision on the newer lease amendment; also a disagreement on dates and an overdue reply."],
-    ["Pothole repairs","project","<b>Pothole repairs</b> · project · whether potholes are repaired within the seven days Administrative Instruction 4.12 sets · 3 items for you here","Waiting on you: Ana's request to check the 812 of 903 count, due 16 October."],
+    ["Pothole repairs","project","<b>Pothole repairs</b> · project · whether potholes are repaired within the seven days Administrative Instruction 4.12 sets · 6 items for you here","Waiting on you: Ana's request to check the 812 of 903 count, due 16 October."],
     ["the rent adjustment","matter","<b>The 2024 rent adjustment</b> · a matter in The Coliseum lease · signed by the City Administrator, March 2024, without a council vote","Two documents disagree on its date; a member must judge which one holds."],
     ["A council member","explore","<b>J. Ortega</b> · Council District 3 since 2023 · his Form 700 for 2025 lists income from Bayline Properties","A lead, never a finding: nothing is evidence until a member opens a question and cites the documents."],
     ["38 disclosure filings",null,"<b>38 disclosure filings</b> · Form 700 statements of economic interests your group holds · council members' filings","The hint is only as complete as these filings; a missing year would hide a match."],
@@ -337,7 +337,7 @@ const SCREEN_REFS = {
     ["owner of the project",null,"<b>Owner of The Coliseum lease</b> · Dev · only an owner signs the project's cases","Your signature stands for the group; readers see “signed by an owner of the project”."]
   ],
   "published": [
-    ["Edition 2",null,"<b>Edition 2</b> · the current edition of this case · published 19 November 2026 · corrects Edition 1, which stays readable","Corrections, if any, come as a new edition listed on the case's public docket."],
+    ["Edition 2",null,"<b>Edition 2</b> · the current edition of this case · published 18 September 2026 · corrects Edition 1, which stays readable","Corrections, if any, come as a new edition listed on the case's public docket."],
     ["Lakeshore Tenants",null,"<b>Lakeshore Tenants</b> · the group that made this case · tenants near the Oakland Coliseum, meeting since 2025","The authors; the case is signed by one of them and can be checked without them."],
     ["council vote the lease requires",null,"<b>Lease §7.2</b> · a clause of the Coliseum lease · a change to the rent needs a council vote","The rule this finding measures the rent adjustments against."],
     ["this project's bar",null,"<b>The project's bar</b> · the least strength a finding needs before the group relies on it · here B for both grades","This finding meets it; the bar is the group's own, set before publishing."],
@@ -361,7 +361,7 @@ const SCREEN_REFS = {
   "docket": [
     ["withdrawals",null,"<b>Withdrawal</b> · the group withdraws a finding or a whole case, publicly · the earlier edition stays visible, marked withdrawn","None so far for this case."],
     ["superseding",null,"<b>Superseding</b> · Edition 2 replaced Edition 1 as the current edition · Edition 1 stays public, marked as corrected","Every new edition is a docket entry; this is the case's first."],
-    ["Order of 20 November","proceeding","<b>Order of 20 November 2026</b> · Superior Court · in the lease rent case · captured by a member","It binds the group's published case; posting it here is how the group complies in the open."],
+    ["Order of 2 October","proceeding","<b>Order of 2 October 2026</b> · Superior Court · in the lease rent case · captured by a member","It binds the group's published case; posting it here is how the group complies in the open."],
     ["Superior Court","proceeding","<b>Superior Court</b> · the state trial court for Alameda County · hears the lease rent case, RG26-114502","Its orders reach what the group publishes as well as what it files."],
     ["exhibit 4",null,"<b>Exhibit 4</b> · a document in Edition 2's evidence · contains a tenant's address · the order seals it","Sealing removes that address from the public case; the next edition says what was sealed and why."],
     ["not yet posted",null,"<b>Not yet posted</b> · a draft docket entry · public only once a member posts it, signed","Readers of the public case can't see this entry until it is posted."],
@@ -413,7 +413,7 @@ const TITLE_HELP = {
   "case-editor": "<b>The Coliseum lease · Edition 2</b>: Dev's draft of the next edition of your group's published case. Nothing here is public until an owner signs and publishes it.",
   "review-copy": "<b>Share Edition 2 for review</b>: lets named outside readers see the draft of The Coliseum lease, Edition 2, before it is published. You can stop a reader's access at any time.",
   "ceremony": "<b>Publish Edition 2</b>: the last checks and the signing of The Coliseum lease, Edition 2. Once published it is permanent and public; it can be corrected by a new edition, never removed.",
-  "published": "<b>The Coliseum lease</b>: your group's published case as anyone reads it: Edition 2, published 19 November 2026, which corrects Edition 1.",
+  "published": "<b>The Coliseum lease</b>: your group's published case as anyone reads it: Edition 2, published 18 September 2026, which corrects Edition 1.",
   "imported": "<b>Port lease revenue</b>: a case published by West Oakland Neighbors (Edition 2), imported by Dev on 1 October. Nothing in it counts for your group until a member accepts it.",
   "doorbell": "<b>Hand material to Lakeshore Tenants</b>: the page where anyone can give the group documents or information, without an account. It says exactly what happens to what is sent.",
 };

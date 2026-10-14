@@ -1,7 +1,7 @@
 /* Civicsmith mockups: the frames (working, setup, public, published), the dock (the assistant panel and the wizard
    guide), and the ring a wizard draws on the control its step names. */
 'use strict';
-const RAIL = [['home', 'Home', 'home'], ['queue', 'Queue', 'queue', 4], ['find', 'Find', 'search'], ['add', 'Add', 'add'], ['projects', 'Projects', 'project'], ['people', 'People', 'subject'], ['settings', 'Settings', 'settings']];
+const RAIL = [['home', 'Home', 'home'], ['queue', 'Queue', 'queue', 13], ['find', 'Find', 'search'], ['add', 'Add', 'add'], ['projects', 'Projects', 'project'], ['people', 'People', 'subject'], ['settings', 'Settings', 'settings']];
 const TABS = [['home', 'Home', 'home'], ['queue', 'Queue', 'queue'], ['add', 'Add', 'add'], ['find', 'Find', 'search'], ['more', 'More', 'settings']];
 const BANDS = {
   working: `<b>Working</b> · not public · seen by your group's members`,
@@ -46,7 +46,7 @@ function mast(c, s) {
     <span class="mk-mastsearch">${I('search')}<span>Search</span></span>
     <button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-lvltoggle aria-label="Explanations: Alt+Shift+I switches" data-tip="<b>Explanations</b>: promptly, every explanation opens when you rest on something for half a second. On a longer pause, marks and names still do; what screens, sections and acts are waits a second and a half, so less opens while you move. Keyboard focus and a tap always show everything at once. Click or press Alt+Shift+I to switch.">${I('question')}<span class="mk-hide-phone">${typeof window !== 'undefined' && window.CS_LEVEL === 1 ? 'On a longer pause' : 'Explain promptly'}</span></button>
     ${c.ai ? `<button type="button" class="cs-btn" data-tone="quiet" aria-label="The assistant">${I('machine')}<span class="mk-hide-phone">Assistant</span></button>` : ''}
-    <span class="cs-kind mk-hide-phone" data-kind="todo">${I('queue')}4</span><span class="mk-avatar" aria-label="Mai">M</span></header>`;
+    <span class="cs-kind mk-hide-phone" data-kind="todo">${I('queue')}13</span><span class="mk-avatar" aria-label="Mai">M</span></header>`;
 }
 // DEC-154 (Bob, 6 October): every screen shows where it is, in the same place: its path, from the section of the rail
 // (or, outside the workspace, the group or Civicsmith) to the screen's own name, which is always last. The heading below
@@ -81,7 +81,7 @@ const pathNav = list => `<nav class="mk-crumbs" aria-label="Where you are">${lis
 const tipOf = (what, why, go) => `${what}${why ? `<span class=why><b>Here:</b> ${why}</span>` : ''}${go ? '<span class=more>Click to open it.</span>' : ''}`;
 const AQ = 'Is the city repairing reported potholes within seven days?';
 const REFS = {
-  home: [['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · project · 3 questions · Edition 2 published 19 November', '2 items in it wait on you this week.'],
+  home: [['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · project · 3 questions · Edition 2 published 18 September', '2 items in it wait on you this week.'],
          ['Pothole repairs', 'project', '<b>Pothole repairs</b> · project · 2 questions · its main question is short on connection', 'A better link between reports and work orders would bring it to the bar.'],
          ['Sewer fund transfers', 'money', '<b>Sewer fund transfers</b> · project · a money trail across FY2022 to FY2024', 'Ana\'s question there waits for the FY2024–25 budget.']],
   members: [['Rosa', null, '<b>Rosa</b> · administrator · cover name R. Medina', 'The group\'s only administrator: the group depends on her and the hosting account.'],
@@ -113,7 +113,7 @@ const REFS = {
 // Things named on many screens: one card wherever they appear (DEC-160, widened 6 October). [text, opens, what it is, why here
 // (usually none: a screen's own REFS add that), screens where it is not attached].
 const GLOBAL_REFS = [
-  ['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · a project · whether the city kept the terms of its lease of the Coliseum land, including rent raised in 2024 without a council vote · owner: Dev · Edition 2 published 19 November', null, ['project']],
+  ['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · a project · whether the city kept the terms of its lease of the Coliseum land, including rent raised in 2024 without a council vote · owner: Dev · Edition 2 published 18 September', null, ['project']],
   ['Pothole repairs', 'project', '<b>Pothole repairs</b> · a project · whether the city repairs reported potholes within the seven days its own policy sets · 2 questions', null, ['project']],
   ['Sewer fund transfers', 'money', '<b>Sewer fund transfers</b> · a project · where sewer-fee money moved between funds, FY2022 to FY2024, and whether each transfer was authorized · owner: Ana', null, []],
   ['Lakeshore Tenants', null, '<b>Lakeshore Tenants</b> · your group · tenants near the Coliseum, meeting since 2025 · 6 members, 1 administrator', null, ['install', 'setup', 'join', 'doorbell', 'published']],
@@ -132,7 +132,7 @@ const GLOBAL_REFS = [
   ['Administrative Instruction 4.12', 'document', '<b>Administrative Instruction 4.12</b> · a document · the city\'s pothole repair policy · Public Works · capture B · sets seven calendar days', null, ['document']],
   ['Lease amendment 1', 'document', '<b>Lease amendment 1</b> · a document · the Coliseum lease change approved 12 January 2024', null, []],
   ['Bayline Properties', 'money', '<b>Bayline Properties</b> · a firm · paid $1.2M in FY2024 under the Coliseum lease', null, []],
-  ['Edition 2', 'published', '<b>Edition 2</b> of The Coliseum lease · a published case · published 19 November 2026 at the time Dev set when signing', null, ['published']],
+  ['Edition 2', 'published', '<b>Edition 2</b> of The Coliseum lease · a published case · published 18 September 2026 at the time Dev set when signing', null, ['published']],
   ['Edition 1', 'published', '<b>Edition 1</b> of The Coliseum lease · a published case, since corrected by Edition 2', null, []],
   ['West Oakland Neighbors', 'imported', '<b>West Oakland Neighbors</b> · another group · its published cases can be imported and recreated here', null, ['imported']],
   ['Bay Courier', null, '<b>Bay Courier</b> · a newsroom · Teo reports for it; its story cites Edition 2', null, []],
@@ -184,7 +184,7 @@ function decorate(html, id, c) {
   set(R.querySelector('.cs-mast .grp'), GROUP_CARD, 1, 'group-identity');
   set(R.querySelector('.mk-mastsearch'), '<b>Search</b>: everything your group holds, documents, questions, people and more. Press / to start typing.', 2);
   set(R.querySelector('.cs-mast [aria-label="The assistant"]'), '<b>The assistant</b>: opens beside your work. It answers only from what your group holds, on the account that serves you, and never concludes, signs or sends.', 2);
-  set(R.querySelector('.cs-mast .cs-kind'), '<b>4 items wait on you</b> in your queue: 2 to do, 1 noticed, 1 status.<span class=more>Click to open your queue.</span>', 1, 'queue');
+  set(R.querySelector('.cs-mast .cs-kind'), '<b>13 items wait on you</b> in your queue: 5 to do, 5 noticed, 3 status.<span class=more>Click to open your queue.</span>', 1, 'queue');
   set(R.querySelector('.mk-avatar'), '<b>You: Mai</b> · member of Lakeshore Tenants · works on Pothole repairs<span class=more>Click for your account and settings.</span>', 1, 'account');
   R.querySelectorAll('.mk-crumbs a').forEach(a => { const x = a.textContent.trim(); const g = (typeof GLOBAL_REFS !== 'undefined' ? GLOBAL_REFS : []).find(r => r[0] === x);
     if (g) set(a, tipOf(g[2], null, g[1]), 1, g[1]); else set(a, `Back to <b>${x}</b>.`, 2, CRUMB_GO[x]); });

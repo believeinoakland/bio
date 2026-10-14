@@ -1432,6 +1432,23 @@
      "modules": [
       "actions"
      ]
+    },
+    {
+     "op": "release",
+     "label": "Vouch for a capture",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "ratification"
+     ]
+    },
+    {
+     "op": "filingapprove",
+     "label": "Approve a letter",
+     "status": "function",
+     "modules": [
+      "filings"
+     ]
     }
    ],
    "journeys": [
