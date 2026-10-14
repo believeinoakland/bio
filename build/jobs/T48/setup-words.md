@@ -12,3 +12,7 @@
 **Deferred:** none. **Final `uses`:** none.
 
 Size (session_01WvshQ6CPE3B9m9XqQMCTYo): test runs 5, module lines 1904
+
+## J1 · COMPLETE
+
+T48-61 applied: WORD_ROWS re-taken at PR #34's merge 4664e8efd4, 1,895 rows, 652 protected, no 'labelled' (R8 tested with controls). setup-words 8 pass 0 fail; users (instance-setup, interface-shell, six screens modules) all 0 fail; format, architecture, coverage 8/8, ownership 0 failures. Entries 2 and 3 NOT applied, on my reading (see record): the file at 4664e8efd4 still holds rfc.quoting and refusal.RFC_QUOTING_MISSING and R8 binds the list to the file word by word; NOT_A_PARTNER already in DEC-221's spelling; op=planask's declaration is op-declarations' act, not this pure-data module's (R4). Tell me if you meant otherwise. Plane bundle is stale (takes this module as input). Ready to merge (after queue, before instance-setup).
