@@ -1,4 +1,4 @@
-/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R21).
+/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R22).
  * A new seam after `queue-producers` with no copy (plan T33-82; Choices 8 and 23): each producer derives, on read and
  * writing nothing, the items one provider's facts earn for a viewer, naming each item's subjects and homes for `queue`
  * to home, offer, mint and publish, exactly as `queue-producers` does for the rest.
@@ -10,7 +10,8 @@
  *   R2  interest-check-noticed   FINDING, people.checkResults            the machine's, "Noticed", hypothesis layer; a hint (R11)
  *   R3  money-detector-noticed   FINDING, money-checks.noticed           the machine's, "Noticed", hypothesis layer; a hint (R11)
  *   R4  standing-answer          FINDING, answers.standingAnswersFor     the assistant's machine work, told once
- *   R5  temporal-expectation-due FINDING, duties.dutiesOf/occurrencesOf  a question, never a violation; keyed per state;
+ *   R5  temporal-expectation-due FINDING, duties.dutiesOf/occurrencesOf  a question, never a violation; keyed per state; `{reason}`
+ *                                is duties' member-facing `reason.says`, never `why` (R22, T48);
  *                                none due after following.dutyWatchEndAt's day (T45), unless already told at or
  *                                before the instant that end took hold: then it stays until disposed (R18, T46;
  *                                R21, T47)
@@ -23,7 +24,7 @@
  *       each item answering its `summary_key`, `detail_key` and `fills`; R12 keeps its plain sentence; R20, T47)
  *   R16 explore-ask              FINDING ("Ask"), ai-use.exploreAsksPending     an account's daily Ask, to its owners
  *       ai-limit-reached         FINDING, ai-use.limitsReached                  a limit reached this period, to its owners
- *       project-account-suspended FINDING, credentials.projectAccountsSuspended a project's sign-in stopped serving
+ *       project-account-suspended FINDING, ai-accounts.projectAccountsSuspended   a project's sign-in stopped serving (T48, N996 §5)
  *       (each item's sentence and fills read by key from `words.json`, `words.mjs`; DEC-189 (5), (6); `{date}` by
  *       `date.daymonth|daymonthyear`, `{when}` by `ai.until.*`, DEC-191 (3), DEC-192 (3), (5))
  *   R17 the investigation's items, each told once, keyed by its source's own key (N820; K2418, K2484), each kind's summary
@@ -42,7 +43,7 @@
  *
  * REACHED as `noticeProducersOf(host, deps)` (K1563 (1)): one instance per Durable Object storage. It registers nothing
  * and holds no check row: it refuses nothing. `deps` (each defaults to its module's instance on the same host, reached
- * lazily when first asked): membership, people, moneyChecks, duties, entities (R20's `{office}`, K3144), answers, inquiry, credentials, following, standards,
+ * lazily when first asked): membership, people, moneyChecks, duties, entities (R20's `{office}`, K3144), answers, inquiry, credentials (R12), aiAccounts (R16's suspended sign-ins, T48), following, standards,
  * fileSafety, provenance, aiUse (R16), steps (with `step`, R17's step work), questionExplorer, investigation, review (R17);
  * and `view`, the jurisdiction view whose time zone R13's to R17's dates are read in (the profile's, when not given; read
  * once a read of `noticeItems`).
@@ -64,6 +65,7 @@ import { entitiesOf } from "../entities/index.mjs";
 import { answersOf } from "../answers/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { credentialsOf, SECURITY_THRESHOLD, SECURITY_DAYS } from "../credentials/index.mjs";
+import { aiAccountsOf } from "../ai-accounts/index.mjs";
 import { followingOf } from "../following/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { fileSafetyOf, findingKind } from "../file-safety/index.mjs";
@@ -160,6 +162,8 @@ const HOUR_MS = 3600e3, DAY_MS = 24 * HOUR_MS;
 /* A provider's failure, named in `facts.failed` as the provider it came from (R1). */
 const failure = (provider) => Object.assign(new Error(`${provider} did not answer`), { provider });
 
+/* R22: the clause `{reason}` leaves behind when it is filled with nothing ("… undetermined, because ."), dropped whole */
+const NO_REASON_CLAUSE = /,\s*because\s+(?=\.)/;
 const filled = (v) => typeof v === "string" && v.trim() !== "";
 /* R16, R17: an item's key: `<CLASS>::<kind>::` and its source's own key, as given (a key already of that form is used whole). */
 const keyed = (cls, kind, key) => (String(key).startsWith(`${cls}::${kind}::`) ? String(key) : `${cls}::${kind}::${key}`);
@@ -212,6 +216,7 @@ export class NoticeProducers {
   get #answers() { return this.#dep("answers", () => answersOf(this.#host)); }
   get #inquiry() { return this.#dep("inquiry", () => inquiryOf(this.#host)); }
   get #credentials() { return this.#dep("credentials", () => credentialsOf(this.#host)); }
+  get #aiAccounts() { return this.#dep("aiAccounts", () => aiAccountsOf(this.#host)); }
   get #following() { return this.#dep("following", () => followingOf(this.#host)); }
   get #standards() { return this.#dep("standards", () => standardsOf(this.#host)); }
   get #fileSafety() { return this.#dep("fileSafety", () => fileSafetyOf(this.#host)); }
@@ -281,7 +286,7 @@ export class NoticeProducers {
       run("file-safety", () => ({ fact: "security_tool_off", ...this.#toolsOff(me, viewer, at) }));
       run("ai-use", () => ({ fact: "explore_ask", ...this.#exploreAsks(me, viewer, at) }));
       run("ai-use", () => ({ fact: "ai_limit", ...this.#limitsReached(me, viewer, at) }));
-      run("credentials", () => ({ fact: "signin_suspended", ...this.#accountsSuspended(me, viewer, at) }));
+      run("ai-accounts", () => ({ fact: "signin_suspended", ...this.#accountsSuspended(me, viewer, at) }));
       run("question-explorer", () => ({ fact: "question_find", ...this.#questionFinds(me, viewer, at) }));
       run("steps", () => ({ fact: "step_later_found", ...this.#laterFound(me, viewer, at) }));
       run("steps", () => ({ fact: "step_due", ...this.#stepsDue(me, viewer, at) }));
@@ -638,11 +643,13 @@ export class NoticeProducers {
     const told = state === "overdue" ? "overdue" : "undetermined";
     const act = d.performance && filled(d.performance.act) ? d.performance.act : d.duty_id;
     const trace = occ.due && occ.due.trace && typeof occ.due.trace === "object" ? occ.due.trace : {};
-    const why = filled(occ.why) ? occ.why.replace(/^possibly overdue: undetermined, because\s+/i, "").replace(/\.\s*$/, "") : "";
+    /* R22 (T48; N1044; duties R33): `{reason}` is duties' member-facing reason (`reason.says`), never `why`, which stays the
+       record's derivation and is not drawn into the sentence; `reason: null` fills nothing and draws no reason clause */
+    const says = occ.reason && filled(occ.reason.says) ? occ.reason.says.trim().replace(/\.\s*$/, "") : "";
     const fills = { duty: act, office: this.#officeOf(d), what: act,
                     basis: filled(trace.citation) ? trace.citation : d.adoption && filled(d.adoption.clause) ? d.adoption.clause
                       : occ.due && filled(occ.due.basis_kind) ? occ.due.basis_kind : (d.time && d.time.basis) || "",
-                    reason: why,
+                    reason: says,
                     ...(told === "overdue" ? { date: dayInSentence(dueDay, today) }
                       : { from: dayInSentence(firstDay, today), to: dayInSentence(dueDay, today) }) };
     const summaryKey = `queue.temporal-expectation-due.${told}.summary`, detailKey = `queue.temporal-expectation-due.${told}.detail`;
@@ -656,7 +663,8 @@ export class NoticeProducers {
       subject: { kind: "duty", id: d.duty_id, occurrence: occ.key, due: due ?? null,
                  basis_kind: occ.due && occ.due.basis_kind ? occ.due.basis_kind : (d.time && d.time.basis) || null,
                  derivation: occ.derivation ?? null, state },
-      summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills), summary_key: summaryKey, detail_key: detailKey, fills,
+      summary: wordsOf(summaryKey, fills), detail: wordsOf(detailKey, fills).replace(NO_REASON_CLAUSE, ""),
+      summary_key: summaryKey, detail_key: detailKey, reason_code: occ.reason && filled(occ.reason.code) ? occ.reason.code : null, fills,
       basis: { source: "duties.occurrencesOf", duty: d.duty_id, occurrence: occ.key, state: occ.state, why: occ.why ?? null,
                trigger: occ.trigger ?? null, due: occ.due ?? null, derivation: occ.derivation ?? null, as_of: asOf,
                recipients_rule: to.rule,
@@ -1068,8 +1076,9 @@ export class NoticeProducers {
   }
 
   #accountsSuspended(me, viewer, now) {
-    const r = this.#credentials.projectAccountsSuspended({ viewer, at: instantOf(now) });
-    if (!Array.isArray(r)) throw failure("credentials");
+    /* (T48; N996 §5) read from ai-accounts (its R13), which took the account reads from credentials */
+    const r = this.#aiAccounts.projectAccountsSuspended({ viewer, at: instantOf(now) });
+    if (!Array.isArray(r)) throw failure("ai-accounts");
     const { list, truncated } = cut(r.filter((e) => e && filled(e.key) && filled(e.project)), ACCOUNT_ITEMS_MAX);
     const items = list.map((e) => {
       const fills = { project: this.#titleOf(e.project, viewer) ?? e.project };
@@ -1080,9 +1089,9 @@ export class NoticeProducers {
         case: this.#homesAt([e.project], viewer),
         subject: { kind: "project", id: e.project, since: e.since ?? null },
         summary: text, detail: text, word: "ai.queue.suspended", fills,
-        basis: { source: "credentials.projectAccountsSuspended", key: e.key, project: e.project, since: e.since ?? null,
-                 detail: "a project's sign-in account serves only while the project has one member (credentials R54, "
-                       + "R59); answered to the project's owners, naming no member." },
+        basis: { source: "ai-accounts.projectAccountsSuspended", key: e.key, project: e.project, since: e.since ?? null,
+                 detail: "a project's sign-in account serves only while the project has one member (ai-accounts R13); "
+                       + "answered to the project's owners, naming no member." },
         age: ageFrom(e.since, now, "no_suspension_instant"),
         assignee: null, assignee_role: null,
         recipients: [me],

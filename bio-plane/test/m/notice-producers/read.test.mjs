@@ -36,8 +36,8 @@ function providers(calls = []) {
         return { ok: true, from, to, step: "hour", buckets: Array.from({ length: Math.ceil((t - f) / 3600e3) }, (_, i) => {
           const start = new Date(f + i * 3600e3).toISOString().replace(/\.\d+Z$/, "Z");
           const n = start >= "2026-10-06T11:00:00Z" ? 40 : 0;
-          return { start, counts: { through: 0, total: n }, usual: { through: 0, total: 0 } }; }) }; },
-      projectAccountsSuspended: () => [{ project: P, member: "alice", since: "2026-10-02T00:00:00Z", key: `${P}|alice|2026-10-02T00:00:00Z` }] },
+          return { start, counts: { through: 0, total: n }, usual: { through: 0, total: 0 } }; }) }; }, },
+    aiAccounts: { projectAccountsSuspended: () => [{ project: P, member: "alice", since: "2026-10-02T00:00:00Z", key: `${P}|alice|2026-10-02T00:00:00Z` }] },
     following: { policyChanges: () => ({ ok: true, cursor: null, changes: [{ watch: 7, standard: "STD-1", address: "https://example.org/p",
       before: { capture: "a".repeat(64), at: "2026-09-01T00:00:00Z" }, after: { capture: "b".repeat(64), at: "2026-10-01T00:00:00Z" }, amendment_held: false }] }) },
     standards: { standardRead: ({ id }) => ({ ok: true, id, cite: "a policy", declared_by: "member:alice" }) },
