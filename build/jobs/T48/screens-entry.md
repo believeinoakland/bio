@@ -34,7 +34,7 @@ Size (session_01BpeeBYLA4MHskJuB8Ac3T8): test runs 9, module lines 1050
 
 **Tests and checks:** module tests 61, pass 61, fail 0 (the R4 test now asserts `FORGOT_HELP` drawn signed out and after an ended session, and, as its control, no `HOSTING_CONTROL` heading, sentence, guide or `#hosting-control` on `forgot` while `setup` still draws it); `control-plane` t46-app and t46-e2e 9/9. `format` 0 failures; `architecture` (screens-entry) 0, run.mjs 0; `coverage` 15 of 15, 0 failures; `ownership` 0; `channels` 0.
 
-Size (session_01BpeeBYLA4MHskJuB8Ac3T8): test runs 13, module lines 1053
+Size (session_01BpeeBYLA4MHskJuB8Ac3T8): test runs 13, module lines 1056
 
 ## J1 · QUESTION
 
