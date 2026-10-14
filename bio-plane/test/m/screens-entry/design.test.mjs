@@ -5,18 +5,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { open, has, lacks, said, all, texts, FOUNDER } from "./kit.mjs";
-import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import * as SHELL from "../../../src/interface-shell/index.mjs";
 
 // ---- the served stylesheets (interface-shell R56): civicsmith.css, shell.css and the shell's own STYLE ----
-const css = (name) => { const f = ASSET_FILES[name]; return f ? (typeof f.body === "string" ? f.body : Buffer.from(f.body).toString("utf8")) : null; };
-/* `shell.css` as interface-assets R7 generates it, while that job's file is not yet served: the product rules of the
-   design page's `<style>` (every selector naming an `mk-` or `cs-` class, none a mock-only or the page's own; a rule
-   under the phone device's frame carried inside the 760 px query with that prefix removed). */
+/* Read from the design's own files, which `interface-assets` serves (R1: civicsmith.css as it is; R7: shell.css made
+   from the page's `<style>`), so no module this one does not use is imported. */
+const DESIGN = (path) => fs.readFileSync(new URL("../../../../docs/development/ux-substrate/" + path, import.meta.url), "utf8");
+/* `shell.css` as interface-assets R7 generates it: the product rules of the design page's `<style>` (every selector
+   naming an `mk-` or `cs-` class, none a mock-only or the page's own; a rule under the phone device's frame carried
+   inside the 760 px query with that prefix removed). */
 function shellCss() {
-  const served = css("shell.css");
-  if (served) return served;
-  const page = fs.readFileSync(new URL("../../../../docs/development/ux-substrate/screens/page.src.html", import.meta.url), "utf8");
+  const page = DESIGN("screens/page.src.html");
   const src = page.slice(page.indexOf("<style>") + 7, page.indexOf("</style>")).replace(/\/\*[\s\S]*?\*\//g, "");
   const MOCK = /\.(mk-scaler|mk-mockctl|mk-osprompt|anat|asfig|viewer|vlist)\b/;
   const PHONE = /^\.mk-device\[data-device="phone"\]\s+/;
@@ -46,7 +45,7 @@ function shellCss() {
 const SHELL_CSS = shellCss();
 const STYLE = (() => { const p = SHELL.interfacePage([]); return p.slice(p.indexOf("<style>") + 7, p.indexOf("</style>")); })();
 const defined = (text) => new Set([...text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{[^{}]*\}/g, "{}").matchAll(/\.([a-zA-Z][\w-]*)/g)].map((m) => m[1]));
-const SERVED = new Set([...defined(css("civicsmith.css")), ...defined(SHELL_CSS), ...defined(STYLE), ...(Array.isArray(SHELL.HOOK_CLASSES) ? SHELL.HOOK_CLASSES.map((h) => (Array.isArray(h) ? h[0] : h && h.class ? h.class : h)) : [])]);
+const SERVED = new Set([...defined(DESIGN("visual-language/civicsmith.css")), ...defined(SHELL_CSS), ...defined(STYLE), ...(Array.isArray(SHELL.HOOK_CLASSES) ? SHELL.HOOK_CLASSES.map((h) => (Array.isArray(h) ? h[0] : h && h.class ? h.class : h)) : [])]);
 // the script hooks this module draws for another to read, until interface-shell's HOOK_CLASSES lists them (R56)
 const HOOKS = new Map([["cs-codes", "journey-check reads the ten recovery codes"]]);
 
