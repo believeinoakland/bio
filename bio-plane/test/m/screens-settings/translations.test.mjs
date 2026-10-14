@@ -28,7 +28,7 @@ test("R16 the panel: translationadopt (typed, or a stored draft kept as drafted)
   const a = await open("translations", { me: ADMIN, table: translationsTable(), subject: "es" });
   assert.deepEqual(ops(panelOf(a.tree, "rail.queue.name")), ["translationadopt"]);
   assert.deepEqual(ops(panelOf(a.tree, "mark.outward.means")), ["translationadopt", "translationconfirm", "translationrevert"]);
-  assert.ok(textOf(panelOf(a.tree, "rail.queue.name")).includes(said("screen.translations.draft.label", { handle: "ana" })), "a draft labelled machine work");
+  assert.ok(textOf(panelOf(a.tree, "rail.queue.name")).includes(said("screen.translations.draft.label", { handle: "ana" })), "a draft labeled machine work");
   assert.deepEqual((await a.press("translationadopt", { data: { key: "rail.queue.name" }, values: { "tr-t-rail_queue_name": "", "tr-t-rail_queue_name-d0": true } })).sent[0].body, { language: "es", key: "rail.queue.name", text: "Cola", draft: "D1" });
   assert.deepEqual((await a.press("translationadopt", { data: { key: "rail.queue.name" }, values: { "tr-t-rail_queue_name": "La cola", "tr-t-rail_queue_name-d0": true } })).sent[0].body, { language: "es", key: "rail.queue.name", text: "La cola", draft: "D1" }, "a draft corrected");
   assert.deepEqual((await a.press("translationadopt", { data: { key: "rail.home.name" }, values: { "tr-t-rail_home_name": "Portada" } })).sent[0].body, { language: "es", key: "rail.home.name", text: "Portada" });

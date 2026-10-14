@@ -98,7 +98,7 @@ test("R27 Update: on its answer the installer's address is offered in a new brow
   assert.equal(all(bad.tree, (e) => e.tag === "a" && /^javascript:/.test(e.attrs.href || "")).length, 0);
 });
 
-test("R27 Not now sends the version; Skip this version is reasoned: its reason, one line, is sent; none sends nothing", async () => {
+test("R27 R34 Not now sends the version; Skip this version is reasoned: its reason, one line, is sent; none sends nothing", async () => {
   const a = await open("updates", { me: ADMIN, table: updatesTable() });
   assert.deepEqual((await a.press("updatelater", { data: { version: "0.84.0" } })).sent.map((x) => [x.op, x.body]).slice(0, 1), [["updatelater", { version: "0.84.0" }]]);
   assert.equal(a.p.requests.at(-1).op, "updatenotice", "R8: the notice is read again after the act");

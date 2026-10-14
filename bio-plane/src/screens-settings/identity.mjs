@@ -4,7 +4,7 @@
    kinds, focus and purpose, and one visibility for the whole description, members only or also the public), and, only
    while the assistant is reachable (interface-shell R20), asks it for a draft (`groupdescriptiondraft`, instance-setup
    R65) from their answers to a few questions: the draft is filled into the focus and purpose fields (`cs.fill`,
-   interface-shell R27), labelled "Draft · the assistant's, asked by <handle>" (and as untested where its answer says so,
+   interface-shell R27), labeled "Draft · the assistant's, asked by <handle>" (and as untested where its answer says so,
    R11), and kept only by the administrator's own save (DEC-152). Every function is self-contained (interface-shell
    R21). */
 

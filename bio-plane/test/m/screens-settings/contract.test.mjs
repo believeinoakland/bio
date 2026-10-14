@@ -1,7 +1,7 @@
 /* screens-settings at the screen contract (interface-shell R21, R38, R5; draft-T46-interface §4 (1)): the screens are
    registry screens, each lists exactly its registry acts (an owed act by the op it owes), every act names an op `OPS`
    holds, every function is self-contained (K2854 T1: it runs the same when rebuilt from its own source, with nothing
-   in scope), and every word a screen names is held in `WORD_ROWS` or the module's own `SCREEN_WORDS`. */
+   in scope), and every word a screen names is a word of `setup-words`' list (R39). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

@@ -1,7 +1,7 @@
 /* screens-settings R6, R7 (and R8): Settings › Your notes, the registry's 5 acts (DEC-136). A member's own notes, seen
    only by them: written, revised, deleted, and turned into an observation, a hunch or a question in the shapes the owner
    names (hypotheses R13); the assistant's help under the note's field only while it is reachable (interface-shell R20),
-   its draft labelled "Draft · the assistant's, asked by <handle>" and kept only by the member's own act (DEC-153 (3)),
+   its draft labeled "Draft · the assistant's, asked by <handle>" and kept only by the member's own act (DEC-153 (3)),
    with the test-instance label `ai.label.untested` beside it when the answer carries `untested` (R11; wizard-scripts
    R34); the court sentence once, the
    first time the member keeps a note while the group tells members what a court can reach (DEC-136; membership R108).
@@ -22,7 +22,7 @@ export const notes = {
     const D = (iso) => String(cs.date(iso, { year: true })).replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]));
     const ui = view.ui || {};
     const data = view.data || {};
-    // a note's field, holding the assistant's draft when one was asked for it, labelled as the assistant's
+    // a note's field, holding the assistant's draft when one was asked for it, labeled as the assistant's
     const textField = (id, field, value) => {
       const dr = ui.draft && ui.draft.field === field ? ui.draft : null;
       const help = view.reachable ? cs.act("writinghelp", { data: { field, id } }) : "";

@@ -8,7 +8,7 @@
    administrator), `translationrevert` (an administrator's undo) and, to an administrator, the assistant's reading of an
    awaiting protected word back into English (`translationdraft` `to_english`), drawn beside it and adopting nothing.
    The picked words' drafts are asked of the assistant (`translationdraft` `to_language`, only while it is reachable),
-   each drawn labelled machine work and shown to no member until adopted. `translationgrant` (an administrator's) grants
+   each drawn labeled machine work and shown to no member until adopted. `translationgrant` (an administrator's) grants
    or revokes a named member's right for the language. Every function is self-contained (interface-shell R21). */
 
 export const translations = {
@@ -73,7 +73,7 @@ export const translations = {
           const fid = "tr-t-" + k.replace(/[^A-Za-z0-9_-]/g, "_");
           const drafts = Array.isArray(x.drafts) ? x.drafts : [];
           const p = [];
-          // the stored drafts, labelled machine work, each one to keep as drafted or corrected
+          // the stored drafts, labeled machine work, each one to keep as drafted or corrected
           if (drafts.length) p.push(`<fieldset><legend>${W(S + "drafts")}</legend>${drafts.map((d, i) => `<input type="radio" id="${fid}-d${i}" name="${fid}-d" data-draft="${E(d.id)}"><label for="${fid}-d${i}"><span class="mk-tag">${W(S + "draft.label", { handle: d.asked_by_name || String(d.asked_by || "").replace(/^member:/, "") })}</span> <span class="rec">${E(d.text)}</span></label>`).join("")}</fieldset>`);
           const adopt = cs.act("translationadopt", { data: { key: k } });
           if (adopt) p.push(`${cs.field(fid, S + "text.field", { help: drafts.length ? S + "text.help.draft" : S + "text.help", rec: true, max: 2000, value: x.text || "", autocomplete: "off" })}${adopt}`);

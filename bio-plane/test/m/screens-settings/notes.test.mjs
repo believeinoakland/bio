@@ -53,7 +53,7 @@ test("R6 noteturn, as the owner's shape names: into a hunch {inquiry, kind, abou
   assert.equal(a.refused.key, "screen.notes.turn.nomade");
 });
 
-test("R6 writinghelp under the note's field only while the assistant is reachable; its draft in the field labelled \"Draft · the assistant's, asked by <handle>\", kept only by the member's own act", async () => {
+test("R6 writinghelp under the note's field only while the assistant is reachable; its draft in the field labeled \"Draft · the assistant's, asked by <handle>\", kept only by the member's own act", async () => {
   const a = await open("notes", { me: MEMBER, table: notesTable(MEMBER), reachable: true });
   const help = acts(a.tree).filter((b) => b.attrs["data-act"] === "writinghelp");
   assert.deepEqual(help.map((b) => b.attrs["data-field"]).sort(), ["new", "note:1", "note:2"], "one under each note's field");
