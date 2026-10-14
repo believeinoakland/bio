@@ -541,6 +541,7 @@ w('acquisition.why.part_missing_disagreeing', '{missing} part(s) missing, {disag
 w('acquisition.text.evidence_store_hold', "the evidence store could not hold the file's bytes", note='acquisition, text')
 w('acquisition.authority_basis.file_cut_out', "a file cut out of an archive at {at}: the cut asserts its bytes and where they sat, never who issued them; the archive's own document states its source", note='acquisition, authority_basis')
 w('acquisition.why.evidence_storage', 'no evidence storage', note='acquisition, why')
+w('refusal.RFC_QUOTING_MISSING', 'A request for comment says the reply may be quoted unless it says otherwise. Add that sentence before approving. Nothing was written.', note="filing-templates's own keyed row, not yet in the list: adopted as written")
 w('filing-templates.counterparty_role', "the official role of the office the action is addressed to (the action's counterparty)", note='filing-templates, counterparty_role')
 w('filing-templates.counterparty_body', "the body of that office (an office's arm only)", note='filing-templates, counterparty_body')
 w('filing-templates.counterparty_organisation', 'the organization of a reporter, an organization or another group the action is addressed to', note='filing-templates, counterparty_organisation')

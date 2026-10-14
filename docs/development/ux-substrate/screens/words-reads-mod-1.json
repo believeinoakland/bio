@@ -1,7 +1,6 @@
 {
  "skilldoctrine.mjs": {
   "reads": [
-   "members.",
    "skilldoctrine.intake.already_have",
    "skilldoctrine.intake.promised",
    "skilldoctrine.intake.since_when",
@@ -10,6 +9,12 @@
    "skilldoctrine.intake.which_body"
   ],
   "unkeyed": [
+   {
+    "file": "skilldoctrine.mjs",
+    "line": 927,
+    "text": "A write-up or letter names the office and the official responsible in that role; staff below that level are named only where the evidence turns on their own act, each such name pointed out for the member to confirm.",
+    "why": "the assistant's skill doctrine, rendered into the agent's pack (skillpack's renderPack) as instructions the model reads; no member screen draws it"
+   },
    {
     "file": "skilldoctrine.mjs",
     "line": 130,

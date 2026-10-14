@@ -3139,6 +3139,12 @@
    "note": "DEC-260: acquisition, why"
   },
   {
+   "key": "refusal.RFC_QUOTING_MISSING",
+   "en": "A request for comment says the reply may be quoted unless it says otherwise. Add that sentence before approving. Nothing was written.",
+   "protected": false,
+   "note": "DEC-260: filing-templates's own keyed row, not yet in the list: adopted as written"
+  },
+  {
    "key": "filing-templates.counterparty_role",
    "en": "the official role of the office the action is addressed to (the action's counterparty)",
    "protected": false,

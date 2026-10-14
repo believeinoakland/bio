@@ -10,79 +10,79 @@
    "key": "refusal.ACCEPTED_WORK_NOT_IN_FORCE",
    "en": "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.ACCEPT_AS_PROPOSED_TAKES_NO_WORDS",
    "en": "Taking up a proposal as proposed records its meaning as it was proposed, so it carries no words of your own; to say it differently, take it up in your own words. Nothing was accepted.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.ACCEPT_FORM_UNKNOWN",
    "en": "A proposal is taken up as proposed, taken up in your own words, or replaced by your own reading, and this named none of the three. Nothing was accepted.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.ACCEPT_NEEDS_HER_WORDS",
    "en": "Taking up a proposal in your own words, or replacing it with your own reading, records what you say it means, and no words were given. Nothing was accepted.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.ACCEPT_NOT_A_MEMBER",
    "en": "Taking up a proposal is a member's own act, and this came from no member. A machine never accepts its own work. Nothing was accepted.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.ACCOUNT_BIAS_NOT_PRINTED",
    "en": "A sentence of the account is framed by a bias statement this case's lens does not print. Frame it by a statement the lens prints, or write it without the framing. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.ACCOUNT_CHECK_UNDETERMINED",
    "en": "The account could not be checked against what it cites, so whether every sentence stands is not known. Try again. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.ACCOUNT_CLAIM_NOT_BIAS",
    "en": "A sentence marked as following a bias statement states a fact: a figure, date, name, quotation or a finding's outcome. Lying is not bias. Cite what the fact rests on, or take it out. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.ACCOUNT_CONTRADICTED_BY_RECORD",
    "en": "A sentence of the account says something other than the record holds: a finding's conclusion or a determination, or a leg that cuts against it read as support. It cannot be tied to evidence. Say what the record holds, or take it out. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.ACCOUNT_FACT_NOT_IN_CITED",
    "en": "A sentence of the account states a figure, date, name or quotation that what it cites does not hold. Say only what it cites holds, or cite what holds it. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.ACCOUNT_FLAG_UNANSWERED",
    "en": "The machine flagged a sentence of the account as not supported by what it cites, and the flag is not answered. Tie the sentence to evidence, or take it out. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.ACCOUNT_SENTENCE_UNSUPPORTED",
    "en": "A sentence of the account rests on nothing it cites. Cite what it rests on, mark it as following a printed bias statement, or take it out. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.ACTION_CLOSED",
    "en": "The action is resolved or abandoned, so nothing is prepared for it.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.ACTION_KIND_UNKNOWN",
@@ -178,7 +178,7 @@
    "key": "refusal.ALREADY_APPROVED",
    "en": "This draft has already been approved, and an approval stands as recorded. Prepare a new draft to approve another text.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.ALREADY_ENDED",
@@ -196,7 +196,7 @@
    "key": "refusal.ALREADY_SENT",
    "en": "This draft is already recorded as sent, and that record stands.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.ALREADY_SUSPENDED",
@@ -208,37 +208,37 @@
    "key": "refusal.ANSWER_ABSENCE_WITHOUT_LEVEL",
    "en": "This sentence said something is missing without saying where the record looked, or in words other than the record's own, so it is not shown.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.ANSWER_CAUSE_UNESTABLISHED",
    "en": "This sentence stated a cause that no finding it quotes establishes, so it is not shown: the cause is not established. A cause a body gave is shown only in its own quoted words.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.ANSWER_CITES_UNREAD",
    "en": "This sentence quoted or rested on something the assistant did not read for this question, or quoted it in words the record does not hold, so it is not shown.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.ANSWER_FIGURE_UNSOURCED",
    "en": "This sentence stated a figure that no calculation or money fact the assistant read gives, so it is not shown.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.ANSWER_RULE_NOT_PLANE",
    "en": "This sentence stated a rule that did not come from the record's own rule services, so it is not shown. The assistant never states a rule from its own knowledge.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.ANSWER_VERDICT_WORD",
    "en": "This sentence gave a verdict, a likelihood or a rating in Civicsmith's own words, so it is not shown. Civicsmith says what the record holds and never judges it.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.APPEAL_NAMES_NO_DECISION",
@@ -250,19 +250,19 @@
    "key": "refusal.AROSE_FROM_REFUSED",
    "en": "What arose from the response is named as a project, or as a plan with one of its matters, each by its id. This request named neither in that form, so nothing was linked.",
    "protected": false,
-   "note": "DEC-260: action-replies's translation, keyed by its code"
+   "note": "DEC-260: action-replies' translation, keyed by its code"
   },
   {
    "key": "refusal.BAD_ABOUT",
    "en": "Name what the hypothesis is about by the record's own ids; a cause, an identity or a relation names exactly two, from and to. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.BAD_CADENCE",
    "en": "A standing question runs daily, weekly or monthly. Choose one of these. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.BAD_CITATION",
@@ -298,7 +298,7 @@
    "key": "refusal.BAD_LIMIT",
    "en": "A limit is a whole number from 1 to 500. Nothing was read.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.BAD_NOTE",
@@ -310,19 +310,19 @@
    "key": "refusal.BAD_POPULATION",
    "en": "The population is not one this module can read; the answer says which part and what it takes. Nothing was defined.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.BAD_RATE",
    "en": "A false-alarm rate is a proportion from 0 to 1. Nothing was recorded.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.BAD_RECIPE",
    "en": "The condition is not a recipe the calculation grammar accepts for a detector; the answer says which step and why. Nothing was defined.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.BAD_RISK_TIER",
@@ -352,31 +352,31 @@
    "key": "refusal.BAD_VALUE",
    "en": "The value does not read as this parameter's kind of value; the answer says what it takes. Nothing was recorded.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.BEARING_NOTHING_TIED",
    "en": "None of this note's sentences could be tied to the document's own words where it said they were, so there is nothing to keep. A sentence that cannot be tied is left out, never kept on trust.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.BEARING_NO_CAPTURE",
    "en": "A note on what a document says is about one captured copy of it that the record holds and you can see, and this named none. Nothing was kept.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.BEARING_NO_QUESTION",
    "en": "A note on what a document says about a question names a question you can see, and this named none. Nothing was kept.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.BEARING_NO_SENTENCES",
    "en": "This note held no sentences, or more than one note may hold. Nothing was kept.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.BENCHMARK_CALLED_NONCONFORMING",
@@ -442,73 +442,73 @@
    "key": "refusal.CHECK_ADDRESS_ONE",
    "en": "A check is asked either of everyone who has declared an expertise, or of one member you name, and this request named neither or both. Nothing was written. Choose one.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.CHECK_ALREADY_RECORDED",
    "en": "This check has already been recorded, and a request holds one check. Nothing was written. The answer shows the record that stands.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.CHECK_ALREADY_TAKEN",
    "en": "Someone else has already taken this check, so it is theirs now. Nothing was written. The answer says who took it and when.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.CHECK_CLOSES_BY_RECORD",
    "en": "You took this check, so this To do closes when you record the check or a concern. Nothing was changed.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.CHECK_MEMBER_REFUSED",
    "en": "The member you named cannot be asked: they are not an active member, or they cannot see this item. Nothing was written. Ask by expertise, or name another member.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.CHECK_NOTE_TOO_LONG",
    "en": "The note is longer than 1,000 characters. Nothing was written. Shorten it and ask again.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.CHECK_NOT_AN_OWNER",
    "en": "Only an owner of the project this item belongs to can ask for a check on it. Nothing was written. Ask one of the project's owners to ask for it.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.CHECK_NOT_FORWARDED",
    "en": "A request for a check is not handed on: it goes to everyone with the expertise who can see the item, or to the member its owner named. Nothing was changed. Anyone who can see the item may take it.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.CHECK_NOT_YOURS",
    "en": "Only the member who took this check can record it. Nothing was written. Take it first if no one has.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.CHECK_NO_REASON",
    "en": "A concern needs its reason, so the owner and the group can see what to look at. Nothing was written. Say what concerns you and record it again.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.CHECK_REASON_TOO_LONG",
    "en": "The reason is longer than 4,000 characters. Nothing was written. Shorten it and record it again.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.CHECK_VERDICT_UNKNOWN",
    "en": "A check is recorded either as checked or as a concern, and this was neither. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.CITE_ONE_SOURCE",
@@ -520,13 +520,13 @@
    "key": "refusal.CLOCK_ENTRY_REFUSED",
    "en": "A deadline needs its words, a date written year-month-day, what it rests on and who owes it (the group, the body, or not stated), and any time of day falls on that date. This one did not meet one of those, so nothing was written.",
    "protected": false,
-   "note": "DEC-260: action-clocks's translation, keyed by its code"
+   "note": "DEC-260: action-clocks' translation, keyed by its code"
   },
   {
    "key": "refusal.CLOCK_PROPOSAL_UNDETERMINED",
    "en": "The proposed deadline has no date: it could not be computed, for the reason it states. Nothing was adopted. A member can state the deadline themselves by revising the action, with its basis.",
    "protected": false,
-   "note": "DEC-260: action-clocks's translation, keyed by its code"
+   "note": "DEC-260: action-clocks' translation, keyed by its code"
   },
   {
    "key": "refusal.CLOCK_REFUSED",
@@ -544,19 +544,19 @@
    "key": "refusal.COMMUNICATION_NO_PREPARER",
    "en": "Nobody is named as the one preparing this communication. Every draft names who prepared it.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.COMMUNICATION_PURPOSE_REFUSED",
    "en": "Say what the communication is for, in at most 500 characters.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.COMMUNICATION_TEXT_REFUSED",
    "en": "The communication's words are empty, too long, or not readable as text.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.COMPLIANCE_NOT_RESTORED",
@@ -604,31 +604,31 @@
    "key": "refusal.CONNECTION_GRADE_OFFERED",
    "en": "This proposed connection came with its own grade. A connection's grade is worked out by the record from how the link is established, never given by the machine that proposed it. Nothing was proposed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.CONNECTION_NOT_ESTABLISHED",
    "en": "This proposed connection does not say how the link is established, or the identifier, name or date it names is not in its own words. A machine only points; it never grades a connection on its own say-so. Nothing was proposed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.CONNECTION_NO_QUOTE",
    "en": "A proposed connection is tied to the exact words it rests on and to the place in the document where they are, and this one gave no words or no readable place. Nothing was proposed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.CONNECTION_NO_TARGET",
    "en": "This proposed connection does not name something it can connect to: a public body, a person in a public role, another document or a question that can be read here. Nothing was proposed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.CONNECTION_PERSON_NO_ROLE",
    "en": "A connection to a person is about their part in a public matter, so it names the public role the words show, and this one named none. Investigations never look at a private life. Nothing was proposed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.CONSEQUENCES_NOT_ADDRESSED",
@@ -682,13 +682,13 @@
    "key": "refusal.COURT_LINK_TARGET_NOT_LAW",
    "en": "A court's reading is linked to a portion of a statute, regulation, ordinance or policy, and the standard named is none of these. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: law-relations's translation, keyed by its code"
+   "note": "DEC-260: law-relations' translation, keyed by its code"
   },
   {
    "key": "refusal.CO_ATTESTATION_UNACKNOWLEDGED",
    "en": "A load-bearing document has no trusted timestamp and co-archive. Retry them, or acknowledge publishing it as self-attested only, with a reason. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.CREDENTIALS_MISSING",
@@ -748,19 +748,19 @@
    "key": "refusal.DETERMINATION_UNREADABLE",
    "en": "No determination can be read here, so the actions available against its offices cannot be listed.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.DISCLOSURE_NOT_STANDING",
    "en": "One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.DOCUMENT_COPY_UNDETERMINED",
    "en": "A document this case relies on could not be checked for the details a member's file can carry, so what the published case would show of it is not known. Try again. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.DUE_CITE_NOT_GOVERNING",
@@ -862,7 +862,7 @@
    "key": "refusal.EXTRACT_NO_SCOPE",
    "en": "This list of proposed readings names neither an investigation nor a document, so nothing was listed. A list of every proposal in the record would be a scan nobody can act on; name the one you mean.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.FACT_FAILED",
@@ -910,31 +910,31 @@
    "key": "refusal.FILING_MARK_REFUSED",
    "en": "Something you marked about this text (whose voice it is, its audience, its language, the sentences about the group's own doing, or what it names) is not in a form that can be recorded. Nothing was prepared.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.FILING_NO_PREPARER",
    "en": "Nobody is named as the one preparing this draft. Every draft names who prepared it.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.FILING_STALE",
    "en": "Something the draft was prepared from has changed since, as named. Prepare the draft again so it says what the record says now.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.FILING_TIER_UNDETERMINED",
    "en": "The action's risk tier has not been stated, and an unstated tier is never read as the lowest. A member states the tier first.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.FILL_UNKNOWN_BLANK",
    "en": "You filled in a blank the text does not have. Fill only the blanks the text names. Nothing was prepared.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.FINDING_IN_SEVERAL_CASES",
@@ -946,19 +946,19 @@
    "key": "refusal.FLAGS_UNDETERMINED",
    "en": "The flags on another group's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.FLAG_DISCLOSURE_NOT_STANDING",
    "en": "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.FLAG_NOT_DISCLOSED",
    "en": "Another group's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.FOLLOWS_NO_ENTRY",
@@ -1018,37 +1018,37 @@
    "key": "refusal.HYPOTHESIS_NOT_A_LEG",
    "en": "A hypothesis is never part of what a finding rests on. Keep it in the inquiry as a hypothesis, and rest the finding on evidence. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.HYPOTHESIS_NOT_INPUT",
    "en": "A hypothesis is held apart from the facts and is never an input, subject or parameter of a check or detector. Nothing was recorded.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.HYPOTHESIS_NO_REASON",
    "en": "Say why you are changing or withdrawing this hypothesis. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.HYPOTHESIS_NO_STATEMENT",
    "en": "Say what you think, in your own words. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.HYPOTHESIS_PROPOSAL_NO_RUN",
    "en": "A proposal of the system's names the run that made it. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.HYPOTHESIS_WITHDRAWN",
    "en": "This hypothesis was withdrawn. Hold a new one if you think it again. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.ILLEGAL_STAGE",
@@ -1060,7 +1060,7 @@
    "key": "refusal.INBOX_REFUSED",
    "en": "This was not saved: the list of tasks it carries is not written the way the record writes tasks, so a member could be shown something in it that the record cannot vouch for. The findings beside this say which entries and what is wrong with each. Nothing was changed.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.INTENT_BAD_STAGE",
@@ -1084,43 +1084,43 @@
    "key": "refusal.LAW_RELATION_NO_CITATION",
    "en": "A relation between laws is recorded with the passage that makes it: the amending or referring words, or the court's words, as captured among the standard's own text. None of those was named. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: law-relations's translation, keyed by its code"
+   "note": "DEC-260: law-relations' translation, keyed by its code"
   },
   {
    "key": "refusal.LAW_RELATION_NO_EDITION",
    "en": "A standard incorporated by reference is recorded with the edition incorporated, in at most 50 characters, and only an incorporation carries one. None was given, it is too long, or this relation is not an incorporation. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: law-relations's translation, keyed by its code"
+   "note": "DEC-260: law-relations' translation, keyed by its code"
   },
   {
    "key": "refusal.LAW_RELATION_NO_EFFECTIVE",
    "en": "An amendment, repeal, renumbering or recodification is recorded with when it took effect: a date, or the recorded event that enacted it. None was given, or it is not in that form. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: law-relations's translation, keyed by its code"
+   "note": "DEC-260: law-relations' translation, keyed by its code"
   },
   {
    "key": "refusal.LAW_RELATION_SELF",
    "en": "A relation joins two different standards or portions, and both ends named are the same. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: law-relations's translation, keyed by its code"
+   "note": "DEC-260: law-relations' translation, keyed by its code"
   },
   {
    "key": "refusal.LAW_RELATION_UNKNOWN",
    "en": "That is not a relation this record holds between laws. The answer lists the ones it holds. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: law-relations's translation, keyed by its code"
+   "note": "DEC-260: law-relations' translation, keyed by its code"
   },
   {
    "key": "refusal.LEAD_NOT_A_LEG",
    "en": "This connection was derived through a declared grouping or a hunch, so it is a lead, never something a finding rests on. Find a source for each step. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.LEG_NOT_REDERIVED",
    "en": "This derived connection could not be worked out again from its derivation, so a finding cannot rest on it. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.LIFECYCLE_TEXT_UNWRITABLE",
@@ -1144,7 +1144,7 @@
    "key": "refusal.MACHINE_CANNOT_ADOPT_CLOCK",
    "en": "A deadline is put on an action by a member. This request came from no signed-in member, so the proposed deadline was not adopted. Sign in as a member to adopt it.",
    "protected": false,
-   "note": "DEC-260: action-clocks's translation, keyed by its code"
+   "note": "DEC-260: action-clocks' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_ADOPT_VERSION",
@@ -1162,13 +1162,13 @@
    "key": "refusal.MACHINE_CANNOT_APPROVE",
    "en": "Only a named member can approve a filing. A machine may prepare the words; it never approves them.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_ASK_SIGN",
    "en": "Asking the project's owners to sign is a person's act, and the credential that asked here is an automated one. Nothing was written. Sign in as a member to ask.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_ATTACH",
@@ -1180,13 +1180,13 @@
    "key": "refusal.MACHINE_CANNOT_AUTHOR",
    "en": "A standing question is kept only by a member's own act; the machine cannot set one. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_CHECK",
    "en": "Asking for a check, taking one and recording one are each a person's act, and the credential that asked here is an automated one. Nothing was written. Sign in as a member to do this.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_CHOOSE_THE_QUESTION",
@@ -1246,25 +1246,25 @@
    "key": "refusal.MACHINE_CANNOT_EXPORT",
    "en": "Only a named member can hand a counsel packet to counsel.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_FILE",
    "en": "Only a named member can record that a filing was sent. Your group's Civicsmith sends nothing itself.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_FORWARD",
    "en": "Forwarding hands an obligation to a named person, and deciding who is better placed to answer it is a judgment about people rather than about records. The credential that asked here is an automated one: it can surface the work and route it as it arrives, and cannot re-address it. Sign in to forward it.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_HYPOTHESISE",
    "en": "Only a member holds a hypothesis. A signal the machine raised can be taken up by a member as a hunch. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_KEEP_VERSION",
@@ -1288,13 +1288,13 @@
    "key": "refusal.MACHINE_CANNOT_NAME_COUNSEL",
    "en": "Only a named member can name the group's counsel and assemble a packet for them.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_NOTE",
    "en": "Only a member keeps a note of their own. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_OPEN",
@@ -1312,7 +1312,7 @@
    "key": "refusal.MACHINE_CANNOT_POST_NOTICE",
    "en": "Only a member, signed in as themselves, prepares or posts a notice that the group is working on something. A machine, the assistant or an operator token cannot. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_RECORD_REEVALUATION",
@@ -1324,7 +1324,7 @@
    "key": "refusal.MACHINE_CANNOT_RELATE",
    "en": "Recording how one law bears on another, or how a court treated a decision, is a member's act. An assistant may propose one for members to consider; it may not record one. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: law-relations's translation, keyed by its code"
+   "note": "DEC-260: law-relations' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_RELEASE_HOLD",
@@ -1342,7 +1342,7 @@
    "key": "refusal.MACHINE_CANNOT_RESOLVE",
    "en": "Closing an obligation says the thing the record asked for has been answered, and somebody has to be willing to say that. The credential that asked here is an automated one — it may surface the work and prepare what it needs, and closing work that is nobody's is still closing it. Sign in to resolve it.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_RESUME",
@@ -1384,7 +1384,7 @@
    "key": "refusal.MACHINE_CANNOT_SET_REMINDER",
    "en": "A reminder is something a member asks for, for themselves. This request came from no signed-in member, so nothing was set. Sign in as a member to ask for a reminder.",
    "protected": false,
-   "note": "DEC-260: action-clocks's translation, keyed by its code"
+   "note": "DEC-260: action-clocks' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_SET_RISK_TIER",
@@ -1396,7 +1396,7 @@
    "key": "refusal.MACHINE_CANNOT_STATE_CLOCK",
    "en": "A deadline is put on an action by a member. This request came from no signed-in member, so nothing was written. Sign in as a member to state the deadline.",
    "protected": false,
-   "note": "DEC-260: action-clocks's translation, keyed by its code"
+   "note": "DEC-260: action-clocks' translation, keyed by its code"
   },
   {
    "key": "refusal.MACHINE_CANNOT_STATE_RECORDS_LAW",
@@ -1444,31 +1444,31 @@
    "key": "refusal.MEMBER_ACT_ONLY",
    "en": "This is a member's act, taken in a member's own name; a machine credential cannot take it. Nothing was changed.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.MINTS_BOUND_REACHED",
    "en": "This investigation has already marked as many passages citable as it was allowed to, so it proposes nothing more and ends. Nothing was proposed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.MINTS_BOUND_WOULD_EXCEED",
    "en": "This batch would mark more passages citable than the investigation has left of its limit, so the whole batch was refused rather than cut to fit: a trimmed batch would drop proposals the sender believes were filed. Nothing was proposed. Send fewer, or ask the member who opened the investigation.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.MONEY_CHECK_NO_CITATION",
    "en": "A threshold or share is stated with its citation: a held standard, or your own word for it. Nothing was recorded.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.NARRATIVE_NOT_A_LEG",
    "en": "A shared note is a member's narrative, never something a finding rests on. Rest the finding on evidence. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.NEITHER_CAPTURE_NOR_TESTIMONY",
@@ -1498,121 +1498,121 @@
    "key": "refusal.NOTE_NO_TEXT",
    "en": "Write the note in your own words. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTE_TOO_LONG",
    "en": "This note is longer than one note can hold. Split it into shorter notes. Nothing was written, and nothing was cut.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTE_TOO_LONG_FOR_HUNCH",
    "en": "This note is longer than a hunch can hold. Hold a shorter hunch in your own words, and keep the note as it is. Nothing was written, and nothing was cut.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTE_TURN_NOT_MADE",
    "en": "Name what you made from this note by the record's own id: the observation or the question your act made. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTE_TURN_UNKNOWN",
    "en": "A note becomes an observation, a hunch or a question. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_ALREADY_OPEN",
    "en": "The project already has an open notice, as named. Change that notice with a new revision of it, or stop it, rather than opening a second. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_NOT_OPEN",
    "en": "That notice is not this project's open notice: it was stopped, or another one is open, or there is none to change or stop. A stopped notice takes no further revision. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_NOT_THE_OWNER",
    "en": "Only an owner of the project tells the network the group is working on it. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_NO_GROUP_SLUG",
    "en": "Your group has no name recorded yet, and a notice is never anonymous. Record the group's name first. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_NO_INSTANCE_KEY",
    "en": "Your group's Civicsmith holds no signing key of its own, so it cannot sign the activity level a notice is always published with. The operator binds one. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_PROJECT_CLOSED",
    "en": "The project is closed, so it takes no new notice and no change to one. An owner may still stop an open notice, with a note on where the work went. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_SIGNATURE_REFUSED",
    "en": "The signature is not a valid signature of this notice by one of your own registered signing keys, for the reason named. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_SINCE_BEFORE_PROJECT",
    "en": "The date the work began is earlier than the project itself, whose first record is dated as named. A notice never claims work from before its project. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_SINCE_EARLIER",
    "en": "A change may move the date the work began later, never earlier than the notice already says. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_SINCE_IN_FUTURE",
    "en": "The date the work began is later than today. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_SINCE_MALFORMED",
    "en": "Give the date the work began as a calendar date, year-month-day. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_STALE",
    "en": "Your group's Civicsmith holds no prepared notice from you with this fingerprint, or it was prepared more than an hour ago. Prepare it again and sign what it shows. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_UNCHANGED",
    "en": "This revision says exactly what the notice already says, so there is nothing to publish.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_WARNING_NOT_ACKNOWLEDGED",
    "en": "A notice is public and permanent, and posting it says you have read that. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOTICE_WORDING_MALFORMED",
    "en": "Say what the group is working on in one line of at most 280 characters. A subject or a body named with it is one line of at most 120 characters, and a hand-off note one line of at most 280, given only when stopping. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: network-notices's translation, keyed by its code"
+   "note": "DEC-260: network-notices' translation, keyed by its code"
   },
   {
    "key": "refusal.NOT_ACCOUNTABILITY",
@@ -1624,19 +1624,19 @@
    "key": "refusal.NOT_AN_EXTRACT_RUN",
    "en": "This investigation was not opened to read documents for what they name, so it cannot propose readings; an investigation exploring a question proposes them only for the step it serves. What an investigation may do is set when it is opened and never widened by its work. Nothing was proposed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.NOT_AN_INQUIRY",
    "en": "What you named is not a question: it is another kind of item in the record. Name the question itself, or leave it out. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: citation's translation, keyed by its code"
+   "note": "DEC-260: citation's translation, keyed by its code; hypotheses reads it too"
   },
   {
    "key": "refusal.NOT_APPROVED",
    "en": "A member approves the draft before it is recorded as sent.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.NOT_A_BREACH_ACTION",
@@ -1654,19 +1654,19 @@
    "key": "refusal.NOT_A_COURT_STANDARD",
    "en": "This act is about a court decision or order, and the standard named is not one. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: law-relations's translation, keyed by its code"
+   "note": "DEC-260: law-relations' translation, keyed by its code"
   },
   {
    "key": "refusal.NOT_A_DOCUMENT",
    "en": "That is not a captured document. A question, a project or an action has no pages or text of its own, so there is nothing in it to read or to point into. Nothing was changed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.NOT_A_READING_RUN",
    "en": "This investigation was not opened to read inside documents, so it reads none. What an investigation may do is set when it is opened and never widened by its work. Nothing was read.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.NOT_HELD",
@@ -1714,7 +1714,7 @@
    "key": "refusal.NOT_THE_GROUPS_ACT",
    "en": "These are your own notes, prepared as yourself: they are not the group's act, so they are never approved or recorded as sent by the group.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.NOT_YOURS",
@@ -1726,55 +1726,55 @@
    "key": "refusal.NO_BUDGET",
    "en": "A detector run is given a time budget in milliseconds, above zero. Nothing was run.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_BYTES_HELD",
    "en": "The record holds no captured copy of that document, so there is no text in it to read or to point into. That is a fact about what has been captured, never about what the document says. Nothing was changed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_CHECK",
    "en": "A parameter belongs to a named check. Nothing was recorded.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_CONTRACT",
    "en": "Amount checks are asked of one contract, named by its entity id. Nothing was checked.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_COUNSEL",
    "en": "Name counsel by a name and an organization, each on one line and not too long; a contact is optional.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_DENOMINATOR",
    "en": "A detector states the population its count is taken over, its denominator. Nothing was defined.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_DERIVATION",
    "en": "A detector states how its result is derived, so a reader can follow it. Nothing was defined.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_GOLD_SET",
    "en": "A false-alarm rate is recorded with the gold set it was measured on. Nothing was recorded.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_LABEL",
    "en": "A detector is defined with a label that says what it looks for. Nothing was defined.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_LAWS",
@@ -1792,7 +1792,7 @@
    "key": "refusal.NO_MINTS_BOUND",
    "en": "This investigation was opened with no limit on how many passages it may mark citable, and without a limit it may mark none. The member who opens an investigation sets that limit. Nothing was proposed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_NOTE",
@@ -1816,31 +1816,31 @@
    "key": "refusal.NO_PAGES_BOUND",
    "en": "This investigation was opened with no limit on how many pages it may read, and without a limit it may read none. The member who opens an investigation sets that limit. Nothing was read.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_POPULATION",
    "en": "A detector is defined with the population of money facts it runs over. Nothing was defined.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_PROJECT",
    "en": "This act or read names a project. Nothing was changed.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_PROPOSALS",
    "en": "This named no passage or connection to propose. A look that found nothing is recorded in the investigation's log of what was looked at, where it says which kind of absence it was, and not here. Nothing was proposed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_PROPOSER",
    "en": "This proposed reading arrived without saying who proposed it, and the record keeps nothing it cannot attribute. Nothing was proposed and no passage was marked citable.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_PUBLISHED_PART",
@@ -1870,7 +1870,7 @@
    "key": "refusal.NO_RUN",
    "en": "A machine reads and proposes only as part of an investigation a member opened, and this named none. Nothing was done.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SAFE_COPY",
@@ -1912,25 +1912,25 @@
    "key": "refusal.NO_SUCH_BUNDLE",
    "en": "There is no question here by that id that you can see. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code; filings and hypotheses read it too"
   },
   {
    "key": "refusal.NO_SUCH_CHECK_REQUEST",
    "en": "There is no request for a check here that you can act on. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_CHECK_TARGET",
    "en": "There is nothing here you can ask a check on: the item is not in the group's record, or it is not one you can see. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_CLOCK_PROPOSAL",
    "en": "There is no standing proposed deadline of that name on this action (it was never proposed, or it has already been adopted), so nothing was adopted. Ask for the deadline to be computed again.",
    "protected": false,
-   "note": "DEC-260: action-clocks's translation, keyed by its code"
+   "note": "DEC-260: action-clocks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_COMPARISON",
@@ -1948,13 +1948,13 @@
    "key": "refusal.NO_SUCH_COST",
    "en": "There is no cost here by that number that you recorded. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_DETECTOR",
    "en": "No detector (or no version of it) answers to that id. Nothing was changed.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_DETERMINATION",
@@ -1972,7 +1972,7 @@
    "key": "refusal.NO_SUCH_FILING",
    "en": "There is no draft by that id that you can read here. A draft of an action you may not see answers exactly as one that does not exist.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_GOAL",
@@ -1984,31 +1984,31 @@
    "key": "refusal.NO_SUCH_HYPOTHESIS",
    "en": "There is no hypothesis here by that id that you can see. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_HYPOTHESIS_PROPOSAL",
    "en": "There is no proposal here by that id that you can see. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_LAW_ITEM",
    "en": "No law relation, court link or treatment answers to that id here. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: law-relations's translation, keyed by its code"
+   "note": "DEC-260: law-relations' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_PACKET",
    "en": "There is no counsel packet by that id and version that you can read here. A packet for an action you may not see answers exactly as one that does not exist.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_PRODUCT",
    "en": "There is nothing here by that id that you can see. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_PROPOSAL",
@@ -2026,7 +2026,7 @@
    "key": "refusal.NO_SUCH_REMINDER",
    "en": "There is no reminder of yours on that deadline that has come due and is waiting for an answer, so nothing was answered.",
    "protected": false,
-   "note": "DEC-260: action-clocks's translation, keyed by its code"
+   "note": "DEC-260: action-clocks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_RESPONSE",
@@ -2038,31 +2038,31 @@
    "key": "refusal.NO_SUCH_RUN",
    "en": "No investigation you can see is open under that name, so nothing was done. A member opens an investigation; the assistant may suggest one, and may not start it.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_SHARE",
    "en": "There is no share of yours standing by that id. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_STANDING_QUESTION",
    "en": "No standing question of yours answers to that. Nothing was changed.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_STEP",
    "en": "There is no step here by that id that you can see. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_STEP_PROPOSAL",
    "en": "There is no proposed step here by that id that you can see. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SUCH_TOOL",
@@ -2074,25 +2074,25 @@
    "key": "refusal.NO_SUCH_WAIT",
    "en": "There is no wait here by that number that you can see. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_SWITCH",
    "en": "Say whether the detector is on or off for the project (true or false). Nothing was changed.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_THEORY",
    "en": "State the candidate theory, and any remedy, in words that are not too long.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.NO_VALUE",
    "en": "A parameter is stated with its value. Nothing was recorded.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.OBJECT_MISSING",
@@ -2122,13 +2122,13 @@
    "key": "refusal.PACKET_NO_REASON",
    "en": "Assembling a counsel packet records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.PAGES_BOUND_REACHED",
    "en": "This investigation has read as many pages as it was allowed to, so it reads no more. The answer says how far it read in this document. Nothing more was read.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.PART_MISSING",
@@ -2140,25 +2140,25 @@
    "key": "refusal.PENDING_CLOCKS_BAD_BEFORE",
    "en": "The deadlines are listed up to a date written year-month-day, and the date given was not one. Nothing was read.",
    "protected": false,
-   "note": "DEC-260: action-clocks's translation, keyed by its code"
+   "note": "DEC-260: action-clocks' translation, keyed by its code"
   },
   {
    "key": "refusal.PERSON_BASIS_NOT_STANDING",
    "en": "A reason given for naming a person is not one the record holds, or the position it cites was not held on the date of the act. Read the list again. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.PERSON_BASIS_UNRECORDED",
    "en": "This case names a person without a recorded reason for naming them. Give each person named a basis: their act or position, a tie, an interest, their consent, an earlier publication, or why a private person is named. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.PHOTO_MARKS_UNDETERMINED",
    "en": "A photo this case relies on could not be checked for the people and number plates marked in it, so what the published case would show of it is not known. Try again. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.PLAN_LINK_REFUSED",
@@ -2278,7 +2278,7 @@
    "key": "refusal.PROPOSAL_ALREADY_ACCEPTED",
    "en": "You have already taken up this proposal, and the record keeps how you did. Nothing was changed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.PROPOSAL_CANNOT_DETERMINE",
@@ -2290,37 +2290,37 @@
    "key": "refusal.PROPOSAL_FORM_UNKNOWN",
    "en": "Take a proposal up as proposed, take it up edited, or write your own instead. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.PROPOSAL_NOT_OPEN",
    "en": "This proposal was already taken up or set aside. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.PROPOSAL_NOT_TAKEN_UP",
    "en": "This cites as yours a passage a machine proposed, and you have not taken that proposal up. Take it up first, as proposed, in your own words, or with your own reading instead; then you may cite it as yours. Nothing was changed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.PROPOSAL_NO_HOW",
    "en": "A proposal of the system's says how it was worked out. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.PROPOSAL_NO_RATE",
    "en": "A proposal of the system's carries its measured false-alarm rate, a share between 0 and 1. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.PROPOSAL_NO_REASON",
    "en": "Say why you are setting this proposal aside. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.PROVIDER_HELD",
@@ -2428,7 +2428,7 @@
    "key": "refusal.READING_PROPOSAL_ABSENT",
    "en": "No proposed passage or connection you can see goes by that name, so nothing was accepted.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.READING_UNKNOWN",
@@ -2464,13 +2464,13 @@
    "key": "refusal.RELIED_ON_NOT_PRESENTABLE",
    "en": "A finding this case relies on rests on material your group's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.REMINDER_REFUSED",
    "en": "A reminder is set on a deadline of the action that has a date, for a day written year-month-day; it changes or removes only a reminder of your own; it is not set twice on one day; and an action holds at most 50 reminders. This request did not meet one of those, so nothing was changed.",
    "protected": false,
-   "note": "DEC-260: action-clocks's translation, keyed by its code"
+   "note": "DEC-260: action-clocks' translation, keyed by its code"
   },
   {
    "key": "refusal.RESOLUTION_WITHOUT_RESOLVING",
@@ -2560,25 +2560,25 @@
    "key": "refusal.RULE_SERVICES_OFF",
    "en": "The record's rule services are switched off in your group's Civicsmith until the assistant's measured bar is met. Nothing was read.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.RULE_SERVICE_EXISTS",
    "en": "A rule service of that name is already held; the first one stays. Nothing was changed.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.RULE_SERVICE_UNKNOWN",
    "en": "No rule service of that name is held in your group's Civicsmith. Nothing was read.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.RUN_NOT_RUNNING",
    "en": "The investigation this names has ended, and an ended investigation reads and proposes nothing more: its work is read against the conditions it ran under, and those stopped when it stopped. Nothing was done.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SAFE_COPY_FAILED",
@@ -2656,19 +2656,19 @@
    "key": "refusal.SELF_ATTESTATION_NOT_STANDING",
    "en": "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgment. Remove it from the list. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.SELF_ATTESTED_NO_REASON",
    "en": "Publishing a document as self-attested only says why. Give the reason. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.SENT_REFERENCE_MALFORMED",
    "en": "The venue's reference for this sending is one line of 1 to 100 characters, as the venue gave it. Nothing was recorded.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.SEVERED_EDGE",
@@ -2686,7 +2686,7 @@
    "key": "refusal.SIGN_ALREADY_ASKED",
    "en": "The owners have already been asked to sign this edition, and it is in their queues. Nothing was written. The answer shows who asked and when.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.SNAP_KEY_TAKEN",
@@ -2740,19 +2740,19 @@
    "key": "refusal.STANDING_ENDED",
    "en": "This standing question has ended, and an ended question is never started again. Set a new one if you want it to keep running. Nothing was changed.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.STANDING_NEEDS_END",
    "en": "A standing question needs an end date after today, so it does not run for ever. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.STANDING_NEEDS_SEARCH",
    "en": "A standing question keeps one search: a saved search, or a find in a document, a set or a project. Give one of these, not both. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: answers's translation, keyed by its code"
+   "note": "DEC-260: answers' translation, keyed by its code"
   },
   {
    "key": "refusal.STATE_MOVE_UNDECLARED",
@@ -2764,67 +2764,67 @@
    "key": "refusal.STEP_ALIKE_EXISTS",
    "en": "This work is already an open step on the question. Use that step, or add your question to it. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_BAD_BY_WHEN",
    "en": "A date for a step is a calendar day, with what sets it: the law, a meeting, or your own choice. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_BAD_COST",
    "en": "A cost is a fee or a purchase: an exact amount, its currency's three-letter code, and what it paid for. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_BAD_END",
    "en": "A step ends as done (ended) or set aside, and only once it is planned or under way. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_BAD_FORM",
    "en": "A proposed step is taken up as proposed, taken up with your own wording, or set aside for a step of your own. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_BAD_OUTCOME",
    "en": "An outcome is helped, a dead end, or not yet judged, recorded for a question the step is on. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_BAD_PLACE",
    "en": "A step is taken on one or more questions, in one project, or for the whole group: exactly one of these, and a step is never placed inside another step. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_BAD_PRODUCT",
    "en": "Name what the step produced by the record's own id: a record, a capture, a passage, a lead or a derived connection with its derivation. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_BAD_REMINDER",
    "en": "A reminder is set for a calendar day. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_BAD_TEXT",
    "en": "Write it in your own words, within the length it allows. Nothing was written, and nothing was cut.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_BAD_WAIT",
    "en": "A step waits on another step, on something arriving, or on a date. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_DECLARED",
@@ -2836,13 +2836,13 @@
    "key": "refusal.STEP_MACHINE_NO_OUTCOME",
    "en": "The system never judges whether a step helped or was a dead end; a member does. It ends its own step with every outcome not yet judged, or sets it aside with its reason. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_MEMBER_ONLY",
    "en": "Only a member does this, in their own words and by their own choice. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_MODULE_UNNAMED",
@@ -2854,199 +2854,199 @@
    "key": "refusal.STEP_NARROWER_THAN_QUESTION",
    "en": "This step is a project's own, and a question's use of it would show it beyond that project. Take a step on the question instead. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_NOT_A_LEG",
    "en": "A step is work done toward an answer, never part of what a finding rests on. Rest the finding on what the step found. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_NOT_ITS_OWN",
    "en": "The system acts only on the steps it took itself. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_NOT_YOUR_RUN",
    "en": "The system takes a step only for a run it holds, and this credential holds no such run. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_NO_WORK",
    "en": "Say what the work is, in your own words, in at most 500 characters. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_PROPOSAL_DECIDED",
    "en": "This proposed step was already taken up or set aside. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_PROPOSE_NOT_A_MACHINE",
    "en": "A member takes a step themselves; a proposal is the system's or an assistant's. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_SHARED_NAME_THE_QUESTION",
    "en": "More than one question uses this step. Name the question whose use of it you are removing. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_UNREADABLE",
    "en": "This names a step the work serves, and the step could not be read here, so nothing was tied to it. Nothing was proposed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_WAITING",
    "en": "This step waits on something not yet met, named here. It starts once each wait is met or removed. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_WAIT_CYCLE",
    "en": "This wait would close a loop: the steps named would each wait on the other and none could start. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_WAIT_NARROWER",
    "en": "This step would wait on a step fewer people can see, so some who see it could not see what it waits on. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STEP_WORKED_KEEPS_RECORD",
    "en": "Work was done on this step, so its record is kept. Set it aside instead. Nothing was deleted.",
    "protected": false,
-   "note": "DEC-260: steps's translation, keyed by its code"
+   "note": "DEC-260: steps' translation, keyed by its code"
   },
   {
    "key": "refusal.STILL_UNFILLED",
    "en": "The text still holds a blank the record could not fill, marked UNFILLED. A member writes it in before the text can be approved.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.SUBJECT_IS_PERSON",
    "en": "A detector looks at money facts, contracts and patterns over facts, never at a person; this definition names a person. Nothing was defined.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_BOILERPLATE",
    "en": "A field this reading has to fill in carries filler text rather than an account of anything. A required field filled to get past a check is worse than an empty one, because it reads to the next member as something somebody wrote.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_BRANCHES_NOT_INDEPENDENT",
    "en": "Two parts of this reading are offered as separate routes to the same answer, and the record can show they trace back to the same original material. Treating them as separate makes the answer look better supported than it is, so a machine may not put it forward that way; a member may still say they are genuinely separate, and that is their call to sign for.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_COMPARISON_INCOMPLETE",
    "en": "The record holds more material behind this question than could be checked in one pass, so whether this reading is genuinely new, or genuinely made of separate parts, was not settled either way. Not finishing the check is a different fact from passing it, and this record does not let the two read the same.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_EMPTY_LEVEL_UNSTATED",
    "en": "Reporting that a level of the search is empty means saying WHICH level was searched and where the log of that search can be read. Absence at one level is not absence at the next, and an unattributed empty answer is the one shape nobody can check.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_LEG_UNREACHABLE",
    "en": "One of the pieces of evidence this reading rests on cannot be reached where it says it is: it is not in the record, it cannot be read from here, or the record has retired it. A reading resting on something retired reads to a later member as live support for the answer.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_NAME_TAKEN",
    "en": "This question already holds a reading by that name. Names are unique within one question so a member can ask for a reading by name, and a second one wearing the same name would make every later reference ambiguous.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_NOT_AN_INQUIRY",
    "en": "Only a question carries readings of its evidence, and the thing named here is not a question. There is nothing under it for a suggestion to be a reading of.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_NOT_DIFFERENT",
    "en": "This reading of the evidence is the same in substance as one this question already holds, so it is not put forward a second time. The reading it matches is named, and adding a duplicate would grow the review pile without adding anything to review.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_NO_DOCUMENT",
    "en": "This question has no readable file behind it, so there is nothing for a reading of its evidence to be added to. That is a fact about the question rather than about the reading, and nothing was composed.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_NO_RUN",
    "en": "Every suggestion names the piece of work that produced it, and this one named none that can be read here. What was searched, under which declared conditions, and where it stopped is what lets anyone else check a reading rather than take it on trust.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_NO_TARGET",
    "en": "That request did not say which question the suggestion is about. A reading of the evidence always belongs to one question, so it asks rather than guessing.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_OUTSIDE_RUN_CONTEXT",
    "en": "This suggestion is about a question the investigation was not working on. An investigation is read against its own question, or the questions its project draws on, so work on a different question starts an investigation of that question.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_PAIR_DOES_NOT_COMPUTE",
    "en": "The strength of this reading does not work out over the structure it declares, on one or both of the two things strength is measured on. A reading whose arithmetic cannot be run is a reading nobody can check, and it is not put forward.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_RUN_NOT_RUNNING",
    "en": "The investigation this suggestion names has ended. A suggestion is read against the conditions of the investigation that produced it, and those stopped being current when it stopped, so going on means starting a new one.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_TOO_MANY_LEGS",
    "en": "This suggestion rests on more pieces of evidence than one reading may carry. The limit is published in the refusal so a caller can split the reading rather than guess at what would have fitted.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_UNKNOWN_KIND",
    "en": "A suggestion is one of five kinds and this one names none of them. The kinds are a closed set so that a run reporting an empty search is told apart from a run that reported nothing at all, which no other field can distinguish.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_UNWRITABLE_DOCUMENT",
    "en": "This question's own file could not be extended in place, so nothing was written. Adding a reading edits the record the reading lives in, and a half-written record is worse than an unchanged one.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUGGEST_UNWRITABLE_STATE",
    "en": "This suggestion tries to arrive already decided — settled, set aside, hidden, or signed by somebody. A suggestion may only ever arrive as something put forward; deciding what to do with it is a named member's act and no automated caller can reach it.",
    "protected": false,
-   "note": "DEC-260: run-productions's translation, keyed by its code"
+   "note": "DEC-260: run-productions' translation, keyed by its code"
   },
   {
    "key": "refusal.SUPERSEDES_ANOTHER_ACT",
@@ -3058,97 +3058,97 @@
    "key": "refusal.TASK_NOT_YOURS",
    "en": "This task is not yours to act on: it is with another member now, so nothing was done to it. The record says below who holds it. Ask them, or an administrator, if it still needs you.",
    "protected": false,
-   "note": "DEC-260: tasks's translation, keyed by its code"
+   "note": "DEC-260: tasks' translation, keyed by its code"
   },
   {
    "key": "refusal.TEMPLATE_AND_TEXT",
    "en": "Name a template or write the words, not both.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.TEMPLATE_FROM_UNAPPROVED",
    "en": "A template is drafted from a draft a member has approved. Approve the draft first.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.TEMPLATE_KIND_MISMATCH",
    "en": "The template named is written for another kind of action. Name one written for this kind.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.TEMPLATE_NOT_NAMED",
    "en": "The jurisdiction profile holds no file template for this kind: name a template, or write the words.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.TEMPLATE_USE_BRIEF",
    "en": "The template named is a briefing to counsel: it serves a counsel packet, never a filing.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.TEMPLATE_USE_FILE",
    "en": "The template named is wording the group files in its own name: a counsel packet's briefing takes a brief template.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.TENSIONS_UNDETERMINED",
    "en": "The record could not be read completely for conflicts on this case's findings, so what must be disclosed is not known. Try again. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.TENSION_NOT_DISCLOSED",
    "en": "A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you cannot see is named by its finding, and the published case will highlight it without naming that record. Disclose it, or resolve it first. Nothing was published.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.TEXT_UNWRITABLE",
    "en": "The text is empty, too long, or not readable as text, so it cannot be prepared or recorded as approved.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.THEORY_NO_PROPOSER",
    "en": "Nobody is named as the one proposing this theory. Every proposal names who made it.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.THEORY_NO_STANDARDS",
    "en": "A candidate theory names the standards it rests on.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.THEORY_STANDARD_UNREADABLE",
    "en": "The standards the theory names cannot be read here, so the proposal is not recorded.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.THEORY_WHY_REFUSED",
    "en": "Say why the theory is proposed, in at most 1,000 characters.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.TIER3_COUNSEL_PACKET",
    "en": "This action's governing tier is 3: no filing is prepared for it. The group names counsel, and a counsel packet is assembled for counsel's review instead.",
    "protected": false,
-   "note": "DEC-260: filings's translation, keyed by its code"
+   "note": "DEC-260: filings' translation, keyed by its code"
   },
   {
    "key": "refusal.TIE_ATTESTATION_MISSING",
    "en": "Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.TOO_MANY_LAWS",
@@ -3160,7 +3160,7 @@
    "key": "refusal.TREATMENT_UNKNOWN",
    "en": "A later decision's treatment of a decision is recorded as reversed, vacated, depublished, overruled or affirmed. This one names none of them. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: law-relations's translation, keyed by its code"
+   "note": "DEC-260: law-relations' translation, keyed by its code"
   },
   {
    "key": "refusal.TRIAGE_ACT_UNKNOWN",
@@ -3178,7 +3178,7 @@
    "key": "refusal.UNCLEARED_HUNCH",
    "en": "A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: case-disclosures's translation, keyed by its code"
+   "note": "DEC-260: case-disclosures' translation, keyed by its code"
   },
   {
    "key": "refusal.UNCLEAR_NO_QUESTION",
@@ -3190,7 +3190,7 @@
    "key": "refusal.UNKNOWN_CHECK",
    "en": "That is not one of the checks that reads a parameter; the answer lists them. Nothing was recorded.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.UNKNOWN_EXTENT_FIELD",
@@ -3202,13 +3202,13 @@
    "key": "refusal.UNKNOWN_HYPOTHESIS_KIND",
    "en": "A hypothesis is one of: cause, identity, relation, flow or other. Nothing was written.",
    "protected": false,
-   "note": "DEC-260: hypotheses's translation, keyed by its code"
+   "note": "DEC-260: hypotheses' translation, keyed by its code"
   },
   {
    "key": "refusal.UNKNOWN_PARAMETER",
    "en": "That check reads no parameter of that name; the answer lists the ones it reads. Nothing was recorded.",
    "protected": false,
-   "note": "DEC-260: money-checks's translation, keyed by its code"
+   "note": "DEC-260: money-checks' translation, keyed by its code"
   },
   {
    "key": "refusal.UNREGISTERED_ARTIFACT",
@@ -4671,6 +4671,12 @@
   {
    "key": "filings.says.prepared_template_retired",
    "en": "prepared from a template since retired: {reason}",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "filings.says.reason_stated",
+   "en": "no reason stated",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7447,8 +7453,116 @@
    "note": "DEC-260"
   },
   {
+   "key": "signpage.civicsmith_signing_keys",
+   "en": "Civicsmith signing keys",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.runs_entirely_tab",
+   "en": "Runs entirely in this tab. Nothing is sent anywhere.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.sign_release",
+   "en": "Sign a release",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.sign_ratification",
+   "en": "Sign a ratification",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.sign_notice",
+   "en": "Sign a notice",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.sign_docket_entry",
+   "en": "Sign a docket entry",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.make_keys",
+   "en": "Make your keys",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.press_makes_keys",
+   "en": "One press makes both keys. Copy the two public keys into the session, and keep the private keys wherever you keep things.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.passphrase_leave_empty",
+   "en": "Passphrase (leave empty for development keys)",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.passphrase_private_key",
+   "en": "With a passphrase, every private key this page gives you is locked with it, and loading one back asks for it. Keep the passphrase apart from the keys: without it they cannot be used.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.generate_keys",
+   "en": "Generate my keys",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.make_recovery_key",
+   "en": "Make a recovery key",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.second_release_key",
+   "en": "A second release key, kept offline. It signs one release only: the one that replaces a lost or stolen release key. Make it once, copy its public key into the session, and keep its private key apart from the release key.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.load_key_already",
+   "en": "Load a key you already have",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.paste_private_key",
+   "en": "Paste a private key from a previous run. The key says which job it is for, so there is nothing to choose.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.load_key",
+   "en": "Load this key",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.forget_everything",
+   "en": "Forget everything",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.key_protected_passphrase",
+   "en": "This key is protected with a passphrase",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
    "key": "signpage.release.choose",
-   "en": "). The signature covers the exact bytes of that file, so a rebuilt asset needs a new signature.",
+   "en": "Choose the release asset ({asset}). The signature covers the exact bytes of that file, so a rebuilt asset needs a new signature.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -7459,8 +7573,230 @@
    "note": "DEC-260"
   },
   {
+   "key": "signpage.sign_bytes",
+   "en": "Sign these bytes",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.copy_record_current",
+   "en": "Copy the record id and its current hash from its page in your group's Civicsmith. The signature covers both, so it authorizes publishing that exact revision and no other.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
    "key": "signpage.ratification_key_loaded",
    "en": "No ratification key loaded.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.record",
+   "en": "Record id",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.record_hash",
+   "en": "Record hash",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.sign_this_ratification",
+   "en": "Sign this ratification",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.copy_notice_revision",
+   "en": "Copy the notice id, its revision number and its hash from its page in your group's Civicsmith. The signature covers all three, so it puts your name to that exact revision of the notice and no other. It is signed with your ratification key.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.notice",
+   "en": "Notice id",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.notice_hash",
+   "en": "Notice hash",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.sign_this_notice",
+   "en": "Sign this notice",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.copy_case_entry",
+   "en": "Copy the case id, the entry number and the entry hash from its page in your group's Civicsmith. The signature covers all three, so it puts your name to that exact entry on that case's public docket and no other. It is signed with your ratification key.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.case",
+   "en": "Case id",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.entry_number",
+   "en": "Entry number",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.entry_hash",
+   "en": "Entry hash",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.sign_this_docket_entry",
+   "en": "Sign this docket entry",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.signing",
+   "en": "Signing as",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.making_keys",
+   "en": "Making your keys…",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.copy_everything_keys",
+   "en": "Copy everything, keys and all",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.download_file",
+   "en": "Download as a file",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.private_keys_locked",
+   "en": "Both private keys are locked with your passphrase. Loading one asks for it, and refuses any other.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.show_release_key",
+   "en": "Show the release key's raw form, once, for the secret store that signs releases",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.development_keys_passphrase",
+   "en": "These are development keys with no passphrase. When Civicsmith goes to real groups, generate fresh keys and protect them. Nothing here carries over.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.hide",
+   "en": "Hide it",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.hidden_page_show",
+   "en": "Hidden. This page will not show it again.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.making_recovery_key",
+   "en": "Making your recovery key…",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.forgotten_nothing_signing",
+   "en": "Forgotten. Nothing signing-related is left in this tab.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.choose_release_asset",
+   "en": "Choose the release asset first.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.paste_record",
+   "en": "Paste the record id.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.record_hash_hex",
+   "en": "The record hash is 64 hex characters.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.ratify.signed",
+   "en": "Authorizes publishing {id} at exactly that hash. If the record changes before you submit it, your group's Civicsmith refuses this signature and you sign the new hash.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.paste_notice_group",
+   "en": "Paste the notice id, as your group's Civicsmith shows it.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.revision_whole_number",
+   "en": "The revision is a whole number, 1 or more.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.notice_hash_hex",
+   "en": "The notice hash is 64 hex characters.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.notice.signed",
+   "en": "Signs revision {rev} of {id} at exactly that hash. If the notice changes before you post it, your group's Civicsmith refuses this signature and you sign the new hash.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.paste_case_group",
+   "en": "Paste the case id, as your group's Civicsmith shows it.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.entry_number_whole",
+   "en": "The entry number is a whole number, 1 or more.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.entry_hash_hex",
+   "en": "The entry hash is 64 hex characters.",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "signpage.docket.signed",
+   "en": "Signs entry {seq} on the docket of {id} at exactly that hash. If the entry changes before you post it, your group's Civicsmith refuses this signature and you prepare and sign it again.",
    "protected": false,
    "note": "DEC-260"
   },
@@ -8227,6 +8563,12 @@
    "note": "DEC-260"
   },
   {
+   "key": "hypotheses.why.read_names_member",
+   "en": "a read names the member reading; an absent viewer is neither an administrator nor the public",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
    "key": "hypotheses.why.node_hunches_inquiry",
    "en": "this node is in more than {hub} hunches of this inquiry, so it is named, never expanded",
    "protected": false,
@@ -8559,6 +8901,12 @@
   {
    "key": "law-relations.label.service_answer_verified",
    "en": "the service's answer, never verified",
+   "protected": false,
+   "note": "DEC-260"
+  },
+  {
+   "key": "law-relations.why.undetermined_date_asked",
+   "en": "undetermined at the date asked",
    "protected": false,
    "note": "DEC-260"
   },
