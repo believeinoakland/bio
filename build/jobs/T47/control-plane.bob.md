@@ -39,3 +39,7 @@ K3148: wizard-scripts (T47-47: the registry at f90b187c7b, 66 screens) and op-gr
 ## B7 · CHANGE
 
 K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75: flat parts, grouplogoset/grouplanguages(set), the `grouplogo` route, `groupLogoAsset`) are merged into `tranche/T47`, with wizard-scripts and op-grades before them. Merge it and run your tests against them.
+
+## B8 · CHANGE
+
+K3149: instance-setup's report: send `grouplogoset`'s body as JSON base64 (`{raw, rawType}`), no store-door change; serve the logo through `groupLogoAsset`; route `grouplogoset`, `grouplanguagesset`, `grouplanguages`.
