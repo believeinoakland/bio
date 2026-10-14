@@ -101,7 +101,10 @@ export const SCREEN_WORDS = Object.freeze([
   ["screen.held.ineligible.crucial", "it is crucial to a finding.", false],
   ["screen.held.ineligible.contested", "a contradiction touching it is still open.", false],
   ["screen.held.eligibility.undetermined", "Whether it can be vouched for in a batch is undetermined until it is checked.", false],
-  ["screen.held.archive", "An archive: {filed} files filed and held beside it, {notfiled} not filed", false],
+  ["screen.held.archive", "An archive: {parts}", false],
+  /* interim, for UX-DESIGN (K3254 (1)): each part drawn only above zero (R17) */
+  ["screen.held.archive.filed", "{count} files filed and held beside it", false],
+  ["screen.held.archive.notfiled", "{count} not filed", false],
   ["screen.held.archivefiles", "Its files", false],
   ["screen.held.archivemore", "{shown} of {total} files shown.", false],
   ["screen.held.more", "More captures are waiting than are shown here: {count} shown.", false],
@@ -172,8 +175,11 @@ export const SCREEN_WORDS = Object.freeze([
   ["screen.open-file.release.pending", "Your reason is recorded. A second member's reason releases it; the machine never can.", false],
   ["screen.open-file.release.done", "Released: the original can be opened again.", false],
   ["screen.open-file.status", "The scanners", false],
-  ["screen.open-file.status.line", "{queued} files waiting for a check, {overdue} overdue, {held} held.", false],
-  ["screen.open-file.nofile", "Name a file to open: this screen opens from a capture.", false],
+  ["screen.open-file.status.line", "{parts}.", false],
+  /* interim, for UX-DESIGN (K3254 (1)): each count drawn only above zero (R17) */
+  ["screen.open-file.status.queued", "{count} files waiting for a check", false],
+  ["screen.open-file.status.overdue", "{count} overdue", false],
+  ["screen.open-file.status.held", "{count} held", false],
 
   /* inbox */
   ["screen.inbox.sub", "Material handed in through your doorbell.", false],
@@ -208,12 +214,18 @@ export const SCREEN_WORDS = Object.freeze([
   ["screen.inbox.source", "This knock's source: {source}", false],
 
   /* archive (R15) */
-  ["screen.archive.noarchive", "Name an archive to open: this screen opens from a held archive.", false],
   ["screen.archive.empty", "This archive lists no files.", false],
   ["screen.archive.ungraded", "its grade could not be read", false],
-  ["screen.archive.facts", "fingerprint {short} · {entries} entries · {size}", false],
+  ["screen.archive.facts", "fingerprint {short}", false],
+  /* interim, for UX-DESIGN (K3254 (1)): the entries count drawn only above zero (R17) */
+  ["screen.archive.facts.entries", "{entries} entries", false],
   ["screen.archive.nonote", "No grade note is held for this archive.", false],
-  ["screen.archive.summary", "Opened when it was captured: {filed} files filed and held for review beside it, {held} already held, {notfiled} not filed, {folders} folders.", false],
+  ["screen.archive.summary", "Opened when it was captured: {parts}.", false],
+  /* interim, for UX-DESIGN (K3254 (1)): the parts of the summary, each drawn only above zero (R17) */
+  ["screen.archive.sum.filed", "{count} files filed and held for review beside it", false],
+  ["screen.archive.sum.held", "{count} already held", false],
+  ["screen.archive.sum.notfiled", "{count} not filed", false],
+  ["screen.archive.sum.folders", "{count} folders", false],
   ["screen.archive.notopened", "Held, but not opened yet: {waiting} files wait to be filed.", false],
   ["screen.archive.gradeabout", "Each filed file carries this archive's grade, {grade}: never stronger, never weaker. A file earns a higher grade only by being captured on its own.", false],
   ["screen.archive.files", "Files in it", false],

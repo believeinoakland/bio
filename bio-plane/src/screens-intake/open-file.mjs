@@ -18,11 +18,13 @@ function openFileReads(view) {
 /* R5: one of the states, drawn from what `threatof` and `originalstate` answer: held (a scan hold), low, or high. */
 function renderOpenFile(cs, view) {
   const sha = typeof view.subject === "string" ? view.subject.toLowerCase() : "";
+  /* R20: opened bare or at no digest, the shell's own "Nothing is here" (interface-shell R35, R61) with the way back */
+  if (!/^[0-9a-f]{64}$/.test(sha)) return `<h1 class="t-title">${cs.w("shell.unavailable.nothing.title")}</h1><p class="cs-state" data-state="empty" data-unavailable="nothing">${cs.w("shell.unavailable.nothing.says")}</p>`
+    + `<p><a class="cs-btn" data-tone="quiet" href="/app" data-nav>${cs.w("shell.unavailable.home")}</a></p>`;
   const head = `<div class="mk-h">${cs.title()}</div>`;
-  if (!/^[0-9a-f]{64}$/.test(sha)) return head + `<p class="mk-note">${cs.w("screen.open-file.nofile")}</p>`;
   const U = view.ui || {}, D = view.data || {};
   const said = (k, f) => `<p class="mk-note" role="status">${cs.w(k, f)}</p>`;
-  const refused = U.refused ? `<p class="cs-refusal" role="alert">${cs.esc(U.refused)}</p>` : "";
+  const refused = U.refused ? `<p class="cs-state" data-state="failed" role="alert">${cs.esc(U.refused)}</p>` : "";
   const notes = cs.state(D.notes, (v) => `<div class="cs-sheet">${v.notes.map((n) => `<div class="cs-row"><span>${cs.w("screen.open-file.note.line",
       { tool: n.tool || "", engine: [n.engine, n.engine_version].filter(Boolean).join(" "), result: n.result || "" })}</span>`
       + (n.scanned_at ? `<span class="meta">${cs.w("screen.open-file.note.at")} ${cs.date(n.scanned_at)}</span>` : "") + "</div>").join("")}</div>`,
@@ -30,9 +32,9 @@ function renderOpenFile(cs, view) {
   const safeDrawn = (s) => {
     if (!s) return "";
     if (s.kind === "data") return (Array.isArray(s.sheets) ? s.sheets : []).map((sh) => `<h3>${cs.w("screen.open-file.safe.sheet", { name: sh.name || "" })}</h3>`
-      + `<div class="tw"><table class="mk-table"><thead><tr><th scope="col">${cs.w("screen.open-file.safe.cell")}</th><th scope="col">${cs.w("screen.open-file.safe.value")}</th></tr></thead><tbody>`
+      + `<table class="mk-table"><thead><tr><th scope="col">${cs.w("screen.open-file.safe.cell")}</th><th scope="col">${cs.w("screen.open-file.safe.value")}</th></tr></thead><tbody>`
       + (Array.isArray(sh.cells) ? sh.cells : []).map((c) => `<tr><td>${cs.esc(c.ref ?? "")}</td><td>${cs.esc(c.value ?? "")}</td></tr>`).join("")
-      + "</tbody></table></div>").join("");
+      + "</tbody></table>").join("");
     return said("screen.open-file.safe.ready")
       + (Number.isFinite(s.pages) ? said(s.truncated ? "screen.open-file.safe.truncated" : "screen.open-file.safe.pages", { pages: s.pages, total: s.source_pages ?? s.pages }) : "");
   };
@@ -82,8 +84,10 @@ function renderOpenFile(cs, view) {
     if (U.release) out += said(U.release === "released" ? "screen.open-file.release.done" : "screen.open-file.release.pending");
     return out;
   }), {});
-  const status = D.status ? cs.sec("screen.open-file.status", cs.state(D.status, (s) => `<p class="mk-small">${cs.w("screen.open-file.status.line",
-    { queued: s.queued ?? 0, overdue: s.overdue ?? 0, held: s.held ?? 0 })}</p>`)) : "";
+  /* R17: the scanners' counts are drawn only when one is above zero (a failed read is still drawn failed) */
+  const idle = D.status && D.status.state === "ok" && D.status.value && !(D.status.value.queued > 0 || D.status.value.overdue > 0 || D.status.value.held > 0);
+  const status = D.status && !idle ? cs.sec("screen.open-file.status", cs.state(D.status, (s) => `<p class="mk-small">${cs.w("screen.open-file.status.line",
+    { parts: [["queued", s.queued], ["overdue", s.overdue], ["held", s.held]].filter(([, n]) => n > 0).map(([k, n]) => cs.w(`screen.open-file.status.${k}`, { count: n })).join(", ") })}</p>`)) : "";
   return head + body + status;
 }
 
