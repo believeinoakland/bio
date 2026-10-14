@@ -51,3 +51,7 @@ K3149: new R50: `ADMIN_ACTS` completed (passwordresetlink, signerset, the group 
 ## B10 · CHANGE
 
 K3150: R49's signatures, as SCREENS-PUBLISH #1 builds to them: `cs.image(op, params, {alt})` answers the image's HTML; `cs.areas(imageHtml, {id, areas, label})` answers the control's HTML, its rectangles read at the act by `cs.value(id)` as `[{left, top, width, height}]`; `cs.choice(id, labelKey, options, {acts: {<value>: op}})` makes one button follow the choice.
+
+## B11 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
