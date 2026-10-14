@@ -15,6 +15,7 @@ import { projectRosterOps } from "../../../src/project-roster/index.mjs";
 import { sourcesOps } from "../../../src/sources/index.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
 import { captureRequestsOps } from "../../../src/capture-requests/index.mjs";
+import { tasksOps } from "../../../src/tasks/index.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, OP_STAMPS, OP_FAMILIES, OP_ALIASES, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS,
         UNATTENDED_BY_DECISION, ACT_GATE, ACT_HELP_ABSENT } = O;
@@ -214,7 +215,7 @@ test("R58, R62, R63 (K3061 D3, K3143, K3144; credentials R66): REAUTH_ACTS is fr
 
 /* ---------- R59 ---------- */
 
-test("R59 (DEC-205, DEC-207 (8), N1001): grouplogoset and grouplanguagesset administrators' acts in instance-setup's family, by stamped, NEEDS null; grouplanguages a public read, in no session set, a present null NEEDS row (K3147); signrequest a member's act in tasks' family, by and viewer stamped, contribute, machineClasses []; signintrace a session's read in signin-door's family, viewer stamped; R34: each member op is named in ACT_HELP_ABSENT or explained, never both (negative control: a drifted spec is seen)", () => {
+test("R59 (DEC-205, DEC-207 (8), N1001): grouplogoset and grouplanguagesset administrators' acts in instance-setup's family, by stamped, NEEDS null; grouplanguages a public read, in no session set, a present null NEEDS row (K3147); signrequest a member's act in tasks' family, by and viewer stamped, contribute, machineClasses []; signintrace a session's read in signin-door's family, viewer stamped; R34: each member op is named in ACT_HELP_ABSENT or explained, never both; signrequest served by tasks' map (negative control: a drifted spec is seen)", async () => {
   for (const op of ["grouplogoset", "grouplanguagesset", "grouplanguages", "signrequest", "signintrace"]) shared(op);
   for (const op of ["grouplogoset", "grouplanguagesset"]) {
     assert.deepEqual(plain(OPS[op]), { classes: SESSION, machineClasses: [], mutating: true }, op);
@@ -230,6 +231,9 @@ test("R59 (DEC-205, DEC-207 (8), N1001): grouplogoset and grouplanguagesset admi
   assert.equal(NEEDS.signrequest, "contribute");
   assert.deepEqual(stamps("signrequest"), ["by", "viewer"]);
   assert.deepEqual(familyOf("signrequest"), ["tasks"]);
+  /* K3152: served by tasks' map since its merge, `by` and `viewer` read from the query */
+  assert.ok(keysOf(tasksOps).includes("signrequest"));
+  for (const k of ["by", "viewer"]) assert.ok(await reaches(tasksOps, "signrequest", { query: { [k]: SENT } }), k);
   assert.deepEqual(plain(OPS.signintrace), { classes: SESSION, machineClasses: [], mutating: false });
   assert.ok(Object.hasOwn(NEEDS, "signintrace") && NEEDS.signintrace === null);
   assert.deepEqual(stamps("signintrace"), ["viewer"]);

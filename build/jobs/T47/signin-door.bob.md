@@ -1,6 +1,6 @@
 # BOB to signin-door (T47)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -23,3 +23,7 @@ K3143: Q1 your own map `signinDoorOps`, spread by plane (plane R49 written; op-d
 ## B3 · CHANGE
 
 K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B4 · CHANGE
+
+K3164: answer-envelope merged into tranche/T47 (R6 img-src 'self' data: blob:; R14 C-69.6 retired, DISCLOSURE_DUE decorated C-29.40; R15; R16 interfacePage at / and /app/*, C-69.7 SIGNINTRACE_NOT_TEST). Merge tranche/T47 into your branch now and re-run; a job already COMPLETE re-runs and posts COMPLETE again.
