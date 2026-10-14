@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { open, html, text, main, btn, fill, press, ok, refused, rawKeys } from "./page.mjs";
+import { SHELL_WORDS } from "../../../src/interface-shell/words.mjs";
 
 const K1 = { knock_id: "KNOCK-2026-10-03-9c1f0a2b", sha256: "1".repeat(64), bytes: 3 * 1048576, note: "The inspection sheets they don't publish.",
              received: "2026-10-03T10:00:00Z", status: "new", pseudonym: "P-1", knocker_digest: "dd" };
@@ -73,12 +74,14 @@ test("R7 inboxresolve to discarded with the member's reason asked first; RESOLVE
 });
 
 test("R10 each knock named is a reference of the kind knock, opening inbox at it, its card naming what was handed in and when", async () => {
+  const card = SHELL_WORDS.find((r) => r[0] === "shell.card.knock");
+  assert.ok(card, "interface-shell R27 holds the knock's card word");
   const p = await open("/app/inbox", { plane: { inbox: LIST } });
   for (const k of [K1, K2, K3]) {
     const a = main(p).querySelector(`a.cs-ref[href="/app/inbox/${k.knock_id}"][data-nav]`);
     assert.ok(a, k.knock_id);
     assert.equal(a.textContent, k.knock_id);
-    assert.match(a.getAttribute("data-tip"), /A knock/);
+    assert.ok(a.getAttribute("data-tip").startsWith(`<b>${card[1]}</b>`), k.knock_id);
   }
   const tip = main(p).querySelector(`a.cs-ref[href="/app/inbox/${K1.knock_id}"]`).getAttribute("data-tip");
   assert.match(tip, /3\.0 MB/);

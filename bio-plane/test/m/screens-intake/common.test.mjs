@@ -117,7 +117,8 @@ test("R8 (interface-shell R12) an act is drawn only when the session may do it: 
 });
 
 test("R9 no act or read records which member opened which file: every request is an op naming no member, and the screens store nothing", async () => {
-  const FRAME = new Set(["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"]);
+  /* the shell's own frame reads, `bootstrap` among them (interface-shell R36: public, once, for the test-instance band) */
+  const FRAME = new Set(["bootstrap", "whoami", "interfacewords", "groupidentity", "queue", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"]);
   const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select"]);
   const plane = { ...Object.fromEntries(READS.map((op) => [op, ok(VALUES[op])])),
                   openoriginal: { status: 200, bytes: "b", type: "application/pdf" }, openwithwarning: { status: 200, bytes: "b", type: "application/pdf" } };
@@ -145,8 +146,9 @@ test("R9 no act or read records which member opened which file: every request is
       if (["threatof", "originalstate", "verdictnotes", "openoriginal", "openwithwarning", "safeview", "deepercheck", "releasescanhold"].includes(r.op))
         assert.deepEqual(Object.keys(r.query).filter((k) => !["op", "override"].includes(k)), ["capture"], r.op);
     }
-    /* the page's storage holds only the shell's own keys (the session handed over; its level, theme and width) */
-    assert.deepEqual([...p.store.keys()], ["bio-session"]);
-    for (const k of p.local.keys()) assert.match(k, /^cs-/, `local storage key ${k} is the shell's`);
+    /* the page's storage holds only the shell's own keys: the session record (interface-shell R32, in local storage) and
+       its level, theme and width; nothing of these screens */
+    for (const k of p.store.keys()) assert.equal(k, "bio-session", `session storage key ${k} is the shell's`);
+    for (const k of p.local.keys()) assert.match(k, /^(cs-|bio-session(:active)?$)/, `local storage key ${k} is the shell's`);
   }
 });
