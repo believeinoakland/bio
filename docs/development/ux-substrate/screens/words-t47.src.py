@@ -20,6 +20,7 @@ w('refusal.PROJECT_BAR_NO_REASON', 'Setting this project\'s bar needs your reaso
 w('refusal.RENDER_QUEUE_UNREADABLE', 'Your group\'s Civicsmith couldn\'t read its list of files waiting for a safe view, so none was made just now. Try again in a moment; if it keeps happening, tell an administrator.', False, 'C-140.43; a safe view is installed but its queue could not be read')
 
 # --- Settings (record-core R25, R26)
+w('refusal.SIGNINTRACE_NOT_TEST', 'This group\'s Civicsmith keeps a trace of sign-ins only while it runs as a test instance, and this one does not. Nothing was read or changed.', False, 'C-69.7; BOB\'s B174 (3)')
 w('refusal.SETTING_INVALID', 'That isn\'t a value this setting takes. Choose one of the setting\'s own values.' + NC, False, 'C-102.32')
 w('refusal.SETTING_NOT_JSON', 'That value can\'t be kept as a setting: a setting holds words, numbers, yes or no, or a list of those.' + NC, False, 'C-102.33')
 

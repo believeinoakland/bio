@@ -119,7 +119,7 @@ const J = [
    { s: 'install', v: 'start', act: 'bootstrap', say: 'The installer asks two things. She picks the short name lakeshore-tenants, reads that it is permanent, and chooses Oakland as the group\'s place.' },
    { s: 'install', v: 'cloudflare', act: 'bootstrap', say: 'She reads what Cloudflare will ask her to allow, and that whoever holds the Cloudflare account controls the group\'s Civicsmith. She goes to Cloudflare\'s own page, signs in there and allows it.' },
    { s: 'install', v: 'progress', act: null, say: 'Back from Cloudflare, she watches each step finish in plain words. Had one stopped it, the page would say why, what to do, and that nothing was created.' },
-   { s: 'install', v: 'done', act: 'selftest', say: 'The checks pass. She saves the one-time password in her password manager and continues to her group\'s address.' },
+   { s: 'install', v: 'done', act: null, say: 'The checks pass, run by the installer as part of installing. She saves the one-time password in her password manager and continues to her group\'s address.' },
    { s: 'setup', act: 'claim', say: 'The one-time password is already filled in. She chooses her own password and claims: she is the group\'s first administrator.' },
    { s: 'setup', act: 'recoverycodesissue', say: 'She saves her ten recovery codes, shown once: her way back in if she ever loses her password.' },
    { s: 'setup', act: 'groupnameset', say: 'She names the group, decides how members reach the assistant, and finishes. “Open your group\'s Civicsmith” takes her in.' },

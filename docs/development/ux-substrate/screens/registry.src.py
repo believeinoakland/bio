@@ -11,7 +11,7 @@ def screen(id, name, frame, purpose, acts, journeys):
 screen('site', 'civicsmith.org', 'setup', 'Civicsmith\'s own website, where the founding journey starts (Bob\'s D6, K3060): what Civicsmith is (installer R42\'s two lines), what a group gets, a case a group published, the groups that chose to be listed (DEC-132), members sent to their own group\'s address; "Start your group": whether it fits, what is needed (Workers Paid), who holds the Cloudflare account, what the group will choose, then "Create your group" opens the installer (DEC-206).',
   [], [1,28])
 screen('install', 'Create your Civicsmith group', 'setup', 'The founder\'s link and the installer, in order: what Civicsmith is and what is needed, the short name and places, Cloudflare\'s permission, the progress and any stop, the checks and the one-time password, the hand-over to setup (DEC-201).',
-  [('bootstrap','Continue to Cloudflare'),('selftest','Run the checks again')], [1,28])
+  [('bootstrap','Continue to Cloudflare')], [1,28])
 screen('update', 'Update your group\'s Civicsmith', 'setup', 'The hosting account\'s holder updates the group\'s Civicsmith to a signed release; records, members and settings are kept (installer R1, DEC-201).',
   [('bootstrap','Continue to Cloudflare to update')], [1])
 screen('front', 'Your group\'s page', 'public', 'The group\'s own landing page at its address (Bob\'s D2, K3060): who it is, what it has published, handing it material, how it works; members sign in beside it, with an own device kept signed in (locks after 30 minutes away, signs out after 12 hours) or a shared one (signed out after 15 minutes away) (D3, K3061); refused, paused, signed out, ended and locked (credentials R4, R38; DEC-201, DEC-202).',

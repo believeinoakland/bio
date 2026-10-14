@@ -33,9 +33,9 @@
       },
       {
        "screen": "install",
-       "act": "selftest",
-       "what": "Let your group's Civicsmith test itself. Allow it to run the assistant's container if you are asked.",
-       "why": "The test proves it works before anyone relies on it."
+       "act": null,
+       "what": "Your group's Civicsmith tests itself as part of installing; the finished panel shows what passed. Allow it to run the assistant's container if you are asked.",
+       "why": "The test proves it works before anyone relies on it. The installer keeps nothing once it hands over, so the checks are run then, not later."
       },
       {
        "screen": "install",

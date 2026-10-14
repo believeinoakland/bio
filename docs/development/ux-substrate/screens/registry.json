@@ -28,15 +28,6 @@
       "instance-setup",
       "setup-page"
      ]
-    },
-    {
-     "op": "selftest",
-     "label": "Run the checks again",
-     "status": "declared",
-     "modules": [
-      "installer",
-      "instance-setup"
-     ]
     }
    ],
    "journeys": [

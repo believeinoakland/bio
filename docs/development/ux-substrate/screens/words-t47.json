@@ -24,6 +24,12 @@
   "note": "C-140.43; a safe view is installed but its queue could not be read"
  },
  {
+  "key": "refusal.SIGNINTRACE_NOT_TEST",
+  "en": "This group's Civicsmith keeps a trace of sign-ins only while it runs as a test instance, and this one does not. Nothing was read or changed.",
+  "protected": false,
+  "note": "C-69.7; BOB's B174 (3)"
+ },
+ {
   "key": "refusal.SETTING_INVALID",
   "en": "That isn't a value this setting takes. Choose one of the setting's own values. Nothing was changed.",
   "protected": false,

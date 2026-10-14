@@ -13,7 +13,7 @@ const ACT_HELP = {
   signouteverywhere: 'Signs you out on every phone and computer you are signed in on, this one included.',
   joinlinkinvite: 'Starts joining through the group\'s join link: the name the group will know you by, then your handle and password.',
   owed_passwordresetlink: 'Makes a one-time link for this member to choose a new password, valid for seven days. You send it yourself; Civicsmith sends no email. Their other sign-ins end when they use it.',
-  selftest: 'Runs Civicsmith\'s own checks on what was just installed, so you know it works before anyone joins.',
+  peopledirectory: 'Lists the people and organisations your group\'s record follows: each with its role or office, how many documents, questions and projects name it and when the newest was added, those your projects touch first. A read: it changes nothing.',
   claim: 'Makes you the group\'s first administrator, using the one-time password from installing. Until it is claimed, nobody can use the group\'s Civicsmith.',
   groupnameset: 'Sets the name members and readers see. It can be changed later; the short name cannot.',
   groupdomainset: 'Proves your group controls this web address, so published cases can show it as yours.',

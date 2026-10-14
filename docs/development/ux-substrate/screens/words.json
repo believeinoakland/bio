@@ -11,7 +11,7 @@
   "handle": 7,
   "ai": 89,
   "date": 14,
-  "queue": 47,
+  "queue": 50,
   "transcribe": 19,
   "capture": 1,
   "document": 5,
@@ -22,7 +22,7 @@
   "label": 52,
   "project": 7,
   "grouprule": 1,
-  "refusal": 156,
+  "refusal": 157,
   "signing": 16,
   "case": 11,
   "docket": 2,
@@ -53,11 +53,11 @@
   "tab": 2,
   "level": 2,
   "screen": 129,
-  "act": 608,
+  "act": 607,
   "column": 33,
   "wizard": 306,
-  "total": 1784,
-  "protected": 649
+  "total": 1787,
+  "protected": 648
  },
  "words": [
   {
@@ -1371,6 +1371,26 @@
    "protected": false,
    "source": "DEC-189",
    "note": "FINDING, to each reviewer who is a member"
+  },
+  {
+   "key": "queue.request-unsent.summary",
+   "en": "You left a request unsent: {what}",
+   "protected": false,
+   "source": "DEC-212",
+   "note": "to the member who approved it"
+  },
+  {
+   "key": "queue.request-unsent.summary.others",
+   "en": "A request was left unsent: {what}",
+   "protected": false,
+   "source": "DEC-212",
+   "note": "to every other member who can see the project"
+  },
+  {
+   "key": "queue.request-unsent.detail",
+   "en": "Approved on {date}, not yet sent: nothing has gone to the office.",
+   "protected": false,
+   "source": "DEC-212"
   },
   {
    "key": "transcribe.refused.notdeployed",
@@ -4257,6 +4277,13 @@
    "note": "C-140.43; a safe view is installed but its queue could not be read"
   },
   {
+   "key": "refusal.SIGNINTRACE_NOT_TEST",
+   "en": "This group's Civicsmith keeps a trace of sign-ins only while it runs as a test instance, and this one does not. Nothing was read or changed.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "C-69.7; BOB's B174 (3)"
+  },
+  {
    "key": "refusal.SETTING_INVALID",
    "en": "That isn't a value this setting takes. Choose one of the setting's own values. Nothing was changed.",
    "protected": false,
@@ -5391,12 +5418,6 @@
   {
    "key": "act.bootstrap.label.install",
    "en": "Continue to Cloudflare",
-   "protected": true,
-   "source": "registry.json"
-  },
-  {
-   "key": "act.selftest.label.install",
-   "en": "Run the checks again",
    "protected": true,
    "source": "registry.json"
   },
@@ -7411,8 +7432,8 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.selftest.does",
-   "en": "Runs Civicsmith's own checks on what was just installed, so you know it works before anyone joins.",
+   "key": "act.peopledirectory.does",
+   "en": "Lists the people and organisations your group's record follows: each with its role or office, how many documents, questions and projects name it and when the newest was added, those your projects touch first. A read: it changes nothing.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -9266,13 +9287,13 @@
   },
   {
    "key": "wizard.WIZ-c887066cc553dd41.step3.what",
-   "en": "Let your group's Civicsmith test itself. Allow it to run the assistant's container if you are asked.",
+   "en": "Your group's Civicsmith tests itself as part of installing; the finished panel shows what passed. Allow it to run the assistant's container if you are asked.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-c887066cc553dd41.step3.why",
-   "en": "The test proves it works before anyone relies on it.",
+   "en": "The test proves it works before anyone relies on it. The installer keeps nothing once it hands over, so the checks are run then, not later.",
    "protected": false,
    "source": "library.json"
   },

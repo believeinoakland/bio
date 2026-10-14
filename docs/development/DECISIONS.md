@@ -3519,3 +3519,17 @@ response: "No, CivicSmith does NOT email members." "Is Publication its own area?
 decided: 2026-10-14 · Bob
 reasoning recorded in: this entry; `dashboards.html`; `screens/mock-screens.js` (`rd`, `ablock`, `AREA_TIPS`, `AREA_GO`, `AREA_BLOCKS`, `STRIP_NEW`, `home`), `screens/page.src.html`, `screens/question.html` (S20, S22), `layouts.html`.
 owed: (BOB) nothing new beyond DEC-218's reads: no digest to build; the home's reads leave out zeros; the areas are four wherever a requirement counts them.
+
+### DEC-220 · answered
+raised: 2026-10-14 · the UX design session with Bob on his secondary account (session_01DyYKz1UJZVqVzz1E8F4Cyk) (BOB #168's HANDOFFs B174, K3143, and B175, K3144: words L11's jobs need, and the installer's "Run the checks again")
+for: bob-session
+question: (1) The keyed words for the request left unsent (DEC-212). (2) The people read's help text. (3) The words of the refusal when a sign-in trace is asked of a group's Civicsmith that is not a test instance. (4) Whether `hostingaccess` is retired. (5) What the installer's finished panel does about running the checks again.
+why it is Bob's: words and registry detail beneath his rulings (DEC-212, DEC-203, DEC-201), decided as design detail and reported (P17).
+provisional: the jobs' interim sentences (B174); `selftest` listed and drawn on `install` (DEC-201).
+alternative: keep "Run the checks again" and have the copy serve it to the installer after hand-over (B175 says it cannot).
+recommendation: as below.
+reversal cost: low.
+response: **Answered to BOB, 2026-10-14 (U206).** (1) `queue.request-unsent.summary` "You left a request unsent: {what}" (to the member who approved it), `queue.request-unsent.summary.others` "A request was left unsent: {what}", `queue.request-unsent.detail` "Approved on {date}, not yet sent: nothing has gone to the office."; {what} names the request as the wizard named it; the queue draws it as DEC-212 drew it. (2) `peopledirectory`: "Lists the people and organisations your group's record follows: each with its role or office, how many documents, questions and projects name it and when the newest was added, those your projects touch first. A read: it changes nothing." (3) `refusal.SIGNINTRACE_NOT_TEST`: "This group's Civicsmith keeps a trace of sign-ins only while it runs as a test instance, and this one does not. Nothing was read or changed." (4) `hostingaccess` is not in the registry: retired, `hostingaccessset` on Your group is the act (DEC-205). (5) "Run the checks again" is dropped from the installer's finished panel, the registry, journey 28 and the wizard "Set up and claim" (its step says the copy tests itself as part of installing): the installer keeps nothing of the copy once it hands over, so the checks are the installation's own, shown once with their results. If the copy serves its checks to administrators, the place for "Run Civicsmith's checks" is Security; drawn when BOB says the copy serves it.
+decided: 2026-10-14 · the design session, under Bob's rulings (P17)
+reasoning recorded in: this entry; `screens/build_words.mjs` (4c''''), `screens/mock-acts.js`, `screens/words-t47.src.py`, `screens/registry.src.py` (`install`), `screens/library.src.py`, `screens/mock-journeys.js`, `screens/mock-screens.js` (`install`), `screens/words.json`, `layouts.html`.
+owed: (BOB) nothing new: the keys are read from `words.json`; wizard-scripts R36 adopts the newest "Set up and claim".

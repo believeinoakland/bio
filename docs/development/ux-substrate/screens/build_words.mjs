@@ -205,6 +205,11 @@ for (const [k, sum, det, note] of [
   ['project-quiet', 'Quiet: {project}', 'Nothing has moved in this project for a while. Where it stands: {progress}. You can write it up and act, keep watching its sources, close it with what remains unknown, or revise what it set out to show. Nobody is asked again until it moves.', 'FINDING, to the project\'s joined members'],
   ['review-comment-left-out', 'Your comments were not included: {case}', 'The case was published without your review comments. You may file a response in its docket, as anyone may.', 'FINDING, to each reviewer who is a member'],
 ]) { add(`queue.${k}.summary`, sum, false, 'DEC-189', note); add(`queue.${k}.detail`, det, false, 'DEC-189', note); }
+// 4c''''. The request left unsent (DEC-212; action-producers R25; BOB's B174 (1)): the reminder to whoever approved it, the line
+//     others see, and its detail; {what} names the request as the wizard named it
+add('queue.request-unsent.summary', 'You left a request unsent: {what}', false, 'DEC-212', 'to the member who approved it');
+add('queue.request-unsent.summary.others', 'A request was left unsent: {what}', false, 'DEC-212', 'to every other member who can see the project');
+add('queue.request-unsent.detail', 'Approved on {date}, not yet sent: nothing has gone to the office.', false, 'DEC-212');
 
 // 4c'''. The assistant's reading of page pictures (DEC-190; BOB's B128, B129; extraction R71, C-51.7)
 add('transcribe.refused.notdeployed', 'Nothing was read or sent: the assistant\'s reading of page pictures isn\'t switched on in your group\'s Civicsmith yet. Each part of the assistant is switched on only after it passes Civicsmith\'s test investigations. You can type a page\'s words yourself meanwhile.', false, 'DEC-190', 'TRANSCRIBE_NOT_DEPLOYED (C-51.7); names no account');
