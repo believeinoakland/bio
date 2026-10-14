@@ -75,10 +75,10 @@ test("R58 R10 R20: a machine is offered no actionreplyquoting, which MACHINE_REF
    at its creation */
 const compose = () => { eventsWorld().ev.start(); dutiesWorld(); };
 
-test("R59 R39: each connection kind's `group` in the vocabulary is one of the design's five (pos, part, money, ment, same), from a "
+test("R59 R60 R39: each connection kind's `group` in the vocabulary is one of the design's six (pos, part, money, ment, same, step_source), from a "
    + "frozen map covering every kind the connection registry holds, and the map names no kind the registry lacks; each group is used", () => {
   compose();
-  assert.deepEqual([...CONNECTION_GROUP_NAMES], ["pos", "part", "money", "ment", "same"]);
+  assert.deepEqual([...CONNECTION_GROUP_NAMES], ["pos", "part", "money", "ment", "same", "step_source"]);
   assert.ok(Object.isFrozen(CONNECTION_GROUPS));
   const v = vocabulariesFor(null).connection_kinds;
   const registry = owners().flatMap((o) => o.kinds.map((k) => k.kind));
@@ -93,11 +93,32 @@ test("R59 R39: each connection kind's `group` in the vocabulary is one of the de
   assert.equal(v.words.money_flow.group, "money");
   assert.equal(v.words.mentioned_together.group, "ment");
   assert.equal(v.words.same_as.group, "same");
+  assert.equal(v.words.step_source.group, "step_source");
   assert.equal(v.words.event_voted.group, "part");
   assert.equal(v.words["line:holds:elected"].group, "pos");
   /* control: a kind the map lacks is seen by the same check */
   const unmapped = registry.filter((k) => !CONNECTION_GROUP_NAMES.includes({ ...CONNECTION_GROUPS, money_flow: undefined }[k]));
   assert.deepEqual(unmapped, ["money_flow"]);
+});
+
+test("R60: `step_source` is answered in its own group, `step_source`, and in none of the other five; R59's groups are six, each used; "
+   + "control: a map giving it `ment` is seen by the same check, and no kind in `ment` is a `step_source`", () => {
+  compose();
+  const v = vocabulariesFor(null).connection_kinds;
+  const registry = owners().flatMap((o) => o.kinds.map((k) => k.kind));
+  assert.ok(registry.includes("step_source"), "the registry holds the step-source kind");
+  assert.equal(v.words.step_source.group, "step_source");
+  assert.equal(CONNECTION_GROUPS.step_source, "step_source");
+  assert.equal(CONNECTION_GROUP_NAMES.length, 6);
+  /* totality over the registry, with the new group: every kind has one of the six, and `step_source` is the only kind in its own */
+  for (const kind of registry) assert.ok(CONNECTION_GROUP_NAMES.includes(v.words[kind].group), kind);
+  assert.deepEqual(registry.filter((k) => v.words[k].group === "step_source"), ["step_source"]);
+  assert.deepEqual(registry.filter((k) => v.words[k].group === "ment").sort(), ["hunch", "in_tension_with", "mentioned_together"]);
+  for (const kind of registry.filter((k) => v.words[k].group === "ment")) assert.notEqual(kind, "step_source");
+  /* control (K874): the earlier map, `step_source` under `ment`, fails the checks above */
+  const old = { ...CONNECTION_GROUPS, step_source: "ment" };
+  assert.notEqual(old.step_source, v.words.step_source.group);
+  assert.equal(registry.filter((k) => old[k] === "ment").includes("step_source"), true);
 });
 
 /* ---- T48's ops, by owner (op-grades R38–R41; K3101, K3278, K3280, K3282): each owner's map holds them, each write is graded and
