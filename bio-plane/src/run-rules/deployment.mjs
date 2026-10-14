@@ -175,16 +175,19 @@ export const ASK_MODE = Object.freeze({
 
 /** R22 (T37-49; N669; K2200, K2201): THE KINDS OF DRAFT, named by `DRAFT_MODE.kinds`. `own_words` is R21's draft of a
  *  member's own words; `translation` the assistant's draft of the interface words a group's language lacks, or its
- *  reading of one kept word back into English for an administrator's check (DEC-127 (5), DEC-157 (2), (4)). Frozen. */
+ *  reading of one kept word back into English for an administrator's check (DEC-127 (5), DEC-157 (2), (4)). R25's three,
+ *  R27's three and R27's T46 `statusreport` follow. R33 (T48; N670; DEC-127 (3)): `reading`, last, the assistant's translation, for one
+ *  member, of a passage of the group's own writing into her language. Frozen. */
 export const DRAFT_KINDS = Object.freeze(["own_words", "translation", "case_account", "account_check", "bearing_note",
-  "textcheck", "infractiondraft", "bearingdraft", "statusreport"]);
+  "textcheck", "infractiondraft", "bearingdraft", "statusreport", "reading"]);
 
 /** R27 (T45-10; N861, N887; Actions D11b, D21, D25; v0.2 rules 1, 2, 9, 16, 19, 21) — THE ACTION DRAFTS, the three of
  *  DRAFT_KINDS (`agent-worker` R76's tasks): `textcheck`, the sentences of a prepared outward text that read as an
  *  assertion of breach, a policy position, an ask for the group's own benefit or a name of staff below the responsible
  *  official; `infractiondraft`, a documented account of a matter for one audience; `bearingdraft`, a reply's claims laid
  *  out claim by claim. Each is R21's mode in every other respect. Named, not sliced off DRAFT_KINDS' end: R27's T46
- *  `statusreport` follows them in DRAFT_KINDS and is not one of them (it deploys under `draft`'s flag alone). Frozen. */
+ *  `statusreport` and R33's `reading` follow them in DRAFT_KINDS and are not of them (each deploys under `draft`'s flag
+ *  alone). Frozen. */
 export const ACTION_DRAFT_KINDS = Object.freeze(["textcheck", "infractiondraft", "bearingdraft"]);
 
 /** R22, R25 (T41-21; D56, D22) — WHAT EACH KIND OF DRAFT MAY READ. `own_words` reads within `answers`' ASK_SCOPE (R21), and
@@ -199,7 +202,10 @@ export const ACTION_DRAFT_KINDS = Object.freeze(["textcheck", "infractiondraft",
  *  grant (so `draftMayRead` is true for them), each only its own narrow part of the record, through the record reads the
  *  grant already admits (`credentials`' AI_GRANT_OPS, no op added), and no write op of any module.
  *  R27 (T46; N920): `statusreport`, the assistant's draft of a plan's status report, reads nothing of the record: only the
- *  items `plan-work` R8 assembled, handed in by the door, so `draftMayRead` is false for it. Frozen, every level. */
+ *  items `plan-work` R8 assembled, handed in by the door, so `draftMayRead` is false for it.
+ *  R33 (T48; N670; DEC-127 (3)): `reading`, the assistant's translation of a passage of the group's own writing into the
+ *  asking member's language, reads nothing of the record: only the passage the door hands in, so `draftMayRead` is false
+ *  for it. Frozen, every level. */
 export const DRAFT_REACH = Object.freeze({
   own_words: Object.freeze({ scope: "ask_scope", means: "within answers' ASK_SCOPE (its R1); a firsthand field reads nothing" }),
   translation: Object.freeze({ scope: "none", means: "nothing of the record: only the interface words it is asked about" }),
@@ -210,6 +216,7 @@ export const DRAFT_REACH = Object.freeze({
   infractiondraft: Object.freeze({ scope: "matter_record", means: "through the asking member's grant, only the matter's own record the member may see: its plan, actions, correspondence and findings, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" }),
   bearingdraft: Object.freeze({ scope: "action_reply", means: "through the asking member's grant, only the action and the reply it is asked about, with the request's claims, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" }),
   statusreport: Object.freeze({ scope: "none", means: "nothing of the record: only the items plan-work R8 assembled for the plan's status report, handed in by the door" }),
+  reading: Object.freeze({ scope: "none", means: "nothing of the record: only the passage of the group's own writing the door hands in, to be put into the asking member's language" }),
 });
 
 /** R27 — THE ACTION DRAFTS' ONE DEPLOY FLAG, `action_drafts`, held here as `ask`'s and `draft`'s are on their modes. The
@@ -307,7 +314,8 @@ export const ENQUIRE_MODE = Object.freeze({
  *  but `true` are `false`: fail closed. Own keys only, as `deployedModesFor`'s flags.
  *  R27 (T45-10): `infractiondraft` and `bearingdraft` read named records through the grant, as an ask does, so they are
  *  `true` whatever `suggestions` while `firsthand` is absent, null or false; `textcheck` reads nothing, so `false`. The
- *  answers for R22's and R25's kinds are unchanged. Pure; never throws. */
+ *  answers for R22's and R25's kinds are unchanged. `statusreport` (R27, T46) and `reading` (R33, T48) read nothing, so
+ *  `false`. Pure; never throws. */
 export function draftMayRead(asked) {
   const at = (k) => (own(asked, k) ? asked[k] : null);
   const firsthand = at("firsthand");
@@ -318,8 +326,8 @@ export function draftMayRead(asked) {
 
 /** R27 — IS A DRAFT OF THIS KIND DEPLOYED UNDER THESE FLAGS? `flags` may name `draft` (R21) and `action_drafts` (R27), a
  *  name left out taking the value this module holds today, as `deployedModesFor`'s. One of ACTION_DRAFT_KINDS: `true`
- *  only when both flags are exactly `true`. R22's and R25's kinds, and T46's `statusreport`: exactly when `draft`'s flag
- *  is. A flag marks served code only: whether a deployed kind runs is R29's (`partAdmittedOn`). An unknown kind:
+ *  only when both flags are exactly `true`. R22's and R25's kinds, T46's `statusreport` and T48's `reading` (R33):
+ *  exactly when `draft`'s flag is. A flag marks served code only: whether a deployed kind runs is R29's (`partAdmittedOn`). An unknown kind:
  *  `false`. Own keys only. Pure; never throws. */
 export function draftKindDeployed(asked) {
   const kind = own(asked, "kind") ? asked.kind : null;
