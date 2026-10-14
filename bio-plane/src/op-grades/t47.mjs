@@ -14,8 +14,8 @@
  * precedent, as `recover`'s). No vocabulary, prompt, consequence statement or Irreversible weight is added. By R18
  * `phone` follows the rung or ground: the `credential` ones answer false (advisory; nothing refuses by device).
  *
- * `passwordresetlink`: R37 words it `reasoned`, but `credentials` R69 asks no reason, so no code would back the rung
- * (`affordances` R19); it is held here on the `credential` ground of the reset it opens, as `recover` (OP-GRADES #9 J1).
+ * `passwordresetlink` is held on the `credential` ground of the reset it opens, as `recover`: `credentials` R69 asks no
+ * reason, so no code would back a `reasoned` rung (`affordances` R19; R37 as K3144 words it).
  * N955 adds no op: `credentials`' `aiRunCredentialMint` is in-plane and the door's op stays `airundispatch` (R33). */
 
 const R = (s) => `read: ${s}; writes nothing`;
