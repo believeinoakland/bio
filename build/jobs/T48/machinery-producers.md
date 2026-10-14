@@ -15,3 +15,7 @@
 **Ran**: `node --test bio-plane/test/m/machinery-producers/` 29 pass, 0 fail. `checks/format` 0 failures; `checks/architecture` 0 failures; `checks/coverage` machinery-producers 12 of 12 ids named; `checks/ownership` 0 failures. `checks/run.mjs`: format and architecture 0 failures; its coverage reds (22) name other modules, none machinery-producers.
 
 Size (session_018zbHQNu1aoAASfEkUGvrde): test runs 3, module lines 1202
+
+## J1 · COMPLETE
+
+T48-58 done: machinery-producers R11 and R12 met (update-ready to-do; failed read named in facts). 29 module tests pass; format, architecture, coverage, ownership 0 failures for this module. Three open readings are in my record under "My readings" (detail as an object, the shape of decisions from updateNoticeState, recipients/subject); tell me if any differs. Clear the "not yet met" marks on R11 and R12.
