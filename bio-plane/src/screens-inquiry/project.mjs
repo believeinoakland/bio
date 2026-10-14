@@ -22,7 +22,8 @@ function reads(view) {
     stage: { op: "projectstage", query: { project: id } },
     participants: { op: "projectparticipants", query: { projectId: id } },
     bar: { op: "strengthbarof", query: { project: id } },
-    questions: { op: "projectquestions", query: { project: id, limit: "100" } },
+    /* an empty first page is drawn by the screen's own sentence, or paged on while a cursor follows */
+    questions: { op: "projectquestions", query: { project: id, limit: "100" }, empty: () => false },
     others: { op: "list", query: { type: "inquiry", limit: "500" } },
     account: { op: "projectaccountstate", query: { project: id } },
     directory: { op: "projectdirectory", query: {} },

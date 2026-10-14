@@ -90,8 +90,9 @@ function render(cs, view) {
     return h;
   })));
 
-  /* the notice a member reads before the project's key first pays for her acts (credentials R58), leaving the group */
-  const n = d.notice && d.notice.state === "ok" ? d.notice.value : null;
+  /* the notice a member who has joined reads before the project's key first pays for her acts (credentials R58), as
+     what it tells her leaves the group */
+  const n = mine && mine.state === "joined" && d.notice && d.notice.state === "ok" ? d.notice.value : null;
   if (n && n.due === true && n.text)
     out.push(cs.sec(S + "notice.head", `<p class="cs-rec" data-notice="projectkey">${E(String(n.text))}</p>`
       + `<p class="cs-meta">${W("mark.outward.means")}</p>`

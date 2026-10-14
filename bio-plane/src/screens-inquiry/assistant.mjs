@@ -104,14 +104,16 @@ function render(cs, view) {
     const st = later("run", "airun", { run: run.id }, String(ui.seq || 0));
     const log = later("log", "airunlog", { run: run.id, limit: "200" }, String(ui.seq || 0));
     const session = st.state === "ok" && st.value.session ? st.value.session : null;
-    status = session ? session.status : run.status;
+    /* while the run is read again, the last answer stands (a read in flight is not the run's state) */
+    if (session) ui.lastStatus = { run: run.id, status: session.status };
+    status = session ? session.status : ui.lastStatus && ui.lastStatus.run === run.id ? ui.lastStatus.status : run.status;
     const untested = (session && session.untested) || run.untested || null;
     if (status === "running" && !run.dispatched) runPart += `<p data-run="yours">${cs.w("screen.assistant.run.yours")}</p>`;
     else if (status === "running") runPart += `<p data-run="running">${cs.w("screen.assistant.run.dispatched")} ${cs.w("screen.assistant.run.running", { ticks: String((session && session.ticks) || 1) })}</p>`;
     else if (status) runPart += `<p data-run="ended">${cs.w("screen.assistant.run.ended", { why: String((session && session.condition) || status) })}</p>`;
     /* R8: while the run this dock started or continued is running, read it again on the page clock, at most once
        every 10 seconds; the shell cancels the timer when she leaves the screen */
-    if (status === "running" && ui.run && ui.run.dispatched && !ui.polling) {
+    if (session && status === "running" && ui.run && ui.run.dispatched && !ui.polling) {
       ui.polling = true;
       cs.later(10000, (k, v) => { v.ui.polling = false; k.set("seq", (v.ui.seq || 0) + 1); });
     }

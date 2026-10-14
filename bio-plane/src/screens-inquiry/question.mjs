@@ -152,8 +152,9 @@ function render(cs, view) {
   /* the current basis version's legs, by role; each live or severed by the inquiry's own reference to its target */
   const refOf = (target) => (doc ? doc.refs.find((r) => String(r.target || "") === target) : null);
   const whyOf = (note) => {
-    const m = /(?:^|\|\s*)Severed [^:]*:\s*([^|]*)$/.exec(String(note || "").trim());
-    return m ? m[1].trim() : "";
+    /* citation R4's note: "<earlier> | Severed <ISO time>: <reason>" */
+    const m = /(?:^|\|\s*)Severed (\S+): ([^|]*)$/.exec(String(note || "").trim());
+    return m ? m[2].trim() : "";
   };
   const cur = (b) => {
     const vs = Array.isArray(b.versions) ? b.versions : [];
