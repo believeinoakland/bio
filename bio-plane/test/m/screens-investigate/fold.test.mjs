@@ -4,13 +4,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import * as shell from "../../../src/interface-shell/index.mjs";
 import { SCREENS } from "../../../src/screens-investigate/index.mjs";
 import { open, main, button, fill, PATHS, ENT, ORG, MSR, CALC, PROC, STD, P, ACT, PERSON, TRAIL } from "./fixtures.mjs";
 
 const page = readFileSync(new URL("../../../../docs/development/ux-substrate/screens/page.src.html", import.meta.url), "utf8");
-const css = page.split("<style>")[1].split("</style>")[0] + ASSET_FILES["civicsmith.css"].body + (shell.STYLE || "");
+const css = page.split("<style>")[1].split("</style>")[0] + readFileSync(new URL("../../../../docs/development/ux-substrate/visual-language/civicsmith.css", import.meta.url), "utf8") + (shell.STYLE || "");
 const DEFINED = new Set([...css.matchAll(/\.([a-zA-Z_][\w-]*)/g)].map((m) => m[1]));
 /* the classes the shell's own kit draws are the shell's to define (interface-shell R56's HOOK_CLASSES and STYLE) */
 for (const f of ["browser.mjs", "index.mjs"]) for (const m of readFileSync(new URL("../../../src/interface-shell/" + f, import.meta.url), "utf8").matchAll(/class=\\?["']([^"'$\\]*)/g)) for (const c of m[1].split(/\s+/).filter(Boolean)) DEFINED.add(c);
