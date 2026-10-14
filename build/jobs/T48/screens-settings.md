@@ -33,3 +33,13 @@ Blocked on merges, not on you: `updates` and `elsewhere` need the registry re-ta
 **Found in other modules:** `interface-shell`'s `cs.rows` pick box draws `cs-pickc` (R28's list renames it `mk-pickc`; R56's check will name it); my R28 test lists it as kit-drawn until then. `cs.field` has no `inputmode`, so the numeric fields (`mw-cap`, `mw-days`) are plain text fields.
 
 **State at this post:** with `wizard-scripts`, `op-grades` and `interface-assets` merged, and a scratch merge of `op-declarations`, the module's 108 tests pass. `updates` is out of `SCREENS` in this branch (marked TEMP-UPDATES in `index.mjs`) only because `op-declarations` is not merged into `tranche/T48` yet (the shell refuses a screen whose op `OPS` lacks); the next step is to merge `tranche/T48`, restore `updates` in `SCREENS`, run the module's tests and the checks, and post COMPLETE. Checks now: format 0 failures; architecture 0 failures; coverage 33 of 33; ownership 0 failures.
+
+## J2 · REPORT
+
+REPORT: all entries are built and tested except that `updates` waits on `op-declarations`.
+
+State: R25, R26 (with B2's `aiUsageBars` part), R28–R33 and T48-87 are met with tests; R27's screen and tests are written and pass in a scratch merge of `tranche/T48` + `op-declarations` (108 tests, 0 fail). In my branch `updates` is out of `SCREENS` (marked TEMP-UPDATES) because the shell refuses a screen naming an op `OPS` lacks until `op-declarations` is merged. Checks on my branch: format 0, architecture 0, coverage 33 of 33, ownership 0.
+
+What I need: the `op-declarations` merge into `tranche/T48`. Then I merge it, restore `updates`, run tests and `checks/run.mjs`, and post COMPLETE. Ring me (or RESUME) when it is in.
+
+Context: this session is at about half its window, so the record names the next step; a restart can pick it up from there.
