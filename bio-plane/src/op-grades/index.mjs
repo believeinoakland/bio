@@ -12,7 +12,7 @@
  *
  * T33's, T34's, T35's, T36's, T37's, T38's, T41's, T42's, T45's, T46's, T47's and T48's ops are graded in `./t33.mjs`,
  * `./t34.mjs`, `./t35.mjs`, `./t36.mjs`, `./t37.mjs`, `./t38.mjs`, `./t41.mjs`, `./t42.mjs`, `./t45.mjs`, `./t46.mjs`,
- * `./t47.mjs` and `./t48.mjs`, spread into the tables below; each of those files imports nothing, so the spread closes no cycle. */
+ * `./t47.mjs`, `./t48.mjs` and `./t49.mjs`, spread into the tables below; each of those files imports nothing, so the spread closes no cycle. */
 
 /* R13 (T33-85): the grades and reasons of every op T33 adds, spread into RUNGS, RUNG_ABSENT and NON_ACTS below. */
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "./t33.mjs";
@@ -39,6 +39,8 @@ import { T46_RUNGS, T46_RUNG_ABSENT, T46_NON_ACTS } from "./t46.mjs";
 import { T47_RUNGS, T47_RUNG_ABSENT, T47_NON_ACTS } from "./t47.mjs";
 /* R38–R41 (T48): every op T48's owners add, graded from its owner, and R39's two given rows. */
 import { T48_RUNGS, T48_RUNG_ABSENT, T48_NON_ACTS, T48_MACHINE_REFUSALS } from "./t48.mjs";
+/* R43 (T49; N1072, N1091): `founderhandleset` and `projectownervotes`, graded from their owners. */
+import { T49_RUNG_ABSENT, T49_NON_ACTS } from "./t49.mjs";
 export { OP_ALIASES, aliased } from "./t34.mjs";
 /* R42 (T48): the design's weight for each rungless act a registered screen lists; it grades nothing. */
 export { MARKS, MARK_SOURCES } from "./marks.mjs";
@@ -95,14 +97,11 @@ export { MARKS, MARK_SOURCES } from "./marks.mjs";
  * output never stops answering at all. */
 export const RUNG_LADDER = ["reversible", "reasoned", "terminal", "attested", "irreversible"];
 
-/* The correction path DEC-19 requires to be stated beside the top rung rather
- * than instead of it. Published with the ladder so a surface that renders
+/* The correction path DEC-19 requires to be stated beside the top rung rather than instead of it, as a KEY (R44): the
+ * sentence is `setup-words`' `screen.ceremony.permanent` (publishing makes an edition permanent and public; it is
+ * corrected by a new edition, never removed), read through `word(key)`. Published with the ladder so a surface that renders
  * "irreversible" cannot render it without the sentence that makes it honest. */
-export const IRREVERSIBLE_CORRECTION_PATH =
-  "Publishing cannot be undone: what it published never stops answering. Correction always moves "
-  + "FORWARD — a further edition (a separate document; every published edition stands), or a "
-  + "withdrawal recorded as another attested act, with both standing in the record. Nothing is "
-  + "erased, and nothing is un-said.";
+export const IRREVERSIBLE_CORRECTION_KEY = "screen.ceremony.permanent";
 
 /* THE REFUSAL FAMILY THAT BACKS THE `reasoned` RUNG. Constructs:161 defines the
  * rung as "a justification is required and never prefilled", and these are the
@@ -283,37 +282,24 @@ export const RUNG_ABSENCE_GROUNDS = {
  * rung name unchanged (R3: a heavy consequence is not a new rung). Five open the full dialog stating the effect;
  * `workobjective` is the lightest, its reason field opening in place with the run's budget and scope beside it.
  * Published as `VOCABULARIES.rung_consequences`, the same object, beside the ladder: no key is added to the decorated act
- * (`affordances` R11), so a surface reads an act's statement by its id. Each statement says only what the owning module enforces;
- * their look is the redesign's. */
+ * (`affordances` R11), so a surface reads an act's entry by its id.
+ * (R44, T49) AN ENTRY HOLDS A KEY, NEVER A SENTENCE: `{friction, key}`, the surface reading the sentence through
+ * `setup-words` `word(key, vars)` (`consequence.<op>` for the eight DEC-258 minted; `screen.person.expunge.statement`, whose
+ * `{date}` and `{member}` the surface fills, and `screen.open-file.warn.ends`, the design's own). Each sentence says only
+ * what the owning module enforces; their look is the redesign's. */
+const ENTRY = (friction, key) => Object.freeze({ friction, key });
 export const CONSEQUENCE_STATEMENTS = Object.freeze({
-  attribute: Object.freeze({ friction: "dialog",
-    statement: "The level you choose is what this case edition publishes about who said your observation. Once the "
-      + "edition is signed and published, it says so permanently: a later edition may choose differently, but this one "
-      + "never stops saying it. Your reason is kept with the choice." }),
-  leadshare: Object.freeze({ friction: "dialog",
-    statement: "Sharing puts what you were told in front of every joined participant of that project. A disclosure "
-      + "cannot be un-read: the share stays in the record with your reason, and what they have read stays read." }),
-  entitycreate: Object.freeze({ friction: "dialog",
-    statement: "This names a person or a body in the group's registry, in your name and with your note. Documents "
-      + "that mention them can then be resolved to the entry, and the entry is corrected by aliases and relations, "
-      + "never erased." }),
-  strengthbar: Object.freeze({ friction: "dialog",
-    statement: "This sets the strength the whole group's work is held to by default: every new project starts from "
-      + "it. It stands as the group's bar, in your name and with your reason, until it is set again." }),
-  filingapprove: Object.freeze({ friction: "dialog",
-    statement: "Approving makes this text yours, recorded with your name, the time and its digest. A filing is "
-      + "approved once, and the approval is not walked back: what is sent is the text you approved." }),
-  workobjective: Object.freeze({ friction: "in-place",
-    statement: "An assistant will work this project's objective within the run's budget and scope, shown beside "
-      + "this field. Your reason is recorded on the run's opening; the run proposes and never concludes." }),
+  attribute:    ENTRY("dialog", "consequence.attribute"),
+  leadshare:    ENTRY("dialog", "consequence.leadshare"),
+  entitycreate: ENTRY("dialog", "consequence.entitycreate"),
+  strengthbar:  ENTRY("dialog", "consequence.strengthbar"),
+  filingapprove: ENTRY("dialog", "consequence.filingapprove"),
+  workobjective: ENTRY("in-place", "consequence.workobjective"),
   /* R8 (DEC-113; K1134 (3), K1252): releasing a litigation hold restarts what the hold stopped, for the projects
-     `action-holds` R6 (was `actions` R57) answers (`op=actionholdpreview`), which the surface reads and shows beside the statement. DEC-113's
-     sentence, with K1252's purge: while a hold stands no held material is purged (action-holds R9). */
-  actionholdrelease: Object.freeze({ friction: "dialog",
-    statement: "Releasing this hold restarts deletion for the projects shown beside this: their material may be purged "
-      + "again, and assistant transcripts for them past the time limit will be deleted on each member's device when it "
-      + "is next opened. This cannot be undone." }),
-  /* R21 (N623, DEC-142): `personexpunge`'s, written in ./t35.mjs beside its grades. */
+     `action-holds` R6 (was `actions` R57) answers (`op=actionholdpreview`), which the surface reads and shows beside the
+     statement. DEC-113's sentence, with K1252's purge: while a hold stands no held material is purged (action-holds R9). */
+  actionholdrelease: ENTRY("dialog", "consequence.actionholdrelease"),
+  /* R21 (N623, DEC-142): `personexpunge`'s and (K2049) `standardrelease`'s, written in ./t35.mjs beside its grades. */
   ...T35_CONSEQUENCE_STATEMENTS,
   /* R24 (DEC-173 (2)): `openwithwarning`'s, written in ./t36.mjs beside its ground. */
   ...T36_CONSEQUENCE_STATEMENTS,
@@ -850,6 +836,7 @@ export const RUNG_ABSENT = {
   ...T46_RUNG_ABSENT,
   ...T47_RUNG_ABSENT,
   ...T48_RUNG_ABSENT,
+  ...T49_RUNG_ABSENT,
 };
 
 /* D-311 · THE ACTS A MACHINE CREDENTIAL'S CLASS IS REFUSED BY NAME, each with the code its store
@@ -1566,6 +1553,7 @@ export const NON_ACTS = {
   ...T46_NON_ACTS,
   ...T47_NON_ACTS,
   ...T48_NON_ACTS,
+  ...T49_NON_ACTS,
 };
 
 /* R21 (N657, DEC-143): THE IRREVERSIBLE WEIGHT. An act that can never be undone shows the Irreversible weight on its

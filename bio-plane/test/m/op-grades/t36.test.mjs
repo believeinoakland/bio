@@ -88,18 +88,14 @@ test("R24 R35: the 23 ops of file-safety — releasescanhold `reasoned` on HOLD_
   assert.notDeepEqual({ ...got, openwithwarning: "reasoned" }, R24_WRITES);
 });
 
-test("R24 R4 (DEC-173 (2)): openwithwarning carries a frozen dialog statement beside its `observational` ground: high "
-   + "risk for the reasons shown beside it, what opening risks (own device, its protections, the sign-in to the group), "
-   + "the two confirmations verbatim, and that who opens or confirmed is never recorded; no rung is added", () => {
+test("R24 R4 R44 (DEC-173 (2)): openwithwarning carries a frozen dialog entry beside its `observational` ground, naming "
+   + "the key of the sentence that says what opening risks; no rung is added", () => {
   const e = CONSEQUENCE_STATEMENTS.openwithwarning;
   assert.equal(e, T36_CONSEQUENCE_STATEMENTS.openwithwarning, "the same object, published by reference");
   assert.ok(Object.isFrozen(e));
-  assert.deepEqual(Object.keys(e), ["friction", "statement"]);
+  assert.deepEqual(Object.keys(e), ["friction", "key"]);
   assert.equal(e.friction, "dialog");
-  for (const part of [/high risk/, /reasons shown beside this/, /your own device/, /that device's protections/,
-    /your sign-in to the group/, /"I will open it on my own device, not a shared one"/,
-    /"I will not enable macros or editing"/, /Who opens which file, and who confirmed, is never recorded/])
-    assert.match(e.statement, part);
+  assert.equal(e.key, "screen.open-file.warn.ends");
   assert.equal(gradeOf("openwithwarning"), "observational");
   assert.ok(!Object.hasOwn(RUNGS, "openwithwarning"));
   assert.ok(!IRREVERSIBLE_WEIGHT.includes("openwithwarning"));
