@@ -34,3 +34,7 @@ Also, beside R14/R15, I re-pin under R7's re-wording clause (DEC-199, `escalatio
 - `checks/run.mjs` over the product: format 0, architecture 0 (3124 files), channels 0; coverage 24 failures, all other modules' unmerged T47 ids (rule 5 (1)), none of this module's.
 
 Size (session_013osHE4dWKZtRLQMyZZYfNj): test runs 9, module lines 887
+
+## J2 · REPORT
+
+control-plane (T47-65): R14 opens two reds there, by design. (a) test/m/control-plane/t46-door.test.mjs R65 and the R32/R39/R46 wire-check test pin DISCLOSURE_DUE at C-69.6; the door now answers it decorated with credentials' C-29.40 and words.json's sentence. (b) control-plane/index.mjs :2035 still calls dispatchRow("DISCLOSURE_DUE"); answer-envelope's reader answers that one retired code with the C-29.40 row (RETIRED_DISPATCH) until T47-65 answers through credentials.disclosureDue, so the door keeps working. After T47-65 that branch can go in a later answer-envelope job. promotion (T48 stamp): src/gate.mjs's census comment still names C-69.6 as a live row. Before/after counts are in my record.
