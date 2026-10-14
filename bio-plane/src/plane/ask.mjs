@@ -9,15 +9,32 @@
    (T47; R47; K3084, K3060 D10) A sign-in's secret is its held token (`credentials` R70's `key`), sent as an API key's
    is; an answer refusing that token (`SIGNIN_TOKEN_REFUSED`) has `credentials` drop it (`subscriptionTokenRefused`). */
 import { credentialsOf, AI_GRANT_TTL_SECONDS } from "../credentials/index.mjs";
+import { aiAccountsOf } from "../ai-accounts/index.mjs";
 import { instanceSetupOf } from "../setup.mjs";
+import { TRACE_HEADER, MEMBER_REF_HEADER } from "../signin-door/index.mjs";
+import { hypothesesOf } from "../hypotheses/index.mjs";
+import { networkNoticesOf } from "../network-notices/index.mjs";
+import { recordOf } from "../record-core/index.mjs";
 import { answersOf } from "../answers/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
-import { membershipOf } from "../membership/index.mjs";
+import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { deployedModesFor, draftKindDeployed, draftMayRead, partRefusal, AI_RUN_OPEN_CHECKS, ASK_MODE,
          DRAFT_MODE } from "../run-rules/index.mjs";
 
 const json = (body, status) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 const idOf = (m) => (typeof m === "string" && m.startsWith("member:") ? m.slice(7) : m);
+
+/** R55 (T48; N1015; K3103; `agent-worker` R87, R83; `control-plane` R93): the headers of a call to `agent-worker`'s `/ask`,
+ *  `/run`, `/draft` or `/transcribe`: the door's `trace` and member ref in `x-civicsmith-trace` and
+ *  `x-civicsmith-member-ref`, each only when handed as a non-empty printable string of at most 200 characters (the
+ *  shape `signin-door` R3 mints), never in a body or an address. A call with none handed sends neither. */
+const HEADER_VALUE = /^[\x21-\x7e]{1,200}$/;
+export function doorHeaders({ trace = null, memberRef = null } = {}) {
+  const h = { "content-type": "application/json" };
+  if (typeof trace === "string" && HEADER_VALUE.test(trace)) h[TRACE_HEADER] = trace;
+  if (typeof memberRef === "string" && HEADER_VALUE.test(memberRef)) h[MEMBER_REF_HEADER] = memberRef;
+  return h;
+}
 
 /* F1 (K1874; admission R20): the session or grant the caller presented, read where admission read it: the
    `Authorization` header when it is exactly `Bearer <value>`, else the JSON body's `token`, else, for T35's release
@@ -33,7 +50,7 @@ function presentedToken(req, url, body) {
 
 /** The door's arm (in the Worker): admits only a member's own session or a presented grant's member, reads the body,
  *  and asks the `bio` object, which answers through `askOnObject`. */
-export async function askOp({ req, url, env, viaSession, sessMember, grantMember }) {
+export async function askOp({ req, url, env, viaSession, sessMember, grantMember, trace = null, memberRef = null }) {
   const member = viaSession && sessMember ? `member:${idOf(sessMember)}` : typeof grantMember === "string" && grantMember ? grantMember : null;
   if (!member)
     return json({ ok: false, reason: "ASK_NOT_A_MEMBER", detail: "an ask is a member's own act, from their own session or "
@@ -47,7 +64,8 @@ export async function askOp({ req, url, env, viaSession, sessMember, grantMember
   const args = { member, question: body && body.question, conversation: body && body.conversation,
                  store: named ? named : null, ...(project ? { project } : {}),
                  session: viaSession ? presentedToken(req, url, body) : null,
-                 grant: viaSession ? null : presentedToken(req, url, body) };
+                 grant: viaSession ? null : presentedToken(req, url, body),
+                 ...(trace ? { trace } : {}), ...(memberRef ? { memberRef } : {}) };
   return env.STORE.get(env.STORE.idFromName("bio")).ask(args);
 }
 
@@ -60,7 +78,7 @@ export const ACTION_DRAFT_OPS = Object.freeze(["infractiondraft", "bearingdraft"
  *  that reached the model counted to the member's day as a draft through the store's `askusage` (ai-runs R48, as
  *  control-plane's draft path counts it), and the draft answered as `{ok: true, result}`, or its refusal at its status.
  *  The grant and the read log are never answered. */
-export async function actionDraftOp({ req, url, env, op, viaSession, sessMember, sessViewer }) {
+export async function actionDraftOp({ req, url, env, op, viaSession, sessMember, sessViewer, trace = null, memberRef = null }) {
   if (!viaSession || !sessMember)
     return json({ ok: false, reason: "ASK_NOT_A_MEMBER", detail: "a draft is a member's own act, from their own session. "
       + "Nothing was drafted." }, 403);
@@ -73,7 +91,8 @@ export async function actionDraftOp({ req, url, env, op, viaSession, sessMember,
   const stub = env.STORE.get(env.STORE.idFromName("bio"));
   let drafted = null, status = 502;
   try {
-    const res = await stub.draft({ op, member: sessMember, session: presentedToken(req, url, b), ...args });
+    const res = await stub.draft({ op, member: sessMember, session: presentedToken(req, url, b), ...args,
+      ...(trace ? { trace } : {}), ...(memberRef ? { memberRef } : {}) });
     status = res.status;
     drafted = await res.json();
   } catch { drafted = null; }
@@ -144,7 +163,7 @@ export function assistantGateOf(ctx, deps = {}) {
  *  closed). */
 export const DRAFT_KIND_OF = Object.freeze({ writinghelp: "own_words", groupdescriptiondraft: "own_words",
   translationdraft: "translation", textcheck: "textcheck", infractiondraft: "infractiondraft", bearingdraft: "bearingdraft",
-  statusreportdraft: "statusreport" });
+  statusreportdraft: "statusreport", readtranslate: "reading" });
 const NOT_DEPLOYED = "AI_RUN_MODE_NOT_DEPLOYED";
 /* R40: the refusal, as ai-runs refuses an undeployed run mode: run-rules' row (C-109.1), read by key, with the mode. */
 function notDeployed(mode, kind = null) {
@@ -245,7 +264,7 @@ function watched(res, heard) {
 /** On the `bio` object: judge the account and its limit (`answers.askAccount`), mint the grant (unless one was
  *  presented), unseal the account, read the suggestions switch, and post the ask. */
 export async function askOnObject(ctx, env, { member, session = null, grant = null, question, conversation, store = null,
-                                              project = null }) {
+                                              project = null, trace = null, memberRef = null }) {
   /* R40 (K2853; T46): first, before the keep-away read, any account read or any grant: the mode deployed by its flag and
      admitted by ai-runs' `partAdmitted`; `untested` the test-instance label when admitted on the exception. */
   const gate = deployGate(ctx, env, ASK_MODE.mode);
@@ -258,7 +277,7 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
      it, `credentials`' `AI_KEPT_AWAY` row as given, before any grant is minted or any account read. */
   const off = instanceSetupOf(ctx, env).assistantGate();
   if (off) return json(off, 403);
-  const c = credentialsOf(ctx);
+  const c = credentialsOf(ctx), acc = aiAccountsOf(ctx);   /* R53: the grant is credentials'; the account reads are ai-accounts' */
   /* R33 (K2500; answers R30): the account that serves this ask, and its limit, judged by answers for the ask's
      `project` when it names one; a refusal (NO_ACCOUNT, AI_USE_SWITCHED_OFF, AI_LIMIT_REACHED, ...) is answered as
      given, before any grant is minted or anything posted. */
@@ -273,14 +292,14 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
   /* K1806, R33 (agent-worker R6, R54; credentials R35, R55; T46): the account that serves this ask in R6's wire shape,
      with that account's own suggestions switch, a sign-in's secret its held token (R47, `wireAccount`). R40
      (agent-worker R79): the test-instance label, when the ask was admitted on the exception. */
-  const heard = tokenRefusal(c, accountOf(judged));
-  let { account } = wireAccount(c, accountOf(judged), member);
+  const heard = tokenRefusal(acc, accountOf(judged));
+  let { account } = wireAccount(acc, accountOf(judged), member);
   const out = JSON.stringify({ question, ...(conversation !== undefined ? { conversation } : {}), ...(store ? { store } : {}),
                                grant: token, account, ...(gate.untested ? { untested: gate.untested } : {}) });
   account = null;
   let res;
   try {
-    res = await w.fetch("https://agent-worker/ask", { method: "POST", headers: { "content-type": "application/json" }, body: out });
+    res = await w.fetch("https://agent-worker/ask", { method: "POST", headers: doorHeaders({ trace, memberRef }), body: out });
   } catch {
     return json({ ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member did not answer. Nothing was kept." }, 502);
   }
@@ -315,7 +334,8 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
 export async function draftOnObject(ctx, env, { op = null, member = null, session = null, told = null, act = null, field = null,
                                                 firsthand = false, pack = null, direction = null, language = null,
                                                 words = null, text = null, matter = null, audience = null, action = null,
-                                                reply = null, plan = null, items = null } = {}, { read = null } = {}) {
+                                                reply = null, plan = null, items = null, subject = null,
+                                                trace = null, memberRef = null } = {}, { read = null } = {}) {
   const who = member === null || member === undefined || member === "" ? null : `member:${idOf(member)}`;
   const readOf = (grant) => {
     if (!grant) return [];
@@ -337,7 +357,29 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
     return out(503, { ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was drafted." });
   const off = instanceSetupOf(ctx, env).assistantGate();   /* N765: `AI_KEPT_AWAY`, as for an ask, before any account */
   if (off) return out(403, off);
-  const c = credentialsOf(ctx);
+  const c = credentialsOf(ctx), acc = aiAccountsOf(ctx);   /* R53: the grant is credentials'; the account reads are ai-accounts' */
+  /* R50 (T48; N670; DEC-127 (3)): a member's reading of a passage of the group's writing in her language, read as she may,
+     before any account: the subject (her own note, a question or finding or a notice as she sees it), the language
+     (`instance-setup.readingLanguage`, its R87, whose refusals pass through), the passage's length, then the keep-away of
+     the subject's project. It mints no grant, sends no `told`, and writes nothing. */
+  let reading = null;
+  if (kind === "reading") {
+    if (!said(who)) return out(400, badTask("a reading is a member's own act"));
+    const got = readSubject(ctx, who, subject);
+    if (!got.ok) return out(got.status, got.answer);
+    const lang = instanceSetupOf(ctx, env).readingLanguage({ member: who, ...(said(language) ? { language } : {}) });
+    if (!lang || lang.ok === false || !said(lang.language)) return out(409, lang || { ok: false, reason: "UNDETERMINED",
+      detail: "the language this passage is read in could not be read. Nothing was translated." });
+    const original = { kind: subject.kind, id: subject.id, text: got.text };
+    if (got.text.length > READ_PASSAGE_MAX)
+      return out(413, { ok: false, reason: "PASSAGE_TOO_LONG", code: "PASSAGE_TOO_LONG", max: READ_PASSAGE_MAX, original,
+        detail: `a passage of more than ${READ_PASSAGE_MAX} characters is not translated here. Nothing was translated.` });
+    let away;
+    try { away = got.project ? acc.aiKeptAway({ project: got.project, use: "draft" }) : null; }
+    catch { away = { ok: false, reason: "UNDETERMINED", detail: "whether this subject's project keeps its material away could not be read. Nothing was translated." }; }
+    if (away) return out(403, away);
+    reading = { language: lang.language, from_language: said(lang.from_language) ? lang.from_language : null, original };
+  }
   /* R40 (T46; N920; study-T46-assistant §2): a plan's status report. The plan is read as the member reads it (`op=plan`,
      her viewer stamp), and the keep-away of its project for drafts (`credentials.aiKeptAway({project, use: "draft"})`)
      refuses as given, both before any account is read; a refused read ends the draft with that refusal. */
@@ -350,7 +392,7 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
     if (p.ok !== true) return out(409, p);
     const project = said(p.project) ? p.project : p.plan && said(p.plan.project) ? p.plan.project : null;
     let away;
-    try { away = c.aiKeptAway({ project, use: "draft" }); } catch { away = { ok: false, reason: "UNDETERMINED", detail: "whether this plan's project keeps its material away could not be read. Nothing was drafted." }; }
+    try { away = acc.aiKeptAway({ project, use: "draft" }); } catch { away = { ok: false, reason: "UNDETERMINED", detail: "whether this plan's project keeps its material away could not be read. Nothing was drafted." }; }
     if (away) return out(403, away);
   }
   /* R33 (K2500, K2508; answers R30): the account and its limit judged by answers for kind `draft`; its refusal answered
@@ -359,8 +401,8 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
   if (!judged || judged.ok !== true) return out(409, judged);
   /* R33 (T46; M-T46-6, K2946): the serving account's own switch; R47 (T47): a sign-in's secret its held token
      (`wireAccount`), and an answer refusing that token has credentials drop it */
-  const heard = tokenRefusal(c, accountOf(judged));
-  let { account, suggestions } = wireAccount(c, accountOf(judged), who);
+  const heard = tokenRefusal(acc, accountOf(judged));
+  let { account, suggestions } = wireAccount(acc, accountOf(judged), who);
   /* R41 (K2824): an action draft's records, from the member's own reads, before any grant is minted */
   let records = {};
   if (kind === "infractiondraft" || kind === "bearingdraft") {
@@ -378,20 +420,22 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
     grant = g.token;
     noteDraftGrant(ctx, grant);   /* R33: its reads are recorded with `use: "draft"` */
   }
-  const task = op === "writinghelp" ? { op, act, field } : kind === "translation" ? { op, direction, language, words }
+  const task = reading ? { op, language: reading.language, text: reading.original.text,
+                            ...(reading.from_language ? { from_language: reading.from_language } : {}) }
+    : op === "writinghelp" ? { op, act, field } : kind === "translation" ? { op, direction, language, words }
     : kind === "textcheck" ? { op, text } : kind === "infractiondraft" ? { op, matter, audience }
     : kind === "bearingdraft" ? { op, action, reply } : kind === "statusreport" ? { op, plan, items } : { op };
   const actionDraft = kind === "textcheck" || kind === "infractiondraft" || kind === "bearingdraft" || kind === "statusreport";
   /* R40 (agent-worker R79): the label rides with the draft when it was admitted on the exception */
   const label = untested ? { untested } : {};
-  const body = JSON.stringify(kind === "translation" ? { task, account, ...(pack != null ? { pack } : {}), ...label }
+  const body = JSON.stringify(kind === "translation" || reading ? { task, account, ...(pack != null ? { pack } : {}), ...label }
     : actionDraft ? { task, account, ...(grant ? { grant } : pack != null ? { pack } : {}), ...records, ...label }
     : { task, told, account, ...(grant ? { grant } : pack != null ? { pack } : {}), ...(firsthand === true ? { firsthand: true } : {}),
         ...label });
   account = null;
   let res;
   try {
-    res = await w.fetch("https://agent-worker/draft", { method: "POST", headers: { "content-type": "application/json" }, body });
+    res = await w.fetch("https://agent-worker/draft", { method: "POST", headers: doorHeaders({ trace, memberRef }), body });
   } catch {
     return out(502, { ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member did not answer. Nothing was kept." }, grant, suggestions);
   }
@@ -399,7 +443,58 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
   try { answer = await res.json(); }
   catch { return out(502, { ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member's answer was not JSON. Nothing was kept." }, grant, suggestions); }
   heard(answer);
+  /* R50: the reading, labelled a machine's, beside the passage it is of; usage and calls ride along for the door's count */
+  if (reading && answer && answer.ok === true && res.status < 400)
+    return out(res.status, { ok: true, translation: answer.translation, language: answer.language ?? reading.language,
+      from_language: answer.from_language ?? reading.from_language, label: { kind: "machine" }, original: reading.original,
+      ...(answer.usage !== undefined ? { usage: answer.usage } : {}), ...(answer.calls !== undefined ? { calls: answer.calls } : {}) },
+      grant, suggestions);
   return out(res.status, answer, grant, suggestions);
+}
+
+/** R50 (T48; N670; DEC-127 (3); `run-rules` R33; `agent-worker` R86; `instance-setup` R87): a passage over this many characters
+ *  is refused before any account is read (a protective limit, K1881). */
+export const READ_PASSAGE_MAX = 20000;
+/** R50: the kinds of subject a member's reading names. */
+export const READ_SUBJECT_KINDS = Object.freeze(["note", "question", "finding", "notice"]);
+const READ_NOTE_PAGES_MAX = 50;
+
+/* R50 item 2: the subject's text as the asking member may read it, never wider: `{ok: true, text, project}`, or the owner's
+   own refusal for an absent or unseen subject, as given. Nothing is written. */
+function readSubject(ctx, who, subject) {
+  const kind = subject && typeof subject === "object" && !Array.isArray(subject) ? subject.kind : null;
+  const id = subject && typeof subject === "object" ? subject.id : null;
+  if (!READ_SUBJECT_KINDS.includes(kind) || !((typeof id === "string" && id.trim() !== "") || Number.isInteger(id)))
+    return { ok: false, status: 400, answer: badTask(`a reading names its subject as {kind, id}, kind one of ${READ_SUBJECT_KINDS.join(", ")}`) };
+  if (kind === "note") {
+    /* hypotheses' notes are never shared: only her own are read (its R12, R14) */
+    const want = Number(id);
+    let after = null;
+    for (let i = 0; i < READ_NOTE_PAGES_MAX; i++) {
+      const page = hypothesesOf(ctx).notesOf({ viewer: who, ...(after !== null ? { after } : {}) });
+      const hit = page && page.ok === true && Array.isArray(page.notes) ? page.notes.find((n) => n.note === want) : null;
+      if (hit) return { ok: true, text: hit.text, project: null };
+      if (!page || page.ok !== true || !page.truncated || !page.next) break;
+      after = page.next.after;
+    }
+    return { ok: false, status: 404, answer: { ok: false, reason: "NO_SUCH_NOTE", code: "NO_SUCH_NOTE",
+      detail: "no note of yours is held by that number", note: Number.isInteger(want) ? want : null } };
+  }
+  if (kind === "question" || kind === "finding") {
+    const sid = String(id);
+    const b = recordOf(ctx).bundleInfo(sid);
+    if (!b || !membershipOf(ctx).inSight(sid, who) || b.type !== "inquiry")
+      return { ok: false, status: 404, answer: { ok: false, reason: "NO_SUCH_BUNDLE", target: sid } };
+    return { ok: true, text: typeof b.title === "string" ? b.title : "", project: b.project ?? null };
+  }
+  /* a notice: through network-notices for her, the latest revision's wording, body and matter */
+  const project = typeof subject.project === "string" && subject.project !== "" ? subject.project : null;
+  const read = networkNoticesOf(ctx).noticesOf({ project, viewer: who });
+  if (!read || read.ok !== true) return { ok: false, status: 404, answer: read || noSuchProject(project) };
+  const n = read.notices.find((x) => x.notice === String(id));
+  const rev = n && n.revisions.length ? n.revisions[n.revisions.length - 1].json : null;
+  if (!rev) return { ok: false, status: 404, answer: noSuchProject(project) };
+  return { ok: true, project, text: [rev.wording, rev.body, rev.matter].filter((x) => typeof x === "string" && x !== "").join("\n") };
 }
 
 /* R41: a draft's task the door cannot assemble records for, in agent-worker R59's code. */
