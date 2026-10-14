@@ -466,7 +466,9 @@ const REASONED_CASES = {
     w.doc("INFO-2026-0001-a"); w.finding("INQ-2026-0001-q", [{ target: "INFO-2026-0001-a" }]);
     const P = w.project("Team", "alice", ["INQ-2026-0001-q"]); w.join(P, "bo");
     const pub = w.publish(P, "alice", ["INQ-2026-0001-q"]);
-    return { w, act: (why) => w.ca.acknowledgeStatement({ viewer: caFix.V("bo"), caseId: pub.caseId, edition: 1, reason: why }) }; },
+    /* T47 (N908 §5): the acknowledgement is case-inputs' since the split (K3116), driven on the real case-inputs the fixture
+       builds beside case-authoring (`w.ci`) */
+    return { w, act: (why) => w.ci.acknowledgeStatement({ viewer: caFix.V("bo"), caseId: pub.caseId, edition: 1, reason: why }) }; },
   standarddeclare: () => { const w = stdFix.seeded(); const p = w.passage().contentId;
     return { w, act: (why) => w.s.standardDeclare({ cite: stdFix.BYLAW, kind: "ordinance", issuer: "Port Ellery Selectboard", reason: why,
       text: [p], author: stdFix.V("bob"), viewer: stdFix.V("bob") }) }; },
