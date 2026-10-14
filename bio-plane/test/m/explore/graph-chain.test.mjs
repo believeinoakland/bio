@@ -179,6 +179,10 @@ test("R22 a walk stopped at its depth says so: a three-hop chain walked to depth
   const three = x.explore({ from: A, at: AT, viewer: V, depth: 3 });
   assert.deepEqual([three.depth_stopped, three.at_depth], [true, [D]]);
   assert.ok(!log.some((c) => c.node === D));
+  // The requirement's own case (K3243): a chain of three nodes, two steps, walked to depth 2 names the far node; to depth 3, false.
+  const short = make([conn("line:part_of", A, B, { id: "ab" }), conn("line:part_of", B, C, { id: "bc" })]).x;
+  assert.deepEqual([short.explore({ from: A, at: AT, viewer: V, depth: 2 }).depth_stopped, short.explore({ from: A, at: AT, viewer: V, depth: 2 }).at_depth], [true, [C]]);
+  assert.equal(short.explore({ from: A, at: AT, viewer: V, depth: 3 }).depth_stopped, false);
   // A walk that runs out of steps before its depth: false.
   assert.equal(make([conn("line:part_of", A, B)]).x.explore({ from: A, at: AT, viewer: V, depth: 3 }).depth_stopped, false);
 });
