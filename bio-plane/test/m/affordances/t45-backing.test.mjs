@@ -71,16 +71,17 @@ test("R19: action-plans' scenariosetaside, scenariorestore, planpause and planre
     return { w, act: (why) => w.ap.planResume({ id: w.PL, ...reasoned(why), ...by("bob") }) }; });
 });
 
-/* ---- actions (R87) ---- */
+/* ---- action-records (was actions R87; T47, N961 §5: moved with the split, K3128) ---- */
 import * as acFix from "../actions/fixture.mjs";
+import { actionRecordsOf } from "../../../src/action-records/index.mjs";
 
-test("R19: actions' actionscope, graded `reasoned` (op-grades R32), is refused without the member's reason with "
-   + "SCOPE_NO_REASON (actions R87), in JUSTIFICATION_REFUSALS, writing nothing, and accepted with it", async () => {
+test("R19: action-records' actionscope (actions' until the split), graded `reasoned` (op-grades R32), is refused without the "
+   + "member's reason with SCOPE_NO_REASON, in JUSTIFICATION_REFUSALS, writing nothing, and accepted with it", async () => {
   const B = "ACTN-2026-0002-b", M = acFix.V(acFix.ALICE);
   await backed("actionscope", "SCOPE_NO_REASON", () => {
     const w = acFix.world();
     w.promote(B, acFix.actionMd(B, [...acFix.CP, "action_kind: other"]));
-    return { w, act: (why) => w.a.actionScope({ target: B, confidential: true, ...reasoned(why), viewer: M, author: M }) };
+    return { w, act: (why) => actionRecordsOf(w.host).actionScope({ target: B, confidential: true, ...reasoned(why), viewer: M, author: M }) };
   });
 });
 

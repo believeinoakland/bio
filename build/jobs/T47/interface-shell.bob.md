@@ -1,6 +1,6 @@
 # BOB to interface-shell (T47)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -47,3 +47,11 @@ K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75:
 ## B9 · CHANGE
 
 K3149: new R50: `ADMIN_ACTS` completed (passwordresetlink, signerset, the group settings, profilesset, placewanted, officesseed, translationgrant/revert, securitytool*), and R11's phone hold covers every act `op-grades.phoneOf` answers false for. op-grades, wizard-scripts, setup-words and instance-setup are merged. Merge `tranche/T47`.
+
+## B10 · CHANGE
+
+K3150: R49's signatures, as SCREENS-PUBLISH #1 builds to them: `cs.image(op, params, {alt})` answers the image's HTML; `cs.areas(imageHtml, {id, areas, label})` answers the control's HTML, its rectangles read at the act by `cs.value(id)` as `[{left, top, width, height}]`; `cs.choice(id, labelKey, options, {acts: {<value>: op}})` makes one button follow the choice.
+
+## B11 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.

@@ -1,29 +1,41 @@
-/* affordances — ACT_HELP (R48, R53; N726, DEC-174 (3) as amended (U117), DEC-99): the one table of what each act does,
- * one English explanation per op, keyed by op, held for translation (N669 keys the translations by this table's keys).
+/* affordances — ACT_HELP (R48, R53, R54, R56; N726, DEC-174 (3) as amended (U117), DEC-99): the one table of what each act
+ * does, one English explanation per op, keyed by op, held for translation (N669 keys the translations by this table's keys).
  *
- * GENERATED, never edited by hand, from the design stream's `docs/development/ux-substrate/screens/mock-acts.js` as
- * PR #28 merged it to `main` (`3f40899950`; DEC-194 (2), DEC-197), 255 entries (T46-45, N937, K2960; before it PR #25's,
- * 213, T44-9; `tranche/T43`'s, 213, T43-17; PR #19's `3660c18803`, 215, T41-52; PR #15's `c848b56671`, 204, T38-31;
- * PR #14's `e08cd35ecb`, 203, T37-27); a later design text is a re-generation. PR #28 gave the 42 ops T45 serves their
- * texts (DEC-194 (2)) and escalation's stop and reopening theirs. Each text is the design's, verbatim, in the design's
- * order, but one (below). Its keys are read as R48 reads them:
- *   - a declared op is that op;
+ * GENERATED, never edited by hand, from the design stream's `docs/development/ux-substrate/screens/mock-acts.js` as it
+ * stands on `tranche/T47` after PR #33's head was merged (`f90b187c7b`, merge `6f0d88d8d5`; DEC-198–DEC-217), 282 entries
+ * (T47-49, N992, K3062, K3143; before it PR #28's, 255, T46-45; PR #25's, 213, T44-9; `tranche/T43`'s, 213, T43-17; PR #19's
+ * `3660c18803`, 215, T41-52; PR #15's `c848b56671`, 204, T38-31; PR #14's `e08cd35ecb`, 203, T37-27); a later design text is
+ * a re-generation. Each text is the design's, verbatim, in the design's order, but one (below). Its keys are read as R48
+ * reads them:
+ *   - a declared op is that op; an op `op-declarations` declares in T47 (its R55, R57, R59: `unlock`, `passwordreset`,
+ *     `grouplogoset`, `grouplanguagesset`, `signrequest`, `projectlist`, `projectquestions`, `drawquestion`,
+ *     `projectbarset`, `monitorset`) is held under its own name now, so its partition (R34) holds at both merges (R53's
+ *     K2999 rule; K3143 (1));
  *   - an alias (`op-grades`' OP_ALIASES, `op-declarations` R21's table) is held under its op, never as a second entry;
- *   - `owed_<op>` is held under `<op>` for every owed act declared since T36 (the nineteen of T36, the eight of T37,
- *     `obscuremarkwithdraw` of T38, the eleven of T41, `pagetranscribe` of T42; still keyed `owed_` in the file:
- *     `subscriptionsignin`, `projectaikeepaway`), for the three of T45 (R53: `actionscope`, `itemtakeup`,
- *     `filingsecondapprove`) and for the two `op-declarations` declares in T46 (R53, K2999: `infolevelset`,
- *     `escalationstoppursuing`, its R50, R51), so no `owed_` key is held;
- *   - `escalationreopen` and `textcheck`, served in T46 and declared by `op-declarations` R51 (T46-51), are held under
- *     their own names (R53; K2996 for `textcheck`, whose text the file gives);
+ *   - `owed_<op>` is held under `<op>` for every owed act declared since T36, and (R56) `owed_passwordresetlink` under
+ *     `passwordresetlink`, declared in T47, so no `owed_` key is held;
+ *   - (R54) `captureupload`, `ask`, `subscriptiondisconnect`, `clockproposals`, `joindoors`, `statusreportassist` and
+ *     `airundispatch` under their own texts; the former `capture` text, and `hostingaccess`'s (the design now gives
+ *     `hostingaccessset`, K3143 (3)), are no longer in the file and are not held;
  *   - `handlechange`: the file's text still describes a change of handle, which `membership` R129 now refuses whatever
  *     is asked (DEC-197), so it is not held; the help states the refusal, `membership`'s own `HANDLE_FIXED` row read by
  *     reference (R53), and the file's text is named back to BOB for the design stream.
- * A retired op is not held (DEC-188 (8)'s four, DEC-182's withdrawn texts; none is in the file). */
+ * A retired op is not held (DEC-188 (8)'s four, DEC-182's withdrawn texts; none is in the file). `peopledirectory` has no
+ * text in the file and is given none here (K3143: the design stream's). */
 import { MEMBERSHIP_CHECKS } from "../membership/index.mjs";
 
 export const ACT_HELP = Object.freeze({
-  bootstrap: 'Installs Civicsmith in your group\'s own Cloudflare account under this short name. The short name is permanent: it appears in every address and beside every signature.',
+  bootstrap: 'Takes you to Cloudflare\'s own page to allow this installer into your account, then sets up your group\'s Civicsmith there under your short name, or updates it. The short name is permanent: it appears in every address and beside every signature.',
+  login: 'Signs you in on this device with your handle and password, for as long as you chose. Several wrong tries pause sign-in from here for a while.',
+  unlock: 'Unlocks this device with your password after it locked while you were away, and takes you back to where you were; nothing was lost. A wrong password counts as a refused sign-in.',
+  recover: 'Sets a new password with one of your recovery codes, for any member. The code is spent, and every other sign-in of yours ends.',
+  grouplanguagesset: 'Sets the languages your group\'s members use: Civicsmith\'s own words are shown in each, and members choose among them when they join. The places whose rules apply are not changed.',
+  grouplogoset: 'Replaces the logo shown beside your group\'s name on its page, its masthead and its published cases. A logo is optional; with none, the name stands alone.',
+  passwordreset: 'Sets your new password from the reset link an administrator made for you. The link is spent, every other sign-in of yours ends, and your handle and work stay as they are.',
+  signout: 'Signs you out on this device. Your work stays in your group\'s Civicsmith.',
+  signouteverywhere: 'Signs you out on every phone and computer you are signed in on, this one included.',
+  joinlinkinvite: 'Starts joining through the group\'s join link: the name the group will know you by, then your handle and password.',
+  passwordresetlink: 'Makes a one-time link for this member to choose a new password, valid for seven days. You send it yourself; Civicsmith sends no email. Their other sign-ins end when they use it.',
   selftest: 'Runs Civicsmith\'s own checks on what was just installed, so you know it works before anyone joins.',
   claim: 'Makes you the group\'s first administrator, using the one-time password from installing. Until it is claimed, nobody can use the group\'s Civicsmith.',
   groupnameset: 'Sets the name members and readers see. It can be changed later; the short name cannot.',
@@ -36,7 +48,7 @@ export const ACT_HELP = Object.freeze({
   groupkeyset: 'Holds one Anthropic API key for the group, sealed and never shown again. It pays for a member\'s act when neither a project\'s account nor the member\'s own serves it.',
   groupkeyswitch: 'Turns the group\'s key on or off without removing it. Members who rely on it are told what changed.',
   courtnoticeset: 'Chooses whether members are told, when they join and the first time they record something not public, what a court order could reach.',
-  hostingaccess: 'Records who holds the Cloudflare account. Whoever holds it can reach everything, so the group should know who that is.',
+  hostingaccessset: 'Records who holds the Cloudflare account. Whoever holds it can reach everything, so the group should know who that is.',
   securitytooladd: 'Adds a security tool your organisation uses. Before it is turned on you see what it is sent, who receives it and how long it keeps files.',
   memberadd: 'Creates an invitation for one person, under the cover the group knows them by. Nothing about them is public.',
   groupdescriptionset: 'Saves what your group is, what it focuses on and why, and who may see each part: members only, or also the public.',
@@ -59,14 +71,17 @@ export const ACT_HELP = Object.freeze({
   securitytoolremove: 'Stops using this tool. Notes it already wrote stay on the files they concern.',
   expertisedeclare: 'Says what you know professionally, such as accounting or law. An administrator confirms it; members can then ask you for checks.',
   setpassword: 'Changes your password. Every other session signed in as you ends, so anyone using an old one must sign in again with the new password.',
+  signrequest: 'Tells the project\'s owners, in their queues, that this edition is prepared and ready to sign. It signs nothing.',
+  signerset: 'Withdraws a member\'s signing key, for a lost or stolen device. It stops working at once; what it already signed can still be checked.',
   signerregister: 'Registers the key you sign published cases with. Readers check a signature against it.',
   signerrevoke: 'Withdraws your signing key, for example if it was lost. Cases already signed keep a record that it was withdrawn.',
   infolevelset: 'Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.',
   groupkeynoticeseen: 'Confirms you have read that your questions go to Anthropic under the group\'s account. Asked once, before your first question.',
   disclosureshown: 'Confirms you have read what connecting your own account means: your questions go to Anthropic under your own account and terms.',
-  subscriptionsignin: 'Opens Anthropic\'s own sign-in page in a new tab. It gives you a code to paste here; Civicsmith never sees your password.',
-  accountreferenceset: 'Connects your own Claude subscription or API key. It serves only you, before the group\'s key.',
-  accountreferenceremove: 'Disconnects your own account. The group\'s key serves you instead, if the group has one.',
+  subscriptionsignin: 'Opens Anthropic\'s own sign-in page in a new tab, then connects your subscription with the code it gives you. Civicsmith never sees your password, and the code is used once and never kept.',
+  subscriptiondisconnect: 'Disconnects your Claude subscription from your group\'s Civicsmith. The group\'s key serves you instead, if the group has one.',
+  accountreferenceset: 'Connects your own Claude API key. It serves only you, before the group\'s key, and Anthropic bills you for each use.',
+  accountreferenceremove: 'Disconnects your own API key and removes it from your group\'s Civicsmith. The group\'s key serves you instead, if the group has one.',
   membertie: 'Lists a tie that could matter to a case: an employer, a relative in a public body, a business interest. A case that concerns it says so.',
   membertiewithdraw: 'Removes a tie from your list. A case already published keeps what it said.',
   notewrite: 'Writes a note only you can see. Use it for thoughts not ready for the group.',
@@ -100,10 +115,12 @@ export const ACT_HELP = Object.freeze({
   selectionrelease: 'Lets the held set go. Nothing in it changes.',
   frontier: 'Shows where nobody has looked yet for this, so the group knows what an answer does not cover.',
   acquire: 'Has your group\'s Civicsmith fetch this address itself and keep exactly what the site sent, with when and from where.',
-  capture: 'Adds this file or photo to the record, with who made or obtained it and how. It waits in Held captures until vouched for.',
+  captureupload: 'Adds this file or photo to the record, with who made or obtained it and how. It waits in Held captures until vouched for.',
   testify: 'Records what you saw or heard yourself as testimony: grade D, labelled as yours, never changed afterwards.',
   capturerequest: 'Asks for this to be captured later, for example when a site is down. The request waits until it can be fetched.',
-  monitor: 'Watches this address and tells you when what it publishes changes. Each new version is kept beside the old.',
+  monitor: 'Checks this address once, now, for a new version. A new version is kept beside the old. To keep checking, turn watching on.',
+  recoverycodesissue: 'Gives you ten new one-time recovery codes for your own role, shown to you once, and spends every earlier unused one. Nobody else can see or use them.',
+  monitorset: 'Turns watching on or off for this document\'s address, and sets how often it is checked. Each new version found is kept beside the old, and you are told.',
   heldcaptures: 'Shows captures waiting for a member to vouch for them before they count.',
   release: 'Vouches that each copy is what its source gave, unaltered. It is signed with your name; it can be corrected later, never silently undone.',
   heldsetaside: 'Sets the picked captures aside with one reason, shown to anyone waiting on them. They can be restored.',
@@ -117,7 +134,7 @@ export const ACT_HELP = Object.freeze({
   releasescanhold: 'Gives your reason to release a file a scanner flagged. A second member\'s reason releases it; the machine never can.',
   cite: 'Cites this passage in a question, as support or as cutting against it. A citation always points at the original document.',
   retire: 'Stops using this copy in new work, with a reason. Questions that cite it are told.',
-  attest: 'Signs that this copy matches its source, adding your word to the capture. Signed with your key.',
+  attest: 'Has an independent timestamp service certify that this exact copy existed by now: a timestamp over its fingerprint. It adds no signature of yours and says nothing about whether the copy is true.',
   identityclaim: 'Says this name refers to a person the record already follows, with how sure you are (a grade) and why. It is shown as a claim, "claimed the same person, grade B, because…"; the records are linked, never merged, and anyone can see the reason or withdraw it with theirs.',
   standingset: 'Keeps asking this as new documents arrive; new matches reach your queue once, as a list.',
   personfact: 'Records a fact about this person from the passage: a position, a credential, an interest. It cites the passage.',
@@ -142,6 +159,8 @@ export const ACT_HELP = Object.freeze({
   procedureguides: 'Shows the routes your places\' rules and your group give for this kind of action, each with the law or rule it cites. Legal information, not legal advice.',
   standingendset: 'Changes when your standing question stops being asked again.',
   declaredstakeset: 'Records, in your group\'s own words, what it stands to gain or lose. It is shown beside your group\'s name wherever its work is published.',
+  clockproposals: 'Lists the dates proposed for this action\'s clock that no member has adopted yet: each with its rule, its basis and who or what proposed it. Adopting one is a separate act.',
+  joindoors: 'Shows administrators how the website key and the join link are set, and every change to them, with who made it and when. Never the key or the link itself.',
   textcheck: 'Asks the assistant to point out sentences that read as a claim of breach, a policy position, an ask for your group, or naming staff. It never rewrites them; you decide.',
   infractiondraft: 'Asks the assistant to draft a documentation of what happened from the record, labelled as its draft until you make it yours.',
   bearingdraft: 'Asks the assistant to propose how the reply bears on each claim, labelled as its proposal until you lay it out yourself.',
@@ -163,6 +182,8 @@ export const ACT_HELP = Object.freeze({
   jointsignatory: 'Records that a partner organisation approved the same text in its own copy. Their copy must match word for word.',
   filingsecondapprove: 'Gives the second approval this project requires before sending. Only a member other than the first approver can give it.',
   escalationstoppursuing: 'Stops pursuing this escalation, with your reason. It is never recorded as ended or as a success, and it can be reopened where it stopped.',
+  statusreportassist: 'Asks the assistant for a first draft of this status report from the plan\'s items. The draft is labelled machine work, each line cites what it rests on, and nothing is saved until you save it as yours.',
+  airundispatch: 'Starts a run on your own Claude sign-in, for you alone: checking this, or planning how to look into it. What it produces is labelled machine work and changes nothing until a member acts on it.',
   escalationreopen: 'Reopens an escalation your group stopped pursuing, at the stage where it stopped, with your reason.',
   scenariosetaside: 'Sets this scenario aside, with your reason. It is kept whole, and can be restored.',
   scenariorestore: 'Brings a set-aside scenario back, with your reason.',
@@ -184,7 +205,12 @@ export const ACT_HELP = Object.freeze({
   standarddeclare: 'Holds this requirement as a standard the city set itself, so questions can test the city against it.',
   moneyrecord: 'Reads this figure into a money fact, with its stage and period, citing where it came from.',
   tabledeclare: 'Says what a table\'s columns are, so its figures can be counted through a calculation rather than one by one.',
-  strengthbar: 'Sets how strong an answer must be in this project before the group relies on it.',
+  strengthbar: 'Sets the group\'s bar: how strong an answer must be before the group relies on it, in every project that sets no bar of its own.',
+  projectbarset: 'Sets this project\'s own bar, with your reason: the strength each of its questions is measured against. It never changes the group\'s bar and holds nothing back; it shows how far each answer is from the bar.',
+  drawquestion: 'Brings a question from elsewhere in your group into this project, with a note on why. The project draws on it; the question stays where it is, and is not copied.',
+  spotcheckvisit: 'Ties what you recorded at one drawn report to the spot-check: repaired, not repaired, or could not tell. It counts toward the estimate only for a report in the draw.',
+  projectquestions: 'Lists the questions this project draws on, its own and those drawn in from elsewhere.',
+  projectlist: 'Lists the projects you may see.',
   projectinvite: 'Invites a member into this project, so they can see and work on it.',
   projectjoin: 'Joins this project to see and work on it.',
   planopen: 'Opens a plan: what the group could do about what it found, its options and what each would take.',
@@ -195,7 +221,8 @@ export const ACT_HELP = Object.freeze({
   withdrawconclusion: 'Withdraws the question\'s answer, with a reason, for example after new evidence.',
   hypothesishold: 'Keeps a hunch beside the question, labelled as yours. A hunch is never evidence and never moves an answer.',
   checkrequest: 'Asks a member with the right expertise to check this, for example an accountant for figures.',
-  rule: 'Asks in plain words. The assistant answers only from what your group holds and says where it looked.',
+  ask: 'Asks in plain words. The assistant answers only from what your group holds and says where it looked.',
+  rule: 'Shows how this answer was counted: the rule it applies, the rows it counted and the method, so you can check it rather than rely on it.',
   standingend: 'Stops asking this question on a schedule.',
   airunopen: 'Asks the assistant to work on what this screen shows. Its results are labelled as machine work and become the group\'s only when a member accepts them.',
   suggest: 'Asks the assistant for suggestions here. Each is labelled as its suggestion, for you to adopt or ignore.',
@@ -264,8 +291,10 @@ export const ACT_HELP = Object.freeze({
   reviewcomment: 'Comments on the draft, for the case\'s owner to read.',
   publishpreflight: 'Checks the case is ready to publish and lists anything that would stop it.',
   publishtensions: 'Shows what must be disclosed in the case, such as members\' ties that concern it.',
-  caseratify: 'Signs this edition with your key. Readers can check the signature without the group.',
+  caseratify: 'Signs this edition, its findings and their evidence with your key, and publishes it now. Readers can check each signature without the group.',
   publish: 'Publishes the signed edition for anyone to read. It can never be unpublished; corrections come as a new edition.',
+  publishatmove: 'Moves the time this signed edition becomes public. The signature stands; Civicsmith checks again at the new time.',
+  publishatcancel: 'Keeps this signed edition unpublished. You can choose a time again, or sign a new edition.',
   publishat: 'Publishes at a set time. Civicsmith checks again then, and does not publish if anything changed since signing.',
   verify: 'Checks the case\'s signature and that it matches what the group signed, without the group\'s help.',
   publishedcase: 'Reads the published case.',
