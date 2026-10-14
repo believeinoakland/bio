@@ -39,7 +39,7 @@ Terms. A **check request** is R13's record; its **target** a bundle id (a findin
 
 #### T47's L11 fold (K3100)
 
-- **R19** (DEC-207 (8)) `signRequest({case, edition, by, viewer})` (`op=signrequest`): a member who may see the case asks its project's owners to sign a prepared edition; refusals, each writing nothing: a machine `by` `MACHINE_CANNOT_ASK_SIGN`, `NO_SUCH_CASE_EDITION` (absent, invisible or not prepared, one answer), `SIGN_ALREADY_ASKED` (answered with the first); each owner gets a To do of kind `sign-requested` on the case (R14's form), resolved by the owner or when the edition is signed. Test with a control. *(not yet met: T47)*
+- **R19** (DEC-207 (8)) `signRequest({case, edition, by, viewer})` (`op=signrequest`): a member who may see the case asks its project's owners to sign a prepared edition; refusals, each writing nothing: a machine `by` `MACHINE_CANNOT_ASK_SIGN`, `NO_SUCH_CASE_EDITION` (absent, invisible or not prepared, one answer), `SIGN_ALREADY_ASKED` (answered with the first); each owner gets a To do of kind `sign-requested` on the case (R14's form), resolved by the owner or when the edition is signed. Test with a control.
 
 ## Private
 

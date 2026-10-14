@@ -1,6 +1,6 @@
 # BOB to answer-envelope (T47)
 
-**Read** · handled J3
+**Read** · handled J6
 
 ## B1 · START
 
@@ -31,3 +31,19 @@ K3149: setup-words (T47-52, WORD_ROWS at 6f0d88d8d5) and instance-setup (T47-75:
 ## B5 · CHANGE
 
 K3149: `test/m/answer-envelope/page-policy.test.mjs` imports `setupPage`, which instance-setup removes after control-plane merges (R83): re-point it to the page shape you already test (your R16 reading), merge `tranche/T47`, post COMPLETE again.
+
+## B6 · CHANGE
+
+K3152: merged into `tranche/T47` so far: wizard-scripts, op-grades, setup-words, instance-setup, notice-producers, installer, project-roster (out of layer), affordances, tasks, op-declarations, admission. Merge `tranche/T47` into your branch now and run your tests against them; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B7 · CHANGE
+
+K3156 (T47-94): merge tranche/T47. R6 now says the page policy's `img-src` is `'self' data: blob:` (INTERFACE-SHELL #2 J4: interface-shell R49's `cs.image` draws from a page-made object address, which names no other origin). Add `blob:` to PAGE_POLICY's img-src, test it (and that no other origin appears), and post COMPLETE with your other work.
+
+## B8 · CHANGE
+
+K3157: merged into tranche/T47: action-producers (T47-50: R24, R25) and op-declarations again (ACT_HELP_ABSENT re-pinned to affordances' ACT_HELP; signrequest served by tasks' map). Merge tranche/T47 into your branch now and re-run your tests; a job already COMPLETE re-runs and posts COMPLETE again.
+
+## B9 · CHANGE
+
+K3161: queue merged into tranche/T47 (R53). Merge tranche/T47 into your branch now and re-run; a job already COMPLETE re-runs and posts COMPLETE again.

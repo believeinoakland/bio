@@ -6,7 +6,7 @@
  * not a task comes from its one read, `feedItems`, its R8).
  *
  *   queueFeed      op=queue: every item typed by class, homed under every case, with its options and its disposition
- *                  (R6–R18, R39, R40, R46, R50); `queueAnswer` is the control plane's decoration of that answer (R17).
+ *                  (R6–R18, R39, R40, R46, R50, R53); `queueAnswer` is the control plane's decoration of that answer (R17).
  *   queueMute, queueSnooze   the PERSONAL half: one member's preferences, writing nothing any other member reads
  *                  (R19–R22, R26, R30, R31).
  *   proposeDispose op=proposedispose: the set, the class bridge, the project arm; the progression arm is
@@ -26,7 +26,9 @@
  *   notices   `notice-producers` (R51), whose `noticeItems` is read beside the producers;
  *   zone      `() => zone | null`, the instance profile's time zone (R21, R22), in place of scheduler's `viewZone`;
  *   env       the instance bindings: `BIO_NOW_MS` (the clock);
- *   now       a clock, `() => ms`, in place of `env`'s;
+ *   now       R53: this module's clock, `() => ms` (epoch milliseconds), in place of `env`'s; adopted from the first
+ *             caller that supplies one, and a later caller's that is another function is refused by a throw naming
+ *             `now` (capture R90's rule for its own). `op=queue` is judged at it and takes no instant from a request;
  *   investigation   `investigation` (R27, K2523), which this module registers its project arm's read with at start;
  *   start     false to skip the scheduler registration (a test that drives the consumer itself) and, unless
  *             `investigation` is given, investigation's.
@@ -149,14 +151,25 @@ export class Queue {
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
 
-  /** The instant this read or act is at: the caller's (ms), else the clock a test gave, else the instance binding
-   *  `BIO_NOW_MS`, else the wall clock. An ABSENT param is null (or "") and falls through, never to the epoch. */
+  /** R53: the clock a caller of `queueOf` supplied (null while none has), and its adoption from the first later caller
+   *  that supplies one; `queueOf` refuses a different one before calling this. */
+  get clock() { return this.#clock; }
+  adoptClock(fn) { if (this.#clock === null && typeof fn === "function") this.#clock = fn; }
+
+  /** The instant this read or act is at: an in-plane caller's (ms), else this module's clock (R53: the clock a caller of
+   *  `queueOf` gave, else the instance binding `BIO_NOW_MS`, else the wall clock). A request never supplies the first:
+   *  `op=queue`'s route passes none. An ABSENT param is null (or "") and falls through, never to the epoch; a clock
+   *  answering no finite instant reads the wall clock. */
   #nowMs(explicit) {
     if (explicit !== undefined && explicit !== null && explicit !== "") {
       const e = Number(explicit);
       if (Number.isFinite(e) && e >= 0) return e;
     }
-    if (this.#clock) return this.#clock();
+    if (this.#clock) {
+      let t;
+      try { t = Number(this.#clock()); } catch { t = NaN; }
+      return Number.isFinite(t) ? t : Date.now();
+    }
     const v = Number(this.#env && this.#env.BIO_NOW_MS);
     if (Number.isFinite(v) && v >= 0) return v;
     return Date.now();
@@ -2229,13 +2242,22 @@ export class Queue {
 
 const OF = new WeakMap();
 
-/** K61: the one queue instance for this Durable Object's storage (`ctx`, or the storage itself). On first reaching it,
+/** K61: the one queue instance for this Durable Object's storage (`ctx`, or the storage itself); a later caller's `now`
+ *  is adopted or refused (R53), its other deps are those of the first caller. On first reaching it,
  *  its three tables are declared to record-core's purge (R36) and its three figures registered with record-core's
  *  counts (R42), and, unless `deps.start` is false, its `queue-renotify` consumer is registered (R22). The inbox's
  *  registrations (the drain, the grammar, the TASK seed, its figure) are `tasks`' (N363, draft §3.3). */
 export function queueOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let q = OF.get(storage);
+  /* R53 (capture R90's rule): a later caller's clock is adopted when no caller supplied one, and refused when it is
+     another function than the one a caller did; judged before anything else, so a refused call changes nothing. */
+  if (q && deps && typeof deps.now === "function") {
+    if (q.clock !== null && q.clock !== deps.now)
+      throw new Error("queueOf: a caller supplied a different `now` for a storage whose queue already holds another "
+                    + "clock a caller gave; queue refuses it rather than judge its feed at either silently (R53)");
+    q.adoptClock(deps.now);
+  }
   if (!q) {
     q = new Queue({ host: ctx, storage, deps: { ...(deps || {}) } });
     OF.set(storage, q);
@@ -2270,8 +2292,8 @@ export function queueOf(ctx, deps = {}) {
 export function queueOps(q, url, body) {
   const s = (k) => url.searchParams.get(k);
   return {
-    queue: () => q.queueFeed({ member: s("member"), viewer: s("viewer"), nowMs: s("now"), limit: s("limit"),
-                               sort: s("sort") }),
+    /* R53 (N983): judged at this module's clock; a `now` in the query or the body is never read. */
+    queue: () => q.queueFeed({ member: s("member"), viewer: s("viewer"), limit: s("limit"), sort: s("sort") }),
     queuemute: () => q.queueMute({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     queuesnooze: () => q.queueSnooze({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     proposedispose: () => q.proposeDispose({ ...(body || {}), viewer: s("viewer"), identity: s("identity") }),

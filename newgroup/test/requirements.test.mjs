@@ -12,7 +12,6 @@ import { createHash } from "node:crypto";
 import worker, * as installer from "../src/index.mjs";
 import { CFG, planeLimits } from "../src/index.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "../../bio-plane/src/setup-fleet.mjs";
-import { setupPage } from "../../bio-plane/src/setup.mjs";
 import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE, PAGE_CSS, ASSISTANT_OFFER, DESCRIPTION, WHO, SECURITY_TOOLS, LEFT_OUT,
   BEFORE_CLOUDFLARE_CONTROL, ALLOWED, STYLESHEET, ASSET_PREFIX, UPDATE_KEEPS } from "../src/ui.mjs";
 import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
@@ -534,13 +533,12 @@ test("R34 the wizard's last screen shows, before the hand-over to your group's C
       [`<button id="handover" class="cs-btn" data-tone="primary" data-url="${done.match(/data-url="([^"]*)"/)[1]}">`], "the hand-over is the only other control, never disabled");
   }
   assert.ok(!w0(ends).raw.includes("acknowledg"), "nothing on the page asks for an acknowledgement");
-  /* The very words instance-setup's claim page shows (R47), from the same export, with R47's one difference (T35; F10,
-     K1874; K2084): the claim page links the guide by its name, and the installer's screen states the same sentence as
-     text, with no link. */
-  const claim = setupPage({ answered: true, result: { ok: true, group: null } });
-  const href = claim.match(/<a href="([^"]+)">Replace the one-time password<\/a>/)?.[1];
-  assert.ok(href, "the claim page links the guide by its name");
-  assert.ok(claim.includes(hostingControlBlock("notice", { guideHref: href })), "the claim page shows the same block, the guide linked");
+  /* The very words instance-setup holds once (R47, R83: its one holder since the setup page retired; K3149), with R47's
+     one difference (T35; F10, K1874; K2084): a screen links the guide by its name, and the installer's screen states the
+     same sentence as text, with no link. The linked form differs from the installer's by the link alone. */
+  const linked = hostingControlBlock("notice", { guideHref: "/app/guide" });
+  assert.ok(linked.includes('<a href="/app/guide">Replace the one-time password</a>'), "a screen links the guide by its name");
+  assert.equal(linked.replace(/<a href="\/app\/guide">([^<]*)<\/a>/, "$1"), block, "the same block, the guide linked");
   assert.ok(!/<a\b/.test(block) && block.includes(escd(HOSTING_CONTROL.guide.sentence)), "the installer's screen states the guide as text");
   for (const w of ends) assert.ok(w.page.done.includes(block), "the installer's screen shows that block");
 });
