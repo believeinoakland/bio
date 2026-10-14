@@ -57,7 +57,6 @@ const PROJECT = [
   row("screen.project.plan.label", "The plan's title"),
   row("screen.project.plan.about", "For which question"),
   row("screen.project.plan.empty", "Give the plan a title and choose its question."),
-  row("screen.project.plan.opened", "Plan opened: {title}. Its screen comes later; it is in the project's record now."),
   row("screen.project.plan.head", "Plans opened here"),
 ];
 
@@ -82,7 +81,6 @@ const QUESTION = [
   row("screen.question.leg.severed", "Removed from the question"),
   row("screen.question.leg.severed.why", "Removed from the question: “{why}”"),
   row("screen.question.leg.unselectable", "This citation could not be picked out just now, so nothing was changed. Try again."),
-  row("screen.question.leg.version", "In “{version}”"),
   row("screen.question.hunches.head", "Hunches"),
   row("screen.question.hunch.by", "Hunch · {who}'s"),
   row("screen.question.hunch.label", "Your hunch"),
@@ -109,8 +107,6 @@ const QUESTION = [
   row("screen.question.narrow.name", "A name for the narrower question"),
   row("screen.question.narrow.description", "Why, in a sentence"),
   row("screen.question.narrow.empty", "Name the narrower question and say why."),
-  row("screen.question.versions.head", "What it rests on"),
-  row("screen.question.versions.count", "{count} ways of answering it, {current} current"),
 ];
 
 /** The document screen's sentences (R3, R15). */

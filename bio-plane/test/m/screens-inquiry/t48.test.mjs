@@ -5,7 +5,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { ok, refusedIn, silent, ADMIN } from "../interface-shell/harness.mjs";
-import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { interfacePage } from "../../../src/interface-shell/index.mjs";
 import { SCREEN_WORDS } from "../../../src/screens-inquiry/index.mjs";
 import { open, main, plane, SCREENS, P, Q, D, SHA, BASIS, READING, PROJECT_QUESTIONS, DOCUMENT_MD, inquiryMd } from "./fixtures.mjs";
@@ -110,7 +109,10 @@ function noPanel() { return ""; }
 const OWN_ONLY = SCREENS.map((s) => (s.id === "projectai" ? { ...s, parts: { ...s.parts, aiPanel: noPanel } } : s));
 const defined = () => {
   const page = readFileSync(new URL("../../../../docs/development/ux-substrate/screens/page.src.html", import.meta.url), "utf8");
-  const css = ASSET_FILES["civicsmith.css"].body + (ASSET_FILES["shell.css"] ? ASSET_FILES["shell.css"].body : (page.match(/<style[^>]*>([\s\S]*?)<\/style>/) || [, ""])[1])
+  /* the served stylesheets' sources: the visual language, and the design page's own `<style>` (what `shell.css` carries,
+     interface-assets R7), and the shell's own STYLE in the page */
+  const css = readFileSync(new URL("../../../../docs/development/ux-substrate/visual-language/civicsmith.css", import.meta.url), "utf8")
+    + (page.match(/<style[^>]*>([\s\S]*?)<\/style>/) || [, ""])[1]
     + (interfacePage(SCREENS).match(/<style>([\s\S]*?)<\/style>/) || [, ""])[1];
   return new Set([...css.matchAll(/\.([A-Za-z_][\w-]*)/g)].map((m) => m[1]));
 };
