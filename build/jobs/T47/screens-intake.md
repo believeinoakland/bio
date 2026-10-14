@@ -50,3 +50,7 @@ T47-59 complete on `job/T47/screens-intake` (tranche/T47 merged at 2d6895cb50; B
 Tests: screens-intake 57 pass, 0 fail, no overlay. Checks: run.mjs format/architecture/channels 0 failures; coverage 16 of 16 for screens-intake (12 product failures, all other modules' not-yet-met ids); ownership 0 failures.
 For you: control-plane `t46-app.test.mjs` R75 fails on `img-src` on `tranche/T47` itself (caac922b0f) and on my branch alike, not mine (control-plane T47-65 or answer-envelope).
 Record's Completion has the bounds I chose (R12: at most 20 earlier knocks read; R14: weekly by default) and the size line.
+
+## J3 · COMPLETE
+
+B8 (K3171) done: doneTestify reads testify's bundle_id (provenance's answer shape); R3's stand-ins answer that shape; new test 'R3 (K3171)' at the interface with a control. tranche/T47 merged (control-plane in): screens-intake 58 pass, 0 fail; control-plane t46-app.test.mjs 5 pass, 0 fail (the R75 img-src red I reported in J2 is gone); format, architecture, coverage 16/16, ownership 0 failures.
