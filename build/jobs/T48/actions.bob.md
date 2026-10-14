@@ -16,3 +16,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950). Your Size line counts only your module's own code (K2513).
 Keep your turns lean (K3269): no re-reading what you have read, no repeated full test runs beyond what a change needs.
 Merge order in L9: action-records first (K3189), then conformance, action-grammar, actions, action-holds, action-replies, filing-templates, filings, action-plans; a job that uses no unmerged same-layer change merges as soon as it is complete.
+
+## B2 · CHANGE
+
+action-records is merged into tranche/T48 (K3278): merge tranche/T48 into your branch. Its site (bio-plane/src/action-records/index.mjs): correspondFence(author, extra?) -> null | C-32.4; correspondEntryRefusal({at, artifactSha, account, dateTime?}, extra?) -> null | C-33.6/.7/.8; unregisteredArtifact(sha, extra?) -> null | C-33.9 (also methods of actionRecordsOf(host)); regions is-machine-correspond, is-correspond-entry, is-correspond-artifact. actionCorrespond calls it and your copies are deleted. action-grammar's R29 names a region is-correspond-direction for C-33.5 in actions: create it (R101). action-grammar waits on your merge.
