@@ -20,7 +20,7 @@ function transcriber({ account = null, limit = null,
     deployable: () => ONE_MATTER.matters.length > 0,
     keptAway: () => null,
     transcription: ({ member, project, at }) => ({ member, project, at, act: `transcribe:t43:${at}`,
-      credentials: { accountFor: async () => account ?? { ok: true, kind: "apikey", level: "member", key: "k" } },
+      accounts: { accountFor: async () => account ?? { ok: true, kind: "apikey", level: "member", key: "k" } },
       useCheck: async () => limit,
       transcribe: async (q) => { calls.transcribe.push(q); return answer(q.pages, q); } }),
   };
