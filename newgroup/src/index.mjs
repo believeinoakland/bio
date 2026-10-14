@@ -23,7 +23,10 @@
  * on the client, deploy, verify a real run, then remove the old.
  */
 
-import { WIZARD_HTML, UPDATE_HTML, PAGE_CSS, PRODUCT, publisherFooter, PROFILE_CHOICES, ASSISTANT_OFFER, SECURITY_TOOLS } from "./ui.mjs";
+import { WIZARD_HTML, UPDATE_HTML, PRODUCT, publisherFooter, PROFILE_CHOICES, ASSISTANT_OFFER, SECURITY_TOOLS, pageHead, pageMark,
+  ASSET_PREFIX, UPDATE_KEEPS } from "./ui.mjs";
+/* R53 (DEC-122 (3); K3100): interface-assets' stylesheet and faces, carried in this bundle and served at ASSET_PREFIX. */
+import { ASSET_FILES } from "../../bio-plane/src/interface-assets/index.mjs";
 import { RELEASE_SOURCE, RELEASE_VERSION } from "./release.mjs";
 import { ARMED_SIGNERS } from "./signers.mjs";
 /* R38, R23 (T46): whether a container image can be pulled, and what your group's Civicsmith lacks without it; held once
@@ -528,7 +531,7 @@ const profilesBinding = (ids) => Array.isArray(ids) && ids.length
 /* The refusal for a `profiles` value /begin cannot bind, or null. */
 function profilesRefusal(v, mode) {
   if (v === undefined) return null;
-  if (mode === "update") return "An update never changes which jurisdiction profiles your group's Civicsmith reads; an administrator changes them on its setup page.";
+  if (mode === "update") return "An update never changes which jurisdiction profiles your group's Civicsmith reads; an administrator changes them in its settings, under Places and offices.";
   if (!Array.isArray(v)) return "The jurisdiction profiles must be a list of the profiles offered.";
   const bad = v.filter((id) => typeof id !== "string" || !HELD_CHOICES.has(id));
   if (bad.length) return "Not a jurisdiction profile this installer offers: " + bad.map((x) => JSON.stringify(x)).join(", ") + ".";
@@ -1248,19 +1251,19 @@ async function logsStep(emit, token, acct, names) {
   const r = await logpushCheck(token, acct, names);
   if (r.state === "clear") {
     emit.ok("logs", "No Logpush job on your Cloudflare account keeps a record of each request to your group's Civicsmith.");
-    return [];
+    return { lags: [], state: r.state };
   }
   if (r.state === "undetermined") {
     emit.no("logs", "Undetermined: the installer could not read your account's Logpush jobs (Cloudflare said: " + r.why + "), so it cannot "
       + "say whether one keeps a record of each request to your group's Civicsmith, which would be a log of who opened which file. "
       + "To check it yourself: in the Cloudflare dashboard, open Analytics & Logs, then Logpush, and look for a job over "
       + "Workers Trace Events; none should cover " + names.join(", ") + ".");
-    return [];
+    return { lags: [], state: r.state };
   }
   const lags = r.jobs.map((j) => logLag(j, names));
   emit.no("logs", (lags.length === 1 ? "A Logpush job on your Cloudflare account" : lags.length + " Logpush jobs on your Cloudflare account")
     + " would keep a log of who opened which file: " + lags.join("; ") + ".");
-  return lags;
+  return { lags, state: r.state };
 }
 
 const lagList = (v) => `<ul>${v.lags.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
@@ -1269,27 +1272,34 @@ const UNDETERMINED_BUILDS = "This release cannot report which version the record
 
 /* -------------------------------------------------------- the progress page
    The callback streams HTML: the shell renders immediately, then each
-   provisioning step lands as a small script as it completes. Live progress
-   with the token never leaving this Worker, and nothing to poll. */
+   provisioning step lands as a small script as it starts and as it ends. Live progress
+   with the token never leaving this Worker, and nothing to poll.
 
+   R51 (DEC-201 (4)): one plain line per step, drawn as it starts and redrawn as it ends (`cs-row`, its state in a word
+   beside it). A stop names the step it stopped at (the line in progress, carried as `fail`'s fourth argument), what
+   happened, and what to do; "nothing was created" is in what happened wherever R4 holds, and on an update (R52) that
+   your group's Civicsmith keeps running as it was. The shell holds exactly one script, before every streamed one. */
+
+const STATE_WORD = Object.freeze({ go: "Now", ok: "Done", no: "Not done" });
 function progressShell(title, slug) {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
-<title>${esc(title)}</title><style>${PAGE_CSS}</style></head><body><main>
-<p class="eyebrow">${PRODUCT} &middot; installer</p>
+  return `${pageHead(esc(title), { noindex: true })}
+<body class="cs"><main class="cs-frame ng">
+${pageMark()}
 <h1>${esc(title)}</h1>
-<p class="small">For the group <b class="mono" id="group">${esc(slug)}</b>. Leave this page open. This usually takes under a minute.</p>
-<div id="log" class="log"></div>
-<div id="fail" class="notice" hidden><h2 id="fail-h"></h2><p id="fail-p"></p><p class="small mono" id="fail-d"></p></div>
-<div id="done" hidden></div>
+<p class="small">For the group <b class="mono" id="group">${esc(slug)}</b>. This takes a few minutes; leave this page open.</p>
+<div id="log" class="cs-sheet ng-log"></div>
+<div id="fail" class="ng-stop" role="alert" hidden><h2 id="fail-h"></h2><p class="small" id="fail-s"></p><p id="fail-p"></p><p id="fail-d"></p></div>
+<div id="done" class="ng-stage" hidden></div>
 ${publisherFooter()}
 <script>
-const $=s=>document.querySelector(s);const rows={};
-function step(id,label){const d=document.createElement("div");d.className="row go";d.id="r-"+id;
- d.innerHTML='<span class="dot"></span><span></span>';d.lastChild.textContent=label;$("#log").appendChild(d);rows[id]=d;}
-function ok(id,label){const d=rows[id];if(!d)return;d.className="row ok";if(label)d.lastChild.textContent=label;}
-function no(id,label){const d=rows[id];if(!d)return;d.className="row no";if(label)d.lastChild.textContent=label;}
-function fail(h,p,d){$("#fail").hidden=false;$("#fail-h").textContent=h;$("#fail-p").textContent=p;$("#fail-d").textContent=d||"";}
+const $=s=>document.querySelector(s);const rows={};const W=${JSON.stringify(STATE_WORD)};
+function mark(d,r,label){d.dataset.r=r;d.firstChild.textContent=W[r];if(label)d.children[1].textContent=label;}
+function step(id,label){const d=document.createElement("div");d.className="cs-row";d.id="r-"+id;
+ d.innerHTML='<span class="mk"></span><span></span><span></span>';mark(d,"go",label);$("#log").appendChild(d);rows[id]=d;}
+function ok(id,label){const d=rows[id];if(d)mark(d,"ok",label);}
+function no(id,label){const d=rows[id];if(d)mark(d,"no",label);}
+function fail(h,p,d,s){$("#fail").hidden=false;$("#fail-h").textContent=h;$("#fail-s").textContent=s?"Stopped at the step: "+s:"";
+ $("#fail-p").textContent=p;$("#fail-d").textContent=d||"";}
 function done(html){$("#done").innerHTML=html;$("#done").hidden=false;
  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",async()=>{
   await navigator.clipboard.writeText(document.getElementById(b.dataset.copy).textContent);
@@ -1309,11 +1319,18 @@ function streamPage(headers, shell, run) {
   const { readable, writable } = new TransformStream();
   const w = writable.getWriter();
   const write = (s) => w.write(enc.encode(s));
+  /* R51: the line in progress, which a stop names. */
+  const lines = new Map();
+  let current = null;
   const emit = {
-    step: (id, label) => write(`<script>step(${jsStr(id)},${jsStr(label)})</script>\n`),
-    ok:   (id, label) => write(`<script>ok(${jsStr(id)}${label ? "," + jsStr(label) : ""})</script>\n`),
-    no:   (id, label) => write(`<script>no(${jsStr(id)}${label ? "," + jsStr(label) : ""})</script>\n`),
-    fail: (h, p, d)   => write(`<script>no();fail(${jsStr(h)},${jsStr(p)},${jsStr(d)})</script>\n`),
+    step: (id, label) => { lines.set(id, label); current = id;
+      return write(`<script>step(${jsStr(id)},${jsStr(label)})</script>\n`); },
+    ok:   (id, label) => { if (label) lines.set(id, label);
+      return write(`<script>ok(${jsStr(id)}${label ? "," + jsStr(label) : ""})</script>\n`); },
+    no:   (id, label) => { if (label) lines.set(id, label);
+      return write(`<script>no(${jsStr(id)}${label ? "," + jsStr(label) : ""})</script>\n`); },
+    /* `at`: the step a stop names when it is not the line in progress (a stop said after later lines were drawn). */
+    fail: (h, p, d, at = current) => write(`<script>no();fail(${jsStr(h)},${jsStr(p)},${jsStr(d)},${jsStr(at ? lines.get(at) : "")})</script>\n`),
     done: (inner)     => write(`<script>done(${jsLit(inner)})</script>\n`),
   };
   (async () => {
@@ -1322,7 +1339,8 @@ function streamPage(headers, shell, run) {
     catch (e) {
       await emit.fail("Something went wrong that this page did not anticipate",
         "The step in progress did not finish. Nothing secret was stored anywhere.",
-        String(e && e.message || e));
+        "Start again from the installer's first page; if it happens again, tell the publisher of " + PRODUCT
+          + " releases what it said: " + String(e && e.message || e));
     }
     await write("</body></html>");
     await w.close();
@@ -1331,6 +1349,12 @@ function streamPage(headers, shell, run) {
 }
 
 /* ---------------------------------------------------------- provisioning */
+
+/* R51: a stop's last line is what to do. Where the cause is Cloudflare's answer, that is to start again, with its words. */
+const tryAgain = (mode, said) => (mode === "update"
+  ? "To continue: run the update again in a minute from the update page; this is usually temporary."
+  : "To continue: start again from the installer's first page in a minute; this is usually temporary.")
+  + " (Cloudflare said: " + said + ")";
 
 /* DIST-9: say which way the organisation `ai` credential went — never its value. */
 function instanceAiNotice(emit, mode, carried) {
@@ -1403,7 +1427,7 @@ async function runInstall(emit, code, saved) {
     emit.no("auth");
     return emit.fail("Cloudflare did not confirm the permission",
       "The sign-in came back but the final handshake failed, so nothing was created.",
-      "Detail: " + e.message);
+      tryAgain("install", e.message));
   }
 
   emit.step("acct", "Finding your account");
@@ -1417,7 +1441,7 @@ async function runInstall(emit, code, saved) {
     emit.no("acct");
     return emit.fail("Could not read your account",
       "Permission was granted but the account list came back empty or refused. Nothing was created.",
-      "Detail: " + e.message);
+      tryAgain("install", e.message));
   }
 
   emit.step("fresh", "Checking the name is free and your account holds no other installation");
@@ -1425,8 +1449,9 @@ async function runInstall(emit, code, saved) {
     if (await scriptExists(token, acct.id, slug)) {
       emit.no("fresh");
       return emit.fail(`An installation named "${slug}" already exists on your account`,
-        "Nothing was changed. If you meant to update it to the current release, go back and choose the update option instead.",
-        "");
+        "Nothing was changed, and nothing was created.",
+        "To continue: choose another short name and start again, or, if that installation is your group's Civicsmith, "
+          + "bring it up to the current release on the update page instead.");
     }
     /* R32: the evidence buckets and the fleet workers the plane binds, read before anything is created. */
     const held = await copyHeld(token, acct.id, { members: [...BINDING_OF.keys()] });
@@ -1436,7 +1461,7 @@ async function runInstall(emit, code, saved) {
     emit.no("fresh");
     return emit.fail("Could not check your account",
       "The check for an existing installation failed, so to be safe nothing was created.",
-      "Detail: " + e.message);
+      tryAgain("install", e.message));
   }
 
   /* R20 with R4: the release is chosen before the first thing this flow creates (the plan probe, then the buckets), so a
@@ -1457,7 +1482,7 @@ async function runInstall(emit, code, saved) {
     catch (e) {
       emit.no("fresh");
       return emit.fail("Could not check your account",
-        "The check for another installation's capability workers failed, so to be safe nothing was created.", "Detail: " + e.message);
+        "The check for another installation's capability workers failed, so to be safe nothing was created.", tryAgain("install", e.message));
     }
     if (held.length) { emit.no("fresh"); return oneCopyRefusal(emit, held); }
   }
@@ -1480,7 +1505,7 @@ async function runInstall(emit, code, saved) {
       + "Cloudflare's Workers Paid plan ($5/month), paid with a payment method on the account, which "
       + "the evidence storage this installer sets up needs as well. Installing without it would hand "
       + "you an installation that looks right and quietly fails under real work, which is worse than this "
-      + "message. Nothing was installed, so there is nothing to clean up.",
+      + "message. Nothing was created, so there is nothing to clean up.",
       "To continue: sign in at dash.cloudflare.com with this same account, open Workers & Pages, "
       + "choose Plans, enable Workers Paid, then come back here and run the installer again.");
   }
@@ -1489,8 +1514,8 @@ async function runInstall(emit, code, saved) {
     return emit.fail("Could not verify your account's Workers plan",
       "The check that establishes your plan did not get a readable answer, and an unverified "
       + "plan is not a verified one — installing anyway could hand you an installation that quietly "
-      + "degrades. Nothing was installed, so there is nothing to clean up.",
-      "This is usually temporary: run the installer again in a minute. (Cloudflare said: "
+      + "degrades. Nothing was created, so there is nothing to clean up.",
+      "To continue: run the installer again in a minute; this is usually temporary. (Cloudflare said: "
       + planAnswer.detail + ")");
   }
   emit.ok("plan", "Workers Paid confirmed"
@@ -1513,7 +1538,7 @@ async function runInstall(emit, code, saved) {
       "Your group's Civicsmith keeps captured documents (PDFs, web pages, timestamp certificates) in Cloudflare's file "
       + "storage, and Cloudflare requires a payment method on the account before that storage can be turned "
       + "on. Usage at a community group's size stays inside the free tier; the card is Cloudflare's "
-      + "requirement, not a charge. Nothing was installed, so there is nothing to clean up.",
+      + "requirement, not a charge. Nothing was created, so there is nothing to clean up.",
       "To continue: sign in at dash.cloudflare.com with this same account, open Billing, add a card or "
       + "PayPal, then come back here and run the installer again. (Cloudflare said: " + e.message + ")");
   }
@@ -1547,7 +1572,7 @@ async function runInstall(emit, code, saved) {
       emit.no("install");
       return emit.fail("The software did not install",
         "Your account was reachable but the install was refused, so there is nothing left behind to clean up.",
-        "Detail: " + e.message);
+        tryAgain("install", e.message));
     }
     emit.ok("install", "Your group's Civicsmith is installed. One optional part — the part that lets it re-check "
       + "documents on its own schedule — was refused by Cloudflare and was left out, so nothing else "
@@ -1594,11 +1619,13 @@ async function runInstall(emit, code, saved) {
       "The software is on your account. Only the public web address failed, which is fixable from the "
       + "Cloudflare dashboard under Workers, without starting over. Until it has one, your group's Civicsmith is not told an "
       + "address of its own; running the updater once the address works tells it.",
-      "Detail: " + addrError.message);
+      "To continue: in the Cloudflare dashboard, open Workers & Pages, then this worker, and turn on its workers.dev address; "
+        + "then run the updater. (Cloudflare said: " + addrError.message + ")", "addr");
   }
 
   /* R46: before `verify` can succeed, no Logpush job may keep a record of each request to the copy's Workers. */
-  const logLags = await logsStep(emit, token, acct.id, copyWorkers(slug, release));
+  const logs = await logsStep(emit, token, acct.id, copyWorkers(slug, release));
+  const logLags = logs.lags;
 
   emit.step("verify", "Checking that it answers");
   const st = await verifyInstall(base, secrets.probe);
@@ -1619,7 +1646,22 @@ async function runInstall(emit, code, saved) {
   else if (st) emit.no("verify", "Your group's Civicsmith answers, but not everything is confirmed yet: the list below names what is not");
   else emit.no("verify");
 
-  emit.done(successPanel(base, secrets, !!st, verdict, saved.vpc));
+  /* R51: the checks the finished panel shows, each as it came out. */
+  const servingLags = served ? served.lags.length : null;
+  const checks = [
+    { r: st ? "ok" : "no", text: st ? "It answers at its address." : "Its address has not answered yet." },
+    !st ? { r: "no", text: "Which release each part runs: not checked yet, as its address has not answered." }
+      : !capable ? { r: "und", text: "Which release its record store and capability workers run: undetermined, as this release cannot report it." }
+      : servingLags === 0 ? { r: "ok", text: `Every part runs release ${release.version}: its address, its record store and each capability worker it is connected to.` }
+      : { r: "no", text: "Not every part is confirmed to run this release yet: the list above names what is not." },
+    { r: byteLags.length ? "no" : "ok", text: byteLags.length ? "Its software did not read back as the release's own bytes: the list above says how."
+      : `Its software reads back as release ${release.version}'s own bytes.` },
+    { r: logs.state === "clear" ? "ok" : logs.state === "named" ? "no" : "und",
+      text: logs.state === "clear" ? "No log on your Cloudflare account records who opens which file."
+        : logs.state === "named" ? "A log on your Cloudflare account would record who opens which file: the list above names it."
+        : "Whether a log on your Cloudflare account records who opens which file: undetermined; the step above says how to check it yourself." },
+  ];
+  emit.done(successPanel(base, secrets, !!st, verdict, saved.vpc, checks));
 }
 
 /* R46: the copy's Workers, by script name: the plane, and every member it binds or the release names. */
@@ -1637,33 +1679,51 @@ function securityToolsNote(vpc) {
     ? "You named a Workers VPC service, so the installer connected the file scanner to it where it could (the capability workers step says whether it did)."
     : "You named no Workers VPC service, so none is connected: a tool reached through a tunnel answers REACH_NOT_BOUND in your group&#39;s Civicsmith until the updater is run with one."}</p></div>`;
 }
-function successPanel(base, secrets, verified, verdict = null, vpc = null) {
+/* R51 (DEC-201 (4)): the finished panel. What the checks found (R15's head and lags, then each check as a line), the
+   one-time password and the address, once, the probe key folded behind "most groups never need it", R45's security-tools
+   note, R34's block, and the hand-over to `<address>/app/setup#boot=<password>` (screens-entry's setup reads it there;
+   the page's script reads the password from `out-boot` at the click, so it is written into the page once). */
+const CHECK_WORD = Object.freeze({ ok: "Passed", no: "Not yet", und: "Undetermined" });
+const checkRows = (checks) => `<div class="cs-sheet ng-log" id="checks">${checks.map((c) =>
+  `<div class="cs-row" data-r="${c.r === "und" ? "go" : c.r}"><span class="mk">${CHECK_WORD[c.r]}</span><span>${esc(c.text)}</span><span></span></div>`).join("")}</div>`;
+export const HANDOVER_PATH = "/app/setup";
+function successPanel(base, secrets, verified, verdict = null, vpc = null, checks = []) {
   const lagging = !!(verdict && !verdict.confirmed);
   const head = verified && !lagging
-    ? `<b>Your group's Civicsmith is running.</b> It lives in your
-Cloudflare account, under your control. ${NO_KEY}`
+    ? `<b>Your group's Civicsmith is running.</b> It answered its own checks. One step is left: you become its first
+administrator. It lives in your Cloudflare account, under your control. ${NO_KEY}`
       + (verdict && !verdict.capable ? ` ${esc(UNDETERMINED_BUILDS)}` : "")
     : lagging
     ? `<b>Your group's Civicsmith is installed${verified ? " and answering" : ""}, but not everything about it is confirmed yet.</b>
-${verified ? "When it was last asked:" : "Its new address has not woken up yet, and:"}${lagList(verdict)}Save the credentials below now either way. It lives in your Cloudflare
+${verified ? "When it was last asked:" : "Its new address has not woken up yet, and:"}${lagList(verdict)}Save the one-time password below now either way. It lives in your Cloudflare
 account, under your control. ${NO_KEY}`
     : `<b>Your group's Civicsmith is installed. Its new address has not woken up yet.</b> Brand-new
 addresses can take a few minutes to start answering; everything else finished. Save the
-credentials below now, then open your address. It lives in your Cloudflare account, under
+one-time password below now, then continue. It lives in your Cloudflare account, under
 your control. ${NO_KEY}`;
-  return `<div class="${lagging ? "notice" : "okbox"}"><p style="margin:0">${head}</p></div>
+  return `<h2>${verified && !lagging ? "Your group&#39;s Civicsmith is ready" : "Your group&#39;s Civicsmith is installed"}</h2>
+<div class="${lagging ? "notice" : "okbox"}"><p>${head}</p></div>
+${checks.length ? checkRows(checks) : ""}
+<section class="cs-section ng-sec" id="one-time">
+<h2>Your one-time password: save it now</h2>
+<p>This makes you your group&#39;s first administrator, in the next step. It is shown <b>once</b>, here. Save it somewhere
+safe, such as a password manager, until you have claimed. Continuing below fills it in for you. When you claim, it is
+spent and you sign in with a password you choose. There is no shared member key: each member signs in with their own
+account.</p>
 <div class="card">
- <div class="kv"><span class="k">Your address</span><span class="v" id="out-url">${esc(base)}</span><button class="copy" data-copy="out-url">Copy</button></div>
  <div class="kv"><span class="k">One-time password</span><span class="v" id="out-boot">${secrets.boot}</span><button class="copy" data-copy="out-boot">Copy</button></div>
- <div class="kv"><span class="k">Probe credential</span><span class="v" id="out-probe">${secrets.probe}</span><button class="copy" data-copy="out-probe">Copy</button></div>
+ <div class="kv"><span class="k">Your address</span><span class="v" id="out-url">${esc(base)}</span><button class="copy" data-copy="out-url">Copy</button></div>
 </div>
-<p><b>Save the probe credential in a password manager now.</b> This page is the only time it is
-shown. The one-time password is spent in the next step, where you choose a real password. There is
-no shared member credential: each member signs in with their own account.</p>
+<p class="help">Your address is where you, and later your members, open your group&#39;s Civicsmith. Bookmark it.</p>
+</section>
+<details class="ng-fold" id="probe-fold"><summary>A probe key, for a monitoring service (most groups never need it)</summary>
+<div class="card"><div class="kv"><span class="k">Probe key</span><span class="v" id="out-probe">${secrets.probe}</span><button class="copy" data-copy="out-probe">Copy</button></div></div>
+<p class="help">Lets a monitoring service check that your group&#39;s Civicsmith is running. It reaches only a separate test
+store, never your group&#39;s records. Shown once: this page is the only time.</p></details>
 ${securityToolsNote(vpc)}
-${/* R34 (DEC-109, K1038): before the hand-over to where the founder chooses a password, who really controls the copy, in
-   instance-setup's words; nothing asks for or records an acknowledgement of it. */ hostingControlBlock("notice")}
-<div class="actions"><button id="handover" data-url="${esc(base)}/">Go to your group&#39;s Civicsmith and finish setup</button></div>`;
+${/* R34 (DEC-109, K1038): before the hand-over to where the founder chooses a password, who really controls your group's
+   Civicsmith, in instance-setup's words; nothing asks for or records an acknowledgement of it. */ hostingControlBlock("notice")}
+<div class="ng-acts"><button id="handover" class="cs-btn" data-tone="primary" data-url="${esc(base)}${HANDOVER_PATH}">Continue to your group&#39;s Civicsmith: become its first administrator</button></div>`;
 }
 
 /* D-436 / IC-172 — THE ONE ACT AN UPDATE LEAVES TO THE OPERATOR: recording which group produces the record.
@@ -1718,8 +1778,22 @@ Your group&#39;s slug may differ from it: the name an installation is given and 
 the same. The installer does not record it for you: which group produces your record is yours to say.</p></div>`;
 }
 
-async function runUpdate(emit, code, saved) {
+/* R52 (DEC-201 (8)): the version before and after, as two lines, on the update's last screen; the version before is the
+   one `op=bootstrap` answered before the upload (R17), or said unread. */
+function versionLines(before, after) {
+  const signed = ARMED_SIGNERS.length ? ", signed by Civicsmith" : "";
+  return `<div class="cs-sheet ng-log" id="versions">`
+    + `<div class="cs-row" data-r="ok"><span class="mk">Before</span><span>${before
+      ? `Your group&#39;s Civicsmith ran release <b class="id">${esc(before)}</b>.`
+      : "The release your group&#39;s Civicsmith ran before could not be read."}</span><span></span></div>`
+    + `<div class="cs-row" data-r="ok"><span class="mk">After</span><span>This update: release <b class="id">${esc(after)}</b>${signed}.</span><span></span></div></div>`;
+}
+
+async function runUpdate(emit0, code, saved) {
   const slug = saved.slug;
+  /* R52 (DEC-201 (8)): every stop of an update, each before its upload changed anything, says your group's Civicsmith
+     keeps running as it was. */
+  const emit = { ...emit0, fail: (h, p, d, ...at) => emit0.fail(h, p + " " + UPDATE_KEEPS, d, ...at) };
   let token, scope;
 
   emit.step("auth", "Confirming your permission with Cloudflare");
@@ -1728,7 +1802,7 @@ async function runUpdate(emit, code, saved) {
     emit.no("auth");
     return emit.fail("Cloudflare did not confirm the permission",
       "The sign-in came back but the final handshake failed. Your group's Civicsmith is untouched.",
-      "Detail: " + e.message);
+      tryAgain("update", e.message));
   }
 
   emit.step("acct", "Finding your account");
@@ -1742,7 +1816,7 @@ async function runUpdate(emit, code, saved) {
     emit.no("acct");
     return emit.fail("Could not read your account",
       "Permission was granted but the account list came back empty or refused. Your group's Civicsmith is untouched.",
-      "Detail: " + e.message);
+      tryAgain("update", e.message));
   }
 
   emit.step("find", `Finding your group's Civicsmith, installed as "${slug}"`);
@@ -1750,15 +1824,15 @@ async function runUpdate(emit, code, saved) {
     if (!(await scriptExists(token, acct.id, slug))) {
       emit.no("find");
       return emit.fail(`No installation named "${slug}" exists on your account`,
-        "Nothing was changed. Check the name against your address: it is the first part, before the first dot.",
-        "");
+        "Nothing was changed.",
+        "To continue: check the name against your group's address (it is the first part, before the first dot) and start again.");
     }
     emit.ok("find");
   } catch (e) {
     emit.no("find");
     return emit.fail("Could not check your account",
       "The lookup failed, so to be safe nothing was changed.",
-      "Detail: " + e.message);
+      tryAgain("update", e.message));
   }
 
   let withR2 = false;
@@ -1805,7 +1879,7 @@ async function runUpdate(emit, code, saved) {
     emit.no("up");
     return emit.fail("The update was refused",
       "Your group's Civicsmith is still running the version it had before. Nothing about it changed.",
-      "Detail: " + e.message);
+      tryAgain("update", e.message));
   }
 
   /* R33: as on install, the uploaded plane is read back and hashed against the release. */
@@ -1837,7 +1911,8 @@ async function runUpdate(emit, code, saved) {
       + "running this update again tells it.");
 
   /* R46: as on install, before `verify` can succeed. */
-  const logLags = await logsStep(emit, token, acct.id, copyWorkers(slug, release));
+  const logs = await logsStep(emit, token, acct.id, copyWorkers(slug, release));
+  const logLags = logs.lags;
 
   /* D-116: confirmed means EVERY part answers the release — the address, the record store, and each capability
      worker through the plane's binding (verifyServing). The patient tone stays, because a rollout genuinely takes
@@ -1861,7 +1936,7 @@ async function runUpdate(emit, code, saved) {
   /* D-436: told, never done — see FIRST_GROUP_RELEASE above. */
   const told = groupNotice(groupUnrecorded(before, release.version, noop), slug, before, base);
 
-  emit.done(noop
+  emit.done(versionLines(before, release.version) + (noop
     ? `<div class="notice"><p style="margin:0"><b>Nothing changed: your group&#39;s Civicsmith was already running ${esc(release.version)}.</b>
 The upload succeeded, but it replaced that version with the same version, so this update moved nothing.
 If you expected something newer, the installer had nothing newer to give: it uses the newest release it can
@@ -1884,10 +1959,24 @@ Your passwords, your credentials, and everything in the record are exactly as th
 Updates never touch them.</p></div>`)
     + told
     + securityToolsNote(saved.vpc)
-    + (base ? `<div class="actions"><a class="btnlink" href="${esc(base)}/">Open your group&#39;s Civicsmith</a></div>` : ""));
+    + (base ? `<div class="ng-acts"><a class="cs-btn" data-tone="primary" href="${esc(base)}/">Open your group&#39;s Civicsmith</a></div>` : "")));
 }
 
 /* ---------------------------------------------------------------- routes */
+
+/* R53 (DEC-122 (3); K3100): one of interface-assets' files (ASSET_FILES: the stylesheet, the icons, the 15 faces and their
+   licences), as its own bytes and type, cacheable for good (each is frozen at ASSETS_COMMIT); null for any other name.
+   Nothing is read or stored: the bytes are this bundle's. */
+const ASSET_BYTES = new Map();
+export function assetResponse(name) {
+  if (!Object.hasOwn(ASSET_FILES, name)) return null;
+  const f = ASSET_FILES[name];
+  if (!ASSET_BYTES.has(name))
+    ASSET_BYTES.set(name, f.encoding === "base64" ? Uint8Array.from(atob(f.body), (c) => c.charCodeAt(0)) : enc.encode(f.body));
+  const type = /^text\//.test(f.type) || f.type === "image/svg+xml" ? `${f.type}; charset=utf-8` : f.type;
+  return new Response(ASSET_BYTES.get(name), { headers: { "content-type": type,
+    "cache-control": "public, max-age=31536000, immutable", "x-content-type-options": "nosniff" } });
+}
 
 export default {
   async fetch(req) {
@@ -1898,6 +1987,12 @@ export default {
 
     if (req.method === "GET" && url.pathname === "/update")
       return html(UPDATE_HTML);
+
+    /* R53 (and R1's one further route): interface-assets' files, byte for byte, at the path the stylesheet names them by. */
+    if (req.method === "GET" && url.pathname.startsWith(ASSET_PREFIX)) {
+      const served = assetResponse(url.pathname.slice(ASSET_PREFIX.length));
+      if (served) return served;
+    }
 
     /* Begin: validate, mint PKCE, park it in an HttpOnly cookie, hand the
        browser the authorize URL. The verifier belongs to this browser and
@@ -1978,14 +2073,13 @@ export default {
 function plainPage(head, what, detail, slug) {
   const group = typeof slug === "string" && slugOk(slug)
     ? `For the group <b class="mono" id="group">${esc(slug)}</b>.` : `Setting up your group&#39;s ${PRODUCT}.`;
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
-<title>${esc(head)}</title><style>${PAGE_CSS}</style></head><body><main>
-<p class="eyebrow">${PRODUCT} &middot; installer</p>
+  return `${pageHead(esc(head), { noindex: true })}
+<body class="cs"><main class="cs-frame ng">
+${pageMark()}
 <h1>${esc(head)}</h1><p>${esc(what)}</p>
 ${detail ? `<p class="small mono">${esc(detail)}</p>` : ""}
 <p class="small">${group}</p>
-<p><a href="/">Back to the start</a></p>
+<div class="ng-acts"><a class="cs-btn" href="/">Back to the start</a></div>
 ${publisherFooter()}
 </main></body></html>`;
 }
